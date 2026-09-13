@@ -1,48 +1,102 @@
-# Cross-disciplinary translation audit
+# Paper Reader
 
-This audit makes real-paper translation failures reproducible without adding
-copyrighted PDFs or translations to Git. The catalog is
-`test-fixtures/real-papers/catalog.json`; PDFs and generated source/translation
-pairs live only in the ignored `test-data/real-papers/` directory.
+英語論文 PDF を、日本語の Web 記事を読む感覚で読める、**ローカル動作の macOS デスクトップアプリ**（Tauri 2）です。
 
-Run `npm run fetch:real-papers`, start the local translation server, then run:
+誌面レイアウトをそのまま複製するのではなく、タイトル・見出し・段落・図表・参考文献などの**意味構造を保ったまま**読書向けに再構成します。翻訳エンジンは端末内の **MADLAD-400 3B**（MPS / bfloat16）です。外部 API は必須にしません。
+
+詳細な起動手順は [QUICKSTART.md](./QUICKSTART.md)。今後の方針と未達は [ROADMAP.md](./ROADMAP.md)。UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md)。
+
+---
+
+## 画面構成
+
+| 場所 | 内容 |
+| --- | --- |
+| **ワークスペース** | 階層フォルダ。開くと直下の子フォルダと、その配下の論文一覧 |
+| **ライブラリ** | すべての論文 / インボックス / お気に入り / 最近読んだ論文 |
+| **リーダー** | 目次 \| 本文 \| メモ一覧／用語集 |
+| **設定** | 読書 / 翻訳 / データ / 詳細設定 |
+
+サイドバー下部から設定を開きます。⌘K はライブラリ検索、⌘F はこの論文内検索です。
+
+---
+
+## いまできること
+
+### ライブラリとワークスペース
+
+- PDF をウィンドウへドロップするか「論文を追加」で取り込む。専用の Import 画面に留まらない
+- カード／行に準備状態（準備中・読めます・日本語化中・要確認）を表示する
+- ワークスペースは任意深さの単一ツリー。論文は多対多で所属。所属なしはインボックス
+- フォルダの三点メニュー: サブフォルダー追加・名称変更・論文ファイル追加・削除（削除は所属のみ外し、論文本体は残す）
+- ヘッダにルートからのパス（`親 / 子 / 今いる場所`）。祖先は薄いリンクで辿れる（論文画面でも同様）
+- サイドバーは「自動開閉 / 常に開く / 常に閉じる」。折りたたみ時は既定で最上位フォルダだけ表示。開いた状態では右端をドラッグして幅を変えられ、ダブルクリックで既定幅に戻る
+
+### 読書
+
+- 日本語 1 カラム本文。原文は段落ごとに展開
+- 目次の表示／非表示、読書位置の復元、表示設定（リーダーと設定画面で共有）
+- 訳文選択で本文上のメモ（Popover）。右の「メモ一覧」は一覧専用（本文操作では自動で開かない）
+- 用語集の閲覧・修正と訳後置換（Ollama による生成は任意）
+- 図・表の本文内表示と拡大。拡大はインライン位置から連続して伸びる（Shared Element）
+- 低信頼箇所の警告と「要確認 N箇所」
+- 書き出し: 訳文 Markdown / Notion 用 ZIP / 検証用パッケージ
+- 「元 PDF を開く」（いま読んでいる付近のページを狙う。配布 `.app` での最終確認は ROADMAP 参照）
+
+### 取り込みと翻訳
+
+- サーバー未接続でも PDF を追加できる。起動できたら待機中ジョブと未完了論文の翻訳を自動再開する
+- タイトル → Abstract → 本文、読書位置付近を優先する文バッチ翻訳（既定 24、micro-batch 合流）
+- 日本語論文は翻訳せずレイアウトのみ
+- スキャン PDF は Apple Vision OCR（`.app` / `tauri:dev` のみ。ブラウザ開発では不可）
+- 品質が足りない訳は保存せず原文表示へ戻す（引用・DOI・統計量などの保持を採点）
+
+---
+
+## 起動（要約）
 
 ```bash
-npm run bench:real-paper-translation -- --paper ozchi-finger-specific-touch --limit 8
+# 推奨: Tauri 開発アプリ（翻訳サーバーはアプリが起動）
+npm run tauri:dev
+
+# ブラウザ UI のみ（OCR なし）
+./restart-translation-server.sh   # 別ターミナル
+npm run dev                       # http://localhost:5173
+
+# リリース .app
+npm run tauri:build
+open "src-tauri/target/release/bundle/macos/Paper Reader.app"
 ```
 
-The evaluator runs the production `extractFromPages` Canonical pipeline, sends
-sampled projected paragraph blocks to the running MADLAD server, and writes
-both JSON and Markdown review queues in `test-data/real-papers/reports/`.
-Every row records source, Japanese output, page span, structural warnings,
-scientific invariants, token counts, and automatic quality score. Automatic
-checks are triage only; semantic equivalence requires source/translation review.
+初回の Python 3.12 venv（`uv`）とトラブルシュートは [QUICKSTART.md](./QUICKSTART.md)。翻訳サーバーは `http://127.0.0.1:8765/health`。
 
-## Initial local sample (2026-09-07)
+---
 
-The local cache contains the established HCI/wearable corpus plus public
-arXiv papers for HCI research methods, cognitive psychology, quantitative
-marketing, human factors/ergonomics, and computational linguistics. The first
-manual pass found the same failure classes across fields.
+## データの置き場
 
-| Failure class | Observed in | Cause | Safe current handling |
-| --- | --- | --- | --- |
-| Fluent phrase loop / unrelated concept | HCI and linguistics | greedy decoding can repeat a valid Japanese phrase while replacing the source concept | detect repeated multi-character spans and fall back to original |
-| Incomplete source fragment | OzCHI, marketing, ergonomics | page/column boundary or header interruption produces a non-sentence block | do not send continuation-shaped text; show original until extraction is repaired |
-| Chrome mixed into body | OzCHI, marketing | permission or running arXiv material became part of a paragraph before role resolution | keep the mixed block untranslated; repair line/block boundary separately |
-| Flattened list | HCI methods, linguistics, cognitive tasks | PDF bullets were combined into one paragraph, so list items compete in a single decode | split multiple bullet items into independent translation units |
-| Numeric/probability loss | cognitive psychology, OzCHI | long lists and result summaries can drop values even if Japanese is fluent | existing invariant score rejects critical loss; list structure reduces the trigger |
+- **論文本文の正本**: Paper Package（`<AppData>/papers/<paperId>/`）。`source.pdf`、`paper.json`、`original.md`、`ja.md`、`translation.json`、`structure.json`、任意で `layout.json.gz` と `assets/`
+- **索引・所属・メモ・読書位置・用語集・翻訳キャッシュ**: SQLite（`library.sqlite`）
+- 翻訳中は Paper Package の全文書き換えをせず、必要な Markdown / JSON だけを更新する
 
-The evaluator intentionally includes unsafe examples in its review queue. A
-passing quality score does not mean the source was complete; source-boundary
-checks run in the import policy before a block is submitted to MADLAD.
+詳細は [DATA_ARCHITECTURE.md](./DATA_ARCHITECTURE.md)。
 
-## Next corpus work
+---
 
-1. Add an OA biomedical/clinical article and a journal-publisher PDF with
-   complex tables when stable direct PDF URLs are found.
-2. Turn manually confirmed audit rows into copyright-safe fixtures made of
-   short metadata and synthetic structural analogues, never copied full PDFs.
-3. Measure block-level false-accept and false-reject rates after each change.
-4. Improve upstream page/column stitching and chrome separation rather than
-   relaxing the safe original fallback.
+## 開発・検証
+
+```bash
+npm test
+npm run lint
+npm run verify:browser          # Playwright。dev server 起動後
+npm run fetch:real-papers       # 実論文 PDF は gitignore の test-data/ へ
+npm run bench:pdf-extraction
+npm run bench:real-paper-translation -- --paper <id> --limit 8
+```
+
+実論文の翻訳監査手順は [TRANSLATION_CORPUS_AUDIT.md](./TRANSLATION_CORPUS_AUDIT.md)。エージェント向けの制約は [AGENTS.md](./AGENTS.md)。
+
+---
+
+## 対象外（いまはやらない）
+
+Windows、クラウド同期、常設 AI チャット、元レイアウト維持型の PDF 書き出し、図中文字の翻訳などは [ROADMAP.md](./ROADMAP.md) の「今はやらないこと」を参照。

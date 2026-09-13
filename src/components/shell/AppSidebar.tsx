@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
   Clock,
@@ -10,7 +10,11 @@ import {
   Star,
 } from "lucide-react";
 import type { WorkspaceNode } from "../../types/project";
-import { useAppStore } from "../../stores/appStore";
+import {
+  clampSidebarWidth,
+  DEFAULT_SIDEBAR_WIDTH,
+  useAppStore,
+} from "../../stores/appStore";
 import {
   INBOX_DROP_ID,
   usePaperDragStore,
@@ -43,6 +47,8 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const sidebarRef = useRef<HTMLElement>(null);
   const sidebarMode = useAppStore((state) => state.displaySettings.sidebarMode);
+  const storedWidth = useAppStore((state) => state.displaySettings.sidebarWidth);
+  const setDisplaySettings = useAppStore((state) => state.setDisplaySettings);
   const collapseRootsOnly = useAppStore(
     (state) => state.displaySettings.sidebarCollapseRootsOnly
   );
@@ -51,6 +57,13 @@ export function AppSidebar({
   const pointerX = usePaperDragStore((state) => state.pointerX);
   const pointerY = usePaperDragStore((state) => state.pointerY);
   const [pointerOverSidebar, setPointerOverSidebar] = useState(false);
+  const [draftWidth, setDraftWidth] = useState<number | null>(null);
+  const [resizing, setResizing] = useState(false);
+  const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
+  const draftWidthRef = useRef<number | null>(null);
+
+  const sidebarWidth = clampSidebarWidth(draftWidth ?? storedWidth ?? DEFAULT_SIDEBAR_WIDTH);
+  draftWidthRef.current = draftWidth;
 
   useEffect(() => {
     if (!draggingPaperId) {
@@ -68,6 +81,64 @@ export function AppSidebar({
     );
   }, [draggingPaperId, pointerX, pointerY]);
 
+  useEffect(() => {
+    if (!resizing) return;
+
+    const onMove = (event: PointerEvent) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+      const next = clampSidebarWidth(drag.startWidth + (event.clientX - drag.startX));
+      draftWidthRef.current = next;
+      setDraftWidth(next);
+    };
+
+    const onUp = () => {
+      const width = draftWidthRef.current;
+      dragRef.current = null;
+      setResizing(false);
+      if (width != null) {
+        setDisplaySettings({ sidebarWidth: clampSidebarWidth(width) });
+        setDraftWidth(null);
+      }
+      document.body.style.removeProperty("cursor");
+      document.body.style.removeProperty("user-select");
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, [resizing, setDisplaySettings]);
+
+  const onResizePointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      dragRef.current = { startX: event.clientX, startWidth: sidebarWidth };
+      draftWidthRef.current = sidebarWidth;
+      setDraftWidth(sidebarWidth);
+      setResizing(true);
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+    },
+    [sidebarWidth]
+  );
+
+  const onResizeDoubleClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setDraftWidth(null);
+      setDisplaySettings({ sidebarWidth: DEFAULT_SIDEBAR_WIDTH });
+    },
+    [setDisplaySettings]
+  );
+
   const modeClass =
     sidebarMode === "expanded"
       ? styles.sidebarExpanded
@@ -78,8 +149,23 @@ export function AppSidebar({
   return (
     <aside
       ref={sidebarRef}
-      className={`${styles.sidebar} ${modeClass} ${pointerOverSidebar ? styles.sidebarDropReady : ""} ${collapseRootsOnly ? styles.sidebarRootsOnly : ""}`}
+      className={`${styles.sidebar} ${modeClass} ${pointerOverSidebar ? styles.sidebarDropReady : ""} ${collapseRootsOnly ? styles.sidebarRootsOnly : ""} ${resizing ? styles.sidebarResizing : ""}`}
+      style={
+        {
+          "--sidebar-expanded-w": `${sidebarWidth}px`,
+        } as React.CSSProperties
+      }
     >
+      <div
+        className={styles.resizeHandle}
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="サイドバーの幅を変更"
+        title="ドラッグで幅を変更 · ダブルクリックで戻す"
+        onPointerDown={onResizePointerDown}
+        onDoubleClick={onResizeDoubleClick}
+      />
+
       <label className={styles.search} title="ライブラリを検索 (⌘K)">
         <span className={styles.iconSlot}>
           <Search size={16} className={styles.searchIcon} />

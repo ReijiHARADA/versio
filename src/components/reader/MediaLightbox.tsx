@@ -89,7 +89,9 @@ export function MediaLightbox({
       return;
     }
     if (activeRef.current) {
-      sourceSnapshot.current = readRect(sourceRef.current) ?? sourceSnapshot.current;
+      // Prefer the open-time rect; remeasure only if missing (source may be opacity:0).
+      sourceSnapshot.current =
+        sourceSnapshot.current ?? readRect(sourceRef.current);
       setPhase("exit");
     }
   }, [open, sourceRef]);
@@ -139,7 +141,9 @@ export function MediaLightbox({
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           if (token !== enterToken.current) return;
-          img.style.transition = `transform ${MOTION_MS}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${MOTION_MS}ms ease-out`;
+          img.style.transition = `transform ${MOTION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)${
+            from ? "" : `, opacity ${MOTION_MS}ms ease-out`
+          }`;
           img.style.transform = "none";
           img.style.opacity = "1";
           setPhase("open");
@@ -167,21 +171,28 @@ export function MediaLightbox({
 
     const from = sourceSnapshot.current;
     const to = img.getBoundingClientRect();
-    img.style.transition = `transform ${MOTION_MS}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${MOTION_MS * 0.75}ms ease-in`;
+    // Keep the image fully opaque while morphing back — fading it with the
+    // backdrop left a white hole over the still-hidden inline source.
+    img.style.opacity = "1";
+    img.style.transition = `transform ${MOTION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
 
     requestAnimationFrame(() => {
       if (from) {
         img.style.transform = flipTransform(from, to);
       } else {
+        img.style.transition = `transform ${MOTION_MS}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${MOTION_MS * 0.75}ms ease-in`;
         img.style.transform = "scale(0.92)";
         img.style.opacity = "0";
       }
     });
 
     const timer = window.setTimeout(() => {
-      activeRef.current = false;
+      // Reveal the inline image first, then drop the portal so they swap in one paint.
       onSurfaceChangeRef.current?.(false);
-      setMounted(false);
+      requestAnimationFrame(() => {
+        activeRef.current = false;
+        setMounted(false);
+      });
     }, MOTION_MS + 20);
 
     return () => window.clearTimeout(timer);
@@ -191,22 +202,19 @@ export function MediaLightbox({
 
   const backdropClass =
     phase === "enter"
-      ? `${styles.overlay} ${styles.overlayEnter}`
+      ? `${styles.backdrop} ${styles.backdropEnter}`
       : phase === "exit"
-        ? `${styles.overlay} ${styles.overlayExit}`
-        : `${styles.overlay} ${styles.overlayOpen}`;
+        ? `${styles.backdrop} ${styles.backdropExit}`
+        : `${styles.backdrop} ${styles.backdropOpen}`;
+
+  const chromeHidden = phase === "exit";
 
   return createPortal(
-    <div
-      className={backdropClass}
-      role="dialog"
-      aria-modal="true"
-      aria-label="拡大表示"
-      onClick={onClose}
-    >
+    <div className={styles.overlay} role="dialog" aria-modal="true" aria-label="拡大表示">
+      <div className={backdropClass} onClick={onClose} />
       <button
         type="button"
-        className={styles.closeButton}
+        className={`${styles.closeButton} ${chromeHidden ? styles.chromeHidden : ""}`}
         onClick={onClose}
         title="閉じる"
       >
@@ -228,7 +236,7 @@ export function MediaLightbox({
           <div
             className={`${styles.caption} ${
               phase === "open" ? styles.captionVisible : ""
-            }`}
+            } ${chromeHidden ? styles.chromeHidden : ""}`}
           >
             {caption}
           </div>

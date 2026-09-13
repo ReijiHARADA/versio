@@ -6,6 +6,15 @@ export type OriginalDisplayMode = "on-demand" | "always" | "when-untranslated";
 /** auto: hoverで開閉 / expanded: 常時展開 / collapsed: 常時アイコンのみ */
 export type SidebarMode = "auto" | "expanded" | "collapsed";
 
+/** Default expanded sidebar width (px). Double-click the resize edge to restore. */
+export const DEFAULT_SIDEBAR_WIDTH = 220;
+export const MIN_SIDEBAR_WIDTH = 160;
+export const MAX_SIDEBAR_WIDTH = 420;
+
+export function clampSidebarWidth(width: number): number {
+  return Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, Math.round(width)));
+}
+
 export type DisplaySettings = {
   fontSize: number;
   lineHeight: number;
@@ -13,6 +22,8 @@ export type DisplaySettings = {
   theme: Theme;
   originalDisplay: OriginalDisplayMode;
   sidebarMode: SidebarMode;
+  /** Expanded sidebar width in px (collapsed rail stays fixed). */
+  sidebarWidth: number;
   /**
    * true (default): icon-rail ではワークスペースの最上位だけ表示し、入れ子は隠す。
    * false: 以前どおり、フォルダが開いていれば折りたたみ中も入れ子アイコンを並べる。
@@ -39,6 +50,7 @@ const defaultDisplaySettings: DisplaySettings = {
   theme: "system",
   originalDisplay: "on-demand",
   sidebarMode: "auto",
+  sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   sidebarCollapseRootsOnly: true,
 };
 
@@ -52,9 +64,13 @@ export const useAppStore = create<AppUiState>()(
       setCurrentPaper: (paperId) => set({ currentPaperId: paperId }),
 
       setDisplaySettings: (settings) =>
-        set((state) => ({
-          displaySettings: { ...state.displaySettings, ...settings },
-        })),
+        set((state) => {
+          const next = { ...state.displaySettings, ...settings };
+          if (settings.sidebarWidth != null) {
+            next.sidebarWidth = clampSidebarWidth(settings.sidebarWidth);
+          }
+          return { displaySettings: next };
+        }),
 
       toggleOriginalExpanded: (blockId) =>
         set((state) => {
@@ -76,11 +92,15 @@ export const useAppStore = create<AppUiState>()(
     }),
     {
       name: "paper-reader-storage",
-      version: 4,
+      version: 5,
       migrate: (persisted) => {
         const value = persisted as { displaySettings?: Partial<DisplaySettings> } | undefined;
+        const merged = { ...defaultDisplaySettings, ...value?.displaySettings };
         return {
-          displaySettings: { ...defaultDisplaySettings, ...value?.displaySettings },
+          displaySettings: {
+            ...merged,
+            sidebarWidth: clampSidebarWidth(merged.sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH),
+          },
         };
       },
       partialize: (state) => ({

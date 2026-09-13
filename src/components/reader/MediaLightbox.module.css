@@ -6,19 +6,26 @@
   align-items: center;
   justify-content: center;
   padding: var(--spacing-xl);
-  background-color: rgba(0, 0, 0, 0.88);
   overscroll-behavior: none;
+  pointer-events: none;
 }
 
-.overlayEnter {
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.88);
+  pointer-events: auto;
+}
+
+.backdropEnter {
   animation: lightboxBackdropIn 0.28s ease-out both;
 }
 
-.overlayOpen {
+.backdropOpen {
   opacity: 1;
 }
 
-.overlayExit {
+.backdropExit {
   animation: lightboxBackdropOut 0.28s ease-in both;
 }
 
@@ -42,25 +49,30 @@
 
 .stage {
   position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   max-width: 90vw;
   max-height: 90vh;
+  pointer-events: auto;
 }
 
 .closeButton {
   position: fixed;
   top: var(--spacing-lg);
   right: var(--spacing-lg);
-  z-index: 1;
+  z-index: 2;
   padding: var(--spacing-sm);
   border: none;
   background-color: rgba(255, 255, 255, 0.12);
   color: white;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+  pointer-events: auto;
+  transition:
+    background-color var(--transition-fast),
+    opacity 0.2s ease-in;
 }
 
 .closeButton:hover {
@@ -73,8 +85,10 @@
   object-fit: contain;
   border-radius: var(--radius-sm);
   transform-origin: center center;
-  will-change: transform, opacity;
+  will-change: transform;
   user-select: none;
+  /* Stay opaque during shared-element morph so the page never flashes white. */
+  opacity: 1;
 }
 
 .caption {
@@ -85,10 +99,18 @@
   font-size: 0.9375rem;
   opacity: 0;
   transform: translateY(6px);
-  transition: opacity 0.22s ease-out 0.12s, transform 0.22s ease-out 0.12s;
+  transition:
+    opacity 0.22s ease-out 0.12s,
+    transform 0.22s ease-out 0.12s;
 }
 
 .captionVisible {
   opacity: 1;
   transform: none;
+}
+
+.chromeHidden {
+  opacity: 0 !important;
+  pointer-events: none;
+  transition: opacity 0.18s ease-in !important;
 }

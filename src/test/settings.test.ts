@@ -50,5 +50,6 @@ describe("display settings defaults", () => {
     const { useAppStore } = await import("../stores/appStore");
     expect(useAppStore.getState().displaySettings.sidebarMode).toBe("auto");
     expect(useAppStore.getState().displaySettings.sidebarCollapseRootsOnly).toBe(true);
+    expect(useAppStore.getState().displaySettings.sidebarWidth).toBe(220);
   });
 });

@@ -22,9 +22,13 @@
   object-fit: contain;
 }
 
+.imageClickable {
+  cursor: zoom-in;
+}
+
 /* Keep layout while the shared-element clone is in flight */
 .sourceHidden .image {
-  opacity: 0;
+  visibility: hidden;
 }
 
 .sourceHidden .zoomButton {

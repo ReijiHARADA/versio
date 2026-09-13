@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { DisplaySettingsControls } from "../reader/DisplaySettingsControls";
-import { useAppStore, type DisplaySettings, type SidebarMode } from "../../stores/appStore";
+import { useAppStore, type DisplaySettings, type SidebarMode, DEFAULT_SIDEBAR_WIDTH } from "../../stores/appStore";
 import styles from "./SettingsScreen.module.css";
 
 export function ReadingSettingsSection() {
@@ -73,5 +73,6 @@ const DEFAULT_READING_SETTINGS: DisplaySettings = {
   theme: "system",
   originalDisplay: "on-demand",
   sidebarMode: "auto",
+  sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   sidebarCollapseRootsOnly: true,
 };

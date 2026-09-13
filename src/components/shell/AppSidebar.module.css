@@ -11,6 +11,7 @@
 /* Shared “is open” selector pieces applied below */
 .sidebar {
   --sidebar-open: 0;
+  position: relative;
   width: var(--sidebar-collapsed-w);
   flex-shrink: 0;
   height: 100%;
@@ -30,10 +31,54 @@
 .sidebarAuto:is(:hover, :has([data-workspace-editing])),
 .sidebarExpanded,
 .sidebarDropReady,
+.sidebarResizing,
 .sidebar:has([data-workspace-editing]) {
   --sidebar-open: 1;
   width: var(--sidebar-expanded-w);
   gap: 4px;
+}
+
+.sidebarResizing {
+  transition: none;
+}
+
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 6;
+  width: 6px;
+  height: 100%;
+  translate: 50% 0;
+  cursor: col-resize;
+  touch-action: none;
+  pointer-events: none;
+}
+
+.resizeHandle::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  translate: -50% 0;
+  border-radius: 1px;
+  background: transparent;
+  transition: background-color var(--transition-fast);
+}
+
+.sidebarAuto:is(:hover, :has([data-workspace-editing])) .resizeHandle,
+.sidebarExpanded .resizeHandle,
+.sidebarDropReady .resizeHandle,
+.sidebarResizing .resizeHandle,
+.sidebar:has([data-workspace-editing]) .resizeHandle {
+  pointer-events: auto;
+}
+
+.resizeHandle:hover::after,
+.sidebarResizing .resizeHandle::after {
+  background-color: var(--color-accent);
 }
 
 /* Collapsed mode ignores hover; drop + rename still open via rules above */
@@ -64,9 +109,13 @@
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .searchInput,
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .badge,
 .sidebarExpanded .label,
+.sidebarResizing .label,
 .sidebarExpanded .itemLabel,
+.sidebarResizing .itemLabel,
 .sidebarExpanded .searchInput,
+.sidebarResizing .searchInput,
 .sidebarExpanded .badge,
+.sidebarResizing .badge,
 .sidebarDropReady .label,
 .sidebarDropReady .itemLabel,
 .sidebarDropReady .searchInput,
@@ -83,7 +132,9 @@
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .itemLabel,
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .searchInput,
 .sidebarExpanded .itemLabel,
+.sidebarResizing .itemLabel,
 .sidebarExpanded .searchInput,
+.sidebarResizing .searchInput,
 .sidebarDropReady .itemLabel,
 .sidebarDropReady .searchInput,
 .sidebar:has([data-workspace-editing]) .itemLabel,
@@ -120,8 +171,11 @@
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .newProject,
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .item,
 .sidebarExpanded .search,
+.sidebarResizing .search,
 .sidebarExpanded .newProject,
+.sidebarResizing .newProject,
 .sidebarExpanded .item,
+.sidebarResizing .item,
 .sidebarDropReady .search,
 .sidebarDropReady .newProject,
 .sidebarDropReady .item,
@@ -219,6 +273,7 @@
 
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .section,
 .sidebarExpanded .section,
+.sidebarResizing .section,
 .sidebarDropReady .section,
 .sidebar:has([data-workspace-editing]) .section {
   margin-top: var(--spacing-sm);
@@ -226,6 +281,7 @@
 
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .section + .section,
 .sidebarExpanded .section + .section,
+.sidebarResizing .section + .section,
 .sidebarDropReady .section + .section,
 .sidebar:has([data-workspace-editing]) .section + .section {
   margin-top: var(--spacing-sm);
@@ -252,6 +308,7 @@
 
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .sectionTitle,
 .sidebarExpanded .sectionTitle,
+.sidebarResizing .sectionTitle,
 .sidebarDropReady .sectionTitle,
 .sidebar:has([data-workspace-editing]) .sectionTitle {
   height: 24px;
@@ -277,6 +334,7 @@
 
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .empty,
 .sidebarExpanded .empty,
+.sidebarResizing .empty,
 .sidebarDropReady .empty,
 .sidebar:has([data-workspace-editing]) .empty {
   height: 24px;
@@ -358,6 +416,7 @@
 
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .projectMenuButton,
 .sidebarExpanded .projectMenuButton,
+.sidebarResizing .projectMenuButton,
 .sidebarDropReady .projectMenuButton,
 .sidebar:has([data-workspace-editing]) .projectMenuButton,
 .projectMenuButtonOpen {
@@ -423,6 +482,7 @@
 
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .badge,
 .sidebarExpanded .badge,
+.sidebarResizing .badge,
 .sidebarDropReady .badge,
 .sidebar:has([data-workspace-editing]) .badge {
   min-width: 1.25rem;
@@ -448,6 +508,7 @@
 
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .scroll,
 .sidebarExpanded .scroll,
+.sidebarResizing .scroll,
 .sidebarDropReady .scroll,
 .sidebar:has([data-workspace-editing]) .scroll {
   gap: 4px;
@@ -465,6 +526,7 @@
 
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .footer,
 .sidebarExpanded .footer,
+.sidebarResizing .footer,
 .sidebarDropReady .footer,
 .sidebar:has([data-workspace-editing]) .footer {
   padding-top: var(--spacing-sm);
@@ -515,6 +577,7 @@
 
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .chevron,
 .sidebarExpanded .chevron,
+.sidebarResizing .chevron,
 .sidebarDropReady .chevron,
 .sidebar:has([data-workspace-editing]) .chevron {
   flex: 0 0 18px;
@@ -525,6 +588,7 @@
 
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .treeRow,
 .sidebarExpanded .treeRow,
+.sidebarResizing .treeRow,
 .sidebarDropReady .treeRow,
 .sidebar:has([data-workspace-editing]) .treeRow {
   padding-left: var(--tree-indent);
@@ -537,6 +601,7 @@
 
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .treeLabel,
 .sidebarExpanded .treeLabel,
+.sidebarResizing .treeLabel,
 .sidebarDropReady .treeLabel,
 .sidebar:has([data-workspace-editing]) .treeLabel {
   padding-left: 2px;
@@ -553,6 +618,7 @@
 
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .treePaper,
 .sidebarExpanded .treePaper,
+.sidebarResizing .treePaper,
 .sidebarDropReady .treePaper,
 .sidebar:has([data-workspace-editing]) .treePaper {
   padding-left: calc(var(--tree-indent) + 20px);
@@ -584,6 +650,7 @@
 
 .sidebarRootsOnly.sidebarAuto:is(:hover, :has([data-workspace-editing])) .treeNested,
 .sidebarRootsOnly.sidebarExpanded .treeNested,
+.sidebarRootsOnly.sidebarResizing .treeNested,
 .sidebarRootsOnly.sidebarDropReady .treeNested,
 .sidebarRootsOnly:has([data-workspace-editing]) .treeNested {
   grid-template-rows: 1fr;

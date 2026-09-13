@@ -31,8 +31,18 @@ export function Table({ metadata }: TableProps) {
               ref={imageRef}
               src={metadata.imageUrl}
               alt={caption}
-              className={styles.image}
+              className={`${styles.image} ${styles.imageClickable}`}
               loading="lazy"
+              role="button"
+              tabIndex={0}
+              title="クリックで拡大表示"
+              onClick={() => setIsZoomed(true)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setIsZoomed(true);
+                }
+              }}
             />
           ) : (
             <div className={styles.missingImage}>表を抽出できませんでした</div>
@@ -41,7 +51,10 @@ export function Table({ metadata }: TableProps) {
             <button
               type="button"
               className={styles.zoomButton}
-              onClick={() => setIsZoomed(true)}
+              onClick={(event) => {
+                event.stopPropagation();
+                setIsZoomed(true);
+              }}
               title="拡大表示"
             >
               <Maximize2 size={16} />
