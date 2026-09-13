@@ -280,3 +280,19 @@ class SegmenterTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RescueWhileConcessiveTests(unittest.TestCase):
+    def test_rescue_splits_while_concessive_after_decode_failure(self) -> None:
+        source = (
+            "While we have shown that an increase in core body temperature can be reflected "
+            "in earlobe temperature measurements made by Thermal Earring in section 6.1, "
+            "directly estimating the core body temperature from the earlobe temperature requires further study."
+        )
+        units = rescue_units_for_translation(source)
+        self.assertEqual([unit.text for unit in units], [
+            "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1,",
+            "directly estimating the core body temperature from the earlobe temperature requires further study.",
+        ])
+        self.assertEqual(units[0].model_input, "We have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1.")
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))

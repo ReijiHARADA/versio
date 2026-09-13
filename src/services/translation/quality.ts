@@ -15,6 +15,60 @@ const LEFTOVER_PLACEHOLDER = /[zζΖ][zζΖ]c[iιΙіІ]t\d+(?:x\d+)?[zζΖ][zζ
 const SOURCE_NEGATION = /\b(?:(?:do|does|did|is|are|was|were|has|have|had)\s+not|cannot|can\s+not|never|without|lack(?:s|ed|ing)?|absence)\b/i;
 const JA_NEGATION = /(?:ない|なく|なかっ|ません|ず|ぬ|無|非|不|未|欠|否)/;
 
+
+export type PartialSourceFallbackDetection = { partial: boolean; reason?: string };
+
+function normalizeForSourceOverlap(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"')
+    .replace(/[\u2013\u2014\u2212]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function sourceSentencesForOverlap(source: string): string[] {
+  const normalized = source.replace(/\s+/g, " ").trim();
+  const spans = normalized.match(/[^.!?]+[.!?]+(?:["')\]]+)?|[^.!?]+$/g) ?? [normalized];
+  const candidates: string[] = [];
+  for (const span of spans) {
+    const text = span.trim();
+    if (!text) continue;
+    candidates.push(text);
+    // A failed semantic unit can leave a long source clause inside an otherwise
+    // Japanese paragraph. Track substantial top-level-looking slices as well;
+    // the length/word thresholds below keep citations, acronyms, and short
+    // source facts from being mistaken for untranslated prose.
+    for (const part of text.split(/[,;:]\s+/)) {
+      const clause = part.trim();
+      if (clause && clause !== text) candidates.push(clause);
+    }
+  }
+  return candidates;
+}
+
+export function detectPartialSourceFallback(source: string, translation: string | undefined): PartialSourceFallbackDetection {
+  if (!translation) return { partial: false };
+  const normalizedTranslation = normalizeForSourceOverlap(translation);
+  if (!normalizedTranslation) return { partial: false };
+  for (const candidate of sourceSentencesForOverlap(source)) {
+    const normalizedCandidate = normalizeForSourceOverlap(candidate);
+    const wordCount = (normalizedCandidate.match(/[a-z][a-z'-]*/g) ?? []).length;
+    const letterCount = (normalizedCandidate.match(/[a-z]/g) ?? []).length;
+    if (normalizedCandidate.length < 48 || wordCount < 7 || letterCount < 35) continue;
+    if (/^(?:fig(?:ure)?|table)\s+\d+/i.test(candidate)) continue;
+    if (looksLikeBibliographyEntry(candidate) || isExpectedNonProseParagraph(candidate)) continue;
+    if (normalizedTranslation.includes(normalizedCandidate)) {
+      return {
+        partial: true,
+        reason: `translation contains unmodified source span (${wordCount} words, ${normalizedCandidate.length} chars)`,
+      };
+    }
+  }
+  return { partial: false };
+}
+
 /**
  * Greedy decoding occasionally repeats a fluent Japanese phrase many times.
  * Character repetition misses this failure because every character is valid.
@@ -264,6 +318,8 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   if (isDegenerateTranslation(out)) reasons.push("degenerate output");
   if (DATE_STAMP.test(out) && !DATE_STAMP.test(source)) reasons.push("unexpected date");
   if (out === source.trim()) reasons.push("source echo");
+  const partialSourceFallback = detectPartialSourceFallback(source, out);
+  if (partialSourceFallback.partial) reasons.push(partialSourceFallback.reason ?? "partial source fallback");
   if (hasOrphanedInvariantSentence(out, source)) reasons.push("orphaned source invariant sentence");
 
   const hasKana = KANA.test(out);
@@ -318,6 +374,7 @@ export function isPlausibleJaTranslation(output: string, source: string): boolea
     && !invariantQuality(source, output).criticalMissing
     && !quality.reasons.includes("long source was implausibly shortened")
     && !quality.reasons.includes("source negation missing")
+    && !quality.reasons.some((reason) => reason.startsWith("translation contains unmodified source span"))
     && quality.score >= 0.8;
 }
 

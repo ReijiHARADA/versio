@@ -14,6 +14,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { extractFromPages } from "../src/services/pdfExtraction/pipeline/extractAcademicPdf.ts";
 import {
+  detectPartialSourceFallback,
   evaluateJaTranslation,
   extractScientificInvariants,
   isExpectedNonProseParagraph,
@@ -128,56 +129,6 @@ function fallbackStage(wouldSubmitToModel: boolean, readerVisibleFallback: boole
   return wouldSubmitToModel ? "post-model" : "pre-model";
 }
 
-
-function normalizeForSourceOverlap(text: string): string {
-  return text
-    .replace(/[\u2010-\u2015]/g, "-")
-    .replace(/[“”]/g, '"')
-    .replace(/[‘’]/g, "'")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-}
-
-function sourceSentencesForOverlap(source: string): string[] {
-  const normalized = compact(source);
-  const spans = normalized.match(/[^.!?]+[.!?]+(?:["')\]]+)?|[^.!?]+$/g) ?? [normalized];
-  const candidates: string[] = [];
-  for (const span of spans) {
-    const text = span.trim();
-    if (!text) continue;
-    candidates.push(text);
-    // Partial-unit fallback can preserve a long rejected clause rather than a
-    // full sentence. Track top-level comma/semicolon separated source slices as
-    // well, but require substantial prose length before flagging them.
-    for (const part of text.split(/[,;:]\s+/)) {
-      const clause = part.trim();
-      if (clause && clause !== text) candidates.push(clause);
-    }
-  }
-  return candidates;
-}
-
-export function detectPartialSourceFallback(source: string, translation: string | undefined): { partial: boolean; reason?: string } {
-  if (!translation) return { partial: false };
-  const normalizedTranslation = normalizeForSourceOverlap(translation);
-  if (!normalizedTranslation) return { partial: false };
-  for (const candidate of sourceSentencesForOverlap(source)) {
-    const normalizedCandidate = normalizeForSourceOverlap(candidate);
-    const wordCount = (normalizedCandidate.match(/[a-z][a-z'-]*/g) ?? []).length;
-    const letterCount = (normalizedCandidate.match(/[a-z]/g) ?? []).length;
-    if (normalizedCandidate.length < 48 || wordCount < 7 || letterCount < 35) continue;
-    if (/^(?:fig(?:ure)?|table)\s+\d+/i.test(candidate)) continue;
-    if (looksLikeBibliographyEntry(candidate) || isExpectedNonProseParagraph(candidate)) continue;
-    if (normalizedTranslation.includes(normalizedCandidate)) {
-      return {
-        partial: true,
-        reason: `translation contains unmodified source span (${wordCount} words, ${normalizedCandidate.length} chars)`,
-      };
-    }
-  }
-  return { partial: false };
-}
 
 function fallbackReason(source: string, result: ServerTranslation | undefined, quality: ReturnType<typeof evaluateJaTranslation> | undefined): string | undefined {
   const structural = unsafeParagraphStructureReason(source);

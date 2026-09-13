@@ -15,7 +15,8 @@ import {
   type ImportConfig,
 } from "../importServiceV2";
 import { resumeIncompleteTranslation } from "./resume";
-import { referenceSectionIds, isRetryableTranslationFailure } from "./policy";
+import { isPlausibleJaTranslation, shouldTranslateTitle, titleTranslationComplete } from "../translation/quality";
+import { referenceSectionIds, isRetryableTranslationFailure, shouldTranslateBlock, shouldTranslateSection } from "./policy";
 
 const startedImportKeys = new Set<string>();
 const importFiles = new Map<string, File>();
@@ -53,7 +54,7 @@ function libraryTranslationCallbacks() {
 }
 
 export async function shouldResumePaperAfterServerReady(paper: Paper): Promise<boolean> {
-  // Prefer index status — avoid loading every package just to decide.
+  // Prefer active index status — avoid loading every package just to decide.
   if (
     paper.processingStatus === "translating" ||
     paper.processingStatus === "queued" ||
@@ -62,16 +63,36 @@ export async function shouldResumePaperAfterServerReady(paper: Paper): Promise<b
   ) {
     return true;
   }
+
+  const [sections, blocks] = await Promise.all([
+    getSectionsByPaper(paper.id),
+    getBlocksByPaper(paper.id),
+  ]);
+  const refSectionIds = referenceSectionIds(sections);
+  const hasRetryableFailedBlock = blocks.some((block) =>
+    isRetryableTranslationFailure(block, refSectionIds)
+  );
+
   if (paper.processingStatus === "failed") {
-    // Only reopen packages that may have retryable translation work.
-    const [sections, blocks] = await Promise.all([
-      getSectionsByPaper(paper.id),
-      getBlocksByPaper(paper.id),
-    ]);
-    const refSectionIds = referenceSectionIds(sections);
-    return blocks.some((block) => isRetryableTranslationFailure(block, refSectionIds));
+    // Only reopen failed packages when real translation work was persisted.
+    return hasRetryableFailedBlock;
   }
-  return false;
+
+  if (paper.titleOriginal && shouldTranslateTitle(paper.titleOriginal)) {
+    if (!titleTranslationComplete(paper.titleOriginal, paper.titleTranslated ?? undefined)) return true;
+  }
+
+  if (sections.some((section) => shouldTranslateSection(section) && !section.translatedTitle)) {
+    return true;
+  }
+
+  if (hasRetryableFailedBlock) return true;
+
+  return blocks.some((block) => {
+    if (!shouldTranslateBlock(block, refSectionIds) || !block.original) return false;
+    if (!block.translated) return true;
+    return !isPlausibleJaTranslation(block.translated, block.original);
+  });
 }
 
 async function attachToWorkspace(nodeId: string, paperId: string): Promise<void> {

@@ -20,25 +20,63 @@ import {
 import { flushPersistence } from "./services/database";
 import { resumeAfterTranslationServerReady } from "./services/import/startBackgroundImport";
 
+function formatBytes(n: number | null | undefined): string | null {
+  if (typeof n !== "number" || !Number.isFinite(n) || n < 0) return null;
+  const units = ["B", "KB", "MB", "GB", "TB"] as const;
+  let value = n;
+  for (const unit of units) {
+    if (value < 1024 || unit === "TB") {
+      return unit === "B" ? `${Math.round(value)}${unit}` : `${value.toFixed(1)}${unit}`;
+    }
+    value /= 1024;
+  }
+  return `${Math.round(n)}B`;
+}
+
 function formatModelBanner(health: TranslationServerHealth | null, attempt: number): string {
   const phase = health?.phase;
-  const progress =
-    typeof health?.progress === "number" && Number.isFinite(health.progress)
-      ? ` ${Math.round(Math.min(1, Math.max(0, health.progress)) * 100)}%`
-      : "";
-  if (health?.message) return health.message;
+  const hasFraction =
+    typeof health?.progress === "number" && Number.isFinite(health.progress);
+  const pct = hasFraction
+    ? Math.round(Math.min(1, Math.max(0, health!.progress!)) * 100)
+    : null;
+  const indeterminate =
+    health?.progress_indeterminate === true ||
+    (!hasFraction &&
+      (phase === "downloading" || phase === "loading" || phase === "warming_up"));
+  const downloaded = formatBytes(health?.downloaded_bytes);
+  const total = formatBytes(health?.total_bytes);
+  const bytePart =
+    downloaded && total
+      ? `${downloaded} / ${total}`
+      : downloaded
+        ? `${downloaded}（合計未取得）`
+        : null;
+
   switch (phase) {
-    case "downloading":
-      return `翻訳モデルを取得しています${progress}`;
+    case "downloading": {
+      if (health?.message) {
+        if (pct != null && !/%/.test(health.message)) {
+          return `${health.message} · ${pct}%`;
+        }
+        return health.message;
+      }
+      const base = "翻訳モデルを取得しています";
+      if (bytePart && pct != null) return `${base}（${bytePart} · ${pct}%）`;
+      if (bytePart) return `${base}（${bytePart}）`;
+      if (pct != null) return `${base} ${pct}%`;
+      return indeterminate ? `${base}（進捗取得中）` : base;
+    }
     case "loading":
-      return `翻訳モデルを読み込んでいます${progress}`;
+      return health?.message || "翻訳モデルを読み込んでいます…";
     case "warming_up":
-      return "翻訳モデルを準備しています…";
+      return health?.message || "翻訳モデルを準備しています…";
     case "model_missing":
-      return "翻訳モデルの準備を開始しています…";
+      return health?.message || "翻訳モデルの準備を開始しています…";
     case "error":
-      return health?.error || "翻訳サーバーでエラーが発生しました";
+      return health?.error || health?.message || "翻訳サーバーでエラーが発生しました";
     default:
+      if (health?.message) return health.message;
       return attempt > 5
         ? `翻訳サーバーを起動しています（${attempt}秒）`
         : "翻訳サーバーを起動しています…";

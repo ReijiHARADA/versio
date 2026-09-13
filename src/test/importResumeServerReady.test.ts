@@ -67,7 +67,7 @@ function paragraph(partial: Partial<PaperBlock> & { id: string; paperId: string 
     order: 0,
     pageStart: 1,
     pageEnd: 1,
-    original: "This is a complete English paragraph that should be translated when the server becomes available.",
+    original: "This study evaluates how participants respond to a prototype system during a controlled user study and explains why the remaining untranslated paragraph should be retried when the translation server becomes available again.",
     translated: undefined,
     translationStatus: undefined,
     metadata: {},

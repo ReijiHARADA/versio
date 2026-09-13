@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectPartialSourceFallback } from "../../scripts/benchmark-real-paper-translation";
+import { detectPartialSourceFallback, evaluateJaTranslation, isPlausibleJaTranslation } from "../services/translation/quality";
 
 describe("translation audit partial source fallback detection", () => {
   it("flags a long source sentence left untranslated inside accepted Japanese", () => {
@@ -14,5 +14,13 @@ describe("translation audit partial source fallback detection", () => {
     const translation = "IR カメラ条件をベースライン条件 [12] と比較した。";
 
     expect(detectPartialSourceFallback(source, translation)).toEqual({ partial: false });
+  });
+
+  it("rejects partial source fallback in production quality gate", () => {
+    const source = "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study. It is known that skin temperature is affected by ambient temperature.";
+    const translation = "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study.皮膚温は周囲温度の影響を受ける。";
+
+    expect(evaluateJaTranslation(translation, source).reasons.join(" ")).toContain("unmodified source span");
+    expect(isPlausibleJaTranslation(translation, source)).toBe(false);
   });
 });

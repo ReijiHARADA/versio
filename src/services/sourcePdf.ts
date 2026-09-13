@@ -46,6 +46,16 @@ export async function openSourcePdf(args: OpenSourcePdfArgs): Promise<void> {
   await invoke("open_source_pdf", {
     paperId: args.paperId,
     page: args.page ?? null,
+    // Reserved for a future bbox highlight pass in the native opener.
+    highlight: args.boundingBox
+      ? {
+          page: args.boundingBox.page,
+          x: args.boundingBox.x,
+          y: args.boundingBox.y,
+          width: args.boundingBox.width,
+          height: args.boundingBox.height,
+        }
+      : null,
   });
 }
 

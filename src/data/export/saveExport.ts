@@ -55,6 +55,13 @@ function resolveNotionAssetSource(
   );
 }
 
+function exportAssets(result: MarkdownExportResult | VerificationExportResult) {
+  return result.assets.map((asset) => ({
+    relativePath: assetDestPath(asset.path),
+    data: Array.from(asset.bytes),
+  }));
+}
+
 /**
  * Notion imports directories inside a ZIP as pages. Keep every image next to
  * the Markdown file and rewrite its relative link so no empty `assets` page
@@ -95,11 +102,12 @@ export async function saveNotionImportExport(
   const fileName = `${result.fileName}-notion.zip`;
   const archive = createNotionImportZip(result);
   if (isTauriApp()) {
-    const path = await invoke<string | null>("pick_save_path", { defaultName: fileName });
+    const path = await invoke<string | null>("save_export_file", {
+      defaultName: fileName,
+      data: Array.from(archive),
+    });
     if (!path) return null;
-    const dest = path.endsWith(".zip") ? path : `${path}.zip`;
-    await invoke("write_user_file", { path: dest, data: Array.from(archive) });
-    return { kind: "notion", path: dest };
+    return { kind: "notion", path };
   }
   downloadBlob(fileName, archive, "application/zip");
   return { kind: "notion", path: fileName };
@@ -109,21 +117,13 @@ export async function saveMarkdownExport(result: MarkdownExportResult): Promise<
   const fileName = `${result.fileName}.md`;
   const bytes = new TextEncoder().encode(result.markdown);
   if (isTauriApp()) {
-    const path = await invoke<string | null>("pick_save_path", { defaultName: fileName });
+    const path = await invoke<string | null>("save_markdown_export", {
+      defaultName: fileName,
+      markdown: Array.from(bytes),
+      assets: exportAssets(result),
+    });
     if (!path) return null;
-    const dest = path.endsWith(".md") ? path : `${path}.md`;
-    await invoke("write_user_file", { path: dest, data: Array.from(bytes) });
-    const slash = dest.lastIndexOf("/");
-    if (slash >= 0) {
-      const destDir = dest.slice(0, slash);
-      for (const asset of result.assets) {
-        await invoke("write_user_file", {
-          path: `${destDir}/${assetDestPath(asset.path)}`,
-          data: Array.from(asset.bytes),
-        });
-      }
-    }
-    return { kind: "markdown", path: dest };
+    return { kind: "markdown", path };
   }
   if (result.assets.length === 0) {
     downloadBlob(fileName, bytes, "text/markdown;charset=utf-8");
@@ -144,40 +144,16 @@ export async function saveVerificationExport(
   result: VerificationExportResult
 ): Promise<SavedExport | null> {
   if (isTauriApp()) {
-    const folder = await invoke<string | null>("pick_directory", {});
-    if (!folder) return null;
-    const destRoot = `${folder.replace(/\/$/, "")}/${result.folderName}`;
-    await invoke("write_user_file", {
-      path: `${destRoot}/translated.md`,
-      data: Array.from(new TextEncoder().encode(result.markdown)),
+    const path = await invoke<string | null>("save_verification_export", {
+      paperId,
+      folderName: result.folderName,
+      markdown: Array.from(new TextEncoder().encode(result.markdown)),
+      assets: exportAssets(result),
+      includeSourcePdf: Boolean(result.sourcePdf),
+      sourcePdf: result.sourcePdf ? Array.from(result.sourcePdf) : null,
     });
-    if (result.sourcePdf) {
-      await invoke("copy_app_file_to_user", {
-        relativePath: `papers/${paperId}/source.pdf`,
-        destPath: `${destRoot}/source.pdf`,
-      }).catch(async () => {
-        await invoke("write_user_file", {
-          path: `${destRoot}/source.pdf`,
-          data: Array.from(result.sourcePdf ?? []),
-        });
-      });
-    }
-    for (const asset of result.assets) {
-      const relative = asset.path.startsWith("assets/")
-        ? `papers/${paperId}/${asset.path}`
-        : `papers/${paperId}/assets/${asset.path}`;
-      const destPath = `${destRoot}/${asset.path.startsWith("assets/") ? asset.path : `assets/${asset.path}`}`;
-      await invoke("copy_app_file_to_user", {
-        relativePath: relative,
-        destPath,
-      }).catch(async () => {
-        await invoke("write_user_file", {
-          path: destPath,
-          data: Array.from(asset.bytes),
-        });
-      });
-    }
-    return { kind: "verification", path: destRoot };
+    if (!path) return null;
+    return { kind: "verification", path };
   }
 
   const files: Record<string, Uint8Array> = {

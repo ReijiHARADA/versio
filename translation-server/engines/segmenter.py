@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 from .citation_protect import protected_span_mask
 
-SEGMENTER_VERSION = "semantic-v50"
+SEGMENTER_VERSION = "semantic-v51"
 _ABBREVIATIONS = {"e.g.", "i.e.", "et al.", "fig.", "no.", "cf.", "dr.", "mr.", "ms.", "vs."}
 
 
@@ -422,6 +422,53 @@ def _rescue_appositive_region_clause(text: str) -> list[TranslationUnit]:
     )
 
 
+
+def _rescue_while_concessive_main_clause(text: str) -> list[TranslationUnit]:
+    """Recover long ``While ... , main clause`` scientific prose.
+
+    Normal segmentation keeps the sentence intact because it is grammatical.
+    When greedy decoding translates only the main clause, retry the concessive
+    setup as an explicit complete sentence and the main clause separately while
+    preserving exact source slices for reconstruction.
+    """
+    if len(text) < 170:
+        return []
+    masked = protected_span_mask(text)
+    if not re.match(r"^while\s+", masked, re.I):
+        return []
+    paren = square = brace = 0
+    split_index = -1
+    for i, char in enumerate(masked):
+        if char == "(":
+            paren += 1
+        elif char == ")":
+            paren = max(0, paren - 1)
+        elif char == "[":
+            square += 1
+        elif char == "]":
+            square = max(0, square - 1)
+        elif char == "{":
+            brace += 1
+        elif char == "}":
+            brace = max(0, brace - 1)
+        elif char == "," and not (paren or square or brace):
+            split_index = i + 1
+            break
+    if split_index < 60 or len(text) - split_index < 60:
+        return []
+    left = text[:split_index].strip()
+    right = text[split_index:].strip()
+    if not re.match(r"(?:directly\s+)?[a-z]+ing\b|(?:this|these|the|a|an)\b", right, re.I):
+        return []
+    left_body = re.sub(r"^while\s+", "", left.rstrip(", "), flags=re.I).strip()
+    if not left_body or not right:
+        return []
+    left_model = left_body[0].upper() + left_body[1:]
+    if left_model[-1:] not in ".!?":
+        left_model += "."
+    right_model = right[0].upper() + right[1:]
+    return _split_rescue_at(text, split_index, left_model, right_model)
+
 def rescue_units_for_translation(source: str) -> list[TranslationUnit]:
     """Return retry-only units for a source chunk that decoded poorly.
 
@@ -435,6 +482,7 @@ def rescue_units_for_translation(source: str) -> list[TranslationUnit]:
     if not compact:
         return []
     for splitter in (
+        _rescue_while_concessive_main_clause,
         _rescue_found_that_coordination,
         _rescue_if_so_semicolon,
         _rescue_nonrestrictive_where_clause,

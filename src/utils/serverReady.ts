@@ -24,6 +24,9 @@ export type TranslationServerHealth = {
   progress?: number | null;
   message?: string | null;
   error?: string | null;
+  downloaded_bytes?: number | null;
+  total_bytes?: number | null;
+  progress_indeterminate?: boolean;
 };
 
 type ReadyListener = () => void;
@@ -119,7 +122,7 @@ export async function waitForServer(
   maxAttempts = 60 * 60,
   intervalMs = 1000
 ): Promise<void> {
-  return waitForTranslationServer({
+  await waitForTranslationServer({
     maxAttempts,
     intervalMs,
     requireModelReady: true,

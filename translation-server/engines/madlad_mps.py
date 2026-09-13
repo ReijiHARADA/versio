@@ -753,6 +753,62 @@ class MADLADEngine(TranslationEngine):
                 return True
             if MADLADEngine._is_implausibly_short_unit(output, source):
                 return True
+            if MADLADEngine._contains_untranslated_source_span(output, source):
+                return True
+        return False
+
+    @staticmethod
+    def _normalize_for_source_overlap(text: str) -> str:
+        return (
+            text.lower()
+            .replace("\u2018", "'")
+            .replace("\u2019", "'")
+            .replace("\u201c", '"')
+            .replace("\u201d", '"')
+            .replace("\u2013", "-")
+            .replace("\u2014", "-")
+            .replace("\u2212", "-")
+        )
+
+    @staticmethod
+    def _source_spans_for_overlap(source: str) -> list[str]:
+        normalized = re.sub(r"\s+", " ", source).strip()
+        spans = re.findall(r"[^.!?]+[.!?]+(?:[\"')\]]+)?|[^.!?]+$", normalized) or [normalized]
+        candidates: list[str] = []
+        for span in spans:
+            text = span.strip()
+            if not text:
+                continue
+            candidates.append(text)
+            for part in re.split(r"[,;:]\s+", text):
+                clause = part.strip()
+                if clause and clause != text:
+                    candidates.append(clause)
+        return candidates
+
+    @staticmethod
+    def _contains_untranslated_source_span(output: str, source: str) -> bool:
+        normalized_output = re.sub(
+            r"\s+",
+            " ",
+            MADLADEngine._normalize_for_source_overlap(output),
+        ).strip()
+        if not normalized_output:
+            return False
+        for candidate in MADLADEngine._source_spans_for_overlap(source):
+            normalized_candidate = re.sub(
+                r"\s+",
+                " ",
+                MADLADEngine._normalize_for_source_overlap(candidate),
+            ).strip()
+            word_count = len(re.findall(r"[a-z][a-z'-]*", normalized_candidate))
+            letter_count = len(re.findall(r"[a-z]", normalized_candidate))
+            if len(normalized_candidate) < 48 or word_count < 7 or letter_count < 35:
+                continue
+            if re.match(r"^(?:fig(?:ure)?|table)\s+\d+", candidate, re.I):
+                continue
+            if normalized_candidate in normalized_output:
+                return True
         return False
 
     @staticmethod

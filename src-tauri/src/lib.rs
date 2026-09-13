@@ -16,18 +16,25 @@ pub struct ServerState {
 fn ensure_server_token(token_slot: &Arc<Mutex<String>>) -> String {
     let mut guard = token_slot.lock().unwrap();
     if guard.is_empty() {
-        *guard = uuid_v4_simple();
+        *guard = random_api_token();
     }
     guard.clone()
 }
 
-fn uuid_v4_simple() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let nanos = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_nanos())
-        .unwrap_or(0);
-    format!("pr-{nanos:x}-{:x}", std::process::id())
+/// Cryptographically strong token for localhost API auth. Not logged or persisted to disk.
+fn random_api_token() -> String {
+    let mut bytes = [0u8; 32];
+    fill_secure_random(&mut bytes).expect("OS CSPRNG unavailable");
+    let mut out = String::with_capacity(64);
+    for b in bytes {
+        out.push_str(&format!("{b:02x}"));
+    }
+    out
+}
+
+fn fill_secure_random(buf: &mut [u8]) -> std::io::Result<()> {
+    use std::io::Read;
+    std::fs::File::open("/dev/urandom")?.read_exact(buf)
 }
 
 /// translation-server ディレクトリのパスを解決する
@@ -195,10 +202,9 @@ pub fn run() {
             paper_fs::remove_app_file,
             paper_fs::rename_app_file,
             paper_fs::list_app_files,
-            paper_fs::pick_save_path,
-            paper_fs::pick_directory,
-            paper_fs::write_user_file,
-            paper_fs::copy_app_file_to_user,
+            paper_fs::save_export_file,
+            paper_fs::save_markdown_export,
+            paper_fs::save_verification_export,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

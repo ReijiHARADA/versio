@@ -91,23 +91,84 @@ pub fn copy_source_pdf(
     Ok(dest.to_string_lossy().to_string())
 }
 
+/// Optional region for a future bbox highlight pass. Geometry is accepted now
+/// so the frontend/Rust contract stays stable; only `page` is used for open.
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
+pub struct SourcePdfHighlight {
+    pub page: u32,
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+}
+
+fn resolve_target_page(page: Option<u32>, highlight: Option<&SourcePdfHighlight>) -> Option<u32> {
+    if let Some(h) = highlight {
+        if h.page >= 1 {
+            return Some(h.page);
+        }
+    }
+    page.filter(|p| *p >= 1)
+}
+
+fn open_pdf_path(path: &Path) -> Result<(), String> {
+    std::process::Command::new("open")
+        .arg(path)
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// Best-effort Preview page jump. Falls back silently if Accessibility is off
+/// or the viewer is not Preview — the PDF is already open.
+fn try_preview_go_to_page(page: u32) -> Result<(), String> {
+    let script = format!(
+        r#"try
+  tell application "Preview" to activate
+  delay 0.35
+  tell application "System Events"
+    tell process "Preview"
+      set frontmost to true
+      keystroke "g" using {{option down, command down}}
+      delay 0.2
+      keystroke "{page}"
+      key code 36
+    end tell
+  end tell
+end try"#
+    );
+    let _ = std::process::Command::new("osascript")
+        .arg("-e")
+        .arg(script)
+        .output();
+    Ok(())
+}
+
 #[tauri::command]
-pub fn open_source_pdf(app: AppHandle, paper_id: String, page: Option<u32>) -> Result<(), String> {
+pub fn open_source_pdf(
+    app: AppHandle,
+    paper_id: String,
+    page: Option<u32>,
+    highlight: Option<SourcePdfHighlight>,
+) -> Result<(), String> {
     let path = paper_dir(&app, &paper_id)?.join("source.pdf");
     if !path.exists() {
         return Err("保存されたPDFが見つかりません".into());
     }
-    let _ = page;
+    let target_page = resolve_target_page(page, highlight.as_ref());
     #[cfg(target_os = "macos")]
     {
-        std::process::Command::new("open")
-            .arg(&path)
-            .spawn()
-            .map_err(|e| e.to_string())?;
+        open_pdf_path(&path)?;
+        if let Some(p) = target_page {
+            let _ = try_preview_go_to_page(p);
+        }
         return Ok(());
     }
     #[cfg(not(target_os = "macos"))]
     {
+        let _ = (path, target_page);
         Err("このOSでは元PDFを開く操作に未対応です".into())
     }
 }
@@ -165,7 +226,22 @@ pub fn open_external_url(url: String) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{is_safe_external_url, is_safe_paper_id};
+    use super::{is_safe_external_url, is_safe_paper_id, resolve_target_page, SourcePdfHighlight};
+
+    #[test]
+    fn resolve_page_prefers_highlight() {
+        let highlight = SourcePdfHighlight {
+            page: 4,
+            x: 0.0,
+            y: 0.0,
+            width: 10.0,
+            height: 10.0,
+        };
+        assert_eq!(resolve_target_page(Some(2), Some(&highlight)), Some(4));
+        assert_eq!(resolve_target_page(Some(2), None), Some(2));
+        assert_eq!(resolve_target_page(Some(0), None), None);
+        assert_eq!(resolve_target_page(None, None), None);
+    }
 
     #[test]
     fn accepts_uuid_and_sample_ids() {

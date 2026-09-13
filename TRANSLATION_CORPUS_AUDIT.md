@@ -908,3 +908,15 @@ The v50 current-source server was started on `http://127.0.0.1:8766` because the
 Spot check: `interactive-jewellery b-828da077` changed from v49 `partialSourceFallback=true` with a 46-word English source span left inside accepted Japanese, to v50 `partialSourceFallback=false` with the rescued claims translated into Japanese. This improves readable output without counting hidden English source fallback as a full accept.
 
 The full v50 benchmark was then started and stopped at the user's request after a clean paper checkpoint. The incomplete report currently has 6 completed paper checkpoints, 62 rows, and 3 `partialSourceFallback` rows; `complete` is `false`, so it is not an authoritative whole-corpus rate. The v50 dev server and benchmark process were stopped. The user's `.app` translation-server process was left running because it belongs to the open app, not this benchmark run.
+
+## V51 partial source fallback guard
+
+Status: implemented and partially measured on 2026-09-13T21:22:17+09:00.
+
+The v50 audit exposed a false-accept class where a paragraph could be mostly Japanese while preserving one or more long English source spans verbatim. This made the product look better than it was: the row was counted as accepted even though a researcher would still see untranslated English inside the Japanese output. The detector that was previously benchmark-only now lives in production quality evaluation, and the benchmark imports the same detector. The server also rejects joined Japanese outputs that contain long unmodified source spans, so MicroBatch unit fallbacks cannot silently pass as completed translations. The translation cache identity was bumped to `3b-mt-v5-semantic-v51`.
+
+A retry-only rescue for long `While ... , main clause` sentences was added because Thermal Earring block `b-01a329cd` showed that shape. The rescue fired in the live v51 server, but MADLAD still drifted on the rescued left clause, so the paragraph correctly remained fallback. This is useful evidence: at least this ordinary fallback is no longer primarily a semicolon/segmenter failure; it is a MADLAD decode/model adequacy problem under the current local engine.
+
+Spot benchmark: `test-data/real-papers/reports/translation-audit-thermal-earring.json` with 12 sampled rows under v51. Partial source fallback dropped to 0, but ordinary-body fallback remained 2/3 for this paper. This is safer but not sufficient for the 5% UX target. The next required step is local/free cascade or replacement-model evaluation on v51 ordinary post-model fallbacks, not more hallucinated-word blacklists.
+
+Verification: targeted Vitest suite passed 87 tests; `npx tsc --noEmit --pretty false` passed; `npm run lint` exited 0 with existing warnings; `npm run build` passed; translation-server unittest suite for microbatcher, segmenter, citation protection, and MADLAD quality passed 72 tests.

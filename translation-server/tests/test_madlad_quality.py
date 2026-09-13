@@ -64,3 +64,27 @@ class MadladUnitQualityTests(unittest.TestCase):
         output = "また、インタラクティブジュエリーは、ジュエリーに関連する内在的な感情をインタラクションを通して明示できる性質を持つことを示した。[29]"
         self.assertTrue(MADLADEngine._is_implausibly_short_unit(output, source))
         self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
+
+
+class MadladPartialSourceFallbackTests(unittest.TestCase):
+    def test_rejects_partial_untranslated_source_span(self) -> None:
+        source = (
+            "While we have shown that an increase in core body temperature can be reflected "
+            "in earlobe temperature measurements made by Thermal Earring in section 6.1, "
+            "directly estimating the core body temperature from the earlobe temperature requires "
+            "further study. It is known that skin temperature is affected by ambient temperature."
+        )
+        output = (
+            "While we have shown that an increase in core body temperature can be reflected "
+            "in earlobe temperature measurements made by Thermal Earring in section 6.1, "
+            "directly estimating the core body temperature from the earlobe temperature requires "
+            "further study.皮膚温は周囲温度の影響を受ける。"
+        )
+        self.assertTrue(MADLADEngine._contains_untranslated_source_span(output, source))
+        self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
+
+    def test_allows_short_source_facts_inside_japanese(self) -> None:
+        source = "We compared the IR camera condition with the baseline condition [12]."
+        output = "IR カメラ条件をベースライン条件 [12] と比較した。"
+        self.assertFalse(MADLADEngine._contains_untranslated_source_span(output, source))
+        self.assertFalse(MADLADEngine._is_degenerate(output, source, "ja"))

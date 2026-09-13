@@ -11,10 +11,10 @@ import asyncio
 import os
 import sys
 import threading
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 import uvicorn
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,6 +37,8 @@ elif os.environ.get("MADLAD_SERVER_SILENCE_OUTPUT") == "1":
 MODEL_ID = "google/madlad400-3b-mt"
 SERVER_TOKEN = os.environ.get("MADLAD_SERVER_TOKEN", "").strip()
 
+_PROGRESS_UNSET = object()
+
 
 @dataclass
 class LifecycleState:
@@ -45,27 +47,43 @@ class LifecycleState:
     message: str = "Starting translation server"
     error: Optional[str] = None
     model_loaded: bool = False
+    downloaded_bytes: Optional[int] = None
+    total_bytes: Optional[int] = None
+    progress_indeterminate: bool = True
 
 
 lifecycle = LifecycleState()
 _lifecycle_lock = threading.Lock()
 _load_thread: Optional[threading.Thread] = None
+_download_bars: dict[int, tuple[int, Optional[int]]] = {}
+_download_bars_lock = threading.Lock()
 
 
 def set_lifecycle(
     phase: str,
     *,
     message: Optional[str] = None,
-    progress: Optional[float] = None,
+    progress: Any = _PROGRESS_UNSET,
     error: Optional[str] = None,
     model_loaded: Optional[bool] = None,
+    downloaded_bytes: Any = _PROGRESS_UNSET,
+    total_bytes: Any = _PROGRESS_UNSET,
+    progress_indeterminate: Optional[bool] = None,
 ) -> None:
     with _lifecycle_lock:
         lifecycle.phase = phase
         if message is not None:
             lifecycle.message = message
-        if progress is not None:
+        if progress is not _PROGRESS_UNSET:
             lifecycle.progress = progress
+        if downloaded_bytes is not _PROGRESS_UNSET:
+            lifecycle.downloaded_bytes = downloaded_bytes
+        if total_bytes is not _PROGRESS_UNSET:
+            lifecycle.total_bytes = total_bytes
+        if progress_indeterminate is not None:
+            lifecycle.progress_indeterminate = progress_indeterminate
+        elif progress is not _PROGRESS_UNSET:
+            lifecycle.progress_indeterminate = progress is None
         if error is not None:
             lifecycle.error = error
         elif phase != "error":
@@ -82,7 +100,123 @@ def snapshot_lifecycle() -> dict:
             "message": lifecycle.message,
             "error": lifecycle.error,
             "model_loaded": lifecycle.model_loaded,
+            "downloaded_bytes": lifecycle.downloaded_bytes,
+            "total_bytes": lifecycle.total_bytes,
+            "progress_indeterminate": lifecycle.progress_indeterminate,
         }
+
+
+def _format_bytes(n: Optional[int]) -> str:
+    if n is None or n < 0:
+        return "?"
+    units = ["B", "KB", "MB", "GB", "TB"]
+    value = float(n)
+    for unit in units:
+        if value < 1024 or unit == units[-1]:
+            if unit == "B":
+                return f"{int(value)}{unit}"
+            return f"{value:.1f}{unit}"
+        value /= 1024
+    return f"{n}B"
+
+
+def _publish_download_progress() -> None:
+    with _download_bars_lock:
+        if not _download_bars:
+            set_lifecycle(
+                "downloading",
+                message="翻訳モデルを初回ダウンロードしています…",
+                progress=None,
+                downloaded_bytes=None,
+                total_bytes=None,
+                progress_indeterminate=True,
+            )
+            return
+        downloaded = sum(n for n, _total in _download_bars.values())
+        known_totals = [t for _n, t in _download_bars.values() if t and t > 0]
+        total = sum(known_totals) if known_totals else None
+        if total and total > 0:
+            frac = min(1.0, downloaded / total)
+            set_lifecycle(
+                "downloading",
+                message=(
+                    f"翻訳モデルをダウンロード中… "
+                    f"{_format_bytes(downloaded)} / {_format_bytes(total)}"
+                ),
+                progress=frac,
+                downloaded_bytes=downloaded,
+                total_bytes=total,
+                progress_indeterminate=False,
+            )
+        else:
+            set_lifecycle(
+                "downloading",
+                message=f"翻訳モデルをダウンロード中… {_format_bytes(downloaded)}（合計サイズ未取得）",
+                progress=None,
+                downloaded_bytes=downloaded,
+                total_bytes=None,
+                progress_indeterminate=True,
+            )
+
+
+class _DownloadProgressTqdm:
+    """Thin tqdm stand-in that reports Hub download bytes into lifecycle."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        self.n = int(kwargs.get("initial") or 0)
+        total = kwargs.get("total")
+        self.total = int(total) if total not in (None, "?") else None
+        self._key = id(self)
+        with _download_bars_lock:
+            _download_bars[self._key] = (self.n, self.total)
+        _publish_download_progress()
+
+    def update(self, n: int = 1) -> None:
+        self.n += int(n or 0)
+        with _download_bars_lock:
+            _download_bars[self._key] = (self.n, self.total)
+        _publish_download_progress()
+
+    def close(self) -> None:
+        with _download_bars_lock:
+            _download_bars.pop(self._key, None)
+
+    def __enter__(self) -> "_DownloadProgressTqdm":
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        self.close()
+
+    def set_description(self, *args: Any, **kwargs: Any) -> None:
+        return None
+
+    def set_postfix(self, *args: Any, **kwargs: Any) -> None:
+        return None
+
+    def refresh(self) -> None:
+        return None
+
+
+@contextmanager
+def _hub_download_progress():
+    """Patch huggingface_hub tqdm during snapshot_download."""
+    with _download_bars_lock:
+        _download_bars.clear()
+    try:
+        import huggingface_hub.utils.tqdm as hub_tqdm  # type: ignore
+
+        original = getattr(hub_tqdm, "tqdm", None)
+        hub_tqdm.tqdm = _DownloadProgressTqdm  # type: ignore[attr-defined]
+        try:
+            yield
+        finally:
+            if original is not None:
+                hub_tqdm.tqdm = original  # type: ignore[attr-defined]
+    except Exception:  # noqa: BLE001 — progress is best-effort
+        yield
+    finally:
+        with _download_bars_lock:
+            _download_bars.clear()
 
 
 def model_cache_present() -> bool:
@@ -95,34 +229,64 @@ def model_cache_present() -> bool:
     return any(p.name.startswith(needle) for p in hub.iterdir() if p.is_dir())
 
 
+def _ensure_model_snapshot() -> None:
+    """Download model files when cache is missing; report real byte progress when possible."""
+    if model_cache_present():
+        return
+    set_lifecycle(
+        "downloading",
+        message="翻訳モデルを初回ダウンロードしています…",
+        progress=None,
+        downloaded_bytes=None,
+        total_bytes=None,
+        progress_indeterminate=True,
+        model_loaded=False,
+    )
+    from huggingface_hub import snapshot_download
+
+    with _hub_download_progress():
+        snapshot_download(MODEL_ID)
+    set_lifecycle(
+        "downloading",
+        message="翻訳モデルのダウンロードが完了しました",
+        progress=1.0,
+        progress_indeterminate=False,
+    )
+
+
 def load_model_background() -> None:
     try:
-        if model_cache_present():
-            set_lifecycle(
-                "loading",
-                message="翻訳モデルを読み込んでいます",
-                progress=0.15,
-                model_loaded=False,
-            )
+        if not model_cache_present():
+            _ensure_model_snapshot()
         else:
             set_lifecycle(
-                "downloading",
-                message="翻訳モデルを初回ダウンロードしています（数GB）",
-                progress=0.05,
+                "loading",
+                message="翻訳モデルをメモリに読み込んでいます…",
+                progress=None,
+                downloaded_bytes=None,
+                total_bytes=None,
+                progress_indeterminate=True,
                 model_loaded=False,
             )
 
-        engine = get_engine()
         set_lifecycle(
             "loading",
-            message="翻訳モデルをメモリに読み込んでいます",
-            progress=0.55,
+            message="翻訳モデルをメモリに読み込んでいます…",
+            progress=None,
+            downloaded_bytes=None,
+            total_bytes=None,
+            progress_indeterminate=True,
+            model_loaded=False,
         )
+        engine = get_engine()
         engine.load_model()
         set_lifecycle(
             "warming_up",
-            message="翻訳モデルを準備しています",
-            progress=0.9,
+            message="翻訳モデルを準備しています…",
+            progress=None,
+            downloaded_bytes=None,
+            total_bytes=None,
+            progress_indeterminate=True,
         )
         # Light warmup so first user translate is not a cold MPS compile.
         try:
@@ -133,6 +297,9 @@ def load_model_background() -> None:
             "ready",
             message="翻訳の準備ができました",
             progress=1.0,
+            downloaded_bytes=None,
+            total_bytes=None,
+            progress_indeterminate=False,
             model_loaded=True,
         )
         print("[STARTUP] MADLAD model ready", flush=True)
@@ -142,6 +309,9 @@ def load_model_background() -> None:
             message="翻訳モデルの読み込みに失敗しました",
             error=str(exc),
             progress=None,
+            downloaded_bytes=None,
+            total_bytes=None,
+            progress_indeterminate=False,
             model_loaded=False,
         )
         print(f"[STARTUP] MADLAD load failed: {exc}", flush=True)
@@ -202,6 +372,9 @@ class StatusResponse(BaseModel):
     phase: str = "unknown"
     progress: Optional[float] = None
     message: Optional[str] = None
+    downloaded_bytes: Optional[int] = None
+    total_bytes: Optional[int] = None
+    progress_indeterminate: bool = True
 
 
 class HealthResponse(BaseModel):
@@ -211,6 +384,9 @@ class HealthResponse(BaseModel):
     progress: Optional[float] = None
     message: Optional[str] = None
     error: Optional[str] = None
+    downloaded_bytes: Optional[int] = None
+    total_bytes: Optional[int] = None
+    progress_indeterminate: bool = True
 
 
 @dataclass
@@ -228,7 +404,10 @@ async def lifespan(app: FastAPI):
     set_lifecycle(
         "model_missing" if not model_cache_present() else "loading",
         message="翻訳サーバーは起動しました。モデルを準備しています",
-        progress=0.0,
+        progress=None,
+        downloaded_bytes=None,
+        total_bytes=None,
+        progress_indeterminate=True,
         model_loaded=False,
     )
     engine = get_engine()
@@ -303,6 +482,9 @@ async def health_check():
         progress=snap["progress"],
         message=snap["message"],
         error=snap["error"],
+        downloaded_bytes=snap["downloaded_bytes"],
+        total_bytes=snap["total_bytes"],
+        progress_indeterminate=bool(snap["progress_indeterminate"]),
     )
 
 
@@ -319,6 +501,9 @@ async def get_status():
             "message": snap["message"],
             "error": snap["error"] or payload.get("error"),
             "model_loaded": bool(snap["model_loaded"] or status.model_loaded),
+            "downloaded_bytes": snap["downloaded_bytes"],
+            "total_bytes": snap["total_bytes"],
+            "progress_indeterminate": bool(snap["progress_indeterminate"]),
         }
     )
     return StatusResponse(**payload)

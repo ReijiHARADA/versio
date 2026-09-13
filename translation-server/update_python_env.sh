@@ -3,7 +3,7 @@
 # Homebrew Python は使わない。
 # macOS 26 では Homebrew python@3.12 の platform.mac_ver() が空になり、
 # python -m venv / ensurepip / uv がすべて失敗する。
-# uv が配布するスタンドアロン CPython 3.12 を使う。
+# uv が配布するスタンドアロン CPython（.python-version の patch 固定）を使う。
 
 set -e
 
@@ -13,6 +13,11 @@ echo "========================================="
 echo ""
 
 cd "$(dirname "$0")"
+
+PYTHON_VERSION="$(tr -d '[:space:]' < .python-version 2>/dev/null || true)"
+if [[ -z "$PYTHON_VERSION" ]]; then
+    PYTHON_VERSION="3.12.14"
+fi
 
 if ! command -v uv &> /dev/null; then
     echo "uvをインストール中..."
@@ -26,10 +31,10 @@ else
 fi
 
 echo ""
-echo "uv管理の Python 3.12 を用意中..."
+echo "uv管理の Python $PYTHON_VERSION を用意中..."
 echo "（Homebrew python@3.12 は macOS 26 で mac_ver が空になるため使わない）"
-uv python install 3.12
-echo "✓ $(uv python find 3.12) --version: $($(uv python find 3.12) --version)"
+uv python install "$PYTHON_VERSION"
+echo "✓ $(uv python find "$PYTHON_VERSION") --version: $($(uv python find "$PYTHON_VERSION") --version)"
 
 if [ -d ".venv" ]; then
     echo ""
@@ -40,15 +45,25 @@ if [ -d ".venv" ]; then
 fi
 
 echo ""
-echo "Python 3.12 で仮想環境を作成中（uv venv）..."
-uv venv --python 3.12 .venv
+echo "Python $PYTHON_VERSION で仮想環境を作成中（uv venv）..."
+uv venv --python "$PYTHON_VERSION" .venv
 echo "✓ 仮想環境作成完了"
 
 source .venv/bin/activate
 
+ACTUAL_VERSION="$(python -c 'import sys; print(".".join(map(str, sys.version_info[:3])))')"
+if [[ "$ACTUAL_VERSION" != "$PYTHON_VERSION" ]]; then
+    echo "エラー: 期待 Python $PYTHON_VERSION ですが実際は $ACTUAL_VERSION です"
+    exit 1
+fi
+
 echo ""
 echo "依存関係をインストール中..."
-uv pip install -r requirements.txt
+if [ -f requirements.lock ]; then
+    uv pip install -r requirements.lock
+else
+    uv pip install -r requirements.txt
+fi
 
 echo ""
 echo "========================================="
