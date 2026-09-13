@@ -337,4 +337,11 @@ export async function deleteAnnotation(id: string): Promise<void> {
   deleteAnnotationRow(db, id);
 }
 
+/** Full-text library search via SQLite FTS (or LIKE fallback). Does not load paper bodies. */
+export async function searchLibraryPaperIds(query: string): Promise<string[]> {
+  const { db } = await ready();
+  const { searchPapersFts } = await import("../data/sqlite/fts");
+  return searchPapersFts(db, query);
+}
+
 export { indexPaperText };

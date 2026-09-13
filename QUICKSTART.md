@@ -92,11 +92,12 @@ curl http://127.0.0.1:8765/health
 ### リリース用 `.app`
 
 ```bash
+# uv が必要。requirements.lock から clean venv を生成してからフロント＋Rust をビルド
 npm run tauri:build
 open "src-tauri/target/release/bundle/macos/Paper Reader.app"
 ```
 
-`beforeBuildCommand` が `scripts/bundle-python.sh` で `.venv` を `translation-server/venv/` にコピーしてからフロントをビルドします。
+`beforeBuildCommand` が `scripts/bundle-python.sh`（lock から venv 生成）のあと `npm run build` を実行します。開発用 `.venv` はコピーしません。
 
 ### テストと実論文 PDF
 

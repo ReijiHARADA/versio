@@ -3,23 +3,40 @@ mod paper_fs;
 mod source_pdf;
 
 use std::path::PathBuf;
+use std::process::{Child, Command, Stdio};
 use std::sync::{Arc, Mutex};
 use tauri::{Manager, State};
-use tauri_plugin_shell::ShellExt;
-use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 
-/// 翻訳サーバーのプロセスハンドルを保持する共有状態
-pub struct ServerState(pub Arc<Mutex<Option<CommandChild>>>);
+/// Shared handles for the translation sidecar.
+pub struct ServerState {
+    pub child: Arc<Mutex<Option<Child>>>,
+    pub token: Arc<Mutex<String>>,
+}
+
+fn ensure_server_token(token_slot: &Arc<Mutex<String>>) -> String {
+    let mut guard = token_slot.lock().unwrap();
+    if guard.is_empty() {
+        *guard = uuid_v4_simple();
+    }
+    guard.clone()
+}
+
+fn uuid_v4_simple() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    format!("pr-{nanos:x}-{:x}", std::process::id())
+}
 
 /// translation-server ディレクトリのパスを解決する
-/// 開発時: CARGO_MANIFEST_DIR/../translation-server
-/// 本番時: Resources/translation-server
 fn resolve_server_dir(app: &tauri::AppHandle) -> PathBuf {
-    // 開発ビルド時は src-tauri/ の親 = プロジェクトルートを使う
     #[cfg(debug_assertions)]
     {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let server_dir = manifest_dir.parent()
+        let server_dir = manifest_dir
+            .parent()
             .unwrap_or(&manifest_dir)
             .join("translation-server");
         if server_dir.exists() {
@@ -28,7 +45,6 @@ fn resolve_server_dir(app: &tauri::AppHandle) -> PathBuf {
         }
     }
 
-    // 本番ビルド: .app/Contents/Resources/translation-server
     match app.path().resource_dir() {
         Ok(p) => {
             let server_dir = p.join("translation-server");
@@ -42,29 +58,26 @@ fn resolve_server_dir(app: &tauri::AppHandle) -> PathBuf {
     }
 }
 
-/// Python 実行ファイルのパスを解決する
 fn find_python(server_dir: &std::path::Path) -> String {
-    // 1. バンドル venv（bundle-python.sh でコピーしたもの: 本番用）
     let bundled = server_dir.join("venv/bin/python3");
     if bundled.exists() {
         log::info!("Using bundled venv: {}", bundled.display());
         return bundled.to_string_lossy().to_string();
     }
-    // 2. 開発時は .venv を直接参照
     let dev_venv = server_dir.join(".venv/bin/python3");
     if dev_venv.exists() {
         log::info!("Using dev .venv: {}", dev_venv.display());
         return dev_venv.to_string_lossy().to_string();
     }
-    // 3. システム Python3（フォールバック）
     log::warn!("No venv found, falling back to system python3");
     "python3".to_string()
 }
 
-fn spawn_server(app: &tauri::AppHandle, state_arc: &Arc<Mutex<Option<CommandChild>>>) {
+fn spawn_server(app: &tauri::AppHandle, state: &ServerState) {
     let server_dir = resolve_server_dir(app);
     let python = find_python(&server_dir);
     let server_script = server_dir.join("server.py");
+    let token = ensure_server_token(&state.token);
 
     if !server_script.exists() {
         log::error!("server.py not found at: {}", server_script.display());
@@ -73,44 +86,33 @@ fn spawn_server(app: &tauri::AppHandle, state_arc: &Arc<Mutex<Option<CommandChil
 
     log::info!("Spawning: {} {}", python, server_script.display());
 
-    let result = app
-        .shell()
-        .command(&python)
-        .args([server_script.to_str().unwrap_or("server.py")])
+    let mut command = Command::new(&python);
+    command
+        .arg(&server_script)
         .current_dir(&server_dir)
-        .env("PYTHONPATH", server_dir.to_str().unwrap_or(""))
+        .env("PYTHONPATH", server_dir.as_os_str())
         .env("PYTORCH_ENABLE_MPS_FALLBACK", "1")
         .env("MADLAD_SERVER_SILENCE_OUTPUT", "1")
         .env("MADLAD_SERVER_HOST", "127.0.0.1")
-        .env("MADLAD_SERVER_PORT", "8765");
+        .env("MADLAD_SERVER_PORT", "8765")
+        .env("MADLAD_SERVER_TOKEN", &token)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
 
-    let debug_units = std::env::var("TRANSLATION_UNIT_DEBUG").unwrap_or_default() == "1";
-    let result = if debug_units {
+    if std::env::var("TRANSLATION_UNIT_DEBUG").unwrap_or_default() == "1" {
         let debug_log = "/tmp/paper-reader-translation-server.log";
         let _ = std::fs::remove_file(debug_log);
-        result
+        command
             .env("TRANSLATION_UNIT_DEBUG", "1")
             .env("MADLAD_SERVER_DEBUG_LOG", debug_log)
-            .spawn()
-    } else {
-        result.spawn()
-    };
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit());
+    }
 
-    match result {
-        Ok((mut rx, child)) => {
-            // `Command::spawn` pipes the child output through this receiver.
-            // Dropping it closes stdout/stderr in the Python server, so any
-            // startup or translation log raises BrokenPipeError and turns a
-            // translation request into HTTP 500. Drain it for the full child
-            // lifetime even when the app does not display these logs.
-            tauri::async_runtime::spawn(async move {
-                while let Some(event) = rx.recv().await {
-                    if let CommandEvent::Error(error) = event {
-                        log::warn!("Translation server output error: {error}");
-                    }
-                }
-            });
-            let mut guard = state_arc.lock().unwrap();
+    match command.spawn() {
+        Ok(child) => {
+            let mut guard = state.child.lock().unwrap();
             *guard = Some(child);
             log::info!("Translation server spawned successfully.");
         }
@@ -120,28 +122,33 @@ fn spawn_server(app: &tauri::AppHandle, state_arc: &Arc<Mutex<Option<CommandChil
     }
 }
 
-/// Tauri コマンド: 翻訳サーバーを手動再起動
 #[tauri::command]
 fn restart_translation_server(app: tauri::AppHandle, state: State<'_, ServerState>) {
     {
-        let mut guard = state.0.lock().unwrap();
-        if let Some(child) = guard.take() {
+        let mut guard = state.child.lock().unwrap();
+        if let Some(mut child) = guard.take() {
             let _ = child.kill();
             log::info!("Stopped previous translation server.");
         }
     }
-    spawn_server(&app, &state.0);
+    spawn_server(&app, &state);
+}
+
+#[tauri::command]
+fn get_translation_server_token(state: State<'_, ServerState>) -> String {
+    ensure_server_token(&state.token)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let server_state = ServerState(Arc::new(Mutex::new(None)));
+    let server_state = ServerState {
+        child: Arc::new(Mutex::new(None)),
+        token: Arc::new(Mutex::new(String::new())),
+    };
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_shell::init())
         .manage(server_state)
         .setup(|app| {
-            // ログプラグイン（デバッグビルドのみ）
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
@@ -150,12 +157,13 @@ pub fn run() {
                 )?;
             }
 
-            // 翻訳サーバーを起動
             let handle = app.handle().clone();
             let state: State<ServerState> = app.state();
-            let state_arc = Arc::clone(&state.0);
+            let child = Arc::clone(&state.child);
+            let token = Arc::clone(&state.token);
             tauri::async_runtime::spawn(async move {
-                spawn_server(&handle, &state_arc);
+                let proxy = ServerState { child, token };
+                spawn_server(&handle, &proxy);
             });
 
             Ok(())
@@ -163,8 +171,8 @@ pub fn run() {
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::Destroyed = event {
                 let state: State<ServerState> = window.state();
-                let mut guard = state.0.lock().unwrap();
-                if let Some(child) = guard.take() {
+                let mut guard = state.child.lock().unwrap();
+                if let Some(mut child) = guard.take() {
                     let _ = child.kill();
                     log::info!("Translation server stopped on window close.");
                 }
@@ -172,6 +180,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             restart_translation_server,
+            get_translation_server_token,
             ocr::ocr_image,
             source_pdf::save_source_pdf,
             source_pdf::copy_source_pdf,

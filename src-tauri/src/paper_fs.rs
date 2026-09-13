@@ -110,6 +110,9 @@ fn require_absolute_user_path(path: &str) -> Result<PathBuf, String> {
     if !dest.is_absolute() {
         return Err("絶対パスが必要です".into());
     }
+    if dest.components().any(|c| matches!(c, Component::ParentDir)) {
+        return Err("無効なパスです".into());
+    }
     Ok(dest)
 }
 

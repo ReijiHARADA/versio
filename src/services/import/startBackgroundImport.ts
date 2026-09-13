@@ -6,7 +6,7 @@ import { showToast } from "../../stores/toastStore";
 import type { Paper, PaperBlock, Section } from "../../types/paper";
 import { upsertBlock, upsertSection } from "../../utils/mergePaperData";
 import { createBlockUpdateBatcher } from "../../utils/batchBlockUpdates";
-import { waitForServer } from "../../utils/serverReady";
+import { waitForTranslationServer } from "../../utils/serverReady";
 import { getAllPapers, getBlocksByPaper, getSectionsByPaper, getSetting } from "../database";
 import { addPaperToWorkspace } from "../projectService";
 import {
@@ -15,8 +15,7 @@ import {
   type ImportConfig,
 } from "../importServiceV2";
 import { resumeIncompleteTranslation } from "./resume";
-import { referenceSectionIds, isRetryableTranslationFailure, shouldTranslateBlock, shouldTranslateSection } from "./policy";
-import { isPlausibleJaTranslation, shouldTranslateTitle, titleTranslationComplete } from "../translation/quality";
+import { referenceSectionIds, isRetryableTranslationFailure } from "./policy";
 
 const startedImportKeys = new Set<string>();
 const importFiles = new Map<string, File>();
@@ -54,38 +53,25 @@ function libraryTranslationCallbacks() {
 }
 
 export async function shouldResumePaperAfterServerReady(paper: Paper): Promise<boolean> {
-  if (paper.processingStatus === "translating" || paper.processingStatus === "queued" || paper.processingStatus === "glossary") {
-    return true;
-  }
-
-  const [sections, blocks] = await Promise.all([
-    getSectionsByPaper(paper.id),
-    getBlocksByPaper(paper.id),
-  ]);
-  const refSectionIds = referenceSectionIds(sections);
-  if (blocks.some((block) => isRetryableTranslationFailure(block, refSectionIds))) return true;
+  // Prefer index status — avoid loading every package just to decide.
   if (
-    paper.titleOriginal &&
-    shouldTranslateTitle(paper.titleOriginal) &&
-    (!paper.titleTranslated || !titleTranslationComplete(paper.titleOriginal, paper.titleTranslated))
+    paper.processingStatus === "translating" ||
+    paper.processingStatus === "queued" ||
+    paper.processingStatus === "glossary" ||
+    paper.processingStatus === "partial"
   ) {
     return true;
   }
-  if (
-    sections.some(
-      (section) =>
-        section.originalTitle &&
-        shouldTranslateSection(section) &&
-        (!section.translatedTitle || !isPlausibleJaTranslation(section.translatedTitle, section.originalTitle))
-    )
-  ) {
-    return true;
+  if (paper.processingStatus === "failed") {
+    // Only reopen packages that may have retryable translation work.
+    const [sections, blocks] = await Promise.all([
+      getSectionsByPaper(paper.id),
+      getBlocksByPaper(paper.id),
+    ]);
+    const refSectionIds = referenceSectionIds(sections);
+    return blocks.some((block) => isRetryableTranslationFailure(block, refSectionIds));
   }
-  return blocks.some(
-    (block) =>
-      shouldTranslateBlock(block, refSectionIds) &&
-      (!block.translated || !isPlausibleJaTranslation(block.translated, block.original || ""))
-  );
+  return false;
 }
 
 async function attachToWorkspace(nodeId: string, paperId: string): Promise<void> {
@@ -114,15 +100,19 @@ async function ensureMadladReady(
   });
 
   try {
-    await waitForServer((attempt) => {
-      patch(jobId, {
-        stage: "reading",
-        message:
-          attempt > 5
-            ? `翻訳サーバーの起動を待っています…（${attempt}秒）`
-            : "翻訳サーバーの起動を待っています...",
-      });
-    }, 90);
+    await waitForTranslationServer({
+      onProgress: (attempt, health) => {
+        const phaseMsg = health?.message;
+        patch(jobId, {
+          stage: "reading",
+          message:
+            phaseMsg ||
+            (attempt > 5
+              ? `翻訳サーバーの起動を待っています…（${attempt}秒）`
+              : "翻訳サーバーの起動を待っています..."),
+        });
+      },
+    });
     const again = await checkMADLADAvailability();
     return again.available;
   } catch {

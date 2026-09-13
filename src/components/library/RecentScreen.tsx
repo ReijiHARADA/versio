@@ -4,8 +4,8 @@ import { Clock } from "lucide-react";
 import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
-import { filterPapersByLibraryQuery } from "../../domain/librarySearch";
 import { derivePaperReadiness } from "../../domain/paperReadiness";
+import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";
 import { PaperDeleteControls } from "./PaperDeleteControls";
 import { PaperCard } from "./PaperCard";
 import { PaperMenu } from "./PaperMenu";
@@ -21,8 +21,8 @@ export function RecentScreen() {
   const { pendingId, error, busy, requestDelete, cancelDelete, confirmDelete } =
     useDeletePaper();
 
-  const recent = useMemo(() => {
-    const list = [...papers]
+  const recentBase = useMemo(() => {
+    return [...papers]
       .filter((p) => p.lastOpenedAt || p.lastReadBlockId)
       .sort((a, b) => {
         const ta = a.lastOpenedAt ?? a.updatedAt;
@@ -30,8 +30,8 @@ export function RecentScreen() {
         return tb.localeCompare(ta);
       })
       .slice(0, 30);
-    return filterPapersByLibraryQuery(list, searchQuery);
-  }, [papers, searchQuery]);
+  }, [papers]);
+  const recent = useLibraryPaperSearch(recentBase, searchQuery);
 
   const handleOpen = (paperId: string) => {
     if (pendingId === paperId) return;

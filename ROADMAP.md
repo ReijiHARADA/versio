@@ -1,8 +1,9 @@
 # Paper Reader ロードマップ
 
-> Version 0.7 / 2026-09-13  
+> Version 0.8 / 2026-09-13  
 > 変えない原則と、現行実装では未達の項目  
-> **いま動いていること**は [README.md](./README.md) を正とする
+> **いま動いていること**は [README.md](./README.md) を正とする  
+> P0 硬化の詳細は [P0_HARDENING.md](./P0_HARDENING.md)
 
 実装判断で README と衝突したら README を優先する。これから作る機能では本書を優先する。技術都合だけで下のプロダクト原則は変えない。実装を変えたら README と本書を同じ作業で更新し、できたことは未達に残さない。
 
@@ -49,11 +50,12 @@ PDF の見た目を複製するのではなく、論文の意味構造を維持�
 
 詳細と画面ラベルは [README.md](./README.md)。ここは残作業の前提だけ書く。
 
-- Tauri 2 の macOS `.app`。MADLAD サイドカー同梱。ライブラリはサーバー待ちせずすぐ出す。終了時は保存 flush のあとウィンドウを閉じる
-- ライブラリ（すべての論文 / インボックス / お気に入り / 最近）と階層ワークスペース。パス trail、サイドバー自動開閉（開いた状態で右端ドラッグによる幅調整・ダブルクリックで既定幅）、折りたたみ時は最上位のみ（設定可）
+- Tauri 2 の macOS `.app`。MADLAD サイドカー同梱。ライブラリはメタデータだけ先に出し、本文は開いた論文だけ lazy load。終了時は保存 flush のあとウィンドウを閉じる
+- ライブラリ（すべての論文 / インボックス / お気に入り / 最近）と階層ワークスペース。パス trail、サイドバー自動開閉（開いた状態で右端ドラッグによる幅調整・ダブルクリックで既定幅）、折りたたみ時は最上位のみ（設定可）。⌘K は FTS + メタデータ検索
 - 日本語 1 カラム、原文展開、目次の開閉、⌘F / ⌘K、表示設定、読書位置、インラインメモ、メモ一覧／用語集、図・表の Shared Element 拡大、書き出し
-- サーバー未接続でも取込可。準備できたら翻訳を自動再開。途中から読める。スキャンは Apple Vision OCR（Tauri のみ）
-- Paper Package が本文の正本、SQLite が索引・所属・注釈など（[DATA_ARCHITECTURE.md](./DATA_ARCHITECTURE.md)）
+- 翻訳サーバーは process 起動と model download/load/warmup を分離。Library はモデル準備中も使える。ready 後に翻訳再開。スキャンは Apple Vision OCR（Tauri のみ）
+- 本番 CSP・最小 WebView 権限・翻訳 POST トークン・lock 由来の clean Python bundle（[P0_HARDENING.md](./P0_HARDENING.md)）
+- Paper Package が本文の正本、SQLite が索引・所属・注釈・FTS など（[DATA_ARCHITECTURE.md](./DATA_ARCHITECTURE.md)）
 - 学術 PDF 抽出は CanonicalDocument 経由。翻訳は文バッチ + 品質ゲート（科学的 invariant）。実論文監査は [TRANSLATION_CORPUS_AUDIT.md](./TRANSLATION_CORPUS_AUDIT.md)
 
 抽出・翻訳の内部詳細（Format Profile、segmenter 版、キャッシュ版など）はコードと上記監査文書を正とし、本書には重複して書かない。
@@ -172,9 +174,10 @@ Production パイプラインは [ACADEMIC_PDF_EXTRACTION_ARCHITECTURE.md](./ACA
 
 - 設定の 4 区分（読書 / 翻訳 / データ / 詳細設定）は実装済み。見た目・情報設計は §3.0
 - 正式なプロダクト名とアイコン
-- App Store / 公証付き配布
+- App Store / 公証付き配布（clean lock 由来 bundle は実装済み。公証フローの CI 検証は未）
 - Windows は対象外のまま
-- 本番 CSP。WKWebView で Vite の ES module が止まって白い画面になったため、いったん未設定。アプリ本体と `127.0.0.1` / `localhost` だけを許可する方針で再導入する
+- 本番 CSP は再導入済み。配布 `.app` での白画面／接続確認は残る（[P0_HARDENING.md](./P0_HARDENING.md)）
+- Import を「モデル ready 前に抽出だけ進める」完全分離は未達（いまは翻訳前に ready 待ち）
 
 ## 4. 今はやらないこと
 

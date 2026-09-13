@@ -4,8 +4,8 @@ import { Star } from "lucide-react";
 import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
-import { filterPapersByLibraryQuery } from "../../domain/librarySearch";
 import { derivePaperReadiness } from "../../domain/paperReadiness";
+import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";
 import { PaperDeleteControls } from "./PaperDeleteControls";
 import { PaperCard } from "./PaperCard";
 import { PaperMenu } from "./PaperMenu";
@@ -18,10 +18,8 @@ export function FavoritesScreen() {
   const setCurrentPaper = useAppStore((s) => s.setCurrentPaper);
   const blocks = useLibraryCache((state) => state.blocks);
   const searchQuery = useProjectStore((s) => s.searchQuery);
-  const favorites = useMemo(
-    () => filterPapersByLibraryQuery(papers.filter((p) => p.favorite), searchQuery),
-    [papers, searchQuery]
-  );
+  const favoriteBase = useMemo(() => papers.filter((p) => p.favorite), [papers]);
+  const favorites = useLibraryPaperSearch(favoriteBase, searchQuery);
   const { pendingId, error, busy, requestDelete, cancelDelete, confirmDelete } =
     useDeletePaper();
 

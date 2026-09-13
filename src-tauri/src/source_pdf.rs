@@ -46,6 +46,28 @@ fn paper_dir(app: &AppHandle, paper_id: &str) -> Result<PathBuf, String> {
     Ok(root)
 }
 
+fn require_readable_pdf(path: &str) -> Result<PathBuf, String> {
+    let p = PathBuf::from(path);
+    if !p.is_absolute() {
+        return Err("PDFパスは絶対パスである必要があります".into());
+    }
+    if p.components().any(|c| matches!(c, Component::ParentDir)) {
+        return Err("無効なPDFパスです".into());
+    }
+    let ext = p
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    if ext != "pdf" {
+        return Err("PDFファイルのみ読み込めます".into());
+    }
+    if !p.is_file() {
+        return Err("PDFファイルが見つかりません".into());
+    }
+    Ok(p)
+}
+
 #[tauri::command]
 pub fn save_source_pdf(app: AppHandle, paper_id: String, data: Vec<u8>) -> Result<String, String> {
     let dir = paper_dir(&app, &paper_id)?;
@@ -61,10 +83,11 @@ pub fn copy_source_pdf(
     paper_id: String,
     source_path: String,
 ) -> Result<String, String> {
+    let source = require_readable_pdf(&source_path)?;
     let dir = paper_dir(&app, &paper_id)?;
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let dest = dir.join("source.pdf");
-    fs::copy(&source_path, &dest).map_err(|e| e.to_string())?;
+    fs::copy(&source, &dest).map_err(|e| e.to_string())?;
     Ok(dest.to_string_lossy().to_string())
 }
 
@@ -105,18 +128,7 @@ pub fn source_pdf_exists(app: AppHandle, paper_id: String) -> Result<bool, Strin
 
 #[tauri::command]
 pub fn read_dropped_pdf(path: String) -> Result<Vec<u8>, String> {
-    let file_path = PathBuf::from(&path);
-    let ext = file_path
-        .extension()
-        .and_then(|value| value.to_str())
-        .unwrap_or("")
-        .to_ascii_lowercase();
-    if ext != "pdf" {
-        return Err("PDFファイルのみ対応しています".into());
-    }
-    if !file_path.is_file() {
-        return Err("ファイルが見つかりません".into());
-    }
+    let file_path = require_readable_pdf(&path)?;
     let size = fs::metadata(&file_path)
         .map_err(|e| e.to_string())?
         .len();

@@ -5,7 +5,7 @@ import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useImportJobStore, visibleImportJobs } from "../../stores/importJobStore";
 import { useProjectStore } from "../../stores/projectStore";
-import { filterPapersByLibraryQuery } from "../../domain/librarySearch";
+import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";
 import { derivePaperReadiness } from "../../domain/paperReadiness";
 import { tryStartPdfImport } from "../../services/pdfImport";
 import { dismissBackgroundImport, retryBackgroundImport } from "../../services/import/startBackgroundImport";
@@ -25,10 +25,7 @@ export function LibraryScreen() {
   const searchQuery = useProjectStore((state) => state.searchQuery);
   const importJobs = useImportJobStore((state) => state.jobs);
   const jobs = useMemo(() => visibleImportJobs(importJobs), [importJobs]);
-  const visiblePapers = useMemo(
-    () => filterPapersByLibraryQuery(papers, searchQuery),
-    [papers, searchQuery]
-  );
+  const visiblePapers = useLibraryPaperSearch(papers, searchQuery);
 
   const { pendingId, error, busy, requestDelete, cancelDelete, confirmDelete } =
     useDeletePaper();

@@ -8,8 +8,6 @@
   "permissions": [
     "core:default",
     "core:window:allow-close",
-    "core:window:allow-destroy",
-    "shell:allow-spawn",
-    "shell:allow-kill"
+    "core:window:allow-destroy"
   ]
 }

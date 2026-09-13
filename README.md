@@ -45,11 +45,15 @@
 
 ### 取り込みと翻訳
 
-- サーバー未接続でも PDF を追加できる。起動できたら待機中ジョブと未完了論文の翻訳を自動再開する
-- タイトル → Abstract → 本文、読書位置付近を優先する文バッチ翻訳（既定 24、micro-batch 合流）
-- 日本語論文は翻訳せずレイアウトのみ
-- スキャン PDF は Apple Vision OCR（`.app` / `tauri:dev` のみ。ブラウザ開発では不可）
-- 品質が足りない訳は保存せず原文表示へ戻す（引用・DOI・統計量などの保持を採点）
+- PDF 追加・途中から読める。タイトル → Abstract → 本文の文バッチ翻訳（既定 24）
+- 日本語論文は翻訳せずレイアウトのみ。スキャンは Apple Vision OCR（Tauri のみ）
+- 品質不足の訳は保存せず原文へ戻す
+- 起動時は論文メタだけ読み、本文は Reader で lazy load。⌘K は SQLite FTS（本文をメモリに載せない）
+- ライブラリはモデル準備中も使える。process 起動と download/load/warmup を分離し、バナーに phase を表示（固定 90 秒 timeout なし）
+- リリース Python は `requirements.lock` から clean venv（開発者 `.venv` コピーなし）
+- 本番 CSP・localhost 限定 API・Tauri 共有トークンで POST 保護
+
+詳細と残課題は [P0_HARDENING.md](./P0_HARDENING.md)。
 
 ---
 
@@ -63,12 +67,12 @@ npm run tauri:dev
 ./restart-translation-server.sh   # 別ターミナル
 npm run dev                       # http://localhost:5173
 
-# リリース .app
+# リリース .app（clean Python runtime を lock から生成してからビルド）
 npm run tauri:build
 open "src-tauri/target/release/bundle/macos/Paper Reader.app"
 ```
 
-初回の Python 3.12 venv（`uv`）とトラブルシュートは [QUICKSTART.md](./QUICKSTART.md)。翻訳サーバーは `http://127.0.0.1:8765/health`。
+初回の Python 3.12 venv（`uv`）とトラブルシュートは [QUICKSTART.md](./QUICKSTART.md)。翻訳サーバーは `http://127.0.0.1:8765/health`（`phase` / `model_loaded`）。
 
 ---
 

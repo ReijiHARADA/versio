@@ -11,15 +11,46 @@ import { ImportScreen } from "./components/import/ImportScreen";
 import { SettingsScreen } from "./components/settings/SettingsScreen";
 import { PdfFileDropLayer } from "./components/shell/PdfFileDropLayer";
 import { useAppStore } from "./stores/appStore";
-import { isTauriApp, markTranslationServerReady, waitForServer } from "./utils/serverReady";
+import {
+  isTauriApp,
+  markTranslationServerReady,
+  waitForTranslationServer,
+  type TranslationServerHealth,
+} from "./utils/serverReady";
 import { flushPersistence } from "./services/database";
 import { resumeAfterTranslationServerReady } from "./services/import/startBackgroundImport";
+
+function formatModelBanner(health: TranslationServerHealth | null, attempt: number): string {
+  const phase = health?.phase;
+  const progress =
+    typeof health?.progress === "number" && Number.isFinite(health.progress)
+      ? ` ${Math.round(Math.min(1, Math.max(0, health.progress)) * 100)}%`
+      : "";
+  if (health?.message) return health.message;
+  switch (phase) {
+    case "downloading":
+      return `翻訳モデルを取得しています${progress}`;
+    case "loading":
+      return `翻訳モデルを読み込んでいます${progress}`;
+    case "warming_up":
+      return "翻訳モデルを準備しています…";
+    case "model_missing":
+      return "翻訳モデルの準備を開始しています…";
+    case "error":
+      return health?.error || "翻訳サーバーでエラーが発生しました";
+    default:
+      return attempt > 5
+        ? `翻訳サーバーを起動しています（${attempt}秒）`
+        : "翻訳サーバーを起動しています…";
+  }
+}
 
 function App() {
   const displaySettings = useAppStore((state) => state.displaySettings);
   const [serverReady, setServerReady] = useState(!isTauriApp());
-  const [serverError, setServerError] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const [health, setHealth] = useState<TranslationServerHealth | null>(null);
 
   useEffect(() => {
     if (!isTauriApp()) {
@@ -31,13 +62,8 @@ function App() {
   useEffect(() => {
     const applyTheme = () => {
       if (displaySettings.theme === "system") {
-        const prefersDark = window.matchMedia(
-          "(prefers-color-scheme: dark)"
-        ).matches;
-        document.documentElement.setAttribute(
-          "data-theme",
-          prefersDark ? "dark" : "light"
-        );
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.setAttribute("data-theme", prefersDark ? "dark" : "light");
       } else {
         document.documentElement.setAttribute("data-theme", displaySettings.theme);
       }
@@ -47,9 +73,7 @@ function App() {
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = () => {
-      if (displaySettings.theme === "system") {
-        applyTheme();
-      }
+      if (displaySettings.theme === "system") applyTheme();
     };
 
     mediaQuery.addEventListener("change", handleChange);
@@ -92,52 +116,57 @@ function App() {
     };
   }, []);
 
-  // Tauri アプリとして起動した場合のみサーバー待機
   useEffect(() => {
     if (!isTauriApp()) return;
     let cancelled = false;
-    let retryTimer: number | undefined;
+    const ac = new AbortController();
 
-    const onReady = () => {
-      if (cancelled) return;
-      if (retryTimer !== undefined) {
-        window.clearInterval(retryTimer);
-        retryTimer = undefined;
+    const run = async () => {
+      setServerError(null);
+      try {
+        await waitForTranslationServer({
+          signal: ac.signal,
+          onProgress: (n, h) => {
+            if (cancelled) return;
+            setAttempt(n);
+            setHealth(h);
+          },
+        });
+        if (cancelled) return;
+        setServerReady(true);
+        setServerError(null);
+        resumeAfterTranslationServerReady();
+      } catch (error) {
+        if (cancelled || ac.signal.aborted) return;
+        setServerError(error instanceof Error ? error.message : "翻訳サーバーを起動できませんでした");
       }
-      setServerReady(true);
-      setServerError(false);
-      resumeAfterTranslationServerReady();
     };
 
-    setServerError(false);
-    waitForServer((n) => setAttempt(n), 90) // 最大90秒待機
-      .then(onReady)
-      .catch(() => {
-        if (cancelled) return;
-        setServerError(true);
-        retryTimer = window.setInterval(() => {
-          waitForServer(undefined, 1, 1000).then(onReady).catch(() => {
-            // Keep the banner actionable while the sidecar/model is still loading.
-          });
-        }, 5000);
-      });
-
+    void run();
     return () => {
       cancelled = true;
-      if (retryTimer !== undefined) window.clearInterval(retryTimer);
+      ac.abort();
     };
   }, []);
 
   const handleRetry = () => {
-    setServerError(false);
+    setServerError(null);
     setServerReady(false);
     setAttempt(0);
-    waitForServer((n) => setAttempt(n), 90)
+    setHealth(null);
+    void waitForTranslationServer({
+      onProgress: (n, h) => {
+        setAttempt(n);
+        setHealth(h);
+      },
+    })
       .then(() => {
         setServerReady(true);
         resumeAfterTranslationServerReady();
       })
-      .catch(() => setServerError(true));
+      .catch((error) => {
+        setServerError(error instanceof Error ? error.message : "翻訳サーバーを起動できませんでした");
+      });
   };
 
   return (
@@ -157,14 +186,13 @@ function App() {
             padding: "10px 16px",
             background: "#1a365d",
             color: "#ffffff",
-            fontFamily:
-              '-apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif',
             fontSize: 13,
           }}
         >
           {serverError ? (
             <>
-              <span>翻訳サーバーの起動に時間がかかっています</span>
+              <span>{serverError}</span>
               <button
                 type="button"
                 onClick={handleRetry}
@@ -181,32 +209,25 @@ function App() {
               </button>
             </>
           ) : (
-            <span>
-              翻訳モデルを読み込んでいます
-              {attempt > 5 ? `（${attempt}秒）` : ""}
-            </span>
+            <span>{formatModelBanner(health, attempt)}</span>
           )}
         </div>
       )}
       <PdfFileDropLayer />
       <div style={{ paddingTop: !serverReady ? 40 : 0, minHeight: "100%" }}>
-      <Routes>
-        {/* Import は shell の外（フルスクリーン） */}
-        <Route path="/import" element={<ImportScreen />} />
-
-        {/* AppShell が常設サイドバーを提供する */}
-        <Route element={<AppShell />}>
-          <Route path="/" element={<LibraryScreen />} />
-          <Route path="/inbox" element={<InboxScreen />} />
-          <Route path="/favorites" element={<FavoritesScreen />} />
-          <Route path="/recent" element={<RecentScreen />} />
-          <Route path="/project/:projectId" element={<ProjectScreen />} />
-          <Route path="/settings" element={<SettingsScreen />} />
-          <Route path="/reader/:paperId" element={<ReaderScreen />} />
-        </Route>
-
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        <Routes>
+          <Route path="/import" element={<ImportScreen />} />
+          <Route element={<AppShell />}>
+            <Route path="/" element={<LibraryScreen />} />
+            <Route path="/inbox" element={<InboxScreen />} />
+            <Route path="/favorites" element={<FavoritesScreen />} />
+            <Route path="/recent" element={<RecentScreen />} />
+            <Route path="/project/:projectId" element={<ProjectScreen />} />
+            <Route path="/settings" element={<SettingsScreen />} />
+            <Route path="/reader/:paperId" element={<ReaderScreen />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </div>
     </HashRouter>
   );

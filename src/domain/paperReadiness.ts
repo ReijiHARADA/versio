@@ -35,13 +35,23 @@ export function derivePaperReadiness(input: {
   blocks?: PaperBlock[];
 }): PaperReadinessView {
   const { processingStatus, blocks } = input;
+  const bodyLoaded = blocks !== undefined;
   const readable = hasReadableBody(blocks);
 
   if (processingStatus === "failed") {
-    return { readiness: "needs_attention", label: "要確認", canOpen: readable };
+    // Unloaded body: trust index — package usually still opens.
+    return {
+      readiness: "needs_attention",
+      label: "要確認",
+      canOpen: bodyLoaded ? readable : true,
+    };
   }
   if (processingStatus === "partial") {
-    return { readiness: "needs_attention", label: "要確認", canOpen: readable };
+    return {
+      readiness: "needs_attention",
+      label: "要確認",
+      canOpen: bodyLoaded ? readable : true,
+    };
   }
   if (processingStatus === "translating" || processingStatus === "glossary") {
     return {
@@ -50,12 +60,22 @@ export function derivePaperReadiness(input: {
       canOpen: true,
     };
   }
+  if (processingStatus === "queued" || processingStatus === "extracting" || processingStatus === "structuring") {
+    if (!bodyLoaded) {
+      return { readiness: "preparing", label: "準備中", canOpen: false };
+    }
+    if (!readable) {
+      return { readiness: "preparing", label: "準備中", canOpen: false };
+    }
+    return { readiness: "translating", label: "日本語化中", canOpen: true };
+  }
   if (isBusyProcessingStatus(processingStatus) && !readable) {
     return { readiness: "preparing", label: "準備中", canOpen: false };
   }
   if (isBusyProcessingStatus(processingStatus) && readable) {
     return { readiness: "translating", label: "日本語化中", canOpen: true };
   }
+  // ready / unknown — openable from library without loading body first
   return { readiness: "readable", label: "読めます", canOpen: true };
 }
 

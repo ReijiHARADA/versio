@@ -14,6 +14,29 @@ export const MADLAD_MODEL_VERSION = "3b-mt-v5-semantic-v50";
 
 const DEFAULT_SERVER_URL = "http://127.0.0.1:8765";
 
+let cachedServerToken: string | null | undefined;
+
+async function translationAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
+    return headers;
+  }
+  if (cachedServerToken === undefined) {
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      cachedServerToken = await invoke<string>("get_translation_server_token");
+    } catch {
+      cachedServerToken = null;
+    }
+  }
+  if (cachedServerToken) {
+    headers["X-Paper-Reader-Token"] = cachedServerToken;
+  }
+  return headers;
+}
+
 export function resolveMadladServerUrl(url?: string): string {
   const trimmed = (url ?? "").trim().replace(/\/$/, "");
   if (!trimmed) {
@@ -40,9 +63,7 @@ export class MADLADEngine implements TranslationEngine {
   ): Promise<TranslationResult> {
     const response = await fetch(`${this.serverUrl}/translate`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: await translationAuthHeaders(),
       body: JSON.stringify({
         text,
         source_language: sourceLanguage,
@@ -91,9 +112,7 @@ export class MADLADEngine implements TranslationEngine {
   ): Promise<TranslationResult[]> {
     const response = await fetch(`${this.serverUrl}/translate/batch`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: await translationAuthHeaders(),
       body: JSON.stringify({
         texts,
         source_language: sourceLanguage,
@@ -173,6 +192,7 @@ export class MADLADEngine implements TranslationEngine {
   async loadModel(): Promise<void> {
     const response = await fetch(`${this.serverUrl}/load`, {
       method: "POST",
+      headers: await translationAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -184,6 +204,7 @@ export class MADLADEngine implements TranslationEngine {
   async unloadModel(): Promise<void> {
     const response = await fetch(`${this.serverUrl}/unload`, {
       method: "POST",
+      headers: await translationAuthHeaders(),
     });
 
     if (!response.ok) {

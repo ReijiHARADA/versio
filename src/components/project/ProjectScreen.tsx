@@ -6,8 +6,8 @@ import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
 import { useImportJobStore, visibleImportJobs } from "../../stores/importJobStore";
 import { usePaperDragStore } from "../../stores/paperDragStore";
-import { filterPapersByLibraryQuery } from "../../domain/librarySearch";
 import { derivePaperReadiness } from "../../domain/paperReadiness";
+import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";
 import { collectDescendantIds, listChildWorkspaceNodes, workspaceAncestorPath } from "../../data/workspace/tree";
 import { listPapersForWorkspace, removePaperFromWorkspace } from "../../services/projectService";
 import { tryStartPdfImport } from "../../services/pdfImport";
@@ -61,14 +61,11 @@ export function ProjectScreen() {
     void listPapersForWorkspace(nodeId).then(setNodePapers).finally(() => setLoading(false));
   }, [nodeId, memberships]);
 
-  const merged = useMemo(
-    () =>
-      filterPapersByLibraryQuery(
-        nodePapers.map((paper) => storePapers.find((item) => item.id === paper.id) ?? paper),
-        searchQuery
-      ),
-    [nodePapers, searchQuery, storePapers]
+  const projectBase = useMemo(
+    () => nodePapers.map((paper) => storePapers.find((item) => item.id === paper.id) ?? paper),
+    [nodePapers, storePapers]
   );
+  const merged = useLibraryPaperSearch(projectBase, searchQuery);
 
   const childFolders = useMemo(() => {
     if (!nodeId) return [];

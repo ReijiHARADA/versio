@@ -382,6 +382,24 @@ export function ReaderScreen() {
     };
   }, [paperId, setSectionsInStore, setBlocksInStore, updatePaper]);
 
+  // Release previous paper body when navigating away (keep metadata + active imports).
+  useEffect(() => {
+    return () => {
+      if (!paperId) return;
+      const cache = useLibraryCache.getState();
+      const paper = cache.papers.find((item) => item.id === paperId);
+      const busy =
+        paper?.processingStatus === "translating" ||
+        paper?.processingStatus === "glossary" ||
+        paper?.processingStatus === "queued";
+      if (busy) return;
+      cache.clearPaperBody(paperId);
+      void import("../../data/repositories/documentRepository").then(({ forgetDocument }) => {
+        forgetDocument(paperId);
+      });
+    };
+  }, [paperId]);
+
   useEffect(() => {
     if (!paperId || isLoading) return;
     void reloadAnnotations();

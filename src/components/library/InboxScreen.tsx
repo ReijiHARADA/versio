@@ -5,8 +5,8 @@ import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useImportJobStore, visibleImportJobs } from "../../stores/importJobStore";
 import { useProjectStore } from "../../stores/projectStore";
-import { filterPapersByLibraryQuery } from "../../domain/librarySearch";
 import { derivePaperReadiness } from "../../domain/paperReadiness";
+import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";
 import { tryStartPdfImport } from "../../services/pdfImport";
 import { dismissBackgroundImport, retryBackgroundImport } from "../../services/import/startBackgroundImport";
 import { PaperDeleteControls } from "./PaperDeleteControls";
@@ -34,10 +34,11 @@ export function InboxScreen() {
     useDeletePaper();
 
   const assigned = new Set(memberships.map((m) => m.paperId));
-  const inboxPapers = useMemo(
-    () => filterPapersByLibraryQuery(papers.filter((p) => !assigned.has(p.id)), searchQuery),
-    [assigned, papers, searchQuery]
+  const inboxBase = useMemo(
+    () => papers.filter((p) => !assigned.has(p.id)),
+    [assigned, papers]
   );
+  const inboxPapers = useLibraryPaperSearch(inboxBase, searchQuery);
 
   const handleFileSelect = useCallback(async (file: File) => {
     await tryStartPdfImport(file);

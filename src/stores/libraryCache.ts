@@ -4,6 +4,7 @@ import type { Paper, PaperBlock, Section } from "../types/paper";
 /**
  * In-memory query cache for library / reader views.
  * Paper Package + SQLite remain the source of truth.
+ * Body (sections/blocks) is loaded lazily when a paper is opened.
  */
 type LibraryCacheState = {
   papers: Paper[];
@@ -18,9 +19,12 @@ type LibraryCacheState = {
   setSections: (paperId: string, sections: Section[] | ((prev: Section[]) => Section[])) => void;
   setBlocks: (paperId: string, blocks: PaperBlock[] | ((prev: PaperBlock[]) => PaperBlock[])) => void;
   updateBlock: (paperId: string, blockId: string, updates: Partial<PaperBlock>) => void;
+  /** Drop cached body only (keep paper metadata). */
+  clearPaperBody: (paperId: string) => void;
   removePaperData: (paperId: string) => void;
   getSections: (paperId: string) => Section[];
   getBlocks: (paperId: string) => PaperBlock[];
+  hasPaperBody: (paperId: string) => boolean;
 };
 
 export const useLibraryCache = create<LibraryCacheState>()((set, get) => ({
@@ -111,6 +115,17 @@ export const useLibraryCache = create<LibraryCacheState>()((set, get) => ({
       };
     }),
 
+  clearPaperBody: (paperId) =>
+    set((state) => {
+      if (!(paperId in state.sections) && !(paperId in state.blocks)) return state;
+      const sections = { ...state.sections };
+      const blocks = { ...state.blocks };
+      delete sections[paperId];
+      delete blocks[paperId];
+      return { sections, blocks };
+    }),
+
   getSections: (paperId) => get().sections[paperId] || [],
   getBlocks: (paperId) => get().blocks[paperId] || [],
+  hasPaperBody: (paperId) => paperId in get().blocks,
 }));
