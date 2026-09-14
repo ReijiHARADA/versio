@@ -1,16 +1,33 @@
 # Paper Reader
 
+## 文書の更新ルール
+
+実装の正は **コード**。文書の役割を混ぜない。
+
+| 文書 | 更新するとき |
+| --- | --- |
+| [CURRENT_STATE.md](./CURRENT_STATE.md) | **user-visible な現在状態**が変わったとき（機能の追加・削除・制限の変化、検証状況の更新） |
+| [ROADMAP.md](./ROADMAP.md) | **プロダクト目標・優先度・スコープ**が変わったときだけ。通常の実装修正では触らない |
+| [README.md](./README.md) | **製品の定義・対応環境・セットアップ・主要導線・ドキュメント入口**が変わったときだけ |
+| [QUICKSTART.md](./QUICKSTART.md) | 起動手順・venv・トラブルシュートが変わったとき |
+| 本ファイル (AGENTS.md) | エージェント向け制約・ビルド／OCR／翻訳／データルールが変わったとき |
+
+- 通常のバグ修正・リファクタ・小さな UX 調整で README / ROADMAP を書き換えない
+- 完了した目標を ROADMAP の「未達」に残さない。現状は CURRENT_STATE へ
+- 抽出・翻訳の詳細は専門文書へ書き、README / ROADMAP / CURRENT_STATE に重複コピーしない
+
 ## Tauri macOS アプリ
 
-- UI を変えたら `npm run dev` を上げ、`npm run verify:browser` で Library / 設定 / Reader を実ブラウザ確認する。このセッションの Cursor に Browser MCP は無いので Playwright（`@playwright/test`）を使う。翻訳サーバーは `http://127.0.0.1:8765/health`。
+- UI を変えたら `npm run dev` または preview を上げ、`npm run verify:browser` で Library / 設定 / Reader を実ブラウザ確認する。このセッションの Cursor に Browser MCP は無いので Playwright（`@playwright/test`）を使う。翻訳サーバーは `http://127.0.0.1:8765/health`。
 - 新しい UI は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md) に従う。局所操作は Popover、一時的な大きい作業は Sheet / Overlay、論文全体の一覧は Inspector。本文操作で Notes を自動で開かない。別 route は Library / Reader / Workspace / Settings だけ。同一対象の場所・サイズ変化（図の拡大など）は Shared Element Transition でビューを切らない。
 - `src-tauri/` が Tauri v2 のシェル。`npm run tauri:dev` で開発、`npm run tauri:build` で `.app` + `.dmg` を生成。
 - 生成物: `src-tauri/target/release/bundle/macos/Paper Reader.app`
 - Xcode は `/Applications/Xcode-beta.app` を使用。ビルド時は `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer` を設定すること。
-- 翻訳サーバーは Tauri の `tauri-plugin-shell` でサイドカー起動。アプリ終了時に自動停止。
-- リリースビルド前に `bash scripts/bundle-python.sh` を実行する。`uv` + `translation-server/requirements.lock` から clean な `translation-server/venv/` を作る（開発者 `.venv` のコピーはしない）。フルリリースでは `beforeBuildCommand` で回す。画面確認だけの再ビルドでは Python 再生成を省略してよい。
+- 翻訳サーバーはアプリが spawn し、終了時に停止する。
+- リリースビルド前に `bash scripts/bundle-python.sh` を実行する。`uv` + `translation-server/requirements.lock` + `.python-version`（patch 固定）から clean な `translation-server/venv/` を作る（開発者 `.venv` のコピーはしない）。フルリリースでは `beforeBuildCommand` で回す。画面確認だけの再ビルドでは Python 再生成を省略してよい。
 - 本番 CSP は有効。WKWebView 向けに `script-src` は nonce のみにしない（`'self' 'unsafe-inline' 'wasm-unsafe-eval'`）。変更時は `.app` で白画面にならないか確認する。
 - PDF 解析は **pdfjs-dist 3.11（legacy build）**。6.x は WKWebView で Iterator Helpers が無く即クラッシュするので上げない。日本語 CID フォントは `pdfjs-dist/cmaps`（Adobe-Japan1 など）をアプリに同梱してデコードする。
+- ユーザー領域への書き出しは Rust の save dialog コマンドで完結させる。フロントから任意 absolute path への write API を復活させない。
 
 ## OCR（スキャン PDF 対応）
 
@@ -26,7 +43,7 @@
 - Concurrent `/translate` requests are coalesced by `MicroBatchScheduler` (25ms window). `generate()` stays single-threaded. Disable with `MADLAD_MICROBATCH=0`.
 - Frontend translation concurrency default is 8 so requests can share a batch; this is not parallel Metal generate.
 - Batching measurements: `translation-server/MPS_BATCH_OPTIMIZATION_REPORT.md`.
-- Do not run `update_python_env.sh` unless the 3.12 venv is broken.
+- Do not run `update_python_env.sh` unless the pinned Python venv is broken. Prefer `.python-version` patch pin.
 - Restart the server with `./restart-translation-server.sh`.
 - Speed measurements and rejected alternatives live in `translation-server/SPEED_BENCH.md`.
 - MLX bf16 (unquantized official 3B) was measured in `translation-server/MLX_BF16_BENCH_REPORT.md`. Do not switch production to it: quality matches MPS, but it is not 1.5–2× faster than the batched MPS path.
@@ -48,4 +65,3 @@
 - Academic PDF extraction: CanonicalDocument is the extraction source of truth. Persist as Paper Package (Markdown + structure). Import calls `extractAcademicPdf` then writes the package. Reader consumes Document AST / projection, not pdfLayout or GROBID internals. `pdfLayout.ts` remains the generic heuristic engine (do not rewrite column left→right). Format Profile apply thresholds stay APPLY_MIN=0.75 / APPLY_MARGIN=0.12. Do not use catalog.json formatFamily for production detection. Do not upgrade pdfjs-dist to 6.x. GROBID/Docling are optional enrichers, not required dependencies. Reuse block IDs on re-extract; do not mint a fresh UUID for every block.
 - Workspace: WorkspaceNode is one type. Every node can have children, papers, and metadata; nesting is unrestricted except cycles. Papers are never copied and belong through WorkspacePaper many-to-many relations.
 - Dotted grant identifiers (`016.128.303`) are not section headings or paper titles. Wrap them into the preceding `grant number` paragraph. Latin-ratio quality checks ignore source proper nouns and numeric ids.
-- After any product or behavior change, update `README.md` and `ROADMAP.md` in the same turn so they match the current code. Move finished work out of ROADMAP section 3. Put remaining gaps only. Update `QUICKSTART.md` or `AGENTS.md` when launch steps or constraints change.

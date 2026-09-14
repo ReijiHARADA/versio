@@ -1,29 +1,79 @@
 # Current State
 
-最終更新: 2026-09-13
+最終更新: 2026-09-14  
+**このファイルが「いま main に何があるか」の正です。** 実装を変えたらここを更新する（[AGENTS.md](./AGENTS.md)）。
 
-## ユーザー向けの挙動
+コードを source of truth とし、アーキテクチャ詳細は各専門文書へリンクする（重複しない）。
 
-### P0 後続（セキュリティ / 再現性）
+---
 
-- **翻訳サーバー認証**: 起動ごとの API token は OS の暗号学的乱数（`/dev/urandom`）で生成。ディスクへは保存しない。
-- **書き出し**: Markdown / Notion ZIP / 検証用パッケージは、保存ダイアログ〜書き込みまでをアプリ側（Rust）で完結。フロントから任意の絶対パスへ直接書けない。
-- **モデル準備バナー**: ダウンロード中は可能なとき実バイト進捗を表示。取得できない段階では「進捗取得中」と明示。読み込み / ウォームアップはダウンロード進捗と混同しない。
-- **元PDF**: Reader から渡したページ番号を使って Preview で該当ページ付近を開く（失敗時は通常の open にフォールバック）。将来の bbox ハイライト用に highlight 引数を予約。
-- **同梱 Python**: release 用 runtime は `translation-server/.python-version` の patch まで固定（現在 `3.12.14`）。
+## Feature status
 
-### P1（Reader / UX / Accessibility）
+| 領域 | 状態 | 要点 |
+| --- | --- | --- |
+| ライブラリ / ワークスペース | **done** | 階層フォルダ、パス trail、サイドバー幅調整、⌘K（FTS + メタデータ） |
+| 起動時データ | **done** | メタデータのみ先読み。本文は Reader で lazy load。終了時は persist flush |
+| Reader 本文 | **done** | 日本語 1 カラム、原文展開、目次、読書位置、⌘F |
+| 長論文描画 | **done** | section 単位の遅延マウント + block プレースホルダ。短編は全マウント |
+| メモ | **done** | 訳文選択 Popover。右パネルは一覧専用（本文操作で自動オープンしない） |
+| 用語集 | **done** | Inspector で CRUD + 訳後置換。本文中用語の軽量 Popover |
+| Citation | **done** | 一意 `[n]` は preview Popover（ジャンプ / DOI・URL）。曖昧番号はリンクしない |
+| 図表 | **done** | 本文表示 + Shared Element lightbox |
+| 書き出し | **done** | Markdown / Notion ZIP / 検証パッケージ。保存ダイアログ〜 write は Rust |
+| 元 PDF | **partial** | ページ指定で open。Preview ページジャンプは Accessibility 依存の best-effort。bbox ハイライトは未 |
+| Import UX | **done** | background import、失敗原因の分類、再試行 / 再開、重複時に既存を開く |
+| Import abort | **not done** | 実行中ジョブの真の中断は未実装（dismiss / 保存後の翻訳再開が主経路） |
+| モデル lifecycle | **done** | process 起動と download/load/warmup 分離。Library は準備中も可。固定 90s timeout なし |
+| セキュリティ | **done** | 本番 CSP、localhost API、CSPRNG token、任意 path write 廃止、PDF path 検証 |
+| 再現ビルド | **done** | `bundle-python.sh` + `requirements.lock` + Python **3.12.14** 固定 |
+| OCR | **done** | Apple Vision（Tauri のみ）。ブラウザ dev では不可 |
+| 抽出 / 翻訳品質 | **ongoing** | CanonicalDocument + 品質ゲートは稼働中。残差は別ストリーム（下記） |
 
-- **長論文 Reader**: section 単位で本文ボディを遅延マウント。`block-*` / `section-*` のプレースホルダは常時残し、outline / search / annotation / reading position / citation jump を維持。短い論文は全マウントのまま。
-- **Import 失敗**: 原因を分類し、再試行 / 続きから再開 / 既存を開く / 閉じる を提示。重複 PDF は既存論文を開く導線を表示。
-- **Citation preview**: 解決可能な `[n]` は Popover で参考文献の要約を表示し、ジャンプや DOI/URL を選べる。解決不能な引用は装飾のみ。
-- **用語 Popover**: 本文中の glossary 用語を軽量に確認できる（Inspector は一覧・編集のまま）。
-- **Keyboard / a11y**: 目次の矢印キー移動、`aria-current`、主要 icon ボタンの accessible name、Popover の Escape / focus 復帰。
+---
 
-## 残課題（別チケット想定）
+## Architecture（現行）
 
-- Preview ページジャンプは Accessibility 許可に依存する best-effort（失敗時は通常 open）。
-- Citation / 用語 Popover の authors・title は参考文献テキストのヒューリスティック解析。構造化抽出の強化は PDF extraction 側の別課題。
-- Import 実行中ジョブの真の abort（プロセス中断）は未実装。失敗・重複カードの dismiss と、保存済み論文の翻訳再開が主経路。
-- 50–100 ページ実 PDF のブラウザ実測メトリクス（memory）は fixture 不在のため、仮想化ユニット指標と短いブラウザ検証で代替。実機計測は `test-data/real-papers` 入手後。
-- 翻訳品質・CanonicalDocument / Evidence / Resolver は本 P1 では未変更。問題発見時は別課題。
+- **シェル**: Tauri 2 macOS。UI は React。翻訳サイドカーはアプリが spawn / 終了時に停止
+- **本文の正本**: Paper Package（`<AppData>/papers/<paperId>/`）— [DATA_ARCHITECTURE.md](./DATA_ARCHITECTURE.md)
+- **索引・所属・メモ・読書位置・用語・FTS**: SQLite `library.sqlite`
+- **抽出**: `extractAcademicPdf` → CanonicalDocument → Package。詳細は [ACADEMIC_PDF_EXTRACTION_ARCHITECTURE.md](./ACADEMIC_PDF_EXTRACTION_ARCHITECTURE.md)
+- **翻訳**: MADLAD-400 3B / MPS / bf16、文バッチ既定 24、品質ゲート。監査手順は [TRANSLATION_CORPUS_AUDIT.md](./TRANSLATION_CORPUS_AUDIT.md)
+- **硬化メモ**: [P0_HARDENING.md](./P0_HARDENING.md)
+
+---
+
+## Known limitations
+
+- Citation / 用語 Popover の authors・title は参考文献・用語テキストのヒューリスティック。構造化抽出の強化は extraction 側
+- 長論文仮想化の **実 PDF メモリ計測**（50–100 ページ）は fixture 依存で未実測。ユニット指標と通常の Reader 検証で代替
+- Preview ページジャンプは失敗しても PDF 自体は開く
+- 配布 `.app` での一連操作（メモ、元 PDF、DOI、Notion インポート、CSP 白画面）はコード上実装済みだが、**公証付きビルドでの再確認**は残る
+- `tauri-plugin-shell` の未使用残り・公証 CI は hardening 残件（P0_HARDENING）
+- 2 段組・図キャプション・affiliation grid・インライン数式などの抽出残差は別ワークストリーム
+
+---
+
+## Release readiness
+
+| 項目 | 状態 |
+| --- | --- |
+| `npm run tauri:build` → `.app` / `.dmg` | 可能（`beforeBuildCommand` で clean Python） |
+| Python runtime 再現性 | **3.12.14** + lock |
+| App Store / 公証フローの CI | 未整備 |
+| Windows | 対象外 |
+
+---
+
+## Test / verification
+
+| コマンド | 役割 |
+| --- | --- |
+| `npm test` | Vitest（抽出・翻訳・Reader UX ロジックなど） |
+| `npm run lint` | oxlint |
+| `npm run build` | `tsc` + Vite |
+| `npm run verify:browser` | Playwright スモーク（Library / 設定など） |
+| `npm run fetch:real-papers` ほか | 実論文コーパス（gitignore の `test-data/`） |
+
+P1 回帰の例: `src/test/reader/sectionVirtualization.test.ts`, `src/test/reader/p1ReaderUx.test.ts`。
+
+`verify:browser` は環境により workspace 見出し待ちでタイムアウトすることがある。失敗時は再現条件をこの節に追記する。
