@@ -196,6 +196,7 @@ pub fn run() {
             source_pdf::delete_source_pdf,
             source_pdf::source_pdf_exists,
             source_pdf::read_dropped_pdf,
+            source_pdf::acceptance_fixture_path,
             paper_fs::read_app_file,
             paper_fs::write_app_file,
             paper_fs::app_file_exists,
@@ -205,6 +206,8 @@ pub fn run() {
             paper_fs::save_export_file,
             paper_fs::save_markdown_export,
             paper_fs::save_verification_export,
+            paper_fs::export_app_directory,
+            paper_fs::import_directory_to_app,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

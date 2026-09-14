@@ -182,6 +182,10 @@ const SOURCE_GROUNDED_TERMS: Array<{
     source: /\bless\s+weird\b/i,
     replacements: [[/より奇妙(?:で|な|に)?/g, "奇妙さが少なく"]],
   },
+  {
+    source: /\bmobile\s+domain\b/i,
+    replacements: [[/移動領域/g, "モバイル分野"]],
+  },
 ];
 
 export function normalizeSourceGroundedTerminology(

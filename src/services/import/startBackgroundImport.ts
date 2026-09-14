@@ -15,10 +15,13 @@ import {
   importPDFV2,
   type ImportConfig,
 } from "../importServiceV2";
+import { ImportCancelledError } from "./cancellation";
 import { v4 as uuidv4 } from "uuid";
+import { translationManager } from "../translation";
 
 const startedImportKeys = new Set<string>();
 const importFiles = new Map<string, File>();
+const importAbortControllers = new Map<string, AbortController>();
 export const SERVER_UNAVAILABLE_MESSAGE = "翻訳サーバーに接続できません";
 
 const blockBatcher = createBlockUpdateBatcher((id, batch) => {
@@ -72,7 +75,8 @@ async function attachToWorkspace(nodeId: string, paperId: string): Promise<void>
 /** Wait for MADLAD instead of failing the job while the sidecar is still booting. */
 async function ensureMadladReady(
   jobId: string,
-  patch: (id: string, next: Partial<ImportJob>) => void
+  patch: (id: string, next: Partial<ImportJob>) => void,
+  signal?: AbortSignal
 ): Promise<boolean> {
   const first = await checkMADLADAvailability();
   if (first.available) return true;
@@ -85,6 +89,7 @@ async function ensureMadladReady(
 
   try {
     await waitForTranslationServer({
+      signal,
       onProgress: (attempt, health) => {
         const phaseMsg = health?.message;
         patch(jobId, {
@@ -99,7 +104,12 @@ async function ensureMadladReady(
     });
     const again = await checkMADLADAvailability();
     return again.available;
-  } catch {
+  } catch (error) {
+    if (signal?.aborted || (error instanceof Error && /abort/i.test(error.message))) {
+      throw new ImportCancelledError("Import cancelled while waiting for translation server", {
+        partialReady: true,
+      });
+    }
     return false;
   }
 }
@@ -110,18 +120,21 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
   const settings = await getSetting<ImportConfig>("translationSettingsV2");
   let attached = false;
   let duplicatePaperId: string | undefined;
+  const controller = importAbortControllers.get(jobId) ?? new AbortController();
+  importAbortControllers.set(jobId, controller);
 
   try {
     const result = await importPDFV2(
       file,
       {
-        waitForTranslationEngine: async () => {
+        signal: controller.signal,
+        waitForTranslationEngine: async (signal) => {
           patch(jobId, {
             stage: "translating",
             message: "翻訳モデルの準備を待っています...",
             error: undefined,
           });
-          return ensureMadladReady(jobId, patch);
+          return ensureMadladReady(jobId, patch, signal ?? controller.signal);
         },
         onProgress: (next) => {
           if (
@@ -191,6 +204,7 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
 
     if (result) {
       importFiles.delete(jobId);
+      importAbortControllers.delete(jobId);
       useLibraryCache.getState().addPaper(result.paper);
       useLibraryCache.getState().setSections(result.paper.id, result.sections);
       useLibraryCache.getState().setBlocks(result.paper.id, result.blocks);
@@ -204,6 +218,7 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
 
     startedImportKeys.delete(fileKey);
     importFiles.delete(jobId);
+    importAbortControllers.delete(jobId);
     useImportJobStore.getState().patchJob(jobId, {
       stage: "duplicate",
       failureKind: "duplicate",
@@ -215,6 +230,27 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
     });
   } catch (error) {
     startedImportKeys.delete(fileKey);
+    importAbortControllers.delete(jobId);
+    if (error instanceof ImportCancelledError) {
+      const job = useImportJobStore.getState().jobs.find((item) => item.id === jobId);
+      if (error.partialReady || job?.paperId) {
+        patch(jobId, {
+          stage: "cancelled",
+          message: "インポートを中断しました（原文は利用できます）",
+          error: undefined,
+        });
+        // Drop transient card; paper card owns the partial paper.
+        if (job?.paperId) {
+          useImportJobStore.getState().removeJob(jobId);
+          importFiles.delete(jobId);
+        }
+      } else {
+        importFiles.delete(jobId);
+        useImportJobStore.getState().removeJob(jobId);
+      }
+      showToast({ kind: "info", message: "インポートをキャンセルしました" });
+      return;
+    }
     const message = error instanceof Error ? error.message : "読み込みに失敗しました";
     const classified = classifyImportFailure(message);
     patch(jobId, {
@@ -248,6 +284,7 @@ export async function startBackgroundImport(
 
   const jobId = uuidv4();
   importFiles.set(jobId, file);
+  importAbortControllers.set(jobId, new AbortController());
   useImportJobStore.getState().upsertJob({
     id: jobId,
     fileName: file.name,
@@ -274,6 +311,7 @@ export async function retryBackgroundImport(jobId: string): Promise<boolean> {
   }
   if (startedImportKeys.has(job.fileKey)) return false;
   startedImportKeys.add(job.fileKey);
+  importAbortControllers.set(jobId, new AbortController());
   useImportJobStore.getState().patchJob(jobId, {
     stage: "reading",
     stageProgress: 0,
@@ -285,9 +323,40 @@ export async function retryBackgroundImport(jobId: string): Promise<boolean> {
   return true;
 }
 
+/**
+ * Request cancel of a running import. Stops at the next safe checkpoint.
+ * Idempotent: repeated calls are ignored after the first request.
+ */
+export function cancelBackgroundImport(jobId: string): boolean {
+  const job = useImportJobStore.getState().jobs.find((item) => item.id === jobId);
+  if (!job) return false;
+  if (
+    job.stage === "completed" ||
+    job.stage === "failed" ||
+    job.stage === "duplicate" ||
+    job.stage === "cancelled" ||
+    job.stage === "cancel_requested"
+  ) {
+    return false;
+  }
+  useImportJobStore.getState().patchJob(jobId, {
+    stage: "cancel_requested",
+    message: "キャンセルしています...",
+  });
+  const controller = importAbortControllers.get(jobId);
+  if (controller && !controller.signal.aborted) {
+    controller.abort();
+  }
+  if (job.paperId) {
+    translationManager.cancel(job.paperId);
+  }
+  return true;
+}
+
 /** Dismiss a pre-persistence import failure without touching saved papers. */
 export function dismissBackgroundImport(jobId: string): void {
   importFiles.delete(jobId);
+  importAbortControllers.delete(jobId);
   useImportJobStore.getState().removeJob(jobId);
 }
 

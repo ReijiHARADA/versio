@@ -1,0 +1,41 @@
+{
+  "version": "semantic-v65",
+  "case": "power-over-skin-concessive",
+  "source": "4.2.2 Proof-of-Concept Transmitter. We invested most of our efforts in optimizing our worn receivers, where size, weight, form factor and power efficiency are paramount. As such, we often used a bench-top signal generator (Siglent SDG5162) to synthesize our RF signal on the transmit side. Although this offers a better connection to earth ground compared to a battery-powered transmitter, it still approximates the performance of worn transmitters in our applications because the receiver ground plane is the more significant limitation on our power transmission. This was used for all experiments in this implementation section. For our example applications, we did create several worn transmitter prototypes, which can be seen in Figure 5. For these, we used an ESP32 to output a 40 MHz square wave (an integer divisor of its 160 MHz base clock frequency) at 3.3 Vpp. This signal was then fed into an RF amplifier board (p.n. TQP3M9009) with a nominal gain of 27.36 dB, the output of which is impedance matched before connecting to the body-coupled electrode.",
+  "units": [
+    {
+      "text": "4.2.2 Proof-of-Concept Transmitter. We invested most of our efforts in optimizing our worn receivers, where size, weight, form factor and power efficiency are paramount.",
+      "model_input": "4.2.2 Proof-of-Concept Transmitter. We invested most of our efforts in optimizing our worn receivers, where size, weight, form factor and power efficiency are paramount."
+    },
+    {
+      "text": "As such, we often used a bench-top signal generator (Siglent SDG5162) to synthesize our RF signal on the transmit side.",
+      "model_input": "As such, we often used a bench-top signal generator (Siglent SDG5162) to synthesize our RF signal on the transmit side."
+    },
+    {
+      "text": "Although this offers a better connection to earth ground compared to a battery-powered transmitter,",
+      "model_input": "This offers a better connection to earth ground compared to a battery-powered transmitter."
+    },
+    {
+      "text": "it still approximates the performance of worn transmitters in our applications because the receiver ground plane is the more significant limitation on our power transmission.",
+      "model_input": "It still approximates the performance of worn transmitters in our applications because the receiver ground plane is the more significant limitation on our power transmission."
+    },
+    {
+      "text": "This was used for all experiments in this implementation section.",
+      "model_input": "This was used for all experiments in this implementation section."
+    },
+    {
+      "text": "For our example applications, we did create several worn transmitter prototypes, which can be seen in Figure 5.",
+      "model_input": "For our example applications, we did create several worn transmitter prototypes, which can be seen in Figure 5."
+    },
+    {
+      "text": "For these, we used an ESP32 to output a 40 MHz square wave (an integer divisor of its 160 MHz base clock frequency) at 3.3 Vpp.",
+      "model_input": "For these, we used an ESP32 to output a 40 MHz square wave (an integer divisor of its 160 MHz base clock frequency) at 3.3 Vpp."
+    },
+    {
+      "text": "This signal was then fed into an RF amplifier board (p.n. TQP3M9009) with a nominal gain of 27.36 dB, the output of which is impedance matched before connecting to the body-coupled electrode.",
+      "model_input": "This signal was then fed into an RF amplifier board (p.n. TQP3M9009) with a nominal gain of 27.36 dB, the output of which is impedance matched before connecting to the body-coupled electrode."
+    }
+  ],
+  "roundTrip": true,
+  "unitCount": 8
+}

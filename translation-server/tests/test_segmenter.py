@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import unittest
+import json
+from pathlib import Path
 
 from engines.madlad_mps import MADLADEngine
 from engines.segmenter import (
@@ -18,9 +20,43 @@ class SegmenterTests(unittest.TestCase):
         self.assertTrue(validate_round_trip(source, units))
         self.assertTrue(all(len(unit.split()) >= 4 for unit in units), units)
 
+    def test_et_al_stays_with_following_numeric_citation(self) -> None:
+        source = "In line with van Dijk et al. [8] we treat social resources as part of the interaction context."
+        units = split_for_translation(source)
+        self.assertEqual(len(units), 1)
+        self.assertTrue(validate_round_trip(source, units))
+
+    def test_proactively_splits_long_although_clause(self) -> None:
+        source = (
+            "Although this offers a better connection to earth ground compared to a battery-powered transmitter, "
+            "it still approximates the performance of worn transmitters in our applications because the receiver "
+            "ground plane is the more significant limitation on our power transmission."
+        )
+        units = segment_for_translation(source)
+        self.assertEqual(len(units), 2)
+        self.assertTrue(units[0].model_input.startswith("This offers"))
+        self.assertTrue(units[1].model_input.startswith("It still"))
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
+
+    def test_keeps_medium_while_sentence_intact_for_context(self) -> None:
+        source = (
+            "While we have shown that an increase in core body temperature can be reflected "
+            "in earlobe temperature measurements made by Thermal Earring in section 6.1, "
+            "directly estimating the core body temperature from the earlobe temperature requires further study."
+        )
+        units = segment_for_translation(source)
+        self.assertEqual(len(units), 1)
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
+
     def test_word_ending_in_ms_is_a_sentence_boundary(self) -> None:
         source = "The mechanisms are described. We then compare the results."
         self.assertEqual(split_for_translation(source), ["The mechanisms are described.", "We then compare the results."])
+
+    def test_leading_tiny_prefix_merges_forward(self) -> None:
+        source = "Related work. Linear probing traces the correlation between hidden states and parse trees."
+        units = split_for_translation(source)
+        self.assertEqual(units, [source])
+        self.assert_round_trip(source)
 
     def test_author_year_semicolons_stay_together(self) -> None:
         source = "The closest related work on finger specific interaction has been presented by (Sigure & Koseki, 1998; Marquardt et al., 2011; Benko et al, 2009), however none are in the mobile domain."
@@ -277,6 +313,18 @@ class SegmenterTests(unittest.TestCase):
             "This region has tight coupling to the body unlike watches and other wearables which are more loosely worn on extremities.",
         )
 
+    def test_clean_source_fallback_fixtures_preserve_units_and_scientific_tokens(self) -> None:
+        fixture = json.loads((Path(__file__).parents[1] / "benchmarks" / "translation-unit-fallback-fixtures-v66.json").read_text())
+        for case in fixture["cases"]:
+            with self.subTest(case=case["id"]):
+                units = split_for_translation(case["source"])
+                self.assertTrue(validate_round_trip(case["source"], units))
+                self.assertGreaterEqual(len(case["source"].split()), case["expected"]["minWords"])
+                model_text = " ".join(model_inputs_for_translation(case["source"]))
+                for token in case["expected"]["mustKeep"]:
+                    self.assertIn(token, model_text)
+                self.assertTrue(all(len(unit.split()) >= 4 for unit in units), units)
+
 
 if __name__ == "__main__":
     unittest.main()
@@ -295,4 +343,16 @@ class RescueWhileConcessiveTests(unittest.TestCase):
             "directly estimating the core body temperature from the earlobe temperature requires further study.",
         ])
         self.assertEqual(units[0].model_input, "We have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1.")
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
+
+    def test_rescue_splits_although_concessive_after_decode_failure(self) -> None:
+        source = (
+            "Although this offers a better connection to earth ground compared to a battery-powered transmitter, "
+            "it still approximates the performance of worn transmitters in our applications because the receiver "
+            "ground plane is the more significant limitation on our power transmission."
+        )
+        units = rescue_units_for_translation(source)
+        self.assertEqual(len(units), 2)
+        self.assertTrue(units[0].model_input.startswith("This offers a better connection"))
+        self.assertTrue(units[1].model_input.startswith("It still approximates"))
         self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))

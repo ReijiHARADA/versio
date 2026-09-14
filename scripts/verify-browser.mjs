@@ -1,21 +1,64 @@
-import { mkdirSync } from "node:fs";
+/**
+ * Browser smoke for Paper Reader (Playwright).
+ *
+ * Prerequisites:
+ * - Frontend preview/dev serving PAPER_READER_URL (default http://localhost:5173)
+ * - Built assets already produced (`npm run build` + `npm run preview` in CI)
+ *
+ * Critical checks must fail (not skip) when fixtures are missing.
+ * Uses in-app sample paper + workspace UI; no MADLAD / network PDFs.
+ */
+import { mkdirSync, rmSync } from "node:fs";
 import { chromium } from "@playwright/test";
 
 const base = process.env.PAPER_READER_URL ?? "http://localhost:5173";
 const outDir = new URL("../test-results/browser-verify/", import.meta.url);
+rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
+
+const runId = `${Date.now()}`;
+const verifyProjectName = `Browser Verify Project ${runId}`;
+const renamedProjectName = `${verifyProjectName} Renamed`;
+const parentFolderName = `Browser Verify Parent ${runId}`;
+const childFolderName = `${parentFolderName} Child`;
+
+const SAMPLE_TITLE_JA = "Attention機構があれば十分である";
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 const failures = [];
-const verifyProjectName = `Browser Verify Project ${Date.now()}`;
-const renamedProjectName = `${verifyProjectName} Renamed`;
+const createdWorkspaceNames = new Set();
 
 async function shot(name) {
-  await page.screenshot({
-    path: new URL(`${name}.png`, outDir).pathname,
-    fullPage: true,
-  });
+  const file = new URL(`${name}.png`, outDir);
+  await page.screenshot({ path: file.pathname, fullPage: true });
+  return file.pathname;
+}
+
+async function diagnose(label) {
+  const url = page.url();
+  const headings = await page
+    .locator("h1, h2, h3")
+    .allTextContents()
+    .then((items) =>
+      items
+        .map((text) => text.replace(/\s+/g, " ").trim())
+        .filter(Boolean)
+        .slice(0, 12)
+    )
+    .catch(() => []);
+  const bodySnippet = await page
+    .locator("body")
+    .innerText()
+    .then((text) => text.replace(/\s+/g, " ").trim().slice(0, 280))
+    .catch(() => "");
+  const path = await shot(`fail-${label.replace(/\s+/g, "-").slice(0, 80)}`);
+  return [
+    `url=${url}`,
+    `headings=${JSON.stringify(headings)}`,
+    `body≈${JSON.stringify(bodySnippet)}`,
+    `screenshot=${path}`,
+  ].join(" | ");
 }
 
 async function check(name, fn) {
@@ -23,32 +66,144 @@ async function check(name, fn) {
     await fn();
     console.log(`ok  ${name}`);
   } catch (error) {
-    failures.push(`${name}: ${error instanceof Error ? error.message : String(error)}`);
-    console.error(`fail ${name}: ${error instanceof Error ? error.message : String(error)}`);
-    await shot(`fail-${name.replace(/\s+/g, "-")}`);
+    const detail = error instanceof Error ? error.message : String(error);
+    let diag = "";
+    try {
+      diag = await diagnose(name);
+    } catch {
+      diag = "diagnose failed";
+    }
+    failures.push(`${name}: ${detail} || ${diag}`);
+    console.error(`fail ${name}: ${detail}`);
+    console.error(`  ${diag}`);
   }
 }
 
+async function waitForPreviewReady() {
+  const deadline = Date.now() + 30_000;
+  let lastError = null;
+  while (Date.now() < deadline) {
+    try {
+      const response = await page.goto(`${base}/#/`, {
+        waitUntil: "domcontentloaded",
+        timeout: 5_000,
+      });
+      if (response && response.ok()) {
+        await page.getByRole("heading", { name: "すべての論文" }).waitFor({
+          timeout: 10_000,
+        });
+        return;
+      }
+      lastError = new Error(`HTTP ${response?.status() ?? "no response"}`);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
+    await page.waitForTimeout(250);
+  }
+  throw new Error(
+    `preview not ready at ${base}: ${lastError?.message ?? "unknown"}`
+  );
+}
+
+async function hoverSidebar() {
+  await page.locator("aside").first().hover();
+}
+
+/** PathTrail puts folder text in h1>nav[aria-label=場所], so heading accessible name is "場所". */
+function locationTrail() {
+  return page.getByRole("navigation", { name: "場所" });
+}
+
+async function expectLocation(folderName) {
+  await locationTrail().getByText(folderName, { exact: true }).waitFor({
+    timeout: 10_000,
+  });
+}
+
+async function createRootFolder(name) {
+  await hoverSidebar();
+  await page.getByRole("button", { name: "新規フォルダ" }).click();
+  await page.getByLabel("フォルダ名").fill(name);
+  await page.getByRole("button", { name: "作成", exact: true }).click();
+  createdWorkspaceNames.add(name);
+  // Root create navigates to /project/:id
+  await page.waitForURL(/#\/project\//, { timeout: 10_000 });
+  await expectLocation(name);
+  await page.getByRole("link", { name: name, exact: true }).waitFor({
+    timeout: 10_000,
+  });
+}
+
+async function deleteWorkspaceByName(name) {
+  await hoverSidebar();
+  const link = page.getByRole("link", { name: name, exact: true });
+  if ((await link.count()) === 0) return;
+  await page.getByRole("button", { name: `「${name}」のメニュー` }).click();
+  await page.getByRole("menuitem", { name: "削除", exact: true }).click();
+  await page.getByRole("menuitem", { name: "削除する", exact: true }).click();
+  await link.waitFor({ state: "detached", timeout: 10_000 });
+  createdWorkspaceNames.delete(name);
+}
+
+async function ensureSamplePaper() {
+  await page.getByRole("link", { name: "設定" }).click();
+  await page.getByRole("heading", { name: "設定", exact: true }).waitFor({ timeout: 10_000 });
+
+  // Sample lives under 詳細設定 → 開発者向け <details>
+  await page.getByRole("button", { name: "詳細設定" }).click();
+  const advanced = page.locator("#section-advanced");
+  await advanced.waitFor({ timeout: 10_000 });
+
+  const details = advanced.locator("details").filter({ hasText: "開発者向け" });
+  await details.waitFor({ timeout: 10_000 });
+  if (!(await details.evaluate((el) => el.open))) {
+    await details.locator("summary").click();
+  }
+
+  const addSample = advanced.getByRole("button", {
+    name: /サンプル論文を追加|サンプル論文は追加済み/,
+  });
+  await addSample.waitFor({ state: "visible", timeout: 10_000 });
+
+  const already = await addSample.isDisabled();
+  if (!already) {
+    await addSample.click();
+    await advanced
+      .getByText(/ライブラリに追加しました|すでにライブラリにあります/)
+      .waitFor({ timeout: 15_000 });
+  }
+
+  await page.getByRole("link", { name: "すべての論文" }).click();
+  await page.getByRole("heading", { name: "すべての論文" }).waitFor({
+    timeout: 10_000,
+  });
+  const card = page.getByText(SAMPLE_TITLE_JA).first();
+  await card.waitFor({ state: "visible", timeout: 15_000 });
+  return card;
+}
+
 try {
-  await page.goto(`${base}/#/`, { waitUntil: "domcontentloaded" });
-  await page.waitForTimeout(500);
+  await waitForPreviewReady();
+  console.log(`ok  preview ready (${base})`);
 
   await check("library heading", async () => {
-    await page.getByRole("heading", { name: "すべての論文" }).waitFor({ timeout: 10_000 });
+    await page.getByRole("heading", { name: "すべての論文" }).waitFor({
+      timeout: 10_000,
+    });
   });
+
   await check("library search", async () => {
-    const search = page.locator("#library-search");
-    await page.locator("aside").first().hover();
-    await search.waitFor({ state: "visible", timeout: 10_000 });
+    await hoverSidebar();
+    await page.locator("#library-search").waitFor({
+      state: "visible",
+      timeout: 10_000,
+    });
   });
   await shot("library");
 
   await check("project action menu", async () => {
-    await page.locator("aside").first().hover();
-    await page.getByRole("button", { name: "新規フォルダ" }).click();
-    await page.getByLabel("フォルダ名").fill(verifyProjectName);
-    await page.getByRole("button", { name: "作成", exact: true }).click();
-    await page.locator("aside").first().hover();
+    await createRootFolder(verifyProjectName);
+    await hoverSidebar();
     if (await page.locator("header").getByTitle("プロジェクトを削除").count()) {
       throw new Error("project header still contains a delete button");
     }
@@ -64,42 +219,54 @@ try {
     await page.getByRole("menuitem", { name: "名称を変更" }).click();
     await page.getByRole("textbox", { name: "名称", exact: true }).fill(renamedProjectName);
     await page.getByRole("textbox", { name: "名称", exact: true }).press("Enter");
-    await page.getByRole("link", { name: renamedProjectName }).waitFor();
-    await page.locator("aside").first().hover();
+    createdWorkspaceNames.delete(verifyProjectName);
+    createdWorkspaceNames.add(renamedProjectName);
+    await page.getByRole("link", { name: renamedProjectName, exact: true }).waitFor({
+      timeout: 10_000,
+    });
+    await expectLocation(renamedProjectName);
 
-    await page.getByRole("button", {
-      name: `「${renamedProjectName}」のメニュー`,
-    }).click();
+    await hoverSidebar();
+    await page
+      .getByRole("button", { name: `「${renamedProjectName}」のメニュー` })
+      .click();
     await page.getByRole("menuitem", { name: "削除", exact: true }).click();
     await page.getByRole("menuitem", { name: "削除する", exact: true }).click();
-    await page.getByRole("link", { name: renamedProjectName }).waitFor({
-      state: "detached",
-    });
+    await page
+      .getByRole("link", { name: renamedProjectName, exact: true })
+      .waitFor({ state: "detached", timeout: 10_000 });
+    createdWorkspaceNames.delete(renamedProjectName);
   });
   await shot("project-action-menu");
 
-  const parentFolderName = `Browser Verify Parent ${Date.now()}`;
-  const childFolderName = `${parentFolderName} Child`;
   await check("workspace child folders in main view", async () => {
-    await page.locator("aside").first().hover();
-    await page.getByRole("button", { name: "新規フォルダ" }).click();
-    await page.getByLabel("フォルダ名").fill(parentFolderName);
-    await page.getByRole("button", { name: "作成", exact: true }).click();
-    await page.locator("aside").first().hover();
-    await page.getByRole("link", { name: parentFolderName, exact: true }).click();
-    await page.getByRole("heading", { name: parentFolderName, exact: true }).waitFor();
+    await page.getByRole("link", { name: "すべての論文" }).click();
+    await page.getByRole("heading", { name: "すべての論文" }).waitFor({
+      timeout: 10_000,
+    });
 
-    await page.getByRole("button", {
-      name: `「${parentFolderName}」のメニュー`,
-    }).click();
+    await createRootFolder(parentFolderName);
+    await expectLocation(parentFolderName);
+
+    await hoverSidebar();
+    await page
+      .getByRole("button", { name: `「${parentFolderName}」のメニュー` })
+      .click();
     await page.getByRole("menuitem", { name: "サブフォルダーを追加" }).click();
     await page.getByLabel("フォルダ名").fill(childFolderName);
     await page.getByRole("button", { name: "作成", exact: true }).click();
+    createdWorkspaceNames.add(childFolderName);
 
-    await page.getByRole("heading", { name: parentFolderName, exact: true }).waitFor();
+    // Stay on parent; child appears as a main-view folder card (h3 inside article).
+    await expectLocation(parentFolderName);
     const folderCard = page.locator("article").filter({ hasText: childFolderName });
-    await folderCard.getByRole("heading", { name: childFolderName, exact: true }).waitFor();
-    await folderCard.getByText("フォルダ").waitFor();
+    await folderCard
+      .getByRole("heading", { name: childFolderName, exact: true })
+      .waitFor({ timeout: 10_000 });
+    await folderCard.getByText("フォルダ").waitFor({ timeout: 5_000 });
+    await page.getByRole("link", { name: childFolderName, exact: true }).waitFor({
+      timeout: 10_000,
+    });
   });
   await shot("workspace-child-folders");
 
@@ -111,40 +278,55 @@ try {
   });
   await shot("settings-reading");
 
-  const addSample = page.getByRole("button", { name: /サンプル論文/ });
-  if (await addSample.isVisible().catch(() => false)) {
-    await page.getByRole("button", { name: "一般" }).click();
-    await addSample.click();
-    await page.waitForTimeout(500);
-  }
-
-  await page.getByRole("link", { name: "すべての論文" }).click();
-  await page.waitForTimeout(400);
+  let sampleCard = null;
+  await check("sample paper fixture", async () => {
+    sampleCard = await ensureSamplePaper();
+  });
   await shot("library-after-sample");
 
-  const sampleCard = page.getByText("Attention機構があれば十分である").first();
-  if (await sampleCard.isVisible().catch(() => false)) {
-    await sampleCard.click();
-    await check("reader title", async () => {
-      await page.getByRole("heading", { name: /Attention/ }).first().waitFor({ timeout: 10_000 });
+  if (!sampleCard) {
+    failures.push(
+      "reader suite: aborted because sample paper fixture was not created (must not skip)"
+    );
+    console.error("fail reader suite: sample paper fixture missing (not skipped)");
+  } else {
+    await check("reader title and body", async () => {
+      await sampleCard.click();
+      await page.waitForURL(/#\/reader\//, { timeout: 10_000 });
+      await page.getByText(SAMPLE_TITLE_JA).first().waitFor({ timeout: 10_000 });
+      await page
+        .locator("[data-text-role='translation']")
+        .first()
+        .waitFor({ timeout: 15_000 });
     });
-    await check("reader outline", async () => {
-      await page.locator("aside").first().waitFor();
+
+    await check("reader search UI", async () => {
+      await page.getByRole("button", { name: "検索 (⌘F)" }).click();
+      const field = page.getByPlaceholder("この論文を検索");
+      await field.waitFor({ state: "visible", timeout: 10_000 });
+      await field.fill("Attention");
+      await page.locator("[data-search-panel]").waitFor({ state: "visible", timeout: 5_000 });
+      await page.keyboard.press("Escape");
+      await page.locator("[data-search-panel]").waitFor({ state: "detached", timeout: 5_000 });
     });
     await shot("reader");
 
     await page.getByRole("link", { name: "すべての論文" }).click();
-    await page.waitForTimeout(400);
+    await page.getByRole("heading", { name: "すべての論文", exact: true }).waitFor({
+      timeout: 10_000,
+    });
+
     await check("favorite mark on paper card", async () => {
       const card = page.locator("article").filter({ hasText: "Attention" }).first();
       await card.getByRole("button", { name: "論文の操作" }).click();
       await page.getByRole("menuitem", { name: "お気に入り" }).click();
-      await card.getByLabel("お気に入り").waitFor();
+      await card.getByLabel("お気に入り").waitFor({ timeout: 10_000 });
     });
     await shot("library-favorite");
-    await sampleCard.click();
 
     await check("inline memo popover stays on reader", async () => {
+      await page.getByText(SAMPLE_TITLE_JA).first().click();
+      await page.waitForURL(/#\/reader\//, { timeout: 10_000 });
       const translation = page.locator("[data-text-role='translation']").first();
       await translation.waitFor({ timeout: 10_000 });
       const box = await translation.boundingBox();
@@ -155,7 +337,8 @@ try {
       await page.mouse.up();
       const dialog = page.getByRole("dialog", { name: "メモを追加" });
       await dialog.waitFor({ state: "visible", timeout: 5_000 });
-      if (await page.getByLabel("メモ一覧").count()) {
+      // Header button also has aria-label メモ一覧; the inspector is an <aside>.
+      if (await page.locator('aside[aria-label="メモ一覧"]').count()) {
         throw new Error("Notes inspector opened from a body selection");
       }
       await page.keyboard.press("Escape");
@@ -165,7 +348,7 @@ try {
     await check("markdown export dialog", async () => {
       await page.getByRole("button", { name: "書き出す" }).click();
       const dialog = page.getByRole("dialog", { name: "書き出す" });
-      await dialog.waitFor({ state: "visible" });
+      await dialog.waitFor({ state: "visible", timeout: 10_000 });
       const bounds = await dialog.evaluate((element) => {
         const rect = element.getBoundingClientRect();
         return {
@@ -185,16 +368,23 @@ try {
       ) {
         throw new Error(`export dialog is outside the viewport: ${JSON.stringify(bounds)}`);
       }
+      await shot("reader-export-dialog");
       await page.keyboard.press("Escape");
       await dialog.waitFor({ state: "detached" });
     });
-    await page.getByRole("button", { name: "書き出す" }).click();
-    await shot("reader-export-dialog");
-    await page.keyboard.press("Escape");
-  } else {
-    console.log("skip reader (sample paper not visible)");
   }
 } finally {
+  // Cleanup workspaces created by this run (best-effort; failures already recorded).
+  try {
+    await page.getByRole("link", { name: "すべての論文" }).click({ timeout: 3_000 }).catch(() => {});
+    for (const name of [...createdWorkspaceNames].reverse()) {
+      await deleteWorkspaceByName(name).catch((error) => {
+        console.warn(`cleanup skip ${name}: ${error instanceof Error ? error.message : error}`);
+      });
+    }
+  } catch (error) {
+    console.warn(`cleanup error: ${error instanceof Error ? error.message : error}`);
+  }
   await browser.close();
 }
 

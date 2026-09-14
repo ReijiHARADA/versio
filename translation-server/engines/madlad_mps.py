@@ -312,8 +312,41 @@ class MADLADEngine(TranslationEngine):
                     translated_text = f"{heading_num}. {translated_text.lstrip()}"
 
                 if self._is_degenerate(translated_text, text, target_language):
-                    print(f"[TRANSLATE] Rejected degenerate output: {translated_text[:120]!r}")
-                    raise ValueError("degenerate translation output")
+                    # Retry the same units with deterministic beam decoding;
+                    # the existing whole-text gate remains unchanged.
+                    try:
+                        beam_pieces: list[str] = []
+                        beam_in: list[int] = []
+                        beam_out: list[int] = []
+                        for chunk, model_input in zip(chunks, model_inputs):
+                            piece, in_tok, out_tok = self._translate_chunk(
+                                chunk, target_language, model_input, num_beams=4, retry_label="whole-beam"
+                            )
+                            beam_pieces.append(piece)
+                            beam_in.append(in_tok)
+                            beam_out.append(out_tok)
+                        beam_text = self._join_translated_chunks(chunks, beam_pieces, target_language, model_inputs)
+                        if not self._is_degenerate(beam_text, text, target_language):
+                            translated_text = beam_text
+                            input_tokens = sum(beam_in)
+                            output_tokens = sum(beam_out)
+                    except Exception:
+                        pass
+                    if self._is_degenerate(translated_text, text, target_language):
+                        rescue_units = rescue_units_for_translation(translate_body)
+                        if len(rescue_units) > len(chunks):
+                            print(f"[TRANSLATE] whole-unit quality failure; retrying with {len(rescue_units)} rescue unit(s)", flush=True)
+                            rescue_chunks = [unit.text for unit in rescue_units]
+                            rescue_inputs = [unit.model_input for unit in rescue_units]
+                            rescue_pieces, rescue_in, rescue_out = self._translate_chunks(rescue_chunks, target_language, rescue_inputs)
+                            rescued = self._join_translated_chunks(rescue_chunks, rescue_pieces, target_language, rescue_inputs)
+                            if not self._is_degenerate(rescued, text, target_language):
+                                translated_text = rescued
+                                input_tokens = sum(rescue_in)
+                                output_tokens = sum(rescue_out)
+                    if self._is_degenerate(translated_text, text, target_language):
+                        print(f"[TRANSLATE] Rejected degenerate output: {translated_text[:120]!r}")
+                        raise ValueError("degenerate translation output")
 
                 print(f"[TRANSLATE] Output: {translated_text[:200]!r}", flush=True)
 
@@ -474,10 +507,19 @@ class MADLADEngine(TranslationEngine):
             pieces: list[str] = []
             in_toks: list[int] = []
             out_toks: list[int] = []
-            for chunk, model_input in zip(chunks, model_inputs):
-                piece, in_tok, out_tok = self._translate_chunk_with_rescue(
-                    chunk, target_language, model_input
-                )
+            for index, (chunk, model_input) in enumerate(zip(chunks, model_inputs)):
+                try:
+                    piece, in_tok, out_tok = self._translate_chunk_with_rescue(
+                        chunk, target_language, model_input
+                    )
+                except Exception as unit_error:
+                    if os.getenv("TRANSLATION_UNIT_DEBUG") == "1":
+                        print(
+                            f"[TRANSLATION_UNIT_FAILURE] index={index} chars={len(chunk)} "
+                            f"words={len(chunk.split())} reason={unit_error!r} source={chunk!r}",
+                            flush=True,
+                        )
+                    raise
                 pieces.append(piece)
                 in_toks.append(in_tok)
                 out_toks.append(out_tok)
@@ -502,10 +544,20 @@ class MADLADEngine(TranslationEngine):
                 group_pieces = []
                 group_in = []
                 group_out = []
-                for chunk, model_input in zip(group, group_inputs):
-                    piece, one_in, one_out = self._translate_chunk_with_rescue(
-                        chunk, target_language, model_input
-                    )
+                for offset, (chunk, model_input) in enumerate(zip(group, group_inputs)):
+                    try:
+                        piece, one_in, one_out = self._translate_chunk_with_rescue(
+                            chunk, target_language, model_input
+                        )
+                    except Exception as unit_error:
+                        if os.getenv("TRANSLATION_UNIT_DEBUG") == "1":
+                            print(
+                                f"[TRANSLATION_UNIT_FAILURE] index={start + offset} "
+                                f"chars={len(chunk)} words={len(chunk.split())} "
+                                f"reason={unit_error!r} source={chunk!r}",
+                                flush=True,
+                            )
+                        raise
                     group_pieces.append(piece)
                     group_in.append(one_in)
                     group_out.append(one_out)
@@ -829,6 +881,16 @@ class MADLADEngine(TranslationEngine):
         ).strip()
         if not normalized_output:
             return False
+        # Detect a decoder appending only the prefix of a source identifier
+        # (for example ``GPT`` from ``GPT-3``) after a complete Japanese
+        # sentence. This catches orphaned source fragments without a
+        # paper-specific blacklist.
+        trailing = re.search(r"([A-Za-z][A-Za-z0-9]*)\s*(?:[。！？.!?]|$)", output)
+        if trailing:
+            tail = trailing.group(1).lower()
+            source_tokens = re.findall(r"[A-Za-z][A-Za-z0-9]*(?:[-'][A-Za-z0-9]+)+", source)
+            if any(token.lower().startswith(tail) and token.lower() != tail for token in source_tokens):
+                return True
         for candidate in MADLADEngine._source_spans_for_overlap(source):
             normalized_candidate = re.sub(
                 r"\s+",

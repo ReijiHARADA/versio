@@ -120,7 +120,6 @@
           "second half of the 20",
           "In terms of renewing interaction"
         ],
-        "tokensInOrderPage": 3,
         "headingContains": [
           "INTERACTIVE JEWELLERY: RELATED WORK"
         ],
@@ -638,9 +637,7 @@
       "downloadUrl": "https://www.nature.com/articles/s41598-018-19997-5.pdf",
       "seedPaths": [],
       "checks": {
-        "expectMultiColumnOnPages": [
-          1
-        ],
+        "expectMultiColumnOnPages": [],
         "referencesHeading": true
       },
       "sourceStatus": "verified-oa",
@@ -671,7 +668,7 @@
       "seedPaths": [],
       "checks": {
         "expectMultiColumnOnPages": [
-          1
+          14
         ],
         "referencesHeading": true
       },

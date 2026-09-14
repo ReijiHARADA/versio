@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 from .citation_protect import protected_span_mask
 
-SEGMENTER_VERSION = "semantic-v61"
+SEGMENTER_VERSION = "semantic-v67"
 _ABBREVIATIONS = {"e.g.", "i.e.", "et al.", "fig.", "no.", "cf.", "dr.", "mr.", "ms.", "vs."}
 
 
@@ -63,7 +63,9 @@ def _is_abbreviation(text: str, index: int) -> bool:
     # MADLAD then tends to omit the second claim.
     if re.search(r"\b(?:person|participant|option|condition|group|box|target|stimulus|case|class|category)\s+[A-Z]\.$", prefix, re.I):
         return False
-    token = re.search(r"(?:^|\s)([A-Za-z]+(?:\.[A-Za-z]+)*\.)$", prefix)
+    # ``et al.`` is a two-token abbreviation and must stay attached to a
+    # following numeric citation such as ``et al. [8]``.
+    token = re.search(r"(?:^|\s)((?:et\s+al|[A-Za-z]+(?:\.[A-Za-z]+)*)\.)$", prefix, re.I)
     return bool(token and token.group(1).lower() in _ABBREVIATIONS) or bool(re.search(r"\b[A-Z]\.$", prefix))
 
 
@@ -139,6 +141,18 @@ def _merge_fragments(parts: list[str]) -> list[str]:
             merged[-1] = f"{merged[-1]} {part}"
         else:
             merged.append(part)
+    # A heading-like or page-edge prefix can be the first sentence in a
+    # physical block (for example ``Related work. Linear probing ...``).
+    # There is no preceding unit to absorb it, so merge it forward. Sending a
+    # two-word prefix independently creates a meaningless translation request
+    # and can make the whole paragraph fall back when that unit is rejected.
+    if (
+        len(merged) > 1
+        and len(merged[0].split()) < 4
+        and not merged[0].rstrip().endswith((":", "："))
+    ):
+        merged[1] = f"{merged[0]} {merged[1]}"
+        merged.pop(0)
     return merged
 
 
@@ -441,7 +455,7 @@ def _rescue_appositive_region_clause(text: str) -> list[TranslationUnit]:
 
 
 def _rescue_while_concessive_main_clause(text: str) -> list[TranslationUnit]:
-    """Recover long ``While ... , main clause`` scientific prose.
+    """Recover long ``While/Although ... , main clause`` scientific prose.
 
     Normal segmentation keeps the sentence intact because it is grammatical.
     When greedy decoding translates only the main clause, retry the concessive
@@ -451,7 +465,7 @@ def _rescue_while_concessive_main_clause(text: str) -> list[TranslationUnit]:
     if len(text) < 170:
         return []
     masked = protected_span_mask(text)
-    if not re.match(r"^while\s+", masked, re.I):
+    if not re.match(r"^(?:while|although)\s+", masked, re.I):
         return []
     paren = square = brace = 0
     split_index = -1
@@ -475,9 +489,9 @@ def _rescue_while_concessive_main_clause(text: str) -> list[TranslationUnit]:
         return []
     left = text[:split_index].strip()
     right = text[split_index:].strip()
-    if not re.match(r"(?:directly\s+)?[a-z]+ing\b|(?:this|these|the|a|an)\b", right, re.I):
+    if not re.match(r"(?:directly\s+)?[a-z]+ing\b|(?:this|these|the|it|they|we|a|an)\b", right, re.I):
         return []
-    left_body = re.sub(r"^while\s+", "", left.rstrip(", "), flags=re.I).strip()
+    left_body = re.sub(r"^(?:while|although)\s+", "", left.rstrip(", "), flags=re.I).strip()
     if not left_body or not right:
         return []
     left_model = left_body[0].upper() + left_body[1:]
@@ -561,6 +575,26 @@ def segment_for_translation(source: str) -> list[TranslationUnit]:
             for sentence_part in sentence_parts:
                 parts.extend(_split_overlong_safe_clauses(sentence_part))
     parts = _merge_fragments(parts)
+    # Concessive clauses are a recurrent decode-risk: the model may keep only
+    # the main clause even when the source sentence is grammatical.  Apply the
+    # same delimiter-aware split proactively for long units, rather than
+    # waiting for a later quality failure.  The helper preserves exact source
+    # slices and is restricted to an explicit top-level comma boundary.
+    expanded: list[str] = []
+    proactive_inputs: dict[str, str] = {}
+    for part in parts:
+        # Keep ordinary sentence-sized concessive clauses intact. Splitting a
+        # short subordinate clause creates a low-context unit that MADLAD may
+        # reject even when the complete sentence is translatable; reserve the
+        # proactive rewrite for genuinely long units where decode drift is a
+        # greater risk.
+        rescue = _rescue_while_concessive_main_clause(part) if len(part) >= 260 else []
+        if rescue:
+            expanded.extend(unit.text for unit in rescue)
+            proactive_inputs.update({unit.text: unit.model_input for unit in rescue})
+        else:
+            expanded.append(part)
+    parts = expanded
     units: list[TranslationUnit] = []
     for part in parts:
         for colon_source, colon_input in _complete_long_colon_predicate_list(part):
@@ -574,7 +608,7 @@ def segment_for_translation(source: str) -> list[TranslationUnit]:
                     TranslationUnit(
                         source_slice,
                         protected_span_mask(source_slice),
-                        _normalize_model_input(model_input),
+                        proactive_inputs.get(source_slice, _normalize_model_input(model_input)),
                     )
                 )
     return units or [TranslationUnit(compact, protected_span_mask(compact), _normalize_model_input(compact))]

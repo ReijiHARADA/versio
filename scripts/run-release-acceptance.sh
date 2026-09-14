@@ -55,12 +55,21 @@ else
 fi
 
 echo
-echo "== Packaged .app manual steps (human) =="
+APP_DEFAULT="$ROOT/src-tauri/target/release/bundle/macos/Paper Reader.app"
+if [[ "$(uname -s)" == "Darwin" && -d "${PAPER_READER_APP_PATH:-$APP_DEFAULT}" ]]; then
+  run_gate "Packaged .app E2E (real .app, no MADLAD)" npm run packaged:e2e
+else
+  echo "-- Packaged .app E2E skipped (build .app first: npm run tauri:build:clean)"
+fi
+
+echo
+echo "== Remaining manual acceptance (OS-dependent) =="
 cat <<'EOF'
-1. npm run tauri:build:clean   # clean Python + .app + .dmg (release)
-   # daily check: npm run tauri:build:fast  (.app only, cached Python)
-2. open src-tauri/target/release/bundle/macos/*.app
-3. PDF import → Reader → annotation → search → source PDF → export
-4. Quit and relaunch → reading position + annotations recover
-5. (Nightly) wait for MADLAD ready → translation resume
+Automated: npm run packaged:e2e (import → annotation → search → export → relaunch)
+Manual still required:
+1. Source PDF open / Preview page jump (Accessibility-dependent)
+2. Full UI Reader navigation feel + ⌘K / ⌘F interaction
+3. (Release) PAPER_READER_SIGN=1 npm run tauri:build:clean — see docs/MACOS_RELEASE.md
+4. (Nightly) MADLAD ready → translation resume
+Daily unsigned check: npm run tauri:build:fast
 EOF

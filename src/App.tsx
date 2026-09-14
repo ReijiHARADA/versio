@@ -19,6 +19,10 @@ import {
 } from "./utils/serverReady";
 import { flushPersistence } from "./services/database";
 import { resumeAfterTranslationServerReady } from "./services/import/startBackgroundImport";
+import {
+  maybeRunPackagedAcceptanceImport,
+  maybeVerifyPackagedAcceptanceRelaunch,
+} from "./services/packagedAcceptance";
 
 function formatBytes(n: number | null | undefined): string | null {
   if (typeof n !== "number" || !Number.isFinite(n) || n < 0) return null;
@@ -94,7 +98,11 @@ function App() {
     if (!isTauriApp()) {
       markTranslationServerReady();
       resumeAfterTranslationServerReady();
+      return;
     }
+    void maybeVerifyPackagedAcceptanceRelaunch().then(() =>
+      maybeRunPackagedAcceptanceImport()
+    );
   }, []);
 
   useEffect(() => {

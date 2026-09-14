@@ -9,7 +9,9 @@ export type ImportStage =
   | "translating"
   | "saving"
   | "completed"
-  | "failed";
+  | "failed"
+  | "cancel_requested"
+  | "cancelled";
 
 export type ImportProgress = {
   stage: ImportStage;
@@ -30,7 +32,9 @@ export type ImportCallbacks = {
   onPaperUpdated?: (paper: Paper) => void;
   onSectionTranslated?: (section: Section) => void;
   /** Called after extraction/partial ready, before translation queue starts. */
-  waitForTranslationEngine?: () => Promise<boolean>;
+  waitForTranslationEngine?: (signal?: AbortSignal) => Promise<boolean>;
+  /** Cooperative cancellation; checked at safe checkpoints only. */
+  signal?: AbortSignal;
 };
 
 export type ImportConfig = {

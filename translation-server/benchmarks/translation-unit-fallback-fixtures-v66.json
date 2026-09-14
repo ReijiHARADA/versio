@@ -1,0 +1,21 @@
+{
+  "version": "semantic-v66",
+  "purpose": "Reproduce clean-source ordinary-body fallbacks without PDF extraction.",
+  "cases": [
+    {
+      "id": "thermal-earring-b-01a329cd",
+      "source": "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study. It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc. While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge.",
+      "expected": { "roundTrip": true, "minWords": 35, "mustKeep": ["6.1"] }
+    },
+    {
+      "id": "cognitive-psychology-gpt3-b-9c57b65a",
+      "source": "In a second test, we asked GPT-3 to intervene in a scenario by removing the correct object to prevent an effect after having read about three different objects, one causing and two not causing the effect (in this case, an allergic reaction; Intervene, see SI Appendix). GPT-3 identified the correct object to be removed. In the final test, we probed GPT-3’s ability of mature causal reasoning24 (Mature, see SI Appendix). In this task, GPT-3 was told that there were four pills: A, B, C and D. While A and B individually could kill someone, C and D could not.",
+      "expected": { "roundTrip": true, "minWords": 35, "mustKeep": ["GPT-3", "A", "B", "C", "D"] }
+    },
+    {
+      "id": "linguistics-language-model-physics-b-30cd3318",
+      "source": "Related work. Linear probing at least traces back to Hewitt and Manning [15], who examines the correlation between BERT’s hidden states and the parse tree distance metric (similar to NTdistance in our language). Subsequent studies [8, 18, 20, 30, 34, 36, 40] also explored probing techniques to suggest that BERT-like transformers can approximate CFGs from natural languages. Our approach differs not only in the multi-head probing formula that we proposed; also that we use synthetic data to demonstrate that linear probing can almost perfectly recover NT ancestors and boundaries, even for complex and ambiguous CFG strings exceeding hundreds of tokens.",
+      "expected": { "roundTrip": true, "minWords": 35, "mustKeep": ["[15]", "[8, 18, 20, 30, 34, 36, 40]", "CFG"] }
+    }
+  ]
+}

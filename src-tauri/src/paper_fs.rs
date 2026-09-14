@@ -122,19 +122,99 @@ end try"#
     Ok(Some(PathBuf::from(path)))
 }
 
-fn choose_directory() -> Result<Option<PathBuf>, String> {
-    let path = run_osascript(
+fn choose_directory_with_prompt(prompt: &str) -> Result<Option<PathBuf>, String> {
+    let prompt = escape_applescript(prompt);
+    let path = run_osascript(&format!(
         r#"try
-set thePath to POSIX path of (choose folder with prompt "保存先フォルダを選択")
+set thePath to POSIX path of (choose folder with prompt "{prompt}")
 return thePath
 on error number -128
 return ""
-end try"#,
-    )?;
+end try"#
+    ))?;
     if path.is_empty() {
         return Ok(None);
     }
     Ok(Some(PathBuf::from(path)))
+}
+
+fn choose_directory() -> Result<Option<PathBuf>, String> {
+    choose_directory_with_prompt("保存先フォルダを選択")
+}
+
+fn copy_dir_recursive(from: &Path, to: &Path) -> Result<(), String> {
+    fs::create_dir_all(to).map_err(|e| e.to_string())?;
+    for entry in fs::read_dir(from).map_err(|e| e.to_string())? {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let src = entry.path();
+        let dest = to.join(entry.file_name());
+        if src.is_dir() {
+            copy_dir_recursive(&src, &dest)?;
+        } else if src.is_file() {
+            if let Some(parent) = dest.parent() {
+                fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+            }
+            fs::copy(&src, &dest).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
+}
+
+/// Export an app-data relative directory to a user-chosen folder (Library Backup).
+#[tauri::command]
+pub fn export_app_directory(
+    app: AppHandle,
+    relative_path: String,
+    dialog_title: String,
+    default_name: String,
+) -> Result<Option<String>, String> {
+    if default_name.is_empty()
+        || default_name.contains('/')
+        || default_name.contains('\\')
+        || default_name.contains("..")
+    {
+        return Err("無効なフォルダ名です".into());
+    }
+    let source = resolve(&app, &relative_path)?;
+    if !source.is_dir() {
+        return Err("エクスポートするバックアップがありません".into());
+    }
+    let base = match choose_directory_with_prompt(&dialog_title)? {
+        Some(p) => p,
+        None => return Ok(None),
+    };
+    let dest = base.join(&default_name);
+    if dest.exists() {
+        return Err("同じ名前のフォルダが既に存在します".into());
+    }
+    copy_dir_recursive(&source, &dest)?;
+    Ok(Some(dest.to_string_lossy().to_string()))
+}
+
+/// Copy a user-chosen backup folder into an app-data relative staging path.
+#[tauri::command]
+pub fn import_directory_to_app(
+    app: AppHandle,
+    relative_path: String,
+    dialog_title: String,
+) -> Result<Option<String>, String> {
+    let dest = resolve(&app, &relative_path)?;
+    let source = match choose_directory_with_prompt(&dialog_title)? {
+        Some(p) => p,
+        None => return Ok(None),
+    };
+    if !source.is_dir() {
+        return Err("選択した場所はフォルダではありません".into());
+    }
+    // Require backup.json at the root of the selection
+    if !source.join("backup.json").is_file() {
+        return Err("backup.json が見つかりません。Paper Reader Backup フォルダを選んでください".into());
+    }
+    if dest.exists() {
+        fs::remove_dir_all(&dest).map_err(|e| e.to_string())?;
+    }
+    copy_dir_recursive(&source, &dest)?;
+    Ok(Some(relative_path))
 }
 
 fn ensure_extension(path: PathBuf, ext: &str) -> PathBuf {

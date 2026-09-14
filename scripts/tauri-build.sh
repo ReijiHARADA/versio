@@ -153,3 +153,10 @@ if [[ "$MODE" == "clean" ]]; then
 fi
 echo "  staged python mode: $STAGED_MODE"
 echo "  timings file: $TIMING_FILE"
+
+# Optional Developer ID sign + notarize (clean releases only; never fast).
+if [[ "$MODE" == "clean" && "${PAPER_READER_SIGN:-}" == "1" ]]; then
+  echo
+  echo "== Signing / notarization (PAPER_READER_SIGN=1) =="
+  bash "$SCRIPT_DIR/macos-sign-notarize.sh"
+fi

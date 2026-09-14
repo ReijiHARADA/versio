@@ -135,6 +135,15 @@ describe("applyGlossary", () => {
   });
 });
 
+describe("source-grounded mobile terminology", () => {
+  it("repairs only when the source contains mobile domain", () => {
+    expect(normalizeSourceGroundedTerminology("None are in the mobile domain.", "移動領域ではない。"))
+      .toBe("モバイル分野ではない。");
+    expect(normalizeSourceGroundedTerminology("None are in the research domain.", "移動領域ではない。"))
+      .toBe("移動領域ではない。");
+  });
+});
+
 describe("citations", () => {
   it("expands ranges only when the span is small", () => {
     expect(expandCitationKeys("1-3")).toEqual(["1", "2", "3"]);

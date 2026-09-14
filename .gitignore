@@ -44,6 +44,10 @@ test-data/real-papers/
 # Local browser verification
 test-results/
 
+# Packaged .app E2E artifacts / generated fixture
+scripts/packaged-e2e/artifacts/
+scripts/packaged-e2e/fixture-tiny.pdf
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

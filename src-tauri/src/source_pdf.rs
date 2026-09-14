@@ -197,6 +197,17 @@ pub fn read_dropped_pdf(path: String) -> Result<Vec<u8>, String> {
     fs::read(&file_path).map_err(|e| e.to_string())
 }
 
+/// Opt-in packaged acceptance: returns fixture path only when PAPER_READER_ACCEPTANCE=1.
+#[tauri::command]
+pub fn acceptance_fixture_path() -> Option<String> {
+    match std::env::var("PAPER_READER_ACCEPTANCE") {
+        Ok(v) if v == "1" || v.eq_ignore_ascii_case("true") => {
+            std::env::var("PAPER_READER_ACCEPTANCE_FIXTURE").ok()
+        }
+        _ => None,
+    }
+}
+
 fn is_safe_external_url(url: &str) -> bool {
     let trimmed = url.trim();
     (trimmed.starts_with("https://") || trimmed.starts_with("http://"))

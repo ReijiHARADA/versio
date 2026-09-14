@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { AlertCircle, Loader2, RotateCcw, Trash2, ExternalLink } from "lucide-react";
+import { AlertCircle, Loader2, RotateCcw, Trash2, ExternalLink, X } from "lucide-react";
 import type { ImportJob } from "../../stores/importJobStore";
 import {
   actionLabel,
@@ -14,6 +14,7 @@ type ImportJobCardProps = {
   onRetry?: (jobId: string) => void;
   onResume?: (jobId: string) => void;
   onDismiss?: (jobId: string) => void;
+  onCancel?: (jobId: string) => void;
   onOpenExisting?: (paperId: string) => void;
   onReadd?: () => void;
 };
@@ -23,10 +24,14 @@ export function ImportJobCard({
   onRetry,
   onResume,
   onDismiss,
+  onCancel,
   onOpenExisting,
   onReadd,
 }: ImportJobCardProps) {
   const failed = job.stage === "failed" || job.stage === "duplicate";
+  const cancelling = job.stage === "cancel_requested";
+  const cancelled = job.stage === "cancelled";
+  const running = !failed && !cancelled && job.stage !== "completed";
   const percent =
     job.stageTotal > 0 ? Math.round((job.stageProgress / job.stageTotal) * 100) : 0;
   const classified = useMemo(
@@ -65,8 +70,14 @@ export function ImportJobCard({
   return (
     <article
       className={styles.row}
-      aria-busy={!failed}
-      aria-label={failed ? `${job.fileName}の読み込み失敗` : `${job.fileName}を準備中`}
+      aria-busy={running && !cancelling}
+      aria-label={
+        failed
+          ? `${job.fileName}の読み込み失敗`
+          : cancelled
+            ? `${job.fileName}をキャンセル済み`
+            : `${job.fileName}を準備中`
+      }
     >
       <div className={styles.info}>
         <div className={styles.titleRow}>
@@ -84,17 +95,41 @@ export function ImportJobCard({
       </div>
       <div className={styles.trailing}>
         <span className={styles.status}>
-          {failed ? (
+          {failed || cancelled ? (
             <AlertCircle size={14} className={styles.statusFailed} />
           ) : (
             <Loader2 size={14} className={styles.statusProcessing} />
           )}
           <span className={styles.statusLabel}>
-            {job.stage === "duplicate" ? "重複" : failed ? "要確認" : "準備中"}
+            {job.stage === "duplicate"
+              ? "重複"
+              : failed
+                ? "要確認"
+                : cancelling
+                  ? "キャンセル中"
+                  : cancelled
+                    ? "キャンセル済"
+                    : "準備中"}
           </span>
         </span>
-        {!failed && (
+        {running && !cancelling && (
           <span className={styles.date}>{percent > 0 ? `${percent}%` : job.message}</span>
+        )}
+        {cancelling && <span className={styles.date}>{job.message}</span>}
+        {running && onCancel && (
+          <div className={styles.importActions}>
+            <button
+              type="button"
+              className={styles.actionButton}
+              title="キャンセル"
+              aria-label="インポートをキャンセル"
+              disabled={cancelling}
+              onClick={() => onCancel(job.id)}
+            >
+              <X size={14} />
+              <span className={jobStyles.actionText}>キャンセル</span>
+            </button>
+          </div>
         )}
         {failed && (
           <div className={styles.importActions}>

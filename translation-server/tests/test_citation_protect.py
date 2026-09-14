@@ -155,6 +155,12 @@ class CitationProtectTests(unittest.TestCase):
         self.assertNotIn("Power-over-Skin", protected)
         self.assertEqual(restore_citations(protected, citations, nonce), source)
 
+
+    def test_restores_placeholder_with_greek_or_cyrillic_lookalikes(self) -> None:
+        source = "The method is described [8]."
+        protected, citations, nonce = protect_citations(source)
+        self.assertEqual(restore_citations(protected.replace("ZZCIT1ZZ", "ΖZCIΤ1ZZ"), citations, nonce), source)
+
     def test_protects_author_year_group_as_one_atomic_span(self) -> None:
         source = "Prior work (Sigure & Koseki, 1998; Marquardt et al., 2011) motivates Deep IV."
         protected, citations, nonce = protect_citations(source)

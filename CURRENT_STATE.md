@@ -1,6 +1,6 @@
 # Current State
 
-最終更新: 2026-09-14  
+最終更新: 2026-09-15  
 **このファイルが「いま main に何があるか」の正です。** 実装を変えたらここを更新する（[AGENTS.md](./AGENTS.md)）。
 
 コードを source of truth とし、アーキテクチャ詳細は各専門文書へリンクする（重複しない）。
@@ -22,7 +22,8 @@
 | 書き出し | **done** | Markdown / Notion ZIP / 検証パッケージ。保存ダイアログ〜 write は Rust |
 | 元 PDF | **partial** | ページ指定で open。Preview ページジャンプは Accessibility 依存の best-effort。bbox ハイライトは未。Reader open では source.pdf を renderer に載せない |
 | Import UX | **done** | background import、失敗原因の分類、再試行 / 再開、重複時に既存を開く |
-| Import abort | **not done** | 実行中ジョブの真の中断は未実装（dismiss / 保存後の翻訳再開が主経路） |
+| Import cancel | **done** | AbortSignal を safe checkpoint に伝播。partial-ready 後は原文を残し `needsTranslationResume=false`（自動再開しない）。UI Cancel |
+| Library Backup / Restore | **done** | Settings → データ。`backup.json` + `library.sqlite` + `papers/`。validate → safety snapshot → swap。失敗時ロールバック |
 | モデル lifecycle | **done** | process 起動と download/load/warmup 分離。extraction は model ready を待たない。原文 Reader は partial 後すぐ利用可。翻訳は ready 後に開始 / resume |
 | server-ready resume | **done** | `needs_translation_resume`（SQLite schema v6）。completed paper の本文全件再読込なし |
 | セキュリティ | **done** | 本番 CSP、localhost API、CSPRNG token、任意 path write 廃止、PDF path 検証 |
@@ -59,6 +60,8 @@
 - 停止前の回帰確認: Vitest 85 tests passed、translation-server unittest 72 tests passed。代替モデル比較は5件生成済み（レポートの `count=5`）。
 - 追加修正: MADLADが出力する連続UTF-8 byte escape（`<0xHH>`）を、完全なUTF-8列だけ復元してから品質判定するようにした。不正列は従来どおり拒否する。translation-server unittest 74 tests passed。
 - v63調査結果: 長段落の生成上限を384へ上げても最長fallback（1,063文字）はsource fallbackのままだったため、256へ戻した。救済分割のfragment閾値変更は既存回帰を壊したため不採用。現在のfull corpusはordinary 74件中fallback 15件（20.27%）。
+- 目標再開Phase 1: 残存15件のpaper/block/page/reason/文字数/一次原因仮説を監査末尾に全件記録。次は各ケースのsource integrity・bbox・canonical geometryを確認し、仮分類を確定する。確定前に新しい翻訳ルールを追加しない。
+- attribution補足: audit rowsでは15件すべて`structuralWarnings: []`だがbboxを保存していないため、structure関連ラベルは未確定。server source fallback 7件をTRANSLATION_UNIT_DEBUGとcanonical geometry付きで優先再現する。
 
 - Citation / 用語 Popover の authors・title はヒューリスティック。構造化抽出の強化は extraction 側
 - Preview ページジャンプは失敗しても PDF 自体は開く
@@ -84,14 +87,68 @@ Reader open は source.pdf / assets を読まない前提。native SQLite の必
 
 ## Release readiness
 
+### Pause checkpoint (2026-09-15)
+
+Corpus-audit work is paused at a clean boundary. No benchmark, test, or audit
+job is running. The packaged app translation server remains running because it
+belongs to the user's launched `.app`; it was left untouched.
+
+Resume from Phase 1 attribution of the 15 remaining ordinary-body fallbacks.
+The measured rate is still 15/74 (20.27%), so the <=5% goal is not met. Next,
+capture canonical block geometry and `TRANSLATION_UNIT_DEBUG=1` traces for all
+15 rows before adding new rules.
+
+### Phase 1 attribution evidence (2026-09-15)
+
+Added `scripts/attribute-translation-fallbacks.ts` and generated
+`test-data/real-papers/reports/translation-fallback-attribution.json` without
+starting the translation server. All 15 remaining fallback rows matched
+exactly one extracted Canonical block and one layout block, so page/bbox
+evidence is now available. Preliminary cause hypotheses are A model/adequacy
+9, D structure mixing 3, and E scientific layout 3. No matched fallback block
+currently shows a within-block column switch, so reading-order failure has not
+been claimed from this evidence. These
+labels are explicitly hypotheses until manual line-level review; no production
+heuristic was changed from this inventory.
+
+The fixed fixture was rerun under `3b-mt-v5-semantic-v61`; direct, micro-batch,
+protection, atomic citation, whole-sentence, and repeat outputs were
+deterministic. No unrelated hallucinated fact appeared, while terminology
+remains awkward (for example 「移動領域」), confirming a semantic adequacy
+issue rather than a splitter or batch failure.
+
+Segmenter v62 now merges leading two- or three-word prefixes forward (while
+preserving colon-ended list lead-ins). This addresses meaningless first units
+seen in several source-echo paragraphs; cache identity is `semantic-v62`.
+Segmenter tests pass, but full-corpus impact is not yet measured.
+
+Added a source-grounded terminology repair for `mobile domain` → `モバイル分野`
+when the model emits `移動領域`; unrelated sources are untouched. Glossary
+tests (16) and TypeScript validation pass. Full-corpus fallback impact remains
+unmeasured until the next benchmark.
+
+The line-level source-integrity pass found 14/15 matched blocks with one
+consistent column, no list boundary, and no continuation edge. One block
+(`cognitive-psychology-gpt3/b-b4ed26af`) contains four detected list lines and
+is marked `review`; it remains a structure-mixing candidate rather than a
+model-only failure.
+
+The existing fixed-fixture model isolation report shows direct and
+MicroBatchScheduler parity (64 input / 86 output tokens), parity with and
+without production protection, and deterministic greedy output. Atomic
+author-year citation protection preserves the full citation and the safe
+two-chunk split remains coherent. No unrelated hallucinated fact appears in
+this isolated sentence, so semicolon splitting and batch mapping are not
+supported as its direct cause.
+
 | 項目 | 状態 |
 | --- | --- |
 | `npm run tauri:build:fast` → `.app` | 日常確認（cached Python） |
 | `npm run tauri:build:clean` / `tauri:build` → `.app` + `.dmg` | リリース（clean Python）。CI acceptance は clean |
-| PR CI | `.github/workflows/ci.yml`（TS test/lint/build、browser smoke、Rust fmt/clippy/test、軽量 Python） |
-| Packaged acceptance | `release-acceptance.yml` + [docs/RELEASE_ACCEPTANCE.md](./docs/RELEASE_ACCEPTANCE.md) |
+| PR CI | `.github/workflows/ci.yml`（TS lint/test/build + browser smoke、Rust fmt/clippy/test + Tauri Linux deps、軽量 Python）。MADLAD なし |
+| Packaged acceptance | `npm run packaged:e2e` + `release-acceptance.yml` + [docs/RELEASE_ACCEPTANCE.md](./docs/RELEASE_ACCEPTANCE.md)（実 `.app`。browser smoke 単体では代替しない） |
 | MADLAD 大容量 download | 通常 CI 外（nightly / human acceptance） |
-| App Store / 公証フローの CI | 未整備 |
+| Developer ID / 公証 | [docs/MACOS_RELEASE.md](./docs/MACOS_RELEASE.md)。`npm run macos:sign` / `PAPER_READER_SIGN=1`（clean のみ。fast には掛けない） |
 | Windows | 対象外 |
 
 ---
@@ -106,13 +163,178 @@ Reader open は source.pdf / assets を読まない前提。native SQLite の必
 | `npm run build` | `tsc` + Vite |
 | `npm run verify:browser` | Playwright スモーク |
 | `npm run bench:library` | 100/500 synthetic library 指標（startup / memory proxy / SQLite / search / persist） |
-| `npm run release:acceptance` | release 前自動ゲート + `.app` 手順表示 |
+| `npm run release:acceptance` | release 前自動ゲート + packaged E2E（`.app` があるとき）+ 残 manual 手順 |
+| `npm run packaged:e2e` | 実 `.app` launch → fixture import → annotation/search/export → relaunch |
+| `npm run macos:sign` | Developer ID codesign + notarize + staple + verify（secrets 必須） |
 | `npm run test:bundle-python` | Python runtime content-hash cache + stage smoke |
-| `npm run tauri:build:fast` | 日常 `.app`（cached Python） |
-| `npm run tauri:build:clean` | リリース `.app` + `.dmg`（clean Python） |
+| `npm run tauri:build:fast` | 日常 `.app`（cached Python、未署名） |
+| `npm run tauri:build:clean` | リリース `.app` + `.dmg`（clean Python）。`PAPER_READER_SIGN=1` で公証まで |
 
 基盤回帰の例: `importResumeServerReady.test.ts`（100 completed → body read 0）、`dirtyTracking.test.ts`（100 read-only → write 0）、`sectionVirtualization.test.ts`（50+ jump mount bound）、`ftsFreshness.test.ts`。
 
 `verify:browser` は preview/dev サーバ起動前提。workspace 子フォルダ見出し待ちでタイムアウトすることがある（既知フレーク）。CI では build 後に `vite preview` を立てて実行する。
 
 Python PR CI は torch 不要の `tests.test_citation_protect` を実行。`micro_batcher` / `segmenter`（MADLADEngine import）はローカル／nightly（torch あり）向け。
+Segmenter v62 full benchmark (same 21-paper, `--limit 8` sample) remained at
+48 ordinary-body rows and 14 fallbacks (29.17%). Tiny-unit segmentation tests
+improved, but the product metric did not move; treat this layer as plateaued.
+## 2026-09-15 checkpoint: attribution rerun
+
+- `scripts/attribute-translation-fallbacks.ts` を現行 `translation-audit.json` に対して再実行し、現行レポート上の ordinary-body fallback 14件を canonical/layout geometry に再結合した。
+- 14件すべてが一意に source block と一致し、抽出側で再現可能な状態を確認した。出力は `test-data/real-papers/reports/translation-fallback-attribution.json`（ローカル監査生成物）へ更新。
+- これはモデル改善を意味しない。次の作業は各行の `attribution` と manual review を現行14件へ同期し、A/E/D の帰属を確定したうえで、救済可能な一般化経路だけを候補比較する。
+- 現時点で production translation server / benchmark process は停止済み。`.app` build は未実施。
+
+## 2026-09-15 checkpoint: whole-unit rescue retry
+
+- `madlad_mps.py` の最終 paragraph 品質検査で失敗した場合、既存の構文依存 `rescue_units_for_translation()` を whole-unit レベルでも一度だけ再試行する経路を追加。
+- per-chunk は通過して join 後に科学トークンや協調節が欠落するケースを救済対象にした。品質ゲート自体は緩和していないため、再試行結果も失敗すれば従来どおり原文 fallback。
+- `py_compile`、TypeScript 型チェック、citation protection 26テスト、差分チェックに成功。実モデルでの fallback 率改善は未測定で、次回サーバー起動時に focused benchmark を実行する。
+- サーバーを v63 で起動し `power-over-skin` の実ブロックを再送したところ、`TQP3M9009` が `RFTQP3M9009` に変形する既存症状は再現した。これは per-chunk 通過後の join/whole-unit 品質失敗に該当するため、rescue 経路の実測改善はまだ確認できていない。
+
+## 2026-09-15 checkpoint: identifier repair audit (not shipped)
+
+- 技術識別子の source-grounded 復元を実モデルで試験したが、長文では識別子が戻っても内容の省略・置換が残った。fallback 率だけを下げる unsafe false accept になるため、本番経路には採用せず、実装と cache version は semantic-v63 に戻した。
+- 固定短文では `TQP3M9009` の付着が解消した一方、実ブロックでは原文にない伝送器・実験結果への置換が再現。今後は識別子修復単独ではなく、意味欠落を検出できる候補評価を先に設計する。
+
+## 2026-09-15 checkpoint: concessive rescue coverage (v64)
+
+- rescue segmentation が文頭 `Although ... , it ...` を対象外にしていたため、長い譲歩節を2つの意味単位へ分ける条件を拡張。括弧内引用は従来どおり保護し、round-trip は維持。
+- `power-over-skin` の274文字節が `Although ...` / `it still ...` の2単位へ分割されることを確認。segmenter 33テスト成功。
+- production identifier repair は導入していないため、意味品質を損なう安全側の判断は維持。cache identity は `semantic-v64` に更新。
+
+## 2026-09-15 checkpoint: proactive concessive segmentation (v65)
+
+- 長い `While/Although ... , main clause` を品質失敗後だけでなく通常の segmenter でも分割。括弧・引用内部の区切りは対象外で、source round-trip を維持。
+- これにより MADLAD が長文の主節だけを採用する decode を事前に避ける。segmenter 34テスト成功。
+- 本番 identifier repair は引き続き未導入。cache identity は `semantic-v65` に更新。
+- v65 の `power-over-skin` source/unit/model_input/round-trip を `translation-server/benchmarks/segmenter-v65-concessive.json` に固定。8 unit、`roundTrip=true` で次回の before/after 比較を再現可能にした。
+- proactive path 自体の回帰テストを追加し、segmenter テストは35件成功。fixture も proactive model input に再生成した。
+- v65 サーバーで分割後の `It still approximates ...` を直接翻訳し、`受信機接地面が電力伝送の大きな制約であるため、この方式は摩耗した送信機の性能に近い。` を得た。分割単位では意味が保たれるが、全段落の安全性判定は別途必要。
+- translation-server 全テストを venv で実行し、79件すべて成功（microbatch の意図的 unit fallback テスト出力を含む）。
+- フロント側の `quality.test.ts` / `glossary.test.ts` も実行し、75件すべて成功。DOMMatrix の canvas 警告は既存のテスト環境依存で、テスト結果には影響なし。
+
+## 2026-09-15 checkpoint: v65 full sample benchmark
+
+- v65 server で全21 paper / 139 rows / ordinary-body 48 rowsを完走。reader-visible fallback は14/48 = 29.17%で、v62 sampleと同率だった。
+- proactive concessive segmentation は分割品質を改善するが、現行サンプルの全体fallback率は下げなかった。ログには `AGMMAGMM` のような技術識別子反復も残るため、quality gate緩和は行わない。
+- ベンチマーク結果は `test-data/real-papers/reports/translation-audit.{json,md}` に保存。サーバーは完走後に停止済み。
+
+## 2026-09-15 checkpoint: local model cascade audit
+
+- キャッシュ済み `Helsinki-NLP/opus-mt-en-jap` を残存 ordinary fallback 8件へ audit-only で比較。長文で大幅な短縮・不自然な語列・反復が発生し、現行MADLADの代替として安全に採用できないことを確認。
+- したがってモデル切替による fallback 率改善は保留し、現行の原文 fallback 安全策を維持する。比較結果は `test-data/real-papers/reports/model-cascade-v65-opus-enja-ordinary.json`。
+- `facebook/m2m100_418M` も同じ8件で比較完了。数値や引用の変形、機械的な不自然さが残り、代替採用不可と判定。結果は `test-data/real-papers/reports/model-cascade-v65-m2m418-ordinary.json`。
+- v65 full sample の ordinary fallback 14件の理由内訳を集計: server source fallback 8、degenerate output 2、scientific invariant欠落（M2W/Machine-to-Wearable、TQP3M9009/dB、不要な1914）3、source negation missing 1。次の優先順位は server/model retry 8件と長文意味欠落の候補評価。
+
+## 2026-09-15 checkpoint: whole-unit beam retry (v66)
+
+- paragraph結合後の品質失敗時に、同一translation unitsを `num_beams=4` で再生成し、既存の品質ゲートを通過した場合だけ採用する再試行を追加。
+- 失敗時は従来の rescue segmentation、最終的に原文 fallback。ゲート緩和ではない。
+- translation-server全79テスト成功、cache identityを `semantic-v66` に更新。実モデル全体benchmarkは次回実行する。
+- v66 全体サンプルを完走したが 21 papers / 139 rows / 48 ordinary-body / 14 fallback = 29.17% で、v65 と同率。beam retry は現行サンプルの fallback を減らさなかったため、常用設定としての効果は未確認。
+
+## 2026-09-15 checkpoint: coverage audit signal
+
+- `scripts/score-translation-coverage.ts` を追加し、v66 report の ordinary-body 40行を audit-only 集計。文数不足（coverage < 0.5）は0、長さ比 <0.28 は0だったが、source invariant の単純保持判定で2行に欠落を検出した。
+- これは現行 quality gate が「fallbackでない＝安全」を保証しない証拠。候補スコアはまだ production gate に接続していないため、2行の手動レビューを先に行う。
+
+## 2026-09-15 checkpoint: paused at a clean boundary
+
+- ユーザー指示により、監査・ベンチマークの常駐プロセスを確認して停止。`server.py`、`benchmark-real`、`compare_fallback_model`、coverage/attribution 実行プロセスはいずれも残っていない。
+- v66 の現状値は 21 papers / 139 rows / ordinary-body 48 rows / reader-visible fallback 14 rows (29.17%)。目標の5%以下には未到達。
+- coverage audit の invariant 欠落候補2件を手動レビュー。`thermal-earring/b-22de2c20` は `14.4uW` の表記差自体は誤警告だが、末尾文の脱落・主語の意味変化があり、severity 3 の unsafe false accept と確定。`thermal-earring/b-01a329cd` は空欄ではなく server source fallback で、正しい安全側fallbackと確定。レビュー記録を `audit-manual-review.json` に追加。
+- 次の再開順: (1) 2件の canonical/translation row と reader-visible 状態を確認、(2) coverage 判定を正規化表記対応にする、(3) 空翻訳が fallback として表示されない経路を追跡、(4) 変更後に v66 相当 benchmark とテストを実行。サーバーは検証後必ず停止する。
+
+## 2026-09-15 checkpoint: Phase 1 attribution inventory refreshed
+
+- 現行 v66 report の reader-visible ordinary fallback は14件（objective冒頭の15件はv61時点）。PDF再抽出との一意一致は14/14で、未一致・曖昧一致は0。
+- 原因仮説を全件に付与し、内訳は A correct-source/model candidate 9件、D structure mixing candidate 2件、E equation/scientific-layout candidate 3件。G unclassified は0件になった。
+- Aの9件は単一column・listなし・continuation兆候なしの provisional-pass sourceで、モデル/品質ゲート再評価を優先する。D/Eは構造・科学記法の切り分けを優先し、翻訳側のブラックリスト追加は行わない。
+- 更新済み report: `test-data/real-papers/reports/translation-fallback-attribution.json`。次は A 9件の translation-unit/debug evidence と D/E 5件の geometry evidenceを確認し、source-integrity と model-quality の分母を分離する。
+- A群の内訳も固定: server source fallback 6件、degenerate output 2件、source negation missing 1件。長文（747〜1496文字）の単一column source fallbackが複数あるため、次回は単一長文を直接再現するdebug fixtureを作り、segmenter/chunk境界とdecode失敗を分離する。
+
+## 2026-09-15 checkpoint: clean-source fallback fixtures
+
+- A群の代表3件（thermal-earring、cognitive-psychology-gpt3、linguistics-language-model-physics）をPDF非依存の固定fixture `translation-server/benchmarks/translation-unit-fallback-fixtures-v66.json` に追加。
+- fixtureは実際のfallback source、必須科学トークン、round-trip、極端な短片禁止を定義。`test_segmenter.py` に読み込みテストを追加し、segmenterテスト36件が成功。
+- これはモデル出力を改善したものではなく、PDF抽出を完全に外した再現基盤。次は同一fixtureをMADLAD direct / production translation pathへ流し、server source fallbackとdecode失敗を分離する。
+
+## 2026-09-15 checkpoint: direct MADLAD fixture diagnosis
+
+- 同一process・同一MADLAD v66で3つのclean-source fixtureを直接実行し、結果を `translation-server/benchmarks/translation-unit-fallback-direct-v66.json` に保存。
+- `thermal-earring-b-01a329cd` と `linguistics-language-model-physics-b-30cd3318` はPDFを介さず `degenerate translation output` を再現。これは抽出だけでは説明できないモデル/品質経路の失敗。
+- `cognitive-psychology-gpt3-b-9c57b65a` は例外なく返ったが、出力中に不自然な `GPT。GPT-3` の分断が発生。現行degenerate gateだけではsemantic errorを捕捉できない具体例になった。
+- direct診断後のモデルプロセスは終了済み。次回は fixture の各条件（raw/protected/atomic、whole sentence/safe split）を同一形式で記録し、production retryで救済可能かを比較する。fallback 5%以下は未達。
+- 全translation-server unittestを再実行し、80件成功。新fixture診断はproduction挙動を変更せず、再現と回帰検証だけを追加している。
+
+## 2026-09-15 checkpoint: per-unit failure instrumentation
+
+- `_translate_chunks` のbatch経路・逐次経路で、`TRANSLATION_UNIT_DEBUG=1` 時に失敗unitのindex、chars、words、reason、sourceを `[TRANSLATION_UNIT_FAILURE]` として記録するようにした。通常実行ではログ量を増やさない。
+- これにより「一つのchunk失敗→段落全体fallback」昇格を、実際の入力単位で追跡できる。translation-server全テスト82件が成功。
+- 次回はこのdebugをA群fixture/production benchmarkで有効化し、失敗unitが長文の一部か、構造混在かを集計する。
+
+## 2026-09-15 checkpoint: debug capture of paragraph escalation
+
+- `TRANSLATION_UNIT_DEBUG=1` のproduction serverへthermal fixtureを投入し、実ログを採取。3 units中、index 0（253 chars / 38 words）が失敗し、`[TRANSLATION_UNIT_FAILURE]` を出力した。
+- 最初のdecodeとbeam retryは短い結論へ圧縮され、rescueの最初のunitも `implausibly_short`。この1 unit失敗が段落全体のsource fallbackへ昇格することを確認。
+- 診断記録を `translation-server/benchmarks/translation-unit-debug-thermal-v68.md` と response JSONへ保存。サーバー停止済み。
+
+## 2026-09-15 checkpoint: manual safety metric
+
+- `audit-manual-review.json` のレビュー済み16件を集計し、reader-visible fallbackでないのに severity >=2 の誤訳が4件。暫定 unsafe false-accept rate は 4/16 = 25.0%。これはfallback率とは別の指標で、現状を研究用途へ出すには高すぎる。
+- 該当は semantic_shift/omission が中心（cognitive-psychology、dont-mind-me、marketing-consumer-response、thermal-earring）。quality gateの形式チェックだけでは意味破綻を十分に捕捉できていない証拠として記録し、ゲート緩和は行わない。
+
+## 2026-09-15 checkpoint: orphaned identifier-prefix guard
+
+- `GPT。GPT-3` のように、日本語文末へsource identifierの接頭辞だけが残るdecode異常を、特定語blacklistではなく「出力末尾tokenがsourceのhyphenated identifierのprefixか」という一般条件で検出する品質ガードを追加。
+- `test_madlad_quality.py` に回帰テストを追加。quality/segmenter対象48件は成功。既存の安全側fallback方針は維持し、通常の完全な固有名詞は対象外。
+- 次回はこのガードをfixture direct診断に適用した場合の分類（unsafe accept→fallback増加か、再試行で救済可能か）を測定し、全corpusで絶対fallback改善があるか確認する。
+
+## 2026-09-15 checkpoint: v67 full-corpus guard benchmark
+
+- orphaned identifier-prefix guardを含むサーバーで全21論文・139 rowsを完走。ordinary-body 48 rows、reader-visible fallback 14 rows = 29.17%で、v66から改善なし。
+- fallback理由は source fallback 8、degenerate 2、invariant/negation系4。ガードは安全性検出を強化したが、現行サンプルのfallback率を下げなかった。
+- benchmark結果は `test-data/real-papers/reports/translation-audit.{json,md}` に更新。サーバーは停止済み。
+- 次の優先順位は、短いchunk拒否で全体fallbackになるA群の再セグメント/再結合評価と、D/E構造候補のsource-integrity実測。品質ガードを緩める方向へは進めない。
+
+## 2026-09-15 checkpoint: medium concessive units kept intact
+
+- direct診断でthermal-earringの253文字 `While ... , directly ...` が5単位へ分割され、短い単位の拒否で全体fallbackになることを確認したため、proactive concessive splitを260文字以上へ限定。274文字の長い `Although` rescueは維持し、253文字の通常文は1 unitのままにした。
+- `test_segmenter.py` に中長さWhile文の不分割回帰を追加。segmenter/quality 49件が成功。
+- これはfallback削減を狙った入力境界変更で、全corpus効果は未測定。次回は同じMADLAD fixture directまたはfull benchmarkで、5→1 unit化がdegenerate率を下げるか確認する。
+
+## 2026-09-15 checkpoint: v67 thermal direct recheck
+
+- 閾値変更後のthermal fixtureは5 unitから3 unitへ減少したが、MADLAD直呼び出しは依然 `degenerate translation output`。`耳の温度から体温を直接推定するには…`（source unitが長い主張を短い結論へ圧縮）が `implausibly_short` で拒否され、beamと2-unit rescue後も失敗した。
+- よって、単純なproactive split抑制だけではこのケースを救済できない。品質ゲート緩和は行わず、次は「長文source unitを意味境界で分割して各主張を保つ」方向を、実測結果とともに再設計する。
+
+## 2026-09-15 checkpoint: thermal production recheck after v68 boundary change
+
+- thermal-earringだけをproduction server経由で再実行。ordinary-body 2件中1件がfallback（1/2）で、対象fallback `b-01a329cd` は従来どおり server source fallback。`b-22de2c20` はacceptのまま。
+- 変更で既存のaccepted blockを悪化させた証拠はないが、論文単位のfallback率は改善していない。結果は `translation-audit-thermal-earring.{json,md}` に保存。
+- サーバー停止済み。全体v68 benchmarkは未実行のため、次回変更前後の全体比較が必要。
+
+## 2026-09-15 checkpoint: v68 full benchmark after boundary change
+
+- v68境界変更（medium concessive split抑制）を含む全21論文・139 rowsで再測定。ordinary-body 48 rows、fallback 14 rows = 29.17%で、v67/v66から変化なし。
+- 変更はthermalの既存accepted blockを壊していないが、残存source fallback/decode failureを減らさなかった。次は単位ごとの品質結果を保持して、長文の一部失敗が段落全体fallbackになる経路を定量化する。
+- ベンチマーク完走後のサーバー停止を確認済み。目標5%以下は未達。
+### Checkpoint: extraction corpus command repaired
+
+- `npm run test:extraction-corpus` was previously wired to the main Vitest config, whose exclude rules caused the real-paper files to be skipped. The new `vitest.extraction.config.ts` makes the command execute both real-paper suites.
+- Corrected three stale fixture expectations using cached PDF evidence: Interactive Jewellery token order is cross-page (no page restriction), the neuroscience sample is single-column on page 1, and the economics sample is multi-column on page 14.
+- Validation: 2 test files, 40 tests passed.
+- Translation-server regression also passes with the project environment: `PYTHONPATH=translation-server translation-server/.venv/bin/python -m unittest discover -s translation-server/tests -p 'test_*.py'` → 82 tests OK. The system Python lacks torch and is not the supported runner.
+- Re-ran fallback attribution after the harness checkpoint: 14/14 ordinary fallback rows matched uniquely; attribution remains A=9, D=2, E=3, unmatched=0. No model or gate change was made in this step.
+- Generated `test-data/real-papers/reports/translation-fallback-analysis-v69.json` as the next diagnostic artifact. It records all 14 ordinary fallback sources, page spans, lengths, warnings, quality reasons, and attribution; 7/14 are 1000+ characters and all 14 are post-model decisions in the current report. This confirms the next experiment should target long-unit/model adequacy while keeping D/E structure cases separate.
+- Baseline TypeScript quality/glossary suites rechecked: 75 tests passed. No new algorithm change was made; this is the comparison baseline for the upcoming long-unit translation experiment.
+- v69 fixed-fixture direct diagnosis completed for the author-year citation sentence. With the same MADLAD process/model, A/B/D/E/F all produced the same stable Japanese output; C (unprotected) also completed with citation transliteration, and G (safe two-unit split) preserved meaning. No hallucination or microbatch mismatch appeared. This rejects citation splitting and microbatch mapping as the cause for this sentence; the remaining quality issue is adequacy of the model's wording ("mobile domain" rendered as "移動領域"). Results are stored in `translation-server/benchmarks/translation-fixture-diagnosis.json`.
+- Existing local MLX INT8 alternative was load-tested and benchmarked without switching production. It loads successfully, but the representative long `intro` output omits multiple source claims and the title output is truncated; therefore it is not a safe replacement yet. Raw run is `/tmp/madlad-mlx-int8-bench.json`.
+- MLX segmented comparison exposed a general boundary bug: `In line with van Dijk et al. [8] ...` was split after `et al.`, and the isolated `[8]` unit triggered hallucinated output. Updated `_is_abbreviation` to recognize the two-token `et al.` abbreviation; added a regression test. Segmenter tests now pass 38/38. This is a source-unit fix, not a blacklist or model change.
+- Re-ran the full translation-server suite after the `et al.` boundary fix: **83 tests passed**. No server process was left running.
+- Direct segmenter verification now keeps `In line with van Dijk et al. [8] ...` as one unit with round-trip integrity (`units=1`, `round_trip=True`), confirming the isolated citation fragment is removed before model submission.
+- Bumped the shared pipeline cache identity from `3b-mt-v5-semantic-v66` to `3b-mt-v5-semantic-v67` after the `et al.` segmentation change. Server segmenter tests (38) and TypeScript typecheck pass, preventing stale v66 translations from being silently reused.
+- v70 direct MPS run confirms the fix reaches production MADLAD input: `et al. [8]` remains inside one 164-character unit, protected only at model encoding, and output contains no isolated citation hallucination. Server reported `3b-mt-v5-semantic-v67`; process exited after the single run.
+- v71 direct MPS recheck of the 245-character `significant-other` A-group fallback now completes as one chunk (66→73 tokens) with a non-degenerate Japanese result under v67. This suggests at least one former transient/model-path failure is recoverable after the pipeline-version/segmentation update, but it is not yet a corpus fallback measurement. Saved as `translation-server/benchmarks/translation-unit-direct-significant-v71.json`.
+- v71 HTTP production-path recheck of the same block returned 200 with the same 1-chunk, 66→73-token result and model version v67. This confirms client-facing server/MicroBatch path does not reproduce that former fallback. Server was explicitly shut down after the request.

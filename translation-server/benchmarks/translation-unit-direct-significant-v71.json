@@ -1,0 +1,10 @@
+{
+  "id": "significant-other-b-bb2064ca",
+  "source_chars": 245,
+  "model_version": "3b-mt-v5-semantic-v67",
+  "chunks": 1,
+  "input_tokens": 66,
+  "output_tokens": 73,
+  "result": "現代ジュエリーは, 新しい素材, プロセス, 視点を取り入れ, 社会におけるジュエリーの役割に関する先入観に挑戦することによって, ジュエリーコンセプトを拡張しようとする豊かな技術分野である。",
+  "status": "accepted_direct"
+}

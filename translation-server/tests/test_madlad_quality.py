@@ -102,3 +102,9 @@ class MadladPartialSourceFallbackTests(unittest.TestCase):
         output = "IR カメラ条件をベースライン条件 [12] と比較した。"
         self.assertFalse(MADLADEngine._contains_untranslated_source_span(output, source))
         self.assertFalse(MADLADEngine._is_degenerate(output, source, "ja"))
+
+    def test_rejects_trailing_prefix_of_source_identifier(self) -> None:
+        source = "GPT-3 identified the correct object to be removed."
+        output = "正しい対象を除去すべきだとGPT。"
+        self.assertTrue(MADLADEngine._contains_untranslated_source_span(output, source))
+        self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))

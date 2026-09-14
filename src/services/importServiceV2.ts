@@ -23,6 +23,7 @@ import {
   computeTextHash,
   getCachedTranslation,
   saveTranslationCache,
+  deletePaper,
   type BenchmarkEntry,
 } from "./database";
 import type { Paper, Section, PaperBlock } from "../types/paper";
@@ -60,6 +61,7 @@ import {
 } from "./import/helpers";
 import { activeImportPaperIds } from "./import/session";
 import type { ImportCallbacks, ImportConfig } from "./import/types";
+import { ImportCancelledError, throwIfImportAborted } from "./import/cancellation";
 
 export {
   isRetryableTranslationFailure,
@@ -102,8 +104,10 @@ export async function importPDFV2(
       stageTotal: 1,
       message: "PDFファイルを読み込んでいます...",
     });
+    throwIfImportAborted(callbacks.signal, { paperId, partialReady: false });
 
     const fileHash = await computeFileHash(file);
+    throwIfImportAborted(callbacks.signal, { paperId, partialReady: false });
 
     const { findDuplicatePaper } = await import("./import/duplicate");
     const existingPaper = await findDuplicatePaper(fileHash);
@@ -129,6 +133,7 @@ export async function importPDFV2(
       extractFigures: true,
       previousBlocks: previousBlocks.length ? previousBlocks : undefined,
       onProgress: (progress) => {
+        throwIfImportAborted(callbacks.signal, { paperId, partialReady: false });
         const stage =
           progress.stage === "figures" || progress.stage === "structuring"
             ? "structuring"
@@ -144,6 +149,7 @@ export async function importPDFV2(
         });
       },
     });
+    throwIfImportAborted(callbacks.signal, { paperId, partialReady: false });
 
     const { paper, sections, blocks: extractedBlocks } = extracted;
     const { attachLinesToBlocks, layoutFileFromNative } = await import("../data/package/layoutFromExtraction");
@@ -184,6 +190,7 @@ export async function importPDFV2(
 
     // Notify that partial data is ready (can start viewing)
     callbacks.onPartialReady(paper, sections, blocks);
+    throwIfImportAborted(callbacks.signal, { paperId, partialReady: true });
 
     if (isJapaneseLayoutOnlyPaper(paper.titleOriginal, blocks)) {
       await finalizeJapaneseLayoutOnly(paper, sections, blocks);
@@ -260,7 +267,8 @@ export async function importPDFV2(
 
     // Stage 5: Translation with priority queue (after model is ready).
     if (callbacks.waitForTranslationEngine) {
-      const engineReady = await callbacks.waitForTranslationEngine();
+      const engineReady = await callbacks.waitForTranslationEngine(callbacks.signal);
+      throwIfImportAborted(callbacks.signal, { paperId, partialReady: true });
       if (!engineReady) {
         paper.processingStatus = "partial";
         paper.needsTranslationResume = true;
@@ -285,6 +293,7 @@ export async function importPDFV2(
     paper.processingStatus = "translating";
     paper.needsTranslationResume = true;
     await savePaper(paper);
+    throwIfImportAborted(callbacks.signal, { paperId, partialReady: true });
 
     const translationQueue = new TranslationQueue(translationEngine, {
       concurrency: cfg.translationConcurrency,
@@ -294,6 +303,11 @@ export async function importPDFV2(
     });
     translationQueue.start();
     translationManager.attach(paperId, translationQueue);
+
+    const onAbortTranslation = () => {
+      translationManager.cancel(paperId);
+    };
+    callbacks.signal?.addEventListener("abort", onAbortTranslation);
 
     // Track translation progress
     let translatedCount = 0;
@@ -534,7 +548,12 @@ export async function importPDFV2(
     if (outstanding === 0) {
       settleAll();
     }
-    await allDone;
+    try {
+      await allDone;
+    } finally {
+      callbacks.signal?.removeEventListener("abort", onAbortTranslation);
+    }
+    throwIfImportAborted(callbacks.signal, { paperId, partialReady: true });
 
     // Stage 6: Finalize
     callbacks.onStageChange("saving");
@@ -569,6 +588,32 @@ export async function importPDFV2(
     return { paper, sections, blocks };
 
   } catch (error) {
+    if (error instanceof ImportCancelledError) {
+      translationManager.cancel(paperId);
+      if (!error.partialReady) {
+        try {
+          await deletePaper(paperId);
+        } catch (cleanupError) {
+          console.warn("Failed to cleanup cancelled import paper:", cleanupError);
+        }
+        throw error;
+      }
+      // Partial-ready: keep Reader package; do not auto-resume after restart.
+      try {
+        const { getPaper } = await import("./database");
+        const paper = await getPaper(paperId);
+        if (paper) {
+          paper.processingStatus = "partial";
+          paper.needsTranslationResume = false;
+          paper.updatedAt = new Date().toISOString();
+          await savePaper(paper);
+          callbacks.onPaperUpdated?.(paper);
+        }
+      } catch (persistError) {
+        console.warn("Failed to mark cancelled import as partial:", persistError);
+      }
+      throw error;
+    }
     const classified = classifyPdfOpenError(error);
     const message =
       classified.code !== "unknown"

@@ -12,8 +12,8 @@ jobs:
   macos-gate:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: npm
@@ -28,5 +28,16 @@ jobs:
         run: npm run release:acceptance
       - name: Packaged app build (clean, no MADLAD)
         run: npm run tauri:build:clean
-      - name: Acceptance checklist
+      - name: Packaged .app E2E
+        run: npm run packaged:e2e
+      - name: Upload E2E artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: packaged-e2e-artifacts
+          path: scripts/packaged-e2e/artifacts/
+          if-no-files-found: ignore
+      - name: Manual checklist remainder
         run: cat docs/RELEASE_ACCEPTANCE.md
+      - name: Signing docs reminder
+        run: cat docs/MACOS_RELEASE.md

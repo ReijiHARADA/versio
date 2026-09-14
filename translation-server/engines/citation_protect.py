@@ -197,12 +197,18 @@ def _to_halfwidth(text: str) -> str:
 def _normalize_placeholder_glyphs(text: str) -> str:
     """Fold common Latin lookalikes only inside citation placeholders."""
     text = _to_halfwidth(text)
-    return re.sub(
+    text = re.sub(
         rf"{_PLACEHOLDER_PREFIX[0:3]}[IΙІ]T",
         _PLACEHOLDER_PREFIX,
         text,
         flags=re.IGNORECASE,
     )
+    # Greedy decoding can emit Greek/Cyrillic lookalikes for the fixed ASCII
+    # placeholder (for example ``ΖZCIΤ2ZZ``). Normalize only the complete
+    # placeholder-shaped token; ordinary scientific text is untouched.
+    lookalikes = re.compile(r"[ZΖЗ][ZΖЗ][CСϹ][IΙІ][TΤТ]\d+(?:X\d+)?[ZΖЗ][ZΖЗ]", re.IGNORECASE)
+    table = str.maketrans({"Ζ": "Z", "З": "Z", "С": "C", "Ϲ": "C", "Ι": "I", "І": "I", "Τ": "T", "Т": "T", "ζ": "z", "с": "c", "ι": "i", "і": "i", "τ": "t", "т": "t"})
+    return lookalikes.sub(lambda match: match.group(0).translate(table), text)
 
 
 def restore_citations(text: str, citations: list[str], nonce: int = 0) -> str:

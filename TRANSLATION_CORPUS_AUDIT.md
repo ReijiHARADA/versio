@@ -1098,6 +1098,46 @@ remaining seven server source fallbacks and invariant/negation cases remain.
 The improvement is consistent with byte-escape restoration but is far above
 the 5% product target, so no completion claim is made.
 
+### Phase 1 attribution inventory (v61, all 15 ordinary fallbacks)
+
+The following inventory is derived from the completed audit rows and the
+rerun in `translation-fallback-attribution.json`. Every current row matched
+exactly one re-extracted canonical block; the labels are evidence-backed
+triage categories, not a claim that model causality is already proven.
+
+| paper / block | page | reason | chars | primary hypothesis |
+| --- | ---: | --- | ---: | --- |
+| interactive-jewellery / b-4d8fd90a | 3 | source negation missing | 546 | correct_source_model_failure |
+| power-over-skin / b-eed74380 | 5 | invariants missing | 1062 | equation_or_scientific_layout_contamination |
+| thermal-earring / b-01a329cd | 24 | server source fallback | 1063 | correct_source_model_failure (pending unit evidence) |
+| dont-mind-me / b-fb4b663f | 2 | unexpected invariant 1914 | 982 | structure_mixing (historical prose/chrome candidate) |
+| dont-mind-me / b-f55efe09 | 3 | invariant iPhone missing | 516 | quality_gate_false_reject (pending source check) |
+| dont-mind-me / b-ea91ca56 | 5 | degenerate output | 754 | structure_mixing (list/prose candidate) |
+| step-to-charge / b-f11f1c54 | 6 | invariants M2W missing | 572 | equation_or_scientific_layout_contamination |
+| step-to-charge / b-e36ddef0 | 8 | source negation missing | 318 | correct_source_model_failure |
+| cognitive-psychology-gpt3 / b-8f2a6a49 | 3 | server source fallback | 1575 | structure_mixing (long paragraph candidate) |
+| cognitive-psychology-gpt3 / b-5096fc7a | 2 | server source fallback | 448 | structure_mixing (list/prose candidate) |
+| cognitive-psychology-gpt3 / b-b4ed26af | 6 | degenerate output | 215 | structure_mixing (numeric list candidate) |
+| linguistics-language-model-physics / b-30cd3318 | 11 | server source fallback | 1180 | correct_source_model_failure (pending unit evidence) |
+| linguistics-language-model-physics / b-ebe5dcc2 | 1 | server source fallback | 1496 | reading_order_failure (known two-column page) |
+| neuroscience-rule-following / b-9ba3fd27 | 1 | server source fallback | 1397 | reading_order_failure (known two-column page) |
+| neuroscience-rule-following / b-026d207e | 4 | server source fallback | 1204 | correct_source_model_failure (pending unit evidence) |
+
+The refreshed v66 inventory has 9 clean-source/model candidates (A), 2
+structure-mixing candidates (D), and 3 scientific-layout candidates (E).
+All 14 source matches are unique. The A group has one column, no list lines,
+no continuation flags, and no structural warnings in the current extraction
+diagnostics, so it is the next model/quality-gate investigation set. D/E are
+kept separate so extraction fixes are not hidden inside translation retries.
+
+The audit rows report `structuralWarnings: []` for all 14 current cases and provide
+pageStart/pageEnd plus model token counts, but they do not retain block-level
+bounding boxes. Therefore the six structure-related labels above remain
+hypotheses rather than verified attribution. The seven rows with
+`server returned source fallback` have no model output to compare and are the
+highest-priority candidates for a rerun with `TRANSLATION_UNIT_DEBUG=1` and
+captured canonical geometry.
+
 ### v63 output-cap experiment
 
 Raising the per-unit generation cap from 256 to 384 tokens was tested against
@@ -1123,3 +1163,172 @@ degenerate output. The server now restores only contiguous, valid UTF-8 byte
 runs before citation restoration and quality checks; malformed runs remain
 visible and are still rejected. This is a representation repair, not a quality
 threshold change. Two regression tests were added (74 Python tests pass).
+
+### Pause checkpoint (2026-09-15)
+
+Phase 1 attribution is the next resume point. The 15 remaining ordinary-body
+fallbacks are inventoried, but structure-related causes remain hypotheses
+because the audit rows lack block-level geometry and translation-unit traces.
+No long-running audit or benchmark process is active. The packaged app server
+was left running with the user's app, not as an audit job. On resume, capture
+canonical geometry and `TRANSLATION_UNIT_DEBUG=1` for each row before changing
+the algorithm further.
+
+### Phase 1 attribution evidence (2026-09-15)
+
+`scripts/attribute-translation-fallbacks.ts` re-runs native extraction for the
+fallback papers and joins each audit row to its Canonical and layout block.
+The generated local report is
+`test-data/real-papers/reports/translation-fallback-attribution.json`.
+All 15 rows matched exactly one block and now include page-level bounding-box
+evidence. Preliminary hypotheses are: A correct-source/model adequacy 9, D
+structure mixing 3, E equation/scientific contamination 3. No matched fallback
+block currently shows a within-block column switch, so reading-order failure
+has not been claimed from this evidence. They are not yet manual ground truth;
+the next step is line-level review of
+these geometries before implementing additional rules.
+
+The line-level source-integrity pass found 14/15 matched blocks with one
+consistent column, no list boundary, and no continuation edge. One block
+(`cognitive-psychology-gpt3/b-b4ed26af`) contains four detected list lines and
+is marked `review`; it remains a structure-mixing candidate rather than a
+model-only failure.
+
+### Fixed-fixture model isolation (existing evidence)
+
+The local fixture report `translation-server/benchmarks/translation-fixture-diagnosis.json`
+compares direct MADLAD, MicroBatchScheduler, no protection, production
+protection, atomic author-year citation protection, whole-sentence input, and
+safe two-chunk input in one deterministic process. Direct and micro-batch use
+the same 64 input / 86 output tokens and produce the same Japanese, so no
+micro-batch mapping defect is evidenced. Whole-sentence and protected inputs
+also match. Atomic citation protection reduces the input to 32 tokens and
+preserves the citation exactly; safe two-chunk input produces a distinct but
+semantically coherent output (67 input / 92 output tokens). None of these
+conditions produces the previously reported unrelated hallucinated facts for
+this fixture. This shifts the remaining investigation toward long-form unit
+composition and model adequacy, rather than the semicolon splitter or batch
+mapping.
+
+The fixture was rerun under the current `3b-mt-v5-semantic-v61` model. Direct,
+micro-batch, protection, atomic-citation, whole-sentence, and repeat outputs
+were deterministic (32/44 tokens for protected input; 64/86 without
+protection). The safe two-chunk condition was 35/51 tokens. No unrelated
+hallucinated fact appeared, but wording such as 「移動領域」 remains a
+terminology/adequacy defect.
+
+### v61 terminology benchmark (2026-09-15)
+
+The full catalog run completed with `--limit 8` against the current server:
+21 papers, 139 sampled rows, and 48 ordinary-body rows. Fourteen ordinary-body
+rows fell back (29.17%); reasons were 8 server source fallbacks, 3 orphaned
+invariant cases, 2 degenerate outputs, and 1 negation failure. This run uses a
+different sample denominator from the earlier 74-row measurement, so it is a
+checkpoint rather than a before/after claim. The server was stopped after the
+run.
+
+As a small, source-grounded refinement, the glossary normalizer now maps the
+model's `移動領域` rendering to `モバイル分野` only when the source contains
+`mobile domain`. This does not alter acceptance thresholds or introduce a
+target-language blacklist; full-corpus impact still requires a new benchmark.
+
+Output inspection confirms that the invariant-related fallbacks are not mere
+gate noise: power-over-skin drops `TQP3M9009`/`dB`, Step-to-Charge drops
+`Machine-to-Wearable`/`M2W` and leaks a placeholder, and dont-mind-me invents
+the year `1914`. Keeping these as original fallback is therefore correct.
+The eight source-echo rows are long ordinary paragraphs with no structural
+warning in the sampled block and remain the primary model-adequacy recovery
+target.
+
+### v63 free-model comparison (audit-only)
+
+The cached `facebook/m2m100_1.2B` model was evaluated on the eight rows that
+the current report marked as complete source fallbacks. It produced Japanese
+for all eight, but long rows were truncated or semantically distorted (for
+example GPT-3 was rendered with unrelated terms, and neuroscience results
+lost qualifications). No scientific-invariant scoring or manual review
+supports enabling it as a cascade. It remains excluded from production; the
+raw outputs are in `test-data/real-papers/reports/model-cascade-v63-m2m12-ordinary.json`.
+
+### v62 leading-fragment repair
+
+Segmenter inspection found several source-echo paragraphs beginning with a
+two- or three-word sentence (`Related work.`, etc.) that was sent as an
+independent translation unit. Such a unit has no semantic context and can
+poison the paragraph result. Leading tiny prefixes now merge forward, while
+colon-ended list lead-ins remain separate. The segmenter cache identity is
+bumped to `semantic-v62`; 33 segmenter tests pass.
+
+### v62 benchmark result (2026-09-15)
+
+The same 21-paper, `--limit 8` benchmark completed after the repair. It
+remained 139 rows / 48 ordinary-body rows / 14 fallbacks (29.17%), with the
+same broad reason distribution. The repair removed standalone tiny units in
+segmentation tests but did not move the product metric on this sample; this
+layer is a measured plateau for now. The server was stopped after the run.
+
+### v63 placeholder glyph repair
+
+One measured unsafe output contained a scientific placeholder mutated with
+Greek/Cyrillic lookalikes (`ΖZCIΤ2ZZ`), causing a valid protected identifier to
+be rejected. Restoration now normalizes lookalikes only inside a complete
+placeholder-shaped token; ordinary text is unaffected. The pipeline identity
+is `semantic-v63`; 77 translation-server tests pass. A full v63 benchmark is
+still required to measure fallback impact.
+
+Focused v63 reruns covered power-over-skin (1/2 ordinary fallback),
+step-to-charge (1/2), and dont-mind-me (1/3). The affected rows still failed
+because the model omitted or concatenated scientific identifiers
+(`TQP3M9009`, `dB`, `Machine-to-Wearable`, `M2W`) or invented `1914`; the new
+normalization did not change these decisions. The server was stopped after the
+focused run.
+## v65 proactive concessive segmentation checkpoint (2026-09-15)
+
+`segmenter-v65-concessive.json` に `power-over-skin` の source と model-facing
+units を固定した。長い `Although ... , it ...` 節は source を改変せず、
+`This offers ...` と `It still ...` の2つの完結した入力へ変換される。
+実モデルで後者を単独翻訳した結果、接地面が電力伝送の制約であることを保持した
+日本語になった。一方、段落全体では識別子が戻っても内容の置換・省略が残るため、
+識別子修復だけで fallback を減らす施策は採用していない。次の評価は v65 の
+focused/full benchmark と、長文の意味欠落を検出する候補スコアリングである。
+
+### v65 full sample result
+
+v65 の全体サンプルを完走した結果は 21 papers / 139 rows / 48 ordinary-body
+rows / 14 reader-visible fallbacks (29.17%) だった。v62 と同率であり、
+proactive segmentation 単独では fallback 率を下げないことが確認された。
+ログには技術識別子の反復（例: `AGMMAGMM`）も残るため、quality gate は緩和しない。
+
+### Local model cascade audit
+
+残存 fallback 8件を audit-only で比較した。`Helsinki-NLP/opus-mt-en-jap`
+は長文の短縮・反復・不自然な語列、`facebook/m2m100_418M` は数値・引用の
+変形と機械的な日本語を示した。いずれも現行 MADLAD の代替として採用しない。
+比較出力は `test-data/real-papers/reports/model-cascade-v65-opus-enja-ordinary.json`
+と `model-cascade-v65-m2m418-ordinary.json` に保存した。
+- **停止チェックポイント (2026-09-15)**: v66 benchmark/監査プロセスは停止済み。21論文・139行・通常本文48行で reader-visible fallback は14行 (29.17%)。coverage audit の不変量候補2件（`thermal-earring`）を次回の手動レビュー対象として残し、再開手順は `CURRENT_STATE.md` に記録した。
+- **手動レビュー確定 (2026-09-15)**: `thermal-earring/b-22de2c20` は単位表記差ではなく、末尾内容の脱落と意味変化を含む severity 3 の unsafe false accept。`b-01a329cd` は server source fallback であり安全なfallback。レビュー記録は `test-data/real-papers/audit-manual-review.json`。
+- **Phase 1 attribution 更新 (2026-09-15)**: v66の14 fallback全件をPDF再抽出へ一意照合（14/14）。仮説内訳は A=9（clean source/model candidate）、D=2（structure mixing candidate）、E=3（equation/scientific-layout candidate）、未分類=0。これは確定診断ではなく、次のdebug/geometryレビュー順序を定めるための帰属である。
+- **Clean-source direct diagnosis (2026-09-15)**: PDFを完全に外した3 fixtureをMADLAD v66へ直接投入。2件は `degenerate translation output` を再現し、1件は例外なしだが `GPT。GPT-3` というsemantic segmentation/decoding異常を返した。direct結果は `translation-unit-fallback-direct-v66.json` に保存し、モデル経路の独立失敗を確認した。
+- direct実験の追加所見: thermal-earring は655文字を5 chunksへ分け、`耳の温度は…` と `また,耳の温度を測定した結果…` の短い出力を `implausibly_short` として拒否。linguistics は655文字・3 chunksで `線形プロービングは…BERT` の出力が同じ理由で拒否。cognitive-psychology は559文字・4 chunks、180 input tokens / 151 output tokensで返ったが、chunk境界に由来する `GPT。GPT-3` が残った。これは「例外を消す」だけでは不十分で、chunk単位の意味品質評価が必要な証拠。
+- `GPT。GPT-3` 対策として、出力末尾のsource identifier prefixを一般検出するガードを追加（blacklistなし）。既存テストを含むquality/segmenter 48件が成功。全corpus fallback率への影響は未測定で、次回full benchmarkで確認する。
+- **v67 full benchmark**: 21論文・139 rows・ordinary-body 48 rowsを完走。fallback 14/48 = 29.17%でv66と同率。orphaned-prefix guardは安全性を強化したが、絶対fallback改善は生まなかった。サーバー停止済み。
+- **v67 medium-concessive recheck**: thermal-earring fixtureのproactive分割を5→3 unitへ抑制して直接MADLADへ再投入したが、長い主張の短縮出力が `implausibly_short` で拒否され、beam/rescue後もfallback。入力境界の過剰分割は一因だが、モデルdecodeの意味圧縮も独立した原因として残る。
+- **v68 thermal production recheck**: 閾値変更後にthermal-earringをproduction serverで再実行。ordinary-body 2件中1件fallback（1/2）で、`b-22de2c20` はaccept、`b-01a329cd` は従来どおりsource fallback。対象論文のfallback率は改善なし。全体benchmarkは次回実行する。
+- **v68 full benchmark**: 21論文・139 rows・ordinary-body 48 rowsを再測定。fallback 14/48 = 29.17%でv67/v66と同率。medium concessive境界変更は既存acceptを維持したが、fallback削減効果は確認できなかった。サーバー停止済み。
+- **Per-unit failure instrumentation (2026-09-15)**: `TRANSLATION_UNIT_DEBUG=1` 時に、batch/逐次経路の失敗unit index・長さ・理由・sourceを記録する診断を追加。挙動は変更せず、82件のserver testsが成功。次回A群で実ログを採取する。
+- **Thermal debug capture (2026-09-15)**: production serverで3 units中index 0（253 chars / 38 words）が失敗し、短縮decode→beam→rescueの順に拒否されて段落fallbackへ昇格する実ログを採取。詳細は `translation-unit-debug-thermal-v68.md`。
+- **暫定安全性指標 (2026-09-15)**: 手動レビュー済み16件中、fallback表示ではない severity 2以上の誤訳が4件（unsafe false-accept 25.0%）。形式的なquality gateだけではsemantic shift/omissionを防げないため、現状は研究用途の無条件accept水準に達していない。
+### Phase 2 checkpoint: extraction regression harness
+
+The real-paper extraction command is now functional through an explicit Vitest config. Stale catalog assertions were corrected from cached-PDF observations (cross-page Interactive Jewellery token order, single-column neuroscience page 1, economics multi-column page 14). The full extraction corpus currently passes: 40/40 tests across 2 suites. This is harness/ground-truth maintenance; it does not yet reduce the measured translation fallback rate.
+
+Server regression verification completed in the project virtualenv: 82 Python tests passed. The server and benchmark processes remain stopped after verification.
+
+The v69 fallback analysis artifact now contains all 14 ordinary fallback rows with source lengths, page spans, structural warnings, quality reasons, and A/D/E attribution. Seven are over 1000 characters; all are post-model decisions in the current report. This separates long-unit/model adequacy experiments from the D/E structure cases without changing acceptance behavior.
+
+The v69 direct fixture diagnosis also completed for the author-year citation sentence. A/B/D/E/F produced identical stable output under one process/model; the unprotected condition completed with citation transliteration; and the safe two-unit split preserved meaning. No hallucination or microbatch mapping error was observed. The remaining issue is terminology adequacy ("mobile domain" → "移動領域"), not citation segmentation. Detailed outputs remain in `translation-server/benchmarks/translation-fixture-diagnosis.json`.
+
+The existing local MLX INT8 MADLAD alternative was load-tested and benchmarked without changing production. It ran successfully, but its representative long introduction omitted several source claims and its title output was truncated, so it is not a safe replacement based on current evidence.
+
+The segmented MLX comparison revealed a general extraction-unit issue: `et al. [8]` was split into an `et al.` fragment and a standalone citation unit, which produced hallucinated output in the latter. The segmenter now treats two-token `et al.` as an abbreviation and keeps the citation attached; 38/38 segmenter tests pass.

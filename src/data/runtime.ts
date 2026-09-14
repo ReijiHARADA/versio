@@ -56,6 +56,23 @@ export async function resetStorageForTests(): Promise<void> {
   resetDatabaseMigrationFlagForTests();
 }
 
+/** Close and reopen storage from the current FS (after restore swaps library.sqlite). */
+export async function reopenStorage(): Promise<StorageRuntime> {
+  if (runtime) {
+    try {
+      await runtime.db.close();
+    } catch {
+      // ignore
+    }
+  }
+  runtime = null;
+  starting = null;
+  resetDocumentCache();
+  const { resetDatabaseMigrationFlagForTests } = await import("../services/database");
+  resetDatabaseMigrationFlagForTests();
+  return getStorage();
+}
+
 export function peekStorage(): StorageRuntime | null {
   return runtime;
 }

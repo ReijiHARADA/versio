@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useImportJobStore } from "../../stores/importJobStore";
 import {
+  cancelBackgroundImport,
   dismissBackgroundImport,
   retryBackgroundImport,
   retryPaperTranslation,
@@ -24,6 +25,9 @@ export function useImportJobRecovery(options?: {
       void retryBackgroundImport(id);
     },
     onDismiss: dismissBackgroundImport,
+    onCancel: (id: string) => {
+      cancelBackgroundImport(id);
+    },
     onOpenExisting: (paperId: string) => {
       const job = useImportJobStore
         .getState()

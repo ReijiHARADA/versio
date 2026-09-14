@@ -24,6 +24,8 @@ const stageLabels: Record<ImportStage, string> = {
   saving: "保存",
   completed: "完了",
   failed: "エラー",
+  cancel_requested: "キャンセル中",
+  cancelled: "キャンセル済",
 };
 
 const stageOrder: ImportStage[] = [

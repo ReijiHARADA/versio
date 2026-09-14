@@ -195,6 +195,24 @@ source.pdf + ja.md + structure.json + layout.json.gz
   → translated-layout.pdf
 ```
 
+## 7b. Library Backup / Restore
+
+User-facing snapshot of the local library (Settings → データ):
+
+```text
+Paper Reader Backup/
+├── backup.json          # formatVersion, appVersion, schema versions, createdAt, paperCount
+├── library.sqlite
+└── papers/<paperId>/…   # full Paper Packages (source PDF, markdown, assets, …)
+```
+
+Create path: flush pending SQLite persist → write staging tree → validate → promote.
+Restore path: validate candidate (no live mutation) → safety snapshot of current data →
+stage → swap → on failure roll back from safety. Invalid backups leave the live library unchanged.
+
+Implementation: `src/data/backup/*`, `src/services/libraryBackup.ts`, Tauri
+`export_app_directory` / `import_directory_to_app`.
+
 ## 8. SQLite schema
 
 **Engine:** [sql.js](https://github.com/sql-js/sql.js) (SQLite WASM with FTS5),
@@ -338,7 +356,8 @@ Not implemented. Required inputs are stored at extract time:
 | Paper Package / `paper.json` | `schemaVersion` | 1 |
 | `structure.json` | `schemaVersion` | 1 |
 | Markdown front matter | `schemaVersion` | 1 |
-| SQLite `meta.schema_version` | integer | 4 |
+| SQLite `meta.schema_version` | integer | 6 |
+| Library Backup / `backup.json` | `formatVersion` | 1 |
 | `translation.json` | `schemaVersion` | 1 |
 | IndexedDB (legacy backup) | `paper-reader` | 4 |
 
