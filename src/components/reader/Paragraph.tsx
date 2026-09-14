@@ -2,15 +2,32 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { AlertTriangle, Eye, EyeOff, Loader2, RefreshCw } from "lucide-react";
 import type { PaperBlock } from "../../types/paper";
 import type { Annotation } from "../../types/annotation";
+import type { GlossaryEntry } from "../../services/llm/types";
 import { useAppStore } from "../../stores/appStore";
 import { updateBlock, getGlossary, getSetting } from "../../services/database";
 import { MADLADEngine } from "../../services/translation/madladEngine";
 import type { ImportConfig } from "../../services/importServiceV2";
-import { usableTranslatedText, looksLikeBibliographyEntry, isReferencesHeading, shouldTranslateParagraph } from "../../services/translation/quality";
+import {
+  usableTranslatedText,
+  looksLikeBibliographyEntry,
+  isReferencesHeading,
+  shouldTranslateParagraph,
+} from "../../services/translation/quality";
 import { isLowExtractionConfidence } from "../../services/extractionConfidence";
 import { splitHighlightedText } from "../../services/highlightRanges";
 import { parseCitationGroups, uniqueCitationTarget } from "../../services/citations";
 import { applyGlossary } from "../../services/llm/glossaryService";
+import {
+  citationPreviewFromIndex,
+  type CitationPreviewModel,
+} from "./citations/citationPreview";
+import {
+  CitationPreviewPopover,
+  anchorFromEventTarget,
+} from "./citations/CitationPreviewPopover";
+import { segmentTextWithGlossary } from "./glossary/glossaryTerms";
+import { GlossaryTermPopover } from "./glossary/GlossaryTermPopover";
+import type { AnchorBox } from "./memo/popoverPosition";
 import styles from "./Paragraph.module.css";
 
 type ParagraphProps = {
@@ -22,6 +39,10 @@ type ParagraphProps = {
   onHighlightClick?: (annotationIds: string[], rect: DOMRect) => void;
   onOpenSourcePdf?: (block: PaperBlock) => void;
   referenceIndex?: Map<string, string>;
+  referenceBlocks?: PaperBlock[];
+  glossaryEntries?: GlossaryEntry[];
+  onOpenGlossaryInspector?: () => void;
+  onJumpToTarget?: (targetId: string) => void;
 };
 
 function highlightMatches(text: string, query: string): ReactNode {
@@ -51,6 +72,10 @@ export function Paragraph({
   onHighlightClick,
   onOpenSourcePdf,
   referenceIndex,
+  referenceBlocks = [],
+  glossaryEntries = [],
+  onOpenGlossaryInspector,
+  onJumpToTarget,
 }: ParagraphProps) {
   const isExpanded = useAppStore((state) => state.expandedOriginalBlocks.has(block.id));
   const toggleOriginalExpanded = useAppStore((state) => state.toggleOriginalExpanded);
@@ -58,6 +83,14 @@ export function Paragraph({
   const [isRetrying, setIsRetrying] = useState(false);
   const [showConfidenceMenu, setShowConfidenceMenu] = useState(false);
   const confidenceRef = useRef<HTMLDivElement>(null);
+  const [citationPreview, setCitationPreview] = useState<{
+    model: CitationPreviewModel;
+    anchor: AnchorBox;
+  } | null>(null);
+  const [termPreview, setTermPreview] = useState<{
+    entry: GlossaryEntry;
+    anchor: AnchorBox;
+  } | null>(null);
 
   const skipTranslation =
     block.translationStatus === "skipped" ||
@@ -130,54 +163,113 @@ export function Paragraph({
     }
   }, [block, isRetrying, onBlockUpdated]);
 
+  const renderGlossaryText = (text: string, keyPrefix: string): ReactNode => {
+    if (!glossaryEntries.length) {
+      return highlightText ? highlightMatches(text, highlightText) : text;
+    }
+    const segments = segmentTextWithGlossary(text, glossaryEntries);
+    return segments.map((seg, i) => {
+      if (seg.kind === "text") {
+        return (
+          <span key={`${keyPrefix}-t-${i}`}>
+            {highlightText ? highlightMatches(seg.text, highlightText) : seg.text}
+          </span>
+        );
+      }
+      return (
+        <button
+          key={`${keyPrefix}-g-${i}`}
+          type="button"
+          className={styles.glossaryTerm}
+          data-glossary-term=""
+          aria-label={`用語: ${seg.entry.term}`}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            setCitationPreview(null);
+            setTermPreview({
+              entry: seg.entry,
+              anchor: anchorFromEventTarget(event.currentTarget),
+            });
+          }}
+        >
+          {highlightText ? highlightMatches(seg.text, highlightText) : seg.text}
+        </button>
+      );
+    });
+  };
+
+  const openCitation = (
+    key: string,
+    target: string,
+    event: React.MouseEvent | React.KeyboardEvent
+  ) => {
+    const model = citationPreviewFromIndex(key, referenceIndex!, referenceBlocks);
+    if (!model) {
+      onJumpToTarget?.(target);
+      return;
+    }
+    setTermPreview(null);
+    setCitationPreview({
+      model,
+      anchor: anchorFromEventTarget(event.currentTarget),
+    });
+  };
+
   const renderCited = (text: string): ReactNode => {
     const groups = referenceIndex && referenceIndex.size > 0 ? parseCitationGroups(text) : [];
     if (groups.length === 0) {
-      return highlightText ? highlightMatches(text, highlightText) : text;
+      return renderGlossaryText(text, "plain");
     }
     const parts: ReactNode[] = [];
     let cursor = 0;
     groups.forEach((group, i) => {
       if (group.start > cursor) {
         const slice = text.slice(cursor, group.start);
-        parts.push(
-          <span key={`t-${i}`}>
-            {highlightText ? highlightMatches(slice, highlightText) : slice}
-          </span>
-        );
+        parts.push(<span key={`t-${i}`}>{renderGlossaryText(slice, `t-${i}`)}</span>);
       }
       const target = uniqueCitationTarget(group.keys, referenceIndex!);
       const cited = text.slice(group.start, group.end);
-      if (target) {
+      if (target && group.keys[0]) {
         const href = target.startsWith("ref-") ? `#${target}` : `#block-${target}`;
         parts.push(
           <a
             key={`c-${i}`}
             className={styles.citation}
             href={href}
+            data-citation-trigger=""
+            aria-haspopup="dialog"
+            aria-label={`参考文献 ${cited}`}
             onClick={(e) => {
               e.preventDefault();
-              document.getElementById(target.startsWith("ref-") ? target : `block-${target}`)?.scrollIntoView({
-                behavior: "smooth",
-                block: "center",
-              });
+              openCitation(group.keys[0], target, e);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                openCitation(group.keys[0], target, e);
+              }
             }}
           >
             {cited}
           </a>
         );
       } else {
-        parts.push(<span key={`c-${i}`}>{cited}</span>);
+        parts.push(
+          <span
+            key={`c-${i}`}
+            className={styles.citationPlain}
+            title="対応する参考文献を特定できません"
+          >
+            {cited}
+          </span>
+        );
       }
       cursor = group.end;
     });
     if (cursor < text.length) {
       const slice = text.slice(cursor);
-      parts.push(
-        <span key="t-end">
-          {highlightText ? highlightMatches(slice, highlightText) : slice}
-        </span>
-      );
+      parts.push(<span key="t-end">{renderGlossaryText(slice, "end")}</span>);
     }
     return parts;
   };
@@ -195,13 +287,10 @@ export function Paragraph({
     );
 
     return segments.map((seg, i) => {
-      const inner = highlightText ? highlightMatches(seg.text, highlightText) : seg.text;
       if (seg.annotationIds.length === 0) {
-        return <span key={i}>{inner}</span>;
+        return <span key={i}>{renderCited(seg.text)}</span>;
       }
-      const flashing = flashAnnotationIds.some((id) =>
-        seg.annotationIds.includes(id)
-      );
+      const flashing = flashAnnotationIds.some((id) => seg.annotationIds.includes(id));
       return (
         <mark
           key={i}
@@ -213,7 +302,7 @@ export function Paragraph({
             onHighlightClick?.(seg.annotationIds, e.currentTarget.getBoundingClientRect());
           }}
         >
-          {inner}
+          {highlightText ? highlightMatches(seg.text, highlightText) : seg.text}
         </mark>
       );
     });
@@ -248,14 +337,13 @@ export function Paragraph({
               onClick={handleRetry}
               disabled={isRetrying}
               title="再翻訳"
+              aria-label="この段落を再翻訳"
             >
               <RefreshCw size={14} className={isRetrying ? styles.spinning : ""} />
               {isRetrying ? "翻訳中..." : "再試行"}
             </button>
           </div>
-          {block.original && (
-            <p className={styles.originalFallback}>{block.original}</p>
-          )}
+          {block.original && <p className={styles.originalFallback}>{block.original}</p>}
         </div>
       ) : (
         <>
@@ -272,9 +360,7 @@ export function Paragraph({
             data-paper-block-id={block.id}
             data-text-role={hasTranslation ? "translation" : "original"}
           >
-            {hasTranslation
-              ? renderTranslated(translated!)
-              : renderCited(displayText)}
+            {hasTranslation ? renderTranslated(translated!) : renderCited(displayText)}
           </p>
 
           {lowConfidence && (
@@ -290,7 +376,7 @@ export function Paragraph({
                 <AlertTriangle size={14} />
               </button>
               {showConfidenceMenu && (
-                <div className={styles.confidenceMenu} role="dialog">
+                <div className={styles.confidenceMenu} role="dialog" aria-label="要確認メニュー">
                   <p>この箇所は読み順の信頼度が低い可能性があります</p>
                   {hasOriginal && (
                     <button
@@ -340,6 +426,23 @@ export function Paragraph({
             </div>
           )}
         </>
+      )}
+
+      {citationPreview && (
+        <CitationPreviewPopover
+          model={citationPreview.model}
+          anchor={citationPreview.anchor}
+          onClose={() => setCitationPreview(null)}
+          onJump={(targetId) => onJumpToTarget?.(targetId)}
+        />
+      )}
+      {termPreview && (
+        <GlossaryTermPopover
+          entry={termPreview.entry}
+          anchor={termPreview.anchor}
+          onClose={() => setTermPreview(null)}
+          onOpenInspector={onOpenGlossaryInspector}
+        />
       )}
     </div>
   );

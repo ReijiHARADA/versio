@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { ImportStage } from "../services/importServiceV2";
+import type { ImportFailureKind } from "../services/import/classifyFailure";
 
 export type ImportJob = {
   id: string;
@@ -7,11 +8,14 @@ export type ImportJob = {
   fileKey: string;
   workspaceNodeId?: string;
   paperId?: string;
-  stage: ImportStage;
+  /** Set when a duplicate of an existing library paper is detected. */
+  existingPaperId?: string;
+  stage: ImportStage | "duplicate";
   stageProgress: number;
   stageTotal: number;
   message: string;
   error?: string;
+  failureKind?: ImportFailureKind;
 };
 
 type ImportJobState = {

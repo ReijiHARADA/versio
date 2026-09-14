@@ -270,8 +270,31 @@
   border-bottom: 1px dotted currentColor;
 }
 
-.citation:hover {
+.citation:hover,
+.citation:focus-visible {
   text-decoration: underline;
+}
+
+.citationPlain {
+  color: inherit;
+}
+
+.glossaryTerm {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-bottom: 1px dotted color-mix(in srgb, var(--color-text-secondary) 70%, transparent);
+}
+
+.glossaryTerm:hover,
+.glossaryTerm:focus-visible {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .confidenceGutter {

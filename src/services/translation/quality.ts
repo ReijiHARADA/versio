@@ -133,6 +133,29 @@ const CCS_CODE = /[A-K]\.\d+(?:\.\d+)*(?:\.[a-z])?/i;
 
 export type ScientificInvariant = { kind: "citation" | "doi" | "url" | "figure" | "statistic" | "measurement" | "year" | "number" | "acronym"; value: string };
 
+const NON_TECHNICAL_UPPERCASE_WORDS = new Set([
+  "A",
+  "AN",
+  "AND",
+  "ARE",
+  "AS",
+  "AT",
+  "BE",
+  "BY",
+  "FOR",
+  "FROM",
+  "IN",
+  "IS",
+  "NO",
+  "NOT",
+  "OF",
+  "ON",
+  "OR",
+  "THE",
+  "TO",
+  "WITH",
+]);
+
 export type TranslationQuality = {
   score: number;
   reasons: string[];
@@ -179,6 +202,7 @@ export function extractScientificInvariants(source: string): ScientificInvariant
       const end = start + match[0].length;
       // Do not also record each component number inside a protected statistic.
       if ((kind === "number" || kind === "year" || kind === "acronym") && covered.some(([left, right]) => start >= left && end <= right)) continue;
+      if (kind === "acronym" && NON_TECHNICAL_UPPERCASE_WORDS.has(match[0].toUpperCase())) continue;
       found.push({ kind, value: match[0] });
       if (kind !== "number") covered.push([start, end]);
     }
@@ -506,6 +530,7 @@ export function isExpectedNonProseParagraph(text: string): boolean {
   if (/\b(?:accepted|received|revised|published|available\s+online)\s*:\s*(?:\d{1,2}\s+[A-Za-z]+\s+\d{4}|[A-Za-z]+\s+\d{1,2},?\s+\d{4})\b/i.test(t)) return true;
   if (/personal\s+or\s+classroom\s+use\b.{0,140}\b(?:copies|copyright|fee)\b/i.test(t)) return true;
   if (/\barXiv:\d{4}\.\d{4,5}v?\d*/i.test(t)) return true;
+  if (/\b(?:CHI|UIST|DIS|CSCW|TEI|UbiComp|MobileHCI|IEEE|ACM)\b.{0,120}\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2}/i.test(t) && /\b[A-Z]\.\s*[A-Z][a-z]+\b/.test(t)) return true;
   // Running headers commonly combine a paper title with a publisher page
   // marker such as `• 195:3`. They carry no sentence boundary and native PDF
   // order can otherwise present them as a paragraph on a later page.

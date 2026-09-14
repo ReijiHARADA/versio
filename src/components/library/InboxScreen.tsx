@@ -8,12 +8,12 @@ import { useProjectStore } from "../../stores/projectStore";
 import { derivePaperReadiness } from "../../domain/paperReadiness";
 import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";
 import { tryStartPdfImport } from "../../services/pdfImport";
-import { dismissBackgroundImport, retryBackgroundImport } from "../../services/import/startBackgroundImport";
 import { PaperDeleteControls } from "./PaperDeleteControls";
 import { PaperCard } from "./PaperCard";
 import { PaperMenu } from "./PaperMenu";
 import { ImportJobCard } from "./ImportJobCard";
 import { useDeletePaper } from "../../hooks/useDeletePaper";
+import { useImportJobRecovery } from "./useImportJobRecovery";
 import type { Paper } from "../../types/paper";
 import styles from "./LibraryScreen.module.css";
 
@@ -30,6 +30,7 @@ export function InboxScreen() {
     () => visibleImportJobs(importJobs, { inboxOnly: true }),
     [importJobs]
   );
+  const recovery = useImportJobRecovery({ fileInputRef });
   const { pendingId, error, busy, requestDelete, cancelDelete, confirmDelete } =
     useDeletePaper();
 
@@ -80,6 +81,7 @@ export function InboxScreen() {
             className={styles.addButton}
             onClick={() => fileInputRef.current?.click()}
             title="論文を追加"
+            aria-label="論文を追加"
           >
             <Plus size={18} />
             論文を追加
@@ -101,7 +103,7 @@ export function InboxScreen() {
         ) : (
           <div className={styles.paperList}>
             {jobs.map((job) => (
-              <ImportJobCard key={job.id} job={job} onRetry={(id) => void retryBackgroundImport(id)} onDismiss={dismissBackgroundImport} />
+              <ImportJobCard key={job.id} job={job} {...recovery} />
             ))}
             {inboxPapers.map((paper) => (
               <PaperCard

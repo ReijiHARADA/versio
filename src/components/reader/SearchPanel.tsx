@@ -147,6 +147,7 @@ export function SearchPanel({
               className={styles.clearButton}
               onClick={() => setQuery("")}
               title="クリア"
+              aria-label="検索をクリア"
             >
               <X size={14} />
             </button>
@@ -208,6 +209,7 @@ export function SearchPanel({
             onClick={() => onStep(-1)}
             disabled={hitCount === 0}
             title="前のヒット"
+            aria-label="前のヒット"
           >
             <ChevronUp size={14} />
           </button>
@@ -217,6 +219,7 @@ export function SearchPanel({
             onClick={() => onStep(1)}
             disabled={hitCount === 0}
             title="次のヒット"
+            aria-label="次のヒット"
           >
             <ChevronDown size={14} />
           </button>

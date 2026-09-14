@@ -11,10 +11,10 @@ import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";
 import { collectDescendantIds, listChildWorkspaceNodes, workspaceAncestorPath } from "../../data/workspace/tree";
 import { listPapersForWorkspace, removePaperFromWorkspace } from "../../services/projectService";
 import { tryStartPdfImport } from "../../services/pdfImport";
-import { dismissBackgroundImport, retryBackgroundImport } from "../../services/import/startBackgroundImport";
 import { PaperCard } from "../library/PaperCard";
 import { PaperMenu } from "../library/PaperMenu";
 import { ImportJobCard } from "../library/ImportJobCard";
+import { useImportJobRecovery } from "../library/useImportJobRecovery";
 import { WorkspaceFolderCard } from "./WorkspaceFolderCard";
 import { WorkspacePathTrail } from "../workspace/WorkspacePathTrail";
 import type { Paper } from "../../types/paper";
@@ -54,6 +54,7 @@ export function ProjectScreen() {
   const [nodePapers, setNodePapers] = useState<Paper[]>([]);
   const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recovery = useImportJobRecovery({ fileInputRef });
 
   useEffect(() => {
     if (!nodeId) return;
@@ -127,6 +128,7 @@ export function ProjectScreen() {
             type="button"
             className={styles.addButton}
             onClick={() => fileInputRef.current?.click()}
+            aria-label="論文を追加"
           >
             <Plus size={18} />
             論文を追加
@@ -167,7 +169,7 @@ export function ProjectScreen() {
           )}
           <div className={styles.paperList}>
             {jobs.map((job) => (
-              <ImportJobCard key={job.id} job={job} onRetry={(id) => void retryBackgroundImport(id)} onDismiss={dismissBackgroundImport} />
+              <ImportJobCard key={job.id} job={job} {...recovery} />
             ))}
             {merged.map((paper) => (
               <PaperCard

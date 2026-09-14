@@ -1,0 +1,55 @@
+.failureDetail {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 36rem;
+}
+
+.failureTitle {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.failureGuidance,
+.failureRaw {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+
+.failureRaw {
+  color: var(--color-text-tertiary);
+}
+
+.primaryAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.primaryAction:hover,
+.primaryAction:focus-visible {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.actionText {
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .actionText {
+    display: none;
+  }
+}

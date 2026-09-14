@@ -1,8 +1,11 @@
-import { v4 as uuidv4 } from "uuid";
-import { useLibraryCache } from "../../stores/libraryCache";
-import { useImportJobStore, type ImportJob } from "../../stores/importJobStore";
-import { useProjectStore } from "../../stores/projectStore";
+import { resumeIncompleteTranslation } from "./resume";
+import { classifyImportFailure } from "./classifyFailure";
+import { isPlausibleJaTranslation, shouldTranslateTitle, titleTranslationComplete } from "../translation/quality";
+import { referenceSectionIds, isRetryableTranslationFailure, shouldTranslateBlock, shouldTranslateSection } from "./policy";
 import { showToast } from "../../stores/toastStore";
+import { useImportJobStore, type ImportJob } from "../../stores/importJobStore";
+import { useLibraryCache } from "../../stores/libraryCache";
+import { useProjectStore } from "../../stores/projectStore";
 import type { Paper, PaperBlock, Section } from "../../types/paper";
 import { upsertBlock, upsertSection } from "../../utils/mergePaperData";
 import { createBlockUpdateBatcher } from "../../utils/batchBlockUpdates";
@@ -14,9 +17,7 @@ import {
   importPDFV2,
   type ImportConfig,
 } from "../importServiceV2";
-import { resumeIncompleteTranslation } from "./resume";
-import { isPlausibleJaTranslation, shouldTranslateTitle, titleTranslationComplete } from "../translation/quality";
-import { referenceSectionIds, isRetryableTranslationFailure, shouldTranslateBlock, shouldTranslateSection } from "./policy";
+import { v4 as uuidv4 } from "uuid";
 
 const startedImportKeys = new Set<string>();
 const importFiles = new Map<string, File>();
@@ -157,12 +158,30 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
 
   const settings = await getSetting<ImportConfig>("translationSettingsV2");
   let attached = false;
+  let duplicatePaperId: string | undefined;
 
   try {
     const result = await importPDFV2(
       file,
       {
         onProgress: (next) => {
+          if (
+            next.paper &&
+            (next.message.includes("既にインポート") ||
+              next.message.toLowerCase().includes("already imported"))
+          ) {
+            duplicatePaperId = next.paper.id;
+            patch(jobId, {
+              stage: "duplicate",
+              failureKind: "duplicate",
+              existingPaperId: next.paper.id,
+              message: next.message,
+              error: next.message,
+              stageProgress: 1,
+              stageTotal: 1,
+            });
+            return;
+          }
           const progressPatch = {
             stage: next.stage,
             stageProgress: next.stageProgress,
@@ -226,13 +245,26 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
 
     startedImportKeys.delete(fileKey);
     importFiles.delete(jobId);
-    useImportJobStore.getState().removeJob(jobId);
-    showToast({ kind: "info", message: "このPDFは既にインポートされています" });
+    useImportJobStore.getState().patchJob(jobId, {
+      stage: "duplicate",
+      failureKind: "duplicate",
+      existingPaperId: duplicatePaperId,
+      message: "このPDFは既にインポートされています",
+      error: "このPDFは既にインポートされています",
+      stageProgress: 1,
+      stageTotal: 1,
+    });
   } catch (error) {
     startedImportKeys.delete(fileKey);
     const message = error instanceof Error ? error.message : "読み込みに失敗しました";
-    patch(jobId, { stage: "failed", error: message, message });
-    showToast({ kind: "error", message: "読み込みに失敗しました" });
+    const classified = classifyImportFailure(message);
+    patch(jobId, {
+      stage: "failed",
+      error: message,
+      message: classified.title,
+      failureKind: classified.kind,
+    });
+    showToast({ kind: "error", message: classified.title });
   }
 }
 

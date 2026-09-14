@@ -35,7 +35,10 @@ const stageOrder: ImportStage[] = [
   "saving",
 ];
 
-function getStageIcon(stage: ImportStage, currentStage: ImportStage) {
+function getStageIcon(stage: ImportStage, currentStage: ImportStage | "duplicate") {
+  if (currentStage === "duplicate") {
+    return <AlertCircle size={16} />;
+  }
   const currentIndex = stageOrder.indexOf(currentStage);
   const stageIndex = stageOrder.indexOf(stage);
 

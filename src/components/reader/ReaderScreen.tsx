@@ -37,7 +37,7 @@ import {
   listAnnotationsForPaper,
   updateAnnotationNote,
 } from "../../services/annotationService";
-import { PaperContent } from "./PaperContent";
+import { PaperContent, type ReaderContentHandle } from "./PaperContent";
 import { ExportDialog, type ExportDialogValues } from "./ExportDialog";
 import { Outline } from "./Outline";
 import { DisplaySettingsPanel } from "./DisplaySettingsPanel";
@@ -151,6 +151,7 @@ export function ReaderScreen() {
   const [exportError, setExportError] = useState<string | null>(null);
 
   const contentRef = useRef<HTMLDivElement>(null);
+  const paperContentRef = useRef<ReaderContentHandle>(null);
   const saveTimeoutRef = useRef<number | null>(null);
   const priorityTimeoutRef = useRef<number | null>(null);
   const lastPriorityBlockRef = useRef<string | null>(null);
@@ -544,22 +545,25 @@ export function ReaderScreen() {
   }, [showSearch, applySearchHits]);
 
   const handleSearchResultClick = useCallback((blockId: string) => {
-    const root = contentRef.current;
-    const blockEl = document.getElementById(`block-${blockId}`);
-    if (root && blockEl) {
-      const firstHit = blockEl.querySelector<HTMLElement>("[data-search-hit]");
-      if (firstHit) {
-        const hits = listSearchHits(root);
-        const index = hits.indexOf(firstHit);
-        if (index >= 0) {
-          searchHitIndexRef.current = index;
-          setSearchHitIndex(index);
-          scrollToSearchHit(hits, index);
-          return;
+    void (async () => {
+      await paperContentRef.current?.ensureBlockMounted(blockId);
+      const root = contentRef.current;
+      const blockEl = document.getElementById(`block-${blockId}`);
+      if (root && blockEl) {
+        const firstHit = blockEl.querySelector<HTMLElement>("[data-search-hit]");
+        if (firstHit) {
+          const hits = listSearchHits(root);
+          const index = hits.indexOf(firstHit);
+          if (index >= 0) {
+            searchHitIndexRef.current = index;
+            setSearchHitIndex(index);
+            scrollToSearchHit(hits, index);
+            return;
+          }
         }
       }
-    }
-    blockEl?.scrollIntoView({ behavior: "smooth", block: "center" });
+      blockEl?.scrollIntoView({ behavior: "smooth", block: "center" });
+    })();
   }, []);
 
   const handleSearchClose = useCallback(() => {
@@ -583,19 +587,26 @@ export function ReaderScreen() {
       return;
     }
 
-    const element = document.getElementById(`block-${paper.lastReadBlockId}`);
-    if (!element) return;
-
-    restoredScrollForPaper.current = paper.id;
     const blockId = paper.lastReadBlockId;
     const offset = paper.lastReadOffset;
-    window.setTimeout(() => {
-      element.scrollIntoView({ block: "start" });
-      if (offset) {
-        contentRef.current?.scrollBy(0, offset);
-      }
-      prioritizeVisible(blockId);
-    }, 100);
+    let cancelled = false;
+    void (async () => {
+      await paperContentRef.current?.ensureBlockMounted(blockId);
+      if (cancelled) return;
+      const element = document.getElementById(`block-${blockId}`);
+      if (!element) return;
+      restoredScrollForPaper.current = paper.id;
+      window.setTimeout(() => {
+        element.scrollIntoView({ block: "start" });
+        if (offset) {
+          contentRef.current?.scrollBy(0, offset);
+        }
+        prioritizeVisible(blockId);
+      }, 100);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [paper, isLoading, storeBlocks.length, prioritizeVisible]);
 
   useEffect(() => {
@@ -797,23 +808,26 @@ export function ReaderScreen() {
 
   const handleSelectAnnotation = useCallback((annotation: Annotation) => {
     setActiveAnnotationIds([annotation.id]);
-    const element = document.getElementById(`block-${annotation.blockId}`);
-    element?.scrollIntoView({ behavior: "smooth", block: "center" });
-    flashAnnotation(annotation.id);
-    window.setTimeout(() => {
-      const measured = measureMemoAnchor({
-        blockId: annotation.blockId,
-        startOffset: annotation.startOffset,
-        endOffset: annotation.endOffset,
-      });
-      const fallback = measured ?? {
-        top: window.innerHeight / 2,
-        left: window.innerWidth / 2,
-        width: 0,
-        height: 0,
-      };
-      setMemoSurface({ mode: "view", annotation, fallback });
-    }, 280);
+    void (async () => {
+      await paperContentRef.current?.ensureBlockMounted(annotation.blockId);
+      const element = document.getElementById(`block-${annotation.blockId}`);
+      element?.scrollIntoView({ behavior: "smooth", block: "center" });
+      flashAnnotation(annotation.id);
+      window.setTimeout(() => {
+        const measured = measureMemoAnchor({
+          blockId: annotation.blockId,
+          startOffset: annotation.startOffset,
+          endOffset: annotation.endOffset,
+        });
+        const fallback = measured ?? {
+          top: window.innerHeight / 2,
+          left: window.innerWidth / 2,
+          width: 0,
+          height: 0,
+        };
+        setMemoSurface({ mode: "view", annotation, fallback });
+      }, 280);
+    })();
   }, [flashAnnotation]);
 
   const handleHighlightClick = useCallback((ids: string[], rect: DOMRect) => {
@@ -889,10 +903,11 @@ export function ReaderScreen() {
   };
 
   const handleSectionClick = (sectionId: string) => {
-    const element = document.getElementById(`section-${sectionId}`);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    void (async () => {
+      await paperContentRef.current?.ensureSectionMounted(sectionId);
+      const element = document.getElementById(`section-${sectionId}`);
+      element?.scrollIntoView({ behavior: "smooth", block: "start" });
+    })();
   };
 
   const contentStyle = {
@@ -909,6 +924,7 @@ export function ReaderScreen() {
             className={styles.iconButton}
             onClick={handleBackClick}
             title={activeWorkspace ? "フォルダに戻る" : "ライブラリに戻る"}
+            aria-label={activeWorkspace ? "フォルダに戻る" : "ライブラリに戻る"}
           >
             <ArrowLeft size={20} />
           </button>
@@ -929,6 +945,7 @@ export function ReaderScreen() {
             className={`${styles.iconButton} ${showOutline ? styles.active : ""}`}
             onClick={() => setShowOutline((value) => !value)}
             aria-label={showOutline ? "目次を隠す" : "目次を表示"}
+            aria-pressed={showOutline}
             data-tooltip={showOutline ? "目次を隠す" : "目次を表示"}
           >
             <PanelLeft size={20} />
@@ -1004,6 +1021,7 @@ export function ReaderScreen() {
 
         <main className={styles.content} style={contentStyle} ref={contentRef}>
           <PaperContent
+            ref={paperContentRef}
             paper={paper}
             sections={storeSections}
             blocks={storeBlocks}
@@ -1014,6 +1032,8 @@ export function ReaderScreen() {
             flashAnnotationIds={flashAnnotationIds}
             onHighlightClick={handleHighlightClick}
             onOpenSourcePdf={(block) => void handleOpenSourcePdf(block.pageStart)}
+            glossaryEntries={glossary}
+            onOpenGlossaryInspector={() => setRightPanel("glossary")}
           />
         </main>
 
