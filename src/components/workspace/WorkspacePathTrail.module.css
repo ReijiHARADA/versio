@@ -53,15 +53,3 @@
 .md .sep {
   font-size: 1.125rem;
 }
-
-.sm {
-  font-size: 0.9375rem;
-}
-
-.sm .ancestor {
-  font-weight: 400;
-}
-
-.sm .current {
-  font-weight: 500;
-}

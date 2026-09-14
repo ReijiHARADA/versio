@@ -121,3 +121,35 @@ A retry-only rescue for long `While ... , main clause` sentences was added becau
 Spot benchmark: `test-data/real-papers/reports/translation-audit-thermal-earring.json` with 12 sampled rows under v51. Partial source fallback dropped to 0, but ordinary-body fallback remained 2/3 for this paper. This is safer but not sufficient for the 5% UX target. The next required step is local/free cascade or replacement-model evaluation on v51 ordinary post-model fallbacks, not more hallucinated-word blacklists.
 
 Verification: targeted Vitest suite passed 87 tests; `npx tsc --noEmit --pretty false` passed; `npm run lint` exited 0 with existing warnings; `npm run build` passed; translation-server unittest suite for microbatcher, segmenter, citation protection, and MADLAD quality passed 72 tests.
+
+## V52 invariant and metadata refinement
+
+Status: implemented and spot-measured on 2026-09-14T17:12:20+09:00.
+
+The v51 whole-corpus audit showed two general false fallback sources in `hci-empirical-methods`: uppercase `NOT` was treated as a technical acronym invariant even though it was only emphatic prose, and a CHI conference date plus author byline blend was classified as ordinary body prose. V52 excludes common uppercase function words from acronym invariants and treats conference-date/byline blends as reference/chrome metadata.
+
+Spot benchmark: `test-data/real-papers/reports/translation-audit-hci-empirical-methods.json`. Ordinary-body fallback improved from 2/6 in v51 to 0/6 in v52, with partial source fallback still 0. This is an aligned improvement because it reduces reader-visible fallback without weakening hallucination or source-span guards. It does not solve the broader target: v51 full corpus ordinary fallback was still 21/74 (28.4%), so v52 needs a full rerun and the remaining failures likely require local/free model cascade or replacement-model evaluation.
+
+## Current stopping point: v52 full corpus completed
+
+The v52 full corpus benchmark completed cleanly and wrote `test-data/real-papers/reports/translation-audit.json` and `.md`. Metrics: 206 rows, 19/73 ordinary-body fallbacks (26.0%), all post-model, and 0 partial-source fallbacks. Two catalog PDFs remain missing from cache (`wear-scale`, `precious-materials`). The next agent should continue from the 19 v52 ordinary-body post-model failures and evaluate a local/free cascade or replacement model; do not solve this by loosening quality gates or accepting known-bad translations.
+
+## V53 follow-up
+
+Generic protection for camel-case and alphanumeric technical identifiers was
+added and the cache identity is now `3b-mt-v5-semantic-v53`. Helsinki-NLP and
+M2M100 418M were evaluated on eight eligible ordinary fallback rows; both remain
+unsuitable for automatic cascade acceptance because of semantic drift,
+truncation, or repetition. Raw reports are under
+`test-data/real-papers/reports/model-cascade-v53-*.json`. Continue with
+sentence-level resegmentation plus scored cascade evaluation.
+
+The v56 server rerun of OzCHI after canonical list splitting produced 0/2
+ordinary-body fallbacks. This confirms the block-level separation is effective
+for the mixed bullet/prose failure, while the full corpus still needs rerun.
+
+The v54 OzCHI spot rerun (8 units) produced 1/2 ordinary-body fallback. The
+accepted long paragraph translated normally; the fallback was a structure-
+mixed block containing a prose lead-in and flattened bullets, suggesting that
+list/body separation at extraction is a more promising next target than further
+generic sentence splitting.

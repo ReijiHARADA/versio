@@ -10,14 +10,11 @@ type WorkspacePathTrailProps = {
    * When omitted, the last folder is the current location (not a link).
    */
   leaf?: { label: string };
-  /** Larger title style for folder screens; compact for reader chrome. */
-  size?: "md" | "sm";
 };
 
 export function WorkspacePathTrail({
   folders,
   leaf,
-  size = "md",
 }: WorkspacePathTrailProps) {
   if (folders.length === 0 && !leaf) return null;
 
@@ -47,10 +44,7 @@ export function WorkspacePathTrail({
   }
 
   return (
-    <nav
-      className={`${styles.trail} ${size === "sm" ? styles.sm : styles.md}`}
-      aria-label="場所"
-    >
+    <nav className={`${styles.trail} ${styles.md}`} aria-label="場所">
       {segments.map((segment, index) => (
         <span key={segment.key} className={styles.segmentWrap}>
           {index > 0 && (

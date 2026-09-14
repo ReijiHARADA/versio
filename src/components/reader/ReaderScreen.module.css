@@ -45,9 +45,11 @@
 }
 
 .title {
-  font-size: 0.9375rem;
-  font-weight: 500;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: var(--color-text);
+  margin: 0;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

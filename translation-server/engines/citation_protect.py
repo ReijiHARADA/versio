@@ -79,6 +79,13 @@ SCIENTIFIC_TOKEN_RE = re.compile(
     # off only for this pattern: an actual lower-to-upper transition is what
     # distinguishes a technical identifier from ordinary English prose.
     r"|(?-i:\b[A-Za-z]*[a-z][A-Z]{2,}[A-Za-z0-9]*\b)"
+    # Mixed-case technical names (for example iPhone, eHealth, or M2W) are
+    # facts even when the capital run is only one letter.  Preserve the
+    # transition generically rather than maintaining a paper-specific list.
+    r"|(?-i:\b[A-Za-z]+[a-z][A-Z][A-Za-z0-9]*\b)"
+    # Alphanumeric method identifiers (M2W, TQP3M9009) are facts even when
+    # they do not contain a lowercase-to-uppercase transition.
+    r"|(?-i:\b[A-Z]{1,4}\d[A-Z0-9]{1,12}\b)"
     # Hyphenated Title-Case system/method names (Power-over-Skin, Machine-to-
     # Wearable) are identifiers, not ordinary prose. Preserve them exactly so
     # the model cannot silently replace the named contribution with a generic

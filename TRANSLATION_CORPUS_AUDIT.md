@@ -920,3 +920,75 @@ A retry-only rescue for long `While ... , main clause` sentences was added becau
 Spot benchmark: `test-data/real-papers/reports/translation-audit-thermal-earring.json` with 12 sampled rows under v51. Partial source fallback dropped to 0, but ordinary-body fallback remained 2/3 for this paper. This is safer but not sufficient for the 5% UX target. The next required step is local/free cascade or replacement-model evaluation on v51 ordinary post-model fallbacks, not more hallucinated-word blacklists.
 
 Verification: targeted Vitest suite passed 87 tests; `npx tsc --noEmit --pretty false` passed; `npm run lint` exited 0 with existing warnings; `npm run build` passed; translation-server unittest suite for microbatcher, segmenter, citation protection, and MADLAD quality passed 72 tests.
+
+## V52 invariant and metadata refinement
+
+Status: implemented and spot-measured on 2026-09-14T17:12:20+09:00.
+
+The v51 whole-corpus audit showed two general false fallback sources in `hci-empirical-methods`: uppercase `NOT` was treated as a technical acronym invariant even though it was only emphatic prose, and a CHI conference date plus author byline blend was classified as ordinary body prose. V52 excludes common uppercase function words from acronym invariants and treats conference-date/byline blends as reference/chrome metadata.
+
+Spot benchmark: `test-data/real-papers/reports/translation-audit-hci-empirical-methods.json`. Ordinary-body fallback improved from 2/6 in v51 to 0/6 in v52, with partial source fallback still 0. This is an aligned improvement because it reduces reader-visible fallback without weakening hallucination or source-span guards. It does not solve the broader target: v51 full corpus ordinary fallback was still 21/74 (28.4%), so v52 needs a full rerun and the remaining failures likely require local/free model cascade or replacement-model evaluation.
+
+## V52 full corpus checkpoint — stopped at a clean boundary
+
+- Report: `test-data/real-papers/reports/translation-audit.json` / `.md`
+- Endpoint: `http://127.0.0.1:8766`
+- Version: `3b-mt-v5-semantic-v52`
+- Status: complete; 21 catalog entries, 19 evaluated, 2 missing cached PDFs (`wear-scale`, `precious-materials`).
+- Reviewed translation rows: 206.
+- Ordinary body prose: 54 accepted / 73 total; 19 fallback, fallback rate 26.0%. All 19 ordinary-body fallbacks are post-model.
+- Partial source fallback: 0 across the full report, so the v51/v52 guard is working as intended.
+- v52 improved the v51 ordinary-body result from 21/74 fallback to 19/73 fallback by removing two false fallback causes: emphasized `NOT` treated as an acronym invariant, and conference-date/author byline metadata treated as ordinary prose.
+
+The process was stopped here because the full v52 benchmark completed and checkpoint files were written. The next useful step is not more safety gating; it is to inspect the 19 ordinary-body post-model failures and evaluate a local/free model cascade or replacement so ordinary readable fallback can move toward the <=5% product target without increasing unsafe false accepts.
+### v53 identifier-preservation checkpoint
+
+The translation server now protects generic technical identifiers with
+camel-case or alphanumeric form (for example `iPhone`, `M2W`, and
+`TQP3M9009`) before MADLAD decoding. This avoids treating a paper's method or
+device name as a missing scientific invariant without adding a paper-specific
+word list. The existing `SI Appendix` citation behavior remains unchanged.
+
+Validation: Python citation/segmenter tests (57) and TypeScript quality tests
+(61) pass. The model/segmenter cache identity is `3b-mt-v5-semantic-v53`.
+
+### v53 local fallback-model evaluation
+
+The two already-cached, local and permissively licensed alternatives were
+evaluated on the eight ordinary-body rows that returned source fallback (the
+audit contains 19 ordinary fallback rows, but only eight have a model-returned
+fallback eligible for this harness). Helsinki-NLP/opus-mt-en-jap produced
+severe word-order corruption and repetition across the sample, so it is not a
+safe cascade candidate. Facebook M2M100 418M preserved more source structure,
+but still showed truncation, terminology errors, and semantic drift in long
+academic prose; it is also not safe to auto-accept without an additional
+semantic quality gate. Raw outputs are retained in
+`test-data/real-papers/reports/model-cascade-v53-opus-ordinary.json` and
+`model-cascade-v53-m2m418-ordinary.json`.
+
+No production model replacement was made from this experiment. This avoids
+lowering fallback by accepting visibly incorrect Japanese. The next experiment
+should test sentence-level resegmentation and a quality-scored cascade against
+the same rows.
+
+### v54 retry resegmentation
+
+Added a conservative retry-only split for long units at top-level clause
+conjunctions (but, however, while, which, and). Citation/parenthesis depth and
+minimum clause lengths are required, so normal segmentation and source
+round-trip fidelity remain unchanged. Cache identity is now
+3b-mt-v5-semantic-v54; segmenter tests remain green.
+
+Spot result: the v54 Thermal Earring rerun (12 sampled units) still has 1/3
+ordinary-body rows accepted and 2/3 fallback, matching the earlier v51/v52
+result. The retry split therefore does not by itself solve this representative
+case; the remaining failures are model-decode/quality failures rather than a
+proven sentence-boundary failure.
+
+### v56 OzCHI verification
+
+After restarting the development server with v56, the same OzCHI fixture
+produced 0/2 ordinary-body fallbacks. The mixed bullet/prose block is now
+represented as independent canonical blocks, so a failed bullet no longer
+forces the following ordinary paragraph to fallback. This is a spot result;
+the full-corpus 5% target remains unverified.

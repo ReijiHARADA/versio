@@ -52,6 +52,7 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 - 設定画面の情報設計が揃っている
 - 正式名称・アイコンが決まっている
 - 公証付き配布の手順（または CI）が再現できる
+- **設定の挙動説明に before / after の短い動画（GIF 等）を置ける** — 特に「左サイドバー」（auto / 常に開く / 常に閉じる）と「折りたたみ時は最上位だけ表示」。左右に設定前・設定後を並べ、アイコンレール時の開閉・入れ子の見え方の差が一目で分かること。素材は `references/` または設定用 static assets に置き、`ReadingSettingsSection` から参照する想定（実装メモは当該コンポーネント内コメントにもあり）
 
 ### A4. ライブラリの見分けやすさ（必要になったら）
 
@@ -67,6 +68,18 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 **Goal** — ⌘K の対象を、メタデータ中心のままか本文まで広げるかを決めて実装する。
 
 **Done when** — 対象範囲が文書化され、実装と一致している。
+
+### A6. フォルダ単位の書き出し（後回し）
+
+**Goal** — 論文単体だけでなく、ワークスペースフォルダ（とその配下）をまとめて書き出せる。
+
+**Done when**（優先度が上がった時点で具体化）
+
+- フォルダ画面またはサイドバーのフォルダメニューから、配下論文を一括 export できる
+- 形式は既存の論文 export（Markdown / Notion ZIP / 検証パッケージ）と揃えるか、フォルダ用バンドルにするかを決めて実装と一致させる
+- 子フォルダを含む範囲・失敗論文の扱いが文書化されている
+
+実装の足場: 現行は Reader の論文単位 `ExportDialog` / Rust save のみ。入口候補は `ProjectScreen` ヘッダーと `WorkspaceTree` 三点メニュー。
 
 ---
 

@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 from .citation_protect import protected_span_mask
 
-SEGMENTER_VERSION = "semantic-v52"
+SEGMENTER_VERSION = "semantic-v56"
 _ABBREVIATIONS = {"e.g.", "i.e.", "et al.", "fig.", "no.", "cf.", "dr.", "mr.", "ms.", "vs."}
 
 
@@ -160,7 +160,24 @@ def _split_list_items(text: str) -> list[str]:
     if len(bullet_positions) < 2:
         return [text]
     boundaries = [0, *[position for position in bullet_positions if position > 0], len(text)]
-    return [text[left:right].strip() for left, right in zip(boundaries, boundaries[1:]) if text[left:right].strip()]
+    items = [text[left:right].strip() for left, right in zip(boundaries, boundaries[1:]) if text[left:right].strip()]
+    # PDF extraction may omit the final bullet's line boundary and append the
+    # following prose sentence directly (``... interaction Our work ...``).
+    # Split only after a sufficiently long bullet and at a sentence-like
+    # uppercase clause starter; ordinary short bullet text is untouched.
+    expanded: list[str] = []
+    for item in items:
+        match = re.search(
+            r"(?<=\w)\s+(?=(?:Our|This|These|The|In|We)\s+(?:work|paper|study|results|method|system|findings|approach)\b)",
+            item[2:] if item.startswith(("• ", "‣ ", "▪ ", "∙ ")) else item,
+        ) if len(item.split()) >= 12 else None
+        if match:
+            offset = 2 if item.startswith(("• ", "‣ ", "▪ ", "∙ ")) else 0
+            cut = match.start() + offset
+            expanded.extend([item[:cut].strip(), item[cut:].strip()])
+        else:
+            expanded.append(item)
+    return [item for item in expanded if item]
 
 
 def _split_inline_enumeration(text: str) -> list[str]:
@@ -469,6 +486,30 @@ def _rescue_while_concessive_main_clause(text: str) -> list[TranslationUnit]:
     right_model = right[0].upper() + right[1:]
     return _split_rescue_at(text, split_index, left_model, right_model)
 
+
+def _rescue_top_level_conjunction(text: str) -> list[TranslationUnit]:
+    """Retry a long sentence split at a top-level clause conjunction.
+
+    This is intentionally retry-only: commas inside citations/parentheses are
+    ignored, and both clauses must be substantial. The original source slices
+    remain exact while the model inputs receive a sentence-final marker.
+    """
+    if len(text) < 260:
+        return []
+    masked = protected_span_mask(text)
+    for match in re.finditer(r",\s+(but|however|while|which|and)\s+", masked, re.I):
+        prefix = masked[:match.start()]
+        if prefix.count("(") != prefix.count(")") or prefix.count("[") != prefix.count("]"):
+            continue
+        left = text[: match.start() + 1].strip()
+        right = text[match.start() + 1 :].strip()
+        if len(left.split()) < 12 or len(right.split()) < 10:
+            continue
+        left_model = left.rstrip(",") + "."
+        right_model = right[0].upper() + right[1:] if right else right
+        return _split_rescue_at(text, match.start() + 1, left_model, right_model)
+    return []
+
 def rescue_units_for_translation(source: str) -> list[TranslationUnit]:
     """Return retry-only units for a source chunk that decoded poorly.
 
@@ -487,6 +528,7 @@ def rescue_units_for_translation(source: str) -> list[TranslationUnit]:
         _rescue_if_so_semicolon,
         _rescue_nonrestrictive_where_clause,
         _rescue_appositive_region_clause,
+        _rescue_top_level_conjunction,
     ):
         units = splitter(compact)
         if len(units) > 1 and validate_round_trip(compact, [unit.text for unit in units]):

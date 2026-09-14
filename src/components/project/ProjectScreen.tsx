@@ -124,6 +124,7 @@ export function ProjectScreen() {
           {node?.description && <p className={styles.description}>{node.description}</p>}
         </div>
         <div className={styles.headerActions}>
+          {/* TODO(folder-export): フォルダ単位の一括書き出し（配下論文）。ROADMAP A6 */}
           <button
             type="button"
             className={styles.addButton}

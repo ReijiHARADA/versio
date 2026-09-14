@@ -27,6 +27,12 @@ export function ReadingSettingsSection() {
         <div className={styles.originalSetting}>
           <label className={styles.label} htmlFor="sidebar-mode">左サイドバー</label>
           <p className={styles.sectionDescription}>ホバーで自動開閉するか、常に開いた／閉じた状態にするかを選びます。</p>
+          {/*
+            TODO(settings-demo): before/after の短い GIF（左右並び）をここに差し込む。
+            対象: sidebarMode（auto / expanded / collapsed）と sidebarCollapseRootsOnly。
+            折りたたみ時に最上位だけ見える／入れ子も並ぶ差、ホバー開閉の差が分かる素材。
+            置き場候補: references/ または public/settings-demos/。ROADMAP A3 参照。
+          */}
           <select
             id="sidebar-mode"
             className={styles.select}
@@ -44,6 +50,7 @@ export function ReadingSettingsSection() {
             <small>
               オン（推奨）: アイコンだけのとき、ワークスペースの入れ子フォルダ／論文を隠します。オフ: 以前どおり、開いているフォルダの中身も並べます。
             </small>
+            {/* 同上 TODO(settings-demo): このトグル用の before/after GIF も左右並びで追加する */}
           </span>
           <input
             id="sidebar-roots-only"

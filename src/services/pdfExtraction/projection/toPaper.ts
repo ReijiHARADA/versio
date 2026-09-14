@@ -82,6 +82,16 @@ function expandAuthorLine(text: string): string[] {
   return names.length > 0 ? names : [cleaned];
 }
 
+/** Split flattened bullet lists into independent canonical blocks. */
+function splitFlattenedList(text: string): string[] {
+  const markers = [...text.matchAll(/(?:^|\s)([•‣▪∙])\s+/g)].map((m) =>
+    m.index === undefined ? -1 : (m.index + (m[0].startsWith(" ") ? 1 : 0))
+  ).filter((i) => i >= 0);
+  if (markers.length < 2) return [text];
+  const bounds = [0, ...markers, text.length];
+  return bounds.slice(0, -1).map((start, i) => text.slice(start, bounds[i + 1]).trim()).filter(Boolean);
+}
+
 function detectHeadingLevel(text: string, fontSize: number, baseFontSize: number): number {
   const match = text.match(/^(\d+)(\.(\d+))?(\.(\d+))?/);
   if (match) {
@@ -415,30 +425,32 @@ export function projectCanonicalToPaper(input: {
       node.role === "other"
     ) {
       const text = node.text ?? "";
+      const listParts = splitFlattenedList(text);
       const isRef = node.role === "reference" || isReferenceText(text, currentKind);
       const translationInputWarning =
         isRef || isExpectedNonProseParagraph(text)
           ? null
           : unsafeParagraphStructureReason(text);
-      pushBlock(node, layout, {
-        sectionId: currentSectionId,
-        type: isRef ? "reference" : "paragraph",
-        pageStart: node.pageStart,
-        pageEnd: node.pageEnd,
-        boundingBoxes: boxes,
-        original: text,
-        translated: null,
-        translationStatus:
-          isRef || !shouldTranslateParagraph(text) ? "skipped" : "pending",
-        parentBlockId: null,
-        metadata: {
-          column,
-          role: node.role,
-          // Preserve the original and show this to the reader when a
-          // physical PDF fragment is unsafe to complete by translation.
-          translationInputWarning: translationInputWarning ?? undefined,
-        },
-      });
+      for (const part of listParts) {
+        pushBlock(node, layout, {
+          sectionId: currentSectionId,
+          type: isRef ? "reference" : "paragraph",
+          pageStart: node.pageStart,
+          pageEnd: node.pageEnd,
+          boundingBoxes: boxes,
+          original: part,
+          translated: null,
+          translationStatus:
+            isRef || !shouldTranslateParagraph(part) ? "skipped" : "pending",
+          parentBlockId: null,
+          metadata: {
+            column,
+            role: node.role,
+            translationInputWarning: translationInputWarning ?? undefined,
+            flattenedListPart: listParts.length > 1,
+          },
+        });
+      }
     }
   }
 

@@ -261,15 +261,16 @@ export function ReaderScreen() {
             <ArrowLeft size={20} />
           </button>
           <div className={styles.titleArea}>
-            {workspacePath.length > 0 ? (
-              <WorkspacePathTrail
-                folders={workspacePath}
-                leaf={{ label: displayPaperTitle(paper) }}
-                size="sm"
-              />
-            ) : (
-              <h1 className={styles.title}>{displayPaperTitle(paper)}</h1>
-            )}
+            <h1 className={styles.title}>
+              {workspacePath.length > 0 ? (
+                <WorkspacePathTrail
+                  folders={workspacePath}
+                  leaf={{ label: displayPaperTitle(paper) }}
+                />
+              ) : (
+                displayPaperTitle(paper)
+              )}
+            </h1>
           </div>
         </div>
         <div className={styles.headerRight}>
