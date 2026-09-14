@@ -2,6 +2,8 @@
 
 PR CI covers TypeScript / Rust / lightweight Python / browser smoke and must not skip important Reader tests for missing fixtures.
 
+Automated pre-steps: `npm run release:acceptance` (lint, test, build, Rust, Python, bench 100).
+
 This gate is for a built macOS `.app` (local `npm run tauri:build` or notarized artifact).
 
 ## Must pass

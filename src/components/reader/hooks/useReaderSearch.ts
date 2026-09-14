@@ -8,6 +8,7 @@ import {
 } from "react";
 import type { PaperBlock } from "../../../types/paper";
 import {
+  findSearchHitBlockIds,
   listSearchHits,
   paintCurrentSearchHit,
   scrollToSearchHit,
@@ -29,8 +30,10 @@ export function useReaderSearch(opts: {
   const searchHitIndexRef = useRef(0);
   const searchQueryRef = useRef(searchQuery);
   const showSearchRef = useRef(showSearch);
+  const storeBlocksRef = useRef(storeBlocks);
   searchQueryRef.current = searchQuery;
   showSearchRef.current = showSearch;
+  storeBlocksRef.current = storeBlocks;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -48,6 +51,26 @@ export function useReaderSearch(opts: {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [showSearch]);
 
+  const mountAndScrollToHit = useCallback(
+    async (index: number, blockIds: string[]) => {
+      const root = contentRef.current;
+      if (!root || blockIds.length === 0) return;
+      const blockId = blockIds[Math.min(Math.max(index, 0), blockIds.length - 1)];
+      await paperContentRef.current?.ensureBlockMounted(blockId);
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+      const hits = listSearchHits(root);
+      setSearchHitCount(hits.length);
+      if (hits.length === 0) return;
+      const clamped = Math.min(Math.max(index, 0), hits.length - 1);
+      searchHitIndexRef.current = clamped;
+      setSearchHitIndex(clamped);
+      scrollToSearchHit(hits, clamped);
+    },
+    [contentRef, paperContentRef]
+  );
+
   const applySearchHits = useCallback(
     (opts: { reset?: boolean; delta?: number; scroll?: boolean }) => {
       const root = contentRef.current;
@@ -60,24 +83,34 @@ export function useReaderSearch(opts: {
         return;
       }
 
-      const hits = listSearchHits(root);
-      setSearchHitCount(hits.length);
+      const blockIds = findSearchHitBlockIds(query, storeBlocksRef.current);
+      setSearchHitCount(blockIds.length);
 
       let next = searchHitIndexRef.current;
       if (opts.reset) next = 0;
-      if (typeof opts.delta === "number" && hits.length > 0) {
-        next = wrapSearchHitIndex(next, hits.length, opts.delta);
+      if (typeof opts.delta === "number" && blockIds.length > 0) {
+        next = wrapSearchHitIndex(next, blockIds.length, opts.delta);
       }
-      if (hits.length === 0) next = 0;
-      else next = Math.min(Math.max(0, next), hits.length - 1);
+      if (blockIds.length === 0) next = 0;
+      else next = Math.min(Math.max(0, next), blockIds.length - 1);
 
       searchHitIndexRef.current = next;
       setSearchHitIndex(next);
-      if (hits.length === 0) return;
-      if (opts.scroll) scrollToSearchHit(hits, next);
-      else paintCurrentSearchHit(hits, next);
+
+      if (blockIds.length === 0) return;
+
+      if (opts.scroll) {
+        void mountAndScrollToHit(next, blockIds);
+        return;
+      }
+
+      const hits = listSearchHits(root);
+      if (hits.length > 0) {
+        const domIndex = Math.min(next, hits.length - 1);
+        paintCurrentSearchHit(hits, domIndex);
+      }
     },
-    [contentRef]
+    [contentRef, mountAndScrollToHit]
   );
 
   useLayoutEffect(() => {

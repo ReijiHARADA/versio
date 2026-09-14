@@ -14,7 +14,7 @@
 | ライブラリ / ワークスペース | **done** | 階層フォルダ、パス trail、サイドバー幅調整、⌘K（FTS + メタデータ） |
 | 起動時データ | **done** | メタデータのみ先読み。本文は Reader で lazy load。終了時は dirty のみ persist flush |
 | Reader 本文 | **done** | 日本語 1 カラム、原文展開、目次、読書位置、⌘F |
-| 長論文描画 | **done** | section 遅延マウント + spacer。jump pin は transient（解放する）。短編は全マウント |
+| 長論文描画 | **done** | section 単位 lazy mount（非表示 section は 1 spacer）。pin は transient のみ（references / 全 search 一致を恒久 pin しない） |
 | メモ | **done** | 訳文選択 Popover。右パネルは一覧専用（本文操作で自動オープンしない） |
 | 用語集 | **done** | Inspector で CRUD + 訳後置換。本文中用語の軽量 Popover |
 | Citation | **done** | 一意 `[n]` は preview Popover（ジャンプ / DOI・URL）。曖昧番号はリンクしない |
@@ -40,7 +40,7 @@
 - **Reader open**: document / layout / source.pdf / assets を分離。既定 load は markdown + structure のみ。図は `assets/…` パスを保持し必要時に Blob 化
 - **document cache**: `dirty` フラグ。read-only open → close では package を再 write しない
 - **FTS**: annotation CRUD と translation checkpoint で per-paper incremental refresh
-- **ReaderScreen**: hooks に分割（document / search / annotations / export / translation resume / reading position）。挙動は維持
+- **ReaderScreen**: hooks に分割（document / glossary / search / annotations / export / translation resume / reading position）。挙動は維持
 - **抽出**: `extractAcademicPdf` → CanonicalDocument → Package。詳細は [ACADEMIC_PDF_EXTRACTION_ARCHITECTURE.md](./ACADEMIC_PDF_EXTRACTION_ARCHITECTURE.md)
 - **翻訳**: MADLAD-400 3B / MPS / bf16、文バッチ既定 24、品質ゲート。監査手順は [TRANSLATION_CORPUS_AUDIT.md](./TRANSLATION_CORPUS_AUDIT.md)
 - **硬化メモ**: [P0_HARDENING.md](./P0_HARDENING.md)
@@ -94,7 +94,8 @@ Reader open は source.pdf / assets を読まない前提。native SQLite の必
 | `npm run lint` | oxlint |
 | `npm run build` | `tsc` + Vite |
 | `npm run verify:browser` | Playwright スモーク |
-| `npm run bench:library-scale` | 100/500 synthetic library 指標 |
+| `npm run bench:library` | 100/500 synthetic library 指標（startup / memory proxy / SQLite / search / persist） |
+| `npm run release:acceptance` | release 前自動ゲート + `.app` 手順表示 |
 
 基盤回帰の例: `importResumeServerReady.test.ts`（100 completed → body read 0）、`dirtyTracking.test.ts`（100 read-only → write 0）、`sectionVirtualization.test.ts`（50+ jump mount bound）、`ftsFreshness.test.ts`。
 

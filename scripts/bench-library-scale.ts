@@ -1,10 +1,10 @@
 /**
- * Synthetic large-library fixture + lightweight metrics for deciding whether
- * sql.js → native SQLite migration is warranted. Does not rewrite persistence.
+ * Synthetic large-library fixture + metrics for sql.js cost signals.
+ * Does not trigger native SQLite migration by itself.
  *
  * Usage:
- *   npx tsx scripts/bench-library-scale.ts --count 100
- *   npx tsx scripts/bench-library-scale.ts --count 500
+ *   npm run bench:library -- --count 100
+ *   npm run bench:library -- --count 500
  */
 import { createMemoryFileSystem } from "../src/data/fs/memoryFs";
 import { projectionToPackage } from "../src/data/package/fromProjection";
@@ -12,10 +12,12 @@ import { persistPaperPackage } from "../src/data/package/persist";
 import {
   flushDocumentPersist,
   loadDocument,
+  peekDocument,
   resetDocumentCache,
   resetDocumentPersistMetrics,
 } from "../src/data/repositories/documentRepository";
 import {
+  getAllPaperIndexes,
   indexPaperText,
   upsertPaperIndex,
 } from "../src/data/repositories/paperRepository";
@@ -49,26 +51,25 @@ function sample(i: number): { paper: Paper; sections: Section[]; blocks: PaperBl
     createdAt: now,
     updatedAt: now,
   };
-  const sections: Section[] = [
-    {
-      id: `${id}-s1`,
-      paperId: id,
-      parentSectionId: null,
-      order: 0,
-      level: 1,
-      originalTitle: "Introduction",
-      translatedTitle: "はじめに",
-      normalizedKind: "introduction",
-    },
-  ];
-  const blocks: PaperBlock[] = Array.from({ length: 12 }, (_, j) => ({
+  const sectionCount = 3 + (i % 5);
+  const sections: Section[] = Array.from({ length: sectionCount }, (_, s) => ({
+    id: `${id}-s${s}`,
+    paperId: id,
+    parentSectionId: null,
+    order: s,
+    level: 1,
+    originalTitle: `Section ${s}`,
+    translatedTitle: `節 ${s}`,
+    normalizedKind: s === 0 ? "introduction" : "body",
+  }));
+  const blocks: PaperBlock[] = Array.from({ length: 24 }, (_, j) => ({
     id: `${id}-b${j}`,
     paperId: id,
-    sectionId: `${id}-s1`,
+    sectionId: `${id}-s${j % sectionCount}`,
     type: "paragraph" as const,
     order: j,
-    pageStart: 1,
-    pageEnd: 1,
+    pageStart: 1 + Math.floor(j / 8),
+    pageEnd: 1 + Math.floor(j / 8),
     boundingBoxes: [],
     original: `Paragraph ${j} of paper ${i} with shared token SharedOmega.`,
     translated: `論文 ${i} の段落 ${j}。共有語 SharedOmega。`,
@@ -80,10 +81,25 @@ function sample(i: number): { paper: Paper; sections: Section[]; blocks: PaperBl
   return { paper, sections, blocks };
 }
 
+function estimateRendererMemoryBytes(paperIds: string[]): number {
+  let bytes = 0;
+  for (const paperId of paperIds) {
+    const cached = peekDocument(paperId);
+    if (!cached) continue;
+    for (const block of cached.blocks) {
+      bytes += (block.original?.length ?? 0) + (block.translated?.length ?? 0);
+    }
+    for (const section of cached.sections) {
+      bytes += (section.originalTitle?.length ?? 0) + (section.translatedTitle?.length ?? 0);
+    }
+  }
+  return bytes;
+}
+
 async function main(): Promise<void> {
   const count = parseCount();
   const fs = createMemoryFileSystem();
-  const t0 = performance.now();
+  const tBuild = performance.now();
   const db = await openSqlite(fs);
   const papers: Paper[] = [];
 
@@ -98,7 +114,11 @@ async function main(): Promise<void> {
     upsertPaperIndex(db, item.paper);
     indexPaperText(db, item.paper, pkg.originalMarkdown, pkg.translatedMarkdown);
   }
-  const buildMs = performance.now() - t0;
+  const buildMs = performance.now() - tBuild;
+
+  const tStartup = performance.now();
+  const indexed = getAllPaperIndexes(db);
+  const startupMs = performance.now() - tStartup;
 
   resetDocumentCache();
   resetDocumentPersistMetrics();
@@ -106,28 +126,33 @@ async function main(): Promise<void> {
   for (const paper of papers) {
     await loadDocument(fs, paper);
   }
-  const loadMs = performance.now() - tLoad;
+  const openAllPapersMs = performance.now() - tLoad;
+  const rendererMemoryBytes = estimateRendererMemoryBytes(papers.map((p) => p.id));
 
   const tSearch = performance.now();
   const hits = searchPapersFts(db, "KeywordZulu");
-  const searchMs = performance.now() - tSearch;
+  const searchLatencyMs = performance.now() - tSearch;
 
   const tFlush = performance.now();
   await flushDocumentPersist(fs, db);
   await db.persist();
-  const flushMs = performance.now() - tFlush;
+  const shutdownPersistMs = performance.now() - tFlush;
   const sqliteBytes = db.exportBytes().byteLength;
 
   const report = {
     count,
+    fixture: { papers: count, sectionsPerPaper: "3-7", blocksPerPaper: 24 },
     buildMs: Math.round(buildMs),
-    openAllPapersMs: Math.round(loadMs),
-    searchLatencyMs: Number(searchMs.toFixed(2)),
+    startupMs: Math.round(startupMs),
+    startupPaperCount: indexed.length,
+    openAllPapersMs: Math.round(openAllPapersMs),
+    rendererMemoryBytes,
+    searchLatencyMs: Number(searchLatencyMs.toFixed(2)),
     searchHitCount: hits.length,
     sqliteBytes,
-    shutdownPersistMs: Math.round(flushMs),
+    shutdownPersistMs: Math.round(shutdownPersistMs),
     note:
-      "In-memory fixture. Use as a relative signal for sql.js cost before considering native SQLite.",
+      "In-memory sql.js fixture. Use as a relative signal before considering native SQLite.",
   };
   console.log(JSON.stringify(report, null, 2));
   await db.close();

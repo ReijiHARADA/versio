@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useLibraryCache } from "../../../stores/libraryCache";
 import {
   getBlocksByPaper,
-  getGlossary,
   getPaper,
   getSectionsByPaper,
   markPaperOpened,
@@ -12,15 +11,12 @@ import {
   mergePreferTranslated,
   mergePreferTranslatedSections,
 } from "../../../utils/mergePaperData";
-import type { GlossaryEntry } from "../../../services/llm/types";
-
 export function useReaderDocument(paperId: string | undefined) {
   const updatePaper = useLibraryCache((s) => s.updatePaper);
   const setSectionsInStore = useLibraryCache((s) => s.setSections);
   const setBlocksInStore = useLibraryCache((s) => s.setBlocks);
 
   const [isLoading, setIsLoading] = useState(true);
-  const [glossary, setGlossary] = useState<GlossaryEntry[]>([]);
   const [hasSourcePdf, setHasSourcePdf] = useState(false);
 
   useEffect(() => {
@@ -33,11 +29,10 @@ export function useReaderDocument(paperId: string | undefined) {
       }
 
       try {
-        const [dbPaper, dbSections, dbBlocks, dbGlossary] = await Promise.all([
+        const [dbPaper, dbSections, dbBlocks] = await Promise.all([
           getPaper(paperId),
           getSectionsByPaper(paperId),
           getBlocksByPaper(paperId),
-          getGlossary(paperId),
         ]);
         if (cancelled) return;
         if (dbPaper) {
@@ -54,7 +49,6 @@ export function useReaderDocument(paperId: string | undefined) {
         if (dbBlocks.length > 0) {
           setBlocksInStore(paperId, (prev) => mergePreferTranslated(prev, dbBlocks));
         }
-        setGlossary(dbGlossary);
         const exists = await sourcePdfExists(paperId);
         if (!cancelled) setHasSourcePdf(exists || Boolean(dbPaper?.sourceStoredPath));
       } catch (e) {
@@ -92,8 +86,6 @@ export function useReaderDocument(paperId: string | undefined) {
 
   return {
     isLoading,
-    glossary,
-    setGlossary,
     hasSourcePdf,
   };
 }

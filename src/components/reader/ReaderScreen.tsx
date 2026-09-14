@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
-import { saveGlossary } from "../../services/database";
 import { createBlockUpdateBatcher } from "../../utils/batchBlockUpdates";
 import type { PaperBlock, Section } from "../../types/paper";
 import { upsertBlock } from "../../utils/mergePaperData";
@@ -35,6 +34,7 @@ import {
   type ReaderRightPanel,
 } from "../../utils/readerRightPanel";
 import { useReaderDocument } from "./hooks/useReaderDocument";
+import { useReaderGlossary } from "./hooks/useReaderGlossary";
 import { useReaderSearch } from "./hooks/useReaderSearch";
 import { useReaderAnnotations } from "./hooks/useReaderAnnotations";
 import { useReaderExport } from "./hooks/useReaderExport";
@@ -80,7 +80,8 @@ export function ReaderScreen() {
 
   const paper = papers.find((p) => p.id === paperId);
 
-  const { isLoading, glossary, setGlossary, hasSourcePdf } = useReaderDocument(paperId);
+  const { isLoading, hasSourcePdf } = useReaderDocument(paperId);
+  const { glossary, setGlossary } = useReaderGlossary(paperId);
 
   const { result: selectionResult, dismiss: dismissSelection } = useTextSelection(
     contentRef,
@@ -373,10 +374,7 @@ export function ReaderScreen() {
             {rightPanel === "glossary" && (
               <GlossaryPanel
                 entries={glossary}
-                onChange={(entries) => {
-                  setGlossary(entries);
-                  if (paperId) void saveGlossary(paperId, entries);
-                }}
+                onChange={setGlossary}
                 onClose={() => setRightPanel("none")}
               />
             )}

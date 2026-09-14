@@ -28,8 +28,9 @@ import {
 import { openExternalUrl } from "../../services/openExternalUrl";
 import {
   computeMountedSectionIds,
-  estimateBlockHeight,
-  sectionsMatchingQuery,
+  estimateSectionBodyHeight,
+  resolveTransientMountPins,
+  shouldVirtualizeSections,
 } from "./virtualization/sectionVirtualization";
 import styles from "./PaperContent.module.css";
 
@@ -164,15 +165,20 @@ const PaperBlockView = memo(function PaperBlockView({
   return <div id={`block-${block.id}`}>{content}</div>;
 });
 
-function BlockPlaceholder({ block }: { block: PaperBlock }) {
-  if (block.type === "heading") return null;
+function SectionBodySpacer({
+  sectionId,
+  blocks,
+}: {
+  sectionId: string;
+  blocks: PaperBlock[];
+}) {
+  const height = estimateSectionBodyHeight(blocks);
   return (
     <div
-      id={`block-${block.id}`}
-      className={styles.blockPlaceholder}
-      style={{ minHeight: estimateBlockHeight(block.type) }}
+      className={styles.sectionBodySpacer}
+      style={{ minHeight: height }}
       aria-hidden="true"
-      data-virtualized-placeholder=""
+      data-virtualized-section={sectionId}
     />
   );
 }
@@ -337,27 +343,19 @@ export const PaperContent = memo(
       [blocks, sectionIds]
     );
 
-    const searchPinned = useMemo(() => {
-      if (!highlightText || highlightText.length < 2) return [] as string[];
-      return sectionsMatchingQuery(highlightText, allSectionsOrdered, blocksBySection);
-    }, [highlightText, allSectionsOrdered, blocksBySection]);
-
-    const effectivePinned = useMemo(() => {
-      return [...new Set([...pinnedSectionIds, ...searchPinned, ...refSectionIds])];
-    }, [pinnedSectionIds, searchPinned, refSectionIds]);
+    const virtualize = shouldVirtualizeSections(allSectionsOrdered.length, blocks.length);
 
     const mountedSectionIds = useMemo(() => {
-      // Short papers: keep everything mounted to avoid spacer churn.
-      if (allSectionsOrdered.length <= 12 && blocks.length <= 80) {
+      if (!virtualize) {
         return new Set(allSectionsOrdered.map((section) => section.id));
       }
       return computeMountedSectionIds({
         orderedSectionIds: allSectionsOrdered.map((section) => section.id),
         visibleSectionIds: visibleForMount,
-        pinnedSectionIds: effectivePinned,
+        pinnedSectionIds: resolveTransientMountPins(pinnedSectionIds),
         overscan: 2,
       });
-    }, [allSectionsOrdered, blocks.length, visibleForMount, effectivePinned]);
+    }, [allSectionsOrdered, blocks.length, virtualize, visibleForMount, pinnedSectionIds]);
 
     const waitForPaint = () =>
       new Promise<void>((resolve) => {
@@ -461,8 +459,11 @@ export const PaperContent = memo(
       };
     }, [blocks, paper.processingStatus, refSectionIds]);
 
-    const renderBlock = (block: PaperBlock, mounted: boolean) =>
-      mounted ? (
+    const renderSectionBody = (sectionId: string, contentBlocks: PaperBlock[], mounted: boolean) => {
+      if (!mounted) {
+        return <SectionBodySpacer key={`spacer-${sectionId}`} sectionId={sectionId} blocks={contentBlocks} />;
+      }
+      return contentBlocks.map((block) => (
         <PaperBlockView
           key={block.id}
           block={block}
@@ -478,9 +479,8 @@ export const PaperContent = memo(
           onOpenGlossaryInspector={onOpenGlossaryInspector}
           onJumpToTarget={onJumpToTarget}
         />
-      ) : (
-        <BlockPlaceholder key={block.id} block={block} />
-      );
+      ));
+    };
 
     const hasContent =
       allSectionsOrdered.length > 0 || blocks.length > 0 || orphanBlocks.length > 0;
@@ -554,7 +554,9 @@ export const PaperContent = memo(
           {hasContent ? (
             <>
               {orphanBlocks.length > 0 && (
-                <div className={styles.section}>{orphanBlocks.map((b) => renderBlock(b, true))}</div>
+                <div className={styles.section}>
+                  {renderSectionBody("orphan", orphanBlocks, true)}
+                </div>
               )}
               {allSectionsOrdered.map((section) => {
                 const contentBlocks = blocksBySection.get(section.id) ?? [];
@@ -572,7 +574,7 @@ export const PaperContent = memo(
                     <HeadingTag className={styles[`heading${section.level}`]}>
                       {sectionDisplayTitle(section)}
                     </HeadingTag>
-                    {contentBlocks.map((block) => renderBlock(block, mounted))}
+                    {renderSectionBody(section.id, contentBlocks, mounted)}
                   </section>
                 );
               })}

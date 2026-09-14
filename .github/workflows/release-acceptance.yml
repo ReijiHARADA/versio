@@ -1,40 +1,32 @@
-# Packaged app release acceptance (manual / nightly)
-#
-# Intentionally separated from PR CI:
-# - Builds a real `.app` (slow, macOS-only)
-# - Does NOT download the full MADLAD model in PR CI
-# - MADLAD download / warmup belongs in nightly or human release acceptance
-#
-# Checklist (run on a notarized or local `tauri build` `.app`):
-# 1. PDF import (extraction completes; Library card appears)
-# 2. Open Reader (original text available even if model still loading)
-# 3. Create / edit / delete annotation; ⌘K search reflects notes immediately
-# 4. In-reader search (⌘F) and outline jump
-# 5. Open source PDF (page jump best-effort)
-# 6. Export Markdown / verification package
-# 7. Quit and relaunch → reading position + annotations recover
-# 8. (Nightly only) Wait for MADLAD ready → translation resume / completion
-#
-# Commands:
-#   npm run tauri:build
-#   open src-tauri/target/release/bundle/macos/*.app
-#
-# Record results in CURRENT_STATE.md Release readiness when status changes.
+# Reminder + optional macOS gate for packaged .app acceptance.
+# Full MADLAD download stays out of PR CI — use nightly or manual runs.
 
-name: Release acceptance (manual)
+name: Release acceptance
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 15 * * 1" # Mondays 00:00 JST-ish
+    - cron: "0 15 * * 1"
 
 jobs:
-  note:
+  macos-gate:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Document gate
-        run: |
-          echo "Use this workflow as the release-acceptance reminder."
-          echo "Full MADLAD download is out of scope for PR CI."
-          cat docs/RELEASE_ACCEPTANCE.md 2>/dev/null || true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.14"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: npm ci
+      - name: Automated pre-release gates
+        run: npm run release:acceptance
+      - name: Packaged app build (no MADLAD)
+        run: npm run tauri:build
+      - name: Acceptance checklist
+        run: cat docs/RELEASE_ACCEPTANCE.md

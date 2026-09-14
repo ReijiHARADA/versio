@@ -6,6 +6,23 @@
 
 export const DEFAULT_OVERSCAN = 2;
 export const DEFAULT_BLOCK_HEIGHT = 72;
+export const SHORT_PAPER_SECTION_LIMIT = 12;
+export const SHORT_PAPER_BLOCK_LIMIT = 80;
+
+/** Short papers mount every section; long papers virtualize by viewport + transient pins only. */
+export function shouldVirtualizeSections(sectionCount: number, blockCount: number): boolean {
+  return !(
+    sectionCount <= SHORT_PAPER_SECTION_LIMIT && blockCount <= SHORT_PAPER_BLOCK_LIMIT
+  );
+}
+
+/**
+ * Pins that affect mounted sections. Only transient jump pins belong here —
+ * never permanent reference-section or all-search-match pinning.
+ */
+export function resolveTransientMountPins(transientPins: Iterable<string>): string[] {
+  return [...new Set(transientPins)];
+}
 
 const BLOCK_HEIGHT_BY_TYPE: Record<string, number> = {
   paragraph: 72,
