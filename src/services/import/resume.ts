@@ -84,18 +84,22 @@ export async function resumeIncompleteTranslation(
       const nextStatus = finalizedTranslationStatus(blocks, (block) =>
         isRetryableTranslationFailure(block, refSectionIds)
       );
-      if (paper.processingStatus !== nextStatus) {
-        paper.processingStatus = nextStatus;
-        await savePaper(paper);
-        callbacks.onPaperUpdated?.(paper);
-      }
+      paper.processingStatus = nextStatus;
+      paper.needsTranslationResume = nextStatus !== "ready";
+      paper.updatedAt = new Date().toISOString();
+      await savePaper(paper);
+      callbacks.onPaperUpdated?.(paper);
       return;
     }
 
     const cfg = resolveImportConfig(config);
     // Leave pending work untouched so a later server-ready resume can pick it up.
     const madlad = await checkMADLADServer(cfg.madladServerUrl);
-    if (!madlad.available) return;
+    if (!madlad.available) {
+      paper.needsTranslationResume = true;
+      await savePaper(paper);
+      return;
+    }
     const translationEngine = new MADLADEngine(cfg.madladServerUrl);
     const queue = new TranslationQueue(translationEngine, {
       concurrency: cfg.translationConcurrency,
@@ -105,6 +109,7 @@ export async function resumeIncompleteTranslation(
     translationManager.attach(paperId, queue);
 
     paper.processingStatus = "translating";
+    paper.needsTranslationResume = true;
     await savePaper(paper);
     callbacks.onPaperUpdated?.(paper);
 
@@ -201,6 +206,7 @@ export async function resumeIncompleteTranslation(
     paper.processingStatus = finalizedTranslationStatus(blocks, (block) =>
       isRetryableTranslationFailure(block, refSectionIds)
     );
+    paper.needsTranslationResume = paper.processingStatus !== "ready";
     paper.updatedAt = new Date().toISOString();
     await savePaper(paper);
     callbacks.onPaperUpdated?.(paper);

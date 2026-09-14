@@ -98,6 +98,8 @@ export type Paper = {
   year: number | null;
   pageCount: number;
   processingStatus: ProcessingStatus;
+  /** SQLite index flag: translation should resume without opening the package. */
+  needsTranslationResume?: boolean;
   lastReadBlockId: string | null;
   lastReadOffset: number | null;
   favorite?: boolean;

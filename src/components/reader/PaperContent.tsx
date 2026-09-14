@@ -359,24 +359,19 @@ export const PaperContent = memo(
       });
     }, [allSectionsOrdered, blocks.length, visibleForMount, effectivePinned]);
 
-    const pinSection = useCallback((sectionId: string) => {
-      setPinnedSectionIds((prev) =>
-        prev.includes(sectionId) ? prev : [...prev, sectionId]
-      );
-    }, []);
-
     const waitForPaint = () =>
       new Promise<void>((resolve) => {
         requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
       });
 
-    const ensureSectionMounted = useCallback(
-      async (sectionId: string) => {
-        pinSection(sectionId);
-        await waitForPaint();
-      },
-      [pinSection]
-    );
+    /** Transient pin: mount target, then release after paint so pins do not accumulate. */
+    const ensureSectionMounted = useCallback(async (sectionId: string) => {
+      setPinnedSectionIds((prev) =>
+        prev.includes(sectionId) ? prev : [...prev, sectionId]
+      );
+      await waitForPaint();
+      setPinnedSectionIds((prev) => prev.filter((id) => id !== sectionId));
+    }, []);
 
     const ensureBlockMounted = useCallback(
       async (blockId: string) => {

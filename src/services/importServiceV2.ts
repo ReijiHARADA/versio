@@ -171,7 +171,11 @@ export async function importPDFV2(
       const { getStorage } = await import("../data/runtime");
       const { loadPaperPackage, persistPaperPackage } = await import("../data/package/persist");
       const { fs } = await getStorage();
-      const pkg = await loadPaperPackage(fs, paperId);
+      const pkg = await loadPaperPackage(fs, paperId, {
+        includeSourcePdf: true,
+        includeAssets: true,
+        includeLayout: true,
+      });
       pkg.layout = layoutFileFromNative(extracted.native, blocks);
       await persistPaperPackage(fs, pkg);
     } catch (error) {
@@ -254,9 +258,32 @@ export async function importPDFV2(
       })();
     }
 
-    // Stage 5: Translation with priority queue
+    // Stage 5: Translation with priority queue (after model is ready).
+    if (callbacks.waitForTranslationEngine) {
+      const engineReady = await callbacks.waitForTranslationEngine();
+      if (!engineReady) {
+        paper.processingStatus = "partial";
+        paper.needsTranslationResume = true;
+        paper.updatedAt = new Date().toISOString();
+        await savePaper(paper);
+        callbacks.onPaperUpdated?.(paper);
+        callbacks.onStageChange("completed");
+        callbacks.onProgress({
+          stage: "completed",
+          stageProgress: 1,
+          stageTotal: 1,
+          message: "原文の準備は完了しました。翻訳はモデル準備後に再開します",
+          paper,
+          sections,
+          blocks,
+        });
+        return { paper, sections, blocks };
+      }
+    }
+
     callbacks.onStageChange("translating");
     paper.processingStatus = "translating";
+    paper.needsTranslationResume = true;
     await savePaper(paper);
 
     const translationQueue = new TranslationQueue(translationEngine, {
@@ -524,6 +551,7 @@ export async function importPDFV2(
     paper.processingStatus = finalizedTranslationStatus(blocks, (block) =>
       isRetryableTranslationFailure(block, refSectionIds)
     );
+    paper.needsTranslationResume = paper.processingStatus !== "ready";
     paper.updatedAt = new Date().toISOString();
     await savePaper(paper);
 

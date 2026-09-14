@@ -95,3 +95,50 @@ export function countMountedBodies(
     sectionCount === 0 ? 0 : Math.max(0, 1 - mountedCount / sectionCount);
   return { sectionCount, mountedCount, savedRatio };
 }
+
+/**
+ * Simulate N outline/search/annotation jumps with transient pins.
+ * After each jump the pin is released once the target is considered visible.
+ * Mounted count must stay bounded (viewport + overscan + at most one transient pin).
+ */
+export function simulateTransientJumpMountCounts(args: {
+  orderedSectionIds: string[];
+  jumpTargetSectionIds: string[];
+  overscan?: number;
+}): { maxMounted: number; finalMounted: number; samples: number[] } {
+  const overscan = args.overscan ?? DEFAULT_OVERSCAN;
+  const samples: number[] = [];
+  let visible = args.orderedSectionIds.slice(0, 1);
+  let transientPin: string | null = null;
+
+  for (const target of args.jumpTargetSectionIds) {
+    transientPin = target;
+    const mountedWhilePinned = computeMountedSectionIds({
+      orderedSectionIds: args.orderedSectionIds,
+      visibleSectionIds: visible,
+      pinnedSectionIds: transientPin ? [transientPin] : [],
+      overscan,
+    });
+    samples.push(mountedWhilePinned.size);
+    // After scroll + visibility: release pin and treat target as visible.
+    visible = [target];
+    transientPin = null;
+    const mountedAfterRelease = computeMountedSectionIds({
+      orderedSectionIds: args.orderedSectionIds,
+      visibleSectionIds: visible,
+      pinnedSectionIds: [],
+      overscan,
+    });
+    samples.push(mountedAfterRelease.size);
+  }
+
+  const maxMounted = samples.length ? Math.max(...samples) : 0;
+  const finalMounted = samples.length ? samples[samples.length - 1] : 0;
+  return { maxMounted, finalMounted, samples };
+}
+
+/** Upper bound: one visible window (±overscan) plus one transient pin (if outside window). */
+export function expectedMountBound(sectionCount: number, overscan = DEFAULT_OVERSCAN): number {
+  const windowSize = Math.min(sectionCount, overscan * 2 + 1);
+  return Math.min(sectionCount, windowSize + 1);
+}

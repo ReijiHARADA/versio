@@ -97,6 +97,11 @@ function resolveImageUrl(
     const fromAssets = assets.get(normalized);
     if (fromAssets) return fromAssets;
   }
+  // Prefer package-relative paths so Reader can lazy-load without embedding base64.
+  for (const candidate of candidates) {
+    const normalized = normalizeAssetPath(candidate);
+    if (normalized.startsWith("assets/")) return normalized;
+  }
   for (const candidate of candidates) {
     if (candidate.startsWith("data:")) return candidate;
   }

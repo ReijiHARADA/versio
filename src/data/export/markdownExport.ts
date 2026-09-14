@@ -125,7 +125,11 @@ export async function exportPaperMarkdown(
   paperId: string,
   options: MarkdownExportOptions = {}
 ): Promise<MarkdownExportResult> {
-  const pkg = await loadPaperPackage(fs, paperId);
+  const pkg = await loadPaperPackage(fs, paperId, {
+    includeAssets: true,
+    includeSourcePdf: false,
+    includeLayout: false,
+  });
   const language = options.language ?? "ja";
   const includeFailed = options.includeFailedTranslations === true;
   const includeComments =
@@ -156,7 +160,11 @@ export async function exportVerificationBundle(
   paperId: string,
   options: MarkdownExportOptions = {}
 ): Promise<VerificationExportResult> {
-  const pkg = await loadPaperPackage(fs, paperId);
+  const pkg = await loadPaperPackage(fs, paperId, {
+    includeAssets: true,
+    includeSourcePdf: true,
+    includeLayout: false,
+  });
   const markdownResult = await exportPaperMarkdown(fs, paperId, {
     ...options,
     language: "ja",

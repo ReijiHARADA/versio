@@ -312,6 +312,8 @@ export async function deleteWorkspacePaperLink(nodeId: string, paperId: string):
 export async function saveAnnotation(annotation: Annotation): Promise<void> {
   const { db } = await ready();
   saveAnnotationRow(db, annotation);
+  const { refreshPaperAnnotationFts } = await import("../data/repositories/paperRepository");
+  refreshPaperAnnotationFts(db, annotation.paperId);
 }
 
 export async function getAnnotation(id: string): Promise<Annotation | undefined> {
@@ -334,7 +336,12 @@ export async function getAnnotationsByBlock(
 
 export async function deleteAnnotation(id: string): Promise<void> {
   const { db } = await ready();
+  const existing = getAnnotationRow(db, id);
   deleteAnnotationRow(db, id);
+  if (existing) {
+    const { refreshPaperAnnotationFts } = await import("../data/repositories/paperRepository");
+    refreshPaperAnnotationFts(db, existing.paperId);
+  }
 }
 
 /** Full-text library search via SQLite FTS (or LIKE fallback). Does not load paper bodies. */

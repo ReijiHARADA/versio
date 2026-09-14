@@ -2,6 +2,7 @@ import type { Paper } from "../../types/paper";
 import { listAnnotationsByPaper } from "./annotationRepository";
 import { rebuildPaperFts } from "../sqlite/fts";
 import type { SqliteClient } from "../sqlite/client";
+import { computeNeedsTranslationResume } from "../../services/import/resumeFlag";
 
 function parseJson<T>(value: unknown, fallback: T): T {
   if (typeof value !== "string" || !value) return fallback;
@@ -13,6 +14,12 @@ function parseJson<T>(value: unknown, fallback: T): T {
 }
 
 function rowToPaper(row: Record<string, unknown>): Paper {
+  const processingStatus = String(row.processing_status) as Paper["processingStatus"];
+  const resumeRaw = row.needs_translation_resume;
+  const needsTranslationResume =
+    resumeRaw == null
+      ? computeNeedsTranslationResume(processingStatus)
+      : Number(resumeRaw) === 1;
   return {
     id: String(row.id),
     sourceFilePath: String(row.source_file_name ?? ""),
@@ -25,7 +32,8 @@ function rowToPaper(row: Record<string, unknown>): Paper {
     publication: row.publication == null ? null : String(row.publication),
     year: row.year == null ? null : Number(row.year),
     pageCount: Number(row.page_count ?? 0),
-    processingStatus: String(row.processing_status) as Paper["processingStatus"],
+    processingStatus,
+    needsTranslationResume,
     lastReadBlockId: row.last_read_block_id == null ? null : String(row.last_read_block_id),
     lastReadOffset: row.last_read_offset == null ? null : Number(row.last_read_offset),
     favorite: Number(row.favorite ?? 0) === 1,
@@ -37,13 +45,17 @@ function rowToPaper(row: Record<string, unknown>): Paper {
 }
 
 export function upsertPaperIndex(db: SqliteClient, paper: Paper): void {
+  const needsResume = computeNeedsTranslationResume(
+    paper.processingStatus,
+    paper.needsTranslationResume
+  );
   db.exec(
     `INSERT INTO papers (
       id, source_file_hash, title_original, title_translated, authors_json,
       publication, year, page_count, processing_status, favorite, last_opened_at,
       last_read_block_id, last_read_offset, source_file_name, source_stored_path,
-      package_revision, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      package_revision, needs_translation_resume, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       source_file_hash=excluded.source_file_hash,
       title_original=excluded.title_original,
@@ -60,6 +72,7 @@ export function upsertPaperIndex(db: SqliteClient, paper: Paper): void {
       source_file_name=excluded.source_file_name,
       source_stored_path=excluded.source_stored_path,
       package_revision=excluded.package_revision,
+      needs_translation_resume=excluded.needs_translation_resume,
       updated_at=excluded.updated_at`,
     [
       paper.id,
@@ -78,6 +91,7 @@ export function upsertPaperIndex(db: SqliteClient, paper: Paper): void {
       paper.sourceFileName ?? paper.sourceFilePath,
       paper.sourceStoredPath ?? null,
       paper.packageRevision ?? 0,
+      needsResume ? 1 : 0,
       paper.createdAt,
       paper.updatedAt,
     ]
@@ -96,6 +110,16 @@ export function getAllPaperIndexes(db: SqliteClient): Paper[] {
 export function getPaperIndexByHash(db: SqliteClient, hash: string): Paper | undefined {
   const row = db.get("SELECT * FROM papers WHERE source_file_hash = ?", [hash]);
   return row ? rowToPaper(row) : undefined;
+}
+
+export function listResumeCandidatePaperIds(db: SqliteClient): string[] {
+  return db
+    .query(
+      `SELECT id FROM papers
+       WHERE needs_translation_resume = 1
+          OR processing_status IN ('queued','extracting','structuring','glossary','translating','partial','failed')`
+    )
+    .map((row) => String(row.id));
 }
 
 export function deletePaperIndex(db: SqliteClient, id: string): void {
@@ -144,6 +168,16 @@ export function rebuildPaperSearchIndex(
     translation,
     annotation,
   });
+}
+
+/** Refresh FTS annotation column for one paper without rewriting package files. */
+export function refreshPaperAnnotationFts(db: SqliteClient, paperId: string): void {
+  const paper = getPaperIndex(db, paperId);
+  if (!paper) return;
+  const row = db.get("SELECT original, translation FROM papers_fts WHERE paper_id = ?", [paperId]);
+  const original = row ? String(row.original ?? "") : "";
+  const translation = row ? String(row.translation ?? "") : "";
+  rebuildPaperSearchIndex(db, paper, original, translation);
 }
 
 export function indexPaperText(

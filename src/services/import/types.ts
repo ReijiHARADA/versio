@@ -29,6 +29,8 @@ export type ImportCallbacks = {
   onBlockTranslated?: (block: PaperBlock) => void;
   onPaperUpdated?: (paper: Paper) => void;
   onSectionTranslated?: (section: Section) => void;
+  /** Called after extraction/partial ready, before translation queue starts. */
+  waitForTranslationEngine?: () => Promise<boolean>;
 };
 
 export type ImportConfig = {

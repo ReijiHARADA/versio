@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Maximize2, Eye, EyeOff } from "lucide-react";
 import type { PaperBlock, FigureMetadata } from "../../types/paper";
+import { usePaperAssetUrl } from "../../hooks/usePaperAssetUrl";
 import styles from "./Figure.module.css";
 import { splitCaptionLabel } from "./caption";
 import { MediaLightbox } from "./MediaLightbox";
@@ -10,15 +11,16 @@ type FigureProps = {
   metadata: FigureMetadata;
 };
 
-export function Figure({ metadata }: FigureProps) {
+export function Figure({ block, metadata }: FigureProps) {
   const [isZoomed, setIsZoomed] = useState(false);
   const [surfaceActive, setSurfaceActive] = useState(false);
   const [showOriginalCaption, setShowOriginalCaption] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
+  const imageUrl = usePaperAssetUrl(block.paperId, metadata.imageUrl);
 
   const hasTranslatedCaption =
     metadata.captionTranslated && metadata.captionOriginal;
-  const hasImage = Boolean(metadata.imageUrl);
+  const hasImage = Boolean(imageUrl);
   const caption = metadata.captionTranslated || metadata.captionOriginal || "";
   const displayedCaption = splitCaptionLabel(caption, metadata.figureNumber || "Figure");
 
@@ -29,7 +31,7 @@ export function Figure({ metadata }: FigureProps) {
           {hasImage ? (
             <img
               ref={imageRef}
-              src={metadata.imageUrl}
+              src={imageUrl}
               alt={caption}
               className={`${styles.image} ${styles.imageClickable}`}
               loading="lazy"
@@ -44,6 +46,8 @@ export function Figure({ metadata }: FigureProps) {
                 }
               }}
             />
+          ) : metadata.imageUrl ? (
+            <div className={styles.missingImage}>図を読み込み中…</div>
           ) : (
             <div className={styles.missingImage}>図を抽出できませんでした</div>
           )}
@@ -89,7 +93,7 @@ export function Figure({ metadata }: FigureProps) {
       {hasImage && (
         <MediaLightbox
           open={isZoomed}
-          src={metadata.imageUrl!}
+          src={imageUrl!}
           alt={caption}
           sourceRef={imageRef}
           onClose={() => setIsZoomed(false)}

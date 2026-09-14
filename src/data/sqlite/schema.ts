@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS papers (
   source_file_name TEXT,
   source_stored_path TEXT,
   package_revision INTEGER NOT NULL DEFAULT 0,
+  needs_translation_resume INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );

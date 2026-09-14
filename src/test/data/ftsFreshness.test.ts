@@ -1,0 +1,95 @@
+import { describe, expect, it } from "vitest";
+import { createMemoryFileSystem } from "../../data/fs/memoryFs";
+import { openSqlite } from "../../data/sqlite/client";
+import { searchPapersFts } from "../../data/sqlite/fts";
+import {
+  indexPaperText,
+  refreshPaperAnnotationFts,
+  upsertPaperIndex,
+} from "../../data/repositories/paperRepository";
+import { saveAnnotationRow, deleteAnnotationRow } from "../../data/repositories/annotationRepository";
+import type { Paper } from "../../types/paper";
+import type { Annotation } from "../../types/annotation";
+
+const now = "2026-09-14T00:00:00.000Z";
+
+function paper(): Paper {
+  return {
+    id: "fts-1",
+    sourceFilePath: "a.pdf",
+    sourceFileHash: "hash-fts",
+    titleOriginal: "UniqueTitleAlpha",
+    titleTranslated: "独自題名アルファ",
+    authors: ["AuthorBravo"],
+    publication: null,
+    year: 2026,
+    pageCount: 1,
+    processingStatus: "ready",
+    needsTranslationResume: false,
+    lastReadBlockId: null,
+    lastReadOffset: null,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+describe("FTS incremental freshness", () => {
+  it("reflects annotation create/update/delete without full library rebuild", async () => {
+    const fs = createMemoryFileSystem();
+    const db = await openSqlite(fs);
+    const p = paper();
+    upsertPaperIndex(db, p);
+    indexPaperText(db, p, "OriginalCharlie body text", "翻訳デルタ本文");
+
+    expect(searchPapersFts(db, "UniqueTitleAlpha")).toContain("fts-1");
+    expect(searchPapersFts(db, "AuthorBravo")).toContain("fts-1");
+    expect(searchPapersFts(db, "OriginalCharlie")).toContain("fts-1");
+    expect(searchPapersFts(db, "翻訳デルタ")).toContain("fts-1");
+    expect(searchPapersFts(db, "MemoEcho")).toEqual([]);
+
+    const annotation: Annotation = {
+      id: "ann-1",
+      paperId: "fts-1",
+      workspaceNodeId: null,
+      blockId: "b1",
+      startOffset: 0,
+      endOffset: 4,
+      selectedText: "body",
+      prefixContext: "",
+      suffixContext: "",
+      translationTextHash: "x",
+      note: "MemoEcho note",
+      status: "active",
+      createdAt: now,
+      updatedAt: now,
+    };
+    saveAnnotationRow(db, annotation);
+    refreshPaperAnnotationFts(db, "fts-1");
+    expect(searchPapersFts(db, "MemoEcho")).toContain("fts-1");
+
+    annotation.note = "MemoFoxtrot updated";
+    annotation.updatedAt = now;
+    saveAnnotationRow(db, annotation);
+    refreshPaperAnnotationFts(db, "fts-1");
+    expect(searchPapersFts(db, "MemoEcho")).toEqual([]);
+    expect(searchPapersFts(db, "MemoFoxtrot")).toContain("fts-1");
+
+    deleteAnnotationRow(db, "ann-1");
+    refreshPaperAnnotationFts(db, "fts-1");
+    expect(searchPapersFts(db, "MemoFoxtrot")).toEqual([]);
+    expect(searchPapersFts(db, "OriginalCharlie")).toContain("fts-1");
+    await db.close();
+  });
+
+  it("refreshes translation column after checkpoint-style reindex", async () => {
+    const fs = createMemoryFileSystem();
+    const db = await openSqlite(fs);
+    const p = paper();
+    upsertPaperIndex(db, p);
+    indexPaperText(db, p, "OriginalCharlie", "初訳");
+    expect(searchPapersFts(db, "完訳ゴルフ")).toEqual([]);
+    indexPaperText(db, p, "OriginalCharlie", "完訳ゴルフ本文");
+    expect(searchPapersFts(db, "完訳ゴルフ")).toContain("fts-1");
+    await db.close();
+  });
+});

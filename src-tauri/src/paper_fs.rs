@@ -1,6 +1,6 @@
+use serde::Deserialize;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
-use serde::Deserialize;
 use tauri::{AppHandle, Manager};
 
 fn is_safe_relative(relative: &str) -> bool {

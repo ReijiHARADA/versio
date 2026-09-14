@@ -6,6 +6,8 @@ import {
   paperPackageExists,
   persistMutablePaperFiles,
   persistPaperPackage,
+  resetPackageLoadMetrics,
+  type LoadPaperPackageOptions,
 } from "../package/persist";
 import { packageToProjection } from "../package/toProjection";
 import { indexPaperText, upsertPaperIndex } from "./paperRepository";
@@ -13,11 +15,13 @@ import type { SqliteClient } from "../sqlite/client";
 
 const MUTABLE_FLUSH_MS = 1500;
 
-type CachedDocument = {
+export type CachedDocument = {
   paper: Paper;
   sections: Section[];
   blocks: PaperBlock[];
   sourcePdf?: Uint8Array;
+  /** True when in-memory state has mutations that must be written back. */
+  dirty: boolean;
 };
 
 type PendingFlush = {
@@ -29,6 +33,23 @@ type PendingFlush = {
 const cache = new Map<string, CachedDocument>();
 const pendingFlushes = new Map<string, PendingFlush>();
 
+export const documentPersistMetrics = {
+  fullPackageWrites: 0,
+  mutableWrites: 0,
+  skippedCleanFlushes: 0,
+};
+
+export function resetDocumentPersistMetrics(): void {
+  documentPersistMetrics.fullPackageWrites = 0;
+  documentPersistMetrics.mutableWrites = 0;
+  documentPersistMetrics.skippedCleanFlushes = 0;
+}
+
+function markDirty(paperId: string): void {
+  const current = cache.get(paperId);
+  if (current) current.dirty = true;
+}
+
 export function rememberDocument(paper: Paper, sections?: Section[], blocks?: PaperBlock[]): void {
   const current = cache.get(paper.id);
   cache.set(paper.id, {
@@ -36,6 +57,7 @@ export function rememberDocument(paper: Paper, sections?: Section[], blocks?: Pa
     sections: sections ?? current?.sections ?? [],
     blocks: blocks ?? current?.blocks ?? [],
     sourcePdf: current?.sourcePdf,
+    dirty: current?.dirty ?? false,
   });
 }
 
@@ -43,6 +65,7 @@ export function rememberSourcePdf(paperId: string, sourcePdf: Uint8Array): void 
   const current = cache.get(paperId);
   if (current) {
     current.sourcePdf = sourcePdf;
+    current.dirty = true;
     return;
   }
   cache.set(paperId, {
@@ -50,6 +73,7 @@ export function rememberSourcePdf(paperId: string, sourcePdf: Uint8Array): void 
     sections: [],
     blocks: [],
     sourcePdf,
+    dirty: true,
   });
 }
 
@@ -88,8 +112,16 @@ async function persistCached(
   cancelMutableFlush(paperId);
   const cached = cache.get(paperId);
   if (!cached || cached.blocks.length === 0) return;
+  if (!cached.dirty) {
+    documentPersistMetrics.skippedCleanFlushes += 1;
+    return;
+  }
   const existing = (await paperPackageExists(fs, paperId))
-    ? await loadPaperPackage(fs, paperId).catch(() => null)
+    ? await loadPaperPackage(fs, paperId, {
+        includeSourcePdf: true,
+        includeAssets: true,
+        includeLayout: true,
+      }).catch(() => null)
     : null;
   const pkg = projectionToPackage({
     paper: cached.paper,
@@ -104,8 +136,10 @@ async function persistCached(
   }
   try {
     const persisted = await persistPaperPackage(fs, pkg);
+    documentPersistMetrics.fullPackageWrites += 1;
     cached.sourcePdf = undefined;
     cached.paper.packageRevision = persisted.revision;
+    cached.dirty = false;
     upsertPaperIndex(db, cached.paper);
     indexPaperText(db, cached.paper, pkg.originalMarkdown, pkg.translatedMarkdown);
   } catch (error) {
@@ -120,6 +154,10 @@ async function persistMutableFromCache(
 ): Promise<void> {
   const cached = cache.get(paperId);
   if (!cached || cached.blocks.length === 0) return;
+  if (!cached.dirty) {
+    documentPersistMetrics.skippedCleanFlushes += 1;
+    return;
+  }
   if (!(await paperPackageExists(fs, paperId))) {
     await persistCached(fs, db, paperId);
     return;
@@ -141,6 +179,10 @@ async function persistMutableFromCache(
       structure: pkg.structure,
       translation: pkg.translation,
     });
+    documentPersistMetrics.mutableWrites += 1;
+    cached.dirty = false;
+    upsertPaperIndex(db, cached.paper);
+    indexPaperText(db, cached.paper, pkg.originalMarkdown, pkg.translatedMarkdown);
   } catch (error) {
     console.warn("Translation checkpoint persist failed:", error);
   }
@@ -162,6 +204,7 @@ export async function persistAfterMutation(
 ): Promise<void> {
   const cached = cache.get(paperId);
   if (!cached || cached.blocks.length === 0) return;
+  markDirty(paperId);
   if (isHotPersistStatus(cached.paper.processingStatus) && (await paperPackageExists(fs, paperId))) {
     scheduleMutablePersist(fs, db, paperId);
     return;
@@ -178,6 +221,11 @@ export async function flushDocumentPersist(
   const unique = [...new Set(ids)];
   for (const id of unique) {
     cancelMutableFlush(id);
+    const cached = cache.get(id);
+    if (!cached?.dirty) {
+      if (cached) documentPersistMetrics.skippedCleanFlushes += 1;
+      continue;
+    }
     await persistMutableFromCache(fs, db, id);
   }
 }
@@ -191,7 +239,7 @@ export async function saveDocumentSections(
   const paperId = sections[0].paperId;
   const current = cache.get(paperId);
   if (current) current.sections = sections;
-  else cache.set(paperId, { paper: placeholderPaper(paperId), sections, blocks: [] });
+  else cache.set(paperId, { paper: placeholderPaper(paperId), sections, blocks: [], dirty: true });
   await persistAfterMutation(fs, db, paperId);
 }
 
@@ -204,7 +252,7 @@ export async function saveDocumentBlocks(
   const paperId = blocks[0].paperId;
   const current = cache.get(paperId);
   if (current) current.blocks = blocks;
-  else cache.set(paperId, { paper: placeholderPaper(paperId), sections: [], blocks });
+  else cache.set(paperId, { paper: placeholderPaper(paperId), sections: [], blocks, dirty: true });
   await persistAfterMutation(fs, db, paperId);
 }
 
@@ -219,7 +267,13 @@ export async function updateDocumentBlock(
     ? blocks.map((item) => (item.id === block.id ? block : item))
     : [...blocks, block];
   if (current) current.blocks = next;
-  else cache.set(block.paperId, { paper: placeholderPaper(block.paperId), sections: [], blocks: next });
+  else
+    cache.set(block.paperId, {
+      paper: placeholderPaper(block.paperId),
+      sections: [],
+      blocks: next,
+      dirty: true,
+    });
   await persistAfterMutation(fs, db, block.paperId);
 }
 
@@ -248,19 +302,30 @@ export async function updateBlockTranslationText(
   }
 }
 
+const DEFAULT_READER_LOAD: LoadPaperPackageOptions = {
+  includeSourcePdf: false,
+  includeAssets: false,
+  includeLayout: false,
+};
+
 export async function loadDocument(
   fs: FileSystem,
-  paper: Paper
+  paper: Paper,
+  options: LoadPaperPackageOptions = DEFAULT_READER_LOAD
 ): Promise<CachedDocument> {
   const cached = cache.get(paper.id);
   if (cached && cached.blocks.length > 0) return cached;
   if (await paperPackageExists(fs, paper.id)) {
-    const pkg = await loadPaperPackage(fs, paper.id);
+    const pkg = await loadPaperPackage(fs, paper.id, options);
     const projected = packageToProjection(pkg, paper);
-    cache.set(paper.id, projected);
-    return projected;
+    const entry: CachedDocument = {
+      ...projected,
+      dirty: false,
+    };
+    cache.set(paper.id, entry);
+    return entry;
   }
-  return cached ?? { paper, sections: [], blocks: [] };
+  return cached ?? { paper, sections: [], blocks: [], dirty: false };
 }
 
 export async function getDocumentSections(
@@ -275,6 +340,18 @@ export async function getDocumentBlocks(
   paper: Paper
 ): Promise<PaperBlock[]> {
   return (await loadDocument(fs, paper)).blocks;
+}
+
+/** Test helper: reopen many papers read-only and flush without writing. */
+export async function openDocumentsReadOnly(
+  fs: FileSystem,
+  papers: Paper[]
+): Promise<void> {
+  resetPackageLoadMetrics();
+  resetDocumentPersistMetrics();
+  for (const paper of papers) {
+    await loadDocument(fs, paper);
+  }
 }
 
 function placeholderPaper(id: string): Paper {

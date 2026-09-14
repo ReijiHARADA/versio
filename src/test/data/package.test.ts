@@ -116,7 +116,11 @@ describe("Paper Package", () => {
     expect(pkg.translation?.blocks["b-002"]?.status).toBe("completed");
     expect(pkg.structure.blocks["b-002"].translationStatus).toBeUndefined();
 
-    const loaded = await loadPaperPackage(fs, "paper-1");
+    const loaded = await loadPaperPackage(fs, "paper-1", {
+      includeAssets: true,
+      includeSourcePdf: true,
+      includeLayout: true,
+    });
     expect(loaded.translation?.blocks["b-002"]?.status).toBe("completed");
     const projected = packageToProjection(loaded, paper);
     expect(projected.blocks.find((b) => b.id === "b-002")?.original).toContain("Recent advances");
@@ -129,6 +133,24 @@ describe("Paper Package", () => {
     expect(String(figure?.metadata.captionTranslated)).toBe("図1. 概要。");
     expect(String(figure?.metadata.imageUrl).startsWith("data:image/")).toBe(true);
     expect(decodeDataUrl(String(figure?.metadata.imageUrl))).not.toBeNull();
+  });
+
+  it("loads Reader packages without source.pdf or assets by default", async () => {
+    const fs = createMemoryFileSystem();
+    const { paper, sections, blocks } = sample();
+    await persistPaperPackage(fs, projectionToPackage({ paper, sections, blocks }));
+    const { packageLoadMetrics, resetPackageLoadMetrics, loadPaperPackage: load } = await import(
+      "../../data/package/persist"
+    );
+    resetPackageLoadMetrics();
+    const loaded = await load(fs, "paper-1");
+    expect(loaded.sourcePdf).toBeUndefined();
+    expect(loaded.assets).toEqual([]);
+    expect(packageLoadMetrics.sourcePdfReads).toBe(0);
+    expect(packageLoadMetrics.assetReads).toBe(0);
+    const projected = packageToProjection(loaded, paper);
+    const figure = projected.blocks.find((b) => b.id === "b-fig");
+    expect(String(figure?.metadata.imageUrl)).toMatch(/^assets\//);
   });
 
   it("rejects duplicate block IDs", () => {

@@ -1,13 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Paper, PaperBlock, Section } from "../types/paper";
+import type { Paper } from "../types/paper";
+import { shouldResumeFromIndex } from "../services/import/resumeFlag";
+import {
+  packageLoadMetrics,
+  resetPackageLoadMetrics,
+} from "../data/package/persist";
 
-const blocksByPaper = new Map<string, PaperBlock[]>();
-const sectionsByPaper = new Map<string, Section[]>();
+const blocksByPaper = new Map<string, unknown[]>();
+const sectionsByPaper = new Map<string, unknown[]>();
 
 vi.mock("../services/database", () => ({
   getAllPapers: vi.fn(async () => []),
-  getBlocksByPaper: vi.fn(async (paperId: string) => blocksByPaper.get(paperId) ?? []),
-  getSectionsByPaper: vi.fn(async (paperId: string) => sectionsByPaper.get(paperId) ?? []),
+  getBlocksByPaper: vi.fn(async (paperId: string) => {
+    blocksByPaper.set(paperId, [...(blocksByPaper.get(paperId) ?? []), "read"]);
+    return [];
+  }),
+  getSectionsByPaper: vi.fn(async (paperId: string) => {
+    sectionsByPaper.set(paperId, [...(sectionsByPaper.get(paperId) ?? []), "read"]);
+    return [];
+  }),
   getSetting: vi.fn(async () => ({})),
 }));
 
@@ -45,7 +56,11 @@ vi.mock("uuid", () => ({ v4: () => "test-id" }));
 
 import { shouldResumePaperAfterServerReady } from "../services/import/startBackgroundImport";
 
-function paper(id: string, processingStatus: Paper["processingStatus"]): Paper {
+function paper(
+  id: string,
+  processingStatus: Paper["processingStatus"],
+  needsTranslationResume?: boolean
+): Paper {
   return {
     id,
     sourceFilePath: `${id}.pdf`,
@@ -53,68 +68,63 @@ function paper(id: string, processingStatus: Paper["processingStatus"]): Paper {
     titleOriginal: "A Complete Paper",
     titleTranslated: "完全な論文",
     processingStatus,
+    needsTranslationResume,
     createdAt: "2026-09-13T00:00:00.000Z",
     updatedAt: "2026-09-13T00:00:00.000Z",
   } as Paper;
-}
-
-function paragraph(partial: Partial<PaperBlock> & { id: string; paperId: string }): PaperBlock {
-  return {
-    id: partial.id,
-    paperId: partial.paperId,
-    sectionId: partial.sectionId ?? "s1",
-    type: "paragraph",
-    order: 0,
-    pageStart: 1,
-    pageEnd: 1,
-    original: "This study evaluates how participants respond to a prototype system during a controlled user study and explains why the remaining untranslated paragraph should be retried when the translation server becomes available again.",
-    translated: undefined,
-    translationStatus: undefined,
-    metadata: {},
-    extractionConfidence: { score: 1, warnings: [] },
-    ...partial,
-  } as PaperBlock;
 }
 
 describe("server-ready translation resume selection", () => {
   beforeEach(() => {
     blocksByPaper.clear();
     sectionsByPaper.clear();
+    resetPackageLoadMetrics();
   });
 
-  it.each(["translating", "queued", "glossary"] as const)(
-    "resumes saved papers in active %s state",
+  it.each(["translating", "queued", "glossary", "partial", "failed"] as const)(
+    "resumes saved papers in active %s state via metadata",
     async (status) => {
-      await expect(shouldResumePaperAfterServerReady(paper(`p-${status}`, status))).resolves.toBe(true);
+      await expect(shouldResumePaperAfterServerReady(paper(`p-${status}`, status))).resolves.toBe(
+        true
+      );
+      expect(blocksByPaper.has(`p-${status}`)).toBe(false);
+      expect(sectionsByPaper.has(`p-${status}`)).toBe(false);
     }
   );
 
-  it.each(["partial", "failed"] as const)(
-    "resumes saved papers in %s state only when translation work remains",
-    async (status) => {
-      const p = paper(`p-${status}`, status);
-      blocksByPaper.set(p.id, [paragraph({ id: "b1", paperId: p.id, translationStatus: "failed" })]);
-      await expect(shouldResumePaperAfterServerReady(p)).resolves.toBe(true);
-    }
-  );
-
-  it("does not resume a failed paper that has no translation work saved", async () => {
-    await expect(shouldResumePaperAfterServerReady(paper("p-failed-empty", "failed"))).resolves.toBe(false);
+  it("does not resume a completed paper with needsTranslationResume=false", async () => {
+    await expect(
+      shouldResumePaperAfterServerReady(paper("p-ready-complete", "ready", false))
+    ).resolves.toBe(false);
   });
 
-  it("resumes a ready paper when it still has retryable failed paragraph blocks", async () => {
-    const p = paper("p-ready", "ready");
-    blocksByPaper.set(p.id, [paragraph({ id: "b1", paperId: p.id, translationStatus: "failed" })]);
-    sectionsByPaper.set(p.id, [{ id: "s1", paperId: p.id, order: 0, originalTitle: "Introduction", normalizedKind: "introduction" } as Section]);
-
-    await expect(shouldResumePaperAfterServerReady(p)).resolves.toBe(true);
+  it("resumes a ready paper only when the resume flag is set", async () => {
+    await expect(
+      shouldResumePaperAfterServerReady(paper("p-ready-flag", "ready", true))
+    ).resolves.toBe(true);
+    await expect(
+      shouldResumePaperAfterServerReady(paper("p-ready-no-flag", "ready", false))
+    ).resolves.toBe(false);
   });
 
-  it("does not resume a ready paper with no retryable failed blocks", async () => {
-    const p = paper("p-ready-complete", "ready");
-    blocksByPaper.set(p.id, [paragraph({ id: "b1", paperId: p.id, translated: "これは翻訳済みです。", translationStatus: "translated" })]);
-    sectionsByPaper.set(p.id, [{ id: "s1", paperId: p.id, order: 0, originalTitle: "Introduction", translatedTitle: "はじめに", normalizedKind: "introduction" } as Section]);
+  it("does not open body/package for 100 completed papers during resume selection", async () => {
+    const completed = Array.from({ length: 100 }, (_, i) =>
+      paper(`ready-${i}`, "ready", false)
+    );
+    resetPackageLoadMetrics();
+    const results = await Promise.all(
+      completed.map((item) => shouldResumePaperAfterServerReady(item))
+    );
+    expect(results.every((value) => value === false)).toBe(true);
+    expect(packageLoadMetrics.documentReads).toBe(0);
+    expect(packageLoadMetrics.sourcePdfReads).toBe(0);
+    expect(packageLoadMetrics.assetReads).toBe(0);
+    expect([...blocksByPaper.keys()]).toEqual([]);
+    expect([...sectionsByPaper.keys()]).toEqual([]);
+  });
 
-    await expect(shouldResumePaperAfterServerReady(p)).resolves.toBe(false);
+  it("shouldResumeFromIndex never requires sections/blocks", () => {
+    expect(shouldResumeFromIndex(paper("a", "ready", false))).toBe(false);
+    expect(shouldResumeFromIndex(paper("b", "translating"))).toBe(true);
   });
 });

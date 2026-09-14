@@ -3,8 +3,10 @@ import {
   computeMountedSectionIds,
   countMountedBodies,
   estimateSectionBodyHeight,
+  expectedMountBound,
   sectionIdForBlock,
   sectionsMatchingQuery,
+  simulateTransientJumpMountCounts,
 } from "../../components/reader/virtualization/sectionVirtualization";
 
 describe("section virtualization", () => {
@@ -63,5 +65,19 @@ describe("section virtualization", () => {
     expect(
       sectionsMatchingQuery("world", [{ id: "s1" }, { id: "s2" }, { id: "s3" }], blocksBySection)
     ).toEqual(["s1", "s3"]);
+  });
+
+  it("keeps mounted section count bounded after 50+ transient jumps", () => {
+    const jumps = Array.from({ length: 60 }, (_, i) => ids[(i * 7) % ids.length]);
+    const { maxMounted, finalMounted } = simulateTransientJumpMountCounts({
+      orderedSectionIds: ids,
+      jumpTargetSectionIds: jumps,
+      overscan: 2,
+    });
+    const bound = expectedMountBound(ids.length, 2);
+    expect(maxMounted).toBeLessThanOrEqual(bound);
+    expect(finalMounted).toBeLessThanOrEqual(bound);
+    // Persistent pin accumulation would grow toward jump count; guard against that.
+    expect(maxMounted).toBeLessThan(20);
   });
 });

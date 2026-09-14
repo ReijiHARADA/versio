@@ -1,7 +1,5 @@
 import { resumeIncompleteTranslation } from "./resume";
 import { classifyImportFailure } from "./classifyFailure";
-import { isPlausibleJaTranslation, shouldTranslateTitle, titleTranslationComplete } from "../translation/quality";
-import { referenceSectionIds, isRetryableTranslationFailure, shouldTranslateBlock, shouldTranslateSection } from "./policy";
 import { showToast } from "../../stores/toastStore";
 import { useImportJobStore, type ImportJob } from "../../stores/importJobStore";
 import { useLibraryCache } from "../../stores/libraryCache";
@@ -10,7 +8,7 @@ import type { Paper, PaperBlock, Section } from "../../types/paper";
 import { upsertBlock, upsertSection } from "../../utils/mergePaperData";
 import { createBlockUpdateBatcher } from "../../utils/batchBlockUpdates";
 import { waitForTranslationServer } from "../../utils/serverReady";
-import { getAllPapers, getBlocksByPaper, getSectionsByPaper, getSetting } from "../database";
+import { getAllPapers, getSetting } from "../database";
 import { addPaperToWorkspace } from "../projectService";
 import {
   checkMADLADAvailability,
@@ -55,45 +53,9 @@ function libraryTranslationCallbacks() {
 }
 
 export async function shouldResumePaperAfterServerReady(paper: Paper): Promise<boolean> {
-  // Prefer active index status — avoid loading every package just to decide.
-  if (
-    paper.processingStatus === "translating" ||
-    paper.processingStatus === "queued" ||
-    paper.processingStatus === "glossary" ||
-    paper.processingStatus === "partial"
-  ) {
-    return true;
-  }
-
-  const [sections, blocks] = await Promise.all([
-    getSectionsByPaper(paper.id),
-    getBlocksByPaper(paper.id),
-  ]);
-  const refSectionIds = referenceSectionIds(sections);
-  const hasRetryableFailedBlock = blocks.some((block) =>
-    isRetryableTranslationFailure(block, refSectionIds)
-  );
-
-  if (paper.processingStatus === "failed") {
-    // Only reopen failed packages when real translation work was persisted.
-    return hasRetryableFailedBlock;
-  }
-
-  if (paper.titleOriginal && shouldTranslateTitle(paper.titleOriginal)) {
-    if (!titleTranslationComplete(paper.titleOriginal, paper.titleTranslated ?? undefined)) return true;
-  }
-
-  if (sections.some((section) => shouldTranslateSection(section) && !section.translatedTitle)) {
-    return true;
-  }
-
-  if (hasRetryableFailedBlock) return true;
-
-  return blocks.some((block) => {
-    if (!shouldTranslateBlock(block, refSectionIds) || !block.original) return false;
-    if (!block.translated) return true;
-    return !isPlausibleJaTranslation(block.translated, block.original);
-  });
+  // Index metadata only — never open sections/blocks/package for completed papers.
+  const { shouldResumeFromIndex } = await import("./resumeFlag");
+  return shouldResumeFromIndex(paper);
 }
 
 async function attachToWorkspace(nodeId: string, paperId: string): Promise<void> {
@@ -144,18 +106,7 @@ async function ensureMadladReady(
 
 async function runImport(jobId: string, file: File, fileKey: string, workspaceNodeId?: string): Promise<void> {
   const patch = useImportJobStore.getState().patchJob;
-  const ready = await ensureMadladReady(jobId, patch);
-  if (!ready) {
-    patch(jobId, {
-      stage: "failed",
-      error: SERVER_UNAVAILABLE_MESSAGE,
-      message: SERVER_UNAVAILABLE_MESSAGE,
-    });
-    startedImportKeys.delete(fileKey);
-    showToast({ kind: "error", message: SERVER_UNAVAILABLE_MESSAGE });
-    return;
-  }
-
+  // Extraction proceeds without waiting for the translation model.
   const settings = await getSetting<ImportConfig>("translationSettingsV2");
   let attached = false;
   let duplicatePaperId: string | undefined;
@@ -164,6 +115,14 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
     const result = await importPDFV2(
       file,
       {
+        waitForTranslationEngine: async () => {
+          patch(jobId, {
+            stage: "translating",
+            message: "翻訳モデルの準備を待っています...",
+            error: undefined,
+          });
+          return ensureMadladReady(jobId, patch);
+        },
         onProgress: (next) => {
           if (
             next.paper &&
@@ -374,6 +333,7 @@ export function resumeAfterTranslationServerReady(): void {
     const cached = useLibraryCache.getState().papers;
     const saved = await getAllPapers();
     const byId = new Map([...cached, ...saved].map((paper) => [paper.id, paper]));
+    // Metadata-only filter: completed papers with needsTranslationResume=false never open packages.
     for (const paper of byId.values()) {
       if (!(await shouldResumePaperAfterServerReady(paper))) continue;
       void resumeIncompleteTranslation(paper.id, callbacks, settings);

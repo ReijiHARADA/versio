@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  typescript:
+    name: TypeScript test / lint / build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: Browser smoke (Playwright)
+        run: |
+          npx playwright install --with-deps chromium
+          npm run preview -- --host 127.0.0.1 --port 5173 &
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:5173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          PAPER_READER_URL=http://127.0.0.1:5173 npm run verify:browser
+        continue-on-error: false
+
+  rust:
+    name: Rust fmt / clippy / test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src-tauri
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+
+  python:
+    name: Lightweight Python tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: translation-server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.14"
+      - name: Run unit tests (no MADLAD / torch)
+        run: |
+          python -m unittest tests.test_citation_protect -v
+        env:
+          SKIP_MODEL_DOWNLOAD: "1"

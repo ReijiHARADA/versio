@@ -285,7 +285,10 @@ schemaVersion: 1
       projectionToPackage({ paper, sections, blocks })
     );
 
-    const afterLoad = packageToProjection(await loadPaperPackage(fs, paper.id), paper);
+    const afterLoad = packageToProjection(
+      await loadPaperPackage(fs, paper.id, { includeAssets: true }),
+      paper
+    );
     const figure = afterLoad.blocks.find((block) => block.id === "b-fig");
     expect(String(figure?.metadata.imageUrl).startsWith("data:image/")).toBe(true);
     expect(figure?.translated).toBe("図1. 概要。");

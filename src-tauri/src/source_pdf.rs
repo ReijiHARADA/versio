@@ -164,7 +164,7 @@ pub fn open_source_pdf(
         if let Some(p) = target_page {
             let _ = try_preview_go_to_page(p);
         }
-        return Ok(());
+        Ok(())
     }
     #[cfg(not(target_os = "macos"))]
     {
@@ -190,9 +190,7 @@ pub fn source_pdf_exists(app: AppHandle, paper_id: String) -> Result<bool, Strin
 #[tauri::command]
 pub fn read_dropped_pdf(path: String) -> Result<Vec<u8>, String> {
     let file_path = require_readable_pdf(&path)?;
-    let size = fs::metadata(&file_path)
-        .map_err(|e| e.to_string())?
-        .len();
+    let size = fs::metadata(&file_path).map_err(|e| e.to_string())?.len();
     if size > MAX_DROPPED_PDF_BYTES {
         return Err("PDFが大きすぎます（100MBまで）".into());
     }
@@ -202,7 +200,9 @@ pub fn read_dropped_pdf(path: String) -> Result<Vec<u8>, String> {
 fn is_safe_external_url(url: &str) -> bool {
     let trimmed = url.trim();
     (trimmed.starts_with("https://") || trimmed.starts_with("http://"))
-        && !trimmed.chars().any(|ch| ch.is_whitespace() || ch == '<' || ch == '>')
+        && !trimmed
+            .chars()
+            .any(|ch| ch.is_whitespace() || ch == '<' || ch == '>')
 }
 
 #[tauri::command]
@@ -216,7 +216,7 @@ pub fn open_external_url(url: String) -> Result<(), String> {
             .arg(&url)
             .spawn()
             .map_err(|e| e.to_string())?;
-        return Ok(());
+        Ok(())
     }
     #[cfg(not(target_os = "macos"))]
     {

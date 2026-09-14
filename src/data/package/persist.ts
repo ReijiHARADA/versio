@@ -15,6 +15,13 @@ export const persistMetrics = {
   sqliteExports: 0,
 };
 
+export const packageLoadMetrics = {
+  documentReads: 0,
+  sourcePdfReads: 0,
+  assetReads: 0,
+  layoutReads: 0,
+};
+
 export function resetPersistMetrics(): void {
   persistMetrics.fullPackageWrites = 0;
   persistMetrics.mutableFileWrites = 0;
@@ -23,6 +30,22 @@ export function resetPersistMetrics(): void {
   persistMetrics.layoutWrites = 0;
   persistMetrics.sqliteExports = 0;
 }
+
+export function resetPackageLoadMetrics(): void {
+  packageLoadMetrics.documentReads = 0;
+  packageLoadMetrics.sourcePdfReads = 0;
+  packageLoadMetrics.assetReads = 0;
+  packageLoadMetrics.layoutReads = 0;
+}
+
+export type LoadPaperPackageOptions = {
+  /** Default false for Reader opens — avoid pulling multi‑MB PDFs into the renderer. */
+  includeSourcePdf?: boolean;
+  /** Default false — figures/tables load per-asset on demand. */
+  includeAssets?: boolean;
+  /** Default false — layout is not needed for Reader body projection. */
+  includeLayout?: boolean;
+};
 
 export function paperDir(paperId: string): string {
   return `papers/${paperId}`;
@@ -112,7 +135,12 @@ export async function persistPaperPackage(
   await fs.remove(tmp);
   await writeTree(fs, tmp, next);
 
-  const loaded = await loadPaperPackage(fs, paperId, tmp);
+  const loaded = await loadPaperPackage(fs, paperId, {
+    root: tmp,
+    includeSourcePdf: true,
+    includeAssets: true,
+    includeLayout: true,
+  });
   const recheck = validatePaperPackage(loaded);
   if (!recheck.ok) {
     await fs.remove(tmp);
@@ -131,8 +159,14 @@ export async function persistPaperPackage(
 export async function loadPaperPackage(
   fs: FileSystem,
   paperId: string,
-  root = paperDir(paperId)
+  options: LoadPaperPackageOptions & { root?: string } = {}
 ): Promise<PaperPackage> {
+  const root = options.root ?? paperDir(paperId);
+  const includeSourcePdf = options.includeSourcePdf === true;
+  const includeAssets = options.includeAssets === true;
+  const includeLayout = options.includeLayout === true;
+
+  packageLoadMetrics.documentReads += 1;
   const paperText = await fs.readText(`${root}/paper.json`);
   const originalMarkdown = await fs.readText(`${root}/original.md`);
   const translatedMarkdown = await fs.readText(`${root}/ja.md`);
@@ -144,19 +178,39 @@ export async function loadPaperPackage(
   const structure = JSON.parse(structureText) as StructureFile;
   const translationText = await fs.readText(`${root}/translation.json`);
   const translation = translationText ? (JSON.parse(translationText) as TranslationFile) : undefined;
-  const layoutBytes = await fs.readBytes(`${root}/layout.json.gz`);
-  const layout = layoutBytes ? gunzipJson<LayoutFile>(layoutBytes) : undefined;
-  const sourcePdf = (await fs.readBytes(`${root}/source.pdf`)) ?? undefined;
-  const files = await fs.list(`${root}/assets`);
-  const assets = [];
-  for (const path of files) {
-    const bytes = await fs.readBytes(path);
-    if (!bytes) continue;
-    assets.push({
-      path: path.replace(`${root}/`, ""),
-      bytes,
-    });
+
+  let layout: LayoutFile | undefined;
+  if (includeLayout) {
+    const layoutBytes = await fs.readBytes(`${root}/layout.json.gz`);
+    if (layoutBytes) {
+      packageLoadMetrics.layoutReads += 1;
+      layout = gunzipJson<LayoutFile>(layoutBytes);
+    }
   }
+
+  let sourcePdf: Uint8Array | undefined;
+  if (includeSourcePdf) {
+    const bytes = await fs.readBytes(`${root}/source.pdf`);
+    if (bytes) {
+      packageLoadMetrics.sourcePdfReads += 1;
+      sourcePdf = bytes;
+    }
+  }
+
+  const assets: Array<{ path: string; bytes: Uint8Array }> = [];
+  if (includeAssets) {
+    const files = await fs.list(`${root}/assets`);
+    for (const path of files) {
+      const bytes = await fs.readBytes(path);
+      if (!bytes) continue;
+      packageLoadMetrics.assetReads += 1;
+      assets.push({
+        path: path.replace(`${root}/`, ""),
+        bytes,
+      });
+    }
+  }
+
   return {
     paper,
     originalMarkdown,
@@ -167,6 +221,31 @@ export async function loadPaperPackage(
     assets,
     sourcePdf,
   };
+}
+
+export async function loadPaperAssetBytes(
+  fs: FileSystem,
+  paperId: string,
+  relativePath: string
+): Promise<Uint8Array | null> {
+  const normalized = relativePath.replace(/^\.\//, "").replace(/^\/+/, "");
+  if (!normalized || normalized.includes("..")) return null;
+  const root = paperDir(paperId);
+  const path = normalized.startsWith("assets/")
+    ? `${root}/${normalized}`
+    : `${root}/assets/${normalized}`;
+  const bytes = await fs.readBytes(path);
+  if (bytes) packageLoadMetrics.assetReads += 1;
+  return bytes;
+}
+
+export async function loadSourcePdfBytes(
+  fs: FileSystem,
+  paperId: string
+): Promise<Uint8Array | null> {
+  const bytes = await fs.readBytes(`${paperDir(paperId)}/source.pdf`);
+  if (bytes) packageLoadMetrics.sourcePdfReads += 1;
+  return bytes;
 }
 
 export async function paperPackageExists(fs: FileSystem, paperId: string): Promise<boolean> {

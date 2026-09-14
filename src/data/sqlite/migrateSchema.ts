@@ -279,11 +279,30 @@ function migrateV4ToV5(db: Database): void {
   db.run("PRAGMA foreign_keys = ON");
 }
 
+function migrateV5ToV6(db: Database): void {
+  const columns = tableInfo(db, "papers").map((column) => column.name);
+  if (!columns.includes("needs_translation_resume")) {
+    db.run(
+      "ALTER TABLE papers ADD COLUMN needs_translation_resume INTEGER NOT NULL DEFAULT 0"
+    );
+  }
+  // Backfill from processing status so completed papers never force package loads.
+  db.run(`
+    UPDATE papers SET needs_translation_resume = 1
+    WHERE processing_status IN ('queued','extracting','structuring','glossary','translating','partial','failed')
+  `);
+  db.run(`
+    UPDATE papers SET needs_translation_resume = 0
+    WHERE processing_status = 'ready'
+  `);
+}
+
 const MIGRATIONS: SchemaMigration[] = [
   { from: 1, to: 2, run: migrateV1ToV2 },
   { from: 2, to: 3, run: migrateV2ToV3 },
   { from: 3, to: 4, run: migrateV3ToV4 },
   { from: 4, to: 5, run: migrateV4ToV5 },
+  { from: 5, to: 6, run: migrateV5ToV6 },
 ];
 
 export function applySqliteSchemaMigrations(db: Database): number {
