@@ -2,44 +2,73 @@
 
 PR CI covers TypeScript / Rust / lightweight Python / browser smoke and must not skip important Reader tests for missing fixtures.
 
-Automated pre-steps: `npm run release:acceptance` (lint, test, build, Rust, Python, bench 100, and packaged E2E when a `.app` is already built).
-
-This gate is for a built macOS `.app` (local `npm run tauri:build:clean` or notarized artifact).
-
-Daily local checks may use `npm run tauri:build:fast` (cached Python, `.app` only). Release / CI acceptance must use **clean** so the Python runtime is rebuilt from `requirements.lock` + pinned patch Python and `.dmg` is produced.
+Automated pre-steps: `npm run release:acceptance`.
 
 Browser Playwright smoke alone is **not** packaged acceptance.
 
-## Automated packaged E2E
+## Release flow
 
-```bash
-npm run tauri:build:clean
-npm run packaged:e2e
+```text
+unit/integration checks
+↓
+clean .app build
+↓
+packaged integration E2E (Layer A)
+↓
+sign/notarize .app          (skip if no Apple credentials — label as unsigned)
+↓
+DMG from finalized .app
+↓
+sign/notarize DMG           (same credential gate)
+↓
+packaged UI E2E (Layer B) / Gatekeeper verification
+↓
+release artifact
 ```
 
-Harness: `scripts/packaged-e2e/run.sh`
+When credentials are absent:
 
-- Launches the real `.app` with an isolated `HOME`
-- Imports a tiny offline fixture (`PAPER_READER_ACCEPTANCE=1`, no MADLAD download)
-- Creates an annotation, runs library search, writes an export marker
-- Quits and relaunches; verifies paper + annotation persistence
-- On failure: step log, screenshot, app log, app-data file summary under `scripts/packaged-e2e/artifacts/`
+```text
+unsigned acceptance passed
+signed acceptance not executed
+```
 
-Signing / notarization (optional, secrets required): [MACOS_RELEASE.md](./MACOS_RELEASE.md)
+Do not mark the run as a signed release.
+
+## Layer A — packaged integration (`npm run packaged:e2e:integration`)
+
+Real `.app`, isolated `HOME`, offline fixture, no MADLAD.
+
+Exercises app-data / import pipeline / annotation persistence / search backend /
+export backend / relaunch. Service-assisted bootstrap is allowed here.
+
+**Required:** `searchHits > 0` in `_acceptance/result.json`.
+
+## Layer B — packaged UI E2E (`npm run packaged:e2e:ui`)
+
+Accessibility / System Events drive the real UI:
+
+import (Open panel) → Library card → Reader → memo Save → search UI hits →
+export → quit → relaunch → paper still present.
+
+DOM watcher records `_acceptance/ui-result.json`. Failure artifacts include
+screenshot, step, app log, AX process dump, app-data summary.
+
+`npm run packaged:e2e` runs Layer A then Layer B.
 
 ## Must pass
 
-1. PDF import → Library card _(automated via packaged E2E)_
-2. Reader opens with original text (model may still be loading) _(body blocks + export from original)_
-3. Annotation create / update / delete _(create + relaunch restore automated; update/delete remain manual)_
-4. Library search (⌘K) and in-reader search (⌘F) _(library search automated; ⌘F UI manual)_
+1. PDF import → Library card _(A + B)_
+2. Reader original text _(A + B)_
+3. Annotation create _(A backend; B via memo UI)_
+4. Library / in-reader search with visible results _(A: searchHits>0; B: search UI hits)_
 5. Source PDF open _(manual — Preview / Accessibility)_
-6. Export (Markdown or verification package) _(markdown marker automated)_
-7. App restart → state recovery (position, annotations, paper list) _(paper + annotation automated)_
+6. Export _(A + B)_
+7. Restart recovery _(A + B)_
+
+Signing: [MACOS_RELEASE.md](./MACOS_RELEASE.md)
 
 ## Out of scope for PR CI
 
-- Full MADLAD-400 model download / MPS warmup
-- Notarization / App Store upload (see [MACOS_RELEASE.md](./MACOS_RELEASE.md))
-
-Those belong to nightly or human release acceptance. Translation quality audits stay on the existing audit scripts.
+- Full MADLAD download / MPS warmup
+- Notarization without configured secrets

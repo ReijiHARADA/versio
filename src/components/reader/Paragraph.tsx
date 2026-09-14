@@ -295,6 +295,7 @@ export function Paragraph({
         <mark
           key={i}
           data-annotation-mark=""
+          data-testid="annotation-mark"
           className={`${styles.annotationMark} ${flashing ? styles.annotationFlash : ""}`}
           onClick={(e) => {
             e.preventDefault();

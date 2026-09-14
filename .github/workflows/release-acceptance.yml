@@ -28,8 +28,20 @@ jobs:
         run: npm run release:acceptance
       - name: Packaged app build (clean, no MADLAD)
         run: npm run tauri:build:clean
-      - name: Packaged .app E2E
-        run: npm run packaged:e2e
+      - name: Packaged integration E2E (Layer A)
+        run: npm run packaged:e2e:integration
+      - name: Packaged UI E2E (Layer B)
+        run: npm run packaged:e2e:ui
+      - name: Signing status
+        run: |
+          if [ "${{ secrets.APPLE_SIGNING_IDENTITY }}" != "" ]; then
+            echo "Apple secrets present in repo settings — run signed flow manually or extend this job."
+            echo "This scheduled job remains unsigned unless PAPER_READER_SIGN is wired with a keychain."
+            echo "signed acceptance not executed"
+          else
+            echo "unsigned acceptance passed"
+            echo "signed acceptance not executed"
+          fi
       - name: Upload E2E artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4

@@ -51,7 +51,9 @@ export async function restoreLibraryBackup(
     candidateRoot: string;
     safetyRoot: string;
     restoreStagingRoot: string;
-    failAfter?: "validate" | "safety" | "stage" | "swap";
+    failAfter?: "validate" | "safety" | "stage" | "swap" | "rollback";
+    /** Corrupt staged sqlite after staging validation (simulates bit-rot before swap). */
+    corruptStagedSqlite?: boolean;
   }
 ): Promise<RestoreLibraryBackupResult> {
   const candidate = normalize(options.candidateRoot);
@@ -110,6 +112,20 @@ export async function restoreLibraryBackup(
     throw new Error("injected failure after stage");
   }
 
+  if (options.corruptStagedSqlite) {
+    await fs.writeBytes(
+      join(staging, BACKUP_SQLITE_NAME),
+      new TextEncoder().encode("not-a-sqlite-file".padEnd(120, "x")
+      )
+    );
+    const restaged = await validateLibraryBackup(fs, staging);
+    if (restaged.ok) {
+      throw new Error("expected staged corruption to fail validation");
+    }
+    await fs.remove(staging);
+    throw new Error(`staged SQLite corruption rejected: ${restaged.errors.join("; ")}`);
+  }
+
   try {
     // Swap: clear live papers + sqlite, then copy from staging
     if (options.failAfter === "swap") {
@@ -127,6 +143,9 @@ export async function restoreLibraryBackup(
   } catch (error) {
     // Rollback from safety
     try {
+      if (options.failAfter === "rollback") {
+        throw new Error("injected failure during rollback");
+      }
       await fs.remove("library.sqlite");
       await fs.remove("papers");
       if (await fs.exists(join(safety, BACKUP_SQLITE_NAME))) {

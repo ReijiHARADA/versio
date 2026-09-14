@@ -23,6 +23,7 @@ import {
   maybeRunPackagedAcceptanceImport,
   maybeVerifyPackagedAcceptanceRelaunch,
 } from "./services/packagedAcceptance";
+import { maybeStartUiE2eWatcher } from "./services/uiE2eWatch";
 
 function formatBytes(n: number | null | undefined): string | null {
   if (typeof n !== "number" || !Number.isFinite(n) || n < 0) return null;
@@ -100,6 +101,7 @@ function App() {
       resumeAfterTranslationServerReady();
       return;
     }
+    void maybeStartUiE2eWatcher();
     void maybeVerifyPackagedAcceptanceRelaunch().then(() =>
       maybeRunPackagedAcceptanceImport()
     );

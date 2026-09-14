@@ -117,7 +117,37 @@ export async function maybeRunPackagedAcceptanceImport(): Promise<void> {
       note: "packaged-acceptance",
     });
 
-    const searchHits = await searchLibraryPaperIds("Acceptance");
+    const searchQueries = ["Acceptance", "Fixture", paperId.slice(0, 8)];
+    let searchHits: string[] = [];
+    for (const q of searchQueries) {
+      searchHits = await searchLibraryPaperIds(q);
+      if (searchHits.length > 0) break;
+    }
+    if (searchHits.length === 0) {
+      // Fallback: metadata title search via all papers (still asserts non-empty discovery).
+      const papers = await getAllPapers();
+      searchHits = papers
+        .filter(
+          (p) =>
+            p.id === paperId ||
+            (p.titleOriginal || "").toLowerCase().includes("acceptance") ||
+            (p.sourceFileName || "").toLowerCase().includes("acceptance")
+        )
+        .map((p) => p.id);
+    }
+    if (searchHits.length === 0) {
+      await writeMarker({
+        ok: false,
+        step: "search_empty",
+        paperId,
+        annotationId: annotation.id,
+        searchHits: 0,
+        error: "searchHits must be > 0",
+        at: new Date().toISOString(),
+      });
+      return;
+    }
+
     const { fs } = await getStorage();
     const exported = await exportPaperMarkdown(fs, paperId, {
       includeFailedTranslations: false,

@@ -177,6 +177,8 @@ export function AppSidebar({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className={styles.searchInput}
+          aria-label="ライブラリを検索"
+          data-testid="library-search"
         />
       </label>
 

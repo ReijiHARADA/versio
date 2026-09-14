@@ -88,6 +88,7 @@ const paperArg = args.indexOf("--paper");
 const onlyPaper = paperArg >= 0 ? args[paperArg + 1] : undefined;
 const limitArg = args.indexOf("--limit");
 const perPaperLimit = limitArg >= 0 ? Number(args[limitArg + 1]) : 8;
+const serialArg = args.includes("--serial");
 const endpoint = process.env.MADLAD_BENCH_URL ?? "http://127.0.0.1:8765";
 
 function compact(text: string): string {
@@ -176,7 +177,7 @@ async function translate(texts: string[]): Promise<ServerTranslation[]> {
   // scheduler, rather than this benchmark, which coalesces safe microbatches.
   // Calling /translate/batch here bypassed the client-equivalent source echo
   // fallback path and made audit rows disagree with the actual reader.
-  return Promise.all(texts.map(async (text) => {
+  const one = async (text: string) => {
     const response = await fetch(`${endpoint}/translate`, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -184,7 +185,13 @@ async function translate(texts: string[]): Promise<ServerTranslation[]> {
     });
     if (!response.ok) throw new Error(`translation server ${response.status}: ${await response.text()}`);
     return (await response.json()) as ServerTranslation;
-  }));
+  };
+  if (serialArg) {
+    const results: ServerTranslation[] = [];
+    for (const text of texts) results.push(await one(text));
+    return results;
+  }
+  return Promise.all(texts.map(one));
 }
 
 function extractQuietly(paper: CatalogPaper, pages: Awaited<ReturnType<typeof extractPdfPages>>) {

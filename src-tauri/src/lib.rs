@@ -197,6 +197,8 @@ pub fn run() {
             source_pdf::source_pdf_exists,
             source_pdf::read_dropped_pdf,
             source_pdf::acceptance_fixture_path,
+            source_pdf::ui_e2e_enabled,
+            source_pdf::ui_e2e_fixture_path,
             paper_fs::read_app_file,
             paper_fs::write_app_file,
             paper_fs::app_file_exists,

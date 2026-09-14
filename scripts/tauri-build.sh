@@ -1,8 +1,20 @@
 #!/bin/bash
 # Packaged Tauri build with fast (daily) vs clean (release) modes + phase timings.
 #
-#   bash scripts/tauri-build.sh fast   # cached Python, .app only
-#   bash scripts/tauri-build.sh clean  # clean Python, .app + .dmg
+#   bash scripts/tauri-build.sh fast   # cached Python, .app only (never signed)
+#   bash scripts/tauri-build.sh clean  # clean Python, .app then DMG
+#
+# Clean + signing (optional):
+#   PAPER_READER_SIGN=1 bash scripts/tauri-build.sh clean
+#     → build unsigned .app
+#     → sign/notarize/staple .app
+#     → build DMG from signed .app
+#     → sign/notarize/staple DMG
+#
+# Clean without credentials:
+#   → build unsigned .app
+#   → build unsigned DMG from that .app
+#   (explicitly NOT a signed release)
 #
 # Env:
 #   DEVELOPER_DIR — defaults to Xcode-beta when present
@@ -38,11 +50,9 @@ export PAPER_READER_BUILD_TIMINGS="$TIMING_FILE"
 if [[ "$MODE" == "clean" ]]; then
   export PAPER_READER_PYTHON_BUNDLE_MODE="clean"
   PYTHON_ARG="clean"
-  BUNDLES=(app dmg)
 else
   export PAPER_READER_PYTHON_BUNDLE_MODE="cache"
   PYTHON_ARG="cache"
-  BUNDLES=(app)
 fi
 
 now_ms() {
@@ -67,14 +77,13 @@ read_timing() {
 
 echo "=========================================="
 echo " Paper Reader tauri build ($MODE)"
-echo " bundles: ${BUNDLES[*]}"
 echo " DEVELOPER_DIR=${DEVELOPER_DIR:-'(unset)'}"
+echo " PAPER_READER_SIGN=${PAPER_READER_SIGN:-0}"
 echo "=========================================="
 
 WALL0="$(now_ms)"
 : >"$TIMING_FILE"
 
-# Run prepare phases ourselves so we can time them; skip Tauri's beforeBuildCommand body.
 t0="$(now_ms)"
 bash "$SCRIPT_DIR/bundle-python.sh" "$PYTHON_ARG"
 python_s="$(elapsed_s "$t0")"
@@ -101,17 +110,48 @@ rust_s="$(elapsed_s "$t0")"
 echo "rust_s=$rust_s" >>"$TIMING_FILE"
 echo "⏱  Rust compile: ${rust_s}s"
 
-# Bundle .app (and optionally leave dmg for a separate timed step).
+# Always produce .app first. DMG is built later from the finalized .app so a
+# signed release never packages a pre-sign snapshot into the disk image.
 t0="$(now_ms)"
 npx tauri build --bundles app --ci
 app_bundle_s="$(elapsed_s "$t0")"
 echo "app_bundle_s=$app_bundle_s" >>"$TIMING_FILE"
 echo "⏱  Tauri .app bundle: ${app_bundle_s}s"
 
-dmg_s="0.0"
-if [[ "$MODE" == "clean" ]]; then
+APP_PATH="src-tauri/target/release/bundle/macos/Paper Reader.app"
+DMG_PATH="src-tauri/target/release/bundle/dmg/Paper Reader_0.1.0_aarch64.dmg"
+STAGE_MODE_FILE="src-tauri/bundled-resources/translation-server/.paper-reader-bundle-mode"
+if [[ -f "$STAGE_MODE_FILE" ]]; then
+  STAGED_MODE="$(tr -d '[:space:]' < "$STAGE_MODE_FILE")"
+else
+  STAGED_MODE="unknown"
+fi
+
+if [[ "$MODE" == "clean" && "$STAGED_MODE" != "clean" ]]; then
+  echo "エラー: clean build なのに staged mode=$STAGED_MODE"
+  exit 1
+fi
+
+SIGNED_RELEASE="no"
+dmg_s="skipped"
+
+if [[ "$MODE" == "clean" && "${PAPER_READER_SIGN:-}" == "1" ]]; then
+  echo
+  echo "== Signing / notarization (PAPER_READER_SIGN=1) =="
+  echo "Order: sign .app → notarize/staple → DMG from signed .app → sign DMG"
   t0="$(now_ms)"
-  npx tauri build --bundles dmg --ci
+  # macos-sign-notarize.sh builds the DMG from the signed app (do not pre-build DMG).
+  PAPER_READER_SKIP_DMG=0 bash "$SCRIPT_DIR/macos-sign-notarize.sh"
+  dmg_s="$(elapsed_s "$t0")"
+  echo "dmg_s=$dmg_s" >>"$TIMING_FILE"
+  echo "sign_notarize_s=$dmg_s" >>"$TIMING_FILE"
+  SIGNED_RELEASE="yes"
+elif [[ "$MODE" == "clean" ]]; then
+  echo
+  echo "== Unsigned DMG from .app (credentials not requested) =="
+  echo "Result: unsigned acceptance only — NOT a signed release."
+  t0="$(now_ms)"
+  bash "$SCRIPT_DIR/macos-build-dmg.sh"
   dmg_s="$(elapsed_s "$t0")"
   echo "dmg_s=$dmg_s" >>"$TIMING_FILE"
   echo "⏱  DMG generation: ${dmg_s}s"
@@ -123,20 +163,6 @@ fi
 wall_s="$(elapsed_s "$WALL0")"
 echo "wall_s=$wall_s" >>"$TIMING_FILE"
 
-APP_PATH="src-tauri/target/release/bundle/macos/Paper Reader.app"
-STAGE_MODE_FILE="src-tauri/bundled-resources/translation-server/.paper-reader-bundle-mode"
-if [[ -f "$STAGE_MODE_FILE" ]]; then
-  STAGED_MODE="$(tr -d '[:space:]' < "$STAGE_MODE_FILE")"
-else
-  STAGED_MODE="unknown"
-fi
-
-# Guard: clean release must not ship a cache-mode marker.
-if [[ "$MODE" == "clean" && "$STAGED_MODE" != "clean" ]]; then
-  echo "エラー: clean build なのに staged mode=$STAGED_MODE"
-  exit 1
-fi
-
 echo
 echo "========== Build timings ($MODE) =========="
 printf "  Python runtime prep : %ss\n" "$(read_timing python_prep_s)"
@@ -144,19 +170,16 @@ printf "  Stage resources     : %ss\n" "$(read_timing stage_s)"
 printf "  Frontend build      : %ss\n" "$(read_timing frontend_s)"
 printf "  Rust compile        : %ss\n" "$(read_timing rust_s)"
 printf "  Tauri .app bundle   : %ss\n" "$(read_timing app_bundle_s)"
-printf "  DMG generation      : %s\n" "$(read_timing dmg_s)"
+printf "  DMG / sign phase    : %s\n" "$(read_timing dmg_s)"
 printf "  Wall clock          : %ss\n" "$wall_s"
 echo "==========================================="
 echo "✓ .app: $APP_PATH"
 if [[ "$MODE" == "clean" ]]; then
-  echo "✓ .dmg: src-tauri/target/release/bundle/dmg/Paper Reader_0.1.0_aarch64.dmg"
+  echo "✓ .dmg: $DMG_PATH"
 fi
 echo "  staged python mode: $STAGED_MODE"
+echo "  signed release: $SIGNED_RELEASE"
 echo "  timings file: $TIMING_FILE"
-
-# Optional Developer ID sign + notarize (clean releases only; never fast).
-if [[ "$MODE" == "clean" && "${PAPER_READER_SIGN:-}" == "1" ]]; then
-  echo
-  echo "== Signing / notarization (PAPER_READER_SIGN=1) =="
-  bash "$SCRIPT_DIR/macos-sign-notarize.sh"
+if [[ "$MODE" == "clean" && "$SIGNED_RELEASE" != "yes" ]]; then
+  echo "  note: unsigned acceptance passed path only (set PAPER_READER_SIGN=1 for signed release)"
 fi

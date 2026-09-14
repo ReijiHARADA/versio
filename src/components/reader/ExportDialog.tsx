@@ -61,6 +61,7 @@ export function ExportDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        data-testid="export-dialog"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className={styles.header}>
@@ -159,6 +160,8 @@ export function ExportDialog({
           <button
             className={styles.primary}
             disabled={busy}
+            data-testid="export-confirm"
+            aria-label="書き出しを実行"
             onClick={() =>
               onExport({
                 mode,

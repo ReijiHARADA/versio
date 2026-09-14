@@ -46,11 +46,13 @@ export async function runLibraryBackup(appVersion: string): Promise<{
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const staging = `_library_backups/staging-${stamp}`;
   const finalRoot = `_library_backups/backup-${stamp}`;
+  const consistentSnapshotRoot = `_library_backups/consistent-${stamp}`;
 
   const result = await createLibraryBackupSnapshot(fs, {
     appVersion,
     stagingRoot: staging,
     finalRoot,
+    consistentSnapshotRoot,
   });
 
   let exportedTo: string | null = null;

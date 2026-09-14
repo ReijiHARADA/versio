@@ -23,7 +23,9 @@
 | 元 PDF | **partial** | ページ指定で open。Preview ページジャンプは Accessibility 依存の best-effort。bbox ハイライトは未。Reader open では source.pdf を renderer に載せない |
 | Import UX | **done** | background import、失敗原因の分類、再試行 / 再開、重複時に既存を開く |
 | Import cancel | **done** | AbortSignal を safe checkpoint に伝播。partial-ready 後は原文を残し `needsTranslationResume=false`（自動再開しない）。UI Cancel |
-| Library Backup / Restore | **done** | Settings → データ。`backup.json` + `library.sqlite` + `papers/`。validate → safety snapshot → swap。失敗時ロールバック |
+| Library Backup / Restore | **done** | Settings → データ。consistent snapshot barrier + `PRAGMA quick_check`/`integrity_check`。validate → safety → swap → rollback |
+| Packaged acceptance | **done** | Layer A integration + Layer B UI E2E（`packaged:e2e*`）。browser smoke 単体では代替しない |
+| Developer ID / 公証 | **done** | `.app` 署名・公証後に DMG 生成（[docs/MACOS_RELEASE.md](./docs/MACOS_RELEASE.md)）。fast には掛けない |
 | モデル lifecycle | **done** | process 起動と download/load/warmup 分離。extraction は model ready を待たない。原文 Reader は partial 後すぐ利用可。翻訳は ready 後に開始 / resume |
 | server-ready resume | **done** | `needs_translation_resume`（SQLite schema v6）。completed paper の本文全件再読込なし |
 | セキュリティ | **done** | 本番 CSP、localhost API、CSPRNG token、任意 path write 廃止、PDF path 検証 |
@@ -146,9 +148,9 @@ supported as its direct cause.
 | `npm run tauri:build:fast` → `.app` | 日常確認（cached Python） |
 | `npm run tauri:build:clean` / `tauri:build` → `.app` + `.dmg` | リリース（clean Python）。CI acceptance は clean |
 | PR CI | `.github/workflows/ci.yml`（TS lint/test/build + browser smoke、Rust fmt/clippy/test + Tauri Linux deps、軽量 Python）。MADLAD なし |
-| Packaged acceptance | `npm run packaged:e2e` + `release-acceptance.yml` + [docs/RELEASE_ACCEPTANCE.md](./docs/RELEASE_ACCEPTANCE.md)（実 `.app`。browser smoke 単体では代替しない） |
+| Packaged acceptance | `npm run packaged:e2e`（Layer A+B）+ `release-acceptance.yml` + [docs/RELEASE_ACCEPTANCE.md](./docs/RELEASE_ACCEPTANCE.md) |
 | MADLAD 大容量 download | 通常 CI 外（nightly / human acceptance） |
-| Developer ID / 公証 | [docs/MACOS_RELEASE.md](./docs/MACOS_RELEASE.md)。`npm run macos:sign` / `PAPER_READER_SIGN=1`（clean のみ。fast には掛けない） |
+| Developer ID / 公証 | [docs/MACOS_RELEASE.md](./docs/MACOS_RELEASE.md)。`.app` 署名後に DMG。`PAPER_READER_SIGN=1`（clean のみ） |
 | Windows | 対象外 |
 
 ---
@@ -164,8 +166,11 @@ supported as its direct cause.
 | `npm run verify:browser` | Playwright スモーク |
 | `npm run bench:library` | 100/500 synthetic library 指標（startup / memory proxy / SQLite / search / persist） |
 | `npm run release:acceptance` | release 前自動ゲート + packaged E2E（`.app` があるとき）+ 残 manual 手順 |
-| `npm run packaged:e2e` | 実 `.app` launch → fixture import → annotation/search/export → relaunch |
-| `npm run macos:sign` | Developer ID codesign + notarize + staple + verify（secrets 必須） |
+| `npm run packaged:e2e` | Layer A integration + Layer B UI（実 `.app`） |
+| `npm run packaged:e2e:integration` | Layer A only（service-assisted smoke） |
+| `npm run packaged:e2e:ui` | Layer B only（Accessibility / System Events） |
+| `npm run macos:sign` | Sign `.app` → DMG from signed app → sign DMG + verify |
+| `npm run macos:dmg` | Build DMG from existing `.app`（no Tauri rebuild） |
 | `npm run test:bundle-python` | Python runtime content-hash cache + stage smoke |
 | `npm run tauri:build:fast` | 日常 `.app`（cached Python、未署名） |
 | `npm run tauri:build:clean` | リリース `.app` + `.dmg`（clean Python）。`PAPER_READER_SIGN=1` で公証まで |
@@ -320,6 +325,33 @@ improved, but the product metric did not move; treat this layer as plateaued.
 - v68境界変更（medium concessive split抑制）を含む全21論文・139 rowsで再測定。ordinary-body 48 rows、fallback 14 rows = 29.17%で、v67/v66から変化なし。
 - 変更はthermalの既存accepted blockを壊していないが、残存source fallback/decode failureを減らさなかった。次は単位ごとの品質結果を保持して、長文の一部失敗が段落全体fallbackになる経路を定量化する。
 - ベンチマーク完走後のサーバー停止を確認済み。目標5%以下は未達。
+
+## 2026-09-15 checkpoint: v75 benchmark paused at checkpoint
+
+- v75の全体ベンチマークを再開したが、最初の論文（interactive-jewellery）の8 translation unitsを処理してチェックポイントを保存した時点で停止した。
+- 現在の保存済みレポートは1論文・8 rows、ordinary-body 5 rows、reader-visible fallback 1 row（20%）。これは全体指標ではなく、途中経過として扱う。
+- 実験用translation-serverとベンチマークプロセスは停止済み。次回は保存済みチェックポイントから再開できる。
+- 停止前後に `src/test/quality.test.ts` を再実行し、60/60 tests passed。品質ゲート変更の既存回帰は確認されていない。
+- 保存済みv69 attributionを再集計すると14件は D=2（構造混在）、A=9（完全な本文に対するモデル品質）、E=3（科学記号・レイアウト混入）。7件が1000文字以上、3件が500文字未満で、長文だけに限定されない。次の実装判断はこの内訳を基準にする。
+- 回帰確認：`npm run test:extraction-corpus` は2 files / 40 tests passed、translation-server unittestは83 tests OK。抽出・サーバーの既存回帰は発生していない。
+- 残存failureの優先キューを `TRANSLATION_FAILURE_TRIAGE.md` に追加。A/D/Eを混ぜず、次回は各群の入力単位・出力・品質理由を比較する。
+- ページ境界・段組の回帰も確認：`src/test/readingOrder/readingOrder.test.ts` は27/27 tests passed。既存の明確なcontinuation stitchを維持できている。
+- A分類の認知心理学代表論文を4-unit診断で再測定中、PDF抽出が長時間化したため中断。サーバーログには通常の短いunitsは訳せる一方、`implausibly_short` でbeam retryに入るunitと、統計・固有名詞周辺の不自然な出力が確認できた。測定は完了扱いにせず、サーバーは終了済み。
+- 次回A分類はPDF抽出を再実行せず、`translation-server/benchmarks/translation-unit-fallback-fixtures-v66.json` の固定sourceを使う。whole-unit / safe-clause / protection条件ごとにmodel input・output・token数・quality reasonsを保存し、`translation-unit-diagnosis-v76.json` として比較する。
+- バッチ安全性を強化：`translateBatch` が入力件数と異なる結果配列を返した場合、静かにindex割当せず明示的に失敗するガードを追加。型チェック（`npx tsc --noEmit`）passed。
+- バッチ件数不一致ガードの回帰テストを追加（`src/test/madladEngine.test.ts`、1/1 passed）。
+- 品質・バッチ回帰を統合実行：2 files / 61 tests passed。
+- PDF抽出を介さないA分類一括診断スクリプト `translation-server/scripts/diagnose_fallback_fixtures.py` を追加。固定fixtureのsegmenter unitsとmodel inputsを保存し、次回の同一モデル比較を再現可能にした。py_compileとTypeScript型チェックpassed。
+- v76 fixture診断を実行し `translation-server/benchmarks/translation-unit-diagnosis-v76.json` を生成。3 cases中、cognitiveは4 unitsで完了（ただし出力にGPT-3境界の不自然さあり）、thermalは3 units、linguisticsは3 unitsがいずれも`degenerate translation output`でfallback。PDF抽出を外してもA群の失敗が再現するため、少なくとも一部はモデル/単位品質層に帰属できる。この成果物は原因帰属用であり、最新完全ベンチマークの14/48（29.17%）を改善したものではない。診断後のサーバー・ベンチマークプロセスは停止済み。
+- 固定fixture 3件のsegmenter round-tripを回帰テスト化し、segmenter suiteは39件すべて成功。fixtureの単位分割がsourceの語・句読点を改変していないことを継続検証できる。
+- 翻訳サーバー全体のPython回帰も再実行し、`unittest discover` は84件すべて成功。fixture追加による既存segmenter・citation・quality・microbatch回帰は確認されていない。
+- クライアント側の品質・バッチ回帰（61 tests）とTypeScript型チェックも再実行して成功。現在の品質ゲートとbatch件数不一致ガードは維持されている。
+- `scripts/validate-fallback-attribution.py` を追加し、現行14件の帰属レポートに必須証拠フィールドが揃うことと、分類が A=9 / D=2 / E=3 であることを検証。次回の手動レビュー・実験で古い件数や未分類を混入させない。
+- 帰属14件のsource-integrity内訳を再集計し、`provisional-pass` 13件 / `review` 1件、全件が単一ページのparagraph nodeであることを確認。これは現行fallback集合の証拠であり、全corpusの抽出品質を代表するとは扱わない。
+- 原因・integrity・fallback理由の集計を `translation-fallback-attribution-summary-v77.json` として保存し、`npm run audit:summarize-fallback-attribution` で再生成可能にした。手動レビュー必須フラグと14/48の製品指標も明示している。
+- この検証を `npm run audit:validate-fallback-attribution` として定常実行できるよう package script に登録し、実行成功を確認。
+- 監査検証を強化し、14件のうちdiagnosticsが空の行を警告として可視化。分類の存在だけでは手動レビュー証拠が十分とはみなさない状態にした（現行14件すべてに警告、未分類はなし）。
+- 既存の抽出matchから14件のderived diagnostics（match/line数、column、page、bbox）を補完し、`npm run audit:validate-fallback-attribution` の空欄警告を解消。各行は引き続き `manualReviewRequired=true` で、人手レビュー済みとは扱わない。
 ### Checkpoint: extraction corpus command repaired
 
 - `npm run test:extraction-corpus` was previously wired to the main Vitest config, whose exclude rules caused the real-paper files to be skipped. The new `vitest.extraction.config.ts` makes the command execute both real-paper suites.
@@ -338,3 +370,9 @@ improved, but the product metric did not move; treat this layer as plateaued.
 - v70 direct MPS run confirms the fix reaches production MADLAD input: `et al. [8]` remains inside one 164-character unit, protected only at model encoding, and output contains no isolated citation hallucination. Server reported `3b-mt-v5-semantic-v67`; process exited after the single run.
 - v71 direct MPS recheck of the 245-character `significant-other` A-group fallback now completes as one chunk (66→73 tokens) with a non-degenerate Japanese result under v67. This suggests at least one former transient/model-path failure is recoverable after the pipeline-version/segmentation update, but it is not yet a corpus fallback measurement. Saved as `translation-server/benchmarks/translation-unit-direct-significant-v71.json`.
 - v71 HTTP production-path recheck of the same block returned 200 with the same 1-chunk, 66→73-token result and model version v67. This confirms client-facing server/MicroBatch path does not reproduce that former fallback. Server was explicitly shut down after the request.
+- v72 full 21-paper benchmark under v67 completed (139 rows; 48 ordinary; 14 reader-visible fallbacks = 29.17%, unchanged from v68). The same `significant-other` block that succeeds in an isolated HTTP request still appears as a fallback in the concurrent corpus run, so next investigation must compare request scheduling/batch context and not assume the isolated result generalizes. Server was stopped after completion.
+- v73 concurrency reproduction: the same `significant-other` HTTP request returned byte-identical 73-token output in 3 sequential and 4 concurrent requests. Thus simple request concurrency does not reproduce that row's fallback; the benchmark discrepancy is likely in block selection/cache/report timing or a different generation context, and should not be “fixed” by disabling concurrency.
+- Added `--serial` to `benchmark-real-paper-translation.ts` so future corpus comparisons can run the same sampled blocks sequentially or concurrently. TypeScript typecheck passes; this is diagnostic-only and does not alter production scheduling.
+- Targeted significant-other serial vs concurrent audit (8 samples each) produced identical 3 fallback rows in both modes. The former 245-character block's server output was valid, but the client audit quality gate labeled it `degenerate output` due its phrase-repetition heuristic; a provisional relaxation was rejected by the existing phrase-loop regression test and reverted. This is a confirmed quality-gate false-reject candidate requiring a more discriminating detector, not a gate loosening.
+- Added a narrow, source-length-gated quality adjustment: a single coherent sentence flagged only by phrase repetition may pass when the source is at least 180 characters; multi-sentence loops and short byte/garbage outputs remain rejected. Added regression coverage; quality suite is 60/60. Client cache identity is now `3b-mt-v5-semantic-v67-quality-v1` so prior gate decisions are not reused.
+- Targeted production benchmark after that gate change: `significant-other` 8 sampled units produced 4 ordinary-body rows and 2 ordinary fallbacks; the former 245-character `b-bb2064ca` is now accepted with the same source-grounded output. The remaining fallbacks are separate rows, so this is a local improvement only; full corpus must be remeasured before claiming a rate change.

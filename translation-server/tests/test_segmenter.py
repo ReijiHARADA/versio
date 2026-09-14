@@ -64,6 +64,16 @@ class SegmenterTests(unittest.TestCase):
         self.assertEqual(units, [source])
         self.assert_round_trip(source)
 
+    def test_clean_source_fallback_fixtures_round_trip(self) -> None:
+        fixture_path = Path(__file__).parents[1] / "benchmarks" / "translation-unit-fallback-fixtures-v66.json"
+        fixtures = json.loads(fixture_path.read_text(encoding="utf-8"))
+        self.assertGreaterEqual(len(fixtures["cases"]), 3)
+        for case in fixtures["cases"]:
+            with self.subTest(case=case["id"]):
+                units = segment_for_translation(case["source"])
+                self.assertTrue(validate_round_trip(case["source"], [u.text for u in units]))
+                self.assertTrue(all(len(u.text.split()) >= 4 for u in units), case["id"])
+
     def test_model_input_repairs_lost_apostrophe_without_changing_source(self) -> None:
         source = "“Its not scary like blood pressure, it feels like a costume or sports gear, activity oriented”"
         units = split_for_translation(source)

@@ -1,4 +1,8 @@
 import type { FileSystem } from "../fs/types";
+import {
+  getStorageGeneration,
+  withBackupWriteBarrier,
+} from "./snapshotBarrier";
 import { createBackupManifest, BACKUP_MANIFEST_NAME, BACKUP_PAPERS_DIR, BACKUP_SQLITE_NAME } from "./types";
 import { validateLibraryBackup } from "./validateBackup";
 
@@ -39,11 +43,17 @@ export type CreateLibraryBackupResult = {
   stagingRoot: string;
   paperCount: number;
   manifestPath: string;
+  snapshotGeneration: number;
 };
 
 /**
- * Flush-ready snapshot into an app-data staging tree (caller must flush DB first).
- * Writes to temporary `stagingRoot`, validates, then atomically renames to `finalRoot`.
+ * Consistent snapshot:
+ * 1. short write barrier
+ * 2. copy live library.sqlite + papers/ into immutable snapshotRoot
+ * 3. release barrier (live mutations may resume)
+ * 4. build/validate/promote backup from the immutable snapshot (long work)
+ *
+ * Caller should flush DB before invoking.
  */
 export async function createLibraryBackupSnapshot(
   fs: FileSystem,
@@ -52,33 +62,62 @@ export async function createLibraryBackupSnapshot(
     stagingRoot: string;
     finalRoot: string;
     /** Injected failure for tests. */
-    failAfter?: "copy" | "validate" | "promote";
+    failAfter?: "copy" | "validate" | "promote" | "snapshot";
+    /** Optional immutable snapshot directory (defaults under staging). */
+    consistentSnapshotRoot?: string;
   }
 ): Promise<CreateLibraryBackupResult> {
   const staging = normalize(options.stagingRoot);
   const finalRoot = normalize(options.finalRoot);
+  const snapshotRoot = normalize(
+    options.consistentSnapshotRoot ?? `${staging}__consistent`
+  );
 
   await fs.remove(staging);
   await fs.remove(finalRoot);
+  await fs.remove(snapshotRoot);
 
   if (!(await fs.exists("library.sqlite"))) {
     throw new Error("library.sqlite がありません。先にライブラリを初期化してください");
   }
 
-  await copyFile(fs, "library.sqlite", join(staging, BACKUP_SQLITE_NAME));
+  let snapshotGeneration = 0;
+  await withBackupWriteBarrier(async () => {
+    snapshotGeneration = getStorageGeneration();
+    await copyFile(fs, "library.sqlite", join(snapshotRoot, BACKUP_SQLITE_NAME));
+    if (await fs.exists("papers")) {
+      await copyTree(fs, "papers", join(snapshotRoot, BACKUP_PAPERS_DIR));
+    }
+    if (getStorageGeneration() !== snapshotGeneration) {
+      throw new Error("backup snapshot became inconsistent during copy (concurrent mutation)");
+    }
+    if (options.failAfter === "snapshot") {
+      throw new Error("injected failure after snapshot");
+    }
+  });
 
+  // Long phase outside the barrier: assemble backup from immutable snapshot.
   let paperCount = 0;
-  if (await fs.exists("papers")) {
-    const paperFiles = await fs.list("papers");
+  if (await fs.exists(join(snapshotRoot, BACKUP_PAPERS_DIR))) {
+    const paperFiles = await fs.list(join(snapshotRoot, BACKUP_PAPERS_DIR));
     const ids = new Set<string>();
+    const papersRoot = join(snapshotRoot, BACKUP_PAPERS_DIR);
     for (const file of paperFiles) {
-      const rel = file.startsWith("papers/") ? file.slice("papers/".length) : "";
+      const rel = file.startsWith(papersRoot + "/")
+        ? file.slice(papersRoot.length + 1)
+        : "";
       const id = rel.split("/")[0];
       if (id) ids.add(id);
     }
     paperCount = ids.size;
-    await copyTree(fs, "papers", join(staging, BACKUP_PAPERS_DIR));
+    await copyTree(fs, join(snapshotRoot, BACKUP_PAPERS_DIR), join(staging, BACKUP_PAPERS_DIR));
   }
+
+  await copyFile(
+    fs,
+    join(snapshotRoot, BACKUP_SQLITE_NAME),
+    join(staging, BACKUP_SQLITE_NAME)
+  );
 
   const manifest = createBackupManifest({
     appVersion: options.appVersion,
@@ -93,6 +132,7 @@ export async function createLibraryBackupSnapshot(
   const validation = await validateLibraryBackup(fs, staging);
   if (!validation.ok) {
     await fs.remove(staging);
+    await fs.remove(snapshotRoot);
     throw new Error(`backup validation failed: ${validation.errors.join("; ")}`);
   }
 
@@ -100,7 +140,6 @@ export async function createLibraryBackupSnapshot(
     throw new Error("injected failure after validate");
   }
 
-  // Promote staging → final (rename tree by renaming files)
   await fs.remove(finalRoot);
   const stagedFiles = await fs.list(staging);
   for (const file of stagedFiles) {
@@ -109,6 +148,7 @@ export async function createLibraryBackupSnapshot(
     await copyFile(fs, file, join(finalRoot, rel));
   }
   await fs.remove(staging);
+  await fs.remove(snapshotRoot);
 
   if (options.failAfter === "promote") {
     await fs.remove(finalRoot);
@@ -125,5 +165,6 @@ export async function createLibraryBackupSnapshot(
     stagingRoot: finalRoot,
     paperCount,
     manifestPath: join(finalRoot, BACKUP_MANIFEST_NAME),
+    snapshotGeneration,
   };
 }

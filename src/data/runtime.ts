@@ -1,4 +1,5 @@
 import { isTauriApp } from "../utils/serverReady";
+import { wrapFileSystemWithBackupBarrier } from "./backup/barrierFs";
 import { createIdbFileSystem } from "./fs/idbFs";
 import { createMemoryFileSystem } from "./fs/memoryFs";
 import { createTauriFileSystem } from "./fs/tauriFs";
@@ -16,7 +17,7 @@ let starting: Promise<StorageRuntime> | null = null;
 let testFs: FileSystem | null = null;
 
 export function setTestFileSystem(fs: FileSystem | null): void {
-  testFs = fs;
+  testFs = fs ? wrapFileSystemWithBackupBarrier(fs) : null;
   runtime = null;
   starting = null;
 }
@@ -27,11 +28,13 @@ export async function getStorage(): Promise<StorageRuntime> {
     starting = (async () => {
       const fs =
         testFs ??
-        (isTauriApp()
-          ? createTauriFileSystem()
-          : typeof window === "undefined"
-            ? createMemoryFileSystem()
-            : createIdbFileSystem());
+        wrapFileSystemWithBackupBarrier(
+          isTauriApp()
+            ? createTauriFileSystem()
+            : typeof window === "undefined"
+              ? createMemoryFileSystem()
+              : createIdbFileSystem()
+        );
       const db = await openSqlite(fs);
       runtime = { fs, db };
       return runtime;
@@ -50,7 +53,7 @@ export async function resetStorageForTests(): Promise<void> {
   }
   runtime = null;
   starting = null;
-  testFs = createMemoryFileSystem();
+  testFs = wrapFileSystemWithBackupBarrier(createMemoryFileSystem());
   resetDocumentCache();
   const { resetDatabaseMigrationFlagForTests } = await import("../services/database");
   resetDatabaseMigrationFlagForTests();

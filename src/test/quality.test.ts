@@ -162,6 +162,13 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation(output, source)).toBe(true);
   });
 
+  it("accepts coherent single-sentence prose with a repeated technical term", () => {
+    const source = "Contemporary Jewellery is a rich craft discipline that seeks to extend concepts of jewellery by embracing new materials, processes and perspectives, whilst challenging preconceptions of jewellery and its role in society.";
+    const output = "現代ジュエリーは, 新しい素材, プロセス, 視点を取り入れ, 社会におけるジュエリーの役割に関する先入観に挑戦することによって, ジュエリーコンセプトを拡張しようとする豊かな技術分野である。";
+    expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
+
   it("rejects literal tokenizer byte escapes inside otherwise Japanese output", () => {
     const source = "A camera captures an image from beneath the chin.";
     const output = "カメラは<0xE9><0xA0><0x9A>の下から画像を取得する。";

@@ -4,25 +4,35 @@ Paper Reader is distributed outside the Mac App Store (Developer ID).
 This document covers **clean release** signing only. Fast development builds
 (`npm run tauri:build:fast`) stay unsigned on purpose.
 
-## Flow
+## Correct order
 
 ```text
-npm run tauri:build:clean
+clean build → unsigned .app only
 ↓
-codesign (hardened runtime + entitlements)
+sign nested Mach-O (failure = release failure; no `|| true`)
 ↓
-notarytool submit + wait
+sign .app bundle
 ↓
-stapler staple
+codesign --verify --deep --strict
 ↓
-codesign --verify / spctl --assess / stapler validate
+notarize .app → staple → spctl assess
 ↓
-npm run packaged:e2e   # real .app acceptance
+build DMG from the signed/stapled .app   (never from a pre-sign snapshot)
 ↓
-ship .app + .dmg
+sign / notarize / staple DMG
+↓
+verify DMG (+ mount and verify inner .app)
+↓
+packaged E2E / ship artifacts
 ```
 
-Helper script:
+Scripts:
+
+| Script | Role |
+| --- | --- |
+| `scripts/tauri-build.sh clean` | Build unsigned `.app`; if `PAPER_READER_SIGN=1`, sign then DMG; else unsigned DMG |
+| `scripts/macos-sign-notarize.sh` | Sign/notarize `.app`, then `macos-build-dmg.sh`, then sign DMG |
+| `scripts/macos-build-dmg.sh` | Create `.dmg` from an existing `.app` (no Tauri rebuild) |
 
 ```bash
 export APPLE_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)"
@@ -31,11 +41,20 @@ export APPLE_TEAM_ID="TEAMID1234"
 export APPLE_APP_SPECIFIC_PASSWORD="xxxx-xxxx-xxxx-xxxx"
 # or: export APPLE_NOTARY_PROFILE="paper-reader-notary"
 
-npm run tauri:build:clean
-npm run macos:sign
-# optional one-shot:
-# PAPER_READER_SIGN=1 npm run tauri:build:clean
+PAPER_READER_SIGN=1 npm run tauri:build:clean
+# equivalent split:
+#   npm run tauri:build:clean          # without SIGN → unsigned .app + unsigned DMG
+#   npm run macos:sign                 # signs existing .app and rebuilds DMG from it
 ```
+
+Without Apple credentials:
+
+```text
+unsigned acceptance passed
+signed acceptance not executed
+```
+
+Do **not** treat unsigned artifacts as a signed release.
 
 ## GitHub Actions secrets (recommended names)
 
@@ -49,47 +68,34 @@ Store credentials in repository / org secrets — never in git.
 | `APPLE_ID` | Apple ID email for notarytool |
 | `APPLE_TEAM_ID` | 10-character Team ID |
 | `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password |
-| `APPLE_NOTARY_PROFILE` | Optional keychain profile name (local/CI with unlocked keychain) |
-
-CI sketch (not wired as required PR check):
-
-1. Decode `APPLE_CERTIFICATE_P12` into a temporary keychain
-2. `npm run tauri:build:clean`
-3. `npm run macos:sign`
-4. Upload stapled `.app` / `.dmg` artifacts
-5. `npm run packaged:e2e`
+| `APPLE_NOTARY_PROFILE` | Optional keychain profile name |
 
 ## Verification (required)
-
-Notarization success alone is not enough. After staple:
 
 ```bash
 codesign --verify --deep --strict --verbose=2 "Paper Reader.app"
 spctl --assess --type execute --verbose=4 "Paper Reader.app"
 xcrun stapler validate "Paper Reader.app"
+
+codesign --verify --verbose=2 "Paper Reader_….dmg"
+xcrun stapler validate "Paper Reader_….dmg"
+# mount DMG and re-run codesign/spctl on the inner .app (done by macos-sign-notarize.sh)
 ```
 
 ## Current macOS capabilities vs distribution
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| `macOSPrivateApi: true` | Used | Needed for some window / WebView behaviors. **Conflicts with Mac App Store** sandbox rules — record only; do not change for this release. |
-| Apple Vision OCR | Used | Works with Developer ID; no special entitlement beyond hardened runtime. |
-| Python translation sidecar | Bundled resource | Nested binaries must be signed (script walks Mach-O under `.app`). |
-| Preview page jump | Best-effort | Accessibility / Preview automation — keep on **manual** acceptance. |
-| Filesystem app-data | Used | Standard Application Support path. |
-| Entitlements | `src-tauri/entitlements.plist` | JIT / unsigned executable memory for WebView + wasm; library validation disabled for sidecar; network client/server; user-selected files. |
-
-App Store submission is **out of scope**. Keep `macOSPrivateApi` as-is for Developer ID builds.
-
-## Local vs CI
-
-- Local: use the env vars above, or `xcrun notarytool store-credentials` → `APPLE_NOTARY_PROFILE`.
-- CI: import the `.p12` into a temporary keychain each job; never cache the keychain across forks.
+| `macOSPrivateApi: true` | Used | **Conflicts with Mac App Store** sandbox — recorded only; unchanged for Developer ID. |
+| Apple Vision OCR | Used | Developer ID OK |
+| Python translation sidecar | Bundled | Nested Mach-O must sign successfully |
+| Preview page jump | Best-effort | Keep on **manual** acceptance |
+| Entitlements | `src-tauri/entitlements.plist` | Hardened runtime |
 
 ## Failure modes this flow prevents
 
-- Shipping an ad-hoc / unsigned `.app` that Gatekeeper blocks for third parties
-- Claiming “notarized” without staple / `spctl` verification
-- Accidentally signing the fast daily build path (slowing iteration)
-- Committing Apple credentials into the repository
+- DMG shipping an unsigned / pre-sign `.app`
+- Nested signing failures swallowed by `|| true`
+- Claiming notarized without staple / `spctl`
+- Signing the fast daily build path
+- Committing Apple credentials

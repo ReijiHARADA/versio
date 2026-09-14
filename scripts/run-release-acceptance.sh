@@ -57,19 +57,28 @@ fi
 echo
 APP_DEFAULT="$ROOT/src-tauri/target/release/bundle/macos/Paper Reader.app"
 if [[ "$(uname -s)" == "Darwin" && -d "${PAPER_READER_APP_PATH:-$APP_DEFAULT}" ]]; then
-  run_gate "Packaged .app E2E (real .app, no MADLAD)" npm run packaged:e2e
+  run_gate "Packaged integration E2E (Layer A)" npm run packaged:e2e:integration
+  run_gate "Packaged UI E2E (Layer B)" npm run packaged:e2e:ui
 else
   echo "-- Packaged .app E2E skipped (build .app first: npm run tauri:build:clean)"
 fi
 
 echo
+if [[ "${PAPER_READER_SIGN:-}" == "1" ]]; then
+  echo "== Signed release path requested (PAPER_READER_SIGN=1) =="
+  echo "Ensure Apple credentials are set; see docs/MACOS_RELEASE.md"
+else
+  echo "== Signing status =="
+  echo "unsigned acceptance path (signed acceptance not executed)"
+  echo "For signed release: PAPER_READER_SIGN=1 npm run tauri:build:clean"
+fi
+
+echo
 echo "== Remaining manual acceptance (OS-dependent) =="
 cat <<'EOF'
-Automated: npm run packaged:e2e (import → annotation → search → export → relaunch)
-Manual still required:
 1. Source PDF open / Preview page jump (Accessibility-dependent)
-2. Full UI Reader navigation feel + ⌘K / ⌘F interaction
-3. (Release) PAPER_READER_SIGN=1 npm run tauri:build:clean — see docs/MACOS_RELEASE.md
+2. Full Reader navigation feel (scroll / outline / glossary)
+3. Gatekeeper first-launch experience on a clean Mac (after signed build)
 4. (Nightly) MADLAD ready → translation resume
 Daily unsigned check: npm run tauri:build:fast
 EOF

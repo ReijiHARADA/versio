@@ -47,6 +47,7 @@ test-results/
 # Packaged .app E2E artifacts / generated fixture
 scripts/packaged-e2e/artifacts/
 scripts/packaged-e2e/fixture-tiny.pdf
+scripts/packaged-e2e/artifacts/**/Acceptance.pdf
 
 # Editor directories and files
 .vscode/*

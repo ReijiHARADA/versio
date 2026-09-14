@@ -10,7 +10,7 @@ import type { TranslationEngine, TranslationResult, EngineStatus } from "./types
 // Bump whenever the server-side protection or semantic-unit pipeline changes.
 // It is part of the cache identity, so stale translations produced before the
 // current source-preservation rules are never silently reused.
-export const MADLAD_MODEL_VERSION = "3b-mt-v5-semantic-v67";
+export const MADLAD_MODEL_VERSION = "3b-mt-v5-semantic-v67-quality-v1";
 
 const DEFAULT_SERVER_URL = "http://127.0.0.1:8765";
 
@@ -127,6 +127,11 @@ export class MADLADEngine implements TranslationEngine {
     }
 
     const data = await response.json();
+    if (!Array.isArray(data.results) || data.results.length !== texts.length) {
+      throw new Error(
+        `Batch translation result count mismatch: expected ${texts.length}, got ${Array.isArray(data.results) ? data.results.length : "non-array"}`
+      );
+    }
 
     return data.results.map((r: Record<string, unknown>, index: number) => {
       const translatedText = restoreUtf8ByteEscapes(r.text as string);

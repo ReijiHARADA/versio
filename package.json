@@ -17,7 +17,10 @@
     "bench:library-scale": "npm run bench:library",
     "release:acceptance": "bash scripts/run-release-acceptance.sh",
     "packaged:e2e": "bash scripts/packaged-e2e/run.sh",
+    "packaged:e2e:integration": "bash scripts/packaged-e2e/run-integration.sh",
+    "packaged:e2e:ui": "bash scripts/packaged-e2e/run-ui.sh",
     "macos:sign": "bash scripts/macos-sign-notarize.sh",
+    "macos:dmg": "bash scripts/macos-build-dmg.sh",
     "test:bundle-python": "bash scripts/test-bundle-python-cache.sh",
     "preview": "vite preview",
     "tauri": "tauri",
@@ -31,6 +34,9 @@
     "audit:prepare-review": "npx --yes tsx scripts/prepare-translation-manual-review.ts",
     "audit:summarize-review": "npx --yes tsx scripts/summarize-translation-manual-review.ts",
     "audit:run-pending": "node scripts/run-pending-translation-audit.mjs",
+    "audit:validate-fallback-attribution": "python3 scripts/validate-fallback-attribution.py",
+    "audit:enrich-fallback-diagnostics": "python3 scripts/enrich-fallback-diagnostics.py",
+    "audit:summarize-fallback-attribution": "python3 scripts/summarize-fallback-attribution.py",
     "verify:real-paper-source-policy": "npx --yes tsx scripts/verify-real-paper-source-policy.ts"
   },
   "dependencies": {

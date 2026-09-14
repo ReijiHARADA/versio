@@ -1332,3 +1332,29 @@ The v69 direct fixture diagnosis also completed for the author-year citation sen
 The existing local MLX INT8 MADLAD alternative was load-tested and benchmarked without changing production. It ran successfully, but its representative long introduction omitted several source claims and its title output was truncated, so it is not a safe replacement based on current evidence.
 
 The segmented MLX comparison revealed a general extraction-unit issue: `et al. [8]` was split into an `et al.` fragment and a standalone citation unit, which produced hallucinated output in the latter. The segmenter now treats two-token `et al.` as an abbreviation and keeps the citation attached; 38/38 segmenter tests pass.
+
+### Checkpoint: v75 benchmark paused cleanly (2026-09-15)
+
+The full benchmark was restarted after the quality-gate adjustment and stopped after the first paper completed its 8-unit checkpoint. The persisted report currently contains 1 paper / 8 rows, with 5 ordinary-body rows and 1 reader-visible fallback (20%); this partial sample must not be compared as a corpus-wide rate. Both the benchmark and translation server were then terminated, and the checkpoint remains available for the next continuation.
+
+The TypeScript quality regression suite was rerun at the stop point: 60/60 tests passed. This verifies the current gate change locally, but does not establish the corpus-wide fallback target.
+
+The persisted v69 attribution was rechecked before stopping: 14 failures are classified D=2 (structure mixing), A=9 (model failure on complete prose), and E=3 (scientific/layout contamination). Seven are at least 1,000 characters and three are under 500 characters, so the next experiment must cover both long-unit adequacy and structural contamination.
+
+Regression verification at this checkpoint passed: extraction corpus 40/40 tests and translation-server unittest 83 tests. No production process was left running.
+
+Reading-order regression was also rerun: 27/27 tests passed, including the cross-page continuation stitch case. No extraction change was introduced in this verification step.
+
+An A-cohort diagnostic was started for the cognitive-psychology representative paper (4 units, serial mode) but was stopped when PDF extraction exceeded the bounded run window. Server logs show mixed behavior: ordinary short units translate, while at least one unit is rejected as `implausibly_short` and retried with beam search. This is diagnostic evidence only; the partial run is not included in corpus metrics.
+
+The next A-cohort run is explicitly fixture-based: use the existing fixed sources in `translation-server/benchmarks/translation-unit-fallback-fixtures-v66.json` and compare whole-unit, safe-clause, and protection variants without PDF extraction. Persist raw model inputs/outputs/token counts and quality reasons in `translation-unit-diagnosis-v76.json`.
+
+Batch integrity was hardened: the TypeScript client now rejects a non-array or length-mismatched `/translate/batch` result instead of silently indexing unrelated output onto source blocks. `npx tsc --noEmit` passed.
+
+A regression test covers the mismatch path (`src/test/madladEngine.test.ts`: 1/1 passed), preventing future removal of this safety check.
+
+Combined quality and batch regression run passed: 2 files / 61 tests.
+
+Added `translation-server/scripts/diagnose_fallback_fixtures.py` for reproducible clean-source A-cohort runs. It bypasses PDF extraction, records segmenter units/model inputs and per-fixture output or error, and writes `translation-unit-diagnosis-v76.json`; the script passes Python compilation and the TypeScript typecheck remains green.
+
+Executed the v76 fixture run: cognitive psychology completed 4 units but retained an unnatural GPT-3 boundary in the output; thermal (3 units) and linguistics (3 units) reproduced `degenerate translation output` without PDF extraction. This is direct evidence that at least part of the A cohort is upstream-independent model/unit failure, not a PDF parser artifact. This is attribution evidence only; the latest complete corpus metric remains 14/48 ordinary-body fallbacks (29.17%), and the processes were stopped after capture.

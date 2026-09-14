@@ -249,7 +249,7 @@ export function ReaderScreen() {
   } as React.CSSProperties;
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-testid="reader-screen" aria-label="リーダー">
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <button
@@ -306,6 +306,7 @@ export function ReaderScreen() {
             onClick={() => setShowSearch(!showSearch)}
             aria-label="検索 (⌘F)"
             data-tooltip="検索 (⌘F)"
+            data-testid="reader-search-open"
           >
             <Search size={20} />
           </button>
@@ -321,6 +322,7 @@ export function ReaderScreen() {
             className={`${styles.iconButton} ${showExport ? styles.active : ""}`}
             aria-label="書き出す"
             data-tooltip="書き出す"
+            data-testid="export-open"
             onClick={() => {
               setShowExport(true);
               setExportStatus(null);
@@ -352,7 +354,13 @@ export function ReaderScreen() {
           </aside>
         )}
 
-        <main className={styles.content} style={contentStyle} ref={contentRef}>
+        <main
+          className={styles.content}
+          style={contentStyle}
+          ref={contentRef}
+          data-testid="reader-body"
+          aria-label="論文本文"
+        >
           <PaperContent
             ref={paperContentRef}
             paper={paper}

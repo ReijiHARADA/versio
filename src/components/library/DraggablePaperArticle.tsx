@@ -39,6 +39,8 @@ export function DraggablePaperArticle({
       role="button"
       tabIndex={0}
       onKeyDown={handleKeyDown}
+      data-testid="paper-card"
+      aria-label={`論文 ${label}`}
     >
       {children}
     </article>

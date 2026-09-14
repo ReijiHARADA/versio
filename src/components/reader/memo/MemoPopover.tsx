@@ -97,6 +97,7 @@ export function MemoPopover({
       role="dialog"
       aria-label={title}
       data-memo-popover="true"
+      data-testid="memo-popover"
       className={styles.popover}
       style={{ top: placement.top, left: placement.left }}
     >
@@ -122,6 +123,7 @@ export function MemoPopover({
               disabled={saving}
               placeholder="メモを入力…"
               aria-label="メモを入力"
+              data-testid="memo-note-input"
               onChange={(event) => onNoteChange(event.target.value)}
               onKeyDown={(event) => {
                 if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
@@ -157,6 +159,8 @@ export function MemoPopover({
                   className={styles.primary}
                   onClick={onSave}
                   disabled={saving}
+                  data-testid="memo-save"
+                  aria-label="メモを保存"
                 >
                   {saving ? "保存中…" : "保存"}
                 </button>

@@ -400,13 +400,15 @@ export function evaluateJaTranslation(output: string, source: string): Translati
 
 export function isPlausibleJaTranslation(output: string, source: string): boolean {
   const quality = evaluateJaTranslation(output, source);
+  const repetitionOnly = quality.reasons.length === 1 && quality.reasons[0] === "degenerate output";
+  const sentenceCount = output.split(/[。！？!?]+/).map((part) => part.trim()).filter(Boolean).length;
   // A preserved grant name or researcher name may legitimately remain Latin.
   // The weighted score handles ordinary quality differences, while scientific
   // facts have an explicit hard safety check below.
   // Never accept a fluent sentence which dropped a citation, statistic,
   // measurement, DOI/URL, or method acronym. The model may be retried by the
   // caller; otherwise keeping the original is safer than changing a result.
-  return !isDegenerateTranslation(output)
+  return (!isDegenerateTranslation(output) || (repetitionOnly && sentenceCount <= 1 && source.trim().length >= 180))
     && !invariantQuality(source, output).criticalMissing
     && !quality.reasons.includes("long source was implausibly shortened")
     && !quality.reasons.includes("source negation missing")

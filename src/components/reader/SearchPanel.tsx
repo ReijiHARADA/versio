@@ -129,7 +129,13 @@ export function SearchPanel({
   };
 
   return (
-    <div className={styles.panel} data-search-panel="">
+    <div
+      className={styles.panel}
+      data-search-panel=""
+      data-testid="reader-search-panel"
+      role="search"
+      aria-label="論文内検索"
+    >
       <div className={styles.header}>
         <div className={styles.inputWrapper}>
           <Search size={16} className={styles.searchIcon} />
@@ -141,6 +147,8 @@ export function SearchPanel({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
+            aria-label="論文内を検索"
+            data-testid="reader-search-input"
           />
           {query && (
             <button
@@ -177,6 +185,7 @@ export function SearchPanel({
                     className={`${styles.resultItem} ${
                       index === selectedIndex ? styles.selected : ""
                     }`}
+                    data-testid="search-hit"
                     onClick={() => {
                       setSelectedIndex(index);
                       onResultClick(result.block.id);

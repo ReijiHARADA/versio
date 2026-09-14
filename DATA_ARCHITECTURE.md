@@ -206,9 +206,21 @@ Paper Reader Backup/
 └── papers/<paperId>/…   # full Paper Packages (source PDF, markdown, assets, …)
 ```
 
-Create path: flush pending SQLite persist → write staging tree → validate → promote.
-Restore path: validate candidate (no live mutation) → safety snapshot of current data →
-stage → swap → on failure roll back from safety. Invalid backups leave the live library unchanged.
+Create path:
+
+1. `flushPersistence()`
+2. short **write barrier** (library.sqlite / papers writers wait)
+3. copy live data into an immutable consistent snapshot directory
+4. release barrier (UI mutations resume)
+5. assemble / validate / promote backup from the snapshot (long work)
+
+Validation includes SQLite `PRAGMA quick_check` / `integrity_check`, required tables,
+critical `papers` columns, and `foreign_key_check`. Older schema versions that the
+app can migrate are warnings, not hard failures (future schemas are rejected).
+
+Restore path: validate candidate (no live mutation) → safety snapshot → stage →
+swap → on failure roll back from safety. Invalid / corrupt SQLite leaves the live
+library unchanged.
 
 Implementation: `src/data/backup/*`, `src/services/libraryBackup.ts`, Tauri
 `export_app_directory` / `import_directory_to_app`.

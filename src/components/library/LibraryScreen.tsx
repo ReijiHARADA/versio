@@ -55,7 +55,9 @@ export function LibraryScreen() {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".pdf"
+        accept="application/pdf,.pdf"
+        data-testid="library-add-pdf-input"
+        aria-label="PDFファイルを選択"
         className={styles.hiddenInput}
         onChange={(e) => {
           const f = e.target.files?.[0];

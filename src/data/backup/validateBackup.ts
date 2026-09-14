@@ -5,6 +5,7 @@ import {
   PACKAGE_SCHEMA_VERSION,
   SQLITE_SCHEMA_VERSION,
 } from "../schemaVersion";
+import { validateSqliteBackupBytes } from "./sqliteIntegrity";
 import {
   BACKUP_MANIFEST_NAME,
   BACKUP_PAPERS_DIR,
@@ -53,7 +54,7 @@ export async function readBackupManifest(
 export async function validateLibraryBackup(
   fs: FileSystem,
   backupRoot: string,
-  options?: { skipPackageBodies?: boolean }
+  options?: { skipPackageBodies?: boolean; skipSqliteIntegrity?: boolean }
 ): Promise<BackupValidationResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -95,6 +96,29 @@ export async function validateLibraryBackup(
   const sqlitePath = join(root, BACKUP_SQLITE_NAME);
   if (!(await fs.exists(sqlitePath))) {
     errors.push("library.sqlite がありません");
+  } else if (!options?.skipSqliteIntegrity) {
+    const bytes = await fs.readBytes(sqlitePath);
+    if (!bytes) {
+      errors.push("library.sqlite を読めません");
+    } else {
+      const integrity = await validateSqliteBackupBytes(bytes);
+      errors.push(...integrity.errors);
+      warnings.push(...integrity.warnings);
+      if (
+        integrity.schemaVersion != null &&
+        manifest.sqliteSchemaVersion !== integrity.schemaVersion
+      ) {
+        if (integrity.schemaVersion > manifest.sqliteSchemaVersion) {
+          errors.push(
+            `backup.json sqliteSchemaVersion=${manifest.sqliteSchemaVersion} と DB meta=${integrity.schemaVersion} が不一致です`
+          );
+        } else {
+          warnings.push(
+            `backup.json sqliteSchemaVersion=${manifest.sqliteSchemaVersion} / DB meta=${integrity.schemaVersion}（migration 想定）`
+          );
+        }
+      }
+    }
   } else {
     const bytes = await fs.readBytes(sqlitePath);
     if (!bytes || bytes.byteLength < 100) {
@@ -140,12 +164,11 @@ export async function validateLibraryBackup(
   if (!options?.skipPackageBodies) {
     for (const paperId of paperIds) {
       try {
-        // loadPaperPackage expects papers/<id> under FS root — use a view fs rooted at backup
-        const pkg = await loadPaperPackage(
-          prefixFileSystem(fs, root),
-          paperId,
-          { includeSourcePdf: false, includeAssets: false, includeLayout: false }
-        );
+        const pkg = await loadPaperPackage(prefixFileSystem(fs, root), paperId, {
+          includeSourcePdf: false,
+          includeAssets: false,
+          includeLayout: false,
+        });
         if (pkg.paper.paperId !== paperId) {
           errors.push(`package ID mismatch: dir=${paperId} paper.json=${pkg.paper.paperId}`);
         }
