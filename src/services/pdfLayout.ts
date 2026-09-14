@@ -1215,7 +1215,20 @@ function isSentenceContinuation(left: string, right: string): boolean {
   if (/[.!?]$/.test(a)) return false;
   if (a.endsWith("-") && /^[a-z]/.test(b)) return true;
   if (isGrantNumberContinuation(a, b)) return true;
-  return /^[a-z(]/.test(b);
+  if (/^[a-z(]/.test(b)) return true;
+  // Native PDF extraction can preserve a wrapped continuation with an
+  // uppercase first word (for example, a proper noun or the start of a
+  // parenthetical phrase).  Only accept this across a page/column boundary
+  // when the preceding fragment ends in a syntactic connector.  This keeps
+  // independent title/paragraph blocks from being merged merely because the
+  // left block lacks terminal punctuation.
+  const lastWord = a.match(/[A-Za-z][A-Za-z'’-]*$/)?.[0].toLowerCase();
+  return (
+    a.length >= 80 &&
+    !!lastWord &&
+    /^(?:and|or|but|nor|to|of|for|from|with|in|on|by|that|which|as|than|via)$/.test(lastWord) &&
+    /^[A-Z(]/.test(b)
+  );
 }
 
 function normalizedRunningText(text: string): string {

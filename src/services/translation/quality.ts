@@ -15,6 +15,18 @@ const LEFTOVER_PLACEHOLDER = /[zζΖ][zζΖ]c[iιΙіІ]t\d+(?:x\d+)?[zζΖ][zζ
 const SOURCE_NEGATION = /\b(?:(?:do|does|did|is|are|was|were|has|have|had)\s+not|cannot|can\s+not|never|without|lack(?:s|ed|ing)?|absence)\b/i;
 const JA_NEGATION = /(?:ない|なく|なかっ|ません|ず|ぬ|無|非|不|未|欠|否)/;
 
+/** Restore valid UTF-8 byte tokens if an older bundled server emitted them. */
+export function restoreUtf8ByteEscapes(text: string): string {
+  return text.replace(/(?:<0x[0-9a-f]{2}>)+/gi, (run) => {
+    const bytes = [...run.matchAll(/<0x([0-9a-f]{2})>/gi)].map((m) => Number.parseInt(m[1], 16));
+    try {
+      return new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(bytes));
+    } catch {
+      return run;
+    }
+  });
+}
+
 
 export type PartialSourceFallbackDetection = { partial: boolean; reason?: string };
 

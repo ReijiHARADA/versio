@@ -612,12 +612,13 @@ class MADLADEngine(TranslationEngine):
         for i, chunk in enumerate(chunks):
             seq = outputs[i]
             piece = self._tokenizer.decode(seq, skip_special_tokens=True).strip()
+            piece = self._restore_byte_escapes(piece)
             cites, nonce = cite_maps[i]
             piece = restore_citations(piece, cites, nonce)
             if enumeration_prefixes[i]:
                 piece = f"{enumeration_prefixes[i]} {piece}".strip()
             if self._is_degenerate(piece, chunk, target_language):
-                print(f"[TRANSLATE] Rejected batch chunk: {piece[:120]!r}", flush=True)
+                print(f"[TRANSLATE] Rejected batch chunk ({self._degenerate_reason(piece, chunk, target_language)}): {piece[:120]!r}", flush=True)
                 raise ValueError("degenerate translation output")
             print(
                 f"[TRANSLATE] batch {in_toks[i]}->{int(seq.shape[0])}: {piece[:120]!r}",
@@ -663,16 +664,31 @@ class MADLADEngine(TranslationEngine):
             outputs[0],
             skip_special_tokens=True,
         ).strip()
+        translated_text = self._restore_byte_escapes(translated_text)
         translated_text = restore_citations(translated_text, cites, nonce)
         if enumeration_prefix:
             translated_text = f"{enumeration_prefix} {translated_text}".strip()
         if self._is_degenerate(translated_text, text, target_language):
             label = f" {retry_label}" if retry_label else ""
-            print(f"[TRANSLATE] Rejected{label} chunk: {translated_text[:120]!r}", flush=True)
+            print(f"[TRANSLATE] Rejected{label} chunk ({self._degenerate_reason(translated_text, text, target_language)}): {translated_text[:120]!r}", flush=True)
             raise ValueError("degenerate translation output")
         label = f" {retry_label}" if retry_label else ""
         print(f"[TRANSLATE]{label} chunk {input_tokens}->{outputs.shape[1]}: {translated_text[:120]!r}", flush=True)
         return translated_text, input_tokens, int(outputs.shape[1])
+
+    @staticmethod
+    def _restore_byte_escapes(text: str) -> str:
+        """Decode contiguous UTF-8 byte tokens emitted by the tokenizer."""
+        pattern = re.compile(r"(?:<0x[0-9A-Fa-f]{2}>)+")
+
+        def replace(match: re.Match[str]) -> str:
+            values = re.findall(r"<0x([0-9A-Fa-f]{2})>", match.group(0))
+            try:
+                return bytes(int(value, 16) for value in values).decode("utf-8")
+            except UnicodeDecodeError:
+                return match.group(0)
+
+        return pattern.sub(replace, text)
 
     @staticmethod
     def _detach_enumeration_prefix(text: str) -> tuple[str, str]:
@@ -756,6 +772,24 @@ class MADLADEngine(TranslationEngine):
             if MADLADEngine._contains_untranslated_source_span(output, source):
                 return True
         return False
+
+    @staticmethod
+    def _degenerate_reason(output: str, source: str, target_language: str) -> str:
+        """Return a compact diagnostic label without changing acceptance."""
+        compact = "".join(output.split())
+        if not compact:
+            return "empty"
+        if re.search(r"<0x[0-9a-f]{2}>", output, re.I):
+            return "byte_escape"
+        if re.search(r"(.)\1{7,}", compact):
+            return "character_repetition"
+        if MADLADEngine._is_implausibly_short_unit(output, source):
+            return "implausibly_short"
+        if MADLADEngine._contains_untranslated_source_span(output, source):
+            return "source_span"
+        if target_language == "ja" and not re.search(r"[\u3040-\u30ff\u4e00-\u9fff]", output):
+            return "no_japanese_script"
+        return "quality_guard"
 
     @staticmethod
     def _normalize_for_source_overlap(text: str) -> str:

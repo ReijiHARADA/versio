@@ -42,13 +42,23 @@
 - **FTS**: annotation CRUD と translation checkpoint で per-paper incremental refresh
 - **ReaderScreen**: hooks に分割（document / glossary / search / annotations / export / translation resume / reading position）。挙動は維持
 - **抽出**: `extractAcademicPdf` → CanonicalDocument → Package。詳細は [ACADEMIC_PDF_EXTRACTION_ARCHITECTURE.md](./ACADEMIC_PDF_EXTRACTION_ARCHITECTURE.md)
-- **翻訳**: MADLAD-400 3B / MPS / bf16、文バッチ既定 24、品質ゲート。監査手順は [TRANSLATION_CORPUS_AUDIT.md](./TRANSLATION_CORPUS_AUDIT.md)
+- **翻訳**: MADLAD-400 3B / MPS / bf16、文バッチ既定 24、品質ゲート（pipeline v61）。監査手順は [TRANSLATION_CORPUS_AUDIT.md](./TRANSLATION_CORPUS_AUDIT.md)
 - **硬化メモ**: [P0_HARDENING.md](./P0_HARDENING.md)
 - **packaged acceptance**: [docs/RELEASE_ACCEPTANCE.md](./docs/RELEASE_ACCEPTANCE.md)
 
 ---
 
 ## Known limitations / 残課題
+
+### 2026-09-15 停止 checkpoint
+
+- v58 full corpus audit は完了済み（21 papers / 206 rows）。ordinary body の reader-visible fallback は 17/74 = 22.97% で、目標の 5% 以下には未到達。
+- 残差改善候補として `facebook/m2m100_1.2B` の比較実験を開始したが、区切りのよい時点で停止。レポート `test-data/real-papers/reports/model-cascade-v58-m2m12-ordinary.json` は保持しているため、再開時に内容を評価すること。production のモデル切替は未実施。
+- 現在、corpus audit / model comparison の長時間プロセスは停止済み。翻訳サーバーを起動していた場合は開発用の常駐プロセスとして別途扱う。
+- 次の再開手順: (1) m2m12 レポートの7件を品質ゲートで再評価、(2) v58 fallback 17件の原因別確認、(3) 改修は before/after 指標を取れる一般化可能なものだけ実施、(4) full audit を再実行。
+- 停止前の回帰確認: Vitest 85 tests passed、translation-server unittest 72 tests passed。代替モデル比較は5件生成済み（レポートの `count=5`）。
+- 追加修正: MADLADが出力する連続UTF-8 byte escape（`<0xHH>`）を、完全なUTF-8列だけ復元してから品質判定するようにした。不正列は従来どおり拒否する。translation-server unittest 74 tests passed。
+- v63調査結果: 長段落の生成上限を384へ上げても最長fallback（1,063文字）はsource fallbackのままだったため、256へ戻した。救済分割のfragment閾値変更は既存回帰を壊したため不採用。現在のfull corpusはordinary 74件中fallback 15件（20.27%）。
 
 - Citation / 用語 Popover の authors・title はヒューリスティック。構造化抽出の強化は extraction 側
 - Preview ページジャンプは失敗しても PDF 自体は開く
@@ -106,4 +116,3 @@ Reader open は source.pdf / assets を読まない前提。native SQLite の必
 `verify:browser` は preview/dev サーバ起動前提。workspace 子フォルダ見出し待ちでタイムアウトすることがある（既知フレーク）。CI では build 後に `vite preview` を立てて実行する。
 
 Python PR CI は torch 不要の `tests.test_citation_protect` を実行。`micro_batcher` / `segmenter`（MADLADEngine import）はローカル／nightly（torch あり）向け。
-

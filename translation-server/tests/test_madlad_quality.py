@@ -6,6 +6,20 @@ from engines.madlad_mps import MADLADEngine
 
 
 class MadladUnitQualityTests(unittest.TestCase):
+    def test_degenerate_reason_labels_are_stable(self) -> None:
+        source = "This is a sufficiently long academic sentence for testing."
+        self.assertEqual(MADLADEngine._degenerate_reason("", source, "ja"), "empty")
+        self.assertEqual(MADLADEngine._degenerate_reason("本文 <0xE8>", source, "ja"), "byte_escape")
+        self.assertEqual(MADLADEngine._degenerate_reason("aaaaaaaaaaaaaaaa", source, "ja"), "character_repetition")
+
+    def test_restores_contiguous_utf8_byte_escapes(self) -> None:
+        encoded = "胸部の<0xE8><0x90><0xBC>片と<0xE9><0xA0><0x9A>部"
+        self.assertEqual(MADLADEngine._restore_byte_escapes(encoded), "胸部の萼片と頚部")
+
+    def test_leaves_invalid_byte_escape_runs_visible(self) -> None:
+        encoded = "本文 <0xE8><0x90>"
+        self.assertEqual(MADLADEngine._restore_byte_escapes(encoded), encoded)
+
     def test_rejects_long_natural_language_unit_reduced_to_its_conclusion(self) -> None:
         source = (
             "While the smaller sample has a larger variance, the correct answer "

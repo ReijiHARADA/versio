@@ -10,6 +10,7 @@ import {
   extractScientificInvariants,
   isExpectedNonProseParagraph,
   unsafeParagraphStructureReason,
+  restoreUtf8ByteEscapes,
 } from "../services/translation/quality";
 import { resolveImportConfig } from "../services/import/helpers";
 import { analyzeStructure } from "../services/structureService";
@@ -166,6 +167,11 @@ describe("isPlausibleJaTranslation", () => {
     const output = "カメラは<0xE9><0xA0><0x9A>の下から画像を取得する。";
     expect(isDegenerateTranslation(output)).toBe(true);
     expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("restores valid tokenizer byte escapes before the client gate", () => {
+    expect(restoreUtf8ByteEscapes("胸部の<0xE8><0x90><0xBC>片")).toBe("胸部の萼片");
+    expect(restoreUtf8ByteEscapes("本文 <0xE8><0x90>")).toBe("本文 <0xE8><0x90>");
   });
 
   it("rejects leftover scientific placeholders even with Latin lookalike glyphs", () => {

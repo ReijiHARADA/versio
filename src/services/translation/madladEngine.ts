@@ -4,13 +4,13 @@
  * Connects to the local MADLAD translation server.
  */
 
-import { isPlausibleJaTranslation } from "./quality";
+import { isPlausibleJaTranslation, restoreUtf8ByteEscapes } from "./quality";
 import type { TranslationEngine, TranslationResult, EngineStatus } from "./types";
 
 // Bump whenever the server-side protection or semantic-unit pipeline changes.
 // It is part of the cache identity, so stale translations produced before the
 // current source-preservation rules are never silently reused.
-export const MADLAD_MODEL_VERSION = "3b-mt-v5-semantic-v57";
+export const MADLAD_MODEL_VERSION = "3b-mt-v5-semantic-v61";
 
 const DEFAULT_SERVER_URL = "http://127.0.0.1:8765";
 
@@ -77,10 +77,11 @@ export class MADLADEngine implements TranslationEngine {
     }
 
     const data = await response.json();
-    const translatedText =
+    const translatedText = restoreUtf8ByteEscapes(
       (typeof data.text === "string" && data.text) ||
       (typeof data.translated_text === "string" && data.translated_text) ||
-      "";
+      ""
+    );
 
     if (!translatedText) {
       throw new Error("Translation server returned empty text");
@@ -128,7 +129,7 @@ export class MADLADEngine implements TranslationEngine {
     const data = await response.json();
 
     return data.results.map((r: Record<string, unknown>, index: number) => {
-      const translatedText = r.text as string;
+      const translatedText = restoreUtf8ByteEscapes(r.text as string);
       // Keep single and batch APIs semantically identical.  The server may
       // return its source as a safe per-unit fallback; it must never be
       // treated as a completed Japanese translation by a future batch caller.

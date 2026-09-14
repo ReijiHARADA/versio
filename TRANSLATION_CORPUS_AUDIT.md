@@ -991,4 +991,135 @@ After restarting the development server with v56, the same OzCHI fixture
 produced 0/2 ordinary-body fallbacks. The mixed bullet/prose block is now
 represented as independent canonical blocks, so a failed bullet no longer
 forces the following ordinary paragraph to fallback. This is a spot result;
-the full-corpus 5% target remains unverified.
+ the full-corpus 5% target remains unverified.
+
+### v57 audit checkpoint — stopped at user request
+
+The v57 full-corpus run was intentionally stopped after the
+`fashion-hybrid-cmf` paper checkpoint. Per-paper checkpoint state remains
+available for resume; the aggregate `translation-audit.json` is marked
+`complete: false` and must not be treated as a corpus result. The development
+translation server remains healthy on port 8766 with model version
+`3b-mt-v5-semantic-v57`.
+
+### v58 page-boundary continuation refinement
+
+Audit aggregation showed 11 fallback rows caused by incomplete paragraph
+endings. The layout continuation predicate now accepts an uppercase next-page
+fragment only when the preceding fragment is substantial and ends with a
+syntactic connector such as `and`, `to`, `of`, or `which`. This targets wrapped
+proper-noun and parenthetical continuations while avoiding generic uppercase
+paragraph merges. TypeScript reading-order and quality tests remain green
+(85 tests).
+
+The v58 Thermal Earring spot rerun completed with 12 sampled units and 3
+ordinary-body rows; 1 remained a server source fallback. This is consistent
+with the prior spot result and does not yet demonstrate a corpus-wide fallback
+reduction, so the full v57/v58 audit remains pending.
+
+### v58 sampled corpus rerun
+
+The completed v58 run sampled four units per catalog paper (21 papers, 71
+rows). It contained 28 ordinary-body rows, of which 9 returned reader-visible
+fallback (32.1%). This smaller stratified sample is not directly comparable to
+the earlier 12-unit full report, but it confirms that the 5% target is not yet
+met and keeps per-paper checkpoints in the generated report.
+
+A direct retry of the longest remaining Thermal Earring discussion paragraph
+still returned source fallback after v58. Server logs show several fluent
+Japanese sentence decodes followed by rejected units and rescue attempts; the
+failure is therefore a model/quality-gate decision rather than a page-boundary
+fragment. The relaxed cross-language length guard did not make this case pass,
+so further threshold loosening would not be a justified fix.
+
+The v57 server was also checked with the fixed OzCHI citation sentence. A
+direct `/translate` request produced a 32-token input and 44-token Japanese
+output while preserving the complete author-year citation group; no
+hallucinated numeric or citation content appeared in this run. This is a
+single deterministic spot check and does not replace the stopped corpus
+benchmark.
+
+### v59 length-guard calibration experiment
+
+Lowering the collapse-ratio guard from `0.20` to `0.15` made the reproduced
+paragraph return Japanese output, but it failed three existing safety tests for
+omitted qualifications and coordinated findings. The experiment was reverted;
+production remains at the tested `0.28` threshold. This confirms that reducing
+fallback by weakening this guard is unsafe without a stronger semantic check.
+
+The server intentionally uses an all-or-nothing paragraph boundary: if any
+translation unit exhausts greedy, beam, and rescue attempts, the request
+returns the original paragraph. Joining the other units with one English
+fragment would lower the headline fallback count but create a mixed-language
+partial fallback, which the existing source-span guard rejects. Future work
+therefore needs validated unit-level quality results and an explicit reader
+presentation policy before relaxing this boundary.
+
+### v58 full stratified audit result
+
+The resumed 12-unit run completed for all 21 catalog papers (206 rows). Among
+74 ordinary-body rows, 17 returned reader-visible fallback (22.97%), down from
+the v56 baseline of 20/74 (27.03%). Seven failures were server source
+fallbacks and four were degenerate outputs; the remainder were invariant or
+negation guards requiring manual semantic review. The result is an improvement
+but remains above the <=5% product target.
+
+In the same v58 report, ordinary-body fallback by catalog discipline was:
+HCI 0/5, cognitive psychology 3/7, marketing 0/6, linguistics 2/4,
+education 0/3, neuroscience 2/6, and uncategorized/other 10/42. The
+uncategorized group dominates the residual count, so the next model-quality
+experiment should sample those failures rather than tune a single discipline.
+
+### v60 checkpoint — local fallback model comparison paused
+
+The retained `facebook/m2m100_1.2B` comparison contains five ordinary-body
+examples. Its outputs are fluent in places but show clear semantic drift,
+omissions, malformed terminology, and source-specific substitutions (for
+example, “SAMT3”/“Synformer BER” in technical prose). Because this model was
+not evaluated by the production quality gate at generation time and is not
+consistently faithful, it is **not** enabled as an automatic fallback or
+cascade. The experiment process was stopped at this checkpoint; the JSON
+report remains available for a later scored comparison against MADLAD.
+
+### v62 runtime spot check
+
+After restarting the development server, startup reported
+`3b-mt-v5-semantic-v61`. The OzCHI author-year citation sentence was translated
+in one request with the complete citation group preserved and no byte escapes
+or invented numeric content. This confirms the v61 server/client path is
+active; it is a spot check and does not change the v58 corpus rate.
+
+### v61 full corpus rerun
+
+The full 12-unit-per-paper audit was rerun against the restarted v61 server
+(21 papers, 206 rows). Ordinary-body fallback decreased from 17/74 (22.97%)
+to 15/74 (20.27%). Degenerate outputs decreased from four to two; the
+remaining seven server source fallbacks and invariant/negation cases remain.
+The improvement is consistent with byte-escape restoration but is far above
+the 5% product target, so no completion claim is made.
+
+### v63 output-cap experiment
+
+Raising the per-unit generation cap from 256 to 384 tokens was tested against
+the longest remaining ordinary-body fallback (1,063 source characters). It
+still returned a complete source fallback after rescue attempts, so the cap
+did not address the failure. The change was reverted to 256; no unverified
+latency or memory cost remains.
+
+The 17 v58 ordinary-body fallbacks were inspected at source/output level. The
+four degenerate cases contain byte escapes or severe repetition and are true
+decode failures. The seven server source fallbacks are long paragraphs whose
+unit-level rescue attempts did not produce a safe complete result. The six
+invariant/negation cases include dropped method identifiers, measurements, or
+explicit negation; they cannot be safely counted as false rejects without a
+human semantic label. This distribution argues for unit-level quality evidence
+and a reader presentation policy, rather than relaxing the global gate.
+
+### v61 byte-escape restoration
+
+Some accepted server decodes contained tokenizer byte escapes such as
+`<0xE8><0x90><0xBC>`, which the client quality gate correctly treated as
+degenerate output. The server now restores only contiguous, valid UTF-8 byte
+runs before citation restoration and quality checks; malformed runs remain
+visible and are still rejected. This is a representation repair, not a quality
+threshold change. Two regression tests were added (74 Python tests pass).
