@@ -21,6 +21,8 @@ run_gate "TypeScript lint" npm run lint
 run_gate "TypeScript tests" npm test
 run_gate "TypeScript build" npm run build
 
+run_gate "Python bundle cache smoke" npm run test:bundle-python
+
 if command -v cargo >/dev/null 2>&1; then
   (
     cd src-tauri
@@ -55,7 +57,8 @@ fi
 echo
 echo "== Packaged .app manual steps (human) =="
 cat <<'EOF'
-1. npm run tauri:build
+1. npm run tauri:build:clean   # clean Python + .app + .dmg (release)
+   # daily check: npm run tauri:build:fast  (.app only, cached Python)
 2. open src-tauri/target/release/bundle/macos/*.app
 3. PDF import → Reader → annotation → search → source PDF → export
 4. Quit and relaunch → reading position + annotations recover

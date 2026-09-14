@@ -20,11 +20,11 @@
 
 - UI を変えたら `npm run dev` または preview を上げ、`npm run verify:browser` で Library / 設定 / Reader を実ブラウザ確認する。このセッションの Cursor に Browser MCP は無いので Playwright（`@playwright/test`）を使う。翻訳サーバーは `http://127.0.0.1:8765/health`。
 - 新しい UI は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md) に従う。局所操作は Popover、一時的な大きい作業は Sheet / Overlay、論文全体の一覧は Inspector。本文操作で Notes を自動で開かない。別 route は Library / Reader / Workspace / Settings だけ。同一対象の場所・サイズ変化（図の拡大など）は Shared Element Transition でビューを切らない。
-- `src-tauri/` が Tauri v2 のシェル。`npm run tauri:dev` で開発、`npm run tauri:build` で `.app` + `.dmg` を生成。
+- `src-tauri/` が Tauri v2 のシェル。`npm run tauri:dev` で開発。日常の `.app` 確認は `npm run tauri:build:fast`（cached Python / `.app` のみ）。リリース確認は `npm run tauri:build:clean`（clean Python / `.app` + `.dmg`）。`npm run tauri:build` は clean のエイリアス。
 - 生成物: `src-tauri/target/release/bundle/macos/Paper Reader.app`
 - Xcode は `/Applications/Xcode-beta.app` を使用。ビルド時は `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer` を設定すること。
 - 翻訳サーバーはアプリが spawn し、終了時に停止する。
-- リリースビルド前に `bash scripts/bundle-python.sh` を実行する。`uv` + `translation-server/requirements.lock` + `.python-version`（patch 固定）から clean な `translation-server/venv/` を作る（開発者 `.venv` のコピーはしない）。フルリリースでは `beforeBuildCommand` で回す。画面確認だけの再ビルドでは Python 再生成を省略してよい。
+- Python runtime は `scripts/bundle-python.sh` が `uv` + `requirements.lock` + `.python-version`（patch 固定）から `translation-server/venv/` を作る（開発者 `.venv` のコピーはしない）。content-hash が一致し validation が通れば reuse。`clean` のみゼロから再構築。Tauri には `src-tauri/bundled-resources/translation-server`（stage）だけを同梱し、`models/` や開発用 `.venv*` を入れない。phase 時間は `scripts/tauri-build.sh` と `.build-timings` / [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md)。
 - 本番 CSP は有効。WKWebView 向けに `script-src` は nonce のみにしない（`'self' 'unsafe-inline' 'wasm-unsafe-eval'`）。変更時は `.app` で白画面にならないか確認する。
 - PDF 解析は **pdfjs-dist 3.11（legacy build）**。6.x は WKWebView で Iterator Helpers が無く即クラッシュするので上げない。日本語 CID フォントは `pdfjs-dist/cmaps`（Adobe-Japan1 など）をアプリに同梱してデコードする。
 - ユーザー領域への書き出しは Rust の save dialog コマンドで完結させる。フロントから任意 absolute path への write API を復活させない。

@@ -86,6 +86,7 @@ SCIENTIFIC_TOKEN_RE = re.compile(
     # Alphanumeric method identifiers (M2W, TQP3M9009) are facts even when
     # they do not contain a lowercase-to-uppercase transition.
     r"|(?-i:\b[A-Z]{1,4}\d[A-Z0-9]{1,12}\b)"
+    r"|(?-i:\b[A-Z]{2,8}\b)"
     # Hyphenated Title-Case system/method names (Power-over-Skin, Machine-to-
     # Wearable) are identifiers, not ordinary prose. Preserve them exactly so
     # the model cannot silently replace the named contribution with a generic
@@ -122,6 +123,14 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
         + list(SCIENTIFIC_PARENTHETICAL_RE.finditer(text))
         + list(SCIENTIFIC_TOKEN_RE.finditer(text))
     )
+    # Do not turn ordinary uppercase function words or the conventional
+    # ``SI Appendix`` label into scientific placeholders. Other short
+    # all-caps tokens are preserved as potentially meaningful method names.
+    ordinary = {"ABC", "AND", "BUT", "FOR", "FROM", "IV", "NOT", "OLS", "SI", "THE", "THIS", "THAT", "WITH"}
+    matches = [
+        match for match in matches
+        if not (match.group(0).isupper() and match.group(0) in ordinary)
+    ]
     matches.sort(key=lambda match: (match.start(), -(match.end() - match.start())))
     non_overlapping: list[re.Match[str]] = []
     end = -1

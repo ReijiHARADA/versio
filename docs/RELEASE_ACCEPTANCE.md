@@ -4,7 +4,9 @@ PR CI covers TypeScript / Rust / lightweight Python / browser smoke and must not
 
 Automated pre-steps: `npm run release:acceptance` (lint, test, build, Rust, Python, bench 100).
 
-This gate is for a built macOS `.app` (local `npm run tauri:build` or notarized artifact).
+This gate is for a built macOS `.app` (local `npm run tauri:build:clean` or notarized artifact).
+
+Daily local checks may use `npm run tauri:build:fast` (cached Python, `.app` only). Release / CI acceptance must use **clean** so the Python runtime is rebuilt from `requirements.lock` + pinned patch Python and `.dmg` is produced.
 
 ## Must pass
 

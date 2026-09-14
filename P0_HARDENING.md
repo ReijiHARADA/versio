@@ -37,7 +37,8 @@
 ## 4. Reproducible build
 
 **After:**
-- `scripts/bundle-python.sh` は開発者 `.venv` をコピーせず、`uv` + `requirements.lock` から clean `translation-server/venv` を生成
+- `scripts/bundle-python.sh` は開発者 `.venv` をコピーせず、`uv` + `requirements.lock` + `.python-version` から `translation-server/venv` を生成。content-hash cache（lock / Python patch / script）で reuse、`clean` で強制再構築。validation 失敗時は再利用しない
+- Tauri resources は `scripts/stage-translation-bundle.sh` が作る `src-tauri/bundled-resources/translation-server` のみ（`models/`・開発用 `.venv*`・tests/benchmarks を同梱しない）
 - `translation-server/requirements.lock` を追加（`uv pip compile`）
 
 **残課題:** CI での clean マシン検証、公証付き署名、Windows 非対応のまま。

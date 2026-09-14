@@ -26,7 +26,7 @@ jobs:
       - run: npm ci
       - name: Automated pre-release gates
         run: npm run release:acceptance
-      - name: Packaged app build (no MADLAD)
-        run: npm run tauri:build
+      - name: Packaged app build (clean, no MADLAD)
+        run: npm run tauri:build:clean
       - name: Acceptance checklist
         run: cat docs/RELEASE_ACCEPTANCE.md

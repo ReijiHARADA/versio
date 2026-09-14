@@ -37,12 +37,15 @@ npm run tauri:dev
 ./restart-translation-server.sh   # 別ターミナル
 npm run dev                       # http://localhost:5173
 
-# リリース .app
-npm run tauri:build
+# 日常確認用 .app（cached Python、dmg なし）
+npm run tauri:build:fast
+
+# リリース確認（clean Python + .app + .dmg）
+npm run tauri:build:clean
 open "src-tauri/target/release/bundle/macos/Paper Reader.app"
 ```
 
-手順・venv・トラブルシュートは [QUICKSTART.md](./QUICKSTART.md)。
+手順・venv・トラブルシュートは [QUICKSTART.md](./QUICKSTART.md)。ビルド時間は [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md)。
 
 ```bash
 npm test

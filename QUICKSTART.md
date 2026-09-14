@@ -92,12 +92,17 @@ curl http://127.0.0.1:8765/health
 ### リリース用 `.app`
 
 ```bash
-# uv が必要。requirements.lock から clean venv を生成してからフロント＋Rust をビルド
-npm run tauri:build
+# 日常確認: cached Python + .app のみ
+npm run tauri:build:fast
+
+# リリース / CI: lock + patch Python から clean rebuild、.app + .dmg
+npm run tauri:build:clean
+# または npm run tauri:build（clean エイリアス）
+
 open "src-tauri/target/release/bundle/macos/Paper Reader.app"
 ```
 
-`beforeBuildCommand` が `scripts/bundle-python.sh`（lock から venv 生成）のあと `npm run build` を実行します。開発用 `.venv` はコピーしません。
+`beforeBuildCommand`（`scripts/before-build.sh`）は content-hash cache 付きの Python 準備 → 最小 stage → frontend build。開発用 `.venv` はコピーしません。Tauri が同梱するのは `src-tauri/bundled-resources/translation-server` のみ（`models/` や `.venv*` は除外）。phase 時間は [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md)。
 
 ### テストと実論文 PDF
 

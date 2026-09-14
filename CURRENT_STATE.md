@@ -26,7 +26,7 @@
 | モデル lifecycle | **done** | process 起動と download/load/warmup 分離。extraction は model ready を待たない。原文 Reader は partial 後すぐ利用可。翻訳は ready 後に開始 / resume |
 | server-ready resume | **done** | `needs_translation_resume`（SQLite schema v6）。completed paper の本文全件再読込なし |
 | セキュリティ | **done** | 本番 CSP、localhost API、CSPRNG token、任意 path write 廃止、PDF path 検証 |
-| 再現ビルド | **done** | `bundle-python.sh` + `requirements.lock` + Python **3.12.14** 固定 |
+| 再現ビルド | **done** | `bundle-python.sh`（content-hash cache）+ lock + Python **3.12.14**。fast/clean 分離。stage で models/開発 venv を除外 |
 | OCR | **done** | Apple Vision（Tauri のみ）。ブラウザ dev では不可 |
 | 抽出 / 翻訳品質 | **ongoing** | CanonicalDocument + 品質ゲートは稼働中。残差は別ストリーム（下記） |
 
@@ -76,7 +76,8 @@ Reader open は source.pdf / assets を読まない前提。native SQLite の必
 
 | 項目 | 状態 |
 | --- | --- |
-| `npm run tauri:build` → `.app` / `.dmg` | 可能（`beforeBuildCommand` で clean Python） |
+| `npm run tauri:build:fast` → `.app` | 日常確認（cached Python） |
+| `npm run tauri:build:clean` / `tauri:build` → `.app` + `.dmg` | リリース（clean Python）。CI acceptance は clean |
 | PR CI | `.github/workflows/ci.yml`（TS test/lint/build、browser smoke、Rust fmt/clippy/test、軽量 Python） |
 | Packaged acceptance | `release-acceptance.yml` + [docs/RELEASE_ACCEPTANCE.md](./docs/RELEASE_ACCEPTANCE.md) |
 | MADLAD 大容量 download | 通常 CI 外（nightly / human acceptance） |
@@ -96,6 +97,9 @@ Reader open は source.pdf / assets を読まない前提。native SQLite の必
 | `npm run verify:browser` | Playwright スモーク |
 | `npm run bench:library` | 100/500 synthetic library 指標（startup / memory proxy / SQLite / search / persist） |
 | `npm run release:acceptance` | release 前自動ゲート + `.app` 手順表示 |
+| `npm run test:bundle-python` | Python runtime content-hash cache + stage smoke |
+| `npm run tauri:build:fast` | 日常 `.app`（cached Python） |
+| `npm run tauri:build:clean` | リリース `.app` + `.dmg`（clean Python） |
 
 基盤回帰の例: `importResumeServerReady.test.ts`（100 completed → body read 0）、`dirtyTracking.test.ts`（100 read-only → write 0）、`sectionVirtualization.test.ts`（50+ jump mount bound）、`ftsFreshness.test.ts`。
 

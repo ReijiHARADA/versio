@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Tauri staged translation-server (built by scripts/stage-translation-bundle.sh)
+src-tauri/bundled-resources/
+.build-timings
+
 # Python / MADLAD server
 translation-server/.venv/
 translation-server/venv/
