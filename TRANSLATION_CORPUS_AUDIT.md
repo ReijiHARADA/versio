@@ -2707,3 +2707,5 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Added a native-boundary observation fixture for the Elsevier Tables 1–7. It captures standalone versus absorbed/mixed caption streams and explicitly requires future splitting to use geometry/style evidence rather than paper-specific labels.
 
 - Added a generic native-font transition boundary guard for short heading-like blocks followed by body-size lines. Synthetic pipeline tests 12/12 and extraction corpus 56/56 pass; Elsevier table recall remains 0.571, so this is a paragraph/heading boundary safety improvement rather than a table-recall fix.
+
+- Added opt-in `PDF_LAYOUT_DEBUG=1` block-boundary diagnostics (role, pages, lines, native fonts, text prefix). Default behavior is unchanged; pipeline tests 12/12 and extraction corpus 56/56 pass.

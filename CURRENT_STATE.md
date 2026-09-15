@@ -2692,3 +2692,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Added a generic line/block boundary guard: when a short paragraph block begins in a materially larger native font and the next line drops to body size, do not merge them. This targets numbered subheading + body fusion seen in the Elsevier case without vocabulary rules.
 - Synthetic pipeline tests: 12/12 passed; extraction corpus: 56/56 passed; Elsevier table recall remains 0.571, while source integrity remains 1.0. The guard is retained for boundary precision and does not claim table recall improvement.
+
+### 2026-09-16 opt-in layout diagnostics
+
+- Added `PDF_LAYOUT_DEBUG=1` diagnostic output in `pdfLayout.ts`, reporting block index, role, page range, line count, native fonts, and text prefix. Default execution remains silent.
+- TypeScript, pipeline tests (12/12), and extraction corpus (56/56) pass. This enables direct comparison of pre/post grouping in the next boundary iteration without changing extraction behavior by default.
