@@ -2214,3 +2214,7 @@ Web buildで検出された `tableText` nullable の型エラーを、nativeGrid
 ### 2026-09-16 checkpoint: real-paper image geometry regression coverage
 
 `src/test/readingOrder/extractPdf.ts` が本番と同じ native image placement を cached PDF から収集するよう統一。これにより画像内 text 除外が synthetic fixtureだけでなく実PDF corpusでも検証される。extraction corpus は2 files / 43 tests通過。次回は画像重なり候補数と本文誤除外率のレポート化を行う。
+
+### 2026-09-16 checkpoint: image/text overlap corpus diagnostic
+
+`scan-image-text-overlap.ts` を追加し、cached corpusのnative画像配置とtext bbox重なり候補を計測できるようにした。現状の候補は `linguistics-language-model-physics` 5411 item、`step-to-charge` 99 item、`interactive-jewellery` 15 itemなどで、画像内ラベルだけでなく図上に重ねた本文・複合PDFも含む可能性がある。したがって除外率を安全性の証拠とみなさず、次回は候補の目視分類と本文誤除外率を測る。
