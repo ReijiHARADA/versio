@@ -2496,3 +2496,7 @@ x帯split後、表セル行と表外注記は別blockになったが、回転表
 ### Rotated caption regression fixture (2026-09-16)
 
 `Table 6` ラベルとタイトル本文の分離を再現する回帰fixtureを追加。rotation-aware caption continuationで同一table_captionへ結合し、reading-order 43/43 成功。
+
+### Caption fixture verification (2026-09-16)
+
+回転captionラベル継続fixtureと20-paper extraction benchmarkを再確認。reading-order 43/43、wear-scale sourceIntegrityRate=1.0。回転caption provenanceのpublisher横断評価は継続。

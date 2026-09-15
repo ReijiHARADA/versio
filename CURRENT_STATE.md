@@ -2394,3 +2394,7 @@ Resolver-selected rotated table nodes are now projected as skipped `table` Paper
 ### Rotated caption regression fixture (2026-09-16)
 
 回転native streamで`Table 6`ラベルとタイトル行が別lineになるケースをsynthetic fixture化。caption continuationが結合し、reading-order suite 43/43 成功。論文専用条件は使用していない。
+
+### Caption fixture verification (2026-09-16)
+
+回転captionラベル継続fixture追加後、reading-order 43/43、型チェック・lint成功。`bench:pdf-extraction` は20-paper benchmarkを完走し、wear-scaleの sourceIntegrityRate=1.0 を維持。
