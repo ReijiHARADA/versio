@@ -2002,3 +2002,7 @@ Reading-order / extraction focused suiteを再実行し、8 files / 63 testsが�
 ### 2026-09-16 checkpoint: corpus benchmark and static checks revalidated
 
 抽出変更後の全20 cached paper benchmarkを再実行し、既存のsourceIntegrityRate 1.0水準を維持した。`npm run lint -- --max-warnings=0` と `npx tsc -b --noEmit` も成功。抽出回帰42/42およびfocused 63 testsと合わせ、現行変更の安全回帰は確認できたが、これは未解決の構造課題を完了扱いにするものではない。
+
+### 2026-09-16 checkpoint: boundary scan refresh
+
+`npm run scan:pdf-boundaries` を再実行し、cached corpusの構造境界候補を更新した。未完結tail、段組混在、表セル連結の候補をレポートへ保存したが、候補は自動修復せず、native画像照合待ちとして扱う。特に表セルが連結した候補はtable-region evidence不足によるもので、paragraphへ強制的に再結合しない方針を維持する。
