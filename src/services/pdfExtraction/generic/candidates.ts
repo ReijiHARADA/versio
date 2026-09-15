@@ -298,7 +298,8 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       );
     const numericDensity = (block.text.match(/\d/g) ?? []).length / Math.max(block.text.length, 1);
     const tableAdjacentNumericRow = layoutRole === "heading" && block.lines.length === 1 &&
-      block.lines[0].items.length >= 2 && numericDensity >= 0.12 &&
+      block.lines[0].items.length >= 1 && numericDensity >= 0.12 &&
+      /[A-Za-z]/.test(block.text) &&
       nearbyTableCaption;
     const role = denseCjkBody || numericRow || mathRow || alignedTableRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation ? "paragraph" : layoutRole;
     const style = styleSignature(block, layouts, baseFontSize, blocks[index - 1], blocks[index + 1]);

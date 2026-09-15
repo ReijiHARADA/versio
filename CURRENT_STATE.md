@@ -2022,3 +2022,7 @@ PPG page 2のlayout dumpでは短い統計行が物理的に独立blockのまま
 ### 2026-09-16 checkpoint: full regression after numeric adjacency evidence
 
 全Vitestを再実行し、61 files / 327 tests pass。numeric proseのResolver evidence追加後も既存のreading order、canonical relation、caption/table/list projectionに回帰なし。抽出コーパス42/42、lint/typecheckも直近検証済み。手動レビュー未完了のため、完了判定は保留。
+
+### 2026-09-16 checkpoint: table-adjacent numeric row evidence
+
+SpeechIn page 3を原PDF画像と抽出結果で照合し、Table 1の太字summary row (`54 English 90.5%` / `44 Chinese 91.6%`) が見出しへ誤分類される候補を確認した。table caption近傍・数値密度・Latin tokenを同時に満たす1行は heading evidenceを抑える汎用条件を追加した。日本語fixtureで誤ってcaptionをparagraph化する回帰が一度発生したため、Latin evidenceを加えて修正。最終的にpipeline、extraction corpus 42/42が通過。原PDFでは表セルの構造化自体はまだ不完全で、低信頼時はparagraph fallbackを維持する。
