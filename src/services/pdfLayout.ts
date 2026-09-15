@@ -1667,7 +1667,14 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       target &&
       target.role === "paragraph" &&
       block.role === "paragraph" &&
-      ((target.column === "left" && block.column === "right" && target.pageEnd === block.pageStart) ||
+      ((target.column === "left" && block.column === "right" && target.pageEnd === block.pageStart &&
+        // A paragraph that starts well below the top of the left column is
+        // unlikely to continue at the top of the right column. Native
+        // extractors frequently expose that layout as two independent
+        // paragraphs; prefer keeping them separate when this evidence is
+        // present. The threshold preserves the explicit top-of-column
+        // continuation regression fixture.
+        (target.lines[0]?.y ?? 0) <= (target.lines[0]?.pageHeight ?? 792) * 0.35) ||
         // A full-width paragraph can continue below an intervening figure in
         // the first physical column of the same page. The continuation test
         // below still requires an unfinished source sentence and a lower-case

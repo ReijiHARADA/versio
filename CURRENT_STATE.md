@@ -2832,3 +2832,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - TypeScript passes; extraction behavior and regression metrics are unchanged.
 
 - Corrected the corpus diagnostic's x-cluster counter to use sorted adjacent coordinates rather than duplicate-value index lookup. Counts remain 255 suspicious blocks, confirming the prior baseline was stable.
+### 2026-09-16 conservative cross-column merge guard
+
+- Added a page-relative guard for same-page left→right paragraph stitching: paragraphs beginning below 35% of the page are no longer eligible for that cross-column merge. The arXiv diagnostic baseline dropped from 255 to 204 suspicious wide/multi-cluster blocks; the medical-image fixture dropped from 51 to 32. This targets the observed mid-page-to-top merge while preserving the top-of-column continuation fixture.
+- Verification: extraction corpus 56/56, focused reading-order/canonical tests 59/59, lint and TypeScript passed. Elsevier table recall remains 0.571428, so this change does not claim table recovery.

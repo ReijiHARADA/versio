@@ -2804,3 +2804,8 @@ The x-cluster counter was corrected to compare sorted adjacent coordinates. The 
 The corpus diagnostic records concrete x-cluster samples. In the arXiv medical-image-segmentation fixture, the first suspicious blocks still show left/right x clusters. This is a diagnostic finding only; no additional x-only production repair was applied. Extraction regressions remain green and the Elsevier table recall baseline is unchanged at 0.571428.
 
 Debug-only merge tracing then confirmed the path is the permissive same-page left→right continuation merge: one arXiv example joins a left block beginning around y≈479 to a right block beginning around y≈184. A simple y-position guard was experimentally rejected because it failed the valid lowercase continuation regression. This narrows the next repair to combined paragraph/provenance evidence rather than a global coordinate threshold.
+### 2026-09-16 cross-column merge experiment
+
+Hypothesis: a left-column paragraph starting well below the page top should not be stitched to a right-column block near the top, because this is an extraction-order artifact rather than a continuation. Applied a 35% page-relative threshold to same-page left→right stitching.
+
+Before/after diagnostic: 255 → 204 suspicious wide/multi-cluster blocks across the cached corpus; the arXiv medical-image fixture 51 → 32. Focused and corpus regressions remained green (59/59 and 56/56). A valid top-of-column lowercase continuation remains covered by regression. Elsevier table recall is unchanged at 0.571428. Keep this guard pending broader manual review; do not interpret diagnostic counts as precision/recall.
