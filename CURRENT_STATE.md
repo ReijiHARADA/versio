@@ -2362,3 +2362,7 @@ x帯ジャンプguard後にextraction corpus 43/43と20-paper benchmarkを再実
 ### Rotated table canonical role audit (2026-09-16)
 
 x帯split後のCanonical出力を監査。表セル行と表外注記は別blockになり、混在blockの翻訳送信は防止された。一方、回転表の `Table` ラベルとcaption本文が別native lineへ分離されるため、既存caption依存relation resolverでは表行をCanonical `table` roleへ昇格できない。caption文字列を論文専用に再構成する変更は避け、次回はrotation-aware caption provenanceを一般的なgeometry evidenceとして設計する。
+
+### Rotated table candidate evidence audit (2026-09-16)
+
+`wear-scale` p.14 のgeneric candidatesを直接確認し、回転表行の多くに `roleScores.table=0.96` が付与されていることを確認した。Canonical projectionでparagraph/skippedに見えるのは、table region memberのprojection経路が別に保持するためであり、candidate evidence自体はResolver閾値を満たしている。次回はCanonical node／regionとPaperBlock projectionの対応を分けて計測する。
