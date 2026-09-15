@@ -2472,3 +2472,7 @@ x帯split後、表セル行と表外注記は別blockになったが、回転表
 ### Rotated table projection guard (2026-09-16)
 
 回転native itemの数・数値密度・複数bboxを用いた保守的なtable projection条件を追加。重点回帰47/47、extraction corpus43/43、20-paper benchmark成功。wear-scale flattened rows=4、source integrity=1.0。
+
+### Extraction checkpoint after rotated projection (2026-09-16)
+
+重点回帰47/47を再確認。表行の誤翻訳送信を防ぎ、注記を独立block化する安全側挙動を維持。回転caption provenanceとpublisher横断手動table precision/recallは未完了。

@@ -2370,3 +2370,7 @@ x帯split後のCanonical出力を監査。表セル行と表外注記は別block
 ### Rotated table projection guard (2026-09-16)
 
 既存Canonical table nodeのprojection条件に、回転native itemが6個以上・数値密度0.35以上・複数bboxの保守的条件を追加。重点回帰47/47、extraction corpus43/43、20-paper benchmarkを通過。`wear-scale` flattenedNumericRowCount=4、sourceIntegrityRate=1.0。表行をtable blockへ投影する経路を拡張したが、caption provenanceの完全復元は未完了。
+
+### Extraction checkpoint after rotated projection (2026-09-16)
+
+重点回帰を再確認し、reading-order + canonical pipeline 47/47 が通過。現行の安全側挙動（表行を誤って翻訳へ送らず、注記を独立block化）を維持。未完了は回転caption provenanceとpublisher横断の手動table precision/recallで、次回はこの計測から再開する。
