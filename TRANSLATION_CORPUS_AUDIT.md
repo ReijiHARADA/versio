@@ -2388,3 +2388,7 @@ PPG Earring p.10の単独改行ハイフンを、未完結paragraph直後のneig
 ### Extraction Phase checkpoint: corpus table-node inventory (2026-09-16)
 
 20 cached PDFを実pipelineで走査し、Canonical table node 538件、Paper table block 520件を得た。これにはcaption由来のtext-less synthetic regionが多数含まれるため、件数を精度指標として扱わない。captionless text-bearing gridのpublisher別precision確認を継続する。
+
+### Extraction Phase checkpoint: table projection precision guard (2026-09-16)
+
+text-bearing table候補には数式断片も含まれることを横断走査で確認した。3行layout条件だけに依存するとresolver後のlookup欠落で実表を落とすため、native boundingBoxes数を併用する保守的条件へ修正。PPG captionless grid回帰は22/22通過。数式のtable誤投影をpublisher横断で測るテストは未完了。

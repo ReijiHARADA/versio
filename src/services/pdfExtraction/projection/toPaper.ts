@@ -265,7 +265,14 @@ export function projectCanonicalToPaper(input: {
           : [];
     const column = node.column ?? layout?.column ?? "single";
 
-    if (node.role === "table" && node.text) {
+    const nativeGrid = node.role === "table" && node.text &&
+      ((layout && layout.lines.length >= 3 &&
+        layout.lines.filter((line) => line.items.length >= 2).length >= 3) ||
+        // Candidate-to-layout lookup can be unavailable after resolver
+        // enrichment; multiple native line boxes remain a conservative grid
+        // provenance signal in that case.
+        node.boundingBoxes.length >= 3);
+    if (nativeGrid) {
       const tableText = node.text;
       const match = tableText.match(/^(?:table|表)\s*(\S+)/i);
       const tableNumber = match

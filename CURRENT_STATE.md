@@ -2118,3 +2118,7 @@ PPG Earring p.10で、段落途中の単独改行ハイフンがlayout上equatio
 ### 2026-09-16 checkpoint: progress ledger refresh
 
 抽出の最新実装（captionless table projection、hyphen continuation safety）と検証結果をprogress ledgerへ反映した。次回はpublisher横断のtext-bearing table precision、39 warning blocksの画像照合、paragraph boundary reviewから再開する。
+
+### 2026-09-16 checkpoint: table projection precision guard
+
+publisher横断走査でtext-bearing table候補が数式にも存在することを確認。projectionを3行構造へ絞る初案はresolver後のlayout lookup欠落で実表を落としたため修正し、native boundingBoxes 3件以上を代替根拠にした。PPG captionless grid回帰は22/22通過。数式候補を表として投影しないpublisher横断テストは今後追加する。
