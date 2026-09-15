@@ -197,9 +197,13 @@ export function projectCanonicalToPaper(input: {
   let sectionOrder = 0;
 
   const usedIds = new Set<string>();
+  // Synthetic figure/table region nodes have no source text and are represented
+  // by their caption block.  Text-bearing table candidates, however, are
+  // native aligned grids (including captionless tables) and must remain
+  // visible as table blocks instead of being sent through paragraph logic.
   const skip = new Set(["header", "footer", "title", "copyright", "author", "affiliation", "figure", "table"]);
 
-  const readable = canonical.nodes.filter((n) => !skip.has(n.role));
+  const readable = canonical.nodes.filter((n) => !skip.has(n.role) || (n.role === "table" && Boolean(n.text)));
   const fallbackIds = readable.map((n) => n.id);
   const orderedIds =
     topologicalOrder(fallbackIds, canonical.relations) ?? fallbackIds;
@@ -260,6 +264,34 @@ export function projectCanonicalToPaper(input: {
           ? layout.lines.map((line) => line.bbox)
           : [];
     const column = node.column ?? layout?.column ?? "single";
+
+    if (node.role === "table" && node.text) {
+      const tableText = node.text;
+      const match = tableText.match(/^(?:table|表)\s*(\S+)/i);
+      const tableNumber = match
+        ? /表/i.test(match[0]) ? `表 ${match[1]}` : `Table ${match[1]}`
+        : "Table";
+      pushBlock(node, layout, {
+        sectionId: currentSectionId,
+        type: "table",
+        pageStart: node.pageStart,
+        pageEnd: node.pageEnd,
+        boundingBoxes: boxes,
+        original: tableText,
+        translated: null,
+        translationStatus: "skipped",
+        parentBlockId: null,
+        metadata: {
+          imageUrl: "",
+          tableNumber,
+          captionOriginal: "",
+          captionTranslated: null,
+          column,
+          figureKey: `table-region-${node.id}`,
+        } satisfies TableMetadata & { column: string; figureKey: string },
+      });
+      continue;
+    }
 
     if (node.role === "heading") {
       const text = node.text ?? "";

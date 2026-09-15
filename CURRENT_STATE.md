@@ -2078,3 +2078,7 @@ PPG Earring p.2、SpeechIn p.3、Regularized DeepIV p.14をPDFレンダリング
 ### 2026-09-16 checkpoint: captionless aligned-grid evidence
 
 PPG Earring p.7の「Component / Weight」表をnative item geometryで確認した。5行・反復列・数値セルを満たすcaptionless gridに対し、generic candidateのtable evidenceを0.95へ引き上げる汎用ルールを追加した。単一列本文には同条件が成立しないためparagraph優先を維持する。extraction corpus 42/42で通過。実PDFのcanonical投影ではformat/relation経路を含む表regionの最終表示を追加確認する必要があり、表grid全体のrecall完了とはまだ扱わない。
+
+### 2026-09-16 checkpoint: text-bearing table projection
+
+Textを持つtable candidateをPaper projectionでparagraph翻訳経路から除外し、table blockとして保持する分岐を追加した。caption由来の合成region（text=null）は従来のcaption経路を維持し、二重生成を避ける。型検査とpipeline/baseline focused testsは通過。PPG p.7の最終canonical roleはformat/relation経路を含む追加確認が必要。

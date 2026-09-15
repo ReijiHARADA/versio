@@ -2352,3 +2352,7 @@ Caption detection accepts compact native labels such as `Table6...` when the tex
 ### Extraction Phase checkpoint: captionless aligned grid (2026-09-16)
 
 PPG Earring p.7で、captionのないComponent/Weight表が5行のparagraphへ連結される例を確認した。native textには各行の反復x位置と数値セルがあり、generic table evidenceを構造grid条件（3行以上、複数item行、数値セル2つ以上）で0.95に引き上げる汎用変更を追加した。単一列本文を同条件でtableへ昇格させないため、tableLikeのgeometry条件を前提にしている。corpus 42/42は通過。canonical最終投影でcaptionless regionがどの経路に現れるかは次回確認課題として残す。
+
+### Extraction Phase checkpoint: table projection boundary (2026-09-16)
+
+text-bearing table candidateをPaper projectionのparagraph処理から分離し、翻訳へ送らない`type: table` blockとして保持する経路を追加した。caption由来のtext-less synthetic regionは既存caption blockへ集約するため重複しない。TypeScriptおよびpipeline/baseline focused testsは通過。captionless gridの最終canonical roleと実UI表示は次回の追加確認対象。
