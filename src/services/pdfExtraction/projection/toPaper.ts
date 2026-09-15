@@ -271,6 +271,15 @@ export function projectCanonicalToPaper(input: {
       !/[∑∫√≤≥≈‖αβγδθλμσΩˆ]/u.test(node.text) &&
       ((layout && layout.lines.length >= 3 &&
         layout.lines.filter((line) => line.items.length >= 2).length >= 3) ||
+        // Rotated tables are commonly emitted as one native line per visual
+        // row, so each candidate has fewer layout lines than a horizontal
+        // grid. Require several rotated items and numeric density before
+        // projecting it as a skipped table block.
+        (layout && layout.lines.length >= 1 &&
+          layout.lines.flatMap((line) => line.items)
+            .filter((item) => Math.abs(item.rotation ?? 0) >= 45).length >= 6 &&
+          ((node.text.match(/\d/g) ?? []).length / Math.max(node.text.length, 1)) >= 0.35 &&
+          node.boundingBoxes.length >= 2) ||
         // Candidate-to-layout lookup can be unavailable after resolver
         // enrichment; multiple native line boxes remain a conservative grid
         // provenance signal in that case.

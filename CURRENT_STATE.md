@@ -2366,3 +2366,7 @@ x帯split後のCanonical出力を監査。表セル行と表外注記は別block
 ### Rotated table candidate evidence audit (2026-09-16)
 
 `wear-scale` p.14 のgeneric candidatesを直接確認し、回転表行の多くに `roleScores.table=0.96` が付与されていることを確認した。Canonical projectionでparagraph/skippedに見えるのは、table region memberのprojection経路が別に保持するためであり、candidate evidence自体はResolver閾値を満たしている。次回はCanonical node／regionとPaperBlock projectionの対応を分けて計測する。
+
+### Rotated table projection guard (2026-09-16)
+
+既存Canonical table nodeのprojection条件に、回転native itemが6個以上・数値密度0.35以上・複数bboxの保守的条件を追加。重点回帰47/47、extraction corpus43/43、20-paper benchmarkを通過。`wear-scale` flattenedNumericRowCount=4、sourceIntegrityRate=1.0。表行をtable blockへ投影する経路を拡張したが、caption provenanceの完全復元は未完了。
