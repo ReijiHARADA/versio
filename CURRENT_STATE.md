@@ -1977,6 +1977,8 @@ page上端（12%以内）の小さい著者名・`et al.` lineをheader evidence
 
 ページ上端headerの合成回帰を追加し、`Author et al.`をheaderとして認識することを固定した。reading-order 38/38、抽出コーパス42/42で通過。
 
+running-header修正後に全Vitestを再実行し、61 files / 327 tests pass。`npm run bench:pdf-extraction`も成功し、extraction-baseline-latest.jsonを更新した。翻訳系・`.app`は未変更。
+
 列検出変更後の最終再検証として `npm run bench:pdf-extraction`、`npm run lint -- --max-warnings=0`、`npx tsc -b --noEmit` を実行し、すべて成功した。抽出baselineを更新済み。全体の手動review・paragraph境界精度は未完了のため、goalは継続する。
 
 ### 2026-09-16 checkpoint: fused heading safety
