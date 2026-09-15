@@ -71,6 +71,7 @@
 - 全Vitestを再実行し、61 files / 340 tests passed。表region条件変更による既存機能の回帰なし。
 - caption隣接の本文をtable regionへ含めないCanonical synthetic regressionを追加し、pipeline 11/11成功。
 - 単独bullet行にも `listRole: item` を付与し、導入文との区別を保持するprojection回帰を追加。pipeline 12/12成功。
+- list projection変更後も extraction corpus 44/44、TypeScript typecheck 成功を再確認。
 
 ### 2026-09-15 停止 checkpoint
 
