@@ -2046,3 +2046,7 @@ running-header suffix evidence追加後に全Vitest 61 files / 327 tests、extra
 ### 2026-09-16 checkpoint: post-header corpus audit
 
 publisher running-header evidence後にsource-policy verifierと全20 paper benchmarkを再実行した。2,457 paragraphs / 492 warning-tagged blocks / 39 explicit violationsの安全抑止状態を維持し、source integrity水準も維持。header除外による新規抽出回帰は確認されていない。手動でのparagraph boundary精度とtable grid recallは未完了。
+
+### 2026-09-16 checkpoint: build validation after extraction changes
+
+running-header evidence変更後に`npm run build`を実行し成功した。既存のineffective dynamic-import warningのみで、抽出コード由来の新規warning/errorはない。`.app`は明示依頼前のため未ビルド。
