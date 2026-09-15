@@ -2498,3 +2498,7 @@ chart-label evidenceを含むbenchmarkを再実行。対象は`power-over-skin` 
 ### Full extraction regression (2026-09-16)
 
 chart-label translation boundary変更後、全Vitestを実行。61 files / 335 tests pass。既存のPDF.js canvas/polyfill警告以外の失敗なし。抽出corpus・reading-order・projectionを含む既存挙動に安全回帰なし。
+
+### Horizontal chart-axis labels (2026-09-16)
+
+chart-label Evidenceを同一x帯だけでなく同一y帯にも適用。各blockが単一native itemの場合に限定し、複数cell行・table caption近傍は除外。synthetic pipeline 6/6、extraction corpus 44/44、typecheck成功。既存表判定の安全回帰なし。

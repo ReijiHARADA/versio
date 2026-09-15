@@ -85,7 +85,14 @@ function chartLabelEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
     candidate !== block && candidate.pageStart === block.pageStart &&
     candidate.column === block.column && candidate.text.trim().length <= 180 &&
     (candidate.text.match(/\d/g) ?? []).length / Math.max(candidate.text.length, 1) >= 0.35 &&
-    Math.abs(candidate.bbox.x - block.bbox.x) <= Math.max(block.bbox.height * 2, 14)
+    (
+      Math.abs(candidate.bbox.x - block.bbox.x) <= Math.max(block.bbox.height * 2, 14) ||
+      Math.abs(candidate.bbox.y - block.bbox.y) <= Math.max(block.bbox.height * 1.5, 10)
+    ) &&
+    // A row containing multiple native items is a cell grid candidate, not a
+    // set of independent chart labels.
+    candidate.lines.length === 1 && candidate.lines[0].items.length <= 1 &&
+    block.lines.length === 1 && block.lines[0].items.length <= 1
   );
   // A caption-adjacent numeric row is more likely a real table row. Leave it
   // to the table evidence generator instead of relabelling it as chart text.
