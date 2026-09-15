@@ -1070,6 +1070,14 @@ function roleForLine(
   if (isFigureCaption(text)) return "figure_caption";
   if (isTableCaption(text)) return "table_caption";
   if (isEquationLine(text)) return "equation";
+  if (
+    line.page > 1 &&
+    line.y < line.pageHeight * 0.12 &&
+    line.fontSize <= baseFont * 0.82 &&
+    (looksLikePersonName(text) || /^[A-Z][A-Za-z'’-]+\s+et\s+al\.?$/i.test(text))
+  ) {
+    return "header";
+  }
   if (isFootnoteLine(line, line.pageHeight ?? 792, baseFont)) {
     if (line.page === 1 && looksLikeAffiliation(text)) return "affiliation";
     return "footnote";
