@@ -2699,3 +2699,5 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Full benchmark after the caption-role guard: source integrity and canonical provenance remain 1.0 across 26 cached PDFs. Annotated table-caption recall mean is 0.929 (minimum 0.571, Elsevier meta-review); table-region recall mean 0.843 (minimum 0.571); relation precision remains 1.0. The remaining Elsevier misses are isolated native grouping/region reconstruction cases.
 
 - Added page-grid precedence guard for existing table captions. Recall stayed 0.571, so the remaining misses are upstream native block formation or downstream relation construction; no metric inflation was introduced. Extraction corpus remains 56/56.
+
+- Native/Layout diagnostic for the Elsevier meta-review: Table 1, 3, 4, and 7 survive as explicit caption blocks; Table 2 is absorbed into a table stream, while Table 5/6 labels are embedded in long mixed paragraph blocks. The remaining recall loss is therefore line/block formation, not resolver precedence. A generic geometry-based boundary rule is required; no paper-specific condition was added.

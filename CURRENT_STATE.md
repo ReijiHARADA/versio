@@ -2671,3 +2671,9 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Added a second generic precedence guard preventing page-grid evidence from overriding an already identified `table_caption`. This did not change the Elsevier recall (0.571), confirming the remaining misses occur before this evidence merge or in relation construction; it is retained as a safety invariant.
 - Extraction corpus remains 56/56; no translation or `.app` changes.
+
+### 2026-09-16 native caption diagnostic
+
+- Native/Layout probe for `medical-deep-learning-meta-review` found explicit caption blocks for Table 1 (page 2), Table 3/4 (page 3), and Table 7 (page 13).
+- Table 2 is absorbed into a table-region stream; Table 5/6 labels appear inside long paragraph blocks that also contain section prose. This confirms the remaining recall loss is at line/block formation (mixed native streams), before resolver evidence precedence.
+- No paper-specific rule was added. Next safe step is a generic boundary split based on caption-label geometry and mixed table/prose stream evidence, with a synthetic regression fixture before touching the real-PDF path.
