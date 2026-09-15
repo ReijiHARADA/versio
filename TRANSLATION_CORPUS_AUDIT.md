@@ -2821,3 +2821,6 @@ Added and verified a generic native-font-transition rule for a numbered heading 
 The extraction corpus was rerun after the inline font-transition heading change: **56/56 passed** with no source-integrity regression. Table recall remains unchanged.
 Full Vitest after the fused-heading rule: **61 files / 345 tests passed**, including the new native font-transition regression.
 Full application regression after the current extraction changes: **61 files / 345 tests passed** and `npm run build` passed. Only existing dynamic-import warnings remain.
+## Extraction follow-up (2026-09-16)
+
+現行抽出コードで `diagnose:pdf-corpus` を再実行した結果、26 papers / 497 pages / suspicious 164 blocks。144件はarXivに集中し、図・表のベクターラベルがnative textとして同一領域に現れる候補が大半だった。段落を強制分割する根拠としては不十分なため、誤分類を増やすルールは追加せず、次回はnative geometryとcaption/table provenanceを用いた手動分類を行う。

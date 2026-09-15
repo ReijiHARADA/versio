@@ -57,6 +57,7 @@
 
 ### 2026-09-16 extraction checkpoint
 
+- `npm run diagnose:pdf-corpus` を現行コードで再実行し、26 papers / 497 pages / suspicious 164 blocks を記録。内訳は arXiv 144、PMLR 6、Elsevier 6、ACM 3 などで、arXivの大半は図・表のベクターラベルがnative textとして混在する診断候補。これはproduction role変更の根拠にはせず、次回はnative geometryとcaption/table provenanceを照合する。
 - 再開時の停止確認として `npm run test:extraction-corpus -- --run` を現行コードで再実行し、real-paper fixture 56/56 passed（reading-order 27、baseline 29）。既存のfont-transition heading / mixed-column保護 / table fallback変更に回帰なし。長時間ジョブは起動しておらず、次回は下記の未解決項目から再開する。
 
 - `npm run test:extraction-corpus` を再実行し、real-paper fixture 44/44 tests passed（reading-order 21、baseline 23）。既存の抽出変更に回帰は確認されなかった。
