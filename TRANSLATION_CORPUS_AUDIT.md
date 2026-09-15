@@ -2638,6 +2638,8 @@ baseline 23件の計44/44テストが成功した。今回の再確認では実�
 全Vitestは61 files / 339 tests passed、TypeScriptとlintも成功した。
 回転数値セル帯をheadingへ昇格させないsynthetic regressionを追加し、pipeline 10/10成功。
 抽出ベンチマークを再生成し、20 cached papers、sourceIntegrityRate 平均1.0、titleExact 0.9を確認。
+caption近傍の一行candidateをtable regionへ含める条件を、終端句読点なし・数値密度ありに限定し、
+実コーパス44/44で回帰がないことを確認した。
 回転表の実PDFプローブでは、nativeセル文字列の保持は確認できたが、行列の完全復元は
 未達だった。誤った表構造を生成しない現行のfallbackを維持し、行帯クラスタ化を次の
 抽出課題として記録する。

@@ -67,6 +67,7 @@
 - 変更後の extraction corpus は再実行して44/44成功。表の完全な行列復元は引き続き未解決。
 - 回転数値セル帯をheadingへ昇格させないsynthetic regressionを追加し、pipeline 10/10成功。セル帯クラスタリング自体は未導入。
 - `npm run bench:pdf-extraction` を再生成。20 cached papers、sourceIntegrityRate 平均1.0、titleExact 0.9。抽出ベンチマークの生成物は `test-data/real-papers/reports/extraction-baseline-latest.json` に更新された。
+- caption近傍の一行candidateをtable regionへ含める条件を、終端句読点なし・数値密度ありに限定。実コーパス44/44で回帰なし。
 
 ### 2026-09-15 停止 checkpoint
 

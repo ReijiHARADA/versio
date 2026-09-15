@@ -254,7 +254,11 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
             // Require multiple aligned text items in the row so ordinary body
             // paragraphs remain excluded.
             const row = candidate.layoutBlock.lines.some((line) => line.items.length >= 2);
-            return row && ((candidate.roleScores.table ?? 0) >= 0.78 || candidate.layoutBlock.lines.length === 1);
+            const text = candidate.layoutBlock.text.trim();
+            const numericDensity = (text.match(/\d/g) ?? []).length / Math.max(text.length, 1);
+            const compactCellRow = candidate.layoutBlock.lines.length === 1 &&
+              !/[.!?]\s*$/.test(text) && numericDensity >= 0.12;
+            return row && ((candidate.roleScores.table ?? 0) >= 0.78 || compactCellRow);
           })
         : [];
       const memberBoxes = regionMembers.flatMap((member) => member.boundingBoxes);
