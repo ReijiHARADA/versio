@@ -2238,3 +2238,7 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 ### 2026-09-16 checkpoint: full-page image safety threshold
 
 画像内 text 除外の全面画像判定を、縦横比だけでなく画像面積比（ページ面積の75%超）でも判定するよう調整。ページ全面に近い scanned overlay を誤除外しにくくした。reading-order 40/40、extraction corpus 43/43、lint、型チェックが成功。次回は実PDFの重なり候補について手動分類率を確定する。
+
+### 2026-09-16 checkpoint: overlap threshold revalidation
+
+全面画像の面積判定（75%超）後に20 cached papersを再走査し、重なり候補は前回と同じ5528 items（design-for-wearability 3、interactive-jewellery 15、linguistics 5411、step-to-charge 99）。閾値変更による候補増減はなく、進捗台帳にも再計測結果を反映した。次回はこの候補から代表ページを画像レンダリングして手動ラベル化する。
