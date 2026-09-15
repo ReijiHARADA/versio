@@ -2026,3 +2026,7 @@ PPG page 2のlayout dumpでは短い統計行が物理的に独立blockのまま
 ### 2026-09-16 checkpoint: table-adjacent numeric row evidence
 
 SpeechIn page 3を原PDF画像と抽出結果で照合し、Table 1の太字summary row (`54 English 90.5%` / `44 Chinese 91.6%`) が見出しへ誤分類される候補を確認した。table caption近傍・数値密度・Latin tokenを同時に満たす1行は heading evidenceを抑える汎用条件を追加した。日本語fixtureで誤ってcaptionをparagraph化する回帰が一度発生したため、Latin evidenceを加えて修正。最終的にpipeline、extraction corpus 42/42が通過。原PDFでは表セルの構造化自体はまだ不完全で、低信頼時はparagraph fallbackを維持する。
+
+### 2026-09-16 checkpoint: SpeechIn table summary verification
+
+SpeechIn page 3のCanonical出力を再確認し、`54 English 90.5%` と `44 Chinese 91.6%` は headingではなく table role へ解決された。原PDFの表最終行との対応が取れ、既存のparagraph/list/table安全fallbackは維持された。focused suiteとextraction corpus 42/42を通過済み。
