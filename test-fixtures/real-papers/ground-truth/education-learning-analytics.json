@@ -1,6 +1,7 @@
 {
   "id": "education-learning-analytics",
-  "title": "Learning Analytics: Challenges and Opportunities",
+  "completeAnnotations": true,
+  "title": "Educational Data mining and Learning Analytics: An updated survey",
   "listItems": [
     "1. Purpose and gain.",
     "2. Representation and actions.",
@@ -9,6 +10,11 @@
     "5. Development and operation.",
     "6. Privacy.",
     "7. Ethics."
+  ],
+  "tableCaptions": [
+    "Table 9: Most popular EDM/LA methods.",
+    "Table 10. Example of users/stakeholders and objectives.",
+    "Table 11. Some current applications or topics of interest of EDM/LA research community."
   ],
   "notes": "List-preservation ground truth from native text; PDF remains cached only."
 }

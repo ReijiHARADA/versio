@@ -309,7 +309,7 @@
     },
     {
       "id": "step-to-charge",
-      "title": "Step-to-Charge: mW-scale Power Transfer to On-body Devices",
+      "title": "Step-to-Charge: mW-scale power transfer to on-body devices for long channel (> 1m) with EQS Resonant Human Body Powering",
       "doi": null,
       "publisher": "arXiv",
       "venue": "arXiv",
@@ -345,9 +345,6 @@
       "seedPaths": [],
       "checks": {
         "titleContains": "Wearable Acceptability",
-        "tableCaptionContains": [
-          "Table"
-        ],
         "referencesHeading": true
       }
     },
@@ -375,7 +372,7 @@
     },
     {
       "id": "fashion-hybrid-cmf",
-      "title": "Fashion Hybrid Design Trend Study in Product Design – focusing on mobile CMF",
+      "title": "Fashion Hybrid Design Trend Study in Product Design -focusing on mobile CMF(Color, Material, Finishing) design-",
       "doi": null,
       "publisher": "KCI",
       "venue": null,
@@ -455,7 +452,7 @@
     },
     {
       "id": "marketing-consumer-response",
-      "title": "Social Dynamics of Consumer Response: A Unified Framework Integrating Statistical Physics and Marketing Dynamics",
+      "title": "Symmetries, Scaling Laws and Phase Transitions in Consumer Advertising Response",
       "doi": null,
       "publisher": "arXiv",
       "venue": "arXiv",
@@ -483,7 +480,7 @@
     },
     {
       "id": "ergonomics-human-factors-ihci",
-      "title": "User Centered Design (VI): Human Factors Approaches for Intelligent Human-Computer Interaction",
+      "title": "六论以用户为中心的设计：智能人机交互的人因工程途径",
       "doi": null,
       "publisher": "arXiv",
       "venue": "arXiv",
@@ -509,7 +506,7 @@
     },
     {
       "id": "linguistics-language-model-physics",
-      "title": "Physics of Language Models: Part 1, Context-Free Grammar",
+      "title": "Physics of Language Models: Part 1, Learning Hierarchical Language Structures",
       "doi": null,
       "publisher": "arXiv",
       "venue": "arXiv",

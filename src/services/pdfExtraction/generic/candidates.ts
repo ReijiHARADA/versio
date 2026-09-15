@@ -33,6 +33,8 @@ export type StyleSignature = {
   spacingBefore: number;
   spacingAfter: number;
   uppercaseRatio: number;
+  /** Median native text-matrix rotation, retained as structural evidence. */
+  rotation: number;
 };
 
 const ROLE_CONFIDENCE: Partial<Record<LayoutRole, number>> = {
@@ -102,12 +104,19 @@ function styleSignature(
     spacingBefore: Math.max(0, block.bbox.y - previousBottom),
     spacingAfter: Math.max(0, nextTop - (block.bbox.y + block.bbox.height)),
     uppercaseRatio: upper / Math.max(letters, 1),
+    rotation: median(items.map((item) => item.rotation ?? 0)),
   };
 }
 
 function headingTextShape(text: string): boolean {
   const compact = text.trim();
   if (!compact || compact.length > 110 || compact.split(/\s+/).length > 16) return false;
+  // Dense CJK prose and numeric/table rows are frequently emitted without
+  // whitespace. They need stronger structural evidence than the generic
+  // capitalization test; otherwise body/table text becomes a heading.
+  if (/[\u3400-\u9fff]/u.test(compact) && (compact.length > 18 || /[，。；：]/u.test(compact))) return false;
+  if (/^[\d\s.,+\-–—=()]+$/.test(compact)) return false;
+  if (/[∥∑∫√∞≈≠≤≥±∂∇×÷]/u.test(compact)) return false;
   if (/[.!?。．]$/.test(compact) || /^\d+[.)]\s+[A-Z][a-z]+,?\s+[A-Z]/.test(compact)) return false;
   const letters = (compact.match(/[A-Za-z]/g) ?? []).length;
   const upper = (compact.match(/[A-Z]/g) ?? []).length;
@@ -136,6 +145,20 @@ function mastheadAuthorEvidence(block: LayoutBlock, previous?: LayoutBlock): num
   return followsTitle ? 0.88 : 0.78;
 }
 
+function authorContinuationEvidence(block: LayoutBlock, previous?: LayoutBlock): number {
+  if (block.pageStart !== 1 || block.lines.length !== 1 || !previous) return 0;
+  const text = block.text.trim();
+  // A wrapped author masthead can be emitted as a separate one-line block.
+  // Detect the format-neutral `SURNAME, Initial.` shape only when it follows
+  // another short masthead row; this avoids treating ordinary all-caps prose
+  // as an author.
+  const nameShape = /^[A-ZÀ-ÖØ-Ý][A-ZÀ-ÖØ-Ý'’-]{2,},\s*[A-ZÀ-ÖØ-Ý](?:\.|\b)/u.test(text);
+  const nearby = block.bbox.y - (previous.bbox.y + previous.bbox.height);
+  const previousMasthead = previous.pageStart === 1 && previous.text.trim().length <= 180 &&
+    (/,\s*[A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ'’-]{1,}/u.test(previous.text) || /\b(?:and|&)\b/i.test(previous.text));
+  return nameShape && previousMasthead && nearby >= 0 && nearby < 28 ? 0.94 : 0;
+}
+
 function tableLike(block: LayoutBlock): boolean {
   // Masthead metadata often has multiple aligned text items (author names,
   // affiliations, e-mail columns) but is never a table region. Keep this
@@ -146,6 +169,15 @@ function tableLike(block: LayoutBlock): boolean {
   }
   const lines = block.lines;
   if (lines.length === 0) return false;
+  const nativeItems = lines.flatMap((line) => line.items);
+  const rotatedItems = nativeItems.filter((item) => Math.abs(item.rotation ?? 0) >= 45);
+  // Rotated statistical tables are emitted as many short, independently
+  // positioned native items rather than horizontal rows. Keep this evidence
+  // deliberately high precision: a sizeable rotated cluster with numeric
+  // content is treated as table-like, while isolated rotated annotations stay
+  // paragraph fallback.
+  const rotatedNumeric = rotatedItems.filter((item) => /\d/.test(item.text)).length;
+  if (rotatedItems.length >= 30 && rotatedNumeric / rotatedItems.length >= 0.3) return true;
   const cellLines = lines.filter((line) => line.items.length >= 2);
   if (cellLines.length === 0) return false;
   const shortItems = cellLines.flatMap((line) => line.items).filter((item) => item.text.trim().length <= 24).length;
@@ -241,14 +273,57 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const base = ROLE_CONFIDENCE[block.role] ?? 0.65;
     const confidence = Math.min(0.95, (base + scored.score) / 2);
     const boxes = block.lines.map((line) => line.bbox);
-    const role = layoutRoleToCanonical(block.role);
+    const layoutRole = layoutRoleToCanonical(block.role);
+    const denseCjkBody = layoutRole === "heading" && /[\u3400-\u9fff]/u.test(block.text) &&
+      (block.text.trim().length > 18 || /[，。；：]/u.test(block.text));
+    const numericRow = layoutRole === "heading" && /^[\d\s.,+\-–—=()]+$/.test(block.text.trim());
+    const mathRow = layoutRole === "heading" && /[∥∑∫√∞≈≠≤≥±∂∇×÷]/u.test(block.text);
+    const nearbyTableCaption = blocks.some((candidate) => candidate.role === "table_caption" &&
+      candidate.pageStart === block.pageStart && Math.abs(candidate.bbox.y - block.bbox.y) < 300);
+    const alignedTableRow = block.lines.length === 1 &&
+      block.lines[0].items.length >= 2 && tableLike(block) && nearbyTableCaption;
+    const tableHeaderRow = block.lines.length === 1 &&
+      block.lines[0].items.length >= 3 && nearbyTableCaption &&
+      !/[.!?;:]/.test(block.text) &&
+      (block.text.match(/[A-Za-z]+/g) ?? []).every((word) => /^[A-Z][a-z]+$/.test(word));
+    // A lone abbreviated word ending in a period is usually a clipped
+    // affiliation/header fragment (for example a wrapped "Technol."). Keep
+    // genuine numbered or multi-word subheadings eligible, but require a
+    // visible bold/weight signal before allowing this shape to become a
+    // heading. This uses native font facts rather than a vocabulary list.
+    const singleWordAbbreviation = layoutRole === "heading" &&
+      /^\p{L}{2,14}\.$/u.test(block.text.trim()) &&
+      !block.lines.flatMap((line) => line.items).some((item) =>
+        /(?:bold|black|heavy|semi[- ]?bold|demi)/i.test(item.fontName)
+      );
+    const numericDensity = (block.text.match(/\d/g) ?? []).length / Math.max(block.text.length, 1);
+    const tableAdjacentNumericRow = layoutRole === "heading" && block.lines.length === 1 &&
+      block.lines[0].items.length >= 2 && numericDensity >= 0.12 &&
+      nearbyTableCaption;
+    const role = denseCjkBody || numericRow || mathRow || alignedTableRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation ? "paragraph" : layoutRole;
     const style = styleSignature(block, layouts, baseFontSize, blocks[index - 1], blocks[index + 1]);
     const scoreByRole: Partial<Record<CanonicalRole, number>> = {
       paragraph: role === "paragraph" ? confidence : 0.22,
       [role]: confidence,
     };
+    // Some journal/preprint mastheads use a large centered title whose line
+    // is title-cased, so the layout pass can mistake it for an author line.
+    // Native size/length/position evidence is sufficient to compete for the
+    // title role without a vocabulary list.
+    if (
+      block.pageStart === 1 &&
+      block.role === "author" &&
+      block.text.trim().length >= 24 &&
+      style.fontSizeRatio >= 1.35 &&
+      !/@/.test(block.text) &&
+      !/(university|department|institute|college|faculty|laboratory|\blab\b|research center|centre)/i.test(block.text)
+    ) {
+      scoreByRole.title = Math.max(scoreByRole.title ?? 0, 0.9);
+    }
     const authorEvidence = mastheadAuthorEvidence(block, blocks[index - 1]);
     if (authorEvidence > 0) scoreByRole.author = authorEvidence;
+    const continuationAuthorEvidence = authorContinuationEvidence(block, blocks[index - 1]);
+    if (continuationAuthorEvidence > 0) scoreByRole.author = Math.max(scoreByRole.author ?? 0, continuationAuthorEvidence);
     const anchoredHeading = blocks.some((other, otherIndex) =>
       otherIndex !== index && other.role === "heading" &&
       Math.abs(styleSignature(other, layouts, baseFontSize, blocks[otherIndex - 1], blocks[otherIndex + 1]).boldScore - style.boldScore) < 0.25 &&
@@ -261,6 +336,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       role !== "title" &&
       role !== "author" &&
       role !== "affiliation" &&
+      !tableAdjacentNumericRow &&
+      !alignedTableRow &&
+      !tableHeaderRow &&
       headingTextShape(block.text) &&
       (!paragraphLike(block.text) || nonBodyFont)
     ) {
@@ -281,7 +359,19 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // conservative paragraph fallback.
     // Keep table evidence available for caption-region membership, but below
     // the resolver's role override threshold so body prose stays paragraph.
-    if (tableLike(block)) scoreByRole.table = 0.90;
+    if (tableLike(block)) {
+      // A large, numeric-rich rotated grid is materially stronger than the
+      // ordinary aligned-row signal: it is the native representation of a
+      // table whose cells are written on the orthogonal axis. Allow the
+      // resolver to select table while retaining the conservative threshold
+      // for all other geometry.
+      const rotatedItems = block.lines.flatMap((line) => line.items)
+        .filter((item) => Math.abs(item.rotation ?? 0) >= 45);
+      const rotatedNumeric = rotatedItems.filter((item) => /\d/.test(item.text)).length;
+      scoreByRole.table = rotatedItems.length >= 30 && rotatedNumeric / Math.max(rotatedItems.length, 1) >= 0.3
+        ? 0.97
+        : 0.90;
+    }
     if (nearbyTableRowEvidence(block, blocks)) scoreByRole.table = 0.96;
     const reason =
       block.role === "title"

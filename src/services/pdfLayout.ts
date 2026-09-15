@@ -53,6 +53,7 @@ export type LayoutLine = {
   fontSize: number;
   bbox: BoundingBox;
   pageHeight?: number;
+  rotation?: number;
 };
 
 export type LayoutBlock = {
@@ -229,7 +230,16 @@ function assignColumn(
 }
 
 function joinItemTexts(items: ExtractedTextItem[]): string {
-  const sorted = [...items].sort((a, b) => a.x - b.x || a.y - b.y);
+  const rotation = median(items.map((item) => item.rotation ?? 0));
+  const sorted = [...items].sort((a, b) => {
+    if (Math.abs(rotation) >= 45) {
+      // Rotate coordinates back onto the native text baseline before joining.
+      const aPos = rotation > 0 ? -a.y : a.y;
+      const bPos = rotation > 0 ? -b.y : b.y;
+      return aPos - bPos || a.x - b.x;
+    }
+    return a.x - b.x || a.y - b.y;
+  });
   if (sorted.length === 0) return "";
 
   let out = sorted[0].text;
@@ -269,6 +279,7 @@ function itemsToLine(
     fontSize,
     bbox,
     pageHeight,
+    rotation: median(items.map((item) => item.rotation ?? 0)),
   };
 }
 

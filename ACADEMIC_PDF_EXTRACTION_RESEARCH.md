@@ -532,3 +532,7 @@ Evidence fusion: native タイトルを GROBID の別文字列で置き換えな
 やらないこと（再掲）: pdfLayout 削除、structureService 全面書き換え、table cell 再構築、巨大 VLM 同梱、cloud parser、AI Chat、翻訳 / MADLAD 変更、pdf.js 6.x。
 
 検証: `npm test`（116 passed）、`npm run lint`、`npm run build`。合成 fixture とキャッシュ済み real-paper の両方。
+
+## 2026-09-16 boundary review addendum
+
+Two recurring masthead boundary cases were confirmed by native-PDF visual review: a bilingual abstract placed above the primary masthead, and a lowercase continuation line from a spanning abstract at the top of the second column. Both are now handled by conservative text-shape/geometry evidence in `pdfLayout.ts`, with regression coverage. Long multilingual affiliation blocks remain valid in ACM/Nature-style papers and are intentionally not demoted by length or language alone. The reusable `npm run scan:pdf-boundaries` command reports candidates for manual review without mutating roles.

@@ -46,6 +46,7 @@ export async function extractPdfPages(pdfPath: string): Promise<ExtractedPage[]>
         fontSize,
         fontName: item.fontName,
         page: pageNum,
+        rotation: Math.round((Math.atan2(tx[1], tx[0]) * 180) / Math.PI * 100) / 100,
       });
     }
 

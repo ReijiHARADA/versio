@@ -1,14 +1,31 @@
 {
   "id": "interactive-jewellery",
+  "completeAnnotations": true,
   "title": "Interactive Jewellery: a design exploration",
   "authors": [],
   "affiliations": [],
   "authorAffiliation": [],
-  "headings": ["INTERACTIVE JEWELLERY: RELATED WORK"],
+  "headings": [
+    "ABSTRACT",
+    "Author Keywords",
+    "ACM Classification Keywords",
+    "INTRODUCTION",
+    "JEWELLERY",
+    "RELATED WORK: CONTEMPORARY JEWELLERY",
+    "INTERACTIVE JEWELLERY: RELATED WORK",
+    "DESIGN EXPLORATIONS",
+    "1. Pix by Laura Claas",
+    "2. Memento by Karin Niemantsverdriet",
+    "3. Leth by Luke Noothout",
+    "DISCUSSION",
+    "CONCLUSION AND FUTURE PERSPECTIVE",
+    "ACKNOWLEDGMENTS",
+    "REFERENCES"
+  ],
   "headingHierarchy": [],
   "tokensInOrder": ["second half of the 20", "In terms of renewing interaction"],
   "figureCaptions": ["Figure 2"],
   "tables": [],
   "pageCount": null,
-  "notes": "Partial GT from catalog checks. Authors left empty until a full pass is annotated."
+  "notes": "Heading list manually checked against rendered ACM TEI'16 PDF pages 1-9; other fields remain partial and are not treated as exhaustive."
 }

@@ -7,8 +7,10 @@ import { parseGrobidHeaderTei } from "./grobid/tei";
 import {
   pairwiseOrderAccuracy,
   relationAccuracy,
+  relationPrecision,
   setScores,
   substringRecall,
+  substringPrecision,
   titleExactMatch,
 } from "./metrics";
 import { classifyDocument, scannedByItemAverage } from "./pageClass";
@@ -17,6 +19,8 @@ import { extractFromPages } from "./pipeline/extractAcademicPdf";
 
 export type PartialGroundTruth = {
   id: string;
+  /** True only when the listed structural labels are exhaustive. */
+  completeAnnotations?: boolean;
   title?: string;
   authors?: string[];
   affiliations?: string[];
@@ -45,18 +49,24 @@ export type BaselinePaperReport = {
   authorF1?: number;
   affiliationF1?: number;
     headingRecall?: number;
+    headingPrecision?: number;
     headingHierarchyAccuracy?: number;
+    headingHierarchyPrecision?: number;
     readingOrderPair?: number;
     figureCaptionRecall?: number;
     tableCaptionRecall?: number;
     tableRegionRecall?: number;
+    tableRegionPrecision?: number;
     listItemRecall?: number;
+    listItemPrecision?: number;
     figureCaptionRelation?: number;
     authorAffiliationF1?: number;
     sourceIntegrityRate: number;
     fusedTitle: string;
     fusedTitleConfidence: number;
     canonicalTitle?: string | null;
+    rotatedNativeItemCount?: number;
+    rotatedLineCount?: number;
   };
 
 export function evaluateBaselinePaper(input: {
@@ -91,12 +101,6 @@ export function evaluateBaselinePaper(input: {
   const affiliations = input.blocks
     .filter((b) => b.role === "affiliation")
     .map((b) => b.text);
-  const figures = input.blocks
-    .filter((b) => b.role === "figure_caption")
-    .map((b) => b.text);
-  const tables = input.blocks
-    .filter((b) => b.role === "table_caption")
-    .map((b) => b.text);
   const gold = input.groundTruth;
   const expectedTitle = gold?.title ?? input.catalogTitle;
   const extracted = extractFromPages({
@@ -109,6 +113,17 @@ export function evaluateBaselinePaper(input: {
   const headings = extracted.canonical.nodes
     .filter((node) => node.role === "heading")
     .map((node) => node.text ?? "");
+  // Structural metrics must evaluate the same resolved layer consumed by the
+  // reader. LayoutBlock roles are useful diagnostics, but can differ from
+  // canonical roles when native PDF streams interleave or rotate captions.
+  const figures = extracted.canonical.nodes
+    .filter((node) => node.role === "caption" && /^figure|^fig\.?/i.test(node.text ?? ""))
+    .map((node) => node.text ?? "")
+    .concat(input.blocks.filter((b) => b.role === "figure_caption").map((b) => b.text));
+  const tables = extracted.canonical.nodes
+    .filter((node) => node.role === "caption" && /^(?:table|表)/i.test(node.text ?? ""))
+    .map((node) => node.text ?? "")
+    .concat(input.blocks.filter((b) => b.role === "table_caption").map((b) => b.text));
   const canonicalTitle =
     extracted.canonical.nodes.find((n) => n.role === "title")?.text ?? null;
   const captionRels = extracted.canonical.relations.filter((r) => r.kind === "CAPTION_OF");
@@ -136,7 +151,9 @@ export function evaluateBaselinePaper(input: {
     catalogFormatFamily: input.catalogFormatFamily,
     pageKind: classifyDocument(input.pages),
     scannedByItemAverage: scannedByItemAverage(input.pages),
-    titlePredicted: titles[0] ?? null,
+    // Report the resolver's logical title, which may span multiple native
+    // lines. Using the first layout block understated wrapped titles.
+    titlePredicted: canonicalTitle ?? titles[0] ?? null,
     titleExact: expectedTitle
       ? titleExactMatch(canonicalTitle ?? titles.join(" "), expectedTitle)
       : undefined,
@@ -151,12 +168,24 @@ export function evaluateBaselinePaper(input: {
     headingRecall: gold?.headings
       ? substringRecall(headings, gold.headings)
       : undefined,
+    headingPrecision: gold?.completeAnnotations && gold.headings
+      ? substringPrecision(headings, gold.headings)
+      : undefined,
     // Several fixtures deliberately provide only a heading-presence check.
     // An empty hierarchy in partial ground truth means "not annotated", not
     // "the document has no hierarchy"; treating resolver relations as false
     // positives would corrupt the cross-paper benchmark average.
     headingHierarchyAccuracy: gold?.headingHierarchy && gold.headingHierarchy.length > 0
       ? relationAccuracy(
+          childRels.map((r) => ({
+            from: extracted.canonical.nodes.find((n) => n.id === r.from)?.text ?? "",
+            to: extracted.canonical.nodes.find((n) => n.id === r.to)?.text ?? "",
+          })),
+          gold.headingHierarchy
+        )
+      : undefined,
+    headingHierarchyPrecision: gold?.completeAnnotations && gold.headingHierarchy && gold.headingHierarchy.length > 0
+      ? relationPrecision(
           childRels.map((r) => ({
             from: extracted.canonical.nodes.find((n) => n.id === r.from)?.text ?? "",
             to: extracted.canonical.nodes.find((n) => n.id === r.to)?.text ?? "",
@@ -178,9 +207,20 @@ export function evaluateBaselinePaper(input: {
     tableRegionRecall: gold?.tableRegions
       ? substringRecall(structuredTableCaptions, gold.tableRegions)
       : undefined,
+    tableRegionPrecision: gold?.completeAnnotations && gold.tableRegions
+      ? substringPrecision(structuredTableCaptions, gold.tableRegions)
+      : undefined,
     listItemRecall: gold?.listItems
       ? substringRecall(
           extracted.blocks.filter((b) => b.type === "paragraph").map((b) => b.original ?? ""),
+          gold.listItems
+        )
+      : undefined,
+    listItemPrecision: gold?.completeAnnotations && gold.listItems
+      ? substringPrecision(
+          extracted.blocks
+            .filter((b) => b.type === "paragraph" && b.metadata?.listRole === "item")
+            .map((b) => b.original ?? ""),
           gold.listItems
         )
       : undefined,
@@ -210,5 +250,11 @@ export function evaluateBaselinePaper(input: {
     fusedTitle: fused.text,
     fusedTitleConfidence: fused.confidence,
     canonicalTitle,
+    rotatedNativeItemCount: input.pages
+      .flatMap((page) => page.textItems)
+      .filter((item) => Math.abs(item.rotation ?? 0) >= 45).length,
+    rotatedLineCount: input.blocks
+      .flatMap((block) => block.lines)
+      .filter((line) => Math.abs(line.rotation ?? 0) >= 45).length,
   };
 }

@@ -29,6 +29,8 @@ type Violation = {
   storedWarning: unknown;
   expectedWarning: string;
   source: string;
+  pageStart: number;
+  pageEnd: number;
 };
 
 async function main(): Promise<void> {
@@ -78,6 +80,8 @@ async function main(): Promise<void> {
           storedWarning,
           expectedWarning,
           source: block.original.replace(/\s+/g, " ").slice(0, 180),
+          pageStart: block.pageStart,
+          pageEnd: block.pageEnd,
         });
       }
     }

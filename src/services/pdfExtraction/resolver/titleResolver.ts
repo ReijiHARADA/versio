@@ -11,6 +11,10 @@ function looksLikeAuthorish(text: string): boolean {
 
 function joinTitleParts(left: string, right: string): string {
   if (/[-\u2010-\u2014]$/.test(left)) {
+    // Preserve an intentional compound such as "On-" + "Body". A lowercase
+    // continuation is the usual line-break hyphenation case and can safely
+    // be dehyphenated.
+    if (/^[A-Z\u00C0-\u024F]/.test(right)) return `${left}${right}`;
     return `${left.replace(/[-\u2010-\u2014]+$/, "")}${right}`;
   }
   return `${left} ${right}`.replace(/\s+/g, " ").trim();
@@ -26,7 +30,12 @@ export function resolveTitle(input: {
   extra?: ExtractionEvidence[];
   grobidTitle?: string | null;
 }): { text: string | null; confidence: number; evidence: ExtractionEvidence[] } {
-  const titles = input.candidates.filter((c) => c.role === "title");
+  // A layout pass can conservatively label a large masthead line as author;
+  // allow strong native title evidence to participate without discarding the
+  // original candidate role used by other resolver decisions.
+  const titles = input.candidates.filter(
+    (c) => c.role === "title" || (c.roleScores?.title ?? 0) >= 0.85
+  );
   let native: string[] = [];
 
   if (titles.length > 0) {

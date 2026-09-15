@@ -18,6 +18,8 @@ export type ExtractedTextItem = {
   fontSize: number;
   fontName: string;
   page: number;
+  /** Native text-matrix rotation in degrees, when supplied by the PDF. */
+  rotation?: number;
 };
 
 export type ExtractedPage = {
@@ -81,6 +83,7 @@ export async function extractPDFContent(
         fontSize,
         fontName: item.fontName,
         page: pageNum,
+        rotation: Math.round((Math.atan2(tx[1], tx[0]) * 180) / Math.PI * 100) / 100,
       });
     }
 

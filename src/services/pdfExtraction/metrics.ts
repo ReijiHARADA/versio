@@ -43,10 +43,34 @@ export function substringRecall(predicted: string[], expected: string[]): number
   if (expected.length === 0) return 1;
   let hit = 0;
   for (const gold of expected) {
-    const needle = gold.toLowerCase();
-    if (predicted.some((p) => p.toLowerCase().includes(needle))) hit += 1;
+    const needle = structuralMetricText(gold);
+    if (predicted.some((p) => structuralMetricText(p).includes(needle))) hit += 1;
   }
   return hit / expected.length;
+}
+
+/** Normalize only structural marker spacing for layout/native-stream metrics.
+ * Canonical source text remains untouched; this lets `Table 6` and a native
+ * `Table6` stream encoding measure the same recovered label. */
+function structuralMetricText(text: string): string {
+  return text.toLowerCase().normalize("NFKC")
+    .replace(/\b(table|figure|fig\.)\s+(?=\d)/g, "$1")
+    .replace(/\s+/g, " ").trim();
+}
+
+/** Precision counterpart for partial ground truth labels. A predicted value
+ * counts as a hit when it contains one annotated label; this is intentionally
+ * conservative for role precision audits and avoids treating unannotated
+ * papers as having zero valid structure. */
+export function substringPrecision(predicted: string[], expected: string[]): number {
+  if (predicted.length === 0) return 1;
+  if (expected.length === 0) return 1;
+  let hit = 0;
+  for (const value of predicted) {
+    const text = value.toLowerCase();
+    if (expected.some((gold) => text.includes(gold.toLowerCase()))) hit += 1;
+  }
+  return hit / predicted.length;
 }
 
 export function pairwiseOrderAccuracy(
@@ -77,6 +101,18 @@ export function relationAccuracy(
     if (pred.has(key(rel))) hit += 1;
   }
   return hit / expected.length;
+}
+
+export function relationPrecision(
+  predicted: Array<{ from: string; to: string }>,
+  expected: Array<{ from: string; to: string }>
+): number {
+  if (predicted.length === 0) return 1;
+  if (expected.length === 0) return 1;
+  const key = (r: { from: string; to: string }) =>
+    `${normalizeTitle(r.from)}=>${normalizeTitle(r.to)}`;
+  const gold = new Set(expected.map(key));
+  return predicted.filter((rel) => gold.has(key(rel))).length / predicted.length;
 }
 
 /** Character error rate when OCR is used. Empty gold → 0. */

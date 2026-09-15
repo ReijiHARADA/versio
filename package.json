@@ -12,6 +12,7 @@
     "test:extraction-corpus": "vitest run --config vitest.extraction.config.ts",
     "fetch:real-papers": "node scripts/fetch-real-papers.mjs",
     "bench:pdf-extraction": "npx tsx scripts/benchmark-pdf-extraction.ts",
+    "scan:pdf-boundaries": "npx vite-node scripts/scan-extraction-boundaries.ts",
     "bench:real-paper-translation": "npx --yes tsx scripts/benchmark-real-paper-translation.ts",
     "bench:library": "npx --yes tsx scripts/bench-library-scale.ts",
     "bench:library-scale": "npm run bench:library",

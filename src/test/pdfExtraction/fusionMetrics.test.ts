@@ -3,11 +3,17 @@ import { fuseTitle } from "../../services/pdfExtraction/fusion";
 import {
   characterErrorRate,
   pairwiseOrderAccuracy,
+  relationPrecision,
   setScores,
+  substringRecall,
+  substringPrecision,
   titleExactMatch,
 } from "../../services/pdfExtraction/metrics";
 
 describe("extraction metrics", () => {
+  it("matches structural labels when native PDF streams omit marker spacing", () => {
+    expect(substringRecall(["Table6Inter-item correlation matrix"], ["Table 6"])).toBe(1);
+  });
   it("matches titles after punctuation folding", () => {
     expect(
       titleExactMatch(
@@ -38,6 +44,15 @@ describe("extraction metrics", () => {
   it("computes CER for OCR comparison", () => {
     expect(characterErrorRate("abc", "abc")).toBe(0);
     expect(characterErrorRate("axc", "abc")).toBeCloseTo(1 / 3);
+  });
+
+  it("reports precision for partially annotated structural labels", () => {
+    expect(substringPrecision(["INTRODUCTION", "ordinary prose"], ["INTRODUCTION"])).toBe(0.5);
+    expect(substringPrecision([], ["INTRODUCTION"])).toBe(1);
+  });
+
+  it("scores relation precision separately from annotated recall", () => {
+    expect(relationPrecision([{ from: "A", to: "B" }, { from: "X", to: "Y" }], [{ from: "A", to: "B" }])).toBe(0.5);
   });
 });
 
