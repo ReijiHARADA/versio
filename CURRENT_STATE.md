@@ -2563,6 +2563,10 @@ caption継続中に複数native item・数式記号・高数値密度の行が�
 
 caption近傍で複数native itemを持つcompact rowを、同一x列の反復または複数rowのband存在でtable evidenceへ引き上げる条件を追加。sentence-shaped proseは従来guardで除外。pipeline 9/9、extraction corpus 44/44を確認。marketingの行は依然として一部equation/paragraphへ分散するため、次はResolverでregion membershipをCanonical provenanceへ反映する。
 
+### Full regression after table-row evidence (2026-09-16)
+
+全Vitest 61 files / 338 tests、extraction corpus 44/44が成功。既存のheading・reading-order・equation・caption回帰なし。table regionのCanonical membershipとpublisher横断precisionは未計測のため、抽出完了判定にはまだ到達していない。
+
 ### Extraction guard static verification (2026-09-16)
 
 prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）も成功。`.app`とtranslation-serverは変更していない。次回はmarketingの誤table候補を手動ground truth化し、precisionを数値化する。

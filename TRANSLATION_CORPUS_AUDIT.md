@@ -2597,3 +2597,5 @@ caption継続中にcell-likeなnative行（複数item、数式記号、高数値
 ### Caption-adjacent row evidence (2026-09-16)
 
 caption近傍のcompactな複数native item行について、x列反復または同一bandの複数rowをtable evidenceに利用。sentence-shaped proseは除外し、pipeline 9/9・extraction corpus 44/44を維持。Canonical table regionへのmembership反映は未完了。
+
+全Vitest 61 files / 338 tests、extraction corpus 44/44が成功。既存回帰はなし。table regionのCanonical membershipとpublisher横断precisionは未計測で、抽出完了判定には未到達。
