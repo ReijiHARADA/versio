@@ -68,6 +68,35 @@ function clamp(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
 
+/**
+ * Axis/plot labels are often emitted as independent native text blocks. They
+ * should not compete with table evidence merely because they contain many
+ * numbers. Repetition on one page/column is a useful, format-independent
+ * signal; the resolver may keep the node as `other`, and projection can then
+ * preserve it without treating it as translatable prose.
+ */
+function chartLabelEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
+  const text = block.text.trim();
+  if (!text || text.length > 180 || /[.!?。！？]$/.test(text)) return 0;
+  const digits = (text.match(/\d/g) ?? []).length;
+  const numericDensity = digits / Math.max(text.length, 1);
+  if (numericDensity < 0.35) return 0;
+  const samePageColumn = blocks.filter((candidate) =>
+    candidate !== block && candidate.pageStart === block.pageStart &&
+    candidate.column === block.column && candidate.text.trim().length <= 180 &&
+    (candidate.text.match(/\d/g) ?? []).length / Math.max(candidate.text.length, 1) >= 0.35 &&
+    Math.abs(candidate.bbox.x - block.bbox.x) <= Math.max(block.bbox.height * 2, 14)
+  );
+  // A caption-adjacent numeric row is more likely a real table row. Leave it
+  // to the table evidence generator instead of relabelling it as chart text.
+  const nearTableCaption = blocks.some((candidate) =>
+    candidate.pageStart === block.pageStart && candidate.role === "table_caption" &&
+    Math.abs(candidate.bbox.y - block.bbox.y) < 300
+  );
+  if (nearTableCaption || samePageColumn.length < 3) return 0;
+  return clamp(0.76 + Math.min(0.16, (samePageColumn.length - 3) * 0.03));
+}
+
 function median(values: number[]): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -319,6 +348,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const nearbyTableCaption = blocks.some((candidate) => candidate.role === "table_caption" &&
       candidate.pageStart === block.pageStart && Math.abs(candidate.bbox.y - block.bbox.y) < 300);
     const pageGrid = pageGridEvidence(block, blocks);
+    const chartLabels = chartLabelEvidence(block, blocks);
     const alignedTableRow = block.lines.length === 1 &&
       block.lines[0].items.length >= 2 && tableLike(block) && nearbyTableCaption;
     const tableHeaderRow = block.lines.length === 1 &&
@@ -347,6 +377,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       [role]: confidence,
     };
     if (pageGrid > 0) scoreByRole.table = pageGrid;
+    if (chartLabels > 0) scoreByRole.other = chartLabels;
     // Some journal/preprint mastheads use a large centered title whose line
     // is title-cased, so the layout pass can mistake it for an author line.
     // Native size/length/position evidence is sufficient to compete for the

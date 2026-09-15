@@ -2478,3 +2478,7 @@ caption metric修正後の `npm run test:extraction-corpus -- --run --reporter=d
 ### Extraction build verification (2026-09-16)
 
 抽出変更を含む通常web build（`npm run build`）が成功。出力されたdynamic import警告は既存のbundle最適化警告で、ビルドエラーではない。`.app` buildは方針どおり未実行。
+
+### Chart-label evidence (2026-09-16)
+
+linguistics PDFの数値軸ラベルを表と混同しないため、同一ページ・列で反復する短い高数値native blockを`other` roleの競合Evidenceとして追加。table caption近傍と複数セル行は除外。before/after benchmarkで`linguistics-language-model-physics`のflattenedNumericRowCountは16→10、sourceIntegrityRate=1.0を維持。pipeline 5/5、reading-order 49/49、extraction corpus 44/44、typecheck成功。`other`は既存projectionで保持され、短い非本文ブロックは翻訳対象外。誤除外のpublisher横断評価は継続。
