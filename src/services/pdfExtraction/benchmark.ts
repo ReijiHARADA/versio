@@ -73,6 +73,7 @@ export type BaselinePaperReport = {
     rotatedLineCount?: number;
     /** Native PDFs may flatten one table row into one text item. */
     flattenedNumericRowCount?: number;
+    chartLabelNodeCount?: number;
 };
 
 function uniqueTexts(values: string[]): string[] {
@@ -143,6 +144,9 @@ export function evaluateBaselinePaper(input: {
       (text.match(/\d/g) ?? []).length / Math.max(text.length, 1) >= 0.22 &&
       !/[.!?]$/.test(text) && (text.match(/[A-Za-z]{2,}/g) ?? []).length <= 2;
   }).length;
+  const chartLabelNodeCount = extracted.canonical.nodes.filter((node) =>
+    node.evidence.some((evidence) => evidence.label === "repeated-numeric-chart-label")
+  ).length;
   const captionRels = extracted.canonical.relations.filter((r) => r.kind === "CAPTION_OF");
   const affRels = extracted.canonical.relations.filter((r) => r.kind === "AFFILIATED_WITH");
   const childRels = extracted.canonical.relations.filter((r) => r.kind === "CHILD_OF");
@@ -311,6 +315,7 @@ export function evaluateBaselinePaper(input: {
     fusedTitleConfidence: fused.confidence,
     canonicalTitle,
     flattenedNumericRowCount,
+    chartLabelNodeCount,
     rotatedNativeItemCount: input.pages
       .flatMap((page) => page.textItems)
       .filter((item) => Math.abs(item.rotation ?? 0) >= 45).length,

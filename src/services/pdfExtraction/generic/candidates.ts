@@ -490,6 +490,16 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         reason,
       },
     ];
+    if (chartLabels > 0) {
+      evidence.push({
+        source: "generic-heuristic",
+        label: "repeated-numeric-chart-label",
+        confidence: chartLabels,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "repeated numeric native labels share a page/column x-band",
+      });
+    }
     return {
       id: `g-${index}`,
       role,

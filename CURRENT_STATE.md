@@ -2482,3 +2482,7 @@ caption metric修正後の `npm run test:extraction-corpus -- --run --reporter=d
 ### Chart-label evidence (2026-09-16)
 
 linguistics PDFの数値軸ラベルを表と混同しないため、同一ページ・列で反復する短い高数値native blockを`other` roleの競合Evidenceとして追加。table caption近傍と複数セル行は除外。before/after benchmarkで`linguistics-language-model-physics`のflattenedNumericRowCountは16→10、sourceIntegrityRate=1.0を維持。pipeline 5/5、reading-order 49/49、extraction corpus 44/44、typecheck成功。`other`は既存projectionで保持され、短い非本文ブロックは翻訳対象外。誤除外のpublisher横断評価は継続。
+
+### Chart evidence corpus probe (2026-09-16)
+
+chart-label evidenceを含むbenchmarkを再実行。対象は`power-over-skin` 4 nodes、`wear-scale` 7 nodes、`linguistics-language-model-physics` 123 nodes。linguisticsのflattenedNumericRowCountは10で、他paperのsourceIntegrityRate=1.0を維持。pipeline 5/5、extraction corpus 44/44。123件はfigure/chartの軸・系列ラベルが多いPDFのため、次回は手動サンプルでfalse positiveを確認し、必要なら閾値を調整する。
