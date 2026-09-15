@@ -1981,6 +1981,8 @@ running-header修正後に全Vitestを再実行し、61 files / 327 tests pass�
 
 融合見出しをnative line内で分割する試行は、実PDFで既存section判定が分割条件を満たさず、出力改善を確認できなかったためrevertした。未検証の文字列分割を残さず、次回はfont/spacing/line geometryを用いたEvidence生成から再設計する。
 
+全20 cached papersを再benchmarkし、`sourceIntegrityRate`はmin/meanとも1.0を維持した。title exactnessは既存の正規化対象を含め0.9で、source reconstructionの新規回帰はない。
+
 header geometry条件のoptional `pageHeight`を既定値へ修正し、`npm run build`を再実行して成功した（既存のdynamic-import warningのみ）。抽出コーパスも42/42で通過。
 
 列検出変更後の最終再検証として `npm run bench:pdf-extraction`、`npm run lint -- --max-warnings=0`、`npx tsc -b --noEmit` を実行し、すべて成功した。抽出baselineを更新済み。全体の手動review・paragraph境界精度は未完了のため、goalは継続する。
