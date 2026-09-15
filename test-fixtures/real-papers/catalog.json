@@ -146,7 +146,9 @@
           ]
         ],
         "referencesHeading": true
-      }
+      },
+      "discipline": "hci",
+      "selectionReason": "HCI layout and two-column conference variation"
     },
     {
       "id": "significant-other",
@@ -170,7 +172,9 @@
           "Introduction"
         ],
         "referencesHeading": true
-      }
+      },
+      "discipline": "hci",
+      "selectionReason": "HCI layout and two-column conference variation"
     },
     {
       "id": "power-over-skin",
@@ -197,7 +201,9 @@
         ],
         "forbidCaptionInParagraph": true,
         "referencesHeading": true
-      }
+      },
+      "discipline": "hci",
+      "selectionReason": "HCI layout and two-column conference variation"
     },
     {
       "id": "thermal-earring",
@@ -224,7 +230,9 @@
         ],
         "forbidCaptionInParagraph": true,
         "referencesHeading": true
-      }
+      },
+      "discipline": "hci",
+      "selectionReason": "HCI layout and two-column conference variation"
     },
     {
       "id": "ppg-earring",
@@ -242,8 +250,14 @@
       "seedPaths": [],
       "checks": {
         "forbidCaptionInParagraph": true,
-        "expectMultiColumnOnPages": [7, 10, 12]
-      }
+        "expectMultiColumnOnPages": [
+          7,
+          10,
+          12
+        ]
+      },
+      "discipline": "hci",
+      "selectionReason": "HCI layout and two-column conference variation"
     },
     {
       "id": "design-for-wearability",
@@ -263,7 +277,9 @@
       "checks": {
         "titleContains": "Wearability",
         "forbidCaptionInParagraph": true
-      }
+      },
+      "discipline": "ergonomics",
+      "selectionReason": "human-factors or wearable ergonomics format"
     },
     {
       "id": "dont-mind-me",
@@ -287,7 +303,9 @@
         ],
         "forbidCaptionInParagraph": true,
         "referencesHeading": true
-      }
+      },
+      "discipline": "hci",
+      "selectionReason": "HCI layout and two-column conference variation"
     },
     {
       "id": "speechin",
@@ -306,7 +324,9 @@
       "checks": {
         "titleContains": "SpeeChin",
         "forbidCaptionInParagraph": true
-      }
+      },
+      "discipline": "linguistics",
+      "selectionReason": "language or speech research structure"
     },
     {
       "id": "step-to-charge",
@@ -327,7 +347,9 @@
       "checks": {
         "referencesHeading": true,
         "mostlySingleColumn": true
-      }
+      },
+      "discipline": "hci",
+      "selectionReason": "HCI layout and two-column conference variation"
     },
     {
       "id": "wear-scale",
@@ -347,7 +369,9 @@
       "checks": {
         "titleContains": "Wearable Acceptability",
         "referencesHeading": true
-      }
+      },
+      "discipline": "ergonomics",
+      "selectionReason": "human-factors or wearable ergonomics format"
     },
     {
       "id": "precious-materials",
@@ -369,7 +393,9 @@
         "forbidCaptionInParagraph": true
       },
       "sourceStatus": "blocked-wrong-document",
-      "sourceStatusNote": "The former DRS download URL returned BodyBug – Design of KinAesthetic Interaction, not this catalogued paper. It is excluded until a verified OA PDF is found."
+      "sourceStatusNote": "The former DRS download URL returned BodyBug – Design of KinAesthetic Interaction, not this catalogued paper. It is excluded until a verified OA PDF is found.",
+      "discipline": "design-research",
+      "selectionReason": "design research and qualitative/visual layout"
     },
     {
       "id": "fashion-hybrid-cmf",
@@ -390,7 +416,9 @@
       ],
       "checks": {
         "forbidCaptionInParagraph": true
-      }
+      },
+      "discipline": "design-research",
+      "selectionReason": "design research and qualitative/visual layout"
     },
     {
       "id": "hci-empirical-methods",
@@ -421,7 +449,9 @@
             "data. This procedure has proved successful"
           ]
         ]
-      }
+      },
+      "discipline": "hci",
+      "selectionReason": "HCI layout and two-column conference variation"
     },
     {
       "id": "cognitive-psychology-gpt3",
@@ -449,7 +479,9 @@
       "checks": {
         "referencesHeading": true,
         "mostlySingleColumn": true
-      }
+      },
+      "discipline": "cognitive-psychology",
+      "selectionReason": "empirical cognitive study with statistical prose"
     },
     {
       "id": "marketing-consumer-response",
@@ -477,7 +509,9 @@
       "checks": {
         "referencesHeading": true,
         "mostlySingleColumn": true
-      }
+      },
+      "discipline": "marketing",
+      "selectionReason": "consumer/marketing empirical format"
     },
     {
       "id": "ergonomics-human-factors-ihci",
@@ -503,7 +537,9 @@
       "seedPaths": [],
       "checks": {
         "mostlySingleColumn": true
-      }
+      },
+      "discipline": "ergonomics",
+      "selectionReason": "human-factors or wearable ergonomics format"
     },
     {
       "id": "linguistics-language-model-physics",
@@ -531,7 +567,9 @@
       "checks": {
         "referencesHeading": true,
         "mostlySingleColumn": true
-      }
+      },
+      "discipline": "linguistics",
+      "selectionReason": "language or speech research structure"
     },
     {
       "id": "ozchi-finger-specific-touch",
@@ -580,7 +618,9 @@
           "t(36)"
         ],
         "referencesHeading": true
-      }
+      },
+      "discipline": "hci",
+      "selectionReason": "HCI layout and two-column conference variation"
     },
     {
       "id": "education-learning-analytics",
@@ -609,7 +649,9 @@
         "referencesHeading": true
       },
       "sourceStatus": "verified-oa",
-      "sourceStatusNote": "arXiv metadata verified against title and authors C. Romero and S. Ventura."
+      "sourceStatusNote": "arXiv metadata verified against title and authors C. Romero and S. Ventura.",
+      "discipline": "education",
+      "selectionReason": "education and learning-analytics survey format"
     },
     {
       "id": "neuroscience-rule-following",
@@ -639,7 +681,9 @@
         "referencesHeading": true
       },
       "sourceStatus": "verified-oa",
-      "sourceStatusNote": "Scientific Reports article is CC BY; title, DOI, year, and authors verified from Maastricht University record."
+      "sourceStatusNote": "Scientific Reports article is CC BY; title, DOI, year, and authors verified from Maastricht University record.",
+      "discipline": "neuroscience",
+      "selectionReason": "neuroscience journal format"
     },
     {
       "id": "economics-regularized-deepiv",
@@ -671,7 +715,9 @@
         "referencesHeading": true
       },
       "sourceStatus": "verified-oa",
-      "sourceStatusNote": "PMLR/arXiv metadata verified against the PDF title page."
+      "sourceStatusNote": "PMLR/arXiv metadata verified against the PDF title page.",
+      "discipline": "economics",
+      "selectionReason": "economics/ML methods and equation-heavy format"
     }
   ]
 }
