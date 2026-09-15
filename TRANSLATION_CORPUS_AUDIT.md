@@ -2709,3 +2709,7 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Added a generic native-font transition boundary guard for short heading-like blocks followed by body-size lines. Synthetic pipeline tests 12/12 and extraction corpus 56/56 pass; Elsevier table recall remains 0.571, so this is a paragraph/heading boundary safety improvement rather than a table-recall fix.
 
 - Added opt-in `PDF_LAYOUT_DEBUG=1` block-boundary diagnostics (role, pages, lines, native fonts, text prefix). Default behavior is unchanged; pipeline tests 12/12 and extraction corpus 56/56 pass.
+
+### 2026-09-16 pause checkpoint
+
+The extraction investigation is paused at a clean checkpoint. No translation-server or `.app` changes were made. The next action is to validate a generic geometry/style boundary split for mixed caption/table streams with a synthetic fixture before changing production grouping.

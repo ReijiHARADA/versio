@@ -2697,3 +2697,10 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Added `PDF_LAYOUT_DEBUG=1` diagnostic output in `pdfLayout.ts`, reporting block index, role, page range, line count, native fonts, and text prefix. Default execution remains silent.
 - TypeScript, pipeline tests (12/12), and extraction corpus (56/56) pass. This enables direct comparison of pre/post grouping in the next boundary iteration without changing extraction behavior by default.
+
+### 2026-09-16 extraction work paused at a clean checkpoint
+
+- User requested a pause after the native/layout diagnostic checkpoint.
+- Worktree is clean; no background audit or translation process is running.
+- Verified baseline remains extraction corpus 56/56 and the latest benchmark findings are documented above.
+- Next resume point is a generic geometry/style boundary split for mixed caption/table streams, starting with a synthetic fixture. Translation-server, quality gate, cascade, and `.app` remain unchanged.
