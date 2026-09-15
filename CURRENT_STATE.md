@@ -2038,3 +2038,7 @@ SpeechInの原PDFページ上端に繰り返される短いタイトル＋ペー
 ### 2026-09-16 checkpoint: publisher running-header suffix evidence
 
 SpeechInの原PDFでは、ページ番号を含む`タイトル • 192:3`形式のrunning headerが著者名条件に該当せず本文へ残っていた。ページ上端・本文より小さいfont・英字タイトル・bullet＋ページ番号suffixを組み合わせた汎用header evidenceを追加し、reading-order 38/38、extraction corpus 42/42で通過。ページ番号付き本文や通常の短文は対象外にしている。全体のheader精度は代表ページの手動確認を継続する。
+
+### 2026-09-16 checkpoint: full validation after running-header evidence
+
+running-header suffix evidence追加後に全Vitest 61 files / 327 tests、extraction corpus 42/42、lint、TypeScriptを再実行して成功した。SpeechInの上端publisher headerは本文から除外され、既存の二段組・caption/table/list回帰は維持。手動レビュー対象の未完結tailと低信頼table gridは引き続き未完了。
