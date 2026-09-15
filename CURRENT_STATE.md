@@ -2146,3 +2146,7 @@ captionless table precision guard後の20 cached PDF横断診断を`test-data/re
 ### 2026-09-16 checkpoint: equation/algorithm table projection guard
 
 横断サンプルでAlgorithm/Require本文と数式断片がtext-bearing table候補に混入していたため、projectionでAlgorithm/Require開始行と主要math symbolを除外する汎用条件を追加。PPG captionless grid回帰は22/22通過。全corpus Paper table block診断値は80から132へ再計測され、captionless実表と残存候補のpublisher別目視確認が必要。
+
+### 2026-09-16 checkpoint: extraction handoff ledger
+
+最新台帳を、equation/algorithm table projection guard後・extraction corpus 43/43の状態へ更新した。次回の実作業は残存text-bearing table候補のpublisher横断precision監査、39 warning blockのnative画像照合、注釈付きparagraph boundaryのprecision/recall計測。
