@@ -187,7 +187,7 @@ export function resolveCanonicalDocument(input: {
     // conservatively left as paragraph. Reuse the closest native candidate's
     // provenance so the resolved title never becomes an unanchored node.
     const titleSource = candidates
-      .filter((candidate) => candidate.pageStart === 1)
+      .filter((candidate) => candidate.pageStart === 1 && candidate.boundingBoxes.length > 0)
       .sort((a, b) => {
         const aScore = a.evidence.some((e) => /title/i.test(e.label)) ? 1 : 0;
         const bScore = b.evidence.some((e) => /title/i.test(e.label)) ? 1 : 0;
