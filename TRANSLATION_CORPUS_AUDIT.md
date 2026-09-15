@@ -2664,3 +2664,5 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Provenance fix verified: resolved synthetic titles now carry the selected native candidate's page/bbox in `sourceAnchor`. The 20-paper benchmark now reports canonical provenance minimum/mean 1.0; prior two residual papers are cleared without fallback or metric relaxation.
 
 - Full-suite verification after provenance fix: 61 Vitest files / 342 tests passed and oxlint passed. Extraction corpus remains 44/44; translation-server and `.app` remain untouched.
+
+- Added `test-fixtures/real-papers/corpus-coverage.json` to make current discipline/format gaps reproducible. It records 21 catalog entries and 20 cached PDFs; medicine and machine-learning coverage still need OA additions before the extraction goal can be complete.
