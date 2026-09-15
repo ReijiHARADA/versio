@@ -2619,3 +2619,4 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Re-ran `npm run test:extraction-corpus -- --run` after the latest extraction-only checkpoint: 2 files / 44 tests passed (reading-order 21, baseline 23). No regression observed in source integrity, heading, caption, table, list, equation, or page/column ordering fixtures.
 - No translation-server, model, quality-gate, or `.app` changes were made. Remaining extraction work is limited to broader manual cross-format review and conservative rotated-table matrix reconstruction.
+- 2026-09-16 verification: production web build (`npm run build`), TypeScript no-emit, and oxlint completed successfully after the extraction checkpoint. This was a web build only; no `.app` bundle was produced.
