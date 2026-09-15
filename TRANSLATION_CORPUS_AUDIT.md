@@ -2617,3 +2617,7 @@ Table 2〜11の短いcaptionをpartial ground truthへ追加し、本文中の`T
 ### List preservation checkpoint (2026-09-16)
 
 education-learning-analyticsのlist ground truthでlistItemRecall 1.0、sourceIntegrity 1.0。list注釈は現在1 paperのみで、横断precisionは未計測。
+
+### Source-policy recheck (2026-09-16)
+
+20 cached papers・2,343 paragraphsを再検証。warning-tagged blocks 353、明示的violationは全件`wouldSubmitToModel:false`。前回492件から減少したが、手動分類とparagraph repairの精度評価は未完了。

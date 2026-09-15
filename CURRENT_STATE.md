@@ -2581,6 +2581,10 @@ marketing PDFのTable 2〜11の短いcaptionをpartial ground truthへ追加（�
 
 既存ground truthでlist注釈があるeducation-learning-analyticsを再確認し、listItemRecall **1.0**、sourceIntegrity **1.0**。corpus全体ではlist注釈が1 paperのみのため、publisher横断のlist precisionは未計測。
 
+### Source-policy recheck (2026-09-16)
+
+全20 cached papers（2,343 paragraphs）でsource-policy verifierを再実行。warning-tagged blocksは353、明示的violationはすべて`wouldSubmitToModel:false`を維持。前回記録の492件から減少したが、未完結段落・括弧不整合の手動分類は未完了であり、抽出品質の完了証拠とは扱わない。
+
 ### Full regression after table-row evidence (2026-09-16)
 
 全Vitest 61 files / 338 tests、extraction corpus 44/44が成功。既存のheading・reading-order・equation・caption回帰なし。table regionのCanonical membershipとpublisher横断precisionは未計測のため、抽出完了判定にはまだ到達していない。
