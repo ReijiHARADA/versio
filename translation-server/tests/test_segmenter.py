@@ -73,6 +73,10 @@ class SegmenterTests(unittest.TestCase):
                 units = segment_for_translation(case["source"])
                 self.assertTrue(validate_round_trip(case["source"], [u.text for u in units]))
                 self.assertTrue(all(len(u.text.split()) >= 4 for u in units), case["id"])
+                expected = case.get("expected", {})
+                for relation in expected.get("mustKeepRelations", []):
+                    self.assertEqual(len(relation), 2)
+                    self.assertTrue(all(token in case["source"] for token in relation))
 
     def test_model_input_repairs_lost_apostrophe_without_changing_source(self) -> None:
         source = "“Its not scary like blood pressure, it feels like a costume or sports gear, activity oriented”"
@@ -322,6 +326,18 @@ class SegmenterTests(unittest.TestCase):
             units[1].model_input,
             "This region has tight coupling to the body unlike watches and other wearables which are more loosely worn on extremities.",
         )
+
+    def test_rescue_long_top_level_comma_is_conservative_and_reconstructable(self) -> None:
+        source = (
+            "The experiment examined how participants selected targets under several visual and motor conditions, "
+            "with the analysis comparing response time, error rate, confidence, workload, and transfer effects "
+            "across the complete set of trials and reporting uncertainty for every estimated difference."
+        )
+        units = rescue_units_for_translation(source)
+        self.assertEqual(len(units), 2)
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
+        self.assertTrue(units[0].model_input.endswith("."))
+        self.assertTrue(units[1].model_input[0].isupper())
 
     def test_clean_source_fallback_fixtures_preserve_units_and_scientific_tokens(self) -> None:
         fixture = json.loads((Path(__file__).parents[1] / "benchmarks" / "translation-unit-fallback-fixtures-v66.json").read_text())

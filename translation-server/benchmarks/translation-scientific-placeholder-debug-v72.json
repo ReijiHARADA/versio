@@ -1,0 +1,12 @@
+{
+  "fixture": "power-over-skin/b-eed74380",
+  "modelVersion": "3b-mt-v5-semantic-v71",
+  "source": "This signal was then fed into an RF amplifier board (p.n. TQP3M9009) with a nominal gain of 27.36 dB, the output of which is impedance matched before connecting to the body-coupled electrode.",
+  "protectedInput": "This signal was then fed into an ZZCIT1ZZ amplifier board (p.n. ZZCIT2ZZ) with a nominal gain of 27.36 dB, the output of which is impedance matched before connecting to the body-coupled electrode.",
+  "citations": ["RF", "TQP3M9009"],
+  "rawDecode": "この信号を，２７．３６ｄＢの利得をもつ増幅器ボードに入力し，その出力はボディ結合電極に接続する前にインピーダンスを整合した。",
+  "legacyRestoredOutput": "この信号を,27.36dBの利得をもつ増幅器ボードに入力し,その出力はボディ結合電極に接続する前にインピーダンスを整合した。RFTQP3M9009",
+  "strictRestore": "reject_missing",
+  "expected": "reject before malformed citation append",
+  "capturedAt": "2026-09-15"
+}

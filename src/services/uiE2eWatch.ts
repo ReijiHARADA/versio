@@ -2,27 +2,75 @@ import { invoke } from "@tauri-apps/api/core";
 import { isTauriApp } from "../utils/serverReady";
 import { getStorage } from "../data/runtime";
 
-type UiE2eMarker = {
+export type UiE2ePhase = "initial" | "relaunch";
+
+export type UiE2eMarker = {
   ok: boolean;
   step: string;
+  phase: UiE2ePhase;
   detail?: string;
   searchVisible?: boolean;
   annotationVisible?: boolean;
+  exportDialogVisible?: boolean;
+  exportCompleted?: boolean;
+  exportBytes?: number;
+  exportedPath?: string;
+  paperTitleHint?: string;
   at: string;
 };
 
 let started = false;
 let selectionTried = false;
+let phase: UiE2ePhase = "initial";
+let lastMarker: UiE2eMarker | null = null;
+let exportCompleted = false;
+let exportBytes = 0;
+let exportedPath: string | undefined;
+let paperTitleHint: string | undefined;
 
 async function writeUiMarker(marker: UiE2eMarker): Promise<void> {
+  lastMarker = marker;
   const { fs } = await getStorage();
   await fs.writeText("_acceptance/ui-result.json", JSON.stringify(marker, null, 2));
 }
 
+/** Called from production export path after a successful save (UI E2E only). */
+export async function reportUiE2eExportSuccess(saved: {
+  path: string;
+  bytes: number;
+}): Promise<void> {
+  if (!isTauriApp()) return;
+  try {
+    const enabled = await invoke<boolean>("ui_e2e_enabled");
+    if (!enabled) return;
+  } catch {
+    return;
+  }
+  exportCompleted = saved.bytes > 0;
+  exportBytes = saved.bytes;
+  exportedPath = saved.path;
+  await writeUiMarker({
+    ok: false,
+    step: exportCompleted ? "ui_export_completed" : "ui_export_empty",
+    phase,
+    exportCompleted,
+    exportBytes,
+    exportedPath,
+    exportDialogVisible: Boolean(document.querySelector('[data-testid="export-dialog"]')),
+    annotationVisible: Boolean(document.querySelector('[data-testid="annotation-mark"]')),
+    searchVisible: Boolean(document.querySelector('[data-testid="search-hit"]')),
+    paperTitleHint,
+    detail: `exportBytes=${saved.bytes}`,
+    at: new Date().toISOString(),
+  });
+}
+
 /**
  * Packaged UI E2E only (PAPER_READER_UI_E2E=1).
- * Observes real DOM for Library → Reader → memo → search → export and
- * records markers. Does not drive imports via service APIs.
+ *
+ * Constraint: WKWebView AX text selection is unreliable, so selection is
+ * synthesized once via the DOM Range API; Save / Search / Export remain
+ * external Accessibility / System Events actions.
  */
 export async function maybeStartUiE2eWatcher(): Promise<void> {
   if (started || !isTauriApp()) return;
@@ -35,9 +83,35 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
   if (!enabled) return;
   started = true;
 
+  // Relaunch detection: prior successful initial marker means we are in phase relaunch.
+  try {
+    const { fs } = await getStorage();
+    const prevRaw = await fs.readText("_acceptance/ui-result.json");
+    if (prevRaw) {
+      const prev = JSON.parse(prevRaw) as UiE2eMarker;
+      if (
+        prev.phase === "initial" &&
+        prev.exportCompleted &&
+        prev.annotationVisible &&
+        (prev.step === "ui_core_flow_ready" || prev.exportCompleted)
+      ) {
+        phase = "relaunch";
+        paperTitleHint = prev.paperTitleHint;
+        // Do not re-synthesize selection on relaunch — annotation should already exist.
+        selectionTried = true;
+        exportCompleted = false;
+        exportBytes = 0;
+        exportedPath = undefined;
+      }
+    }
+  } catch {
+    // ignore
+  }
+
   await writeUiMarker({
     ok: false,
-    step: "ui_watch_started",
+    step: phase === "relaunch" ? "ui_relaunch_watch_started" : "ui_watch_started",
+    phase,
     at: new Date().toISOString(),
   });
 
@@ -50,21 +124,48 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
     const searchHits = document.querySelectorAll('[data-testid="search-hit"]');
     const exportDialog = document.querySelector('[data-testid="export-dialog"]');
     const annotationMark = document.querySelector('[data-testid="annotation-mark"]');
+    const exportStatus = document.querySelector('[data-testid="export-status"]');
 
-    let step = "ui_waiting_library";
-    if (paperCard && !reader) step = "ui_library_card_visible";
-    if (reader && readerBody) step = "ui_reader_visible";
-    if (memo) step = "ui_memo_open";
-    if (annotationMark) step = "ui_annotation_visible";
-    if (searchPanel) {
-      step = searchHits.length > 0 ? "ui_search_hits_visible" : "ui_search_open";
+    if (paperCard && !paperTitleHint) {
+      paperTitleHint = paperCard.getAttribute("aria-label") || paperCard.textContent?.trim() || "";
     }
-    if (exportDialog) step = "ui_export_open";
 
-    // Once Reader body exists, synthesize a real DOM selection once so MemoPopover
-    // opens through the production selection path (AX text selection in WKWebView
-    // is unreliable). External automation still types the note and clicks Save.
-    if (readerBody && !selectionTried && !memo && !annotationMark) {
+    // Detect export success from visible status if reportUiE2eExportSuccess already ran.
+    if (
+      exportStatus?.textContent?.includes("書き出しました") &&
+      !exportCompleted &&
+      exportedPath
+    ) {
+      // keep existing exportCompleted from report
+    }
+
+    let step = phase === "relaunch" ? "ui_relaunch_waiting" : "ui_waiting_library";
+    if (paperCard && !reader) {
+      step = phase === "relaunch" ? "ui_relaunch_library_card_visible" : "ui_library_card_visible";
+    }
+    if (reader && readerBody) {
+      step = phase === "relaunch" ? "ui_relaunch_reader_visible" : "ui_reader_visible";
+    }
+    if (phase === "initial") {
+      if (memo) step = "ui_memo_open";
+      if (annotationMark) step = "ui_annotation_visible";
+      if (searchPanel) {
+        step = searchHits.length > 0 ? "ui_search_hits_visible" : "ui_search_open";
+      }
+      if (exportDialog) step = "ui_export_open";
+      if (exportCompleted && exportBytes > 0) step = "ui_export_completed";
+    } else if (annotationMark) {
+      step = "ui_relaunch_annotation_visible";
+    }
+
+    // Initial-phase selection synthesis (not used on relaunch).
+    if (
+      phase === "initial" &&
+      readerBody &&
+      !selectionTried &&
+      !memo &&
+      !annotationMark
+    ) {
       selectionTried = true;
       const target =
         readerBody.querySelector<HTMLElement>("[data-block-id]") ||
@@ -86,18 +187,47 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
       }
     }
 
-    const ready =
-      Boolean(paperCard) &&
-      Boolean(reader) &&
-      Boolean(annotationMark || memo) &&
-      Boolean(searchPanel && searchHits.length > 0);
+    const searchVisible = Boolean(searchPanel && searchHits.length > 0);
+    const annotationVisible = Boolean(annotationMark);
+    const exportDialogVisible = Boolean(exportDialog);
+
+    let ok = false;
+    if (phase === "initial") {
+      ok =
+        Boolean(paperCard) &&
+        Boolean(reader) &&
+        annotationVisible &&
+        searchVisible &&
+        exportCompleted &&
+        exportBytes > 0;
+      if (ok) step = "ui_core_flow_ready";
+    } else {
+      ok = Boolean(paperCard) && Boolean(reader) && annotationVisible;
+      if (ok) step = "ui_relaunch_annotation_visible";
+    }
+
+    // Avoid clobbering a fresher exportCompleted marker with a weaker tick.
+    if (
+      lastMarker?.step === "ui_export_completed" &&
+      !ok &&
+      phase === "initial" &&
+      step === "ui_export_open"
+    ) {
+      // keep advancing via exportCompleted fields below
+    }
 
     await writeUiMarker({
-      ok: ready,
-      step: ready ? "ui_core_flow_ready" : step,
-      searchVisible: Boolean(searchPanel && searchHits.length > 0),
-      annotationVisible: Boolean(annotationMark || memo),
-      detail: `cards=${document.querySelectorAll('[data-testid="paper-card"]').length} hits=${searchHits.length}`,
+      ok,
+      step,
+      phase,
+      searchVisible,
+      annotationVisible,
+      exportDialogVisible,
+      exportCompleted,
+      exportBytes,
+      exportedPath,
+      paperTitleHint,
+      detail: `cards=${document.querySelectorAll('[data-testid="paper-card"]').length} hits=${searchHits.length} exportBytes=${exportBytes}`,
       at: new Date().toISOString(),
     });
   };

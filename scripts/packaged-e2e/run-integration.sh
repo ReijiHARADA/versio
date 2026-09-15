@@ -6,7 +6,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 APP_PATH="${PAPER_READER_APP_PATH:-$ROOT/src-tauri/target/release/bundle/macos/Paper Reader.app}"
 ARTIFACT_DIR="$ROOT/scripts/packaged-e2e/artifacts/integration"
-FIXTURE_PDF="$ROOT/scripts/packaged-e2e/fixture-tiny.pdf"
+FIXTURE_PDF="${PAPER_READER_E2E_FIXTURE:-$ROOT/test-fixtures/generated-pdfs/single-column.pdf}"
+if [[ ! -f "$FIXTURE_PDF" ]]; then
+  FIXTURE_PDF="$ROOT/scripts/packaged-e2e/fixture-tiny.pdf"
+fi
 ACCEPTANCE_HOME="${PAPER_READER_ACCEPTANCE_HOME:-$ARTIFACT_DIR/app-data-$$}"
 LOG_FILE="$ARTIFACT_DIR/app.log"
 STEP_FILE="$ARTIFACT_DIR/step.txt"
@@ -49,6 +52,7 @@ fi
 
 if [[ ! -f "$FIXTURE_PDF" ]]; then
   step "generate fixture pdf"
+  FIXTURE_PDF="$ROOT/scripts/packaged-e2e/fixture-tiny.pdf"
   python3 - "$FIXTURE_PDF" <<'PY'
 import sys
 from pathlib import Path

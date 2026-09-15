@@ -1,0 +1,77 @@
+{
+  "model": "Helsinki-NLP/opus-mt-en-jap",
+  "category": "ordinary-body-prose",
+  "count": 7,
+  "results": [
+    {
+      "paperId": "thermal-earring",
+      "blockId": "b-01a329cd",
+      "source": "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study. It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc. While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge. We expect that with a larger and more representative data set, it would be possible to develop a model to predict user’s core body temperature using their earlobe temperature and corresponding demographics. In future work, Thermal Earring may be deployed in a larger study in conjunction with other physiological sensors to build a model for computing the core body temperature from the earlobe temperature.",
+      "model": "Helsinki-NLP/opus-mt-en-jap",
+      "translation": "長い突起される son内の 目は,宮内の片目で飾り,死意志と まことの are 軍 軍 軍 軍があって,そこはさそろった入港にある. 入港というのは,さ とき三階から,腕であって,死意の行がそろうためである.",
+      "inputTokens": 293,
+      "outputTokens": 69,
+      "timeMs": 563.770055770874
+    },
+    {
+      "paperId": "cognitive-psychology-gpt3",
+      "blockId": "b-8f2a6a49",
+      "source": "Decision-making: Heuristics and biases We began our investigations of GPT-3’s decision-making by prompting the canonical “Linda problem”15 (Linda, see Figure 1A). This problem has been known to assess the conjunction fallacy, a formal fallacy that occurs when it is assumed that specific conditions are more probable than a single general one. In the standard vignette, a hypothetical woman named Linda is described as “outspoken, bright, and politically active”. Participants are then asked if it was more likely that Linda is a bank teller or that she is a bank teller and an active feminist. GPT-3, just like people, chose the second option, thereby falling for the conjunction fallacy. Next, we prompted the so-called “cab problem”16 (Cab, see SI Appendix), in which participants commonly fail to take the base rate of different colors of taxis in a city into account when judging the probability of the color of a cab that was involved in an accident. Unlike people, GPT-3 did not fall for the base-rate fallacy, i.e. to ignore the base rates of different colors, but instead provided the (approximately) correct answer. Finally, we asked GPT-3 to provide an answer to the “hospital problem”17 (Hospital, see SI Appendix), in which participants are asked which of two hospitals, a smaller or a larger one, is more likely to report more days on which more than 60% of all born children were boys. While the correct answer would be the smaller hospital (due to the larger variance of smaller samples), GPT-3, just like people, thought that the probability was about equal.",
+      "model": "Helsinki-NLP/opus-mt-en-jap",
+      "translation": "彼らは柔和な難を第二人 霊にうさむのに,わたしたちは人ず,受難を犯す口のように,いてその倒すがよかった.",
+      "inputTokens": 485,
+      "outputTokens": 38,
+      "timeMs": 205.94191551208496
+    },
+    {
+      "paperId": "cognitive-psychology-gpt3",
+      "blockId": "b-5096fc7a",
+      "source": "We used the public OpenAI API to run all our simulations14. There are four GPT-3 models accessible through this API: “Ada”, “Babbage”, “Curie” and “Davinci” (sorted from the least to the most complex model). We focused our investigation on the most powerful of these models (“Davinci”) unless otherwise noted. We furthermore set the temperature parameter to 0, leading to deterministic answers, and kept the default values for all other parameters.",
+      "model": "Helsinki-NLP/opus-mt-en-jap",
+      "translation": "わたし たち は , クレネテ ・ クレクミン を 出立 し て , ま く の を 決定 し た . ここ に は パトケデ が 来 た . ここには パトラク と クミン が あ る . これ は 決心 を いだ く こと で , わたし たち の シフレトケン を 打 つ こと で は な い か . また , 決心 者 が われわれ に 臨 み , すなわち , い かこ な い .",
+      "inputTokens": 149,
+      "outputTokens": 116,
+      "timeMs": 649.3918895721436
+    },
+    {
+      "paperId": "cognitive-psychology-gpt3",
+      "blockId": "b-9c57b65a",
+      "source": "In a second test, we asked GPT-3 to intervene in a scenario by removing the correct object to prevent an effect after having read about three different objects, one causing and two not causing the effect (in this case, an allergic reaction; Intervene, see SI Appendix). GPT-3 identified the correct object to be removed. In the final test, we probed GPT-3’s ability of mature causal reasoning24 (Mature, see SI Appendix). In this task, GPT-3 was told that there were four pills: A, B, C and D. While A and B individually could kill someone, C and D could not. GPT-3 successfully answered multiple questions about counterfactuals correctly, such as: “A man took pill B and pill C and he died. If he had not taken pill B, could he still have died?”.",
+      "model": "Helsinki-NLP/opus-mt-en-jap",
+      "translation": "彼 は , 暴動 を 失 っ た まま , 病 と い う  が 宮 で 開 か れ て い た の で , 裁判 を 受け て い る の で す . この 倒れ は , 帆 を 見 た の で す が , 啓示 に つ い て は ,  部族 の ため に  喜 ん で い ま す . ここ に 来る 者 が あ り ま す . 彼 は この  汚 さ れ て い ま す \" .",
+      "inputTokens": 228,
+      "outputTokens": 108,
+      "timeMs": 551.1407852172852
+    },
+    {
+      "paperId": "linguistics-language-model-physics",
+      "blockId": "b-30cd3318",
+      "source": "Related work. Linear probing at least traces back to Hewitt and Manning [15], who examines the correlation between BERT’s hidden states and the parse tree distance metric (similar to NTdistance in our language). Subsequent studies [8, 18, 20, 30, 34, 36, 40] also explored probing techniques to suggest that BERT-like transformers can approximate CFGs from natural languages. Our approach differs not only in the multi-head probing formula that we proposed; also that we use synthetic data to demonstrate that linear probing can almost perfectly recover NT ancestors and boundaries, even for complex and ambiguous CFG strings exceeding hundreds of tokens (c.f. English CFG has an average length of 28, see Appendix G). We focus on training generative decoder-only models; an encoder-based model like BERT [17] or its modern variant deBERTa [14] may not learn deep (i.e., close to the CFG root) NT information very well, as shown in Result 4-5. Our results, along with Section 5 next, shall provide evidence that generative language models like GPT-2 employ a DP-like approach to generate CFGs, while encoder-based models trained via MLM struggle to learn more complex/deeper CFGs.",
+      "model": "Helsinki-NLP/opus-mt-en-jap",
+      "translation": "彼らは陰謀にくみをするのに,さか刺す目があり,陰謀をこぐために,金持の難を考える.",
+      "inputTokens": 408,
+      "outputTokens": 31,
+      "timeMs": 166.517972946167
+    },
+    {
+      "paperId": "linguistics-language-model-physics",
+      "blockId": "b-ebe5dcc2",
+      "source": "Transformer-based language models are effective but complex, and understanding their inner workings and reasoning mechanisms is a significant challenge. Previous research has primarily explored how these models handle simple tasks like name copying or selection, and we extend this by investigating how these models perform recursive language structure reasoning defined by context-free grammars (CFGs). We introduce a family of synthetic CFGs that produce hierarchical rules, capable of generating lengthy sentences (e.g., hundreds of tokens) that are locally ambiguous and require dynamic programming to parse. Despite this complexity, we demonstrate that generative models like GPT can accurately learn and reason over CFG-defined hierarchies and generate sentences based on it. We explore the model’s internals, revealing that its hidden states precisely capture the structure of CFGs, and its attention patterns resemble the information passing in a dynamic programming algorithm. This paper also presents several corollaries, including showing why absolute positional embeddings is inferior to relative and rotary embeddings; uniform attention alone is surprisingly effective (motivating our follow-up work on Canon layers [1]); encoder-only models (e.g., BERT, DeBERTa) struggle with deep structure reasoning on CFGs compared to autoregressive models (e.g., GPT); and injecting structural or syntactic noise into pretraining data markedly improves robustness to corrupted language prompts.",
+      "model": "Helsinki-NLP/opus-mt-en-jap",
+      "translation": "彼らは陰謀をこぎ,知識があって,むだである. 啓示は彼らには呼ぶわたしが,偶像にむかっては呼ぶのに,知識が静まり,知識がりするかげぐことが,人々にすぎない.",
+      "inputTokens": 455,
+      "outputTokens": 49,
+      "timeMs": 260.85829734802246
+    },
+    {
+      "paperId": "neuroscience-rule-following",
+      "blockId": "b-9ba3fd27",
+      "source": "Decisions are often governed by rules on adequate social behaviour. Recent research suggests that the right lateral prefrontal cortex (rLPFC) is involved in the implementation of internal fairness rules (norms), by controlling the impulse to act selfishly. A drawback of these studies is that the assumed norms and impulses have to be deduced from behaviour and that norm-following and pro-sociality are indistinguishable. Here, we directly confronted participants with a rule that demanded to make advantageous or disadvantageous monetary allocations for themselves or another person. To disentangle its functional role in rule-following and pro-sociality, we divergently manipulated the rLPFC by applying cathodal or anodal transcranial direct current stimulation (tDCS). Cathodal tDCS increased participants’ rule-following, even of rules that demanded to lose money or hurt another person financially. In contrast, anodal tDCS led participants to specifically violate more often those rules that were at odds with what participants chose freely. Brain stimulation over the rLPFC thus did not simply increase or decrease selfishness. Instead, by disentangling rule-following and pro-sociality, our results point to a broader role of the rLPFC in integrating the costs and benefits of rules in order to align decisions with internal goals, ultimately enabling to flexibly adapt social behaviour.",
+      "model": "Helsinki-NLP/opus-mt-en-jap",
+      "translation": "書 く 家 に は , 強制 だけ が あ る の で , 彼 ら は 考え を も っ て 人 を 失 い , 外 に 裁判 を 受け る の で は な い . ここ に は 多数 の 時 と , 陰謀 を 用い る こと が でき る .",
+      "inputTokens": 411,
+      "outputTokens": 68,
+      "timeMs": 353.58500480651855
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "model": "facebook/m2m100_1.2B",
+  "category": "ordinary-body-prose",
+  "count": 7,
+  "results": [
+    {
+      "paperId": "thermal-earring",
+      "blockId": "b-01a329cd",
+      "source": "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study. It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc. While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge. We expect that with a larger and more representative data set, it would be possible to develop a model to predict user’s core body temperature using their earlobe temperature and corresponding demographics. In future work, Thermal Earring may be deployed in a larger study in conjunction with other physiological sensors to build a model for computing the core body temperature from the earlobe temperature.",
+      "model": "facebook/m2m100_1.2B",
+      "translation": "耳の耳の体温の増加は、耳の体の体温、性別、代謝率、体質指数など、環境温度の外部の要因によって反映されることが示されているが、耳の耳から体温を直接評価するには、さらなる研究が必要である。耳の体溫を含む皮膚温度は、耳に体温を超える要因の数によって影響されることが知られているが、耳は体温、年齢、体重指数等を含む。熱の体温は、環境温暖化の影響を除くために情報を提供する一方で、ユーザー依存性や代謝率などのこれらの他の要因を解決することは開かれた課題である。我々は、より大きな、より代表的なデータセットで、耳の骨の体温と関連する人口統計を使用してユーザーの体の核心温度を予測するモデルを開発することが可能であることを期待する。",
+      "inputTokens": 228,
+      "outputTokens": 217,
+      "timeMs": 9597.410917282104
+    },
+    {
+      "paperId": "cognitive-psychology-gpt3",
+      "blockId": "b-8f2a6a49",
+      "source": "Decision-making: Heuristics and biases We began our investigations of GPT-3’s decision-making by prompting the canonical “Linda problem”15 (Linda, see Figure 1A). This problem has been known to assess the conjunction fallacy, a formal fallacy that occurs when it is assumed that specific conditions are more probable than a single general one. In the standard vignette, a hypothetical woman named Linda is described as “outspoken, bright, and politically active”. Participants are then asked if it was more likely that Linda is a bank teller or that she is a bank teller and an active feminist. GPT-3, just like people, chose the second option, thereby falling for the conjunction fallacy. Next, we prompted the so-called “cab problem”16 (Cab, see SI Appendix), in which participants commonly fail to take the base rate of different colors of taxis in a city into account when judging the probability of the color of a cab that was involved in an accident. Unlike people, GPT-3 did not fall for the base-rate fallacy, i.e. to ignore the base rates of different colors, but instead provided the (approximately) correct answer. Finally, we asked GPT-3 to provide an answer to the “hospital problem”17 (Hospital, see SI Appendix), in which participants are asked which of two hospitals, a smaller or a larger one, is more likely to report more days on which more than 60% of all born children were boys. While the correct answer would be the smaller hospital (due to the larger variance of smaller samples), GPT-3, just like people, thought that the probability was about equal.",
+      "model": "facebook/m2m100_1.2B",
+      "translation": "リハビリは、確率が決定する: エウリスティクスと偏見 私たちは、SIの決定のためのSAMT3の決定の正しい方法を推奨することにより、私たちの調査を開始しました「Linda問題」15(Linda、図1Aを参照)。この問題は、それは、特定の条件が一般的なものよりも確率が高いと仮定されるときに起こる、結合誤り、公式誤りであると評価するために知られているが、GPT-3は、標準的なヴィネットで、仮定的な女性の名前Lindaは「発言され、明るく、政治的に活発である」と記述されています。参加者は、Lindaが銀行のデーターである可能性が高いかどうか、または彼女が銀行のディーラーであり、アクティブなフェミニストであるかどうかを問われました。GPT-3、単に人々のように、二つの選択肢を選択し、それによって結合誤りを落とします。それから、我々は、いわゆる「カバー」ではなく「カバー3」に、人々が関与",
+      "inputTokens": 403,
+      "outputTokens": 257,
+      "timeMs": 10416.36610031128
+    },
+    {
+      "paperId": "cognitive-psychology-gpt3",
+      "blockId": "b-5096fc7a",
+      "source": "We used the public OpenAI API to run all our simulations14. There are four GPT-3 models accessible through this API: “Ada”, “Babbage”, “Curie” and “Davinci” (sorted from the least to the most complex model). We focused our investigation on the most powerful of these models (“Davinci”) unless otherwise noted. We furthermore set the temperature parameter to 0, leading to deterministic answers, and kept the default values for all other parameters.",
+      "model": "facebook/m2m100_1.2B",
+      "translation": "このAPIを通じてアクセスできる4つのGPT-3モデルは、「Ada」、「Babbage」、「Curie」、「Davinci」(最小から最も複雑なモデルまで)です。我々は、これらのモデルの最も強力なモデル(「Davinci」)に調査を集中させた。",
+      "inputTokens": 114,
+      "outputTokens": 76,
+      "timeMs": 2983.5619926452637
+    },
+    {
+      "paperId": "cognitive-psychology-gpt3",
+      "blockId": "b-9c57b65a",
+      "source": "In a second test, we asked GPT-3 to intervene in a scenario by removing the correct object to prevent an effect after having read about three different objects, one causing and two not causing the effect (in this case, an allergic reaction; Intervene, see SI Appendix). GPT-3 identified the correct object to be removed. In the final test, we probed GPT-3’s ability of mature causal reasoning24 (Mature, see SI Appendix). In this task, GPT-3 was told that there were four pills: A, B, C and D. While A and B individually could kill someone, C and D could not. GPT-3 successfully answered multiple questions about counterfactuals correctly, such as: “A man took pill B and pill C and he died. If he had not taken pill B, could he still have died?”.",
+      "model": "facebook/m2m100_1.2B",
+      "translation": "二次テストでは、GPT-3 が、効果を防ぐために正しいオブジェクトを削除して、効果を起こす3つの異なるオブジェットについて読んだ後、シナリオに介入するよう求めました(この場合、アレルギー反応、介入、SI 附属書を参照)。 GPT-3 は、取り除くべき正しいオフジェクトを特定しました。最終テストでは、「成熟した男性は、ピルBとピルCを服用し、彼は死んだ。彼がピルBを服用していなかった場合、彼はまだ死にますか?」など、偽事実に関する複数の質問に成功して答えたGPT-3。",
+      "inputTokens": 201,
+      "outputTokens": 168,
+      "timeMs": 6675.307035446167
+    },
+    {
+      "paperId": "linguistics-language-model-physics",
+      "blockId": "b-30cd3318",
+      "source": "Related work. Linear probing at least traces back to Hewitt and Manning [15], who examines the correlation between BERT’s hidden states and the parse tree distance metric (similar to NTdistance in our language). Subsequent studies [8, 18, 20, 30, 34, 36, 40] also explored probing techniques to suggest that BERT-like transformers can approximate CFGs from natural languages. Our approach differs not only in the multi-head probing formula that we proposed; also that we use synthetic data to demonstrate that linear probing can almost perfectly recover NT ancestors and boundaries, even for complex and ambiguous CFG strings exceeding hundreds of tokens (c.f. English CFG has an average length of 28, see Appendix G). We focus on training generative decoder-only models; an encoder-based model like BERT [17] or its modern variant deBERTa [14] may not learn deep (i.e., close to the CFG root) NT information very well, as shown in Result 4-5. Our results, along with Section 5 next, shall provide evidence that generative language models like GPT-2 employ a DP-like approach to generate CFGs, while encoder-based models trained via MLM struggle to learn more complex/deeper CFGs.",
+      "model": "facebook/m2m100_1.2B",
+      "translation": "関連の仕事. 線形探査は少なくともヒューイットとマンニング(15)に戻る痕跡を示すが、彼らはBERTの隠れた状態とパルセツリー距離メトリック(私たちの言語でNT距離に類似)との関連性を調査している。 後後の研究(8、18、20、30、34、36、40)はまた、BERTのような変換器が自然言語からCFGを近づけることができることを示唆する探査技術を調査した。 私たちのアプローチは、私たちが提案した複数の頭部探査式に異なります。 また、私たちは、線形探検がNTの先祖と境界をほぼ完全に回復することができることを示すために合成データを使用しています。 レコードベースのモデルBERT(17)またはその近代バージョンBERT(14)は、深く学ぶことができない(セクションを介して、CFGの証拠は、次のような複雑な方法をGMP2に使用するように努力します。",
+      "inputTokens": 310,
+      "outputTokens": 254,
+      "timeMs": 10096.527814865112
+    },
+    {
+      "paperId": "linguistics-language-model-physics",
+      "blockId": "b-ebe5dcc2",
+      "source": "Transformer-based language models are effective but complex, and understanding their inner workings and reasoning mechanisms is a significant challenge. Previous research has primarily explored how these models handle simple tasks like name copying or selection, and we extend this by investigating how these models perform recursive language structure reasoning defined by context-free grammars (CFGs). We introduce a family of synthetic CFGs that produce hierarchical rules, capable of generating lengthy sentences (e.g., hundreds of tokens) that are locally ambiguous and require dynamic programming to parse. Despite this complexity, we demonstrate that generative models like GPT can accurately learn and reason over CFG-defined hierarchies and generate sentences based on it. We explore the model’s internals, revealing that its hidden states precisely capture the structure of CFGs, and its attention patterns resemble the information passing in a dynamic programming algorithm. This paper also presents several corollaries, including showing why absolute positional embeddings is inferior to relative and rotary embeddings; uniform attention alone is surprisingly effective (motivating our follow-up work on Canon layers [1]); encoder-only models (e.g., BERT, DeBERTa) struggle with deep structure reasoning on CFGs compared to autoregressive models (e.g., GPT); and injecting structural or syntactic noise into pretraining data markedly improves robustness to corrupted language prompts.",
+      "model": "facebook/m2m100_1.2B",
+      "translation": "トランスフォーマーベースのSynformer BER 言語モデルは効果的だが、データは複雑であり、その内部機能と推論メカニズムを理解することは重要な課題である。以前の研究は、これらのモデルが名前コピーや選択などの単純なタスクを処理する方法を主に探究し、これらのモードが文脈フリーグラマ(CFGs)によって定義されたリクルシブ言語構造推論を実行する方法を調査することで拡張しています。我々は、CFG定義の等級を基に、長い文句(例えば、トークンの数百)を生成する能力を持つ合成CFGの家族を導入し、効果的な文句を生成します。我々が、CFJの内部を調査し、CFDの構造を正確にカバーするために隠された状態が、その注意パターンは、動的で表記されたアルゴニズムのレイヤープレスと、単独自にカバーリングされた位置を埋めている(C",
+      "inputTokens": 369,
+      "outputTokens": 257,
+      "timeMs": 10274.083137512207
+    },
+    {
+      "paperId": "neuroscience-rule-following",
+      "blockId": "b-9ba3fd27",
+      "source": "Decisions are often governed by rules on adequate social behaviour. Recent research suggests that the right lateral prefrontal cortex (rLPFC) is involved in the implementation of internal fairness rules (norms), by controlling the impulse to act selfishly. A drawback of these studies is that the assumed norms and impulses have to be deduced from behaviour and that norm-following and pro-sociality are indistinguishable. Here, we directly confronted participants with a rule that demanded to make advantageous or disadvantageous monetary allocations for themselves or another person. To disentangle its functional role in rule-following and pro-sociality, we divergently manipulated the rLPFC by applying cathodal or anodal transcranial direct current stimulation (tDCS). Cathodal tDCS increased participants’ rule-following, even of rules that demanded to lose money or hurt another person financially. In contrast, anodal tDCS led participants to specifically violate more often those rules that were at odds with what participants chose freely. Brain stimulation over the rLPFC thus did not simply increase or decrease selfishness. Instead, by disentangling rule-following and pro-sociality, our results point to a broader role of the rLPFC in integrating the costs and benefits of rules in order to align decisions with internal goals, ultimately enabling to flexibly adapt social behaviour.",
+      "model": "facebook/m2m100_1.2B",
+      "translation": "最終的に、内部の利益は適切な社会的行動に関する規則によって支配されることが多い。最近の研究では、右側の前頭皮(rLPFC)が内部の公平性の規則(規範)の実施に関与していることを示唆しています。これらの研究の欠点の一つは、適切な行動の規範と衝動を推測するために、規則に従って行動するために、そして規範に従って社会的であることは区別できないということを示唆していることです。ここでは、私たちは直接参加者に利点または不利な自己行動のための資金配分を要求する規則(tDCS)に直面しました。それで、参加者の規則に適応することを増加させた、それでも、社会的目的を失うことではなく、金銭的目的を無駄にすること、または社会的目的のためのルールを失うことを要求したため、私たちは、カトドルまたは無形のトランスクレナル直流動性(tDCDL)規則を適用して、リフレッシュな参加者を増",
+      "inputTokens": 358,
+      "outputTokens": 257,
+      "timeMs": 10377.400875091553
+    }
+  ]
+}

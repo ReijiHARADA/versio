@@ -14,6 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "test-data/real-papers/reports/translation-fallback-attribution.json"
+CURRENT_REPORT = ROOT / "test-data/real-papers/reports/translation-audit.json"
 REQUIRED = {
     "paperId", "blockId", "pageStart", "pageEnd", "role", "source",
     "fallbackReason", "diagnostics", "attribution", "sourceIntegrity",
@@ -49,6 +50,20 @@ def main() -> None:
         raise SystemExit("\n".join(missing))
     print(f"validated {len(failures)} fallback rows")
     print("primary causes: " + ", ".join(f"{key}={causes[key]}" for key in sorted(causes)))
+    if CURRENT_REPORT.exists():
+        current = json.loads(CURRENT_REPORT.read_text(encoding="utf-8"))
+        current_ids = {
+            (paper["paper"]["id"], row["blockId"])
+            for paper in current.get("papers", [])
+            for row in paper.get("rows", [])
+            if row.get("sourceCategory") == "ordinary-body-prose"
+            and (row.get("readerVisibleFallback") or row.get("sourceFallback"))
+        }
+        historical_ids = {(row.get("paperId"), row.get("blockId")) for row in failures}
+        stale = historical_ids - current_ids
+        print(f"current benchmark ordinary fallback rows: {len(current_ids)}")
+        if stale:
+            print(f"WARNING: {len(stale)} persisted attribution row(s) are no longer current: {sorted(stale)}")
     for warning in warnings:
         print(f"WARNING: {warning}")
 

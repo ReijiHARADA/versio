@@ -1,5 +1,5 @@
 {
-  "model_version": "3b-mt-v5-semantic-v67",
+  "model_version": "3b-mt-v5-semantic-v71-strict-restore-v6",
   "rows": [
     {
       "id": "thermal-earring-b-01a329cd",
@@ -14,6 +14,9 @@
         "It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc.",
         "While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge."
       ],
+      "unit_count": 3,
+      "source_round_trip": true,
+      "model_version": "3b-mt-v5-semantic-v71-strict-restore-v6",
       "result": null,
       "error": "ValueError: degenerate translation output"
     },
@@ -32,17 +35,20 @@
         "In the final test, we probed GPT-3’s ability of mature causal reasoning24 (Mature, see SI Appendix).",
         "In this task, GPT-3 was told that there were four pills: A, B, C and D. While A and B individually could kill someone, C and D could not."
       ],
+      "unit_count": 4,
+      "source_round_trip": true,
+      "model_version": "3b-mt-v5-semantic-v71-strict-restore-v6",
       "result": {
-        "text": "2回目のテストでは,GPT‐3に, 効果を引き起こす3つの異なる物体(この場合, アレルギー反応;Intervene,SI Appendixを参照)のうち,1つが効果を起こし,2つが起こさない物体について読んだ後, 効果の防止のために正しい物体を除去してシナリオに介入するよう求めた。GPT‐3は, 除去すべき正しい物体を識別した。最終テストでは,GPT‐3の成熟した因果推論能力を調べた24。これに対して,GPT‐3は,A,B,C,Dの4錠剤があると言われた。",
+        "text": "2回目のテストでは, 効果を引き起こす物体と引き起こさない物体の3種類について読んだ後, 効果の防止のために正しい物体を除去することでシナリオに介入するようGPT‐3に要求した。GPT‐3は除去すべき正しい物体を同定した。最終テストでは,GPT‐3の成熟因果推論24の能力を調べた。GPT‐3は,A,B,C,Dの4錠剤を与えられた。",
         "source_language": "en",
         "target_language": "ja",
         "model": "google/madlad400-3b-mt",
-        "model_version": "3b-mt-v5-semantic-v67",
+        "model_version": "3b-mt-v5-semantic-v71-strict-restore-v6",
         "input_chars": 559,
-        "output_chars": 231,
-        "input_tokens": 180,
-        "output_tokens": 230,
-        "translation_time_ms": 17855.75294494629
+        "output_chars": 166,
+        "input_tokens": 168,
+        "output_tokens": 158,
+        "translation_time_ms": 11040.37094116211
       },
       "error": null
     },
@@ -59,8 +65,22 @@
         "Subsequent studies [8, 18, 20, 30, 34, 36, 40] also explored probing techniques to suggest that BERT-like transformers can approximate CFGs from natural languages.",
         "Our approach differs not only in the multi-head probing formula that we proposed; also that we use synthetic data to demonstrate that linear probing can almost perfectly recover NT ancestors and boundaries, even for complex and ambiguous CFG strings exceeding hundreds of tokens."
       ],
-      "result": null,
-      "error": "ValueError: degenerate translation output"
+      "unit_count": 3,
+      "source_round_trip": true,
+      "model_version": "3b-mt-v5-semantic-v71-strict-restore-v6",
+      "result": {
+        "text": "線形プロービングは,BERTの隠れ状態と解析木距離計量(NT距離)との間の相関を調べたHewittとManningにまで遡る。次の研究では,BERT型変換器が自然言語からCFGを近似できることを示すためのプロービング技術を探索した。提案した多重ヘッドプロビング公式だけでなく, 線形プロビングが複雑で曖昧な数百個のトークンを超えるCFG文字列に対しても,NT先祖と境界をほぼ完全に回復できることを示すために合成データを用いた。",
+        "source_language": "en",
+        "target_language": "ja",
+        "model": "google/madlad400-3b-mt",
+        "model_version": "3b-mt-v5-semantic-v71-strict-restore-v6",
+        "input_chars": 655,
+        "output_chars": 213,
+        "input_tokens": 194,
+        "output_tokens": 200,
+        "translation_time_ms": 15934.026956558228
+      },
+      "error": null
     }
   ]
 }

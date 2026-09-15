@@ -1,16 +1,25 @@
 #!/usr/bin/env bash
 # Layer B — Packaged UI E2E via Accessibility / System Events (real .app UI).
-# Does NOT call startBackgroundImport / createAnnotation from TS services.
+#
+# Constraint: WKWebView AX text selection is unreliable. Selection is synthesized
+# once in-page; Save / Search / Export remain external UI actions.
+#
+# Asserts: Library → Reader → annotation mark → search hits → export file
+#          → quit → relaunch → Reader → persisted annotation mark
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 APP_PATH="${PAPER_READER_APP_PATH:-$ROOT/src-tauri/target/release/bundle/macos/Paper Reader.app}"
 ARTIFACT_DIR="$ROOT/scripts/packaged-e2e/artifacts/ui"
-FIXTURE_PDF="$ROOT/scripts/packaged-e2e/fixture-tiny.pdf"
+FIXTURE_PDF="${PAPER_READER_E2E_FIXTURE:-$ROOT/test-fixtures/generated-pdfs/single-column.pdf}"
+if [[ ! -f "$FIXTURE_PDF" ]]; then
+  FIXTURE_PDF="$ROOT/scripts/packaged-e2e/fixture-tiny.pdf"
+fi
 ACCEPTANCE_HOME="${PAPER_READER_UI_E2E_HOME:-$ARTIFACT_DIR/app-data-$$}"
 LOG_FILE="$ARTIFACT_DIR/app.log"
 STEP_FILE="$ARTIFACT_DIR/step.txt"
 AX_DUMP="$ARTIFACT_DIR/ax-tree.txt"
+SUPPORT_REL="Library/Application Support/com.harada.paper-reader"
 
 mkdir -p "$ARTIFACT_DIR"
 rm -rf "$ACCEPTANCE_HOME"
@@ -23,7 +32,7 @@ fail() {
   echo "step=$(cat "$STEP_FILE" 2>/dev/null || echo unknown)" | tee -a "$LOG_FILE"
   echo "app-data=$ACCEPTANCE_HOME" | tee -a "$LOG_FILE"
   if [[ -d "$ACCEPTANCE_HOME" ]]; then
-    find "$ACCEPTANCE_HOME" -maxdepth 5 -type f 2>/dev/null | head -120 >>"$LOG_FILE" || true
+    find "$ACCEPTANCE_HOME" -maxdepth 6 -type f 2>/dev/null | head -160 >>"$LOG_FILE" || true
   fi
   RESULT="$(find "$ACCEPTANCE_HOME" -path '*/_acceptance/ui-result.json' 2>/dev/null | head -1 || true)"
   if [[ -n "$RESULT" && -f "$RESULT" ]]; then
@@ -31,7 +40,6 @@ fail() {
     cat "$RESULT" >>"$LOG_FILE" || true
     cp "$RESULT" "$ARTIFACT_DIR/ui-result.json" 2>/dev/null || true
   fi
-  # Best-effort AX dump
   osascript <<'OSA' >"$AX_DUMP" 2>>"$LOG_FILE" || true
 tell application "System Events"
   set procs to name of every process whose background only is false
@@ -55,10 +63,7 @@ if [[ ! -d "$APP_PATH" ]]; then
 fi
 
 if [[ ! -f "$FIXTURE_PDF" ]]; then
-  bash "$ROOT/scripts/packaged-e2e/run-integration.sh" >/dev/null 2>&1 || true
-fi
-[[ -f "$FIXTURE_PDF" ]] || {
-  python3 - "$FIXTURE_PDF" <<'PY'
+  python3 - "$ROOT/scripts/packaged-e2e/fixture-tiny.pdf" <<'PY'
 import sys
 from pathlib import Path
 path = Path(sys.argv[1])
@@ -86,7 +91,8 @@ startxref
 %%EOF
 """)
 PY
-}
+  FIXTURE_PDF="$ROOT/scripts/packaged-e2e/fixture-tiny.pdf"
+fi
 
 BIN="$APP_PATH/Contents/MacOS/app"
 if [[ ! -x "$BIN" ]]; then
@@ -94,7 +100,6 @@ if [[ ! -x "$BIN" ]]; then
 fi
 [[ -x "$BIN" ]] || fail "executable not found"
 
-# Short path helps Open dialog keystrokes.
 SHORT_FIXTURE="$ARTIFACT_DIR/Acceptance.pdf"
 cp "$FIXTURE_PDF" "$SHORT_FIXTURE"
 
@@ -116,18 +121,32 @@ data = json.load(open(sys.argv[1]))
 want = sys.argv[2]
 step = data.get("step") or ""
 ok = bool(data.get("ok"))
+phase = data.get("phase") or "initial"
+
+def has_ann():
+    return bool(data.get("annotationVisible"))
+
 if want == "ui_library_card_visible":
-    sys.exit(0 if step in {"ui_library_card_visible", "ui_reader_visible", "ui_core_flow_ready"} or "card" in (data.get("detail") or "") else 1)
+    sys.exit(0 if step in {
+        "ui_library_card_visible",
+        "ui_relaunch_library_card_visible",
+        "ui_reader_visible",
+        "ui_relaunch_reader_visible",
+        "ui_core_flow_ready",
+        "ui_relaunch_annotation_visible",
+    } else 1)
 if want == "ui_reader_visible":
-    sys.exit(0 if step in {"ui_reader_visible", "ui_memo_open", "ui_annotation_visible", "ui_search_open", "ui_search_hits_visible", "ui_export_open", "ui_core_flow_ready"} else 1)
+    sys.exit(0 if "reader" in step or step in {"ui_core_flow_ready", "ui_relaunch_annotation_visible"} else 1)
 if want == "ui_annotation_visible":
-    sys.exit(0 if data.get("annotationVisible") or step in {"ui_annotation_visible", "ui_memo_open", "ui_core_flow_ready"} else 1)
+    sys.exit(0 if has_ann() or step in {"ui_annotation_visible", "ui_core_flow_ready"} else 1)
 if want == "ui_search_hits_visible":
     sys.exit(0 if data.get("searchVisible") or step in {"ui_search_hits_visible", "ui_core_flow_ready"} else 1)
+if want == "ui_export_completed":
+    sys.exit(0 if data.get("exportCompleted") and int(data.get("exportBytes") or 0) > 0 else 1)
 if want == "ui_core_flow_ready":
-    sys.exit(0 if ok and step == "ui_core_flow_ready" else 1)
-if want == "ui_relaunch_ok":
-    sys.exit(0 if step in {"ui_library_card_visible", "ui_annotation_visible", "ui_core_flow_ready", "ui_reader_visible"} and ("cards=" not in (data.get("detail") or "") or "cards=0" not in (data.get("detail") or "")) else 1)
+    sys.exit(0 if ok and step == "ui_core_flow_ready" and data.get("exportCompleted") and has_ann() and data.get("searchVisible") else 1)
+if want == "ui_relaunch_annotation_visible":
+    sys.exit(0 if phase == "relaunch" and has_ann() and step == "ui_relaunch_annotation_visible" and ok else 1)
 sys.exit(1)
 PY
       then
@@ -181,7 +200,6 @@ launch_app() {
   if ! kill -0 "$APP_PID" 2>/dev/null; then
     fail "app exited immediately after launch"
   fi
-  # Bring to front
   osascript -e 'tell application "System Events" to set frontmost of first process whose unix id is '"$APP_PID"' to true' 2>/dev/null \
     || osascript -e 'tell application "Paper Reader" to activate' 2>/dev/null \
     || true
@@ -200,10 +218,8 @@ quit_app() {
 
 choose_pdf_via_open_panel() {
   step "UI import via Open panel"
-  # Click the add-paper control (AXDescription / title).
   ax_click_by_label "論文を追加" || ax_click_by_label "PDFファイルを選択" || true
   sleep 1
-  # Open panel: Go to folder
   osascript <<OSA || fail "open panel navigation failed"
 tell application "System Events"
   keystroke "g" using {command down, shift down}
@@ -217,6 +233,30 @@ end tell
 OSA
 }
 
+assert_export_file() {
+  step "assert export file on disk"
+  python3 - "$ARTIFACT_DIR/ui-result.json" "$ACCEPTANCE_HOME" <<'PY' || fail "export file missing or empty"
+import json, sys, os
+from pathlib import Path
+marker = json.loads(Path(sys.argv[1]).read_text())
+home = Path(sys.argv[2])
+assert marker.get("exportCompleted") is True, marker
+assert int(marker.get("exportBytes") or 0) > 0, marker
+exported = marker.get("exportedPath") or ""
+candidates = []
+if exported:
+    candidates.append(Path(exported))
+candidates.extend(home.glob("**/_acceptance/exports/*"))
+found = None
+for p in candidates:
+    if p.is_file() and p.stat().st_size > 0:
+        found = p
+        break
+assert found is not None, f"no non-empty export file; marker={marker}"
+print("export ok", found, "bytes", found.stat().st_size)
+PY
+}
+
 launch_app
 choose_pdf_via_open_panel
 
@@ -228,8 +268,7 @@ ax_click_by_label "論文" || ax_click_by_label "Acceptance" || true
 sleep 2
 wait_ui_step "ui_reader_visible" 120
 
-step "save memo via UI (selection synthesized in-page once; Save is AX click)"
-# Give selection → compose a moment, then type note + save.
+step "save memo via UI"
 sleep 2
 osascript <<'OSA' || true
 tell application "System Events"
@@ -254,41 +293,37 @@ OSA
 sleep 2
 wait_ui_step "ui_search_hits_visible" 60
 
-step "open export UI"
+step "open export UI and run export"
 ax_click_by_label "書き出す" || true
 sleep 1
-ax_click_by_label "書き出しを実行" || ax_click_by_label "書き出す" || true
-sleep 2
+ax_click_by_label "書き出しを実行" || true
+# Prefer the confirm control inside the dialog
+ax_click_by_label "書き出す" || true
+wait_ui_step "ui_export_completed" 90
+assert_export_file
 
-# Require search hits visible before relaunch
-python3 - "$ARTIFACT_DIR/ui-result.json" <<'PY' || fail "searchHits not visible in UI"
-import json, sys
-from pathlib import Path
-p = Path(sys.argv[1])
-assert p.exists(), "ui-result missing"
-data = json.loads(p.read_text())
-assert data.get("searchVisible") or data.get("step") in {"ui_search_hits_visible", "ui_core_flow_ready"}, data
-print("ui search ok", data.get("step"))
-PY
+wait_ui_step "ui_core_flow_ready" 30
 
 quit_app
 launch_app
-step "relaunch: paper + annotation still present in UI markers"
+step "relaunch: open paper and require annotation mark in Reader UI"
 sleep 5
 wait_ui_step "ui_library_card_visible" 120
-# Open paper again and confirm annotation mark marker
-ax_click_by_label "論文" || true
+ax_click_by_label "論文" || ax_click_by_label "Acceptance" || true
 sleep 3
-RESULT="$(find_ui_result)"
-[[ -n "$RESULT" ]] || fail "ui-result missing after relaunch"
-python3 - "$RESULT" <<'PY' || fail "relaunch UI persistence failed"
+wait_ui_step "ui_relaunch_annotation_visible" 120
+
+python3 - "$ARTIFACT_DIR/ui-result.json" <<'PY' || fail "relaunch annotation assert failed"
 import json, sys
 data = json.load(open(sys.argv[1]))
-detail = data.get("detail") or ""
-assert "cards=0" not in detail, data
-print("relaunch ok", data.get("step"), detail)
+assert data.get("phase") == "relaunch", data
+assert data.get("annotationVisible") is True, data
+assert data.get("step") == "ui_relaunch_annotation_visible", data
+assert data.get("ok") is True, data
+print("relaunch annotation ok", data.get("paperTitleHint"))
 PY
+
 quit_app
 
 step "done"
-echo "OK packaged UI E2E. Artifacts: $ARTIFACT_DIR" | tee -a "$LOG_FILE"
+echo "OK packaged UI E2E (export + relaunch annotation). Artifacts: $ARTIFACT_DIR" | tee -a "$LOG_FILE"

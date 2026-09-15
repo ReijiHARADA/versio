@@ -150,8 +150,16 @@ export function ExportDialog({
               : "OFF のときは失敗した段落を書き出しません。ON のときは訳を作らず、原文と失敗マークを残します。"}
           </p>
 
-          {status && <p className={styles.status}>{status}</p>}
-          {error && <p className={styles.error}>{error}</p>}
+          {status && (
+            <p className={styles.status} data-testid="export-status" aria-live="polite">
+              {status}
+            </p>
+          )}
+          {error && (
+            <p className={styles.error} data-testid="export-error">
+              {error}
+            </p>
+          )}
         </div>
         <div className={styles.actions}>
           <button className={styles.secondary} onClick={onClose} disabled={busy}>

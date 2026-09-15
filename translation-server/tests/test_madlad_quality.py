@@ -68,6 +68,14 @@ class MadladUnitQualityTests(unittest.TestCase):
         self.assertFalse(MADLADEngine._is_implausibly_short_unit(output, source))
         self.assertFalse(MADLADEngine._is_degenerate(output, source, "ja"))
 
+    def test_allows_compact_complete_mid_length_sentence(self) -> None:
+        source = (
+            "We, therefore, next turned our lens of investigation to a more challenging "
+            "setting and tested GPT-3 on actual, task-based experiments."
+        )
+        output = "GPT‐3を実際のタスクベースの実験でテストした。"
+        self.assertFalse(MADLADEngine._is_implausibly_short_unit(output, source))
+
     def test_still_rejects_coordinated_claim_when_one_finding_is_omitted(self) -> None:
         source = (
             "Among other things they found that an emotional relation with an – at first nondescript – "
@@ -78,6 +86,12 @@ class MadladUnitQualityTests(unittest.TestCase):
         output = "また、インタラクティブジュエリーは、ジュエリーに関連する内在的な感情をインタラクションを通して明示できる性質を持つことを示した。[29]"
         self.assertTrue(MADLADEngine._is_implausibly_short_unit(output, source))
         self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
+
+    def test_candidate_score_prefers_scientific_token_preservation(self) -> None:
+        source = "The study measured GPT-3 accuracy at 92.4% with p < 0.001 across both conditions."
+        preserved = "この研究では、両条件でGPT-3の精度92.4%を測定し、p < 0.001だった。"
+        omitted = "この研究では、両条件で精度を測定した。"
+        self.assertGreater(MADLADEngine._candidate_score(preserved, source), MADLADEngine._candidate_score(omitted, source))
 
 
 class MadladPartialSourceFallbackTests(unittest.TestCase):

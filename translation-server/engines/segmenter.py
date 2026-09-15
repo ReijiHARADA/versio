@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 from .citation_protect import protected_span_mask
 
-SEGMENTER_VERSION = "semantic-v67"
+SEGMENTER_VERSION = "semantic-v71"
 _ABBREVIATIONS = {"e.g.", "i.e.", "et al.", "fig.", "no.", "cf.", "dr.", "mr.", "ms.", "vs."}
 
 
@@ -524,6 +524,42 @@ def _rescue_top_level_conjunction(text: str) -> list[TranslationUnit]:
         return _split_rescue_at(text, match.start() + 1, left_model, right_model)
     return []
 
+
+def _rescue_top_level_clause_comma(text: str) -> list[TranslationUnit]:
+    """Last-resort retry split for an exceptionally long comma-bound sentence.
+
+    This is deliberately restricted to retry-only use.  A top-level comma near
+    the middle of a 300+ character sentence is considered only when both sides
+    are substantial clauses; citation/layout commas are masked or rejected.
+    The source slices remain exact while model inputs receive terminal
+    punctuation so neither fragment is sent as an orphaned continuation.
+    """
+    if len(text) < 300:
+        return []
+    masked = protected_span_mask(text)
+    candidates: list[int] = []
+    depth = {"(": 0, "[": 0, "{": 0}
+    for i, char in enumerate(masked):
+        if char in "([{":
+            depth[char] += 1
+        elif char in ")]}":
+            opener = {')': '(', ']': '[', '}': '{'}[char]
+            depth[opener] = max(0, depth[opener] - 1)
+        elif char == "," and not any(depth.values()):
+            left = text[: i + 1].strip()
+            right = text[i + 1 :].strip()
+            if len(left) >= 110 and len(right) >= 100 and len(left.split()) >= 14 and len(right.split()) >= 12:
+                candidates.append(i + 1)
+    if not candidates:
+        return []
+    split = min(candidates, key=lambda index: abs(len(text) / 2 - index))
+    left = text[:split].strip().rstrip(",") + "."
+    right = text[split:].strip()
+    if not right:
+        return []
+    right_model = right[0].upper() + right[1:]
+    return _split_rescue_at(text, split, left, right_model)
+
 def rescue_units_for_translation(source: str) -> list[TranslationUnit]:
     """Return retry-only units for a source chunk that decoded poorly.
 
@@ -543,6 +579,7 @@ def rescue_units_for_translation(source: str) -> list[TranslationUnit]:
         _rescue_nonrestrictive_where_clause,
         _rescue_appositive_region_clause,
         _rescue_top_level_conjunction,
+        _rescue_top_level_clause_comma,
     ):
         units = splitter(compact)
         if len(units) > 1 and validate_round_trip(compact, [unit.text for unit in units]):

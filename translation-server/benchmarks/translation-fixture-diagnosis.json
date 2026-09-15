@@ -1,7 +1,7 @@
 {
   "fixture": "The closest related work on finger specific interaction has been presented by (Sigure & Koseki, 1998; Marquardt et al., 2011; Benko et al, 2009), however none are in the mobile domain.",
   "model": "google/madlad400-3b-mt",
-  "model_version": "3b-mt-v5-semantic-v66",
+  "model_version": "3b-mt-v5-semantic-v67",
   "generation": {
     "num_beams": 1,
     "do_sample": false
@@ -17,7 +17,7 @@
       "postprocess_output": "指特異的相互作用に関する最も近い関連の研究は(Sigure & Koseki, 1998; Marquardt et al., 2011; Benko et al, 2009)によって提示されたが, 移動領域ではない。",
       "input_tokens": 32,
       "output_tokens": 44,
-      "model_version": "3b-mt-v5-semantic-v66"
+      "model_version": "3b-mt-v5-semantic-v67"
     },
     {
       "condition": "B_MicroBatchScheduler",
@@ -29,7 +29,7 @@
       "postprocess_output": "指特異的相互作用に関する最も近い関連の研究は(Sigure & Koseki, 1998; Marquardt et al., 2011; Benko et al, 2009)によって提示されたが, 移動領域ではない。",
       "input_tokens": 32,
       "output_tokens": 44,
-      "model_version": "3b-mt-v5-semantic-v66"
+      "model_version": "3b-mt-v5-semantic-v67"
     },
     {
       "condition": "C_no_scientific_or_citation_protection",

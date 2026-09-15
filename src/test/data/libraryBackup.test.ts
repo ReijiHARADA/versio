@@ -1,8 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { wrapFileSystemWithBackupBarrier } from "../../data/backup/barrierFs";
 import { createLibraryBackupSnapshot } from "../../data/backup/createBackup";
 import { restoreLibraryBackup } from "../../data/backup/restoreBackup";
 import { validateLibraryBackup } from "../../data/backup/validateBackup";
+import { resetBackupBarrierForTests } from "../../data/backup/snapshotBarrier";
 import {
   BACKUP_MANIFEST_NAME,
   BACKUP_PAPERS_DIR,
@@ -386,6 +387,10 @@ describe("library backup / restore", () => {
 });
 
 describe("backup snapshot consistency under concurrent mutation", () => {
+  beforeEach(() => {
+    resetBackupBarrierForTests();
+  });
+
   it("write barrier delays live mutation until snapshot completes; backup stays consistent", async () => {
     const raw = createMemoryFileSystem();
     const fs = wrapFileSystemWithBackupBarrier(raw);

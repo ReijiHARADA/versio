@@ -14,6 +14,28 @@ from engines.citation_protect import (
 
 
 class CitationProtectTests(unittest.TestCase):
+    def test_hyphenated_model_identifier_is_not_split_into_acronym_placeholder(self) -> None:
+        protected, cites, _ = protect_citations("GPT-3 identified the object.")
+        self.assertEqual(cites, [])
+        self.assertEqual(protected, "GPT-3 identified the object.")
+
+    def test_strict_restore_rejects_dropped_placeholder(self) -> None:
+        protected, cites, nonce = protect_citations("signal TQP3M9009 and RF")
+        with self.assertRaisesRegex(ValueError, "placeholder dropped"):
+            restore_citations(protected.replace("ZZCIT1ZZ", ""), cites, nonce, reject_missing=True)
+
+    def test_strict_restore_accepts_fullwidth_placeholder(self) -> None:
+        protected, cites, nonce = protect_citations("see [12]")
+        fullwidth = protected.replace("ZZCIT1ZZ", "ＺＺＣＩＴ１ＺＺ")
+        self.assertEqual(restore_citations(fullwidth, cites, nonce, reject_missing=True), "see [12]")
+
+    def test_strict_restore_recovers_dropped_terminal_figure_reference(self) -> None:
+        protected, cites, nonce = protect_citations("The result is shown (Fig. 8 and Table S3).")
+        self.assertEqual(
+            restore_citations("結果を示した。", cites, nonce, reject_missing=True),
+            "結果を示した(Fig. 8 and Table S3)。",
+        )
+
     def test_single_citation(self) -> None:
         src = "Smith et al. [8] proposed a method."
         protected, cites, nonce = protect_citations(src)

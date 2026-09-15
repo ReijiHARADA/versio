@@ -48,11 +48,28 @@ export backend / relaunch. Service-assisted bootstrap is allowed here.
 
 Accessibility / System Events drive the real UI:
 
-import (Open panel) → Library card → Reader → memo Save → search UI hits →
-export → quit → relaunch → paper still present.
+```text
+Open panel import
+→ Library card
+→ Reader
+→ memo Save → annotation mark visible
+→ Search UI → result visible
+→ Export UI → real export file (bytes > 0)
+→ quit → relaunch
+→ Library card → Reader → persisted annotation mark visible
+```
 
-DOM watcher records `_acceptance/ui-result.json`. Failure artifacts include
-screenshot, step, app log, AX process dump, app-data summary.
+**Constraint:** WKWebView AX text selection is unreliable, so selection is
+synthesized once via the DOM Range API; Save / Search / Export stay external.
+
+When `PAPER_READER_UI_E2E=1`, Markdown export skips the save dialog and writes
+under app-data `_acceptance/exports/` (still through the production ExportDialog
+→ `saveMarkdownExport` → Tauri command path).
+
+DOM watcher records `_acceptance/ui-result.json` including
+`exportCompleted`, `exportBytes`, `annotationVisible`, and `phase`.
+
+Failure artifacts: screenshot, step, app log, AX dump, app-data summary.
 
 `npm run packaged:e2e` runs Layer A then Layer B.
 

@@ -1329,6 +1329,18 @@ The v69 fallback analysis artifact now contains all 14 ordinary fallback rows wi
 
 The v69 direct fixture diagnosis also completed for the author-year citation sentence. A/B/D/E/F produced identical stable output under one process/model; the unprotected condition completed with citation transliteration; and the safe two-unit split preserved meaning. No hallucination or microbatch mapping error was observed. The remaining issue is terminology adequacy ("mobile domain" → "移動領域"), not citation segmentation. Detailed outputs remain in `translation-server/benchmarks/translation-fixture-diagnosis.json`.
 
+The same A–G comparison was re-run under the current v67 engine (v78
+checkpoint). Every condition completed: A/B/D/E/F were output-identical,
+unprotected C transliterated the citation, and G preserved the clause meaning
+after a safe split. No hallucination or microbatch mapping error was observed;
+the remaining defect is terminology adequacy (`mobile domain` → `移動領域`).
+
+Measured token counts were A/B/D/E/F = 32 input / 44 output tokens, C and the
+deterministic repeat = 64 / 86, and G = 35 / 51 (the two safe units combined).
+These numbers are recorded in the JSON artifact and show that the protection
+variants changed model input length but did not change this model's decoded
+meaning for the cited sentence.
+
 The existing local MLX INT8 MADLAD alternative was load-tested and benchmarked without changing production. It ran successfully, but its representative long introduction omitted several source claims and its title output was truncated, so it is not a safe replacement based on current evidence.
 
 The segmented MLX comparison revealed a general extraction-unit issue: `et al. [8]` was split into an `et al.` fragment and a standalone citation unit, which produced hallucinated output in the latter. The segmenter now treats two-token `et al.` as an abbreviation and keeps the citation attached; 38/38 segmenter tests pass.
@@ -1358,3 +1370,72 @@ Combined quality and batch regression run passed: 2 files / 61 tests.
 Added `translation-server/scripts/diagnose_fallback_fixtures.py` for reproducible clean-source A-cohort runs. It bypasses PDF extraction, records segmenter units/model inputs and per-fixture output or error, and writes `translation-unit-diagnosis-v76.json`; the script passes Python compilation and the TypeScript typecheck remains green.
 
 Executed the v76 fixture run: cognitive psychology completed 4 units but retained an unnatural GPT-3 boundary in the output; thermal (3 units) and linguistics (3 units) reproduced `degenerate translation output` without PDF extraction. This is direct evidence that at least part of the A cohort is upstream-independent model/unit failure, not a PDF parser artifact. This is attribution evidence only; the latest complete corpus metric remains 14/48 ordinary-body fallbacks (29.17%), and the processes were stopped after capture.
+# 2026-09-15 quality checkpoint
+
+The latest synchronized full benchmark reports **12/48 ordinary-body
+reader-visible fallbacks (25.00%)**. Historical attribution contains 14 rows;
+two are stale because later runs recovered them. Current causes are A=7, D=2,
+E=3.
+
+An E-cohort runtime capture established that `power-over-skin` loses protected
+`RF` and `TQP3M9009` placeholders during MADLAD decoding. The old restoration
+path appended missing values at the end, producing `RFTQP3M9009`. Production
+translation now uses strict restoration and falls back before malformed
+scientific text is returned. Evidence is stored in
+`translation-server/benchmarks/translation-scientific-placeholder-debug-v72.json`.
+
+This is a safety correction, not a fallback-rate improvement; the <=5% target
+remains unmet. Python translation-server tests (88/88) and client Vitest tests
+(297/297) pass after the change.
+
+## 2026-09-15 v6 attribution reconciliation
+
+The authoritative v6 serial report contains 12 current ordinary-body fallback
+rows out of 48 (25.00%). `test-data/real-papers/reports/translation-fallback-attribution.json`
+has been resynchronized to those exact IDs; seven rows retained only in older
+benchmark runs are no longer counted as current. The validator now reports
+12 current rows with primary causes A=7 (complete prose/model or decode path),
+D=2 (structure mixing), and E=3 (scientific/layout contamination), with no
+stale-row warning. These labels remain subject to manual semantic review and
+are attribution evidence, not proof that the model is safe. No translation
+server process is running at this checkpoint.
+
+The regenerated v77 summary now also reports format and discipline slices.
+Discipline labels are taken from the majority label in existing manual-review
+records when the paper catalog has no explicit discipline field; papers without
+such evidence remain `unknown` rather than being guessed. Current reviewed
+slices are: cognitive psychology 3/6 (50.0%), linguistics 2/3 (66.7%),
+marketing 1/3 (33.3%), and HCI 0/3. These are small samples and should not be
+treated as population estimates.
+
+The manual-review taxonomy currently contains 185 records: 16 completed and
+169 pending. Among 93 records explicitly accepted by the production decision,
+4 have severity >=2, giving an observed unsafe false-accept rate of 4.30% in
+the reviewed subset. Labels and severities are emitted in
+`translation-fallback-attribution-summary-v77.json`; unlabeled records are
+kept out of the denominator for this metric.
+
+The clean-source A-cohort fixture rerun (MPS, current model, bypassing PDF
+extraction) is recorded in
+`translation-server/benchmarks/translation-unit-diagnosis-v76.json`.
+Thermal-earring reproduces a degenerate short-unit failure through greedy,
+beam, and rescue attempts; the cognitive fixture completes after per-unit
+rescue with citation 24 retained; the linguistics fixture completes after an
+identifier-drop retry but remains truncated at its final clause. These results
+separate residual A failures from PDF extraction while preserving the strict
+fallback safety boundary.
+
+The controlled OzCHI author-year comparison is stored in
+`translation-server/benchmarks/translation-unit-variants-v79.json`. Four
+conditions (unprotected, current protection, atomic author-year protection,
+and current protected unit) all produce one semantic unit without semicolon
+splitting. Protection preserves the exact citation group; the unprotected
+decode transliterates citation years. The final negated mobile-domain claim is
+retained in every condition, with only a terminology-quality issue remaining.
+No hallucinated facts were observed in this controlled run.
+
+After the v7 terminal-boundary ranking change, the same matrix was rerun. All
+four outputs were byte-for-byte equivalent to the v6 capture; the new ranking
+signal did not select a different candidate in this case. It remains a
+general safety-oriented tie-breaker, but this fixture provides no measured
+fallback improvement.

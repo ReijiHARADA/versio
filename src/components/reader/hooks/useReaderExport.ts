@@ -58,6 +58,13 @@ export function useReaderExport(paperId: string | undefined) {
           return;
         }
         setExportStatus(`書き出しました: ${saved.path}`);
+        try {
+          const { reportUiE2eExportSuccess } = await import("../../../services/uiE2eWatch");
+          const bytes = new TextEncoder().encode(result.markdown).length;
+          await reportUiE2eExportSuccess({ path: saved.path, bytes });
+        } catch {
+          // UI E2E reporter is optional outside acceptance launches.
+        }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         setExportError(message || "書き出しに失敗しました");

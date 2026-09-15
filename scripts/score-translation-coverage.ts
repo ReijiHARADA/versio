@@ -3,13 +3,17 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = path.join(process.cwd());
-const input = path.join(root, "test-data/real-papers/reports/translation-audit.json");
+const input = process.env.TRANSLATION_AUDIT_INPUT
+  ? path.resolve(root, process.env.TRANSLATION_AUDIT_INPUT)
+  : path.join(root, "test-data/real-papers/reports/translation-audit.json");
 const output = path.join(root, "test-data/real-papers/reports/translation-coverage-v66.json");
 const report = JSON.parse(fs.readFileSync(input, "utf8")) as { papers: Array<{ paper: { id: string }; rows: any[] }> };
 
 const sourceSentences = (text: string) => Math.max(1, (text.match(/[.!?](?:["')\]]+)?(?=\s|$)/g) ?? []).length);
 const japaneseSentences = (text: string) => (text.match(/[。！？]/g) ?? []).length;
 const invariantCount = (row: any) => Array.isArray(row.sourceInvariants) ? row.sourceInvariants.length : 0;
+const isOrdinaryBody = (row: any) => row.sourceCategory === "ordinary-body-prose"
+  || (row.role === "paragraph" && row.sourceFallback !== true);
 const preservedInvariantCount = (row: any) => {
   const source = String(row.source ?? "");
   const translated = String(row.translation ?? "");
@@ -18,7 +22,7 @@ const preservedInvariantCount = (row: any) => {
 };
 
 const rows = report.papers.flatMap(({ paper, rows }) => rows
-  .filter((row) => row.sourceCategory === "ordinary-body-prose" && row.translation)
+  .filter((row) => isOrdinaryBody(row) && row.translation)
   .map((row) => {
     const source = String(row.source);
     const translation = String(row.translation);

@@ -31,7 +31,7 @@ class MADLADEngine(TranslationEngine):
     """
 
     MODEL_ID = "google/madlad400-3b-mt"
-    MODEL_VERSION = f"3b-mt-v5-{SEGMENTER_VERSION}"
+    MODEL_VERSION = f"3b-mt-v5-{SEGMENTER_VERSION}-strict-restore-v7"
     # Greedy MADLAD can loop on a Japanese phrase for English parallel lists
     # (for example, repeated "how to …" clauses). Four tokens still permits
     # ordinary lexical reuse while stopping the observed decoder loop.
@@ -570,8 +570,35 @@ class MADLADEngine(TranslationEngine):
         self, text: str, target_language: str, model_input: str | None = None
     ) -> tuple[str, int, int]:
         try:
-            return self._translate_chunk(text, target_language, model_input)
+            greedy = self._translate_chunk(text, target_language, model_input)
+            # Long academic units are the main source of silent claim loss.
+            # Generate a second deterministic candidate only for those units;
+            # short prose keeps the fast single-decode path.
+            if len(text) >= 300:
+                try:
+                    beam = self._translate_chunk(
+                        text, target_language, model_input, num_beams=4, retry_label="candidate-beam"
+                    )
+                    if self._candidate_score(beam[0], text) > self._candidate_score(greedy[0], text):
+                        return beam
+                except Exception:
+                    pass
+            return greedy
         except Exception as original_error:
+            # If only identifier-like placeholders were dropped, retry once
+            # without protection. The client invariant gate remains the final
+            # authority, so a retry that loses RF/TQP3M9009 is still rejected.
+            message = str(original_error)
+            if "protected citation placeholder dropped by model:" in message:
+                missing = message.split(":", 1)[1].split(",")
+                if missing and all(re.fullmatch(r"\s*[A-Za-z][A-Za-z0-9._-]{1,31}\s*", item) for item in missing):
+                    try:
+                        print("[TRANSLATE] retrying identifier-drop chunk without placeholders", flush=True)
+                        return self._translate_chunk(
+                            text, target_language, text, retry_label="unprotected-identifiers", disable_protection=True
+                        )
+                    except Exception:
+                        pass
             try:
                 print(
                     "[TRANSLATE] retrying rejected chunk with beam search",
@@ -611,6 +638,37 @@ class MADLADEngine(TranslationEngine):
             if self._is_degenerate(translated, text, target_language):
                 raise original_error
             return translated, sum(in_toks), sum(out_toks)
+
+    @staticmethod
+    def _candidate_score(output: str, source: str) -> float:
+        """Rank already-validated candidates without inventing semantic facts.
+
+        This is a conservative tie-breaker: it rewards preservation of source
+        numeric/scientific tokens and penalizes severe length collapse. It is
+        never an acceptance gate and cannot make an otherwise rejected output
+        acceptable.
+        """
+        source_tokens = re.findall(
+            r"\b\d+(?:\.\d+)?\b"
+            r"|\bp\s*[<=>≤≥]\s*\.?\d+(?:\.\d+)?"
+            r"|\b[FT]\s*\([^)]{1,12}\)"
+            r"|\b(?:BERT|GPT[-‐‑–—]?\d+)\b",
+            source,
+            re.I,
+        )
+        output_lower = output.lower()
+        preserved = sum(token.lower() in output_lower for token in source_tokens)
+        ratio = len(output) / max(len(source), 1)
+        length_score = min(ratio / 0.35, 1.0) if ratio < 0.35 else 1.0
+        # A decoder that stops before the source sentence boundary is a common
+        # silent omission. Prefer a candidate that preserves a terminal mark
+        # when both candidates already pass the hard quality gates. This is a
+        # ranking signal only; it never makes an otherwise rejected output
+        # acceptable.
+        source_terminal = bool(re.search(r"[.!?]\s*[\"')\]]*$", source))
+        output_terminal = bool(re.search(r"[。！？.!?]\s*$", output))
+        terminal_score = 1.0 if source_terminal and output_terminal else 0.0
+        return preserved * 4.0 + length_score + terminal_score
 
     def _translate_chunk_batch(
         self, chunks: list[str], target_language: str, model_inputs: list[str] | None = None
@@ -666,7 +724,7 @@ class MADLADEngine(TranslationEngine):
             piece = self._tokenizer.decode(seq, skip_special_tokens=True).strip()
             piece = self._restore_byte_escapes(piece)
             cites, nonce = cite_maps[i]
-            piece = restore_citations(piece, cites, nonce)
+            piece = restore_citations(piece, cites, nonce, reject_missing=True)
             if enumeration_prefixes[i]:
                 piece = f"{enumeration_prefixes[i]} {piece}".strip()
             if self._is_degenerate(piece, chunk, target_language):
@@ -690,9 +748,14 @@ class MADLADEngine(TranslationEngine):
         model_input: str | None = None,
         num_beams: int = 1,
         retry_label: str = "",
+        disable_protection: bool = False,
     ) -> tuple[str, int, int]:
         enumeration_prefix, translate_body = self._detach_enumeration_prefix(model_input or text)
-        protected, cites, nonce = protect_citations(translate_body)
+        protected, cites, nonce = (
+            (translate_body, [], 0)
+            if disable_protection
+            else protect_citations(translate_body)
+        )
         inputs = self._encode_translation_inputs(protected, target_language)
         input_tokens = inputs["input_ids"].shape[1]
         max_new_tokens = min(max(input_tokens * 3 + 24, 48), 256)
@@ -716,8 +779,20 @@ class MADLADEngine(TranslationEngine):
             outputs[0],
             skip_special_tokens=True,
         ).strip()
+        if os.getenv("TRANSLATION_UNIT_DEBUG") == "1":
+            # Keep decode-time evidence separate from the restored result. This
+            # is intentionally opt-in: normal runs must not emit full paper
+            # text, while investigations need to distinguish model corruption
+            # from placeholder restoration or quality-gate rejection.
+            print(
+                f"[TRANSLATION_DECODE] input={protected!r} raw={translated_text!r} "
+                f"citations={cites!r} nonce={nonce}",
+                flush=True,
+            )
         translated_text = self._restore_byte_escapes(translated_text)
-        translated_text = restore_citations(translated_text, cites, nonce)
+        translated_text = restore_citations(translated_text, cites, nonce, reject_missing=True)
+        if os.getenv("TRANSLATION_UNIT_DEBUG") == "1":
+            print(f"[TRANSLATION_RESTORED] text={translated_text!r}", flush=True)
         if enumeration_prefix:
             translated_text = f"{enumeration_prefix} {translated_text}".strip()
         if self._is_degenerate(translated_text, text, target_language):
@@ -948,7 +1023,14 @@ class MADLADEngine(TranslationEngine):
                 flags=re.I,
             )
             ratio_source = "".join(adjusted.split())
-        return len(output_compact) / max(1, len(ratio_source)) < 0.28
+        # Japanese can express a compact, complete academic sentence in far
+        # fewer characters than English.  Keep the stricter 0.28 floor for
+        # long units (where omitted qualifications are common), but avoid
+        # rejecting a substantive 110–179 character sentence solely because
+        # its faithful Japanese rendering is compact.
+        has_qualification = bool(re.search(r"\b(?:because|although|though|while|whereas|even|unless|if)\b", source, re.I))
+        floor = 0.21 if len(ratio_source) < 180 and not has_qualification else 0.28
+        return len(output_compact) / max(1, len(ratio_source)) < floor
 
     @staticmethod
     def _latin_ratio_beyond_source(output: str, source: str) -> float:

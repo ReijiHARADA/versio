@@ -130,6 +130,13 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
     matches = [
         match for match in matches
         if not (match.group(0).isupper() and match.group(0) in ordinary)
+        # Keep model/version identifiers such as GPT-3 atomic.  The generic
+        # acronym matcher otherwise captures ``GPT`` before the ``-3`` and
+        # sends a standalone placeholder that MADLAD frequently drops.
+        and not (
+            match.group(0).isupper()
+            and re.match(r"[A-Z]{2,8}(?=\s*[-‐‑–—]\s*\d)", text[match.start():])
+        )
     ]
     matches.sort(key=lambda match: (match.start(), -(match.end() - match.start())))
     non_overlapping: list[re.Match[str]] = []
@@ -211,7 +218,13 @@ def _normalize_placeholder_glyphs(text: str) -> str:
     return lookalikes.sub(lambda match: match.group(0).translate(table), text)
 
 
-def restore_citations(text: str, citations: list[str], nonce: int = 0) -> str:
+def restore_citations(
+    text: str,
+    citations: list[str],
+    nonce: int = 0,
+    *,
+    reject_missing: bool = False,
+) -> str:
     """Put original citation strings back, preserving content and order."""
     if not citations:
         return _to_halfwidth(text)
@@ -237,12 +250,26 @@ def restore_citations(text: str, citations: list[str], nonce: int = 0) -> str:
                     out = before[:terminal.start()] + match.group(0) + punctuation + after
             out = pattern.sub(citation, out, count=1)
         elif citation not in out:
-            missing.append(citation)
+            # A dropped parenthetical/figure citation at the source sentence
+            # tail can be restored exactly before the translated terminal mark.
+            # This is deliberately limited to reference-shaped spans; numeric
+            # measurements and identifiers must still fail closed when lost.
+            if citation.lstrip().startswith(("(", "[")) and re.search(r"[。！？.!?]\s*$", out):
+                terminal = re.search(r"([。！？.!?])\s*$", out)
+                assert terminal is not None
+                out = out[:terminal.start()] + citation + terminal.group(1) + out[terminal.end():]
+            else:
+                missing.append(citation)
     leftover = (
         re.compile(rf"{re.escape(_PLACEHOLDER_PREFIX)}\d+X\d+{re.escape(_PLACEHOLDER_SUFFIX)}", re.I)
         if nonce
         else re.compile(rf"{re.escape(_PLACEHOLDER_PREFIX)}\d+{re.escape(_PLACEHOLDER_SUFFIX)}", re.I)
     )
+    if reject_missing and missing:
+        raise ValueError(
+            "protected citation placeholder dropped by model: "
+            + ", ".join(missing[:4])
+        )
     out = leftover.sub("", out)
     for citation in missing:
         # If MADLAD drops an inline numeric-reference placeholder entirely,

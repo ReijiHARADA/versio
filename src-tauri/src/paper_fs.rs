@@ -122,6 +122,27 @@ end try"#
     Ok(Some(PathBuf::from(path)))
 }
 
+/// When PAPER_READER_UI_E2E=1, skip the save dialog and write under app-data
+/// `_acceptance/exports/` so CI can assert a real export without flaky dialogs.
+fn resolve_export_destination(
+    app: &AppHandle,
+    default_name: &str,
+) -> Result<Option<PathBuf>, String> {
+    if crate::source_pdf::ui_e2e_enabled() {
+        let root = app.path().app_data_dir().map_err(|e| e.to_string())?;
+        let safe = default_name
+            .replace('/', "_")
+            .replace('\\', "_")
+            .replace("..", "_");
+        if safe.is_empty() {
+            return Err("無効なファイル名です".into());
+        }
+        Ok(Some(root.join("_acceptance").join("exports").join(safe)))
+    } else {
+        choose_save_path(default_name)
+    }
+}
+
 fn choose_directory_with_prompt(prompt: &str) -> Result<Option<PathBuf>, String> {
     let prompt = escape_applescript(prompt);
     let path = run_osascript(&format!(
@@ -251,8 +272,12 @@ pub struct ExportAssetInput {
 
 /// Dialog → write a single file. Frontend never supplies an absolute path.
 #[tauri::command]
-pub fn save_export_file(default_name: String, data: Vec<u8>) -> Result<Option<String>, String> {
-    let picked = match choose_save_path(&default_name)? {
+pub fn save_export_file(
+    app: AppHandle,
+    default_name: String,
+    data: Vec<u8>,
+) -> Result<Option<String>, String> {
+    let picked = match resolve_export_destination(&app, &default_name)? {
         Some(p) => p,
         None => return Ok(None),
     };
@@ -272,11 +297,12 @@ pub fn save_export_file(default_name: String, data: Vec<u8>) -> Result<Option<St
 /// Dialog for a Markdown file, then write markdown + sibling asset files.
 #[tauri::command]
 pub fn save_markdown_export(
+    app: AppHandle,
     default_name: String,
     markdown: Vec<u8>,
     assets: Vec<ExportAssetInput>,
 ) -> Result<Option<String>, String> {
-    let picked = match choose_save_path(&default_name)? {
+    let picked = match resolve_export_destination(&app, &default_name)? {
         Some(p) => p,
         None => return Ok(None),
     };

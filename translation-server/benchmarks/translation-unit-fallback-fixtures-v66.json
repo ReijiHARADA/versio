@@ -10,7 +10,7 @@
     {
       "id": "cognitive-psychology-gpt3-b-9c57b65a",
       "source": "In a second test, we asked GPT-3 to intervene in a scenario by removing the correct object to prevent an effect after having read about three different objects, one causing and two not causing the effect (in this case, an allergic reaction; Intervene, see SI Appendix). GPT-3 identified the correct object to be removed. In the final test, we probed GPT-3’s ability of mature causal reasoning24 (Mature, see SI Appendix). In this task, GPT-3 was told that there were four pills: A, B, C and D. While A and B individually could kill someone, C and D could not.",
-      "expected": { "roundTrip": true, "minWords": 35, "mustKeep": ["GPT-3", "A", "B", "C", "D"] }
+      "expected": { "roundTrip": true, "minWords": 35, "mustKeep": ["GPT-3", "A", "B", "C", "D"], "mustKeepRelations": [["A", "B"], ["C", "D"]] }
     },
     {
       "id": "linguistics-language-model-physics-b-30cd3318",

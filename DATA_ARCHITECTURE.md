@@ -209,10 +209,14 @@ Paper Reader Backup/
 Create path:
 
 1. `flushPersistence()`
-2. short **write barrier** (library.sqlite / papers writers wait)
-3. copy live data into an immutable consistent snapshot directory
-4. release barrier (UI mutations resume)
-5. assemble / validate / promote backup from the snapshot (long work)
+2. **write barrier**: stop new writers → drain admitted active writers → copy live
+   `library.sqlite` + `papers/` into an immutable consistent snapshot directory
+3. release barrier (UI mutations resume)
+4. assemble / validate / promote backup from the snapshot (long work)
+
+Writers use acquire/release leases (`withLibraryWriteLease`) so exceptions cannot
+leave a stuck active count. Generation remains a diagnostic counter, not a drain
+substitute.
 
 Validation includes SQLite `PRAGMA quick_check` / `integrity_check`, required tables,
 critical `papers` columns, and `foreign_key_check`. Older schema versions that the

@@ -37,6 +37,7 @@
     "audit:validate-fallback-attribution": "python3 scripts/validate-fallback-attribution.py",
     "audit:enrich-fallback-diagnostics": "python3 scripts/enrich-fallback-diagnostics.py",
     "audit:summarize-fallback-attribution": "python3 scripts/summarize-fallback-attribution.py",
+    "audit:diagnose-a-cohort": "PYTHONPATH=translation-server translation-server/.venv/bin/python translation-server/scripts/diagnose_a_cohort_variants.py",
     "verify:real-paper-source-policy": "npx --yes tsx scripts/verify-real-paper-source-policy.ts"
   },
   "dependencies": {

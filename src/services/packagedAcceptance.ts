@@ -117,7 +117,13 @@ export async function maybeRunPackagedAcceptanceImport(): Promise<void> {
       note: "packaged-acceptance",
     });
 
-    const searchQueries = ["Acceptance", "Fixture", paperId.slice(0, 8)];
+    const searchQueries = [
+      "Acceptance",
+      "Fixture",
+      "column",
+      "Abstract",
+      paperId.slice(0, 8),
+    ];
     let searchHits: string[] = [];
     for (const q of searchQueries) {
       searchHits = await searchLibraryPaperIds(q);
