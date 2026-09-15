@@ -2114,3 +2114,7 @@ PPG Earring p.10で、段落途中の単独改行ハイフンがlayout上equatio
 ### 2026-09-16 checkpoint: corpus table-node inventory
 
 20 cached PDFを実pipelineで走査し、Canonical table node 538件、Paper table block 520件を確認した。大半はcaption由来のtext-less synthetic regionで、件数はtable precision/recallを示さない。captionless text-bearing gridの誤昇格がないかpublisher別のサンプル監査が次の課題。
+
+### 2026-09-16 checkpoint: progress ledger refresh
+
+抽出の最新実装（captionless table projection、hyphen continuation safety）と検証結果をprogress ledgerへ反映した。次回はpublisher横断のtext-bearing table precision、39 warning blocksの画像照合、paragraph boundary reviewから再開する。
