@@ -141,6 +141,25 @@ describe("PDF reading order regression", () => {
     expect((stitched?.bbox.y ?? 0) + (stitched?.bbox.height ?? 0)).toBeGreaterThan(704);
   });
 
+  it("stitches a right-column paragraph into the next page's left column", () => {
+    const pages: ExtractedPage[] = [
+      { pageNumber: 1, width: 612, height: 792, textItems: Array.from({ length: 8 }, (_, index) => ({
+        text: `RIGHT_${index}`, x: 338, y: 620 + index * 10, width: 220, height: 8, fontSize: 8, fontName: "Body", page: 1,
+      })) },
+      { pageNumber: 2, width: 612, height: 792, textItems: Array.from({ length: 8 }, (_, index) => ({
+        text: index === 0 ? "continues with the remaining sentence" : `LEFT_${index}`,
+        x: 54, y: 86 + index * 10, width: 220, height: 8, fontSize: 8, fontName: "Body", page: 2,
+      })) },
+    ];
+    const { blocks } = reconstructDocument(pages);
+    const stitched = blocks.find((block) => block.text.includes("continues with"));
+    expect(stitched?.pageStart).toBe(1);
+    expect(stitched?.pageEnd).toBe(2);
+    expect(stitched?.text).toContain("RIGHT_7 continues");
+    expect(stitched?.lines.map((line) => line.page)).toContain(1);
+    expect(stitched?.lines.map((line) => line.page)).toContain(2);
+  });
+
   it("does not join an independent capitalized paragraph on the next page", () => {
     const pages: ExtractedPage[] = [
       { pageNumber: 5, width: 612, height: 792, textItems: [{ text: "PAGE_END The prior paragraph ends without a terminal mark", x: 54, y: 704, width: 500, height: 10, fontSize: 10, fontName: "Helvetica", page: 5 }] },

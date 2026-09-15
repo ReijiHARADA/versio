@@ -1914,3 +1914,7 @@ Full test, lint, and typecheck revalidation succeeded after the extraction basel
 ### 2026-09-16 checkpoint: two-column ordering guard
 
 二段組のnative行について、左列を上から下へ処理してから右列へ移る読み順を合成回帰テストで固定した（33 reading-order tests pass）。このテストは列検出そのものを緩和せず、今後の改善による既存読み順の安全回帰を検出する。実PDFのword-level二段組混在は引き続き未解決。
+
+### 2026-09-16 checkpoint: cross-page two-column stitch guard
+
+右列から次ページ左列へ続く未完結段落の合成回帰テストを追加した。34 reading-order tests passし、pageStart/pageEndと両ページのline provenanceを検証する。実コーパスの列検出不足そのものは未解決。
