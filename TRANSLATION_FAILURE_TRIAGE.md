@@ -90,3 +90,7 @@ severity>=2のaccepted rowsに対し、coverage relation lossとscientific invar
 ### 2026-09-15: held-out candidate semantic review
 
 Baseline fallback 3件に対するM2M100 1.2B / CAT-Translate 1.4B候補6件を原文比較した。hard signalを通過していても、6件すべてsemantic shift・omission・terminology errorを含み、自動cascade採用可能な候補は0件だった。MiniLMのfull similarityは0.633〜0.871、source sentence最低値は0.324〜0.789だったが、`step-to-charge`の専門用語変質を高スコアで見逃した。したがってembedding値単独のcandidate gateは不十分で、claim/terminology保持を含むaudit評価が必要である。詳細は`reports/cascade-candidate-review-v1.json`と`reports/cascade-candidate-semantic-v1.json`。
+
+### 2026-09-16: flattened table extraction finding
+
+Publisher横断の境界診断で見つかった`wear-scale` p.14を再現確認した。相関行列は各行が単一native itemとして抽出されるため、既存の`tableLike`（同一line内の複数item）を通らず、paragraph列として残る。末尾では表ヘッダ、脚注、通常本文まで同一blockに連結される。numeric-rowをgeneric candidateで個別にtable化する試作は実canonicalで有効性を確認できず、precisionを証明できないため撤回した。次の実装対象は、page/column/y近接と反復numeric形状からrow clusterを作り、caption・本文境界を含むregionとしてresolverへ渡すこと。

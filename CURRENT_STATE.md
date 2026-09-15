@@ -2150,3 +2150,7 @@ captionless table precision guard後の20 cached PDF横断診断を`test-data/re
 ### 2026-09-16 checkpoint: extraction handoff ledger
 
 最新台帳を、equation/algorithm table projection guard後・extraction corpus 43/43の状態へ更新した。次回の実作業は残存text-bearing table候補のpublisher横断precision監査、39 warning blockのnative画像照合、注釈付きparagraph boundaryのprecision/recall計測。
+
+### 2026-09-16 checkpoint: flattened statistical table diagnostic
+
+`wear-scale.pdf` p.14 の native extractionを目視・canonical出力で確認した。Inter-item correlation matrix の各行が1 native itemへ平坦化され、15行がparagraphとして出力され、後続の表見出し・脚注・本文も同一paragraphへ混在している。既存のmulti-item geometry table evidenceでは検出できない形式であり、単純なnumeric-row relabelはresolver/projection経路で有効にならなかったため採用せず撤回した。次回はpage-local row clusterをCanonical前段で構築し、表領域と本文の境界を同時に検証する。
