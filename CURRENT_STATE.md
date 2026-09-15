@@ -2266,3 +2266,7 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 ### 2026-09-16 checkpoint: repeat-operator corpus regression
 
 `paintImageXObjectRepeat` 対応後に cached extraction corpus を再実行し、2 files / 43 tests が通過。repeat画像対応による heading、caption、table、reading-order 回帰は検出されなかった。次回は画像重なり候補の長文分類を完了し、抽出完了条件の未検証項目を棚卸しする。
+
+### 2026-09-16 checkpoint: clean stop
+
+画像重なり再走査と抽出回帰確認を完了した時点で一旦停止。監査・ベンチマークの長時間プロセスは残っておらず、作業ツリーもクリーン。起動中の `.app` に同梱された翻訳サーバー（PID 99922）はアプリ利用のため維持している。再開時は、長文重なり候補の手動分類を確定し、wear-scale のページローカルな flattened table region 検出へ進む。
