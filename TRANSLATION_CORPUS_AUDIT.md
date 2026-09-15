@@ -2432,3 +2432,7 @@ Algorithm/Require本文や数式断片がtable candidateになる例を確認し
 ### Rotated x-band regression (2026-09-16)
 
 回転セル群と広い回転注記を同一baselineに置く一般化合成回帰を追加。reading-order suite は 42/42 通過し、表セルと注記の再結合を防ぐ既存guardを固定した。
+
+### Rotated band guard validation (2026-09-16)
+
+回転line間のx帯分離guardを追加し、重点回帰47/47、extraction corpus43/43を通過。既存の合成表・列跨ぎ・source integrityに回帰なし。実PDFでのtable region完全再構成は未完了。

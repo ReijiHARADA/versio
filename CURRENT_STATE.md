@@ -2330,3 +2330,7 @@ Reading-order と canonical pipeline の重点回帰を再実行し、2 files / 
 ### Rotated x-band regression (2026-09-16)
 
 回転grid bandと広い回転noteを同一baselineに置く合成ケースを追加し、reading-order suite は 42/42 通過。既存の内容構成guardがx帯の異なるnoteを表セルblockへ再結合しないことを固定した。実PDFでのx帯境界統合は次回検証する。
+
+### Rotated band guard validation (2026-09-16)
+
+rotation content merge guardにx帯の分離 evidence を追加。重点回帰 47/47、extraction corpus 43/43 を通過し、既存の合成表・列跨ぎ・source integrityに回帰なし。`wear-scale` 実PDFの表全体region再構成は未確認のため、次回ベンチマークで flattened rows と table/prose混在を比較する。

@@ -1276,9 +1276,19 @@ function groupLinesIntoBlocks(
     const nextCellLike = nextItems.filter((item) => item.width <= 48 && item.text.trim().split(/\s+/).length <= 3).length >= 4;
     const previousProseLike = previousItems.some((item) => item.width > 80 || item.text.trim().split(/\s+/).length >= 4);
     const nextProseLike = nextItems.some((item) => item.width > 80 || item.text.trim().split(/\s+/).length >= 4);
+    const previousMinX = Math.min(...previousItems.map((item) => item.x));
+    const previousMaxX = Math.max(...previousItems.map((item) => item.x + item.width));
+    const nextMinX = Math.min(...nextItems.map((item) => item.x));
+    const nextMaxX = Math.max(...nextItems.map((item) => item.x + item.width));
+    const rotatedBandGap = previousRotated && nextRotated
+      ? Math.max(nextMinX - previousMaxX, previousMinX - nextMaxX)
+      : 0;
+    const separatedRotatedBands = previousRotated && nextRotated &&
+      rotatedBandGap > baseFont * 1.5 &&
+      ((previousCellLike && nextItems.length >= 2) || (nextCellLike && previousItems.length >= 2));
     const rotationContentCompatible = !(
       previousRotated && nextRotated &&
-      ((previousCellLike && nextProseLike) || (previousProseLike && nextCellLike))
+      ((previousCellLike && nextProseLike) || (previousProseLike && nextCellLike) || separatedRotatedBands)
     );
     const authorKindOk =
       currentRole !== "author" ||
