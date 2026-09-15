@@ -2680,3 +2680,5 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Corrected the Elsevier medical meta-review catalog title/DOI to match the cached publication PDF, eliminating one catalog-side titleExact false negative. Extraction regression remains 56/56.
 
 - Expanded benchmark metrics: source integrity and figure-caption relation are 1.0 across 26 cached papers. Table-caption relation recall has a 0.25 minimum on the Elsevier meta-review, queued for table-region manual review.
+
+- Lowered weak table evidence below role-promotion threshold (0.68) to protect aligned prose from table misclassification. Regression remains 56/56; the Elsevier table-caption recall case is unchanged and remains a focused region-reconstruction task.
