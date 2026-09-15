@@ -105,6 +105,18 @@ describe("PDF reading order regression", () => {
     expect(text.indexOf("LEFT_8")).toBeLessThan(text.indexOf("RIGHT_1"));
   });
 
+  it("joins an unfinished left-column sentence to a lowercase right-column continuation", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 1, width: 612, height: 792,
+      textItems: [
+        ...Array.from({ length: 8 }, (_, index) => ({ text: `left_${index}`, x: 54, y: 120 + index * 16, width: 220, height: 10, fontSize: 10, fontName: "Body", page: 1 })),
+        ...Array.from({ length: 8 }, (_, index) => ({ text: index === 0 ? "the remaining clause" : `right_${index}`, x: 338, y: 120 + index * 16, width: 220, height: 10, fontSize: 10, fontName: "Body", page: 1 })),
+      ],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    expect(blocks.some((block) => block.text.includes("left_7 the remaining clause"))).toBe(true);
+  });
+
   it("preserves native rotation as line provenance without dropping rotated text", () => {
     const pages: ExtractedPage[] = [{
       pageNumber: 4,

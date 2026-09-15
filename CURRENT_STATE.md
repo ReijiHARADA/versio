@@ -1938,3 +1938,7 @@ Full test, lint, and typecheck revalidation succeeded after the extraction basel
 ### 2026-09-16 checkpoint: ppg block-boundary audit
 
 `ppg-earring`全16ページをdenseWordColumns後に再走査した。173 blocks中、左右列が同一blockへ混在するものは2、複数ページblockは2。page2/3の列検出は改善したが、page3/page13に混在blockが残るため完了条件は未達。denseWordColumnsはsource integrity回帰なし（コーパス42/42）。
+
+### 2026-09-16 checkpoint: valid same-page column continuation
+
+ppg-earring page3/page13の左右列混在は、左列末尾の未完結文から右列先頭のlowercase continuationへの正しい結合だった。35 reading-order testsに同一ページ左→右継続の回帰を追加し、誤結合と区別できるようにした。
