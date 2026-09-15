@@ -2820,3 +2820,4 @@ Elsevier block inspection confirms two distinct unresolved patterns: `Table 5 pr
 Added and verified a generic native-font-transition rule for a numbered heading suffix fused onto prose. The rule requires multiple native items and a distinct font; the existing single-item fused-heading negative case remains intact. The Elsevier page-4 probe now detects `2.1. Medical deep learning reviews in 2017` as a heading. Focused reading-order tests 46/46 and extraction corpus 56/56 pass.
 The extraction corpus was rerun after the inline font-transition heading change: **56/56 passed** with no source-integrity regression. Table recall remains unchanged.
 Full Vitest after the fused-heading rule: **61 files / 345 tests passed**, including the new native font-transition regression.
+Full application regression after the current extraction changes: **61 files / 345 tests passed** and `npm run build` passed. Only existing dynamic-import warnings remain.
