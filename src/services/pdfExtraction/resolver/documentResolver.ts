@@ -183,16 +183,26 @@ export function resolveCanonicalDocument(input: {
     titleNode.confidence = titleResolved.confidence;
     titleNode.evidence = [...titleNode.evidence, ...titleResolved.evidence];
   } else if (!titleNode && titleResolved.text) {
+    // Metadata/GROBID can supply a title even when the native candidate was
+    // conservatively left as paragraph. Reuse the closest native candidate's
+    // provenance so the resolved title never becomes an unanchored node.
+    const titleSource = candidates
+      .filter((candidate) => candidate.pageStart === 1)
+      .sort((a, b) => {
+        const aScore = a.evidence.some((e) => /title/i.test(e.label)) ? 1 : 0;
+        const bScore = b.evidence.some((e) => /title/i.test(e.label)) ? 1 : 0;
+        return bScore - aScore || Math.abs(a.text.length - titleResolved.text.length) - Math.abs(b.text.length - titleResolved.text.length);
+      })[0];
     nodes.unshift({
       id: "title-resolved",
       role: "title",
       text: titleResolved.text,
       pageStart: 1,
       pageEnd: 1,
-      boundingBoxes: [],
+      boundingBoxes: titleSource?.boundingBoxes ?? [],
       confidence: titleResolved.confidence,
       evidence: titleResolved.evidence,
-      sourceAnchor: { page: 1, boundingBoxes: [] },
+      sourceAnchor: titleSource?.sourceAnchor ?? { page: 1, boundingBoxes: [] },
     });
   }
 
