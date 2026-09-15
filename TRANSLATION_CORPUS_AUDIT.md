@@ -2729,3 +2729,7 @@ After the generic heading/body split, the Elsevier table caption/region/relation
 ### 2026-09-16 column-boundary continuation guard
 
 A generic colon-ended continuation guard now prevents list/table introductions from being merged across a column boundary. The remaining Elsevier wide mixed stream is not consistently labeled by native column assignment, so it remains unresolved pending page-layout classification. Regression remains 56/56.
+
+### 2026-09-16 mixed-column probe follow-up
+
+The remaining wide Elsevier block is upstream layout classification: its bbox spans both columns while line assignments are inconsistent. Post-group splitting cannot safely repair it. The colon transition guard remains a precision improvement; extraction regression is 56/56.

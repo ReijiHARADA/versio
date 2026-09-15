@@ -2728,3 +2728,9 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Added a generic guard preventing a column/page continuation merge when the preceding block ends in `:`. This preserves list/table introductions at structural boundaries.
 - The real Elsevier page-6 probe still contains a wider native mixed stream whose lines are not consistently labeled as left/right columns; it remains unresolved and is not force-reclassified. This is evidence for improving page layout classification before further merge rules.
 - Pipeline 12/12 and extraction corpus 56/56 pass after the change. No translation or `.app` changes.
+
+### 2026-09-16 mixed-column probe follow-up
+
+- The Elsevier page-6 wide block remains a native layout classification failure: its bbox spans both columns, but line-level assignment is not consistently left/right, so post-group splitting cannot safely repair it.
+- A colon boundary guard was retained as a safe improvement for ordinary column transitions; it did not falsely claim to solve the wide stream.
+- Pipeline 12/12 and extraction corpus 56/56 pass. Next action is page-layout classification evidence (synthetic fixture first), not more merge heuristics.

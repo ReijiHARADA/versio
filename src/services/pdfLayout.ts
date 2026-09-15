@@ -1550,7 +1550,9 @@ function isSentenceContinuation(left: string, right: string): boolean {
   const a = left.trim();
   const b = right.trim();
   if (!a || !b) return false;
-  if (/[.!?]$/.test(a)) return false;
+  // A colon commonly introduces a list or table; do not carry that lead-in
+  // into the next column/page stream.
+  if (/[.!?:]$/.test(a)) return false;
   if (a.endsWith("-") && /^[a-z]/.test(b)) return true;
   if (isGrantNumberContinuation(a, b)) return true;
   if (/^[a-z(]/.test(b)) return true;
