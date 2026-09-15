@@ -237,8 +237,8 @@ export function evaluateBaselinePaper(input: {
       ? substringPrecision(structuredTableCaptions, gold.tableRegions)
       : undefined,
     tableCaptionRelationRecall:
-      (gold?.tableCaptions ?? tables).length > 0
-        ? (gold?.tableCaptions ?? tables).filter((expectedCaption) => {
+      gold?.tableCaptions && gold.tableCaptions.length > 0
+        ? gold.tableCaptions.filter((expectedCaption) => {
             const captionNode = extracted.canonical.nodes.find(
               (node) => node.role === "caption" &&
                 (node.text ?? "").toLowerCase().includes(expectedCaption.toLowerCase())
@@ -250,7 +250,7 @@ export function evaluateBaselinePaper(input: {
                     extracted.canonical.nodes.find((node) => node.id === relation.to)?.role === "table"
                 )
               : false;
-          }).length / (gold?.tableCaptions ?? tables).length
+          }).length / gold.tableCaptions.length
         : undefined,
     tableCaptionRelationPrecision:
       captionRels.filter((relation) => {

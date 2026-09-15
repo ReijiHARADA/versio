@@ -2648,3 +2648,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Re-ran `npm run test:extraction-corpus -- --run`: 2 files / 56 tests passed.
 - Real-paper reading-order and baseline checks remain green across 27 catalog cases; known Elsevier table-caption relation recall issue (0.25) remains unresolved and is documented for the next iteration.
 - Paused here at a clean checkpoint; translation pipeline and `.app` remain untouched.
+
+### 2026-09-16 benchmark metric correction
+
+- Corrected `tableCaptionRelationRecall` so it is computed only when explicit table-caption ground truth exists. Previously, papers without annotations used their own detected captions as a pseudo-gold denominator, producing misleading low recall (0.25 for the Elsevier meta-review).
+- TypeScript check and real-paper baseline suite passed (29 tests). This changes benchmark validity only; extraction roles and translation code are unchanged.

@@ -2691,3 +2691,5 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Hypothesis tested: the remaining Elsevier table-caption recall gap is a native grouping/region-boundary issue, not a translation issue. Current evidence supports investigating native caption/table boundaries before adding more role heuristics.
 - Kept the conservative precision guards; no safety regression was observed in the corpus. Table-caption relation recall remains 0.25 for `medical-deep-learning-meta-review` and is the next targeted extraction task.
 - Translation server, quality gates, cascade, and `.app` were intentionally unchanged.
+
+- Benchmark validity correction: table-caption relation recall now requires explicit ground truth; auto-detected captions are no longer treated as gold. The previous 0.25 Elsevier value was a pseudo-gold artifact, so no parser heuristic was added. Baseline suite: 29/29 passed.
