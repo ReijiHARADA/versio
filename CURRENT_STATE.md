@@ -55,6 +55,11 @@
 
 ## Known limitations / 残課題
 
+### 2026-09-16 extraction checkpoint
+
+- `npm run test:extraction-corpus` を再実行し、real-paper fixture 44/44 tests passed（reading-order 21、baseline 23）。既存の抽出変更に回帰は確認されなかった。
+- 今回は検証のみで、translation-server、品質ゲート、モデル、`.app` は変更していない。次回は未解決のページ/段組 paragraph repair と rotated-table region を優先する。
+
 ### 2026-09-15 停止 checkpoint
 
 - v58 full corpus audit は完了済み（21 papers / 206 rows）。ordinary body の reader-visible fallback は 17/74 = 22.97% で、目標の 5% 以下には未到達。
