@@ -2492,3 +2492,7 @@ x帯split後、表セル行と表外注記は別blockになったが、回転表
 ### Rotation-aware caption continuation (2026-09-16)
 
 ラベル単独行に続くcaption本文の分離を改善。緩和条件は`Table/Figure + 番号`の完全一致ブロックに限定し、通常caption後のheadingを巻き込まない。既存回帰は reading-order 47/47、extraction corpus 44/44。
+
+### Rotated caption regression fixture (2026-09-16)
+
+`Table 6` ラベルとタイトル本文の分離を再現する回帰fixtureを追加。rotation-aware caption continuationで同一table_captionへ結合し、reading-order 43/43 成功。

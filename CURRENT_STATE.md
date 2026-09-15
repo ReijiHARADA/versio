@@ -2390,3 +2390,7 @@ Resolver-selected rotated table nodes are now projected as skipped `table` Paper
 ### Rotation-aware caption continuation (2026-09-16)
 
 `Table N` / `Figure N` のようなラベルだけがnative lineとして分離された場合、同一captionのタイトル行がheading風でも、ラベル単独ブロックに限ってcaption continuationを許可する一般条件を追加。通常caption後のheadingには適用しない。reading-order 47/47、extraction corpus 44/44。
+
+### Rotated caption regression fixture (2026-09-16)
+
+回転native streamで`Table 6`ラベルとタイトル行が別lineになるケースをsynthetic fixture化。caption continuationが結合し、reading-order suite 43/43 成功。論文専用条件は使用していない。
