@@ -2745,3 +2745,7 @@ A generic `assignColumn` spanning cutoff probe (0.48 → 0.55 page width) was co
 ### 2026-09-16 wide-column regression fixture
 
 Added a synthetic two-column fixture with wide native line widths to protect column assignment against spanning-threshold regressions. Pipeline suite is now 13/13; real-paper extraction remains 56/56.
+
+### 2026-09-16 spanning-vs-column regression
+
+The synthetic wide-column fixture now includes a full-width spanning line and asserts the distinction from wide column text. Pipeline remains 13/13; the real-paper corpus remains 56/56.

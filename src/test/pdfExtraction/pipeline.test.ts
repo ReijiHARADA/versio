@@ -14,12 +14,14 @@ describe("canonical extraction pipeline", () => {
       { text: `Left column sentence ${row} with enough words for layout detection.`, x: 40, y: 120 + row * 18, width: 280, height: 8, fontSize: 8, fontName: "Body", page: 1 },
       { text: `Right column sentence ${row} with enough words for layout detection.`, x: 304, y: 120 + row * 18, width: 280, height: 8, fontSize: 8, fontName: "Body", page: 1 },
     ]).flat();
+    textItems.push({ text: "A spanning abstract line remains across both columns.", x: 40, y: 80, width: 540, height: 8, fontSize: 8, fontName: "Body", page: 1 });
     const page = { pageNumber: 1, width: 595, height: 790, textItems };
     expect(detectPageColumns(page).isMultiColumn).toBe(true);
     const blocks = reconstructDocument([page]).blocks;
-    expect(blocks.every((block) => block.column === "left" || block.column === "right")).toBe(true);
+    expect(blocks.every((block) => ["left", "right", "spanning"].includes(block.column))).toBe(true);
     expect(blocks.some((block) => block.column === "left")).toBe(true);
     expect(blocks.some((block) => block.column === "right")).toBe(true);
+    expect(blocks.some((block) => block.column === "spanning")).toBe(true);
   });
 
   it("projects Japanese conference headings with CHILD_OF parents", () => {

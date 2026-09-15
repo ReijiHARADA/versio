@@ -2748,3 +2748,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Added a synthetic regression using 280px native lines in two columns. It verifies that wide column lines are still assigned left/right rather than spanning, while `detectPageColumns` identifies the page as multi-column.
 - Pipeline suite now has 13 tests; all pass. This fixture protects the span-width threshold used during the Elsevier investigation.
+
+### 2026-09-16 spanning-vs-column regression
+
+- Extended the synthetic wide-column fixture with a full-width spanning line. It verifies that ordinary wide lines remain left/right while a genuinely wide native line remains `spanning`.
+- Pipeline suite: 13/13 passed. This is a classifier guard; the Elsevier mixed stream still requires upstream native-layout diagnosis.
