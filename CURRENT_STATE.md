@@ -2738,3 +2738,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 verification after continuation guard
 
 - Revalidated the new structural continuation guard with pipeline 12/12 and extraction corpus 56/56. The wide Elsevier stream remains an upstream column-label/layout issue; no unsafe reclassification was introduced.
+
+### 2026-09-16 span-width threshold probe
+
+- Tested a generic increase of the `assignColumn` spanning cutoff from 0.48 to 0.55 page width, accounting for native trailing advance width. The Elsevier page-6 mixed stream did not change, so this was insufficient to repair the upstream classification; the threshold is retained only if corpus-safe.
+- Pipeline 12/12 and extraction corpus 56/56 pass. Table metrics were not claimed improved.

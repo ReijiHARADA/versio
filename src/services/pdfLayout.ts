@@ -74,6 +74,10 @@ const HEADER_Y = 48;
 const FOOTER_MARGIN = 38;
 const MIN_COLUMN_ITEMS = 8;
 const SPAN_WIDTH_RATIO = 0.48;
+// A native line can be slightly wider than its visual column because PDF
+// text matrices include trailing advance width. Keep the spanning cutoff
+// above ordinary column width while retaining the stricter detector sample.
+const ASSIGN_SPAN_WIDTH_RATIO = 0.55;
 
 function median(values: number[]): number {
   if (values.length === 0) return 0;
@@ -227,7 +231,7 @@ function assignColumn(
 ): LayoutColumn {
   if (!layout.isMultiColumn) return "single";
 
-  if (item.width > layout.pageWidth * SPAN_WIDTH_RATIO) return "spanning";
+  if (item.width > layout.pageWidth * ASSIGN_SPAN_WIDTH_RATIO) return "spanning";
   if (
     item.width > layout.pageWidth * 0.4 &&
     item.x < layout.gutterX - 20 &&
