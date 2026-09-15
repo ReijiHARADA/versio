@@ -2452,3 +2452,7 @@ x帯guard後に型チェック、lint、buildを実行し成功。既知のpdfjs
 ### Rotated table x-band split (2026-09-16)
 
 回転lineのnative x帯ジャンプをblock merge境界に反映。`wear-scale` p.14で従来56行に混在していた表セル＋本文を分離し、Cronbach注記／本文は独立block化した。重点回帰47/47通過。全extraction corpus再走査は次工程。
+
+### Rotated table boundary corpus verification (2026-09-16)
+
+x帯ジャンプguard後、extraction corpus43/43と20-paper benchmarkを再実行。`wear-scale` flattenedNumericRowCountは11から4へ減少し、rotatedLineCount=33、sourceIntegrityRate=1.0を維持。残る表外注記境界は手動レビュー対象。

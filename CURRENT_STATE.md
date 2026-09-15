@@ -2350,3 +2350,7 @@ x帯guard後のTypeScript型チェック、lint、buildが成功（既知のpdfj
 ### Rotated table x-band split (2026-09-16)
 
 実PDF p.14 のCanonical dumpで、表セル＋後続本文が56行の単一paragraphに再結合される残存原因を確認。回転lineのnative item中央値xが大きく跳ぶ場合にmergeを拒否する一般条件を追加した。実PDF再probeではCronbach脚注／本文blockが1行の独立blockになり、表行との混在を解消。重点回帰47/47、extraction corpusは次回全走査で再確認する。
+
+### Rotated table boundary corpus verification (2026-09-16)
+
+x帯ジャンプguard後にextraction corpus 43/43と20-paper benchmarkを再実行。`wear-scale` flattenedNumericRowCountは11→4へ減少、rotatedLineCount=33、sourceIntegrityRate=1.0を維持。他の既存real-paper回帰は通過。残る4行は表外注記とのregion統合を含むため、完全解決とは扱わず手動レビュー対象に残す。
