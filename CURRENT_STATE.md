@@ -2530,3 +2530,7 @@ chart labelの翻訳境界変更後、既存の全Vitest（61 files / 335 tests�
 ### Benchmark refresh after education annotations (2026-09-16)
 
 20-paper benchmark再生成。注釈済みsubsetのheadingRecall（4 papers）、figureCaptionRecall（4）、tableCaptionRecall（4）、tableRegionRecall（3）は全て平均1.0、全20 papersのsourceIntegrityRate平均も1.0。未注釈paperを含む全体精度とは解釈せず、ground truth coverage拡張の効果として記録。
+
+### Marketing caption ground truth (2026-09-16)
+
+marketing-consumer-responseのnative PDFで確認できるTable 1 captionをpartial ground truthへ追加（recallのみ）。20-paper benchmarkでtableCaptionRecallとsourceIntegrityRateを再計測し、結果をreportへ反映。次回はcaption relationの有無を手動確認する。

@@ -1,0 +1,9 @@
+{
+  "id": "marketing-consumer-response",
+  "completeAnnotations": false,
+  "title": "Symmetries, Scaling Laws and Phase Transitions in Consumer Advertising Response",
+  "tableCaptions": [
+    "Table 1. Based on the attribution model results, we utilized the Python library SciPy"
+  ],
+  "notes": "Partial caption ground truth from the native arXiv PDF; used for recall only."
+}
