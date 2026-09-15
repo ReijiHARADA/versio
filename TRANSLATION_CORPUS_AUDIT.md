@@ -2364,3 +2364,7 @@ PPG Earring p.7を実pipelineで再抽出し、Component/Weight gridがCanonical
 ### Extraction Phase checkpoint: captionless table regression locked (2026-09-16)
 
 PPG Earring実PDFのcaptionless Component/Weight gridについて、Canonical role、PaperBlock type、translation skipを検証する回帰テストを追加した。extraction configで22 testsが通過。単一形式の保護であり、全publisherのtable-region recallは引き続き未完了。
+
+### Extraction Phase checkpoint: corpus benchmark after table projection (2026-09-16)
+
+20 cached papersを再ベンチマークし、source integrity平均1.0、既存table-region評価対象の平均recall 1.0、title exactness 0.9を維持した。captionless table regressionを含むextraction testsは22/22通過。手動の段落境界・全publisher表recallは引き続き未完了。

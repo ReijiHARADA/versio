@@ -2090,3 +2090,7 @@ PPG Earring p.7を`extractFromPages`で再実行し、Component/Weight gridがCa
 ### 2026-09-16 checkpoint: captionless table regression locked
 
 実PDFを使う回帰テストを追加し、PPG Earringのcaptionless native gridがCanonical `table`、PaperBlock `table`、`translationStatus=skipped`であることを固定した。extraction configで22 tests通過。これは1形式の実例を保護するもので、他publisherのtable recallは未完了。
+
+### 2026-09-16 checkpoint: corpus benchmark after table projection
+
+20 cached papersのextraction benchmarkを再実行。sourceIntegrityRate平均1.0、既存tableRegionRecall対象の平均1.0、titleExact 0.9を維持した。captionless table regressionを含むextraction testsは22/22通過。全corpusの表recall・paragraph手動精度は未完了であり、数値を完了条件とはみなさない。
