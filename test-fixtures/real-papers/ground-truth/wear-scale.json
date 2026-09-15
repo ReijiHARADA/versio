@@ -1,0 +1,8 @@
+{
+  "id": "wear-scale",
+  "title": "Validation of the wearable acceptability range scale for smart apparel",
+  "tableCaptions": ["Inter-item correlation matrix"],
+  "tableRegions": ["Inter-item correlation matrix"],
+  "completeAnnotations": false,
+  "notes": "Caption text is emitted as a rotated native heading below the table region; used to measure rotation-aware caption provenance."
+}

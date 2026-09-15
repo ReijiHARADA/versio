@@ -2450,3 +2450,7 @@ Resolverに、回転native line・短heading・同一ページ直上の高信頼
 ### Post-promotion benchmark (2026-09-16)
 
 rotation-aware caption promotion後も20-paper benchmarkは完走。gold対象10本のtable relation recall平均は0.71875、precisionは1.0を維持。wear-scaleではCAPTION_OF=1の実probeを確認済みだが、ground truth未登録のため集計recallは未反映。
+
+### Wear-scale caption ground truth (2026-09-16)
+
+`wear-scale` ground truthへ回転caption `Inter-item correlation matrix` とtable region期待値を追加。再benchmarkでtableRegionRecall=1、tableCaptionRelationRecall=1、sourceIntegrityRate=1。layout caption recall=0はnative label分離の診断値として保持。

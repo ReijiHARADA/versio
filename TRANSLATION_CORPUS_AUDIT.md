@@ -2552,3 +2552,7 @@ Resolverで回転短headingを直上table regionとのgeometry evidenceにより
 ### Post-promotion benchmark (2026-09-16)
 
 caption昇格後の20-paper benchmarkを再生成し、gold対象10本のrelation recall平均0.71875、precision 1.0を維持。wear-scaleのCAPTION_OF=1は実probe済みだがgold未登録で集計対象外。
+
+### Wear-scale caption ground truth (2026-09-16)
+
+wear-scaleのground truth metadataを追加し、回転caption provenanceを評価可能化。再benchmarkでtable region recall 1、caption relation recall 1、source integrity 1。layout caption recall 0は分離状態の診断値。
