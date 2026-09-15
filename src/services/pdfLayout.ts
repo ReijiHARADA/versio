@@ -786,7 +786,9 @@ function isGrantNumberContinuation(previous: string, next: string): boolean {
   const a = previous.trim();
   const b = next.trim();
   if (!a || !b) return false;
-  if (/[.!?]$/.test(a)) return false;
+  // A colon commonly introduces a list or table; the next column/page is a
+  // new structural stream rather than a continuation of the same sentence.
+  if (/[.!?:]$/.test(a)) return false;
   const nextFirst = b.split(/\s+/)[0] ?? b;
   if (
     /\b(?:grant|award|project|contract)\s+(?:numbers?|no\.?|#)\s*$/i.test(a) &&
@@ -1423,9 +1425,52 @@ function groupLinesIntoBlocks(
     }
   }
   flush();
-  const nonEmptyBlocks = splitStyledHeadingPrefixes(blocks.filter((b) => b.text.length > 0), baseFont);
+  const nonEmptyBlocks = splitMixedColumnBlocks(
+    splitStyledHeadingPrefixes(blocks.filter((b) => b.text.length > 0), baseFont)
+  );
   logLayoutBlockBoundaries(nonEmptyBlocks);
   return mergeColumnContinuations(nonEmptyBlocks);
+}
+
+/** Keep a paragraph from spanning two native columns when the extractor has
+ * already assigned its lines to distinct columns. A true spanning block has
+ * `column=spanning` on every line; mixed left/right runs are a reading-order
+ * boundary and must remain separate for the resolver to reason about. */
+function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
+  const result: LayoutBlock[] = [];
+  for (const block of blocks) {
+    const columns = new Set(block.lines.map((line) => line.column));
+    const lineWidths = block.lines.map((line) => line.width).filter((width) => width > 0);
+    const typicalLineWidth = median(lineWidths) || 1;
+    if (block.role !== "paragraph" || columns.size < 2 || columns.has("spanning") ||
+        block.bbox.width < typicalLineWidth * 1.65 || block.lines.length < 3) {
+      result.push(block);
+      continue;
+    }
+    let run: LayoutLine[] = [];
+    let runColumn: LayoutColumn | null = null;
+    const flushRun = () => {
+      if (run.length === 0) return;
+      result.push({
+        role: "paragraph",
+        text: joinLines(run),
+        lines: run,
+        pageStart: run[0].page,
+        pageEnd: run[run.length - 1].page,
+        column: run[0].column,
+        bbox: blockBbox(run),
+      });
+      run = [];
+    };
+    for (const line of block.lines) {
+      if (runColumn !== null && line.column !== runColumn) flushRun();
+      runColumn = line.column;
+      run.push(line);
+    }
+    flushRun();
+    if (result.length === 0) result.push(block);
+  }
+  return result;
 }
 
 /**

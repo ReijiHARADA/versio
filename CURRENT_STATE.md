@@ -2722,3 +2722,9 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Re-ran `npm run bench:pdf-extraction` after the styled-prefix split. The Elsevier case remains table caption/region/relation recall 0.571 with relation precision 1.0; source integrity remains 1.0. The change fixes heading/body fusion but does not falsely claim table recovery.
 - Extraction corpus and pipeline remain 56/56 and 12/12. Next work should target native table-region evidence separately, using the now-corrected heading boundary as an input.
+
+### 2026-09-16 column-boundary continuation guard
+
+- Added a generic guard preventing a column/page continuation merge when the preceding block ends in `:`. This preserves list/table introductions at structural boundaries.
+- The real Elsevier page-6 probe still contains a wider native mixed stream whose lines are not consistently labeled as left/right columns; it remains unresolved and is not force-reclassified. This is evidence for improving page layout classification before further merge rules.
+- Pipeline 12/12 and extraction corpus 56/56 pass after the change. No translation or `.app` changes.
