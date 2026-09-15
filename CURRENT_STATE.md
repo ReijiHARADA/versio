@@ -66,6 +66,7 @@
 - 診断サンプルを全疑わしいblockへ拡張（v2）。arXiv 117件中 imageOverlap≥0.2 が26、numericRatio≥0.2 が29、shortTokenRatio≥0.7 が72。画像重なりなしのベクター図候補が多数残るため、次回はfont/geometry clusterとcaption近接を組み合わせて手動分類する。
 - native factsの閾値分類を`extraction-diagnostic-classification-v1.json`として保存。全129件の内訳は raster-overlap 26、vector-or-table-label 12、short-label 43、mixed-layout 48。これは優先順位付け専用で、role自動変更には使わない。
 - 韓国語abstractのような「狭いラベル帯＋広い本文帯」をgeometryで検出し、同一paragraphから分離する`labelSidebar` evidenceを追加。fashion-hybrid-cmfの疑わしいblockは1→0、PPGは0を維持。reading-order 27/27、extraction corpus 56/56 passed。
+- 現行benchmark集計（26 papers）: heading recall/precisionは注釈済みサンプルで平均1.0、figure caption recall平均1.0、table caption recall平均0.929、table region recall平均0.843、titleExact 20/26。未注釈paperのheading値は平均に含めていない。
 - `npm run diagnose:pdf-corpus` を現行コードで再実行し、26 papers / 497 pages / suspicious 164 blocks を記録。内訳は arXiv 144、PMLR 6、Elsevier 6、ACM 3 などで、arXivの大半は図・表のベクターラベルがnative textとして混在する診断候補。これはproduction role変更の根拠にはせず、次回はnative geometryとcaption/table provenanceを照合する。
 - 再開時の停止確認として `npm run test:extraction-corpus -- --run` を現行コードで再実行し、real-paper fixture 56/56 passed（reading-order 27、baseline 29）。既存のfont-transition heading / mixed-column保護 / table fallback変更に回帰なし。長時間ジョブは起動しておらず、次回は下記の未解決項目から再開する。
 
