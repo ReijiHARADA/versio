@@ -373,8 +373,14 @@ function clusterItemsIntoLines(
     // has several items and the unrotated side contains real prose.
     const rotated = group.filter((item) => Math.abs(item.rotation ?? 0) >= 45);
     const horizontal = group.filter((item) => Math.abs(item.rotation ?? 0) < 45);
-    const horizontalWords = horizontal.map((item) => item.text).join(" ").trim().split(/\s+/).filter(Boolean).length;
-    if (rotated.length >= 4 && horizontalWords >= 4) return [rotated, horizontal];
+    const horizontalText = horizontal.map((item) => item.text).join(" ").trim();
+    const horizontalWords = horizontalText.split(/\s+/).filter(Boolean).length;
+    // Short footnotes/notes can be only three words.  Accept those only when
+    // they look like prose (a lowercase word or sentence punctuation); this
+    // keeps compact numeric/header cells in the rotated grid.
+    const shortHorizontalProse = horizontalWords >= 3 &&
+      /[a-z]/.test(horizontalText) && /[.!?,:;]$/.test(horizontalText);
+    if (rotated.length >= 4 && (horizontalWords >= 4 || shortHorizontalProse)) return [rotated, horizontal];
     // A rotated matrix and its explanatory footnote can share a baseline and
     // rotation.  Matrix cells are short native items; the footnote is a
     // sentence-sized item. Split only with several short rotated cells plus a

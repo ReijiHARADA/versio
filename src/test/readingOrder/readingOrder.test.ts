@@ -206,6 +206,41 @@ describe("PDF reading order regression", () => {
     expect(note?.text).not.toMatch(/R1.*Cronbach|Cronbach.*R1/);
   });
 
+  it("separates a short prose note from a rotated grid band", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 14,
+      width: 595,
+      height: 791,
+      textItems: [
+        ...Array.from({ length: 6 }, (_, row) => ({
+          text: `R${row + 1} 0.${row + 1}`,
+          x: 180 + row * 12,
+          y: 120,
+          width: 32,
+          height: 8,
+          fontSize: 8,
+          fontName: "Body",
+          page: 14,
+          rotation: 90,
+        })),
+        {
+          text: "See note below.",
+          x: 430,
+          y: 120,
+          width: 90,
+          height: 8,
+          fontSize: 8,
+          fontName: "Body",
+          page: 14,
+        },
+      ],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    const note = blocks.find((block) => block.text.includes("See note below"));
+    expect(note).toBeTruthy();
+    expect(note?.text).not.toMatch(/R1.*See note|See note.*R1/);
+  });
+
   it("does not remerge a rotated native line with following prose", () => {
     const pages: ExtractedPage[] = [{
       pageNumber: 14,

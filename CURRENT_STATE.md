@@ -60,6 +60,7 @@
 - 現行コードで `npm run test:extraction-corpus -- --run` を再実行し、real-paper fixture 56/56（reading-order 27、baseline 29）が成功した。続けて `npm run bench:pdf-extraction` を完走し、26 cached papers / 497 pages の benchmark を更新した。
 - benchmark の source integrity / canonical provenance は全 paper で 1.0 を維持。caption relation は 1.0、table caption recall 平均 0.929、table region recall 平均 0.843。Elsevier native stream の Table 2/5/6 境界欠落と arXiv の vector-label 混在は未解決のままで、文字列推測による補完は行っていない。
 - 今回は抽出の検証と証拠更新のみ。翻訳 server、品質 gate、モデル、`.app` は変更していない。次の実装候補は、wear-scale の回転表 footnote 分離または speechin の汎用 table-region evidence だが、まず native geometry を手動確認してから安全な回帰を追加する。
+- 回転 native grid と同一ベースラインに置かれた3語程度の prose note を、末尾句読点・小文字を伴う場合に限って grid から分離する一般条件を追加。新しい reading-order 回帰を含め focused 47/47、extraction corpus 56/56 passed。数値セル・短い見出しには適用しない。
 
 ### 2026-09-16 extraction checkpoint
 
