@@ -2305,4 +2305,6 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 
 同一回転方向でもセル群と prose 群を block merge させない内容構成条件を追加。extraction corpus 43/43、lint、型チェックが通過。`wear-scale` では脚注を独立 line に保てるが、PDF側の幅情報が不均一な行では表セルと後続本文の連結が残るため、誤分離を避けて追加閾値は保留する。
 
+最新変更後の全Vitestは 61 files / 331 tests が通過し、build と TypeScript 型チェックも成功。表後注記の同一block問題は残存しているため、抽出完成とは扱わず、引き続き geometry 境界を検証する。
+
 captionless numeric-row の synthetic regression を追加し、6行の反復 x 列が table evidence（score >= 0.94）として生成されることを確認。pipeline suite は 5/5。実PDFではページ内の表後注記がまだ同じ block に残るため、region の上下境界を手動比較してから拡張する。
