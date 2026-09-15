@@ -2376,3 +2376,7 @@ PPG Earring実PDFのcaptionless Component/Weight gridについて、Canonical ro
 ### Extraction Phase checkpoint: hyphen continuation equation safety (2026-09-16)
 
 PPG Earring p.10の単独改行ハイフンを、未完結paragraph直後のneighbor evidenceでequationからparagraphへfallbackさせた。これは数式記号一般を禁止するものではなく、page/column、前段落の終端、近接geometryを併用する。実PDF回帰を含むextraction testsは22/22通過。診断用Layout dumpの物理roleとCanonical最終roleは異なり得るため、今後も両方を分けて評価する。
+
+### Extraction Phase checkpoint: source policy after boundary safety (2026-09-16)
+
+最新のtable projection / hyphen continuation変更後にsource-policy verifierを再実行し成功。39 explicit violationsは全て`wouldSubmitToModel=false`のままで、危険な抽出断片を翻訳へ流さない境界を維持した。これは安全抑止の検証であり、警告原因のnative画像照合完了を示さない。

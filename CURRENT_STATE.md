@@ -2102,3 +2102,7 @@ PPG Earring p.7を`extractFromPages`で再実行し、Component/Weight gridがCa
 ### 2026-09-16 checkpoint: hyphen continuation equation safety
 
 PPG Earring p.10で、段落途中の単独改行ハイフンがlayout上equation候補になる例を確認した。未完結paragraph直後の単独dashをequation evidenceから抑制し、Canonical resolverでparagraphへfallbackする汎用neighbor evidenceを追加。実PDF回帰テストで確認し、extraction config 22/22通過。layout dump上の物理role表示は診断用にequationのままだが、Canonical/Paper経路では翻訳対象paragraphとして扱う。
+
+### 2026-09-16 checkpoint: source-policy after boundary safety
+
+表projectionと単独改行ハイフンのequation safety後にreal-paper source policy verifierを再実行し成功。39 explicit violationsは引き続き`wouldSubmitToModel=false`で抑止され、抽出警告を翻訳へ流さない安全境界を維持。警告のnative画像照合とparagraph repair精度は未完了。
