@@ -2577,6 +2577,10 @@ marketing PDFのTable 2〜11の短いcaptionをpartial ground truthへ追加（�
 
 `ppg-earring`のreal-paper reading-order testをextraction configで単独再実行し成功（1/1）。page 2の列推定は現在`isMultiColumn=true`（leftX 56 / rightX 320）を返すことを確認。過去の混在警告サンプルは手動レビュー対象として残す。
 
+### List preservation benchmark (2026-09-16)
+
+既存ground truthでlist注釈があるeducation-learning-analyticsを再確認し、listItemRecall **1.0**、sourceIntegrity **1.0**。corpus全体ではlist注釈が1 paperのみのため、publisher横断のlist precisionは未計測。
+
 ### Full regression after table-row evidence (2026-09-16)
 
 全Vitest 61 files / 338 tests、extraction corpus 44/44が成功。既存のheading・reading-order・equation・caption回帰なし。table regionのCanonical membershipとpublisher横断precisionは未計測のため、抽出完了判定にはまだ到達していない。

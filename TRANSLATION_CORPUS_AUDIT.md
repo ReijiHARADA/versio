@@ -2613,3 +2613,7 @@ Table 2〜11の短いcaptionをpartial ground truthへ追加し、本文中の`T
 ### PPG column verification (2026-09-16)
 
 `ppg-earring` reading-order testをextraction configで単独実行し1/1成功。page 2の列推定は`isMultiColumn=true`（leftX 56 / rightX 320）。過去の混在警告サンプルは手動レビュー対象として継続。
+
+### List preservation checkpoint (2026-09-16)
+
+education-learning-analyticsのlist ground truthでlistItemRecall 1.0、sourceIntegrity 1.0。list注釈は現在1 paperのみで、横断precisionは未計測。
