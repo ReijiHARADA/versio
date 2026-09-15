@@ -138,7 +138,7 @@ describe("baseline benchmark on cached real papers", () => {
         metadata: { title: wear.paper.title, pageCount: pages.length },
       });
       const matrixRows = result.blocks.filter((block) =>
-        block.pageStart === 14 && block.type === "table" && /^[+−\-]?\d/.test(block.original.trim())
+        block.pageStart === 14 && block.type === "table" && /^[+−-]?\d/.test(block.original.trim())
       );
       expect(matrixRows.length).toBeGreaterThanOrEqual(10);
       expect(matrixRows.every((block) => block.translationStatus === "skipped")).toBe(true);

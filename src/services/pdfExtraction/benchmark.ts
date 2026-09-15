@@ -131,7 +131,7 @@ export function evaluateBaselinePaper(input: {
   const flattenedNumericRowCount = extracted.canonical.nodes.filter((node) => {
     const text = (node.text ?? "").trim();
     return node.role === "paragraph" && node.pageStart === node.pageEnd &&
-      text.length <= 180 && /^[+−\-]?\d/.test(text) &&
+      text.length <= 180 && /^[+−-]?\d/.test(text) &&
       (text.match(/\d/g) ?? []).length / Math.max(text.length, 1) >= 0.22 &&
       !/[.!?]$/.test(text) && (text.match(/[A-Za-z]{2,}/g) ?? []).length <= 2;
   }).length;

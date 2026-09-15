@@ -115,7 +115,7 @@ function headingTextShape(text: string): boolean {
   // whitespace. They need stronger structural evidence than the generic
   // capitalization test; otherwise body/table text becomes a heading.
   if (/[\u3400-\u9fff]/u.test(compact) && (compact.length > 18 || /[，。；：]/u.test(compact))) return false;
-  if (/^[\d\s.,+\-–—=()]+$/.test(compact)) return false;
+  if (/^[\d\s.,+-–—=()]+$/.test(compact)) return false;
   if (/[∥∑∫√∞≈≠≤≥±∂∇×÷]/u.test(compact)) return false;
   if (/[.!?。．]$/.test(compact) || /^\d+[.)]\s+[A-Z][a-z]+,?\s+[A-Z]/.test(compact)) return false;
   const letters = (compact.match(/[A-Za-z]/g) ?? []).length;
@@ -263,7 +263,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
   blocks.forEach((block, index) => {
     const text = block.text.trim();
     const row = block.role === "paragraph" && block.lines.length === 1 &&
-      block.pageStart === block.pageEnd && text.length <= 180 && /^[+−\-]?\d/.test(text) &&
+      block.pageStart === block.pageEnd && text.length <= 180 && /^[+−-]?\d/.test(text) &&
       (text.match(/\d/g) ?? []).length / Math.max(text.length, 1) >= 0.22 &&
       !/[.!?]$/.test(text) && (text.match(/[A-Za-z]{2,}/g) ?? []).length <= 2;
     const previous = blocks[index - 1];
@@ -292,7 +292,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const layoutRole = layoutRoleToCanonical(block.role);
     const denseCjkBody = layoutRole === "heading" && /[\u3400-\u9fff]/u.test(block.text) &&
       (block.text.trim().length > 18 || /[，。；：]/u.test(block.text));
-    const numericRow = layoutRole === "heading" && /^[\d\s.,+\-–—=()]+$/.test(block.text.trim());
+    const numericRow = layoutRole === "heading" && /^[\d\s.,+-–—=()]+$/.test(block.text.trim());
     const mathRow = layoutRole === "heading" && /[∥∑∫√∞≈≠≤≥±∂∇×÷]/u.test(block.text);
     const nearbyTableCaption = blocks.some((candidate) => candidate.role === "table_caption" &&
       candidate.pageStart === block.pageStart && Math.abs(candidate.bbox.y - block.bbox.y) < 300);
