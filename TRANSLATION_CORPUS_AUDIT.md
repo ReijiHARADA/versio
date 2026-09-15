@@ -2556,3 +2556,7 @@ caption昇格後の20-paper benchmarkを再生成し、gold対象10本のrelatio
 ### Wear-scale caption ground truth (2026-09-16)
 
 wear-scaleのground truth metadataを追加し、回転caption provenanceを評価可能化。再benchmarkでtable region recall 1、caption relation recall 1、source integrity 1。layout caption recall 0は分離状態の診断値。
+
+### Wear-scale ground truth regression (2026-09-16)
+
+wear-scale caption ground truth追加後のextraction corpusは44/44成功。回転caption relation評価を継続可能な状態にした。

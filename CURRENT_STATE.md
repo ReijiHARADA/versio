@@ -2454,3 +2454,7 @@ rotation-aware caption promotion後も20-paper benchmarkは完走。gold対象10
 ### Wear-scale caption ground truth (2026-09-16)
 
 `wear-scale` ground truthへ回転caption `Inter-item correlation matrix` とtable region期待値を追加。再benchmarkでtableRegionRecall=1、tableCaptionRelationRecall=1、sourceIntegrityRate=1。layout caption recall=0はnative label分離の診断値として保持。
+
+### Wear-scale ground truth regression (2026-09-16)
+
+wear-scale ground truth追加後も extraction corpus 44/44 を確認。回転caption relationの実測値がbenchmarkへ反映され、既存corpusに安全回帰なし。
