@@ -2548,3 +2548,7 @@ wear-scale p.14で回転表セルはtable nodeへ投影され、本文混在は�
 ### Rotation-aware table caption promotion (2026-09-16)
 
 Resolverで回転短headingを直上table regionとのgeometry evidenceによりcaptionへ昇格。wear-scale p.14でCAPTION_OF=1を確認。reading-order 49/49、extraction corpus 44/44。通常headingへの誤昇格を避ける保守条件。
+
+### Post-promotion benchmark (2026-09-16)
+
+caption昇格後の20-paper benchmarkを再生成し、gold対象10本のrelation recall平均0.71875、precision 1.0を維持。wear-scaleのCAPTION_OF=1は実probe済みだがgold未登録で集計対象外。
