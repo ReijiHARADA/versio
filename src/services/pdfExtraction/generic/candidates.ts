@@ -505,9 +505,10 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         block.lines.filter((line) => line.items.length >= 2).length >= 3 &&
         block.lines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length >= 2;
       const proseBlock = paragraphLike(block.text) && /[.!?]\s*$/.test(block.text.trim());
+      const longCaption = block.role === "table_caption" && paragraphLike(block.text);
       scoreByRole.table = rotatedItems.length >= 30 && rotatedNumeric / Math.max(rotatedItems.length, 1) >= 0.3
         ? 0.97
-        : structuralGrid && !proseBlock
+        : structuralGrid && !proseBlock && !longCaption
           ? 0.95
           : 0.90;
     }

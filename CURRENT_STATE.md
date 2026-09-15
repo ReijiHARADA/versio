@@ -2569,6 +2569,10 @@ marketing PDFのTable 2〜11の短いcaptionをpartial ground truthへ追加（�
 
 再抽出で確認したcaption一覧はTable 2〜11（Table 8を含む）までCanonical captionとして保持され、Table 4の本文参照はparagraphへ分離された。relation recallの未達はTable 1の長文caption/region競合が主候補で、次回はそのnodeとbboxを直接照合する。
 
+### Long caption role preservation (2026-09-16)
+
+長文table captionがstructural-gridスコアでtable roleへ上書きされる競合を抑制（caption roleかつparagraph-likeなblock）。marketing benchmarkでtableCaptionRecall **1.0**、tableCaptionRelationRecall **1.0**、relationPrecision **1.0**、sourceIntegrity **1.0**へ改善。全extraction corpus **44/44**、pipeline **9/9**、全Vitest **61 files / 338 tests**を確認。
+
 ### Full regression after table-row evidence (2026-09-16)
 
 全Vitest 61 files / 338 tests、extraction corpus 44/44が成功。既存のheading・reading-order・equation・caption回帰なし。table regionのCanonical membershipとpublisher横断precisionは未計測のため、抽出完了判定にはまだ到達していない。
