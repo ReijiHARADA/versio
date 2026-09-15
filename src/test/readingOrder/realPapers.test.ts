@@ -24,6 +24,7 @@ type CatalogPaper = {
     referencesHeading?: boolean;
     titleContains?: string;
     mostlySingleColumn?: boolean;
+    forbidSamePageMixedXParagraphs?: boolean;
   };
 };
 
@@ -66,6 +67,16 @@ describe("real jewelry-corpus PDFs", () => {
         .map((b) => b.text);
       const paragraphs = blocks.filter((b) => b.role === "paragraph").map((b) => b.text);
       const titles = blocks.filter((b) => b.role === "title").map((b) => b.text);
+
+      if (checks.forbidSamePageMixedXParagraphs) {
+        for (const block of blocks.filter((b) => b.role === "paragraph")) {
+          if (block.pageStart !== block.pageEnd || block.lines.length < 4) continue;
+          const widths = block.lines.map((line) => line.width).filter((width) => width > 0).sort((a, b) => a - b);
+          const typical = widths[Math.floor(widths.length / 2)] ?? 1;
+          const xs = [...new Set(block.lines.map((line) => Math.round(line.x / 24) * 24))];
+          expect(block.bbox.width >= typical * 1.65 && xs.length >= 2, `mixed x-band paragraph: ${block.text.slice(0, 80)}`).toBe(false);
+        }
+      }
 
       for (const pageNum of checks.expectMultiColumnOnPages ?? []) {
         expect(layouts[pageNum - 1]?.isMultiColumn, `page ${pageNum} 2-column`).toBe(true);

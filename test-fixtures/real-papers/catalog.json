@@ -250,6 +250,7 @@
       "seedPaths": [],
       "checks": {
         "forbidCaptionInParagraph": true,
+        "forbidSamePageMixedXParagraphs": true,
         "expectMultiColumnOnPages": [
           7,
           10,
