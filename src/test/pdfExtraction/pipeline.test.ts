@@ -94,6 +94,18 @@ describe("canonical extraction pipeline", () => {
       .every((block) => block.translationStatus === "skipped")).toBe(true);
   });
 
+  it("does not promote sentence-shaped prose beside a table caption", () => {
+    const textItems = [
+      { text: "Table 1. Results", x: 80, y: 100, width: 100, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+      { text: "In the curves shown in Figure 1 we compare the response across conditions.", x: 80, y: 125, width: 260, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+      { text: "The", x: 80, y: 125, width: 18, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+      { text: "results", x: 180, y: 125, width: 28, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+    ];
+    const candidates = generateGenericCandidates([{ pageNumber: 1, width: 500, height: 700, textItems }]).candidates;
+    const prose = candidates.find((candidate) => candidate.text.includes("curves shown"));
+    expect(prose?.roleScores.table ?? 0).toBeLessThan(0.94);
+  });
+
   it("does not run GROBID or Docling without a local service", () => {
     const pages = FIXTURES["single-column"]();
     const native = nativeDocumentFromExtracted(pages, { pageCount: 1 });

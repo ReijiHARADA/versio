@@ -2534,3 +2534,11 @@ chart labelの翻訳境界変更後、既存の全Vitest（61 files / 335 tests�
 ### Marketing caption ground truth (2026-09-16)
 
 marketing-consumer-responseのnative PDFで確認できるTable 1 captionをpartial ground truthへ追加（recallのみ）。20-paper benchmarkでtableCaptionRecallとsourceIntegrityRateを再計測し、結果をreportへ反映。次回はcaption relationの有無を手動確認する。
+
+### Extraction-first checkpoint paused (2026-09-16)
+
+ユーザー指示により、抽出アルゴリズム改善作業をキリのよい地点で一時停止。チャート軸ラベルEvidenceと翻訳境界変更まで実装済み。全Vitest 61 files / 335 tests、extraction corpus 44/44、lint、typecheck、web buildが成功。未解決の次工程は、marketing PDFで確認された prose/equation の誤table昇格を一般的なgeometry/prose-likeness guardで抑制し、synthetic regressionとpublisher横断precisionを追加すること。アプリ同梱translation-server processも停止済み。
+
+### Table false-positive guard (2026-09-16)
+
+`nearbyTableRowEvidence` が、caption近傍というだけで文型の長いnative blockをtable rowへ昇格させないよう、単語数・終端句読点・文字/数字比率によるprose-likeness guardを追加。marketing PDFで観測した誤昇格パターンを一般化したsynthetic regressionを追加し、pipeline test 7/7成功。次は全extraction corpusとpublisher横断benchmarkでtable precisionへの影響を確認する。

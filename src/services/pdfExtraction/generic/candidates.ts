@@ -249,6 +249,18 @@ function tableLike(block: LayoutBlock): boolean {
 
 function nearbyTableRowEvidence(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
   if (block.lines.length !== 1 || block.lines[0].items.length < 2) return false;
+  // A caption can be close to the prose that introduces a table.  That prose
+  // often contains several native spans on one line, so proximity plus x
+  // alignment alone is insufficient evidence for a table row.  Keep this
+  // fallback limited to compact cell-like text and reject sentence-shaped
+  // blocks before they can cross the resolver's table threshold.
+  const text = block.text.trim();
+  const words = text.split(/\s+/).filter(Boolean);
+  const letters = (text.match(/[A-Za-z]/g) ?? []).length;
+  const digits = (text.match(/\d/g) ?? []).length;
+  const sentenceLike = words.length >= 10 || /[.!?]\s*$/.test(text) ||
+    (letters >= 24 && digits / Math.max(letters + digits, 1) < 0.12);
+  if (sentenceLike) return false;
   const caption = blocks.find((candidate) =>
     candidate.pageStart === block.pageStart &&
     candidate.role === "table_caption" &&

@@ -2572,3 +2572,6 @@ linguistics-language-model-physics のグラフ軸・チャート数値ラベル
 ## Marketing caption relation checkpoint — 2026-09-16
 
 `marketing-consumer-response`へTable 1のpartial ground truthを追加。native caption text recallは1.0だが、resolved `CAPTION_OF → table` relation recallは0。caption本文の抽出は成功している一方、table region／relation provenanceが未復元であることを切り分けた。sourceIntegrityRateは1.0。次回はこのarXiv単段表のnative geometryを調査する。
+### Extraction checkpoint: prose/table boundary guard (2026-09-16)
+
+Marketing PDFで確認された、Table caption近傍の文章がtable roleへ誤昇格する可能性に対し、`nearbyTableRowEvidence`へ一般的なprose-likeness guard（単語数、文末句読点、文字/数字比率）を追加。caption近傍でも文型blockはparagraphへ残すsynthetic regressionを追加し、pipeline test 7/7を確認。全corpus再計測とpublisher横断table precision確認が次アクション。
