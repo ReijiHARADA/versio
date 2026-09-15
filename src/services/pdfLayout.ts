@@ -786,9 +786,7 @@ function isGrantNumberContinuation(previous: string, next: string): boolean {
   const a = previous.trim();
   const b = next.trim();
   if (!a || !b) return false;
-  // A colon commonly introduces a list or table; the next column/page is a
-  // new structural stream rather than a continuation of the same sentence.
-  if (/[.!?:]$/.test(a)) return false;
+  if (/[.!?]$/.test(a)) return false;
   const nextFirst = b.split(/\s+/)[0] ?? b;
   if (
     /\b(?:grant|award|project|contract)\s+(?:numbers?|no\.?|#)\s*$/i.test(a) &&
