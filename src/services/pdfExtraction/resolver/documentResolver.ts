@@ -202,7 +202,9 @@ export function resolveCanonicalDocument(input: {
       boundingBoxes: titleSource?.boundingBoxes ?? [],
       confidence: titleResolved.confidence,
       evidence: titleResolved.evidence,
-      sourceAnchor: titleSource?.sourceAnchor ?? { page: 1, boundingBoxes: [] },
+      sourceAnchor: titleSource
+        ? { page: titleSource.pageStart, boundingBoxes: titleSource.boundingBoxes }
+        : { page: 1, boundingBoxes: [] },
     });
   }
 
