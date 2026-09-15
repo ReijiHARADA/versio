@@ -2258,3 +2258,7 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 ### 2026-09-16 checkpoint: long-overlap candidate review
 
 長文候補112件のサンプル内訳を確認。`interactive-jewellery` の11件はACM permission/copyright/DOI chrome、`linguistics-language-model-physics` の長文候補はなく、残りは短い図ラベル・軸値だった。画像重なりを本文除外へ直結する誤検出は確認されず、現行の保守的な閾値を維持する。
+
+### 2026-09-16 checkpoint: baseline after image geometry integration
+
+画像配置／repeat operator／全面画像安全条件を含む現行実装で `npm run bench:pdf-extraction` を再計測。20 papers、`sourceIntegrityRate` 平均1.0を維持し、ground-truth tableRegionRecall対象2件はいずれも1.0。画像重なり候補の除外による既存指標の回帰は確認されなかった。
