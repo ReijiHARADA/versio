@@ -2458,3 +2458,7 @@ rotation-aware caption promotion後も20-paper benchmarkは完走。gold対象10
 ### Wear-scale ground truth regression (2026-09-16)
 
 wear-scale ground truth追加後も extraction corpus 44/44 を確認。回転caption relationの実測値がbenchmarkへ反映され、既存corpusに安全回帰なし。
+
+### Extraction checkpoint paused (2026-09-16)
+
+ユーザー指示により、ここで一旦停止。作業ツリーはclean。直近の実装は回転native tableの混在paragraph再結合防止と、表直下の回転短headingをcaptionへ昇格するResolver evidence。直近確認値は reading-order 49/49、extraction corpus 44/44、wear-scaleのtableRegionRecall=1.0・tableCaptionRelationRecall=1.0・sourceIntegrityRate=1.0。再開時はcaption metricの集計整合性確認と、他publisherの回転表／caption regression追加から開始する。translation-server、モデル、.app buildは未変更・未実行。
