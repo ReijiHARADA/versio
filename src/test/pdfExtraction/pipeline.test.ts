@@ -95,6 +95,22 @@ describe("canonical extraction pipeline", () => {
       .every((block) => block.translationStatus === "skipped")).toBe(true);
   });
 
+  it("does not promote rotated numeric cell bands to headings", () => {
+    const textItems = Array.from({ length: 10 }, (_, index) => ({
+      text: index % 2 === 0 ? `R${index / 2 + 1}` : `0.${index + 1}`,
+      x: 120 + index * 7,
+      y: 260,
+      width: 24,
+      height: 8,
+      fontSize: 8,
+      fontName: "Helvetica",
+      rotation: 90,
+      page: 1,
+    }));
+    const candidates = generateGenericCandidates([{ pageNumber: 1, width: 500, height: 700, textItems }]).candidates;
+    expect(candidates.every((candidate) => (candidate.roleScores.heading ?? 0) < 0.68)).toBe(true);
+  });
+
   it("does not promote sentence-shaped prose beside a table caption", () => {
     const textItems = [
       { text: "Table 1. Results", x: 80, y: 100, width: 100, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },

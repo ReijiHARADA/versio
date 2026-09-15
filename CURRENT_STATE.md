@@ -65,6 +65,7 @@
 - 回転表のx軸行帯クラスタ案は実PDFで`Factor...`セル列をheadingへ誤昇格させたためリバート。回帰テストは成功し、安全側fallbackを維持した。
 - その原因に対し、回転かつ数値密度の高いblockをheading evidenceから除外する一般ガードを追加。`wear-scale` 14ページのセル列はheadingにならず、table/paragraph候補として保持されることを確認した。
 - 変更後の extraction corpus は再実行して44/44成功。表の完全な行列復元は引き続き未解決。
+- 回転数値セル帯をheadingへ昇格させないsynthetic regressionを追加し、pipeline 10/10成功。セル帯クラスタリング自体は未導入。
 
 ### 2026-09-15 停止 checkpoint
 
