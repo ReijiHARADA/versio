@@ -468,9 +468,12 @@ export function isFigureCaption(text: string): boolean {
 }
 
 export function isTableCaption(text: string): boolean {
-  return /^(?:tables?|表)\s*(?:\d+[a-z]?|[ivxlcdm]+)(?:\s*[:.：–—-]|\s*$)/i.test(
-    layoutPlain(text)
-  );
+  const caption = layoutPlain(text);
+  if (/^(?:tables?|表)\s*(?:\d+[a-z]?|[ivxlcdm]+)(?:\s*[:.：–—-]|\s*$)/i.test(caption)) return true;
+  // Journal captions frequently omit punctuation: `Table 5 Factor ...`.
+  // Require a title-like continuation so ordinary prose such as `Table 1 is`
+  // remains a paragraph.
+  return /^(?:tables?|表)\s*(?:\d+[a-z]?|[ivxlcdm]+)\s+(?=[A-Z][A-Za-z])/i.test(caption);
 }
 
 function isCopyright(text: string, fontSize: number, baseFont: number): boolean {
