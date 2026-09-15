@@ -276,7 +276,7 @@ export function projectCanonicalToPaper(input: {
         // provenance signal in that case.
         node.boundingBoxes.length >= 3);
     if (nativeGrid) {
-      const tableText = node.text;
+      const tableText = node.text ?? "";
       const match = tableText.match(/^(?:table|表)\s*(\S+)/i);
       const tableNumber = match
         ? /表/i.test(match[0]) ? `表 ${match[1]}` : `Table ${match[1]}`

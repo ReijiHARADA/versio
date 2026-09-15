@@ -2198,3 +2198,7 @@ flattened-row routing rollback後に`npm run bench:pdf-extraction`を再実行�
 ### 2026-09-16 checkpoint: caption detection and extraction corpus revalidation
 
 `wear-scale.pdf` p.13 の native reading-order dumpで、句読点なしの `Table 5 Factor reliabilities...` が `table_caption` として認識されることを再確認した。`npm run test:extraction-corpus -- --run` は2 files / 43 tests、TypeScript型チェックも成功。作業ツリーはclean。flattened tableのregion統合とpublisher横断の手動precision/recallは未完了のため、翻訳server変更や`.app`ビルドには進んでいない。
+
+### 2026-09-16 checkpoint: extraction projection build repair
+
+Web buildで検出された `tableText` nullable の型エラーを、nativeGrid条件を維持したまま空文字へ正規化して修正。抽出挙動は変更せず、`npm run build`、`npm run lint`、extraction corpus 2 files / 43 tests が成功した。次回は図領域に混入するnative textのgeometry診断を続ける。
