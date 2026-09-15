@@ -273,6 +273,16 @@ describe("PDF reading order regression", () => {
     expect(blocks[0]?.role).toBe("paragraph");
   });
 
+  it("classifies a small author running header by top-of-page geometry", () => {
+    const { blocks } = reconstructDocument([{
+      pageNumber: 2,
+      width: 612,
+      height: 792,
+      textItems: [{ text: "Author et al.", x: 520, y: 67, width: 50, height: 7, fontSize: 7, fontName: "Helvetica", page: 2 }],
+    }]);
+    expect(blocks[0]?.role).toBe("header");
+  });
+
   it("splits a body-style heading that is repeated at the start of its following prose", () => {
     const textItems = [
       "Vignette-based investigations",
