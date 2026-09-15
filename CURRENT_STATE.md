@@ -2158,3 +2158,7 @@ captionless table precision guard後の20 cached PDF横断診断を`test-data/re
 ### 2026-09-16 checkpoint: flattened-row audit metric
 
 `BaselinePaperReport.flattenedNumericRowCount` を追加し、native paragraphとして残る数値行をpaper単位で定量化できるようにした。これは検出のみでCanonical roleや翻訳routingを変更しない。型チェック成功。projectionのnullable table textも明示的に正規化した。次回はこの指標を全cached corpusへ出力し、table-region実装の正解候補を絞る。
+
+### 2026-09-16 checkpoint: corpus flattened-row distribution
+
+`npm run bench:pdf-extraction`を実行し、20 cached papersのflattenedNumericRowCountを再計測。最大は`linguistics-language-model-physics` 65行、`wear-scale` 15行、`cognitive-psychology-gpt3` 5行、`power-over-skin` 4行。表region修正の優先対象は言語学PDFとwear-scaleで、単一行の誤検出を一律にtable化するのは危険と確認した。sourceIntegrity等既存指標は維持。
