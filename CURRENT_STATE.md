@@ -2322,3 +2322,7 @@ captionless numeric-row の synthetic regression を追加し、6行の反復 x 
 ### Focused regression recheck (2026-09-16)
 
 Reading-order と canonical pipeline の重点回帰を再実行し、2 files / 46 tests が通過。ページ跨ぎ paragraph stitching、column跨ぎ、heading hierarchy、caption/table evidence の合成ケースに安全回帰なし。`wear-scale` p.14 の回転表境界は、現在の geometry guardで脚注lineの分離までは確認済みだが、表セルと後続本文の一部混在が残るため未完了と判定した。
+
+### Rotation coordinate probe (2026-09-16)
+
+`wear-scale.pdf` は17ページ。pdfjs native transformを直接確認し、p.14の回転表セル群は主に x≈162–414、表外 Cronbach 脚注は x≈428–440 に配置されることを確認した。両者は同じ90度系回転でもx帯に明確な空隙がある一方、表ヘッダには幅の大きい native itemも含まれるため、単純な item 幅閾値だけで境界を決めると表内部を分断する危険がある。次回は回転lineのx帯連続性を、近傍行クラスタと組み合わせた evidence として合成回帰化してから実装する。

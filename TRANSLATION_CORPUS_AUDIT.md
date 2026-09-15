@@ -2424,3 +2424,7 @@ Algorithm/Require本文や数式断片がtable candidateになる例を確認し
 ### Focused extraction regression recheck (2026-09-16)
 
 重点回帰（reading-order + canonical pipeline）は 46/46 通過。ページ・列跨ぎ stitching と既存 heading/caption/table 合成ケースに安全回帰なし。回転表の残存混在は未解決のため、抽出完了判定および翻訳フェーズ移行は保留。
+
+### Rotation coordinate probe (2026-09-16)
+
+`wear-scale.pdf` p.14 の native transformを再確認。回転表セルは x≈162–414、表外Cronbach脚注は x≈428–440 に集中し、x帯の空隙が境界 evidence になる。ただし表ヘッダにも広いitemがあるため幅だけの閾値は採用せず、近傍行クラスタと組み合わせた回帰を次回追加する。
