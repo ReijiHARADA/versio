@@ -147,6 +147,22 @@ describe("PDF reading order regression", () => {
     expect(lines.some((line) => line.text.includes("Table") && line.rotation === 90)).toBe(true);
   });
 
+  it("keeps a rotated caption label with its title line", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 4,
+      width: 612,
+      height: 792,
+      textItems: [
+        { text: "Table 6", x: 120, y: 300, width: 32, height: 8, fontSize: 8, fontName: "Helvetica", page: 4, rotation: 90 },
+        { text: "Inter-item correlation matrix", x: 120, y: 312, width: 120, height: 8, fontSize: 8, fontName: "Helvetica", page: 4, rotation: 90 },
+      ],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    const caption = blocks.find((block) => block.role === "table_caption");
+    expect(caption?.text).toContain("Table 6");
+    expect(caption?.text).toContain("Inter-item correlation matrix");
+  });
+
   it("keeps every block reproducible from native source lines", () => {
     for (const build of Object.values(FIXTURES)) {
       const { blocks } = reconstructDocument(build());
