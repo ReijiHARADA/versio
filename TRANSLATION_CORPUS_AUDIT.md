@@ -2888,3 +2888,5 @@ Full application regression after the current extraction changes: **61 files / 3
 ### 2026-09-16 list metric semantics
 
 - Benchmark now requires an explicit `completeListAnnotations` flag before reporting list precision. The Interactive Jewellery list annotation is partial, so its precision is withheld while recall remains reported. This separates annotation coverage from extraction quality; TypeScript and corpus tests pass.
+
+- `completeListAnnotations` schema change passes lint and build; existing dynamic-import warnings only.

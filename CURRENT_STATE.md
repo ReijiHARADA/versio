@@ -2920,3 +2920,5 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Separated `completeListAnnotations` from document-wide `completeAnnotations` in the extraction benchmark. Interactive Jewellery's five list items are verified examples but not exhaustive, so list precision is now intentionally omitted until full list annotation exists; recall remains measurable. This prevents the former misleading 0.1875 precision from being treated as an extraction score.
 - TypeScript and extraction corpus both pass (56/56).
+
+- Evaluation-schema verification after separating list annotation completeness: lint and Vite build pass; only existing ineffective dynamic-import warnings remain. No `.app` build.
