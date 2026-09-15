@@ -2536,3 +2536,7 @@ table caption relation recallの分母をground truth caption数へ変更。未�
 ### Post-guard benchmark (2026-09-16)
 
 回転line guard後の20-paper benchmarkを再生成。wear-scaleはsource integrity 1.0、flattened rows 4、rotated items 248 / lines 33。表本文への誤再結合は消失し、残4行はregion分類課題。
+
+### Rotated prose remerge regression (2026-09-16)
+
+回転表行と後続通常proseの再結合を防ぐfixtureを追加し、reading-order 44/44を確認。特定論文文字列には依存しない。

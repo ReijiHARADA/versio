@@ -2434,3 +2434,7 @@ Benchmark report now exposes `tableCaptionRelationRecall` and `tableCaptionRelat
 ### Post-guard benchmark (2026-09-16)
 
 回転line互換性guard後の20-paper benchmarkで、`wear-scale` sourceIntegrityRate=1.0、flattenedNumericRowCount=4、rotatedNativeItemCount=248、rotatedLineCount=33を確認。混在blockは再発せず、残る4行は表構造／注記のregion分類課題として切り分け済み。
+
+### Rotated prose remerge regression (2026-09-16)
+
+同一ページの回転native表行から通常proseへ誤結合しないsynthetic regressionを追加。reading-order 44/44 成功。guardの安全性をfixtureで固定した。
