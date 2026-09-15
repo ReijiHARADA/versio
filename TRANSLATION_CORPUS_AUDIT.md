@@ -2858,3 +2858,5 @@ Full application regression after the current extraction changes: **61 files / 3
 - Repeated bullets with a colon-terminated introduction now project as `lead-in`, `item 1`, `item 2` using a punctuation and marker-count guard. This addresses list flattening without splitting ordinary inline punctuation. Focused tests 15/15 and extraction corpus 56/56 pass.
 
 - List projection change passed lint, TypeScript, and Vite build. Only existing ineffective dynamic-import warnings remain; no packaged app was produced.
+
+- Diagnostic baseline remains 149 suspicious wide multi-x blocks across 26 papers / 497 pages after the list change. This is not a failure rate; arXiv vector-label candidates remain queued for geometry-backed review.
