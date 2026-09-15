@@ -2653,3 +2653,9 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Corrected `tableCaptionRelationRecall` so it is computed only when explicit table-caption ground truth exists. Previously, papers without annotations used their own detected captions as a pseudo-gold denominator, producing misleading low recall (0.25 for the Elsevier meta-review).
 - TypeScript check and real-paper baseline suite passed (29 tests). This changes benchmark validity only; extraction roles and translation code are unchanged.
+
+### 2026-09-16 table-caption boundary follow-up
+
+- Added a generic resolver guard so `nearbyTableRowEvidence` cannot override an already identified `table_caption` candidate into `table`.
+- Added explicit ground truth for the Elsevier meta-review's Tables 1–7. Benchmark moved from the invalid pseudo-gold 0.25 to measured values: caption/region/relation recall 0.57, relation precision 1.0. Remaining misses are native caption/region grouping cases, now measurable.
+- Extraction corpus regression remains green; translation and `.app` remain untouched.

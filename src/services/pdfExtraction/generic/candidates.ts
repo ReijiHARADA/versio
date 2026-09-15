@@ -523,7 +523,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
           // evidence is present.
           : 0.68;
     }
-    if (nearbyTableRowEvidence(block, blocks)) scoreByRole.table = 0.96;
+    if (block.role !== "table_caption" && nearbyTableRowEvidence(block, blocks)) scoreByRole.table = 0.96;
     const reason =
       block.role === "title"
         ? "largest font in first-page masthead"
