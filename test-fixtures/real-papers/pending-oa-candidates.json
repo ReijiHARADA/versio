@@ -1,0 +1,12 @@
+{
+  "version": "extraction-corpus-pending-v1",
+  "status": "metadata-only",
+  "candidates": [
+    {"id":"medical-deep-learning-meta-review","title":"Medical Deep Learning -- A systematic Meta-Review","discipline":"medicine","venue":"arXiv","doi":null,"sourceUrl":"https://arxiv.org/abs/2010.14881","oaStatus":"open","reasonSelected":"medical review with dense citations and mixed prose"},
+    {"id":"medical-imaging-deep-learning-review","title":"A review of deep learning in medical imaging","discipline":"medicine","venue":"arXiv","doi":null,"sourceUrl":"https://arxiv.org/abs/2008.09104","oaStatus":"open","reasonSelected":"figure/table-heavy medical imaging review"},
+    {"id":"covid-ml-review","title":"Diagnosis of COVID-19 Using Machine Learning and Deep Learning: A review","discipline":"medicine","venue":"arXiv","doi":null,"sourceUrl":"https://arxiv.org/abs/2110.14910","oaStatus":"open","reasonSelected":"clinical review with statistical and acronym variation"},
+    {"id":"medical-image-segmentation-deep-learning","title":"Medical Image Segmentation Using Deep Learning","discipline":"machine-learning","venue":"arXiv","doi":null,"sourceUrl":"https://arxiv.org/abs/2009.13120","oaStatus":"open","reasonSelected":"ML methods and equation/figure variation"},
+    {"id":"interpreting-neural-networks","title":"Interpreting neural networks is a crucial and challenging task from data","discipline":"machine-learning","venue":"ICLR","doi":null,"sourceUrl":"https://arxiv.org/abs/1705.04977","oaStatus":"open","reasonSelected":"conference ML layout with method/equation blocks"},
+    {"id":"human-ai-interaction-guidelines","title":"A Comparative Analysis of Industry Human-AI Interaction Guidelines","discipline":"hci","venue":"arXiv","doi":null,"sourceUrl":"https://arxiv.org/abs/2010.11761","oaStatus":"open","reasonSelected":"HCI survey with guideline lists and multi-column text"}
+  ]
+}
