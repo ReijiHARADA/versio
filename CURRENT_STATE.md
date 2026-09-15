@@ -2254,3 +2254,7 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 ### 2026-09-16 checkpoint: overlap candidate length stratification
 
 画像重なり診断に短ラベル（32文字以下）／長文候補の件数を追加。再計測では合計5528件中、短ラベル5416件、長文112件（interactive-jewellery permission/chrome等を含む）。長文は自動除外せず、chrome/body判定の手動対象として分離できるようになった。
+
+### 2026-09-16 checkpoint: long-overlap candidate review
+
+長文候補112件のサンプル内訳を確認。`interactive-jewellery` の11件はACM permission/copyright/DOI chrome、`linguistics-language-model-physics` の長文候補はなく、残りは短い図ラベル・軸値だった。画像重なりを本文除外へ直結する誤検出は確認されず、現行の保守的な閾値を維持する。
