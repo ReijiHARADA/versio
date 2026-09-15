@@ -1990,3 +1990,7 @@ header geometry条件のoptional `pageHeight`を既定値へ修正し、`npm run
 ### 2026-09-16 checkpoint: fused heading safety
 
 ppg-earring page10の実出力で、`6.2.1 ...`見出しと続きの本文が同一native lineへ融合し、headingへ誤昇格するケースを確認した。長いline内で文末句読点後に大文字文が続く場合はheading evidenceを下げ、paragraphへ倒す一般規則を追加。合成reading-order 36/36、抽出コーパス42/42で通過した。残るfootnote/chrome混入は別のrole・geometry課題として継続する。
+
+### 2026-09-16 checkpoint: extraction safety-policy revalidation
+
+`npm run verify:real-paper-source-policy` を全20 cached papersで再実行した。2,457 paragraphsのうち492 blocksが警告タグ付きで、明示的な39件はすべて `wouldSubmitToModel:false` のまま維持された。既存の手動レビュー8件を含む安全側の監査状態に新規悪化はない。警告の大半は incomplete tail / unbalanced delimiter で、次の改善は誤結合を避けたまま未完結段落を修復できる証拠設計が必要。翻訳サーバーと`.app`は変更していない。
