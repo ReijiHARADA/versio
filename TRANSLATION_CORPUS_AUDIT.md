@@ -2635,3 +2635,4 @@ baseline 23件の計44/44テストが成功した。今回の再確認では実�
 同日、native itemのfont境界を使い、短い太字の行内subheadingラベルと後続本文を
 分離する一般ルールを追加した。`Subjects.` + 本文の回帰テストが成功し、実コーパス
 44/44にも安全性回帰はない。翻訳server側は変更していない。
+全Vitestは61 files / 339 tests passed、TypeScriptとlintも成功した。

@@ -60,6 +60,7 @@
 - `npm run test:extraction-corpus` を再実行し、real-paper fixture 44/44 tests passed（reading-order 21、baseline 23）。既存の抽出変更に回帰は確認されなかった。
 - 今回は検証のみで、translation-server、品質ゲート、モデル、`.app` は変更していない。次回は未解決のページ/段組 paragraph repair と rotated-table region を優先する。
 - 追加で、同一行に置かれた短い太字ラベル（例: `Subjects.`）と本文をnative itemの境界で分離する一般化ルールを実装し、reading-order回帰テストを追加した。抽出corpusは引き続き44/44で成功。
+- 全Vitestも再実行し、61 files / 339 tests passed。TypeScript と lint も成功した。
 
 ### 2026-09-15 停止 checkpoint
 
