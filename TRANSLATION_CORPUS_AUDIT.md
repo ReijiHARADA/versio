@@ -2678,3 +2678,5 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Expanded-corpus benchmark: all 26 cached PDFs completed extraction with source integrity 1.0. Four new medical reviews have titleExact=false against their arXiv metadata (publication-title mismatch or truncation); this is a title-fusion/catalog issue queued for review, not source text loss.
 
 - Corrected the Elsevier medical meta-review catalog title/DOI to match the cached publication PDF, eliminating one catalog-side titleExact false negative. Extraction regression remains 56/56.
+
+- Expanded benchmark metrics: source integrity and figure-caption relation are 1.0 across 26 cached papers. Table-caption relation recall has a 0.25 minimum on the Elsevier meta-review, queued for table-region manual review.
