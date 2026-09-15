@@ -53,6 +53,17 @@ describe("canonical extraction pipeline", () => {
     expect(title?.roleScores.heading).toBeUndefined();
   });
 
+  it("emits page-local grid evidence for captionless numeric rows", () => {
+    const textItems = Array.from({ length: 6 }, (_, row) => [
+      { text: `R${row + 1}`, x: 80, y: 120 + row * 18, width: 18, height: 8, fontSize: 8, fontName: "Body", page: 1 },
+      { text: `${(1.1 + row / 10).toFixed(2)}`, x: 180, y: 120 + row * 18, width: 30, height: 8, fontSize: 8, fontName: "Body", page: 1 },
+      { text: `${(2.2 + row / 10).toFixed(2)}`, x: 240, y: 120 + row * 18, width: 30, height: 8, fontSize: 8, fontName: "Body", page: 1 },
+      { text: `${(3.3 + row / 10).toFixed(2)}`, x: 300, y: 120 + row * 18, width: 30, height: 8, fontSize: 8, fontName: "Body", page: 1 },
+    ]).flat();
+    const candidates = generateGenericCandidates([{ pageNumber: 1, width: 500, height: 700, textItems }]).candidates;
+    expect(candidates.filter((candidate) => (candidate.roleScores.table ?? 0) >= 0.94).length).toBeGreaterThanOrEqual(6);
+  });
+
   it("does not run GROBID or Docling without a local service", () => {
     const pages = FIXTURES["single-column"]();
     const native = nativeDocumentFromExtracted(pages, { pageCount: 1 });

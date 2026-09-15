@@ -2292,3 +2292,5 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 追加の reading-order suite は 41/41。`baselineRealPapers.test.ts` は専用設定の除外対象だったため直接実行できず、標準の `test:extraction-corpus`（43/43）で代替確認済み。現行ベンチマークでは `wear-scale` flattenedNumericRowCount=11、`linguistics`=15、`economics`=3、sourceIntegrityRate は各 1.0 を維持。
 
 ページ局所 table grid の回帰後に `npm run build` も成功（既知の ineffective dynamic import 警告のみ）。表セルの一部は table role へ昇格したが、表全体の連続 region と表後注記の分離は未検証のため、次回は手動比較を先に行う。
+
+captionless numeric-row の synthetic regression を追加し、6行の反復 x 列が table evidence（score >= 0.94）として生成されることを確認。pipeline suite は 5/5。実PDFではページ内の表後注記がまだ同じ block に残るため、region の上下境界を手動比較してから拡張する。
