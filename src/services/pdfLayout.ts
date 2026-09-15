@@ -1105,6 +1105,16 @@ function roleForLine(
   const inMasthead =
     line.page === 1 && mastheadEndY >= 0 && line.y < mastheadEndY;
   if (inMasthead) {
+    // CJK journals frequently place an abstract immediately below the title
+    // without an English "Abstract" anchor.  When masthead detection cannot
+    // find that anchor, treating every line before the inferred body start as
+    // affiliation turns the abstract into metadata.  A long CJK line with
+    // sentence punctuation is stronger body evidence than the masthead
+    // fallback and should remain translatable prose.
+    const cjkBodyLine = cjkCount(text) >= 18 &&
+      (/[，。；！？：]/u.test(text) || text.length >= 32) &&
+      !looksLikeAffiliation(text);
+    if (cjkBodyLine) return "paragraph";
     if (looksLikeGrantIdentifier(text) || startsWithGrantIdentifier(text)) {
       return "paragraph";
     }
