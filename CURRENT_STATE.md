@@ -1872,3 +1872,33 @@ Reviewed the available `ppg-earring` warning samples whose extracted source visi
 ### PPG page-2 boundary baseline (2026-09-16)
 
 Captured a compact native extraction baseline for `ppg-earring.pdf` page 2 at `test-data/real-papers/ppg-page2-boundary-baseline.json`. It records the detected layout, block columns, bboxes, line counts, and text prefixes, preserving a reproducible before-state for the mixed-column repair. No rule change was made in this step.
+
+### Rotation provenance regression lock (2026-09-16)
+
+Added a synthetic reading-order regression asserting rotated native text remains present and retains `LayoutLine.rotation` provenance. Targeted reading-order tests pass 32/32 and extraction corpus remains 42/42. This does not claim rotated table reconstruction is complete; it protects the low-risk provenance behavior while geometry work continues.
+
+### Extraction-only scope audit (2026-09-16)
+
+Final scope audit for this iteration: no modified files under `translation-server/` or `src/services/translation/`. Full Vitest passes 61 files / 321 tests; extraction corpus passes 42/42; lint, typecheck, and diff checks pass. Extraction remains incomplete because the corpus still lacks broad manual paragraph-boundary review and a safe generic fix for word-stream two-column pages.
+
+### Corpus coverage stratification (2026-09-16)
+
+Added `test-data/real-papers/reports/extraction-coverage-summary.json`. The 20-paper benchmark spans 10 format families; 18 reports are native-text and 2 mixed, with all currently annotated metric values equal to 1.0. The summary explicitly records metric coverage so these perfect values are not mistaken for exhaustive precision/recall across every block.
+
+Correction: the coverage summary now avoids interpreting the pair-count `readingOrderPair` field as a rate; aggregate reading-order status is marked unavailable until a normalized metric is added.
+
+### Web build validation (2026-09-16)
+
+`npm run build` succeeds after the extraction-only changes. Vite reports only existing ineffective dynamic-import warnings. Tauri `.app` remains intentionally unbuilt.
+
+### Manual warning-review coverage summary (2026-09-16)
+
+Added `test-data/real-papers/extraction-warning-review-summary.json`: 39 explicit policy-warning items, 8 manually reviewed native-geometry samples, and 31 pending. All 8 reviewed samples are severity 3 `chrome_contamination` with primary cause `reading_order`; this is a targeted sample and must not be extrapolated into a corpus-wide error rate.
+
+### Source-policy safety recheck (2026-09-16)
+
+The current extraction tree was rechecked with `verify:real-paper-source-policy`: 20 cached papers, 2,567 paragraphs, 509 warning-tagged blocks, and 39 explicit violations. The explicit violations remain withheld from model submission. The increased paragraph/warning totals reflect the current committed extraction output and are recorded as a fresh baseline; no translation code or app bundle was changed.
+
+### Regression stability checkpoint (2026-09-16)
+
+Full test, lint, and typecheck revalidation succeeded after the extraction baseline commit: Vitest 61 files / 321 tests. This checkpoint changes no extraction behavior and keeps the unresolved word-stream column issue explicitly open.

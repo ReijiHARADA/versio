@@ -88,6 +88,20 @@ describe("isEquationLine", () => {
 });
 
 describe("PDF reading order regression", () => {
+  it("preserves native rotation as line provenance without dropping rotated text", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 4,
+      width: 612,
+      height: 792,
+      textItems: [
+        { text: "Table", x: 120, y: 300, width: 24, height: 8, fontSize: 8, fontName: "Helvetica", page: 4, rotation: 90 },
+        { text: "6", x: 120, y: 288, width: 6, height: 8, fontSize: 8, fontName: "Helvetica", page: 4, rotation: 90 },
+      ],
+    }];
+    const { lines } = reconstructDocument(pages);
+    expect(lines.some((line) => line.text.includes("Table") && line.rotation === 90)).toBe(true);
+  });
+
   it("keeps every block reproducible from native source lines", () => {
     for (const build of Object.values(FIXTURES)) {
       const { blocks } = reconstructDocument(build());
