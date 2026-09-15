@@ -2508,3 +2508,7 @@ table captionの`CAPTION_OF` relationをground truth付きで測れるoptional b
 ### Table caption relation metrics (2026-09-16)
 
 Resolved table caption-to-table `CAPTION_OF` relations are now reported with recall/precision fields. Metrics remain diagnostic until manual ground truth is expanded; no translation changes.
+
+### Table relation metric correction (2026-09-16)
+
+table caption relation precisionの分母定義を修正し、figure relationが混入しないようにした。指標は診断用で、抽出・翻訳挙動は変更していない。

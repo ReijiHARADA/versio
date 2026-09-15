@@ -2406,3 +2406,7 @@ Benchmarkのoptional ground truthに`tableCaptionRelations`と`tableCaptionRelat
 ### Table caption relation metrics (2026-09-16)
 
 Benchmark report now exposes `tableCaptionRelationRecall` and `tableCaptionRelationPrecision`, derived from resolved caption-to-table relations. This makes publisher-crossed provenance measurable without changing extraction behavior. Typecheck and pipeline tests 5/5 passed.
+
+### Table relation metric correction (2026-09-16)
+
+`tableCaptionRelationPrecision` の分母を全caption relationからtable caption起点のrelationだけへ修正。figure relation混入による過小評価を除去。typecheck・lint成功。
