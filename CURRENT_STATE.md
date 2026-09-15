@@ -2786,3 +2786,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Result: the change caused a safety regression in the captionless native-grid fixture (the expected hyphenated continuation was no longer a paragraph), so it was reverted. The existing 56/56 corpus baseline is preserved. The probe is not retained as a production rule; the mixed-stream issue needs stronger line-level evidence before another classifier change.
 
 - A narrower gutter-fragment rule (short lowercase/hyphen tokens only) produced the same native-grid regression and was also reverted. This confirms that token-shape-only reassignment is insufficient; the next attempt must use page-level line clustering and provenance.
+
+### 2026-09-16 stable extraction baseline rerun
+
+- Re-ran `npm run bench:pdf-extraction` on the unchanged stable classifier: 26 cached papers, aggregate source integrity 1.0.
+- `medical-deep-learning-meta-review` remains the limiting case: table caption/region/relation recall 0.571428..., with no metric improvement claimed. This is the comparison baseline for the next page-level clustering experiment.

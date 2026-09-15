@@ -2775,3 +2775,5 @@ The extraction changes now pass the production web build. The verification caugh
 A probe that classified gutter-adjacent lines using the detected right-column anchor was reverted after it broke the captionless native-grid regression. This confirms that a broad anchor-based reassignment is unsafe; no production behavior or baseline metric was kept from the probe.
 
 A narrower variant restricted to short lowercase or hyphen fragments caused the same regression and was also reverted. Token shape alone cannot distinguish gutter fragments from legitimate table continuations.
+
+The stable extraction benchmark was rerun: 26 cached papers and aggregate source-integrity 1.0. The Elsevier meta-review remains at table caption/region/relation recall 0.571428..., so no improvement is claimed yet.
