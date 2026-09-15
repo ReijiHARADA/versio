@@ -2162,3 +2162,7 @@ captionless table precision guard後の20 cached PDF横断診断を`test-data/re
 ### 2026-09-16 checkpoint: corpus flattened-row distribution
 
 `npm run bench:pdf-extraction`を実行し、20 cached papersのflattenedNumericRowCountを再計測。最大は`linguistics-language-model-physics` 65行、`wear-scale` 15行、`cognitive-psychology-gpt3` 5行、`power-over-skin` 4行。表region修正の優先対象は言語学PDFとwear-scaleで、単一行の誤検出を一律にtable化するのは危険と確認した。sourceIntegrity等既存指標は維持。
+
+### 2026-09-16 checkpoint: conservative flattened-row evidence
+
+Generic candidate generationに、10行以上連続する数値主体native paragraphへtable evidenceを付与する条件を追加した。PPG captionless grid回帰は維持（22/22）。wear-scale p.14では行間/候補条件がまだregion化に至らず、precision優先で自動統合は未達。次回は候補列のbbox連続性を詳細に計測する。
