@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { extractPdfPages } from "../src/test/readingOrder/extractPdf";
+import { detectPageColumns } from "../src/services/pdfLayout";
 
 const root = process.cwd();
 const pdfDir = path.join(root, "test-data/real-papers");
@@ -21,7 +22,7 @@ for (const filename of fs.readdirSync(pdfDir).filter((name) => name.endsWith(".p
     const left = usable.filter((item) => item.x + item.width <= page.width * 0.49).length;
     const right = usable.filter((item) => item.x >= page.width * 0.51).length;
     if (gaps >= 2 && left >= 8 && right >= 8) {
-      output.push({ filename, page: page.pageNumber, itemCount: usable.length, centralGapBins: gaps, leftItems: left, rightItems: right });
+      output.push({ filename, page: page.pageNumber, itemCount: usable.length, centralGapBins: gaps, leftItems: left, rightItems: right, currentMultiColumn: detectPageColumns(page).isMultiColumn });
     }
   }
 }

@@ -1922,3 +1922,7 @@ Full test, lint, and typecheck revalidation succeeded after the extraction basel
 ### 2026-09-16 checkpoint: column occupancy diagnostic
 
 `npm run diagnose:column-occupancy` を追加し、native word bboxの中央ガター候補を20 cached papersで走査した。53ページが候補になった（ppg-earring 13、OzCHI 9、power-over-skin 9、dont-mind-me 7、interactive-jewellery 7、design-for-wearability 6、その他2）。単独ではspanning要素や単段の空白も混ざるため、列確定には使わず診断証拠として保存した。
+
+### 2026-09-16 checkpoint: occupancy diagnostic comparison
+
+列占有診断に現行`detectPageColumns`の判定を併記した。53候補ページ中14ページは幾何候補だが現行判定が単段で、改善対象を定量化できた。ただし候補にはspanning/単段の空白も含まれるため、自動昇格はしていない。
