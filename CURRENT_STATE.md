@@ -2494,3 +2494,7 @@ chart-label evidenceを含むbenchmarkを再実行。対象は`power-over-skin` 
 ### Chart label translation boundary (2026-09-16)
 
 `repeated-numeric-chart-label` evidenceをprojectionまで伝播し、該当PaperBlockをsource保持・translationStatus=`skipped`に固定。長い数値系列でも翻訳入力へ送られない。synthetic pipeline 6/6、extraction corpus 44/44、typecheck成功。本文・table候補への影響は既存回帰で検出なし。
+
+### Full extraction regression (2026-09-16)
+
+chart-label translation boundary変更後、全Vitestを実行。61 files / 335 tests pass。既存のPDF.js canvas/polyfill警告以外の失敗なし。抽出corpus・reading-order・projectionを含む既存挙動に安全回帰なし。
