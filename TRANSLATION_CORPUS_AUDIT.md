@@ -2540,3 +2540,7 @@ table caption relation recallの分母をground truth caption数へ変更。未�
 ### Rotated prose remerge regression (2026-09-16)
 
 回転表行と後続通常proseの再結合を防ぐfixtureを追加し、reading-order 44/44を確認。特定論文文字列には依存しない。
+
+### Wear-scale caption provenance probe (2026-09-16)
+
+wear-scale p.14で回転表セルはtable nodeへ投影され、本文混在はない。一方、表直下の回転短heading `Inter-item correlation matrix` はcaptionにならず、CAPTION_OF=0。次回は一般的な表region近接 geometry evidenceを評価する。

@@ -2438,3 +2438,7 @@ Benchmark report now exposes `tableCaptionRelationRecall` and `tableCaptionRelat
 ### Rotated prose remerge regression (2026-09-16)
 
 同一ページの回転native表行から通常proseへ誤結合しないsynthetic regressionを追加。reading-order 44/44 成功。guardの安全性をfixtureで固定した。
+
+### Wear-scale caption provenance probe (2026-09-16)
+
+実PDF p.14のnative出力を再probe。回転表セルはCanonical `table` nodeへ投影されるが、`Inter-item correlation matrix` はheadingとして残り、`CAPTION_OF` は0件。表と本文の混在は解消済み。次は「表region直下の回転短heading」をcaption evidenceへ昇格するか、precision評価して判断する。
