@@ -2274,3 +2274,7 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 ### 2026-09-16 checkpoint: extraction baseline and boundary rescan
 
 抽出 corpus を再実行し、2 files / 43 tests が通過。`npm run bench:pdf-extraction` も完了し、20 papers、既存対象の `sourceIntegrityRate` は平均 1.0、OzCHI の heading hierarchy / table caption / table region は 1.0 を維持した。境界診断は20 papersを走査したが、Figure/Table参照の多くは本文中の正当な参照であり、文字列一致だけで除外できないことを再確認した。`ergonomics-human-factors-ihci` 等の affiliation候補と `wear-scale` の flattened table rows は、native geometryを確認してから一般化可能な修正を行う。翻訳サーバーは変更していない。
+
+### 2026-09-16 checkpoint: CJK masthead/body boundary
+
+中国語論文で、タイトル直後の長い要旨行が英語の Abstract アンカーなしに masthead 内へ入り、`affiliation` として扱われる候補を確認した。`pdfLayout.ts` に、長く句読点を含む CJK native line を本文 evidence として扱う保守的な境界条件を追加。extraction corpus は 2 files / 43 tests が通過し、既存の欧文・表・見出し回帰は未検出。コミット `73cd529`。次は同PDFの実抽出結果で affiliation/body の分離を確認し、wear-scale の flattened table region 検証へ戻る。
