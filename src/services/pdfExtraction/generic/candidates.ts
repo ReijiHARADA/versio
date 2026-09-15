@@ -267,14 +267,30 @@ function nearbyTableRowEvidence(block: LayoutBlock, blocks: LayoutBlock[]): bool
     Math.abs(candidate.bbox.y - block.bbox.y) < 300
   );
   if (!caption) return false;
+  const captionDistance = Math.abs(caption.bbox.y - block.bbox.y);
+  if (captionDistance > 280) return false;
   const x = Math.round(block.lines[0].items[0].x / 12) * 12;
   const alignedRows = blocks.filter((candidate) => {
     if (candidate === block || candidate.pageStart !== block.pageStart || candidate.lines.length !== 1) return false;
-    if (Math.abs(candidate.bbox.y - block.bbox.y) > 300 || candidate.lines[0].items.length < 2) return false;
+    if (Math.abs(candidate.bbox.y - block.bbox.y) > 220 || candidate.lines[0].items.length < 2) return false;
     const otherX = Math.round(candidate.lines[0].items[0].x / 12) * 12;
     return otherX === x;
   }).length;
-  return alignedRows >= 1;
+  if (alignedRows >= 1) return true;
+  // When the PDF groups each visual row into a different x pattern, the
+  // first-cell alignment can be lost. Multiple compact rows in the caption's
+  // immediate band still provide strong region evidence, while prose guards
+  // above prevent a sentence that merely mentions the table from qualifying.
+  const compact = text.split(/\s+/).filter(Boolean).length <= 10 &&
+    !/[.!?]\s*$/.test(text);
+  if (!compact) return false;
+  const bandRows = blocks.filter((candidate) => {
+    if (candidate === block || candidate.pageStart !== block.pageStart || candidate.lines.length !== 1) return false;
+    if (candidate.bbox.y < Math.min(caption.bbox.y, block.bbox.y) - 12 ||
+      candidate.bbox.y > Math.max(caption.bbox.y, block.bbox.y) + 220) return false;
+    return candidate.lines[0].items.length >= 3;
+  });
+  return block.lines[0].items.length >= 4 && bandRows.length >= 2;
 }
 
 /** Detect a page-local grid when PDF extraction split each visual row into a
