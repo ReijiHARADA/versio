@@ -2836,4 +2836,5 @@ Full application regression after the current extraction changes: **61 files / 3
 - 推定列のx帯量子化を32ptへ調整し、同一列内のnative x揺れを吸収。多帯図表には適用せず、real-paper reading-order 27/27 passed。
 - 安定化後の全検証: Vitest 345/345、extraction corpus 56/56、typecheck、lint成功。`.app`は未ビルド。
 - x帯量子化後のbenchmark再生成でもsource integrity/provenanceは26 papers全て1.0。tableCaptionRecall平均0.929、tableRegionRecall平均0.843で変化なし。
+- 最新コードの`npm run build`も成功（既知のdynamic import警告のみ）。`.app`は未ビルド。
 現行抽出コードで `diagnose:pdf-corpus` を再実行した結果、26 papers / 497 pages / suspicious 164 blocks。144件はarXivに集中し、図・表のベクターラベルがnative textとして同一領域に現れる候補が大半だった。段落を強制分割する根拠としては不十分なため、誤分類を増やすルールは追加せず、次回はnative geometryとcaption/table provenanceを用いた手動分類を行う。

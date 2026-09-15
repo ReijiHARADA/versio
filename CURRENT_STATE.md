@@ -70,6 +70,7 @@
 - 推定列のx帯量子化を32ptへ調整し、同一列内のnative x揺れ（PPG page 11）を吸収。二列以外の多帯図表へ適用しない条件を維持し、real-paper reading-order 27/27 passed。
 - 安定化後の検証を完了: 全Vitest 345/345、extraction corpus 56/56、typecheck、lint成功。`.app`は未ビルド。
 - x帯量子化後のbenchmark再生成でも sourceIntegrityRate / canonicalProvenanceRate は26 papers全て1.0、tableCaptionRecall平均0.929、tableRegionRecall平均0.843で変化なし。
+- 最新コードで`npm run build`を再実行し成功。既知のdynamic import警告のみで、`.app`は方針どおり未ビルド。
 - `npm run diagnose:pdf-corpus` を現行コードで再実行し、26 papers / 497 pages / suspicious 164 blocks を記録。内訳は arXiv 144、PMLR 6、Elsevier 6、ACM 3 などで、arXivの大半は図・表のベクターラベルがnative textとして混在する診断候補。これはproduction role変更の根拠にはせず、次回はnative geometryとcaption/table provenanceを照合する。
 - 再開時の停止確認として `npm run test:extraction-corpus -- --run` を現行コードで再実行し、real-paper fixture 56/56 passed（reading-order 27、baseline 29）。既存のfont-transition heading / mixed-column保護 / table fallback変更に回帰なし。長時間ジョブは起動しておらず、次回は下記の未解決項目から再開する。
 
