@@ -2506,3 +2506,7 @@ chart-label Evidenceを同一x帯だけでなく同一y帯にも適用。各bloc
 ### Static verification after chart projection boundary (2026-09-16)
 
 chart label projection変更後のlint（`--max-warnings=0`）とTypeScript型チェックを再実行し、いずれも成功。次回はpublisher横断の手動レビューを優先し、precision/recall未計測の構造をground truth化する。
+
+### Full regression after horizontal chart labels (2026-09-16)
+
+横軸label対応後の全Vitestを再実行。61 files / 335 tests pass。既存heading/table/list/reading-order回帰なし。PDF.js canvas/polyfill警告のみ。作業ツリーclean。
