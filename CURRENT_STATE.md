@@ -2557,6 +2557,8 @@ marketing-consumer-responseのnative PDFで確認できるTable 1 captionをpart
 
 caption継続中に複数native item・数式記号・高数値密度の行が現れた場合、captionを終了して後続を表/数式候補へ戻すgeometry/content guardを追加。Table 2のcaptionから式行を分離するsynthetic回帰を追加し、pipeline 9/9、extraction corpus 44/44成功。次はmarketingの長文captionとregion relationを再計測する。
 
+実PDFの再抽出で、Table 2はcaption 1行＋後続式行へ分離され、`Table 4 shows ...` はparagraphへ戻った。一方、Table 4の見出し行がequation扱いになるなど、表セルのCanonical table化は未完了。次はcaptionに隣接するcell-like行をtable regionへ確実に束ねるEvidenceを検討する。
+
 ### Extraction guard static verification (2026-09-16)
 
 prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）も成功。`.app`とtranslation-serverは変更していない。次回はmarketingの誤table候補を手動ground truth化し、precisionを数値化する。

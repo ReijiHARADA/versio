@@ -2591,3 +2591,5 @@ Marketing PDFで確認された、Table caption近傍の文章がtable roleへ�
 ### Caption-to-region boundary guard (2026-09-16)
 
 caption継続中にcell-likeなnative行（複数item、数式記号、高数値密度）が現れたらcaptionを終了するgeometry/content guardを追加。Table 2のcaptionと式行を分離するsynthetic回帰を追加し、pipeline 9/9、extraction corpus 44/44成功。
+
+実PDF再抽出ではTable 2がcaption 1行と後続式行に分離され、`Table 4 shows ...` はparagraphへ分類された。Table 4のheader行など一部cell-like行はまだequation/paragraphへ分散しており、table regionの確実な束ねは未完了。
