@@ -2520,3 +2520,7 @@ table caption relation precisionの分母定義を修正し、figure relationが
 ### Ground-truth caption recall (2026-09-16)
 
 table caption relation recallの分母をground truth caption数へ変更。未検出captionを正しくrecall低下として計測する。抽出挙動と翻訳serverは変更なし。
+
+### Ground-truth relation rerun (2026-09-16)
+
+20-paper再計測でtable caption relation recall平均0.71875（goldあり10本）、precision 1.0。wear-scale回転caption=0、OzCHI=1.0。低recallは未検出・分離captionとして次の手動分類対象。

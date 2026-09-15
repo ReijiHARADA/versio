@@ -2418,3 +2418,7 @@ Benchmark report now exposes `tableCaptionRelationRecall` and `tableCaptionRelat
 ### Ground-truth caption recall (2026-09-16)
 
 `tableCaptionRelationRecall` が `gold.tableCaptions` を分母に使うよう修正。未検出captionを検出済み件数で隠さず、ground truth基準で評価可能になった。typecheck成功。
+
+### Ground-truth relation rerun (2026-09-16)
+
+修正版で20-paper benchmarkを再生成。ground truth table captionがある10本の relation recall平均は0.71875、table起点 relation precisionは対象で1.0。wear-scale=0、OzCHI=1.0。低recallの主因は回転／分離captionとcaption未検出で、改善余地を定量化できた。
