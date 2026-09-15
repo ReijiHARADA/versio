@@ -516,7 +516,11 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         ? 0.97
         : structuralGrid && !proseBlock && !longCaption
           ? 0.95
-          : 0.90;
+          // `tableLike` also catches ordinary multi-line prose with aligned
+          // native items. Keep that signal for region membership, but below
+          // the resolver's role-promotion threshold unless stronger grid
+          // evidence is present.
+          : 0.68;
     }
     if (nearbyTableRowEvidence(block, blocks)) scoreByRole.table = 0.96;
     const reason =
