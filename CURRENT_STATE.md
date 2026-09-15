@@ -63,6 +63,7 @@
 - ElsevierのTable 2/5/6はnative text streamにcaption境界が存在しないため、文字列推測による補完は行わず未解決として保持。`npm run lint` と `npm run build` は成功（既知のdynamic import警告のみ）。
 - PPG Earringにnative x帯混在paragraphを検出するreal-paper regression assertionを追加。real-paper reading-order 27/27 passed。列推定の安全性を今後の変更で自動監視できる。
 - corpus診断を`pdf-layout-corpus-diagnostic-v1`のnative-facts拡張として保存。疑わしいサンプルにimageOverlap、numericRatio、shortTokenRatioを付与し、arXivサンプル41件中imageOverlap≥0.2が4、shortTokenRatio≥0.7が23だった。これは図表ラベル候補の分類材料であり、production role変更の根拠にはまだ不足する。
+- 診断サンプルを全疑わしいblockへ拡張（v2）。arXiv 117件中 imageOverlap≥0.2 が26、numericRatio≥0.2 が29、shortTokenRatio≥0.7 が72。画像重なりなしのベクター図候補が多数残るため、次回はfont/geometry clusterとcaption近接を組み合わせて手動分類する。
 - `npm run diagnose:pdf-corpus` を現行コードで再実行し、26 papers / 497 pages / suspicious 164 blocks を記録。内訳は arXiv 144、PMLR 6、Elsevier 6、ACM 3 などで、arXivの大半は図・表のベクターラベルがnative textとして混在する診断候補。これはproduction role変更の根拠にはせず、次回はnative geometryとcaption/table provenanceを照合する。
 - 再開時の停止確認として `npm run test:extraction-corpus -- --run` を現行コードで再実行し、real-paper fixture 56/56 passed（reading-order 27、baseline 29）。既存のfont-transition heading / mixed-column保護 / table fallback変更に回帰なし。長時間ジョブは起動しておらず、次回は下記の未解決項目から再開する。
 

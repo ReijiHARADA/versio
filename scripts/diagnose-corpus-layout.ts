@@ -30,7 +30,7 @@ for (const paper of catalog.papers) {
     formatFamily: paper.formatFamily,
     pages: pages.length,
     suspiciousBlocks: suspicious.length,
-    samples: suspicious.slice(0, 5).map((block) => ({
+    samples: suspicious.map((block) => ({
       page: block.pageStart,
       xClusters: [...new Set(block.lines.map((line) => Math.round(line.x)))].sort((a, b) => a - b),
       xSpread: Math.round((Math.max(...block.lines.map((line) => line.x)) - Math.min(...block.lines.map((line) => line.x))) * 10) / 10,
