@@ -8,6 +8,7 @@ import {
   Search,
   Settings,
   Star,
+  Trash2,
 } from "lucide-react";
 import type { WorkspaceNode } from "../../types/project";
 import {
@@ -222,6 +223,7 @@ export function AppSidebar({
             />
             <LibItem to="/favorites" icon={<Star size={16} />} label="お気に入り" />
             <LibItem to="/recent" icon={<Clock size={16} />} label="最近読んだ論文" />
+            <LibItem to="/trash" icon={<Trash2 size={16} />} label="ゴミ箱" />
           </nav>
         </section>
       </div>

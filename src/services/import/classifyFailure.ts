@@ -8,7 +8,13 @@ export type ImportFailureKind =
   | "duplicate"
   | "unknown";
 
-export type ImportRecoveryAction = "retry" | "resume" | "open_existing" | "dismiss" | "readd";
+export type ImportRecoveryAction =
+  | "retry"
+  | "resume"
+  | "open_existing"
+  | "restore_existing"
+  | "dismiss"
+  | "readd";
 
 export type ClassifiedImportFailure = {
   kind: ImportFailureKind;
@@ -36,6 +42,19 @@ export function classifyImportFailure(
   stage?: string | null
 ): ClassifiedImportFailure {
   const text = (message || "").trim();
+
+  if (
+    includesAny(text, ["同じ論文がゴミ箱", "ゴミ箱にあります"])
+  ) {
+    return {
+      kind: "duplicate",
+      title: "同じ論文がゴミ箱にあります",
+      guidance: "ゴミ箱から復元するか、この追加を取り消してください。",
+      primaryAction: "restore_existing",
+      secondaryActions: ["dismiss"],
+      preservePartialWork: true,
+    };
+  }
 
   if (
     includesAny(text, ["既にインポート", "already imported", "duplicate"]) ||
@@ -158,6 +177,8 @@ export function actionLabel(action: ImportRecoveryAction): string {
       return "続きから再開";
     case "open_existing":
       return "既存の論文を開く";
+    case "restore_existing":
+      return "ゴミ箱から復元";
     case "dismiss":
       return "閉じる";
     case "readd":

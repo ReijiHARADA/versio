@@ -108,3 +108,17 @@ curl http://127.0.0.1:8765/status
 - 初回翻訳で Hugging Face からモデルを取得します（約 6GB）
 - ロードに数十秒かかることがあります
 - 実行中のメモリはおおよそ 8–10GB です
+
+## ローカル候補モデル監査
+
+候補モデル比較は production server とは分離した `scripts/compare_fallback_model.py` で実行します。
+
+```bash
+python scripts/compare_fallback_model.py \
+  --model facebook/m2m100_1.2B \
+  --input ../test-data/real-papers/reports/model-quality-unsafe-v8.json \
+  --num-beams 4 --max-new-tokens 512 \
+  --output ../test-data/real-papers/reports/model-candidate.json
+```
+
+`--input` は `rows` 配列（`paperId`、`blockId`、`source`）を持つJSON fixtureを受け取り、`--num-beams` と `--max-new-tokens` で生成条件を明示します。出力は監査用であり、意味レビューと保守的な品質評価を通過するまでproduction cascadeへ自動採用しません。

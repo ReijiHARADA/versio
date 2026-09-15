@@ -1,0 +1,37 @@
+{
+  "model": "Helsinki-NLP/opus-tatoeba-en-ja",
+  "category": "ordinary-body-prose",
+  "count": 3,
+  "results": [
+    {
+      "paperId": "thermal-earring",
+      "blockId": "b-01a329cd",
+      "source": "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study. It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc. While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge. We expect that with a larger and more representative data set, it would be possible to develop a model to predict user’s core body temperature using their earlobe temperature and corresponding demographics. In future work, Thermal Earring may be deployed in a larger study in conjunction with other physiological sensors to build a model for computing the core body temperature from the earlobe temperature.",
+      "model": "Helsinki-NLP/opus-tatoeba-en-ja",
+      "translation": "コア温度の上昇は,セマロンの耳電圧計で行った耳腔温度計に反映される可能性があることを示すため,第6節の6.1節の「耳腔温度」から直接測るには,更に研究が必要である. ^ \"耳腔温度を含む皮膚温度は,内耳腔温度の変動を超え,性別,年度,体温など,核温度を超える多くの要因によって影響を受けることが認められる. ^ ^ \"音波温度の変動はこれらの物質に依存しない,これらの要素を生じる他の要素に伴う温度の変動が生じる可能性がある.",
+      "inputTokens": 208,
+      "outputTokens": 133,
+      "timeMs": 1991.3511276245117
+    },
+    {
+      "paperId": "cognitive-psychology-gpt3",
+      "blockId": "b-8f2a6a49",
+      "source": "Decision-making: Heuristics and biases We began our investigations of GPT-3’s decision-making by prompting the canonical “Linda problem”15 (Linda, see Figure 1A). This problem has been known to assess the conjunction fallacy, a formal fallacy that occurs when it is assumed that specific conditions are more probable than a single general one. In the standard vignette, a hypothetical woman named Linda is described as “outspoken, bright, and politically active”. Participants are then asked if it was more likely that Linda is a bank teller or that she is a bank teller and an active feminist. GPT-3, just like people, chose the second option, thereby falling for the conjunction fallacy. Next, we prompted the so-called “cab problem”16 (Cab, see SI Appendix), in which participants commonly fail to take the base rate of different colors of taxis in a city into account when judging the probability of the color of a cab that was involved in an accident. Unlike people, GPT-3 did not fall for the base-rate fallacy, i.e. to ignore the base rates of different colors, but instead provided the (approximately) correct answer. Finally, we asked GPT-3 to provide an answer to the “hospital problem”17 (Hospital, see SI Appendix), in which participants are asked which of two hospitals, a smaller or a larger one, is more likely to report more days on which more than 60% of all born children were boys. While the correct answer would be the smaller hospital (due to the larger variance of smaller samples), GPT-3, just like people, thought that the probability was about equal.",
+      "model": "Helsinki-NLP/opus-tatoeba-en-ja",
+      "translation": "決定書作成: GPT-3 の決定に関する調査を開始しました。\"Linda\"問題\"を提起し,決定の決定を (1 a b c \"1 a \") 15 (平成29年) 。 この問題は,合併条件が1つの一般的条件よりも高いと推測されるときは、形式的な説明が知られています。標準の前提条件では、リンダは「非公式」と説明されているが、その場合は、その人が政治的な理由として「明示的」と答えている。 上級者では、その人が「明示」と答えられないので、その場合は「銀行」というメッセージが明らかに「明示されたり、その人が、その人が不在」というような「不在」というメッセージに「不在」、「不在」というメッセージを発した「不在」、というような「何」、「不在の「不在」といったようなメッセージが「不在」「不在」と「不在」の応答を発った。 該当者」、「不在で、「不在」 「不在」、「いいえ、「不在の「いいえ、「いいえ、メッセージ」、「不在\"というような、「不在\"」、「不在、「不在、「いいえ」、「いいえ」、「不在,「",
+      "inputTokens": 376,
+      "outputTokens": 257,
+      "timeMs": 1711.5581035614014
+    },
+    {
+      "paperId": "cognitive-psychology-gpt3",
+      "blockId": "b-9c57b65a",
+      "source": "In a second test, we asked GPT-3 to intervene in a scenario by removing the correct object to prevent an effect after having read about three different objects, one causing and two not causing the effect (in this case, an allergic reaction; Intervene, see SI Appendix). GPT-3 identified the correct object to be removed. In the final test, we probed GPT-3’s ability of mature causal reasoning24 (Mature, see SI Appendix). In this task, GPT-3 was told that there were four pills: A, B, C and D. While A and B individually could kill someone, C and D could not. GPT-3 successfully answered multiple questions about counterfactuals correctly, such as: “A man took pill B and pill C and he died. If he had not taken pill B, could he still have died?”.",
+      "model": "Helsinki-NLP/opus-tatoeba-en-ja",
+      "translation": "2 回 目 の テスト で は , GPT-3 に , 3 個 の 異なっ た 物体 に つい て 読ん だ 後 に 正しい 効果 を 防ぐ ため に , シナリオ に 介入 する よう 要請 し まし た。 一つ の 物体 が 原因 で , 一つ は アレルギー 反応 を 起こし , 二つ は 原因 を 生じ させ ない ( この場合 は SILix を ご覧 ください ) 。 最後 の テスト で , GP3-3 は 円熟 し た 因果 論 の 能力 ( MAT 24 を ご覧 ください。 ) を 調べ , GP-3 で は 1 回 , 1 回 に 1 回 , 2 回 は 薬 を 飲め ない かみ , 2 回 , 2 度 は 投薬 を 飲める こと が でき ない か どう か を し て い まし た。",
+      "inputTokens": 191,
+      "outputTokens": 165,
+      "timeMs": 1290.4560565948486
+    }
+  ]
+}

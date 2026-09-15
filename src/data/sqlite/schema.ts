@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS papers (
   source_stored_path TEXT,
   package_revision INTEGER NOT NULL DEFAULT 0,
   needs_translation_resume INTEGER NOT NULL DEFAULT 0,
+  trashed_at TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -38,6 +39,8 @@ CREATE TABLE IF NOT EXISTS workspace_nodes (
   description TEXT,
   research_question TEXT,
   keywords_json TEXT,
+  trashed_at TEXT,
+  trash_root_id TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );

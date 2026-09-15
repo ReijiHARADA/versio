@@ -284,7 +284,7 @@ export function looksLikeSubjectClassification(text: string): boolean {
   if (!t || t.length > 320) return false;
   if (/[→⟶]/.test(t) && /(?:^|[•·‣∙*])/.test(t)) return true;
   if (
-    /^(?:index\s+terms?|keywords?|ccs\s+concepts?|acm\s+classification\s+keywords?)\s*[—–:\-]\s*\S/i.test(
+    /^(?:index\s+terms?|keywords?|ccs\s+concepts?|acm\s+classification\s+keywords?)\s*[—–:-]\s*\S/i.test(
       t
     )
   ) {
@@ -586,7 +586,7 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   if (t.length >= 48 && noTerminal && /^(?:starting\s+from|based\s+on|using|through|by|with|from)\b/i.test(t)) {
     return "段落の末尾が欠けている可能性があります";
   }
-  const closedQuote = /^(?:[\"“]).*(?:[\"”])(?:\s*\[[^\]]+\])?$/s.test(t);
+  const closedQuote = /^(?:["“]).*(?:["”])(?:\s*\[[^\]]+\])?$/s.test(t);
   if (t.length >= 400 && noTerminal && !closedQuote && !/^(?:[-•‣▪∙*]|\d+[.)])\s+/.test(t)) {
     return "段落の末尾が欠けている可能性があります";
   }

@@ -140,7 +140,6 @@ async function deleteWorkspaceByName(name) {
   if ((await link.count()) === 0) return;
   await page.getByRole("button", { name: `「${name}」のメニュー` }).click();
   await page.getByRole("menuitem", { name: "削除", exact: true }).click();
-  await page.getByRole("menuitem", { name: "削除する", exact: true }).click();
   await link.waitFor({ state: "detached", timeout: 10_000 });
   createdWorkspaceNames.delete(name);
 }
@@ -149,16 +148,10 @@ async function ensureSamplePaper() {
   await page.getByRole("link", { name: "設定" }).click();
   await page.getByRole("heading", { name: "設定", exact: true }).waitFor({ timeout: 10_000 });
 
-  // Sample lives under 詳細設定 → 開発者向け <details>
-  await page.getByRole("button", { name: "詳細設定" }).click();
+  // Sample lives under 詳細 → 開発者 card
+  await page.getByRole("button", { name: "詳細", exact: true }).click();
   const advanced = page.locator("#section-advanced");
   await advanced.waitFor({ timeout: 10_000 });
-
-  const details = advanced.locator("details").filter({ hasText: "開発者向け" });
-  await details.waitFor({ timeout: 10_000 });
-  if (!(await details.evaluate((el) => el.open))) {
-    await details.locator("summary").click();
-  }
 
   const addSample = advanced.getByRole("button", {
     name: /サンプル論文を追加|サンプル論文は追加済み/,
@@ -231,7 +224,6 @@ try {
       .getByRole("button", { name: `「${renamedProjectName}」のメニュー` })
       .click();
     await page.getByRole("menuitem", { name: "削除", exact: true }).click();
-    await page.getByRole("menuitem", { name: "削除する", exact: true }).click();
     await page
       .getByRole("link", { name: renamedProjectName, exact: true })
       .waitFor({ state: "detached", timeout: 10_000 });
@@ -272,9 +264,9 @@ try {
 
   await page.getByRole("link", { name: "設定" }).click();
   await check("settings reading preview", async () => {
-    await page.getByRole("button", { name: "読書" }).click();
+    await page.getByRole("button", { name: "読書", exact: true }).click();
     await page.getByLabel("本文プレビュー").waitFor({ timeout: 10_000 });
-    await page.getByText("プレビュー").first().waitFor();
+    await page.getByText("ライブプレビュー").first().waitFor();
   });
   await shot("settings-reading");
 

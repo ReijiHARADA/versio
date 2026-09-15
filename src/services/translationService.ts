@@ -154,7 +154,7 @@ export async function checkOllamaStatus(
     const hasModel = models.some((m: string) => m.startsWith(model.split(":")[0]));
 
     return { available: true, hasModel, models };
-  } catch (e) {
+  } catch {
     return {
       available: false,
       hasModel: false,

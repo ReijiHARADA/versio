@@ -11,11 +11,9 @@ import {
   type TranslationSettingsV2,
 } from "../../utils/translationSettings";
 import {
-  SETTINGS_SECTIONS,
-  settingsSectionElementId,
   type SettingsSectionId,
 } from "../../utils/settingsToc";
-import { SettingsToc } from "./SettingsToc";
+import { SettingsNavigation } from "./SettingsNavigation";
 import { TranslationSettingsSection } from "./TranslationSettingsSection";
 import { ReadingSettingsSection } from "./ReadingSettingsSection";
 import { StorageSettingsSection } from "./StorageSettingsSection";
@@ -44,7 +42,6 @@ export function SettingsScreen() {
   const [confirmClearCache, setConfirmClearCache] = useState(false);
   const [clearingCache, setClearingCache] = useState(false);
   const [cacheMessage, setCacheMessage] = useState<string | null>(null);
-  const contentRef = useRef<HTMLElement>(null);
   const settingsRef = useRef(settings);
 
   useEffect(() => {
@@ -152,22 +149,6 @@ export function SettingsScreen() {
     }
   };
 
-  const handleSelectSection = (id: SettingsSectionId) => {
-    setActiveSection(id);
-    const element = document.getElementById(settingsSectionElementId(id));
-    if (element && contentRef.current) contentRef.current.scrollTo({ top: element.offsetTop - 24, behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    const root = contentRef.current;
-    if (!root) return;
-    let frame = 0;
-    const update = () => { frame = 0; const atBottom = root.scrollTop + root.clientHeight >= root.scrollHeight - 8; const next = atBottom ? SETTINGS_SECTIONS[SETTINGS_SECTIONS.length - 1].id : SETTINGS_SECTIONS.filter((section) => (document.getElementById(settingsSectionElementId(section.id))?.offsetTop ?? Infinity) <= root.scrollTop + 80).at(-1)?.id ?? SETTINGS_SECTIONS[0].id; setActiveSection((current) => current === next ? current : next); };
-    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
-    root.addEventListener("scroll", onScroll, { passive: true }); update();
-    return () => { root.removeEventListener("scroll", onScroll); if (frame) cancelAnimationFrame(frame); };
-  }, []);
-
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -179,24 +160,18 @@ export function SettingsScreen() {
 
       <div className={styles.main}>
         <aside className={styles.sidebar}>
-          <SettingsToc activeId={activeSection} onSelect={handleSelectSection} />
+          <SettingsNavigation activeId={activeSection} onSelect={setActiveSection} />
         </aside>
-        <main ref={contentRef} className={styles.content}>
-          <section id={settingsSectionElementId("reading")} className={styles.section}><ReadingSettingsSection /></section>
-          <section
-            id={settingsSectionElementId("translation")}
-            className={styles.section}
-          >
+        <main className={styles.content}>
+          {activeSection === "reading" ? <ReadingSettingsSection /> : null}
+          {activeSection === "translation" ? (
             <TranslationSettingsSection
               settings={settings}
               onChange={updateSettings}
               madladStatus={madladStatus}
             />
-          </section>
-          <section
-            id={settingsSectionElementId("data")}
-            className={styles.section}
-          >
+          ) : null}
+          {activeSection === "data" ? (
             <StorageSettingsSection
               confirming={confirmClearCache}
               busy={clearingCache}
@@ -208,26 +183,25 @@ export function SettingsScreen() {
               onConfirmClear={() => void handleConfirmClearCache()}
               onCancelClear={() => setConfirmClearCache(false)}
             />
-          </section>
-          <section
-            id={settingsSectionElementId("advanced")}
-            className={styles.section}
-          >
-            <DiagnosticsSettingsSection
-              madladStatus={madladStatus}
-              ollamaStatus={ollamaStatus}
-              settings={settings}
-              onChange={updateSettings}
-              onRecheck={() => {
-                void checkMadlad();
-                void checkOllama();
-              }}
-              sampleAlreadyAdded={sampleAlreadyAdded}
-              isAddingSample={isAddingSample}
-              sampleMessage={sampleMessage}
-              onAddSample={() => void handleAddSample()}
-            />
-          </section>
+          ) : null}
+          {activeSection === "advanced" ? (
+            <div id="section-advanced">
+              <DiagnosticsSettingsSection
+                madladStatus={madladStatus}
+                ollamaStatus={ollamaStatus}
+                settings={settings}
+                onChange={updateSettings}
+                onRecheck={() => {
+                  void checkMadlad();
+                  void checkOllama();
+                }}
+                sampleAlreadyAdded={sampleAlreadyAdded}
+                isAddingSample={isAddingSample}
+                sampleMessage={sampleMessage}
+                onAddSample={() => void handleAddSample()}
+              />
+            </div>
+          ) : null}
         </main>
       </div>
     </div>

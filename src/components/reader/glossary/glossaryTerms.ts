@@ -35,7 +35,7 @@ export function findGlossaryTermMatches(
     occupied.some((span) => start < span.end && end > span.start);
 
   for (const { entry, term } of candidates) {
-    const latin = /^[\x00-\x7F]+$/.test(term);
+    const latin = [...term].every((ch) => ch.charCodeAt(0) <= 0x7f);
     const pattern = latin
       ? new RegExp(`\\b${escapeRegExp(term)}\\b`, "gi")
       : new RegExp(escapeRegExp(term), "g");

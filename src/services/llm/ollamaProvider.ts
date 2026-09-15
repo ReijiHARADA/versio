@@ -103,7 +103,7 @@ export class OllamaProvider implements LLMProvider {
         models,
         currentModel: this._model,
       };
-    } catch (e) {
+    } catch {
       return {
         available: false,
         models: [],

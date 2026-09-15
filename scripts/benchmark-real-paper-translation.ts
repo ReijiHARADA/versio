@@ -8,6 +8,7 @@
  *   npx tsx scripts/benchmark-real-paper-translation.ts
  *   npx tsx scripts/benchmark-real-paper-translation.ts --paper ozchi-finger-specific-touch
  *   npx tsx scripts/benchmark-real-paper-translation.ts --limit 4
+ *   npx tsx scripts/benchmark-real-paper-translation.ts --resume
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -89,6 +90,7 @@ const onlyPaper = paperArg >= 0 ? args[paperArg + 1] : undefined;
 const limitArg = args.indexOf("--limit");
 const perPaperLimit = limitArg >= 0 ? Number(args[limitArg + 1]) : 8;
 const serialArg = args.includes("--serial");
+const resumeArg = args.includes("--resume");
 const endpoint = process.env.MADLAD_BENCH_URL ?? "http://127.0.0.1:8765";
 
 function compact(text: string): string {
@@ -290,14 +292,43 @@ function markdownReport(report: {
 
 async function main() {
   console.log(`[audit] start endpoint=${endpoint} paper=${onlyPaper ?? "all"} limit=${perPaperLimit}`);
-  const health = await fetch(`${endpoint}/health`);
-  if (!health.ok) throw new Error(`MADLAD health check failed at ${endpoint}`);
+  const readyDeadline = Date.now() + Number(process.env.MADLAD_READY_TIMEOUT_MS ?? 900_000);
+  let health: Response | undefined;
+  while (Date.now() < readyDeadline) {
+    try {
+      const response = await fetch(`${endpoint}/health`);
+      health = response;
+      if (response.ok) {
+        const status = await response.json() as { model_loaded?: boolean; phase?: string };
+        if (status.model_loaded === true || status.phase === "ready") break;
+        console.log(`[audit] waiting for model (${status.phase ?? "unknown"})`);
+      }
+    } catch {
+      console.log("[audit] waiting for translation server");
+    }
+    await new Promise((resolve) => setTimeout(resolve, 5_000));
+  }
+  if (!health?.ok) throw new Error(`MADLAD health check failed at ${endpoint}`);
+  const finalHealth = await (await fetch(`${endpoint}/health`)).json() as { model_loaded?: boolean; phase?: string };
+  if (finalHealth.model_loaded !== true && finalHealth.phase !== "ready") {
+    throw new Error(`MADLAD model did not become ready before timeout (phase=${finalHealth.phase ?? "unknown"})`);
+  }
   const selected = catalog.papers.filter((paper) => !onlyPaper || paper.id === onlyPaper);
   console.log(`[audit] selected=${selected.length}`);
   if (onlyPaper && selected.length === 0) throw new Error(`Unknown catalog paper: ${onlyPaper}`);
-  const papers: Array<{ paper: CatalogPaper; rows: AuditRow[]; error?: string }> = [];
-  const reportDir = path.join(root, catalog.pdfDir, "reports");
   const reportName = onlyPaper ? `translation-audit-${onlyPaper}` : "translation-audit";
+  const reportDir = path.join(root, catalog.pdfDir, "reports");
+  const checkpointPath = path.join(reportDir, `${reportName}.json`);
+  const prior = resumeArg && fs.existsSync(checkpointPath)
+    ? JSON.parse(fs.readFileSync(checkpointPath, "utf8")) as { papers?: Array<{ paper: CatalogPaper; rows: AuditRow[]; error?: string }> }
+    : undefined;
+  const papers: Array<{ paper: CatalogPaper; rows: AuditRow[]; error?: string }> = resumeArg
+    ? (prior?.papers ?? []).filter((entry) => !entry.error)
+    : [];
+  // Only successful paper checkpoints are resumable. Transient server/model
+  // errors must be retried after the endpoint becomes ready.
+  const completedIds = new Set(papers.filter((entry) => !entry.error).map((entry) => entry.paper.id));
+  if (resumeArg && completedIds.size > 0) console.log(`[audit] resuming; skipping ${completedIds.size} checkpointed paper(s)`);
   const saveCheckpoint = () => {
     const report = { createdAt: new Date().toISOString(), endpoint, papers, complete: papers.length === selected.length };
     fs.mkdirSync(reportDir, { recursive: true });
@@ -308,6 +339,7 @@ async function main() {
   };
 
   for (const paper of selected) {
+    if (completedIds.has(paper.id)) continue;
     const pdfPath = path.join(root, catalog.pdfDir, paper.filename);
     if (!fs.existsSync(pdfPath)) {
       papers.push({ paper, rows: [], error: `PDF not cached: ${pdfPath}` });

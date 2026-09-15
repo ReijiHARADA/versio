@@ -1434,8 +1434,340 @@ decode transliterates citation years. The final negated mobile-domain claim is
 retained in every condition, with only a terminology-quality issue remaining.
 No hallucinated facts were observed in this controlled run.
 
+The current-report coverage pass (`translation-coverage-v66.json`) examined 78
+translated ordinary-body rows. Sentence coverage and length-ratio alarms were
+zero, but exact invariant matching found 10 rows with at least one missing
+source invariant, including 5 rows that were not reader-visible fallbacks.
+This is evidence that fluent outputs can pass coarse sentence/length checks
+while losing scientific tokens. The signal remains audit-only until token
+normalization and false-positive calibration are added.
+
+The audit-only semantic coverage evaluator was rerun on 14 reviewed translated
+blocks with the local multilingual MiniLM model. Three reviewed rows had
+severity >=2; their mean minimum source-sentence similarity (0.729) was not
+lower than the 11 safe rows (0.638), so this embedding score cannot serve as a
+standalone unsafe-translation gate. Results are stored in
+`test-data/real-papers/reports/semantic-coverage-reviewed-v42.json` and remain
+an audit signal only.
+
 After the v7 terminal-boundary ranking change, the same matrix was rerun. All
 four outputs were byte-for-byte equivalent to the v6 capture; the new ranking
 signal did not select a different candidate in this case. It remains a
 general safety-oriented tie-breaker, but this fixture provides no measured
 fallback improvement.
+
+The audit-only invariant comparison now applies NFKC, Unicode-hyphen,
+whitespace, and case normalization. Rerunning the same 78 rows reduced
+apparent invariant-loss alarms from 10 to 7, removing three formatting-only
+false positives. The remaining seven rows stay queued for manual token review;
+production acceptance behavior is unchanged.
+
+## Translation coverage v67 (audit-only provenance update)
+
+The normalized invariant audit was rerun and versioned as `translation-coverage-v67.json` (`3b-mt-v5-semantic-v67-audit-normalized`). Across 78 ordinary translated rows, low sentence coverage and low length ratio remain 0; invariant loss is 7 after NFKC, Unicode-hyphen, whitespace, and case normalization (raw v66 loss was 10, including three formatting-only mismatches). This is diagnostic evidence only; it does not loosen the production quality gate or alter fallback decisions.
+
+### A-cohort failure-mode triage (audit-only)
+
+`fallback-a-subtypes-v1.json` records a reproducible heuristic triage of the current ordinary-body fallback rows into decode/truncation, long-unit omission risk, scientific-token loss risk, and other model-adequacy buckets. These labels are deliberately provisional and require manual semantic review; they are not production routing rules. The artifact is the input set for the next selective-cascade/candidate-selection experiment.
+
+### Selective cascade audit v1
+
+The current fallback inventory was joined with the previously captured local Opus and M2M100-1.2B outputs in `selective-cascade-audit-v1.json`. Invariant retention and length are recorded as safety triage signals only; no alternate model output is promoted without semantic review. This preserves the safety boundary while enabling the next candidate-selection experiment.
+
+### Selective cascade audit v2 correction
+
+The cascade comparison was regenerated with Opus and M2M100-1.2B kept in separate per-model maps. This fixes an audit join defect in v1 that could overwrite one candidate, without changing production behavior. The corrected artifact is `selective-cascade-audit-v2.json` (12 fallback rows; 6 with captured alternatives).
+
+The corrected cascade artifact was screened with a conservative audit threshold requiring complete recorded-invariant retention and length ratio ≥0.35. It produced 0 automatically eligible alternate candidates among 12 fallback rows; M2M100-1.2B is comparatively stronger than Opus but still shows truncation or invariant loss. No production cascade was enabled.
+
+### Local model inventory checkpoint
+
+The local cache was inspected before expanding the cascade. It contains only the already evaluated MADLAD, Opus, M2M100-418M/1.2B families plus the MiniLM evaluator; the repository bundles MADLAD MLX only. Therefore no additional untested offline translation candidate is available without a new model download and licensing/size review. Production remains unchanged.
+
+### Semantic relation audit signal
+
+The audit coverage scorer now records a conservative negation relation (`sourceNegation`, `translationNegation`, `negationPreserved`). The current 78-row sample contains 4 possible negation relation losses. This remains audit-only because lexical Japanese negation detection has false positives/negatives; it is used to prioritize manual review and future relation-aware candidate selection.
+
+The four negation-relation flags are accepted rows rather than fallbacks, making them the highest-priority potential unsafe false-accept candidates for manual review: `interactive-jewellery/b-4d8fd90a`, `significant-other/b-70cd9829`, `design-for-wearability/b-96ae98eb`, and `neuroscience-rule-following/b-ddf5ca5d`. No automatic rejection is enabled from this signal.
+
+The coverage audit now also records contrast relations (for example `however`, `although`, `unlike`, and `whereas`) alongside negation. Japanese contrast markers are checked conservatively. This is audit-only evidence for candidate selection and manual review, not an automatic fallback rule.
+
+The resumability metadata was corrected so `audit-progress.json.lastBenchmarkVersion` matches the authoritative full-corpus report (`3b-mt-v5-semantic-v71-strict-restore-v6-full-serial`) rather than the older review-generator default. This is bookkeeping only.
+
+### Candidate licensing checkpoint
+
+`facebook/nllb-200-distilled-600M` was checked as a possible free local model. Its Hugging Face model card lists CC-BY-NC-4.0, so it was excluded before download for product use without a commercial-license review. No model download or production change was made. The local candidate ledger is `local-model-candidate-ledger-v1.json`.
+
+### Additional Apache candidate benchmark
+
+`Helsinki-NLP/opus-tatoeba-en-ja` (Apache-2.0) was evaluated locally on three fallback rows. It produced malformed spacing/punctuation, domain terminology corruption, and truncation, so it is not a safe cascade candidate. Raw output is `translation-server/benchmarks/model-cascade-opus-tatoeba-v1.json`; production remains unchanged.
+
+The three Opus-Tatoeba outputs were screened with the same conservative safety signals used for cascade triage. **1/3** met the mechanical invariant/length screen, but manual inspection is still required and the candidate remains excluded from automatic routing. It remains audit-only and is not eligible for automatic cascade routing.
+
+Manual spot-check of the one Opus-Tatoeba row that passed mechanical screening found severe semantic corruption: GPT-3 identifiers, pill counts/causal relations, and the counterfactual question were not preserved. This is a concrete false-eligibility example and confirms that candidate selection needs relation-aware semantic review before any production cascade.
+
+The cascade acceptance policy is now explicit: invariant retention and length are necessary but insufficient. A candidate must also pass relation-aware semantic review covering negation, contrast, counts/conditions, and terminal claims. The Opus-Tatoeba false-eligibility example is retained as a regression guard against promoting fluent but structurally wrong output.
+
+The contrast audit signal was tightened to high-precision discourse markers; weak conjunctions (`but`, `while`, `instead`) are no longer treated as standalone contrast evidence, while paired Japanese forms such as `だけでなく` and `ものの` are recognized. This is an audit precision correction only.
+
+Manual review of two queued relation flags found one real issue and one false positive: `interactive-jewellery/b-4d8fd90a` omits the source's “not the first” claim (severity 2), while `significant-other/b-70cd9829` correctly preserves the not-merely/but relation. The review labels are stored in `audit-manual-review.json`; production behavior is unchanged.
+
+An ID-only semantic relation review queue was added at `semantic-relation-review-queue-v1.json`. It contains 8 flagged rows from coverage v67, with negation/contrast flag types and reader-visible status but no copyrighted excerpts. Manual comparison remains required; no production gate change was made.
+
+Manual relation review of three queued rows found one serious semantic shift/omission (`dont-mind-me/b-fb4b663f`, severity 3), one correct relation (`marketing-consumer-response/b-85131724`), and one minor concessive weakening (`power-over-skin/b-eed74380`, severity 1). These labels are recorded in `audit-manual-review.json`; production behavior is unchanged.
+
+The semantic relation queue is now **5/8 reviewed**, with 3 pending. Judgments include one severity-3 semantic shift, one severity-2 omission, one severity-1 wording issue, and two correct/false-positive cases. Queue progress is persisted in `audit-progress.json`.
+
+Two remaining neuroscience relation flags were manually reviewed and marked correct in the ID-only queue: `b-e30c258d` preserves the whereas contrast, and `b-ddf5ca5d` preserves the neither/nor fairness result. The the ID-only queue now records 2/8 reviewed; other reviewed rows are tracked in the manual-review file.
+
+The manual-review generator now derives the benchmark version from the report, preventing metadata rollback to v50. Its regenerated queue reports only current-key matches (9/139), so the durable progress ledger was restored to the authoritative 19 completed / 166 pending totals; no review judgments were removed.
+
+The progress ledger's diagnostic version now explicitly identifies the v67 relations audit (`translation-coverage-v67-relations`), covering both negation and contrast signals.
+
+The ID-only relation queue was reconciled against durable manual-review records and now reports 5/8 durable manual-review matches, with 3 pending. This fixes progress bookkeeping without changing translation behavior.
+
+The final pending design-for-wearability relation flag (`b-96ae98eb`) was reviewed: the not-only/but-also relation is retained, but terminology and figure references are awkward (severity 1). The ID-only queue records this judgment; durable manual-review matches remain separately tracked.
+
+The final two relation-queue entries were reviewed: `power-over-skin/b-eed74380` has a severity-1 concessive weakening, and `dont-mind-me/b-fb4b663f` has a severity-3 semantic shift. The ID-only relation queue is now complete (8/8); the broader manual-review corpus remains 19/166.
+
+Audit tooling caveat: rerunning the manual-review generator materialized 9 completed / 130 pending current-key records and replaced the prior local 19/166 snapshot. The benchmark-version rollback bug is fixed, but historical review records with changed source keys are not preserved by the generator. This is tracked as a tooling issue; no translation behavior changed.
+
+The attribution summarizer now includes and deduplicates `archivedReviews`, preventing future loss of archived safety evidence during queue regeneration. The current durable review file contains 13 completed / 130 pending records; the earlier 19/166 snapshot was partially overwritten before this fix and remains historical only.
+
+The manual-review generator now rehydrates both active and archived reviews before rebuilding. Future source-key changes will preserve prior judgments. The current durable file remains 9 completed / 130 pending because the earlier overwrite had already removed its archived records; this patch prevents further loss.
+
+## Ordinal/uniqueness relation review (2026-09-15)
+
+The audit-only ordinal signal (`first`, `last`, `only`, `unique`, and
+Japanese equivalents) flagged seven accepted rows. Manual comparison found two
+severity-2 omissions: the interactive-jewellery paragraph drops “not the
+first”, and the cognitive-psychology paragraph drops the experimentally added
+third option. Two rows soften an ordering or descriptor nuance (severity 1),
+and three flags were false positives or adequately rendered. These findings
+are recorded in `semantic-relation-review-queue-v2.json` and synchronized into
+`audit-manual-review.json`. They are review evidence only; the production
+quality gate remains unchanged until a precision/recall evaluation supports a
+safe policy.
+
+## Current resumable baseline (2026-09-15)
+
+The authoritative v77 attribution summary currently covers 48 ordinary-body
+rows and 12 reader-visible fallbacks (**25.00%**), all post-model (primary
+causes A=7, D=2, E=3). Durable manual review contains 139 rows: 19 completed
+and 120 pending. Among reviewed accepted rows, 2 are severity >=2 unsafe
+false-accept candidates (2/67 = 2.99%). The 5% product target is therefore
+not met. The next work item is continued manual review and evidence-backed
+model/cascade evaluation; no fallback threshold has been loosened.
+
+### Manual review batch: cognitive psychology and wearability (2026-09-15)
+
+Ten additional rows were compared manually. Five had no translated output and
+were confirmed as safe source fallbacks (severity 4 for reader usability), one
+source block contained interleaved list/citation markers and was classified as
+extraction contamination (severity 3), and four translated rows retained the
+main claim with either correct or minor wording quality. No new unsafe accepted
+translation was inferred from this batch; the fallback burden remains a
+separate product metric.
+
+### Manual review batch: wearability, social acceptability, economics (2026-09-15)
+
+Ten further rows were reviewed. Confirmed issues include a subject-changing
+translation (“wearable products” rendered as website design), a severity-4
+empty-output fallback, a severity-4 numeric/claim alignment failure with
+unrestored placeholders, and two incomplete source blocks caused by extraction
+boundaries. The updated audit-only reviewed-accepted safety estimate is 7/67
+severity>=2 (**10.45%**); this increase reflects newly reviewed evidence rather
+than a production regression. Product fallback remains 12/48 (25.00%).
+
+### Manual review batch: economics and education (2026-09-15)
+
+Ten additional rows were reviewed. Several economics rows are incomplete
+mathematical/column fragments and were classified as source-fragment failures;
+complete economics prose generally retained its claims. One education glossary
+row has a terminology error (`教学` for teaching activities), while the longer
+LA/EDM comparison preserves its contrast and overlap. The reviewed accepted
+severity>=2 estimate is now 8/67 (11.94%); product fallback remains 12/48.
+
+### Manual review batch: education, ergonomics, and design (2026-09-15)
+
+Ten rows were reviewed. The batch found two terminology errors in educational
+analytics, four extraction fragments, and several metadata/non-body rows. The
+reviewed-accepted severity>=2 estimate is now 10/67 (14.93%); this is expanded
+manual evidence, not a production regression. Product fallback remains 12/48.
+
+### Manual review batch: design and HCI (2026-09-15)
+
+Ten rows were reviewed. Four design rows are incomplete extraction fragments;
+HCI bullets mostly preserve their technical claims, with one
+counterbalancing terminology error. The reviewed accepted severity>=2 estimate
+is 11/67 (16.42%), while the product fallback metric remains 12/48 (25.00%).
+
+### Manual review batch: linguistics and interaction design (2026-09-15)
+
+Ten rows were reviewed. One long linguistics paragraph had no output, and one
+interaction-design paragraph omitted the scope of its structural claim. Most
+short definition/list rows preserved their claims with minor wording issues.
+The reviewed accepted severity>=2 estimate is 12/67 (17.91%); product fallback
+remains 12/48 (25.00%).
+
+### Manual review batch: linguistics and marketing (2026-09-15)
+
+Ten rows were reviewed. Long linguistics and marketing paragraphs frequently
+fell back with no output, while complete equations and model descriptions
+preserved their main claims. A mathematical continuation beginning with
+“where” was classified as a source fragment. The reviewed accepted
+severity>=2 estimate remains 12/67 (17.91%); product fallback remains 12/48.
+
+### Manual review batch: neuroscience, marketing, OzCHI (2026-09-15)
+
+Ten rows were reviewed. Several neuroscience and OzCHI methods/abstract rows
+were safe empty-output fallbacks; one marketing block contained an embedded
+arXiv header (chrome contamination), and one OzCHI permission fragment was
+severely corrupted. Complete participant and study-objective rows preserved
+key facts. The reviewed accepted severity>=2 estimate remains 12/67 (17.91%);
+product fallback remains 12/48 (25.00%).
+
+### Manual review batch: OzCHI and power-transfer research (2026-09-15)
+
+Ten rows were reviewed. Complete OzCHI study-objective text was accurate, but a
+related-work paragraph omitted a “neither” claim and a statistical-results
+paragraph had no output. Power-transfer rows mostly fell back safely, including
+one long safety paragraph with SAR/mA values. Reviewed accepted severity>=2 is
+13/67 (19.40%); product fallback remains 12/48 (25.00%).
+
+### Manual review batch: power transfer, PPG, significant-other (2026-09-15)
+
+Ten rows were reviewed. Two PPG rows were incomplete extraction fragments; the
+remaining complete significant-other prose preserved its central claims with
+mostly minor wording issues. The product fallback metric remains 12/48
+(25.00%); the reviewed accepted severity>=2 estimate remains 13/67 (19.40%).
+
+### Manual review batch: SpeechIn and wearable powering (2026-09-15)
+
+Ten rows were reviewed. One SpeechIn contribution bullet contains a severe
+repeated “face” hallucination despite a fluent output; several powering rows
+are safe empty-output fallbacks, and two contain embedded arXiv/chopped source
+contamination. Complete SpeechIn study summaries preserve counts and accuracy
+values. Reviewed accepted severity>=2 is 13/67 (19.40%); product fallback
+remains 12/48 (25.00%).
+
+### Manual review completion (2026-09-15)
+
+The remaining 11 rows were reviewed, completing the 139-row manual queue.
+Final review labels are: correct 19, minor wording 48, omission 36,
+source-fragment 24, semantic-shift 5, chrome contamination 3, terminology
+error 3, and numeric error 1. The audit-only severity>=2 accepted estimate is
+15/67 (22.39%); this is evidence that the current automatic gate is unsafe for
+research use and is not a reason to loosen fallback. Product fallback remains
+12/48 (25.00%).
+
+## v8 production guard follow-up (2026-09-15)
+
+The server now applies the same generic phrase-repetition guard as the client.
+It rejects material repetition of Japanese kanji/phrase n-grams while allowing
+normal repeated technical terms. Focused and full translation-server tests pass
+(16/16 focused, 93/93 full). A full v8 corpus rerun is still pending; the last
+measured product baseline remains 12/48 ordinary-body fallbacks (25.00%).
+
+## v8 reviewed corpus checkpoint (2026-09-15)
+
+The v8 local MADLAD run covered 21/21 catalog papers and 139 sampled units. The dedicated review queue now contains 139/139 reviewed rows. The reviewed summary (`reports/translation-v8-reviewed-summary.json`) records 65 accepted translations and 74 reader-visible fallbacks; the ordinary-body subset is 48 rows with 12 fallbacks (25%). Among accepted rows, 15 are severity >=2 unsafe false accepts (23.08%).
+
+Three of those 15 are source fragments caused by PDF extraction/paragraph reconstruction and are excluded from model-cascade experiments. The remaining 12 are model-quality candidates. Existing M2M100-1.2B and Opus alternatives produced 6 captured candidate outputs but 0/6 passed the conservative invariant/length gate, so cascade remains disabled. The next experiment must use `reports/model-quality-unsafe-v8.json` and must report semantic adequacy separately from source-integrity failures.
+
+The benchmark runner now supports `--resume` and waits for `/health` model readiness before issuing requests, preventing transient model-loading 503s from polluting a checkpoint. Client regression is 307/307, translation-server regression is 93/93, and lint/typecheck pass.
+
+## Phase 2 continuation: same-fixture model and relation audit (2026-09-15)
+
+The ordinary-body baseline remains 48 sampled blocks with 12 reader-visible
+fallbacks (25.00%). Manual review covers all 139 sampled rows; 15/65 accepted
+rows have severity >=2 (23.08% unsafe false accepts). The <=5% target is not
+met.
+
+All alternate-model experiments below use the exact 12-row
+`model-quality-unsafe-v8.json` fixture. Helsinki Opus EN-JA and M2M100 418M
+show severe drift/truncation or numeric corruption. M2M100 1.2B greedy and
+beam=4 candidates were manually compared and yielded 0/12 safe rescues. The
+candidate selector and cascade remain audit-only; no model replacement has
+been enabled.
+
+The semantic coverage audit v68 now measures invariants, negation, contrast,
+ordinal/uniqueness, and condition/causal relations. After calibrating valid
+Japanese condition renderings, condition false positives are 0/75. Remaining
+relation flags are intentionally review signals, not automatic rejection rules.
+See `reports/semantic-relation-signal-precision-v1.json`,
+`reports/same-fixture-model-summary-v1.json`, and
+`MODEL_ROUTING_DECISION_V1.md`.
+
+Next work must either produce a genuinely distinct, license-approved local
+candidate on the same fixture or improve semantic relation evaluation and
+routing with reviewed positive rescues. Surface metrics alone must not reduce
+fallbacks or bypass source-claim review.
+
+## Phase 2 checkpoint: Gemma 2 9B same-fixture audit
+
+A local Ollama `gemma2:9b` run completed for all 12 fixed model-quality unsafe blocks. Exact outputs and latency are in `test-data/real-papers/reports/model-quality-gemma2-9b-v1.json`; the combined surface-signal comparison is `candidate-selection-gemma-m2m-v1.json`. Several outputs are coherent and preserve numbers, but at least one long block truncates and the OzCHI sample still shows terminology/semantic risk. Therefore this is evidence for further review only: no production routing or fallback-policy change was made. All 12 rows require manual source-claim labels before a selective cascade can be considered.
+
+### Gemma 2 9B manual review checkpoint
+
+All 12 outputs were compared to their source claims. Review v1 records 9 apparent rescues, 1 conditional output with a remaining untranslated domain term, and 2 semantic/attribution rejects; the incomplete source-fragment row is explicitly retained as an extraction failure. See `test-data/real-papers/reports/model-quality-gemma2-9b-manual-v1.{json,md}`. This is fixed-fixture evidence only; no production model routing has changed.
+
+### Selective cascade simulation (audit-only)
+
+On the fixed 12-row model-quality unsafe fixture, an oracle simulation using the Gemma manual labels would select Gemma for 9 rows and retain fallback for 3; selected rows with severity ≥2 were 0. This demonstrates potential rescue capacity but is an optimistic, post-hoc upper bound and does not justify production routing. See `selective-cascade-gemma-v1.json`; next work is held-out selection without manual labels.
+
+Automatic selector calibration found a safety gap: 10/12 Gemma outputs pass current hard surface signals, while manual labels identify only 1/12 as clean and flag the rest for omission, semantic shift, numeric, or terminology errors. Shape/invariant checks alone therefore cannot drive routing; semantic coverage remains the next required evaluator.
+
+### Semantic coverage corpus calibration
+
+The local multilingual MiniLM evaluator was run across all 139 manually reviewed rows. Per-row source-sentence and full-pair similarities are stored in `test-data/real-papers/reports/semantic-coverage-v2.json`. This establishes a corpus-wide calibration dataset for measuring false accepts/rejects against manual severity labels; it remains audit-only pending threshold calibration.
+
+Threshold calibration shows the MiniLM similarity signal is insufficient alone: at min-source similarity 0.85, 2/18 unsafe rows remain accepted (11.1%) while 37 safe rows are rejected. Lower thresholds leave 6–14 unsafe accepts. This prevents promoting embedding similarity as a standalone production gate.
+
+### Semantic coverage calibration curves
+
+Generated `test-data/real-papers/reports/semantic-coverage-calibration-v1.json` over 45 thresholds for both minimum source-sentence and full-pair similarity. Each point reports unsafe acceptance and safe rejection against manual severity labels. It remains audit-only and does not change production fallback behavior.
+
+### Composite semantic coverage calibration
+
+Created `semantic-coverage-composite-calibration-v1.json`, combining minimum source-sentence similarity with penalties for negation/contrast/ordinal/condition and scientific-invariant loss. Threshold trade-offs are recorded against manual severity labels. This remains audit-only pending held-out validation.
+
+### Baseline resynchronization
+
+Using the current authoritative files, the audit has 21 papers and 139 rows. The current ordinary-body predicate selects 82 rows, of which 17 are reader-visible fallbacks (20.7%). The manual-review file has no `productionDecision` values, so unsafe accepted counts are taken from the explicit `unsafe-accepted-v8.json` report (15 rows). Model identity: `3b-mt-v5-semantic-v71-strict-restore-v8`.
+
+### Gemma held-out smoke
+
+A three-row ordinary-body held-out smoke produced mixed results: one coherent output, one clear mid-sentence truncation, and one fluent output requiring semantic review. This supports keeping Gemma audit-only until completeness and semantic checks are calibrated.
+
+### Gemma generation-limit follow-up
+
+The held-out row that previously truncated was rerun via Ollama API with `temperature=0` and `num_predict=512`; it completed and retained the citation/claims. The earlier truncation is therefore at least partly generation-limit related. Broader semantic validation is still required before any cascade routing.
+
+### Generation capacity fix (v9)
+
+Raised the bounded MADLAD decoder cap from 256 to 384 tokens for both single and batch paths, based on observed long-unit truncation. The model identity is now `3b-mt-v5-semantic-v71-strict-restore-v9` so stale translation cache entries are not reused. Existing guards remain active; translation-server tests pass 97/97. This change requires a fresh representative benchmark before production quality claims.
+
+### Runtime packaging note
+
+The currently running macOS `.app` bundle was inspected and still contains the v8 server source. The v9 generation-cap change is present only in the source worktree until a new Tauri bundle is built and restarted. This checkpoint intentionally leaves the existing app process untouched.
+
+### v9 Tauri bundle verification
+
+`npm run tauri:build` completed successfully. The generated `.app` timestamp is 2026-09-15 15:59:24, and its bundled translation server contains `strict-restore-v9` plus `MAX_NEW_TOKENS = 384`. The pre-existing server process was left running; a full app quit/relaunch is required for runtime v9 activation.
+
+The existing app server remains healthy on port 8765 (`/health`: ready, model loaded), but it was intentionally not restarted after the v9 build. Runtime v9 verification remains pending a user-approved full app relaunch.
+
+Added `scripts/verify-bundled-translation-server.sh` for resumable runtime checks (bundle timestamp, model version, generation cap, and process path) without process mutation.
+
+### v9 runtime launch follow-up
+
+The old PID 2108 is now gone after the user restart. A new server PID appeared briefly (58895) but exited before `/health` became available; port 8765 is currently closed. No crash report appeared in the recent DiagnosticReports listing. The next verification must launch the app from Terminal and capture translation-server stderr.
+
+### v9 runtime activation confirmed
+
+After the user relaunched the app, a new bundled server PID 60582 appeared. `/health` initially reported model loading, then reported `ready` with `model_loaded=true`. The process path is the v9-verified `.app` bundle. The API does not expose the model-version string directly, so version confirmation is based on the bundled source plus the post-build process path.
+
+## v9 baseline resynchronization (2026-09-15)
+
+`reports/baseline-v9.json` is the machine-readable baseline. The strict `ordinary-body-prose` source category contains 48 rows with 12 post-model fallbacks (25.0%). The product UX predicate is broader (paragraph role without source fallback): 82 rows with 17 reader-visible fallbacks (20.7%). Both figures are retained because they answer different questions; the latter is the target metric for the <=5% product goal. The v9 packaged runtime is active, but no model cascade is enabled yet.

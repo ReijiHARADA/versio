@@ -82,6 +82,9 @@ for (const cap of blocks.filter((b) => b.role === "figure_caption")) {
   console.log(
     `  nearest [${nearest?.role}] "${(nearest?.text || "").slice(0, 70)}" gap=${gapNearest.toFixed(1)}`
   );
+  if (gapSub != null) {
+    console.log(`  substantial [${substantial?.role}] gap=${gapSub.toFixed(1)}`);
+  }
   const crop = figureImageRect(cap, blocks, layout);
   console.log(
     `  crop ${crop ? `${crop.width.toFixed(0)}x${crop.height.toFixed(0)} @ (${crop.x.toFixed(0)},${crop.y.toFixed(0)}) key=${figureLookupKey(cap.text, page)}` : "NONE"}`

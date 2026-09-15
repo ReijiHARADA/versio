@@ -67,7 +67,6 @@ export function WorkspaceTree({
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuAnchor, setMenuAnchor] = useState<MenuAnchor | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const treeRef = useRef<HTMLElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -117,7 +116,6 @@ export function WorkspaceTree({
     if (!openMenuId) return;
     const close = () => {
       setOpenMenuId(null);
-      setConfirmDeleteId(null);
     };
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
@@ -148,37 +146,7 @@ export function WorkspaceTree({
         data-workspace-menu=""
         style={{ top: menuAnchor.top, left: menuAnchor.left }}
       >
-        {confirmDeleteId === node.id ? (
-          <>
-            <p className={styles.menuNotice}>
-              「{node.name}」と配下の項目を削除しますか？論文ファイルは残ります。
-            </p>
-            <button type="button" role="menuitem" onClick={() => setConfirmDeleteId(null)}>
-              キャンセル
-            </button>
-            <button
-              type="button"
-              role="menuitem"
-              className={styles.projectMenuDanger}
-              disabled={deleting}
-              onClick={() => {
-                setDeleting(true);
-                void onDelete(node)
-                  .then(() => setOpenMenuId(null))
-                  .catch((error: unknown) =>
-                    showToast({
-                      kind: "error",
-                      message: error instanceof Error ? error.message : "削除に失敗しました",
-                    })
-                  )
-                  .finally(() => setDeleting(false));
-              }}
-            >
-              {deleting ? "削除中…" : "削除する"}
-            </button>
-          </>
-        ) : (
-          <>
+        <>
             <button
               type="button"
               role="menuitem"
@@ -219,13 +187,24 @@ export function WorkspaceTree({
               type="button"
               role="menuitem"
               className={styles.projectMenuDanger}
-              onClick={() => setConfirmDeleteId(node.id)}
+              disabled={deleting}
+              onClick={() => {
+                setDeleting(true);
+                void onDelete(node)
+                  .then(() => setOpenMenuId(null))
+                  .catch((error: unknown) =>
+                    showToast({
+                      kind: "error",
+                      message: error instanceof Error ? error.message : "削除に失敗しました",
+                    })
+                  )
+                  .finally(() => setDeleting(false));
+              }}
             >
               <Trash2 size={14} />
-              削除
+              {deleting ? "移動中…" : "削除"}
             </button>
           </>
-        )}
       </div>,
       document.body
     );
@@ -295,7 +274,6 @@ export function WorkspaceTree({
             aria-expanded={menuOpen}
             onClick={(event) => {
               event.stopPropagation();
-              setConfirmDeleteId(null);
               setOpenMenuId(menuOpen ? null : node.id);
             }}
           >

@@ -6,6 +6,7 @@ import { ProjectScreen } from "./components/project/ProjectScreen";
 import { InboxScreen } from "./components/library/InboxScreen";
 import { FavoritesScreen } from "./components/library/FavoritesScreen";
 import { RecentScreen } from "./components/library/RecentScreen";
+import { TrashScreen } from "./components/library/TrashScreen";
 import { ReaderScreen } from "./components/reader/ReaderScreen";
 import { ImportScreen } from "./components/import/ImportScreen";
 import { SettingsScreen } from "./components/settings/SettingsScreen";
@@ -270,6 +271,7 @@ function App() {
             <Route path="/inbox" element={<InboxScreen />} />
             <Route path="/favorites" element={<FavoritesScreen />} />
             <Route path="/recent" element={<RecentScreen />} />
+            <Route path="/trash" element={<TrashScreen />} />
             <Route path="/project/:projectId" element={<ProjectScreen />} />
             <Route path="/settings" element={<SettingsScreen />} />
             <Route path="/reader/:paperId" element={<ReaderScreen />} />

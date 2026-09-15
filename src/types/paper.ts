@@ -105,6 +105,8 @@ export type Paper = {
   favorite?: boolean;
   lastOpenedAt?: string;
   packageRevision?: number;
+  /** ISO timestamp when moved to Trash; null/undefined means active in library. */
+  trashedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 };

@@ -10,7 +10,8 @@ import { AppSidebar } from "./AppSidebar";
 import { PaperDragPreview } from "./PaperDragPreview";
 import { NewWorkspaceNodeModal } from "../workspace/NewWorkspaceNodeModal";
 import { setPaperDropHandler, INBOX_DROP_ID, usePaperDragStore } from "../../stores/paperDragStore";
-import { useToastStore } from "../../stores/toastStore";
+import { showToast, useToastStore } from "../../stores/toastStore";
+import { restoreWorkspaceFolderFromTrash, purgeExpiredTrash } from "../../services/trashService";
 import { resumeAfterTranslationServerReady } from "../../services/import/startBackgroundImport";
 import { isTranslationServerReady, subscribeTranslationServerReady } from "../../utils/serverReady";
 import styles from "./AppShell.module.css";
@@ -20,7 +21,7 @@ export function AppShell() {
   const setPapers = useLibraryCache((state) => state.setPapers);
   const workspaceNodes = useProjectStore((state) => state.workspaceNodes); const memberships = useProjectStore((state) => state.memberships); const searchQuery = useProjectStore((state) => state.searchQuery);
   const setLoaded = useProjectStore((state) => state.setLoaded); const setSearchQuery = useProjectStore((state) => state.setSearchQuery); const mergeWorkspaceNodes = useProjectStore((state) => state.mergeWorkspaceNodes); const setMemberships = useProjectStore((state) => state.setMemberships); const upsertWorkspaceNode = useProjectStore((state) => state.upsertWorkspaceNode); const upsertMembership = useProjectStore((state) => state.upsertMembership); const removeMembershipsForPaper = useProjectStore((state) => state.removeMembershipsForPaper); const removeWorkspaceNodesLocal = useProjectStore((state) => state.removeWorkspaceNodesLocal);
-  const showToast = usePaperDragStore((state) => state.showToast); const toast = useToastStore((state) => state.toast); const clearToast = useToastStore((state) => state.clearToast);
+  const showDragToast = usePaperDragStore((state) => state.showToast); const toast = useToastStore((state) => state.toast); const clearToast = useToastStore((state) => state.clearToast);
   const [createParentId, setCreateParentId] = useState<string | null | undefined>(undefined); const [fileNodeId, setFileNodeId] = useState<string | null>(null); const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -54,6 +55,9 @@ export function AppShell() {
         mergeWorkspaceNodes(dbNodes);
         setMemberships(dbLinks);
         setPapers(dbPapers);
+        void purgeExpiredTrash().catch((error) => {
+          console.warn("Failed to purge expired trash:", error);
+        });
         if (!cancelled && isTranslationServerReady()) {
           resumeAfterTranslationServerReady();
         }
@@ -74,11 +78,42 @@ export function AppShell() {
 
   const routeNodeId = location.pathname.startsWith("/project/") ? location.pathname.slice("/project/".length).split("/")[0] : null;
   const readerNodeId = useMemo(() => { const fromQuery = new URLSearchParams(location.search).get("workspace"); if (fromQuery) return fromQuery; if (!paperId) return null; const links = memberships.filter((link) => link.paperId === paperId); return links.length === 1 ? links[0].nodeId : null; }, [location.search, memberships, paperId]);
-  const papers = useLibraryCache((state) => state.papers); const inboxCount = useMemo(() => { const assigned = new Set(memberships.map((link) => link.paperId)); return papers.filter((paper) => !assigned.has(paper.id)).length; }, [memberships, papers]);
+  const papers = useLibraryCache((state) => state.papers); const inboxCount = useMemo(() => {
+    const activeNodes = new Set(workspaceNodes.map((node) => node.id));
+    const assigned = new Set(
+      memberships.filter((link) => activeNodes.has(link.nodeId)).map((link) => link.paperId)
+    );
+    return papers.filter((paper) => !assigned.has(paper.id)).length;
+  }, [memberships, papers, workspaceNodes]);
   const create = async (input: { name: string; description?: string }) => { const node = await createWorkspaceNode({ ...input, parentId: createParentId ?? null }); upsertWorkspaceNode(node); setCreateParentId(undefined); if (node.parentId) return; navigate(`/project/${node.id}`); };
   const addPaperFile = (node: WorkspaceNode) => { setFileNodeId(node.id); fileInputRef.current?.click(); };
-  const deleteNode = async (node: WorkspaceNode) => { const removed = await removeWorkspaceItem(node.id); removeWorkspaceNodesLocal(removed); setMemberships(await getAllWorkspacePapers()); if (routeNodeId && removed.includes(routeNodeId)) navigate("/inbox"); };
-  const handleDropPaper = useCallback(async (targetId: string, droppedPaperId: string, sourceNodeId: string | null) => { if (targetId === INBOX_DROP_ID) { const removed = await removePaperFromAllWorkspaces(droppedPaperId); removeMembershipsForPaper(droppedPaperId); showToast({ kind: removed ? "added" : "duplicate", message: removed ? "インボックスに戻しました" : "すでにインボックスにあります" }); return; } try { const link = sourceNodeId ? await movePaperInWorkspace(droppedPaperId, sourceNodeId, targetId) : await addPaperToWorkspace(targetId, droppedPaperId); if (sourceNodeId) useProjectStore.getState().removeMembershipLocal(sourceNodeId, droppedPaperId); upsertMembership(link); showToast({ kind: "added", message: "論文の配置を更新しました" }); } catch (error) { showToast({ kind: error instanceof Error && error.message.includes("すでに") ? "duplicate" : "error", message: error instanceof Error ? error.message : "論文の配置に失敗しました" }); } }, [removeMembershipsForPaper, showToast, upsertMembership]);
+  const deleteNode = async (node: WorkspaceNode) => {
+    const removed = await removeWorkspaceItem(node.id);
+    removeWorkspaceNodesLocal(removed);
+    setMemberships(await getAllWorkspacePapers());
+    if (routeNodeId && removed.includes(routeNodeId)) navigate("/inbox");
+    showToast({
+      kind: "info",
+      message: `「${node.name}」をゴミ箱に移動しました`,
+      actionLabel: "元に戻す",
+      onAction: () => {
+        void restoreWorkspaceFolderFromTrash(node.id)
+          .then(async (restored) => {
+            for (const item of restored) {
+              upsertWorkspaceNode(item);
+            }
+            setMemberships(await getAllWorkspacePapers());
+          })
+          .catch((error: unknown) => {
+            showToast({
+              kind: "error",
+              message: error instanceof Error ? error.message : "復元に失敗しました",
+            });
+          });
+      },
+    });
+  };
+  const handleDropPaper = useCallback(async (targetId: string, droppedPaperId: string, sourceNodeId: string | null) => { if (targetId === INBOX_DROP_ID) { const removed = await removePaperFromAllWorkspaces(droppedPaperId); removeMembershipsForPaper(droppedPaperId); showDragToast({ kind: removed ? "added" : "duplicate", message: removed ? "インボックスに戻しました" : "すでにインボックスにあります" }); return; } try { const link = sourceNodeId ? await movePaperInWorkspace(droppedPaperId, sourceNodeId, targetId) : await addPaperToWorkspace(targetId, droppedPaperId); if (sourceNodeId) useProjectStore.getState().removeMembershipLocal(sourceNodeId, droppedPaperId); upsertMembership(link); showDragToast({ kind: "added", message: "論文の配置を更新しました" }); } catch (error) { showDragToast({ kind: error instanceof Error && error.message.includes("すでに") ? "duplicate" : "error", message: error instanceof Error ? error.message : "論文の配置に失敗しました" }); } }, [removeMembershipsForPaper, showDragToast, upsertMembership]);
   useEffect(() => { setPaperDropHandler(handleDropPaper); return () => setPaperDropHandler(null); }, [handleDropPaper]);
   return <div className={styles.shell}>
     <input ref={fileInputRef} type="file" accept=".pdf,application/pdf" className={styles.hiddenInput} onChange={(event) => { const file = event.target.files?.[0]; if (file && fileNodeId) void tryStartPdfImport(file, { workspaceNodeId: fileNodeId }); event.target.value = ""; setFileNodeId(null); }} />

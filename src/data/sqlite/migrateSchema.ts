@@ -297,12 +297,31 @@ function migrateV5ToV6(db: Database): void {
   `);
 }
 
+function migrateV6ToV7(db: Database): void {
+  const paperColumns = tableInfo(db, "papers").map((column) => column.name);
+  if (!paperColumns.includes("trashed_at")) {
+    db.run("ALTER TABLE papers ADD COLUMN trashed_at TEXT");
+  }
+  db.run("CREATE INDEX IF NOT EXISTS papers_by_trashed ON papers(trashed_at)");
+
+  const nodeColumns = tableInfo(db, "workspace_nodes").map((column) => column.name);
+  if (!nodeColumns.includes("trashed_at")) {
+    db.run("ALTER TABLE workspace_nodes ADD COLUMN trashed_at TEXT");
+  }
+  if (!nodeColumns.includes("trash_root_id")) {
+    db.run("ALTER TABLE workspace_nodes ADD COLUMN trash_root_id TEXT");
+  }
+  db.run("CREATE INDEX IF NOT EXISTS workspace_nodes_trashed ON workspace_nodes(trashed_at)");
+  db.run("CREATE INDEX IF NOT EXISTS workspace_nodes_trash_root ON workspace_nodes(trash_root_id)");
+}
+
 const MIGRATIONS: SchemaMigration[] = [
   { from: 1, to: 2, run: migrateV1ToV2 },
   { from: 2, to: 3, run: migrateV2ToV3 },
   { from: 3, to: 4, run: migrateV3ToV4 },
   { from: 4, to: 5, run: migrateV4ToV5 },
   { from: 5, to: 6, run: migrateV5ToV6 },
+  { from: 6, to: 7, run: migrateV6ToV7 },
 ];
 
 export function applySqliteSchemaMigrations(db: Database): number {
@@ -311,6 +330,9 @@ export function applySqliteSchemaMigrations(db: Database): number {
     db.run("DROP INDEX IF EXISTS papers_by_hash");
     db.run("CREATE UNIQUE INDEX IF NOT EXISTS papers_unique_hash ON papers(source_file_hash)");
     db.run("CREATE INDEX IF NOT EXISTS annotations_by_paper_block ON annotations(paper_id, block_id)");
+    db.run("CREATE INDEX IF NOT EXISTS papers_by_trashed ON papers(trashed_at)");
+    db.run("CREATE INDEX IF NOT EXISTS workspace_nodes_trashed ON workspace_nodes(trashed_at)");
+    db.run("CREATE INDEX IF NOT EXISTS workspace_nodes_trash_root ON workspace_nodes(trash_root_id)");
     setSchemaVersion(db, SQLITE_SCHEMA_VERSION);
     db.run("PRAGMA foreign_keys = ON");
     return SQLITE_SCHEMA_VERSION;

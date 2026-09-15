@@ -8,7 +8,6 @@ import { useProjectStore } from "../../stores/projectStore";
 import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";
 import { derivePaperReadiness } from "../../domain/paperReadiness";
 import { tryStartPdfImport } from "../../services/pdfImport";
-import { PaperDeleteControls } from "./PaperDeleteControls";
 import { PaperCard } from "./PaperCard";
 import { PaperMenu } from "./PaperMenu";
 import { ImportJobCard } from "./ImportJobCard";
@@ -28,15 +27,14 @@ export function LibraryScreen() {
   const visiblePapers = useLibraryPaperSearch(papers, searchQuery);
   const recovery = useImportJobRecovery({ fileInputRef });
 
-  const { pendingId, error, busy, requestDelete, cancelDelete, confirmDelete } =
-    useDeletePaper();
+  const { busyId, requestDelete } = useDeletePaper();
 
   const handleFileSelect = useCallback(async (file: File) => {
     await tryStartPdfImport(file);
   }, []);
 
   const handleOpenPaper = (paperId: string) => {
-    if (pendingId === paperId) return;
+    if (busyId === paperId) return;
     const paper = papers.find((item) => item.id === paperId);
     if (!paper) return;
     const view = derivePaperReadiness({
@@ -109,26 +107,14 @@ export function LibraryScreen() {
               <PaperCard
                 key={paper.id}
                 paper={paper}
-                enabled={pendingId !== paper.id}
+                enabled={busyId !== paper.id}
                 onOpen={() => handleOpenPaper(paper.id)}
                 actions={
-                  pendingId === paper.id ? (
-                    <PaperDeleteControls
-                      paperId={paper.id}
-                      pendingId={pendingId}
-                      error={error}
-                      busy={busy}
-                      onRequest={requestDelete}
-                      onConfirm={confirmDelete}
-                      onCancel={cancelDelete}
-                    />
-                  ) : (
-                    <PaperMenu
-                      paper={paper}
-                      variant="library"
-                      onDeleteRequest={requestDelete}
-                    />
-                  )
+                  <PaperMenu
+                    paper={paper}
+                    variant="library"
+                    onDeleteRequest={requestDelete}
+                  />
                 }
               />
             ))}

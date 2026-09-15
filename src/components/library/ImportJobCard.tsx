@@ -53,6 +53,9 @@ export function ImportJobCard({
       case "open_existing":
         if (job.existingPaperId) onOpenExisting?.(job.existingPaperId);
         break;
+      case "restore_existing":
+        if (job.existingPaperId) onOpenExisting?.(job.existingPaperId);
+        break;
       case "dismiss":
         onDismiss?.(job.id);
         break;
@@ -135,6 +138,7 @@ export function ImportJobCard({
           <div className={styles.importActions}>
             {actions.map((action) => {
               if (action === "open_existing" && !job.existingPaperId) return null;
+              if (action === "restore_existing" && !job.existingPaperId) return null;
               if (action === "readd" && !onReadd) return null;
               const label = actionLabel(action);
               const icon =

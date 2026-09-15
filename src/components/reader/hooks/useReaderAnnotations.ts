@@ -107,6 +107,8 @@ export function useReaderAnnotations(opts: {
       root?.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
     };
+    // Mode only: fallback updates from this listener must not rebind it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- memoSurface.fallback churn
   }, [memoSurface?.mode, contentRef]);
 
   const reloadAnnotations = useCallback(async () => {

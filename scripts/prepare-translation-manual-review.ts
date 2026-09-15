@@ -27,8 +27,16 @@ const reportPaths = [path.join(reportsDir, "translation-audit.json")];
 const reports = reportPaths.map((reportPath) =>
   JSON.parse(fs.readFileSync(reportPath, "utf8")) as AuditReport,
 );
-const old = fs.existsSync(reviewPath) ? JSON.parse(fs.readFileSync(reviewPath, "utf8")) as { reviews?: ExistingReview[] } : {};
-const saved = new Map((old.reviews ?? []).map((review) => [review.key, review]));
+const latestModelVersion = reports.flatMap((report) => report.papers.flatMap((entry) => entry.rows))
+  .map((row) => String(row.modelVersion ?? ""))
+  .find((version) => version.length > 0) ?? "unknown";
+const old = fs.existsSync(reviewPath)
+  ? JSON.parse(fs.readFileSync(reviewPath, "utf8")) as { reviews?: ExistingReview[]; archivedReviews?: ExistingReview[] }
+  : {};
+// Rehydrate archived annotations before rebuilding the current-key queue; this
+// prevents a regenerated report from silently dropping historical judgments.
+const priorReviews = [...(old.reviews ?? []), ...(old.archivedReviews ?? [])];
+const saved = new Map(priorReviews.map((review) => [review.key, review]));
 const queue = new Map<string, ExistingReview>();
 const completedPaperIds = new Set<string>();
 for (const report of reports) for (const entry of report.papers) for (const row of entry.rows) {
@@ -98,7 +106,7 @@ const previousProgress = fs.existsSync(progressPath)
 const progress = {
   ...previousProgress,
   phase: "phase-2",
-  lastBenchmarkVersion: "3b-mt-v5-semantic-v50",
+  lastBenchmarkVersion: latestModelVersion,
   completedPapers: [...completedPaperIds].sort(),
   pendingPapers: [], reviewedBlocks: completed, archivedReviewedBlocks: archivedReviews.length, pendingManualReview: reviews.length - completed,
   unresolvedFailures: [

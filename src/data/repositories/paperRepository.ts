@@ -39,6 +39,7 @@ function rowToPaper(row: Record<string, unknown>): Paper {
     favorite: Number(row.favorite ?? 0) === 1,
     lastOpenedAt: row.last_opened_at ? String(row.last_opened_at) : undefined,
     packageRevision: Number(row.package_revision ?? 0),
+    trashedAt: row.trashed_at == null ? null : String(row.trashed_at),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
   };
@@ -54,8 +55,8 @@ export function upsertPaperIndex(db: SqliteClient, paper: Paper): void {
       id, source_file_hash, title_original, title_translated, authors_json,
       publication, year, page_count, processing_status, favorite, last_opened_at,
       last_read_block_id, last_read_offset, source_file_name, source_stored_path,
-      package_revision, needs_translation_resume, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      package_revision, needs_translation_resume, trashed_at, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       source_file_hash=excluded.source_file_hash,
       title_original=excluded.title_original,
@@ -73,6 +74,7 @@ export function upsertPaperIndex(db: SqliteClient, paper: Paper): void {
       source_stored_path=excluded.source_stored_path,
       package_revision=excluded.package_revision,
       needs_translation_resume=excluded.needs_translation_resume,
+      trashed_at=excluded.trashed_at,
       updated_at=excluded.updated_at`,
     [
       paper.id,
@@ -92,6 +94,7 @@ export function upsertPaperIndex(db: SqliteClient, paper: Paper): void {
       paper.sourceStoredPath ?? null,
       paper.packageRevision ?? 0,
       needsResume ? 1 : 0,
+      paper.trashedAt ?? null,
       paper.createdAt,
       paper.updatedAt,
     ]
@@ -104,7 +107,33 @@ export function getPaperIndex(db: SqliteClient, id: string): Paper | undefined {
 }
 
 export function getAllPaperIndexes(db: SqliteClient): Paper[] {
-  return db.query("SELECT * FROM papers ORDER BY updated_at DESC").map(rowToPaper);
+  return db
+    .query("SELECT * FROM papers WHERE trashed_at IS NULL ORDER BY updated_at DESC")
+    .map(rowToPaper);
+}
+
+export function getTrashedPaperIndexes(db: SqliteClient): Paper[] {
+  return db
+    .query("SELECT * FROM papers WHERE trashed_at IS NOT NULL ORDER BY trashed_at DESC")
+    .map(rowToPaper);
+}
+
+export function getExpiredTrashedPaperIndexes(db: SqliteClient, cutoffIso: string): Paper[] {
+  return db
+    .query(
+      "SELECT * FROM papers WHERE trashed_at IS NOT NULL AND trashed_at <= ? ORDER BY trashed_at ASC",
+      [cutoffIso]
+    )
+    .map(rowToPaper);
+}
+
+export function setPaperTrashedAt(db: SqliteClient, paperId: string, trashedAt: string | null): void {
+  const now = new Date().toISOString();
+  db.exec("UPDATE papers SET trashed_at = ?, updated_at = ? WHERE id = ?", [
+    trashedAt,
+    now,
+    paperId,
+  ]);
 }
 
 export function getPaperIndexByHash(db: SqliteClient, hash: string): Paper | undefined {
@@ -116,8 +145,9 @@ export function listResumeCandidatePaperIds(db: SqliteClient): string[] {
   return db
     .query(
       `SELECT id FROM papers
-       WHERE needs_translation_resume = 1
-          OR processing_status IN ('queued','extracting','structuring','glossary','translating','partial','failed')`
+       WHERE trashed_at IS NULL
+         AND (needs_translation_resume = 1
+          OR processing_status IN ('queued','extracting','structuring','glossary','translating','partial','failed'))`
     )
     .map((row) => String(row.id));
 }

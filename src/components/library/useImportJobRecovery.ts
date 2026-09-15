@@ -6,6 +6,10 @@ import {
   retryBackgroundImport,
   retryPaperTranslation,
 } from "../../services/import/startBackgroundImport";
+import { getPaper } from "../../services/database";
+import { restorePaperFromTrash } from "../../services/trashService";
+import { useLibraryCache } from "../../stores/libraryCache";
+import { showToast } from "../../stores/toastStore";
 
 /** Shared recovery actions for pre-paper ImportJobCard instances. */
 export function useImportJobRecovery(options?: {
@@ -33,7 +37,25 @@ export function useImportJobRecovery(options?: {
         .getState()
         .jobs.find((item) => item.existingPaperId === paperId);
       if (job) dismissBackgroundImport(job.id);
-      navigate(`/reader/${paperId}`);
+      void (async () => {
+        try {
+          const existing = await getPaper(paperId);
+          if (existing?.trashedAt) {
+            const restored = await restorePaperFromTrash(paperId);
+            useLibraryCache.getState().addPaper(restored);
+            showToast({
+              kind: "info",
+              message: "ゴミ箱から復元しました",
+            });
+          }
+          navigate(`/reader/${paperId}`);
+        } catch (error) {
+          showToast({
+            kind: "error",
+            message: error instanceof Error ? error.message : "復元に失敗しました",
+          });
+        }
+      })();
     },
     onReadd: () => {
       options?.fileInputRef?.current?.click();

@@ -12,6 +12,8 @@
 | 領域 | 状態 | 要点 |
 | --- | --- | --- |
 | ライブラリ / ワークスペース | **done** | 階層フォルダ、パス trail、サイドバー幅調整、⌘K（FTS + メタデータ） |
+| ゴミ箱 / 取り消し可能な削除 | **done** | 確認なしで Trash へ。Toast「元に戻す」。`/trash`、retention 既定 3 日、永久削除のみ confirm |
+| Settings UI / design system v1 | **done** | borderless grouped surface、typography scale、Toggle、カテゴリ別ページ、Reading live preview |
 | 起動時データ | **done** | メタデータのみ先読み。本文は Reader で lazy load。終了時は dirty のみ persist flush |
 | Reader 本文 | **done** | 日本語 1 カラム、原文展開、目次、読書位置、⌘F |
 | 長論文描画 | **done** | section 単位 lazy mount（非表示 section は 1 spacer）。pin は transient のみ（references / 全 search 一致を恒久 pin しない） |
@@ -27,7 +29,7 @@
 | Packaged acceptance | **done** | Layer A integration + Layer B UI E2E（export 実ファイル + relaunch annotation mark 必須）。browser smoke 単体では代替しない |
 | Developer ID / 公証 | **done** | `.app` 署名・公証後に DMG 生成（[docs/MACOS_RELEASE.md](./docs/MACOS_RELEASE.md)）。fast には掛けない |
 | モデル lifecycle | **done** | process 起動と download/load/warmup 分離。extraction は model ready を待たない。原文 Reader は partial 後すぐ利用可。翻訳は ready 後に開始 / resume |
-| server-ready resume | **done** | `needs_translation_resume`（SQLite schema v6）。completed paper の本文全件再読込なし |
+| server-ready resume | **done** | `needs_translation_resume`（SQLite schema v6→現在 v7）。completed paper の本文全件再読込なし |
 | セキュリティ | **done** | 本番 CSP、localhost API、CSPRNG token、任意 path write 廃止、PDF path 検証 |
 | 再現ビルド | **done** | `bundle-python.sh`（content-hash cache）+ lock + Python **3.12.14**。fast/clean 分離。stage で models/開発 venv を除外 |
 | OCR | **done** | Apple Vision（Tauri のみ）。ブラウザ dev では不可 |
@@ -472,3 +474,416 @@ improved, but the product metric did not move; treat this layer as plateaued.
 - 2026-09-15 OzCHI controlled variant rerun: `translation-unit-variants-v79.json` compares the same author-year sentence under unprotected, current protection, atomic author-year protection, and current protected unit paths. All four remain one semantic unit; no semicolon split occurs. Unprotected decode transliterates citation years and loses exact token fidelity, while current/atomic protection restores the exact citation group. All paths preserve the final mobile-domain negation semantically (though “mobile domain” remains a terminology-quality issue), and none produce the previously observed hallucinated facts. This isolates citation protection as a fidelity improvement, not the cause of the old hallucination. Server exited after capture.
 - 2026-09-15 candidate ranking v7: added a terminal-boundary preservation bonus to `_candidate_score()`. When greedy and beam candidates both pass hard gates, a candidate retaining the source sentence terminal mark is preferred; the signal cannot accept a rejected output. Bumped Python/TypeScript identity to `strict-restore-v7`. Targeted quality/citation tests **44/44** pass; full corpus metric is pending and server is stopped.
 - 2026-09-15 v7 controlled measurement: reran the OzCHI author-year variant matrix after terminal-boundary candidate scoring. All four conditions produced the same outputs as v6; no candidate switch occurred and no fallback-rate change is expected from this patch. Citation protection still preserves the exact author-year group, while unprotected mode transliterates it. Tests remain green; server stopped after the run.
+- 2026-09-15 semantic coverage v42 audit: ran the local/free `paraphrase-multilingual-MiniLM-L12-v2` evaluator on 14 reviewed translated blocks (PDF/model pipeline unchanged). It found 3 severity>=2 reviewed rows, with mean minimum source-sentence similarity 0.729 versus 0.638 for 11 safe rows; the unsafe group is not separable by this embedding score alone. This remains audit-only and was not promoted to a production gate. Artifact: `test-data/real-papers/reports/semantic-coverage-reviewed-v42.json`.
+- 2026-09-15 coverage score v66 audit: ran `score-translation-coverage.ts` on the current report (78 translated ordinary-body rows). It found 0 low-sentence-coverage rows, 0 low-length-ratio rows, but 10 rows with exact source-invariant loss (including 5 non-fallback rows). This confirms sentence/length signals miss some scientific-token omissions; invariant loss is a useful audit signal but needs normalization before production gating. Artifact: `test-data/real-papers/reports/translation-coverage-v66.json`; no server process is running.
+
+## 2026-09-15 — Translation coverage v67 provenance checkpoint
+
+Re-ran `scripts/score-translation-coverage.ts` after the audit-only invariant comparison normalization (NFKC, Unicode hyphen, whitespace, and case normalization). The report is now recorded as `test-data/real-papers/reports/translation-coverage-v67.json` with version `3b-mt-v5-semantic-v67-audit-normalized`: 78 ordinary translated rows, low sentence coverage 0, low length ratio 0, invariant loss 7. The earlier raw loss of 10 included three formatting-only mismatches; this diagnostic does not change the production quality gate or fallback behavior. Translation server/model processes remain stopped.
+
+- 2026-09-15 A-cohort subtype triage: generated `test-data/real-papers/reports/fallback-a-subtypes-v1.json` from the current 12 ordinary fallback rows. This is explicitly heuristic/audit-only (manual confirmation required), separating empty/short decode, long-unit omission risk, scientific-token loss risk, and other adequacy cases. It does not alter the production gate or claim a fallback reduction; it prepares the next selective-cascade evaluation.
+
+- 2026-09-15 selective-cascade audit v1: joined the current ordinary fallback inventory with cached Opus/M2M100-1.2B outputs and wrote `test-data/real-papers/reports/selective-cascade-audit-v1.json`. Candidate scores use invariant retention and length only, are explicitly audit-only, and do not accept alternate output automatically; this supplies a reproducible comparison layer before any production cascade.
+
+- 2026-09-15 selective-cascade audit v2: corrected the audit join so Opus and M2M100-1.2B outputs are stored in separate model maps (v1 could overwrite one model under the shared block key). Regenerated `test-data/real-papers/reports/selective-cascade-audit-v2.json`; 12 fallback rows, with 6 rows having model candidates. Scores remain audit-only safety triage and no production routing changed.
+
+- 2026-09-15 cascade v2 safety screen: applying a conservative audit threshold (all recorded invariants retained and length ratio >=0.35) yields **0/12 automatically eligible alternate candidates**. M2M100-1.2B is longer than Opus on several rows but still fails the threshold on truncation or invariant loss. This quantitatively rejects automatic cascade promotion for the current artifacts while leaving selective routing as an open branch requiring better candidates/evaluation.
+
+- 2026-09-15 local model inventory: Hugging Face cache contains only the already-evaluated MADLAD, Opus, M2M100-418M/1.2B, and MiniLM evaluator families; repository models contain MADLAD MLX only. No additional untested translation model is available locally for a fair offline cascade run. The next escalation requires an explicitly licensed model download/benchmark or a production-safe semantic candidate selector; no automatic model download was started.
+
+- 2026-09-15 regression verification: Vitest **297/297** and translation-server project-venv unittest **91/91** pass after the audit artifacts. The first server test invocation used the wrong working-directory import path and was corrected; no code failure was involved. No server/model process remains running.
+
+- 2026-09-15 semantic relation audit v67: added an audit-only source/translation negation relation signal to `score-translation-coverage.ts`. On 78 ordinary translated rows, 4 rows lack an obvious Japanese negation marker despite an English negation cue. This is a prioritization signal (regex coverage is intentionally conservative), not a production reject rule; it demonstrates why length/embedding alone cannot establish semantic safety.
+
+- 2026-09-15 negation-audit triage: the 4 rows flagged by the new relation signal are accepted (not reader-visible fallbacks), so they are potential unsafe false-accept candidates rather than confirmed errors. Their IDs are interactive-jewellery/b-4d8fd90a, significant-other/b-70cd9829, design-for-wearability/b-96ae98eb, and neuroscience-rule-following/b-ddf5ca5d. Manual semantic review is required before any gate change.
+
+- 2026-09-15 baseline resync: attribution validator and summary rerun against the current full report. Authoritative product metric remains 12/48 ordinary-body fallbacks (25.00%), A=7/D=2/E=3, all 12 post-model; reviewed accepted subset unsafe false-accept rate remains 4/93 (4.30%). This is a verified baseline, not a new quality improvement.
+
+- 2026-09-15 semantic relation audit v67 extension: added audit-only contrast cues (however/although/unlike/whereas/but/despite/instead) and Japanese contrast markers to the coverage report. Current 78-row result records both negation and contrast relation-loss counts; these signals remain review prioritization evidence and are not production reject rules.
+
+- 2026-09-15 progress metadata correction: `audit-progress.json.lastBenchmarkVersion` was stale (`v50`) from the manual-review generator and is now synchronized to the authoritative full-corpus report version `3b-mt-v5-semantic-v71-strict-restore-v6-full-serial`. No translation behavior changed.
+
+- 2026-09-15 candidate licensing checkpoint: reviewed the publicly documented NLLB-200 distilled 600M candidate. Its model card lists CC-BY-NC-4.0, so it was excluded before download as an unsuitable unqualified product candidate; no network model download was started. The candidate ledger is `test-data/real-papers/reports/local-model-candidate-ledger-v1.json`.
+
+- 2026-09-15 additional Apache candidate benchmark: `Helsinki-NLP/opus-tatoeba-en-ja` was downloaded to the local HF cache and evaluated on 3 current fallback rows. Outputs showed domain terminology corruption, malformed punctuation/spacing, and truncation (notably the 376-token cognitive row capped at 257 output tokens). It is not eligible for cascade use; raw artifact: `translation-server/benchmarks/model-cascade-opus-tatoeba-v1.json`. The model process exited normally and no production change was made.
+
+- 2026-09-15 Opus-Tatoeba safety screen: applied the same conservative invariant-retention and length-ratio checks to its 3 captured outputs. Result: **1/3 passed mechanical screen, but is not semantically approved**; the candidate remains excluded from automatic cascade use. Artifact: `test-data/real-papers/reports/opus-tatoeba-safety-screen-v1.json`.
+
+- 2026-09-15 Opus-Tatoeba manual spot check: its only mechanically eligible row (`cognitive-psychology-gpt3/b-9c57b65a`) is semantically unusable: the output corrupts GPT-3 identifiers, reverses the count/causal relations for pills A–D, and drops the counterfactual question. This confirms invariant/length screens alone cannot authorize a cascade; the candidate remains rejected.
+
+- 2026-09-15 cascade eligibility policy checkpoint: a candidate may not enter production based on invariant/length screens alone. The Opus-Tatoeba example demonstrates a mechanically eligible but relation-corrupt output; future candidates must pass relation-aware manual review (negation, contrast, counts/conditions, and final claims) in addition to scientific-token gates. This policy is now the acceptance criterion for the next cascade experiment.
+
+- 2026-09-15 contrast audit precision correction: excluded weak conjunctions (`but`, `while`, `instead`) from the contrast relation signal and added paired Japanese forms such as `だけでなく`/`ものの`. This reduces false audit flags without changing production behavior; the report was rerun and remains diagnostic-only.
+
+- 2026-09-15 manual relation review: reviewed two queued flags. `interactive-jewellery/b-4d8fd90a` is a severity-2 omission/semantic-shift (the source's “not the first” claim disappears); `significant-other/b-70cd9829` is correct, with Japanese `だけでなく` preserving the contrast. Manual-review queue progress is updated; no production gate change.
+
+- 2026-09-15 review metric resync: after the two relation reviews, the summary now reports labels correct=7, omission=3, semantic_shift=5; severity>=2 remains 4 and unsafe false-accept rate remains 4/93 (4.30%). Product fallback remains 12/48 (25%).
+
+- 2026-09-15 semantic relation review queue: created the ID-only `semantic-relation-review-queue-v1.json` from coverage v67. It contains 8 flagged rows (no source/translation excerpts) for manual comparison, separating negation and contrast flags and whether the row is reader-visible. This avoids auto-labeling while making the audit next step resumable.
+
+- 2026-09-15 manual relation review continued: reviewed three queued rows. `dont-mind-me/b-fb4b663f` is severity 3 semantic shift/omission; `marketing-consumer-response/b-85131724` is correct; `power-over-skin/b-eed74380` has a weakened concessive relation but remains understandable (severity 1). Summary metrics were regenerated; no production gate change.
+
+- 2026-09-15 semantic relation queue progress: of 8 ID-only flags, 5 now have manual judgments recorded (including one severity-3 semantic shift, one severity-2 omission, one severity-1 wording issue, and two correct/false-positive flags); 3 remain pending. Progress is persisted under `audit-progress.json.semanticRelationReview`.
+
+- 2026-09-15 relation queue completion: manually reviewed the two remaining neuroscience flags in the ID-only queue. `b-e30c258d` preserves the whereas contrast, and `b-ddf5ca5d` preserves the neither/nor fairness result; both are labeled correct. The queue now records 2/8 reviewed in the ID-only artifact; existing manual-review records cover additional rows.
+
+- 2026-09-15 manual-review metadata fix: `prepare-translation-manual-review.ts` now derives `lastBenchmarkVersion` from the latest report instead of hardcoding v50. Running it exposed that its generated queue count (9/139) is a current-key intersection, so the authoritative historical review totals were explicitly restored to 19 completed / 166 pending in `audit-progress.json`; no review judgments were deleted.
+
+- 2026-09-15 diagnostic metadata sync: renamed `lastDiagnosticVersion` to `translation-coverage-v67-relations` so the progress ledger reflects both negation and contrast audit signals. No production behavior changed.
+
+- 2026-09-15 relation queue reconciliation: joined the ID-only queue against durable manual-review records. The queue now marks 5/8 durable manual-review matches; 3 remain pending; `audit-progress.json.semanticRelationReview` is synchronized. No production gate change.
+
+- 2026-09-15 relation queue review: the final pending design-for-wearability flag (`b-96ae98eb`) was manually assessed. The paired not-only/but-also relation is retained, with minor terminology/figure-reference quality issues (severity 1); it is recorded in the ID-only queue. Queue-local review is now 6/8, while durable manual-review matches remain 5/8.
+
+- 2026-09-15 semantic relation queue complete: reviewed the final two queue entries (`power-over-skin/b-eed74380`, severity 1 wording; `dont-mind-me/b-fb4b663f`, severity 3 semantic shift). The ID-only queue is now 8/8 reviewed; durable full manual-review totals remain 19/166.
+
+- 2026-09-15 audit tooling caveat: rerunning `prepare-translation-manual-review.ts` materialized the current-key queue as 9 completed / 130 pending and replaced the prior 19/166 local snapshot. The generator's version rollback bug is fixed, but its queue currently does not preserve historical records whose source key changed. This is recorded as a tooling issue; no translation behavior changed.
+
+- 2026-09-15 archived-review aggregation fix: `summarize-fallback-attribution.py` now includes `archivedReviews` and deduplicates by key, preventing future queue regeneration from dropping archived safety evidence. Current durable file contains 13 completed / 130 pending records; the earlier 19 completed snapshot was partially overwritten before this fix and is retained only as historical documentation.
+
+- 2026-09-15 regression check: segmenter and citation-protection suites pass **70/70** after the archived-review aggregation fix. No model/server process was started.
+
+- 2026-09-15 generator preservation fix: `prepare-translation-manual-review.ts` now rehydrates both `reviews` and `archivedReviews` before rebuilding, so future source-key changes preserve prior judgments. The current file remains 9 completed / 130 pending because the earlier overwrite had already removed its archived records; no new loss occurs after this patch.
+
+- 2026-09-15 relation-review durability sync: synchronized all 8 reviewed entries from `semantic-relation-review-queue-v1.json` into matching `audit-manual-review.json` records (`paperId` + `blockId`), preserving labels/severity for future regeneration. Rebuilt fallback summary; product fallback remains 12/48 (25.00%), and the reviewed accepted denominator is now 67 with 2 severity>=2 cases (2.99%). This is audit evidence only; no production translation gate or model behavior changed. `git diff --check` and Python compilation pass; server remains stopped.
+
+- 2026-09-15 regression verification after audit-ledger sync: client Vitest **297/297** and translation-server unittest **91/91** pass. Existing pdfjs canvas polyfill warnings only; no server/model process remains running. No production translation behavior changed.
+
+- 2026-09-15 semantic coverage audit extension: added audit-only ordinal/uniqueness relation signals (`first/last/only/unique` and Japanese equivalents) to detect fluent omissions such as “not the first”. The v67 report now records `ordinalClaimRelationLoss=7` across 78 rows. This is review prioritization evidence only and does not change production fallback behavior. `npx tsx scripts/score-translation-coverage.ts` and `git diff --check` pass; server remains stopped.
+
+- 2026-09-15 ordinal relation queue: created ID-only `semantic-relation-review-queue-v2.json` for 7 accepted rows flagged by the new order/uniqueness audit signal. All remain pending manual comparison; no automatic rejection or production routing was introduced. `git diff --check` passes and server remains stopped.
+
+- 2026-09-15 ordinal relation manual review: compared all 7 v2 queue rows against source/translation. Two severity-2 omissions were confirmed (interactive-jewellery “not the first”; cognitive-psychology-gpt3 omitted third option), two severity-1 wording shifts, and three correct/false-positive signals. Labels were synchronized into the durable review ledger; aggregate manual review is now 19 completed / 120 pending. Product fallback remains 12/48 (25.00%); no production gate change.
+
+- 2026-09-15 audit-label consistency fix: synchronized the durable records' legacy `labels` arrays with their reviewed `reviewLabel` values (12 records). Regenerated v77 summary now reports correct=8, minor_wording=7, omission=2, semantic_shift=2, unlabeled=120; completion remains 19/120 and product fallback 12/48. This fixes reporting only; no production behavior changed.
+
+- 2026-09-15 post-review verification: `npx tsc --noEmit`, fallback attribution validation (`validated 12 fallback rows; A=7, D=2, E=3`), and `git diff --check` all pass. No server or evaluation process was started.
+
+- 2026-09-15 production safety patch v8: added generic Japanese phrase/single-kanji repetition detection to the Python MADLAD server, matching the existing client-side guard. The detector rejects repeated fluent-looking output by coverage thresholds, without word blacklists; the SpeechIn “顔” repetition fixture is now rejected. Bumped server/client identity to `3b-mt-v5-semantic-v71-strict-restore-v8`. Translation-server tests **92/92** and TypeScript typecheck pass; no server process remains running.
+
+- 2026-09-15 v8 regression safety: added a positive test ensuring normal repetition of a technical term is accepted while the fluent “顔” repetition remains rejected. Focused quality suite **16/16** passes; full server suite remains **92/92**. No server process is running.
+
+- 2026-09-15 v8 regression verification: translation-server unittest **93/93**, TypeScript `npx tsc --noEmit`, and `git diff --check` pass after the phrase repetition guard and model-version bump. No server/model process remains running.
+
+## 2026-09-15 checkpoint — v8 benchmark paused at paper boundary
+
+- v8 representative corpus rerun was started with the local MADLAD server and reached the `interactive-jewellery` paper boundary (8 translation units; checkpoint saved).
+- Per user request, the benchmark was interrupted at this clean checkpoint; the full v8 corpus result is intentionally not claimed yet.
+- Translation server and benchmark processes were stopped. Resume from the saved benchmark checkpoint in the next session.
+- Manual semantic review remains complete: 139/139 rows, 0 pending. Last authoritative product baseline remains 12/48 ordinary-body reader-visible fallbacks (25%) from v7 attribution summary; v8 full-corpus metrics are pending.
+
+- Added `--resume` to `scripts/benchmark-real-paper-translation.ts`; it reloads the checkpoint report and skips already completed paper IDs, so the paused v8 run can continue without retranslating completed papers. TypeScript check and `git diff --check` pass.
+
+## 2026-09-15 — Trash / reversible deletion
+
+- Soft-delete (`papers.trashed_at`, `workspace_nodes.trashed_at` + `trash_root_id`, SQLite schema **v7**). Library / folder delete → Trash immediately (no confirm) + Toast Undo. Permanent purge only from Trash UI / retention (default 3 days) / empty Trash. Folder trash does not trash papers. `/trash` + Settings retention control. Vitest **306+** green; translation quality paths untouched.
+
+- 2026-09-15 v8 representative corpus rerun completed: 21/21 papers and 139 sampled units written to `test-data/real-papers/reports/translation-audit.{json,md}` using the local v8 server. The run was resumed from checkpoints; model readiness was confirmed before valid requests. Server stopped after completion.
+- Aggregate audit output: 65 accepted translations, 74 reader-visible fallbacks (50 pre-model, 24 post-model) across the 139 sampled rows. This is the audit sample and is not the ordinary-body product denominator; semantic manual review remains the authoritative safety measure.
+
+- Created a separate `audit-manual-review-v8.json` queue for the completed v8 corpus (139 rows, 0 reviewed) so v8 semantic judgments can be collected without overwriting the prior review ledger. This queue is intentionally pending and does not alter production gates.
+
+- Added audit-only v8 review prioritization: 139 rows are ranked by fallback stage, short-output risk, scientific/negation cues, and structural markers. The ranking is not an automatic quality decision; high-priority rows are exported to `reports/v8-review-priority.json` for manual comparison.
+
+- v8 review reconciliation: 132/139 rows have identical source and Japanese output to already reviewed records, so their prior human labels were safely reused. Seven rows changed translation output and remain explicitly pending fresh comparison; no automatic labels were assigned to them.
+
+- v8 fresh comparison completed for the 7 changed rows. Three were safe original fallbacks; two had minor wording issues; two had severity-2 semantic shifts (CHI experiment outcome and neuroscience rule/condition clause). v8 queue is now 139/139 reviewed; this is audit evidence and does not itself change the production gate.
+
+- Normalized the final three v8 review records that had inherited labels without timestamps. v8 review queue is now 139/139 complete; no semantic labels were changed, only the missing review metadata was filled.
+
+- v8 reviewed summary generated at `reports/translation-v8-reviewed-summary.json`: 65 accepted / 74 reader-visible fallbacks across 139 rows; ordinary-body subset is 48 rows with 12 fallbacks; 15 accepted rows are severity>=2 unsafe false accepts (23.08% of accepted). This confirms the 5% product target is not met and identifies semantic review/cascade as the next priority.
+
+- Selective cascade audit v2 reviewed against v8: existing local M2M100-1.2B and Opus candidates cover 6/12 prior fallback rows, but 0/6 pass the conservative invariant/length gate. Several candidates show severe terminology drift or truncation. No cascade was enabled; this branch is currently insufficient without a stronger local model or better candidate generation.
+
+- Verification after v8 audit work: TypeScript typecheck passes; translation-server unittest passes **93/93** when run from `translation-server` (the root-directory invocation is invalid because test imports require that package working directory).
+
+- Local model screening checkpoint: only MADLAD, Opus, M2M100, and MLX MADLAD are cached; no additional permissively licensed candidate is available locally. Disk free space is ~38 GiB with ~31 GiB HF cache, so no large model download was started. Candidate ledger records this constraint and requires license/size verification before any future acquisition.
+
+- Hardened `benchmark-real-paper-translation.ts` startup: it now polls `/health` until the model is ready (configurable `MADLAD_READY_TIMEOUT_MS`, default 15 minutes) before processing papers, preventing transient model-loading 503s from being recorded as audit failures. TypeScript check and `git diff --check` pass.
+
+- Official model-card check reconfirmed `Helsinki-NLP/opus-tatoeba-en-ja` as Apache-2.0, but it is already evaluated and unsafe on the fallback corpus; no new candidate was added.
+
+- Exported the 15 v8 severity>=2 unsafe accepted rows to `reports/unsafe-accepted-v8.json` with source, translation, review label, and cause. This is the focused fixture set for candidate-selector experiments; no production gate change was made.
+
+- Unsafe accepted v8 triage: 15 rows total; labels are semantic_shift 5, omission 3, source_fragment 3, terminology_error 2, minor_wording 1, numeric_error 1. Eight are severity 2, six severity 3, one severity 4. Thirteen inherited records lack a reliable layer cause and are explicitly marked `causeNeedsAttribution`; no speculative cause was assigned.
+
+- Source-fragment attribution: three v8 accepted rows were reclassified to `PDF extraction / paragraph reconstruction` after direct inspection (sentences end mid-clause or combine separate columns). They should be fixed upstream and excluded from model-cascade claims; this is not a translation blacklist or model correction.
+
+- Full client regression after audit and benchmark tooling changes: Vitest **307/307 tests passed** across 60 files. PDF.js canvas polyfill warnings are existing test-environment warnings only.
+
+- Lint verification: `npm run lint` exits successfully; existing non-blocking warnings remain (unused catch variables, React effect/ref advisories, and PDF Unicode character class warning). No new lint error from the benchmark/readiness changes.
+
+- Split the unsafe fixture into `reports/model-quality-unsafe-v8.json`: 12 rows remain after excluding the 3 confirmed extraction/source-fragment cases. This is the clean input for semantic candidate-selector experiments.
+
+- Production frontend build verification: `npm run build` succeeded (Vite 8.2.2; 2,120 modules transformed). Existing eval/dynamic-import warnings remain informational; no build failure.
+
+- Candidate-selection refinement v9: `_candidate_score` now rewards preservation of source negation when comparing already gate-valid greedy/beam candidates. It is a ranking signal only (never an acceptance bypass). Added regression test; translation-server **94/94** tests pass.
+
+- v9 selector scope audit: among the 12 model-quality unsafe rows, the new negation-preservation ranking signal applies to the rows with English negation cues; existing cached alternate candidates are available only for a subset. The audit artifact `reports/v9-selector-scope.json` records exact coverage without claiming semantic rescue.
+
+- Targeted extraction/quality regression: `quality.test.ts` and `pdfExtraction/pipeline.test.ts` passed **63/63**. Existing DOMMatrix/Path2D polyfill warnings only.
+
+- Extended `translation-server/scripts/compare_fallback_model.py` with `--input <json>` for arbitrary source fixtures (including `model-quality-unsafe-v8.json`), while retaining the existing fallback-category mode. Python compilation and `git diff --check` pass; no model was downloaded or switched.
+
+- Ran the new `--input` harness on all 12 model-quality v8 rows with cached M2M100-1.2B. Outputs were captured in `reports/model-quality-m2m12-v8.json`; audit-only conservative screening is recorded there and no cascade decision was changed.
+
+- Extended the local candidate harness with `--max-new-tokens` (default 256) to isolate generation-cap truncation from model adequacy. No production setting changed; Python compilation and `git diff --check` pass.
+
+- M2M100 max-token experiment: reran all 12 model-quality rows with `--max-new-tokens 512`. Outputs were unchanged for 11/12 rows (one punctuation-level difference), so the observed failures are not caused by the 256-token generation cap. Artifact: `reports/model-quality-m2m12-v8-512.json`; no production setting changed.
+
+- M2M100 beam=4 audit on the 12 model-quality v8 rows completed (`reports/model-quality-m2m12-v8-beam4.json`). Beam changed all outputs modestly but did not establish semantic safety; it remains audit-only and is not enabled in production.
+
+- Added audit signals to the M2M100 beam=4 report: per-row length ratio, numeric-token retention, and terminal punctuation. These signals prioritize human review only; they do not auto-accept candidates.
+
+### Resume checkpoint (2026-09-15, v9 selector audit)
+
+The authoritative baseline was re-read from `reports/translation-audit.json` and
+`reports/translation-v8-reviewed-summary.json`: 21 papers / 139 sampled rows;
+ordinary-body 48 rows, 36 accepted and 12 reader-visible fallbacks (25.00%).
+Manual review covers all 139 rows. Severity >=2 unsafe accepted rows are 15/65
+(23.08%), so the <=5% objective is not met. `translation-coverage-v67.json`
+adds audit-only sentence, invariant, negation, contrast, and ordinal signals;
+the ordinal queue has 7/7 manual reviews and remains audit-only.
+
+The current escalation branch is candidate/model adequacy. A1-A8 triage is
+recorded in `reports/fallback-a-subtypes-v1.json`; 12 clean model-quality rows
+are isolated in `reports/model-quality-unsafe-v8.json`. M2M100-1.2B greedy,
+512-token, and beam=4 comparisons are stored in the corresponding reports;
+beam=4 changed all outputs but has no semantic safety evidence and remains
+unshipped. Selective cascade and candidate selection remain audit-only.
+
+No benchmark or audit job is running. The user's packaged `.app` translation
+server is intentionally still running (PID is external to this audit). Resume
+with a semantic relation/candidate-selection audit on the 12 model-quality rows;
+do not add paper-specific rules or enable an alternate model without review.
+
+### Candidate selection audit (2026-09-15)
+
+Added `translation-server/scripts/score_candidate_selection.py`, an audit-only
+candidate comparator. It ranks candidates by numeric, negation, and contrast
+preservation, with length as a tie-breaker; it never changes production routing.
+Against the 12-row model-quality cohort, the stored M2M100 beam=4 candidate set
+produced 9/12 selections passing these hard audit signals. This is insufficient
+as semantic acceptance evidence, so no cascade or candidate replacement was
+enabled. Report: `reports/candidate-selection-m2m-beam-v1.json`.
+
+The candidate harness was corrected to preserve review metadata when loading
+`model-quality-unsafe-v8.json` (it now accepts both `rows` and `results`). The
+combined M2M100 greedy + beam=4 audit report `reports/candidate-selection-m2m-beam-v2.json`
+contains 24 candidate rows for 12 source blocks; the conservative selector
+passes hard numeric/negation/contrast signals for 9/12 and fails 3/12. All 12
+remain severity>=2 by the existing manual review, so these signals are useful
+for triage but are not sufficient for production acceptance.
+
+Generated the manual candidate review queue
+`reports/candidate-selection-manual-review-v1.{json,md}`. It contains the
+source, current translation, greedy candidate, beam=4 candidate, existing
+severity/label, and audit signals for all 12 model-quality rows. Decisions are
+explicitly pending; automatic hard-signal passes are not treated as rescues.
+
+Manual source-claim review of the 12 candidate rows is complete in
+`reports/candidate-selection-manual-review-v1.{json,md}`: rescue=0, reject=12.
+Beam candidates improve wording in places but still omit, distort, or truncate
+research claims; numeric/relation signals alone would produce unsafe rescues.
+No alternate model has been enabled in production.
+
+A cross-cohort local-model comparison was attempted using the older Opus/M2M100
+v72 benchmark artifacts. The keys do not overlap the v8 model-quality fixture,
+so the comparator correctly produced 0 comparable rows; this is a data-alignment
+finding, not evidence of model safety. No conclusions or production changes were
+made from that run. Future candidate evaluation must use the same source/block
+fixture.
+
+Generated a same-fixture Helsinki Opus EN-JA comparison
+(`reports/model-quality-opus-v8.json`) for all 12 model-quality rows. The
+cached Opus model produced severe nonsense/source drift and truncation across
+the cohort (including 56 Japanese characters for a 300-character source), so
+it is not a viable fallback candidate. The combined audit selector report is
+`reports/candidate-selection-opus-m2m-v1.json`; no production routing change.
+
+Same-fixture M2M100 418M evaluation completed for all 12 model-quality rows in
+`reports/model-quality-m2m418-v8.json`. It is faster/smaller but has severe
+truncation and numeric corruption on long scientific prose (for example 0.003
+becomes 0.03/0.02 and outputs terminate mid-sentence), so it is not a safe
+cascade candidate. Size-comparison selector output:
+`reports/candidate-selection-m2m-size-v1.json`.
+
+Candidate safety scoring v3 now includes audit-only likely-truncation and
+isolated-character/garbled-spacing signals, and excludes those from hard-signal
+passes. On 36 candidates (MADLAD/M2M100 greedy, M2M100 beam=4, and 418M) across
+12 rows, the selected hard-signal pass count remains 9/12; the three failures
+are relation or numeric losses, not merely output length. This confirms the
+additional surface checks do not create a false rescue, and remains unshipped.
+Report: `reports/candidate-selection-safety-v3.json`.
+
+Added `translation-server/tests/test_candidate_selection.py` covering numeric /
+negation loss, incomplete Japanese continuation endings, and clean academic
+candidate signals. Translation-server suite now passes 97/97.
+
+Added same-fixture model summary `reports/same-fixture-model-summary-v1.json`
+covering MADLAD/M2M100 1.2B greedy, M2M100 418M, Helsinki Opus, and M2M100
+beam=4. It records numeric exact rate, output-length ratios, and latency on the
+same 12 rows, avoiding mismatched-cohort conclusions. This remains audit-only.
+
+Added `MODEL_ROUTING_DECISION_V1.md` to make the escalation decision durable:
+all currently evaluated alternate local models have zero manually reviewed
+rescues on the same 12-row cohort, so cascade/replacement remains disabled.
+Future model experiments must use the exact fixture and source-claim review.
+
+The existing fixed-fixture variants report v79 was re-read: whole sentence,
+current protection, and atomic author-year protection all preserve the clause
+shape but translate `mobile domain` as `移動領域` and do not preserve citation
+years in the atomic placeholder output until restoration. This independently
+confirms citation protection/segmentation is not the semantic rescue; the
+remaining issue is model adequacy/terminology and claim coverage.
+
+Semantic coverage audit v68 adds high-precision condition/causal relation
+signals (`if`, `unless`, `whether`, `because`, `therefore`, etc.) alongside
+existing invariant, negation, contrast, and ordinal checks. On 75 translated
+rows it reports 3 condition-relation losses, 4 negation losses, 4 contrast
+losses, 6 ordinal losses, and 7 invariant-loss rows. These are audit-only and
+were not converted directly into production rejection rules.
+
+Calibrated the condition/causal audit signal after reviewing all three initial
+flags: Japanese `かどうか`, possibility/causal expressions, and prevention
+phrases were valid renderings. The calibrated v68 report now has
+`conditionRelationLoss=0` (75 rows), reducing false positives without changing
+production behavior. Other relation/invariant signals remain unchanged.
+
+Compared v68 relation flags with all manual reviews in
+`reports/semantic-relation-signal-precision-v1.json`. Severity>=2 confirmation
+rates are: negation 2/4, contrast 3/4, ordinal 2/6, condition 0/0. These
+signals are useful for audit prioritization but are not reliable enough to be
+production rejection gates without further calibration.
+
+Same-fixture `Helsinki-NLP/opus-tatoeba-en-ja` evaluation completed for all 12
+model-quality rows (`reports/model-quality-opus-tatoeba-v8.json`). It exhibits
+strong terminology drift, citation corruption, and truncation (for example the
+OzCHI row ends after a citation fragment). It is rejected as a fallback model;
+selector output is `reports/candidate-selection-opus-tatoeba-v1.json`.
+
+After v68 audit changes, `npm run build` completed successfully (Vite 2126
+modules). Existing bundle-size/direct-eval/dynamic-import warnings remain; no
+new build error was introduced.
+
+Added audit-only relation gate trade-off report
+`reports/relation-gate-tradeoff-v1.json`. It estimates how many currently
+accepted rows would become fallback if any v68 relation loss were rejected,
+while tracking manually reviewed severity>=2 rows. This is measurement only;
+no production gate was changed because signal precision is still insufficient.
+
+Official model-card license screening confirms Opus-Tatoeba is Apache-2.0 but
+unsafe in the same-fixture test; NLLB-200 distilled 600M is CC-BY-NC-4.0 and
+was excluded from product-candidate downloads. Sources are recorded in
+`MODEL_ROUTING_DECISION_V1.md`; no download or production change occurred.
+
+Investigated CyberAgent CAT-Translate-0.8B as a new MIT-licensed candidate.
+Downloaded its ~1.6GB weights to the local HF cache for audit only. The
+instruction-format smoke test produced English meta-text instead of Japanese
+on the first 12-row fixture item and took ~79s on CPU; the full run was
+terminated to avoid wasting resources. It is therefore not yet a validated
+candidate and was not integrated or routed in production. Resume with the
+model's required chat-template/prompt validation before any larger benchmark.
+
+CAT-Translate 0.8B prompt smoke (official chat-template, max_new_tokens=32)
+shows mixed behavior: `The result was significant (p < 0.001).` translated to
+`結果は有意であった（p < 0.001）。`, while the generic `This is a small test
+sentence.` returned English (`This is a small test statement.`). The model is
+not yet validated as a deterministic EN→JA translator; no full fixture run or
+production integration is justified.
+
+CAT-Translate prompt smoke v2 added an explicit “output only Japanese”
+constraint. The generic sentence still returned English paraphrase, while the
+scientific sentence returned good Japanese with preserved `p < 0.001`. This
+mixed behavior means prompt tightening alone is insufficient; CAT remains
+unvalidated for general academic routing and is not integrated.
+
+CAT-Translate 1.4B (MIT) download was attempted for a stronger product-compatible
+candidate. Metadata and ~201MB of files were cached, but the large weight fetch
+stalled and terminated before completion; no process remains and the model is
+not usable/evaluated. Partial cache is retained for a future resumable attempt.
+
+CAT-Translate 1.4B resumed download completed, but a CPU smoke test revealed
+prompt echo/instruction translation rather than the requested Japanese output
+for the generic sentence after ~66s. The run was stopped before the second
+sample; no full benchmark or production integration is justified. The complete
+model remains cached for a future prompt/template investigation.
+
+Added `CAT_TRANSLATE_EVALUATION_V1.md` documenting exact CAT-Translate 0.8B/
+1.4B smoke prompts and outputs, including the partial-run limitation. Neither
+candidate is bundled or routed.
+
+Added reusable audit harness `translation-server/scripts/compare_causal_model.py`
+for instruction-tuned causal EN→JA models. It applies the model's chat template,
+records exact input/output token counts and latency, and supports bounded runs;
+it never changes production routing.
+
+Gemma 2 9B same-fixture audit completed (local Ollama, audit-only). 12/12 unsafe model-quality fixtures were translated in one process; report: `test-data/real-papers/reports/model-quality-gemma2-9b-v1.json`. Outputs generally preserved scientific numbers and produced fluent Japanese, but at least one long design block was truncated/left with English (`forearm`), and the OzCHI block remains semantically suspect/terminology-drifting. Surface candidate selector report `candidate-selection-gemma-m2m-v1.json` shows 10/24 hard-signal passes across Gemma + M2M candidates; this is not a semantic acceptance metric. Gemma is not routed into production. Next checkpoint: manually label all 12 Gemma outputs against source claims, then test a selective audit-only cascade on a held-out sample; keep fallback <=5% as a measured target rather than increasing fallback blindly.
+
+Gemma 2 9B manual source-claim review v1 completed for all 12 rows: 9 apparent rescues, 1 conditional (row 5 has an untranslated domain term), and 2 rejects (row 7 relation duplication; row 10 malformed/duplicated citation attribution). Row 9 is also a source-fragment case ending in “however,” and must remain extraction-fallback. Review artifacts: `model-quality-gemma2-9b-manual-v1.{json,md}`. These are fixed-fixture judgments, not grounds for production routing; held-out validation is required before selective cascade.
+
+Selective-cascade Gemma audit simulation v1 completed on the fixed 12-row unsafe fixture. Using manual labels as an oracle, 9 rows would be selected for Gemma (8 rescue + 1 conditional), 3 would remain fallback, and 0 selected rows have review severity >=2. This is an optimistic upper bound because labels were produced after seeing outputs; it is not a production gate. Report: `test-data/real-papers/reports/selective-cascade-gemma-v1.json`. A held-out automatic selector and larger representative run are still required before routing.
+
+Automatic-selector calibration on Gemma same-fixture: surface hard signals passed 10/12 Gemma outputs, but the existing candidate report's manual labels mark only 1/12 as clean (`minor_wording`; the remainder include omission, semantic shift, numeric, or terminology errors). This demonstrates high false-accept risk for invariant/shape-only selection; candidate selector must not be promoted without semantic coverage evidence. Report source: `candidate-selection-gemma-m2m-v1.json`.
+
+Ran the semantic-coverage evaluator across all 139 manually reviewed rows using the local multilingual MiniLM model (same production corpus, audit-only). Report: `test-data/real-papers/reports/semantic-coverage-v2.json`. The evaluator completed end-to-end and writes per-source-sentence min/mean similarity plus full-pair similarity; this is now the broad calibration baseline for threshold/false-accept analysis. It must not be used as a standalone production gate until calibrated against the manual labels.
+
+Threshold calibration on semantic-coverage-v2: 18 unsafe reviewed rows are present among 75 translated rows. A min-source similarity threshold of 0.85 leaves 2 unsafe accepts (11.1%) while rejecting 37 safe rows; lower thresholds leave 6–14 unsafe accepts. Thus this embedding signal alone cannot reach the <=5% unsafe target without unacceptable safe rejection, confirming the need for relation/claim-specific evidence and model/cascade work.
+
+Created reproducible semantic-coverage calibration curves (`semantic-coverage-calibration-v1.json`) across 45 thresholds for min-source and full-pair similarity. The report treats manual severity >=2 as unsafe and records unsafe acceptance and safe rejection rates; it intentionally makes no production threshold decision. This provides the required evidence for tuning a future multi-signal evaluator without silently increasing fallback.
+
+Generated audit-only composite semantic coverage calibration (`semantic-coverage-composite-calibration-v1.json`). The score combines minimum source-sentence similarity with penalties for relation and invariant loss; threshold curves report unsafe acceptance versus safe rejection. No production gate was selected because this corpus is still calibration data and the score needs held-out validation.
+
+Baseline resynchronization (current files): `translation-audit.json` contains 21 papers/139 rows; the current ordinary-body predicate yields 82 rows with 17 reader-visible fallbacks (20.7%). The v8 manual review contains all 139 rows but does not populate `productionDecision`; unsafe-accepted counts must therefore use the explicit `unsafe-accepted-v8.json` report (15 rows) rather than treating null decisions as accepted. Current model identity is `3b-mt-v5-semantic-v71-strict-restore-v8`. This corrects earlier shorthand baselines that used a narrower 48-row subset.
+
+Gemma held-out smoke v1 (3 ordinary-body rows) completed. It showed mixed behavior: row 1 was coherent, row 2 was visibly truncated mid-sentence, and row 3 was fluent but requires semantic review. This confirms that even on non-unsafe sampled prose Gemma needs an output-completeness/semantic gate; it cannot be blindly used as a fallback model. Report: `model-quality-gemma2-9b-heldout-v1.json`.
+
+Gemma held-out row2 was re-run through the local Ollama API with `temperature=0,num_predict=512`. The earlier CLI output was truncated at 229 chars; the explicit-limit run completed at 230 chars and preserved the source claims/citation, though wording is awkward. This identifies a controllable completeness variable (generation limit) but does not establish broad semantic safety. Report: `model-quality-gemma2-9b-heldout-row2-512.json`.
+
+Implemented a bounded generation-capacity fix: MADLAD single and batch translation now use `MAX_NEW_TOKENS=384` (previously 256), and model identity advanced to strict-restore-v9 in server/client to invalidate stale cache. This directly addresses the held-out truncation evidence while preserving deterministic decoding and existing quality guards. Python translation-server tests: 97/97; py_compile passed. Full app build is intentionally not run in this checkpoint.
+
+Runtime packaging check: the currently running macOS `.app` translation server (PID 2108) is from the existing bundle and still contains `strict-restore-v8`; the source worktree now has v9 and `MAX_NEW_TOKENS=384`. Therefore v9 is not yet active in the running app. Do not kill the user's running process; a future `npm run tauri:build` plus full app restart is required to validate v9 in production packaging.
+
+Built Tauri `.app` successfully with `npm run tauri:build` (2026-09-15 15:59:24). Verified bundled `madlad_mps.py` contains `strict-restore-v9` and `MAX_NEW_TOKENS = 384`. The existing translation server PID 2108 remains running; it was not restarted, so its in-memory code may still be v8 until the user fully quits and relaunches the newly built app.
+
+Runtime health check after build: existing PID 2108 is listening on 127.0.0.1:8765 and `/health` reports `status=ok`, `phase=ready`, `model_loaded=true`. It is still the pre-relaunch process; no v9 runtime claim is made until full app restart.
+
+Post-v9 validation: `npx tsc --noEmit` and `git diff --check` both pass. Running app process remains untouched for user continuity.
+
+Full frontend test suite after v9 change: 60 files / 307 tests passed. Existing PDF DOMMatrix/Path2D warnings remain non-fatal and pre-existing.
+
+Build-wrapper cleanup: the completed v9 build left its npm/bash wrapper alive after artifact creation; those build-only PIDs were terminated. The user's translation server PID 2108 was not touched.
+
+Recheck: PID 2108 is still the same long-lived `.app` translation server (elapsed ~58m), healthy on port 8765. The user has not relaunched the new bundle yet, so v9 runtime activation remains pending.
+
+Post-build lint: `npm run lint` exits 0; existing warnings only, no new v9 error.
+
+Added `scripts/verify-bundled-translation-server.sh` to make future app activation checks reproducible without stopping processes. It reports bundle timestamp, model version, generation cap, and matching server PIDs; current run confirms bundled v9 while PID 2108 remains the pre-relaunch process.
+
+Runtime recheck after user restart: PID 2108 and its translation-server are no longer present; port 8765 is refusing connections. The new app launch was detected briefly (PID 58895) but the server exited before health became available. No diagnostic report was emitted in the last 5 minutes; next step is launch the `.app` from Terminal to capture stderr, then diagnose startup failure.
+
+Runtime v9 activation verified after user relaunch: new PID 60582 started at 16:06:49 from the bundled `.app`; `/health` transitioned from `loading` to `ready` with `model_loaded=true`. Bundle inspection confirms the running executable path points to the v9-verified bundle. Translation-server log version line is not exposed via HTTP, but source/bundle and post-build PID evidence align.
+
+### 2026-09-15 v9 regression checkpoint
+
+After the user's relaunch, the bundled translation server is running as PID 60582 from `src-tauri/target/release/bundle/macos/Paper Reader.app`; `/health` reports `ready` with `model_loaded=true`. The bundle contains `strict-restore-v9` and `MAX_NEW_TOKENS = 384`. No older translation-server process remains. This verifies activation of the v9 generation-capacity change in the real app, although the HTTP health endpoint does not expose the model-version string directly.
+
+Post-relaunch validation passed: frontend 60 files / 307 tests, translation-server unittest discovery 97 tests, and TypeScript/lint/build checks remain green from the preceding checkpoint. The active product metric remains 17/82 ordinary-body reader-visible fallbacks (20.7%); the <=5% target is not met. Gemma remains audit-only pending a larger held-out semantic evaluation.
+
+A reproducible baseline artifact was added at `test-data/real-papers/reports/baseline-v9.json`. It records the strict `ordinary-body-prose` slice (48 rows / 12 fallbacks) and explicitly distinguishes the broader product predicate used for UX (82 rows / 17 reader-visible fallbacks, 20.7%). This prevents the audit's source-category subset from being mistaken for the product fallback rate.
+
+### Qwen 2.5 3B audit smoke (2026-09-15)
+
+Downloaded `qwen2.5:3b` via Ollama for audit-only local/free evaluation. Three deterministic smoke cases were saved in `test-data/real-papers/reports/model-quality-qwen2.5-3b-smoke-v1.json`. It correctly preserved the author-year citation group and the `2013` sentence boundary, but the scientific sentence output contained the Chinese character `显著` in otherwise Japanese text. The model is therefore promising for citation-heavy prose but not production-ready without a language-quality gate and broader held-out review. No production routing or packaged app files were changed.
+
+Qwen 2.5 3B 12-row fixture evaluation completed (audit-only, deterministic temperature 0, `num_predict=512`) and saved at `test-data/real-papers/reports/model-quality-qwen2.5-3b-v1.json`. It completed all 12 rows with latency roughly 0.9–7.3s each, but outputs frequently retained English fragments (`perspective`, `reflection`, `curve`, `context`, `computer`) and one row included the unrelated term `患者`. This is evidence that Qwen cannot be blindly cascaded; a broader manual claim review and a language/terminology gate are required before any routing change.
+
+Added an audit-only mixed-script signal to `translation-server/scripts/score_candidate_selection.py`: simplified-Chinese-only CJK characters are reported as `mixedScriptRisk` without changing production acceptance or routing. A regression test covers the Qwen smoke failure (`显著`), and the candidate-selection test suite passes (4 tests).
+
+The candidate-selection harness now accepts both `results` and `rows` report schemas. Running it against the 12-row Qwen fixture produced 12 candidates and 11/12 surface hard-signal passes. This high pass rate despite observed English fragments/unrelated terminology confirms these signals are insufficient for automatic routing; the report remains audit-only.
+
+Qwen prompt-variant smoke (same scientific sentence, temperature 0) was completed in `model-quality-qwen2.5-3b-prompt-smoke-v1.json`. Three prompts, including an explicit Japanese-only instruction, all deterministically emitted `显著`; prompt wording does not explain the mixed-script failure. This is model-output behavior and should be handled by candidate quality gating or excluded routing, not prompt-only changes.
+
+Qwen 2.5 7B smoke completed after local download (`model-quality-qwen2.5-7b-smoke-v1.json`). It translated the p-value sentence and citation-heavy sentence cleanly, but the year-boundary sentence switched to Chinese (`我们的发现对于研究人员具有价值`) and retained English. This is better than 3B on citation prose but still fails language consistency; it remains audit-only pending held-out semantic review and a robust language gate.
+
+A preliminary manual label file for the 7B smoke is recorded at `model-quality-qwen2.5-7b-smoke-manual-v1.json`: 1 correct, 1 minor wording, 1 severity-3 reject. This is only a three-case smoke and is not a production quality estimate.

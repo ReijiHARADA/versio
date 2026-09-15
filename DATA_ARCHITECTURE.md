@@ -261,14 +261,23 @@ legacy `papers` / `sections` / `blocks` object stores).
 Tables:
 
 - `meta` — schema version, migration marks
-- `papers` — library index (no body)
-- `workspace_nodes` — folder / project tree
+- `papers` — library index (no body); `trashed_at` marks soft-deleted library papers
+- `workspace_nodes` — folder / project tree; `trashed_at` + `trash_root_id` for reversible folder deletion
 - `projects` — project-only metadata
-- `workspace_papers` — many-to-many membership (paper is not copied)
+- `workspace_papers` — many-to-many membership (paper is not copied; kept while folders/papers are in Trash)
 - `annotations` — block-anchored notes
 - `reading_positions` — `paperId + blockId + offset`
 - `glossaries`, `translation_cache`, `translation_jobs`, `settings`, `benchmarks`
 - `papers_fts` — FTS5 cache; rebuildable from packages + annotations
+
+### Soft delete / Trash (schema v7)
+
+- Library delete and workspace folder delete move items to Trash immediately (no confirm).
+- Soft-deleted papers keep Paper Package / `source.pdf` / translations / notes / memberships until purge.
+- Soft-deleted folders keep hierarchy via `trash_root_id`; papers in those folders are **not** auto-trashed.
+- Normal library / workspace / FTS queries exclude `trashed_at IS NOT NULL`.
+- Permanent deletion (`deletePaperEverywhere` / workspace node hard-delete) runs on Trash purge, empty Trash, or retention expiry (default 3 days, setting `trashRetentionDays`).
+- Backup / restore includes Trash timestamps because they live in `library.sqlite`.
 
 ## 9. Workspace tree
 
@@ -372,7 +381,7 @@ Not implemented. Required inputs are stored at extract time:
 | Paper Package / `paper.json` | `schemaVersion` | 1 |
 | `structure.json` | `schemaVersion` | 1 |
 | Markdown front matter | `schemaVersion` | 1 |
-| SQLite `meta.schema_version` | integer | 6 |
+| SQLite `meta.schema_version` | integer | 7 |
 | Library Backup / `backup.json` | `formatVersion` | 1 |
 | `translation.json` | `schemaVersion` | 1 |
 | IndexedDB (legacy backup) | `paper-reader` | 4 |

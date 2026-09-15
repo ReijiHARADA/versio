@@ -172,7 +172,7 @@ export function PaperMenu({
                 }}
               >
                 <Trash2 size={14} />
-                ライブラリから削除…
+                ライブラリから削除
               </button>
             </>
           )}

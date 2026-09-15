@@ -112,11 +112,14 @@ export async function importPDFV2(
     const { findDuplicatePaper } = await import("./import/duplicate");
     const existingPaper = await findDuplicatePaper(fileHash);
     if (existingPaper) {
+      const inTrash = Boolean(existingPaper.trashedAt);
       callbacks.onProgress({
         stage: "completed",
         stageProgress: 1,
         stageTotal: 1,
-        message: "このPDFは既にインポートされています",
+        message: inTrash
+          ? "同じ論文がゴミ箱にあります"
+          : "このPDFは既にインポートされています",
         paper: existingPaper,
       });
       return null;

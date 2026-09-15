@@ -140,6 +140,7 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
           if (
             next.paper &&
             (next.message.includes("既にインポート") ||
+              next.message.includes("ゴミ箱にあります") ||
               next.message.toLowerCase().includes("already imported"))
           ) {
             duplicatePaperId = next.paper.id;

@@ -1,52 +1,59 @@
 import { useCallback, useState } from "react";
 import { useLibraryCache } from "../stores/libraryCache";
-import { useProjectStore } from "../stores/projectStore";
-import { deletePaperEverywhere } from "../services/paperDelete";
+import { showToast } from "../stores/toastStore";
+import { displayPaperTitle } from "../services/translation/quality";
+import {
+  movePaperToTrash,
+  restorePaperFromTrash,
+} from "../services/trashService";
 
 export function useDeletePaper() {
   const removePaper = useLibraryCache((s) => s.removePaper);
-  const removePaperData = useLibraryCache((s) => s.removePaperData);
-  const removeMembershipsForPaper = useProjectStore((s) => s.removeMembershipsForPaper);
-  const [pendingId, setPendingId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const addPaper = useLibraryCache((s) => s.addPaper);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-  const requestDelete = useCallback((event: React.MouseEvent, paperId: string) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setError(null);
-    setPendingId(paperId);
-  }, []);
-
-  const cancelDelete = useCallback((event?: React.MouseEvent) => {
-    event?.preventDefault();
-    event?.stopPropagation();
-    setPendingId(null);
-    setError(null);
-  }, []);
-
-  const confirmDelete = useCallback(
+  const moveToTrash = useCallback(
     async (event: React.MouseEvent, paperId: string) => {
       event.preventDefault();
       event.stopPropagation();
-      if (busy) return;
-      setBusy(true);
-      setError(null);
+      if (busyId) return;
+      const paper = useLibraryCache.getState().papers.find((item) => item.id === paperId);
+      if (!paper) return;
+      setBusyId(paperId);
       try {
-        await deletePaperEverywhere(paperId);
+        await movePaperToTrash(paperId);
         removePaper(paperId);
-        removePaperData(paperId);
-        removeMembershipsForPaper(paperId);
-        setPendingId(null);
+        const title = displayPaperTitle(paper);
+        showToast({
+          kind: "info",
+          message: `「${title}」をゴミ箱に移動しました`,
+          actionLabel: "元に戻す",
+          onAction: () => {
+            void restorePaperFromTrash(paperId)
+              .then((restored) => {
+                addPaper(restored);
+              })
+              .catch((error: unknown) => {
+                showToast({
+                  kind: "error",
+                  message:
+                    error instanceof Error ? error.message : "復元に失敗しました",
+                });
+              });
+          },
+        });
       } catch (err) {
-        console.error("Failed to delete paper:", err);
-        setError("削除に失敗しました。もう一度試してください。");
+        console.error("Failed to move paper to trash:", err);
+        showToast({
+          kind: "error",
+          message: "ゴミ箱への移動に失敗しました。もう一度試してください。",
+        });
       } finally {
-        setBusy(false);
+        setBusyId(null);
       }
     },
-    [busy, removePaper, removePaperData, removeMembershipsForPaper]
+    [addPaper, busyId, removePaper]
   );
 
-  return { pendingId, error, busy, requestDelete, cancelDelete, confirmDelete };
+  return { busyId, requestDelete: moveToTrash };
 }

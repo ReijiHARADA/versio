@@ -57,6 +57,13 @@ describe("import failure classification", () => {
     expect(result.primaryAction).toBe("open_existing");
   });
 
+  it("classifies trashed duplicates with restore action", () => {
+    const result = classifyImportFailure("同じ論文がゴミ箱にあります");
+    expect(result.kind).toBe("duplicate");
+    expect(result.primaryAction).toBe("restore_existing");
+    expect(actionLabel("restore_existing")).toBe("ゴミ箱から復元");
+  });
+
   it("classifies extraction failures as retry", () => {
     const result = classifyImportFailure("failed to extract pdf", "extracting");
     expect(result.kind).toBe("extraction");

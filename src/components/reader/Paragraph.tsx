@@ -21,10 +21,8 @@ import {
   citationPreviewFromIndex,
   type CitationPreviewModel,
 } from "./citations/citationPreview";
-import {
-  CitationPreviewPopover,
-  anchorFromEventTarget,
-} from "./citations/CitationPreviewPopover";
+import { CitationPreviewPopover } from "./citations/CitationPreviewPopover";
+import { anchorFromEventTarget } from "./popoverAnchor";
 import { segmentTextWithGlossary } from "./glossary/glossaryTerms";
 import { GlossaryTermPopover } from "./glossary/GlossaryTermPopover";
 import type { AnchorBox } from "./memo/popoverPosition";

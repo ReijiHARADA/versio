@@ -8,7 +8,6 @@ import { useProjectStore } from "../../stores/projectStore";
 import { derivePaperReadiness } from "../../domain/paperReadiness";
 import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";
 import { tryStartPdfImport } from "../../services/pdfImport";
-import { PaperDeleteControls } from "./PaperDeleteControls";
 import { PaperCard } from "./PaperCard";
 import { PaperMenu } from "./PaperMenu";
 import { ImportJobCard } from "./ImportJobCard";
@@ -31,13 +30,18 @@ export function InboxScreen() {
     [importJobs]
   );
   const recovery = useImportJobRecovery({ fileInputRef });
-  const { pendingId, error, busy, requestDelete, cancelDelete, confirmDelete } =
-    useDeletePaper();
+  const { busyId, requestDelete } = useDeletePaper();
 
-  const assigned = new Set(memberships.map((m) => m.paperId));
+  const workspaceNodes = useProjectStore((s) => s.workspaceNodes);
+  const assignedIds = useMemo(() => {
+    const active = new Set(workspaceNodes.map((node) => node.id));
+    return new Set(
+      memberships.filter((m) => active.has(m.nodeId)).map((m) => m.paperId)
+    );
+  }, [memberships, workspaceNodes]);
   const inboxBase = useMemo(
-    () => papers.filter((p) => !assigned.has(p.id)),
-    [assigned, papers]
+    () => papers.filter((p) => !assignedIds.has(p.id)),
+    [assignedIds, papers]
   );
   const inboxPapers = useLibraryPaperSearch(inboxBase, searchQuery);
 
@@ -46,7 +50,7 @@ export function InboxScreen() {
   }, []);
 
   const handleOpen = (paper: Paper) => {
-    if (pendingId === paper.id) return;
+    if (busyId === paper.id) return;
     const view = derivePaperReadiness({
       processingStatus: paper.processingStatus,
       blocks: blocks[paper.id],
@@ -109,26 +113,14 @@ export function InboxScreen() {
               <PaperCard
                 key={paper.id}
                 paper={paper}
-                enabled={pendingId !== paper.id}
+                enabled={busyId !== paper.id}
                 onOpen={() => handleOpen(paper)}
                 actions={
-                  pendingId === paper.id ? (
-                    <PaperDeleteControls
-                      paperId={paper.id}
-                      pendingId={pendingId}
-                      error={error}
-                      busy={busy}
-                      onRequest={requestDelete}
-                      onConfirm={confirmDelete}
-                      onCancel={cancelDelete}
-                    />
-                  ) : (
-                    <PaperMenu
-                      paper={paper}
-                      variant="library"
-                      onDeleteRequest={requestDelete}
-                    />
-                  )
+                  <PaperMenu
+                    paper={paper}
+                    variant="library"
+                    onDeleteRequest={requestDelete}
+                  />
                 }
               />
             ))}

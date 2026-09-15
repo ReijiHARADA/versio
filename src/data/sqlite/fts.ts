@@ -31,16 +31,23 @@ export function buildFtsMatchQuery(query: string): string | null {
 
 export function searchPapersFts(db: SqliteClient, query: string): string[] {
   if (!query.trim()) return [];
+  const activeIds = new Set(
+    db
+      .query<{ id: string }>("SELECT id FROM papers WHERE trashed_at IS NULL")
+      .map((row) => String(row.id))
+  );
   if (db.hasFts5) {
     const match = buildFtsMatchQuery(query);
     if (!match) return [];
     try {
       return db
         .query<{ paper_id: string }>(
-          "SELECT paper_id FROM papers_fts WHERE papers_fts MATCH ? LIMIT 50",
+          "SELECT paper_id FROM papers_fts WHERE papers_fts MATCH ? LIMIT 80",
           [match]
         )
-        .map((row) => row.paper_id);
+        .map((row) => row.paper_id)
+        .filter((id) => activeIds.has(id))
+        .slice(0, 50);
     } catch {
       // Malformed MATCH — fall through to LIKE.
     }
@@ -50,8 +57,10 @@ export function searchPapersFts(db: SqliteClient, query: string): string[] {
     .query<{ paper_id: string }>(
       `SELECT paper_id FROM papers_fts
        WHERE title LIKE ? OR authors LIKE ? OR original LIKE ? OR translation LIKE ? OR annotation LIKE ?
-       LIMIT 50`,
+       LIMIT 80`,
       [like, like, like, like, like]
     )
-    .map((row) => row.paper_id);
+    .map((row) => row.paper_id)
+    .filter((id) => activeIds.has(id))
+    .slice(0, 50);
 }

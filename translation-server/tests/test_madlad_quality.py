@@ -20,6 +20,17 @@ class MadladUnitQualityTests(unittest.TestCase):
         encoded = "本文 <0xE8><0x90>"
         self.assertEqual(MADLADEngine._restore_byte_escapes(encoded), encoded)
 
+    def test_allows_normal_repeated_technical_term(self) -> None:
+        output = "温度を測定し、温度変化を記録した。温度の推移を分析し、温度モデルを評価した。"
+        self.assertFalse(MADLADEngine._has_abnormal_phrase_repetition(output))
+
+    def test_rejects_fluent_japanese_phrase_repetition(self) -> None:
+        source = "We present a smart necklace that recognizes silent speech commands in two languages."
+        output = "顔の顔面の顔の顔の下から撮影した画像を用いて、英語と中国語のコマンドを識別する。"
+        self.assertTrue(MADLADEngine._has_abnormal_phrase_repetition(output))
+        self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
+        self.assertEqual(MADLADEngine._degenerate_reason(output, source, "ja"), "phrase_repetition")
+
     def test_rejects_long_natural_language_unit_reduced_to_its_conclusion(self) -> None:
         source = (
             "While the smaller sample has a larger variance, the correct answer "
@@ -91,6 +102,12 @@ class MadladUnitQualityTests(unittest.TestCase):
         source = "The study measured GPT-3 accuracy at 92.4% with p < 0.001 across both conditions."
         preserved = "この研究では、両条件でGPT-3の精度92.4%を測定し、p < 0.001だった。"
         omitted = "この研究では、両条件で精度を測定した。"
+        self.assertGreater(MADLADEngine._candidate_score(preserved, source), MADLADEngine._candidate_score(omitted, source))
+
+    def test_candidate_score_prefers_negation_preservation(self) -> None:
+        source = "The method does not distinguish between the two conditions."
+        preserved = "この方法は2つの条件を区別しない。"
+        omitted = "この方法は2つの条件を区別する。"
         self.assertGreater(MADLADEngine._candidate_score(preserved, source), MADLADEngine._candidate_score(omitted, source))
 
 

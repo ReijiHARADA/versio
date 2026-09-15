@@ -13,8 +13,8 @@ describe("settings TOC", () => {
     expect(SETTINGS_SECTIONS.map((section) => section.label)).toEqual([
       "読書",
       "翻訳",
-      "データ",
-      "詳細設定",
+      "ライブラリとデータ",
+      "詳細",
     ]);
     expect(settingsSectionElementId("reading")).toBe("section-reading");
   });

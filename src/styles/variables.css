@@ -16,13 +16,30 @@
   --color-figure-bg: #f5f5f5;
   --color-equation-bg: #f8f9fa;
   --color-shadow: rgba(0, 0, 0, 0.1);
+  --color-danger: #c5221f;
+  --color-success: #16803c;
 
-  /* Typography */
+  /* Semantic surfaces (design system v1) */
+  --color-surface-page: var(--color-bg);
+  --color-surface-grouped: #f1f3f5;
+  --color-surface-hover: #e8eaed;
+  --color-surface-control: #ffffff;
+  --color-separator-subtle: color-mix(in srgb, var(--color-text) 8%, transparent);
+
+  /* Typography scale v1 (role-based) */
   --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
   --font-family-serif: "Georgia", "Hiragino Mincho ProN", "Yu Mincho", serif;
   --font-family-mono: "SF Mono", "Monaco", "Inconsolata", "Fira Mono",
     "Droid Sans Mono", monospace;
+  --font-size-title: 1.25rem;
+  --font-size-heading: 0.9375rem;
+  --font-size-body: 0.875rem;
+  --font-size-small: 0.8125rem;
+  --font-size-caption: 0.75rem;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
 
   /* Spacing */
   --spacing-xs: 4px;
@@ -31,6 +48,12 @@
   --spacing-lg: 24px;
   --spacing-xl: 32px;
   --spacing-2xl: 48px;
+
+  /* Controls */
+  --control-height: 32px;
+  --control-height-lg: 36px;
+  --control-radius: var(--radius-md);
+  --control-padding-x: 12px;
 
   /* Layout */
   --nav-sidebar-width: 220px;
@@ -68,6 +91,14 @@
   --color-figure-bg: #2d2d30;
   --color-equation-bg: #252526;
   --color-shadow: rgba(0, 0, 0, 0.3);
+  --color-danger: #f28b82;
+  --color-success: #6ee7b7;
+
+  --color-surface-page: var(--color-bg);
+  --color-surface-grouped: #2c2c2e;
+  --color-surface-hover: #353538;
+  --color-surface-control: #3a3a3c;
+  --color-separator-subtle: color-mix(in srgb, var(--color-text) 12%, transparent);
 }
 
 * {

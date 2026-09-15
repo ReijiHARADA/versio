@@ -802,7 +802,7 @@ function isNameToken(part: string, parts: string[]): boolean {
   if (/^[A-Z]\.$/.test(fold) || /^[A-Z]$/.test(fold)) return true;
   const hasMacronStub = parts.some((p) => {
     const f = foldNameToken(p);
-    return /^[A-Z]$/.test(f) || /[\u00AF\u0304]$/.test(p);
+    return /^[A-Z]$/.test(f) || p.endsWith("\u00AF") || p.endsWith("\u0304");
   });
   if (/^[a-z]{2,6}$/.test(fold) && hasMacronStub) return true;
   return false;

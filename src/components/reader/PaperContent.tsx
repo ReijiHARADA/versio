@@ -355,7 +355,7 @@ export const PaperContent = memo(
         pinnedSectionIds: resolveTransientMountPins(pinnedSectionIds),
         overscan: 2,
       });
-    }, [allSectionsOrdered, blocks.length, virtualize, visibleForMount, pinnedSectionIds]);
+    }, [allSectionsOrdered, virtualize, visibleForMount, pinnedSectionIds]);
 
     const waitForPaint = () =>
       new Promise<void>((resolve) => {

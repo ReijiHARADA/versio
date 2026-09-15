@@ -96,7 +96,15 @@ def main() -> None:
             item["fallbacks"] += 1
     for item in discipline_groups.values():
         item["rate"] = item["fallbacks"] / max(1, item["ordinaryRows"])
-    reviews = review_payload.get("reviews", [])
+    # Include completed archived records so regenerating the current-key queue
+    # cannot erase historical manual-review evidence from the safety metric.
+    active_reviews = review_payload.get("reviews", [])
+    archived_reviews = review_payload.get("archivedReviews", [])
+    review_by_key = {row.get("key"): row for row in archived_reviews if row.get("key")}
+    review_by_key.update({row.get("key"): row for row in active_reviews if row.get("key")})
+    reviews = list(review_by_key.values()) + [
+        row for row in archived_reviews if not row.get("key")
+    ]
     unsafe_false_accepts = sum(
         row.get("readerVisibleFallback") is False and int(row.get("severity", 0)) >= 2
         for row in reviews
@@ -120,8 +128,8 @@ def main() -> None:
         "fallbackStageCounts": dict(sorted(fallback_stages.items())),
         "manualReviewRequired": True,
         "manualReview": {
-            "completed": review_payload.get("summary", {}).get("completed", len(reviews)),
-            "pending": review_payload.get("summary", {}).get("pending"),
+            "completed": sum(bool(row.get("reviewedAt")) for row in reviews),
+            "pending": sum(not row.get("reviewedAt") for row in reviews),
             "unsafeFalseAcceptsSeverityGte2": unsafe_false_accepts,
             "reviewedAcceptedBlocks": reviewed_accepts,
             "unsafeFalseAcceptRate": unsafe_false_accepts / max(1, reviewed_accepts),

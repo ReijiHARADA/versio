@@ -1,4 +1,4 @@
-import { InfoPopover, anchorFromEventTarget } from "../InfoPopover";
+import { InfoPopover } from "../InfoPopover";
 import styles from "../InfoPopover.module.css";
 import type { CitationPreviewModel } from "./citationPreview";
 import type { AnchorBox } from "../memo/popoverPosition";
@@ -69,4 +69,3 @@ export function CitationPreviewPopover({
   );
 }
 
-export { anchorFromEventTarget };

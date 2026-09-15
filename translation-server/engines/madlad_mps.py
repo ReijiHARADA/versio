@@ -31,7 +31,11 @@ class MADLADEngine(TranslationEngine):
     """
 
     MODEL_ID = "google/madlad400-3b-mt"
-    MODEL_VERSION = f"3b-mt-v5-{SEGMENTER_VERSION}-strict-restore-v7"
+    MODEL_VERSION = f"3b-mt-v5-{SEGMENTER_VERSION}-strict-restore-v9"
+    # Long academic units were previously capped at 256 decoder tokens,
+    # causing otherwise valid output to end mid-sentence. Keep the cap finite
+    # while allowing a complete Japanese rendering for long source units.
+    MAX_NEW_TOKENS = 384
     # Greedy MADLAD can loop on a Japanese phrase for English parallel lists
     # (for example, repeated "how to …" clauses). Four tokens still permits
     # ordinary lexical reuse while stopping the observed decoder loop.
@@ -668,7 +672,17 @@ class MADLADEngine(TranslationEngine):
         source_terminal = bool(re.search(r"[.!?]\s*[\"')\]]*$", source))
         output_terminal = bool(re.search(r"[。！？.!?]\s*$", output))
         terminal_score = 1.0 if source_terminal and output_terminal else 0.0
-        return preserved * 4.0 + length_score + terminal_score
+        source_has_negation = bool(re.search(
+            r"\b(?:not|never|without|neither|nor|no|cannot|can't|doesn't|don't|didn't)\b",
+            source,
+            re.I,
+        ))
+        output_has_negation = bool(re.search(r"(?:ない|なく|ません|ず|ぬ|無い|無し)", output))
+        # Relation preservation is only a ranking signal between candidates
+        # that already pass hard quality gates. It must never turn a rejected
+        # candidate into an accepted translation.
+        negation_score = 1.5 if source_has_negation == output_has_negation else -1.5
+        return preserved * 4.0 + length_score + terminal_score + negation_score
 
     def _translate_chunk_batch(
         self, chunks: list[str], target_language: str, model_inputs: list[str] | None = None
@@ -699,7 +713,7 @@ class MADLADEngine(TranslationEngine):
         encoded = {key: value.to(self._device) for key, value in encoded.items()}
         in_toks = [int(n) for n in encoded["attention_mask"].sum(dim=1).tolist()]
         max_new_tokens = max(
-            min(max(token_count * 3 + 24, 48), 256) for token_count in in_toks
+            min(max(token_count * 3 + 24, 48), self.MAX_NEW_TOKENS) for token_count in in_toks
         )
         decoder_start = self._model.config.decoder_start_token_id
         pad_id = self._tokenizer.pad_token_id
@@ -758,7 +772,7 @@ class MADLADEngine(TranslationEngine):
         )
         inputs = self._encode_translation_inputs(protected, target_language)
         input_tokens = inputs["input_ids"].shape[1]
-        max_new_tokens = min(max(input_tokens * 3 + 24, 48), 256)
+        max_new_tokens = min(max(input_tokens * 3 + 24, 48), self.MAX_NEW_TOKENS)
         decoder_start = self._model.config.decoder_start_token_id
 
         with torch.inference_mode():
@@ -868,6 +882,24 @@ class MADLADEngine(TranslationEngine):
         return {k: v.to(self._device) for k, v in encoded.items()}
 
     @staticmethod
+    def _has_abnormal_phrase_repetition(output: str) -> bool:
+        """Detect repeated fluent Japanese phrases without a word blacklist."""
+        compact = "".join(re.findall(r"[\u3040-\u30ff\u4e00-\u9fff\d]", output))
+        if len(compact) < 36:
+            return False
+        single_counts: dict[str, int] = {}
+        for char in compact:
+            if re.match(r"[\u4e00-\u9fff]", char):
+                single_counts[char] = single_counts.get(char, 0) + 1
+        if any(count >= 4 and count / len(compact) >= 0.08 for count in single_counts.values()):
+            return True
+        counts: dict[str, int] = {}
+        for index in range(len(compact) - 4):
+            phrase = compact[index : index + 5]
+            counts[phrase] = counts.get(phrase, 0) + 1
+        return any(count >= 3 and (5 * count) / len(compact) >= 0.16 for count in counts.values())
+
+    @staticmethod
     def _is_degenerate(output: str, source: str, target_language: str) -> bool:
         compact = "".join(output.split())
         if not compact:
@@ -898,6 +930,8 @@ class MADLADEngine(TranslationEngine):
                 return True
             if MADLADEngine._contains_untranslated_source_span(output, source):
                 return True
+            if MADLADEngine._has_abnormal_phrase_repetition(output):
+                return True
         return False
 
     @staticmethod
@@ -914,6 +948,8 @@ class MADLADEngine(TranslationEngine):
             return "implausibly_short"
         if MADLADEngine._contains_untranslated_source_span(output, source):
             return "source_span"
+        if MADLADEngine._has_abnormal_phrase_repetition(output):
+            return "phrase_repetition"
         if target_language == "ja" and not re.search(r"[\u3040-\u30ff\u4e00-\u9fff]", output):
             return "no_japanese_script"
         return "quality_guard"

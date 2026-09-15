@@ -26,7 +26,15 @@ AUDIT = ROOT / "test-data/real-papers/reports/translation-audit.json"
 REPORT_DIR = ROOT / "test-data/real-papers/reports"
 
 
-def _load_rows(category: str, limit: int) -> list[dict[str, str]]:
+def _load_rows(category: str, limit: int, input_path: Path | None = None) -> list[dict[str, str]]:
+    if input_path is not None:
+        payload = json.loads(input_path.read_text(encoding="utf-8"))
+        source_rows = payload.get("rows", payload if isinstance(payload, list) else [])
+        rows = []
+        for row in source_rows:
+            if row.get("source"):
+                rows.append({k: row[k] for k in ("paperId", "blockId", "source") if k in row})
+        return rows[:limit] if limit else rows
     audit = json.loads(AUDIT.read_text(encoding="utf-8"))
     rows: list[dict[str, str]] = []
     for paper in audit["papers"]:
@@ -61,9 +69,12 @@ def main() -> None:
     parser.add_argument("--category", default="ordinary-body-prose")
     parser.add_argument("--limit", type=int, default=20)
     parser.add_argument("--output", default="")
+    parser.add_argument("--input", default="", help="JSON fixture containing rows with paperId/blockId/source")
+    parser.add_argument("--max-new-tokens", type=int, default=256)
+    parser.add_argument("--num-beams", type=int, default=1)
     args = parser.parse_args()
 
-    rows = _load_rows(args.category, args.limit)
+    rows = _load_rows(args.category, args.limit, Path(args.input) if args.input else None)
     output = Path(args.output) if args.output else REPORT_DIR / (
         "model-cascade-"
         + args.model.replace("/", "-").replace("_", "-").replace(".", "-")
@@ -85,8 +96,8 @@ def main() -> None:
             max_length=512,
         ).to(device)
         generate_kwargs = {
-            "max_new_tokens": 256,
-            "num_beams": 1,
+            "max_new_tokens": args.max_new_tokens,
+            "num_beams": args.num_beams,
             "do_sample": False,
             "no_repeat_ngram_size": 4,
         }
