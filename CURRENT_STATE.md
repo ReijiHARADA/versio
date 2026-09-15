@@ -2098,3 +2098,7 @@ PPG Earring p.7を`extractFromPages`で再実行し、Component/Weight gridがCa
 ### 2026-09-16 checkpoint: full regression after table projection
 
 全Vitest 61 files / 328 tests、lint（max warnings 0）、TypeScriptを再実行して成功。captionless table projection変更による既存抽出回帰は検出されなかった。buildと全corpus benchmarkは直前の成功結果を維持している。抽出完了条件（全corpus手動境界レビュー、publisher横断table recall）は未達のためgoalは継続する。
+
+### 2026-09-16 checkpoint: hyphen continuation equation safety
+
+PPG Earring p.10で、段落途中の単独改行ハイフンがlayout上equation候補になる例を確認した。未完結paragraph直後の単独dashをequation evidenceから抑制し、Canonical resolverでparagraphへfallbackする汎用neighbor evidenceを追加。実PDF回帰テストで確認し、extraction config 22/22通過。layout dump上の物理role表示は診断用にequationのままだが、Canonical/Paper経路では翻訳対象paragraphとして扱う。

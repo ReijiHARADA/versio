@@ -119,6 +119,10 @@ describe("baseline benchmark on cached real papers", () => {
       );
       expect(projected?.type).toBe("table");
       expect(projected?.translationStatus).toBe("skipped");
+      const hyphenatedContinuation = result.canonical.nodes.find((node) =>
+        node.text?.trim().startsWith("- achieves 74.55")
+      );
+      expect(hyphenatedContinuation?.role).toBe("paragraph");
     }, 60_000);
   }
 });

@@ -2372,3 +2372,7 @@ PPG Earring実PDFのcaptionless Component/Weight gridについて、Canonical ro
 ### Extraction Phase checkpoint: full regression after table projection (2026-09-16)
 
 全Vitest 61 files / 328 tests、lint（警告0）、TypeScriptが通過。captionless table projection変更による既存回帰は確認されなかった。全corpusの手動境界レビューとpublisher横断table recallは未完了であり、抽出完了とは扱わない。
+
+### Extraction Phase checkpoint: hyphen continuation equation safety (2026-09-16)
+
+PPG Earring p.10の単独改行ハイフンを、未完結paragraph直後のneighbor evidenceでequationからparagraphへfallbackさせた。これは数式記号一般を禁止するものではなく、page/column、前段落の終端、近接geometryを併用する。実PDF回帰を含むextraction testsは22/22通過。診断用Layout dumpの物理roleとCanonical最終roleは異なり得るため、今後も両方を分けて評価する。

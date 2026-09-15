@@ -369,8 +369,15 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       block.lines[0].items.length <= 8 &&
       /\d/.test(block.text) &&
       block.bbox.y - (previousBlock.bbox.y + previousBlock.bbox.height) < baseFontSize * 1.8;
+    const hyphenContinuation = previousBlock?.role === "paragraph" &&
+      previousBlock.pageEnd === block.pageStart &&
+      previousBlock.column === block.column &&
+      !/[.!?:;]$/.test(previousBlock.text.trim()) &&
+      /^[-–—]$/.test(block.text.trim()) &&
+      block.lines.length === 1 &&
+      block.bbox.y - (previousBlock.bbox.y + previousBlock.bbox.height) < baseFontSize * 1.8;
     if (equation > 0.12) {
-      scoreByRole.equation = adjacentParagraphContinuation
+      scoreByRole.equation = adjacentParagraphContinuation || hyphenContinuation
         ? Math.min(equation, 0.38)
         : equation;
     }
