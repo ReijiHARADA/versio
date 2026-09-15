@@ -2703,3 +2703,5 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Native/Layout diagnostic for the Elsevier meta-review: Table 1, 3, 4, and 7 survive as explicit caption blocks; Table 2 is absorbed into a table stream, while Table 5/6 labels are embedded in long mixed paragraph blocks. The remaining recall loss is therefore line/block formation, not resolver precedence. A generic geometry-based boundary rule is required; no paper-specific condition was added.
 
 - Synthetic caption-plus-grid probe was attempted and reverted: a naive short-cell continuation rule did not produce a stable canonical caption and could lose multi-line caption titles. No production behavior changed; future boundary logic must require stronger geometry evidence.
+
+- Added a native-boundary observation fixture for the Elsevier Tables 1–7. It captures standalone versus absorbed/mixed caption streams and explicitly requires future splitting to use geometry/style evidence rather than paper-specific labels.

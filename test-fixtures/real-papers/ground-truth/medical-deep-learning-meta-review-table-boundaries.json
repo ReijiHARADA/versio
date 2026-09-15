@@ -1,0 +1,14 @@
+{
+  "paperId": "medical-deep-learning-meta-review",
+  "version": "native-boundary-observation-v1",
+  "observations": [
+    {"label":"Table 1","page":2,"nativeStatus":"standalone-caption","expectedRole":"caption"},
+    {"label":"Table 2","page":2,"nativeStatus":"absorbed-in-table-stream","expectedRole":"caption+table-region"},
+    {"label":"Table 3","page":3,"nativeStatus":"standalone-caption","expectedRole":"caption"},
+    {"label":"Table 4","page":3,"nativeStatus":"standalone-caption","expectedRole":"caption"},
+    {"label":"Table 5","page":6,"nativeStatus":"mixed-section-and-table-stream","expectedRole":"caption+table-region"},
+    {"label":"Table 6","page":9,"nativeStatus":"mixed-section-and-table-stream","expectedRole":"caption+table-region"},
+    {"label":"Table 7","page":13,"nativeStatus":"standalone-caption","expectedRole":"caption"}
+  ],
+  "ruleConstraint":"Use native geometry (vertical gap, x-band repetition, style transition) and preserve source text; do not match paper-specific strings."
+}

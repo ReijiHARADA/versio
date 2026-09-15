@@ -2682,3 +2682,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Attempted a synthetic caption-plus-grid fixture to validate a broader caption split. The fixture showed the current line grouping can merge a label with a two-item header; the proposed short-cell rule did not yield a stable canonical caption, so it was reverted rather than risking caption title loss in other formats.
 - No production behavior changed in this probe. The next boundary rule must operate on stronger vertical/geometry separation and preserve multi-line caption titles.
+
+### 2026-09-16 table boundary observation fixture
+
+- Added `medical-deep-learning-meta-review-table-boundaries.json` documenting native statuses for Tables 1–7. It records which captions are standalone versus absorbed/mixed and constrains the future fix to vertical gap, repeated x-bands, and style transitions.
+- This is metadata only; production extraction behavior is unchanged and the corpus remains 56/56.
