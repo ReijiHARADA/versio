@@ -68,6 +68,7 @@
 - 韓国語abstractのような「狭いラベル帯＋広い本文帯」をgeometryで検出し、同一paragraphから分離する`labelSidebar` evidenceを追加。fashion-hybrid-cmfの疑わしいblockは1→0、PPGは0を維持。reading-order 27/27、extraction corpus 56/56 passed。
 - 現行benchmark集計（26 papers）: heading recall/precisionは注釈済みサンプルで平均1.0、figure caption recall平均1.0、table caption recall平均0.929、table region recall平均0.843、titleExact 20/26。未注釈paperのheading値は平均に含めていない。
 - 推定列のx帯量子化を32ptへ調整し、同一列内のnative x揺れ（PPG page 11）を吸収。二列以外の多帯図表へ適用しない条件を維持し、real-paper reading-order 27/27 passed。
+- 安定化後の検証を完了: 全Vitest 345/345、extraction corpus 56/56、typecheck、lint成功。`.app`は未ビルド。
 - `npm run diagnose:pdf-corpus` を現行コードで再実行し、26 papers / 497 pages / suspicious 164 blocks を記録。内訳は arXiv 144、PMLR 6、Elsevier 6、ACM 3 などで、arXivの大半は図・表のベクターラベルがnative textとして混在する診断候補。これはproduction role変更の根拠にはせず、次回はnative geometryとcaption/table provenanceを照合する。
 - 再開時の停止確認として `npm run test:extraction-corpus -- --run` を現行コードで再実行し、real-paper fixture 56/56 passed（reading-order 27、baseline 29）。既存のfont-transition heading / mixed-column保護 / table fallback変更に回帰なし。長時間ジョブは起動しておらず、次回は下記の未解決項目から再開する。
 
