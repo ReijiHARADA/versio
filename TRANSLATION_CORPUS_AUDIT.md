@@ -2860,3 +2860,5 @@ Full application regression after the current extraction changes: **61 files / 3
 - List projection change passed lint, TypeScript, and Vite build. Only existing ineffective dynamic-import warnings remain; no packaged app was produced.
 
 - Diagnostic baseline remains 149 suspicious wide multi-x blocks across 26 papers / 497 pages after the list change. This is not a failure rate; arXiv vector-label candidates remain queued for geometry-backed review.
+
+- Full application regression after list separation: 61 test files / 346 tests passed; extraction corpus remains 56/56. No translation-server or packaged-app change was made.

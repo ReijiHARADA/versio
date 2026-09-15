@@ -2889,3 +2889,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Post-change gates for list lead-in separation: `npm run lint`, `npx tsc --noEmit --pretty false`, and `npm run build` all pass. Build emitted only the existing ineffective dynamic-import warnings; no `.app` was built.
 
 - Refreshed corpus diagnostic after list projection: 26 papers / 497 pages / 149 suspicious wide multi-x blocks. Concentration remains arXiv vector-label candidates; no unsafe production exclusion was introduced.
+
+### 2026-09-16 full regression after list separation
+
+- Full Vitest passed: 61 files / 346 tests. Extraction-specific tests remain 56/56. This confirms the list projection change does not regress Reader, import, export, or other application behavior.
