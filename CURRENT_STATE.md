@@ -2342,3 +2342,7 @@ x帯guard後に20-paper benchmarkを再実行。`wear-scale` は rotatedNativeIt
 ### Extraction guard verification (2026-09-16)
 
 x帯guard後のTypeScript型チェック、lint、buildが成功（既知のpdfjs eval／dynamic import警告のみ）。重点回帰47/47、extraction corpus43/43、20-paper benchmarkも成功。`.app`は明示依頼がないため未ビルド。
+
+### Full regression after extraction guards (2026-09-16)
+
+全Vitestを再実行し、61 files / 332 tests が通過（回転表境界回帰を含む）。作業ツリーはclean。抽出の未完了項目は回転表のCanonical table region完全分離とpublisher横断手動precision/recallであり、翻訳serverには進んでいない。

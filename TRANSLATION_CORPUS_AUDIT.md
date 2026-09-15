@@ -2444,3 +2444,7 @@ x帯guard後の20-paper benchmarkで、`wear-scale` は rotated items 248、rota
 ### Extraction guard verification (2026-09-16)
 
 x帯guard後に型チェック、lint、buildを実行し成功。既知のpdfjs eval／dynamic import警告のみ。重点回帰47/47、extraction corpus43/43、20-paper benchmarkを維持。
+
+### Full regression after extraction guards (2026-09-16)
+
+全Vitest 61 files / 332 tests が通過。回転表境界回帰を含む。Canonical table region完全分離とpublisher横断手動precision/recallは未完了。
