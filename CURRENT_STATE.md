@@ -2218,3 +2218,7 @@ Web buildで検出された `tableText` nullable の型エラーを、nativeGrid
 ### 2026-09-16 checkpoint: image/text overlap corpus diagnostic
 
 `scan-image-text-overlap.ts` を追加し、cached corpusのnative画像配置とtext bbox重なり候補を計測できるようにした。現状の候補は `linguistics-language-model-physics` 5411 item、`step-to-charge` 99 item、`interactive-jewellery` 15 itemなどで、画像内ラベルだけでなく図上に重ねた本文・複合PDFも含む可能性がある。したがって除外率を安全性の証拠とみなさず、次回は候補の目視分類と本文誤除外率を測る。
+
+### 2026-09-16 checkpoint: image geometry safety revalidation
+
+画像配置情報を含む cached real-paper extraction corpus を再実行し、2 files / 43 tests が通過。最新 baseline の20 papersで `sourceIntegrityRate` 平均は1.0を維持した。画像内重なり候補はPDF形式により大きく異なるため、候補を一律削除する方針は採用せず、本文誤除外率を確認できるまで現行の保守的閾値を維持する。
