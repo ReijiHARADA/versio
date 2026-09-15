@@ -1942,3 +1942,7 @@ Full test, lint, and typecheck revalidation succeeded after the extraction basel
 ### 2026-09-16 checkpoint: valid same-page column continuation
 
 ppg-earring page3/page13の左右列混在は、左列末尾の未完結文から右列先頭のlowercase continuationへの正しい結合だった。35 reading-order testsに同一ページ左→右継続の回帰を追加し、誤結合と区別できるようにした。
+
+### 2026-09-16 checkpoint: full test after dense columns
+
+`denseWordColumns`導入後に通常Vitestを再実行し、61 files / 324 tests pass。抽出以外の回帰は確認されなかった。実PDFの二段組block境界監査は継続中。
