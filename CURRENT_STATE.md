@@ -2170,3 +2170,7 @@ Generic candidate generationに、10行以上連続する数値主体native para
 ### 2026-09-16 checkpoint: flattened-row projection guard
 
 Projectionで、同一page/column上に10行以上連続する数値主体native paragraphをtable block（translationStatus=skipped）として扱う保守的guardを追加した。Canonical roleは変更せず、既存captionless grid回帰22/22と型チェックを通過。wear-scale p.14のregion統合自体は未完だが、次回はこのguardの実corpus影響とfalse positiveを測定する。
+
+### 2026-09-16 checkpoint: projection guard end-to-end
+
+`wear-scale.pdf` p.14の15 flattened rowsが実際にPaperBlock table/skippedとして投影されることを再確認。PPGを含むextraction corpus 43/43、TypeScript型チェック成功。regionは行単位の保守的投影で、1つのgrid nodeへの統合は未実施。
