@@ -2518,3 +2518,7 @@ chart labelの翻訳境界変更後、既存の全Vitest（61 files / 335 tests�
 ### Progress metadata refresh (2026-09-16)
 
 `test-data/real-papers/audit-progress.json`をchart-label translation boundary時点へ更新。次回アクションをpublisher横断precision、heading/list/caption ground truth、Canonical provenance測定に整理した。
+
+### Ground-truth coverage audit (2026-09-16)
+
+既存ground truth 6 filesを集計。headingsは3 papers、headingHierarchyは1、figureCaptionsは2、tableCaptionsは4、tableRegionsは3、listItemsは1、tokensInOrderは1のみ。authors/affiliationsは未注釈。自動corpus greenでも、publisher横断のprecision/recall完了を示さないため、次工程で代表paperを手動注釈する。
