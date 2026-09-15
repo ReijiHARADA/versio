@@ -512,9 +512,10 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         block.lines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length >= 2;
       const proseBlock = paragraphLike(block.text) && /[.!?]\s*$/.test(block.text.trim());
       const longCaption = block.role === "table_caption" && paragraphLike(block.text);
+      const captionBlock = block.role === "table_caption";
       scoreByRole.table = rotatedItems.length >= 30 && rotatedNumeric / Math.max(rotatedItems.length, 1) >= 0.3
         ? 0.97
-        : structuralGrid && !proseBlock && !longCaption
+        : structuralGrid && !proseBlock && !longCaption && !captionBlock
           ? 0.95
           // `tableLike` also catches ordinary multi-line prose with aligned
           // native items. Keep that signal for region membership, but below
