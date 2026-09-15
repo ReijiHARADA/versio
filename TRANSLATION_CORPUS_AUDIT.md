@@ -2412,3 +2412,7 @@ Algorithm/Require本文や数式断片がtable candidateになる例を確認し
 ### Extraction Phase checkpoint: page-grid and rotated-table review (2026-09-16)
 
 抽出優先方針に従い、翻訳品質の評価へ進む前に表境界を再確認した。`wear-scale` p.14 は回転相関行列と表外脚注が同一ページにあり、native x/y geometry だけで表セル帯を分離できる一方、脚注を同一 block に吸収する境界が残る。ページ局所の反復 x 列・数値セル密度から table evidence を生成する保守的な実装と synthetic regression を追加した。reading-order 41/41、extraction corpus 43/43、build/lint/typecheck は成功。表後脚注の手動境界確認と publisher 横断の table precision/recall は未完了であり、翻訳サーバー変更は保留している。
+
+### Extraction work clean stop (2026-09-16)
+
+今回の抽出フェーズは、回転 native item に基づく line/block 境界ガードまで実装・検証した地点で停止した。実行中プロセスはなく、作業ツリーはクリーン。次回の再開点は `wear-scale` p.14 の回転表セル帯と表外脚注の x帯連続性を native geometry で検証すること。翻訳サーバーの変更や `.app` ビルドは行っていない。

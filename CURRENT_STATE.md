@@ -2310,3 +2310,7 @@ line の rotation 判定を line metadata ではなく native item の回転値�
 最新変更後の全Vitestは 61 files / 331 tests が通過し、build と TypeScript 型チェックも成功。表後注記の同一block問題は残存しているため、抽出完成とは扱わず、引き続き geometry 境界を検証する。
 
 captionless numeric-row の synthetic regression を追加し、6行の反復 x 列が table evidence（score >= 0.94）として生成されることを確認。pipeline suite は 5/5。実PDFではページ内の表後注記がまだ同じ block に残るため、region の上下境界を手動比較してから拡張する。
+
+### Clean stop checkpoint (2026-09-16)
+
+ユーザー指示により、抽出アルゴリズム改善をキリのよい地点で停止。実行中の監査・ベンチマーク・テストプロセスはなく、作業ツリーはクリーン。最新コミットは `320b25d`（native item の rotation boundary を block merge に反映）。全Vitest 61 files / 331 tests、extraction corpus 43/43、build、lint、TypeScript 型チェックは直近で成功済み。未解決の主課題は `wear-scale` p.14 の回転表と表外脚注の境界、および publisher 横断の table precision/recall 手動監査。次回はこのケースの native x帯連続性を検証し、一般化可能な回帰テストを追加してから実装判断する。翻訳サーバーおよび `.app` は変更・ビルドしていない。
