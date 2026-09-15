@@ -2086,3 +2086,7 @@ Textを持つtable candidateをPaper projectionでparagraph翻訳経路から除
 ### 2026-09-16 checkpoint: captionless table end-to-end verification
 
 PPG Earring p.7を`extractFromPages`で再実行し、Component/Weight gridがCanonical role=`table`、PaperBlock type=`table`・translationStatus=`skipped`になることを確認した。従来のparagraph翻訳経路から外れ、native source textとbbox provenanceを保持する。既存focused testsとTypeScriptは通過。captionless table全体のrecall測定と他形式の目視確認は継続課題。
+
+### 2026-09-16 checkpoint: captionless table regression locked
+
+実PDFを使う回帰テストを追加し、PPG Earringのcaptionless native gridがCanonical `table`、PaperBlock `table`、`translationStatus=skipped`であることを固定した。extraction configで22 tests通過。これは1形式の実例を保護するもので、他publisherのtable recallは未完了。

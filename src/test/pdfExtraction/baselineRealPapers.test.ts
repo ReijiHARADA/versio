@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { reconstructDocument } from "../../services/pdfLayout";
 import { extractPdfPages } from "../readingOrder/extractPdf";
 import { evaluateBaselinePaper } from "../../services/pdfExtraction/benchmark";
+import { extractFromPages } from "../../services/pdfExtraction/pipeline/extractAcademicPdf";
 import type { PartialGroundTruth } from "../../services/pdfExtraction/benchmark";
 
 type CatalogPaper = {
@@ -95,6 +96,29 @@ describe("baseline benchmark on cached real papers", () => {
       if (gt?.listItems) {
         expect(report.listItemRecall).toBeGreaterThanOrEqual(0.9);
       }
+    }, 60_000);
+  }
+
+  const ppg = available.find(({ paper }) => paper.id === "ppg-earring");
+  if (ppg) {
+    it("preserves a captionless native grid as a non-translated table block", async () => {
+      const pages = await extractPdfPages(ppg.pdfPath);
+      const result = extractFromPages({
+        pages,
+        paperId: ppg.paper.id,
+        filePath: ppg.pdfPath,
+        fileHash: "regression",
+        metadata: { title: ppg.paper.title, pageCount: pages.length },
+      });
+      const canonical = result.canonical.nodes.find((node) =>
+        node.text?.startsWith("Component Weight Earring PCB")
+      );
+      expect(canonical?.role).toBe("table");
+      const projected = result.blocks.find((block) =>
+        block.original.startsWith("Component Weight Earring PCB")
+      );
+      expect(projected?.type).toBe("table");
+      expect(projected?.translationStatus).toBe("skipped");
     }, 60_000);
   }
 });
