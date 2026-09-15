@@ -2666,3 +2666,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Across annotated papers: heading recall/precision mean 1.0 (n=4/2), table-caption recall mean 0.929 (min 0.571), table-region recall mean 0.843 (min 0.571), table-caption relation recall mean 0.929 (min 0.571), relation precision 1.0 where present.
 - All 26 cached papers retain sourceIntegrityRate=1.0 and canonicalProvenanceRate=1.0.
 - Only remaining annotated table miss is the Elsevier meta-review; it is a genuine native grouping/region reconstruction case, not a pseudo-gold metric artifact.
+
+### 2026-09-16 table evidence precedence follow-up
+
+- Added a second generic precedence guard preventing page-grid evidence from overriding an already identified `table_caption`. This did not change the Elsevier recall (0.571), confirming the remaining misses occur before this evidence merge or in relation construction; it is retained as a safety invariant.
+- Extraction corpus remains 56/56; no translation or `.app` changes.

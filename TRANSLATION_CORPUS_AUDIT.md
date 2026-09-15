@@ -2697,3 +2697,5 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Added explicit Tables 1–7 ground truth for the Elsevier meta-review and fixed a generic evidence conflict where nearby table-row evidence could override a native `table_caption`. Measured caption/region/relation recall is now 0.57 (precision 1.0); remaining misses are genuine native grouping/region cases.
 
 - Full benchmark after the caption-role guard: source integrity and canonical provenance remain 1.0 across 26 cached PDFs. Annotated table-caption recall mean is 0.929 (minimum 0.571, Elsevier meta-review); table-region recall mean 0.843 (minimum 0.571); relation precision remains 1.0. The remaining Elsevier misses are isolated native grouping/region reconstruction cases.
+
+- Added page-grid precedence guard for existing table captions. Recall stayed 0.571, so the remaining misses are upstream native block formation or downstream relation construction; no metric inflation was introduced. Extraction corpus remains 56/56.

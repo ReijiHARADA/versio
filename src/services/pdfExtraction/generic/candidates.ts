@@ -416,7 +416,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       paragraph: role === "paragraph" ? confidence : 0.22,
       [role]: confidence,
     };
-    if (pageGrid > 0) scoreByRole.table = pageGrid;
+    if (pageGrid > 0 && block.role !== "table_caption") scoreByRole.table = pageGrid;
     if (chartLabels > 0) scoreByRole.other = chartLabels;
     // Some journal/preprint mastheads use a large centered title whose line
     // is title-cased, so the layout pass can mistake it for an author line.
