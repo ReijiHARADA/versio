@@ -2777,3 +2777,5 @@ A probe that classified gutter-adjacent lines using the detected right-column an
 A narrower variant restricted to short lowercase or hyphen fragments caused the same regression and was also reverted. Token shape alone cannot distinguish gutter fragments from legitimate table continuations.
 
 The stable extraction benchmark was rerun: 26 cached papers and aggregate source-integrity 1.0. The Elsevier meta-review remains at table caption/region/relation recall 0.571428..., so no improvement is claimed yet.
+
+Native line inspection found that the Elsevier mixed paragraphs have multiple x clusters (roughly 38, 270–281, and 307) despite collapsed column metadata; the ppg-earring guard lacks this same wide multi-cluster paragraph shape. This supports a page-aware clustering experiment, but an x-only split is intentionally deferred until line ordering and table provenance are part of the evidence.

@@ -2791,3 +2791,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Re-ran `npm run bench:pdf-extraction` on the unchanged stable classifier: 26 cached papers, aggregate source integrity 1.0.
 - `medical-deep-learning-meta-review` remains the limiting case: table caption/region/relation recall 0.571428..., with no metric improvement claimed. This is the comparison baseline for the next page-level clustering experiment.
+
+### 2026-09-16 native x-cluster diagnosis
+
+- Inspected all unusually wide paragraph blocks in the Elsevier fixture and compared them with the ppg-earring regression. Elsevier mixed blocks contain distinct native x clusters (for example x≈38 and x≈307, plus gutter fragments around x≈270–281) while their assigned column metadata can collapse to one stream.
+- The ppg-earring guard does not show the same wide multi-cluster paragraph shape. This is useful evidence for a future page-aware repair, but no x-only split was implemented because line ordering and table-cell provenance still need to be included.
