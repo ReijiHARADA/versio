@@ -165,12 +165,17 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     leftItems.length >= 250 &&
     rightItems.length >= 250 &&
     rightX - leftX >= page.width * 0.35;
+  const denseUsableColumns =
+    usable.length >= 700 &&
+    usable.filter((item) => item.x + item.width <= page.width * 0.49).length >= 250 &&
+    usable.filter((item) => item.x >= page.width * 0.51).length >= 250 &&
+    rightX - leftX >= page.width * 0.35;
   const isMultiColumn =
     leftItems.length >= MIN_COLUMN_ITEMS &&
     rightItems.length >= MIN_COLUMN_ITEMS &&
     (leftLong.length >= MIN_COLUMN_ITEMS &&
       rightLong.length >= MIN_COLUMN_ITEMS ||
-      denseWordColumns) &&
+      (denseWordColumns || denseUsableColumns)) &&
     rightX - leftX >= page.width * 0.22 &&
     leftShare >= 0.22 &&
     rightShare >= 0.22 &&

@@ -1960,3 +1960,7 @@ ppg-earring page3/page13の左右列混在は、左列末尾の未完結文か�
 診断へ`longItemCount`/`longItemShare`も追加した。ppg-earringのpage 7/10/12は長幅itemが0で、native抽出がword単位に細分化されているため従来の長行サンプルが空になる。これはdense evidenceが左右word数を使うべき根拠だが、page 7の図中心領域も同じ傾向を持つため、次はy方向の反復行・caption/role evidenceとの統合が必要。
 
 さらに左右列の共有y帯数（14pt bin）を診断へ追加した。残る候補は共有y帯が7〜33で、図・参考文献・本文二段組が重なるため、この単一指標の自動昇格は見送る。次の実装ではline formation後の連続行と既存role evidenceを併用する。
+
+### 2026-09-16 checkpoint: page-wide dense word evidence
+
+native word itemが長行へまとまらないページ向けに、`usable`全体の左右word分布を使う保守的な`denseUsableColumns` evidenceを追加した（総語数700以上、左右各250以上、ピーク分離35%以上）。抽出コーパス42/42、全Vitest61 files/324 tests pass。ppg-earring page7/10/12は二段組へ復元され、page16参考文献とeducation-learning-analytics page6は単段のまま。列診断の単段候補は5から2へ減少し、spanning/参考文献の誤昇格は確認されていない。翻訳サーバーと`.app`は未変更。
