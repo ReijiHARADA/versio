@@ -1535,7 +1535,8 @@ function splitStyledHeadingPrefixes(blocks: LayoutBlock[], baseFont: number): La
 }
 
 function logLayoutBlockBoundaries(blocks: LayoutBlock[]): void {
-  if (typeof process === "undefined" || process.env.PDF_LAYOUT_DEBUG !== "1") return;
+  const debugFlag = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_DEBUG;
+  if (debugFlag !== "1") return;
   for (const [index, block] of blocks.entries()) {
     const fonts = [...new Set(block.lines.flatMap((line) => line.items.map((item) => item.fontName)))];
     console.warn(`[PDF_LAYOUT_BLOCK] index=${index} role=${block.role} page=${block.pageStart}-${block.pageEnd} lines=${block.lines.length} fonts=${fonts.join(",")} text=${block.text.slice(0, 180)}`);

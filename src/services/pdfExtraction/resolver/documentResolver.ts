@@ -177,12 +177,13 @@ export function resolveCanonicalDocument(input: {
   nodes = promoteRotatedTableCaptions(nodes, candidates);
   nodes = markAbstracts(nodes);
 
+  const resolvedTitleText = titleResolved.text;
   const titleNode = nodes.find((n) => n.role === "title");
-  if (titleNode && titleResolved.text) {
-    titleNode.text = titleResolved.text;
+  if (titleNode && resolvedTitleText) {
+    titleNode.text = resolvedTitleText;
     titleNode.confidence = titleResolved.confidence;
     titleNode.evidence = [...titleNode.evidence, ...titleResolved.evidence];
-  } else if (!titleNode && titleResolved.text) {
+  } else if (!titleNode && resolvedTitleText) {
     // Metadata/GROBID can supply a title even when the native candidate was
     // conservatively left as paragraph. Reuse the closest native candidate's
     // provenance so the resolved title never becomes an unanchored node.
@@ -191,12 +192,12 @@ export function resolveCanonicalDocument(input: {
       .sort((a, b) => {
         const aScore = a.evidence.some((e) => /title/i.test(e.label)) ? 1 : 0;
         const bScore = b.evidence.some((e) => /title/i.test(e.label)) ? 1 : 0;
-        return bScore - aScore || Math.abs(a.text.length - titleResolved.text.length) - Math.abs(b.text.length - titleResolved.text.length);
+        return bScore - aScore || Math.abs(a.text.length - resolvedTitleText.length) - Math.abs(b.text.length - resolvedTitleText.length);
       })[0];
     nodes.unshift({
       id: "title-resolved",
       role: "title",
-      text: titleResolved.text,
+      text: resolvedTitleText,
       pageStart: 1,
       pageEnd: 1,
       boundingBoxes: titleSource?.boundingBoxes ?? [],

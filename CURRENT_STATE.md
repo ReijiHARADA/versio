@@ -2773,3 +2773,9 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 post-list benchmark
 
 - Re-ran `npm run bench:pdf-extraction` after dash-bullet projection support. The 26-paper report remains sourceIntegrityRate 1.0; the Elsevier table caption/region recall remains 0.571. No regression or metric inflation was observed.
+
+### 2026-09-16 extraction build verification
+
+- Fixed two TypeScript build blockers exposed by the verification build: narrowed the nullable resolved title once before reuse, and kept the opt-in PDF layout debug flag browser-safe via `globalThis`.
+- `npm run build` now passes (`tsc -b && vite build`). No `.app` bundle was produced and translation-server code was unchanged.
+- Extraction remains 56/56 real-paper checks, 14/14 pipeline checks, and the unresolved Elsevier mixed-stream/table-region issue remains the next algorithmic task.

@@ -2765,3 +2765,7 @@ Full Vitest passed (61 files, 344 tests), with extraction pipeline 14/14 and rea
 ### 2026-09-16 post-list benchmark
 
 The 26-paper extraction benchmark was rerun after dash-bullet support. Source integrity remains 1.0 and Elsevier table caption/region recall remains 0.571; no regression was observed.
+
+### 2026-09-16 extraction build verification
+
+The extraction changes now pass the production web build. The verification caught and fixed a nullable title narrowing issue and a browser-incompatible direct `process` reference in the opt-in layout diagnostic. `npm run build` passes; no `.app` was built and translation-server behavior was left untouched. The 56/56 extraction corpus and 14/14 pipeline suites remain green. The Elsevier mixed native stream and table-region recall (0.571) remain open findings.
