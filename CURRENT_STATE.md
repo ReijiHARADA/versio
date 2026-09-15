@@ -1910,3 +1910,7 @@ Full test, lint, and typecheck revalidation succeeded after the extraction basel
 ### 2026-09-16 checkpoint: baseline rerun after column experiments
 
 `npm run bench:pdf-extraction` を再実行し、20 cached papers の extraction-baseline-latest.json を更新した。source integrity は既存どおり維持され、列検出候補は回帰のため未採用。抽出コーパス 42/42、baseline 21/21 を基準として保持する。翻訳サーバーと `.app` は未変更。
+
+### 2026-09-16 checkpoint: two-column ordering guard
+
+二段組のnative行について、左列を上から下へ処理してから右列へ移る読み順を合成回帰テストで固定した（33 reading-order tests pass）。このテストは列検出そのものを緩和せず、今後の改善による既存読み順の安全回帰を検出する。実PDFのword-level二段組混在は引き続き未解決。

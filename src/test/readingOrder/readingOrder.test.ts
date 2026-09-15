@@ -88,6 +88,23 @@ describe("isEquationLine", () => {
 });
 
 describe("PDF reading order regression", () => {
+  it("reads a two-column page down the left column before the right column", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 1,
+      width: 612,
+      height: 792,
+      textItems: Array.from({ length: 8 }, (_, index) => [
+        { text: `LEFT_${index + 1}`, x: 54, y: 120 + index * 16, width: 220, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+        { text: `RIGHT_${index + 1}`, x: 338, y: 120 + index * 16, width: 220, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      ]).flat(),
+    }];
+    const { blocks, layouts } = reconstructDocument(pages);
+    expect(layouts[0]?.isMultiColumn).toBe(true);
+    const text = blocks.map((block) => block.text).join(" ");
+    expect(text.indexOf("LEFT_1")).toBeLessThan(text.indexOf("RIGHT_1"));
+    expect(text.indexOf("LEFT_8")).toBeLessThan(text.indexOf("RIGHT_1"));
+  });
+
   it("preserves native rotation as line provenance without dropping rotated text", () => {
     const pages: ExtractedPage[] = [{
       pageNumber: 4,
