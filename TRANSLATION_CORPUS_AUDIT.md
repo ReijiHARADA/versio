@@ -2560,3 +2560,7 @@ wear-scaleのground truth metadataを追加し、回転caption provenanceを評�
 ### Wear-scale ground truth regression (2026-09-16)
 
 wear-scale caption ground truth追加後のextraction corpusは44/44成功。回転caption relation評価を継続可能な状態にした。
+
+## Extraction continuation checkpoint — 2026-09-16
+
+最新20-paper extraction benchmarkを再実行し、table caption metricをresolved `CAPTION_OF → table` provenanceにも対応させた。gold relation recall平均は0.81875（10 papers）、wear-scaleはcaption recall/relation recallとも1.0。figure captionをtable metricへ混入させない制約を維持。抽出 corpus 44/44、pipeline 5/5、typecheck成功。翻訳server／モデル／`.app`は未変更。残課題はpublisher横断のcaption provenance、linguistics PDFの数値行16件のtable-region判定、および手動レビュー拡充。
