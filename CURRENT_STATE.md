@@ -1946,3 +1946,7 @@ ppg-earring page3/page13の左右列混在は、左列末尾の未完結文か�
 ### 2026-09-16 checkpoint: full test after dense columns
 
 `denseWordColumns`導入後に通常Vitestを再実行し、61 files / 324 tests pass。抽出以外の回帰は確認されなかった。実PDFの二段組block境界監査は継続中。
+
+### 2026-09-16 checkpoint: lower-density column evidence trial
+
+未解決だった低密度のword-stream二段組を対象に、`denseWordColumns`の左右word数閾値を各300から各250へ緩和した。`npm run test:extraction-corpus` は42/42、通常Vitestは61 files / 324 testsで通過し、列占有診断の現行単段候補は53ページ中14から5へ減少した。教育PDFの低密度候補は引き続き単段のままで、紙面専用条件は追加していない。次は緩和後の実PDF block境界とsource integrityを再監査する。

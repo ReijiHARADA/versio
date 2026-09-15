@@ -162,8 +162,8 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     (i) => i.width >= page.width * 0.22 && i.width <= page.width * 0.55
   );
   const denseWordColumns =
-    leftItems.length >= 300 &&
-    rightItems.length >= 300 &&
+    leftItems.length >= 250 &&
+    rightItems.length >= 250 &&
     rightX - leftX >= page.width * 0.35;
   const isMultiColumn =
     leftItems.length >= MIN_COLUMN_ITEMS &&
