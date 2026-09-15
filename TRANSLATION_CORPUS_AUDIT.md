@@ -2528,3 +2528,7 @@ table caption relation recallの分母をground truth caption数へ変更。未�
 ### Latest caption relation values (2026-09-16)
 
 最新reportではgoldあり10本のtable relation recall平均0.71875、precisionは定義可能な9本で1.0。wear-scaleは回転caption未検出でrecall 0。誤relationを増やさず未解決として記録。
+
+### Rotated table prose remerge fix (2026-09-16)
+
+回転表先頭line＋本文の再結合を、回転native lineの有無が異なるblock間では禁止。wear-scale p.14の混在block消失を実測し、reading-order 43/43、extraction corpus 44/44を確認。

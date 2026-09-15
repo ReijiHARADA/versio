@@ -2426,3 +2426,7 @@ Benchmark report now exposes `tableCaptionRelationRecall` and `tableCaptionRelat
 ### Latest caption relation values (2026-09-16)
 
 現行reportのgoldあり10本は relation recall 平均0.71875、table起点 relation precisionは定義可能な9本で全て1.0。wear-scaleは回転caption未検出のためprecision未定義・recall 0。未解決を安全側に維持。
+
+### Rotated table prose remerge fix (2026-09-16)
+
+実PDF `wear-scale` p.14で、回転表先頭lineと非回転本文が同一paragraphへ戻る経路を確認し、`mergeColumnContinuations` に回転line互換性guardを追加。再probeで高さ300超の混在blockは消失。reading-order 43/43、extraction corpus 44/44。
