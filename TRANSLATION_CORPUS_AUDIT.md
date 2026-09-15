@@ -2603,3 +2603,5 @@ caption近傍のcompactな複数native item行について、x列反復または
 ### Marketing table ground-truth expansion (2026-09-16)
 
 Table 2〜11の短いcaptionをpartial ground truthへ追加し、本文中の`Table 4 shows ...`は除外。benchmarkはtableCaptionRecall 1.0、tableCaptionRelationRecall 0.909、relationPrecision 1.0、sourceIntegrity 1.0。未リンク1件はrelation候補の近接/region競合として次に調査する。
+
+再抽出ではTable 2〜11のcaptionがCanonicalに保持され、Table 4の本文参照はparagraphへ分離された。未達のrelation recall 1件はTable 1の長文caption/region競合が主候補であり、次回bbox照合を行う。

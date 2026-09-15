@@ -2567,6 +2567,8 @@ caption近傍で複数native itemを持つcompact rowを、同一x列の反復�
 
 marketing PDFのTable 2〜11の短いcaptionをpartial ground truthへ追加（本文中の`Table 4 shows ...`は除外）。benchmarkでtableCaptionRecall **1.0**、tableCaptionRelationRecall **0.909**、relationPrecision **1.0**、sourceIntegrity **1.0**。未リンク1件の原因を次に特定する。
 
+再抽出で確認したcaption一覧はTable 2〜11（Table 8を含む）までCanonical captionとして保持され、Table 4の本文参照はparagraphへ分離された。relation recallの未達はTable 1の長文caption/region競合が主候補で、次回はそのnodeとbboxを直接照合する。
+
 ### Full regression after table-row evidence (2026-09-16)
 
 全Vitest 61 files / 338 tests、extraction corpus 44/44が成功。既存のheading・reading-order・equation・caption回帰なし。table regionのCanonical membershipとpublisher横断precisionは未計測のため、抽出完了判定にはまだ到達していない。
