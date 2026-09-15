@@ -749,6 +749,11 @@ function isHeadingLine(line: LayoutLine, baseFont: number): boolean {
   if (looksLikeEmail(text) || looksLikeUrl(text) || looksLikeAffiliation(text)) {
     return false;
   }
+  // A native stream may fuse a short numbered heading with the first words of
+  // the following paragraph.  Once a reasonably long line contains sentence
+  // punctuation followed by a new capitalized clause, prefer paragraph so the
+  // body is not promoted into the heading role.
+  if (text.length > 45 && /[.!?]\s+[A-Z]/.test(text)) return false;
   if (/^[a-z]/.test(text)) return false;
   if (/[-–—]$/.test(text) && text.split(/\s+/).length >= 4) return false;
   if (/^\d+\.\s+[A-Z]/.test(text) && !/^\d+\.\d+/.test(text)) {

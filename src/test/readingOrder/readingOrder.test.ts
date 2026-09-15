@@ -284,6 +284,27 @@ describe("PDF reading order regression", () => {
     expect(blocks.filter((block) => block.role === "heading")).toHaveLength(0);
   });
 
+  it("does not promote a numbered heading fused with its first sentence", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 1,
+      width: 612,
+      height: 792,
+      textItems: [{
+        text: "6.2.1 Example participant results. Figure 10 shows the participant's signal.",
+        x: 54,
+        y: 120,
+        width: 480,
+        height: 10,
+        fontSize: 10,
+        fontName: "Helvetica",
+        page: 1,
+      }],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    expect(blocks.some((block) => block.role === "heading")).toBe(false);
+    expect(blocks.find((block) => block.text.includes("Figure 10"))?.role).toBe("paragraph");
+  });
+
   it("single-column keeps linear order", () => {
     const { blocks } = reconstructDocument(FIXTURES["single-column"]());
     const text = joined(bodyBlocks(blocks));
