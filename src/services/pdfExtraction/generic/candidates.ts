@@ -401,11 +401,16 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         /(?:bold|black|heavy|semi[- ]?bold|demi)/i.test(item.fontName)
       );
     const numericDensity = (block.text.match(/\d/g) ?? []).length / Math.max(block.text.length, 1);
+    const rotatedItems = block.lines.flatMap((line) => line.items)
+      .filter((item) => Math.abs(item.rotation ?? 0) >= 45);
+    const rotatedNumericGrid = rotatedItems.length >= 8 &&
+      rotatedItems.filter((item) => /\d/.test(item.text)).length / rotatedItems.length >= 0.12 &&
+      !/[.!?]\s*$/.test(block.text.trim());
     const tableAdjacentNumericRow = layoutRole === "heading" && block.lines.length === 1 &&
       block.lines[0].items.length >= 1 && numericDensity >= 0.12 &&
       /[A-Za-z]/.test(block.text) &&
       nearbyTableCaption;
-    const role = denseCjkBody || numericRow || mathRow || alignedTableRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation ? "paragraph" : layoutRole;
+    const role = denseCjkBody || numericRow || mathRow || alignedTableRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || rotatedNumericGrid ? "paragraph" : layoutRole;
     const style = styleSignature(block, layouts, baseFontSize, blocks[index - 1], blocks[index + 1]);
     const scoreByRole: Partial<Record<CanonicalRole, number>> = {
       paragraph: role === "paragraph" ? confidence : 0.22,
@@ -446,6 +451,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       !tableAdjacentNumericRow &&
       !alignedTableRow &&
       !tableHeaderRow &&
+      !rotatedNumericGrid &&
       headingTextShape(block.text) &&
       (!paragraphLike(block.text) || nonBodyFont)
     ) {

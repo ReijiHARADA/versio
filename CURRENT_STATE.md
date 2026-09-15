@@ -63,6 +63,7 @@
 - 全Vitestも再実行し、61 files / 339 tests passed。TypeScript と lint も成功した。
 - 回転表の実PDFプローブでは、表セルのnative textを捨てずに保持しつつ、行列の完全復元は未達と確認。誤った構造化を避ける現行の安全側挙動を維持し、次回は行帯クラスタの一般化を検討する。
 - 回転表のx軸行帯クラスタ案は実PDFで`Factor...`セル列をheadingへ誤昇格させたためリバート。回帰テストは成功し、安全側fallbackを維持した。
+- その原因に対し、回転かつ数値密度の高いblockをheading evidenceから除外する一般ガードを追加。`wear-scale` 14ページのセル列はheadingにならず、table/paragraph候補として保持されることを確認した。
 
 ### 2026-09-15 停止 checkpoint
 
