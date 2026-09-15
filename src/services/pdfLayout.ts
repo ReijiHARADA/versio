@@ -1433,6 +1433,12 @@ function logLayoutBlockBoundaries(blocks: LayoutBlock[]): void {
   for (const [index, block] of blocks.entries()) {
     const fonts = [...new Set(block.lines.flatMap((line) => line.items.map((item) => item.fontName)))];
     console.warn(`[PDF_LAYOUT_BLOCK] index=${index} role=${block.role} page=${block.pageStart}-${block.pageEnd} lines=${block.lines.length} fonts=${fonts.join(",")} text=${block.text.slice(0, 180)}`);
+    if (fonts.length > 1) {
+      for (const [lineIndex, line] of block.lines.entries()) {
+        const lineFonts = [...new Set(line.items.map((item) => item.fontName))].join(",");
+        console.warn(`[PDF_LAYOUT_LINE] block=${index} line=${lineIndex} y=${line.y.toFixed(2)} x=${line.bbox.x.toFixed(2)} items=${line.items.length} fonts=${lineFonts} text=${line.text.slice(0, 160)}`);
+      }
+    }
   }
 }
 

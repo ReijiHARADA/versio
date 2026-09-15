@@ -2704,3 +2704,9 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Worktree is clean; no background audit or translation process is running.
 - Verified baseline remains extraction corpus 56/56 and the latest benchmark findings are documented above.
 - Next resume point is a generic geometry/style boundary split for mixed caption/table streams, starting with a synthetic fixture. Translation-server, quality gate, cascade, and `.app` remain unchanged.
+
+### 2026-09-16 line-level mixed-stream evidence
+
+- Expanded the opt-in `PDF_LAYOUT_DEBUG=1` logger to emit line-level native font, x/y, item-count, and text diagnostics for mixed-font blocks.
+- Probe confirms the Elsevier mixed streams begin with two `g_d0_f5` heading lines, then switch to `g_d0_f1` body lines in the same block (Table 5 page 6, Table 6 page 9, and the analogous Table 7 stream page 15). This is direct evidence that the boundary must be introduced during line/block formation.
+- `npx tsc --noEmit` passes. No production extraction behavior changes were made by this diagnostic-only addition.

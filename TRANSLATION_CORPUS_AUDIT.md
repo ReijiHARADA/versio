@@ -2713,3 +2713,7 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 ### 2026-09-16 pause checkpoint
 
 The extraction investigation is paused at a clean checkpoint. No translation-server or `.app` changes were made. The next action is to validate a generic geometry/style boundary split for mixed caption/table streams with a synthetic fixture before changing production grouping.
+
+### 2026-09-16 line-level mixed-stream evidence
+
+The opt-in layout diagnostic now reports each line in mixed-font blocks. The Elsevier probe shows two `g_d0_f5` heading lines followed by `g_d0_f1` body lines inside one paragraph block for the Table 5/6 (and analogous Table 7) streams. This confirms the next fix belongs in generic line/block formation; no production role rule was added in this checkpoint.
