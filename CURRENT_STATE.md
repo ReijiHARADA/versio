@@ -69,6 +69,7 @@
 - `npm run bench:pdf-extraction` を再生成。20 cached papers、sourceIntegrityRate 平均1.0、titleExact 0.9。抽出ベンチマークの生成物は `test-data/real-papers/reports/extraction-baseline-latest.json` に更新された。
 - caption近傍の一行candidateをtable regionへ含める条件を、終端句読点なし・数値密度ありに限定。実コーパス44/44で回帰なし。
 - 全Vitestを再実行し、61 files / 340 tests passed。表region条件変更による既存機能の回帰なし。
+- caption隣接の本文をtable regionへ含めないCanonical synthetic regressionを追加し、pipeline 11/11成功。
 
 ### 2026-09-15 停止 checkpoint
 

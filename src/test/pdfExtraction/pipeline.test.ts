@@ -123,6 +123,29 @@ describe("canonical extraction pipeline", () => {
     expect(prose?.roleScores.table ?? 0).toBeLessThan(0.94);
   });
 
+  it("keeps a prose line out of a caption-adjacent table region", () => {
+    const rows = ["A 1.2 3.4", "B 2.3 4.5", "C 3.4 5.6"].flatMap((row, index) => {
+      const [label, first, second] = row.split(" ");
+      return [
+        { text: label, x: 80, y: 160 + index * 14, width: 20, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+        { text: first, x: 180, y: 160 + index * 14, width: 30, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+        { text: second, x: 240, y: 160 + index * 14, width: 30, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+      ];
+    });
+    const result = extractFromPages({
+      pages: [{ pageNumber: 1, width: 500, height: 700, textItems: [
+        { text: "Table 1. Results", x: 80, y: 100, width: 120, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+        { text: "This sentence explains the experiment and should remain prose.", x: 80, y: 125, width: 260, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+        ...rows,
+      ] }],
+      paperId: "table-region-prose", filePath: "/tmp/table.pdf", fileHash: "table", metadata: { pageCount: 1 },
+    });
+    const prose = result.canonical.nodes.find((node) => node.text?.startsWith("This sentence"));
+    const region = result.canonical.nodes.find((node) => node.role === "table" && !node.text);
+    expect(prose?.role).toBe("paragraph");
+    expect(region?.boundingBoxes[0]?.y).toBeGreaterThan(130);
+  });
+
   it("keeps running references such as Table 4 shows as paragraph text", () => {
     const pages = [{
       pageNumber: 1,
