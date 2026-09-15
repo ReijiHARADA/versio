@@ -1934,3 +1934,7 @@ Full test, lint, and typecheck revalidation succeeded after the extraction basel
 ### 2026-09-16 checkpoint: dense word evidence benchmark
 
 `npm run bench:pdf-extraction` をdenseWordColumns導入後に再実行し、20 cached papersのレポートを更新した。`sourceIntegrityRate`は既存の1.0水準を維持し、抽出コーパス42/42も維持。ppg-earring page2/3の二段組検出改善を確認済み。
+
+### 2026-09-16 checkpoint: ppg block-boundary audit
+
+`ppg-earring`全16ページをdenseWordColumns後に再走査した。173 blocks中、左右列が同一blockへ混在するものは2、複数ページblockは2。page2/3の列検出は改善したが、page3/page13に混在blockが残るため完了条件は未達。denseWordColumnsはsource integrity回帰なし（コーパス42/42）。
