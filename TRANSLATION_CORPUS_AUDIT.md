@@ -2790,6 +2790,8 @@ The corpus diagnostic now also aggregates by format family. The largest suspicio
 
 Manual review of `medical-image-segmentation-deep-learning` confirms genuine left/right prose interleaving in its first suspicious blocks (x≈50 and x≈317). The diagnostic is useful for prioritization, while production splitting remains gated on table/list evidence.
 
+The extraction corpus remains green at 56/56 after the diagnostic updates; same-page column-stitch thresholds were left unchanged pending stronger combined Evidence.
+
 The corpus diagnostic now stores up to five concrete samples per paper (page, x clusters, assigned columns, and source excerpt), allowing repeatable manual review without changing extraction behavior.
 
 The x-cluster counter was corrected to compare sorted adjacent coordinates. The corpus total remains 255 suspicious blocks, so the earlier baseline was not inflated by duplicate coordinates.

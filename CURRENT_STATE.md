@@ -2817,6 +2817,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Reviewed `medical-image-segmentation-deep-learning`: its first suspicious blocks are genuine left/right prose interleaving (x≈50 and x≈317), not harmless table geometry. The report is actionable, but wide blocks still require table/list safeguards before any production split.
 
+- The corpus regression was rerun after the diagnostic-only changes: 56/56 passed. Same-page column-stitch thresholds remain unchanged because both valid continuation and false interleaving cases are present.
+
 ### 2026-09-16 corpus diagnostic samples
 
 - Extended `diagnose:pdf-corpus` to retain up to five page/x-cluster/column/text samples per paper, so manual review can be resumed without rerunning extraction or guessing which blocks produced a count.

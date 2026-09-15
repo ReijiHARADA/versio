@@ -6,7 +6,7 @@ import { reconstructDocument } from "../src/services/pdfLayout";
 const root = path.resolve(".");
 const catalog = JSON.parse(fs.readFileSync(path.join(root, "test-fixtures/real-papers/catalog.json"), "utf8"));
 const pdfDir = path.join(root, catalog.pdfDir);
-const reports = [] as Array<{ id: string; formatFamily?: string; pages: number; suspiciousBlocks: number; samples: Array<{ page: number; xClusters: number[]; columns: string[]; text: string }> }>;
+const reports = [] as Array<{ id: string; formatFamily?: string; pages: number; suspiciousBlocks: number; samples: Array<{ page: number; xClusters: number[]; xSpread: number; typicalLineWidth: number; bboxWidth: number; columns: string[]; text: string }> }>;
 for (const paper of catalog.papers) {
   const pdfPath = path.join(pdfDir, paper.filename);
   if (!fs.existsSync(pdfPath)) continue;
@@ -33,6 +33,9 @@ for (const paper of catalog.papers) {
     samples: suspicious.slice(0, 5).map((block) => ({
       page: block.pageStart,
       xClusters: [...new Set(block.lines.map((line) => Math.round(line.x)))].sort((a, b) => a - b),
+      xSpread: Math.round((Math.max(...block.lines.map((line) => line.x)) - Math.min(...block.lines.map((line) => line.x))) * 10) / 10,
+      typicalLineWidth: Math.round((block.lines.map((line) => line.width).filter((width) => width > 0).sort((a, b) => a - b)[Math.floor(block.lines.length / 2)] ?? 0) * 10) / 10,
+      bboxWidth: Math.round(block.bbox.width * 10) / 10,
       columns: [...new Set(block.lines.map((line) => line.column))],
       text: block.text.slice(0, 240),
     })),
