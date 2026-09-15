@@ -1463,10 +1463,22 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
     const lineWidths = block.lines.map((line) => line.width).filter((width) => width > 0);
     const typicalLineWidth = median(lineWidths) || 1;
     const startsMidPage = (block.lines[0]?.y ?? 0) > (block.lines[0]?.pageHeight ?? 792) * 0.35;
-    if (block.role !== "paragraph" || columns.size < 2 || columns.has("spanning") ||
+    const xBands = [...new Set(block.lines.map((line) => Math.round(line.x / 24) * 24))].sort((a, b) => a - b);
+    const inferredTwoColumn = columns.size === 1 && xBands.length >= 2 &&
+      block.bbox.width >= typicalLineWidth * 1.65;
+    if (block.role !== "paragraph" || (!inferredTwoColumn && columns.size < 2) || columns.has("spanning") ||
         block.bbox.width < typicalLineWidth * 1.65 || block.lines.length < 3 || !startsMidPage) {
       result.push(block);
       continue;
+    }
+    if (inferredTwoColumn) {
+      const splitX = (Math.min(...xBands) + Math.max(...xBands)) / 2;
+      const left = block.lines.filter((line) => line.x <= splitX).sort((a, b) => a.y - b.y);
+      const right = block.lines.filter((line) => line.x > splitX).sort((a, b) => a.y - b.y);
+      if (left.length >= 2 && right.length >= 2) {
+        for (const run of [left, right]) result.push({ role: "paragraph", text: joinLines(run), lines: run, pageStart: run[0].page, pageEnd: run[run.length - 1].page, column: run[0].column, bbox: blockBbox(run) });
+        continue;
+      }
     }
     let run: LayoutLine[] = [];
     let runColumn: LayoutColumn | null = null;

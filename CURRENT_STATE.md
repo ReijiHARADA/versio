@@ -57,6 +57,7 @@
 
 ### 2026-09-16 extraction checkpoint
 
+- native列ラベルが全て`single`になるPDFでも、同一x帯の反復・行幅比・ページ内位置を組み合わせて列を推定する`splitMixedColumnBlocks`補強を追加。PPG Earringのpage 1で本文2列が交互に混ざっていた1 blockを左右2 paragraphへ分離でき、全体診断は suspicious 164→129。extraction corpus 56/56、reading-order 27/27 passed。列推定は図表や数式帯にも影響し得るため、次回は安全回帰とsource integrityを追加確認する。
 - `npm run diagnose:pdf-corpus` を現行コードで再実行し、26 papers / 497 pages / suspicious 164 blocks を記録。内訳は arXiv 144、PMLR 6、Elsevier 6、ACM 3 などで、arXivの大半は図・表のベクターラベルがnative textとして混在する診断候補。これはproduction role変更の根拠にはせず、次回はnative geometryとcaption/table provenanceを照合する。
 - 再開時の停止確認として `npm run test:extraction-corpus -- --run` を現行コードで再実行し、real-paper fixture 56/56 passed（reading-order 27、baseline 29）。既存のfont-transition heading / mixed-column保護 / table fallback変更に回帰なし。長時間ジョブは起動しておらず、次回は下記の未解決項目から再開する。
 
