@@ -125,4 +125,5 @@ describe("baseline benchmark on cached real papers", () => {
       expect(hyphenatedContinuation?.role).toBe("paragraph");
     }, 60_000);
   }
+
 });

@@ -2400,3 +2400,7 @@ text-bearing table候補には数式断片も含まれることを横断走査�
 ### Extraction Phase checkpoint: extraction corpus after table precision guard (2026-09-16)
 
 最新guard後のextraction corpusは2 files / 43 testsが通過した。captionless table回帰を含むcached-paper checksに回帰はない。手動のparagraph/table precision確認は未完了。
+
+### Extraction Phase checkpoint: table precision audit calibration (2026-09-16)
+
+長文table候補ゼロという単純不変条件は、captionや複合構造を誤って拒否するため採用しなかった。追加テストは撤回し、PPG実表回帰22/22を維持。table precisionはpublisher別のnative geometry＋caption provenance正解データで評価する。

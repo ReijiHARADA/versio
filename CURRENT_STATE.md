@@ -2134,3 +2134,7 @@ publisher横断走査でtext-bearing table候補が数式にも存在するこ�
 ### 2026-09-16 checkpoint: table projection audit artifact
 
 captionless table precision guard後の20 cached PDF横断診断を`test-data/real-papers/reports/table-projection-audit-latest.json`へ保存した。Paper table block合計は80。caption由来regionとtext-bearing候補を含む診断値であり、publisher別の手動precision/recall確定値ではない。次回はこの一覧からnative画像照合を行う。
+
+### 2026-09-16 checkpoint: table precision audit calibration
+
+横断監査で長文table候補が残るため、単純な「長文tableゼロ」テストはcaption/複合構造を誤って失敗させることを確認し、追加テストを採用せず撤回した。実表回帰22/22は維持。今後はlayout geometryとcaption provenanceを分離したpublisher別正解データでprecisionを測る。
