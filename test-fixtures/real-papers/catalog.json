@@ -721,16 +721,17 @@
     },
     {
       "id": "medical-deep-learning-meta-review",
-      "title": "Medical Deep Learning -- A systematic Meta-Review",
-      "doi": null,
-      "publisher": "arXiv",
-      "venue": "arXiv",
-      "formatFamily": "arxiv",
+      "title": "Medical deep learning—A systematic meta-review",
+      "doi": "10.1016/j.cmpb.2022.106874",
+      "publisher": "Elsevier",
+      "venue": "Computer Methods and Programs in Biomedicine",
+      "formatFamily": "elsevier",
       "templateVersion": "arxiv",
       "discipline": "medicine",
       "selectionReason": "medical review with dense citations and mixed prose",
       "kinds": [
         "single-column",
+        "tables",
         "citations"
       ],
       "filename": "medical-deep-learning-meta-review.pdf",
