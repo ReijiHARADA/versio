@@ -2042,3 +2042,7 @@ SpeechInの原PDFでは、ページ番号を含む`タイトル • 192:3`形式
 ### 2026-09-16 checkpoint: full validation after running-header evidence
 
 running-header suffix evidence追加後に全Vitest 61 files / 327 tests、extraction corpus 42/42、lint、TypeScriptを再実行して成功した。SpeechInの上端publisher headerは本文から除外され、既存の二段組・caption/table/list回帰は維持。手動レビュー対象の未完結tailと低信頼table gridは引き続き未完了。
+
+### 2026-09-16 checkpoint: post-header corpus audit
+
+publisher running-header evidence後にsource-policy verifierと全20 paper benchmarkを再実行した。2,457 paragraphs / 492 warning-tagged blocks / 39 explicit violationsの安全抑止状態を維持し、source integrity水準も維持。header除外による新規抽出回帰は確認されていない。手動でのparagraph boundary精度とtable grid recallは未完了。
