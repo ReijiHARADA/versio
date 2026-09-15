@@ -1072,7 +1072,7 @@ function roleForLine(
   if (isEquationLine(text)) return "equation";
   if (
     line.page > 1 &&
-    line.y < line.pageHeight * 0.12 &&
+    line.y < (line.pageHeight ?? 792) * 0.12 &&
     line.fontSize <= baseFont * 0.82 &&
     (looksLikePersonName(text) || /^[A-Z][A-Za-z'’-]+\s+et\s+al\.?$/i.test(text))
   ) {
