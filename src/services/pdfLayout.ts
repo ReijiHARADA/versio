@@ -370,6 +370,15 @@ function clusterItemsIntoLines(
     const horizontal = group.filter((item) => Math.abs(item.rotation ?? 0) < 45);
     const horizontalWords = horizontal.map((item) => item.text).join(" ").trim().split(/\s+/).filter(Boolean).length;
     if (rotated.length >= 4 && horizontalWords >= 4) return [rotated, horizontal];
+    // A rotated matrix and its explanatory footnote can share a baseline and
+    // rotation.  Matrix cells are short native items; the footnote is a
+    // sentence-sized item. Split only with several short rotated cells plus a
+    // clearly prose-like rotated item, preserving both source texts.
+    const rotatedCells = rotated.filter((item) => item.width <= 48 && item.text.trim().split(/\s+/).length <= 3);
+    const rotatedProse = rotated.filter((item) => item.width > 80 || item.text.trim().split(/\s+/).length >= 4);
+    if (rotatedCells.length >= 4 && rotatedProse.length > 0) {
+      return [rotatedCells, rotated.filter((item) => !rotatedCells.includes(item))];
+    }
     return [group];
   });
   return separatedGroups

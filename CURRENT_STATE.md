@@ -2299,4 +2299,6 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 
 回転・水平混在 line の分離ガードを追加し、複数の回転 native item と水平 prose が同一 baseline に入る場合は別 line として扱うようにした。reading-order + pipeline は 46/46、extraction corpus は 43/43 を維持。`wear-scale` の脚注も回転配置のためこのガードだけでは分離できず、次回は x帯の連続性を組み合わせる。
 
+回転文字同士でも、短いセル item と長い prose item を幅・単語数で分ける guard を追加。`wear-scale` p.14 では Cronbach 脚注が独立 line になり、表セルと脚注の混在が一段減った。ただし表セル側に後続本文が連結する別境界は残る。extraction corpus 43/43 は維持。
+
 captionless numeric-row の synthetic regression を追加し、6行の反復 x 列が table evidence（score >= 0.94）として生成されることを確認。pipeline suite は 5/5。実PDFではページ内の表後注記がまだ同じ block に残るため、region の上下境界を手動比較してから拡張する。
