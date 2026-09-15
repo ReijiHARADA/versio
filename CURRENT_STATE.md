@@ -2018,3 +2018,7 @@ PPG page 2で、本文の直後に単独出力された`86.29 ± 2.96% ...`がdi
 ### 2026-09-16 checkpoint: numeric-line canonical verification
 
 PPG page 2のlayout dumpでは短い統計行が物理的に独立blockのまま残るが、これはnative provenanceを保持するため意図した状態である。新しいrole evidenceでは同一列の未完結paragraph直後という隣接条件により equation score がparagraphとの競合で敗れ、Canonical resolver後はparagraphへfallbackする。物理blockを文字列結合してsource integrityを損なう変更は行っていない。
+
+### 2026-09-16 checkpoint: full regression after numeric adjacency evidence
+
+全Vitestを再実行し、61 files / 327 tests pass。numeric proseのResolver evidence追加後も既存のreading order、canonical relation、caption/table/list projectionに回帰なし。抽出コーパス42/42、lint/typecheckも直近検証済み。手動レビュー未完了のため、完了判定は保留。
