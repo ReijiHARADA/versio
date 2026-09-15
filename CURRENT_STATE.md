@@ -2126,3 +2126,7 @@ publisher横断走査でtext-bearing table候補が数式にも存在するこ�
 ### 2026-09-16 checkpoint: captionless table precision recheck
 
 全corpus走査で通常本文がtable blockへ投影されるリスクを確認し、文章句読点（文末period、!、?、semicolon）を含むtext-bearing候補を除外するprecision guardを追加。小数点は許可し、PPG Component/Weight grid回帰は22/22通過。走査上のPaper table block数は423から80へ減少し、過剰投影を抑制した。publisher横断の真陽性recallは未測定。
+
+### 2026-09-16 checkpoint: extraction corpus after table precision guard
+
+最新table precision guard後に`npm run test:extraction-corpus -- --run`を実行し、2 files / 43 testsが通過。captionless table回帰を含む全cached-paper extraction checksに回帰なし。手動レビュー未完了のためgoalは継続。

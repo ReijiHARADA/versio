@@ -2396,3 +2396,7 @@ text-bearing table候補には数式断片も含まれることを横断走査�
 ### Extraction Phase checkpoint: captionless table precision recheck (2026-09-16)
 
 通常本文のtable誤投影リスクを横断走査で確認し、文中句読点を持つtext-bearing候補をprojection対象外にした。小数点は除外せず、PPG gridは維持。Paper table block inventoryは423から80へ減少したが、これはprecision guardの影響を示す診断値であり、publisher横断recallの完了指標ではない。
+
+### Extraction Phase checkpoint: extraction corpus after table precision guard (2026-09-16)
+
+最新guard後のextraction corpusは2 files / 43 testsが通過した。captionless table回帰を含むcached-paper checksに回帰はない。手動のparagraph/table precision確認は未完了。
