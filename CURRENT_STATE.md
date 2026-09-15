@@ -2334,3 +2334,7 @@ Reading-order と canonical pipeline の重点回帰を再実行し、2 files / 
 ### Rotated band guard validation (2026-09-16)
 
 rotation content merge guardにx帯の分離 evidence を追加。重点回帰 47/47、extraction corpus 43/43 を通過し、既存の合成表・列跨ぎ・source integrityに回帰なし。`wear-scale` 実PDFの表全体region再構成は未確認のため、次回ベンチマークで flattened rows と table/prose混在を比較する。
+
+### Rotated band benchmark (2026-09-16)
+
+x帯guard後に20-paper benchmarkを再実行。`wear-scale` は rotatedNativeItemCount=248、rotatedLineCount=33、flattenedNumericRowCount=11、sourceIntegrityRate=1.0。重点回帰47/47、extraction corpus43/43。guardによる既存精度低下は検出されなかったが、表後注記との完全なregion分離はまだ手動確認待ち。

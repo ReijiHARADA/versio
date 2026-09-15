@@ -2436,3 +2436,7 @@ Algorithm/Require本文や数式断片がtable candidateになる例を確認し
 ### Rotated band guard validation (2026-09-16)
 
 回転line間のx帯分離guardを追加し、重点回帰47/47、extraction corpus43/43を通過。既存の合成表・列跨ぎ・source integrityに回帰なし。実PDFでのtable region完全再構成は未完了。
+
+### Rotated band benchmark (2026-09-16)
+
+x帯guard後の20-paper benchmarkで、`wear-scale` は rotated items 248、rotated lines 33、flattened numeric rows 11、source integrity 1.0。重点回帰47/47、extraction corpus43/43。完全なtable region分離は未完了。
