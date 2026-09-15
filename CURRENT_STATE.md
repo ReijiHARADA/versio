@@ -2816,3 +2816,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 arXiv sample review
 
 - Reviewed `medical-image-segmentation-deep-learning`: its first suspicious blocks are genuine left/right prose interleaving (x≈50 and x≈317), not harmless table geometry. The report is actionable, but wide blocks still require table/list safeguards before any production split.
+
+### 2026-09-16 corpus diagnostic samples
+
+- Extended `diagnose:pdf-corpus` to retain up to five page/x-cluster/column/text samples per paper, so manual review can be resumed without rerunning extraction or guessing which blocks produced a count.
+- TypeScript passes; extraction behavior and regression metrics are unchanged.

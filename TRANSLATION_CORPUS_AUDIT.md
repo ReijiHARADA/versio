@@ -2789,3 +2789,5 @@ Added the corpus wrapper `npm run diagnose:pdf-corpus -- [output.json]`. The cur
 The corpus diagnostic now also aggregates by format family. The largest suspicious-block groups are arXiv (177), ACM (33), OzCHI (14), Elsevier (13), and IEEE (8); counts are used to prioritize review and are not themselves failure rates.
 
 Manual review of `medical-image-segmentation-deep-learning` confirms genuine left/right prose interleaving in its first suspicious blocks (x≈50 and x≈317). The diagnostic is useful for prioritization, while production splitting remains gated on table/list evidence.
+
+The corpus diagnostic now stores up to five concrete samples per paper (page, x clusters, assigned columns, and source excerpt), allowing repeatable manual review without changing extraction behavior.
