@@ -2915,3 +2915,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 list ground-truth benchmark
 
 - Added five manually verified list items to the Interactive Jewellery ground truth. The refreshed extraction benchmark reports listItemRecall **1.0** for that paper; list precision is **0.1875**, revealing remaining over/under-segmentation ambiguity and establishing a measurable follow-up target rather than treating recall alone as completion.
+
+### 2026-09-16 list annotation completeness
+
+- Separated `completeListAnnotations` from document-wide `completeAnnotations` in the extraction benchmark. Interactive Jewellery's five list items are verified examples but not exhaustive, so list precision is now intentionally omitted until full list annotation exists; recall remains measurable. This prevents the former misleading 0.1875 precision from being treated as an extraction score.
+- TypeScript and extraction corpus both pass (56/56).

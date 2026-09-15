@@ -21,6 +21,8 @@ export type PartialGroundTruth = {
   id: string;
   /** True only when the listed structural labels are exhaustive. */
   completeAnnotations?: boolean;
+  /** List annotations are often partial even when heading annotations are exhaustive. */
+  completeListAnnotations?: boolean;
   title?: string;
   authors?: string[];
   affiliations?: string[];
@@ -273,7 +275,7 @@ export function evaluateBaselinePaper(input: {
           gold.listItems
         )
       : undefined,
-    listItemPrecision: gold?.completeAnnotations && gold.listItems
+    listItemPrecision: gold?.completeListAnnotations && gold.listItems
       ? substringPrecision(
           extracted.blocks
             .filter((b) => b.type === "paragraph" && b.metadata?.listRole === "item")

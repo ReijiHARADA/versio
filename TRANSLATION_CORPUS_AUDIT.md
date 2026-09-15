@@ -2884,3 +2884,7 @@ Full application regression after the current extraction changes: **61 files / 3
 ### 2026-09-16 list metric baseline
 
 - Interactive Jewellery now has five verified list-item annotations. Benchmark listItemRecall is 1.0; listItemPrecision is 0.1875, so list preservation is measurable but not yet complete. This prevents recall-only overclaiming.
+
+### 2026-09-16 list metric semantics
+
+- Benchmark now requires an explicit `completeListAnnotations` flag before reporting list precision. The Interactive Jewellery list annotation is partial, so its precision is withheld while recall remains reported. This separates annotation coverage from extraction quality; TypeScript and corpus tests pass.
