@@ -2779,3 +2779,5 @@ A narrower variant restricted to short lowercase or hyphen fragments caused the 
 The stable extraction benchmark was rerun: 26 cached papers and aggregate source-integrity 1.0. The Elsevier meta-review remains at table caption/region/relation recall 0.571428..., so no improvement is claimed yet.
 
 Native line inspection found that the Elsevier mixed paragraphs have multiple x clusters (roughly 38, 270–281, and 307) despite collapsed column metadata; the ppg-earring guard lacks this same wide multi-cluster paragraph shape. This supports a page-aware clustering experiment, but an x-only split is intentionally deferred until line ordering and table provenance are part of the evidence.
+
+The table audit also shows that Table 1, 3, 4, and 7 are native caption blocks, while Table 2, 5, and 6 are present in `pdftotext -layout` but not as literal PDF.js native items (or are embedded in paragraph streams). This is an upstream native-fact representation loss rather than evidence for a caption-name rule; recovery should remain generic and confidence-aware.

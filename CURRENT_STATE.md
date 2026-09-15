@@ -2796,3 +2796,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Inspected all unusually wide paragraph blocks in the Elsevier fixture and compared them with the ppg-earring regression. Elsevier mixed blocks contain distinct native x clusters (for example x≈38 and x≈307, plus gutter fragments around x≈270–281) while their assigned column metadata can collapse to one stream.
 - The ppg-earring guard does not show the same wide multi-cluster paragraph shape. This is useful evidence for a future page-aware repair, but no x-only split was implemented because line ordering and table-cell provenance still need to be included.
+
+### 2026-09-16 table-caption native fact check
+
+- The Elsevier ground truth expects Table 1–7. Native extraction resolves Table 1, 3, 4, and 7 captions; Table 2, 5, and 6 appear in `pdftotext -layout` but are absent as literal native items or embedded in paragraph streams in the PDF.js facts.
+- This distinguishes a resolver miss from an upstream native-text representation loss. Adding caption vocabulary or a paper-specific recovery would violate the extraction policy; the next safe route is a generic glyph/geometry caption candidate backed by native items, with explicit low confidence when the literal caption token is absent.
