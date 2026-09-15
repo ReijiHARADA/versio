@@ -2749,3 +2749,7 @@ Added a synthetic two-column fixture with wide native line widths to protect col
 ### 2026-09-16 spanning-vs-column regression
 
 The synthetic wide-column fixture now includes a full-width spanning line and asserts the distinction from wide column text. Pipeline remains 13/13; the real-paper corpus remains 56/56.
+
+### 2026-09-16 wide-block diagnostic
+
+The opt-in layout logger now also reports unusually wide blocks relative to their line widths, making upstream column-label loss observable. This diagnostic does not change extraction behavior.

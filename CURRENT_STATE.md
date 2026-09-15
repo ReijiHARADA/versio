@@ -2753,3 +2753,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Extended the synthetic wide-column fixture with a full-width spanning line. It verifies that ordinary wide lines remain left/right while a genuinely wide native line remains `spanning`.
 - Pipeline suite: 13/13 passed. This is a classifier guard; the Elsevier mixed stream still requires upstream native-layout diagnosis.
+
+### 2026-09-16 wide-block diagnostic
+
+- Extended opt-in layout diagnostics to include unusually wide blocks (relative to their typical line width), not only mixed-font blocks. This captures upstream streams that lose column labels before block grouping.
+- TypeScript passes; this is diagnostic-only and does not change extraction roles.
