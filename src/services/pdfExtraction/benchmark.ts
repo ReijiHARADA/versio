@@ -62,6 +62,8 @@ export type BaselinePaperReport = {
     listItemPrecision?: number;
     figureCaptionRelation?: number;
     tableCaptionRelation?: number;
+    tableCaptionRelationRecall?: number;
+    tableCaptionRelationPrecision?: number;
     authorAffiliationF1?: number;
     sourceIntegrityRate: number;
     fusedTitle: string;
@@ -221,6 +223,27 @@ export function evaluateBaselinePaper(input: {
     tableRegionPrecision: gold?.completeAnnotations && gold.tableRegions
       ? substringPrecision(structuredTableCaptions, gold.tableRegions)
       : undefined,
+    tableCaptionRelationRecall:
+      tables.length > 0
+        ? tables.filter((caption) => {
+            const captionNode = extracted.canonical.nodes.find(
+              (node) => node.role === "caption" && node.text === caption
+            );
+            return captionNode
+              ? captionRels.some(
+                  (relation) =>
+                    relation.from === captionNode.id &&
+                    extracted.canonical.nodes.find((node) => node.id === relation.to)?.role === "table"
+                )
+              : false;
+          }).length / tables.length
+        : undefined,
+    tableCaptionRelationPrecision:
+      captionRels.length > 0
+        ? captionRels.filter(
+            (relation) => extracted.canonical.nodes.find((node) => node.id === relation.to)?.role === "table"
+          ).length / captionRels.length
+        : undefined,
     listItemRecall: gold?.listItems
       ? substringRecall(
           extracted.blocks.filter((b) => b.type === "paragraph").map((b) => b.original ?? ""),
