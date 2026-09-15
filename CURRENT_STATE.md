@@ -104,7 +104,7 @@
 - Preview ページジャンプは失敗しても PDF 自体は開く
 - 配布 `.app` での一連操作の **公証付きビルドでの再確認**は残る（acceptance checklist は整備済み）
 - `tauri-plugin-shell` の未使用残り・公証 CI は hardening 残件（P0_HARDENING）
-- **抽出残差（本変更では未修正）**: `npm run test:extraction-corpus` にて実コーパスで確認。現状ローカル fixture では `interactive-jewellery`（token order）、`neuroscience-rule-following` / `economics-regularized-deepiv`（page1 multi-column 判定）が失敗。2 段組・図キャプション・affiliation grid・インライン数式などは別ワークストリーム
+- **抽出残差（現行）**: `npm run test:extraction-corpus` は56/56 passed。診断上は図表ベクターラベル、native streamでcaption境界が失われた表、少数の段組混在候補が残る。誤推定を避け、native provenance付きの安全なfallbackを優先している。
 - **native SQLite 移行**: 未実施。下記計測を見て判断する（現時点で rewrite しない）
 
 ---
