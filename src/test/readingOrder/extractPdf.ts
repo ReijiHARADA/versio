@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import fs from "node:fs";
 import path from "node:path";
-import type { ExtractedPage, ExtractedTextItem } from "../../services/pdfService";
+import { collectImagePlacements, type ExtractedPage, type ExtractedTextItem } from "../../services/pdfService";
 
 const require = createRequire(import.meta.url);
 const pdfjsLib = require("pdfjs-dist/legacy/build/pdf.js") as typeof import("pdfjs-dist");
@@ -55,6 +55,7 @@ export async function extractPdfPages(pdfPath: string): Promise<ExtractedPage[]>
       width: viewport.width,
       height: viewport.height,
       textItems,
+      imagePlacements: collectImagePlacements(await page.getOperatorList(), viewport.height),
     });
   }
 

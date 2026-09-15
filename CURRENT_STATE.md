@@ -2210,3 +2210,7 @@ Web buildで検出された `tableText` nullable の型エラーを、nativeGrid
 ### 2026-09-16 checkpoint: figure-image text boundary regression
 
 画像配置矩形と text bbox の重なり判定を reading-order regression に追加し、画像内部の埋め込みラベルを本文から除外しつつ画像外本文を保持することを確認。focused reading-order suite は40/40通過。実PDFの画像配置データを使う本番経路の定量比較は次回継続する。
+
+### 2026-09-16 checkpoint: real-paper image geometry regression coverage
+
+`src/test/readingOrder/extractPdf.ts` が本番と同じ native image placement を cached PDF から収集するよう統一。これにより画像内 text 除外が synthetic fixtureだけでなく実PDF corpusでも検証される。extraction corpus は2 files / 43 tests通過。次回は画像重なり候補数と本文誤除外率のレポート化を行う。

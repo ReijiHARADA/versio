@@ -132,7 +132,7 @@ function applyCtm(ctm: number[], x: number, y: number): [number, number] {
   return [ctm[0] * x + ctm[2] * y + ctm[4], ctm[1] * x + ctm[3] * y + ctm[5]];
 }
 
-function collectImagePlacements(
+export function collectImagePlacements(
   operatorList: { fnArray: number[]; argsArray: unknown[][] },
   pageHeight: number
 ): PdfImagePlacement[] {
