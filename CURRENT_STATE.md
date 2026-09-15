@@ -2763,3 +2763,9 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Extended flattened-list projection to recognize repeated en/em-dash bullets, which are common in journal PDFs, while leaving a single inline dash as prose.
 - Added regression coverage; pipeline 14/14 and extraction corpus 56/56 pass. This preserves list boundaries without changing native extraction or translation behavior.
+
+### 2026-09-16 full extraction regression verification
+
+- Full Vitest suite passed: 61 files / 344 tests.
+- Extraction-specific pipeline remains 14/14 and real-paper corpus 56/56; lint and TypeScript also pass.
+- This validates safety of the recent list and layout diagnostics, but does not satisfy the extraction completion gate: Elsevier mixed native streams and table-region recall remain unresolved.

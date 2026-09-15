@@ -2757,3 +2757,7 @@ The opt-in layout logger now also reports unusually wide blocks relative to thei
 ### 2026-09-16 dash-bullet preservation
 
 Repeated en/em-dash bullets are now split into list items during projection; a single inline dash remains prose. Pipeline is 14/14 and extraction corpus 56/56.
+
+### 2026-09-16 full extraction regression verification
+
+Full Vitest passed (61 files, 344 tests), with extraction pipeline 14/14 and real-paper corpus 56/56. Lint and TypeScript pass. The extraction goal remains open because mixed native streams and table-region recall are unresolved.
