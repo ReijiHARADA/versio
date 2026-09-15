@@ -2206,3 +2206,7 @@ Web buildで検出された `tableText` nullable の型エラーを、nativeGrid
 ### 2026-09-16 checkpoint: native image placement evidence
 
 `ExtractedPage` に PDF native image placement（矩形）を任意情報として保持し、layout の line grouping 前に、ページ全面画像を除外した大きな画像内部の text item のみを保守的に除外する経路を追加した。これにより図画像内に埋め込まれたラベルが本文 paragraphへ混入する候補を、文字列依存なしに扱える。fixture互換性を維持し、`npm run build`、`npm run lint`、extraction corpus 43/43 を確認済み。実PDFでの画像重なり効果の定量評価は次回実施する。
+
+### 2026-09-16 checkpoint: figure-image text boundary regression
+
+画像配置矩形と text bbox の重なり判定を reading-order regression に追加し、画像内部の埋め込みラベルを本文から除外しつつ画像外本文を保持することを確認。focused reading-order suite は40/40通過。実PDFの画像配置データを使う本番経路の定量比較は次回継続する。

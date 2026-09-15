@@ -89,6 +89,21 @@ describe("isEquationLine", () => {
 });
 
 describe("PDF reading order regression", () => {
+  it("excludes native text embedded inside a figure image", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 1, width: 612, height: 792,
+      imagePlacements: [{ id: "figure-1", x: 180, y: 180, width: 240, height: 180 }],
+      textItems: [
+        { text: "Body text remains", x: 54, y: 120, width: 180, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "Embedded figure label", x: 220, y: 240, width: 120, height: 10, fontSize: 9, fontName: "FigureFont", page: 1 },
+      ],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    const text = blocks.map((block) => block.text).join(" ");
+    expect(text).toContain("Body text remains");
+    expect(text).not.toContain("Embedded figure label");
+  });
+
   it("reads a two-column page down the left column before the right column", () => {
     const pages: ExtractedPage[] = [{
       pageNumber: 1,
