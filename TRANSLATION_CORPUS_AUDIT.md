@@ -2783,3 +2783,5 @@ Native line inspection found that the Elsevier mixed paragraphs have multiple x 
 The table audit also shows that Table 1, 3, 4, and 7 are native caption blocks, while Table 2, 5, and 6 are present in `pdftotext -layout` but not as literal PDF.js native items (or are embedded in paragraph streams). This is an upstream native-fact representation loss rather than evidence for a caption-name rule; recovery should remain generic and confidence-aware.
 
 Added the diagnostic CLI `npm run diagnose:pdf-layout -- <pdf> [output.json]`, which emits wide multi-x-cluster paragraph blocks with their assigned columns and source text. The Elsevier fixture currently reports 14 suspicious blocks over 22 pages; no production classification is changed.
+
+Added the corpus wrapper `npm run diagnose:pdf-corpus -- [output.json]`. The current cached corpus has 26 papers, 497 pages, and 255 suspicious wide/multi-cluster paragraph blocks. This is a diagnostic baseline, not a quality claim.

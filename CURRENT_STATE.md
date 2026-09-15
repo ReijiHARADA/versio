@@ -2806,3 +2806,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Added `npm run diagnose:pdf-layout -- <pdf> [output.json]`. It records suspicious paragraph blocks whose bbox is much wider than their typical line and whose native x positions form multiple clusters, including assigned columns and provenance text.
 - The Elsevier fixture produces 14 suspicious blocks across 22 pages; this is diagnostic-only and leaves extraction roles unchanged. TypeScript passes.
+
+### 2026-09-16 corpus layout diagnostic
+
+- Added `npm run diagnose:pdf-corpus -- [output.json]` to apply the same native x-cluster diagnostic to every cached fixture without changing extraction.
+- Current corpus result: 26 papers, 497 pages, 255 suspicious wide/multi-cluster paragraph blocks. This provides a corpus-level baseline for precision-first page-aware repairs.

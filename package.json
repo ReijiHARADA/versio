@@ -15,6 +15,7 @@
     "diagnose:column-occupancy": "npx tsx scripts/diagnose-column-occupancy.ts",
     "scan:pdf-boundaries": "npx vite-node scripts/scan-extraction-boundaries.ts",
     "diagnose:pdf-layout": "npx tsx scripts/diagnose-pdf-layout.ts",
+    "diagnose:pdf-corpus": "npx tsx scripts/diagnose-corpus-layout.ts",
     "bench:real-paper-translation": "npx --yes tsx scripts/benchmark-real-paper-translation.ts",
     "bench:library": "npx --yes tsx scripts/bench-library-scale.ts",
     "bench:library-scale": "npm run bench:library",
