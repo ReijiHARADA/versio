@@ -2672,3 +2672,5 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Added six metadata-only OA candidates covering medicine and machine learning in `test-fixtures/real-papers/pending-oa-candidates.json`. They remain pending and are excluded from benchmark counts until their PDFs are legally cached and title-verified.
 
 - Corrected the arXiv 1705.04977 pending record to its verified title, “Detecting Statistical Interactions from Neural Network Weights,” and arXiv-issued DOI.
+
+- Cached six OA arXiv PDFs and added verified catalog metadata. The extraction corpus is now 27 catalog entries / 26 cached PDFs, and the extraction regression run passed 56/56 tests. PDF binaries remain local cache-only.

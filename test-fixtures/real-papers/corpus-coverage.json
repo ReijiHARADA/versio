@@ -1,8 +1,8 @@
 {
   "version": "extraction-corpus-coverage-v1",
-  "generatedAt": "2026-09-15T21:14:54.066502+00:00",
-  "paperCount": 21,
-  "cachedPdfCount": 20,
+  "generatedAt": "2026-09-15T21:17:51.143707+00:00",
+  "paperCount": 27,
+  "cachedPdfCount": 26,
   "formatFamilyCounts": {
     "acm-acmart": 5,
     "arxiv": 6,
@@ -49,9 +49,11 @@
     "economics": 1,
     "education": 1,
     "ergonomics": 3,
-    "hci": 9,
+    "hci": 10,
     "linguistics": 2,
+    "machine-learning": 2,
     "marketing": 1,
+    "medicine": 3,
     "neuroscience": 1
   }
 }
