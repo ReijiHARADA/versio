@@ -1930,3 +1930,7 @@ Full test, lint, and typecheck revalidation succeeded after the extraction basel
 ### 2026-09-16 checkpoint: dense word-column evidence trial
 
 既存ピーク検出を維持したまま、左右列のword item数が各300以上かつx分離がページ幅35%以上の場合に限り、長い単語item不足を補う`denseWordColumns` evidenceを追加した。`ppg-earring` page2/3は二段組として検出され、抽出コーパス42/42、lint、typecheckが通過。低密度の教育PDFは昇格されない。次にppg全ページのblock境界とsource integrityを再評価する。
+
+### 2026-09-16 checkpoint: dense word evidence benchmark
+
+`npm run bench:pdf-extraction` をdenseWordColumns導入後に再実行し、20 cached papersのレポートを更新した。`sourceIntegrityRate`は既存の1.0水準を維持し、抽出コーパス42/42も維持。ppg-earring page2/3の二段組検出改善を確認済み。
