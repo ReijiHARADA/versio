@@ -2650,3 +2650,7 @@ caption隣接の本文をtable regionへ含めないCanonical synthetic regressi
 試作したx軸行帯クラスタ化は実PDFでセル列をheadingへ誤昇格させたため採用せず、リバートした。
 代替として、回転かつ数値密度の高いblockをheading evidenceから除外する一般ガードを追加。
 `wear-scale` 14ページでセル列がheadingにならないことを確認し、table/paragraph候補として保持した。
+
+## Extraction-only checkpoint (2026-09-16)
+
+The extraction benchmark was regenerated after the latest boundary and table evidence changes. The cached corpus contains 20 papers; the extraction regression suite remains 44/44 passed, and the benchmark reports source-integrity minimum 1.0 with figure/table relation checks passing for the covered fixtures. This checkpoint records extraction evidence only; translation behavior and the `.app` bundle were not changed. Rotated-table matrix reconstruction and broader manual cross-format review remain open.
