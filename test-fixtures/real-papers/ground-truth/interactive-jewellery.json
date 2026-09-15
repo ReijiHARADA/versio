@@ -25,6 +25,7 @@
   "headingHierarchy": [],
   "tokensInOrder": ["second half of the 20", "In terms of renewing interaction"],
   "figureCaptions": ["Figure 2"],
+  "listItems": ["adornment", "protection", "prosperity", "identity", "memento"],
   "tables": [],
   "pageCount": null,
   "notes": "Heading list manually checked against rendered ACM TEI'16 PDF pages 1-9; other fields remain partial and are not treated as exhaustive."

@@ -2911,3 +2911,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Extended generic flattened-list marker recognition to repeated `(a)`, `a)`, and similar alphabetic markers, while retaining the existing repeated-marker requirement and colon lead-in guard. Focused pipeline 15/15 and extraction corpus 56/56 passed; no translation or `.app` changes.
 
 - Latest full Vitest after alphabetic list marker support: 61 files / 346 tests passed. No application regression detected.
+
+### 2026-09-16 list ground-truth benchmark
+
+- Added five manually verified list items to the Interactive Jewellery ground truth. The refreshed extraction benchmark reports listItemRecall **1.0** for that paper; list precision is **0.1875**, revealing remaining over/under-segmentation ambiguity and establishing a measurable follow-up target rather than treating recall alone as completion.
