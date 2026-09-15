@@ -2290,3 +2290,5 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 ページ局所 grid evidence を追加し、同一ページ・列で6ブロック以上に反復する native x 列と数値セル密度が揃う場合のみ table score 0.96 を生成する。`wear-scale` の flattened numeric row 診断は 58→11 に減少し、通常本文への影響を避けるため caption文字列には依存しない。extraction corpus 43/43 は維持したが、表後注記との境界は未解決で、次回に手動比較する。
 
 追加の reading-order suite は 41/41。`baselineRealPapers.test.ts` は専用設定の除外対象だったため直接実行できず、標準の `test:extraction-corpus`（43/43）で代替確認済み。現行ベンチマークでは `wear-scale` flattenedNumericRowCount=11、`linguistics`=15、`economics`=3、sourceIntegrityRate は各 1.0 を維持。
+
+ページ局所 table grid の回帰後に `npm run build` も成功（既知の ineffective dynamic import 警告のみ）。表セルの一部は table role へ昇格したが、表全体の連続 region と表後注記の分離は未検証のため、次回は手動比較を先に行う。
