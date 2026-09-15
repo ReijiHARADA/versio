@@ -11,22 +11,26 @@ function overlapRatio(item: { x: number; y: number; width: number; height: numbe
   return overlap / Math.max(1, item.width * item.height);
 }
 
-const report: Array<{ filename: string; placements: number; embeddedTextCandidates: number }> = [];
+const report: Array<{ filename: string; placements: number; embeddedTextCandidates: number; samples: Array<{ page: number; text: string; bbox: { x: number; y: number; width: number; height: number }; image: { id: string; x: number; y: number; width: number; height: number } }> }> = [];
 for (const filename of files) {
   const pages = await extractPdfPages(path.join(root, filename));
   let placements = 0;
   let candidates = 0;
+  const samples: Array<{ page: number; text: string; bbox: { x: number; y: number; width: number; height: number }; image: { id: string; x: number; y: number; width: number; height: number } }> = [];
   for (const page of pages) {
     const images = (page.imagePlacements ?? []).filter((image) =>
       image.width >= 100 && image.height >= 50 &&
       !(image.width > page.width * 0.88 && image.height > page.height * 0.88)
     );
     placements += images.length;
-    candidates += page.textItems.filter((item) =>
-      images.some((image) => overlapRatio(item, image) >= 0.8)
-    ).length;
+    for (const item of page.textItems) {
+      const image = images.find((candidate) => overlapRatio(item, candidate) >= 0.8);
+      if (!image) continue;
+      candidates++;
+      if (samples.length < 20) samples.push({ page: page.pageNumber, text: item.text, bbox: { x: item.x, y: item.y, width: item.width, height: item.height }, image });
+    }
   }
-  const row = { filename, placements, embeddedTextCandidates: candidates };
+  const row = { filename, placements, embeddedTextCandidates: candidates, samples };
   report.push(row);
   if (placements || candidates) console.log(JSON.stringify(row));
 }

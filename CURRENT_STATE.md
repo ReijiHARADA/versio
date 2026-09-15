@@ -2226,3 +2226,7 @@ Web buildで検出された `tableText` nullable の型エラーを、nativeGrid
 ### 2026-09-16 checkpoint: persisted image/text overlap report
 
 画像重なり診断を `test-data/real-papers/reports/image-text-overlap-latest.json` へ保存するよう拡張。20 cached papersを走査し、候補は合計5528 items（形式依存の大きな偏りあり）。この数値は除外の正解率ではなく手動レビュー対象の母集団であり、次段で画像内ラベル／画像上本文／誤検出を分類する。
+
+### 2026-09-16 checkpoint: overlap sample classification
+
+重なり診断に代表 text/bbox/image sample（各PDF最大20件）を追加。代表例は `design-for-wearability` の図ラベル、`linguistics-language-model-physics` の数値軸ラベル、`step-to-charge` の `Wearable Rx` 等で、図内ラベル候補として妥当だった。一方 `interactive-jewellery` では画像と permission text の重なりも検出され、全候補を自動削除する前に chrome/body 分類が必要と確認した。
