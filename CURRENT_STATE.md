@@ -2186,3 +2186,7 @@ guardの実corpus走査を実行。table/skippedへの適用は`wear-scale` 16�
 ### 2026-09-16 checkpoint: flattened-row routing reverted
 
 全corpus回帰でflattened-row projection guardがOzCHI table-region recallを低下させることを再確認したため、routing/evidence変更を撤回。既存抽出回帰22/22へ復帰。flattened rowの診断指標は保持済みで、次回はcaption relationを含むnative geometry region設計を行う。
+
+### 2026-09-16 checkpoint: post-rollback extraction baseline
+
+flattened-row routing rollback後に`npm run bench:pdf-extraction`を再実行。20 papers、sourceIntegrity平均1.0、ground-truth tableRegionRecallが計測対象2件で各1.0。既存の安全基準へ復帰している。flattened matrixの翻訳回避は未解決で、次回はcaption/page近傍を含むregion候補を別レイヤーで設計する。
