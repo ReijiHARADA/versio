@@ -502,6 +502,9 @@ function isFootnoteLine(
   if (!t) return false;
   if (line.fontSize > baseFont * 0.9 && line.fontSize > 9.2) return false;
   if (line.y < pageHeight * 0.7) return false;
+  // Measurement/statistical lines can begin with a number but are body prose,
+  // not footnotes (for example `180 bpm` or `94.25±4.63%`).
+  if (/^\d{3,}(?:\b|[.,])/.test(t) || /^\d{1,3}[.,]\d/.test(t)) return false;
   // Native PDF text occasionally joins the superscript marker to the first
   // word (`1Please …`). Geometry and small type still identify it as a
   // footnote; requiring extracted whitespace would leak it into body prose.

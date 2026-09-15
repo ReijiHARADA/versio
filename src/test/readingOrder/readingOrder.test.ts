@@ -254,6 +254,25 @@ describe("PDF reading order regression", () => {
     expect(blocks.some((block) => block.role === "paragraph" && block.text.startsWith("1Please contact"))).toBe(false);
   });
 
+  it("does not classify numeric measurement prose as a footnote", () => {
+    const { blocks } = reconstructDocument([{
+      pageNumber: 1,
+      width: 612,
+      height: 792,
+      textItems: [{
+        text: "180 bpm, which equals 1 Hz to 3 Hz). This line stands out distinctly",
+        x: 54,
+        y: 696,
+        width: 240,
+        height: 9,
+        fontSize: 8.8,
+        fontName: "Helvetica",
+        page: 1,
+      }],
+    }]);
+    expect(blocks[0]?.role).toBe("paragraph");
+  });
+
   it("splits a body-style heading that is repeated at the start of its following prose", () => {
     const textItems = [
       "Vignette-based investigations",

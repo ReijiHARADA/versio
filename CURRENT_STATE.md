@@ -1967,6 +1967,10 @@ native word itemが長行へまとまらないページ向けに、`usable`全�
 
 ppg-earringのreal-paper catalogにpage7/10/12の二段組期待値を追加し、抽出回帰42/42で固定した。これはword-stream列検出の改善を将来の変更から保護するためのレイアウトfixtureであり、本文内容の翻訳評価ではない。
 
+### 2026-09-16 checkpoint: numeric prose footnote guard
+
+ppg-earring page10で`180 bpm`や`94.25±4.63%`が小さいfontと下部位置のため脚注へ誤分類されていた。`isFootnoteLine`に整数測定値・小数統計値を脚注markerから除外するguardを追加し、該当行はparagraphへ復元された。reading-order 37/37、抽出コーパス42/42で通過。`Xue et al.` running headerは残存課題として記録する。
+
 列検出変更後の最終再検証として `npm run bench:pdf-extraction`、`npm run lint -- --max-warnings=0`、`npx tsc -b --noEmit` を実行し、すべて成功した。抽出baselineを更新済み。全体の手動review・paragraph境界精度は未完了のため、goalは継続する。
 
 ### 2026-09-16 checkpoint: fused heading safety
