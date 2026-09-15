@@ -2416,3 +2416,7 @@ Algorithm/Require本文や数式断片がtable candidateになる例を確認し
 ### Extraction work clean stop (2026-09-16)
 
 今回の抽出フェーズは、回転 native item に基づく line/block 境界ガードまで実装・検証した地点で停止した。実行中プロセスはなく、作業ツリーはクリーン。次回の再開点は `wear-scale` p.14 の回転表セル帯と表外脚注の x帯連続性を native geometry で検証すること。翻訳サーバーの変更や `.app` ビルドは行っていない。
+
+### Extraction baseline revalidation (2026-09-16)
+
+停止点から再開して extraction corpus と 20-paper benchmark を再実行。reading-order real papers 21/21、extraction corpus 43/43、既存 source-integrity は 1.0 を維持した。回転表の表外脚注混在は未解決のため、翻訳フェーズへは進めていない。

@@ -2314,3 +2314,7 @@ captionless numeric-row の synthetic regression を追加し、6行の反復 x 
 ### Clean stop checkpoint (2026-09-16)
 
 ユーザー指示により、抽出アルゴリズム改善をキリのよい地点で停止。実行中の監査・ベンチマーク・テストプロセスはなく、作業ツリーはクリーン。最新コミットは `320b25d`（native item の rotation boundary を block merge に反映）。全Vitest 61 files / 331 tests、extraction corpus 43/43、build、lint、TypeScript 型チェックは直近で成功済み。未解決の主課題は `wear-scale` p.14 の回転表と表外脚注の境界、および publisher 横断の table precision/recall 手動監査。次回はこのケースの native x帯連続性を検証し、一般化可能な回帰テストを追加してから実装判断する。翻訳サーバーおよび `.app` は変更・ビルドしていない。
+
+### Extraction baseline revalidation (2026-09-16)
+
+停止点から再開し、`npm run test:extraction-corpus -- --run` と `npm run bench:pdf-extraction` を完了。real-paper reading-order 21/21、extraction corpus 43/43 を維持し、20 cached papers の `sourceIntegrityRate` は既存対象で 1.0。作業ツリーは clean。現行の最大残存課題は `wear-scale` p.14 の回転表と表外脚注の同一block混在で、次の変更は native x帯連続性を使った一般化検証に限定する。
