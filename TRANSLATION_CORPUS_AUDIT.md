@@ -2532,3 +2532,7 @@ table caption relation recallの分母をground truth caption数へ変更。未�
 ### Rotated table prose remerge fix (2026-09-16)
 
 回転表先頭line＋本文の再結合を、回転native lineの有無が異なるblock間では禁止。wear-scale p.14の混在block消失を実測し、reading-order 43/43、extraction corpus 44/44を確認。
+
+### Post-guard benchmark (2026-09-16)
+
+回転line guard後の20-paper benchmarkを再生成。wear-scaleはsource integrity 1.0、flattened rows 4、rotated items 248 / lines 33。表本文への誤再結合は消失し、残4行はregion分類課題。
