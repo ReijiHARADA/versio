@@ -242,6 +242,19 @@ describe("PDF reading order regression", () => {
     expect(blocks.some((block) => block.role === "paragraph" && block.text.startsWith("This is the first body"))).toBe(true);
   });
 
+  it("keeps a long CJK abstract line out of masthead affiliation", () => {
+    const items = [
+      { text: "智能人机交互的人因工程途径", x: 54, y: 80, width: 260, height: 18, fontSize: 16, fontName: "Title-Bold", page: 1 },
+      { text: "许 为", x: 54, y: 112, width: 80, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      { text: "（浙江大学 心理科学研究中心，杭州 310058）", x: 54, y: 130, width: 300, height: 9, fontSize: 9, fontName: "Body", page: 1 },
+      { text: "摘要 本文从以用户为中心的设计理念出发，在分析智能人机交互的人因特征的基础上，提出一个协同认知系统的新框架。", x: 54, y: 155, width: 500, height: 9, fontSize: 9, fontName: "Body", page: 1 },
+    ];
+    const { blocks } = reconstructDocument([{ pageNumber: 1, width: 612, height: 792, textItems: items }]);
+    const abstract = blocks.find((block) => block.text.startsWith("摘要"));
+    expect(abstract?.role).toBe("paragraph");
+    expect(abstract?.role).not.toBe("affiliation");
+  });
+
   it("does not stitch author metadata into a body paragraph across pages", () => {
     const pages: ExtractedPage[] = [
       { pageNumber: 1, width: 612, height: 792, textItems: [
