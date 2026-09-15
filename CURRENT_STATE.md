@@ -61,6 +61,7 @@
 - 今回は検証のみで、translation-server、品質ゲート、モデル、`.app` は変更していない。次回は未解決のページ/段組 paragraph repair と rotated-table region を優先する。
 - 追加で、同一行に置かれた短い太字ラベル（例: `Subjects.`）と本文をnative itemの境界で分離する一般化ルールを実装し、reading-order回帰テストを追加した。抽出corpusは引き続き44/44で成功。
 - 全Vitestも再実行し、61 files / 339 tests passed。TypeScript と lint も成功した。
+- 回転表の実PDFプローブでは、表セルのnative textを捨てずに保持しつつ、行列の完全復元は未達と確認。誤った構造化を避ける現行の安全側挙動を維持し、次回は行帯クラスタの一般化を検討する。
 
 ### 2026-09-15 停止 checkpoint
 
