@@ -2182,3 +2182,7 @@ Projectionで、同一page/column上に10行以上連続する数値主体native
 ### 2026-09-16 checkpoint: flattened table guard corpus audit
 
 guardの実corpus走査を実行。table/skippedへの適用は`wear-scale` 16行、`linguistics-language-model-physics` 13行（他paper 0）。対象はいずれも数値主体・連続native rowで、通常本文への適用候補は検出されなかった。診断JSONは`test-data/real-papers/reports/flattened-table-guard-audit.json`。抽出corpus 43/43、通常テスト328件、lint/typecheck成功。
+
+### 2026-09-16 checkpoint: flattened-row routing reverted
+
+全corpus回帰でflattened-row projection guardがOzCHI table-region recallを低下させることを再確認したため、routing/evidence変更を撤回。既存抽出回帰22/22へ復帰。flattened rowの診断指標は保持済みで、次回はcaption relationを含むnative geometry region設計を行う。
