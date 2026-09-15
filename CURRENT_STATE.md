@@ -2784,3 +2784,5 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Hypothesis: using the observed right-column anchor instead of gutter midpoint would separate short native fragments near the gutter in the Elsevier mixed stream.
 - Result: the change caused a safety regression in the captionless native-grid fixture (the expected hyphenated continuation was no longer a paragraph), so it was reverted. The existing 56/56 corpus baseline is preserved. The probe is not retained as a production rule; the mixed-stream issue needs stronger line-level evidence before another classifier change.
+
+- A narrower gutter-fragment rule (short lowercase/hyphen tokens only) produced the same native-grid regression and was also reverted. This confirms that token-shape-only reassignment is insufficient; the next attempt must use page-level line clustering and provenance.
