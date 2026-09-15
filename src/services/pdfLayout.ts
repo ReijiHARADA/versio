@@ -1463,11 +1463,13 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
     const lineWidths = block.lines.map((line) => line.width).filter((width) => width > 0);
     const typicalLineWidth = median(lineWidths) || 1;
     const startsMidPage = (block.lines[0]?.y ?? 0) > (block.lines[0]?.pageHeight ?? 792) * 0.35;
-    const xBands = [...new Set(block.lines.map((line) => Math.round(line.x / 24) * 24))].sort((a, b) => a - b);
+    // Quantize x origins coarsely enough to absorb glyph-level drift within
+    // one column while still separating typical academic column gutters.
+    const xBands = [...new Set(block.lines.map((line) => Math.round(line.x / 32) * 32))].sort((a, b) => a - b);
     const samePage = block.pageStart === block.pageEnd;
-    const inferredTwoColumn = columns.size === 1 && xBands.length >= 2 && samePage &&
+    const inferredTwoColumn = columns.size === 1 && xBands.length === 2 && samePage &&
       block.bbox.width >= typicalLineWidth * 1.65;
-    const labelSidebar = columns.size === 1 && xBands.length >= 2 && samePage && (() => {
+    const labelSidebar = columns.size === 1 && xBands.length === 2 && samePage && (() => {
       const splitX = (Math.min(...xBands) + Math.max(...xBands)) / 2;
       const left = block.lines.filter((line) => line.x <= splitX);
       const right = block.lines.filter((line) => line.x > splitX);

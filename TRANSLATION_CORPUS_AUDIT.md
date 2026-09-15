@@ -2833,4 +2833,5 @@ Full application regression after the current extraction changes: **61 files / 3
 - 閾値分類レポートを保存。129件中 raster-overlap 26、vector-or-table-label 12、short-label 43、mixed-layout 48。分類は手動レビューの優先順位付けに限定する。
 - 狭いラベル帯と広い本文帯のgeometry evidence（`labelSidebar`）を追加。fashion-hybrid-cmfのsuspicious blockは1→0、PPGは0を維持し、extraction corpus 56/56 passed。
 - 現行26-paper benchmarkは、注釈済みサンプルのheading recall/precision平均1.0、figure caption recall平均1.0、table caption recall平均0.929、table region recall平均0.843、titleExact 20/26。未注釈paperのheading指標は除外。
+- 推定列のx帯量子化を32ptへ調整し、同一列内のnative x揺れを吸収。多帯図表には適用せず、real-paper reading-order 27/27 passed。
 現行抽出コードで `diagnose:pdf-corpus` を再実行した結果、26 papers / 497 pages / suspicious 164 blocks。144件はarXivに集中し、図・表のベクターラベルがnative textとして同一領域に現れる候補が大半だった。段落を強制分割する根拠としては不十分なため、誤分類を増やすルールは追加せず、次回はnative geometryとcaption/table provenanceを用いた手動分類を行う。
