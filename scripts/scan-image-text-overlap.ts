@@ -11,11 +11,13 @@ function overlapRatio(item: { x: number; y: number; width: number; height: numbe
   return overlap / Math.max(1, item.width * item.height);
 }
 
-const report: Array<{ filename: string; placements: number; embeddedTextCandidates: number; samples: Array<{ page: number; text: string; bbox: { x: number; y: number; width: number; height: number }; image: { id: string; x: number; y: number; width: number; height: number } }> }> = [];
+const report: Array<{ filename: string; placements: number; embeddedTextCandidates: number; shortLabelCandidates: number; longTextCandidates: number; samples: Array<{ page: number; text: string; bbox: { x: number; y: number; width: number; height: number }; image: { id: string; x: number; y: number; width: number; height: number } }> }> = [];
 for (const filename of files) {
   const pages = await extractPdfPages(path.join(root, filename));
   let placements = 0;
   let candidates = 0;
+  let shortLabelCandidates = 0;
+  let longTextCandidates = 0;
   const samples: Array<{ page: number; text: string; bbox: { x: number; y: number; width: number; height: number }; image: { id: string; x: number; y: number; width: number; height: number } }> = [];
   for (const page of pages) {
     const images = (page.imagePlacements ?? []).filter((image) =>
@@ -28,10 +30,12 @@ for (const filename of files) {
       const image = images.find((candidate) => overlapRatio(item, candidate) >= 0.8);
       if (!image) continue;
       candidates++;
+      if (item.text.trim().length <= 32) shortLabelCandidates++;
+      else longTextCandidates++;
       if (samples.length < 20) samples.push({ page: page.pageNumber, text: item.text, bbox: { x: item.x, y: item.y, width: item.width, height: item.height }, image });
     }
   }
-  const row = { filename, placements, embeddedTextCandidates: candidates, samples };
+  const row = { filename, placements, embeddedTextCandidates: candidates, shortLabelCandidates, longTextCandidates, samples };
   report.push(row);
   if (placements || candidates) console.log(JSON.stringify(row));
 }

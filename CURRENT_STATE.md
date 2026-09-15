@@ -2250,3 +2250,7 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 ### 2026-09-16 checkpoint: extraction web build after image guards
 
 画像 placement / repeat operator / 全面画像安全条件を含む現行抽出コードで `npm run build` が成功。既知の dynamic import 警告のみで、画像境界変更による build regression はない。`.app` は方針どおり未ビルド。
+
+### 2026-09-16 checkpoint: overlap candidate length stratification
+
+画像重なり診断に短ラベル（32文字以下）／長文候補の件数を追加。再計測では合計5528件中、短ラベル5416件、長文112件（interactive-jewellery permission/chrome等を含む）。長文は自動除外せず、chrome/body判定の手動対象として分離できるようになった。
