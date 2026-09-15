@@ -126,4 +126,23 @@ describe("baseline benchmark on cached real papers", () => {
     }, 60_000);
   }
 
+  const wear = available.find(({ paper }) => paper.id === "wear-scale");
+  if (wear) {
+    it("projects rotated numeric table rows without translating them", async () => {
+      const pages = await extractPdfPages(wear.pdfPath);
+      const result = await extractFromPages({
+        pages,
+        paperId: wear.paper.id,
+        filePath: wear.pdfPath,
+        fileHash: "regression",
+        metadata: { title: wear.paper.title, pageCount: pages.length },
+      });
+      const pageFourteenTables = result.blocks.filter(
+        (block) => block.pageStart === 14 && block.type === "table"
+      );
+      expect(pageFourteenTables.length).toBeGreaterThan(0);
+      expect(pageFourteenTables.every((block) => block.translationStatus === "skipped")).toBe(true);
+    }, 60_000);
+  }
+
 });

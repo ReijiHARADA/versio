@@ -2480,3 +2480,7 @@ x帯split後、表セル行と表外注記は別blockになったが、回転表
 ### Rotated table projection revalidation (2026-09-16)
 
 回転table nodeをcanonical boxes＋数値密度で保守的にPaperBlockへ投影。wear-scale p.14でtable block生成を確認。extraction corpus43/43、flattened rows=4、source integrity=1.0。caption provenance計測は継続。
+
+### Rotated table projection regression (2026-09-16)
+
+`wear-scale` real-paper fixtureでp.14のtable PaperBlock生成とskipped状態を回帰化。extraction corpus 44/44。caption provenance完全測定は継続。

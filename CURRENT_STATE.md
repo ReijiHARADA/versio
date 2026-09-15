@@ -2378,3 +2378,7 @@ x帯split後のCanonical出力を監査。表セル行と表外注記は別block
 ### Rotated table projection revalidation (2026-09-16)
 
 Resolver-selected rotated table nodes are now projected as skipped `table` PaperBlocks when layout lookup is unavailable but canonical boxes and numeric density provide provenance. `wear-scale` p.14 now emits table blocks for the recovered rows; extraction corpus 43/43 and benchmark flattenedNumericRowCount=4, sourceIntegrityRate=1.0. Caption provenance remains an open metric, not a translation blocker.
+
+### Rotated table projection regression (2026-09-16)
+
+`wear-scale` real-paper fixtureに、p.14でtable PaperBlockが生成され、全table blockがskippedであることを追加検証。extraction corpusは2 files / 44 tests、全テスト対象に安全回帰なし。caption provenanceの完全測定は未完了。
