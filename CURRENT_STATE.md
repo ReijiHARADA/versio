@@ -2130,3 +2130,7 @@ publisher横断走査でtext-bearing table候補が数式にも存在するこ�
 ### 2026-09-16 checkpoint: extraction corpus after table precision guard
 
 最新table precision guard後に`npm run test:extraction-corpus -- --run`を実行し、2 files / 43 testsが通過。captionless table回帰を含む全cached-paper extraction checksに回帰なし。手動レビュー未完了のためgoalは継続。
+
+### 2026-09-16 checkpoint: table projection audit artifact
+
+captionless table precision guard後の20 cached PDF横断診断を`test-data/real-papers/reports/table-projection-audit-latest.json`へ保存した。Paper table block合計は80。caption由来regionとtext-bearing候補を含む診断値であり、publisher別の手動precision/recall確定値ではない。次回はこの一覧からnative画像照合を行う。
