@@ -2293,4 +2293,6 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 
 ページ局所 table grid の回帰後に `npm run build` も成功（既知の ineffective dynamic import 警告のみ）。表セルの一部は table role へ昇格したが、表全体の連続 region と表後注記の分離は未検証のため、次回は手動比較を先に行う。
 
+`wear-scale` p.14 を原PDFレンダリングで確認。中央は回転した相関行列（Table 6）で、下端に横向きの Cronbach 脚注・定義文が表外に配置される。したがって次の region 境界候補は、回転セルの y 帯と脚注の回転角度・x帯を分ける geometry evidence。現行の部分的 table 昇格だけでは注記混入を解消しないため、低信頼時の自動結合は保留する。
+
 captionless numeric-row の synthetic regression を追加し、6行の反復 x 列が table evidence（score >= 0.94）として生成されることを確認。pipeline suite は 5/5。実PDFではページ内の表後注記がまだ同じ block に残るため、region の上下境界を手動比較してから拡張する。
