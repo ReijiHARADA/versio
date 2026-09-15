@@ -2502,3 +2502,7 @@ chart-label translation boundary変更後、全Vitestを実行。61 files / 335 
 ### Horizontal chart-axis labels (2026-09-16)
 
 chart-label Evidenceを同一x帯だけでなく同一y帯にも適用。各blockが単一native itemの場合に限定し、複数cell行・table caption近傍は除外。synthetic pipeline 6/6、extraction corpus 44/44、typecheck成功。既存表判定の安全回帰なし。
+
+### Static verification after chart projection boundary (2026-09-16)
+
+chart label projection変更後のlint（`--max-warnings=0`）とTypeScript型チェックを再実行し、いずれも成功。次回はpublisher横断の手動レビューを優先し、precision/recall未計測の構造をground truth化する。
