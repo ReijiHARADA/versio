@@ -2384,3 +2384,7 @@ PPG Earring p.10の単独改行ハイフンを、未完結paragraph直後のneig
 ### Extraction Phase checkpoint: bundle validation (2026-09-16)
 
 抽出変更を含むWeb buildが成功した。表示されたdynamic-import warningsは既存のchunk最適化に関するもの。Tauri `.app`は今回のgoal範囲外として未ビルド。
+
+### Extraction Phase checkpoint: corpus table-node inventory (2026-09-16)
+
+20 cached PDFを実pipelineで走査し、Canonical table node 538件、Paper table block 520件を得た。これにはcaption由来のtext-less synthetic regionが多数含まれるため、件数を精度指標として扱わない。captionless text-bearing gridのpublisher別precision確認を継続する。

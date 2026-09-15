@@ -2110,3 +2110,7 @@ PPG Earring p.10で、段落途中の単独改行ハイフンがlayout上equatio
 ### 2026-09-16 checkpoint: bundle validation
 
 抽出変更を含む`npm run build`が成功。出力されたdynamic-import warningは既存のchunk最適化警告で、抽出実装のerrorではない。Tauri `.app`は明示依頼がないため作成していない。
+
+### 2026-09-16 checkpoint: corpus table-node inventory
+
+20 cached PDFを実pipelineで走査し、Canonical table node 538件、Paper table block 520件を確認した。大半はcaption由来のtext-less synthetic regionで、件数はtable precision/recallを示さない。captionless text-bearing gridの誤昇格がないかpublisher別のサンプル監査が次の課題。
