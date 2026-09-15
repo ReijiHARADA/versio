@@ -1902,3 +1902,7 @@ The current extraction tree was rechecked with `verify:real-paper-source-policy`
 ### Regression stability checkpoint (2026-09-16)
 
 Full test, lint, and typecheck revalidation succeeded after the extraction baseline commit: Vitest 61 files / 321 tests. This checkpoint changes no extraction behavior and keeps the unresolved word-stream column issue explicitly open.
+
+### 2026-09-16 checkpoint: line-envelope column experiment reverted
+
+`ppg-earring` page 2 was rechecked from native PDF facts: 1,046 word items are spread across the full page width, while the current detector remains single-column because it samples item widths before line formation. A conservative line-envelope replacement was tested, but it caused six extraction-corpus regressions (interactive-jewellery, power-over-skin, dont-mind-me, OzCHI heading/column, economics rotated page) and was reverted immediately. The extraction corpus is back to 42/42 passing. This rules out a naive line-width substitution; the next column detector must distinguish spanning regions and rotated/table geometry before adoption.
