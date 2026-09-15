@@ -2658,3 +2658,5 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Dedicated rotated-table regression: `wear-scale` real PDF test passed (1 selected / 22 skipped). Numeric rotated table rows remain preserved as non-translated table blocks; no unsafe heading promotion observed.
 
 - Added a canonical provenance metric to the extraction benchmark. It checks source page, native bbox, and page range for every canonical node. On the 20-paper cache, minimum coverage is 0.9959 and mean coverage is 0.9997; the residual is recorded for manual attribution.
+
+- Provenance attribution pass: metadata-resolved titles now reuse an anchored native candidate where available. Benchmark residuals remained unchanged (fashion-hybrid-cmf 0.9959; education-learning-analytics 0.9978), so the remaining missing anchors are elsewhere in resolver-generated nodes and remain queued for inspection.
