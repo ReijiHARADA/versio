@@ -2386,3 +2386,7 @@ Resolver-selected rotated table nodes are now projected as skipped `table` Paper
 ### Extraction verification checkpoint (2026-09-16)
 
 `npm run test:extraction-corpus -- --run --reporter=dot` を再実行し、2 files / 44 tests が成功。回転表の分離・table projection 回帰は維持され、翻訳serverおよび `.app` は変更・ビルドしていない。残課題は回転caption provenanceの一般化と、publisher横断の手動precision/recall計測。
+
+### Rotation-aware caption continuation (2026-09-16)
+
+`Table N` / `Figure N` のようなラベルだけがnative lineとして分離された場合、同一captionのタイトル行がheading風でも、ラベル単独ブロックに限ってcaption continuationを許可する一般条件を追加。通常caption後のheadingには適用しない。reading-order 47/47、extraction corpus 44/44。

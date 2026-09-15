@@ -643,7 +643,14 @@ function isRepeatedHeadingLead(heading: LayoutLine, body: LayoutLine): boolean {
 function captionShouldContinue(currentText: string, next: LayoutLine, baseFont: number): boolean {
   const nextText = next.text.trim();
   if (!nextText) return false;
-  if (isHeadingLine(next, baseFont)) return false;
+  // Native streams sometimes emit a caption label (`Table 2`/`Figure 3`)
+  // separately from its title.  A title-like continuation is safe only when
+  // the current block is exactly that label; never relax this for a complete
+  // caption, where the next heading must remain a new block.
+  const labelOnly = /^(?:table|tables?|figure|fig\.?|表|図)\s*(?:\d+[a-z]?|[ivxlcdm]+)$/i.test(
+    layoutPlain(currentText)
+  );
+  if (isHeadingLine(next, baseFont) && !labelOnly) return false;
   if (/^(abstract|introduction|ccs concepts|author keywords?|index terms|keywords)\b/i.test(nextText)) {
     return false;
   }

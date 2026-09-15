@@ -2488,3 +2488,7 @@ x帯split後、表セル行と表外注記は別blockになったが、回転表
 ### Extraction verification checkpoint (2026-09-16)
 
 停止前の再検証として extraction corpus 2 files / 44 tests を実行し全件成功。今回の確認ではコード変更を行わず、既存の回転表境界・table projection回帰が維持されていることを確認した。未完了項目は回転caption provenanceとpublisher横断の手動評価。
+
+### Rotation-aware caption continuation (2026-09-16)
+
+ラベル単独行に続くcaption本文の分離を改善。緩和条件は`Table/Figure + 番号`の完全一致ブロックに限定し、通常caption後のheadingを巻き込まない。既存回帰は reading-order 47/47、extraction corpus 44/44。
