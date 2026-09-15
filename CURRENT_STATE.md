@@ -2034,3 +2034,7 @@ SpeechIn page 3のCanonical出力を再確認し、`54 English 90.5%` と `44 Ch
 ### 2026-09-16 checkpoint: repeated running-title classification
 
 SpeechInの原PDFページ上端に繰り返される短いタイトル＋ページ番号行が本文へ混入していた。既存の反復running-header形状（短いtitle-case、複数ページで同一、句読点末尾や数値本文を除外）を最終LayoutBlock roleにも反映し、headerとしてCanonical入力から除外できるようにした。focused 63 tests、extraction corpus 42/42で通過。論文固有文字列は使用していない。
+
+### 2026-09-16 checkpoint: publisher running-header suffix evidence
+
+SpeechInの原PDFでは、ページ番号を含む`タイトル • 192:3`形式のrunning headerが著者名条件に該当せず本文へ残っていた。ページ上端・本文より小さいfont・英字タイトル・bullet＋ページ番号suffixを組み合わせた汎用header evidenceを追加し、reading-order 38/38、extraction corpus 42/42で通過。ページ番号付き本文や通常の短文は対象外にしている。全体のheader精度は代表ページの手動確認を継続する。

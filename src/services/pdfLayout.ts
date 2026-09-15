@@ -1074,7 +1074,9 @@ function roleForLine(
     line.page > 1 &&
     line.y < (line.pageHeight ?? 792) * 0.12 &&
     line.fontSize <= baseFont * 0.82 &&
-    (looksLikePersonName(text) || /^[A-Z][A-Za-z'’-]+\s+et\s+al\.?$/i.test(text))
+    (looksLikePersonName(text) ||
+      /^[A-Z][A-Za-z'’-]+\s+et\s+al\.?$/i.test(text) ||
+      /[A-Za-z]{3,}.*[•·]\s*\d+\s*:\s*\d+\s*$/.test(text))
   ) {
     return "header";
   }
