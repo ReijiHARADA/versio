@@ -2874,3 +2874,7 @@ Full application regression after the current extraction changes: **61 files / 3
 ### 2026-09-16 column occupancy probe
 
 - Column occupancy diagnostics found 57 candidate pages with native text on both sides of a central gutter. Because the set includes valid prose columns and table/diagram layouts, occupancy alone is insufficient for production splitting; the report is retained for combined geometry/role review.
+
+### 2026-09-16 alphabetic list checkpoint
+
+- Repeated alphabetic list markers (`(a)`, `a)`) are now preserved as separate list items under the same multi-marker guard. Pipeline 15/15 and extraction corpus 56/56 remain green.

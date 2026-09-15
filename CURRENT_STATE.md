@@ -2905,3 +2905,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 column occupancy diagnostic
 
 - `npm run diagnose:column-occupancy` scanned the cached corpus and produced 57 candidate pages with central gutter occupancy. The report is diagnostic-only; candidate pages include both valid two-column pages and table/diagram-heavy layouts, so no global column relabel was applied.
+
+### 2026-09-16 alphabetic list markers
+
+- Extended generic flattened-list marker recognition to repeated `(a)`, `a)`, and similar alphabetic markers, while retaining the existing repeated-marker requirement and colon lead-in guard. Focused pipeline 15/15 and extraction corpus 56/56 passed; no translation or `.app` changes.

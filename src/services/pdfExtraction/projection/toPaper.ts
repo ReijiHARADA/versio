@@ -90,7 +90,7 @@ export function splitFlattenedList(text: string): string[] {
   const markers = [...text.matchAll(/(?:^|\s)([•‣▪∙–—])\s+/g)].map((m) =>
     m.index === undefined ? -1 : (m.index + (m[0].startsWith(" ") ? 1 : 0))
   ).filter((i) => i >= 0);
-  const numbered = [...text.matchAll(/(?:^|\s)((?:[1-9]|1[0-9]|20)[.)])\s+/g)]
+  const numbered = [...text.matchAll(/(?:^|\s)((?:[1-9]|1[0-9]|20)[.)]|\([A-Za-z]\)|[A-Za-z]\))\s+/g)]
     .map((m) => (m.index === undefined ? -1 : m.index + (m[0].startsWith(" ") ? 1 : 0)))
     .filter((i) => i >= 0);
   const starts = markers.length >= 2 ? markers : numbered;
@@ -507,7 +507,7 @@ export function projectCanonicalToPaper(input: {
     ) {
       const text = node.text ?? "";
       const listParts = splitFlattenedList(text);
-      const standaloneListItem = /^(?:[•‣▪∙]|(?:[1-9]|1[0-9]|20)[.)])\s+/.test(text.trim());
+      const standaloneListItem = /^(?:[•‣▪∙]|(?:[1-9]|1[0-9]|20)[.)]|\([A-Za-z]\)|[A-Za-z]\))\s+/.test(text.trim());
       const isRef = !isNumberedProseListItem(text) &&
         (node.role === "reference" || isReferenceText(text, currentKind));
       const isChartLabel = node.evidence.some(

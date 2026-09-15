@@ -22,6 +22,9 @@ describe("canonical extraction pipeline", () => {
     expect(splitFlattenedList("Our contributions are: • First item • Second item")).toEqual([
       "Our contributions are:", "• First item", "• Second item",
     ]);
+    expect(splitFlattenedList("The options are: (a) alpha (b) beta (c) gamma")).toEqual([
+      "The options are:", "(a) alpha", "(b) beta", "(c) gamma",
+    ]);
   });
 
   it("keeps wide native column lines assigned to their column", () => {
