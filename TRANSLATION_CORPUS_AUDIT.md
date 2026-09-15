@@ -2890,3 +2890,7 @@ Full application regression after the current extraction changes: **61 files / 3
 - Benchmark now requires an explicit `completeListAnnotations` flag before reporting list precision. The Interactive Jewellery list annotation is partial, so its precision is withheld while recall remains reported. This separates annotation coverage from extraction quality; TypeScript and corpus tests pass.
 
 - `completeListAnnotations` schema change passes lint and build; existing dynamic-import warnings only.
+
+### 2026-09-16 list precision probe
+
+- Education list probe: recall 1.0, provisional precision 0.318. Because exhaustive annotation was unverified, `completeListAnnotations` was reverted. This confirms the benchmark must distinguish annotation coverage from extraction quality.

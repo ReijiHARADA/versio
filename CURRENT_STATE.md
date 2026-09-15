@@ -2922,3 +2922,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - TypeScript and extraction corpus both pass (56/56).
 
 - Evaluation-schema verification after separating list annotation completeness: lint and Vite build pass; only existing ineffective dynamic-import warnings remain. No `.app` build.
+
+### 2026-09-16 list precision probe (reverted)
+
+- Temporarily marked the education survey's seven listed items exhaustive to measure precision. Recall was 1.0 but precision 0.318, and manual completeness of all document lists was not established. The flag was reverted; the probe is retained as evidence that partial list annotations must not be treated as a production quality score.
