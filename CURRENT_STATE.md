@@ -2514,3 +2514,7 @@ chart label projection変更後のlint（`--max-warnings=0`）とTypeScript型�
 ### Cross-layer safety verification (2026-09-16)
 
 chart labelの翻訳境界変更後、既存の全Vitest（61 files / 335 tests）を再確認。extraction corpus 44/44、lint、typecheck、通常web buildとも成功。手動レビューv8は翻訳fallback中心のデータであり、抽出precisionの正解集合には流用せず、抽出ground truth拡張を次工程とする。
+
+### Progress metadata refresh (2026-09-16)
+
+`test-data/real-papers/audit-progress.json`をchart-label translation boundary時点へ更新。次回アクションをpublisher横断precision、heading/list/caption ground truth、Canonical provenance測定に整理した。
