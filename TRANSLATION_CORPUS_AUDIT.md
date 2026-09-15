@@ -2564,3 +2564,7 @@ wear-scale caption ground truth追加後のextraction corpusは44/44成功。回
 ## Extraction continuation checkpoint — 2026-09-16
 
 最新20-paper extraction benchmarkを再実行し、table caption metricをresolved `CAPTION_OF → table` provenanceにも対応させた。gold relation recall平均は0.81875（10 papers）、wear-scaleはcaption recall/relation recallとも1.0。figure captionをtable metricへ混入させない制約を維持。抽出 corpus 44/44、pipeline 5/5、typecheck成功。翻訳server／モデル／`.app`は未変更。残課題はpublisher横断のcaption provenance、linguistics PDFの数値行16件のtable-region判定、および手動レビュー拡充。
+
+## Chart-label evidence checkpoint — 2026-09-16
+
+linguistics-language-model-physics のグラフ軸・チャート数値ラベルについて、同一ページ・列の反復x座標をnative geometry evidenceとして`other`競合スコア化した。table caption近傍と複数セル行は除外し、Resolverの最終判断を維持。flattenedNumericRowCount 16→10、sourceIntegrityRate 1.0。pipeline 5/5、extraction corpus 44/44、通常build成功。誤除外の横断評価は未完了。
