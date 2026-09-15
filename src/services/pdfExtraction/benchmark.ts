@@ -66,6 +66,8 @@ export type BaselinePaperReport = {
     tableCaptionRelationPrecision?: number;
     authorAffiliationF1?: number;
     sourceIntegrityRate: number;
+    /** Canonical nodes retain a page anchor and at least one native bbox. */
+    canonicalProvenanceRate: number;
     fusedTitle: string;
     fusedTitleConfidence: number;
     canonicalTitle?: string | null;
@@ -311,6 +313,15 @@ export function evaluateBaselinePaper(input: {
       input.blocks.length === 0
         ? 1
         : input.blocks.filter(hasSourceTextIntegrity).length / input.blocks.length,
+    canonicalProvenanceRate:
+      extracted.canonical.nodes.length === 0
+        ? 1
+        : extracted.canonical.nodes.filter((node) =>
+            Number.isFinite(node.sourceAnchor.page) &&
+            node.sourceAnchor.boundingBoxes.length > 0 &&
+            node.boundingBoxes.length > 0 &&
+            node.pageStart <= node.pageEnd
+          ).length / extracted.canonical.nodes.length,
     fusedTitle: fused.text,
     fusedTitleConfidence: fused.confidence,
     canonicalTitle,
