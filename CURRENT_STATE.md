@@ -2442,3 +2442,7 @@ Benchmark report now exposes `tableCaptionRelationRecall` and `tableCaptionRelat
 ### Wear-scale caption provenance probe (2026-09-16)
 
 実PDF p.14のnative出力を再probe。回転表セルはCanonical `table` nodeへ投影されるが、`Inter-item correlation matrix` はheadingとして残り、`CAPTION_OF` は0件。表と本文の混在は解消済み。次は「表region直下の回転短heading」をcaption evidenceへ昇格するか、precision評価して判断する。
+
+### Rotation-aware table caption promotion (2026-09-16)
+
+Resolverに、回転native line・短heading・同一ページ直上の高信頼table evidenceを組み合わせたcaption昇格を追加。wear-scale p.14で`Inter-item correlation matrix`がcaption化され、CAPTION_OF=1。reading-order 49/49、extraction corpus 44/44。

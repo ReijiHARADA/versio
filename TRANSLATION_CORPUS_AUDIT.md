@@ -2544,3 +2544,7 @@ table caption relation recallの分母をground truth caption数へ変更。未�
 ### Wear-scale caption provenance probe (2026-09-16)
 
 wear-scale p.14で回転表セルはtable nodeへ投影され、本文混在はない。一方、表直下の回転短heading `Inter-item correlation matrix` はcaptionにならず、CAPTION_OF=0。次回は一般的な表region近接 geometry evidenceを評価する。
+
+### Rotation-aware table caption promotion (2026-09-16)
+
+Resolverで回転短headingを直上table regionとのgeometry evidenceによりcaptionへ昇格。wear-scale p.14でCAPTION_OF=1を確認。reading-order 49/49、extraction corpus 44/44。通常headingへの誤昇格を避ける保守条件。
