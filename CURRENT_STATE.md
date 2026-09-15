@@ -2474,3 +2474,7 @@ Benchmarkの`tableCaptionRecall`を、文字列が`Table`で始まらない場�
 ### Extraction regression verification (2026-09-16)
 
 caption metric修正後の `npm run test:extraction-corpus -- --run --reporter=dot` は2 files / 44 tests pass、lintも成功。PDF.jsのcanvas/polyfill警告は既存のテスト環境警告で、テスト失敗ではない。次の実装候補はlinguisticsの数値行16件のnative geometry分類であり、根拠を得るまでtable化は行わない。
+
+### Extraction build verification (2026-09-16)
+
+抽出変更を含む通常web build（`npm run build`）が成功。出力されたdynamic import警告は既存のbundle最適化警告で、ビルドエラーではない。`.app` buildは方針どおり未実行。
