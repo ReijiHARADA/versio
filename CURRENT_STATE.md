@@ -2014,3 +2014,7 @@ PPG page 2で、本文の直後に単独出力された`86.29 ± 2.96% ...`がdi
 ### 2026-09-16 checkpoint: numeric-prose change corpus audit
 
 隣接paragraph evidence追加後に全20 cached paper benchmarkとsource-policy verifierを再実行した。source integrity 1.0水準、明示的警告39件のモデル送信抑止、既存の抽出回帰42/42を維持。数式を通常本文へ戻す変更による既存equation/table/caption回帰は観測されなかった。なお、未完結tail・表セル境界・融合見出しの手動精度は未測定のため、完了判定は保留する。
+
+### 2026-09-16 checkpoint: numeric-line canonical verification
+
+PPG page 2のlayout dumpでは短い統計行が物理的に独立blockのまま残るが、これはnative provenanceを保持するため意図した状態である。新しいrole evidenceでは同一列の未完結paragraph直後という隣接条件により equation score がparagraphとの競合で敗れ、Canonical resolver後はparagraphへfallbackする。物理blockを文字列結合してsource integrityを損なう変更は行っていない。
