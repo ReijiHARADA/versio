@@ -2654,3 +2654,5 @@ caption隣接の本文をtable regionへ含めないCanonical synthetic regressi
 ## Extraction-only checkpoint (2026-09-16)
 
 The extraction benchmark was regenerated after the latest boundary and table evidence changes. The cached corpus contains 20 papers; the extraction regression suite remains 44/44 passed, and the benchmark reports source-integrity minimum 1.0 with figure/table relation checks passing for the covered fixtures. This checkpoint records extraction evidence only; translation behavior and the `.app` bundle were not changed. Rotated-table matrix reconstruction and broader manual cross-format review remain open.
+
+- Dedicated rotated-table regression: `wear-scale` real PDF test passed (1 selected / 22 skipped). Numeric rotated table rows remain preserved as non-translated table blocks; no unsafe heading promotion observed.
