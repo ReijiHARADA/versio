@@ -1918,3 +1918,7 @@ Full test, lint, and typecheck revalidation succeeded after the extraction basel
 ### 2026-09-16 checkpoint: cross-page two-column stitch guard
 
 右列から次ページ左列へ続く未完結段落の合成回帰テストを追加した。34 reading-order tests passし、pageStart/pageEndと両ページのline provenanceを検証する。実コーパスの列検出不足そのものは未解決。
+
+### 2026-09-16 checkpoint: column occupancy diagnostic
+
+`npm run diagnose:column-occupancy` を追加し、native word bboxの中央ガター候補を20 cached papersで走査した。53ページが候補になった（ppg-earring 13、OzCHI 9、power-over-skin 9、dont-mind-me 7、interactive-jewellery 7、design-for-wearability 6、その他2）。単独ではspanning要素や単段の空白も混ざるため、列確定には使わず診断証拠として保存した。
