@@ -2812,3 +2812,4 @@ Before/after diagnostic: 255 → 204 suspicious wide/multi-cluster blocks across
 ### 2026-09-16 post-stitch mixed-column repair
 
 Applied a second, conservative geometry pass after paragraph stitching. Only paragraph blocks that still contain multiple assigned columns, exceed the wide-block ratio, and begin below 35% of the page are split. Diagnostic count improved 204 → 164 corpus-wide and 32 → 24 for the arXiv medical-image fixture. Focused tests remain 59/59; no table-recall gain is claimed. Manual review is still required for the remaining 24 blocks and for possible false splits.
+Manual review of the first residual arXiv samples shows diagram labels (U-Net/backbone/loss terms and convolution dimensions), rather than ordinary prose. These should be handled as figure-region/native text evidence in a later pass; no generic paragraph rule was changed based on them.
