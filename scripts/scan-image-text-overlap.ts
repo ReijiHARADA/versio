@@ -11,6 +11,7 @@ function overlapRatio(item: { x: number; y: number; width: number; height: numbe
   return overlap / Math.max(1, item.width * item.height);
 }
 
+const report: Array<{ filename: string; placements: number; embeddedTextCandidates: number }> = [];
 for (const filename of files) {
   const pages = await extractPdfPages(path.join(root, filename));
   let placements = 0;
@@ -25,5 +26,11 @@ for (const filename of files) {
       images.some((image) => overlapRatio(item, image) >= 0.8)
     ).length;
   }
-  if (placements || candidates) console.log(JSON.stringify({ filename, placements, embeddedTextCandidates: candidates }));
+  const row = { filename, placements, embeddedTextCandidates: candidates };
+  report.push(row);
+  if (placements || candidates) console.log(JSON.stringify(row));
 }
+
+const reportPath = path.join(root, "reports", "image-text-overlap-latest.json");
+fs.mkdirSync(path.dirname(reportPath), { recursive: true });
+fs.writeFileSync(reportPath, `${JSON.stringify({ version: "image-text-overlap-v1", generatedAt: new Date().toISOString(), papers: report }, null, 2)}\n`);

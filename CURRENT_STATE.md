@@ -2222,3 +2222,7 @@ Web buildで検出された `tableText` nullable の型エラーを、nativeGrid
 ### 2026-09-16 checkpoint: image geometry safety revalidation
 
 画像配置情報を含む cached real-paper extraction corpus を再実行し、2 files / 43 tests が通過。最新 baseline の20 papersで `sourceIntegrityRate` 平均は1.0を維持した。画像内重なり候補はPDF形式により大きく異なるため、候補を一律削除する方針は採用せず、本文誤除外率を確認できるまで現行の保守的閾値を維持する。
+
+### 2026-09-16 checkpoint: persisted image/text overlap report
+
+画像重なり診断を `test-data/real-papers/reports/image-text-overlap-latest.json` へ保存するよう拡張。20 cached papersを走査し、候補は合計5528 items（形式依存の大きな偏りあり）。この数値は除外の正解率ではなく手動レビュー対象の母集団であり、次段で画像内ラベル／画像上本文／誤検出を分類する。
