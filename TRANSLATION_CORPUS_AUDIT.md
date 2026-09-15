@@ -2484,3 +2484,7 @@ x帯split後、表セル行と表外注記は別blockになったが、回転表
 ### Rotated table projection regression (2026-09-16)
 
 `wear-scale` real-paper fixtureでp.14のtable PaperBlock生成とskipped状態を回帰化。extraction corpus 44/44。caption provenance完全測定は継続。
+
+### Extraction verification checkpoint (2026-09-16)
+
+停止前の再検証として extraction corpus 2 files / 44 tests を実行し全件成功。今回の確認ではコード変更を行わず、既存の回転表境界・table projection回帰が維持されていることを確認した。未完了項目は回転caption provenanceとpublisher横断の手動評価。

@@ -2382,3 +2382,7 @@ Resolver-selected rotated table nodes are now projected as skipped `table` Paper
 ### Rotated table projection regression (2026-09-16)
 
 `wear-scale` real-paper fixtureに、p.14でtable PaperBlockが生成され、全table blockがskippedであることを追加検証。extraction corpusは2 files / 44 tests、全テスト対象に安全回帰なし。caption provenanceの完全測定は未完了。
+
+### Extraction verification checkpoint (2026-09-16)
+
+`npm run test:extraction-corpus -- --run --reporter=dot` を再実行し、2 files / 44 tests が成功。回転表の分離・table projection 回帰は維持され、翻訳serverおよび `.app` は変更・ビルドしていない。残課題は回転caption provenanceの一般化と、publisher横断の手動precision/recall計測。
