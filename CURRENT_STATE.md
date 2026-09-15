@@ -2138,3 +2138,7 @@ captionless table precision guard後の20 cached PDF横断診断を`test-data/re
 ### 2026-09-16 checkpoint: table precision audit calibration
 
 横断監査で長文table候補が残るため、単純な「長文tableゼロ」テストはcaption/複合構造を誤って失敗させることを確認し、追加テストを採用せず撤回した。実表回帰22/22は維持。今後はlayout geometryとcaption provenanceを分離したpublisher別正解データでprecisionを測る。
+
+### 2026-09-16 checkpoint: clean extraction pause
+
+最新の作業ツリーはclean。table precision guard・captionless table regressionを含むextraction corpusは2 files / 43 tests通過。実行中プロセスなし。次回はpublisher横断table precisionと手動paragraph boundaryレビューから再開する。
