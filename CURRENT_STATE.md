@@ -1926,3 +1926,7 @@ Full test, lint, and typecheck revalidation succeeded after the extraction basel
 ### 2026-09-16 checkpoint: occupancy diagnostic comparison
 
 列占有診断に現行`detectPageColumns`の判定を併記した。53候補ページ中14ページは幾何候補だが現行判定が単段で、改善対象を定量化できた。ただし候補にはspanning/単段の空白も含まれるため、自動昇格はしていない。
+
+### 2026-09-16 checkpoint: dense word-column evidence trial
+
+既存ピーク検出を維持したまま、左右列のword item数が各300以上かつx分離がページ幅35%以上の場合に限り、長い単語item不足を補う`denseWordColumns` evidenceを追加した。`ppg-earring` page2/3は二段組として検出され、抽出コーパス42/42、lint、typecheckが通過。低密度の教育PDFは昇格されない。次にppg全ページのblock境界とsource integrityを再評価する。
