@@ -1420,7 +1420,11 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
     }
     result.push(block);
   }
-  return result;
+  return result.map((block) =>
+    isRepeatedRunningHeader(block, repeatedTexts)
+      ? { ...block, role: "header" as LayoutRole }
+      : block
+  );
 }
 
 function columnBand(

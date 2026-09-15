@@ -2030,3 +2030,7 @@ SpeechIn page 3を原PDF画像と抽出結果で照合し、Table 1の太字summ
 ### 2026-09-16 checkpoint: SpeechIn table summary verification
 
 SpeechIn page 3のCanonical出力を再確認し、`54 English 90.5%` と `44 Chinese 91.6%` は headingではなく table role へ解決された。原PDFの表最終行との対応が取れ、既存のparagraph/list/table安全fallbackは維持された。focused suiteとextraction corpus 42/42を通過済み。
+
+### 2026-09-16 checkpoint: repeated running-title classification
+
+SpeechInの原PDFページ上端に繰り返される短いタイトル＋ページ番号行が本文へ混入していた。既存の反復running-header形状（短いtitle-case、複数ページで同一、句読点末尾や数値本文を除外）を最終LayoutBlock roleにも反映し、headerとしてCanonical入力から除外できるようにした。focused 63 tests、extraction corpus 42/42で通過。論文固有文字列は使用していない。
