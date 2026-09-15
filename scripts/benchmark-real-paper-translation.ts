@@ -92,6 +92,8 @@ const perPaperLimit = limitArg >= 0 ? Number(args[limitArg + 1]) : 8;
 const serialArg = args.includes("--serial");
 const resumeArg = args.includes("--resume");
 const endpoint = process.env.MADLAD_BENCH_URL ?? "http://127.0.0.1:8765";
+const serverToken = process.env.MADLAD_SERVER_TOKEN?.trim();
+const requestTimeoutMs = Number(process.env.MADLAD_BENCH_REQUEST_TIMEOUT_MS ?? 180_000);
 
 function compact(text: string): string {
   return text.replace(/\s+/g, " ").trim();
@@ -180,13 +182,26 @@ async function translate(texts: string[]): Promise<ServerTranslation[]> {
   // Calling /translate/batch here bypassed the client-equivalent source echo
   // fallback path and made audit rows disagree with the actual reader.
   const one = async (text: string) => {
-    const response = await fetch(`${endpoint}/translate`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ text, source_language: "en", target_language: "ja" }),
-    });
-    if (!response.ok) throw new Error(`translation server ${response.status}: ${await response.text()}`);
-    return (await response.json()) as ServerTranslation;
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const response = await fetch(`${endpoint}/translate`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            ...(serverToken ? { "X-Paper-Reader-Token": serverToken } : {}),
+          },
+          body: JSON.stringify({ text, source_language: "en", target_language: "ja" }),
+          signal: AbortSignal.timeout(requestTimeoutMs),
+        });
+        if (!response.ok) throw new Error(`translation server ${response.status}: ${await response.text()}`);
+        return (await response.json()) as ServerTranslation;
+      } catch (error) {
+        lastError = error;
+        if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 1_000));
+      }
+    }
+    throw lastError;
   };
   if (serialArg) {
     const results: ServerTranslation[] = [];
@@ -325,9 +340,12 @@ async function main() {
   const papers: Array<{ paper: CatalogPaper; rows: AuditRow[]; error?: string }> = resumeArg
     ? (prior?.papers ?? []).filter((entry) => !entry.error)
     : [];
-  // Only successful paper checkpoints are resumable. Transient server/model
-  // errors must be retried after the endpoint becomes ready.
-  const completedIds = new Set(papers.filter((entry) => !entry.error).map((entry) => entry.paper.id));
+  // Only checkpoints that satisfy the current requested sample size are
+  // complete. Partial rows must be retried rather than silently skipped;
+  // transient server/model errors are retried after the endpoint is ready.
+  const completedIds = new Set(papers
+    .filter((entry) => !entry.error && entry.rows.length >= perPaperLimit)
+    .map((entry) => entry.paper.id));
   if (resumeArg && completedIds.size > 0) console.log(`[audit] resuming; skipping ${completedIds.size} checkpointed paper(s)`);
   const saveCheckpoint = () => {
     const report = { createdAt: new Date().toISOString(), endpoint, papers, complete: papers.length === selected.length };
@@ -340,9 +358,11 @@ async function main() {
 
   for (const paper of selected) {
     if (completedIds.has(paper.id)) continue;
+    const previous = papers.find((entry) => entry.paper.id === paper.id);
+    if (previous) papers.splice(papers.indexOf(previous), 1);
     const pdfPath = path.join(root, catalog.pdfDir, paper.filename);
     if (!fs.existsSync(pdfPath)) {
-      papers.push({ paper, rows: [], error: `PDF not cached: ${pdfPath}` });
+      papers.push({ paper, rows: previous?.rows ?? [], error: `PDF not cached: ${pdfPath}` });
       saveCheckpoint();
       continue;
     }
@@ -409,7 +429,7 @@ async function main() {
       saveCheckpoint();
       console.log(`${paper.id}: ${rows.length} translation units (checkpoint saved)`);
     } catch (error) {
-      papers.push({ paper, rows: [], error: error instanceof Error ? error.message : String(error) });
+      papers.push({ paper, rows: previous?.rows ?? [], error: error instanceof Error ? error.message : String(error) });
       saveCheckpoint();
       console.error(`${paper.id}:`, error);
     }

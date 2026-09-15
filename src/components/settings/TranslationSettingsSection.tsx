@@ -38,10 +38,7 @@ export function TranslationSettingsSection({
 
   return (
     <div className={styles.page}>
-      <div>
-        <h2 className={styles.pageTitle}>翻訳</h2>
-        <p className={styles.pageLead}>用語集と翻訳の速さなど、読む体験に関わる翻訳設定です。</p>
-      </div>
+      <h2 className={styles.pageTitle}>翻訳</h2>
 
       <div className={styles.cardStack}>
         <SettingsCard title="翻訳">

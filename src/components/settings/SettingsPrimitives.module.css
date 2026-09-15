@@ -70,7 +70,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  max-width: min(280px, 46%);
+  max-width: min(420px, 62%);
 }
 
 .statusRow {

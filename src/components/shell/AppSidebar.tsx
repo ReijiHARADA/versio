@@ -141,11 +141,7 @@ export function AppSidebar({
   );
 
   const modeClass =
-    sidebarMode === "expanded"
-      ? styles.sidebarExpanded
-      : sidebarMode === "collapsed"
-        ? styles.sidebarCollapsed
-        : styles.sidebarAuto;
+    sidebarMode === "expanded" ? styles.sidebarExpanded : styles.sidebarAuto;
 
   return (
     <aside

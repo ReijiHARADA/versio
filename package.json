@@ -31,6 +31,7 @@
     "bundle:python": "bash scripts/bundle-python.sh",
     "bundle:python:clean": "bash scripts/bundle-python.sh clean",
     "verify:browser": "node scripts/verify-browser.mjs",
+    "capture:settings-previews": "node scripts/capture-settings-previews.mjs",
     "audit:prepare-review": "npx --yes tsx scripts/prepare-translation-manual-review.ts",
     "audit:summarize-review": "npx --yes tsx scripts/summarize-translation-manual-review.ts",
     "audit:run-pending": "node scripts/run-pending-translation-audit.mjs",

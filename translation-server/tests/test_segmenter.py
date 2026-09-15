@@ -209,6 +209,17 @@ class SegmenterTests(unittest.TestCase):
         self.assertTrue(all(unit.startswith("•") for unit in units[1:]))
         self.assertTrue(validate_round_trip(source, units))
 
+    def test_complete_sentences_are_independent_translation_units(self) -> None:
+        source = (
+            "From the above can be concluded that neither of the design proposals uses state-of-the-art technology "
+            "when it comes to dynamic behaviour, data visualisation and data sharing. This might prevent early "
+            "disposal because of the introduction of a next generation technology."
+        )
+        units = split_for_translation(source)
+        self.assertEqual(len(units), 2)
+        self.assertIn("prevent early disposal", units[1])
+        self.assertTrue(validate_round_trip(source, units))
+
     def test_inline_numbered_list_keeps_every_condition_as_a_unit(self) -> None:
         source = "The method has limitations: (1) it needs unique solutions; (2) it needs an unstable oracle; (3) it has no model selection. We address all three."
         units = split_for_translation(source)

@@ -148,10 +148,11 @@ async function ensureSamplePaper() {
   await page.getByRole("link", { name: "設定" }).click();
   await page.getByRole("heading", { name: "設定", exact: true }).waitFor({ timeout: 10_000 });
 
-  // Sample lives under 詳細 → 開発者 card
+  // Sample lives under 詳細 on the single settings page
   await page.getByRole("button", { name: "詳細", exact: true }).click();
   const advanced = page.locator("#section-advanced");
   await advanced.waitFor({ timeout: 10_000 });
+  await advanced.scrollIntoViewIfNeeded();
 
   const addSample = advanced.getByRole("button", {
     name: /サンプル論文を追加|サンプル論文は追加済み/,

@@ -213,4 +213,9 @@ describe("trash retention setting normalization", () => {
     expect(normalizeTrashRetentionDays(1.5)).toBe(3);
     expect(normalizeTrashRetentionDays(null)).toBe(3);
   });
+
+  it("accepts never-auto-delete (0)", () => {
+    expect(normalizeTrashRetentionDays(0)).toBe(0);
+    expect(normalizeTrashRetentionDays("0")).toBe(0);
+  });
 });

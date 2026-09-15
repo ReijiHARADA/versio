@@ -3,8 +3,8 @@ import { persist } from "zustand/middleware";
 
 export type Theme = "light" | "dark" | "system";
 export type OriginalDisplayMode = "on-demand" | "always" | "when-untranslated";
-/** auto: hoverで開閉 / expanded: 常時展開 / collapsed: 常時アイコンのみ */
-export type SidebarMode = "auto" | "expanded" | "collapsed";
+/** auto: hoverで開閉 / expanded: 常時展開 */
+export type SidebarMode = "auto" | "expanded";
 
 /** Default expanded sidebar width (px). Double-click the resize edge to restore. */
 export const DEFAULT_SIDEBAR_WIDTH = 220;
@@ -69,6 +69,9 @@ export const useAppStore = create<AppUiState>()(
           if (settings.sidebarWidth != null) {
             next.sidebarWidth = clampSidebarWidth(settings.sidebarWidth);
           }
+          if (next.sidebarMode !== "auto" && next.sidebarMode !== "expanded") {
+            next.sidebarMode = "auto";
+          }
           return { displaySettings: next };
         }),
 
@@ -92,13 +95,16 @@ export const useAppStore = create<AppUiState>()(
     }),
     {
       name: "paper-reader-storage",
-      version: 5,
+      version: 6,
       migrate: (persisted) => {
-        const value = persisted as { displaySettings?: Partial<DisplaySettings> } | undefined;
+        const value = persisted as { displaySettings?: Partial<DisplaySettings> & { sidebarMode?: string } } | undefined;
         const merged = { ...defaultDisplaySettings, ...value?.displaySettings };
+        const sidebarMode =
+          merged.sidebarMode === "expanded" ? "expanded" : "auto";
         return {
           displaySettings: {
             ...merged,
+            sidebarMode,
             sidebarWidth: clampSidebarWidth(merged.sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH),
           },
         };

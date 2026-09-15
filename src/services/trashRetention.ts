@@ -2,7 +2,8 @@ import { getSetting, saveSetting } from "./database";
 
 export const TRASH_RETENTION_SETTING_KEY = "trashRetentionDays";
 export const DEFAULT_TRASH_RETENTION_DAYS = 3;
-export const TRASH_RETENTION_OPTIONS = [1, 3, 7, 14, 30] as const;
+/** `0` = never auto-delete (no retention deadline). */
+export const TRASH_RETENTION_OPTIONS = [1, 3, 7, 14, 30, 0] as const;
 export type TrashRetentionDays = (typeof TRASH_RETENTION_OPTIONS)[number];
 
 export function isValidTrashRetentionDays(value: unknown): value is TrashRetentionDays {
@@ -22,6 +23,10 @@ export function normalizeTrashRetentionDays(value: unknown): TrashRetentionDays 
   return DEFAULT_TRASH_RETENTION_DAYS;
 }
 
+export function isTrashAutoDeleteEnabled(retentionDays: number): boolean {
+  return retentionDays > 0;
+}
+
 export async function getTrashRetentionDays(): Promise<TrashRetentionDays> {
   const raw = await getSetting<unknown>(TRASH_RETENTION_SETTING_KEY);
   return normalizeTrashRetentionDays(raw);
@@ -33,7 +38,7 @@ export async function setTrashRetentionDays(days: unknown): Promise<TrashRetenti
   return next;
 }
 
-/** Cutoff ISO: items with trashed_at <= cutoff are expired. */
+/** Cutoff ISO: items with trashed_at <= cutoff are expired. Only valid when auto-delete is on. */
 export function trashExpiryCutoffIso(retentionDays: number, now = new Date()): string {
   const ms = Math.max(1, retentionDays) * 24 * 60 * 60 * 1000;
   return new Date(now.getTime() - ms).toISOString();
@@ -50,6 +55,7 @@ export function formatTrashRemainingLabel(
   retentionDays: number,
   now = new Date()
 ): string {
+  if (!isTrashAutoDeleteEnabled(retentionDays)) return "自動削除なし";
   const expires = Date.parse(trashExpiresAtIso(trashedAt, retentionDays));
   if (!Number.isFinite(expires)) return "期限不明";
   const remainingMs = expires - now.getTime();
@@ -57,4 +63,8 @@ export function formatTrashRemainingLabel(
   const days = Math.ceil(remainingMs / (24 * 60 * 60 * 1000));
   if (days <= 1) return "約1日以内に完全削除";
   return `約${days}日後に完全削除`;
+}
+
+export function trashRetentionOptionLabel(days: TrashRetentionDays): string {
+  return days === 0 ? "設定しない" : `${days}日後`;
 }

@@ -13,6 +13,7 @@ import {
   getTrashRetentionDays,
   setTrashRetentionDays,
   TRASH_RETENTION_OPTIONS,
+  trashRetentionOptionLabel,
   type TrashRetentionDays,
 } from "../../services/trashRetention";
 import { purgeExpiredTrash } from "../../services/trashService";
@@ -118,12 +119,7 @@ export function StorageSettingsSection({
 
   return (
     <div className={styles.page}>
-      <div>
-        <h2 className={styles.pageTitle}>ライブラリとデータ</h2>
-        <p className={styles.pageLead}>
-          バックアップ、ゴミ箱の保持期間、一時データの管理です。
-        </p>
-      </div>
+      <h2 className={styles.pageTitle}>ライブラリとデータ</h2>
 
       <div className={styles.cardStack}>
         <SettingsCard title="バックアップ">
@@ -184,22 +180,27 @@ export function StorageSettingsSection({
         <SettingsCard title="ゴミ箱">
           <SettingsRow
             label="自動削除までの日数"
-            description="ゴミ箱の項目を自動で完全削除するまでの日数です。変更直後に期限切れがあれば削除します。"
-            htmlFor="trash-retention-days"
+            description="ゴミ箱の項目を自動で完全削除するまでの日数です。「設定しない」では手動削除のみです。変更直後に期限切れがあれば削除します。"
             align="start"
           >
-            <select
-              id="trash-retention-days"
-              className={styles.select}
-              value={retentionDays}
-              onChange={(event) => void handleRetentionChange(event.target.value)}
+            <div
+              className={styles.segmented}
+              role="radiogroup"
+              aria-label="自動削除までの日数"
             >
               {TRASH_RETENTION_OPTIONS.map((days) => (
-                <option key={days} value={days}>
-                  {days}日後
-                </option>
+                <button
+                  key={days}
+                  type="button"
+                  role="radio"
+                  aria-checked={retentionDays === days}
+                  className={retentionDays === days ? styles.selected : ""}
+                  onClick={() => void handleRetentionChange(String(days))}
+                >
+                  {trashRetentionOptionLabel(days)}
+                </button>
               ))}
-            </select>
+            </div>
           </SettingsRow>
         </SettingsCard>
 

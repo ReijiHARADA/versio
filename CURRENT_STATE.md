@@ -47,7 +47,7 @@
 - **FTS**: annotation CRUD と translation checkpoint で per-paper incremental refresh
 - **ReaderScreen**: hooks に分割（document / glossary / search / annotations / export / translation resume / reading position）。挙動は維持
 - **抽出**: `extractAcademicPdf` → CanonicalDocument → Package。詳細は [ACADEMIC_PDF_EXTRACTION_ARCHITECTURE.md](./ACADEMIC_PDF_EXTRACTION_ARCHITECTURE.md)
-- **翻訳**: MADLAD-400 3B / MPS / bf16、文バッチ既定 24、品質ゲート（pipeline v61）。監査手順は [TRANSLATION_CORPUS_AUDIT.md](./TRANSLATION_CORPUS_AUDIT.md)
+- **翻訳**: MADLAD-400 3B / MPS / bf16、文バッチ既定 24、品質ゲート（pipeline v71 / strict-restore-v9）。監査手順は [TRANSLATION_CORPUS_AUDIT.md](./TRANSLATION_CORPUS_AUDIT.md)
 - **硬化メモ**: [P0_HARDENING.md](./P0_HARDENING.md)
 - **packaged acceptance**: [docs/RELEASE_ACCEPTANCE.md](./docs/RELEASE_ACCEPTANCE.md)
 
@@ -887,3 +887,139 @@ Qwen prompt-variant smoke (same scientific sentence, temperature 0) was complete
 Qwen 2.5 7B smoke completed after local download (`model-quality-qwen2.5-7b-smoke-v1.json`). It translated the p-value sentence and citation-heavy sentence cleanly, but the year-boundary sentence switched to Chinese (`我们的发现对于研究人员具有价值`) and retained English. This is better than 3B on citation prose but still fails language consistency; it remains audit-only pending held-out semantic review and a robust language gate.
 
 A preliminary manual label file for the 7B smoke is recorded at `model-quality-qwen2.5-7b-smoke-manual-v1.json`: 1 correct, 1 minor wording, 1 severity-3 reject. This is only a three-case smoke and is not a production quality estimate.
+
+Qwen 2.5 7B full 12-row fixture evaluation completed (`model-quality-qwen2.5-7b-v1.json`). Mean latency was 7.4s/row (range 1.7–16.0s). Compared with 3B, 7B produced substantially more coherent Japanese and preserved the OzCHI citation row, but several long outputs retained English/uppercase terms and require semantic review. No simplified-Chinese drift was observed in this run, yet this is not sufficient evidence for automatic routing; manual claim labels and held-out validation remain required.
+
+Manual claim review of all 12 Qwen 2.5 7B fixture outputs is now recorded in `model-quality-qwen2.5-7b-manual-v1.json`: 5 correct, 5 minor/terminology issues, 1 severity-3 hallucination (an unsupported political/economic conclusion), and 1 additional terminology issue. This confirms improved fluency does not guarantee semantic safety; Qwen remains audit-only.
+
+Calibration correction: the mixed-script audit set was narrowed to characters absent from Japanese orthography; common shared kanji are no longer flagged. Re-running Qwen 7B selection gives `mixedScriptRisk=0` for that fixture (the known Chinese drift remains represented by the 3B report). This avoids a false-positive audit signal and production behavior remains unchanged.
+
+Manual review of the Qwen 2.5 14B fixture is recorded in `model-quality-qwen2.5-14b-manual-v1.json`: 4 correct, 6 minor wording/terminology, 1 severity-2 omission, and 1 severity-3 language failure (a full Chinese output). Although 14B improves the citation and year-boundary smoke cases, its 12-row severe-error rate is 2/12 and latency averages ~15.5s/row; it is not safe for production cascade without stronger gating.
+
+Qwen 14B selector calibration joined surface signals to the manual labels in `qwen14-selector-vs-manual-v1.json`: 11/12 passed hard surface signals, while 2/12 had manual severity >=2 and both passed those signals. Surface-only routing would therefore have a 18.2% unsafe false-accept rate on this fixture; no cascade is enabled.
+
+Audit-only selective-cascade simulation for Qwen 14B (`selective-cascade-qwen14-oracle-v1.json`) joins its manual labels to the existing unsafe cohort. On the overlapping 12 rows, 10 would be rescued and 2 would remain fallback, with 0 severe selected rows—but this is oracle-style (labels were assigned after seeing outputs), so it cannot justify production routing. Held-out automatic semantic selection is still required.
+
+Qwen 14B semantic-coverage audit (`semantic-coverage-qwen14-v1.json`) and threshold curves (`qwen14-semantic-calibration-v1.json`) are complete. A min-source similarity threshold of 0.70 retains 8/12 rows but still retains 1/2 manually severe rows (12.5% unsafe); thresholds do not reach the <=5% safety target. The embedding signal remains audit-only and is not promoted to production gating.
+
+Post-Qwen audit verification: translation-server unittest discovery passes 98 tests (including the mixed-script and rows-schema changes), `git diff --check` passes, and the user-launched bundled server PID 60582 remains healthy (`/health` ready, model_loaded=true).
+
+Local-model manual comparison (`local-model-manual-comparison-v1.json`) now consolidates the same 12-row fixture. Preliminary severe counts are Gemma 9B 3, Qwen 7B 1, and Qwen 14B 2; Qwen 7B has the most `correct` labels (5), but the models fail on different rows. This supports selective routing research, not a blanket replacement.
+
+Qwen 14B prompt-rescue experiment (`model-quality-qwen2.5-14b-prompt-rescue-v1.json`) reran the previously severe thermal-earring row with three explicit Japanese-only prompts and `num_predict=512`. All three outputs were Japanese, preserved 11.3mm/31mm/335mg/14.4μW/28 days, and avoided the prior Chinese failure. This indicates prompt/template sensitivity for that row, but it is a single rescue experiment; Qwen remains audit-only until the same prompt is evaluated on held-out rows and semantic safety is measured.
+
+Held-out prompt evaluation for Qwen 14B (`model-quality-qwen2.5-14b-heldout-prompt-v1.json`) completed on 3 ordinary blocks. Manual review (`model-quality-qwen2.5-14b-heldout-prompt-manual-v1.json`) found 1 correct, 1 minor wording, and 1 severity-2 semantic shift (the “early disposal” relation was reversed/unclear). The Japanese-only prompt improves language consistency but does not guarantee claim preservation, so Qwen remains audit-only.
+
+Qwen14 held-out segmented rescue (`model-quality-qwen2.5-14b-heldout-segmented-v1.json`) split the previous 2-sentence block into two complete translation units. Both outputs preserved the intended relations; the second explicitly rendered “prevent early disposal” correctly. This is evidence that unit granularity still affects model adequacy even after language prompting. It supports validating sentence-level rescue segmentation before any model cascade, while production MADLAD routing remains unchanged.
+
+Verified against the actual production `segment_for_translation`: the held-out design block is already split into the two complete sentences before model input. Therefore the Qwen rescue experiment validates the segmentation path but does not justify another segmenter code change; remaining quality gap is model/candidate selection and extraction-specific unit construction.
+
+Runtime recheck after local 14B evaluation: the app-managed server was automatically relaunched as PID 90642 (the previous PID exited during model-memory pressure). It is from the rebuilt `.app` bundle and returned to `/health=ready`, `model_loaded=true` after warmup. No manual process kill was performed.
+
+After evaluation, the audit-only Ollama Qwen14B model was unloaded (`ollama ps` empty) to release GPU memory. The app-managed bundled server remains healthy at `/health=ready`, `model_loaded=true`; its process was not stopped.
+
+Added a regression test for the held-out early-disposal case: complete sentences are emitted as independent translation units, the second unit retains `prevent early disposal`, and round-trip reconstruction passes. Segmenter + candidate-selection tests now pass 45 tests.
+
+## 2026-09-15 runtime/regrssion checkpoint
+
+The user-launched bundled translation server remains active at PID 90642 (`/health` ready, `model_loaded=true`). Bundle verification confirms `3b-mt-v5-semantic-v9-strict-restore-v9` and `MAX_NEW_TOKENS = 384`. Translation-server unittest discovery passed 98 tests. This is a verification checkpoint; production model routing remains unchanged while the <=5% fallback objective is still under evaluation.
+
+## 2026-09-15 runtime/regression checkpoint
+
+The user-launched bundled translation server remains active at PID 90642 (`/health` ready, `model_loaded=true`). Bundle verification confirms the strict-restore-v9 model version and `MAX_NEW_TOKENS = 384`. Translation-server unittest discovery passed 99 tests. This is a verification checkpoint; production model routing remains unchanged while the <=5% fallback objective is still under evaluation.
+
+## 2026-09-15 escalation ladder checkpoint
+
+Created `reports/strategy-escalation-v1.json` consolidating current Level 1–5 evidence. MADLAD segmentation/decode changes are at a measured plateau; Gemma 9B, Qwen 7B, and Qwen 14B have been evaluated locally, but each has severe errors on the fixed fixture. Oracle cascade results are not deployable, and Qwen14 surface/semantic selectors remain unsafe on held-out or manually labeled evidence. The next experiment is label-blind held-out candidate selection; no production routing was changed.
+
+### 2026-09-15 candidate-selection harness checkpoint
+
+The audit-only candidate selector now has a CLI regression test for held-out
+rows that omit `paperId`; matching falls back to `blockId` without silently
+dropping the row. This changes evaluation coverage only and does not alter
+production translation routing. The translation-server suite passes 105 tests.
+The current product baseline remains ordinary-body 82 rows with 17 reader-visible
+fallbacks (20.7%); the <=5% target is still open.
+
+Frontend regression after the audit-harness change: Vitest 60 files / 307 tests,
+oxlint, and `tsc --noEmit` all pass. The app-managed server remained ready
+through verification; no `.app` rebuild or process restart was performed.
+
+Candidate-selection scope audit: existing Qwen14 selector reports are enriched
+unsafe cohorts (10/10 eligible corpus rows have severity >=2; held-out has only
+one eligible row), so they are insufficient to justify routing. This is recorded
+in `test-data/real-papers/reports/candidate-selection-scope-v1.json`; production
+routing remains unchanged. A mixed-quality, label-blind held-out fixture is now
+the next evidence requirement.
+
+A mixed-quality held-out fixture scaffold is now present at
+`test-data/real-papers/reports/mixed-quality-heldout-v1.json` (17 ordinary-body
+cases: 12 baseline accepted, 5 reader-visible fallback). Semantic labels are
+blank by design; candidate routing remains unevaluated and production routing is
+unchanged.
+
+The mixed-quality held-out fixture now has a translation-server regression test:
+its 12 accepted / 5 fallback composition and blank manual labels are asserted.
+The Python suite passes 106 tests; production routing remains unchanged.
+
+### 2026-09-15 benchmark authentication checkpoint
+
+A pending `significant-other` audit initially returned HTTP 401 because the
+benchmark client did not send the app server's token. The client now accepts
+`MADLAD_SERVER_TOKEN` transiently and sends `X-Paper-Reader-Token`; no token is
+persisted. A retry against the live packaged server did not complete within the
+observation window and was interrupted; its partial report is retained. The
+server health endpoint remains ready, and no app-managed process was stopped.
+
+Authenticated audit resumed successfully for `significant-other`: 2 translation
+units were generated through the packaged server and checkpointed. The paper is
+still incomplete (requested limit 12), so it is not counted as a completed corpus
+paper. The app-managed process remains running.
+
+### 2026-09-15 resume semantics and runtime interruption
+
+Fixed benchmark `--resume` semantics: a checkpoint is skipped only when its row
+count reaches the current `--limit`; partial checkpoints are retried. The retry
+then encountered a socket close and the packaged server was no longer listening
+(`/health` connection refused), so the audit remains partial and no server was
+restarted by this session. TypeScript validation and the 106-test Python suite
+still pass.
+
+The audit client now bounds each translation request with
+`MADLAD_BENCH_REQUEST_TIMEOUT_MS` (default 180s) and retries once after a
+transient fetch/socket failure. This is benchmark reliability only; no reader
+routing or server lifecycle behavior changed. TypeScript and diff checks pass.
+
+A second resume fix preserves previously completed partial rows when a retry
+fails: the report now retains the prior rows alongside the new error, while
+only rows meeting the requested limit are skipped. `tsc --noEmit` and diff
+checks pass. The current failed report had already been overwritten before this
+fix, so its earlier two rows cannot be recovered from that file; future retries
+will preserve them.
+
+## 2026-09-15 checkpoint: semantic coverage v80
+
+サーバーを起動せず、既存の手動レビュー済み139件（翻訳出力あり78件）を
+`paraphrase-multilingual-MiniLM-L12-v2` で再評価した。unsafe severity>=2 は19件、
+安全群の平均最小文類似度は0.789、unsafe群は0.686。最小類似度が0.60未満は10件、
+0.65未満は12件だった。これは audit-only のシグナルであり、本番ゲートやモデル経路は変更していない。
+レポート: `test-data/real-papers/reports/semantic-coverage-v80.json`。
+
+現在の実行可能な翻訳サーバーはなく、`8765/health` は接続拒否。次回はアプリ起動後に
+label-blind mixed-quality fixture の候補生成と selective cascade 評価へ進む。
+
+`semantic-coverage-v80-summary.json` に分野別集計を追加。78出力の閾値別件数と16 paperの平均値を固定し、次回cascade比較の基準にする。
+
+## 2026-09-15 checkpoint: packaged server resumed
+
+ユーザー起動の `.app` bundled server が `health=ready`, `model_loaded=true` になったため、
+`significant-other` を `--limit 12 --resume` で再開。4 rows を checkpoint 保存した後、
+5件目の推論が120秒 timeout で終了した。既存4 rows は保持され、レポートに timeout error として残っている。
+最初の4 rows は ordinary-body 3件中3件を翻訳成功、reference/chrome 1件は pre-model fallback。
+次回は timeout を短く再試行せず、サーバー負荷を確認してから残りを再開する。
+
+## 2026-09-15 checkpoint: significant-other audit completed
+
+packaged server を再利用し `significant-other` の12 unit監査を完了。12 rows を checkpoint 保存し、
+reference/chrome 1件のみ pre-model fallback、ordinary-body は全件出力を取得した。
+レポート `test-data/real-papers/reports/translation-audit-significant-other.json`。

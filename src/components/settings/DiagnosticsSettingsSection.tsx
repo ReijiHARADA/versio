@@ -42,12 +42,7 @@ export function DiagnosticsSettingsSection({
 
   return (
     <div className={styles.page}>
-      <div>
-        <h2 className={styles.pageTitle}>詳細</h2>
-        <p className={styles.pageLead}>
-          接続先や並行数など、通常は変更しない開発者向けの設定です。
-        </p>
-      </div>
+      <h2 className={styles.pageTitle}>詳細</h2>
 
       <div className={styles.cardStack}>
         <SettingsCard title="サービス">

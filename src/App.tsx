@@ -25,6 +25,7 @@ import {
   maybeVerifyPackagedAcceptanceRelaunch,
 } from "./services/packagedAcceptance";
 import { maybeStartUiE2eWatcher } from "./services/uiE2eWatch";
+import styles from "./App.module.css";
 
 function formatBytes(n: number | null | undefined): string | null {
   if (typeof n !== "number" || !Number.isFinite(n) || n < 0) return null;
@@ -221,39 +222,11 @@ function App() {
   return (
     <HashRouter>
       {!serverReady && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 12,
-            padding: "10px 16px",
-            background: "#1a365d",
-            color: "#ffffff",
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif',
-            fontSize: 13,
-          }}
-        >
+        <div className={styles.banner} role="status" aria-live="polite">
           {serverError ? (
             <>
               <span>{serverError}</span>
-              <button
-                type="button"
-                onClick={handleRetry}
-                style={{
-                  padding: "4px 12px",
-                  borderRadius: 6,
-                  border: "1px solid #ffffff",
-                  background: "transparent",
-                  color: "#ffffff",
-                  cursor: "pointer",
-                }}
-              >
+              <button type="button" className={styles.bannerRetry} onClick={handleRetry}>
                 再試行
               </button>
             </>
@@ -263,21 +236,25 @@ function App() {
         </div>
       )}
       <PdfFileDropLayer />
-      <div style={{ paddingTop: !serverReady ? 40 : 0, minHeight: "100%" }}>
-        <Routes>
-          <Route path="/import" element={<ImportScreen />} />
-          <Route element={<AppShell />}>
-            <Route path="/" element={<LibraryScreen />} />
-            <Route path="/inbox" element={<InboxScreen />} />
-            <Route path="/favorites" element={<FavoritesScreen />} />
-            <Route path="/recent" element={<RecentScreen />} />
-            <Route path="/trash" element={<TrashScreen />} />
-            <Route path="/project/:projectId" element={<ProjectScreen />} />
-            <Route path="/settings" element={<SettingsScreen />} />
-            <Route path="/reader/:paperId" element={<ReaderScreen />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+      <div
+        className={`${styles.root} ${!serverReady ? styles.rootWithBanner : ""}`}
+      >
+        <div className={styles.routes}>
+          <Routes>
+            <Route path="/import" element={<ImportScreen />} />
+            <Route element={<AppShell />}>
+              <Route path="/" element={<LibraryScreen />} />
+              <Route path="/inbox" element={<InboxScreen />} />
+              <Route path="/favorites" element={<FavoritesScreen />} />
+              <Route path="/recent" element={<RecentScreen />} />
+              <Route path="/trash" element={<TrashScreen />} />
+              <Route path="/project/:projectId" element={<ProjectScreen />} />
+              <Route path="/settings" element={<SettingsScreen />} />
+              <Route path="/reader/:paperId" element={<ReaderScreen />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
       </div>
     </HashRouter>
   );

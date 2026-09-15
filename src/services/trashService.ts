@@ -18,6 +18,7 @@ import { deletePaperEverywhere } from "./paperDelete";
 import { translationManager } from "./translation";
 import {
   getTrashRetentionDays,
+  isTrashAutoDeleteEnabled,
   trashExpiryCutoffIso,
 } from "./trashRetention";
 
@@ -137,6 +138,9 @@ export async function purgeExpiredTrash(now = new Date()): Promise<{
   folders: number;
 }> {
   const retentionDays = await getTrashRetentionDays();
+  if (!isTrashAutoDeleteEnabled(retentionDays)) {
+    return { papers: 0, folders: 0 };
+  }
   const cutoff = trashExpiryCutoffIso(retentionDays, now);
   const { db } = await getStorage();
 

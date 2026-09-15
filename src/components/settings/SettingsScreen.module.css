@@ -60,6 +60,16 @@
   padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-2xl);
 }
 
+.section {
+  scroll-margin-top: var(--spacing-lg);
+}
+
+.section + .section {
+  margin-top: var(--spacing-2xl);
+  padding-top: var(--spacing-xl);
+  border-top: 1px solid var(--color-separator-subtle);
+}
+
 .page {
   width: 100%;
   display: flex;
@@ -74,38 +84,10 @@
   color: var(--color-text);
 }
 
-.pageLead {
-  margin: calc(var(--spacing-sm) * -1) 0 0;
-  font-size: var(--font-size-small);
-  color: var(--color-text-secondary);
-  line-height: 1.5;
-  max-width: 42rem;
-}
-
 .cardStack {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-}
-
-.readingLayout {
-  display: grid;
-  grid-template-columns: minmax(320px, 1fr) minmax(320px, 1.05fr);
-  gap: var(--spacing-lg);
-  align-items: start;
-}
-
-.readingControls {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  min-width: 0;
-}
-
-.readingPreviewColumn {
-  min-width: 0;
-  position: sticky;
-  top: 0;
 }
 
 .select,
@@ -125,6 +107,15 @@
 
 .select {
   cursor: pointer;
+  padding-right: calc(var(--control-padding-x) + 1.25rem);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px 12px;
+}
+
+[data-theme="dark"] .select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 }
 
 .input {
@@ -133,7 +124,7 @@
 
 .select:hover,
 .input:hover {
-  background: color-mix(in srgb, var(--color-surface-control) 88%, var(--color-text));
+  background-color: color-mix(in srgb, var(--color-surface-control) 88%, var(--color-text));
 }
 
 .select:focus-visible,
@@ -170,6 +161,7 @@
   border-radius: var(--control-radius);
   background: var(--color-surface-control);
   gap: 2px;
+  max-width: 100%;
 }
 
 .segmented button {
@@ -183,6 +175,7 @@
   padding: 0 var(--spacing-sm);
   min-height: calc(var(--control-height) - 4px);
   cursor: pointer;
+  white-space: nowrap;
   transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
@@ -353,16 +346,6 @@
 @media (prefers-reduced-motion: reduce) {
   .spinning {
     animation: none;
-  }
-}
-
-@media (max-width: 1100px) {
-  .readingLayout {
-    grid-template-columns: 1fr;
-  }
-
-  .readingPreviewColumn {
-    position: static;
   }
 }
 

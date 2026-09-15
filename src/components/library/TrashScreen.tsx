@@ -13,6 +13,7 @@ import {
 import {
   formatTrashRemainingLabel,
   getTrashRetentionDays,
+  isTrashAutoDeleteEnabled,
 } from "../../services/trashRetention";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
@@ -188,7 +189,10 @@ export function TrashScreen() {
             </div>
             <h2 className={styles.emptyTitle}>ゴミ箱は空です</h2>
             <p className={styles.emptyDescription}>
-              削除した論文とフォルダがここに入ります。{retentionDays}日後に自動で完全削除されます。
+              削除した論文とフォルダがここに入ります。
+              {isTrashAutoDeleteEnabled(retentionDays)
+                ? `${retentionDays}日後に自動で完全削除されます。`
+                : "自動削除はオフです。手動で空にするまで残ります。"}
             </p>
           </div>
         ) : (

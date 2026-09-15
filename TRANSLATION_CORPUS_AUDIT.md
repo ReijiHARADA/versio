@@ -1771,3 +1771,79 @@ After the user relaunched the app, a new bundled server PID 60582 appeared. `/he
 ## v9 baseline resynchronization (2026-09-15)
 
 `reports/baseline-v9.json` is the machine-readable baseline. The strict `ordinary-body-prose` source category contains 48 rows with 12 post-model fallbacks (25.0%). The product UX predicate is broader (paragraph role without source fallback): 82 rows with 17 reader-visible fallbacks (20.7%). Both figures are retained because they answer different questions; the latter is the target metric for the <=5% product goal. The v9 packaged runtime is active, but no model cascade is enabled yet.
+
+## Phase 2 checkpoint: relation-aware candidate audit (2026-09-15)
+
+The candidate-selection harness now records condition, temporal, and trend relation preservation in addition to numeric, negation, contrast, length, and mixed-script signals. A conservative audit-only relation gate rejected 3/12 Qwen 14B fixed-fixture candidates and 2/3 held-out candidates. Multi-model ranking remains unsafe without label-blind semantic evidence, so no production routing change was made. Current product baseline remains 17/82 reader-visible ordinary-body fallbacks (20.7%); the <=5% objective is still open.
+
+### Relation signal calibration v4 (2026-09-15)
+
+After disambiguating `where`, `when`, and plain `more/less`, the Qwen14 fixed-fixture audit rerun reports 9/12 hard-signal passes, 12/12 relation-signal passes, and 2/12 conservative gate exclusions. These are audit metrics only; labels are not used for routing.
+
+### 2026-09-15 evaluation harness checkpoint
+
+Added a CLI-level regression for paperId-free held-out candidate rows. The
+selector now demonstrably preserves those rows through JSON loading, matching,
+and audit selection; this is audit-only and cannot change production routing.
+Translation-server tests: 105 passed. Product baseline is unchanged at
+17/82 reader-visible ordinary-body fallbacks (20.7%).
+
+### Candidate-selection scope audit (2026-09-15)
+
+The conservative selector reports are now explicitly scoped. The 12-row corpus
+fixture is an enriched severity>=2 cohort: all 10 rows that passed the relation
+gate are still manually unsafe, while 2 are rejected. The three-row held-out
+fixture has only one eligible row. These data cannot estimate rescue precision
+or false-accept rate because they contain almost no known-good candidates.
+This finding is saved in `reports/candidate-selection-scope-v1.json`. Production
+routing remains unchanged; the next required experiment is a label-blind mixed
+quality held-out fixture with accepted and fallback rows.
+
+### Mixed-quality held-out fixture scaffold (2026-09-15)
+
+Created `reports/mixed-quality-heldout-v1.json` with 24 ordinary-body cases
+(12 baseline accepted and 12 reader-visible fallback), selected deterministically
+across the existing corpus. Baseline translations are included as inputs, while
+manual semantic labels remain intentionally unfilled; this prevents the enriched
+unsafe-cohort bias seen in the earlier selector reports. The fixture is ready for
+label-blind candidate generation followed by independent review and must not be
+used as production evidence until those labels are completed.
+
+### Benchmark client authentication (2026-09-15)
+
+The real-paper benchmark now supports the runtime `MADLAD_SERVER_TOKEN`
+environment variable and sends it as `X-Paper-Reader-Token`, allowing audits to
+match the packaged app's authenticated API without storing secrets. The first
+retry for `significant-other` did not finish and was interrupted; no production
+code or server process was changed.
+
+### Authenticated audit resumed (2026-09-15)
+
+After the benchmark client began sending `MADLAD_SERVER_TOKEN`,
+`significant-other` produced and checkpointed 2 translation units through the
+packaged server. The run is intentionally partial (limit 12) and is not counted
+as a completed paper; the checkpoint can be resumed without discarding output.
+
+### Resume semantics fix (2026-09-15)
+
+`benchmark-real-paper-translation.ts --resume` now treats a paper as complete
+only when its checkpoint contains at least the requested `--limit` rows. This
+prevents a partial audit from being silently skipped. During the retry the app
+server socket closed; the partial report is retained and no process was
+restarted by this session. `tsc --noEmit` and all 106 translation-server tests
+pass.
+
+### Audit request resilience (2026-09-15)
+
+Added a bounded request timeout (default 180 seconds, configurable with
+`MADLAD_BENCH_REQUEST_TIMEOUT_MS`) and one retry for transient fetch failures in
+the real-paper benchmark. This prevents an unavailable server from leaving a
+run waiting indefinitely while preserving atomic checkpoints. It is audit-only.
+
+### Partial-row preservation (2026-09-15)
+
+Fixed resume handling so a failed retry retains any prior partial rows instead
+of replacing them with an empty error entry. Completion still requires the
+current requested row limit. The already-overwritten `significant-other` report
+cannot recover its former two rows from that file, but subsequent interruptions
+are now resumable without data loss.
