@@ -1267,6 +1267,9 @@ function groupLinesIntoBlocks(
     }
 
     const sameRole = forcedRole === currentRole;
+    const previousRotated = Math.abs(current[current.length - 1].rotation ?? 0) >= 45;
+    const nextRotated = Math.abs(line.rotation ?? 0) >= 45;
+    const rotationCompatible = previousRotated === nextRotated;
     const authorKindOk =
       currentRole !== "author" ||
       looksLikeEmail(joinLines(current)) === looksLikeEmail(line.text);
@@ -1280,6 +1283,7 @@ function groupLinesIntoBlocks(
       currentRole !== "table_caption" &&
       currentRole !== "footnote" &&
       !styleStartsSubheading(current[current.length - 1], line, baseFont) &&
+      rotationCompatible &&
       canMerge(current[current.length - 1], line, baseFont);
 
     const affiliationContinue =

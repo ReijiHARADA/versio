@@ -2301,4 +2301,6 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 
 回転文字同士でも、短いセル item と長い prose item を幅・単語数で分ける guard を追加。`wear-scale` p.14 では Cronbach 脚注が独立 line になり、表セルと脚注の混在が一段減った。ただし表セル側に後続本文が連結する別境界は残る。extraction corpus 43/43 は維持。
 
+さらに異なる回転方向の line を同一 paragraph に merge しない `rotationCompatible` 条件を追加。extraction corpus は 43/43 を維持し、`wear-scale` では脚注 line と表セル line の分離を再確認した。両者が同じ回転方向で連結される残存ケースは x帯連続性で解く必要があり、次回へ繰り越す。
+
 captionless numeric-row の synthetic regression を追加し、6行の反復 x 列が table evidence（score >= 0.94）として生成されることを確認。pipeline suite は 5/5。実PDFではページ内の表後注記がまだ同じ block に残るため、region の上下境界を手動比較してから拡張する。
