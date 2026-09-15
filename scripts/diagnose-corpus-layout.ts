@@ -24,6 +24,16 @@ for (const paper of catalog.papers) {
   reports.push({ id: paper.id, formatFamily: paper.formatFamily, pages: pages.length, suspiciousBlocks });
 }
 const output = { version: "pdf-layout-corpus-diagnostic-v1", papers: reports.length, totalPages: reports.reduce((sum, r) => sum + r.pages, 0), totalSuspiciousBlocks: reports.reduce((sum, r) => sum + r.suspiciousBlocks, 0), reports };
+const byFormat = new Map<string, { papers: number; pages: number; suspiciousBlocks: number }>();
+for (const report of reports) {
+  const key = report.formatFamily ?? "unknown";
+  const current = byFormat.get(key) ?? { papers: 0, pages: 0, suspiciousBlocks: 0 };
+  current.papers++;
+  current.pages += report.pages;
+  current.suspiciousBlocks += report.suspiciousBlocks;
+  byFormat.set(key, current);
+}
+Object.assign(output, { byFormat: Object.fromEntries(byFormat) });
 const outputPath = process.argv[2];
 if (outputPath) fs.writeFileSync(path.resolve(outputPath), JSON.stringify(output, null, 2) + "\n");
 else console.log(JSON.stringify(output, null, 2));

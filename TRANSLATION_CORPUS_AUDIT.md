@@ -2785,3 +2785,5 @@ The table audit also shows that Table 1, 3, 4, and 7 are native caption blocks, 
 Added the diagnostic CLI `npm run diagnose:pdf-layout -- <pdf> [output.json]`, which emits wide multi-x-cluster paragraph blocks with their assigned columns and source text. The Elsevier fixture currently reports 14 suspicious blocks over 22 pages; no production classification is changed.
 
 Added the corpus wrapper `npm run diagnose:pdf-corpus -- [output.json]`. The current cached corpus has 26 papers, 497 pages, and 255 suspicious wide/multi-cluster paragraph blocks. This is a diagnostic baseline, not a quality claim.
+
+The corpus diagnostic now also aggregates by format family. The largest suspicious-block groups are arXiv (177), ACM (33), OzCHI (14), Elsevier (13), and IEEE (8); counts are used to prioritize review and are not themselves failure rates.
