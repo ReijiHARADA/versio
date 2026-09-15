@@ -2830,4 +2830,5 @@ Full application regression after the current extraction changes: **61 files / 3
 - PPG Earringのreal-paper fixtureに、同一ページ内のx帯混在paragraphを拒否する回帰assertionを追加し、27/27 passed。
 - 診断出力にnative image overlap・numeric ratio・short token ratioを追加。arXivの疑わしいサンプル41件ではimageOverlap≥0.2が4件、shortTokenRatio≥0.7が23件。図表ラベル候補の分類には有用だが、画像配置がないベクター図は引き続きnative geometryの手動確認が必要。
 - 診断対象を全疑わしいblockへ拡張（v2）。arXiv 117件中 imageOverlap≥0.2 が26、numericRatio≥0.2 が29、shortTokenRatio≥0.7 が72。ベクター図候補をproductionで除外するにはまだ証拠不足。
+- 閾値分類レポートを保存。129件中 raster-overlap 26、vector-or-table-label 12、short-label 43、mixed-layout 48。分類は手動レビューの優先順位付けに限定する。
 現行抽出コードで `diagnose:pdf-corpus` を再実行した結果、26 papers / 497 pages / suspicious 164 blocks。144件はarXivに集中し、図・表のベクターラベルがnative textとして同一領域に現れる候補が大半だった。段落を強制分割する根拠としては不十分なため、誤分類を増やすルールは追加せず、次回はnative geometryとcaption/table provenanceを用いた手動分類を行う。
