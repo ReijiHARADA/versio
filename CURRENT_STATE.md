@@ -2166,3 +2166,7 @@ captionless table precision guard後の20 cached PDF横断診断を`test-data/re
 ### 2026-09-16 checkpoint: conservative flattened-row evidence
 
 Generic candidate generationに、10行以上連続する数値主体native paragraphへtable evidenceを付与する条件を追加した。PPG captionless grid回帰は維持（22/22）。wear-scale p.14では行間/候補条件がまだregion化に至らず、precision優先で自動統合は未達。次回は候補列のbbox連続性を詳細に計測する。
+
+### 2026-09-16 checkpoint: flattened-row projection guard
+
+Projectionで、同一page/column上に10行以上連続する数値主体native paragraphをtable block（translationStatus=skipped）として扱う保守的guardを追加した。Canonical roleは変更せず、既存captionless grid回帰22/22と型チェックを通過。wear-scale p.14のregion統合自体は未完だが、次回はこのguardの実corpus影響とfalse positiveを測定する。
