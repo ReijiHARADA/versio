@@ -2828,4 +2828,5 @@ Full application regression after the current extraction changes: **61 files / 3
 - 列分離後の抽出benchmarkは26 papersで sourceIntegrityRate / canonicalProvenanceRate ともに平均・最小1.0。tableCaptionRecall平均0.929、tableRegionRecall平均0.843で、既存の表検出指標は悪化しなかった。
 - Elsevier Table 2/5/6はnative stream上でcaption境界が失われているため、推測によるcaption生成は見送り。lint/build成功（既知のdynamic import警告のみ）。
 - PPG Earringのreal-paper fixtureに、同一ページ内のx帯混在paragraphを拒否する回帰assertionを追加し、27/27 passed。
+- 診断出力にnative image overlap・numeric ratio・short token ratioを追加。arXivの疑わしいサンプル41件ではimageOverlap≥0.2が4件、shortTokenRatio≥0.7が23件。図表ラベル候補の分類には有用だが、画像配置がないベクター図は引き続きnative geometryの手動確認が必要。
 現行抽出コードで `diagnose:pdf-corpus` を再実行した結果、26 papers / 497 pages / suspicious 164 blocks。144件はarXivに集中し、図・表のベクターラベルがnative textとして同一領域に現れる候補が大半だった。段落を強制分割する根拠としては不十分なため、誤分類を増やすルールは追加せず、次回はnative geometryとcaption/table provenanceを用いた手動分類を行う。

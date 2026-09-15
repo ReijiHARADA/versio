@@ -6,7 +6,7 @@ import { reconstructDocument } from "../src/services/pdfLayout";
 const root = path.resolve(".");
 const catalog = JSON.parse(fs.readFileSync(path.join(root, "test-fixtures/real-papers/catalog.json"), "utf8"));
 const pdfDir = path.join(root, catalog.pdfDir);
-const reports = [] as Array<{ id: string; formatFamily?: string; pages: number; suspiciousBlocks: number; samples: Array<{ page: number; xClusters: number[]; xSpread: number; typicalLineWidth: number; bboxWidth: number; columns: string[]; text: string }> }>;
+const reports = [] as Array<{ id: string; formatFamily?: string; pages: number; suspiciousBlocks: number; samples: Array<{ page: number; xClusters: number[]; xSpread: number; typicalLineWidth: number; bboxWidth: number; columns: string[]; text: string; imageOverlap: number; numericRatio: number; shortTokenRatio: number }> }>;
 for (const paper of catalog.papers) {
   const pdfPath = path.join(pdfDir, paper.filename);
   if (!fs.existsSync(pdfPath)) continue;
@@ -38,6 +38,13 @@ for (const paper of catalog.papers) {
       bboxWidth: Math.round(block.bbox.width * 10) / 10,
       columns: [...new Set(block.lines.map((line) => line.column))],
       text: block.text.slice(0, 240),
+      imageOverlap: Math.round(Math.max(...(pages[block.pageStart - 1]?.imagePlacements ?? []).map((image) => {
+        const x = Math.max(0, Math.min(block.bbox.x + block.bbox.width, image.x + image.width) - Math.max(block.bbox.x, image.x));
+        const y = Math.max(0, Math.min(block.bbox.y + block.bbox.height, image.y + image.height) - Math.max(block.bbox.y, image.y));
+        return (x * y) / Math.max(1, block.bbox.width * block.bbox.height);
+      }).concat(0)) * 100) / 100,
+      numericRatio: Math.round((block.text.replace(/[^0-9]/g, "").length / Math.max(1, block.text.length)) * 100) / 100,
+      shortTokenRatio: Math.round((block.lines.flatMap((line) => line.items).filter((item) => item.text.trim().length <= 14).length / Math.max(1, block.lines.flatMap((line) => line.items).length)) * 100) / 100,
     })),
   });
 }
