@@ -1005,7 +1005,8 @@ function buildPageLines(
     const itemArea = Math.max(1, item.width * item.height);
     return (page.imagePlacements ?? []).some((image) => {
       if (image.width < 100 || image.height < 50) return false;
-      if (image.width > page.width * 0.88 && image.height > page.height * 0.88) return false;
+      const imageAreaRatio = (image.width * image.height) / Math.max(1, page.width * page.height);
+      if (imageAreaRatio > 0.75 || (image.width > page.width * 0.88 && image.height > page.height * 0.88)) return false;
       const overlap = Math.max(0, Math.min(item.x + item.width, image.x + image.width) - Math.max(item.x, image.x)) *
         Math.max(0, Math.min(item.y + item.height, image.y + image.height) - Math.max(item.y, image.y));
       return overlap / itemArea >= 0.8;

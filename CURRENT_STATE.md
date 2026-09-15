@@ -2234,3 +2234,7 @@ Web buildで検出された `tableText` nullable の型エラーを、nativeGrid
 ### 2026-09-16 checkpoint: repeated image operator coverage
 
 native image placement収集に `paintImageXObjectRepeat` を追加し、repeat operatorで描画される画像も図境界候補に含めた。TypeScript型チェックとreading-order suite 40/40が成功。次回はrepeat画像を含む実PDFで候補数の変化を比較する。
+
+### 2026-09-16 checkpoint: full-page image safety threshold
+
+画像内 text 除外の全面画像判定を、縦横比だけでなく画像面積比（ページ面積の75%超）でも判定するよう調整。ページ全面に近い scanned overlay を誤除外しにくくした。reading-order 40/40、extraction corpus 43/43、lint、型チェックが成功。次回は実PDFの重なり候補について手動分類率を確定する。

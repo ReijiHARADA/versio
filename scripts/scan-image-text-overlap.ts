@@ -20,6 +20,7 @@ for (const filename of files) {
   for (const page of pages) {
     const images = (page.imagePlacements ?? []).filter((image) =>
       image.width >= 100 && image.height >= 50 &&
+      !((image.width * image.height) / Math.max(1, page.width * page.height) > 0.75) &&
       !(image.width > page.width * 0.88 && image.height > page.height * 0.88)
     );
     placements += images.length;
