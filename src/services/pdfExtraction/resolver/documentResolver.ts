@@ -81,6 +81,50 @@ function nodeFromCandidate(candidate: RoleCandidate): CanonicalNode {
   };
 }
 
+function promoteRotatedTableCaptions(
+  nodes: CanonicalNode[],
+  candidates: RoleCandidate[]
+): CanonicalNode[] {
+  const tableBoxes = candidates
+    .filter((candidate) => (candidate.roleScores.table ?? 0) >= 0.94)
+    .flatMap((candidate) => candidate.boundingBoxes);
+  if (tableBoxes.length === 0) return nodes;
+  return nodes.map((node) => {
+    if (node.role !== "heading" || !node.text || node.text.length > 100) return node;
+    const candidate = candidates.find((item) => item.id === node.id);
+    if (!candidate || !candidate.layoutBlock.lines.some((line) => Math.abs(line.rotation ?? 0) >= 45)) {
+      return node;
+    }
+    const box = node.boundingBoxes[0];
+    if (!box) return node;
+    const nearTable = tableBoxes.some((table) =>
+      table.page === box.page &&
+      box.y >= table.y + table.height &&
+      box.y - (table.y + table.height) < 48 &&
+      box.x < table.x + table.width &&
+      table.x < box.x + box.width
+    );
+    return nearTable
+      ? {
+          ...node,
+          role: "caption" as const,
+          confidence: Math.min(0.86, node.confidence + 0.08),
+          evidence: [
+            ...node.evidence,
+            {
+              source: "generic-heuristic" as const,
+              label: "rotation-aware-table-caption",
+              confidence: 0.82,
+              page: node.pageStart,
+              bbox: box,
+              reason: "short rotated heading immediately below a high-confidence table region",
+            },
+          ],
+        }
+      : node;
+  });
+}
+
 function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
   let inAbstract = false;
   return nodes.map((node) => {
@@ -130,6 +174,7 @@ export function resolveCanonicalDocument(input: {
   });
 
   let nodes = candidates.map(nodeFromCandidate);
+  nodes = promoteRotatedTableCaptions(nodes, candidates);
   nodes = markAbstracts(nodes);
 
   const titleNode = nodes.find((n) => n.role === "title");
