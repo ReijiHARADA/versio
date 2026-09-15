@@ -718,6 +718,120 @@
       "sourceStatusNote": "PMLR/arXiv metadata verified against the PDF title page.",
       "discipline": "economics",
       "selectionReason": "economics/ML methods and equation-heavy format"
+    },
+    {
+      "id": "medical-deep-learning-meta-review",
+      "title": "Medical Deep Learning -- A systematic Meta-Review",
+      "doi": null,
+      "publisher": "arXiv",
+      "venue": "arXiv",
+      "formatFamily": "arxiv",
+      "templateVersion": "arxiv",
+      "discipline": "medicine",
+      "selectionReason": "medical review with dense citations and mixed prose",
+      "kinds": [
+        "single-column",
+        "citations"
+      ],
+      "filename": "medical-deep-learning-meta-review.pdf",
+      "downloadUrl": "https://arxiv.org/abs/2010.14881",
+      "seedPaths": [],
+      "checks": {}
+    },
+    {
+      "id": "medical-imaging-deep-learning-review",
+      "title": "A review of deep learning in medical imaging",
+      "doi": null,
+      "publisher": "arXiv",
+      "venue": "arXiv",
+      "formatFamily": "arxiv",
+      "templateVersion": "arxiv",
+      "discipline": "medicine",
+      "selectionReason": "figure/table-heavy medical imaging review",
+      "kinds": [
+        "single-column",
+        "citations"
+      ],
+      "filename": "medical-imaging-deep-learning-review.pdf",
+      "downloadUrl": "https://arxiv.org/abs/2008.09104",
+      "seedPaths": [],
+      "checks": {}
+    },
+    {
+      "id": "covid-ml-review",
+      "title": "Diagnosis of COVID-19 Using Machine Learning and Deep Learning: A review",
+      "doi": null,
+      "publisher": "arXiv",
+      "venue": "arXiv",
+      "formatFamily": "arxiv",
+      "templateVersion": "arxiv",
+      "discipline": "medicine",
+      "selectionReason": "clinical review with statistical and acronym variation",
+      "kinds": [
+        "single-column",
+        "citations"
+      ],
+      "filename": "covid-ml-review.pdf",
+      "downloadUrl": "https://arxiv.org/abs/2110.14910",
+      "seedPaths": [],
+      "checks": {}
+    },
+    {
+      "id": "medical-image-segmentation-deep-learning",
+      "title": "Medical Image Segmentation Using Deep Learning",
+      "doi": null,
+      "publisher": "arXiv",
+      "venue": "arXiv",
+      "formatFamily": "arxiv",
+      "templateVersion": "arxiv",
+      "discipline": "machine-learning",
+      "selectionReason": "ML methods and equation/figure variation",
+      "kinds": [
+        "single-column",
+        "citations"
+      ],
+      "filename": "medical-image-segmentation-deep-learning.pdf",
+      "downloadUrl": "https://arxiv.org/abs/2009.13120",
+      "seedPaths": [],
+      "checks": {}
+    },
+    {
+      "id": "interpreting-neural-networks",
+      "title": "Detecting Statistical Interactions from Neural Network Weights",
+      "doi": "10.48550/arXiv.1705.04977",
+      "publisher": "arXiv",
+      "venue": "ICLR",
+      "formatFamily": "arxiv",
+      "templateVersion": "arxiv",
+      "discipline": "machine-learning",
+      "selectionReason": "conference ML layout with method/equation blocks",
+      "kinds": [
+        "single-column",
+        "citations"
+      ],
+      "filename": "detecting-statistical-interactions.pdf",
+      "downloadUrl": "https://arxiv.org/abs/1705.04977",
+      "seedPaths": [],
+      "checks": {}
+    },
+    {
+      "id": "human-ai-interaction-guidelines",
+      "title": "A Comparative Analysis of Industry Human-AI Interaction Guidelines",
+      "doi": null,
+      "publisher": "arXiv",
+      "venue": "arXiv",
+      "formatFamily": "arxiv",
+      "templateVersion": "arxiv",
+      "discipline": "hci",
+      "selectionReason": "HCI survey with guideline lists and multi-column text",
+      "kinds": [
+        "single-column",
+        "citations"
+      ],
+      "filename": "human-ai-interaction-guidelines.pdf",
+      "downloadUrl": "https://arxiv.org/abs/2010.11761",
+      "seedPaths": [],
+      "checks": {}
     }
   ]
 }
