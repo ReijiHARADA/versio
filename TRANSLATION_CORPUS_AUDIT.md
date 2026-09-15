@@ -2839,3 +2839,8 @@ Full application regression after the current extraction changes: **61 files / 3
 - 最新コードの`npm run build`も成功（既知のdynamic import警告のみ）。`.app`は未ビルド。
 - 追加指標はlistItemRecall 1.0（注釈済み1件）、figureCaptionRelation平均1.0（24件）、tableCaptionRelationRecall平均0.929（6件）、relationPrecision平均1.0（14件）。list precisionのground truthは未整備。
 現行抽出コードで `diagnose:pdf-corpus` を再実行した結果、26 papers / 497 pages / suspicious 164 blocks。144件はarXivに集中し、図・表のベクターラベルがnative textとして同一領域に現れる候補が大半だった。段落を強制分割する根拠としては不十分なため、誤分類を増やすルールは追加せず、次回はnative geometryとcaption/table provenanceを用いた手動分類を行う。
+
+### 2026-09-16 extraction Phase 3 checkpoint
+
+- Stable extraction benchmark rerun: 26 cached papers / 497 pages, extraction corpus 56/56. Source-integrity and canonical-provenance rates are 1.0 for every paper; table-caption recall mean 0.929 and table-region recall mean 0.843, unchanged after x-band quantization.
+- No production classifier was changed in this checkpoint. The known limiting case is Elsevier native-stream loss for Table 2/5/6 (0.571428 caption/region recall); recovery remains gated on generic native geometry evidence to avoid false captions. `.app` was not built and translation code was untouched.

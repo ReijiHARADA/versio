@@ -2865,3 +2865,9 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Re-ran extraction corpus after the inline font-transition heading change: **56/56 passed** and TypeScript passed. No table metric change or source-integrity regression was observed.
 - Full Vitest after the fused-heading rule: **61 files / 345 tests passed**. The new native font-transition regression is covered; no unrelated behavior regressed.
 - Full application regression after all current extraction changes: **61 files / 345 tests passed**; `npm run build` passed with only existing dynamic-import warnings. Extraction remains the active goal; no `.app` bundle was built.
+
+### 2026-09-16 extraction benchmark checkpoint
+
+- Re-ran `npm run test:extraction-corpus -- --run`: 56/56 real-paper extraction checks passed.
+- Re-ran `npm run bench:pdf-extraction` on the stable x-band classifier: 26 cached papers / 497 pages; source integrity and canonical provenance remain 1.0 across all papers. Aggregate table caption recall remains 0.929 and table-region recall 0.843 (the Elsevier meta-review remains 0.571428 for its known native-stream limitation). No safety regression was observed.
+- This iteration changed no production code and did not build `.app`; it establishes a fresh benchmark checkpoint before the next table/figure geometry investigation.
