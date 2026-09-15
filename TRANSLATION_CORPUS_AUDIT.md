@@ -2825,4 +2825,5 @@ Full application regression after the current extraction changes: **61 files / 3
 
 - PPG Earring page 1では、native column labelが全て`single`でもx帯が54/318に反復していたため、geometry evidenceで左右列を推定する一般則を追加。suspicious blockは164→129に減少し、extraction corpusは56/56 passed。図表・数式帯への安全回帰確認を次の検証項目とする。
 - 推定列分離は同一ページ内のblockに限定し、ページ跨ぎparagraph stitchingの回帰を防止。全Vitest 345/345、PPGの残存suspicious block 0を確認。
+- 列分離後の抽出benchmarkは26 papersで sourceIntegrityRate / canonicalProvenanceRate ともに平均・最小1.0。tableCaptionRecall平均0.929、tableRegionRecall平均0.843で、既存の表検出指標は悪化しなかった。
 現行抽出コードで `diagnose:pdf-corpus` を再実行した結果、26 papers / 497 pages / suspicious 164 blocks。144件はarXivに集中し、図・表のベクターラベルがnative textとして同一領域に現れる候補が大半だった。段落を強制分割する根拠としては不十分なため、誤分類を増やすルールは追加せず、次回はnative geometryとcaption/table provenanceを用いた手動分類を行う。
