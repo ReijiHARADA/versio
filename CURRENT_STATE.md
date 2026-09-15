@@ -2812,3 +2812,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Added `npm run diagnose:pdf-corpus -- [output.json]` to apply the same native x-cluster diagnostic to every cached fixture without changing extraction.
 - Current corpus result: 26 papers, 497 pages, 255 suspicious wide/multi-cluster paragraph blocks. This provides a corpus-level baseline for precision-first page-aware repairs.
 - Extended the report with format-family aggregation. Current suspicious-block counts include arXiv 177/268 pages, ACM 33/74, OzCHI 14/10, Elsevier 13/22, IEEE 8/7, and smaller counts in PMLR/KCI/unknown; these are diagnostic counts, not error rates.
+
+### 2026-09-16 arXiv sample review
+
+- Reviewed `medical-image-segmentation-deep-learning`: its first suspicious blocks are genuine left/right prose interleaving (x≈50 and x≈317), not harmless table geometry. The report is actionable, but wide blocks still require table/list safeguards before any production split.
