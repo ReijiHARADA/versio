@@ -2844,3 +2844,7 @@ Full application regression after the current extraction changes: **61 files / 3
 
 - Stable extraction benchmark rerun: 26 cached papers / 497 pages, extraction corpus 56/56. Source-integrity and canonical-provenance rates are 1.0 for every paper; table-caption recall mean 0.929 and table-region recall mean 0.843, unchanged after x-band quantization.
 - No production classifier was changed in this checkpoint. The known limiting case is Elsevier native-stream loss for Table 2/5/6 (0.571428 caption/region recall); recovery remains gated on generic native geometry evidence to avoid false captions. `.app` was not built and translation code was untouched.
+
+### 2026-09-16 extraction safety regression
+
+- Added a synthetic x-band regression for the inferred two-column repair. Alternating native lines from two x-bands must remain lossless after reconstruction; all source tokens are present in non-empty blocks. Focused pipeline tests pass 15/15. No production classifier change or `.app` build.

@@ -36,6 +36,20 @@ describe("canonical extraction pipeline", () => {
     expect(blocks.some((block) => block.column === "spanning")).toBe(true);
   });
 
+  it("preserves native text when inferring two x-bands inside one paragraph stream", () => {
+    const left = ["Left one", "Left two", "Left three", "Left four"];
+    const right = ["Right one", "Right two", "Right three", "Right four"];
+    const textItems = left.flatMap((text, index) => [
+      { text, x: 48, y: 300 + index * 16, width: 150, height: 8, fontSize: 8, fontName: "Body", page: 1 },
+      { text: right[index], x: 320, y: 300 + index * 16, width: 150, height: 8, fontSize: 8, fontName: "Body", page: 1 },
+    ]);
+    const blocks = reconstructDocument([{ pageNumber: 1, width: 540, height: 790, textItems }]).blocks;
+    const reconstructed = blocks.map((block) => block.text).join(" ");
+    for (const token of [...left, ...right]) expect(reconstructed).toContain(token);
+    expect(blocks.length).toBeGreaterThanOrEqual(2);
+    expect(blocks.every((block) => block.text.length > 0 && block.lines.length > 0)).toBe(true);
+  });
+
   it("projects Japanese conference headings with CHILD_OF parents", () => {
     const pages = FIXTURES["japanese-conference"]();
     const result = extractFromPages({

@@ -2871,3 +2871,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Re-ran `npm run test:extraction-corpus -- --run`: 56/56 real-paper extraction checks passed.
 - Re-ran `npm run bench:pdf-extraction` on the stable x-band classifier: 26 cached papers / 497 pages; source integrity and canonical provenance remain 1.0 across all papers. Aggregate table caption recall remains 0.929 and table-region recall 0.843 (the Elsevier meta-review remains 0.571428 for its known native-stream limitation). No safety regression was observed.
 - This iteration changed no production code and did not build `.app`; it establishes a fresh benchmark checkpoint before the next table/figure geometry investigation.
+
+### 2026-09-16 inferred-column integrity regression
+
+- Added a synthetic regression covering a paragraph stream whose native lines alternate between two x-bands while column labels are `single`. The test asserts every native line survives reconstruction and remains represented by non-empty, provenance-bearing blocks.
+- Focused canonical extraction suite: 15/15 passed. This is a safety test only; no classifier threshold or production extraction behavior changed.
