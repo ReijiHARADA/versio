@@ -2779,3 +2779,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Fixed two TypeScript build blockers exposed by the verification build: narrowed the nullable resolved title once before reuse, and kept the opt-in PDF layout debug flag browser-safe via `globalThis`.
 - `npm run build` now passes (`tsc -b && vite build`). No `.app` bundle was produced and translation-server code was unchanged.
 - Extraction remains 56/56 real-paper checks, 14/14 pipeline checks, and the unresolved Elsevier mixed-stream/table-region issue remains the next algorithmic task.
+
+### 2026-09-16 gutter-anchor probe (reverted)
+
+- Hypothesis: using the observed right-column anchor instead of gutter midpoint would separate short native fragments near the gutter in the Elsevier mixed stream.
+- Result: the change caused a safety regression in the captionless native-grid fixture (the expected hyphenated continuation was no longer a paragraph), so it was reverted. The existing 56/56 corpus baseline is preserved. The probe is not retained as a production rule; the mixed-stream issue needs stronger line-level evidence before another classifier change.
