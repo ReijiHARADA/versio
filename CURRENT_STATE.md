@@ -2819,6 +2819,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - The corpus regression was rerun after the diagnostic-only changes: 56/56 passed. Same-page column-stitch thresholds remain unchanged because both valid continuation and false interleaving cases are present.
 
+- Core reading-order and canonical pipeline suites pass together: 59/59 tests. No extraction behavior changed in this diagnostic iteration.
+
 ### 2026-09-16 corpus diagnostic samples
 
 - Extended `diagnose:pdf-corpus` to retain up to five page/x-cluster/column/text samples per paper, so manual review can be resumed without rerunning extraction or guessing which blocks produced a count.
