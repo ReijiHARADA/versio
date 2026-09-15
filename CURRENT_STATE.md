@@ -2246,3 +2246,7 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 ### 2026-09-16 checkpoint: manual figure-label review
 
 `step-to-charge` p.7 と `linguistics-language-model-physics` p.7 をレンダリング確認し、重なり候補が図内ラベル／軸値であることを確認。両件を severity 0 の accepted review case として `extraction-manual-review-v1.json` に記録した。本文誤除外を示す証拠は現時点でなく、画像 geometry 除外条件は維持する。
+
+### 2026-09-16 checkpoint: extraction web build after image guards
+
+画像 placement / repeat operator / 全面画像安全条件を含む現行抽出コードで `npm run build` が成功。既知の dynamic import 警告のみで、画像境界変更による build regression はない。`.app` は方針どおり未ビルド。
