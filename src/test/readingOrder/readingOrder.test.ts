@@ -206,6 +206,21 @@ describe("PDF reading order regression", () => {
     expect(note?.text).not.toMatch(/R1.*Cronbach|Cronbach.*R1/);
   });
 
+  it("does not remerge a rotated native line with following prose", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 14,
+      width: 612,
+      height: 792,
+      textItems: [
+        { text: "Table 6 0.93 0.41", x: 160, y: 300, width: 90, height: 8, fontSize: 8, fontName: "Helvetica", page: 14, rotation: 90 },
+        { text: "resulted in creation of a revised scale for smart apparel.", x: 420, y: 305, width: 170, height: 10, fontSize: 10, fontName: "Body", page: 14 },
+      ],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    expect(blocks.some((block) => block.text.includes("Table 6") && block.text.includes("resulted"))).toBe(false);
+    expect(blocks.some((block) => block.text.includes("resulted in creation"))).toBe(true);
+  });
+
   it("stitches an unambiguously continued paragraph across adjacent pages", () => {
     const pages: ExtractedPage[] = [
       { pageNumber: 5, width: 612, height: 792, textItems: [{ text: "PAGE_END Examination of the distribution of targets showed errors. One", x: 54, y: 704, width: 500, height: 10, fontSize: 10, fontName: "Helvetica", page: 5 }] },
