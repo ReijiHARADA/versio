@@ -2609,3 +2609,7 @@ Table 2〜11の短いcaptionをpartial ground truthへ追加し、本文中の`T
 ### Long caption role preservation (2026-09-16)
 
 長文table captionのtable role上書き競合を抑制。marketing benchmarkはtableCaptionRecall 1.0、tableCaptionRelationRecall 1.0、relationPrecision 1.0、sourceIntegrity 1.0へ改善。extraction corpus 44/44、全Vitest 61 files / 338 testsを確認。
+
+### PPG column verification (2026-09-16)
+
+`ppg-earring` reading-order testをextraction configで単独実行し1/1成功。page 2の列推定は`isMultiColumn=true`（leftX 56 / rightX 320）。過去の混在警告サンプルは手動レビュー対象として継続。
