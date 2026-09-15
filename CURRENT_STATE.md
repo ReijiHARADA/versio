@@ -2462,3 +2462,7 @@ wear-scale ground truth追加後も extraction corpus 44/44 を確認。回転ca
 ### Extraction checkpoint paused (2026-09-16)
 
 ユーザー指示により、ここで一旦停止。作業ツリーはclean。直近の実装は回転native tableの混在paragraph再結合防止と、表直下の回転短headingをcaptionへ昇格するResolver evidence。直近確認値は reading-order 49/49、extraction corpus 44/44、wear-scaleのtableRegionRecall=1.0・tableCaptionRelationRecall=1.0・sourceIntegrityRate=1.0。再開時はcaption metricの集計整合性確認と、他publisherの回転表／caption regression追加から開始する。translation-server、モデル、.app buildは未変更・未実行。
+
+### Ground-truth benchmark refresh (2026-09-16)
+
+停止前に最新ground truthを反映して `npm run bench:pdf-extraction` を再実行。20 papersを完走し、table caption relation recallのgold対象10本平均は **0.81875**（wear-scale=1.0）、relation precisionは有効な起点で1.0。前回0.71875はwear-scale ground truth追加前の集計値だった。次回は他publisherのcaption provenanceを追加評価する。
