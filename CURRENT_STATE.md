@@ -2346,3 +2346,7 @@ x帯guard後のTypeScript型チェック、lint、buildが成功（既知のpdfj
 ### Full regression after extraction guards (2026-09-16)
 
 全Vitestを再実行し、61 files / 332 tests が通過（回転表境界回帰を含む）。作業ツリーはclean。抽出の未完了項目は回転表のCanonical table region完全分離とpublisher横断手動precision/recallであり、翻訳serverには進んでいない。
+
+### Rotated table x-band split (2026-09-16)
+
+実PDF p.14 のCanonical dumpで、表セル＋後続本文が56行の単一paragraphに再結合される残存原因を確認。回転lineのnative item中央値xが大きく跳ぶ場合にmergeを拒否する一般条件を追加した。実PDF再probeではCronbach脚注／本文blockが1行の独立blockになり、表行との混在を解消。重点回帰47/47、extraction corpusは次回全走査で再確認する。

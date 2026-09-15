@@ -2448,3 +2448,7 @@ x帯guard後に型チェック、lint、buildを実行し成功。既知のpdfjs
 ### Full regression after extraction guards (2026-09-16)
 
 全Vitest 61 files / 332 tests が通過。回転表境界回帰を含む。Canonical table region完全分離とpublisher横断手動precision/recallは未完了。
+
+### Rotated table x-band split (2026-09-16)
+
+回転lineのnative x帯ジャンプをblock merge境界に反映。`wear-scale` p.14で従来56行に混在していた表セル＋本文を分離し、Cronbach注記／本文は独立block化した。重点回帰47/47通過。全extraction corpus再走査は次工程。

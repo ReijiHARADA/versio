@@ -1286,9 +1286,17 @@ function groupLinesIntoBlocks(
     const separatedRotatedBands = previousRotated && nextRotated &&
       rotatedBandGap > baseFont * 1.5 &&
       ((previousCellLike && nextItems.length >= 2) || (nextCellLike && previousItems.length >= 2));
+    const previousMedianX = previousItems
+      .map((item) => item.x)
+      .sort((a, b) => a - b)[Math.floor(previousItems.length / 2)];
+    const nextMedianX = nextItems
+      .map((item) => item.x)
+      .sort((a, b) => a - b)[Math.floor(nextItems.length / 2)];
+    const rotatedBandJump = previousRotated && nextRotated &&
+      Math.abs(nextMedianX - previousMedianX) > baseFont * 4;
     const rotationContentCompatible = !(
       previousRotated && nextRotated &&
-      ((previousCellLike && nextProseLike) || (previousProseLike && nextCellLike) || separatedRotatedBands)
+      ((previousCellLike && nextProseLike) || (previousProseLike && nextCellLike) || separatedRotatedBands || rotatedBandJump)
     );
     const authorKindOk =
       currentRole !== "author" ||
