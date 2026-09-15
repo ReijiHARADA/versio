@@ -1111,8 +1111,8 @@ function roleForLine(
     // affiliation turns the abstract into metadata.  A long CJK line with
     // sentence punctuation is stronger body evidence than the masthead
     // fallback and should remain translatable prose.
-    const cjkBodyLine = cjkCount(text) >= 18 &&
-      (/[，。；！？：]/u.test(text) || text.length >= 32) &&
+    const cjkBodyLine = cjkCount(text) >= 12 &&
+      (/[，。；！？：]/u.test(text) || text.length >= 20) &&
       !looksLikeAffiliation(text);
     if (cjkBodyLine) return "paragraph";
     if (looksLikeGrantIdentifier(text) || startsWithGrantIdentifier(text)) {

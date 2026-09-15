@@ -2278,3 +2278,5 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 ### 2026-09-16 checkpoint: CJK masthead/body boundary
 
 中国語論文で、タイトル直後の長い要旨行が英語の Abstract アンカーなしに masthead 内へ入り、`affiliation` として扱われる候補を確認した。`pdfLayout.ts` に、長く句読点を含む CJK native line を本文 evidence として扱う保守的な境界条件を追加。extraction corpus は 2 files / 43 tests が通過し、既存の欧文・表・見出し回帰は未検出。コミット `73cd529`。次は同PDFの実抽出結果で affiliation/body の分離を確認し、wear-scale の flattened table region 検証へ戻る。
+
+追加確認では長い要旨・箇条書きの一部が paragraph に戻った一方、短いCJK断片やページ上部メタデータには affiliation 誤分類が残った。閾値をさらに広げると著者情報を本文化する恐れがあるため、次は native geometry と行間で判定する。
