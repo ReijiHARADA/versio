@@ -2466,3 +2466,7 @@ wear-scale ground truth追加後も extraction corpus 44/44 を確認。回転ca
 ### Ground-truth benchmark refresh (2026-09-16)
 
 停止前に最新ground truthを反映して `npm run bench:pdf-extraction` を再実行。20 papersを完走し、table caption relation recallのgold対象10本平均は **0.81875**（wear-scale=1.0）、relation precisionは有効な起点で1.0。前回0.71875はwear-scale ground truth追加前の集計値だった。次回は他publisherのcaption provenanceを追加評価する。
+
+### Table caption metric correction (2026-09-16)
+
+Benchmarkの`tableCaptionRecall`を、文字列が`Table`で始まらない場合でも、tableへの`CAPTION_OF`で証明されたcaptionを含めて評価するよう修正。figure captionはtable-linked nodeに限定して除外。pipeline 5/5、typecheck成功。20-paper benchmark再実行でgold relation recall平均は0.81875を維持し、wear-scaleのcaption recall/relation recallはともに1.0。

@@ -219,7 +219,10 @@ export function evaluateBaselinePaper(input: {
       ? substringRecall(figures, gold.figureCaptions)
       : undefined,
     tableCaptionRecall: gold?.tableCaptions
-      ? substringRecall(tables, gold.tableCaptions)
+      // Include captions proven by a CAPTION_OF relation even when the
+      // native text omits the literal "Table" label (e.g. rotated tables).
+      // Keep unrelated figure captions out by using only table-linked nodes.
+      ? substringRecall(uniqueTexts(tables.concat(structuredTableCaptions)), gold.tableCaptions)
       : undefined,
     tableRegionRecall: gold?.tableRegions
       ? substringRecall(structuredTableCaptions, gold.tableRegions)
