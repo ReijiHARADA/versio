@@ -57,6 +57,8 @@
 
 ### 2026-09-16 extraction checkpoint
 
+- 再開時の停止確認として `npm run test:extraction-corpus -- --run` を現行コードで再実行し、real-paper fixture 56/56 passed（reading-order 27、baseline 29）。既存のfont-transition heading / mixed-column保護 / table fallback変更に回帰なし。長時間ジョブは起動しておらず、次回は下記の未解決項目から再開する。
+
 - `npm run test:extraction-corpus` を再実行し、real-paper fixture 44/44 tests passed（reading-order 21、baseline 23）。既存の抽出変更に回帰は確認されなかった。
 - 今回は検証のみで、translation-server、品質ゲート、モデル、`.app` は変更していない。次回は未解決のページ/段組 paragraph repair と rotated-table region を優先する。
 - 追加で、同一行に置かれた短い太字ラベル（例: `Subjects.`）と本文をnative itemの境界で分離する一般化ルールを実装し、reading-order回帰テストを追加した。抽出corpusは引き続き44/44で成功。
