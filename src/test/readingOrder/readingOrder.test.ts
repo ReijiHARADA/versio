@@ -154,6 +154,42 @@ describe("PDF reading order regression", () => {
     }
   });
 
+  it("does not merge a rotated grid band with a wide rotated note", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 14,
+      width: 595,
+      height: 791,
+      textItems: [
+        ...Array.from({ length: 6 }, (_, row) => ({
+          text: `R${row + 1} 0.${row + 1} 0.${row + 2}`,
+          x: 180 + row * 12,
+          y: 120,
+          width: 32,
+          height: 8,
+          fontSize: 8,
+          fontName: "Body",
+          page: 14,
+          rotation: 90,
+        })),
+        {
+          text: "Cronbach alpha and factor definition note outside the table.",
+          x: 430,
+          y: 120,
+          width: 260,
+          height: 8,
+          fontSize: 8,
+          fontName: "Body",
+          page: 14,
+          rotation: 90,
+        },
+      ],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    const note = blocks.find((block) => block.text.includes("Cronbach"));
+    expect(note).toBeTruthy();
+    expect(note?.text).not.toMatch(/R1.*Cronbach|Cronbach.*R1/);
+  });
+
   it("stitches an unambiguously continued paragraph across adjacent pages", () => {
     const pages: ExtractedPage[] = [
       { pageNumber: 5, width: 612, height: 792, textItems: [{ text: "PAGE_END Examination of the distribution of targets showed errors. One", x: 54, y: 704, width: 500, height: 10, fontSize: 10, fontName: "Helvetica", page: 5 }] },

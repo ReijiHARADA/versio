@@ -2428,3 +2428,7 @@ Algorithm/Require本文や数式断片がtable candidateになる例を確認し
 ### Rotation coordinate probe (2026-09-16)
 
 `wear-scale.pdf` p.14 の native transformを再確認。回転表セルは x≈162–414、表外Cronbach脚注は x≈428–440 に集中し、x帯の空隙が境界 evidence になる。ただし表ヘッダにも広いitemがあるため幅だけの閾値は採用せず、近傍行クラスタと組み合わせた回帰を次回追加する。
+
+### Rotated x-band regression (2026-09-16)
+
+回転セル群と広い回転注記を同一baselineに置く一般化合成回帰を追加。reading-order suite は 42/42 通過し、表セルと注記の再結合を防ぐ既存guardを固定した。

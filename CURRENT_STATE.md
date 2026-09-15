@@ -2326,3 +2326,7 @@ Reading-order と canonical pipeline の重点回帰を再実行し、2 files / 
 ### Rotation coordinate probe (2026-09-16)
 
 `wear-scale.pdf` は17ページ。pdfjs native transformを直接確認し、p.14の回転表セル群は主に x≈162–414、表外 Cronbach 脚注は x≈428–440 に配置されることを確認した。両者は同じ90度系回転でもx帯に明確な空隙がある一方、表ヘッダには幅の大きい native itemも含まれるため、単純な item 幅閾値だけで境界を決めると表内部を分断する危険がある。次回は回転lineのx帯連続性を、近傍行クラスタと組み合わせた evidence として合成回帰化してから実装する。
+
+### Rotated x-band regression (2026-09-16)
+
+回転grid bandと広い回転noteを同一baselineに置く合成ケースを追加し、reading-order suite は 42/42 通過。既存の内容構成guardがx帯の異なるnoteを表セルblockへ再結合しないことを固定した。実PDFでのx帯境界統合は次回検証する。
