@@ -2660,3 +2660,5 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Added a canonical provenance metric to the extraction benchmark. It checks source page, native bbox, and page range for every canonical node. On the 20-paper cache, minimum coverage is 0.9959 and mean coverage is 0.9997; the residual is recorded for manual attribution.
 
 - Provenance attribution pass: metadata-resolved titles now reuse an anchored native candidate where available. Benchmark residuals remained unchanged (fashion-hybrid-cmf 0.9959; education-learning-analytics 0.9978), so the remaining missing anchors are elsewhere in resolver-generated nodes and remain queued for inspection.
+
+- Provenance fix verified: resolved synthetic titles now carry the selected native candidate's page/bbox in `sourceAnchor`. The 20-paper benchmark now reports canonical provenance minimum/mean 1.0; prior two residual papers are cleared without fallback or metric relaxation.
