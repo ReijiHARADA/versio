@@ -2062,3 +2062,7 @@ publisher running-header分類後に19 cached PDFのboundary scanを更新した
 ### 2026-09-16 checkpoint: publisher header synthetic regression
 
 実PDFで確認したpublisher title＋page suffix headerを、十分なbody font分布を含むsynthetic pageで回帰化した。39 reading-order tests、extraction corpus 42/42が通過し、前回の不安定な単一line fixtureは使っていない。header判定のgeometry条件を将来の変更から保護した。
+
+### 2026-09-16 checkpoint: structural marker scan baseline
+
+最新コードで19 cached PDFを再走査し、埋め込み構造マーカー候補は403件だった。これは本文中のFigure/Table参照を含むtriage候補であり、caption誤検出の正解率とは扱わない。候補レポートを手動レビュー対象として固定し、論文固有ルールによる自動切り出しは行わない。
