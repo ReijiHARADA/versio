@@ -2575,3 +2575,5 @@ linguistics-language-model-physics のグラフ軸・チャート数値ラベル
 ### Extraction checkpoint: prose/table boundary guard (2026-09-16)
 
 Marketing PDFで確認された、Table caption近傍の文章がtable roleへ誤昇格する可能性に対し、`nearbyTableRowEvidence`へ一般的なprose-likeness guard（単語数、文末句読点、文字/数字比率）を追加。caption近傍でも文型blockはparagraphへ残すsynthetic regressionを追加し、pipeline test 7/7を確認。全corpus再計測とpublisher横断table precision確認が次アクション。
+
+全extraction corpus再計測は44/44（reading-order 21、baseline 23）で成功。既存real-paperの安全回帰は観測されなかった。table precisionの定量化は、未注釈のprose/table境界を手動ground truthへ追加してから実施する。

@@ -2542,3 +2542,5 @@ marketing-consumer-responseのnative PDFで確認できるTable 1 captionをpart
 ### Table false-positive guard (2026-09-16)
 
 `nearbyTableRowEvidence` が、caption近傍というだけで文型の長いnative blockをtable rowへ昇格させないよう、単語数・終端句読点・文字/数字比率によるprose-likeness guardを追加。marketing PDFで観測した誤昇格パターンを一般化したsynthetic regressionを追加し、pipeline test 7/7成功。次は全extraction corpusとpublisher横断benchmarkでtable precisionへの影響を確認する。
+
+全extraction corpusを再実行し、real-paper/reading-order 21件とbaseline 23件の計44件が成功。PDF.jsのcanvas/フォント関連warning以外の失敗なし。table precisionの実測値はground truth拡張後の手動レビューが必要で、次回へ持ち越す。
