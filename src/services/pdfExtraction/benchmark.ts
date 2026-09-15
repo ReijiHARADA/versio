@@ -73,7 +73,11 @@ export type BaselinePaperReport = {
     rotatedLineCount?: number;
     /** Native PDFs may flatten one table row into one text item. */
     flattenedNumericRowCount?: number;
-  };
+};
+
+function uniqueTexts(values: string[]): string[] {
+  return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+}
 
 export function evaluateBaselinePaper(input: {
   id: string;
@@ -122,14 +126,14 @@ export function evaluateBaselinePaper(input: {
   // Structural metrics must evaluate the same resolved layer consumed by the
   // reader. LayoutBlock roles are useful diagnostics, but can differ from
   // canonical roles when native PDF streams interleave or rotate captions.
-  const figures = extracted.canonical.nodes
+  const figures = uniqueTexts(extracted.canonical.nodes
     .filter((node) => node.role === "caption" && /^figure|^fig\.?/i.test(node.text ?? ""))
     .map((node) => node.text ?? "")
-    .concat(input.blocks.filter((b) => b.role === "figure_caption").map((b) => b.text));
-  const tables = extracted.canonical.nodes
+    .concat(input.blocks.filter((b) => b.role === "figure_caption").map((b) => b.text)));
+  const tables = uniqueTexts(extracted.canonical.nodes
     .filter((node) => node.role === "caption" && /^(?:table|表)/i.test(node.text ?? ""))
     .map((node) => node.text ?? "")
-    .concat(input.blocks.filter((b) => b.role === "table_caption").map((b) => b.text));
+    .concat(input.blocks.filter((b) => b.role === "table_caption").map((b) => b.text)));
   const canonicalTitle =
     extracted.canonical.nodes.find((n) => n.role === "title")?.text ?? null;
   const flattenedNumericRowCount = extracted.canonical.nodes.filter((node) => {
