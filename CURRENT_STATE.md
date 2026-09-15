@@ -2659,3 +2659,10 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Added a generic resolver guard so `nearbyTableRowEvidence` cannot override an already identified `table_caption` candidate into `table`.
 - Added explicit ground truth for the Elsevier meta-review's Tables 1–7. Benchmark moved from the invalid pseudo-gold 0.25 to measured values: caption/region/relation recall 0.57, relation precision 1.0. Remaining misses are native caption/region grouping cases, now measurable.
 - Extraction corpus regression remains green; translation and `.app` remain untouched.
+
+### 2026-09-16 full benchmark after caption guard
+
+- Recomputed the 26 cached-paper benchmark after adding Elsevier table ground truth and the caption-role precedence guard.
+- Across annotated papers: heading recall/precision mean 1.0 (n=4/2), table-caption recall mean 0.929 (min 0.571), table-region recall mean 0.843 (min 0.571), table-caption relation recall mean 0.929 (min 0.571), relation precision 1.0 where present.
+- All 26 cached papers retain sourceIntegrityRate=1.0 and canonicalProvenanceRate=1.0.
+- Only remaining annotated table miss is the Elsevier meta-review; it is a genuine native grouping/region reconstruction case, not a pseudo-gold metric artifact.
