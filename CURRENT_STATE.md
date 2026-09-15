@@ -2422,3 +2422,7 @@ Benchmark report now exposes `tableCaptionRelationRecall` and `tableCaptionRelat
 ### Ground-truth relation rerun (2026-09-16)
 
 修正版で20-paper benchmarkを再生成。ground truth table captionがある10本の relation recall平均は0.71875、table起点 relation precisionは対象で1.0。wear-scale=0、OzCHI=1.0。低recallの主因は回転／分離captionとcaption未検出で、改善余地を定量化できた。
+
+### Latest caption relation values (2026-09-16)
+
+現行reportのgoldあり10本は relation recall 平均0.71875、table起点 relation precisionは定義可能な9本で全て1.0。wear-scaleは回転caption未検出のためprecision未定義・recall 0。未解決を安全側に維持。

@@ -2524,3 +2524,7 @@ table caption relation recallの分母をground truth caption数へ変更。未�
 ### Ground-truth relation rerun (2026-09-16)
 
 20-paper再計測でtable caption relation recall平均0.71875（goldあり10本）、precision 1.0。wear-scale回転caption=0、OzCHI=1.0。低recallは未検出・分離captionとして次の手動分類対象。
+
+### Latest caption relation values (2026-09-16)
+
+最新reportではgoldあり10本のtable relation recall平均0.71875、precisionは定義可能な9本で1.0。wear-scaleは回転caption未検出でrecall 0。誤relationを増やさず未解決として記録。
