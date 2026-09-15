@@ -2705,3 +2705,5 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Synthetic caption-plus-grid probe was attempted and reverted: a naive short-cell continuation rule did not produce a stable canonical caption and could lose multi-line caption titles. No production behavior changed; future boundary logic must require stronger geometry evidence.
 
 - Added a native-boundary observation fixture for the Elsevier Tables 1–7. It captures standalone versus absorbed/mixed caption streams and explicitly requires future splitting to use geometry/style evidence rather than paper-specific labels.
+
+- Added a generic native-font transition boundary guard for short heading-like blocks followed by body-size lines. Synthetic pipeline tests 12/12 and extraction corpus 56/56 pass; Elsevier table recall remains 0.571, so this is a paragraph/heading boundary safety improvement rather than a table-recall fix.
