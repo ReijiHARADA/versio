@@ -67,6 +67,8 @@ export type BaselinePaperReport = {
     canonicalTitle?: string | null;
     rotatedNativeItemCount?: number;
     rotatedLineCount?: number;
+    /** Native PDFs may flatten one table row into one text item. */
+    flattenedNumericRowCount?: number;
   };
 
 export function evaluateBaselinePaper(input: {
@@ -126,6 +128,13 @@ export function evaluateBaselinePaper(input: {
     .concat(input.blocks.filter((b) => b.role === "table_caption").map((b) => b.text));
   const canonicalTitle =
     extracted.canonical.nodes.find((n) => n.role === "title")?.text ?? null;
+  const flattenedNumericRowCount = extracted.canonical.nodes.filter((node) => {
+    const text = (node.text ?? "").trim();
+    return node.role === "paragraph" && node.pageStart === node.pageEnd &&
+      text.length <= 180 && /^[+−\-]?\d/.test(text) &&
+      (text.match(/\d/g) ?? []).length / Math.max(text.length, 1) >= 0.22 &&
+      !/[.!?]$/.test(text) && (text.match(/[A-Za-z]{2,}/g) ?? []).length <= 2;
+  }).length;
   const captionRels = extracted.canonical.relations.filter((r) => r.kind === "CAPTION_OF");
   const affRels = extracted.canonical.relations.filter((r) => r.kind === "AFFILIATED_WITH");
   const childRels = extracted.canonical.relations.filter((r) => r.kind === "CHILD_OF");
@@ -250,6 +259,7 @@ export function evaluateBaselinePaper(input: {
     fusedTitle: fused.text,
     fusedTitleConfidence: fused.confidence,
     canonicalTitle,
+    flattenedNumericRowCount,
     rotatedNativeItemCount: input.pages
       .flatMap((page) => page.textItems)
       .filter((item) => Math.abs(item.rotation ?? 0) >= 45).length,
