@@ -2414,3 +2414,7 @@ Benchmark report now exposes `tableCaptionRelationRecall` and `tableCaptionRelat
 ### Table relation benchmark rerun (2026-09-16)
 
 修正版 benchmark を20-paperで再生成。table relation metric対象10本で precision平均1.0（table起点の誤relationなし）。recallは caption分割・未検出を含み、wear-scaleは0（回転caption provenance未解決）、OzCHIは1.0。次はこのrecall欠損の手動分類。
+
+### Ground-truth caption recall (2026-09-16)
+
+`tableCaptionRelationRecall` が `gold.tableCaptions` を分母に使うよう修正。未検出captionを検出済み件数で隠さず、ground truth基準で評価可能になった。typecheck成功。

@@ -2516,3 +2516,7 @@ table caption relation precisionの分母定義を修正し、figure relationが
 ### Table relation benchmark rerun (2026-09-16)
 
 20-paper benchmark再生成。table relation metric対象10本のprecision平均は1.0、recallはcaption分割／未検出により分野・形式ごとの差が残る。wear-scale回転captionはrecall 0で、未解決課題として保持。
+
+### Ground-truth caption recall (2026-09-16)
+
+table caption relation recallの分母をground truth caption数へ変更。未検出captionを正しくrecall低下として計測する。抽出挙動と翻訳serverは変更なし。
