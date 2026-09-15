@@ -1952,3 +1952,5 @@ ppg-earring page3/page13の左右列混在は、左列末尾の未完結文か�
 未解決だった低密度のword-stream二段組を対象に、`denseWordColumns`の左右word数閾値を各300から各250へ緩和した。`npm run test:extraction-corpus` は42/42、通常Vitestは61 files / 324 testsで通過し、列占有診断の現行単段候補は53ページ中14から5へ減少した。教育PDFの低密度候補は引き続き単段のままで、紙面専用条件は追加していない。次は緩和後の実PDF block境界とsource integrityを再監査する。
 
 診断を再生成して残り5候補を確認した。ppg-earringのうちpage 7は図中心、page 16は参考文献中心で、word占有だけでは二段組昇格の正解ラベルにならない。page 10/12は引き続き実二段組候補、education-learning-analytics page 6は低密度候補である。したがって閾値をさらに下げず、spanning/参考文献を識別するline-level evidenceを次の調査対象とする。
+
+閾値変更後の `npm run bench:pdf-extraction` も完了し、extraction-baseline-latest.jsonを更新した。benchmarkのsource-integrity指標と既存構造指標は維持され、翻訳系・`.app`は未変更。
