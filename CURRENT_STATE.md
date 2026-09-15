@@ -2178,3 +2178,7 @@ Projectionで、同一page/column上に10行以上連続する数値主体native
 ### 2026-09-16 checkpoint: flattened table regression locked
 
 `wear-scale` p.14のflattened numeric matrixについて、10行以上がPaperBlock tableかつ全件skippedであることを回帰テスト化。extraction baselineは23 testsへ増加し全件成功。PPG captionless table回帰も維持。次回は全corpus適用数とfalse-positive候補を集計する。
+
+### 2026-09-16 checkpoint: flattened table guard corpus audit
+
+guardの実corpus走査を実行。table/skippedへの適用は`wear-scale` 16行、`linguistics-language-model-physics` 13行（他paper 0）。対象はいずれも数値主体・連続native rowで、通常本文への適用候補は検出されなかった。診断JSONは`test-data/real-papers/reports/flattened-table-guard-audit.json`。抽出corpus 43/43、通常テスト328件、lint/typecheck成功。
