@@ -2194,3 +2194,7 @@ flattened-row routing rollback後に`npm run bench:pdf-extraction`を再実行�
 ### 2026-09-16 checkpoint: unpunctuated table caption detection
 
 `Table 5 Factor reliabilities...` のように番号後の句読点がないcaptionを、タイトル形の継続語を要求してtable_captionへ分類する汎用ルールを追加。通常文の`Table 1 is ...`を誤分類しない回帰を追加。reading-order / extraction focused tests成功。次回はこのcaption情報とflattened row regionを安全に接続する。
+
+### 2026-09-16 checkpoint: caption detection and extraction corpus revalidation
+
+`wear-scale.pdf` p.13 の native reading-order dumpで、句読点なしの `Table 5 Factor reliabilities...` が `table_caption` として認識されることを再確認した。`npm run test:extraction-corpus -- --run` は2 files / 43 tests、TypeScript型チェックも成功。作業ツリーはclean。flattened tableのregion統合とpublisher横断の手動precision/recallは未完了のため、翻訳server変更や`.app`ビルドには進んでいない。
