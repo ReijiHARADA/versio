@@ -2734,3 +2734,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - The Elsevier page-6 wide block remains a native layout classification failure: its bbox spans both columns, but line-level assignment is not consistently left/right, so post-group splitting cannot safely repair it.
 - A colon boundary guard was retained as a safe improvement for ordinary column transitions; it did not falsely claim to solve the wide stream.
 - Pipeline 12/12 and extraction corpus 56/56 pass. Next action is page-layout classification evidence (synthetic fixture first), not more merge heuristics.
+
+### 2026-09-16 verification after continuation guard
+
+- Revalidated the new structural continuation guard with pipeline 12/12 and extraction corpus 56/56. The wide Elsevier stream remains an upstream column-label/layout issue; no unsafe reclassification was introduced.

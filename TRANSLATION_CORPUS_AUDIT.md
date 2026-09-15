@@ -2733,3 +2733,7 @@ A generic colon-ended continuation guard now prevents list/table introductions f
 ### 2026-09-16 mixed-column probe follow-up
 
 The remaining wide Elsevier block is upstream layout classification: its bbox spans both columns while line assignments are inconsistent. Post-group splitting cannot safely repair it. The colon transition guard remains a precision improvement; extraction regression is 56/56.
+
+### 2026-09-16 verification after continuation guard
+
+Pipeline and extraction corpus remain green (12/12 and 56/56). The wide mixed stream is still tracked as an upstream layout-classification issue.
