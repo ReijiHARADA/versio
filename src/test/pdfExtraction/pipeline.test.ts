@@ -83,6 +83,15 @@ describe("canonical extraction pipeline", () => {
     );
     expect(chartLabels.length).toBeGreaterThanOrEqual(3);
     expect(chartLabels.every((candidate) => (candidate.roleScores.table ?? 0) < 0.94)).toBe(true);
+    const projected = extractFromPages({
+      pages: [{ pageNumber: 1, width: 500, height: 700, textItems }],
+      paperId: "chart-labels",
+      filePath: "/tmp/chart.pdf",
+      fileHash: "chart",
+      metadata: { pageCount: 1 },
+    });
+    expect(projected.blocks.filter((block) => block.metadata.translationInputWarning?.includes("chart label"))
+      .every((block) => block.translationStatus === "skipped")).toBe(true);
   });
 
   it("does not run GROBID or Docling without a local service", () => {

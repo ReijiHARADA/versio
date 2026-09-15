@@ -2490,3 +2490,7 @@ chart-label evidenceを含むbenchmarkを再実行。対象は`power-over-skin` 
 ### Chart-axis regression fixture (2026-09-16)
 
 同一x帯に反復する5本の数値ラベルをsynthetic fixture化。`repeated-numeric-chart-label` Evidenceが付与され、table override threshold未満であることを確認（pipeline 6/6）。表セル誤分類を防ぐ回帰として保持する。
+
+### Chart label translation boundary (2026-09-16)
+
+`repeated-numeric-chart-label` evidenceをprojectionまで伝播し、該当PaperBlockをsource保持・translationStatus=`skipped`に固定。長い数値系列でも翻訳入力へ送られない。synthetic pipeline 6/6、extraction corpus 44/44、typecheck成功。本文・table候補への影響は既存回帰で検出なし。

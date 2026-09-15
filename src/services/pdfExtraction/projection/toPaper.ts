@@ -499,8 +499,13 @@ export function projectCanonicalToPaper(input: {
       const listParts = splitFlattenedList(text);
       const isRef = !isNumberedProseListItem(text) &&
         (node.role === "reference" || isReferenceText(text, currentKind));
+      const isChartLabel = node.evidence.some(
+        (evidence) => evidence.label === "repeated-numeric-chart-label"
+      );
       const translationInputWarning =
-        isRef || isExpectedNonProseParagraph(text)
+        isChartLabel
+          ? "repeated numeric chart label; kept as source text"
+          : isRef || isExpectedNonProseParagraph(text)
           ? null
           : unsafeParagraphStructureReason(text);
       for (const [partIndex, part] of listParts.entries()) {
@@ -513,7 +518,7 @@ export function projectCanonicalToPaper(input: {
           original: part,
           translated: null,
           translationStatus:
-            isRef || !shouldTranslateParagraph(part) ? "skipped" : "pending",
+            isChartLabel || isRef || !shouldTranslateParagraph(part) ? "skipped" : "pending",
           parentBlockId: null,
           metadata: {
             column,
