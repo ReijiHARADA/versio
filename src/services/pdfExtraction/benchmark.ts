@@ -228,10 +228,11 @@ export function evaluateBaselinePaper(input: {
       ? substringPrecision(structuredTableCaptions, gold.tableRegions)
       : undefined,
     tableCaptionRelationRecall:
-      tables.length > 0
-        ? tables.filter((caption) => {
+      (gold?.tableCaptions ?? tables).length > 0
+        ? (gold?.tableCaptions ?? tables).filter((expectedCaption) => {
             const captionNode = extracted.canonical.nodes.find(
-              (node) => node.role === "caption" && node.text === caption
+              (node) => node.role === "caption" &&
+                (node.text ?? "").toLowerCase().includes(expectedCaption.toLowerCase())
             );
             return captionNode
               ? captionRels.some(
@@ -240,7 +241,7 @@ export function evaluateBaselinePaper(input: {
                     extracted.canonical.nodes.find((node) => node.id === relation.to)?.role === "table"
                 )
               : false;
-          }).length / tables.length
+          }).length / (gold?.tableCaptions ?? tables).length
         : undefined,
     tableCaptionRelationPrecision:
       captionRels.filter((relation) => {
