@@ -2340,3 +2340,7 @@ Rotation-backed caption recognition now classifies reverse-stream table captions
 ### Extraction checkpoint: compact rotated table label (2026-09-16)
 
 Caption detection accepts compact native labels such as `Table6...` when the text begins with a table marker and number. This handles spacing loss in rotated PDF streams while preserving ordinary prose precision. Extraction corpus remains 42/42; typecheck and diff checks pass.
+
+### Extraction-only continuation (2026-09-16)
+
+翻訳品質の監査へ進む前に、抽出側の安全性を再確認した。全20 cached papersで source-policy verifier を実行し、明示的な39件の不完全/不整合候補はモデル送信を抑止したまま維持された。抽出コーパスは42/42、source integrity benchmark は20 papersで最小・平均とも1.0。これは抽出全体の正解率を意味せず、未完結段落の修復、表グリッド、融合見出し、手動境界レビューは継続課題である。翻訳サーバーはこの段階では変更しない。
