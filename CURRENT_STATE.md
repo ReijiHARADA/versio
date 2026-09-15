@@ -55,6 +55,12 @@
 
 ## Known limitations / 残課題
 
+### 2026-09-16 extraction verification checkpoint
+
+- 現行コードで `npm run test:extraction-corpus -- --run` を再実行し、real-paper fixture 56/56（reading-order 27、baseline 29）が成功した。続けて `npm run bench:pdf-extraction` を完走し、26 cached papers / 497 pages の benchmark を更新した。
+- benchmark の source integrity / canonical provenance は全 paper で 1.0 を維持。caption relation は 1.0、table caption recall 平均 0.929、table region recall 平均 0.843。Elsevier native stream の Table 2/5/6 境界欠落と arXiv の vector-label 混在は未解決のままで、文字列推測による補完は行っていない。
+- 今回は抽出の検証と証拠更新のみ。翻訳 server、品質 gate、モデル、`.app` は変更していない。次の実装候補は、wear-scale の回転表 footnote 分離または speechin の汎用 table-region evidence だが、まず native geometry を手動確認してから安全な回帰を追加する。
+
 ### 2026-09-16 extraction checkpoint
 
 - native列ラベルが全て`single`になるPDFでも、同一x帯の反復・行幅比・ページ内位置を組み合わせて列を推定する`splitMixedColumnBlocks`補強を追加。PPG Earringのpage 1で本文2列が交互に混ざっていた1 blockを左右2 paragraphへ分離でき、全体診断は suspicious 164→129。extraction corpus 56/56、reading-order 27/27 passed。列推定は図表や数式帯にも影響し得るため、次回は安全回帰とsource integrityを追加確認する。
