@@ -2050,3 +2050,7 @@ publisher running-header evidence後にsource-policy verifierと全20 paper benc
 ### 2026-09-16 checkpoint: build validation after extraction changes
 
 running-header evidence変更後に`npm run build`を実行し成功した。既存のineffective dynamic-import warningのみで、抽出コード由来の新規warning/errorはない。`.app`は明示依頼前のため未ビルド。
+
+### 2026-09-16 checkpoint: boundary scan after header classification
+
+publisher running-header分類後に19 cached PDFのboundary scanを更新した。候補レポートは継続して未完結tail・表セル連結・本文内Figure/Table参照を分離して記録している。候補は正解ラベルとみなさず、native画像照合なしの自動修復は行っていない。
