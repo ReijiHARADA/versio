@@ -1,0 +1,46 @@
+{
+  "version": "extraction-corpus-coverage-v1",
+  "generatedAt": "2026-09-15T21:14:54.066502+00:00",
+  "paperCount": 21,
+  "cachedPdfCount": 20,
+  "formatFamilyCounts": {
+    "acm-acmart": 5,
+    "arxiv": 6,
+    "ieee-conference": 1,
+    "kci": 1,
+    "nature": 1,
+    "nordes": 1,
+    "ozchi-conference": 1,
+    "pmlr": 1,
+    "springer-journal": 1,
+    "springer-open": 1,
+    "unknown": 2
+  },
+  "kindCounts": {
+    "citations": 10,
+    "equations": 7,
+    "figures": 16,
+    "lists": 1,
+    "one-column": 12,
+    "statistical-prose": 4,
+    "tables": 11,
+    "two-column": 7
+  },
+  "requiredDisciplineFields": [
+    "hci",
+    "cognitive-psychology",
+    "marketing",
+    "ergonomics",
+    "linguistics",
+    "medicine",
+    "neuroscience",
+    "economics",
+    "education",
+    "machine-learning"
+  ],
+  "notes": [
+    "Catalog currently has no explicit discipline field; formatFamily is not a discipline label.",
+    "Medicine and machine-learning entries are absent from the current catalog and require OA metadata/PDF additions before final extraction audit.",
+    "This report is inventory only; no extraction or translation behavior is changed."
+  ]
+}
