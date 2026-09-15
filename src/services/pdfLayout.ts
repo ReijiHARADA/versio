@@ -1465,7 +1465,7 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
     const startsMidPage = (block.lines[0]?.y ?? 0) > (block.lines[0]?.pageHeight ?? 792) * 0.35;
     const xBands = [...new Set(block.lines.map((line) => Math.round(line.x / 24) * 24))].sort((a, b) => a - b);
     const inferredTwoColumn = columns.size === 1 && xBands.length >= 2 &&
-      block.bbox.width >= typicalLineWidth * 1.65;
+      block.pageStart === block.pageEnd && block.bbox.width >= typicalLineWidth * 1.65;
     if (block.role !== "paragraph" || (!inferredTwoColumn && columns.size < 2) || columns.has("spanning") ||
         block.bbox.width < typicalLineWidth * 1.65 || block.lines.length < 3 || !startsMidPage) {
       result.push(block);
