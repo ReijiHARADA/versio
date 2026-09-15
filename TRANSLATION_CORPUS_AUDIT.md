@@ -2642,6 +2642,7 @@ caption近傍の一行candidateをtable regionへ含める条件を、終端句�
 実コーパス44/44で回帰がないことを確認した。
 全Vitestは61 files / 340 tests passed。
 caption隣接の本文をtable regionへ含めないCanonical synthetic regressionを追加し、pipeline 11/11成功。
+単独bullet行にも`listRole: item`を付与するprojection回帰を追加し、pipeline 12/12成功。
 回転表の実PDFプローブでは、nativeセル文字列の保持は確認できたが、行列の完全復元は
 未達だった。誤った表構造を生成しない現行のfallbackを維持し、行帯クラスタ化を次の
 抽出課題として記録する。

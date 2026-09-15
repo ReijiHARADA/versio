@@ -146,6 +146,19 @@ describe("canonical extraction pipeline", () => {
     expect(region?.boundingBoxes[0]?.y).toBeGreaterThan(130);
   });
 
+  it("marks standalone bullet blocks as list items", () => {
+    const result = extractFromPages({
+      pages: [{ pageNumber: 1, width: 500, height: 700, textItems: [
+        { text: "• First contribution", x: 80, y: 120, width: 160, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+        { text: "• Second contribution", x: 80, y: 140, width: 170, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+      ] }],
+      paperId: "bullet-items", filePath: "/tmp/bullets.pdf", fileHash: "bullets", metadata: { pageCount: 1 },
+    });
+    const items = result.blocks.filter((block) => block.original?.startsWith("•"));
+    expect(items).toHaveLength(2);
+    expect(items.every((block) => block.metadata.listRole === "item")).toBe(true);
+  });
+
   it("keeps running references such as Table 4 shows as paragraph text", () => {
     const pages = [{
       pageNumber: 1,

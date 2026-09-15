@@ -497,6 +497,7 @@ export function projectCanonicalToPaper(input: {
     ) {
       const text = node.text ?? "";
       const listParts = splitFlattenedList(text);
+      const standaloneListItem = /^(?:[•‣▪∙]|(?:[1-9]|1[0-9]|20)[.)])\s+/.test(text.trim());
       const isRef = !isNumberedProseListItem(text) &&
         (node.role === "reference" || isReferenceText(text, currentKind));
       const isChartLabel = node.evidence.some(
@@ -530,7 +531,9 @@ export function projectCanonicalToPaper(input: {
                 ? partIndex === 0
                   ? "intro"
                   : "item"
-                : undefined,
+                : standaloneListItem
+                  ? "item"
+                  : undefined,
           },
         });
       }
