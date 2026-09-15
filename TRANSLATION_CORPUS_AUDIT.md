@@ -2670,3 +2670,5 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Catalog entries now carry explicit `discipline` and `selectionReason` metadata. The current 21-paper inventory is intentionally recorded as imbalanced (HCI 9; ergonomics 3; linguistics/design research 2 each; cognitive psychology, marketing, education, neuroscience, economics 1 each) so OA expansion can target the gaps.
 
 - Added six metadata-only OA candidates covering medicine and machine learning in `test-fixtures/real-papers/pending-oa-candidates.json`. They remain pending and are excluded from benchmark counts until their PDFs are legally cached and title-verified.
+
+- Corrected the arXiv 1705.04977 pending record to its verified title, “Detecting Statistical Interactions from Neural Network Weights,” and arXiv-issued DOI.
