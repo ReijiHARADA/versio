@@ -2856,3 +2856,5 @@ Full application regression after the current extraction changes: **61 files / 3
 ### 2026-09-16 list structure checkpoint
 
 - Repeated bullets with a colon-terminated introduction now project as `lead-in`, `item 1`, `item 2` using a punctuation and marker-count guard. This addresses list flattening without splitting ordinary inline punctuation. Focused tests 15/15 and extraction corpus 56/56 pass.
+
+- List projection change passed lint, TypeScript, and Vite build. Only existing ineffective dynamic-import warnings remain; no packaged app was produced.

@@ -2885,3 +2885,5 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Generalized flattened-list projection: when repeated bullet/number markers follow a colon-terminated lead-in, the lead-in becomes its own block and each marker remains an independent item. Inline dash/bullet prose still remains unchanged.
 - Verification: focused pipeline 15/15 and extraction corpus 56/56 passed; no translation or `.app` changes.
+
+- Post-change gates for list lead-in separation: `npm run lint`, `npx tsc --noEmit --pretty false`, and `npm run build` all pass. Build emitted only the existing ineffective dynamic-import warnings; no `.app` was built.
