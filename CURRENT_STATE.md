@@ -2174,3 +2174,7 @@ Projectionで、同一page/column上に10行以上連続する数値主体native
 ### 2026-09-16 checkpoint: projection guard end-to-end
 
 `wear-scale.pdf` p.14の15 flattened rowsが実際にPaperBlock table/skippedとして投影されることを再確認。PPGを含むextraction corpus 43/43、TypeScript型チェック成功。regionは行単位の保守的投影で、1つのgrid nodeへの統合は未実施。
+
+### 2026-09-16 checkpoint: flattened table regression locked
+
+`wear-scale` p.14のflattened numeric matrixについて、10行以上がPaperBlock tableかつ全件skippedであることを回帰テスト化。extraction baselineは23 testsへ増加し全件成功。PPG captionless table回帰も維持。次回は全corpus適用数とfalse-positive候補を集計する。
