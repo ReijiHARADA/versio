@@ -2476,3 +2476,7 @@ x帯split後、表セル行と表外注記は別blockになったが、回転表
 ### Extraction checkpoint after rotated projection (2026-09-16)
 
 重点回帰47/47を再確認。表行の誤翻訳送信を防ぎ、注記を独立block化する安全側挙動を維持。回転caption provenanceとpublisher横断手動table precision/recallは未完了。
+
+### Rotated table projection revalidation (2026-09-16)
+
+回転table nodeをcanonical boxes＋数値密度で保守的にPaperBlockへ投影。wear-scale p.14でtable block生成を確認。extraction corpus43/43、flattened rows=4、source integrity=1.0。caption provenance計測は継続。

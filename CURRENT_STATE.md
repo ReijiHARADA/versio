@@ -2374,3 +2374,7 @@ x帯split後のCanonical出力を監査。表セル行と表外注記は別block
 ### Extraction checkpoint after rotated projection (2026-09-16)
 
 重点回帰を再確認し、reading-order + canonical pipeline 47/47 が通過。現行の安全側挙動（表行を誤って翻訳へ送らず、注記を独立block化）を維持。未完了は回転caption provenanceとpublisher横断の手動table precision/recallで、次回はこの計測から再開する。
+
+### Rotated table projection revalidation (2026-09-16)
+
+Resolver-selected rotated table nodes are now projected as skipped `table` PaperBlocks when layout lookup is unavailable but canonical boxes and numeric density provide provenance. `wear-scale` p.14 now emits table blocks for the recovered rows; extraction corpus 43/43 and benchmark flattenedNumericRowCount=4, sourceIntegrityRate=1.0. Caption provenance remains an open metric, not a translation blocker.

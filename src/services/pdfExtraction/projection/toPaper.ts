@@ -280,6 +280,11 @@ export function projectCanonicalToPaper(input: {
             .filter((item) => Math.abs(item.rotation ?? 0) >= 45).length >= 6 &&
           ((node.text.match(/\d/g) ?? []).length / Math.max(node.text.length, 1)) >= 0.35 &&
           node.boundingBoxes.length >= 2) ||
+        // Resolver-selected table nodes may not have a layout lookup after
+        // enrichment; retain the same numeric/provenance safeguards using
+        // canonical boxes alone.
+        (!layout && node.boundingBoxes.length >= 2 &&
+          ((node.text.match(/\d/g) ?? []).length / Math.max(node.text.length, 1)) >= 0.35) ||
         // Candidate-to-layout lookup can be unavailable after resolver
         // enrichment; multiple native line boxes remain a conservative grid
         // provenance signal in that case.
