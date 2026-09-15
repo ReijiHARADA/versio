@@ -2599,3 +2599,7 @@ caption継続中にcell-likeなnative行（複数item、数式記号、高数値
 caption近傍のcompactな複数native item行について、x列反復または同一bandの複数rowをtable evidenceに利用。sentence-shaped proseは除外し、pipeline 9/9・extraction corpus 44/44を維持。Canonical table regionへのmembership反映は未完了。
 
 全Vitest 61 files / 338 tests、extraction corpus 44/44が成功。既存回帰はなし。table regionのCanonical membershipとpublisher横断precisionは未計測で、抽出完了判定には未到達。
+
+### Marketing table ground-truth expansion (2026-09-16)
+
+Table 2〜11の短いcaptionをpartial ground truthへ追加し、本文中の`Table 4 shows ...`は除外。benchmarkはtableCaptionRecall 1.0、tableCaptionRelationRecall 0.909、relationPrecision 1.0、sourceIntegrity 1.0。未リンク1件はrelation候補の近接/region競合として次に調査する。

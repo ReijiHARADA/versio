@@ -3,7 +3,17 @@
   "completeAnnotations": false,
   "title": "Symmetries, Scaling Laws and Phase Transitions in Consumer Advertising Response",
   "tableCaptions": [
-    "Table 1. Based on the attribution model results, we utilized the Python library SciPy"
+    "Table 1. Based on the attribution model results, we utilized the Python library SciPy",
+    "Table 2: Equations used for fitting consumer response curve",
+    "Table 3: Curve fitting method",
+    "Table 4: Equation fitting for dummy data 1",
+    "Table 5",
+    "Table 6",
+    "Table 7",
+    "Table 8",
+    "Table 9",
+    "Table 10",
+    "Table 11"
   ],
-  "notes": "Partial caption ground truth from the native arXiv PDF; used for recall only."
+  "notes": "Partial caption ground truth from the native arXiv PDF; short labels are used for recall only. Table 4 shows... running prose is intentionally excluded."
 }
