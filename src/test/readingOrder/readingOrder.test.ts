@@ -283,6 +283,29 @@ describe("PDF reading order regression", () => {
     expect(blocks[0]?.role).toBe("header");
   });
 
+  it("classifies a publisher title with page suffix as a running header", () => {
+    const body = Array.from({ length: 20 }, (_, index) => ({
+      text: `Body line ${index} contains enough ordinary words to establish the page font baseline.`,
+      x: 54,
+      y: 160 + index * 12,
+      width: 300,
+      height: 11,
+      fontSize: 10,
+      fontName: "Helvetica",
+      page: 2,
+    }));
+    const { blocks } = reconstructDocument([{
+      pageNumber: 2,
+      width: 612,
+      height: 792,
+      textItems: [
+        { text: "A Smart Necklace for Silent Speech Recognition • 192:3", x: 320, y: 67, width: 230, height: 7, fontSize: 7, fontName: "Helvetica", page: 2 },
+        ...body,
+      ],
+    }]);
+    expect(blocks[0]?.role).toBe("header");
+  });
+
   it("splits a body-style heading that is repeated at the start of its following prose", () => {
     const textItems = [
       "Vignette-based investigations",

@@ -2058,3 +2058,7 @@ publisher running-header分類後に19 cached PDFのboundary scanを更新した
 ### 2026-09-16 checkpoint: extraction gate revalidation
 
 最新のrunning-header / table-summary / numeric-prose evidence後に、extraction corpus 42/42、lint、TypeScriptを再実行して成功した。source-policyの安全抑止も維持。これらは回帰がないことの証拠であり、全体の手動精度（段落・表セル・融合見出し）を完了扱いにはしない。
+
+### 2026-09-16 checkpoint: publisher header synthetic regression
+
+実PDFで確認したpublisher title＋page suffix headerを、十分なbody font分布を含むsynthetic pageで回帰化した。39 reading-order tests、extraction corpus 42/42が通過し、前回の不安定な単一line fixtureは使っていない。header判定のgeometry条件を将来の変更から保護した。
