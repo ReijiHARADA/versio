@@ -1270,6 +1270,16 @@ function groupLinesIntoBlocks(
     const previousRotated = Math.abs(current[current.length - 1].rotation ?? 0) >= 45;
     const nextRotated = Math.abs(line.rotation ?? 0) >= 45;
     const rotationCompatible = previousRotated === nextRotated;
+    const previousItems = current[current.length - 1].items;
+    const nextItems = line.items;
+    const previousCellLike = previousItems.filter((item) => item.width <= 48 && item.text.trim().split(/\s+/).length <= 3).length >= 4;
+    const nextCellLike = nextItems.filter((item) => item.width <= 48 && item.text.trim().split(/\s+/).length <= 3).length >= 4;
+    const previousProseLike = previousItems.some((item) => item.width > 80 || item.text.trim().split(/\s+/).length >= 4);
+    const nextProseLike = nextItems.some((item) => item.width > 80 || item.text.trim().split(/\s+/).length >= 4);
+    const rotationContentCompatible = !(
+      previousRotated && nextRotated &&
+      ((previousCellLike && nextProseLike) || (previousProseLike && nextCellLike))
+    );
     const authorKindOk =
       currentRole !== "author" ||
       looksLikeEmail(joinLines(current)) === looksLikeEmail(line.text);
@@ -1284,6 +1294,7 @@ function groupLinesIntoBlocks(
       currentRole !== "footnote" &&
       !styleStartsSubheading(current[current.length - 1], line, baseFont) &&
       rotationCompatible &&
+      rotationContentCompatible &&
       canMerge(current[current.length - 1], line, baseFont);
 
     const affiliationContinue =

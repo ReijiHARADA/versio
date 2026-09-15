@@ -2303,4 +2303,6 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 
 さらに異なる回転方向の line を同一 paragraph に merge しない `rotationCompatible` 条件を追加。extraction corpus は 43/43 を維持し、`wear-scale` では脚注 line と表セル line の分離を再確認した。両者が同じ回転方向で連結される残存ケースは x帯連続性で解く必要があり、次回へ繰り越す。
 
+同一回転方向でもセル群と prose 群を block merge させない内容構成条件を追加。extraction corpus 43/43、lint、型チェックが通過。`wear-scale` では脚注を独立 line に保てるが、PDF側の幅情報が不均一な行では表セルと後続本文の連結が残るため、誤分離を避けて追加閾値は保留する。
+
 captionless numeric-row の synthetic regression を追加し、6行の反復 x 列が table evidence（score >= 0.94）として生成されることを確認。pipeline suite は 5/5。実PDFではページ内の表後注記がまだ同じ block に残るため、region の上下境界を手動比較してから拡張する。
