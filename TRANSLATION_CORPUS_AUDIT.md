@@ -2625,3 +2625,9 @@ education-learning-analyticsのlist ground truthでlistItemRecall 1.0、sourceIn
 ### Extraction backlog audit (2026-09-16)
 
 未解決項目を再集計し、economics native-math boundary、speechin table-row role/region、Nature系行内bold subheading、page/column paragraph repair、OA corpus 50+拡張を残課題として明示。translation-server/quality gateは変更しない。
+
+### Extraction regression recheck (2026-09-16)
+
+`npm run test:extraction-corpus` を現行ツリーで再実行し、reading-order 21件と
+baseline 23件の計44/44テストが成功した。今回の再確認では実装変更を加えず、
+ページ/段組 paragraph repair と回転表 region化を次の抽出作業として維持する。
