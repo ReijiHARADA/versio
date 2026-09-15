@@ -2862,3 +2862,7 @@ Full application regression after the current extraction changes: **61 files / 3
 - Diagnostic baseline remains 149 suspicious wide multi-x blocks across 26 papers / 497 pages after the list change. This is not a failure rate; arXiv vector-label candidates remain queued for geometry-backed review.
 
 - Full application regression after list separation: 61 test files / 346 tests passed; extraction corpus remains 56/56. No translation-server or packaged-app change was made.
+
+### 2026-09-16 residual sample review
+
+- Native sample review separates diagram labels, equation/grammar notation, and genuine two-column prose/list interleaving. Their shared x-cluster shape means geometry alone cannot safely relabel them; the extraction resolver must combine role, rotation, image/figure evidence, and neighboring structure before changing production behavior.

@@ -2893,3 +2893,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 full regression after list separation
 
 - Full Vitest passed: 61 files / 346 tests. Extraction-specific tests remain 56/56. This confirms the list projection change does not regress Reader, import, export, or other application behavior.
+
+### 2026-09-16 residual sample review
+
+- Reviewed refreshed arXiv samples at native geometry. `medical-image-segmentation-deep-learning` residuals are compact diagram labels (U-Net/backbone/loss terms), `linguistics-language-model-physics` residuals are equation/grammar notation, and `cognitive-psychology-gpt3` includes genuine two-column prose/list interleaving. Since these classes share wide x-cluster signatures but different semantics, a geometry-only production exclusion would be unsafe; retain diagnostic-only classification pending combined role/figure evidence.
