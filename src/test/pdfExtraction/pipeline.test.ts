@@ -6,6 +6,7 @@ import { grobidEnricher } from "../../services/pdfExtraction/enrichers/grobid";
 import { doclingEnricher } from "../../services/pdfExtraction/enrichers/docling";
 import { nativeDocumentFromExtracted } from "../../services/pdfExtraction/native/fromExtracted";
 import { generateGenericCandidates } from "../../services/pdfExtraction/generic/candidates";
+import { reconstructDocument } from "../../services/pdfLayout";
 
 describe("canonical extraction pipeline", () => {
   it("projects Japanese conference headings with CHILD_OF parents", () => {
@@ -104,6 +105,20 @@ describe("canonical extraction pipeline", () => {
     const candidates = generateGenericCandidates([{ pageNumber: 1, width: 500, height: 700, textItems }]).candidates;
     const prose = candidates.find((candidate) => candidate.text.includes("curves shown"));
     expect(prose?.roleScores.table ?? 0).toBeLessThan(0.94);
+  });
+
+  it("keeps running references such as Table 4 shows as paragraph text", () => {
+    const pages = [{
+      pageNumber: 1,
+      width: 500,
+      height: 700,
+      textItems: [{
+        text: "Table 4 shows the results obtained for dummy data 1.",
+        x: 80, y: 120, width: 260, height: 8, fontSize: 8, fontName: "Helvetica", page: 1,
+      }],
+    }];
+    const block = reconstructDocument(pages).blocks[0];
+    expect(block?.role).toBe("paragraph");
   });
 
   it("does not run GROBID or Docling without a local service", () => {

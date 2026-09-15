@@ -2549,6 +2549,10 @@ marketing-consumer-responseのnative PDFで確認できるTable 1 captionをpart
 
 複数行・複数itemでも文末句読点を持つ長いprose blockがstructural gridスコアでtableへ昇格しないよう、回転表以外のtable scoreを抑制するguardを追加。marketing benchmarkを再生成し、title/sourceIntegrity/table caption recallは維持（各1.0）、table caption relation recallは0のまま。captionと本文が同一native blockに混ざる問題は未解決で、次は行境界での分割Evidenceを検討する。
 
+### Running table-reference caption guard (2026-09-16)
+
+`Table 4 shows ...` のような本文中の表参照をcaptionと誤認しないよう、caption続きが一般的な叙述動詞で始まる場合をparagraphへ戻す判定を追加。synthetic pipeline 8/8、extraction corpus 44/44成功。marketingのcaption relation recallは未改善だが、誤caption化の新規回帰は確認されていない。
+
 ### Extraction guard static verification (2026-09-16)
 
 prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）も成功。`.app`とtranslation-serverは変更していない。次回はmarketingの誤table候補を手動ground truth化し、precisionを数値化する。

@@ -493,7 +493,15 @@ export function isTableCaption(text: string): boolean {
   // Journal captions frequently omit punctuation: `Table 5 Factor ...`.
   // Require a title-like continuation so ordinary prose such as `Table 1 is`
   // remains a paragraph.
-  return /^(?:tables?|表)\s*(?:\d+[a-z]?|[ivxlcdm]+)\s+(?=[A-Z][A-Za-z])/i.test(caption);
+  const continuation = caption.match(/^(?:tables?|表)\s*(?:\d+[a-z]?|[ivxlcdm]+)\s+(.+)$/i)?.[1] ?? "";
+  // A numbered table mentioned in running prose commonly starts with a
+  // finite verb (`Table 4 shows ...`). It is a paragraph reference, not the
+  // caption that labels the region. Keep the check lexical and format-neutral
+  // so it applies across publishers without paper-specific strings.
+  if (/^(?:shows?|presents?|indicates?|reports?|lists?|summarizes?|gives?|contains?|illustrates?)\b/i.test(continuation)) {
+    return false;
+  }
+  return /^[A-Z][A-Za-z]/.test(continuation);
 }
 
 function isCopyright(text: string, fontSize: number, baseFont: number): boolean {

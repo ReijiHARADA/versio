@@ -2583,3 +2583,7 @@ Marketing PDFで確認された、Table caption近傍の文章がtable roleへ�
 ### Structural-grid prose guard (2026-09-16)
 
 長い文型blockが複数行・複数native itemを含んでも、回転表以外ではtable昇格スコアを抑制するguardを追加。marketing benchmark再生成でtitle、table caption recall、source integrityは各1.0を維持し、caption relation recallは0のまま。captionと本文が同一native blockに混ざる問題は継続調査。
+
+### Running table-reference guard (2026-09-16)
+
+`Table 4 shows ...` のような本文中の表参照をcaptionと誤認しない叙述動詞guardを追加。synthetic pipeline 8/8、extraction corpus 44/44。marketingのcaption relation recallは未改善だが、誤caption化の回帰は確認されていない。
