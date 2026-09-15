@@ -2408,3 +2408,7 @@ text-bearing table候補には数式断片も含まれることを横断走査�
 ### Extraction Phase checkpoint: equation/algorithm table projection guard (2026-09-16)
 
 Algorithm/Require本文や数式断片がtable candidateになる例を確認し、projectionでそれらを除外するmath-symbol / prefix guardを追加した。PPG実表回帰は22/22通過。診断上のPaper table block数は132で、これはcaption regionと残存候補を含むためrecall/precisionの確定値ではない。
+
+### Extraction Phase checkpoint: page-grid and rotated-table review (2026-09-16)
+
+抽出優先方針に従い、翻訳品質の評価へ進む前に表境界を再確認した。`wear-scale` p.14 は回転相関行列と表外脚注が同一ページにあり、native x/y geometry だけで表セル帯を分離できる一方、脚注を同一 block に吸収する境界が残る。ページ局所の反復 x 列・数値セル密度から table evidence を生成する保守的な実装と synthetic regression を追加した。reading-order 41/41、extraction corpus 43/43、build/lint/typecheck は成功。表後脚注の手動境界確認と publisher 横断の table precision/recall は未完了であり、翻訳サーバー変更は保留している。
