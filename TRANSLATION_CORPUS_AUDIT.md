@@ -2848,3 +2848,7 @@ Full application regression after the current extraction changes: **61 files / 3
 ### 2026-09-16 extraction safety regression
 
 - Added a synthetic x-band regression for the inferred two-column repair. Alternating native lines from two x-bands must remain lossless after reconstruction; all source tokens are present in non-empty blocks. Focused pipeline tests pass 15/15. No production classifier change or `.app` build.
+
+### 2026-09-16 diagnostic refresh
+
+- Current native-layout diagnostic: 26 papers, 497 pages, 149 suspicious wide/multi-x blocks. Distribution is arXiv 136, PMLR 6, Elsevier 4, OzCHI 2, IEEE 1. The count is diagnostic only; no new role rule was added because residual arXiv samples are largely vector diagram labels and a broad exclusion could hide real prose.
