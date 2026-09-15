@@ -2799,3 +2799,6 @@ The focused reading-order and canonical pipeline suites also pass together (59/5
 The corpus diagnostic now stores up to five concrete samples per paper (page, x clusters, assigned columns, and source excerpt), allowing repeatable manual review without changing extraction behavior.
 
 The x-cluster counter was corrected to compare sorted adjacent coordinates. The corpus total remains 255 suspicious blocks, so the earlier baseline was not inflated by duplicate coordinates.
+### 2026-09-16 mixed-column guard checkpoint
+
+The corpus diagnostic now records whether a suspicious block carries `mixedColumnEvidence`. In the arXiv medical-image-segmentation fixture, the first suspicious blocks still show left/right x clusters with no marker, indicating that they bypass the geometry split path. This is a diagnostic finding only; no additional x-only production repair was applied. Extraction regressions remain green and the Elsevier table recall baseline is unchanged at 0.571428.

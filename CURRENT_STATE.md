@@ -2824,6 +2824,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 ### 2026-09-16 corpus diagnostic samples
 
+- Added `mixedColumnEvidence` to corpus diagnostic samples. The segmentation guard is not present on the first arXiv suspicious samples (the blocks retain left/right x clusters), so the next investigation must trace why those blocks bypass geometry splitting before any broader production rule is attempted.
+
 - Extended `diagnose:pdf-corpus` to retain up to five page/x-cluster/column/text samples per paper, so manual review can be resumed without rerunning extraction or guessing which blocks produced a count.
 - TypeScript passes; extraction behavior and regression metrics are unchanged.
 
