@@ -2568,3 +2568,7 @@ wear-scale caption ground truth追加後のextraction corpusは44/44成功。回
 ## Chart-label evidence checkpoint — 2026-09-16
 
 linguistics-language-model-physics のグラフ軸・チャート数値ラベルについて、同一ページ・列の反復x座標をnative geometry evidenceとして`other`競合スコア化した。table caption近傍と複数セル行は除外し、Resolverの最終判断を維持。flattenedNumericRowCount 16→10、sourceIntegrityRate 1.0。pipeline 5/5、extraction corpus 44/44、通常build成功。誤除外の横断評価は未完了。
+
+## Marketing caption relation checkpoint — 2026-09-16
+
+`marketing-consumer-response`へTable 1のpartial ground truthを追加。native caption text recallは1.0だが、resolved `CAPTION_OF → table` relation recallは0。caption本文の抽出は成功している一方、table region／relation provenanceが未復元であることを切り分けた。sourceIntegrityRateは1.0。次回はこのarXiv単段表のnative geometryを調査する。
