@@ -2202,3 +2202,7 @@ flattened-row routing rollback後に`npm run bench:pdf-extraction`を再実行�
 ### 2026-09-16 checkpoint: extraction projection build repair
 
 Web buildで検出された `tableText` nullable の型エラーを、nativeGrid条件を維持したまま空文字へ正規化して修正。抽出挙動は変更せず、`npm run build`、`npm run lint`、extraction corpus 2 files / 43 tests が成功した。次回は図領域に混入するnative textのgeometry診断を続ける。
+
+### 2026-09-16 checkpoint: native image placement evidence
+
+`ExtractedPage` に PDF native image placement（矩形）を任意情報として保持し、layout の line grouping 前に、ページ全面画像を除外した大きな画像内部の text item のみを保守的に除外する経路を追加した。これにより図画像内に埋め込まれたラベルが本文 paragraphへ混入する候補を、文字列依存なしに扱える。fixture互換性を維持し、`npm run build`、`npm run lint`、extraction corpus 43/43 を確認済み。実PDFでの画像重なり効果の定量評価は次回実施する。

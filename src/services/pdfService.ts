@@ -22,11 +22,20 @@ export type ExtractedTextItem = {
   rotation?: number;
 };
 
+export type PdfImagePlacement = {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
 export type ExtractedPage = {
   pageNumber: number;
   width: number;
   height: number;
   textItems: ExtractedTextItem[];
+  imagePlacements?: PdfImagePlacement[];
 };
 
 export type PDFExtractionResult = {
@@ -92,6 +101,7 @@ export async function extractPDFContent(
       width: viewport.width,
       height: viewport.height,
       textItems,
+      imagePlacements: collectImagePlacements(await page.getOperatorList(), viewport.height),
     });
   }
 
@@ -122,22 +132,14 @@ function applyCtm(ctm: number[], x: number, y: number): [number, number] {
   return [ctm[0] * x + ctm[2] * y + ctm[4], ctm[1] * x + ctm[3] * y + ctm[5]];
 }
 
-type PlacedPdfImage = {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
 function collectImagePlacements(
   operatorList: { fnArray: number[]; argsArray: unknown[][] },
   pageHeight: number
-): PlacedPdfImage[] {
+): PdfImagePlacement[] {
   const { OPS } = pdfjsLib;
   let ctm = IDENTITY_CTM;
   const stack: number[][] = [];
-  const placed: PlacedPdfImage[] = [];
+  const placed: PdfImagePlacement[] = [];
 
   for (let i = 0; i < operatorList.fnArray.length; i++) {
     const fn = operatorList.fnArray[i];
@@ -247,7 +249,7 @@ function pdfImageToCanvas(img: PdfImageObject): HTMLCanvasElement | null {
 }
 
 function compositePlacedImages(
-  items: { placed: PlacedPdfImage; canvas: HTMLCanvasElement }[]
+  items: { placed: PdfImagePlacement; canvas: HTMLCanvasElement }[]
 ): string | null {
   if (items.length === 0) return null;
 
@@ -372,7 +374,7 @@ export async function extractFigureImages(
             const canvas = obj ? pdfImageToCanvas(obj) : null;
             return canvas ? { placed, canvas } : null;
           })
-          .filter((item): item is { placed: PlacedPdfImage; canvas: HTMLCanvasElement } =>
+          .filter((item): item is { placed: PdfImagePlacement; canvas: HTMLCanvasElement } =>
             Boolean(item)
           );
 

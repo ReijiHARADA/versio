@@ -1001,8 +1001,19 @@ function buildPageLines(
     spanning: [],
     single: [],
   };
+  const embeddedFigureText = (item: ExtractedTextItem): boolean => {
+    const itemArea = Math.max(1, item.width * item.height);
+    return (page.imagePlacements ?? []).some((image) => {
+      if (image.width < 100 || image.height < 50) return false;
+      if (image.width > page.width * 0.88 && image.height > page.height * 0.88) return false;
+      const overlap = Math.max(0, Math.min(item.x + item.width, image.x + image.width) - Math.max(item.x, image.x)) *
+        Math.max(0, Math.min(item.y + item.height, image.y + image.height) - Math.max(item.y, image.y));
+      return overlap / itemArea >= 0.8;
+    });
+  };
   for (const item of page.textItems) {
     if (!item.text.trim()) continue;
+    if (embeddedFigureText(item)) continue;
     const column = assignColumn(item, layout);
     buckets[column].push(item);
   }
