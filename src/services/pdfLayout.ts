@@ -1464,14 +1464,24 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
     const typicalLineWidth = median(lineWidths) || 1;
     const startsMidPage = (block.lines[0]?.y ?? 0) > (block.lines[0]?.pageHeight ?? 792) * 0.35;
     const xBands = [...new Set(block.lines.map((line) => Math.round(line.x / 24) * 24))].sort((a, b) => a - b);
-    const inferredTwoColumn = columns.size === 1 && xBands.length >= 2 &&
-      block.pageStart === block.pageEnd && block.bbox.width >= typicalLineWidth * 1.65;
-    if (block.role !== "paragraph" || (!inferredTwoColumn && columns.size < 2) || columns.has("spanning") ||
-        block.bbox.width < typicalLineWidth * 1.65 || block.lines.length < 3 || !startsMidPage) {
+    const samePage = block.pageStart === block.pageEnd;
+    const inferredTwoColumn = columns.size === 1 && xBands.length >= 2 && samePage &&
+      block.bbox.width >= typicalLineWidth * 1.65;
+    const labelSidebar = columns.size === 1 && xBands.length >= 2 && samePage && (() => {
+      const splitX = (Math.min(...xBands) + Math.max(...xBands)) / 2;
+      const left = block.lines.filter((line) => line.x <= splitX);
+      const right = block.lines.filter((line) => line.x > splitX);
+      const leftMedian = median(left.map((line) => line.width).filter((width) => width > 0));
+      const rightMedian = median(right.map((line) => line.width).filter((width) => width > 0));
+      return left.length >= 2 && right.length >= 3 && leftMedian > 0 && rightMedian > 0 &&
+        leftMedian <= rightMedian * 0.35 && rightMedian >= typicalLineWidth * 0.85;
+    })();
+    if (block.role !== "paragraph" || (!inferredTwoColumn && !labelSidebar && columns.size < 2) || columns.has("spanning") ||
+        (!labelSidebar && block.bbox.width < typicalLineWidth * 1.65) || block.lines.length < 3 || !startsMidPage) {
       result.push(block);
       continue;
     }
-    if (inferredTwoColumn) {
+    if (inferredTwoColumn || labelSidebar) {
       const splitX = (Math.min(...xBands) + Math.max(...xBands)) / 2;
       const left = block.lines.filter((line) => line.x <= splitX).sort((a, b) => a.y - b.y);
       const right = block.lines.filter((line) => line.x > splitX).sort((a, b) => a.y - b.y);
