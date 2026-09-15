@@ -2761,3 +2761,7 @@ Repeated en/em-dash bullets are now split into list items during projection; a s
 ### 2026-09-16 full extraction regression verification
 
 Full Vitest passed (61 files, 344 tests), with extraction pipeline 14/14 and real-paper corpus 56/56. Lint and TypeScript pass. The extraction goal remains open because mixed native streams and table-region recall are unresolved.
+
+### 2026-09-16 post-list benchmark
+
+The 26-paper extraction benchmark was rerun after dash-bullet support. Source integrity remains 1.0 and Elsevier table caption/region recall remains 0.571; no regression was observed.

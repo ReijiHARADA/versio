@@ -2769,3 +2769,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Full Vitest suite passed: 61 files / 344 tests.
 - Extraction-specific pipeline remains 14/14 and real-paper corpus 56/56; lint and TypeScript also pass.
 - This validates safety of the recent list and layout diagnostics, but does not satisfy the extraction completion gate: Elsevier mixed native streams and table-region recall remain unresolved.
+
+### 2026-09-16 post-list benchmark
+
+- Re-ran `npm run bench:pdf-extraction` after dash-bullet projection support. The 26-paper report remains sourceIntegrityRate 1.0; the Elsevier table caption/region recall remains 0.571. No regression or metric inflation was observed.
