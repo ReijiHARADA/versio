@@ -1998,3 +1998,7 @@ ppg-earring page10の実出力で、`6.2.1 ...`見出しと続きの本文が同
 ### 2026-09-16 checkpoint: focused extraction regression suite
 
 Reading-order / extraction focused suiteを再実行し、8 files / 63 testsが通過した。二段組、ページ跨ぎ、caption/list/table projection、heading hierarchy、source provenanceの既存回帰は維持されている。`audit-progress.json` の次アクションを警告39件のnative画像照合と、list/equation/tableを跨がない未完結tail修復へ更新した。まだ抽出完了判定は行わない。
+
+### 2026-09-16 checkpoint: corpus benchmark and static checks revalidated
+
+抽出変更後の全20 cached paper benchmarkを再実行し、既存のsourceIntegrityRate 1.0水準を維持した。`npm run lint -- --max-warnings=0` と `npx tsc -b --noEmit` も成功。抽出回帰42/42およびfocused 63 testsと合わせ、現行変更の安全回帰は確認できたが、これは未解決の構造課題を完了扱いにするものではない。
