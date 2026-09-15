@@ -2470,3 +2470,7 @@ wear-scale ground truth追加後も extraction corpus 44/44 を確認。回転ca
 ### Table caption metric correction (2026-09-16)
 
 Benchmarkの`tableCaptionRecall`を、文字列が`Table`で始まらない場合でも、tableへの`CAPTION_OF`で証明されたcaptionを含めて評価するよう修正。figure captionはtable-linked nodeに限定して除外。pipeline 5/5、typecheck成功。20-paper benchmark再実行でgold relation recall平均は0.81875を維持し、wear-scaleのcaption recall/relation recallはともに1.0。
+
+### Extraction regression verification (2026-09-16)
+
+caption metric修正後の `npm run test:extraction-corpus -- --run --reporter=dot` は2 files / 44 tests pass、lintも成功。PDF.jsのcanvas/polyfill警告は既存のテスト環境警告で、テスト失敗ではない。次の実装候補はlinguisticsの数値行16件のnative geometry分類であり、根拠を得るまでtable化は行わない。
