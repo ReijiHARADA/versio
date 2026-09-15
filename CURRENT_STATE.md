@@ -1956,3 +1956,5 @@ ppg-earring page3/page13の左右列混在は、左列末尾の未完結文か�
 閾値変更後の `npm run bench:pdf-extraction` も完了し、extraction-baseline-latest.jsonを更新した。benchmarkのsource-integrity指標と既存構造指標は維持され、翻訳系・`.app`は未変更。
 
 列診断に短い小文字語の割合（`proseWordShare`）を追加し、53候補ページを再計測した。残る5単段候補も0.72〜0.82と本文語彙を含むため、語彙率だけでは図・参考文献・低密度本文を安全に分離できないことが分かった。line単位の幅・反復x位置・role evidenceを組み合わせる必要がある。
+
+診断へ`longItemCount`/`longItemShare`も追加した。ppg-earringのpage 7/10/12は長幅itemが0で、native抽出がword単位に細分化されているため従来の長行サンプルが空になる。これはdense evidenceが左右word数を使うべき根拠だが、page 7の図中心領域も同じ傾向を持つため、次はy方向の反復行・caption/role evidenceとの統合が必要。
