@@ -2190,3 +2190,7 @@ guardの実corpus走査を実行。table/skippedへの適用は`wear-scale` 16�
 ### 2026-09-16 checkpoint: post-rollback extraction baseline
 
 flattened-row routing rollback後に`npm run bench:pdf-extraction`を再実行。20 papers、sourceIntegrity平均1.0、ground-truth tableRegionRecallが計測対象2件で各1.0。既存の安全基準へ復帰している。flattened matrixの翻訳回避は未解決で、次回はcaption/page近傍を含むregion候補を別レイヤーで設計する。
+
+### 2026-09-16 checkpoint: unpunctuated table caption detection
+
+`Table 5 Factor reliabilities...` のように番号後の句読点がないcaptionを、タイトル形の継続語を要求してtable_captionへ分類する汎用ルールを追加。通常文の`Table 1 is ...`を誤分類しない回帰を追加。reading-order / extraction focused tests成功。次回はこのcaption情報とflattened row regionを安全に接続する。
