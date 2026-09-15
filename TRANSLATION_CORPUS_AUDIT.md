@@ -2809,3 +2809,6 @@ Debug-only merge tracing then confirmed the path is the permissive same-page lef
 Hypothesis: a left-column paragraph starting well below the page top should not be stitched to a right-column block near the top, because this is an extraction-order artifact rather than a continuation. Applied a 35% page-relative threshold to same-page left→right stitching.
 
 Before/after diagnostic: 255 → 204 suspicious wide/multi-cluster blocks across the cached corpus; the arXiv medical-image fixture 51 → 32. Focused and corpus regressions remained green (59/59 and 56/56). A valid top-of-column lowercase continuation remains covered by regression. Elsevier table recall is unchanged at 0.571428. Keep this guard pending broader manual review; do not interpret diagnostic counts as precision/recall.
+### 2026-09-16 post-stitch mixed-column repair
+
+Applied a second, conservative geometry pass after paragraph stitching. Only paragraph blocks that still contain multiple assigned columns, exceed the wide-block ratio, and begin below 35% of the page are split. Diagnostic count improved 204 → 164 corpus-wide and 32 → 24 for the arXiv medical-image fixture. Focused tests remain 59/59; no table-recall gain is claimed. Manual review is still required for the remaining 24 blocks and for possible false splits.

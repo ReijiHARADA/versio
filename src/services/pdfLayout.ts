@@ -1432,7 +1432,7 @@ function groupLinesIntoBlocks(
     splitStyledHeadingPrefixes(blocks.filter((b) => b.text.length > 0), baseFont)
   );
   logLayoutBlockBoundaries(nonEmptyBlocks);
-  return mergeColumnContinuations(nonEmptyBlocks);
+  return splitMixedColumnBlocks(mergeColumnContinuations(nonEmptyBlocks));
 }
 
 /** Keep a paragraph from spanning two native columns when the extractor has
@@ -1445,8 +1445,9 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
     const columns = new Set(block.lines.map((line) => line.column));
     const lineWidths = block.lines.map((line) => line.width).filter((width) => width > 0);
     const typicalLineWidth = median(lineWidths) || 1;
+    const startsMidPage = (block.lines[0]?.y ?? 0) > (block.lines[0]?.pageHeight ?? 792) * 0.35;
     if (block.role !== "paragraph" || columns.size < 2 || columns.has("spanning") ||
-        block.bbox.width < typicalLineWidth * 1.65 || block.lines.length < 3) {
+        block.bbox.width < typicalLineWidth * 1.65 || block.lines.length < 3 || !startsMidPage) {
       result.push(block);
       continue;
     }
