@@ -2356,3 +2356,7 @@ PPG Earring p.7で、captionのないComponent/Weight表が5行のparagraphへ�
 ### Extraction Phase checkpoint: table projection boundary (2026-09-16)
 
 text-bearing table candidateをPaper projectionのparagraph処理から分離し、翻訳へ送らない`type: table` blockとして保持する経路を追加した。caption由来のtext-less synthetic regionは既存caption blockへ集約するため重複しない。TypeScriptおよびpipeline/baseline focused testsは通過。captionless gridの最終canonical roleと実UI表示は次回の追加確認対象。
+
+### Extraction Phase checkpoint: captionless table end-to-end verification (2026-09-16)
+
+PPG Earring p.7を実pipelineで再抽出し、Component/Weight gridがCanonical `table`、Paper projectionでも`type: table`かつ`translationStatus: skipped`になることを確認した。これにより表セル列を通常paragraphとしてMADLADへ渡さない。今回の確認は1実表のend-to-end evidenceであり、corpus全体のtable-region recall完了を意味しない。
