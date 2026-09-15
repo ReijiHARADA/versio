@@ -2676,3 +2676,5 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Cached six OA arXiv PDFs and added verified catalog metadata. The extraction corpus is now 27 catalog entries / 26 cached PDFs, and the extraction regression run passed 56/56 tests. PDF binaries remain local cache-only.
 
 - Expanded-corpus benchmark: all 26 cached PDFs completed extraction with source integrity 1.0. Four new medical reviews have titleExact=false against their arXiv metadata (publication-title mismatch or truncation); this is a title-fusion/catalog issue queued for review, not source text loss.
+
+- Corrected the Elsevier medical meta-review catalog title/DOI to match the cached publication PDF, eliminating one catalog-side titleExact false negative. Extraction regression remains 56/56.
