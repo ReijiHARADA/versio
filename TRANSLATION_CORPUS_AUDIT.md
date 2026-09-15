@@ -2380,3 +2380,7 @@ PPG Earring p.10の単独改行ハイフンを、未完結paragraph直後のneig
 ### Extraction Phase checkpoint: source policy after boundary safety (2026-09-16)
 
 最新のtable projection / hyphen continuation変更後にsource-policy verifierを再実行し成功。39 explicit violationsは全て`wouldSubmitToModel=false`のままで、危険な抽出断片を翻訳へ流さない境界を維持した。これは安全抑止の検証であり、警告原因のnative画像照合完了を示さない。
+
+### Extraction Phase checkpoint: bundle validation (2026-09-16)
+
+抽出変更を含むWeb buildが成功した。表示されたdynamic-import warningsは既存のchunk最適化に関するもの。Tauri `.app`は今回のgoal範囲外として未ビルド。

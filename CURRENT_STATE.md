@@ -2106,3 +2106,7 @@ PPG Earring p.10で、段落途中の単独改行ハイフンがlayout上equatio
 ### 2026-09-16 checkpoint: source-policy after boundary safety
 
 表projectionと単独改行ハイフンのequation safety後にreal-paper source policy verifierを再実行し成功。39 explicit violationsは引き続き`wouldSubmitToModel=false`で抑止され、抽出警告を翻訳へ流さない安全境界を維持。警告のnative画像照合とparagraph repair精度は未完了。
+
+### 2026-09-16 checkpoint: bundle validation
+
+抽出変更を含む`npm run build`が成功。出力されたdynamic-import warningは既存のchunk最適化警告で、抽出実装のerrorではない。Tauri `.app`は明示依頼がないため作成していない。
