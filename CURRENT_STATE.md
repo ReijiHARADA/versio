@@ -1994,3 +1994,7 @@ ppg-earring page10の実出力で、`6.2.1 ...`見出しと続きの本文が同
 ### 2026-09-16 checkpoint: extraction safety-policy revalidation
 
 `npm run verify:real-paper-source-policy` を全20 cached papersで再実行した。2,457 paragraphsのうち492 blocksが警告タグ付きで、明示的な39件はすべて `wouldSubmitToModel:false` のまま維持された。既存の手動レビュー8件を含む安全側の監査状態に新規悪化はない。警告の大半は incomplete tail / unbalanced delimiter で、次の改善は誤結合を避けたまま未完結段落を修復できる証拠設計が必要。翻訳サーバーと`.app`は変更していない。
+
+### 2026-09-16 checkpoint: focused extraction regression suite
+
+Reading-order / extraction focused suiteを再実行し、8 files / 63 testsが通過した。二段組、ページ跨ぎ、caption/list/table projection、heading hierarchy、source provenanceの既存回帰は維持されている。`audit-progress.json` の次アクションを警告39件のnative画像照合と、list/equation/tableを跨がない未完結tail修復へ更新した。まだ抽出完了判定は行わない。
