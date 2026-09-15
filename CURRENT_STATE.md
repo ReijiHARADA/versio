@@ -72,6 +72,7 @@
 - x帯量子化後のbenchmark再生成でも sourceIntegrityRate / canonicalProvenanceRate は26 papers全て1.0、tableCaptionRecall平均0.929、tableRegionRecall平均0.843で変化なし。
 - 最新コードで`npm run build`を再実行し成功。既知のdynamic import警告のみで、`.app`は方針どおり未ビルド。
 - titleExact 20/26の未一致は、catalog titleに対するnative候補の表記差（副題・媒体見出し・切り詰め）を含むため、構造抽出の失敗率として単独解釈しない。今後はtitle ground truthと候補集合を併記して評価する。
+- benchmark追加集計: listItemRecallは注釈済み1 paperで1.0（precision注釈なし）、figureCaptionRelation平均1.0（24件）、tableCaptionRelationRecall平均0.929（6件）、relationPrecision平均1.0（14件）。
 - `npm run diagnose:pdf-corpus` を現行コードで再実行し、26 papers / 497 pages / suspicious 164 blocks を記録。内訳は arXiv 144、PMLR 6、Elsevier 6、ACM 3 などで、arXivの大半は図・表のベクターラベルがnative textとして混在する診断候補。これはproduction role変更の根拠にはせず、次回はnative geometryとcaption/table provenanceを照合する。
 - 再開時の停止確認として `npm run test:extraction-corpus -- --run` を現行コードで再実行し、real-paper fixture 56/56 passed（reading-order 27、baseline 29）。既存のfont-transition heading / mixed-column保護 / table fallback変更に回帰なし。長時間ジョブは起動しておらず、次回は下記の未解決項目から再開する。
 
