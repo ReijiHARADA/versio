@@ -2878,3 +2878,5 @@ Full application regression after the current extraction changes: **61 files / 3
 ### 2026-09-16 alphabetic list checkpoint
 
 - Repeated alphabetic list markers (`(a)`, `a)`) are now preserved as separate list items under the same multi-marker guard. Pipeline 15/15 and extraction corpus 56/56 remain green.
+
+- Latest full Vitest after alphabetic list marker support remains 61 files / 346 tests passed.

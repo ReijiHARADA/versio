@@ -2909,3 +2909,5 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 alphabetic list markers
 
 - Extended generic flattened-list marker recognition to repeated `(a)`, `a)`, and similar alphabetic markers, while retaining the existing repeated-marker requirement and colon lead-in guard. Focused pipeline 15/15 and extraction corpus 56/56 passed; no translation or `.app` changes.
+
+- Latest full Vitest after alphabetic list marker support: 61 files / 346 tests passed. No application regression detected.
