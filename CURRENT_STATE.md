@@ -1906,3 +1906,7 @@ Full test, lint, and typecheck revalidation succeeded after the extraction basel
 ### 2026-09-16 checkpoint: line-envelope column experiment reverted
 
 `ppg-earring` page 2 was rechecked from native PDF facts: 1,046 word items are spread across the full page width, while the current detector remains single-column because it samples item widths before line formation. A conservative line-envelope replacement was tested, but it caused six extraction-corpus regressions (interactive-jewellery, power-over-skin, dont-mind-me, OzCHI heading/column, economics rotated page) and was reverted immediately. The extraction corpus is back to 42/42 passing. This rules out a naive line-width substitution; the next column detector must distinguish spanning regions and rotated/table geometry before adoption.
+
+### 2026-09-16 checkpoint: baseline rerun after column experiments
+
+`npm run bench:pdf-extraction` を再実行し、20 cached papers の extraction-baseline-latest.json を更新した。source integrity は既存どおり維持され、列検出候補は回帰のため未採用。抽出コーパス 42/42、baseline 21/21 を基準として保持する。翻訳サーバーと `.app` は未変更。
