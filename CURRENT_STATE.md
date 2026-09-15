@@ -2122,3 +2122,7 @@ PPG Earring p.10で、段落途中の単独改行ハイフンがlayout上equatio
 ### 2026-09-16 checkpoint: table projection precision guard
 
 publisher横断走査でtext-bearing table候補が数式にも存在することを確認。projectionを3行構造へ絞る初案はresolver後のlayout lookup欠落で実表を落としたため修正し、native boundingBoxes 3件以上を代替根拠にした。PPG captionless grid回帰は22/22通過。数式候補を表として投影しないpublisher横断テストは今後追加する。
+
+### 2026-09-16 checkpoint: captionless table precision recheck
+
+全corpus走査で通常本文がtable blockへ投影されるリスクを確認し、文章句読点（文末period、!、?、semicolon）を含むtext-bearing候補を除外するprecision guardを追加。小数点は許可し、PPG Component/Weight grid回帰は22/22通過。走査上のPaper table block数は423から80へ減少し、過剰投影を抑制した。publisher横断の真陽性recallは未測定。

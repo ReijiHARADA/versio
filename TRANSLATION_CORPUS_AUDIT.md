@@ -2392,3 +2392,7 @@ PPG Earring p.10の単独改行ハイフンを、未完結paragraph直後のneig
 ### Extraction Phase checkpoint: table projection precision guard (2026-09-16)
 
 text-bearing table候補には数式断片も含まれることを横断走査で確認した。3行layout条件だけに依存するとresolver後のlookup欠落で実表を落とすため、native boundingBoxes数を併用する保守的条件へ修正。PPG captionless grid回帰は22/22通過。数式のtable誤投影をpublisher横断で測るテストは未完了。
+
+### Extraction Phase checkpoint: captionless table precision recheck (2026-09-16)
+
+通常本文のtable誤投影リスクを横断走査で確認し、文中句読点を持つtext-bearing候補をprojection対象外にした。小数点は除外せず、PPG gridは維持。Paper table block inventoryは423から80へ減少したが、これはprecision guardの影響を示す診断値であり、publisher横断recallの完了指標ではない。

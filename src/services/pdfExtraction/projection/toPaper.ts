@@ -266,6 +266,7 @@ export function projectCanonicalToPaper(input: {
     const column = node.column ?? layout?.column ?? "single";
 
     const nativeGrid = node.role === "table" && node.text &&
+      !/[!?;]|[.]\s*(?:[A-Za-z]|$)/.test(node.text) &&
       ((layout && layout.lines.length >= 3 &&
         layout.lines.filter((line) => line.items.length >= 2).length >= 3) ||
         // Candidate-to-layout lookup can be unavailable after resolver
