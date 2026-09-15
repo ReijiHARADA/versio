@@ -2821,3 +2821,5 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Extended `diagnose:pdf-corpus` to retain up to five page/x-cluster/column/text samples per paper, so manual review can be resumed without rerunning extraction or guessing which blocks produced a count.
 - TypeScript passes; extraction behavior and regression metrics are unchanged.
+
+- Corrected the corpus diagnostic's x-cluster counter to use sorted adjacent coordinates rather than duplicate-value index lookup. Counts remain 255 suspicious blocks, confirming the prior baseline was stable.

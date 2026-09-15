@@ -18,7 +18,11 @@ for (const paper of catalog.papers) {
     const typical = widths[Math.floor(widths.length / 2)] ?? 1;
     const xs = [...new Set(block.lines.map((line) => Math.round(line.x)))].sort((a, b) => a - b);
     let clusters = 0;
-    for (const x of xs) if (clusters === 0 || x - xs[Math.max(0, xs.indexOf(x) - 1)] > 24) clusters++;
+    let previous: number | undefined;
+    for (const x of xs) {
+      if (previous === undefined || x - previous > 24) clusters++;
+      previous = x;
+    }
     return block.bbox.width >= typical * 1.65 && clusters >= 2;
   });
   reports.push({
