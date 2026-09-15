@@ -241,7 +241,8 @@
       "downloadUrl": "https://ubicomplab.cs.washington.edu/pdfs/ppg_earring.pdf",
       "seedPaths": [],
       "checks": {
-        "forbidCaptionInParagraph": true
+        "forbidCaptionInParagraph": true,
+        "expectMultiColumnOnPages": [7, 10, 12]
       }
     },
     {
