@@ -243,10 +243,19 @@ export function evaluateBaselinePaper(input: {
           }).length / tables.length
         : undefined,
     tableCaptionRelationPrecision:
-      captionRels.length > 0
-        ? captionRels.filter(
-            (relation) => extracted.canonical.nodes.find((node) => node.id === relation.to)?.role === "table"
-          ).length / captionRels.length
+      captionRels.filter((relation) => {
+        const caption = extracted.canonical.nodes.find((node) => node.id === relation.from);
+        return caption?.role === "caption" && /^(?:table|表)/i.test(caption.text ?? "");
+      }).length > 0
+        ? captionRels.filter((relation) => {
+            const caption = extracted.canonical.nodes.find((node) => node.id === relation.from);
+            return caption?.role === "caption" && /^(?:table|表)/i.test(caption.text ?? "") &&
+              extracted.canonical.nodes.find((node) => node.id === relation.to)?.role === "table";
+          }).length /
+          captionRels.filter((relation) => {
+            const caption = extracted.canonical.nodes.find((node) => node.id === relation.from);
+            return caption?.role === "caption" && /^(?:table|表)/i.test(caption.text ?? "");
+          }).length
         : undefined,
     listItemRecall: gold?.listItems
       ? substringRecall(
