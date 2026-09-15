@@ -2792,6 +2792,8 @@ Manual review of `medical-image-segmentation-deep-learning` confirms genuine lef
 
 The extraction corpus remains green at 56/56 after the diagnostic updates; same-page column-stitch thresholds were left unchanged pending stronger combined Evidence.
 
+Geometry-split runs now carry internal `mixedColumnEvidence`, so the later same-page stitch cannot immediately rejoin them. Regressions remain green; Elsevier table metrics are unchanged and no accuracy gain is claimed.
+
 The focused reading-order and canonical pipeline suites also pass together (59/59); this iteration remains diagnostic-only.
 
 The corpus diagnostic now stores up to five concrete samples per paper (page, x clusters, assigned columns, and source excerpt), allowing repeatable manual review without changing extraction behavior.

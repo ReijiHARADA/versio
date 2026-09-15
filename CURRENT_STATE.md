@@ -2818,6 +2818,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Reviewed `medical-image-segmentation-deep-learning`: its first suspicious blocks are genuine left/right prose interleaving (x≈50 and x≈317), not harmless table geometry. The report is actionable, but wide blocks still require table/list safeguards before any production split.
 
 - The corpus regression was rerun after the diagnostic-only changes: 56/56 passed. Same-page column-stitch thresholds remain unchanged because both valid continuation and false interleaving cases are present.
+- Added internal `mixedColumnEvidence` when geometry-based splitting occurs, preventing the later same-page stitch from immediately rejoining those runs. Core and corpus regressions pass; the Elsevier table metrics remain unchanged, so this is a safety guard rather than a claimed accuracy improvement.
 
 - Core reading-order and canonical pipeline suites pass together: 59/59 tests. No extraction behavior changed in this diagnostic iteration.
 
