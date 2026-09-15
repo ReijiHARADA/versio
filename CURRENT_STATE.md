@@ -2717,3 +2717,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - The Elsevier probe now separates the two-line `2.1.1...` heading from the `Table 5 presents...` body (and the analogous Table 6/7 streams). This removes the observed heading/body fusion without paper-specific vocabulary.
 - Safety checks: pipeline 12/12 and extraction corpus 56/56 passed; TypeScript passed. No translation-server or `.app` changes.
 - Table-region recall is not yet claimed as solved; the next step is to evaluate whether the separated body/table stream can be recognized generically without promoting prose or cells incorrectly.
+
+### 2026-09-16 post-fix benchmark
+
+- Re-ran `npm run bench:pdf-extraction` after the styled-prefix split. The Elsevier case remains table caption/region/relation recall 0.571 with relation precision 1.0; source integrity remains 1.0. The change fixes heading/body fusion but does not falsely claim table recovery.
+- Extraction corpus and pipeline remain 56/56 and 12/12. Next work should target native table-region evidence separately, using the now-corrected heading boundary as an input.

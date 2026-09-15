@@ -2721,3 +2721,7 @@ The opt-in layout diagnostic now reports each line in mixed-font blocks. The Els
 ### 2026-09-16 generic numbered-heading boundary fix
 
 A generic native-style transition rule now splits short numbered subsection prefixes from following body lines when the font family changes. The Elsevier probe separates the two-line numbered headings preceding Tables 5/6/7 from their prose. Pipeline (12/12), extraction corpus (56/56), and typecheck pass. Table-region recall remains an open task.
+
+### 2026-09-16 post-fix benchmark
+
+After the generic heading/body split, the Elsevier table caption/region/relation recall remains 0.571 (relation precision 1.0) while source integrity remains 1.0. This is an honest unchanged table metric: the fix addresses block fusion, not table recovery. Extraction regression remains 56/56.
