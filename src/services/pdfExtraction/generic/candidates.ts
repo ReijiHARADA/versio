@@ -257,6 +257,22 @@ function equationScore(block: LayoutBlock, layout: PageColumnLayout | undefined)
  */
 export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtraction {
   const { layouts, blocks, baseFontSize } = reconstructDocument(pages);
+  const flattenedRows = new Set<number>();
+  let run: number[] = [];
+  const flushRun = () => { if (run.length >= 10) run.forEach((i) => flattenedRows.add(i)); run = []; };
+  blocks.forEach((block, index) => {
+    const text = block.text.trim();
+    const row = block.role === "paragraph" && block.lines.length === 1 &&
+      block.pageStart === block.pageEnd && text.length <= 180 && /^[+−\-]?\d/.test(text) &&
+      (text.match(/\d/g) ?? []).length / Math.max(text.length, 1) >= 0.22 &&
+      !/[.!?]$/.test(text) && (text.match(/[A-Za-z]{2,}/g) ?? []).length <= 2;
+    const previous = blocks[index - 1];
+    const adjacent = row && previous?.pageStart === block.pageStart && previous.column === block.column &&
+      block.bbox.y - (previous.bbox.y + previous.bbox.height) < baseFontSize * 2.8;
+    if (adjacent) run.push(index);
+    else { flushRun(); if (row) run.push(index); }
+  });
+  flushRun();
   const fontUse = new Map<string, number>();
   let itemCount = 0;
   for (const block of blocks) {
@@ -386,7 +402,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // conservative paragraph fallback.
     // Keep table evidence available for caption-region membership, but below
     // the resolver's role override threshold so body prose stays paragraph.
-    if (tableLike(block)) {
+    if (tableLike(block) || flattenedRows.has(index)) {
       // A large, numeric-rich rotated grid is materially stronger than the
       // ordinary aligned-row signal: it is the native representation of a
       // table whose cells are written on the orthogonal axis. Allow the
@@ -402,7 +418,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         ? 0.97
         : structuralGrid
           ? 0.95
-          : 0.90;
+          : flattenedRows.has(index)
+            ? 0.95
+            : 0.90;
     }
     if (nearbyTableRowEvidence(block, blocks)) scoreByRole.table = 0.96;
     const reason =
