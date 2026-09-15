@@ -1267,8 +1267,8 @@ function groupLinesIntoBlocks(
     }
 
     const sameRole = forcedRole === currentRole;
-    const previousRotated = Math.abs(current[current.length - 1].rotation ?? 0) >= 45;
-    const nextRotated = Math.abs(line.rotation ?? 0) >= 45;
+    const previousRotated = current[current.length - 1].items.some((item) => Math.abs(item.rotation ?? 0) >= 45);
+    const nextRotated = line.items.some((item) => Math.abs(item.rotation ?? 0) >= 45);
     const rotationCompatible = previousRotated === nextRotated;
     const previousItems = current[current.length - 1].items;
     const nextItems = line.items;
