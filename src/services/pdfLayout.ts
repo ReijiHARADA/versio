@@ -361,7 +361,18 @@ function clusterItemsIntoLines(
     }
   }
 
-  return groups
+  const separatedGroups = groups.flatMap((group) => {
+    // Rotated tables are sometimes emitted on the same baseline as a
+    // horizontal footnote. Keep those native items as separate lines so the
+    // table region cannot absorb the note. Only split when the rotated side
+    // has several items and the unrotated side contains real prose.
+    const rotated = group.filter((item) => Math.abs(item.rotation ?? 0) >= 45);
+    const horizontal = group.filter((item) => Math.abs(item.rotation ?? 0) < 45);
+    const horizontalWords = horizontal.map((item) => item.text).join(" ").trim().split(/\s+/).filter(Boolean).length;
+    if (rotated.length >= 4 && horizontalWords >= 4) return [rotated, horizontal];
+    return [group];
+  });
+  return separatedGroups
     .map((group) => itemsToLine(group, column, pageNumber, pageHeight))
     .filter((line) => line.text.length > 0)
     .sort((a, b) => a.y - b.y);

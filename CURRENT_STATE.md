@@ -2297,4 +2297,6 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 
 手動レビューに `wear-scale:p14:table6-boundary` を追加し、table contamination severity 3（研究者が表の解釈を誤る可能性）として未解決登録。`audit-progress.json` の unresolvedFailures と benchmark version も更新した。次回はこのケースを最小回帰として、回転表の row band と脚注を分割するアルゴリズムを検討する。
 
+回転・水平混在 line の分離ガードを追加し、複数の回転 native item と水平 prose が同一 baseline に入る場合は別 line として扱うようにした。reading-order + pipeline は 46/46、extraction corpus は 43/43 を維持。`wear-scale` の脚注も回転配置のためこのガードだけでは分離できず、次回は x帯の連続性を組み合わせる。
+
 captionless numeric-row の synthetic regression を追加し、6行の反復 x 列が table evidence（score >= 0.94）として生成されることを確認。pipeline suite は 5/5。実PDFではページ内の表後注記がまだ同じ block に残るため、region の上下境界を手動比較してから拡張する。
