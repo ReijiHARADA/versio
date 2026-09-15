@@ -2230,3 +2230,7 @@ Web buildで検出された `tableText` nullable の型エラーを、nativeGrid
 ### 2026-09-16 checkpoint: overlap sample classification
 
 重なり診断に代表 text/bbox/image sample（各PDF最大20件）を追加。代表例は `design-for-wearability` の図ラベル、`linguistics-language-model-physics` の数値軸ラベル、`step-to-charge` の `Wearable Rx` 等で、図内ラベル候補として妥当だった。一方 `interactive-jewellery` では画像と permission text の重なりも検出され、全候補を自動削除する前に chrome/body 分類が必要と確認した。
+
+### 2026-09-16 checkpoint: repeated image operator coverage
+
+native image placement収集に `paintImageXObjectRepeat` を追加し、repeat operatorで描画される画像も図境界候補に含めた。TypeScript型チェックとreading-order suite 40/40が成功。次回はrepeat画像を含む実PDFで候補数の変化を比較する。

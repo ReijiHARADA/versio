@@ -152,7 +152,8 @@ export function collectImagePlacements(
       ctm = multiplyCtm(ctm, args as number[]);
     } else if (
       fn === OPS.paintImageXObject ||
-      fn === OPS.paintInlineImageXObject
+      fn === OPS.paintInlineImageXObject ||
+      fn === OPS.paintImageXObjectRepeat
     ) {
       const id = String(args[0] ?? "");
       if (!id) continue;
