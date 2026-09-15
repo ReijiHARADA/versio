@@ -6,9 +6,21 @@ import { grobidEnricher } from "../../services/pdfExtraction/enrichers/grobid";
 import { doclingEnricher } from "../../services/pdfExtraction/enrichers/docling";
 import { nativeDocumentFromExtracted } from "../../services/pdfExtraction/native/fromExtracted";
 import { generateGenericCandidates } from "../../services/pdfExtraction/generic/candidates";
+import { splitFlattenedList } from "../../services/pdfExtraction/projection/toPaper";
 import { detectPageColumns, reconstructDocument } from "../../services/pdfLayout";
 
 describe("canonical extraction pipeline", () => {
+  it("splits repeated dash bullets without splitting a single inline dash", () => {
+    expect(splitFlattenedList("– First item – Second item – Third item")).toEqual([
+      "– First item",
+      "– Second item",
+      "– Third item",
+    ]);
+    expect(splitFlattenedList("A model-based approach – with a caveat.")).toEqual([
+      "A model-based approach – with a caveat.",
+    ]);
+  });
+
   it("keeps wide native column lines assigned to their column", () => {
     const textItems = Array.from({ length: 10 }, (_, row) => [
       { text: `Left column sentence ${row} with enough words for layout detection.`, x: 40, y: 120 + row * 18, width: 280, height: 8, fontSize: 8, fontName: "Body", page: 1 },

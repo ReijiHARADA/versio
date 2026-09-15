@@ -84,7 +84,10 @@ function expandAuthorLine(text: string): string[] {
 
 /** Split flattened bullet lists into independent canonical blocks. */
 export function splitFlattenedList(text: string): string[] {
-  const markers = [...text.matchAll(/(?:^|\s)([•‣▪∙])\s+/g)].map((m) =>
+  // Academic PDFs often encode bullet lists as en/em dashes rather than a
+  // dedicated bullet glyph. Repeated dash markers are treated as list
+  // boundaries; a single inline dash remains ordinary prose.
+  const markers = [...text.matchAll(/(?:^|\s)([•‣▪∙–—])\s+/g)].map((m) =>
     m.index === undefined ? -1 : (m.index + (m[0].startsWith(" ") ? 1 : 0))
   ).filter((i) => i >= 0);
   const numbered = [...text.matchAll(/(?:^|\s)((?:[1-9]|1[0-9]|20)[.)])\s+/g)]

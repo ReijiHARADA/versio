@@ -2758,3 +2758,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Extended opt-in layout diagnostics to include unusually wide blocks (relative to their typical line width), not only mixed-font blocks. This captures upstream streams that lose column labels before block grouping.
 - TypeScript passes; this is diagnostic-only and does not change extraction roles.
+
+### 2026-09-16 dash-bullet preservation
+
+- Extended flattened-list projection to recognize repeated en/em-dash bullets, which are common in journal PDFs, while leaving a single inline dash as prose.
+- Added regression coverage; pipeline 14/14 and extraction corpus 56/56 pass. This preserves list boundaries without changing native extraction or translation behavior.

@@ -2753,3 +2753,7 @@ The synthetic wide-column fixture now includes a full-width spanning line and as
 ### 2026-09-16 wide-block diagnostic
 
 The opt-in layout logger now also reports unusually wide blocks relative to their line widths, making upstream column-label loss observable. This diagnostic does not change extraction behavior.
+
+### 2026-09-16 dash-bullet preservation
+
+Repeated en/em-dash bullets are now split into list items during projection; a single inline dash remains prose. Pipeline is 14/14 and extraction corpus 56/56.
