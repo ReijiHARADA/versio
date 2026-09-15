@@ -2899,3 +2899,4 @@ Full application regression after the current extraction changes: **61 files / 3
 
 - Added a geometry-only safeguard for rotated native grids that share a baseline with a short prose note. When the rotated side has at least four cells and the horizontal side has at least three prose-like words plus terminal punctuation, the groups remain separate; numeric/header cells do not satisfy the guard.
 - The new synthetic regression passes, focused reading-order tests are 47/47, and the real-paper extraction corpus is 56/56. This is a boundary-preservation improvement; no translation code or packaged app was changed.
+- Full application regression after this extraction-only change: Vitest **61 files / 347 tests**, TypeScript, lint, and Vite build all pass. Only pre-existing dynamic-import and chunk-size warnings remain.
