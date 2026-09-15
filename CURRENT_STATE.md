@@ -2070,3 +2070,7 @@ publisher running-header分類後に19 cached PDFのboundary scanを更新した
 ### 2026-09-16 checkpoint: visual spot-check record
 
 PPG Earring p.2、SpeechIn p.3、Regularized DeepIV p.14をPDFレンダリングで目視し、本文・header・表caption/summary row・数式境界を抽出結果と照合した。確認結果を`TRANSLATION_CORPUS_AUDIT.md`へ記録。代表spot-checkのため全corpus精度の完了証拠とはせず、未確認候補は安全fallbackのまま保持する。
+
+### 2026-09-16 checkpoint: user-requested pause
+
+抽出アルゴリズム改善の作業を、回帰検証が通った区切りで停止。現在、長期実行中の監査・ベンチマーク・テストプロセスは存在せず、working treeもclean。最新の到達点はrunning-header evidence、numeric-prose/equation safety、table summary-row classification、二段組検出の回帰維持。未完了事項は39件のexplicit extraction warningsのnative画像照合、段落境界の手動精度確認、table grid recall改善で、次回はこれらの手動レビューから再開する。.appは今回ビルドしていない。
