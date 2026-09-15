@@ -2344,3 +2344,7 @@ Caption detection accepts compact native labels such as `Table6...` when the tex
 ### Extraction-only continuation (2026-09-16)
 
 翻訳品質の監査へ進む前に、抽出側の安全性を再確認した。全20 cached papersで source-policy verifier を実行し、明示的な39件の不完全/不整合候補はモデル送信を抑止したまま維持された。抽出コーパスは42/42、source integrity benchmark は20 papersで最小・平均とも1.0。これは抽出全体の正解率を意味せず、未完結段落の修復、表グリッド、融合見出し、手動境界レビューは継続課題である。翻訳サーバーはこの段階では変更しない。
+
+### Native extraction visual spot-check (2026-09-16)
+
+原PDFをレンダリングして3ページを目視照合した。PPG Earring p.2では2段組本文、上端著者header、統計値行の位置を確認した。SpeechIn p.3ではpublisher header、導入文、箇条書き、Table 1 captionと表本体を確認し、summary rowの見出し誤分類を修正した。Regularized DeepIV p.14では上端数式と本文の境界を確認し、回転/数式のnative geometryを保持したまま低信頼部分をparagraph/equationへfallbackしている。これらは代表spot-checkであり、全corpusの手動precision/recallを意味しない。

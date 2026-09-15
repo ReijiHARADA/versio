@@ -2066,3 +2066,7 @@ publisher running-header分類後に19 cached PDFのboundary scanを更新した
 ### 2026-09-16 checkpoint: structural marker scan baseline
 
 最新コードで19 cached PDFを再走査し、埋め込み構造マーカー候補は403件だった。これは本文中のFigure/Table参照を含むtriage候補であり、caption誤検出の正解率とは扱わない。候補レポートを手動レビュー対象として固定し、論文固有ルールによる自動切り出しは行わない。
+
+### 2026-09-16 checkpoint: visual spot-check record
+
+PPG Earring p.2、SpeechIn p.3、Regularized DeepIV p.14をPDFレンダリングで目視し、本文・header・表caption/summary row・数式境界を抽出結果と照合した。確認結果を`TRANSLATION_CORPUS_AUDIT.md`へ記録。代表spot-checkのため全corpus精度の完了証拠とはせず、未確認候補は安全fallbackのまま保持する。
