@@ -2270,3 +2270,7 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 ### 2026-09-16 checkpoint: clean stop
 
 画像重なり再走査と抽出回帰確認を完了した時点で一旦停止。監査・ベンチマークの長時間プロセスは残っておらず、作業ツリーもクリーン。起動中の `.app` に同梱された翻訳サーバー（PID 99922）はアプリ利用のため維持している。再開時は、長文重なり候補の手動分類を確定し、wear-scale のページローカルな flattened table region 検出へ進む。
+
+### 2026-09-16 checkpoint: extraction baseline and boundary rescan
+
+抽出 corpus を再実行し、2 files / 43 tests が通過。`npm run bench:pdf-extraction` も完了し、20 papers、既存対象の `sourceIntegrityRate` は平均 1.0、OzCHI の heading hierarchy / table caption / table region は 1.0 を維持した。境界診断は20 papersを走査したが、Figure/Table参照の多くは本文中の正当な参照であり、文字列一致だけで除外できないことを再確認した。`ergonomics-human-factors-ihci` 等の affiliation候補と `wear-scale` の flattened table rows は、native geometryを確認してから一般化可能な修正を行う。翻訳サーバーは変更していない。
