@@ -2262,3 +2262,7 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 ### 2026-09-16 checkpoint: baseline after image geometry integration
 
 画像配置／repeat operator／全面画像安全条件を含む現行実装で `npm run bench:pdf-extraction` を再計測。20 papers、`sourceIntegrityRate` 平均1.0を維持し、ground-truth tableRegionRecall対象2件はいずれも1.0。画像重なり候補の除外による既存指標の回帰は確認されなかった。
+
+### 2026-09-16 checkpoint: repeat-operator corpus regression
+
+`paintImageXObjectRepeat` 対応後に cached extraction corpus を再実行し、2 files / 43 tests が通過。repeat画像対応による heading、caption、table、reading-order 回帰は検出されなかった。次回は画像重なり候補の長文分類を完了し、抽出完了条件の未検証項目を棚卸しする。
