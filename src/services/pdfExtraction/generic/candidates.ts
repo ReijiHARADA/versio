@@ -488,9 +488,10 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       const structuralGrid = block.lines.length >= 3 &&
         block.lines.filter((line) => line.items.length >= 2).length >= 3 &&
         block.lines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length >= 2;
+      const proseBlock = paragraphLike(block.text) && /[.!?]\s*$/.test(block.text.trim());
       scoreByRole.table = rotatedItems.length >= 30 && rotatedNumeric / Math.max(rotatedItems.length, 1) >= 0.3
         ? 0.97
-        : structuralGrid
+        : structuralGrid && !proseBlock
           ? 0.95
           : 0.90;
     }

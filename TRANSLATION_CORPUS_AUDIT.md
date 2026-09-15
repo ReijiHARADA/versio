@@ -2579,3 +2579,7 @@ Marketing PDFで確認された、Table caption近傍の文章がtable roleへ�
 全extraction corpus再計測は44/44（reading-order 21、baseline 23）で成功。既存real-paperの安全回帰は観測されなかった。table precisionの定量化は、未注釈のprose/table境界を手動ground truthへ追加してから実施する。
 
 静的検証としてTypeScript型チェックとlint（warnings 0）も成功。今回の変更は抽出層と回帰テスト・監査記録のみで、translation-server/.appは変更していない。
+
+### Structural-grid prose guard (2026-09-16)
+
+長い文型blockが複数行・複数native itemを含んでも、回転表以外ではtable昇格スコアを抑制するguardを追加。marketing benchmark再生成でtitle、table caption recall、source integrityは各1.0を維持し、caption relation recallは0のまま。captionと本文が同一native blockに混ざる問題は継続調査。

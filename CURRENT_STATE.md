@@ -2545,6 +2545,10 @@ marketing-consumer-responseのnative PDFで確認できるTable 1 captionをpart
 
 全extraction corpusを再実行し、real-paper/reading-order 21件とbaseline 23件の計44件が成功。PDF.jsのcanvas/フォント関連warning以外の失敗なし。table precisionの実測値はground truth拡張後の手動レビューが必要で、次回へ持ち越す。
 
+### Table structural-grid prose guard (2026-09-16)
+
+複数行・複数itemでも文末句読点を持つ長いprose blockがstructural gridスコアでtableへ昇格しないよう、回転表以外のtable scoreを抑制するguardを追加。marketing benchmarkを再生成し、title/sourceIntegrity/table caption recallは維持（各1.0）、table caption relation recallは0のまま。captionと本文が同一native blockに混ざる問題は未解決で、次は行境界での分割Evidenceを検討する。
+
 ### Extraction guard static verification (2026-09-16)
 
 prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）も成功。`.app`とtranslation-serverは変更していない。次回はmarketingの誤table候補を手動ground truth化し、precisionを数値化する。
