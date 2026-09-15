@@ -2368,3 +2368,7 @@ PPG Earring実PDFのcaptionless Component/Weight gridについて、Canonical ro
 ### Extraction Phase checkpoint: corpus benchmark after table projection (2026-09-16)
 
 20 cached papersを再ベンチマークし、source integrity平均1.0、既存table-region評価対象の平均recall 1.0、title exactness 0.9を維持した。captionless table regressionを含むextraction testsは22/22通過。手動の段落境界・全publisher表recallは引き続き未完了。
+
+### Extraction Phase checkpoint: full regression after table projection (2026-09-16)
+
+全Vitest 61 files / 328 tests、lint（警告0）、TypeScriptが通過。captionless table projection変更による既存回帰は確認されなかった。全corpusの手動境界レビューとpublisher横断table recallは未完了であり、抽出完了とは扱わない。

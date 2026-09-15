@@ -2094,3 +2094,7 @@ PPG Earring p.7を`extractFromPages`で再実行し、Component/Weight gridがCa
 ### 2026-09-16 checkpoint: corpus benchmark after table projection
 
 20 cached papersのextraction benchmarkを再実行。sourceIntegrityRate平均1.0、既存tableRegionRecall対象の平均1.0、titleExact 0.9を維持した。captionless table regressionを含むextraction testsは22/22通過。全corpusの表recall・paragraph手動精度は未完了であり、数値を完了条件とはみなさない。
+
+### 2026-09-16 checkpoint: full regression after table projection
+
+全Vitest 61 files / 328 tests、lint（max warnings 0）、TypeScriptを再実行して成功。captionless table projection変更による既存抽出回帰は検出されなかった。buildと全corpus benchmarkは直前の成功結果を維持している。抽出完了条件（全corpus手動境界レビュー、publisher横断table recall）は未達のためgoalは継続する。
