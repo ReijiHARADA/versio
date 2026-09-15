@@ -2404,3 +2404,7 @@ text-bearing table候補には数式断片も含まれることを横断走査�
 ### Extraction Phase checkpoint: table precision audit calibration (2026-09-16)
 
 長文table候補ゼロという単純不変条件は、captionや複合構造を誤って拒否するため採用しなかった。追加テストは撤回し、PPG実表回帰22/22を維持。table precisionはpublisher別のnative geometry＋caption provenance正解データで評価する。
+
+### Extraction Phase checkpoint: equation/algorithm table projection guard (2026-09-16)
+
+Algorithm/Require本文や数式断片がtable candidateになる例を確認し、projectionでそれらを除外するmath-symbol / prefix guardを追加した。PPG実表回帰は22/22通過。診断上のPaper table block数は132で、これはcaption regionと残存候補を含むためrecall/precisionの確定値ではない。

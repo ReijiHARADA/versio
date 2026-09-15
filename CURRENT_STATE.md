@@ -2142,3 +2142,7 @@ captionless table precision guard後の20 cached PDF横断診断を`test-data/re
 ### 2026-09-16 checkpoint: clean extraction pause
 
 最新の作業ツリーはclean。table precision guard・captionless table regressionを含むextraction corpusは2 files / 43 tests通過。実行中プロセスなし。次回はpublisher横断table precisionと手動paragraph boundaryレビューから再開する。
+
+### 2026-09-16 checkpoint: equation/algorithm table projection guard
+
+横断サンプルでAlgorithm/Require本文と数式断片がtext-bearing table候補に混入していたため、projectionでAlgorithm/Require開始行と主要math symbolを除外する汎用条件を追加。PPG captionless grid回帰は22/22通過。全corpus Paper table block診断値は80から132へ再計測され、captionless実表と残存候補のpublisher別目視確認が必要。
