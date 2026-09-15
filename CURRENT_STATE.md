@@ -2642,3 +2642,9 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Last verification: extraction corpus 56/56 passed; prior full Vitest 61 files / 342 tests passed; TypeScript, oxlint, and web build passed.
 - No translation-server, model, quality-gate, or `.app` build/process was started for this checkpoint.
 - Next extraction task: investigate low table-caption relation recall (0.25) in the Elsevier medical meta-review using generic caption/region boundary evidence; do not add paper-specific rules.
+
+### 2026-09-16 extraction recheck before pause
+
+- Re-ran `npm run test:extraction-corpus -- --run`: 2 files / 56 tests passed.
+- Real-paper reading-order and baseline checks remain green across 27 catalog cases; known Elsevier table-caption relation recall issue (0.25) remains unresolved and is documented for the next iteration.
+- Paused here at a clean checkpoint; translation pipeline and `.app` remain untouched.
