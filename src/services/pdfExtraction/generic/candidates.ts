@@ -388,9 +388,14 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       const rotatedItems = block.lines.flatMap((line) => line.items)
         .filter((item) => Math.abs(item.rotation ?? 0) >= 45);
       const rotatedNumeric = rotatedItems.filter((item) => /\d/.test(item.text)).length;
+      const structuralGrid = block.lines.length >= 3 &&
+        block.lines.filter((line) => line.items.length >= 2).length >= 3 &&
+        block.lines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length >= 2;
       scoreByRole.table = rotatedItems.length >= 30 && rotatedNumeric / Math.max(rotatedItems.length, 1) >= 0.3
         ? 0.97
-        : 0.90;
+        : structuralGrid
+          ? 0.95
+          : 0.90;
     }
     if (nearbyTableRowEvidence(block, blocks)) scoreByRole.table = 0.96;
     const reason =

@@ -2074,3 +2074,7 @@ PPG Earring p.2、SpeechIn p.3、Regularized DeepIV p.14をPDFレンダリング
 ### 2026-09-16 checkpoint: user-requested pause
 
 抽出アルゴリズム改善の作業を、回帰検証が通った区切りで停止。現在、長期実行中の監査・ベンチマーク・テストプロセスは存在せず、working treeもclean。最新の到達点はrunning-header evidence、numeric-prose/equation safety、table summary-row classification、二段組検出の回帰維持。未完了事項は39件のexplicit extraction warningsのnative画像照合、段落境界の手動精度確認、table grid recall改善で、次回はこれらの手動レビューから再開する。.appは今回ビルドしていない。
+
+### 2026-09-16 checkpoint: captionless aligned-grid evidence
+
+PPG Earring p.7の「Component / Weight」表をnative item geometryで確認した。5行・反復列・数値セルを満たすcaptionless gridに対し、generic candidateのtable evidenceを0.95へ引き上げる汎用ルールを追加した。単一列本文には同条件が成立しないためparagraph優先を維持する。extraction corpus 42/42で通過。実PDFのcanonical投影ではformat/relation経路を含む表regionの最終表示を追加確認する必要があり、表grid全体のrecall完了とはまだ扱わない。

@@ -2348,3 +2348,7 @@ Caption detection accepts compact native labels such as `Table6...` when the tex
 ### Native extraction visual spot-check (2026-09-16)
 
 原PDFをレンダリングして3ページを目視照合した。PPG Earring p.2では2段組本文、上端著者header、統計値行の位置を確認した。SpeechIn p.3ではpublisher header、導入文、箇条書き、Table 1 captionと表本体を確認し、summary rowの見出し誤分類を修正した。Regularized DeepIV p.14では上端数式と本文の境界を確認し、回転/数式のnative geometryを保持したまま低信頼部分をparagraph/equationへfallbackしている。これらは代表spot-checkであり、全corpusの手動precision/recallを意味しない。
+
+### Extraction Phase checkpoint: captionless aligned grid (2026-09-16)
+
+PPG Earring p.7で、captionのないComponent/Weight表が5行のparagraphへ連結される例を確認した。native textには各行の反復x位置と数値セルがあり、generic table evidenceを構造grid条件（3行以上、複数item行、数値セル2つ以上）で0.95に引き上げる汎用変更を追加した。単一列本文を同条件でtableへ昇格させないため、tableLikeのgeometry条件を前提にしている。corpus 42/42は通過。canonical最終投影でcaptionless regionがどの経路に現れるかは次回確認課題として残す。
