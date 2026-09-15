@@ -2500,3 +2500,7 @@ x帯split後、表セル行と表外注記は別blockになったが、回転表
 ### Caption fixture verification (2026-09-16)
 
 回転captionラベル継続fixtureと20-paper extraction benchmarkを再確認。reading-order 43/43、wear-scale sourceIntegrityRate=1.0。回転caption provenanceのpublisher横断評価は継続。
+
+### Caption relation metric (2026-09-16)
+
+table captionの`CAPTION_OF` relationをground truth付きで測れるoptional benchmark metricを追加。既存fixture互換で、抽出ロジックと翻訳serverは変更していない。

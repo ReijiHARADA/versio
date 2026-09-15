@@ -2398,3 +2398,7 @@ Resolver-selected rotated table nodes are now projected as skipped `table` Paper
 ### Caption fixture verification (2026-09-16)
 
 回転captionラベル継続fixture追加後、reading-order 43/43、型チェック・lint成功。`bench:pdf-extraction` は20-paper benchmarkを完走し、wear-scaleの sourceIntegrityRate=1.0 を維持。
+
+### Caption relation metric (2026-09-16)
+
+Benchmarkのoptional ground truthに`tableCaptionRelations`と`tableCaptionRelation`を追加し、table captionの`CAPTION_OF` provenanceをfigureと分離して計測可能にした。typecheck、pdfExtraction pipeline 5/5 成功。
