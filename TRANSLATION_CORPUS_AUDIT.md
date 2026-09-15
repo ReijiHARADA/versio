@@ -2741,3 +2741,7 @@ Pipeline and extraction corpus remain green (12/12 and 56/56). The wide mixed st
 ### 2026-09-16 span-width threshold probe
 
 A generic `assignColumn` spanning cutoff probe (0.48 → 0.55 page width) was corpus-safe but did not alter the Elsevier mixed stream. No table metric improvement is claimed; upstream page-layout evidence remains the next task.
+
+### 2026-09-16 wide-column regression fixture
+
+Added a synthetic two-column fixture with wide native line widths to protect column assignment against spanning-threshold regressions. Pipeline suite is now 13/13; real-paper extraction remains 56/56.

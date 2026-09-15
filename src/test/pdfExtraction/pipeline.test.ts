@@ -6,9 +6,22 @@ import { grobidEnricher } from "../../services/pdfExtraction/enrichers/grobid";
 import { doclingEnricher } from "../../services/pdfExtraction/enrichers/docling";
 import { nativeDocumentFromExtracted } from "../../services/pdfExtraction/native/fromExtracted";
 import { generateGenericCandidates } from "../../services/pdfExtraction/generic/candidates";
-import { reconstructDocument } from "../../services/pdfLayout";
+import { detectPageColumns, reconstructDocument } from "../../services/pdfLayout";
 
 describe("canonical extraction pipeline", () => {
+  it("keeps wide native column lines assigned to their column", () => {
+    const textItems = Array.from({ length: 10 }, (_, row) => [
+      { text: `Left column sentence ${row} with enough words for layout detection.`, x: 40, y: 120 + row * 18, width: 280, height: 8, fontSize: 8, fontName: "Body", page: 1 },
+      { text: `Right column sentence ${row} with enough words for layout detection.`, x: 304, y: 120 + row * 18, width: 280, height: 8, fontSize: 8, fontName: "Body", page: 1 },
+    ]).flat();
+    const page = { pageNumber: 1, width: 595, height: 790, textItems };
+    expect(detectPageColumns(page).isMultiColumn).toBe(true);
+    const blocks = reconstructDocument([page]).blocks;
+    expect(blocks.every((block) => block.column === "left" || block.column === "right")).toBe(true);
+    expect(blocks.some((block) => block.column === "left")).toBe(true);
+    expect(blocks.some((block) => block.column === "right")).toBe(true);
+  });
+
   it("projects Japanese conference headings with CHILD_OF parents", () => {
     const pages = FIXTURES["japanese-conference"]();
     const result = extractFromPages({

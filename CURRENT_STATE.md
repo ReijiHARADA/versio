@@ -2743,3 +2743,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Tested a generic increase of the `assignColumn` spanning cutoff from 0.48 to 0.55 page width, accounting for native trailing advance width. The Elsevier page-6 mixed stream did not change, so this was insufficient to repair the upstream classification; the threshold is retained only if corpus-safe.
 - Pipeline 12/12 and extraction corpus 56/56 pass. Table metrics were not claimed improved.
+
+### 2026-09-16 wide-column regression fixture
+
+- Added a synthetic regression using 280px native lines in two columns. It verifies that wide column lines are still assigned left/right rather than spanning, while `detectPageColumns` identifies the page as multi-column.
+- Pipeline suite now has 13 tests; all pass. This fixture protects the span-width threshold used during the Elsevier investigation.
