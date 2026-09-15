@@ -2840,3 +2840,4 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Manual sample review of the 24 remaining arXiv diagnostic blocks: the first residuals are diagram labels (U-Net/backbone/loss terms and convolution dimensions), not prose paragraphs. They are a separate figure-region/native-text problem; no paragraph rule was broadened from these samples.
 - Build verification after the post-stitch pass: `npm run build` passed (only existing ineffective dynamic-import warnings). No `.app` bundle was produced.
 - Full test suite after extraction changes: **61 files / 344 tests passed**. This validates that figure-label investigation and cross-column guards have not regressed unrelated import, export, or reader behavior.
+- Re-ran `npm run bench:pdf-extraction` after the latest extraction pass. All cached papers retain source-integrity rate 1.0; the Elsevier meta-review remains the known table limitation (caption/region recall 0.571428). No regression was observed.

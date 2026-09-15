@@ -2815,3 +2815,4 @@ Applied a second, conservative geometry pass after paragraph stitching. Only par
 Manual review of the first residual arXiv samples shows diagram labels (U-Net/backbone/loss terms and convolution dimensions), rather than ordinary prose. These should be handled as figure-region/native text evidence in a later pass; no generic paragraph rule was changed based on them.
 Build verification after the post-stitch pass succeeded; only pre-existing ineffective dynamic-import warnings were emitted. No Tauri `.app` build was performed.
 Full Vitest regression after the extraction changes: **61 test files / 344 tests passed**. No unrelated reader, import, or export regression was observed.
+The extraction benchmark was rerun after the figure-label review. Cached-paper source-integrity remains 1.0; the Elsevier table limitation remains unchanged at caption/region recall 0.571428. No regression was observed.
