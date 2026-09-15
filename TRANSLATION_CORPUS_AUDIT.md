@@ -2894,3 +2894,8 @@ Full application regression after the current extraction changes: **61 files / 3
 ### 2026-09-16 list precision probe
 
 - Education list probe: recall 1.0, provisional precision 0.318. Because exhaustive annotation was unverified, `completeListAnnotations` was reverted. This confirms the benchmark must distinguish annotation coverage from extraction quality.
+
+### 2026-09-16 rotated-grid note boundary
+
+- Added a geometry-only safeguard for rotated native grids that share a baseline with a short prose note. When the rotated side has at least four cells and the horizontal side has at least three prose-like words plus terminal punctuation, the groups remain separate; numeric/header cells do not satisfy the guard.
+- The new synthetic regression passes, focused reading-order tests are 47/47, and the real-paper extraction corpus is 56/56. This is a boundary-preservation improvement; no translation code or packaged app was changed.
