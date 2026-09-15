@@ -1423,9 +1423,68 @@ function groupLinesIntoBlocks(
     }
   }
   flush();
-  const nonEmptyBlocks = blocks.filter((b) => b.text.length > 0);
+  const nonEmptyBlocks = splitStyledHeadingPrefixes(blocks.filter((b) => b.text.length > 0), baseFont);
   logLayoutBlockBoundaries(nonEmptyBlocks);
   return mergeColumnContinuations(nonEmptyBlocks);
+}
+
+/**
+ * Some native extractors put a multi-line numbered subsection and its first
+ * body line in one paragraph stream. Split only when a short, numbered
+ * prefix has a clear native style transition to body text. The conservative
+ * bounds avoid treating ordinary bold inline text or table rows as headings.
+ */
+function splitStyledHeadingPrefixes(blocks: LayoutBlock[], baseFont: number): LayoutBlock[] {
+  const result: LayoutBlock[] = [];
+  for (const block of blocks) {
+    if (block.role !== "paragraph" || block.lines.length < 2) {
+      result.push(block);
+      continue;
+    }
+    const firstFont = block.lines[0].fontSize;
+    const firstFonts = new Set(block.lines[0].items.map((item) => item.fontName));
+    const prefixEnd = block.lines.findIndex((line, index) => {
+      if (index <= 0) return false;
+      const lineFonts = new Set(line.items.map((item) => item.fontName));
+      const nativeStyleDrop = [...lineFonts].every((font) => !firstFonts.has(font));
+      return line.fontSize <= firstFont - Math.max(0.35, baseFont * 0.04) || nativeStyleDrop;
+    });
+    if (prefixEnd <= 0 || prefixEnd > 3) {
+      result.push(block);
+      continue;
+    }
+    const prefixLines = block.lines.slice(0, prefixEnd);
+    const prefixText = layoutPlain(joinLines(prefixLines));
+    const prefixWords = prefixText.split(/\s+/).filter(Boolean);
+    const numberedHeading = /^\d{1,2}(?:\.\d{1,2}){1,3}\.?\s+/.test(prefixText) &&
+      prefixText.length <= 140 && prefixWords.length <= 18 &&
+      !/[.!?。．]$/.test(prefixText);
+    const bodyLine = block.lines[prefixEnd];
+    if (!numberedHeading || bodyLine.x < block.lines[0].x - baseFont * 0.5) {
+      result.push(block);
+      continue;
+    }
+    result.push({
+      role: "heading",
+      text: joinLines(prefixLines),
+      lines: prefixLines,
+      pageStart: prefixLines[0].page,
+      pageEnd: prefixLines[prefixLines.length - 1].page,
+      column: prefixLines[0].column,
+      bbox: blockBbox(prefixLines),
+    });
+    const bodyLines = block.lines.slice(prefixEnd);
+    result.push({
+      role: "paragraph",
+      text: joinLines(bodyLines),
+      lines: bodyLines,
+      pageStart: bodyLines[0].page,
+      pageEnd: bodyLines[bodyLines.length - 1].page,
+      column: bodyLines[0].column,
+      bbox: blockBbox(bodyLines),
+    });
+  }
+  return result;
 }
 
 function logLayoutBlockBoundaries(blocks: LayoutBlock[]): void {

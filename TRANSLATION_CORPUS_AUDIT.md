@@ -2717,3 +2717,7 @@ The extraction investigation is paused at a clean checkpoint. No translation-ser
 ### 2026-09-16 line-level mixed-stream evidence
 
 The opt-in layout diagnostic now reports each line in mixed-font blocks. The Elsevier probe shows two `g_d0_f5` heading lines followed by `g_d0_f1` body lines inside one paragraph block for the Table 5/6 (and analogous Table 7) streams. This confirms the next fix belongs in generic line/block formation; no production role rule was added in this checkpoint.
+
+### 2026-09-16 generic numbered-heading boundary fix
+
+A generic native-style transition rule now splits short numbered subsection prefixes from following body lines when the font family changes. The Elsevier probe separates the two-line numbered headings preceding Tables 5/6/7 from their prose. Pipeline (12/12), extraction corpus (56/56), and typecheck pass. Table-region recall remains an open task.

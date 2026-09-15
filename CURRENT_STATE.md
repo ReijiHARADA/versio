@@ -2710,3 +2710,10 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Expanded the opt-in `PDF_LAYOUT_DEBUG=1` logger to emit line-level native font, x/y, item-count, and text diagnostics for mixed-font blocks.
 - Probe confirms the Elsevier mixed streams begin with two `g_d0_f5` heading lines, then switch to `g_d0_f1` body lines in the same block (Table 5 page 6, Table 6 page 9, and the analogous Table 7 stream page 15). This is direct evidence that the boundary must be introduced during line/block formation.
 - `npx tsc --noEmit` passes. No production extraction behavior changes were made by this diagnostic-only addition.
+
+### 2026-09-16 generic numbered-heading boundary fix
+
+- Implemented `splitStyledHeadingPrefixes`, a generic line/block formation guard. It recognizes a short numbered prefix followed by a native font-family transition to body text, then emits separate heading and paragraph blocks while preserving native lines and provenance.
+- The Elsevier probe now separates the two-line `2.1.1...` heading from the `Table 5 presents...` body (and the analogous Table 6/7 streams). This removes the observed heading/body fusion without paper-specific vocabulary.
+- Safety checks: pipeline 12/12 and extraction corpus 56/56 passed; TypeScript passed. No translation-server or `.app` changes.
+- Table-region recall is not yet claimed as solved; the next step is to evaluate whether the separated body/table stream can be recognized generically without promoting prose or cells incorrectly.
