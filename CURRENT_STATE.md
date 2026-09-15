@@ -2635,3 +2635,10 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - 2026-09-16 expanded benchmark metrics: 26 cached papers report sourceIntegrityRate min/mean 1.0 and figure-caption relation min/mean 1.0. Table-caption relation recall minimum is 0.25 on the Elsevier meta-review; this is a real table-region/caption coverage candidate for manual review, not a translation issue.
 - 2026-09-16 table precision fix: weak `tableLike` evidence now scores 0.68 unless structural grid/rotated-grid evidence is present, preventing long aligned prose from resolving as table while retaining evidence for caption-region membership. Extraction regression remains 56/56; Elsevier table-caption recall remains 0.25 and is still queued for region reconstruction.
 - 2026-09-16 table caption guard: caption blocks are now excluded from structural-grid table promotion, preventing caption text from resolving as table when native cell items share its line. Extraction regression remains 56/56; Elsevier relation recall remains 0.25, so this guard is a precision fix and not a recall claim.
+
+### 2026-09-16 stop checkpoint
+
+- Extraction-only work is paused at a clean, committed checkpoint (`d2de5c2`).
+- Last verification: extraction corpus 56/56 passed; prior full Vitest 61 files / 342 tests passed; TypeScript, oxlint, and web build passed.
+- No translation-server, model, quality-gate, or `.app` build/process was started for this checkpoint.
+- Next extraction task: investigate low table-caption relation recall (0.25) in the Elsevier medical meta-review using generic caption/region boundary evidence; do not add paper-specific rules.
