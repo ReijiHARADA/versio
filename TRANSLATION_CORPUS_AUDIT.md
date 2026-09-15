@@ -2802,3 +2802,5 @@ The x-cluster counter was corrected to compare sorted adjacent coordinates. The 
 ### 2026-09-16 mixed-column guard checkpoint
 
 The corpus diagnostic now records whether a suspicious block carries `mixedColumnEvidence`. In the arXiv medical-image-segmentation fixture, the first suspicious blocks still show left/right x clusters with no marker, indicating that they bypass the geometry split path. This is a diagnostic finding only; no additional x-only production repair was applied. Extraction regressions remain green and the Elsevier table recall baseline is unchanged at 0.571428.
+
+Debug-only merge tracing then confirmed the path is the permissive same-page left→right continuation merge: one arXiv example joins a left block beginning around y≈479 to a right block beginning around y≈184. A simple y-position guard was experimentally rejected because it failed the valid lowercase continuation regression. This narrows the next repair to combined paragraph/provenance evidence rather than a global coordinate threshold.

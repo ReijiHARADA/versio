@@ -1681,6 +1681,10 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       isSentenceContinuation(target.text, block.text)
       && !(hasRotatedNativeLine(target) !== hasRotatedNativeLine(block))
     ) {
+      const debugFlag = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_DEBUG;
+      if (debugFlag === "1" && target.pageStart === block.pageStart && target.column !== block.column) {
+        console.warn(`[PDF_LAYOUT_MERGE] page=${block.pageStart} ${target.column}->${block.column} targetY=${target.lines[0]?.y?.toFixed(1)} blockY=${block.lines[0]?.y?.toFixed(1)} left=${target.text.slice(-100)} right=${block.text.slice(0, 100)}`);
+      }
       target.text = joinHyphenated(target.text, block.text).replace(/\s+/g, " ").trim();
       target.lines = [...target.lines, ...block.lines];
       target.pageEnd = block.pageEnd;

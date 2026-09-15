@@ -2820,6 +2820,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - The corpus regression was rerun after the diagnostic-only changes: 56/56 passed. Same-page column-stitch thresholds remain unchanged because both valid continuation and false interleaving cases are present.
 - Added internal `mixedColumnEvidence` when geometry-based splitting occurs, preventing the later same-page stitch from immediately rejoining those runs. Core and corpus regressions pass; the Elsevier table metrics remain unchanged, so this is a safety guard rather than a claimed accuracy improvement.
 
+- Added debug-only `[PDF_LAYOUT_MERGE]` tracing. On the arXiv fixture it identifies the concrete failure path: independent left/right blocks are joined by the permissive same-page continuation rule (for example target y≈479 → right block y≈184). A stricter y-only guard was tested and reverted because it broke the valid lowercase continuation fixture; the next fix must combine paragraph provenance with this evidence.
+
 - Core reading-order and canonical pipeline suites pass together: 59/59 tests. No extraction behavior changed in this diagnostic iteration.
 
 ### 2026-09-16 corpus diagnostic samples
