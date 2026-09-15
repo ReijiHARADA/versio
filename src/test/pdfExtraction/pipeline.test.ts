@@ -121,6 +121,24 @@ describe("canonical extraction pipeline", () => {
     expect(block?.role).toBe("paragraph");
   });
 
+  it("ends a caption before a cell-like equation line", () => {
+    const pages = [{
+      pageNumber: 1,
+      width: 500,
+      height: 700,
+      textItems: [
+        { text: "Table 2", x: 80, y: 100, width: 45, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+        { text: "Equations used for fitting", x: 130, y: 100, width: 130, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+        ...["y = Cxα", "y = KVmax/(m+x)", "y = 1/(1+Kx^d)", "p < 0.001", "R² = 0.92", "n = 20", "β = 0.4", "γ = 0.8"].map((text, i) => ({
+          text, x: 80 + (i % 4) * 90, y: 125 + Math.floor(i / 4) * 14, width: 70, height: 8, fontSize: 8, fontName: "Helvetica", page: 1,
+        })),
+      ],
+    }];
+    const blocks = reconstructDocument(pages).blocks;
+    expect(blocks.some((block) => block.role === "table_caption" && block.text.includes("Table 2"))).toBe(true);
+    expect(blocks.some((block) => block.role !== "table_caption" && block.text.includes("y = Cx"))).toBe(true);
+  });
+
   it("does not run GROBID or Docling without a local service", () => {
     const pages = FIXTURES["single-column"]();
     const native = nativeDocumentFromExtracted(pages, { pageCount: 1 });

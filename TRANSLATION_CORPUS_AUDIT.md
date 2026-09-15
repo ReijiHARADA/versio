@@ -2587,3 +2587,7 @@ Marketing PDFで確認された、Table caption近傍の文章がtable roleへ�
 ### Running table-reference guard (2026-09-16)
 
 `Table 4 shows ...` のような本文中の表参照をcaptionと誤認しない叙述動詞guardを追加。synthetic pipeline 8/8、extraction corpus 44/44。marketingのcaption relation recallは未改善だが、誤caption化の回帰は確認されていない。
+
+### Caption-to-region boundary guard (2026-09-16)
+
+caption継続中にcell-likeなnative行（複数item、数式記号、高数値密度）が現れたらcaptionを終了するgeometry/content guardを追加。Table 2のcaptionと式行を分離するsynthetic回帰を追加し、pipeline 9/9、extraction corpus 44/44成功。

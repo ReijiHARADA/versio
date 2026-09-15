@@ -651,6 +651,17 @@ function isRepeatedHeadingLead(heading: LayoutLine, body: LayoutLine): boolean {
 function captionShouldContinue(currentText: string, next: LayoutLine, baseFont: number): boolean {
   const nextText = next.text.trim();
   if (!nextText) return false;
+  // Native extraction may place a table's first row or an equation directly
+  // after its caption. Such lines have many independently positioned spans or
+  // dense symbolic/numeric content; continuing the caption would merge the
+  // region into prose and prevent the resolver from seeing its structure.
+  const nextItems = next.items.length;
+  const nextLetters = (nextText.match(/[A-Za-z]/g) ?? []).length;
+  const nextDigits = (nextText.match(/\d/g) ?? []).length;
+  const symbolic = /[=∑∫√∞≈≠≤≥±×÷αβγδ]/u.test(nextText);
+  const cellLike = nextItems >= 8 ||
+    (nextItems >= 4 && (symbolic || nextDigits / Math.max(nextLetters + nextDigits, 1) >= 0.3));
+  if (cellLike) return false;
   // Native streams sometimes emit a caption label (`Table 2`/`Figure 3`)
   // separately from its title.  A title-like continuation is safe only when
   // the current block is exactly that label; never relax this for a complete

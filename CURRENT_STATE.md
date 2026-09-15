@@ -2553,6 +2553,10 @@ marketing-consumer-responseのnative PDFで確認できるTable 1 captionをpart
 
 `Table 4 shows ...` のような本文中の表参照をcaptionと誤認しないよう、caption続きが一般的な叙述動詞で始まる場合をparagraphへ戻す判定を追加。synthetic pipeline 8/8、extraction corpus 44/44成功。marketingのcaption relation recallは未改善だが、誤caption化の新規回帰は確認されていない。
 
+### Caption-to-region boundary guard (2026-09-16)
+
+caption継続中に複数native item・数式記号・高数値密度の行が現れた場合、captionを終了して後続を表/数式候補へ戻すgeometry/content guardを追加。Table 2のcaptionから式行を分離するsynthetic回帰を追加し、pipeline 9/9、extraction corpus 44/44成功。次はmarketingの長文captionとregion relationを再計測する。
+
 ### Extraction guard static verification (2026-09-16)
 
 prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）も成功。`.app`とtranslation-serverは変更していない。次回はmarketingの誤table候補を手動ground truth化し、precisionを数値化する。
