@@ -2614,3 +2614,8 @@ progress ledgerの未解決項目を再集計。構造抽出の残課題は、(1
 ### Extraction guard static verification (2026-09-16)
 
 prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）も成功。`.app`とtranslation-serverは変更していない。次回はmarketingの誤table候補を手動ground truth化し、precisionを数値化する。
+
+### 2026-09-16 extraction continuation verification
+
+- Re-ran `npm run test:extraction-corpus -- --run` after the latest extraction-only checkpoint: 2 files / 44 tests passed (reading-order 21, baseline 23). No regression observed in source integrity, heading, caption, table, list, equation, or page/column ordering fixtures.
+- No translation-server, model, quality-gate, or `.app` changes were made. Remaining extraction work is limited to broader manual cross-format review and conservative rotated-table matrix reconstruction.
