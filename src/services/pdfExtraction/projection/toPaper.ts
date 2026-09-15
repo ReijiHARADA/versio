@@ -212,30 +212,6 @@ export function projectCanonicalToPaper(input: {
     .map((id) => nodeById.get(id))
     .filter((n): n is CanonicalNode => Boolean(n));
 
-  // A few journal PDFs flatten a numeric matrix into one paragraph node per
-  // row. Keep long, contiguous runs out of translation while preserving each
-  // native row and its provenance. The high row-count threshold avoids
-  // catching ordinary numeric prose or small captionless grids.
-  const flattenedNumericRows = new Set<string>();
-  let numericRun: CanonicalNode[] = [];
-  const flushNumericRun = () => {
-    if (numericRun.length >= 10) numericRun.forEach((node) => flattenedNumericRows.add(node.id));
-    numericRun = [];
-  };
-  for (const node of orderedNodes) {
-    const text = (node.text ?? "").trim();
-    const row = node.role === "paragraph" && node.pageStart === node.pageEnd &&
-      text.length <= 180 && /^[+−-]?\d/.test(text) &&
-      (text.match(/\d/g) ?? []).length / Math.max(text.length, 1) >= 0.22 &&
-      !/[.!?]$/.test(text) && (text.match(/[A-Za-z]{2,}/g) ?? []).length <= 2;
-    const previous = numericRun.at(-1);
-    const adjacent = row && previous && previous.pageStart === node.pageStart &&
-      Math.abs((node.boundingBoxes[0]?.y ?? 0) - (previous.boundingBoxes.at(-1)?.y ?? 0)) < 40;
-    if (adjacent) numericRun.push(node);
-    else { flushNumericRun(); if (row) numericRun.push(node); }
-  }
-  flushNumericRun();
-
   const pushBlock = (
     node: CanonicalNode,
     layout: LayoutBlock | undefined,
@@ -288,21 +264,6 @@ export function projectCanonicalToPaper(input: {
           ? layout.lines.map((line) => line.bbox)
           : [];
     const column = node.column ?? layout?.column ?? "single";
-    if (flattenedNumericRows.has(node.id)) {
-      pushBlock(node, layout, {
-        sectionId: currentSectionId,
-        type: "table",
-        pageStart: node.pageStart,
-        pageEnd: node.pageEnd,
-        boundingBoxes: node.boundingBoxes,
-        parentBlockId: null,
-        original: node.text ?? "",
-        translated: "",
-        translationStatus: "skipped",
-        metadata: { tableNumber: "Table", caption: "" },
-      });
-      continue;
-    }
 
     const nativeGrid = node.role === "table" && node.text &&
       !/[!?;]|[.]\s*(?:[A-Za-z]|$)/.test(node.text) &&
@@ -315,7 +276,7 @@ export function projectCanonicalToPaper(input: {
         // provenance signal in that case.
         node.boundingBoxes.length >= 3);
     if (nativeGrid) {
-      const tableText = node.text ?? "";
+      const tableText = node.text;
       const match = tableText.match(/^(?:table|表)\s*(\S+)/i);
       const tableNumber = match
         ? /表/i.test(match[0]) ? `表 ${match[1]}` : `Table ${match[1]}`
