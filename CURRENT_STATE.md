@@ -2154,3 +2154,7 @@ captionless table precision guard後の20 cached PDF横断診断を`test-data/re
 ### 2026-09-16 checkpoint: flattened statistical table diagnostic
 
 `wear-scale.pdf` p.14 の native extractionを目視・canonical出力で確認した。Inter-item correlation matrix の各行が1 native itemへ平坦化され、15行がparagraphとして出力され、後続の表見出し・脚注・本文も同一paragraphへ混在している。既存のmulti-item geometry table evidenceでは検出できない形式であり、単純なnumeric-row relabelはresolver/projection経路で有効にならなかったため採用せず撤回した。次回はpage-local row clusterをCanonical前段で構築し、表領域と本文の境界を同時に検証する。
+
+### 2026-09-16 checkpoint: flattened-row audit metric
+
+`BaselinePaperReport.flattenedNumericRowCount` を追加し、native paragraphとして残る数値行をpaper単位で定量化できるようにした。これは検出のみでCanonical roleや翻訳routingを変更しない。型チェック成功。projectionのnullable table textも明示的に正規化した。次回はこの指標を全cached corpusへ出力し、table-region実装の正解候補を絞る。
