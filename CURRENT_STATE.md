@@ -2318,3 +2318,7 @@ captionless numeric-row の synthetic regression を追加し、6行の反復 x 
 ### Extraction baseline revalidation (2026-09-16)
 
 停止点から再開し、`npm run test:extraction-corpus -- --run` と `npm run bench:pdf-extraction` を完了。real-paper reading-order 21/21、extraction corpus 43/43 を維持し、20 cached papers の `sourceIntegrityRate` は既存対象で 1.0。作業ツリーは clean。現行の最大残存課題は `wear-scale` p.14 の回転表と表外脚注の同一block混在で、次の変更は native x帯連続性を使った一般化検証に限定する。
+
+### Focused regression recheck (2026-09-16)
+
+Reading-order と canonical pipeline の重点回帰を再実行し、2 files / 46 tests が通過。ページ跨ぎ paragraph stitching、column跨ぎ、heading hierarchy、caption/table evidence の合成ケースに安全回帰なし。`wear-scale` p.14 の回転表境界は、現在の geometry guardで脚注lineの分離までは確認済みだが、表セルと後続本文の一部混在が残るため未完了と判定した。

@@ -2420,3 +2420,7 @@ Algorithm/Require本文や数式断片がtable candidateになる例を確認し
 ### Extraction baseline revalidation (2026-09-16)
 
 停止点から再開して extraction corpus と 20-paper benchmark を再実行。reading-order real papers 21/21、extraction corpus 43/43、既存 source-integrity は 1.0 を維持した。回転表の表外脚注混在は未解決のため、翻訳フェーズへは進めていない。
+
+### Focused extraction regression recheck (2026-09-16)
+
+重点回帰（reading-order + canonical pipeline）は 46/46 通過。ページ・列跨ぎ stitching と既存 heading/caption/table 合成ケースに安全回帰なし。回転表の残存混在は未解決のため、抽出完了判定および翻訳フェーズ移行は保留。
