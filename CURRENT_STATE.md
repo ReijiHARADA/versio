@@ -2801,3 +2801,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - The Elsevier ground truth expects Table 1–7. Native extraction resolves Table 1, 3, 4, and 7 captions; Table 2, 5, and 6 appear in `pdftotext -layout` but are absent as literal native items or embedded in paragraph streams in the PDF.js facts.
 - This distinguishes a resolver miss from an upstream native-text representation loss. Adding caption vocabulary or a paper-specific recovery would violate the extraction policy; the next safe route is a generic glyph/geometry caption candidate backed by native items, with explicit low confidence when the literal caption token is absent.
+
+### 2026-09-16 layout diagnostic CLI
+
+- Added `npm run diagnose:pdf-layout -- <pdf> [output.json]`. It records suspicious paragraph blocks whose bbox is much wider than their typical line and whose native x positions form multiple clusters, including assigned columns and provenance text.
+- The Elsevier fixture produces 14 suspicious blocks across 22 pages; this is diagnostic-only and leaves extraction roles unchanged. TypeScript passes.
