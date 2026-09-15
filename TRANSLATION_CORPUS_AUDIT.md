@@ -2684,3 +2684,10 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Lowered weak table evidence below role-promotion threshold (0.68) to protect aligned prose from table misclassification. Regression remains 56/56; the Elsevier table-caption recall case is unchanged and remains a focused region-reconstruction task.
 
 - Added a generic guard excluding `table_caption` blocks from structural-grid role promotion. Extraction regression remains 56/56; Elsevier caption relation recall is unchanged at 0.25 and remains a recall task.
+
+### Extraction checkpoint — 2026-09-16
+
+- Revalidated the expanded extraction corpus: 56/56 tests passed across 27 catalog cases.
+- Hypothesis tested: the remaining Elsevier table-caption recall gap is a native grouping/region-boundary issue, not a translation issue. Current evidence supports investigating native caption/table boundaries before adding more role heuristics.
+- Kept the conservative precision guards; no safety regression was observed in the corpus. Table-caption relation recall remains 0.25 for `medical-deep-learning-meta-review` and is the next targeted extraction task.
+- Translation server, quality gates, cascade, and `.app` were intentionally unchanged.
