@@ -229,6 +229,44 @@ function nearbyTableRowEvidence(block: LayoutBlock, blocks: LayoutBlock[]): bool
   return alignedRows >= 1;
 }
 
+/** Detect a page-local grid when PDF extraction split each visual row into a
+ * separate block and no caption is available on the same page.  Repeated
+ * native x positions across several neighbouring blocks are required, along
+ * with numeric cell density; ordinary prose and bibliography lines do not
+ * satisfy this geometry pattern. */
+function pageGridEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
+  if (block.role === "author" || block.role === "affiliation" || block.role === "title") return 0;
+  const peers = blocks.filter((candidate) =>
+    candidate.pageStart === block.pageStart &&
+    candidate.column === block.column &&
+    candidate.role === "paragraph" &&
+    candidate.lines.length <= 2 &&
+    candidate.lines[0]?.items.length >= 3
+  );
+  if (peers.length < 6) return 0;
+  const peerYs = peers.map((candidate) => candidate.bbox.y);
+  const inGridBand = block.pageStart === peers[0].pageStart &&
+    block.column === peers[0].column &&
+    block.bbox.y >= Math.min(...peerYs) - 14 &&
+    block.bbox.y <= Math.max(...peerYs) + 14 &&
+    block.lines.length <= 2 &&
+    (block.lines[0]?.items.length ?? 0) >= 2;
+  if (!inGridBand) return 0;
+  const numericCells = peers.flatMap((candidate) => candidate.lines[0].items)
+    .filter((item) => /\d/.test(item.text)).length;
+  const allCells = peers.reduce((sum, candidate) => sum + candidate.lines[0].items.length, 0);
+  if (numericCells / Math.max(allCells, 1) < 0.45) return 0;
+  const xCounts = new Map<number, number>();
+  for (const candidate of peers) {
+    for (const item of candidate.lines[0].items) {
+      const x = Math.round(item.x / 8) * 8;
+      xCounts.set(x, (xCounts.get(x) ?? 0) + 1);
+    }
+  }
+  const repeatedColumns = [...xCounts.values()].filter((count) => count >= Math.ceil(peers.length * 0.5)).length;
+  return repeatedColumns >= 3 ? 0.96 : 0;
+}
+
 
 function equationScore(block: LayoutBlock, layout: PageColumnLayout | undefined): number {
   const text = block.text.trim();
@@ -280,6 +318,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const mathRow = layoutRole === "heading" && /[∥∑∫√∞≈≠≤≥±∂∇×÷]/u.test(block.text);
     const nearbyTableCaption = blocks.some((candidate) => candidate.role === "table_caption" &&
       candidate.pageStart === block.pageStart && Math.abs(candidate.bbox.y - block.bbox.y) < 300);
+    const pageGrid = pageGridEvidence(block, blocks);
     const alignedTableRow = block.lines.length === 1 &&
       block.lines[0].items.length >= 2 && tableLike(block) && nearbyTableCaption;
     const tableHeaderRow = block.lines.length === 1 &&
@@ -307,6 +346,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       paragraph: role === "paragraph" ? confidence : 0.22,
       [role]: confidence,
     };
+    if (pageGrid > 0) scoreByRole.table = pageGrid;
     // Some journal/preprint mastheads use a large centered title whose line
     // is title-cased, so the layout pass can mistake it for an author line.
     // Native size/length/position evidence is sufficient to compete for the

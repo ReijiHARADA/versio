@@ -2286,3 +2286,5 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 `wear-scale` p.14 の native geometry を確認。R4〜D1 の各行は x=178.1 の行ラベルと約12px間隔で反復する数値列を持ち、表セル自体は明確な行クラスタになっている。一方、表後の注記と本文が同一 paragraph block に連結されている。caption近接だけを広げると通常の数値本文を誤って table にする恐れがあるため、次の実装候補はページ局所の反復 x 列・y 行クラスタを region evidence として resolver に渡すこと。今回のターンでは自動 relabel は行わず、誤分類を増やさない安全側を維持する。
 
 今回の回帰確認では reading-order suite 41/41、extraction corpus 43/43、lint、TypeScript 型チェックが成功。作業ツリーはクリーンな状態で、`.app` は未ビルド。表領域の自動 relabel は未着手のまま次回へ繰り越す。
+
+ページ局所 grid evidence を追加し、同一ページ・列で6ブロック以上に反復する native x 列と数値セル密度が揃う場合のみ table score 0.96 を生成する。`wear-scale` の flattened numeric row 診断は 58→11 に減少し、通常本文への影響を避けるため caption文字列には依存しない。extraction corpus 43/43 は維持したが、表後注記との境界は未解決で、次回に手動比較する。
