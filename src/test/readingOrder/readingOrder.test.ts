@@ -283,6 +283,19 @@ describe("PDF reading order regression", () => {
     expect(text).toContain("MARGIN_BODY_B");
   });
 
+  it("separates a bold inline subsection label from following prose", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 2, width: 612, height: 792,
+      textItems: [
+        { text: "Subjects.", x: 90, y: 180, width: 48, height: 10, fontSize: 9, fontName: "Helvetica-Bold", page: 2 },
+        { text: "Participants completed the task in a quiet laboratory setting.", x: 144, y: 180, width: 300, height: 10, fontSize: 9, fontName: "Helvetica", page: 2 },
+      ],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    expect(blocks.some((b) => b.role === "heading" && b.text === "Subjects.")).toBe(true);
+    expect(blocks.some((b) => b.role === "paragraph" && b.text.includes("Participants completed"))).toBe(true);
+  });
+
   it("splits a DOI-bearing publisher line before trailing body prose", () => {
     const page: ExtractedPage = {
       pageNumber: 1, width: 612, height: 792,

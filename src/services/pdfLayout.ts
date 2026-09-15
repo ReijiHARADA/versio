@@ -387,6 +387,30 @@ function clusterItemsIntoLines(
     .sort((a, b) => a.y - b.y);
 }
 
+/** Split a bold inline subsection label from the body text that follows it.
+ * Some journal templates keep `Subjects.` / `Experimental Procedure.` and
+ * the first sentence on one baseline.  Treating the whole line as prose
+ * loses the structural label; splitting is allowed only for a short bold
+ * prefix with a sentence-like non-bold suffix, preserving the native items.
+ */
+function splitInlineSubheading(line: LayoutLine): LayoutLine[] {
+  if (Math.abs(line.rotation ?? 0) >= 45 || line.items.length < 2) return [line];
+  const ordered = [...line.items].sort((a, b) => a.x - b.x);
+  let prefixCount = 0;
+  while (prefixCount < ordered.length && /(?:bold|black|heavy|semi[- ]?bold|demi)/i.test(ordered[prefixCount].fontName)) {
+    prefixCount += 1;
+  }
+  if (prefixCount === 0 || prefixCount === ordered.length) return [line];
+  const prefixItems = ordered.slice(0, prefixCount);
+  const suffixItems = ordered.slice(prefixCount);
+  const prefix = joinItemTexts(prefixItems).trim();
+  const suffix = joinItemTexts(suffixItems).trim();
+  if (!/^[A-Z][A-Za-z\s-]{2,58}[.:]$/.test(prefix)) return [line];
+  if (suffix.split(/\s+/).length < 5 || !/^[A-Z(]/.test(suffix)) return [line];
+  const make = (items: ExtractedTextItem[]): LayoutLine => itemsToLine(items, line.column, line.page, line.pageHeight);
+  return [make(prefixItems), make(suffixItems)];
+}
+
 function isRepeatedHeaderFooter(text: string, patterns: Set<string>): boolean {
   return patterns.has(normalizeChromeKey(text));
 }
@@ -830,9 +854,9 @@ function isHeadingLine(line: LayoutLine, baseFont: number): boolean {
   // later compares it with paragraph evidence and document style clusters.
   if (
     lineUsesBoldFace(line) &&
-    /^[A-Z][A-Za-z]*(?:[\s:–—-]+(?:[A-Z][A-Za-z]*|[IVX]+|of|and|the|in|on|for|to))*$/.test(text) &&
+    /^[A-Z][A-Za-z]*(?:[\s:–—-]+(?:[A-Z][A-Za-z]*|[IVX]+|of|and|the|in|on|for|to))*[.:]?$/.test(text) &&
     text.split(/\s+/).length <= 14 &&
-    !/[.!?。．]$/.test(text)
+    !/[!?。．]$/.test(text)
   ) {
     return true;
   }
@@ -1072,7 +1096,9 @@ function buildPageLines(
     );
   });
 
-  const visible = lines.filter((line) => !isEdgeChrome(line, layout, patterns));
+  const structurallySplit = lines.flatMap(splitInlineSubheading);
+
+  const visible = structurallySplit.filter((line) => !isEdgeChrome(line, layout, patterns));
   const splitCandidates = visible.filter((line) => isBodyStartHeading(line.text));
   const splitAt =
     splitCandidates.length > 0

@@ -2631,3 +2631,7 @@ education-learning-analyticsのlist ground truthでlistItemRecall 1.0、sourceIn
 `npm run test:extraction-corpus` を現行ツリーで再実行し、reading-order 21件と
 baseline 23件の計44/44テストが成功した。今回の再確認では実装変更を加えず、
 ページ/段組 paragraph repair と回転表 region化を次の抽出作業として維持する。
+
+同日、native itemのfont境界を使い、短い太字の行内subheadingラベルと後続本文を
+分離する一般ルールを追加した。`Subjects.` + 本文の回帰テストが成功し、実コーパス
+44/44にも安全性回帰はない。翻訳server側は変更していない。
