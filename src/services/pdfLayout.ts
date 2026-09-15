@@ -65,7 +65,6 @@ export type LayoutBlock = {
   column: LayoutColumn;
   bbox: BoundingBox;
   /** Set when geometry already proved this block crossed native columns. */
-  mixedColumnEvidence?: boolean;
 };
 
 function lineUsesBoldFace(line: LayoutLine): boolean {
@@ -1463,7 +1462,6 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
         pageEnd: run[run.length - 1].page,
         column: run[0].column,
         bbox: blockBbox(run),
-        mixedColumnEvidence: true,
       });
       run = [];
     };
@@ -1669,8 +1667,6 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       target &&
       target.role === "paragraph" &&
       block.role === "paragraph" &&
-      !target.mixedColumnEvidence &&
-      !block.mixedColumnEvidence &&
       ((target.column === "left" && block.column === "right" && target.pageEnd === block.pageStart) ||
         // A full-width paragraph can continue below an intervening figure in
         // the first physical column of the same page. The continuation test

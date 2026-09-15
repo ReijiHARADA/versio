@@ -2818,7 +2818,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Reviewed `medical-image-segmentation-deep-learning`: its first suspicious blocks are genuine left/right prose interleaving (x≈50 and x≈317), not harmless table geometry. The report is actionable, but wide blocks still require table/list safeguards before any production split.
 
 - The corpus regression was rerun after the diagnostic-only changes: 56/56 passed. Same-page column-stitch thresholds remain unchanged because both valid continuation and false interleaving cases are present.
-- Added internal `mixedColumnEvidence` when geometry-based splitting occurs, preventing the later same-page stitch from immediately rejoining those runs. Core and corpus regressions pass; the Elsevier table metrics remain unchanged, so this is a safety guard rather than a claimed accuracy improvement.
+- A geometry-split `mixedColumnEvidence` guard was tested but reverted because it broke the valid lowercase continuation fixture; no such production guard is currently active.
 
 - Added debug-only `[PDF_LAYOUT_MERGE]` tracing. On the arXiv fixture it identifies the concrete failure path: independent left/right blocks are joined by the permissive same-page continuation rule (for example target y≈479 → right block y≈184). A stricter y-only guard was tested and reverted because it broke the valid lowercase continuation fixture; the next fix must combine paragraph provenance with this evidence.
 
@@ -2826,7 +2826,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 ### 2026-09-16 corpus diagnostic samples
 
-- Added `mixedColumnEvidence` to corpus diagnostic samples. The segmentation guard is not present on the first arXiv suspicious samples (the blocks retain left/right x clusters), so the next investigation must trace why those blocks bypass geometry splitting before any broader production rule is attempted.
+- The corpus diagnostic remains focused on x-cluster samples; the next investigation must trace paragraph provenance before any broader production rule is attempted.
 
 - Extended `diagnose:pdf-corpus` to retain up to five page/x-cluster/column/text samples per paper, so manual review can be resumed without rerunning extraction or guessing which blocks produced a count.
 - TypeScript passes; extraction behavior and regression metrics are unchanged.
