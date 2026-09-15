@@ -2486,3 +2486,7 @@ linguistics PDFの数値軸ラベルを表と混同しないため、同一ペ�
 ### Chart evidence corpus probe (2026-09-16)
 
 chart-label evidenceを含むbenchmarkを再実行。対象は`power-over-skin` 4 nodes、`wear-scale` 7 nodes、`linguistics-language-model-physics` 123 nodes。linguisticsのflattenedNumericRowCountは10で、他paperのsourceIntegrityRate=1.0を維持。pipeline 5/5、extraction corpus 44/44。123件はfigure/chartの軸・系列ラベルが多いPDFのため、次回は手動サンプルでfalse positiveを確認し、必要なら閾値を調整する。
+
+### Chart-axis regression fixture (2026-09-16)
+
+同一x帯に反復する5本の数値ラベルをsynthetic fixture化。`repeated-numeric-chart-label` Evidenceが付与され、table override threshold未満であることを確認（pipeline 6/6）。表セル誤分類を防ぐ回帰として保持する。

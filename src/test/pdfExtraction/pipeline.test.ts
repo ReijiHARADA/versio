@@ -64,6 +64,27 @@ describe("canonical extraction pipeline", () => {
     expect(candidates.filter((candidate) => (candidate.roleScores.table ?? 0) >= 0.94).length).toBeGreaterThanOrEqual(6);
   });
 
+  it("keeps repeated chart-axis labels out of table evidence", () => {
+    const textItems = Array.from({ length: 5 }, (_, index) => ({
+      text: `${(index * 0.005).toFixed(3)}`,
+      x: 70,
+      y: 120 + index * 18,
+      width: 30,
+      height: 8,
+      fontSize: 8,
+      fontName: "Helvetica",
+      page: 1,
+    }));
+    const candidates = generateGenericCandidates([
+      { pageNumber: 1, width: 500, height: 700, textItems },
+    ]).candidates;
+    const chartLabels = candidates.filter((candidate) =>
+      candidate.evidence.some((evidence) => evidence.label === "repeated-numeric-chart-label")
+    );
+    expect(chartLabels.length).toBeGreaterThanOrEqual(3);
+    expect(chartLabels.every((candidate) => (candidate.roleScores.table ?? 0) < 0.94)).toBe(true);
+  });
+
   it("does not run GROBID or Docling without a local service", () => {
     const pages = FIXTURES["single-column"]();
     const native = nativeDocumentFromExtracted(pages, { pageCount: 1 });
