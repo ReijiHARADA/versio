@@ -2512,3 +2512,7 @@ Resolved table caption-to-table `CAPTION_OF` relations are now reported with rec
 ### Table relation metric correction (2026-09-16)
 
 table caption relation precisionの分母定義を修正し、figure relationが混入しないようにした。指標は診断用で、抽出・翻訳挙動は変更していない。
+
+### Table relation benchmark rerun (2026-09-16)
+
+20-paper benchmark再生成。table relation metric対象10本のprecision平均は1.0、recallはcaption分割／未検出により分野・形式ごとの差が残る。wear-scale回転captionはrecall 0で、未解決課題として保持。

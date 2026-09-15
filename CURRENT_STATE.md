@@ -2410,3 +2410,7 @@ Benchmark report now exposes `tableCaptionRelationRecall` and `tableCaptionRelat
 ### Table relation metric correction (2026-09-16)
 
 `tableCaptionRelationPrecision` の分母を全caption relationからtable caption起点のrelationだけへ修正。figure relation混入による過小評価を除去。typecheck・lint成功。
+
+### Table relation benchmark rerun (2026-09-16)
+
+修正版 benchmark を20-paperで再生成。table relation metric対象10本で precision平均1.0（table起点の誤relationなし）。recallは caption分割・未検出を含み、wear-scaleは0（回転caption provenance未解決）、OzCHIは1.0。次はこのrecall欠損の手動分類。
