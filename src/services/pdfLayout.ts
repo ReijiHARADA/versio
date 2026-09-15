@@ -1423,7 +1423,17 @@ function groupLinesIntoBlocks(
     }
   }
   flush();
-  return mergeColumnContinuations(blocks.filter((b) => b.text.length > 0));
+  const nonEmptyBlocks = blocks.filter((b) => b.text.length > 0);
+  logLayoutBlockBoundaries(nonEmptyBlocks);
+  return mergeColumnContinuations(nonEmptyBlocks);
+}
+
+function logLayoutBlockBoundaries(blocks: LayoutBlock[]): void {
+  if (typeof process === "undefined" || process.env.PDF_LAYOUT_DEBUG !== "1") return;
+  for (const [index, block] of blocks.entries()) {
+    const fonts = [...new Set(block.lines.flatMap((line) => line.items.map((item) => item.fontName)))];
+    console.warn(`[PDF_LAYOUT_BLOCK] index=${index} role=${block.role} page=${block.pageStart}-${block.pageEnd} lines=${block.lines.length} fonts=${fonts.join(",")} text=${block.text.slice(0, 180)}`);
+  }
 }
 
 function isSentenceContinuation(left: string, right: string): boolean {
