@@ -2242,3 +2242,7 @@ native image placement収集に `paintImageXObjectRepeat` を追加し、repeat 
 ### 2026-09-16 checkpoint: overlap threshold revalidation
 
 全面画像の面積判定（75%超）後に20 cached papersを再走査し、重なり候補は前回と同じ5528 items（design-for-wearability 3、interactive-jewellery 15、linguistics 5411、step-to-charge 99）。閾値変更による候補増減はなく、進捗台帳にも再計測結果を反映した。次回はこの候補から代表ページを画像レンダリングして手動ラベル化する。
+
+### 2026-09-16 checkpoint: manual figure-label review
+
+`step-to-charge` p.7 と `linguistics-language-model-physics` p.7 をレンダリング確認し、重なり候補が図内ラベル／軸値であることを確認。両件を severity 0 の accepted review case として `extraction-manual-review-v1.json` に記録した。本文誤除外を示す証拠は現時点でなく、画像 geometry 除外条件は維持する。
