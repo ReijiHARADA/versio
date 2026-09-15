@@ -2358,3 +2358,7 @@ x帯ジャンプguard後にextraction corpus 43/43と20-paper benchmarkを再実
 ### Canonical role probe after x-band split (2026-09-16)
 
 `wear-scale` p.14 のCanonical出力を確認。表セル由来の短い数値blockは paragraph/translationStatus=skipped として保持され、表外Cronbach注記・後続本文は独立pending paragraphになった。表行のCanonical `table` 昇格は未達だが、翻訳へ誤送信される混在blockは解消された。次回は rotated row をtable regionへ昇格するresolver evidenceを、既存precision guardを維持して検証する。
+
+### Rotated table canonical role audit (2026-09-16)
+
+x帯split後のCanonical出力を監査。表セル行と表外注記は別blockになり、混在blockの翻訳送信は防止された。一方、回転表の `Table` ラベルとcaption本文が別native lineへ分離されるため、既存caption依存relation resolverでは表行をCanonical `table` roleへ昇格できない。caption文字列を論文専用に再構成する変更は避け、次回はrotation-aware caption provenanceを一般的なgeometry evidenceとして設計する。
