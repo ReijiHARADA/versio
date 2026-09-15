@@ -2677,3 +2677,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Native/Layout probe for `medical-deep-learning-meta-review` found explicit caption blocks for Table 1 (page 2), Table 3/4 (page 3), and Table 7 (page 13).
 - Table 2 is absorbed into a table-region stream; Table 5/6 labels appear inside long paragraph blocks that also contain section prose. This confirms the remaining recall loss is at line/block formation (mixed native streams), before resolver evidence precedence.
 - No paper-specific rule was added. Next safe step is a generic boundary split based on caption-label geometry and mixed table/prose stream evidence, with a synthetic regression fixture before touching the real-PDF path.
+
+### 2026-09-16 synthetic boundary probe
+
+- Attempted a synthetic caption-plus-grid fixture to validate a broader caption split. The fixture showed the current line grouping can merge a label with a two-item header; the proposed short-cell rule did not yield a stable canonical caption, so it was reverted rather than risking caption title loss in other formats.
+- No production behavior changed in this probe. The next boundary rule must operate on stronger vertical/geometry separation and preserve multi-line caption titles.

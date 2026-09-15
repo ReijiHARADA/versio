@@ -2701,3 +2701,5 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Added page-grid precedence guard for existing table captions. Recall stayed 0.571, so the remaining misses are upstream native block formation or downstream relation construction; no metric inflation was introduced. Extraction corpus remains 56/56.
 
 - Native/Layout diagnostic for the Elsevier meta-review: Table 1, 3, 4, and 7 survive as explicit caption blocks; Table 2 is absorbed into a table stream, while Table 5/6 labels are embedded in long mixed paragraph blocks. The remaining recall loss is therefore line/block formation, not resolver precedence. A generic geometry-based boundary rule is required; no paper-specific condition was added.
+
+- Synthetic caption-plus-grid probe was attempted and reverted: a naive short-cell continuation rule did not produce a stable canonical caption and could lose multi-line caption titles. No production behavior changed; future boundary logic must require stronger geometry evidence.
