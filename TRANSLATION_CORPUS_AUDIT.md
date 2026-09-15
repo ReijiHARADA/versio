@@ -2666,3 +2666,5 @@ The extraction benchmark was regenerated after the latest boundary and table evi
 - Full-suite verification after provenance fix: 61 Vitest files / 342 tests passed and oxlint passed. Extraction corpus remains 44/44; translation-server and `.app` remain untouched.
 
 - Added `test-fixtures/real-papers/corpus-coverage.json` to make current discipline/format gaps reproducible. It records 21 catalog entries and 20 cached PDFs; medicine and machine-learning coverage still need OA additions before the extraction goal can be complete.
+
+- Catalog entries now carry explicit `discipline` and `selectionReason` metadata. The current 21-paper inventory is intentionally recorded as imbalanced (HCI 9; ergonomics 3; linguistics/design research 2 each; cognitive psychology, marketing, education, neuroscience, economics 1 each) so OA expansion can target the gaps.

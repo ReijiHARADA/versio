@@ -39,8 +39,19 @@
     "machine-learning"
   ],
   "notes": [
-    "Catalog currently has no explicit discipline field; formatFamily is not a discipline label.",
+    "Catalog now includes explicit discipline and selectionReason metadata; counts reflect inventory, not balanced sampling.",
     "Medicine and machine-learning entries are absent from the current catalog and require OA metadata/PDF additions before final extraction audit.",
     "This report is inventory only; no extraction or translation behavior is changed."
-  ]
+  ],
+  "disciplineCounts": {
+    "cognitive-psychology": 1,
+    "design-research": 2,
+    "economics": 1,
+    "education": 1,
+    "ergonomics": 3,
+    "hci": 9,
+    "linguistics": 2,
+    "marketing": 1,
+    "neuroscience": 1
+  }
 }
