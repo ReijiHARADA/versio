@@ -405,11 +405,28 @@ function splitInlineSubheading(line: LayoutLine): LayoutLine[] {
   while (prefixCount < ordered.length && /(?:bold|black|heavy|semi[- ]?bold|demi)/i.test(ordered[prefixCount].fontName)) {
     prefixCount += 1;
   }
-  if (prefixCount === 0 || prefixCount === ordered.length) return [line];
+  if (prefixCount === ordered.length) return [line];
   const prefixItems = ordered.slice(0, prefixCount);
   const suffixItems = ordered.slice(prefixCount);
   const prefix = joinItemTexts(prefixItems).trim();
   const suffix = joinItemTexts(suffixItems).trim();
+  if (prefixCount === 0) {
+    const firstFont = ordered[0]?.fontName;
+    const transition = ordered.findIndex((item, index) => index > 0 && item.fontName !== firstFont);
+    if (transition > 0 && transition < ordered.length) {
+      const bodyItems = ordered.slice(0, transition);
+      const headingItems = ordered.slice(transition);
+      const bodyText = joinItemTexts(bodyItems).trim();
+      const headingText = joinItemTexts(headingItems).trim();
+      if (bodyText.length >= 12 && headingText.length <= 120 &&
+          headingText.split(/\s+/).length <= 14 &&
+          /^\d{1,2}(?:\.\d{1,2}){1,3}\.\s*[A-Z]/.test(headingText)) {
+        const make = (items: ExtractedTextItem[]): LayoutLine => itemsToLine(items, line.column, line.page, line.pageHeight);
+        return [make(bodyItems), make(headingItems)];
+      }
+    }
+    return [line];
+  }
   if (!/^[A-Z][A-Za-z\s-]{2,58}[.:]$/.test(prefix)) return [line];
   if (suffix.split(/\s+/).length < 5 || !/^[A-Z(]/.test(suffix)) return [line];
   const make = (items: ExtractedTextItem[]): LayoutLine => itemsToLine(items, line.column, line.page, line.pageHeight);

@@ -466,6 +466,17 @@ describe("PDF reading order regression", () => {
     expect(blocks.find((block) => block.text.includes("Figure 10"))?.role).toBe("paragraph");
   });
 
+  it("splits a native font transition into a numbered subsection heading", () => {
+    const items = [
+      { text: "Earlier prose ends", x: 54, y: 180, width: 120, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      { text: "here.", x: 178, y: 180, width: 28, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      { text: "2.1.", x: 220, y: 180, width: 24, height: 10, fontSize: 10, fontName: "HeadingFace", page: 1 },
+      { text: "Subsection", x: 247, y: 180, width: 58, height: 10, fontSize: 10, fontName: "HeadingFace", page: 1 },
+    ];
+    const { blocks } = reconstructDocument([{ pageNumber: 1, width: 612, height: 792, textItems: items }]);
+    expect(blocks.some((block) => block.role === "heading" && block.text.includes("2.1."))).toBe(true);
+  });
+
   it("single-column keeps linear order", () => {
     const { blocks } = reconstructDocument(FIXTURES["single-column"]());
     const text = joined(bodyBlocks(blocks));
