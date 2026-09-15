@@ -2522,3 +2522,7 @@ chart labelの翻訳境界変更後、既存の全Vitest（61 files / 335 tests�
 ### Ground-truth coverage audit (2026-09-16)
 
 既存ground truth 6 filesを集計。headingsは3 papers、headingHierarchyは1、figureCaptionsは2、tableCaptionsは4、tableRegionsは3、listItemsは1、tokensInOrderは1のみ。authors/affiliationsは未注釈。自動corpus greenでも、publisher横断のprecision/recall完了を示さないため、次工程で代表paperを手動注釈する。
+
+### Education caption ground-truth expansion (2026-09-16)
+
+教育系PDFのground truthをTable 1–11、Figure 1–5へ拡張（短いcaption本文のみ）。`completeAnnotations=false`としてrecall評価に限定。benchmarkでfigureCaptionRecall=1、tableCaptionRecall=1、sourceIntegrityRate=1。extraction corpus 44/44。直接baseline testは専用configのexclude対象だったため実行不可だが、corpus configで再確認済み。
