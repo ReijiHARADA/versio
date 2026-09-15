@@ -2354,3 +2354,7 @@ x帯guard後のTypeScript型チェック、lint、buildが成功（既知のpdfj
 ### Rotated table boundary corpus verification (2026-09-16)
 
 x帯ジャンプguard後にextraction corpus 43/43と20-paper benchmarkを再実行。`wear-scale` flattenedNumericRowCountは11→4へ減少、rotatedLineCount=33、sourceIntegrityRate=1.0を維持。他の既存real-paper回帰は通過。残る4行は表外注記とのregion統合を含むため、完全解決とは扱わず手動レビュー対象に残す。
+
+### Canonical role probe after x-band split (2026-09-16)
+
+`wear-scale` p.14 のCanonical出力を確認。表セル由来の短い数値blockは paragraph/translationStatus=skipped として保持され、表外Cronbach注記・後続本文は独立pending paragraphになった。表行のCanonical `table` 昇格は未達だが、翻訳へ誤送信される混在blockは解消された。次回は rotated row をtable regionへ昇格するresolver evidenceを、既存precision guardを維持して検証する。

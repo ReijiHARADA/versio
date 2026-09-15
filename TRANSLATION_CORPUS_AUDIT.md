@@ -2456,3 +2456,7 @@ x帯guard後に型チェック、lint、buildを実行し成功。既知のpdfjs
 ### Rotated table boundary corpus verification (2026-09-16)
 
 x帯ジャンプguard後、extraction corpus43/43と20-paper benchmarkを再実行。`wear-scale` flattenedNumericRowCountは11から4へ減少し、rotatedLineCount=33、sourceIntegrityRate=1.0を維持。残る表外注記境界は手動レビュー対象。
+
+### Canonical role probe after x-band split (2026-09-16)
+
+`wear-scale` p.14で、表セル由来blockは skipped paragraphとして保持され、Cronbach注記・後続本文は独立pending paragraphになった。表行のCanonical table昇格は未達だが、混在blockの翻訳送信は解消。
