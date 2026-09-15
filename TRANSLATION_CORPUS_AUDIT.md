@@ -2866,3 +2866,7 @@ Full application regression after the current extraction changes: **61 files / 3
 ### 2026-09-16 residual sample review
 
 - Native sample review separates diagram labels, equation/grammar notation, and genuine two-column prose/list interleaving. Their shared x-cluster shape means geometry alone cannot safely relabel them; the extraction resolver must combine role, rotation, image/figure evidence, and neighboring structure before changing production behavior.
+
+### 2026-09-16 Elsevier representation check
+
+- Cross-checked pages 4–7 using `pdftotext -layout` and the PDF.js-native pipeline. Table 2 is referenced in prose and does not form a standalone native caption, while Table 5 does. The remaining recall gap is therefore an upstream native representation issue; no caption guess or paper-specific rule was added.

@@ -2897,3 +2897,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 residual sample review
 
 - Reviewed refreshed arXiv samples at native geometry. `medical-image-segmentation-deep-learning` residuals are compact diagram labels (U-Net/backbone/loss terms), `linguistics-language-model-physics` residuals are equation/grammar notation, and `cognitive-psychology-gpt3` includes genuine two-column prose/list interleaving. Since these classes share wide x-cluster signatures but different semantics, a geometry-only production exclusion would be unsafe; retain diagnostic-only classification pending combined role/figure evidence.
+
+### 2026-09-16 Elsevier native-vs-layout comparison
+
+- Compared `pdftotext -layout` pages 4–7 of the cached Elsevier meta-review with PDF.js-native extraction. `Table 2` appears as a prose parenthetical reference and its visual caption/table content is not emitted as a standalone native caption; `Table 5` is present as a native caption. This confirms the missing-caption cases are representation loss/stream embedding, not a safe resolver relabel. No fallback parser or OCR was introduced.
