@@ -153,6 +153,40 @@ describe("Paper Package", () => {
     expect(String(figure?.metadata.imageUrl)).toMatch(/^assets\//);
   });
 
+  it("recovers an incomplete package from .bak leftovers", async () => {
+    const fs = createMemoryFileSystem();
+    const { paper, sections, blocks } = sample();
+    await persistPaperPackage(fs, projectionToPackage({ paper, sections, blocks }));
+
+    // Simulate a crashed atomic swap: live dir missing core files, .bak still complete.
+    const ja = await fs.readText("papers/paper-1/ja.md");
+    const original = await fs.readText("papers/paper-1/original.md");
+    const structure = await fs.readText("papers/paper-1/structure.json");
+    const paperJson = await fs.readText("papers/paper-1/paper.json");
+    expect(ja && original && structure && paperJson).toBeTruthy();
+
+    await fs.writeText("papers/paper-1.bak/ja.md", ja!);
+    await fs.writeText("papers/paper-1.bak/original.md", original!);
+    await fs.writeText("papers/paper-1.bak/structure.json", structure!);
+    await fs.writeText("papers/paper-1.bak/paper.json", paperJson!);
+    const assetFiles = (await fs.list("papers/paper-1/assets")).filter((p) =>
+      p.includes("/assets/")
+    );
+    for (const path of assetFiles) {
+      const bytes = await fs.readBytes(path);
+      if (!bytes) continue;
+      await fs.writeBytes(path.replace("papers/paper-1/", "papers/paper-1.bak/"), bytes);
+    }
+
+    await fs.remove("papers/paper-1/ja.md");
+    await fs.remove("papers/paper-1/original.md");
+
+    const loaded = await loadPaperPackage(fs, "paper-1");
+    expect(loaded.translatedMarkdown).toContain("ウェアラブル");
+    expect(await fs.exists("papers/paper-1/ja.md")).toBe(true);
+    expect(await fs.exists("papers/paper-1/original.md")).toBe(true);
+  });
+
   it("rejects duplicate block IDs", () => {
     const { paper, sections, blocks } = sample();
     const pkg = projectionToPackage({ paper, sections, blocks });

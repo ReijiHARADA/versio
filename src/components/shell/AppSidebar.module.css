@@ -391,8 +391,8 @@
 
 .item.dropTarget {
   background: var(--color-accent-light);
-  outline: 2px dashed var(--color-accent);
-  outline-offset: -2px;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 2px var(--color-accent);
   color: var(--color-accent);
 }
 
@@ -682,10 +682,19 @@
   pointer-events: auto;
 }
 
-.dropinside { background: var(--color-accent-light); outline: 1px dashed var(--color-accent); outline-offset: -1px; }
+.dropinside {
+  background: var(--color-accent-light);
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
 .dropbefore { box-shadow: inset 0 2px var(--color-accent); }
 .dropafter { box-shadow: inset 0 -2px var(--color-accent); }
-.invalidDrop { background: #c5221f18; outline: 1px dashed #c5221f; cursor: not-allowed; }
+.invalidDrop {
+  background: #c5221f18;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px #c5221f;
+  cursor: not-allowed;
+}
 .invalidDrop * { cursor: not-allowed !important; }
 .paperInvalid:hover { outline: 1px dashed #c5221f; cursor: not-allowed; }
 .rootDrop { display: none; }

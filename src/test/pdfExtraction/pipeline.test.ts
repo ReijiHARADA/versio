@@ -5,6 +5,7 @@ import { FIXTURES } from "../readingOrder/builders";
 import { grobidEnricher } from "../../services/pdfExtraction/enrichers/grobid";
 import { doclingEnricher } from "../../services/pdfExtraction/enrichers/docling";
 import { nativeDocumentFromExtracted } from "../../services/pdfExtraction/native/fromExtracted";
+import { generateGenericCandidates } from "../../services/pdfExtraction/generic/candidates";
 
 describe("canonical extraction pipeline", () => {
   it("projects Japanese conference headings with CHILD_OF parents", () => {
@@ -43,6 +44,13 @@ describe("canonical extraction pipeline", () => {
     expect(viaWrapper.blocks.map((b) => b.type)).toEqual(
       viaPipeline.blocks.map((b) => b.type)
     );
+  });
+
+  it("does not attach heading evidence to metadata blocks", () => {
+    const candidates = generateGenericCandidates(FIXTURES["single-column"]()).candidates;
+    const title = candidates.find((candidate) => candidate.role === "title");
+    expect(title).toBeTruthy();
+    expect(title?.roleScores.heading).toBeUndefined();
   });
 
   it("does not run GROBID or Docling without a local service", () => {

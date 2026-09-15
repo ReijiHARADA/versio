@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Settings } from "lucide-react";
-import { getSetting, saveSetting, clearTranslationCache } from "../../services/database";
+import { getSetting, saveSetting, clearTranslationCache, restoreTranslationCache } from "../../services/database";
 import { checkMADLADServer } from "../../services/translation/madladEngine";
 import { checkOllamaAvailability } from "../../services/llm/ollamaProvider";
 import { addSamplePaper } from "../../services/samplePaper";
 import { useLibraryCache } from "../../stores/libraryCache";
+import { showToast } from "../../stores/toastStore";
 import { samplePaper } from "../../data/samplePaper";
 import {
   mergeTranslationSettingsV2,
@@ -41,9 +42,7 @@ export function SettingsScreen() {
     models: [],
   });
   const [activeSection, setActiveSection] = useState<SettingsSectionId>("reading");
-  const [confirmClearCache, setConfirmClearCache] = useState(false);
   const [clearingCache, setClearingCache] = useState(false);
-  const [cacheMessage, setCacheMessage] = useState<string | null>(null);
   const contentRef = useRef<HTMLElement>(null);
   const settingsRef = useRef(settings);
 
@@ -133,20 +132,37 @@ export function SettingsScreen() {
     }
   };
 
-  const handleConfirmClearCache = async () => {
+  const handleClearCache = async () => {
+    if (clearingCache) return;
     setClearingCache(true);
-    setCacheMessage(null);
     try {
-      const count = await clearTranslationCache();
-      setConfirmClearCache(false);
-      setCacheMessage(
-        count > 0
-          ? `翻訳キャッシュを削除しました（${count}件）`
-          : "削除するキャッシュはありませんでした"
-      );
+      const { count, snapshot } = await clearTranslationCache();
+      if (count === 0) {
+        showToast({ kind: "info", message: "削除するキャッシュはありませんでした" });
+        return;
+      }
+      showToast({
+        kind: "info",
+        message: `翻訳キャッシュを削除しました（${count}件）`,
+        actionLabel: "元に戻す",
+        onAction: () => {
+          void restoreTranslationCache(snapshot)
+            .then(() => {
+              showToast({ kind: "info", message: "翻訳キャッシュを元に戻しました" });
+            })
+            .catch((error: unknown) => {
+              console.error("Failed to restore translation cache:", error);
+              showToast({
+                kind: "error",
+                message:
+                  error instanceof Error ? error.message : "キャッシュの復元に失敗しました",
+              });
+            });
+        },
+      });
     } catch (error) {
       console.error("Failed to clear translation cache:", error);
-      setCacheMessage("削除に失敗しました");
+      showToast({ kind: "error", message: "削除に失敗しました" });
     } finally {
       setClearingCache(false);
     }
@@ -156,9 +172,23 @@ export function SettingsScreen() {
     setActiveSection(id);
     const element = document.getElementById(settingsSectionElementId(id));
     const root = contentRef.current;
-    if (element && root) {
-      root.scrollTo({ top: element.offsetTop - 24, behavior: "smooth" });
+    if (!element || !root) return;
+
+    // First section: reset to the top so the page title isn't clipped under the
+    // scrollport (offsetTop is unreliable vs. the padded scroll container).
+    if (id === SETTINGS_SECTIONS[0]?.id) {
+      root.scrollTo({ top: 0, behavior: "smooth" });
+      return;
     }
+
+    const top =
+      element.getBoundingClientRect().top -
+      root.getBoundingClientRect().top +
+      root.scrollTop;
+    root.scrollTo({
+      top: Math.max(0, top - 24),
+      behavior: "smooth",
+    });
   };
 
   useEffect(() => {
@@ -168,14 +198,23 @@ export function SettingsScreen() {
     const update = () => {
       frame = 0;
       const atBottom = root.scrollTop + root.clientHeight >= root.scrollHeight - 8;
-      const next = atBottom
-        ? SETTINGS_SECTIONS[SETTINGS_SECTIONS.length - 1].id
-        : (SETTINGS_SECTIONS.filter(
-            (section) =>
-              (document.getElementById(settingsSectionElementId(section.id))?.offsetTop ??
-                Infinity) <=
-              root.scrollTop + 80
-          ).at(-1)?.id ?? SETTINGS_SECTIONS[0].id);
+      if (atBottom) {
+        const last = SETTINGS_SECTIONS[SETTINGS_SECTIONS.length - 1].id;
+        setActiveSection((current) => (current === last ? current : last));
+        return;
+      }
+      if (root.scrollTop <= 8) {
+        const first = SETTINGS_SECTIONS[0].id;
+        setActiveSection((current) => (current === first ? current : first));
+        return;
+      }
+      const rootTop = root.getBoundingClientRect().top;
+      const next =
+        SETTINGS_SECTIONS.filter((section) => {
+          const el = document.getElementById(settingsSectionElementId(section.id));
+          if (!el) return false;
+          return el.getBoundingClientRect().top - rootTop <= 80;
+        }).at(-1)?.id ?? SETTINGS_SECTIONS[0].id;
       setActiveSection((current) => (current === next ? current : next));
     };
     const onScroll = () => {
@@ -215,15 +254,8 @@ export function SettingsScreen() {
           </section>
           <section id={settingsSectionElementId("data")} className={styles.section}>
             <StorageSettingsSection
-              confirming={confirmClearCache}
               busy={clearingCache}
-              message={cacheMessage}
-              onRequestClear={() => {
-                setCacheMessage(null);
-                setConfirmClearCache(true);
-              }}
-              onConfirmClear={() => void handleConfirmClearCache()}
-              onCancelClear={() => setConfirmClearCache(false)}
+              onClearCache={() => void handleClearCache()}
             />
           </section>
           <section id={settingsSectionElementId("advanced")} className={styles.section}>

@@ -26,6 +26,7 @@
 
 .dropTarget {
   border-color: var(--color-accent);
+  border-radius: var(--radius-lg);
   box-shadow: 0 0 0 1px var(--color-accent);
 }
 

@@ -96,6 +96,7 @@ describe("real jewelry-corpus PDFs", () => {
         );
       }
 
+
       for (const forbidden of checks.forbidHeadingContains ?? []) {
         expect(
           headings.some((h) => h.toLowerCase().includes(forbidden.toLowerCase())),

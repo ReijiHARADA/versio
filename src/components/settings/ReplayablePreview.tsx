@@ -15,8 +15,8 @@ type ReplayablePreviewProps = {
 };
 
 /**
- * Plays a short GIF a few times, then freezes on the poster with a replay control.
- * Reduced-motion: poster only.
+ * When the preview enters the viewport, plays the GIF a few times, then freezes
+ * on the poster with a replay control. Reduced-motion: poster only.
  */
 export function ReplayablePreview({
   src,
@@ -26,10 +26,13 @@ export function ReplayablePreview({
   still = false,
   alt = "",
 }: ReplayablePreviewProps) {
-  const [reduceMotion, setReduceMotion] = useState(false);
-  const [playing, setPlaying] = useState(!still);
-  const [token, setToken] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const [inView, setInView] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [autoStarted, setAutoStarted] = useState(false);
+  const [token, setToken] = useState(0);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -39,12 +42,35 @@ export function ReplayablePreview({
     return () => mq.removeEventListener("change", sync);
   }, []);
 
+  useEffect(() => {
+    if (still || reduceMotion) return;
+    const el = rootRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) setInView(true);
+      },
+      { threshold: 0.4, rootMargin: "0px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [still, reduceMotion]);
+
   const stopTimer = () => {
     if (timerRef.current != null) {
       window.clearTimeout(timerRef.current);
       timerRef.current = null;
     }
   };
+
+  // First time on screen → start ~3 cycles (not on mount while off-screen).
+  useEffect(() => {
+    if (still || reduceMotion || !inView || autoStarted) return;
+    setAutoStarted(true);
+    setToken((n) => n + 1);
+    setPlaying(true);
+  }, [still, reduceMotion, inView, autoStarted]);
 
   useEffect(() => {
     stopTimer();
@@ -67,17 +93,17 @@ export function ReplayablePreview({
     : `${src}${src.includes("?") ? "&" : "?"}r=${token}`;
 
   return (
-    <div className={styles.root}>
+    <div ref={rootRef} className={styles.root}>
       <img
         className={styles.image}
         src={imageSrc}
         alt={alt}
         width={640}
-        height={360}
-        loading="lazy"
+        height={300}
+        loading={inView || playing ? "eager" : "lazy"}
         decoding="async"
       />
-      {!still && !reduceMotion && !playing ? (
+      {!still && !reduceMotion && !playing && autoStarted ? (
         <button
           type="button"
           className={styles.replay}

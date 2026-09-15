@@ -83,12 +83,16 @@ function expandAuthorLine(text: string): string[] {
 }
 
 /** Split flattened bullet lists into independent canonical blocks. */
-function splitFlattenedList(text: string): string[] {
+export function splitFlattenedList(text: string): string[] {
   const markers = [...text.matchAll(/(?:^|\s)([•‣▪∙])\s+/g)].map((m) =>
     m.index === undefined ? -1 : (m.index + (m[0].startsWith(" ") ? 1 : 0))
   ).filter((i) => i >= 0);
-  if (markers.length < 2) return [text];
-  const bounds = [0, ...markers, text.length];
+  const numbered = [...text.matchAll(/(?:^|\s)((?:[1-9]|1[0-9]|20)[.)])\s+/g)]
+    .map((m) => (m.index === undefined ? -1 : m.index + (m[0].startsWith(" ") ? 1 : 0)))
+    .filter((i) => i >= 0);
+  const starts = markers.length >= 2 ? markers : numbered;
+  if (starts.length < 2) return [text];
+  const bounds = [0, ...starts, text.length];
   return bounds.slice(0, -1).map((start, i) => text.slice(start, bounds[i + 1]).trim()).filter(Boolean);
 }
 
@@ -106,7 +110,18 @@ function detectHeadingLevel(text: string, fontSize: number, baseFontSize: number
 
 function isReferenceText(text: string, currentKind: NormalizedSectionKind | null): boolean {
   if (currentKind === "references") return true;
-  return /^\[\d+\]/.test(text) || /^\d+\.\s+[A-Z][a-z]+,?\s+[A-Z]/.test(text);
+  // A numbered list item is not a bibliography entry. Outside an explicit
+  // References section, require citation-shaped evidence such as a year.
+  return /^\[\d+\]/.test(text) ||
+    (/^\d+\.\s+[A-Z][a-z]+,?\s+[A-Z]/.test(text) && /\b(?:19|20)\d{2}\b/.test(text));
+}
+
+/** Numbered prose items are lists even when an upstream role heuristic called
+ * them references. Bibliography entries have author/year evidence; ordinary
+ * list items do not. */
+function isNumberedProseListItem(text: string): boolean {
+  return /^(?:[1-9]|1[0-9]|20)[.)]\s+/.test(text) &&
+    !/\b(?:19|20)\d{2}\b/.test(text.slice(0, 180));
 }
 
 function layoutForNode(
@@ -426,12 +441,13 @@ export function projectCanonicalToPaper(input: {
     ) {
       const text = node.text ?? "";
       const listParts = splitFlattenedList(text);
-      const isRef = node.role === "reference" || isReferenceText(text, currentKind);
+      const isRef = !isNumberedProseListItem(text) &&
+        (node.role === "reference" || isReferenceText(text, currentKind));
       const translationInputWarning =
         isRef || isExpectedNonProseParagraph(text)
           ? null
           : unsafeParagraphStructureReason(text);
-      for (const part of listParts) {
+      for (const [partIndex, part] of listParts.entries()) {
         pushBlock(node, layout, {
           sectionId: currentSectionId,
           type: isRef ? "reference" : "paragraph",
@@ -448,6 +464,12 @@ export function projectCanonicalToPaper(input: {
             role: node.role,
             translationInputWarning: translationInputWarning ?? undefined,
             flattenedListPart: listParts.length > 1,
+            listRole:
+              listParts.length > 1
+                ? partIndex === 0
+                  ? "intro"
+                  : "item"
+                : undefined,
           },
         });
       }

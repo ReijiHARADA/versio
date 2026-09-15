@@ -61,10 +61,26 @@ export function getCachedTranslationRow(
   return row?.translated_text != null ? String(row.translated_text) : null;
 }
 
+function translationCacheFromRow(row: Record<string, unknown>): TranslationCacheEntry {
+  return {
+    textHash: String(row.text_hash),
+    model: String(row.model),
+    modelVersion: String(row.model_version),
+    sourceLanguage: String(row.source_language),
+    targetLanguage: String(row.target_language),
+    translatedText: String(row.translated_text),
+    cachedAt: Number(row.cached_at),
+  };
+}
+
+export function listTranslationCacheRows(db: SqliteClient): TranslationCacheEntry[] {
+  return db.query("SELECT * FROM translation_cache").map(translationCacheFromRow);
+}
+
 export function saveTranslationCacheRow(
   db: SqliteClient,
   textHash: string,
-  entry: Omit<TranslationCacheEntry, "textHash" | "cachedAt">
+  entry: Omit<TranslationCacheEntry, "textHash" | "cachedAt"> & { cachedAt?: number }
 ): void {
   db.exec(
     `INSERT INTO translation_cache (
@@ -80,9 +96,21 @@ export function saveTranslationCacheRow(
       entry.sourceLanguage,
       entry.targetLanguage,
       entry.translatedText,
-      Date.now(),
+      entry.cachedAt ?? Date.now(),
     ]
   );
+}
+
+export function restoreTranslationCacheRows(
+  db: SqliteClient,
+  entries: TranslationCacheEntry[]
+): void {
+  if (entries.length === 0) return;
+  db.transaction(() => {
+    for (const entry of entries) {
+      saveTranslationCacheRow(db, entry.textHash, entry);
+    }
+  });
 }
 
 export function clearTranslationCacheRows(db: SqliteClient, model?: string): number {

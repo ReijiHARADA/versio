@@ -33,6 +33,10 @@ type AppSidebarProps = {
   onAddPaperToWorkspace: (node: WorkspaceNode) => void;
   activeNodeId?: string | null;
   inboxCount: number;
+  /** Hide the settings footer (used by Settings GIF capture crop). */
+  showSettings?: boolean;
+  /** Folder ids that start collapsed (Settings GIF capture). */
+  initialCollapsedIds?: readonly string[];
 };
 
 export function AppSidebar({
@@ -45,6 +49,8 @@ export function AppSidebar({
   onAddPaperToWorkspace,
   activeNodeId,
   inboxCount,
+  showSettings = true,
+  initialCollapsedIds,
 }: AppSidebarProps) {
   const sidebarRef = useRef<HTMLElement>(null);
   const sidebarMode = useAppStore((state) => state.displaySettings.sidebarMode);
@@ -199,6 +205,7 @@ export function AppSidebar({
             onDelete={onDeleteNode}
             onNewChild={onNewChild}
             onAddPaper={onAddPaperToWorkspace}
+            initialCollapsedIds={initialCollapsedIds}
           />
         </section>
 
@@ -224,23 +231,25 @@ export function AppSidebar({
         </section>
       </div>
 
-      <div className={styles.footer}>
-        <NavLink
-          to="/settings"
-          className={({ isActive }) =>
-            `${styles.item} ${styles.footerButton} ${isActive ? styles.active : ""}`
-          }
-          title="設定"
-          onClick={(event) => {
-            if (draggingPaperId) event.preventDefault();
-          }}
-        >
-          <span className={styles.iconSlot}>
-            <Settings size={16} />
-          </span>
-          <span className={styles.itemLabel}>設定</span>
-        </NavLink>
-      </div>
+      {showSettings ? (
+        <div className={styles.footer}>
+          <NavLink
+            to="/settings"
+            className={({ isActive }) =>
+              `${styles.item} ${styles.footerButton} ${isActive ? styles.active : ""}`
+            }
+            title="設定"
+            onClick={(event) => {
+              if (draggingPaperId) event.preventDefault();
+            }}
+          >
+            <span className={styles.iconSlot}>
+              <Settings size={16} />
+            </span>
+            <span className={styles.itemLabel}>設定</span>
+          </NavLink>
+        </div>
+      ) : null}
     </aside>
   );
 }

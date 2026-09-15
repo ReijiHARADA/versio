@@ -115,6 +115,46 @@ describe("library backup / restore", () => {
     expect(full.ok, full.errors.join("; ")).toBe(true);
   });
 
+  it("skips .tmp/.bak leftovers and incomplete packages instead of failing", async () => {
+    const fs = createMemoryFileSystem();
+    await seedSqlite(fs);
+    await persistPaperPackage(fs, projectionToPackage(makePaper("paper-ok")));
+
+    // Atomic-write leftovers that previously broke validation.
+    await fs.writeText(
+      "papers/paper-ok.bak/paper.json",
+      JSON.stringify({ paperId: "paper-ok", schemaVersion: 1, revision: 1 })
+    );
+    await fs.writeText("papers/paper-ok.bak/original.md", "# leftover");
+    await fs.writeText(
+      "papers/paper-ok.tmp/paper.json",
+      JSON.stringify({ paperId: "paper-ok", schemaVersion: 1, revision: 1 })
+    );
+    await fs.writeText("papers/paper-ok.tmp/original.md", "# leftover");
+
+    // Incomplete real package (missing required files).
+    await fs.writeText(
+      "papers/paper-broken/paper.json",
+      JSON.stringify({ paperId: "paper-broken", schemaVersion: 1, revision: 1 })
+    );
+
+    const result = await createLibraryBackupSnapshot(fs, {
+      appVersion: "0.0.0-test",
+      stagingRoot: "_backup_staging",
+      finalRoot: "_backup",
+    });
+
+    expect(result.paperCount).toBe(1);
+    expect(await fs.exists(`_backup/${BACKUP_PAPERS_DIR}/paper-ok/paper.json`)).toBe(true);
+    expect(await fs.exists(`_backup/${BACKUP_PAPERS_DIR}/paper-ok.bak/paper.json`)).toBe(false);
+    expect(await fs.exists(`_backup/${BACKUP_PAPERS_DIR}/paper-ok.tmp/paper.json`)).toBe(false);
+    expect(await fs.exists(`_backup/${BACKUP_PAPERS_DIR}/paper-broken/paper.json`)).toBe(false);
+    expect(result.warnings.some((w) => w.includes("paper-broken"))).toBe(true);
+
+    const full = await validateLibraryBackup(fs, "_backup");
+    expect(full.ok, full.errors.join("; ")).toBe(true);
+  });
+
   it("validateLibraryBackup rejects missing backup.json", async () => {
     const fs = createMemoryFileSystem();
     const sqlite = await seedSqlite(fs);

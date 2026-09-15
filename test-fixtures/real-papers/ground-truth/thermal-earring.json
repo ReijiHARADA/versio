@@ -5,8 +5,15 @@
   "affiliations": [],
   "authorAffiliation": [],
   "headings": [],
-  "figureCaptions": ["Fig. 1"],
-  "tableCaptions": ["Table 1"],
+  "figureCaptions": [
+    "Fig. 1"
+  ],
+  "tableCaptions": [
+    "Table 1"
+  ],
   "pageCount": null,
-  "notes": "ACM IMWUT / acmart. Caption checks only."
+  "notes": "ACM IMWUT / acmart. Figure and table region checks.",
+  "tableRegions": [
+    "Table 1"
+  ]
 }

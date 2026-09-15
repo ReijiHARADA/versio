@@ -26,8 +26,18 @@ function sectionHasCycle(
   return false;
 }
 
-export function validatePaperPackage(pkg: PaperPackage): PackageValidation {
+export function validatePaperPackage(
+  pkg: PaperPackage,
+  options?: {
+    /**
+     * When false, skip checks that require `pkg.assets` bytes to be loaded
+     * (caller may verify asset files on disk separately).
+     */
+    requireAssetBytes?: boolean;
+  }
+): PackageValidation {
   const diagnostics: PackageDiagnostic[] = [];
+  const requireAssetBytes = options?.requireAssetBytes !== false;
   if (pkg.paper.schemaVersion < 1) {
     add(diagnostics, "error", "unsupported-schema", `未対応の paper.json schemaVersion: ${pkg.paper.schemaVersion}`);
   }
@@ -89,10 +99,12 @@ export function validatePaperPackage(pkg: PaperPackage): PackageValidation {
   }
 
   const assetPaths = new Set(pkg.assets.map((asset) => asset.path.replace(/^\.\//, "")));
-  for (const node of original.nodes) {
-    if ((node.type === "figure" || node.type === "table") && node.src?.startsWith("assets/")) {
-      if (!assetPaths.has(node.src)) {
-        add(diagnostics, "error", "missing-asset", `assets がありません: ${node.src}`);
+  if (requireAssetBytes) {
+    for (const node of original.nodes) {
+      if ((node.type === "figure" || node.type === "table") && node.src?.startsWith("assets/")) {
+        if (!assetPaths.has(node.src)) {
+          add(diagnostics, "error", "missing-asset", `assets がありません: ${node.src}`);
+        }
       }
     }
   }

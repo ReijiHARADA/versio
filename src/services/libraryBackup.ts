@@ -40,6 +40,7 @@ async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T
 export async function runLibraryBackup(appVersion: string): Promise<{
   paperCount: number;
   exportedTo: string | null;
+  warnings: string[];
 }> {
   await flushPersistence();
   const { fs } = await getStorage();
@@ -55,6 +56,11 @@ export async function runLibraryBackup(appVersion: string): Promise<{
     consistentSnapshotRoot,
   });
 
+  const skipNote =
+    result.warnings.length > 0
+      ? `（不完全な論文 ${result.warnings.length} 件は除外）`
+      : "";
+
   let exportedTo: string | null = null;
   if (isTauriApp()) {
     const dest = await invoke<string | null>("export_app_directory", {
@@ -65,7 +71,7 @@ export async function runLibraryBackup(appVersion: string): Promise<{
     if (!dest) {
       await setMeta({
         lastMessage:
-          "バックアップは作成しましたが、保存先選択がキャンセルされました（アプリ内に保持）",
+          `バックアップは作成しましたが、保存先選択がキャンセルされました（アプリ内に保持）${skipNote}`,
       });
       exportedTo = finalRoot;
     } else {
@@ -73,7 +79,7 @@ export async function runLibraryBackup(appVersion: string): Promise<{
       await setMeta({
         lastBackupAt: new Date().toISOString(),
         lastBackupPaperCount: result.paperCount,
-        lastMessage: `バックアップを保存しました（${result.paperCount}件）`,
+        lastMessage: `バックアップを保存しました（${result.paperCount}件）${skipNote}`,
       });
     }
   } else {
@@ -81,11 +87,15 @@ export async function runLibraryBackup(appVersion: string): Promise<{
     await setMeta({
       lastBackupAt: new Date().toISOString(),
       lastBackupPaperCount: result.paperCount,
-      lastMessage: `バックアップを作成しました（${result.paperCount}件）`,
+      lastMessage: `バックアップを作成しました（${result.paperCount}件）${skipNote}`,
     });
   }
 
-  return { paperCount: result.paperCount, exportedTo };
+  return {
+    paperCount: result.paperCount,
+    exportedTo,
+    warnings: result.warnings,
+  };
 }
 
 /**

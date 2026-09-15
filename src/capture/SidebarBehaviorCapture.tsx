@@ -6,6 +6,7 @@ import { useLibraryCache } from "../stores/libraryCache";
 import { useProjectStore } from "../stores/projectStore";
 import {
   SIDEBAR_CAPTURE_VIEWPORT,
+  SIDEBAR_PREVIEW_COLLAPSED_IDS,
   SIDEBAR_PREVIEW_MEMBERSHIPS,
   SIDEBAR_PREVIEW_PAPERS,
   SIDEBAR_PREVIEW_WORKSPACE,
@@ -114,8 +115,10 @@ export function SidebarBehaviorCapture() {
             onNewChild={noop}
             onDeleteNode={noopAsync}
             onAddPaperToWorkspace={noop}
-            activeNodeId="ws-root"
+            activeNodeId="ws-kansei"
             inboxCount={0}
+            showSettings={false}
+            initialCollapsedIds={SIDEBAR_PREVIEW_COLLAPSED_IDS}
           />
         </div>
         {/*

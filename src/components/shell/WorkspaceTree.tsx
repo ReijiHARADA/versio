@@ -51,6 +51,7 @@ export function WorkspaceTree({
   onDelete,
   onNewChild,
   onAddPaper,
+  initialCollapsedIds,
 }: {
   nodes: WorkspaceNode[];
   activeNodeId?: string | null;
@@ -59,11 +60,17 @@ export function WorkspaceTree({
   onDelete: (node: WorkspaceNode) => Promise<void>;
   onNewChild: (node: WorkspaceNode) => void;
   onAddPaper: (node: WorkspaceNode) => void;
+  /** Folder ids that start collapsed (capture fixtures / demos). */
+  initialCollapsedIds?: readonly string[];
 }) {
   const tree = useMemo(() => buildWorkspaceTree(nodes), [nodes]);
   const memberships = useProjectStore((state) => state.memberships);
   const papers = useLibraryCache((state) => state.papers);
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    for (const id of initialCollapsedIds ?? []) initial[id] = true;
+    return initial;
+  });
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuAnchor, setMenuAnchor] = useState<MenuAnchor | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);

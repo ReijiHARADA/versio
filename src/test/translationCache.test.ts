@@ -15,6 +15,7 @@ import {
   saveSections,
   saveSetting,
   saveTranslationCache,
+  restoreTranslationCache,
   saveReadingPosition,
   getWorkspacePaperLink,
   saveAnnotation,
@@ -118,7 +119,19 @@ describe("clearTranslationCache", () => {
     await saveReadingPosition("cache-clear-paper", "cache-clear-block", 24);
 
     const removed = await clearTranslationCache();
-    expect(removed).toBe(1);
+    expect(removed.count).toBe(1);
+    expect(removed.snapshot).toHaveLength(1);
+    expect(
+      await getCachedTranslation("cache-clear-hash", "madlad", "3b", "en", "ja")
+    ).toBeNull();
+
+    await restoreTranslationCache(removed.snapshot);
+    expect(
+      await getCachedTranslation("cache-clear-hash", "madlad", "3b", "en", "ja")
+    ).toBe("こんにちはキャッシュ。");
+
+    // Clear again so the rest of the assertions stay focused on non-cache data.
+    await clearTranslationCache();
     expect(
       await getCachedTranslation("cache-clear-hash", "madlad", "3b", "en", "ja")
     ).toBeNull();

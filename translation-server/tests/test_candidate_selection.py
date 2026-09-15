@@ -29,6 +29,30 @@ class CandidateSelectionSignalsTest(unittest.TestCase):
         self.assertTrue(result["mixedScriptRisk"])
         self.assertIn("显", result["simplifiedOnlyCjk"])
 
+    def test_scientific_technical_tokens_are_tracked_without_blacklisting_words(self):
+        result = signals(
+            "We evaluated the M2W system with EQS-HBP and TQP3M9009.",
+            "M2WシステムをEQS-HBPで評価した。",
+        )
+        self.assertEqual(result["technicalTokenTotal"], 3)
+        self.assertEqual(result["technicalTokenKept"], 2)
+        self.assertEqual(result["missingTechnicalTokens"], ["TQP3M9009"])
+
+    def test_claim_structure_signal_detects_respectively_and_pairings(self):
+        result = signals(
+            "A and B were tested against C and D, respectively.",
+            "AとBは、それぞれCとDと比較された。",
+        )
+        self.assertTrue(result["claimStructurePresent"])
+        self.assertTrue(result["claimStructurePreserved"])
+
+    def test_claim_structure_signal_marks_missing_mapping(self):
+        result = signals(
+            "A and B were tested against C and D, respectively.",
+            "AとBをCとDに対してテストした。",
+        )
+        self.assertFalse(result["claimStructurePreserved"])
+
     def test_semantic_relation_signals_cover_condition_time_and_trend(self):
         source = "If temperature increases before treatment, the later value is higher."
         result = signals(source, "治療前に温度が増加した場合、その後の値は高くなる。")

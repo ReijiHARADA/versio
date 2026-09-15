@@ -51,12 +51,14 @@ import {
   listAllBenchmarks,
   listBenchmarksByModel,
   listBenchmarksByPaper,
+  listTranslationCacheRows,
+  restoreTranslationCacheRows,
   saveBenchmarkRow,
   saveGlossaryRow,
   saveSettingRow,
   saveTranslationCacheRow,
 } from "../data/repositories/settingsRepository";
-import { paperDir } from "../data/package/persist";
+import { paperBackupDir, paperDir, paperTmpDir } from "../data/package/persist";
 import { syncPaperIndexesFromPackages } from "../data/package/syncIndex";
 
 export type { BenchmarkEntry };
@@ -147,6 +149,8 @@ export async function deletePaper(id: string): Promise<void> {
   });
   forgetDocument(id);
   await fs.remove(paperDir(id));
+  await fs.remove(paperBackupDir(id));
+  await fs.remove(paperTmpDir(id));
 }
 
 export async function saveSections(sections: Section[]): Promise<void> {
@@ -246,9 +250,21 @@ export async function clearCacheByModel(model: string): Promise<number> {
   return clearTranslationCacheRows(db, model);
 }
 
-export async function clearTranslationCache(): Promise<number> {
+export async function clearTranslationCache(): Promise<{
+  count: number;
+  snapshot: TranslationCacheEntry[];
+}> {
   const { db } = await ready();
-  return clearTranslationCacheRows(db);
+  const snapshot = listTranslationCacheRows(db);
+  clearTranslationCacheRows(db);
+  return { count: snapshot.length, snapshot };
+}
+
+export async function restoreTranslationCache(
+  entries: TranslationCacheEntry[]
+): Promise<void> {
+  const { db } = await ready();
+  restoreTranslationCacheRows(db, entries);
 }
 
 export async function saveGlossary(paperId: string, entries: GlossaryEntry[]): Promise<void> {

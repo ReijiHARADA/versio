@@ -3,45 +3,71 @@ import type { Paper } from "../types/paper";
 
 const t = "2024-01-01T00:00:00.000Z";
 
-/** Fixed workspace tree for Settings behavior GIF capture (same for OFF/ON). */
+/**
+ * Fixed workspace tree for Settings behavior GIF capture.
+ * Top: M1 → 感性工学 → two papers; bottom: B4 (collapsed).
+ */
 export const SIDEBAR_PREVIEW_WORKSPACE: WorkspaceNode[] = [
   {
-    id: "ws-root",
+    id: "ws-m1",
     parentId: null,
+    name: "M1",
+    order: 0,
+    createdAt: t,
+    updatedAt: t,
+  },
+  {
+    id: "ws-b4",
+    parentId: null,
+    name: "B4",
+    order: 1,
+    createdAt: t,
+    updatedAt: t,
+  },
+  {
+    id: "ws-kansei",
+    parentId: "ws-m1",
     name: "感性工学",
     order: 0,
     createdAt: t,
     updatedAt: t,
   },
-  {
-    id: "ws-child",
-    parentId: "ws-root",
-    name: "注意研究",
-    order: 0,
-    createdAt: t,
-    updatedAt: t,
-  },
-  {
-    id: "ws-sibling",
-    parentId: null,
-    name: "機械学習",
-    order: 1,
-    createdAt: t,
-    updatedAt: t,
-  },
 ];
+
+/** Folder ids that start collapsed in the capture mount. */
+export const SIDEBAR_PREVIEW_COLLAPSED_IDS = ["ws-b4"] as const;
 
 export const SIDEBAR_PREVIEW_PAPERS: Paper[] = [
   {
-    id: "paper-attention",
-    sourceFilePath: "fixture/attention.pdf",
-    sourceFileHash: "fixture-hash",
-    titleOriginal: "Attention Is All You Need",
-    titleTranslated: "注意機構があれば十分である",
-    authors: ["Vaswani et al."],
+    id: "paper-social-proof",
+    sourceFilePath: "fixture/social-proof.pdf",
+    sourceFileHash: "fixture-hash-social-proof",
+    titleOriginal:
+      "The Effect of Similarity to Others on User Cognition and Purchase-Related Behavior: Focusing on the Information Representation of Social Proof",
+    titleTranslated:
+      "他者との類似性がユーザーの認知と購買関連行動に与える影響：ソーシャルプルーフの情報表現に着目して",
+    authors: ["Fixture"],
     publication: null,
-    year: 2017,
-    pageCount: 15,
+    year: 2024,
+    pageCount: 12,
+    processingStatus: "ready",
+    lastReadBlockId: null,
+    lastReadOffset: null,
+    createdAt: t,
+    updatedAt: t,
+  },
+  {
+    id: "paper-ux-writing",
+    sourceFilePath: "fixture/ux-writing.pdf",
+    sourceFileHash: "fixture-hash-ux-writing",
+    titleOriginal:
+      "The Effect of UX Writing on User Kansei: Framing Effects from Tone and Style Changes",
+    titleTranslated:
+      "UX ライティングがユーザーの感性に与える影響：語調・文体の変化によるフレーミング効果",
+    authors: ["Fixture"],
+    publication: null,
+    year: 2024,
+    pageCount: 10,
     processingStatus: "ready",
     lastReadBlockId: null,
     lastReadOffset: null,
@@ -52,16 +78,23 @@ export const SIDEBAR_PREVIEW_PAPERS: Paper[] = [
 
 export const SIDEBAR_PREVIEW_MEMBERSHIPS: WorkspacePaper[] = [
   {
-    nodeId: "ws-child",
-    paperId: "paper-attention",
+    nodeId: "ws-kansei",
+    paperId: "paper-social-proof",
     order: 0,
+    createdAt: t,
+    updatedAt: t,
+  },
+  {
+    nodeId: "ws-kansei",
+    paperId: "paper-ux-writing",
+    order: 1,
     createdAt: t,
     updatedAt: t,
   },
 ];
 
-/** Pull-back frame: more chrome visible, content clipped at the right edge. */
-export const SIDEBAR_CAPTURE_VIEWPORT = { width: 640, height: 360 } as const;
+/** Top-left crop frame: right/bottom edges clip chrome (no settings footer). */
+export const SIDEBAR_CAPTURE_VIEWPORT = { width: 640, height: 300 } as const;
 
-/** One auto hover cycle ≈ this long (used by ReplayablePreview). */
-export const SIDEBAR_CAPTURE_CYCLE_MS = 3800;
+/** One hover expand/collapse (or cursor wander) cycle ≈ this long. */
+export const SIDEBAR_CAPTURE_CYCLE_MS = 4000;

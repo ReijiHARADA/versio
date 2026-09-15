@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { reconstructDocument, type LayoutBlock, isEquationLine, isFigureCaption, isTableCaption } from "../../services/pdfLayout";
+import { reconstructDocument, type LayoutBlock, hasSourceTextIntegrity, isEquationLine, isFigureCaption, isTableCaption } from "../../services/pdfLayout";
 import type { ExtractedPage } from "../../services/pdfService";
 import { FIXTURES } from "./builders";
 
@@ -88,6 +88,13 @@ describe("isEquationLine", () => {
 });
 
 describe("PDF reading order regression", () => {
+  it("keeps every block reproducible from native source lines", () => {
+    for (const build of Object.values(FIXTURES)) {
+      const { blocks } = reconstructDocument(build());
+      expect(blocks.every(hasSourceTextIntegrity)).toBe(true);
+    }
+  });
+
   it("stitches an unambiguously continued paragraph across adjacent pages", () => {
     const pages: ExtractedPage[] = [
       { pageNumber: 5, width: 612, height: 792, textItems: [{ text: "PAGE_END Examination of the distribution of targets showed errors. One", x: 54, y: 704, width: 500, height: 10, fontSize: 10, fontName: "Helvetica", page: 5 }] },
@@ -98,6 +105,9 @@ describe("PDF reading order regression", () => {
     expect(stitched?.text).toContain("One exception to this");
     expect(stitched?.pageStart).toBe(5);
     expect(stitched?.pageEnd).toBe(6);
+    expect(stitched?.lines.map((line) => line.page)).toEqual([5, 6]);
+    expect(stitched?.bbox.y).toBe(86);
+    expect((stitched?.bbox.y ?? 0) + (stitched?.bbox.height ?? 0)).toBeGreaterThan(704);
   });
 
   it("does not join an independent capitalized paragraph on the next page", () => {
@@ -126,6 +136,48 @@ describe("PDF reading order regression", () => {
     expect(text).not.toContain("Published: xx xx xxxx");
     expect(text).toContain("MARGIN_BODY_A");
     expect(text).toContain("MARGIN_BODY_B");
+  });
+
+  it("splits a DOI-bearing publisher line before trailing body prose", () => {
+    const page: ExtractedPage = {
+      pageNumber: 1, width: 612, height: 792,
+      textItems: [{ text: "Copyright 2024 ACM http://dx.doi.org/10.1000/example First body sentence starts here and continues as ordinary prose.", x: 54, y: 300, width: 500, height: 9, fontSize: 7, fontName: "Meta", page: 1 }],
+    };
+    const { blocks } = reconstructDocument([page]);
+    expect(blocks.some((b) => b.text.includes("doi.org"))).toBe(true);
+    expect(blocks.some((b) => b.text.includes("First body sentence"))).toBe(true);
+    expect(blocks.every(hasSourceTextIntegrity)).toBe(true);
+  });
+
+  it("joins a wrapped affiliation without absorbing the following body", () => {
+    const items = [
+      { text: "Affiliation Fixture Paper", x: 54, y: 80, width: 260, height: 18, fontSize: 16, fontName: "Title-Bold", page: 1 },
+      { text: "Ada Lovelace", x: 54, y: 115, width: 100, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      { text: "Department of Computing, University of Example and", x: 54, y: 132, width: 300, height: 8, fontSize: 8, fontName: "Body", page: 1 },
+      { text: "Research Centre, Example City, Japan", x: 54, y: 143, width: 240, height: 8, fontSize: 8, fontName: "Body", page: 1 },
+      { text: "Abstract", x: 54, y: 165, width: 80, height: 10, fontSize: 10, fontName: "Body-Bold", page: 1 },
+      { text: "This is the first body sentence with enough words to establish ordinary prose.", x: 54, y: 185, width: 480, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+    ];
+    const { blocks } = reconstructDocument([{ pageNumber: 1, width: 612, height: 792, textItems: items }]);
+    const affiliation = blocks.find((block) => block.role === "affiliation");
+    expect(affiliation?.text).toContain("Research Centre");
+    expect(blocks.some((block) => block.role === "paragraph" && block.text.startsWith("This is the first body"))).toBe(true);
+  });
+
+  it("does not stitch author metadata into a body paragraph across pages", () => {
+    const pages: ExtractedPage[] = [
+      { pageNumber: 1, width: 612, height: 792, textItems: [
+        { text: "Metadata Paper", x: 54, y: 80, width: 240, height: 18, fontSize: 16, fontName: "Title-Bold", page: 1 },
+        { text: "Ada Lovelace", x: 54, y: 112, width: 100, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "Department of Computing, University of Example", x: 54, y: 130, width: 300, height: 8, fontSize: 8, fontName: "Body", page: 1 },
+        { text: "Jörg Gross and Franziska Emmerling contributed equally to this work. Correspondence and requests for materials should be addressed to J.G. (email: mail@example.org)", x: 54, y: 720, width: 500, height: 8, fontSize: 8, fontName: "Body", page: 1 },
+      ] },
+      { pageNumber: 2, width: 612, height: 792, textItems: [
+        { text: "been broadly associated with adaptive behaviour in the study.", x: 54, y: 86, width: 500, height: 10, fontSize: 10, fontName: "Body", page: 2 },
+      ] },
+    ];
+    const { blocks } = reconstructDocument(pages);
+    expect(joined(blocks)).not.toContain("mail@example.org) been");
   });
 
   it("keeps an attached numbered small-type footnote out of body prose", () => {

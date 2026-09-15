@@ -29,7 +29,12 @@ function hasCompleteCheckpoint(paper) {
   try {
     const report = JSON.parse(fs.readFileSync(file, "utf8"));
     const entry = report.papers?.find((item) => item.paper?.id === paper.id);
-    return report.complete === true && !entry?.error && Array.isArray(entry?.rows) && entry.rows.length >= limit;
+    // `complete` means the paper was fully processed.  A fixture may contain
+    // fewer eligible units than the requested sampling limit; retrying it on
+    // every run cannot create new source blocks and made the pending runner
+    // loop forever.  Partial/interrupted papers still carry an entry error and
+    // remain pending.
+    return report.complete === true && !entry?.error && Array.isArray(entry?.rows);
   } catch {
     return false;
   }

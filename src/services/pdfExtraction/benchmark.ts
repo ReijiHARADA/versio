@@ -1,4 +1,4 @@
-import type { LayoutBlock } from "../pdfLayout";
+import { hasSourceTextIntegrity, type LayoutBlock } from "../pdfLayout";
 import type { ExtractedPage } from "../pdfService";
 import { evidenceFromPages } from "./evidence";
 import { detectFormat } from "./formats";
@@ -25,6 +25,7 @@ export type PartialGroundTruth = {
   figureCaptions?: string[];
   tableCaptions?: string[];
   tableRegions?: string[];
+  listItems?: string[];
   authorAffiliation?: Array<{ from: string; to: string }>;
   headingHierarchy?: Array<{ from: string; to: string }>;
   figureCaptionRelations?: Array<{ from: string; to: string }>;
@@ -49,8 +50,10 @@ export type BaselinePaperReport = {
     figureCaptionRecall?: number;
     tableCaptionRecall?: number;
     tableRegionRecall?: number;
+    listItemRecall?: number;
     figureCaptionRelation?: number;
     authorAffiliationF1?: number;
+    sourceIntegrityRate: number;
     fusedTitle: string;
     fusedTitleConfidence: number;
     canonicalTitle?: string | null;
@@ -175,6 +178,12 @@ export function evaluateBaselinePaper(input: {
     tableRegionRecall: gold?.tableRegions
       ? substringRecall(structuredTableCaptions, gold.tableRegions)
       : undefined,
+    listItemRecall: gold?.listItems
+      ? substringRecall(
+          extracted.blocks.filter((b) => b.type === "paragraph").map((b) => b.original ?? ""),
+          gold.listItems
+        )
+      : undefined,
     figureCaptionRelation:
       gold?.figureCaptionRelations && gold.figureCaptionRelations.length > 0
         ? relationAccuracy(
@@ -194,6 +203,10 @@ export function evaluateBaselinePaper(input: {
             gold.authorAffiliation
           )
         : undefined,
+    sourceIntegrityRate:
+      input.blocks.length === 0
+        ? 1
+        : input.blocks.filter(hasSourceTextIntegrity).length / input.blocks.length,
     fusedTitle: fused.text,
     fusedTitleConfidence: fused.confidence,
     canonicalTitle,

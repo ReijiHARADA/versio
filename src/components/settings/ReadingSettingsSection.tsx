@@ -2,16 +2,18 @@ import { Sun, Moon, Monitor } from "lucide-react";
 import {
   useAppStore,
   type DisplaySettings,
+  type OriginalDisplayMode,
   type Theme,
   DEFAULT_SIDEBAR_WIDTH,
 } from "../../stores/appStore";
 import { Toggle } from "../ui/Toggle";
 import { SettingsCard, SettingsRow } from "./SettingsPrimitives";
+import { SettingsSelect } from "./SettingsSelect";
 import { ReadingPreview } from "./ReadingPreview";
 import { BehaviorComparison } from "./BehaviorComparison";
-import { BehaviorModePreview } from "./BehaviorModePreview";
 import {
-  SIDEBAR_MODE_ASSETS,
+  SIDEBAR_AUTO_COLLAPSE_OFF,
+  SIDEBAR_AUTO_COLLAPSE_ON,
   SIDEBAR_ROOTS_ONLY_OFF,
   SIDEBAR_ROOTS_ONLY_ON,
 } from "./settingsPreviewAssets";
@@ -27,6 +29,15 @@ const DEFAULT_READING_SETTINGS: DisplaySettings = {
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   sidebarCollapseRootsOnly: true,
 };
+
+const ORIGINAL_DISPLAY_OPTIONS: {
+  value: OriginalDisplayMode;
+  label: string;
+}[] = [
+  { value: "on-demand", label: "必要なときだけ" },
+  { value: "always", label: "常に表示" },
+  { value: "when-untranslated", label: "翻訳がないときだけ" },
+];
 
 export function ReadingSettingsSection() {
   const displaySettings = useAppStore((state) => state.displaySettings);
@@ -157,59 +168,39 @@ export function ReadingSettingsSection() {
           <SettingsRow
             label="原文の表示"
             description="英語原文を本文内でどのように表示するか選びます。"
-            align="start"
+            htmlFor="original-display"
           >
-            <div
-              className={styles.segmented}
-              role="radiogroup"
+            <SettingsSelect
+              id="original-display"
               aria-label="原文の表示"
-            >
-              {(
-                [
-                  { value: "on-demand", label: "必要なときだけ" },
-                  { value: "always", label: "常に表示" },
-                  { value: "when-untranslated", label: "翻訳がないときだけ" },
-                ] as const
-              ).map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={displaySettings.originalDisplay === option.value}
-                  className={
-                    displaySettings.originalDisplay === option.value ? styles.selected : ""
-                  }
-                  onClick={() =>
-                    setDisplaySettings({ originalDisplay: option.value })
-                  }
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+              value={displaySettings.originalDisplay}
+              options={ORIGINAL_DISPLAY_OPTIONS}
+              onChange={(originalDisplay) => setDisplaySettings({ originalDisplay })}
+            />
           </SettingsRow>
         </SettingsCard>
 
         <SettingsCard title="ナビゲーション">
           <SettingsRow
-            label="常に開く"
-            description="オフのときはホバーで自動開閉します。"
-            htmlFor="sidebar-always-open"
+            label="自動で折りたたむ"
+            description="オンのときはホバーで開閉します。オフのときは常に開いた状態です。"
+            htmlFor="sidebar-auto-collapse"
           >
             <Toggle
-              id="sidebar-always-open"
-              checked={displaySettings.sidebarMode === "expanded"}
+              id="sidebar-auto-collapse"
+              checked={displaySettings.sidebarMode === "auto"}
               onChange={(checked) =>
                 setDisplaySettings({
-                  sidebarMode: checked ? "expanded" : "auto",
+                  sidebarMode: checked ? "auto" : "expanded",
                 })
               }
             />
           </SettingsRow>
 
-          <BehaviorModePreview
-            mode={displaySettings.sidebarMode}
-            assets={SIDEBAR_MODE_ASSETS}
+          <BehaviorComparison
+            value={displaySettings.sidebarMode === "auto"}
+            off={SIDEBAR_AUTO_COLLAPSE_OFF}
+            on={SIDEBAR_AUTO_COLLAPSE_ON}
           />
 
           <SettingsRow

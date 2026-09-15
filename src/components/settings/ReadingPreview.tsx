@@ -6,6 +6,7 @@ import {
 } from "../reader/ReaderArticleSurface";
 import styles from "./ReadingPreview.module.css";
 
+const FIXTURE_TITLE = "注意機構があれば十分である";
 const FIXTURE_SECTION = "1. はじめに";
 const FIXTURE_BODY_1 =
   "英語論文を、日本語の記事を読む感覚で読むための表示です。文字サイズ・行間・本文幅がここに反映されます。";
@@ -55,6 +56,7 @@ export function ReadingPreview({ settings }: ReadingPreviewProps) {
     >
       <div className={styles.viewport}>
         <ReaderArticleSurface
+          title={FIXTURE_TITLE}
           sectionTitle={FIXTURE_SECTION}
           paragraphs={buildParagraphs(settings.originalDisplay)}
           contentStyle={contentStyle}

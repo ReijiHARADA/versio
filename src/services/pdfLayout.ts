@@ -454,7 +454,22 @@ export function isTableCaption(text: string): boolean {
 
 function isCopyright(text: string, fontSize: number, baseFont: number): boolean {
   if (fontSize > baseFont * 0.92) return false;
-  return /permission to make digital or hard copies/i.test(text);
+  return /permission to make digital or hard copies/i.test(text) ||
+    /copyright\s+\d{4}[^.]{0,100}\b(?:acm|ieee|springer|elsevier)\b/i.test(text);
+}
+
+function splitInlineDoi(line: LayoutLine): LayoutLine[] {
+  const match = line.text.match(/\b(?:https?:\/\/)?(?:dx\.)?doi\.org\/\S+/i);
+  if (!match || match.index === undefined) return [line];
+  const end = match.index + match[0].length;
+  const tail = line.text.slice(end).trim();
+  if (tail.split(/\s+/).filter(Boolean).length < 3) return [line];
+  const head = line.text.slice(0, end).trim();
+  const ratio = Math.max(0.2, Math.min(0.8, head.length / line.text.length));
+  return [
+    { ...line, text: head, width: line.width * ratio },
+    { ...line, text: tail, x: line.x + line.width * ratio, width: line.width * (1 - ratio) },
+  ];
 }
 
 function isFootnoteLine(
@@ -785,6 +800,7 @@ function looksLikeLatinAuthorLine(text: string): boolean {
   return caps.length >= 2 && caps.length <= 8 && caps.length >= words.length - 2;
 }
 
+
 const NAME_PARTICLE = /^(van|von|de|den|der|di|da|la|le|du|del|st|ter|bin|al)$/i;
 const NAME_JOINER = /^(and|&)$/i;
 
@@ -881,6 +897,12 @@ function joinLines(lines: LayoutLine[]): string {
     text = joinHyphenated(text, next);
   }
   return text.replace(/\s+/g, " ").trim();
+}
+
+/** Checks that block text is reproducible from its native lines. */
+export function hasSourceTextIntegrity(block: LayoutBlock): boolean {
+  if (block.lines.length === 0) return block.text.trim().length === 0;
+  return joinLines(block.lines) === block.text.replace(/\s+/g, " ").trim();
 }
 
 function sortColumnLines(lines: LayoutLine[]): LayoutLine[] {
@@ -1055,6 +1077,25 @@ function canMerge(prev: LayoutLine, next: LayoutLine, baseFont: number): boolean
   return true;
 }
 
+function canMergeAffiliation(
+  current: LayoutLine[],
+  next: LayoutLine,
+  baseFont: number
+): boolean {
+  if (current.length === 0) return false;
+  const prev = current[current.length - 1];
+  if (prev.page !== next.page || prev.column !== next.column) return false;
+  if (next.y - prev.y > baseFont * 1.8) return false;
+  if (next.fontSize > baseFont * 1.08) return false;
+  const existing = joinLines(current);
+  const nextText = next.text.trim();
+  // An affiliation often wraps after a comma or conjunction.  Require either
+  // that syntactic continuation or an institution/country marker on the next
+  // line so a misclassified body paragraph cannot be absorbed into metadata.
+  const syntacticContinuation = /(?:,|;|\band|\bof|\bfor|\bthe)$/i.test(existing);
+  return syntacticContinuation || looksLikeAffiliation(nextText);
+}
+
 function groupLinesIntoBlocks(
   lines: LayoutLine[],
   baseFont: number
@@ -1084,7 +1125,8 @@ function groupLinesIntoBlocks(
     currentRole = null;
   };
 
-  for (const line of lines) {
+  for (const sourceLine of lines) {
+    for (const line of splitInlineDoi(sourceLine)) {
     if (!line.text.trim()) continue;
     if (line.page !== copyrightPage || line.column !== copyrightColumn) {
       copyrightStarted = false;
@@ -1094,7 +1136,8 @@ function groupLinesIntoBlocks(
       copyrightPage = line.page;
       copyrightColumn = line.column;
     }
-    const role = roleForLine(line, baseFont, mastheadEndY, copyrightStarted, titleFont);
+    const isSplitTail = line !== sourceLine;
+    const role = roleForLine(line, baseFont, mastheadEndY, isSplitTail ? false : copyrightStarted, titleFont);
     if (isReferencesHeading(line.text)) {
       inReferences = true;
     }
@@ -1155,6 +1198,11 @@ function groupLinesIntoBlocks(
       !styleStartsSubheading(current[current.length - 1], line, baseFont) &&
       canMerge(current[current.length - 1], line, baseFont);
 
+    const affiliationContinue =
+      currentRole === "affiliation" &&
+      (forcedRole === "affiliation" || forcedRole === "paragraph") &&
+      canMergeAffiliation(current, line, baseFont);
+
     const grantContinue =
       currentRole === "paragraph" &&
       forcedRole === "paragraph" &&
@@ -1195,7 +1243,7 @@ function groupLinesIntoBlocks(
       Math.abs(line.fontSize - current[current.length - 1].fontSize) < 0.8 &&
       /^[A-Z0-9][A-Z0-9\s–—-]+$/.test(layoutPlain(line.text));
 
-    if (mergeable || captionContinue || grantContinue || titleContinue || footnoteContinue || headingContinue) {
+    if (mergeable || affiliationContinue || captionContinue || grantContinue || titleContinue || footnoteContinue || headingContinue) {
       current.push(line);
       continue;
     }
@@ -1203,6 +1251,7 @@ function groupLinesIntoBlocks(
     flush();
     current = [line];
     currentRole = forcedRole;
+    }
   }
   flush();
   return mergeColumnContinuations(blocks.filter((b) => b.text.length > 0));
@@ -1262,6 +1311,13 @@ function isUnclassifiedFootnote(block: LayoutBlock): boolean {
   return largestFont > 0 && largestFont <= 7.5;
 }
 
+/** Author/contributor metadata is visually near the page boundary but is not
+ * prose. Never use it as the source paragraph for cross-page stitching. */
+function isAuthorMetadataBlock(block: LayoutBlock): boolean {
+  if (block.role !== "paragraph") return false;
+  return /(?:contributed equally|correspondence|corresponding author|requests for materials|should be addressed to|e-?mail\s*:)/i.test(block.text);
+}
+
 function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
   const textCounts = new Map<string, number>();
   for (const block of blocks) {
@@ -1279,6 +1335,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         result[targetIdx].role === "footer" ||
         result[targetIdx].role === "footnote" ||
         isUnclassifiedFootnote(result[targetIdx]) ||
+        isAuthorMetadataBlock(result[targetIdx]) ||
         isRepeatedRunningHeader(result[targetIdx], repeatedTexts) ||
         // A figure/table caption can be physically placed between two lines
         // of one paragraph. It must remain its own canonical block, but must

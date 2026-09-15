@@ -1,11 +1,16 @@
 import type { FileSystem } from "../fs/types";
 import { loadPaperPackage } from "../package/persist";
 import { validatePaperPackage } from "../package/validate";
+import { parsePaperMarkdown } from "../markdown/parse";
 import {
   PACKAGE_SCHEMA_VERSION,
   SQLITE_SCHEMA_VERSION,
 } from "../schemaVersion";
 import { validateSqliteBackupBytes } from "./sqliteIntegrity";
+import {
+  collectPaperPackageDirNames,
+  isTransientPaperDirName,
+} from "./paperDirs";
 import {
   BACKUP_MANIFEST_NAME,
   BACKUP_PAPERS_DIR,
@@ -45,6 +50,25 @@ export async function readBackupManifest(
   } catch {
     return null;
   }
+}
+
+async function assertReferencedAssetsOnDisk(
+  fs: FileSystem,
+  papersPrefix: string,
+  paperId: string,
+  originalMarkdown: string
+): Promise<string[]> {
+  const errors: string[] = [];
+  const original = parsePaperMarkdown(originalMarkdown, paperId);
+  for (const node of original.nodes) {
+    if ((node.type === "figure" || node.type === "table") && node.src?.startsWith("assets/")) {
+      const path = join(papersPrefix, paperId, node.src);
+      if (!(await fs.exists(path))) {
+        errors.push(`${paperId}: assets がありません: ${node.src}`);
+      }
+    }
+  }
+  return errors;
 }
 
 /**
@@ -132,25 +156,23 @@ export async function validateLibraryBackup(
   }
 
   const papersPrefix = join(root, BACKUP_PAPERS_DIR);
-  const files = await fs.list(papersPrefix);
-  const paperIds = new Set<string>();
+  const files = (await fs.exists(papersPrefix)) ? await fs.list(papersPrefix) : [];
   for (const file of files) {
     const rel = file.startsWith(papersPrefix + "/")
       ? file.slice(papersPrefix.length + 1)
-      : file.startsWith(BACKUP_PAPERS_DIR + "/")
-        ? file.slice(BACKUP_PAPERS_DIR.length + 1)
-        : null;
+      : null;
     if (!rel) continue;
-    const [paperId, ...rest] = rel.split("/");
-    if (!paperId || paperId.includes("..")) {
-      errors.push(`不正な papers パス: ${file}`);
+    const top = rel.split("/")[0];
+    if (top && isTransientPaperDirName(top)) {
+      warnings.push(`一時ディレクトリを無視しました: papers/${top}`);
       continue;
     }
-    paperIds.add(paperId);
-    if (rest.some((part) => part === "..")) {
+    if (rel.split("/").some((part) => part === "..")) {
       errors.push(`path traversal in backup: ${file}`);
     }
   }
+
+  const paperIds = new Set(collectPaperPackageDirNames(files, papersPrefix));
 
   if (manifest.paperCount !== paperIds.size) {
     const msg = `backup.json の paperCount=${manifest.paperCount} と papers/ 内 ${paperIds.size} 件が一致しません`;
@@ -172,12 +194,15 @@ export async function validateLibraryBackup(
         if (pkg.paper.paperId !== paperId) {
           errors.push(`package ID mismatch: dir=${paperId} paper.json=${pkg.paper.paperId}`);
         }
-        const validation = validatePaperPackage(pkg);
+        const validation = validatePaperPackage(pkg, { requireAssetBytes: false });
         if (!validation.ok) {
           for (const d of validation.diagnostics.filter((item) => item.level === "error")) {
             errors.push(`${paperId}: ${d.message}`);
           }
         }
+        errors.push(
+          ...(await assertReferencedAssetsOnDisk(fs, papersPrefix, paperId, pkg.originalMarkdown))
+        );
       } catch (error) {
         errors.push(
           `${paperId}: package を読めません（${error instanceof Error ? error.message : String(error)}）`

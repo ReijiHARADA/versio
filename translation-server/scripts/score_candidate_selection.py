@@ -24,6 +24,14 @@ TREND_JA = re.compile(r"(?:増加|減少|高い|低い|多い|少ない|改善|�
 # rejection rule in production and avoids confusing ordinary shared kanji.
 SIMPLIFIED_ONLY_CJK = set("显简词语汉仅为们这对从发进动应并个实现时机经说该让")
 
+# Preserve only tokens whose surface form is normally meaningful to a
+# scientific reader (acronyms, alphanumeric identifiers, or hyphenated
+# technical names).  Ordinary translatable English words are intentionally
+# excluded; this is an audit signal, not a terminology blacklist.
+TECHNICAL_TOKEN = re.compile(r"(?<![A-Za-z0-9])(?=[A-Za-z0-9-]*[A-Z0-9])[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)+(?![A-Za-z0-9])|(?<![A-Za-z0-9])[A-Z]{2,}[A-Z0-9]*(?![A-Za-z0-9])|(?<![A-Za-z0-9])[A-Za-z]+\d+[A-Za-z0-9-]*(?![A-Za-z0-9])")
+CLAIM_EN = re.compile(r"\b(?:respectively|both\b.*\band\b|either\b.*\bor\b|in contrast|on the one hand|on the other hand)\b", re.I | re.S)
+CLAIM_JA = re.compile(r"(?:それぞれ|各々|両方|双方|いずれか|または|対照的|一方では|他方では)")
+
 def signals(source: str, output: str) -> dict:
     src_tokens = re.findall(r"\b\d+(?:\.\d+)?\b", source)
     out = output.replace(",", "")
@@ -39,7 +47,18 @@ def signals(source: str, output: str) -> dict:
     continuation = bool(re.search(r"(?:の|が|を|に|と|で|は|も|そして|または|および|、)$", output.strip()))
     spaced_chars = len(re.findall(r"(?:\b\S\b\s+){4,}", output)) > 0
     simplified_only = sorted(set(ch for ch in output if ch in SIMPLIFIED_ONLY_CJK))
+    technical_tokens = sorted(set(TECHNICAL_TOKEN.findall(source)))
+    normalized_output = re.sub(r"\s+", "", output).lower()
+    technical_kept = [token for token in technical_tokens
+                      if token.lower().replace("-", "") in normalized_output.replace("-", "")]
+    claim_structure = bool(CLAIM_EN.search(source))
+    claim_structure_preserved = not claim_structure or bool(CLAIM_JA.search(output))
     return {"numericTotal": len(src_tokens), "numericKept": kept,
+            "technicalTokenTotal": len(technical_tokens),
+            "technicalTokenKept": len(technical_kept),
+            "missingTechnicalTokens": [token for token in technical_tokens if token not in technical_kept],
+            "claimStructurePresent": claim_structure,
+            "claimStructurePreserved": claim_structure_preserved,
             "negationPreserved": neg, "contrastPreserved": contrast,
             "conditionPreserved": condition, "temporalRelationPreserved": temporal,
             "trendPreserved": trend,
@@ -98,7 +117,7 @@ def main() -> None:
                      "selectionSignals": selected["signals"] if selected else {"rejectedByRelationGate": True}})
     summary = {"rows": len(rows), "candidateCount": len(candidates),
                "selectionIsAuditOnly": True,
-               "hardSignalPass": sum(1 for r in rows if r["selectionSignals"].get("numericKept") == r["selectionSignals"].get("numericTotal") and r["selectionSignals"].get("negationPreserved") and r["selectionSignals"].get("contrastPreserved") and not r["selectionSignals"].get("likelyTruncated") and not r["selectionSignals"].get("garbledSpacing")),
+        "hardSignalPass": sum(1 for r in rows if r["selectionSignals"].get("numericKept") == r["selectionSignals"].get("numericTotal") and r["selectionSignals"].get("technicalTokenKept", 0) == r["selectionSignals"].get("technicalTokenTotal", 0) and r["selectionSignals"].get("claimStructurePreserved", True) and r["selectionSignals"].get("negationPreserved") and r["selectionSignals"].get("contrastPreserved") and not r["selectionSignals"].get("likelyTruncated") and not r["selectionSignals"].get("garbledSpacing")),
                "relationSignalPass": sum(1 for r in rows if all(r["selectionSignals"].get(k, True) for k in ("conditionPreserved", "temporalRelationPreserved", "trendPreserved"))),
                "relationRiskRows": [r["key"] for r in rows if not all(r["selectionSignals"].get(k, True) for k in ("conditionPreserved", "temporalRelationPreserved", "trendPreserved"))],
                "rejectedByRelationGate": sum(1 for r in rows if r["auditSelection"] is None)}

@@ -3,7 +3,7 @@
   overflow: hidden;
   background: var(--color-surface-page);
   outline: 1px solid var(--color-separator-subtle);
-  aspect-ratio: 640 / 360;
+  aspect-ratio: 640 / 300;
   width: 100%;
 }
 

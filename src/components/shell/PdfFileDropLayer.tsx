@@ -18,7 +18,6 @@ function dragHasFiles(event: DragEvent): boolean {
 export function PdfFileDropLayer() {
   const location = useLocation();
   const [hovering, setHovering] = useState(false);
-  const [acceptedName, setAcceptedName] = useState<string | null>(null);
   const dragDepth = useRef(0);
   const locationRef = useRef(location);
   locationRef.current = location;
@@ -27,8 +26,6 @@ export function PdfFileDropLayer() {
     const loc = locationRef.current;
     if (loc.pathname.startsWith("/import")) return;
     const workspaceNodeId = importWorkspaceNodeIdFromLocation(loc.pathname, loc.search);
-    setAcceptedName(file.name);
-    window.setTimeout(() => setAcceptedName(null), 1600);
     await tryStartPdfImport(file, { workspaceNodeId });
   }, []);
 
@@ -115,12 +112,12 @@ export function PdfFileDropLayer() {
   }, [importDroppedFile]);
 
   if (location.pathname.startsWith("/import")) return null;
-  if (!hovering && !acceptedName) return null;
+  if (!hovering) return null;
 
   return (
     <div className={styles.overlay} role="status">
       <Upload size={64} />
-      <p>{acceptedName ? `受け取りました: ${acceptedName}` : "PDFをドロップしてインポート"}</p>
+      <p>PDFをドロップしてインポート</p>
     </div>
   );
 }

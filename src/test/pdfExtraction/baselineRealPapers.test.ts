@@ -92,6 +92,9 @@ describe("baseline benchmark on cached real papers", () => {
         expect(report.tableCaptionRecall).toBe(1);
         expect(report.tableRegionRecall).toBeGreaterThanOrEqual(0.8);
       }
+      if (gt?.listItems) {
+        expect(report.listItemRecall).toBeGreaterThanOrEqual(0.9);
+      }
     }, 60_000);
   }
 });

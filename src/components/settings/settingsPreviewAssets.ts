@@ -5,17 +5,16 @@ import sidebarRootsOnlyOn from "../../assets/settings-previews/sidebar-roots-onl
 import sidebarRootsOnlyOnPoster from "../../assets/settings-previews/sidebar-roots-only-on.poster.png";
 import sidebarModeAuto from "../../assets/settings-previews/sidebar-mode-auto.gif";
 import sidebarModeAutoPoster from "../../assets/settings-previews/sidebar-mode-auto.poster.png";
+import sidebarModeExpanded from "../../assets/settings-previews/sidebar-mode-expanded.gif";
 import sidebarModeExpandedPoster from "../../assets/settings-previews/sidebar-mode-expanded.poster.png";
 import type { BehaviorPreviewSide } from "./BehaviorComparison";
-import type { ModePreviewAsset } from "./BehaviorModePreview";
-import type { SidebarMode } from "../../stores/appStore";
 import { SIDEBAR_CAPTURE_CYCLE_MS } from "../../capture/sidebarPreviewFixture";
 
 export const SIDEBAR_ROOTS_ONLY_OFF: BehaviorPreviewSide = {
   src: sidebarRootsOnlyOff,
   poster: sidebarRootsOnlyOffPoster,
   label: "OFF",
-  caption: "折りたたみ時も入れ子を表示",
+  caption: "ホバーで展開。折りたたみ時も入れ子を表示",
   cycleDurationMs: SIDEBAR_CAPTURE_CYCLE_MS,
 };
 
@@ -23,22 +22,24 @@ export const SIDEBAR_ROOTS_ONLY_ON: BehaviorPreviewSide = {
   src: sidebarRootsOnlyOn,
   poster: sidebarRootsOnlyOnPoster,
   label: "ON",
-  caption: "折りたたみ時は最上位だけ",
+  caption: "ホバーで展開。折りたたみ時は最上位だけ",
   cycleDurationMs: SIDEBAR_CAPTURE_CYCLE_MS,
 };
 
-export const SIDEBAR_MODE_ASSETS: Record<SidebarMode, ModePreviewAsset> = {
-  auto: {
-    src: sidebarModeAuto,
-    poster: sidebarModeAutoPoster,
-    caption: "ホバーで開き、離すとアイコンのみに戻ります",
-    cycleDurationMs: SIDEBAR_CAPTURE_CYCLE_MS,
-  },
-  expanded: {
-    // Still frame only — no looping GIF
-    src: sidebarModeExpandedPoster,
-    poster: sidebarModeExpandedPoster,
-    caption: "常にラベル付きで開いた状態です",
-    still: true,
-  },
+/** 「自動で折りたたむ」ON = hover auto mode. */
+export const SIDEBAR_AUTO_COLLAPSE_ON: BehaviorPreviewSide = {
+  src: sidebarModeAuto,
+  poster: sidebarModeAutoPoster,
+  label: "ON",
+  caption: "ホバーで開き、離すとアイコンのみに戻ります",
+  cycleDurationMs: SIDEBAR_CAPTURE_CYCLE_MS,
+};
+
+/** 「自動で折りたたむ」OFF = always expanded (cursor still moves). */
+export const SIDEBAR_AUTO_COLLAPSE_OFF: BehaviorPreviewSide = {
+  src: sidebarModeExpanded,
+  poster: sidebarModeExpandedPoster,
+  label: "OFF",
+  caption: "常にラベル付きで開いた状態です",
+  cycleDurationMs: SIDEBAR_CAPTURE_CYCLE_MS,
 };

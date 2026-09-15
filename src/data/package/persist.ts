@@ -51,6 +51,76 @@ export function paperDir(paperId: string): string {
   return `papers/${paperId}`;
 }
 
+export function paperBackupDir(paperId: string): string {
+  return `papers/${paperId}.bak`;
+}
+
+export function paperTmpDir(paperId: string): string {
+  return `papers/${paperId}.tmp`;
+}
+
+function normalizeFsPath(path: string): string {
+  return path.replace(/\\/g, "/").replace(/\/+$/, "");
+}
+
+async function copyPackageTree(fs: FileSystem, from: string, to: string): Promise<void> {
+  const fromRoot = normalizeFsPath(from);
+  const toRoot = normalizeFsPath(to);
+  await fs.remove(toRoot);
+  const files = await fs.list(fromRoot);
+  for (const file of files) {
+    const rel =
+      file === fromRoot
+        ? ""
+        : file.startsWith(fromRoot + "/")
+          ? file.slice(fromRoot.length + 1)
+          : "";
+    if (!rel) continue;
+    const bytes = await fs.readBytes(file);
+    if (!bytes) continue;
+    await fs.writeBytes(`${toRoot}/${rel}`, bytes);
+  }
+}
+
+async function packageCoreComplete(fs: FileSystem, root: string): Promise<boolean> {
+  const base = normalizeFsPath(root);
+  const paperText = await fs.readText(`${base}/paper.json`);
+  const originalMarkdown = await fs.readText(`${base}/original.md`);
+  const translatedMarkdown = await fs.readText(`${base}/ja.md`);
+  const structureText = await fs.readText(`${base}/structure.json`);
+  return Boolean(paperText && originalMarkdown && translatedMarkdown && structureText);
+}
+
+/**
+ * If the live package dir is incomplete after a crashed atomic write, restore
+ * from `.bak` / `.tmp` leftovers when those are complete.
+ */
+export async function recoverPaperPackageIfNeeded(
+  fs: FileSystem,
+  paperId: string
+): Promise<"primary" | "bak" | "tmp" | null> {
+  const primary = paperDir(paperId);
+  if (await packageCoreComplete(fs, primary)) return "primary";
+
+  const bak = paperBackupDir(paperId);
+  if (await packageCoreComplete(fs, bak)) {
+    await copyPackageTree(fs, bak, primary);
+    await fs.remove(bak);
+    await fs.remove(paperTmpDir(paperId));
+    return "bak";
+  }
+
+  const tmp = paperTmpDir(paperId);
+  if (await packageCoreComplete(fs, tmp)) {
+    await copyPackageTree(fs, tmp, primary);
+    await fs.remove(tmp);
+    await fs.remove(bak);
+    return "tmp";
+  }
+
+  return null;
+}
+
 async function writeTextAtomic(fs: FileSystem, path: string, text: string): Promise<void> {
   const tmp = `${path}.tmp`;
   await fs.writeText(tmp, text);
@@ -161,7 +231,12 @@ export async function loadPaperPackage(
   paperId: string,
   options: LoadPaperPackageOptions & { root?: string } = {}
 ): Promise<PaperPackage> {
-  const root = options.root ?? paperDir(paperId);
+  const explicitRoot = options.root;
+  if (!explicitRoot) {
+    await recoverPaperPackageIfNeeded(fs, paperId);
+  }
+
+  const root = explicitRoot ?? paperDir(paperId);
   const includeSourcePdf = options.includeSourcePdf === true;
   const includeAssets = options.includeAssets === true;
   const includeLayout = options.includeLayout === true;
@@ -249,7 +324,10 @@ export async function loadSourcePdfBytes(
 }
 
 export async function paperPackageExists(fs: FileSystem, paperId: string): Promise<boolean> {
-  return fs.exists(`${paperDir(paperId)}/paper.json`);
+  if (await fs.exists(`${paperDir(paperId)}/paper.json`)) return true;
+  if (await fs.exists(`${paperBackupDir(paperId)}/paper.json`)) return true;
+  if (await fs.exists(`${paperTmpDir(paperId)}/paper.json`)) return true;
+  return false;
 }
 
 export async function updateTranslatedMarkdown(

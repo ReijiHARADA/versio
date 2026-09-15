@@ -246,7 +246,15 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
             const candidateBox = candidate.boundingBoxes[0];
             if (!candidateBox || candidate.pageStart !== caption.pageStart) return false;
             const aboveCaption = candidateBox.y < box.y && box.y - (candidateBox.y + candidateBox.height) < 280;
-            return aboveCaption && (candidate.roleScores.table ?? 0) >= 0.78;
+            const belowCaption = candidateBox.y >= box.y && candidateBox.y - (box.y + box.height) < 280;
+            if (!(aboveCaption || belowCaption)) return false;
+            // A native table is often split into one LayoutBlock per row by
+            // the generic block grouper. Preserve those rows as a region even
+            // when no single block has enough lines to earn table evidence.
+            // Require multiple aligned text items in the row so ordinary body
+            // paragraphs remain excluded.
+            const row = candidate.layoutBlock.lines.some((line) => line.items.length >= 2);
+            return row && ((candidate.roleScores.table ?? 0) >= 0.78 || candidate.layoutBlock.lines.length === 1);
           })
         : [];
       const memberBoxes = regionMembers.flatMap((member) => member.boundingBoxes);

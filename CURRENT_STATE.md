@@ -1023,3 +1023,443 @@ label-blind mixed-quality fixture の候補生成と selective cascade 評価へ
 packaged server を再利用し `significant-other` の12 unit監査を完了。12 rows を checkpoint 保存し、
 reference/chrome 1件のみ pre-model fallback、ordinary-body は全件出力を取得した。
 レポート `test-data/real-papers/reports/translation-audit-significant-other.json`。
+
+## 2026-09-15 checkpoint: alternative candidate comparison
+
+`significant-other` の同一12入力を無料ローカル `facebook/m2m100_1.2B` でも生成し、
+MADLAD出力と突合した。比較レポートは `reports/significant-other-candidate-comparison-v1.json`。
+M2M100は12件すべて出力できたが、日本語の不自然な直訳・未完了出力が複数あり、
+このサンプルだけでproduction cascadeへ採用しない。次は semantic coverage と手動レビューで
+MADLAD fallback救済の安全性を判定する。
+
+`significant-other` 同一12入力の production quality audit-only 比較を追加。MADLADは10/12、M2M100 1.2Bは8/12が既存quality score=1。M2M100はfallback救済候補だが、品質scoreだけでは意味の不自然さを除外できないため本番cascade未採用。レポート `reports/significant-other-candidate-quality-v1.json`。
+
+## 2026-09-15 checkpoint: ozchi HCI audit expanded
+
+packaged server で `ozchi-finger-specific-touch` を12 unitへ拡張。12 rows を取得し、
+source category と fallback 内訳を保存した。レポート `reports/translation-audit-ozchi-finger-specific-touch.json`。
+
+## 2026-09-15 checkpoint: cognitive psychology audit expanded
+
+packaged server で `cognitive-psychology-gpt3` を12 unitへ拡張。12 rows を取得し、
+source category と fallback 内訳を保存した。レポート `reports/translation-audit-cognitive-psychology-gpt3.json`。
+
+Ergonomics ケース `ergonomics-human-factors-ihci` は catalog/PDF から抽出可能な eligible paragraph が1 unit בלבדで、12 unit拡張はできなかった。監査レポートは更新済みで、サンプル不足として記録する。
+
+## 2026-09-15 checkpoint: linguistics audit expanded
+
+packaged server で `linguistics-language-model-physics` を12 unitへ拡張。12 rows を取得し、
+source category と fallback 内訳を保存した。レポート `reports/translation-audit-linguistics-language-model-physics.json`。
+
+Neuroscience ケース拡張は開始時に packaged server が応答したが、並列送信中に server socket が停止し、checkpoint は既存8 rowsのまま。レポートに接続拒否を記録し、再起動は行わない。
+
+## 2026-09-15 checkpoint: clean stop
+
+ユーザー指示に従い、実行中だった neuroscience 監査を1 paper の checkpoint 保存完了後に停止。
+`translation-audit-neuroscience-rule-following.json` は11 translation unitsを保持し、監査プロセスは終了済み。
+アプリ管理下の translation-server は終了させず、そのまま残した。
+
+## 2026-09-15 checkpoint: neuroscience resume
+
+再開後も `neuroscience-rule-following` は11 rows（limit12未満）のまま checkpoint 保存。
+追加対象のリクエストは完了したが selected rows は増えず、次回も `--resume --limit 12` で再試行する。
+
+## 2026-09-15 checkpoint: thermal audit expanded
+
+`thermal-earring` を12 unitへ拡張し、12 rowsを保存。fallback内訳をレポートへ反映した。
+
+## 2026-09-15 checkpoint: power-over-skin audit resumed
+
+packaged server が ready の状態で `power-over-skin` を `--limit 12 --resume` で再開し、12 translation units を checkpoint 保存した。既存8件から4件を補完し、レポート `test-data/real-papers/reports/translation-audit-power-over-skin.json` / `.md` を更新。pre-model fallback と post-model fallback は従来の品質判定結果を保持している。これは監査データの拡充であり、production routing は変更していない。
+
+## 2026-09-15 checkpoint: step-to-charge audit resumed
+
+`step-to-charge` を packaged server で `--resume --limit 12` 実行し、12 unitsを保存。レポート `test-data/real-papers/reports/translation-audit-step-to-charge.{json,md}` を更新した。監査拡充のみでproduction routingは未変更。
+
+## 2026-09-15 checkpoint: interactive-jewellery audit resumed
+
+`interactive-jewellery` を packaged server で `--resume --limit 12` 実行し、既存4件から12 unitsへ拡張。監査レポートを更新し、production routingは変更していない。
+
+## 2026-09-15 checkpoint: dont-mind-me audit resumed
+
+`dont-mind-me` を packaged server で `--resume --limit 12` 実行し、既存8件から12 unitsへ拡張。監査レポートを更新した。production routingは変更していない。
+
+## 2026-09-15 checkpoint: Phase 2 aggregate resynchronization
+
+既存の translation-audit レポートを横断再集計し、`reports/corpus-phase2-summary-v1.json` を生成した。これはレポート間重複を除去していない探索的集計であり、正式な baseline の代替にはしていない。正式 baseline は v9/v77 の deduplicated report を維持する。v77 attribution summary は ordinary 48 rows / 12 fallbacks (25%)、manual reviewed accepted 67中 severity>=2 が15 (unsafe false accept 22.39%) と再確認された。
+
+## 2026-09-15 checkpoint: mixed-quality alternative candidate generation
+
+label-blind mixed-quality fixture 17 cases を `facebook/m2m100_1.2B` で生成し、`reports/mixed-quality-m2m12-v1.json` に raw output と token数を保存した。これは候補評価用で、production cascadeは未導入。M2M出力は自然さ・用語・未完了文の手動レビューが必要で、既存MADLAD成功出力との自動置換根拠にはまだならない。
+
+## 2026-09-15 checkpoint: mixed-quality candidate comparison
+
+17-case fixtureのMADLAD既存出力とM2M100 1.2B出力を同一 source/block IDで突合し、`reports/mixed-quality-candidate-comparison-v1.json` に保存。M2M候補は全件非空だが、数値・引用・早期終了の自動フラグと自然さの問題が残るため、semantic manual review前のproduction cascade導入は見送った。
+
+## 2026-09-15 checkpoint: selective cascade simulation (audit-only)
+
+M2M100候補に数値・引用・早期終了・反復などの自動品質フラグを適用し、フラグを通過する候補だけを救済候補とするシミュレーションを `reports/selective-cascade-simulation-v1.json` に保存。baselineAccepted はproduction gate状態で独立した意味正解ではないため、結果を本番routingの根拠にはしていない。blind manual semantic labels 完了後に安全性を判定する。
+
+## 2026-09-15 checkpoint: regression verification after cascade audit
+
+候補比較・監査レポート追加後の回帰確認を実施。Vitest **60 files / 308 tests passed**、`npx tsc --noEmit` passed、translation-server unittest **106 passed**、`git diff --check` passed。production routing・`.app` buildは変更していない。
+
+## 2026-09-15 checkpoint: ergonomics sample-shortage verification
+
+`ergonomics-human-factors-ihci --limit 12 --resume` を再実行。抽出側の eligible units は1件のみで、翻訳後も1 rowのまま増加しなかった。これは翻訳サーバーの失敗ではなく、現fixture/PDFのサンプル不足として記録し、抽出ワークストリームの追加fixture候補に残した。
+
+## 2026-09-15 checkpoint: candidate semantic coverage comparison
+
+mixed-quality 17 casesのMADLAD/M2M100候補34件を同一のMiniLM semantic-coverage evaluatorで比較した。`reports/mixed-quality-semantic-comparison-v1.json` に保存。MADLAD平均 min-source similarity は0.700、M2M100は0.590、0.60未満はMADLAD 4/17・M2M100 8/17。埋め込み類似度だけでは意味正解を保証しないため、cascade自動採用の根拠にはせず、manual review優先順位付けに限定する。
+
+## 2026-09-15 checkpoint: manual review queue resynchronized
+
+`npm run audit:prepare-review` を実行し、拡張監査を反映した review queue を更新。現在 `132/139` rows が completed、残り7 rowsが manual semantic review対象として明示された。自動acceptを正解扱いせず、cascade判断は保留。
+
+## 2026-09-15 checkpoint: pending manual review priority queue
+
+未レビュー7 rows（ordinary 4、list 2、damaged-extraction 1）を抽出し、構造混在・長文を優先する再開用キュー `reports/manual-review-priority-v1.json` を生成した。ラベルやseverityは自動付与していない。
+
+## 2026-09-15 checkpoint: review metrics resummarized
+
+最新の手動レビュー集計を生成。132 reviewed blocksで automatic accept 46.21%、pre-model fallback 37.88%、post-model fallback 15.91%、semantic error 30.30%、unsafe false accept 21.31%、extraction-induced error 19.70%。ordinary-bodyは44 reviewed、post-model fallback 25%、semantic error 27.27%、unsafe false accept 15.15%。値は未レビュー7件が残る暫定値で、fallback <=5%未達。
+
+## 2026-09-15 checkpoint: A-cohort variant diagnosis rerun
+
+`audit:enrich-fallback-diagnostics` は現行レポートに追加対象0件だった。続けて `audit:diagnose-a-cohort` を完了し、MADLAD実モデルのA-cohort variant outputを `translation-server/benchmarks/translation-unit-variants-v79.json` に保存。短い日本語候補を長さだけで救済しない既存方針を確認し、production routingは変更していない。
+
+## 2026-09-15 checkpoint: pending audit runner completed
+
+`run-pending-translation-audit.mjs --limit 12` を packaged server で完了。ergonomics は1 unit、neuroscience は11 unitsを再確認し、runner自体は failures=0。12件未達は eligible source不足で、監査レポートとreview queueは保持された。
+
+## 2026-09-15 checkpoint: pending runner short-fixture fix
+
+`run-pending-translation-audit.mjs` の完了判定を修正。正常に処理完了したpaperは、eligible unit数がsampling limit未満でも再試行しないようにした。entry errorがある中断ケースは従来どおりpendingに残る。`--dry-run --limit 12` で cached19 / pending0 / skipped2 を確認し、`git diff --check` 通過。
+
+## 2026-09-15 checkpoint: runner fix lint verification
+
+runner完了判定修正後に `npm run lint` を実行し成功。前回の Vitest/tsc/Python 回帰結果と合わせ、監査runner変更に静的検査上の問題がないことを確認した。
+
+## 2026-09-15 checkpoint: frontend build verification
+
+`npm run build`（tsc -b + Vite production build）成功。Viteの既知の ineffective dynamic import warningのみで、build artifact生成を確認。`.app` はユーザー指示どおり未ビルド。
+
+## 2026-09-15 checkpoint: extraction corpus verification
+
+`npm run test:extraction-corpus` 成功（2 test files / 40 tests）。既知のPDFフォント警告は出たが、cached real-paper reading-order と baseline extraction は通過。これは抽出回帰がないことの確認であり、既存のpaper-specific extraction limitationsは別途残る。
+
+## 2026-09-15 checkpoint: runtime/version verification
+
+監査レポートの実翻訳 rows は `3b-mt-v5-semantic-v71-strict-restore-v9` を使用し、packaged server health は `model_loaded=true`, `phase=ready` を再確認。`git diff --check`も通過。
+
+## 2026-09-15 checkpoint: M2M100 beam-4 fallback probe
+
+mixed-quality baseline fallback 5件に対してM2M100 1.2B beam=4を生成し、`reports/mixed-quality-m2m12-beam4-v1.json` に保存。beam出力は候補の流暢さが改善する例もあるが、長文の未完了・用語混在が残るため、5件だけでproduction rescue採用はしない。
+
+## 2026-09-15 checkpoint: CAT-Translate candidate triage
+
+キャッシュ済み `cyberagent/CAT-Translate-1.4b` を候補として確認したが、checkpoint configは Llama/CausalLMであり、既存のseq2seq比較 harness (`AutoModelForSeq2SeqLM`) では翻訳入力形式を適用できず評価は未実施。無理にseq2seqとして扱わず、chat/prompt仕様を確認した専用adapterが必要。production routingは変更していない。
+
+## 2026-09-15 checkpoint: CAT-Translate adapter probe
+
+CAT-Translate 1.4Bの公式chat-template形式に対応したaudit-only CausalLM harness `translation-server/scripts/compare_causal_translation_model.py` を追加し、mixed-quality fallback 5件を生成。結果 `reports/mixed-quality-cat14-fallback-v1.json`。CATは一部長文で出力量が改善したが、dont-mind-meで引用欠落、power-over-skinで数値欠落が残るため、5件だけではcascade採用不可。production routingは変更していない。
+
+## 2026-09-15 checkpoint: CAT-Translate full-fixture probe paused
+
+ユーザー指示に従い、CAT-Translate 1.4B mixed-quality全17件評価を15/17件がcheckpoint保存された時点で停止。`reports/mixed-quality-cat14-all-v1.json` は15件の途中結果を保持し、残り2件は次回再開可能。アプリ管理下のtranslation-serverは停止していない。production routingは未変更。
+
+## 2026-09-15 checkpoint: CAT-Translate full fixture completed
+
+停止していたCAT-Translate 1.4B mixed-quality評価の残り2件を再開し、全17/17件を保存。統合レポート `reports/mixed-quality-cat14-all-v1.json` を更新した。全件の品質フラグ集計とMADLAD/M2M比較は次工程で行う。production routingは未変更。
+
+## 2026-09-15 checkpoint: CAT semantic coverage
+
+CAT-Translate全17候補へ既存MiniLM evaluatorを適用。平均 min-source similarityは0.588、0.60未満は8/17。数値欠落4件・引用欠落1件もあり、MADLAD（同fixture平均0.700）を下回るため、CATを本番cascadeへ採用しない。レポート `reports/mixed-quality-cat14-semantic-v1.json`。
+
+## 2026-09-15 checkpoint: three-model comparison consolidated
+
+同一17-source fixtureのMADLAD / M2M100 1.2B / CAT-Translate 1.4Bを統合比較し、`reports/mixed-quality-three-model-comparison-v1.json` に保存。数値・引用欠落とCATのsemantic coverageをモデル別に記録した。候補差は入力カテゴリに依存するため、productionの自動置換は未実施。
+
+## 2026-09-15 checkpoint: manual review queue completed
+
+保留7 rowsを手動確認し、`audit-manual-review.json` の139/139 rowsに `reviewedAt`・labels・severity・notesを付与。`npm run audit:summarize-review` の全体値は automatic accept 46.76%、pre-model fallback 35.97%、post-model fallback 17.27%、semantic error 32.37%、unsafe false accept 23.08%、extraction-induced error 18.71%。ordinary-bodyは48 rows、post-model fallback 25%、semantic error 31.25%、unsafe false accept 19.44%。fallback <=5%未達。次はA群のsemantic omission / relation-changing mistranslationを対象に、audit-only evaluatorとselective cascade候補を拡張する。
+
+## 2026-09-15 checkpoint: semantic relation audit refreshed
+
+`npx tsx scripts/score-translation-coverage.ts` を実行し、ordinary-body translated rows 75件を再評価。invariant loss 7、negation relation loss 4、contrast relation loss 4、ordinal claim relation loss 6を検出した。これはaudit-only signalであり、まだproduction rejectには接続していない。正常な翻訳を一括fallbackさせず、これらのrelation lossをcandidate selectionのmanual-review優先順位へ利用する。
+
+## 2026-09-15 checkpoint: relation signal calibration
+
+`reports/relation-calibration-v1.json` を生成し、coverage evaluatorのrelation/invariant lossをmanual review severity>=2のaccepted rowsと照合した。現時点ではaudit signalのprecision/recallを校正する段階で、production rejectやcascade採用は行っていない。signalが安全に使えるかを確認してからrouting候補へ進む。
+
+## 2026-09-15 checkpoint: three-model selective-cascade simulation
+
+既存のaudit-only candidate selectorをMADLAD baselineとM2M100/CATの17-case fixtureへ適用。34候補を比較し、relation gateありで17 rows中16 rowsを選択、1 rowをreject。hard invariant/continuation signalを同時に満たしたのは13 rows。これはfallback rescue可能性の上限を示す診断であり、semantic correctnessの証明ではないためproduction routingは変更していない。
+
+## 2026-09-15 checkpoint: semantic review prioritization
+
+`prioritize-semantic-review.ts` を追加し、manual severity>=2かつproduction acceptの行を、relation loss・invariant loss・source長で監査優先順位化した。出力は `test-data/real-papers/reports/semantic-review-priority-v1.json`。これはaudit-onlyであり、候補選択・production fallbackは変更していない。
+
+## 2026-09-15 checkpoint: semantic priority scorer verified
+
+semantic priority scorerのrelation-loss抽出を`*Preserved`信号に限定するよう修正し、15件のaccepted severity>=2 rowsを再生成。`npx tsc --noEmit` と `git diff --check` が通過。audit-only。
+
+## 2026-09-15 checkpoint: translation-server regression verification
+
+`PYTHONPATH=translation-server translation-server/.venv/bin/python -m unittest discover -s translation-server/tests -q` を再実行し、106 tests passed。candidate selectorの診断JSON出力は既知のauditテストとして1行表示されるが、失敗ではない。
+
+## 2026-09-15 checkpoint: frontend regression after audit tooling
+
+`npm test -- --run` 成功（60 files / 310 tests）。監査用priority scorer追加による既存UI・抽出・翻訳関連テストの回帰は確認されなかった。
+
+## 2026-09-15 checkpoint: lint verification
+
+`npm run lint`（oxlint）が成功。新規semantic priority scorerを含む作業ツリーに静的検査上のエラーはない。
+
+## 2026-09-15 checkpoint: local model ledger reviewed
+
+既存のlocal-model-candidate-ledgerを再確認。Apache/MITの無料ローカル候補（Opus、M2M100 418M/1.2B）は評価済みだが、fallback rescueに必要なsemantic safetyを満たさない。NLLB distilled 600MはCC-BY-NC-4.0のため製品候補から除外済み。現時点で未評価かつキャッシュ済みの追加候補はなく、無計画な大容量ダウンロードは行わない。
+
+## 2026-09-15 checkpoint: post-fallback rescue upper bound
+
+manual reviewでpost-model fallbackだった行とM2M/CAT候補を結合し、数値保持・長さ・継続語のみの保守的signalで救済上限を算出。`reports/post-fallback-rescue-upper-bound-v1.json` に保存した。signal passは意味正解を保証しないため、本番cascade導入判断には使わず、次のmanual candidate review対象を限定する。
+
+## 2026-09-15 checkpoint: candidate ledger synchronized with Gemma evidence
+
+既存のGemma 2 9B same-fixture/held-out評価をlocal-model-candidate-ledgerへ反映。固定12 rowsでは9 apparent rescues・1 conditional・2 rejectsだが、manual labelsを見た後のoracle評価であり、held-outでも混在挙動があるため本番routingは未導入。ライセンス条件は製品配布前に再確認する。
+
+## 2026-09-15 checkpoint: held-out selector evidence reviewed
+
+既存のQwen14 held-out relation-gate reportを確認。3 rows中hard signal passは1、relation gateで2 rowsがrejectされた。小標本であり性能推定には使えないが、固定fixtureだけのselector校正を本番へ持ち込まない根拠として記録した。
+
+## 2026-09-15 checkpoint: fallback reason distribution
+
+manual reviewのpost-model fallback 24件を確認。14件が`server returned source fallback`で、残りはscientific invariant・negation・degenerate等の個別guardだった。fallback行のtranslationは空で、length thresholdを下げても救済できない。したがって単純な品質閾値緩和ではfallback 5%へ近づかず、候補生成またはモデル適合性の改善が必要。
+
+## 2026-09-15 checkpoint: Gemma held-out completeness signal
+
+Gemma held-out 3 rowsを再集計し、`gemma-heldout-completeness-v1.json` に文字長比・数値保持・短縮フラグを保存。短縮signalは意味正解の代替ではないが、固定fixture oracleに依存しない入力品質確認として利用できる。
+
+## 2026-09-15 checkpoint: next-action list reconciled
+
+`audit-progress.json` の古い完了済み項目を整理し、未解決のsemantic claim校正・held-out cascade・抽出fallback分離・新規無料モデルscreeningだけをnextActionsとして残した。次回Codexはこのリストから再開できる。
+
+## 2026-09-15 checkpoint: runtime resync
+
+read-only health checkで `127.0.0.1:8765` は現在接続不可、translation-server/paper-readerプロセスも存在しないことを確認。監査runnerは cached=19 / pending=0 / skipped-no-pdf=2。アプリ管理プロセスをこちらから起動・停止せず、次回はユーザーが.appを起動した後にruntime確認を再開する。
+
+## 2026-09-15 checkpoint: aggregate audit report reconstructed
+
+認証なしの監査CLIが集約 `translation-audit.json` を部分上書きしたため、残存する19個のper-paper reportから集約JSON/Markdownを再構成した（19 papers / 216 rows）。個別レポートとmanual review 139-row基盤は保持されている。再構成ファイルは元の集約生成順と完全同一とは限らないため、次回は個別レポートをsource of truthとして比較し、集約値を無条件にbaselineへ使わない。
+
+## 2026-09-15 checkpoint: runtime resumed
+
+再確認で packaged app-managed translation-server が `127.0.0.1:8765` に復帰し、healthは `model_loaded=true / phase=ready`。認証付き監査CLI用tokenは環境に露出させず、未認証リクエストは実行しない。次回はアプリの通常翻訳経路、または安全に設定された認証環境からheld-out評価を実施する。
+
+## 2026-09-15 checkpoint: manual-review baseline fixed for next strategy branch
+
+139/139 manually reviewed rowsを再集計し、`test-data/real-papers/reports/manual-review-baseline-v1.json`へ保存した。現行値は全体のreader-visible fallback 74/139 (53.24%)、unsafe false accept 15/139 (10.79%)、semantic error 45/139 (32.37%)。ordinary-bodyは48 rows、reader-visible fallback 12/48 (25.00%)、unsafe false accept 7/48 (14.58%)、semantic error 15/48 (31.25%)。分野ラベルは重複するため分野別合計は全体と一致しない。このbaselineを次のheld-out selective cascade / candidate-selection比較の固定基準とする。既存production routingは変更していない。
+
+## 2026-09-15 checkpoint: held-out cascade review queue prepared
+
+17件の同一source三モデル比較から、baselineがfallbackで、代替候補が数値・引用のhard signalを通過した行だけを抽出し、`reports/cascade-candidate-review-v1.json`へ保存した。候補は自動採用せず、sourceと各候補を手動比較してsemantic adequacyを判定する。次はこのqueueのレビュー後、救済率とunsafe false acceptをbaseline（ordinary 12/48 fallback、7/48 unsafe）と比較する。
+
+## 2026-09-15 checkpoint: cascade candidate manual review completed
+
+候補レビューqueueの3/3件を原文比較した。interactive-jewellery、marketing-consumer-response、step-to-chargeのM2M100/CAT候補はいずれもsemantic shift、omission、または専門用語の意味変更を含み、自動cascadeに安全な候補は0件だった。`reports/cascade-candidate-review-v1.json`へ原文・候補訳・severity・理由を追記し、production routingは変更していない。今回のheld-out候補ではfallback救済経路は確認できず、次は別のモデル候補screeningまたはclaim-level candidate selectionの評価が必要。
+
+## 2026-09-15 checkpoint: local cache screening
+
+Hugging Face cacheを再確認し、未評価候補として見えていた`cyberagent/CAT-Translate-0.8b`は実体がなく`refs/main`のみ（約4 KB）であることを確認した。ライセンス確認・ダウンロード・評価は開始していない。既存の実体あり候補はMADLAD、M2M100、Helsinki、CAT-Translate 1.4B、Gemma等で、既存比較でproduction自動cascade採用条件を満たしていない。台帳を更新した。
+
+## 2026-09-15 checkpoint: external free-model screening
+
+公式モデルカードを確認し、`HPLT/translate-en-ja-v2.0-hplt`を未取得候補として台帳に記録した。英→日・CC-BY-4.0だが、現時点ではMarian形式でTransformers変換が作業中と記載されているため、サイズ・macOS実行互換性を確認するまでダウンロード／製品評価は行わない。既存キャッシュは増やしていない。
+
+## 2026-09-15 checkpoint: HPLT artifact/runtime check
+
+HPLT公式ファイル一覧でcheckpointが311 MB（Marian `.npz`）と確認できたが、ローカルに`marian`/`marian-decoder`がなく、Transformers形式も未提供である。したがって取得しても現行translation-serverで評価できないため、ダウンロードせず候補台帳にサイズとruntime blockerを記録した。
+
+## 2026-09-15 checkpoint: candidate semantic embedding audit
+
+候補6件（3 blocks × M2M100/CAT）へ既存のMiniLM semantic coverage evaluatorを適用し、`reports/cascade-candidate-semantic-v1.json`へ保存。full similarityは0.633〜0.871、min-source similarityは0.324〜0.789だったが、手動レビューでは6件すべて安全な自動採用不可（semantic shift / omission / terminology error）。embedding score単独では専門用語の意味変更を検出できず、candidate selectionのproduction gateには不十分であることを確認した。
+
+## 2026-09-15 checkpoint: technical-token audit signal
+
+`score_candidate_selection.py`へ、通常語をブラックリスト化せず、英数字識別子・大文字略語・ハイフン付き技術名の保持率を測るaudit-only signalを追加した。例では`M2W`/`EQS-HBP`は保持、`TQP3M9009`欠落を検出できる。production quality gateやroutingには接続していない。`py_compile`と代表ケースの出力確認、`git diff --check`を通過。
+
+Candidate-selection regression: `tests.test_candidate_selection` 10 tests passed after technical-token signal addition.
+
+Full translation-server regression after candidate audit signal: `unittest discover -s translation-server/tests -q` 106 tests passed. The single `[MICROBATCH] unit fallback` line is an expected diagnostic from an existing test, not a failure.
+
+Technical-token audit signal regression expanded with an explicit identifier-loss test; `tests.test_candidate_selection` now passes 11 tests.
+
+Frontend regression after audit-signal/test changes: `npm test -- --run` passed (60 files / 310 tests). PDF.js DOMMatrix/Path2D warnings are the existing missing-canvas warning; no test failures.
+
+Candidate-selection `hardSignalPass` now requires complete technical-token preservation in addition to numeric/continuation checks. This remains audit-only; candidate ranking and production routing are unchanged. Candidate-selection regression remains 11 tests passed.
+
+## 2026-09-15 checkpoint: claim-structure audit signals
+
+candidate-selectionへ、`respectively`・`both...and`・`either...or`等の対応関係を検出するaudit-only信号を追加し、hard-signal集計にも反映した。日本語側の「それぞれ」「双方」「いずれか」等を確認するが、production rejectには未接続。回帰テストは13件通過。
+
+## 2026-09-15 checkpoint: user-requested pause
+
+ユーザー指示により、claim-structure audit signal追加（candidate-selectionテスト13件通過）までを区切りとして停止。監査runner・benchmark・translation-serverの長時間プロセスは稼働していない。次回はこの地点からheld-out claim-structure評価、または新規ローカルモデル評価を再開する。fallback目標は未達で、goalは継続。
+
+## 2026-09-15 checkpoint: source vs packaged algorithm verification
+
+`.app`内の`translation-server/engines/segmenter.py`と作業ツリーの同ファイル、`madlad_mps.py`は`cmp`で完全一致（`SEGMENTER_VERSION=semantic-v71`）。PDF抽出（`pdfLayout.ts` / Canonical pipeline）はTauriのフロントエンドへコンパイル埋め込みされ、`.app`内にTS原本は存在しないため個別ファイル比較は不可。ただし抽出ソースの最終更新は`.app`ビルド時刻（21:18）より前で、ビルド後の抽出コード差分は確認されなかった。したがって抽出アルゴリズムは同一と判断できるが、最終的な完全証明には再ビルド後のpackaged acceptanceが必要。
+
+## 2026-09-15 checkpoint: extraction heuristic diagnostic baseline
+
+cached real-paper 20件を再抽出し、paragraph長、chrome語混入、列境界痕跡のaudit-only診断を実施。`reports/extraction-diagnostic-v1.json`へ保存した。これは誤り確定ではなく、次の手動確認対象を絞るtriageである。特にlinguistics/economics/neuroscienceで長大paragraphや数式・表由来の混在候補が多く、既存のテストはこれらのblock境界品質を十分にassertしていないことが分かった。翻訳側・production parserは未変更。
+
+## 2026-09-15 checkpoint: extraction author metadata stitch guard
+
+Neuroscience real-paper inspection showed author/contributor metadata at the bottom of page 1 being stitched into the first body paragraph on page 2 because the continuation heuristic only saw a lowercase next fragment. Added a generic `isAuthorMetadataBlock` boundary (contributed equally, correspondence, requests for materials, addressed-to, e-mail markers) to the existing resolver-side continuation skip list. This prevents metadata from becoming a translation paragraph while preserving normal cross-page prose stitching. Added a regression test. Reading-order: 29 tests passed; extraction corpus: 40 tests passed; TypeScript and lint passed. Translation server and `.app` were not changed or rebuilt.
+
+Follow-up verification: cross-page stitch regression now also asserts both source pages remain in the merged block's line provenance and its bounding box spans the page-end source geometry.
+
+## 2026-09-15 checkpoint: native source integrity assertion
+
+Exported `hasSourceTextIntegrity` from `pdfLayout.ts`, which verifies each layout block can be reconstructed from its native ordered lines (including hyphen joining and normalized whitespace). A regression test now applies this invariant to every named reading-order fixture; 30 tests pass. This is audit instrumentation only and does not alter translation behavior.
+
+## 2026-09-15 checkpoint: benchmark source-integrity metric
+
+Extraction benchmark reports now include `sourceIntegrityRate`, computed from the same native-line reconstruction invariant used by reading-order tests. This exposes source-loss regressions per real-paper baseline instead of relying only on role/heading metrics. Typecheck and fusion metrics tests pass; translation code remains untouched.
+
+Follow-up: sourceIntegrityRate initially targeted projected PaperBlock objects (which intentionally omit native lines); corrected it to score the LayoutBlock input where native provenance exists. Extraction corpus rerun passed 40/40.
+
+## 2026-09-15 checkpoint: corpus source-integrity scan
+
+Ran the new native-line integrity metric across all 19 cached real papers (4,493 layout blocks). Every block reconstructed exactly after permitted whitespace/hyphen normalization: 100% sourceIntegrityRate for each paper. Report: `test-data/real-papers/reports/extraction-source-integrity-v1.json`. This validates text reconstruction, but does not by itself prove semantic reading order or role correctness.
+
+## 2026-09-15 checkpoint: table evidence precision guard
+
+Real-paper scan showed ordinary multi-token body lines were receiving table evidence because PDF.js emits each word as a separate item. Tightened the generic table grid signal to require repeated x-start columns across rows, in addition to short-cell/numeric evidence, and explicitly excluded author/affiliation/title masthead blocks. Extraction corpus remains 40/40; interactive-jewellery inferred table nodes dropped from 39 to 25 in the diagnostic probe. This is a precision improvement; remaining table candidates require manual region review before further threshold changes.
+
+Follow-up table scan: requiring at least two multi-item native rows did not change the interactive-jewellery candidate count (25), indicating remaining candidates are multi-row aligned body/figure text rather than masthead-only noise. No further threshold tightening was made without manual ground truth; corpus tests remain 40/40.
+
+## 2026-09-15 checkpoint: sentence-like table false-positive guard
+
+PDF image inspection of interactive-jewellery page 1 showed body paragraphs being promoted to table evidence solely because word-level native items formed pseudo-grids. Added a generic guard: multi-line blocks with >20 words and multiple sentence boundaries fall back from table evidence to paragraph. Probe reduced inferred table candidates from 25 to 0 on that body-only page while the extraction corpus remained 40/40. True table recall still needs confirmation on table-heavy pages before declaring the threshold final.
+
+OzCHI table guard acceptance: Table caption recall 1.0, table-region recall 0.8 (existing ground truth threshold), source integrity 1.0 after the sentence-like false-positive guard. Diagnostic report: `reports/extraction-table-guard-v1.json`.
+
+Whole-document probe after the sentence-like guard: interactive-jewellery now produces 0 canonical table regions (13 figure captions remain), consistent with its ground-truth metadata; OzCHI retains table caption recall 1.0 and region recall 0.8. No fixture-specific production rule was added.
+
+## 2026-09-15 checkpoint: caption-above-table probe
+
+Added `Table 1` to the thermal-earring ground truth and tested captions placed above a table. The resolver now considers candidate regions both above and below a caption, but this PDF's table body is image-only/native-text-free, so structured region recall remains 0 and the system correctly falls back to caption-only confidence. Extraction corpus stays 40/40. This documents a genuine native-text limitation rather than forcing a false table grid.
+
+## 2026-09-15 checkpoint: table caption orientation
+
+The table relation resolver now searches both sides of a table caption (many journal layouts place captions above tables; others place them below). The thermal-earring image-only Table 1 remains a caption-only fallback because no native cell geometry exists; no fabricated region is emitted. Targeted reading-order tests (30) and extraction corpus (40) pass.
+
+## 2026-09-15 checkpoint: numbered list projection
+
+Projection now splits flattened numbered list items (`1.`–`20.` and `1)`–`20)`) in addition to bullet markers. Decimal values are excluded by the integer-marker pattern. The introduction remains a separate source part and item order is preserved. Added two regression tests; extraction corpus remains 40/40 and typecheck passes.
+
+## 2026-09-15 checkpoint: list-heavy corpus probe
+
+A native-text scan of the cached PDFs found no reliably encoded bullet lines via pdftotext; numbered-list support is therefore covered by synthetic source-preserving tests while real-paper list recall remains unmeasured. No heuristic was broadened based on absent evidence. Lint passes after the projection change.
+
+Real list probe: `education-learning-analytics.pdf` already yields separate paragraph blocks for items 1–7 and the later 1–6 challenge list in native extraction. The numbered projection helper covers flattened cases without changing these existing boundaries; no additional grouping rule was needed.
+
+## 2026-09-15 checkpoint: numbered prose vs reference projection
+
+The education-learning-analytics probe exposed a generic projection bug: numbered prose items could inherit the `reference` role from upstream heuristics and were therefore skipped as bibliography. Projection now recognizes bounded integer markers without an author/year citation as numbered prose and emits paragraph/list parts. `npm run test:extraction-corpus` passes 40/40. This is an extraction-only correction; translation code and server were unchanged.
+
+## 2026-09-15 checkpoint: inline DOI/body boundary
+
+Native extraction probe found a generic failure mode where a publisher masthead, DOI URL, and first body sentence were emitted as one text item. `pdfLayout` now splits a DOI-bearing item only when substantive trailing prose exists, preserving separate geometry-derived lines; expanded low-size copyright detection keeps the masthead out of body classification. Extraction corpus remains 40/40 after the change. This rule is format-agnostic and does not match venue or paper strings.
+
+## 2026-09-15 checkpoint: inline DOI regression coverage
+
+Added a source-preserving regression for a publisher line containing copyright, DOI, and trailing prose. The reading-order suite now passes 31/31, including the split boundary; extraction remains extraction-corpus green. Cross-format manual review remains pending.
+
+## 2026-09-15 checkpoint: persisted extraction baseline
+
+`bench:pdf-extraction` now writes the full structured result to `test-data/real-papers/reports/extraction-baseline-latest.json` with a version and timestamp, while retaining stdout output for CI. This makes before/after extraction comparisons reproducible. The benchmark completed successfully over the cached corpus after the metadata-boundary change.
+
+## 2026-09-15 checkpoint: extraction corpus rerun
+
+- `npm run test:extraction-corpus` passed 2 files / 40 tests, including 20 cached real-paper reading-order checks and 20 baseline checks.
+- The 19-paper extraction baseline was regenerated at `test-data/real-papers/reports/extraction-baseline-latest.json`.
+- Current measured rates remain: source integrity 100% (all baseline papers), exact title match 57.9% (catalog/native title comparison), education numbered-list recall 100%, thermal-earring table-region recall 80%.
+- No translation-server or `.app` process was started or changed in this iteration.
+- Remaining extraction work is line/bbox-level attribution for the three known residual reading-order cases (`interactive-jewellery`, `neuroscience-rule-following`, `economics-regularized-deepiv`) and representative manual cross-format review. No new heuristic is justified until those cases are inspected.
+
+- Validation after the corpus rerun: `npm run lint`, `npx tsc --noEmit --pretty false`, and `git diff --check` all pass. These checks cover the current extraction changes; they do not close the three known real-paper attribution items.
+
+- Native layout probe of the two suspected page-1 multi-column cases shows both are intentionally single-column body layouts: `neuroscience-rule-following` body lines share x≈155.6 with widths≈320–400, and `economics-regularized-deepiv` has a single main text region with author/contact metadata at the top. The earlier “page1 multi-column” concern is therefore a diagnostic false positive, not evidence for changing `detectPageColumns`; page 14 of economics remains the explicitly expected two-column regression.
+
+- Added `scripts/build-extraction-review-sample.ts` and generated `test-data/real-papers/reports/extraction-manual-sample-v1.json` with 114 representative heading/paragraph/caption rows from the cached corpus. Each row retains page range, role, text, bbox, and pending manual label/cause fields; this is the hand-review input for the remaining extraction audit.
+- The manual review sample was refined to be role-stratified (up to two headings, three paragraphs, and all available figure/table captions per paper); regeneration now yields 144 rows including 6 table captions and 43 figure captions. TypeScript validation passes.
+- Manual visual review completed for `interactive-jewellery` page 2 (rendered at 120 dpi): heading, Figure 1 caption separation, bullet ordering, and the RELATED WORK heading/paragraph boundary were correct (4 checks, severity 0). Results are stored in `test-data/real-papers/reports/extraction-manual-review-v1.json`. This is one reviewed page, not corpus-wide completion evidence.
+- Manual visual review of `neuroscience-rule-following` page 1 found no body/chrome mixing, but the author line is currently projected as a paragraph rather than an author role. This is a genuine generic role-classification candidate (severity 1), to be addressed only with style/geometry evidence; no paper-specific rule was added.
+
+## 2026-09-15 checkpoint: structured masthead author evidence
+
+- Added a generic `looksLikeStructuredAuthorLine` evidence predicate for long masthead author rows containing multiple affiliation markers and name-shaped tokens. It is used only inside the existing masthead classification path and adds no paper-specific vocabulary.
+- Nature `neuroscience-rule-following` page 1 now classifies the multi-author row as `author` instead of `paragraph`; affiliations remain separate and body/chrome boundaries are unchanged.
+- Reading-order corpus test: 20/20 passed; TypeScript and diff checks pass. The change is retained pending the full 40-test corpus rerun.
+- Full extraction corpus rerun after structured author evidence: 2 files / 40 tests passed. No existing reading-order, caption, table, list, or source-integrity regression observed.
+- Full application test suite after the author-role change: 61 files / 316 tests passed. The extraction-specific suite and application suite both remain green.
+- Manual visual review of IEEE/legacy `design-for-wearability` page 1 found correct title/author/affiliation separation, no extracted watermark contamination, correct two-column abstract/body order, and a separate Keywords block (3 checks, severity 0). The PDF's old metadata emitted a Poppler field warning but rendering and native extraction completed.
+- Manual visual review of `thermal-earring` page 13 found a genuine table gap: Table 1 caption and surrounding section boundaries are correct, but the visible native-text grid (header + five rows) is emitted as paragraph blocks and lacks a table region. Labeled `table_contamination`, severity 2, primary cause `table-region-detection`; no workaround or paper-specific rule added.
+
+## 2026-09-15 checkpoint: table row region evidence
+
+- `relationResolver.figureNodesForCaptions` now accepts one-line native rows with multiple aligned text items as table-region members when they sit near a table caption. This covers PDFs whose block grouper emits one row per `LayoutBlock`, while still excluding ordinary prose rows without multiple native items.
+- `npm run test:extraction-corpus` passed (40/40). Full table-region recall must be remeasured with the benchmark before considering this complete; no translation code or `.app` build was changed.
+
+## 2026-09-15 checkpoint: masthead author evidence v1
+
+- Added generic resolver evidence for a first-page, single-line native block containing multiple name-shaped tokens and affiliation markers immediately after a title block. This addresses Nature-style author rows that fall outside the layout masthead cutoff without a name dictionary or paper-specific string.
+- Canonical probe for `neuroscience-rule-following` now resolves `Jörg Gross … Alexander T. Sack` as `author` (confidence 0.88); body paragraphs remain paragraphs. Extraction corpus remains 40/40 after the change. The publisher `OPEN` label remains an isolated metadata block; it is not merged into body text.
+
+- Post-author-evidence benchmark rerun completed: 19 cached papers, source integrity 1.0; extraction corpus 40/40. Author-role validation is currently a Canonical probe rather than a baseline metric because the benchmark's block-level author metric intentionally measures pre-resolver layout roles.
+
+## 2026-09-15 checkpoint: metadata heading precision
+
+- Generic heading evidence is now suppressed for blocks already classified as title, author, or affiliation. The Nature probe no longer projects `OPEN` or title continuation lines as headings; the author row remains `author` and body remains `paragraph`.
+- This is a precision-first resolver correction, not a paper-specific rule. Extraction corpus stayed at 40/40 after the change.
+
+## 2026-09-15 checkpoint: extraction benchmark after metadata precision
+
+- Re-ran the cached 19-paper extraction benchmark after suppressing metadata heading evidence. Source-integrity remains 1.0 across the corpus and the extraction corpus remains 40/40. The Nature Canonical probe no longer emits spurious `OPEN` or title-continuation heading nodes.
+
+## 2026-09-15 checkpoint: table row role evidence v1
+
+- Added conservative nearby-caption geometry evidence for one-line native rows with multiple text items and a neighboring aligned row. Such rows can resolve as `table` instead of paragraph; the existing table-region relation remains the source of the grouped bounding box. Extraction corpus remains 40/40 after the change.
+
+- Added a regression test ensuring metadata title blocks do not receive generic heading evidence. Targeted pipeline test: 4/4 passed.
+
+- Production frontend build (`npm run build`, tsc + Vite) passed after the extraction changes. This is not a Tauri `.app` build; packaged output remains intentionally untouched.
+
+- Regenerated the role-stratified manual extraction sample from the latest source: 144 rows across 19 cached PDFs. Existing manual labels are kept in the separate review file; newly generated rows remain pending.
+
+- Final verification after table-row and metadata-heading changes: extraction corpus 40/40; full Vitest 61 files / 317 tests; `git diff --check` passed. No Tauri bundle or translation-server process was started.
+
+- Extraction benchmark regenerated after table-row evidence: 19 papers; minimum table-region recall 1.0, minimum list-item recall 1.0, source-integrity minimum 1.0. Title exact remains 0.579 due catalog/native title variation and is not treated as a source-loss metric.
+
+- Manual extraction sample inventory: 144 rows (38 headings, 57 paragraphs, 43 figure captions, 6 table captions). Existing rendered review covers 12 checks: 10 severity-0, 1 severity-1 Nature author-role issue (now fixed in Canonical probe), and 1 severity-2 thermal table contamination (table-region recall now 1.0).
+
+- Documentation consistency pass: updated the author-evidence checkpoint to reflect the current probe (isolated `OPEN` metadata block, title lines retained as title), removing an obsolete known-issue statement.
+
+- Extraction audit checkpoint: no new heuristic was promoted in this pass because remaining failures lack cross-format manual evidence. Current report remains 19 papers with source integrity/table/list minima all 1.0; review sample remains 144 rows. This preserves precision over speculative recall gains.
+
+- Replaced stale translation-oriented `nextActions` in `audit-progress.json` with extraction-only follow-up tasks: cross-format paragraph review, heading hierarchy validation, table-row canonical duplication checks, and per-change baseline reruns.
+
+- Verification checkpoint: removed an incomplete draft assertion from the real-paper baseline test before it could affect the suite. `npm run test:extraction-corpus` remains green (40/40), the targeted canonical pipeline suite is green (4/4), and `git diff --check` passes. No translation-server or `.app` build was run.
+
+- Extraction-only validation checkpoint: `npm run lint`, `npx tsc --noEmit --pretty false`, and `npm run build` all pass after the cleanup. The regular frontend build refreshed `dist`; the Tauri `.app` remains intentionally unbuilt. Existing Vite/pdfjs warnings are unchanged and non-fatal.
+
+- List provenance checkpoint: projected flattened numbered/bullet sequences now retain `metadata.listRole` (`intro` or `item`) per emitted block, alongside the existing source-preserving marker. This keeps list boundaries explicit without changing `BlockType` or translation behavior. List projection + Canonical pipeline tests pass (6/6); typecheck passes.
+
+- Cross-page diagnostic checkpoint: scanned all cached real-paper PDFs using the current native extraction and recorded 67 cross-page paragraph blocks in `test-data/real-papers/reports/cross-page-paragraphs-v1.json`. The report preserves paper id, page span, and source text for manual review. It confirms stitching is active across 19 papers, but does not yet prove every merge is correct; suspicious rows (for example rows ending in a continuation token or table-like content) remain in the review queue before any new merge heuristic is added.
+
+- Cross-page diagnostic v2 adds the following-block context in `cross-page-paragraphs-v2.json`: 67 spans total, 11 ending without sentence punctuation, and 8 followed by a lowercase-start paragraph. These are high-value manual-review candidates for continuation stitching; no heuristic was changed based on this signal alone.
+
+- Regression confirmation after the diagnostics and list provenance changes: `npm run test:extraction-corpus` passed again (**2 files / 40 tests**). No extraction heuristic or translation code was changed in this verification.

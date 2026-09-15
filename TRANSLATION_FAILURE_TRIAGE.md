@@ -70,3 +70,23 @@ neuroscience `67, 188, 165, 162, 187, 131, 143, 86, 260` and `343, 174,
 length threshold. The next implementation should instrument per-unit decode
 outcomes and test a generic, conservative semantic rescue for the 300+ character
 units, while retaining the source fallback for any unit that remains unsafe.
+
+### 2026-09-15: relation-loss signal refreshed
+
+全manual review完了後にcoverage evaluatorを再実行し、translated ordinary-body 75 rowsで invariant loss 7、negation loss 4、contrast loss 4、ordinal-claim loss 6を検出した。sentence/length coverageの低値は今回0件だったが、これは意味保持を保証しない。relation signalsはaudit-onlyのまま維持し、production routing変更の前にmanual truthとのprecision/recallを測定する。
+
+### 2026-09-15: relation signal calibration
+
+`reports/relation-calibration-v1.json` に、invariant・negation・contrast・ordinal・統合loss signalとseverity>=2誤訳のTP/FP/FN/TNを保存した。手動レビュー済みのaccepted rowsに限定したauditであり、reader-visible fallbackを含む全体品質の代替ではない。precision優先でthresholdを決めるまでproduction gateへ接続しない。
+
+### 2026-09-15: three-model cascade simulation
+
+MADLAD baselineにM2M100 1.2BとCAT-Translate 1.4Bを加えた34候補/17 sourceのaudit-only選択を実施し、`test-data/real-papers/reports/selective-cascade-three-model-v1.json` に保存。relation gateを有効にすると16 rowsが選択、1 rowは安全信号不足でreject、hard signal passは13 rows。候補を選べても意味正解とは限らないため、本番cascadeは未導入。
+
+### 2026-09-15: semantic review prioritization
+
+severity>=2のaccepted rowsに対し、coverage relation lossとscientific invariant lossを結合した再現可能な優先順位付けを追加した。`semantic-review-priority-v1.json` に保存し、次のcandidate比較・手動再確認の入力にする。単純なrelation lossだけではprecision不足だったため、自動rejectには使わない。
+
+### 2026-09-15: held-out candidate semantic review
+
+Baseline fallback 3件に対するM2M100 1.2B / CAT-Translate 1.4B候補6件を原文比較した。hard signalを通過していても、6件すべてsemantic shift・omission・terminology errorを含み、自動cascade採用可能な候補は0件だった。MiniLMのfull similarityは0.633〜0.871、source sentence最低値は0.324〜0.789だったが、`step-to-charge`の専門用語変質を高スコアで見逃した。したがってembedding値単独のcandidate gateは不十分で、claim/terminology保持を含むaudit評価が必要である。詳細は`reports/cascade-candidate-review-v1.json`と`reports/cascade-candidate-semantic-v1.json`。

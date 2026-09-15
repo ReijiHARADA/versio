@@ -18,26 +18,19 @@ import {
 } from "../../services/trashRetention";
 import { purgeExpiredTrash } from "../../services/trashService";
 import { SettingsCard, SettingsRow } from "./SettingsPrimitives";
+import { SettingsSelect } from "./SettingsSelect";
 import styles from "./SettingsScreen.module.css";
 
 type StorageSettingsSectionProps = {
-  confirming: boolean;
   busy: boolean;
-  message: string | null;
-  onRequestClear: () => void;
-  onConfirmClear: () => void;
-  onCancelClear: () => void;
+  onClearCache: () => void;
 };
 
 const APP_VERSION = "0.1.0";
 
 export function StorageSettingsSection({
-  confirming,
   busy,
-  message,
-  onRequestClear,
-  onConfirmClear,
-  onCancelClear,
+  onClearCache,
 }: StorageSettingsSectionProps) {
   const [meta, setMeta] = useState<LibraryBackupMeta | null>(null);
   const [backupBusy, setBackupBusy] = useState(false);
@@ -60,8 +53,8 @@ export function StorageSettingsSection({
     useProjectStore.getState().setMemberships(memberships);
   };
 
-  const handleRetentionChange = async (value: string) => {
-    const next = await setTrashRetentionDays(Number(value));
+  const handleRetentionChange = async (days: TrashRetentionDays) => {
+    const next = await setTrashRetentionDays(days);
     setRetentionDays(next);
     void purgeExpiredTrash().catch((error) => {
       console.warn("Failed to purge trash after retention change:", error);
@@ -76,8 +69,13 @@ export function StorageSettingsSection({
       const result = await runLibraryBackup(APP_VERSION);
       const next = await getLibraryBackupMeta();
       setMeta(next);
+      const skipNote =
+        result.warnings.length > 0
+          ? `（不完全な論文 ${result.warnings.length} 件は除外）`
+          : "";
       setBackupMessage(
-        next.lastMessage ?? `バックアップを作成しました（論文 ${result.paperCount} 件）`
+        next.lastMessage ??
+          `バックアップを作成しました（論文 ${result.paperCount} 件）${skipNote}`
       );
     } catch (error) {
       setBackupMessage(
@@ -181,26 +179,18 @@ export function StorageSettingsSection({
           <SettingsRow
             label="自動削除までの日数"
             description="ゴミ箱の項目を自動で完全削除するまでの日数です。「設定しない」では手動削除のみです。変更直後に期限切れがあれば削除します。"
-            align="start"
+            htmlFor="trash-retention"
           >
-            <div
-              className={styles.segmented}
-              role="radiogroup"
+            <SettingsSelect
+              id="trash-retention"
               aria-label="自動削除までの日数"
-            >
-              {TRASH_RETENTION_OPTIONS.map((days) => (
-                <button
-                  key={days}
-                  type="button"
-                  role="radio"
-                  aria-checked={retentionDays === days}
-                  className={retentionDays === days ? styles.selected : ""}
-                  onClick={() => void handleRetentionChange(String(days))}
-                >
-                  {trashRetentionOptionLabel(days)}
-                </button>
-              ))}
-            </div>
+              value={retentionDays}
+              options={TRASH_RETENTION_OPTIONS.map((days) => ({
+                value: days,
+                label: trashRetentionOptionLabel(days),
+              }))}
+              onChange={(days) => void handleRetentionChange(days)}
+            />
           </SettingsRow>
         </SettingsCard>
 
@@ -210,40 +200,15 @@ export function StorageSettingsSection({
             description="同じ文章を速く翻訳するための一時データです。削除しても保存済みの論文・翻訳・元PDF・メモは消えません。"
             align="start"
           >
-            {confirming ? (
-              <div className={styles.actionRow}>
-                <p className={styles.confirmText}>
-                  翻訳キャッシュを削除しますか？保存済みの論文や翻訳、元PDF、メモは削除されません。
-                </p>
-                <button
-                  type="button"
-                  className={styles.dangerButton}
-                  disabled={busy}
-                  onClick={onConfirmClear}
-                >
-                  {busy ? "削除中..." : "キャッシュを削除"}
-                </button>
-                <button
-                  type="button"
-                  className={styles.ghostButton}
-                  disabled={busy}
-                  onClick={onCancelClear}
-                >
-                  キャンセル
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                className={styles.button}
-                onClick={onRequestClear}
-                disabled={busy}
-              >
-                翻訳キャッシュを削除
-              </button>
-            )}
+            <button
+              type="button"
+              className={styles.button}
+              onClick={onClearCache}
+              disabled={busy}
+            >
+              {busy ? "削除中..." : "翻訳キャッシュを削除"}
+            </button>
           </SettingsRow>
-          {message ? <p className={styles.statusText}>{message}</p> : null}
         </SettingsCard>
       </div>
     </div>

@@ -53,14 +53,13 @@ for (const paper of catalog.papers) {
 
 const titleHits = reports.filter((r) => r.titleExact === true).length;
 const titleKnown = reports.filter((r) => r.titleExact !== undefined).length;
-console.log(
-  JSON.stringify(
-    {
-      papers: reports.length,
-      titleExact: titleKnown === 0 ? null : titleHits / titleKnown,
-      reports,
-    },
-    null,
-    2
-  )
-);
+const result = {
+  version: "extraction-baseline-v1",
+  generatedAt: new Date().toISOString(),
+  papers: reports.length,
+  titleExact: titleKnown === 0 ? null : titleHits / titleKnown,
+  reports,
+};
+const reportPath = path.join(root, "test-data/real-papers/reports/extraction-baseline-latest.json");
+fs.writeFileSync(reportPath, `${JSON.stringify(result, null, 2)}\n`);
+console.log(JSON.stringify({ ...result, reportPath }, null, 2));

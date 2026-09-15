@@ -127,3 +127,49 @@ p-values, sample-size notation, and measurements with restoreable placeholders.
 After translation, the client scores language integrity, repetition, length,
 and source scientific invariants. Outputs that lose a critical invariant are
 rejected so the reader retains the original text rather than a fluent error.
+
+### Affiliation line-wrap boundary
+
+Affiliation lines may wrap after a comma or conjunction and lose the
+institution marker on the continuation line. The generic grouping layer now
+allows a conservative same-page/same-column affiliation continuation when line
+spacing and font size match the masthead and the preceding text ends in a
+syntactic connector (or the next line contains an institution marker). This
+keeps affiliation metadata together without allowing a body paragraph to be
+absorbed after the masthead.
+
+### Author metadata is a page-boundary barrier
+
+Contributor notes and correspondence/e-mail metadata can sit at the bottom of a page and be followed by lowercase body text on the next page. The continuation resolver treats generic metadata markers as a non-stitchable boundary, so page-boundary repair cannot turn author notes into translated body prose. This is a boundary rule, not a paper-specific name or venue rule.
+
+### Native source integrity invariant
+
+Layout blocks expose an integrity check that reconstructs their text from ordered native lines, preserving punctuation and line provenance while allowing only whitespace normalization and legitimate line-break hyphen joining. Extraction fixtures assert this invariant before projection to translation blocks.
+
+### Benchmark source-integrity metric
+
+Each extraction baseline now reports the proportion of canonical blocks reproducible from native ordered lines. This metric is calculated independently of translation and makes punctuation/text loss visible alongside reading-order and structure scores.
+
+### Table evidence precision
+
+A line containing multiple native text items is not sufficient table evidence because ordinary PDF.js word extraction has the same shape. The generic table detector now requires repeated horizontal start columns across multiple rows, plus compact-cell or numeric evidence, and ignores masthead metadata. Low-confidence candidates continue to fall back to paragraph in the resolver.
+
+### Sentence-like blocks are not table grids
+
+Word-level native extraction can make ordinary paragraphs look like aligned cells. The table evidence generator now rejects multi-line, long, sentence-like blocks before grid scoring. This reduces table false positives while retaining compact numeric or short-cell grids; table-heavy fixtures remain required to validate recall.
+
+### Caption orientation
+
+Table-region association is orientation-agnostic: candidate native rows may appear above or below a caption. When no cell geometry is available (for example an image-only table), the resolver preserves the caption and emits a low-confidence fallback instead of fabricating a structured grid.
+
+### Numbered list boundaries
+
+Flattened native text may contain an introduction followed by numbered items. Projection recognizes bounded integer list markers and emits source-preserving parts, while decimal measurements remain intact. This prevents list content from being sent downstream as one paragraph without adding paper-specific vocabulary.
+
+### Numbered list/reference disambiguation
+
+A numeric prefix alone does not make a block bibliographic. During projection, bounded numbered prose markers (`1.`–`20.` / `1)`–`20)`) without nearby year evidence are treated as list content even if a generic upstream candidate proposed `reference`. Reference classification remains enabled for explicit References sections and citation-shaped entries.
+
+### Inline publisher metadata boundaries
+
+Some PDFs flatten masthead metadata, DOI, and the first body sentence into one native text item. The line grouper recognizes a DOI URL with substantive trailing prose as a boundary and proportionally preserves the native bbox for both pieces. Copyright detection uses generic legal/publisher markers and small-type evidence; no venue-specific string is required.

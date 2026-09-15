@@ -17,7 +17,7 @@ const root = path.resolve(__dirname, "..");
 const outDir = path.join(root, "src/assets/settings-previews");
 const workRoot = path.join("/tmp", "paper-reader-settings-previews");
 const CAPTURE_URL = "http://127.0.0.1:5199/";
-const VIEWPORT = { width: 640, height: 360 };
+const VIEWPORT = { width: 640, height: 300 };
 const DPR = 2;
 const FPS = 12;
 /** GIF netscape loop: 2 ⇒ play, then loop twice more = 3 plays total. */
@@ -46,7 +46,7 @@ const CLIPS = [
     id: "sidebar-mode-expanded",
     mode: "expanded",
     rootsOnly: true,
-    kind: "static",
+    kind: "expanded",
   },
 ];
 
@@ -73,6 +73,32 @@ async function moveCursor(page, from, to, ms) {
     );
     await sleep(ms / steps);
   }
+}
+
+async function runHoverExpandCycle(page, away, over) {
+  // Collapsed → hover expand → hold → leave collapse (same for roots OFF/ON and auto mode).
+  await sleep(700);
+  await moveCursor(page, away, over, 500);
+  await page.locator("[data-capture-root] aside").hover({
+    position: { x: 24, y: 100 },
+    force: true,
+  });
+  await sleep(1300);
+  await moveCursor(page, over, away, 500);
+  await page.mouse.move(away.x, away.y);
+  await sleep(900);
+}
+
+/** Expanded mode stays open; only the cursor wanders to show activity. */
+async function runExpandedCursorCycle(page, away, over) {
+  await sleep(500);
+  await moveCursor(page, away, over, 600);
+  await sleep(900);
+  const mid = { x: over.x + 40, y: over.y + 50 };
+  await moveCursor(page, over, mid, 450);
+  await sleep(700);
+  await moveCursor(page, mid, away, 600);
+  await sleep(700);
 }
 
 async function waitForApi(page) {
@@ -164,15 +190,6 @@ async function encodeGif(clipDir, outGif, posterPng, { loopCount }) {
   if (mid) fs.copyFileSync(path.join(clipDir, mid), posterPng);
 }
 
-function writeStill(clipDir, posterPng) {
-  const frames = fs
-    .readdirSync(clipDir)
-    .filter((f) => /^f-\d+\.png$/.test(f))
-    .sort();
-  const pick = frames[Math.floor(frames.length * 0.6)] ?? frames[0];
-  if (pick) fs.copyFileSync(path.join(clipDir, pick), posterPng);
-}
-
 function startVite() {
   const viteBin = path.join(root, "node_modules/vite/bin/vite.js");
   return spawn(
@@ -226,13 +243,13 @@ async function main() {
     await page.goto(CAPTURE_URL, { waitUntil: "networkidle" });
     await waitForApi(page);
 
-    const away = { x: 420, y: 240 };
+    const away = { x: 420, y: 200 };
     const over = { x: 32, y: 120 };
 
     for (const clip of CLIPS) {
       console.log(`Capturing ${clip.id}…`);
       await configure(page, clip.mode, clip.rootsOnly);
-      await setCursorVisible(page, clip.kind !== "static");
+      await setCursorVisible(page, true);
       await page.evaluate(
         ({ x, y }) => {
           const el = document.getElementById("capture-cursor");
@@ -248,44 +265,18 @@ async function main() {
 
       const clipDir = path.join(workRoot, clip.id);
       await captureFrames(page, clipDir, async () => {
-        if (clip.kind === "static") {
-          await sleep(700);
+        if (clip.kind === "expanded") {
+          await runExpandedCursorCycle(page, away, over);
           return;
         }
-        if (clip.kind === "roots") {
-          await sleep(700);
-          await moveCursor(page, away, over, 450);
-          await sleep(1200);
-          await moveCursor(page, over, away, 450);
-          await page.mouse.move(away.x, away.y);
-          await sleep(700);
-          return;
-        }
-        // auto: enter → expand → leave → collapse
-        await sleep(700);
-        await moveCursor(page, away, over, 500);
-        await page.locator("[data-capture-root] aside").hover({
-          position: { x: 24, y: 100 },
-          force: true,
-        });
-        await sleep(1300);
-        await moveCursor(page, over, away, 500);
-        await page.mouse.move(500, 240);
-        await sleep(900);
+        // roots OFF/ON and auto mode: show expand ↔ collapse; rootsOnly changes collapsed tree.
+        await runHoverExpandCycle(page, away, over);
       });
 
       const poster = path.join(outDir, `${clip.id}.poster.png`);
-      if (clip.kind === "static") {
-        writeStill(clipDir, poster);
-        // Keep a 1-frame gif alias unused; UI uses poster as still.
-        const staleGif = path.join(outDir, `${clip.id}.gif`);
-        if (fs.existsSync(staleGif)) fs.unlinkSync(staleGif);
-        console.log(`  → ${path.relative(root, poster)} (still)`);
-      } else {
-        const gif = path.join(outDir, `${clip.id}.gif`);
-        await encodeGif(clipDir, gif, poster, { loopCount: GIF_LOOP_COUNT });
-        console.log(`  → ${path.relative(root, gif)} (${fs.statSync(gif).size} bytes)`);
-      }
+      const gif = path.join(outDir, `${clip.id}.gif`);
+      await encodeGif(clipDir, gif, poster, { loopCount: GIF_LOOP_COUNT });
+      console.log(`  → ${path.relative(root, gif)} (${fs.statSync(gif).size} bytes)`);
     }
 
     await browser.close();

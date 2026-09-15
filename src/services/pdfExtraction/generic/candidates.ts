@@ -122,7 +122,28 @@ function paragraphLike(text: string): boolean {
   return words.length > 16 || lower >= 5 || /[.!?]\s*$/.test(text.trim());
 }
 
+function mastheadAuthorEvidence(block: LayoutBlock, previous?: LayoutBlock): number {
+  if (block.pageStart !== 1 || block.lines.length !== 1) return 0;
+  const text = block.text.trim();
+  const items = block.lines[0]?.items.length ?? 0;
+  if (items < 2 || /[.!?]$/.test(text)) return 0;
+  // Name-shaped tokens plus affiliation markers are a format-neutral signal;
+  // unlike a name dictionary it works across international author names.
+  const names = text.match(/\b[A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ'’-]{1,}\b/g) ?? [];
+  const markers = text.match(/(?:\d{1,2}|[*†‡])\s*(?:,|&|$)/g) ?? [];
+  const followsTitle = previous?.role === "title";
+  if (names.length < 2 || markers.length === 0) return 0;
+  return followsTitle ? 0.88 : 0.78;
+}
+
 function tableLike(block: LayoutBlock): boolean {
+  // Masthead metadata often has multiple aligned text items (author names,
+  // affiliations, e-mail columns) but is never a table region. Keep this
+  // evidence generator scoped to body geometry; the resolver still decides
+  // the final role from all evidence.
+  if (block.role === "author" || block.role === "affiliation" || block.role === "title") {
+    return false;
+  }
   const lines = block.lines;
   if (lines.length === 0) return false;
   const cellLines = lines.filter((line) => line.items.length >= 2);
@@ -130,7 +151,18 @@ function tableLike(block: LayoutBlock): boolean {
   const shortItems = cellLines.flatMap((line) => line.items).filter((item) => item.text.trim().length <= 24).length;
   const itemCount = cellLines.flatMap((line) => line.items).length;
   const numeric = cellLines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length;
-  const itemGrid = itemCount >= 4 && shortItems / itemCount >= 0.7 && (numeric >= 2 || cellLines.length >= 2);
+  const xStartClusters = new Map<number, Set<number>>();
+  for (const [lineIndex, line] of cellLines.entries()) {
+    for (const item of line.items) {
+      const x = Math.round(item.x / 12) * 12;
+      const rows = xStartClusters.get(x) ?? new Set<number>();
+      rows.add(lineIndex);
+      xStartClusters.set(x, rows);
+    }
+  }
+  const minRepeatedRows = Math.max(2, Math.ceil(cellLines.length * 0.5));
+  const repeatedColumns = [...xStartClusters.values()].filter((rows) => rows.size >= minRepeatedRows).length;
+  const itemGrid = cellLines.length >= 2 && itemCount >= 4 && shortItems / itemCount >= 0.7 && repeatedColumns >= 2 && (numeric >= 2 || cellLines.length >= 2);
   // Some tables have a long prose description in their right-hand cells.  A
   // short-cell ratio alone then mislabels them as paragraphs, even though the
   // native geometry clearly shows repeated cells and an indented description
@@ -146,6 +178,25 @@ function tableLike(block: LayoutBlock): boolean {
     indentedRows >= 2;
   return itemGrid || proseGrid;
 }
+
+function nearbyTableRowEvidence(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
+  if (block.lines.length !== 1 || block.lines[0].items.length < 2) return false;
+  const caption = blocks.find((candidate) =>
+    candidate.pageStart === block.pageStart &&
+    candidate.role === "table_caption" &&
+    Math.abs(candidate.bbox.y - block.bbox.y) < 300
+  );
+  if (!caption) return false;
+  const x = Math.round(block.lines[0].items[0].x / 12) * 12;
+  const alignedRows = blocks.filter((candidate) => {
+    if (candidate === block || candidate.pageStart !== block.pageStart || candidate.lines.length !== 1) return false;
+    if (Math.abs(candidate.bbox.y - block.bbox.y) > 300 || candidate.lines[0].items.length < 2) return false;
+    const otherX = Math.round(candidate.lines[0].items[0].x / 12) * 12;
+    return otherX === x;
+  }).length;
+  return alignedRows >= 1;
+}
+
 
 function equationScore(block: LayoutBlock, layout: PageColumnLayout | undefined): number {
   const text = block.text.trim();
@@ -196,6 +247,8 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       paragraph: role === "paragraph" ? confidence : 0.22,
       [role]: confidence,
     };
+    const authorEvidence = mastheadAuthorEvidence(block, blocks[index - 1]);
+    if (authorEvidence > 0) scoreByRole.author = authorEvidence;
     const anchoredHeading = blocks.some((other, otherIndex) =>
       otherIndex !== index && other.role === "heading" &&
       Math.abs(styleSignature(other, layouts, baseFontSize, blocks[otherIndex - 1], blocks[otherIndex + 1]).boldScore - style.boldScore) < 0.25 &&
@@ -204,7 +257,13 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const nonBodyFont = style.fontNames.length > 0 && style.fontNames.every(
       (fontName) => (fontUse.get(fontName) ?? itemCount) / Math.max(itemCount, 1) < 0.18
     );
-    if (headingTextShape(block.text) && (!paragraphLike(block.text) || nonBodyFont)) {
+    if (
+      role !== "title" &&
+      role !== "author" &&
+      role !== "affiliation" &&
+      headingTextShape(block.text) &&
+      (!paragraphLike(block.text) || nonBodyFont)
+    ) {
       const styleEvidence = (style.boldScore >= 0.35 ? 0.32 : 0) +
         (style.fontSizeRatio >= 1.04 ? 0.14 : 0) +
         (style.spacingBefore >= baseFontSize * 0.55 ? 0.1 : 0) +
@@ -220,7 +279,10 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // A true geometry grid is stronger evidence than paragraph text shape.
     // The resolver still requires this high score before it can override the
     // conservative paragraph fallback.
-    if (tableLike(block)) scoreByRole.table = 0.96;
+    // Keep table evidence available for caption-region membership, but below
+    // the resolver's role override threshold so body prose stays paragraph.
+    if (tableLike(block)) scoreByRole.table = 0.90;
+    if (nearbyTableRowEvidence(block, blocks)) scoreByRole.table = 0.96;
     const reason =
       block.role === "title"
         ? "largest font in first-page masthead"

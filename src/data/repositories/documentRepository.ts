@@ -316,14 +316,19 @@ export async function loadDocument(
   const cached = cache.get(paper.id);
   if (cached && cached.blocks.length > 0) return cached;
   if (await paperPackageExists(fs, paper.id)) {
-    const pkg = await loadPaperPackage(fs, paper.id, options);
-    const projected = packageToProjection(pkg, paper);
-    const entry: CachedDocument = {
-      ...projected,
-      dirty: false,
-    };
-    cache.set(paper.id, entry);
-    return entry;
+    try {
+      const pkg = await loadPaperPackage(fs, paper.id, options);
+      const projected = packageToProjection(pkg, paper);
+      const entry: CachedDocument = {
+        ...projected,
+        dirty: false,
+      };
+      cache.set(paper.id, entry);
+      return entry;
+    } catch (error) {
+      console.warn("Failed to load paper package:", paper.id, error);
+      return cached ?? { paper, sections: [], blocks: [], dirty: false };
+    }
   }
   return cached ?? { paper, sections: [], blocks: [], dirty: false };
 }
