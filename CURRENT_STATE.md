@@ -2526,3 +2526,7 @@ chart labelの翻訳境界変更後、既存の全Vitest（61 files / 335 tests�
 ### Education caption ground-truth expansion (2026-09-16)
 
 教育系PDFのground truthをTable 1–11、Figure 1–5へ拡張（短いcaption本文のみ）。`completeAnnotations=false`としてrecall評価に限定。benchmarkでfigureCaptionRecall=1、tableCaptionRecall=1、sourceIntegrityRate=1。extraction corpus 44/44。直接baseline testは専用configのexclude対象だったため実行不可だが、corpus configで再確認済み。
+
+### Benchmark refresh after education annotations (2026-09-16)
+
+20-paper benchmark再生成。注釈済みsubsetのheadingRecall（4 papers）、figureCaptionRecall（4）、tableCaptionRecall（4）、tableRegionRecall（3）は全て平均1.0、全20 papersのsourceIntegrityRate平均も1.0。未注釈paperを含む全体精度とは解釈せず、ground truth coverage拡張の効果として記録。
