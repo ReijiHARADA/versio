@@ -21,8 +21,13 @@ for (const filename of fs.readdirSync(pdfDir).filter((name) => name.endsWith(".p
     const gaps = central.filter((count) => count === 0).length;
     const left = usable.filter((item) => item.x + item.width <= page.width * 0.49).length;
     const right = usable.filter((item) => item.x >= page.width * 0.51).length;
+    const proseWord = (item: (typeof usable)[number]) =>
+      /[a-z]{2,}/.test(item.text) && item.text.trim().length <= 24;
+    const proseWordShare = usable.length
+      ? usable.filter(proseWord).length / usable.length
+      : 0;
     if (gaps >= 2 && left >= 8 && right >= 8) {
-      output.push({ filename, page: page.pageNumber, itemCount: usable.length, centralGapBins: gaps, leftItems: left, rightItems: right, currentMultiColumn: detectPageColumns(page).isMultiColumn });
+      output.push({ filename, page: page.pageNumber, itemCount: usable.length, centralGapBins: gaps, leftItems: left, rightItems: right, proseWordShare: Number(proseWordShare.toFixed(3)), currentMultiColumn: detectPageColumns(page).isMultiColumn });
     }
   }
 }

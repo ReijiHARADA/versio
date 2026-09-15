@@ -1954,3 +1954,5 @@ ppg-earring page3/page13の左右列混在は、左列末尾の未完結文か�
 診断を再生成して残り5候補を確認した。ppg-earringのうちpage 7は図中心、page 16は参考文献中心で、word占有だけでは二段組昇格の正解ラベルにならない。page 10/12は引き続き実二段組候補、education-learning-analytics page 6は低密度候補である。したがって閾値をさらに下げず、spanning/参考文献を識別するline-level evidenceを次の調査対象とする。
 
 閾値変更後の `npm run bench:pdf-extraction` も完了し、extraction-baseline-latest.jsonを更新した。benchmarkのsource-integrity指標と既存構造指標は維持され、翻訳系・`.app`は未変更。
+
+列診断に短い小文字語の割合（`proseWordShare`）を追加し、53候補ページを再計測した。残る5単段候補も0.72〜0.82と本文語彙を含むため、語彙率だけでは図・参考文献・低密度本文を安全に分離できないことが分かった。line単位の幅・反復x位置・role evidenceを組み合わせる必要がある。
