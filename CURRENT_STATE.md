@@ -2402,3 +2402,7 @@ Resolver-selected rotated table nodes are now projected as skipped `table` Paper
 ### Caption relation metric (2026-09-16)
 
 Benchmarkのoptional ground truthに`tableCaptionRelations`と`tableCaptionRelation`を追加し、table captionの`CAPTION_OF` provenanceをfigureと分離して計測可能にした。typecheck、pdfExtraction pipeline 5/5 成功。
+
+### Table caption relation metrics (2026-09-16)
+
+Benchmark report now exposes `tableCaptionRelationRecall` and `tableCaptionRelationPrecision`, derived from resolved caption-to-table relations. This makes publisher-crossed provenance measurable without changing extraction behavior. Typecheck and pipeline tests 5/5 passed.

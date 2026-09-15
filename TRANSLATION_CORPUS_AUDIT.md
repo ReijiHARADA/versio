@@ -2504,3 +2504,7 @@ x帯split後、表セル行と表外注記は別blockになったが、回転表
 ### Caption relation metric (2026-09-16)
 
 table captionの`CAPTION_OF` relationをground truth付きで測れるoptional benchmark metricを追加。既存fixture互換で、抽出ロジックと翻訳serverは変更していない。
+
+### Table caption relation metrics (2026-09-16)
+
+Resolved table caption-to-table `CAPTION_OF` relations are now reported with recall/precision fields. Metrics remain diagnostic until manual ground truth is expanded; no translation changes.
