@@ -2880,3 +2880,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 corpus diagnostic refresh
 
 - Re-ran `npm run diagnose:pdf-corpus` after the integrity regression. The diagnostic reports 26 papers / 497 pages / 149 suspicious wide multi-x blocks (arXiv 136, PMLR 6, Elsevier 4, OzCHI 2, IEEE 1). This is a prioritization signal, not an error rate; arXiv residuals remain dominated by native vector figure labels and require manual geometry confirmation before any production filter.
+
+### 2026-09-16 list lead-in separation
+
+- Generalized flattened-list projection: when repeated bullet/number markers follow a colon-terminated lead-in, the lead-in becomes its own block and each marker remains an independent item. Inline dash/bullet prose still remains unchanged.
+- Verification: focused pipeline 15/15 and extraction corpus 56/56 passed; no translation or `.app` changes.

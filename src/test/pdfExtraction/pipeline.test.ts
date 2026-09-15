@@ -19,6 +19,9 @@ describe("canonical extraction pipeline", () => {
     expect(splitFlattenedList("A model-based approach – with a caveat.")).toEqual([
       "A model-based approach – with a caveat.",
     ]);
+    expect(splitFlattenedList("Our contributions are: • First item • Second item")).toEqual([
+      "Our contributions are:", "• First item", "• Second item",
+    ]);
   });
 
   it("keeps wide native column lines assigned to their column", () => {

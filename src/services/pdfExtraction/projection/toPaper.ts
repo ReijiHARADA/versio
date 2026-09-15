@@ -95,7 +95,14 @@ export function splitFlattenedList(text: string): string[] {
     .filter((i) => i >= 0);
   const starts = markers.length >= 2 ? markers : numbered;
   if (starts.length < 2) return [text];
-  const bounds = [0, ...starts, text.length];
+  const first = starts[0];
+  const prefix = text.slice(0, first).trim();
+  // Keep a sentence-shaped lead-in separate when the native stream clearly
+  // marks the list introduction with a colon. Requiring the colon avoids
+  // splitting ordinary prose that happens to contain two bullet glyphs.
+  const bounds = prefix.endsWith(":")
+    ? [0, first, ...starts.slice(1), text.length]
+    : [0, ...starts, text.length];
   return bounds.slice(0, -1).map((start, i) => text.slice(start, bounds[i + 1]).trim()).filter(Boolean);
 }
 

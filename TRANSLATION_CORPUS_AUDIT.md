@@ -2852,3 +2852,7 @@ Full application regression after the current extraction changes: **61 files / 3
 ### 2026-09-16 diagnostic refresh
 
 - Current native-layout diagnostic: 26 papers, 497 pages, 149 suspicious wide/multi-x blocks. Distribution is arXiv 136, PMLR 6, Elsevier 4, OzCHI 2, IEEE 1. The count is diagnostic only; no new role rule was added because residual arXiv samples are largely vector diagram labels and a broad exclusion could hide real prose.
+
+### 2026-09-16 list structure checkpoint
+
+- Repeated bullets with a colon-terminated introduction now project as `lead-in`, `item 1`, `item 2` using a punctuation and marker-count guard. This addresses list flattening without splitting ordinary inline punctuation. Focused tests 15/15 and extraction corpus 56/56 pass.
