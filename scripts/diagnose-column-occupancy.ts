@@ -19,8 +19,10 @@ for (const filename of fs.readdirSync(pdfDir).filter((name) => name.endsWith(".p
     }
     const central = bins.slice(Math.floor(bins.length * 0.38), Math.ceil(bins.length * 0.62));
     const gaps = central.filter((count) => count === 0).length;
-    const left = usable.filter((item) => item.x + item.width <= page.width * 0.49).length;
-    const right = usable.filter((item) => item.x >= page.width * 0.51).length;
+    const leftItems = usable.filter((item) => item.x + item.width <= page.width * 0.49);
+    const rightItems = usable.filter((item) => item.x >= page.width * 0.51);
+    const left = leftItems.length;
+    const right = rightItems.length;
     const proseWord = (item: (typeof usable)[number]) =>
       /[a-z]{2,}/.test(item.text) && item.text.trim().length <= 24;
     const proseWordShare = usable.length
@@ -29,8 +31,12 @@ for (const filename of fs.readdirSync(pdfDir).filter((name) => name.endsWith(".p
     const longItems = usable.filter(
       (item) => item.width >= page.width * 0.25 && item.width <= page.width * 0.55,
     );
+    const yBinSize = 14;
+    const leftYBins = new Set(leftItems.map((item) => Math.floor(item.y / yBinSize)));
+    const rightYBins = new Set(rightItems.map((item) => Math.floor(item.y / yBinSize)));
+    const sharedYBinCount = [...leftYBins].filter((bin) => rightYBins.has(bin)).length;
     if (gaps >= 2 && left >= 8 && right >= 8) {
-      output.push({ filename, page: page.pageNumber, itemCount: usable.length, centralGapBins: gaps, leftItems: left, rightItems: right, longItemCount: longItems.length, longItemShare: Number((longItems.length / Math.max(usable.length, 1)).toFixed(3)), proseWordShare: Number(proseWordShare.toFixed(3)), currentMultiColumn: detectPageColumns(page).isMultiColumn });
+      output.push({ filename, page: page.pageNumber, itemCount: usable.length, centralGapBins: gaps, leftItems: left, rightItems: right, sharedYBinCount, longItemCount: longItems.length, longItemShare: Number((longItems.length / Math.max(usable.length, 1)).toFixed(3)), proseWordShare: Number(proseWordShare.toFixed(3)), currentMultiColumn: detectPageColumns(page).isMultiColumn });
     }
   }
 }
