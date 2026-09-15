@@ -353,7 +353,26 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       );
     }
     const equation = equationScore(block, layout);
-    if (equation > 0.12) scoreByRole.equation = equation;
+    // A numeric/statistical line can be emitted as its own native block when
+    // the preceding prose line wraps at a column boundary.  If it is directly
+    // adjacent to an unfinished paragraph in the same page/column, preserve
+    // the paragraph continuation instead of promoting the line to a display
+    // equation.  This is geometry + neighboring evidence, not a vocabulary
+    // exception, and leaves genuinely isolated equations eligible.
+    const previousBlock = blocks[index - 1];
+    const adjacentParagraphContinuation = previousBlock?.role === "paragraph" &&
+      previousBlock.pageEnd === block.pageStart &&
+      previousBlock.column === block.column &&
+      !/[.!?:;]$/.test(previousBlock.text.trim()) &&
+      block.lines.length === 1 &&
+      block.lines[0].items.length <= 8 &&
+      /\d/.test(block.text) &&
+      block.bbox.y - (previousBlock.bbox.y + previousBlock.bbox.height) < baseFontSize * 1.8;
+    if (equation > 0.12) {
+      scoreByRole.equation = adjacentParagraphContinuation
+        ? Math.min(equation, 0.38)
+        : equation;
+    }
     // A true geometry grid is stronger evidence than paragraph text shape.
     // The resolver still requires this high score before it can override the
     // conservative paragraph fallback.

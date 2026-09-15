@@ -2006,3 +2006,7 @@ Reading-order / extraction focused suiteを再実行し、8 files / 63 testsが�
 ### 2026-09-16 checkpoint: boundary scan refresh
 
 `npm run scan:pdf-boundaries` を再実行し、cached corpusの構造境界候補を更新した。未完結tail、段組混在、表セル連結の候補をレポートへ保存したが、候補は自動修復せず、native画像照合待ちとして扱う。特に表セルが連結した候補はtable-region evidence不足によるもので、paragraphへ強制的に再結合しない方針を維持する。
+
+### 2026-09-16 checkpoint: neighboring evidence for numeric prose
+
+PPG page 2で、本文の直後に単独出力された`86.29 ± 2.96% ...`がdisplay equationへ昇格する候補になっていた。直前が同一ページ・同一列の未完結paragraphで、短いnumeric lineが通常行間に続く場合は equation score を0.38以下へ抑え、Resolverのparagraph evidenceを優先する汎用ルールを追加した。数式テキスト・geometryの強い孤立式は従来どおり候補に残る。focused extraction tests、extraction corpus 42/42、lint、typecheckを通過。安全回帰は未確認だが、実corpus全体の再監査を次に行う。
