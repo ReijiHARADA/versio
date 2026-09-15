@@ -2621,3 +2621,7 @@ education-learning-analyticsのlist ground truthでlistItemRecall 1.0、sourceIn
 ### Source-policy recheck (2026-09-16)
 
 20 cached papers・2,343 paragraphsを再検証。warning-tagged blocks 353、明示的violationは全件`wouldSubmitToModel:false`。前回492件から減少したが、手動分類とparagraph repairの精度評価は未完了。
+
+### Extraction backlog audit (2026-09-16)
+
+未解決項目を再集計し、economics native-math boundary、speechin table-row role/region、Nature系行内bold subheading、page/column paragraph repair、OA corpus 50+拡張を残課題として明示。translation-server/quality gateは変更しない。

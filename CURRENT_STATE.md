@@ -2585,6 +2585,10 @@ marketing PDFのTable 2〜11の短いcaptionをpartial ground truthへ追加（�
 
 全20 cached papers（2,343 paragraphs）でsource-policy verifierを再実行。warning-tagged blocksは353、明示的violationはすべて`wouldSubmitToModel:false`を維持。前回記録の492件から減少したが、未完結段落・括弧不整合の手動分類は未完了であり、抽出品質の完了証拠とは扱わない。
 
+### Extraction backlog audit (2026-09-16)
+
+progress ledgerの未解決項目を再集計。構造抽出の残課題は、(1) economicsのnative math境界、(2) speechinのtable-row role/region、(3) Nature系の行内bold subheading、(4) page/column paragraph repair、(5) OA corpus 50+拡張。翻訳モデルや品質ゲートはこのgoalでは変更しない。
+
 ### Full regression after table-row evidence (2026-09-16)
 
 全Vitest 61 files / 338 tests、extraction corpus 44/44が成功。既存のheading・reading-order・equation・caption回帰なし。table regionのCanonical membershipとpublisher横断precisionは未計測のため、抽出完了判定にはまだ到達していない。
