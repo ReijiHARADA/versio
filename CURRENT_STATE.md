@@ -1966,3 +1966,5 @@ ppg-earring page3/page13の左右列混在は、左列末尾の未完結文か�
 native word itemが長行へまとまらないページ向けに、`usable`全体の左右word分布を使う保守的な`denseUsableColumns` evidenceを追加した（総語数700以上、左右各250以上、ピーク分離35%以上）。抽出コーパス42/42、全Vitest61 files/324 tests pass。ppg-earring page7/10/12は二段組へ復元され、page16参考文献とeducation-learning-analytics page6は単段のまま。列診断の単段候補は5から2へ減少し、spanning/参考文献の誤昇格は確認されていない。翻訳サーバーと`.app`は未変更。
 
 ppg-earringのreal-paper catalogにpage7/10/12の二段組期待値を追加し、抽出回帰42/42で固定した。これはword-stream列検出の改善を将来の変更から保護するためのレイアウトfixtureであり、本文内容の翻訳評価ではない。
+
+列検出変更後の最終再検証として `npm run bench:pdf-extraction`、`npm run lint -- --max-warnings=0`、`npx tsc -b --noEmit` を実行し、すべて成功した。抽出baselineを更新済み。全体の手動review・paragraph境界精度は未完了のため、goalは継続する。
