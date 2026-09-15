@@ -33,6 +33,7 @@ export type PartialGroundTruth = {
   authorAffiliation?: Array<{ from: string; to: string }>;
   headingHierarchy?: Array<{ from: string; to: string }>;
   figureCaptionRelations?: Array<{ from: string; to: string }>;
+  tableCaptionRelations?: Array<{ from: string; to: string }>;
 };
 
 export type BaselinePaperReport = {
@@ -60,6 +61,7 @@ export type BaselinePaperReport = {
     listItemRecall?: number;
     listItemPrecision?: number;
     figureCaptionRelation?: number;
+    tableCaptionRelation?: number;
     authorAffiliationF1?: number;
     sourceIntegrityRate: number;
     fusedTitle: string;
@@ -242,6 +244,15 @@ export function evaluateBaselinePaper(input: {
         : captionRels.length > 0
           ? 1
           : undefined,
+    tableCaptionRelation:
+      gold?.tableCaptionRelations && gold.tableCaptionRelations.length > 0
+        ? relationAccuracy(
+            captionRels
+              .filter((r) => extracted.canonical.nodes.find((n) => n.id === r.to)?.role === "table")
+              .map((r) => ({ from: r.from, to: r.to })),
+            gold.tableCaptionRelations
+          )
+        : undefined,
     authorAffiliationF1:
       gold?.authorAffiliation && gold.authorAffiliation.length > 0
         ? relationAccuracy(
