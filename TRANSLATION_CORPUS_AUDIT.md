@@ -2870,3 +2870,7 @@ Full application regression after the current extraction changes: **61 files / 3
 ### 2026-09-16 Elsevier representation check
 
 - Cross-checked pages 4–7 using `pdftotext -layout` and the PDF.js-native pipeline. Table 2 is referenced in prose and does not form a standalone native caption, while Table 5 does. The remaining recall gap is therefore an upstream native representation issue; no caption guess or paper-specific rule was added.
+
+### 2026-09-16 column occupancy probe
+
+- Column occupancy diagnostics found 57 candidate pages with native text on both sides of a central gutter. Because the set includes valid prose columns and table/diagram layouts, occupancy alone is insufficient for production splitting; the report is retained for combined geometry/role review.

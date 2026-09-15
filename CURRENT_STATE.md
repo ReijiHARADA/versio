@@ -2901,3 +2901,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 Elsevier native-vs-layout comparison
 
 - Compared `pdftotext -layout` pages 4–7 of the cached Elsevier meta-review with PDF.js-native extraction. `Table 2` appears as a prose parenthetical reference and its visual caption/table content is not emitted as a standalone native caption; `Table 5` is present as a native caption. This confirms the missing-caption cases are representation loss/stream embedding, not a safe resolver relabel. No fallback parser or OCR was introduced.
+
+### 2026-09-16 column occupancy diagnostic
+
+- `npm run diagnose:column-occupancy` scanned the cached corpus and produced 57 candidate pages with central gutter occupancy. The report is diagnostic-only; candidate pages include both valid two-column pages and table/diagram-heavy layouts, so no global column relabel was applied.
