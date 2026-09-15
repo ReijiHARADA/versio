@@ -2338,3 +2338,7 @@ rotation content merge guardにx帯の分離 evidence を追加。重点回帰 4
 ### Rotated band benchmark (2026-09-16)
 
 x帯guard後に20-paper benchmarkを再実行。`wear-scale` は rotatedNativeItemCount=248、rotatedLineCount=33、flattenedNumericRowCount=11、sourceIntegrityRate=1.0。重点回帰47/47、extraction corpus43/43。guardによる既存精度低下は検出されなかったが、表後注記との完全なregion分離はまだ手動確認待ち。
+
+### Extraction guard verification (2026-09-16)
+
+x帯guard後のTypeScript型チェック、lint、buildが成功（既知のpdfjs eval／dynamic import警告のみ）。重点回帰47/47、extraction corpus43/43、20-paper benchmarkも成功。`.app`は明示依頼がないため未ビルド。

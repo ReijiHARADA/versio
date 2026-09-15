@@ -2440,3 +2440,7 @@ Algorithm/Require本文や数式断片がtable candidateになる例を確認し
 ### Rotated band benchmark (2026-09-16)
 
 x帯guard後の20-paper benchmarkで、`wear-scale` は rotated items 248、rotated lines 33、flattened numeric rows 11、source integrity 1.0。重点回帰47/47、extraction corpus43/43。完全なtable region分離は未完了。
+
+### Extraction guard verification (2026-09-16)
+
+x帯guard後に型チェック、lint、buildを実行し成功。既知のpdfjs eval／dynamic import警告のみ。重点回帰47/47、extraction corpus43/43、20-paper benchmarkを維持。
