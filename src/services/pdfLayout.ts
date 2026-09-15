@@ -1442,6 +1442,10 @@ function isAuthorMetadataBlock(block: LayoutBlock): boolean {
   return /(?:contributed equally|correspondence|corresponding author|requests for materials|should be addressed to|e-?mail\s*:)/i.test(block.text);
 }
 
+function hasRotatedNativeLine(block: LayoutBlock): boolean {
+  return block.lines.some((line) => Math.abs(line.rotation ?? 0) >= 45);
+}
+
 function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
   const textCounts = new Map<string, number>();
   for (const block of blocks) {
@@ -1498,6 +1502,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         (target.column === "single" && (block.column === "left" || block.column === "right") && target.pageEnd === block.pageStart) ||
         crossesPageBoundary) &&
       isSentenceContinuation(target.text, block.text)
+      && !(hasRotatedNativeLine(target) !== hasRotatedNativeLine(block))
     ) {
       target.text = joinHyphenated(target.text, block.text).replace(/\s+/g, " ").trim();
       target.lines = [...target.lines, ...block.lines];
