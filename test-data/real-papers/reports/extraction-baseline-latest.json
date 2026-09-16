@@ -1,6 +1,6 @@
 {
   "version": "extraction-baseline-v1",
-  "generatedAt": "2026-09-16T07:26:12.659Z",
+  "generatedAt": "2026-09-16T07:43:21.720Z",
   "papers": 26,
   "titleExact": 0.7692307692307693,
   "reports": [
@@ -351,13 +351,13 @@
       "figureCaptionRelation": 1,
       "sourceIntegrityRate": 1,
       "canonicalProvenanceRate": 1,
-      "fusedTitle": "arXiv:2404.13319v1 [cs.HC] 20 Apr 2024",
+      "fusedTitle": "Empirical Research Methods for Human-Computer Interaction",
       "fusedTitleConfidence": 0.8280000000000001,
       "canonicalTitle": "Empirical Research Methods for Human-Computer Interaction",
       "flattenedNumericRowCount": 0,
       "chartLabelNodeCount": 0,
       "rotatedNativeItemCount": 1,
-      "rotatedLineCount": 1
+      "rotatedLineCount": 0
     },
     {
       "id": "cognitive-psychology-gpt3",
@@ -658,7 +658,7 @@
       "flattenedNumericRowCount": 2,
       "chartLabelNodeCount": 0,
       "rotatedNativeItemCount": 2,
-      "rotatedLineCount": 1
+      "rotatedLineCount": 0
     },
     {
       "id": "covid-ml-review",
@@ -716,7 +716,7 @@
       "flattenedNumericRowCount": 7,
       "chartLabelNodeCount": 0,
       "rotatedNativeItemCount": 31,
-      "rotatedLineCount": 11
+      "rotatedLineCount": 10
     },
     {
       "id": "interpreting-neural-networks",
@@ -768,13 +768,13 @@
       "figureCaptionRelation": 1,
       "sourceIntegrityRate": 1,
       "canonicalProvenanceRate": 1,
-      "fusedTitle": "arXiv:2010.11761v1 [cs.HC] 22 Oct 2020",
+      "fusedTitle": "A Comparative Analysis of Industry Human-AI Interaction Guidelines",
       "fusedTitleConfidence": 0.8,
       "canonicalTitle": "A Comparative Analysis of Industry Human-AI Interaction Guidelines",
       "flattenedNumericRowCount": 2,
       "chartLabelNodeCount": 0,
       "rotatedNativeItemCount": 118,
-      "rotatedLineCount": 45
+      "rotatedLineCount": 44
     }
   ]
 }
