@@ -3323,3 +3323,6 @@ A stricter vector-label evidence variant now requires strong native rotation geo
 
 ### 2026-09-16 二段組ページ境界回帰
 右列末尾の未完結文が次ページ左列先頭へ続く典型的な reading-order を synthetic native geometry で固定し、結合されることを確認した。focused reading-order は 52/52 合格。独立大文字段落の分離テストも維持している。
+
+### 2026-09-16 抽出ベースライン再計測
+ページstitch変更後の26-paper baselineを再生成した。注釈付きtable caption recall は 1.000 (6)、table region recall は 0.950 (4)、source integrity と canonical provenance はともに 1.000 (26)。残るtable-region missは手動geometryレビュー対象として保持し、翻訳側の変更は行っていない。

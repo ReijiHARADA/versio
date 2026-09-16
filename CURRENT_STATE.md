@@ -3428,3 +3428,4 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - Focused reading-order 50/50、extraction corpus 56/56、full corpus reading-order 27/27 を確認。source-integrity 回帰への悪化なし。
 - 2026-09-16: added a safety regression proving an uppercase independent paragraph is not stitched across pages; focused reading-order suite 51/51.
 - 2026-09-16: added two-column page-boundary regression for right-column tail → next-page left-column continuation; focused reading-order suite 52/52.
+- 2026-09-16: regenerated extraction baseline after page-stitch changes: 26 papers; annotated table-caption recall 1.000 (6), table-region recall 0.950 (4), source integrity 1.000 and canonical provenance 1.000 (26). Remaining table-region misses are unresolved and require manual geometry review.

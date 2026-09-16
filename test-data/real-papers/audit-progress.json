@@ -3025,7 +3025,8 @@
     "2026-09-16: medical meta-review metric/prose equation negative regression added; baseline 29/29 passed.",
     "2026-09-16: short operator-separated diagram-label negative evidence added; focused 48/48 and PPG baseline passed.",
     "2026-09-16: layout diagnostic stable at 149 suspicious blocks/497 pages after short-label equation guard; no residual suppression.",
-    "2026-09-16: after single-column page stitching, corpus layout diagnostic rerun completed; residual suspicious blocks remain diagnostic-only and no new role suppression was introduced."
+    "2026-09-16: after single-column page stitching, corpus layout diagnostic rerun completed; residual suspicious blocks remain diagnostic-only and no new role suppression was introduced.",
+    "2026-09-16: extraction baseline regenerated after page stitching: 26 papers; table caption recall 1.000, table region recall 0.950, source integrity/provenance 1.000."
   ],
   "lastExtractionCheckpoint": {
     "tableRegionRecall": 1.0,
