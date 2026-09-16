@@ -3171,3 +3171,7 @@ The three pre-training-method and numeric matrix streams are embedded Figure 28 
 ### 2026-09-16 manual residual review: linguistics page 11
 
 The candidate ending at “learns” is ordinary body prose and continues on the next native line; no reading-order failure was observed. Recorded as `paragraph`, severity 0. Coverage: 49/83, 34 pending.
+
+### 2026-09-16 manual residual review: medical segmentation page 16
+
+The VOE metric prose candidate is ordinary body text adjacent to a displayed formula (`paragraph`, severity 0), not a figure label. No algorithm change was added. Coverage: 50/83, 33 pending.

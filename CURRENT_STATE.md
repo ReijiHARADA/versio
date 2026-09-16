@@ -3168,3 +3168,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: linguistics page 11
 
 - The candidate ending at “learns” is ordinary body prose; the visual page shows the sentence continuing on the next native line. Recorded as `paragraph`, severity 0, with no reading-order failure. Manual coverage is 49/83 (34 pending).
+
+### 2026-09-16 manual residual review: medical segmentation page 16
+
+- The VOE metric prose candidate was visually confirmed as ordinary body text introducing a displayed formula. Recorded as `paragraph`, severity 0; no figure/label or equation boundary change was justified. Manual coverage is 50/83 (33 pending).

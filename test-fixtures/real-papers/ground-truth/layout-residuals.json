@@ -775,10 +775,10 @@
       "page": 16,
       "classification": "short-label-band",
       "text": "where A and B denote the ground truth and the predicted segmentation maps, respectively. VOE: it is the complement of the Jaccard index, it is defined as: |A ∩ B|",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: prose introducing VOE metric is ordinary body text adjacent to a displayed formula; not a figure label",
+      "manualRole": "paragraph",
+      "reviewStatus": "reviewed",
+      "severity": 0
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
