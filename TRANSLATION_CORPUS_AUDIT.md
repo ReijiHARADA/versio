@@ -3183,3 +3183,7 @@ The three network/loss residual streams are embedded Figure 2 diagram labels (`f
 ### 2026-09-16 manual residual review: medical segmentation page 4
 
 The Up/Conv residual is embedded Figure 3 U-Net diagram content (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage: 54/83, 29 pending.
+
+### 2026-09-16 manual residual review: medical segmentation page 6
+
+The down/up-sampling and skip-connection residual is embedded Figure 7 diagram content (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage: 55/83, 28 pending.

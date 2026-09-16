@@ -695,10 +695,10 @@
       "page": 6,
       "classification": "short-label-band",
       "text": "Down-sampling Up-sampling X4,0 Xi,j ConvolutionSkip connection",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: down/up-sampling and skip-connection labels are embedded Figure 7 U-Net++ diagram content",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
