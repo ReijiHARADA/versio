@@ -547,10 +547,10 @@
       "page": 10,
       "classification": "short-label-band",
       "text": "-DL for decision support in up pulmonary nodule and diagnosis and classification labeling -Alleviate the burden of dataset labeling with reinforcement learning -Create public datasets similar to ImageNet -Multi-scale patches during training",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: page is Table 6; native stream split future-direction cells into a residual block",
+      "manualRole": "table_row",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-deep-learning-meta-review",

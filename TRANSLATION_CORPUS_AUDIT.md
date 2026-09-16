@@ -2987,3 +2987,7 @@ Extraction work remains ahead of translation work. The current native-PDF regres
 ### 2026-09-16 extraction residual review update
 
 The medical meta-review page 6 short-label residual was visually confirmed as a real dash list (14 items) flattened by native stream extraction. It is labeled `list_item`, severity 2 in the residual fixture. This is an extraction boundary issue, not a translation-model issue; the generic projection splitter remains covered by existing tests.
+
+### 2026-09-16 Table 6 residual review
+
+Page 10 of the medical meta-review was visually checked. The short-label residual beginning `-DL for decision support...` is part of Table 6 future-direction cells, not body prose. It is recorded as `table_row`, severity 3. The current generic table projection does not yet recover every cell boundary from this native stream; this remains the next extraction implementation target.
