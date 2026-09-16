@@ -3043,7 +3043,7 @@
     "extractionCorpusTests": "56 passed",
     "fullVitest": "353 passed",
     "nextAction": "Add a general arXiv two-column fixture for spanning-vs-column order and duplicate figure-caption detection; inspect affiliation/body boundary before changing resolver rules.",
-    "latestCommit": "a4dcfb0"
+    "latestCommit": "ab9a036"
   },
   "nextAction": "Add a general arXiv two-column fixture for spanning-vs-column order and duplicate figure-caption detection; inspect affiliation/body boundary before changing resolver rules."
 }
