@@ -3326,3 +3326,6 @@ A stricter vector-label evidence variant now requires strong native rotation geo
 
 ### 2026-09-16 抽出ベースライン再計測
 ページstitch変更後の26-paper baselineを再生成した。注釈付きtable caption recall は 1.000 (6)、table region recall は 0.950 (4)、source integrity と canonical provenance はともに 1.000 (26)。残るtable-region missは手動geometryレビュー対象として保持し、翻訳側の変更は行っていない。
+
+### 2026-09-16 OzCHI table region目視確認
+OzCHI page 8をレンダリングして確認した結果、左側のTable 4と右側のTable 5はいずれもcaption付きの独立したgridだった。captionは両方検出されるが、generic region membershipが一方を取りこぼしている。本文を誤ってtableへ昇格させるリスクを避け、追加の広域fallbackは行わず、native row geometryを用いた次の改善対象として記録した。
