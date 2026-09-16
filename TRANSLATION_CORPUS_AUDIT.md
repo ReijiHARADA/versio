@@ -2955,3 +2955,5 @@ The sample can be regenerated with `npm run audit:build-extraction-sample`; the 
 As a visual sanity check, Power-over-Skin page 2 was rendered and compared with its extraction: Figure 2 and its caption are distinct from adjacent prose, so image-overlap evidence remains advisory and is not used as a blanket exclusion.
 
 Step-to-Charge page 2 was also rendered; three image-overlap/label-band blocks were manually labeled `figure_label` (severity 3). The other 80 residual samples remain pending and are excluded from metrics.
+
+The fixture was integrity-checked after the review update: all 83 samples remain present across 27 pages, with no null records.
