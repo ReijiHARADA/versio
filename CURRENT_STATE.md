@@ -3489,3 +3489,8 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - 最終確認済み: extraction corpus 56/56、full Vitest 61 files / 354 tests、lint、TypeScript、26-paper baseline の annotated table recall 1.0 / source integrity 1.0。
 - 未解決: broader corpus の手動レビュー、残存する proseGrid の曖昧な table 候補、figure/table native geometry の精密化。
 - 再開時は `git log -3` と本節を確認し、翻訳サーバーや .app の変更には進まず、抽出候補の手動検証から開始する。
+
+### 2026-09-16 再開検証チェックポイント
+- 停止後に `npm run test:extraction-corpus` を再実行し、2 files / 56 tests が成功。
+- 現行 OzCHI canonical 出力を再確認し、結果本文と箇条書き導入文は paragraph、Table 1〜5 は table として保持されている。
+- 次の抽出レビュー対象を progress JSON に同期: Nature inline subheading、economics native-math boundary、speechin table rows、wear-scale rotated footnote。

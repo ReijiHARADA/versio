@@ -1,6 +1,6 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "extraction-v-current-2026-09-16-vector-label-revert",
+  "lastBenchmarkVersion": "extraction-v-current-2026-09-16-same-origin-prose-guard",
   "lastDiagnosticVersion": "pdf-layout-corpus-diagnostic-v1",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
@@ -3039,5 +3039,5 @@
     "nextAction": "Improve proseGrid using row-level x/y stability; page-9 list guard is kept. Do not use broad word-count suppression because it regresses table recall.",
     "latestCommit": "a4dcfb0"
   },
-  "nextAction": "derive stronger figure-vs-table native geometry before any vector-label suppression; continue paragraph/block audit"
+  "nextAction": "Continue manual review of remaining extraction failures: Nature inline subheadings, economics native-math boundaries, speechin table rows, wear-scale rotated footnote; preserve current table/list guards."
 }
