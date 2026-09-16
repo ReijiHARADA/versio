@@ -3029,3 +3029,9 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Added a Canonical regression proving synthetic table regions preserve a non-rendered caption identity (`structuralLabel`), bounding-box provenance, and `text: null` so the table label is not projected as duplicate reader text.
 - `src/test/pdfExtraction/pipeline.test.ts` passes 16/16; the broader extraction suite remains 56/56 and focused reading-order coverage remains 49/49.
 - Work is paused at this clean extraction milestone. Translation-server changes and `.app` build remain intentionally out of scope.
+
+### 2026-09-16 multi-page table continuation experiment
+
+- Extended table-region candidate collection to allow up to four later pages only when the caption is near the page bottom, the candidate remains in the caption x-band, and native table evidence is present. This is a generic geometry/evidence rule; no paper-specific text matching was added.
+- Safety checks pass: extraction corpus 56/56 and typecheck pass. Benchmark remains `tableRegionRecall=0.571` and `tableContinuationPageRecall=0.143` (1/7), so the rule did not improve this corpus and is retained as bounded groundwork rather than claimed success.
+- The remaining miss is upstream native candidate/caption evidence on the affected continuation pages; next work should inspect those candidate blocks and avoid widening this rule without stronger evidence.

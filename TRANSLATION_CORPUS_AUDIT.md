@@ -3043,3 +3043,7 @@ Canonical synthetic table regions now preserve caption identity via non-rendered
 ### 2026-09-16 extraction pause checkpoint
 
 Added a stable synthetic regression for table-region identity: caption labels remain available as Canonical `structuralLabel`, member geometry is retained, and synthetic regions keep `text: null` to prevent duplicate reader text. Pipeline tests pass 16/16, extraction corpus 56/56, and focused reading-order tests 49/49. The remaining multi-page table gap is unchanged (continuation recall 1/7); translation work remains paused until extraction residual review continues.
+
+### 2026-09-16 multi-page table continuation experiment
+
+A bounded generic continuation path now considers up to four later pages when bottom-caption geometry, x-band proximity, and native table evidence agree. Extraction corpus remains 56/56 and the medical benchmark is unchanged (`tableRegionRecall` 4/7; continuation recall 1/7). The experiment is kept because it is safe groundwork, but it does not solve the remaining cases; further work requires inspecting upstream candidate formation.
