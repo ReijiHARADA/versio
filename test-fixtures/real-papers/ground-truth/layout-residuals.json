@@ -435,40 +435,40 @@
       "page": 36,
       "classification": "image-overlap",
       "text": "lay1 lay2 lay3 lay4 lay5 lay6 lay7 lay8 lay9 lay10 lay11 lay12 r=0 r=4 r=8 r=12 r=16",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: lay/r labels are embedded Figure 26 heatmap axes and series labels",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 36,
       "classification": "image-overlap",
       "text": "lay1 lay2 lay3 lay4 lay5 lay6 lay7 lay8 lay9 lay10 lay11 lay12 r=0 r=4 r=8 r=12 r=16",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: lay/r labels are embedded Figure 26 heatmap axes and series labels",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 36,
       "classification": "image-overlap",
       "text": "lay1 lay2 lay3 lay4 lay5 lay6 lay7 lay8 lay9 lay10 lay11 lay12 r=0 r=4 r=8 r=12 r=16",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: lay/r labels are embedded Figure 26 heatmap axes and series labels",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 36,
       "classification": "image-overlap",
       "text": "lay1 lay2 lay3 lay4 lay5 lay6 lay7 lay8 lay9 lay10 lay11 lay12 r=0 r=4 r=8 r=12 r=16",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: lay/r labels are embedded Figure 26 heatmap axes and series labels",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",

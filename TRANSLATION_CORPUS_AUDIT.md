@@ -3159,3 +3159,7 @@ The model-name and numeric residual is embedded Figure 19 heatmap content (`figu
 ### 2026-09-16 manual residual review: linguistics page 29
 
 The two duplicate model-name residuals are embedded Figure 20 heatmap labels (`figure_label`, severity 3, extraction cause), likely duplicate native extraction of one figure. No algorithm change was added. Coverage: 41/83, 42 pending.
+
+### 2026-09-16 manual residual review: linguistics page 36
+
+The four lay/r residual streams are embedded Figure 26 heatmap labels (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage: 45/83, 38 pending.
