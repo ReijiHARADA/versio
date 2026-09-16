@@ -3307,3 +3307,10 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 benchmark refresh
 
 - `npm run bench:pdf-extraction` passed. The medical meta-review report remains at table-region recall 0.571, continuation-page recall 0.286, source integrity 1.00, and figure-caption relation 1.00. No translation code changed.
+# Checkpoint (2026-09-16): extraction audit paused at a clean boundary
+
+- User requested a temporary stop at a sensible checkpoint.
+- `npm run test:extraction-corpus`: 2 files, 56 tests passed (17.28s).
+- Worktree is clean; no unverified production change is pending.
+- Current extraction baseline remains: source integrity/provenance 1.0; medical meta-review table-region recall 0.571, continuation-page recall 0.286.
+- Next action on resume: add line-level style/x-band diagnostics and benchmark a generic table-caption boundary rule. Keep translation server/model and `.app` untouched until extraction work is validated.
