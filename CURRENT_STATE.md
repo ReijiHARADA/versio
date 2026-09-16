@@ -2966,3 +2966,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 image-overlap corpus verification
 
 - Re-ran the 26-paper extraction benchmark after adding image-overlap evidence. Source-integrity remains 1.0 for every paper, and chart-label evidence remains limited to six detected nodes; no broad paragraph-to-other regression was observed. Extraction corpus remains 56/56.
+
+### 2026-09-16 manual image-label review
+
+- Manual review of representative high-overlap samples in the cached arXiv corpus confirmed that strings such as `GPT_rel GPT_rot GPT_pos` and repeated axis values are figure/chart labels, while the corpus also contains legitimate prose near images. The image-overlap evidence therefore remains advisory; no unconditional paragraph suppression is justified.

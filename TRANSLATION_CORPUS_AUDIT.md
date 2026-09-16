@@ -2933,3 +2933,7 @@ Added conservative image-placement overlap evidence for short multi-line label c
 ### 2026-09-16 image-overlap corpus verification
 
 The 26-paper benchmark was rerun after the image-overlap evidence change. Source integrity stayed at 1.0 across all papers, with six chart-label evidence nodes and no observed broad paragraph-to-other regression. Extraction corpus remains 56/56.
+
+### 2026-09-16 manual image-label review
+
+Reviewed representative high-overlap cached arXiv samples. Repeated model names and axis values are figure/chart labels, but legitimate prose can also be adjacent to or overlap an image. Image-overlap evidence remains advisory until a fixture demonstrates safe role resolution.
