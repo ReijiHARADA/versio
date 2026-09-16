@@ -625,20 +625,20 @@
       "page": 9,
       "classification": "short-label-band",
       "text": "Remarks Refs. The method is weekly supervised with pseudo la- [54] U-Net bels",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: method/remarks and performance-metric streams are rows of Tables 6/7, not prose",
+      "manualRole": "table_row",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "covid-ml-review",
       "page": 9,
       "classification": "short-label-band",
       "text": "Joint classification and segmentation [56] U-Net - [57] U-Net - [69] U-Net - [86] U-Net - [87] VB-Net Human-in-the-loop [89] Commercial Software/U-Net Combination of 3D and 2D methods [91] Commercial Software - [92] Threshold-based region g",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: method/remarks and performance-metric streams are rows of Tables 6/7, not prose",
+      "manualRole": "table_row",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "covid-ml-review",

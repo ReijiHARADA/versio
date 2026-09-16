@@ -3222,3 +3222,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 manual residual review: covid ML page 5
 
 - The prediction metrics/objectives candidate is a row block in Table 2, not paragraph prose. Recorded as `table_row`, severity 3, primary cause `line grouping`; manual coverage is 65/83 (18 pending).
+
+### 2026-09-16 manual residual review: covid ML page 9
+
+- Two residual streams were visually confirmed as rows of Tables 6/7: method/remarks and performance metrics. Recorded as `table_row`, severity 3, primary cause `line grouping`; manual coverage is 67/83 (16 pending).
