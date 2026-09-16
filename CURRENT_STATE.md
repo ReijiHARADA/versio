@@ -3504,3 +3504,4 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - lint (`oxlint --deny-warnings`) と TypeScript (`tsc --noEmit`) は成功。
 - 現段階で新たな安全な一般則は確認できなかったため、未検証の table/math 昇格は追加していない。
 - Full Vitest rerun after the latest extraction checkpoint: 61 files / 354 tests passed.
+- Focused wear-scale rotated-table regression rerun: 1/1 passed; rotated numeric table blocks remain skipped for translation and are not merged with following prose.
