@@ -415,20 +415,20 @@
       "page": 29,
       "classification": "image-overlap",
       "text": "GPT on cfg3f GPT_rel on cfg3f GPT_rand on cfg3f GPT on cfg3i GPT_rel on cfg3i GPT_rand on cfg3i lay0 lay1 lay2 lay3 lay4 lay5 lay6 lay7 lay8 lay9 lay10 lay11 lay12",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: duplicated model-name streams are embedded Figure 20 heatmap labels, likely native duplicate extraction of one figure",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 29,
       "classification": "image-overlap",
       "text": "GPT on cfg3f GPT_rel on cfg3f GPT_rand on cfg3f GPT on cfg3i GPT_rel on cfg3i GPT_rand on cfg3i lay0 lay1 lay2 lay3 lay4 lay5 lay6 lay7 lay8 lay9 lay10 lay11 lay12",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: duplicated model-name streams are embedded Figure 20 heatmap labels, likely native duplicate extraction of one figure",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",
