@@ -2979,3 +2979,7 @@ The fixture was integrity-checked after the review update: all 83 samples remain
 The medical meta-review's Table 1 page was rendered as a table-boundary sanity check. Its caption/grid are distinct from body prose; Table 2/5/6 remain unresolved native-stream cases and are not patched by string rules.
 
 The extraction corpus was re-run after restoring the residual fixture: 56/56 tests passed, confirming the manual metadata is isolated from production extraction.
+
+### 2026-09-16 extraction-goal checkpoint
+
+Extraction work remains ahead of translation work. The current native-PDF regression baseline is green (56/56 extraction tests, 48/48 reading-order tests, build/typecheck/lint passing), while residual layout review is incomplete (83 samples, 80 pending). Translation-server changes remain intentionally paused until extraction boundaries and table/list residuals are resolved.
