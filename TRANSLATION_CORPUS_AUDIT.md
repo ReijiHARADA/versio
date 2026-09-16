@@ -3496,3 +3496,7 @@ The boundary scanner now separates extraction traces (stderr) from its JSON find
 ### 2026-09-16 machine-readable boundary scan validation
 
 The scanner's separated JSON was parsed over the corpus: 25 papers had findings, with 10 affiliation candidates and 12 figure-marker-in-paragraph candidates, and zero long-caption candidates. These remain native-geometry triage signals; no broad parser rule was added.
+
+### 2026-09-16 boundary scanner file output
+
+The scanner now accepts `--json-out=...` and writes findings directly to a file. A corpus run produced valid JSON with 25 finding papers, 10 affiliation candidates, and 12 figure-marker-in-paragraph candidates. These remain review inputs, not automatic role changes.

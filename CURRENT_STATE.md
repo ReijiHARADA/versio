@@ -3694,3 +3694,7 @@ Added a generic mixed-page fixture with title, authors, full-width affiliation, 
 ### 2026-09-16 machine-readable boundary scan validation
 
 The updated boundary scanner was run over the cached corpus and its JSON payload parsed successfully after separating shell noise: 25 papers produced findings, including 10 affiliation candidates and 12 figure-marker-in-paragraph candidates; no long-caption candidates were reported. These are triage signals requiring native bbox review, not automatic relabels.
+
+### 2026-09-16 boundary scanner file output
+
+Added `--json-out=/path/findings.json` to the boundary scanner. The corpus run wrote and parsed a clean JSON artifact: 25 papers with findings, 10 affiliation candidates, and 12 figure-marker-in-paragraph candidates. This supports repeatable native-geometry review without changing extraction behavior.

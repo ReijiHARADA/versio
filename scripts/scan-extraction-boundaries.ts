@@ -45,4 +45,10 @@ for (const file of files) {
 }
 
 console.log = stdoutLog;
-process.stdout.write(`${JSON.stringify(findings, null, 2)}\n`);
+const payload = `${JSON.stringify(findings, null, 2)}\n`;
+const outputArg = process.argv.find((arg) => arg.startsWith("--json-out="));
+if (outputArg) {
+  fs.writeFileSync(outputArg.slice("--json-out=".length), payload, "utf8");
+} else {
+  process.stdout.write(payload);
+}
