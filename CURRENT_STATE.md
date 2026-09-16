@@ -3481,3 +3481,11 @@ Requiring repeated native item x-columns in proseGrid did not change the remaini
 ### Same-origin prose guard (2026-09-16)
 
 A narrow candidate guard now suppresses strong grid evidence for blocks with more than eight lines, more than 20 words, and a single native line-origin band. This matches the observed incomplete prose shape while leaving multi-column table rows and flattened grids eligible. In OzCHI manual output, the page-8 results paragraph remains paragraph and the expected Table 1–5 regions remain. Extraction corpus 56/56, full Vitest 354/354, and the OzCHI table baseline (recall 1.0, source integrity 1.0) pass.
+
+### 2026-09-16 作業停止チェックポイント
+- ユーザー指示により、抽出アルゴリズム改善の現フェーズを停止。
+- 作業ツリーは clean、長時間実行中の npm/tsx/translation-server/vite プロセスなし。
+- 最後に保持した実装は、ページ境界 paragraph stitching、continued caption、flattened native table geometry、list-like/same-origin prose table guards。
+- 最終確認済み: extraction corpus 56/56、full Vitest 61 files / 354 tests、lint、TypeScript、26-paper baseline の annotated table recall 1.0 / source integrity 1.0。
+- 未解決: broader corpus の手動レビュー、残存する proseGrid の曖昧な table 候補、figure/table native geometry の精密化。
+- 再開時は `git log -3` と本節を確認し、翻訳サーバーや .app の変更には進まず、抽出候補の手動検証から開始する。

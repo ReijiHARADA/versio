@@ -3390,3 +3390,6 @@ Tested requiring repeated native item x-columns in proseGrid. It did not remove 
 ### Same-origin prose guard (2026-09-16)
 
 Added a narrow geometry condition for >8-line, >20-word blocks sharing one native line-origin band; this suppresses the observed incomplete prose grid candidate without broad word-count rejection. OzCHI page-8 output keeps the results paragraph as paragraph and preserves Table 1–5 (table recall 1.0, source integrity 1.0). Extraction corpus 56/56 and Vitest 354/354 pass.
+
+### 2026-09-16 作業停止チェックポイント
+ユーザー指示により、この時点でプロセスを停止した。未完了の抽出課題は、残存する proseGrid の曖昧な table 候補と、広範な corpus の手動レビュー。再開時は `CURRENT_STATE.md` の同日チェックポイントと `git log -3` を確認する。
