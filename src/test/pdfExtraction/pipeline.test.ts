@@ -165,6 +165,25 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.relations.some((relation) => relation.kind === "CAPTION_OF" && relation.to === region?.id)).toBe(true);
   });
 
+  it("recognizes a captioned flattened multi-cell grid", () => {
+    const textItems = [
+      { text: "Table 4. Summary", x: 80, y: 100, width: 140, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+      ...Array.from({ length: 7 }, (_, row) => [
+        { text: `Method${row + 1}`, x: 80, y: 125 + row * 14, width: 52, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+        { text: row % 2 ? "Camera" : "Sensor", x: 155, y: 125 + row * 14, width: 48, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+        { text: `${10 + row}`, x: 225, y: 125 + row * 14, width: 20, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+        { text: `${80 + row}.5%`, x: 285, y: 125 + row * 14, width: 34, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+      ]).flat(),
+    ];
+    const result = extractFromPages({
+      pages: [{ pageNumber: 1, width: 500, height: 700, textItems }],
+      paperId: "captioned-grid", filePath: "/tmp/captioned-grid.pdf", fileHash: "captioned-grid", metadata: { pageCount: 1 },
+    });
+    const region = result.canonical.nodes.find((node) => node.role === "table" && node.structuralLabel?.startsWith("Table 4"));
+    expect(region).toBeTruthy();
+    expect(result.blocks.some((block) => block.type === "table" && block.original?.includes("Method1"))).toBe(true);
+  });
+
   it("keeps repeated chart-axis labels out of table evidence", () => {
     const textItems = Array.from({ length: 5 }, (_, index) => ({
       text: `${(index * 0.005).toFixed(3)}`,

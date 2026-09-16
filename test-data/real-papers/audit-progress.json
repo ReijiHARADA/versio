@@ -1,6 +1,6 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "extraction-corpus-2026-09-16-56tests",
+  "lastBenchmarkVersion": "extraction-corpus-2026-09-16-56tests-captioned-grid",
   "lastDiagnosticVersion": "pdf-layout-corpus-diagnostic-v1",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
@@ -3059,6 +3059,6 @@
     "nextAction": "Add and validate a general affiliation/body boundary fixture; then review table/list residuals.",
     "latestCommit": "f695d44"
   },
-  "nextAction": "Continue extraction-only work: build a generic native geometry fixture for caption adjacency/column interleaving; do not change translation-server or build .app.",
+  "nextAction": "Continue extraction-only review: inspect wear-scale rotated footnote and arXiv caption/column residuals; keep conservative geometry evidence and do not alter translation-server.",
   "lastUpdate": "2026-09-16"
 }

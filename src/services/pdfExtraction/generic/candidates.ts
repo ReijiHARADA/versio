@@ -462,6 +462,18 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const compactTableDataRow = nearbyTableCaption && block.lines.length === 1 &&
       block.lines[0].items.length >= 3 && block.text.trim().split(/\s+/).filter(Boolean).length <= 10 &&
       !/[.!?;:]/.test(block.text);
+    // Some native PDF producers flatten a complete table into one LayoutBlock:
+    // header rows may have a few items while data rows retain 4–6 cells.  The
+    // regular `tableLike` score is intentionally conservative for this shape,
+    // so use caption proximity plus repeated multi-cell rows as an additional
+    // geometry evidence signal.  Sentence punctuation and long prose are
+    // excluded to avoid promoting ordinary paragraphs.
+    const captionedNativeGrid = nearbyTableCaption && block.lines.length >= 6 &&
+      block.lines.filter((line) => line.items.length >= 4).length >= Math.ceil(block.lines.length * 0.55) &&
+      block.lines.filter((line) => line.items.length >= 2).length >= 4 &&
+      !/[.!?]\s*$/.test(block.text.trim()) &&
+      block.text.trim().split(/\s+/).filter(Boolean).length <= 140 &&
+      block.lines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length >= 2;
     const role = denseCjkBody || numericRow || mathRow || alignedTableRow || numericMultiItemRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || rotatedNumericGrid ? "paragraph" : layoutRole;
     const style = styleSignature(block, layouts, baseFontSize, blocks[index - 1], blocks[index + 1]);
     const scoreByRole: Partial<Record<CanonicalRole, number>> = {
@@ -599,7 +611,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
           // evidence is present.
           : 0.68;
     }
-    if (block.role !== "table_caption" && (nearbyTableRowEvidence(block, blocks) || compactTableDataRow)) scoreByRole.table = 0.96;
+    if (block.role !== "table_caption" && (nearbyTableRowEvidence(block, blocks) || compactTableDataRow || captionedNativeGrid)) scoreByRole.table = 0.96;
     const reason =
       block.role === "title"
         ? "largest font in first-page masthead"

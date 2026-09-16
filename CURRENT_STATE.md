@@ -3722,3 +3722,7 @@ Boundary findings now include nearest image vertical gap (with null when no hori
 ### 2026-09-16 extraction corpus checkpoint
 
 After the caption-adjacency diagnostic changes, `npm run test:extraction-corpus -- --reporter=dot` completed with **2 files / 56 tests passed** in 29.18s. Native PDF.js warnings (missing optional canvas polyfills and malformed embedded font/color-space objects) remain non-fatal. No translation-server or `.app` changes were made; the extraction goal remains open for native column/caption residual fixtures.
+
+### 2026-09-16 captioned flattened multi-cell grid
+
+Native inspection of `speechin.pdf` page 3 showed Table 1 flattened into one 11-line block (header plus repeated multi-cell rows), which previously remained a paragraph. Added a generic caption-adjacent grid evidence path requiring repeated multi-cell geometry, numeric content, bounded word count, and no sentence-ending punctuation. The real probe now resolves this block as a table while preserving numeric summary rows; a synthetic regression covers the shape. Targeted pipeline: 21/21; TypeScript passed. No translation or `.app` changes.
