@@ -3393,3 +3393,9 @@ Added a narrow geometry condition for >8-line, >20-word blocks sharing one nativ
 
 ### 2026-09-16 作業停止チェックポイント
 ユーザー指示により、この時点でプロセスを停止した。未完了の抽出課題は、残存する proseGrid の曖昧な table 候補と、広範な corpus の手動レビュー。再開時は `CURRENT_STATE.md` の同日チェックポイントと `git log -3` を確認する。
+## Extraction audit checkpoint — 2026-09-16
+
+- Real-paper extraction corpus is stable at 56/56 tests with the single-worker corpus configuration.
+- Manual residual fixture now has 83/83 reviewed samples; the review summarizer accepts both the legacy `manualRole` field and the current `reviewLabel` field.
+- The dominant residual is vector/image figure labels (49 samples). Labels with explicit image/vector evidence are suppressed from translatable nodes; labels emitted without image placement metadata remain under review.
+- Economics native math and wear-scale rotated Table 6 were inspected without adding paper-specific rules. Standalone equations and rotated table regions remain separated in the canonical output.
