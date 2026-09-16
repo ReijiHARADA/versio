@@ -7,581 +7,831 @@
       "page": 2,
       "classification": "image-overlap",
       "text": "• Wireless power delivered EQS Resonant Implemented S2C System across whole body machine-wearable • Up to 2mW power transfer Machine- Rx • Higher available power wearable for wall connected Tx • Higher power delivered Wearable-wearable to R",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "step-to-charge",
       "page": 2,
       "classification": "image-overlap",
       "text": "Frequency Tx Ground Plate Floor Based Connected Tx Signal Plate Proximity of floor based Ground Connected Tx, Wearable/",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "step-to-charge",
       "page": 2,
       "classification": "short-label-band",
       "text": "Earth’s Generator - Bluetooth Module fabric: Tx • Office ground Data Acquisition signal plate Spaces Floor Based and Display Transmitter Setup. (c) (d)",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "step-to-charge",
       "page": 7,
       "classification": "image-overlap",
       "text": "Biophysical S2C: Channel Model Channel Wearable Receiver Larger Portable Receiver Model Rx",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "step-to-charge",
       "page": 7,
       "classification": "short-label-band",
       "text": "Signal Plate Earth Resistance CGB - (a) Ground (b) (c) Tx Body Rx RS RB L",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "step-to-charge",
       "page": 16,
       "classification": "short-label-band",
       "text": "This Work 1.7-2 posture. ≥100 𝝁W power recovered at different positions on the body. The received power is the available (AC RMS) power at Rx. (a)",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "step-to-charge",
       "page": 16,
       "classification": "image-overlap",
       "text": "1500 <=10mW Proximity Key (E.g. BMW Key Fob)Smart Watches (E.g. Apple Watch) 5% 1000 <=1mW Fitness Tracker Scientific Calculator (E.g. Casio) 50% <=500uW High(E.g. FitBit)-Power PhysiologicalE-Paper/Reader (E.g. Kindle)M2W powering limit po",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "step-to-charge",
       "page": 18,
       "classification": "short-label-band",
       "text": "Rx. VIN CGB CB Cret",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "step-to-charge",
       "page": 22,
       "classification": "short-label-band",
       "text": "CGB, Vout VB C Vout neglected VB ZGB RL - L RL for ZLoad ZLoad portable Rx Cret, Zret Cret, Zret",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "step-to-charge",
       "page": 23,
       "classification": "short-label-band",
       "text": "Simplifying by writing ZGB in terms of the capacitance CGB and frequency (ω), Vo ZLoad jωC1GB =",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "step-to-charge",
       "page": 26,
       "classification": "short-label-band",
       "text": "Grounded Tx Multiple Receivers Wearable Tx Broadband Rx_1 Rx_2 Rx_n channel with Wearable Rx grounded Tx ......",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "cognitive-psychology-gpt3",
       "page": 6,
       "classification": "short-label-band",
       "text": "Q: Which machine do you choose? A: Machine 0 1 2 3 4 5 6 Trial",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "cognitive-psychology-gpt3",
       "page": 8,
       "classification": "short-label-band",
       "text": "Q: Do you want to trade with alien D or F? A: Alien 0.5 rewarded unrewarded",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "cognitive-psychology-gpt3",
       "page": 9,
       "classification": "short-label-band",
       "text": "Ideal Human GPT-3 You have previously observed the following chemical substances in different wine casks: 15 - Cask 1: substance A was present, substance B was present, substance C was present. - Cask 2: substance A was present, substance B",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "cognitive-psychology-gpt3",
       "page": 9,
       "classification": "short-label-band",
       "text": "previous research: C - Substance A likely causes the production of substance B. Ideal Human GPT-3 - Substance A likely causes the production of substance C. 15",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "ergonomics-human-factors-ihci",
       "page": 11,
       "classification": "short-label-band",
       "text": "驾驶员，智能系统 智能车联网,道路 智能交通信号， 公众，自动驾驶 系统组成 （环境和驾驶员状 智能传感器，行 交通规则和法 公司, 电信运营 态感应系统、车载 人，其他运行自主 律，智能交通指 商,政府等 人机共驾协同认知 控制系统、机载智 驾驶车，道路信 挥系统等 生态系统的架构层次 能体等） 号，云技术，5G 等",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 4,
       "classification": "image-overlap",
       "text": "...8|->3 1 1 learns boundary-based attention to 8|8|-->1 2>3 3 1 most adjacent NT boundaries at all levels NT boundary 𝔟6=1 9|9|-->1 2 1>3 3",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 5,
       "classification": "short-label-band",
       "text": "4. During generation, when a rule sℓ,i 7→ sℓ+1,j, sℓ+1,j+1 is applied, define the parent parℓ+1(j) = def parℓ+1(j + 1) = i (and similarly if the rule of sℓ,i is of length 3). 5. Define NT ancestor indices p = (p1(i), . . . , pL(i))i∈[m ] an",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 6,
       "classification": "short-label-band",
       "text": "Result 1: Completion accuracy. We evaluate F by letting it generate completions for prefixes x:c = (x1, x2, · · · , xc) from strings x freshly sampled from L(G). The generation accuracy is measured as Prx∼L(G) + randomness of F [(x:c, F(x:c",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 9,
       "classification": "image-overlap",
       "text": "GPT_rel GPT_rot GPT_pos GPT_uni deBERTa baseline (GPT_rand) GPT cfg3b cfg3hcfg3i cfg3g cfg3e1cfg3f cfg3e2",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 9,
       "classification": "short-label-band",
       "text": "Multi-head linear probing (full). Due to the high dimensionality of this linear function (e.g., len(x) = 300 and d = 768 yield 300 × 768 dimensions) and variable string lengths, we propose a d multi-head linear function for efficient learni",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 9,
       "classification": "short-label-band",
       "text": "Gi(x) is still a linear function over (Ek(x))k∈[len(x)] ′ as the linear weights wr,i→k depend only on positions i and k, not on x. Similarly, we train Gi(x) ∈ \u0000 \u0001 L R using the logistic loss to predict the binary values bℓ(i) . Details are ",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 10,
       "classification": "image-overlap",
       "text": "GPT_rel GPT_rot GPT_pos GPT_uni deBERTa baseline (GPT_rand) GPT cfg3b cfg3i cfg3h cfg3g cfg3f cfg3e1 cfg3e2",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 11,
       "classification": "short-label-band",
       "text": "We first note that the transformer’s attention weights are primarily influenced by the tokens’ relative distance. This holds true even when trained on the CFG data with absolute positional embedding. This implies that the transformer learns",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 12,
       "classification": "image-overlap",
       "text": "head1 head2 head3 head4 head5 head6 head7 head8 head9head10head11head12 NT5NT4 h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 -1 5 54 53 52 55 44 43 42 45 34 33 32 35 24 23 22 2 lay1 lay1 0+1-1 0.08",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 12,
       "classification": "image-overlap",
       "text": "0+1-1 0.07 lay3 xx xx xx x 0+1-1",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 12,
       "classification": "image-overlap",
       "text": "r=4 lay4 xx xx xx xx NT3NT2 0+1-1 0.06",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 12,
       "classification": "image-overlap",
       "text": "r=12 lay9 -10+1 lay9",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 12,
       "classification": "short-label-band",
       "text": "Above, we define “adjacency” as follows. We introduce B ′ to represent the average value l,h,ℓ →ℓ,r ′ of Bl,h,j→i(x) over samples x and token pairs i, j that are at the deepest NT-ends on levels ℓ, ℓ ♯ ♯ ′ respectively (symbolically, b (i) ",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 13,
       "classification": "short-label-band",
       "text": "𝐷𝑃(0,𝑗,𝟏𝟖) 𝐷𝑃(𝑖, 𝑗, 𝑎) = whether symbol 𝑎 𝐷𝑃(0,𝑖1,𝟏𝟑) 𝐷𝑃(𝑖1,𝑗,𝟏𝟓) can generate 𝑥𝑖+1 … 𝑥𝑗",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 13,
       "classification": "short-label-band",
       "text": "𝐷𝑃2 𝑡,15 = 𝐷𝑃 0,𝑖1,𝟏𝟑 𝐷𝑃(𝑖1,𝑖2,𝟏𝟎) 𝐷𝑃2(𝑗, 𝑎) = whether symbol 𝑎 𝐷𝑃2(𝑡,𝟏𝟎) 𝐷𝑃(𝑖2,𝑗,𝟖) can follow sequence 𝑥1 … 𝑥𝑗 𝐷𝑃2(𝑡,𝟗)",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 14,
       "classification": "image-overlap",
       "text": "000 001 010 011 100 101 110111 1.00 000 001 010 011 100 101 110111 1.00 0.750.50 0.750.50 0.250.00 0.250.00 010011 010011 0.250.50 0.250.50 100101 100101",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 21,
       "classification": "short-label-band",
       "text": "GPT_rel GPT_rot GPT_pos GPT_uni truth GPT",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 26,
       "classification": "image-overlap",
       "text": "GPT_rel GPT_rot GPT_pos GPT_uni GPT_rel GPT_rot GPT_pos GPT_uni truth GPT GPT 0 0 0.20 0.7 0.15 50 0.6 50 0.10 0.5 0.05 100 100 0.4 0.00 150 0.3 150 0.05",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 28,
       "classification": "image-overlap",
       "text": "GPT_rel GPT_rot GPT_pos GPT_uni baseline (GPT_rand) GPT cfg3b cfg3i cfg3h cfg3g cfg3f cfg3e1 cfg3e2",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 28,
       "classification": "image-overlap",
       "text": "GPT_rel GPT_rot GPT_pos GPT_uni baseline (GPT_rand) GPT cfg3b cfg3i cfg3h cfg3g cfg3f cfg3e1",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 28,
       "classification": "image-overlap",
       "text": "GPT_rel GPT_rot GPT_pos GPT_uni baseline (GPT_rand) GPT cfg3b cfg3i cfg3h cfg3g cfg3f cfg3e1 cfg3e2",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 29,
       "classification": "image-overlap",
       "text": "GPT on cfg3f GPT_rel on cfg3f GPT_rand on cfg3f GPT on cfg3i GPT_rel on cfg3i GPT_rand on cfg3i lay0 lay1 lay2 lay3 lay4 lay5 lay6 lay7 lay8 lay9 lay10 lay11 lay12",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 29,
       "classification": "image-overlap",
       "text": "GPT on cfg3f GPT_rel on cfg3f GPT_rand on cfg3f GPT on cfg3i GPT_rel on cfg3i GPT_rand on cfg3i lay0 lay1 lay2 lay3 lay4 lay5 lay6 lay7 lay8 lay9 lay10 lay11 lay12",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 36,
       "classification": "image-overlap",
       "text": "lay1 lay2 lay3 lay4 lay5 lay6 lay7 lay8 lay9 lay10 lay11 lay12 r=0 r=4 r=8 r=12 r=16",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 36,
       "classification": "image-overlap",
       "text": "lay1 lay2 lay3 lay4 lay5 lay6 lay7 lay8 lay9 lay10 lay11 lay12 r=0 r=4 r=8 r=12 r=16",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 36,
       "classification": "image-overlap",
       "text": "lay1 lay2 lay3 lay4 lay5 lay6 lay7 lay8 lay9 lay10 lay11 lay12 r=0 r=4 r=8 r=12 r=16",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 36,
       "classification": "image-overlap",
       "text": "lay1 lay2 lay3 lay4 lay5 lay6 lay7 lay8 lay9 lay10 lay11 lay12 r=0 r=4 r=8 r=12 r=16",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 38,
       "classification": "image-overlap",
       "text": "--------------------pre-training method-------------------- NT-level 0.1 random perturbation T-level 0.15 random perturbation NT-level 0.05 deterministic permutation cut0 =0.1 cut0 =0.2 cut0 =1 corrupted cut50 =0.1 corrupted cut50 =0.2 corr",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 38,
       "classification": "image-overlap",
       "text": "--------------------pre-training method-------------------- NT-level 0.1 random perturbation T-level 0.15 random perturbation NT-level 0.05 deterministic permutation cut0 =0.1 cut0 =0.2 cut0 =1 corrupted cut50 =0.1 corrupted cut50 =0.2 corr",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 38,
       "classification": "image-overlap",
       "text": "--------------------pre-training method-------------------- NT-level 0.1 random perturbation T-level 0.15 random perturbation NT-level 0.05 deterministic permutation cut0 =0.1 cut0 =0.2 cut0 =1 corrupted cut50 =0.1 corrupted cut50 =0.2 corr",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 44,
       "classification": "image-overlap",
       "text": "cfg3f cfg3g cfg3h cfg8e cfg9e cfg3f cfg3g cfg3h cfg8e cfg9e GPT (8head,1024dim) GPT (8head,1024dim) GPT_uni (8head,1024dim) GPT_uni (8head,1024dim) GPT (8head,936dim) GPT (8head,936dim) GPT (12head,936dim) GPT (12head,936dim) GPT_uni (8head",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "ozchi-finger-specific-touch",
       "page": 8,
       "classification": "short-label-band",
       "text": "Finger Phonebook Gallery Thumb Call tapped contact Show sharing context menu (email, sms, etc.) Finger1 Open tapped contacts Edit image contact card Finger2 upOpen “open apps” pop- Open “open apps” pop-up",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "education-learning-analytics",
       "page": 7,
       "classification": "short-label-band",
       "text": "Machine Learning M. Virvou, E. 2019 Springer 223 Paradigms: Advances Alepis, G.A. in Learning Analytics Tsihrintzis, L.C. Jain",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "economics-regularized-deepiv",
       "page": 12,
       "classification": "short-label-band",
       "text": "Require: Dataset {Xi, Yi, Zi}i∈[n], function class G, function class H, hˆ−1 = 0 1: Learn gˆ(x|z) by MLE (4) 2: for m = 1, 2, · · · , M do 3: Learn hˆm by iterative Tikhonov estimator as the following: ( )2 ( )2",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "economics-regularized-deepiv",
       "page": 13,
       "classification": "short-label-band",
       "text": "2β √ for any ǫ > 0, thus we still obtain a rate of2β O(δn2+β ) when log(1/δn) ≥ β/2. In such a case, we √ can obtain a O(δn2+β ) rate even β grows with n, as long as it grows slower than log(1/δn).",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "economics-regularized-deepiv",
       "page": 35,
       "classification": "short-label-band",
       "text": "for all f ∈ F. √ Note that for any√ f ∈ F we have and | log f(x) − log f′(x)| ≤ 2|f(x) − f′(x)| since ‖f‖∞ ≥ 1/ 2. By the definition of Hellinger distance, we have",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "economics-regularized-deepiv",
       "page": 37,
       "classification": "short-label-band",
       "text": "g0(x|z) gˆ(x|z) ′2 1/2 h (x)] · E[2H2(ˆg(·|z) | g0(·|z))]1/2 (CS inequality) + E[ g(⋆(x|z)",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-deep-learning-meta-review",
       "page": 6,
       "classification": "short-label-band",
       "text": "– Toxicity of chemicals; ex- – Pulmonary nodule diagnosis; – Physiological signals; in- – DNA sequencing; – Radiotherapy; – Ophthalmology; the – Electronic health records; – Bioinformatics; – Personalized medicine; – 1-D biosignals; – Omics",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-deep-learning-meta-review",
       "page": 10,
       "classification": "short-label-band",
       "text": "-DL for decision support in up pulmonary nodule and diagnosis and classification labeling -Alleviate the burden of dataset labeling with reinforcement learning -Create public datasets similar to ImageNet -Multi-scale patches during training",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-deep-learning-meta-review",
       "page": 13,
       "classification": "short-label-band",
       "text": "-Clinical workflow and cost can be reduced -Include 3D, multiview cine clips, or spatiotemporal data into limited AI models (continued on next page)",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-deep-learning-meta-review",
       "page": 18,
       "classification": "short-label-band",
       "text": "evi- 5. Author’s perspective miss- Mi- From a high-level point of view, and to formulate it provoca- . tively, some tasks like medical image segmentation have already two been solved over thirty years ago, as can be seen by the claims argue",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "covid-ml-review",
       "page": 5,
       "classification": "short-label-band",
       "text": "Prediction Result Objectives Dataset (C): 0.9993, R2(N): 0.9183; - (C): 0.9991, R2(N): 0.8124. 2(N): 0.3372; In Wuhan, R2(C): Prediction of epidemic results of -",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "covid-ml-review",
       "page": 9,
       "classification": "short-label-band",
       "text": "Remarks Refs. The method is weekly supervised with pseudo la- [54] U-Net bels",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "covid-ml-review",
       "page": 9,
       "classification": "short-label-band",
       "text": "Joint classification and segmentation [56] U-Net - [57] U-Net - [69] U-Net - [86] U-Net - [87] VB-Net Human-in-the-loop [89] Commercial Software/U-Net Combination of 3D and 2D methods [91] Commercial Software - [92] Threshold-based region g",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "covid-ml-review",
       "page": 11,
       "classification": "short-label-band",
       "text": "VGG16 VGG19 Xception ResNet 50 [60] [119, 120] ResNet 50V2 DenseNet121 Inception V3 Inception ResNet V2 DenseNet 169 VGG16 VGG19 Xception ResNet 50 [72] [102, 103, 108] ResNet 50V2 DenseNet121 Inception V3 Inception ResNet V2 [64] Custom we",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 3,
       "classification": "short-label-band",
       "text": "U-Net 3D Net Backbone RNN Network Skip Connection",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 3,
       "classification": "short-label-band",
       "text": "Dense Connection Inception Supervised Network Depth Separate Learning Block Attention Multiscale",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 3,
       "classification": "short-label-band",
       "text": "Cross Entropy Loss WCE Loss Dice Loss Tversky Loss Loss Function Boundary Loss Generalized Dice Loss Exponential Logarithmic Loss",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 4,
       "classification": "short-label-band",
       "text": "“Up“Conv. 2×2 filters,stride:2 “Up“Conv. Fine-grained features forwarding Convolution using a",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 6,
       "classification": "short-label-band",
       "text": "Down-sampling Up-sampling X4,0 Xi,j ConvolutionSkip connection",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 7,
       "classification": "short-label-band",
       "text": "1×1 Conv 1×1 Conv Rate = 1 Rate = 1 Channel = 512 Channel = 512 1×1 Conv Rate = 1 3×3 Conv Channel = 512 Rate = 5 Channel = 512 3×3 Conv 3×3 Conv Rate = 1 Rate = 3 Channel = 512 Channel = 512 3×3 Conv 3×3 Conv Rate = 3 Rate = 3 Channel = 51",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 7,
       "classification": "short-label-band",
       "text": "H H C W C W",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 9,
       "classification": "short-label-band",
       "text": "Unfold  * = D HQ",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 11,
       "classification": "image-overlap",
       "text": "Traditional Augmentation Data Augmentation Synthetic Augmentation",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 11,
       "classification": "short-label-band",
       "text": "Pre-trained Weakly Supervised Transfer Model Learning Learning Domain Adaptation",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 12,
       "classification": "short-label-band",
       "text": "Prior Distribution Z Generator Scale Image Discriminator Condition C",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 12,
       "classification": "short-label-band",
       "text": "Generator G Image: Y Discriminator G Scale Scale Discriminator F Image: X",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 16,
       "classification": "short-label-band",
       "text": "where A and B denote the ground truth and the predicted segmentation maps, respectively. VOE: it is the complement of the Jaccard index, it is defined as: |A ∩ B|",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 17,
       "classification": "short-label-band",
       "text": "LITS MSD MSD KITS MSD MSD",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 17,
       "classification": "short-label-band",
       "text": "STARE ISIC CHAOS BRATS",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "interpreting-neural-networks",
       "page": 16,
       "classification": "short-label-band",
       "text": "i∈I j∈Si ∑ y ( ) Since that j∈Si wj fj xIj is not a function of xi, we have that ϕ (·) is a function without the interaction I, which contradicts our assumption.",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "interpreting-neural-networks",
       "page": 17,
       "classification": "short-label-band",
       "text": "The right-hand side can be re-written as ∑ ∣ ∣∣ ∣ ∣ ∣ ∣ y ∣∣ (L) ∣ ∣ (`+1)∣ wjL ∣WjL,jL−1∣ · · · ∣Wj`+1,i∣. j`+1,...,jL",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "interpreting-neural-networks",
       "page": 18,
       "classification": "short-label-band",
       "text": "We evaluate our approach in a large p setting with pairwise interactions using the same synthetic function as in Pu- 1.0 rushotham et al. (2014). Specifically, we generate a dataset ( ) (i) (i) of n samples and p features { X , y } using th",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "interpreting-neural-networks",
       "page": 18,
       "classification": "short-label-band",
       "text": "0.4 (i) p th where X ∈ R is the i instance of the design matrix p×n (i) th",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "interpreting-neural-networks",
       "page": 18,
       "classification": "short-label-band",
       "text": "ROC(AUC = 0.984) variable y ∈ R , W ∈ R contains the weights of 0.0 p pairwise interactions, β ∈ R contains the weights of main 0.0 0.2 0.4 0.6 0.8 1.0",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "interpreting-neural-networks",
       "page": 18,
       "classification": "short-label-band",
       "text": "False Positive Rate (i) effects, \u000f is noise, and i = 1, . . . , n. W was generated as ∑K >",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     },
     {
       "paper": "interpreting-neural-networks",
       "page": 21,
       "classification": "image-overlap",
       "text": "500000 40°N 400000 38°N 300000 36°N 200000 34°N 100000 123°W 120°W 117°W",
-      "review": "figure-or-chart-label-candidate"
+      "review": "figure-or-chart-label-candidate",
+      "manualRole": null,
+      "reviewStatus": "pending",
+      "severity": null
     }
-  ]
+  ],
+  "reviewSchema": "manualRole: figure_label|table_label|body|mixed; severity 0-4; pending entries are excluded from precision metrics"
 }
