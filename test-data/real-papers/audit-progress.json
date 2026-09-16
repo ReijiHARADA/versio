@@ -3032,7 +3032,7 @@
     "extractionCorpus": "56/56",
     "readingOrder": "49/49",
     "tableContinuationPageRecall": "2/7",
-    "nextAction": "run diagnose-caption-boundaries.ts on medical review pages 2,6,9,13 and design style/x-band boundary rule",
+    "nextAction": "design and benchmark style/x-band table-caption boundary rule; current baseline tableRegionRecall=0.137",
     "fullVitest": "61 files / 350 tests",
     "typecheck": "pass",
     "manualReviewed": "83/83"
