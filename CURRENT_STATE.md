@@ -3766,3 +3766,7 @@ Attempted to generate a rotated temporary PDF for orientation-aware testing. The
 ### 2026-09-16 rotated temporary PDF provenance verification
 
 Generated a minimal temporary PDF with `/Rotate 90` without adding a repository dependency. The production extraction path and test extraction helper now both preserve `rotation: 90`; the extracted text remains intact and the viewport dimensions are correctly swapped. TypeScript passed. This validates the provenance path needed for orientation-aware fixtures; no table role rule was added.
+
+### 2026-09-16 extraction web build verification
+
+`npm run build` passed (`tsc -b` + Vite, 2147 modules transformed). Only existing ineffective dynamic-import warnings were emitted. No `.app` build was run, and translation-server code remains unchanged.
