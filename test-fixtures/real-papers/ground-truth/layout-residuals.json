@@ -705,20 +705,20 @@
       "page": 7,
       "classification": "short-label-band",
       "text": "1×1 Conv 1×1 Conv Rate = 1 Rate = 1 Channel = 512 Channel = 512 1×1 Conv Rate = 1 3×3 Conv Channel = 512 Rate = 5 Channel = 512 3×3 Conv 3×3 Conv Rate = 1 Rate = 3 Channel = 512 Channel = 512 3×3 Conv 3×3 Conv Rate = 3 Rate = 3 Channel = 51",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: convolution/rate/channel and tensor-axis labels are embedded Figure 8/9 diagrams",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 7,
       "classification": "short-label-band",
       "text": "H H C W C W",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: convolution/rate/channel and tensor-axis labels are embedded Figure 8/9 diagrams",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-image-segmentation-deep-learning",

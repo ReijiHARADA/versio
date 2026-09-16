@@ -3184,3 +3184,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: medical segmentation page 6
 
 - The down/up-sampling and skip-connection candidate is embedded Figure 7 U-Net++ diagram content. Recorded as `figure_label`, severity 3, primary cause `pdf extraction`; no new rule was justified. Manual coverage is 55/83 (28 pending).
+
+### 2026-09-16 manual residual review: medical segmentation page 7
+
+- Two residual streams of convolution/rate/channel and tensor-axis labels were visually confirmed as embedded Figure 8/9 diagram content. Recorded as `figure_label`, severity 3, primary cause `pdf extraction`; no new rule was justified. Manual coverage is 57/83 (26 pending).
