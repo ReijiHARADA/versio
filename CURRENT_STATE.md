@@ -3262,3 +3262,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 table-region experiment reverted
 
 - The aligned-row acceptance experiment produced no measurable change in table-region recall (0.137) after a full benchmark rerun, so it was reverted to avoid unverified false-positive risk. Extraction corpus remains 56/56.
+
+### 2026-09-16 table recall diagnosis
+
+- Full benchmark after reverting the aligned-row experiment still reports only `medical-deep-learning-meta-review` below 0.5 table-region recall (0.571 on its caption/region subset; continuation-page recall 0.286). The remaining misses are caption text absorbed into table streams (Tables 2/5/6), so row-membership thresholds are not the root cause. Next investigation should target caption extraction/splitting at line/block formation.

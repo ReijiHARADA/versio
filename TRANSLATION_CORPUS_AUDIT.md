@@ -3233,3 +3233,7 @@ The two residual streams are Table 6/7 rows (`table_row`, severity 3, line-group
 ## Extraction audit checkpoint (2026-09-16)
 
 The extraction benchmark was rerun after completing the 83-sample residual review. Across 26 reports, source-integrity and canonical-provenance rates were 1.00, and figure-caption relation precision was 0.923. Table-caption relation precision was 0.538; table-region recall (0.137) and table-continuation recall (0.011) remain the main measurable extraction gaps. Translation code was not changed.
+
+### Table recall diagnosis (2026-09-16)
+
+A full post-change benchmark showed only the medical meta-review below the table recall threshold: caption/region recall 0.571 and continuation-page recall 0.286. The ground-truth observations identify Tables 2, 5, and 6 as captions absorbed into table streams, indicating the next fix belongs in line/block caption boundary formation rather than row-member acceptance. No additional code change was made in this checkpoint.
