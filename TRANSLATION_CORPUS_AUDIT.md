@@ -3213,3 +3213,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 manual residual review: economics page 12
 
 Algorithm 3 pseudocode and its display equation are flattened into one candidate (`list_flattening`, severity 3, line-grouping cause). This is a substantive generic algorithm-block issue; coverage: 62/83, 20 pending.
+
+### 2026-09-16 manual residual review: economics page 13
+
+The mathematical continuation candidate is ordinary body prose below Figure 1 (`paragraph`, severity 0), not a figure label. No algorithm change was added. Coverage remains 63/83 with 19 pending.

@@ -3210,3 +3210,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 manual residual review: economics page 12
 
 - Algorithm 3 pseudocode and its display equation are flattened into one candidate, losing the algorithm/list boundary. Recorded as `list_flattening`, severity 3, primary cause `line grouping`; this is a substantive extraction issue for future generic algorithm-block handling. Manual coverage is 62/83 (20 pending).
+
+### 2026-09-16 manual residual review: economics page 13
+
+- The mathematical continuation candidate is ordinary body prose with display notation below Figure 1, not a figure label. Recorded as `paragraph`, severity 0; no equation boundary change was justified. Manual coverage remains 63/83 (19 pending).

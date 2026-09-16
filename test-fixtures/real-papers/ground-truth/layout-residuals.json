@@ -545,10 +545,10 @@
       "page": 13,
       "classification": "short-label-band",
       "text": "2β √ for any ǫ > 0, thus we still obtain a rate of2β O(δn2+β ) when log(1/δn) ≥ β/2. In such a case, we √ can obtain a O(δn2+β ) rate even β grows with n, as long as it grows slower than log(1/δn).",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: continuation prose with inline/display mathematical notation is ordinary body text below Figure 1",
+      "manualRole": "paragraph",
+      "reviewStatus": "reviewed",
+      "severity": 0
     },
     {
       "paper": "economics-regularized-deepiv",
