@@ -258,6 +258,15 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
             Infinity,
           )
         : Infinity;
+      const previousSamePageCaptionY = role === "table"
+        ? Math.max(
+            ...candidates
+              .filter((candidate) => candidate.layoutBlock.role === "table_caption" && candidate !== caption && candidate.pageStart === caption.pageStart)
+              .map((candidate) => candidate.boundingBoxes[0]?.y ?? -Infinity)
+              .filter((y) => y < (box?.y ?? -Infinity)),
+            -Infinity,
+          )
+        : -Infinity;
       const regionMembers = role === "table" && box
         ? candidates.filter((candidate) => {
             const candidateBox = candidate.boundingBoxes[0];
@@ -272,7 +281,7 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
             if (!samePage && !nextPageContinuation && !laterPageContinuation) return false;
             if (candidate !== caption && candidate.layoutBlock.role === "table_caption") return false;
             if (["heading", "title", "footnote", "copyright", "author", "affiliation"].includes(candidate.layoutBlock.role)) return false;
-            if (samePage && nextSamePageCaptionY < Infinity && candidateBox.y < box.y) return false;
+            if (samePage && previousSamePageCaptionY > -Infinity && candidateBox.y < box.y) return false;
             if (samePage && nextSamePageCaptionY < Infinity && candidateBox.y >= nextSamePageCaptionY) return false;
             const aboveCaption = samePage && candidateBox.y < box.y && box.y - (candidateBox.y + candidateBox.height) < 280;
             const belowCaption = samePage && candidateBox.y >= box.y && candidateBox.y - (box.y + box.height) < 280;
@@ -293,6 +302,11 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
                 // inside a caption-adjacent region; ordinary prose remains
                 // protected by the sentence and proximity checks above.
                 (/^[•‣▪∙–—-]\s*\S/.test(text) && text.length <= 180));
+            // A paragraph receives table score when it is merely near a
+            // caption. Without numeric/aligned-cell evidence, do not promote
+            // it into a structured region.
+            if (candidate.layoutBlock.role === "paragraph" &&
+              !compactCellRow && numericDensity < 0.12) return false;
             const highConfidenceContinuationRow = laterPageContinuation &&
               (candidate.roleScores.table ?? 0) >= 0.78 &&
               candidate.layoutBlock.lines.length <= 3;
@@ -303,7 +317,7 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
       const memberBoxes = regionMembers.flatMap((member) => member.boundingBoxes);
       const debug = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_TABLE_DEBUG;
       if (debug === "1" && role === "table") {
-        console.warn(`[PDF_TABLE_REGION] label=${JSON.stringify(caption.layoutBlock.text)} captionPages=${caption.pageStart}-${caption.pageEnd} members=${regionMembers.map((member) => `${member.pageStart}-${member.pageEnd}:${member.layoutBlock.role}:${member.layoutBlock.text.slice(0, 80)}`).join(" | ")}`);
+        console.warn(`[PDF_TABLE_REGION] label=${JSON.stringify(caption.layoutBlock.text)} captionPages=${caption.pageStart}-${caption.pageEnd} members=${regionMembers.map((member) => { const text = member.layoutBlock.text.trim(); const digits = (text.match(/\d/g) ?? []).length; return `${member.pageStart}-${member.pageEnd}:${member.layoutBlock.role}:score=${(member.roleScores.table ?? 0).toFixed(2)}:density=${(digits / Math.max(text.length, 1)).toFixed(2)}:items=${Math.max(...member.layoutBlock.lines.map((line) => line.items.length), 0)}:${text.slice(0, 80)}`; }).join(" | ")}`);
       }
       const regionBox = memberBoxes.length > 0
         ? {
