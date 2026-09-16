@@ -2905,3 +2905,7 @@ Full application regression after the current extraction changes: **61 files / 3
 
 - Native page 3 inspection confirmed that Table 1 is split into an 11-line multi-cell grid plus a final four-item row (`SpeeChin One camera Necklace UD, SI`). Caption proximity alone is insufficient because the final row has no numeric token and competes with paragraph evidence.
 - Two compact-row promotion attempts failed at the resolver/projection boundary and were reverted to preserve precision. The remaining implementation target is a single region evidence built from the preceding grid's bbox band and repeated x columns, then consumed by the existing resolver.
+
+### 2026-09-16 extraction follow-up: compact table rows
+
+A generic caption-proximate compact-row rule now preserves one-line native table rows with multiple cells as canonical `table` blocks. The SpeeChin Table 1 row `SpeeChin One camera Necklace UD, SI` is now projected as a skipped table block instead of a translatable paragraph. This keeps native table content out of the translation queue without paper-specific matching. Real-paper baseline: 29/29; extraction corpus: 56/56.

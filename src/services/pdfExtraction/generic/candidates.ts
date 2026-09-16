@@ -410,6 +410,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       block.lines[0].items.length >= 1 && numericDensity >= 0.12 &&
       /[A-Za-z]/.test(block.text) &&
       nearbyTableCaption;
+    const compactTableDataRow = nearbyTableCaption && block.lines.length === 1 &&
+      block.lines[0].items.length >= 3 && block.text.trim().split(/\s+/).filter(Boolean).length <= 10 &&
+      !/[.!?;:]/.test(block.text);
     const role = denseCjkBody || numericRow || mathRow || alignedTableRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || rotatedNumericGrid ? "paragraph" : layoutRole;
     const style = styleSignature(block, layouts, baseFontSize, blocks[index - 1], blocks[index + 1]);
     const scoreByRole: Partial<Record<CanonicalRole, number>> = {
@@ -523,7 +526,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
           // evidence is present.
           : 0.68;
     }
-    if (block.role !== "table_caption" && nearbyTableRowEvidence(block, blocks)) scoreByRole.table = 0.96;
+    if (block.role !== "table_caption" && (nearbyTableRowEvidence(block, blocks) || compactTableDataRow)) scoreByRole.table = 0.96;
     const reason =
       block.role === "title"
         ? "largest font in first-page masthead"

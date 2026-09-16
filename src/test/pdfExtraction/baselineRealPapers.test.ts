@@ -93,6 +93,11 @@ describe("baseline benchmark on cached real papers", () => {
         expect(report.tableCaptionRecall).toBe(1);
         expect(report.tableRegionRecall).toBeGreaterThanOrEqual(0.8);
       }
+      if (paper.id === "speechin") {
+        const row = extractFromPages({ pages, paperId: "bench-speechin-row", filePath: paper.filename, fileHash: paper.id, metadata: { title: paper.title, pageCount: pages.length } }).blocks.find((block) => block.original?.startsWith("SpeeChin One camera"));
+        expect(row?.type).toBe("table");
+        expect(row?.translationStatus).toBe("skipped");
+      }
       if (gt?.listItems) {
         expect(report.listItemRecall).toBeGreaterThanOrEqual(0.9);
       }

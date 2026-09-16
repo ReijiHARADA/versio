@@ -2935,3 +2935,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 list precision probe (reverted)
 
 - Temporarily marked the education survey's seven listed items exhaustive to measure precision. Recall was 1.0 but precision 0.318, and manual completeness of all document lists was not established. The flag was reverted; the probe is retained as evidence that partial list annotations must not be treated as a production quality score.
+
+### 2026-09-16 compact table-row boundary fix
+
+- Added generic, caption-proximate compact-row evidence for one-line native rows with at least three cells, no sentence punctuation, and at most ten words. The existing resolver now promotes the SpeeChin row `SpeeChin One camera Necklace UD, SI` to a high-confidence table, and projection marks it `skipped` so it is not sent to translation.
+- This is geometry/caption evidence rather than a paper-specific string rule. The real-paper baseline passes 29/29, with the extraction corpus remaining 56/56; no translation-server or `.app` changes were made.

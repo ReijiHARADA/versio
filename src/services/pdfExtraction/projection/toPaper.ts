@@ -298,7 +298,13 @@ export function projectCanonicalToPaper(input: {
         // Candidate-to-layout lookup can be unavailable after resolver
         // enrichment; multiple native line boxes remain a conservative grid
         // provenance signal in that case.
-        node.boundingBoxes.length >= 3);
+        node.boundingBoxes.length >= 3 ||
+        (layout && layout.lines.length === 1 && layout.lines[0].items.length >= 3 &&
+          layout.lines[0].text.trim().split(/\s+/).filter(Boolean).length <= 10 &&
+          !/[.!?]\s*$/.test(layout.lines[0].text.trim())) ||
+        (node.confidence >= 0.94 && node.boundingBoxes.length === 1 &&
+          node.text.trim().split(/\s+/).filter(Boolean).length <= 10 &&
+          !/[.!?]\s*$/.test(node.text.trim())));
     if (nativeGrid) {
       const tableText = node.text ?? "";
       const match = tableText.match(/^(?:table|表)\s*(\S+)/i);
