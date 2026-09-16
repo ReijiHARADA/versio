@@ -197,7 +197,7 @@ async function translate(texts: string[]): Promise<ServerTranslation[]> {
   // fallback path and made audit rows disagree with the actual reader.
   const one = async (text: string) => {
     let lastError: unknown;
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    for (let attempt = 0; attempt < 6; attempt += 1) {
       try {
         const response = await fetch(`${endpoint}/translate`, {
           method: "POST",
@@ -208,11 +208,21 @@ async function translate(texts: string[]): Promise<ServerTranslation[]> {
           body: JSON.stringify({ text, source_language: "en", target_language: "ja" }),
           signal: AbortSignal.timeout(requestTimeoutMs),
         });
-        if (!response.ok) throw new Error(`translation server ${response.status}: ${await response.text()}`);
+        if (!response.ok) {
+          const detail = await response.text();
+          throw Object.assign(new Error(`translation server ${response.status}: ${detail}`), {
+            status: response.status,
+          });
+        }
         return (await response.json()) as ServerTranslation;
       } catch (error) {
         lastError = error;
-        if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 1_000));
+        const status = (error as { status?: number }).status;
+        if (attempt < 5) {
+          // A ready health response can race the final warmup transition;
+          // retry transient 503s long enough for the model lifecycle to settle.
+          await new Promise((resolve) => setTimeout(resolve, status === 503 ? 3_000 : 1_000));
+        }
       }
     }
     throw lastError;

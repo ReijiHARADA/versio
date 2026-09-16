@@ -1328,14 +1328,16 @@ function groupLinesIntoBlocks(
       const text = line.text.trim();
       const capitalWords = text.split(/\s+/).filter((word) => /^[A-Z][A-Za-z.'’-]{1,}$/.test(word));
       return capitalWords.length >= 2 && capitalWords.length <= 12 &&
-        text.length <= 120 && !/[.!?]$/.test(text) && !looksLikeAffiliation(text);
+        text.length <= 140 && !/^(?:arxiv|doi|http)/i.test(text) &&
+        !/[.!?]$/.test(text);
     })
     .map((line) => line.y)
+    .filter((y) => y > (pageOne[0]?.y ?? 0) + 8)
     .sort((a, b) => a - b)[0];
   if (firstAuthorY !== undefined) {
     for (const line of pageOne) {
       const text = line.text.trim();
-      if (line.y >= firstAuthorY || !["spanning", "single"].includes(line.column)) continue;
+      if (line.y >= firstAuthorY || (line.column === "right" && line.width < 300)) continue;
       if (text.length < 20 || text.length > 180 || /[.!?;]$/.test(text)) continue;
       if (isBodyStartHeading(text) || looksLikeAffiliation(text) || looksLikePersonName(text) || looksLikeLatinAuthorLine(text)) continue;
       mastheadTitleTexts.add(text);
