@@ -3520,3 +3520,7 @@ Figure-marker findings now report native image-placement overlap. The corpus sca
 ### 2026-09-16 caption adjacency diagnostics
 
 The scanner reports nearest horizontally aligned image gap in addition to overlap. The representative mixed Figure 2 paragraph has no aligned image, so its failure is native text ordering/column interleaving; image overlap alone cannot safely trigger a split.
+
+## Extraction checkpoint (2026-09-16)
+
+The extraction pipeline remains the active priority before translation work. The current 26-paper native-PDF baseline reports heading precision 1.000 / recall 0.993, reading-order pair accuracy 1.000, figure-caption relation 1.000, source integrity 1.000, canonical provenance 1.000, and title exact 0.769. Extraction corpus regression is 56/56; TypeScript, lint, and Web build pass. Residual diagnostic findings are concentrated in arXiv/PMLR vector labels, short-label bands, and dense math grids; no safe broad relabel rule has been identified. Next: orientation-aware table/footnote fixture using native rotation provenance.
