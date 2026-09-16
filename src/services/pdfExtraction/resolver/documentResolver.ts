@@ -149,6 +149,46 @@ function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
   });
 }
 
+function suppressVectorLabelClusters(nodes: CanonicalNode[]): CanonicalNode[] {
+  const captions = nodes.filter((node) => node.role === "caption");
+  return nodes.map((node) => {
+    if (!node.text || !["heading", "paragraph"].includes(node.role) || node.text.length > 40) return node;
+    const text = node.text.trim();
+    if (!text || /[.!?。！？]$/.test(text)) return node;
+    const tokens = text.split(/\s+/).filter(Boolean);
+    const labelLike = tokens.length >= 2 && tokens.every((token) =>
+      token.length <= 12 && (/^[A-Z0-9_+−–—/().]+$/.test(token) || /^[A-Z][A-Z0-9_+−–—/().]*$/.test(token))
+    );
+    if (!labelLike) return node;
+    const captionNearby = captions.some((caption) =>
+      caption.pageStart === node.pageStart && Math.abs(caption.boundingBoxes[0]?.y - (node.boundingBoxes[0]?.y ?? 0)) < 260
+    );
+    if (!captionNearby) return node;
+    const peers = nodes.filter((peer) => {
+      if (peer === node || peer.pageStart !== node.pageStart || !peer.text || peer.text.length > 40) return false;
+      if (/[.!?。！？]$/.test(peer.text.trim())) return false;
+      const box = peer.boundingBoxes[0];
+      const own = node.boundingBoxes[0];
+      if (!box || !own || Math.abs(box.y - own.y) > 140 || Math.abs(box.x - own.x) > 260) return false;
+      return peer.text.trim().split(/\s+/).filter(Boolean).length >= 2;
+    });
+    if (peers.length < 3) return node;
+    return {
+      ...node,
+      role: "other" as const,
+      confidence: Math.max(node.confidence, 0.84),
+      evidence: [...node.evidence, {
+        source: "generic-heuristic" as const,
+        label: "vector-label-cluster",
+        confidence: 0.84,
+        page: node.pageStart,
+        bbox: node.boundingBoxes[0] ?? { page: node.pageStart, x: 0, y: 0, width: 0, height: 0 },
+        reason: "short symbol-like labels form a local cluster near a figure/table caption",
+      }],
+    };
+  });
+}
+
 function average(values: number[], fallback = 0.8): number {
   if (values.length === 0) return fallback;
   return values.reduce((a, b) => a + b, 0) / values.length;
@@ -182,6 +222,7 @@ export function resolveCanonicalDocument(input: {
   let nodes = candidates.map(nodeFromCandidate);
   nodes = promoteRotatedTableCaptions(nodes, candidates);
   nodes = markAbstracts(nodes);
+  nodes = suppressVectorLabelClusters(nodes);
 
   const resolvedTitleText = titleResolved.text;
   const titleNode = nodes.find((n) => n.role === "title");

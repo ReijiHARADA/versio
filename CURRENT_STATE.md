@@ -3562,3 +3562,8 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 ### 2026-09-16 corpus diagnostic refresh
 - `npm run diagnose:pdf-corpus` を再実行し、26 papers / 497 pages / 149 suspicious blocks を確認（arXiv 134、PMLR 11、Elsevier 4、その他 0〜2）。
 - 診断は候補抽出専用で、今回の出力から自動 relabel は行わない。arXiv/PMLR の figure/table-like residual を次の geometry review queue とする。
+
+### 2026-09-16 vector-label cluster resolver experiment
+- 近傍 caption と短い記号・大文字ラベルの局所クラスタを evidence として `other` に抑制する一般則を追加。
+- 対象条件は 40文字以下、2語以上、文末句読点なし、同ページ caption 260pt以内、近傍ラベル3件以上に限定。
+- step-to-charge/speechin regression と extraction corpus は 56/56 passed。既存の通常見出し誤分類は確認されていない。今後 full Vitest と baseline metrics を再確認する。
