@@ -3674,3 +3674,7 @@ Strengthened the mixed first-page fixture: affiliation text must remain an `affi
 ### 2026-09-16 extraction benchmark refresh
 
 `npm run bench:pdf-extraction` regenerated `extraction-baseline-latest.json` for 26 papers. Aggregate metrics remain heading precision 1.000, heading recall 0.993, reading-order pair 1.000, figure-caption relation 1.000, source integrity 1.000, and canonical provenance 1.000; title exact 0.769. No regression from the native duplicate-span guard.
+
+### 2026-09-16 repeated-cell safety fixture
+
+Added a regression proving identical numeric values at distinct x coordinates (separate native table cells) are both preserved by the duplicate-span guard. Pipeline suite: 20/20 passed.

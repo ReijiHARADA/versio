@@ -3476,3 +3476,7 @@ The complex mixed-band fixture now explicitly checks that native affiliation tex
 ### 2026-09-16 extraction benchmark refresh
 
 The 26-paper benchmark was regenerated after the latest native text cleanup. Aggregate scores remain heading precision 1.000, recall 0.993, reading-order pair 1.000, figure-caption relation 1.000, source integrity 1.000, canonical provenance 1.000; title exact remains 0.769. Remaining failures are geometry residuals, not translation behavior.
+
+### 2026-09-16 repeated-cell safety fixture
+
+Added a safety fixture for repeated values in separate native table cells. Both values survive while only near-coincident duplicate spans are removed. Pipeline suite: 20/20.

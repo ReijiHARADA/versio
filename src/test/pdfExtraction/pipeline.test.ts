@@ -53,6 +53,15 @@ describe("canonical extraction pipeline", () => {
     expect(blocks.some((block) => block.column === "spanning")).toBe(true);
   });
 
+  it("preserves repeated values in distinct native table cells", () => {
+    const page = { pageNumber: 1, width: 500, height: 700, textItems: [
+      { text: "42", x: 80, y: 180, width: 16, height: 8, fontSize: 9, fontName: "Body", page: 1 },
+      { text: "42", x: 220, y: 180, width: 16, height: 8, fontSize: 9, fontName: "Body", page: 1 },
+    ] };
+    const text = reconstructDocument([page]).blocks.map((block) => block.text).join(" ");
+    expect((text.match(/42/g) ?? []).length).toBe(2);
+  });
+
   it("preserves native text when inferring two x-bands inside one paragraph stream", () => {
     const left = ["Left one", "Left two", "Left three", "Left four"];
     const right = ["Right one", "Right two", "Right three", "Right four"];
