@@ -2949,3 +2949,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 extraction build checkpoint
 
 - Production web build completed after the extraction changes (`npm run build`). TypeScript and Vite succeeded; only existing chunk-size, direct-eval, and ineffective dynamic-import warnings remain. No Tauri `.app` bundle was produced.
+
+### 2026-09-16 full application regression checkpoint
+
+- Full Vitest passes: 61 files / 347 tests. Extraction-specific reading order, pipeline, and real-paper suites remain green. This confirms the diagnostic classification and compact table-row changes do not regress import, reader, translation-cache, or export behavior.

@@ -2917,3 +2917,7 @@ The corpus diagnostic now records evidence-based residual classes. Across 149 su
 ### 2026-09-16 build verification
 
 `npm run build` passes with the extraction pipeline and residual diagnostics changes. Warnings are pre-existing Vite chunk/dynamic-import and pdfjs eval notices; no `.app` build was requested.
+
+### 2026-09-16 full regression checkpoint
+
+Full Vitest passes (61 files / 347 tests) after the extraction diagnostic and compact table-row changes. No translation-server or packaged-app code was changed.
