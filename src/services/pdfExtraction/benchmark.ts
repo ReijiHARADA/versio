@@ -49,6 +49,7 @@ export type BaselinePaperReport = {
   pageKind: ReturnType<typeof classifyDocument>;
   scannedByItemAverage: boolean;
   titlePredicted: string | null;
+  titleExpected?: string;
   titleExact?: boolean;
   authorF1?: number;
   affiliationF1?: number;
@@ -181,6 +182,7 @@ export function evaluateBaselinePaper(input: {
     // Report the resolver's logical title, which may span multiple native
     // lines. Using the first layout block understated wrapped titles.
     titlePredicted: canonicalTitle ?? titles[0] ?? null,
+    titleExpected: expectedTitle,
     titleExact: expectedTitle
       ? titleExactMatch(canonicalTitle ?? titles.join(" "), expectedTitle)
       : undefined,
