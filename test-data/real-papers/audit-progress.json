@@ -3036,7 +3036,8 @@
     "overallChromeContaminationRate": 0,
     "extractionCorpusTests": "56 passed",
     "fullVitest": "353 passed",
-    "nextAction": "manual review of broadened table-region candidates and paragraph/list boundaries; synthetic flattened-grid regression added in f7e71af"
+    "nextAction": "Improve proseGrid using row-level x/y stability; page-9 list guard is kept. Do not use broad word-count suppression because it regresses table recall.",
+    "latestCommit": "a4dcfb0"
   },
   "nextAction": "derive stronger figure-vs-table native geometry before any vector-label suppression; continue paragraph/block audit"
 }
