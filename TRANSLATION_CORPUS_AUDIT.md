@@ -24,6 +24,10 @@ The page-top caption guard was validated against the medical meta-review. It
 raises table-region recall from 0.571 to 1.000 without changing the 56/56
 extraction-corpus result. Table continuation-page recall remains 0.571 and is
 still an extraction task; translation-server behavior is intentionally unchanged.
+Resolver diagnostics also show the proximity window can attach later table
+captions/rows to an earlier region (visible in the medical Table 1 trace). This
+precision risk is hidden by the incomplete-annotation recall metric and is the
+next extraction issue to resolve.
 
 ## Initial local sample (2026-09-07)
 

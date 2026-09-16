@@ -278,6 +278,10 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
           })
         : [];
       const memberBoxes = regionMembers.flatMap((member) => member.boundingBoxes);
+      const debug = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_TABLE_DEBUG;
+      if (debug === "1" && role === "table") {
+        console.warn(`[PDF_TABLE_REGION] label=${JSON.stringify(caption.layoutBlock.text)} captionPages=${caption.pageStart}-${caption.pageEnd} members=${regionMembers.map((member) => `${member.pageStart}-${member.pageEnd}:${member.layoutBlock.role}:${member.layoutBlock.text.slice(0, 80)}`).join(" | ")}`);
+      }
       const regionBox = memberBoxes.length > 0
         ? {
             page: box!.page,
