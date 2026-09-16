@@ -3521,3 +3521,7 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - Verification: focused numeric/equation/heading suite 12/12; extraction corpus 56/56. Full baseline recheck remains required before keeping the change.
 - Full Vitest after numeric multi-item row guard: 61 files / 354 tests passed; no safety regression observed in existing fixtures.
 - Added a synthetic regression for numeric multi-item summary rows; focused pipeline test passes and protects against future heading promotion regressions.
+
+### 2026-09-16 speechin canonical recheck after numeric-row guard
+- End-to-end `extractFromPages` now resolves `54 English 90.5%` and `44 Chinese 91.6%` as table nodes (not headings); their evidence is paragraph/table role-scores and they remain non-translatable table content.
+- The earlier heading output came from pre-resolver layout inspection, not final CanonicalDocument. No additional percent-specific rule was retained.
