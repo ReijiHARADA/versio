@@ -2937,3 +2937,7 @@ The 26-paper benchmark was rerun after the image-overlap evidence change. Source
 ### 2026-09-16 manual image-label review
 
 Reviewed representative high-overlap cached arXiv samples. Repeated model names and axis values are figure/chart labels, but legitimate prose can also be adjacent to or overlap an image. Image-overlap evidence remains advisory until a fixture demonstrates safe role resolution.
+
+### 2026-09-16 residual review fixture
+
+Added an 83-sample metadata-only fixture for image-overlap and short-label-band residuals. It references cached PDFs and preserves short text excerpts for manual role review; no production role rule is derived from it yet.

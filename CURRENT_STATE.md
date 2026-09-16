@@ -2970,3 +2970,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual image-label review
 
 - Manual review of representative high-overlap samples in the cached arXiv corpus confirmed that strings such as `GPT_rel GPT_rot GPT_pos` and repeated axis values are figure/chart labels, while the corpus also contains legitimate prose near images. The image-overlap evidence therefore remains advisory; no unconditional paragraph suppression is justified.
+
+### 2026-09-16 reviewed residual fixture
+
+- Added `test-fixtures/real-papers/ground-truth/layout-residuals.json` with 83 cached-corpus samples from image-overlap and short-label-band classes. The fixture stores paper/page/classification/text metadata without adding PDF binaries and is intended for manual role review before any production suppression rule.
