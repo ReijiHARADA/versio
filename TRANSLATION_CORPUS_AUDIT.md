@@ -3115,3 +3115,7 @@ The page-5 residual merges numbered method steps, inline formulas, a definition,
 ### 2026-09-16 image-overlap resolver guard
 
 A precision-first Resolver guard now maps blocks with strong existing image-overlap label evidence to `other` when it clearly beats paragraph evidence. Full tests (61/350), extraction corpus (56/56), and typecheck pass; source integrity/canonical provenance remain 1.0. No translation-server changes.
+
+### 2026-09-16 manual residual review: linguistics page 6
+
+Rendered review confirmed a boxed Result 1–3 summary with bullet items that extraction flattens into surrounding results prose. Recorded as `list_flattening`, severity 3, with line grouping as the primary cause; review coverage is 22/83 (61 pending).
