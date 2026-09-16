@@ -86,6 +86,15 @@ describe("isEquationLine", () => {
       expect(isEquationLine(sample), sample).toBe(false);
     }
   });
+
+  it("rejects scientific prose fragments with inline units or citations", () => {
+    const samples = [
+      "mum of 100 − 200μW depending upon the available energy. Further,",
+      "5 − 200μW/cm3 for piezoelectric) [2, 3]. Thus, studies have been conducted",
+      "CR = 0.99), self-expression (AVE = 0.56; CR = 0.96), consequences",
+    ];
+    for (const sample of samples) expect(isEquationLine(sample), sample).toBe(false);
+  });
 });
 
 describe("PDF reading order regression", () => {

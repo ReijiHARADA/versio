@@ -657,8 +657,13 @@ export function isEquationLine(text: string): boolean {
   // considered later by the evidence generator, but a sentence that contains
   // a statistic must never be made atomic as a displayed equation here.
   const proseWords = tokens.filter((word) => /[A-Za-z]{3,}/.test(word)).length;
-  const statisticalResult = /(?:\b[ntz]\s*=|[χΧxX²]\s*\(|\b[FPt]\s*\(|\bp\s*[<=>])/.test(t);
+  const statisticalResult = /(?:\b[ntz]\s*=|[χΧxX²]\s*\(|\b[FPt]\s*\(|\bp\s*[<=>]|\b(?:AVE|CR|SE|RMSE|MAE|MPE|MAPE)\s*=)/i.test(t);
   if (statisticalResult && (proseWords >= 3 || /[,.;:]/.test(t))) return false;
+  // Unit-bearing prose often contains a single minus sign or Greek symbol
+  // while remaining an ordinary sentence fragment. A displayed equation is
+  // normally symbol-dense and short; six or more prose words is a strong
+  // negative signal unless an explicit equation number anchors the line.
+  if (!hasEqNumber && proseWords >= 6) return false;
 
   if (hasEqNumber && math >= 1) return true;
   if (math < 2) return false;
