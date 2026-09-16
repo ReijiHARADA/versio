@@ -3030,7 +3030,7 @@
     "tableRegionRecall": "1.000",
     "tableContinuationPageRecall": "1.000",
     "sourceIntegrityRate": "1.000",
-    "note": "Generic continued-caption handling validated across extraction corpus; Table 7 page 14 is merged into its page 13 region."
+    "note": "Vector figure label evidence added for dense short native text clusters; extraction corpus and full benchmark remain green."
   },
-  "nextAction": "audit paragraph stitching and block-boundary precision across corpus"
+  "nextAction": "manually review vector-label false positives across corpus and then continue paragraph/block boundary audit"
 }

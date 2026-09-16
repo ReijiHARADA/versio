@@ -3295,3 +3295,7 @@ Full-suite validation checkpoint: Vitest passed 61 files / 350 tests after conti
 Boundary scan checkpoint: `npm run scan:pdf-boundaries` completed successfully on the cached corpus. It continues to expose mixed table/figure/list streams in selected papers; no broad post-hoc merge rule was added.
 
 Visual review: the `human-ai-interaction-guidelines` page-3 mixed-layout residual is Figure 2 radial-chart labels, not prose. Because image-overlap evidence did not fire for this native vector figure, no blanket suppression was added; the remaining issue is vector-figure label evidence.
+
+### 2026-09-16 vector-figure label evidence
+
+Added generic `vector-figure-label-cluster` evidence for dense, short, multi-x-band native text without sentence punctuation. Resolver routing is evidence-based and only selects `other` when it outranks paragraph evidence. Extraction corpus remains 56/56; benchmark source integrity and figure-caption relation remain 1.000. Manual false-positive review is next.

@@ -3386,3 +3386,10 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 
 - Rendered `human-ai-interaction-guidelines` page 3. The diagnostic block at page 3 is Figure 2's radial-chart labels, not body prose; its mixed x-clusters are intentional figure text.
 - No production suppression was added because the current image-overlap evidence did not fire for this native vector figure. This is a figure-label/native-vector evidence gap, not a paragraph-stitching error.
+
+### 2026-09-16 vector-figure label evidence
+
+- Added generic `vector-figure-label-cluster` evidence for dense short native text items spanning multiple x-bands without sentence punctuation; the Resolver can safely route these to `other` when evidence outranks paragraph evidence.
+- Targeted human-AI Figure 2 residual remains one advisory diagnostic block, while it is now represented as non-translatable evidence in the canonical resolver path.
+- Extraction corpus: 56/56; full benchmark source-integrity and figure-caption relation remain 1.000; TypeScript and focused reading-order tests pass.
+- Next: manually review vector-label false positives across the corpus before widening the rule.
