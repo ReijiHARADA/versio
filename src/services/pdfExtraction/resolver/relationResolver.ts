@@ -248,10 +248,13 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
             const samePage = candidate.pageStart === caption.pageStart;
             const nextPageContinuation = candidate.pageStart === caption.pageStart + 1 &&
               box.y > 500 && candidateBox.y < 220;
-            if (!samePage && !nextPageContinuation) return false;
+            const laterPageContinuation = candidate.pageStart > caption.pageStart &&
+              candidate.pageStart <= caption.pageStart + 4 &&
+              box.y > 500 && Math.abs(candidateBox.x - box.x) < 180;
+            if (!samePage && !nextPageContinuation && !laterPageContinuation) return false;
             const aboveCaption = samePage && candidateBox.y < box.y && box.y - (candidateBox.y + candidateBox.height) < 280;
             const belowCaption = samePage && candidateBox.y >= box.y && candidateBox.y - (box.y + box.height) < 280;
-            if (!(aboveCaption || belowCaption)) return false;
+            if (!(aboveCaption || belowCaption || laterPageContinuation || nextPageContinuation)) return false;
             // A native table is often split into one LayoutBlock per row by
             // the generic block grouper. Preserve those rows as a region even
             // when no single block has enough lines to earn table evidence.
