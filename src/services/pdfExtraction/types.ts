@@ -18,6 +18,30 @@ export type ExtractionEvidence = {
   reason?: string;
 };
 
+export type StructuralRegionEvidence = {
+  id: string;
+  kind: "table" | "figure" | "list" | "unknown";
+  pageStart: number;
+  pageEnd: number;
+  boundingBoxes: BoundingBox[];
+  captionCandidateId?: string;
+  memberCandidateIds: string[];
+  columnX?: number[];
+  graphicsEvidence?: ExtractionEvidence[];
+  repeatedHeaderEvidence?: ExtractionEvidence[];
+  confidence: number;
+  provenance: ExtractionEvidence[];
+};
+
+/**
+ * Table-specific region evidence. This is intentionally a structural alias
+ * at the pipeline boundary; resolution remains unchanged until table-region
+ * scoring is enabled in a later phase.
+ */
+export type TableRegionEvidence = StructuralRegionEvidence & {
+  kind: "table";
+};
+
 /** @deprecated Use ExtractionEvidence. Kept for PoC call sites. */
 export type Evidence = ExtractionEvidence & { note?: string };
 

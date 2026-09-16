@@ -2,6 +2,8 @@ export type {
   Evidence,
   EvidenceSource,
   ExtractionEvidence,
+  StructuralRegionEvidence,
+  TableRegionEvidence,
   FormatId,
   DocumentEvidence,
   FormatDetection,
@@ -17,6 +19,7 @@ export { assignNativeTextToBoxes } from "./layoutAssign";
 export { extractAcademicPdf, extractFromPages } from "./pipeline/extractAcademicPdf";
 export { projectCanonicalToPaper } from "./projection/toPaper";
 export { generateGenericCandidates } from "./generic/candidates";
+export { resolveCanonicalDocument, resolveTableRegions } from "./resolver/documentResolver";
 export { grobidEnricher } from "./enrichers/grobid";
 export { doclingEnricher } from "./enrichers/docling";
 export { visionOcrEnricher } from "./enrichers/ocr";

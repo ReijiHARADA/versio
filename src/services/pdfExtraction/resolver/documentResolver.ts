@@ -7,6 +7,7 @@ import type {
 } from "../canonical/types";
 import type { FormatDetection, PageTextKind, ExtractionEvidence } from "../types";
 import type { RoleCandidate } from "../generic/candidates";
+import type { StructuralRegionEvidence } from "../types";
 import { formatTitleEvidence } from "../formats/applyHardRules";
 import { normalizedTextHash } from "../sourceAnchor";
 import { resolveTitle } from "./titleResolver";
@@ -222,6 +223,40 @@ function average(values: number[], fallback = 0.8): number {
   return values.reduce((a, b) => a + b, 0) / values.length;
 }
 
+/** Apply only high-confidence, explicitly anchored region evidence. Generic
+ * callers usually provide no regions; when present, member ids are the hard
+ * boundary that prevents page-wide guesses from relabelling prose. */
+export function resolveTableRegions(nodes: CanonicalNode[], regions: StructuralRegionEvidence[]): CanonicalNode[] {
+  let resolvedNodes = nodes;
+  for (const region of regions) {
+    if (region.kind !== "table" || region.confidence < 0.98 || region.memberCandidateIds.length === 0) continue;
+    const memberIds = new Set(region.memberCandidateIds);
+    const members = resolvedNodes.filter((node) => memberIds.has(node.id));
+    if (members.length !== region.memberCandidateIds.length) continue;
+    const memberIdsToPromote = new Set(members
+      .filter((node) => node.role === "paragraph" || node.role === "other")
+      .map((node) => node.id));
+    if (memberIdsToPromote.size === 0) continue;
+    resolvedNodes = resolvedNodes.map((node) => {
+      if (!memberIdsToPromote.has(node.id)) return node;
+      return {
+        ...node,
+        role: "table",
+        confidence: Math.max(node.confidence, region.confidence),
+        evidence: [...node.evidence, ...region.provenance, {
+          source: "layout-model" as const,
+          label: "table-region-member",
+          confidence: region.confidence,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: `region=${region.id}`,
+        }],
+      };
+    });
+  }
+  return resolvedNodes;
+}
+
 export function resolveCanonicalDocument(input: {
   candidates: RoleCandidate[];
   layouts: PageColumnLayout[];
@@ -234,6 +269,7 @@ export function resolveCanonicalDocument(input: {
   fileHash?: string;
   metadataTitle?: string;
   extraEvidence?: ExtractionEvidence[];
+  regionEvidence?: StructuralRegionEvidence[];
   grobidTitle?: string | null;
 }): CanonicalDocument {
   const { candidates, detection } = input;
@@ -248,6 +284,7 @@ export function resolveCanonicalDocument(input: {
   });
 
   let nodes = candidates.map(nodeFromCandidate);
+  nodes = resolveTableRegions(nodes, input.regionEvidence ?? []);
   nodes = promoteRotatedTableCaptions(nodes, candidates);
   nodes = markAbstracts(nodes);
   nodes = suppressVectorLabelClusters(nodes);

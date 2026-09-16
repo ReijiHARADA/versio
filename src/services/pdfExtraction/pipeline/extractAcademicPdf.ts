@@ -16,6 +16,7 @@ import { grobidEnricher } from "../enrichers/grobid";
 import { doclingEnricher } from "../enrichers/docling";
 import type { CanonicalDocument } from "../canonical/types";
 import type { ExtractionEvidence, PageTextKind } from "../types";
+import type { StructuralRegionEvidence } from "../types";
 import type { ExtractionContext, ExtractionEnricher } from "../enrichers/types";
 
 export type ExtractProgress = {
@@ -34,6 +35,7 @@ export type ExtractAcademicPdfInput = {
   metadata?: { title?: string; author?: string; pageCount: number };
   extractFigures?: boolean;
   previousBlocks?: PaperBlock[];
+  regionEvidence?: StructuralRegionEvidence[];
   onProgress?: (progress: ExtractProgress) => void;
 };
 
@@ -223,6 +225,7 @@ export function extractFromPages(input: {
       ...applied.evidence,
       ...input.pages.flatMap((page) => graphicsToExtractionEvidence(page.pageNumber, page.graphicsPrimitives ?? [])),
     ],
+    regionEvidence: input.regionEvidence,
   });
 
   console.info(

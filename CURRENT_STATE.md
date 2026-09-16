@@ -3911,6 +3911,7 @@ Regenerated `test-data/real-papers/reports/extraction-baseline-latest.json` with
 - Added `graphicsEvidenceBounds()` as a small diagnostic helper for deriving a candidate vector-region bbox without affecting text roles. Typecheck and lint pass.
 - Added `graphicsToExtractionEvidence()` to convert native graphics candidates into existing `ExtractionEvidence` records (with page/bbox/confidence and an explicit non-relabeling reason). This is the planned bridge to the resolver boundary, but remains unconnected until precision evaluation is complete. Typecheck and lint pass.
 - Resolver integration remains intentionally deferred: current measurements do not yet prove safe continuation recall across all Table 6/7 pages, so no automatic promotion is enabled.
+- Started the region-level architecture requested by `goal-objective.md`: added `StructuralRegionEvidence` (stable id, page span, bounding boxes, member candidate ids, caption/headers/graphics evidence, confidence, provenance) and optional `regionEvidence` inputs to `resolveCanonicalDocument()`/`extractFromPages()`. The field is currently pass-through only, so existing roles and text projection are unchanged. Typecheck and lint pass.
 - Wired native graphics candidates into the existing `extraEvidence` array during `extractFromPages()`. This makes the evidence visible to the canonical resolver without changing any role score or promotion rule; TypeScript and lint pass.
 - Re-ran `npm run test:extraction-corpus -- --run` after the Evidence bridge; exit 0. The corpus remains green at 56/56, confirming the extraEvidence wiring did not alter extracted roles.
 - Added `projectTableRegionBounds()` to project a prior region's horizontal extent onto an adjacent page for bounded, audit-only candidate search. It clamps to page dimensions and intentionally does not classify or merge content. Typecheck and lint pass.
@@ -3922,7 +3923,15 @@ Regenerated `test-data/real-papers/reports/extraction-baseline-latest.json` with
 
 ### Evidence inventory (Table 6/7 continuation)
 
+- Added the explicit `TableRegionEvidence` type alias at the public extraction boundary (`StructuralRegionEvidence & { kind: "table" }`). This is type-only and keeps resolver behavior unchanged. `npx tsc --noEmit` passes and the extraction corpus remains 56/56.
+- Began region resolution with a precision-gated resolver pass: only table regions with confidence ≥0.98 and an exact, complete member-id match can relabel existing paragraph/other nodes. Ambiguous or partial regions are ignored. The extraction corpus remains 56/56 after the change.
+
 - Available and now captured: native text item bbox, font/size/rotation, repeated x/y clusters, page dimensions and boundaries, image placements, vector rectangles/paths, caption candidates, and bounded region signatures.
 - Available but not yet consumed by continuation: repeated-header identity, cross-page column alignment, and neighboring canonical block roles.
 - Not present in the current native model: a guaranteed table grid/row-cell graph for captionless continuation pages. The new evidence therefore remains audit-only until a candidate region can be formed without guessing.
 - Applied the signature to wear-scale pages 7–14 as a page-level diagnostic. Table-heavy pages expose repeated rule evidence (p7 h=12, p8 h=2/v=2, p9 h=12, p10 h=22, p11 h=27, p12 h=2/v=2, p13 h=21, p14 v=48), but page-wide text signatures are too broad (e.g. 171 items/35 x-clusters on p7) to use directly. This confirms the next required step is caption-anchored region cropping before similarity scoring; no continuation promotion has been enabled.
+- Added resolver boundary verification for the new region path: TypeScript check and the focused table-signature suite (5 tests) pass. High-confidence exact-member regions are promoted to table nodes; low-confidence or partial regions remain unchanged. No `.app` build was run.
+- Exported the resolver's `resolveTableRegions()` helper and added focused tests for complete high-confidence promotion versus partial/low-confidence rejection (`tableRegionResolver.test.ts`, 2 tests). Combined table suites pass 7/7; typecheck remains green.
+- Made `resolveTableRegions()` side-effect free: it now returns cloned promoted nodes, deduplicates member ids with a Set, and leaves already-resolved/non-table roles untouched. Typecheck and focused resolver tests remain green.
+- Full extraction corpus re-run after resolver immutability change: 2 test files, 56/56 tests passed (30.25s). PDF.js native warnings remain informational only.
+- Exported `resolveCanonicalDocument` and `resolveTableRegions` from the extraction public index so callers can supply and verify region evidence through the canonical API. Typecheck and diff validation pass.
