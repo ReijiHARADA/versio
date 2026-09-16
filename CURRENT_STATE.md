@@ -3519,3 +3519,4 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - Hypothesis: speechin Table 1 summary rows (`54 English 90.5%`, etc.) were being promoted to headings because they contain title-like words plus numeric values.
 - Change: generic candidate scoring now demotes single-line, multi-item, punctuation-free rows with numeric density >=0.18 to paragraph evidence and excludes them from heading evidence. This is format-neutral and does not depend on table names.
 - Verification: focused numeric/equation/heading suite 12/12; extraction corpus 56/56. Full baseline recheck remains required before keeping the change.
+- Full Vitest after numeric multi-item row guard: 61 files / 354 tests passed; no safety regression observed in existing fixtures.
