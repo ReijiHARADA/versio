@@ -3678,3 +3678,7 @@ Strengthened the mixed first-page fixture: affiliation text must remain an `affi
 ### 2026-09-16 repeated-cell safety fixture
 
 Added a regression proving identical numeric values at distinct x coordinates (separate native table cells) are both preserved by the duplicate-span guard. Pipeline suite: 20/20 passed.
+
+### 2026-09-16 full regression after repeated-cell fixture
+
+Full Vitest completed with **61 files / 358 tests passed**. This includes the duplicate-span caption and distinct repeated-cell safety fixtures. No translation or `.app` changes.

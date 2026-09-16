@@ -3480,3 +3480,7 @@ The 26-paper benchmark was regenerated after the latest native text cleanup. Agg
 ### 2026-09-16 repeated-cell safety fixture
 
 Added a safety fixture for repeated values in separate native table cells. Both values survive while only near-coincident duplicate spans are removed. Pipeline suite: 20/20.
+
+### 2026-09-16 full regression after repeated-cell fixture
+
+Full Vitest is green: **61 files / 358 tests passed**. The new native text-layer cleanup remains isolated from translation code; extraction completion is still pending geometry residuals.

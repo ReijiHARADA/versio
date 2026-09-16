@@ -3059,6 +3059,6 @@
     "nextAction": "Add and validate a general affiliation/body boundary fixture; then review table/list residuals.",
     "latestCommit": "f695d44"
   },
-  "nextAction": "Add a real multi-column affiliation/body geometry fixture; then evaluate arXiv vector-label and table/list residuals.",
+  "nextAction": "Create a real multi-column affiliation/body geometry fixture and address remaining arXiv vector-label/table-list residuals.",
   "lastUpdate": "2026-09-16"
 }
