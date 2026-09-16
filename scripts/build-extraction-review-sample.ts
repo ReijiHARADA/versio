@@ -20,12 +20,15 @@ for (const paper of catalog.papers) {
   const candidates = blocks
     .filter((block) => block.text.trim().length > 0)
     .filter((block) => ["heading", "paragraph", "figure_caption", "table_caption"].includes(block.role));
-  // Keep the sample small, but always retain structural examples when present.
+  // Keep the sample bounded, but ensure every paper contributes at least a
+  // dozen section-stratified blocks when the cached extraction has enough
+  // material. Structural examples are selected first so ordinary prose does
+  // not crowd out captions, lists, or headings.
   const selected = [
-    ...candidates.filter((b) => b.role === "heading").slice(0, 2),
-    ...candidates.filter((b) => b.role === "paragraph").slice(0, 3),
+    ...candidates.filter((b) => b.role === "heading").slice(0, 4),
     ...candidates.filter((b) => b.role === "figure_caption" || b.role === "table_caption"),
-  ].filter((block, index, all) => all.indexOf(block) === index).slice(0, 8);
+    ...candidates.filter((b) => b.role === "paragraph").slice(0, 12),
+  ].filter((block, index, all) => all.indexOf(block) === index).slice(0, 16);
   for (const block of selected) {
     rows.push({
       paperId: paper.id,

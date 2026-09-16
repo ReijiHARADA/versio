@@ -2948,4 +2948,4 @@ The residual fixture now carries `manualRole`, `reviewStatus`, and `severity` pe
 
 The extraction corpus and 26-paper benchmark were re-run after this schema change; reading-order/baseline suites remain green and source-integrity/canonical-provenance metrics remain 1.0.
 
-The cached corpus also produced a 200-row section-stratified extraction review sample with page/bbox provenance. Rows remain pending manual comparison against rendered PDFs.
+The cached corpus now produces a 415-row section-stratified extraction review sample (15–16 rows per paper) with page/bbox provenance. Rows remain pending manual comparison against rendered PDFs.

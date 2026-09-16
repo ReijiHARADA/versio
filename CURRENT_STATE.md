@@ -2985,4 +2985,4 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 ### 2026-09-16 manual extraction sample
 
-- Regenerated `extraction-manual-sample-v1.json` from the cached corpus. It contains 200 section-stratified rows (headings, ordinary paragraphs, and all detected captions), each with page/bbox provenance and a pending manual label. No production classification is inferred from this sample.
+- Regenerated `extraction-manual-sample-v1.json` from the cached corpus. It contains 415 section-stratified rows (15–16 per paper; headings, ordinary paragraphs, and all detected captions), each with page/bbox provenance and a pending manual label. No production classification is inferred from this sample.
