@@ -1,6 +1,6 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "extraction-v-current-2026-09-16",
+  "lastBenchmarkVersion": "extraction-v-current-2026-09-16-table-boundary",
   "lastDiagnosticVersion": "pdf-layout-corpus-diagnostic-v1",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
@@ -3031,10 +3031,12 @@
     "pipelineTests": "16/16",
     "extractionCorpus": "56/56",
     "readingOrder": "49/49",
-    "tableContinuationPageRecall": "2/7",
-    "nextAction": "investigate table continuation pageEnd using generic cross-page geometry/style; current medical tableRegionRecall=1.000, continuation=0.571",
+    "tableContinuationPageRecall": "0.429",
+    "nextAction": "recover genuine table continuation rows without restoring cross-table links; current medical recall region=1.000, continuation=0.429",
     "fullVitest": "61 files / 350 tests",
     "typecheck": "pass",
-    "manualReviewed": "83/83"
+    "manualReviewed": "83/83",
+    "tableRegionRecall": "1.000",
+    "lastBenchmarkVersion": "extraction-v-current-2026-09-16-table-boundary"
   }
 }
