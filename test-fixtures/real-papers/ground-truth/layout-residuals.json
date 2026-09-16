@@ -37,20 +37,24 @@
       "page": 7,
       "classification": "image-overlap",
       "text": "Biophysical S2C: Channel Model Channel Wearable Receiver Larger Portable Receiver Model Rx",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: native short-label bands are labels embedded in Figure 2, not translatable body prose",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 3,
+      "reviewLabel": "figure_label",
+      "rootCause": "pdf extraction"
     },
     {
       "paper": "step-to-charge",
       "page": 7,
       "classification": "short-label-band",
       "text": "Signal Plate Earth Resistance CGB - (a) Ground (b) (c) Tx Body Rx RS RB L",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: native short-label bands are labels embedded in Figure 2, not translatable body prose",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 3,
+      "reviewLabel": "figure_label",
+      "rootCause": "pdf extraction"
     },
     {
       "paper": "step-to-charge",

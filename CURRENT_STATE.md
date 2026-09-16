@@ -3054,3 +3054,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 continuation evidence experiment (reverted)
 
 - Tried propagating table evidence from a prior-page caption to first blocks on the next page. The corpus stayed 56/56 and continuation recall stayed 2/7, while the rule could promote unrelated page-top prose. Reverted under the precision-first policy; production extraction remains at the prior committed behavior.
+
+### 2026-09-16 manual residual review: Step-to-Charge page 7
+
+- Rendered the cached PDF page 7 and compared the two pending short-label residuals with the native page. Both belong to the internal labels and annotations of Figure 2 (Biophysical Channel Model / S2C Channel Model), not body prose.
+- Labeled both samples `figure_label`, severity 3, root cause `pdf extraction`. Review coverage is now 10/83 (73 pending); no production rule was added because image/label geometry needs a generic boundary solution.
