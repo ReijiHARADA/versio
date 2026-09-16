@@ -2962,3 +2962,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Added conservative generic image-overlap evidence for multi-line, short-token native blocks that overlap an image placement and lack sentence punctuation. This evidence competes as `other` without deleting source text; projection behavior remains unchanged until broader precision evidence is available.
 - Pipeline tests 15/15 and extraction corpus 56/56 pass; no translation or `.app` changes.
+
+### 2026-09-16 image-overlap corpus verification
+
+- Re-ran the 26-paper extraction benchmark after adding image-overlap evidence. Source-integrity remains 1.0 for every paper, and chart-label evidence remains limited to six detected nodes; no broad paragraph-to-other regression was observed. Extraction corpus remains 56/56.

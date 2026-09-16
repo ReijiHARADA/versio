@@ -2929,3 +2929,7 @@ After the compact-row change, table-region recall remains 0.843 mean (n=4; min 0
 ### 2026-09-16 image-overlap evidence
 
 Added conservative image-placement overlap evidence for short multi-line label clusters. It is resolver evidence only and does not force source removal or translation skipping. Pipeline and extraction corpus regressions remain green.
+
+### 2026-09-16 image-overlap corpus verification
+
+The 26-paper benchmark was rerun after the image-overlap evidence change. Source integrity stayed at 1.0 across all papers, with six chart-label evidence nodes and no observed broad paragraph-to-other regression. Extraction corpus remains 56/56.
