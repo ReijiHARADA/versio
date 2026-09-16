@@ -121,10 +121,12 @@
       "page": 26,
       "classification": "short-label-band",
       "text": "Grounded Tx Multiple Receivers Wearable Tx Broadband Rx_1 Rx_2 Rx_n channel with Wearable Rx grounded Tx ......",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: residual is embedded labels and annotations inside Figure 9, including curve labels and axis text",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 3,
+      "reviewLabel": "figure_label",
+      "rootCause": "pdf extraction"
     },
     {
       "paper": "cognitive-psychology-gpt3",

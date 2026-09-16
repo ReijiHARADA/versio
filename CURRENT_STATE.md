@@ -3088,3 +3088,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: Step-to-Charge page 23
 
 - Page 23 is a dense displayed-equation sequence (transfer functions, equations 10–14). Labeled the residual `equation`, severity 3, root cause `pdf extraction`; review coverage is now 17/83 (66 pending).
+
+### 2026-09-16 manual residual review: Step-to-Charge page 26
+
+- Figure 9's residual is embedded curve/axis labels and annotations, confirmed visually. Labeled `figure_label`, severity 3, root cause `pdf extraction`; manual review is now 18/83 (65 pending).
