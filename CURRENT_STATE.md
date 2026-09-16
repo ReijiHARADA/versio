@@ -3734,3 +3734,7 @@ After captioned multi-cell grid detection, extraction corpus remained **2 files 
 ### 2026-09-16 wear-scale rotated-table residual probe
 
 Native probe of `wear-scale.pdf` page 14 confirms the remaining Table 6 issue is a raster/coordinate-transformed matrix: rows are emitted as many short numeric blocks with small native rotation values (roughly 0–21° after PDF transform), interleaved with separate row labels and a long footnote line. The existing >=45° rotated-grid evidence cannot safely identify this shape without risking ordinary numeric prose. No broad relabel was added; it remains an unresolved geometry fixture requiring page transform/orientation evidence.
+
+### 2026-09-16 low-angle matrix safety fixture
+
+Added a regression fixture for numeric matrix fragments whose native text carries only small (0–15°) rotation values. The test asserts these fragments cannot become headings through style/number heuristics, preserving precision-first fallback while orientation-aware table evidence remains unresolved. Pipeline: 22/22; TypeScript passed.

@@ -184,6 +184,22 @@ describe("canonical extraction pipeline", () => {
     expect(result.blocks.some((block) => block.type === "table" && block.original?.includes("Method1"))).toBe(true);
   });
 
+  it("keeps low-angle numeric matrix fragments out of heading role", () => {
+    const textItems = Array.from({ length: 8 }, (_, row) => ({
+      text: `${(row + 1).toFixed(2)} ${(row + 2).toFixed(2)} ${(row + 3).toFixed(2)} R${row + 1}`,
+      x: 180,
+      y: 120 + row * 18,
+      width: 180,
+      height: 8,
+      fontSize: 8,
+      fontName: "Body",
+      rotation: (row % 4) * 5,
+      page: 1,
+    }));
+    const candidates = generateGenericCandidates([{ pageNumber: 1, width: 500, height: 700, textItems }]).candidates;
+    expect(candidates.every((candidate) => candidate.role !== "heading")).toBe(true);
+  });
+
   it("keeps repeated chart-axis labels out of table evidence", () => {
     const textItems = Array.from({ length: 5 }, (_, index) => ({
       text: `${(index * 0.005).toFixed(3)}`,
