@@ -3217,3 +3217,7 @@ Algorithm 3 pseudocode and its display equation are flattened into one candidate
 ### 2026-09-16 manual residual review: economics page 13
 
 The mathematical continuation candidate is ordinary body prose below Figure 1 (`paragraph`, severity 0), not a figure label. No algorithm change was added. Coverage remains 63/83 with 19 pending.
+
+### 2026-09-16 manual residual review: education page 7
+
+The candidate is a Table 2 book row (`table_row`, severity 3, line-grouping cause), not body prose. Coverage: 64/83, 18 pending.

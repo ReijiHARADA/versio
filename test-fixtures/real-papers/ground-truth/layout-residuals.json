@@ -525,10 +525,10 @@
       "page": 7,
       "classification": "short-label-band",
       "text": "Machine Learning M. Virvou, E. 2019 Springer 223 Paradigms: Advances Alepis, G.A. in Learning Analytics Tsihrintzis, L.C. Jain",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: book title/author/year/publisher/page stream is a row of Table 2, not body prose",
+      "manualRole": "table_row",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "economics-regularized-deepiv",

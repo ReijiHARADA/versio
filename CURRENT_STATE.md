@@ -3214,3 +3214,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 manual residual review: economics page 13
 
 - The mathematical continuation candidate is ordinary body prose with display notation below Figure 1, not a figure label. Recorded as `paragraph`, severity 0; no equation boundary change was justified. Manual coverage remains 63/83 (19 pending).
+
+### 2026-09-16 manual residual review: education page 7
+
+- The book title/author/year/publisher/page candidate is a row of Table 2, not body prose. Recorded as `table_row`, severity 3, primary cause `line grouping`; manual coverage is 64/83 (18 pending).
