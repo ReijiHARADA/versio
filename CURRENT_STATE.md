@@ -3001,3 +3001,10 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Revalidated the residual fixture after editing: all 83 samples and 27 distinct pages are present, with exactly three reviewed labels and no null entries.
 - Rendered the medical-deep-learning-meta-review page containing Table 1; the standalone caption and compact grid are visually separable from the two-column prose. The remaining Table 2/5/6 cases still require native-stream boundary analysis.
 - After restoring the residual fixture and its three labels, `npm run test:extraction-corpus -- --run` passes 56/56 again. This verifies the review metadata change did not alter extraction behavior.
+
+### 2026-09-16 extraction checkpoint (paused)
+
+- Paused at a clean extraction milestone at the user's request. `npm run test:extraction-corpus -- --run` passes 56/56 and focused reading-order tests pass 48/48.
+- Residual review fixture integrity is confirmed: 83 samples, 27 pages, 3 manually reviewed figure-label samples, 80 pending; no null records.
+- Extraction benchmark remains source-integrity 1.0 and canonical-provenance 1.0. Layout diagnostic remains 149 suspicious blocks across 497 pages; this is recorded for follow-up rather than treated as solved.
+- No `.app` build was performed, and translation-server/model code was intentionally left unchanged. Next extraction work should review the remaining residual samples and native table boundaries before resuming translation-pipeline work.
