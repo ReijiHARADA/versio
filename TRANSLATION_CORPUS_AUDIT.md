@@ -3207,3 +3207,5 @@ The two generator/discriminator/domain residual streams are embedded Figure 15/1
 ### 2026-09-16 manual residual review: medical segmentation page 17
 
 The two benchmark dataset-name residual streams are labels beneath the Figure 17 image grid (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage remains 61/83 with 21 pending.
+
+Correction: page 17 added two reviewed samples; progress is **63/83**, with **19 pending**.

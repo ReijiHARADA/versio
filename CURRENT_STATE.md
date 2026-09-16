@@ -3204,3 +3204,5 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: medical segmentation page 17
 
 - Two benchmark dataset-name streams were visually confirmed as labels beneath the Figure 17 image grid. Recorded as `figure_label`, severity 3, primary cause `pdf extraction`; no new rule was justified. Manual coverage remains 61/83 (21 pending).
+
+Correction: page 17 added two reviewed samples; progress is **63/83**, with **19 pending**.
