@@ -3059,6 +3059,6 @@
     "nextAction": "Add and validate a general affiliation/body boundary fixture; then review table/list residuals.",
     "latestCommit": "f695d44"
   },
-  "nextAction": "Use machine-readable boundary findings to create a real affiliation/body fixture, then address arXiv vector-label and table/list residuals.",
+  "nextAction": "Review the 10 affiliation and 12 figure-marker candidates using native bbox; convert confirmed patterns into general fixtures.",
   "lastUpdate": "2026-09-16"
 }

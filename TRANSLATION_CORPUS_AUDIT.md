@@ -3492,3 +3492,7 @@ A paper-agnostic geometry fixture now covers a full-width affiliation band befor
 ### 2026-09-16 boundary scanner output separation
 
 The boundary scanner now separates extraction traces (stderr) from its JSON findings (stdout), making native geometry findings suitable for automated fixture generation. Production parsing is unchanged.
+
+### 2026-09-16 machine-readable boundary scan validation
+
+The scanner's separated JSON was parsed over the corpus: 25 papers had findings, with 10 affiliation candidates and 12 figure-marker-in-paragraph candidates, and zero long-caption candidates. These remain native-geometry triage signals; no broad parser rule was added.
