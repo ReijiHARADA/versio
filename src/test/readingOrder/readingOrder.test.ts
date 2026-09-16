@@ -166,6 +166,19 @@ describe("PDF reading order regression", () => {
     expect(paragraph?.pageEnd).toBe(2);
   });
 
+  it("does not stitch an independent uppercase paragraph across pages", () => {
+    const pages: ExtractedPage[] = [
+      { pageNumber: 1, width: 612, height: 792, textItems: [
+        { text: "The preceding paragraph ends without punctuation and", x: 54, y: 620, width: 320, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      ] },
+      { pageNumber: 2, width: 612, height: 792, textItems: [
+        { text: "Results were reported for all participants.", x: 54, y: 200, width: 260, height: 10, fontSize: 10, fontName: "Body", page: 2 },
+      ] },
+    ];
+    const { blocks } = reconstructDocument(pages);
+    expect(blocks.some((block) => block.text.includes("preceding paragraph") && block.text.includes("Results were"))).toBe(false);
+  });
+
   it("splits independent top-of-page columns when the right column starts a new sentence", () => {
     const pages: ExtractedPage[] = [{
       pageNumber: 1, width: 612, height: 792,

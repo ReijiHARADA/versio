@@ -3426,3 +3426,4 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - 追加した regression case で、未完結文の single-column paragraph が連続ページで分断される経路を再現。
 - `mergeColumnContinuations` の連続ページ条件を single→single に限定して許可し、既存の末尾位置・lowercase continuation・role/rotation guard を維持。
 - Focused reading-order 50/50、extraction corpus 56/56、full corpus reading-order 27/27 を確認。source-integrity 回帰への悪化なし。
+- 2026-09-16: added a safety regression proving an uppercase independent paragraph is not stitched across pages; focused reading-order suite 51/51.

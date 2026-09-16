@@ -3317,3 +3317,6 @@ A stricter vector-label evidence variant now requires strong native rotation geo
 
 ### 2026-09-16 ページ境界の single-column paragraph stitching
 未完結文がページ末尾で切れ、次ページの continuation が別blockになる一般経路を synthetic native geometry で再現した。連続ページかつ同じ single column の場合のみ、既存の末尾位置、lowercase continuation、paragraph role、rotation 整合性を満たすと結合するよう条件を拡張した。focused reading-order 50/50、extraction corpus 56/56、real-paper reading-order 27/27 が通過した。
+
+### 2026-09-16 ページ境界stitchの安全側回帰
+未完結段落をページ跨ぎで結合する変更に対し、次ページが大文字で始まる独立段落を結合しない回帰テストを追加した。focused reading-order は 51/51 合格。
