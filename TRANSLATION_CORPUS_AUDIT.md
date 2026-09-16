@@ -3358,3 +3358,7 @@ Manual canonical output for OzCHI page 8/9 exposed pre-existing false-positive r
 ### Table precision guard checkpoint (2026-09-16)
 
 Manual review found long multi-column prose fragments receiving strong table evidence. Added geometry-aware safeguards: non-numeric region members need repeated multi-item rows, bullet-only streams are excluded, and incomplete prose blocks over 20 words cannot receive the strongest structural-grid score. On the OzCHI review output, the previously observed results paragraph and bullet introduction are no longer promoted as table candidates while Table 1–5 remain. Extraction corpus 56/56 and full Vitest 354/354 pass. Broader corpus manual review remains pending.
+
+### Table candidate prose-shape refinement (2026-09-16)
+
+The OzCHI manual review identified incomplete 8+ line prose blocks being scored as structural grids. A generic line-count/word-count guard now suppresses strong grid evidence for that shape, while flattened grids and short multi-cell tables remain eligible. The two observed prose candidates are now paragraph nodes; Table 1–5 remain. Extraction corpus 56/56, Vitest 354/354, lint, and typecheck pass.

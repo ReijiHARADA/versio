@@ -3449,3 +3449,7 @@ Manual canonical inspection of OzCHI page 8/9 found pre-existing false-positive 
 ### Multi-item ratio / prose precision guard (2026-09-16)
 
 Manual canonical inspection showed that long column fragments with only one or two multi-item lines could be promoted as table candidates. Region membership now requires a repeated multi-item-line ratio for non-numeric candidates; bullet-only streams remain excluded. A candidate prose-shape guard (>20 words) prevents incomplete column fragments from receiving the strongest structural-grid score, while short real tables remain eligible. OzCHI inspection no longer promotes the previously observed long results paragraph or bullet introduction to table; the expected Table 1–5 nodes remain. Extraction corpus remains 56/56 and full Vitest 354/354.
+
+### Table candidate prose-shape refinement (2026-09-16)
+
+Manual OzCHI canonical review confirmed that incomplete multi-column prose (8+ lines, 20+ words) could receive structural-grid evidence because its first/last native lines had multiple items. The generic candidate guard now treats that shape as prose unless it is a true flattened grid; this removes the two observed prose candidates while preserving Table 1–5 and existing synthetic grids. Extraction corpus 56/56, full Vitest 354/354, lint, and typecheck pass. Remaining table rows without a caption are still intentionally conservative.
