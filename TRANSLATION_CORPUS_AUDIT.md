@@ -3027,3 +3027,7 @@ Added generic evidence for bullet-prefixed single-item table cells in caption-ad
 ### 2026-09-16 page-crossing table association
 
 Added a constrained resolver path for table candidates on the next page when a caption is near the preceding page bottom and the candidate is near the next-page top. Regression extraction tests remain 56/56; medical table-region recall stays 4/7, showing the remaining issue is upstream caption recognition/continuation rather than this association path.
+
+### 2026-09-16 multi-page table ground truth
+
+The medical ground-truth fixture now records `Table 6` as spanning pages 7–11 and `Table 7` as spanning pages 13–14. This documents the confirmed failure shape and prevents a one-page continuation heuristic from being mistaken for complete table support.

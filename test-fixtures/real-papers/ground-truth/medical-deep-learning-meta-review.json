@@ -21,5 +21,18 @@
   "completeAnnotations": false,
   "forbidEquationContains": [
     "programming languages, like C or C++."
-  ]
+  ],
+  "tableContinuationPages": {
+    "Table 6": [
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "Table 7": [
+      13,
+      14
+    ]
+  }
 }
