@@ -535,10 +535,10 @@
       "page": 12,
       "classification": "short-label-band",
       "text": "Require: Dataset {Xi, Yi, Zi}i∈[n], function class G, function class H, hˆ−1 = 0 1: Learn gˆ(x|z) by MLE (4) 2: for m = 1, 2, · · · , M do 3: Learn hˆm by iterative Tikhonov estimator as the following: ( )2 ( )2",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: Algorithm 3 pseudocode and its display equation are flattened into one candidate; algorithm/list boundary is lost",
+      "manualRole": "list_flattening",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "economics-regularized-deepiv",
