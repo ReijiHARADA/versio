@@ -3055,3 +3055,7 @@ Removed only the vertical-position prerequisite for later-page candidates; x-ban
 ### 2026-09-16 continuation-row evidence experiment
 
 Later-page candidates with high table role score may now qualify even when native text collapsed their cells into one item (bounded to three lines). Tests remain green, but medical metrics are unchanged (table region 4/7; continuation 2/7). The remaining failure is therefore likely candidate scoring/line grouping upstream.
+
+### 2026-09-16 full regression checkpoint
+
+Full Vitest passes 61 files / 350 tests and TypeScript typecheck passes after the latest extraction experiment. Table continuation remains incomplete at 2/7; this checkpoint is recorded without advancing to translation work.

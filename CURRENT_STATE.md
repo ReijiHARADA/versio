@@ -3045,3 +3045,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 continuation-row evidence experiment
 
 - Tested allowing later-page rows with high table role score even when native extraction collapsed the row into one text item. Extraction tests and typecheck pass; the medical benchmark remains 4/7 table-region recall and 2/7 continuation recall. The condition is retained as a safe generic fallback, but it produces no measured gain and must not be treated as completion.
+
+### 2026-09-16 full regression checkpoint
+
+- Full Vitest suite passes 61 files / 350 tests after the table continuation evidence experiment; `npx tsc --noEmit --pretty false` also passes.
+- No translation-server/model code or `.app` bundle was changed. Extraction goal remains active because table continuation recall is 2/7 and residual manual review is incomplete.
