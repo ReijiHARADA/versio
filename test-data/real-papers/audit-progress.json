@@ -3032,7 +3032,7 @@
     "extractionCorpus": "56/56",
     "readingOrder": "49/49",
     "tableContinuationPageRecall": "2/7",
-    "nextAction": "implement and benchmark style/x-band table-caption boundary rule; baseline medical tableRegionRecall=0.571, continuation=0.286",
+    "nextAction": "investigate table continuation pageEnd using generic cross-page geometry/style; current medical tableRegionRecall=1.000, continuation=0.571",
     "fullVitest": "61 files / 350 tests",
     "typecheck": "pass",
     "manualReviewed": "83/83"
