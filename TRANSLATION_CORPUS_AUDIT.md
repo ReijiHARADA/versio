@@ -2991,3 +2991,7 @@ The medical meta-review page 6 short-label residual was visually confirmed as a 
 ### 2026-09-16 Table 6 residual review
 
 Page 10 of the medical meta-review was visually checked. The short-label residual beginning `-DL for decision support...` is part of Table 6 future-direction cells, not body prose. It is recorded as `table_row`, severity 3. The current generic table projection does not yet recover every cell boundary from this native stream; this remains the next extraction implementation target.
+
+### 2026-09-16 Table 7 residual review
+
+The page 13 short-label residual beginning `-Clinical workflow...` was visually confirmed as Table 7 cell content and labeled `table_row`, severity 3. Together with Table 6, this supports a general page-local table continuation/cell grouping fix rather than a paper-specific rule.

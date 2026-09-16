@@ -557,10 +557,10 @@
       "page": 13,
       "classification": "short-label-band",
       "text": "-Clinical workflow and cost can be reduced -Include 3D, multiview cine clips, or spatiotemporal data into limited AI models (continued on next page)",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: native page is Table 7; future-direction cells are flattened into one residual block",
+      "manualRole": "table_row",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-deep-learning-meta-review",
