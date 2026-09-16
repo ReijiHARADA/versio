@@ -3570,4 +3570,5 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - full Vitest は **61 files / 355 tests passed**。Resolver の局所クラスタ抑制による既存回帰は確認されていない。
 - step-to-charge 再 probe で `VIN VB CGB Pout` も `other` へ抑制されることを確認。語形条件を uppercase-only から短い英数字ラベル（`Pout`/`Body` 等）まで拡張した。extraction corpus は 56/56 passed。
 - 最新 baseline (`extraction-baseline-latest.json`) は source integrity / provenance / figure relation / table relation が全件 1.0。残差診断は arXiv/PMLR に集中し、図内ラベル、表グリッド、数式・アルゴリズム混在が主パターン。次の変更はこれらを別々の geometry fixture で検証してから行う。
+- mixed-case vector label 拡張後の全 Vitest を再実行し **61 files / 355 tests passed**。通常見出しの誤 `other` 化は検出されなかった。
 - 26-paper baseline を再生成。source integrity 26/26=1.0、canonical provenance 26/26=1.0、figure relation 24/24=1.0、table caption relation 14/14=1.0。title exact は 20/26=0.769 で、今回の resolver 変更による悪化は確認されない。
