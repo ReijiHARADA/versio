@@ -2990,7 +2990,7 @@
       "education-learning-analytics": 1
     }
   },
-  "benchmarkVersion": "extraction-corpus-44-tests-marketing-11-captions",
+  "benchmarkVersion": "extraction-corpus-56-tests-single-worker-v1",
   "notes": [
     "56/56 extraction corpus and 26-paper benchmark re-run; source integrity/provenance remain 1.0; residual Elsevier table-stream and arXiv vector-label cases require geometry review",
     "2026-09-16: extraction corpus rerun 56/56 passed; no production or translation-server changes.",
@@ -3025,7 +3025,8 @@
     "2026-09-16: short operator-separated diagram-label negative evidence added; focused 48/48 and PPG baseline passed.",
     "2026-09-16: layout diagnostic stable at 149 suspicious blocks/497 pages after short-label equation guard; no residual suppression.",
     "2026-09-16: after single-column page stitching, corpus layout diagnostic rerun completed; residual suspicious blocks remain diagnostic-only and no new role suppression was introduced.",
-    "2026-09-16: extraction baseline regenerated after page stitching: 26 papers; table caption recall 1.000, table region recall 0.950, source integrity/provenance 1.000."
+    "2026-09-16: extraction baseline regenerated after page stitching: 26 papers; table caption recall 1.000, table region recall 0.950, source integrity/provenance 1.000.",
+    "2026-09-16: corpus config stabilized with 180s timeout and single worker; full extraction corpus 56/56 passed in 26.98s. speechin Table 1 canonical role confirmed as table via provenance probe."
   ],
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",
@@ -3038,5 +3039,5 @@
     "nextAction": "Improve proseGrid using row-level x/y stability; page-9 list guard is kept. Do not use broad word-count suppression because it regresses table recall.",
     "latestCommit": "a4dcfb0"
   },
-  "nextAction": "Resolve speechin main grid paragraph projection via candidate-to-region provenance; then review economics native math and wear-scale rotated footnote."
+  "nextAction": "Review economics native-math boundaries and wear-scale rotated footnote; expand manual extraction review. Speechin Table 1 main grid is resolved as table in current CanonicalDocument."
 }
