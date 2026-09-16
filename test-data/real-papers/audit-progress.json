@@ -28,8 +28,8 @@
   ],
   "pendingPapers": [],
   "reviewedBlocks": 132,
-  "lastCheckpoint": "manual-review-interpreting-pages16-18-21-2026-09-16",
-  "pendingManualReview": 4,
+  "lastCheckpoint": "manual-review-complete-2026-09-16",
+  "pendingManualReview": 0,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
     "measure partial source fallback inside accepted output before treating accept rate as fully translated rate",
@@ -3027,14 +3027,14 @@
     "2026-09-16: layout diagnostic stable at 149 suspicious blocks/497 pages after short-label equation guard; no residual suppression."
   ],
   "lastExtractionCheckpoint": {
-    "status": "paused",
+    "status": "active",
     "pipelineTests": "16/16",
     "extractionCorpus": "56/56",
     "readingOrder": "49/49",
     "tableContinuationPageRecall": "2/7",
-    "nextAction": "review remaining interpreting-neural-networks residuals and rerun corpus metrics",
+    "nextAction": "rerun extraction corpus metrics and reconcile audit report",
     "fullVitest": "61 files / 350 tests",
     "typecheck": "pass",
-    "manualReviewed": "79/83"
+    "manualReviewed": "83/83"
   }
 }

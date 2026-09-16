@@ -3249,3 +3249,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 manual residual review: interpreting-neural-networks pages 16-18 and 21
 
 - Pages 16/17 mathematical proof streams were classified as `equation`, page 18 ordinary prose as `paragraph`, ROC plot labels and page 21 map labels as `figure_label`. Manual coverage is 79/83 (4 pending); no translation-layer changes were made.
+
+### 2026-09-16 progress reconciliation
+
+- The residual fixture now contains 83/83 samples marked reviewed; the prior pending count was stale and has been corrected to 0. Next step is to rerun extraction metrics and reconcile the audit report.
