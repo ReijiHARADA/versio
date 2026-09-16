@@ -9,6 +9,7 @@
  *   npx tsx scripts/benchmark-real-paper-translation.ts --paper ozchi-finger-specific-touch
  *   npx tsx scripts/benchmark-real-paper-translation.ts --limit 4
  *   npx tsx scripts/benchmark-real-paper-translation.ts --resume
+ *   npx tsx scripts/benchmark-real-paper-translation.ts --token-file /private/tmp/paper-reader-token
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -56,6 +57,7 @@ type ServerTranslation = {
 };
 
 type AuditRow = {
+  paperId: string;
   blockId: string;
   role: PaperBlock["type"];
   pageStart: number;
@@ -78,6 +80,8 @@ type AuditRow = {
   fallbackReason?: string;
   wouldSubmitToModel: boolean;
   wouldAcceptTranslation?: boolean;
+  sourceIntegrity: "clean" | "mixed-chrome" | "structural-warning";
+  extractionProvenance: { pageStart: number; pageEnd: number; bboxCount: number; extractionConfidence: number | null };
 };
 
 const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "..");
@@ -92,7 +96,10 @@ const perPaperLimit = limitArg >= 0 ? Number(args[limitArg + 1]) : 8;
 const serialArg = args.includes("--serial");
 const resumeArg = args.includes("--resume");
 const endpoint = process.env.MADLAD_BENCH_URL ?? "http://127.0.0.1:8765";
-const serverToken = process.env.MADLAD_SERVER_TOKEN?.trim();
+const tokenFileArg = args.indexOf("--token-file");
+const tokenFile = tokenFileArg >= 0 ? args[tokenFileArg + 1] : undefined;
+const serverToken = (process.env.MADLAD_SERVER_TOKEN?.trim() ||
+  (tokenFile ? fs.readFileSync(tokenFile, "utf8").trim() : "")) || undefined;
 const requestTimeoutMs = Number(process.env.MADLAD_BENCH_REQUEST_TIMEOUT_MS ?? 180_000);
 
 function compact(text: string): string {
@@ -114,6 +121,13 @@ function structuralWarnings(block: PaperBlock): string[] {
 function sourceCategory(block: PaperBlock): SourceCategory {
   const text = compact(block.original ?? "");
   const warnings = structuralWarnings(block);
+  const chromeSignals = [
+    /creativecommons|copyright\s+\d{4}|all rights reserved/i,
+    /doi\s*:\s*10\.\d{4,9}\//i,
+    /isbn\s*\d|acm\s+\d{4}/i,
+    /licensed under a creative commons/i,
+  ].filter((pattern) => pattern.test(text)).length;
+  if (chromeSignals > 0 && /[A-Za-z]{3,}\s+[A-Za-z]{3,}/.test(text)) return "damaged-extraction";
   if (warnings.includes("caption-shaped text")) return "caption";
   if (warnings.includes("scientific/statistical prose")) return "statistical-prose";
   if (warnings.includes("list-item boundary")) return "list";
@@ -400,7 +414,9 @@ async function main() {
         const wouldAcceptTranslation = sourceFallback ? false : normalizedTranslation ? isPlausibleJaTranslation(normalizedTranslation, source) : undefined;
         const readerVisibleFallback = !wouldAcceptTranslation;
         const partialSourceFallback = detectPartialSourceFallback(source, normalizedTranslation);
+        const category = sourceCategory(block);
         return {
+          paperId: paper.id,
           blockId: block.id,
           role: block.type,
           pageStart: block.pageStart,
@@ -418,7 +434,9 @@ async function main() {
           sourceInvariants: extractScientificInvariants(source).map((item) => item.value),
           quality,
           structuralWarnings: structuralWarnings(block),
-          sourceCategory: sourceCategory(block),
+          sourceCategory: category,
+          sourceIntegrity: category === "damaged-extraction" ? "mixed-chrome" : structuralWarnings(block).length ? "structural-warning" : "clean",
+          extractionProvenance: { pageStart: block.pageStart, pageEnd: block.pageEnd, bboxCount: block.boundingBoxes.length, extractionConfidence: block.extractionConfidence },
           fallbackStage: fallbackStage(wouldSubmitToModel, readerVisibleFallback),
           fallbackReason: fallbackReason(source, result, quality),
           wouldSubmitToModel,

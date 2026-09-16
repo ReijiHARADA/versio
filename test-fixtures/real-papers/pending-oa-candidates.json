@@ -61,6 +61,111 @@
       "sourceUrl": "https://arxiv.org/abs/2010.11761",
       "oaStatus": "open",
       "reasonSelected": "HCI survey with guideline lists and multi-column text"
+    },
+    {
+      "id": "hfe-healthcare-scoping-2024",
+      "title": "Principles for the conduct of human factors/ergonomics in healthcare: a scoping study of the published evidence",
+      "discipline": "ergonomics",
+      "venue": "BMJ Open Quality",
+      "doi": "10.1136/bmjoq-2024-003222",
+      "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11969590/",
+      "oaStatus": "open",
+      "reasonSelected": "Recent open-access HFE scoping review with tables and supplementary PDF"
+    },
+    {
+      "id": "hfe-healthcare-safety-review",
+      "title": "An Evaluation of the Effects of Human Factors and Ergonomics on Health Care and Patient Safety Practices: A Systematic Review",
+      "discipline": "ergonomics",
+      "venue": "PLOS ONE",
+      "doi": "10.1371/journal.pone.0129948",
+      "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4466322/",
+      "oaStatus": "open",
+      "reasonSelected": "Open systematic review with heterogeneous study tables and statistical prose"
+    },
+    {
+      "id": "hfe-mixed-methods-healthcare",
+      "title": "A Systematic Review of Mixed Methods Research on Human Factors and Ergonomics in Health Care",
+      "discipline": "ergonomics",
+      "venue": "Applied Ergonomics",
+      "doi": "10.1016/j.apergo.2015.06.001",
+      "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4725322/",
+      "oaStatus": "open-author-manuscript",
+      "reasonSelected": "Mixed-methods review with dense citations and journal-style layout"
+    },
+    {
+      "id": "hfe-system-redesign-review",
+      "title": "A systematic review of Human Factors and Ergonomics-based healthcare system redesign for quality of care and patient safety",
+      "discipline": "ergonomics",
+      "venue": "Ergonomics",
+      "doi": "10.1080/00140139.2014.959070",
+      "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4297241/",
+      "oaStatus": "open-author-manuscript",
+      "reasonSelected": "Ergonomics journal review with redesign framework and evidence tables"
+    },
+    {
+      "id": "osworld-multimodal-agents",
+      "title": "OSWorld: Benchmarking Multimodal Agents for Open-Ended Tasks in Real Computer Environments",
+      "authors": ["Tianbao Xie", "Danyang Zhang", "Jixuan Chen", "Xiaochuan Li"],
+      "year": 2024,
+      "discipline": "hci",
+      "venue": "arXiv / NeurIPS",
+      "publisher": "arXiv",
+      "doi": "10.48550/arXiv.2404.07972",
+      "sourceUrl": "https://arxiv.org/pdf/2404.07972",
+      "oaStatus": "open",
+      "reasonSelected": "Recent HCI/agent benchmark with figures, tables, and multi-column layout"
+    },
+    {
+      "id": "conversation-analysis-user-experience",
+      "title": "Conversation Analysis and the User Experience",
+      "authors": ["Allison Woodruff", "Paul M. Aoki"],
+      "year": 2004,
+      "discipline": "hci",
+      "venue": "CHI Extended Abstracts",
+      "publisher": "ACM",
+      "doi": null,
+      "sourceUrl": "https://arxiv.org/pdf/cs/0405109",
+      "oaStatus": "open",
+      "reasonSelected": "Older HCI qualitative case study with legacy PDF typography"
+    },
+    {
+      "id": "computational-linguistics-nlp-translation",
+      "title": "Computational linguistics and Natural Language Processing",
+      "authors": ["Saturnino Luz"],
+      "year": 2022,
+      "discipline": "linguistics",
+      "venue": "arXiv",
+      "publisher": "arXiv",
+      "doi": "10.48550/arXiv.2206.07026",
+      "sourceUrl": "https://arxiv.org/pdf/2206.07026",
+      "oaStatus": "open",
+      "reasonSelected": "Linguistics chapter focused on translation terminology and prose"
+    },
+    {
+      "id": "social-influence-social-advertising",
+      "title": "Social Influence in Social Advertising: Evidence from Field Experiments",
+      "authors": ["Eytan Bakshy", "Dean Eckles", "Rong Yan", "Itamar Rosenn"],
+      "year": 2012,
+      "discipline": "marketing",
+      "venue": "ACM EC",
+      "publisher": "ACM",
+      "doi": "10.1145/2229012.2229027",
+      "sourceUrl": "https://arxiv.org/pdf/1206.4327",
+      "oaStatus": "open",
+      "reasonSelected": "Marketing field experiments with statistical prose and social-network terminology"
+    },
+    {
+      "id": "modeling-human-behavior-cognitive-uncertainty",
+      "title": "Modeling Human Behavior Part II -- Cognitive approaches and Uncertainty",
+      "authors": ["Andrew Fuchs", "Andrea Passarella", "Marco Conti"],
+      "year": 2022,
+      "discipline": "cognitive-psychology",
+      "venue": "arXiv",
+      "publisher": "arXiv",
+      "doi": "10.48550/arXiv.2205.06483",
+      "sourceUrl": "https://arxiv.org/pdf/2205.06483",
+      "oaStatus": "open",
+      "reasonSelected": "Cognitive modeling review with uncertainty terminology and equation-like notation"
     }
   ]
 }

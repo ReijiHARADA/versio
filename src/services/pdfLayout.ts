@@ -1224,7 +1224,8 @@ function roleForLine(
   baseFont: number,
   mastheadEndY: number,
   inCopyright: boolean,
-  titleFont: number
+  titleFont: number,
+  mastheadTitleTexts?: Set<string>
 ): LayoutRole {
   const text = line.text.trim();
   if (isCopyright(text, line.fontSize, baseFont) || inCopyright) {
@@ -1247,6 +1248,11 @@ function roleForLine(
     if (line.page === 1 && looksLikeAffiliation(text)) return "affiliation";
     return "footnote";
   }
+
+  // Some arXiv/proceedings templates use a centered, body-sized title above
+  // the author masthead.  `titleFont` intentionally remains conservative;
+  // this document-level anchor supplies an independent geometry/order signal.
+  if (mastheadTitleTexts?.has(text)) return "title";
 
   if (looksLikeTitleLine(line, titleFont, baseFont)) return "title";
 
@@ -1314,6 +1320,27 @@ function groupLinesIntoBlocks(
 ): LayoutBlock[] {
   const mastheadEndY = detectMastheadEnd(lines, baseFont);
   const titleFont = detectTitleFont(lines, baseFont);
+  const mastheadTitleTexts = new Set<string>();
+  const pageOne = lines.filter((line) => line.page === 1);
+  const firstAuthorY = pageOne
+    .filter((line) => {
+      if (looksLikePersonName(line.text) || looksLikeLatinAuthorLine(line.text)) return true;
+      const text = line.text.trim();
+      const capitalWords = text.split(/\s+/).filter((word) => /^[A-Z][A-Za-z.'’-]{1,}$/.test(word));
+      return capitalWords.length >= 2 && capitalWords.length <= 12 &&
+        text.length <= 120 && !/[.!?]$/.test(text) && !looksLikeAffiliation(text);
+    })
+    .map((line) => line.y)
+    .sort((a, b) => a - b)[0];
+  if (firstAuthorY !== undefined) {
+    for (const line of pageOne) {
+      const text = line.text.trim();
+      if (line.y >= firstAuthorY || !["spanning", "single"].includes(line.column)) continue;
+      if (text.length < 20 || text.length > 180 || /[.!?;]$/.test(text)) continue;
+      if (isBodyStartHeading(text) || looksLikeAffiliation(text) || looksLikePersonName(text) || looksLikeLatinAuthorLine(text)) continue;
+      mastheadTitleTexts.add(text);
+    }
+  }
   const blocks: LayoutBlock[] = [];
   let current: LayoutLine[] = [];
   let currentRole: LayoutRole | null = null;
@@ -1349,7 +1376,7 @@ function groupLinesIntoBlocks(
       copyrightColumn = line.column;
     }
     const isSplitTail = line !== sourceLine;
-    const role = roleForLine(line, baseFont, mastheadEndY, isSplitTail ? false : copyrightStarted, titleFont);
+    const role = roleForLine(line, baseFont, mastheadEndY, isSplitTail ? false : copyrightStarted, titleFont, mastheadTitleTexts);
     if (isReferencesHeading(line.text)) {
       inReferences = true;
     }

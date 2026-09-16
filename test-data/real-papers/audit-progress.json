@@ -1,12 +1,13 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "extraction-baseline-26papers-2026-09-16-grid-rotation",
+  "lastBenchmarkVersion": "3b-mt-v5-semantic-v71-strict-restore-v9",
   "lastDiagnosticVersion": "pdf-layout-corpus-diagnostic-v1",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
   "attributionStatus": "v6 baseline 12/48 (25.00%); audit-only semantic MiniLM v42 and coverage v66 completed; coverage found 10 exact invariant-loss rows (5 accepted), so token normalization/calibration is next; production gate unchanged",
   "completedPapers": [
     "cognitive-psychology-gpt3",
+    "covid-ml-review",
     "design-for-wearability",
     "dont-mind-me",
     "economics-regularized-deepiv",
@@ -14,9 +15,14 @@
     "ergonomics-human-factors-ihci",
     "fashion-hybrid-cmf",
     "hci-empirical-methods",
+    "human-ai-interaction-guidelines",
     "interactive-jewellery",
+    "interpreting-neural-networks",
     "linguistics-language-model-physics",
     "marketing-consumer-response",
+    "medical-deep-learning-meta-review",
+    "medical-image-segmentation-deep-learning",
+    "medical-imaging-deep-learning-review",
     "neuroscience-rule-following",
     "ozchi-finger-specific-touch",
     "power-over-skin",
@@ -24,12 +30,13 @@
     "significant-other",
     "speechin",
     "step-to-charge",
-    "thermal-earring"
+    "thermal-earring",
+    "wear-scale"
   ],
   "pendingPapers": [],
   "reviewedBlocks": 132,
   "lastCheckpoint": "extraction-geometry-triage-v1-2026-09-16",
-  "pendingManualReview": 0,
+  "pendingManualReview": 46,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
     "measure partial source fallback inside accepted output before treating accept rate as fully translated rate",
@@ -38,32 +45,13 @@
     "expand OA corpus to 50+ verified PDFs",
     "page/column paragraph repair",
     "chrome separation",
-    "evaluate replacement or cascade translation models under local/free-use constraints",
-    {
-      "paperId": "economics-regularized-deepiv",
-      "page": 14,
-      "category": "native-math-boundary",
-      "severity": "review",
-      "status": "unresolved-safe-fallback",
-      "note": "Visual order is correct; display equations produce adjacent paragraph/equation fragments. Defer generic geometry/context rule."
-    },
-    {
-      "paperId": "speechin",
-      "page": 3,
-      "category": "table-row-role",
-      "severity": "review",
-      "status": "unresolved-safe-fallback",
-      "note": "Main Table 1 six-column grid remains paragraphized; numeric summary rows now resolve as table after generic numeric-row guard."
-    },
-    "wear-scale p14 rotated Table 6 footnote mixed into paragraph block; geometry split pending"
+    "evaluate replacement or cascade translation models under local/free-use constraints"
   ],
   "nextActions": [
-    "Maintain explicit completeListAnnotations for any future list precision metric; current Interactive Jewellery list labels are partial and recall-only.",
-    "Add source-integrity and figure/table safety regressions for inferred x-band column split (scientific-token case added; continue figure/table case).",
-    "Measure heading precision/recall impact across full corpus.",
-    "Classify residual arXiv vector-diagram labels using native geometry.",
-    "Investigate generic native-fact recovery for Elsevier Table 2/5/6.",
-    "Manually label the 200-row extraction sample against rendered PDFs; do not count pending rows as precision."
+    "Expand catalog from 26 to >=50 provenance-verified OA PDFs across target disciplines and missing formats",
+    "Retry complete-abstract false rejects (cognitive-psychology-gpt3, economics-regularized-deepiv, linguistics-language-model-physics, neuroscience-rule-following) with structured metadata separated",
+    "Implement high-precision cross-page paragraph stitching using native geometry fixtures",
+    "Implement table/vector-region extraction fixtures and rerun fresh translation benchmark"
   ],
   "v33StructuralSafety": {
     "status": "implemented and verified",
@@ -447,8 +435,8 @@
     "ordinalReviewed": 7,
     "ordinalPending": 0
   },
-  "lastUpdated": "2026-09-16",
-  "manualReviewCompletedAt": "2026-09-15T12:22:57.065509+00:00",
+  "lastUpdated": "2026-09-16T16:25:07.634Z",
+  "manualReviewCompletedAt": "2026-09-16T16:25:07.633Z",
   "completedWork": [
     "Gemma 2 9B same-fixture 12-row audit completed (local Ollama, report model-quality-gemma2-9b-v1.json).",
     "Generated semantic-coverage-calibration-v1 threshold curves against manual severity labels.",
@@ -2603,17 +2591,10 @@
     }
   ],
   "manualReviewSummary": {
-    "sampleRows": 144,
-    "roles": {
-      "heading": 38,
-      "paragraph": 57,
-      "figure_caption": 43,
-      "table_caption": 6
-    },
-    "renderedChecks": 12,
-    "severity0": 10,
-    "severity1": 1,
-    "severity2": 1
+    "reviewedBlocks": 52,
+    "queueSize": 52,
+    "pending": 0,
+    "provisional": true
   },
   "summary": {
     "boundaryCandidateReview": "Latest six remaining candidates visually classified as legitimate metadata; two confirmed errors fixed generically."
