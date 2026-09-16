@@ -350,3 +350,12 @@ describe("canonical extraction pipeline", () => {
     expect(doclingEnricher.shouldRun(ctx)).toBe(false);
   });
 });
+
+  it("recognizes a high-font CJK title without Latin characters", () => {
+    const pages = [{ pageNumber: 1, width: 500, height: 700, textItems: [
+      { text: "智能人机交互的人因工程途径", x: 100, y: 100, width: 220, height: 16, fontSize: 16, fontName: "Title", page: 1 },
+      { text: "这是正文段落，包含足够的普通文字用于基准字体估计。", x: 80, y: 150, width: 260, height: 9, fontSize: 9, fontName: "Body", page: 1 },
+    ] }];
+    const result = reconstructDocument(pages);
+    expect(result.blocks[0]?.role).toBe("title");
+  });

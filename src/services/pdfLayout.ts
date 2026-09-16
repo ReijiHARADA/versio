@@ -919,7 +919,8 @@ function isHeadingLine(line: LayoutLine, baseFont: number): boolean {
     return true;
   }
   if (line.fontSize > baseFont * 1.28 && text.length < 80 && text.split(/\s+/).length <= 12) {
-    if (!/[A-Za-z]{3,}/.test(text)) return false;
+    const hasTitleScript = /[A-Za-z]{3,}/.test(text) || /[぀-ヿ㐀-鿿]{3,}/u.test(text);
+    if (!hasTitleScript) return false;
     if (/[.!?。．]$/.test(text) && text.split(/\s+/).length > 6) return false;
     if (looksLikePersonName(text)) return false;
     return true;
