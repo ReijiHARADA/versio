@@ -3340,3 +3340,4 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - Current 26-paper extraction benchmark records medical table-region recall 1.000, table-continuation-page recall 0.429, and source-integrity 1.000.
 - No translation-server/model or `.app` changes were made.
 - Resume next by visually verifying the medical Table 6/7 continuation ground truth, then either correct fixture metadata with evidence or design a generic continuation rule; do not widen proximity heuristics blindly.
+- Visual verification confirms Table 7 spans pages 13–14. Native line diagnostics see `Table 7 (continued)` on page 14, but no RoleCandidate carries that text into the resolver; the loss occurs during line/block classification (before relation resolution). Do not patch the resolver alone; next isolate the top-band/chrome classification boundary and add a generic continued-caption candidate test.
