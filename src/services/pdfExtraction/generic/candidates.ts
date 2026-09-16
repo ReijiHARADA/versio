@@ -242,12 +242,18 @@ function tableLike(block: LayoutBlock): boolean {
   if (rotatedItems.length >= 30 && rotatedNumeric / rotatedItems.length >= 0.3) return true;
   const flatLines = lines.filter((line) => line.items.length === 1);
   const flatXs = new Map<number, number>();
+  const flatYRows = new Map<number, Set<number>>();
   for (const line of flatLines) {
     const x = Math.round(line.items[0].x / 12) * 12;
     flatXs.set(x, (flatXs.get(x) ?? 0) + 1);
+    const y = Math.round(line.y / 4) * 4;
+    const xs = flatYRows.get(y) ?? new Set<number>();
+    xs.add(x);
+    flatYRows.set(y, xs);
   }
   const flattenedGrid = flatLines.length >= 6 && flatLines.length === lines.length &&
     [...flatXs.values()].filter((count) => count >= 2).length >= 2 &&
+    [...flatYRows.values()].filter((xs) => xs.size >= 2).length >= 3 &&
     lines.every((line) => line.bbox.width <= 260) &&
     !/[.!?]\s*$/.test(block.text.trim()) &&
     block.text.trim().split(/\s+/).filter(Boolean).length <= 40;
@@ -556,12 +562,18 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         block.lines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length >= 2;
       const flatLines = block.lines.filter((line) => line.items.length === 1);
       const flatXs = new Map<number, number>();
+      const flatYRows = new Map<number, Set<number>>();
       for (const line of flatLines) {
         const x = Math.round(line.items[0].x / 12) * 12;
         flatXs.set(x, (flatXs.get(x) ?? 0) + 1);
+        const y = Math.round(line.y / 4) * 4;
+        const xs = flatYRows.get(y) ?? new Set<number>();
+        xs.add(x);
+        flatYRows.set(y, xs);
       }
       const flattenedGrid = flatLines.length >= 6 && flatLines.length === block.lines.length &&
         [...flatXs.values()].filter((count) => count >= 2).length >= 2 &&
+        [...flatYRows.values()].filter((xs) => xs.size >= 2).length >= 3 &&
         block.lines.every((line) => line.bbox.width <= 260) &&
         !/[.!?]\s*$/.test(block.text.trim()) &&
         block.text.trim().split(/\s+/).filter(Boolean).length <= 40;

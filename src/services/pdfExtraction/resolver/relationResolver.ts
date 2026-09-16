@@ -300,16 +300,32 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
             const sentenceLike = /[.!?:;]\s*$/.test(text) && text.split(/\s+/).filter(Boolean).length > 8;
             const row = candidate.layoutBlock.lines.some((line) => line.items.length >= 2) && !sentenceLike;
             const numericDensity = (text.match(/\d/g) ?? []).length / Math.max(text.length, 1);
+            const wordCount = text.split(/\s+/).filter(Boolean).length;
+            const letterCount = (text.match(/[A-Za-z]/g) ?? []).length;
+            const longProseRow = wordCount > 8 && letterCount / Math.max(text.length, 1) > 0.45;
             const flatLines = candidate.layoutBlock.lines.filter((line) => line.items.length === 1);
             const flatXs = new Map<number, number>();
+            const flatYRows = new Map<number, Set<number>>();
             for (const line of flatLines) {
               const x = Math.round(line.items[0].x / 12) * 12;
               flatXs.set(x, (flatXs.get(x) ?? 0) + 1);
+              const y = Math.round(line.y / 4) * 4;
+              const xs = flatYRows.get(y) ?? new Set<number>();
+              xs.add(x);
+              flatYRows.set(y, xs);
             }
             const flattenedGridRow = flatLines.length >= 6 && flatLines.length === candidate.layoutBlock.lines.length &&
               [...flatXs.values()].filter((count) => count >= 2).length >= 2 &&
+              [...flatYRows.values()].filter((xs) => xs.size >= 2).length >= 3 &&
               candidate.layoutBlock.lines.every((line) => line.bbox.width <= 260) &&
               !/[.!?]\s*$/.test(text) && text.split(/\s+/).filter(Boolean).length <= 40;
+            const bulletStream = candidate.layoutBlock.lines.every((line) => line.items.length === 1) &&
+              candidate.layoutBlock.lines.some((line) => /^\s*[•‣▪∙–—-]\s*/.test(line.text));
+            // A caption-adjacent paragraph can be split into several native
+            // lines and otherwise look like a row. Keep long prose and list
+            // streams out unless strong multi-cell evidence is present.
+            if (bulletStream && !flattenedGridRow) return false;
+            if (longProseRow && (candidate.roleScores.table ?? 0) < 0.9 && !flattenedGridRow) return false;
             const compactCellRow = candidate.layoutBlock.lines.length === 1 &&
               !/[.!?]\s*$/.test(text) && (numericDensity >= 0.12 ||
                 // Multi-column review tables often encode a bullet cell as one

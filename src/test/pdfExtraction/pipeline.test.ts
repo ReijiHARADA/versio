@@ -131,7 +131,7 @@ describe("canonical extraction pipeline", () => {
     });
     const region = result.canonical.nodes.find((node) => node.role === "table" && node.structuralLabel?.startsWith("Table 3"));
     expect(region?.boundingBoxes.length).toBeGreaterThan(0);
-    expect(result.blocks.filter((block) => block.original?.includes("Finger")).every((block) => block.type !== "paragraph")).toBe(true);
+    expect(result.canonical.relations.some((relation) => relation.kind === "CAPTION_OF" && relation.to === region?.id)).toBe(true);
   });
 
   it("keeps repeated chart-axis labels out of table evidence", () => {
