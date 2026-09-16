@@ -148,7 +148,8 @@
         "referencesHeading": true
       },
       "discipline": "hci",
-      "selectionReason": "HCI layout and two-column conference variation"
+      "selectionReason": "HCI layout and two-column conference variation",
+      "oaStatus": "local-seed"
     },
     {
       "id": "significant-other",
@@ -174,7 +175,9 @@
         "referencesHeading": true
       },
       "discipline": "hci",
-      "selectionReason": "HCI layout and two-column conference variation"
+      "selectionReason": "HCI layout and two-column conference variation",
+      "sourceUrl": "https://shura.shu.ac.uk/43/1/fulltext.pdf",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "power-over-skin",
@@ -203,7 +206,9 @@
         "referencesHeading": true
       },
       "discipline": "hci",
-      "selectionReason": "HCI layout and two-column conference variation"
+      "selectionReason": "HCI layout and two-column conference variation",
+      "sourceUrl": "https://daehwakim.com/paper/PowerOverSkin_paper.pdf",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "thermal-earring",
@@ -232,7 +237,9 @@
         "referencesHeading": true
       },
       "discipline": "hci",
-      "selectionReason": "HCI layout and two-column conference variation"
+      "selectionReason": "HCI layout and two-column conference variation",
+      "sourceUrl": "https://ubicomplab.cs.washington.edu/pdfs/Thermal_Earring.pdf",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "ppg-earring",
@@ -258,7 +265,9 @@
         ]
       },
       "discipline": "hci",
-      "selectionReason": "HCI layout and two-column conference variation"
+      "selectionReason": "HCI layout and two-column conference variation",
+      "sourceUrl": "https://ubicomplab.cs.washington.edu/pdfs/ppg_earring.pdf",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "design-for-wearability",
@@ -280,7 +289,9 @@
         "forbidCaptionInParagraph": true
       },
       "discipline": "ergonomics",
-      "selectionReason": "human-factors or wearable ergonomics format"
+      "selectionReason": "human-factors or wearable ergonomics format",
+      "sourceUrl": "https://www.andrew.cmu.edu/course/15-821/assets/READINGS/PAPERS/gemperle1998.pdf",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "dont-mind-me",
@@ -306,7 +317,9 @@
         "referencesHeading": true
       },
       "discipline": "hci",
-      "selectionReason": "HCI layout and two-column conference variation"
+      "selectionReason": "HCI layout and two-column conference variation",
+      "sourceUrl": "https://ecl.cc.gatech.edu/sites/default/files/publications/p89-profita.pdf",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "speechin",
@@ -327,7 +340,9 @@
         "forbidCaptionInParagraph": true
       },
       "discipline": "linguistics",
-      "selectionReason": "language or speech research structure"
+      "selectionReason": "language or speech research structure",
+      "sourceUrl": "https://czhang.org/assets/pdf/Speechin.pdf",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "step-to-charge",
@@ -350,7 +365,9 @@
         "mostlySingleColumn": true
       },
       "discipline": "hci",
-      "selectionReason": "HCI layout and two-column conference variation"
+      "selectionReason": "HCI layout and two-column conference variation",
+      "sourceUrl": "https://arxiv.org/pdf/2408.01927",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "wear-scale",
@@ -372,7 +389,9 @@
         "referencesHeading": true
       },
       "discipline": "ergonomics",
-      "selectionReason": "human-factors or wearable ergonomics format"
+      "selectionReason": "human-factors or wearable ergonomics format",
+      "sourceUrl": "https://fashionandtextiles.springeropen.com/counter/pdf/10.1186/s40691-019-0203-3.pdf",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "precious-materials",
@@ -419,7 +438,8 @@
         "forbidCaptionInParagraph": true
       },
       "discipline": "design-research",
-      "selectionReason": "design research and qualitative/visual layout"
+      "selectionReason": "design research and qualitative/visual layout",
+      "oaStatus": "local-seed"
     },
     {
       "id": "hci-empirical-methods",
@@ -452,7 +472,9 @@
         ]
       },
       "discipline": "hci",
-      "selectionReason": "HCI layout and two-column conference variation"
+      "selectionReason": "HCI layout and two-column conference variation",
+      "sourceUrl": "https://arxiv.org/pdf/2404.13319",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "cognitive-psychology-gpt3",
@@ -482,7 +504,9 @@
         "mostlySingleColumn": true
       },
       "discipline": "cognitive-psychology",
-      "selectionReason": "empirical cognitive study with statistical prose"
+      "selectionReason": "empirical cognitive study with statistical prose",
+      "sourceUrl": "https://arxiv.org/pdf/2206.14576",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "marketing-consumer-response",
@@ -512,7 +536,9 @@
         "mostlySingleColumn": true
       },
       "discipline": "marketing",
-      "selectionReason": "consumer/marketing empirical format"
+      "selectionReason": "consumer/marketing empirical format",
+      "sourceUrl": "https://arxiv.org/pdf/2404.02175",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "ergonomics-human-factors-ihci",
@@ -540,7 +566,9 @@
         "mostlySingleColumn": true
       },
       "discipline": "ergonomics",
-      "selectionReason": "human-factors or wearable ergonomics format"
+      "selectionReason": "human-factors or wearable ergonomics format",
+      "sourceUrl": "https://arxiv.org/pdf/2111.04880",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "linguistics-language-model-physics",
@@ -570,7 +598,9 @@
         "mostlySingleColumn": true
       },
       "discipline": "linguistics",
-      "selectionReason": "language or speech research structure"
+      "selectionReason": "language or speech research structure",
+      "sourceUrl": "https://arxiv.org/pdf/2305.13673",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "ozchi-finger-specific-touch",
@@ -621,7 +651,8 @@
         "referencesHeading": true
       },
       "discipline": "hci",
-      "selectionReason": "HCI layout and two-column conference variation"
+      "selectionReason": "HCI layout and two-column conference variation",
+      "oaStatus": "local-seed"
     },
     {
       "id": "education-learning-analytics",
@@ -652,7 +683,9 @@
       "sourceStatus": "verified-oa",
       "sourceStatusNote": "arXiv metadata verified against title and authors C. Romero and S. Ventura.",
       "discipline": "education",
-      "selectionReason": "education and learning-analytics survey format"
+      "selectionReason": "education and learning-analytics survey format",
+      "sourceUrl": "https://arxiv.org/pdf/2402.07956",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "neuroscience-rule-following",
@@ -684,7 +717,9 @@
       "sourceStatus": "verified-oa",
       "sourceStatusNote": "Scientific Reports article is CC BY; title, DOI, year, and authors verified from Maastricht University record.",
       "discipline": "neuroscience",
-      "selectionReason": "neuroscience journal format"
+      "selectionReason": "neuroscience journal format",
+      "sourceUrl": "https://www.nature.com/articles/s41598-018-19997-5.pdf",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "economics-regularized-deepiv",
@@ -718,7 +753,9 @@
       "sourceStatus": "verified-oa",
       "sourceStatusNote": "PMLR/arXiv metadata verified against the PDF title page.",
       "discipline": "economics",
-      "selectionReason": "economics/ML methods and equation-heavy format"
+      "selectionReason": "economics/ML methods and equation-heavy format",
+      "sourceUrl": "https://arxiv.org/pdf/2403.04236",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "medical-deep-learning-meta-review",
@@ -738,7 +775,9 @@
       "filename": "medical-deep-learning-meta-review.pdf",
       "downloadUrl": "https://arxiv.org/abs/2010.14881",
       "seedPaths": [],
-      "checks": {}
+      "checks": {},
+      "sourceUrl": "https://arxiv.org/abs/2010.14881",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "medical-imaging-deep-learning-review",
@@ -757,7 +796,9 @@
       "filename": "medical-imaging-deep-learning-review.pdf",
       "downloadUrl": "https://arxiv.org/abs/2008.09104",
       "seedPaths": [],
-      "checks": {}
+      "checks": {},
+      "sourceUrl": "https://arxiv.org/abs/2008.09104",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "covid-ml-review",
@@ -776,7 +817,9 @@
       "filename": "covid-ml-review.pdf",
       "downloadUrl": "https://arxiv.org/abs/2110.14910",
       "seedPaths": [],
-      "checks": {}
+      "checks": {},
+      "sourceUrl": "https://arxiv.org/abs/2110.14910",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "medical-image-segmentation-deep-learning",
@@ -795,7 +838,9 @@
       "filename": "medical-image-segmentation-deep-learning.pdf",
       "downloadUrl": "https://arxiv.org/abs/2009.13120",
       "seedPaths": [],
-      "checks": {}
+      "checks": {},
+      "sourceUrl": "https://arxiv.org/abs/2009.13120",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "interpreting-neural-networks",
@@ -814,7 +859,9 @@
       "filename": "detecting-statistical-interactions.pdf",
       "downloadUrl": "https://arxiv.org/abs/1705.04977",
       "seedPaths": [],
-      "checks": {}
+      "checks": {},
+      "sourceUrl": "https://arxiv.org/abs/1705.04977",
+      "oaStatus": "oa-or-author-hosted"
     },
     {
       "id": "human-ai-interaction-guidelines",
@@ -833,7 +880,213 @@
       "filename": "human-ai-interaction-guidelines.pdf",
       "downloadUrl": "https://arxiv.org/abs/2010.11761",
       "seedPaths": [],
-      "checks": {}
+      "checks": {},
+      "sourceUrl": "https://arxiv.org/abs/2010.11761",
+      "oaStatus": "oa-or-author-hosted"
+    },
+    {
+      "id": "social-influence-social-advertising",
+      "title": "Social Influence in Social Advertising: Evidence from Field Experiments",
+      "authors": [
+        "Eytan Bakshy",
+        "Dean Eckles",
+        "Rong Yan",
+        "Itamar Rosenn"
+      ],
+      "year": 2012,
+      "discipline": "marketing",
+      "venue": "ACM EC",
+      "publisher": "ACM",
+      "doi": "10.1145/2229012.2229027",
+      "formatFamily": "acm-acmart",
+      "filename": "social-influence-social-advertising.pdf",
+      "downloadUrl": "https://arxiv.org/pdf/1206.4327.pdf",
+      "sourceUrl": "https://arxiv.org/pdf/1206.4327.pdf",
+      "oaStatus": "open",
+      "selectionReason": "Marketing field experiment with statistical prose and social-network terminology",
+      "kinds": [
+        "two-column",
+        "tables",
+        "statistical-prose"
+      ],
+      "checks": {
+        "titleContains": "Social Influence in Social Advertising",
+        "tokensInOrder": [
+          "two very large field experiments",
+          "social cues"
+        ]
+      }
+    },
+    {
+      "id": "modeling-human-behavior-cognitive-uncertainty",
+      "title": "Modeling Human Behavior Part II -- Cognitive approaches and Uncertainty",
+      "authors": [
+        "Andrew Fuchs",
+        "Andrea Passarella",
+        "Marco Conti"
+      ],
+      "year": 2022,
+      "discipline": "cognitive-psychology",
+      "venue": "arXiv",
+      "publisher": "arXiv",
+      "doi": "10.48550/arXiv.2205.06483",
+      "formatFamily": "acm-acmart",
+      "filename": "modeling-human-behavior-cognitive-uncertainty.pdf",
+      "downloadUrl": "https://arxiv.org/pdf/2205.06483.pdf",
+      "sourceUrl": "https://arxiv.org/pdf/2205.06483.pdf",
+      "oaStatus": "open",
+      "selectionReason": "Cognitive modeling review with uncertainty terminology and equation-like notation",
+      "kinds": [
+        "journal-style",
+        "equations",
+        "citations"
+      ],
+      "checks": {
+        "titleContains": "Modeling Human Behavior Part II",
+        "tokensInOrder": [
+          "cognitive abilities",
+          "uncertainty"
+        ]
+      }
+    },
+    {
+      "id": "osworld-multimodal-agents",
+      "title": "OSWorld: Benchmarking Multimodal Agents for Open-Ended Tasks in Real Computer Environments",
+      "authors": [
+        "Tianbao Xie",
+        "Danyang Zhang",
+        "Jixuan Chen",
+        "Xiaochuan Li",
+        "Siheng Zhao",
+        "Ruisheng Cao",
+        "Toh Jing Hua",
+        "Zhoujun Cheng",
+        "Dongchan Shin",
+        "Fangyu Lei",
+        "Yitao Liu",
+        "Yiheng Xu",
+        "Shuyan Zhou",
+        "Silvio Savarese",
+        "Caiming Xiong",
+        "Victor Zhong",
+        "Tao Yu"
+      ],
+      "year": 2024,
+      "discipline": "hci",
+      "venue": "NeurIPS / arXiv",
+      "publisher": "arXiv",
+      "doi": "10.48550/arXiv.2404.07972",
+      "formatFamily": "arxiv",
+      "filename": "osworld-multimodal-agents.pdf",
+      "downloadUrl": "https://arxiv.org/pdf/2404.07972.pdf",
+      "sourceUrl": "https://arxiv.org/pdf/2404.07972.pdf",
+      "oaStatus": "open",
+      "selectionReason": "Recent HCI/agent benchmark with figures, tables, and multi-column layout",
+      "kinds": [
+        "two-column",
+        "figures",
+        "tables",
+        "benchmark"
+      ],
+      "checks": {
+        "titleContains": "OSWORLD: Benchmarking Multimodal Agents",
+        "tokensInOrder": [
+          "Abstract",
+          "interactive environment"
+        ]
+      }
+    },
+    {
+      "id": "conversation-analysis-user-experience",
+      "title": "Conversation Analysis and the User Experience",
+      "authors": [
+        "Allison Woodruff",
+        "Paul M. Aoki"
+      ],
+      "year": 2004,
+      "discipline": "hci",
+      "venue": "CHI Extended Abstracts",
+      "publisher": "ACM",
+      "doi": null,
+      "formatFamily": "acm-acmart",
+      "filename": "conversation-analysis-user-experience.pdf",
+      "downloadUrl": "https://arxiv.org/pdf/cs/0405109.pdf",
+      "sourceUrl": "https://arxiv.org/pdf/cs/0405109.pdf",
+      "oaStatus": "open",
+      "selectionReason": "Older HCI qualitative case study with legacy PDF typography",
+      "kinds": [
+        "legacy-pdf",
+        "qualitative",
+        "two-column"
+      ],
+      "checks": {
+        "titleContains": "Conversation Analysis and the User Experience",
+        "tokensInOrder": [
+          "ABSTRACT",
+          "conversation analysis"
+        ]
+      }
+    },
+    {
+      "id": "computational-linguistics-nlp-translation",
+      "title": "Computational linguistics and Natural Language Processing",
+      "authors": [
+        "Saturnino Luz"
+      ],
+      "year": 2022,
+      "discipline": "linguistics",
+      "venue": "arXiv",
+      "publisher": "arXiv",
+      "doi": "10.48550/arXiv.2206.07026",
+      "formatFamily": "arxiv",
+      "filename": "computational-linguistics-nlp-translation.pdf",
+      "downloadUrl": "https://arxiv.org/pdf/2206.07026.pdf",
+      "sourceUrl": "https://arxiv.org/pdf/2206.07026.pdf",
+      "oaStatus": "open",
+      "selectionReason": "Linguistics chapter focused on translation terminology and prose",
+      "kinds": [
+        "single-column",
+        "chapter",
+        "translation-terminology"
+      ],
+      "checks": {
+        "titleContains": "Computational linguistics and Natural Language Processing",
+        "tokensInOrder": [
+          "computational models",
+          "translation"
+        ]
+      }
+    },
+    {
+      "id": "how-content-volume-landing-pages",
+      "title": "How Content Volume on Landing Pages Influences Consumer Behavior: Empirical Evidence",
+      "authors": [
+        "Ruti Gafni",
+        "Nim Dvir"
+      ],
+      "year": 2018,
+      "discipline": "marketing",
+      "venue": "InSITE 2018",
+      "publisher": "Informing Science Institute",
+      "doi": null,
+      "formatFamily": "journal-oa",
+      "filename": "how-content-volume-landing-pages.pdf",
+      "downloadUrl": "https://proceedings.informingscience.org/InSITE2018/InSITE2018p035-053Gafni4259.pdf",
+      "sourceUrl": "https://proceedings.informingscience.org/InSITE2018/InSITE2018p035-053Gafni4259.pdf",
+      "oaStatus": "open",
+      "selectionReason": "Marketing field experiments with A/B testing, statistics, and single-column journal layout",
+      "kinds": [
+        "single-column",
+        "field-experiment",
+        "statistics"
+      ],
+      "checks": {
+        "titleContains": "HOW CONTENT VOLUME ON LANDING PAGES",
+        "tokensInOrder": [
+          "pilot study",
+          "large-scale online experiments"
+        ]
+      }
     }
   ]
 }

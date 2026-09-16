@@ -113,6 +113,11 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation(output, source)).toBe(false);
   });
 
+  it("rejects simplified-Chinese contamination inside Japanese output", () => {
+    const source = "Deep learning methods are widely used in medical image segmentation and improve the accuracy of diagnosis.";
+    expect(isPlausibleJaTranslation("医療画像のセグメンテーションにディープ学习手法を用いる。", source)).toBe(false);
+  });
+
   it("accepts academic Japanese while preserving scientific invariants", () => {
     const source = "For n = 20, F(4,33) = 2.913 and p < 0.001 [12] were observed at 9.6 mm.";
     const output = "n = 20では、9.6 mmにおいてF(4,33) = 2.913、p < 0.001という結果が観察された[12]。";
@@ -223,6 +228,19 @@ describe("isPlausibleJaTranslation", () => {
         "We developed Power-over-Skin, an approach using the human body itself to deliver power."
       )
     ).toBe(false);
+  });
+
+  it("accepts a descriptive hyphenated expansion when its acronym is preserved", () => {
+    const source = "We report the Signal-to-Noise Ratio (SNR) for each condition.";
+    const output = "各条件の信号対雑音比（SNR）を報告する。";
+    expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
+  it("rejects a long translation that ends in a truncated source name", () => {
+    const source = `${"The study evaluates related work and reports the observed interaction results. ".repeat(6)}Baudisch et al. describe the comparison.`;
+    const output = "本研究は関連研究と観察された相互作用の結果を評価する。Baudi";
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+    expect(evaluateJaTranslation(output, source).reasons).toContain("trailing Latin fragment");
   });
 
   it("rejects a translation that drops an explicit source negation", () => {

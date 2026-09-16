@@ -6,9 +6,15 @@ import { reconstructDocument } from "../src/services/pdfLayout";
 const root = path.resolve(".");
 const catalog = JSON.parse(fs.readFileSync(path.join(root, "test-fixtures/real-papers/catalog.json"), "utf8"));
 const pdfDir = path.join(root, catalog.pdfDir);
+const args = process.argv.slice(2);
+const paperArg = args.indexOf("--paper");
+const requestedPaper = paperArg >= 0 ? args[paperArg + 1] : undefined;
+const outputArg = args.indexOf("--output");
+const requestedOutput = outputArg >= 0 ? args[outputArg + 1] : undefined;
 type SuspiciousClass = "image-overlap" | "numeric-grid" | "short-label-band" | "mixed-layout";
 const reports = [] as Array<{ id: string; formatFamily?: string; pages: number; suspiciousBlocks: number; classCounts: Record<SuspiciousClass, number>; samples: Array<{ page: number; classification: SuspiciousClass; xClusters: number[]; xSpread: number; typicalLineWidth: number; bboxWidth: number; columns: string[]; text: string; imageOverlap: number; numericRatio: number; shortTokenRatio: number }> }>;
 for (const paper of catalog.papers) {
+  if (requestedPaper && paper.id !== requestedPaper) continue;
   const pdfPath = path.join(pdfDir, paper.filename);
   if (!fs.existsSync(pdfPath)) continue;
   const pages = await extractPdfPages(pdfPath);
@@ -78,6 +84,6 @@ for (const report of reports) {
   byFormat.set(key, current);
 }
 Object.assign(output, { byFormat: Object.fromEntries(byFormat) });
-const outputPath = process.argv[2];
+const outputPath = requestedOutput ?? (args[0]?.startsWith("--") ? undefined : args[0]);
 if (outputPath) fs.writeFileSync(path.resolve(outputPath), JSON.stringify(output, null, 2) + "\n");
 else console.log(JSON.stringify(output, null, 2));

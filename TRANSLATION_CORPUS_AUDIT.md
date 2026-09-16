@@ -3568,3 +3568,26 @@ Hypothesis: vector diagram labels can be embedded before a prose line, so a term
 ### 2026-09-16 controlled vector-label regression
 
 Added a paper-agnostic geometry fixture with a prose line, smaller compact labels across multiple x-bands, and a following prose line. Generic candidate generation now emits `vector-figure-label-cluster` for this mixed block. Pipeline suite: 24/24 passed; no lexical paper-specific condition was used. Keep pending full benchmark.
+
+## Phase 2 manual semantic review completion (2026-09-17)
+
+The current cached corpus review is complete: **26 PDFs, 52 sampled blocks, 52 manually reviewed** across HCI, cognitive psychology, marketing, human factors, linguistics/ML, medicine, neuroscience, economics, education, design, and technical papers. This is a corpus audit checkpoint, not completion of the requested 50+ paper expansion.
+
+Provisional reviewed-block metrics:
+
+| Metric | Rate |
+| --- | ---: |
+| Semantic error | 30.8% |
+| Extraction-induced error | 38.5% |
+| Unsafe false accept among accepted reviewed rows | 52.0% |
+| Hallucination | 4.35% |
+
+The dominant extraction failures are incomplete cross-page/column paragraphs, flattened multi-column tables, and vector diagram labels mixed into prose. Translation failures include omissions, citation/author attribution shifts, terminology errors, and severe fluent hallucination. Two complete long abstracts were rejected before/after model use and are retained as false-reject candidates for direct retry rather than used to justify stricter thresholds.
+
+Implemented during this phase: a script-level simplified-CJK contamination guard with a regression test (63/63 quality tests pass). It detects mixed-language output such as `学习` without blacklisting domain terms. Remaining work is to expand the provenance-verified corpus to at least 50 papers, run direct retries for false-reject candidates, and implement/measure paragraph stitching and table/vector-region improvements before claiming a production-ready fallback rate.
+
+The catalog was normalized with derivable `sourceUrl` and `oaStatus` values; author/year and other non-derivable provenance fields remain explicitly missing for later verification.
+
+### Phase 2 continuation: target tracking and acquisition gate (2026-09-17)
+
+The catalog now emits per-discipline target deficits and the pending-candidate checker rejects duplicate IDs and incomplete provenance before any PDF is acquired. The current catalog remains 27 entries / 26 ready PDFs. Four additional HFE candidates have verified DOI and primary OA landing pages, but PMC access in this environment currently returns a browser challenge; they remain metadata-only until the PDF bytes can be legally retrieved and title/DOI checked.

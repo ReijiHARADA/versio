@@ -5,6 +5,10 @@
 const THAI = /[\u0E00-\u0E7F]/;
 const KANA = /[\u3040-\u30FF]/;
 const KANJI = /[\u4E00-\u9FFF]/;
+// Characters that are standard simplified-Chinese forms but are not used in
+// ordinary Japanese prose. A small script-level signal catches language
+// contamination (for example 学习) without blacklisting domain vocabulary.
+const SIMPLIFIED_CJK_CONTAMINATION = /[习这们该过现为发见后还进对个从认说时实开结统处变关]/;
 const HANGUL = /[\uAC00-\uD7AF]/;
 const DATE_STAMP = /\d{4}-\d{2}-\d{2}/;
 // Tokenizer/decode failures can surface as literal byte escapes (for example
@@ -140,6 +144,18 @@ function hasOrphanedInvariantSentence(output: string, source: string): boolean {
   });
 }
 
+function hasTrailingLatinFragment(output: string, source: string): boolean {
+  if (source.trim().length < 300) return false;
+  const match = output.trim().match(/([A-Za-z]{4,})\s*$/);
+  if (!match) return false;
+  const tail = match[1].toLowerCase();
+  const sourceWords = source.match(/[A-Za-z]{4,}/g)?.map((word) => word.toLowerCase()) ?? [];
+  // A decoder can stop in the middle of a proper noun (e.g. `Baudi` from
+  // `Baudisch`). Exact source tokens and common retained acronyms are safe;
+  // a strict prefix of a longer source token indicates truncation.
+  return sourceWords.some((word) => word.startsWith(tail) && word.length > tail.length);
+}
+
 /** ACM CCS 1998-style classifier: H.5.2, H.5.m, I.2.10 */
 const CCS_CODE = /[A-K]\.\d+(?:\.\d+)*(?:\.[a-z])?/i;
 
@@ -200,7 +216,9 @@ const SCIENTIFIC_PATTERNS: Array<[ScientificInvariant["kind"], RegExp]> = [
   // latter covers model/system names such as DeepIV without treating normal
   // prose as an invariant.
   ["acronym", /\b(?:[A-Z][A-Z0-9]{1,9}|[A-Za-z]*[a-z][A-Z][A-Za-z0-9]*)\b/g],
-  ["acronym", /\b[A-Z][a-z]+(?:-[a-z]+)*-[A-Z][a-z]+\b/g],
+  // Preserve branded hyphenated identifiers (for example Power-over-Skin),
+  // while avoiding ordinary descriptive compounds such as Signal-to-Noise.
+  ["acronym", /\b[A-Z][a-z]+-(?!(?:to|of|and|or|in|on|for)\b)[a-z]+-[A-Z][a-z]+\b/g],
   ["number", /\b\d+(?:\.\d+)?\b/g],
 ];
 
@@ -357,11 +375,13 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   const partialSourceFallback = detectPartialSourceFallback(source, out);
   if (partialSourceFallback.partial) reasons.push(partialSourceFallback.reason ?? "partial source fallback");
   if (hasOrphanedInvariantSentence(out, source)) reasons.push("orphaned source invariant sentence");
+  if (hasTrailingLatinFragment(out, source)) reasons.push("trailing Latin fragment");
 
   const hasKana = KANA.test(out);
   const hasKanji = KANJI.test(out);
   if (!hasKana && !hasKanji) reasons.push("no Japanese script");
   if (source.trim().length >= 40 && hasKanji && !hasKana) reasons.push("Japanese prose lacks kana");
+  if (hasKana && SIMPLIFIED_CJK_CONTAMINATION.test(out)) reasons.push("simplified Chinese mixed into Japanese");
 
   if (latinRatioBeyondSource(out, source) > 0.45) reasons.push("excessive new Latin text");
   // Negation changes the direction of a claim. This deliberately excludes
@@ -377,7 +397,7 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   }
   const invariant = invariantQuality(source, out);
   reasons.push(...invariant.reasons);
-  const languageScore = reasons.some((reason) => /Japanese|Latin|source echo|date|empty/.test(reason)) ? 0.15 : 1;
+  const languageScore = reasons.some((reason) => /Japanese|Latin|source echo|date|empty|simplified Chinese/.test(reason)) ? 0.15 : 1;
   const repetitionScore = isDegenerateTranslation(out) ? 0 : 1;
   const lengthRatio = out.length / Math.max(source.trim().length, 1);
   // A many-sentence academic paragraph rendered as a very short Japanese
@@ -387,7 +407,7 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   const severeLongOmission = source.trim().length >= 500 && lengthRatio < 0.2;
   const lengthScore = lengthRatio < 0.12 || lengthRatio > 4 || severeLongOmission ? 0.3 : 1;
   if (lengthScore < 1) reasons.push(severeLongOmission ? "long source was implausibly shortened" : "implausible length ratio");
-  const semanticSafetyScore = reasons.includes("source negation missing") ? 0.35 : 1;
+  const semanticSafetyScore = reasons.includes("source negation missing") || reasons.includes("trailing Latin fragment") ? 0.35 : 1;
   return {
     score: Math.max(0, Math.min(1, (languageScore * 0.35 + invariant.score * 0.4 + repetitionScore * 0.15 + lengthScore * 0.1) * semanticSafetyScore)),
     reasons,
@@ -412,6 +432,8 @@ export function isPlausibleJaTranslation(output: string, source: string): boolea
     && !invariantQuality(source, output).criticalMissing
     && !quality.reasons.includes("long source was implausibly shortened")
     && !quality.reasons.includes("source negation missing")
+    && !quality.reasons.includes("trailing Latin fragment")
+    && !quality.reasons.includes("simplified Chinese mixed into Japanese")
     && !quality.reasons.some((reason) => reason.startsWith("translation contains unmodified source span"))
     && quality.score >= 0.8;
 }

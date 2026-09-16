@@ -15,7 +15,7 @@ const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "..");
 const reportsDir = path.join(root, "test-data/real-papers/reports");
 const outDir = path.join(root, "test-data/real-papers");
 const reviewPath = path.join(outDir, "audit-manual-review.json");
-type AuditReport = { papers: Array<{ paper: { id: string; title: string; disciplines?: string[]; formatFamily?: string }; rows: Array<Record<string, unknown>> }> };
+type AuditReport = { papers: Array<{ paper: { id: string; title: string; disciplines?: string[]; discipline?: string; formatFamily?: string }; rows: Array<Record<string, unknown>> }> };
 // The completed whole-corpus report is the review population.  Atomic reports
 // are interruption checkpoints from older pipeline versions; mixing them here
 // made a stale result look like a current translation and inflated the queue.
@@ -23,7 +23,7 @@ type AuditReport = { papers: Array<{ paper: { id: string; title: string; discipl
 // identity alone is insufficient, but a pipeline-version change that leaves
 // both source and Japanese output byte-for-byte identical does not invalidate
 // a human source/translation comparison.
-const reportPaths = [path.join(reportsDir, "translation-audit.json")];
+const reportPaths = [path.join(reportsDir, process.env.TRANSLATION_AUDIT_REPORT ?? "translation-audit.json")];
 const reports = reportPaths.map((reportPath) =>
   JSON.parse(fs.readFileSync(reportPath, "utf8")) as AuditReport,
 );
@@ -40,14 +40,15 @@ const saved = new Map(priorReviews.map((review) => [review.key, review]));
 const queue = new Map<string, ExistingReview>();
 const completedPaperIds = new Set<string>();
 for (const report of reports) for (const entry of report.papers) for (const row of entry.rows) {
+  const paperMetadata = (entry.paper as unknown as { paper?: { id: string; title: string; disciplines?: string[]; discipline?: string; formatFamily?: string } }).paper ?? entry.paper;
   const source = String(row.source ?? "");
-  const key = `${entry.paper.id}:${String(row.blockId)}:${source.slice(0, 80)}`;
+  const key = `${paperMetadata.id}:${String(row.blockId)}:${source.slice(0, 80)}`;
   const current = {
     key,
-    paperId: entry.paper.id,
-    title: entry.paper.title,
-    disciplines: entry.paper.disciplines ?? [],
-    formatFamily: entry.paper.formatFamily ?? "unknown",
+    paperId: paperMetadata.id,
+    title: paperMetadata.title,
+    disciplines: paperMetadata.disciplines ?? (paperMetadata.discipline ? [paperMetadata.discipline] : []),
+    formatFamily: paperMetadata.formatFamily ?? "unknown",
     blockId: String(row.blockId ?? ""),
     pageStart: Number(row.pageStart ?? 0),
     pageEnd: Number(row.pageEnd ?? 0),
@@ -103,12 +104,19 @@ const progressPath = path.join(outDir, "audit-progress.json");
 const previousProgress = fs.existsSync(progressPath)
   ? JSON.parse(fs.readFileSync(progressPath, "utf8")) as Record<string, unknown>
   : {};
+const historicalCompleted = Array.isArray(previousProgress.completedPapers)
+  ? previousProgress.completedPapers.filter((value): value is string => typeof value === "string")
+  : [];
+const completedPapers = [...new Set([...historicalCompleted, ...completedPaperIds])].sort();
+const historicalReviewedBlocks = typeof previousProgress.reviewedBlocks === "number"
+  ? previousProgress.reviewedBlocks
+  : 0;
 const progress = {
   ...previousProgress,
   phase: "phase-2",
   lastBenchmarkVersion: latestModelVersion,
-  completedPapers: [...completedPaperIds].sort(),
-  pendingPapers: [], reviewedBlocks: completed, archivedReviewedBlocks: archivedReviews.length, pendingManualReview: reviews.length - completed,
+  completedPapers,
+  pendingPapers: [], reviewedBlocks: Math.max(historicalReviewedBlocks, completed), archivedReviewedBlocks: archivedReviews.length, pendingManualReview: reviews.length - completed,
   unresolvedFailures: [
     "manual semantic review of current accepts",
     "measure partial source fallback inside accepted output before treating accept rate as fully translated rate",

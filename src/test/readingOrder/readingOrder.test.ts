@@ -100,6 +100,41 @@ describe("isEquationLine", () => {
 });
 
 describe("PDF reading order regression", () => {
+  it("stitches an unfinished paragraph across a page boundary", () => {
+    const longPrefix = "Examination of the distribution of targets that were not tapped within the time limit indicated that the corners of the screen are generally prone to errors. One";
+    const pages: ExtractedPage[] = [
+      {
+        pageNumber: 1, width: 612, height: 792,
+        textItems: [{ text: longPrefix, x: 54, y: 750, width: 500, height: 10, fontSize: 10, fontName: "Body", page: 1 }],
+      },
+      {
+        pageNumber: 2, width: 612, height: 792,
+        textItems: [{ text: "exception to this is the low miss rate observed in the central region.", x: 54, y: 110, width: 500, height: 10, fontSize: 10, fontName: "Body", page: 2 }],
+      },
+    ];
+    const { blocks } = reconstructDocument(pages);
+    const paragraphs = blocks.filter((b) => b.role === "paragraph");
+    expect(paragraphs.map((b) => b.text).join(" ")).toContain("One exception to this");
+    expect(paragraphs).toHaveLength(1);
+  });
+
+  it("stitches a connector ending across pages without joining a new sentence", () => {
+    const pages: ExtractedPage[] = [
+      {
+        pageNumber: 1, width: 612, height: 792,
+        textItems: [{ text: "We plan to more widely explore use cases and to", x: 54, y: 750, width: 500, height: 10, fontSize: 10, fontName: "Body", page: 1 }],
+      },
+      {
+        pageNumber: 2, width: 612, height: 792,
+        textItems: [{ text: "gain a better understanding of its utility in a real life use context.", x: 54, y: 110, width: 500, height: 10, fontSize: 10, fontName: "Body", page: 2 }],
+      },
+    ];
+    const { blocks } = reconstructDocument(pages);
+    const paragraphs = blocks.filter((b) => b.role === "paragraph");
+    expect(paragraphs).toHaveLength(1);
+    expect(paragraphs[0].text).toContain("to gain a better understanding");
+  });
+
   it("excludes native text embedded inside a figure image", () => {
     const pages: ExtractedPage[] = [{
       pageNumber: 1, width: 612, height: 792,

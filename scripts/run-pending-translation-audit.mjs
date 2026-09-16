@@ -54,7 +54,7 @@ for (const [index, paper] of pending.entries()) {
   const label = `${index + 1}/${pending.length} ${paper.id}`;
   console.log(`[audit-runner] start ${label}`);
   appendLog(`start ${label}`);
-  const benchmark = spawnSync("npx", ["--yes", "tsx", "scripts/benchmark-real-paper-translation.ts", "--paper", paper.id, "--limit", String(limit)], {
+  const benchmark = spawnSync("node_modules/.bin/vite-node", ["--script", "scripts/benchmark-real-paper-translation.ts", "--paper", paper.id, "--limit", String(limit)], {
     cwd: root,
     stdio: "inherit",
   });
@@ -64,7 +64,7 @@ for (const [index, paper] of pending.entries()) {
     appendLog(`failed ${label} exit=${benchmark.status ?? "signal"}`);
     continue;
   }
-  const queue = spawnSync("npx", ["--yes", "tsx", "scripts/prepare-translation-manual-review.ts"], {
+  const queue = spawnSync("node_modules/.bin/vite-node", ["--script", "scripts/prepare-translation-manual-review.ts"], {
     cwd: root,
     stdio: "inherit",
   });

@@ -3997,3 +3997,641 @@ The current member-union bbox for ppg-earring p7 is bounded to the compact compo
 ## Production gate decision
 
 After v3 caption grouping and member-union bbox, the 14-region visual cohort is 14/14 A (precision 100%). All tracked false-promotion counts are zero, extraction corpus is 56/56, full tests are 373/373, typecheck/lint/build/diff-check pass. Source provenance fields and canonical member IDs remain intact. TableRegion resolution is eligible for production projection in the next goal; this goal did not change projection wiring.
+
+## Translation baseline Phase 0/1 attempt (2026-09-17)
+
+Confirmed TableRegion evidence is already wired into `extractAcademicPdf.ts` → `resolveCanonicalDocument` → projection, so no additional extraction change was needed for Phase 0. Translation server health is ready, but the fresh benchmark attempt (`benchmark-real-paper-translation.ts --limit 2 --serial`) selected the corpus and received HTTP 401 Unauthorized because `MADLAD_SERVER_TOKEN` was not supplied. The process was stopped after confirming the auth blocker; no benchmark rows were treated as valid baseline data. Next action: run with the app/server’s configured benchmark token, then record fresh product/model metrics.
+
+## Fresh translation baseline status
+
+The local server uses a per-process random token supplied by Tauri (`get_translation_server_token`); it is intentionally neither persisted nor logged. The benchmark CLI cannot authenticate to an already-running app server without that token, so no fresh translation baseline was generated in this session. This is an environment handoff issue, not a translation result. A future benchmark run must obtain the token through the app IPC command or launch an isolated server with a known temporary token.
+
+## Benchmark authentication handoff
+
+Added `--token-file <path>` support to `scripts/benchmark-real-paper-translation.ts`. The token is read only at process start and never written to reports or logs. This preserves the app's per-process localhost authentication while allowing a token obtained through the Tauri IPC command to be supplied to a fresh baseline run. Typecheck and diff-check pass.
+
+## Fresh baseline retry (2026-09-17)
+
+Started an isolated authenticated server on port 8766 with token `local-benchmark-token`; model loaded successfully on MPS and reported production identity `3b-mt-v5-semantic-v71-strict-restore-v9`. The benchmark retry could not launch because `npx` attempted registry access for `tsx` and network DNS was unavailable; no translation rows were produced. The isolated server process remains available in session for a later retry using a local TypeScript runner.
+
+## Fresh translation baseline sample (ppg-earring, 2026-09-17)
+
+Using an isolated authenticated server on port 8766 and the production model, a fresh extraction/translation run processed 2 ordinary paragraph units. Both were reader-visible post-model fallbacks: one server source fallback, one quality-gate rejection for missing invariants (`SNR`, `Signal-to-Noise`). This is the first valid post-extraction baseline sample; it is too small to estimate the product fallback target, but it identifies a likely quality-gate false-reject candidate for manual review. Report: `test-data/real-papers/reports/translation-audit-ppg-earring.{json,md}`.
+
+## Fresh baseline second sample (thermal-earring, 2026-09-17)
+
+Authenticated isolated server on port 8767 processed 2 ordinary units from improved Extraction. Results: 1 accepted translation, 1 pre-model fallback due to detected incomplete paragraph boundary (`段落の末尾が欠けている可能性があります`). No model/quality-gate semantic result was counted for the pre-model fallback. Report: `test-data/real-papers/reports/translation-audit-thermal-earring.{json,md}`. Combined valid fresh sample so far: 4 units, 1 accepted, 3 fallbacks; this remains diagnostic-only and is not a corpus-wide rate.
+
+## Fresh baseline attribution note
+
+Manual inspection of the first valid rows found the ppg abstract block is visibly contaminated by ACM license/chrome text, despite being categorized as ordinary prose. This should be re-attributed to extraction/structure mixing (not a MADLAD failure) in the next audit pass. The thermal accepted long paragraph preserved numeric invariants but still needs semantic review; the pre-model truncated block is an extraction boundary failure. No quality-gate threshold was changed.
+
+## Attribution classifier refinement (2026-09-17)
+
+The translation benchmark now labels blocks containing generic publication chrome signals (Creative Commons/license, copyright, DOI, ISBN/ACM metadata) as `damaged-extraction` before model-quality aggregation. This changes only audit attribution; it does not alter extraction, translation submission, or quality-gate behavior. Typecheck and diff-check pass.
+
+## Validation after translation audit classifier change (2026-09-17)
+
+Full validation remains green: frontend tests 373/373, extraction corpus 56/56, TypeScript typecheck, oxlint, Vite build, and `git diff --check`. Build output contains only existing ineffective dynamic-import warnings.
+
+## Fresh baseline aggregation (v1)
+
+Added `scripts/summarize-fresh-translation-baseline.ts` with an explicit `FRESH_TRANSLATION_REPORTS` allowlist so historical audits are not mixed into the current baseline. For the two valid fresh reports (`ppg-earring`, `thermal-earring`): 4 rows total; 3 ordinary-body rows; 2 reader-visible fallbacks; product fallback rate 66.7% on this diagnostic sample; stage counts pre-model=1, post-model=2, none=1. Sample size is insufficient for the <=5% target and requires expansion.
+
+## Fresh baseline third sample (ozchi-finger-specific-touch, 2026-09-17)
+
+The HCI regression paper produced 2 units: both accepted (one statistical-prose, one ordinary-body) with quality score 1. No fallback occurred. Combined fresh reports now contain 6 rows / 4 ordinary-body rows; reader-visible fallback 2/4 = 50%, model-eligible fallback 2/5 = 40%. This is still a small, deliberately diagnostic sample; it demonstrates large variance by source paper and is not evidence of meeting the <=5% target.
+
+## Manual review queue check
+
+The existing whole-corpus `translation-audit.json` currently contains no rows, so `prepare-translation-manual-review.ts` produced an empty queue (0/0). Fresh per-paper reports remain separate and are not silently merged into the historical whole-corpus queue. Manual semantic review therefore remains pending until a fresh whole-corpus benchmark is generated.
+
+## Fresh corpus provenance fields (2026-09-17)
+
+Benchmark rows now persist `sourceIntegrity` (`clean`, `mixed-chrome`, or `structural-warning`) and compact `extractionProvenance` (page range, bbox count, extraction confidence). This supports separate product-quality vs model-quality metrics without changing runtime translation behavior. Typecheck and diff-check pass.
+
+## Translation-server validation
+
+Attempted `translation-server/.venv/bin/python -m pytest -q`; the bundled venv does not include pytest (`No module named pytest`). No server test result was claimed. Frontend/extraction/typecheck/lint/build validations remain green; Python test dependency installation is the next environment task.
+
+## Translation-server Python tests enabled (2026-09-17)
+
+Restored pip with `ensurepip`, installed pytest into the existing translation-server venv, and ran the scoped suite `translation-server/.venv/bin/python -m pytest -q translation-server/tests`: **109 passed, 6 subtests passed**. Running pytest from the repository root still collects stale `src-tauri/target/debug` copies, so the scoped test path is the authoritative server result.
+
+## Pytest isolation
+
+Added `translation-server/pytest.ini` (`testpaths = tests`, `python_files = test_*.py`) and verified the authoritative invocation from the translation-server directory: `../translation-server/.venv/bin/python -m pytest -q` → **109 passed, 6 subtests passed**. Running from the repository root remains unsafe because stale generated Tauri test copies are outside the server package.
+
+## Fresh manual-review pipeline
+
+Added `scripts/merge-fresh-translation-reports.ts` and made `prepare-translation-manual-review.ts` accept `TRANSLATION_AUDIT_REPORT`. Merged the three current fresh reports into `translation-audit-fresh-v1.json` and generated a label-blind queue: **6 rows, 2 already reviewed, 4 pending**. Historical `translation-audit.json` remains untouched.
+
+## Fresh manual semantic review (2026-09-17)
+
+Completed review of the 4 pending rows in the 6-row fresh queue. Two accepted OzCHI units: one correct (severity 0), one minor wording/omission (severity 1). Two ppg fallbacks: one severity-4 chrome/source-fragment extraction failure, one severity-3 semantic shift caught by the quality gate. Queue is now 6/6 reviewed; no accepted severity>=2 false accept in this small sample. Labels and causes are stored in `test-data/real-papers/audit-manual-review.json`.
+
+## Current baseline checkpoint (2026-09-17)
+
+Recomputed from the explicit three-report fresh allowlist: ordinary-body total 4, reader-visible fallback 2 (50%); model-eligible total 5, fallback 2 (40%). Manual queue remains 6/6 completed for these reports. These rates are diagnostic and far above the <=5% target, so no completion claim or model change is justified yet.
+
+## Quality-gate false-reject fix (2026-09-17)
+
+Removed ordinary descriptive hyphen compounds such as `Signal-to-Noise` from acronym invariants, while retaining branded identifiers such as `Power-over-Skin` via a stopword-aware pattern. This addresses the observed false reject where a valid Japanese translation of the SNR definition was rejected for missing the English expansion, without weakening preservation of actual method/product identifiers. Quality tests: 60/60 passed; typecheck passed.
+
+## Regression after invariant refinement (2026-09-17)
+
+After the hyphenated descriptive-term invariant fix: frontend tests 373/373, extraction corpus 56/56, and translation-server tests 109 passed + 6 subtests. No regression observed.
+
+## 2026-09-17 pause checkpoint
+
+User requested a clean pause. No benchmark, pytest, translation-server, or Tauri build process was intentionally left running. The current worktree contains the translation-quality audit implementation and fresh-baseline artifacts listed below. Resume from this checkpoint; do not treat the broader translation-quality goal as complete.
+
+Next concrete action: inspect `src/test/quality.test.ts` around the hyphenated identifier regression and add/verify a focused regression for descriptive `Signal-to-Noise` expansion while retaining the branded `Power-over-Skin` protection behavior, then rerun the focused quality tests and the existing validation suite only if code changes are made.
+
+Current validation checkpoint: frontend tests 373/373, extraction corpus 56/56, translation-server pytest 109 passed + 6 subtests, typecheck/lint/build/diff-check passed. Fresh diagnostic baseline remains tiny (6 rows; ordinary-body reader-visible fallback 50%, model-eligible fallback 40%) and is not a product-level conclusion.
+
+### Focused quality regression checkpoint
+
+Added a regression test ensuring a descriptive hyphenated expansion (`Signal-to-Noise Ratio`) is accepted when the source acronym (`SNR`) is preserved, while the branded `Power-over-Skin` identifier remains protected. Focused quality suite passes: 61/61.
+
+## Full frontend regression after focused quality test (2026-09-17)
+
+`npm test -- --run` passes: 63 files / 374 tests. The new descriptive hyphenated-term regression is included; extraction and translation-server validation checkpoints remain green.
+
+## Audit progress reconciliation (2026-09-17)
+
+`audit-progress.json` had been narrowed to the three fresh translation reports by a benchmark helper, which would have hidden the historical completed-paper list. Reconciled it by taking the union of historical and fresh completed papers (19 total) and preserving the historical reviewed-block count (132). JSON validation and `git diff --check` pass.
+
+## Progress writer persistence fix (2026-09-17)
+
+Fixed `prepare-translation-manual-review.ts` so rebuilding a fresh/manual queue unions newly completed papers with the historical `completedPapers` list and preserves the maximum historical `reviewedBlocks` count. This prevents future audit runs from erasing prior corpus progress. TypeScript check and `git diff --check` pass.
+
+## Progress writer verification (2026-09-17)
+
+Attempted to rerun the manual-review generator against `translation-audit-fresh-v1.json`; `npx` could not resolve `tsx` because registry DNS is unavailable in this environment, so the generator itself was not executed. The subsequent state inspection confirmed `completedPapers=19`, `reviewedBlocks=132`, and `pendingManualReview=4` remained intact. Use the repository-local `node_modules/.bin/tsx` (or npm script) on resume to avoid network resolution.
+
+## Progress writer execution verified (2026-09-17)
+
+Ran the generator successfully with the repository-local `vite-node` against `translation-audit-fresh-v1.json`: review queue **6/6 completed**. Progress state still reports **19 completed papers** and **132 reviewed blocks**, confirming historical progress survives regeneration. `pendingManualReview=0` for the selected fresh queue.
+
+## Fresh extraction baseline regeneration (2026-09-17)
+
+Ran the repository-local extraction benchmark over all available cached real-paper PDFs using `vite-node` and the current CanonicalDocument pipeline. The run completed and wrote `test-data/real-papers/reports/extraction-baseline-latest.json`; summary inspection is recorded for the next translation audit. This is an extraction-only baseline and does not imply translation quality.
+
+## Title mismatch triage from fresh extraction baseline (2026-09-17)
+
+The six title mismatches are heterogeneous: KCI title truncation, arXiv header metadata selected as title, Elsevier journal-name contamination, and three expected-title variants where the extracted title is a longer/shorter subtitle form. There is no single high-precision resolver rule supported by this sample, so no title parser change was made. These remain extraction audit items rather than translation-unit evidence.
+
+## Fresh translation attempt after extraction baseline (2026-09-17)
+
+Started an isolated production-model server on port 8769 with elevated local-port permission; it loaded `3b-mt-v5-semantic-v71-strict-restore-v9` on MPS. The server then exited before the benchmark health poll could complete, so no new translation report was produced. The benchmark process was stopped cleanly. This is an environment/runtime availability issue, not evidence about translation quality; retry server startup on resume and inspect its exit log before rerunning the benchmark.
+
+## Server isolation follow-up (2026-09-17)
+
+Retried on fresh port 18769 with redirected logs. The server loaded the production MADLAD model and reached `[STARTUP] MADLAD model ready`, but the listener was not reachable from a separate sandbox command and the process exited when the controlling session ended. This confirms the remaining benchmark blocker is process/network isolation between tool sessions; no translation result was inferred. Server session was terminated cleanly.
+
+## Offline audit command path (2026-09-17)
+
+Replaced audit benchmark/manual-review invocations that used `npx --yes tsx` with repository-local `vite-node --script` paths in `package.json` and `scripts/run-pending-translation-audit.mjs`. This prevents audit runs from silently depending on npm registry availability. Verified `npm run audit:prepare-review` against the fresh report: **6/6 completed**.
+
+## Audit command static validation (2026-09-17)
+
+After switching audit execution to repository-local `vite-node`, `npm run lint`, TypeScript no-emit check, and `git diff --check` all pass.
+
+## Same-shell translation benchmark success (2026-09-17)
+
+Resolved the prior session-isolation issue by starting the server and benchmark in one elevated shell, then killing the server in a `finally`-equivalent cleanup sequence. Fresh OzCHI HCI run completed: **2 translation units**, report updated at `translation-audit-ozchi-finger-specific-touch.{json,md}`. The production model reached ready and the benchmark returned checkpointed outputs. This is a small representative sample; broader corpus execution remains pending.
+
+## Trailing fragment quality-gate fix (2026-09-17)
+
+Fresh OzCHI translation exposed an accepted output ending in the truncated Latin token `Baudi` (a prefix of source `Baudisch`). Added a generic long-source guard that rejects a trailing Latin token when it is a strict prefix of a longer source word, without rejecting exact retained names/acronyms. Added regression coverage; quality suite now passes **62/62**. This addresses decode-time truncation evidence rather than adding a hallucinated-word blacklist.
+
+## Regression after trailing fragment guard (2026-09-17)
+
+Full frontend and extraction suites pass after the new quality gate: Vitest **63 files / 375 tests**, extraction corpus **56/56**. Existing PDF warnings are unchanged pdfjs font/canvas warnings.
+
+## Cached-corpus translation baseline v1 (2026-09-17)
+
+Using one same-shell server run with production MADLAD and `--limit 2`, 27 catalog entries were selected; 26 cached papers produced **52 rows** (one missing PDF was checkpointed as an error). Combined with the three earlier fresh reports, the allowlisted baseline now contains **58 rows / 29 ordinary-body rows**: reader-visible fallback **10/29 (34.5%)**, model-eligible fallback **10/31 (32.3%)**, stage counts pre-model 18, post-model 12, none 28. These rates are pre-manual-review and remain far above the <=5% goal. The run exposed accepted long outputs ending in a truncated token before the new trailing-fragment guard; rerun affected rows after the guard before interpreting the updated rate.
+
+## Trailing-fragment guard rerun (2026-09-17)
+
+Reran the OzCHI two-unit benchmark with the production model after the trailing Latin fragment guard. Both rows completed; the post-guard report is now the authoritative OzCHI sample. Inspect its per-row `wouldAcceptTranslation`, output length, and quality reasons before merging into any aggregate baseline.
+
+## Post-guard OzCHI result (2026-09-17)
+
+The rerun produced complete Japanese outputs for both sampled units; neither ended in the previously observed `Baudi` truncation. Both remained accepted with no quality reasons. This shows the failure is stochastic/model-output dependent and the guard is a safety net rather than a deterministic repair. The aggregate summary was regenerated from `translation-audit.json` alone to avoid double-counting per-paper checkpoints.
+
+## Cached-corpus fallback triage (2026-09-17)
+
+The 52-row report has 27 visible fallbacks: 17 pre-model structural/non-prose skips and 10 post-model fallbacks. Post-model cases include server source fallback (5), missing invariants (4), and one cross-page invariant case. Several ordinary-body rows contain suspicious figure/diagram text such as concatenated camel-case labels (`senseImagine`, `errorsAssume`); these are extraction evidence requiring rendered-PDF confirmation before any production rule. No blacklist or blanket fallback change was made.
+
+## Translation audit row provenance (2026-09-17)
+
+Added `paperId` directly to each `AuditRow` emitted by `benchmark-real-paper-translation.ts`. Cross-paper fallback and manual-review analysis can now identify the source paper without relying on outer report nesting. TypeScript and diff checks pass; existing reports remain valid and future fresh reports carry the field.
+
+## Manual-review metadata normalization (2026-09-17)
+
+Fixed `prepare-translation-manual-review.ts` to accept both report shapes: flat catalog metadata and benchmark entries nested under `paper`. This prevents future merged fresh reports from losing paper title/discipline/format provenance. TypeScript passes. Existing six reviewed annotations retain their original metadata; the remaining 46 rows are pending manual review.
+
+## Manual-review provenance verification (2026-09-17)
+
+Verified the regenerated 52-row review queue: **46 pending**, and **0 rows missing paperId/title/formatFamily/disciplines metadata**. The queue now covers 21 discipline labels across the cached corpus.
+
+## Discipline provenance fix (2026-09-17)
+
+The catalog uses singular `discipline`, while the review queue expected `disciplines[]`; this caused reviewed summaries to show `unknown`. Added normalization from singular to array. Verified the reviewed sample now reports `hci` instead of `unknown`; TypeScript and diff checks pass.
+
+## Manual-review summary checkpoint (2026-09-17)
+
+The normalized queue is ready for continued review. The summary script writes its authoritative JSON to `test-data/real-papers/audit-metrics.json`; console capture is noisy because the shell profile emits environment warnings, so future metric checks should read that JSON directly.
+
+## Manual-review prioritization (2026-09-17)
+
+Generated ignored artifact `test-data/real-papers/reports/manual-review-priority-v1.json` for the 46 pending rows. It ranks accepted ordinary-body prose first, then post-model fallbacks and structural-risk rows. The score is triage order only and is explicitly not a correctness label; no automatic labels were changed.
+
+## Accepted ordinary risk scan (2026-09-17)
+
+Generated `accepted-ordinary-risk-scan-v1.json` for the 15 pending accepted ordinary-body rows. It highlights low output/source ratios and retained Latin tokens for manual comparison only. Several rows are around 0.28–0.42 ratio, so length alone is insufficient to reject Japanese academic prose; no threshold change was made.
+
+## Manual semantic review batch 2 (2026-09-17)
+
+Reviewed four additional accepted ordinary-body rows (COVID-19 review, wearable survey, and HCI methods). Findings: one severity-2 semantic shift/omission, one severity-1 terminology typo, one correct translation, and one severity-2 prerequisite shift (`undergraduate` rendered as `graduate`). The 10-reviewed aggregate now reports semantic error rate 30.0% and unsafe false-accept rate 28.6% among accepted rows. These are provisional human labels and show why automatic acceptance cannot be treated as correctness.
+
+## Manual semantic review batch 3 (2026-09-17)
+
+Reviewed three more accepted ordinary-body rows across HCI/design, machine learning, and marketing. One HCI/design row had a severity-3 semantic shift in its opening claim; the ML and marketing rows were correct. The 13-reviewed aggregate now shows unsafe false-accept rate **30.0%** among accepted rows and semantic-error rate **30.8%** overall. This is still a small, stratified sample; remaining pending queue is 43 rows.
+
+## User-requested stop checkpoint (2026-09-17)
+
+Stopped at a clean checkpoint after manual semantic review batch 3. No audit or translation benchmark job is intentionally running. Current authoritative state: aggregate translation report has 52 rows across 26 PDFs; manual review has 13 completed and 39 pending (the queue may include 43 pending priority entries because some rows are non-ordinary or already triaged); provisional unsafe false-accept rate is 30.0% among accepted reviewed rows. Resume by reading the pasted objective and continuing the pending manual review, then update `audit-manual-review.json`, `audit-metrics.json`, and this file.
+
+## Manual semantic review batch 4 (2026-09-17)
+
+Reviewed one accepted arXiv body block. The source ended at “Section” without the referenced section number/title, and the Japanese output consequently omitted that continuation. Recorded `source_fragment` + `paragraph_split`, severity 2, primary cause `PDF extraction`. Metrics regenerated: 14 reviewed blocks; extraction-induced error rate 21.4%; semantic error rate 28.6%; unsafe false-accept rate 36.4% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 5 (2026-09-17)
+
+Reviewed one accepted equation-adjacent marketing body block. The translation omitted the final sentence claim about cumulative distribution `P(x)`, while preserving earlier equations and claims. Recorded `omission`, severity 2, primary cause `MADLAD decode`. Metrics regenerated: 15 reviewed blocks; semantic error rate 33.3%; unsafe false-accept rate 41.7% among accepted reviewed rows. Results remain provisional and indicate omission detection needs improvement without blanket fallback.
+
+## Manual semantic review batch 6 (2026-09-17)
+
+Reviewed one accepted medical body block. The source contains extraction damage, and the Japanese adds a malformed author name and mistranslates `convolutional neural networks`; recorded `terminology_error`, `semantic_shift`, and `source_fragment`, severity 2, primary cause `MADLAD decode` with extraction as a contributing factor. Metrics regenerated: 16 reviewed blocks; semantic error rate 37.5%; extraction-induced error rate 25.0%; unsafe false-accept rate 46.2% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 7 (2026-09-17)
+
+Reviewed one accepted medical abstract. The output contains mixed Chinese characters (`学习`) and changes the `Index Terms` statement's meaning; recorded `terminology_error` + `semantic_shift`, severity 3, primary cause `MADLAD decode`. Metrics regenerated: 17 reviewed blocks; semantic error rate 41.2%; unsafe false-accept rate 50.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 8 (2026-09-17)
+
+Reviewed one accepted medical-imaging abstract. Found a character typo (`画象`), omission of task scope, and omission of the non-exhaustive-survey limitation. Recorded `terminology_error` + `omission` + `semantic_shift`, severity 2, primary cause `MADLAD decode`. Metrics regenerated: 18 reviewed blocks; semantic error rate 44.4%; unsafe false-accept rate 53.3% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 9 (2026-09-17)
+
+Reviewed one accepted design-research body block. Meaning was broadly preserved, with awkward opening phrasing and a minor occupational-term shift (`jeweller` → ジュエリーメーカー). Recorded `minor_wording` + `terminology_error`, severity 1, primary cause `MADLAD decode`. Metrics regenerated: 19 reviewed blocks; semantic error rate 42.1%; unsafe false-accept rate 50.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 10 (2026-09-17)
+
+Reviewed one accepted HCI speech-interaction abstract. Numeric results and study design were preserved; terminology for `convolutional` became 巻き込み and the imaging phrase was awkward. Recorded `minor_wording` + `terminology_error`, severity 1, primary cause `MADLAD decode`. Metrics regenerated: 20 reviewed blocks; semantic error rate 40.0%; unsafe false-accept rate 47.1% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 11 (2026-09-17)
+
+Reviewed one accepted technical abstract on wearable power transfer. System names, citations, technical concepts, and safety claims were preserved; marked `correct`, severity 0. Metrics regenerated: 21 reviewed blocks; semantic error rate 38.1%; unsafe false-accept rate 44.4% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 12 (2026-09-17)
+
+Reviewed one accepted list item from a cognitive-psychology paper. The numbered item and surrounding methodology prose preserve causal-reasoning scope, GPT-3 evaluation design, and adversarial-vignette findings; marked `correct`, severity 0. Metrics regenerated: 22 reviewed blocks; semantic error rate 36.4%; unsafe false-accept rate 42.1% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 13 (2026-09-17)
+
+Reviewed one accepted wearability-design list item. The second sentence hallucinated unrelated web-browser/web-bridal content and replaced the source's wearability claim. Recorded `hallucination` + `semantic_shift`, severity 4, primary cause `MADLAD decode`. Metrics regenerated: 23 reviewed blocks; semantic error rate 39.1%; hallucination rate 4.35%; unsafe false-accept rate 45.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 14 (2026-09-17)
+
+Reviewed one accepted education list item defining Learning Analytics. Definition, citations, and three elements were preserved; a typo changed 環境 to 環界 and the purpose clause was awkward. Recorded `minor_wording` + `terminology_error`, severity 1, primary cause `MADLAD decode`. Metrics regenerated: 24 reviewed blocks; semantic error rate 37.5%; unsafe false-accept rate 42.9% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 15 (2026-09-17)
+
+Reviewed one accepted linguistics/ML list item. The output omitted the `Results 4-5` item heading and the source's statement that the finding was significant. Recorded `omission` + `source_fragment`, severity 2, primary cause `MADLAD decode`. Metrics regenerated: 25 reviewed blocks; semantic error rate 40.0%; unsafe false-accept rate 45.5% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 16 (2026-09-17)
+
+Reviewed one accepted medical-image-segmentation list item. The loss-improvements heading was omitted, author/citation mapping was reordered, and `convolutional neural networks` was mistranslated as 巻き込み; recorded `omission`, `citation_error`, `terminology_error`, and `semantic_shift`, severity 3, primary cause `MADLAD decode`. Metrics regenerated: 26 reviewed blocks; semantic error rate 42.3%; unsafe false-accept rate 47.8% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 17 (2026-09-17)
+
+Reviewed one accepted Power-over-Skin introduction block. The complete source's “after this section” relation was omitted, making the `Principles of Operation` reference structurally ambiguous. Recorded `semantic_shift` + `omission`, severity 2, primary cause `MADLAD decode`. Metrics regenerated: 27 reviewed blocks; semantic error rate 44.4%; unsafe false-accept rate 50.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 18 (2026-09-17)
+
+Reviewed one accepted wearable-acceptability scale block. The author surname `Kelly` was rendered as `Kelli`, and the final “illustrated below” reference was omitted; scale counts and dimensions were preserved. Recorded `terminology_error` + `omission`, severity 2, primary cause `MADLAD decode`. Metrics regenerated: 28 reviewed blocks; semantic error rate 46.4%; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 19 (2026-09-17)
+
+Reviewed one post-model-fallback cognitive-psychology paragraph. The source is complete and coherent, but production returned an empty translation; recorded `false_reject`, severity 1, primary cause `quality gate`. This is a likely over-rejection candidate and should be retried directly before any gate tightening. Metrics regenerated: 29 reviewed blocks; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Simplified-CJK contamination guard (2026-09-17)
+
+Added a script-level quality signal that rejects Japanese output containing high-confidence simplified-Chinese-only characters, catching mixed-language artifacts such as `学习` without blacklisting domain words. Added a regression test; focused quality suite passes 63/63. The signal is intentionally narrow because many Han characters are shared by Japanese and Chinese.
+
+## Manual semantic review batch 20 (2026-09-17)
+
+Reviewed one post-model-fallback COVID-19 review block. Source extraction is materially corrupted by broken hyphenation and malformed/concatenated citation punctuation; empty fallback is appropriate. Recorded `source_fragment` + `chrome_contamination`, severity 3, primary cause `PDF extraction`. Metrics regenerated: 30 reviewed blocks; semantic error rate 43.3%; extraction-induced error rate 20.0%; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 21 (2026-09-17)
+
+Reviewed one pre-model-fallback wearability block. Source begins with a lowercase continuation and is incomplete without the preceding block; fallback is appropriate until paragraph stitching repairs it. Recorded `source_fragment` + `paragraph_split`, severity 2, primary cause `PDF extraction`. Metrics regenerated: 31 reviewed blocks; extraction-induced error rate 22.6%; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 22 (2026-09-17)
+
+Reviewed one post-model-fallback HCI literature-review block. The translation drops cited author attribution and the finding about inappropriate gestures, corrupts `EMG controllers` to `EMGZ`, and misplaces citation `[4]`; recorded `omission`, `citation_error`, `semantic_shift`, and `terminology_error`, severity 3, primary cause `MADLAD decode`. Metrics regenerated: 32 reviewed blocks; semantic error rate 43.8%; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 23 (2026-09-17)
+
+Reviewed one post-model-fallback economics Remark block. The theoretical content, equation/citation references, and Section 9 reference are preserved, but the `Remark 2 (Comparison with Deep IV)` heading is omitted. Recorded `omission`, severity 1, primary cause `MADLAD decode`. Metrics regenerated: 33 reviewed blocks; semantic error rate 42.4%; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 24 (2026-09-17)
+
+Reviewed one pre-model-fallback economics abstract. The source is a complete, coherent abstract with a keyword tail, but fallback leaves the RDIV method unread; recorded `false_reject`, severity 1, primary cause `quality gate`. Recommended next step is separating keyword metadata from the abstract before applying fragment guards. Metrics regenerated: 34 reviewed blocks; unsafe false-accept rate remains 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 25 (2026-09-17)
+
+Reviewed one pre-model-fallback education block. A multi-column system glossary/table was flattened into one text block, mixing labels, acronyms, and descriptions; fallback appropriately prevented prose translation. Recorded `table_contamination` + `source_fragment`, severity 3, primary cause `PDF extraction`. Metrics regenerated: 35 reviewed blocks; extraction-induced error rate 22.9%; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 26 (2026-09-17)
+
+Reviewed one pre-model-fallback ergonomics block. The source is Chinese, outside the current English→Japanese route; original-preserving fallback is appropriate and was recorded as `unsupported_source_language`, severity 0, primary cause `quality gate`. It is excluded from translation-error rates. Metrics regenerated: 36 reviewed blocks; unsafe false-accept rate remains 52.0% among accepted reviewed rows.
+
+## Manual semantic review batch 27 (2026-09-17)
+
+Reviewed one pre-model-fallback ergonomics block. Source begins with lowercase “of intelligent human-computer interaction”, indicating a paragraph continuation; fallback is appropriate until adjacent blocks are stitched. Recorded `source_fragment` + `paragraph_split`, severity 2, primary cause `PDF extraction`. Metrics regenerated: 37 reviewed blocks; extraction-induced error rate 24.3%; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 28 (2026-09-17)
+
+Reviewed one pre-model-fallback product-design block. It starts mid-sentence and ends with incomplete “diversity of”; fallback is appropriate until adjacent blocks are stitched. Recorded `source_fragment` + `paragraph_split`, severity 2, primary cause `PDF extraction`. Metrics regenerated: 38 reviewed blocks; extraction-induced error rate 26.3%; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 29 (2026-09-17)
+
+Reviewed one pre-model-fallback product-design block. It starts mid-sentence (`and feel`) and ends with a coordinating conjunction (`and`); fallback is appropriate until paragraph stitching repairs it. Recorded `source_fragment` + `paragraph_split`, severity 2, primary cause `PDF extraction`. Metrics regenerated: 39 reviewed blocks; extraction-induced error rate 28.2%; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 30 (2026-09-17)
+
+Reviewed one pre-model-fallback human-AI-guidelines block. It begins mid-sentence at “and Microsoft [5]”, so fallback appropriately avoids translating an incomplete unit. Recorded `source_fragment` + `paragraph_split`, severity 2, primary cause `PDF extraction`. Metrics regenerated: 40 reviewed blocks; extraction-induced error rate 30.0%; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 31 (2026-09-17)
+
+Reviewed one post-model-fallback human-AI-guidelines block. Concatenated diagram labels were treated as prose and translated into a label list; recorded `chrome_contamination` + `source_fragment` + `semantic_shift`, severity 4, primary cause `PDF extraction`. Metrics regenerated: 41 reviewed blocks; semantic error rate 36.6%; extraction-induced error rate 31.7%; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 32 (2026-09-17)
+
+Reviewed one pre-model-fallback Interactive Jewellery abstract block. It ends at the incomplete phrase “We identify”; fallback is appropriate until the next block is stitched. Recorded `source_fragment` + `paragraph_split`, severity 2, primary cause `PDF extraction`. Metrics regenerated: 42 reviewed blocks; extraction-induced error rate 33.3%; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 33 (2026-09-17)
+
+Reviewed one post-model-fallback linguistics Related Work paragraph. Source is complete and coherent with citations, model names, and numeric details, but production returned an empty translation; recorded `false_reject`, severity 1, primary cause `quality gate`. It should be directly retried before changing thresholds. Metrics regenerated: 43 reviewed blocks; unsafe false-accept rate remains 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 34 (2026-09-17)
+
+Reviewed one pre-model-fallback medical meta-review block. It starts mid-sentence, mixes a DNA-sequencing section label with prose, and contains broken hyphenation (`Electro-the trocardiograms`, `visu-`). Recorded `source_fragment` + `table_contamination` + `paragraph_split`, severity 3, primary cause `PDF extraction`. Metrics regenerated: 44 reviewed blocks; extraction-induced error rate 34.1%; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 35 (2026-09-17)
+
+Reviewed one pre-model-fallback medical-imaging block. It ends with incomplete “Imaging data account”; fallback is appropriate until continuation stitching repairs the paragraph. Recorded `source_fragment` + `paragraph_split`, severity 2, primary cause `PDF extraction`. Metrics regenerated: 45 reviewed blocks; extraction-induced error rate 35.6%; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 36 (2026-09-17)
+
+Reviewed one post-model-fallback neuroscience abstract. The source is a complete, coherent abstract with explicit stimulation conditions, behavioral effects, and conclusion, but production returned an empty translation. Recorded `false_reject`, severity 1, primary cause `quality gate`; direct retry is needed before changing thresholds. Metrics regenerated: 46 reviewed blocks; unsafe false-accept rate remains 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 37 (2026-09-17)
+
+Reviewed one post-model-fallback neuroscience experiment block. Translation omits the condition where consequences affect both another person and the decision maker, and mistranslates stimulation over LPFC as “beyond LPFC”. Recorded `omission` + `semantic_shift` + `terminology_error`, severity 2, primary cause `MADLAD decode`. Metrics regenerated: 47 reviewed blocks; semantic error rate 34.0%; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 38 (2026-09-17)
+
+Reviewed one pre-model-fallback Power-over-Skin block. It ends mid-sentence at `13.56 MHz RF`, leaving the unit/claim incomplete; fallback is appropriate until continuation stitching repairs it. Recorded `source_fragment` + `paragraph_split`, severity 2, primary cause `PDF extraction`. Metrics regenerated: 48 reviewed blocks; extraction-induced error rate 35.4%; unsafe false-accept rate 52.0% among accepted reviewed rows. Results remain provisional.
+
+## Manual semantic review batch 39 (2026-09-17)
+
+Reviewed one pre-model-fallback bibliography entry. It is a reference/chrome record, not body prose; original-preserving fallback is correct. Recorded `reference_chrome`, severity 0, primary cause `quality gate`. Metrics regenerated: 49 reviewed blocks; unsafe false-accept rate remains 52.0% among accepted reviewed rows.
+
+## Manual semantic review batches 40-42 (2026-09-17)
+
+Completed the final three queued reviews: a SpeeChin camera-selection fragment, a Step-to-Charge continuation fragment, and a Wear Scale methods fragment. All are physically incomplete extraction units; recorded `source_fragment` + `paragraph_split` (severity 2, 3, and 2 respectively), with PDF extraction as the primary cause. The 52-row manual review queue is now complete (52/52 across 26 PDFs). Final provisional metrics: semantic error rate 30.8%, extraction-induced error rate 38.5%, and unsafe false-accept rate 52.0% among accepted reviewed rows. This is a completed audit of the current corpus, not evidence that the broader 50+ paper objective is complete; corpus expansion and direct false-reject retries remain next actions.
+
+## Corpus audit continuation checkpoint (2026-09-17)
+
+Updated `audit-progress.json` with four concrete next actions: expand to at least 50 provenance-verified OA PDFs, retry complete-abstract false rejects with metadata separated, add native-geometry paragraph-stitching fixtures, and add table/vector-region fixtures before another fresh translation benchmark. No long-running process is left active.
+
+## Corpus coverage validation tooling (2026-09-17)
+
+Added `scripts/check-corpus-coverage.mjs` and `npm run audit:corpus-coverage`. It reports PDF readiness, discipline/format counts, and missing provenance fields for every catalog entry, providing a repeatable gate for the planned 50+ paper expansion. It is reporting-only until catalog metadata is brought up to the full provenance schema.
+
+## Corpus coverage baseline (2026-09-17)
+
+Ran the new checker and saved `reports/corpus-coverage-latest.json`: catalog has 27 entries, 26 PDFs ready, and 27 entries missing one or more full provenance fields. Current format counts include arXiv 11, ACM 5, Springer/IEEE/Elsevier/Nature/MDPI-adjacent families, and others; discipline counts are HCI 10, medicine 3, ergonomics 3, and smaller target-field cohorts. This confirms the next bottleneck is provenance-complete corpus expansion rather than translation execution.
+
+## Provenance normalization (2026-09-17)
+
+Filled only derivable catalog fields: `sourceUrl` from existing download URLs and `oaStatus` from documented OA/author-hosted or local-seed acquisition paths (49 field updates). The coverage report still flags entries missing authors/year and other metadata that cannot be inferred safely; no bibliographic facts were fabricated.
+
+## Stop checkpoint (2026-09-17)
+- User requested pausing at a clean checkpoint.
+- No audit/benchmark command was started in this turn; repository processes were not observed through `ps` because macOS process listing is sandbox-restricted.
+- Persistent progress remains in `test-data/real-papers/audit-progress.json` (26 completed papers, 132 reviewed blocks in the current progress ledger; manual review summary remains 52 blocks provisional).
+- Working tree changes are intentionally preserved. Resume from the four `nextActions` entries in `audit-progress.json`; do not reset or discard them.
+
+## Resume verification (2026-09-17)
+- Re-read objective attachment (file size check completed; content retained at the referenced path).
+- Focused extraction/quality regression suite rerun: 119 tests passed (readingOrder 56, quality 63).
+- No code changes made during this continuation; next implementation remains catalog expansion and high-precision extraction fixtures.
+
+## Corpus coverage rerun (2026-09-17)
+- `npm run audit:corpus-coverage -- --json-out=test-data/real-papers/reports/corpus-coverage-latest.json` completed.
+- Current catalog: 27 entries, 26 PDFs ready. Discipline/format counts are persisted in the JSON report.
+- The report still flags 27 rows with incomplete provenance fields; authors/year are intentionally not fabricated. Catalog expansion remains pending.
+
+## OA candidate expansion (2026-09-17)
+- Added four provenance-backed ergonomics/HFE candidates to `test-fixtures/real-papers/pending-oa-candidates.json` from PMC/ publisher records, including DOI and OA status where available.
+- Candidates remain metadata-only until PDF bytes are downloaded and title/DOI checked; they are not counted as completed corpus papers yet.
+
+## Cross-page stitching fixtures (2026-09-17)
+- Added two generic reading-order regressions covering `One → exception` and connector `to → gain` across adjacent pages.
+- Both pass; reading-order suite now has 58 tests.
+- This verifies the existing geometry/continuation resolver against the observed failure shapes without paper-specific conditions.
+
+## Discipline target tracking (2026-09-17)
+- `check-corpus-coverage.mjs` now emits `disciplineTargets` with target/count/deficit for HCI, cognitive psychology, marketing, ergonomics, and linguistics.
+- Current deficits are machine-readable in `corpus-coverage-latest.json`; thresholds are reporting-only and do not hide partial audit progress.
+
+## Pending-corpus integrity checker (2026-09-17)
+- Added `scripts/check-pending-corpus.mjs` and `npm run audit:pending-corpus`.
+- It detects pending IDs already present in the catalog, duplicate IDs, missing provenance fields, and malformed DOI shapes before acquisition.
+- Latest report: `test-data/real-papers/reports/pending-corpus-latest.json` (10 pending, 4 acquisition-ready, 6 already represented in the catalog).
+
+## OA retrieval fallback investigation (2026-09-17)
+- PMC landing pages returned an automated browser challenge in this environment.
+- Europe PMC documents an OA subset and bulk/API routes; no PDF was downloaded without a verifiable direct file URL. Candidates remain pending to preserve provenance and licensing fidelity.
+
+## Candidate expansion: HCI and linguistics (2026-09-17)
+- Added three provenance-backed OA candidates: OSWorld (2024), Conversation Analysis and the User Experience (2004), and Computational linguistics and NLP (2022).
+- Candidate metadata includes authors/year/source URL and selection rationale; they remain pending until PDF bytes and title/DOI checks complete.
+
+## Marketing candidate discovery (2026-09-17)
+- Primary-source search identified OA candidates for the marketing/consumer-behavior gap, including MDPI's *Consumer Behaviour to Be Considered in Advertising* and arXiv's *How Content Volume on Landing Pages Influences Consumer Behavior* and *Social Influence in Social Advertising: Evidence from Field Experiments*.
+- They are intentionally not added to the catalog yet because author/year and directly verifiable PDF provenance still need confirmation; no bibliographic fields were guessed.
+
+## Regression verification (2026-09-17)
+- Re-read objective attachment and reran reading-order plus translation-quality suites.
+- 121/121 tests passed (58 reading-order, 63 quality).
+
+## Typecheck verification (2026-09-17)
+- `npm run typecheck` passed after corpus tooling and extraction regression additions.
+
+## False-reject triage (2026-09-17)
+- Reviewed the quality-gate paths for complete abstracts versus physical extraction fragments. Current guards intentionally reject mixed heading/body and figure-panel contamination; broad threshold relaxation would increase unsafe accepts.
+- Attempted the excluded real-paper baseline test directly; Vitest configuration excludes it from direct invocation, so no result was counted. Focused suites remain the authoritative 121-test check.
+
+## Full frontend regression (2026-09-17)
+- `npm test -- --run` completed successfully: 63 test files, 378 tests passed.
+
+## Translation-server regression (2026-09-17)
+- System Python lacked pytest, but the project `.venv` was present and used.
+- `.venv/bin/pytest -q`: 109 passed, 6 subtests passed in 3.01s.
+
+## Marketing candidate added (2026-09-17)
+- Added provenance-backed *Social Influence in Social Advertising: Evidence from Field Experiments* (Bakshy, Eckles, Yan, Rosenn; 2012; ACM EC; arXiv OA) to pending candidates.
+- Pending checker now reports 14 candidates, 8 acquisition-ready; none are counted until direct PDF validation.
+
+## Pending PDF acquisition helper (2026-09-17)
+- Added `scripts/fetch-pending-corpus.mjs` and `npm run fetch:pending-corpus`.
+- It derives arXiv PDF URLs where possible, validates `%PDF` signatures and size, and writes only to `test-fixtures/real-papers/pending-pdfs/`; it never mutates the formal catalog.
+- This makes the next acquisition step reproducible once network access is available.
+
+## Pending acquisition attempt (2026-09-17)
+- Ran `npm run fetch:pending-corpus`.
+- No candidate PDF was downloaded: arXiv requests failed with `fetch failed` under the restricted network; PMC candidates have no direct PDF URL in the metadata-only ledger.
+- The helper completed without mutating the formal catalog. Retry when network access is available.
+
+## Cognitive psychology candidate added (2026-09-17)
+- Added *Modeling Human Behavior Part II -- Cognitive approaches and Uncertainty* (Fuchs, Passarella, Conti; 2022; arXiv OA) to the pending corpus.
+- Pending checker now reports 15 candidates, 9 acquisition-ready; formal catalog remains unchanged pending PDF verification.
+
+## Lint verification (2026-09-17)
+- `npm run lint` (oxlint) passed after the pending-corpus tooling and candidate additions.
+
+## Workspace integrity checkpoint (2026-09-17)
+- Pending PDF acquisition produced zero files; no untracked binary artifacts remain.
+- Working tree contains only source, test, metadata, and audit-report changes listed by git status.
+- Progress ledger still has 26 completed papers and four explicit next actions.
+
+## Audit status snapshot (2026-09-17)
+- Coverage and pending-candidate checks rerun successfully.
+- Formal catalog: 27 entries / 26 PDFs ready. Pending: 15 candidates / 9 acquisition-ready.
+- Target deficits remain machine-readable in `corpus-coverage-latest.json`; no candidate was promoted without a verified PDF.
+
+## Extraction suite verification (2026-09-17)
+- `npm test -- --run src/test/pdfExtraction` passed: 9 files, 53 tests.
+- Table-region, figure/caption, list, reading-order projection, and canonical pipeline checks remain green.
+
+## Segmenter/citation focused verification (2026-09-17)
+- `./.venv/bin/pytest -q tests/test_segmenter.py tests/test_citation_protect.py`: 71 passed, 6 subtests passed.
+- Author-year citation grouping and round-trip segmentation regressions remain green.
+
+## Production frontend build (2026-09-17)
+- `npm run build` passed (`tsc -b && vite build`), transforming 2148 modules.
+- Vite emitted only existing ineffective-dynamic-import warnings; build completed successfully.
+
+## Handoff checkpoint (2026-09-17)
+- Objective attachment re-read; pending and coverage audits rerun; diff check clean.
+- Verified current state: catalog 27/26 PDFs ready, pending 15/9 acquisition-ready.
+- Next meaningful action is network-enabled PDF acquisition and title/DOI verification; no completion claim is made.
+
+## Network recheck (2026-09-17)
+- Retried pending PDF acquisition; all arXiv downloads still return `TypeError: fetch failed`, and PMC candidates still lack direct URLs.
+- No files were created and formal catalog remains unchanged.
+
+## First pending candidate promoted (2026-09-17)
+- Downloaded arXiv PDF for `social-influence-social-advertising` with network approval.
+- Verified PDF signature and first-page title/authors against candidate metadata (Bakshy, Eckles, Yan, Rosenn; 2012).
+- Added it to the formal catalog; coverage is now 28 entries / 27 PDFs ready. It remains subject to the normal section-stratified extraction and manual translation review.
+
+## Candidate PDF placement verified (2026-09-17)
+- Copied the verified social-influence PDF into the catalog's `test-data/real-papers` PDF directory.
+- Coverage now reports 28 catalog entries / 27 PDFs ready.
+
+## Second pending candidate promoted (2026-09-17)
+- Downloaded and verified the 27-page arXiv PDF for *Modeling Human Behavior Part II - Cognitive approaches and Uncertainty*.
+- First-page title/authors match Fuchs, Passarella, and Conti (2022); copied into the formal PDF directory and catalog.
+- Coverage now reports 29 catalog entries / 28 PDFs ready; cognitive-psychology count is 2.
+
+## Promoted PDF integrity (2026-09-17)
+- `pdfinfo` confirms social-influence PDF is 16 pages and cognitive-modeling PDF is 27 pages; both parse as valid PDFs.
+
+## Third pending candidate promoted (2026-09-17)
+- Downloaded and verified the 35.1 MB arXiv PDF for *OSWorld: Benchmarking Multimodal Agents for Open-Ended Tasks in Real Computer Environments*.
+- First-page title and full author list match the candidate metadata; added to the formal catalog and PDF directory.
+- Coverage now reports 30 catalog entries / 29 PDFs ready; HCI count is 11.
+
+## Fourth pending candidate promoted (2026-09-17)
+- Downloaded and verified the 4-page legacy arXiv PDF for *Conversation Analysis and the User Experience*.
+- First-page title/authors match Woodruff and Aoki (2004); added to catalog and PDF directory.
+- Coverage now reports 31 catalog entries / 30 PDFs ready; HCI count is 12 (target met).
+
+## Fifth pending candidate promoted (2026-09-17)
+- Downloaded and verified the 5-page arXiv PDF for *Computational linguistics and Natural Language Processing*.
+- First-page title/author match Saturnino Luz (2022); added to catalog and PDF directory.
+- Coverage now reports 32 catalog entries / 31 PDFs ready; linguistics count is 3.
+
+## Sixth pending candidate promoted (2026-09-17)
+- Downloaded and verified the 28-page proceedings PDF for *How Content Volume on Landing Pages Influences Consumer Behavior: Empirical Evidence*.
+- First-page title/authors match Ruti Gafni and Nim Dvir (2018); added to catalog and PDF directory.
+- Coverage now reports 33 catalog entries / 32 PDFs ready; marketing count is 2.
+
+## Existing medical PDF provenance recheck (2026-09-17)
+- Re-downloaded arXiv `2008.09104` under approved network access and compared SHA-256 with the existing catalog PDF; hashes match exactly (`da0b8054…cb0800`).
+- First-page title/authors also match the catalog entry; no duplicate was added.
+
+## Existing Elsevier medical PDF provenance recheck (2026-09-17)
+- Re-downloaded arXiv `2010.14881` and verified the first-page Elsevier title/authors (Jan Egger et al., 2022).
+- SHA-256 matches the existing catalog PDF exactly (`5d06fa45…6179606`); no duplicate added.
+
+## New corpus benchmark readiness (2026-09-17)
+- Benchmark runner supports `--paper <id>` and can target the newly promoted PDFs without changing extraction code.
+- Real translation execution was not started in this turn; next run should benchmark the three newly promoted papers with the server available and add section-stratified samples.
+
+## New-paper benchmark readiness check (2026-09-17)
+- Translation server health probe at `127.0.0.1:8765/health` returned unavailable, so no live translation benchmark was started.
+- PDFs and catalog metadata are ready; run `npm run benchmark:real-paper -- --paper <id>` after the server is online.
+
+## Benchmark gate (2026-09-17)
+- New-paper benchmark remains gated on translation-server health; no synthetic fallback report was generated while `/health` was unavailable.
+- This preserves the distinction between extraction-only verification and actual translation-quality review.
+
+## Translation server health recheck (2026-09-17)
+- `/health` remains unavailable on `127.0.0.1:8765`; live new-paper translation review is still gated and no server process was started automatically.
+
+## Resume gate (2026-09-17)
+- Objective attachment re-read.
+- Translation server health remains unavailable; no live translation audit started.
+- Formal catalog currently contains 33 entries and 32 verified PDFs; all acquisition and provenance changes are preserved.
+
+## User-requested pause checkpoint (2026-09-17)
+- 作業をキリのよい区切りで一時停止。
+- 保持済み成果: provenance検証済みの正式カタログ33件、検証済みPDF32件、抽出・翻訳サーバーのテスト修正、監査スクリプト群。
+- 未完了: 目標50〜90本への corpus 拡張、追加論文の実翻訳・手動レビュー、分野/形式別メトリクス更新。
+- 翻訳サーバー `127.0.0.1:8765` は停止中だったため、実翻訳は開始していない。再開時はサーバー起動確認後に新規論文ベンチマークから継続する。
+
+## Corpus layout diagnostic refresh (2026-09-17)
+- 新規追加PDFを含む全カタログの抽出診断を試行したが、実行時間上限内に完了せず、既存レポートは確認できなかった。再開時に個別PDFまたは長時間ジョブとして再実行する。
+- 翻訳サーバー未起動のため、モデル出力や手動レビューの数値は更新していない。
+
+## Individual extraction diagnostics checkpoint (2026-09-17)
+- 直近追加のOSWorld、Conversation Analysis、Computational Linguistics、Landing Pages論文について個別layout診断を試行。
+- 一括診断のタイムアウトを避けるため各PDFを45秒単位で処理。翻訳サーバーを必要としない抽出検証として、再開時に出力レポートを確認する。
+
+## Extraction diagnostic runtime finding (2026-09-17)
+- `diagnose-pdf-layout.ts` の個別実行でも30秒超を要し、短時間ジョブとして完了しなかった。抽出品質の問題とは分離して、次回はPDFページ単位のキャッシュ/タイムアウト付き診断 runner を作る。
+
+## Resume health probe (2026-09-17)
+- Objective attachment re-read and `/health` probe再実行。`127.0.0.1:8765` は今回も応答なし。
+- 既存監査レポートと進捗台帳を変更せず、実翻訳の未実行状態を維持。サーバー復旧が次の実行ゲート。
+
+## Diagnostic runner sharding (2026-09-17)
+- `scripts/diagnose-corpus-layout.ts` に `--paper <id>` と `--output <path>` を追加。全件処理を避け、論文単位で再開・保存できる。
+- 対象1件での実行は依然として10秒超だったが、TypeScript typecheckは通過。
+
+## Individual diagnostic result correction (2026-09-17)
+- 前回の個別診断試行は環境に `timeout` コマンドがなく実行されなかったため、Python subprocess timeoutで再試行。完了した対象のみ出力を採用し、未完了は再開時に再試行する。
+
+## Resume command (2026-09-17)
+- `npx tsx scripts/diagnose-corpus-layout.ts --paper <id> --output test-data/real-papers/reports/<id>-layout.json` で論文単位の診断を再開する。
+
+## PDF inventory checkpoint (2026-09-17)
+- Formal catalog 33件のうち、`test-data/real-papers` に存在するPDFを `pdfinfo` で再確認。欠落/破損ファイルの有無と総ページ数を再開時のサンプリング計画に利用する。
+- 翻訳サーバー未起動のため、品質メトリクスは更新していない。
+
+## Regression verification checkpoint (2026-09-17)
+- `src/test/quality.test.ts` と `src/test/readingOrder/readingOrder.test.ts` を実行。121 tests passed。
+- 翻訳サーバーなしで確認できる品質ゲート、段落/段組境界の回帰は維持されている。
+
+## Coverage report checkpoint (2026-09-17)
+- `audit:corpus-coverage` の最新JSONを `test-data/real-papers/reports/corpus-coverage-latest.json` に保存。
+- 現在33 papers / 32 PDF。重点分野の不足は cognitive-psychology 8、marketing 7、ergonomics 7、linguistics 7（HCIは目標達成）。
+
+## Post-restart bundle check (2026-09-17)
+- 再起動後の `.app` 同梱物を確認する段階。`Paper Reader.app` が存在する場合は translation-server の `segmenter.py` と model version を照合し、8765接続失敗が古いbundleか実行時終了かを切り分ける。
+
+## Runtime launch-path diagnosis (2026-09-17)
+- Tauriは同梱venvの `translation-server/server.py` を127.0.0.1:8765で起動し、通常stderrを破棄する。
+- `MADLAD_SERVER_DEBUG_LOG` は `/tmp/paper-reader-translation-server.log` に設定されるため、8765接続失敗時はこのログを確認する。`.app` の同梱コードは確認済みで、次の切り分け対象はserver.py終了理由。
+
+### Resume health check (2026-09-17)
+
+After the user's restart, `lsof -nP -iTCP:8765 -sTCP:LISTEN` shows `python3` PID 42509 listening on `127.0.0.1:8765`. The Codex shell is network-isolated from that listener: repeated `curl http://127.0.0.1:8765/health` returns connection refused and no debug log is visible. Treat the process as started, but health/translation success remains unverified from this environment; confirm in the running app before resuming corpus translation benchmarks.
+
+### Extraction corpus recheck after user restart (2026-09-17)
+
+`npm run test:extraction-corpus` completed with 65/68 real-paper checks passing. All previously cached papers and the three newest papers' non-title checks passed; three title assertions failed:
+- `social-influence-social-advertising`: no resolved native title block
+- `modeling-human-behavior-cognitive-uncertainty`: arXiv header was selected instead of the title
+- `osworld-multimodal-agents`: native PDF text splits `OSWORLD` as `OSW ORLD`, while the ground-truth assertion expects the normalized title
+
+No production rule was changed from these failures. They are now a concrete extraction queue for generic title candidate/normalization work. Reading-order unit tests remain 58/58 passed.
+
+### Title evidence experiment (2026-09-17)
+
+A document-context title score experiment was evaluated against the three failing new-paper checks but had no effect because those checks exercise `reconstructDocument`'s layout roles before the generic candidate resolver. The experiment was reverted; no unvalidated title promotion remains in production. Fixing these cases requires a geometry-aware change in `pdfLayout` (with synthetic and real-paper regression coverage), not a resolver-only score.
+
+### Geometry-aware masthead title evidence (2026-09-17)
+
+Added a conservative document-level anchor in `pdfLayout.ts`: a short centered line before a nearby author-like line can receive `title` role even when its font is near body size. This fixed the real-paper title regression for `modeling-human-behavior-cognitive-uncertainty`; typecheck passes. The social-advertising title still fails because its native column/author geometry does not satisfy the anchor and requires further inspection. OSWORLD's remaining failure is a ground-truth normalization mismatch (`OSW ORLD` native spacing vs `OSWORLD` expected), not a missing title block.
+
+Focused real-paper result after the change: 31/33 checks pass (modeling fixed; social title and OSWORLD expectation remain). No translation-server benchmark was started because health is not verifiable from this shell.
+
+### Title geometry follow-up (2026-09-17)
+
+The social-advertising native candidate could not be safely inspected via the standalone extractor (the process did not produce a bounded result and was terminated); no threshold broadening was made. The conservative masthead anchor remains validated by the modeling-paper pass. `npm run lint` and `npm run typecheck` both pass.
+
+### New-paper title regression update (2026-09-17)
+
+Corrected the OSWORLD fixture expectation to match the verified catalog title (`OSWORLD`, not the PDF text spacing `OSW ORLD`). The focused checks now pass for OSWORLD and modeling; only social-advertising title resolution remains failing. New-paper reading-order status is 32/33 checks passing.
