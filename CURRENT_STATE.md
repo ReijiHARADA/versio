@@ -2953,3 +2953,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 full application regression checkpoint
 
 - Full Vitest passes: 61 files / 347 tests. Extraction-specific reading order, pipeline, and real-paper suites remain green. This confirms the diagnostic classification and compact table-row changes do not regress import, reader, translation-cache, or export behavior.
+
+### 2026-09-16 table metric checkpoint
+
+- Recomputed extraction baseline after compact-row preservation: table-region recall mean **0.843** (4 annotated papers, minimum 0.571), table-caption recall mean **0.929** (6 annotated papers, minimum 0.571). The change preserves existing aggregate scores while preventing an observed native table row from entering translation.

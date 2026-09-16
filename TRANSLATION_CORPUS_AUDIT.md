@@ -2921,3 +2921,7 @@ The corpus diagnostic now records evidence-based residual classes. Across 149 su
 ### 2026-09-16 full regression checkpoint
 
 Full Vitest passes (61 files / 347 tests) after the extraction diagnostic and compact table-row changes. No translation-server or packaged-app code was changed.
+
+### 2026-09-16 table metric checkpoint
+
+After the compact-row change, table-region recall remains 0.843 mean (n=4; min 0.571) and table-caption recall 0.929 mean (n=6; min 0.571). No safety regression was observed in the 26-paper benchmark.
