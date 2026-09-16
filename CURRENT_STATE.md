@@ -3686,3 +3686,7 @@ Full Vitest completed with **61 files / 358 tests passed**. This includes the du
 ### 2026-09-16 spanning affiliation geometry fixture
 
 Added a generic mixed-page fixture with title, authors, full-width affiliation, abstract, and two-column body. The affiliation remains a dedicated block ahead of the abstract and is not duplicated as paragraph text; body order remains left then right. Reading-order suite: 54/54 passed.
+
+### 2026-09-16 boundary scanner output separation
+
+`scan-extraction-boundaries.ts` now routes extraction's human-readable console logs to stderr and reserves stdout for the final JSON payload. This enables reliable machine parsing when inspecting native bbox candidates; no production extraction behavior changes.

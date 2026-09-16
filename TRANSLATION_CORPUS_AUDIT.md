@@ -3488,3 +3488,7 @@ Full Vitest is green: **61 files / 358 tests passed**. The new native text-layer
 ### 2026-09-16 spanning affiliation geometry fixture
 
 A paper-agnostic geometry fixture now covers a full-width affiliation band before an abstract and two-column body. Affiliation/body separation and ordering pass without lexical paper-specific rules. Reading-order suite: 54/54.
+
+### 2026-09-16 boundary scanner output separation
+
+The boundary scanner now separates extraction traces (stderr) from its JSON findings (stdout), making native geometry findings suitable for automated fixture generation. Production parsing is unchanged.

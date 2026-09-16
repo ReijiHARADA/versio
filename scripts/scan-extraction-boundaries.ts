@@ -12,6 +12,12 @@ const pdfDir = path.resolve("test-data/real-papers");
 const files = fs.readdirSync(pdfDir).filter((name) => name.endsWith(".pdf"));
 const findings: Array<{ id: string; affiliation: unknown[]; caption: unknown[]; figureInParagraph: unknown[]; embeddedStructuralMarker: unknown[] }> = [];
 
+// Layout extraction has an opt-in human-readable trace that uses console.log.
+// Keep the scanner's stdout machine-readable so callers can pipe it to JSON
+// tools; preserve the trace on stderr for interactive diagnosis.
+const stdoutLog = console.log;
+console.log = (...args: unknown[]) => console.error(...args);
+
 for (const file of files) {
   const pages = await extractPdfPages(path.join(pdfDir, file));
   const canonical = extractFromPages({
@@ -38,4 +44,5 @@ for (const file of files) {
   }
 }
 
-console.log(JSON.stringify(findings, null, 2));
+console.log = stdoutLog;
+process.stdout.write(`${JSON.stringify(findings, null, 2)}\n`);
