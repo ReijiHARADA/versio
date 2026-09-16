@@ -3023,3 +3023,7 @@ After the mixed-column guard and independent top-column fixture, the full Vitest
 ### 2026-09-16 bullet-cell table evidence
 
 Added generic evidence for bullet-prefixed single-item table cells in caption-adjacent regions. Safety regression checks pass (56/56 extraction tests); medical table-region recall remains 4/7, so the remaining Table 6/7 miss is attributable to page/region association and is explicitly retained as the next target.
+
+### 2026-09-16 page-crossing table association
+
+Added a constrained resolver path for table candidates on the next page when a caption is near the preceding page bottom and the candidate is near the next-page top. Regression extraction tests remain 56/56; medical table-region recall stays 4/7, showing the remaining issue is upstream caption recognition/continuation rather than this association path.

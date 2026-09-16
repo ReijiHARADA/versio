@@ -244,9 +244,13 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
       const regionMembers = role === "table" && box
         ? candidates.filter((candidate) => {
             const candidateBox = candidate.boundingBoxes[0];
-            if (!candidateBox || candidate.pageStart !== caption.pageStart) return false;
-            const aboveCaption = candidateBox.y < box.y && box.y - (candidateBox.y + candidateBox.height) < 280;
-            const belowCaption = candidateBox.y >= box.y && candidateBox.y - (box.y + box.height) < 280;
+            if (!candidateBox) return false;
+            const samePage = candidate.pageStart === caption.pageStart;
+            const nextPageContinuation = candidate.pageStart === caption.pageStart + 1 &&
+              box.y > 500 && candidateBox.y < 220;
+            if (!samePage && !nextPageContinuation) return false;
+            const aboveCaption = samePage && candidateBox.y < box.y && box.y - (candidateBox.y + candidateBox.height) < 280;
+            const belowCaption = samePage && candidateBox.y >= box.y && candidateBox.y - (box.y + box.height) < 280;
             if (!(aboveCaption || belowCaption)) return false;
             // A native table is often split into one LayoutBlock per row by
             // the generic block grouper. Preserve those rows as a region even
