@@ -3072,3 +3072,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: ergonomics page 11
 
 - Rendered ergonomics-human-factors-ihci page 11. The Chinese residual is a cell/row stream inside Table 3 (with checkmarks), not body prose. Labeled `table_row`, severity 3, root cause `pdf extraction`; review coverage is now 12/83 (71 pending).
+
+### 2026-09-16 manual residual review: Step-to-Charge page 16
+
+- Rendered page 16 and confirmed the two residuals are embedded Figure 5 content: one is the highlighted “This Work” table row and the other is chart/device labels. Labeled them `table_row` and `figure_label`, both severity 3, root cause `pdf extraction`. Review coverage is now 14/83 (69 pending).

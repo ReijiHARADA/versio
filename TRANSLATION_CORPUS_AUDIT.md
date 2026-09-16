@@ -3079,3 +3079,7 @@ Figure 4 prompt/chart text was confirmed visually as embedded figure content. Th
 ### 2026-09-16 manual residual review: ergonomics page 11
 
 Visual review confirmed the residual belongs to Table 3 cell rows. It is labeled `table_row`, severity 3, with PDF extraction as the primary cause; manual review is now 12/83 (71 pending).
+
+### 2026-09-16 manual residual review: Step-to-Charge page 16
+
+Figure 5's highlighted table row and chart/device labels were confirmed visually as embedded figure content. They are labeled `table_row` and `figure_label` (severity 3); review coverage is 14/83 with 69 pending.

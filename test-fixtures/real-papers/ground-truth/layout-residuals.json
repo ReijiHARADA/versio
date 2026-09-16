@@ -61,20 +61,24 @@
       "page": 16,
       "classification": "short-label-band",
       "text": "This Work 1.7-2 posture. ≥100 𝝁W power recovered at different positions on the body. The received power is the available (AC RMS) power at Rx. (a)",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: residual is embedded in Figure 5 table/chart content, not standalone body prose",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 3,
+      "reviewLabel": "table_row",
+      "rootCause": "pdf extraction"
     },
     {
       "paper": "step-to-charge",
       "page": 16,
       "classification": "image-overlap",
       "text": "1500 <=10mW Proximity Key (E.g. BMW Key Fob)Smart Watches (E.g. Apple Watch) 5% 1000 <=1mW Fitness Tracker Scientific Calculator (E.g. Casio) 50% <=500uW High(E.g. FitBit)-Power PhysiologicalE-Paper/Reader (E.g. Kindle)M2W powering limit po",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: residual is embedded in Figure 5 table/chart content, not standalone body prose",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 3,
+      "reviewLabel": "figure_label",
+      "rootCause": "pdf extraction"
     },
     {
       "paper": "step-to-charge",
