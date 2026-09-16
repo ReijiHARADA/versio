@@ -3670,3 +3670,7 @@ Non-mutating diagnostic regenerated: 26 papers / 497 pages / 149 suspicious bloc
 ### 2026-09-16 complex first-page affiliation assertion
 
 Strengthened the mixed first-page fixture: affiliation text must remain an `affiliation` block and must not be relabeled as paragraph content, while body reading order remains left-column before right-column. Reading-order suite: 53/53 passed.
+
+### 2026-09-16 extraction benchmark refresh
+
+`npm run bench:pdf-extraction` regenerated `extraction-baseline-latest.json` for 26 papers. Aggregate metrics remain heading precision 1.000, heading recall 0.993, reading-order pair 1.000, figure-caption relation 1.000, source integrity 1.000, and canonical provenance 1.000; title exact 0.769. No regression from the native duplicate-span guard.

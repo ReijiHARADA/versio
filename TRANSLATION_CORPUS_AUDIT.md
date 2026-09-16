@@ -3472,3 +3472,7 @@ The non-mutating corpus diagnostic remains 26 papers, 497 pages, and 149 suspici
 ### 2026-09-16 complex first-page affiliation assertion
 
 The complex mixed-band fixture now explicitly checks that native affiliation text is not duplicated or relabeled as paragraph content, and that it precedes the abstract. Reading-order suite: 53/53.
+
+### 2026-09-16 extraction benchmark refresh
+
+The 26-paper benchmark was regenerated after the latest native text cleanup. Aggregate scores remain heading precision 1.000, recall 0.993, reading-order pair 1.000, figure-caption relation 1.000, source integrity 1.000, canonical provenance 1.000; title exact remains 0.769. Remaining failures are geometry residuals, not translation behavior.
