@@ -2959,3 +2959,5 @@ Step-to-Charge page 2 was also rendered; three image-overlap/label-band blocks w
 The fixture was integrity-checked after the review update: all 83 samples remain present across 27 pages, with no null records.
 
 The medical meta-review's Table 1 page was rendered as a table-boundary sanity check. Its caption/grid are distinct from body prose; Table 2/5/6 remain unresolved native-stream cases and are not patched by string rules.
+
+The extraction corpus was re-run after restoring the residual fixture: 56/56 tests passed, confirming the manual metadata is isolated from production extraction.
