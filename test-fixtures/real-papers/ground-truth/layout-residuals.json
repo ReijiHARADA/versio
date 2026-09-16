@@ -785,20 +785,20 @@
       "page": 17,
       "classification": "short-label-band",
       "text": "LITS MSD MSD KITS MSD MSD",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: benchmark dataset names are labels embedded beneath Figure 17 image grid",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 17,
       "classification": "short-label-band",
       "text": "STARE ISIC CHAOS BRATS",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: benchmark dataset names are labels embedded beneath Figure 17 image grid",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "interpreting-neural-networks",

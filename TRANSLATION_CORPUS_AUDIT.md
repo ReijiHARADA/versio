@@ -3203,3 +3203,7 @@ The two augmentation/transfer-learning residual streams are embedded Figure 14 d
 ### 2026-09-16 manual residual review: medical segmentation page 12
 
 The two generator/discriminator/domain residual streams are embedded Figure 15/16 GAN diagram labels (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage: 61/83, 21 pending.
+
+### 2026-09-16 manual residual review: medical segmentation page 17
+
+The two benchmark dataset-name residual streams are labels beneath the Figure 17 image grid (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage remains 61/83 with 21 pending.
