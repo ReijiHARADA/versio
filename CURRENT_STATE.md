@@ -3341,3 +3341,10 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - No translation-server/model or `.app` changes were made.
 - Resume next by visually verifying the medical Table 6/7 continuation ground truth, then either correct fixture metadata with evidence or design a generic continuation rule; do not widen proximity heuristics blindly.
 - Visual verification confirms Table 7 spans pages 13–14. Native line diagnostics see `Table 7 (continued)` on page 14, but no RoleCandidate carries that text into the resolver; the loss occurs during line/block classification (before relation resolution). Do not patch the resolver alone; next isolate the top-band/chrome classification boundary and add a generic continued-caption candidate test.
+
+### 2026-09-16 continued-table caption fix
+
+- Generic `Table N (continued)` captions are now preserved at the page top and merged into the preceding table region by matching the table number; continued captions are not emitted as duplicate root regions.
+- Medical review benchmark improved from continuation recall 0.750 to **1.000**; table-region recall and source integrity remain **1.000**.
+- `npm run test:extraction-corpus`: **56/56 passed**; TypeScript check passed. No translation-server or `.app` changes.
+- Next: resume corpus-wide paragraph-stitching and block-boundary precision audit.

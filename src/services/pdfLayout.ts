@@ -546,6 +546,7 @@ export function isFigureCaption(text: string): boolean {
 
 export function isTableCaption(text: string): boolean {
   const caption = layoutPlain(text);
+  if (/^(?:tables?|表)\s*\d+[a-z]?\s*\(continued\)$/i.test(caption)) return true;
   if (/^(?:tables?|表)\s*(?:\d+[a-z]?|[ivxlcdm]+)(?:\s*[:.：–—-]|\s*$)/i.test(caption)) return true;
   // Journal captions frequently omit punctuation: `Table 5 Factor ...`.
   // Require a title-like continuation so ordinary prose such as `Table 1 is`

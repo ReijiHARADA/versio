@@ -232,11 +232,12 @@ export function topologicalOrder(
 }
 
 export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNode[] {
+  const continuedTable = (text: string) => /^(?:table|tables)\s+\d+[a-z]?\s*\(continued\)/i.test(text.trim());
   return candidates
     .filter(
       (c) =>
         c.layoutBlock.role === "figure_caption" ||
-        c.layoutBlock.role === "table_caption"
+        (c.layoutBlock.role === "table_caption" && !continuedTable(c.layoutBlock.text))
     )
     .map((caption, i) => {
       const role = caption.layoutBlock.role === "table_caption" ? "table" : "figure";
@@ -272,6 +273,10 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
             const candidateBox = candidate.boundingBoxes[0];
             if (!candidateBox) return false;
             const samePage = candidate.pageStart === caption.pageStart;
+            const continuedCaption = candidate.layoutBlock.role === "table_caption" && continuedTable(candidate.layoutBlock.text) &&
+              candidate.layoutBlock.text.match(/^(?:table|tables)\s+(\d+[a-z]?)/i)?.[1]?.toLowerCase() ===
+              caption.layoutBlock.text.match(/^(?:table|tables)\s+(\d+[a-z]?)/i)?.[1]?.toLowerCase();
+            if (continuedCaption) return candidate.pageStart > caption.pageStart && candidate.pageStart <= caption.pageStart + 4;
             const nextPageContinuation = candidate.pageStart === caption.pageStart + 1 &&
               box.y > 500 && candidateBox.y < 220 && candidate.pageStart < nextTableCaptionPage;
             const laterPageContinuation = candidate.pageStart > caption.pageStart &&

@@ -1,6 +1,6 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "extraction-v-current-2026-09-16-table-ground-truth-correction",
+  "lastBenchmarkVersion": "extraction-v-current-2026-09-16-continued-caption",
   "lastDiagnosticVersion": "pdf-layout-corpus-diagnostic-v1",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
@@ -3028,9 +3028,9 @@
   ],
   "lastExtractionCheckpoint": {
     "tableRegionRecall": "1.000",
-    "tableContinuationPageRecall": "0.750",
+    "tableContinuationPageRecall": "1.000",
     "sourceIntegrityRate": "1.000",
-    "note": "Visual verification corrected Table 6 continuation pages from [7,8,9,10,11] to [10,11]; remaining miss is Table 7 continuation alignment."
+    "note": "Generic continued table captions survive top-band filtering and are merged into the preceding table region; medical Table 7 now spans pages 13-14."
   },
-  "nextAction": "visually verify Table 7 continuation metadata and then address genuine continuation evidence generically"
+  "nextAction": "continue corpus-wide paragraph stitching and block-boundary precision audit"
 }
