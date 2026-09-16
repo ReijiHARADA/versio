@@ -2966,6 +2966,8 @@ The dedicated extraction corpus was re-run after the guard evaluation: 56/56 tes
 
 The medical meta-review now explicitly guards a corpus-observed metric/prose fragment from equation role; the baseline real-paper suite passes 29/29.
 
+The layout diagnostic remains stable after the short-label equation guard: 149 suspicious blocks across 497 pages, with no residual-class suppression or source loss.
+
 Very short operator-separated labels are now rejected as equation candidates when they lack a relation operator or equation number; the PPG continuation regression remains green.
 
 As a visual sanity check, Power-over-Skin page 2 was rendered and compared with its extraction: Figure 2 and its caption are distinct from adjacent prose, so image-overlap evidence remains advisory and is not used as a blanket exclusion.

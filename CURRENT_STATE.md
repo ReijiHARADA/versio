@@ -2994,6 +2994,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Full application regression after the equation change: Vitest 61 files / 348 tests passed. No reader, import, projection, or export regression was observed.
 - Re-ran the dedicated real-paper extraction suites after the safe equation guard decision: 56/56 tests passed, including PPG table and page-boundary cases.
 - Added a real-paper negative regression for a metric/prose fragment in the medical meta-review; the baseline suite passes 29/29 after the equation guard.
+- Re-ran the 26-paper layout diagnostic after the short-label guard: 497 pages / 149 suspicious blocks, unchanged class distribution (image-overlap 28, numeric-grid 15, short-label-band 55, mixed-layout 51). The change is intentionally role-local and does not hide layout residuals.
 - Added a conservative negative check for very short operator-separated diagram labels. Focused reading-order tests remain 48/48 and the sensitive PPG baseline case passes.
 - Spot-checked the rendered Power-over-Skin page 2 against the extracted stream: the Figure 2 image/caption is visually distinct from the surrounding two-column prose. This supports keeping image-overlap labels advisory rather than suppressing all nearby text.
 - Rendered Step-to-Charge page 2 and manually labeled three overlapping native blocks as `figure_label` (severity 3); the remaining 80 residual samples stay pending.
