@@ -3033,7 +3033,8 @@
     "2026-09-16: mixed-case vector label suppression verified on step-to-charge; extraction corpus 56/56, lint and TypeScript pass, baseline integrity/provenance unchanged.",
     "2026-09-16: production web build (`npm run build`) passed after vector-label resolver change; only ineffective dynamic-import warnings, no .app build.",
     "2026-09-16: medical-image-segmentation native probe found page-1 column interleave, affiliation/body adjacency, and duplicate Fig.1 caption; diagnostic only, no paper-specific rule.",
-    "2026-09-16: exact same-page normalized caption deduplication added in resolver; extraction corpus 56/56 passed."
+    "2026-09-16: exact same-page normalized caption deduplication added in resolver; extraction corpus 56/56 passed.",
+    "2026-09-16: post-caption-dedup full Vitest 61 files/355 tests, TypeScript, and lint passed."
   ],
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",

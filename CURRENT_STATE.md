@@ -3591,3 +3591,9 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 ### 2026-09-16 exact caption deduplication
 - Added a resolver-level `dedupeExactCaptions` pass: only captions with identical normalized text on the same page are coalesced, retaining the higher-confidence native candidate. Near-duplicate/continuation captions remain untouched.
 - Extraction corpus regression: 2 files / 56 tests passed (26.79s). No translation-server or `.app` changes.
+
+### 2026-09-16 caption dedup regression verification
+- Full Vitest: 61 files / 355 tests passed.
+- TypeScript `npx tsc --noEmit --pretty false`: passed.
+- Oxlint `npm run lint -- --deny-warnings`: passed.
+- Remaining extraction gaps are the documented arXiv column interleave and duplicate-caption source residuals; extraction goal is not complete yet.

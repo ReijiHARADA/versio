@@ -3407,3 +3407,5 @@ A narrow native-to-canonical probe of `medical-image-segmentation-deep-learning.
 ### 2026-09-16 exact caption deduplication
 
 Added a conservative resolver pass that coalesces only same-page captions with identical normalized text. This addresses duplicate native caption candidates without merging continuation captions or similar prose. Extraction corpus: 56/56 passed; no translation code changed.
+
+Full regression after caption deduplication: Vitest 61/355, TypeScript and lint passed. The extraction goal remains open because the medical arXiv two-column ordering and affiliation/body boundary still require a general geometry fixture and resolver/layout correction.
