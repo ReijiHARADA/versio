@@ -3172,3 +3172,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: medical segmentation page 16
 
 - The VOE metric prose candidate was visually confirmed as ordinary body text introducing a displayed formula. Recorded as `paragraph`, severity 0; no figure/label or equation boundary change was justified. Manual coverage is 50/83 (33 pending).
+
+### 2026-09-16 manual residual review: medical segmentation page 3
+
+- Three network/loss label streams were visually confirmed as labels embedded in the Figure 2 overview diagram. Recorded as `figure_label`, severity 3, primary cause `pdf extraction`; no new rule was justified. Manual coverage is 53/83 (30 pending).

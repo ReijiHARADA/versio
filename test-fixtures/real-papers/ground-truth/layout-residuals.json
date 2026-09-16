@@ -655,30 +655,30 @@
       "page": 3,
       "classification": "short-label-band",
       "text": "U-Net 3D Net Backbone RNN Network Skip Connection",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: network/loss names are labels embedded in Figure 2 overview diagram",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 3,
       "classification": "short-label-band",
       "text": "Dense Connection Inception Supervised Network Depth Separate Learning Block Attention Multiscale",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: network/loss names are labels embedded in Figure 2 overview diagram",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 3,
       "classification": "short-label-band",
       "text": "Cross Entropy Loss WCE Loss Dice Loss Tversky Loss Loss Function Boundary Loss Generalized Dice Loss Exponential Logarithmic Loss",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: network/loss names are labels embedded in Figure 2 overview diagram",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-image-segmentation-deep-learning",

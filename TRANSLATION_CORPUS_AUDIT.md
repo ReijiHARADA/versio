@@ -3175,3 +3175,7 @@ The candidate ending at “learns” is ordinary body prose and continues on the
 ### 2026-09-16 manual residual review: medical segmentation page 16
 
 The VOE metric prose candidate is ordinary body text adjacent to a displayed formula (`paragraph`, severity 0), not a figure label. No algorithm change was added. Coverage: 50/83, 33 pending.
+
+### 2026-09-16 manual residual review: medical segmentation page 3
+
+The three network/loss residual streams are embedded Figure 2 diagram labels (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage: 53/83, 30 pending.
