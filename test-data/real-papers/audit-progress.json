@@ -3046,19 +3046,20 @@
     "2026-09-16: extraction corpus recheck after spanning metadata fixture 56/56 passed in 26.67s.",
     "2026-09-16: real-paper reading-order suite 27/27 passed after metadata guard and fixture.",
     "2026-09-16: reviewed table/list residual samples; mixed-layout/numeric-grid cases are cards/diagrams or dense math, requiring geometry evidence; no broad suppression.",
-    "2026-09-16: affiliation boundary regression added; Japanese conference fixture keeps 東京大学 out of paragraph duplication, reading-order 53/53."
+    "2026-09-16: affiliation boundary regression added; Japanese conference fixture keeps 東京大学 out of paragraph duplication, reading-order 53/53.",
+    "2026-09-16: checkpoint reconciled at 8d80922; affiliation boundary fixture, caption deduplication, flattened-grid evidence, and native page-rotation provenance are implemented. Extraction corpus 56/56, full Vitest 361/361, baseline 26 papers remains stable; next is orientation-aware table/footnote fixture and arXiv/PMLR residual review."
   ],
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",
-    "change": "spanning metadata ordering guard",
+    "change": "checkpoint reconciliation after native rotation provenance",
     "ozchiTableRegionRecall": 1,
     "overallSourceIntegrityRate": 1,
     "overallChromeContaminationRate": 0,
     "extractionCorpusTests": "56 passed",
-    "fullVitest": "356 passed",
-    "nextAction": "Add and validate a general affiliation/body boundary fixture; then review table/list residuals.",
-    "latestCommit": "f695d44"
+    "fullVitest": "361 passed",
+    "nextAction": "Add a generic orientation-aware table/footnote fixture using page rotation and item transforms; then review arXiv/PMLR residuals.",
+    "latestCommit": "8d80922"
   },
-  "nextAction": "Continue extraction-only: orientation-aware table/footnote fixture and arXiv/PMLR residual review.",
+  "nextAction": "Continue extraction-only: add orientation-aware table/footnote fixture using native rotation provenance, then review arXiv/PMLR residuals.",
   "lastUpdate": "2026-09-16"
 }
