@@ -3338,3 +3338,6 @@ Table 3のようなnative抽出（各行item 1個、x帯反復）を対象にfla
 
 ### 2026-09-16 multi-line table region membership評価
 既存のtable evidenceが高い4行以上blockをregion memberへ許可する実験を行ったが、OzCHI table-region recallは0.800のままで改善しなかった。効果がないため撤回し、誤昇格防止を維持した。
+
+### 2026-09-16 flattened grid region評価
+各visual rowがnative item 1個に平坦化される表向けに、x帯反復とresolverのmulti-line membershipを組み合わせた実験を行った。既存回帰56/56は維持したが、OzCHI table-region recallは0.800のままで改善しなかったため撤回した。

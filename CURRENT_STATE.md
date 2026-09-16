@@ -3433,3 +3433,4 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - 2026-09-16: evaluated alignedNumericRow fallback for caption-adjacent table rows; OzCHI table-region recall stayed 0.800 and no measurable gain, so the heuristic was reverted to avoid unvalidated promotion.
 - 2026-09-16: evaluated flattened-row geometry evidence (single-item lines with repeated x bands and regular y gaps) for table detection; corpus/extraction remained 56/56 but OzCHI table-region recall stayed 0.800, so the unproductive heuristic was reverted.
 - 2026-09-16: evaluated allowing high-confidence multi-line table candidates into region membership; OzCHI table-region recall stayed 0.800, so the change was reverted to preserve precision.
+- 2026-09-16: evaluated flattened-grid evidence plus resolver membership for one-item-per-row tables; OzCHI region recall remained 0.800, so both changes were reverted after no measurable gain.
