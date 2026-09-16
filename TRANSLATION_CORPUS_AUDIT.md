@@ -3320,3 +3320,6 @@ A stricter vector-label evidence variant now requires strong native rotation geo
 
 ### 2026-09-16 ページ境界stitchの安全側回帰
 未完結段落をページ跨ぎで結合する変更に対し、次ページが大文字で始まる独立段落を結合しない回帰テストを追加した。focused reading-order は 51/51 合格。
+
+### 2026-09-16 二段組ページ境界回帰
+右列末尾の未完結文が次ページ左列先頭へ続く典型的な reading-order を synthetic native geometry で固定し、結合されることを確認した。focused reading-order は 52/52 合格。独立大文字段落の分離テストも維持している。

@@ -179,6 +179,19 @@ describe("PDF reading order regression", () => {
     expect(blocks.some((block) => block.text.includes("preceding paragraph") && block.text.includes("Results were"))).toBe(false);
   });
 
+  it("stitches a right-column tail to the next page's left-column continuation", () => {
+    const page1Items = [
+      ...Array.from({ length: 6 }, (_, i) => ({ text: `left filler ${i}.`, x: 54, y: 120 + i * 16, width: 180, height: 10, fontSize: 10, fontName: "Body", page: 1 })),
+      { text: "The final clause of the analysis was reported and", x: 338, y: 700, width: 220, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+    ];
+    const page2Items = [
+      { text: "the interpretation remained stable across groups.", x: 54, y: 120, width: 240, height: 10, fontSize: 10, fontName: "Body", page: 2 },
+      ...Array.from({ length: 5 }, (_, i) => ({ text: `right filler ${i}.`, x: 338, y: 120 + i * 16, width: 180, height: 10, fontSize: 10, fontName: "Body", page: 2 })),
+    ];
+    const { blocks } = reconstructDocument([{ pageNumber: 1, width: 612, height: 792, textItems: page1Items }, { pageNumber: 2, width: 612, height: 792, textItems: page2Items }]);
+    expect(blocks.some((block) => block.text.includes("reported and the interpretation"))).toBe(true);
+  });
+
   it("splits independent top-of-page columns when the right column starts a new sentence", () => {
     const pages: ExtractedPage[] = [{
       pageNumber: 1, width: 612, height: 792,
