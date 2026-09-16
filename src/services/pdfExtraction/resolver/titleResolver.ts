@@ -39,10 +39,24 @@ export function resolveTitle(input: {
   let native: string[] = [];
 
   if (titles.length > 0) {
-    let combined = titles[0].text.trim();
-    for (let i = 1; i < titles.length; i++) {
-      const prev = titles[i - 1];
-      const cur = titles[i];
+    const titleStart = titles.reduce((best, candidate, index) => {
+      const following = input.candidates.slice(input.candidates.indexOf(candidate) + 1, input.candidates.indexOf(candidate) + 5);
+      const hasAuthorAnchor = following.some((next) => {
+        if (next.pageStart !== candidate.pageStart || !["author", "affiliation"].includes(next.role)) return false;
+        const gap = (next.boundingBoxes[0]?.y ?? 0) - ((candidate.boundingBoxes[0]?.y ?? 0) + (candidate.boundingBoxes[0]?.height ?? 0));
+        return gap >= 0 && gap <= 180;
+      });
+      const bestFollowing = titles[best];
+      const bestAnchor = input.candidates.slice(input.candidates.indexOf(bestFollowing) + 1, input.candidates.indexOf(bestFollowing) + 5).some((next) =>
+        next.pageStart === bestFollowing.pageStart && ["author", "affiliation"].includes(next.role)
+      );
+      return hasAuthorAnchor && !bestAnchor ? index : best;
+    }, 0);
+    const selectedTitles = titleStart > 0 ? titles.slice(titleStart) : titles;
+    let combined = selectedTitles[0].text.trim();
+    for (let i = 1; i < selectedTitles.length; i++) {
+      const prev = selectedTitles[i - 1];
+      const cur = selectedTitles[i];
       if (cur.pageStart !== prev.pageStart) break;
       const prevBottom =
         (prev.boundingBoxes[0]?.y ?? 0) + (prev.boundingBoxes[0]?.height ?? 0);
@@ -54,7 +68,7 @@ export function resolveTitle(input: {
     }
     native = [combined];
 
-    const last = titles[titles.length - 1];
+    const last = selectedTitles[selectedTitles.length - 1];
     const lastText = native[0];
     if (/[-\u2010-\u2014]$/.test(lastText) || /\bOn-$/.test(lastText)) {
       const idx = input.candidates.findIndex((c) => c.id === last.id);
