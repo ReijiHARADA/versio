@@ -3266,3 +3266,6 @@ caption exists on that page, preventing Table 4 from absorbing Table 3 rows.
 The refreshed 26-paper benchmark reports table-region recall 1.000 and
 continuation-page recall 0.429 (previously 0.571); this recall regression is
 tracked for the next iteration while preserving the precision guard.
+Table 6 diagnostics show only a page-10 caption/header with confident identity;
+pages 7–9 lack matching caption identity in canonical candidates. Widening the
+proximity window would therefore risk false links and is not adopted.
