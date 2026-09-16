@@ -38,6 +38,8 @@ export type CanonicalNode = {
   evidence: ExtractionEvidence[];
   sourceAnchor: SourceAnchor;
   column?: string;
+  /** Stable structural label for synthetic regions; does not become reader text. */
+  structuralLabel?: string;
   /** Resolver-visible style evidence retained from native PDF text. */
   style?: {
     fontSizeRatio: number;

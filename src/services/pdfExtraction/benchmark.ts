@@ -246,7 +246,7 @@ export function evaluateBaselinePaper(input: {
           if (expected.length === 0) return undefined;
           const regions = extracted.canonical.nodes.filter((node) => node.role === "table");
           const hits = expected.filter(({ label, page }) => regions.some((region) =>
-            (region.text ?? "").toLowerCase().includes(label.toLowerCase()) &&
+            (region.structuralLabel ?? region.text ?? "").toLowerCase().includes(label.toLowerCase()) &&
             region.pageStart <= page && region.pageEnd >= page
           )).length;
           return hits / expected.length;

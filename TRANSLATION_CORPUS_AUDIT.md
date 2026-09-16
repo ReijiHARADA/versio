@@ -3035,3 +3035,7 @@ The medical ground-truth fixture now records `Table 6` as spanning pages 7–11 
 ### 2026-09-16 multi-page table metric
 
 The extraction benchmark now reports `tableContinuationPageRecall` when ground truth supplies continuation pages. The medical Table 6/7 case currently scores 0, accurately reflecting that region nodes lack caption identity and page-span provenance; this is diagnostic infrastructure, not a quality-gate change.
+
+### 2026-09-16 table region provenance
+
+Canonical synthetic table regions now preserve caption identity via non-rendered `structuralLabel`, member bboxes, and page span. The medical continuation metric improved from 0 to 1/7 (0.143) without changing reader text projection. Extraction tests and typecheck pass; remaining multi-page rows require broader but bounded region collection.

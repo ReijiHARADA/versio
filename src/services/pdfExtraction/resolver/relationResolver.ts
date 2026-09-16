@@ -292,8 +292,9 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
         role: role as "figure" | "table",
         text: null,
         pageStart: caption.pageStart,
-        pageEnd: caption.pageEnd,
-        boundingBoxes: [figureBox],
+        pageEnd: regionMembers.length > 0 ? Math.max(caption.pageEnd, ...regionMembers.map((member) => member.pageEnd)) : caption.pageEnd,
+        boundingBoxes: regionMembers.length > 0 ? memberBoxes : [figureBox],
+        structuralLabel: role === "table" ? caption.layoutBlock.text : undefined,
         confidence: regionBox ? 0.86 : role === "table" ? 0.48 : 0.7,
         evidence: [
           {
