@@ -20,6 +20,7 @@
     "scan:pdf-boundaries": "npx vite-node scripts/scan-extraction-boundaries.ts",
     "diagnose:pdf-layout": "npx tsx scripts/diagnose-pdf-layout.ts",
     "diagnose:pdf-corpus": "npx tsx scripts/diagnose-corpus-layout.ts",
+    "diagnose:title-geometry": "npx tsx scripts/diagnose-title-geometry.ts",
     "audit:build-extraction-sample": "npx tsx scripts/build-extraction-review-sample.ts",
     "audit:summarize-extraction-review": "npx tsx scripts/summarize-extraction-review.ts",
     "diagnose:caption-boundaries": "npx tsx scripts/diagnose-caption-boundaries.ts",

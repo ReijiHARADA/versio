@@ -4635,3 +4635,31 @@ The social-advertising native candidate could not be safely inspected via the st
 ### New-paper title regression update (2026-09-17)
 
 Corrected the OSWORLD fixture expectation to match the verified catalog title (`OSWORLD`, not the PDF text spacing `OSW ORLD`). The focused checks now pass for OSWORLD and modeling; only social-advertising title resolution remains failing. New-paper reading-order status is 32/33 checks passing.
+
+### Title geometry diagnostic added (2026-09-17)
+
+Added production-independent `scripts/diagnose-title-geometry.ts` and `npm run diagnose:title-geometry`. It records page-1 native text geometry/font facts, grouped blocks, generic candidate scores/evidence, and surrounding masthead candidates as JSON. The first standalone run for social advertising exceeded the shell observation window and was terminated; the diagnostic itself does not alter extraction behavior. `npm run typecheck`, `npm run lint`, and `git diff --check` pass.
+
+### Fresh-port translation benchmark resumed (2026-09-17)
+
+Using the requested same-shell lifecycle on fresh port `18769`, the bundled MADLAD server reached ready on MPS/bfloat16 (`3b-mt-v5-semantic-v71-strict-restore-v9`), the benchmark ran, and the shell trap stopped the server afterward. `social-influence-social-advertising` was sampled at 2 ordinary-body units: 1 fully translated accept and 1 post-model source fallback after the quality gate (no failed request, no pre-model structural block). Report artifacts: `test-data/real-papers/reports/translation-audit-social-influence-social-advertising.{json,md}`. The fallback row preserves scientific invariants `2011`, `2012`, and `WOM`; its generated candidates were rejected for phrase repetition / implausible-short output during rescue. This is the first fresh-port live translation evidence after the localhost isolation blocker.
+
+### Fresh benchmark warmup race hardening (2026-09-17)
+
+A same-shell run on fresh port `18770` exposed a benchmark harness race: `/health` returned `loading`/`warming_up`, then the runner selected a paper and its first POST received 503 before the final warmup transition. The server itself subsequently became ready. `scripts/benchmark-real-paper-translation.ts` now retries transient 503 responses up to five times with a 3-second delay, while retaining shorter retries for other transient failures. This is audit-harness reliability only; production server behavior is unchanged. Typecheck and lint pass. The affected run produced a checkpoint but is marked incomplete for rerun.
+
+### Fresh benchmark warmup fix validated (2026-09-17)
+
+Reran `modeling-human-behavior-cognitive-uncertainty` on fresh port `18771` after the harness retry change. The run completed 2 units with no 503 failure: 1 accepted translation and 1 quality-gate fallback. The fallback was correctly triggered by scientific invariant loss (`MouseLab` became `MauseLab`), while the accepted unit preserved its citation/identifier invariants. Server was stopped by the same-shell trap. Report: `test-data/real-papers/reports/translation-audit-modeling-human-behavior-cognitive-uncertainty.{json,md}`.
+
+### Identifier-protection rescue hardening (2026-09-17)
+
+Fresh benchmark logs traced `MouseLab → MauseLab` to the identifier-drop rescue path: after a protected placeholder was rejected, the server retried with protection disabled. Mixed-case technical identifiers are now excluded from that unprotected retry; the protected beam/rescue path remains authoritative, so the source identifier cannot be silently mutated by the fallback attempt. Python `compileall`, TypeScript typecheck, and diff check pass. The bundled venv lacks pytest in this environment, so the full Python test suite remains to be run with the project test environment.
+
+### Fresh benchmark: OSWorld (2026-09-17)
+
+Ran `osworld-multimodal-agents` on fresh port `18772` with the same-shell server lifecycle; the server was stopped by trap. Two units completed: one ordinary body unit was accepted, while one conclusion block was correctly held before model submission because its paragraph ending appeared truncated (`段落の末尾が欠けている可能性があります`). This confirms the extraction/input policy is preventing a likely source-fragment translation rather than manufacturing a model error. Report: `test-data/real-papers/reports/translation-audit-osworld-multimodal-agents.{json,md}`.
+
+### Extraction regression after title-anchor refinement (2026-09-17)
+
+The full extraction corpus recheck completed with 66/68 checks passing: all baseline extraction checks passed, while the two remaining real-paper title assertions are social advertising and modeling (the latter is sensitive to the current masthead competition and needs deterministic fixture coverage). OSWORLD and all other new papers pass. Focused generic reading-order tests remain 58/58; typecheck and lint pass. No further title threshold broadening was made in this turn.

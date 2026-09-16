@@ -595,7 +595,7 @@ class MADLADEngine(TranslationEngine):
             message = str(original_error)
             if "protected citation placeholder dropped by model:" in message:
                 missing = message.split(":", 1)[1].split(",")
-                if missing and all(re.fullmatch(r"\s*[A-Za-z][A-Za-z0-9._-]{1,31}\s*", item) for item in missing):
+                if missing and all(re.fullmatch(r"\s*[A-Za-z][A-Za-z0-9._-]{1,31}\s*", item) for item in missing) and not any(re.search(r"[a-z][A-Z]", item) for item in missing):
                     try:
                         print("[TRANSLATE] retrying identifier-drop chunk without placeholders", flush=True)
                         return self._translate_chunk(
