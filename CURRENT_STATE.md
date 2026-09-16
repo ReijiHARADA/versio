@@ -3532,3 +3532,8 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - ユーザー指示により、ここで作業を停止。実行中の監査・ベンチマークプロセスはなく、作業ツリーもクリーン。
 - 直近の実装は numeric multi-item row の heading 誤昇格ガードまで。extraction corpus 56/56、全 Vitest 61 files / 354 tests、lint、TypeScript が成功。
 - 次回は speechin Table 1 の安定した六列グリッドが最終 CanonicalDocument で paragraph 化される原因を、candidate → resolver → projection の provenance で特定するところから再開する。翻訳サーバーや .app の作業には進まない。
+
+### 2026-09-16 speechin Table 1 provenance 再確認
+- focused probe を candidate → `resolveCanonicalDocument` の実データで再実行した。
+- Table 1 主グリッドは candidate の `roleScores.table=0.95`（paragraph=0.855）を持ち、最終 CanonicalDocument でも `id=g-20`, `role=table`, `confidence=0.95` となることを確認。
+- `54 English 90.5%`、`44 Chinese 91.6%` などの行も table として解決される。以前の paragraph 観測は pre-resolver/古い probe の出力であり、現行状態の未解決課題から除外する。
