@@ -3103,3 +3103,7 @@ Rendered review confirmed the residual belongs to Figure 9 labels and annotation
 ### 2026-09-16 manual residual review: cognitive page 9
 
 The two residual blocks are embedded Figure 5 prompt/chart text, confirmed by rendered review. Both are recorded as `figure_label`, severity 3; manual review is now 19/83 (64 pending).
+
+### 2026-09-16 manual residual review: linguistics page 4
+
+Rendered review confirmed the residual is Figure 2's CFG/DP parsing diagram labels, not body prose. Recorded as `figure_label`, severity 3, with PDF extraction as the primary cause; review coverage is 20/83 (63 pending).

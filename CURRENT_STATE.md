@@ -3096,3 +3096,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: cognitive page 9
 
 - Figure 5 prompt/chart residuals were visually confirmed as embedded causal-reasoning figure content. Labeled both `figure_label`, severity 3, root cause `pdf extraction`; review coverage is now 19/83 (64 pending).
+
+### 2026-09-16 manual residual review: linguistics page 4
+
+- Figure 2's CFG/DP parsing labels and colored symbols were confirmed visually as embedded diagram content. Labeled the residual `figure_label`, severity 3, root cause `pdf extraction`; review coverage is now 20/83 (63 pending).
