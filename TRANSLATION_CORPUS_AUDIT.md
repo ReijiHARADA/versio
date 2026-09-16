@@ -3131,3 +3131,7 @@ Two residuals are embedded Figure 6/7 table or diagram labels (`table_row` / `fi
 ### 2026-09-16 manual residual review: linguistics page 12
 
 Page 12 visual review classified four heatmap label streams as embedded `figure_label` content (severity 3, extraction cause) and the adjacent definition paragraph as correct prose (severity 0, automated false positive). Coverage is 33/83 with 50 pending. No new rule was added because the existing image-overlap Resolver guard is the applicable generic handling.
+
+### 2026-09-16 extraction benchmark checkpoint
+
+`npm run bench:pdf-extraction` completed after the latest manual review. The generated report remains ignored; tracked baseline is unchanged (56/56 extraction corpus, 49/49 reading order, source integrity and canonical provenance 1.0, medical table-region recall 4/7, continuation page recall 2/7). No new algorithm change was justified by page 12.

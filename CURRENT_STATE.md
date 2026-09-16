@@ -3127,3 +3127,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Rendered page 12 at native layout. Four image-overlap streams (`head1...`, `0+1-1`, `r=4...`, `r=12...`) are embedded heatmap labels and are recorded as `figure_label`, severity 3, primary cause `pdf extraction`.
 - The adjacent “Above, we define …” candidate is ordinary body prose with inline notation, recorded as `paragraph`, severity 0; this is an automated residual false positive.
 - Manual coverage is now 33/83 (50 pending). No extraction algorithm change was justified by this page.
+
+### 2026-09-16 extraction benchmark checkpoint
+
+- Re-ran `npm run bench:pdf-extraction` after the page-12 review; the benchmark completed and regenerated `test-data/real-papers/reports/extraction-baseline-latest.json` (ignored generated output).
+- Existing measured baseline remains: extraction corpus 56/56, reading order 49/49, source integrity 1.0, canonical provenance 1.0, medical table-region recall 4/7, table-continuation page recall 2/7. No translation or `.app` work was performed.
