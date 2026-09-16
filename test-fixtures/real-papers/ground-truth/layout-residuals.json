@@ -755,20 +755,20 @@
       "page": 12,
       "classification": "short-label-band",
       "text": "Prior Distribution Z Generator Scale Image Discriminator Condition C",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: generator/discriminator/domain labels are embedded Figure 15/16 GAN diagrams",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 12,
       "classification": "short-label-band",
       "text": "Generator G Image: Y Discriminator G Scale Scale Discriminator F Image: X",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: generator/discriminator/domain labels are embedded Figure 15/16 GAN diagrams",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-image-segmentation-deep-learning",

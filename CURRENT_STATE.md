@@ -3196,3 +3196,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: medical segmentation page 11
 
 - Two augmentation/transfer-learning label streams were visually confirmed as embedded Figure 14 overview diagram content. Recorded as `figure_label`, severity 3, primary cause `pdf extraction`; no new rule was justified. Manual coverage is 59/83 (23 pending).
+
+### 2026-09-16 manual residual review: medical segmentation page 12
+
+- Two generator/discriminator/domain label streams were visually confirmed as embedded Figure 15/16 GAN diagram content. Recorded as `figure_label`, severity 3, primary cause `pdf extraction`; no new rule was justified. Manual coverage is 61/83 (21 pending).

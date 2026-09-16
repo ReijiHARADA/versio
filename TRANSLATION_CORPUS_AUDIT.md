@@ -3199,3 +3199,7 @@ The Unfold/sum/query residual is embedded Figure 11 diagram content (`figure_lab
 ### 2026-09-16 manual residual review: medical segmentation page 11
 
 The two augmentation/transfer-learning residual streams are embedded Figure 14 diagram labels (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage: 59/83, 23 pending.
+
+### 2026-09-16 manual residual review: medical segmentation page 12
+
+The two generator/discriminator/domain residual streams are embedded Figure 15/16 GAN diagram labels (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage: 61/83, 21 pending.
