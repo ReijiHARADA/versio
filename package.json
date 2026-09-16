@@ -18,6 +18,7 @@
     "diagnose:pdf-corpus": "npx tsx scripts/diagnose-corpus-layout.ts",
     "audit:build-extraction-sample": "npx tsx scripts/build-extraction-review-sample.ts",
     "audit:summarize-extraction-review": "npx tsx scripts/summarize-extraction-review.ts",
+    "diagnose:caption-boundaries": "npx tsx scripts/diagnose-caption-boundaries.ts",
     "bench:real-paper-translation": "npx --yes tsx scripts/benchmark-real-paper-translation.ts",
     "bench:library": "npx --yes tsx scripts/bench-library-scale.ts",
     "bench:library-scale": "npm run bench:library",

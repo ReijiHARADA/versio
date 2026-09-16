@@ -3295,3 +3295,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 reusable caption geometry diagnostic
 
 - Added `scripts/diagnose-caption-boundaries.ts`, which prints native text item text, bbox, font, and size for selected pages. It runs against arbitrary PDFs and records no paper-specific rules. Verified successfully on the medical review PDF (pages 2, 6, 9, 13); PDF.js emitted only existing canvas polyfill warnings.
+
+### 2026-09-16 diagnostic npm command
+
+- Registered `npm run diagnose:caption-boundaries` for repeatable native caption geometry inspection. Verified on the medical review PDF page 2 with exit code 0; extraction behavior is unchanged.
