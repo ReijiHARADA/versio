@@ -3003,3 +3003,7 @@ Page 18 of the medical meta-review was visually confirmed to contain a left-colu
 ### 2026-09-16 mixed-column split experiment
 
 A generic relaxation for top-of-page mixed-column splitting was tested and reverted: it caused the existing unfinished left-column to right-column continuation case to stop stitching (47/48). The safety regression is recorded; future changes must distinguish genuine interleaving from a column continuation using sentence completeness and column sequence evidence.
+
+### 2026-09-16 continuation-aware mixed-column guard
+
+Added a conservative geometry/text guard for mixed left/right blocks: preserve a likely continuation when the right head is lowercase and the left tail is unfinished; otherwise permit the existing column split path at the top edge. Regression suites remain green (56/56 extraction, 48/48 reading-order), and the diagnostic count is unchanged at 149, so this is an incremental safety-preserving step rather than a claimed precision gain.

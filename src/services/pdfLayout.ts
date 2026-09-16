@@ -1492,8 +1492,16 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
       return left.length >= 2 && right.length >= 3 && leftMedian > 0 && rightMedian > 0 &&
         leftMedian <= rightMedian * 0.35 && rightMedian >= typicalLineWidth * 0.85;
     })();
+    const orderedColumns = [...new Set(block.lines.map((line) => line.column))];
+    const leftLines = block.lines.filter((line) => line.column === "left");
+    const rightLines = block.lines.filter((line) => line.column === "right");
+    const leftTail = leftLines.at(-1)?.text.trim() ?? "";
+    const rightHead = rightLines[0]?.text.trim() ?? "";
+    const clearColumnContinuation = orderedColumns.includes("left") && orderedColumns.includes("right") &&
+      /^[a-z]/.test(rightHead) && !/[.!?;:]$/.test(leftTail);
     if (block.role !== "paragraph" || (!inferredTwoColumn && !labelSidebar && columns.size < 2) || columns.has("spanning") ||
-        (!labelSidebar && block.bbox.width < typicalLineWidth * 1.65) || block.lines.length < 3 || !startsMidPage) {
+        (!labelSidebar && block.bbox.width < typicalLineWidth * 1.65) || block.lines.length < 3 ||
+        (!startsMidPage && (columns.size < 2 || clearColumnContinuation))) {
       result.push(block);
       continue;
     }
