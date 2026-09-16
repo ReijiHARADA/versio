@@ -3420,3 +3420,4 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - 回転ラベル候補4件を目視確認した結果、human-AI 論文の3件は Figure 2 の図ラベルだったが、linguistics 論文の1件は回転した表見出しだった。
 - 回転だけでは図と表を安全に区別できないため、rotation-only の vector label evidence と resolver hook を撤回した。
 - 撤回後も extraction corpus は 56/56、既存の table region / continued-caption 回帰は維持。次は figure/table の native geometry を組み合わせた判定を検討する。
+- 2026-09-16: full Vitest after rotation-label heuristic reversion passed 61 files / 350 tests; extraction objective remains active and no translation-server or .app changes were made.
