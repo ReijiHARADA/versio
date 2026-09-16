@@ -3456,3 +3456,7 @@ A general line-formation guard now drops only near-coincident, text-identical na
 ### 2026-09-16 duplicate caption content assertion
 
 The caption fixture now checks both canonical node count and exact marker occurrence, proving that duplicate native spans do not silently concatenate into one node. Targeted pipeline: 19/19.
+
+### 2026-09-16 verification checkpoint
+
+The native duplicate-span guard is verified by pipeline (19/19) and extraction corpus (56/56). TypeScript, lint, and Web build pass; only existing ineffective dynamic-import warnings remain. `.app` and translation-server remain untouched.
