@@ -2982,3 +2982,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 extraction revalidation
 
 - Re-ran `npm run test:extraction-corpus -- --run` and `npm run bench:pdf-extraction` after the review-schema checkpoint. The real-paper suites remain green (27 reading-order + 29 baseline), and the 26-paper benchmark regenerated successfully with source integrity and canonical provenance at 1.0.
+
+### 2026-09-16 manual extraction sample
+
+- Regenerated `extraction-manual-sample-v1.json` from the cached corpus. It contains 200 section-stratified rows (headings, ordinary paragraphs, and all detected captions), each with page/bbox provenance and a pending manual label. No production classification is inferred from this sample.

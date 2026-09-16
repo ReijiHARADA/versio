@@ -2947,3 +2947,5 @@ Added an 83-sample metadata-only fixture for image-overlap and short-label-band 
 The residual fixture now carries `manualRole`, `reviewStatus`, and `severity` per sample. All 83 samples remain `pending`; pending samples are excluded from precision and unsafe-false-accept metrics until manual review is complete.
 
 The extraction corpus and 26-paper benchmark were re-run after this schema change; reading-order/baseline suites remain green and source-integrity/canonical-provenance metrics remain 1.0.
+
+The cached corpus also produced a 200-row section-stratified extraction review sample with page/bbox provenance. Rows remain pending manual comparison against rendered PDFs.
