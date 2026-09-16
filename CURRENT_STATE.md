@@ -3381,3 +3381,8 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 
 - `npm run scan:pdf-boundaries` completed successfully across the cached corpus; no source files changed.
 - The scan continues to expose mixed table/figure/list streams in selected papers, so the next implementation must target native line provenance rather than broad post-hoc paragraph merging.
+
+### 2026-09-16 visual review of mixed-layout residual
+
+- Rendered `human-ai-interaction-guidelines` page 3. The diagnostic block at page 3 is Figure 2's radial-chart labels, not body prose; its mixed x-clusters are intentional figure text.
+- No production suppression was added because the current image-overlap evidence did not fire for this native vector figure. This is a figure-label/native-vector evidence gap, not a paragraph-stitching error.

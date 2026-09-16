@@ -3293,3 +3293,5 @@ Corpus layout diagnostic refresh: 26 papers / 497 pages produced 152 advisory su
 Full-suite validation checkpoint: Vitest passed 61 files / 350 tests after continued-table handling. No cross-feature regression was observed.
 
 Boundary scan checkpoint: `npm run scan:pdf-boundaries` completed successfully on the cached corpus. It continues to expose mixed table/figure/list streams in selected papers; no broad post-hoc merge rule was added.
+
+Visual review: the `human-ai-interaction-guidelines` page-3 mixed-layout residual is Figure 2 radial-chart labels, not prose. Because image-overlap evidence did not fire for this native vector figure, no blanket suppression was added; the remaining issue is vector-figure label evidence.
