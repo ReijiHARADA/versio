@@ -3064,3 +3064,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Revalidated product-side extraction checks: full Vitest 61 files / 350 tests, extraction corpus 56/56, TypeScript typecheck, lint (`oxlint --deny-warnings`), and frontend build all pass. Lint emits two existing ineffective-dynamic-import warnings but exits successfully.
 - Extraction completion is not claimed: manual residual review remains 10/83 and multi-page table continuation recall 2/7. Translation work remains paused.
+
+### 2026-09-16 manual residual review: cognitive page 8
+
+- Rendered cognitive-psychology-gpt3 page 8. The residual `Q: Do you want to trade with alien D or F?` and related labels are embedded in Figure 4's prompt panel, not standalone body prose. Labeled `figure_label`, severity 3, root cause `pdf extraction`. Review coverage is 11/83 (72 pending).

@@ -3071,3 +3071,7 @@ Visual comparison confirmed two short-label residuals are embedded Figure 2 anno
 ### 2026-09-16 validation checkpoint
 
 Full Vitest (61 files / 350 tests), extraction corpus (56/56), typecheck, lint, and frontend build pass. Lint reports two pre-existing ineffective dynamic import warnings. Extraction remains incomplete because manual residual review is 10/83 and table continuation recall is 2/7.
+
+### 2026-09-16 manual residual review: cognitive page 8
+
+Figure 4 prompt/chart text was confirmed visually as embedded figure content. The residual is labeled `figure_label`, severity 3, with PDF extraction as the primary cause; review coverage is now 11/83 (72 pending).

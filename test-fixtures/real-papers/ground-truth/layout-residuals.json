@@ -131,10 +131,12 @@
       "page": 8,
       "classification": "short-label-band",
       "text": "Q: Do you want to trade with alien D or F? A: Alien 0.5 rewarded unrewarded",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: chart/prompt text is embedded in Figure 4 and is not a standalone prose block",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 3,
+      "reviewLabel": "figure_label",
+      "rootCause": "pdf extraction"
     },
     {
       "paper": "cognitive-psychology-gpt3",
