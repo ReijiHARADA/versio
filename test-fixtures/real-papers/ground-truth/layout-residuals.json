@@ -275,10 +275,10 @@
       "page": 11,
       "classification": "short-label-band",
       "text": "We first note that the transformer’s attention weights are primarily influenced by the tokens’ relative distance. This holds true even when trained on the CFG data with absolute positional embedding. This implies that the transformer learns",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: candidate is ordinary body prose; extraction sample truncates at an internal line but native reading order continues correctly",
+      "manualRole": "paragraph",
+      "reviewStatus": "reviewed",
+      "severity": 0
     },
     {
       "paper": "linguistics-language-model-physics",
