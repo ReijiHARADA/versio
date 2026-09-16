@@ -1,0 +1,10 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import { extractPdfPages } from '../src/test/readingOrder/extractPdf';
+import { buildCaptionAnchoredTableSignature } from '../src/services/pdfService';
+const oldLog=console.log; console.log=()=>{};
+const pdfPath=process.argv[2] ?? 'test-data/real-papers/wear-scale.pdf';
+const pages=await extractPdfPages(pdfPath);
+console.log=oldLog;
+const report=pages.map((page)=>{const s=buildCaptionAnchoredTableSignature(page.textItems,page.graphicsPrimitives);return {page:page.pageNumber,captions:page.textItems.filter(i=>/^\s*table\b/i.test(i.text)).map(i=>i.text),signature:s?{columnCount:s.columnX.length,rowCount:s.rowSpacing.length,horizontalRules:s.horizontalRules,verticalRules:s.verticalRules,bbox:s.bbox}:null};});
+await mkdir('test-data/real-papers/reports',{recursive:true});
+await writeFile('test-data/real-papers/reports/table-signature-wear-scale-v1.json',JSON.stringify({pdfPath,generatedAt:new Date().toISOString(),pages:report},null,2));

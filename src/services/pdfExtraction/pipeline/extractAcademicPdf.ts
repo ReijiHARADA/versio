@@ -1,6 +1,5 @@
-import { extractPDFContent, extractFigureImages } from "../../pdfService";
+import { extractPDFContent, extractFigureImages, graphicsToExtractionEvidence, type ExtractedPage } from "../../pdfService";
 import { figureLookupKey, formatReadingOrderLog } from "../../pdfLayout";
-import type { ExtractedPage } from "../../pdfService";
 import type { Paper, Section, PaperBlock } from "../../../types/paper";
 import type { LayoutBlock, PageColumnLayout } from "../../pdfLayout";
 import { nativeDocumentFromExtracted } from "../native/fromExtracted";
@@ -220,7 +219,10 @@ export function extractFromPages(input: {
     filePath: input.filePath,
     fileHash: input.fileHash,
     metadataTitle: input.metadata.title,
-    extraEvidence: applied.evidence,
+    extraEvidence: [
+      ...applied.evidence,
+      ...input.pages.flatMap((page) => graphicsToExtractionEvidence(page.pageNumber, page.graphicsPrimitives ?? [])),
+    ],
   });
 
   console.info(

@@ -1,6 +1,7 @@
 import type { TextItem, TextMarkedContent } from "pdfjs-dist/types/src/display/api";
 import { openPdfDocument, pdfjsLib } from "./pdfjsRuntime";
 import { classifyPdfOpenError } from "./pdfOpenError";
+import type { ExtractionEvidence } from "./pdfExtraction/types";
 import {
   assignRectsToRegions,
   figureImageRect,
@@ -22,6 +23,131 @@ export type ExtractedTextItem = {
   rotation?: number;
 };
 
+export type PdfGraphicsPrimitive = {
+  kind: "rectangle" | "line";
+  orientation?: "horizontal" | "vertical" | "other";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** Native path geometry; independent from extracted text. */
+  confidence: number;
+};
+
+export type TableRegionSignature = {
+  bbox: { x: number; y: number; width: number; height: number };
+  columnX: number[];
+  rowSpacing: number[];
+  horizontalRules: number;
+  verticalRules: number;
+  fontNames: string[];
+  fontSize: number;
+};
+
+export function tableRegionSignatureSimilarity(a: TableRegionSignature, b: TableRegionSignature): number {
+  const ratio = (x: number, y: number) => Math.min(x, y) / Math.max(x, y, 1);
+  const columns = ratio(a.columnX.length, b.columnX.length);
+  const rows = ratio(a.rowSpacing.length, b.rowSpacing.length);
+  const width = ratio(a.bbox.width, b.bbox.width);
+  const height = ratio(a.bbox.height, b.bbox.height);
+  const rules = ratio(a.horizontalRules + a.verticalRules, b.horizontalRules + b.verticalRules);
+  const fonts = a.fontNames.some((font) => b.fontNames.includes(font)) ? 1 : 0;
+  return columns * 0.25 + rows * 0.2 + width * 0.2 + height * 0.15 + rules * 0.15 + fonts * 0.05;
+}
+
+/** Conservative bounded continuation signal; callers must still require page adjacency and text evidence. */
+export function isLikelyTableContinuation(
+  previous: TableRegionSignature,
+  next: TableRegionSignature,
+  similarityThreshold = 0.72
+): boolean {
+  const similarity = tableRegionSignatureSimilarity(previous, next);
+  const hasStructuralEvidence = (next.horizontalRules + next.verticalRules) >= 2 || next.columnX.length >= 3;
+  return similarity >= similarityThreshold && hasStructuralEvidence;
+}
+
+export function graphicsEvidenceBounds(graphics: PdfGraphicsPrimitive[]): TableRegionSignature["bbox"] | null {
+  if (graphics.length === 0) return null;
+  const minX = Math.min(...graphics.map((item) => item.x));
+  const minY = Math.min(...graphics.map((item) => item.y));
+  const maxX = Math.max(...graphics.map((item) => item.x + item.width));
+  const maxY = Math.max(...graphics.map((item) => item.y + item.height));
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
+
+/** Projects a prior region's horizontal extent onto the next page for audit-only candidate search. */
+export function projectTableRegionBounds(
+  previous: TableRegionSignature["bbox"],
+  pageWidth: number,
+  pageHeight: number,
+  verticalPadding = 24
+): TableRegionSignature["bbox"] {
+  const x = Math.max(0, Math.min(previous.x, pageWidth));
+  const width = Math.max(0, Math.min(previous.width, pageWidth - x));
+  return { x, y: 0, width, height: Math.max(0, pageHeight - verticalPadding) };
+}
+
+export function buildProjectedTableSignature(
+  textItems: ExtractedTextItem[],
+  graphics: PdfGraphicsPrimitive[],
+  bounds: TableRegionSignature["bbox"]
+): TableRegionSignature | null {
+  const items = textItems.filter((item) => item.x + item.width >= bounds.x && item.x <= bounds.x + bounds.width &&
+    item.y + item.height >= bounds.y && item.y <= bounds.y + bounds.height);
+  const paths = graphics.filter((item) => item.x + item.width >= bounds.x && item.x <= bounds.x + bounds.width &&
+    item.y + item.height >= bounds.y && item.y <= bounds.y + bounds.height);
+  return buildTableRegionSignature(items, paths);
+}
+
+/** Builds a format-agnostic table signature from native text and vector evidence. */
+export function buildTableRegionSignature(
+  textItems: ExtractedTextItem[],
+  graphics: PdfGraphicsPrimitive[] = []
+): TableRegionSignature | null {
+  if (textItems.length < 2) return null;
+  const xs = [...new Set(textItems.map((item) => Math.round(item.x * 2) / 2))].sort((a, b) => a - b);
+  const ys = [...new Set(textItems.map((item) => Math.round(item.y * 2) / 2))].sort((a, b) => a - b);
+  const minX = Math.min(...textItems.map((item) => item.x));
+  const minY = Math.min(...textItems.map((item) => item.y));
+  const maxX = Math.max(...textItems.map((item) => item.x + item.width));
+  const maxY = Math.max(...textItems.map((item) => item.y + item.height));
+  const fontNames = [...new Set(textItems.map((item) => item.fontName).filter(Boolean))].sort();
+  const horizontalRules = graphics.filter((item) => item.kind === "line" && item.orientation === "horizontal").length;
+  const verticalRules = graphics.filter((item) => item.kind === "line" && item.orientation === "vertical").length;
+  return {
+    bbox: { x: minX, y: minY, width: maxX - minX, height: maxY - minY },
+    columnX: xs,
+    rowSpacing: ys.slice(1).map((y, index) => y - ys[index]),
+    horizontalRules,
+    verticalRules,
+    fontNames,
+    fontSize: textItems.reduce((sum, item) => sum + item.fontSize, 0) / textItems.length,
+  };
+}
+
+/** Derives a bounded signature for the region immediately below a table caption. */
+export function buildCaptionAnchoredTableSignature(
+  textItems: ExtractedTextItem[],
+  graphics: PdfGraphicsPrimitive[] = [],
+  captionPattern: RegExp = /^\s*table\s+\d+/i,
+  maxHeight = 420
+): TableRegionSignature | null {
+  const caption = textItems
+    .filter((item) => captionPattern.test(item.text) ||
+      (/^\s*table\s*$/i.test(item.text) && textItems.some((other) =>
+        other !== item && /\d+/.test(other.text) && Math.abs(other.y - item.y) <= Math.max(item.height, other.height))))
+    .sort((a, b) => a.y - b.y)[0];
+  if (!caption) return null;
+  const top = caption.y + caption.height;
+  const regionItems = textItems.filter((item) => item.y >= top - 2 && item.y <= top + maxHeight);
+  if (regionItems.length < 2) return null;
+  const minX = Math.min(...regionItems.map((item) => item.x));
+  const maxX = Math.max(...regionItems.map((item) => item.x + item.width));
+  const regionGraphics = graphics.filter((item) => item.y + item.height >= caption.y && item.y <= top + maxHeight &&
+    item.x + item.width >= minX && item.x <= maxX);
+  return buildTableRegionSignature(regionItems, regionGraphics);
+}
+
 export type PdfImagePlacement = {
   id: string;
   x: number;
@@ -29,6 +155,20 @@ export type PdfImagePlacement = {
   width: number;
   height: number;
 };
+
+export function graphicsToExtractionEvidence(
+  page: number,
+  graphics: PdfGraphicsPrimitive[]
+): ExtractionEvidence[] {
+  return graphics.map((item) => ({
+    source: "pdf-native",
+    label: `native-${item.orientation ?? item.kind}-graphics`,
+    confidence: item.confidence,
+    page,
+    bbox: { x: item.x, y: item.y, width: item.width, height: item.height },
+    reason: "vector geometry evidence; does not relabel text by itself",
+  }));
+}
 
 export type ExtractedPage = {
   pageNumber: number;
@@ -38,6 +178,7 @@ export type ExtractedPage = {
   rotation?: number;
   textItems: ExtractedTextItem[];
   imagePlacements?: PdfImagePlacement[];
+  graphicsPrimitives?: PdfGraphicsPrimitive[];
 };
 
 export type PDFExtractionResult = {
@@ -105,6 +246,7 @@ export async function extractPDFContent(
       rotation: typeof page.rotate === "number" ? page.rotate : undefined,
       textItems,
       imagePlacements: collectImagePlacements(await page.getOperatorList(), viewport.height),
+      graphicsPrimitives: collectGraphicsPrimitives(await page.getOperatorList(), viewport.height),
     });
   }
 
@@ -182,6 +324,74 @@ export function collectImagePlacements(
     }
   }
   return placed;
+}
+
+
+/**
+ * Collects simple native ruling candidates without changing text extraction.
+ * This is deliberately conservative: only rectangle and line path operators
+ * are emitted, and callers must treat them as additional evidence.
+ */
+export function collectGraphicsPrimitives(
+  operatorList: { fnArray: number[]; argsArray: unknown[][] },
+  pageHeight: number
+): PdfGraphicsPrimitive[] {
+  const { OPS } = pdfjsLib;
+  let ctm = IDENTITY_CTM;
+  const stack: number[][] = [];
+  const out: PdfGraphicsPrimitive[] = [];
+  let path: Array<[number, number]> = [];
+  const addRect = (x: number, y: number, width: number, height: number) => {
+    const corners = [
+      applyCtm(ctm, x, y), applyCtm(ctm, x + width, y),
+      applyCtm(ctm, x + width, y + height), applyCtm(ctm, x, y + height),
+    ];
+    const xs = corners.map((point) => point[0]);
+    const ys = corners.map((point) => point[1]);
+    out.push({ kind: "rectangle", x: Math.min(...xs), y: pageHeight - Math.max(...ys),
+      width: Math.max(...xs) - Math.min(...xs), height: Math.max(...ys) - Math.min(...ys), confidence: 0.72 });
+  };
+  const addLine = (a: [number, number], b: [number, number]) => {
+    const start = applyCtm(ctm, a[0], a[1]);
+    const end = applyCtm(ctm, b[0], b[1]);
+    const length = Math.hypot(end[0] - start[0], end[1] - start[1]);
+    if (length < 8) return;
+    const minX = Math.min(start[0], end[0]);
+    const width = Math.abs(end[0] - start[0]);
+    const height = Math.abs(end[1] - start[1]);
+    out.push({ kind: "line", orientation: width >= height * 3 ? "horizontal" : height >= width * 3 ? "vertical" : "other",
+      x: minX, y: pageHeight - Math.max(start[1], end[1]), width, height, confidence: 0.58 });
+  };
+  for (let i = 0; i < operatorList.fnArray.length; i++) {
+    const fn = operatorList.fnArray[i];
+    const args = operatorList.argsArray[i] ?? [];
+    if (fn === OPS.save) stack.push(ctm);
+    else if (fn === OPS.restore) ctm = stack.pop() ?? IDENTITY_CTM;
+    else if (fn === OPS.transform && args.length >= 6) ctm = multiplyCtm(ctm, args as number[]);
+    else if (fn === OPS.rectangle && args.length >= 4) addRect(...(args.slice(0, 4) as number[]));
+    else if (fn === OPS.moveTo && args.length >= 2) path = [[args[0] as number, args[1] as number]];
+    else if (fn === OPS.lineTo && args.length >= 2 && path.length > 0) {
+      const next: [number, number] = [args[0] as number, args[1] as number];
+      addLine(path[path.length - 1], next); path.push(next);
+    } else if (fn === OPS.constructPath && Array.isArray(args[0]) && Array.isArray(args[1])) {
+      const pathOps = args[0] as number[];
+      const pathArgs = args[1] as number[];
+      let offset = 0;
+      for (const pathOp of pathOps) {
+        if (pathOp === OPS.moveTo || pathOp === OPS.lineTo) {
+          if (offset + 1 >= pathArgs.length) break;
+          const point: [number, number] = [pathArgs[offset++], pathArgs[offset++]];
+          if (pathOp === OPS.moveTo || path.length === 0) path = [point];
+          else { addLine(path[path.length - 1], point); path.push(point); }
+        } else if (pathOp === OPS.rectangle) {
+          if (offset + 3 >= pathArgs.length) break;
+          addRect(pathArgs[offset++], pathArgs[offset++], pathArgs[offset++], pathArgs[offset++]);
+        } else if (pathOp === OPS.curveTo) offset += 6;
+        else if (pathOp === OPS.curveTo2 || pathOp === OPS.curveTo3) offset += 4;
+      }
+    } else if (fn === OPS.stroke || fn === OPS.closeStroke || fn === OPS.fill || fn === OPS.eoFill || fn === OPS.fillStroke || fn === OPS.closePath || fn === OPS.endPath) path = [];
+  }
+  return out;
 }
 
 type PdfImageObject = {

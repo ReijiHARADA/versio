@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import fs from "node:fs";
 import path from "node:path";
-import { collectImagePlacements, type ExtractedPage, type ExtractedTextItem } from "../../services/pdfService";
+import { collectGraphicsPrimitives, collectImagePlacements, type ExtractedPage, type ExtractedTextItem } from "../../services/pdfService";
 
 const require = createRequire(import.meta.url);
 const pdfjsLib = require("pdfjs-dist/legacy/build/pdf.js") as typeof import("pdfjs-dist");
@@ -30,6 +30,7 @@ export async function extractPdfPages(pdfPath: string): Promise<ExtractedPage[]>
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     const page = await pdf.getPage(pageNum);
     const viewport = page.getViewport({ scale: 1.0 });
+    const operatorList = await page.getOperatorList();
     const textContent = await page.getTextContent();
     const textItems: ExtractedTextItem[] = [];
 
@@ -56,7 +57,8 @@ export async function extractPdfPages(pdfPath: string): Promise<ExtractedPage[]>
       height: viewport.height,
       rotation: typeof page.rotate === "number" ? page.rotate : undefined,
       textItems,
-      imagePlacements: collectImagePlacements(await page.getOperatorList(), viewport.height),
+      imagePlacements: collectImagePlacements(operatorList, viewport.height),
+      graphicsPrimitives: collectGraphicsPrimitives(operatorList, viewport.height),
     });
   }
 
