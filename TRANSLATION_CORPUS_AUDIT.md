@@ -3382,3 +3382,7 @@ Latest baseline verification (2026-09-16): list-like table guard preserves table
 ### Corpus diagnostic refresh (2026-09-16)
 
 The extraction diagnostic covers 26 papers / 497 pages and reports 149 suspicious blocks. Largest review queues are linguistics (34), cognitive psychology (23), and medical imaging (22), mostly image-overlap, short-label-band, and mixed-layout signals. These remain diagnostic-only until manual confirmation; no broad suppression was introduced.
+
+### proseGrid stable-item-column experiment (2026-09-16)
+
+Tested requiring repeated native item x-columns in proseGrid. It did not remove the remaining page-8 long-prose candidate and risked rejecting legitimate multi-line cells, so the change was reverted. The failure likely originates in block grouping before candidate generation.

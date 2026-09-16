@@ -3473,3 +3473,7 @@ Latest baseline verification (2026-09-16): after the list-like table guard, all 
 ### Corpus diagnostic refresh (2026-09-16)
 
 `npm run diagnose:pdf-corpus` now covers 26 papers / 497 pages and reports 149 suspicious blocks (diagnostic classes: image-overlap, numeric-grid, short-label-band, mixed-layout). The largest buckets are linguistics (34), cognitive psychology (23), and medical imaging (22); these are review queues, not automatic failures. No production suppression was added from counts alone.
+
+### proseGrid stable-item-column experiment (2026-09-16)
+
+Requiring repeated native item x-columns in proseGrid did not change the remaining long prose candidate on the OzCHI page-8 output, while carrying recall risk for multi-line table cells. Reverted. The unresolved candidate is likely caused by block grouping before candidate generation rather than x-column evidence alone.
