@@ -3258,3 +3258,8 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 
 - `npm run bench:pdf-extraction` completed successfully across 26 reports.
 - Aggregate source-integrity and canonical-provenance rates are 1.00. Figure-caption relation precision is 0.923; table-caption relation precision is 0.538. Table-region recall remains low at 0.137 and continuation-page recall at 0.011, so table detection/continuation is the next algorithmic priority.
+
+### 2026-09-16 table-region evidence refinement
+
+- Broadened table-region member acceptance for short, aligned native rows without terminal sentence punctuation, while retaining proximity and length guards. This targets missed multi-row tables without paper-specific rules.
+- `npm run test:extraction-corpus` passed: 2 files, 56 tests.

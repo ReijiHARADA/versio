@@ -3233,3 +3233,7 @@ The two residual streams are Table 6/7 rows (`table_row`, severity 3, line-group
 ## Extraction audit checkpoint (2026-09-16)
 
 The extraction benchmark was rerun after completing the 83-sample residual review. Across 26 reports, source-integrity and canonical-provenance rates were 1.00, and figure-caption relation precision was 0.923. Table-caption relation precision was 0.538; table-region recall (0.137) and table-continuation recall (0.011) remain the main measurable extraction gaps. Translation code was not changed.
+
+### Table-region refinement (2026-09-16)
+
+The resolver now accepts short aligned native rows as table-region members when they are caption-proximate and do not end like prose sentences. This is a generic geometry/text rule intended to improve missed table rows while retaining conservative bounds. Extraction corpus validation passed (56/56 tests). Benchmark metrics should be rerun before claiming recall improvement.
