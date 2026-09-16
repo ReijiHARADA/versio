@@ -3778,3 +3778,7 @@ Re-ran `npm run test:extraction-corpus -- --reporter=dot`: **2 files / 56 tests 
 ### 2026-09-16 arXiv/PMLR residual native-geometry review
 
 Re-ran the non-mutating corpus diagnostic against 26 cached papers (497 pages, 152 suspicious blocks). Residuals are concentrated in arXiv (134) and PMLR (11); representative samples are vector diagrams, multilingual/short-label bands, and dense mathematical grids rather than ordinary paragraph blocks. No safe corpus-wide relabel rule was identified, so production extraction behavior remains unchanged. Diagnostic artifact: `/tmp/extraction-diagnostic.json`.
+
+### 2026-09-16 extraction quality gates revalidated
+
+Parallel verification completed successfully: extraction corpus **56/56**, TypeScript no-emit, and `npm run lint -- --deny-warnings` all passed. PDF.js native parsing warnings remain non-fatal. This establishes a green baseline before any orientation-aware fixture change; translation-server and `.app` remain untouched.
