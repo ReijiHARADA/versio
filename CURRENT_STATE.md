@@ -3274,3 +3274,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 caption boundary experiment reverted
 
 - A label-only exception still split the long caption after a partial line and did not recover the absorbed rows reliably. Reverted; no unverified caption rule is retained.
+
+### 2026-09-16 caption spacing experiment reverted
+
+- Increasing table-caption continuation spacing to 3.2× base font did not attach the caption prose and had no validated benefit. Reverted; native line spacing/style diagnostics remain the next step.
