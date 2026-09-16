@@ -241,17 +241,27 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
     .map((caption, i) => {
       const role = caption.layoutBlock.role === "table_caption" ? "table" : "figure";
       const box = caption.boundingBoxes[0];
+      const nextTableCaptionPage = role === "table"
+        ? Math.min(
+            ...candidates
+              .filter((candidate) => candidate.layoutBlock.role === "table_caption" && candidate !== caption && candidate.pageStart > caption.pageStart)
+              .map((candidate) => candidate.pageStart),
+            Infinity,
+          )
+        : Infinity;
       const regionMembers = role === "table" && box
         ? candidates.filter((candidate) => {
             const candidateBox = candidate.boundingBoxes[0];
             if (!candidateBox) return false;
             const samePage = candidate.pageStart === caption.pageStart;
             const nextPageContinuation = candidate.pageStart === caption.pageStart + 1 &&
-              box.y > 500 && candidateBox.y < 220;
+              box.y > 500 && candidateBox.y < 220 && candidate.pageStart < nextTableCaptionPage;
             const laterPageContinuation = candidate.pageStart > caption.pageStart &&
               candidate.pageStart <= caption.pageStart + 4 &&
+              candidate.pageStart < nextTableCaptionPage &&
               Math.abs(candidateBox.x - box.x) < 180;
             if (!samePage && !nextPageContinuation && !laterPageContinuation) return false;
+            if (candidate !== caption && candidate.layoutBlock.role === "table_caption") return false;
             const aboveCaption = samePage && candidateBox.y < box.y && box.y - (candidateBox.y + candidateBox.height) < 280;
             const belowCaption = samePage && candidateBox.y >= box.y && candidateBox.y - (box.y + box.height) < 280;
             if (!(aboveCaption || belowCaption || laterPageContinuation || nextPageContinuation)) return false;
