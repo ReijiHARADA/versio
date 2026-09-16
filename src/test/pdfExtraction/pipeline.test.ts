@@ -27,6 +27,17 @@ describe("canonical extraction pipeline", () => {
     ]);
   });
 
+  it("keeps numeric multi-item summary rows out of heading role", () => {
+    const textItems = [
+      { text: "54 English", x: 120, y: 120, width: 70, height: 8, fontSize: 9, fontName: "Helvetica-Bold", page: 1 },
+      { text: "90.5%", x: 240, y: 120, width: 40, height: 8, fontSize: 9, fontName: "Helvetica-Bold", page: 1 },
+    ];
+    const candidates = generateGenericCandidates([{ pageNumber: 1, width: 500, height: 700, textItems }]).candidates;
+    const row = candidates.find((candidate) => candidate.text.includes("54 English"));
+    expect(row?.role).toBe("paragraph");
+    expect(row?.roleScores.heading ?? 0).toBeLessThan(0.68);
+  });
+
   it("keeps wide native column lines assigned to their column", () => {
     const textItems = Array.from({ length: 10 }, (_, row) => [
       { text: `Left column sentence ${row} with enough words for layout detection.`, x: 40, y: 120 + row * 18, width: 280, height: 8, fontSize: 8, fontName: "Body", page: 1 },
