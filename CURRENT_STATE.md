@@ -3365,3 +3365,9 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - Re-ran extraction corpus after continued-caption regression coverage: 2 files / 56 tests passed.
 - Lint (`npm run lint -- --deny-warnings`) passed; worktree remains clean.
 - Extraction objective is not complete: next evidence target remains paragraph stitching and block-boundary precision across the 26-paper corpus.
+
+### 2026-09-16 corpus layout diagnostic refresh
+
+- `npm run diagnose:pdf-corpus` completed on 26 papers / 497 pages.
+- 152 suspicious wide or multi-cluster blocks remain (diagnostic candidates, not automatic failures); most are arXiv figure/math labels. No broad rule was changed from this run.
+- This confirms the next high-value work is provenance-aware paragraph/block review rather than widening generic merges.
