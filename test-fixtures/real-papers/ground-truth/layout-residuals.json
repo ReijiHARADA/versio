@@ -735,20 +735,20 @@
       "page": 11,
       "classification": "image-overlap",
       "text": "Traditional Augmentation Data Augmentation Synthetic Augmentation",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: augmentation/transfer-learning labels are embedded Figure 14 overview diagram content",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
       "page": 11,
       "classification": "short-label-band",
       "text": "Pre-trained Weakly Supervised Transfer Model Learning Learning Domain Adaptation",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: augmentation/transfer-learning labels are embedded Figure 14 overview diagram content",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-image-segmentation-deep-learning",

@@ -3195,3 +3195,7 @@ The two convolution/rate/channel and tensor-axis residual streams are embedded F
 ### 2026-09-16 manual residual review: medical segmentation page 9
 
 The Unfold/sum/query residual is embedded Figure 11 diagram content (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage: 58/83, 25 pending.
+
+### 2026-09-16 manual residual review: medical segmentation page 11
+
+The two augmentation/transfer-learning residual streams are embedded Figure 14 diagram labels (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage: 59/83, 23 pending.

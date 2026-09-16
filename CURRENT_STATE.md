@@ -3192,3 +3192,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: medical segmentation page 9
 
 - The Unfold/sum/query candidate is embedded Figure 11 global aggregation diagram content. Recorded as `figure_label`, severity 3, primary cause `pdf extraction`; no new rule was justified. Manual coverage is 58/83 (25 pending).
+
+### 2026-09-16 manual residual review: medical segmentation page 11
+
+- Two augmentation/transfer-learning label streams were visually confirmed as embedded Figure 14 overview diagram content. Recorded as `figure_label`, severity 3, primary cause `pdf extraction`; no new rule was justified. Manual coverage is 59/83 (23 pending).
