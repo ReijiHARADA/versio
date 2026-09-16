@@ -285,50 +285,50 @@
       "page": 12,
       "classification": "image-overlap",
       "text": "head1 head2 head3 head4 head5 head6 head7 head8 head9head10head11head12 NT5NT4 h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 -1 5 54 53 52 55 44 43 42 45 34 33 32 35 24 23 22 2 lay1 lay1 0+1-1 0.08",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: page 12 native figure labels are chart text; prose candidate is ordinary body paragraph",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 12,
       "classification": "image-overlap",
       "text": "0+1-1 0.07 lay3 xx xx xx x 0+1-1",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: page 12 native figure labels are chart text; prose candidate is ordinary body paragraph",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 12,
       "classification": "image-overlap",
       "text": "r=4 lay4 xx xx xx xx NT3NT2 0+1-1 0.06",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: page 12 native figure labels are chart text; prose candidate is ordinary body paragraph",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 12,
       "classification": "image-overlap",
       "text": "r=12 lay9 -10+1 lay9",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: page 12 native figure labels are chart text; prose candidate is ordinary body paragraph",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 12,
       "classification": "short-label-band",
       "text": "Above, we define “adjacency” as follows. We introduce B ′ to represent the average value l,h,ℓ →ℓ,r ′ of Bl,h,j→i(x) over samples x and token pairs i, j that are at the deepest NT-ends on levels ℓ, ℓ ♯ ♯ ′ respectively (symbolically, b (i) ",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: page 12 native figure labels are chart text; prose candidate is ordinary body paragraph",
+      "manualRole": "paragraph",
+      "reviewStatus": "reviewed",
+      "severity": 0
     },
     {
       "paper": "linguistics-language-model-physics",
