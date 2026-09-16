@@ -39,7 +39,6 @@
     "page/column paragraph repair",
     "chrome separation",
     "evaluate replacement or cascade translation models under local/free-use constraints",
-    "Nature-style bold inline subheadings sharing a line with prose",
     {
       "paperId": "economics-regularized-deepiv",
       "page": 14,
@@ -3039,5 +3038,5 @@
     "nextAction": "Improve proseGrid using row-level x/y stability; page-9 list guard is kept. Do not use broad word-count suppression because it regresses table recall.",
     "latestCommit": "a4dcfb0"
   },
-  "nextAction": "Continue manual review of remaining extraction failures: Nature inline subheadings, economics native-math boundaries, speechin table rows, wear-scale rotated footnote; preserve current table/list guards."
+  "nextAction": "Manual review remaining extraction failures: economics native-math boundaries, speechin table rows, wear-scale rotated footnote; preserve current table/list guards."
 }

@@ -3494,3 +3494,7 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - 停止後に `npm run test:extraction-corpus` を再実行し、2 files / 56 tests が成功。
 - 現行 OzCHI canonical 出力を再確認し、結果本文と箇条書き導入文は paragraph、Table 1〜5 は table として保持されている。
 - 次の抽出レビュー対象を progress JSON に同期: Nature inline subheading、economics native-math boundary、speechin table rows、wear-scale rotated footnote。
+
+### 2026-09-16 Nature inline heading verification
+- Existing mixed-font boundary implementation was revalidated with the focused regression (`bold inline subsection`): 1/1 passed.
+- Nature inline subheadings are therefore removed from the unresolved queue; remaining review targets are economics native-math boundaries, speechin table rows, and wear-scale rotated footnote.
