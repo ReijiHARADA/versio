@@ -1,6 +1,6 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "extraction-v-current-2026-09-16-same-origin-prose-guard",
+  "lastBenchmarkVersion": "extraction-corpus-2026-09-16-56tests",
   "lastDiagnosticVersion": "pdf-layout-corpus-diagnostic-v1",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
@@ -3051,14 +3051,14 @@
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",
     "change": "spanning metadata ordering guard",
-    "ozchiTableRegionRecall": 1.0,
-    "overallSourceIntegrityRate": 1.0,
+    "ozchiTableRegionRecall": 1,
+    "overallSourceIntegrityRate": 1,
     "overallChromeContaminationRate": 0,
     "extractionCorpusTests": "56 passed",
     "fullVitest": "356 passed",
     "nextAction": "Add and validate a general affiliation/body boundary fixture; then review table/list residuals.",
     "latestCommit": "f695d44"
   },
-  "nextAction": "Review native text ordering for candidates without aligned images; fixture only confirmed geometry patterns.",
+  "nextAction": "Continue extraction-only work: build a generic native geometry fixture for caption adjacency/column interleaving; do not change translation-server or build .app.",
   "lastUpdate": "2026-09-16"
 }

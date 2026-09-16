@@ -3718,3 +3718,7 @@ Boundary findings now include maximum native image-placement overlap for figure-
 ### 2026-09-16 caption adjacency diagnostics
 
 Boundary findings now include nearest image vertical gap (with null when no horizontally aligned image exists) alongside overlap. The representative mixed Figure 2 paragraph has no aligned image, confirming that some extraction failures arise from native text ordering/column interleaving rather than image overlap. TypeScript passed.
+
+### 2026-09-16 extraction corpus checkpoint
+
+After the caption-adjacency diagnostic changes, `npm run test:extraction-corpus -- --reporter=dot` completed with **2 files / 56 tests passed** in 29.18s. Native PDF.js warnings (missing optional canvas polyfills and malformed embedded font/color-space objects) remain non-fatal. No translation-server or `.app` changes were made; the extraction goal remains open for native column/caption residual fixtures.
