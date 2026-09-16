@@ -62,6 +62,7 @@
 - 今回は抽出の検証と証拠更新のみ。翻訳 server、品質 gate、モデル、`.app` は変更していない。次の実装候補は、wear-scale の回転表 footnote 分離または speechin の汎用 table-region evidence だが、まず native geometry を手動確認してから安全な回帰を追加する。
 - 回転 native grid と同一ベースラインに置かれた3語程度の prose note を、末尾句読点・小文字を伴う場合に限って grid から分離する一般条件を追加。新しい reading-order 回帰を含め focused 47/47、extraction corpus 56/56 passed。数値セル・短い見出しには適用しない。
 - 変更後の全アプリ回帰も確認し、Vitest 61 files / 347 tests、`npm run build` と lint が成功。buildは既知のdynamic-import/chunk-size警告のみ。
+- SpeeChin page 3 の Table 1 を native block単位で再調査。captionと11行のmulti-cell gridは分離できるが、後続の `SpeeChin One camera Necklace UD, SI` 行は4 native item・数値なしで、caption近接だけでは table evidence が不足する。compact-row条件の試行は resolver/projection回帰を満たさず撤回した。次は先行grid blockと後続rowのbbox帯・x列反復を一つの region evidenceへ集約する必要がある。
 
 ### 2026-09-16 extraction checkpoint
 
