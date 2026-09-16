@@ -3558,3 +3558,7 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - `step-to-charge.pdf` page 7 を最終 CanonicalDocument で再確認。図中の `Cret CL`、`CB CL RL`、`VIN VB CGB Pout` など一部の短いベクターラベルが `heading`/`paragraph` として残る一方、画像・ベクタークラスタ evidence が付くブロックは `other` へ抑制される。
 - before: 図ラベル候補の一部が本文可読ノードに混入。after: evidence が取得できた候補は抑制済み。native image placement のないベクター図形ラベルについては、近傍図領域を一般化できる geometry rule が未確立のため今回は変更を保留。
 - この residual は現行 83件レビューの主要失敗（figure_label 49）として追跡し、次回は図領域と短ラベル帯の距離・密度を使った precision-first rule を synthetic fixture で検証する。
+
+### 2026-09-16 corpus diagnostic refresh
+- `npm run diagnose:pdf-corpus` を再実行し、26 papers / 497 pages / 149 suspicious blocks を確認（arXiv 134、PMLR 11、Elsevier 4、その他 0〜2）。
+- 診断は候補抽出専用で、今回の出力から自動 relabel は行わない。arXiv/PMLR の figure/table-like residual を次の geometry review queue とする。
