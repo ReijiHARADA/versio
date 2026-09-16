@@ -3279,3 +3279,7 @@ Follow-up visual/native check: Table 7 is visibly continued on page 14, but the 
 ### 2026-09-16 continued-table caption fix
 
 Added a generic format-level rule for `Table N (continued)` at the physical top of a page. The caption is retained as a member of the preceding numbered table region (matched by table number), avoiding a duplicate root table. Medical benchmark: table-region recall **1.000**, continuation-page recall **1.000** (up from 0.750), source integrity **1.000**; extraction corpus remains **56/56**.
+
+### 2026-09-16 continued-caption corpus regression
+
+The generic continued-caption implementation was rechecked against the extraction corpus: **56/56 tests passed**. Table 7 page 14 is merged into the page 13 region, with no duplicate root table. Source integrity remains 1.000. Next phase is paragraph-stitching and block-boundary precision across the corpus.

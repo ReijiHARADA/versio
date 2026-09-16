@@ -3030,7 +3030,7 @@
     "tableRegionRecall": "1.000",
     "tableContinuationPageRecall": "1.000",
     "sourceIntegrityRate": "1.000",
-    "note": "Generic continued table captions survive top-band filtering and are merged into the preceding table region; medical Table 7 now spans pages 13-14."
+    "note": "Generic continued-caption handling validated across extraction corpus; Table 7 page 14 is merged into its page 13 region."
   },
-  "nextAction": "continue corpus-wide paragraph stitching and block-boundary precision audit"
+  "nextAction": "audit paragraph stitching and block-boundary precision across corpus"
 }

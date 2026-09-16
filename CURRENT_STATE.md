@@ -3348,3 +3348,9 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - Medical review benchmark improved from continuation recall 0.750 to **1.000**; table-region recall and source integrity remain **1.000**.
 - `npm run test:extraction-corpus`: **56/56 passed**; TypeScript check passed. No translation-server or `.app` changes.
 - Next: resume corpus-wide paragraph-stitching and block-boundary precision audit.
+
+### 2026-09-16 corpus regression after continued-caption handling
+
+- `npm run test:extraction-corpus` passed: 2 files, 56 tests.
+- Native table continuation handling caused no corpus regression; medical Table 7 now resolves as one region spanning pages 13–14.
+- TypeScript check passed. Worktree is ready for the next extraction phase: paragraph stitching and block-boundary precision.
