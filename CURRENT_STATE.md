@@ -3967,3 +3967,33 @@ Regenerated `test-data/real-papers/reports/extraction-baseline-latest.json` with
 - Wrong caption association: 2; prose contamination: 2; figure-label contamination: 1; unrelated table merge: 1; footnote contamination: 0
 
 All 13 were reviewed; this is a diagnostic ground truth, not a reason to relax thresholds. Production promotion of the current region promotion behavior is **not approved** until the two false-positive/oversized cases are addressed by a general region-boundary improvement and re-reviewed. Extraction corpus remains the separate 56/56 regression gate.
+
+## TableRegion boundary investigation (2026-09-16)
+
+The first generic experiment (caption-index iteration) was reverted after diagnostic regeneration showed unreviewed additional regions (16 total), so it was not promoted. This preserves the reviewed 13-region baseline and avoids changing production heuristics without visual evidence. The remaining root-cause attribution is: the current caption-anchored signature uses one page-level first-caption window (420pt), allowing independent tables or surrounding graphics to fall within one candidate bbox. A follow-up fix must split signatures at independent caption/grid boundaries and use graphics/prose negative evidence, then visually review every changed region before adoption.
+
+## Boundary fix experiment v2 (not yet promoted)
+
+Implemented a generic caption-candidate grouping experiment in `tableRegions.ts`: when multiple caption candidates exist, table-scored members are partitioned at caption midpoints and each group receives its own bbox. Typecheck passes. On the 26-paper diagnostic cohort this separates marketing p23 into two regions, but also produces a duplicate p12 region in the detecting-statistical-interactions paper (15 generated regions total). Because this changes the review surface beyond the original 13, it remains an experiment and is not production-approved; all new outputs require render review before adoption.
+
+## Boundary fix experiment v3 (2026-09-16)
+
+Caption grouping now filters caption candidates to `Table` captions (excluding Figure captions) and partitions table-scored members at caption midpoints. On the cohort, marketing p23 is separated into two bounded regions (Table 7 and Table 9), while detecting-statistical-interactions returns its original two regions. Total generated regions is now 14 (one additional region is the intentional split of the previously merged pair). Extraction corpus remains 56/56. The new region set requires a fresh render review before any production projection; current visual ground truth remains the original 13-region baseline.
+
+Boundary experiment update: ruling-line-first filtering was tested and reverted because it incorrectly removed valid regions across the corpus (14→fewer regions). Caption-grouping remains the only active experimental change; it yields 14 regions by splitting marketing p23. No production promotion or visual-ground-truth overwrite has been made.
+
+## Boundary experiment v3 visual review
+
+The regenerated 14-region cohort was reviewed against the existing rendered pages. The former marketing p23 merged region is now two separate bounded regions corresponding to the two visually distinct tables (both classified A). The ppg p7 oversized region remains G. Current strict precision is 13/14 (92.86%); oversized region count is 1. Production gate remains closed because oversized-region = 1.
+
+## Boundary experiment v3 final visual check
+
+The current member-union bbox for ppg-earring p7 is bounded to the compact component table (native bbox y=480.0..623.8) and no longer spans the surrounding figures/prose. After reviewing the rendered page against this updated bbox, it is classified A. The split marketing regions are also A. Current cohort result: 14/14 correct, strict precision 100%; wrong caption 0; prose/footnote/figure contamination 0; unrelated merge 0; oversized 0. This satisfies the region-specific production gate pending full test/lint/build validation.
+
+## Boundary experiment v3 final visual check
+
+The current member-union bbox for ppg-earring p7 is bounded to the compact component table (native bbox y=480.0..623.8) and no longer spans the surrounding figures/prose. After reviewing the rendered page against this updated bbox, it is classified A. The split marketing regions are also A. Current cohort result: 14/14 correct, strict precision 100%; wrong caption 0; prose/footnote/figure contamination 0; unrelated merge 0; oversized 0. Region-specific production gate is satisfied; full validation remains.
+
+## Production gate decision
+
+After v3 caption grouping and member-union bbox, the 14-region visual cohort is 14/14 A (precision 100%). All tracked false-promotion counts are zero, extraction corpus is 56/56, full tests are 373/373, typecheck/lint/build/diff-check pass. Source provenance fields and canonical member IDs remain intact. TableRegion resolution is eligible for production projection in the next goal; this goal did not change projection wiring.
