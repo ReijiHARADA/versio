@@ -25,6 +25,10 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
     .filter((entry): entry is [CanonicalNode["role"], number] => typeof entry[1] === "number")
     .sort((a, b) => b[1] - a[1]);
   const [role, score] = ranked[0] ?? [candidate.role, candidate.confidence];
+  const imageLabelEvidence = candidate.evidence.some((entry) => entry.label === "image-overlap-label-cluster");
+  if (imageLabelEvidence && (scores.other ?? 0) >= paragraph + 0.06) {
+    return { role: "other", confidence: scores.other ?? score };
+  }
   // Precision first: weak semantic evidence falls back to paragraph instead
   // of turning normal prose into an equation, heading, or table.
   if (role === "equation" && score < Math.max(0.72, paragraph + 0.18)) {

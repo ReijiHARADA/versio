@@ -3111,3 +3111,7 @@ Rendered review confirmed the residual is Figure 2's CFG/DP parsing diagram labe
 ### 2026-09-16 manual residual review: linguistics page 5
 
 The page-5 residual merges numbered method steps, inline formulas, a definition, and subsequent section prose. It is recorded as `paragraph_merge`, severity 3, with paragraph reconstruction as the primary cause; review coverage is 21/83 (62 pending).
+
+### 2026-09-16 image-overlap resolver guard
+
+A precision-first Resolver guard now maps blocks with strong existing image-overlap label evidence to `other` when it clearly beats paragraph evidence. Full tests (61/350), extraction corpus (56/56), and typecheck pass; source integrity/canonical provenance remain 1.0. No translation-server changes.

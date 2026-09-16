@@ -3104,3 +3104,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: linguistics page 5
 
 - Page 5 residual is a genuine block-boundary failure: numbered method steps, inline mathematical notation, a definition, and the following section prose are merged. Visual review labels it `paragraph_merge`, severity 3, primary cause `paragraph reconstruction`; review coverage is 21/83 (62 pending).
+
+### 2026-09-16 image-overlap resolver guard
+
+- Added a conservative Resolver rule: when the existing `image-overlap-label-cluster` evidence exceeds paragraph evidence by at least 0.06, the node resolves to `other` instead of translatable paragraph. This addresses embedded figure-label residuals without suppressing ordinary text lacking that evidence.
+- Safety: full Vitest 61/350, extraction corpus 56/56, typecheck pass; source integrity and canonical provenance remain 1.0 on the benchmark. Translation code remains unchanged.
