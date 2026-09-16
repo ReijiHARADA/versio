@@ -3348,3 +3348,5 @@ regular flattened-grid evidenceをresolver閾値以上へ引き上げる実験�
 ### Extraction checkpoint: flattened native table rows (2026-09-16)
 
 Hypothesis: OzCHI Table 3/5 were omitted because one-item-per-line native grids returned before table evidence was generated. After moving a conservative repeated-x geometry predicate before the early return, candidates for these grids receive table evidence and the resolver admits the same geometry only near a matching caption. On the 26-paper baseline, OzCHI table-region recall improved 0.8 → 1.0 (5/5); aggregate source-integrity remains 1.0 and chrome contamination remains 0. Extraction corpus (56 tests) and full Vitest (61 files / 353 tests) pass. Kept because the rule is geometry-based and benchmark-positive; broader manual review remains pending.
+
+Follow-up verification (2026-09-16): full 26-paper baseline after flattened-grid change reports no table-recall regression (all reported table recall values 1.0), source integrity 1.0, and no chrome contamination. The synthetic one-item grid regression passes; lint and typecheck also pass. Manual review of broader candidate populations remains the next checkpoint.
