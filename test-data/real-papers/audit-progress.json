@@ -3030,7 +3030,7 @@
     "tableRegionRecall": "1.000",
     "tableContinuationPageRecall": "1.000",
     "sourceIntegrityRate": "1.000",
-    "note": "Vector figure label evidence added for dense short native text clusters; extraction corpus and full benchmark remain green."
+    "note": "Rotation-gated vector figure label evidence fires on 4 blocks across corpus (human-ai and linguistics), versus 612 for prior broad heuristic; extraction corpus remains green."
   },
-  "nextAction": "manually review vector-label false positives across corpus and then continue paragraph/block boundary audit"
+  "nextAction": "manually validate the four rotation-gated vector-label candidates and inspect remaining paragraph/block boundary samples"
 }

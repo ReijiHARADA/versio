@@ -25,7 +25,9 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
     .filter((entry): entry is [CanonicalNode["role"], number] => typeof entry[1] === "number")
     .sort((a, b) => b[1] - a[1]);
   const [role, score] = ranked[0] ?? [candidate.role, candidate.confidence];
-  const imageLabelEvidence = candidate.evidence.some((entry) => entry.label === "image-overlap-label-cluster");
+  const imageLabelEvidence = candidate.evidence.some((entry) =>
+    entry.label === "image-overlap-label-cluster" || entry.label === "rotated-figure-label-cluster"
+  );
   if (imageLabelEvidence && (scores.other ?? 0) >= paragraph + 0.06) {
     return { role: "other", confidence: scores.other ?? score };
   }

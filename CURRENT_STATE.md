@@ -3409,3 +3409,9 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - Corpus-wide measurement found the provisional vector-label heuristic fired on 612 blocks, far beyond the manually confirmed figure-label residuals; this was an unacceptable precision regression.
 - Reverted the production heuristic and its synthetic test. Existing image/chart evidence remains unchanged.
 - TypeScript and focused pipeline tests pass after revert. Next work must use stronger native vector geometry (rotation/center/figure bounds) before reintroducing evidence.
+
+### 2026-09-16 rotation-gated vector-label evidence
+
+- Refined the reverted broad vector-label experiment using strong native rotation geometry (>=35° on most items), short labels, and multiple x-bands.
+- Corpus measurement: **4 candidate blocks across 2 papers** (human-AI Figure 2 and one linguistics paper), down from 612 for the broad heuristic. Extraction corpus remains 56/56; TypeScript and focused tests pass.
+- This is retained as a provisional evidence generator pending manual validation of all four candidates; no translation-layer changes.

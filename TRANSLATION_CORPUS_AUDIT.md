@@ -3307,3 +3307,7 @@ Added a synthetic regression for dense multi-x-band native vector labels; the fo
 ### 2026-09-16 vector-label experiment reverted
 
 The provisional vector-label heuristic was measured across the corpus and fired on 612 blocks, so it was too broad for precision-first extraction. Production code and the synthetic test were reverted; the diagnostic finding is retained. A future rule must require stronger native vector geometry before suppressing translation.
+
+### 2026-09-16 rotation-gated vector-label evidence
+
+A stricter vector-label evidence variant now requires strong native rotation geometry (>=35°), dense short items, and multiple x-bands. It fires on 4 blocks across 2 papers versus 612 for the broad version. Extraction corpus remains 56/56; manual validation of the four candidates is still required.
