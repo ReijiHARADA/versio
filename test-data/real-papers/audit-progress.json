@@ -1,6 +1,6 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "extraction-v-current-2026-09-16-table-boundary",
+  "lastBenchmarkVersion": "extraction-v-current-2026-09-16-table-ground-truth-correction",
   "lastDiagnosticVersion": "pdf-layout-corpus-diagnostic-v1",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
@@ -3027,16 +3027,10 @@
     "2026-09-16: layout diagnostic stable at 149 suspicious blocks/497 pages after short-label equation guard; no residual suppression."
   ],
   "lastExtractionCheckpoint": {
-    "status": "active",
-    "pipelineTests": "16/16",
-    "extractionCorpus": "56/56",
-    "readingOrder": "49/49",
-    "tableContinuationPageRecall": "0.429",
-    "nextAction": "recover genuine table continuation rows without restoring cross-table links; current medical recall region=1.000, continuation=0.429",
-    "fullVitest": "61 files / 350 tests",
-    "typecheck": "pass",
-    "manualReviewed": "83/83",
     "tableRegionRecall": "1.000",
-    "lastBenchmarkVersion": "extraction-v-current-2026-09-16-table-boundary"
-  }
+    "tableContinuationPageRecall": "0.750",
+    "sourceIntegrityRate": "1.000",
+    "note": "Visual verification corrected Table 6 continuation pages from [7,8,9,10,11] to [10,11]; remaining miss is Table 7 continuation alignment."
+  },
+  "nextAction": "visually verify Table 7 continuation metadata and then address genuine continuation evidence generically"
 }

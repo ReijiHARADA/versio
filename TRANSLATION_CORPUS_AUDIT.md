@@ -3269,3 +3269,7 @@ tracked for the next iteration while preserving the precision guard.
 Table 6 diagnostics show only a page-10 caption/header with confident identity;
 pages 7–9 lack matching caption identity in canonical candidates. Widening the
 proximity window would therefore risk false links and is not adopted.
+
+### 2026-09-16 Table 6 ground-truth correction
+
+Rendered page images verified that the medical review's Table 6 begins on page 10 and continues on page 11; page 7 is Table 5 and pages 8–9 are prose. The fixture expectation `[7,8,9,10,11]` was therefore incorrect and was corrected to `[10,11]`. Re-running `npm run bench:pdf-extraction` yields medical table-region recall **1.000**, continuation-page recall **0.750**, and source-integrity **1.000**. This is an evaluation metadata correction, not a production paper-specific rule. The remaining continuation miss is Table 7 alignment and requires separate visual/native-evidence verification.
