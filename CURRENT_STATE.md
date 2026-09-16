@@ -3613,3 +3613,6 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 ### 2026-09-16 corpus diagnostic refresh
 - `npm run diagnose:pdf-corpus` completed: 26 papers / 497 pages / 149 suspicious blocks. Residuals remain concentrated in arXiv (136), PMLR (6), Elsevier (4), OzCHI (2), IEEE (1); this diagnostic is intentionally non-mutating.
 - The queue is now narrowed to general arXiv/PMLR vector-label, numeric-grid, and mixed-layout geometry cases. No translation changes and no `.app` build.
+
+### 2026-09-16 production web build verification
+- `npm run build` passed after the spanning metadata ordering guard (`tsc -b` + Vite). Only existing ineffective dynamic-import warnings were emitted. `.app` was not built.

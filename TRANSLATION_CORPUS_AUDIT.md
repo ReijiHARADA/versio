@@ -3421,3 +3421,5 @@ Full 26-paper extraction benchmark after the spanning metadata guard: heading pr
 ### 2026-09-16 corpus diagnostic refresh
 
 Latest layout diagnostic: 26 papers, 497 pages, 149 suspicious blocks. Distribution is arXiv 136, PMLR 6, Elsevier 4, OzCHI 2, IEEE 1; all other format families are 0. These are diagnostic candidates, not automatic relabels. The next extraction work remains geometry fixtures for vector labels, numeric grids, and mixed layouts.
+
+Production web build verification after the latest extraction change: `npm run build` passed (TypeScript + Vite); only existing ineffective dynamic-import warnings remain. No `.app` build or translation-server change.
