@@ -3015,3 +3015,7 @@ Cognitive psychology corpus page 6 was rendered and checked. The `Q: Which machi
 ### 2026-09-16 top-column regression fixture
 
 Added a generic regression fixture for independent top-of-page columns. It verifies that a capitalized right-column sentence is not joined to the left column, while the existing lowercase continuation test remains intact. Focused reading-order coverage is now 49/49.
+
+### 2026-09-16 full extraction-priority regression
+
+After the mixed-column guard and independent top-column fixture, the full Vitest suite passes 61 files / 349 tests. Extraction-specific coverage remains 56/56 and reading-order coverage is 49/49; translation-server work remains paused.
