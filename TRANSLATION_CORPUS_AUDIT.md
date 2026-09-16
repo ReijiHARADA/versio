@@ -3376,3 +3376,5 @@ Added a distinct line-origin requirement to proseGrid evidence. It removes the p
 ### List-like table candidate guard (2026-09-16)
 
 A mixed prose + bullet block on OzCHI page 9 was receiving structural table evidence via proseGrid. Added a generic guard for four-plus-line blocks containing bullet markers, so the block remains paragraph/list content. Table 1–5 recall remains 1.0 and extraction corpus remains 56/56. Separate long-prose proseGrid candidates remain an open precision item.
+
+Latest baseline verification (2026-09-16): list-like table guard preserves table recall (all four annotated papers 1.0) and source integrity (26/26 at 1.0). Translation pipeline remains untouched.
