@@ -3469,3 +3469,7 @@ A further geometry check requires proseGrid candidates to contain at least two d
 Manual OzCHI page-9 review found a mixed prose + bullet block receiving structural table evidence through `proseGrid`. Generic candidate scoring now suppresses strong table evidence for blocks with four or more lines containing bullet markers. The mixed block remains a paragraph/list stream, while Table 1–5 recall remains 1.0 and extraction corpus remains 56/56. Long prose candidates from the separate proseGrid path remain under review.
 
 Latest baseline verification (2026-09-16): after the list-like table guard, all four annotated table-region papers report recall 1.0 and all 26 papers report source integrity 1.0. No `.app` or translation-server process was changed.
+
+### Corpus diagnostic refresh (2026-09-16)
+
+`npm run diagnose:pdf-corpus` now covers 26 papers / 497 pages and reports 149 suspicious blocks (diagnostic classes: image-overlap, numeric-grid, short-label-band, mixed-layout). The largest buckets are linguistics (34), cognitive psychology (23), and medical imaging (22); these are review queues, not automatic failures. No production suppression was added from counts alone.

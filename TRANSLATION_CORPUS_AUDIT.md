@@ -3378,3 +3378,7 @@ Added a distinct line-origin requirement to proseGrid evidence. It removes the p
 A mixed prose + bullet block on OzCHI page 9 was receiving structural table evidence via proseGrid. Added a generic guard for four-plus-line blocks containing bullet markers, so the block remains paragraph/list content. Table 1–5 recall remains 1.0 and extraction corpus remains 56/56. Separate long-prose proseGrid candidates remain an open precision item.
 
 Latest baseline verification (2026-09-16): list-like table guard preserves table recall (all four annotated papers 1.0) and source integrity (26/26 at 1.0). Translation pipeline remains untouched.
+
+### Corpus diagnostic refresh (2026-09-16)
+
+The extraction diagnostic covers 26 papers / 497 pages and reports 149 suspicious blocks. Largest review queues are linguistics (34), cognitive psychology (23), and medical imaging (22), mostly image-overlap, short-label-band, and mixed-layout signals. These remain diagnostic-only until manual confirmation; no broad suppression was introduced.
