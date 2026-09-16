@@ -3682,3 +3682,7 @@ Added a regression proving identical numeric values at distinct x coordinates (s
 ### 2026-09-16 full regression after repeated-cell fixture
 
 Full Vitest completed with **61 files / 358 tests passed**. This includes the duplicate-span caption and distinct repeated-cell safety fixtures. No translation or `.app` changes.
+
+### 2026-09-16 spanning affiliation geometry fixture
+
+Added a generic mixed-page fixture with title, authors, full-width affiliation, abstract, and two-column body. The affiliation remains a dedicated block ahead of the abstract and is not duplicated as paragraph text; body order remains left then right. Reading-order suite: 54/54 passed.

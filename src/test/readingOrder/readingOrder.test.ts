@@ -428,6 +428,30 @@ describe("PDF reading order regression", () => {
     expect(blocks.some((block) => block.role === "paragraph" && block.text.startsWith("This is the first body"))).toBe(true);
   });
 
+  it("keeps a spanning affiliation band ahead of two-column body text", () => {
+    const page: ExtractedPage = {
+      pageNumber: 1, width: 612, height: 792,
+      textItems: [
+        { text: "Geometry Boundary Study", x: 54, y: 70, width: 420, height: 18, fontSize: 17, fontName: "Title-Bold", page: 1 },
+        { text: "Ada Lovelace and Alan Turing", x: 54, y: 102, width: 220, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "Department of Computing, Example University", x: 54, y: 120, width: 360, height: 8, fontSize: 8, fontName: "Body", page: 1 },
+        { text: "Abstract", x: 54, y: 150, width: 70, height: 10, fontSize: 11, fontName: "Body-Bold", page: 1 },
+        { text: "ABSTRACT_BAND This abstract spans the page before two-column body content begins.", x: 54, y: 168, width: 500, height: 9, fontSize: 9, fontName: "Body", page: 1 },
+        { text: "Introduction", x: 54, y: 220, width: 100, height: 10, fontSize: 11, fontName: "Body-Bold", page: 1 },
+        { text: "LEFT_BODY This left column paragraph remains after the abstract.", x: 54, y: 245, width: 230, height: 9, fontSize: 9, fontName: "Body", page: 1 },
+        { text: "RIGHT_BODY This right column paragraph follows the left column.", x: 318, y: 245, width: 230, height: 9, fontSize: 9, fontName: "Body", page: 1 },
+      ],
+    };
+    const { blocks } = reconstructDocument([page]);
+    const affiliation = blocks.find((b) => b.role === "affiliation");
+    const abstract = blocks.find((b) => /ABSTRACT_BAND/.test(b.text));
+    expect(affiliation?.text).toContain("Example University");
+    expect(affiliation && abstract && blocks.indexOf(affiliation) < blocks.indexOf(abstract)).toBe(true);
+    expect(blocks.filter((b) => b.role === "paragraph").some((b) => /Example University/.test(b.text))).toBe(false);
+    const body = joined(bodyBlocks(blocks));
+    tokensInOrder(body, ["ABSTRACT_BAND", "LEFT_BODY", "RIGHT_BODY"]);
+  });
+
   it("keeps a long CJK abstract line out of masthead affiliation", () => {
     const items = [
       { text: "智能人机交互的人因工程途径", x: 54, y: 80, width: 260, height: 18, fontSize: 16, fontName: "Title-Bold", page: 1 },

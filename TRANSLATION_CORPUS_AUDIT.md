@@ -3484,3 +3484,7 @@ Added a safety fixture for repeated values in separate native table cells. Both 
 ### 2026-09-16 full regression after repeated-cell fixture
 
 Full Vitest is green: **61 files / 358 tests passed**. The new native text-layer cleanup remains isolated from translation code; extraction completion is still pending geometry residuals.
+
+### 2026-09-16 spanning affiliation geometry fixture
+
+A paper-agnostic geometry fixture now covers a full-width affiliation band before an abstract and two-column body. Affiliation/body separation and ordering pass without lexical paper-specific rules. Reading-order suite: 54/54.
