@@ -3059,3 +3059,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Rendered the cached PDF page 7 and compared the two pending short-label residuals with the native page. Both belong to the internal labels and annotations of Figure 2 (Biophysical Channel Model / S2C Channel Model), not body prose.
 - Labeled both samples `figure_label`, severity 3, root cause `pdf extraction`. Review coverage is now 10/83 (73 pending); no production rule was added because image/label geometry needs a generic boundary solution.
+
+### 2026-09-16 validation checkpoint
+
+- Revalidated product-side extraction checks: full Vitest 61 files / 350 tests, extraction corpus 56/56, TypeScript typecheck, lint (`oxlint --deny-warnings`), and frontend build all pass. Lint emits two existing ineffective-dynamic-import warnings but exits successfully.
+- Extraction completion is not claimed: manual residual review remains 10/83 and multi-page table continuation recall 2/7. Translation work remains paused.

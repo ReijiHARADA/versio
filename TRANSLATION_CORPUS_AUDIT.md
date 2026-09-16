@@ -3067,3 +3067,7 @@ A prior-page caption propagation rule was evaluated and reverted: it yielded no 
 ### 2026-09-16 manual residual review: Step-to-Charge page 7
 
 Visual comparison confirmed two short-label residuals are embedded Figure 2 annotations, not translatable paragraphs. Both are labeled `figure_label`, severity 3, with PDF extraction as the primary cause. Manual review is now 10/83, with 73 pending.
+
+### 2026-09-16 validation checkpoint
+
+Full Vitest (61 files / 350 tests), extraction corpus (56/56), typecheck, lint, and frontend build pass. Lint reports two pre-existing ineffective dynamic import warnings. Extraction remains incomplete because manual residual review is 10/83 and table continuation recall is 2/7.
