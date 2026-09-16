@@ -3646,3 +3646,7 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 ### 2026-09-16 caption deduplication pipeline regression
 
 Added a pipeline-level regression that injects an identical native figure caption candidate with a small geometry offset and verifies projection emits exactly one canonical caption. Targeted PDF extraction pipeline: 19/19 passed. The test confirms duplicate suppression at the resolver/projection boundary; the remaining issue is preserving caption text without concatenating duplicate raw spans, which is tracked for a future geometry refinement.
+
+### 2026-09-16 native duplicate text-span guard
+
+`joinItemTexts` now removes only text-identical spans that are nearly coincident in x/y, preventing duplicated PDF text layers from concatenating captions or body words. Repeated table values at distinct coordinates are preserved. Pipeline tests: 19/19; extraction corpus: 56/56. This is a native-geometry cleanup; translation code remains unchanged.

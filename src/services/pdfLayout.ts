@@ -245,8 +245,20 @@ function assignColumn(
 }
 
 function joinItemTexts(items: ExtractedTextItem[]): string {
+  // PDF text layers occasionally duplicate an entire span at nearly the same
+  // coordinates (an invisible accessibility layer over visible text). Drop
+  // only near-coincident, text-identical spans; repeated values in tables or
+  // separate columns remain untouched.
+  const uniqueItems = items.filter((item, index, all) => {
+    const normalized = item.text.replace(/\s+/g, " ").trim();
+    return !all.slice(0, index).some((previous) =>
+      previous.text.replace(/\s+/g, " ").trim() === normalized &&
+      Math.abs(previous.x - item.x) <= Math.max(2, item.width * 0.08) &&
+      Math.abs(previous.y - item.y) <= Math.max(2, item.height * 0.8)
+    );
+  });
   const rotation = median(items.map((item) => item.rotation ?? 0));
-  const sorted = [...items].sort((a, b) => {
+  const sorted = [...uniqueItems].sort((a, b) => {
     if (Math.abs(rotation) >= 45) {
       // Rotate coordinates back onto the native text baseline before joining.
       const aPos = rotation > 0 ? -a.y : a.y;

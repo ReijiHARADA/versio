@@ -3448,3 +3448,7 @@ The Japanese conference geometry fixture now asserts that affiliation text remai
 ### 2026-09-16 caption deduplication regression
 
 A pipeline fixture now duplicates a native figure-caption span with a slight bbox offset. Canonical projection returns one caption node (targeted suite 19/19). This validates exact same-page caption deduplication without changing translation behavior. The fixture also exposes that duplicate raw text can be concatenated before deduplication; preserving a single clean caption string remains an open geometry refinement.
+
+### 2026-09-16 native duplicate text-span guard
+
+A general line-formation guard now drops only near-coincident, text-identical native spans. This prevents accessibility/visible text-layer duplication from producing concatenated captions while retaining repeated values in separate table cells. Targeted pipeline: 19/19; extraction corpus: 56/56. No translation changes.
