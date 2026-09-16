@@ -28,8 +28,8 @@
   ],
   "pendingPapers": [],
   "reviewedBlocks": 132,
-  "lastCheckpoint": "paused-on-request-2026-09-16",
-  "pendingManualReview": 16,
+  "lastCheckpoint": "manual-review-covid-page11-2026-09-16",
+  "pendingManualReview": 15,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
     "measure partial source fallback inside accepted output before treating accept rate as fully translated rate",
@@ -3032,9 +3032,9 @@
     "extractionCorpus": "56/56",
     "readingOrder": "49/49",
     "tableContinuationPageRecall": "2/7",
-    "nextAction": "resume visual review of covid ML page 11 residual, then economics pages 35/37 and interpreting-neural-networks samples",
+    "nextAction": "review remaining economics pages 35/37 and interpreting-neural-networks samples",
     "fullVitest": "61 files / 350 tests",
     "typecheck": "pass",
-    "manualReviewed": "67/83"
+    "manualReviewed": "68/83"
   }
 }

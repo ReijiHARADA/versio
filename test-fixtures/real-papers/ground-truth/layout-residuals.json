@@ -645,10 +645,10 @@
       "page": 11,
       "classification": "short-label-band",
       "text": "VGG16 VGG19 Xception ResNet 50 [60] [119, 120] ResNet 50V2 DenseNet121 Inception V3 Inception ResNet V2 DenseNet 169 VGG16 VGG19 Xception ResNet 50 [72] [102, 103, 108] ResNet 50V2 DenseNet121 Inception V3 Inception ResNet V2 [64] Custom we",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: model names, reference numbers, and metrics are cells/rows of Table 9, not prose",
+      "manualRole": "table_row",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-image-segmentation-deep-learning",

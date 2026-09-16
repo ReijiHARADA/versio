@@ -3233,3 +3233,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - Last committed change: `80eb7c6 Review covid method and metric table rows`.
 - Existing validation remains green: extraction corpus 56/56, reading order 49/49, full Vitest 61 files / 350 tests, TypeScript typecheck, lint, and frontend build.
 - Resume with visual review of the remaining covid ML page 11 residual, then economics pages 35/37 and interpreting-neural-networks pending samples. Do not alter translation-server code or build the `.app` as part of this paused extraction phase.
+
+### 2026-09-16 manual residual review: covid ML page 11
+
+- The model-name/reference/metric stream is visually confirmed as Table 9 cell content, not body prose. Recorded as `table_row`, severity 3, primary cause `line grouping`; manual coverage is 68/83 (15 pending).
