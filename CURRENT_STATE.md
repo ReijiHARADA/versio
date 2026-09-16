@@ -3080,3 +3080,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: Step-to-Charge page 18
 
 - Figure 6's `Rx`, `VIN`, `CGB`, `CB`, and `Cret` residual is embedded experimental-setup annotation, confirmed by rendered PDF. Labeled `figure_label`, severity 3, root cause `pdf extraction`; manual review is now 15/83 (68 pending).
+
+### 2026-09-16 manual residual review: Step-to-Charge page 22
+
+- Page 22 residual is a mixture of displayed circuit equations and Figure 7 diagram labels (`CGB`, `ZLoad`, `Rx`). Visual review labeled it `equation`, severity 3, root cause `pdf extraction`; review coverage is 16/83 (67 pending). This identifies a mixed equation/figure boundary case for later geometry work.

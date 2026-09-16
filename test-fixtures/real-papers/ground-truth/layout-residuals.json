@@ -97,10 +97,12 @@
       "page": 22,
       "classification": "short-label-band",
       "text": "CGB, Vout VB C Vout neglected VB ZGB RL - L RL for ZLoad ZLoad portable Rx Cret, Zret Cret, Zret",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: native residual combines displayed circuit equations with diagram annotations on page 22; it is not ordinary prose",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 3,
+      "reviewLabel": "equation",
+      "rootCause": "pdf extraction"
     },
     {
       "paper": "step-to-charge",

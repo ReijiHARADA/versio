@@ -3087,3 +3087,7 @@ Figure 5's highlighted table row and chart/device labels were confirmed visually
 ### 2026-09-16 manual residual review: Step-to-Charge page 18
 
 Rendered review confirmed the electrical labels belong to Figure 6 panels, not body text. Recorded as `figure_label`, severity 3, with PDF extraction as the primary cause; review coverage is 15/83 (68 pending).
+
+### 2026-09-16 manual residual review: Step-to-Charge page 22
+
+Visual review found a mixed displayed-equation and Figure 7 annotation block. It is recorded as `equation`, severity 3, with PDF extraction as the primary cause; review coverage is 16/83 (67 pending).
