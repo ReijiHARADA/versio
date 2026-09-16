@@ -34,6 +34,9 @@ tests remain 56/56; continuation-page recall is unchanged at 0.571.
 Long sentence-shaped candidates ending in punctuation are now excluded from
 table-row evidence, preventing prose from entering a table region. Tests remain
 56/56 and no translation code was changed.
+When multiple table captions share a page, same-page row candidates are now
+bounded to the interval after the current caption and before the next one;
+focused diagnostics show Table 1 no longer cross-links adjacent tables.
 
 ## Initial local sample (2026-09-07)
 

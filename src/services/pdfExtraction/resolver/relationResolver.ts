@@ -249,6 +249,15 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
             Infinity,
           )
         : Infinity;
+      const nextSamePageCaptionY = role === "table"
+        ? Math.min(
+            ...candidates
+              .filter((candidate) => candidate.layoutBlock.role === "table_caption" && candidate !== caption && candidate.pageStart === caption.pageStart)
+              .map((candidate) => candidate.boundingBoxes[0]?.y ?? Infinity)
+              .filter((y) => y > (box?.y ?? Infinity)),
+            Infinity,
+          )
+        : Infinity;
       const regionMembers = role === "table" && box
         ? candidates.filter((candidate) => {
             const candidateBox = candidate.boundingBoxes[0];
@@ -262,6 +271,8 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
               Math.abs(candidateBox.x - box.x) < 180;
             if (!samePage && !nextPageContinuation && !laterPageContinuation) return false;
             if (candidate !== caption && candidate.layoutBlock.role === "table_caption") return false;
+            if (samePage && nextSamePageCaptionY < Infinity && candidateBox.y < box.y) return false;
+            if (samePage && nextSamePageCaptionY < Infinity && candidateBox.y >= nextSamePageCaptionY) return false;
             const aboveCaption = samePage && candidateBox.y < box.y && box.y - (candidateBox.y + candidateBox.height) < 280;
             const belowCaption = samePage && candidateBox.y >= box.y && candidateBox.y - (box.y + box.height) < 280;
             if (!(aboveCaption || belowCaption || laterPageContinuation || nextPageContinuation)) return false;
