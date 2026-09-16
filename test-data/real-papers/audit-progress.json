@@ -3059,6 +3059,6 @@
     "nextAction": "Add and validate a general affiliation/body boundary fixture; then review table/list residuals.",
     "latestCommit": "f695d44"
   },
-  "nextAction": "Review saved boundary findings with native bbox and create confirmed affiliation/body and figure-marker fixtures.",
+  "nextAction": "Review candidate inventory by native bbox, starting with medical/HCI affiliation boundaries and linguistics diagram labels; add only confirmed general fixtures.",
   "lastUpdate": "2026-09-16"
 }

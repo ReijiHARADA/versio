@@ -3698,3 +3698,7 @@ The updated boundary scanner was run over the cached corpus and its JSON payload
 ### 2026-09-16 boundary scanner file output
 
 Added `--json-out=/path/findings.json` to the boundary scanner. The corpus run wrote and parsed a clean JSON artifact: 25 papers with findings, 10 affiliation candidates, and 12 figure-marker-in-paragraph candidates. This supports repeatable native-geometry review without changing extraction behavior.
+
+### 2026-09-16 boundary candidate inventory
+
+Parsed the saved scanner output and grouped candidates for review. Affiliation candidates occur across 10 papers (including medical, neuroscience, HCI, and design fixtures); figure-marker-in-paragraph candidates occur across 12 papers, with the densest cluster in linguistics/math-heavy and diagram-rich papers. No automatic relabel was made from this inventory.
