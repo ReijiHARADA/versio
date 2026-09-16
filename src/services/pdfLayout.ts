@@ -664,6 +664,9 @@ export function isEquationLine(text: string): boolean {
   // normally symbol-dense and short; six or more prose words is a strong
   // negative signal unless an explicit equation number anchors the line.
   if (!hasEqNumber && proseWords >= 6) return false;
+  // Very short operator-separated labels are commonly diagram annotations
+  // (for example, component abbreviations) rather than equations.
+  if (!hasEqNumber && !/[=<>≤≥≈≠]/.test(t) && tokens.every((token) => token.replace(/[^A-Za-z0-9]/g, "").length <= 3)) return false;
 
   if (hasEqNumber && math >= 1) return true;
   if (math < 2) return false;
