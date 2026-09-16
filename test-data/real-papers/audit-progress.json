@@ -1,0 +1,3040 @@
+{
+  "phase": "phase-2",
+  "lastBenchmarkVersion": "extraction-v-current-2026-09-16",
+  "lastDiagnosticVersion": "pdf-layout-corpus-diagnostic-v1",
+  "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
+  "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
+  "attributionStatus": "v6 baseline 12/48 (25.00%); audit-only semantic MiniLM v42 and coverage v66 completed; coverage found 10 exact invariant-loss rows (5 accepted), so token normalization/calibration is next; production gate unchanged",
+  "completedPapers": [
+    "cognitive-psychology-gpt3",
+    "design-for-wearability",
+    "dont-mind-me",
+    "economics-regularized-deepiv",
+    "education-learning-analytics",
+    "ergonomics-human-factors-ihci",
+    "fashion-hybrid-cmf",
+    "hci-empirical-methods",
+    "interactive-jewellery",
+    "linguistics-language-model-physics",
+    "marketing-consumer-response",
+    "neuroscience-rule-following",
+    "ozchi-finger-specific-touch",
+    "power-over-skin",
+    "ppg-earring",
+    "significant-other",
+    "speechin",
+    "step-to-charge",
+    "thermal-earring"
+  ],
+  "pendingPapers": [],
+  "reviewedBlocks": 132,
+  "lastCheckpoint": "paused-on-request-2026-09-16",
+  "pendingManualReview": 16,
+  "unresolvedFailures": [
+    "manual semantic review of current accepts",
+    "measure partial source fallback inside accepted output before treating accept rate as fully translated rate",
+    "fallback rate must be driven below 5% for product-quality reading UX",
+    "unsafe false accepts dominated by semantic shift and omission without durable numeric/citation facts",
+    "expand OA corpus to 50+ verified PDFs",
+    "page/column paragraph repair",
+    "chrome separation",
+    "evaluate replacement or cascade translation models under local/free-use constraints",
+    "Nature-style bold inline subheadings sharing a line with prose",
+    {
+      "paperId": "economics-regularized-deepiv",
+      "page": 14,
+      "category": "native-math-boundary",
+      "severity": "review",
+      "status": "unresolved-safe-fallback",
+      "note": "Visual order is correct; display equations produce adjacent paragraph/equation fragments. Defer generic geometry/context rule."
+    },
+    {
+      "paperId": "speechin",
+      "page": 3,
+      "category": "table-row-role",
+      "severity": "review",
+      "status": "unresolved-safe-fallback",
+      "note": "Table caption isolated, but bold summary rows are heading-like and grid rows remain paragraphized; requires generic table-region evidence refinement."
+    },
+    "wear-scale p14 rotated Table 6 footnote mixed into paragraph block; geometry split pending"
+  ],
+  "nextActions": [
+    "Maintain explicit completeListAnnotations for any future list precision metric; current Interactive Jewellery list labels are partial and recall-only.",
+    "Add source-integrity and figure/table safety regressions for inferred x-band column split.",
+    "Measure heading precision/recall impact across full corpus.",
+    "Classify residual arXiv vector-diagram labels using native geometry.",
+    "Investigate generic native-fact recovery for Elsevier Table 2/5/6.",
+    "Manually label the 200-row extraction sample against rendered PDFs; do not count pending rows as precision."
+  ],
+  "v33StructuralSafety": {
+    "status": "implemented and verified",
+    "findings": [
+      "accepted dangling `as` fragment invented battery-life claim",
+      "accepted clipped `and standard` result fragment",
+      "accepted mixed-script affiliation metadata"
+    ],
+    "safeguards": [
+      "nonterminal unmatched delimiter rejection",
+      "trailing `as` and dangling statistical-label rejection",
+      "mixed-script affiliation metadata skip"
+    ],
+    "manualReview": {
+      "currentAutomaticAccepts": 85,
+      "reviewed": 33,
+      "unsafeSeverityGte2": 15,
+      "pending": 52
+    },
+    "nextAction": "Continue stratified manual comparison of the 52 remaining current accepts; rerun production audit under v33 before interpreting rates."
+  },
+  "v34CalendarInvariant": {
+    "status": "implemented and verified",
+    "finding": "calendar year 1914 was invented while source contained only 1979",
+    "safeguard": "calendar years 1500–2099 are source invariants and unexpected years reject output",
+    "nextAction": "Rerun source-policy and full production audit under v34, then continue manual review."
+  },
+  "v35IncompleteIntroductions": {
+    "status": "implemented and verified",
+    "finding": "nonterminal “We present Thermal” physical block was accepted after silently dropping the unfinished introduction",
+    "safeguard": "generic no-terminal introducing-verb plus first-capitalized-token structural rejection",
+    "manualReview": {
+      "v34Accepts": 78,
+      "reviewed": 17,
+      "severityGte2": 8
+    },
+    "nextAction": "Start v35 server, benchmark current cached corpus, and continue v35-only manual review."
+  },
+  "v36StructureBoundaries": {
+    "status": "implemented and verified",
+    "findings": [
+      "running header ending in publisher page marker translated as prose",
+      "subpanel caption beginning `(b)` lost its panel/cross-reference",
+      "equation definition ending in colon lost its delimiter"
+    ],
+    "safeguards": [
+      "page-marker running-header metadata skip",
+      "nonterminal panel-caption source warning",
+      "nonterminal colon boundary warning"
+    ],
+    "nextAction": "Run v36 full cached corpus and independently review current accepts."
+  },
+  "v38PanelComparisonInvariants": {
+    "status": "implemented and verified",
+    "findings": [
+      "Figure 1(a) was reduced to Figure 1",
+      "the comparison condition where y ̸= 0 when x = 0 was omitted",
+      "MADLAD mutated a citation placeholder to ZZCΙT2ZZ with a Greek capital iota"
+    ],
+    "safeguards": [
+      "parenthesized figure panels are scientific invariants",
+      "single-letter variable comparisons are scientific invariants and protected spans",
+      "placeholder restoration normalizes Latin-lookalike glyphs",
+      "leftover scientific placeholders are rejected by the client quality gate"
+    ],
+    "manualReview": {
+      "currentAutomaticAccepts": 72,
+      "reviewed": 12,
+      "severityGte2": 4,
+      "pending": 194
+    },
+    "nextAction": "Continue v38-only semantic review and investigate content-coverage checks for fluent omissions."
+  },
+  "v39FallbackTarget": {
+    "status": "implemented and measured",
+    "benchmark": {
+      "papers": 21,
+      "sampledBlocks": 206,
+      "ordinaryBodyProse": 75,
+      "ordinaryBodyFallbacks": 20,
+      "ordinaryBodyFallbackRate": 0.267,
+      "preModelOrdinaryFallbacks": 0,
+      "postModelOrdinaryFallbacks": 20
+    },
+    "safeguards": [
+      "retry-only rescue units for found-that coordination and if-so semicolon questions",
+      "unsafe where/appositive rescue was measured and deliberately not enabled",
+      "fragmented Japanese spacing is now a degenerate-output signal"
+    ],
+    "modelComparison": {
+      "helsinkiOpusMtEnJap": "0/20 plausible after fragmented-output guard; rejected as cascade candidate",
+      "m2m100_418m": "7/20 passed automatic gate but manual spot-check shows semantic drift; not production-enabled",
+      "m2m100_1_2b": "4/10 passed automatic gate with better fluency; still has severe long-form semantic drift; not production-enabled"
+    },
+    "nextAction": "Build semantic content-coverage scoring and continue local/free model comparison before enabling any cascade."
+  },
+  "v40ReaderVisibleFallback": {
+    "status": "implemented and measured",
+    "benchmark": {
+      "papers": 21,
+      "sampledBlocks": 206,
+      "ordinaryBodyProse": 75,
+      "ordinaryBodyReaderVisibleFallbacks": 35,
+      "ordinaryBodyReaderVisibleFallbackRate": 0.467,
+      "ordinaryBodyPreModelFallbacks": 0,
+      "ordinaryBodyPostModelFallbacks": 35
+    },
+    "semanticCoverage": {
+      "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "mode": "audit signal only, not production gate",
+      "reviewedAccepts": 12,
+      "unsafeReviewed": 4,
+      "safeAvgMinSourceSimilarity": 0.777,
+      "unsafeAvgMinSourceSimilarity": 0.721,
+      "report": "test-data/real-papers/reports/semantic-coverage-accepts-v40.json"
+    },
+    "nextAction": "Calibrate semantic coverage against more manual labels before using it for cascade routing or hard rejection."
+  },
+  "archivedReviewedBlocks": 0,
+  "handoff": {
+    "status": "paused_for_account_transfer",
+    "processesStopped": true,
+    "fullV46Benchmark": "started but interrupted before completion; rerun required",
+    "authoritativeCompletedReport": "previous completed report remains test-data/real-papers/reports/translation-audit.json until v46 rerun completes",
+    "spotChecks": [
+      {
+        "block": "interactive-jewellery b-7e7c94f2",
+        "result": "fallback recovered by beam retry"
+      },
+      {
+        "block": "power-over-skin b-eed74380",
+        "result": "fallback recovered by beam retry"
+      },
+      {
+        "block": "thermal-earring b-22de2c20",
+        "result": "fallback recovered by rescue retry; app-side earring terminology normalization added"
+      },
+      {
+        "block": "dont-mind-me b-ea91ca56",
+        "result": "fallback recovered after parenthesized decimal protection"
+      },
+      {
+        "block": "dont-mind-me b-27091f72",
+        "result": "fallback recovered after parenthesized decimal protection; less-comparative polarity normalization added"
+      },
+      {
+        "block": "interactive-jewellery b-828da077",
+        "result": "still source fallback; needs next recovery strategy"
+      }
+    ],
+    "tests": [
+      "translation-server unittest segmenter/citation_protect/madlad_quality/micro_batcher passed: 66 tests",
+      "vitest quality/glossary passed: 70 tests",
+      "tsc --noEmit passed before final glossary polarity edit; rerun after transfer"
+    ],
+    "nextActions": [
+      "start v46 translation server and confirm /status model_version",
+      "rerun npm run bench:real-paper-translation -- --limit 12",
+      "prepare and summarize manual review from the completed v46 report",
+      "verify app/benchmark postprocess for earring and less-comparative repairs",
+      "continue local/free model cascade evaluation if ordinary-body fallback remains above 5%"
+    ]
+  },
+  "lastCompletedFullBenchmarkVersion": "3b-mt-v5-semantic-v48",
+  "interruptedBenchmark": {
+    "version": "3b-mt-v5-semantic-v50",
+    "stoppedAt": "2026-09-13T19:25:00+09:00",
+    "requestedByUser": true,
+    "complete": false,
+    "completedPaperCheckpoints": 6,
+    "completedPapers": [
+      "interactive-jewellery",
+      "significant-other",
+      "power-over-skin",
+      "thermal-earring",
+      "ppg-earring",
+      "design-for-wearability"
+    ],
+    "rows": 62,
+    "partialSourceFallbacks": 3,
+    "reportPath": "test-data/real-papers/reports/translation-audit.json",
+    "note": "v50 full benchmark was stopped at a paper checkpoint by user request. Do not treat this incomplete report as the authoritative whole-corpus metric."
+  },
+  "v47OverRejectFix": {
+    "status": "implemented and verified",
+    "change": "raised abnormal phrase repetition threshold for valid statistical/social acceptability prose",
+    "benchmark": {
+      "complete": true,
+      "ordinaryBodyProse": {
+        "total": 74,
+        "accepted": 53,
+        "readerVisibleFallback": 21,
+        "fallbackRate": 0.284
+      }
+    }
+  },
+  "v48PartialUnitFallback": {
+    "status": "implemented and verified",
+    "change": "micro-batcher preserves only the failed translation unit as exact source instead of falling back the entire paragraph",
+    "benchmark": {
+      "complete": true,
+      "ordinaryBodyProse": {
+        "total": 74,
+        "accepted": 60,
+        "readerVisibleFallback": 14,
+        "fallbackRate": 0.189
+      },
+      "caveat": "some accepted rows contain partial English source fallback; this needs a dedicated metric."
+    }
+  },
+  "v49PlaceholderLeakGuard": {
+    "status": "implemented and unit-tested; full benchmark interrupted by user",
+    "change": "client quality guard rejects leftover scientific placeholders with Greek zeta/iota or Cyrillic lookalikes such as ΖZCIt2ZZ",
+    "tests": [
+      "npx vitest run src/test/quality.test.ts src/test/glossary.test.ts",
+      "npx tsc --noEmit",
+      "cd translation-server && .venv/bin/python -m unittest tests.test_micro_batcher tests.test_segmenter tests.test_citation_protect tests.test_madlad_quality"
+    ]
+  },
+  "stoppedAtUserRequest": {
+    "time": "2026-09-13T14:50:00+09:00",
+    "state": "all long-running processes stopped; TypeScript check passed after partial-source-fallback audit metric edits",
+    "nextAction": "resume by completing v49 benchmark, then run audit:prepare-review and audit:summarize-review"
+  },
+  "serverReadyResumeFix": {
+    "status": "implemented and verified",
+    "date": "2026-09-13",
+    "problem": "Papers/imports added before MADLAD became reachable could remain failed or incomplete after the server later became ready, especially when the paper was saved but not present in the in-memory library cache or when initial server polling timed out.",
+    "changes": [
+      "server-ready resume now scans saved papers from the database in addition to the in-memory library cache",
+      "resume candidates include active saved states translating/queued/glossary and saved partial/failed/ready papers with actual pending title, section, or retryable block translation work",
+      "App continues low-frequency health polling after the initial 90-second startup wait fails, and triggers resume as soon as the server becomes ready",
+      "manual retry/resume now uses the same library callback path and saved-paper callback upserts the paper into the cache",
+      "resumeIncompleteTranslation now honors configured translationConcurrency instead of forcing concurrency 8"
+    ],
+    "verification": [
+      "npx vitest run src/test/importResumeServerReady.test.ts src/test/quality.test.ts src/test/resumeTranslation.test.ts",
+      "npx tsc --noEmit --pretty false",
+      "npm run lint (exit 0; existing warnings only)",
+      "npm run build"
+    ]
+  },
+  "v50ReportingFrameOverrejectFix": {
+    "status": "implemented, spot-checked, and partially benchmarked; full benchmark interrupted by user",
+    "change": "unit-length compression guard discounts leading reporting frames such as “Among other things they found that …” only after rescue segmentation and only when the source is not still a coordinated and-that claim",
+    "spotCheck": {
+      "paper": "interactive-jewellery",
+      "block": "b-828da077",
+      "before": "v49 accepted output contained a 46-word unmodified English source span and was flagged partialSourceFallback=true",
+      "after": "v50 translated the rescued claims into Japanese and partialSourceFallback=false in the 4-block spot audit"
+    },
+    "partialBenchmark": {
+      "complete": false,
+      "papers": 6,
+      "rows": 62,
+      "partialSourceFallbacks": 3
+    },
+    "verification": [
+      "npx vitest run src/test/translationAuditPartialFallback.test.ts src/test/importResumeServerReady.test.ts src/test/quality.test.ts src/test/glossary.test.ts src/test/resumeTranslation.test.ts",
+      "npx tsc --noEmit --pretty false",
+      "cd translation-server && .venv/bin/python -m unittest tests.test_micro_batcher tests.test_segmenter tests.test_citation_protect tests.test_madlad_quality"
+    ]
+  },
+  "v51PartialSourceFallbackGuard": {
+    "status": "implemented and partially measured",
+    "implementedAt": "2026-09-13T21:22:17+09:00",
+    "changes": [
+      "Moved partial source fallback detection from benchmark-only code into production translation quality checks.",
+      "Server-side MADLAD quality now rejects paragraph outputs that contain long unmodified English source spans inside otherwise Japanese text.",
+      "Benchmark reuses the production detector so audit and app behavior cannot diverge on this failure class.",
+      "Cache identity bumped to 3b-mt-v5-semantic-v51 to avoid reusing accepted mixed English/Japanese translations from older runs.",
+      "Added retry-only rescue for long While ... , main-clause sentences; measured Thermal Earring case still drifts at decode time and is correctly rejected."
+    ],
+    "measurement": {
+      "report": "test-data/real-papers/reports/translation-audit-thermal-earring.json",
+      "paper": "thermal-earring",
+      "rows": 12,
+      "partialSourceFallbacks": 0,
+      "fallbacks": 11,
+      "ordinaryBodyProse": 3,
+      "ordinaryBodyFallbacks": 2,
+      "ordinaryBodyFallbackRate": 0.667,
+      "finding": "Partial English source spans no longer pass as accepted output, but MADLAD drift on ordinary Thermal Earring prose still causes fallback; this supports model/cascade evaluation rather than more blacklist-style guards."
+    },
+    "verification": [
+      "npx vitest run src/test/translationAuditPartialFallback.test.ts src/test/importResumeServerReady.test.ts src/test/quality.test.ts src/test/glossary.test.ts src/test/resumeTranslation.test.ts passed: 87 tests",
+      "npx tsc --noEmit --pretty false passed",
+      "npm run lint exited 0 with existing warnings",
+      "npm run build passed",
+      "translation-server unittest micro_batcher/segmenter/citation_protect/madlad_quality passed: 72 tests"
+    ]
+  },
+  "v52InvariantAndMetadataRefinement": {
+    "status": "implemented and spot-measured",
+    "implementedAt": "2026-09-14T17:12:20+09:00",
+    "changes": [
+      "Do not treat common emphasized uppercase function words such as NOT as technical acronym invariants.",
+      "Skip conference date + author byline blends as reference/chrome metadata instead of ordinary body prose.",
+      "Cache identity bumped to 3b-mt-v5-semantic-v52."
+    ],
+    "measurement": {
+      "report": "test-data/real-papers/reports/translation-audit-hci-empirical-methods.json",
+      "paper": "hci-empirical-methods",
+      "rows": 12,
+      "ordinaryBodyProse": 6,
+      "ordinaryBodyFallbacks": 0,
+      "partialSourceFallbacks": 0,
+      "beforeV51OrdinaryFallbacksForThisPaper": 2,
+      "finding": "The false ordinary fallback for emphasized NOT is now accepted, and the CHI conference-date/byline blend is classified as reference/chrome pre-model instead of ordinary body prose."
+    }
+  },
+  "lastBenchmarkReport": "test-data/real-papers/reports/extraction-baseline-latest.json",
+  "updatedAt": "2026-09-15T23:34:27.800931+00:00",
+  "benchmarks": {
+    "v52FullCorpus": {
+      "createdAt": "2026-09-14T08:31:22.627Z",
+      "endpoint": "http://127.0.0.1:8766",
+      "complete": true,
+      "catalogEntries": 21,
+      "evaluatedPapers": 19,
+      "errors": [
+        {
+          "paper": "wear-scale",
+          "error": "PDF not cached: /Users/harada/Desktop/codex/projects/paper-reader/test-data/real-papers/wear-scale.pdf"
+        },
+        {
+          "paper": "precious-materials",
+          "error": "PDF not cached: /Users/harada/Desktop/codex/projects/paper-reader/test-data/real-papers/precious-materials.pdf"
+        }
+      ],
+      "reviewedRows": 206,
+      "ordinaryBodyProse": {
+        "total": 73,
+        "accepted": 54,
+        "fallbacks": 19,
+        "fallbackRate": 0.2603,
+        "preModelFallbacks": 0,
+        "postModelFallbacks": 19,
+        "partialSourceFallbacks": 0
+      },
+      "allPartialSourceFallbacks": 0,
+      "ordinaryFallbackPapers": [
+        "cognitive-psychology-gpt3",
+        "dont-mind-me",
+        "interactive-jewellery",
+        "linguistics-language-model-physics",
+        "neuroscience-rule-following",
+        "ozchi-finger-specific-touch",
+        "power-over-skin",
+        "speechin",
+        "step-to-charge",
+        "thermal-earring"
+      ],
+      "v56FullCorpus": {
+        "report": "test-data/real-papers/reports/translation-audit.json",
+        "createdAt": "2026-09-14T09:14:45.247Z",
+        "catalogEntries": 21,
+        "reviewedRows": 206,
+        "ordinaryBodyProse": {
+          "total": 74,
+          "accepted": 54,
+          "fallbacks": 20,
+          "fallbackRate": 0.2703,
+          "preModelFallbacks": 0,
+          "postModelFallbacks": 20,
+          "partialSourceFallbacks": 0
+        },
+        "note": "Canonical list splitting improves mixed-block isolation, but full-corpus fallback is 27.03%; the 5% target is not met."
+      }
+    }
+  },
+  "semanticRelationReview": {
+    "queueVersion": "semantic-relation-review-queue-v1",
+    "queued": 8,
+    "reviewed": 8,
+    "pending": 0,
+    "durableManualReviewMatches": 5,
+    "lastReviewed": "2026-09-15",
+    "ordinalQueueVersion": "semantic-relation-review-queue-v2",
+    "ordinalQueued": 7,
+    "ordinalReviewed": 7,
+    "ordinalPending": 0
+  },
+  "lastUpdated": "2026-09-16",
+  "manualReviewCompletedAt": "2026-09-15T12:22:57.065509+00:00",
+  "completedWork": [
+    "Gemma 2 9B same-fixture 12-row audit completed (local Ollama, report model-quality-gemma2-9b-v1.json).",
+    "Generated semantic-coverage-calibration-v1 threshold curves against manual severity labels.",
+    "Generated composite semantic coverage calibration curves with relation and invariant penalties.",
+    "Raised bounded MADLAD generation cap to 384 and bumped model version to strict-restore-v9.",
+    "Post-relaunch v9 packaged runtime verified: PID 60582 from rebuilt .app, /health ready/model_loaded=true; frontend 307 and translation-server 97 tests passed.",
+    "Created baseline-v9.json with strict source-category and broader product UX fallback metrics; clarified denominator mismatch for future audits.",
+    "Qwen 2.5 3B audit-only smoke completed: citation-heavy and year-boundary cases coherent, but mixed Chinese/Japanese output on scientific case; not production-routed. Report model-quality-qwen2.5-3b-smoke-v1.json.",
+    "Qwen 2.5 3B 12-row fixed unsafe-fixture evaluation completed (audit-only, temperature 0, max 512); frequent English fragments and one unrelated term observed, so no production cascade. Report model-quality-qwen2.5-3b-v1.json.",
+    "Added audit-only mixedScriptRisk signal for simplified-Chinese-only characters; regression test catches Qwen mixed output without changing production gate.",
+    "Fixed candidate-selection audit harness to consume rows-schema reports; Qwen 12-row run now records 11/12 hard-signal passes, demonstrating surface false-accept risk.",
+    "Qwen prompt-variant smoke: explicit Japanese-only prompts still deterministically emitted simplified Chinese `显著`; prompt-only fix ruled out.",
+    "Qwen 2.5 7B smoke completed: clean p-value and citation outputs, but Chinese/English drift on year-boundary sentence; report model-quality-qwen2.5-7b-smoke-v1.json; no production routing.",
+    "Recorded preliminary manual labels for Qwen 2.5 7B smoke (1 correct, 1 minor wording, 1 severity-3 reject); not a production estimate.",
+    "Qwen 2.5 7B 12-row fixture evaluation completed; mean latency 7.4s/row, improved coherence/citation retention vs 3B but long outputs need semantic review; no production routing.",
+    "Completed manual claim review for all 12 Qwen 2.5 7B fixture rows: 5 correct, 5 minor/terminology, 1 severity-3 hallucination, 1 additional terminology issue; report model-quality-qwen2.5-7b-manual-v1.json.",
+    "Corrected mixed-script audit character set to exclude shared Japanese kanji; Qwen7 rerun mixedScriptRisk=0, preventing false-positive signal.",
+    "Qwen 2.5 14B 12-row fixture manually reviewed: 4 correct, 6 minor/terminology, 1 severity-2 omission, 1 severity-3 language failure; not production-routed.",
+    "Joined Qwen14 selector signals with manual labels: 11/12 surface passes, 2 severe manual rows also pass (18.2% unsafe false-accept on fixture); cascade remains disabled.",
+    "Generated audit-only Qwen14 selective-cascade oracle simulation: 10/12 rescue, 2 fallback, 0 severe selected by manual labels; not deployable evidence.",
+    "Ran Qwen14 semantic coverage and calibration: threshold 0.70 retains 8/12 but 1/2 severe rows (12.5% unsafe); embedding gate remains audit-only.",
+    "Post-audit verification: translation-server unittest discovery 98 tests passed; bundled app PID 60582 remains ready/model_loaded=true; diff check clean.",
+    "Consolidated Gemma9B/Qwen7B/Qwen14B manual fixture comparison; severe counts 3/1/2 respectively, with non-overlapping failures. Blanket replacement rejected; selective routing remains under evaluation.",
+    "Qwen14 prompt-rescue experiment: 3 explicit Japanese-only prompts fixed prior Chinese output on thermal-earring row while preserving all scientific values; report model-quality-qwen2.5-14b-prompt-rescue-v1.json. Single-row evidence only, no production routing.",
+    "Qwen14 held-out prompt evaluation completed: 3 rows, manual 1 correct/1 minor/1 severity-2 semantic shift; prompt helps language but not claim safety.",
+    "Qwen14 segmented rescue: held-out 2-sentence block translated as two units with relation preserved, including correct early-disposal meaning; report model-quality-qwen2.5-14b-heldout-segmented-v1.json.",
+    "Verified production segment_for_translation splits the held-out early-disposal block into two complete sentences; no additional segmenter patch justified from this case.",
+    "Verified app-managed server recovered after local model evaluation: new bundled PID 90642 reached health ready/model_loaded=true after warmup.",
+    "Unloaded audit-only Ollama Qwen14B after evaluation; app-managed translation server remains ready/model_loaded=true.",
+    "Added segmenter regression for early-disposal held-out sentence boundary; 45 segmenter/candidate tests pass."
+  ],
+  "completedExperiments": [
+    {
+      "at": "2026-09-15T07:46:53.787113+00:00",
+      "name": "runtime-and-regression-recheck-v9",
+      "status": "pass",
+      "evidence": [
+        "bundled server PID 90642 health ready/model_loaded=true",
+        "translation-server unittest discovery 99 tests passed",
+        "bundle verifier confirms strict-restore-v9 and MAX_NEW_TOKENS 384"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:47:25.479607+00:00",
+      "name": "frontend-regression-recheck-v9",
+      "status": "pass",
+      "evidence": [
+        "vitest 60 files / 307 tests passed",
+        "translation-server PYTHONPATH unittest 99 tests passed",
+        "active bundled server remains PID 90642 ready"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:48:50.210602+00:00",
+      "name": "relation-signal-audit-v1",
+      "status": "pass",
+      "evidence": [
+        "candidate selector now reports condition, temporal, and trend preservation signals",
+        "production routing unchanged",
+        "regression suite passed"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:49:34.087503+00:00",
+      "name": "heldout-relation-signal-qwen14-v1",
+      "status": "audit-only",
+      "evidence": [
+        "12 candidate rows",
+        "surface hard pass 11/12",
+        "condition/temporal/trend relation pass 9/12",
+        "three relation-risk rows overlap severity 3/4 manual failures",
+        "no production routing change"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:50:01.813061+00:00",
+      "name": "multi-model-relation-selection-v1",
+      "status": "audit-only",
+      "evidence": [
+        "36 candidates across Gemma9B/Qwen7B/Qwen14B",
+        "selector chose Gemma for 11/12 rows",
+        "all 12 baseline severity>=2 rows would be replaced by selector",
+        "demonstrates ranking remains unsafe without held-out semantic labels",
+        "no production routing change"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:50:40.383942+00:00",
+      "name": "relation-gated-selection-audit-v1",
+      "status": "audit-only",
+      "evidence": [
+        "Qwen14 12-row candidate run with relation gate",
+        "9 selected, 3 rejected for condition/temporal/trend risk",
+        "gate is not production enabled",
+        "100 translation-server tests pass"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:51:16.916035+00:00",
+      "name": "heldout-relation-gate-v1",
+      "status": "audit-only",
+      "evidence": [
+        "fixed harness to support held-out rows without paperId",
+        "3 held-out Qwen14 rows",
+        "relation gate retained 1 and rejected 2 due surface hard signals",
+        "100 translation-server tests pass",
+        "production routing unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:51:39.875418+00:00",
+      "name": "heldout-harness-regression-v1",
+      "status": "pass",
+      "evidence": [
+        "paperId-free held-out fixture support retained",
+        "translation-server 101 tests passed",
+        "bundled runtime health ready/model_loaded=true"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:51:59.626690+00:00",
+      "name": "frontend-build-recheck-v9",
+      "status": "pass",
+      "evidence": [
+        "tsc --noEmit passed",
+        "npm run lint passed with existing warnings",
+        "npm run build passed",
+        "no app-managed server restart"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:52:25.972991+00:00",
+      "name": "audit-documentation-phase2-checkpoint",
+      "status": "recorded",
+      "evidence": [
+        "relation-aware selector results linked in TRANSLATION_CORPUS_AUDIT.md",
+        "current product baseline preserved as 17/82 = 20.7%",
+        "no production routing change"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:53:10.773633+00:00",
+      "name": "local-model-inventory-recheck",
+      "status": "recorded",
+      "evidence": [
+        "ollama local candidates available: qwen2.5 3b/7b/14b and gemma2 9b",
+        "no audit model currently loaded",
+        "bundled app server remains separate and untouched"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:53:54.168641+00:00",
+      "name": "full-regression-after-relation-gate",
+      "status": "pass",
+      "evidence": [
+        "translation-server 101 tests",
+        "vitest 60 files / 307 tests",
+        "app-managed runtime health verified in prior checkpoint",
+        "no production routing change"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:54:12.215267+00:00",
+      "name": "segmentation-relation-comparison-v1",
+      "status": "audit-only",
+      "evidence": [
+        "compared Qwen14 whole-block prompt outputs with segmented outputs",
+        "signals recorded per unit",
+        "production routing unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:54:40.458541+00:00",
+      "name": "relation-signal-where-false-positive-fix",
+      "status": "pass",
+      "evidence": [
+        "removed relative-clause where from condition trigger",
+        "added regression test",
+        "translation-server 102 tests pass",
+        "Qwen14 conservative report rerun; production routing unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:55:08.792238+00:00",
+      "name": "trend-signal-false-positive-fix",
+      "status": "pass",
+      "evidence": [
+        "narrowed trend vocabulary to directional change verbs",
+        "added plain-more regression test",
+        "Qwen14 conservative audit rerun: hardSignalPass 10/12, relationRiskRows 0, rejectedByRelationGate 1",
+        "translation-server 103 tests passed",
+        "production routing unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:56:30.839966+00:00",
+      "name": "relation-signal-when-disambiguation",
+      "status": "pass",
+      "evidence": [
+        "moved when from condition vocabulary to temporal vocabulary",
+        "added regression test",
+        "translation-server 104 tests pass",
+        "production routing unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:57:27.407296+00:00",
+      "name": "qwen14-conservative-v4-rerun",
+      "status": "audit-only",
+      "evidence": [
+        "recomputed after when disambiguation",
+        "12 rows, hardSignalPass 9/12",
+        "relationSignalPass 12/12",
+        "rejectedByRelationGate 2",
+        "production routing unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T07:57:39.124648+00:00",
+      "name": "relation-calibration-v4-documentation",
+      "status": "recorded",
+      "evidence": [
+        "documented relation vocabulary calibration v4",
+        "Qwen14 audit metrics retained",
+        "production routing unchanged"
+      ]
+    }
+  ],
+  "checkpoints": [
+    {
+      "at": "2026-09-15T08:03:36.841388+00:00",
+      "name": "candidate-selection-cli-heldout-regression",
+      "status": "pass",
+      "evidence": [
+        "added CLI regression for rows without paperId",
+        "translation-server unittest 105 tests passed",
+        "production routing unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T08:04:17.764439+00:00",
+      "name": "frontend-regression-after-audit-harness",
+      "status": "pass",
+      "evidence": [
+        "vitest 60 files / 307 tests",
+        "oxlint exit 0",
+        "tsc --noEmit passed",
+        "app-managed translation server remained ready"
+      ]
+    },
+    {
+      "at": "2026-09-15T08:04:50.587178+00:00",
+      "name": "candidate-selection-scope-audit",
+      "status": "audit-only",
+      "evidence": [
+        "identified enriched-unsafe cohort bias in selector reports",
+        "saved candidate-selection-scope-v1.json",
+        "production routing unchanged",
+        "next: mixed-quality label-blind heldout fixture"
+      ]
+    },
+    {
+      "at": "2026-09-15T08:05:18.952161+00:00",
+      "name": "mixed-quality-heldout-fixture-scaffold",
+      "status": "prepared",
+      "evidence": [
+        "24 ordinary-body cases",
+        "12 baseline accepted and 12 reader-visible fallback",
+        "manual labels intentionally blank",
+        "production routing unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T08:06:23.326024+00:00",
+      "name": "mixed-quality-fixture-schema-test",
+      "status": "pass",
+      "evidence": [
+        "fixture test asserts 12 accepted and 5 fallback cases",
+        "manual truth labels remain blank",
+        "translation-server unittest 106 tests passed",
+        "production routing unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T08:08:48.087352+00:00",
+      "name": "benchmark-client-auth-header",
+      "status": "partial",
+      "evidence": [
+        "benchmark accepts transient MADLAD_SERVER_TOKEN",
+        "initial pending run returned 401 before fix",
+        "retry interrupted after no completion",
+        "app server left running"
+      ]
+    },
+    {
+      "at": "2026-09-15T08:09:36.624900+00:00",
+      "name": "significant-other-authenticated-audit-partial",
+      "status": "pass",
+      "evidence": [
+        "2 translation units generated through authenticated packaged app server",
+        "benchmark client uses transient MADLAD_SERVER_TOKEN",
+        "checkpoint report written",
+        "paper remains incomplete for limit 12",
+        "server process preserved"
+      ]
+    },
+    {
+      "at": "2026-09-15T08:11:01.258973+00:00",
+      "name": "resume-partial-checkpoint-fix",
+      "status": "partial",
+      "evidence": [
+        "resume now requires rows >= requested limit",
+        "retry retained partial report",
+        "packaged server socket closed during retry",
+        "tsc and 106 Python tests pass",
+        "no server restart performed"
+      ]
+    },
+    {
+      "at": "2026-09-15T08:11:31.870019+00:00",
+      "name": "benchmark-request-timeout-retry",
+      "status": "pass",
+      "evidence": [
+        "bounded 180s request timeout",
+        "one transient fetch retry",
+        "tsc and diff checks pass",
+        "production routing unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T08:12:35.131701+00:00",
+      "name": "resume-partial-row-preservation",
+      "status": "pass",
+      "evidence": [
+        "failed retries preserve prior partial rows",
+        "completion requires requested limit",
+        "tsc and diff checks pass",
+        "production routing unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T12:22:57.065509+00:00",
+      "name": "manual review queue completed",
+      "details": "Reviewed all 139 audit rows; final provisional metrics: accept 46.76%, pre 35.97%, post 17.27%, semantic error 32.37%, unsafe false accept 23.08%, extraction-induced 18.71%; ordinary-body post fallback 25%.",
+      "next": "Expand audit-only semantic relation evaluator and selective cascade experiments; do not change production routing without safety evidence."
+    },
+    {
+      "at": "2026-09-15T12:23:34.357823+00:00",
+      "name": "semantic relation audit refreshed",
+      "details": "75 translated ordinary-body rows: invariant loss 7, negation 4, contrast 4, ordinal 6; audit-only, no production routing change.",
+      "next": "Calibrate relation signals against manual labels before selective cascade."
+    },
+    {
+      "at": "2026-09-15T12:24:05.725655+00:00",
+      "name": "relation signal calibration",
+      "details": "Accepted-row calibration: invariant precision/recall 0/0, negation 0.333/0.067, contrast 0.5/0.067, ordinal 0.2/0.067, any relation 0.25/0.2. Audit-only signals are not production-safe yet.",
+      "next": "Design higher-precision semantic claim evaluator or candidate cascade experiment; preserve current routing."
+    },
+    {
+      "at": "2026-09-15T12:24:41.894044+00:00",
+      "name": "three-model selective cascade simulation",
+      "details": "34 candidates across 17 sources; relation gate selected 16 and rejected 1; hard signal pass 13. Audit-only; no production routing change.",
+      "next": "Add semantic claim/relation review labels and test candidate selection against manual severity before any rollout."
+    },
+    {
+      "at": "2026-09-15T12:25:28.368328+00:00",
+      "name": "semantic review prioritization",
+      "details": "Generated audit-only priority list for accepted severity>=2 rows using relation/invariant losses and source length.",
+      "next": "Use prioritized rows to calibrate candidate selection and evaluate rescue candidates; no production routing change."
+    },
+    {
+      "at": "2026-09-15T12:25:41.701914+00:00",
+      "name": "semantic priority scorer verified",
+      "details": "Relation-loss extraction limited to Preserved signals; regenerated 15 accepted severity>=2 priorities; TypeScript and diff checks passed.",
+      "next": "Calibrate candidate selection on these priorities, preserving audit-only boundary."
+    },
+    {
+      "at": "2026-09-15T12:25:59.710464+00:00",
+      "name": "translation-server regression verification",
+      "details": "Python unittest discovery passed 106 tests after semantic priority scorer addition; no production routing change.",
+      "next": "Continue semantic claim evaluator/cascade calibration."
+    },
+    {
+      "at": "2026-09-15T12:26:19.294304+00:00",
+      "name": "frontend regression verification",
+      "details": "Vitest passed 60 files / 310 tests after audit tooling changes.",
+      "next": "Continue semantic claim evaluator and cascade calibration."
+    },
+    {
+      "at": "2026-09-15T12:26:46.003391+00:00",
+      "name": "lint verification",
+      "details": "oxlint passed after audit tooling changes.",
+      "next": "Continue semantic claim evaluator/cascade calibration."
+    },
+    {
+      "at": "2026-09-15T12:27:02.770397+00:00",
+      "name": "local model ledger reviewed",
+      "details": "Cached free local candidates are evaluated; no additional permissive cached candidate remains. NLLB CC-BY-NC excluded due to license.",
+      "next": "Continue semantic claim evaluation; any new model download requires explicit license/size screening."
+    },
+    {
+      "at": "2026-09-15T12:27:28.334687+00:00",
+      "name": "post-fallback rescue upper bound",
+      "details": "Joined manually reviewed post-model fallback rows with M2M/CAT candidates; conservative signal upper bound saved.",
+      "next": "Manual review candidate outputs before any selective cascade rollout."
+    },
+    {
+      "at": "2026-09-15T12:27:55.602446+00:00",
+      "name": "candidate ledger synchronization",
+      "details": "Added existing Gemma 2 9B fixed-fixture and held-out evidence to local candidate ledger; not production-routed.",
+      "next": "Held-out semantic selector validation before any cascade rollout."
+    },
+    {
+      "at": "2026-09-15T12:28:17.379801+00:00",
+      "name": "held-out selector evidence reviewed",
+      "details": "Qwen14 held-out relation gate: 1/3 hard-signal pass, 2/3 rejected; sample too small for production inference.",
+      "next": "Use larger held-out semantic claim labels before routing changes."
+    },
+    {
+      "at": "2026-09-15T12:28:47.536638+00:00",
+      "name": "fallback reason distribution",
+      "details": "Post-model fallback 24 rows: 14 server-returned source fallback; remaining invariant/negation/degenerate guards. Empty translations mean threshold relaxation cannot rescue them.",
+      "next": "Focus on candidate generation/model adequacy, not lowering quality thresholds."
+    },
+    {
+      "at": "2026-09-15T12:29:21.175726+00:00",
+      "name": "Gemma held-out completeness signal",
+      "details": "Generated audit-only length/numeric completeness report for 3 held-out Gemma rows.",
+      "next": "Use larger held-out claim labels; do not route based on completeness alone."
+    },
+    {
+      "at": "2026-09-15T12:29:42.071259+00:00",
+      "name": "next actions reconciled",
+      "details": "Removed stale completed benchmark/review tasks and retained unresolved semantic, cascade, extraction, and model-screening work.",
+      "next": [
+        "calibrate semantic claim evaluator on manual severity labels",
+        "run larger held-out candidate comparison including Gemma/Qwen where locally available",
+        "evaluate selective cascade rescue on held-out ordinary-body rows with manual review",
+        "reduce extraction-induced fallback separately via page/column stitching",
+        "screen any new free local model for license, disk, latency, and semantic safety before download"
+      ]
+    },
+    {
+      "at": "2026-09-15T12:30:05.537762+00:00",
+      "name": "runtime resync",
+      "details": "Read-only health check found port 8765 unavailable and no translation-server process; audit queue has pending=0. No process was started or stopped.",
+      "next": "When app is launched, verify server health before runtime translation experiments."
+    },
+    {
+      "at": "2026-09-15T12:42:36.033317+00:00",
+      "name": "aggregate audit report reconstruction",
+      "details": "CLI without token partially overwrote aggregate; reconstructed translation-audit.json/md from 19 surviving per-paper reports (216 rows). Manual 139-row review remains source for current metrics.",
+      "next": "Treat per-paper reports/manual review as authoritative and avoid unauthenticated benchmark writes."
+    },
+    {
+      "at": "2026-09-15T12:42:54.967942+00:00",
+      "name": "runtime resumed",
+      "details": "Health endpoint ready with model_loaded=true; unauthenticated benchmark was not retried and no token was exposed.",
+      "next": "Run authenticated app-path held-out evaluation when safely configured."
+    },
+    {
+      "timestamp": "2026-09-15T22:48:00+09:00",
+      "phase": "extraction",
+      "status": "in_progress",
+      "completed": [
+        "reran extraction corpus: 40 tests passed",
+        "reran 19-paper baseline benchmark",
+        "verified source integrity remains 1.0 across baseline",
+        "verified education numbered-list recall 1.0",
+        "verified inline DOI/body split regression"
+      ],
+      "metrics": {
+        "papers": 19,
+        "titleExactRate": 0.5789473684210527,
+        "sourceIntegrityRate": 1,
+        "thermalEarringTableRegionRecall": 0.8,
+        "educationListItemRecall": 1
+      },
+      "unresolved": [
+        "interactive-jewellery token-order regression",
+        "neuroscience-rule-following multi-column classification",
+        "economics-regularized-deepiv multi-column classification",
+        "manual cross-format review and paragraph-boundary attribution"
+      ],
+      "nextActions": [
+        "inspect three residual reading-order cases at line/bbox level",
+        "add only evidence-backed generic regression or resolver changes",
+        "perform representative manual review and record labels"
+      ]
+    },
+    {
+      "timestamp": "2026-09-15T22:52:00+09:00",
+      "name": "extraction-manual-sample-v1",
+      "status": "pass",
+      "evidence": [
+        "generated 114 representative rows from 19 cached PDFs",
+        "rows retain role/page/bbox/native text and pending manual labels",
+        "translation server untouched"
+      ],
+      "next": [
+        "manually compare representative rows with rendered source PDFs",
+        "classify boundary and contamination failures before code changes"
+      ]
+    },
+    {
+      "timestamp": "2026-09-15T22:54:00+09:00",
+      "name": "structured-masthead-author-evidence",
+      "status": "pass",
+      "evidence": [
+        "neuroscience page1 author row changed paragraph -> author",
+        "Nature page1 rendered review confirms no chrome/body mixing",
+        "reading-order suite 20/20 passed",
+        "no paper-specific vocabulary added"
+      ],
+      "next": [
+        "rerun full 40-test extraction corpus",
+        "check author false positives across formats"
+      ]
+    },
+    {
+      "timestamp": "2026-09-15T22:54:30+09:00",
+      "name": "structured-author-full-corpus-rerun",
+      "status": "pass",
+      "evidence": [
+        "extraction corpus 40/40 passed",
+        "no reading-order/caption/table/list/source-integrity regression observed"
+      ],
+      "next": [
+        "measure author false-positive rate with broader annotated masthead sample",
+        "continue rendered review for IEEE and table-heavy papers"
+      ]
+    },
+    {
+      "timestamp": "2026-09-15T22:57:00+09:00",
+      "name": "ieee-legacy-rendered-review",
+      "status": "pass",
+      "evidence": [
+        "design-for-wearability page1 rendered and compared",
+        "3 checks severity 0",
+        "no watermark/chrome contamination observed",
+        "two-column order and Keywords boundary correct"
+      ],
+      "next": [
+        "review table-heavy and figure-heavy pages",
+        "aggregate manual labels and causes"
+      ]
+    },
+    {
+      "timestamp": "2026-09-15T23:00:00+09:00",
+      "name": "table-heavy-rendered-review",
+      "status": "finding",
+      "evidence": [
+        "thermal-earring page13 rendered and compared",
+        "caption and section boundaries correct",
+        "native grid rows remain paragraph blocks",
+        "table contamination severity 2"
+      ],
+      "next": [
+        "design generic row/column geometry table-region evidence",
+        "add positive native-grid regression fixture before implementation"
+      ]
+    },
+    {
+      "id": "extraction-corpus-rerun-app-divergence-v1",
+      "status": "verified",
+      "result": "Extraction corpus 40/40 after current source changes; economics DeepIV page 14 visually confirmed as single-column native layout. Current macOS .app predates source extraction changes and was not rebuilt per goal."
+    },
+    {
+      "id": "interactive-jewellery-column-review-v1",
+      "status": "verified",
+      "result": "Page 3 visual/native comparison confirms genuine ACM two-column reading order with embedded figure captions; existing token-order regression passes; no heuristic change promoted."
+    },
+    {
+      "id": "extraction-benchmark-rerun-v2",
+      "status": "verified",
+      "result": "npm run bench:pdf-extraction completed on 19-paper corpus; sourceIntegrity, figureCaptionRelation, table/list minima remain 1.0; representative OzCHI heading/hierarchy/table metrics remain 1.0."
+    },
+    {
+      "id": "extraction-lint-typecheck-v1",
+      "status": "verified",
+      "result": "lint and TypeScript noEmit pass after extraction benchmark rerun; translation-server and .app unchanged."
+    },
+    {
+      "id": "full-regression-build-v3",
+      "status": "verified",
+      "result": "Full Vitest 61 files/317 tests and frontend build pass after extraction audit updates; existing Vite warnings only; no Tauri build."
+    },
+    {
+      "id": "deepiv-native-math-boundary-classification-v1",
+      "status": "recorded",
+      "result": "Page 14 visual/native comparison classifies residual as display-math boundary fragmentation, not reading-order failure; no heuristic added."
+    },
+    {
+      "id": "mixed-font-candidate-inventory-v1",
+      "status": "reviewed",
+      "result": "53 candidates inventoried (linguistics 22, economics 21, others 10); majority are long prose/table rows, so existing conservative inline-subheading gate retained."
+    },
+    {
+      "id": "significant-other-cross-page-boundary-v1",
+      "status": "verified",
+      "result": "Pages 10-11 visual review confirms quote continuation and separate following reference; existing role-aware stitching is correct."
+    },
+    {
+      "id": "nature-inline-subheading-visual-v1",
+      "status": "verified",
+      "result": "Nature page 2 visual confirms Methods/Subjects/Experimental Procedure label+prose boundaries; current native-item split matches layout and baseline assertion."
+    },
+    {
+      "id": "statistical-prose-equation-negative-v1",
+      "status": "verified",
+      "result": "Added n/chi-square/F/t statistical prose negatives; readingOrder targeted suite 32/32 passes. No translation changes."
+    },
+    {
+      "id": "dont-mind-me-figure-boundary-v1",
+      "status": "verified",
+      "result": "ACM page 4 visual review confirms Figure 3/caption isolation and separate heading/body boundaries; no parser change."
+    },
+    {
+      "id": "table-caption-cell-boundary-v1",
+      "status": "verified",
+      "result": "Generic caption continuation guard prevents multi-cell rows from joining table captions; marketing page 14 probe corrected; readingOrder 33/33 and baseline 20/20 pass."
+    },
+    {
+      "id": "table-caption-fix-corpus-regression-v1",
+      "status": "verified",
+      "result": "Full extraction corpus 40/40 after table caption/cell boundary fix; diff check passes; no structural regression observed."
+    },
+    {
+      "id": "full-suite-table-caption-fix-v1",
+      "status": "verified",
+      "result": "Full Vitest 61 files/319 tests passes after generic table-caption/cell boundary fix; diff check passes; translation and .app unchanged."
+    },
+    {
+      "id": "speechin-table-row-review-v1",
+      "status": "recorded",
+      "result": "Visual page 3 review found unresolved bold summary row roles and paragraphized grid; caption remains isolated."
+    },
+    {
+      "id": "speechin-numeric-table-row-role-v2",
+      "status": "verified",
+      "result": "Resolver now classifies bold numeric rows adjacent to Table 1 as table (0.96) and suppresses heading evidence; caption remains separate; baseline 20/20 and tsc pass."
+    },
+    {
+      "id": "speechin-table-role-regression-v1",
+      "status": "verified",
+      "result": "Extraction corpus 40/40 and TypeScript noEmit pass after table-adjacent numeric-row role correction; no cached-corpus regression observed."
+    },
+    {
+      "id": "corpus-benchmark-speechin-v2",
+      "status": "verified",
+      "result": "19-paper benchmark regenerated after speechin table-row correction; source integrity min 1.0 across 19, figure relation min 1.0 across 17 annotated, table/list annotated minima 1.0."
+    },
+    {
+      "id": "speechin-table-row-role-regression-v1",
+      "status": "verified",
+      "result": "speechin table summary rows resolve as table; extraction corpus 40/40; targeted real-paper baseline 20/20",
+      "artifact": "src/test/pdfExtraction/baselineRealPapers.test.ts"
+    },
+    {
+      "id": "interactive-jewellery-heading-complete-gt-v1",
+      "status": "verified",
+      "result": "manual heading annotation for ACM TEI pages 1-9; heading precision 1.0 and recall 1.0 in regenerated benchmark"
+    },
+    {
+      "id": "thermal-earring-heading-complete-gt-v1",
+      "status": "verified",
+      "result": "manual heading annotation for ACM IMWUT; heading precision 0.949 and recall 0.974, exposing one residual heading boundary false-positive/miss for follow-up"
+    },
+    {
+      "id": "thermal-earring-heading-gt-correction-v1",
+      "status": "verified",
+      "result": "removed non-heading ABSTRACT from exhaustive GT; recall 1.0, precision 0.949; two generic false positives retained for evidence review"
+    },
+    {
+      "id": "heading-abbreviation-precision-v1",
+      "status": "verified",
+      "result": "generic single-word unbold period abbreviation demoted; thermal heading precision 0.949→0.974, recall 1.0; baseline 20/20"
+    },
+    {
+      "id": "table-row-heading-guard-safety-v1",
+      "status": "reverted",
+      "result": "broad multi-item caption-near guard reduced thermal heading recall 0.946; reverted; retained conservative table-like guard restores 0.974 precision / 1.0 recall"
+    },
+    {
+      "id": "extraction-source-validation-v1",
+      "status": "verified",
+      "result": "full Vitest 61/320, lint, TypeScript noEmit, and web build pass; Tauri app intentionally not built"
+    },
+    {
+      "id": "ozchi-heading-complete-gt-v1",
+      "status": "verified",
+      "result": "promoted supplied OzCHI heading ground truth to exhaustive; benchmark heading precision 0.893, recall 1.0; table-region precision 1.0"
+    },
+    {
+      "id": "ozchi-heading-gt-partial-correction-v1",
+      "status": "verified",
+      "result": "removed exhaustive flag after canonical probe found omitted front-matter headings; precision withheld, recall retained"
+    },
+    {
+      "id": "structural-metrics-summary-v1",
+      "status": "verified",
+      "result": "generated complete-annotation-only structural metric summary; heading precision mean 0.987, recall 1.0; table precision/recall 1.0",
+      "artifact": "test-data/real-papers/reports/structural-metrics-summary-v1.json"
+    },
+    {
+      "id": "post-heading-evidence-regression-v1",
+      "status": "verified",
+      "result": "extraction corpus 40/40 and full suite 61/320 pass after heading/table evidence review"
+    },
+    {
+      "id": "hierarchy-precision-regression-v1",
+      "status": "verified",
+      "result": "full suite 61/321 and diff check pass after hierarchy precision metric addition"
+    },
+    {
+      "id": "hierarchy-complete-annotation-guard-v1",
+      "status": "verified",
+      "result": "gated hierarchy precision by completeAnnotations; removed invalid OzCHI partial-edge 0.333; rebuilt structural-metrics-summary-v2"
+    },
+    {
+      "id": "table-header-heading-precision-v1",
+      "status": "verified",
+      "result": "generic caption-near multi-cell title-case table-header guard; thermal heading precision 1.0 / recall 1.0; full suite 61/321"
+    },
+    {
+      "id": "structural-metrics-summary-v2-refresh",
+      "status": "verified",
+      "result": "after generic table-header guard, complete heading mean/min precision 1.0 and recall 1.0; table precision/recall 1.0",
+      "artifact": "test-data/real-papers/reports/structural-metrics-summary-v2.json"
+    },
+    {
+      "id": "education-list-complete-gt-v1",
+      "status": "verified",
+      "result": "seven numbered list items marked exhaustive; list precision/recall 1.0/1.0",
+      "artifact": "test-data/real-papers/reports/structural-metrics-summary-v2.json"
+    },
+    {
+      "id": "post-list-metric-validation-v1",
+      "status": "verified",
+      "result": "full Vitest 61/321, lint, typecheck, and diff check pass; extraction workstream remains active"
+    },
+    {
+      "id": "cross-page-connector-regression-v1",
+      "status": "verified",
+      "result": "page 9 `... to` + page 10 `gain ...` stitches as one paragraph; reading-order 34/34",
+      "nextActions": [
+        "complete cross-format ground truth",
+        "review remaining paragraph/table limitations"
+      ]
+    },
+    {
+      "id": "native-duplicate-provenance-v1",
+      "status": "verified",
+      "result": "economics duplicate phrase reproduced by direct pdftotext; no unsafe deduplication added",
+      "nextActions": [
+        "visual provenance review of native duplicate",
+        "complete cross-format ground truth"
+      ]
+    },
+    {
+      "id": "post-provenance-validation-v1",
+      "status": "verified",
+      "result": "extraction corpus 2 files/40 tests, lint, typecheck, diff check pass",
+      "nextActions": [
+        "visual review of native duplicate",
+        "expand complete cross-format annotations"
+      ]
+    },
+    {
+      "id": "visual-native-duplicate-confirmed-v1",
+      "status": "verified",
+      "result": "rendered economics PDF page 38 visibly contains the repeated phrase; deduplication rejected as unsafe",
+      "nextActions": [
+        "expand complete cross-format annotations",
+        "review remaining extraction failures"
+      ]
+    },
+    {
+      "id": "provenance-invariant-regression-v1",
+      "status": "verified",
+      "result": "all synthetic non-empty blocks retain valid page/bbox provenance; reading-order 35/35",
+      "nextActions": [
+        "expand complete cross-format annotations",
+        "review remaining extraction failures"
+      ]
+    },
+    {
+      "id": "full-regression-after-provenance-v1",
+      "status": "verified",
+      "result": "full Vitest 61 files/323 tests pass; extraction-only scope preserved",
+      "nextActions": [
+        "expand complete cross-format annotations",
+        "review remaining extraction failures"
+      ]
+    },
+    {
+      "id": "web-build-validation-v1",
+      "status": "verified",
+      "result": "npm run build passes; existing Vite dynamic-import warnings only",
+      "nextActions": [
+        "expand complete cross-format annotations",
+        "review remaining extraction failures"
+      ]
+    },
+    {
+      "id": "ground-truth-coverage-audit-v1",
+      "status": "verified",
+      "result": "5 fixtures total; 3 complete; exhaustive precision coverage is headings(2), table regions(1), list items(1)",
+      "nextActions": [
+        "complete cross-format ground truth annotations",
+        "manual bbox review on additional real PDFs"
+      ]
+    },
+    {
+      "id": "real-paper-baseline-regenerated-v1",
+      "status": "verified",
+      "result": "bench:pdf-extraction completed for 19 cached real papers",
+      "nextActions": [
+        "expand complete cross-format annotations",
+        "manual bbox review on additional real PDFs"
+      ]
+    },
+    {
+      "id": "generic-title-threshold-v1",
+      "status": "verified",
+      "result": "education title now classified as title under 1.22x generic threshold; extraction corpus 2 files/40 tests pass",
+      "nextActions": [
+        "run full regression and benchmark refresh",
+        "expand complete cross-format annotations"
+      ]
+    },
+    {
+      "id": "full-regression-title-fix-v1",
+      "status": "verified",
+      "result": "Vitest 61 files/323 tests pass; education title classification retained",
+      "nextActions": [
+        "expand complete cross-format annotations",
+        "manual bbox review on additional real PDFs"
+      ]
+    },
+    {
+      "id": "lint-title-fix-v1",
+      "status": "verified",
+      "result": "npm run lint passes after generic title threshold change",
+      "nextActions": [
+        "expand complete cross-format annotations",
+        "manual bbox review on additional real PDFs"
+      ]
+    },
+    {
+      "id": "benchmark-title-fix-refresh-v1",
+      "status": "verified",
+      "result": "19-paper benchmark rerun; education title text recovered, source integrity 1.0",
+      "nextActions": [
+        "expand complete cross-format annotations",
+        "review catalog title normalization separately"
+      ]
+    },
+    {
+      "id": "title-threshold-benchmark-safety-v1",
+      "status": "verified",
+      "result": "19-paper refresh preserves ACM/thermal heading 1.0 precision/recall and source integrity 1.0",
+      "nextActions": [
+        "expand complete cross-format annotations",
+        "review catalog normalization separately"
+      ]
+    },
+    {
+      "id": "education-title-ground-truth-correction-v1",
+      "status": "verified",
+      "result": "Corrected expected title to native PDF title and added executable exact-title assertion; extraction corpus and 19-paper benchmark pass"
+    },
+    {
+      "id": "wrapped-nature-title-benchmark-v1",
+      "status": "verified",
+      "result": "Benchmark now reports canonical multi-line resolved title; neuroscience exact-title regression passes 20/20"
+    },
+    {
+      "id": "masthead-badge-contamination-v1",
+      "status": "verified",
+      "result": "Generic geometry/style guard demotes isolated all-caps masthead badge from affiliation; neuroscience baseline 20/20"
+    },
+    {
+      "id": "post-masthead-guard-validation-v1",
+      "status": "verified",
+      "result": "Extraction corpus 2 files/40 tests, lint, and TypeScript noEmit pass"
+    },
+    {
+      "id": "hci-arxiv-title-evidence-v1",
+      "status": "verified",
+      "result": "Generic native style/size title evidence plus resolver participation recovers HCI title; arXiv identifier excluded; targeted baseline 20/20"
+    },
+    {
+      "id": "nineteen-paper-title-benchmark-v2",
+      "status": "verified",
+      "result": "19-paper benchmark refreshed; title exact-match 0.632→0.684; HCI now exact; extraction corpus 2 files/40 tests"
+    },
+    {
+      "id": "linguistic-arxiv-v4-title-metadata-v1",
+      "status": "verified",
+      "result": "Updated stale v1 catalog title to native v4 title; exact regression passes 20/20"
+    },
+    {
+      "id": "catalog-native-title-audit-v2",
+      "status": "verified",
+      "result": "Corrected marketing and ergonomics catalog titles from native PDFs; 19-paper title exact-match 0.842; extraction 2 files/40 tests"
+    },
+    {
+      "id": "title-compound-hyphen-v1",
+      "status": "verified",
+      "result": "Preserved intentional title hyphen on uppercase continuation; dont-mind-me exact regression passes 20/20"
+    },
+    {
+      "id": "title-benchmark-hyphen-v2",
+      "status": "verified",
+      "result": "19-paper title exact-match 0.895 (17/19) after generic compound-hyphen fix; remaining step-to-charge and fashion-hybrid-cmf"
+    },
+    {
+      "id": "current-corpus-title-closure-v1",
+      "status": "verified",
+      "result": "Native catalog audit closes all 19 cached title mismatches; title exact-match 1.0; extraction corpus 2 files/40 tests"
+    },
+    {
+      "id": "full-vitest-after-title-v1",
+      "status": "verified",
+      "result": "Full Vitest passes 61 files/323 tests after title and metadata extraction fixes"
+    },
+    {
+      "id": "full-validation-current-extraction-v1",
+      "status": "verified",
+      "result": "Lint, TypeScript noEmit, and full Vitest 61 files/323 tests pass; 19/19 title exact; structural manual review remains"
+    },
+    {
+      "id": "cross-page-adjacency-triage-v1",
+      "status": "verified",
+      "result": "21-paper report has 67 boundary rows; 10 high-risk adjacency cases catalogued for manual review; no unsafe stitch rule added"
+    },
+    {
+      "id": "page-width-build-fix-v1",
+      "status": "verified",
+      "result": "Propagated LayoutLine.pageWidth for generic masthead geometry guard; npm run build passes"
+    },
+    {
+      "id": "reading-order-focused-v1",
+      "status": "verified",
+      "result": "Focused reading-order suite passes 35/35 after page geometry propagation"
+    },
+    {
+      "id": "boundary-anomaly-scan-v1",
+      "date": "2026-09-16",
+      "scope": "19 cached PDFs / CanonicalDocument boundary scan",
+      "result": {
+        "papersScanned": 19,
+        "suspiciousAffiliationPapers": 7,
+        "suspiciousCaptionPapers": 0,
+        "suspiciousAffiliations": 8
+      },
+      "findings": [
+        "Seven papers contain long or sentence-like affiliation candidates; these require native geometry/manual review before any generic rule is changed.",
+        "No long figure-caption boundary anomaly was detected by the conservative scan.",
+        "The scan is triage evidence, not a precision metric; no production heuristic was added."
+      ],
+      "nextActions": [
+        "Inspect the eight affiliation candidates with page-one native geometry and role evidence.",
+        "Prioritize the Chinese abstract-like candidate and the HCI sentence-like candidate.",
+        "Add a generic fix only after confirming a repeated geometry/style pattern and regression coverage"
+      ]
+    },
+    {
+      "id": "extraction-corpus-regression-v2",
+      "date": "2026-09-16",
+      "scope": "real-paper extraction corpus",
+      "result": "2 files / 40 tests passed",
+      "notes": "Boundary anomaly scan did not lead to a heuristic change; native geometry review remains next."
+    },
+    {
+      "id": "bilingual-abstract-boundary-review-v1",
+      "date": "2026-09-16",
+      "fixture": "ergonomics-human-factors-ihci.pdf",
+      "finding": "Visual review confirms Chinese 摘要 block is abstract content incorrectly grouped as affiliation above the English masthead.",
+      "experiment": "Line-level prose demotion did not affect grouped block and was reverted after 39/40 regression.",
+      "decision": "Keep/revert: revert shipped rule; next work is grouping-level masthead boundary evidence."
+    },
+    {
+      "id": "masthead-grouping-experiment-v1",
+      "date": "2026-09-16",
+      "fixture": "ergonomics-human-factors-ihci.pdf",
+      "result": "reverted; focused baseline 19/20",
+      "finding": "CJK prose demotion at roleForLine does not affect already grouped affiliation block.",
+      "next": "instrument masthead boundary/group formation with native coordinates."
+    },
+    {
+      "id": "bilingual-abstract-boundary-fix-v1",
+      "date": "2026-09-16",
+      "fixture": "ergonomics-human-factors-ihci.pdf",
+      "hypothesis": "Dense long CJK prose in masthead region can be a translated abstract, not affiliation.",
+      "before": "摘要 block role=affiliation",
+      "after": "摘要 block role=paragraph",
+      "validation": "focused baseline 20/20; extraction corpus 2 files / 40 tests",
+      "decision": "keep generic CJK density/length guard; no paper-specific keyword"
+    },
+    {
+      "id": "spanning-abstract-continuation-fix-v1",
+      "date": "2026-09-16",
+      "fixture": "hci-empirical-methods.pdf",
+      "hypothesis": "Lowercase substantive top-right-column line is continuation prose, not affiliation.",
+      "before": "and demonstrates... role=affiliation",
+      "after": "role=paragraph",
+      "validation": "focused baseline 20/20; extraction corpus 2 files / 40 tests",
+      "decision": "keep generic lowercase substantive-line guard"
+    },
+    {
+      "id": "spanning-abstract-full-regression-v1",
+      "date": "2026-09-16",
+      "result": "Vitest 61 files / 323 tests; extraction corpus 2 files / 40 tests; lint/typecheck pass",
+      "scope": "generic masthead continuation guard",
+      "app": "not built",
+      "translationServer": "unchanged"
+    },
+    {
+      "id": "spanning-abstract-safety-regression-v1",
+      "date": "2026-09-16",
+      "result": "full Vitest 61 files / 323 tests; extraction corpus 2 files / 40 tests; lint/typecheck previously green",
+      "safety": "no existing-suite regression",
+      "scope": "masthead continuation extraction guard"
+    },
+    {
+      "id": "spanning-abstract-regression-assertion-v1",
+      "date": "2026-09-16",
+      "fixture": "hci-empirical-methods.pdf",
+      "result": "explicit role assertions added; focused baseline 20/20",
+      "safety": "continuation cannot regress to affiliation"
+    },
+    {
+      "id": "extraction-web-build-v1",
+      "date": "2026-09-16",
+      "result": "npm run build passed",
+      "warnings": "existing ineffective dynamic-import warnings only",
+      "tauriApp": "not built"
+    },
+    {
+      "id": "extraction-benchmark-refresh-v1",
+      "date": "2026-09-16",
+      "papers": 19,
+      "metrics": {
+        "titleExact": 1,
+        "sourceIntegrityRateMin": 1,
+        "sourceIntegrityRateMean": 1,
+        "figureCaptionRelationMin": 1,
+        "figureCaptionRelationMean": 1
+      },
+      "caveat": "paragraph/affiliation precision remains manually unverified"
+    },
+    {
+      "id": "neuroscience-affiliation-visual-review-v1",
+      "date": "2026-09-16",
+      "fixture": "neuroscience-rule-following.pdf",
+      "finding": "Flagged long affiliation is genuine multi-institution author footnote on page 1.",
+      "decision": "no change; broad affiliation demotion would be unsafe"
+    },
+    {
+      "id": "boundary-triage-tool-v1",
+      "date": "2026-09-16",
+      "artifact": "scripts/scan-extraction-boundaries.ts",
+      "command": "npm run scan:pdf-boundaries",
+      "behavior": "reports candidates only; no relabeling",
+      "validation": "lint and TypeScript noEmit pass"
+    },
+    {
+      "id": "ppg-affiliation-visual-review-v1",
+      "date": "2026-09-16",
+      "fixture": "ppg-earring.pdf",
+      "finding": "Flagged candidates are genuine multi-column author/institution affiliations.",
+      "decision": "no change"
+    },
+    {
+      "id": "fashion-affiliation-visual-review-v1",
+      "date": "2026-09-16",
+      "fixture": "fashion-hybrid-cmf.pdf",
+      "finding": "Flagged bilingual affiliation is genuine author/institution metadata.",
+      "decision": "no change"
+    },
+    {
+      "id": "boundary-triage-command-v1",
+      "date": "2026-09-16",
+      "command": "npm run scan:pdf-boundaries",
+      "result": "completed; candidate JSON emitted; report-only"
+    },
+    {
+      "id": "boundary-scan-delta-v1",
+      "date": "2026-09-16",
+      "before": {
+        "papers": 7,
+        "affiliationCandidates": 8
+      },
+      "after": {
+        "papers": 5,
+        "affiliationCandidates": 6,
+        "captionCandidates": 0
+      },
+      "interpretation": "candidate reduction after two generic boundary fixes; remaining candidates require native review"
+    },
+    {
+      "id": "thermal-affiliation-visual-review-v1",
+      "date": "2026-09-16",
+      "fixture": "thermal-earring.pdf",
+      "finding": "Flagged candidate is genuine ACM author/affiliation block.",
+      "decision": "no change"
+    },
+    {
+      "id": "speechin-affiliation-visual-review-v1",
+      "date": "2026-09-16",
+      "fixture": "speechin.pdf",
+      "finding": "Flagged candidate is genuine ACM author/affiliation list.",
+      "decision": "no change"
+    },
+    {
+      "id": "affiliation-review-closure-v1",
+      "date": "2026-09-16",
+      "scanCandidates": 8,
+      "confirmedErrors": 2,
+      "legitimateMetadata": 6,
+      "result": "manual review complete for initial scan"
+    },
+    {
+      "id": "table-metric-review-v1",
+      "date": "2026-09-16",
+      "fixtures": [
+        "thermal-earring.pdf",
+        "ozchi-finger-specific-touch.pdf"
+      ],
+      "result": "annotated table caption/region recall 1.0; thermal complete region precision 1.0",
+      "caveat": "cell-level structure and broader precision remain open"
+    },
+    {
+      "id": "masthead-boundary-phase-v1",
+      "date": "2026-09-16",
+      "status": "triage-complete",
+      "confirmedErrors": 2,
+      "legitimateAffiliationCandidates": 6,
+      "next": "paragraph stitching and table-cell/cross-format manual coverage"
+    },
+    {
+      "id": "thermal-table-visual-review-v1",
+      "date": "2026-09-16",
+      "fixture": "thermal-earring.pdf",
+      "page": 13,
+      "finding": "Native bordered 4-column Table 1 is separate from caption and prose.",
+      "decision": "existing table region behavior retained; no change"
+    },
+    {
+      "id": "thermal-table-row-regression-v1",
+      "date": "2026-09-16",
+      "fixture": "thermal-earring.pdf",
+      "page": 13,
+      "assertion": "Fever Experiment rows remain table nodes",
+      "validation": "baseline 20/20"
+    }
+  ],
+  "iterations": [
+    {
+      "at": "2026-09-15T17:20:00+09:00",
+      "name": "semantic-coverage-v80",
+      "status": "pass",
+      "evidence": [
+        "78 reviewed outputs scored",
+        "19 severity>=2 unsafe rows",
+        "safe mean min similarity 0.789 vs unsafe 0.686",
+        "audit-only; production unchanged",
+        "server health unavailable"
+      ]
+    },
+    {
+      "at": "2026-09-15T09:05:00+00:00",
+      "name": "packaged-significant-other-resume",
+      "status": "partial",
+      "evidence": [
+        "health model_loaded=true",
+        "4 rows checkpointed",
+        "5th request timed out at 120s",
+        "partial rows preserved"
+      ]
+    },
+    {
+      "at": "2026-09-15T09:20:00+00:00",
+      "name": "significant-other-m2m12-candidate-comparison",
+      "status": "pass",
+      "evidence": [
+        "12 same-input candidates generated",
+        "MADLAD fallback count 2",
+        "M2M100 output all 12",
+        "comparison report saved",
+        "production unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T09:35:00+00:00",
+      "name": "significant-other-candidate-quality",
+      "status": "pass",
+      "evidence": [
+        "same 12 inputs",
+        "MADLAD quality score 1: 10",
+        "M2M100 quality score 1: 8",
+        "audit-only; no cascade"
+      ]
+    },
+    {
+      "at": "2026-09-15T09:50:00+00:00",
+      "name": "ozchi-audit-expand-12",
+      "status": "pass",
+      "evidence": [
+        "12 rows checkpointed",
+        "fallback breakdown saved",
+        "packaged model ready"
+      ]
+    },
+    {
+      "at": "2026-09-15T10:20:00+00:00",
+      "name": "cognitive-psychology-audit-expand-12",
+      "status": "pass",
+      "evidence": [
+        "12 rows checkpointed",
+        "fallback breakdown saved",
+        "packaged model ready"
+      ]
+    },
+    {
+      "at": "2026-09-15T10:55:00+00:00",
+      "name": "linguistics-audit-expand-12",
+      "status": "pass",
+      "evidence": [
+        "12 rows checkpointed",
+        "fallback breakdown saved",
+        "packaged model ready"
+      ]
+    },
+    {
+      "at": "2026-09-15T11:30:00+00:00",
+      "name": "neuroscience-audit-expand-attempt",
+      "status": "partial",
+      "evidence": [
+        "server initially ready",
+        "connection refused during parallel requests",
+        "existing checkpoint preserved",
+        "no restart performed"
+      ]
+    },
+    {
+      "at": "2026-09-15T12:05:00+00:00",
+      "name": "clean-stop-neuroscience-checkpoint",
+      "status": "pass",
+      "evidence": [
+        "benchmark process completed",
+        "11 units checkpointed",
+        "server process not killed",
+        "resume remains available"
+      ]
+    },
+    {
+      "at": "2026-09-15T12:40:00+00:00",
+      "name": "neuroscience-resume-available-sample",
+      "status": "pass",
+      "evidence": [
+        "server ready",
+        "11 rows checkpointed",
+        "no additional eligible unit produced",
+        "report preserved"
+      ]
+    },
+    {
+      "at": "2026-09-15T13:40:00+00:00",
+      "name": "thermal-audit-expand-12",
+      "status": "pass",
+      "evidence": [
+        "12 rows checkpointed",
+        "8 reader-visible fallbacks",
+        "list/reference/extraction/model causes recorded"
+      ]
+    },
+    {
+      "at": "2026-09-15T10:44:52+00:00",
+      "name": "power-over-skin-audit-resume-12",
+      "status": "pass",
+      "evidence": [
+        "packaged server health ready",
+        "12 rows checkpointed",
+        "existing partial rows preserved",
+        "fallback breakdown report updated"
+      ]
+    },
+    {
+      "at": "2026-09-15T10:45:53+00:00",
+      "name": "step-to-charge-audit-resume-12",
+      "status": "pass",
+      "evidence": [
+        "packaged server health ready",
+        "12 rows checkpointed",
+        "fallback breakdown report updated"
+      ]
+    },
+    {
+      "at": "2026-09-15T10:48:07+00:00",
+      "name": "interactive-jewellery-audit-resume-12",
+      "status": "pass",
+      "evidence": [
+        "packaged server health ready",
+        "12 rows checkpointed",
+        "fallback breakdown report updated"
+      ]
+    },
+    {
+      "at": "2026-09-15T10:49:57+00:00",
+      "name": "dont-mind-me-audit-resume-12",
+      "status": "pass",
+      "evidence": [
+        "packaged server health ready",
+        "12 rows checkpointed",
+        "fallback breakdown report updated"
+      ]
+    },
+    {
+      "at": "2026-09-15T10:53:09+00:00",
+      "name": "mixed-quality-m2m12-candidate-generation",
+      "status": "pass",
+      "evidence": [
+        "17 label-blind cases generated",
+        "raw outputs and token counts saved",
+        "production routing unchanged",
+        "manual semantic labels still pending"
+      ]
+    },
+    {
+      "at": "2026-09-15T10:53:43+00:00",
+      "name": "mixed-quality-candidate-comparison-v1",
+      "status": "pass",
+      "evidence": [
+        "17 same-source comparisons saved",
+        "token and quality flags included",
+        "production cascade unchanged",
+        "semantic review required"
+      ]
+    },
+    {
+      "at": "2026-09-15T10:54:13+00:00",
+      "name": "selective-cascade-simulation-v1",
+      "status": "pass",
+      "evidence": [
+        "17 candidate rows scored by invariant/degeneracy flags",
+        "accepted/fallback cohorts compared",
+        "audit-only report saved",
+        "production routing unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T10:54:39+00:00",
+      "name": "regression-verification-after-cascade-audit",
+      "status": "pass",
+      "evidence": [
+        "Vitest 60 files / 308 tests passed",
+        "tsc --noEmit passed",
+        "translation-server unittest 106 passed",
+        "git diff --check passed"
+      ]
+    },
+    {
+      "at": "2026-09-15T10:55:17+00:00",
+      "name": "ergonomics-sample-shortage-reverify",
+      "status": "partial",
+      "evidence": [
+        "server completed request",
+        "selected 1 eligible unit",
+        "no additional units available",
+        "fixture expansion pending"
+      ]
+    },
+    {
+      "at": "2026-09-15T10:56:04+00:00",
+      "name": "candidate-semantic-coverage-comparison-v1",
+      "status": "pass",
+      "evidence": [
+        "34 candidate outputs scored",
+        "MADLAD/M2M100 threshold comparison saved",
+        "embedding-only selector rejected as insufficient",
+        "production unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T10:56:56+00:00",
+      "name": "manual-review-queue-resync",
+      "status": "pass",
+      "evidence": [
+        "audit:prepare-review completed",
+        "132/139 rows completed",
+        "7 semantic reviews pending",
+        "automatic accept not treated as truth"
+      ]
+    },
+    {
+      "at": "2026-09-15T10:57:23+00:00",
+      "name": "manual-review-priority-queue-v1",
+      "status": "pass",
+      "evidence": [
+        "7 pending rows extracted",
+        "structure/list/long rows prioritized",
+        "labels and severity left blank",
+        "resume artifact saved"
+      ]
+    },
+    {
+      "at": "2026-09-15T10:57:45+00:00",
+      "name": "review-metrics-resummarize",
+      "status": "pass",
+      "evidence": [
+        "132 reviewed blocks summarized",
+        "7 pending remain",
+        "ordinary fallback and unsafe false accept recorded",
+        "fallback <=5% not met"
+      ]
+    },
+    {
+      "at": "2026-09-15T10:58:57+00:00",
+      "name": "a-cohort-variant-diagnosis-v79",
+      "status": "pass",
+      "evidence": [
+        "diagnostic script completed",
+        "translation-unit-variants-v79.json saved",
+        "short-output rescue remains rejected",
+        "production routing unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T11:01:49+00:00",
+      "name": "pending-audit-runner-completed",
+      "status": "pass",
+      "evidence": [
+        "runner processed 2 pending papers",
+        "failures=0",
+        "ergonomics 1 eligible unit",
+        "neuroscience 11 eligible units",
+        "review queue preserved"
+      ]
+    },
+    {
+      "at": "2026-09-15T11:02:18+00:00",
+      "name": "pending-runner-short-fixture-fix",
+      "status": "pass",
+      "evidence": [
+        "completion predicate updated",
+        "dry-run cached19 pending0 skipped2",
+        "interrupted entries with errors remain pending",
+        "diff check passed"
+      ]
+    },
+    {
+      "at": "2026-09-15T11:02:36+00:00",
+      "name": "runner-fix-lint-verification",
+      "status": "pass",
+      "evidence": [
+        "npm run lint passed",
+        "dry-run pending0 previously verified",
+        "prior Vitest/tsc/Python regression retained"
+      ]
+    },
+    {
+      "at": "2026-09-15T11:02:57+00:00",
+      "name": "frontend-build-verification",
+      "status": "pass",
+      "evidence": [
+        "npm run build passed",
+        "Vite artifact generated",
+        "known dynamic import warnings only",
+        ".app build intentionally skipped"
+      ]
+    },
+    {
+      "at": "2026-09-15T11:03:23+00:00",
+      "name": "extraction-corpus-verification",
+      "status": "pass",
+      "evidence": [
+        "npm run test:extraction-corpus passed",
+        "2 test files / 40 tests",
+        "known font warnings only",
+        "translation routing unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T11:03:44+00:00",
+      "name": "runtime-version-verification",
+      "status": "pass",
+      "evidence": [
+        "health model_loaded true",
+        "phase ready",
+        "audit row model version verified",
+        "diff check passed"
+      ]
+    },
+    {
+      "at": "2026-09-15T11:05:20+00:00",
+      "name": "m2m12-beam4-fallback-probe",
+      "status": "pass",
+      "evidence": [
+        "5 baseline fallback rows generated",
+        "beam4 raw outputs and quality flags saved",
+        "long/terminology risks remain",
+        "production unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T11:06:03+00:00",
+      "name": "cat-translate-14b-triage",
+      "status": "partial",
+      "evidence": [
+        "cached checkpoint inspected",
+        "Llama/CausalLM config detected",
+        "seq2seq harness rejected model",
+        "no production change"
+      ]
+    },
+    {
+      "at": "2026-09-15T11:21:30+00:00",
+      "name": "cat-translate-14b-adapter-probe",
+      "status": "pass",
+      "evidence": [
+        "official chat-template used",
+        "5 fallback rows generated",
+        "numeric/citation flags recorded",
+        "production cascade unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T11:46:01+00:00",
+      "name": "cat-translate-full-fixture-paused",
+      "status": "partial",
+      "evidence": [
+        "15/17 rows checkpointed",
+        "process stopped at clean row boundary",
+        "2 rows remain resumable",
+        "production unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T12:19:02+00:00",
+      "name": "cat-translate-full-fixture-completed",
+      "status": "pass",
+      "evidence": [
+        "remaining 2 rows resumed",
+        "17/17 rows integrated",
+        "combined report saved",
+        "production unchanged"
+      ]
+    },
+    {
+      "at": "2026-09-15T12:19:44+00:00",
+      "name": "cat-translate-semantic-coverage",
+      "status": "pass",
+      "evidence": [
+        "17 CAT candidates scored",
+        "mean min-source similarity 0.600",
+        "8/17 below 0.60",
+        "MADLAD 0.700 comparator",
+        "production cascade rejected"
+      ]
+    },
+    {
+      "at": "2026-09-15T12:20:20+00:00",
+      "name": "three-model-comparison-consolidated",
+      "status": "pass",
+      "evidence": [
+        "MADLAD/M2M100/CAT same 17 sources joined",
+        "numeric/citation flags recorded",
+        "CAT semantic scores linked",
+        "automatic replacement rejected pending semantic review"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:32:00+09:00",
+      "name": "numbered-prose-reference-disambiguation",
+      "status": "pass",
+      "evidence": [
+        "education list items no longer projected as references",
+        "extraction corpus 40/40",
+        "listItemRecall regression assertion added"
+      ],
+      "next": [
+        "expand manual list review and heading/block boundary audit"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:34:00+09:00",
+      "name": "education-list-recall-verification",
+      "status": "pass",
+      "evidence": [
+        "real cached education PDF listItemRecall=1.0 after projection fix",
+        "citation-shaped bibliography remains paragraph/reference-safe"
+      ],
+      "next": [
+        "manual heading hierarchy and boundary review across representative formats"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:35:00+09:00",
+      "name": "reading-order-regression-rerun",
+      "status": "pass",
+      "evidence": [
+        "30 reading-order tests passed",
+        "page/column stitch and source-integrity regressions remain green"
+      ],
+      "next": [
+        "manual review of mixed chrome/body native items"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:36:00+09:00",
+      "name": "inline-doi-body-boundary",
+      "status": "pass",
+      "evidence": [
+        "generic DOI-bearing native item split before trailing body prose",
+        "extraction corpus 40/40",
+        "typecheck passed"
+      ],
+      "next": [
+        "manual compare resulting first-page chrome/body blocks across formats"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:38:30+09:00",
+      "name": "inline-doi-regression-test",
+      "status": "pass",
+      "evidence": [
+        "synthetic DOI/body boundary regression 31/31",
+        "full extraction corpus previously 40/40",
+        "typecheck and lint previously passed"
+      ],
+      "next": [
+        "manual cross-format review of metadata boundaries"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:38:45+09:00",
+      "name": "inline-metadata-corpus-rerun",
+      "status": "pass",
+      "evidence": [
+        "extraction corpus 40/40 after DOI boundary rule",
+        "reading-order boundary regression 31/31",
+        "no translation code changed"
+      ],
+      "next": [
+        "manual cross-format block-boundary audit"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:39:00+09:00",
+      "name": "post-boundary-full-regression",
+      "status": "pass",
+      "evidence": [
+        "full frontend suite 61 files / 316 tests",
+        "extraction corpus 40/40",
+        "typecheck and lint passed"
+      ],
+      "next": [
+        "manual cross-format heading and boundary review"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:40:00+09:00",
+      "name": "full-pdf-extraction-benchmark-rerun",
+      "status": "pass",
+      "evidence": [
+        "bench:pdf-extraction completed over cached corpus",
+        "sourceIntegrityRate remains 1.0 on reported papers",
+        "canonical title and caption relation metrics emitted"
+      ],
+      "next": [
+        "persist structured benchmark artifact and perform manual block-boundary sampling"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:40:15+09:00",
+      "name": "doi-split-source-integrity-assertion",
+      "status": "pass",
+      "evidence": [
+        "DOI split synthetic case preserves native line reconstruction",
+        "reading-order suite 31/31"
+      ],
+      "next": [
+        "cross-format manual boundary sampling"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:41:00+09:00",
+      "name": "persisted-extraction-baseline",
+      "status": "pass",
+      "evidence": [
+        "bench:pdf-extraction writes versioned JSON artifact",
+        "cached corpus benchmark completed"
+      ],
+      "next": [
+        "manual cross-format review using persisted baseline"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "at": "2026-09-15T12:49:18.712214+00:00",
+      "name": "manual-review-baseline-v1",
+      "status": "pass",
+      "evidence": [
+        "139/139 reviews recomputed",
+        "ordinary-body 12/48 reader-visible fallback (25.00%)",
+        "ordinary-body 7/48 unsafe false accepts (14.58%)",
+        "report: reports/manual-review-baseline-v1.json"
+      ],
+      "next": [
+        "held-out selective cascade with manual candidate review",
+        "separate extraction-induced failures from model failures"
+      ]
+    }
+  ],
+  "extractionActions": [
+    {
+      "at": "2026-09-15T13:08:58.688920+00:00",
+      "name": "affiliation-line-wrap-boundary",
+      "status": "pass",
+      "evidence": [
+        "neuroscience wrapped affiliation reproduced and joined",
+        "new readingOrder regression test",
+        "28 reading-order tests passed",
+        "tsc and lint passed"
+      ],
+      "next": [
+        "audit chrome/body boundaries",
+        "strengthen table/list region fixtures"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:12:00+09:00",
+      "name": "extraction-author-metadata-stitch-guard",
+      "status": "pass",
+      "evidence": [
+        "excluded generic author/contributor metadata paragraphs from cross-page continuation targets",
+        "readingOrder.test.ts 29 tests passed",
+        "extraction corpus 40 tests passed",
+        "tsc and lint passed"
+      ],
+      "next": [
+        "inspect remaining real-paper boundary candidates",
+        "continue extraction-only review before translation work"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:15:30+09:00",
+      "name": "native-source-integrity-invariant",
+      "status": "pass",
+      "evidence": [
+        "hasSourceTextIntegrity exported from pdfLayout",
+        "all named reading-order fixtures pass",
+        "30 reading-order tests passed"
+      ],
+      "next": [
+        "continue manual table/caption/list boundary review"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:16:00+09:00",
+      "name": "benchmark-source-integrity-rate",
+      "status": "pass",
+      "evidence": [
+        "BaselinePaperReport exposes sourceIntegrityRate",
+        "typecheck passed",
+        "fusion metrics tests passed"
+      ],
+      "next": [
+        "run corpus report and inspect low-integrity blocks"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:16:40+09:00",
+      "name": "source-integrity-metric-corpus-rerun",
+      "status": "pass",
+      "evidence": [
+        "fixed metric to use native LayoutBlock input",
+        "extraction corpus 40/40 passed"
+      ],
+      "next": [
+        "inspect low-integrity rate and boundary taxonomy"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:17:40+09:00",
+      "name": "corpus-source-integrity-scan-v1",
+      "status": "pass",
+      "evidence": [
+        "19 cached real papers",
+        "4493 layout blocks",
+        "100% sourceIntegrityRate",
+        "report: reports/extraction-source-integrity-v1.json"
+      ],
+      "next": [
+        "manual role and reading-order review for table/caption/list candidates"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:20:00+09:00",
+      "name": "table-grid-repeated-column-guard",
+      "status": "pass",
+      "evidence": [
+        "excluded masthead metadata from tableLike",
+        "required repeated x-start columns",
+        "interactive-jewellery probe 39 -> 25 inferred table nodes",
+        "extraction corpus 40/40 passed"
+      ],
+      "next": [
+        "manual review remaining table candidates and validate true table recall"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:21:00+09:00",
+      "name": "table-grid-multirow-scan",
+      "status": "pass",
+      "evidence": [
+        "required at least two multi-item rows",
+        "interactive-jewellery candidate count remained 25",
+        "no unvalidated threshold tightening",
+        "extraction corpus 40/40 passed"
+      ],
+      "next": [
+        "manual inspect candidate regions against PDF before changing table thresholds"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:22:00+09:00",
+      "name": "sentence-like-table-fp-guard",
+      "status": "pass",
+      "evidence": [
+        "PDF image inspection of interactive-jewellery page 1",
+        "body table candidates 25 -> 0",
+        "extraction corpus 40/40 passed"
+      ],
+      "next": [
+        "validate recall on table-heavy pages before finalizing threshold"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:24:00+09:00",
+      "name": "table-guard-ozchi-acceptance",
+      "status": "pass",
+      "evidence": [
+        "interactive-jewellery page 1 candidates 25 -> 0",
+        "OzCHI caption recall 1.0",
+        "OzCHI region recall 0.8",
+        "source integrity 1.0",
+        "report: reports/extraction-table-guard-v1.json"
+      ],
+      "next": [
+        "manual review table-heavy corpus regions"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:25:00+09:00",
+      "name": "whole-document-table-precision-probe",
+      "status": "pass",
+      "evidence": [
+        "interactive-jewellery canonical tables 0, figure captions 13",
+        "OzCHI table recall preserved",
+        "no fixture-specific production rule"
+      ],
+      "next": [
+        "expand table ground truth for additional table-heavy papers"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:25:30+09:00",
+      "name": "caption-above-image-table-probe",
+      "status": "pass",
+      "evidence": [
+        "thermal-earring Table 1 ground truth added",
+        "resolver checks candidates above/below caption",
+        "image-only table correctly remains caption-only fallback",
+        "extraction corpus 40/40 passed"
+      ],
+      "next": [
+        "add a native-text table fixture for positive region recall"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:26:30+09:00",
+      "name": "table-caption-orientation",
+      "status": "pass",
+      "evidence": [
+        "resolver considers native candidates above and below captions",
+        "thermal image-only Table 1 stays caption-only",
+        "reading-order 30 tests",
+        "extraction corpus 40 tests"
+      ],
+      "next": [
+        "expand native-text table ground truth"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:26:30+09:00",
+      "name": "numbered-list-projection",
+      "status": "pass",
+      "evidence": [
+        "numbered markers 1-20 supported",
+        "decimal regression test passes",
+        "extraction corpus 40/40",
+        "typecheck passed"
+      ],
+      "next": [
+        "manual review list-heavy real-paper blocks"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:27:30+09:00",
+      "name": "list-heavy-corpus-probe",
+      "status": "pass",
+      "evidence": [
+        "cached PDF native-text scan found no reliable bullet markers",
+        "numbered list synthetic tests pass",
+        "lint passed"
+      ],
+      "next": [
+        "obtain/annotate real list-heavy fixture for recall measurement"
+      ]
+    },
+    {
+      "at": "2026-09-15T22:28:30+09:00",
+      "name": "real-numbered-list-probe",
+      "status": "pass",
+      "evidence": [
+        "education-learning-analytics native extraction yields separate 1-7 and 1-6 item blocks",
+        "projection fallback remains source-preserving"
+      ],
+      "next": [
+        "annotate list recall in corpus ground truth"
+      ]
+    },
+    {
+      "version": "extraction-table-row-region-v1",
+      "status": "implemented",
+      "result": "thermal-earring Table 1 region recall 1.0; extraction corpus 40/40",
+      "tests": [
+        "npm run test:extraction-corpus",
+        "npm run lint",
+        "npx tsc --noEmit"
+      ]
+    },
+    {
+      "version": "extraction-masthead-author-evidence-v1",
+      "status": "implemented",
+      "result": "Nature author row canonical role author; corpus 40/40",
+      "tests": [
+        "npm run test:extraction-corpus"
+      ]
+    },
+    {
+      "version": "extraction-metadata-heading-precision-v1",
+      "status": "implemented",
+      "result": "suppress heading evidence for title/author/affiliation; corpus 40/40",
+      "tests": [
+        "npm run test:extraction-corpus"
+      ]
+    },
+    {
+      "version": "extraction-table-row-role-evidence-v1",
+      "status": "implemented",
+      "result": "nearby aligned native rows receive table evidence; corpus 40/40",
+      "tests": [
+        "npm run test:extraction-corpus",
+        "npm run lint",
+        "npx tsc --noEmit"
+      ]
+    },
+    {
+      "version": "extraction-metadata-heading-test-v1",
+      "status": "verified",
+      "result": "metadata blocks heading evidence regression test 4/4",
+      "tests": [
+        "npx vitest run src/test/pdfExtraction/pipeline.test.ts --run"
+      ]
+    },
+    {
+      "version": "extraction-frontend-build-v1",
+      "status": "verified",
+      "result": "npm run build passed; no .app build",
+      "tests": [
+        "npm run build"
+      ]
+    },
+    {
+      "version": "extraction-regression-317-tests-v1",
+      "status": "verified",
+      "result": "extraction 40/40; Vitest 61 files/317 tests; diff check clean",
+      "tests": [
+        "npm run test:extraction-corpus",
+        "npm test -- --run",
+        "git diff --check"
+      ]
+    },
+    {
+      "version": "extraction-benchmark-table-rows-v1",
+      "status": "verified",
+      "result": "19 papers; table recall 1.0; list recall 1.0; source integrity 1.0",
+      "tests": [
+        "npm run bench:pdf-extraction"
+      ]
+    },
+    {
+      "version": "extraction-evidence-gate-v1",
+      "status": "audited",
+      "result": "no speculative heuristic promoted; current report minima source/table/list=1.0",
+      "next": "cross-format manual review of remaining paragraph and hierarchy cases"
+    },
+    {
+      "at": "2026-09-15T14:18:03.789353Z",
+      "action": "Removed incomplete draft assertion from baselineRealPapers test; verified extraction corpus 40/40, targeted pipeline 4/4, tsc and diff check. No app build.",
+      "status": "verified"
+    },
+    {
+      "at": "2026-09-15T14:19:29.111408Z",
+      "action": "Preserved intro/item provenance for flattened list projection via metadata.listRole; no translation behavior changed. Targeted tests 6/6 and typecheck pass.",
+      "status": "verified"
+    },
+    {
+      "at": "2026-09-15T14:21:02.424714Z",
+      "action": "Scanned cached corpus for cross-page paragraph blocks; recorded 67 spans in reports/cross-page-paragraphs-v1.json for manual review. No merge heuristic changed.",
+      "status": "in-review"
+    },
+    {
+      "at": "2026-09-15T14:21:34.092317Z",
+      "action": "Added following-block context to cross-page diagnostics: 67 spans, 11 no punctuation endings, 8 lowercase continuations. Pending manual review; no heuristic change.",
+      "status": "in-review"
+    },
+    {
+      "at": "2026-09-15T14:24:48.819005Z",
+      "action": "Rendered and visually reviewed OzCHI page 5 and education page 20; confirmed real continuation and native-cell geometry limitation. No heuristic change.",
+      "status": "in-review"
+    },
+    {
+      "at": "2026-09-15T14:25:51.578095Z",
+      "action": "Persisted visual manual review labels for OzCHI page 5 and education page 20, including severity and root cause.",
+      "status": "in-review"
+    },
+    {
+      "id": "springer-masthead-author-v1",
+      "status": "fixed",
+      "evidence": "significant-other page 1 rendered/native comparison",
+      "result": "FISHER, T. resolves as author; heading false positive removed",
+      "tests": "extraction corpus 40/40"
+    },
+    {
+      "id": "inline-style-boundaries-scan-v1",
+      "status": "diagnosed",
+      "result": "53 mixed-font paragraph first-line candidates across cached corpus; Nature inline subheadings confirmed cross-format pattern",
+      "artifact": "test-data/real-papers/reports/inline-style-boundaries-v1.json"
+    },
+    {
+      "id": "inline-subheading-split-v1",
+      "status": "implemented",
+      "result": "Native mixed-font lead split into heading + paragraph; Nature Methods page 2 verified; extraction corpus 40/40",
+      "safety": "Conservative punctuation/font/geometry gates; no vocabulary list"
+    },
+    {
+      "id": "inline-subheading-regression-v1",
+      "status": "verified",
+      "result": "Nature inline heading split protected by real-paper baseline assertions; 20/20 targeted tests",
+      "safety": "Source text preserved; no translation changes"
+    },
+    {
+      "id": "extraction-benchmark-inline-split-v1",
+      "status": "verified",
+      "result": "19-paper benchmark rerun; source-integrity/caption/table/list minima 1.0; OzCHI heading/hierarchy/table metrics unchanged",
+      "artifact": "test-data/real-papers/reports/extraction-baseline-latest.json"
+    },
+    {
+      "id": "nature-masthead-probe-v1",
+      "status": "diagnosed",
+      "result": "Final canonical probe still emits multi-author row as paragraph; resolver/format evidence tracing required"
+    },
+    {
+      "id": "nature-masthead-probe-resolved",
+      "status": "verified",
+      "result": "Canonical probe confirms multi-author masthead resolves as author (g-4, confidence 0.88); prior concern was inspecting intermediate layout blocks"
+    },
+    {
+      "id": "nature-inline-heading-hierarchy-v1",
+      "status": "verified",
+      "result": "Subjects./Experimental Procedure. resolve CHILD_OF Methods; hierarchy probe passed"
+    },
+    {
+      "id": "heading-precision-cjk-v1",
+      "status": "implemented",
+      "result": "Dense CJK prose/numeric rows demoted from heading; true numbered Chinese section headings retained; extraction corpus 40/40"
+    },
+    {
+      "id": "heading-precision-benchmark-v1",
+      "status": "verified",
+      "result": "19-paper benchmark after CJK demotion: source-integrity/table-region/list minima 1.0; title exact 0.579 remains metadata variation"
+    },
+    {
+      "id": "frontend-build-extraction-v1",
+      "status": "verified",
+      "result": "Frontend build/lint/diff checks pass after extraction changes; Tauri app intentionally not built"
+    },
+    {
+      "id": "thermal-table-canonical-probe-v1",
+      "status": "verified",
+      "result": "Table 1 canonical probe: one caption + three table rows + CAPTION_OF table region; no paragraph duplication"
+    },
+    {
+      "id": "full-suite-extraction-v1",
+      "status": "verified",
+      "result": "Full Vitest suite 61 files / 317 tests passed after extraction changes"
+    },
+    {
+      "id": "cjk-regression-assertion-v2",
+      "status": "verified",
+      "result": "Regression assertion now targets generic candidate role after demotion; targeted baseline 20/20"
+    },
+    {
+      "id": "full-vitest-recheck-v2",
+      "status": "verified",
+      "result": "Full Vitest 61 files / 317 tests passed after CJK assertion correction"
+    },
+    {
+      "id": "math-fragment-heading-precision-v1",
+      "status": "implemented",
+      "result": "Math-symbol rows no longer receive heading candidate evidence; Step-to-Charge representative probe; targeted baseline 20/20"
+    },
+    {
+      "id": "math-heading-canonical-verify-v1",
+      "status": "verified",
+      "result": "Step-to-Charge canonical probe: 0 math-operator headings after correction; 72 textual headings remain"
+    },
+    {
+      "id": "table-caption-region-audit-v1",
+      "status": "verified",
+      "result": "37 table captions across 8 papers; 37 CAPTION_OF relations; 0 unrelated captions",
+      "artifact": "test-data/real-papers/reports/table-caption-region-audit-v1.json"
+    },
+    {
+      "timestamp": "2026-09-15T18:04:29.749685+00:00",
+      "action": "denseUsableColumns page-wide word evidence",
+      "result": "ppg-earring pages 7,10,12 restored as two-column; extraction corpus 42/42; full Vitest 61 files/324 tests",
+      "next": "line-level evidence combining y continuity and role evidence"
+    },
+    {
+      "timestamp": "2026-09-15T18:14:57.728445+00:00",
+      "action": "footnote/header role guards",
+      "result": "numeric measurement lines remain paragraph; top-of-page author et al. lines are header; extraction 42/42; full Vitest 327 pass",
+      "next": "manual paragraph-boundary and caption/table/list audit"
+    }
+  ],
+  "manualReviewSummary": {
+    "sampleRows": 144,
+    "roles": {
+      "heading": 38,
+      "paragraph": 57,
+      "figure_caption": 43,
+      "table_caption": 6
+    },
+    "renderedChecks": 12,
+    "severity0": 10,
+    "severity1": 1,
+    "severity2": 1
+  },
+  "summary": {
+    "boundaryCandidateReview": "Latest six remaining candidates visually classified as legitimate metadata; two confirmed errors fixed generically."
+  },
+  "completedChecks": [
+    {
+      "id": "power-over-skin-cross-page-visual-v1",
+      "status": "reviewed",
+      "result": "legitimate two-column continuation and separate safety passage; no stitch change"
+    },
+    {
+      "id": "dont-mind-me-cross-page-paragraph-v1",
+      "status": "regression-covered",
+      "result": "particular social → situations. One such example stitched across pages 1–2 with provenance"
+    },
+    {
+      "id": "step-to-charge-figure-label-stitching-v2",
+      "status": "fixed",
+      "result": "geometry-first multi-cell guard prevents figure labels joining body; caption remains separate"
+    },
+    {
+      "id": "figure-reference-triage-v1",
+      "status": "report-only",
+      "result": "45 paragraph-internal figure-reference candidates scanned; representative ppg continuation legitimate"
+    },
+    {
+      "id": "figure-text-guard-build-validation-v1",
+      "status": "validated",
+      "result": "extraction corpus 40/40; typecheck, lint, web build pass; no Tauri build"
+    },
+    {
+      "id": "list-structure-audit-v1",
+      "status": "reviewed",
+      "result": "projection listRole split retained; complete annotation precision/recall 1.0; no new defect"
+    },
+    {
+      "id": "education-table-page20-visual-v1",
+      "status": "reviewed",
+      "result": "Tables 9-11 visually confirmed; partial native table nodes and safe paragraph fallback where cell coordinates unstable"
+    },
+    {
+      "id": "post-table-list-benchmark-v1",
+      "status": "validated",
+      "result": "19 papers; title exact 19/19; source integrity min/mean 1.0/1.0"
+    },
+    {
+      "id": "canonical-table-fallback-review-v1",
+      "status": "reviewed",
+      "result": "aligned native rows structured only with evidence; unstable grids use caption-only fallback"
+    },
+    {
+      "id": "full-vitest-after-table-figure-audit-v1",
+      "status": "passed",
+      "result": "61 files / 323 tests"
+    },
+    {
+      "id": "education-table-caption-groundtruth-v1",
+      "status": "added",
+      "result": "Tables 9 and 10 page-20 captions annotated exhaustively; Table 11 deferred pending later-page review"
+    },
+    {
+      "id": "education-table11-groundtruth-v1",
+      "status": "added",
+      "result": "page22 Table 11 caption visually verified and annotated; focused baseline 20/20"
+    },
+    {
+      "id": "education-table-caption-benchmark-v1",
+      "status": "validated",
+      "result": "table caption recall 1.0; list precision/recall 1.0; source integrity 1.0; region metrics unmeasured"
+    },
+    {
+      "id": "catalog-cache-coverage-v1",
+      "status": "measured",
+      "result": "21 catalog papers; 19 cached; Springer Open and Nordes remain uncached"
+    },
+    {
+      "id": "wear-scale-cache-benchmark-v1",
+      "status": "validated",
+      "result": "legal Springer Open PDF cached; titleExact=true; sourceIntegrityRate=1; no structural ground truth added without manual annotation"
+    },
+    {
+      "id": "rotation-line-boundary-full-regression-v1",
+      "status": "validated",
+      "result": "full Vitest 61 files / 324 tests; extraction corpus 42/42; rotation-compatible clustering shows no observed regression"
+    },
+    {
+      "id": "rotation-evidence-benchmark-v1",
+      "status": "validated",
+      "result": "benchmark schema records rotatedNativeItemCount and rotatedLineCount; 20 reports regenerated with sourceIntegrityRate min/mean 1.0/1.0"
+    },
+    {
+      "id": "rotation-cluster-full-regression-v1",
+      "status": "validated",
+      "result": "orientation-aware rotated clustering; full Vitest 61 files / 324 tests and extraction corpus 42/42 pass"
+    },
+    {
+      "id": "rotated-table-role-resolution-v1",
+      "date": "2026-09-16",
+      "scope": "wear-scale page 14",
+      "result": "large numeric-rich rotated native clusters resolve as table; extraction corpus 42/42; typecheck/lint pass",
+      "remaining": "caption ordering and stable cell grid"
+    },
+    {
+      "id": "orientation-aware-item-order-v1",
+      "date": "2026-09-16",
+      "result": "rotated line text joins along native baseline; reading-order 37/37; extraction 42/42",
+      "remaining": "visual caption confirmation and stable cell grid"
+    },
+    {
+      "id": "rotated-caption-role-v1",
+      "date": "2026-09-16",
+      "result": "reverse-stream rotated table caption classified as caption and linked through existing resolver; extraction 42/42",
+      "remaining": "presentation normalization of native caption order"
+    },
+    {
+      "id": "compact-rotated-table-caption-v1",
+      "date": "2026-09-16",
+      "result": "compact Table6 caption form recognized after native spacing loss; extraction 42/42",
+      "remaining": "full visual caption and cell-grid audit"
+    },
+    {
+      "id": "full-benchmark-rotated-caption-v1",
+      "date": "2026-09-16",
+      "result": "20 cached papers benchmarked; sourceIntegrityRate remains 1.0; report regenerated",
+      "next": "broaden manual structure annotations and table-grid evaluation"
+    },
+    {
+      "id": "rotated-caption-regression-lock-v1",
+      "date": "2026-09-16",
+      "result": "wear-scale page 14 asserts canonical table and caption nodes; extraction 42/42",
+      "remaining": "broader manual table-region ground truth"
+    },
+    {
+      "id": "full-regression-rotated-caption-v2",
+      "date": "2026-09-16",
+      "result": "full Vitest 61 files / 325 tests; extraction 42/42; no translation/app changes"
+    },
+    {
+      "id": "rotated-caption-relation-v1",
+      "date": "2026-09-16",
+      "result": "wear-scale page 14 caption-to-table relation asserted; extraction 42/42",
+      "remaining": "broader relation precision audit"
+    },
+    {
+      "id": "web-build-extraction-v1",
+      "date": "2026-09-16",
+      "result": "npm run build passed; only pre-existing ineffective dynamic import warnings",
+      "app": "Tauri .app intentionally not built"
+    },
+    {
+      "id": "rotated-caption-metric-caveat-v1",
+      "date": "2026-09-16",
+      "result": "reverted unverified wear-scale GT; layout-level caption metric differs from canonical caption recovery",
+      "next": "align benchmark metrics across layout and canonical layers"
+    },
+    {
+      "id": "canonical-layout-metric-audit-v1",
+      "date": "2026-09-16",
+      "result": "wear-scale canonical caption recovery vs layout metric discrepancy reproduced; unverified GT removed",
+      "next": "design cross-layer structural metric"
+    },
+    {
+      "id": "structural-label-metric-v1",
+      "date": "2026-09-16",
+      "result": "metric-only Table/Figure marker spacing normalization added; unit and extraction tests pass",
+      "safety": "source text and roles unchanged"
+    },
+    {
+      "id": "caption-metric-compat-v1",
+      "date": "2026-09-16",
+      "result": "canonical + layout caption union preserves existing recall; annotated caption min/mean 1.0/1.0; source integrity 1.0"
+    },
+    {
+      "id": "full-regression-metric-layer-v1",
+      "date": "2026-09-16",
+      "result": "full Vitest 61 files / 326 tests; diff check pass; extraction-only scope preserved"
+    },
+    {
+      "id": "corpus-metric-snapshot-v1",
+      "date": "2026-09-16",
+      "result": "20-paper benchmark snapshot: annotated heading recall 1.0/1.0 mean/min, precision 1.0/1.0, hierarchy 1.0/1.0, caption relation 1.0/1.0, source integrity 1.0/1.0",
+      "caveat": "metrics cover annotated subsets only"
+    },
+    {
+      "id": "boundary-scan-revalidation-v1",
+      "date": "2026-09-16",
+      "result": "report-only scan rerun; no new generic boundary defect confirmed; no rule added"
+    },
+    {
+      "id": "source-policy-revalidation-v1",
+      "date": "2026-09-16",
+      "result": "20 cached papers; 2457 paragraphs; 492 warning-tagged blocks; safety skips reported for incomplete/list/equation fragments",
+      "next": "manual classify warning classes before any stitching relaxation"
+    },
+    {
+      "id": "benchmark-refresh-caption-metrics-v2",
+      "date": "2026-09-16",
+      "result": "20 papers; source integrity min 1.0; title exact 19/20 known normalization case; no new regression"
+    },
+    {
+      "id": "regression-rerun-v2",
+      "date": "2026-09-16",
+      "result": "full Vitest 61/326 and extraction corpus 42/42 after caption/rotation changes"
+    },
+    {
+      "id": "source-policy-warning-taxonomy-v1",
+      "date": "2026-09-16",
+      "result": "20 cached papers; 2457 paragraphs; 492 warning-tagged blocks; 39 explicit violations (21 unbalanced delimiters, 17 incomplete tails, 1 continuation head)",
+      "safety": "all explicit violations skipped and not submitted to translation model",
+      "next": "manually classify warning samples before relaxing stitching"
+    },
+    {
+      "id": "benchmark-rerun-warning-audit-v1",
+      "date": "2026-09-16",
+      "result": "bench:pdf-extraction completed; 20 cached-paper reports regenerated",
+      "next": "manual review of warning and table-grid samples"
+    },
+    {
+      "id": "warning-review-ledger-v1",
+      "date": "2026-09-16",
+      "result": "created extraction-warning-review.json with 39 explicit violations and provenance fields",
+      "next": "manually label warning samples against rendered/native PDF"
+    },
+    {
+      "id": "warning-ledger-regression-v1",
+      "date": "2026-09-16",
+      "result": "extraction corpus 42/42; full Vitest 61 files / 326 tests",
+      "scope": "ledger-only; no parser behavior change"
+    },
+    {
+      "id": "warning-ledger-provenance-v1",
+      "date": "2026-09-16",
+      "result": "verifier and review ledger now include pageStart/pageEnd for 39 explicit violations",
+      "next": "compare each page-level sample with native PDF rendering before stitching changes"
+    },
+    {
+      "id": "embedded-structure-boundary-scan-v1",
+      "date": "2026-09-16",
+      "result": "19 PDFs scanned; 403 embedded-marker candidates, 45 figure-in-paragraph, 6 affiliation candidates",
+      "safety": "report-only; candidates include legitimate prose references and no parser rule was added",
+      "next": "manual native-geometry classification"
+    },
+    {
+      "id": "narrow-word-column-experiment-reverted-v1",
+      "date": "2026-09-16",
+      "result": "relaxed word-stream detector reproduced ppg mixed-column target but caused 2 existing regressions; reverted; extraction 42/42 restored",
+      "safety": "no parser change retained",
+      "next": "line-level occupancy evidence before another detector change"
+    },
+    {
+      "id": "column-detector-revert-clean-v1",
+      "date": "2026-09-16",
+      "result": "reverted narrow-word detector and dependent uncommitted assertions; extraction corpus restored 42/42",
+      "remaining": "rotation/caption regression lock needs reconstruction with generic layout changes"
+    },
+    {
+      "id": "post-revert-full-regression-v1",
+      "date": "2026-09-16",
+      "result": "full Vitest 61 files / 320 tests; extraction corpus 42/42",
+      "caveat": "experimental uncommitted assertions removed with reverted detector; rotation/table caption coverage remains open"
+    },
+    {
+      "id": "rotation-provenance-restoration-v1",
+      "date": "2026-09-16",
+      "result": "LayoutLine retains median native rotation and rotated items join along projected baseline; extraction 42/42",
+      "safety": "no column or role threshold changes",
+      "next": "add geometry-backed rotated table/caption regression without detector relaxation"
+    },
+    {
+      "id": "current-extraction-verification-v1",
+      "date": "2026-09-16",
+      "result": "extraction 42/42; lint and typecheck pass",
+      "remaining": "ppg word-stream two-column case requires stronger geometry evidence"
+    },
+    {
+      "id": "benchmark-revalidation-after-rollback-v1",
+      "date": "2026-09-16",
+      "result": "20-paper extraction benchmark regenerated after rollback; source integrity unchanged",
+      "remaining": "PPG mixed-column defect and manual boundary review"
+    },
+    {
+      "id": "native-reading-order-review-sample-v1",
+      "date": "2026-09-16",
+      "result": "reviewed available ppg-earring mixed-column warning samples; labeled reading-order/chrome contamination severity 3",
+      "caveat": "targeted sample only; broader PDF visual review remains"
+    },
+    {
+      "id": "ppg-page2-boundary-baseline-v1",
+      "date": "2026-09-16",
+      "result": "captured page-2 layout/block/bbox baseline for reproducible mixed-column repair",
+      "next": "derive and test line-level geometry condition"
+    },
+    {
+      "id": "rotation-provenance-regression-lock-v1",
+      "date": "2026-09-16",
+      "result": "synthetic rotated-native line provenance test added; reading-order 32/32; extraction 42/42",
+      "remaining": "rotated table reconstruction and broad manual review"
+    },
+    {
+      "id": "extraction-only-scope-audit-v1",
+      "date": "2026-09-16",
+      "result": "no translation-server/src translation files modified; full Vitest 61/321; extraction 42/42; lint/typecheck/diff pass",
+      "remaining": "manual boundary review and generic word-stream column repair"
+    },
+    {
+      "id": "corpus-coverage-stratification-v1",
+      "date": "2026-09-16",
+      "result": "20 reports stratified across 10 format families; 18 native-text and 2 mixed; metric coverage summary saved",
+      "caveat": "perfect values apply only to annotated metrics"
+    },
+    {
+      "id": "web-build-validation-extraction-v2",
+      "date": "2026-09-16",
+      "result": "npm run build succeeded; existing ineffective dynamic-import warnings only",
+      "app": "Tauri .app intentionally not built"
+    },
+    {
+      "id": "manual-warning-review-coverage-v1",
+      "date": "2026-09-16",
+      "result": "39 warning items tracked; 8 manually reviewed, 31 pending; summary artifact saved",
+      "caveat": "targeted sample, not corpus-wide rate"
+    },
+    {
+      "id": "source-policy-safety-recheck-v2",
+      "date": "2026-09-16",
+      "result": "20 cached papers; 2567 paragraphs; 509 warning-tagged blocks; 39 explicit violations; all withheld from model",
+      "next": "reconcile count drift and continue native-boundary review"
+    },
+    {
+      "id": "regression-stability-checkpoint-v2",
+      "date": "2026-09-16",
+      "result": "full Vitest 61/321; lint and typecheck pass",
+      "remaining": "extraction completion criteria remain unmet; no behavior change"
+    },
+    {
+      "id": "column-line-envelope-experiment-reverted",
+      "date": "2026-09-16",
+      "result": "Naive line-envelope evidence caused 6 extraction regressions; reverted; corpus restored to 42/42",
+      "next": "Design column evidence that handles spanning and rotated/table regions before changing production"
+    },
+    "denseUsableColumns regression",
+    "ppg-earring pages 7/10/12 two-column lock"
+  ],
+  "coverage": {
+    "catalogPapers": 21,
+    "cachedPapers": 20,
+    "uncachedPapers": [
+      "precious-materials"
+    ],
+    "cachedFormatFamilies": [
+      "acm-acmart",
+      "springer-journal",
+      "ieee-conference",
+      "unknown",
+      "arxiv",
+      "kci",
+      "ozchi-conference",
+      "nature",
+      "pmlr",
+      "springer-open"
+    ],
+    "uncachedFormatFamilies": [
+      "nordes"
+    ]
+  },
+  "extraction": {
+    "flattenedNumericRows": {
+      "linguistics-language-model-physics": 65,
+      "wear-scale": 15,
+      "cognitive-psychology-gpt3": 5,
+      "power-over-skin": 4,
+      "economics-regularized-deepiv": 3,
+      "step-to-charge": 2,
+      "education-learning-analytics": 1
+    }
+  },
+  "benchmarkVersion": "extraction-corpus-44-tests-marketing-11-captions",
+  "notes": [
+    "56/56 extraction corpus and 26-paper benchmark re-run; source integrity/provenance remain 1.0; residual Elsevier table-stream and arXiv vector-label cases require geometry review",
+    "2026-09-16: extraction corpus rerun 56/56 passed; no production or translation-server changes.",
+    "2026-09-16: inferred x-band split fixed PPG Earring mixed-column block; diagnostic suspicious 164->129; extraction corpus 56/56.",
+    "Constrained inferred x-band split to same-page blocks after stitching regression; full Vitest 345/345, PPG suspicious 0, corpus total 129.",
+    "Diagnostic extended with imageOverlap/numericRatio/shortTokenRatio; sampled arxiv suspicious blocks 41, image overlap >=.2:4, short-token >=.7:23; no production role change.",
+    "Diagnostic now records all suspicious blocks: 129 total, arxiv 117; image overlap >=.2:26, numeric ratio >=.2:29, short token ratio >=.7:72.",
+    "Saved classification report: 129 suspicious blocks -> raster-overlap 26, vector/table-label 12, short-label 43, mixed-layout 48; diagnostic only.",
+    "Added generic labelSidebar geometry evidence for narrow metadata labels beside wide body; fashion suspicious 1->0, PPG 0; extraction 56/56.",
+    "Current 26-paper extraction metrics: heading annotated avg precision/recall 1.0, figure caption recall 1.0, table caption recall .929, table region recall .843, titleExact 20/26.",
+    "Adjusted inferred column x-band quantization to 32pt; PPG page11 regression fixed; real-paper reading-order 27/27.",
+    "After x-band stabilization: Vitest 345/345, extraction corpus 56/56, typecheck and lint passed; app not built.",
+    "Benchmark regenerated after x-band quantization: integrity/provenance 26/26 at 1.0; table caption .929, region .843 unchanged.",
+    "Latest extraction code npm run build passed; only known dynamic import warnings; app intentionally not built.",
+    "Extended metrics: list recall 1.0 (n=1), figure relation avg 1.0 (n=24), table relation recall .929 (n=6), relation precision 1.0 (n=14); list precision ground truth missing.",
+    "2026-09-16: stable x-band extraction benchmark rerun; 26 papers/497 pages, corpus 56/56, source integrity and provenance 1.0, table caption mean 0.929, table region mean 0.843; no production code changed.",
+    "2026-09-16: refreshed diagnostic after list projection; 26 papers/497 pages/149 suspicious wide multi-x blocks, concentrated in arXiv vector-label candidates.",
+    "2026-09-16: list precision metric now gated by completeListAnnotations; partial Interactive Jewellery labels no longer yield misleading precision.",
+    "2026-09-16: compact caption-proximate native table rows promoted to table/skipped; baseline 29/29 and extraction corpus 56/56.",
+    "2026-09-16: residual layout diagnostics classified 149 candidates (image-overlap 28, numeric-grid 15, short-label-band 55, mixed-layout 51); production unchanged.",
+    "2026-09-16: residual review fixture contains 83 metadata-only native-block samples for future manual role labeling.",
+    "2026-09-16: residual fixture schema adds manualRole/reviewStatus/severity; 83 samples pending and excluded from metrics until reviewed.",
+    "2026-09-16: regenerated 200-row section-stratified extraction review sample with page/bbox provenance; all labels pending.",
+    "2026-09-16: expanded extraction review sample to 415 rows, 15-16 per cached paper; all labels pending.",
+    "2026-09-16: extraction corpus 56/56 passed after residual fixture restoration and manual labels.",
+    "2026-09-16: equation classifier rejects corpus-derived unit-bearing prose and AVE/CR/RMSE metric fragments; focused tests 48/48.",
+    "2026-09-16: full 26-paper benchmark after equation negative evidence; review sample equation candidates 17 -> 14, source integrity/provenance remain 1.0.",
+    "2026-09-16: full Vitest 61 files/348 tests passed after equation negative-evidence change.",
+    "2026-09-16: stricter equation relation-operator guard reverted after PPG paragraph-continuation regression; retained prose/statistical negative evidence passes.",
+    "2026-09-16: dedicated extraction corpus 56/56 passed after equation guard evaluation, including PPG continuation.",
+    "2026-09-16: medical meta-review metric/prose equation negative regression added; baseline 29/29 passed.",
+    "2026-09-16: short operator-separated diagram-label negative evidence added; focused 48/48 and PPG baseline passed.",
+    "2026-09-16: layout diagnostic stable at 149 suspicious blocks/497 pages after short-label equation guard; no residual suppression."
+  ],
+  "lastExtractionCheckpoint": {
+    "status": "paused",
+    "pipelineTests": "16/16",
+    "extractionCorpus": "56/56",
+    "readingOrder": "49/49",
+    "tableContinuationPageRecall": "2/7",
+    "nextAction": "resume visual review of covid ML page 11 residual, then economics pages 35/37 and interpreting-neural-networks samples",
+    "fullVitest": "61 files / 350 tests",
+    "typecheck": "pass",
+    "manualReviewed": "67/83"
+  }
+}
