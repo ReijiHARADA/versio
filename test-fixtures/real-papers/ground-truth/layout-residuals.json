@@ -805,70 +805,70 @@
       "page": 16,
       "classification": "short-label-band",
       "text": "i∈I j∈Si ∑ y ( ) Since that j∈Si wj fj xIj is not a function of xi, we have that ϕ (·) is a function without the interaction I, which contradicts our assumption.",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: mathematical proof continuation is an isolated display-equation fragment",
+      "manualRole": "equation",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "interpreting-neural-networks",
       "page": 17,
       "classification": "short-label-band",
       "text": "The right-hand side can be re-written as ∑ ∣ ∣∣ ∣ ∣ ∣ ∣ y ∣∣ (L) ∣ ∣ (`+1)∣ wjL ∣WjL,jL−1∣ · · · ∣Wj`+1,i∣. j`+1,...,jL",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: mathematical bound is an isolated display-equation fragment",
+      "manualRole": "equation",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "interpreting-neural-networks",
       "page": 18,
       "classification": "short-label-band",
       "text": "We evaluate our approach in a large p setting with pairwise interactions using the same synthetic function as in Pu- 1.0 rushotham et al. (2014). Specifically, we generate a dataset ( ) (i) (i) of n samples and p features { X , y } using th",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: ordinary body prose around Figure 1; no structural extraction error",
+      "manualRole": "paragraph",
+      "reviewStatus": "reviewed",
+      "severity": 0
     },
     {
       "paper": "interpreting-neural-networks",
       "page": 18,
       "classification": "short-label-band",
       "text": "0.4 (i) p th where X ∈ R is the i instance of the design matrix p×n (i) th",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: ordinary body prose around Figure 1; no structural extraction error",
+      "manualRole": "paragraph",
+      "reviewStatus": "reviewed",
+      "severity": 0
     },
     {
       "paper": "interpreting-neural-networks",
       "page": 18,
       "classification": "short-label-band",
       "text": "ROC(AUC = 0.984) variable y ∈ R , W ∈ R contains the weights of 0.0 p pairwise interactions, β ∈ R contains the weights of main 0.0 0.2 0.4 0.6 0.8 1.0",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: ROC plot labels embedded in figure",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "interpreting-neural-networks",
       "page": 18,
       "classification": "short-label-band",
       "text": "False Positive Rate (i) effects, \u000f is noise, and i = 1, . . . , n. W was generated as ∑K >",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: ordinary body prose around Figure 1; no structural extraction error",
+      "manualRole": "paragraph",
+      "reviewStatus": "reviewed",
+      "severity": 0
     },
     {
       "paper": "interpreting-neural-networks",
       "page": 21,
       "classification": "image-overlap",
       "text": "500000 40°N 400000 38°N 300000 36°N 200000 34°N 100000 123°W 120°W 117°W",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: map coordinate/legend stream is embedded figure content",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     }
   ],
   "reviewSchema": "manualRole: figure_label|table_label|body|mixed; severity 0-4; pending entries are excluded from precision metrics"
