@@ -3332,3 +3332,6 @@ OzCHI page 8をレンダリングして確認した結果、左側のTable 4と�
 
 ### 2026-09-16 aligned numeric row fallbackの評価と撤回
 caption近接・複数native item・numeric densityを組み合わせる `alignedNumericRow` fallbackを評価したが、OzCHIのtable-region recallは0.800のままで改善しなかった。効果がないまま本文昇格リスクを増やすため撤回した。
+
+### 2026-09-16 flattened-row geometry実験
+Table 3のようなnative抽出（各行item 1個、x帯反復）を対象にflattened-row geometry evidenceを評価した。回帰は56/56を維持したが、OzCHI table-region recallは0.800のままで改善しなかったため、効果のない昇格条件は撤回した。
