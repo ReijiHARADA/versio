@@ -3335,3 +3335,6 @@ caption近接・複数native item・numeric densityを組み合わせる `aligne
 
 ### 2026-09-16 flattened-row geometry実験
 Table 3のようなnative抽出（各行item 1個、x帯反復）を対象にflattened-row geometry evidenceを評価した。回帰は56/56を維持したが、OzCHI table-region recallは0.800のままで改善しなかったため、効果のない昇格条件は撤回した。
+
+### 2026-09-16 multi-line table region membership評価
+既存のtable evidenceが高い4行以上blockをregion memberへ許可する実験を行ったが、OzCHI table-region recallは0.800のままで改善しなかった。効果がないため撤回し、誤昇格防止を維持した。
