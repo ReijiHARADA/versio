@@ -3758,3 +3758,7 @@ Boundary scan findings now include a native text rotation summary (min/max/mean)
 ### 2026-09-16 diagnostic refresh after captioned grid evidence
 
 Non-mutating corpus diagnosis now reports 26 papers / 497 pages / 152 suspicious blocks. Residuals remain concentrated in arXiv (134), PMLR (11), Elsevier (4), OzCHI (2), and IEEE (1); the increase from 149 is diagnostic classification sensitivity after the new grid evidence, not a production role regression. Extraction corpus and full Vitest remain green.
+
+### 2026-09-16 temporary rotation-fixture environment check
+
+Attempted to generate a rotated temporary PDF for orientation-aware testing. The current environment has no `reportlab`, `pypdf`, `qpdf`, `gs`, or `pdftk`, so no fixture was added and no repository dependency was changed. The required fixture work remains queued in `audit-progress.json`.
