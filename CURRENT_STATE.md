@@ -3278,3 +3278,8 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 caption spacing experiment reverted
 
 - Increasing table-caption continuation spacing to 3.2× base font did not attach the caption prose and had no validated benefit. Reverted; native line spacing/style diagnostics remain the next step.
+
+### 2026-09-16 caption diagnostics
+
+- Added opt-in `PDF_LAYOUT_DEBUG=1` diagnostics for caption continuation decisions (source/next text, native item count, digit count, cell-like result). Default behavior is unchanged; this enables direct native-geometry investigation of the remaining table caption misses.
+- TypeScript typecheck passed. Commit: `d2fe7c9`.
