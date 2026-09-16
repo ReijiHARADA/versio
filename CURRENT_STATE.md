@@ -3477,3 +3477,7 @@ Latest baseline verification (2026-09-16): after the list-like table guard, all 
 ### proseGrid stable-item-column experiment (2026-09-16)
 
 Requiring repeated native item x-columns in proseGrid did not change the remaining long prose candidate on the OzCHI page-8 output, while carrying recall risk for multi-line table cells. Reverted. The unresolved candidate is likely caused by block grouping before candidate generation rather than x-column evidence alone.
+
+### Same-origin prose guard (2026-09-16)
+
+A narrow candidate guard now suppresses strong grid evidence for blocks with more than eight lines, more than 20 words, and a single native line-origin band. This matches the observed incomplete prose shape while leaving multi-column table rows and flattened grids eligible. In OzCHI manual output, the page-8 results paragraph remains paragraph and the expected Table 1–5 regions remain. Extraction corpus 56/56, full Vitest 354/354, and the OzCHI table baseline (recall 1.0, source integrity 1.0) pass.

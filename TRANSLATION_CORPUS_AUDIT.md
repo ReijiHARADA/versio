@@ -3386,3 +3386,7 @@ The extraction diagnostic covers 26 papers / 497 pages and reports 149 suspiciou
 ### proseGrid stable-item-column experiment (2026-09-16)
 
 Tested requiring repeated native item x-columns in proseGrid. It did not remove the remaining page-8 long-prose candidate and risked rejecting legitimate multi-line cells, so the change was reverted. The failure likely originates in block grouping before candidate generation.
+
+### Same-origin prose guard (2026-09-16)
+
+Added a narrow geometry condition for >8-line, >20-word blocks sharing one native line-origin band; this suppresses the observed incomplete prose grid candidate without broad word-count rejection. OzCHI page-8 output keeps the results paragraph as paragraph and preserves Table 1–5 (table recall 1.0, source integrity 1.0). Extraction corpus 56/56 and Vitest 354/354 pass.
