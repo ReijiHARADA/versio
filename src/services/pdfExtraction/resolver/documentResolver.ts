@@ -157,7 +157,7 @@ function suppressVectorLabelClusters(nodes: CanonicalNode[]): CanonicalNode[] {
     if (!text || /[.!?。！？]$/.test(text)) return node;
     const tokens = text.split(/\s+/).filter(Boolean);
     const labelLike = tokens.length >= 2 && tokens.every((token) =>
-      token.length <= 12 && (/^[A-Z0-9_+−–—/().]+$/.test(token) || /^[A-Z][A-Z0-9_+−–—/().]*$/.test(token))
+      token.length <= 12 && /^[A-Z][A-Za-z0-9_+−–—/().]*$/.test(token)
     );
     if (!labelLike) return node;
     const captionNearby = captions.some((caption) =>
