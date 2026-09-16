@@ -3539,3 +3539,8 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - `54 English 90.5%`、`44 Chinese 91.6%` などの行も table として解決される。以前の paragraph 観測は pre-resolver/古い probe の出力であり、現行状態の未解決課題から除外する。
 - corpus 全体の再実行は並列負荷で 60 秒 timeout（speechin / step-to-charge）となったが、speechin を `--maxWorkers=1 --testTimeout=180000` で単独再実行し 1/1 成功（28 skipped）。コード回帰ではなく実行負荷による timeout と判断する。次回は corpus 実行時の worker/timeout 設定を確認する。
 - `vitest.extraction.config.ts` に real-paper corpus 用の `testTimeout=180000` / `maxWorkers=minWorkers=1` を追加。設定反映後の `npm run test:extraction-corpus` は **2 files / 56 tests passed**（約27秒）で完走し、タイムアウトを解消した。
+
+### 2026-09-16 economics native-math review
+- `economics-regularized-deepiv.pdf` の native text と CanonicalDocument を page 14/40/41 で照合。
+- 独立した display math は equation として保持され、本文中の数式説明は paragraph のまま。page 14 の `LogSigmoid/Piecewise` は native PDF 自体が式と本文を別行で持つため、現行分類は安全側。
+- 一部の式番号・複数行式は paragraph/equation が交互になる断片が残るが、広い昇格規則を追加すると本文誤分類のリスクが高い。今回は修正を保留し、native geometry を使う専用 regression が必要な課題として記録。
