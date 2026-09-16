@@ -3050,9 +3050,9 @@
     "overallSourceIntegrityRate": 1.0,
     "overallChromeContaminationRate": 0,
     "extractionCorpusTests": "56 passed",
-    "fullVitest": "353 passed",
+    "fullVitest": "356 passed",
     "nextAction": "Add and validate a general affiliation/body boundary fixture; then review table/list residuals.",
-    "latestCommit": "ab9a036"
+    "latestCommit": "5ac58be"
   },
   "nextAction": "Add a general affiliation/body boundary fixture based on native geometry, then review table/list residuals."
 }
