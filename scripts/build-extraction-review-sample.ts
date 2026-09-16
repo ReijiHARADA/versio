@@ -44,6 +44,16 @@ for (const paper of catalog.papers) {
   }
 }
 
+const counts = new Map<string, number>();
+for (const row of rows) counts.set(String(row.paperId), (counts.get(String(row.paperId)) ?? 0) + 1);
+const underSampled = catalog.papers
+  .filter((paper) => fs.existsSync(path.join(root, catalog.pdfDir, paper.filename)))
+  .filter((paper) => (counts.get(paper.id) ?? 0) < 12)
+  .map((paper) => `${paper.id}:${counts.get(paper.id) ?? 0}`);
+if (underSampled.length > 0) {
+  throw new Error(`extraction review sample requires at least 12 rows per cached paper: ${underSampled.join(", ")}`);
+}
+
 const output = path.join(root, "test-data/real-papers/reports/extraction-manual-sample-v1.json");
 fs.mkdirSync(path.dirname(output), { recursive: true });
 fs.writeFileSync(output, `${JSON.stringify({ version: "extraction-manual-sample-v1", generatedAt: new Date().toISOString(), rows }, null, 2)}\n`);
