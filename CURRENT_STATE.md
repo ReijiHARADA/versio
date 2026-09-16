@@ -3100,3 +3100,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: linguistics page 4
 
 - Figure 2's CFG/DP parsing labels and colored symbols were confirmed visually as embedded diagram content. Labeled the residual `figure_label`, severity 3, root cause `pdf extraction`; review coverage is now 20/83 (63 pending).
+
+### 2026-09-16 manual residual review: linguistics page 5
+
+- Page 5 residual is a genuine block-boundary failure: numbered method steps, inline mathematical notation, a definition, and the following section prose are merged. Visual review labels it `paragraph_merge`, severity 3, primary cause `paragraph reconstruction`; review coverage is 21/83 (62 pending).

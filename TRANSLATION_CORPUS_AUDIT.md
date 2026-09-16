@@ -3107,3 +3107,7 @@ The two residual blocks are embedded Figure 5 prompt/chart text, confirmed by re
 ### 2026-09-16 manual residual review: linguistics page 4
 
 Rendered review confirmed the residual is Figure 2's CFG/DP parsing diagram labels, not body prose. Recorded as `figure_label`, severity 3, with PDF extraction as the primary cause; review coverage is 20/83 (63 pending).
+
+### 2026-09-16 manual residual review: linguistics page 5
+
+The page-5 residual merges numbered method steps, inline formulas, a definition, and subsequent section prose. It is recorded as `paragraph_merge`, severity 3, with paragraph reconstruction as the primary cause; review coverage is 21/83 (62 pending).

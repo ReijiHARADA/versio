@@ -203,10 +203,12 @@
       "page": 5,
       "classification": "short-label-band",
       "text": "4. During generation, when a rule sℓ,i 7→ sℓ+1,j, sℓ+1,j+1 is applied, define the parent parℓ+1(j) = def parℓ+1(j + 1) = i (and similarly if the rule of sℓ,i is of length 3). 5. Define NT ancestor indices p = (p1(i), . . . , pL(i))i∈[m ] an",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: numbered method steps, inline formulas, definition, and following section prose are merged into one extraction block; formulas are inline within body text",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 3,
+      "reviewLabel": "paragraph_merge",
+      "rootCause": "paragraph reconstruction"
     },
     {
       "paper": "linguistics-language-model-physics",
