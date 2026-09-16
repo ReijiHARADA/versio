@@ -2951,3 +2951,5 @@ The extraction corpus and 26-paper benchmark were re-run after this schema chang
 The cached corpus now produces a 415-row section-stratified extraction review sample (15–16 rows per paper) with page/bbox provenance. Rows remain pending manual comparison against rendered PDFs.
 
 The sample can be regenerated with `npm run audit:build-extraction-sample`; the command uses only cached native extraction and does not start the translation server.
+
+As a visual sanity check, Power-over-Skin page 2 was rendered and compared with its extraction: Figure 2 and its caption are distinct from adjacent prose, so image-overlap evidence remains advisory and is not used as a blanket exclusion.
