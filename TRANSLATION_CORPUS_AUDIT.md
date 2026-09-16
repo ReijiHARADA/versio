@@ -3399,3 +3399,7 @@ Added a narrow geometry condition for >8-line, >20-word blocks sharing one nativ
 - Manual residual fixture now has 83/83 reviewed samples; the review summarizer accepts both the legacy `manualRole` field and the current `reviewLabel` field.
 - The dominant residual is vector/image figure labels (49 samples). Labels with explicit image/vector evidence are suppressed from translatable nodes; labels emitted without image placement metadata remain under review.
 - Economics native math and wear-scale rotated Table 6 were inspected without adding paper-specific rules. Standalone equations and rotated table regions remain separated in the canonical output.
+
+### 2026-09-16 medical arXiv residual probe (native geometry)
+
+A narrow native-to-canonical probe of `medical-image-segmentation-deep-learning.pdf` confirms the remaining arXiv diagnostic queue is structural rather than translation-related. Page 1 has body text split across left/right columns with a continuation beginning `have become four important...` emitted before the left-column continuation `tion, pulmonary nodules...`; the affiliation block is also classified as a paragraph adjacent to body text. Page 2 emits a short `Survey` paragraph between body and `Fig. 1` caption, and the same Fig. 1 caption appears again later in the native reading stream. These are native reading-order / duplicate-caption residuals. No paper-specific rule was added; the next fix requires a general spanning-vs-column ordering and caption deduplication fixture with bbox evidence.

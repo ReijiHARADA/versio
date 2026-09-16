@@ -3031,7 +3031,8 @@
     "2026-09-16: wear-scale rotated-footnote review page 14; rotated Table 6 grid/caption stays separated and non-translated under existing regression (1/1).",
     "2026-09-16: corpus diagnostic latest 26 papers/497 pages/149 suspicious blocks; arXiv 134 and PMLR 11 dominate residual queue, diagnostic-only.",
     "2026-09-16: mixed-case vector label suppression verified on step-to-charge; extraction corpus 56/56, lint and TypeScript pass, baseline integrity/provenance unchanged.",
-    "2026-09-16: production web build (`npm run build`) passed after vector-label resolver change; only ineffective dynamic-import warnings, no .app build."
+    "2026-09-16: production web build (`npm run build`) passed after vector-label resolver change; only ineffective dynamic-import warnings, no .app build.",
+    "2026-09-16: medical-image-segmentation native probe found page-1 column interleave, affiliation/body adjacency, and duplicate Fig.1 caption; diagnostic only, no paper-specific rule."
   ],
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",
@@ -3041,8 +3042,8 @@
     "overallChromeContaminationRate": 0,
     "extractionCorpusTests": "56 passed",
     "fullVitest": "353 passed",
-    "nextAction": "Improve proseGrid using row-level x/y stability; page-9 list guard is kept. Do not use broad word-count suppression because it regresses table recall.",
+    "nextAction": "Add a general arXiv two-column fixture for spanning-vs-column order and duplicate figure-caption detection; inspect affiliation/body boundary before changing resolver rules.",
     "latestCommit": "a4dcfb0"
   },
-  "nextAction": "Review arXiv/PMLR vector/table residuals and paragraph/list boundary samples with geometry fixtures."
+  "nextAction": "Add a general arXiv two-column fixture for spanning-vs-column order and duplicate figure-caption detection; inspect affiliation/body boundary before changing resolver rules."
 }

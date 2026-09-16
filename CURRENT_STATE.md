@@ -3581,3 +3581,7 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - Worktree is clean; latest committed extraction progress remains `d04de40`.
 - No `.app` build was performed in this checkpoint.
 - Resume point: inspect the narrowed medical-image-segmentation arXiv residuals, then decide whether a general evidence rule is justified; otherwise record the residual and continue corpus diagnostics. Keep translation-server/model work out of this extraction phase.
+
+### 2026-09-16 medical arXiv native residual probe
+- Narrow probe of `medical-image-segmentation-deep-learning.pdf` confirmed a real two-column reading-order residual: page 1 right-column continuation is emitted before the corresponding left-column continuation. Affiliation/body adjacency and a duplicate `Fig. 1` caption also remain in the native-to-canonical stream.
+- No paper-specific rule or translation change was made. Next extraction iteration should add a general spanning/column ordering and caption-dedup fixture using bbox evidence.
