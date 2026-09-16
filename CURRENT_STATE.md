@@ -2990,3 +2990,4 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Spot-checked the rendered Power-over-Skin page 2 against the extracted stream: the Figure 2 image/caption is visually distinct from the surrounding two-column prose. This supports keeping image-overlap labels advisory rather than suppressing all nearby text.
 - Rendered Step-to-Charge page 2 and manually labeled three overlapping native blocks as `figure_label` (severity 3); the remaining 80 residual samples stay pending.
 - Revalidated the residual fixture after editing: all 83 samples and 27 distinct pages are present, with exactly three reviewed labels and no null entries.
+- Rendered the medical-deep-learning-meta-review page containing Table 1; the standalone caption and compact grid are visually separable from the two-column prose. The remaining Table 2/5/6 cases still require native-stream boundary analysis.
