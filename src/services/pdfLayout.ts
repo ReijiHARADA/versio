@@ -1082,8 +1082,14 @@ function orderPageLines(lines: LayoutLine[], layout: PageColumnLayout): LayoutLi
   );
 
   const spanningTop = spanning.filter((l) => l.y < columnTop - 6);
+  // Footer/header metadata can be classified as spanning even when it sits
+  // between the two column bands. It must not act as a mid-page cut, or the
+  // tail of a left-column paragraph is emitted after the right column.
+  const spanningChrome = spanning.filter((l) =>
+    /^(?:arxiv\b|doi\s*[:.]|copyright\b|https?:\/\/doi\.org\/|\d+\s*$)/i.test(l.text.trim())
+  );
   const spanningMid = spanning.filter(
-    (l) => l.y >= columnTop - 6 && l.y <= columnBottom + 6
+    (l) => l.y >= columnTop - 6 && l.y <= columnBottom + 6 && !spanningChrome.includes(l)
   );
   const spanningBottom = spanning.filter((l) => l.y > columnBottom + 6);
 

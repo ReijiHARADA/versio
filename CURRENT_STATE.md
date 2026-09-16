@@ -3597,3 +3597,7 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - TypeScript `npx tsc --noEmit --pretty false`: passed.
 - Oxlint `npm run lint -- --deny-warnings`: passed.
 - Remaining extraction gaps are the documented arXiv column interleave and duplicate-caption source residuals; extraction goal is not complete yet.
+
+### 2026-09-16 spanning chrome ordering guard
+- Hypothesis: a spanning footer/header metadata line was incorrectly treated as a mid-page cut, causing column chunks to be interleaved. Added a generic metadata-pattern guard (`arXiv`, DOI, copyright, URL, page-number-only) so it cannot split the two-column reading order.
+- Medical survey probe now keeps left-column continuation together before entering the right column; extraction corpus remains 56/56. TypeScript and lint pass. No translation changes.
