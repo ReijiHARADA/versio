@@ -3702,3 +3702,7 @@ Added `--json-out=/path/findings.json` to the boundary scanner. The corpus run w
 ### 2026-09-16 boundary candidate inventory
 
 Parsed the saved scanner output and grouped candidates for review. Affiliation candidates occur across 10 papers (including medical, neuroscience, HCI, and design fixtures); figure-marker-in-paragraph candidates occur across 12 papers, with the densest cluster in linguistics/math-heavy and diagram-rich papers. No automatic relabel was made from this inventory.
+
+### 2026-09-16 boundary finding provenance
+
+Boundary scanner findings now include the first native bbox, resolver confidence, and evidence labels for affiliation and figure-marker candidates. This makes manual confirmation traceable to native geometry before any parser rule is introduced. TypeScript and lint pass.

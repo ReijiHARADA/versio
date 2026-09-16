@@ -3504,3 +3504,7 @@ The scanner now accepts `--json-out=...` and writes findings directly to a file.
 ### 2026-09-16 boundary candidate inventory
 
 The machine-readable findings were grouped by paper. Affiliation candidates span 10 papers across multiple disciplines; figure-marker-in-paragraph candidates span 12 papers, concentrated in math/diagram-heavy layouts. Candidate inventory remains a manual/native-bbox review queue.
+
+### 2026-09-16 boundary finding provenance
+
+Affiliation and figure-marker findings now carry native bbox, confidence, and evidence labels. This provides auditable evidence for separating true caption contamination from ordinary in-text Figure references before changing extraction rules.
