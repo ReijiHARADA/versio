@@ -3798,3 +3798,7 @@ Regenerated the 26-paper baseline with `titleExpected` exposed. Six mismatches a
 ### 2026-09-16 title review checkpoint
 
 The six explicit title mismatches are now tracked as native-candidate review items. No common safe resolver condition is established yet, so extraction behavior remains unchanged and the next action is bbox/font comparison before considering a generic title-region adjustment.
+
+### 2026-09-16 generic CJK title recognition
+
+Root cause confirmed for the Chinese title mismatch: the high-font title branch required at least three Latin letters, rejecting CJK-only native title lines. Replaced that gate with a script-aware Latin-or-CJK check and added a synthetic regression. Focused extraction pipeline: **23/23 passed**; TypeScript passed. This is a generic title evidence fix, not a paper-specific rule.
