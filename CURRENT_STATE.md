@@ -3113,3 +3113,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: linguistics page 6
 
 - The boxed Result 1–3 callout and its bullet items are visibly distinct from the following Results prose, but native extraction flattens the callout/list boundary. Labeled `list_flattening`, severity 3, primary cause `line grouping`; review coverage is now 22/83 (61 pending).
+
+### 2026-09-16 manual residual review: linguistics page 9
+
+- Reviewed three residuals against Figure/Table 5 and surrounding prose. The model-name heatmap stream is `table_row`, severity 3; the two linear-probing blocks are valid prose with inline notation (`correct`, severity 0). Review coverage is now 25/83 (58 pending), documenting an automated false-positive residual.

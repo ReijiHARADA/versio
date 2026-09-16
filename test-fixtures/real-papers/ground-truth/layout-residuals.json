@@ -227,30 +227,36 @@
       "page": 9,
       "classification": "image-overlap",
       "text": "GPT_rel GPT_rot GPT_pos GPT_uni deBERTa baseline (GPT_rand) GPT cfg3b cfg3hcfg3i cfg3g cfg3e1cfg3f cfg3e2",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: model comparison heatmap labels are table content",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 3,
+      "reviewLabel": "table_row",
+      "rootCause": "pdf extraction"
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 9,
       "classification": "short-label-band",
       "text": "Multi-head linear probing (full). Due to the high dimensionality of this linear function (e.g., len(x) = 300 and d = 768 yield 300 × 768 dimensions) and variable string lengths, we propose a d multi-head linear function for efficient learni",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: native text is ordinary prose with inline mathematical notation",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 0,
+      "reviewLabel": "correct",
+      "rootCause": "none"
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 9,
       "classification": "short-label-band",
       "text": "Gi(x) is still a linear function over (Ek(x))k∈[len(x)] ′ as the linear weights wr,i→k depend only on positions i and k, not on x. Similarly, we train Gi(x) ∈ \u0000 \u0001 L R using the logistic loss to predict the binary values bℓ(i) . Details are ",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: native text is ordinary prose with inline mathematical notation",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 0,
+      "reviewLabel": "correct",
+      "rootCause": "none"
     },
     {
       "paper": "linguistics-language-model-physics",

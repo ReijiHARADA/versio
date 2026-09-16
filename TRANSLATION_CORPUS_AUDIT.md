@@ -3119,3 +3119,7 @@ A precision-first Resolver guard now maps blocks with strong existing image-over
 ### 2026-09-16 manual residual review: linguistics page 6
 
 Rendered review confirmed a boxed Result 1–3 summary with bullet items that extraction flattens into surrounding results prose. Recorded as `list_flattening`, severity 3, with line grouping as the primary cause; review coverage is 22/83 (61 pending).
+
+### 2026-09-16 manual residual review: linguistics page 9
+
+Of three residuals, the model-name heatmap stream is table content (`table_row`, severity 3); the two linear-probing blocks are valid prose with inline notation (`correct`, severity 0). This records an automated residual false positive; coverage is 25/83 (58 pending).
