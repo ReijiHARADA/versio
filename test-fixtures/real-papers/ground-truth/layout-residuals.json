@@ -615,10 +615,10 @@
       "page": 5,
       "classification": "short-label-band",
       "text": "Prediction Result Objectives Dataset (C): 0.9993, R2(N): 0.9183; - (C): 0.9991, R2(N): 0.8124. 2(N): 0.3372; In Wuhan, R2(C): Prediction of epidemic results of -",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: prediction metrics/objectives stream is a row block in Table 2, not paragraph prose",
+      "manualRole": "table_row",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "covid-ml-review",
