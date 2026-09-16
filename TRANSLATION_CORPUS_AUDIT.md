@@ -3364,3 +3364,7 @@ Manual review found long multi-column prose fragments receiving strong table evi
 The OzCHI manual review identified incomplete 8+ line prose blocks being scored as structural grids. A generic line-count/word-count guard now suppresses strong grid evidence for that shape, while flattened grids and short multi-cell tables remain eligible. The two observed prose candidates are now paragraph nodes; Table 1–5 remain. Extraction corpus 56/56, Vitest 354/354, lint, and typecheck pass.
 
 Verification correction (2026-09-16): broad candidate prose suppression was reverted after the full baseline showed OzCHI table-region recall falling to 0.8. Resolver-side guards remain, but strong multi-item prose candidates are still an open precision issue.
+
+### Structural-grid precision experiment (2026-09-16)
+
+A repeated-x-across-three-lines condition was tested for structural-grid evidence. It preserved tests and OzCHI recall but did not affect the remaining long-prose false positives, which come through the separate `proseGrid` path. Reverted due to no measured benefit; follow-up should target row-level geometry in `proseGrid`.

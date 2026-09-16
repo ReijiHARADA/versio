@@ -3455,3 +3455,7 @@ Manual canonical inspection showed that long column fragments with only one or t
 Manual OzCHI canonical review confirmed that incomplete multi-column prose (8+ lines, 20+ words) could receive structural-grid evidence because its first/last native lines had multiple items. The generic candidate guard now treats that shape as prose unless it is a true flattened grid; this removes the two observed prose candidates while preserving Table 1–5 and existing synthetic grids. Extraction corpus 56/56, full Vitest 354/354, lint, and typecheck pass. Remaining table rows without a caption are still intentionally conservative.
 
 Verification correction (2026-09-16): the broad candidate prose-shape suppression reduced OzCHI table-region recall to 0.8 and was reverted. The resolver-side multi-item/bullet guards remain; canonical manual review still shows strong multi-item prose candidates requiring a safer geometry criterion.
+
+### Structural-grid precision experiment (2026-09-16)
+
+Tested requiring repeated x columns across at least three native lines for the strong structural-grid score. Existing extraction tests and OzCHI recall remained green, but the manually observed long prose candidates were produced by the separate `proseGrid` path and were unchanged. Reverted this no-benefit candidate change; next work should improve `proseGrid` using row-level geometry rather than broad word-count suppression.
