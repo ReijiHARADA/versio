@@ -721,6 +721,10 @@ function captionShouldContinue(currentText: string, next: LayoutLine, baseFont: 
   const symbolic = /[=∑∫√∞≈≠≤≥±×÷αβγδ]/u.test(nextText);
   const cellLike = nextItems >= 8 ||
     (nextItems >= 4 && (symbolic || nextDigits / Math.max(nextLetters + nextDigits, 1) >= 0.3));
+  const debug = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_DEBUG;
+  if (debug === "1") {
+    console.warn(`[PDF_CAPTION_CONTINUE] current=${JSON.stringify(currentText.slice(-120))} next=${JSON.stringify(nextText.slice(0, 120))} items=${nextItems} digits=${nextDigits} cellLike=${cellLike}`);
+  }
   if (cellLike) return false;
   // Native streams sometimes emit a caption label (`Table 2`/`Figure 3`)
   // separately from its title.  A title-like continuation is safe only when
