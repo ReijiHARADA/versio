@@ -273,10 +273,8 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
             const highConfidenceContinuationRow = laterPageContinuation &&
               (candidate.roleScores.table ?? 0) >= 0.78 &&
               candidate.layoutBlock.lines.length <= 3;
-            const alignedCellRow = row && text.length <= 220 &&
-              !/[.!?]\s*$/.test(text);
-            return (highConfidenceContinuationRow || alignedCellRow || compactCellRow) &&
-              ((candidate.roleScores.table ?? 0) >= 0.78 || alignedCellRow || compactCellRow);
+            return (row || highConfidenceContinuationRow) &&
+              ((candidate.roleScores.table ?? 0) >= 0.78 || compactCellRow);
           })
         : [];
       const memberBoxes = regionMembers.flatMap((member) => member.boundingBoxes);
