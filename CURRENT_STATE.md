@@ -3770,3 +3770,7 @@ Generated a minimal temporary PDF with `/Rotate 90` without adding a repository 
 ### 2026-09-16 extraction web build verification
 
 `npm run build` passed (`tsc -b` + Vite, 2147 modules transformed). Only existing ineffective dynamic-import warnings were emitted. No `.app` build was run, and translation-server code remains unchanged.
+
+### 2026-09-16 extraction corpus revalidation after checkpoint
+
+Re-ran `npm run test:extraction-corpus -- --reporter=dot`: **2 files / 56 tests passed** in 28.71s. Existing PDF.js optional canvas/font warnings remain non-fatal. No translation-server or `.app` changes; extraction work remains active at the orientation-aware table/footnote fixture and arXiv/PMLR residual review.
