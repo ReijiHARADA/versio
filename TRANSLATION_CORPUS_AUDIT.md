@@ -3452,3 +3452,7 @@ A pipeline fixture now duplicates a native figure-caption span with a slight bbo
 ### 2026-09-16 native duplicate text-span guard
 
 A general line-formation guard now drops only near-coincident, text-identical native spans. This prevents accessibility/visible text-layer duplication from producing concatenated captions while retaining repeated values in separate table cells. Targeted pipeline: 19/19; extraction corpus: 56/56. No translation changes.
+
+### 2026-09-16 duplicate caption content assertion
+
+The caption fixture now checks both canonical node count and exact marker occurrence, proving that duplicate native spans do not silently concatenate into one node. Targeted pipeline: 19/19.

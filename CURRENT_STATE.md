@@ -3650,3 +3650,7 @@ Added a pipeline-level regression that injects an identical native figure captio
 ### 2026-09-16 native duplicate text-span guard
 
 `joinItemTexts` now removes only text-identical spans that are nearly coincident in x/y, preventing duplicated PDF text layers from concatenating captions or body words. Repeated table values at distinct coordinates are preserved. Pipeline tests: 19/19; extraction corpus: 56/56. This is a native-geometry cleanup; translation code remains unchanged.
+
+### 2026-09-16 duplicate caption content assertion
+
+Strengthened the caption regression to assert the marker appears exactly once in canonical text, not only that one node exists. Targeted pipeline remains 19/19 passed; this guards against hidden concatenation from duplicate native spans.

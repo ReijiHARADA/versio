@@ -97,6 +97,7 @@ describe("canonical extraction pipeline", () => {
     const result = extractFromPages({ pages, paperId: "caption-dedupe", filePath: "/tmp/c.pdf", fileHash: "h", metadata: { pageCount: 1 } });
     const captions = result.canonical.nodes.filter((node) => node.role === "caption" && /FWFIG_CAPTION/.test(node.text ?? ""));
     expect(captions).toHaveLength(1);
+    expect((captions[0]?.text?.match(/FWFIG_CAPTION/g) ?? []).length).toBe(1);
   });
 
   it("keeps analyzeStructure as a projection wrapper", () => {
