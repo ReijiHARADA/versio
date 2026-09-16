@@ -3027,7 +3027,8 @@
     "2026-09-16: after single-column page stitching, corpus layout diagnostic rerun completed; residual suspicious blocks remain diagnostic-only and no new role suppression was introduced.",
     "2026-09-16: extraction baseline regenerated after page stitching: 26 papers; table caption recall 1.000, table region recall 0.950, source integrity/provenance 1.000.",
     "2026-09-16: corpus config stabilized with 180s timeout and single worker; full extraction corpus 56/56 passed in 26.98s. speechin Table 1 canonical role confirmed as table via provenance probe.",
-    "2026-09-16: reviewed economics native math on pages 14/40/41; standalone display equations resolve safely, mixed multi-line formulas remain conservative paragraph/equation fragments; no broad promotion rule added."
+    "2026-09-16: reviewed economics native math on pages 14/40/41; standalone display equations resolve safely, mixed multi-line formulas remain conservative paragraph/equation fragments; no broad promotion rule added.",
+    "2026-09-16: wear-scale rotated-footnote review page 14; rotated Table 6 grid/caption stays separated and non-translated under existing regression (1/1)."
   ],
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",
@@ -3040,5 +3041,5 @@
     "nextAction": "Improve proseGrid using row-level x/y stability; page-9 list guard is kept. Do not use broad word-count suppression because it regresses table recall.",
     "latestCommit": "a4dcfb0"
   },
-  "nextAction": "Add geometry-based regression for multi-line economics equations only if a general rule can be proven; otherwise continue manual review of rotated footnotes and remaining corpus samples."
+  "nextAction": "Continue manual review of remaining 415 extraction samples, prioritizing unresolved chrome/body and paragraph boundary labels; do not broaden role heuristics without evidence."
 }

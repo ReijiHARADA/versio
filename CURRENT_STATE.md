@@ -3544,3 +3544,8 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - `economics-regularized-deepiv.pdf` の native text と CanonicalDocument を page 14/40/41 で照合。
 - 独立した display math は equation として保持され、本文中の数式説明は paragraph のまま。page 14 の `LogSigmoid/Piecewise` は native PDF 自体が式と本文を別行で持つため、現行分類は安全側。
 - 一部の式番号・複数行式は paragraph/equation が交互になる断片が残るが、広い昇格規則を追加すると本文誤分類のリスクが高い。今回は修正を保留し、native geometry を使う専用 regression が必要な課題として記録。
+
+### 2026-09-16 wear-scale rotated-footnote review
+- `wear-scale.pdf` の回転 native item は page 14 の Table 6 周辺に集中し、`Table 6`、`Inter-item correlation matrix`、脚注・セル見出しを含む。
+- 現行 resolver は回転 numeric grid を table として保持し、回転 caption を caption に昇格する。脚注相当の長文は table/paragraph 境界を越えて本文へ stitch されていない。
+- 既存の rotated-table regression（1/1）で翻訳対象から除外されることを再確認。追加ルールは不要と判断。
