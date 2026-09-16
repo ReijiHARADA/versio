@@ -3059,6 +3059,6 @@
     "nextAction": "Add and validate a general affiliation/body boundary fixture; then review table/list residuals.",
     "latestCommit": "f695d44"
   },
-  "nextAction": "Continue extraction-only review: inspect wear-scale rotated footnote and arXiv caption/column residuals; keep conservative geometry evidence and do not alter translation-server.",
+  "nextAction": "Inspect wear-scale rotated footnote and arXiv/PMLR caption-column residuals with native bbox fixtures; extraction-only.",
   "lastUpdate": "2026-09-16"
 }

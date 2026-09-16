@@ -3726,3 +3726,7 @@ After the caption-adjacency diagnostic changes, `npm run test:extraction-corpus 
 ### 2026-09-16 captioned flattened multi-cell grid
 
 Native inspection of `speechin.pdf` page 3 showed Table 1 flattened into one 11-line block (header plus repeated multi-cell rows), which previously remained a paragraph. Added a generic caption-adjacent grid evidence path requiring repeated multi-cell geometry, numeric content, bounded word count, and no sentence-ending punctuation. The real probe now resolves this block as a table while preserving numeric summary rows; a synthetic regression covers the shape. Targeted pipeline: 21/21; TypeScript passed. No translation or `.app` changes.
+
+### 2026-09-16 flattened grid corpus regression
+
+After captioned multi-cell grid detection, extraction corpus remained **2 files / 56 tests passed** (28.10s); the focused pipeline suite is **21/21**. No reading-order or source-integrity regression was observed. Remaining extraction work is still the rotated footnote and arXiv/PMLR column/caption residual review.
