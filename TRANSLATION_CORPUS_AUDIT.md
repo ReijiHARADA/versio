@@ -3191,3 +3191,7 @@ The down/up-sampling and skip-connection residual is embedded Figure 7 diagram c
 ### 2026-09-16 manual residual review: medical segmentation page 7
 
 The two convolution/rate/channel and tensor-axis residual streams are embedded Figure 8/9 diagram labels (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage: 57/83, 26 pending.
+
+### 2026-09-16 manual residual review: medical segmentation page 9
+
+The Unfold/sum/query residual is embedded Figure 11 diagram content (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage: 58/83, 25 pending.

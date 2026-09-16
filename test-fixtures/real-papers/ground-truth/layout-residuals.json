@@ -725,10 +725,10 @@
       "page": 9,
       "classification": "short-label-band",
       "text": "Unfold  * = D HQ",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: Unfold/sum/query labels are embedded Figure 11 global aggregation diagram content",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
