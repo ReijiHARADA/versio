@@ -112,6 +112,28 @@ describe("canonical extraction pipeline", () => {
     expect(candidates.filter((candidate) => (candidate.roleScores.table ?? 0) >= 0.94).length).toBeGreaterThanOrEqual(6);
   });
 
+  it("recognizes a native one-item-per-line grid when x bands repeat", () => {
+    const rows = [
+      ["Finger", "Function"], ["Thumb", "Call tapped contact"],
+      ["Finger1", "Open tapped contacts"], ["Finger2", "Open apps"],
+      ["Finger3", "Delete contact"], ["Finger4", "Open help view"],
+    ];
+    const textItems = [
+      { text: "Table 3. Finger functions", x: 80, y: 100, width: 150, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+      ...rows.flatMap(([left, right], index) => [
+        { text: left, x: 80, y: 125 + index * 14, width: 70, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+        { text: right, x: 180, y: 125 + index * 14, width: 120, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+      ]),
+    ];
+    const result = extractFromPages({
+      pages: [{ pageNumber: 1, width: 500, height: 700, textItems }],
+      paperId: "flattened-grid", filePath: "/tmp/flattened-grid.pdf", fileHash: "flattened-grid", metadata: { pageCount: 1 },
+    });
+    const region = result.canonical.nodes.find((node) => node.role === "table" && node.structuralLabel?.startsWith("Table 3"));
+    expect(region?.boundingBoxes.length).toBeGreaterThan(0);
+    expect(result.blocks.filter((block) => block.original?.includes("Finger")).every((block) => block.type !== "paragraph")).toBe(true);
+  });
+
   it("keeps repeated chart-axis labels out of table evidence", () => {
     const textItems = Array.from({ length: 5 }, (_, index) => ({
       text: `${(index * 0.005).toFixed(3)}`,
