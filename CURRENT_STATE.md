@@ -3371,3 +3371,8 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - `npm run diagnose:pdf-corpus` completed on 26 papers / 497 pages.
 - 152 suspicious wide or multi-cluster blocks remain (diagnostic candidates, not automatic failures); most are arXiv figure/math labels. No broad rule was changed from this run.
 - This confirms the next high-value work is provenance-aware paragraph/block review rather than widening generic merges.
+
+### 2026-09-16 full-suite validation
+
+- Full Vitest suite passed: 61 files / 350 tests.
+- Continued table-caption handling introduces no cross-feature regression. Extraction remains the active goal; translation server and `.app` remain untouched.

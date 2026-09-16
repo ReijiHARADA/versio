@@ -3289,3 +3289,5 @@ Added regression coverage for the generic `Table N (continued)` caption form. Th
 Validation checkpoint: extraction corpus remains 56/56 and lint passes after continued-caption handling. The remaining extraction work is paragraph stitching and block-boundary precision across the corpus.
 
 Corpus layout diagnostic refresh: 26 papers / 497 pages produced 152 advisory suspicious blocks. The majority are figure/math label clusters; no production suppression was added. Next work remains provenance-aware paragraph and block-boundary review.
+
+Full-suite validation checkpoint: Vitest passed 61 files / 350 tests after continued-table handling. No cross-feature regression was observed.
