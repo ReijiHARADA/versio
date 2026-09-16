@@ -3008,3 +3008,4 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Residual review fixture integrity is confirmed: 83 samples, 27 pages, 3 manually reviewed figure-label samples, 80 pending; no null records.
 - Extraction benchmark remains source-integrity 1.0 and canonical-provenance 1.0. Layout diagnostic remains 149 suspicious blocks across 497 pages; this is recorded for follow-up rather than treated as solved.
 - No `.app` build was performed, and translation-server/model code was intentionally left unchanged. Next extraction work should review the remaining residual samples and native table boundaries before resuming translation-pipeline work.
+- Revalidated the paused extraction milestone: `npm run build`, `npx tsc --noEmit --pretty false`, and `npm run lint -- --deny-warnings` all pass. No `.app` bundle was produced.
