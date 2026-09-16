@@ -3147,3 +3147,7 @@ The page-14 numeric/label residual is embedded Figure 11 heatmap content (`figur
 ### 2026-09-16 manual residual review: linguistics page 21
 
 The GPT model-name residual is embedded Figure 14 legend content (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage: 37/83, 46 pending.
+
+### 2026-09-16 manual residual review: linguistics page 26
+
+The model-name and numeric residual is embedded Figure 18 heatmap content (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage: 38/83, 45 pending.

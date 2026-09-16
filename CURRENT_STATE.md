@@ -3144,3 +3144,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: linguistics page 21
 
 - GPT model-name residual was visually confirmed as Figure 14 legend labels, not body text. Recorded as `figure_label`, severity 3, primary cause `pdf extraction`; no new rule was needed. Manual coverage is 37/83 (46 pending).
+
+### 2026-09-16 manual residual review: linguistics page 26
+
+- GPT legend names and heatmap numeric labels were visually confirmed as embedded Figure 18 chart content. Recorded as `figure_label`, severity 3, primary cause `pdf extraction`; no new rule was justified. Manual coverage is 38/83 (45 pending).

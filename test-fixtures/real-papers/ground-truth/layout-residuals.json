@@ -375,10 +375,10 @@
       "page": 26,
       "classification": "image-overlap",
       "text": "GPT_rel GPT_rot GPT_pos GPT_uni GPT_rel GPT_rot GPT_pos GPT_uni truth GPT GPT 0 0 0.20 0.7 0.15 50 0.6 50 0.10 0.5 0.05 100 100 0.4 0.00 150 0.3 150 0.05",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: GPT legend names and numeric heatmap labels are embedded Figure 18 chart content",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",
