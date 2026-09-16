@@ -3601,3 +3601,7 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 ### 2026-09-16 spanning chrome ordering guard
 - Hypothesis: a spanning footer/header metadata line was incorrectly treated as a mid-page cut, causing column chunks to be interleaved. Added a generic metadata-pattern guard (`arXiv`, DOI, copyright, URL, page-number-only) so it cannot split the two-column reading order.
 - Medical survey probe now keeps left-column continuation together before entering the right column; extraction corpus remains 56/56. TypeScript and lint pass. No translation changes.
+
+### 2026-09-16 medical survey post-guard probe
+- After the spanning metadata guard, page 1 canonical order is `title → affiliation → abstract/heading → left-column intro → left-column affiliation block → right-column continuation`; the earlier metadata-induced split is gone.
+- Same-page exact caption duplicate count is now 0 in the probe. The affiliation block remains a native layout boundary requiring a broader affiliation/body ordering fixture; no heuristic was added.

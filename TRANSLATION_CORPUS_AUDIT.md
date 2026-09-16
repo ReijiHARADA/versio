@@ -3413,3 +3413,5 @@ Full regression after caption deduplication: Vitest 61/355, TypeScript and lint 
 ### 2026-09-16 spanning metadata ordering guard
 
 A native geometry probe showed a spanning arXiv metadata line acting as a mid-page cut and interleaving columns. The layout reader now excludes generic metadata/footer patterns from mid-page cuts. This preserves left-column continuation order before the right column. Extraction corpus: 56/56; TypeScript and lint passed. The affiliation/body boundary and duplicate-caption verification remain queued.
+
+Post-guard medical survey probe: the former metadata mid-cut no longer interleaves the left-column tail and right-column continuation, and exact same-page caption duplicate count is 0. A long affiliation block still appears between left and right column content because its native bbox occupies the lower left column; this is retained as an unresolved geometry fixture rather than relabeled by paper-specific logic.

@@ -3035,7 +3035,8 @@
     "2026-09-16: medical-image-segmentation native probe found page-1 column interleave, affiliation/body adjacency, and duplicate Fig.1 caption; diagnostic only, no paper-specific rule.",
     "2026-09-16: exact same-page normalized caption deduplication added in resolver; extraction corpus 56/56 passed.",
     "2026-09-16: post-caption-dedup full Vitest 61 files/355 tests, TypeScript, and lint passed.",
-    "2026-09-16: spanning metadata guard prevents arXiv/DOI/copyright lines from splitting two-column reading order; corpus 56/56, tsc/lint pass."
+    "2026-09-16: spanning metadata guard prevents arXiv/DOI/copyright lines from splitting two-column reading order; corpus 56/56, tsc/lint pass.",
+    "2026-09-16: post-guard medical probe: caption duplicate count 0; metadata interleave fixed; affiliation ordering remains queued geometry fixture."
   ],
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",
