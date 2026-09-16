@@ -495,6 +495,11 @@ function isEdgeChrome(
   patterns: Set<string>
 ): boolean {
   if (isFootnoteLine(line, layout.pageHeight, line.fontSize)) return false;
+  // A table/figure may legitimately start at the physical top of a page
+  // (especially a continued table). Preserve an explicit caption label before
+  // applying the generic header band rule; ordinary running headers do not
+  // satisfy these caption predicates.
+  if (isTableCaption(line.text) || isFigureCaption(line.text)) return false;
   const topBand = Math.max(HEADER_Y, layout.pageHeight * 0.08);
   if (line.y < topBand) return true;
   if (line.y > layout.pageHeight - FOOTER_MARGIN) return true;
