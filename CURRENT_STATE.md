@@ -3806,3 +3806,7 @@ Root cause confirmed for the Chinese title mismatch: the high-font title branch 
 ### 2026-09-16 CJK title fix revalidation
 
 Focused extraction pipeline remains **23/23 passed** and TypeScript no-emit passes after the script-aware CJK title gate. No long-lived Vitest/Vite/translation-server process remains after verification.
+
+### 2026-09-16 metadata-font title inference fix
+
+Excluded author, affiliation, and email lines from document title-font estimation. Focused pipeline remains 23/23 and TypeScript passes. Baseline title candidate review shows medical image segmentation now selects the expected core title; remaining mismatches are subtitle truncation, publisher/header selection, and one arXiv identifier case. No translation changes.

@@ -3051,7 +3051,8 @@
     "2026-09-16: added six title-only ground-truth fixtures; baseline titleExact remains 0.769, exposing genuine title mismatches without parser changes.",
     "2026-09-16: regenerated baseline with explicit titleExpected; six title mismatches classified for native title-region review, no resolver rule added.",
     "2026-09-16: title mismatch review complete; no shared safe resolver condition yet, so no parser behavior change.",
-    "2026-09-16: CJK-only native title gate fixed with script-aware Latin/CJK evidence; focused pipeline 23/23 and TypeScript passed."
+    "2026-09-16: CJK-only native title gate fixed with script-aware Latin/CJK evidence; focused pipeline 23/23 and TypeScript passed.",
+    "2026-09-16: title-font inference excludes author/affiliation/email metadata; focused 23/23, TypeScript pass; medical image title candidate improved, remaining mismatches tracked."
   ],
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",
@@ -3064,6 +3065,6 @@
     "nextAction": "Add a generic orientation-aware table/footnote fixture using page rotation and item transforms; then review arXiv/PMLR residuals.",
     "latestCommit": "8d80922"
   },
-  "nextAction": "Regenerate 26-paper baseline and inspect remaining title-region mismatches; then continue orientation-aware table/footnote fixture.",
+  "nextAction": "Review title candidate selection among multiple native title blocks (publisher headers, subtitles, identifiers) using bbox/style and add a generic resolver regression.",
   "lastUpdate": "2026-09-16"
 }
