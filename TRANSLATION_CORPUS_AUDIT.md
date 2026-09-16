@@ -2958,6 +2958,8 @@ The generic equation classifier now rejects longer unit-bearing prose and metric
 
 After the change, the 26-paper benchmark still reports source-integrity and canonical-provenance 1.0. Equation candidates in the fixed 415-row review sample decreased from 17 to 14; manual review is still required.
 
+Full Vitest also passes 61 files / 348 tests after the equation classifier change, covering reader, import, projection, and export paths.
+
 As a visual sanity check, Power-over-Skin page 2 was rendered and compared with its extraction: Figure 2 and its caption are distinct from adjacent prose, so image-overlap evidence remains advisory and is not used as a blanket exclusion.
 
 Step-to-Charge page 2 was also rendered; three image-overlap/label-band blocks were manually labeled `figure_label` (severity 3). The other 80 residual samples remain pending and are excluded from metrics.
