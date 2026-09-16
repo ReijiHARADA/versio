@@ -2988,3 +2988,4 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Regenerated `extraction-manual-sample-v1.json` from the cached corpus. It contains 415 section-stratified rows (15–16 per paper; headings, ordinary paragraphs, and all detected captions), each with page/bbox provenance and a pending manual label. No production classification is inferred from this sample.
 - Added `npm run audit:build-extraction-sample` as the reproducible command for regenerating that sample.
 - Spot-checked the rendered Power-over-Skin page 2 against the extracted stream: the Figure 2 image/caption is visually distinct from the surrounding two-column prose. This supports keeping image-overlap labels advisory rather than suppressing all nearby text.
+- Rendered Step-to-Charge page 2 and manually labeled three overlapping native blocks as `figure_label` (severity 3); the remaining 80 residual samples stay pending.

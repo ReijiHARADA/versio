@@ -2953,3 +2953,5 @@ The cached corpus now produces a 415-row section-stratified extraction review sa
 The sample can be regenerated with `npm run audit:build-extraction-sample`; the command uses only cached native extraction and does not start the translation server.
 
 As a visual sanity check, Power-over-Skin page 2 was rendered and compared with its extraction: Figure 2 and its caption are distinct from adjacent prose, so image-overlap evidence remains advisory and is not used as a blanket exclusion.
+
+Step-to-Charge page 2 was also rendered; three image-overlap/label-band blocks were manually labeled `figure_label` (severity 3). The other 80 residual samples remain pending and are excluded from metrics.
