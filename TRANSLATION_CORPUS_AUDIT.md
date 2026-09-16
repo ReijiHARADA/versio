@@ -3127,3 +3127,7 @@ Of three residuals, the model-name heatmap stream is table content (`table_row`,
 ### 2026-09-16 manual residual review: linguistics page 10
 
 Two residuals are embedded Figure 6/7 table or diagram labels (`table_row` / `figure_label`, severity 3); the surrounding explanatory text is valid prose (`correct`, severity 0). Manual review is 28/83 with 55 pending.
+
+### 2026-09-16 manual residual review: linguistics page 12
+
+Page 12 visual review classified four heatmap label streams as embedded `figure_label` content (severity 3, extraction cause) and the adjacent definition paragraph as correct prose (severity 0, automated false positive). Coverage is 33/83 with 50 pending. No new rule was added because the existing image-overlap Resolver guard is the applicable generic handling.

@@ -3121,3 +3121,9 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: linguistics page 10
 
 - Reviewed three residuals around Figures 6–7: model comparison labels are `table_row` and diagram labels are `figure_label` (both severity 3); the surrounding explanatory block is valid prose (`correct`, severity 0). Coverage is now 28/83 (55 pending).
+
+### 2026-09-16 manual residual review: linguistics page 12
+
+- Rendered page 12 at native layout. Four image-overlap streams (`head1...`, `0+1-1`, `r=4...`, `r=12...`) are embedded heatmap labels and are recorded as `figure_label`, severity 3, primary cause `pdf extraction`.
+- The adjacent “Above, we define …” candidate is ordinary body prose with inline notation, recorded as `paragraph`, severity 0; this is an automated residual false positive.
+- Manual coverage is now 33/83 (50 pending). No extraction algorithm change was justified by this page.
