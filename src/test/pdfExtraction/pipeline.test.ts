@@ -142,6 +142,7 @@ describe("canonical extraction pipeline", () => {
       .every((block) => block.translationStatus === "skipped")).toBe(true);
   });
 
+
   it("does not promote rotated numeric cell bands to headings", () => {
     const textItems = Array.from({ length: 10 }, (_, index) => ({
       text: index % 2 === 0 ? `R${index / 2 + 1}` : `0.${index + 1}`,
