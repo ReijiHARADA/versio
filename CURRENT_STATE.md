@@ -2974,3 +2974,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 reviewed residual fixture
 
 - Added `test-fixtures/real-papers/ground-truth/layout-residuals.json` with 83 cached-corpus samples from image-overlap and short-label-band classes. The fixture stores paper/page/classification/text metadata without adding PDF binaries and is intended for manual role review before any production suppression rule.
+
+### 2026-09-16 residual review schema
+
+- Extended the 83-sample residual fixture with `manualRole`, `reviewStatus`, and `severity`. All entries are currently `pending` and must be manually labeled before precision or unsafe-false-accept metrics are reported.

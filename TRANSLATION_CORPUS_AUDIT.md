@@ -2941,3 +2941,7 @@ Reviewed representative high-overlap cached arXiv samples. Repeated model names 
 ### 2026-09-16 residual review fixture
 
 Added an 83-sample metadata-only fixture for image-overlap and short-label-band residuals. It references cached PDFs and preserves short text excerpts for manual role review; no production role rule is derived from it yet.
+
+### 2026-09-16 residual review schema
+
+The residual fixture now carries `manualRole`, `reviewStatus`, and `severity` per sample. All 83 samples remain `pending`; pending samples are excluded from precision and unsafe-false-accept metrics until manual review is complete.
