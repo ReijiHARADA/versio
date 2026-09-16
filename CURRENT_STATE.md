@@ -3510,3 +3510,7 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - `diagnose:pdf-corpus` 再実行結果は 26 papers / 497 pages / 149 suspicious blocks。
 - speechin の手動確認済み table-row 問題は自動診断サンプルに現れず、診断器の false-negative（検出漏れ）として扱う必要がある。
 - economics の native-math 候補は複数ページで検出されるが、既存の equation negative evidence と衝突するため、現時点では昇格ルールを追加していない。
+
+### 2026-09-16 speechin table false-negative inspection
+- Native page 3 inspection shows Table 1 rows with stable six-column x origins across 8 data rows, but canonical projection currently emits the grid as a paragraph and promotes two numeric continuation lines to headings.
+- This is a confirmed extraction false-negative/heading false-positive pair. A safe fix must preserve caption adjacency and stable row geometry while preventing numeric row fragments from heading promotion; no change committed yet pending a focused synthetic regression.
