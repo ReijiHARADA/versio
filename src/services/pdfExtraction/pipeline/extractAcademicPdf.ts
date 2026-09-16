@@ -6,6 +6,7 @@ import { nativeDocumentFromExtracted } from "../native/fromExtracted";
 import type { NativeDocument } from "../native/types";
 import { classifyDocument } from "../pageClass";
 import { generateGenericCandidates } from "../generic/candidates";
+import { buildTableRegionEvidence } from "../generic/tableRegions";
 import { evidenceFromPages } from "../evidence";
 import { detectFormat } from "../formats";
 import { applyFormatHardRules } from "../formats/applyHardRules";
@@ -197,6 +198,7 @@ export function extractFromPages(input: {
   native?: NativeDocument;
   pageKind?: PageTextKind;
   previousBlocks?: PaperBlock[];
+  regionEvidence?: StructuralRegionEvidence[];
 }): ExtractAcademicPdfResult {
   const pageKind = input.pageKind ?? classifyDocument(input.pages);
   const native =
@@ -209,6 +211,7 @@ export function extractFromPages(input: {
   });
   const detection = detectFormat(detectorEvidence);
   const applied = applyFormatHardRules(generic.candidates, detection);
+  const generatedRegions = buildTableRegionEvidence(input.pages, applied.candidates);
 
   const canonical = resolveCanonicalDocument({
     candidates: applied.candidates,
@@ -225,7 +228,7 @@ export function extractFromPages(input: {
       ...applied.evidence,
       ...input.pages.flatMap((page) => graphicsToExtractionEvidence(page.pageNumber, page.graphicsPrimitives ?? [])),
     ],
-    regionEvidence: input.regionEvidence,
+    regionEvidence: [...generatedRegions, ...(input.regionEvidence ?? [])],
   });
 
   console.info(

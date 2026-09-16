@@ -138,14 +138,26 @@ export function buildCaptionAnchoredTableSignature(
         other !== item && /\d+/.test(other.text) && Math.abs(other.y - item.y) <= Math.max(item.height, other.height))))
     .sort((a, b) => a.y - b.y)[0];
   if (!caption) return null;
-  const top = caption.y + caption.height;
-  const regionItems = textItems.filter((item) => item.y >= top - 2 && item.y <= top + maxHeight);
-  if (regionItems.length < 2) return null;
-  const minX = Math.min(...regionItems.map((item) => item.x));
-  const maxX = Math.max(...regionItems.map((item) => item.x + item.width));
-  const regionGraphics = graphics.filter((item) => item.y + item.height >= caption.y && item.y <= top + maxHeight &&
-    item.x + item.width >= minX && item.x <= maxX);
-  return buildTableRegionSignature(regionItems, regionGraphics);
+  const belowTop = caption.y + caption.height;
+  const below = textItems.filter((item) => item.y >= belowTop - 2 && item.y <= belowTop + maxHeight);
+  const above = textItems.filter((item) => item.y + item.height <= caption.y + 2 && item.y + item.height >= caption.y - maxHeight);
+  const signatureFor = (items: ExtractedTextItem[]): TableRegionSignature | null => {
+    if (items.length < 2) return null;
+    const minX = Math.min(...items.map((item) => item.x));
+    const maxX = Math.max(...items.map((item) => item.x + item.width));
+    const minY = Math.min(...items.map((item) => item.y));
+    const maxY = Math.max(...items.map((item) => item.y + item.height));
+    const regionGraphics = graphics.filter((item) => item.y + item.height >= minY - 2 && item.y <= maxY + 2 &&
+      item.x + item.width >= minX && item.x <= maxX);
+    return buildTableRegionSignature(items, regionGraphics);
+  };
+  const belowSignature = signatureFor(below);
+  const aboveSignature = signatureFor(above);
+  if (!belowSignature) return aboveSignature;
+  if (!aboveSignature) return belowSignature;
+  const strength = (signature: TableRegionSignature) =>
+    signature.horizontalRules * 2 + signature.verticalRules * 2 + signature.columnX.length + signature.rowSpacing.length;
+  return strength(aboveSignature) > strength(belowSignature) ? aboveSignature : belowSignature;
 }
 
 export type PdfImagePlacement = {
@@ -165,7 +177,7 @@ export function graphicsToExtractionEvidence(
     label: `native-${item.orientation ?? item.kind}-graphics`,
     confidence: item.confidence,
     page,
-    bbox: { x: item.x, y: item.y, width: item.width, height: item.height },
+    bbox: { page, x: item.x, y: item.y, width: item.width, height: item.height },
     reason: "vector geometry evidence; does not relabel text by itself",
   }));
 }
@@ -368,7 +380,7 @@ export function collectGraphicsPrimitives(
     if (fn === OPS.save) stack.push(ctm);
     else if (fn === OPS.restore) ctm = stack.pop() ?? IDENTITY_CTM;
     else if (fn === OPS.transform && args.length >= 6) ctm = multiplyCtm(ctm, args as number[]);
-    else if (fn === OPS.rectangle && args.length >= 4) addRect(...(args.slice(0, 4) as number[]));
+    else if (fn === OPS.rectangle && args.length >= 4) addRect(...(args.slice(0, 4) as [number, number, number, number]));
     else if (fn === OPS.moveTo && args.length >= 2) path = [[args[0] as number, args[1] as number]];
     else if (fn === OPS.lineTo && args.length >= 2 && path.length > 0) {
       const next: [number, number] = [args[0] as number, args[1] as number];

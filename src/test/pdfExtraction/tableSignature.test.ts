@@ -25,6 +25,14 @@ describe("table region evidence", () => {
     expect(signature?.columnX.length).toBe(2);
   });
 
+  it("also anchors tables whose caption is below the grid", () => {
+    const source = [item("A", 20, 100), item("1", 80, 100), item("B", 20, 120), item("2", 80, 120), item("Table", 20, 145), item("7", 55, 145)];
+    const signature = buildCaptionAnchoredTableSignature(source);
+    expect(signature).not.toBeNull();
+    expect(signature?.bbox.y).toBeLessThan(140);
+    expect(signature?.columnX.length).toBe(2);
+  });
+
   it("requires structural evidence for continuation", () => {
     const base = { bbox: { x: 0, y: 0, width: 300, height: 200 }, columnX: [0, 100, 200], rowSpacing: [12, 12], horizontalRules: 4, verticalRules: 0, fontNames: ["body"], fontSize: 9 };
     const next = { ...base, columnX: [0, 100], horizontalRules: 0, verticalRules: 0 };
