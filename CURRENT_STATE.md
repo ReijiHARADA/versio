@@ -3573,3 +3573,11 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - `npm run build`（tsc -b + vite build）も成功。dynamic import の既知 warning のみで、`.app` は未ビルド。
 - mixed-case vector label 拡張後の全 Vitest を再実行し **61 files / 355 tests passed**。通常見出しの誤 `other` 化は検出されなかった。
 - 26-paper baseline を再生成。source integrity 26/26=1.0、canonical provenance 26/26=1.0、figure relation 24/24=1.0、table caption relation 14/14=1.0。title exact は 20/26=0.769 で、今回の resolver 変更による悪化は確認されない。
+
+## 2026-09-16 extraction goal checkpoint — paused at clean boundary
+
+- User requested a pause at a clean stopping point.
+- No extraction audit, benchmark, Vitest, npm, or translation-server process is running.
+- Worktree is clean; latest committed extraction progress remains `d04de40`.
+- No `.app` build was performed in this checkpoint.
+- Resume point: inspect the narrowed medical-image-segmentation arXiv residuals, then decide whether a general evidence rule is justified; otherwise record the residual and continue corpus diagnostics. Keep translation-server/model work out of this extraction phase.
