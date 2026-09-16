@@ -3266,3 +3266,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 table recall diagnosis
 
 - Full benchmark after reverting the aligned-row experiment still reports only `medical-deep-learning-meta-review` below 0.5 table-region recall (0.571 on its caption/region subset; continuation-page recall 0.286). The remaining misses are caption text absorbed into table streams (Tables 2/5/6), so row-membership thresholds are not the root cause. Next investigation should target caption extraction/splitting at line/block formation.
+
+### 2026-09-16 caption continuation experiment reverted
+
+- Relaxing the generic `cellLike` guard caused Table 1's numeric rows to be absorbed into the caption, a clear safety regression. The experiment was reverted. The remaining Table 2/5/6 misses require a more precise style/geometry transition signal, not a broader continuation rule.
