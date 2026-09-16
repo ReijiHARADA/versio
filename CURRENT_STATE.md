@@ -3762,3 +3762,7 @@ Non-mutating corpus diagnosis now reports 26 papers / 497 pages / 152 suspicious
 ### 2026-09-16 temporary rotation-fixture environment check
 
 Attempted to generate a rotated temporary PDF for orientation-aware testing. The current environment has no `reportlab`, `pypdf`, `qpdf`, `gs`, or `pdftk`, so no fixture was added and no repository dependency was changed. The required fixture work remains queued in `audit-progress.json`.
+
+### 2026-09-16 rotated temporary PDF provenance verification
+
+Generated a minimal temporary PDF with `/Rotate 90` without adding a repository dependency. The production extraction path and test extraction helper now both preserve `rotation: 90`; the extracted text remains intact and the viewport dimensions are correctly swapped. TypeScript passed. This validates the provenance path needed for orientation-aware fixtures; no table role rule was added.

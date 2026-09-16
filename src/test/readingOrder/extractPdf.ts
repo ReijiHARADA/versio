@@ -54,6 +54,7 @@ export async function extractPdfPages(pdfPath: string): Promise<ExtractedPage[]>
       pageNumber: pageNum,
       width: viewport.width,
       height: viewport.height,
+      rotation: typeof page.rotate === "number" ? page.rotate : undefined,
       textItems,
       imagePlacements: collectImagePlacements(await page.getOperatorList(), viewport.height),
     });

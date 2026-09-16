@@ -3059,6 +3059,6 @@
     "nextAction": "Add and validate a general affiliation/body boundary fixture; then review table/list residuals.",
     "latestCommit": "f695d44"
   },
-  "nextAction": "Create orientation-aware temporary PDF fixture using an available generator (reportlab/pypdf/qpdf unavailable in current environment); then test page rotation metadata and wear-scale geometry.",
+  "nextAction": "Use validated page rotation provenance with native item transforms to build orientation-aware table/footnote fixture; then review arXiv/PMLR residuals.",
   "lastUpdate": "2026-09-16"
 }
