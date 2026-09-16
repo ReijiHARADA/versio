@@ -706,6 +706,12 @@ describe("PDF reading order regression", () => {
     expect(body).toContain("COMPLEX_L1");
     expect(body).toContain("COMPLEX_R1");
     tokensInOrder(body, ["COMPLEX_L8", "COMPLEX_R1"]);
+    const affiliation = blocks.find((b) => /Example Institute College/.test(b.text));
+    const abstract = blocks.find((b) => /COMPLEX_ABS/.test(b.text));
+    expect(affiliation?.role).toBe("affiliation");
+    expect(abstract && affiliation && blocks.indexOf(affiliation) < blocks.indexOf(abstract)).toBe(true);
+    expect(body).toContain("Example Institute College");
+    expect(blocks.filter((b) => b.role === "paragraph").some((b) => /Example Institute College/.test(b.text))).toBe(false);
   });
 
   it("footnote is not merged into mid-column body", () => {

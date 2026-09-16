@@ -3468,3 +3468,7 @@ Full reading-order fixtures remain green (**53/53**) after the coincident native
 ### 2026-09-16 corpus diagnostic after duplicate-span guard
 
 The non-mutating corpus diagnostic remains 26 papers, 497 pages, and 149 suspicious blocks (arXiv 136; PMLR 6; Elsevier 4; OzCHI 2; IEEE 1). Stable counts are expected because remaining candidates are primarily vector-label and mixed-layout geometry cases.
+
+### 2026-09-16 complex first-page affiliation assertion
+
+The complex mixed-band fixture now explicitly checks that native affiliation text is not duplicated or relabeled as paragraph content, and that it precedes the abstract. Reading-order suite: 53/53.

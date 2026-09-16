@@ -3666,3 +3666,7 @@ The duplicate native-span guard was rechecked against the full reading-order fix
 ### 2026-09-16 corpus diagnostic after duplicate-span guard
 
 Non-mutating diagnostic regenerated: 26 papers / 497 pages / 149 suspicious blocks, unchanged from the prior baseline (arXiv 136, PMLR 6, Elsevier 4, OzCHI 2, IEEE 1). The guard addresses text-layer duplication rather than vector-label/table geometry, so no metric regression was observed.
+
+### 2026-09-16 complex first-page affiliation assertion
+
+Strengthened the mixed first-page fixture: affiliation text must remain an `affiliation` block and must not be relabeled as paragraph content, while body reading order remains left-column before right-column. Reading-order suite: 53/53 passed.
