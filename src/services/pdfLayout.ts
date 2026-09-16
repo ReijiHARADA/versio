@@ -1742,10 +1742,10 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         // A full-width paragraph can continue in the first body column of
         // the next page.  The next paragraph may begin below a page-top
         // figure, so its y position alone is not a reliable boundary here.
-        (target.column === "single" && block.column === "left")) &&
+        (target.column === "single" && (block.column === "single" || block.column === "left"))) &&
       (target.lines[target.lines.length - 1]?.y ?? 0) >
         (target.lines[target.lines.length - 1]?.pageHeight ?? Number.MAX_SAFE_INTEGER) * 0.68 &&
-      ((target.column === "single" && block.column === "left") ||
+      ((target.column === "single" && (block.column === "single" || block.column === "left")) ||
         (block.lines[0]?.y ?? Number.MAX_SAFE_INTEGER) <
           (block.lines[0]?.pageHeight ?? 0) * 0.32);
     if (

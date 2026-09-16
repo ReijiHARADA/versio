@@ -3421,3 +3421,8 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - 回転だけでは図と表を安全に区別できないため、rotation-only の vector label evidence と resolver hook を撤回した。
 - 撤回後も extraction corpus は 56/56、既存の table region / continued-caption 回帰は維持。次は figure/table の native geometry を組み合わせた判定を検討する。
 - 2026-09-16: full Vitest after rotation-label heuristic reversion passed 61 files / 350 tests; extraction objective remains active and no translation-server or .app changes were made.
+
+### 2026-09-16 single-column page-boundary stitching
+- 追加した regression case で、未完結文の single-column paragraph が連続ページで分断される経路を再現。
+- `mergeColumnContinuations` の連続ページ条件を single→single に限定して許可し、既存の末尾位置・lowercase continuation・role/rotation guard を維持。
+- Focused reading-order 50/50、extraction corpus 56/56、full corpus reading-order 27/27 を確認。source-integrity 回帰への悪化なし。

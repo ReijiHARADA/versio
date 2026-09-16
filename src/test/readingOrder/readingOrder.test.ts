@@ -144,6 +144,28 @@ describe("PDF reading order regression", () => {
     expect(blocks.some((block) => block.text.includes("left_7 the remaining clause"))).toBe(true);
   });
 
+  it("stitches an unfinished paragraph across consecutive pages", () => {
+    const pages: ExtractedPage[] = [
+      {
+        pageNumber: 1, width: 612, height: 792,
+        textItems: [
+          { text: "The distribution of targets was examined carefully and the", x: 54, y: 620, width: 420, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+        ],
+      },
+      {
+        pageNumber: 2, width: 612, height: 792,
+        textItems: [
+          { text: "results were consistent across participants.", x: 54, y: 200, width: 260, height: 10, fontSize: 10, fontName: "Body", page: 2 },
+        ],
+      },
+    ];
+    const { blocks } = reconstructDocument(pages);
+    const paragraph = blocks.find((block) => block.text.includes("distribution of targets"));
+    expect(paragraph?.text).toContain("the results were consistent");
+    expect(paragraph?.pageStart).toBe(1);
+    expect(paragraph?.pageEnd).toBe(2);
+  });
+
   it("splits independent top-of-page columns when the right column starts a new sentence", () => {
     const pages: ExtractedPage[] = [{
       pageNumber: 1, width: 612, height: 792,
