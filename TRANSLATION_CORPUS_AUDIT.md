@@ -2999,3 +2999,7 @@ The page 13 short-label residual beginning `-Clinical workflow...` was visually 
 ### 2026-09-16 mixed-column residual review
 
 Page 18 of the medical meta-review was visually confirmed to contain a left-column bullet list and independent right-column section prose. The diagnostic residual is labeled `mixed_columns`, severity 3. This confirms that mixed-column stream interleaving remains a high-impact extraction issue distinct from translation quality.
+
+### 2026-09-16 mixed-column split experiment
+
+A generic relaxation for top-of-page mixed-column splitting was tested and reverted: it caused the existing unfinished left-column to right-column continuation case to stop stitching (47/48). The safety regression is recorded; future changes must distinguish genuine interleaving from a column continuation using sentence completeness and column sequence evidence.
