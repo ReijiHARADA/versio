@@ -3628,3 +3628,7 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 ### 2026-09-16 residual review refresh
 - Manual residual summary remains 83/83 reviewed, pending 0: figure_label 49, table_row 14, equation 6, paragraph 7, list_flattening 2, list_item 1, mixed_columns 1, paragraph_merge 1, correct 2. Severity 3 accounts for 73 samples.
 - Class distribution is image-overlap 28 and short-label-band 55. These are extraction residuals, not translation failures; no broad suppression was introduced.
+
+### 2026-09-16 extraction corpus recheck
+- Extraction corpus rerun after the spanning metadata regression fixture: **2 files / 56 tests passed** in 26.67s.
+- No new failures; the remaining open work is the documented affiliation/body ordering and table/list geometry review.

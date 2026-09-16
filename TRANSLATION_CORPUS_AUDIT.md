@@ -3431,3 +3431,5 @@ The metadata ordering guard now has a general regression test built on the exist
 Full regression after adding the spanning metadata fixture: **61 files / 356 tests passed**. Remaining extraction work is limited to corpus-backed affiliation/body ordering and table/list geometry residuals; translation code remains unchanged.
 
 Residual review refresh: all 83 samples are reviewed (pending 0). Main labels are figure_label 49 and table_row 14; severity 3 is 73/83. Classes are image-overlap 28 and short-label-band 55. The high-severity queue remains an extraction geometry problem, so no translation-layer change or broad suppression was added.
+
+Extraction corpus recheck after the latest fixture: **56/56 passed** in 26.67s, with no new failures. Affiliation/body ordering and table/list geometry remain the next open extraction items.
