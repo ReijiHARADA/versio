@@ -270,8 +270,9 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
             // when no single block has enough lines to earn table evidence.
             // Require multiple aligned text items in the row so ordinary body
             // paragraphs remain excluded.
-            const row = candidate.layoutBlock.lines.some((line) => line.items.length >= 2);
             const text = candidate.layoutBlock.text.trim();
+            const sentenceLike = /[.!?:;]\s*$/.test(text) && text.split(/\s+/).filter(Boolean).length > 8;
+            const row = candidate.layoutBlock.lines.some((line) => line.items.length >= 2) && !sentenceLike;
             const numericDensity = (text.match(/\d/g) ?? []).length / Math.max(text.length, 1);
             const compactCellRow = candidate.layoutBlock.lines.length === 1 &&
               !/[.!?]\s*$/.test(text) && (numericDensity >= 0.12 ||

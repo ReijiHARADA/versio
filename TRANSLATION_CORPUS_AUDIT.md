@@ -31,6 +31,9 @@ next extraction issue to resolve.
 The resolver now stops cross-page member collection at the next table caption;
 the medical Table 1 diagnostic no longer includes later table labels. Corpus
 tests remain 56/56; continuation-page recall is unchanged at 0.571.
+Long sentence-shaped candidates ending in punctuation are now excluded from
+table-row evidence, preventing prose from entering a table region. Tests remain
+56/56 and no translation code was changed.
 
 ## Initial local sample (2026-09-07)
 
