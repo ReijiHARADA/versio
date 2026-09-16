@@ -3139,3 +3139,7 @@ Page 12 visual review classified four heatmap label streams as embedded `figure_
 ### 2026-09-16 manual residual review: linguistics page 13
 
 The two DP-formula residual candidates are embedded Figure 10 diagram labels, not standalone equations. They are recorded as `figure_label` severity 3; no new extraction rule was added. Coverage: 35/83, 48 pending.
+
+### 2026-09-16 manual residual review: linguistics page 14
+
+The page-14 numeric/label residual is embedded Figure 11 heatmap content (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage is 36/83 with 47 pending.

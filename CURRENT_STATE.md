@@ -3136,3 +3136,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: linguistics page 13
 
 - Two short-label candidates containing DP formulas were visually confirmed as labels inside Figure 10, not standalone body equations. Both are recorded as `figure_label`, severity 3, primary cause `pdf extraction`; no equation rule change was justified. Manual coverage is now 35/83 (48 pending).
+
+### 2026-09-16 manual residual review: linguistics page 14
+
+- Repeated binary labels and heatmap values were visually confirmed as embedded Figure 11 chart content. Recorded as `figure_label`, severity 3, primary cause `pdf extraction`; no new rule was justified. Manual coverage is 36/83 (47 pending).

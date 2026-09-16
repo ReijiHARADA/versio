@@ -355,10 +355,10 @@
       "page": 14,
       "classification": "image-overlap",
       "text": "000 001 010 011 100 101 110111 1.00 000 001 010 011 100 101 110111 1.00 0.750.50 0.750.50 0.250.00 0.250.00 010011 010011 0.250.50 0.250.50 100101 100101",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: repeated binary labels and heatmap values are embedded Figure 11 chart content",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",
