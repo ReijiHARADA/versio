@@ -3810,3 +3810,7 @@ Focused extraction pipeline remains **23/23 passed** and TypeScript no-emit pass
 ### 2026-09-16 metadata-font title inference fix
 
 Excluded author, affiliation, and email lines from document title-font estimation. Focused pipeline remains 23/23 and TypeScript passes. Baseline title candidate review shows medical image segmentation now selects the expected core title; remaining mismatches are subtitle truncation, publisher/header selection, and one arXiv identifier case. No translation changes.
+
+### 2026-09-16 title-font fix corpus revalidation
+
+The 26-paper baseline after metadata-font exclusion remains safe: titleExact 0.769, mean heading precision 1.000, mean heading recall 0.999, reading-order pair 1.000, and source integrity 1.000. The title metric did not move because remaining failures are candidate selection/subtitle issues, while heading recall improved slightly. No safety regression observed.

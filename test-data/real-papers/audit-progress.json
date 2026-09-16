@@ -3052,7 +3052,8 @@
     "2026-09-16: regenerated baseline with explicit titleExpected; six title mismatches classified for native title-region review, no resolver rule added.",
     "2026-09-16: title mismatch review complete; no shared safe resolver condition yet, so no parser behavior change.",
     "2026-09-16: CJK-only native title gate fixed with script-aware Latin/CJK evidence; focused pipeline 23/23 and TypeScript passed.",
-    "2026-09-16: title-font inference excludes author/affiliation/email metadata; focused 23/23, TypeScript pass; medical image title candidate improved, remaining mismatches tracked."
+    "2026-09-16: title-font inference excludes author/affiliation/email metadata; focused 23/23, TypeScript pass; medical image title candidate improved, remaining mismatches tracked.",
+    "2026-09-16: 26-paper baseline after title-font fix: titleExact 0.769, heading precision 1.000, recall 0.999, reading-order/source integrity 1.000; no safety regression."
   ],
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",
