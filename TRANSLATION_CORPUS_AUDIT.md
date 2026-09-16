@@ -3311,3 +3311,6 @@ The provisional vector-label heuristic was measured across the corpus and fired 
 ### 2026-09-16 rotation-gated vector-label evidence
 
 A stricter vector-label evidence variant now requires strong native rotation geometry (>=35°), dense short items, and multiple x-bands. It fires on 4 blocks across 2 papers versus 612 for the broad version. Extraction corpus remains 56/56; manual validation of the four candidates is still required.
+
+### 2026-09-16 抽出精度レビュー: 回転ラベル判定の撤回
+回転した短い native text を図ラベル候補とする実験を corpus で確認した。4候補のうち human-AI 論文の3候補は Figure 2 の放射状チャートラベルだったが、linguistics 論文の候補は回転した表の列見出しだった。したがって回転のみを根拠に `other` へ抑制する本番ヒューリスティックは false positive を生むため撤回した。撤回後も extraction corpus 56/56、table region recall 1.000、continued-caption page recall 1.000、source integrity 1.000 を維持している。図ラベル抑制を再導入する場合は、図領域の geometry と table-region evidence を併用し、表見出しを除外できることを先に回帰テストする。

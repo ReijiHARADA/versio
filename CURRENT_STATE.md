@@ -3415,3 +3415,8 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - Refined the reverted broad vector-label experiment using strong native rotation geometry (>=35° on most items), short labels, and multiple x-bands.
 - Corpus measurement: **4 candidate blocks across 2 papers** (human-AI Figure 2 and one linguistics paper), down from 612 for the broad heuristic. Extraction corpus remains 56/56; TypeScript and focused tests pass.
 - This is retained as a provisional evidence generator pending manual validation of all four candidates; no translation-layer changes.
+
+### 2026-09-16 rotation-label heuristic reverted after manual review
+- 回転ラベル候補4件を目視確認した結果、human-AI 論文の3件は Figure 2 の図ラベルだったが、linguistics 論文の1件は回転した表見出しだった。
+- 回転だけでは図と表を安全に区別できないため、rotation-only の vector label evidence と resolver hook を撤回した。
+- 撤回後も extraction corpus は 56/56、既存の table region / continued-caption 回帰は維持。次は figure/table の native geometry を組み合わせた判定を検討する。

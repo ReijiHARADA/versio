@@ -1,6 +1,6 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "extraction-v-current-2026-09-16-continued-caption",
+  "lastBenchmarkVersion": "extraction-v-current-2026-09-16-vector-label-revert",
   "lastDiagnosticVersion": "pdf-layout-corpus-diagnostic-v1",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
@@ -3027,10 +3027,10 @@
     "2026-09-16: layout diagnostic stable at 149 suspicious blocks/497 pages after short-label equation guard; no residual suppression."
   ],
   "lastExtractionCheckpoint": {
-    "tableRegionRecall": "1.000",
-    "tableContinuationPageRecall": "1.000",
-    "sourceIntegrityRate": "1.000",
-    "note": "Rotation-gated vector figure label evidence fires on 4 blocks across corpus (human-ai and linguistics), versus 612 for prior broad heuristic; extraction corpus remains green."
+    "tableRegionRecall": 1.0,
+    "tableContinuationPageRecall": 1.0,
+    "sourceIntegrityRate": 1.0,
+    "note": "Rotation-only vector label heuristic reverted after manual review found a rotated table-header false positive; extraction corpus 56/56."
   },
-  "nextAction": "manually validate the four rotation-gated vector-label candidates and inspect remaining paragraph/block boundary samples"
+  "nextAction": "derive stronger figure-vs-table native geometry before any vector-label suppression; continue paragraph/block audit"
 }
