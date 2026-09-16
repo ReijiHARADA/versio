@@ -874,6 +874,9 @@ describe("PDF reading order regression", () => {
     expect(blocks.some((b) => b.role === "title" && /情報採餌理論/.test(b.text))).toBe(
       true
     );
+    const affiliation = blocks.find((b) => b.role === "affiliation" && /東京大学/.test(b.text));
+    expect(affiliation).toBeDefined();
+    expect(blocks.some((b) => b.role === "paragraph" && /東京大学/.test(b.text) && b !== affiliation)).toBe(false);
     expect(
       blocks.some(
         (b) =>

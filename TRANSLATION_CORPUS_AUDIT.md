@@ -3439,3 +3439,7 @@ Real-paper reading-order recheck with the extraction config: **27/27 passed** af
 ### 2026-09-16 table/list residual classification
 
 Review of diagnostic samples confirms that many cognitive-psychology and step-to-charge mixed-layout/numeric-grid candidates are experiment cards, diagrams, or chart labels, while linguistics candidates contain dense algorithm/math notation. A generic word-count suppression would risk hiding legitimate prose, so no new role rule was added; geometry/image provenance remains the next safe discriminator.
+
+### 2026-09-16 affiliation boundary regression
+
+The Japanese conference geometry fixture now asserts that affiliation text remains an affiliation node and is not duplicated as paragraph content. Reading-order tests remain 53/53.

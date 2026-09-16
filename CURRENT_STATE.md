@@ -3638,3 +3638,6 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 
 ### 2026-09-16 table/list residual classification
 - Diagnostic samples show cognitive-psychology and step-to-charge `mixed-layout`/`numeric-grid` blocks are experiment cards, diagrams, and chart labels embedded in native text, while linguistics residuals include dense algorithm/math notation. These are not safe to suppress with a shared word-count rule; geometry/image provenance is required. No new relabel rule added.
+
+### 2026-09-16 affiliation boundary regression
+- Extended the Japanese conference geometry fixture to assert that a native affiliation (`東京大学`) remains an affiliation node and is not duplicated into a paragraph. Reading-order suite: 53/53 passed.
