@@ -3299,3 +3299,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 diagnostic npm command
 
 - Registered `npm run diagnose:caption-boundaries` for repeatable native caption geometry inspection. Verified on the medical review PDF page 2 with exit code 0; extraction behavior is unchanged.
+
+### 2026-09-16 frontend build verification
+
+- `npm run build` passed (TypeScript project build and Vite production bundle). No `.app` build was performed.
