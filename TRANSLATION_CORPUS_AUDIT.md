@@ -3099,3 +3099,7 @@ Rendered review confirmed the residual is a sequence of displayed transfer-funct
 ### 2026-09-16 manual residual review: Step-to-Charge page 26
 
 Rendered review confirmed the residual belongs to Figure 9 labels and annotations. Recorded as `figure_label`, severity 3, with PDF extraction as the primary cause; review coverage is 18/83 (65 pending).
+
+### 2026-09-16 manual residual review: cognitive page 9
+
+The two residual blocks are embedded Figure 5 prompt/chart text, confirmed by rendered review. Both are recorded as `figure_label`, severity 3; manual review is now 19/83 (64 pending).

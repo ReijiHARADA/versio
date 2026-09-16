@@ -3092,3 +3092,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: Step-to-Charge page 26
 
 - Figure 9's residual is embedded curve/axis labels and annotations, confirmed visually. Labeled `figure_label`, severity 3, root cause `pdf extraction`; manual review is now 18/83 (65 pending).
+
+### 2026-09-16 manual residual review: cognitive page 9
+
+- Figure 5 prompt/chart residuals were visually confirmed as embedded causal-reasoning figure content. Labeled both `figure_label`, severity 3, root cause `pdf extraction`; review coverage is now 19/83 (64 pending).

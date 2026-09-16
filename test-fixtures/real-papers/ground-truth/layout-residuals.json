@@ -155,20 +155,24 @@
       "page": 9,
       "classification": "short-label-band",
       "text": "Ideal Human GPT-3 You have previously observed the following chemical substances in different wine casks: 15 - Cask 1: substance A was present, substance B was present, substance C was present. - Cask 2: substance A was present, substance B",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: causal-reasoning prompt and chart text are embedded in Figure 5, not ordinary body prose",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 3,
+      "reviewLabel": "figure_label",
+      "rootCause": "pdf extraction"
     },
     {
       "paper": "cognitive-psychology-gpt3",
       "page": 9,
       "classification": "short-label-band",
       "text": "previous research: C - Substance A likely causes the production of substance B. Ideal Human GPT-3 - Substance A likely causes the production of substance C. 15",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: causal-reasoning prompt and chart text are embedded in Figure 5, not ordinary body prose",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 3,
+      "reviewLabel": "figure_label",
+      "rootCause": "pdf extraction"
     },
     {
       "paper": "ergonomics-human-factors-ihci",
