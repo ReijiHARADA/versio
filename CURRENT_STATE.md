@@ -3754,3 +3754,7 @@ Full Vitest completed with **61 files / 361 tests passed** after preserving nati
 ### 2026-09-16 rotation diagnostics in boundary scan
 
 Boundary scan findings now include a native text rotation summary (min/max/mean) for figure-marker candidates. A corpus run produced valid JSON for 25 papers; the representative mixed Figure 2 case is 0° text, further separating it from genuine rotated-table residuals. This is diagnostic provenance only; no role rule changed. TypeScript passed.
+
+### 2026-09-16 diagnostic refresh after captioned grid evidence
+
+Non-mutating corpus diagnosis now reports 26 papers / 497 pages / 152 suspicious blocks. Residuals remain concentrated in arXiv (134), PMLR (11), Elsevier (4), OzCHI (2), and IEEE (1); the increase from 149 is diagnostic classification sensitivity after the new grid evidence, not a production role regression. Extraction corpus and full Vitest remain green.
