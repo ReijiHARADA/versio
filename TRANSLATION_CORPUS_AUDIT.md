@@ -3051,3 +3051,7 @@ A bounded generic continuation path now considers up to four later pages when bo
 ### 2026-09-16 table continuation refinement
 
 Removed only the vertical-position prerequisite for later-page candidates; x-band, four-page bound, and native table-row evidence remain mandatory. This recovered one additional continuation page in the medical fixture: recall improved from 1/7 to 2/7 while table-region recall stayed 4/7. The change is kept with the safety suite green, but multi-page table extraction remains incomplete.
+
+### 2026-09-16 continuation-row evidence experiment
+
+Later-page candidates with high table role score may now qualify even when native text collapsed their cells into one item (bounded to three lines). Tests remain green, but medical metrics are unchanged (table region 4/7; continuation 2/7). The remaining failure is therefore likely candidate scoring/line grouping upstream.

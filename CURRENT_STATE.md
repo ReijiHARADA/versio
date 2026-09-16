@@ -3041,3 +3041,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Relaxed only the later-page vertical-position check for caption-associated table rows; the remaining guards still require same x-band, a bounded four-page window, and native row/table evidence. This captures continuations whose caption is not at the physical page bottom while leaving ordinary prose excluded.
 - Extraction corpus remains 56/56. Medical benchmark improved from continuation recall 1/7 to 2/7 (0.286); table-region recall remains 4/7 (0.571). No source-integrity regression was observed.
 - This is still incomplete: the two multi-page tables require broader row coverage and stronger repeated-header evidence before claiming full support.
+
+### 2026-09-16 continuation-row evidence experiment
+
+- Tested allowing later-page rows with high table role score even when native extraction collapsed the row into one text item. Extraction tests and typecheck pass; the medical benchmark remains 4/7 table-region recall and 2/7 continuation recall. The condition is retained as a safe generic fallback, but it produces no measured gain and must not be treated as completion.
