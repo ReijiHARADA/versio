@@ -3742,3 +3742,7 @@ Added a regression fixture for numeric matrix fragments whose native text carrie
 ### 2026-09-16 native page rotation provenance
 
 `ExtractedPage` now preserves the PDF page's native rotation metadata (`page.rotate`) without changing existing viewport/text coordinates. This is the required provenance input for a future orientation-aware table/footnote resolver; the wear-scale page itself reports 0°, so no unsafe role promotion was made. Reading-order suite: 54/54; TypeScript passed.
+
+### 2026-09-16 extraction baseline after grid/orientation provenance
+
+Re-ran `npm run bench:pdf-extraction` after the captioned-grid and page-rotation provenance changes. The 26-paper report remains stable: title exact 0.769; heading precision 1.000, heading recall 0.993, reading-order pair 1.000, figure-caption relation 1.000, source integrity 1.000, and canonical provenance 1.000. No safety regression was observed.
