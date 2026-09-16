@@ -3605,3 +3605,7 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 ### 2026-09-16 medical survey post-guard probe
 - After the spanning metadata guard, page 1 canonical order is `title → affiliation → abstract/heading → left-column intro → left-column affiliation block → right-column continuation`; the earlier metadata-induced split is gone.
 - Same-page exact caption duplicate count is now 0 in the probe. The affiliation block remains a native layout boundary requiring a broader affiliation/body ordering fixture; no heuristic was added.
+
+### 2026-09-16 full extraction benchmark after ordering guard
+- 26-paper baseline regenerated. Aggregate heading precision 1.000, heading recall 0.993, reading-order pair score 1.000, figure-caption relation 1.000, source-integrity 1.000, canonical provenance 1.000. Title exact remains 0.769.
+- No regression attributable to the spanning metadata guard; `.app` and translation server remain untouched.
