@@ -3786,3 +3786,7 @@ Parallel verification completed successfully: extraction corpus **56/56**, TypeS
 ### 2026-09-16 extraction web build revalidation
 
 `npm run build` passed (`tsc -b` plus Vite, 2147 modules). Only existing ineffective dynamic-import warnings were emitted. No `.app` build was run; translation-server remains unchanged.
+
+### 2026-09-16 title ground-truth coverage
+
+Added title-only ground-truth metadata for six corpus papers that previously had no dedicated annotation. Re-running the baseline confirms the reported titleExact value remains 0.769; the added entries expose genuine title normalization/extraction mismatches rather than silently excluding them. No parser rule was changed.
