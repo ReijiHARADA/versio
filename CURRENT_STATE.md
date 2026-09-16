@@ -3503,3 +3503,4 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - extraction corpus 56/56 を再実行し、26-paper baseline を再生成。
 - lint (`oxlint --deny-warnings`) と TypeScript (`tsc --noEmit`) は成功。
 - 現段階で新たな安全な一般則は確認できなかったため、未検証の table/math 昇格は追加していない。
+- Full Vitest rerun after the latest extraction checkpoint: 61 files / 354 tests passed.
