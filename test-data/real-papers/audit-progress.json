@@ -3029,7 +3029,8 @@
     "2026-09-16: corpus config stabilized with 180s timeout and single worker; full extraction corpus 56/56 passed in 26.98s. speechin Table 1 canonical role confirmed as table via provenance probe.",
     "2026-09-16: reviewed economics native math on pages 14/40/41; standalone display equations resolve safely, mixed multi-line formulas remain conservative paragraph/equation fragments; no broad promotion rule added.",
     "2026-09-16: wear-scale rotated-footnote review page 14; rotated Table 6 grid/caption stays separated and non-translated under existing regression (1/1).",
-    "2026-09-16: corpus diagnostic latest 26 papers/497 pages/149 suspicious blocks; arXiv 134 and PMLR 11 dominate residual queue, diagnostic-only."
+    "2026-09-16: corpus diagnostic latest 26 papers/497 pages/149 suspicious blocks; arXiv 134 and PMLR 11 dominate residual queue, diagnostic-only.",
+    "2026-09-16: mixed-case vector label suppression verified on step-to-charge; extraction corpus 56/56, lint and TypeScript pass, baseline integrity/provenance unchanged."
   ],
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",
@@ -3042,5 +3043,5 @@
     "nextAction": "Improve proseGrid using row-level x/y stability; page-9 list guard is kept. Do not use broad word-count suppression because it regresses table recall.",
     "latestCommit": "a4dcfb0"
   },
-  "nextAction": "Review arXiv/PMLR vector/table-like residuals with native geometry; add a general rule only with precision regression coverage."
+  "nextAction": "Review arXiv/PMLR residual geometry and remaining paragraph/list boundary samples; keep translation pipeline unchanged."
 }
