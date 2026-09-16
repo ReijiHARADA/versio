@@ -1013,11 +1013,7 @@ function looksLikePersonName(text: string): boolean {
 function detectTitleFont(lines: LayoutLine[], baseFont: number): number {
   const pageOne = lines.filter((l) => l.page === 1 && l.text.trim().length >= 8);
   if (pageOne.length === 0) return 0;
-  const titleCandidates = pageOne.filter((line) => {
-    const text = line.text.trim();
-    return !looksLikeEmail(text) && !looksLikeAffiliation(text) && !looksLikePersonName(text);
-  });
-  const maxFont = Math.max(...(titleCandidates.length > 0 ? titleCandidates : pageOne).map((l) => l.fontSize));
+  const maxFont = Math.max(...pageOne.map((l) => l.fontSize));
   if (maxFont < baseFont * 1.28) return 0;
   return maxFont;
 }
