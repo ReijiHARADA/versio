@@ -3376,3 +3376,8 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 
 - Full Vitest suite passed: 61 files / 350 tests.
 - Continued table-caption handling introduces no cross-feature regression. Extraction remains the active goal; translation server and `.app` remain untouched.
+
+### 2026-09-16 boundary scan checkpoint
+
+- `npm run scan:pdf-boundaries` completed successfully across the cached corpus; no source files changed.
+- The scan continues to expose mixed table/figure/list streams in selected papers, so the next implementation must target native line provenance rather than broad post-hoc paragraph merging.

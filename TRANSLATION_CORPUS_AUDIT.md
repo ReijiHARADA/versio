@@ -3291,3 +3291,5 @@ Validation checkpoint: extraction corpus remains 56/56 and lint passes after con
 Corpus layout diagnostic refresh: 26 papers / 497 pages produced 152 advisory suspicious blocks. The majority are figure/math label clusters; no production suppression was added. Next work remains provenance-aware paragraph and block-boundary review.
 
 Full-suite validation checkpoint: Vitest passed 61 files / 350 tests after continued-table handling. No cross-feature regression was observed.
+
+Boundary scan checkpoint: `npm run scan:pdf-boundaries` completed successfully on the cached corpus. It continues to expose mixed table/figure/list streams in selected papers; no broad post-hoc merge rule was added.
