@@ -2952,7 +2952,9 @@ The cached corpus now produces a 415-row section-stratified extraction review sa
 
 The sample can be regenerated with `npm run audit:build-extraction-sample`; the command uses only cached native extraction and does not start the translation server.
 
-Equation candidates are included in the structural sample (up to three per paper); the current 415 rows contain 17 resolved equation blocks for manual false-positive review.
+Equation candidates are included in the structural sample (up to three per paper); the current 415 rows contain 11 resolved equation blocks for manual false-positive review.
+
+`npm run audit:summarize-extraction-review` now validates residual review metadata and reports the current 3 reviewed figure labels / 80 pending samples without treating pending rows as metrics.
 
 The generic equation classifier now rejects longer unit-bearing prose and metric/statistical fragments when no explicit equation number anchors them. A stricter relation-operator guard was reverted after a safety regression in an existing paragraph continuation; the retained change passes corpus-derived regression cases.
 

@@ -2987,7 +2987,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Regenerated `extraction-manual-sample-v1.json` from the cached corpus. It contains 415 section-stratified rows (15–16 per paper; headings, ordinary paragraphs, and all detected captions), each with page/bbox provenance and a pending manual label. No production classification is inferred from this sample.
 - Added `npm run audit:build-extraction-sample` as the reproducible command for regenerating that sample.
-- The sample generator now includes up to three resolved `equation` blocks per paper alongside headings, prose, and captions; the current 415-row sample contains 17 equation candidates.
+- The sample generator now includes up to three resolved `equation` blocks per paper alongside headings, prose, and captions; the current 415-row sample contains 11 equation candidates.
+- Added `npm run audit:summarize-extraction-review` to validate reviewed residual labels and report pending/reviewed counts. Current state: 83 total, 3 reviewed figure labels (severity 3), 80 pending.
 - Tightened generic equation negative evidence for unit-bearing prose and statistical metric fragments (`AVE`, `CR`, `RMSE`, etc.). A stricter relation-operator guard was evaluated but reverted after it removed an existing paragraph continuation; the retained change is covered by corpus-derived cases and focused tests remain 48/48.
 - Full 26-paper benchmark rerun preserved source integrity and canonical provenance at 1.0. The 415-row review sample now contains 14 equation candidates (down from 17); this is a diagnostic reduction, not a claimed precision score.
 - Full application regression after the equation change: Vitest 61 files / 348 tests passed. No reader, import, projection, or export regression was observed.
