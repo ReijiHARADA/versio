@@ -3329,3 +3329,6 @@ A stricter vector-label evidence variant now requires strong native rotation geo
 
 ### 2026-09-16 OzCHI table region目視確認
 OzCHI page 8をレンダリングして確認した結果、左側のTable 4と右側のTable 5はいずれもcaption付きの独立したgridだった。captionは両方検出されるが、generic region membershipが一方を取りこぼしている。本文を誤ってtableへ昇格させるリスクを避け、追加の広域fallbackは行わず、native row geometryを用いた次の改善対象として記録した。
+
+### 2026-09-16 aligned numeric row fallbackの評価と撤回
+caption近接・複数native item・numeric densityを組み合わせる `alignedNumericRow` fallbackを評価したが、OzCHIのtable-region recallは0.800のままで改善しなかった。効果がないまま本文昇格リスクを増やすため撤回した。
