@@ -3830,3 +3830,6 @@ Full Vitest completed with **61 files / 362 tests passed** after reverting unsaf
 ### 2026-09-16 post-rollback lint/typecheck
 
 After title experiment rollback, TypeScript no-emit and lint with warnings denied both pass. Current extraction baseline is safe to hand off; next change must be fixture-driven title candidate evidence or orientation-aware table geometry.
+### 2026-09-16 reproducible extraction typecheck command
+
+Added the missing `npm run typecheck` script (`tsc --noEmit`) so extraction verification is reproducible from the project scripts. TypeScript no-emit and lint with warnings denied pass; no extraction or translation behavior changed.
