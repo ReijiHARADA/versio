@@ -19,7 +19,7 @@ for (const paper of catalog.papers) {
   const { blocks } = reconstructDocument(pages);
   const candidates = blocks
     .filter((block) => block.text.trim().length > 0)
-    .filter((block) => ["heading", "paragraph", "figure_caption", "table_caption"].includes(block.role));
+    .filter((block) => ["heading", "paragraph", "figure_caption", "table_caption", "equation"].includes(block.role));
   // Keep the sample bounded, but ensure every paper contributes at least a
   // dozen section-stratified blocks when the cached extraction has enough
   // material. Structural examples are selected first so ordinary prose does
@@ -27,6 +27,7 @@ for (const paper of catalog.papers) {
   const selected = [
     ...candidates.filter((b) => b.role === "heading").slice(0, 4),
     ...candidates.filter((b) => b.role === "figure_caption" || b.role === "table_caption"),
+    ...candidates.filter((b) => b.role === "equation").slice(0, 3),
     ...candidates.filter((b) => b.role === "paragraph").slice(0, 12),
   ].filter((block, index, all) => all.indexOf(block) === index).slice(0, 16);
   for (const block of selected) {
