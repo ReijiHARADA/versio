@@ -3068,3 +3068,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: cognitive page 8
 
 - Rendered cognitive-psychology-gpt3 page 8. The residual `Q: Do you want to trade with alien D or F?` and related labels are embedded in Figure 4's prompt panel, not standalone body prose. Labeled `figure_label`, severity 3, root cause `pdf extraction`. Review coverage is 11/83 (72 pending).
+
+### 2026-09-16 manual residual review: ergonomics page 11
+
+- Rendered ergonomics-human-factors-ihci page 11. The Chinese residual is a cell/row stream inside Table 3 (with checkmarks), not body prose. Labeled `table_row`, severity 3, root cause `pdf extraction`; review coverage is now 12/83 (71 pending).

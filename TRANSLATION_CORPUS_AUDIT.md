@@ -3075,3 +3075,7 @@ Full Vitest (61 files / 350 tests), extraction corpus (56/56), typecheck, lint, 
 ### 2026-09-16 manual residual review: cognitive page 8
 
 Figure 4 prompt/chart text was confirmed visually as embedded figure content. The residual is labeled `figure_label`, severity 3, with PDF extraction as the primary cause; review coverage is now 11/83 (72 pending).
+
+### 2026-09-16 manual residual review: ergonomics page 11
+
+Visual review confirmed the residual belongs to Table 3 cell rows. It is labeled `table_row`, severity 3, with PDF extraction as the primary cause; manual review is now 12/83 (71 pending).

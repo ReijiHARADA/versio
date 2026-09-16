@@ -163,10 +163,12 @@
       "page": 11,
       "classification": "short-label-band",
       "text": "驾驶员，智能系统 智能车联网,道路 智能交通信号， 公众，自动驾驶 系统组成 （环境和驾驶员状 智能传感器，行 交通规则和法 公司, 电信运营 态感应系统、车载 人，其他运行自主 律，智能交通指 商,政府等 人机共驾协同认知 控制系统、机载智 驾驶车，道路信 挥系统等 生态系统的架构层次 能体等） 号，云技术，5G 等",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: native Chinese text is a row/cell stream inside Table 3; it must not be translated as ordinary paragraph prose",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 3,
+      "reviewLabel": "table_row",
+      "rootCause": "pdf extraction"
     },
     {
       "paper": "linguistics-language-model-physics",
