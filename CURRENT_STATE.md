@@ -3774,3 +3774,7 @@ Generated a minimal temporary PDF with `/Rotate 90` without adding a repository 
 ### 2026-09-16 extraction corpus revalidation after checkpoint
 
 Re-ran `npm run test:extraction-corpus -- --reporter=dot`: **2 files / 56 tests passed** in 28.71s. Existing PDF.js optional canvas/font warnings remain non-fatal. No translation-server or `.app` changes; extraction work remains active at the orientation-aware table/footnote fixture and arXiv/PMLR residual review.
+
+### 2026-09-16 arXiv/PMLR residual native-geometry review
+
+Re-ran the non-mutating corpus diagnostic against 26 cached papers (497 pages, 152 suspicious blocks). Residuals are concentrated in arXiv (134) and PMLR (11); representative samples are vector diagrams, multilingual/short-label bands, and dense mathematical grids rather than ordinary paragraph blocks. No safe corpus-wide relabel rule was identified, so production extraction behavior remains unchanged. Diagnostic artifact: `/tmp/extraction-diagnostic.json`.
