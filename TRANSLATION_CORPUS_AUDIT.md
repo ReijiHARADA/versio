@@ -3344,3 +3344,7 @@ Table 3のようなnative抽出（各行item 1個、x帯反復）を対象にfla
 
 ### 2026-09-16 flattened-grid confidence評価
 regular flattened-grid evidenceをresolver閾値以上へ引き上げる実験を行ったが、OzCHI table-region recallは0.800のままで効果なし。実装は撤回した。
+
+### Extraction checkpoint: flattened native table rows (2026-09-16)
+
+Hypothesis: OzCHI Table 3/5 were omitted because one-item-per-line native grids returned before table evidence was generated. After moving a conservative repeated-x geometry predicate before the early return, candidates for these grids receive table evidence and the resolver admits the same geometry only near a matching caption. On the 26-paper baseline, OzCHI table-region recall improved 0.8 → 1.0 (5/5); aggregate source-integrity remains 1.0 and chrome contamination remains 0. Extraction corpus (56 tests) and full Vitest (61 files / 353 tests) pass. Kept because the rule is geometry-based and benchmark-positive; broader manual review remains pending.

@@ -240,8 +240,19 @@ function tableLike(block: LayoutBlock): boolean {
   // paragraph fallback.
   const rotatedNumeric = rotatedItems.filter((item) => /\d/.test(item.text)).length;
   if (rotatedItems.length >= 30 && rotatedNumeric / rotatedItems.length >= 0.3) return true;
+  const flatLines = lines.filter((line) => line.items.length === 1);
+  const flatXs = new Map<number, number>();
+  for (const line of flatLines) {
+    const x = Math.round(line.items[0].x / 12) * 12;
+    flatXs.set(x, (flatXs.get(x) ?? 0) + 1);
+  }
+  const flattenedGrid = flatLines.length >= 6 && flatLines.length === lines.length &&
+    [...flatXs.values()].filter((count) => count >= 2).length >= 2 &&
+    lines.every((line) => line.bbox.width <= 260) &&
+    !/[.!?]\s*$/.test(block.text.trim()) &&
+    block.text.trim().split(/\s+/).filter(Boolean).length <= 40;
   const cellLines = lines.filter((line) => line.items.length >= 2);
-  if (cellLines.length === 0) return false;
+  if (cellLines.length === 0) return flattenedGrid;
   const shortItems = cellLines.flatMap((line) => line.items).filter((item) => item.text.trim().length <= 24).length;
   const itemCount = cellLines.flatMap((line) => line.items).length;
   const numeric = cellLines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length;
@@ -270,7 +281,7 @@ function tableLike(block: LayoutBlock): boolean {
     cellLines.length >= 4 &&
     cellLines.length / lines.length >= 0.45 &&
     indentedRows >= 2;
-  return itemGrid || proseGrid;
+  return itemGrid || proseGrid || flattenedGrid;
 }
 
 function nearbyTableRowEvidence(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
@@ -543,12 +554,23 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       const structuralGrid = block.lines.length >= 3 &&
         block.lines.filter((line) => line.items.length >= 2).length >= 3 &&
         block.lines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length >= 2;
+      const flatLines = block.lines.filter((line) => line.items.length === 1);
+      const flatXs = new Map<number, number>();
+      for (const line of flatLines) {
+        const x = Math.round(line.items[0].x / 12) * 12;
+        flatXs.set(x, (flatXs.get(x) ?? 0) + 1);
+      }
+      const flattenedGrid = flatLines.length >= 6 && flatLines.length === block.lines.length &&
+        [...flatXs.values()].filter((count) => count >= 2).length >= 2 &&
+        block.lines.every((line) => line.bbox.width <= 260) &&
+        !/[.!?]\s*$/.test(block.text.trim()) &&
+        block.text.trim().split(/\s+/).filter(Boolean).length <= 40;
       const proseBlock = paragraphLike(block.text) && /[.!?]\s*$/.test(block.text.trim());
       const longCaption = block.role === "table_caption" && paragraphLike(block.text);
       const captionBlock = block.role === "table_caption";
       scoreByRole.table = rotatedItems.length >= 30 && rotatedNumeric / Math.max(rotatedItems.length, 1) >= 0.3
         ? 0.97
-        : structuralGrid && !proseBlock && !longCaption && !captionBlock
+        : (structuralGrid || flattenedGrid) && !proseBlock && !longCaption && !captionBlock
           ? 0.95
           // `tableLike` also catches ordinary multi-line prose with aligned
           // native items. Keep that signal for region membership, but below

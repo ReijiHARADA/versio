@@ -300,6 +300,16 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
             const sentenceLike = /[.!?:;]\s*$/.test(text) && text.split(/\s+/).filter(Boolean).length > 8;
             const row = candidate.layoutBlock.lines.some((line) => line.items.length >= 2) && !sentenceLike;
             const numericDensity = (text.match(/\d/g) ?? []).length / Math.max(text.length, 1);
+            const flatLines = candidate.layoutBlock.lines.filter((line) => line.items.length === 1);
+            const flatXs = new Map<number, number>();
+            for (const line of flatLines) {
+              const x = Math.round(line.items[0].x / 12) * 12;
+              flatXs.set(x, (flatXs.get(x) ?? 0) + 1);
+            }
+            const flattenedGridRow = flatLines.length >= 6 && flatLines.length === candidate.layoutBlock.lines.length &&
+              [...flatXs.values()].filter((count) => count >= 2).length >= 2 &&
+              candidate.layoutBlock.lines.every((line) => line.bbox.width <= 260) &&
+              !/[.!?]\s*$/.test(text) && text.split(/\s+/).filter(Boolean).length <= 40;
             const compactCellRow = candidate.layoutBlock.lines.length === 1 &&
               !/[.!?]\s*$/.test(text) && (numericDensity >= 0.12 ||
                 // Multi-column review tables often encode a bullet cell as one
@@ -311,12 +321,12 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
             // caption. Without numeric/aligned-cell evidence, do not promote
             // it into a structured region.
             if (candidate.layoutBlock.role === "paragraph" &&
-              !compactCellRow && numericDensity < 0.12) return false;
+              !compactCellRow && !flattenedGridRow && numericDensity < 0.12) return false;
             const highConfidenceContinuationRow = laterPageContinuation &&
               (candidate.roleScores.table ?? 0) >= 0.78 &&
               candidate.layoutBlock.lines.length <= 3;
             return (row || highConfidenceContinuationRow) &&
-              ((candidate.roleScores.table ?? 0) >= 0.78 || compactCellRow);
+              ((candidate.roleScores.table ?? 0) >= 0.78 || compactCellRow || flattenedGridRow);
           })
         : [];
       const memberBoxes = regionMembers.flatMap((member) => member.boundingBoxes);
