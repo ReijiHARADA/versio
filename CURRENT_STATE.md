@@ -3826,3 +3826,7 @@ The title-candidate proximity experiment caused a real-paper regression (`speech
 ### 2026-09-16 post-rollback full regression
 
 Full Vitest completed with **61 files / 362 tests passed** after reverting unsafe title experiments. TypeScript no-emit also passed. Existing PDF.js optional canvas/font warnings remain non-fatal; no translation-server or `.app` changes.
+
+### 2026-09-16 post-rollback lint/typecheck
+
+After title experiment rollback, TypeScript no-emit and lint with warnings denied both pass. Current extraction baseline is safe to hand off; next change must be fixture-driven title candidate evidence or orientation-aware table geometry.

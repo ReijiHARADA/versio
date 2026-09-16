@@ -3056,7 +3056,8 @@
     "2026-09-16: 26-paper baseline after title-font fix: titleExact 0.769, heading precision 1.000, recall 0.999, reading-order/source integrity 1.000; no safety regression.",
     "2026-09-16: title resolver now prefers candidates with nearby author/affiliation anchors; focused 23/23, baseline titleExact 0.769, no safety regression.",
     "2026-09-16: rolled back title candidate proximity and metadata-font title inference after speechin real-paper regression; extraction corpus restored 56/56. CJK script-aware gate remains.",
-    "2026-09-16: post-rollback full Vitest 61 files/362 tests and TypeScript passed; extraction baseline stable."
+    "2026-09-16: post-rollback full Vitest 61 files/362 tests and TypeScript passed; extraction baseline stable.",
+    "2026-09-16: post-rollback TypeScript and lint passed; next change constrained to fixture-driven title evidence or orientation-aware table geometry."
   ],
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",
