@@ -3331,3 +3331,12 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - Tightened table-row evidence to reject long sentence-shaped candidates ending in punctuation. Table 1's `Research questions...` prose is no longer a region member; recall remains 1.000/0.571 and corpus tests remain 56/56.
 - Follow-up validation: `npx tsc --noEmit --pretty false` and `npm run lint -- --deny-warnings` both pass after the table-row evidence change.
 - Same-page caption boundary validation: candidates are now limited to the vertical interval after the current caption and before the next caption when multiple captions share a page. Corpus tests remain 56/56 and typecheck passes; focused diagnostics show Table 1 no longer cross-links prior/following tables.
+
+### 2026-09-16 pause checkpoint (current)
+
+- User requested a temporary stop at a clean boundary.
+- Worktree is clean; latest committed state is `bd3ebf2` (table continuation diagnosis).
+- Validation remains green: extraction corpus 56/56, full Vitest 61 files/350 tests, TypeScript check, lint, and production web build all pass.
+- Current 26-paper extraction benchmark records medical table-region recall 1.000, table-continuation-page recall 0.429, and source-integrity 1.000.
+- No translation-server/model or `.app` changes were made.
+- Resume next by visually verifying the medical Table 6/7 continuation ground truth, then either correct fixture metadata with evidence or design a generic continuation rule; do not widen proximity heuristics blindly.
