@@ -3538,3 +3538,4 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - Table 1 主グリッドは candidate の `roleScores.table=0.95`（paragraph=0.855）を持ち、最終 CanonicalDocument でも `id=g-20`, `role=table`, `confidence=0.95` となることを確認。
 - `54 English 90.5%`、`44 Chinese 91.6%` などの行も table として解決される。以前の paragraph 観測は pre-resolver/古い probe の出力であり、現行状態の未解決課題から除外する。
 - corpus 全体の再実行は並列負荷で 60 秒 timeout（speechin / step-to-charge）となったが、speechin を `--maxWorkers=1 --testTimeout=180000` で単独再実行し 1/1 成功（28 skipped）。コード回帰ではなく実行負荷による timeout と判断する。次回は corpus 実行時の worker/timeout 設定を確認する。
+- `vitest.extraction.config.ts` に real-paper corpus 用の `testTimeout=180000` / `maxWorkers=minWorkers=1` を追加。設定反映後の `npm run test:extraction-corpus` は **2 files / 56 tests passed**（約27秒）で完走し、タイムアウトを解消した。
