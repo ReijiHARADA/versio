@@ -3263,3 +3263,6 @@ The extraction benchmark was rerun after completing the 83-sample residual revie
 A full post-change benchmark showed only the medical meta-review below the table recall threshold: caption/region recall 0.571 and continuation-page recall 0.286. The ground-truth observations identify Tables 2, 5, and 6 as captions absorbed into table streams, indicating the next fix belongs in line/block caption boundary formation rather than row-member acceptance. No additional code change was made in this checkpoint.
 Same-page table intervals also reject rows above a caption when an earlier
 caption exists on that page, preventing Table 4 from absorbing Table 3 rows.
+The refreshed 26-paper benchmark reports table-region recall 1.000 and
+continuation-page recall 0.429 (previously 0.571); this recall regression is
+tracked for the next iteration while preserving the precision guard.
