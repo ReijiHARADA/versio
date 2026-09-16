@@ -189,6 +189,34 @@ function suppressVectorLabelClusters(nodes: CanonicalNode[]): CanonicalNode[] {
   });
 }
 
+/** Remove exact duplicate caption candidates emitted by native text streams.
+ * Keep the most confident/provenanced candidate; near-duplicate prose is left
+ * untouched because it may represent a legitimate continuation.
+ */
+function dedupeExactCaptions(nodes: CanonicalNode[]): CanonicalNode[] {
+  const seen = new Map<string, CanonicalNode>();
+  const result: CanonicalNode[] = [];
+  for (const node of nodes) {
+    if (node.role !== "caption" || !node.text) {
+      result.push(node);
+      continue;
+    }
+    const key = `${node.pageStart}:${node.text.trim().replace(/\s+/g, " ").toLowerCase()}`;
+    const existing = seen.get(key);
+    if (!existing) {
+      seen.set(key, node);
+      result.push(node);
+      continue;
+    }
+    if (node.confidence > existing.confidence) {
+      const index = result.indexOf(existing);
+      if (index >= 0) result[index] = node;
+      seen.set(key, node);
+    }
+  }
+  return result;
+}
+
 function average(values: number[], fallback = 0.8): number {
   if (values.length === 0) return fallback;
   return values.reduce((a, b) => a + b, 0) / values.length;
@@ -223,6 +251,7 @@ export function resolveCanonicalDocument(input: {
   nodes = promoteRotatedTableCaptions(nodes, candidates);
   nodes = markAbstracts(nodes);
   nodes = suppressVectorLabelClusters(nodes);
+  nodes = dedupeExactCaptions(nodes);
 
   const resolvedTitleText = titleResolved.text;
   const titleNode = nodes.find((n) => n.role === "title");

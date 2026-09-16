@@ -3403,3 +3403,7 @@ Added a narrow geometry condition for >8-line, >20-word blocks sharing one nativ
 ### 2026-09-16 medical arXiv residual probe (native geometry)
 
 A narrow native-to-canonical probe of `medical-image-segmentation-deep-learning.pdf` confirms the remaining arXiv diagnostic queue is structural rather than translation-related. Page 1 has body text split across left/right columns with a continuation beginning `have become four important...` emitted before the left-column continuation `tion, pulmonary nodules...`; the affiliation block is also classified as a paragraph adjacent to body text. Page 2 emits a short `Survey` paragraph between body and `Fig. 1` caption, and the same Fig. 1 caption appears again later in the native reading stream. These are native reading-order / duplicate-caption residuals. No paper-specific rule was added; the next fix requires a general spanning-vs-column ordering and caption deduplication fixture with bbox evidence.
+
+### 2026-09-16 exact caption deduplication
+
+Added a conservative resolver pass that coalesces only same-page captions with identical normalized text. This addresses duplicate native caption candidates without merging continuation captions or similar prose. Extraction corpus: 56/56 passed; no translation code changed.

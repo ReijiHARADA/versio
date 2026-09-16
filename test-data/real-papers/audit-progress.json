@@ -3032,18 +3032,19 @@
     "2026-09-16: corpus diagnostic latest 26 papers/497 pages/149 suspicious blocks; arXiv 134 and PMLR 11 dominate residual queue, diagnostic-only.",
     "2026-09-16: mixed-case vector label suppression verified on step-to-charge; extraction corpus 56/56, lint and TypeScript pass, baseline integrity/provenance unchanged.",
     "2026-09-16: production web build (`npm run build`) passed after vector-label resolver change; only ineffective dynamic-import warnings, no .app build.",
-    "2026-09-16: medical-image-segmentation native probe found page-1 column interleave, affiliation/body adjacency, and duplicate Fig.1 caption; diagnostic only, no paper-specific rule."
+    "2026-09-16: medical-image-segmentation native probe found page-1 column interleave, affiliation/body adjacency, and duplicate Fig.1 caption; diagnostic only, no paper-specific rule.",
+    "2026-09-16: exact same-page normalized caption deduplication added in resolver; extraction corpus 56/56 passed."
   ],
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",
-    "change": "flattened native table geometry",
+    "change": "exact same-page caption deduplication",
     "ozchiTableRegionRecall": 1.0,
     "overallSourceIntegrityRate": 1.0,
     "overallChromeContaminationRate": 0,
     "extractionCorpusTests": "56 passed",
     "fullVitest": "353 passed",
-    "nextAction": "Add a general arXiv two-column fixture for spanning-vs-column order and duplicate figure-caption detection; inspect affiliation/body boundary before changing resolver rules.",
+    "nextAction": "Validate exact-caption deduplication on arXiv/PMLR fixtures, then add a general spanning-vs-column ordering fixture for the medical survey residual.",
     "latestCommit": "ab9a036"
   },
-  "nextAction": "Add a general arXiv two-column fixture for spanning-vs-column order and duplicate figure-caption detection; inspect affiliation/body boundary before changing resolver rules."
+  "nextAction": "Validate exact-caption deduplication on arXiv/PMLR fixtures, then add a general spanning-vs-column ordering fixture for the medical survey residual."
 }

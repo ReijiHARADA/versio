@@ -3587,3 +3587,7 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - No paper-specific rule or translation change was made. Next extraction iteration should add a general spanning/column ordering and caption-dedup fixture using bbox evidence.
 
 - Checkpoint metadata synchronized to commit `ab9a036`; no active process remains after the probe.
+
+### 2026-09-16 exact caption deduplication
+- Added a resolver-level `dedupeExactCaptions` pass: only captions with identical normalized text on the same page are coalesced, retaining the higher-confidence native candidate. Near-duplicate/continuation captions remain untouched.
+- Extraction corpus regression: 2 files / 56 tests passed (26.79s). No translation-server or `.app` changes.
