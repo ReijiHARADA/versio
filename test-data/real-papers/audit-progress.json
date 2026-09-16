@@ -3039,7 +3039,8 @@
     "2026-09-16: post-guard medical probe: caption duplicate count 0; metadata interleave fixed; affiliation ordering remains queued geometry fixture.",
     "2026-09-16: 26-paper baseline after spanning metadata guard: heading precision 1.000, recall 0.993, reading order 1.000, figure relation 1.000, source/provenance 1.000; title exact 0.769.",
     "2026-09-16: diagnostic refresh 26 papers/497 pages/149 suspicious blocks; arXiv 136, PMLR 6, Elsevier 4, OzCHI 2, IEEE 1.",
-    "2026-09-16: npm run build passed after latest extraction ordering guard; only known ineffective dynamic-import warnings."
+    "2026-09-16: npm run build passed after latest extraction ordering guard; only known ineffective dynamic-import warnings.",
+    "2026-09-16: added general ACM two-column spanning-metadata regression; reading-order tests 53/53."
   ],
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",
@@ -3052,5 +3053,5 @@
     "nextAction": "Add and validate a general affiliation/body boundary fixture; then review table/list residuals.",
     "latestCommit": "ab9a036"
   },
-  "nextAction": "Add general geometry fixtures for arXiv/PMLR vector labels, numeric grids, and mixed layouts; keep diagnostics non-mutating."
+  "nextAction": "Add a general affiliation/body boundary fixture based on native geometry, then review table/list residuals."
 }

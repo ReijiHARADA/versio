@@ -3616,3 +3616,7 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 
 ### 2026-09-16 production web build verification
 - `npm run build` passed after the spanning metadata ordering guard (`tsc -b` + Vite). Only existing ineffective dynamic-import warnings were emitted. `.app` was not built.
+
+### 2026-09-16 spanning metadata regression fixture
+- Added a regression using the established ACM two-column fixture with an inserted spanning arXiv metadata line. It asserts the left column completes before the right column begins.
+- Reading-order test: 53/53 passed. This captures the native residual without a paper-specific fixture.

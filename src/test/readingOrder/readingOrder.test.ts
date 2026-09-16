@@ -625,6 +625,23 @@ describe("PDF reading order regression", () => {
     assertNoLineInterleave(columnRuns(blocks));
   });
 
+  it("keeps spanning metadata from splitting an established two-column page", () => {
+    const page = FIXTURES["ACM-style-two-column"]()[0];
+    page.textItems.push({
+      text: "arXiv:2401.12345v1 [cs.HC] 12 Jan 2024",
+      x: 54,
+      y: 500,
+      width: 504,
+      height: 8,
+      fontSize: 7,
+      fontName: "Meta",
+      page: 1,
+    });
+    const { blocks } = reconstructDocument([page]);
+    const text = joined(bodyBlocks(blocks));
+    expect(text.indexOf("ACMSTYLE_L8")).toBeLessThan(text.indexOf("ACMSTYLE_R1"));
+  });
+
   it("full-width title is spanning and not absorbed into a column paragraph", () => {
     const { blocks } = reconstructDocument(FIXTURES["full-width-title"]());
     const title = blocks.find((b) => b.role === "title");

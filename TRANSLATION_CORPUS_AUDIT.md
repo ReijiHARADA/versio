@@ -3423,3 +3423,7 @@ Full 26-paper extraction benchmark after the spanning metadata guard: heading pr
 Latest layout diagnostic: 26 papers, 497 pages, 149 suspicious blocks. Distribution is arXiv 136, PMLR 6, Elsevier 4, OzCHI 2, IEEE 1; all other format families are 0. These are diagnostic candidates, not automatic relabels. The next extraction work remains geometry fixtures for vector labels, numeric grids, and mixed layouts.
 
 Production web build verification after the latest extraction change: `npm run build` passed (TypeScript + Vite); only existing ineffective dynamic-import warnings remain. No `.app` build or translation-server change.
+
+### 2026-09-16 spanning metadata regression fixture
+
+The metadata ordering guard now has a general regression test built on the existing ACM two-column fixture. A spanning arXiv line inserted mid-page cannot split the left column before the right; reading-order tests pass 53/53.
