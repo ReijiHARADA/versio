@@ -3750,3 +3750,7 @@ Re-ran `npm run bench:pdf-extraction` after the captioned-grid and page-rotation
 ### 2026-09-16 full regression after rotation provenance
 
 Full Vitest completed with **61 files / 361 tests passed** after preserving native page rotation and adding low-angle matrix safety coverage. Existing PDF.js optional canvas/font warnings remain non-fatal. No translation or `.app` changes.
+
+### 2026-09-16 rotation diagnostics in boundary scan
+
+Boundary scan findings now include a native text rotation summary (min/max/mean) for figure-marker candidates. A corpus run produced valid JSON for 25 papers; the representative mixed Figure 2 case is 0° text, further separating it from genuine rotated-table residuals. This is diagnostic provenance only; no role rule changed. TypeScript passed.
