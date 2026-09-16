@@ -3059,6 +3059,6 @@
     "nextAction": "Add and validate a general affiliation/body boundary fixture; then review table/list residuals.",
     "latestCommit": "f695d44"
   },
-  "nextAction": "Build a native-geometry affiliation/body boundary fixture and evaluate table/list residuals; current guard and all extraction checks are green.",
+  "nextAction": "Add a general affiliation/body boundary fixture from native multi-column geometry, then evaluate table/list residuals.",
   "lastUpdate": "2026-09-16"
 }

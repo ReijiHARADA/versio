@@ -3460,3 +3460,7 @@ The caption fixture now checks both canonical node count and exact marker occurr
 ### 2026-09-16 verification checkpoint
 
 The native duplicate-span guard is verified by pipeline (19/19) and extraction corpus (56/56). TypeScript, lint, and Web build pass; only existing ineffective dynamic-import warnings remain. `.app` and translation-server remain untouched.
+
+### 2026-09-16 reading-order safety recheck
+
+Full reading-order fixtures remain green (**53/53**) after the coincident native-span cleanup. This confirms the guard does not alter column ordering or affiliation/list boundaries.

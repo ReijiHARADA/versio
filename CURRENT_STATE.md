@@ -3658,3 +3658,7 @@ Strengthened the caption regression to assert the marker appears exactly once in
 ### 2026-09-16 verification checkpoint
 
 After the native duplicate-span guard and caption-content assertion: targeted pipeline 19/19, extraction corpus 56/56, TypeScript and lint passed, and Web build passed. Build emitted only pre-existing ineffective dynamic-import warnings; no `.app` build was run.
+
+### 2026-09-16 reading-order safety recheck
+
+The duplicate native-span guard was rechecked against the full reading-order fixture suite: **53/53 passed**. No ordering, affiliation, caption, or list regression was observed.
