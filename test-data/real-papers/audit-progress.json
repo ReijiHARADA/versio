@@ -3049,7 +3049,8 @@
     "2026-09-16: affiliation boundary regression added; Japanese conference fixture keeps 東京大学 out of paragraph duplication, reading-order 53/53.",
     "2026-09-16: checkpoint reconciled at 8d80922; affiliation boundary fixture, caption deduplication, flattened-grid evidence, and native page-rotation provenance are implemented. Extraction corpus 56/56, full Vitest 361/361, baseline 26 papers remains stable; next is orientation-aware table/footnote fixture and arXiv/PMLR residual review.",
     "2026-09-16: added six title-only ground-truth fixtures; baseline titleExact remains 0.769, exposing genuine title mismatches without parser changes.",
-    "2026-09-16: regenerated baseline with explicit titleExpected; six title mismatches classified for native title-region review, no resolver rule added."
+    "2026-09-16: regenerated baseline with explicit titleExpected; six title mismatches classified for native title-region review, no resolver rule added.",
+    "2026-09-16: title mismatch review complete; no shared safe resolver condition yet, so no parser behavior change."
   ],
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",
@@ -3062,6 +3063,6 @@
     "nextAction": "Add a generic orientation-aware table/footnote fixture using page rotation and item transforms; then review arXiv/PMLR residuals.",
     "latestCommit": "8d80922"
   },
-  "nextAction": "Continue extraction-only: add orientation-aware table/footnote fixture using native rotation provenance, then review arXiv/PMLR residuals.",
+  "nextAction": "Review native title candidate bboxes for the six explicit mismatches; only then consider a generic title-region resolver change. Keep translation-server untouched.",
   "lastUpdate": "2026-09-16"
 }

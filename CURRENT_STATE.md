@@ -3794,3 +3794,7 @@ Added title-only ground-truth metadata for six corpus papers that previously had
 ### 2026-09-16 title mismatch audit
 
 Regenerated the 26-paper baseline with `titleExpected` exposed. Six mismatches are now explicit: one wrapped design subtitle omission, one arXiv identifier selected over a Chinese title, and four publisher/subtitle normalization differences. These require native title-region review before any generic resolver change; no paper-specific rule was added.
+
+### 2026-09-16 title review checkpoint
+
+The six explicit title mismatches are now tracked as native-candidate review items. No common safe resolver condition is established yet, so extraction behavior remains unchanged and the next action is bbox/font comparison before considering a generic title-region adjustment.
