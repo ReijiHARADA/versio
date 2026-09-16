@@ -3549,3 +3549,7 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - `wear-scale.pdf` の回転 native item は page 14 の Table 6 周辺に集中し、`Table 6`、`Inter-item correlation matrix`、脚注・セル見出しを含む。
 - 現行 resolver は回転 numeric grid を table として保持し、回転 caption を caption に昇格する。脚注相当の長文は table/paragraph 境界を越えて本文へ stitch されていない。
 - 既存の rotated-table regression（1/1）で翻訳対象から除外されることを再確認。追加ルールは不要と判断。
+
+### 2026-09-16 manual residual review schema verification
+- `summarize-extraction-review.ts` が旧 fixture schema（manualRole のみ）を前提にしており、現行 `reviewLabel` を持つ 83件を invalid としていた。
+- 集計を `manualRole ?? reviewLabel` に対応させ、83/83 reviewed、pending 0 として集計可能にした。内訳は figure_label 49、table_row 14、equation 6、paragraph 7、その他 7。severity 3 が 73件で、主に図・表内ラベルの抽出残差。

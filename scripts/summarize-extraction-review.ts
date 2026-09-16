@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 
 type Sample = {
   classification: string;
-  manualRole: string | null;
+  manualRole?: string | null;
+  reviewLabel?: string;
   reviewStatus: "pending" | "reviewed";
   severity: number | null;
 };
@@ -15,8 +16,17 @@ const fixture = JSON.parse(fs.readFileSync(
   "utf8",
 )) as { samples: Sample[] };
 
-const reviewed = fixture.samples.filter((sample) => sample.reviewStatus === "reviewed");
-const invalid = fixture.samples.filter((sample) =>
+// Keep this report compatible with both the original flat review schema and
+// the newer generated sample schema, which stores the label inside `review`.
+// The committed residual ground truth is authoritative when both are present.
+const samples = fixture.samples.map((sample) => ({
+  ...sample,
+  manualRole: sample.manualRole ?? sample.reviewLabel ?? null,
+  reviewStatus: sample.reviewStatus ?? "pending",
+}));
+
+const reviewed = samples.filter((sample) => sample.reviewStatus === "reviewed");
+const invalid = samples.filter((sample) =>
   sample.reviewStatus === "reviewed" &&
   (sample.manualRole === null || sample.severity === null || sample.severity < 0 || sample.severity > 4)
 );
@@ -27,9 +37,9 @@ const countBy = (values: string[]) => Object.fromEntries(
 );
 console.log(JSON.stringify({
   version: "extraction-residual-review-summary-v1",
-  total: fixture.samples.length,
+  total: samples.length,
   reviewed: reviewed.length,
-  pending: fixture.samples.length - reviewed.length,
+  pending: samples.length - reviewed.length,
   reviewedByRole: countBy(reviewed.map((sample) => sample.manualRole as string)),
   reviewedByClass: countBy(reviewed.map((sample) => sample.classification)),
   severity: countBy(reviewed.map((sample) => String(sample.severity))),
