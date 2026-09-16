@@ -142,20 +142,6 @@ describe("canonical extraction pipeline", () => {
       .every((block) => block.translationStatus === "skipped")).toBe(true);
   });
 
-  it("routes dense native vector-figure labels away from translation", () => {
-    const textItems = [
-      ["Protect privacy", "Control data", "Explain choices"],
-      ["Use clear labels", "Avoid surprises", "Give feedback"],
-      ["Secure storage", "Limit access", "Show rationale"],
-    ].flatMap((row, rowIndex) => row.map((text, colIndex) => ({
-      text, x: 120 + colIndex * 110 + rowIndex * 8, y: 300 + rowIndex * 8,
-      width: 72, height: 8, fontSize: 8, fontName: "VectorFont", page: 1,
-    })));
-    const candidates = generateGenericCandidates([{ pageNumber: 1, width: 500, height: 700, textItems }]).candidates;
-    const vector = candidates.find((candidate) => candidate.evidence.some((evidence) => evidence.label === "vector-figure-label-cluster"));
-    expect(vector).toBeTruthy();
-  });
-
 
   it("does not promote rotated numeric cell bands to headings", () => {
     const textItems = Array.from({ length: 10 }, (_, index) => ({

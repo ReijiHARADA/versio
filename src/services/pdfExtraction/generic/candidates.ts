@@ -117,19 +117,6 @@ function imageOverlapLabelEvidence(block: LayoutBlock, page?: ExtractedPage): nu
   return overlap >= 0.2 ? clamp(0.78 + Math.min(0.14, overlap * 0.14)) : 0;
 }
 
-/** Native vector figures have no image placement metadata. Dense short text
- * items arranged across several x-bands are still strong evidence of a
- * diagram label cluster, provided the stream does not read like sentences. */
-function vectorFigureLabelEvidence(block: LayoutBlock): number {
-  if (block.role !== "paragraph" || block.lines.length < 3) return 0;
-  const items = block.lines.flatMap((line) => line.items);
-  if (items.length < 8 || items.filter((item) => item.text.trim().length <= 80).length / items.length < 0.85) return 0;
-  if (/[.!?。！？]$/.test(block.text.trim())) return 0;
-  const xBands = new Set(block.lines.flatMap((line) => line.items.map((item) => Math.round(item.x / 24))));
-  if (xBands.size < 3) return 0;
-  return 0.82;
-}
-
 function median(values: number[]): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -411,7 +398,6 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const pageGrid = pageGridEvidence(block, blocks);
     const chartLabels = chartLabelEvidence(block, blocks);
     const imageLabels = imageOverlapLabelEvidence(block, pages.find((page) => page.pageNumber === block.pageStart));
-    const vectorLabels = vectorFigureLabelEvidence(block);
     const alignedTableRow = block.lines.length === 1 &&
       block.lines[0].items.length >= 2 && tableLike(block) && nearbyTableCaption;
     const tableHeaderRow = block.lines.length === 1 &&
@@ -450,7 +436,6 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     if (pageGrid > 0 && block.role !== "table_caption") scoreByRole.table = pageGrid;
     if (chartLabels > 0) scoreByRole.other = chartLabels;
     if (imageLabels > 0) scoreByRole.other = Math.max(scoreByRole.other ?? 0, imageLabels);
-    if (vectorLabels > 0) scoreByRole.other = Math.max(scoreByRole.other ?? 0, vectorLabels);
     // Some journal/preprint mastheads use a large centered title whose line
     // is title-cased, so the layout pass can mistake it for an author line.
     // Native size/length/position evidence is sufficient to compete for the
@@ -589,16 +574,6 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         page: block.pageStart,
         bbox: block.bbox,
         reason: "short multi-line native labels substantially overlap an image placement",
-      });
-    }
-    if (vectorLabels > 0) {
-      evidence.push({
-        source: "generic-heuristic",
-        label: "vector-figure-label-cluster",
-        confidence: vectorLabels,
-        page: block.pageStart,
-        bbox: block.bbox,
-        reason: "dense short native text items span multiple x-bands without sentence punctuation",
       });
     }
     return {

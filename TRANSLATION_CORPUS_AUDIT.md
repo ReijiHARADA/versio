@@ -3303,3 +3303,7 @@ Added generic `vector-figure-label-cluster` evidence for dense, short, multi-x-b
 Full Vitest validation after vector figure-label evidence: 61 files / 350 tests passed, with no observed list, reading-order, or data-layer regression.
 
 Added a synthetic regression for dense multi-x-band native vector labels; the focused pipeline test passes. This verifies evidence generation without paper-specific strings.
+
+### 2026-09-16 vector-label experiment reverted
+
+The provisional vector-label heuristic was measured across the corpus and fired on 612 blocks, so it was too broad for precision-first extraction. Production code and the synthetic test were reverted; the diagnostic finding is retained. A future rule must require stronger native vector geometry before suppressing translation.

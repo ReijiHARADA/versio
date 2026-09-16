@@ -3403,3 +3403,9 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 
 - Added a synthetic pipeline regression proving dense multi-x-band native labels emit `vector-figure-label-cluster` evidence.
 - Focused pipeline test passes; full extraction corpus and full Vitest results remain green from the preceding validation.
+
+### 2026-09-16 vector-label experiment reverted
+
+- Corpus-wide measurement found the provisional vector-label heuristic fired on 612 blocks, far beyond the manually confirmed figure-label residuals; this was an unacceptable precision regression.
+- Reverted the production heuristic and its synthetic test. Existing image/chart evidence remains unchanged.
+- TypeScript and focused pipeline tests pass after revert. Next work must use stronger native vector geometry (rotation/center/figure bounds) before reintroducing evidence.
