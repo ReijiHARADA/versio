@@ -241,6 +241,47 @@ describe("PDF reading order regression", () => {
     }
   });
 
+  it("preserves native text across mixed x-band input", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 7,
+      width: 612,
+      height: 792,
+      textItems: [
+        { text: "Left alpha continues", x: 54, y: 420, width: 92, height: 9, fontSize: 9, fontName: "Body", page: 7 },
+        { text: "Right beta begins", x: 330, y: 420, width: 96, height: 9, fontSize: 9, fontName: "Body", page: 7 },
+        { text: "Left gamma result.", x: 54, y: 438, width: 88, height: 9, fontSize: 9, fontName: "Body", page: 7 },
+        { text: "Right delta result.", x: 330, y: 438, width: 92, height: 9, fontSize: 9, fontName: "Body", page: 7 },
+        { text: "Left epsilon note.", x: 54, y: 456, width: 86, height: 9, fontSize: 9, fontName: "Body", page: 7 },
+        { text: "Right zeta note.", x: 330, y: 456, width: 88, height: 9, fontSize: 9, fontName: "Body", page: 7 },
+      ],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    const text = blocks.map((block) => block.text).join(" ");
+    for (const token of ["Left alpha", "Left gamma", "Left epsilon", "Right beta", "Right delta", "Right zeta"]) {
+      expect(text).toContain(token);
+    }
+    expect(blocks.every(hasSourceTextIntegrity)).toBe(true);
+    expect(blocks.filter((block) => block.role === "paragraph").length).toBeGreaterThan(0);
+  });
+
+  it("keeps inferred x-band splits source-complete when bands contain punctuation and numbers", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 8, width: 612, height: 792,
+      textItems: [
+        { text: "Left sentence continues", x: 54, y: 320, width: 110, height: 9, fontSize: 9, fontName: "Body", page: 8 },
+        { text: "Right result p < 0.001.", x: 330, y: 320, width: 110, height: 9, fontSize: 9, fontName: "Body", page: 8 },
+        { text: "with a second clause.", x: 54, y: 338, width: 100, height: 9, fontSize: 9, fontName: "Body", page: 8 },
+        { text: "Table 2 3.14 42%", x: 330, y: 338, width: 100, height: 9, fontSize: 9, fontName: "Body", page: 8 },
+      ],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    const text = blocks.map((block) => block.text).join(" ");
+    for (const token of ["Left sentence", "with a second clause.", "Right result", "0.001", "Table 2", "3.14", "42%"]) {
+      expect(text).toContain(token);
+    }
+    expect(blocks.every(hasSourceTextIntegrity)).toBe(true);
+  });
+
   it("does not merge a rotated grid band with a wide rotated note", () => {
     const pages: ExtractedPage[] = [{
       pageNumber: 14,

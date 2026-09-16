@@ -124,9 +124,18 @@ function vectorFigureLabelEvidence(block: LayoutBlock): number {
   if (block.role !== "paragraph" || block.lines.length < 3) return 0;
   const items = block.lines.flatMap((line) => line.items);
   if (items.length < 8 || items.filter((item) => item.text.trim().length <= 80).length / items.length < 0.85) return 0;
-  if (/[.!?。！？]$/.test(block.text.trim())) return 0;
   const xBands = new Set(block.lines.flatMap((line) => line.items.map((item) => Math.round(item.x / 24))));
   if (xBands.size < 3) return 0;
+  // A diagram can share a block with a nearby prose line. In that case the
+  // block may end in a sentence terminator even though the compact labels are
+  // still vector text. Require a distinct, smaller label style so ordinary
+  // multi-column prose is not promoted by punctuation alone.
+  const sizes = block.lines.map((line) => line.fontSize).filter((size) => size > 0);
+  const bodySize = median(sizes);
+  const hasSmallerLabelLine = bodySize > 0 && block.lines.some((line) =>
+    line.fontSize > 0 && line.fontSize <= bodySize * 0.86 && line.text.trim().split(/\s+/).length <= 5
+  );
+  if (/[.!?。！？]$/.test(block.text.trim()) && !hasSmallerLabelLine) return 0;
   return 0.82;
 }
 
@@ -334,7 +343,22 @@ function nearbyTableRowEvidence(block: LayoutBlock, blocks: LayoutBlock[]): bool
       candidate.bbox.y > Math.max(caption.bbox.y, block.bbox.y) + 220) return false;
     return candidate.lines[0].items.length >= 3;
   });
-  return block.lines[0].items.length >= 4 && bandRows.length >= 2;
+  if (block.lines[0].items.length >= 4 && bandRows.length >= 2) return true;
+
+  // A PDF producer may emit a header/numeric grid as one block and the next
+  // label-only row as another.  Reuse the preceding block's native geometry
+  // only when it is independently table-like, directly above this row, and
+  // the horizontal spans overlap.  This avoids promoting an unrelated prose
+  // line merely because a caption is nearby.
+  const precedingGrid = blocks
+    .filter((candidate) => candidate !== block && candidate.pageStart === block.pageStart &&
+      candidate.bbox.y < block.bbox.y && tableLike(candidate))
+    .sort((a, b) => b.bbox.y - a.bbox.y)[0];
+  if (!precedingGrid) return false;
+  const gap = block.bbox.y - (precedingGrid.bbox.y + precedingGrid.bbox.height);
+  const overlap = Math.min(block.bbox.x + block.bbox.width, precedingGrid.bbox.x + precedingGrid.bbox.width) -
+    Math.max(block.bbox.x, precedingGrid.bbox.x);
+  return gap >= -4 && gap <= 36 && overlap >= Math.min(block.bbox.width, precedingGrid.bbox.width) * 0.5;
 }
 
 /** Detect a page-local grid when PDF extraction split each visual row into a

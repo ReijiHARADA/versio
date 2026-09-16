@@ -20,6 +20,17 @@ checks are triage only; semantic equivalence requires source/translation review.
 
 ## Extraction checkpoint (2026-09-16)
 
+The current extraction branch was revalidated after the x-band source-integrity
+regression: reading-order focused tests are 55/55, the real-paper extraction
+corpus is 56/56, and TypeScript, lint, and production web build all pass. The
+new regression only asserts native-text preservation; it does not widen role
+classification. No translation server or packaged app was changed.
+
+Table-row evidence now also permits a split, label-only row when an independently
+table-like native block immediately precedes it and the two bounding boxes share
+at least half their horizontal span. This remains geometry-only and is guarded
+by a narrow vertical gap; the corpus remains 56/56 after the change.
+
 The page-top caption guard was validated against the medical meta-review. It
 raises table-region recall from 0.571 to 1.000 without changing the 56/56
 extraction-corpus result. Table continuation-page recall remains 0.571 and is
@@ -3524,3 +3535,36 @@ The scanner reports nearest horizontally aligned image gap in addition to overla
 ## Extraction checkpoint (2026-09-16)
 
 The extraction pipeline remains the active priority before translation work. The current 26-paper native-PDF baseline reports heading precision 1.000 / recall 0.993, reading-order pair accuracy 1.000, figure-caption relation 1.000, source integrity 1.000, canonical provenance 1.000, and title exact 0.769. Extraction corpus regression is 56/56; TypeScript, lint, and Web build pass. Residual diagnostic findings are concentrated in arXiv/PMLR vector labels, short-label bands, and dense math grids; no safe broad relabel rule has been identified. Next: orientation-aware table/footnote fixture using native rotation provenance.
+
+### 2026-09-16 extraction continuation: inferred-column safety
+
+Hypothesis: inferred two-column splitting can lose or misclassify scientific tokens when native x metadata collapses to a single column label. Targeted synthetic input included p-values, decimals, percentages, and a table-like numeric row in alternating x bands.
+
+Before: no explicit regression covering token preservation for this inferred path.
+After: all native markers survive reconstruction, every resulting block passes `hasSourceTextIntegrity`, and the focused reading-order suite passes 56/56. No role promotion rule was changed, so no new false-positive evidence was introduced. Keep.
+
+The full corpus remains at 26 papers / 497 pages; residual diagnostic candidates remain geometry-heavy (arXiv vector labels and Elsevier native table streams). Next work is orientation-aware table/footnote evidence, followed by manual review of the remaining diagnostic sample.
+
+### 2026-09-16 geometry triage artifact
+
+Generated `test-data/real-papers/reports/extraction-diagnostic-triage-v1.json` from the native-facts diagnostic. It contains 129 suspicious samples with native provenance and an auditable recommendation: 83 high-risk short/numeric/image-overlap candidates should retain native fallback, while 46 remain review-for-structure. This is a triage artifact only; no lexical or paper-specific production rule was introduced.
+
+The 46 review-for-structure findings are also exported as `test-data/real-papers/reports/extraction-review-queue-v1.csv`, sorted by paper and page for manual native-PDF comparison. The queue records bbox and diagnostic ratios so manual labels can be added without inferring from text alone.
+
+### 2026-09-16 manual native-PDF comparison: cognitive-psychology-gpt3 p2
+
+`pdftotext -layout` confirms the suspicious block is a vector figure/text-layer interaction: the page's Figure 1 contains labels such as “Linda”, “Cab”, “Hospital”, “Toma”, and “Wason” arranged in a diagram, while the nearby body paragraph begins “Linda is 31 years old…”. The extractor combines these native labels into one paragraph because there is no raster image overlap. This is a genuine figure-label contamination case, not a translation failure. A lexical split would be unsafe; the correct next step is vector-figure region evidence from native geometry/line clustering, with paragraph fallback when confidence is insufficient.
+
+The vector-figure finding is now recorded in `reports/extraction-manual-review-v1.json` as an unresolved-safe-fallback severity-2 case, with its geometry root cause and proposed evidence-only remedy.
+
+### 2026-09-16 benchmark refresh after vector review
+
+`npm run bench:pdf-extraction` completed over 26 cached papers. Source integrity and canonical provenance remain 1.000; figure-caption relation remains 1.000; title exact remains 20/26 (0.769). No safety regression was observed, and no translation code was executed.
+
+### 2026-09-16 vector-label evidence refinement
+
+Hypothesis: vector diagram labels can be embedded before a prose line, so a terminal period alone must not suppress vector-label evidence. The generic evidence now permits that case only with a distinct smaller compact label line; ordinary sentence paragraphs still require the prior punctuation guard. Targeted pdfExtraction suite: 44/44 passed. Keep pending full-corpus benchmark review.
+
+### 2026-09-16 controlled vector-label regression
+
+Added a paper-agnostic geometry fixture with a prose line, smaller compact labels across multiple x-bands, and a following prose line. Generic candidate generation now emits `vector-figure-label-cluster` for this mixed block. Pipeline suite: 24/24 passed; no lexical paper-specific condition was used. Keep pending full benchmark.

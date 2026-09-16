@@ -57,6 +57,24 @@
 
 ### 2026-09-16 extraction verification checkpoint
 
+- 抽出変更を含む現行ツリーで `npm run typecheck`、`npm run lint -- --deny-warnings`、`npm run build` が成功。Vite の既知の eval / chunk / ineffective dynamic import 警告のみで、`.app` は未ビルド。
+
+- `npm run bench:pdf-extraction` を再実行し、26 cached papers / 497 pages の benchmark を更新。source integrity / canonical provenance は全件 1.0、table caption recall 平均 0.929、table region recall 平均 0.843。titleExact は 20/26 で、表・ベクターラベル・タイトル表記差の残差は未解決。
+
+- 再開後に `npm run test:extraction-corpus -- --run` を実行し、reading-order 27 + baseline 29 の 56/56 tests passed（27.85s）。既知の PDF.js polyfill/font 警告のみ。翻訳 server・品質 gate・`.app` は変更していない。次は未解決の table continuation evidence を native geometryで確認する。
+
+- 再起動前の停止確認後に extraction corpus を再検証し、reading-order 27、baseline 29 の計 56/56 tests passed（27.59s）。既知の PDF.js `canvas` polyfill / font 警告のみで失敗はなく、翻訳 server・モデル・品質 gate・`.app` は変更していない。次の実装候補は SpeeChin の後続表行を先行 grid の x 列反復と bbox 帯で結び付ける汎用 evidence の検証。
+- 混在 x-band 入力で左右帯の native text が欠落せず source-integrity を満たす synthetic reading-order 回帰を追加。focused reading-order は 55/55 passed。分離条件そのものは未変更で、caption・table の誤昇格を避ける安全側挙動を維持した。
+- 回帰テスト追加後に `npm run typecheck` を再実行し成功。抽出側の型整合性を確認し、翻訳 server・品質 gate・`.app` は引き続き未変更。
+- 抽出回帰テスト変更後に `npm run lint -- --deny-warnings` も成功。警告・エラーなし。
+- 抽出回帰テスト変更後に `npm run build` も成功（既知の ineffective dynamic import 警告のみ）。`.app` は方針どおり未ビルド。
+- table-row evidence を一般化し、caption 近傍で分割された行について、独立した先行 table-like block、bbox の垂直 gap（-4〜36pt）、水平 span の50%以上の重なりを同時に要求する経路を追加。SpeeChin のようなラベルのみの後続行を拾える可能性を広げつつ、caption近接だけの本文誤昇格を避ける。extraction corpus は 56/56 passed（29.17s）。
+- pdfExtraction focused suite も再実行し、7 files / 44 tests passed。caption-adjacent prose、chart labels、flattened grid、list projection の既存安全回帰を確認した。
+- 通常の Vitest 全体も再実行し、61 files / 363 tests passed。抽出変更による Reader・data・import・translation 周辺の回帰は確認されなかった。
+
+- 停止状態からの再開確認として `npm run test:extraction-corpus -- --run` を実行し、real-paper fixture 56/56（reading-order 27、baseline 29）が成功。現時点でコード変更はなく、翻訳 server・`.app` は起動／変更していない。次の実装は SpeeChin Table 1 の後続行を、先行gridのx列反復とbbox帯へ統合する汎用 table-region evidence の検証から再開する。
+- 続けて `npm run bench:pdf-extraction` を実行し、26 cached papers / 497 pages の現行 benchmark を再生成。sourceIntegrityRate と canonicalProvenanceRate は全 paper で 1.0、tableCaptionRecall 平均 0.929、tableRegionRecall 平均 0.843。benchmark 後も翻訳 server・`.app` は変更していない。
+
 - 現行コードで `npm run test:extraction-corpus -- --run` を再実行し、real-paper fixture 56/56（reading-order 27、baseline 29）が成功した。続けて `npm run bench:pdf-extraction` を完走し、26 cached papers / 497 pages の benchmark を更新した。
 - benchmark の source integrity / canonical provenance は全 paper で 1.0 を維持。caption relation は 1.0、table caption recall 平均 0.929、table region recall 平均 0.843。Elsevier native stream の Table 2/5/6 境界欠落と arXiv の vector-label 混在は未解決のままで、文字列推測による補完は行っていない。
 - 今回は抽出の検証と証拠更新のみ。翻訳 server、品質 gate、モデル、`.app` は変更していない。次の実装候補は、wear-scale の回転表 footnote 分離または speechin の汎用 table-region evidence だが、まず native geometry を手動確認してから安全な回帰を追加する。
@@ -3833,3 +3851,37 @@ After title experiment rollback, TypeScript no-emit and lint with warnings denie
 ### 2026-09-16 reproducible extraction typecheck command
 
 Added the missing `npm run typecheck` script (`tsc --noEmit`) so extraction verification is reproducible from the project scripts. TypeScript no-emit and lint with warnings denied pass; no extraction or translation behavior changed.
+
+### 2026-09-16 extraction resume checkpoint
+
+After restart, `npm run test:extraction-corpus -- --run --reporter=dot` passed **2 files / 56 tests**. The non-mutating corpus diagnostic remains **26 papers / 497 pages / 152 suspicious blocks**, concentrated in arXiv vector/mathematical layouts (134), PMLR (11), Elsevier (4), and a small number of mixed-layout samples. No generic role rule was changed; next work remains geometry review for these residuals.
+
+### 2026-09-16 extraction benchmark resume
+
+Regenerated `test-data/real-papers/reports/extraction-baseline-latest.json` with the current extraction pipeline. Source integrity and canonical provenance remain 1.0 across the 26-paper corpus; table caption/region metrics and the known title-normalization residuals remain under review. No translation-server or packaged-app changes were made.
+
+### 2026-09-16 extraction safety regression
+
+- Added a mixed x-band regression containing punctuation, p-values, decimals, percentages, and table-like labels. The inferred column split preserves every native token and `hasSourceTextIntegrity` remains true.
+- Focused reading-order suite: 56/56 passed. No production translation code or `.app` build was run.
+- Next: use rendered/native geometry to classify remaining arXiv vector-label candidates, then investigate Elsevier Table 2/5/6 native stream boundaries.
+
+### 2026-09-16 extraction continuation: inferred-column safety
+
+- Added a source-integrity regression for inferred x-band splitting with p-values, decimals, percentages, and table-like numeric labels. Focused reading-order: 56/56 passed; all output blocks retain native source tokens.
+- No role heuristic, translation code, translation server, or `.app` was changed. Residual geometry candidates remain for orientation-aware table/footnote review.
+- Extraction corpus recheck after the safety fixture passed 2 files / 56 tests in 29.26s. Only existing pdfjs canvas/font warnings were emitted; translation pipeline and `.app` remain untouched.
+
+### 2026-09-16 geometry triage artifact
+
+- Generated `test-data/real-papers/reports/extraction-diagnostic-triage-v1.json` from native-facts findings: 129 samples, 83 retain-native-fallback, 46 review-for-structure. Recommendations are evidence triage only and do not relabel production blocks.
+- Exported the 46 geometry review candidates to `test-data/real-papers/reports/extraction-review-queue-v1.csv` with paper/page/bbox and native diagnostic ratios for manual comparison.
+
+### 2026-09-16 manual native-PDF comparison
+
+- Reviewed `cognitive-psychology-gpt3.pdf` page 2 with `pdftotext -layout`. The suspicious paragraph contains body text interleaved with vector figure labels (Linda/Cab/Hospital/Toma/Wason). There is no raster overlap, confirming a vector-figure contamination residual. No lexical split was added; geometry-based region evidence remains the next safe step.
+- Added the cognitive-psychology-gpt3 p.2 vector-figure contamination case to `reports/extraction-manual-review-v1.json` as unresolved-safe-fallback (severity 2), with native geometry root cause and no lexical fix.
+- Refreshed `npm run bench:pdf-extraction`: 26 paper reports; source integrity and canonical provenance remain 1.0, figure-caption relation 1.0, and title exact 20/26 (0.769). Existing PDF.js canvas/font warnings only.
+- Updated generic `vectorFigureLabelEvidence` to allow a sentence-terminated mixed block only when a distinct smaller compact label line is present, covering vector diagram labels adjacent to prose while retaining the punctuation guard for ordinary paragraphs. pdfExtraction suite: 44/44 passed.
+- Extraction corpus after vector-label evidence refinement: 2 files / 56 tests passed in 29.10s. Existing pdfjs canvas/font warnings only.
+- Added a controlled geometry regression for vector labels interleaved with a sentence; generic candidate generation emits `vector-figure-label-cluster`. Pipeline test: 24/24 passed.

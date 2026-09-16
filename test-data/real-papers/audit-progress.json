@@ -28,7 +28,7 @@
   ],
   "pendingPapers": [],
   "reviewedBlocks": 132,
-  "lastCheckpoint": "manual-review-complete-2026-09-16",
+  "lastCheckpoint": "extraction-geometry-triage-v1-2026-09-16",
   "pendingManualReview": 0,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
@@ -59,7 +59,7 @@
   ],
   "nextActions": [
     "Maintain explicit completeListAnnotations for any future list precision metric; current Interactive Jewellery list labels are partial and recall-only.",
-    "Add source-integrity and figure/table safety regressions for inferred x-band column split.",
+    "Add source-integrity and figure/table safety regressions for inferred x-band column split (scientific-token case added; continue figure/table case).",
     "Measure heading precision/recall impact across full corpus.",
     "Classify residual arXiv vector-diagram labels using native geometry.",
     "Investigate generic native-fact recovery for Elsevier Table 2/5/6.",
@@ -3057,7 +3057,8 @@
     "2026-09-16: title resolver now prefers candidates with nearby author/affiliation anchors; focused 23/23, baseline titleExact 0.769, no safety regression.",
     "2026-09-16: rolled back title candidate proximity and metadata-font title inference after speechin real-paper regression; extraction corpus restored 56/56. CJK script-aware gate remains.",
     "2026-09-16: post-rollback full Vitest 61 files/362 tests and TypeScript passed; extraction baseline stable.",
-    "2026-09-16: post-rollback TypeScript and lint passed; next change constrained to fixture-driven title evidence or orientation-aware table geometry."
+    "2026-09-16: post-rollback TypeScript and lint passed; next change constrained to fixture-driven title evidence or orientation-aware table geometry.",
+    "2026-09-16: extraction corpus rerun 56/56 and benchmark regenerated (26 papers/497 pages); source integrity/provenance 1.0, table caption mean 0.929, table region mean 0.843. No translation or app changes."
   ],
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",
@@ -3071,5 +3072,80 @@
     "latestCommit": "8d80922"
   },
   "nextAction": "Design title selection using explicit publisher/header evidence and real-paper fixtures; do not reapply rejected proximity/font rules.",
-  "lastUpdate": "2026-09-16"
+  "lastUpdate": "2026-09-16",
+  "iterationLog": [
+    {
+      "id": "extraction-resume-diagnostic-v1",
+      "date": "2026-09-16",
+      "result": "Extraction corpus 56/56 passed; diagnostic 26 papers/497 pages/152 suspicious blocks; residuals remain geometry-heavy and unchanged.",
+      "next": "Review arXiv/PMLR geometry without role overreach."
+    },
+    {
+      "id": "extraction-safety-regression-v1",
+      "date": "2026-09-16",
+      "result": "Added mixed x-band source-integrity regression with punctuation, p-values, decimals, percentages, and table-like labels; focused reading-order 56/56 passed.",
+      "next": "Classify residual arXiv vector-label candidates and inspect Elsevier native table stream boundaries."
+    },
+    {
+      "id": "extraction-inferred-column-safety-v1",
+      "date": "2026-09-16",
+      "result": "Added scientific-token source-integrity regression for inferred x-band split; focused reading-order 56/56 passed.",
+      "next": "Review orientation-aware table/footnote evidence and remaining geometry candidates."
+    },
+    {
+      "id": "extraction-corpus-recheck-v1",
+      "date": "2026-09-16",
+      "result": "Extraction corpus recheck passed 2 files / 56 tests in 29.26s. Native PDF warnings are existing pdfjs canvas/font warnings.",
+      "next": "Continue geometry triage; do not alter translation pipeline."
+    },
+    {
+      "id": "extraction-geometry-triage-v1",
+      "date": "2026-09-16",
+      "result": "Generated native-provenance triage artifact for 129 suspicious samples: 83 retain-native-fallback and 46 review-for-structure.",
+      "next": "Manually inspect representative vector-label and native table-stream samples before any production rule."
+    },
+    {
+      "id": "extraction-review-queue-v1",
+      "date": "2026-09-16",
+      "result": "Exported 46 review-for-structure native-geometry candidates as a paper/page-sorted CSV queue.",
+      "next": "Manually compare representative vector-label and table-stream candidates against rendered PDFs."
+    },
+    {
+      "id": "manual-vector-figure-review-v1",
+      "date": "2026-09-16",
+      "result": "Compared cognitive-psychology-gpt3 page 2 native layout; confirmed body/diagram labels are interleaved vector text with no raster overlap.",
+      "next": "Design geometry-only vector figure region evidence and a regression before production changes."
+    },
+    {
+      "id": "manual-review-vector-case-v1",
+      "date": "2026-09-16",
+      "result": "Recorded cognitive-psychology-gpt3 page 2 vector-figure contamination as unresolved-safe-fallback severity 2 with native-geometry root cause.",
+      "next": "Validate geometry-only vector figure evidence on synthetic and real native lines before production integration."
+    },
+    {
+      "id": "extraction-benchmark-refresh-v2",
+      "date": "2026-09-16",
+      "result": "Benchmark refreshed across 26 cached papers; source integrity 1.0, canonical provenance 1.0, figure-caption relation 1.0, title exact 20/26.",
+      "next": "Implement only after geometry-only vector figure evidence has a validated synthetic regression."
+    },
+    {
+      "id": "vector-label-evidence-v1",
+      "date": "2026-09-16",
+      "result": "Refined generic vector figure label evidence for mixed blocks with a smaller compact label line; pdfExtraction 44/44 passed.",
+      "next": "Run extraction corpus and benchmark to measure false-positive impact before considering further region projection."
+    },
+    {
+      "id": "vector-label-evidence-corpus-v1",
+      "date": "2026-09-16",
+      "result": "After vector-label evidence refinement, extraction corpus remained 2 files / 56 tests passed in 29.10s.",
+      "next": "Review benchmark deltas and validate vector-label resolver projection on a controlled geometry fixture."
+    },
+    {
+      "id": "vector-label-regression-v1",
+      "date": "2026-09-16",
+      "result": "Controlled geometry fixture confirms vector-figure evidence for smaller compact labels mixed with prose; pipeline 24/24 passed.",
+      "next": "Refresh corpus benchmark and inspect whether vector evidence improves candidate labeling without false promotions."
+    }
+  ],
+  "lastAction": "extraction corpus regression 56/56 passed; no translation-server or app changes"
 }

@@ -230,6 +230,21 @@ describe("canonical extraction pipeline", () => {
       .every((block) => block.translationStatus === "skipped")).toBe(true);
   });
 
+  it("emits vector-figure evidence for compact labels mixed with prose", () => {
+    const textItems = [
+      { text: "The participant completed the task and the", x: 70, y: 120, width: 190, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      { text: "Linda", x: 310, y: 132, width: 28, height: 7, fontSize: 7, fontName: "Figure", page: 1 },
+      { text: "Cab", x: 350, y: 132, width: 20, height: 7, fontSize: 7, fontName: "Figure", page: 1 },
+      { text: "Hospital", x: 390, y: 132, width: 38, height: 7, fontSize: 7, fontName: "Figure", page: 1 },
+      { text: "Toma", x: 310, y: 144, width: 24, height: 7, fontSize: 7, fontName: "Figure", page: 1 },
+      { text: "Test", x: 350, y: 144, width: 22, height: 7, fontSize: 7, fontName: "Figure", page: 1 },
+      { text: "Wason", x: 390, y: 144, width: 28, height: 7, fontSize: 7, fontName: "Figure", page: 1 },
+      { text: "continued in the study.", x: 70, y: 156, width: 115, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+    ];
+    const candidates = generateGenericCandidates([{ pageNumber: 1, width: 500, height: 700, textItems }]).candidates;
+    expect(candidates.some((candidate) => candidate.evidence.some((e) => e.label === "vector-figure-label-cluster"))).toBe(true);
+  });
+
 
   it("does not promote rotated numeric cell bands to headings", () => {
     const textItems = Array.from({ length: 10 }, (_, index) => ({
