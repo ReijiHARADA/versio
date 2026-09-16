@@ -3035,3 +3035,9 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Extended table-region candidate collection to allow up to four later pages only when the caption is near the page bottom, the candidate remains in the caption x-band, and native table evidence is present. This is a generic geometry/evidence rule; no paper-specific text matching was added.
 - Safety checks pass: extraction corpus 56/56 and typecheck pass. Benchmark remains `tableRegionRecall=0.571` and `tableContinuationPageRecall=0.143` (1/7), so the rule did not improve this corpus and is retained as bounded groundwork rather than claimed success.
 - The remaining miss is upstream native candidate/caption evidence on the affected continuation pages; next work should inspect those candidate blocks and avoid widening this rule without stronger evidence.
+
+### 2026-09-16 table continuation refinement
+
+- Relaxed only the later-page vertical-position check for caption-associated table rows; the remaining guards still require same x-band, a bounded four-page window, and native row/table evidence. This captures continuations whose caption is not at the physical page bottom while leaving ordinary prose excluded.
+- Extraction corpus remains 56/56. Medical benchmark improved from continuation recall 1/7 to 2/7 (0.286); table-region recall remains 4/7 (0.571). No source-integrity regression was observed.
+- This is still incomplete: the two multi-page tables require broader row coverage and stronger repeated-header evidence before claiming full support.

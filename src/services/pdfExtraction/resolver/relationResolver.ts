@@ -250,7 +250,7 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
               box.y > 500 && candidateBox.y < 220;
             const laterPageContinuation = candidate.pageStart > caption.pageStart &&
               candidate.pageStart <= caption.pageStart + 4 &&
-              box.y > 500 && Math.abs(candidateBox.x - box.x) < 180;
+              Math.abs(candidateBox.x - box.x) < 180;
             if (!samePage && !nextPageContinuation && !laterPageContinuation) return false;
             const aboveCaption = samePage && candidateBox.y < box.y && box.y - (candidateBox.y + candidateBox.height) < 280;
             const belowCaption = samePage && candidateBox.y >= box.y && candidateBox.y - (box.y + box.height) < 280;

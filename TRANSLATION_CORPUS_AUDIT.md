@@ -3047,3 +3047,7 @@ Added a stable synthetic regression for table-region identity: caption labels re
 ### 2026-09-16 multi-page table continuation experiment
 
 A bounded generic continuation path now considers up to four later pages when bottom-caption geometry, x-band proximity, and native table evidence agree. Extraction corpus remains 56/56 and the medical benchmark is unchanged (`tableRegionRecall` 4/7; continuation recall 1/7). The experiment is kept because it is safe groundwork, but it does not solve the remaining cases; further work requires inspecting upstream candidate formation.
+
+### 2026-09-16 table continuation refinement
+
+Removed only the vertical-position prerequisite for later-page candidates; x-band, four-page bound, and native table-row evidence remain mandatory. This recovered one additional continuation page in the medical fixture: recall improved from 1/7 to 2/7 while table-region recall stayed 4/7. The change is kept with the safety suite green, but multi-page table extraction remains incomplete.
