@@ -685,10 +685,10 @@
       "page": 4,
       "classification": "short-label-band",
       "text": "“Up“Conv. 2×2 filters,stride:2 “Up“Conv. Fine-grained features forwarding Convolution using a",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: Up/Conv labels are embedded in Figure 3 U-Net architecture diagram",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-image-segmentation-deep-learning",
