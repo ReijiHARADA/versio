@@ -3417,3 +3417,7 @@ A native geometry probe showed a spanning arXiv metadata line acting as a mid-pa
 Post-guard medical survey probe: the former metadata mid-cut no longer interleaves the left-column tail and right-column continuation, and exact same-page caption duplicate count is 0. A long affiliation block still appears between left and right column content because its native bbox occupies the lower left column; this is retained as an unresolved geometry fixture rather than relabeled by paper-specific logic.
 
 Full 26-paper extraction benchmark after the spanning metadata guard: heading precision 1.000, heading recall 0.993, reading-order pair score 1.000, figure-caption relation 1.000, source integrity 1.000, and canonical provenance 1.000. Title exact remains 0.769. No translation changes were made.
+
+### 2026-09-16 corpus diagnostic refresh
+
+Latest layout diagnostic: 26 papers, 497 pages, 149 suspicious blocks. Distribution is arXiv 136, PMLR 6, Elsevier 4, OzCHI 2, IEEE 1; all other format families are 0. These are diagnostic candidates, not automatic relabels. The next extraction work remains geometry fixtures for vector labels, numeric grids, and mixed layouts.

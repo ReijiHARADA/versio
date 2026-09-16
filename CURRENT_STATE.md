@@ -3609,3 +3609,7 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 ### 2026-09-16 full extraction benchmark after ordering guard
 - 26-paper baseline regenerated. Aggregate heading precision 1.000, heading recall 0.993, reading-order pair score 1.000, figure-caption relation 1.000, source-integrity 1.000, canonical provenance 1.000. Title exact remains 0.769.
 - No regression attributable to the spanning metadata guard; `.app` and translation server remain untouched.
+
+### 2026-09-16 corpus diagnostic refresh
+- `npm run diagnose:pdf-corpus` completed: 26 papers / 497 pages / 149 suspicious blocks. Residuals remain concentrated in arXiv (136), PMLR (6), Elsevier (4), OzCHI (2), IEEE (1); this diagnostic is intentionally non-mutating.
+- The queue is now narrowed to general arXiv/PMLR vector-label, numeric-grid, and mixed-layout geometry cases. No translation changes and no `.app` build.
