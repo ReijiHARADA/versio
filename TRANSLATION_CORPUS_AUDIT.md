@@ -2925,3 +2925,7 @@ Full Vitest passes (61 files / 347 tests) after the extraction diagnostic and co
 ### 2026-09-16 table metric checkpoint
 
 After the compact-row change, table-region recall remains 0.843 mean (n=4; min 0.571) and table-caption recall 0.929 mean (n=6; min 0.571). No safety regression was observed in the 26-paper benchmark.
+
+### 2026-09-16 image-overlap evidence
+
+Added conservative image-placement overlap evidence for short multi-line label clusters. It is resolver evidence only and does not force source removal or translation skipping. Pipeline and extraction corpus regressions remain green.

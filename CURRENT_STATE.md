@@ -2957,3 +2957,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 table metric checkpoint
 
 - Recomputed extraction baseline after compact-row preservation: table-region recall mean **0.843** (4 annotated papers, minimum 0.571), table-caption recall mean **0.929** (6 annotated papers, minimum 0.571). The change preserves existing aggregate scores while preventing an observed native table row from entering translation.
+
+### 2026-09-16 image-overlap evidence checkpoint
+
+- Added conservative generic image-overlap evidence for multi-line, short-token native blocks that overlap an image placement and lack sentence punctuation. This evidence competes as `other` without deleting source text; projection behavior remains unchanged until broader precision evidence is available.
+- Pipeline tests 15/15 and extraction corpus 56/56 pass; no translation or `.app` changes.

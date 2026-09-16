@@ -104,6 +104,19 @@ function chartLabelEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
   return clamp(0.76 + Math.min(0.16, (samePageColumn.length - 3) * 0.03));
 }
 
+function imageOverlapLabelEvidence(block: LayoutBlock, page?: ExtractedPage): number {
+  if (!page || block.role !== "paragraph" || block.lines.length < 3 || /[.!?。！？]$/.test(block.text.trim())) return 0;
+  const items = block.lines.flatMap((line) => line.items);
+  const shortRatio = items.filter((item) => item.text.trim().length <= 14).length / Math.max(1, items.length);
+  if (shortRatio < 0.65) return 0;
+  const overlap = Math.max(...(page.imagePlacements ?? []).map((image) => {
+    const x = Math.max(0, Math.min(block.bbox.x + block.bbox.width, image.x + image.width) - Math.max(block.bbox.x, image.x));
+    const y = Math.max(0, Math.min(block.bbox.y + block.bbox.height, image.y + image.height) - Math.max(block.bbox.y, image.y));
+    return (x * y) / Math.max(1, block.bbox.width * block.bbox.height);
+  }).concat(0));
+  return overlap >= 0.2 ? clamp(0.78 + Math.min(0.14, overlap * 0.14)) : 0;
+}
+
 function median(values: number[]): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -384,6 +397,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       candidate.pageStart === block.pageStart && Math.abs(candidate.bbox.y - block.bbox.y) < 300);
     const pageGrid = pageGridEvidence(block, blocks);
     const chartLabels = chartLabelEvidence(block, blocks);
+    const imageLabels = imageOverlapLabelEvidence(block, pages.find((page) => page.pageNumber === block.pageStart));
     const alignedTableRow = block.lines.length === 1 &&
       block.lines[0].items.length >= 2 && tableLike(block) && nearbyTableCaption;
     const tableHeaderRow = block.lines.length === 1 &&
@@ -421,6 +435,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     };
     if (pageGrid > 0 && block.role !== "table_caption") scoreByRole.table = pageGrid;
     if (chartLabels > 0) scoreByRole.other = chartLabels;
+    if (imageLabels > 0) scoreByRole.other = Math.max(scoreByRole.other ?? 0, imageLabels);
     // Some journal/preprint mastheads use a large centered title whose line
     // is title-cased, so the layout pass can mistake it for an author line.
     // Native size/length/position evidence is sufficient to compete for the
@@ -549,6 +564,16 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         page: block.pageStart,
         bbox: block.bbox,
         reason: "repeated numeric native labels share a page/column x-band",
+      });
+    }
+    if (imageLabels > 0) {
+      evidence.push({
+        source: "generic-heuristic",
+        label: "image-overlap-label-cluster",
+        confidence: imageLabels,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "short multi-line native labels substantially overlap an image placement",
       });
     }
     return {
