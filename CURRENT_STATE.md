@@ -3802,3 +3802,7 @@ The six explicit title mismatches are now tracked as native-candidate review ite
 ### 2026-09-16 generic CJK title recognition
 
 Root cause confirmed for the Chinese title mismatch: the high-font title branch required at least three Latin letters, rejecting CJK-only native title lines. Replaced that gate with a script-aware Latin-or-CJK check and added a synthetic regression. Focused extraction pipeline: **23/23 passed**; TypeScript passed. This is a generic title evidence fix, not a paper-specific rule.
+
+### 2026-09-16 CJK title fix revalidation
+
+Focused extraction pipeline remains **23/23 passed** and TypeScript no-emit passes after the script-aware CJK title gate. No long-lived Vitest/Vite/translation-server process remains after verification.
