@@ -117,10 +117,10 @@
       "page": 6,
       "classification": "short-label-band",
       "text": "Q: Which machine do you choose? A: Machine 0 1 2 3 4 5 6 Trial",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: page 6 Figure 3 chart/prompt labels; residual is not body prose",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "cognitive-psychology-gpt3",

@@ -3007,3 +3007,7 @@ A generic relaxation for top-of-page mixed-column splitting was tested and rever
 ### 2026-09-16 continuation-aware mixed-column guard
 
 Added a conservative geometry/text guard for mixed left/right blocks: preserve a likely continuation when the right head is lowercase and the left tail is unfinished; otherwise permit the existing column split path at the top edge. Regression suites remain green (56/56 extraction, 48/48 reading-order), and the diagnostic count is unchanged at 149, so this is an incremental safety-preserving step rather than a claimed precision gain.
+
+### 2026-09-16 cognitive figure residual review
+
+Cognitive psychology corpus page 6 was rendered and checked. The `Q: Which machine...` / trial-label residual belongs to Figure 3's prompt/chart composition and must not be translated as ordinary prose. It is recorded as `figure_label`, severity 3.
