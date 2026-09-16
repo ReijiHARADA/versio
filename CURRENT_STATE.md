@@ -3818,3 +3818,7 @@ The 26-paper baseline after metadata-font exclusion remains safe: titleExact 0.7
 ### 2026-09-16 title candidate proximity resolver
 
 Added a generic title-candidate preference for candidates followed nearby on the same page by author/affiliation blocks, reducing the likelihood of selecting a publisher masthead. Focused pipeline: 23/23; TypeScript passed. The 26-paper titleExact baseline remains 0.769 with no reading-order or source-integrity regression; remaining failures require fuller title-region evidence.
+
+### 2026-09-16 title resolver safety rollback
+
+The title-candidate proximity experiment caused a real-paper regression (`speechin` title role became empty) and was reverted. The metadata-font title inference experiment also caused the same regression and was reverted. The CJK script-aware gate remains. After rollback, extraction corpus is restored to **56/56 passed**. The rejected experiments are retained only as audit history; no unsafe title rule is active.
