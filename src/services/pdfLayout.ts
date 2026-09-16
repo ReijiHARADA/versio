@@ -1138,6 +1138,17 @@ function buildPageLines(
 
   const structurallySplit = lines.flatMap(splitInlineSubheading);
 
+  // Opt-in line diagnostics for investigating generic caption/table boundaries.
+  // Keep this disabled by default; it reports native geometry and style only.
+  const lineDebug = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_DEBUG;
+  if (lineDebug === "lines") {
+    for (const line of structurallySplit) {
+      if (/^(?:table|tables?|figure|fig\.?|表|図)\b/i.test(line.text.trim())) {
+        console.warn(`[PDF_LAYOUT_LINE] page=${line.page} column=${line.column} y=${line.y.toFixed(2)} x=${line.x.toFixed(2)} width=${line.width.toFixed(2)} font=${line.fontName} size=${line.fontSize.toFixed(2)} items=${line.items.length} text=${JSON.stringify(line.text)}`);
+      }
+    }
+  }
+
   const visible = structurallySplit.filter((line) => !isEdgeChrome(line, layout, patterns));
   const splitCandidates = visible.filter((line) => isBodyStartHeading(line.text));
   const splitAt =

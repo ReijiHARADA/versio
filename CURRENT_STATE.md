@@ -3314,3 +3314,4 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - Worktree is clean; no unverified production change is pending.
 - Current extraction baseline remains: source integrity/provenance 1.0; medical meta-review table-region recall 0.571, continuation-page recall 0.286.
 - Next action on resume: add line-level style/x-band diagnostics and benchmark a generic table-caption boundary rule. Keep translation server/model and `.app` untouched until extraction work is validated.
+- Follow-up evidence: `PDF_LAYOUT_DEBUG=lines` now emits opt-in native line geometry/style for table/figure labels; extraction corpus remains 56/56 after this instrumentation.
