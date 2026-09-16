@@ -567,10 +567,10 @@
       "page": 18,
       "classification": "short-label-band",
       "text": "evi- 5. Author’s perspective miss- Mi- From a high-level point of view, and to formulate it provoca- . tively, some tasks like medical image segmentation have already two been solved over thirty years ago, as can be seen by the claims argue",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: left column is a bullet list while right column is section 5 prose; native stream interleaves both",
+      "manualRole": "mixed_columns",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "covid-ml-review",

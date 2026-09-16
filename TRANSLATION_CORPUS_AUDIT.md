@@ -2995,3 +2995,7 @@ Page 10 of the medical meta-review was visually checked. The short-label residua
 ### 2026-09-16 Table 7 residual review
 
 The page 13 short-label residual beginning `-Clinical workflow...` was visually confirmed as Table 7 cell content and labeled `table_row`, severity 3. Together with Table 6, this supports a general page-local table continuation/cell grouping fix rather than a paper-specific rule.
+
+### 2026-09-16 mixed-column residual review
+
+Page 18 of the medical meta-review was visually confirmed to contain a left-column bullet list and independent right-column section prose. The diagnostic residual is labeled `mixed_columns`, severity 3. This confirms that mixed-column stream interleaving remains a high-impact extraction issue distinct from translation quality.
