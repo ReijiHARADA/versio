@@ -3635,3 +3635,6 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 
 ### 2026-09-16 real-paper reading-order recheck
 - Real-paper reading-order suite rerun with extraction config: **27/27 passed**. This confirms no regression in the corpus reading-order contracts after the metadata guard and synthetic fixture.
+
+### 2026-09-16 table/list residual classification
+- Diagnostic samples show cognitive-psychology and step-to-charge `mixed-layout`/`numeric-grid` blocks are experiment cards, diagrams, and chart labels embedded in native text, while linguistics residuals include dense algorithm/math notation. These are not safe to suppress with a shared word-count rule; geometry/image provenance is required. No new relabel rule added.

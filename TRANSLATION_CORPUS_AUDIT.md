@@ -3435,3 +3435,7 @@ Residual review refresh: all 83 samples are reviewed (pending 0). Main labels ar
 Extraction corpus recheck after the latest fixture: **56/56 passed** in 26.67s, with no new failures. Affiliation/body ordering and table/list geometry remain the next open extraction items.
 
 Real-paper reading-order recheck with the extraction config: **27/27 passed** after the spanning metadata guard and regression fixture. No translation changes.
+
+### 2026-09-16 table/list residual classification
+
+Review of diagnostic samples confirms that many cognitive-psychology and step-to-charge mixed-layout/numeric-grid candidates are experiment cards, diagrams, or chart labels, while linguistics candidates contain dense algorithm/math notation. A generic word-count suppression would risk hiding legitimate prose, so no new role rule was added; geometry/image provenance remains the next safe discriminator.

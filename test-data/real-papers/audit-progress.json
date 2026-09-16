@@ -3044,7 +3044,8 @@
     "2026-09-16: full Vitest after spanning metadata fixture 61 files/356 tests passed.",
     "2026-09-16: residual summary refreshed: 83/83 reviewed, severity-3 73; figure_label 49, table_row 14, classes image-overlap 28/short-label-band 55.",
     "2026-09-16: extraction corpus recheck after spanning metadata fixture 56/56 passed in 26.67s.",
-    "2026-09-16: real-paper reading-order suite 27/27 passed after metadata guard and fixture."
+    "2026-09-16: real-paper reading-order suite 27/27 passed after metadata guard and fixture.",
+    "2026-09-16: reviewed table/list residual samples; mixed-layout/numeric-grid cases are cards/diagrams or dense math, requiring geometry evidence; no broad suppression."
   ],
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",
@@ -3055,7 +3056,7 @@
     "extractionCorpusTests": "56 passed",
     "fullVitest": "356 passed",
     "nextAction": "Add and validate a general affiliation/body boundary fixture; then review table/list residuals.",
-    "latestCommit": "b95de75"
+    "latestCommit": "93e7a7f"
   },
   "nextAction": "Add a general affiliation/body boundary fixture based on native geometry, then review table/list residuals."
 }
