@@ -1149,7 +1149,7 @@ function buildPageLines(
   if (lineDebug === "lines") {
     for (const line of structurallySplit) {
       if (/^(?:table|tables?|figure|fig\.?|表|図)\b/i.test(line.text.trim())) {
-        console.warn(`[PDF_LAYOUT_LINE] page=${line.page} column=${line.column} y=${line.y.toFixed(2)} x=${line.x.toFixed(2)} width=${line.width.toFixed(2)} font=${line.fontName} size=${line.fontSize.toFixed(2)} items=${line.items.length} text=${JSON.stringify(line.text)}`);
+        console.warn(`[PDF_LAYOUT_LINE] page=${line.page} column=${line.column} y=${line.y.toFixed(2)} x=${line.x.toFixed(2)} width=${line.width.toFixed(2)} font=${line.items[0]?.fontName ?? "unknown"} size=${line.fontSize.toFixed(2)} items=${line.items.length} text=${JSON.stringify(line.text)}`);
       }
     }
   }
