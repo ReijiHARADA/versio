@@ -3354,3 +3354,8 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - `npm run test:extraction-corpus` passed: 2 files, 56 tests.
 - Native table continuation handling caused no corpus regression; medical Table 7 now resolves as one region spanning pages 13–14.
 - TypeScript check passed. Worktree is ready for the next extraction phase: paragraph stitching and block-boundary precision.
+
+### 2026-09-16 continued-caption regression coverage
+
+- Added a unit assertion that the generic `Table N (continued)` form is recognized as a table caption.
+- Focused reading-order test passes; prior extraction corpus remains 56/56.

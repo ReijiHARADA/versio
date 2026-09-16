@@ -3283,3 +3283,5 @@ Added a generic format-level rule for `Table N (continued)` at the physical top 
 ### 2026-09-16 continued-caption corpus regression
 
 The generic continued-caption implementation was rechecked against the extraction corpus: **56/56 tests passed**. Table 7 page 14 is merged into the page 13 region, with no duplicate root table. Source integrity remains 1.000. Next phase is paragraph-stitching and block-boundary precision across the corpus.
+
+Added regression coverage for the generic `Table N (continued)` caption form. The focused caption test passes, and the previously recorded extraction corpus result remains 56/56.
