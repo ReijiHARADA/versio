@@ -3301,3 +3301,5 @@ Visual review: the `human-ai-interaction-guidelines` page-3 mixed-layout residua
 Added generic `vector-figure-label-cluster` evidence for dense, short, multi-x-band native text without sentence punctuation. Resolver routing is evidence-based and only selects `other` when it outranks paragraph evidence. Extraction corpus remains 56/56; benchmark source integrity and figure-caption relation remain 1.000. Manual false-positive review is next.
 
 Full Vitest validation after vector figure-label evidence: 61 files / 350 tests passed, with no observed list, reading-order, or data-layer regression.
+
+Added a synthetic regression for dense multi-x-band native vector labels; the focused pipeline test passes. This verifies evidence generation without paper-specific strings.

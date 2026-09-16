@@ -3398,3 +3398,8 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 
 - Full Vitest after vector figure-label evidence: 61 files / 350 tests passed.
 - No list, reading-order, or data-layer regression detected. Worktree is clean and extraction remains active before translation work.
+
+### 2026-09-16 vector-label evidence regression test
+
+- Added a synthetic pipeline regression proving dense multi-x-band native labels emit `vector-figure-label-cluster` evidence.
+- Focused pipeline test passes; full extraction corpus and full Vitest results remain green from the preceding validation.
