@@ -3011,3 +3011,7 @@ Added a conservative geometry/text guard for mixed left/right blocks: preserve a
 ### 2026-09-16 cognitive figure residual review
 
 Cognitive psychology corpus page 6 was rendered and checked. The `Q: Which machine...` / trial-label residual belongs to Figure 3's prompt/chart composition and must not be translated as ordinary prose. It is recorded as `figure_label`, severity 3.
+
+### 2026-09-16 top-column regression fixture
+
+Added a generic regression fixture for independent top-of-page columns. It verifies that a capitalized right-column sentence is not joined to the left column, while the existing lowercase continuation test remains intact. Focused reading-order coverage is now 49/49.

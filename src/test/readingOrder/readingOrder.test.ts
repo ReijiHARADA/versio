@@ -143,6 +143,18 @@ describe("PDF reading order regression", () => {
     expect(blocks.some((block) => block.text.includes("left_7 the remaining clause"))).toBe(true);
   });
 
+  it("splits independent top-of-page columns when the right column starts a new sentence", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 1, width: 612, height: 792,
+      textItems: [
+        ...Array.from({ length: 6 }, (_, index) => ({ text: `left bullet ${index}.`, x: 54, y: 60 + index * 16, width: 220, height: 10, fontSize: 10, fontName: "Body", page: 1 })),
+        ...Array.from({ length: 6 }, (_, index) => ({ text: index === 0 ? "Independent section begins here." : `right prose ${index}`, x: 338, y: 60 + index * 16, width: 220, height: 10, fontSize: 10, fontName: "Body", page: 1 })),
+      ],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    expect(blocks.some((block) => block.text.includes("left bullet 5.") && block.text.includes("Independent section"))).toBe(false);
+  });
+
   it("preserves native rotation as line provenance without dropping rotated text", () => {
     const pages: ExtractedPage[] = [{
       pageNumber: 4,
