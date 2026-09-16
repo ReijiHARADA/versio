@@ -38,7 +38,7 @@ for (const file of files) {
     .map((node) => ({ text: node.text?.slice(0, 220), page: node.pageStart, bbox: node.boundingBoxes[0], confidence: node.confidence, evidence: node.evidence.map((entry) => entry.label) }));
   const figureInParagraph = canonical.nodes
     .filter((node) => node.role === "paragraph" && /(?:^|\s)(?:Fig(?:ure)?\.?\s*\d{1,3})\s*[:.]/i.test(node.text ?? ""))
-    .map((node) => ({ text: node.text?.slice(0, 220), page: node.pageStart }));
+    .map((node) => ({ text: node.text?.slice(0, 220), page: node.pageStart, bbox: node.boundingBoxes[0], confidence: node.confidence, evidence: node.evidence.map((entry) => entry.label) }));
   if (affiliation.length || caption.length || figureInParagraph.length || embeddedStructuralMarker.length) {
     findings.push({ id: file, affiliation, caption, figureInParagraph, embeddedStructuralMarker });
   }

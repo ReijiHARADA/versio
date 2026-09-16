@@ -3706,3 +3706,7 @@ Parsed the saved scanner output and grouped candidates for review. Affiliation c
 ### 2026-09-16 boundary finding provenance
 
 Boundary scanner findings now include the first native bbox, resolver confidence, and evidence labels for affiliation and figure-marker candidates. This makes manual confirmation traceable to native geometry before any parser rule is introduced. TypeScript and lint pass.
+
+### 2026-09-16 figure-marker provenance validation
+
+The saved findings now expose bbox/evidence for embedded figure markers. A representative statistical-interaction page shows a paragraph bbox at x≈108, y≈416, confidence 0.855, with `vector-figure-label-cluster` evidence; this confirms the candidate is a mixed native text/figure-label geometry case rather than a simple lexical false positive. No parser rule was added.

@@ -3508,3 +3508,7 @@ The machine-readable findings were grouped by paper. Affiliation candidates span
 ### 2026-09-16 boundary finding provenance
 
 Affiliation and figure-marker findings now carry native bbox, confidence, and evidence labels. This provides auditable evidence for separating true caption contamination from ordinary in-text Figure references before changing extraction rules.
+
+### 2026-09-16 figure-marker provenance validation
+
+A representative `Figure 2:` candidate now carries native bbox and evidence (`vector-figure-label-cluster`, confidence 0.855), confirming mixed text/figure-label geometry. This supports a geometry-aware fixture and avoids unsafe lexical splitting.
