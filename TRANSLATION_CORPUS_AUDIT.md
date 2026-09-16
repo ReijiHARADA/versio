@@ -2954,7 +2954,7 @@ The sample can be regenerated with `npm run audit:build-extraction-sample`; the 
 
 Equation candidates are included in the structural sample (up to three per paper); the current 415 rows contain 17 resolved equation blocks for manual false-positive review.
 
-The generic equation classifier now rejects longer unit-bearing prose and metric/statistical fragments when no explicit equation number anchors them. Corpus-derived regression cases pass without changing translation behavior.
+The generic equation classifier now rejects longer unit-bearing prose and metric/statistical fragments when no explicit equation number anchors them. A stricter relation-operator guard was reverted after a safety regression in an existing paragraph continuation; the retained change passes corpus-derived regression cases.
 
 After the change, the 26-paper benchmark still reports source-integrity and canonical-provenance 1.0. Equation candidates in the fixed 415-row review sample decreased from 17 to 14; manual review is still required.
 
