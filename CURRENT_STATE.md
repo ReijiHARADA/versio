@@ -3253,3 +3253,8 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 progress reconciliation
 
 - The residual fixture now contains 83/83 samples marked reviewed; the prior pending count was stale and has been corrected to 0. Next step is to rerun extraction metrics and reconcile the audit report.
+
+### 2026-09-16 extraction benchmark rerun
+
+- `npm run bench:pdf-extraction` completed successfully across 26 reports.
+- Aggregate source-integrity and canonical-provenance rates are 1.00. Figure-caption relation precision is 0.923; table-caption relation precision is 0.538. Table-region recall remains low at 0.137 and continuation-page recall at 0.011, so table detection/continuation is the next algorithmic priority.

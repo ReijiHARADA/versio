@@ -3229,3 +3229,7 @@ The prediction-metrics candidate is a Table 2 row block (`table_row`, severity 3
 ### 2026-09-16 manual residual review: covid ML page 9
 
 The two residual streams are Table 6/7 rows (`table_row`, severity 3, line-grouping cause), not prose. Coverage: 67/83, 16 pending.
+
+## Extraction audit checkpoint (2026-09-16)
+
+The extraction benchmark was rerun after completing the 83-sample residual review. Across 26 reports, source-integrity and canonical-provenance rates were 1.00, and figure-caption relation precision was 0.923. Table-caption relation precision was 0.538; table-region recall (0.137) and table-continuation recall (0.011) remain the main measurable extraction gaps. Translation code was not changed.
