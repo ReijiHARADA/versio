@@ -3620,3 +3620,7 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 ### 2026-09-16 spanning metadata regression fixture
 - Added a regression using the established ACM two-column fixture with an inserted spanning arXiv metadata line. It asserts the left column completes before the right column begins.
 - Reading-order test: 53/53 passed. This captures the native residual without a paper-specific fixture.
+
+### 2026-09-16 full regression after spanning metadata fixture
+- Full Vitest: **61 files / 356 tests passed** (includes the new two-column spanning metadata regression).
+- Extraction goal remains open: affiliation/body native ordering and residual table/list geometry still need corpus-backed fixtures.

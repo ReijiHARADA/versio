@@ -3427,3 +3427,5 @@ Production web build verification after the latest extraction change: `npm run b
 ### 2026-09-16 spanning metadata regression fixture
 
 The metadata ordering guard now has a general regression test built on the existing ACM two-column fixture. A spanning arXiv line inserted mid-page cannot split the left column before the right; reading-order tests pass 53/53.
+
+Full regression after adding the spanning metadata fixture: **61 files / 356 tests passed**. Remaining extraction work is limited to corpus-backed affiliation/body ordering and table/list geometry residuals; translation code remains unchanged.
