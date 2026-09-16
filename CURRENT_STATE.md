@@ -3822,3 +3822,7 @@ Added a generic title-candidate preference for candidates followed nearby on the
 ### 2026-09-16 title resolver safety rollback
 
 The title-candidate proximity experiment caused a real-paper regression (`speechin` title role became empty) and was reverted. The metadata-font title inference experiment also caused the same regression and was reverted. The CJK script-aware gate remains. After rollback, extraction corpus is restored to **56/56 passed**. The rejected experiments are retained only as audit history; no unsafe title rule is active.
+
+### 2026-09-16 post-rollback full regression
+
+Full Vitest completed with **61 files / 362 tests passed** after reverting unsafe title experiments. TypeScript no-emit also passed. Existing PDF.js optional canvas/font warnings remain non-fatal; no translation-server or `.app` changes.
