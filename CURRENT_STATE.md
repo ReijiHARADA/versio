@@ -3526,3 +3526,4 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - End-to-end `extractFromPages` now resolves `54 English 90.5%` and `44 Chinese 91.6%` as table nodes (not headings); their evidence is paragraph/table role-scores and they remain non-translatable table content.
 - The earlier heading output came from pre-resolver layout inspection, not final CanonicalDocument. No additional percent-specific rule was retained.
 - End-to-end speechin probe after numeric-row guard confirms the two previously heading-promoted summary rows now resolve as table nodes; the larger six-column native grid remains paragraphized and is still unresolved.
+- Latest lint and TypeScript revalidation after speechin analysis: both pass; no source changes in this iteration.
