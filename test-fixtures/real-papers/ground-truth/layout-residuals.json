@@ -365,10 +365,10 @@
       "page": 21,
       "classification": "short-label-band",
       "text": "GPT_rel GPT_rot GPT_pos GPT_uni truth GPT",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: GPT model names are Figure 14 legend labels embedded above the caption",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",

@@ -3143,3 +3143,7 @@ The two DP-formula residual candidates are embedded Figure 10 diagram labels, no
 ### 2026-09-16 manual residual review: linguistics page 14
 
 The page-14 numeric/label residual is embedded Figure 11 heatmap content (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage is 36/83 with 47 pending.
+
+### 2026-09-16 manual residual review: linguistics page 21
+
+The GPT model-name residual is embedded Figure 14 legend content (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage: 37/83, 46 pending.
