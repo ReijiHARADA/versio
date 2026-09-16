@@ -299,6 +299,8 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
             const text = candidate.layoutBlock.text.trim();
             const sentenceLike = /[.!?:;]\s*$/.test(text) && text.split(/\s+/).filter(Boolean).length > 8;
             const row = candidate.layoutBlock.lines.some((line) => line.items.length >= 2) && !sentenceLike;
+            const multiItemLines = candidate.layoutBlock.lines.filter((line) => line.items.length >= 2).length;
+            const multiItemRatio = multiItemLines / Math.max(candidate.layoutBlock.lines.length, 1);
             const numericDensity = (text.match(/\d/g) ?? []).length / Math.max(text.length, 1);
             const wordCount = text.split(/\s+/).filter(Boolean).length;
             const letterCount = (text.match(/[A-Za-z]/g) ?? []).length;
@@ -325,6 +327,7 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
             // lines and otherwise look like a row. Keep long prose and list
             // streams out unless strong multi-cell evidence is present.
             if (bulletStream && !flattenedGridRow) return false;
+            if (row && multiItemRatio < 0.4 && !flattenedGridRow && numericDensity < 0.12) return false;
             if (longProseRow && (candidate.roleScores.table ?? 0) < 0.9 && !flattenedGridRow) return false;
             const compactCellRow = candidate.layoutBlock.lines.length === 1 &&
               !/[.!?]\s*$/.test(text) && (numericDensity >= 0.12 ||

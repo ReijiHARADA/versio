@@ -3445,3 +3445,7 @@ Follow-up verification (2026-09-16): reran the full 26-paper extraction baseline
 ### Table-region precision review (2026-09-16)
 
 Manual canonical inspection of OzCHI page 8/9 found pre-existing false-positive table members: long paragraph fragments and a bullet introduction were admitted beside Table 5. The flattened-grid change itself was not the cause (the false positives reproduce without it). A resolver guard now identifies long prose and bullet-only streams and excludes them unless strong row geometry is present. Existing synthetic table, extraction corpus (56), and full Vitest (354) pass; further native table precision work is pending because some false positives still receive strong multi-item evidence.
+
+### Multi-item ratio / prose precision guard (2026-09-16)
+
+Manual canonical inspection showed that long column fragments with only one or two multi-item lines could be promoted as table candidates. Region membership now requires a repeated multi-item-line ratio for non-numeric candidates; bullet-only streams remain excluded. A candidate prose-shape guard (>20 words) prevents incomplete column fragments from receiving the strongest structural-grid score, while short real tables remain eligible. OzCHI inspection no longer promotes the previously observed long results paragraph or bullet introduction to table; the expected Table 1–5 nodes remain. Extraction corpus remains 56/56 and full Vitest 354/354.

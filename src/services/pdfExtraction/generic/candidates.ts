@@ -577,7 +577,8 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         block.lines.every((line) => line.bbox.width <= 260) &&
         !/[.!?]\s*$/.test(block.text.trim()) &&
         block.text.trim().split(/\s+/).filter(Boolean).length <= 40;
-      const proseBlock = paragraphLike(block.text) && /[.!?]\s*$/.test(block.text.trim());
+      const proseBlock = paragraphLike(block.text) &&
+        (/[.!?]\s*$/.test(block.text.trim()) || block.text.trim().split(/\s+/).filter(Boolean).length > 20);
       const longCaption = block.role === "table_caption" && paragraphLike(block.text);
       const captionBlock = block.role === "table_caption";
       scoreByRole.table = rotatedItems.length >= 30 && rotatedNumeric / Math.max(rotatedItems.length, 1) >= 0.3

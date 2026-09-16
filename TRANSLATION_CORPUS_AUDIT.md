@@ -3354,3 +3354,7 @@ Follow-up verification (2026-09-16): full 26-paper baseline after flattened-grid
 ### Table precision review (2026-09-16)
 
 Manual canonical output for OzCHI page 8/9 exposed pre-existing false-positive region members (a truncated results paragraph and a bullet introduction). The flattened-grid rule was not responsible; the same members appear after reverting it. Added conservative resolver guards for long prose and bullet-only streams, while preserving strong multi-cell rows. Extraction corpus (56) and full Vitest (354) pass. Remaining false positives with strong multi-item evidence require a separate geometry refinement.
+
+### Table precision guard checkpoint (2026-09-16)
+
+Manual review found long multi-column prose fragments receiving strong table evidence. Added geometry-aware safeguards: non-numeric region members need repeated multi-item rows, bullet-only streams are excluded, and incomplete prose blocks over 20 words cannot receive the strongest structural-grid score. On the OzCHI review output, the previously observed results paragraph and bullet introduction are no longer promoted as table candidates while Table 1–5 remain. Extraction corpus 56/56 and full Vitest 354/354 pass. Broader corpus manual review remains pending.
