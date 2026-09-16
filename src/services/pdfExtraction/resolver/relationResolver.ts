@@ -257,7 +257,12 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
             const text = candidate.layoutBlock.text.trim();
             const numericDensity = (text.match(/\d/g) ?? []).length / Math.max(text.length, 1);
             const compactCellRow = candidate.layoutBlock.lines.length === 1 &&
-              !/[.!?]\s*$/.test(text) && numericDensity >= 0.12;
+              !/[.!?]\s*$/.test(text) && (numericDensity >= 0.12 ||
+                // Multi-column review tables often encode a bullet cell as one
+                // native text item with no numeric token. Keep it eligible only
+                // inside a caption-adjacent region; ordinary prose remains
+                // protected by the sentence and proximity checks above.
+                (/^[•‣▪∙–—-]\s*\S/.test(text) && text.length <= 180));
             return row && ((candidate.roleScores.table ?? 0) >= 0.78 || compactCellRow);
           })
         : [];

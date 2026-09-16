@@ -3019,3 +3019,7 @@ Added a generic regression fixture for independent top-of-page columns. It verif
 ### 2026-09-16 full extraction-priority regression
 
 After the mixed-column guard and independent top-column fixture, the full Vitest suite passes 61 files / 349 tests. Extraction-specific coverage remains 56/56 and reading-order coverage is 49/49; translation-server work remains paused.
+
+### 2026-09-16 bullet-cell table evidence
+
+Added generic evidence for bullet-prefixed single-item table cells in caption-adjacent regions. Safety regression checks pass (56/56 extraction tests); medical table-region recall remains 4/7, so the remaining Table 6/7 miss is attributable to page/region association and is explicitly retained as the next target.
