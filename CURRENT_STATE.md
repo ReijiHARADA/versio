@@ -3291,3 +3291,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 native caption geometry measurement
 
 - Direct `textItems` inspection of the medical meta-review shows caption labels and prose use the same font family/size (Table label `g_d0_f1`, 7.97pt; prose `g_d0_f1`, 6.38pt in the sampled page), while the caption-to-next-line y gap is about 8.6pt. Table 1's first prose line has 8 native items and no digits; table headers follow at y≈698.7 with repeated x positions. This confirms style transition plus x-band repetition is needed; item count alone cannot distinguish caption prose.
+
+### 2026-09-16 reusable caption geometry diagnostic
+
+- Added `scripts/diagnose-caption-boundaries.ts`, which prints native text item text, bbox, font, and size for selected pages. It runs against arbitrary PDFs and records no paper-specific rules. Verified successfully on the medical review PDF (pages 2, 6, 9, 13); PDF.js emitted only existing canvas polyfill warnings.
