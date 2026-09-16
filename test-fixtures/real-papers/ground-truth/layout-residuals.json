@@ -109,10 +109,12 @@
       "page": 23,
       "classification": "short-label-band",
       "text": "Simplifying by writing ZGB in terms of the capacitance CGB and frequency (ω), Vo ZLoad jωC1GB =",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: residual is a dense sequence of displayed transfer-function equations (10–14), not prose",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 3,
+      "reviewLabel": "equation",
+      "rootCause": "pdf extraction"
     },
     {
       "paper": "step-to-charge",

@@ -3084,3 +3084,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: Step-to-Charge page 22
 
 - Page 22 residual is a mixture of displayed circuit equations and Figure 7 diagram labels (`CGB`, `ZLoad`, `Rx`). Visual review labeled it `equation`, severity 3, root cause `pdf extraction`; review coverage is 16/83 (67 pending). This identifies a mixed equation/figure boundary case for later geometry work.
+
+### 2026-09-16 manual residual review: Step-to-Charge page 23
+
+- Page 23 is a dense displayed-equation sequence (transfer functions, equations 10–14). Labeled the residual `equation`, severity 3, root cause `pdf extraction`; review coverage is now 17/83 (66 pending).
