@@ -3955,3 +3955,15 @@ Regenerated `test-data/real-papers/reports/extraction-baseline-latest.json` with
 - Checkpoint note: no further threshold tuning is justified. The next evidence required for completion is manual visual labeling of the 13 generated regions in `table-region-cohort-v1.json` (true table / prose / footnote / figure / unrelated table), followed by measured precision and wrong-caption association. Until those labels exist, region count is intentionally not presented as a precision claim.
 - Rendered p14 for manual visual review. The rotated caption is explicitly “Table 6 Inter-item correlation matrix”; p14 is not Table 7. Corrected the audit ground truth again to Table 6 p14 and Table 7 unknown/empty for this fixture, then regenerated the report. This prevents false recall claims from stale inherited page labels.
 - Rendered p13 as well: it is clearly Table 5 (“Factor reliabilities for smart clothing and footwear with 15 items”), confirming the corrected ground truth. p14 is Table 6. The audit now excludes p13 from Table 6/7 continuation metrics; this is a visual-review-backed correction, not a heuristic assumption.
+
+## TableRegion visual ground truth cohort v1 (2026-09-16)
+
+13/13 generated TableRegionEvidence regions were manually compared with rendered PDF pages. The complete labels and member inventories are in `test-data/real-papers/reports/table-region-cohort-v1.json`.
+
+- A (correct table region): 11
+- F (unrelated table merge): 1 (`marketing-consumer-response.pdf` p23; Table 7 and Table 9 share one oversized region)
+- G (incomplete/oversized region): 1 (`ppg-earring.pdf` p7; component table region includes surrounding visual/prose area)
+- Visual region precision: 11/13 = 84.62% (strict A classification)
+- Wrong caption association: 2; prose contamination: 2; figure-label contamination: 1; unrelated table merge: 1; footnote contamination: 0
+
+All 13 were reviewed; this is a diagnostic ground truth, not a reason to relax thresholds. Production promotion of the current region promotion behavior is **not approved** until the two false-positive/oversized cases are addressed by a general region-boundary improvement and re-reviewed. Extraction corpus remains the separate 56/56 regression gate.
