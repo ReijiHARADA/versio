@@ -3746,3 +3746,7 @@ Added a regression fixture for numeric matrix fragments whose native text carrie
 ### 2026-09-16 extraction baseline after grid/orientation provenance
 
 Re-ran `npm run bench:pdf-extraction` after the captioned-grid and page-rotation provenance changes. The 26-paper report remains stable: title exact 0.769; heading precision 1.000, heading recall 0.993, reading-order pair 1.000, figure-caption relation 1.000, source integrity 1.000, and canonical provenance 1.000. No safety regression was observed.
+
+### 2026-09-16 full regression after rotation provenance
+
+Full Vitest completed with **61 files / 361 tests passed** after preserving native page rotation and adding low-angle matrix safety coverage. Existing PDF.js optional canvas/font warnings remain non-fatal. No translation or `.app` changes.
