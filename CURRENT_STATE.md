@@ -3710,3 +3710,7 @@ Boundary scanner findings now include the first native bbox, resolver confidence
 ### 2026-09-16 figure-marker provenance validation
 
 The saved findings now expose bbox/evidence for embedded figure markers. A representative statistical-interaction page shows a paragraph bbox at x≈108, y≈416, confidence 0.855, with `vector-figure-label-cluster` evidence; this confirms the candidate is a mixed native text/figure-label geometry case rather than a simple lexical false positive. No parser rule was added.
+
+### 2026-09-16 native image-overlap evidence
+
+Boundary findings now include maximum native image-placement overlap for figure-marker paragraphs. Corpus scan completed and parsed; no candidate had positive text/image overlap, indicating these cases require caption-adjacency and column geometry rather than an overlap-only rule. TypeScript passed.

@@ -3512,3 +3512,7 @@ Affiliation and figure-marker findings now carry native bbox, confidence, and ev
 ### 2026-09-16 figure-marker provenance validation
 
 A representative `Figure 2:` candidate now carries native bbox and evidence (`vector-figure-label-cluster`, confidence 0.855), confirming mixed text/figure-label geometry. This supports a geometry-aware fixture and avoids unsafe lexical splitting.
+
+### 2026-09-16 native image-overlap evidence
+
+Figure-marker findings now report native image-placement overlap. The corpus scan found zero positive overlaps among the candidates, ruling out an overlap-only fix and directing the next fixture toward caption adjacency and column geometry.
