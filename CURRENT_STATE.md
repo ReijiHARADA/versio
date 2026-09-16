@@ -3148,3 +3148,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: linguistics page 26
 
 - GPT legend names and heatmap numeric labels were visually confirmed as embedded Figure 18 chart content. Recorded as `figure_label`, severity 3, primary cause `pdf extraction`; no new rule was justified. Manual coverage is 38/83 (45 pending).
+
+### 2026-09-16 manual residual review: linguistics page 28
+
+- GPT model names and heatmap values were visually confirmed as embedded Figure 19 chart labels. Recorded as `figure_label`, severity 3, primary cause `pdf extraction`; no new rule was justified. Manual coverage is 39/83 (44 pending).
