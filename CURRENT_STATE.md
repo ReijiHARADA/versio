@@ -3050,3 +3050,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Full Vitest suite passes 61 files / 350 tests after the table continuation evidence experiment; `npx tsc --noEmit --pretty false` also passes.
 - No translation-server/model code or `.app` bundle was changed. Extraction goal remains active because table continuation recall is 2/7 and residual manual review is incomplete.
+
+### 2026-09-16 continuation evidence experiment (reverted)
+
+- Tried propagating table evidence from a prior-page caption to first blocks on the next page. The corpus stayed 56/56 and continuation recall stayed 2/7, while the rule could promote unrelated page-top prose. Reverted under the precision-first policy; production extraction remains at the prior committed behavior.

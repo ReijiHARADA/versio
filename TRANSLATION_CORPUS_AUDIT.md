@@ -3059,3 +3059,7 @@ Later-page candidates with high table role score may now qualify even when nativ
 ### 2026-09-16 full regression checkpoint
 
 Full Vitest passes 61 files / 350 tests and TypeScript typecheck passes after the latest extraction experiment. Table continuation remains incomplete at 2/7; this checkpoint is recorded without advancing to translation work.
+
+### 2026-09-16 continuation evidence experiment (reverted)
+
+A prior-page caption propagation rule was evaluated and reverted: it yielded no benchmark gain (continuation 2/7) and could promote unrelated page-top prose. Precision-first behavior is preserved.
