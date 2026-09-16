@@ -28,8 +28,8 @@
   ],
   "pendingPapers": [],
   "reviewedBlocks": 132,
-  "lastCheckpoint": "manual-review-linguistics44-ozchi8-2026-09-16",
-  "pendingManualReview": 13,
+  "lastCheckpoint": "manual-review-economics-pages35-37-2026-09-16",
+  "pendingManualReview": 11,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
     "measure partial source fallback inside accepted output before treating accept rate as fully translated rate",
@@ -3032,9 +3032,9 @@
     "extractionCorpus": "56/56",
     "readingOrder": "49/49",
     "tableContinuationPageRecall": "2/7",
-    "nextAction": "review economics pages 35/37 and interpreting-neural-networks pages 16-21",
+    "nextAction": "review interpreting-neural-networks pages 16-21 remaining samples",
     "fullVitest": "61 files / 350 tests",
     "typecheck": "pass",
-    "manualReviewed": "70/83"
+    "manualReviewed": "72/83"
   }
 }

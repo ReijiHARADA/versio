@@ -555,20 +555,20 @@
       "page": 35,
       "classification": "short-label-band",
       "text": "for all f ∈ F. √ Note that for any√ f ∈ F we have and | log f(x) − log f′(x)| ≤ 2|f(x) − f′(x)| since ‖f‖∞ ≥ 1/ 2. By the definition of Hellinger distance, we have",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: mathematical display continuation extracted as an isolated equation fragment; it must remain separate from prose and not be translated as a paragraph",
+      "manualRole": "equation",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "economics-regularized-deepiv",
       "page": 37,
       "classification": "short-label-band",
       "text": "g0(x|z) gˆ(x|z) ′2 1/2 h (x)] · E[2H2(ˆg(·|z) | g0(·|z))]1/2 (CS inequality) + E[ g(⋆(x|z)",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: mathematical display continuation extracted as an isolated equation fragment; it must remain separate from prose and not be translated as a paragraph",
+      "manualRole": "equation",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "medical-deep-learning-meta-review",

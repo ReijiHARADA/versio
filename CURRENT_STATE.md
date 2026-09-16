@@ -3241,3 +3241,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 manual residual review: linguistics page 44 and OzCHI page 8
 
 - Linguistics model/configuration streams and OzCHI interaction-label streams were classified as `figure_label`, severity 3, primary cause `pdf extraction`; manual coverage is 70/83 (13 pending).
+
+### 2026-09-16 manual residual review: economics pages 35 and 37
+
+- Both isolated mathematical continuation streams were confirmed as display-equation fragments. Recorded as `equation`, severity 3, primary cause `pdf extraction`; they must not be sent as ordinary paragraph text. Manual coverage is 72/83 (11 pending).
