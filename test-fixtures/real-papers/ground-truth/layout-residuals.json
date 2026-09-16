@@ -537,10 +537,10 @@
       "page": 6,
       "classification": "short-label-band",
       "text": "– Toxicity of chemicals; ex- – Pulmonary nodule diagnosis; – Physiological signals; in- – DNA sequencing; – Radiotherapy; – Ophthalmology; the – Electronic health records; – Bioinformatics; – Personalized medicine; – 1-D biosignals; – Omics",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: native page shows a 14-item dash list; extraction flattened items into one block",
+      "manualRole": "list_item",
+      "reviewStatus": "reviewed",
+      "severity": 2
     },
     {
       "paper": "medical-deep-learning-meta-review",

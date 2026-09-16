@@ -2983,3 +2983,7 @@ The extraction corpus was re-run after restoring the residual fixture: 56/56 tes
 ### 2026-09-16 extraction-goal checkpoint
 
 Extraction work remains ahead of translation work. The current native-PDF regression baseline is green (56/56 extraction tests, 48/48 reading-order tests, build/typecheck/lint passing), while residual layout review is incomplete (83 samples, 80 pending). Translation-server changes remain intentionally paused until extraction boundaries and table/list residuals are resolved.
+
+### 2026-09-16 extraction residual review update
+
+The medical meta-review page 6 short-label residual was visually confirmed as a real dash list (14 items) flattened by native stream extraction. It is labeled `list_item`, severity 2 in the residual fixture. This is an extraction boundary issue, not a translation-model issue; the generic projection splitter remains covered by existing tests.
