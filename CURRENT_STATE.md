@@ -3782,3 +3782,7 @@ Re-ran the non-mutating corpus diagnostic against 26 cached papers (497 pages, 1
 ### 2026-09-16 extraction quality gates revalidated
 
 Parallel verification completed successfully: extraction corpus **56/56**, TypeScript no-emit, and `npm run lint -- --deny-warnings` all passed. PDF.js native parsing warnings remain non-fatal. This establishes a green baseline before any orientation-aware fixture change; translation-server and `.app` remain untouched.
+
+### 2026-09-16 extraction web build revalidation
+
+`npm run build` passed (`tsc -b` plus Vite, 2147 modules). Only existing ineffective dynamic-import warnings were emitted. No `.app` build was run; translation-server remains unchanged.
