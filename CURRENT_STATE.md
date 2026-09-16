@@ -3237,3 +3237,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 manual residual review: covid ML page 11
 
 - The model-name/reference/metric stream is visually confirmed as Table 9 cell content, not body prose. Recorded as `table_row`, severity 3, primary cause `line grouping`; manual coverage is 68/83 (15 pending).
+
+### 2026-09-16 manual residual review: linguistics page 44 and OzCHI page 8
+
+- Linguistics model/configuration streams and OzCHI interaction-label streams were classified as `figure_label`, severity 3, primary cause `pdf extraction`; manual coverage is 70/83 (13 pending).

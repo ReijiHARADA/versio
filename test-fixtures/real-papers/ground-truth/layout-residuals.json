@@ -505,20 +505,20 @@
       "page": 44,
       "classification": "image-overlap",
       "text": "cfg3f cfg3g cfg3h cfg8e cfg9e cfg3f cfg3g cfg3h cfg8e cfg9e GPT (8head,1024dim) GPT (8head,1024dim) GPT_uni (8head,1024dim) GPT_uni (8head,1024dim) GPT (8head,936dim) GPT (8head,936dim) GPT (12head,936dim) GPT (12head,936dim) GPT_uni (8head",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: configuration/model-name streams are labels embedded in a figure, not prose",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "ozchi-finger-specific-touch",
       "page": 8,
       "classification": "short-label-band",
       "text": "Finger Phonebook Gallery Thumb Call tapped contact Show sharing context menu (email, sms, etc.) Finger1 Open tapped contacts Edit image contact card Finger2 upOpen “open apps” pop- Open “open apps” pop-up",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: Finger/Phonebook/Gallery/Thumb/Call streams are labels embedded in a figure interaction diagram, not prose",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "education-learning-analytics",
