@@ -2978,3 +2978,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 residual review schema
 
 - Extended the 83-sample residual fixture with `manualRole`, `reviewStatus`, and `severity`. All entries are currently `pending` and must be manually labeled before precision or unsafe-false-accept metrics are reported.
+
+### 2026-09-16 extraction revalidation
+
+- Re-ran `npm run test:extraction-corpus -- --run` and `npm run bench:pdf-extraction` after the review-schema checkpoint. The real-paper suites remain green (27 reading-order + 29 baseline), and the 26-paper benchmark regenerated successfully with source integrity and canonical provenance at 1.0.

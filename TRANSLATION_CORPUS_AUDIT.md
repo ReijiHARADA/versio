@@ -2945,3 +2945,5 @@ Added an 83-sample metadata-only fixture for image-overlap and short-label-band 
 ### 2026-09-16 residual review schema
 
 The residual fixture now carries `manualRole`, `reviewStatus`, and `severity` per sample. All 83 samples remain `pending`; pending samples are excluded from precision and unsafe-false-accept metrics until manual review is complete.
+
+The extraction corpus and 26-paper benchmark were re-run after this schema change; reading-order/baseline suites remain green and source-integrity/canonical-provenance metrics remain 1.0.
