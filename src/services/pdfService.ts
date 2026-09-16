@@ -34,6 +34,8 @@ export type ExtractedPage = {
   pageNumber: number;
   width: number;
   height: number;
+  /** Native PDF page rotation in degrees, preserved for geometry resolvers. */
+  rotation?: number;
   textItems: ExtractedTextItem[];
   imagePlacements?: PdfImagePlacement[];
 };
@@ -100,6 +102,7 @@ export async function extractPDFContent(
       pageNumber: pageNum,
       width: viewport.width,
       height: viewport.height,
+      rotation: typeof page.rotate === "number" ? page.rotate : undefined,
       textItems,
       imagePlacements: collectImagePlacements(await page.getOperatorList(), viewport.height),
     });

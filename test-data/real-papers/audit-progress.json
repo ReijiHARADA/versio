@@ -3059,6 +3059,6 @@
     "nextAction": "Add and validate a general affiliation/body boundary fixture; then review table/list residuals.",
     "latestCommit": "f695d44"
   },
-  "nextAction": "Implement orientation-aware table evidence only after a native page-transform fixture; continue arXiv/PMLR column/caption review.",
+  "nextAction": "Use preserved page rotation plus native item transforms to build orientation-aware table/footnote fixture; then review arXiv/PMLR residuals.",
   "lastUpdate": "2026-09-16"
 }

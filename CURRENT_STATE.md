@@ -3738,3 +3738,7 @@ Native probe of `wear-scale.pdf` page 14 confirms the remaining Table 6 issue is
 ### 2026-09-16 low-angle matrix safety fixture
 
 Added a regression fixture for numeric matrix fragments whose native text carries only small (0–15°) rotation values. The test asserts these fragments cannot become headings through style/number heuristics, preserving precision-first fallback while orientation-aware table evidence remains unresolved. Pipeline: 22/22; TypeScript passed.
+
+### 2026-09-16 native page rotation provenance
+
+`ExtractedPage` now preserves the PDF page's native rotation metadata (`page.rotate`) without changing existing viewport/text coordinates. This is the required provenance input for a future orientation-aware table/footnote resolver; the wear-scale page itself reports 0°, so no unsafe role promotion was made. Reading-order suite: 54/54; TypeScript passed.
