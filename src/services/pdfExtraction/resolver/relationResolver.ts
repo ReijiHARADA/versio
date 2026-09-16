@@ -270,7 +270,11 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
                 // inside a caption-adjacent region; ordinary prose remains
                 // protected by the sentence and proximity checks above.
                 (/^[•‣▪∙–—-]\s*\S/.test(text) && text.length <= 180));
-            return row && ((candidate.roleScores.table ?? 0) >= 0.78 || compactCellRow);
+            const highConfidenceContinuationRow = laterPageContinuation &&
+              (candidate.roleScores.table ?? 0) >= 0.78 &&
+              candidate.layoutBlock.lines.length <= 3;
+            return (row || highConfidenceContinuationRow) &&
+              ((candidate.roleScores.table ?? 0) >= 0.78 || compactCellRow);
           })
         : [];
       const memberBoxes = regionMembers.flatMap((member) => member.boundingBoxes);
