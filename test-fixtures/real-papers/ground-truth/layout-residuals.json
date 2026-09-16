@@ -335,20 +335,20 @@
       "page": 13,
       "classification": "short-label-band",
       "text": "𝐷𝑃(0,𝑗,𝟏𝟖) 𝐷𝑃(𝑖, 𝑗, 𝑎) = whether symbol 𝑎 𝐷𝑃(0,𝑖1,𝟏𝟑) 𝐷𝑃(𝑖1,𝑗,𝟏𝟓) can generate 𝑥𝑖+1 … 𝑥𝑗",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: displayed DP formulas are embedded Figure 10 labels/diagram content; not body equations",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 13,
       "classification": "short-label-band",
       "text": "𝐷𝑃2 𝑡,15 = 𝐷𝑃 0,𝑖1,𝟏𝟑 𝐷𝑃(𝑖1,𝑖2,𝟏𝟎) 𝐷𝑃2(𝑗, 𝑎) = whether symbol 𝑎 𝐷𝑃2(𝑡,𝟏𝟎) 𝐷𝑃(𝑖2,𝑗,𝟖) can follow sequence 𝑥1 … 𝑥𝑗 𝐷𝑃2(𝑡,𝟗)",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: displayed DP formulas are embedded Figure 10 labels/diagram content; not body equations",
+      "manualRole": "figure_label",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",

@@ -3135,3 +3135,7 @@ Page 12 visual review classified four heatmap label streams as embedded `figure_
 ### 2026-09-16 extraction benchmark checkpoint
 
 `npm run bench:pdf-extraction` completed after the latest manual review. The generated report remains ignored; tracked baseline is unchanged (56/56 extraction corpus, 49/49 reading order, source integrity and canonical provenance 1.0, medical table-region recall 4/7, continuation page recall 2/7). No new algorithm change was justified by page 12.
+
+### 2026-09-16 manual residual review: linguistics page 13
+
+The two DP-formula residual candidates are embedded Figure 10 diagram labels, not standalone equations. They are recorded as `figure_label` severity 3; no new extraction rule was added. Coverage: 35/83, 48 pending.

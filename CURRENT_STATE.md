@@ -3132,3 +3132,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Re-ran `npm run bench:pdf-extraction` after the page-12 review; the benchmark completed and regenerated `test-data/real-papers/reports/extraction-baseline-latest.json` (ignored generated output).
 - Existing measured baseline remains: extraction corpus 56/56, reading order 49/49, source integrity 1.0, canonical provenance 1.0, medical table-region recall 4/7, table-continuation page recall 2/7. No translation or `.app` work was performed.
+
+### 2026-09-16 manual residual review: linguistics page 13
+
+- Two short-label candidates containing DP formulas were visually confirmed as labels inside Figure 10, not standalone body equations. Both are recorded as `figure_label`, severity 3, primary cause `pdf extraction`; no equation rule change was justified. Manual coverage is now 35/83 (48 pending).
