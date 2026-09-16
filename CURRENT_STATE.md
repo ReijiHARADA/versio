@@ -3023,3 +3023,9 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 - Added explicit ground truth for multi-page tables: Table 6 spans pages 7–11 and Table 7 spans pages 13–14. This makes the current 4/7 table-region recall gap measurable without adding the PDF to the repository.
 - Added `tableContinuationPageRecall` benchmark support for explicit multi-page table ground truth. Current medical case scores 0 because synthetic/structured table region nodes carry no table label text and only caption relations identify them; this exposes the missing caption-to-region identity/provenance needed for multi-page evaluation.
 - Added Canonical synthetic-region provenance: table regions now retain a non-rendered `structuralLabel`, all member native bounding boxes, and the maximum member `pageEnd`. Benchmark now measures medical multi-page table continuation recall at 1/7 (0.143), up from 0; source integrity and canonical provenance remain 1.0. Remaining pages need multi-page member collection beyond the current constrained window.
+
+### 2026-09-16 extraction checkpoint (paused)
+
+- Added a Canonical regression proving synthetic table regions preserve a non-rendered caption identity (`structuralLabel`), bounding-box provenance, and `text: null` so the table label is not projected as duplicate reader text.
+- `src/test/pdfExtraction/pipeline.test.ts` passes 16/16; the broader extraction suite remains 56/56 and focused reading-order coverage remains 49/49.
+- Work is paused at this clean extraction milestone. Translation-server changes and `.app` build remain intentionally out of scope.

@@ -3039,3 +3039,7 @@ The extraction benchmark now reports `tableContinuationPageRecall` when ground t
 ### 2026-09-16 table region provenance
 
 Canonical synthetic table regions now preserve caption identity via non-rendered `structuralLabel`, member bboxes, and page span. The medical continuation metric improved from 0 to 1/7 (0.143) without changing reader text projection. Extraction tests and typecheck pass; remaining multi-page rows require broader but bounded region collection.
+
+### 2026-09-16 extraction pause checkpoint
+
+Added a stable synthetic regression for table-region identity: caption labels remain available as Canonical `structuralLabel`, member geometry is retained, and synthetic regions keep `text: null` to prevent duplicate reader text. Pipeline tests pass 16/16, extraction corpus 56/56, and focused reading-order tests 49/49. The remaining multi-page table gap is unchanged (continuation recall 1/7); translation work remains paused until extraction residual review continues.

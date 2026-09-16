@@ -194,6 +194,21 @@ describe("canonical extraction pipeline", () => {
     expect(region?.boundingBoxes[0]?.y).toBeGreaterThan(130);
   });
 
+  it("preserves table identity without projecting synthetic region text", () => {
+    const result = extractFromPages({
+      pages: [{ pageNumber: 1, width: 500, height: 700, textItems: [
+        { text: "Table 9", x: 80, y: 100, width: 45, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+        { text: "Summary of methods", x: 130, y: 100, width: 120, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 },
+        ...["A 1", "B 2", "C 3"].flatMap((text, i) => text.split(" ").map((part, j) => ({ text: part, x: 80 + j * 100, y: 125 + i * 14, width: 30, height: 8, fontSize: 8, fontName: "Helvetica", page: 1 }))),
+      ] }],
+      paperId: "table-identity", filePath: "/tmp/table-identity.pdf", fileHash: "table-identity", metadata: { pageCount: 1 },
+    });
+    const region = result.canonical.nodes.find((node) => node.role === "table" && node.structuralLabel?.startsWith("Table 9"));
+    expect(region?.text ?? null).toBeNull();
+    expect(region?.structuralLabel).toContain("Table 9");
+    expect(region?.boundingBoxes.length).toBeGreaterThan(0);
+  });
+
   it("marks standalone bullet blocks as list items", () => {
     const result = extractFromPages({
       pages: [{ pageNumber: 1, width: 500, height: 700, textItems: [
