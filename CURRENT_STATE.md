@@ -3527,3 +3527,8 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - The earlier heading output came from pre-resolver layout inspection, not final CanonicalDocument. No additional percent-specific rule was retained.
 - End-to-end speechin probe after numeric-row guard confirms the two previously heading-promoted summary rows now resolve as table nodes; the larger six-column native grid remains paragraphized and is still unresolved.
 - Latest lint and TypeScript revalidation after speechin analysis: both pass; no source changes in this iteration.
+
+### 2026-09-16 停止チェックポイント
+- ユーザー指示により、ここで作業を停止。実行中の監査・ベンチマークプロセスはなく、作業ツリーもクリーン。
+- 直近の実装は numeric multi-item row の heading 誤昇格ガードまで。extraction corpus 56/56、全 Vitest 61 files / 354 tests、lint、TypeScript が成功。
+- 次回は speechin Table 1 の安定した六列グリッドが最終 CanonicalDocument で paragraph 化される原因を、candidate → resolver → projection の provenance で特定するところから再開する。翻訳サーバーや .app の作業には進まない。
