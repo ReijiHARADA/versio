@@ -2913,3 +2913,7 @@ A generic caption-proximate compact-row rule now preserves one-line native table
 ### 2026-09-16 residual classification checkpoint
 
 The corpus diagnostic now records evidence-based residual classes. Across 149 suspicious wide multi-x blocks: 28 overlap an image region, 15 are numeric grids, 55 are short-label bands, and 51 are mixed layouts. This supports targeted geometry experiments while keeping the production resolver unchanged until precision is demonstrated.
+
+### 2026-09-16 build verification
+
+`npm run build` passes with the extraction pipeline and residual diagnostics changes. Warnings are pre-existing Vite chunk/dynamic-import and pdfjs eval notices; no `.app` build was requested.

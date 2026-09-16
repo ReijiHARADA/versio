@@ -2945,3 +2945,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Extended `diagnose-corpus-layout` with evidence-based categories for suspicious wide multi-x paragraph blocks: image-overlap, numeric-grid, short-label-band, and mixed-layout. Re-running the 26-paper/497-page corpus yields 149 diagnostic candidates: 28 image-overlap, 15 numeric-grid, 55 short-label-band, and 51 mixed-layout.
 - These are diagnostic labels only; no production relabeling was applied. The distribution confirms that most residuals are short/vector labels or mixed figure layouts, so a global exclusion would be unsafe.
+
+### 2026-09-16 extraction build checkpoint
+
+- Production web build completed after the extraction changes (`npm run build`). TypeScript and Vite succeeded; only existing chunk-size, direct-eval, and ineffective dynamic-import warnings remain. No Tauri `.app` bundle was produced.
