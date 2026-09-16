@@ -3031,3 +3031,7 @@ Added a constrained resolver path for table candidates on the next page when a c
 ### 2026-09-16 multi-page table ground truth
 
 The medical ground-truth fixture now records `Table 6` as spanning pages 7–11 and `Table 7` as spanning pages 13–14. This documents the confirmed failure shape and prevents a one-page continuation heuristic from being mistaken for complete table support.
+
+### 2026-09-16 multi-page table metric
+
+The extraction benchmark now reports `tableContinuationPageRecall` when ground truth supplies continuation pages. The medical Table 6/7 case currently scores 0, accurately reflecting that region nodes lack caption identity and page-span provenance; this is diagnostic infrastructure, not a quality-gate change.

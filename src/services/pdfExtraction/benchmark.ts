@@ -31,6 +31,7 @@ export type PartialGroundTruth = {
   figureCaptions?: string[];
   tableCaptions?: string[];
   tableRegions?: string[];
+  tableContinuationPages?: Record<string, number[]>;
   listItems?: string[];
   authorAffiliation?: Array<{ from: string; to: string }>;
   headingHierarchy?: Array<{ from: string; to: string }>;
@@ -60,6 +61,7 @@ export type BaselinePaperReport = {
     tableCaptionRecall?: number;
     tableRegionRecall?: number;
     tableRegionPrecision?: number;
+    tableContinuationPageRecall?: number;
     listItemRecall?: number;
     listItemPrecision?: number;
     figureCaptionRelation?: number;
@@ -237,6 +239,18 @@ export function evaluateBaselinePaper(input: {
       : undefined,
     tableRegionPrecision: gold?.completeAnnotations && gold.tableRegions
       ? substringPrecision(structuredTableCaptions, gold.tableRegions)
+      : undefined,
+    tableContinuationPageRecall: gold?.tableContinuationPages
+      ? (() => {
+          const expected = Object.entries(gold.tableContinuationPages).flatMap(([label, pages]) => pages.map((page) => ({ label, page })));
+          if (expected.length === 0) return undefined;
+          const regions = extracted.canonical.nodes.filter((node) => node.role === "table");
+          const hits = expected.filter(({ label, page }) => regions.some((region) =>
+            (region.text ?? "").toLowerCase().includes(label.toLowerCase()) &&
+            region.pageStart <= page && region.pageEnd >= page
+          )).length;
+          return hits / expected.length;
+        })()
       : undefined,
     tableCaptionRelationRecall:
       gold?.tableCaptions && gold.tableCaptions.length > 0
