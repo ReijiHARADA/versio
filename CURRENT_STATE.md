@@ -3303,3 +3303,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 frontend build verification
 
 - `npm run build` passed (TypeScript project build and Vite production bundle). No `.app` build was performed.
+
+### 2026-09-16 benchmark refresh
+
+- `npm run bench:pdf-extraction` passed. The medical meta-review report remains at table-region recall 0.571, continuation-page recall 0.286, source integrity 1.00, and figure-caption relation 1.00. No translation code changed.
