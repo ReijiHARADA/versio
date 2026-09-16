@@ -3567,3 +3567,4 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - 近傍 caption と短い記号・大文字ラベルの局所クラスタを evidence として `other` に抑制する一般則を追加。
 - 対象条件は 40文字以下、2語以上、文末句読点なし、同ページ caption 260pt以内、近傍ラベル3件以上に限定。
 - step-to-charge/speechin regression と extraction corpus は 56/56 passed。既存の通常見出し誤分類は確認されていない。今後 full Vitest と baseline metrics を再確認する。
+- full Vitest は **61 files / 355 tests passed**。Resolver の局所クラスタ抑制による既存回帰は確認されていない。
