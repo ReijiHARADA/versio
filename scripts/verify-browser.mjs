@@ -266,8 +266,10 @@ try {
   await page.getByRole("link", { name: "設定" }).click();
   await check("settings reading preview", async () => {
     await page.getByRole("button", { name: "読書", exact: true }).click();
-    await page.getByLabel("本文プレビュー").waitFor({ timeout: 10_000 });
-    await page.getByText("ライブプレビュー").first().waitFor();
+    const preview = page.getByLabel("本文プレビュー");
+    await preview.waitFor({ timeout: 10_000 });
+    // Fixture body from ReadingPreview — confirms the live Reader surface rendered.
+    await preview.getByText("注意機構があれば十分である").waitFor({ timeout: 5_000 });
   });
   await shot("settings-reading");
 

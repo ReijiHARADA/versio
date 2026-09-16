@@ -211,10 +211,7 @@ pub fn acceptance_fixture_path() -> Option<String> {
 /// Opt-in UI E2E: Accessibility-driven harness (not service-call acceptance).
 #[tauri::command]
 pub fn ui_e2e_enabled() -> bool {
-    match std::env::var("PAPER_READER_UI_E2E") {
-        Ok(v) if v == "1" || v.eq_ignore_ascii_case("true") => true,
-        _ => false,
-    }
+    matches!(std::env::var("PAPER_READER_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true"))
 }
 
 /// Fixture PDF path for UI E2E import (separate from service-call acceptance).

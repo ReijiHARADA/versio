@@ -130,10 +130,7 @@ fn resolve_export_destination(
 ) -> Result<Option<PathBuf>, String> {
     if crate::source_pdf::ui_e2e_enabled() {
         let root = app.path().app_data_dir().map_err(|e| e.to_string())?;
-        let safe = default_name
-            .replace('/', "_")
-            .replace('\\', "_")
-            .replace("..", "_");
+        let safe = default_name.replace(['/', '\\'], "_").replace("..", "_");
         if safe.is_empty() {
             return Err("無効なファイル名です".into());
         }
@@ -229,7 +226,9 @@ pub fn import_directory_to_app(
     }
     // Require backup.json at the root of the selection
     if !source.join("backup.json").is_file() {
-        return Err("backup.json が見つかりません。Paper Reader Backup フォルダを選んでください".into());
+        return Err(
+            "backup.json が見つかりません。Paper Reader Backup フォルダを選んでください".into(),
+        );
     }
     if dest.exists() {
         fs::remove_dir_all(&dest).map_err(|e| e.to_string())?;
