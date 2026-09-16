@@ -3459,3 +3459,7 @@ Verification correction (2026-09-16): the broad candidate prose-shape suppressio
 ### Structural-grid precision experiment (2026-09-16)
 
 Tested requiring repeated x columns across at least three native lines for the strong structural-grid score. Existing extraction tests and OzCHI recall remained green, but the manually observed long prose candidates were produced by the separate `proseGrid` path and were unchanged. Reverted this no-benefit candidate change; next work should improve `proseGrid` using row-level geometry rather than broad word-count suppression.
+
+### proseGrid x-origin guard (2026-09-16)
+
+A further geometry check requires proseGrid candidates to contain at least two distinct line-origin bands in addition to indented rows. This removes the page-8 results prose candidate in manual OzCHI inspection while preserving expected table regions and all extraction tests. A page-9 bullet/table-like stream remains under review because its native item geometry is more ambiguous.

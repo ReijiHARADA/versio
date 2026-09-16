@@ -282,11 +282,12 @@ function tableLike(block: LayoutBlock): boolean {
   // distinct cell-column indent.
   const xPositions = lines.map((line) => line.bbox.x);
   const left = Math.min(...xPositions);
+  const distinctLineOrigins = new Set(xPositions.map((x) => Math.round(x / 12))).size;
   const indentedRows = lines.filter((line) => line.bbox.x - left >= 36).length;
   const proseGrid =
     cellLines.length >= 4 &&
     cellLines.length / lines.length >= 0.45 &&
-    indentedRows >= 2;
+    indentedRows >= 2 && distinctLineOrigins >= 2;
   return itemGrid || proseGrid || flattenedGrid;
 }
 

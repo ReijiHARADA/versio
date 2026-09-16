@@ -3368,3 +3368,7 @@ Verification correction (2026-09-16): broad candidate prose suppression was reve
 ### Structural-grid precision experiment (2026-09-16)
 
 A repeated-x-across-three-lines condition was tested for structural-grid evidence. It preserved tests and OzCHI recall but did not affect the remaining long-prose false positives, which come through the separate `proseGrid` path. Reverted due to no measured benefit; follow-up should target row-level geometry in `proseGrid`.
+
+### proseGrid x-origin guard (2026-09-16)
+
+Added a distinct line-origin requirement to proseGrid evidence. It removes the page-8 results prose candidate in the OzCHI manual output without changing expected table regions or extraction tests. One page-9 bullet/table-like stream remains ambiguous and is intentionally not suppressed without stronger native evidence.
