@@ -3662,3 +3662,7 @@ After the native duplicate-span guard and caption-content assertion: targeted pi
 ### 2026-09-16 reading-order safety recheck
 
 The duplicate native-span guard was rechecked against the full reading-order fixture suite: **53/53 passed**. No ordering, affiliation, caption, or list regression was observed.
+
+### 2026-09-16 corpus diagnostic after duplicate-span guard
+
+Non-mutating diagnostic regenerated: 26 papers / 497 pages / 149 suspicious blocks, unchanged from the prior baseline (arXiv 136, PMLR 6, Elsevier 4, OzCHI 2, IEEE 1). The guard addresses text-layer duplication rather than vector-label/table geometry, so no metric regression was observed.

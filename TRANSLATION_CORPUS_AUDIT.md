@@ -3464,3 +3464,7 @@ The native duplicate-span guard is verified by pipeline (19/19) and extraction c
 ### 2026-09-16 reading-order safety recheck
 
 Full reading-order fixtures remain green (**53/53**) after the coincident native-span cleanup. This confirms the guard does not alter column ordering or affiliation/list boundaries.
+
+### 2026-09-16 corpus diagnostic after duplicate-span guard
+
+The non-mutating corpus diagnostic remains 26 papers, 497 pages, and 149 suspicious blocks (arXiv 136; PMLR 6; Elsevier 4; OzCHI 2; IEEE 1). Stable counts are expected because remaining candidates are primarily vector-label and mixed-layout geometry cases.
