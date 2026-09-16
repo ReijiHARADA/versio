@@ -271,6 +271,7 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
               Math.abs(candidateBox.x - box.x) < 180;
             if (!samePage && !nextPageContinuation && !laterPageContinuation) return false;
             if (candidate !== caption && candidate.layoutBlock.role === "table_caption") return false;
+            if (["heading", "title", "footnote", "copyright", "author", "affiliation"].includes(candidate.layoutBlock.role)) return false;
             if (samePage && nextSamePageCaptionY < Infinity && candidateBox.y < box.y) return false;
             if (samePage && nextSamePageCaptionY < Infinity && candidateBox.y >= nextSamePageCaptionY) return false;
             const aboveCaption = samePage && candidateBox.y < box.y && box.y - (candidateBox.y + candidateBox.height) < 280;

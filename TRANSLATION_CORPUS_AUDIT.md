@@ -34,6 +34,10 @@ tests remain 56/56; continuation-page recall is unchanged at 0.571.
 Long sentence-shaped candidates ending in punctuation are now excluded from
 table-row evidence, preventing prose from entering a table region. Tests remain
 56/56 and no translation code was changed.
+Region members with roles that cannot be table rows (heading, title, footnote,
+chrome, author, affiliation) are also excluded while native table headers stay
+eligible. The medical diagnostic no longer links the section heading to Tables
+2/3; extraction tests remain 56/56.
 When multiple table captions share a page, same-page row candidates are now
 bounded to the interval after the current caption and before the next one;
 focused diagnostics show Table 1 no longer cross-links adjacent tables.

@@ -3323,6 +3323,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - Same-page caption boundary validation: candidates are limited to the vertical interval after the current caption and before the next one when multiple captions share a page; corpus tests remain 56/56.
 - Build validation caught and fixed a diagnostic-only type error (`LayoutLine` has no `fontName`; use the first native item's font). `npm run build` now passes.
 - Full suite validation: `npm test -- --run` passes with 61 files / 350 tests after the table-region boundary changes.
+- Table-region candidate roles are now filtered to exclude heading/title/footnote/chrome/author/affiliation blocks while retaining table headers. Focused medical diagnostics no longer attach the page-6 section heading to Table 2/3; extraction corpus remains 56/56.
 - Tightened table-row evidence to reject long sentence-shaped candidates ending in punctuation. Table 1's `Research questions...` prose is no longer a region member; recall remains 1.000/0.571 and corpus tests remain 56/56.
 - Follow-up validation: `npx tsc --noEmit --pretty false` and `npm run lint -- --deny-warnings` both pass after the table-row evidence change.
 - Same-page caption boundary validation: candidates are now limited to the vertical interval after the current caption and before the next caption when multiple captions share a page. Corpus tests remain 56/56 and typecheck passes; focused diagnostics show Table 1 no longer cross-links prior/following tables.
