@@ -3434,3 +3434,4 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - 2026-09-16: evaluated flattened-row geometry evidence (single-item lines with repeated x bands and regular y gaps) for table detection; corpus/extraction remained 56/56 but OzCHI table-region recall stayed 0.800, so the unproductive heuristic was reverted.
 - 2026-09-16: evaluated allowing high-confidence multi-line table candidates into region membership; OzCHI table-region recall stayed 0.800, so the change was reverted to preserve precision.
 - 2026-09-16: evaluated flattened-grid evidence plus resolver membership for one-item-per-row tables; OzCHI region recall remained 0.800, so both changes were reverted after no measurable gain.
+- 2026-09-16: tested raising regular flattened-grid table evidence to resolver-eligible confidence; OzCHI recall remained 0.800, so no production change retained.

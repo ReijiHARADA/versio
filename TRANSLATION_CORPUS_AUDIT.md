@@ -3341,3 +3341,6 @@ Table 3のようなnative抽出（各行item 1個、x帯反復）を対象にfla
 
 ### 2026-09-16 flattened grid region評価
 各visual rowがnative item 1個に平坦化される表向けに、x帯反復とresolverのmulti-line membershipを組み合わせた実験を行った。既存回帰56/56は維持したが、OzCHI table-region recallは0.800のままで改善しなかったため撤回した。
+
+### 2026-09-16 flattened-grid confidence評価
+regular flattened-grid evidenceをresolver閾値以上へ引き上げる実験を行ったが、OzCHI table-region recallは0.800のままで効果なし。実装は撤回した。
