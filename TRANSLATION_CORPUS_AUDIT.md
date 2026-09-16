@@ -3083,3 +3083,7 @@ Visual review confirmed the residual belongs to Table 3 cell rows. It is labeled
 ### 2026-09-16 manual residual review: Step-to-Charge page 16
 
 Figure 5's highlighted table row and chart/device labels were confirmed visually as embedded figure content. They are labeled `table_row` and `figure_label` (severity 3); review coverage is 14/83 with 69 pending.
+
+### 2026-09-16 manual residual review: Step-to-Charge page 18
+
+Rendered review confirmed the electrical labels belong to Figure 6 panels, not body text. Recorded as `figure_label`, severity 3, with PDF extraction as the primary cause; review coverage is 15/83 (68 pending).

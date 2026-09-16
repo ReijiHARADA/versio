@@ -85,10 +85,12 @@
       "page": 18,
       "classification": "short-label-band",
       "text": "Rx. VIN CGB CB Cret",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: Rx/VIN/CGB labels are embedded in Figure 6 experimental setup panels",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 3,
+      "reviewLabel": "figure_label",
+      "rootCause": "pdf extraction"
     },
     {
       "paper": "step-to-charge",

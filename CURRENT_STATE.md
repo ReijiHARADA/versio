@@ -3076,3 +3076,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: Step-to-Charge page 16
 
 - Rendered page 16 and confirmed the two residuals are embedded Figure 5 content: one is the highlighted “This Work” table row and the other is chart/device labels. Labeled them `table_row` and `figure_label`, both severity 3, root cause `pdf extraction`. Review coverage is now 14/83 (69 pending).
+
+### 2026-09-16 manual residual review: Step-to-Charge page 18
+
+- Figure 6's `Rx`, `VIN`, `CGB`, `CB`, and `Cret` residual is embedded experimental-setup annotation, confirmed by rendered PDF. Labeled `figure_label`, severity 3, root cause `pdf extraction`; manual review is now 15/83 (68 pending).
