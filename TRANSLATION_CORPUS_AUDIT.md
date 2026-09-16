@@ -2909,3 +2909,7 @@ Full application regression after the current extraction changes: **61 files / 3
 ### 2026-09-16 extraction follow-up: compact table rows
 
 A generic caption-proximate compact-row rule now preserves one-line native table rows with multiple cells as canonical `table` blocks. The SpeeChin Table 1 row `SpeeChin One camera Necklace UD, SI` is now projected as a skipped table block instead of a translatable paragraph. This keeps native table content out of the translation queue without paper-specific matching. Real-paper baseline: 29/29; extraction corpus: 56/56.
+
+### 2026-09-16 residual classification checkpoint
+
+The corpus diagnostic now records evidence-based residual classes. Across 149 suspicious wide multi-x blocks: 28 overlap an image region, 15 are numeric grids, 55 are short-label bands, and 51 are mixed layouts. This supports targeted geometry experiments while keeping the production resolver unchanged until precision is demonstrated.

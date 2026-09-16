@@ -2940,3 +2940,8 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 
 - Added generic, caption-proximate compact-row evidence for one-line native rows with at least three cells, no sentence punctuation, and at most ten words. The existing resolver now promotes the SpeeChin row `SpeeChin One camera Necklace UD, SI` to a high-confidence table, and projection marks it `skipped` so it is not sent to translation.
 - This is geometry/caption evidence rather than a paper-specific string rule. The real-paper baseline passes 29/29, with the extraction corpus remaining 56/56; no translation-server or `.app` changes were made.
+
+### 2026-09-16 residual extraction classification
+
+- Extended `diagnose-corpus-layout` with evidence-based categories for suspicious wide multi-x paragraph blocks: image-overlap, numeric-grid, short-label-band, and mixed-layout. Re-running the 26-paper/497-page corpus yields 149 diagnostic candidates: 28 image-overlap, 15 numeric-grid, 55 short-label-band, and 51 mixed-layout.
+- These are diagnostic labels only; no production relabeling was applied. The distribution confirms that most residuals are short/vector labels or mixed figure layouts, so a global exclusion would be unsafe.

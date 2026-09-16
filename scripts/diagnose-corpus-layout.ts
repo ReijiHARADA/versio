@@ -6,7 +6,8 @@ import { reconstructDocument } from "../src/services/pdfLayout";
 const root = path.resolve(".");
 const catalog = JSON.parse(fs.readFileSync(path.join(root, "test-fixtures/real-papers/catalog.json"), "utf8"));
 const pdfDir = path.join(root, catalog.pdfDir);
-const reports = [] as Array<{ id: string; formatFamily?: string; pages: number; suspiciousBlocks: number; samples: Array<{ page: number; xClusters: number[]; xSpread: number; typicalLineWidth: number; bboxWidth: number; columns: string[]; text: string; imageOverlap: number; numericRatio: number; shortTokenRatio: number }> }>;
+type SuspiciousClass = "image-overlap" | "numeric-grid" | "short-label-band" | "mixed-layout";
+const reports = [] as Array<{ id: string; formatFamily?: string; pages: number; suspiciousBlocks: number; classCounts: Record<SuspiciousClass, number>; samples: Array<{ page: number; classification: SuspiciousClass; xClusters: number[]; xSpread: number; typicalLineWidth: number; bboxWidth: number; columns: string[]; text: string; imageOverlap: number; numericRatio: number; shortTokenRatio: number }> }>;
 for (const paper of catalog.papers) {
   const pdfPath = path.join(pdfDir, paper.filename);
   if (!fs.existsSync(pdfPath)) continue;
@@ -25,27 +26,45 @@ for (const paper of catalog.papers) {
     }
     return block.bbox.width >= typical * 1.65 && clusters >= 2;
   });
-  reports.push({
-    id: paper.id,
-    formatFamily: paper.formatFamily,
-    pages: pages.length,
-    suspiciousBlocks: suspicious.length,
-    samples: suspicious.map((block) => ({
+  const samples = suspicious.map((block) => {
+    const imageOverlap = Math.max(...(pages[block.pageStart - 1]?.imagePlacements ?? []).map((image) => {
+      const x = Math.max(0, Math.min(block.bbox.x + block.bbox.width, image.x + image.width) - Math.max(block.bbox.x, image.x));
+      const y = Math.max(0, Math.min(block.bbox.y + block.bbox.height, image.y + image.height) - Math.max(block.bbox.y, image.y));
+      return (x * y) / Math.max(1, block.bbox.width * block.bbox.height);
+    }).concat(0));
+    const numericRatio = block.text.replace(/[^0-9]/g, "").length / Math.max(1, block.text.length);
+    const shortTokenRatio = block.lines.flatMap((line) => line.items).filter((item) => item.text.trim().length <= 14).length / Math.max(1, block.lines.flatMap((line) => line.items).length);
+    const classification: SuspiciousClass = imageOverlap >= 0.2
+      ? "image-overlap"
+      : numericRatio >= 0.2 && shortTokenRatio >= 0.5
+        ? "numeric-grid"
+        : shortTokenRatio >= 0.7
+          ? "short-label-band"
+          : "mixed-layout";
+    return {
       page: block.pageStart,
+      classification,
       xClusters: [...new Set(block.lines.map((line) => Math.round(line.x)))].sort((a, b) => a - b),
       xSpread: Math.round((Math.max(...block.lines.map((line) => line.x)) - Math.min(...block.lines.map((line) => line.x))) * 10) / 10,
       typicalLineWidth: Math.round((block.lines.map((line) => line.width).filter((width) => width > 0).sort((a, b) => a - b)[Math.floor(block.lines.length / 2)] ?? 0) * 10) / 10,
       bboxWidth: Math.round(block.bbox.width * 10) / 10,
       columns: [...new Set(block.lines.map((line) => line.column))],
       text: block.text.slice(0, 240),
-      imageOverlap: Math.round(Math.max(...(pages[block.pageStart - 1]?.imagePlacements ?? []).map((image) => {
-        const x = Math.max(0, Math.min(block.bbox.x + block.bbox.width, image.x + image.width) - Math.max(block.bbox.x, image.x));
-        const y = Math.max(0, Math.min(block.bbox.y + block.bbox.height, image.y + image.height) - Math.max(block.bbox.y, image.y));
-        return (x * y) / Math.max(1, block.bbox.width * block.bbox.height);
-      }).concat(0)) * 100) / 100,
-      numericRatio: Math.round((block.text.replace(/[^0-9]/g, "").length / Math.max(1, block.text.length)) * 100) / 100,
-      shortTokenRatio: Math.round((block.lines.flatMap((line) => line.items).filter((item) => item.text.trim().length <= 14).length / Math.max(1, block.lines.flatMap((line) => line.items).length)) * 100) / 100,
-    })),
+      imageOverlap: Math.round(imageOverlap * 100) / 100,
+      numericRatio: Math.round(numericRatio * 100) / 100,
+      shortTokenRatio: Math.round(shortTokenRatio * 100) / 100,
+    };
+  });
+  const classCounts = Object.fromEntries(([
+    "image-overlap", "numeric-grid", "short-label-band", "mixed-layout",
+  ] as SuspiciousClass[]).map((key) => [key, samples.filter((sample) => sample.classification === key).length])) as Record<SuspiciousClass, number>;
+  reports.push({
+    id: paper.id,
+    formatFamily: paper.formatFamily,
+    pages: pages.length,
+    suspiciousBlocks: suspicious.length,
+    classCounts,
+    samples,
   });
 }
 const output = { version: "pdf-layout-corpus-diagnostic-v1", papers: reports.length, totalPages: reports.reduce((sum, r) => sum + r.pages, 0), totalSuspiciousBlocks: reports.reduce((sum, r) => sum + r.suspiciousBlocks, 0), reports };
