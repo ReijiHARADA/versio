@@ -3632,3 +3632,6 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 ### 2026-09-16 extraction corpus recheck
 - Extraction corpus rerun after the spanning metadata regression fixture: **2 files / 56 tests passed** in 26.67s.
 - No new failures; the remaining open work is the documented affiliation/body ordering and table/list geometry review.
+
+### 2026-09-16 real-paper reading-order recheck
+- Real-paper reading-order suite rerun with extraction config: **27/27 passed**. This confirms no regression in the corpus reading-order contracts after the metadata guard and synthetic fixture.
