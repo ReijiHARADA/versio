@@ -3053,7 +3053,7 @@
     "extractionCorpusTests": "56 passed",
     "fullVitest": "356 passed",
     "nextAction": "Add and validate a general affiliation/body boundary fixture; then review table/list residuals.",
-    "latestCommit": "5ac58be"
+    "latestCommit": "7acd207"
   },
   "nextAction": "Add a general affiliation/body boundary fixture based on native geometry, then review table/list residuals."
 }
