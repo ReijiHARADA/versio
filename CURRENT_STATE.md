@@ -3641,3 +3641,8 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 
 ### 2026-09-16 affiliation boundary regression
 - Extended the Japanese conference geometry fixture to assert that a native affiliation (`東京大学`) remains an affiliation node and is not duplicated into a paragraph. Reading-order suite: 53/53 passed.
+
+
+### 2026-09-16 caption deduplication pipeline regression
+
+Added a pipeline-level regression that injects an identical native figure caption candidate with a small geometry offset and verifies projection emits exactly one canonical caption. Targeted PDF extraction pipeline: 19/19 passed. The test confirms duplicate suppression at the resolver/projection boundary; the remaining issue is preserving caption text without concatenating duplicate raw spans, which is tracked for a future geometry refinement.

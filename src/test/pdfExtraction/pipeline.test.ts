@@ -89,6 +89,16 @@ describe("canonical extraction pipeline", () => {
     expect(result.blocks[0]?.metadata.evidence).toBeTruthy();
   });
 
+  it("coalesces identical native caption candidates before projection", () => {
+    const pages = FIXTURES["full-width-figure"]();
+    const caption = pages[0].textItems.find((item) => /FWFIG_CAPTION/.test(item.text));
+    expect(caption).toBeTruthy();
+    pages[0].textItems.push({ ...caption!, x: caption!.x + 2, y: caption!.y + 1 });
+    const result = extractFromPages({ pages, paperId: "caption-dedupe", filePath: "/tmp/c.pdf", fileHash: "h", metadata: { pageCount: 1 } });
+    const captions = result.canonical.nodes.filter((node) => node.role === "caption" && /FWFIG_CAPTION/.test(node.text ?? ""));
+    expect(captions).toHaveLength(1);
+  });
+
   it("keeps analyzeStructure as a projection wrapper", () => {
     const pages = FIXTURES["classification-index"]();
     const viaWrapper = analyzeStructure(pages, "p", "/tmp/c.pdf", "h", { pageCount: 1 });

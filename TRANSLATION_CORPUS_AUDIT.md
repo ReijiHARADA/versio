@@ -3443,3 +3443,8 @@ Review of diagnostic samples confirms that many cognitive-psychology and step-to
 ### 2026-09-16 affiliation boundary regression
 
 The Japanese conference geometry fixture now asserts that affiliation text remains an affiliation node and is not duplicated as paragraph content. Reading-order tests remain 53/53.
+
+
+### 2026-09-16 caption deduplication regression
+
+A pipeline fixture now duplicates a native figure-caption span with a slight bbox offset. Canonical projection returns one caption node (targeted suite 19/19). This validates exact same-page caption deduplication without changing translation behavior. The fixture also exposes that duplicate raw text can be concatenated before deduplication; preserving a single clean caption string remains an open geometry refinement.

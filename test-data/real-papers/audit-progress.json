@@ -3059,5 +3059,6 @@
     "nextAction": "Add and validate a general affiliation/body boundary fixture; then review table/list residuals.",
     "latestCommit": "f695d44"
   },
-  "nextAction": "Add a general affiliation/body boundary fixture based on native geometry, then review table/list residuals."
+  "nextAction": "Add a general affiliation/body boundary fixture based on native geometry, then review table/list residuals; caption dedup pipeline regression is in place.",
+  "lastUpdate": "2026-09-16"
 }
