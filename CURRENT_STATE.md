@@ -3287,3 +3287,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 caption diagnostic experiment reverted
 
 - Native debug showed Table 1's continuation line has 8 items and no digits, while other table captions have mixed numeric content. A header-aware exception still partially merged captions and was reverted after inspection; no production behavior changed.
+
+### 2026-09-16 native caption geometry measurement
+
+- Direct `textItems` inspection of the medical meta-review shows caption labels and prose use the same font family/size (Table label `g_d0_f1`, 7.97pt; prose `g_d0_f1`, 6.38pt in the sampled page), while the caption-to-next-line y gap is about 8.6pt. Table 1's first prose line has 8 native items and no digits; table headers follow at y≈698.7 with repeated x positions. This confirms style transition plus x-band repetition is needed; item count alone cannot distinguish caption prose.
