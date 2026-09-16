@@ -579,11 +579,12 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         !/[.!?]\s*$/.test(block.text.trim()) &&
         block.text.trim().split(/\s+/).filter(Boolean).length <= 40;
       const proseBlock = paragraphLike(block.text) && /[.!?]\s*$/.test(block.text.trim());
+      const listLikeBlock = block.lines.length >= 4 && /[•‣▪∙]/.test(block.text);
       const longCaption = block.role === "table_caption" && paragraphLike(block.text);
       const captionBlock = block.role === "table_caption";
       scoreByRole.table = rotatedItems.length >= 30 && rotatedNumeric / Math.max(rotatedItems.length, 1) >= 0.3
         ? 0.97
-        : (structuralGrid || flattenedGrid) && !proseBlock && !longCaption && !captionBlock
+        : (structuralGrid || flattenedGrid) && !proseBlock && !listLikeBlock && !longCaption && !captionBlock
           ? 0.95
           // `tableLike` also catches ordinary multi-line prose with aligned
           // native items. Keep that signal for region membership, but below

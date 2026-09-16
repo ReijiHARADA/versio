@@ -3372,3 +3372,7 @@ A repeated-x-across-three-lines condition was tested for structural-grid evidenc
 ### proseGrid x-origin guard (2026-09-16)
 
 Added a distinct line-origin requirement to proseGrid evidence. It removes the page-8 results prose candidate in the OzCHI manual output without changing expected table regions or extraction tests. One page-9 bullet/table-like stream remains ambiguous and is intentionally not suppressed without stronger native evidence.
+
+### List-like table candidate guard (2026-09-16)
+
+A mixed prose + bullet block on OzCHI page 9 was receiving structural table evidence via proseGrid. Added a generic guard for four-plus-line blocks containing bullet markers, so the block remains paragraph/list content. Table 1–5 recall remains 1.0 and extraction corpus remains 56/56. Separate long-prose proseGrid candidates remain an open precision item.

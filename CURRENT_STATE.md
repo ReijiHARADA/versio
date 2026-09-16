@@ -3463,3 +3463,7 @@ Tested requiring repeated x columns across at least three native lines for the s
 ### proseGrid x-origin guard (2026-09-16)
 
 A further geometry check requires proseGrid candidates to contain at least two distinct line-origin bands in addition to indented rows. This removes the page-8 results prose candidate in manual OzCHI inspection while preserving expected table regions and all extraction tests. A page-9 bullet/table-like stream remains under review because its native item geometry is more ambiguous.
+
+### List-like table candidate guard (2026-09-16)
+
+Manual OzCHI page-9 review found a mixed prose + bullet block receiving structural table evidence through `proseGrid`. Generic candidate scoring now suppresses strong table evidence for blocks with four or more lines containing bullet markers. The mixed block remains a paragraph/list stream, while Table 1–5 recall remains 1.0 and extraction corpus remains 56/56. Long prose candidates from the separate proseGrid path remain under review.
