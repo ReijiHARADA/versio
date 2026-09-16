@@ -3429,3 +3429,5 @@ Production web build verification after the latest extraction change: `npm run b
 The metadata ordering guard now has a general regression test built on the existing ACM two-column fixture. A spanning arXiv line inserted mid-page cannot split the left column before the right; reading-order tests pass 53/53.
 
 Full regression after adding the spanning metadata fixture: **61 files / 356 tests passed**. Remaining extraction work is limited to corpus-backed affiliation/body ordering and table/list geometry residuals; translation code remains unchanged.
+
+Residual review refresh: all 83 samples are reviewed (pending 0). Main labels are figure_label 49 and table_row 14; severity 3 is 73/83. Classes are image-overlap 28 and short-label-band 55. The high-severity queue remains an extraction geometry problem, so no translation-layer change or broad suppression was added.

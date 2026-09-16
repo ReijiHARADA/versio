@@ -3624,3 +3624,7 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 ### 2026-09-16 full regression after spanning metadata fixture
 - Full Vitest: **61 files / 356 tests passed** (includes the new two-column spanning metadata regression).
 - Extraction goal remains open: affiliation/body native ordering and residual table/list geometry still need corpus-backed fixtures.
+
+### 2026-09-16 residual review refresh
+- Manual residual summary remains 83/83 reviewed, pending 0: figure_label 49, table_row 14, equation 6, paragraph 7, list_flattening 2, list_item 1, mixed_columns 1, paragraph_merge 1, correct 2. Severity 3 accounts for 73 samples.
+- Class distribution is image-overlap 28 and short-label-band 55. These are extraction residuals, not translation failures; no broad suppression was introduced.
