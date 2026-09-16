@@ -3029,10 +3029,14 @@
     "2026-09-16: extraction baseline regenerated after page stitching: 26 papers; table caption recall 1.000, table region recall 0.950, source integrity/provenance 1.000."
   ],
   "lastExtractionCheckpoint": {
-    "tableRegionRecall": 1.0,
-    "tableContinuationPageRecall": 1.0,
-    "sourceIntegrityRate": 1.0,
-    "note": "Rotation-only vector label heuristic reverted after manual review found a rotated table-header false positive; extraction corpus 56/56."
+    "date": "2026-09-16",
+    "change": "flattened native table geometry",
+    "ozchiTableRegionRecall": 1.0,
+    "overallSourceIntegrityRate": 1.0,
+    "overallChromeContaminationRate": 0,
+    "extractionCorpusTests": "56 passed",
+    "fullVitest": "353 passed",
+    "nextAction": "manual review of broadened table-region candidates and paragraph/list boundaries"
   },
   "nextAction": "derive stronger figure-vs-table native geometry before any vector-label suppression; continue paragraph/block audit"
 }
