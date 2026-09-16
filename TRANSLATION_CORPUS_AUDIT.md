@@ -3163,3 +3163,7 @@ The two duplicate model-name residuals are embedded Figure 20 heatmap labels (`f
 ### 2026-09-16 manual residual review: linguistics page 36
 
 The four lay/r residual streams are embedded Figure 26 heatmap labels (`figure_label`, severity 3, extraction cause). No algorithm change was added. Coverage: 45/83, 38 pending.
+
+### 2026-09-16 manual residual review: linguistics page 38
+
+The three pre-training-method and numeric matrix streams are embedded Figure 28 heatmap/table content (`table_row`, severity 3, extraction cause). No algorithm change was added. Coverage: 48/83, 35 pending.

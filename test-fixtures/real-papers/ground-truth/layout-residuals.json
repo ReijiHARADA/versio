@@ -475,30 +475,30 @@
       "page": 38,
       "classification": "image-overlap",
       "text": "--------------------pre-training method-------------------- NT-level 0.1 random perturbation T-level 0.15 random perturbation NT-level 0.05 deterministic permutation cut0 =0.1 cut0 =0.2 cut0 =1 corrupted cut50 =0.1 corrupted cut50 =0.2 corr",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: pre-training method labels and numeric matrix streams are embedded Figure 28 heatmap/table content",
+      "manualRole": "table_row",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 38,
       "classification": "image-overlap",
       "text": "--------------------pre-training method-------------------- NT-level 0.1 random perturbation T-level 0.15 random perturbation NT-level 0.05 deterministic permutation cut0 =0.1 cut0 =0.2 cut0 =1 corrupted cut50 =0.1 corrupted cut50 =0.2 corr",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: pre-training method labels and numeric matrix streams are embedded Figure 28 heatmap/table content",
+      "manualRole": "table_row",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",
       "page": 38,
       "classification": "image-overlap",
       "text": "--------------------pre-training method-------------------- NT-level 0.1 random perturbation T-level 0.15 random perturbation NT-level 0.05 deterministic permutation cut0 =0.1 cut0 =0.2 cut0 =1 corrupted cut50 =0.1 corrupted cut50 =0.2 corr",
-      "review": "figure-or-chart-label-candidate",
-      "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "review": "visual review: pre-training method labels and numeric matrix streams are embedded Figure 28 heatmap/table content",
+      "manualRole": "table_row",
+      "reviewStatus": "reviewed",
+      "severity": 3
     },
     {
       "paper": "linguistics-language-model-physics",

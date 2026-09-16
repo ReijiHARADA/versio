@@ -3160,3 +3160,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: linguistics page 36
 
 - Four lay/r label streams were visually confirmed as Figure 26 heatmap axes/series labels. Recorded as `figure_label`, severity 3, primary cause `pdf extraction`; no new rule was justified. Manual coverage is 45/83 (38 pending).
+
+### 2026-09-16 manual residual review: linguistics page 38
+
+- Three pre-training-method / numeric matrix residuals were visually confirmed as embedded Figure 28 heatmap/table content. Recorded as `table_row`, severity 3, primary cause `pdf extraction`; no new rule was justified. Manual coverage is 48/83 (35 pending).
