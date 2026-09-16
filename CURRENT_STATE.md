@@ -3814,3 +3814,7 @@ Excluded author, affiliation, and email lines from document title-font estimatio
 ### 2026-09-16 title-font fix corpus revalidation
 
 The 26-paper baseline after metadata-font exclusion remains safe: titleExact 0.769, mean heading precision 1.000, mean heading recall 0.999, reading-order pair 1.000, and source integrity 1.000. The title metric did not move because remaining failures are candidate selection/subtitle issues, while heading recall improved slightly. No safety regression observed.
+
+### 2026-09-16 title candidate proximity resolver
+
+Added a generic title-candidate preference for candidates followed nearby on the same page by author/affiliation blocks, reducing the likelihood of selecting a publisher masthead. Focused pipeline: 23/23; TypeScript passed. The 26-paper titleExact baseline remains 0.769 with no reading-order or source-integrity regression; remaining failures require fuller title-region evidence.
