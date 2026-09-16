@@ -3270,3 +3270,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 ### 2026-09-16 caption continuation experiment reverted
 
 - Relaxing the generic `cellLike` guard caused Table 1's numeric rows to be absorbed into the caption, a clear safety regression. The experiment was reverted. The remaining Table 2/5/6 misses require a more precise style/geometry transition signal, not a broader continuation rule.
+
+### 2026-09-16 caption boundary experiment reverted
+
+- A label-only exception still split the long caption after a partial line and did not recover the absorbed rows reliably. Reverted; no unverified caption rule is retained.
