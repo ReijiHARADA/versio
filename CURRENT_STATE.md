@@ -3117,3 +3117,7 @@ prose/table boundary guard後にTypeScript型チェックとlint（warnings 0）
 ### 2026-09-16 manual residual review: linguistics page 9
 
 - Reviewed three residuals against Figure/Table 5 and surrounding prose. The model-name heatmap stream is `table_row`, severity 3; the two linear-probing blocks are valid prose with inline notation (`correct`, severity 0). Review coverage is now 25/83 (58 pending), documenting an automated false-positive residual.
+
+### 2026-09-16 manual residual review: linguistics page 10
+
+- Reviewed three residuals around Figures 6–7: model comparison labels are `table_row` and diagram labels are `figure_label` (both severity 3); the surrounding explanatory block is valid prose (`correct`, severity 0). Coverage is now 28/83 (55 pending).

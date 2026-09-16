@@ -3123,3 +3123,7 @@ Rendered review confirmed a boxed Result 1–3 summary with bullet items that ex
 ### 2026-09-16 manual residual review: linguistics page 9
 
 Of three residuals, the model-name heatmap stream is table content (`table_row`, severity 3); the two linear-probing blocks are valid prose with inline notation (`correct`, severity 0). This records an automated residual false positive; coverage is 25/83 (58 pending).
+
+### 2026-09-16 manual residual review: linguistics page 10
+
+Two residuals are embedded Figure 6/7 table or diagram labels (`table_row` / `figure_label`, severity 3); the surrounding explanatory text is valid prose (`correct`, severity 0). Manual review is 28/83 with 55 pending.

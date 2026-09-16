@@ -263,10 +263,12 @@
       "page": 10,
       "classification": "image-overlap",
       "text": "GPT_rel GPT_rot GPT_pos GPT_uni deBERTa baseline (GPT_rand) GPT cfg3b cfg3i cfg3h cfg3g cfg3f cfg3e1 cfg3e2",
-      "review": "figure-or-chart-label-candidate",
+      "review": "visual review: model comparison heatmap/diagram labels are embedded figure-table content",
       "manualRole": null,
-      "reviewStatus": "pending",
-      "severity": null
+      "reviewStatus": "reviewed",
+      "severity": 3,
+      "reviewLabel": "table_row",
+      "rootCause": "pdf extraction"
     },
     {
       "paper": "linguistics-language-model-physics",
