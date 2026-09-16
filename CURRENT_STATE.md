@@ -3393,3 +3393,8 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 - Targeted human-AI Figure 2 residual remains one advisory diagnostic block, while it is now represented as non-translatable evidence in the canonical resolver path.
 - Extraction corpus: 56/56; full benchmark source-integrity and figure-caption relation remain 1.000; TypeScript and focused reading-order tests pass.
 - Next: manually review vector-label false positives across the corpus before widening the rule.
+
+### 2026-09-16 vector-label full-suite validation
+
+- Full Vitest after vector figure-label evidence: 61 files / 350 tests passed.
+- No list, reading-order, or data-layer regression detected. Worktree is clean and extraction remains active before translation work.
