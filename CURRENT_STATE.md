@@ -3514,3 +3514,8 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 ### 2026-09-16 speechin table false-negative inspection
 - Native page 3 inspection shows Table 1 rows with stable six-column x origins across 8 data rows, but canonical projection currently emits the grid as a paragraph and promotes two numeric continuation lines to headings.
 - This is a confirmed extraction false-negative/heading false-positive pair. A safe fix must preserve caption adjacency and stable row geometry while preventing numeric row fragments from heading promotion; no change committed yet pending a focused synthetic regression.
+
+### 2026-09-16 numeric multi-item row heading guard
+- Hypothesis: speechin Table 1 summary rows (`54 English 90.5%`, etc.) were being promoted to headings because they contain title-like words plus numeric values.
+- Change: generic candidate scoring now demotes single-line, multi-item, punctuation-free rows with numeric density >=0.18 to paragraph evidence and excludes them from heading evidence. This is format-neutral and does not depend on table names.
+- Verification: focused numeric/equation/heading suite 12/12; extraction corpus 56/56. Full baseline recheck remains required before keeping the change.

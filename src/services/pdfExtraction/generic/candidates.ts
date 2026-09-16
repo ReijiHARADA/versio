@@ -452,6 +452,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const rotatedNumericGrid = rotatedItems.length >= 8 &&
       rotatedItems.filter((item) => /\d/.test(item.text)).length / rotatedItems.length >= 0.12 &&
       !/[.!?]\s*$/.test(block.text.trim());
+    const numericMultiItemRow = block.lines.length === 1 &&
+      block.lines[0].items.length >= 2 && numericDensity >= 0.18 &&
+      !/[.!?]$/.test(block.text.trim());
     const tableAdjacentNumericRow = layoutRole === "heading" && block.lines.length === 1 &&
       block.lines[0].items.length >= 1 && numericDensity >= 0.12 &&
       /[A-Za-z]/.test(block.text) &&
@@ -459,7 +462,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const compactTableDataRow = nearbyTableCaption && block.lines.length === 1 &&
       block.lines[0].items.length >= 3 && block.text.trim().split(/\s+/).filter(Boolean).length <= 10 &&
       !/[.!?;:]/.test(block.text);
-    const role = denseCjkBody || numericRow || mathRow || alignedTableRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || rotatedNumericGrid ? "paragraph" : layoutRole;
+    const role = denseCjkBody || numericRow || mathRow || alignedTableRow || numericMultiItemRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || rotatedNumericGrid ? "paragraph" : layoutRole;
     const style = styleSignature(block, layouts, baseFontSize, blocks[index - 1], blocks[index + 1]);
     const scoreByRole: Partial<Record<CanonicalRole, number>> = {
       paragraph: role === "paragraph" ? confidence : 0.22,
@@ -500,6 +503,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       role !== "author" &&
       role !== "affiliation" &&
       !tableAdjacentNumericRow &&
+      !numericMultiItemRow &&
       !alignedTableRow &&
       !tableHeaderRow &&
       !rotatedNumericGrid &&
