@@ -3516,3 +3516,7 @@ A representative `Figure 2:` candidate now carries native bbox and evidence (`ve
 ### 2026-09-16 native image-overlap evidence
 
 Figure-marker findings now report native image-placement overlap. The corpus scan found zero positive overlaps among the candidates, ruling out an overlap-only fix and directing the next fixture toward caption adjacency and column geometry.
+
+### 2026-09-16 caption adjacency diagnostics
+
+The scanner reports nearest horizontally aligned image gap in addition to overlap. The representative mixed Figure 2 paragraph has no aligned image, so its failure is native text ordering/column interleaving; image overlap alone cannot safely trigger a split.

@@ -3714,3 +3714,7 @@ The saved findings now expose bbox/evidence for embedded figure markers. A repre
 ### 2026-09-16 native image-overlap evidence
 
 Boundary findings now include maximum native image-placement overlap for figure-marker paragraphs. Corpus scan completed and parsed; no candidate had positive text/image overlap, indicating these cases require caption-adjacency and column geometry rather than an overlap-only rule. TypeScript passed.
+
+### 2026-09-16 caption adjacency diagnostics
+
+Boundary findings now include nearest image vertical gap (with null when no horizontally aligned image exists) alongside overlap. The representative mixed Figure 2 paragraph has no aligned image, confirming that some extraction failures arise from native text ordering/column interleaving rather than image overlap. TypeScript passed.

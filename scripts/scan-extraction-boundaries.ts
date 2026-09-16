@@ -17,6 +17,13 @@ const overlapRatio = (box: { x: number; y: number; width: number; height: number
     Math.max(0, Math.min(box.y + box.height, image.y + image.height) - Math.max(box.y, image.y));
   return overlap / Math.max(1, box.width * box.height);
 };
+const verticalGap = (box: { x: number; y: number; width: number; height: number }, image: { x: number; y: number; width: number; height: number }) => {
+  const horizontal = box.x < image.x + image.width && image.x < box.x + box.width;
+  if (!horizontal) return Number.POSITIVE_INFINITY;
+  if (box.y + box.height < image.y) return image.y - (box.y + box.height);
+  if (image.y + image.height < box.y) return box.y - (image.y + image.height);
+  return 0;
+};
 
 // Layout extraction has an opt-in human-readable trace that uses console.log.
 // Keep the scanner's stdout machine-readable so callers can pipe it to JSON
@@ -42,10 +49,10 @@ for (const file of files) {
     .map((node) => ({ text: node.text?.slice(0, 180), page: node.pageStart }));
   const embeddedStructuralMarker = canonical.nodes
     .filter((node) => node.role === "paragraph" && /(?:^|\s)(?:Abstract|Introduction|Related Work|Methods|Results|Discussion|Conclusions|(?:Fig(?:ure)?|Table)\.?\s*\d{1,3})\b/i.test(node.text ?? "") && /\S+\s+(?:Abstract|Introduction|Related Work|Methods|Results|Discussion|Conclusions|(?:Fig(?:ure)?|Table)\.?\s*\d{1,3})\b/i.test(node.text ?? ""))
-    .map((node) => ({ text: node.text?.slice(0, 220), page: node.pageStart, bbox: node.boundingBoxes[0], imageOverlap: Math.max(0, ...(pageImages.get(node.pageStart) ?? []).map((image) => overlapRatio(node.boundingBoxes[0], image))), confidence: node.confidence, evidence: node.evidence.map((entry) => entry.label) }));
+    .map((node) => ({ text: node.text?.slice(0, 220), page: node.pageStart, bbox: node.boundingBoxes[0], imageOverlap: Math.max(0, ...(pageImages.get(node.pageStart) ?? []).map((image) => overlapRatio(node.boundingBoxes[0], image))), nearestImageGap: Math.min(...(pageImages.get(node.pageStart) ?? []).map((image) => verticalGap(node.boundingBoxes[0], image)), Number.POSITIVE_INFINITY), confidence: node.confidence, evidence: node.evidence.map((entry) => entry.label) }));
   const figureInParagraph = canonical.nodes
     .filter((node) => node.role === "paragraph" && /(?:^|\s)(?:Fig(?:ure)?\.?\s*\d{1,3})\s*[:.]/i.test(node.text ?? ""))
-    .map((node) => ({ text: node.text?.slice(0, 220), page: node.pageStart, bbox: node.boundingBoxes[0], confidence: node.confidence, evidence: node.evidence.map((entry) => entry.label) }));
+    .map((node) => ({ text: node.text?.slice(0, 220), page: node.pageStart, bbox: node.boundingBoxes[0], imageOverlap: Math.max(0, ...(pageImages.get(node.pageStart) ?? []).map((image) => overlapRatio(node.boundingBoxes[0], image))), nearestImageGap: Math.min(...(pageImages.get(node.pageStart) ?? []).map((image) => verticalGap(node.boundingBoxes[0], image)), Number.POSITIVE_INFINITY), confidence: node.confidence, evidence: node.evidence.map((entry) => entry.label) }));
   if (affiliation.length || caption.length || figureInParagraph.length || embeddedStructuralMarker.length) {
     findings.push({ id: file, affiliation, caption, figureInParagraph, embeddedStructuralMarker });
   }

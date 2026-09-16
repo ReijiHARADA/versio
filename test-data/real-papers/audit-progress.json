@@ -3059,6 +3059,6 @@
     "nextAction": "Add and validate a general affiliation/body boundary fixture; then review table/list residuals.",
     "latestCommit": "f695d44"
   },
-  "nextAction": "Use caption adjacency plus column/font geometry for confirmed mixed figure-label cases; image overlap alone is insufficient.",
+  "nextAction": "Review native text ordering for candidates without aligned images; fixture only confirmed geometry patterns.",
   "lastUpdate": "2026-09-16"
 }
