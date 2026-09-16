@@ -3359,3 +3359,9 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 
 - Added a unit assertion that the generic `Table N (continued)` form is recognized as a table caption.
 - Focused reading-order test passes; prior extraction corpus remains 56/56.
+
+### 2026-09-16 extraction validation checkpoint
+
+- Re-ran extraction corpus after continued-caption regression coverage: 2 files / 56 tests passed.
+- Lint (`npm run lint -- --deny-warnings`) passed; worktree remains clean.
+- Extraction objective is not complete: next evidence target remains paragraph stitching and block-boundary precision across the 26-paper corpus.
