@@ -3505,3 +3505,8 @@ A narrow candidate guard now suppresses strong grid evidence for blocks with mor
 - 現段階で新たな安全な一般則は確認できなかったため、未検証の table/math 昇格は追加していない。
 - Full Vitest rerun after the latest extraction checkpoint: 61 files / 354 tests passed.
 - Focused wear-scale rotated-table regression rerun: 1/1 passed; rotated numeric table blocks remain skipped for translation and are not merged with following prose.
+
+### 2026-09-16 残存課題の診断確認
+- `diagnose:pdf-corpus` 再実行結果は 26 papers / 497 pages / 149 suspicious blocks。
+- speechin の手動確認済み table-row 問題は自動診断サンプルに現れず、診断器の false-negative（検出漏れ）として扱う必要がある。
+- economics の native-math 候補は複数ページで検出されるが、既存の equation negative evidence と衝突するため、現時点では昇格ルールを追加していない。
