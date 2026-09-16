@@ -3283,3 +3283,7 @@ Correction: page 17 added two reviewed samples; progress is **63/83**, with **19
 
 - Added opt-in `PDF_LAYOUT_DEBUG=1` diagnostics for caption continuation decisions (source/next text, native item count, digit count, cell-like result). Default behavior is unchanged; this enables direct native-geometry investigation of the remaining table caption misses.
 - TypeScript typecheck passed. Commit: `d2fe7c9`.
+
+### 2026-09-16 caption diagnostic experiment reverted
+
+- Native debug showed Table 1's continuation line has 8 items and no digits, while other table captions have mixed numeric content. A header-aware exception still partially merged captions and was reverted after inspection; no production behavior changed.
