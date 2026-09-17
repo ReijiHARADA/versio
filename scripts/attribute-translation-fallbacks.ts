@@ -11,7 +11,8 @@ import { extractPdfPages } from "../src/test/readingOrder/extractPdf.ts";
 
 const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "..");
 const catalog = JSON.parse(fs.readFileSync(path.join(root, "test-fixtures/real-papers/catalog.json"), "utf8")) as { pdfDir: string; papers: Array<{ id: string; title: string; filename: string }> };
-const report = JSON.parse(fs.readFileSync(path.join(root, "test-data/real-papers/reports/translation-audit.json"), "utf8")) as { papers: Array<{ paper: { id: string; title: string; filename: string }; rows: any[] }> };
+const reportName = process.env.TRANSLATION_AUDIT_REPORT ?? "translation-audit.json";
+const report = JSON.parse(fs.readFileSync(path.join(root, "test-data/real-papers/reports", reportName), "utf8")) as { papers: Array<{ paper: { id: string; title: string; filename: string }; rows: any[] }> };
 
 const compact = (value: string) => value.replace(/\s+/g, " ").trim();
 const output: any[] = [];
@@ -110,5 +111,5 @@ for (const entry of report.papers) {
 }
 
 const outPath = path.join(root, "test-data/real-papers/reports/translation-fallback-attribution.json");
-fs.writeFileSync(outPath, `${JSON.stringify({ createdAt: new Date().toISOString(), sourceReport: "translation-audit.json", failures: output }, null, 2)}\n`);
+fs.writeFileSync(outPath, `${JSON.stringify({ createdAt: new Date().toISOString(), sourceReport: reportName, failures: output }, null, 2)}\n`);
 console.log(`wrote ${output.length} attribution rows to ${outPath}`);

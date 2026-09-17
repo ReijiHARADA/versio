@@ -94,3 +94,20 @@ Baseline fallback 3件に対するM2M100 1.2B / CAT-Translate 1.4B候補6件を�
 ### 2026-09-16: flattened table extraction finding
 
 Publisher横断の境界診断で見つかった`wear-scale` p.14を再現確認した。相関行列は各行が単一native itemとして抽出されるため、既存の`tableLike`（同一line内の複数item）を通らず、paragraph列として残る。末尾では表ヘッダ、脚注、通常本文まで同一blockに連結される。numeric-rowをgeneric candidateで個別にtable化する試作は実canonicalで有効性を確認できず、precisionを証明できないため撤回した。次の実装対象は、page/column/y近接と反復numeric形状からrow clusterを作り、caption・本文境界を含むregionとしてresolverへ渡すこと。
+
+### 2026-09-19: 300-block manual audit checkpoint
+
+The expanded corpus review is now complete at 300/300 blocks. The authoritative aggregate reports **45.33% extraction-induced errors**, **34.33% semantic errors**, **44.37% unsafe false accepts**, and **19.62% false rejects**. This confirms that the next work must reduce both extraction damage and over-fallback; tightening the gate alone would fail the UX requirement.
+
+Prioritized general fixes supported by the audit:
+
+1. Repair logical paragraphs across page/column boundaries before translation-unit validation, using punctuation, continuation morphology, and geometry while excluding headings, figures, tables, and chrome.
+2. Split figure/table/affiliation/license chrome at line grouping boundaries and expose table regions as a structured fallback rather than empty prose.
+3. Calibrate the quality gate on complete coherent paragraphs (including abstracts and methods) so they are not rejected solely because they are long or contain scientific notation.
+4. Preserve scientific tokens and citations while adding content-coverage signals for omissions; use them for selective retry/fallback only after measuring precision on the frozen reviewed set.
+
+No paper-specific rule or hallucinated-term blacklist is justified by the audit. The next implementation checkpoint must record before/after metrics against this 300-block baseline and keep the baseline immutable.
+
+### Vector-figure diagnostic checkpoint (2026-09-19)
+
+`PDF_LAYOUT_DEBUG=1` now emits both the reconstructed block inventory and per-candidate geometry. Running the compact-label regression still produces 23/24 passing tests, with no candidate diagnostic for the failing vector-figure evidence. This establishes that the failing input is separated or discarded before `vectorFigureLabelEvidence()` is evaluated. The next change should instrument native line grouping immediately after `reconstructDocument()` and compare the retained lines/items against the source fixture. Do not lower the vector-label threshold until that evidence is available.

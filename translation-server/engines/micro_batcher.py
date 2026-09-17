@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 import re
+import hashlib
 import threading
 import time
 from concurrent.futures import Future
@@ -277,7 +278,7 @@ class MicroBatchScheduler:
                 pieces: list[str] = []
                 in_toks: list[int] = []
                 out_toks: list[int] = []
-                for chunk, model_input in zip(chunks, item_model_inputs):
+                for unit_index, (chunk, model_input) in enumerate(zip(chunks, item_model_inputs)):
                     try:
                         if model_input == chunk:
                             unit_pieces, unit_in, unit_out = engine._translate_chunks([chunk], target_language)
@@ -294,10 +295,16 @@ class MicroBatchScheduler:
                         # runs its whole-paragraph quality gate, so unsafe
                         # mixed output can be rejected, but a single hard
                         # sentence no longer erases every safe sentence.
-                        print(
-                            f"[MICROBATCH] unit fallback: {unit_error}",
-                            flush=True,
-                        )
+                        if self._unit_debug:
+                            source_hash = hashlib.sha256(item.text.encode("utf-8")).hexdigest()[:12]
+                            print(
+                                f"[MICROBATCH] unit fallback source={source_hash} "
+                                f"unit={unit_index}/{len(chunks)} chars={len(chunk)} "
+                                f"error={type(unit_error).__name__}: {unit_error}",
+                                flush=True,
+                            )
+                        else:
+                            print("[MICROBATCH] unit fallback", flush=True)
                         pieces.append(chunk)
                         in_toks.append(0)
                         out_toks.append(0)

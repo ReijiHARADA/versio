@@ -75,6 +75,10 @@ describe("baseline benchmark on cached real papers", () => {
       if (report.titleExact !== undefined) {
         expect(typeof report.titleExact).toBe("boolean");
       }
+      if (paper.id === "social-influence-social-advertising" || paper.id === "modeling-human-behavior-cognitive-uncertainty") {
+        expect(report.titleExact).toBe(true);
+        expect(report.titlePredicted?.toLowerCase()).not.toMatch(/arxiv:/);
+      }
       if (paper.formatFamily === "acm-acmart" && report.formatApplied === "acm") {
         expect(report.formatScores.acm).toBeGreaterThanOrEqual(0.75);
       }

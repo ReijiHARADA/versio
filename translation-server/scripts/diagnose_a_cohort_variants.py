@@ -44,6 +44,12 @@ def main() -> None:
     if match:
         direct_variants.append(("whole_atomic_author_year", source, "atomic_author_year"))
     direct_variants.extend((f"unit_{i}_current_protection", unit, "current") for i, unit in enumerate(units))
+    requested = os.environ.get("A_COHORT_CONDITIONS")
+    if requested:
+        allowed = {item.strip() for item in requested.split(",") if item.strip()}
+        direct_variants = [item for item in direct_variants if item[0] in allowed]
+        if not direct_variants:
+            raise ValueError(f"no conditions matched A_COHORT_CONDITIONS={requested}")
     for name, text, mode in direct_variants:
         if mode == "none":
             protected, citations, nonce = text, [], 0

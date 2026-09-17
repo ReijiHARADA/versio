@@ -1087,6 +1087,123 @@
           "large-scale online experiments"
         ]
       }
+    },
+    {
+      "id": "using-cognitive-psychology-gpt3",
+      "title": "Using cognitive psychology to understand GPT-3",
+      "authors": [
+        "Marcel Binz",
+        "Eric Schulz"
+      ],
+      "year": 2022,
+      "discipline": "cognitive-psychology",
+      "venue": "arXiv",
+      "publisher": "arXiv",
+      "doi": null,
+      "formatFamily": "arxiv-two-column",
+      "filename": "using-cognitive-psychology-gpt3.pdf",
+      "downloadUrl": "https://arxiv.org/pdf/2206.14576",
+      "sourceUrl": "https://arxiv.org/abs/2206.14576",
+      "oaStatus": "open",
+      "selectionReason": "Cognitive psychology experiments, figures, tables, and citation-rich prose",
+      "kinds": [
+        "two-column",
+        "figures",
+        "tables",
+        "statistics"
+      ],
+      "checks": {
+        "titleContains": "Using cognitive psychology to understand GPT-3"
+      }
+    },
+    {
+      "id": "syntax-prosody-correlation",
+      "title": "An Empirical Analysis of the Correlation of Syntax and Prosody",
+      "authors": [
+        "Arne Köhn",
+        "Timo Baumann",
+        "Oskar Dörfler"
+      ],
+      "year": 2018,
+      "discipline": "linguistics",
+      "venue": "Interspeech",
+      "publisher": "arXiv",
+      "doi": null,
+      "formatFamily": "arxiv-two-column",
+      "filename": "syntax-prosody-correlation.pdf",
+      "downloadUrl": "https://arxiv.org/pdf/1806.05900",
+      "sourceUrl": "https://arxiv.org/abs/1806.05900",
+      "oaStatus": "open",
+      "selectionReason": "Linguistics corpus study with mixed-effects statistics, equations, figures, and tables",
+      "kinds": [
+        "two-column",
+        "statistics",
+        "figures",
+        "tables"
+      ],
+      "checks": {
+        "titleContains": "An Empirical Analysis of the Correlation of Syntax and Prosody"
+      }
+    },
+    {
+      "id": "hfe-healthcare-scoping-2024",
+      "title": "Principles for the conduct of human factors/ergonomics in healthcare: a scoping study of the published evidence",
+      "discipline": "ergonomics",
+      "venue": "BMJ Open Quality",
+      "doi": "10.1136/bmjoq-2024-003222",
+      "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11969590/",
+      "oaStatus": "open",
+      "reasonSelected": "Recent open-access HFE scoping review with tables and supplementary PDF",
+      "filename": "hfe-healthcare-scoping-2024.pdf",
+      "disciplines": [
+        "ergonomics"
+      ],
+      "kinds": [
+        "review"
+      ],
+      "formatFamily": "journal-oa",
+      "publisher": "BMJ",
+      "selectionReason": "Recent open-access HFE scoping review with tables and supplementary PDF",
+      "checks": {},
+      "authors": [
+        "Angela O'Dea",
+        "Mahnaz Sharafkhani",
+        "Margaret Codd",
+        "Mary Browne",
+        "Paul O'Connor",
+        "Marie E Ward"
+      ],
+      "year": 2025
+    },
+    {
+      "id": "hfe-healthcare-safety-review",
+      "title": "An Evaluation of the Effects of Human Factors and Ergonomics on Health Care and Patient Safety Practices: A Systematic Review",
+      "discipline": "ergonomics",
+      "venue": "PLOS ONE",
+      "doi": "10.1371/journal.pone.0129948",
+      "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4466322/",
+      "oaStatus": "open",
+      "reasonSelected": "Open systematic review with heterogeneous study tables and statistical prose",
+      "filename": "hfe-healthcare-safety-review.pdf",
+      "disciplines": [
+        "ergonomics"
+      ],
+      "kinds": [
+        "review"
+      ],
+      "formatFamily": "journal-oa",
+      "publisher": "PLOS",
+      "selectionReason": "Open systematic review with heterogeneous study tables and statistical prose",
+      "checks": {},
+      "authors": [
+        "Xuanyue Mao",
+        "Pengli Jia",
+        "Longhao Zhang",
+        "Pujing Zhao",
+        "Ying Chen",
+        "Mingming Zhang"
+      ],
+      "year": 2015
     }
   ]
 }

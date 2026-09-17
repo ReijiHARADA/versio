@@ -16,7 +16,11 @@ const DATE_STAMP = /\d{4}-\d{2}-\d{2}/;
 // surrounding sentence must not make the result acceptable.
 const BYTE_ESCAPE = /<0x[0-9a-f]{2}>/i;
 const LEFTOVER_PLACEHOLDER = /[zζΖ][zζΖ]c[iιΙіІ]t\d+(?:x\d+)?[zζΖ][zζΖ]/i;
-const SOURCE_NEGATION = /\b(?:(?:do|does|did|is|are|was|were|has|have|had)\s+not|cannot|can\s+not|never|without|lack(?:s|ed|ing)?|absence)\b/i;
+// Include quantifier negation ("not all/every/..."), which is a semantic
+// reversal when translated as an unrestricted universal claim even though it
+// has no auxiliary verb.  Keep this lexical and bounded rather than using a
+// broad blacklist of English words.
+const SOURCE_NEGATION = /\b(?:(?:do|does|did|is|are|was|were|has|have|had)\s+not|not\s+(?:all|every|each|necessarily)|cannot|can\s+not|never|without|lack(?:s|ed|ing)?|absence)\b/i;
 const JA_NEGATION = /(?:ない|なく|なかっ|ません|ず|ぬ|無|非|不|未|欠|否)/;
 
 /** Restore valid UTF-8 byte tokens if an older bundled server emitted them. */

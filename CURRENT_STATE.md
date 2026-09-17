@@ -1,6 +1,6 @@
 # Current State
 
-最終更新: 2026-09-15  
+最終更新: 2026-09-17
 **このファイルが「いま main に何があるか」の正です。** 実装を変えたらここを更新する（[AGENTS.md](./AGENTS.md)）。
 
 コードを source of truth とし、アーキテクチャ詳細は各専門文書へリンクする（重複しない）。
@@ -54,6 +54,38 @@
 ---
 
 ## Known limitations / 残課題
+
+### 2026-09-17 corpus audit pause checkpoint
+
+- pending corpus の合法URL再取得を確認したが、新規PDFは増えず、readyForAcquisition は human-factors/healthcare 4件（直接PDF URLなし）のまま。既存の34 papers / 276 rows、manual review 52/52 完了状態を保持している。
+- 長時間の取得・翻訳・サーバープロセスは起動していない。次回は合法な取得先を補完してから、fresh-port同一shell benchmarkを再開する。
+- `scripts/fetch-pending-corpus.mjs` に、安定したPMC記事URLからHTML内のPDFリンクを解決する汎用取得処理を追加。arXiv/明示downloadUrlの既存挙動は維持し、構文検査とdiff-checkを通過した。ネットワーク復旧後に4件の取得を再試行する。
+- PMCの一次検索結果でも対象記事にPDF提供表示があることを確認した。取得失敗は権利やURL欠落ではなく、現セッションのDNS/ネットワーク到達性に限定される。
+- その後の承認済み外部実行で arXiv/既存URLの10件を取得（pending-pdfsに追加）。PMC 3件はbot対策HTML、1件は直接URL未解決で未取得。`audit:corpus-coverage` はcatalog 35件 / PDF ready 34件を報告している。
+- 取得済みPDFを監査の正規 `test-data/real-papers` へ配置し、`run-pending-translation-audit.mjs --dry-run` で cached=34 / pending=0 を確認。既存レポートが揃っているため、同じ論文の重複翻訳は起動していない。
+- Europe PMCフォールバックを追加後、HFE healthcare 2件も取得成功し、PDFの正規配置と構文/diffチェックを再確認。残る2件はEurope PMC 500で保留。catalog既存34件の監査レポートは完了済みのため、次回は新規2件をcatalog/監査へ追加する工程から開始する。
+- HFE 2件をcatalogへ登録（BMJ/PLOSのpublisher、DOI、OA記事URL、selectionReason、journal-oa formatFamily）し、`audit:corpus-coverage` でPDF readyを確認。著者・年は一次PDF確認前に推測せず未入力のまま。`run-pending-translation-audit --dry-run` は cached=36 / pending=2 を示す。
+- fresh-port 18793でHFE 2件の同一shell benchmarkを試行。モデル初期化ログ（semantic-v71-strict-restore-v9）は確認できたが、環境の localhost bind が `operation not permitted` で拒否されたためbenchmarkは開始せず、trapでセッションを終了。次回は許可済み実行環境で同じfresh-port方式を再試行する。
+- 取得済みHFE抽出ベンチマークを補完しようとしたが、`npx tsx` のregistry名前解決が `ENOTFOUND` で失敗。既存依存が揃った環境で再実行する。長時間ジョブは残っていない。
+- ローカルの`vite-node`で抽出ベンチマークを再実行でき、HFE 2件を含む現行PDF群の結果を`extraction-baseline-latest.json`へ更新。HFE safety reviewのtitleは一致、scoping studyは候補が末尾`evidence`を欠く切り詰めでtitleExact=falseだが、sourceIntegrity/canonicalProvenanceは1.0。翻訳benchmarkはlocalhost bind制限のため未実行。
+- HFE scoping studyのtitle geometry診断を実行し、page 1のnative lines/block candidates・style/role evidenceを出力。診断はproduction挙動を変更しない。タイトル残差は引き続き一般的なline/block grouping候補として扱う。
+- catalog追加時に不足していた`checks`既定値を補い、extraction corpusを再実行。real-paper baseline/reading-order **76/76 passed**（PDF.js canvas/font警告のみ）。
+- catalog/fixture更新後も `npm run typecheck`、`npm run lint -- --deny-warnings`、`git diff --check` が成功。翻訳品質目標は未達のためgoalは継続中。
+- fresh-port 18795でHFE 2件を同一shell benchmarkし、各12 unitsのレポートを生成。trap cleanup後に全38レポートをdedup mergeし、authoritative aggregateを **36 papers / 300 rows**へ更新。`audit-progress.json`も同期した。
+- 手動レビューキュー再生成は既存の52/52完了を維持し、新規HFE行はキュー対象に追加されなかった。次回はprepareスクリプトのレポート選別条件を調査し、新規24行をレビューキューへ取り込む。
+- 原因はprepareスクリプトが既定で古い`translation-audit.json`だけを読むことだった。fresh aggregateを`TRANSLATION_AUDIT_REPORT=translation-audit-fresh-v1.json`で明示して再生成し、レビューキューを**300件（HFE 24件を含む）/30件既レビュー/270件未レビュー**へ更新した。production挙動は変更していない。
+- HFEの原文・訳文を追加比較し、正解2件と抽出起因のsource-fragment 4件を記録。現在のレビューキューは **300件 / 44件既レビュー / 256件未レビュー**。抽出起因の行は翻訳モデルの誤訳として集計していない。
+- `manual-review-summary-v1.json` を現行44件から再集計。severity>=2 は25件（56.8%）、semantic系ラベル7件、terminology_error 7件、source_fragment 18件。これはレビュー済みサンプルの率であり、全corpus品質推定ではない。
+- `prepare-translation-manual-review.ts` を修正し、明示指定がない場合は存在する`translation-audit-fresh-v1.json`を優先するようにした。これでfresh集計後の新規行が古い既定レポートに隠れる再発を防ぐ。typecheck/lint/diff-check成功。
+- 標準summarizerをローカル`vite-node`で実行し、52/300レビュー時点の暫定指標を更新。automatic accept 38.5%、pre-model fallback 34.6%、post-model fallback 26.9%、semantic error 17.3%、extraction-induced 44.2%、unsafe false-accept 40.0%。未レビュー248件を含む全体品質とは解釈しない。
+- `validate-fallback-attribution.py` を実行し23 attribution rowsを検証。A(extraction) 6、D(model) 2、E(truncation) 3、G(gate) 12。17件が現行benchmarkと古いblock IDで不一致、diagnostics empty警告が残るため、次回はattribution再同期を行う。
+- fresh aggregateを指定してattributionを再生成し、現行27 fallback rowsへ更新。validatorの既定入力は旧reportのため警告が残り、次回はvalidator側にもfresh report選択を伝播させる。
+- `validate-fallback-attribution.py`もfresh aggregateを既定選択するよう修正。検証結果は27 rows、current benchmark ordinary fallbackも27 rowsでstale ID警告は解消（diagnostics emptyの手動確認警告は継続）。`py_compile`とdiff-check成功。
+- validator変更後もtranslation-server Python regression **109/109 passed**。監査基盤変更による翻訳実装回帰はない。
+- 標準summarizerのstdout JSONを保存ファイルへ同期し、`manual-review-summary-v1.json` の authoritative値を52/300へ修正。progress/aggregateも36/300で一致し、diff-check成功。
+- `audit-progress.json` のレビュー件数をキューから再同期し、reviewedBlocks=52、pendingManualReview=248、aggregate=36/300で一致させた。
+- social advertisingの因果推論ブロックを2件手動比較し、正解1件・抽出起因source fragment 1件を追加。標準集計は54/300 reviewed、未レビュー246件へ更新。
+- cognitive-psychology GPT-3のabstract 1件を手動確認し、カテゴリ列挙と比較主張が保持された正解例として記録。標準集計は55/300 reviewed、未レビュー245件へ更新。
 
 ### 2026-09-16 extraction verification checkpoint
 
@@ -4663,3 +4695,1130 @@ Ran `osworld-multimodal-agents` on fresh port `18772` with the same-shell server
 ### Extraction regression after title-anchor refinement (2026-09-17)
 
 The full extraction corpus recheck completed with 66/68 checks passing: all baseline extraction checks passed, while the two remaining real-paper title assertions are social advertising and modeling (the latter is sensitive to the current masthead competition and needs deterministic fixture coverage). OSWORLD and all other new papers pass. Focused generic reading-order tests remain 58/58; typecheck and lint pass. No further title threshold broadening was made in this turn.
+
+## 2026-09-17 title geometry diagnostic and regression checkpoint
+
+- Added/ran `scripts/diagnose-title-geometry.ts` via `npm run diagnose:title-geometry` for both residual title cases:
+  - `test-data/real-papers/reports/title-geometry-social-advertising.json`
+  - `test-data/real-papers/reports/title-geometry-modeling.json`
+- Social diagnostic attributed the miss to generic `font_size_evidence`: an arXiv header line (20pt) dominated title-font estimation while the actual two-line title was 11.955pt vs 9.963pt body. The title block was consequently classified as author. This was not a paper-specific string issue.
+- Generic fix in `src/services/pdfLayout.ts`: exclude arXiv/URL header lines from title-font estimation and accept modest title/body style separation (1.12x) used by this format.
+- Validation: focused social/modeling title tests 2/2 passed; full extraction corpus + reading-order regression 68/68 passed (`npm run test:extraction-corpus`).
+- Remaining work: continue fresh-port translation audit and semantic review; do not claim translation fallback/unsafe-false-accept targets are complete from extraction success alone.
+- Fresh-port modeling benchmark rerun on port 18773 completed successfully in the same shell (server cleanup trap executed). Benchmark status 0; report refreshed. The server reached model-ready after warmup, and MouseLab remained preserved through the identifier rescue path. This confirms the translation stream is operational independently of the app's localhost session isolation.
+- Fresh-port audit expanded with `medical-deep-learning-meta-review` on port 18774. Same-shell server/benchmark completed with status 0 and automatic cleanup. Report: `test-data/real-papers/reports/translation-audit-medical-deep-learning-meta-review.{json,md}`. Two sampled units were processed; one required beam rescue after a quality rejection, providing another accepted-vs-gate-false-reject case for later manual review.
+- `fetch-pending-corpus.mjs` retrieved six arXiv PDFs plus existing pending candidates; four PMC candidates still need direct OA PDF URL resolution. No production extraction thresholds were changed for those.
+- Rebuilt the manual review queue from the current aggregate report with `npm run audit:prepare-review`: 52/52 review records retained/completed (annotations preserved only when translation output matches).
+- Current fallback attribution summary (`translation-fallback-attribution-summary-v77.json`) reports 25 reviewed ordinary blocks, 8 reader-visible fallbacks (32%), and 13 unsafe false accepts at severity >=2 (unsafe false-accept rate 52% among reviewed accepted blocks). This is evidence that the <=5% / near-zero unsafe-corruption goal is not yet met; do not loosen gates or declare completion.
+- Generated audit-only semantic review priority artifact with `npx vite-node --script scripts/prioritize-semantic-review.ts`: 13 accepted rows at manual severity >=2 were ranked using severity, relation loss, invariant loss, and source length. Top targets include design-for-wearability and medical-image-segmentation. This keeps manual labels out of production selectors while focusing subsequent review and fixes on high-impact semantic errors.
+- Reviewed the top five severity-prioritized accepted failures and wrote `test-data/real-papers/reports/semantic-failure-analysis-v1.md`. Evidence shows fluent unsupported additions/omissions (e.g. wearable design translated as web-browser/web-bridal content; opening sentence omitted) even when scientific invariants survive. Primary attribution is model semantic coverage/decode, with some source-boundary secondary causes. This rules out a numeric-only quality gate fix and motivates selective semantic coverage/rescue evaluation next.
+- Quality guard regression after the audit analysis: `src/test/quality.test.ts` passed 63/63. Existing invariant, degeneration, source-fragment, and language-contamination protections remain green while semantic failures stay audit-only pending a measured selective rescue design.
+- Ran the existing local/free semantic-coverage evaluator with the venv model on 10 reviewed accepted rows (`semantic-coverage-latest.json`). It produced sentence-level similarity evidence; the known high-severity design-for-wearability row scored full=0.651/min-source=0.506 and interactive-jewellery scored full=0.691/min-source=0.622, while clean education-learning-analytics scored full=0.871/min-source=0.850. This supports using coverage as a selective rescue signal rather than a global gate; no production threshold was changed.
+- Expanded semantic coverage evaluation to all 25 reviewed accepted rows (`semantic-coverage-all-reviewed.json`). Low minimum-source similarity is concentrated in known unsafe examples but overlaps with safe wording variation, so a hard threshold would over-reject. This supports a multi-signal selective rescue (coverage + invariant/structure evidence) rather than an immediate production cutoff.
+- Attempted audit-only alternative-model comparison with cached `cyberagent/CAT-Translate-1.4b`; its Llama architecture is incompatible with the seq2seq harness and was rejected before inference. Attempted cached `facebook/m2m100_1.2B`; the cache is incomplete and Hugging Face metadata lookup failed due restricted DNS, so no model output was fabricated. This is an evaluation-environment limitation, not a production blocker; local MADLAD fresh-port benchmarks remain available.
+- Fresh-port audit added `medical-imaging-deep-learning-review` on port 18775; benchmark completed with status 0 and server cleanup. Report saved at `test-data/real-papers/reports/translation-audit-medical-imaging-deep-learning-review.{json,md}`. This confirms another medical-format paper can be measured independently of the app server.
+- Fresh-port audit added `covid-ml-review` on port 18776; benchmark completed with status 0 and server cleanup. Report saved at `test-data/real-papers/reports/translation-audit-covid-ml-review.{json,md}`. One sampled unit fell back after protected scientific identifiers were dropped, correctly attributed to invariant preservation/model output rather than hidden extraction behavior.
+- Fresh-port audit added `medical-image-segmentation-deep-learning` on port 18777; benchmark status 0 and server cleanup confirmed. Report saved at `test-data/real-papers/reports/translation-audit-medical-image-segmentation-deep-learning.{json,md}`. The long loss-improvement unit used identifier rescue plus two-unit beam rescue, preserving [98]–[102] while avoiding a single-fragment submission.
+- Fresh-port audit added `interpreting-neural-networks` on port 18778; benchmark completed with status 0 and cleanup. Report saved at `test-data/real-papers/reports/translation-audit-interpreting-neural-networks.{json,md}`. The sampled abstract/body units produced coherent Japanese after initial warmup degenerate output was skipped; this adds an ML-format accepted sample for comparison with unsafe semantic coverage cases.
+- Fresh-port audit added `human-ai-interaction-guidelines` on port 18779; benchmark completed status 0 with cleanup. Report saved at `test-data/real-papers/reports/translation-audit-human-ai-interaction-guidelines.{json,md}`. One unit triggered protected identifier-drop fallback (`errorsAssume`), showing a further model/invariant failure mode to include in selective rescue evaluation.
+- Fresh-port audit added `conversation-analysis-user-experience` on port 18780; benchmark status 0 and cleanup confirmed. Report saved at `test-data/real-papers/reports/translation-audit-conversation-analysis-user-experience.{json,md}`. The older single-column conversation-analysis sample translated two units without fallback, adding format/discipline coverage.
+- Fresh-port audit added `computational-linguistics-nlp-translation` on port 18781; benchmark status 0 and cleanup confirmed. Report saved at `test-data/real-papers/reports/translation-audit-computational-linguistics-nlp-translation.{json,md}`. The short sampled units completed through the same MADLAD path; startup degenerate output was isolated to warmup and did not abort the benchmark.
+- Merged all 30 per-paper fresh translation reports into `translation-audit-fresh-v1.json` (excluding the prior merged file), then rebuilt the review queue against it. Current queue: **208 rows**, with **28 previously annotated** and remaining rows pending manual semantic comparison. This is the current cross-paper audit population; no production selector changes were made.
+- Ran semantic coverage over the full 208-row merged review population using the local/free MiniLM evaluator; output saved as `semantic-coverage-208.json`. This supplies a complete triage signal for the 180 pending manual rows and confirms that low similarity is distributed across formats, so it must remain a review/rescue signal rather than a global fallback threshold.
+- Created audit-only priority queue `semantic-review-low-coverage-v1.json` containing 32 rows with minimum source-sentence similarity <0.65, sorted by manual severity then similarity. This queue is for human semantic comparison and cannot alter production decisions.
+- Materialized the 12 lowest-coverage excerpts into `semantic-review-low-coverage-excerpts.md` for human comparison. Several rows have severity 0 only because they are pending review; they are intentionally not treated as safe. This prevents embedding scores from being mistaken for labels and keeps the audit workflow explicit.
+- Materialized the low-coverage excerpts correctly by joining semantic scores back to the review source records; `semantic-review-low-coverage-excerpts.md` now contains the available priority excerpts for manual comparison.
+- Rebuilt the review queue after all fresh reports were merged; it remains 208 rows across 30 papers, 28 annotated and 180 pending. Production decision fields are preserved per row, while pending rows remain explicitly unreviewed.
+- Generalized `scripts/attribute-translation-fallbacks.ts` to accept `TRANSLATION_AUDIT_REPORT`, then ran it against the 30-paper fresh aggregate. It produced 18 ordinary-body fallback attribution rows (all extraction geometry matched or were explicitly classified), with causes/status now based on the current fresh report rather than the stale baseline. This establishes a current attribution inventory for reducing reader-visible fallback.
+- Post-attribution validation: typecheck, lint, and `git diff --check` all pass. No app/.app build was performed, per the active extraction/translation audit scope.
+- Generated a fresh-only baseline summary from `translation-audit-fresh-v1.json` (excluding per-paper files to avoid double counting). The prior all-files summary was intentionally superseded because it double-counted merged reports; the fresh-only artifact is the authoritative aggregate for current audit metrics.
+- Audited fresh aggregate pre-model fallbacks: 42 rows. Their reasons are now separated from model failures; the majority are source/structure validation failures and therefore cannot be improved by changing MADLAD alone. This supports prioritizing paragraph repair and source-integrity improvements before model cascade work.
+- Built audit-only `pre-model-repair-candidates-v1.json`: of 42 pre-model fallbacks, 32 are paragraph/fragment repair candidates (page-boundary continuation, truncated word, or unbalanced delimiters), while 10 are non-prose/structural cases. This quantifies the highest-impact extraction improvement target without changing production behavior.
+- Updated `TRANSLATION_CORPUS_AUDIT.md` with the deduplicated Phase 2 fresh-port checkpoint, current fallback/stage counts, pre-model repair attribution, manual-review progress, and next actions. This is the durable handoff for continuing the audit.
+- Translation-server Python regression rerun with correct `PYTHONPATH=translation-server`: **109 tests passed** via unittest discovery. The earlier no-PYTHONPATH failure was an invocation issue, not a code failure.
+- Created deterministic paper-level held-out cohort `translation-audit-heldout-v1.json` (5 of 30 papers selected by SHA-256 ranking, independent of manual labels). These papers are frozen for future selective-rescue comparisons to prevent audit-label leakage.
+- Environment check found listeners on legacy ports 8765–8769 (PIDs 42509, 41528, 44762, 50085, 66350). Fresh benchmark ports (18773+) were cleaned by traps; these legacy listeners predate the current same-shell runs and were not killed because process ownership/role could not be safely inspected under sandbox restrictions. Future benchmarks continue using fresh ports and do not depend on them.
+- Focused segmenter regression rerun: **41 tests passed**, including author-year semicolon protection, year-vs-decimal boundaries, bullet/list unit preservation, continuation merging, and round-trip invariants.
+- Final handoff sanity check: typecheck, lint, and diff-check pass; core audit artifacts (fresh baseline, held-out cohort, pre-model repair candidates) are present. No fresh benchmark process is left running; legacy app listeners remain isolated from the audit workflow.
+- Fixed a regression introduced by the modest title-font threshold: wrapped grant-number acknowledgement lines could be treated as title candidates and split from their support paragraph. Generic title rejection now excludes funding/grant metadata and dotted grant identifiers. Reading-order 58/58, typecheck, lint, and diff-check pass.
+- Resumed fresh-port audit on 2026-09-17: processed the final two cached pending papers (`wear-scale`, `how-content-volume-landing-pages`) with 12 units each on port 18782. Both reports completed; the same-shell trap stopped the server and no listener remains on 18782. Fresh aggregate updated to 32 papers / 232 rows: ordinary-body 74 with 19 reader-visible fallbacks (25.7%), model-eligible 154 with 70 fallbacks (45.5%), stages pre-model 50 / post-model 28 / accepted 82. Manual review remains 28/232 completed. The <=5% fallback and near-zero unsafe-corruption goals are not met; continue with attribution/selective rescue.
+- Refreshed audit artifacts after the two-paper run: manual review queue now correctly references `translation-audit-fresh-v1.json` with 232 rows (28 annotated, 204 pending). Semantic priority queue regenerated (6 eligible high-priority rows); no labels leak into production. `git diff --check` passes.
+- Recomputed `pre-model-repair-candidates-v2.json` from the current 32-paper aggregate with paper IDs preserved: 50 pre-model fallbacks split into 33 continuation/truncation/repair candidates and 17 non-prose or unsafe-to-merge cases. Main buckets: paragraph-ending truncation 23, leading continuation 9; figure-subpanel mixing 2 remains excluded from repair. Audit-only; no production rule changed.
+- Verification after audit reclassification: `src/test/quality.test.ts` passed 63/63 and translation-server unittest discovery passed 109/109. The current 33 repair candidates are audit-only; no production merge or quality-gate change was made because all candidates are same-page sampled blocks and cannot prove safe cross-page stitching.
+- Reran semantic coverage with the full fresh aggregate via `TRANSLATION_AUDIT_INPUT=.../translation-audit-fresh-v1.json`: 144 comparable translated rows. Audit signals: low sentence coverage 2, low length ratio 2, invariant loss 24, negation relation loss 7, contrast relation loss 6, ordinal claim loss 17, condition relation loss 3. No production threshold change; signals remain for manual/selective rescue evaluation.
+- Generated audit-only `semantic-review-candidates-fresh-v1.md`: source/translation pairs for the top 20 of 82 accepted fresh rows, ranked by relation/invariant/length-risk signals. Highest-priority examples include neuroscience-rule-following, thermal-earring, and two how-content-volume-landing-pages units. No production selector or threshold uses this ranking.
+- Recomputed provisional manual-review metrics against the 232-row fresh queue: 28 reviewed, automatic accept 46.4%, semantic error 25.0%, extraction-induced 32.1%, unsafe false-accept 46.2% among eligible reviewed accepts, false-reject 6.7%. These are provisional because 204 rows remain unreviewed; they confirm the current quality target is unmet and support prioritizing semantic rescue over gate relaxation.
+- Attributed 50 pre-model fallbacks by source integrity: 14 `mixed-chrome`, 1 structural-warning, 35 unknown in report metadata. Mixed-chrome examples span Creative Commons licence text, figure subpanel descriptions, and paragraph fragments, so no global retry rule was added; they remain an extraction separation worklist.
+- Rechecked catalog OA retrieval with `scripts/fetch-real-papers.mjs`: 32/33 PDFs ready; no additional candidate was legally retrievable from the current catalog (one remains missing URL). Corpus expansion beyond 32 requires adding and provenance-verifying new metadata/PDFs rather than retrying the same fetch.
+- Expanded corpus with OA arXiv cognitive-psychology paper `using-cognitive-psychology-gpt3` (Binz & Schulz, 2022, arXiv:2206.14576). Catalog metadata and PDF were added after title/source verification. Extraction corpus regression passed **70/70**. Fresh-port translation benchmark on 18783 completed 12 units; server cleanup confirmed. Fresh aggregate now 33 papers / 244 rows: ordinary-body 81 with 21 fallbacks (25.9%), model-eligible 161 with 72 fallbacks (44.7%), stages pre-model 53 / post-model 31 / accepted 88. Review queue 28/244 completed; goal remains active.
+- Expanded corpus with OA arXiv linguistics paper `syntax-prosody-correlation` (Köhn, Baumann & Dörfler, 2018, arXiv:1806.05900). PDF downloaded after metadata verification; extraction corpus passed **72/72**. Fresh-port benchmark on 18784 completed 12 units and server cleanup completed. Fresh aggregate now 34 papers / 256 rows; review queue refreshed.
+- Semantic coverage rerun after the 34-paper expansion: 154 comparable rows, low sentence coverage 2, low length ratio 2, invariant loss 25, negation loss 8, contrast loss 6, ordinal loss 17, condition loss 3. Audit-only; no production threshold changed.
+- Post-expansion validation: corpus coverage reports 35 catalog papers / 34 PDFs ready; `npm run typecheck` and `npm run lint` completed without errors. Existing metadata gaps in older local-seed papers remain documented; new arXiv entries include source URLs and selection reasons.
+- Per-paper new-format attribution: `using-cognitive-psychology-gpt3` 6/12 fallbacks (3 pre, 3 post); `syntax-prosody-correlation` 8/12 fallbacks (all pre-model, mostly paragraph-ending/leading continuation warnings). This confirms the new linguistic two-column paper is an extraction-boundary stress case and should not be used to tune MADLAD quality thresholds.
+- Attempted to add PMC OA ergonomics paper `hfe-covid-workspaces`; PMC returned an HTML access page instead of a PDF at the guessed URL, so the unverified catalog entry was removed. No paper was counted or benchmarked from this failed retrieval.
+- PMC OA manifest resolution was attempted for PMC9929192 and PMC4466322; both manifest requests returned 404 from the NCBI endpoint in this environment. No PDFs were added without a verifiable OA manifest/link. Corpus remains 34 papers / 256 rows.
+- Updated `audit-progress.json` durable handoff after the 34-paper corpus expansion: 34 completed papers, no pending cached papers, benchmark version `3b-mt-v5-semantic-v71-strict-restore-v9`; next actions now prioritize manual accepted-output review, source-fragment repair evidence, OA expansion, and held-out selective rescue.
+- Manually reviewed one high-priority accepted marketing row (`how-content-volume-landing-pages` b-081de247): source negation “not all persuasion theories are effective online” was reversed to “all ... are effective,” severity 3 semantic shift, primary cause MADLAD decode. Review queue is now 29/256 completed; this label remains audit-only.
+- Manually reviewed `thermal-earring` b-22de2c20: one occurrence of “earlobe temperature” became “耳か温度,” labeled terminology_error + minor_wording, severity 1, primary MADLAD decode. Updated provisional reviewed metrics: 29 rows; semantic error 27.6%, terminology error 17.2%, unsafe false-accept 50.0%. Still provisional and audit-only.
+- Manually reviewed `hci-empirical-methods` b-48011542: “counter-balancing test conditions” became nonstandard “対抗試験条件,” labeled terminology_error severity 1, primary MADLAD decode. Provisional reviewed metrics now 30 rows: semantic error 26.7%, terminology error 20.0%, unsafe false-accept 46.7%.
+- Manually reviewed `interactive-jewellery` b-7e7c94f2: translation omits that the three perspectives will structure description/reflection throughout the remainder of the paper, labeled omission + semantic_shift severity 2, primary MADLAD decode. Provisional review now 31/256, semantic error 29.0%, unsafe false-accept 50.0%.
+- Manually reviewed `cognitive-psychology-gpt3` b-654e8b90: translation changes the Blicket experiment condition (second object/machine and joint activation) and adds unsupported shared-information verification. Labeled semantic_shift + omission + addition, severity 3, primary MADLAD decode. Provisional review 32/256; semantic error 31.3%; unsafe false-accept 52.9%.
+- Added a general quantifier-negation guard: `SOURCE_NEGATION` now recognizes bounded forms such as “not all/every/each/necessarily,” closing the observed “not all → all” false-accept path. Added two quality regressions (drop rejects, preserved bounded negation accepts). Quality tests pass 65/65; typecheck/lint/diff-check pass. This is a safety guard, not a blacklist, and no .app build was performed.
+- Fresh rebenchmark after quantifier-negation guard (port 18785) confirmed the known “not all ...” marketing row now receives `post-model fallback` with reason `source negation missing`, instead of being accepted. Aggregate refreshed: 34 papers / 256 rows; ordinary-body 21/84 fallbacks (25.0%), model-eligible 72/164 (43.9%), stages pre-model 61 / post-model 31 / accepted 92. No listener remains on 18785.
+- Fixed `scripts/merge-fresh-translation-reports.ts` to dedupe papers by `paper.id`, with later input reports overriding earlier checkpoints. This corrected a duplicate how-content paper after rebenchmarking: authoritative aggregate is 34 papers / 256 rows, ordinary-body fallback 22/84 (26.2%), model-eligible 73/164 (44.5%), stages pre-model 61 / post-model 32 / accepted 91. Manual queue remains 32/256; diff-check passes.
+- Integrity check after merge fix: fresh aggregate has 34 papers, 34 unique IDs, and zero duplicates. Quality regression remains 65/65 after the quantifier-negation guard.
+- Post-model fallback reason inventory on authoritative 34-paper aggregate: 32 rows total; 18 are server source-fallback outputs, 2 quantifier/explicit negation misses, and 12 scientific/language/degeneration invariant failures. This indicates most post-model fallbacks are model/server output failures rather than over-strict length gating; no global gate relaxation is justified.
+- User-requested pause checkpoint (2026-09-17): stopped at a clean audit boundary after completing the post-model fallback inventory and long-source-fallback stratification. No fresh benchmark/translation-server listener was found on the fresh-port range; legacy app listeners were not touched. Working tree changes remain uncommitted. Resume next by inspecting `translation-server/engines/segmenter.py` in bounded slices, then run an audit-only segmentation ablation on representative long source-fallback rows before changing production code. Current authoritative baseline remains 34 papers / 256 rows, ordinary-body fallback 22/84 (26.2%), model-eligible fallback 73/164 (44.5%), manual review 32/256.
+- Audit-only segmentation baseline created at `test-data/real-papers/reports/segmenter-long-fallback-baseline-v1.json`. It records the five longest post-model `server returned source fallback` examples, current `semantic-v71` units, model inputs, lengths, and round-trip checks. Current segmentation produced 7–12 units per 1,496–1,750-character source; all five round-trip checks passed. No production behavior changed.
+- Continued audit verification: focused semantic segmenter suite passed **41/41** after the long-fallback baseline. The baseline shows no tiny citation-only fragmentation and all five source round-trips are intact; therefore no evidence yet supports a generic splitter fix. Keep the next experiment at model-input/output attribution or controlled ablation rather than relaxing the quality gate.
+- Full translation-server Python regression rerun after the segmentation baseline: **109/109 passed** (including microbatch and candidate-selection coverage). No production change was needed; the next uncompleted evidence step remains same-model direct-vs-microbatch ablation on fixed long sources.
+- Attempted fixed-fixture direct `/translate` ablation on fresh port 18786. Server reached application startup but sandbox denied bind (`[Errno 1] operation not permitted`), so no model output was collected; the same-shell trap terminated the attempt and no listener remains. This is an environment execution blocker for direct model ablation, not a translation-quality conclusion. Existing Python tests remain green.
+- Fixed-fixture direct model run succeeded on elevated fresh port 18787. The 184-character citation sentence was sent as one production `/translate` request; MADLAD returned a fluent Japanese output preserving all three author-year citations, with 32 input tokens and 44 output tokens in 2.12s. This single direct run did not reproduce the previously reported hallucination, so it is evidence against a deterministic failure of this exact input under the current server version; broader condition ablation remains pending.
+- Same-process fixed-fixture ablation completed on elevated fresh port 18788. Three requests (raw citation, atomic `ZZREF1ZZ` placeholder, and an intentionally split 2-unit input) all returned without the prior hallucination. Raw: 32→44 tokens; placeholder: 32→44; split: 36→49. The split output introduced a mild relational drift, while placeholder output correctly preserved the placeholder for later restoration. Full inputs/outputs are in `test-data/real-papers/reports/translation-fixed-ablation-v1.json`; no production change made.
+- Recomputed manual-review summary against the authoritative 34-paper aggregate: 32/256 reviewed, automatic accept 50.0%, semantic error 31.25%, terminology error 18.75%, extraction-induced 28.125%, unsafe false-accept 50.0%, false-reject 6.25%. These remain provisional because 224 rows are pending; automatic acceptance is not treated as correctness.
+- Manually reviewed three additional accepted rows (cognitive-psychology GPT-3 API methods, marketing paper structure paragraph, Jogwheel methods paragraph). Queue is now 35/256 reviewed. Provisional aggregate: automatic accept 54.29%, semantic error 34.29%, terminology error 22.86%, extraction-induced 25.71%, unsafe false-accept 52.63%, false-reject 6.25%. Labels remain audit-only.
+- Manually reviewed two additional accepted rows (truncated section-reference paragraph and interactive-jewellery disposal/technology causality). Queue is now 37/256 reviewed. Provisional metrics: automatic accept 54.05%, semantic error 35.14%, terminology error 21.62%, extraction-induced 27.03%, unsafe false-accept 53.13%, false-reject 6.25%.
+- Correction: the review summarizer counts **36/256**, not 37, because one targeted row was already present in the queue's reviewed set. Authoritative provisional metrics are automatic accept 55.56%, semantic error 38.89%, terminology error 22.22%, extraction-induced 22.22%, unsafe false-accept 55.0%, false-reject 6.25%.
+- Manually reviewed one additional accepted cognitive-psychology methods row (GPT-3 trial/prompt/feedback procedure). Review remains 36/256 according to summarizer's deduplicated count; provisional semantic error increased to 38.89%, automatic accept 55.56%, terminology error 22.22%, extraction-induced 22.22%, unsafe false-accept 55.0%, false-reject 6.25%. Duplicate-key behavior is retained in the audit tool and does not affect production.
+- Latest summarizer output is authoritative after the new unique row: **37/256** reviewed, automatic accept 56.76%, semantic error 40.54%, terminology error 21.62%, extraction-induced 21.62%, unsafe false-accept 57.14%, false-reject 6.25%. Earlier 36/256 checkpoint is superseded.
+- Added debug-only microbatch fallback attribution: with `TRANSLATION_UNIT_DEBUG=1`, unit fallback logs now include a short source SHA-256, unit index/total, chunk length, and exception type/message; normal mode keeps the concise log. Translation-server regression remains **109/109 passed**, and `git diff --check` passes.
+- Debug instrumentation validation complete: `py_compile` passed, full translation-server regression **109/109 passed**, and `git diff --check` passed. This instrumentation change is ready for the next fresh-port audit run; no .app build performed.
+- Expanded fresh audit with `covid-ml-review` (12 units) on port 18789 using `TRANSLATION_UNIT_DEBUG=1`; report saved and server cleanup completed. Aggregate was merged with paper-id deduplication; current totals should be re-summarized before manual review.
+- Corrected the covid merge invocation after an initial no-op (the merge script requires `FRESH_TRANSLATION_REPORTS`); remerged all per-paper fresh reports successfully. Current aggregate was rebuilt from all available reports with paper-id deduplication.
+- Manually reviewed one accepted medicine row from `covid-ml-review`: “results are estimated and reported” became “experimental results,” with process compression. Labeled semantic_shift severity 2, primary MADLAD decode. Review count now 38/256; provisional semantic error 39.47%, unsafe false-accept 57.89%.
+- Correction: `covid-ml-review:b-77db4961` was already present in the review queue and was not changed by the attempted duplicate-key update; no new review count should be inferred from that attempt. The authoritative count remains 37/256 and the prior metrics remain unchanged.
+- Added fresh benchmark for `human-ai-interaction-guidelines` (12 units, port 18790, debug enabled) and merged all per-paper reports with deduplication. Server cleanup completed; aggregate rebuilt and counts recorded above.
+- After the new paper report, aggregate is now **34 papers / 266 rows** (paper count unchanged because this paper was already represented in the catalog aggregate; 10 additional sampled rows replaced/filled the prior checkpoint). Manual review queue preparation was rerun; pending rows must be rechecked before new annotations.
+- Queue rebuild note: `prepare-translation-manual-review.ts` intentionally narrowed the active queue to 52 priority rows and moved 9 prior rows to `archivedReviews`; active reviewed count is now 28/52. Summarizer's current provisional metrics are automatic accept 53.57%, semantic error 28.57%, terminology error 17.86%, extraction-induced 28.57%, unsafe false-accept 46.67%, false-reject 0%. Prior 37/256 metrics remain historical and are not the current active-queue denominator.
+- Post-benchmark state verification: no listener on fresh port 18790. Aggregate remains 34 papers / 266 rows; active review file contains 52 rows with 28 completed and 9 archived historical reviews. Next resume point is manual review of the newly added/priority rows, followed by a fresh summary; no server process is running.
+- Manually reviewed `human-ai-interaction-guidelines` accepted conclusion row b-3d6e8ba2: “steering the future” was mistranslated as dominating/controlling the future, severity 2 semantic shift, primary MADLAD decode. Active review summary refreshed by the summarizer; labels remain audit-only.
+- Recomputed current aggregate metrics after the 266-row merge: ordinary-body fallback and model-eligible fallback counts/rates were printed above and supersede earlier 256-row values. No production behavior changed; this is a measurement checkpoint.
+- Post-aggregate application validation: `npm run typecheck` and `npm run lint` both passed. No `.app` build was run; audit remains source/translation benchmark work.
+- Reviewed one education accepted list item (`education-learning-analytics` b-844b5f68): malformed terminology “環界” for environment, severity 1, primary MADLAD decode. Active queue count/metrics refreshed by summarizer.
+- Reviewed one wearable/ergonomics accepted row (`wear-scale` b-16c56d24): author name Kelly→Kelli terminology drift and omission of “as illustrated below”; severity 1. Active review is now 30/52; current summary refreshed by the audit script.
+- Reviewed speech interaction accepted abstract (`speechin` b-29bed79d): technical terminology corruption (“convolutional”→巻き込み, duplicated neck/face phrase) despite preserved counts/accuracies; terminology_error severity 2, primary MADLAD decode. Active review now 31/52.
+- Checkpoint after speechin/wear-scale/education manual review: no further generic production rule is justified by isolated terminology errors; current next escalation is alternate-model or selective-cascade evaluation on the frozen held-out cohort. `git diff --check` remains clean.
+- Reviewed existing alternate-model artifacts: Gemma 2 9B, Qwen 2.5 3B/7B/14B, M2M100, and Opus benchmark reports are present, including held-out/manual and selector comparisons. No selector change was made; next step is to align these artifacts with the current 266-row fresh aggregate before any production cascade decision.
+- Parsed alternate-model manual artifacts: Qwen 2.5 14B/7B and Gemma 2 9B reports contain explicit `manualLabel` fields, but they are small legacy samples (12 rows each, plus smoke/held-out subsets) and are not aligned to the current 266-row aggregate. They are suitable for a later held-out selector analysis, not for claiming a production improvement yet.
+- Created audit-only `alternate-model-manual-summary-v1.json` by aggregating explicit manual labels from legacy Qwen/Gemma artifacts. It records per-artifact label counts and severe semantic/safety rates; because samples are small and not aligned to the 266-row aggregate, it is not a production model-selection result.
+- Final consistency check for this checkpoint: alternate-model summary artifact exists and is non-empty; fresh benchmark ports 18789/18790 have no listeners; `git diff --check` passes. Goal remains active and below target; no completion claim made.
+- Created `alternate-model-alignment-v1.json`, joining legacy alternate-model manual rows to the current 266-row aggregate by `(paperId, blockId)`. This establishes the exact overlap for future selective-cascade analysis without treating unaligned legacy scores as production evidence.
+- Compared the 3 exact-alignment rows: alternate labels are available for only three Qwen 2.5 14B held-out prompt rows, so rescue/safety estimates are too small for a selector decision. The alignment artifact is retained as an audit-only seed; no cascade threshold was changed.
+- Added source-normalized alignment artifact `alternate-model-source-alignment-v1.json`. Matching by whitespace-normalized source hash finds additional overlap beyond exact block IDs; this remains audit-only and is safer for future selector analysis than positional matching.
+- Cross-model source-alignment audit over 17 rows: comparison is now sufficient to identify candidate rescue cases, but still too small and overlapping across model artifacts for production selection. The analysis artifact now supports prioritizing rows where MADLAD fallback/accepted status disagrees with alternate manual labels; no selector change made.
+- Checked local Ollama availability for alternate-model reapplication: `/opt/homebrew/bin/ollama` exists, but its daemon at 127.0.0.1:11434 is unreachable under this session (`operation not permitted`). No alternate-model rerun was attempted; existing legacy artifacts remain audit-only.
+- Re-ran a legacy held-out semantic-shift source through local Ollama Qwen 2.5 14B. The output preserved the causal uncertainty more closely than the prior MADLAD translation in this sample; terminal control escapes were stripped only from the saved audit artifact. This is one qualitative observation, not a production selector result.
+- Same-source Qwen 2.5 14B comparison for `speechin` b-29bed79d completed. Qwen rendered “convolutional recurrent neural network” as 深層畳み込み再帰神経ネットワーク and preserved 54/44/20/10/72 and 90.5%/91.6%; this is materially better than MADLAD's malformed “巻き込み” terminology in the reviewed row. Saved to `alternate-model-speechin-v1.json`; one-row evidence only, no production cascade change.
+
+- User-requested pause checkpoint (2026-09-17): audit/benchmark processes are stopped. No fresh translation server or benchmark process is running; latest durable state is the 34-paper / 266-row aggregate with active manual-review queue at 52 rows (31 reviewed at last reliable summary). Resume from alternate-model/selective-cascade evaluation and manual-review continuation. No .app build performed.
+
+- Resumed checkpoint: title geometry diagnostics were inspected for the two residual title cases. `social-influence-social-advertising` is a generic candidate-scoring/masthead competition issue: the two-line title is grouped but labeled `author`. `modeling-human-behavior-cognitive-uncertainty` is correctly classified as `title`; the mismatch is punctuation normalization (`-` vs `--`) and not extraction loss. Saved audit-only attribution to `test-data/real-papers/reports/title-root-cause-attribution-v1.json`; no production threshold or resolver rule changed.
+
+- Resumed fresh-port audit for the pending computational-linguistics paper. Same-shell server on port 18791 completed and was trapped/stopped; report `translation-audit-computational-linguistics-nlp-translation.json` contains 2 eligible rows (the PDF yielded only two qualifying paragraph blocks). Merge was attempted with the correct basename after an initial path-form invocation error; aggregate remains the authoritative source for next review. No production code changed.
+
+- Aggregate repair checkpoint: after the computational-linguistics run, the first merge invocation temporarily selected only that report due to an incorrect path form. A full basename-based rebuild from all 35 per-paper reports restored the authoritative aggregate to 34 papers / 276 rows (paper-id deduplicated). The per-paper report is complete; no server remains running. No production code changed.
+
+- Manual review continuation: audited accepted `design-for-wearability:b-8613f419`. The Japanese output introduces unrelated web/web-bridal content and omits the body-worn design guideline meaning; labeled hallucination + semantic_shift + terminology_error, severity 4, primary MADLAD decode. This is a confirmed unsafe false accept and remains audit-only (no blacklist or production selector change).
+- Corrected audit metadata for the wearability review by adding `reviewedAt`; summarizer now includes the severity-4 unsafe false accept in the authoritative 31/52 reviewed summary.
+- Manual review continuation: audited accepted `interactive-jewellery:b-c1e9695a`; opening discourse claim was omitted and an unsupported manufacturing reference was introduced. Labeled omission + semantic shift, severity 2, primary MADLAD decode. Summary refreshed.
+- Manual review continuation: audited accepted `medical-imaging-deep-learning-review:b-f434fd12`. Overall abstract meaning is retained, but federated learning terminology and medical-imaging wording are degraded and the non-exhaustive-survey qualification is weakened. Labeled terminology_error/omission severity 1, primary MADLAD decode; not an unsafe factual reversal.
+- Manual review continuation: audited accepted `hci-empirical-methods:b-d508a89e`. `undergraduate HCI course` became `大学院のHCIコース`, changing the intended prerequisite audience; the rest of the requirement paragraph is preserved. Labeled terminology_error/semantic_shift severity 2, primary MADLAD decode.
+- Manual review continuation: audited accepted `marketing-consumer-response:b-6e163a56`. The statement that cumulative distribution function P(x) also does not follow a scaling law was omitted, changing a mathematical claim. Labeled omission/semantic_shift severity 2, primary MADLAD decode; invariant checks did not detect this relational omission.
+- Manual review continuation: audited accepted cognitive-psychology methods block `b-3f9702fe-5`. A 979-character methods description was compressed to 374 characters, omitting the per-trial GPT-3 response detail and weakening the vignette/task distinction. Labeled omission severity 2, primary MADLAD decode.
+- Quality-gate analysis: generated `accepted-length-ratio-audit-v1.json` for accepted rows with Japanese/source character ratio <0.4. Reviewed samples contain both correct concise translations and severity>=2 omissions, so a hard ratio rejection would create false fallbacks; no threshold change was made. Length remains an evidence signal requiring semantic/coverage corroboration.
+- Manual review continuation: completed the final unreviewed accepted row `dont-mind-me:b-e93e395c`. Study design, ages, screening, and qualifying question are preserved; only `wearable controller` is an awkward transliteration. Labeled minor_wording/terminology_error severity 1, no unsafe semantic error.
+- Manual review continuation: audited `dont-mind-me:b-667e5341` post-model fallback. Main argument is retained, but `EMG controllers` becomes `EMGZ` and citation [4] is displaced; invariant gate correctly rejected the missing EMG token. Labeled terminology_error/citation_error severity 2, primary MADLAD decode, with quality gate acting safely.
+- Manual review continuation: audited pre-model fallback `design-for-wearability:b-5824321b`. Source starts mid-sentence (`with what they wear and carry`) with missing antecedent; fallback is correct and should be attributed to paragraph reconstruction/extraction, not MADLAD. Labeled source_fragment/paragraph_split severity 2.
+- Manual review continuation: audited pre-model fallback `power-over-skin:b-73291c9e`. Source ends mid-phrase (`13.56 MHz RF`), so the fallback is correct and attributed to paragraph reconstruction/extraction rather than MADLAD. Labeled source_fragment/paragraph_split severity 2.
+- Manual review continuation: audited neuroscience post-model fallback `neuroscience-rule-following:b-ae7871b7-3`. Citation cluster 29,30,32 and citation 33 were omitted, with compression of the opening consequence condition; invariant gate correctly rejected it. Labeled citation_error/omission severity 2, primary MADLAD decode.
+- Manual review continuation: audited pre-model fallback `fashion-hybrid-cmf:b-cfc8332e`; it starts with a lowercase continuation and ends mid-clause. Fallback is correct and attributed to paragraph reconstruction/extraction. Labeled source_fragment/paragraph_split severity 2.
+- Manual review continuation: audited pre-model fallback `fashion-hybrid-cmf:b-d0b7f07c`; lower-case continuation ending at `self-expression and`. Fallback is correct; primary cause extraction/paragraph reconstruction. Labeled source_fragment/paragraph_split severity 2.
+- Manual review continuation: audited pre-model fallback `step-to-charge:b-c96bb1f8`; unit begins mid-sentence (`the human body...`) despite intact subsequent power-transfer claims. Fallback is correct and attributed to paragraph reconstruction/extraction. Labeled source_fragment/paragraph_split severity 2.
+- Manual review continuation: audited pre-model fallback `ergonomics-human-factors-ihci:b-776916fd`; source begins with dangling `of intelligent human-computer interaction` and continues a prior sentence. Fallback is correct; primary cause paragraph reconstruction/extraction. Labeled source_fragment/paragraph_split severity 2.
+- Manual review continuation: audited pre-model fallback `interactive-jewellery:b-b11f9f2e`; source ends with incomplete predicate `We identify`. Fallback is correct and attributed to paragraph reconstruction/extraction. Labeled source_fragment/paragraph_split severity 2.
+- Manual review continuation: audited pre-model fallback `wear-scale:b-673addc1-3`; `(b) validating...` subpanel text is mixed with methods prose and ends mid-sentence. Fallback is correct; primary cause structure mixing/extraction. Labeled source_fragment/figure_caption/paragraph_split severity 2.
+- Manual review continuation: audited `ergonomics-human-factors-ihci:b-1042fadb-2`. It is a Chinese bullet/list block, not an English-to-Japanese translation unit; expected-non-prose/source-language policy correctly prevented model submission. Labeled correct severity 0, not a translation failure.
+- Manual review continuation: audited education pre-model fallback `education-learning-analytics:b-2acf9e0b`. It is a flattened table with column labels and cell prose interleaved, ending mid-row; fallback correctly prevents ordinary paragraph translation. Primary cause table/reading-order extraction; labeled table_contamination/source_fragment/paragraph_split severity 2.
+- Manual review continuation: audited human-AI guideline post-model fallback `human-ai-interaction-guidelines:b-e41c0a7a`. Source is a concatenated guideline-card stream (`senseImagine`, `errorsAssume`) with missing separators; invariant gate rejected identifier-like token loss. Primary cause structure mixing/extraction, secondary MADLAD decode. Labeled table_contamination/terminology_error/source_fragment severity 2.
+- Manual review continuation: completed the final active queue row `speechin:b-374f26ae`; source ends at incomplete `too large to be considered`. Pre-model fallback is correct and attributed to paragraph reconstruction/extraction. Labeled source_fragment/paragraph_split severity 2. Active queue is now 52/52 reviewed.
+- Selective-cascade checkpoint: reconciled existing three-model comparison with the completed 52-row manual review. Existing cascade candidates remain audit-only; the three manually reviewed candidate rows contain semantic shifts, so no safe automatic rescue candidate is available. Saved `selective-cascade-decision-v1.json`; no production model selector enabled.
+- Corpus expansion checkpoint: conversation-analysis-user-experience was benchmarked on fresh port 18792 and completed; same-shell cleanup stopped the server. Aggregate rebuilt from all per-paper reports with deduplication. No production code changed.
+- Post-review verification: typecheck and lint pass after the 52-row manual review. Fallback attribution was rerun with the required report basename; the earlier path-form invocation failed before reading data and caused no mutation. `git diff --check` passes.
+- Saved the completed 52-row manual-review summary as `test-data/real-papers/reports/manual-review-summary-v1.json` for durable consumption by future sessions. Current reviewed unsafe false-accept remains 0.52; this is an audit metric, not a production decision.
+- Post-audit regression checkpoint: extraction corpus and real-paper reading-order suites completed successfully at **72/72 tests** (35 real-paper reading-order cases included). Existing PDF.js font/ColorSpace warnings remain non-failing. No production code changed in this checkpoint.
+- Post-audit safety verification: quality suite passed **65/65** and translation-server Python regression passed **109/109**. Existing microbatch fallback attribution test output is expected; no production behavior changed.
+- Corpus coverage checkpoint: `audit:corpus-coverage` reports 35 catalog entries / 34 PDFs ready. HCI target is met (12), while cognitive psychology 3/10, marketing 3/10, ergonomics 3/10, and linguistics 4/10 remain below target. This deficit is now explicit worklist; no duplicate metadata-only entries were added.
+
+- User-requested pause checkpoint (2026-09-17): stopped at a clean audit boundary. Latest merged aggregate is 36 papers / 300 blocks; manual review queue is 57 reviewed / 243 pending. HFE scoping and safety PDFs are included, and extraction regression is 76/76. Typecheck, lint, quality suite (65/65), and translation-server Python regression (109/109) passed at the latest verified checkpoints. No .app build was run. Resume from provenance completion for the two HFE catalog entries, then continue manual semantic review and fresh-port benchmark/corpus expansion. No production model cascade has been enabled.
+- Provenance checkpoint (2026-09-17): verified HFE PDF first-page bibliographic metadata and filled catalog authors/year without changing extraction behavior. `hfe-healthcare-scoping-2024` is O’Dea et al., 2025 (BMJ Open Quality, DOI 10.1136/bmjoq-2024-003222); `hfe-healthcare-safety-review` is Mao et al., 2015 (PLOS ONE, DOI 10.1371/journal.pone.0129948). Coverage checker now reports both entries complete; remaining catalog metadata gaps are pre-existing entries. No translation server is running; next action is manual review continuation or fresh-port benchmark.
+- Manual review continuation: audited accepted `cognitive-psychology-gpt3:b-5096fc7a`. Translation preserves the model names and temperature, but omits “unless otherwise noted” and “default values for all other parameters,” weakening reproducibility conditions. Labeled omission/terminology_error severity 1, primary MADLAD decode; not an unsafe result error. Review progress is now 58/300 (242 pending).
+- Manual review continuation: audited accepted `cognitive-psychology-gpt3:b-654e8b90`. The Japanese translation changes the Blicket causal test: “second object” becomes “second machine,” the joint activation condition is omitted, and unsupported “shared information / verifying operation” content is added. Labeled semantic_shift/omission/addition/terminology_error severity 3, primary MADLAD decode. This is an unsafe false accept requiring model/input or semantic-coverage work, not a fallback-threshold adjustment. Review progress is now 59/300 (241 pending).
+- Manual review continuation: audited accepted `cognitive-psychology-gpt3:b-b4361dd7`. Core claims, experiment count, and iterative prompt update are preserved; the transition to a more challenging setting is compressed and “passable” is rendered awkwardly. Labeled minor_wording/omission severity 1, primary MADLAD decode. Review progress is now 60/300 (240 pending).
+- Manual review continuation: audited accepted `conversation-analysis-user-experience:b-0d5b12a9`. All two case studies, design principles, mobile/social audio work, and unrealized adaptive-space concepts are preserved; wording is awkward but not semantically unsafe. Labeled minor_wording severity 1, primary MADLAD decode. Review progress is now 61/300 (239 pending).
+- Manual review continuation: audited accepted `covid-ml-review:b-23ad8d8f-2`. The source is an incomplete figure/section reference ending at “Section”; the translation invents “第1節,” risking a wrong cross-reference. Labeled source_fragment/paragraph_split/semantic_shift severity 2, primary PDF extraction/paragraph reconstruction. This demonstrates an extraction-induced unsafe false accept that should be repaired upstream rather than by weakening translation gates. Review progress is now 62/300 (238 pending).
+- Manual review continuation: audited accepted `conversation-analysis-user-experience:b-198b962f`. Procedure, CA analysis, multimodal visit recordings, transcription, and repeated viewing are preserved; introductory framing and a below-reference are omitted and tense shifts slightly. Labeled minor_wording/omission severity 1, primary MADLAD decode. Review progress is now 63/300 (237 pending).
+- Manual review continuation: audited accepted `covid-ml-review:b-585a6d0d`. Bullet claim about rapidly changing ML/DL theory and the need to know the current state is accurately preserved; labeled correct severity 0. Review progress is now 64/300 (236 pending).
+- Manual review continuation: audited accepted `covid-ml-review:b-8949c8e7`. The bullet's two claims (DL diagnostic capability and COVID-19 problem-solving capability) are not both preserved; the diagnostic capability is omitted. Labeled omission/semantic_shift severity 2, primary MADLAD decode. Review progress is now 65/300 (235 pending).
+- Manual review continuation: audited accepted numeric/table block `covid-ml-review:b-c37832bd`. The source is a multi-column table stream with mixed cells; translation invents range lower bound `0.9800` and obscures cell correspondence. Labeled table_contamination/source_fragment/addition/numeric_error severity 3, primary PDF extraction/table reading order, secondary MADLAD decode. Review progress is now 66/300 (234 pending).
+- Manual review continuation: audited accepted numeric bullet `covid-ml-review:b-dba43189`. Forecasting and patient-detection capabilities remain present, but “forecasting” becomes awkward “予測解決” and COVID casing varies. Labeled terminology_error/minor_wording severity 1, primary MADLAD decode. Review progress is now 67/300 (233 pending).
+- Manual review continuation: audited accepted figure-caption block `design-for-wearability:b-08a0a506`. Figure number, triceps arc mapping, averaging across people, and wearable-design application are preserved; “arc” is mistranslated as bow and “shape-able” is awkward. Labeled terminology_error/minor_wording severity 1, primary MADLAD decode. Review progress is now 68/300 (232 pending).
+- Manual review continuation: audited accepted `design-for-wearability:b-3176c513`. Guideline counts (first six vs latter seven) and generalization rationale are preserved; “integrate” and “physical manifestation” are slightly awkwardly rendered. Labeled minor_wording severity 1, primary MADLAD decode. Review progress is now 69/300 (231 pending).
+- Manual review continuation: audited accepted list block `design-for-wearability:b-3aa98fa9`. All three criteria and bullet structure are accurately preserved; labeled correct severity 0. Review progress is now 70/300 (230 pending).
+- Manual review continuation: audited accepted `design-for-wearability:b-4655d14e`. Criteria application, unobtrusive placement, and figure reference are preserved; labeled correct severity 0. Review progress is now 71/300 (229 pending).
+- Manual review continuation: audited accepted `design-for-wearability:b-4ac537c3`. Wearable/wearability terminology drifts to “ウェスタビリティ/ウェスタブル,” and “wearable product design” becomes unsupported “ウェストバンド製品設計.” Labeled terminology_error/semantic_shift/hallucination severity 3, primary MADLAD decode/terminology drift. This is an unsafe accepted translation and a candidate for terminology-aware validation or selective cascade. Review progress is now 72/300 (228 pending).
+- Manual review continuation: audited accepted quote `design-for-wearability:b-4c095bc2`. The comparison to blood pressure, costume/sports gear feeling, and activity orientation are broadly retained, but activity-oriented becomes “improves activity” and the malformed source comparison is normalized. Labeled minor_wording/semantic_shift severity 1, primary MADLAD decode. Review progress is now 73/300 (227 pending).
+- Manual review continuation: audited accepted keyword block `design-for-wearability:b-52a32441`. Core terms `wearability` and `wearable computers` are rendered as “ウェスタビリティ/ウェスタブルコンピュータ,” harming terminology and search/index use. Labeled terminology_error/semantic_shift severity 2, primary MADLAD decode/terminology drift. Review progress is now 74/300 (226 pending).
+- Manual review continuation: audited accepted numeric block `design-for-wearability:b-c2c0337c`. Electronic-component constraint, 3/8–1 inch pod thickness, 1/4 inch flex zones, and flexible-circuit fit are preserved with matching numbers; labeled correct severity 0. Review progress is now 75/300 (225 pending).
+- Manual review continuation: audited accepted `dont-mind-me:b-2562a1cf`. Cultural/time dependence of social acceptability, initial severity, exposure effect, and Bluetooth headset example are preserved, but “attitudes”/acceptability terminology becomes awkward “接近” with lexical drift. Labeled minor_wording/terminology_error severity 1, primary MADLAD decode. Review progress is now 76/300 (224 pending).
+- Manual review continuation: audited accepted statistical block `dont-mind-me:b-27091f72`. All p-values and gender/location findings are present, but the translation flattens the four location-specific p-values into an unstructured sequence, obscuring their attribution. Labeled numeric_error/semantic_shift/minor_wording severity 2, primary MADLAD/postprocess. Review progress is now 77/300 (223 pending).
+- Manual review continuation: audited accepted methods block `dont-mind-me:b-7379acb2`. Sample counts, age range, Wilcoxon signed-rank test, and p<.05 filtering are preserved, but “United States of America” recruitment context is omitted and gender-comparison wording is awkward. Labeled omission/minor_wording severity 1, primary MADLAD decode. Review progress is now 78/300 (222 pending).
+- Manual review continuation: audited accepted statistical block `dont-mind-me:b-966f2caf`. Gender/location findings and p-values are severely mixed; visible unrecovered placeholders `ZZЦIT2ZZ` and `ZZtCIT4ZZ` remain, and p-values detach from their claims. Labeled citation_error/numeric_error/semantic_shift/terminology_error severity 3, primary postprocess/scientific-token restoration, secondary MADLAD decode. This is a major quality-gate false accept requiring restoration validation. Review progress is now 79/300 (221 pending).
+- Production safety fix (2026-09-17): added Cyrillic `Ц` lookalike normalization for protected `ZZCIT…ZZ` tokens and regression coverage. This addresses the observed unrecovered `ZZЦIT2ZZ` residue generically; no hallucinated-word blacklist. Bumped MADLAD model/cache identity from `strict-restore-v9` to `strict-restore-v10` in Python and TypeScript so stale translations are not reused. Citation-protection tests passed (31/31 via full discovery; focused quality subset 17/17) and typecheck passed. No .app build performed.
+- Post-fix verification: full TypeScript `npm test -- --run` reached 62/63 files and 379/380 tests; one pre-existing extraction vector-figure evidence assertion failed (`src/test/pdfExtraction/pipeline.test.ts:245`) and is unrelated to citation restoration/version changes. Focused citation/quality Python tests remained green (31/31 citation-protect, 17/17 quality subset), full translation-server discovery 110/110, typecheck and diff-check passed.
+- Extraction follow-up: investigated the lingering vector-figure evidence assertion; the candidate still fails with the existing synthetic fixture, so no speculative extraction threshold change was retained. The only production change in this checkpoint is citation-placeholder restoration plus cache-version bump; extraction behavior remains unchanged.
+- Production safety follow-up (2026-09-17): strict citation restoration now rejects malformed placeholder residue such as `ZZtCIT1ZZ` when protected spans were used, instead of exposing it to readers. Added regression test; citation-protection suite 32/32 and full translation-server suite 111/111 pass. Bumped model/cache identity to `strict-restore-v11` in Python and TypeScript. No `.app` build performed.
+- Manual review continuation: audited accepted methods block `dont-mind-me:b-b3f36abd`. Participant counts/ages, American-study comparison, and gender-based attitude comparison are preserved; a small purpose phrase is omitted and wording is awkward. Labeled minor_wording severity 1, primary MADLAD decode. Review progress is now 80/300 (220 pending).
+- Manual review continuation: audited accepted figure-results block `dont-mind-me:b-c31ae803`. Source ends mid-clause at “received the highest and”; translation closes the sentence and mistranslates “body placement” as “体位.” Labeled source_fragment/paragraph_split/semantic_shift severity 2, primary PDF extraction/paragraph reconstruction, secondary MADLAD decode. This is another extraction-induced unsafe accepted result. Review progress is now 81/300 (219 pending).
+- Extraction triage checkpoint: a high-recall scan of 142 accepted production rows flags 49 possible continuation/fragment candidates. This is an audit-only upper bound (it intentionally overflags complete captions, keywords, equations, and citation tails); manual review has confirmed several true source-fragment false accepts. Saved `test-data/real-papers/reports/accepted-fragment-triage-v1.json` for prioritizing a precision-oriented fragment detector. No production threshold changed.
+- Manual review continuation: audited accepted equation-introduction block `economics-regularized-deepiv:b-1cc4f05a`. Source ends at a colon before the defining formula; translation closes the prose without linking the next equation. Labeled source_fragment/paragraph_split severity 2, primary PDF extraction/paragraph reconstruction. Review progress is now 82/300 (218 pending).
+- Manual review continuation: audited accepted methods block `dont-mind-me:b-e703b51a`. Survey scope and all requested preference/concern/usefulness items are preserved, but the system name `Jogwheel` mutates to `Jogwhill`, a terminology/identity error. Labeled terminology_error/semantic_shift severity 2, primary MADLAD decode. Review progress is now 83/300 (217 pending).
+- Manual review continuation: audited accepted statistical block `dont-mind-me:b-ea91ca56`. Multiple gender/location findings survive textually, but p-values detach from their claims, access adjectives become standalone numeric targets, and several perception terms are mistranslated. Labeled semantic_shift/numeric_error/terminology_error severity 3, primary MADLAD decode/postprocess. Review progress is now 84/300 (216 pending).
+- Manual review continuation: audited accepted English block `education-learning-analytics:b-16a21467`. Output is predominantly Chinese (`教学分析/教学活动/教育问题`) rather than Japanese, so it is unusable despite partially preserving the TA definition and citation. Labeled terminology_error/semantic_shift/hallucination severity 3, primary MADLAD language control with quality-gate false accept. Review progress is now 85/300 (215 pending).
+- Quality-gate regression checkpoint (2026-09-17): added a generic test ensuring a pure Chinese decode for an English source is rejected; `src/test/quality.test.ts` now passes 66/66. This confirms the language guard covers the education-learning-analytics failure shape in isolation; no paper-specific vocabulary rule was added.
+- Manual review continuation: audited accepted education block `education-learning-analytics:b-25729d7b`. LA/EDM shared goals, challenge distinction, model-use contrast, overlap, and citations are preserved; labeled correct severity 0. Review progress is now 86/300 (214 pending).
+- Manual review continuation: audited accepted structure-mixed block `education-learning-analytics:b-260caac4`. Heading/reference/table text is interleaved; unsupported numbers `589 224` and `communication and collaboration` appear in source and are carried into the translation. Labeled table_contamination/source_fragment/numeric_error severity 3, primary PDF extraction/reading order with quality-gate source-structure false accept. Review progress is now 87/300 (213 pending).
+- Manual review continuation: audited accepted education block `education-learning-analytics:b-2e93906b`. EDS definition, source environment, citation, and data-science components are accurately preserved; labeled correct severity 0. Review progress is now 88/300 (212 pending).
+- Manual review continuation: audited accepted education definition block `education-learning-analytics:b-651ab347`. BDE definition, four Vs, educational environment, and citation are present, but mixed-script token “ビッグデーta” appears. Labeled terminology_error/semantic_shift severity 2, primary MADLAD decode/postprocess. Review progress is now 89/300 (211 pending).
+- Manual review continuation: audited accepted continuation block `education-learning-analytics:b-6d31b921`. It begins mid-sentence and ends with a “Methods section below” reference; translation accepts it as a standalone sentence. Labeled source_fragment/paragraph_split severity 2, primary PDF extraction/paragraph reconstruction. Review progress is now 90/300 (210 pending).
+- Stop checkpoint (2026-09-17): user requested a pause at a clean boundary. No audit, benchmark, translation-server, or app process is running (process-list inspection unavailable in sandbox, but no command session is active). Durable audit state remains 36 papers / 300 blocks, 90 manually reviewed / 210 pending; latest manual-review summary is `test-data/real-papers/reports/manual-review-summary-v1.json`. Resume by recomputing reviewedAt count, selecting the next unreviewed accepted block with concise output, then regenerating the summary and synchronizing `audit-progress.json`. No `.app` build was performed.
+- Manual review continuation (2026-09-17): audited accepted `education-learning-analytics:b-8e3b35f3`. EDM/DM definitions, educational-environment scope, and both citations are preserved; only harmless punctuation spacing differs. Labeled `correct`, severity 0. Review progress is now 91/300 (209 pending); summary and `audit-progress.json` synchronized.
+- Manual review continuation (2026-09-17): audited accepted `fashion-hybrid-cmf:b-0a32a3e9`. Source ends mid-clause at “consumer’s”; translation closes the sentence and loses the continuation. Labeled `source_fragment`/`paragraph_split`, severity 2, primary extraction/paragraph reconstruction. Review progress is now 92/300 (208 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `fashion-hybrid-cmf:b-2c0349df`. Source is grammatically broken and truncated at “design”; translation drops the fourth-point connective and closes the fragment. Labeled `source_fragment`/`paragraph_split`/`semantic_shift`, severity 2, primary extraction/paragraph reconstruction. Review progress is now 93/300 (207 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `fashion-hybrid-cmf:b-2d397029`. Abstract includes interleaved Keyword/chrome text and truncates mid-sentence; translation closes the claim with unsupported content. Labeled `source_fragment`/`paragraph_split`/`chrome_contamination`/`semantic_shift`, severity 3, primary extraction/reading-order. Review progress is now 94/300 (206 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `fashion-hybrid-cmf:b-b4cabc3e`. Source is a truncated caption/fragment; translation invents a complete claim about introducing mobile-phone material, finish, design, and function changes. Labeled `source_fragment`/`paragraph_split`/`semantic_shift`/`hallucination`, severity 3, primary extraction/paragraph reconstruction. Review progress is now 95/300 (205 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `fashion-hybrid-cmf:b-fe1ed554`. Source is Korean/OCR mixed with interleaved keywords and truncates mid-sentence; translation carries corrupted insertions and closes the fragment. Labeled `source_fragment`/`chrome_contamination`/`paragraph_split`/`semantic_shift`/`terminology_error`, severity 3, primary extraction/reading-order. Review progress is now 96/300 (204 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `hci-empirical-methods:b-48011542`. List structure and content are preserved; “counter-balancing test conditions” is mistranslated as 対抗試験条件. Labeled `terminology_error`/`minor_wording`, severity 1, primary MADLAD terminology. Review progress is now 97/300 (203 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `hci-empirical-methods:b-9888be80`. Source ends with an open comma after “analysis of variance,” and continues in the next unit; it was accepted standalone. Labeled `source_fragment`/`paragraph_split`, severity 2, primary extraction/paragraph reconstruction. Review progress is now 98/300 (202 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `hci-empirical-methods:b-b05addc3`. Accessibility request, contact target, consultation, and assistance commitment are preserved; labeled `correct`, severity 0. Review progress is now 99/300 (201 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `hci-empirical-methods:b-be861440`. Keyword list maps empirical research, user study, experiment design, quantitative methods, and CHI writing correctly; labeled `correct`, severity 0. Review progress is now 100/300 (200 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `hci-empirical-methods:b-d4284b87`. Bullet list is materially distorted: first item becomes a past-tense assertion and the final group-participation item expands into four unsupported experiment/reporting steps. Labeled `semantic_shift`/`addition`/`list_flattening`/`terminology_error`, severity 3, primary MADLAD decode/list handling. Review progress is now 101/300 (199 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `hci-empirical-methods:b-f4f738fc`. Purpose, tutorial, no-user-study requirement, and CHI-course independence are preserved; explicit two-session duration is omitted. Labeled `omission`/`minor_wording`, severity 1, primary MADLAD decode. Review progress is now 102/300 (198 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `hci-empirical-methods:b-f82706b9`. Translation substantially reorders/distorts the course description, omits investigator/participant roles, and adds unsupported understanding/awareness claims. Labeled `semantic_shift`/`omission`/`addition`/`list_flattening`, severity 3, primary MADLAD decode. Review progress is now 103/300 (197 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `hfe-healthcare-safety-review:b-1577a493-2`. Source question 4 is followed by the criterion “Risk of bias”; translation drops that criterion. Labeled `source_fragment`/`omission`/`paragraph_split`, severity 2, primary extraction/block boundary. Review progress is now 104/300 (196 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `how-content-volume-landing-pages:b-29bb773d`. Persuasion theory, Means-End relation, influence principles, heuristic cues, and citations are preserved; wording is awkward but not materially wrong. Labeled `minor_wording`/`terminology_error`, severity 1. Review progress is now 105/300 (195 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `how-content-volume-landing-pages:b-52877aa6`. Sample sizes, design, page variants, theory basis, and A/B randomization are preserved; “online advertising” as traffic source is omitted. Labeled `omission`/`minor_wording`, severity 1, primary MADLAD decode. Review progress is now 106/300 (194 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `how-content-volume-landing-pages:b-52aa1bc3`. Aim and conversion definition are preserved, but “commercial landing page” is mistranslated as 商用ランドマークページ. Labeled `terminology_error`/`minor_wording`, severity 1, primary MADLAD terminology. Review progress is now 107/300 (193 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `how-content-volume-landing-pages:b-5cd37497`. Study design, sample sizes, setting, literature review, page variants, form, and between-group design are preserved; parenthetical label “a conversion” is omitted. Labeled `omission`/`minor_wording`, severity 1. Review progress is now 108/300 (192 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `how-content-volume-landing-pages:b-719207f7`. Paper structure and research-flow summary are preserved; “research streams” is awkwardly rendered as 研究流れ. Labeled `minor_wording`, severity 1. Review progress is now 109/300 (191 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `how-content-volume-landing-pages:b-8dfa7c20`. Findings and contradiction of prior research are preserved; conversion is inconsistently rendered as 変換/転換. Labeled `terminology_error`/`minor_wording`, severity 1. Review progress is now 110/300 (190 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `how-content-volume-landing-pages:b-aa5dfd86`. Background definition and the bidirectional research question are preserved; “operationalized through conversions” is awkwardly rendered. Labeled `terminology_error`/`minor_wording`, severity 1. Review progress is now 111/300 (189 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `how-content-volume-landing-pages:b-d75508ed`. Risk rationale, citations, and trust/value/quality aims are preserved, but the mitigation link and explicit recommendation to display more content are softened. Labeled `omission`/`semantic_shift`, severity 1. Review progress is now 112/300 (188 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `human-ai-interaction-guidelines:b-31d497e1`. Outlier identification/investigation are preserved; source has OCR spacing/case corruption and the categorical/n-best phrase is awkward but faithful. Labeled `minor_wording`/`terminology_error`, severity 1. Review progress is now 113/300 (187 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `human-ai-interaction-guidelines:b-3d6e8ba2`. Source truncates mid-word at “guideli…”; translation closes the paragraph and includes continuation claims about community governance/Human-Centered AI. Labeled `source_fragment`/`paragraph_split`/`semantic_shift`/`addition`, severity 3, primary extraction/paragraph reconstruction. Review progress is now 114/300 (186 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `human-ai-interaction-guidelines:b-7c768f95`. Two guideline bullets are concatenated in source (“...doKeep...”); translation preserves the merged boundary and awkward token. Core requirements remain understandable. Labeled `list_flattening`/`minor_wording`/`terminology_error`, severity 1, primary extraction/list grouping. Review progress is now 115/300 (185 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `human-ai-interaction-guidelines:b-84ac4d20`. Comparative-analysis scope, methodology/academic comparisons, consensus overlap, and multifaceted company differences are preserved; labeled `correct`, severity 0. Review progress is now 116/300 (184 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `human-ai-interaction-guidelines:b-aa235d40`. Source truncates mid-word at “wit…”; translation completes it with unsupported claims about uncertainty/bias visualization and AI products. Labeled `source_fragment`/`paragraph_split`/`semantic_shift`/`addition`, severity 3, primary extraction/paragraph reconstruction. Review progress is now 117/300 (183 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `human-ai-interaction-guidelines:b-af26885b`. Unified taxonomy and comparison purpose are preserved, but “external overarching structure” becomes the nonsensical オーバハッチング構造, obscuring the central framework. Labeled `terminology_error`/`semantic_shift`, severity 2, primary MADLAD terminology. Review progress is now 118/300 (182 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `human-ai-interaction-guidelines:b-e20ec2ac`. Source truncates after “and”; translation invents a two-group classification and obscures/reverses “Allow for opting out.” Labeled `source_fragment`/`paragraph_split`/`addition`/`semantic_shift`/`terminology_error`, severity 3, primary extraction/paragraph reconstruction. Review progress is now 119/300 (181 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `interactive-jewellery:b-38a26961-2`. Protection definition and self/close-others threat context are preserved accurately; labeled `correct`, severity 0. Review progress is now 120/300 (180 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited the next `interactive-jewellery` prosperity definition block. Keeping valuables close while showing them publicly is preserved accurately; labeled `correct`, severity 0. Review progress is now 121/300 (179 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `interactive-jewellery:b-3b76f8cb`. State-of-the-art scope is preserved, but modality is strengthened from “might” to a definite claim and “early disposal” loses its early-obsolescence nuance as 廃棄. Labeled `terminology_error`/`semantic_shift`, severity 2. Review progress is now 122/300 (178 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `interactive-jewellery:b-76b88e30`. Holiday-photo comparison, curation difficulty, retrieval consequence, and emotional meaning are preserved accurately; labeled `correct`, severity 0. Review progress is now 123/300 (177 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `interactive-jewellery:b-7b9e4feb`. Identity, social status, beliefs, outward expression, and self-reconfirmation are preserved; labeled `correct`, severity 0. Review progress is now 124/300 (176 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `interactive-jewellery:b-7e7c94f2`. Three perspectives and their structuring purpose remain, but paragraph introduction, whole-paper scope, and description/reflection dual purpose are omitted. Labeled `omission`/`semantic_shift`, severity 2. Review progress is now 125/300 (175 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `interactive-jewellery:b-828da077`. Core digital/physical, animation, emotional-relation, implicit/explicit-emotion claims and citation [29] are preserved; author “Steel” mutates to “Stile” and “at first nondescript” is omitted. Labeled `terminology_error`/`citation_error`/`omission`, severity 2. Review progress is now 126/300 (174 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `interactive-jewellery:b-d0adea56`. Pix ring function, low-resolution privacy effect, camera placement, capture interaction, posture analogy, download limitation, overwrite behavior, and Figure 8 are preserved; labeled `correct`, severity 0. Review progress is now 127/300 (173 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `interactive-jewellery:b-df3c0683`. Field exploration, artistic/personal significance, making-process focus, dedication, and citations are preserved, but “White & Steel” mutates to “Whith and Stile.” Labeled `citation_error`/`terminology_error`, severity 2. Review progress is now 128/300 (172 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `linguistics-language-model-physics:b-541d5f1d`. CFG claims, c=0/50, GPT result, and cfg3 adherence are preserved, but the opening sentence remains untranslated and wording is awkward. Labeled `omission`/`minor_wording`/`terminology_error`, severity 2. Review progress is now 129/300 (171 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `linguistics-language-model-physics:b-aacffec0`. Source truncates after “but also”; translation adds unsupported CFG grammatical-accuracy/parse-tree claims and renders transformer as misleading 変圧器. Labeled `source_fragment`/`paragraph_split`/`addition`/`semantic_shift`/`terminology_error`, severity 3, primary extraction/paragraph reconstruction. Review progress is now 130/300 (170 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `linguistics-language-model-physics:b-db602c5d`. Result 11, 10% perturbation, robustness improvement, and lower-quality pretraining implication are preserved accurately; labeled `correct`, severity 0. Review progress is now 131/300 (169 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `linguistics-language-model-physics:b-dd2088ed`. Attention-pattern/CFG reasoning content is preserved, but “attention heads”→注意頭 and transformer→変換器 are awkward technical renderings. Labeled `terminology_error`/`minor_wording`, severity 1. Review progress is now 132/300 (168 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `linguistics-language-model-physics:b-ef49c518`. CFG/DP analogy remains, but the index sequence `i+1…j` is corrupted to `1…j`, with distorted ellipses; Figure `2+10` is retained. Labeled `numeric_error`/`semantic_shift`/`minor_wording`, severity 2, primary numeric-symbol handling. Review progress is now 133/300 (167 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `marketing-consumer-response:b-40e2e92b`. Source truncates at “consumer response to mar…”, while translation adds unsupported continuation about marketing stimuli, brand attitudes, and Ising dynamics. Labeled `source_fragment`/`paragraph_split`/`addition`/`semantic_shift`, severity 3, primary extraction/paragraph reconstruction. Review progress is now 134/300 (166 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `marketing-consumer-response:b-9e377747`. Saturation consensus, limited empirical evidence, threshold uncertainty, and concave/sigmoidal debate are preserved accurately; labeled `correct`, severity 0. Review progress is now 135/300 (165 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `marketing-consumer-response:b-ae32e1d7`. Equation lead-in ends at a colon and was accepted without its following display formula. Labeled `source_fragment`/`paragraph_split`/`omission`, severity 2, primary extraction/block boundary. Review progress is now 136/300 (164 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `marketing-consumer-response:b-d2740ffc`. Symmetry, invariance, group theory, physical mechanisms/laws, and citations are preserved accurately; labeled `correct`, severity 0. Review progress is now 137/300 (163 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `marketing-consumer-response:b-e445e6d9`. Ergodicity/path dependence, symmetry-breaking analysis, descriptive-model proposal, and direct versus inspired-formalism distinction are preserved; labeled `correct`, severity 0. Review progress is now 138/300 (162 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `marketing-consumer-response:b-ec98306a`. Source truncates at “The correlation length”; translation adds an entire definition of correlation length and microscopic correlations. Labeled `source_fragment`/`paragraph_split`/`addition`/`semantic_shift`, severity 3, primary extraction/paragraph reconstruction. Review progress is now 139/300 (161 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `modeling-human-behavior-cognitive-uncertainty:b-87c1389e`. Source truncates at “concent…”, while translation adds a [55] LSTM/RNN claim and uses misleading transformer/sparsity terms (変圧器/散乱). Labeled `source_fragment`/`paragraph_split`/`addition`/`terminology_error`/`semantic_shift`, severity 3, primary extraction/paragraph reconstruction. Review progress is now 140/300 (160 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `modeling-human-behavior-cognitive-uncertainty:b-d0612e2a`. Source truncates after “expected values of all”; translation adds unsupported continuation covering bets, predictions, three outcomes, 200 MTurk participants, variance trials, heuristics, and rewards, while WADD mutates to “Wage-Aditive Strategy.” Labeled `source_fragment`/`paragraph_split`/`terminology_error`/`semantic_shift`/`addition`, severity 3, primary extraction/paragraph reconstruction. Review progress is now 141/300 (159 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `neuroscience-rule-following:b-026d207e`. Source truncates at “Unsurpris…”, while translation adds downstream tDCS/simulation/results claims, Fig. 4/Tables S1-S2, and null-effect conclusion. Earlier design/regression details are preserved. Labeled `source_fragment`/`paragraph_split`/`addition`/`semantic_shift`, severity 3, primary extraction/paragraph reconstruction. Review progress is now 142/300 (158 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `neuroscience-rule-following:b-34f581e0`. Recruitment, sample demographics, ethics approval, consent, and guideline compliance are preserved; the right to withdraw at any time is omitted. Labeled `omission`/`minor_wording`, severity 1. Review progress is now 143/300 (157 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `neuroscience-rule-following:b-afc10f8c`. Selfishness/rule-following framing, block definitions, and me-versus-other trade-off are preserved, but “rule-adherence” becomes nonsensical ルールアヘンシング, obscuring a key construct. Labeled `terminology_error`/`semantic_shift`, severity 2. Review progress is now 144/300 (156 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `neuroscience-rule-following:b-ddf5ca5d`. Fairness task, A/B allocations, cathodal/anodal tDCS null effect, figure/table references, and decision-versus-evaluation distinction are preserved accurately; labeled `correct`, severity 0. Review progress is now 145/300 (155 pending); summary and progress JSON synchronized.
+- Manual review continuation (2026-09-17): audited accepted `neuroscience-rule-following:b-e30c258d`. Source truncates at “selfish or pro…”, while translation closes the rule description and adds unsupported consequence/choice framing; instructed→示唆された also weakens the condition. Labeled `source_fragment`/`paragraph_split`/`addition`/`semantic_shift`, severity 3, primary extraction/paragraph reconstruction. Review progress is now 146/300 (154 pending); summary and progress JSON synchronized.
+
+### Checkpoint 2026-09-17T18:45:00Z
+- Manual review: `osworld-multimodal-agents:b-5e3f0843` (page 16) marked `omission`, `minor_wording`, severity 1; primary cause MADLAD. Translation preserved the main claim but omitted the concrete examples of human-superior tasks and the `(Fig. 10 Line 2)` reference.
+- Progress synchronized: 147/300 reviewed, 153 pending. Summary regenerated at `test-data/real-papers/reports/manual-review-summary-v1.json`; `git diff --check` passed.
+- No server, benchmark, or long-running process was started. Stopped at a clean review/checkpoint boundary per request.
+
+### Checkpoint 2026-09-17T18:50:00Z
+- Manual review: `power-over-skin:b-0ddb2737` (page 1) marked `minor_wording` / `semantic_shift`, severity 1; primary cause MADLAD. Technical claims and quantitative content were preserved, with awkward rendering of the opening sentence and a slight shift in the study-campaign clause.
+- Progress synchronized: 148/300 reviewed, 152 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T18:55:00Z
+- Manual review: `significant-other:b-15572cac` (page 5) marked `minor_wording` / `semantic_shift`, severity 1; primary cause MADLAD. Main argument and terminology were retained, but “question our relationships” and “In extension” were rendered awkwardly and lost nuance.
+- Progress synchronized: 149/300 reviewed, 151 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T19:00:00Z
+- Manual review: `significant-other:b-373d377f` (page 4) marked `minor_wording` / `omission`, severity 1; primary cause MADLAD. The conceptual content is retained; the conditional “if so” is implicit and the final question is rendered somewhat awkwardly.
+- Progress synchronized: 150/300 reviewed, 150 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T19:05:00Z
+- Manual review: `significant-other:b-3c51e1bf` (page 6) marked `semantic_shift`, `omission`, `addition`, `hallucination`, severity 3; primary cause MADLAD. The second sentence replaced the source’s object-mediated participant-data collection and continuity claim with an unsupported statement about expressing psychological states.
+- Progress synchronized: 151/300 reviewed, 149 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T19:10:00Z
+- Manual review: `significant-other:b-552e7579` (page 3) marked `minor_wording`, severity 1; primary cause MADLAD, secondary postprocess. Examples and citation were preserved, with awkward literal phrasing and a minor Japanese typo.
+- Progress synchronized: 152/300 reviewed, 148 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T19:15:00Z
+- Manual review: `significant-other:b-70cd9829` (page 5) marked `minor_wording`, severity 1; primary cause MADLAD. Claims and citation were preserved; only literal phrasing and terminology choices reduce naturalness.
+- Progress synchronized: 153/300 reviewed, 147 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T19:20:00Z
+- Manual review: `significant-other:b-be25a1d0` (page 7) marked `semantic_shift`, `omission`, `minor_wording`, severity 2; primary cause MADLAD. The conceptual contrast is present, but the proposal grammar, “occasional” nuance, and fading/glimpsed behavior are distorted.
+- Progress synchronized: 154/300 reviewed, 146 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T19:25:00Z
+- Manual review: `significant-other:b-e8c99117` (page 5) marked `minor_wording`, severity 1; primary cause MADLAD. Relationship and meaning were preserved; “connotations” became an unnatural specialist term (`内涵`).
+- Progress synchronized: 155/300 reviewed, 145 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T19:30:00Z
+- Manual review: `significant-other:b-ebabdbee` (page 10) marked `semantic_shift`, `omission`, `addition`, `terminology_error`, severity 3; primary cause MADLAD. A long interview utterance was materially distorted (`pieces`→曲, `family thing`→家族の知り合い), with unsupported additions and severe grammatical breakdown; unsuitable for qualitative research use.
+- Progress synchronized: 156/300 reviewed, 144 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T19:35:00Z
+- Manual review: `significant-other:b-f0934ab4` (page 9) marked `minor_wording`, severity 1; primary cause MADLAD, secondary postprocess. Core claims were preserved; remaining issues are typographical and literal phrasing.
+- Progress synchronized: 157/300 reviewed, 143 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T19:40:00Z
+- Manual review: `speechin:b-374f26ae` (page 5) marked `source_fragment`, `paragraph_split`, `omission`, `semantic_shift`, severity 3; primary cause PDF extraction, secondary MADLAD. The block ends mid-sentence and omits the neck/chin/face encoding rationale and camera alternatives, demonstrating a high-impact extraction boundary failure.
+- Progress synchronized: 158/300 reviewed, 142 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T19:45:00Z
+- Manual review: `speechin:b-705b019c` (page 12) marked `source_fragment`, `paragraph_split`, `numeric_error`, `addition`, `hallucination`, `semantic_shift`, `omission`, severity 4; primary cause MADLAD, secondary PDF extraction. The accepted translation invented 100%/90% fluency figures, changed the button-holding procedure, and omitted Figure 8(b)/resume details, making participant and procedure reporting unsafe.
+- Progress synchronized: 159/300 reviewed, 141 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T19:50:00Z
+- Manual review: `speechin:b-ac208d10` (page 3) marked `minor_wording`, severity 1; primary cause MADLAD, secondary postprocess. SSR topic and the two-category structure were preserved; wording is mildly literal/awkward.
+- Progress synchronized: 160/300 reviewed, 140 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T19:55:00Z
+- Manual review: `step-to-charge:b-3aa55960` (page 21) marked `terminology_error` / `minor_wording`, severity 1; primary cause MADLAD. Caption identity and core setup details remain understandable, but “Supplementary” and earth-ground wording are inaccurate.
+- Progress synchronized: 161/300 reviewed, 139 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T20:00:00Z
+- Manual review: `step-to-charge:b-4de1d2db` (page 21) marked `correct`, severity 0; figure number, supplementary status, screenshot, and setup description were accurately preserved.
+- Progress synchronized: 162/300 reviewed, 138 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T20:05:00Z
+- Manual review: `step-to-charge:b-94dc74da` (page 12) marked `terminology_error`, `omission`, `minor_wording`, severity 1; primary cause MADLAD. Experimental setup and safety constraint were retained, while “function generator” was literal and off-the-shelf components were omitted.
+- Progress synchronized: 163/300 reviewed, 137 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T20:10:00Z
+- Manual review: `syntax-prosody-correlation:b-7452784c` (page 2) marked `semantic_shift`, `omission`, `terminology_error`, `source_fragment`, severity 3; primary cause MADLAD. Methodological constraints and the warning against the naive syntax–prosody correlation test were materially lost; “prosodic features” was mistranslated, making the accepted output unsafe for research interpretation.
+- Progress synchronized: 164/300 reviewed, 136 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T20:15:00Z
+- Manual review: `syntax-prosody-correlation:b-b015f548` (page 2) marked `source_fragment`, `paragraph_split`, `addition`, `semantic_shift`, `omission`, severity 3; primary cause PDF extraction, secondary MADLAD. The source ends mid-sentence, while the accepted translation incorporates later test content and examples, creating a cross-block alignment error.
+- Progress synchronized: 165/300 reviewed, 135 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T20:20:00Z
+- Manual review: `syntax-prosody-correlation:b-b6c48fc0` (page 2) marked `terminology_error` / `semantic_shift`, severity 2; primary cause MADLAD. The caption structure is intact, but prosodic features were mistranslated as phonological features, changing a central technical concept.
+- Progress synchronized: 166/300 reviewed, 134 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T20:25:00Z
+- Manual review: `syntax-prosody-correlation:b-f6512d26-2` (page 1) marked `correct`, severity 0; the translation accurately preserves the model limitation and syntax–prosody correlation contrast.
+- Progress synchronized: 167/300 reviewed, 133 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T20:30:00Z
+- Manual review: `using-cognitive-psychology-gpt3:b-3f9702fe-5` (page 2) marked `source_fragment`, `paragraph_split`, `addition`, severity 3; primary cause PDF extraction, secondary MADLAD. The source ends mid-clause (`analyze its behavior similar`), while the translation completes it with likely later-block content, indicating a paragraph-boundary alignment error.
+- Progress synchronized: 168/300 reviewed, 132 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T20:35:00Z
+- Manual review: `using-cognitive-psychology-gpt3:b-5096fc7a` (page 2) marked `omission` / `minor_wording`, severity 1; primary cause MADLAD. Model selection and temperature were preserved, but footnote 14, “unless otherwise noted,” and default values for other parameters were omitted.
+- Progress synchronized: 169/300 reviewed, 131 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T20:40:00Z
+- Manual review: `using-cognitive-psychology-gpt3:b-b4361dd7` (page 4) marked `omission` / `minor_wording`, severity 1; primary cause MADLAD. Experimental design and GPT-3 procedure were preserved, but the section heading and a transition nuance were omitted.
+- Progress synchronized: 170/300 reviewed, 130 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T20:45:00Z
+- Manual review: `using-cognitive-psychology-gpt3:b-bd4d3a92` (page 6) marked `table_contamination`, `source_fragment`, `semantic_shift`, `omission`, severity 3; primary cause PDF extraction, secondary MADLAD. Figure/table labels were interleaved with prose, producing an incoherent accepted translation and demonstrating a reading-order/structure boundary failure.
+- Progress synchronized: 171/300 reviewed, 129 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T20:50:00Z
+- Manual review: `using-cognitive-psychology-gpt3:b-be6d482b` (page 6) marked `terminology_error` / `minor_wording`, severity 1; primary cause MADLAD. Figure caption content and conditions are preserved, but “horizon condition” is a literal, unnatural term.
+- Progress synchronized: 172/300 reviewed, 128 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T21:00:00Z
+- Manual review: `using-cognitive-psychology-gpt3:b-ebeb028c` (page 1) marked `source_fragment`, `paragraph_split`, `addition`, `omission`, `semantic_shift`, severity 3; primary cause PDF extraction, secondary MADLAD. The abstract ends mid-word, the translation likely completes it from a later block, and “or better” in the human comparison is omitted.
+- Progress synchronized: 173/300 reviewed, 127 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T21:05:00Z
+- Manual review: `wear-scale:b-5d0b8880` (page 1) marked `minor_wording` / `chrome_contamination`, severity 1; primary cause MADLAD, secondary PDF extraction. CC BY 4.0 terms are substantially preserved, but the license chrome is truncated and contains a minor inserted term.
+- Progress synchronized: 174/300 reviewed, 126 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T21:10:00Z
+- Manual review: `wear-scale:b-65e8256c` (page 3) marked `terminology_error` / `minor_wording`, severity 1; primary cause MADLAD. Ergonomics rationale and citations remain intact; “wearable” was mistyped as `ウェーバブル` and one acceptance phrase is awkward.
+- Progress synchronized: 175/300 reviewed, 125 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T21:15:00Z
+- Manual review: `wear-scale:b-bd7fafb7` (page 3) marked `terminology_error` / `minor_wording`, severity 1; primary cause MADLAD. Availability definition, cost trade-off, sales risk, and citations were preserved; product-availability wording is somewhat ambiguous.
+- Progress synchronized: 176/300 reviewed, 124 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T21:20:00Z
+- Manual review: `cognitive-psychology-gpt3:b-811490d3` (pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Fallback was appropriate because the source ends mid-clause (`tasks that they have not`), though cross-block paragraph stitching is still needed for readability.
+- Progress synchronized: 177/300 reviewed, 123 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T21:30:00Z
+- Manual review: `cognitive-psychology-gpt3:b-8ae7b52f` (page 1, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. The block ends at “The model”, so fallback is appropriate pending cross-block stitching.
+- Progress synchronized: 178/300 reviewed, 122 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T21:40:00Z
+- Manual review: `cognitive-psychology-gpt3:b-8cc9869a` (page 6, pre-model fallback) marked `table_contamination` / `source_fragment`, severity 2; primary cause PDF extraction. “Mean regret”, a stray numeric cell, and experiment prose were mixed; fallback correctly prevented unsafe translation pending table/text separation.
+- Progress synchronized: 179/300 reviewed, 121 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T21:50:00Z
+- Manual review: `cognitive-psychology-gpt3:b-b4ed26af` (page 6, post-model source fallback) marked `table_contamination` / `source_fragment`, severity 2; primary cause PDF extraction. Reward values and row numbers are interleaved table cells; preserving source was appropriate pending table structuring.
+- Progress synchronized: 180/300 reviewed, 120 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T22:00:00Z
+- Manual review: `cognitive-psychology-gpt3:b-b65732bb` (page 4, post-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. The source ends mid-word (`85% are gree`), so fallback is safe, but this is an over-fallback candidate once paragraph stitching repairs the boundary.
+- Progress synchronized: 181/300 reviewed, 119 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T22:10:00Z
+- Manual review: `cognitive-psychology-gpt3:b-bd718104` (page 3, post-model source fallback) marked `correct`, severity 0; primary cause quality_gate. The source is a complete coherent paragraph and the fallback preserves it accurately, making this a safe but likely over-fallback case.
+- Progress synchronized: 182/300 reviewed, 118 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T22:20:00Z
+- Manual review: `cognitive-psychology-gpt3:b-d5eb3533` (page 3, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. The complete CRT explanation and numerical example are safely preserved, but expected non-prose classification is an over-fallback candidate if quote-aware translation is added.
+- Progress synchronized: 183/300 reviewed, 117 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-17T22:30:00Z
+- Manual review: `computational-linguistics-nlp-translation:b-d93e4de8` (page 15, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. The references paragraph ends mid-clause (`reviews novel optimisation`), so fallback is safe, but paragraph stitching could make it translatable and reduce fallback.
+- Progress synchronized: 184/300 reviewed, 116 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T09:10:00Z
+- Manual review: `computational-linguistics-nlp-translation:b-ead38fbe` (page 1, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. The complete definitions and distinction of computational linguistics/NLP are preserved by fallback, but this is a likely over-fallback candidate.
+- Progress synchronized: 185/300 reviewed, 115 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T09:20:00Z
+- Manual review: `covid-ml-review:b-08b741fe` (page 3, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. PRISMA method text ends mid-reference (`PRIS-`), so fallback is safe pending paragraph stitching.
+- Progress synchronized: 186/300 reviewed, 114 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T09:30:00Z
+- Manual review: `covid-ml-review:b-23ad8d8f` (page 4, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. The section reference ends mid-clause, so fallback is safe pending stitching.
+- Progress synchronized: 187/300 reviewed, 113 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T09:40:00Z
+- Manual review: `covid-ml-review:b-2eaa1445` (page 4, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. The numerical screening counts are intact, but the paragraph ends at `these 6`; stitching is needed before translation.
+- Progress synchronized: 188/300 reviewed, 112 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T09:50:00Z
+- Manual review: `covid-ml-review:b-6a3e4b71` (page 6, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. The block starts mid-word (`timate`), so fallback is safe; metric sentence can be retried after stitching.
+- Progress synchronized: 189/300 reviewed, 111 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T10:00:00Z
+- Manual review: `covid-ml-review:b-7fedaaf2` (page 1, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. The block begins mid-word (`firmed cases`), so fallback is safe pending stitching.
+- Progress synchronized: 190/300 reviewed, 110 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T10:10:00Z
+- Manual review: `design-for-wearability:b-6ef29eb2` (page 4, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. The block begins mid-sentence, so fallback is safe pending stitching.
+- Progress synchronized: 191/300 reviewed, 109 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T10:20:00Z
+- Manual review: `design-for-wearability:b-81ee1ee3` (page 4, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. The block begins mid-sentence (`for the body`), so fallback is safe pending stitching.
+- Progress synchronized: 192/300 reviewed, 108 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T10:30:00Z
+- Manual review: `design-for-wearability:b-c4204aea` (page 4, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. The block begins mid-sentence (`unknown physiological effect`), so fallback is safe pending stitching.
+- Progress synchronized: 193/300 reviewed, 107 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T10:40:00Z
+- Manual review: `design-for-wearability:b-d19ed6e5` (page 4, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. The block begins mid-sentence (`valuable aspect`), so fallback is safe pending stitching.
+- Progress synchronized: 194/300 reviewed, 106 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T10:50:00Z
+- Manual review: `dont-mind-me:b-4675d82c` (page 3, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. The paragraph is grammatically complete and its interaction-design claims are preserved by fallback, making it an over-fallback candidate.
+- Progress synchronized: 195/300 reviewed, 105 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T11:00:00Z
+- Manual review: `dont-mind-me:b-5b4eca6f` (page 1, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. The numbered heading is preserved exactly, but expected non-prose fallback is an over-fallback candidate if heading-specific handling is introduced.
+- Progress synchronized: 196/300 reviewed, 104 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T11:10:00Z
+- Manual review: `dont-mind-me:b-f55efe09` (page 3, post-model fallback) marked `correct`, severity 0; primary cause quality_gate. The complete interaction-study paragraph is safely preserved by fallback; the iPhone invariant/protection issue is an over-fallback candidate.
+- Progress synchronized: 197/300 reviewed, 103 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T11:20:00Z
+- Manual review: `dont-mind-me:b-fb4b663f` (page 2, post-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. The block ends mid-word (`he`), so fallback is safe pending stitching; scientific-token fallback is a secondary improvement opportunity.
+- Progress synchronized: 198/300 reviewed, 102 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T11:30:00Z
+- Manual review: `economics-regularized-deepiv:b-05c5c885` (page 14, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. The AGMM method sentence ends at `manually set to`, so fallback is safe pending stitching.
+- Progress synchronized: 199/300 reviewed, 101 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T11:40:00Z
+- Manual review: `economics-regularized-deepiv:b-1040ed31` (page 14, post-model fallback) marked `table_contamination`, `source_fragment`, `omission`, severity 3; primary cause PDF extraction. Missing learning-rate values and interleaved `pro-`/`hyper-` fragments make fallback necessary to avoid incorrect hyperparameters.
+- Progress synchronized: 200/300 reviewed, 100 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T11:50:00Z
+- Manual review: `economics-regularized-deepiv:b-1edcbf8b` (page 9, post-model fallback) marked `correct`, severity 0; primary cause quality_gate. The heading, methodological explanation, and equation are preserved exactly; separating prose from equation could reduce fallback.
+- Progress synchronized: 201/300 reviewed, 99 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T12:00:00Z
+- Manual review: `economics-regularized-deepiv:b-6c738f11` (page 13, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. The nonlinear transformation sentence ends at `into`, so fallback is safe pending formula/paragraph stitching.
+- Progress synchronized: 202/300 reviewed, 98 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T12:10:00Z
+- Manual review: `economics-regularized-deepiv:b-9da2f378` (page 12, pre-model fallback) marked `source_fragment`, `equation_contamination`, `paragraph_split`, severity 3; primary cause PDF extraction. Theory/formula text is corrupted and truncated, so fallback correctly avoids speculative translation.
+- Progress synchronized: 203/300 reviewed, 97 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T12:20:00Z
+- Manual review: `economics-regularized-deepiv:b-c31e9e3e` (page 3, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. NPIV contribution text ends at `analogous to`, so fallback is safe pending stitching.
+- Progress synchronized: 204/300 reviewed, 96 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T12:30:00Z
+- Manual review: `economics-regularized-deepiv:b-d7ed1c27` (page 12, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. The theory sentence ends mid-reference (`Theo-`) and includes a formula, so fallback is safe pending stitching.
+- Progress synchronized: 205/300 reviewed, 95 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T12:40:00Z
+- Manual review: `economics-regularized-deepiv:b-eae90e9b` (page 4, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Mathematical definition paragraph is truncated at continuation `We`; fallback is safe pending cross-block stitching.
+- Progress synchronized: 206/300 reviewed, 94 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T12:50:00Z
+- Manual review: `economics-regularized-deepiv:b-f670e854` (page 14, pre-model fallback) marked `omission`, `equation_contamination`, `source_fragment`, severity 3; primary cause PDF extraction. The MSE normalization formula is missing and the confidence-interval sentence is malformed, so fallback is appropriate pending formula-aware reconstruction.
+- Progress synchronized: 207/300 reviewed, 93 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T13:00:00Z
+- Manual review: `education-learning-analytics:b-1d3fa523` (page 12, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Visualization paragraph ends mid-clause at `in a way`, so fallback is safe pending stitching.
+- Progress synchronized: 208/300 reviewed, 92 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T13:10:00Z
+- Manual review: `education-learning-analytics:b-4192aec1` (page 12, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Continuation starts mid-sentence and ends with conjunction `and`; fallback is safe pending page/paragraph stitching.
+- Progress synchronized: 209/300 reviewed, 91 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T13:20:00Z
+- Manual review: `education-learning-analytics:b-986d0687` (page 12, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Block begins as a continuation without a sentence boundary; fallback is safe pending neighboring-text stitching.
+- Progress synchronized: 210/300 reviewed, 90 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T13:30:00Z
+- Manual review: `education-learning-analytics:b-9cc54fe1` (page 12, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Block starts mid-sentence and ends at pronoun `It`; fallback is safe pending stitching.
+- Progress synchronized: 211/300 reviewed, 89 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T13:40:00Z
+- Manual review: `education-learning-analytics:b-ad584b3b` (page 3, post-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete academic-analytics bullet and citations are preserved as original text, indicating safe but potentially excessive fallback.
+- Progress synchronized: 212/300 reviewed, 88 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T13:50:00Z
+- Manual review: `ergonomics-human-factors-ihci:b-874e2296` (page 1, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Introduction block ends mid-sentence at `characteristics`; fallback is safe pending stitching.
+- Progress synchronized: 213/300 reviewed, 87 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T14:00:00Z
+- Manual review: `fashion-hybrid-cmf:b-0730bc05` (page 2, post-model fallback) marked `repetition`, `hallucination`, `terminology_error`, severity 4; primary cause MADLAD. Korean/English affiliation produced extreme repeated “工業デザイン学科” and unsupported additions before fallback; severe semantic failure recorded.
+- Progress synchronized: 214/300 reviewed, 86 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T14:10:00Z
+- Manual review: `fashion-hybrid-cmf:b-075ebbdc` (page 6, pre-model fallback metadata but nonempty translation) marked `hallucination`, `addition`, `citation_error`, severity 4; primary cause MADLAD, secondary postprocess. Korean reference became unrelated fabricated Japanese bibliography with broken URLs; severe mismatch recorded.
+- Progress synchronized: 215/300 reviewed, 85 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T14:20:00Z
+- Manual review: `fashion-hybrid-cmf:b-b675eb98` (page 3, pre-model fallback metadata but nonempty translation) marked `hallucination`, `addition`, `citation_error`, severity 4; primary cause MADLAD. Korean bibliography gained fabricated Japanese publication metadata and lost author details; severe citation corruption recorded.
+- Progress synchronized: 216/300 reviewed, 84 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T14:30:00Z
+- Manual review: `fashion-hybrid-cmf:b-bfdd34ce` (page 2, pre-model fallback) marked `source_fragment`, `paragraph_split`, `omission`, severity 3; primary cause PDF extraction, secondary MADLAD. CMF paragraph is cut at `Color,` and the available translation omits the continuation; stitching is required before model input.
+- Progress synchronized: 217/300 reviewed, 83 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T14:40:00Z
+- Manual review: `fashion-hybrid-cmf:b-cfc8332e` (page 2, pre-model fallback) marked `source_fragment`, `paragraph_split`, `semantic_shift`, `omission`, severity 4; primary cause MADLAD, secondary PDF extraction. Fragmentary hybrid-design source ending at `diversity of` became an unrelated fashion-design outlook statement.
+- Progress synchronized: 218/300 reviewed, 82 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T14:50:00Z
+- Manual review: `fashion-hybrid-cmf:b-d0b7f07c` (page 2, pre-model fallback) marked `source_fragment`, `paragraph_split`, `omission`, severity 3; primary cause PDF extraction, secondary MADLAD. Fragment ends with `and` and translation stops early; stitching is required before translation.
+- Progress synchronized: 219/300 reviewed, 81 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T15:00:00Z
+- Manual review: `fashion-hybrid-cmf:b-df23d98d` (page 5, pre-model fallback metadata but nonempty translation) marked `hallucination`, `repetition`, `citation_error`, `addition`, severity 4; primary cause MADLAD. Korean references became repeated unrelated psychology text and fabricated TV metadata.
+- Progress synchronized: 220/300 reviewed, 80 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T15:10:00Z
+- Manual review: `hci-empirical-methods:b-0869212e` (page 2, pre-model fallback) marked `correct` / `chrome_contamination`, severity 0; primary cause quality_gate. Proceedings header and author masthead are correctly kept as original chrome.
+- Progress synchronized: 221/300 reviewed, 79 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T15:20:00Z
+- Manual review: `hci-empirical-methods:b-71f897d1` (page 3, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete author-bio/tutorial metadata is safely preserved, but remains an over-fallback candidate.
+- Progress synchronized: 222/300 reviewed, 78 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T15:30:00Z
+- Manual review: `hci-empirical-methods:b-bcdc761f` (page 1, pre-model fallback) marked `chrome_contamination` / `paragraph_merge`, severity 2; primary cause PDF extraction. ACM reference-format metadata is merged with a body sentence; fallback safely avoids translating mixed content.
+- Progress synchronized: 223/300 reviewed, 77 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T15:40:00Z
+- Manual review: `hci-empirical-methods:b-ce3aae09` (page 1, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Course-history list ends mid-entry at `Technical University`; fallback is safe pending stitching.
+- Progress synchronized: 224/300 reviewed, 76 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T15:50:00Z
+- Manual review: `hfe-healthcare-scoping-2024:b-e92e953e` (page 2, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete healthcare HFE paragraph with citations is safely preserved, but represents an over-fallback candidate.
+- Progress synchronized: 225/300 reviewed, 75 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T16:00:00Z
+- Manual review: `how-content-volume-landing-pages:b-0173f0cc` (page 1, pre-model fallback) marked `correct` / `chrome_contamination`, severity 0; primary cause quality_gate. Complete Creative Commons license text is safely preserved verbatim.
+- Progress synchronized: 226/300 reviewed, 74 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T16:10:00Z
+- Manual review: `how-content-volume-landing-pages:b-081de247` (page 2, post-model fallback) marked `semantic_shift` / `paragraph_merge`, severity 3; primary cause MADLAD, secondary PDF extraction. Translation reverses “not all persuasion theories are effective” to “all … are effective”; heading is also merged into body.
+- Progress synchronized: 227/300 reviewed, 73 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T16:20:00Z
+- Manual review: `how-content-volume-landing-pages:b-cc8f1b09` (page 2, post-model fallback) marked `paragraph_merge` / `source_fragment`, severity 3; primary cause PDF extraction. Marketing introduction contains the malformed join `there is no On the one hand`, indicating reading-order/column corruption; fallback is safe.
+- Progress synchronized: 228/300 reviewed, 72 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T16:30:00Z
+- Manual review: `how-content-volume-landing-pages:b-f0da294c` (page 13, pre-model fallback) marked `paragraph_merge` / `source_fragment`, severity 3; primary cause PDF extraction. Results text is interleaved/garbled and ends at `determinant of`; fallback is safe.
+- Progress synchronized: 229/300 reviewed, 71 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T16:40:00Z
+- Manual review: `human-ai-interaction-guidelines:b-0f38e816` (page 1, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete abstract paragraph and URL are safely preserved, though this is an over-fallback candidate.
+- Progress synchronized: 230/300 reviewed, 70 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T16:50:00Z
+- Manual review: `human-ai-interaction-guidelines:b-25c273af` (page 3, post-model fallback) marked `list_flattening` / `source_fragment`, severity 3; primary cause PDF extraction. Guideline bullets are concatenated without separators; fallback safely avoids translating destroyed list structure.
+- Progress synchronized: 231/300 reviewed, 69 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T17:00:00Z
+- Manual review: `human-ai-interaction-guidelines:b-e41c0a7a` (page 3, post-model fallback) marked `list_flattening` / `source_fragment`, severity 3; primary cause PDF extraction. Guideline items are concatenated without separators; fallback safely avoids translating corrupted list structure.
+- Progress synchronized: 232/300 reviewed, 68 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T17:10:00Z
+- Manual review: `human-ai-interaction-guidelines:b-fdb3a023` (page 2, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete Apple-guideline synthesis paragraph is safely preserved, though it is an over-fallback candidate.
+- Progress synchronized: 233/300 reviewed, 67 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T17:20:00Z
+- Manual review: `interactive-jewellery:b-0de71ad0` (page 2, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete framework introduction and citation lead-in are safely preserved.
+- Progress synchronized: 234/300 reviewed, 66 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T17:30:00Z
+- Manual review: `interactive-jewellery:b-4d8fd90a` (page 3, post-model fallback) marked `omission` / `semantic_shift`, severity 2; primary cause MADLAD. Fluent translation omits the explicit “we are not the first to explore this” claim and compresses the transition.
+- Progress synchronized: 235/300 reviewed, 65 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T17:40:00Z
+- Manual review: `interactive-jewellery:b-53fd37a4` (page 1, pre-model fallback) marked `correct` / `chrome_contamination`, severity 0; primary cause quality_gate. ACM classification metadata is correctly preserved.
+- Progress synchronized: 236/300 reviewed, 64 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T18:00:00Z
+- Manual review: `linguistics-language-model-physics:b-4e385fbd` (page 5, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. CFG experiment bullet and technical notation are safely preserved.
+- Progress synchronized: 237/300 reviewed, 63 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T18:10:00Z
+- Manual review: `linguistics-language-model-physics:b-95091995` (page 7, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete CFG diversity results paragraph is safely preserved.
+- Progress synchronized: 238/300 reviewed, 62 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T18:20:00Z
+- Manual review: `linguistics-language-model-physics:b-d6b53df1` (page 3, post-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete CFG results bullet is safely preserved.
+- Progress synchronized: 239/300 reviewed, 61 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T18:30:00Z
+- Manual review: `linguistics-language-model-physics:b-dcca9a67` (page 3, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. CFG introduction ends with `Specifically,`; fallback is safe pending stitching.
+- Progress synchronized: 240/300 reviewed, 60 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T18:40:00Z
+- Manual review: `linguistics-language-model-physics:b-ebe5dcc2` (page 1, post-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete CFG abstract with model comparisons and scientific claims is safely preserved.
+- Progress synchronized: 241/300 reviewed, 59 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T18:50:00Z
+- Manual review: `marketing-consumer-response:b-4019f21f` (page 1, post-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete marketing abstract with model names and scientific claims is safely preserved.
+- Progress synchronized: 242/300 reviewed, 58 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T19:00:00Z
+- Manual review: `marketing-consumer-response:b-9a63c23b` (page 2, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete marginal-utility/scaling-law paragraph safely preserves variables and meaning, but may be over-conservative.
+- Progress synchronized: 243/300 reviewed, 57 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T19:10:00Z
+- Manual review: `marketing-consumer-response:b-c40f7b78` (page 1, pre-model fallback) marked `chrome_contamination` / `paragraph_merge`, severity 2; primary cause PDF extraction. arXiv header text is injected into the body sentence; fallback is safe.
+- Progress synchronized: 244/300 reviewed, 56 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T19:20:00Z
+- Manual review: `medical-imaging-deep-learning-review:b-57f62043` (page 1, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Medical introduction starts mid-sentence at `for about 90%`; fallback is safe pending stitching.
+- Progress synchronized: 245/300 reviewed, 55 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T19:30:00Z
+- Manual review: `neuroscience-rule-following:b-1a59779c` (page 3, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Task-description paragraph ends at a colon before the allocation list; fallback preserves numeric values safely.
+- Progress synchronized: 246/300 reviewed, 54 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T19:40:00Z
+- Manual review: `neuroscience-rule-following:b-54f766b4` (page 7, post-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete tDCS results paragraph with percentages, U statistic and p-value is safely preserved.
+- Progress synchronized: 247/300 reviewed, 53 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T19:50:00Z
+- Manual review: `neuroscience-rule-following:b-97d59d28` (page 7, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Discussion ends at `when a rule was`; fallback is safe pending stitching.
+- Progress synchronized: 248/300 reviewed, 52 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T20:00:00Z
+- Manual review: `neuroscience-rule-following:b-a138a527` (page 4, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete tDCS methods paragraph with counts, electrode parameters, duration, and statistical tests is safely preserved.
+- Progress synchronized: 249/300 reviewed, 51 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T20:10:00Z
+- Manual review: `neuroscience-rule-following:b-ebad01c8` (page 8, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Discussion block starts at `in place` and ends at `pro-social behaviour is impulsive`; fallback is safe pending stitching.
+- Progress synchronized: 250/300 reviewed, 50 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T20:20:00Z
+- Manual review: `osworld-multimodal-agents:b-cd7ebd0d` (page 17, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. OSWorld conclusion ends at `particularly in`; fallback is safe pending stitching.
+- Progress synchronized: 251/300 reviewed, 49 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T20:30:00Z
+- Manual review: `power-over-skin:b-0b12a478` (page 10, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Wearable-electronics paragraph begins with `and` and continues prior text; fallback is safe.
+- Progress synchronized: 252/300 reviewed, 48 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T20:40:00Z
+- Manual review: `power-over-skin:b-121096b1` (page 6, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Methods paragraph starts mid-sentence and ends at `ground electrode`; fallback is safe pending stitching.
+- Progress synchronized: 253/300 reviewed, 47 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T20:50:00Z
+- Manual review: `power-over-skin:b-5d14b86b` (page 4, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Overview paragraph ends at `Figure`; fallback is safe pending caption/reference stitching.
+- Progress synchronized: 254/300 reviewed, 46 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T21:00:00Z
+- Manual review: `power-over-skin:b-70288ce0` (page 2, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Related-work paragraph ends at `cross-room power transfer`; fallback is safe pending stitching.
+- Progress synchronized: 255/300 reviewed, 45 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T21:10:00Z
+- Manual review: `power-over-skin:b-9869d9eb` (page 4, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Measurement paragraph ends at `receiver`; fallback is safe pending stitching.
+- Progress synchronized: 256/300 reviewed, 44 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T21:20:00Z
+- Manual review: `power-over-skin:b-986d5514` (page 8, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete reproducibility statement and GitHub URL are safely preserved.
+- Progress synchronized: 257/300 reviewed, 43 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T21:30:00Z
+- Manual review: `power-over-skin:b-af8e15c4` (page 7, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. RF-input methods paragraph starts at `of the receiver`; fallback is safe pending stitching.
+- Progress synchronized: 258/300 reviewed, 42 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T21:40:00Z
+- Manual review: `power-over-skin:b-c89c4ac5` (page 2, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Wireless-power related-work block begins at `was previously demonstrated`; fallback is safe.
+- Progress synchronized: 259/300 reviewed, 41 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T21:50:00Z
+- Manual review: `power-over-skin:b-eed74380` (page 5, post-model fallback) marked `terminology_error` / `semantic_shift`, severity 2; primary cause MADLAD. “Worn receivers” is repeatedly translated as “摩耗した送信機”, reversing hardware roles.
+- Progress synchronized: 260/300 reviewed, 40 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T22:00:00Z
+- Manual review: `power-over-skin:b-fa6eb504` (page 5, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Impedance paragraph starts at `impedance reaches a minimum`; fallback is safe pending stitching.
+- Progress synchronized: 261/300 reviewed, 39 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T21:40:00Z
+- Manual review: `significant-other:b-38bcee70` (page 5, post-model fallback) marked `semantic_shift` / `terminology_error`, severity 2; primary cause MADLAD. “Personally significant” and “far less prescribed” lose nuance in Japanese despite otherwise fluent translation.
+- Progress synchronized: 262/300 reviewed, 38 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T22:10:00Z
+- Manual review: `speechin:b-003920f3` (page 3, post-model fallback) marked `repetition`, `hallucination`, `omission`, `list_flattening`, severity 4; primary cause MADLAD. SpeeChin contribution list contains severe repeated text and omitted IR-camera/deep-learning details.
+- Progress synchronized: 263/300 reviewed, 37 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T22:20:00Z
+- Manual review: `speechin:b-159e2df8` (page 11, pre-model fallback metadata but nonempty translation) marked `correct`, severity 0. Translation accurately preserves IRB context, participant counts, command counts, and cross-linguistic purpose.
+- Progress synchronized: 264/300 reviewed, 36 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T22:30:00Z
+- Manual review: `speechin:b-1cc6b866` (page 14, post-model fallback) marked `omission`, `numeric_error`, `source_fragment`, severity 3; primary cause MADLAD. Confusion analysis and participant accuracy range are omitted, and statistical output ends malformed at `p = 0。`.
+- Progress synchronized: 265/300 reviewed, 35 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
+
+### Checkpoint 2026-09-18T22:40Z
+- Manual review advanced to 266/300 blocks; 34 remain pending.
+- Reviewed `speechin:b-29bed79d` (abstract): labels `omission`, `numeric_error`, `semantic_shift`; severity 3; primary cause MADLAD, secondary quality gate. Translation omitted the 72-nonword study and compressed the concluding scope, removing a material experiment from the abstract.
+- Updated `test-data/real-papers/audit-manual-review.json`, regenerated `test-data/real-papers/reports/manual-review-summary-v1.json`, and synchronized `test-data/real-papers/audit-progress.json`.
+- `git diff --check` passed. Next continuation should select the first remaining unreviewed row from the review JSON.
+
+### Checkpoint 2026-09-18T22:50Z
+- Manual review advanced to 267/300 blocks; 33 remain pending.
+- Reviewed `speechin:b-4f1711b6` (page 12): labels `source_fragment`, `omission`, `paragraph_split`; severity 2; primary cause PDF extraction, secondary quality gate. The block starts mid-sentence (“to start…”) and the fallback translation omits the camera/SSR comparison context.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-18T23:00Z
+- Manual review advanced to 268/300 blocks; 32 remain pending.
+- Reviewed `speechin:b-4f5acf50` (page 8): labels `omission`, `numeric_error`, `semantic_shift`; severity 4; primary cause MADLAD, secondary quality gate. The methods translation omits all utterance-detection thresholds and invents a sentence-length rule, making the algorithm unusable.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-18T23:10Z
+- Manual review advanced to 269/300 blocks; 31 remain pending.
+- Reviewed `speechin:b-6d32413c` (page 5): labels `semantic_shift`, `omission`; severity 2; primary cause MADLAD, secondary quality gate. The translation reverses the necklace/chain physical relation and omits the Figure 1(a) reference.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-18T23:20Z
+- Manual review advanced to 270/300 blocks; 30 remain pending.
+- Reviewed `speechin:b-ad6d8bb6` (page 13): labels `source_fragment`, `paragraph_split`, `numeric_error`, `semantic_shift`; severity 3; primary cause PDF extraction, secondary MADLAD. The block ends at an incomplete Chinese-study range and the fallback supplies unsafe quantitative context.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-18T23:30Z
+- Manual review advanced to 271/300 blocks; 29 remain pending.
+- Reviewed `speechin:b-df1c6f4b` (page 7): labels `chrome_contamination`, `hallucination`, `semantic_shift`; severity 2; primary cause PDF extraction, secondary quality gate. ACM masthead metadata was exposed as body text and produced unrelated Japanese bibliographic hallucination before fallback.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-18T23:40Z
+- Manual review advanced to 272/300 blocks; 28 remain pending.
+- Reviewed `step-to-charge:b-2516d282` (page 1): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. The energy-range paragraph ends mid-word (“maxi-”) and is pre-model fallback, leaving a substantive sentence unreadable while preventing hallucination.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-18T23:50Z
+- Manual review advanced to 273/300 blocks; 27 remain pending.
+- Reviewed `step-to-charge:b-374b471f` (page 1): labels `chrome_contamination`, `paragraph_merge`, `source_fragment`, `omission`; severity 3; primary cause PDF extraction, secondary quality gate. An arXiv header token is embedded inside the body paragraph and the contaminated block falls back before translation, making the paragraph unreadable.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T00:00Z
+- Manual review advanced to 274/300 blocks; 26 remain pending.
+- Reviewed `step-to-charge:b-61e46413` (page 21): terminology_error, severity 1; primary cause MADLAD, secondary quality gate. Supplementary Figure 3 bullet preserves the claim, but compresses the technical “Machine-to-Wearable EQS” acronym into an opaque form.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T00:10Z
+- Manual review advanced to 275/300 blocks; 25 remain pending.
+- Reviewed `step-to-charge:b-8969632b` (page 7): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Circuit-model paragraph ends with an orphaned “For” and is rejected pre-model, so the continuation is unreadable.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T00:20Z
+- Manual review advanced to 276/300 blocks; 24 remain pending.
+- Reviewed `step-to-charge:b-8cccd2f8` (page 20): correct, severity 0. HFSS simulation setup, tissue properties, crossed-cylinder geometry, figure reference, and citation are preserved; only minor wording awkwardness remains.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T00:30Z
+- Manual review advanced to 277/300 blocks; 23 remain pending.
+- Reviewed `step-to-charge:b-b3e6aa8f` (page 21): terminology_error, severity 1; primary cause MADLAD, secondary quality gate. Supplementary Figure 1 meaning is retained, but the full technical name is compressed into unexplained “MTWR.”
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T00:40Z
+- Manual review advanced to 278/300 blocks; 22 remain pending.
+- Reviewed `step-to-charge:b-e36ddef0` (page 8): correct, severity 0. Series-inductor purpose, resonant/low-load condition, power effect, circuit and equation references are preserved.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T00:50Z
+- Manual review advanced to 279/300 blocks; 21 remain pending.
+- Reviewed `step-to-charge:b-eaf0e9eb` (page 3): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Ambient-energy paragraph ends at “varying between” without its range and is pre-model fallback.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T01:00Z
+- Manual review advanced to 280/300 blocks; 20 remain pending.
+- Reviewed `syntax-prosody-correlation:b-13a725c6` (page 4): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Prosody paragraph begins with a continuation fragment and falls back pre-model, obscuring its hypothesis context.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T01:10Z
+- Manual review advanced to 281/300 blocks; 19 remain pending.
+- Reviewed `syntax-prosody-correlation:b-2978be5c` (page 3): labels `source_fragment`, `equation_contamination`, `omission`, `paragraph_merge`; severity 3; primary cause PDF extraction, secondary quality gate. Inline annotation tokens are mixed into a long prose block that also ends mid-sentence, causing pre-model fallback and loss of the discussion.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T01:20Z
+- Manual review advanced to 282/300 blocks; 18 remain pending.
+- Reviewed `syntax-prosody-correlation:b-48965d2f` (page 4): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. The hypothesis block begins with continuation “that” and falls back pre-model, losing the preceding comparison context.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T01:30Z
+- Manual review advanced to 283/300 blocks; 17 remain pending.
+- Reviewed `syntax-prosody-correlation:b-67aed892` (page 3): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Experimental-design paragraph ends at “as these” and loses the noun-comparison continuation.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T01:40Z
+- Manual review advanced to 284/300 blocks; 16 remain pending.
+- Reviewed `syntax-prosody-correlation:b-88e95222` (page 1): omission, severity 2; primary cause quality gate. The abstract is complete and coherent but is pre-model fallback with an empty translation, indicating an over-fallback/false reject rather than extraction damage.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T01:50Z
+- Manual review advanced to 285/300 blocks; 15 remain pending.
+- Reviewed `syntax-prosody-correlation:b-ded1f063` (page 1): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Conclusion text begins with continuation “conclude that” and falls back pre-model, losing the evidence claim context.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T02:00Z
+- Manual review advanced to 286/300 blocks; 14 remain pending.
+- Reviewed `syntax-prosody-correlation:b-e3c62f72-3` (page 2): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Figure 2 caption begins at “(b)” and ends at “For each model”, so the extended-model description is unavailable after pre-model fallback.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T02:10Z
+- Manual review advanced to 287/300 blocks; 13 remain pending.
+- Reviewed `syntax-prosody-correlation:b-f6512d26-3` (page 1): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Related-work/roadmap text ends at “in Section” and falls back pre-model, truncating the transition to methods and data.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T02:20Z
+- Manual review advanced to 288/300 blocks; 12 remain pending.
+- Reviewed `using-cognitive-psychology-gpt3:b-0ca9f77d` (page 2): labels `paragraph_merge`, `chrome_contamination`, `source_fragment`, `omission`; severity 3; primary cause PDF extraction, secondary quality gate. The Linda vignette is merged with unrelated diagram labels and falls back pre-model, making the example unreadable.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T02:30Z
+- Manual review advanced to 289/300 blocks; 11 remain pending.
+- Reviewed `using-cognitive-psychology-gpt3:b-3f9702fe` (page 2): omission, severity 2; primary cause quality gate. A complete list-introduction sentence is pre-model fallback with empty translation, demonstrating over-fallback on a coherent unit.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T02:40Z
+- Manual review advanced to 290/300 blocks; 10 remain pending.
+- Reviewed `using-cognitive-psychology-gpt3:b-8f2a6a49` (page 3): omission, severity 2; primary cause quality gate. A complete paragraph covering Linda, cab, and hospital bias tasks is post-model fallback with empty translation, demonstrating a false reject on coherent source text.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T02:50Z
+- Manual review advanced to 291/300 blocks; 9 remain pending.
+- Reviewed `using-cognitive-psychology-gpt3:b-978aa7eb` (page 1): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Abstract continuation starts at lowercase “vignettes” and falls back pre-model, losing the preceding conclusion context.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T03:00Z
+- Manual review advanced to 292/300 blocks; 8 remain pending.
+- Reviewed `using-cognitive-psychology-gpt3:b-9c57b65a` (page 4): omission, severity 2; primary cause quality gate. Complete causal-intervention and counterfactual-reasoning results (including the four-pill example) are post-model fallback with empty translation, another over-fallback on coherent source.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T03:10Z
+- Manual review advanced to 293/300 blocks; 7 remain pending.
+- Reviewed `using-cognitive-psychology-gpt3:b-bd718104` (page 3): omission, severity 2; primary cause quality gate. Complete vignette-method description is post-model fallback with empty translation, demonstrating another false reject on coherent source.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T03:20Z
+- Manual review advanced to 294/300 blocks; 6 remain pending.
+- Reviewed `wear-scale:b-4a4e1ea0-3` (page 6): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. A smart-apparel list/figure item starts at “(b)” and ends at “and”, so fallback leaves it unreadable.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T03:30Z
+- Manual review advanced to 295/300 blocks; 5 remain pending.
+- Reviewed `wear-scale:b-5e0d1b33` (page 11): labels `table_contamination`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Dense model-fit table is correctly blocked from paragraph translation, but lacks a structured table projection and is effectively unreadable in the translated view.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T03:40Z
+- Manual review advanced to 296/300 blocks; 4 remain pending.
+- Reviewed `wear-scale:b-673addc1-6` (page 1): labels `source_fragment`, `list_flattening`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. A `(c)` list item ending in a colon is pre-model fallback, losing the following WEAR dimension list.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T03:50Z
+- Manual review advanced to 297/300 blocks; 3 remain pending.
+- Reviewed `wear-scale:b-8b37d87c` (page 6): omission, severity 2; primary cause quality gate. Complete sampling/demographics methods paragraph with essential counts, power analysis, and Table 1 context is post-model fallback with empty translation, another over-fallback.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T04:00Z
+- Manual review advanced to 298/300 blocks; 2 remain pending.
+- Reviewed `wear-scale:b-904ccfef` (page 1): labels `chrome_contamination`, `paragraph_merge`, `source_fragment`, `omission`; severity 3; primary cause PDF extraction, secondary quality gate. Introduction is merged with author-affiliation/address chrome and a hyphenated line break, so the opening motivation falls back pre-display.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T04:10Z
+- Manual review advanced to 299/300 blocks; 1 remains pending.
+- Reviewed `wear-scale:b-bd476321` (page 1): labels `chrome_contamination`, `source_fragment`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. A Creative Commons licensing footer is exposed as a body fragment and falls back pre-model; legal chrome is not translated, but still pollutes the reading stream.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T04:20Z
+- Initial manual review corpus completed: **300/300 blocks**, 0 pending.
+- Reviewed `wear-scale:b-c4ef514d-2` (page 2): labels `source_fragment`, `list_flattening`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. WEAR objective item `(a)` ends at “and” and falls back pre-model because its continuation was split.
+- Updated review JSON, summary report, progress JSON. `git diff --check` passed.
+- Next phase: consolidate cross-discipline/format metrics and implement only generalizable extraction or quality-gate fixes supported by the full corpus.
+
+### Checkpoint 2026-09-19T05:00Z
+- Generated `test-data/real-papers/reports/manual-review-taxonomy-v1.json` from the immutable 300-row manual review. Counts: source_fragment 128, paragraph_split 89, omission 76, semantic_shift 64, correct 64, terminology_error 53; primary causes PDF extraction 100, MADLAD/MADLAD decode 57, quality gate 38.
+- Severity distribution: 0=65, 1=54, 2=119, 3=53, 4=9. Production decisions: accept 142, pre-model fallback 109, post-model fallback 49.
+- This taxonomy report is the baseline for the next general extraction and quality-gate changes. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T05:20Z
+- Added a regression test requiring a complete >400-character academic paragraph with terminal punctuation and coherent prose to remain translation-eligible. This protects against over-fallback while preserving existing incomplete-fragment rejection.
+- `quality.test.ts`: 67/67 passed; `npm run typecheck` passed; `git diff --check` passed.
+
+### Checkpoint 2026-09-19T05:40Z
+- Verification after over-fallback regression: reading-order + quality suites **125/125 passed** (58 + 67), lint with `--deny-warnings` passed, and `git diff --check` passed.
+- No `.app` build or long-running server was started; this checkpoint only validates extraction/quality code and tests.
+
+### Checkpoint 2026-09-19T06:00Z
+- Ran PDF extraction suites: **52/53 passed** across 9 files. The sole failure is the known pre-existing `pipeline.test.ts` vector-figure evidence assertion; all layout, table, list, and resolver tests passed. No new failure was introduced by the over-fallback regression.
+- This known failure remains documented and is not being paper-specifically patched. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T06:20Z
+- Added opt-in `PDF_LAYOUT_DEBUG=1` candidate-geometry diagnostics: page, role, line/item counts, x-band count, vector-label score, and text preview. Production behavior is unchanged unless the flag is enabled.
+- Typecheck passed. Pipeline suite remains **23/24**, with the same known vector-figure evidence failure; no additional failures. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T06:40Z
+- Ran `PDF_LAYOUT_DEBUG=1` against the vector-figure regression. The test still fails (23/24), and no candidate-geometry line was emitted for the failing candidate, confirming the input is discarded before the diagnostic point (block formation/candidate mapping), not merely scored below the vector-label threshold.
+- This narrows the next fix to block formation instrumentation; no heuristic threshold was changed. `git diff --check` passed.
+
+### Checkpoint 2026-09-19T07:00Z
+- Extended `PDF_LAYOUT_DEBUG=1` with pre-candidate block inventory (`PDF_CANDIDATE_INPUT`, `PDF_BLOCK_INPUT`) including page span, role, line/item counts, and text preview. This will identify whether vector/figure evidence is lost during block reconstruction; default production behavior is unchanged.
+- Typecheck and `git diff --check` passed.
+
+### Checkpoint 2026-09-19T07:20Z
+- Post-diagnostic verification: lint (`--deny-warnings`) passed; quality + reading-order suites **125/125 passed**; `git diff --check` passed.
+- The remaining vector-figure failure is isolated to candidate/block formation and remains the next implementation target; no threshold relaxation was introduced.
+
+## 2026-09-19T07:40: grouped-line extraction diagnostic checkpoint
+
+- Added opt-in `PDF_LAYOUT_DEBUG=1` diagnostics immediately after `groupLinesIntoBlocks()` in `src/services/pdfLayout.ts`.
+- Logs total reconstructed lines/blocks/body font and each line's page, column, geometry, font, item count, and text prefix.
+- This is diagnostic-only; production grouping behavior is unchanged.
+- `npm run typecheck` passed and `git diff --check` passed.
+- Next action: rerun the remaining social-advertising/modeling title fixtures with this flag, attribute the failure before changing thresholds, then resume fresh-port translation audit.
+
+## 2026-09-19T07:50: title geometry fixtures regenerated
+
+- Generated `title-geometry-social-advertising.json` and `title-geometry-modeling.json` from the real PDFs.
+- Both expected native titles are present as title candidates; the remaining diagnostic concern is a competing arXiv/masthead block also receiving title evidence.
+- Updated `title-root-cause-attribution-v1.json`: current attribution is generic candidate scoring / masthead competition, with no safe production threshold change yet.
+- Modeling title differs from catalog only by ASCII `-` vs `--`; treat as evaluation normalization, not extraction loss.
+
+## 2026-09-19T08:10: generic masthead title filtering checkpoint
+
+- Added resolver-level `looksLikeRotatedMasthead()` to exclude arXiv/URL stamps and strongly rotated page furniture from title selection, even when generic title evidence is high.
+- This is format-agnostic and based on geometry/text role, with no paper-specific strings.
+- `npm run typecheck` passed; extraction corpus suite completed with existing baseline results (39 real-paper tests; known vector-figure residual remains); `npm run lint -- --deny-warnings` passed; `git diff --check` passed.
+- Title geometry fixtures show expected titles remain present; next validation should inspect canonical resolved title and then return to fresh-port translation audit.
+
+## 2026-09-19T08:30: canonical title verification checkpoint
+
+- Re-ran the extraction benchmark after resolver filtering.
+- `social-influence-social-advertising`: canonical title is `Social Influence in Social Advertising: Evidence from Field Experiments`; `titleExact=true`.
+- `modeling-human-behavior-cognitive-uncertainty`: canonical title is `Modeling Human Behavior Part II - Cognitive approaches and Uncertainty`; benchmark normalization reports `titleExact=true` against catalog `--` punctuation.
+- The rotated/arXiv masthead no longer contaminates the canonical title selection.
+- Full benchmark command exceeded the interactive output window but wrote the report; no active benchmark process remains.
+- Next action: resume fresh-port translation audit on the next unreviewed corpus cohort and aggregate model-vs-product fallback metrics.
+
+## 2026-09-19T09:00: title resolver regression locked
+
+- Added real-paper regression assertions that the two previously unresolved title cases resolve to `titleExact=true` and never select an `arXiv:` masthead as canonical title.
+- Focused baseline run passed: 2 tests passed, 37 skipped by filter.
+- This closes the title-attribution checkpoint without broad threshold relaxation. Corpus remains 36 PDF-ready / 37 catalog entries; no pending translation papers are currently available, so the next translation step is fresh-port benchmarking of the next added/held-out PDF.
+
+## 2026-09-19T09:20: audit progress consistency checkpoint
+
+- Verified `audit-manual-review.json`: 300 review rows, all have labels and severity; pending manual review is 0.
+- Corrected stale `audit-progress.json` value (`pendingManualReview: 243` → `0`) and refreshed next actions so the next session does not requeue already reviewed blocks.
+- Pending PDF directory contains only copies of already cataloged papers; no new unreviewed local paper was available for a fresh-port run.
+
+## 2026-09-19T09:45: OA corpus acquisition checkpoint
+
+- Re-ran the existing OA fetcher with network permission. 11 candidate PDFs downloaded successfully into `test-fixtures/real-papers/pending-pdfs/`; 3 PMC endpoints remain unavailable (403/500).
+- Added retrieval status, date, and SHA-256 hashes to `pending-oa-candidates.json`; no catalog registration was performed without title/metadata verification.
+- Existing catalog remains 37 entries / 36 PDF-ready. The downloaded files are ready for metadata/title verification and registration in the next corpus-expansion step.
+
+## 2026-09-19T10:10: OA title verification checkpoint
+
+- Built `test-data/real-papers/reports/oa-title-verification-v1.json` from the downloaded PDFs.
+- Verified first-page title/expected-title correspondence for all downloaded candidates with source URL, OA status, byte size, SHA-256, and preview retained.
+- This is a provenance gate only; catalog registration and benchmark sampling remain the next step.
+
+## 2026-09-19T10:35: PMC acquisition checkpoint
+
+- Tried the official NCBI PMC OA API for the three unavailable candidates (`PMC11969590`, `PMC4725322`, `PMC4297241`); all returned HTTP 404, so no direct OA package was available through that route.
+- No unverified PDF was added. Corpus expansion remains pending additional provenance-verified sources.
+
+## 2026-09-19T11:00: fallback attribution refresh
+
+- Ran `audit:validate-fallback-attribution`: 27 fallback rows validated; primary causes A=6, D=2, E=3, G=16.
+- Regenerated fallback summary `translation-fallback-attribution-summary-v77.json`.
+- Current audit-only manual review remains 300 completed / 0 pending; unsafe false-accept rate among reviewed accepted blocks is 49.06% (78/159), so quality remains far from product target and must not be hidden by fallback increases.
+- Product metric in this attribution cohort: 8 ordinary fallbacks / 25 ordinary rows = 32%; this is a small cohort and not a corpus-wide estimate.
+- 27 rows still require manual diagnostic enrichment; no production gate change was made.
+
+## 2026-09-19T11:30: fallback diagnostics enrichment checkpoint
+
+- Ran `audit:enrich-fallback-diagnostics`; all 27 previously empty fallback rows now contain persisted extraction match evidence (pages, columns, bounding boxes, line counts).
+- Re-ran validation: 27 rows validated with no missing-diagnostics warnings; primary attribution remains A=6, D=2, E=3, G=16.
+- Re-generated summary v77; metrics unchanged, confirming enrichment changed observability only and did not alter production decisions.
+- Next action: use the now-attributed rows to separate source-fragment/chrome failures from genuine model failures before any quality-gate or model change.
+
+## 2026-09-19T12:00: fallback layer separation checkpoint
+
+- Joined the 27 validated fallback attribution rows with the 300-row manual-review ledger and wrote `fallback-layer-separation-v1.json`.
+- Label-based classification separates fallback evidence into extraction-shaped vs translation-shaped vs unresolved without changing production decisions.
+- This provides the next review slice for distinguishing source fragments/chrome/table contamination from genuine semantic model failures.
+
+## 2026-09-19T12:20: fallback layer join corrected
+
+- Corrected the fallback/manual-review join to use `(paperId, blockId)` (the attribution report has no composite `key` field).
+- Regenerated `fallback-layer-separation-v1.json` with actual labels and severity; previous all-unresolved result was a join-key artifact, not a product finding.
+
+## 2026-09-19T12:45: quality-gate false-reject attribution
+
+- Reviewed the 8 previously unresolved fallback rows. All are either manual-review `correct` or `false_reject` cases caused by invariant/source checks, rather than semantic model corruption.
+- Reclassified them as `quality_gate`; resulting 27-row separation is extraction=12, translation/model=7, quality_gate=8.
+- This confirms a concrete next improvement area: reduce false rejects for benign identifiers/proper nouns without weakening semantic safety.
+
+## 2026-09-19T13:10: quality-gate identifier investigation
+
+- Investigated the 8 quality-gate false rejects, especially benign identifiers such as `iPhone`, `Machine-to-Wearable`, figure labels, and references.
+- A tentative relaxation of acronym criticality was tested but removed after the focused quality behavior did not yet provide a reliable safe acceptance criterion; no production quality rule was changed.
+- Quality suite remains green (68/68); diff-check passed.
+- Next action: design an explicit identifier class (brand/proper-name vs method/metric acronym) with fixture-backed evidence before reducing these false rejects.
+
+## 2026-09-19T13:35: identifier false-reject probe closed
+
+- Probed a generic distinction between lowercase-leading brand identifiers and strict method acronyms; the current quality API still has additional plausibility constraints, so the proposed relaxation was not accepted.
+- Reverted the experimental rule and fixture; no production behavior changed.
+- Quality suite remains green (67/67); diff-check passed.
+- Keep the 8 quality-gate rows as an explicit evidence-backed follow-up rather than weakening invariant protection heuristically.
+
+## 2026-09-19T13:55: resolver regression verification checkpoint
+
+- Re-ran reading-order regression after title resolver work: 58/58 passed.
+- Quality regression remains 67/67 passed from prior checkpoint.
+- The full extraction-corpus command exceeded the 30-second interactive execution window before printing its final summary; no failure result was observed, so it is not counted as a completed full-suite verification here.
+- `git diff --check` passed.
+
+## 2026-09-19T14:25: full extraction corpus verification
+
+- Completed the long-running `npm run test:extraction-corpus` session via persistent process polling.
+- Result: **2 test files, 76/76 tests passed** (39 baseline real-paper tests + 37 reading-order tests).
+- This supersedes the earlier timeout-only observation; no vector-figure failure appeared in this run.
+
+## 2026-09-19T14:55: fresh-port benchmark environment checkpoint
+
+- Attempted the required same-shell fresh-port benchmark on port 18765 with the local translation server and one social-advertising paper.
+- Server startup reached model initialization and reported `3b-mt-v5-semantic-v71-strict-restore-v11`, but uvicorn bind returned `Errno 1 operation not permitted` in this sandbox; no translation request was sent and the trap cleaned up the process.
+- This is an execution-environment port-bind restriction, not a translation-quality result. Existing extraction/quality regressions remain green.
+- Next action: run the same command in the user’s app/host environment or an approved port-capable shell, then store a fresh translation report.
+
+## 2026-09-19T15:40: fresh-port translation benchmark checkpoint
+
+- Completed same-shell fresh-port benchmark on port 18766 for `social-influence-social-advertising` (2 sampled units, serial mode).
+- Report written: `translation-audit-social-influence-social-advertising.{json,md}`.
+- Server startup and model readiness succeeded under the approved host execution environment; shell trap stopped the server after benchmark completion.
+- Next action: merge this fresh report with the existing cohort and continue model-vs-product metrics; no production algorithm change was made in this run.
+
+## 2026-09-19T16:00: fresh report aggregation note
+
+- The individual fresh social-advertising report is authoritative and contains 2 rows: one accepted quality=1 and one post-model source fallback (`server returned source fallback`).
+- Bulk merge invocation exceeded the interactive window before producing output; no aggregate report was claimed or used.
+
+## 2026-09-19T16:20: fresh aggregate refresh
+
+- Merged the three authoritative fresh reports (modeling, OSWorld, and social advertising) into `translation-audit-fresh-v1.json`.
+- Aggregate now explicitly includes the latest social-advertising 2-unit run; source reports are recorded in the aggregate metadata.
+- No production code changed; `git diff --check` passed.
+
+## 2026-09-19T17:45: fresh modeling benchmark environment retry
+
+- Retried same-shell fresh-port modeling benchmark on 18767.
+- This attempt again hit uvicorn `Errno 1 operation not permitted` while binding, before any request; trap cleanup completed.
+- Prior social-advertising run on 18766 succeeded, so this is an intermittent host/sandbox bind condition rather than a model result. No report was overwritten or claimed.
+
+## 2026-09-19T18:55: modeling fresh benchmark checkpoint
+
+- Completed same-shell fresh-port benchmark on port 18768 for `modeling-human-behavior-cognitive-uncertainty` (2 sampled units, serial mode).
+- Report written and merged with the existing modeling/OSWorld/social-advertising aggregate.
+- Server trap cleanup completed after benchmark.
+- Next action: aggregate row-level fallback/acceptance metrics and compare against the 300-block manual audit; no production algorithm change in this run.
+
+## 2026-09-19T19:20: fresh aggregate metrics checkpoint
+
+- Computed row-level metrics from the three fresh reports (modeling, OSWorld, social advertising) and saved `translation-fresh-metrics-v1.json`.
+- Metrics are kept separate from the 300-block manual review and the small attribution cohort.
+
+## 2026-09-19T19:40: fresh fallback attribution
+
+- Reviewed the two fresh-cohort fallbacks at source level.
+- OSWorld fallback is pre-model and ends mid-sentence (`particularly in`), with mixed-chrome provenance: extraction/source-fragment failure.
+- Social advertising fallback is post-model on a complete, clean long paragraph; the server returned source unchanged. This is the first fresh evidence favoring a model/input-length or decode failure rather than extraction.
+- Modeling’s two sampled units were both accepted at quality 1.0.
+- Next action: run the existing translation-unit variant ablation on the clean social paragraph before changing production segmentation or model settings.
+
+## 2026-09-19T20:10: clean model-fallback fixture added
+
+- Added the exact clean social-advertising paragraph that produced a post-model source fallback to `translation-unit-fallback-fixtures-v66.json` as `social-advertising-clean-long-fallback`.
+- Fixture records expected semantic anchors and minimum content size for the upcoming model-input variant ablation; it does not change production behavior.
+
+## 2026-09-19T20:45: variant ablation interruption checkpoint
+
+- Started `diagnose_a_cohort_variants.py` for the new clean social-advertising fallback fixture.
+- Model loaded successfully on CPU, but the long multi-condition run was interrupted during the first semantic-unit processing; no new output file was written (existing v79 report remains unchanged).
+- The partial console observation is not treated as a translation result. No production code or model settings changed.
+- Next action: rerun the ablation with a bounded single-condition/shorter fixture or a persistent longer session, then compare whole vs semantic-unit input.
+
+## 2026-09-19T21:30: bounded variant ablation checkpoint
+
+- Added `A_COHORT_CONDITIONS` filtering to the diagnostic script so conditions can run independently.
+- Completed the `whole_current_protection` condition for the clean social-advertising fallback fixture with the same MADLAD model; saved a dedicated report `translation-unit-ablation-social-whole-current-v1.json`.
+- The existing v79 benchmark file was overwritten by this diagnostic run; the dedicated report preserves this single-condition result. No production behavior changed.
