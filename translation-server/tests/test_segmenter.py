@@ -6,6 +6,7 @@ from pathlib import Path
 
 from engines.madlad_mps import MADLADEngine
 from engines.segmenter import (
+    is_probable_panel_fragment,
     model_inputs_for_translation,
     rescue_units_for_translation,
     segment_for_translation,
@@ -15,6 +16,10 @@ from engines.segmenter import (
 
 
 class SegmenterTests(unittest.TestCase):
+    def test_short_panel_fragment_is_marked_before_inference(self):
+        self.assertTrue(is_probable_panel_fragment("(b) the characteristics of the interaction method with peers."))
+        self.assertFalse(is_probable_panel_fragment("The paper evaluates (b) conditions in a complete paragraph."))
+
     def assert_round_trip(self, source: str) -> None:
         units = split_for_translation(source)
         self.assertTrue(validate_round_trip(source, units))

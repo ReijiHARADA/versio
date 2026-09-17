@@ -392,6 +392,12 @@ describe("unsafe extracted translation input", () => {
     ).toBe(true);
   });
 
+  it("rejects short figure-panel units even when the extracted fragment has a period", () => {
+    const panel = "(b) the characteristics of the interaction method with peers.";
+    expect(unsafeParagraphStructureReason(panel)).toContain("サブパネル");
+    expect(shouldTranslateParagraph(panel)).toBe(false);
+  });
+
   it("does not present expected metadata skips as structural uncertainty", () => {
     const email = "researcher@example.edu collaborator@example.edu editor@example.edu";
     expect(isExpectedNonProseParagraph(email)).toBe(true);

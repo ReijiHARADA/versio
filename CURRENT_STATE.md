@@ -5822,3 +5822,134 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 - Added `A_COHORT_CONDITIONS` filtering to the diagnostic script so conditions can run independently.
 - Completed the `whole_current_protection` condition for the clean social-advertising fallback fixture with the same MADLAD model; saved a dedicated report `translation-unit-ablation-social-whole-current-v1.json`.
 - The existing v79 benchmark file was overwritten by this diagnostic run; the dedicated report preserves this single-condition result. No production behavior changed.
+
+## 2026-09-19T21:40: ablation result attribution
+
+- `whole_current_protection` did not produce a decoded translation: MADLAD raised `ValueError: protected citation placeholder dropped by model: WOM`.
+- This is direct evidence that current protection/placeholder handling can itself trigger fallback on a clean long paragraph; it is distinct from PDF extraction and must be measured against unprotected and atomic-citation variants.
+- The dedicated report records `input_tokens/output_tokens: null` because decode was rejected before a valid output.
+
+## 2026-09-19T22:35: unprotected ablation checkpoint
+
+- Completed `whole_unprotected` for the clean social-advertising fixture under the same model.
+- Dedicated report saved as `translation-unit-ablation-social-whole-unprotected-v1.json`.
+- The diagnostic still logged a rejected short semantic unit during internal processing; this result must be interpreted together with the row-level report and the atomic-citation condition, not as proof that protection alone caused the production fallback.
+- No production behavior changed.
+
+## 2026-09-19T22:45: unprotected result interpretation
+
+- `whole_unprotected` also failed with `ValueError: degenerate translation output` on the same clean long paragraph.
+- Therefore current evidence does not support “citation protection alone causes the fallback”; both protected and unprotected whole-input conditions fail.
+- The source begins with `(b)` and is a long multi-sentence block. Next comparison should be safe semantic sentence units (and separately atomic author-year protection) to isolate input length/segmentation effects.
+
+## 2026-09-19T23:30: semantic-unit ablation checkpoint
+
+- Completed bounded `unit_0_current_protection` condition for the clean social-advertising fixture.
+- Dedicated report saved as `translation-unit-ablation-social-unit0-v1.json`.
+- The segmenter produced a short unit beginning with `(b)`; the engine translated it but logged a `chunk 21->27` repair. This is evidence that the current unit segmentation can still expose a fragment even when whole-input decoding fails.
+- No production behavior changed.
+
+## 2026-09-20T01:45: panel-fragment checkpoint
+
+- 確認: `src/services/translation/quality.ts` の既存 `unsafeParagraphStructureReason()` は、終端句読点のない `(a)/(b) ...` を図表サブパネル混入として検出し、`shouldTranslateParagraph()` がMADLAD送信前に除外する汎用ルールを既に持っている。
+- fresh ablation の `unit_0_current_protection` では `(b)` で始まる単位が実際に作られ、21→27 token の修復ログが出た。今回の長文fallbackの構造汚染候補として記録したが、既存判定の回帰は確認できなかった。
+- `npm test -- --run src/test/quality.test.ts` は 67/67 passed。今回はproduction codeを変更せず、既存の汎用パネル判定を維持した。
+- 次の作業候補: `(b)` 単位が品質判定を通過する呼び出し経路を特定し、`shouldTranslateParagraph` と translation-unit builder の間で判定が失われていないかを追跡する。その後、atomic citation/semantic-unit ablationを同一fresh serverで再開する。
+
+## 2026-09-20T01:50: bounded panel-fragment guard
+
+- 修正: `(a)/(b)` で始まる短い抽出単位は、末尾にピリオドが付いていても図表サブパネル混入として翻訳対象から除外するよう `unsafeParagraphStructureReason()` を拡張。240文字以内に限定し、長い列挙本文を一律拒否しない。
+- 回帰テストを追加し、品質テストは 68/68 passed。
+- これは `(b) ... peers.` のような単位が品質ゲートを通過していた経路を止めるための汎用修正。次は本番の translation-unit builder 側で同じ判定が適用されることを確認する。
+
+## 2026-09-20T02:00: server-path panel guard
+
+- 実行経路を確認: `MicroBatchScheduler._translate_language_group()` はTypeScriptの `shouldTranslateParagraph()` を再実行せず、`segment_for_translation()` の各unitを直接MADLADへ渡していた。これが `(b) ... peers.` が送信された理由。
+- 修正: Python側の共有 `segmenter.py` に `is_probable_panel_fragment()` を追加し、MicroBatchSchedulerで該当unitを原文保持（model inferenceなし）にした。短い `(a)/(b)` の図表パネル単位だけに限定。
+- 回帰テストを追加。`py_compile` は成功、TypeScript品質テストは前回 68/68 passed。
+- Python unittestはこのシェルの標準Pythonに `torch` がないため収集時に停止（実装エラーではなく実行環境依存）。translation-server用依存環境で再実行が必要。
+
+## 2026-09-20T02:10: translation-server regression verification
+
+- `translation-server/.venv/bin/python` を使用して segmenter + microbatch の unittest を実行: **49 tests OK**。
+- 標準Pythonで発生した `torch` import errorは環境差であり、依存環境では解消。追加した `is_probable_panel_fragment` とMicroBatch分岐を含めて通過。
+- 今回はfresh model benchmarkを再実行せず、構造断片をMADLADに送らない経路の回帰検証を完了した。
+
+## 2026-09-20T02:30: author-year unit fresh check
+
+- translation-server `.venv` のfresh model (CPU, model v71) で `ozchi-author-year` の `unit_0_current_protection` を実行。
+- segmenterは引用群を含む意味単位を1つとして保持し、出力は引用を保持した日本語文になった。`Marquardt et al., 2011;` の単独fragmentは生成されなかった。
+- この結果は「単位分割が引用群を壊していない」ことの確認であり、長文whole-inputのfallback原因を解消した証拠ではない。次の比較対象は同じfixtureのwhole/atomic条件。
+
+## 2026-09-20T03:20: ozchi whole-condition ablation
+
+- 同一fresh model/同一processで `whole_unprotected`, `whole_current_protection`, `whole_atomic_author_year` を比較し、`test-data/real-papers/reports/translation-unit-ablation-ozchi-whole-v1.json` に保存。
+- 3条件ともdecode成功。unprotected/currentは著者年を保持したが、日本語は「移動領域」など不自然な語彙。atomic placeholderは引用を復元できる入力になった。
+- 重要なhallucination（100mm等）はこの固定文では再現せず、引用保護の有無だけを原因とは断定できない。今回の出力から、次の改善対象は長文入力の分割品質と用語/意味品質である。
+
+## 2026-09-20T03:45: microbatch panel regression checkpoint
+
+- MicroBatchの回帰テストを追加し、パネル断片はengine呼び出しに含まれず原文として結合されることを確認。
+- translation-server `.venv` テスト: **50 tests OK**（segmenter + microbatch）。
+- `git diff --check` 通過。次は長文semantic unitsのfresh比較または抽出側のpanel混入根本修復へ進める。
+
+## 2026-09-20T04:00: typecheck checkpoint
+
+- `npm run typecheck` 成功。
+- social-advertising fixtureのsegmenter出力を確認: 1750文字が12 unitsに分割され、先頭 `(b)` unitは81文字。今回のMicroBatch guardが対象にする典型ケースと一致。
+- 次回は抽出fixtureから `(b)` のbbox/roleを採取し、本文への混入をresolver段階で防げるかを検討する。
+
+## 2026-09-20T04:30: extraction panel attribution
+
+- 実PDFを `reconstructDocument()` で確認。page 2の該当blockは `role=paragraph`、bbox x=110.26 y=101.101 width=394.52で、`(a)` と `(b)` は本文中の列挙として同一paragraphに含まれている。
+- したがって、今回ablationで使った先頭 `(b)` fixtureはPDF全体のblockそのものではなく、後段で切り出されたstandalone単位。抽出resolverに `(b)` 専用修正を追加する根拠は得られなかった。
+- evidenceを `test-data/real-papers/reports/panel-contamination-social-v1.json` に保存。server側の短いstandalone panel guardは防御策として維持する。
+
+## 2026-09-20T04:50: extraction regression checkpoint
+
+- `npm run test:extraction-corpus` 完了: **2 test files / 76 tests passed**（baseline 39 + reading-order 37）。
+- server側panel guardと診断追加による既存real-paper extraction regressionは確認されなかった。
+- 次回は長文semantic unitのfresh decode比較を優先する。
+
+## 2026-09-20T05:20: social semantic unit decode
+
+- social advertising fixtureの通常本文 `unit_1`（“The present research addresses both of these topics.”）をfresh modelで単独decode。
+- 入力14 token、出力29 token、decode成功。短い意味単位ではfallbackせず、長文whole failureとは異なる挙動を確認。
+- dedicated report: `test-data/real-papers/reports/translation-unit-ablation-social-unit1-v1.json`。
+- 次回は長さ190〜300文字のunitsを数件まとめて比較し、長文閾値と品質低下の関係を測る。
+
+## 2026-09-20T05:45: semantic false-accept checkpoint
+
+- Fresh unit benchmarkで `The present research addresses both of these topics.` → `これらの問題を解決するために,本研究は,これらの両者を取り上げた。` を確認。
+- decodeは成功し形式品質も満たすが、`addresses` を「解決する」、`topics` を「問題」とする意味変化がある。既存のscientific invariant/degeneracy gateでは検出できない種類のsemantic false accept。
+- これは禁止語blacklistや抽出修正ではなく、モデル選択または別モデルによる選択的cascade/意味評価が必要な証拠。次回は代替モデル候補の可用性と、同一fixtureでの比較評価へ進む。
+
+## 2026-09-20T06:15: alternative-model inventory checkpoint
+
+- 現在のHF cacheには MADLAD、Opus EN-JA、M2M100 418M/1.2B、CAT-Translate 0.8B/1.4B等が存在することを確認。
+- 既存記録ではOpus/M2Mは長文欠落・意味 drift、CATはprompt echo/英語paraphrase、Gemma 2 9Bは一部 rescue だがunsafe例あり。いずれもproduction routing未採用。
+- 代替モデル候補の追加ダウンロードは行わず、既存の同一fixture評価結果を次の選択的cascade設計の入力として利用する。
+
+## 2026-09-20T06:40: cascade evidence review
+
+- 既存のaudit-only cascade reportsを再確認。Qwen 1.4B oracle simulationは12 rows中10 rescue/2 fallback、candidate unsafe selected 0だが、manual labelを見た後のoracleであり自動routing根拠ではない。
+- 3-model comparisonは17 rows、hard-signal pass 13/34で、surface signalだけでは意味品質を保証できない。
+- よってproduction cascadeはまだ有効化しない。次はmanualラベルを見ずに計算できるheld-out selectorを設計し、fallback 5%目標とunsafe false-acceptを同時に測定する。
+
+## 2026-09-20T07:00: selector baseline checkpoint
+
+- 既存 `score_candidate_selection.py` の自動シグナル（数値、否定、対比、条件、時系列、傾向、技術トークン、短縮）を確認。
+- `test_candidate_selection.py` は **13/13 passed**。現状selectorはaudit-onlyでmanual labelをrouting条件に使わない。
+- 短文の意味drift（addresses→解決する）のような語義変化は既存surface signalでは通過し得るため、selectorをproductionへ昇格せず、embedding/claim evidenceとのheld-out校正が必要。
+
+## 2026-09-20T07:30: embedding selector calibration
+
+- `semantic-coverage-v2.json` の75 rowsをmanual severityと突合して閾値表を再計算。threshold 0.85では22 accepted中unsafe 2（9.1%）、safe false reject 37/57（64.9%）。0.65ではunsafe 11/63（17.5%）、false reject 5/57（8.8%）。
+- embedding単独ではunsafe false accept 5%以下とfallback 5%以下を同時に満たせないことを再確認。
+- 校正結果を `test-data/real-papers/reports/semantic-selector-calibration-v3.json` に保存。production gate/routingは変更していない。
+
+## 2026-09-20T08:00: combined selector calibration
+
+- embedding minimum similarityにsource/target sentence count一致条件を追加したaudit-only試算を実施。
+- 最良の測定点でも threshold 0.65 は61 accepted中unsafe 11（18.0%）、safe false reject 7/57（12.3%）。条件追加だけではunsafe 5%以下に届かない。
+- 結果を `test-data/real-papers/reports/semantic-selector-calibration-v4.json` に保存。production routingは変更していない。
