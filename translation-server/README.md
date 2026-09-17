@@ -122,3 +122,19 @@ python scripts/compare_fallback_model.py \
 ```
 
 `--input` は `rows` 配列（`paperId`、`blockId`、`source`）を持つJSON fixtureを受け取り、`--num-beams` と `--max-new-tokens` で生成条件を明示します。出力は監査用であり、意味レビューと保守的な品質評価を通過するまでproduction cascadeへ自動採用しません。
+
+## Claim alignment selector (audit only)
+
+既存候補とsemantic coverageを突き合わせる場合は、次のselectorを使えます。
+
+```bash
+PYTHONPATH=translation-server translation-server/.venv/bin/python \
+  translation-server/scripts/score_candidate_selection.py \
+  --baseline test-data/real-papers/audit-manual-review.json \
+  --candidate test-data/real-papers/reports/model-quality-qwen2.5-14b-v1.json \
+  --semantic-coverage test-data/real-papers/reports/semantic-coverage-qwen14-v1.json \
+  --min-semantic-sim 0.65 \
+  --output /tmp/candidate-selection-audit.json
+```
+
+`--semantic-coverage` と `--min-semantic-sim` は候補を監査上除外するだけで、アプリの翻訳routingやfallback policyを変更しません。`audit-manual-review.json` は `reviews` envelopeにも対応しています。
