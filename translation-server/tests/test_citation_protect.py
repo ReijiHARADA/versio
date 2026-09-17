@@ -110,6 +110,17 @@ class CitationProtectTests(unittest.TestCase):
         restored = restore_citations("値はZZCΙT1ZZである。", cites, nonce)
         self.assertEqual(restored, "値はx = 0である。")
 
+    def test_restores_placeholder_with_cyrillic_c_lookalike(self) -> None:
+        src = "The value is x = 0."
+        _, cites, nonce = protect_citations(src)
+        restored = restore_citations("値はZZЦIT1ZZである。", cites, nonce, reject_missing=True)
+        self.assertEqual(restored, "値はx = 0である。")
+
+    def test_strict_restore_rejects_malformed_placeholder_residue(self) -> None:
+        _, cites, nonce = protect_citations("The value is x = 0.")
+        with self.assertRaisesRegex(ValueError, "placeholder malformed"):
+            restore_citations("値はZZtCIT1ZZである。", cites, nonce, reject_missing=True)
+
     def test_fixed_corpus_citation_case(self) -> None:
         corpus = json.loads(
             (Path(__file__).resolve().parents[1] / "benchmarks" / "corpus.json").read_text(

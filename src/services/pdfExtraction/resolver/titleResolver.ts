@@ -9,6 +9,15 @@ function looksLikeAuthorish(text: string): boolean {
   return false;
 }
 
+function looksLikeRotatedMasthead(candidate: RoleCandidate): boolean {
+  const text = candidate.text.trim();
+  const rotation = candidate.layoutBlock.rotation ?? candidate.layoutBlock.lines[0]?.rotation ?? 0;
+  // arXiv stamps and running mastheads are occasionally emitted with a large
+  // title-like font. They are page furniture, even when generic evidence has
+  // promoted them to a title candidate.
+  return /^(?:arxiv\b|http\s*:\/\/|https\s*:\/\/)/i.test(text) || Math.abs(rotation) >= 45;
+}
+
 function joinTitleParts(left: string, right: string): string {
   if (/[-\u2010-\u2014]$/.test(left)) {
     // Preserve an intentional compound such as "On-" + "Body". A lowercase
@@ -34,7 +43,7 @@ export function resolveTitle(input: {
   // allow strong native title evidence to participate without discarding the
   // original candidate role used by other resolver decisions.
   const titles = input.candidates.filter(
-    (c) => c.role === "title" || (c.roleScores?.title ?? 0) >= 0.85
+    (c) => (c.role === "title" || (c.roleScores?.title ?? 0) >= 0.85) && !looksLikeRotatedMasthead(c)
   );
   let native: string[] = [];
 

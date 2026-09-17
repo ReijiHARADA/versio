@@ -10,7 +10,10 @@
       "doi": null,
       "sourceUrl": "https://arxiv.org/abs/2010.14881",
       "oaStatus": "open",
-      "reasonSelected": "medical review with dense citations and mixed prose"
+      "reasonSelected": "medical review with dense citations and mixed prose",
+      "retrievalStatus": "downloaded-pending-registration",
+      "localSha256": "5d06fa45a332523e5391cc47e5a640290f37a8a971e8f104a5678c7bc6179606",
+      "retrievalDate": "2026-09-19"
     },
     {
       "id": "medical-imaging-deep-learning-review",
@@ -20,7 +23,10 @@
       "doi": null,
       "sourceUrl": "https://arxiv.org/abs/2008.09104",
       "oaStatus": "open",
-      "reasonSelected": "figure/table-heavy medical imaging review"
+      "reasonSelected": "figure/table-heavy medical imaging review",
+      "retrievalStatus": "downloaded-pending-registration",
+      "localSha256": "da0b8054d3641c40623ec59d16ee4dec38390cae48462c355fedd3d5a8cb0800",
+      "retrievalDate": "2026-09-19"
     },
     {
       "id": "covid-ml-review",
@@ -30,7 +36,10 @@
       "doi": null,
       "sourceUrl": "https://arxiv.org/abs/2110.14910",
       "oaStatus": "open",
-      "reasonSelected": "clinical review with statistical and acronym variation"
+      "reasonSelected": "clinical review with statistical and acronym variation",
+      "retrievalStatus": "downloaded-pending-registration",
+      "localSha256": "be6157171e8f52d66d5db54163afe9936e0d2735dd50c0ac7160efee3dde19b2",
+      "retrievalDate": "2026-09-19"
     },
     {
       "id": "medical-image-segmentation-deep-learning",
@@ -40,7 +49,10 @@
       "doi": null,
       "sourceUrl": "https://arxiv.org/abs/2009.13120",
       "oaStatus": "open",
-      "reasonSelected": "ML methods and equation/figure variation"
+      "reasonSelected": "ML methods and equation/figure variation",
+      "retrievalStatus": "downloaded-pending-registration",
+      "localSha256": "e341951706ef093a3124bb737b318fc79abd41e9a737024d3b5e4ecdc39f3af9",
+      "retrievalDate": "2026-09-19"
     },
     {
       "id": "interpreting-neural-networks",
@@ -50,7 +62,10 @@
       "doi": "10.48550/arXiv.1705.04977",
       "sourceUrl": "https://arxiv.org/abs/1705.04977",
       "oaStatus": "open",
-      "reasonSelected": "conference ML layout with method/equation blocks"
+      "reasonSelected": "conference ML layout with method/equation blocks",
+      "retrievalStatus": "downloaded-pending-registration",
+      "localSha256": "0f80e8cb627dab3c312327899bed23192faceee2f40a7a1bf79bf24129577e97",
+      "retrievalDate": "2026-09-19"
     },
     {
       "id": "human-ai-interaction-guidelines",
@@ -60,7 +75,10 @@
       "doi": null,
       "sourceUrl": "https://arxiv.org/abs/2010.11761",
       "oaStatus": "open",
-      "reasonSelected": "HCI survey with guideline lists and multi-column text"
+      "reasonSelected": "HCI survey with guideline lists and multi-column text",
+      "retrievalStatus": "downloaded-pending-registration",
+      "localSha256": "59df74e7918405b4ca9d60822edb634cd37f4f0d847ba6f8fc0616ed6de1baa8",
+      "retrievalDate": "2026-09-19"
     },
     {
       "id": "hfe-healthcare-scoping-2024",
@@ -70,7 +88,10 @@
       "doi": "10.1136/bmjoq-2024-003222",
       "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11969590/",
       "oaStatus": "open",
-      "reasonSelected": "Recent open-access HFE scoping review with tables and supplementary PDF"
+      "reasonSelected": "Recent open-access HFE scoping review with tables and supplementary PDF",
+      "retrievalStatus": "downloaded-pending-registration",
+      "localSha256": "af28ac143ca6194fe49bdc86400f033ba5f36e0dd09abd728d89447c343aa922",
+      "retrievalDate": "2026-09-19"
     },
     {
       "id": "hfe-healthcare-safety-review",
@@ -80,7 +101,10 @@
       "doi": "10.1371/journal.pone.0129948",
       "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4466322/",
       "oaStatus": "open",
-      "reasonSelected": "Open systematic review with heterogeneous study tables and statistical prose"
+      "reasonSelected": "Open systematic review with heterogeneous study tables and statistical prose",
+      "retrievalStatus": "downloaded-pending-registration",
+      "localSha256": "cc39aea49c1616ecbc7ad021e2aad03c1902dcf15318597734d00caaf695c4ae",
+      "retrievalDate": "2026-09-19"
     },
     {
       "id": "hfe-mixed-methods-healthcare",
@@ -90,7 +114,8 @@
       "doi": "10.1016/j.apergo.2015.06.001",
       "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4725322/",
       "oaStatus": "open-author-manuscript",
-      "reasonSelected": "Mixed-methods review with dense citations and journal-style layout"
+      "reasonSelected": "Mixed-methods review with dense citations and journal-style layout",
+      "retrievalStatus": "download-failed-or-unavailable"
     },
     {
       "id": "hfe-system-redesign-review",
@@ -100,12 +125,18 @@
       "doi": "10.1080/00140139.2014.959070",
       "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4297241/",
       "oaStatus": "open-author-manuscript",
-      "reasonSelected": "Ergonomics journal review with redesign framework and evidence tables"
+      "reasonSelected": "Ergonomics journal review with redesign framework and evidence tables",
+      "retrievalStatus": "download-failed-or-unavailable"
     },
     {
       "id": "osworld-multimodal-agents",
       "title": "OSWorld: Benchmarking Multimodal Agents for Open-Ended Tasks in Real Computer Environments",
-      "authors": ["Tianbao Xie", "Danyang Zhang", "Jixuan Chen", "Xiaochuan Li"],
+      "authors": [
+        "Tianbao Xie",
+        "Danyang Zhang",
+        "Jixuan Chen",
+        "Xiaochuan Li"
+      ],
       "year": 2024,
       "discipline": "hci",
       "venue": "arXiv / NeurIPS",
@@ -113,12 +144,18 @@
       "doi": "10.48550/arXiv.2404.07972",
       "sourceUrl": "https://arxiv.org/pdf/2404.07972",
       "oaStatus": "open",
-      "reasonSelected": "Recent HCI/agent benchmark with figures, tables, and multi-column layout"
+      "reasonSelected": "Recent HCI/agent benchmark with figures, tables, and multi-column layout",
+      "retrievalStatus": "downloaded-pending-registration",
+      "localSha256": "d4c6e20dd59467f005561b1e97199f9842fd3b0e9fdd93e66e06ba0ec09edfdb",
+      "retrievalDate": "2026-09-19"
     },
     {
       "id": "conversation-analysis-user-experience",
       "title": "Conversation Analysis and the User Experience",
-      "authors": ["Allison Woodruff", "Paul M. Aoki"],
+      "authors": [
+        "Allison Woodruff",
+        "Paul M. Aoki"
+      ],
       "year": 2004,
       "discipline": "hci",
       "venue": "CHI Extended Abstracts",
@@ -126,12 +163,17 @@
       "doi": null,
       "sourceUrl": "https://arxiv.org/pdf/cs/0405109",
       "oaStatus": "open",
-      "reasonSelected": "Older HCI qualitative case study with legacy PDF typography"
+      "reasonSelected": "Older HCI qualitative case study with legacy PDF typography",
+      "retrievalStatus": "downloaded-pending-registration",
+      "localSha256": "49380499ac3cf3bde36eab47345a7abb52718625393fc981ddefa4468ed1065a",
+      "retrievalDate": "2026-09-19"
     },
     {
       "id": "computational-linguistics-nlp-translation",
       "title": "Computational linguistics and Natural Language Processing",
-      "authors": ["Saturnino Luz"],
+      "authors": [
+        "Saturnino Luz"
+      ],
       "year": 2022,
       "discipline": "linguistics",
       "venue": "arXiv",
@@ -139,12 +181,20 @@
       "doi": "10.48550/arXiv.2206.07026",
       "sourceUrl": "https://arxiv.org/pdf/2206.07026",
       "oaStatus": "open",
-      "reasonSelected": "Linguistics chapter focused on translation terminology and prose"
+      "reasonSelected": "Linguistics chapter focused on translation terminology and prose",
+      "retrievalStatus": "downloaded-pending-registration",
+      "localSha256": "2e43acafdb63131431627f59dfdb0890fabaa202c53448216cfb1fbd7568655d",
+      "retrievalDate": "2026-09-19"
     },
     {
       "id": "social-influence-social-advertising",
       "title": "Social Influence in Social Advertising: Evidence from Field Experiments",
-      "authors": ["Eytan Bakshy", "Dean Eckles", "Rong Yan", "Itamar Rosenn"],
+      "authors": [
+        "Eytan Bakshy",
+        "Dean Eckles",
+        "Rong Yan",
+        "Itamar Rosenn"
+      ],
       "year": 2012,
       "discipline": "marketing",
       "venue": "ACM EC",
@@ -152,12 +202,19 @@
       "doi": "10.1145/2229012.2229027",
       "sourceUrl": "https://arxiv.org/pdf/1206.4327",
       "oaStatus": "open",
-      "reasonSelected": "Marketing field experiments with statistical prose and social-network terminology"
+      "reasonSelected": "Marketing field experiments with statistical prose and social-network terminology",
+      "retrievalStatus": "downloaded-pending-registration",
+      "localSha256": "a594ae592617e54b37a53aee8ce4467130a081d58aae8334c04790d2125f4385",
+      "retrievalDate": "2026-09-19"
     },
     {
       "id": "modeling-human-behavior-cognitive-uncertainty",
       "title": "Modeling Human Behavior Part II -- Cognitive approaches and Uncertainty",
-      "authors": ["Andrew Fuchs", "Andrea Passarella", "Marco Conti"],
+      "authors": [
+        "Andrew Fuchs",
+        "Andrea Passarella",
+        "Marco Conti"
+      ],
       "year": 2022,
       "discipline": "cognitive-psychology",
       "venue": "arXiv",
@@ -165,7 +222,10 @@
       "doi": "10.48550/arXiv.2205.06483",
       "sourceUrl": "https://arxiv.org/pdf/2205.06483",
       "oaStatus": "open",
-      "reasonSelected": "Cognitive modeling review with uncertainty terminology and equation-like notation"
+      "reasonSelected": "Cognitive modeling review with uncertainty terminology and equation-like notation",
+      "retrievalStatus": "downloaded-pending-registration",
+      "localSha256": "ed0737a392b98bcd19c11a758e1c8bc82d7eec6fabb4d63044b229f49ace8d69",
+      "retrievalDate": "2026-09-19"
     }
   ]
 }

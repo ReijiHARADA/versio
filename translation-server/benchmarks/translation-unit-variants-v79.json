@@ -1,114 +1,28 @@
 {
-  "fixture": "thermal-earring-b-01a329cd",
-  "model_version": "3b-mt-v5-semantic-v71-strict-restore-v9",
-  "source": "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study. It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc. While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge.",
+  "fixture": "social-advertising-clean-long-fallback",
+  "model_version": "3b-mt-v5-semantic-v71-strict-restore-v11",
+  "source": "(b) the characteristics of the relationship between the consumer and their peers. The present research addresses both of these topics. Despite the similarities between WOM marketing and social advertising, there are a number of important qualities that distinguish the two. First, a minimal, “lightweight” consumer behavior (e.g., creating a connection with an entity) is sufficient to make that consumer a source of peer influence. Second, social influence via these systems is passive and automatically targeted (cf. [Aral and Walker 2011]). That is, once an individual creates a persistent connection with an advertised entity, social influence can occur continually without additional actions, such as sharing messages with others. Finally, social advertising allows stakeholders to play a more active role in creating and funding ad campaigns with specific text, images, or video. We regard social advertising as any advertising method that uses information about consumers’ social networks to target ads and/or provide personalized social signals. Thus, there are two ways in which the use of social information in advertising can affect consumer responses: social networks encode unobserved consumer characteristics, which allow advertisers to target likely adopters; and the inclusion of social cues creates a new channel for social influence. Recent work on social advertising (e.g., [Tucker 2012]) has recognized these mechanisms, but has been largely unable to identify the the extent in which social influence actually plays a role. As far as we know, the present research is the first to identify the effect of social signals from peers on consumer responses to advertising. We use field experiments to make this identification possible.",
   "rows": [
-    {
-      "condition": "whole_unprotected",
-      "protection_mode": "none",
-      "expected": {
-        "roundTrip": true,
-        "minWords": 35,
-        "mustKeep": [
-          "6.1"
-        ]
-      },
-      "model_input": "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study. It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc. While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge.",
-      "units": [
-        "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study. It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc. While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge."
-      ],
-      "output": null,
-      "input_tokens": null,
-      "output_tokens": null,
-      "error": "ValueError: degenerate translation output"
-    },
     {
       "condition": "whole_current_protection",
       "protection_mode": "current",
       "expected": {
         "roundTrip": true,
-        "minWords": 35,
+        "minWords": 80,
         "mustKeep": [
-          "6.1"
+          "social advertising",
+          "peer influence",
+          "field experiments"
         ]
       },
-      "model_input": "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study. It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc. While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge.",
+      "model_input": "(b) the characteristics of the relationship between the consumer and their peers. The present research addresses both of these topics. Despite the similarities between ZZCIT1ZZ marketing and social advertising, there are a number of important qualities that distinguish the two. First, a minimal, “lightweight” consumer behavior (e.g., creating a connection with an entity) is sufficient to make that consumer a source of peer influence. Second, social influence via these systems is passive and automatically targeted ZZCIT2ZZ. That is, once an individual creates a persistent connection with an advertised entity, social influence can occur continually without additional actions, such as sharing messages with others. Finally, social advertising allows stakeholders to play a more active role in creating and funding ad campaigns with specific text, images, or video. We regard social advertising as any advertising method that uses information about consumers’ social networks to target ads and/or provide personalized social signals. Thus, there are two ways in which the use of social information in advertising can affect consumer responses: social networks encode unobserved consumer characteristics, which allow advertisers to target likely adopters; and the inclusion of social cues creates a new channel for social influence. Recent work on social advertising ZZCIT3ZZ has recognized these mechanisms, but has been largely unable to identify the the extent in which social influence actually plays a role. As far as we know, the present research is the first to identify the effect of social signals from peers on consumer responses to advertising. We use field experiments to make this identification possible.",
       "units": [
-        "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study. It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc. While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge."
+        "(b) the characteristics of the relationship between the consumer and their peers. The present research addresses both of these topics. Despite the similarities between WOM marketing and social advertising, there are a number of important qualities that distinguish the two. First, a minimal, “lightweight” consumer behavior (e.g., creating a connection with an entity) is sufficient to make that consumer a source of peer influence. Second, social influence via these systems is passive and automatically targeted (cf. [Aral and Walker 2011]). That is, once an individual creates a persistent connection with an advertised entity, social influence can occur continually without additional actions, such as sharing messages with others. Finally, social advertising allows stakeholders to play a more active role in creating and funding ad campaigns with specific text, images, or video. We regard social advertising as any advertising method that uses information about consumers’ social networks to target ads and/or provide personalized social signals. Thus, there are two ways in which the use of social information in advertising can affect consumer responses: social networks encode unobserved consumer characteristics, which allow advertisers to target likely adopters; and the inclusion of social cues creates a new channel for social influence. Recent work on social advertising (e.g., [Tucker 2012]) has recognized these mechanisms, but has been largely unable to identify the the extent in which social influence actually plays a role. As far as we know, the present research is the first to identify the effect of social signals from peers on consumer responses to advertising. We use field experiments to make this identification possible."
       ],
       "output": null,
       "input_tokens": null,
       "output_tokens": null,
-      "error": "ValueError: degenerate translation output"
-    },
-    {
-      "condition": "unit_0_current_protection",
-      "protection_mode": "current",
-      "expected": {
-        "roundTrip": true,
-        "minWords": 35,
-        "mustKeep": [
-          "6.1"
-        ]
-      },
-      "model_input": "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study.",
-      "units": [
-        "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study."
-      ],
-      "output": null,
-      "input_tokens": null,
-      "output_tokens": null,
-      "error": "ValueError: degenerate translation output"
-    },
-    {
-      "condition": "unit_1_current_protection",
-      "protection_mode": "current",
-      "expected": {
-        "roundTrip": true,
-        "minWords": 35,
-        "mustKeep": [
-          "6.1"
-        ]
-      },
-      "model_input": "It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc.",
-      "units": [
-        "It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc."
-      ],
-      "output": "耳介温を含む皮膚温は,周囲温度,性別,年齢,代謝率,BMIなどの核心体温以外の多くの因子に影響されることが知られている。",
-      "coverage": {
-        "requiredTokenPresence": {
-          "6.1": false
-        },
-        "relationTokenPresence": []
-      },
-      "input_tokens": 48,
-      "output_tokens": 56,
-      "error": null
-    },
-    {
-      "condition": "unit_2_current_protection",
-      "protection_mode": "current",
-      "expected": {
-        "roundTrip": true,
-        "minWords": 35,
-        "mustKeep": [
-          "6.1"
-        ]
-      },
-      "model_input": "While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge.",
-      "units": [
-        "While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge."
-      ],
-      "output": "サーマルイヤリングは環境温度の影響を排除する情報を提供するが,ユーザ依存性や代謝率などの他の因子を解決するのは開かれた課題である。",
-      "coverage": {
-        "requiredTokenPresence": {
-          "6.1": false
-        },
-        "relationTokenPresence": []
-      },
-      "input_tokens": 41,
-      "output_tokens": 56,
-      "error": null
+      "error": "ValueError: protected citation placeholder dropped by model: WOM"
     }
   ]
 }

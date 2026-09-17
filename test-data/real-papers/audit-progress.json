@@ -7,6 +7,8 @@
   "attributionStatus": "v6 baseline 12/48 (25.00%); audit-only semantic MiniLM v42 and coverage v66 completed; coverage found 10 exact invariant-loss rows (5 accepted), so token normalization/calibration is next; production gate unchanged",
   "completedPapers": [
     "cognitive-psychology-gpt3",
+    "computational-linguistics-nlp-translation",
+    "conversation-analysis-user-experience",
     "covid-ml-review",
     "design-for-wearability",
     "dont-mind-me",
@@ -15,6 +17,9 @@
     "ergonomics-human-factors-ihci",
     "fashion-hybrid-cmf",
     "hci-empirical-methods",
+    "hfe-healthcare-safety-review",
+    "hfe-healthcare-scoping-2024",
+    "how-content-volume-landing-pages",
     "human-ai-interaction-guidelines",
     "interactive-jewellery",
     "interpreting-neural-networks",
@@ -23,20 +28,25 @@
     "medical-deep-learning-meta-review",
     "medical-image-segmentation-deep-learning",
     "medical-imaging-deep-learning-review",
+    "modeling-human-behavior-cognitive-uncertainty",
     "neuroscience-rule-following",
+    "osworld-multimodal-agents",
     "ozchi-finger-specific-touch",
     "power-over-skin",
     "ppg-earring",
     "significant-other",
+    "social-influence-social-advertising",
     "speechin",
     "step-to-charge",
+    "syntax-prosody-correlation",
     "thermal-earring",
+    "using-cognitive-psychology-gpt3",
     "wear-scale"
   ],
   "pendingPapers": [],
-  "reviewedBlocks": 132,
-  "lastCheckpoint": "extraction-geometry-triage-v1-2026-09-16",
-  "pendingManualReview": 46,
+  "reviewedBlocks": 300,
+  "lastCheckpoint": "title-resolver-regression-v2-2026-09-19",
+  "pendingManualReview": 0,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
     "measure partial source fallback inside accepted output before treating accept rate as fully translated rate",
@@ -48,10 +58,11 @@
     "evaluate replacement or cascade translation models under local/free-use constraints"
   ],
   "nextActions": [
-    "Expand catalog from 26 to >=50 provenance-verified OA PDFs across target disciplines and missing formats",
-    "Retry complete-abstract false rejects (cognitive-psychology-gpt3, economics-regularized-deepiv, linguistics-language-model-physics, neuroscience-rule-following) with structured metadata separated",
-    "Implement high-precision cross-page paragraph stitching using native geometry fixtures",
-    "Implement table/vector-region extraction fixtures and rerun fresh translation benchmark"
+    "add provenance-verified OA papers to reach 50+ corpus, then run fresh-port translation benchmark",
+    "use semantic-coverage audit scores to prioritize likely omissions and semantic shifts",
+    "continue local/free EN-JA model comparison; do not enable cascade until manual review confirms semantic adequacy",
+    "design production-safe content coverage checks that do not inflate reader-visible fallback",
+    "add verified OA candidates with provenance"
   ],
   "v33StructuralSafety": {
     "status": "implemented and verified",
@@ -435,7 +446,7 @@
     "ordinalReviewed": 7,
     "ordinalPending": 0
   },
-  "lastUpdated": "2026-09-16T16:25:07.634Z",
+  "lastUpdated": "2026-09-17T16:00:16.552443Z",
   "manualReviewCompletedAt": "2026-09-16T16:25:07.633Z",
   "completedWork": [
     "Gemma 2 9B same-fixture 12-row audit completed (local Ollama, report model-quality-gemma2-9b-v1.json).",
@@ -3039,7 +3050,10 @@
     "2026-09-16: rolled back title candidate proximity and metadata-font title inference after speechin real-paper regression; extraction corpus restored 56/56. CJK script-aware gate remains.",
     "2026-09-16: post-rollback full Vitest 61 files/362 tests and TypeScript passed; extraction baseline stable.",
     "2026-09-16: post-rollback TypeScript and lint passed; next change constrained to fixture-driven title evidence or orientation-aware table geometry.",
-    "2026-09-16: extraction corpus rerun 56/56 and benchmark regenerated (26 papers/497 pages); source integrity/provenance 1.0, table caption mean 0.929, table region mean 0.843. No translation or app changes."
+    "2026-09-16: extraction corpus rerun 56/56 and benchmark regenerated (26 papers/497 pages); source integrity/provenance 1.0, table caption mean 0.929, table region mean 0.843. No translation or app changes.",
+    "2026-09-17: aggregate rebuilt at 34 papers/276 rows; active manual review 35/52 after auditing design-for-wearability, interactive-jewellery, medical-imaging, and HCI methods accepted outputs.",
+    "2026-09-17: reviewed marketing quantitative block b-6e163a56; relational mathematical omission confirmed as unsafe accepted output.",
+    "2026-09-17: active 52-row manual review queue completed; all rows have reviewedAt and labels."
   ],
   "lastExtractionCheckpoint": {
     "date": "2026-09-16",
@@ -3053,7 +3067,7 @@
     "latestCommit": "8d80922"
   },
   "nextAction": "Design title selection using explicit publisher/header evidence and real-paper fixtures; do not reapply rejected proximity/font rules.",
-  "lastUpdate": "2026-09-16",
+  "lastUpdate": "2026-09-17",
   "iterationLog": [
     {
       "id": "extraction-resume-diagnostic-v1",
@@ -3128,5 +3142,10 @@
       "next": "Refresh corpus benchmark and inspect whether vector evidence improves candidate labeling without false promotions."
     }
   ],
-  "lastAction": "extraction corpus regression 56/56 passed; no translation-server or app changes"
+  "lastAction": "extraction corpus regression 56/56 passed; no translation-server or app changes",
+  "pendingReviewBlocks": 0,
+  "aggregateRows": 300,
+  "aggregatePapers": 36,
+  "pendingBlocks": 0,
+  "lastReviewUpdate": "2026-09-17T19:50:00Z"
 }

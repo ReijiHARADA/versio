@@ -1011,10 +1011,16 @@ function looksLikePersonName(text: string): boolean {
 }
 
 function detectTitleFont(lines: LayoutLine[], baseFont: number): number {
-  const pageOne = lines.filter((l) => l.page === 1 && l.text.trim().length >= 8);
+  const pageOne = lines.filter((l) =>
+    l.page === 1 && l.text.trim().length >= 8 &&
+    !/^arxiv\b/i.test(l.text.trim()) && !looksLikeUrl(l.text)
+  );
   if (pageOne.length === 0) return 0;
   const maxFont = Math.max(...pageOne.map((l) => l.fontSize));
-  if (maxFont < baseFont * 1.28) return 0;
+  // Some journal mastheads use only a modest size increase for the title
+  // (roughly 1.15–1.2× body). Keep the threshold above body while allowing
+  // those style clusters; oversized arXiv headers are filtered above.
+  if (maxFont < baseFont * 1.12) return 0;
   return maxFont;
 }
 
@@ -1025,13 +1031,18 @@ function looksLikeTitleLine(
 ): boolean {
   if (line.page !== 1 || titleFont <= 0) return false;
   if (line.fontSize < titleFont * 0.9) return false;
-  if (line.fontSize < baseFont * 1.28) return false;
+  if (line.fontSize < baseFont * 1.12) return false;
   const text = line.text.trim();
   if (text.length < 8 || text.length > 180) return false;
   if (isBodyStartHeading(text) || NAMED_HEADINGS.some((re) => re.test(text))) {
     return false;
   }
   if (looksLikeEmail(text) || looksLikeAffiliation(text) || looksLikeUrl(text)) {
+    return false;
+  }
+  // Funding acknowledgements can use a larger masthead-like style and wrap
+  // numeric grant identifiers across lines. They are metadata, never titles.
+  if (/\b(?:grant|award|project|contract)\b/i.test(text) || /\b\d{2,}(?:\.\d+)+\b/.test(text)) {
     return false;
   }
   if (looksLikePaperCode(text)) return false;
@@ -2033,6 +2044,12 @@ export function reconstructDocument(pages: ExtractedPage[]): {
   ) || 10;
 
   const blocks = groupLinesIntoBlocks(lines, bodyFont);
+  if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_DEBUG === "1") {
+    console.warn(`[PDF_GROUPED_LINES] lines=${lines.length} blocks=${blocks.length} bodyFont=${bodyFont.toFixed(2)}`);
+    lines.forEach((line, index) => {
+      console.warn(`[PDF_LINE] index=${index} page=${line.page} column=${line.column} x=${line.x.toFixed(1)} y=${line.y.toFixed(1)} font=${line.fontSize.toFixed(1)} items=${line.items.length} text=${line.text.slice(0, 120)}`);
+    });
+  }
   return { layouts, lines, blocks, baseFontSize: bodyFont };
 }
 

@@ -8,13 +8,16 @@ from being presented as complete evidence for the next experiment.
 from __future__ import annotations
 
 import json
+import os
 from collections import Counter
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "test-data/real-papers/reports/translation-fallback-attribution.json"
-CURRENT_REPORT = ROOT / "test-data/real-papers/reports/translation-audit.json"
+configured_report = os.environ.get("TRANSLATION_AUDIT_REPORT")
+default_report = "translation-audit-fresh-v1.json" if (ROOT / "test-data/real-papers/reports/translation-audit-fresh-v1.json").exists() else "translation-audit.json"
+CURRENT_REPORT = ROOT / "test-data/real-papers/reports" / (configured_report or default_report)
 REQUIRED = {
     "paperId", "blockId", "pageStart", "pageEnd", "role", "source",
     "fallbackReason", "diagnostics", "attribution", "sourceIntegrity",

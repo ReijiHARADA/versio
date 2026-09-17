@@ -6,10 +6,38 @@ const pending = JSON.parse(readFileSync(join(root, "test-fixtures/real-papers/pe
 const outDir = join(root, "test-fixtures/real-papers/pending-pdfs");
 mkdirSync(outDir, { recursive: true });
 
+async function resolveDirectPdfUrl(candidate) {
+  if (candidate.downloadUrl) return candidate.downloadUrl;
+  if (candidate.sourceUrl?.includes("arxiv.org/")) {
+    return candidate.sourceUrl.replace(/\/abs\//, "/pdf/").replace(/\.pdf$/, "") + ".pdf";
+  }
+  // PMC article pages expose the publisher/author-manuscript PDF link in HTML.
+  // Resolve it generically so catalog entries can retain a stable article URL.
+  if (candidate.sourceUrl?.includes("pmc.ncbi.nlm.nih.gov/articles/")) {
+    const pmcId = candidate.sourceUrl.match(/\/articles\/(PMC\d+)/i)?.[1];
+    if (pmcId) return `https://europepmc.org/articles/${pmcId}?pdf=render`;
+    const response = await fetch(candidate.sourceUrl, {
+      redirect: "follow",
+      headers: { "User-Agent": "PaperReaderCorpusFetcher/1.0", Accept: "text/html" },
+    });
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+    const html = await response.text();
+    const links = [...html.matchAll(/href=["']([^"']+\.pdf(?:\?[^"']*)?)["']/gi)]
+      .map((match) => new URL(match[1], candidate.sourceUrl).href);
+    const preferred = links.find((url) => /pmc|nih|ncbi/i.test(url)) ?? links[0];
+    if (preferred) return preferred;
+  }
+  return null;
+}
+
 for (const candidate of pending.candidates) {
-  const url = candidate.downloadUrl ?? (candidate.sourceUrl?.includes("arxiv.org/")
-    ? candidate.sourceUrl.replace(/\/abs\//, "/pdf/").replace(/\.pdf$/, "") + ".pdf"
-    : null);
+  let url;
+  try {
+    url = await resolveDirectPdfUrl(candidate);
+  } catch (error) {
+    console.log(JSON.stringify({ id: candidate.id, status: "failed-resolving-url", error: String(error) }));
+    continue;
+  }
   if (!url) {
     console.log(JSON.stringify({ id: candidate.id, status: "no-direct-pdf-url" }));
     continue;

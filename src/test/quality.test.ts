@@ -118,6 +118,11 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation("医療画像のセグメンテーションにディープ学习手法を用いる。", source)).toBe(false);
   });
 
+  it("rejects a pure Chinese decode for an English source", () => {
+    const source = "Teaching analytics refers to the analysis and evaluation of teaching activities.";
+    expect(isPlausibleJaTranslation("教学分析是对教学活动及其表现数据的分析。", source)).toBe(false);
+  });
+
   it("accepts academic Japanese while preserving scientific invariants", () => {
     const source = "For n = 20, F(4,33) = 2.913 and p < 0.001 [12] were observed at 9.6 mm.";
     const output = "n = 20では、9.6 mmにおいてF(4,33) = 2.913、p < 0.001という結果が観察された[12]。";
@@ -214,6 +219,7 @@ describe("isPlausibleJaTranslation", () => {
     )).toBe(false);
   });
 
+
   it("rejects a fluent translation that silently drops a method acronym", () => {
     const source = "RDIV improves MSE for NPIV regression.";
     const output = "この方法は回帰の誤差を改善する。";
@@ -255,6 +261,19 @@ describe("isPlausibleJaTranslation", () => {
   it("accepts an explicit negation preserved in Japanese", () => {
     const source = "The individual does not consider x to be important.";
     const output = "個人はxを重要とは考えない。";
+    expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
+  it("rejects a universal claim that drops quantifier negation", () => {
+    const source = "Contrary to earlier work, not all persuasion theories are effective online.";
+    const output = "以前の研究とは異なり、すべての説得理論がオンラインで有効である。";
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+    expect(evaluateJaTranslation(output, source).reasons).toContain("source negation missing");
+  });
+
+  it("accepts a bounded universal claim when quantifier negation is preserved", () => {
+    const source = "Contrary to earlier work, not all persuasion theories are effective online.";
+    const output = "以前の研究とは異なり、すべての説得理論がオンラインで有効とは限らない。";
     expect(isPlausibleJaTranslation(output, source)).toBe(true);
   });
 
@@ -522,6 +541,12 @@ describe("unsafe extracted translation input", () => {
         "• identity: expressing identity, social status and beliefs towards the world and reconfirming them towards oneself"
       )
     ).toBe(true);
+  });
+
+  it("keeps a complete long academic paragraph eligible for translation", () => {
+    const source = "This study evaluates a coherent research method across several experimental conditions, reports participant outcomes and confidence intervals, compares the observed effects with prior work, and discusses limitations and implications for future studies. ".repeat(4).trim() + ".";
+    expect(source.length).toBeGreaterThan(400);
+    expect(shouldTranslateParagraph(source)).toBe(true);
   });
 
   it("keeps a long lower-case column continuation out of translation", () => {

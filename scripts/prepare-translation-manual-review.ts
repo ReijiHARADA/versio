@@ -23,7 +23,11 @@ type AuditReport = { papers: Array<{ paper: { id: string; title: string; discipl
 // identity alone is insufficient, but a pipeline-version change that leaves
 // both source and Japanese output byte-for-byte identical does not invalidate
 // a human source/translation comparison.
-const reportPaths = [path.join(reportsDir, process.env.TRANSLATION_AUDIT_REPORT ?? "translation-audit.json")];
+const configuredReport = process.env.TRANSLATION_AUDIT_REPORT;
+const defaultReport = fs.existsSync(path.join(reportsDir, "translation-audit-fresh-v1.json"))
+  ? "translation-audit-fresh-v1.json"
+  : "translation-audit.json";
+const reportPaths = [path.join(reportsDir, configuredReport ?? defaultReport)];
 const reports = reportPaths.map((reportPath) =>
   JSON.parse(fs.readFileSync(reportPath, "utf8")) as AuditReport,
 );
