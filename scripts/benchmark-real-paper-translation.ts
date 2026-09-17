@@ -57,6 +57,8 @@ type ServerTranslation = {
 };
 
 type AuditRow = {
+  /** Stable join key for audit-only candidate reports. */
+  key: string;
   paperId: string;
   blockId: string;
   role: PaperBlock["type"];
@@ -426,6 +428,7 @@ async function main() {
         const partialSourceFallback = detectPartialSourceFallback(source, normalizedTranslation);
         const category = sourceCategory(block);
         return {
+          key: `${paper.id}:${block.id}`,
           paperId: paper.id,
           blockId: block.id,
           role: block.type,

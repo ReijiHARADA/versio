@@ -5953,3 +5953,115 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 - embedding minimum similarityにsource/target sentence count一致条件を追加したaudit-only試算を実施。
 - 最良の測定点でも threshold 0.65 は61 accepted中unsafe 11（18.0%）、safe false reject 7/57（12.3%）。条件追加だけではunsafe 5%以下に届かない。
 - 結果を `test-data/real-papers/reports/semantic-selector-calibration-v4.json` に保存。production routingは変更していない。
+
+## 2026-09-20T08:30: model-agreement review
+
+- 既存のQwen/Gemma/M2M/Opus候補selector reportsを同一12-row cohortで比較。
+- hardSignalPassはQwen系8〜11/12、Gemma/M2M 10/24など高く見える一方、manual source-claim reviewでは候補をproduction安全と判定できる行が不足している。表面シグナル・モデル間候補数の一致だけではsemantic correctnessの証拠にならない。
+- したがってモデル合意を単独routing gateにしない。次の実装候補は、claim単位のsource/translation対応を評価する監査器で、まずheld-out測定を行う。
+
+## 2026-09-20T09:00: claim-alignment audit trigger
+
+- semantic-coverage-v2のsource/target sentence対応から、min similarity <0.65 またはsentence count不一致をclaim review triggerとして抽出。75 rows中、要レビュー候補を `test-data/real-papers/reports/claim-alignment-review-required-v1.json` に保存。
+- これは低類似度を自動rejectするものではなく、semantic false acceptを手動/別モデル検証へ回すaudit-only基盤。production gateは変更していない。
+
+## 2026-09-20T09:30: claim triage prioritization
+
+- claim review候補14件を集計: minor_wording 7、semantic_shift 2、omission 2、source_fragment 2、numeric_error 1。severity>=2は7件（うちseverity3/4が5件）。
+- 優先順位を semantic_shift → omission → numeric_error → source_fragment として `claim-alignment-triage-v1.json` に保存。
+- これは候補抽出の監査整理で、production gateは変更していない。
+
+## 2026-09-20T10:00: lint checkpoint
+
+- `npm run lint` 成功（oxlint）。
+- 既存のTypeScript品質テスト、translation-server 50 tests、extraction corpus 76 tests、typecheck、lintを今回変更後に確認済み。
+
+## 2026-09-20T10:15: handoff checkpoint
+
+- 実行中のbenchmark/server process確認を試みたが、この環境では `sysmond` 不在のため `pgrep` がプロセス一覧を取得できなかった。直前の各benchmarkは終了コード0で完了しており、残存を示す実行セッションはない。
+- 変更・診断レポート・未解決課題は本ファイル末尾まで更新済み。次回はclaim alignment 14件の別モデル再評価から再開する。
+
+## 2026-09-20T10:30: qwen surface false-accept evidence
+
+- Qwen14候補の表面シグナルをmanual severityと照合。severity>=2なのに数値完全保持・truncationなしで通過する行が **12/12** 存在（semantic_shift/omissionを含む）。
+- 形式シグナルだけでcascadeを有効化するとunsafe false acceptが増える根拠として `qwen-surface-false-accept-v1.json` に保存。
+- production変更は行わず、claim対応/意味評価が必要という判断を維持。
+
+## 2026-09-20T11:00: selector semantic-input extension
+
+- `score_candidate_selection.py` にaudit-only `--semantic-coverage` と `--min-semantic-sim` を追加。候補ごとにmin similarity・文数一致を記録し、指定閾値未満を選択から除外できる。
+- production routingには接続せず、既存selectorテスト **13/13 passed**、py_compile、git diff checkを確認。
+- 次回はこの拡張をQwen候補とsemantic-coverage-v2に実際に適用し、manual labelを選択ロジックへ渡さないheld-out測定を行う。
+
+## 2026-09-20T12:00: selector envelope fix
+
+- 実データ適用時に `audit-manual-review.json` が `reviews` envelopeを使うため、selectorが0 rowsになっていた入力互換バグを発見・修正。`rows/results/reviews` を受け付けるようにした。
+- Qwen14 + semantic-coverageで再実行: 7 rows、hardSignalPass 5、relationSignalPass 6、relation gate reject 1。manual labelは選択条件に使用していない。
+- 回帰テストを追加し **14/14 passed**。py_compile、git diff check通過。
+
+## 2026-09-20T12:30: qwen semantic selector result
+
+- 修正済みselectorをQwen14候補＋semantic coverageへ適用。7 rows中6 rowsが選択、relation gateで1 rowを除外。
+- manual severityとの監査照合では選択6 rows中severity>=2が複数残るため、threshold 0.65単独でproduction採用不可。これはselectorがmanual labelを見ていないことの確認後に、評価目的でのみ照合した。
+- production routingは変更していない。
+
+## 2026-09-20T12:50: translation-server full regression
+
+- translation-server `.venv` で全unittestを実行: **114 tests passed**。
+- selector `reviews` envelope対応、semantic coverageオプション、panel fragment guardを含む全Python回帰に失敗なし。
+- productionモデルroutingは変更せず、次の段階はclaim候補の別モデル再評価とmanual review更新。
+
+## 2026-09-20T13:20: selector threshold regression
+
+- semantic coverage閾値で候補をaudit選択から除外するケースを回帰テスト化。
+- candidate selection tests **15/15 passed**。manual labelを参照せず閾値動作のみを検証。
+
+## 2026-09-20T14:00: selector documentation checkpoint
+
+- `translation-server/README.md` にclaim alignment selectorのaudit-only実行例を追加。
+- `reviews` envelope対応とsemantic thresholdの意味、production routingへ接続しないことを明記。次回セッションから同じ検証を再現可能。
+
+## 2026-09-20T14:30: qwen high-threshold calibration
+
+- Qwen14＋semantic coverageをthreshold 0.85で再計算。7 rows中1 rowのみ選択、6 rows fallback。選択1件はmanual severity 2で、unsafe false accept 1/1（100%）。
+- 高閾値化はfallbackを大幅に増やすだけでunsafeを解消しないことを確認。production routingは変更しない。
+
+## 2026-09-20T15:00: selector rejection diagnostics
+
+- semantic閾値で候補を除外した場合も、`selectionSignals.semanticCoverage` に類似度・文数一致を残すようselector出力を改善。fallback原因を後から追跡できる。
+- selector tests **15/15 passed**、py_compile、git diff check通過。
+
+## 2026-09-20T16:00: selector key compatibility
+
+- segmented Qwen reportで `key` fieldを使う入力形状を確認し、selectorのrow_keyを `key` 優先・`paperId:blockId` fallbackへ修正。異なるreport envelopeでKeyErrorにならない。
+- segmented reportとmanual corpusのID体系が一致せず、適用結果は0 rows。これはデータ結合上の未解決点として記録し、誤った評価値は採用しない。
+- selector tests **15/15 passed**、py_compile、git diff check通過。
+
+## 2026-09-20T16:30: segmented report key audit
+
+- `model-quality-qwen2.5-14b-heldout-segmented-v1.json` は2 rowsのみで、`paperId`/`blockId`/`key`がなくsource・translationだけのheld-out形式だった。manual corpusとの安全なID正規化はできず、selector結果0 rowsは正しい扱い。
+- source hashや近似本文で無理に結合すると誤評価を生むため、自動推測は行わない。次回は生成時点でpaperId/blockIdを保持するreport writerを修正してから再評価する。
+
+## 2026-09-20T17:00: selector unmatched-row diagnostics
+
+- selectorに`unmatchedCandidateRows`を追加。ID欠落候補を0 rowsとして黙って捨てず、report summaryで可視化する。
+- selector tests **15/15 passed**、py_compile、git diff check通過。
+
+## 2026-09-20T17:30: audit stable join key
+
+- `scripts/benchmark-real-paper-translation.ts` の全監査行に `key = paperId:blockId` を生成時から保存するよう変更。
+- 下流の候補レポートがIDを欠落させた場合に本文推測で結合せず、生成元で安全に結合できる基盤を追加。
+- `npm run typecheck`、`npm run lint`、`git diff --check` 成功。
+- 既存の生成済みレポートは再生成していないため、次回fresh benchmarkからこのキーが入る。
+
+## 2026-09-20T17:45: unmatched key detail
+
+- selector summaryに `unmatchedCandidateKeys`（最大20件）を追加し、ID欠落行の具体的な識別情報を監査レポートへ残すようにした。
+- これにより、候補数0の原因が「ベースライン不一致」か「候補キー欠落」かを summary だけで判別できる。
+- candidate selection tests **15/15 passed**、`git diff --check` 成功。production routingは未変更。
+
+## 2026-09-20T18:15: regression after stable-key change
+
+- 正しい環境変数付きで translation-server 全回帰を再実行: **115 tests passed**。
+- `npm run test:extraction-corpus`: **76 tests passed**（baseline 39 + reading-order 37）。
+- 先行実行で発生したPython import errorは `PYTHONPATH` 指定漏れによる起動条件の問題で、修正版の実行では再現しなかった。

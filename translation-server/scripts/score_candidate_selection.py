@@ -74,29 +74,49 @@ def main() -> None:
                     help="JSON report containing a results array")
     ap.add_argument("--require-relations", action="store_true",
                     help="audit-only: reject selections missing relation signals")
+    ap.add_argument("--semantic-coverage",
+                    help="audit-only semantic-coverage JSON keyed by paper/block")
+    ap.add_argument("--min-semantic-sim", type=float, default=0.0,
+                    help="audit-only minimum source-sentence similarity")
     ap.add_argument("--output", required=True)
     args = ap.parse_args()
     baseline_payload = json.loads(Path(args.baseline).read_text())
     # Accept either the reviewed unsafe fixture (`rows`) or a model report
     # (`results`) so the harness cannot silently discard review metadata.
-    baseline_rows = baseline_payload.get("rows") or baseline_payload.get("results") or []
+    baseline_rows = baseline_payload.get("rows") or baseline_payload.get("results") or baseline_payload.get("reviews") or []
     def row_key(row):
         # Held-out fixtures may omit paperId; blockId is still unique within a
         # fixture and must not make the audit harness silently unusable.
-        return (row.get("paperId", "") + ":" + row["blockId"]).lstrip(":")
+        if row.get("key"):
+            return str(row["key"])
+        block_id = row.get("blockId")
+        if not block_id:
+            return ""
+        return (row.get("paperId", "") + ":" + str(block_id)).lstrip(":")
     unsafe = {row_key(r): r for r in baseline_rows}
+    semantic = {}
+    if args.semantic_coverage:
+        payload = json.loads(Path(args.semantic_coverage).read_text())
+        semantic = {row_key(r): r for r in (payload.get("rows") or [])}
     candidates = []
+    unmatched_candidates = 0
+    unmatched_keys = []
     for filename in args.candidate:
         report = json.loads(Path(filename).read_text())
         for row in (report.get("results") or report.get("rows") or []):
             key = row_key(row)
+            if not key:
+                unmatched_candidates += 1
+                if len(unmatched_keys) < 20:
+                    unmatched_keys.append(row.get("key") or "<missing-key>")
+                continue
             if key in unsafe:
                 candidates.append({"key": key, "model": row.get("model", filename),
                                    "source": row["source"], "translation": row["translation"],
                                    "signals": signals(row["source"], row["translation"])})
     grouped = {}
     for row in candidates:
-        grouped.setdefault(row["key"], []).append(row)
+            grouped.setdefault(row["key"], []).append(row)
     rows = []
     for key, options in grouped.items():
         # Conservative audit ranking: hard relation/invariant losses disqualify
@@ -109,13 +129,27 @@ def main() -> None:
             not r["signals"]["likelyTruncated"], not r["signals"]["garbledSpacing"],
             r["signals"]["lengthRatio"] >= 0.28), reverse=True)
         selected = ranked[0]
+        coverage = semantic.get(key)
+        semantic_selection = None
+        if coverage:
+            semantic_selection = {
+                "minSourceSentenceSimilarity": coverage.get("minSourceSentenceSimilarity"),
+                "sourceSentenceCount": coverage.get("sourceSentenceCount"),
+                "targetSentenceCount": coverage.get("targetSentenceCount"),
+                "sentenceCountMatch": coverage.get("sourceSentenceCount") == coverage.get("targetSentenceCount"),
+            }
+            selected["semanticCoverage"] = semantic_selection
+            if args.min_semantic_sim and (coverage.get("minSourceSentenceSimilarity") or 0) < args.min_semantic_sim:
+                selected = None
         if args.require_relations and not all(selected["signals"].get(k, True) for k in ("conditionPreserved", "temporalRelationPreserved", "trendPreserved")):
             selected = None
         rows.append({"key": key, "severity": unsafe[key].get("severity"),
                      "reviewLabel": unsafe[key].get("reviewLabel"),
                      "candidates": options, "auditSelection": selected["model"] if selected else None,
-                     "selectionSignals": selected["signals"] if selected else {"rejectedByRelationGate": True}})
+                     "selectionSignals": ({**selected["signals"], "semanticCoverage": semantic_selection} if selected else {"rejectedByRelationGate": True, "semanticCoverage": semantic_selection})})
     summary = {"rows": len(rows), "candidateCount": len(candidates),
+               "unmatchedCandidateRows": unmatched_candidates,
+               "unmatchedCandidateKeys": unmatched_keys,
                "selectionIsAuditOnly": True,
         "hardSignalPass": sum(1 for r in rows if r["selectionSignals"].get("numericKept") == r["selectionSignals"].get("numericTotal") and r["selectionSignals"].get("technicalTokenKept", 0) == r["selectionSignals"].get("technicalTokenTotal", 0) and r["selectionSignals"].get("claimStructurePreserved", True) and r["selectionSignals"].get("negationPreserved") and r["selectionSignals"].get("contrastPreserved") and not r["selectionSignals"].get("likelyTruncated") and not r["selectionSignals"].get("garbledSpacing")),
                "relationSignalPass": sum(1 for r in rows if all(r["selectionSignals"].get(k, True) for k in ("conditionPreserved", "temporalRelationPreserved", "trendPreserved"))),

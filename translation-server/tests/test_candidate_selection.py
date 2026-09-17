@@ -100,6 +100,34 @@ class CandidateSelectionSignalsTest(unittest.TestCase):
             self.assertEqual(report["summary"]["rows"], 1)
             self.assertEqual(report["rows"][0]["auditSelection"], "fixture")
 
+    def test_cli_accepts_manual_review_envelope(self):
+        baseline = {"reviews": [{"blockId": "heldout-1", "severity": 0,
+                                  "source": "A result was significant.",
+                                  "translation": "結果は有意だった。"}]}
+        candidate = {"results": [{"blockId": "heldout-1", "model": "fixture",
+                                   "source": "A result was significant.",
+                                   "translation": "結果は有意だった。"}]}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            b, c, o = root / "b.json", root / "c.json", root / "o.json"
+            b.write_text(json.dumps(baseline), encoding="utf-8")
+            c.write_text(json.dumps(candidate), encoding="utf-8")
+            with patch("sys.argv", ["score_candidate_selection.py", "--baseline", str(b), "--candidate", str(c), "--output", str(o)]):
+                main()
+            self.assertEqual(json.loads(o.read_text())["summary"]["rows"], 1)
+
+    def test_semantic_threshold_can_reject_candidate_audit_only(self):
+        baseline = {"rows": [{"blockId": "heldout-1", "source": "A result was significant.", "translation": "結果。"}]}
+        candidate = {"results": [{"blockId": "heldout-1", "model": "fixture", "source": "A result was significant.", "translation": "結果。"}]}
+        coverage = {"rows": [{"blockId": "heldout-1", "minSourceSentenceSimilarity": 0.4, "sourceSentenceCount": 1, "targetSentenceCount": 1}]}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            b, c, s, o = [root / name for name in ("b.json", "c.json", "s.json", "o.json")]
+            b.write_text(json.dumps(baseline), encoding="utf-8"); c.write_text(json.dumps(candidate), encoding="utf-8"); s.write_text(json.dumps(coverage), encoding="utf-8")
+            with patch("sys.argv", ["score_candidate_selection.py", "--baseline", str(b), "--candidate", str(c), "--semantic-coverage", str(s), "--min-semantic-sim", "0.65", "--output", str(o)]):
+                main()
+            self.assertIsNone(json.loads(o.read_text())["rows"][0]["auditSelection"])
+
 
 if __name__ == "__main__":
     unittest.main()
