@@ -15,6 +15,12 @@ SEGMENTER_VERSION = "semantic-v71"
 _ABBREVIATIONS = {"e.g.", "i.e.", "et al.", "fig.", "no.", "cf.", "dr.", "mr.", "ms.", "vs."}
 
 
+def is_probable_panel_fragment(text: str) -> bool:
+    """Identify a short figure/table sub-panel unit before model inference."""
+    compact = _compact(text)
+    return bool(re.match(r"^\([a-z]\)\s+", compact, re.I) and len(compact) <= 240)
+
+
 @dataclass(frozen=True)
 class TranslationUnit:
     # Exact source slice. Joining ``text`` values must reconstruct the source.

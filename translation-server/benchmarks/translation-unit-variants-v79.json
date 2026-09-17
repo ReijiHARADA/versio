@@ -4,7 +4,7 @@
   "source": "(b) the characteristics of the relationship between the consumer and their peers. The present research addresses both of these topics. Despite the similarities between WOM marketing and social advertising, there are a number of important qualities that distinguish the two. First, a minimal, “lightweight” consumer behavior (e.g., creating a connection with an entity) is sufficient to make that consumer a source of peer influence. Second, social influence via these systems is passive and automatically targeted (cf. [Aral and Walker 2011]). That is, once an individual creates a persistent connection with an advertised entity, social influence can occur continually without additional actions, such as sharing messages with others. Finally, social advertising allows stakeholders to play a more active role in creating and funding ad campaigns with specific text, images, or video. We regard social advertising as any advertising method that uses information about consumers’ social networks to target ads and/or provide personalized social signals. Thus, there are two ways in which the use of social information in advertising can affect consumer responses: social networks encode unobserved consumer characteristics, which allow advertisers to target likely adopters; and the inclusion of social cues creates a new channel for social influence. Recent work on social advertising (e.g., [Tucker 2012]) has recognized these mechanisms, but has been largely unable to identify the the extent in which social influence actually plays a role. As far as we know, the present research is the first to identify the effect of social signals from peers on consumer responses to advertising. We use field experiments to make this identification possible.",
   "rows": [
     {
-      "condition": "whole_current_protection",
+      "condition": "unit_1_current_protection",
       "protection_mode": "current",
       "expected": {
         "roundTrip": true,
@@ -15,14 +15,22 @@
           "field experiments"
         ]
       },
-      "model_input": "(b) the characteristics of the relationship between the consumer and their peers. The present research addresses both of these topics. Despite the similarities between ZZCIT1ZZ marketing and social advertising, there are a number of important qualities that distinguish the two. First, a minimal, “lightweight” consumer behavior (e.g., creating a connection with an entity) is sufficient to make that consumer a source of peer influence. Second, social influence via these systems is passive and automatically targeted ZZCIT2ZZ. That is, once an individual creates a persistent connection with an advertised entity, social influence can occur continually without additional actions, such as sharing messages with others. Finally, social advertising allows stakeholders to play a more active role in creating and funding ad campaigns with specific text, images, or video. We regard social advertising as any advertising method that uses information about consumers’ social networks to target ads and/or provide personalized social signals. Thus, there are two ways in which the use of social information in advertising can affect consumer responses: social networks encode unobserved consumer characteristics, which allow advertisers to target likely adopters; and the inclusion of social cues creates a new channel for social influence. Recent work on social advertising ZZCIT3ZZ has recognized these mechanisms, but has been largely unable to identify the the extent in which social influence actually plays a role. As far as we know, the present research is the first to identify the effect of social signals from peers on consumer responses to advertising. We use field experiments to make this identification possible.",
+      "model_input": "The present research addresses both of these topics.",
       "units": [
-        "(b) the characteristics of the relationship between the consumer and their peers. The present research addresses both of these topics. Despite the similarities between WOM marketing and social advertising, there are a number of important qualities that distinguish the two. First, a minimal, “lightweight” consumer behavior (e.g., creating a connection with an entity) is sufficient to make that consumer a source of peer influence. Second, social influence via these systems is passive and automatically targeted (cf. [Aral and Walker 2011]). That is, once an individual creates a persistent connection with an advertised entity, social influence can occur continually without additional actions, such as sharing messages with others. Finally, social advertising allows stakeholders to play a more active role in creating and funding ad campaigns with specific text, images, or video. We regard social advertising as any advertising method that uses information about consumers’ social networks to target ads and/or provide personalized social signals. Thus, there are two ways in which the use of social information in advertising can affect consumer responses: social networks encode unobserved consumer characteristics, which allow advertisers to target likely adopters; and the inclusion of social cues creates a new channel for social influence. Recent work on social advertising (e.g., [Tucker 2012]) has recognized these mechanisms, but has been largely unable to identify the the extent in which social influence actually plays a role. As far as we know, the present research is the first to identify the effect of social signals from peers on consumer responses to advertising. We use field experiments to make this identification possible."
+        "The present research addresses both of these topics."
       ],
-      "output": null,
-      "input_tokens": null,
-      "output_tokens": null,
-      "error": "ValueError: protected citation placeholder dropped by model: WOM"
+      "output": "これらの問題を解決するために,本研究は,これらの両者を取り上げた。",
+      "coverage": {
+        "requiredTokenPresence": {
+          "social advertising": false,
+          "peer influence": false,
+          "field experiments": false
+        },
+        "relationTokenPresence": []
+      },
+      "input_tokens": 14,
+      "output_tokens": 29,
+      "error": null
     }
   ]
 }

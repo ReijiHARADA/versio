@@ -16,7 +16,7 @@ from typing import Optional
 
 from .base import TranslationResult
 from .citation_protect import protect_citations
-from .segmenter import segment_for_translation
+from .segmenter import is_probable_panel_fragment, segment_for_translation
 from .madlad_mps import MADLADEngine, get_engine
 
 
@@ -279,6 +279,14 @@ class MicroBatchScheduler:
                 in_toks: list[int] = []
                 out_toks: list[int] = []
                 for unit_index, (chunk, model_input) in enumerate(zip(chunks, item_model_inputs)):
+                    if is_probable_panel_fragment(chunk):
+                        # Panel labels are source facts, not prose. Preserve the
+                        # exact unit and keep it out of MADLAD; the UI can still
+                        # show the original label/caption context.
+                        pieces.append(chunk)
+                        in_toks.append(0)
+                        out_toks.append(0)
+                        continue
                     try:
                         if model_input == chunk:
                             unit_pieces, unit_in, unit_out = engine._translate_chunks([chunk], target_language)

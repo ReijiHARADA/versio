@@ -63,6 +63,28 @@ def _first_piece(chunks: list[str], pieces: list[str], lang: str) -> str:
 
 
 class MicroBatcherTests(unittest.TestCase):
+    def test_panel_fragment_is_preserved_without_model_call(self) -> None:
+        engine = FakeEngine()
+        sched = MicroBatchScheduler(engine)
+        with (
+            patch(
+                "engines.micro_batcher.MADLADEngine._split_for_translation",
+                staticmethod(lambda text: text.split("|")),
+            ),
+            patch(
+                "engines.micro_batcher.MADLADEngine._join_translated_chunks",
+                staticmethod(lambda chunks, pieces, lang, *args: " ".join(pieces)),
+            ),
+        ):
+            result = sched.translate_many(
+                ["(b) the characteristics of the interaction method with peers.|A complete paragraph."],
+                "en",
+                "ja",
+            )[0]
+        self.assertEqual(engine.calls, [("ja", ["A complete paragraph."])])
+        self.assertIn("(b) the characteristics", result.text)
+        self.assertIn("ja:A complete paragraph.", result.text)
+
     def test_same_language_pair_keeps_requests_isolated(self) -> None:
         engine = FakeEngine()
         sched = MicroBatchScheduler(engine)

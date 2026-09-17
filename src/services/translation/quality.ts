@@ -622,9 +622,11 @@ export function unsafeParagraphStructureReason(text: string): string | null {
     return "段落の末尾が欠けている可能性があります";
   }
   // Figure/table sub-panels extracted as `(a) noun phrase` are captions or
-  // legends. Without terminal punctuation they do not form a reliable prose
-  // translation unit, even when their words happen to be English.
-  if (noTerminal && /^\([a-z]\)\s+/i.test(t)) {
+  // legends. A sentence terminator does not make the panel label prose: the
+  // translation segmenter can append one to a short panel fragment before
+  // this gate runs. Keep the rule bounded to a short panel-shaped unit so a
+  // genuinely enumerated paragraph is not discarded.
+  if (/^\([a-z]\)\s+/i.test(t) && t.length <= 240) {
     return "図表のサブパネル説明が本文に混ざっている可能性があります";
   }
   // A PDF block ending immediately after an introducing verb and the first
