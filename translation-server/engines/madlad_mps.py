@@ -28,10 +28,26 @@ def allows_unprotected_identifier_retry(missing: list[str]) -> bool:
     A transformed token such as ``errorsAssume`` may be a dropped scientific
     placeholder; retrying without protection could silently lose facts.
     """
+    def is_plain_identifier(item: str) -> bool:
+        return bool(re.fullmatch(r"\s*[A-Za-z][A-Za-z0-9._-]{1,31}\s*", item)) and not re.search(r"[a-z][A-Z]", item)
+
+    def is_figure_or_table_reference(item: str) -> bool:
+        # Figure/table labels are structural references. If MADLAD drops only
+        # this low-semantic-span token, a second decode without the placeholder
+        # is safer than falling back the entire otherwise complete paragraph.
+        # Keep the grammar deliberately narrow: no prose or statistical values.
+        return bool(
+            re.fullmatch(
+                r"\s*\(?\s*(?:fig(?:ure)?s?|table|tbl)\.?\s*\d+(?:\s*[a-z])?\s*\)?\s*",
+                item,
+                flags=re.IGNORECASE,
+            )
+        )
+
     return bool(missing) and all(
-        re.fullmatch(r"\s*[A-Za-z][A-Za-z0-9._-]{1,31}\s*", item)
+        is_plain_identifier(item) or is_figure_or_table_reference(item)
         for item in missing
-    ) and not any(re.search(r"[a-z][A-Z]", item) for item in missing)
+    )
 
 
 class MADLADEngine(TranslationEngine):
@@ -43,7 +59,7 @@ class MADLADEngine(TranslationEngine):
     """
 
     MODEL_ID = "google/madlad400-3b-mt"
-    MODEL_VERSION = f"3b-mt-v5-{SEGMENTER_VERSION}-strict-restore-v11"
+    MODEL_VERSION = f"3b-mt-v5-{SEGMENTER_VERSION}-strict-restore-v12"
     # Long academic units were previously capped at 256 decoder tokens,
     # causing otherwise valid output to end mid-sentence. Keep the cap finite
     # while allowing a complete Japanese rendering for long source units.
