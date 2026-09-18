@@ -1,6 +1,6 @@
 # Current State
 
-最終更新: 2026-09-18 17:47 +0900
+最終更新: 2026-09-18 19:57 +0900
 **このファイルが「いま main に何があるか」の正です。** 実装を変えたらここを更新する（[AGENTS.md](./AGENTS.md)）。
 
 コードを source of truth とし、アーキテクチャ詳細は各専門文書へリンクする（重複しない）。
@@ -8,6 +8,23 @@
 ---
 
 ## Feature status
+
+### 2026-09-18 19:53 checkpoint
+
+- 現在、翻訳 server・fresh benchmark・長時間監査プロセスは起動していない。`ps` はこの実行環境の権限制約で参照できなかったが、実行中ジョブのハンドルはなく、ファイル更新も発生していない。
+- `npm run audit:validate-fallback-attribution` は persisted attribution 27行を検証した。既存 attribution のうち26行は現在の benchmark cohort と一致しないため、過去レポートを現行値として再利用しない。
+- `vite-node --script scripts/summarize-fresh-translation-baseline.ts` は既存レポートを再集計したが、世代の異なるレポートを含むため、fresh v7の代替にはしない。fresh再実行後にstable keyで再生成する。
+- 次の実作業は、ユーザー環境または許可された実行環境で fresh-port の translation server と benchmark を同一shellで起動し、現行コードの fallback / quality / manual review を更新すること。サーバーなしでの安全な実装変更は現時点で追加せず、古い集計値で改善を主張しない。
+
+### 2026-09-18 19:54 semantic review prioritization
+
+- `scripts/prioritize-semantic-review.ts` を現行の `audit-manual-review.json` と `translation-coverage-v68.json` に対して再実行し、受理済みかつ severity 2 以上の監査対象を17行へ優先順位付けした（成果物: `test-data/real-papers/reports/semantic-review-priority-v1.json`）。
+- 上位には、抽出断片ではなく受理済み翻訳そのものの意味崩れが含まれる。例として、GPT-3のスロットマシン文、CHIコース説明の「attendees」を「実験者」へ変える例、COVID診断文の `estimated and reported` を実験結果とする例がある。
+- これは自動品質ゲートを緩和・強化する根拠にはまだ使わない。fresh benchmarkとblind manual reviewで再現性を確認し、source fragment／モデル出力／用語・関係欠落を分離してから一般的な修正へ進む。
+- 世代混在を防ぐため、`summarize-fresh-translation-baseline.ts` は `FRESH_TRANSLATION_REPORTS` の明示指定を必須化した。`translation-audit-fresh-v2.json` 単独での再集計は 80 rows / ordinary-body 37 rows / fallback 9 rows (24.3%) となり、旧世代を混ぜた集計とは分離された。typecheck と diff-check は成功。
+- v2の9 fallbackを診断分類し、`translation-fresh-v2-fallback-attribution.json` に保存した。内訳は transport/server availability 3、model decode degeneracy 3、mixed-script quality gate 2、scientific placeholder restore failure 1。モデル品質と接続失敗を同じ率として改善しないための診断であり、production routingは変更していない。
+- 集計スクリプトの境界テストも実行した。環境変数なしでは終了コード1で世代混在を拒否し、`FRESH_TRANSLATION_REPORTS=translation-audit-fresh-v2.json` では 80 rows / fallback 9 を再現した。`git diff --check` 成功。
+
 
 | 領域 | 状態 | 要点 |
 | --- | --- | --- |
