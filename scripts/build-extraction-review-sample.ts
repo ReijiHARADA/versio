@@ -22,13 +22,23 @@ for (const paper of catalog.papers) {
     .filter((block) => ["heading", "paragraph", "figure_caption", "table_caption", "equation"].includes(block.role));
   // Keep the sample bounded, but ensure every paper contributes at least a
   // dozen section-stratified blocks when the cached extraction has enough
-  // material. Structural examples are selected first so ordinary prose does
-  // not crowd out captions, lists, or headings.
+  // material. Ordinary prose is kept dominant; structural examples are
+  // capped so captions and headings do not crowd out body text.
+  const paragraphCandidates = candidates.filter((b) => b.role === "paragraph");
+  const suspiciousParagraphs = paragraphCandidates.filter((b) =>
+    /(?:^|\s)(?:Abstract|Introduction|Related Work|Methods|Results|Discussion|Conclusions|(?:Fig(?:ure)?|Table)\.?\s*\d{1,3})\b/i.test(b.text)
+    && /[.!?]\s+[A-Z]/.test(b.text)
+  );
   const selected = [
-    ...candidates.filter((b) => b.role === "heading").slice(0, 4),
-    ...candidates.filter((b) => b.role === "figure_caption" || b.role === "table_caption"),
-    ...candidates.filter((b) => b.role === "equation").slice(0, 3),
-    ...candidates.filter((b) => b.role === "paragraph").slice(0, 12),
+    // Keep ordinary body text dominant, while reserving two slots for
+    // geometry-confirmation candidates where a structural marker is embedded
+    // in a paragraph. These are review candidates, never automatic errors.
+    ...suspiciousParagraphs.slice(0, 2),
+    ...paragraphCandidates.filter((b) => !suspiciousParagraphs.includes(b)).slice(0, 10),
+    ...candidates.filter((b) => b.role === "heading").slice(0, 3),
+    ...candidates.filter((b) => b.role === "figure_caption").slice(0, 1),
+    ...candidates.filter((b) => b.role === "table_caption").slice(0, 1),
+    ...candidates.filter((b) => b.role === "equation").slice(0, 1),
   ].filter((block, index, all) => all.indexOf(block) === index).slice(0, 16);
   for (const block of selected) {
     rows.push({
@@ -40,7 +50,12 @@ for (const paper of catalog.papers) {
       role: block.role,
       text: block.text,
       bbox: block.bbox,
-      review: { label: "pending", severity: null, primaryCause: null, notes: "Compare with the rendered source PDF." },
+      diagnosticFlags: [
+        block.pageStart !== block.pageEnd ? "cross-page-block" : null,
+        block.role === "paragraph" && /(?:^|\s)(?:Abstract|Introduction|Related Work|Methods|Results|Discussion|Conclusions|(?:Fig(?:ure)?|Table)\.?\s*\d{1,3})\b/i.test(block.text) ? "embedded-structural-marker-candidate" : null,
+        block.role === "paragraph" && /[.!?]\s+[A-Z]/.test(block.text) ? "internal-sentence-boundary" : null,
+      ].filter(Boolean),
+      review: { label: "pending", severity: null, primaryCause: null, notes: "Compare with the rendered source PDF; diagnosticFlags are candidate signals only." },
     });
   }
 }

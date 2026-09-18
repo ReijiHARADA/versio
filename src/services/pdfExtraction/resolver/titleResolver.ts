@@ -9,6 +9,17 @@ function looksLikeAuthorish(text: string): boolean {
   return false;
 }
 
+function stripMastheadSuffix(text: string): string {
+  const trimmed = text.trim();
+  // ORCID/URL and email tokens are unambiguous masthead metadata when they
+  // occur after a substantial title prefix. Keep URLs that make up the whole
+  // candidate out of this rule so a metadata fallback is not truncated.
+  const boundary = trimmed.search(/\s+(?:<https?:\/\/|https?:\/\/|[\w.+-]+@[\w.-]+\.[A-Za-z]{2,})/i);
+  if (boundary >= 32) return trimmed.slice(0, boundary).trim();
+
+  return trimmed;
+}
+
 function looksLikeRotatedMasthead(candidate: RoleCandidate): boolean {
   const text = candidate.text.trim();
   const rotation = candidate.layoutBlock.rotation ?? candidate.layoutBlock.lines[0]?.rotation ?? 0;
@@ -48,7 +59,7 @@ export function resolveTitle(input: {
   let native: string[] = [];
 
   if (titles.length > 0) {
-    let combined = titles[0].text.trim();
+    let combined = stripMastheadSuffix(titles[0].text);
     for (let i = 1; i < titles.length; i++) {
       const prev = titles[i - 1];
       const cur = titles[i];
@@ -59,7 +70,7 @@ export function resolveTitle(input: {
       const prevFont = prev.layoutBlock.lines[0]?.fontSize ?? 12;
       if (gap > prevFont * 2.8) break;
       if (looksLikeAuthorish(cur.text)) break;
-      combined = joinTitleParts(combined, cur.text.trim());
+      combined = joinTitleParts(combined, stripMastheadSuffix(cur.text));
     }
     native = [combined];
 

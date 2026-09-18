@@ -163,7 +163,7 @@ function hasTrailingLatinFragment(output: string, source: string): boolean {
 /** ACM CCS 1998-style classifier: H.5.2, H.5.m, I.2.10 */
 const CCS_CODE = /[A-K]\.\d+(?:\.\d+)*(?:\.[a-z])?/i;
 
-export type ScientificInvariant = { kind: "citation" | "doi" | "url" | "figure" | "statistic" | "measurement" | "year" | "number" | "acronym"; value: string };
+export type ScientificInvariant = { kind: "citation" | "doi" | "url" | "figure" | "statistic" | "measurement" | "year" | "number" | "acronym" | "structure"; value: string };
 
 const NON_TECHNICAL_UPPERCASE_WORDS = new Set([
   "A",
@@ -204,6 +204,9 @@ const SCIENTIFIC_PATTERNS: Array<[ScientificInvariant["kind"], RegExp]> = [
   // Figure/panel labels are source references. Keeping their original form is
   // safer than allowing a decoder to omit, renumber, or detach them.
   ["figure", /\bfig(?:ure)?s?\.?\s*\d+(?:[a-z]|\([a-z]\))?/gi],
+  // Numbered document references are structural facts. Preserve the number
+  // even when the surface label is localized (for example Section 3 → 第3節).
+  ["structure", /\b(?:section|chapter|appendix)\s+\d+(?:\.\d+)*/gi],
   // Superscript-style references are often emitted by native PDF extraction
   // as a number adjacent to a quoted term or identifier: `problem”16 (`.
   // Treat the number as a citation only in that parenthesized-reference
@@ -251,6 +254,16 @@ function normalizeInvariant(value: string): string {
 function outputContainsInvariant(output: string, invariant: ScientificInvariant): boolean {
   const normalizedOutput = normalizeInvariant(output);
   const value = normalizeInvariant(invariant.value);
+  if (invariant.kind === "structure") {
+    const sourceNumbers = invariant.value.match(/\d+(?:\.\d+)*/g) ?? [];
+    if (sourceNumbers.length === 0) return false;
+    return sourceNumbers.every((number) => {
+      const escaped = number.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      // Require a structural label near the number; an unrelated count such
+      // as `3つ` must not satisfy `Section 3`.
+      return new RegExp(`(?:第\\s*${escaped}\\s*[節章]|(?:セクション|section|chapter|appendix)\\s*${escaped})`, "i").test(output);
+    });
+  }
   if (invariant.kind !== "acronym") return normalizedOutput.includes(value);
   // `BERT` must not be treated as preserved merely because `DeBERTa` occurs.
   // Method/model identifiers are ASCII tokens even when adjacent to Japanese.
@@ -268,18 +281,18 @@ function invariantQuality(source: string, output: string): { score: number; reas
   // wording such as "first" becoming "1つ".
   const sourceFacts = new Set(
     invariants
-      .filter((item) => ["citation", "doi", "url", "figure", "statistic", "measurement", "year"].includes(item.kind))
+      .filter((item) => ["citation", "doi", "url", "figure", "statistic", "measurement", "year", "structure"].includes(item.kind))
       .map((item) => `${item.kind}:${normalizeInvariant(item.value)}`)
   );
   const unexpected = extractScientificInvariants(output).filter((item) =>
-    ["citation", "doi", "url", "figure", "statistic", "measurement", "year"].includes(item.kind)
+    ["citation", "doi", "url", "figure", "statistic", "measurement", "year", "structure"].includes(item.kind)
       && !sourceFacts.has(`${item.kind}:${normalizeInvariant(item.value)}`)
   );
   if (missing.length === 0 && unexpected.length === 0) return { score: 1, reasons: [], criticalMissing: false };
   // A missing acronym can change the method, metric, or experimental
   // condition under discussion (for example MSE, NPIV, or DeepIV). It is a
   // safety failure, not merely a stylistic difference.
-  const critical = missing.filter((item) => ["citation", "doi", "url", "figure", "statistic", "measurement", "year", "acronym"].includes(item.kind));
+  const critical = missing.filter((item) => ["citation", "doi", "url", "figure", "statistic", "measurement", "year", "acronym", "structure"].includes(item.kind));
   const reasons: string[] = [];
   if (missing.length > 0) reasons.push(`scientific invariants missing: ${missing.slice(0, 4).map((item) => item.value).join(", ")}`);
   if (unexpected.length > 0) reasons.push(`unexpected scientific invariants: ${unexpected.slice(0, 4).map((item) => item.value).join(", ")}`);
@@ -663,6 +676,13 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   }
   if (/\b(?:the|an?)\s+(?:entire|following|same|former|latter)\s*$/i.test(t) || /\b(?:albeit|although|though|because|while|whereas|with|without|including|concerning|between|than|to|of|for|at|in|on|from|by|as)\s*$/i.test(t) || /\b(?:about|above|across|after|against|among|around|at|before|behind|below|beneath|beside|between|beyond|by|during|for|from|in|inside|into|near|of|on|onto|over|through|to|toward|under|with|within|without)\s+(?:the|a|an|this|that|these|those|its|their|our|his|her)\s*$/i.test(t) || /\b(?:is|are|was|were|be|been|being|has|have|had|do|does|did|can|could|will|would|should|may|might)\s*$/i.test(t) || /\b(?:and|or)\s+(?:standard|mean|median|confidence|statistical)\s*$/i.test(t)) {
     return "段落の末尾が欠けている可能性があります";
+  }
+  // Native PDF extraction can cut a cross-reference immediately after its
+  // label (for example `... in Section`). Translating this fragment makes
+  // the model invent a section number or lose the document relation. Keep the
+  // source until the layout layer can stitch the following block.
+  if (t.length >= 48 && /\b(?:section|figure|table|appendix|chapter)\s*$/i.test(t)) {
+    return "文書内参照が途中で切れている可能性があります";
   }
   if (/\b[a-z]{2,}-\s+\d+(?:\.\d+)?\s+[a-z]{2,}\b/i.test(t)) {
     return "表または図の数値セルが本文に混ざっている可能性があります";

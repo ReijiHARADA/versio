@@ -10,11 +10,34 @@ import type { TranslationEngine, TranslationResult, EngineStatus } from "./types
 // Bump whenever the server-side protection or semantic-unit pipeline changes.
 // It is part of the cache identity, so stale translations produced before the
 // current source-preservation rules are never silently reused.
-export const MADLAD_MODEL_VERSION = "3b-mt-v5-semantic-v71-strict-restore-v11";
+export const MADLAD_MODEL_VERSION = "3b-mt-v5-semantic-v71-strict-restore-v16";
 
 const DEFAULT_SERVER_URL = "http://127.0.0.1:8765";
 
 let cachedServerToken: string | null | undefined;
+
+const TRANSLATION_REQUEST_ATTEMPTS = 3;
+
+async function fetchTranslation(url: string, init: RequestInit): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < TRANSLATION_REQUEST_ATTEMPTS; attempt += 1) {
+    try {
+      const response = await fetch(url, init);
+      // A sidecar can be briefly unavailable while the model is loading or
+      // restarting. Retry only transient gateway/service responses; preserve
+      // deterministic client errors for the caller's failure classification.
+      if (![502, 503, 504].includes(response.status) || attempt === TRANSLATION_REQUEST_ATTEMPTS - 1) {
+        return response;
+      }
+      lastError = new Error(`Translation server temporary error: ${response.status}`);
+    } catch (error) {
+      lastError = error;
+      if (attempt === TRANSLATION_REQUEST_ATTEMPTS - 1) throw error;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 150 * (attempt + 1)));
+  }
+  throw lastError instanceof Error ? lastError : new Error("Translation request failed");
+}
 
 async function translationAuthHeaders(): Promise<Record<string, string>> {
   const headers: Record<string, string> = {
@@ -61,7 +84,7 @@ export class MADLADEngine implements TranslationEngine {
     sourceLanguage: string,
     targetLanguage: string
   ): Promise<TranslationResult> {
-    const response = await fetch(`${this.serverUrl}/translate`, {
+    const response = await fetchTranslation(`${this.serverUrl}/translate`, {
       method: "POST",
       headers: await translationAuthHeaders(),
       body: JSON.stringify({
@@ -111,7 +134,7 @@ export class MADLADEngine implements TranslationEngine {
     sourceLanguage: string,
     targetLanguage: string
   ): Promise<TranslationResult[]> {
-    const response = await fetch(`${this.serverUrl}/translate/batch`, {
+    const response = await fetchTranslation(`${this.serverUrl}/translate/batch`, {
       method: "POST",
       headers: await translationAuthHeaders(),
       body: JSON.stringify({
@@ -160,7 +183,7 @@ export class MADLADEngine implements TranslationEngine {
 
   async getStatus(): Promise<EngineStatus> {
     try {
-      const response = await fetch(`${this.serverUrl}/status`);
+      const response = await fetchTranslation(`${this.serverUrl}/status`, { method: "GET" });
 
       if (!response.ok) {
         return {
