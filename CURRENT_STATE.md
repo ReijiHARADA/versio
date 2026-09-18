@@ -1,6 +1,6 @@
 # Current State
 
-最終更新: 2026-09-18 19:57 +0900
+最終更新: 2026-09-18 22:32 +0900
 **このファイルが「いま main に何があるか」の正です。** 実装を変えたらここを更新する（[AGENTS.md](./AGENTS.md)）。
 
 コードを source of truth とし、アーキテクチャ詳細は各専門文書へリンクする（重複しない）。
@@ -24,6 +24,50 @@
 - 世代混在を防ぐため、`summarize-fresh-translation-baseline.ts` は `FRESH_TRANSLATION_REPORTS` の明示指定を必須化した。`translation-audit-fresh-v2.json` 単独での再集計は 80 rows / ordinary-body 37 rows / fallback 9 rows (24.3%) となり、旧世代を混ぜた集計とは分離された。typecheck と diff-check は成功。
 - v2の9 fallbackを診断分類し、`translation-fresh-v2-fallback-attribution.json` に保存した。内訳は transport/server availability 3、model decode degeneracy 3、mixed-script quality gate 2、scientific placeholder restore failure 1。モデル品質と接続失敗を同じ率として改善しないための診断であり、production routingは変更していない。
 - 集計スクリプトの境界テストも実行した。環境変数なしでは終了コード1で世代混在を拒否し、`FRESH_TRANSLATION_REPORTS=translation-audit-fresh-v2.json` では 80 rows / fallback 9 を再現した。`git diff --check` 成功。
+
+### 2026-09-18 22:13 resume check
+
+- 最新コミット `009321f` と現行成果物を確認した。
+- `127.0.0.1:8765/status` は接続拒否で、translation server は起動していない。fresh benchmarkは実行していない。
+- 最新の明示世代集計は `translation-audit-fresh-v2.json` 単独で 80 rows、ordinary-body 37 rows、fallback 9 rows（24.3%）。これは現行目標の5%以下を満たさず、モデル改善完了とは扱わない。
+
+### 2026-09-18 22:19 offline model evaluation check
+
+- localhostに依存しない候補モデル比較として、既存の固定3行fixtureへ M2M100-1.2B の同一条件評価を試行した。
+- この環境のキャッシュは重みが揃っておらず、TransformersがHugging Faceへメタデータ取得を試みて名前解決エラーになったため、生成結果は得られなかった。再試行ループは中断し、ネットワークなしでの結果とは扱わない。
+- 既存のproduction routing、品質ゲート、モデル選択は変更していない。次回は重みが完全にキャッシュされたモデル、またはユーザー環境でネットワーク許可された同一fixture評価を行う。
+
+### 2026-09-18 22:23 offline M2M snapshot smoke
+
+- M2M100-1.2Bの完全なローカルsnapshot（`7b361841...`）を直接指定し、ネットワークを無効化した3行の固定fixture評価に成功。成果物は `test-data/real-papers/reports/model-quality-m2m12-offline-smoke-v2.json`。
+- 3行とも生成は完了したが、用語精度は production MADLAD の代替採用を支持しない。例として `jewellery` が「宝石」、`earring` が「スマートオーダー／り耳」、`earlobe` が「耳の骨」へずれている。数値（11.3 mm、31 mm、335 mg、14.4 uW、28日）は保持された。
+- これは3行の探索的比較であり、意味正解率やcascade採用の根拠にはしない。M2Mを本番へ変更せず、同一held-out cohortのblind reviewを行うまで候補扱いを継続する。
+- 既存の監査シグナル評価では3/3が数値・関係シグナルを通過したが、用語の意味ずれは検出できなかった。これは自動不変量だけでモデル選択を決められないことを示すため、semantic reviewを必須とする根拠として記録する（production gate変更なし）。
+
+### 2026-09-18 22:25 offline M2M held-out fixture
+
+- 同じ完全snapshot・greedy条件で `model-quality-unsafe-v8.json` の12行を評価し、`model-quality-m2m12-offline-v1.json` と scored artifact を保存した。
+- 監査シグナルは hardSignalPass **9/12**、relationSignalPass **12/12**。ただし出力には `Jogwheel`、`earring`、`earlobe` などの重大な用語崩れと、長文の途中切れがあり、candidate replacement/cascade の採用基準を満たさない。
+- これはM2Mの候補比較を前進させる証拠だが、既存MADLADとの同一12行のblind semantic再比較なしに優劣を主張しない。productionコード、品質ゲート、routingは変更していない。
+
+### 2026-09-18 22:27 offline Opus EN→JA held-out fixture
+
+- 同じ12行を完全な `Helsinki-NLP/opus-mt-en-jap` snapshotで評価し、`model-quality-opus-enja-offline-v1.json` と scored artifact を保存した。
+- hardSignalPass **0/12**。出力は日本語風の分かち書き・無関係な固有語・意味崩れが多く、M2Mより明確に不適。relationSignalPassは8/12だが、これは十分条件ではない。
+- この候補は本番cascadeから除外する。モデル置換は行わず、候補比較のnegative evidenceとして記録した。
+
+### 2026-09-18 22:30 offline M2M beam comparison
+
+- M2M100-1.2Bを同じ12行で `num_beams=4` にして比較。成果物は `model-quality-m2m12-offline-beam4-v1.json` と scored artifact。
+- hardSignalPassはgreedyと同じ **9/12**、relationSignalPassも **12/12**。beamで一部の日本語の流暢さは改善したが、`earring` の用語崩れや長文の切れは残り、単純なbeam設定変更だけで採用基準には到達しない。
+- generation設定・production routing・quality gateは変更していない。候補評価は引き続きsemantic blind review待ち。
+
+### 2026-09-18 22:32 fresh-v2 semantic false-accept audit
+
+- `translation-audit-fresh-v2.json` と関係監査を突合し、accepted outputの意味リスクを `semantic-risk-fresh-v2-v1.json` に固定した。
+- 5行が関係または不変量シグナルを失い、うち **4行はreader-visible fallbackなし**。内訳は contrast 2、negation 1、ordinal claim 1、scientific invariant 1。
+- 代表例は `attendees` を「実験者」としたHCI本文、否定を落とした機械学習本文、抽出崩れを受理したGPT-3本文。これはfallback率とは別のsemantic false-accept問題として、手動レビューとモデル比較の優先対象にする。
+- 自動シグナルのみでproduction rejectへ変更せず、現行routing・quality gateは維持した。
 
 
 | 領域 | 状態 | 要点 |
