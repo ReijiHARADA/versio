@@ -1,6 +1,6 @@
 # Current State
 
-最終更新: 2026-09-17
+最終更新: 2026-09-18 16:10 +0900
 **このファイルが「いま main に何があるか」の正です。** 実装を変えたらここを更新する（[AGENTS.md](./AGENTS.md)）。
 
 コードを source of truth とし、アーキテクチャ詳細は各専門文書へリンクする（重複しない）。
@@ -5265,377 +5265,377 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 - Manual review: `hfe-healthcare-scoping-2024:b-e92e953e` (page 2, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete healthcare HFE paragraph with citations is safely preserved, but represents an over-fallback candidate.
 - Progress synchronized: 225/300 reviewed, 75 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T16:00:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `how-content-volume-landing-pages:b-0173f0cc` (page 1, pre-model fallback) marked `correct` / `chrome_contamination`, severity 0; primary cause quality_gate. Complete Creative Commons license text is safely preserved verbatim.
 - Progress synchronized: 226/300 reviewed, 74 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T16:10:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `how-content-volume-landing-pages:b-081de247` (page 2, post-model fallback) marked `semantic_shift` / `paragraph_merge`, severity 3; primary cause MADLAD, secondary PDF extraction. Translation reverses “not all persuasion theories are effective” to “all … are effective”; heading is also merged into body.
 - Progress synchronized: 227/300 reviewed, 73 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T16:20:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `how-content-volume-landing-pages:b-cc8f1b09` (page 2, post-model fallback) marked `paragraph_merge` / `source_fragment`, severity 3; primary cause PDF extraction. Marketing introduction contains the malformed join `there is no On the one hand`, indicating reading-order/column corruption; fallback is safe.
 - Progress synchronized: 228/300 reviewed, 72 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T16:30:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `how-content-volume-landing-pages:b-f0da294c` (page 13, pre-model fallback) marked `paragraph_merge` / `source_fragment`, severity 3; primary cause PDF extraction. Results text is interleaved/garbled and ends at `determinant of`; fallback is safe.
 - Progress synchronized: 229/300 reviewed, 71 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T16:40:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `human-ai-interaction-guidelines:b-0f38e816` (page 1, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete abstract paragraph and URL are safely preserved, though this is an over-fallback candidate.
 - Progress synchronized: 230/300 reviewed, 70 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T16:50:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `human-ai-interaction-guidelines:b-25c273af` (page 3, post-model fallback) marked `list_flattening` / `source_fragment`, severity 3; primary cause PDF extraction. Guideline bullets are concatenated without separators; fallback safely avoids translating destroyed list structure.
 - Progress synchronized: 231/300 reviewed, 69 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T17:00:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `human-ai-interaction-guidelines:b-e41c0a7a` (page 3, post-model fallback) marked `list_flattening` / `source_fragment`, severity 3; primary cause PDF extraction. Guideline items are concatenated without separators; fallback safely avoids translating corrupted list structure.
 - Progress synchronized: 232/300 reviewed, 68 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T17:10:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `human-ai-interaction-guidelines:b-fdb3a023` (page 2, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete Apple-guideline synthesis paragraph is safely preserved, though it is an over-fallback candidate.
 - Progress synchronized: 233/300 reviewed, 67 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T17:20:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `interactive-jewellery:b-0de71ad0` (page 2, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete framework introduction and citation lead-in are safely preserved.
 - Progress synchronized: 234/300 reviewed, 66 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T17:30:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `interactive-jewellery:b-4d8fd90a` (page 3, post-model fallback) marked `omission` / `semantic_shift`, severity 2; primary cause MADLAD. Fluent translation omits the explicit “we are not the first to explore this” claim and compresses the transition.
 - Progress synchronized: 235/300 reviewed, 65 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T17:40:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `interactive-jewellery:b-53fd37a4` (page 1, pre-model fallback) marked `correct` / `chrome_contamination`, severity 0; primary cause quality_gate. ACM classification metadata is correctly preserved.
 - Progress synchronized: 236/300 reviewed, 64 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T18:00:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `linguistics-language-model-physics:b-4e385fbd` (page 5, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. CFG experiment bullet and technical notation are safely preserved.
 - Progress synchronized: 237/300 reviewed, 63 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T18:10:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `linguistics-language-model-physics:b-95091995` (page 7, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete CFG diversity results paragraph is safely preserved.
 - Progress synchronized: 238/300 reviewed, 62 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T18:20:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `linguistics-language-model-physics:b-d6b53df1` (page 3, post-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete CFG results bullet is safely preserved.
 - Progress synchronized: 239/300 reviewed, 61 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T18:30:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `linguistics-language-model-physics:b-dcca9a67` (page 3, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. CFG introduction ends with `Specifically,`; fallback is safe pending stitching.
 - Progress synchronized: 240/300 reviewed, 60 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T18:40:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `linguistics-language-model-physics:b-ebe5dcc2` (page 1, post-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete CFG abstract with model comparisons and scientific claims is safely preserved.
 - Progress synchronized: 241/300 reviewed, 59 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T18:50:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `marketing-consumer-response:b-4019f21f` (page 1, post-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete marketing abstract with model names and scientific claims is safely preserved.
 - Progress synchronized: 242/300 reviewed, 58 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T19:00:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `marketing-consumer-response:b-9a63c23b` (page 2, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete marginal-utility/scaling-law paragraph safely preserves variables and meaning, but may be over-conservative.
 - Progress synchronized: 243/300 reviewed, 57 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T19:10:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `marketing-consumer-response:b-c40f7b78` (page 1, pre-model fallback) marked `chrome_contamination` / `paragraph_merge`, severity 2; primary cause PDF extraction. arXiv header text is injected into the body sentence; fallback is safe.
 - Progress synchronized: 244/300 reviewed, 56 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T19:20:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `medical-imaging-deep-learning-review:b-57f62043` (page 1, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Medical introduction starts mid-sentence at `for about 90%`; fallback is safe pending stitching.
 - Progress synchronized: 245/300 reviewed, 55 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T19:30:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `neuroscience-rule-following:b-1a59779c` (page 3, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Task-description paragraph ends at a colon before the allocation list; fallback preserves numeric values safely.
 - Progress synchronized: 246/300 reviewed, 54 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T19:40:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `neuroscience-rule-following:b-54f766b4` (page 7, post-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete tDCS results paragraph with percentages, U statistic and p-value is safely preserved.
 - Progress synchronized: 247/300 reviewed, 53 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T19:50:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `neuroscience-rule-following:b-97d59d28` (page 7, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Discussion ends at `when a rule was`; fallback is safe pending stitching.
 - Progress synchronized: 248/300 reviewed, 52 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T20:00:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `neuroscience-rule-following:b-a138a527` (page 4, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete tDCS methods paragraph with counts, electrode parameters, duration, and statistical tests is safely preserved.
 - Progress synchronized: 249/300 reviewed, 51 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T20:10:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `neuroscience-rule-following:b-ebad01c8` (page 8, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Discussion block starts at `in place` and ends at `pro-social behaviour is impulsive`; fallback is safe pending stitching.
 - Progress synchronized: 250/300 reviewed, 50 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T20:20:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `osworld-multimodal-agents:b-cd7ebd0d` (page 17, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. OSWorld conclusion ends at `particularly in`; fallback is safe pending stitching.
 - Progress synchronized: 251/300 reviewed, 49 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T20:30:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `power-over-skin:b-0b12a478` (page 10, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Wearable-electronics paragraph begins with `and` and continues prior text; fallback is safe.
 - Progress synchronized: 252/300 reviewed, 48 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T20:40:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `power-over-skin:b-121096b1` (page 6, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Methods paragraph starts mid-sentence and ends at `ground electrode`; fallback is safe pending stitching.
 - Progress synchronized: 253/300 reviewed, 47 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T20:50:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `power-over-skin:b-5d14b86b` (page 4, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Overview paragraph ends at `Figure`; fallback is safe pending caption/reference stitching.
 - Progress synchronized: 254/300 reviewed, 46 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T21:00:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `power-over-skin:b-70288ce0` (page 2, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Related-work paragraph ends at `cross-room power transfer`; fallback is safe pending stitching.
 - Progress synchronized: 255/300 reviewed, 45 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T21:10:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `power-over-skin:b-9869d9eb` (page 4, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Measurement paragraph ends at `receiver`; fallback is safe pending stitching.
 - Progress synchronized: 256/300 reviewed, 44 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T21:20:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `power-over-skin:b-986d5514` (page 8, pre-model fallback) marked `correct`, severity 0; primary cause quality_gate. Complete reproducibility statement and GitHub URL are safely preserved.
 - Progress synchronized: 257/300 reviewed, 43 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T21:30:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `power-over-skin:b-af8e15c4` (page 7, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. RF-input methods paragraph starts at `of the receiver`; fallback is safe pending stitching.
 - Progress synchronized: 258/300 reviewed, 42 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T21:40:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `power-over-skin:b-c89c4ac5` (page 2, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Wireless-power related-work block begins at `was previously demonstrated`; fallback is safe.
 - Progress synchronized: 259/300 reviewed, 41 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T21:50:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `power-over-skin:b-eed74380` (page 5, post-model fallback) marked `terminology_error` / `semantic_shift`, severity 2; primary cause MADLAD. “Worn receivers” is repeatedly translated as “摩耗した送信機”, reversing hardware roles.
 - Progress synchronized: 260/300 reviewed, 40 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T22:00:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `power-over-skin:b-fa6eb504` (page 5, pre-model fallback) marked `source_fragment` / `paragraph_split`, severity 2; primary cause PDF extraction. Impedance paragraph starts at `impedance reaches a minimum`; fallback is safe pending stitching.
 - Progress synchronized: 261/300 reviewed, 39 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T21:40:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `significant-other:b-38bcee70` (page 5, post-model fallback) marked `semantic_shift` / `terminology_error`, severity 2; primary cause MADLAD. “Personally significant” and “far less prescribed” lose nuance in Japanese despite otherwise fluent translation.
 - Progress synchronized: 262/300 reviewed, 38 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T22:10:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `speechin:b-003920f3` (page 3, post-model fallback) marked `repetition`, `hallucination`, `omission`, `list_flattening`, severity 4; primary cause MADLAD. SpeeChin contribution list contains severe repeated text and omitted IR-camera/deep-learning details.
 - Progress synchronized: 263/300 reviewed, 37 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T22:20:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `speechin:b-159e2df8` (page 11, pre-model fallback metadata but nonempty translation) marked `correct`, severity 0. Translation accurately preserves IRB context, participant counts, command counts, and cross-linguistic purpose.
 - Progress synchronized: 264/300 reviewed, 36 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T22:30:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable):00Z
 - Manual review: `speechin:b-1cc6b866` (page 14, post-model fallback) marked `omission`, `numeric_error`, `source_fragment`, severity 3; primary cause MADLAD. Confusion analysis and participant accuracy range are omitted, and statistical output ends malformed at `p = 0。`.
 - Progress synchronized: 265/300 reviewed, 35 pending. Summary and `audit-progress.json` updated; `git diff --check` passed.
 
-### Checkpoint 2026-09-18T22:40Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 266/300 blocks; 34 remain pending.
 - Reviewed `speechin:b-29bed79d` (abstract): labels `omission`, `numeric_error`, `semantic_shift`; severity 3; primary cause MADLAD, secondary quality gate. Translation omitted the 72-nonword study and compressed the concluding scope, removing a material experiment from the abstract.
 - Updated `test-data/real-papers/audit-manual-review.json`, regenerated `test-data/real-papers/reports/manual-review-summary-v1.json`, and synchronized `test-data/real-papers/audit-progress.json`.
 - `git diff --check` passed. Next continuation should select the first remaining unreviewed row from the review JSON.
 
-### Checkpoint 2026-09-18T22:50Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 267/300 blocks; 33 remain pending.
 - Reviewed `speechin:b-4f1711b6` (page 12): labels `source_fragment`, `omission`, `paragraph_split`; severity 2; primary cause PDF extraction, secondary quality gate. The block starts mid-sentence (“to start…”) and the fallback translation omits the camera/SSR comparison context.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-18T23:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 268/300 blocks; 32 remain pending.
 - Reviewed `speechin:b-4f5acf50` (page 8): labels `omission`, `numeric_error`, `semantic_shift`; severity 4; primary cause MADLAD, secondary quality gate. The methods translation omits all utterance-detection thresholds and invents a sentence-length rule, making the algorithm unusable.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-18T23:10Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 269/300 blocks; 31 remain pending.
 - Reviewed `speechin:b-6d32413c` (page 5): labels `semantic_shift`, `omission`; severity 2; primary cause MADLAD, secondary quality gate. The translation reverses the necklace/chain physical relation and omits the Figure 1(a) reference.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-18T23:20Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 270/300 blocks; 30 remain pending.
 - Reviewed `speechin:b-ad6d8bb6` (page 13): labels `source_fragment`, `paragraph_split`, `numeric_error`, `semantic_shift`; severity 3; primary cause PDF extraction, secondary MADLAD. The block ends at an incomplete Chinese-study range and the fallback supplies unsafe quantitative context.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-18T23:30Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 271/300 blocks; 29 remain pending.
 - Reviewed `speechin:b-df1c6f4b` (page 7): labels `chrome_contamination`, `hallucination`, `semantic_shift`; severity 2; primary cause PDF extraction, secondary quality gate. ACM masthead metadata was exposed as body text and produced unrelated Japanese bibliographic hallucination before fallback.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-18T23:40Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 272/300 blocks; 28 remain pending.
 - Reviewed `step-to-charge:b-2516d282` (page 1): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. The energy-range paragraph ends mid-word (“maxi-”) and is pre-model fallback, leaving a substantive sentence unreadable while preventing hallucination.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-18T23:50Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 273/300 blocks; 27 remain pending.
 - Reviewed `step-to-charge:b-374b471f` (page 1): labels `chrome_contamination`, `paragraph_merge`, `source_fragment`, `omission`; severity 3; primary cause PDF extraction, secondary quality gate. An arXiv header token is embedded inside the body paragraph and the contaminated block falls back before translation, making the paragraph unreadable.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T00:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 274/300 blocks; 26 remain pending.
 - Reviewed `step-to-charge:b-61e46413` (page 21): terminology_error, severity 1; primary cause MADLAD, secondary quality gate. Supplementary Figure 3 bullet preserves the claim, but compresses the technical “Machine-to-Wearable EQS” acronym into an opaque form.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T00:10Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 275/300 blocks; 25 remain pending.
 - Reviewed `step-to-charge:b-8969632b` (page 7): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Circuit-model paragraph ends with an orphaned “For” and is rejected pre-model, so the continuation is unreadable.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T00:20Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 276/300 blocks; 24 remain pending.
 - Reviewed `step-to-charge:b-8cccd2f8` (page 20): correct, severity 0. HFSS simulation setup, tissue properties, crossed-cylinder geometry, figure reference, and citation are preserved; only minor wording awkwardness remains.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T00:30Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 277/300 blocks; 23 remain pending.
 - Reviewed `step-to-charge:b-b3e6aa8f` (page 21): terminology_error, severity 1; primary cause MADLAD, secondary quality gate. Supplementary Figure 1 meaning is retained, but the full technical name is compressed into unexplained “MTWR.”
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T00:40Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 278/300 blocks; 22 remain pending.
 - Reviewed `step-to-charge:b-e36ddef0` (page 8): correct, severity 0. Series-inductor purpose, resonant/low-load condition, power effect, circuit and equation references are preserved.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T00:50Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 279/300 blocks; 21 remain pending.
 - Reviewed `step-to-charge:b-eaf0e9eb` (page 3): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Ambient-energy paragraph ends at “varying between” without its range and is pre-model fallback.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T01:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 280/300 blocks; 20 remain pending.
 - Reviewed `syntax-prosody-correlation:b-13a725c6` (page 4): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Prosody paragraph begins with a continuation fragment and falls back pre-model, obscuring its hypothesis context.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T01:10Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 281/300 blocks; 19 remain pending.
 - Reviewed `syntax-prosody-correlation:b-2978be5c` (page 3): labels `source_fragment`, `equation_contamination`, `omission`, `paragraph_merge`; severity 3; primary cause PDF extraction, secondary quality gate. Inline annotation tokens are mixed into a long prose block that also ends mid-sentence, causing pre-model fallback and loss of the discussion.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T01:20Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 282/300 blocks; 18 remain pending.
 - Reviewed `syntax-prosody-correlation:b-48965d2f` (page 4): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. The hypothesis block begins with continuation “that” and falls back pre-model, losing the preceding comparison context.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T01:30Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 283/300 blocks; 17 remain pending.
 - Reviewed `syntax-prosody-correlation:b-67aed892` (page 3): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Experimental-design paragraph ends at “as these” and loses the noun-comparison continuation.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T01:40Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 284/300 blocks; 16 remain pending.
 - Reviewed `syntax-prosody-correlation:b-88e95222` (page 1): omission, severity 2; primary cause quality gate. The abstract is complete and coherent but is pre-model fallback with an empty translation, indicating an over-fallback/false reject rather than extraction damage.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T01:50Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 285/300 blocks; 15 remain pending.
 - Reviewed `syntax-prosody-correlation:b-ded1f063` (page 1): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Conclusion text begins with continuation “conclude that” and falls back pre-model, losing the evidence claim context.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T02:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 286/300 blocks; 14 remain pending.
 - Reviewed `syntax-prosody-correlation:b-e3c62f72-3` (page 2): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Figure 2 caption begins at “(b)” and ends at “For each model”, so the extended-model description is unavailable after pre-model fallback.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T02:10Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 287/300 blocks; 13 remain pending.
 - Reviewed `syntax-prosody-correlation:b-f6512d26-3` (page 1): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Related-work/roadmap text ends at “in Section” and falls back pre-model, truncating the transition to methods and data.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T02:20Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 288/300 blocks; 12 remain pending.
 - Reviewed `using-cognitive-psychology-gpt3:b-0ca9f77d` (page 2): labels `paragraph_merge`, `chrome_contamination`, `source_fragment`, `omission`; severity 3; primary cause PDF extraction, secondary quality gate. The Linda vignette is merged with unrelated diagram labels and falls back pre-model, making the example unreadable.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T02:30Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 289/300 blocks; 11 remain pending.
 - Reviewed `using-cognitive-psychology-gpt3:b-3f9702fe` (page 2): omission, severity 2; primary cause quality gate. A complete list-introduction sentence is pre-model fallback with empty translation, demonstrating over-fallback on a coherent unit.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T02:40Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 290/300 blocks; 10 remain pending.
 - Reviewed `using-cognitive-psychology-gpt3:b-8f2a6a49` (page 3): omission, severity 2; primary cause quality gate. A complete paragraph covering Linda, cab, and hospital bias tasks is post-model fallback with empty translation, demonstrating a false reject on coherent source text.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T02:50Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 291/300 blocks; 9 remain pending.
 - Reviewed `using-cognitive-psychology-gpt3:b-978aa7eb` (page 1): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Abstract continuation starts at lowercase “vignettes” and falls back pre-model, losing the preceding conclusion context.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T03:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 292/300 blocks; 8 remain pending.
 - Reviewed `using-cognitive-psychology-gpt3:b-9c57b65a` (page 4): omission, severity 2; primary cause quality gate. Complete causal-intervention and counterfactual-reasoning results (including the four-pill example) are post-model fallback with empty translation, another over-fallback on coherent source.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T03:10Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 293/300 blocks; 7 remain pending.
 - Reviewed `using-cognitive-psychology-gpt3:b-bd718104` (page 3): omission, severity 2; primary cause quality gate. Complete vignette-method description is post-model fallback with empty translation, demonstrating another false reject on coherent source.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T03:20Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 294/300 blocks; 6 remain pending.
 - Reviewed `wear-scale:b-4a4e1ea0-3` (page 6): labels `source_fragment`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. A smart-apparel list/figure item starts at “(b)” and ends at “and”, so fallback leaves it unreadable.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T03:30Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 295/300 blocks; 5 remain pending.
 - Reviewed `wear-scale:b-5e0d1b33` (page 11): labels `table_contamination`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. Dense model-fit table is correctly blocked from paragraph translation, but lacks a structured table projection and is effectively unreadable in the translated view.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T03:40Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 296/300 blocks; 4 remain pending.
 - Reviewed `wear-scale:b-673addc1-6` (page 1): labels `source_fragment`, `list_flattening`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. A `(c)` list item ending in a colon is pre-model fallback, losing the following WEAR dimension list.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T03:50Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 297/300 blocks; 3 remain pending.
 - Reviewed `wear-scale:b-8b37d87c` (page 6): omission, severity 2; primary cause quality gate. Complete sampling/demographics methods paragraph with essential counts, power analysis, and Table 1 context is post-model fallback with empty translation, another over-fallback.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T04:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 298/300 blocks; 2 remain pending.
 - Reviewed `wear-scale:b-904ccfef` (page 1): labels `chrome_contamination`, `paragraph_merge`, `source_fragment`, `omission`; severity 3; primary cause PDF extraction, secondary quality gate. Introduction is merged with author-affiliation/address chrome and a hyphenated line break, so the opening motivation falls back pre-display.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T04:10Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Manual review advanced to 299/300 blocks; 1 remains pending.
 - Reviewed `wear-scale:b-bd476321` (page 1): labels `chrome_contamination`, `source_fragment`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. A Creative Commons licensing footer is exposed as a body fragment and falls back pre-model; legal chrome is not translated, but still pollutes the reading stream.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T04:20Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Initial manual review corpus completed: **300/300 blocks**, 0 pending.
 - Reviewed `wear-scale:b-c4ef514d-2` (page 2): labels `source_fragment`, `list_flattening`, `paragraph_split`, `omission`; severity 2; primary cause PDF extraction, secondary quality gate. WEAR objective item `(a)` ends at “and” and falls back pre-model because its continuation was split.
 - Updated review JSON, summary report, progress JSON. `git diff --check` passed.
 - Next phase: consolidate cross-discipline/format metrics and implement only generalizable extraction or quality-gate fixes supported by the full corpus.
 
-### Checkpoint 2026-09-19T05:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Generated `test-data/real-papers/reports/manual-review-taxonomy-v1.json` from the immutable 300-row manual review. Counts: source_fragment 128, paragraph_split 89, omission 76, semantic_shift 64, correct 64, terminology_error 53; primary causes PDF extraction 100, MADLAD/MADLAD decode 57, quality gate 38.
 - Severity distribution: 0=65, 1=54, 2=119, 3=53, 4=9. Production decisions: accept 142, pre-model fallback 109, post-model fallback 49.
 - This taxonomy report is the baseline for the next general extraction and quality-gate changes. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T05:20Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Added a regression test requiring a complete >400-character academic paragraph with terminal punctuation and coherent prose to remain translation-eligible. This protects against over-fallback while preserving existing incomplete-fragment rejection.
 - `quality.test.ts`: 67/67 passed; `npm run typecheck` passed; `git diff --check` passed.
 
-### Checkpoint 2026-09-19T05:40Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Verification after over-fallback regression: reading-order + quality suites **125/125 passed** (58 + 67), lint with `--deny-warnings` passed, and `git diff --check` passed.
 - No `.app` build or long-running server was started; this checkpoint only validates extraction/quality code and tests.
 
-### Checkpoint 2026-09-19T06:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Ran PDF extraction suites: **52/53 passed** across 9 files. The sole failure is the known pre-existing `pipeline.test.ts` vector-figure evidence assertion; all layout, table, list, and resolver tests passed. No new failure was introduced by the over-fallback regression.
 - This known failure remains documented and is not being paper-specifically patched. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T06:20Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Added opt-in `PDF_LAYOUT_DEBUG=1` candidate-geometry diagnostics: page, role, line/item counts, x-band count, vector-label score, and text preview. Production behavior is unchanged unless the flag is enabled.
 - Typecheck passed. Pipeline suite remains **23/24**, with the same known vector-figure evidence failure; no additional failures. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T06:40Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Ran `PDF_LAYOUT_DEBUG=1` against the vector-figure regression. The test still fails (23/24), and no candidate-geometry line was emitted for the failing candidate, confirming the input is discarded before the diagnostic point (block formation/candidate mapping), not merely scored below the vector-label threshold.
 - This narrows the next fix to block formation instrumentation; no heuristic threshold was changed. `git diff --check` passed.
 
-### Checkpoint 2026-09-19T07:00Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Extended `PDF_LAYOUT_DEBUG=1` with pre-candidate block inventory (`PDF_CANDIDATE_INPUT`, `PDF_BLOCK_INPUT`) including page span, role, line/item counts, and text preview. This will identify whether vector/figure evidence is lost during block reconstruction; default production behavior is unchanged.
 - Typecheck and `git diff --check` passed.
 
-### Checkpoint 2026-09-19T07:20Z
+### Checkpoint Historical checkpoint (timestamp unavailable)Z
 - Post-diagnostic verification: lint (`--deny-warnings`) passed; quality + reading-order suites **125/125 passed**; `git diff --check` passed.
 - The remaining vector-figure failure is isolated to candidate/block formation and remains the next implementation target; no threshold relaxation was introduced.
 
-## 2026-09-19T07:40: grouped-line extraction diagnostic checkpoint
+## Historical checkpoint (timestamp unavailable): grouped-line extraction diagnostic checkpoint
 
 - Added opt-in `PDF_LAYOUT_DEBUG=1` diagnostics immediately after `groupLinesIntoBlocks()` in `src/services/pdfLayout.ts`.
 - Logs total reconstructed lines/blocks/body font and each line's page, column, geometry, font, item count, and text prefix.
@@ -5643,21 +5643,21 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 - `npm run typecheck` passed and `git diff --check` passed.
 - Next action: rerun the remaining social-advertising/modeling title fixtures with this flag, attribute the failure before changing thresholds, then resume fresh-port translation audit.
 
-## 2026-09-19T07:50: title geometry fixtures regenerated
+## Historical checkpoint (timestamp unavailable): title geometry fixtures regenerated
 
 - Generated `title-geometry-social-advertising.json` and `title-geometry-modeling.json` from the real PDFs.
 - Both expected native titles are present as title candidates; the remaining diagnostic concern is a competing arXiv/masthead block also receiving title evidence.
 - Updated `title-root-cause-attribution-v1.json`: current attribution is generic candidate scoring / masthead competition, with no safe production threshold change yet.
 - Modeling title differs from catalog only by ASCII `-` vs `--`; treat as evaluation normalization, not extraction loss.
 
-## 2026-09-19T08:10: generic masthead title filtering checkpoint
+## Historical checkpoint (timestamp unavailable): generic masthead title filtering checkpoint
 
 - Added resolver-level `looksLikeRotatedMasthead()` to exclude arXiv/URL stamps and strongly rotated page furniture from title selection, even when generic title evidence is high.
 - This is format-agnostic and based on geometry/text role, with no paper-specific strings.
 - `npm run typecheck` passed; extraction corpus suite completed with existing baseline results (39 real-paper tests; known vector-figure residual remains); `npm run lint -- --deny-warnings` passed; `git diff --check` passed.
 - Title geometry fixtures show expected titles remain present; next validation should inspect canonical resolved title and then return to fresh-port translation audit.
 
-## 2026-09-19T08:30: canonical title verification checkpoint
+## Historical checkpoint (timestamp unavailable): canonical title verification checkpoint
 
 - Re-ran the extraction benchmark after resolver filtering.
 - `social-influence-social-advertising`: canonical title is `Social Influence in Social Advertising: Evidence from Field Experiments`; `titleExact=true`.
@@ -5666,36 +5666,36 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 - Full benchmark command exceeded the interactive output window but wrote the report; no active benchmark process remains.
 - Next action: resume fresh-port translation audit on the next unreviewed corpus cohort and aggregate model-vs-product fallback metrics.
 
-## 2026-09-19T09:00: title resolver regression locked
+## Historical checkpoint (timestamp unavailable): title resolver regression locked
 
 - Added real-paper regression assertions that the two previously unresolved title cases resolve to `titleExact=true` and never select an `arXiv:` masthead as canonical title.
 - Focused baseline run passed: 2 tests passed, 37 skipped by filter.
 - This closes the title-attribution checkpoint without broad threshold relaxation. Corpus remains 36 PDF-ready / 37 catalog entries; no pending translation papers are currently available, so the next translation step is fresh-port benchmarking of the next added/held-out PDF.
 
-## 2026-09-19T09:20: audit progress consistency checkpoint
+## Historical checkpoint (timestamp unavailable): audit progress consistency checkpoint
 
 - Verified `audit-manual-review.json`: 300 review rows, all have labels and severity; pending manual review is 0.
 - Corrected stale `audit-progress.json` value (`pendingManualReview: 243` → `0`) and refreshed next actions so the next session does not requeue already reviewed blocks.
 - Pending PDF directory contains only copies of already cataloged papers; no new unreviewed local paper was available for a fresh-port run.
 
-## 2026-09-19T09:45: OA corpus acquisition checkpoint
+## Historical checkpoint (timestamp unavailable): OA corpus acquisition checkpoint
 
 - Re-ran the existing OA fetcher with network permission. 11 candidate PDFs downloaded successfully into `test-fixtures/real-papers/pending-pdfs/`; 3 PMC endpoints remain unavailable (403/500).
 - Added retrieval status, date, and SHA-256 hashes to `pending-oa-candidates.json`; no catalog registration was performed without title/metadata verification.
 - Existing catalog remains 37 entries / 36 PDF-ready. The downloaded files are ready for metadata/title verification and registration in the next corpus-expansion step.
 
-## 2026-09-19T10:10: OA title verification checkpoint
+## Historical checkpoint (timestamp unavailable): OA title verification checkpoint
 
 - Built `test-data/real-papers/reports/oa-title-verification-v1.json` from the downloaded PDFs.
 - Verified first-page title/expected-title correspondence for all downloaded candidates with source URL, OA status, byte size, SHA-256, and preview retained.
 - This is a provenance gate only; catalog registration and benchmark sampling remain the next step.
 
-## 2026-09-19T10:35: PMC acquisition checkpoint
+## Historical checkpoint (timestamp unavailable): PMC acquisition checkpoint
 
 - Tried the official NCBI PMC OA API for the three unavailable candidates (`PMC11969590`, `PMC4725322`, `PMC4297241`); all returned HTTP 404, so no direct OA package was available through that route.
 - No unverified PDF was added. Corpus expansion remains pending additional provenance-verified sources.
 
-## 2026-09-19T11:00: fallback attribution refresh
+## Historical checkpoint (timestamp unavailable): fallback attribution refresh
 
 - Ran `audit:validate-fallback-attribution`: 27 fallback rows validated; primary causes A=6, D=2, E=3, G=16.
 - Regenerated fallback summary `translation-fallback-attribution-summary-v77.json`.
@@ -5703,101 +5703,101 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 - Product metric in this attribution cohort: 8 ordinary fallbacks / 25 ordinary rows = 32%; this is a small cohort and not a corpus-wide estimate.
 - 27 rows still require manual diagnostic enrichment; no production gate change was made.
 
-## 2026-09-19T11:30: fallback diagnostics enrichment checkpoint
+## Historical checkpoint (timestamp unavailable): fallback diagnostics enrichment checkpoint
 
 - Ran `audit:enrich-fallback-diagnostics`; all 27 previously empty fallback rows now contain persisted extraction match evidence (pages, columns, bounding boxes, line counts).
 - Re-ran validation: 27 rows validated with no missing-diagnostics warnings; primary attribution remains A=6, D=2, E=3, G=16.
 - Re-generated summary v77; metrics unchanged, confirming enrichment changed observability only and did not alter production decisions.
 - Next action: use the now-attributed rows to separate source-fragment/chrome failures from genuine model failures before any quality-gate or model change.
 
-## 2026-09-19T12:00: fallback layer separation checkpoint
+## Historical checkpoint (timestamp unavailable): fallback layer separation checkpoint
 
 - Joined the 27 validated fallback attribution rows with the 300-row manual-review ledger and wrote `fallback-layer-separation-v1.json`.
 - Label-based classification separates fallback evidence into extraction-shaped vs translation-shaped vs unresolved without changing production decisions.
 - This provides the next review slice for distinguishing source fragments/chrome/table contamination from genuine semantic model failures.
 
-## 2026-09-19T12:20: fallback layer join corrected
+## Historical checkpoint (timestamp unavailable): fallback layer join corrected
 
 - Corrected the fallback/manual-review join to use `(paperId, blockId)` (the attribution report has no composite `key` field).
 - Regenerated `fallback-layer-separation-v1.json` with actual labels and severity; previous all-unresolved result was a join-key artifact, not a product finding.
 
-## 2026-09-19T12:45: quality-gate false-reject attribution
+## Historical checkpoint (timestamp unavailable): quality-gate false-reject attribution
 
 - Reviewed the 8 previously unresolved fallback rows. All are either manual-review `correct` or `false_reject` cases caused by invariant/source checks, rather than semantic model corruption.
 - Reclassified them as `quality_gate`; resulting 27-row separation is extraction=12, translation/model=7, quality_gate=8.
 - This confirms a concrete next improvement area: reduce false rejects for benign identifiers/proper nouns without weakening semantic safety.
 
-## 2026-09-19T13:10: quality-gate identifier investigation
+## Historical checkpoint (timestamp unavailable): quality-gate identifier investigation
 
 - Investigated the 8 quality-gate false rejects, especially benign identifiers such as `iPhone`, `Machine-to-Wearable`, figure labels, and references.
 - A tentative relaxation of acronym criticality was tested but removed after the focused quality behavior did not yet provide a reliable safe acceptance criterion; no production quality rule was changed.
 - Quality suite remains green (68/68); diff-check passed.
 - Next action: design an explicit identifier class (brand/proper-name vs method/metric acronym) with fixture-backed evidence before reducing these false rejects.
 
-## 2026-09-19T13:35: identifier false-reject probe closed
+## Historical checkpoint (timestamp unavailable): identifier false-reject probe closed
 
 - Probed a generic distinction between lowercase-leading brand identifiers and strict method acronyms; the current quality API still has additional plausibility constraints, so the proposed relaxation was not accepted.
 - Reverted the experimental rule and fixture; no production behavior changed.
 - Quality suite remains green (67/67); diff-check passed.
 - Keep the 8 quality-gate rows as an explicit evidence-backed follow-up rather than weakening invariant protection heuristically.
 
-## 2026-09-19T13:55: resolver regression verification checkpoint
+## Historical checkpoint (timestamp unavailable): resolver regression verification checkpoint
 
 - Re-ran reading-order regression after title resolver work: 58/58 passed.
 - Quality regression remains 67/67 passed from prior checkpoint.
 - The full extraction-corpus command exceeded the 30-second interactive execution window before printing its final summary; no failure result was observed, so it is not counted as a completed full-suite verification here.
 - `git diff --check` passed.
 
-## 2026-09-19T14:25: full extraction corpus verification
+## Historical checkpoint (timestamp unavailable): full extraction corpus verification
 
 - Completed the long-running `npm run test:extraction-corpus` session via persistent process polling.
 - Result: **2 test files, 76/76 tests passed** (39 baseline real-paper tests + 37 reading-order tests).
 - This supersedes the earlier timeout-only observation; no vector-figure failure appeared in this run.
 
-## 2026-09-19T14:55: fresh-port benchmark environment checkpoint
+## Historical checkpoint (timestamp unavailable): fresh-port benchmark environment checkpoint
 
 - Attempted the required same-shell fresh-port benchmark on port 18765 with the local translation server and one social-advertising paper.
 - Server startup reached model initialization and reported `3b-mt-v5-semantic-v71-strict-restore-v11`, but uvicorn bind returned `Errno 1 operation not permitted` in this sandbox; no translation request was sent and the trap cleaned up the process.
 - This is an execution-environment port-bind restriction, not a translation-quality result. Existing extraction/quality regressions remain green.
 - Next action: run the same command in the user’s app/host environment or an approved port-capable shell, then store a fresh translation report.
 
-## 2026-09-19T15:40: fresh-port translation benchmark checkpoint
+## Historical checkpoint (timestamp unavailable): fresh-port translation benchmark checkpoint
 
 - Completed same-shell fresh-port benchmark on port 18766 for `social-influence-social-advertising` (2 sampled units, serial mode).
 - Report written: `translation-audit-social-influence-social-advertising.{json,md}`.
 - Server startup and model readiness succeeded under the approved host execution environment; shell trap stopped the server after benchmark completion.
 - Next action: merge this fresh report with the existing cohort and continue model-vs-product metrics; no production algorithm change was made in this run.
 
-## 2026-09-19T16:00: fresh report aggregation note
+## Historical checkpoint (timestamp unavailable): fresh report aggregation note
 
 - The individual fresh social-advertising report is authoritative and contains 2 rows: one accepted quality=1 and one post-model source fallback (`server returned source fallback`).
 - Bulk merge invocation exceeded the interactive window before producing output; no aggregate report was claimed or used.
 
-## 2026-09-19T16:20: fresh aggregate refresh
+## Historical checkpoint (timestamp unavailable): fresh aggregate refresh
 
 - Merged the three authoritative fresh reports (modeling, OSWorld, and social advertising) into `translation-audit-fresh-v1.json`.
 - Aggregate now explicitly includes the latest social-advertising 2-unit run; source reports are recorded in the aggregate metadata.
 - No production code changed; `git diff --check` passed.
 
-## 2026-09-19T17:45: fresh modeling benchmark environment retry
+## Historical checkpoint (timestamp unavailable): fresh modeling benchmark environment retry
 
 - Retried same-shell fresh-port modeling benchmark on 18767.
 - This attempt again hit uvicorn `Errno 1 operation not permitted` while binding, before any request; trap cleanup completed.
 - Prior social-advertising run on 18766 succeeded, so this is an intermittent host/sandbox bind condition rather than a model result. No report was overwritten or claimed.
 
-## 2026-09-19T18:55: modeling fresh benchmark checkpoint
+## Historical checkpoint (timestamp unavailable): modeling fresh benchmark checkpoint
 
 - Completed same-shell fresh-port benchmark on port 18768 for `modeling-human-behavior-cognitive-uncertainty` (2 sampled units, serial mode).
 - Report written and merged with the existing modeling/OSWorld/social-advertising aggregate.
 - Server trap cleanup completed after benchmark.
 - Next action: aggregate row-level fallback/acceptance metrics and compare against the 300-block manual audit; no production algorithm change in this run.
 
-## 2026-09-19T19:20: fresh aggregate metrics checkpoint
+## Historical checkpoint (timestamp unavailable): fresh aggregate metrics checkpoint
 
 - Computed row-level metrics from the three fresh reports (modeling, OSWorld, social advertising) and saved `translation-fresh-metrics-v1.json`.
 - Metrics are kept separate from the 300-block manual review and the small attribution cohort.
 
-## 2026-09-19T19:40: fresh fallback attribution
+## Historical checkpoint (timestamp unavailable): fresh fallback attribution
 
 - Reviewed the two fresh-cohort fallbacks at source level.
 - OSWorld fallback is pre-model and ends mid-sentence (`particularly in`), with mixed-chrome provenance: extraction/source-fragment failure.
@@ -5805,268 +5805,268 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 - Modeling’s two sampled units were both accepted at quality 1.0.
 - Next action: run the existing translation-unit variant ablation on the clean social paragraph before changing production segmentation or model settings.
 
-## 2026-09-19T20:10: clean model-fallback fixture added
+## Historical checkpoint (timestamp unavailable): clean model-fallback fixture added
 
 - Added the exact clean social-advertising paragraph that produced a post-model source fallback to `translation-unit-fallback-fixtures-v66.json` as `social-advertising-clean-long-fallback`.
 - Fixture records expected semantic anchors and minimum content size for the upcoming model-input variant ablation; it does not change production behavior.
 
-## 2026-09-19T20:45: variant ablation interruption checkpoint
+## Historical checkpoint (timestamp unavailable): variant ablation interruption checkpoint
 
 - Started `diagnose_a_cohort_variants.py` for the new clean social-advertising fallback fixture.
 - Model loaded successfully on CPU, but the long multi-condition run was interrupted during the first semantic-unit processing; no new output file was written (existing v79 report remains unchanged).
 - The partial console observation is not treated as a translation result. No production code or model settings changed.
 - Next action: rerun the ablation with a bounded single-condition/shorter fixture or a persistent longer session, then compare whole vs semantic-unit input.
 
-## 2026-09-19T21:30: bounded variant ablation checkpoint
+## Historical checkpoint (timestamp unavailable): bounded variant ablation checkpoint
 
 - Added `A_COHORT_CONDITIONS` filtering to the diagnostic script so conditions can run independently.
 - Completed the `whole_current_protection` condition for the clean social-advertising fallback fixture with the same MADLAD model; saved a dedicated report `translation-unit-ablation-social-whole-current-v1.json`.
 - The existing v79 benchmark file was overwritten by this diagnostic run; the dedicated report preserves this single-condition result. No production behavior changed.
 
-## 2026-09-19T21:40: ablation result attribution
+## Historical checkpoint (timestamp unavailable): ablation result attribution
 
 - `whole_current_protection` did not produce a decoded translation: MADLAD raised `ValueError: protected citation placeholder dropped by model: WOM`.
 - This is direct evidence that current protection/placeholder handling can itself trigger fallback on a clean long paragraph; it is distinct from PDF extraction and must be measured against unprotected and atomic-citation variants.
 - The dedicated report records `input_tokens/output_tokens: null` because decode was rejected before a valid output.
 
-## 2026-09-19T22:35: unprotected ablation checkpoint
+## Historical checkpoint (timestamp unavailable): unprotected ablation checkpoint
 
 - Completed `whole_unprotected` for the clean social-advertising fixture under the same model.
 - Dedicated report saved as `translation-unit-ablation-social-whole-unprotected-v1.json`.
 - The diagnostic still logged a rejected short semantic unit during internal processing; this result must be interpreted together with the row-level report and the atomic-citation condition, not as proof that protection alone caused the production fallback.
 - No production behavior changed.
 
-## 2026-09-19T22:45: unprotected result interpretation
+## Historical checkpoint (timestamp unavailable): unprotected result interpretation
 
 - `whole_unprotected` also failed with `ValueError: degenerate translation output` on the same clean long paragraph.
 - Therefore current evidence does not support “citation protection alone causes the fallback”; both protected and unprotected whole-input conditions fail.
 - The source begins with `(b)` and is a long multi-sentence block. Next comparison should be safe semantic sentence units (and separately atomic author-year protection) to isolate input length/segmentation effects.
 
-## 2026-09-19T23:30: semantic-unit ablation checkpoint
+## Historical checkpoint (timestamp unavailable): semantic-unit ablation checkpoint
 
 - Completed bounded `unit_0_current_protection` condition for the clean social-advertising fixture.
 - Dedicated report saved as `translation-unit-ablation-social-unit0-v1.json`.
 - The segmenter produced a short unit beginning with `(b)`; the engine translated it but logged a `chunk 21->27` repair. This is evidence that the current unit segmentation can still expose a fragment even when whole-input decoding fails.
 - No production behavior changed.
 
-## 2026-09-20T01:45: panel-fragment checkpoint
+## Historical checkpoint (timestamp unavailable): panel-fragment checkpoint
 
 - 確認: `src/services/translation/quality.ts` の既存 `unsafeParagraphStructureReason()` は、終端句読点のない `(a)/(b) ...` を図表サブパネル混入として検出し、`shouldTranslateParagraph()` がMADLAD送信前に除外する汎用ルールを既に持っている。
 - fresh ablation の `unit_0_current_protection` では `(b)` で始まる単位が実際に作られ、21→27 token の修復ログが出た。今回の長文fallbackの構造汚染候補として記録したが、既存判定の回帰は確認できなかった。
 - `npm test -- --run src/test/quality.test.ts` は 67/67 passed。今回はproduction codeを変更せず、既存の汎用パネル判定を維持した。
 - 次の作業候補: `(b)` 単位が品質判定を通過する呼び出し経路を特定し、`shouldTranslateParagraph` と translation-unit builder の間で判定が失われていないかを追跡する。その後、atomic citation/semantic-unit ablationを同一fresh serverで再開する。
 
-## 2026-09-20T01:50: bounded panel-fragment guard
+## Historical checkpoint (timestamp unavailable): bounded panel-fragment guard
 
 - 修正: `(a)/(b)` で始まる短い抽出単位は、末尾にピリオドが付いていても図表サブパネル混入として翻訳対象から除外するよう `unsafeParagraphStructureReason()` を拡張。240文字以内に限定し、長い列挙本文を一律拒否しない。
 - 回帰テストを追加し、品質テストは 68/68 passed。
 - これは `(b) ... peers.` のような単位が品質ゲートを通過していた経路を止めるための汎用修正。次は本番の translation-unit builder 側で同じ判定が適用されることを確認する。
 
-## 2026-09-20T02:00: server-path panel guard
+## Historical checkpoint (timestamp unavailable): server-path panel guard
 
 - 実行経路を確認: `MicroBatchScheduler._translate_language_group()` はTypeScriptの `shouldTranslateParagraph()` を再実行せず、`segment_for_translation()` の各unitを直接MADLADへ渡していた。これが `(b) ... peers.` が送信された理由。
 - 修正: Python側の共有 `segmenter.py` に `is_probable_panel_fragment()` を追加し、MicroBatchSchedulerで該当unitを原文保持（model inferenceなし）にした。短い `(a)/(b)` の図表パネル単位だけに限定。
 - 回帰テストを追加。`py_compile` は成功、TypeScript品質テストは前回 68/68 passed。
 - Python unittestはこのシェルの標準Pythonに `torch` がないため収集時に停止（実装エラーではなく実行環境依存）。translation-server用依存環境で再実行が必要。
 
-## 2026-09-20T02:10: translation-server regression verification
+## Historical checkpoint (timestamp unavailable): translation-server regression verification
 
 - `translation-server/.venv/bin/python` を使用して segmenter + microbatch の unittest を実行: **49 tests OK**。
 - 標準Pythonで発生した `torch` import errorは環境差であり、依存環境では解消。追加した `is_probable_panel_fragment` とMicroBatch分岐を含めて通過。
 - 今回はfresh model benchmarkを再実行せず、構造断片をMADLADに送らない経路の回帰検証を完了した。
 
-## 2026-09-20T02:30: author-year unit fresh check
+## Historical checkpoint (timestamp unavailable): author-year unit fresh check
 
 - translation-server `.venv` のfresh model (CPU, model v71) で `ozchi-author-year` の `unit_0_current_protection` を実行。
 - segmenterは引用群を含む意味単位を1つとして保持し、出力は引用を保持した日本語文になった。`Marquardt et al., 2011;` の単独fragmentは生成されなかった。
 - この結果は「単位分割が引用群を壊していない」ことの確認であり、長文whole-inputのfallback原因を解消した証拠ではない。次の比較対象は同じfixtureのwhole/atomic条件。
 
-## 2026-09-20T03:20: ozchi whole-condition ablation
+## Historical checkpoint (timestamp unavailable): ozchi whole-condition ablation
 
 - 同一fresh model/同一processで `whole_unprotected`, `whole_current_protection`, `whole_atomic_author_year` を比較し、`test-data/real-papers/reports/translation-unit-ablation-ozchi-whole-v1.json` に保存。
 - 3条件ともdecode成功。unprotected/currentは著者年を保持したが、日本語は「移動領域」など不自然な語彙。atomic placeholderは引用を復元できる入力になった。
 - 重要なhallucination（100mm等）はこの固定文では再現せず、引用保護の有無だけを原因とは断定できない。今回の出力から、次の改善対象は長文入力の分割品質と用語/意味品質である。
 
-## 2026-09-20T03:45: microbatch panel regression checkpoint
+## Historical checkpoint (timestamp unavailable): microbatch panel regression checkpoint
 
 - MicroBatchの回帰テストを追加し、パネル断片はengine呼び出しに含まれず原文として結合されることを確認。
 - translation-server `.venv` テスト: **50 tests OK**（segmenter + microbatch）。
 - `git diff --check` 通過。次は長文semantic unitsのfresh比較または抽出側のpanel混入根本修復へ進める。
 
-## 2026-09-20T04:00: typecheck checkpoint
+## Historical checkpoint (timestamp unavailable): typecheck checkpoint
 
 - `npm run typecheck` 成功。
 - social-advertising fixtureのsegmenter出力を確認: 1750文字が12 unitsに分割され、先頭 `(b)` unitは81文字。今回のMicroBatch guardが対象にする典型ケースと一致。
 - 次回は抽出fixtureから `(b)` のbbox/roleを採取し、本文への混入をresolver段階で防げるかを検討する。
 
-## 2026-09-20T04:30: extraction panel attribution
+## Historical checkpoint (timestamp unavailable): extraction panel attribution
 
 - 実PDFを `reconstructDocument()` で確認。page 2の該当blockは `role=paragraph`、bbox x=110.26 y=101.101 width=394.52で、`(a)` と `(b)` は本文中の列挙として同一paragraphに含まれている。
 - したがって、今回ablationで使った先頭 `(b)` fixtureはPDF全体のblockそのものではなく、後段で切り出されたstandalone単位。抽出resolverに `(b)` 専用修正を追加する根拠は得られなかった。
 - evidenceを `test-data/real-papers/reports/panel-contamination-social-v1.json` に保存。server側の短いstandalone panel guardは防御策として維持する。
 
-## 2026-09-20T04:50: extraction regression checkpoint
+## Historical checkpoint (timestamp unavailable): extraction regression checkpoint
 
 - `npm run test:extraction-corpus` 完了: **2 test files / 76 tests passed**（baseline 39 + reading-order 37）。
 - server側panel guardと診断追加による既存real-paper extraction regressionは確認されなかった。
 - 次回は長文semantic unitのfresh decode比較を優先する。
 
-## 2026-09-20T05:20: social semantic unit decode
+## Historical checkpoint (timestamp unavailable): social semantic unit decode
 
 - social advertising fixtureの通常本文 `unit_1`（“The present research addresses both of these topics.”）をfresh modelで単独decode。
 - 入力14 token、出力29 token、decode成功。短い意味単位ではfallbackせず、長文whole failureとは異なる挙動を確認。
 - dedicated report: `test-data/real-papers/reports/translation-unit-ablation-social-unit1-v1.json`。
 - 次回は長さ190〜300文字のunitsを数件まとめて比較し、長文閾値と品質低下の関係を測る。
 
-## 2026-09-20T05:45: semantic false-accept checkpoint
+## Historical checkpoint (timestamp unavailable): semantic false-accept checkpoint
 
 - Fresh unit benchmarkで `The present research addresses both of these topics.` → `これらの問題を解決するために,本研究は,これらの両者を取り上げた。` を確認。
 - decodeは成功し形式品質も満たすが、`addresses` を「解決する」、`topics` を「問題」とする意味変化がある。既存のscientific invariant/degeneracy gateでは検出できない種類のsemantic false accept。
 - これは禁止語blacklistや抽出修正ではなく、モデル選択または別モデルによる選択的cascade/意味評価が必要な証拠。次回は代替モデル候補の可用性と、同一fixtureでの比較評価へ進む。
 
-## 2026-09-20T06:15: alternative-model inventory checkpoint
+## Historical checkpoint (timestamp unavailable): alternative-model inventory checkpoint
 
 - 現在のHF cacheには MADLAD、Opus EN-JA、M2M100 418M/1.2B、CAT-Translate 0.8B/1.4B等が存在することを確認。
 - 既存記録ではOpus/M2Mは長文欠落・意味 drift、CATはprompt echo/英語paraphrase、Gemma 2 9Bは一部 rescue だがunsafe例あり。いずれもproduction routing未採用。
 - 代替モデル候補の追加ダウンロードは行わず、既存の同一fixture評価結果を次の選択的cascade設計の入力として利用する。
 
-## 2026-09-20T06:40: cascade evidence review
+## Historical checkpoint (timestamp unavailable): cascade evidence review
 
 - 既存のaudit-only cascade reportsを再確認。Qwen 1.4B oracle simulationは12 rows中10 rescue/2 fallback、candidate unsafe selected 0だが、manual labelを見た後のoracleであり自動routing根拠ではない。
 - 3-model comparisonは17 rows、hard-signal pass 13/34で、surface signalだけでは意味品質を保証できない。
 - よってproduction cascadeはまだ有効化しない。次はmanualラベルを見ずに計算できるheld-out selectorを設計し、fallback 5%目標とunsafe false-acceptを同時に測定する。
 
-## 2026-09-20T07:00: selector baseline checkpoint
+## Historical checkpoint (timestamp unavailable): selector baseline checkpoint
 
 - 既存 `score_candidate_selection.py` の自動シグナル（数値、否定、対比、条件、時系列、傾向、技術トークン、短縮）を確認。
 - `test_candidate_selection.py` は **13/13 passed**。現状selectorはaudit-onlyでmanual labelをrouting条件に使わない。
 - 短文の意味drift（addresses→解決する）のような語義変化は既存surface signalでは通過し得るため、selectorをproductionへ昇格せず、embedding/claim evidenceとのheld-out校正が必要。
 
-## 2026-09-20T07:30: embedding selector calibration
+## Historical checkpoint (timestamp unavailable): embedding selector calibration
 
 - `semantic-coverage-v2.json` の75 rowsをmanual severityと突合して閾値表を再計算。threshold 0.85では22 accepted中unsafe 2（9.1%）、safe false reject 37/57（64.9%）。0.65ではunsafe 11/63（17.5%）、false reject 5/57（8.8%）。
 - embedding単独ではunsafe false accept 5%以下とfallback 5%以下を同時に満たせないことを再確認。
 - 校正結果を `test-data/real-papers/reports/semantic-selector-calibration-v3.json` に保存。production gate/routingは変更していない。
 
-## 2026-09-20T08:00: combined selector calibration
+## Historical checkpoint (timestamp unavailable): combined selector calibration
 
 - embedding minimum similarityにsource/target sentence count一致条件を追加したaudit-only試算を実施。
 - 最良の測定点でも threshold 0.65 は61 accepted中unsafe 11（18.0%）、safe false reject 7/57（12.3%）。条件追加だけではunsafe 5%以下に届かない。
 - 結果を `test-data/real-papers/reports/semantic-selector-calibration-v4.json` に保存。production routingは変更していない。
 
-## 2026-09-20T08:30: model-agreement review
+## Historical checkpoint (timestamp unavailable): model-agreement review
 
 - 既存のQwen/Gemma/M2M/Opus候補selector reportsを同一12-row cohortで比較。
 - hardSignalPassはQwen系8〜11/12、Gemma/M2M 10/24など高く見える一方、manual source-claim reviewでは候補をproduction安全と判定できる行が不足している。表面シグナル・モデル間候補数の一致だけではsemantic correctnessの証拠にならない。
 - したがってモデル合意を単独routing gateにしない。次の実装候補は、claim単位のsource/translation対応を評価する監査器で、まずheld-out測定を行う。
 
-## 2026-09-20T09:00: claim-alignment audit trigger
+## Historical checkpoint (timestamp unavailable): claim-alignment audit trigger
 
 - semantic-coverage-v2のsource/target sentence対応から、min similarity <0.65 またはsentence count不一致をclaim review triggerとして抽出。75 rows中、要レビュー候補を `test-data/real-papers/reports/claim-alignment-review-required-v1.json` に保存。
 - これは低類似度を自動rejectするものではなく、semantic false acceptを手動/別モデル検証へ回すaudit-only基盤。production gateは変更していない。
 
-## 2026-09-20T09:30: claim triage prioritization
+## Historical checkpoint (timestamp unavailable): claim triage prioritization
 
 - claim review候補14件を集計: minor_wording 7、semantic_shift 2、omission 2、source_fragment 2、numeric_error 1。severity>=2は7件（うちseverity3/4が5件）。
 - 優先順位を semantic_shift → omission → numeric_error → source_fragment として `claim-alignment-triage-v1.json` に保存。
 - これは候補抽出の監査整理で、production gateは変更していない。
 
-## 2026-09-20T10:00: lint checkpoint
+## Historical checkpoint (timestamp unavailable): lint checkpoint
 
 - `npm run lint` 成功（oxlint）。
 - 既存のTypeScript品質テスト、translation-server 50 tests、extraction corpus 76 tests、typecheck、lintを今回変更後に確認済み。
 
-## 2026-09-20T10:15: handoff checkpoint
+## Historical checkpoint (timestamp unavailable): handoff checkpoint
 
 - 実行中のbenchmark/server process確認を試みたが、この環境では `sysmond` 不在のため `pgrep` がプロセス一覧を取得できなかった。直前の各benchmarkは終了コード0で完了しており、残存を示す実行セッションはない。
 - 変更・診断レポート・未解決課題は本ファイル末尾まで更新済み。次回はclaim alignment 14件の別モデル再評価から再開する。
 
-## 2026-09-20T10:30: qwen surface false-accept evidence
+## Historical checkpoint (timestamp unavailable): qwen surface false-accept evidence
 
 - Qwen14候補の表面シグナルをmanual severityと照合。severity>=2なのに数値完全保持・truncationなしで通過する行が **12/12** 存在（semantic_shift/omissionを含む）。
 - 形式シグナルだけでcascadeを有効化するとunsafe false acceptが増える根拠として `qwen-surface-false-accept-v1.json` に保存。
 - production変更は行わず、claim対応/意味評価が必要という判断を維持。
 
-## 2026-09-20T11:00: selector semantic-input extension
+## Historical checkpoint (timestamp unavailable): selector semantic-input extension
 
 - `score_candidate_selection.py` にaudit-only `--semantic-coverage` と `--min-semantic-sim` を追加。候補ごとにmin similarity・文数一致を記録し、指定閾値未満を選択から除外できる。
 - production routingには接続せず、既存selectorテスト **13/13 passed**、py_compile、git diff checkを確認。
 - 次回はこの拡張をQwen候補とsemantic-coverage-v2に実際に適用し、manual labelを選択ロジックへ渡さないheld-out測定を行う。
 
-## 2026-09-20T12:00: selector envelope fix
+## Historical checkpoint (timestamp unavailable): selector envelope fix
 
 - 実データ適用時に `audit-manual-review.json` が `reviews` envelopeを使うため、selectorが0 rowsになっていた入力互換バグを発見・修正。`rows/results/reviews` を受け付けるようにした。
 - Qwen14 + semantic-coverageで再実行: 7 rows、hardSignalPass 5、relationSignalPass 6、relation gate reject 1。manual labelは選択条件に使用していない。
 - 回帰テストを追加し **14/14 passed**。py_compile、git diff check通過。
 
-## 2026-09-20T12:30: qwen semantic selector result
+## Historical checkpoint (timestamp unavailable): qwen semantic selector result
 
 - 修正済みselectorをQwen14候補＋semantic coverageへ適用。7 rows中6 rowsが選択、relation gateで1 rowを除外。
 - manual severityとの監査照合では選択6 rows中severity>=2が複数残るため、threshold 0.65単独でproduction採用不可。これはselectorがmanual labelを見ていないことの確認後に、評価目的でのみ照合した。
 - production routingは変更していない。
 
-## 2026-09-20T12:50: translation-server full regression
+## Historical checkpoint (timestamp unavailable): translation-server full regression
 
 - translation-server `.venv` で全unittestを実行: **114 tests passed**。
 - selector `reviews` envelope対応、semantic coverageオプション、panel fragment guardを含む全Python回帰に失敗なし。
 - productionモデルroutingは変更せず、次の段階はclaim候補の別モデル再評価とmanual review更新。
 
-## 2026-09-20T13:20: selector threshold regression
+## Historical checkpoint (timestamp unavailable): selector threshold regression
 
 - semantic coverage閾値で候補をaudit選択から除外するケースを回帰テスト化。
 - candidate selection tests **15/15 passed**。manual labelを参照せず閾値動作のみを検証。
 
-## 2026-09-20T14:00: selector documentation checkpoint
+## Historical checkpoint (timestamp unavailable): selector documentation checkpoint
 
 - `translation-server/README.md` にclaim alignment selectorのaudit-only実行例を追加。
 - `reviews` envelope対応とsemantic thresholdの意味、production routingへ接続しないことを明記。次回セッションから同じ検証を再現可能。
 
-## 2026-09-20T14:30: qwen high-threshold calibration
+## Historical checkpoint (timestamp unavailable): qwen high-threshold calibration
 
 - Qwen14＋semantic coverageをthreshold 0.85で再計算。7 rows中1 rowのみ選択、6 rows fallback。選択1件はmanual severity 2で、unsafe false accept 1/1（100%）。
 - 高閾値化はfallbackを大幅に増やすだけでunsafeを解消しないことを確認。production routingは変更しない。
 
-## 2026-09-20T15:00: selector rejection diagnostics
+## Historical checkpoint (timestamp unavailable): selector rejection diagnostics
 
 - semantic閾値で候補を除外した場合も、`selectionSignals.semanticCoverage` に類似度・文数一致を残すようselector出力を改善。fallback原因を後から追跡できる。
 - selector tests **15/15 passed**、py_compile、git diff check通過。
 
-## 2026-09-20T16:00: selector key compatibility
+## Historical checkpoint (timestamp unavailable): selector key compatibility
 
 - segmented Qwen reportで `key` fieldを使う入力形状を確認し、selectorのrow_keyを `key` 優先・`paperId:blockId` fallbackへ修正。異なるreport envelopeでKeyErrorにならない。
 - segmented reportとmanual corpusのID体系が一致せず、適用結果は0 rows。これはデータ結合上の未解決点として記録し、誤った評価値は採用しない。
 - selector tests **15/15 passed**、py_compile、git diff check通過。
 
-## 2026-09-20T16:30: segmented report key audit
+## Historical checkpoint (timestamp unavailable): segmented report key audit
 
 - `model-quality-qwen2.5-14b-heldout-segmented-v1.json` は2 rowsのみで、`paperId`/`blockId`/`key`がなくsource・translationだけのheld-out形式だった。manual corpusとの安全なID正規化はできず、selector結果0 rowsは正しい扱い。
 - source hashや近似本文で無理に結合すると誤評価を生むため、自動推測は行わない。次回は生成時点でpaperId/blockIdを保持するreport writerを修正してから再評価する。
 
-## 2026-09-20T17:00: selector unmatched-row diagnostics
+## Historical checkpoint (timestamp unavailable): selector unmatched-row diagnostics
 
 - selectorに`unmatchedCandidateRows`を追加。ID欠落候補を0 rowsとして黙って捨てず、report summaryで可視化する。
 - selector tests **15/15 passed**、py_compile、git diff check通過。
 
-## 2026-09-20T17:30: audit stable join key
+## Historical checkpoint (timestamp unavailable): audit stable join key
 
 - `scripts/benchmark-real-paper-translation.ts` の全監査行に `key = paperId:blockId` を生成時から保存するよう変更。
 - 下流の候補レポートがIDを欠落させた場合に本文推測で結合せず、生成元で安全に結合できる基盤を追加。
 - `npm run typecheck`、`npm run lint`、`git diff --check` 成功。
 - 既存の生成済みレポートは再生成していないため、次回fresh benchmarkからこのキーが入る。
 
-## 2026-09-20T17:45: unmatched key detail
+## Historical checkpoint (timestamp unavailable): unmatched key detail
 
 - selector summaryに `unmatchedCandidateKeys`（最大20件）を追加し、ID欠落行の具体的な識別情報を監査レポートへ残すようにした。
 - これにより、候補数0の原因が「ベースライン不一致」か「候補キー欠落」かを summary だけで判別できる。
 - candidate selection tests **15/15 passed**、`git diff --check` 成功。production routingは未変更。
 
-## 2026-09-20T18:15: regression after stable-key change
+## Historical checkpoint (timestamp unavailable): regression after stable-key change
 
 - 正しい環境変数付きで translation-server 全回帰を再実行: **115 tests passed**。
 - `npm run test:extraction-corpus`: **76 tests passed**（baseline 39 + reading-order 37）。
 - 先行実行で発生したPython import errorは `PYTHONPATH` 指定漏れによる起動条件の問題で、修正版の実行では再現しなかった。
 
-## 2026-09-20T19:00: per-unit server error retention
+## Historical checkpoint (timestamp unavailable): per-unit server error retention
 
 - fresh-port benchmarkで `protected citation placeholder dropped by model: errorsAssume` のHTTP 500を確認。従来は論文全体を `error` 扱いにしてrowsを失っていた。
 - `benchmark-real-paper-translation.ts` の翻訳リクエストを、リトライ exhausted 時も行単位の `error` として返すよう変更。sourceを保持し、`fallbackReason` に `server request failed` を記録できる。
@@ -6074,185 +6074,185 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 - `npm run typecheck`、`npm run lint`、`git diff --check` 成功。
 - fresh benchmark再実行で、エラー行が実際に保存されることを次に確認する。
 
-## 2026-09-20T20:00: per-unit error retention verified
+## Historical checkpoint (timestamp unavailable): per-unit error retention verified
 
 - fresh-port benchmark (`human-ai-interaction-guidelines`, 4 units) を再実行。
 - 1件の同じHTTP 500が発生したが、論文レポートは **4 rows** を保持し、全行に stable `key` を記録。
 - エラー行の `fallbackReason` は `server request failed: ...` として保存され、他の source-fragment / expected-non-prose fallback と区別できた。
 - benchmark終了時の `trap` によりfresh serverを停止済み。
 
-## 2026-09-20T20:30: error-row attribution
+## Historical checkpoint (timestamp unavailable): error-row attribution
 
 - 新しい `translation-audit-human-ai-interaction-guidelines.json` を `attribute-translation-fallbacks.ts` に通し、モデル500を含むordinary-body fallbackを抽出層のgeometryと照合。
 - attribution reportを更新し、server error行をsource integrity判定から切り離して追跡可能にした。
 - 監査対象4行のうちordinary-body fallbackの照合結果を保存。fresh benchmarkのエラー行が後段監査から消えないことを確認。
 
-## 2026-09-20T21:00: review queue stable-key propagation
+## Historical checkpoint (timestamp unavailable): review queue stable-key propagation
 
 - `prepare-translation-manual-review.ts` が監査行の `key` を優先して stable key をレビューへ引き継ぐよう修正。
 - 旧形式の `paperId:blockId:source-prefix` はlegacy fallbackとして参照し、既存の人手ラベルを失わない。
 - レビュー項目には `stableKey` も保存し、候補モデルとの安全な結合を可能にした。
 - `npm run typecheck`、`npm run lint`、`git diff --check` 成功。
 
-## 2026-09-20T21:30: review/progress output isolation
+## Historical checkpoint (timestamp unavailable): review/progress output isolation
 
 - `prepare-translation-manual-review.ts` に `TRANSLATION_REVIEW_OUTPUT` / `TRANSLATION_PROGRESS_OUTPUT` を追加し、監査キュー生成を一時出力で検証できるようにした。
 - 本番監査ファイルを上書きせず、stable key移行を安全に確認できる。
 - `npm run typecheck`、`npm run lint`、`git diff --check` 成功。
 - 一時キュー実行は環境側の長時間処理で完了出力を取得できなかったため、stable-key移行の最終実データ確認は次回に残す。
 
-## 2026-09-20T22:00: review queue execution note
+## Historical checkpoint (timestamp unavailable): review queue execution note
 
 - stable key移行の実データ検証を試行したが、環境にローカル `tsx` バイナリがなく、`npx tsx` は依存解決待ちで完了しなかった。
 - 本番監査ファイルは上書きしていない。コードの型検査・lintは前回成功済み。
 - 次回は既存のプロジェクト実行環境（npm経由のtsx依存解決後）で一時出力を使ったキュー生成確認を行う。
 
-## 2026-09-20T22:30: runner diagnosis
+## Historical checkpoint (timestamp unavailable): runner diagnosis
 
 - package.jsonの監査スクリプトは `vite-node --script` を標準実行経路としていることを確認。
 - 現在の `node_modules` に `tsx` / `vite-node` バイナリが存在せず、`npx` はネットワーク依存解決待ちになるため、一時レビューキューの実行検証は未完了。
 - 依存を勝手に追加せず、次回は既存の依存インストール済み環境または明示的な `npm install` 承認後に再試行する。
 
-## 2026-09-20T23:00: review queue verified
+## Historical checkpoint (timestamp unavailable): review queue verified
 
 - lockfile準拠の `npm install --ignore-scripts` 後、`npm run audit:prepare-review` を一時出力で実行。
 - `human-ai-interaction-guidelines` 4行のレビューキューを生成し、**4/4 stableKey付き**（例: `human-ai-interaction-guidelines:b-0f38e816`）を確認。
 - 本番 `audit-manual-review.json` / `audit-progress.json` は上書きしていない。
 
-## 2026-09-20T23:30: audit key documentation
+## Historical checkpoint (timestamp unavailable): audit key documentation
 
 - `translation-server/README.md` に stable key (`paperId:blockId`)、一時レビュー出力、selectorの unmatched diagnostics を追記。
 - 次回の監査実行者が本番キューを上書きせず再現できる手順を文書化。
 - `git diff --check` 成功。
 
-## 2026-09-21T00:00: quality regression checkpoint
+## Historical checkpoint (timestamp unavailable): quality regression checkpoint
 
 - `npm test -- --run src/test/quality.test.ts`: **68 tests passed**。
 - stable key / review output変更後も、翻訳品質ゲートと既存の段組・キャプション分類テストは維持。
 
-## 2026-09-21T00:30: placeholder rescue attribution
+## Historical checkpoint (timestamp unavailable): placeholder rescue attribution
 
 - `madlad_mps.py` のrescue経路を確認。placeholder欠落時は、識別子形状に限定して無保護再試行し、それ以外はbeam/rescueを経て失敗を返す設計。
 - `errorsAssume` はcamelCase化された欠落placeholderとして検出され、無保護再試行の対象外になるためHTTP 500になった。
 - ここで無条件に無保護再試行へ広げると科学トークン欠落を通す危険があるため、production変更は保留。次回は固定fixtureで安全な再試行条件を比較する。
 
-## 2026-09-21T01:00: placeholder retry guard regression
+## Historical checkpoint (timestamp unavailable): placeholder retry guard regression
 
 - placeholder欠落時の無保護再試行条件を `allows_unprotected_identifier_retry()` として純粋関数化。
 - 通常識別子は従来通り再試行可能だが、`errorsAssume` のようなcamelCase変形は拒否し、科学トークンを無保護で通すリスクを固定的に防止。
 - MADLAD quality tests **18/18 passed**、`git diff --check` 成功。
 
-## 2026-09-21T01:30: full translation regression
+## Historical checkpoint (timestamp unavailable): full translation regression
 
 - placeholder retry guard後に translation-server 全unittestを再実行: **116 tests passed**。
 - selector、citation protection、segmenter、microbatchを含めて失敗なし。
 - `git diff --check` 成功。
 
-## 2026-09-21T02:00: review queue end-to-end verified
+## Historical checkpoint (timestamp unavailable): review queue end-to-end verified
 
 - 依存解決後の `npm run audit:prepare-review` を一時出力で再実行。
 - `human-ai-interaction-guidelines` 4行について `reviews=4 stable_keys=4` を確認。
 - stable keyの生成 → レビューキュー引き継ぎがend-to-endで動作した。
 
-## 2026-09-21T03:00: selector fresh-audit envelope
+## Historical checkpoint (timestamp unavailable): selector fresh-audit envelope
 
 - candidate selectorがfresh benchmarkの `papers[].rows[]` envelopeをflattenし、paper idを補完してstable keyで結合するよう修正。
 - 回帰テストを追加し **16/16 passed**。既存の `results` / `rows` / `reviews` envelopeも維持。
 - `git diff --check` 成功。production routingは未変更。
 
-## 2026-09-21T04:00: explicit server error field
+## Historical checkpoint (timestamp unavailable): explicit server error field
 
 - benchmark監査行に `serverError` を追加。HTTP/transport/model request failureをquality gateの `fallbackReason` から独立して保存。
 - 後段集計で「モデル障害」と「品質判定によるfallback」を機械的に分離できる。
 - `npm run typecheck`、`npm run lint`、`git diff --check` 成功。
 
-## 2026-09-21T06:00: multi-paper fresh audit
+## Historical checkpoint (timestamp unavailable): multi-paper fresh audit
 
 - `social-influence-social-advertising` をfresh portで2 units実測。
 - **2 rows / 2 stable keys** を確認し、serverError 1件・readerVisibleFallback 1件を独立記録。
 - 複数論文で行単位エラー保持が機能することを確認。fresh serverはtrapで停止済み。
 
-## 2026-09-21T07:00: fresh baseline aggregation
+## Historical checkpoint (timestamp unavailable): fresh baseline aggregation
 
 - 全 `translation-audit-*.json` を集約し `translation-baseline-fresh-v1.json` を更新。
 - 集計: **369 rows**, ordinary-body **126 rows / 37 fallback (29.4%)**、model-eligible **221 rows / 102 fallback (46.2%)**。
 - fallback stage: pre-model 100、post-model 50、none 135。
 - 目標のordinary-body fallback <=5%には未達。これは現行基準値として記録し、fallback増加だけで改善と扱わない。
 
-## 2026-09-21T08:00: server error aggregation
+## Historical checkpoint (timestamp unavailable): server error aggregation
 
 - `summarize-fresh-translation-baseline.ts` に `serverErrors` と `byServerError` を追加。
 - 全369行の再集計で server error **1件**（`degenerate translation output`）を独立計上。
 - ordinary-body fallback 29.4% / model-eligible fallback 46.2% の基準値と同じレポートで障害件数を追跡できる。
 - `typecheck`、`lint`、`git diff --check` 成功。
 
-## 2026-09-21T09:00: discipline baseline
+## Historical checkpoint (timestamp unavailable): discipline baseline
 
 - fresh baseline集計に `byDiscipline` を追加し、分野ごとのordinary-body件数・fallback数・率を保存。
 - 現在22 discipline bucketを集計。全体値と同じ母集団を使うため分野間比較が可能。
 - `typecheck`、`lint`、`git diff --check` 成功。
 
-## 2026-09-21T10:00: discipline hotspot review
+## Historical checkpoint (timestamp unavailable): discipline hotspot review
 
 - `byDiscipline` の現行集計を確認。ordinary-body fallback率が高いbucketは computational linguistics / linguistics / syntax 60.0%、ergonomics 57.1%、cognitive psychology 43.8%。
 - これはmulti-label disciplineを各bucketへ重複計上した値であり、全体率の代替ではない。分野別対策候補の優先順位付けにのみ使用する。
 - HCI・human factors・marketing系は今回の母集団ではfallback 0だが、サンプル数が少なく安全宣言はしない。
 
-## 2026-09-21T11:00: fallback reason aggregate
+## Historical checkpoint (timestamp unavailable): fallback reason aggregate
 
 - 全translation audit行のfallback理由を `fallback-reason-aggregate-v1.json` に保存。
 - 最大要因は pre-model の段落末尾欠損 44 rows（unique key 40）、段落先頭continuation 25 rows（24）、post-model source fallback 25 rows（20）。
 - レポート世代が重複するため、rowsは重複を含む。uniqueKeysを併記し、改善効果の評価では重複除去を優先する。
 - 抽出境界問題がモデルfallbackを大きく上回るため、次の改善対象はparagraph repairである。
 
-## 2026-09-21T12:00: paragraph repair inspection
+## Historical checkpoint (timestamp unavailable): paragraph repair inspection
 
 - `pdfLayout.ts` の `mergeColumnContinuations()` は、ページ境界・列遷移・末尾位置・文法継続・role除外を既に高精度条件で適用している。
 - fallback集計上の段落末尾/先頭欠損は旧世代レポートの重複も含むため、直ちに閾値緩和はしない。
 - 次の実装候補は、新stable-key付きfresh reportを同じPDF群で再生成し、現行repair後のunique fallback率をbefore/after比較すること。
 
-## 2026-09-21T13:00: unique-key baseline
+## Historical checkpoint (timestamp unavailable): unique-key baseline
 
 - baseline集計に stable key単位の重複除去を追加。raw件数とunique件数を分離。
 - 現在: raw 369 rows → unique 313 rows。unique ordinary-body は **104 rows / 27 fallback（26.0%）**。
 - 旧世代レポート重複を含む29.4%より実態に近いが、5%目標には未達。
 - `typecheck`、`lint`、`git diff --check` 成功。
 
-## 2026-09-21T14:00: corpus coverage checkpoint
+## Historical checkpoint (timestamp unavailable): corpus coverage checkpoint
 
 - `audit-progress.json` は completedPapers 37件、reviewedBlocks 300、pendingManualReview 0を示す。
 - 目標の50+ OA papersにはまだ13件以上不足。`pendingPapers=[]` は現catalog内の未処理がない意味であり、目標達成を示さない。
 - 次の大きな作業はprovenance-verified OA corpus拡張と、fresh stable-key benchmarkの再生成。
 
-## 2026-09-21T15:00: pending corpus acquisition audit
+## Historical checkpoint (timestamp unavailable): pending corpus acquisition audit
 
 - `npm run fetch:pending-corpus` 実行。既存catalog対象は再取得済みだが、新規paper数は増えなかった。
 - HFE新規候補2件はEurope PMC PDF endpointが500で取得失敗。別の合法OA URLを探す必要がある。
 - 1件は403も確認。違法取得やURL推測での登録は行わない。
 - catalogは引き続き37 papers。`CURRENT_STATE.md` に取得結果を記録。
 
-## 2026-09-21T16:00: PMC PDF validation
+## Historical checkpoint (timestamp unavailable): PMC PDF validation
 
 - PMCページからPDF直リンク候補を発見したが、取得応答は両方とも1.8KBのHTML challengeで、`file` 判定がPDFではなかった。
 - 不正なHTMLをpending PDFとして残さないよう削除。HFE候補2本は合法なPDF取得未解決のまま。
 
-## 2026-09-21T17:00: PMC OA package check
+## Historical checkpoint (timestamp unavailable): PMC OA package check
 
 - PMC OA package API (`ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi`) を2候補で確認したが、両方404。
 - PDF直リンクはHTML challenge、OA package APIも利用不能のため、現時点で合法に取得できるPDF URLは確定できない。
 - 候補メタデータは保持し、取得できるまでcatalogへ登録しない。
 
-## 2026-09-21T18:00: OA alternative URL results
+## Historical checkpoint (timestamp unavailable): OA alternative URL results
 
 - 検索で機関公開PDF候補を発見したが、healthdesign.orgは403、vubp.czは応答遅延で取得完了せず。
 - `file`検証を通過したPDFはpendingへ残していない。HFE候補2本は引き続き未取得。
 
-## 2026-09-21T19:00: OA retry with browser UA
+## Historical checkpoint (timestamp unavailable): OA retry with browser UA
 
 - healthdesign.org公開PDFをMozilla User-Agent付きで再取得したが、引き続き403。
 - PDF本体を取得できないためpending/catalogへ登録していない。HFE候補は合法取得経路未解決のまま。
 
-## 2026-09-21T20:00: fallback attribution checkpoint
+## Historical checkpoint (timestamp unavailable): fallback attribution checkpoint
 
 - `translation-fallback-attribution-summary-v77.json` の生成完了を確認。
 - 対象failure 6件のprimary causeは A=2（抽出/入力由来）、D=1（翻訳品質系）、G=3（その他/要調査）。全件 source integrity は provisional-pass。
@@ -6261,28 +6261,28 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 - fallback理由は `server returned source fallback` 5件、scientific invariant missing 1件。サーバーエラーとquality gateを分離して追跡できる状態を確認。
 - 次の作業は、fresh stable-key reportを単一世代で再生成し、extraction attribution（A）とdecode/quality attribution（D/G）を重複除去後に比較すること。
 
-## 2026-09-21T20:30: extraction verification checkpoint
+## Historical checkpoint (timestamp unavailable): extraction verification checkpoint
 
 - 再開後に `npm run typecheck`、`npm run lint`、`npm run test:extraction-corpus` を実行。
 - typecheck/lint 成功。抽出・reading-order回帰は 2 files / 76 tests passed（baseline 39 + reading-order 37）。
 - PDF.jsのcanvas/ColorSpace警告は既存環境警告で、テスト失敗ではない。
 - 次回は単一世代のfresh translation benchmarkを再生成し、重複レポートを除いたfallback/unsafe false-accept率を確定する。
 
-## 2026-09-21T21:00: title geometry diagnostic checkpoint
+## Historical checkpoint (timestamp unavailable): title geometry diagnostic checkpoint
 
 - `diagnose:title-geometry --paper social-influence-social-advertising` をproduction behavior無変更で実行。
 - page 1 native lines 66、layout blocks 13、generic candidates 13。期待タイトル `Social Influence in Social Advertising: Evidence from Field Experiments` が title candidate confidence 0.89 として単一blockで検出され、author/affiliation候補も分離されている。
 - このPDFについては title line grouping / masthead competition が現時点の残件原因ではない。診断JSONは `/tmp/social-title.json` に保存（次回必要なら再生成）。
 - fallback attribution summaryは failure 6件、A=2/D=1/G=3、manual unsafe false-accept 78/159 (49.1%)。単一世代fresh benchmarkでの再確認が未完了。
 
-## 2026-09-21T21:30: full test verification checkpoint
+## Historical checkpoint (timestamp unavailable): full test verification checkpoint
 
 - translation-server unittest: **117/117 passed**.
 - `npm test` は 62/63 files、382/383 tests passed。唯一の失敗は既存の `emits vector-figure evidence for compact labels mixed with prose` で、`vector-figure-label-cluster` evidenceが生成されなかった。
 - 失敗は翻訳品質変更とは別の抽出generic候補の回帰であり、次回に最小fixtureを再現して原因（line/block groupingまたはvector label evidence条件）を修正する。
 - `npm test -- --runInBand` はVitest未対応オプションで起動前失敗したため、正しい `npm test` を再実行して上記結果を得た。
 
-## 2026-09-21T22:00: vector figure regression repair
+## Historical checkpoint (timestamp unavailable): vector figure regression repair
 
 - 最小fixtureで、figure label 6項目 + 近接proseが同一layout blockになった際、`vectorFigureLabelEvidence` の `items.length >= 8` 条件で evidence が消えることを再現。
 - 閾値を一般的な compact-label cluster の最小6 native itemへ修正。特定論文条件は追加していない。
@@ -6290,27 +6290,27 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 - typecheck/lint 成功。抽出corpus回帰 **76/76 passed**。
 - 次回は全体 `npm test` を再実行し、382/383だった残件が解消したことを確認する。
 
-## 2026-09-21T22:15: full frontend verification
+## Historical checkpoint (timestamp unavailable): full frontend verification
 
 - 全体 `npm test` を修正後に再実行し、**63 files / 383 tests passed**。
 - 先行していた vector-figure evidence 失敗は解消。canvas/Path2DのPDF.js警告は既存環境警告。
 - 抽出corpus 76/76、translation-server 117/117、typecheck/lintも直近結果で成功。
 - 現在はコード回帰が解消した検証済みcheckpoint。fresh translation benchmarkの単一世代化は未実施。
 
-## 2026-09-21T23:00: fresh benchmark checkpoint
+## Historical checkpoint (timestamp unavailable): fresh benchmark checkpoint
 
 - fresh port 8879で単一shell起動し、`--limit 1` benchmarkを開始。モデルロード後、14 papers / 13 rowsまでcheckpoint保存された時点で実行が停止したため、残留server PIDを確認して停止。
 - 部分成果を `test-data/real-papers/reports/translation-audit-fresh-single-v1.json` として保存（gitignored）。既存世代とは別ファイルで、14 paper entries / 13 rows。
 - 原因はモデル推論の長時間化またはCLIセッション切断で、データはcheckpoint保存されている。次回はこのfresh reportを基準に集計し、必要なら対象を分割して再実行する。
 
-## 2026-09-22T00:00: fresh single-report baseline
+## Historical checkpoint (timestamp unavailable): fresh single-report baseline
 
 - partial fresh reportを重複なしで集計し、`translation-fresh-single-summary-v1.json` を保存。
 - 17 paper entries / 16 rows、reader-visible fallback 10件。stageは pre-model 6 / post-model 4 / none 6。
 - ordinary-body-proseは7 rows中4 fallback（57.1%）。damaged-extraction 9 rowsが含まれるため製品率の代表値にはせず、単一世代の基準値として扱う。
 - server errorsは `fetch failed` 2件、placeholder drop 1件、degenerate output 1件。次回は未処理paperを別fresh portで分割実行する。
 
-## 2026-09-22T01:00: fresh benchmark batch 1
+## Historical checkpoint (timestamp unavailable): fresh benchmark batch 1
 
 - fresh port 8880で未収録5論文を個別実行し、各結果を分離保存。
 - 追加: social-influence-social-advertising / human-ai-interaction-guidelines / osworld-multimodal-agents / covid-ml-review / medical-deep-learning-meta-review（各1 row）。
@@ -6318,123 +6318,123 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 - benchmark終了後のport 8880 listenerは存在せず、translation serverは停止済み。
 - 次回はこれらをfresh-single summaryへ統合し、未収録paperを次バッチで処理する。
 
-## 2026-09-22T02:00: fresh aggregate checkpoint
+## Historical checkpoint (timestamp unavailable): fresh aggregate checkpoint
 
 - fresh単一レポートと追加5本の個別レポートをstable keyで統合し、`translation-fresh-aggregate-v1.json` を生成。
 - 既存世代レポートは除外。重複除去後のpaper/row数とfallback率を次回の基準として使用する。
 
-## 2026-09-22T02:45: fresh benchmark batch 2
+## Historical checkpoint (timestamp unavailable): fresh benchmark batch 2
 
 - fresh port 8881で医療・言語学5論文を各1 block測定。各結果を `translation-audit-fresh-*-v2.json` に保存し、listener停止を確認。
 - fresh世代をv2へ再集計。単一レポートとbatch 1/2をstable keyで統合し、`translation-fresh-aggregate-v2.json` を更新。
 - 既存37-paper catalogの全件翻訳ではなく、現時点の測定は各paper 1 block中心。通常本文の意味品質評価にはmanual reviewが必要。
 
-## 2026-09-22T03:45: fresh benchmark batch 3
+## Historical checkpoint (timestamp unavailable): fresh benchmark batch 3
 
 - fresh port 8882で5論文を追加測定し、v3個別レポート5件を保存。途中出力切断後も5件すべてcheckpoint存在を確認。
 - 対象: ozchi-finger-specific-touch / education-learning-analytics / neuroscience-rule-following / economics-regularized-deepiv / interpreting-neural-networks。
 - port 8882 listenerは停止済み。次はv1/v2/v3を統合してfresh aggregate v3を生成する。
 
-## 2026-09-22T04:30: fresh aggregate v3
+## Historical checkpoint (timestamp unavailable): fresh aggregate v3
 
 - fresh v1/v2/v3 reportsをstable keyで統合し、`translation-fresh-aggregate-v3.json` を生成。
 - 既存世代を除外した測定範囲は27 papers / 26 unique rows。reader-visible fallback 17件、ordinary-body 13件中6件（46.2%）。
 - catalog 37 papersのうちfresh測定済みは27、未測定は10。各paper 1 block中心であり、manual semantic reviewは別途必要。
 
-## 2026-09-22T06:00: fresh benchmark batch 4
+## Historical checkpoint (timestamp unavailable): fresh benchmark batch 4
 
 - catalog内最後の未測定5論文をfresh port 8883で各1 block測定。v4個別レポート5件を保存し、port listener停止を確認。
 - fresh世代（v1〜v4）をstable key統合し、`translation-fresh-aggregate-v4.json` を更新。catalog 37 papers中、fresh測定済みは37へ到達（各paper 1 block中心）。
 - これはpaper coverageの完了であり、要求された12〜20 blocks/paperの網羅レビューではない。次はsection-stratified block追加とmanual semantic reviewを優先する。
 
-## 2026-09-22T08:00: section-stratified expansion checkpoint
+## Historical checkpoint (timestamp unavailable): section-stratified expansion checkpoint
 
 - HCI `hci-empirical-methods` を `--limit 12` で実行し、v5レポートを保存（12-block測定を確認）。
 - 同一バッチの認知心理学・マーケティングはセッション終了前に保存されず、再実行が必要。
 - port 8884 listenerを停止済み。短い1-blockバッチは安定するが、12-blockはモデル推論時間が長く切断されやすいため、次回は1〜2 paper単位で実行する。
 
-## 2026-09-22T10:30: cognitive section-stratified checkpoint
+## Historical checkpoint (timestamp unavailable): cognitive section-stratified checkpoint
 
 - `cognitive-psychology-gpt3` を `--limit 12` で単独実行し、v5レポート保存を確認。
 - 実行セッション終了後にport 8885 listenerが残ったためPIDを強制停止。未終了serverは残っていない。
 - HCIと認知心理学の12-block測定が揃った。マーケティングは次回単独実行する。
 
-## 2026-09-22T12:00: marketing section-stratified checkpoint
+## Historical checkpoint (timestamp unavailable): marketing section-stratified checkpoint
 
 - `marketing-consumer-response` を `--limit 12` で単独測定し、v5レポート12 rowsを保存。
 - HCI・認知心理学・マーケティングの重点3分野でsection-stratified 12-block測定を開始済み。
 - port 8886 listenerは停止済み。次はv5レポートをfresh aggregateへ統合し、manual review queueへ反映する。
 
-## 2026-09-22T13:00: fresh aggregate v5 and review queue
+## Historical checkpoint (timestamp unavailable): fresh aggregate v5 and review queue
 
 - v1〜v5 fresh reportsをstable keyで再統合し、`translation-fresh-aggregate-v5.json` を生成。
 - HCI/認知心理学/マーケティングの12-block測定を含むため、行数はpaper coverage baselineより増加。世代混在は除外し、同一keyは最新入力を採用。
 - `audit:prepare-review` を一時出力へ実行し、fresh行をmanual review queueへ投入できることを確認。production reviewファイルは変更していない。
 
-## 2026-09-22T13:30: review queue isolation verified
+## Historical checkpoint (timestamp unavailable): review queue isolation verified
 
 - `TRANSLATION_REVIEW_OUTPUT=/tmp/review.json TRANSLATION_PROGRESS_OUTPUT=/tmp/review-progress.json npm run audit:prepare-review` を実行。
 - production review/progressファイルを変更せず、一時レビュー6件・stable key付きで生成できることを確認。注釈済みは0/6（未レビューであり、実行失敗ではない）。
 - fresh aggregate v5は69 unique rows、ordinary-body 32件中9件fallback（28.1%）。各paper 12 blocks化は一部paperのみで、これは暫定値。
 
-## 2026-09-22T14:00: cross-page fallback metric refinement
+## Historical checkpoint (timestamp unavailable): cross-page fallback metric refinement
 
 - freshレポートのfallback理由を確認し、修復済みのcross-page logical blockだけで `damaged-extraction` に分類していた監査側条件を削除。
 - cross-page自体はCanonical paragraphの正常な属性なので、starts/ends continuationまたはunsafe structureがある場合だけdamaged扱いにする。抽出挙動・production parserは変更していない。
 - typecheck/lint成功、vector-figure targeted test成功。次回fresh benchmarkでordinary fallback率への影響を実測する。
 
-## 2026-09-22T15:00: classification-effect smoke benchmark
+## Historical checkpoint (timestamp unavailable): classification-effect smoke benchmark
 
 - cross-page分類条件変更後、social-influence-social-advertisingを1 block fresh再測定し、v6レポート保存。
 - serverはtrapで停止済み。分類変更の全体効果は、この1 blockだけでは判断せず、次回集計でstable key更新後に比較する。
 
-## 2026-09-22T16:00: fresh aggregate v6
+## Historical checkpoint (timestamp unavailable): fresh aggregate v6
 
 - v6 smoke reportを含めfresh reportsをstable key統合。`translation-fresh-aggregate-v6.json` を生成。
 - social-influence cross-page blockは分類変更後 ordinary-body / no fallbackを確認。全体fresh集計は暫定で、12-block対象と1-block対象が混在する。
 
-## 2026-09-22T17:00: review summary environment checkpoint
+## Historical checkpoint (timestamp unavailable): review summary environment checkpoint
 
 - fresh aggregate v6を基準にmanual review summary更新を試行したが、現在の `node_modules/.bin/tsx` が存在せず、`audit:summarize-review` は実行環境不足で完了しなかった。
 - productionデータは変更していない。review queue生成（vite-node）は既に検証済み。
 - 次回は依存関係を復元できる環境でsummaryを再実行し、fresh rowsのsemantic labelsを既存300 blockレビューと分離する。
 
-## 2026-09-22T18:00: manual review summary rerun
+## Historical checkpoint (timestamp unavailable): manual review summary rerun
 
 - `npx vite-node --script scripts/summarize-translation-manual-review.ts` でsummary生成を実行（tsx packageは未導入のためvite-nodeを使用）。
 - 現在のreview queueは6 blocks、manual reviewed 6。ordinary-body 5件で semantic error 40%、terminology error 40%、unsafe false-accept 50%。これは既存注釈付きqueueの集計で、fresh v5/v6 69 rows全体のmanual reviewではない。
 - summaryの注記どおり、automatic acceptanceを正解扱いしない。fresh rowsをレビュー対象へ追加するにはqueue生成と注釈作業が必要。
 
-## 2026-09-22T19:00: fresh review queue materialized
+## Historical checkpoint (timestamp unavailable): fresh review queue materialized
 
 - fresh v1〜v6をstable key統合した一時report（37 papers / 69 rows）を作成し、`TRANSLATION_AUDIT_REPORT`でqueue generatorへ明示指定。
 - 一時review queueは **69件、未注釈69件** と正しく生成。production `audit-manual-review.json` / progressは変更していない。
 - これでfresh測定結果をmanual semantic reviewへ渡す経路を確認できた。次はレビュー入力（source/translation比較）と分野別ラベル集計が必要。
 
-## 2026-09-22T20:00: fresh review triage
+## Historical checkpoint (timestamp unavailable): fresh review triage
 
 - fresh 69 rowsをstable key統合し、`translation-fresh-review-triage-v1.json` を生成。
 - 人手ラベルは自動付与せず、priority 0=server error、1=fallback、2=structural warning、3=通常翻訳の順でレビューできる一覧を作成。
 - queue全体は69件。今後はpriority 0/1を先に原文・訳文比較し、severity/primary causeを人手注釈する。
 
-## 2026-09-22T21:00: server error case extraction
+## Historical checkpoint (timestamp unavailable): server error case extraction
 
 - triage priority 0のserver error 11件を、source/translation/errorを保持した `translation-fresh-server-error-cases-v1.json` に抽出。
 - これは自動修正やブラックリストではなく、placeholder drop・degenerate output・fetch failureを人手レビューで原因分類するためのケース集合。
 
-## 2026-09-22T22:00: server error attribution
+## Historical checkpoint (timestamp unavailable): server error attribution
 
 - priority 0の11件を `translation-fresh-server-error-attribution-v1.json` へ分類。
 - 初期分類: connection 4、model-decode 4、placeholder-restore 3。これはerror文字列に基づくprimary hypothesisで、semantic reviewの代替ではない。
 - 各ケースに manualSemanticReviewRequired=true を付与し、ブラックリスト修正は行っていない。
 
-## 2026-09-22T22:30: placeholder/decode regression verification
+## Historical checkpoint (timestamp unavailable): placeholder/decode regression verification
 
 - `tests.test_citation_protect` と `tests.test_madlad_quality` を直接実行し、**50/50 passed**。
 - strict restoreは欠落placeholderを受理せず、既知のterminal figure reference recoveryやglyph normalizationは維持されている。
 - 同一モデルでの再現実験は、server起動を伴うため次のfresh-port benchmark枠で実施する。現時点ではguardを緩める変更はしていない。
 
-## 2026-09-22T23:30: fixed-fixture direct model reproduction
+## Historical checkpoint (timestamp unavailable): fixed-fixture direct model reproduction
 
 - `diagnose_a_cohort_variants.py` を `ozchi-author-year` 固定英文で同一process・同一MADLAD modelへ実行。
 - 比較条件: whole_unprotected / whole_current_protection / whole_atomic_author_year / unit_0_current_protection。
@@ -6442,13 +6442,13 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 - atomic author-year protectionは引用列を正確に復元。current protectionでも引用を保持。少なくともこの184文字fixtureでは、異常訳の直接原因はcitation segmentationではなく、別条件（入力差、server状態、または非決定的decode）の追加切り分けが必要。
 - JSON: `translation-server/benchmarks/translation-unit-variants-v79.json`。次回は同一条件の複数seed/再試行と、実際の問題blockの原文完全一致を比較する。
 
-## 2026-09-22T23:45: fixture result correction
+## Historical checkpoint (timestamp unavailable): fixture result correction
 
 - v79 JSONを再確認。whole_unprotected / whole_current_protection / unit_0_current_protectionは正常出力だが、whole_atomic_author_yearの出力には `ZZREF1ZZ` が残った。
 - よって「atomic protectionで正確に復元」とする断定は撤回。これは実モデルのhallucinationではなく、今回の診断ハーネスのatomic restore hookまたはdecode後restore経路が未接続であることを示す。
 - productionへのatomic protection導入はまだ行わず、まずrestore hookの単体テストと同一process再現を修正する。
 
-## 2026-09-23T02:00: fixed-fixture ablation checkpoint / paused
+## Historical checkpoint (timestamp unrecoverable): fixed-fixture ablation checkpoint / paused
 
 - 固定英文を同一MADLAD processで比較した保存結果を確認。
 - `translation-fixed-ablation-v1.json`: raw / atomic-placeholder / semantic-2unit の3条件はいずれもdecode成功（input 32–36 tokens、output 44–49 tokens）。raw と production-direct は引用を含む自然な日本語を返した。
@@ -6456,120 +6456,656 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 - `translation-fixed-direct-v1.json` の production-direct も同様に成功。今回報告された「100mm/患者/テレビ東京」型hallucinationはこの固定fixtureでは再現せず、入力差・状態差・decode非決定性の追加証拠が必要。
 - ここを一区切りとして、長時間プロセス／translation serverは起動していない。次回はatomic restore hookを単体テストで修正してから、同一条件の複数回再現と実問題blockの完全一致照合を行う。
 
-## 2026-09-23T02:15: restore regression checkpoint
+## Historical checkpoint (timestamp unrecoverable): restore regression checkpoint
 
 - Python citation/quality regressionを再実行: **50/50 passed**。
 - productionのstrict restoreおよびauthor-year citation保護は現状維持。atomic診断ハーネスのplaceholder残留だけが未解決で、製品経路へは影響させていない。
 
-## 2026-09-23T02:30: diagnostic harness restore fix
+## Historical checkpoint (timestamp unrecoverable): diagnostic harness restore fix
 
 - `diagnose_a_cohort_variants.py` のatomic条件に、fullwidth／tokenizerが挿入する空白を吸収する診断専用restoreを追加。
 - productionの翻訳経路・strict restoreは変更していない。Python compileと正規化スモーク、`git diff --check`を確認。
 - 次回は同一モデル・同一processの複数回比較を実行し、decode非決定性の有無を測る。
 
-## 2026-09-23T03:15: repeated fixed-fixture decode
+## Historical checkpoint (timestamp unrecoverable): repeated fixed-fixture decode
 
 - 同一process・同一model・同一英文をraw/current protection各3回で実行。
 - 6回ともエラーなし。rawは毎回同じfullwidth寄り出力、current protectionは毎回同じ引用保持出力。今回のhallucinationは再現せず、greedy decodeの非決定性はこのfixtureでは観測されなかった。
 - JSON: `translation-server/benchmarks/translation-unit-repeat-v1.json`。
 
-## 2026-09-23T03:30: segmenter/protection regression checkpoint
+## Historical checkpoint (timestamp unrecoverable): segmenter/protection regression checkpoint
 
 - `test_segmenter`, `test_citation_protect`, `test_madlad_quality`: **92/92 passed**。
 - segmenterのround-trip、author-year citation保護、strict restore／品質guardに新たな回帰なし。
 - 実問題のhallucination本文は保存ログに存在せず、現時点でモデル入力との差分を直接照合できない。次回はアプリで再現したblockを `TRANSLATION_UNIT_DEBUG=1` 付きサーバーへ送り、decode前後の実入力を保存する。
 
-## 2026-09-23T04:00: app-local evidence inspection
+## Historical checkpoint (timestamp unrecoverable): app-local evidence inspection
 
 - 実機の `~/Library/Application Support/com.harada.paper-reader` を読み取り専用で確認。
 - 現在保存されている4論文のうち、`translation.json` は completed/skipped/failed の状態のみを保持し、blockごとの訳文は `ja.md` に投影される。
 - 既知のhallucination語（100mm、患者、テレビ東京、チョコレート等）は現保存データには存在しなかった。一方、`ja.md` に英語のまま残る本文・chrome混在があり、これはモデルhallucinationではなく翻訳未完了または原文fallbackの証拠。
 - 翻訳精度の実問題を再現するには、アプリで新しい失敗blockを `TRANSLATION_UNIT_DEBUG=1` サーバーへ送る必要がある。DB／保存データだけから過去のdecode入力は復元できない。
 
-## 2026-09-23T04:30: app-local translation health metric
+## Historical checkpoint (timestamp unrecoverable): app-local translation health metric
 
 - 実機4論文の `original.md`／`ja.md` を比較。日本語文字比率は順に 7.1%、5.5%、19.4%、0.7%（論文別）。保存された `ja.md` の大部分が英語で、現状態では「翻訳品質」以前に翻訳未完了／原文fallbackが支配的。
 - したがって、次の改善評価では意味誤訳率と別に、翻訳完了率・原文fallback率を必ず分離計測する。モデルを変更する前に、server接続失敗・queue再開・completed判定が英語fallbackを通す経路を追跡する。
 
-## 2026-09-23T05:00: evidence checkpoint / no active jobs
+## Historical checkpoint (timestamp unrecoverable): evidence checkpoint / no active jobs
 
 - 現在、translation server・benchmark・diagnostic processが動作していないことを確認。
 - 既存証拠では、固定fixtureのgreedy出力は決定的でhallucination非再現、実機保存データは翻訳未完了／原文投影が支配的。production挙動を変える追加修正を推測で入れる段階ではない。
 - 次回の必須入力は、実際にhallucinationが表示されたblockを再送した `TRANSLATION_UNIT_DEBUG=1` のログ（SOURCE / CHUNK / TRANSLATION_DECODE / TRANSLATION_RESTORED）。これが得られるまで、モデル交換やblacklist追加は行わない。
 
-## 2026-09-23T05:05: process-check correction
+## Historical checkpoint (timestamp unrecoverable): process-check correction
 
 - `pgrep` はmacOS sandboxのsysmond制限でプロセス一覧を取得できず、外部プロセスの不存在は断定しない。今回のshellから起動したjob handleは存在せず、こちらが起動したserver/benchmarkはない。
 
-## 2026-09-23T05:30: local translation audit CLI
+## Historical checkpoint (timestamp unrecoverable): local translation audit CLI
 
 - `scripts/audit-local-paper-translations.mjs` を追加。実機保存ディレクトリを変更せず、paperごとのtranslation status分布と `ja.md` の日本語／Latin比率をJSON出力できる。
 - 実機データでCLIを実行し、4 paperを読み取り確認。次回の再現後、block-level debugログとこの保存状態を同じ基準で比較する。
 
-## 2026-09-23T05:45: audit CLI verification
+## Historical checkpoint (timestamp unrecoverable): audit CLI verification
 
 - `node --check scripts/audit-local-paper-translations.mjs` 成功。
 - `translationAuditPartialFallback.test.ts`: **3/3 passed**。
 - 保存データを変更せず、次回の実機再現後に同じCLIでstatus分布と日本語化率を再計測できる。
 
-## 2026-09-23T06:00: translation provenance metadata
+## Historical checkpoint (timestamp unrecoverable): translation provenance metadata
 
 - `assignBlockTranslation()` が成功したblockへ `metadata.translationOutcome="translated"` を付与。
 - PDF projection時点で `translationStatus="skipped"` のblockへ `metadata.translationOutcome="structural_skip"` を付与。
 - 既存status値・DB schema・再開条件は変更なし。監査で翻訳済みと構造skipを分離できる。
 - 対象テスト: glossary/cache 2/2、PDF extraction pipeline 24/24 passed。`git diff --check` 成功。
 
-## 2026-09-23T06:15: provenance typecheck
+## Historical checkpoint (timestamp unrecoverable): provenance typecheck
 
 - `npm run typecheck` 成功。
 - provenance metadata追加による型回帰なし。`git diff --check` も成功。
 
-## 2026-09-23T06:30: full frontend regression
+## Historical checkpoint (timestamp unrecoverable): full frontend regression
 
 - `npm test`: **63 files / 383 tests passed**。
 - provenance metadata追加後も翻訳・抽出・保存・UI関連テストに回帰なし（PDF.js canvas polyfill warningは既存環境警告）。
 
-## 2026-09-23T07:00: extraction corpus regression
+## Historical checkpoint (timestamp unrecoverable): extraction corpus regression
 
 - `npm run test:extraction-corpus`: **2 files / 76 tests passed**（baseline real papers 39、reading-order 37）。
 - provenance metadata変更による実論文抽出・reading order回帰なし。PDF.jsの既存フォント／canvas警告のみ。
 
-## 2026-09-23T07:15: provenance regression test
+## Historical checkpoint (timestamp unrecoverable): provenance regression test
 
 - `glossaryApply.test.ts` に `metadata.translationOutcome="translated"` の永続化assertを追加。
 - targeted test 1/1、`npm run typecheck`、`git diff --check` 成功。
 
-## 2026-09-23T07:30: lint checkpoint
+## Historical checkpoint (timestamp unrecoverable): lint checkpoint
 
 - `npm run lint` 成功。
 - provenance metadata、監査CLIを含む変更は typecheck／lint／全テストを通過。
 
-## 2026-09-23T07:45: audit outcome aggregation
+## Historical checkpoint (timestamp unrecoverable): audit outcome aggregation
 
 - local translation audit CLIに `outcomes` 集計（translated / structural_skip / source_fallback / unclassified）を追加。
 - provenance metadataを監査レポートへ反映可能にした。CLI構文とglossary provenance testは成功。
 
-## 2026-09-23T08:00: provenance backfill observation
+## Historical checkpoint (timestamp unrecoverable): provenance backfill observation
 
 - 拡張CLIを実機4論文へ再実行。既存データは全blockが `unclassified`（新metadata導入前に保存されたため）で、status分布のみ取得可能。
 - 新規翻訳／再投影後は `translated` と `structural_skip` が埋まる。過去データを推測でbackfillせず、再翻訳時の実測値として更新する方針。
 
-## 2026-09-23T08:30: failed provenance
+## Historical checkpoint (timestamp unrecoverable): failed provenance
 
 - 翻訳失敗経路（import／resume）にも `translationOutcome="source_fallback"` を付与。
 - 追加時に検出した重複代入を除去し、lint／typecheck／`git diff --check` を再実行して成功。
 
-## 2026-09-23T08:45: failed provenance full regression
+## Historical checkpoint (timestamp unrecoverable): failed provenance full regression
 
 - `npm test`: **63 files / 383 tests passed**。
 - 翻訳失敗時の `source_fallback` metadata追加による回帰なし。
 
-## 2026-09-23T09:00: audit script npm entry
+## Historical checkpoint (timestamp unrecoverable): audit script npm entry
 
 - `package.json` に `audit:local-translations` scriptを追加。
 - npm wrapperの標準出力にはnpm headerが混ざるため、機械処理時は直接CLI実行またはstdoutのJSON部分を利用する。CLI本体は既に構文確認済み、lint成功。
 
-## 2026-09-23T09:15: audit CLI fixture smoke
+## Historical checkpoint (timestamp unrecoverable): audit CLI fixture smoke
 
 - `npm run audit:local-translations -- test-data/real-papers` を実行。fixture rootに保存済みpaperがないため `papers: 0` を正常出力。
 - 引数処理と空データ時のクラッシュなしを確認。
+
+## Current main synchronization (2026-09-18)
+
+- Current main: `1174ab1 feat: enhance translation error handling and audit processes` (`1174ab19570600e305c01522ce870aa81973dd2a`).
+- 実行環境時刻: 2026-09-18 14:32 JST。過去checkpointの復元不能な未来時刻は `Historical checkpoint (timestamp unrecoverable)` 見出しへ置換し、技術的内容と順序を保持。
+- 最新安定fresh aggregate: `translation-fresh-aggregate-v6.json`（37 papers / 69 unique rows / 35 fallbacks、ordinary-body 32 rows / 9 fallbacks = 28.125%; by stage pre-model 22 / none 34 / post-model 13）。
+- 最新review triage: `translation-fresh-review-triage-v1.json`（69 items）。`audit-progress.json` はcompletedPapers 37、pendingPapers 0、reviewedBlocks 300を示す。
+- Goal全体はblocked扱いにせず、P0の監査世代整理とfallback／semantic reviewを継続する。
+
+## 2026-09-18 14:33 JST: fresh audit progress synchronization
+
+- `audit-progress.json` に最新fresh世代を明示的に追加。v6 aggregateは37 papers / 69 rows / 35 fallbacks、ordinary-body 32 rows / 9 fallbacks (28.125%)、fresh manual review pending 69。
+- 既存のhistorical/manual review 300件は保持し、fresh 69行と混同しないよう分離フィールドで管理。
+- JSON validationと`git diff --check`成功。
+
+## 2026-09-18 14:35 JST: fresh baseline v6
+
+- `translation-fresh-baseline-v6.json` を作成。v6 aggregateとfresh triageだけを結合し、stable key `paperId:blockId`、37 papers / 69 rows、ordinary-body fallback 28.125%、triage priority 0/1/2/3 = 11/24/11/23を明示。
+- historical 300 reviewed blocksは混在させず、fresh 69 rowsはmanual semantic labels未付与として記録。
+- `audit-progress.json` のlatestFreshBaselineを更新。JSON validationと`git diff --check`成功。
+
+## 2026-09-18 14:37 JST: fresh manual semantic review subset
+
+- `translation-fresh-review-triage-v1.json` の fresh 69 rows から、label-blind manual comparison を6 rows実施。
+- 結果を `test-data/real-papers/reports/translation-fresh-manual-review-v1.json` に保存。minor_wording 3、semantic_shift 2、table_contamination 1。構造混入はモデル品質と分離して extraction/structure に帰属。
+- fresh review remaining は63 rows。manual labelはproduction selectorへ渡さない。
+- `audit-progress.json` に review artifact と件数を同期。
+
+## 2026-09-18 14:37 JST: fresh manual review extended
+
+- fresh triage rowsを追加4件レビューし、合計10/69 rowsをlabel済みに更新。
+- 累計: correct 1、minor_wording 4、semantic_shift 2、omission 1、source_fragment 1、table_contamination 1。
+- primary causeはtranslation 8、extraction 2。未レビュー59 rows。
+- omission（P(x)節の欠落）と未完source fragmentを確認。自動accept率を正解とは扱わない。
+
+## 2026-09-18 14:37 JST: fresh review metrics
+
+- `translation-fresh-manual-metrics-v1.json` を生成。レビュー済み10件のうち severity >=2 は5件（全体の暫定 unsafe false-accept 50%）。翻訳起因だけでは3/8件（37.5%）、構造起因2件は別集計。
+- これは10件の手動サブセットであり、69件全体の推定値ではない。自動acceptを正解扱いせず、production selectorにも投入していない。
+
+## 2026-09-18 14:37 JST: quality-gate test environment check
+
+- `translation-server/tests/test_madlad_quality.py` を実行しようとしたが、pytest未導入、unittest実行では `torch` 未導入で import 段階停止。これは環境依存の検証制約であり、translation goal全体は継続する。
+- production codeはこのターンで変更していない。manual metrics/reportのみ更新済み。
+
+## 2026-09-18 14:37 JST: baseline linked to manual metrics
+
+- `translation-fresh-baseline-v6.json` に manual review artifact / metrics artifact と、レビュー済み10件・未レビュー59件を追加。
+- unsafe false-accept は reviewed subset の暫定値としてのみ保持し、automatic aggregateのfallback率やproduction selectorへ混ぜていない。
+- `audit-progress.json` の latest artifact参照を更新。
+
+## 2026-09-18 14:37 JST: fresh manual review 15 rows
+
+- 追加5 rowsをレビューし、合計15/69 rows、未レビュー54 rowsへ更新。
+- labels: correct 3、minor_wording 6、semantic_shift 2、omission 2、source_fragment 1、table_contamination 1。
+- reviewed subsetの暫定 unsafe false-accept は6/15（40%）、翻訳起因のみ4/13（30.8%）。全体への外挿はしていない。
+- manual metrics と fresh baseline の件数を同期。
+
+## 2026-09-18 14:37 JST: fresh manual review 19 rows
+
+- 追加4 rowsをレビューし、合計19/69 rows、未レビュー50 rows。
+- 新たに専門用語誤訳（convolutional / sparsity）と、抽出末尾欠損2件を確認。
+- metrics / baselineを再計算し、manual labelは評価専用のまま保持。
+
+## 2026-09-18 14:37 JST: fresh manual review 22 rows
+
+- 追加3 rowsをレビューし、合計22/69 rows、未レビュー47 rows。
+- undergraduate/graduate条件の変質、原文にない実験者の説明追加、用語表記揺れを確認。
+- reviewed subsetの暫定 unsafe false-accept は11/22（50%）、翻訳起因8/19（42.1%）。全体には外挿しない。
+
+## 2026-09-18 14:37 JST: fresh manual review 27 rows
+
+- priority 2 の構造・リスト・統計本文を5 rows追加レビューし、合計27/69 rows、未レビュー42 rows。
+- 箇条書き flattening、段落境界破壊、図周辺の単位混在を確認。翻訳モデルの問題と抽出問題を分離して記録。
+- reviewed subset暫定 unsafe false-accept は15/27（55.6%）、翻訳起因9/22（40.9%）。全体への外挿なし。
+
+## 2026-09-18 14:37 JST: fresh manual review 32 rows
+
+- fallbackを含むpriority 1 rowsを5件追加レビューし、合計32/69 rows、未レビュー37 rows。
+- safe false reject候補（完結した本文が翻訳されず原文fallback）と、中国語文字混入、構造混入を分離して記録。
+- reviewed subset暫定 unsafe false-accept は17/32（53.1%）、翻訳起因11/27（40.7%）。全体への外挿なし。
+
+## 2026-09-18 14:37 JST: safe fallback candidate queue
+
+- fresh 69 rowsから、180文字以上の長い英文で、明白な表・図・数値断片を除外した fallback候補31件を抽出。
+- `translation-safe-fallback-candidates-v1.json` に保存。pre-model/post-modelとmanual labelを保持し、safe false rejectの調査順序付けに使用する。
+- audit-onlyであり、production gate bypassやfallback緩和はまだ行っていない。
+
+## 2026-09-18 14:45 JST: review artifact consistency check
+
+- fresh manual review 32 rowsのstable key重複なし、必須label/cause/severity/problem欠落なしを確認。
+- baselineのreviewedRows=32、pendingRows=37、metrics参照が実ファイルと一致。
+- 監査ファイルのみ更新し、production codeは変更していない。
+
+## 2026-09-18 14:46 JST: translation-server test environment restored
+
+- repositoryの `translation-server/.venv` を確認し、torch 2.14.0 が利用可能なことを確認。
+- `translation-server/tests/test_madlad_quality.py`: 18 passed。
+- `translation-server/tests/test_segmenter.py` と `test_citation_protect.py`: 74 passed, 8 subtests passed。
+- system Pythonではなくプロジェクトvenvを使えば、quality/segmenter回帰テストを実行できる状態になった。
+
+## 2026-09-18 14:48 JST: fresh-port startup probe
+
+- project venvでfresh-port `18765` のserver startup probeを実行。
+- startup logから Python 3.12.14、torch 2.14.0、model version `3b-mt-v5-semantic-v71-strict-restore-v11` を確認。
+- 環境では `MPS available: False` のためCPU fallbackへ切り替わった。
+- server bindは sandbox の `operation not permitted` で拒否され、health/benchmarkは実行できなかった。起動したprobe processは終了済み。
+- これは当該環境のsocket bind制約であり、translation goal全体のblocked条件とは扱わない。quality/segmenter testsは引き続きvenvで実行可能。
+
+## 2026-09-18 14:49 JST: translation-server full regression
+
+- project venvで `translation-server/tests` 全体を実行。
+- **117 passed, 8 subtests passed**。
+- socket bindを必要としないsegmenter/citation/quality/microbatch回帰はgreen。
+
+## 2026-09-18 14:49 JST: application validation
+
+- `npm run typecheck`: passed。
+- `npm run lint`: passed。
+- `git diff --check`: passed。
+
+## 2026-09-18 14:49 JST: app full regression
+
+- `npm test`: **63 test files passed、383 tests passed**。
+- PDF.js canvas polyfill warningのみで、テスト失敗なし。
+
+## 2026-09-18 14:50 JST: extraction corpus regression
+
+- `npm run test:extraction-corpus` を再実行。cached real-paper baseline 39件と reading-order corpusを含む extraction regressionが完了。
+- 既知の PDF.js canvas / font warningのみで失敗なし（前回記録: 76 tests passed）。
+
+## 2026-09-18 14:50 JST: consolidated quality status
+
+- `translation-quality-status-v1.json` を生成し、fresh cohort、manual subset、fallback候補、validation、corpus shortfall、次アクションを分離して集約。
+- 自動値と手動値を混ぜず、socket bind制約とextraction summary truncationも明記。
+
+## 2026-09-18 14:50 JST: ordinary-body fallback attribution
+
+- fresh ordinary-body 32 rowsのfallback 9件は全て `post-model` stage。
+- そのうち8件は serverError flagを持つ。pre-model source fallbackではないため、Extraction修正や入力policy緩和で隠さず、server/model availabilityとpost-model errorを別に再実行する必要がある。
+- ordinary-body fallback率28.1%の主な一次調査先を post-model/server-error 側へ固定。
+
+## 2026-09-18 14:50 JST: post-model server-error taxonomy
+
+- fresh triage全体の serverError 11件を分類: `degenerate translation output` 4件、`fetch failed` 4件、protected placeholder dropped 3件。
+- ordinary-body fallback 9件のうち8件がserverError flagを持つため、fallback改善はこの3系統を別々に再現・修正する必要がある。
+- placeholder droppedの値には `Fig. 2`、`errorsAssume`、ライセンス文断片が含まれ、単一のhallucination blacklistでは扱わない。
+
+## 2026-09-18 14:50 JST: replay command handoff
+
+- socket bind可能なホストで、`MADLAD_BENCH_URL` をfresh-portへ設定し、`scripts/benchmark-real-paper-translation.ts` を `--resume` なしで候補fixtureに対して実行する。
+- 結果は既存fresh-v6と混ぜず、新しいversioned reportへ保存し、stable key `paperId:blockId` で差分比較する。
+
+## 2026-09-18 14:50 JST: pending audit queue check
+
+- `run-pending-translation-audit.mjs` は cached=36、pending=0、skipped-no-pdf=1、limit=12 と報告。
+- 既存paperの未処理キューはなく、次の実作業はfresh-port再翻訳またはOA corpus追加。
+
+
+## 2026-09-18 15:00 JST: goal checkpoint paused
+
+- 常駐translation-server / benchmark processは起動していない。
+- 現在の再開地点は fresh-port benchmark（localhost bind可能な環境）または audit-only semantic review / OA corpus expansion。
+- `audit-progress.json` に `status=paused`、`activeProcess=null`、次アクションを記録した。
+
+
+## 2026-09-18 15:03 JST: structural reference gate review
+
+- `Fig. 2` のplaceholder dropを検討したが、standalone参照を自動復元すると `See` などの意味単位欠落を隠して unsafe false-accept を増やし得るため、production gateは緩和しなかった。
+- 既存の括弧内 Figure/Table 参照の限定復元と、任意識別子・ライセンス文のstrict fallbackは維持。
+- 次回fresh benchmarkで `Fig. 2` ケースを再測定し、復元候補とsource fallbackを分けて評価する。
+
+
+## 2026-09-18 15:04 JST: audit artifact consistency
+
+- fresh triage 69/69 unique、manual review 32/32 unique、fallback candidates 31/31 unique。manual/candidate keysは全てtriage subsetで、重複・未知keyは0。
+- 未レビューはstable keyで37件、候補とレビューの重複は5件。整合性を `translation-audit-consistency-v1.json` に保存。production routingには使用しない。
+
+
+## 2026-09-18 15:05 JST: manual review queue v2
+
+- 未レビュー37件をstable keyで再抽出し、priority → source length → key順に固定。`translation-manual-review-queue-v2.json` に保存。
+- review labels / severity / cause layerを明示し、自動acceptやmanual labelをproduction routingへ渡さない。
+
+
+## 2026-09-18 15:05 JST: pending review distribution
+
+- 未レビュー37件の内訳: priority 0=11、1=19、2=6、3=1。categoryは damaged-extraction 24、ordinary-body-prose 9、list 3、caption 1。
+- fallback stageは pre-model 19、post-model 11、none 7。server errorは translation server 500が7、fetch failedが4。
+- 集計を `translation-manual-review-queue-summary-v1.json` に保存。これは記述用で、production selectorには使用しない。
+
+
+## 2026-09-18 15:07 JST: pending semantic review addendum
+
+- fallback/server-errorを除く未レビュー行から7件を原文・訳文で比較。`correct` 2、`minor_wording` 3、`source_fragment` 1、`terminology_error` 1。
+- `translation-manual-review-addendum-v1.json` に保存。既存v1 metricsとは分離し、production routingへは使用しない。
+
+
+## 2026-09-18 15:07 JST: combined manual review snapshot
+
+- 既存32件と追加7件をstable keyで統合し、重複なし39件の `translation-manual-review-combined-v1.json` を生成。
+- labelは correct 5、minor_wording 11、semantic_shift 4、omission 2、hallucination 1、terminology_error 4、source_fragment 5、その他7。primary causeは translation 29、extraction系10。
+- この集計は評価用スナップショットであり、自動acceptを正解扱いせず、production routingにも接続しない。
+
+
+## 2026-09-18 15:08 JST: combined review metrics
+
+- 統合39件からsource fallback 2件・source fragment 5件をsemantic分母から分離し、semantic review 32件を集計。severity>=2のunsafe false acceptは16/32（50.0%）、translation起因は11/27（40.7%）。
+- `translation-manual-review-combined-metrics-v1.json` に保存。レビュー済みsubsetの値であり、全corpus推定やproduction selectorには使用しない。
+
+
+## 2026-09-18 15:08 JST: standalone figure fallback guard
+
+- `See Fig. 2` のようなstandalone構造参照をモデルが落とした場合、参照ラベルだけを復元して意味欠落を隠さずstrict fallbackする回帰テストを追加。
+- citation protection focused tests **33 passed**、`git diff --check` passed。
+
+
+## 2026-09-18 15:09 JST: full translation-server regression after guard test
+
+- translation-server全体 **118 passed、8 subtests passed**。strict restore、quality、segmenter、microbatchに失敗なし。`git diff --check` passed。
+
+
+## 2026-09-18 15:10 JST: degenerate fallback path inspection
+
+- `degenerate translation output` の既存経路を確認。通常chunk → whole-unit beam → rescue segmentation → strict reject の順で再試行済みで、単純なretry不足ではない。
+- rescue後もdegenerateならsource fallbackにする設計を維持。新しい緩和はfresh decodeログなしでは安全性を証明できないため追加しない。
+
+
+## 2026-09-18 15:10 JST: audit goal resumed
+
+- `audit-progress.json` を `status=active` に戻した。常駐プロセスは起動せず、次アクションはfresh-port benchmarkまたは残りfallback行の監査。
+
+
+## 2026-09-18 15:11 JST: pending PDF corpus check
+
+- pending-pdfsは 13 本確認できたが、catalogにtitle/DOI/OA provenanceが揃っていないため、50+ corpusへ推測登録しなかった。
+- 既存auditには一部（covid-ml-review、human-ai-interaction-guidelines等）が登録済み。残りは provenance verification後に追加する。
+
+
+## 2026-09-18 15:11 JST: pending PDF provenance candidate inventory
+
+- pending-pdfs 13本についてローカル `pdfinfo` とSHA-256だけを収集し、`pending-pdf-provenance-candidates-v1.json` に保存。
+- DOI/source URL/license/OA statusは未検証のまま明示し、authoritative corpusへ推測登録していない。
+
+
+## 2026-09-18 15:13 JST: provenance title matching
+
+- arXivの一次情報で4本を外部照合: computational linguistics (2206.07026)、H-AI guidelines (2010.11761)、Neural Network Weights (1705.04977)、OSWorld (2404.07972)。title/author/identifier一致を台帳に記録。
+- arXiv一致はOA・再配布ライセンスの完全確認を意味しないため、authoritative corpus昇格はlicense確認後に行う。
+
+
+## 2026-09-18 15:13 JST: arXiv license evidence
+
+- 照合済み4本について、arXivのnon-exclusive distribution licenseを確認し、OA候補として台帳へ記録。
+- これはarXiv上の配布許諾であり、Paper Reader repositoryへの再配布や商用利用を包括的に許可するものではないため、authoritative corpus昇格条件は別途維持。
+
+
+## 2026-09-18 15:15 JST: healthcare provenance matching
+
+- healthcare/HFE 3本をPubMed/PMC一次ページで照合: human factors safety review (PMC4466322)、HFE healthcare scoping study (PMC11969590, DOI 10.1136/bmjoq-2024-003222)、medical deep learning meta-review (PMID 35588660, DOI 10.1016/j.cmpb.2022.106874)。
+- title/author/identifierと公開本文またはfree-article状態を台帳に記録。再配布ライセンスの扱いは別途維持。
+
+
+## 2026-09-18 15:15 JST: medical imaging provenance matching
+
+- `Medical Image Segmentation Using Deep Learning: A Survey` と `A review of deep learning in medical imaging` をarXiv一次ページで照合。関連journal DOIも台帳へ記録。外部照合済み候補は9本。
+
+
+## 2026-09-18 15:16 JST: social/cognitive provenance matching
+
+- `Social Influence in Social Advertising: Evidence from Field Experiments` と `Modeling Human Behavior Part II -- Cognitive approaches and Uncertainty` をarXiv一次ページで照合。関連ACM DOIも記録し、外部照合済み候補は11本。
+
+
+## 2026-09-18 15:16 JST: HCI/medical provenance matching
+
+- `Conversation Analysis and the User Experience` をarXiv cs/0405109（関連DOI 10.1080/1462626048520184）、COVID ML reviewをarXiv 2110.14910で照合。外部照合済み候補は13本。
+
+
+## 2026-09-18 15:17 JST: corpus provenance coverage snapshot
+
+- authoritative completedPapersは36、provenance照合済みpending PDFは13、未照合pendingは0。重複を除くpotential distinct coverageは49。
+- `corpus-provenance-coverage-v1.json` に保存。pending 13本は抽出/翻訳監査未実施のためcompletedPapersへ追加していない。50+達成とは扱わない。
+
+
+## 2026-09-18 15:17 JST: provenance duplicate correction
+
+- pending 13本とcompletedPapersを正規化IDで照合し、**13/13が既存paperの重複**と判明。前版のpotential distinct coverage 49は誤り。
+- `corpus-provenance-coverage-v2.json` でauthoritative distinct coverageを36へ訂正。新規paper追加は0件、50+目標は未達。
+
+
+## 2026-09-18 15:18 JST: new corpus candidate discovered
+
+- `test-data/real-papers/detecting-statistical-interactions.pdf` はcompletedPapersにない新規候補。arXiv 1705.04977でtitle/author/venueを照合済み。
+- `audit-progress.json` のpendingPapersへ追加し、`corpus-new-paper-candidates-v1.json` に記録。equation/statistical notationを含むML format variationとして、抽出・翻訳監査後にcompletedへ昇格する。
+
+
+## 2026-09-18 15:21 JST: new candidate extraction diagnostic
+
+- `detecting-statistical-interactions.pdf` の抽出診断をローカル `vite-node` で完了。21ページ、title candidate 1件、heading 26、paragraph 260、author candidateを確認。
+- canvas polyfill warningは既存環境警告で、抽出処理は完了。translation auditは未実施。
+- `extraction-diagnostic-detecting-statistical-interactions-v1.json` に保存。
+
+
+## 2026-09-18 15:22 JST: corpus coverage after new candidate
+
+- authoritative audited distinct papers 36、provenance verified pending 1、potential coverage 37。`corpus-provenance-coverage-v3.json` に更新。
+- 新候補は抽出診断済みだがtranslation/manual audit未完了のため、50+達成やcompleted扱いにはしていない。
+
+
+## 2026-09-18 15:22 JST: new candidate translation sample
+
+- detecting-statistical-interactionsから12 blocksのsource-only sampleを固定（title/author、early headings、long prose、later-page prose）。
+- `translation-audit-sample-detecting-v1.json` に保存。fresh-port翻訳未実施のため品質判定は付けていない。
+
+
+### 2026-09-18 14:24 +0900 extraction candidate checkpoint
+
+- `detecting-statistical-interactions.pdf` の抽出診断を完了。21ページ、title候補2件、author候補1件、heading 26、paragraph 260を取得し、PDF.js canvas/fontの警告以外の抽出警告はない。
+- 12ブロックのsection-stratified translation sampleを保存済み。fresh-port translation benchmarkはlocalhost bind制約のため未実行で、モデル品質の判定や完了扱いにはしていない。
+- 現在の次アクションは、許可された同一shell環境でこの候補のfresh benchmarkを実行し、stable keyでaggregateへ取り込むこと。
+
+### 2026-09-18 15:25 +0900 validation checkpoint
+
+- `npm run test:extraction-corpus` completed with **39 tests passed** (real-paper extraction baseline; existing PDF.js canvas/font warnings only).
+- `npm run typecheck`, `npm run lint -- --deny-warnings`, and `git diff --check` all passed.
+- No production extraction or translation behavior was changed in this checkpoint. The detecting-statistical-interactions translation benchmark remains pending because this environment cannot bind localhost; no long-running process was left behind.
+
+
+### 2026-09-18 15:27 +0900 fresh translation benchmark checkpoint
+
+- fresh-port **18798** を同一shellで起動し、`interpreting-neural-networks`（catalog上の正式なstable ID。PDF titleは *Detecting Statistical Interactions from Neural Network Weights*）を12 unitsで実行。healthは`phase=ready`、benchmark完了、`translation-audit-interpreting-neural-networks.json`を更新した。
+- 開始時に仮の`detecting-statistical-interactions` IDを指定してcatalog解決に失敗したため、同一PDFが既存IDで登録済みであることを確認した。重複paperとして追加せず、stable keyを維持する。
+- trap cleanupでサーバーを停止済み。次はこのfresh reportを現行aggregateへ取り込み、section-stratified/manual review queueを更新する。
+
+### 2026-09-18 15:33 +0900 review checkpoint
+
+- `interpreting-neural-networks` fresh reportのaccepted translation 5件をaudit-onlyで予備レビューし、`translation-manual-review-interpreting-neural-networks-v1.json`へ保存。技術用語を含む1件をseverity 2 terminology_error候補、残りをminor_wording候補として記録した。production routingには使用していない。
+- この12-unit reportは既存aggregateの件数へ単純加算せず、stable key重複を避けて個別の最新レポートとして保持している。次の統合時に同一paperの旧rowを置換する。
+
+### 2026-09-18 15:35 +0900 stable-key aggregate checkpoint
+
+- 各paperの最新translation audit reportをstable keyで選択し、`translation-audit-fresh-v2.json` と `translation-fresh-aggregate-v7.json` を生成。旧 `interpreting-neural-networks` rowを今回の12-unit fresh reportで置換し、重複keyは0件。
+- 現行fresh aggregateは **36 papers / 80 unique rows**。ordinary-bodyは37件、reader-visible fallback 9件（24.3%）。内訳は pre-model 27、post-model 14、none 39、server error 10。これは12〜20 blocks/paperの最終監査ではなく、現時点の選択可能rowのbaselineである。
+- manual review queueを再生成し、80 rows中31 rowsを既レビューとして認識。`translation-baseline-fresh-v1.json` も`translation-audit-fresh-v2.json`だけを対象に再生成した。
+
+### 2026-09-18 15:40 +0900 review queue refresh
+
+- `TRANSLATION_AUDIT_REPORT=translation-audit-fresh-v2.json`でレビューキューを再構築。現行80 stable-key rowsのうち31件が既存注釈と同一出力で再利用され、49件が未レビューとして残る（`audit-manual-review.json`）。
+- 旧集計を混ぜず、今回のfresh v2だけをreview populationに使用した。manual labelsは引き続きaudit-only。
+
+### 2026-09-18 15:45 +0900 semantic review checkpoint
+
+- accepted ordinary-body rowsを優先して5件レビュー。`hci-empirical-methods`でsourceの undergraduate が訳文の graduate に変わるseverity 2 semantic_shiftを確認。ML paperでは Additive Grovesの綴り・multiplicative等のterminology_error候補2件、その他minor wording 2件を記録。
+- これは監査用ラベルでありproduction selectorへは渡していない。誤訳の中心がfallback不足ではなく、技術用語と関係表現の意味ずれにもあることを確認した。
+
+### 2026-09-18 15:47 +0900 review metrics checkpoint
+
+- manual reviewの更新後、reviewed 36 rows（うち翻訳を比較できる20 rows）を再集計。severity>=2は7 rows（35%）だが、既存注釈の一部は旧schemaでlabel未設定のため、これは暫定audit-only値であり全体品質推定ではない。
+- metrics保存: `translation-manual-review-metrics-v2.json`。技術用語誤りとsource/extraction fragmentを分離して保持した。
+
+### 2026-09-18 15:50 +0900 label normalization checkpoint
+
+- 既存レビューのnotesから内容が明示できる29行だけlabelを正規化（pending比較行は未推測）。レビュー済み36件、label付き翻訳比較20件。label付き比較では severity>=2 が7/20 (35%)。`translation-manual-review-metrics-v3.json`へ保存。
+- ラベル補完はaudit用のみで、production gate・selector・held-outには影響させていない。
+
+### Historical checkpoint (timestamp unavailable) +0900 quality-gate false-reject checkpoint
+
+- manual review notesから、sourceが完結しているのに空訳/fallbackになった品質ゲート候補を**5件**抽出（cognitive psychology、linguistics、marketing、neuroscience）。`quality-gate-false-reject-candidates-v1.json`に保存。
+- これは同一モデルの再試行でdecode/quality理由を採取するための候補で、fallbackを減らす変更やproduction緩和はまだ行っていない。pending比較やsource-fragmentは候補から除外した。
+
+### Historical checkpoint (timestamp unavailable) +0900 same-model retry checkpoint
+
+- quality-gate候補5件をfresh-port 18799で同一モデルに直接再試行。**2件は再びsource fallback**、**3件は日本語を生成**した。
+- 生成側には、marketing abstract（翻訳は概ね成立）と、入力自体が文途中のcontinuationだった行が含まれる。後者は品質ゲート誤fallbackではなく、候補抽出時のsource-fragment誤分類として切り分けた。
+- retry summary: `quality-gate-false-reject-retry-summary-v1.json`。production gateは変更していない。サーバーはtrap cleanup済み。
+
+### Historical checkpoint (timestamp unavailable) +0900 fallback attribution checkpoint
+
+- retry server logを確認し、2件のsource-equal再試行は `degenerate translation output` → identifier-drop/rescue retry → unit fallback の経路だったとattribution。単なるnetwork failureではない。
+- 3件のHTTP 200非source出力はfallback候補から分離し、marketing abstractは翻訳候補、continuation入力はsource-fragment候補として扱う。`quality-gate-false-reject-attribution-v1.json`へ保存。
+- production gateの緩和・fallback強制削減はまだ実施していない。
+
+### Historical checkpoint (timestamp unavailable) +0900 split retry checkpoint
+
+- 3件のdegenerate fallback（cognitive 1、linguistics 1、neuroscience 1）をaudit-onlyで文単位に分割して再試行。翻訳復帰率はそれぞれ **9/10、5/7、8/9** sentence units。元のparagraph単位では全件source fallbackだったため、長いtranslation unitがdegenerateを誘発する有力な証拠になった。
+- ただし一部の長文は分割後もfallback（合計4 sentence units）。単純な文分割をそのままproductionへ入れず、citation/括弧・continuation・再結合と品質判定を含むlabel-blind実験が必要。
+- レポート: `quality-gate-split-retry-v1.json`。fresh serverは停止済み。
+
+### Historical checkpoint (timestamp unavailable) +0900 segmenter diagnostic checkpoint
+
+- 現行production `segment_for_translation` を同じ3候補へ適用。unit数は cognitive 10、linguistics 5、neuroscience 9で、全件 whitespace-normalized round-tripを満たした。
+- `translation-server/tests/test_segmenter.py`: **42 passed, 8 subtests passed**。production segmenter自体は安全な分割を既に行っているため、今回の改善候補は「分割後のjoin/quality gate」と「長文unitの残り4件」をaudit側で切り分ける段階にある。
+- 診断: `quality-gate-production-segmentation-diagnostic-v1.json`。コード変更なし。
+
+### Historical checkpoint (timestamp unavailable) +0900 remaining-unit attribution checkpoint
+
+- 分割後もfallbackした4 unitsを分類。linguisticsの1件は `(c.f.` で終わるsource fragment（PDF/extraction起因）。残り3件は完結した一文だが、単独unitでもMADLADがdegenerateとなるdecode/quality-gate残差。
+- よって「長いparagraphを分割すれば全て解決」ではなく、complete sentence向けの別モデル/cascadeまたは再生成条件をheld-outで評価する必要がある。production変更はまだ行っていない。
+- レポート: `quality-gate-remaining-fallback-attribution-v1.json`。
+
+### Historical checkpoint (timestamp unavailable) +0900 focused validation checkpoint
+
+- segmenter/citation focused tests: **75 passed, 8 subtests passed**。今回の残りfallback分類に対するproductionコード変更は不要と判断し、既存の保護・round-trip保証を維持する。
+
+### Historical checkpoint (timestamp unavailable) +0900 cascade inventory checkpoint
+
+- 既存のlocal候補（M2M100/Opus）は過去に同一fixtureで評価済みで、semantic safetyを満たさずproduction cascadeには不適格。新規モデルを再取得せず、同じ実験を重複実行していない。
+- candidate selection focused tests: **16 passed**。代替候補を自動採用する変更は行っていない。
+
+### Historical checkpoint (timestamp unavailable) +0900 review priority checkpoint
+
+- 現在の未レビュー行を再確認し、翻訳出力が存在する未レビュー候補を`manual-review-priority-v1.json`へ抽出。source長を基準に、長い通常本文を先に比較できるようにした。自動labelやproduction routingには使わない。
+
+### Historical checkpoint (timestamp unavailable) +0900 manual semantic review checkpoint
+
+- 未レビューの翻訳行を6件比較。HCIの実験参加者役割の逆転、COVID診断工程の「結果」→「実験結果」、MLの`sparsity`→「散乱」/transformer→「変圧器ネットワーク」をseverity 2以上として記録。marketingの物理説明はcorrect、認知心理2件はminor wordingとした。
+- 現在のlabel-complete translated reviewは25件、severity>=2は9件。これはmanual reviewed subsetのみで、全体推定やproduction判定ではない。
+
+### Historical checkpoint (timestamp unavailable) +0900 manual semantic review checkpoint
+
+- 追加4件をレビュー。OZCHIのparticipant/questionnaire relation、marketingのmarginal-utility equations、wearable terminologyでseverity 2相当を記録。jewelleryのfigure caption周辺はminor wordingに分類。
+- label-complete translated reviewは29件、severity>=2は12件。引き続きaudit-onlyのsubset値。
+
+### Historical checkpoint (timestamp unavailable) +0900 manual semantic review checkpoint
+
+- 追加5件をレビュー。Marketingの累積分布節の omission、HCIのwithin/between-subjects用語、情報量とconversionのsemantic shiftを確認。course block 1件はsource fragmentとして翻訳品質から分離。認知心理captionはminor wording。
+- reviewed 51件、label-complete translated review 33件、severity>=2は15件。依然audit-only subset。
+
+### Historical checkpoint (timestamp unavailable) +0900 manual semantic review checkpoint
+
+- HCIのbullet/keyword行6件と認知心理の図表由来行1件をレビュー。認知心理行は条件列がflattenされseverity 3 semantic shift。HCI bullet群は概ねcorrect/minor wording。
+- reviewed 58件、label-complete translated review 40件、severity>=2は16件。source/figure structure問題はtranslation errorから分離して記録。
+
+### Historical checkpoint (timestamp unavailable) +0900 review metrics checkpoint
+
+- 現行手動レビューからdiscipline/paper単位の暫定集計を生成。metrics v5はlabel-complete translated subset 40件、severity>=2 16件（40%）を記録し、paper別内訳も保持する。
+- これはsampling biasと未レビュー22件があるため、全corpusの品質率やproduction受入率としては扱わない。
+
+### Historical checkpoint (timestamp unavailable) +0900 reviewability checkpoint
+
+- 現在の未レビュー22件はすべて翻訳テキストが空（pre-model 19、post-model 3）で、原文/訳文のsemantic比較対象ではない。これらを誤ってsemantic errorへ数えず、source/server/quality fallback queueとして保持する。
+- 翻訳テキストが存在するレビュー可能行は今回のバッチで全件比較済み（label-complete 40件）。残りは再翻訳または抽出/サーバー原因の再現が必要。
+
+### Historical checkpoint (timestamp unavailable) +0900 empty-fallback attribution checkpoint
+
+- 翻訳空の22 rowsをsemantic labelなしでaudit-only triage。heuristic候補は source fragment/paragraph boundary 5、figure/table-adjacent 2、pre-model source fallback 13、post-model server/quality fallback 2。
+- これは自動推定であり確定原因ではない。実PDF/サーバーログ確認前にproduction修正やsemantic errorへ昇格させない。
+- レポート: `empty-translation-fallback-attribution-v1.json`。
+
+### Historical checkpoint (timestamp unavailable) +0900 fallback triage confidence checkpoint
+
+- 空訳triageのsource previewを再確認。5件のfragment候補は、`and`/`to`/`of`/`which`等のcontinuation markerで終わるためhigh-confidence候補。figure/table隣接2件はgeometry未確認のlow-confidence候補として残した。
+- 低信頼のfigure/table候補を翻訳失敗へ昇格させず、抽出diagnostic待ちとして保持する。
+
+- confidence欄はsource previewだけでは断定できないためmedium/lowへ修正。full source geometryやserver logの確認前にhigh-confidenceとは扱わない。
+
+### Historical checkpoint (timestamp unavailable) +0900 translation-server regression checkpoint
+
+- translation-server全テスト: **118 passed, 8 subtests passed**。strict restore、segmenter、candidate selectionを含む現行server実装はgreen。
+- 今回はproductionコードを変更していないため、既存のfresh benchmarkと監査成果物を維持したまま、fallback原因の確認を続ける。
+
+### Historical checkpoint (timestamp unavailable) +0900 geometry validation checkpoint
+
+- reading-order診断でlow-confidence候補2件を確認。`hci-empirical-methods:b-7686f78` は本文とFigure 2 captionが分離された完全なparagraphで、figure隣接そのものは抽出欠陥ではない。post-model/quality-gate候補へ再分類。
+- `speechin:b-374f26ae` はparagraphが “too large to be considered” で終わり、次の本文へ続くsource fragmentを確認。extraction/paragraph reconstruction起因として確定候補。
+- production挙動は変更していない。
+
+### Historical checkpoint (timestamp unavailable) +0900 fragment geometry validation checkpoint
+
+- 残るfragment候補をreading-orderで確認。ergonomicsは文頭`of`、fashionは`through the diversity of`、ML notationは`matrix of`で次blockへ続き、ML list 2件は`and`で次項/次段落へ続く。6件すべてsource fragment/list boundaryとして確認できた。
+- figure隣接でも完全paragraphだったHCI行とは区別し、fragment行はsemantic translation error集計から除外する。
+
+### Historical checkpoint (timestamp unavailable) +0900 fallback taxonomy checkpoint
+
+- validated reading-order結果をempty-fallback taxonomyへ反映。空訳22件のうち、source fragment/list boundary **6件**を抽出起因として確認し、完全paragraphだがFigure参照隣接のpost-model候補 **1件**を別分類した。残りはgeometry/log未確認のaudit候補。
+- レポート: `empty-fallback-failure-taxonomy-v1.json`。この分類はproduction routingを変更しない。
+
+### 2026-09-18 15:56 +0900 stable baseline checkpoint
+
+- 最新fresh aggregate v7とfallback taxonomy v1を明示的なbaseline v8へ固定。stable key 80行、36論文、ordinary-body 37行中9行fallback（24.32%）で、<=5%目標は未達。
+- fallback stage、source category、抽出fragment、semantic false-acceptレビューを混同しない指標構造を保存した。
+- レポート: `test-data/real-papers/reports/translation-quality-baseline-v8.json`。production routingは変更していない。
+
+### 2026-09-18 15:58 +0900 figure-reference fallback checkpoint
+
+- `hci-empirical-methods:b-7686f78` のfallback理由をaggregateで確定。本文は完全なparagraphで、serverが保護placeholder `Fig. 2` の脱落をstrict restoreで拒否していた。抽出fragmentではない。
+- `allows_unprotected_identifier_retry()` を拡張し、欠落placeholderが狭い図表参照（Fig/Figure/Table/Tbl + 番号）のみの場合に限って、保護なし再decodeを許可。科学値・統計記法・一般proseの欠落は従来通りfallbackする。
+- 翻訳cacheの世代混在を避けるため `MODEL_VERSION` を strict-restore-v12 へ更新。
+- translation-server全テスト **119 passed, 8 subtests passed**。fresh benchmarkでの改善率は未計測で、production routing全体の有効化はしていない。
+
+### 2026-09-18 16:02 +0900 v12 fresh benchmark attempt
+
+- HCI fixtureのv12 fresh-port benchmarkをport 18801で開始したが、translation serverのbindがmacOS sandboxで `operation not permitted` となり、health ready前に終了。これは既知の実行環境制約で、production変更の失敗とは扱わない。
+- server logでは `3b-mt-v5-semantic-v71-strict-restore-v12` の起動表示まで確認できた。benchmark reportは生成していないため、v12のfallback率改善は未検証のまま。
+
+### Historical checkpoint (timestamp unavailable) v12 HCI benchmark evidence
+
+- 権限付きfresh-port（18803）でHCIを19 units実行。対象blockは `b-7686f78c` として選択され、model version v12を確認。
+- `Fig. 2` を含む先頭unitは保護なしretryではなく通常のplaceholder処理を通過し、その後のunitsも翻訳された。ただし同じcross-page logical block内の後半unitがphrase-repetitionでgreedy/beamとも失敗し、microbatchがunit fallbackしたため、block全体はsource fallbackのまま。
+- したがって図表placeholder修正だけではこのblockのreader-visible fallbackを解消しない。残る原因はcross-page blockの後半unitにおけるdecode/quality gateであり、抽出修正や図表参照の追加緩和は行わない。
+- fresh reportは `translation-audit-hci-empirical-methods.json` に保存。実測は対象block単位でv12の完全成功を示していない。
+
+### Historical checkpoint (timestamp unavailable) HCI fragment reattribution
+
+- v12 fresh reportで対象blockのsourceをproduction segmenterに通し、末尾unitが `The participant does an experimental task` で未完、直後のlist blockが `– entering a text phrase...` から開始することを確認。
+- 当初のFigure隣接post-model候補は、実際にはcross-page/list境界を含む抽出fragmentとして再分類。図表placeholder修正の効果測定対象から除外し、fallback taxonomyのconfirmed extraction fragmentsを6→7へ更新。
+- この再分類により、後半unitのphrase repetitionをモデル品質だけに帰属しない。paper-specificなproduction fixは入れていない。
+
+### 2026-09-18 16:09 +0900 list-boundary regression checkpoint
+
+- page末尾の未完leadと、次page先頭の箇条書きを無条件にparagraph結合しない回帰テストを追加。本文/list構造を壊す誤mergeを防ぐ。
+- reading-order focused tests **59 passed**。production extraction挙動は変更していない。
+
+### Historical checkpoint (timestamp unavailable) extraction validation checkpoint
+
+- `npm run typecheck` 成功。
+- `npm run test:extraction-corpus` 成功（extraction corpus / real-paper baseline **39 tests passed**）。PDF.jsのcanvas/font warningのみで、既存回帰はgreen。
+
+### Historical checkpoint (timestamp unavailable) validation checkpoint
+
+- `npm run lint -- --deny-warnings` 成功。現在のproduction変更（図表参照retry）と抽出回帰テストはtypecheck・lint・extraction corpus・reading-order・translation-server testsがgreen。
+- 未解決: cross-page本文fragmentをlist構造を壊さず修復する一般アルゴリズム、ordinary-body fallback 24.32%→5%以下、semantic false-accept削減。次回はfragment-aware logical unit設計をaudit-only fixtureで先に評価する。
+
+### 2026-09-18 16:10 +0900 handoff checkpoint
+
+- `audit-progress.json` にHCI v12 fresh report、fallback taxonomy、次のfragment-aware audit-only評価方針を登録。次回は現在のno-merge production条件を維持したまま比較可能。
+
+### Historical checkpoint (timestamp unavailable) fragment-list audit fixture checkpoint
+
+- HCIのcross-page本文→list境界をaudit-only fixtureへ保存。本文fragmentを単独翻訳せず、list marker/境界を保持した候補修復を比較できる入力を固定した。
+- レポート: `fragment-list-boundary-audit-v1.json`。production routingと抽出挙動は変更していない。
+
+### Historical checkpoint (timestamp unavailable) fragment-aware candidate
+
+- fragment-list audit fixtureに、本文fragmentを翻訳対象外のcontextとして保持し、次のlist itemだけを独立translation unitとして扱う候補policyを追加。
+- list markerは保持し、本文fragmentを単独でMADLADへ送らない。audit-onlyでありproduction routingは未変更。

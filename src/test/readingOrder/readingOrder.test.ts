@@ -214,6 +214,20 @@ describe("PDF reading order regression", () => {
     expect(blocks.some((block) => block.text.includes("preceding paragraph") && block.text.includes("Results were"))).toBe(false);
   });
 
+  it("keeps a page-boundary list continuation separate from an unfinished lead", () => {
+    const pages: ExtractedPage[] = [
+      { pageNumber: 1, width: 612, height: 792, textItems: [
+        { text: "The procedure consists of the following task", x: 54, y: 700, width: 300, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      ] },
+      { pageNumber: 2, width: 612, height: 792, textItems: [
+        { text: "– entering a phrase five times with a stylus", x: 54, y: 120, width: 260, height: 10, fontSize: 10, fontName: "Body", page: 2 },
+      ] },
+    ];
+    const { blocks } = reconstructDocument(pages);
+    expect(blocks.some((block) => block.text.includes("following task") && block.text.includes("entering a phrase"))).toBe(false);
+    expect(blocks.some((block) => block.text.includes("entering a phrase"))).toBe(true);
+  });
+
   it("stitches a right-column tail to the next page's left-column continuation", () => {
     const page1Items = [
       ...Array.from({ length: 6 }, (_, i) => ({ text: `left filler ${i}.`, x: 54, y: 120 + i * 16, width: 180, height: 10, fontSize: 10, fontName: "Body", page: 1 })),

@@ -11,9 +11,16 @@ from engines.citation_protect import (
     protect_citations,
     restore_citations,
 )
+from engines.madlad_mps import allows_unprotected_identifier_retry
 
 
 class CitationProtectTests(unittest.TestCase):
+    def test_unprotected_retry_allows_only_structural_figure_table_reference(self) -> None:
+        self.assertTrue(allows_unprotected_identifier_retry(["Fig. 2"]))
+        self.assertTrue(allows_unprotected_identifier_retry(["(Table 3a)"]))
+        self.assertFalse(allows_unprotected_identifier_retry(["Fig. 2 and the result"]))
+        self.assertFalse(allows_unprotected_identifier_retry(["p < 0.001"]))
+
     def test_hyphenated_model_identifier_is_not_split_into_acronym_placeholder(self) -> None:
         protected, cites, _ = protect_citations("GPT-3 identified the object.")
         self.assertEqual(cites, [])
@@ -35,6 +42,11 @@ class CitationProtectTests(unittest.TestCase):
             restore_citations("結果を示した。", cites, nonce, reject_missing=True),
             "結果を示した(Fig. 8 and Table S3)。",
         )
+
+    def test_strict_restore_rejects_dropped_standalone_figure_reference(self) -> None:
+        _, cites, nonce = protect_citations("The result is shown. See Fig. 2")
+        with self.assertRaisesRegex(ValueError, "placeholder dropped"):
+            restore_citations("結果を示した。", cites, nonce, reject_missing=True)
 
     def test_single_citation(self) -> None:
         src = "Smith et al. [8] proposed a method."
