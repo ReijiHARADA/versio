@@ -2,7 +2,14 @@ import fs from "node:fs";
 import path from "node:path";
 const dir = path.join("test-data/real-papers/reports");
 const requested = process.env.FRESH_TRANSLATION_REPORTS?.split(",").map(s=>s.trim()).filter(Boolean);
-const files = fs.readdirSync(dir).filter(f => (f === "translation-audit.json" || /^translation-audit-.*\.json$/.test(f)) && (!requested || requested.includes(f)));
+if (!requested?.length) {
+  throw new Error("FRESH_TRANSLATION_REPORTS must list one benchmark generation explicitly; refusing to mix historical reports");
+}
+const available = new Set(fs.readdirSync(dir));
+const missing = requested.filter(file => !available.has(file));
+if (missing.length) throw new Error(`requested translation reports are missing: ${missing.join(", ")}`);
+const files = requested.filter(f => f === "translation-audit.json" || /^translation-audit-.*\.json$/.test(f));
+if (!files.length) throw new Error("FRESH_TRANSLATION_REPORTS contains no translation-audit JSON report");
 const rows = files.flatMap(file => {
   const report = JSON.parse(fs.readFileSync(path.join(dir,file),"utf8"));
   return (report.papers ?? []).flatMap((paper: any) => {
