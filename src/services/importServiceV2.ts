@@ -366,6 +366,7 @@ export async function importPDFV2(
         const block = blocks.find((b) => b.id === task.blockId);
         if (block) {
           block.translationStatus = "failed";
+          block.metadata = { ...block.metadata, translationOutcome: "source_fallback" };
           await updateBlock(block);
           callbacks.onBlockTranslated?.(block);
         }
@@ -432,6 +433,7 @@ export async function importPDFV2(
       const block = blocks.find((b) => b.id === task.blockId);
       if (block) {
         block.translationStatus = "failed";
+        block.metadata = { ...block.metadata, translationOutcome: "source_fallback" };
         void updateBlock(block);
         callbacks.onBlockTranslated?.(block);
       }

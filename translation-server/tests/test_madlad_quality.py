@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import unittest
 
-from engines.madlad_mps import MADLADEngine
+from engines.madlad_mps import MADLADEngine, allows_unprotected_identifier_retry
 
 
 class MadladUnitQualityTests(unittest.TestCase):
+    def test_identifier_retry_rejects_camelcase_placeholder_drift(self) -> None:
+        self.assertTrue(allows_unprotected_identifier_retry(["errors"]))
+        self.assertFalse(allows_unprotected_identifier_retry(["errorsAssume"]))
+
     def test_degenerate_reason_labels_are_stable(self) -> None:
         source = "This is a sufficiently long academic sentence for testing."
         self.assertEqual(MADLADEngine._degenerate_reason("", source, "ja"), "empty")

@@ -1,6 +1,6 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "3b-mt-v5-semantic-v71-strict-restore-v9",
+  "lastBenchmarkVersion": "3b-mt-v5-semantic-v71-strict-restore-v11",
   "lastDiagnosticVersion": "pdf-layout-corpus-diagnostic-v1",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
@@ -58,7 +58,8 @@
     "evaluate replacement or cascade translation models under local/free-use constraints"
   ],
   "nextActions": [
-    "add provenance-verified OA papers to reach 50+ corpus, then run fresh-port translation benchmark",
+    "complete a v49 full benchmark, then measure partial source fallback inside accepted output",
+    "continue v41 manual comparison of accepted ordinary body prose before relaxing any gate",
     "use semantic-coverage audit scores to prioritize likely omissions and semantic shifts",
     "continue local/free EN-JA model comparison; do not enable cascade until manual review confirms semantic adequacy",
     "design production-safe content coverage checks that do not inflate reader-visible fallback",
@@ -181,7 +182,7 @@
     },
     "nextAction": "Calibrate semantic coverage against more manual labels before using it for cascade routing or hard rejection."
   },
-  "archivedReviewedBlocks": 0,
+  "archivedReviewedBlocks": 300,
   "handoff": {
     "status": "paused_for_account_transfer",
     "processesStopped": true,

@@ -586,6 +586,11 @@ export function projectCanonicalToPaper(input: {
   const reconciled = input.previousBlocks?.length
     ? reconcileBlockIds(input.previousBlocks, blocks).blocks
     : blocks;
+  const annotatedBlocks = reconciled.map((block) =>
+    block.translationStatus === "skipped"
+      ? { ...block, metadata: { ...block.metadata, translationOutcome: "structural_skip" } }
+      : block
+  );
 
-  return { paper, sections, blocks: reconciled };
+  return { paper, sections, blocks: annotatedBlocks };
 }

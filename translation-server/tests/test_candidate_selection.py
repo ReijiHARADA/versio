@@ -116,6 +116,18 @@ class CandidateSelectionSignalsTest(unittest.TestCase):
                 main()
             self.assertEqual(json.loads(o.read_text())["summary"]["rows"], 1)
 
+    def test_cli_flattens_fresh_papers_rows_envelope(self):
+        baseline = {"rows": [{"key": "paper:block", "severity": 0, "source": "A result.", "translation": "結果。"}]}
+        candidate = {"papers": [{"paper": {"id": "paper"}, "rows": [{"blockId": "block", "key": "paper:block", "model": "fixture", "source": "A result.", "translation": "結果。"}]}]}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); b, c, o = root / "b.json", root / "c.json", root / "o.json"
+            b.write_text(json.dumps(baseline)); c.write_text(json.dumps(candidate))
+            with patch("sys.argv", ["score_candidate_selection.py", "--baseline", str(b), "--candidate", str(c), "--output", str(o)]):
+                main()
+            report = json.loads(o.read_text())
+            self.assertEqual(report["summary"]["rows"], 1)
+            self.assertEqual(report["summary"]["unmatchedCandidateRows"], 0)
+
     def test_semantic_threshold_can_reject_candidate_audit_only(self):
         baseline = {"rows": [{"blockId": "heldout-1", "source": "A result was significant.", "translation": "結果。"}]}
         candidate = {"results": [{"blockId": "heldout-1", "model": "fixture", "source": "A result was significant.", "translation": "結果。"}]}

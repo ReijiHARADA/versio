@@ -54,6 +54,7 @@ type ServerTranslation = {
   input_tokens: number | null;
   output_tokens: number | null;
   translation_time_ms: number;
+  error?: string;
 };
 
 type AuditRow = {
@@ -80,6 +81,7 @@ type AuditRow = {
   sourceCategory: SourceCategory;
   fallbackStage: FallbackStage;
   fallbackReason?: string;
+  serverError?: string;
   wouldSubmitToModel: boolean;
   wouldAcceptTranslation?: boolean;
   sourceIntegrity: "clean" | "mixed-chrome" | "structural-warning";
@@ -135,8 +137,7 @@ function sourceCategory(block: PaperBlock): SourceCategory {
   if (warnings.includes("list-item boundary")) return "list";
   if (looksLikeBibliographyEntry(text) || isExpectedNonProseParagraph(text)) return "reference-chrome";
   if (
-    warnings.includes("cross-page logical block")
-    || warnings.includes("starts like continuation")
+    warnings.includes("starts like continuation")
     || warnings.includes("ends like continuation")
     || unsafeParagraphStructureReason(text)
   ) {
@@ -158,6 +159,7 @@ function fallbackReason(source: string, result: ServerTranslation | undefined, q
     if (looksLikeBibliographyEntry(source) || isExpectedNonProseParagraph(source)) return "expected non-prose paragraph";
     return "input policy rejected paragraph";
   }
+  if (result?.error) return `server request failed: ${result.error}`;
   if (result?.text === source) return "server returned source fallback";
   if (quality?.reasons.length) return quality.reasons.join("; ");
   return undefined;
@@ -227,7 +229,14 @@ async function translate(texts: string[]): Promise<ServerTranslation[]> {
         }
       }
     }
-    throw lastError;
+    return {
+      text,
+      model_version: "",
+      input_tokens: null,
+      output_tokens: null,
+      translation_time_ms: 0,
+      error: lastError instanceof Error ? lastError.message : String(lastError),
+    };
   };
   if (serialArg) {
     const results: ServerTranslation[] = [];
@@ -452,6 +461,7 @@ async function main() {
           extractionProvenance: { pageStart: block.pageStart, pageEnd: block.pageEnd, bboxCount: block.boundingBoxes.length, extractionConfidence: block.extractionConfidence },
           fallbackStage: fallbackStage(wouldSubmitToModel, readerVisibleFallback),
           fallbackReason: fallbackReason(source, result, quality),
+          serverError: result?.error,
           wouldSubmitToModel,
           wouldAcceptTranslation,
         };

@@ -142,6 +142,7 @@ export async function resumeIncompleteTranslation(
         const block = blocks.find((item) => item.id === task.blockId);
         if (block) {
           block.translationStatus = "failed";
+          block.metadata = { ...block.metadata, translationOutcome: "source_fallback" };
           void updateBlock(block);
           callbacks.onBlockTranslated?.(block);
         }
@@ -175,6 +176,7 @@ export async function resumeIncompleteTranslation(
       const block = blocks.find((item) => item.id === task.blockId);
       if (block) {
         block.translationStatus = "failed";
+        block.metadata = { ...block.metadata, translationOutcome: "source_fallback" };
         void updateBlock(block);
         callbacks.onBlockTranslated?.(block);
       }
