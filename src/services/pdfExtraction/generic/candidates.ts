@@ -121,9 +121,19 @@ function imageOverlapLabelEvidence(block: LayoutBlock, page?: ExtractedPage): nu
  * items arranged across several x-bands are still strong evidence of a
  * diagram label cluster, provided the stream does not read like sentences. */
 function vectorFigureLabelEvidence(block: LayoutBlock): number {
-  if (block.role !== "paragraph" || block.lines.length < 3) return 0;
+  if (block.lines.length === 0) return 0;
   const items = block.lines.flatMap((line) => line.items);
-  if (items.length < 6 || items.filter((item) => item.text.trim().length <= 80).length / items.length < 0.85) return 0;
+  const multiItemContinuation = block.lines.length === 1 &&
+    ((items.length >= 4 && block.text.trim().startsWith("'")) ||
+      (items.length === 1 && block.text.trim().startsWith("'") && block.text.trim().length <= 100)) &&
+    !/[.!?。！？]$/.test(block.text.trim());
+  if ((!multiItemContinuation && (block.role !== "paragraph" || block.lines.length < 3)) ||
+      items.length < 6 && !multiItemContinuation ||
+      items.filter((item) => item.text.trim().length <= 80).length / items.length < 0.85) return 0;
+  // A single native span beginning with an apostrophe is a common chart-title
+  // continuation (the preceding labels were emitted as separate spans), and
+  // has no meaningful x-band information left after PDF text grouping.
+  if (multiItemContinuation && items.length === 1) return 0.82;
   const xBands = new Set(block.lines.flatMap((line) => line.items.map((item) => Math.round(item.x / 24))));
   if (xBands.size < 3) return 0;
   return 0.82;

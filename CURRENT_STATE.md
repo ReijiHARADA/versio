@@ -1,6 +1,6 @@
 # Current State
 
-最終更新: 2026-09-18 16:10 +0900
+最終更新: 2026-09-18 17:47 +0900
 **このファイルが「いま main に何があるか」の正です。** 実装を変えたらここを更新する（[AGENTS.md](./AGENTS.md)）。
 
 コードを source of truth とし、アーキテクチャ詳細は各専門文書へリンクする（重複しない）。
@@ -47,13 +47,42 @@
 - **FTS**: annotation CRUD と translation checkpoint で per-paper incremental refresh
 - **ReaderScreen**: hooks に分割（document / glossary / search / annotations / export / translation resume / reading position）。挙動は維持
 - **抽出**: `extractAcademicPdf` → CanonicalDocument → Package。詳細は [ACADEMIC_PDF_EXTRACTION_ARCHITECTURE.md](./ACADEMIC_PDF_EXTRACTION_ARCHITECTURE.md)
-- **翻訳**: MADLAD-400 3B / MPS / bf16、文バッチ既定 24、品質ゲート（pipeline v71 / strict-restore-v9）。監査手順は [TRANSLATION_CORPUS_AUDIT.md](./TRANSLATION_CORPUS_AUDIT.md)
+- **翻訳**: MADLAD-400 3B / MPS / bf16、文バッチ既定 24、品質ゲート（pipeline v71 / strict-restore-v16）。監査手順は [TRANSLATION_CORPUS_AUDIT.md](./TRANSLATION_CORPUS_AUDIT.md)
 - **硬化メモ**: [P0_HARDENING.md](./P0_HARDENING.md)
 - **packaged acceptance**: [docs/RELEASE_ACCEPTANCE.md](./docs/RELEASE_ACCEPTANCE.md)
 
 ---
 
 ## Known limitations / 残課題
+
+### 2026-09-18 pending-PDF extraction probe
+
+- 翻訳 server は `127.0.0.1:8765` で応答していないため、v12 の fresh translation benchmark はまだ再実行していない。
+- 保留PDF 2件を現行抽出へ通し、`test-data/real-papers/reports/pending-extraction-probe-v1.json` に固定した。`human-ai-interaction-guidelines.pdf` は8ページ/153 blocks、`covid-ml-review.pdf` は17ページ/225 blocks。
+- この診断で、一般化可能な抽出残差を確認した。Human-AI paper の page 1 では図ラベル由来の短い候補が `title`/`author`/`affiliation` と競合し、本文タイトル以外に `"'s Emphasis of Human-AI Interaction Guidelines"` が title になっている。COVID review では abstract の複数行が affiliation と分類され、タイトルも `"Diagnosis ...: A"` と `"Review"` に分割されている。
+- いずれも文字列ブラックリストや論文固有条件は追加していない。次は native geometry/style、candidate evidence、resolver のどの層で誤昇格したかを診断し、production変更前に synthetic/real-paper regressionを追加する。翻訳品質の数値は server 復旧後に取得する。
+- 診断後の汎用修正として、短いタイトル継続行を段組み境界をまたいで結合し、先頭が possessive fragment になる単一native spanをベクター図ラベル evidence として `other` へ競合させる処理を追加。COVID reviewは `Diagnosis ...: A Review` に結合され、Human-AIの図タイトル断片はcanonical title候補から除外された。診断結果は `test-data/real-papers/reports/pending-title-geometry-v3.json` に保存。
+- 修正後に `npm run typecheck`、`npm run lint -- --deny-warnings`、`npm run test:extraction-corpus -- --run` を実行し、real-paper extraction/reading-order **76/76 passed**。翻訳 serverは未起動で、fresh v12翻訳指標は未更新。
+- possessive vector-figure fragment の synthetic regression を `src/test/pdfExtraction/pipeline.test.ts` に追加し、focused pipeline **25/25 passed**。`generateGenericCandidates` が `vector-figure-label-cluster` evidence を出し、`other` 競合を保持することを固定した。
+- masthead直下に`Abstract`見出しがないPDFで、長い折返し英文を`affiliation`へ誤分類しない一般条件を追加。COVID reviewのabstract先頭〜中盤の長文行がparagraphへ戻ることを実PDFで確認した（短い残片は引き続き要調査）。変更後もextraction corpus **76/76 passed**、typecheck/lint成功。
+- 追加のnative geometry診断で、残りの短い`and detecting...`/`applying...`は段組み再配置で幅の狭い小文字継続行になっていたと確認。小文字・接続詞開始かつ機関名/メールでない行を本文継続として扱い、これらもparagraphへ戻した。extraction corpus **76/76 passed**。
+- 現行ツリーで全Vitest **63 files / 385 tests passed**。translation-server単体回帰も `PYTHONPATH=translation-server ... unittest discover` で **119 tests passed**。最初のPython実行はPYTHONPATH不足でimport errorになったが、コード不具合ではなく環境変数を付けて再実行し成功した。localhost server・fresh translation benchmarkは未起動。
+- localhost停止中でも監査値を再集計し、`test-data/real-papers/audit-metrics.json` を更新。レビュー済み58/80件の暫定値は ordinary-body 36件で post-model fallback 8/36 = **22.2%**、semantic error 4/36 = **11.1%**、unsafe false-accept **46.4%**（accepted 28件中 severity>=2 が13件）。これは未レビュー22件を含まない暫定値で、目標の5%以下・安全水準には未到達。自動acceptを正解扱いせず、サーバー復旧後のv12 fresh benchmarkと追加手動レビューを優先する。
+- accepted 重大レビュー行を現行品質ゲートへ再評価する診断 `scripts/audit-translation-relation-signals.ts` を追加し、`test-data/real-papers/reports/semantic-relation-gate-audit-v1.json` を生成。17件中13件に関係信号（否定・比較・因果・条件・時間）があり、6件は原文信号が出力側で検出できないにもかかわらず、現行ゲートが score 1.0・理由なしでacceptした。これは自動rejectの根拠ではなく、semantic false-acceptを測定し selective cascade / claim-alignmentへ接続するための診断である。単純な日本語キーワード一致は十分な意味判定ではないため、次はこの6件と正常例で精度を校正してからproduction gateへの影響を検討する。
+- 既存の代替モデル成果物を再確認した。`selective-cascade-audit-v2.json` は12候補中 conservative eligible 0、`selective-cascade-decision-v1.json` は no production cascade、`selective-cascade-simulation-v1.json` も blind manual semantic label 未検証のため出荷不可としている。M2M100 1.2B/418M と Opus の ordinary 比較には、反復・語順崩壊・固有語誤訳が残り、現MADLADの代替として採用できる証拠はない。単一モデル切替はせず、fresh benchmark 復旧後に同一fixtureで再評価する。
+- 関係信号の欠落6件を原文・訳文で手動再確認し、`semantic-relation-manual-review-v1.json` に保存。4件は日本語の自然な談話順序で補われるため信号false-positive、2件は用語・文書内参照の実質的な意味損失を含む。単純な信号欠落をhard rejectにせず、構造参照と用語整合のblind校正へ分離する方針を確定した。
+- `quality.ts` の `unsafeParagraphStructureReason` に、文末が `Section`/`Figure`/`Table`/`Appendix`/`Chapter` だけで終わる未完了の文書内参照を検出する一般条件を追加。後続ブロックと結合できない場合にモデルの番号推測・参照欠落を防ぐ。`src/test/quality.test.ts` に回帰を追加し、quality **68/68**、typecheck、lint、diff-checkが成功。これはsource fallbackを増やすだけの最終策ではなく、上流stitchで修復できない残片を安全に扱うための境界条件である。
+- 既存manual-review 80行への影響を調査し、この条件に一致したのは2行だけ。いずれも実際に文末が`Section`で途切れたsource fragment（1件は既存pre-model fallback、1件は誤ってacceptされたseverity 2）で、通常の完全文は巻き込まれていない。
+- 変更後に全Vitest **63 files / 385 tests passed**。PDF.jsのcanvas polyfill警告のみで、翻訳モデル・サーバー・`.app`は起動／変更していない。
+- `ScientificInvariant` に番号付き `Section`/`Chapter`/`Appendix` の `structure` kind を追加。表記が「第3節」のようにローカライズされても元の参照番号を検証し、欠落や別番号を品質ゲートで拒否する。`quality.test.ts` は **69/69**、typecheck、lint、diff-check成功。一般数値や図表本文は対象外。
+- この品質ゲート変更に合わせ、client/serverの `MADLAD_MODEL_VERSION` を `3b-mt-v5-semantic-v71-strict-restore-v15` へ更新。v12以前の翻訳キャッシュを再利用せず、構造参照検査を通した結果だけを採用する。モデル重み・生成設定は変更していない。
+- 抽出側の `isSentenceContinuation` に、`... in Section` → `3` のような文書内参照ラベルと直後の番号を結合する一般条件を追加。全Vitest **63 files / 386 tests passed**、typecheck、lint、diff-check成功。抽出単位が変わるためclient/serverのcache versionをv16へ更新した。
+- `titleResolver` に、タイトル候補の後ろへ混入したORCID/URL/メールをmasthead suffixとして切り離す一般条件を追加。曖昧な著者名推測は行わず、明確な連絡先トークンだけを境界にする。v16で新しい抽出結果を再評価する。
+- v15後のreal-paper extraction corpusを長時間セッションで完走し、reading-order 37 + baseline 39 の **76/76 passed**。PDF.jsのcanvas/フォント/TT警告のみで、参照結合修正による抽出回帰は確認されなかった。
+- `npm run bench:pdf-extraction` はregistry DNS制約で`tsx`取得に失敗したため、同じ処理を既存のローカル `vite-node` で再実行し、`extraction-baseline-latest.json`を36 papersへ更新。sourceIntegrity / canonicalProvenanceは全件1.0。注釈済み行ではfigure/table relation・caption recallも1.0だが、未注釈paperを含む平均精度とは解釈しない。新しいtranslation benchmarkは未実行。
+- benchmarkの再現メタデータを `test-data/real-papers/reports/extraction-benchmark-v15-metadata.json` に保存（36 papers、title exact 24/36、source integrity 36/36、canonical provenance 36/36、code revisionを記録）。
+- title exactness 12件の内訳を `title-exactness-triage-v1.json` に保存。metadata/byline混入6、publisher/venue混入2、catalogの合法なsubtitle差2、title truncation 2。titleExactを単一の抽出品質率として扱わず、候補scoring・masthead geometry・title continuationの層へ分離した。
+- v13更新後の全Vitestは **63 files / 386 tests passed**。client/serverの識別子一致もgrepで確認し、translation-server Python回帰 **119 tests passed**、typecheck、lint、diff-checkも成功。
 
 ### 2026-09-17 corpus audit pause checkpoint
 
@@ -7109,3 +7138,231 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 
 - fragment-list audit fixtureに、本文fragmentを翻訳対象外のcontextとして保持し、次のlist itemだけを独立translation unitとして扱う候補policyを追加。
 - list markerは保持し、本文fragmentを単独でMADLADへ送らない。audit-onlyでありproduction routingは未変更。
+
+### 2026-09-18 16:28 +0900 semantic review metrics checkpoint
+
+- 現在の `audit-manual-review.json` を再集計し、label-complete 31行、source_fragment除外後のsemantic review 21行、automatic accepted 12行を明示した。
+- accepted subsetのseverity>=2は2行（unsafe false accept rate **16.7%**）。これはmanual reviewed subsetのみで、全体品質の推定ではない。
+- レポート: `translation-manual-review-metrics-v6.json`。manual labelはproduction routingに使用していない。
+
+### 2026-09-18 16:31 +0900 claim alignment audit checkpoint
+
+- accepted semantic rows 12件を再走査し、relation-bearing source・sentence-count mismatch・structural-reference coverageのaudit signalを抽出。12件中10件にsignal、severity>=2の既知false acceptは2件。
+- 高リスク例はSection参照の欠落・継続文の捏造（source fragment混入）と、`after this section`の時系列/section relation omission。signalはaudit-onlyで、automatic rejectやroutingには使っていない。
+- レポート: `claim-alignment-audit-v1.json`。
+
+### 2026-09-18 16:35 +0900 semantic false-accept taxonomy checkpoint
+
+- accepted false accept 2件をroot cause分離。1件はsource fragmentがSection参照を欠落させた後段の継続文捏造、1件は完全sourceに対するtemporal/section relation omission。
+- レポート: `semantic-false-accept-taxonomy-v1.json`。manual taxonomyはaudit-onlyで、blacklist・manual label routing・hard rejectには使用しない。
+- 次はheld-outでlabel-blind claim/relation coverage signalを校正し、safe/unsafe overlapを測ってからproduction適用可否を判断する。
+
+### 2026-09-18 16:39 +0900 held-out signal calibration checkpoint
+
+- claim/relation signalをpaper単位のdeterministic held-outで記述評価。development 9行はprecision 28.6%、recall 100%; held-out 3行はsignal 3件すべてsafeでprecision **0%**（unsafe 0件）。
+- signalはunsafe行を拾う可能性がある一方、安全な翻訳も過剰検出するため、hard reject・selective cascade・production routingには不適格。manual label leakageなし。
+- レポート: `claim-relation-signal-calibration-v1.json`。サンプルが小さいため、corpus拡張後に再評価する。
+
+### 2026-09-18 16:31 +0900 safe false-reject audit checkpoint
+
+- 既存manual review 80行から、production fallbackだが翻訳本文が存在し、severity <=1かつ明示的source_fragmentでない候補を抽出。
+- 候補は2行（economics-regularized-deepiv、interpreting-neural-networks）。レポート: `test-data/real-papers/reports/safe-false-reject-audit-v1.json`。
+- これは自動的な再受理やrouting変更の根拠にはせず、次に原文と訳文を手動比較する対象として保存した。
+- 候補2行を原文と訳文で照合し、引用・主張・関係が保たれた `likely_safe_false_reject` と判定。いずれもproduction再受理は行わず、quality gate緩和の証拠としては未使用。
+
+### 2026-09-18 cache-version consistency checkpoint
+
+- `src/services/translation/madladEngine.ts` の `MADLAD_MODEL_VERSION` を server側の `3b-mt-v5-semantic-v71-strict-restore-v12` に同期。
+- strict-restore v11のキャッシュが新しい品質判定後に再利用されないようにした。
+- `npm run typecheck`、`npm run lint -- --deny-warnings`、`git diff --check` 成功。
+
+### 2026-09-18 cache-generation audit checkpoint
+
+- v7 aggregateを最新実装の品質結果と誤認しないため、client/serverのv12同期状態とfresh rerun必須条件を `translation-quality-baseline-v9-metadata.json` に固定。
+- v7のordinary-body fallback 24.32%は旧キャッシュ世代を含む監査値であり、v12改善の証拠には使わない。
+- 次の実測はfresh v12 benchmarkのみを採用する。
+
+### 2026-09-18 fallback-layer attribution checkpoint
+
+- v7 aggregateのfallback 42件を再分類。extraction-boundary 26、server/resume 4、placeholder-restore 3、decode-degenerate 3、invariant-gate 2、server-source-fallback 1、other 3。
+- 最大層は抽出境界で、quality gateを緩めても解決しない。レポート `fallback-layer-attribution-v2.json` を追加し、一般化可能なlogical paragraph修復を次の優先対象にした。
+
+### extraction boundary scan checkpoint
+
+- `npm run scan:pdf-boundaries -- --json-out=test-data/real-papers/reports/extraction-boundary-scan-v2.json` を36論文に実行。
+- 36/36論文で候補が検出されたため、単純な件数削減ではなく、native geometryとrole evidenceで高精度候補を選別する必要がある。production挙動は変更していない。
+
+### extraction scan precision checkpoint
+
+- scan v2は36論文で `embeddedStructuralMarker` 713件を検出したが、本文中の通常参照を含む広い候補検出であり、抽出失敗の確定値ではない。
+- detector precisionをnative geometry/manual labelなしにproductionへ反映しない方針を固定。要約: `extraction-boundary-scan-summary-v1.json`。
+
+### extraction manual sample checkpoint
+
+- `vite-node --script scripts/build-extraction-review-sample.ts` で36論文・575ブロックのレビューサンプルを生成。
+- 各論文12件以上、heading/caption/equation/paragraphを含む層化候補。全行のreviewはpendingで、production修正や自動正解判定には使用しない。
+- `npx tsx` はネットワーク制約で失敗したため、既存のローカル `vite-node` を使用。
+
+### extraction sample balance checkpoint
+
+- `build-extraction-review-sample.ts` を修正し、本文paragraphを各論文最大10件、heading最大3件、figure/table caption各1件、equation最大1件に制限。
+- 再生成結果は36論文・538行（paragraph 360、heading 108、figure_caption 29、table_caption 20、equation 21）。caption偏重を解消し、普通本文の抽出品質を測れる構成にした。
+- `npm run typecheck` 成功。production parserは変更していない。
+
+### extraction suspicious-sample checkpoint
+
+- レビューサンプル生成器に、構造markerがparagraphへ埋め込まれた疑いのある候補を各論文最大2件追加。正常paragraphと同じサンプル内で比較可能にした。
+- `npm run typecheck` 成功し、サンプルを再生成済み。候補はreview-onlyで自動エラー扱いしない。
+
+### extraction diagnostic flags checkpoint
+
+- 各レビュー行に `diagnosticFlags`（cross-page-block、embedded-structural-marker-candidate、internal-sentence-boundary）を追加。
+- これらはレビュー候補の根拠を可視化するだけで、正誤判定・quality gate・production routingには使用しない。
+- `npm run typecheck` 成功、サンプル再生成済み。
+
+### extraction review priority checkpoint
+
+- 538行のサンプルからdiagnosticFlags付き候補120行を優先レビューリストへ抽出。
+- レポート `extraction-review-priority-v1.json`。review-onlyで、ラベルやproduction routingには未使用。
+
+### extraction sample regeneration correction
+
+- 診断フラグ追加後のサンプル生成が一時的に最低12行制約で失敗していたため、paragraph枠と上限を調整。
+- 現在は36論文・568行で正常生成し、診断フラグ付き候補を優先レビュー120行へ抽出済み。
+
+### extraction priority index checkpoint
+
+- `audit-progress.json` に `extraction-review-priority-v1.json` を登録。
+- 次の実装判断は120件の優先候補のgeometry確認後に行う。
+
+### extraction priority precision checkpoint
+
+- 優先レビューをv2へ更新し、internal-sentence-boundaryだけの通常複文を除外。
+- embedded structural markerまたはcross-page blockを含む候補のみを優先対象にした。
+
+### extraction review index checkpoint
+
+- 優先81候補を人手確認しやすいMarkdown一覧 `extraction-review-priority-v2.md` に出力。
+- JSONを正本として保持し、Markdownは閲覧用インデックス。
+
+### extraction review index checkpoint
+
+- 優先候補を人手確認しやすいMarkdown一覧 `extraction-review-priority-v2.md` に出力。
+- JSONを正本として保持し、Markdownは閲覧用インデックス。
+
+### extraction priority diagnostic summary checkpoint
+
+- 優先候補81件をflag/format別に集計した `test-data/real-papers/reports/extraction-review-priority-summary-v1.json` を追加。
+- `embedded-structural-marker-candidate` 74件、`internal-sentence-boundary` 74件、`cross-page-block` 12件（重複あり）。12 format familyを含む。
+- 内部文境界と本文中のFigure/Table参照が既知のfalse-positive候補であるため、geometry/manual確認なしに抽出修正へ昇格しない。
+- typecheck、lint、quality/partial-fallback/reading-orderの130テストが成功。
+
+### cross-page extraction triage checkpoint
+
+- 12件の `cross-page-block` を `extraction-cross-page-review-v1.json` に保存し、文末句読点・先頭大文字/小文字・最終語を記録。
+- `step-to-charge` などでは段落が図やarXivメタデータを跨いで見える例があり、単純なページ跨ぎ結合の拡張ではなく、line geometryとchrome境界を先に確認する必要がある。
+- この時点ではproduction parserを変更していない。誤結合を避けるため、次の修正候補はnative line itemの位置関係で確認する。
+
+### hfe geometry diagnostic checkpoint
+
+- `hfe-healthcare-scoping-2024` のpage 1–2についてnative text itemの座標・font・line候補と跨ぎparagraphを `hfe-healthcare-scoping-2024-geometry-diagnostic-v1.json` に保存。
+- page 2は左右2段組で、本文断片と引用superscriptが同一y帯に並ぶ。候補の原因はline grouping/reading-order/chrome判定のいずれかで、単純なpage-stitch拡張とは確定していない。
+- production挙動は変更していない。次はこの診断から再現可能な一般テストを作り、原因層が確定した場合だけ修正する。
+
+### top-band body continuation fix checkpoint
+
+- `isEdgeChrome()` のページ上端8%一律除外を、段組内で本文らしい継続行（小文字開始、ハイフン折返し、十分な本文幅）を保持する条件へ限定。
+- `hfe-healthcare-scoping-2024` で消失していた `in healthcare, and healthcare has struggled to take advan-` は抽出結果へ戻った。現状は前ページ末尾とのstitchがまだ別ブロックのため、本文欠落は解消したが翻訳単位の完全結合は未完了。
+- 既存extraction corpus 76 tests、typecheck、lintは成功。paper固有条件は追加していない。
+
+### cross-page column stitch fix checkpoint
+
+- 原因は `mergeColumnContinuations()` 自体ではなく、後段 `splitMixedColumnBlocks()` がページ跨ぎの右列→次ページ左列の正しい継続まで再分割していたこと。
+- `crossPageColumnContinuation` を追加し、前ページ右列末尾→次ページ左列先頭が `isSentenceContinuation()` を満たす場合は再分割しないよう修正。
+- `hfe-healthcare-scoping-2024` は `HFE has struggled to maintain its relevance in healthcare, ...` の1 logical paragraphへ復元。
+- extraction corpus / reading-order 76 tests、typecheck、lintが成功。
+
+### extraction regression fixture checkpoint
+
+- `test-fixtures/real-papers/catalog.json` の `hfe-healthcare-scoping-2024` に、ページ跨ぎ論理文の `requireSameParagraph` 回帰条件を追加。
+- 実PDFを含む extraction corpus / reading-order 76 tests、typecheck、lintが成功。
+
+### top-band corpus audit checkpoint
+
+- 全cached real-paperを対象に、ページ上端の本文らしいnative itemがcanonicalから消えるかを診断。13候補中、英語本文の欠落は0件。未収載2件は韓国語論文の反復running headerで、本文欠落とは確認されなかった。
+- レポート `top-band-body-lines-v1.json` を保存。今回の上端保護修正を他形式へ無差別拡張する根拠はなく、現行条件を維持する。
+
+### fresh v12 availability checkpoint
+
+- 127.0.0.1:8765/healthを確認したがtranslation serverは停止中。sandboxのbind制約を繰り返さず、fresh v12 benchmarkは未実行として明示した。
+- 抽出修正・回帰成果物は保持し、server起動後にのみ翻訳結果のbefore/afterを更新する。
+
+### alternate model audit resync checkpoint
+
+- 既存 `candidate-selection-safety-v3.json` は36候補中hard signal pass 9件だがaudit-only。
+- `selective-cascade-audit-v2.json` は12 fallback rows、候補6行、保守的eligible 0件（M2M100-1.2B/Opusとも0件）。production cascadeを有効化する根拠はない。
+
+### audit artifact path integrity checkpoint
+
+- `audit-progress.json.latestReports` の抽象的な `file:label` 参照を実在するソースファイルパスへ正規化。
+- 42件のlatestReportsを検査し、参照切れ0件を確認。fresh v12 benchmark未実行状態は維持。
+
+### paused checkpoint (2026-09-18)
+
+- ユーザー指示により、ここで作業を停止。
+- 実行中の監査・ベンチマーク・translation server processは確認できず、fresh translation benchmarkは未実行のまま。
+- 次回は未完了の title resolver v16 検証（typecheck / lint / pipeline test / diff check）から再開する。
+
+### resumed verification checkpoint (2026-09-18 17:38 +0900)
+
+- title resolver v16 の未完了検証を実施。typecheck、lint、`pipeline.test.ts` 25件、quality test 69件、translation-server Python tests 119件、`git diff --check` が成功。
+- ローカル `vite-node` の extraction benchmark を同一プロセスで再実行。36 papers、sourceIntegrity 36/36、canonicalProvenance 36/36、title exactness 24/36（0.667）。v16 はURL/email masthead suffixの明確な混入を抑える保守的修正で、残る12件は別原因（publisher/byline競合、タイトル切れ、正規化差）として未解決。
+- translation serverは起動しておらず、fresh translation benchmarkは未実行。localhost bind制約を回避するため、既存品質テストと抽出ベンチマークのみ完了。
+
+### title triage follow-up checkpoint (2026-09-18 17:41 +0900)
+
+- 残るタイトル不一致12件を再確認。byline/publisher混入、タイトル切れ、catalog subtitle差分が混在しており、単純な名前正規表現による除去は held-out 以外にもタイトルを切るため採用しなかった。
+- 修正なしで benchmark を再実行し、36 papers / title exactness 24/36 (0.667)、source integrity 36/36、canonical provenance 36/36 を再確認。品質を悪化させる抽出変更は残していない。
+- relation-signal audit を再生成。17 accepted severity>=2 rows中、source relation signalあり13、missing signal 6。検出は診断用途に留め、汎用性を確認できない無差別quality gate変更は行っていない。
+
+### alternate model evidence checkpoint (2026-09-18 17:44 +0900)
+
+- 既存のheld-outを含む代替モデル手動評価を再確認。Qwen2.5 7Bは12行中1 severe (8.3%)、14Bは12行中2 severe (16.7%)、14B held-outは3行中1 severe (33.3%)。MADLADとの同一 fixture / 同一品質基準での優越性を示さず、本番置換・cascade routingは未採用。
+- `selective-cascade-audit-v2.json` は候補行6、保守的eligible 0（M2M100-1.2B / Opusとも、長文・引用・不変量保持で不合格）。候補モデルを本番へ送る安全な汎用条件はまだ得られていない。
+- 現行実装を変更せず、評価証跡のみ更新。次の有効な改善は fresh translation server benchmark または新規モデルを同一 held-out corpus で評価すること。
+
+### transient sidecar retry checkpoint (2026-09-18 17:42 +0900)
+
+- `MADLADEngine` の単発 `fetch failed` / HTTP 502・503・504 を最大3回、短い指数的待機で再試行する共通処理を追加。4xxや決定的な5xxは従来どおり即時に呼び出し側へ返す。
+- 単体テストでネットワーク失敗後の再試行成功を確認。madladEngine tests 2件、typecheck、lint、diff checkが成功。
+- これは翻訳品質ゲートを緩める変更ではなく、sidecar起動直後・一時的切断による翻訳未完了を減らすためのresume層の改善。実サーバーでのfallback率効果はfresh benchmarkで再測定する。
+
+### full regression checkpoint (2026-09-18 17:43 +0900)
+
+- 全Vitest 63 files / 387 tests passed after the transient sidecar retry change。
+- canvas native bindingに関する既知のPDF.js warningは出るが、テスト失敗はない。fresh translation benchmarkは依然として未実行。
+
+### ordinary fallback attribution checkpoint (2026-09-18 17:43 +0900)
+
+- 既存 v7 aggregate の ordinary-body 37行 / reader-visible fallback 9行を再集計し、全9行が post-model。理由内訳は server request failure 7、simplified-Chinese contamination 2。
+- 診断 artifact `test-data/real-papers/reports/ordinary-fallback-attribution-v1.json` を保存。これは再試行変更前の既存reportの帰属であり、改善効果の主張には使わない。fresh benchmark後に同じstable cohortで比較する。
+
+### transient HTTP retry regression checkpoint (2026-09-18 17:44 +0900)
+
+- batch endpointが503を返した後の再試行成功を追加テスト。madladEngine tests 3件、typecheck、lint、diff checkが成功。
+
+### status retry checkpoint (2026-09-18 17:45 +0900)
+
+- 翻訳サーバーの `/status` 取得にも同じ一時障害 retry を適用。起動直後のfalse unavailableを減らし、既存のserver-ready/resumeテスト12件とmadladEngineテスト3件、typecheck、lintが成功。
+
+### status retry regression checkpoint (2026-09-18 17:46 +0900)
+
+- `/status` が一度ネットワーク失敗しても次の応答で available=true を返す回帰テストを追加。madladEngine tests 4件、typecheck、lint、diff checkが成功。
+
+### retry boundary checkpoint (2026-09-18 17:46 +0900)
+
+- 400系の決定的エラーは再試行せず1回で返す回帰テストを追加。madladEngine tests 5件、typecheck、lint、diff checkが成功。
+
+### full Vitest checkpoint (2026-09-18 17:47 +0900)
+
+- 全Vitestを再実行し、63 files / 390 tests passed。最新のsidecar retry境界テストを含む。fresh translation benchmarkは未実行のまま。

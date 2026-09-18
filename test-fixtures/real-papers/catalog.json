@@ -1164,7 +1164,14 @@
       "formatFamily": "journal-oa",
       "publisher": "BMJ",
       "selectionReason": "Recent open-access HFE scoping review with tables and supplementary PDF",
-      "checks": {},
+      "checks": {
+        "requireSameParagraph": [
+          [
+            "HFE has struggled to maintain its relevance",
+            "in healthcare"
+          ]
+        ]
+      },
       "authors": [
         "Angela O'Dea",
         "Mahnaz Sharafkhani",

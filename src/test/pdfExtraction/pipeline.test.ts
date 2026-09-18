@@ -245,6 +245,22 @@ describe("canonical extraction pipeline", () => {
     expect(candidates.some((candidate) => candidate.evidence.some((e) => e.label === "vector-figure-label-cluster"))).toBe(true);
   });
 
+  it("does not promote a possessive vector-figure fragment to a title", () => {
+    const candidates = generateGenericCandidates([{
+      pageNumber: 1,
+      width: 540,
+      height: 790,
+      textItems: [
+        { text: "A General Study of Human-AI Interaction", x: 70, y: 60, width: 390, height: 14, fontSize: 16, fontName: "Title", page: 1 },
+        { text: "Author Example", x: 190, y: 88, width: 100, height: 8, fontSize: 9, fontName: "Body", page: 1 },
+        { text: "'s Emphasis of Human-AI Interaction Guidelines", x: 230, y: 190, width: 240, height: 13, fontSize: 15, fontName: "ChartTitle", page: 1 },
+      ],
+    }]).candidates;
+    const fragment = candidates.find((candidate) => candidate.text.startsWith("'s Emphasis"));
+    expect(fragment?.evidence.some((evidence) => evidence.label === "vector-figure-label-cluster")).toBe(true);
+    expect(fragment?.roleScores.other).toBeGreaterThanOrEqual(0.82);
+  });
+
 
   it("does not promote rotated numeric cell bands to headings", () => {
     const textItems = Array.from({ length: 10 }, (_, index) => ({

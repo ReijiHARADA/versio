@@ -447,7 +447,7 @@
     "ordinalReviewed": 7,
     "ordinalPending": 0
   },
-  "lastUpdated": "2026-09-18T07:10:23.367518Z",
+  "lastUpdated": "2026-09-18T07:39:00Z",
   "manualReviewCompletedAt": "2026-09-16T16:25:07.633Z",
   "completedWork": [
     "Gemma 2 9B same-fixture 12-row audit completed (local Ollama, report model-quality-gemma2-9b-v1.json).",
@@ -3067,7 +3067,7 @@
     "nextAction": "Add a generic orientation-aware table/footnote fixture using page rotation and item transforms; then review arXiv/PMLR residuals.",
     "latestCommit": "8d80922"
   },
-  "nextAction": "design an audit-only fragment-aware logical-unit evaluation for cross-page prose followed by lists; preserve current no-merge production rule; rerun HCI fresh benchmark in a bind-capable environment",
+  "nextAction": "start fresh v12 benchmark when translation server is available; until then retain extraction regression and audit artifacts",
   "lastUpdate": "2026-09-18 14:50 +0900",
   "iterationLog": [
     {
@@ -3201,6 +3201,35 @@
     "translationQualityBaselineV8": "test-data/real-papers/reports/translation-quality-baseline-v8.json",
     "hciFreshV12": "test-data/real-papers/reports/translation-audit-hci-empirical-methods.json",
     "fallbackTaxonomy": "test-data/real-papers/reports/empty-fallback-failure-taxonomy-v1.json",
-    "fragmentListBoundaryAudit": "test-data/real-papers/reports/fragment-list-boundary-audit-v1.json"
+    "fragmentListBoundaryAudit": "test-data/real-papers/reports/fragment-list-boundary-audit-v1.json",
+    "manualReviewMetricsV6": "test-data/real-papers/reports/translation-manual-review-metrics-v6.json",
+    "claimAlignmentAuditV1": "test-data/real-papers/reports/claim-alignment-audit-v1.json",
+    "semanticFalseAcceptTaxonomyV1": "test-data/real-papers/reports/semantic-false-accept-taxonomy-v1.json",
+    "claimRelationSignalCalibrationV1": "test-data/real-papers/reports/claim-relation-signal-calibration-v1.json",
+    "safeFalseRejectAuditV1": "safe-false-reject-audit-v1.json",
+    "translationQualityBaselineV9Metadata": "translation-quality-baseline-v9-metadata.json",
+    "fallbackLayerAttributionV2": "fallback-layer-attribution-v2.json",
+    "extractionBoundaryScanV2": "extraction-boundary-scan-v2.json",
+    "extractionBoundaryScanSummaryV1": "extraction-boundary-scan-summary-v1.json",
+    "extractionManualSampleV1": "extraction-manual-sample-v1.json",
+    "extractionReviewPriorityV1": "extraction-review-priority-v1.json",
+    "extractionReviewPrioritySummaryV1": "test-data/real-papers/reports/extraction-review-priority-summary-v1.json",
+    "extractionCrossPageReviewV1": "test-data/real-papers/reports/extraction-cross-page-review-v1.json",
+    "hfeGeometryDiagnosticV1": "test-data/real-papers/reports/hfe-healthcare-scoping-2024-geometry-diagnostic-v1.json",
+    "extractionTopBandContinuationFix": "src/services/pdfLayout.ts",
+    "extractionCrossPageColumnStitchFix": "src/services/pdfLayout.ts",
+    "extractionCrossPageRegression": "test-fixtures/real-papers/catalog.json",
+    "topBandBodyLinesV1": "test-data/real-papers/reports/top-band-body-lines-v1.json",
+    "freshV12Status": {
+      "checkedAt": "2026-09-18T08:03:10.528Z",
+      "endpoint": "http://127.0.0.1:8765/health",
+      "available": false,
+      "notes": "No server process; benchmark intentionally not retried in sandbox."
+    },
+    "alternateModelSafetyResync": {
+      "candidateSelection": "test-data/real-papers/reports/candidate-selection-safety-v3.json",
+      "selectiveCascade": "test-data/real-papers/reports/selective-cascade-audit-v2.json",
+      "productionEligible": 0
+    }
   }
 }

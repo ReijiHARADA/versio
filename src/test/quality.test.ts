@@ -517,6 +517,14 @@ describe("unsafe extracted translation input", () => {
     expect(isPlausibleJaTranslation("参加者に「タクシー問題」16 (Cab、SI付録を参照)を提示した。", source)).toBe(true);
   });
 
+  it("preserves numbered document references across localization", () => {
+    const source = "The rest of the paper is organized as follows: related work is reviewed in Section 3.";
+    expect(isPlausibleJaTranslation("本稿の構成は次の通りであり、関連研究を第3節で検討する。", source)).toBe(true);
+    expect(isPlausibleJaTranslation("本稿の構成は次の通りであり、関連研究を第1節で検討する。", source)).toBe(false);
+    expect(isPlausibleJaTranslation("本稿の構成は次の通りである。", source)).toBe(false);
+    expect(isPlausibleJaTranslation("本稿の構成は次の通りであり、関連研究を3つ検討する。", source)).toBe(false);
+  });
+
   it("keeps a block beginning with a lower-case sentence tail out of translation", () => {
     expect(shouldTranslateParagraph("data. This procedure has proved successful in previous offerings of this course, and the following complete sentences should be stitched with the preceding page before translation.".repeat(2))).toBe(false);
   });
@@ -535,6 +543,16 @@ describe("unsafe extracted translation input", () => {
     ).toBe(false);
     expect(shouldTranslateParagraph("Available power density varies between")).toBe(false);
     expect(shouldTranslateParagraph("Participants stayed consistent with their free choices when a rule was")).toBe(false);
+    expect(
+      unsafeParagraphStructureReason(
+        "The rest of the paper is organized as follows: we first review related work and define notations in Section"
+      )
+    ).toContain("文書内参照");
+    expect(
+      shouldTranslateParagraph(
+        "The rest of the paper is organized as follows: we first review related work and define notations in Section"
+      )
+    ).toBe(false);
     expect(
       shouldTranslateParagraph(
         "This prototype included two applications, the phonebook application, as previously studied in the"

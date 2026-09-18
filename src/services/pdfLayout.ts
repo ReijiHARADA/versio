@@ -513,7 +513,19 @@ function isEdgeChrome(
   // satisfy these caption predicates.
   if (isTableCaption(line.text) || isFigureCaption(line.text)) return false;
   const topBand = Math.max(HEADER_Y, layout.pageHeight * 0.08);
-  if (line.y < topBand) return true;
+  if (line.y < topBand) {
+    // Journal PDFs can begin the next page with the continuation of a body
+    // paragraph.  A blanket top-band rule drops that line before paragraph
+    // stitching (for example a lowercase continuation or a hyphenated word
+    // wrap in a two-column article).  Preserve body-like column lines while
+    // retaining the chrome rule for spanning/short running headers.
+    const text = line.text.trim();
+    const bodyContinuation =
+      line.column !== "spanning" &&
+      (/[a-z(]/.test(text[0] ?? "") || /-$/.test(text) ||
+        (text.split(/\s+/).length >= 6 && line.width >= layout.pageWidth * 0.32));
+    if (!bodyContinuation) return true;
+  }
   if (line.y > layout.pageHeight - FOOTER_MARGIN) return true;
   if (/^\d{1,3}$/.test(line.text.trim())) return true;
   if (isPublicationMetadata(line.text)) return true;
@@ -1280,6 +1292,26 @@ function roleForLine(
       (/[，。；！？：]/u.test(text) || text.length >= 20) &&
       !looksLikeAffiliation(text);
     if (cjkBodyLine) return "paragraph";
+    // Some journal layouts place the abstract immediately below a wrapped
+    // title/author masthead without an `Abstract` anchor.  Long sentence-like
+    // Latin lines are body evidence even when the masthead boundary was
+    // inferred a few points too low.  Institution-shaped lines remain
+    // metadata, and short author rows do not satisfy this condition.
+    const words = text.split(/\s+/).filter(Boolean);
+    const latinBodyLine = (words.length >= 16 || (line.width >= 180 && text.length >= 48)) &&
+      !looksLikeAffiliation(text) &&
+      (/[.!?]$/.test(text) || /-$/.test(text) || /[,;:]\s*$/.test(text) ||
+        (line.width >= 240 && words.length >= 10));
+    if (latinBodyLine) return "paragraph";
+    // A narrow column fragment can be short after a PDF producer reflows a
+    // spanning abstract. Lowercase/conjunction starts are continuation
+    // evidence; institution and author-shaped lines are excluded above or
+    // by the guards here.
+    if (/^(?:[a-z]|and\b|but\b|or\b|which\b|that\b|where\b|while\b)/.test(text) &&
+        line.width >= 70 && !looksLikeAffiliation(text) &&
+        !looksLikeEmail(text)) {
+      return "paragraph";
+    }
     if (looksLikeGrantIdentifier(text) || startsWithGrantIdentifier(text)) {
       return "paragraph";
     }
@@ -1498,9 +1530,22 @@ function groupLinesIntoBlocks(
 
     const titleContinue =
       currentRole === "title" &&
-      forcedRole === "title" &&
       line.page === current[0].page &&
-      line.y - current[current.length - 1].y < baseFont * 2.8;
+      (line.column === current[0].column ||
+        (current[0].column === "spanning" && line.column !== "spanning" &&
+          line.x < current[0].x + current[0].width &&
+          line.x + line.width > current[0].x)) &&
+      line.y - current[current.length - 1].y < baseFont * 2.8 &&
+      // A title subtitle is often one short native line with a smaller font
+      // and is therefore initially classified as affiliation/paragraph. Keep
+      // it with the title when it is structurally close and cannot be an
+      // author or institution line. Longer prose must still form a new block.
+      (forcedRole === "title" ||
+        (line.text.trim().split(/\s+/).filter(Boolean).length <= 6 &&
+          line.text.trim().length <= 48 &&
+          !looksLikePersonName(line.text) &&
+          !looksLikeAffiliation(line.text) &&
+          !looksLikeEmail(line.text)));
 
     const captionContinue =
       (currentRole === "figure_caption" || currentRole === "table_caption") &&
@@ -1577,11 +1622,19 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
     const rightLines = block.lines.filter((line) => line.column === "right");
     const leftTail = leftLines.at(-1)?.text.trim() ?? "";
     const rightHead = rightLines[0]?.text.trim() ?? "";
+    const crossPageColumnContinuation = block.pageStart < block.pageEnd && (() => {
+      const firstPage = block.pageStart;
+      const before = block.lines.filter((line) => line.page === firstPage).at(-1);
+      const after = block.lines.find((line) => line.page > firstPage);
+      return before?.column === "right" && after?.column === "left" &&
+        isSentenceContinuation(before.text, after.text);
+    })();
     const clearColumnContinuation = orderedColumns.includes("left") && orderedColumns.includes("right") &&
       /^[a-z]/.test(rightHead) && !/[.!?;:]$/.test(leftTail);
     if (block.role !== "paragraph" || (!inferredTwoColumn && !labelSidebar && columns.size < 2) || columns.has("spanning") ||
         (!labelSidebar && block.bbox.width < typicalLineWidth * 1.65) || block.lines.length < 3 ||
-        (!startsMidPage && (columns.size < 2 || clearColumnContinuation))) {
+        (!startsMidPage && (columns.size < 2 || clearColumnContinuation)) ||
+        crossPageColumnContinuation) {
       result.push(block);
       continue;
     }
@@ -1705,6 +1758,13 @@ function isSentenceContinuation(left: string, right: string): boolean {
   if (/[.!?:]$/.test(a)) return false;
   if (a.endsWith("-") && /^[a-z]/.test(b)) return true;
   if (isGrantNumberContinuation(a, b)) return true;
+  // A PDF text stream may place a numbered cross-reference on the following
+  // line/column (`... in Section` → `3`). Stitch only this explicit label +
+  // number shape; arbitrary uppercase starts remain subject to the stricter
+  // connector rule below.
+  if (/\b(?:section|chapter|appendix|figure|table)$/i.test(a) && /^\d+(?:\.\d+)*(?:[.)]|\b)/.test(b)) {
+    return true;
+  }
   if (/^[a-z(]/.test(b)) return true;
   // Native PDF extraction can preserve a wrapped continuation with an
   // uppercase first word (for example, a proper noun or the start of a
