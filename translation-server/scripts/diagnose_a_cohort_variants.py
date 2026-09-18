@@ -65,7 +65,13 @@ def main() -> None:
             protected = text[:match.start()] + token + text[match.end():]
             citations, nonce = [match.group(0)], 0
             madlad_module.protect_citations = lambda value: (protected if value == text else value, citations, nonce)
-            madlad_module.restore_citations = lambda value, c, _n, **_kw: value.replace(token, c[0]) if c else value
+            def restore_atomic(value, c, _n, **_kw):
+                if not c:
+                    return value
+                normalized = value.translate(str.maketrans("ＺＺＲＥＦ１２３４５６７８９０", "ZZREF1234567890"))
+                normalized = re.sub(r"Z\s*Z\s*R\s*E\s*F\s*1\s*Z\s*Z", token, normalized, flags=re.IGNORECASE)
+                return normalized.replace(token, c[0])
+            madlad_module.restore_citations = restore_atomic
         try:
             # Pass the original text; the patched protection function controls
             # exactly what reaches the model and avoids double protection.

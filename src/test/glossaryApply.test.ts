@@ -66,5 +66,6 @@ describe("reapplyGlossary", () => {
     const updated = await reapplyGlossary("g1");
     expect(updated.paper?.titleTranslated).toContain("アフォーダンス");
     expect(updated.blocks[0]?.translated).toContain("アフォーダンス");
+    expect(updated.blocks[0]?.metadata.translationOutcome).toBe("translated");
   });
 });

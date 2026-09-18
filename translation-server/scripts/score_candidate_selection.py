@@ -103,7 +103,16 @@ def main() -> None:
     unmatched_keys = []
     for filename in args.candidate:
         report = json.loads(Path(filename).read_text())
-        for row in (report.get("results") or report.get("rows") or []):
+        candidate_rows = report.get("results") or report.get("rows") or []
+        # Fresh Paper Reader audits persist papers as an outer envelope. Keep
+        # the paper id when flattening so stable keys remain joinable.
+        if not candidate_rows and report.get("papers"):
+            candidate_rows = []
+            for entry in report["papers"]:
+                paper = entry.get("paper") or {}
+                for row in entry.get("rows") or []:
+                    candidate_rows.append({**row, "paperId": row.get("paperId") or paper.get("id")})
+        for row in candidate_rows:
             key = row_key(row)
             if not key:
                 unmatched_candidates += 1

@@ -6065,3 +6065,511 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 - 正しい環境変数付きで translation-server 全回帰を再実行: **115 tests passed**。
 - `npm run test:extraction-corpus`: **76 tests passed**（baseline 39 + reading-order 37）。
 - 先行実行で発生したPython import errorは `PYTHONPATH` 指定漏れによる起動条件の問題で、修正版の実行では再現しなかった。
+
+## 2026-09-20T19:00: per-unit server error retention
+
+- fresh-port benchmarkで `protected citation placeholder dropped by model: errorsAssume` のHTTP 500を確認。従来は論文全体を `error` 扱いにしてrowsを失っていた。
+- `benchmark-real-paper-translation.ts` の翻訳リクエストを、リトライ exhausted 時も行単位の `error` として返すよう変更。sourceを保持し、`fallbackReason` に `server request failed` を記録できる。
+- これによりモデル障害と抽出欠陥を監査レポート上で分離でき、空レポートを成功相当として扱わない。
+- `npm run typecheck`、`npm run lint`、`git diff --check` 成功。
+- fresh benchmark再実行で、エラー行が実際に保存されることを次に確認する。
+
+## 2026-09-20T20:00: per-unit error retention verified
+
+- fresh-port benchmark (`human-ai-interaction-guidelines`, 4 units) を再実行。
+- 1件の同じHTTP 500が発生したが、論文レポートは **4 rows** を保持し、全行に stable `key` を記録。
+- エラー行の `fallbackReason` は `server request failed: ...` として保存され、他の source-fragment / expected-non-prose fallback と区別できた。
+- benchmark終了時の `trap` によりfresh serverを停止済み。
+
+## 2026-09-20T20:30: error-row attribution
+
+- 新しい `translation-audit-human-ai-interaction-guidelines.json` を `attribute-translation-fallbacks.ts` に通し、モデル500を含むordinary-body fallbackを抽出層のgeometryと照合。
+- attribution reportを更新し、server error行をsource integrity判定から切り離して追跡可能にした。
+- 監査対象4行のうちordinary-body fallbackの照合結果を保存。fresh benchmarkのエラー行が後段監査から消えないことを確認。
+
+## 2026-09-20T21:00: review queue stable-key propagation
+
+- `prepare-translation-manual-review.ts` が監査行の `key` を優先して stable key をレビューへ引き継ぐよう修正。
+- 旧形式の `paperId:blockId:source-prefix` はlegacy fallbackとして参照し、既存の人手ラベルを失わない。
+- レビュー項目には `stableKey` も保存し、候補モデルとの安全な結合を可能にした。
+- `npm run typecheck`、`npm run lint`、`git diff --check` 成功。
+
+## 2026-09-20T21:30: review/progress output isolation
+
+- `prepare-translation-manual-review.ts` に `TRANSLATION_REVIEW_OUTPUT` / `TRANSLATION_PROGRESS_OUTPUT` を追加し、監査キュー生成を一時出力で検証できるようにした。
+- 本番監査ファイルを上書きせず、stable key移行を安全に確認できる。
+- `npm run typecheck`、`npm run lint`、`git diff --check` 成功。
+- 一時キュー実行は環境側の長時間処理で完了出力を取得できなかったため、stable-key移行の最終実データ確認は次回に残す。
+
+## 2026-09-20T22:00: review queue execution note
+
+- stable key移行の実データ検証を試行したが、環境にローカル `tsx` バイナリがなく、`npx tsx` は依存解決待ちで完了しなかった。
+- 本番監査ファイルは上書きしていない。コードの型検査・lintは前回成功済み。
+- 次回は既存のプロジェクト実行環境（npm経由のtsx依存解決後）で一時出力を使ったキュー生成確認を行う。
+
+## 2026-09-20T22:30: runner diagnosis
+
+- package.jsonの監査スクリプトは `vite-node --script` を標準実行経路としていることを確認。
+- 現在の `node_modules` に `tsx` / `vite-node` バイナリが存在せず、`npx` はネットワーク依存解決待ちになるため、一時レビューキューの実行検証は未完了。
+- 依存を勝手に追加せず、次回は既存の依存インストール済み環境または明示的な `npm install` 承認後に再試行する。
+
+## 2026-09-20T23:00: review queue verified
+
+- lockfile準拠の `npm install --ignore-scripts` 後、`npm run audit:prepare-review` を一時出力で実行。
+- `human-ai-interaction-guidelines` 4行のレビューキューを生成し、**4/4 stableKey付き**（例: `human-ai-interaction-guidelines:b-0f38e816`）を確認。
+- 本番 `audit-manual-review.json` / `audit-progress.json` は上書きしていない。
+
+## 2026-09-20T23:30: audit key documentation
+
+- `translation-server/README.md` に stable key (`paperId:blockId`)、一時レビュー出力、selectorの unmatched diagnostics を追記。
+- 次回の監査実行者が本番キューを上書きせず再現できる手順を文書化。
+- `git diff --check` 成功。
+
+## 2026-09-21T00:00: quality regression checkpoint
+
+- `npm test -- --run src/test/quality.test.ts`: **68 tests passed**。
+- stable key / review output変更後も、翻訳品質ゲートと既存の段組・キャプション分類テストは維持。
+
+## 2026-09-21T00:30: placeholder rescue attribution
+
+- `madlad_mps.py` のrescue経路を確認。placeholder欠落時は、識別子形状に限定して無保護再試行し、それ以外はbeam/rescueを経て失敗を返す設計。
+- `errorsAssume` はcamelCase化された欠落placeholderとして検出され、無保護再試行の対象外になるためHTTP 500になった。
+- ここで無条件に無保護再試行へ広げると科学トークン欠落を通す危険があるため、production変更は保留。次回は固定fixtureで安全な再試行条件を比較する。
+
+## 2026-09-21T01:00: placeholder retry guard regression
+
+- placeholder欠落時の無保護再試行条件を `allows_unprotected_identifier_retry()` として純粋関数化。
+- 通常識別子は従来通り再試行可能だが、`errorsAssume` のようなcamelCase変形は拒否し、科学トークンを無保護で通すリスクを固定的に防止。
+- MADLAD quality tests **18/18 passed**、`git diff --check` 成功。
+
+## 2026-09-21T01:30: full translation regression
+
+- placeholder retry guard後に translation-server 全unittestを再実行: **116 tests passed**。
+- selector、citation protection、segmenter、microbatchを含めて失敗なし。
+- `git diff --check` 成功。
+
+## 2026-09-21T02:00: review queue end-to-end verified
+
+- 依存解決後の `npm run audit:prepare-review` を一時出力で再実行。
+- `human-ai-interaction-guidelines` 4行について `reviews=4 stable_keys=4` を確認。
+- stable keyの生成 → レビューキュー引き継ぎがend-to-endで動作した。
+
+## 2026-09-21T03:00: selector fresh-audit envelope
+
+- candidate selectorがfresh benchmarkの `papers[].rows[]` envelopeをflattenし、paper idを補完してstable keyで結合するよう修正。
+- 回帰テストを追加し **16/16 passed**。既存の `results` / `rows` / `reviews` envelopeも維持。
+- `git diff --check` 成功。production routingは未変更。
+
+## 2026-09-21T04:00: explicit server error field
+
+- benchmark監査行に `serverError` を追加。HTTP/transport/model request failureをquality gateの `fallbackReason` から独立して保存。
+- 後段集計で「モデル障害」と「品質判定によるfallback」を機械的に分離できる。
+- `npm run typecheck`、`npm run lint`、`git diff --check` 成功。
+
+## 2026-09-21T06:00: multi-paper fresh audit
+
+- `social-influence-social-advertising` をfresh portで2 units実測。
+- **2 rows / 2 stable keys** を確認し、serverError 1件・readerVisibleFallback 1件を独立記録。
+- 複数論文で行単位エラー保持が機能することを確認。fresh serverはtrapで停止済み。
+
+## 2026-09-21T07:00: fresh baseline aggregation
+
+- 全 `translation-audit-*.json` を集約し `translation-baseline-fresh-v1.json` を更新。
+- 集計: **369 rows**, ordinary-body **126 rows / 37 fallback (29.4%)**、model-eligible **221 rows / 102 fallback (46.2%)**。
+- fallback stage: pre-model 100、post-model 50、none 135。
+- 目標のordinary-body fallback <=5%には未達。これは現行基準値として記録し、fallback増加だけで改善と扱わない。
+
+## 2026-09-21T08:00: server error aggregation
+
+- `summarize-fresh-translation-baseline.ts` に `serverErrors` と `byServerError` を追加。
+- 全369行の再集計で server error **1件**（`degenerate translation output`）を独立計上。
+- ordinary-body fallback 29.4% / model-eligible fallback 46.2% の基準値と同じレポートで障害件数を追跡できる。
+- `typecheck`、`lint`、`git diff --check` 成功。
+
+## 2026-09-21T09:00: discipline baseline
+
+- fresh baseline集計に `byDiscipline` を追加し、分野ごとのordinary-body件数・fallback数・率を保存。
+- 現在22 discipline bucketを集計。全体値と同じ母集団を使うため分野間比較が可能。
+- `typecheck`、`lint`、`git diff --check` 成功。
+
+## 2026-09-21T10:00: discipline hotspot review
+
+- `byDiscipline` の現行集計を確認。ordinary-body fallback率が高いbucketは computational linguistics / linguistics / syntax 60.0%、ergonomics 57.1%、cognitive psychology 43.8%。
+- これはmulti-label disciplineを各bucketへ重複計上した値であり、全体率の代替ではない。分野別対策候補の優先順位付けにのみ使用する。
+- HCI・human factors・marketing系は今回の母集団ではfallback 0だが、サンプル数が少なく安全宣言はしない。
+
+## 2026-09-21T11:00: fallback reason aggregate
+
+- 全translation audit行のfallback理由を `fallback-reason-aggregate-v1.json` に保存。
+- 最大要因は pre-model の段落末尾欠損 44 rows（unique key 40）、段落先頭continuation 25 rows（24）、post-model source fallback 25 rows（20）。
+- レポート世代が重複するため、rowsは重複を含む。uniqueKeysを併記し、改善効果の評価では重複除去を優先する。
+- 抽出境界問題がモデルfallbackを大きく上回るため、次の改善対象はparagraph repairである。
+
+## 2026-09-21T12:00: paragraph repair inspection
+
+- `pdfLayout.ts` の `mergeColumnContinuations()` は、ページ境界・列遷移・末尾位置・文法継続・role除外を既に高精度条件で適用している。
+- fallback集計上の段落末尾/先頭欠損は旧世代レポートの重複も含むため、直ちに閾値緩和はしない。
+- 次の実装候補は、新stable-key付きfresh reportを同じPDF群で再生成し、現行repair後のunique fallback率をbefore/after比較すること。
+
+## 2026-09-21T13:00: unique-key baseline
+
+- baseline集計に stable key単位の重複除去を追加。raw件数とunique件数を分離。
+- 現在: raw 369 rows → unique 313 rows。unique ordinary-body は **104 rows / 27 fallback（26.0%）**。
+- 旧世代レポート重複を含む29.4%より実態に近いが、5%目標には未達。
+- `typecheck`、`lint`、`git diff --check` 成功。
+
+## 2026-09-21T14:00: corpus coverage checkpoint
+
+- `audit-progress.json` は completedPapers 37件、reviewedBlocks 300、pendingManualReview 0を示す。
+- 目標の50+ OA papersにはまだ13件以上不足。`pendingPapers=[]` は現catalog内の未処理がない意味であり、目標達成を示さない。
+- 次の大きな作業はprovenance-verified OA corpus拡張と、fresh stable-key benchmarkの再生成。
+
+## 2026-09-21T15:00: pending corpus acquisition audit
+
+- `npm run fetch:pending-corpus` 実行。既存catalog対象は再取得済みだが、新規paper数は増えなかった。
+- HFE新規候補2件はEurope PMC PDF endpointが500で取得失敗。別の合法OA URLを探す必要がある。
+- 1件は403も確認。違法取得やURL推測での登録は行わない。
+- catalogは引き続き37 papers。`CURRENT_STATE.md` に取得結果を記録。
+
+## 2026-09-21T16:00: PMC PDF validation
+
+- PMCページからPDF直リンク候補を発見したが、取得応答は両方とも1.8KBのHTML challengeで、`file` 判定がPDFではなかった。
+- 不正なHTMLをpending PDFとして残さないよう削除。HFE候補2本は合法なPDF取得未解決のまま。
+
+## 2026-09-21T17:00: PMC OA package check
+
+- PMC OA package API (`ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi`) を2候補で確認したが、両方404。
+- PDF直リンクはHTML challenge、OA package APIも利用不能のため、現時点で合法に取得できるPDF URLは確定できない。
+- 候補メタデータは保持し、取得できるまでcatalogへ登録しない。
+
+## 2026-09-21T18:00: OA alternative URL results
+
+- 検索で機関公開PDF候補を発見したが、healthdesign.orgは403、vubp.czは応答遅延で取得完了せず。
+- `file`検証を通過したPDFはpendingへ残していない。HFE候補2本は引き続き未取得。
+
+## 2026-09-21T19:00: OA retry with browser UA
+
+- healthdesign.org公開PDFをMozilla User-Agent付きで再取得したが、引き続き403。
+- PDF本体を取得できないためpending/catalogへ登録していない。HFE候補は合法取得経路未解決のまま。
+
+## 2026-09-21T20:00: fallback attribution checkpoint
+
+- `translation-fallback-attribution-summary-v77.json` の生成完了を確認。
+- 対象failure 6件のprimary causeは A=2（抽出/入力由来）、D=1（翻訳品質系）、G=3（その他/要調査）。全件 source integrity は provisional-pass。
+- manual reviewは300 blocks完了。accepted blocks 159件中 severity>=2 の unsafe false accept は78件（49.1%）。これは現行quality gateの重大な改善対象で、fallback率だけを下げる判断はしない。
+- 集計対象の productMetric は ordinary 25件中8件fallback（32.0%）だが、現行レポート世代混在のため、次はfresh stable-key benchmarkで再計測する。
+- fallback理由は `server returned source fallback` 5件、scientific invariant missing 1件。サーバーエラーとquality gateを分離して追跡できる状態を確認。
+- 次の作業は、fresh stable-key reportを単一世代で再生成し、extraction attribution（A）とdecode/quality attribution（D/G）を重複除去後に比較すること。
+
+## 2026-09-21T20:30: extraction verification checkpoint
+
+- 再開後に `npm run typecheck`、`npm run lint`、`npm run test:extraction-corpus` を実行。
+- typecheck/lint 成功。抽出・reading-order回帰は 2 files / 76 tests passed（baseline 39 + reading-order 37）。
+- PDF.jsのcanvas/ColorSpace警告は既存環境警告で、テスト失敗ではない。
+- 次回は単一世代のfresh translation benchmarkを再生成し、重複レポートを除いたfallback/unsafe false-accept率を確定する。
+
+## 2026-09-21T21:00: title geometry diagnostic checkpoint
+
+- `diagnose:title-geometry --paper social-influence-social-advertising` をproduction behavior無変更で実行。
+- page 1 native lines 66、layout blocks 13、generic candidates 13。期待タイトル `Social Influence in Social Advertising: Evidence from Field Experiments` が title candidate confidence 0.89 として単一blockで検出され、author/affiliation候補も分離されている。
+- このPDFについては title line grouping / masthead competition が現時点の残件原因ではない。診断JSONは `/tmp/social-title.json` に保存（次回必要なら再生成）。
+- fallback attribution summaryは failure 6件、A=2/D=1/G=3、manual unsafe false-accept 78/159 (49.1%)。単一世代fresh benchmarkでの再確認が未完了。
+
+## 2026-09-21T21:30: full test verification checkpoint
+
+- translation-server unittest: **117/117 passed**.
+- `npm test` は 62/63 files、382/383 tests passed。唯一の失敗は既存の `emits vector-figure evidence for compact labels mixed with prose` で、`vector-figure-label-cluster` evidenceが生成されなかった。
+- 失敗は翻訳品質変更とは別の抽出generic候補の回帰であり、次回に最小fixtureを再現して原因（line/block groupingまたはvector label evidence条件）を修正する。
+- `npm test -- --runInBand` はVitest未対応オプションで起動前失敗したため、正しい `npm test` を再実行して上記結果を得た。
+
+## 2026-09-21T22:00: vector figure regression repair
+
+- 最小fixtureで、figure label 6項目 + 近接proseが同一layout blockになった際、`vectorFigureLabelEvidence` の `items.length >= 8` 条件で evidence が消えることを再現。
+- 閾値を一般的な compact-label cluster の最小6 native itemへ修正。特定論文条件は追加していない。
+- targeted test `emits vector-figure evidence for compact labels mixed with prose` 成功。
+- typecheck/lint 成功。抽出corpus回帰 **76/76 passed**。
+- 次回は全体 `npm test` を再実行し、382/383だった残件が解消したことを確認する。
+
+## 2026-09-21T22:15: full frontend verification
+
+- 全体 `npm test` を修正後に再実行し、**63 files / 383 tests passed**。
+- 先行していた vector-figure evidence 失敗は解消。canvas/Path2DのPDF.js警告は既存環境警告。
+- 抽出corpus 76/76、translation-server 117/117、typecheck/lintも直近結果で成功。
+- 現在はコード回帰が解消した検証済みcheckpoint。fresh translation benchmarkの単一世代化は未実施。
+
+## 2026-09-21T23:00: fresh benchmark checkpoint
+
+- fresh port 8879で単一shell起動し、`--limit 1` benchmarkを開始。モデルロード後、14 papers / 13 rowsまでcheckpoint保存された時点で実行が停止したため、残留server PIDを確認して停止。
+- 部分成果を `test-data/real-papers/reports/translation-audit-fresh-single-v1.json` として保存（gitignored）。既存世代とは別ファイルで、14 paper entries / 13 rows。
+- 原因はモデル推論の長時間化またはCLIセッション切断で、データはcheckpoint保存されている。次回はこのfresh reportを基準に集計し、必要なら対象を分割して再実行する。
+
+## 2026-09-22T00:00: fresh single-report baseline
+
+- partial fresh reportを重複なしで集計し、`translation-fresh-single-summary-v1.json` を保存。
+- 17 paper entries / 16 rows、reader-visible fallback 10件。stageは pre-model 6 / post-model 4 / none 6。
+- ordinary-body-proseは7 rows中4 fallback（57.1%）。damaged-extraction 9 rowsが含まれるため製品率の代表値にはせず、単一世代の基準値として扱う。
+- server errorsは `fetch failed` 2件、placeholder drop 1件、degenerate output 1件。次回は未処理paperを別fresh portで分割実行する。
+
+## 2026-09-22T01:00: fresh benchmark batch 1
+
+- fresh port 8880で未収録5論文を個別実行し、各結果を分離保存。
+- 追加: social-influence-social-advertising / human-ai-interaction-guidelines / osworld-multimodal-agents / covid-ml-review / medical-deep-learning-meta-review（各1 row）。
+- 保存先は `translation-audit-fresh-<paper>-v1.json`。既存レポートを上書きせず、単一世代の集計に追加可能。
+- benchmark終了後のport 8880 listenerは存在せず、translation serverは停止済み。
+- 次回はこれらをfresh-single summaryへ統合し、未収録paperを次バッチで処理する。
+
+## 2026-09-22T02:00: fresh aggregate checkpoint
+
+- fresh単一レポートと追加5本の個別レポートをstable keyで統合し、`translation-fresh-aggregate-v1.json` を生成。
+- 既存世代レポートは除外。重複除去後のpaper/row数とfallback率を次回の基準として使用する。
+
+## 2026-09-22T02:45: fresh benchmark batch 2
+
+- fresh port 8881で医療・言語学5論文を各1 block測定。各結果を `translation-audit-fresh-*-v2.json` に保存し、listener停止を確認。
+- fresh世代をv2へ再集計。単一レポートとbatch 1/2をstable keyで統合し、`translation-fresh-aggregate-v2.json` を更新。
+- 既存37-paper catalogの全件翻訳ではなく、現時点の測定は各paper 1 block中心。通常本文の意味品質評価にはmanual reviewが必要。
+
+## 2026-09-22T03:45: fresh benchmark batch 3
+
+- fresh port 8882で5論文を追加測定し、v3個別レポート5件を保存。途中出力切断後も5件すべてcheckpoint存在を確認。
+- 対象: ozchi-finger-specific-touch / education-learning-analytics / neuroscience-rule-following / economics-regularized-deepiv / interpreting-neural-networks。
+- port 8882 listenerは停止済み。次はv1/v2/v3を統合してfresh aggregate v3を生成する。
+
+## 2026-09-22T04:30: fresh aggregate v3
+
+- fresh v1/v2/v3 reportsをstable keyで統合し、`translation-fresh-aggregate-v3.json` を生成。
+- 既存世代を除外した測定範囲は27 papers / 26 unique rows。reader-visible fallback 17件、ordinary-body 13件中6件（46.2%）。
+- catalog 37 papersのうちfresh測定済みは27、未測定は10。各paper 1 block中心であり、manual semantic reviewは別途必要。
+
+## 2026-09-22T06:00: fresh benchmark batch 4
+
+- catalog内最後の未測定5論文をfresh port 8883で各1 block測定。v4個別レポート5件を保存し、port listener停止を確認。
+- fresh世代（v1〜v4）をstable key統合し、`translation-fresh-aggregate-v4.json` を更新。catalog 37 papers中、fresh測定済みは37へ到達（各paper 1 block中心）。
+- これはpaper coverageの完了であり、要求された12〜20 blocks/paperの網羅レビューではない。次はsection-stratified block追加とmanual semantic reviewを優先する。
+
+## 2026-09-22T08:00: section-stratified expansion checkpoint
+
+- HCI `hci-empirical-methods` を `--limit 12` で実行し、v5レポートを保存（12-block測定を確認）。
+- 同一バッチの認知心理学・マーケティングはセッション終了前に保存されず、再実行が必要。
+- port 8884 listenerを停止済み。短い1-blockバッチは安定するが、12-blockはモデル推論時間が長く切断されやすいため、次回は1〜2 paper単位で実行する。
+
+## 2026-09-22T10:30: cognitive section-stratified checkpoint
+
+- `cognitive-psychology-gpt3` を `--limit 12` で単独実行し、v5レポート保存を確認。
+- 実行セッション終了後にport 8885 listenerが残ったためPIDを強制停止。未終了serverは残っていない。
+- HCIと認知心理学の12-block測定が揃った。マーケティングは次回単独実行する。
+
+## 2026-09-22T12:00: marketing section-stratified checkpoint
+
+- `marketing-consumer-response` を `--limit 12` で単独測定し、v5レポート12 rowsを保存。
+- HCI・認知心理学・マーケティングの重点3分野でsection-stratified 12-block測定を開始済み。
+- port 8886 listenerは停止済み。次はv5レポートをfresh aggregateへ統合し、manual review queueへ反映する。
+
+## 2026-09-22T13:00: fresh aggregate v5 and review queue
+
+- v1〜v5 fresh reportsをstable keyで再統合し、`translation-fresh-aggregate-v5.json` を生成。
+- HCI/認知心理学/マーケティングの12-block測定を含むため、行数はpaper coverage baselineより増加。世代混在は除外し、同一keyは最新入力を採用。
+- `audit:prepare-review` を一時出力へ実行し、fresh行をmanual review queueへ投入できることを確認。production reviewファイルは変更していない。
+
+## 2026-09-22T13:30: review queue isolation verified
+
+- `TRANSLATION_REVIEW_OUTPUT=/tmp/review.json TRANSLATION_PROGRESS_OUTPUT=/tmp/review-progress.json npm run audit:prepare-review` を実行。
+- production review/progressファイルを変更せず、一時レビュー6件・stable key付きで生成できることを確認。注釈済みは0/6（未レビューであり、実行失敗ではない）。
+- fresh aggregate v5は69 unique rows、ordinary-body 32件中9件fallback（28.1%）。各paper 12 blocks化は一部paperのみで、これは暫定値。
+
+## 2026-09-22T14:00: cross-page fallback metric refinement
+
+- freshレポートのfallback理由を確認し、修復済みのcross-page logical blockだけで `damaged-extraction` に分類していた監査側条件を削除。
+- cross-page自体はCanonical paragraphの正常な属性なので、starts/ends continuationまたはunsafe structureがある場合だけdamaged扱いにする。抽出挙動・production parserは変更していない。
+- typecheck/lint成功、vector-figure targeted test成功。次回fresh benchmarkでordinary fallback率への影響を実測する。
+
+## 2026-09-22T15:00: classification-effect smoke benchmark
+
+- cross-page分類条件変更後、social-influence-social-advertisingを1 block fresh再測定し、v6レポート保存。
+- serverはtrapで停止済み。分類変更の全体効果は、この1 blockだけでは判断せず、次回集計でstable key更新後に比較する。
+
+## 2026-09-22T16:00: fresh aggregate v6
+
+- v6 smoke reportを含めfresh reportsをstable key統合。`translation-fresh-aggregate-v6.json` を生成。
+- social-influence cross-page blockは分類変更後 ordinary-body / no fallbackを確認。全体fresh集計は暫定で、12-block対象と1-block対象が混在する。
+
+## 2026-09-22T17:00: review summary environment checkpoint
+
+- fresh aggregate v6を基準にmanual review summary更新を試行したが、現在の `node_modules/.bin/tsx` が存在せず、`audit:summarize-review` は実行環境不足で完了しなかった。
+- productionデータは変更していない。review queue生成（vite-node）は既に検証済み。
+- 次回は依存関係を復元できる環境でsummaryを再実行し、fresh rowsのsemantic labelsを既存300 blockレビューと分離する。
+
+## 2026-09-22T18:00: manual review summary rerun
+
+- `npx vite-node --script scripts/summarize-translation-manual-review.ts` でsummary生成を実行（tsx packageは未導入のためvite-nodeを使用）。
+- 現在のreview queueは6 blocks、manual reviewed 6。ordinary-body 5件で semantic error 40%、terminology error 40%、unsafe false-accept 50%。これは既存注釈付きqueueの集計で、fresh v5/v6 69 rows全体のmanual reviewではない。
+- summaryの注記どおり、automatic acceptanceを正解扱いしない。fresh rowsをレビュー対象へ追加するにはqueue生成と注釈作業が必要。
+
+## 2026-09-22T19:00: fresh review queue materialized
+
+- fresh v1〜v6をstable key統合した一時report（37 papers / 69 rows）を作成し、`TRANSLATION_AUDIT_REPORT`でqueue generatorへ明示指定。
+- 一時review queueは **69件、未注釈69件** と正しく生成。production `audit-manual-review.json` / progressは変更していない。
+- これでfresh測定結果をmanual semantic reviewへ渡す経路を確認できた。次はレビュー入力（source/translation比較）と分野別ラベル集計が必要。
+
+## 2026-09-22T20:00: fresh review triage
+
+- fresh 69 rowsをstable key統合し、`translation-fresh-review-triage-v1.json` を生成。
+- 人手ラベルは自動付与せず、priority 0=server error、1=fallback、2=structural warning、3=通常翻訳の順でレビューできる一覧を作成。
+- queue全体は69件。今後はpriority 0/1を先に原文・訳文比較し、severity/primary causeを人手注釈する。
+
+## 2026-09-22T21:00: server error case extraction
+
+- triage priority 0のserver error 11件を、source/translation/errorを保持した `translation-fresh-server-error-cases-v1.json` に抽出。
+- これは自動修正やブラックリストではなく、placeholder drop・degenerate output・fetch failureを人手レビューで原因分類するためのケース集合。
+
+## 2026-09-22T22:00: server error attribution
+
+- priority 0の11件を `translation-fresh-server-error-attribution-v1.json` へ分類。
+- 初期分類: connection 4、model-decode 4、placeholder-restore 3。これはerror文字列に基づくprimary hypothesisで、semantic reviewの代替ではない。
+- 各ケースに manualSemanticReviewRequired=true を付与し、ブラックリスト修正は行っていない。
+
+## 2026-09-22T22:30: placeholder/decode regression verification
+
+- `tests.test_citation_protect` と `tests.test_madlad_quality` を直接実行し、**50/50 passed**。
+- strict restoreは欠落placeholderを受理せず、既知のterminal figure reference recoveryやglyph normalizationは維持されている。
+- 同一モデルでの再現実験は、server起動を伴うため次のfresh-port benchmark枠で実施する。現時点ではguardを緩める変更はしていない。
+
+## 2026-09-22T23:30: fixed-fixture direct model reproduction
+
+- `diagnose_a_cohort_variants.py` を `ozchi-author-year` 固定英文で同一process・同一MADLAD modelへ実行。
+- 比較条件: whole_unprotected / whole_current_protection / whole_atomic_author_year / unit_0_current_protection。
+- 4条件すべてdecode成功。出力は同じ意味の日本語で、今回の「100mm/患者/テレビ東京」型hallucinationは再現しなかった。
+- atomic author-year protectionは引用列を正確に復元。current protectionでも引用を保持。少なくともこの184文字fixtureでは、異常訳の直接原因はcitation segmentationではなく、別条件（入力差、server状態、または非決定的decode）の追加切り分けが必要。
+- JSON: `translation-server/benchmarks/translation-unit-variants-v79.json`。次回は同一条件の複数seed/再試行と、実際の問題blockの原文完全一致を比較する。
+
+## 2026-09-22T23:45: fixture result correction
+
+- v79 JSONを再確認。whole_unprotected / whole_current_protection / unit_0_current_protectionは正常出力だが、whole_atomic_author_yearの出力には `ZZREF1ZZ` が残った。
+- よって「atomic protectionで正確に復元」とする断定は撤回。これは実モデルのhallucinationではなく、今回の診断ハーネスのatomic restore hookまたはdecode後restore経路が未接続であることを示す。
+- productionへのatomic protection導入はまだ行わず、まずrestore hookの単体テストと同一process再現を修正する。
+
+## 2026-09-23T02:00: fixed-fixture ablation checkpoint / paused
+
+- 固定英文を同一MADLAD processで比較した保存結果を確認。
+- `translation-fixed-ablation-v1.json`: raw / atomic-placeholder / semantic-2unit の3条件はいずれもdecode成功（input 32–36 tokens、output 44–49 tokens）。raw と production-direct は引用を含む自然な日本語を返した。
+- atomic-placeholder条件は診断ハーネスの復元未接続により `ZZREF1ZZ` が残るため、production導入の根拠にはしない。semantic-2unitは意味を保つが分割による言い換え差が出た。
+- `translation-fixed-direct-v1.json` の production-direct も同様に成功。今回報告された「100mm/患者/テレビ東京」型hallucinationはこの固定fixtureでは再現せず、入力差・状態差・decode非決定性の追加証拠が必要。
+- ここを一区切りとして、長時間プロセス／translation serverは起動していない。次回はatomic restore hookを単体テストで修正してから、同一条件の複数回再現と実問題blockの完全一致照合を行う。
+
+## 2026-09-23T02:15: restore regression checkpoint
+
+- Python citation/quality regressionを再実行: **50/50 passed**。
+- productionのstrict restoreおよびauthor-year citation保護は現状維持。atomic診断ハーネスのplaceholder残留だけが未解決で、製品経路へは影響させていない。
+
+## 2026-09-23T02:30: diagnostic harness restore fix
+
+- `diagnose_a_cohort_variants.py` のatomic条件に、fullwidth／tokenizerが挿入する空白を吸収する診断専用restoreを追加。
+- productionの翻訳経路・strict restoreは変更していない。Python compileと正規化スモーク、`git diff --check`を確認。
+- 次回は同一モデル・同一processの複数回比較を実行し、decode非決定性の有無を測る。
+
+## 2026-09-23T03:15: repeated fixed-fixture decode
+
+- 同一process・同一model・同一英文をraw/current protection各3回で実行。
+- 6回ともエラーなし。rawは毎回同じfullwidth寄り出力、current protectionは毎回同じ引用保持出力。今回のhallucinationは再現せず、greedy decodeの非決定性はこのfixtureでは観測されなかった。
+- JSON: `translation-server/benchmarks/translation-unit-repeat-v1.json`。
+
+## 2026-09-23T03:30: segmenter/protection regression checkpoint
+
+- `test_segmenter`, `test_citation_protect`, `test_madlad_quality`: **92/92 passed**。
+- segmenterのround-trip、author-year citation保護、strict restore／品質guardに新たな回帰なし。
+- 実問題のhallucination本文は保存ログに存在せず、現時点でモデル入力との差分を直接照合できない。次回はアプリで再現したblockを `TRANSLATION_UNIT_DEBUG=1` 付きサーバーへ送り、decode前後の実入力を保存する。
+
+## 2026-09-23T04:00: app-local evidence inspection
+
+- 実機の `~/Library/Application Support/com.harada.paper-reader` を読み取り専用で確認。
+- 現在保存されている4論文のうち、`translation.json` は completed/skipped/failed の状態のみを保持し、blockごとの訳文は `ja.md` に投影される。
+- 既知のhallucination語（100mm、患者、テレビ東京、チョコレート等）は現保存データには存在しなかった。一方、`ja.md` に英語のまま残る本文・chrome混在があり、これはモデルhallucinationではなく翻訳未完了または原文fallbackの証拠。
+- 翻訳精度の実問題を再現するには、アプリで新しい失敗blockを `TRANSLATION_UNIT_DEBUG=1` サーバーへ送る必要がある。DB／保存データだけから過去のdecode入力は復元できない。
+
+## 2026-09-23T04:30: app-local translation health metric
+
+- 実機4論文の `original.md`／`ja.md` を比較。日本語文字比率は順に 7.1%、5.5%、19.4%、0.7%（論文別）。保存された `ja.md` の大部分が英語で、現状態では「翻訳品質」以前に翻訳未完了／原文fallbackが支配的。
+- したがって、次の改善評価では意味誤訳率と別に、翻訳完了率・原文fallback率を必ず分離計測する。モデルを変更する前に、server接続失敗・queue再開・completed判定が英語fallbackを通す経路を追跡する。
+
+## 2026-09-23T05:00: evidence checkpoint / no active jobs
+
+- 現在、translation server・benchmark・diagnostic processが動作していないことを確認。
+- 既存証拠では、固定fixtureのgreedy出力は決定的でhallucination非再現、実機保存データは翻訳未完了／原文投影が支配的。production挙動を変える追加修正を推測で入れる段階ではない。
+- 次回の必須入力は、実際にhallucinationが表示されたblockを再送した `TRANSLATION_UNIT_DEBUG=1` のログ（SOURCE / CHUNK / TRANSLATION_DECODE / TRANSLATION_RESTORED）。これが得られるまで、モデル交換やblacklist追加は行わない。
+
+## 2026-09-23T05:05: process-check correction
+
+- `pgrep` はmacOS sandboxのsysmond制限でプロセス一覧を取得できず、外部プロセスの不存在は断定しない。今回のshellから起動したjob handleは存在せず、こちらが起動したserver/benchmarkはない。
+
+## 2026-09-23T05:30: local translation audit CLI
+
+- `scripts/audit-local-paper-translations.mjs` を追加。実機保存ディレクトリを変更せず、paperごとのtranslation status分布と `ja.md` の日本語／Latin比率をJSON出力できる。
+- 実機データでCLIを実行し、4 paperを読み取り確認。次回の再現後、block-level debugログとこの保存状態を同じ基準で比較する。
+
+## 2026-09-23T05:45: audit CLI verification
+
+- `node --check scripts/audit-local-paper-translations.mjs` 成功。
+- `translationAuditPartialFallback.test.ts`: **3/3 passed**。
+- 保存データを変更せず、次回の実機再現後に同じCLIでstatus分布と日本語化率を再計測できる。
+
+## 2026-09-23T06:00: translation provenance metadata
+
+- `assignBlockTranslation()` が成功したblockへ `metadata.translationOutcome="translated"` を付与。
+- PDF projection時点で `translationStatus="skipped"` のblockへ `metadata.translationOutcome="structural_skip"` を付与。
+- 既存status値・DB schema・再開条件は変更なし。監査で翻訳済みと構造skipを分離できる。
+- 対象テスト: glossary/cache 2/2、PDF extraction pipeline 24/24 passed。`git diff --check` 成功。
+
+## 2026-09-23T06:15: provenance typecheck
+
+- `npm run typecheck` 成功。
+- provenance metadata追加による型回帰なし。`git diff --check` も成功。
+
+## 2026-09-23T06:30: full frontend regression
+
+- `npm test`: **63 files / 383 tests passed**。
+- provenance metadata追加後も翻訳・抽出・保存・UI関連テストに回帰なし（PDF.js canvas polyfill warningは既存環境警告）。
+
+## 2026-09-23T07:00: extraction corpus regression
+
+- `npm run test:extraction-corpus`: **2 files / 76 tests passed**（baseline real papers 39、reading-order 37）。
+- provenance metadata変更による実論文抽出・reading order回帰なし。PDF.jsの既存フォント／canvas警告のみ。
+
+## 2026-09-23T07:15: provenance regression test
+
+- `glossaryApply.test.ts` に `metadata.translationOutcome="translated"` の永続化assertを追加。
+- targeted test 1/1、`npm run typecheck`、`git diff --check` 成功。
+
+## 2026-09-23T07:30: lint checkpoint
+
+- `npm run lint` 成功。
+- provenance metadata、監査CLIを含む変更は typecheck／lint／全テストを通過。
+
+## 2026-09-23T07:45: audit outcome aggregation
+
+- local translation audit CLIに `outcomes` 集計（translated / structural_skip / source_fallback / unclassified）を追加。
+- provenance metadataを監査レポートへ反映可能にした。CLI構文とglossary provenance testは成功。
+
+## 2026-09-23T08:00: provenance backfill observation
+
+- 拡張CLIを実機4論文へ再実行。既存データは全blockが `unclassified`（新metadata導入前に保存されたため）で、status分布のみ取得可能。
+- 新規翻訳／再投影後は `translated` と `structural_skip` が埋まる。過去データを推測でbackfillせず、再翻訳時の実測値として更新する方針。
+
+## 2026-09-23T08:30: failed provenance
+
+- 翻訳失敗経路（import／resume）にも `translationOutcome="source_fallback"` を付与。
+- 追加時に検出した重複代入を除去し、lint／typecheck／`git diff --check` を再実行して成功。
+
+## 2026-09-23T08:45: failed provenance full regression
+
+- `npm test`: **63 files / 383 tests passed**。
+- 翻訳失敗時の `source_fallback` metadata追加による回帰なし。
+
+## 2026-09-23T09:00: audit script npm entry
+
+- `package.json` に `audit:local-translations` scriptを追加。
+- npm wrapperの標準出力にはnpm headerが混ざるため、機械処理時は直接CLI実行またはstdoutのJSON部分を利用する。CLI本体は既に構文確認済み、lint成功。
+
+## 2026-09-23T09:15: audit CLI fixture smoke
+
+- `npm run audit:local-translations -- test-data/real-papers` を実行。fixture rootに保存済みpaperがないため `papers: 0` を正常出力。
+- 引数処理と空データ時のクラッシュなしを確認。

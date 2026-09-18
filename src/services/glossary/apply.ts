@@ -14,6 +14,7 @@ import type { Paper, PaperBlock, Section } from "../../types/paper";
 export function assignBlockTranslation(block: PaperBlock, translated: string): void {
   block.translated = translated;
   block.translationStatus = "completed";
+  block.metadata = { ...block.metadata, translationOutcome: "translated" };
   if (block.type === "figure" || block.type === "table") {
     block.metadata = { ...block.metadata, captionTranslated: translated };
   }

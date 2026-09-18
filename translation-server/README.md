@@ -138,3 +138,20 @@ PYTHONPATH=translation-server translation-server/.venv/bin/python \
 ```
 
 `--semantic-coverage` と `--min-semantic-sim` は候補を監査上除外するだけで、アプリの翻訳routingやfallback policyを変更しません。`audit-manual-review.json` は `reviews` envelopeにも対応しています。
+
+### Stable audit keys and isolated review queues
+
+`benchmark-real-paper-translation.ts` の各監査行には、候補比較用の安定キー
+`key: "paperId:blockId"` が含まれます。レビューキュー生成時もこのキーが引き継がれ、旧形式のキーは互換参照されます。
+
+本番キューを変更せずに検証する場合:
+
+```bash
+TRANSLATION_AUDIT_REPORT=translation-audit-<paper>.json \
+TRANSLATION_REVIEW_OUTPUT=/tmp/review.json \
+TRANSLATION_PROGRESS_OUTPUT=/tmp/progress.json \
+npm run audit:prepare-review
+```
+
+生成済みレポートでキーが欠落している候補は、selectorの
+`unmatchedCandidateRows` / `unmatchedCandidateKeys` に記録されます。本文の近似一致で補完しないでください。
