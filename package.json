@@ -51,6 +51,8 @@
     "audit:enrich-fallback-diagnostics": "python3 scripts/enrich-fallback-diagnostics.py",
     "audit:summarize-fallback-attribution": "python3 scripts/summarize-fallback-attribution.py",
     "audit:diagnose-a-cohort": "PYTHONPATH=translation-server translation-server/.venv/bin/python translation-server/scripts/diagnose_a_cohort_variants.py",
+    "audit:relation-signals": "vite-node --script scripts/audit-translation-relation-signals.ts",
+    "audit:product-quality": "vite-node --script scripts/summarize-fresh-product-quality.ts",
     "verify:real-paper-source-policy": "npx --yes tsx scripts/verify-real-paper-source-policy.ts",
     "audit:local-translations": "node scripts/audit-local-paper-translations.mjs"
   },

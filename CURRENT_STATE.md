@@ -1,6 +1,6 @@
 # Current State
 
-最終更新: 2026-09-18 22:32 +0900
+最終更新: 2026-09-20 13:39 +0900
 **このファイルが「いま main に何があるか」の正です。** 実装を変えたらここを更新する（[AGENTS.md](./AGENTS.md)）。
 
 コードを source of truth とし、アーキテクチャ詳細は各専門文書へリンクする（重複しない）。
@@ -8,6 +8,45 @@
 ---
 
 ## Feature status
+
+### 2026-09-20 13:31 relation audit reproducibility
+
+- `scripts/audit-translation-relation-signals.ts` に `TRANSLATION_RELATION_INPUT` / `TRANSLATION_RELATION_OUTPUT` を追加し、manual-review envelopeとfresh translation-audit envelopeの双方を同じ監査器で処理できるようにした。既定値は従来のmanual-review artifactのままで、production routingは変更しない。
+- fresh-v2を再集計し、`semantic-relation-fresh-v2-v1.json` を生成。39 translated rows中、関係信号あり27、欠落信号14、現行gateが理由なしで受理している欠落信号14。これは自動reject率ではなく、semantic review / candidate comparisonの優先順位用の診断値。
+- `npm run typecheck` と `git diff --check` が成功。翻訳サーバーは起動していないため、fresh model benchmarkは追加していない。
+
+### 2026-09-20 13:34 model comparison matrix
+
+- 現行MADLADとM2M100-1.2B greedy/beam4を同一unsafe 12行で比較し、`model-comparison-unsafe-v1.json` を保存した。これはaudit-onlyで自動選択には使わない。
+- 数値表面シグナル保持は MADLAD **12/12**、M2M greedy **8/12**、M2M beam4 **8/12**。M2Mは専門語崩れに加えて数値欠落があり、現時点でcascade候補として不適。
+- この比較はsemantic正解率を測るものではなく、blind manual reviewを代替しない。production routing・品質ゲートは変更していない。
+
+### 2026-09-20 13:36 product-quality denominator audit
+
+- fresh-v2のうち、`sourceCategory=ordinary-body-prose` かつ翻訳本文が非空の **30行**を分母に、fallbackとsemantic riskを分離集計。成果物は `fresh-v2-product-quality-v1.json`。
+- この限定分母では reader-visible fallback **2/30 (6.7%)**、semantic risk **5/30 (16.7%)**、fallbackとsemantic riskを重複除外した combined risk **6/30 (20.0%)**。以前の37行集計とは分母定義が異なるため、直接置換しない。
+- 5%目標は未達で、fallback削減だけでは不十分。semantic riskは手動確認なしにproduction rejectへ接続していない。
+
+### 2026-09-20 13:40 product-quality audit automation
+
+- 手作業だったfresh製品指標集計を `scripts/summarize-fresh-product-quality.ts` と `npm run audit:product-quality` に移行。audit reportとsemantic-risk reportを入力として、stable keyの重複を除き、fallbackとsemantic riskを別々に集計する。
+- 再実行結果は30 ordinary rows、fallback 2 (6.7%)、semantic risk 5 (16.7%)、combined risk 6 (20.0%)。成果物は `fresh-v2-product-quality-v2.json`。
+- `typecheck`、lint、`git diff --check` 成功。production routing・品質gate・モデルは未変更。
+
+### 2026-09-20 CAT-Translate smoke attempt
+
+- キャッシュ済みCAT-Translate 1.4Bを同一fixtureで探索評価しようとしたが、MPS上の因果LM生成が最初の長文行で長時間進まず中断した。出力artifactは生成していない。
+- これはモデル品質のnegative/positive evidenceとして扱わず、推論速度・実行条件の未評価として記録する。productionへの導入やrouting変更はない。
+
+### 2026-09-20 product-quality audit fixture check
+
+- `summarize-fresh-product-quality.ts` を一時fixtureで検証。空翻訳を分母から除外し、同一stable keyのsemantic-risk重複を1件へ畳み込むことを確認した。
+- fixture結果は ordinary 1、semantic risk 1、combined risk 1。`git diff --check` 成功。監査スクリプト自体のproduction挙動への影響はない。
+
+### 2026-09-20 full Vitest regression
+
+- 全Vitest **63 files / 390 tests passed**。canvas native bindingに関する既知のPDF.js warningのみで、監査基盤変更による失敗はない。
+- 翻訳サーバーは停止中のため、fresh translation benchmarkは未実行のまま。
 
 ### 2026-09-18 19:53 checkpoint
 
