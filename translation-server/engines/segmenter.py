@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 from .citation_protect import protected_span_mask
 
-SEGMENTER_VERSION = "semantic-v71"
+SEGMENTER_VERSION = "semantic-v73"
 _ABBREVIATIONS = {"e.g.", "i.e.", "et al.", "fig.", "no.", "cf.", "dr.", "mr.", "ms.", "vs."}
 
 
@@ -214,7 +214,17 @@ def _split_inline_enumeration(text: str) -> list[str]:
     Require at least two ordinal markers so equations and ordinary
     parenthetical numbers remain part of their surrounding sentence.
     """
-    markers = list(re.finditer(r"\(\d{1,2}\)", text))
+    # A numeric parenthesis is also common statistical syntax (H(2), F(4,33),
+    # etc.). Treat it as an item marker only at a list boundary and when prose
+    # follows it. In particular, `(2) = 6.06` is a degrees-of-freedom token,
+    # not an ordinal item. Requiring a leading colon/semicolon/start boundary
+    # prevents parentheses embedded in ordinary sentences from becoming cuts.
+    markers = [
+        match
+        for match in re.finditer(r"\(\d{1,2}\)", text)
+        if (match.start() == 0 or re.search(r"[:;]\s*$", text[: match.start()]))
+        and re.match(r"\s+[A-Za-z]", text[match.end() :])
+    ]
     if len(markers) < 2:
         return [text]
     starts = [0, *[match.start() for match in markers]]

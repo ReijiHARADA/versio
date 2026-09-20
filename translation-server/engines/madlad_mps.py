@@ -13,7 +13,11 @@ import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 from .base import TranslationEngine, TranslationResult, EngineStatus
-from .citation_protect import protect_citations, restore_citations
+from .citation_protect import (
+    SOURCE_PROTECTION_VERSION,
+    protect_citations,
+    restore_citations,
+)
 from .segmenter import (
     SEGMENTER_VERSION,
     rescue_units_for_translation,
@@ -59,7 +63,9 @@ class MADLADEngine(TranslationEngine):
     """
 
     MODEL_ID = "google/madlad400-3b-mt"
-    MODEL_VERSION = f"3b-mt-v5-{SEGMENTER_VERSION}-strict-restore-v20"
+    MODEL_VERSION = (
+        f"3b-mt-v5-{SEGMENTER_VERSION}-{SOURCE_PROTECTION_VERSION}-strict-restore-v20"
+    )
     # Long academic units were previously capped at 256 decoder tokens,
     # causing otherwise valid output to end mid-sentence. Keep the cap finite
     # while allowing a complete Japanese rendering for long source units.

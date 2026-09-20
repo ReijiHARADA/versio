@@ -344,6 +344,87 @@ function captionedMultiColumnTableBand(
   return above && below;
 }
 
+/** Long prose in a table's rightmost column can look like ordinary paragraph
+ * text after line formation. Repeated same-baseline cells to its left, plus a
+ * nearby native table caption, are strong region evidence even when this
+ * column alone has no short numeric cells. */
+function captionedNeighborCellRows(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
+  if (block.role === "table_caption" || block.lines.length < 4 || block.bbox.width > 280) return false;
+  const caption = blocks.find((candidate) => candidate.pageStart === block.pageStart &&
+    candidate.role === "table_caption" && candidate.bbox.y < block.bbox.y &&
+    block.bbox.y - (candidate.bbox.y + candidate.bbox.height) <= 420);
+  if (!caption) return false;
+  const alignedRows = block.lines.filter((line) => {
+    const origins: number[] = [];
+    const alignedItems = blocks.flatMap((peer) => {
+      if (peer === block || peer.pageStart !== block.pageStart) return [];
+      return peer.lines
+        .filter((peerLine) => Math.abs(peerLine.y - line.y) <= Math.max(2, line.fontSize * 0.4))
+        .flatMap((peerLine) => peerLine.items)
+        .filter((item) => item.x < line.x - 24 && /[\p{L}\p{N}]/u.test(item.text));
+    }).sort((a, b) => a.x - b.x);
+    let previousCellEnd: number | undefined;
+    for (const item of alignedItems) {
+      const wordGap = previousCellEnd === undefined ? Number.POSITIVE_INFINITY : item.x - previousCellEnd;
+      if (previousCellEnd === undefined || wordGap > Math.max(2, item.fontSize * 0.6)) {
+        origins.push(item.x);
+      }
+      previousCellEnd = Math.max(previousCellEnd ?? Number.NEGATIVE_INFINITY, item.x + item.width);
+    }
+    // Neighboring paragraph fragments may have slightly different left
+    // indents (e.g. a wrapped column starts at x=51 and its opening line at
+    // x=62). Treat those as one text column; genuine table columns are farther
+    // apart. Requiring distinct x-buckets here promoted ordinary two-column
+    // prose as a table when a table caption happened to sit above it.
+    origins.sort((a, b) => a - b);
+    let distinctOrigins = 0;
+    let previousOrigin = Number.NEGATIVE_INFINITY;
+    for (const origin of origins) {
+      if (origin - previousOrigin >= 24) {
+        distinctOrigins += 1;
+        previousOrigin = origin;
+      }
+    }
+    return distinctOrigins >= 2;
+  }).length;
+  return alignedRows >= 2;
+}
+
+/** Native PDF spans on one baseline often preserve the separate cells of a
+ * table row even when block formation concatenates those cells into one
+ * sentence-shaped string. A nearby caption plus four well-separated native
+ * text runs is strong row evidence; ordinary prose spans are adjacent or
+ * separated only by word-sized gaps. */
+function captionedNativeMultiCellRow(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
+  if (block.role === "table_caption") return false;
+  const caption = blocks.find((candidate) => candidate.pageStart === block.pageStart &&
+    candidate.role === "table_caption" && candidate.bbox.y < block.bbox.y &&
+    block.bbox.y - (candidate.bbox.y + candidate.bbox.height) <= 520);
+  if (!caption) return false;
+
+  return block.lines.some((line) => {
+    // Layout may split the final wide cell into a neighboring block while
+    // retaining the first three cell spans together. Reassemble native spans
+    // from all same-baseline peers before checking the row geometry.
+    const items = blocks
+      .filter((peer) => peer.pageStart === block.pageStart)
+      .flatMap((peer) => peer.lines
+        .filter((peerLine) => Math.abs(peerLine.y - line.y) <= Math.max(2, line.fontSize * 0.4))
+        .flatMap((peerLine) => peerLine.items))
+      .filter((item) => /[\p{L}\p{N}]/u.test(item.text))
+      .sort((a, b) => a.x - b.x);
+    if (items.length < 4) return false;
+    let separatedRuns = 1;
+    let previousEnd = items[0].x + items[0].width;
+    for (const item of items.slice(1)) {
+      const gap = item.x - previousEnd;
+      if (gap >= Math.max(10, item.fontSize * 0.9)) separatedRuns += 1;
+      previousEnd = Math.max(previousEnd, item.x + item.width);
+    }
+    return separatedRuns >= 4;
+  });
+}
+
 function nearbyTableRowEvidence(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
   if (block.lines.length !== 1 || block.lines[0].items.length < 2) return false;
   // A caption can be close to the prose that introduces a table.  That prose
@@ -583,6 +664,8 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const captionedCompactRows = captionedCompactRowCluster(block, blocks);
     const captionedRepeatedRow = captionedRepeatedCellRow(block, blocks);
     const captionedColumnarGrid = captionedMultiColumnTableBand(block, blocks, layout?.pageWidth ?? 612);
+    const captionedNeighborRows = captionedNeighborCellRows(block, blocks);
+    const captionedNativeCellRow = captionedNativeMultiCellRow(block, blocks);
     const pageGrid = pageGridEvidence(block, blocks);
     const chartLabels = chartLabelEvidence(block, blocks);
     const imageLabels = imageOverlapLabelEvidence(block, pages.find((page) => page.pageNumber === block.pageStart));
@@ -768,7 +851,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
           // evidence is present.
           : 0.68;
     }
-    if (block.role !== "table_caption" && (nearbyTableRowEvidence(block, blocks) || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedRepeatedRow)) scoreByRole.table = 0.96;
+    if (block.role !== "table_caption" && (nearbyTableRowEvidence(block, blocks) || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedRepeatedRow || captionedNeighborRows || captionedNativeCellRow)) scoreByRole.table = 0.96;
     const reason =
       block.role === "title"
         ? "largest font in first-page masthead"
@@ -811,6 +894,26 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         page: block.pageStart,
         bbox: block.bbox,
         reason: "dense short native text items span multiple x-bands without sentence punctuation",
+      });
+    }
+    if (captionedNeighborRows) {
+      evidence.push({
+        source: "geometry",
+        label: "captioned-neighbor-cell-rows",
+        confidence: 0.96,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "repeated same-baseline cell origins to the left of a prose column under a native table caption",
+      });
+    }
+    if (captionedNativeCellRow) {
+      evidence.push({
+        source: "geometry",
+        label: "captioned-native-multicell-row",
+        confidence: 0.96,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "nearby native table caption and four well-separated text spans on one baseline indicate distinct cells",
       });
     }
     return {

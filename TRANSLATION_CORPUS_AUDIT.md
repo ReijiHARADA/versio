@@ -1,53 +1,260 @@
 # Cross-disciplinary translation audit
 
-## Latest checkpoint (2026-09-20 21:01 JST)
+## Latest checkpoint (2026-09-21 00:15 JST)
 
-The user-provided server is available at `127.0.0.1:8765` with MADLAD v20
-ready. A fresh v32 reader-path benchmark completed on the marketing Springer
-paper (`test-data/real-papers/reports/translation-audit-v32-captioned-grid-row-recovery.json`):
-12 rows, 7 model submissions, 6 accepts, 6 visible fallbacks (5 pre-model
-structural skips and 1 post-model quality fallback). The source was sampled
-section-stratified; this single-paper cohort is diagnostic only.
+### v47: trace two statistical semantic false accepts to model decode; probe input phrasing
 
-The extraction issue was table content broken into ordinary paragraph/list
-blocks across a captioned, multi-column Springer table. Native page 7 shows
-Table 2 rows split between the left and right column: before, compact cell
-labels such as `’s own needs ... Offer peer support...` were accepted as
-Japanese paragraph translations; page 8 Table 3 cells such as `Greater
-consumption skills | Greater co-production skills` were also translated as
-prose. Generic table evidence now combines caption proximity, repeated short
-row spacing, stable x-column positions, and same-baseline neighboring cells.
-Five sampled table/diagram blocks are now marked as table-related and kept
-source-only before model submission. Some are preserved as fallback text
-because the extracted geometry is not sufficient to build a reliable grid;
-structured Japanese table rendering is still unresolved.
+On a single ready model process, replayed the two v46 false-accept blocks through the production server with unit debug tracing. The participant-count sentence reached MADLAD intact as one 161-character chunk; greedy output already said `各学科から88名`, so segmentation/citation splitting was not the direct cause. The statistical sentence reached decode in a 340-character chunk with `H(2)=4.17, p=0.124` hidden as a citation placeholder; greedy and beam both emitted `両群間`, and the final block later said the study compared three groups. Neither model fallback nor the number/negation quality checks rejected the internally inconsistent output. Attribution: primary model decode, secondary false-accept gap in the quality gate. Citation protection can remove context, but the “both groups” error also reproduced with the sentence alone, so that is not by itself causal.
 
-Added regression assertions for the Table 2/3 row clusters. Latest extraction,
-reading-order, real-paper, and quality selection: **107/107 passed**; typecheck,
-lint, and `git diff --check` passed. This targeted extraction improvement does
-not meet the ordinary-body fallback goal: v32 has 1/6 ordinary-body rows
-falling back (16.7%). The denominator changed from earlier runs because two
-blocks previously counted as prose are now classified as table content; do not
-claim a direct fallback-rate improvement from that reclassification.
+Eight same-process diagnostic variants (`/tmp/paper-reader-semantic-v47-variants.json`) showed that “No significant differences were found among the three groups...” translated as `3群間...` (31 input / 17 output tokens), while a later sentence naming three groups did not correct the original sentence's `両群間` output. Participant-count rewrites remained unreliable: a reordered version omitted key sample/pay facts and passed with no fallback; adding “overall” preserved 88 but still yielded ambiguous scope. Do not adopt source rewriting from these results. No production code changed. Full trace: `/tmp/paper-reader-semantic-v47.log`; original replay: `/tmp/paper-reader-semantic-v47-replay.json`. Next: held-out cross-domain tests for set cardinality and count scope, then evaluate a general semantic consistency signal with false-reject accounting before any production guard change.
 
-Manual review in `reports/semantic-review-v32-marketing-grid.json` covers all
-six accepts and the post-model fallback. Three accepts have severity >=2,
-including an accepted hallucinated experimental-results claim that was already
-confirmed in v25/v26. The live quality gate still accepts this semantic error;
-the table extraction fix does not change model decoding or semantic validation.
-The post-model fallback was appropriate: a paragraph ends inside an author-year
-citation and the proposed Japanese output supplied a year absent from its
-source block. Table/source-only rows are not ordinary-body false rejects but
-remain untranslated content users may need to inspect in the original.
+### v46: reassemble native cell geometry across peer blocks; remove two accepted table fragments
 
-Next: apply these table geometry checks to held-out cached PDFs, specifically
-verify no ordinary prose was promoted; continue accepted/fallback manual
-review and find a general semantic safeguard for unsupported added claims. The
-<=5% ordinary-body fallback target and near-zero severe false-accept objective
-remain unmet. Do not loosen all quality checks or count table/source-only
-reclassification as progress toward the target.
+Manual PDF review of v45 found two accepted outputs on page 5 were Table 1 rows, not prose. Their geometry explains the false accept: three cell spans were grouped into one layout block and the long outcome cell was a same-baseline peer block. Generic `captionedNativeMultiCellRow` evidence now joins native spans across same-baseline peers when a nearby native table caption exists and there are four clearly separated text runs. The Brodie row is preserved as a structured table; the Mathwick/Mosteller row is source-only because no reliable grid is projected. Both are excluded from paragraph translation. Regression coverage includes both rows and the full prose paragraph immediately below Table 2 (negative case).
 
-## Previous checkpoint (2026-09-20 19:25 JST)
+Fresh v46 on the same three OA papers / 36 selected blocks produced 12 accepted translations and 24 visible fallbacks. Relative to v45, three accepts disappeared because two flattened table rows left the paragraph candidate set (the remaining sampling change is structural). The previously reviewed table-row false accepts are no longer sent to MADLAD. All 12 accepts were manually compared: 2/12 severity >=2 (16.7%), both statistical prose; 2/3 accepted statistical blocks (66.7%) retain meaning shifts around participant scope and the number of compared groups. No list/table false accept remained in this accepted set, though the keyword line is flattened with minor readability impact.
+
+The report's automatically labeled ordinary-body category says 1/10 fallbacks (10%); visual/manual adjudication shows the single fallback is funding metadata, and six accepted rows are genuine ordinary body. That tiny purposive sample has 0/6 visible fallback, but cannot establish the <=5% product target. The complete prose block repaired in v45 still returns `partial_unit_fallback` on direct replay, due protected-token restoration; see `reports/translation-audit-v45-recovered-marketing-paragraph-replay.json`. Keep this as a false-reject candidate, not a clean accept.
+
+Report: `reports/translation-audit-v46-table-grid-evidence.json`; full accept review: `reports/semantic-review-v46-table-grid-evidence.json`. Validation: extraction baseline 55/55, extraction/reading-order corpus 107/107, default Vitest 408/408 (65 files), typecheck/lint. No app build; Python server implementation was unchanged (latest Python tests v44: 130 + 11 subtests). Normal server PID 81428 is ready; no benchmark/debug process remains.
+
+Next: fixture and diagnose the protected-span partial fallback, then address the two statistical scope/cardinality errors with cross-domain source invariants or another evidence method that does not hard-code the paper's hallucinated wording. Expand manual review beyond this three-paper diagnostic before estimating product ordinary-body fallback.
+
+## Previous checkpoint (2026-09-21 00:00 JST)
+
+### v45: correct a caption-neighbor false table classification; fresh cohort exposes table false accepts
+
+The Springer marketing PDF page 7 contains a regular right-column paragraph immediately below Table 2. It was being preserved source-only as a table because left-column prose at x≈51pt and an indented first line at x≈62pt were counted as separate neighbor-cell origins. The generic `captionedNeighborCellRows` evidence now merges same-baseline spans and clusters nearby starts within 24pt before counting distinct cell origins. A real-paper regression asserts this body block projects as a pending paragraph without `tableSourceFallback`; the existing Table 2 assertions remain.
+
+The same three-paper / 36-row reader-path cohort was rerun as v45 (`translation-audit-v45-extraction-table-fix.json`). Changed extraction altered stratified sample membership, so this is a directional diagnostic rather than a controlled matched-rate claim. It yielded 15 accepts / 21 visible fallbacks (v44: 12 / 24). Automated `ordinary-body-prose` contained 13 rows and 1 fallback (7.7%), but that category is contaminated by two accepted flattened table rows and one funding metadata block. All 15 accepts were manually compared in `semantic-review-v45-extraction-table-fix.json`; 5/15 (33.3%) have severity >=2. The unsafe set includes the known quantifier/group-scope errors, the construct “sharing economy” rendered as “共有経営,” and two malformed table-row fragments accepted as paragraphs. Therefore v45 does not establish an overall quality gain and the automated ordinary-body rate is not a valid product rate.
+
+The previously misclassified 882-character Wirtz paragraph is now a paragraph and is submitted to MADLAD. A direct production-server replay produced mostly coherent Japanese, but returned `partial_unit_fallback` after protected-token restoration failed. It was not selected in v45's 12-row marketing stratum and must not be counted as an accepted clean translation. Full source and response are recorded in `reports/translation-audit-v45-recovered-marketing-paragraph-replay.json`.
+
+Validation passed: baseline extraction 55/55; complete extraction/reading-order corpus 107/107; typecheck and lint. Python server tests remain the v44 result (130 tests + 11 subtests); this iteration changed TypeScript extraction only. No app bundle was built. Debug server and benchmark have stopped; normal server PID 81428 is ready with `3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20`.
+
+Next: repair generic table-row boundary/classification false accepts with positive and negative layout fixtures, then manually recalculate the true-body denominator. Keep the table-adjacent full prose case as a negative fixture. Afterwards address statistical scope/quantifier failures and protected-token partial fallback. Do not loosen quality gates or report automatic labels as manual truth.
+
+## Previous checkpoint (2026-09-20 23:25 JST)
+
+### v44: proper-name fixes confirmed; statistical prose still has unsafe accepts
+
+Fresh production-reader-path report test-data/real-papers/reports/translation-audit-v44-post-protection.json used the same cohort as v43: 36 stratified blocks from wear-scale (ergonomics), marketing-consumer-production-journey (marketing), and cognitive-vr-mnemonic-processing (cognitive psychology). The run completed in about 2m53s. It accepted 12/36 and displayed source fallback on 24/36, unchanged from v43. Ordinary-body fallback was 3/12 (25%), all post-model; overall fallback comprised 19 pre-model and 5 post-model rows. The <=5% target is not met.
+
+All 12 accepted outputs were manually compared with the English source; see semantic-review-v44-post-protection.json. Two severity-2 semantic shifts remain (2/12 accepts overall, both in statistical prose; 2/3 accepted statistical-prose rows). For the participant sample, “from various fields of study” became ambiguous “各学科から88名”, potentially implying 88 participants per department. In a results paragraph, “none of the groups” became “両群間” (between two groups), though this experiment has three conditions. These are model semantic errors, not extraction errors, and current automatic quality checks accept them. Ordinary-body accepts were 0/9 severity >=2 in this small purposive cohort.
+
+The prior v43 severity-2 proper-name errors are resolved: narrative Kelly’s (2016) and acknowledgment Dimitrios Tsekouras now retain exact spelling under scientific/name protection. PDF-native geometry repair also restored the previously missing ’ co-production activities. We in the marketing abstract; the complete source and full abstract translation are now present and accepted. Since repair generated a new block ID, compare the old/new abstract by source content rather than stable key alone. These fixes reduced reviewed severity-2+ accepts from 3/12 to 2/12, but did not reduce fallback rate.
+
+A repeated Tucker (2014) row remains fallback. Under v43 the client gate cited missing year 2014; in v44 the server reports protected-token restoration failure for unit 0. This is a concrete false-reject / protection interaction to diagnose. Two other statistical rows also fail protected-token restoration (WEAR sample-size and cognitive pairwise results). Do not loosen the guard until inputs, placeholders, generated chunks, and restoration are captured. Mean accepted translation time was 9.22s; v43 was 9.93s and whole-run times were 2m53s vs 2m56s. This is descriptive only, not a controlled speed or quality gain.
+
+The v44 process loaded the edited protection code but reported the old identity 3b-mt-v5-semantic-v73-strict-restore-v20; at run time, the app cache constant was still v71. After v44, added source-protect-v1 to the server identity and synchronized the TypeScript cache key. A cross-language cache-identity test, typecheck, lint, and Python suite 130 + 11 subtests pass. Restarted server PID 80608 reports 3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20 and is ready. Model warmup OK failed the Japanese-script check, but model loading completed. PDF.js emitted its optional missing canvas.node warnings; the benchmark itself completed successfully.
+
+Next: create fixed, cross-domain statistical-prose fixtures for quantifier/group-scope preservation; trace the three protected-token restore failures end-to-end; only then make generalizable changes. Measure false rejects as well as unsafe accepts on a fresh versioned held-out cohort. Preserve v43/v44 reports and do not represent fallbacks as safety improvements.
+
+### v42: generic column, rail, caption, and continuation repair
+
+Native geometry on the Frontiers cognitive-VR PDF page 1 showed a 7pt publication
+date rail at x=73.9 beside 9pt body text beginning at x=208.3. Other pages had
+large figures/captions leaving only a few paired body lines, so the previous
+column-profile detector missed two-column layout and reading order interleaved
+the columns. This is generic line/block grouping evidence, before resolver role
+selection.
+
+`src/services/pdfLayout.ts` now identifies sparse but repeated column x-origins,
+separates narrow rail lines from wide body lines, reconnects caption lines when
+a short statistical caption tail is detached, and stitches only high-confidence
+unfinished prose continuations across nearby margin blocks/pages/columns. For a
+left-to-right column transition, it transfers only the unfinished sentence
+prefix, leaving later independent material with its own block. These changes
+were checked against the cognitive-vr PDF and synthetic reading-order cases;
+they are geometry/continuation based, not paper-specific.
+
+Fresh production reader-path report:
+`test-data/real-papers/reports/translation-audit-v42-margin-stitch.json`.
+The 12 sampled rows are 6 accepted and 6 visible fallbacks. The ordinary-body
+category contains 4 rows with 1 fallback (25%). Manual comparison of all six
+accepted Japanese outputs is recorded in
+`test-data/real-papers/reports/semantic-review-v42-margin-stitch.json`: 0/6
+severity >=2, with minor wording issues in all six. This is a purposive
+single-paper result, not a population estimate. Mean generation time for the
+six accepted outputs was 8.13 seconds; no matched performance claim is made.
+
+The previously accepted paragraph ending `... by comparing` is reconstructed
+through the next page before translation; the former “10 vs 20 cases” fluent
+hallucination is no longer generated. Figure 5's caption tail and p-value are
+preserved. The publication date is no longer fused into method prose. This
+repairs input structure, but several other damaged/table/reference fragments
+still fallback, and one statistical acknowledgment is rejected because the
+invariant guard considers `MWK` missing. Fallback and unsafe-accept targets
+remain unmet; no threshold was relaxed.
+
+Validation: extraction-corpus 107/107 (2 files), focused reading-order 67/67,
+target table/Wear Scale regressions 2/2, typecheck and lint pass. PDF.js emitted
+optional missing `canvas.node` warnings only. System Python 3.14 lacks pytest, so
+Python server tests were not runnable in this environment. No `.app` build was
+run; port 8765 remains the user's active server.
+
+### v39: nested statistics restore safely and terminology correction
+
+### v39: nested statistics restore safely and terminology correction
+
+The v33 and v38 Frontiers cognitive-paper samples share all 12 stable block
+keys. The targeted result block `b-0948b947` had been split at statistical
+degrees-of-freedom notation `(2)` and fell back after MADLAD omitted protected
+statistics. Production segmentation now treats those tokens as part of the
+statistic, and retry-only clause splitting isolates the school-exam result from
+the memory-result clause. A balanced nested-parenthesis scanner atomically
+protects *terminal* statistical result groups. If a dropped group is terminal,
+the exact source parenthetical is restored next to its translated claim; a
+nonterminal group is excluded so restoration cannot shift evidence onto a
+later claim.
+
+Fresh production `/translate` plus the client gate now accepts the 1,110-character
+block (`semantic-v73`): 242 input / 341 output tokens, 68.1 seconds, quality
+score 1.0. Manual comparison found the reported tests, values, p-values, and
+result directions intact (severity 1 for awkward placement of a Figure 5
+reference). On identical 12 stable keys, v33 had 7 accepts / 5 visible
+fallbacks; v39 has 8 / 4. One statistical-prose block moved from fallback to
+accept. Another block, `b-3e9b6acb`, still falls back after test-name
+placeholders are dropped; no broad statistics-fallback reduction is claimed.
+
+Reviewing every v39 accept also found three generic issues. A left publication
+date rail was fused into methods prose; a caption ending at the partial word
+`Significant` was translated without that fragment; and `stimulus material`
+became `刺激物質`. The first two remain accepted errors (severity 2). The
+terminology error was corrected with source-grounded normalization to
+`刺激素材` / `ビデオ素材`, without changing accept decisions on the exact same
+12 rows. Accepted severity-2+ went from 3/8 in v38 to 2/8 in v39; within the
+automatically ordinary-body category it is 2/5 (40%) in this purposive
+single-paper sample. Ordinary-body fallback is 0/5 in both runs; overall
+fallback is 4/12. This does not meet the <=5% ordinary-body fallback goal or
+the near-zero unsafe-error goal. See
+`reports/semantic-review-v39-stimulus-material.json` and
+`reports/translation-audit-v39-stimulus-material.json`.
+
+Python translation-server tests are being re-run after the v73 protection
+change; the glossary test passes 17/17. No `.app` build was run. Next: diagnose
+the generic page-rail/body merge and incomplete-caption false accepts, then
+investigate the remaining dropped-test-name fallback without loosening
+scientific invariants.
+
+## Previous checkpoint (v37, 2026-09-20)
+
+### v37 follow-up: statistical notation was misread as inline list markers
+
+The v33 cognitive-psychology fallback `cognitive-vr-mnemonic-processing:b-0948b947`
+contains a 1,110-character results paragraph. The prior segmenter interpreted
+every degrees-of-freedom token `(2)` in `H(2)` as an inline enumeration marker.
+Replaying the old production helper yields 10 units, including the broken pairs
+`... examinations (H` / `(2)=4.17...` and `... tasks (MCQ: H` / `(2) = 6.06...`.
+
+The new generic candidate rule accepts `(n)` only at a list boundary (start,
+colon, or semicolon) and only when prose follows; an equation form like
+`(2) = 6.06` is not a list marker. The production/cache version is now
+`semantic-v72`. The same source segments into six complete sentences and
+round-trips exactly. The real numbered-list regression still passes.
+
+This corrects source-unit damage but does not yet reduce fallback on that case.
+The same MADLAD model, through production `/translate`, still returned source
+because it dropped protected statistical evidence in two sentence units. Debug
+output shows unit 0 omitted `p=0.124` and the `(MCQ…; CT…; FR…)` group; unit 2
+omitted several task/p-value placeholders. The other four sentence units
+translated. Treat this as a separate remaining issue: dense result prose and
+all-or-nothing scientific-token restoration. The fix must preserve each test's
+reported values and their relationship; allowing dropped p-values merely to
+improve the fallback rate would be unsafe.
+
+Python translation-server tests now pass **125 tests plus 8 subtests**. The
+translation server is running and ready at `127.0.0.1:8765` with debug enabled
+and model `3b-mt-v5-semantic-v72-strict-restore-v20`; there is no active broad
+benchmark. Prior v33/v35 rates remain unchanged and descriptive only.
+
+Next: design and test a general strategy for dense statistical-result groups,
+then evaluate it on this block and held-out statistical prose. Continue ordinary
+body false-reject review and corpus expansion. No `.app` build was run.
+
+## Previous checkpoint (v33, 2026-09-20)
+
+The translation server was ready at `127.0.0.1:8765` with
+MADLAD `semantic-v71-strict-restore-v20`. The broad fresh run is v33
+(`reports/translation-audit-v33-cross-field-heldout.json`): three OA journal
+papers spanning ergonomics, corpus linguistics, and cognitive psychology, 12
+stratified blocks each. There were 22 model submissions, 15 accepts, and 21
+reader-visible fallbacks. Ordinary-body rows were 15 with 3 fallbacks (20.0%).
+Every accepted row was manually reviewed: severity >=2 appeared in 5/15 accepts;
+for ordinary-body accepts it was 5/12 (41.7%). This is a purposive diagnostic,
+not a prevalence estimate. See `reports/semantic-review-v33-cross-field-heldout.json`.
+
+The v33 held-out run confirmed that current source-role estimates can miss
+peripheral metadata. In the Frontiers PDF, `15 February 2023` in a left-side
+publication rail shared a baseline with body text; it was fused into the block
+and became an apparent experiment date. In the Springer ergonomics PDF, a
+repeated page-edge mark `1 3` was treated as paragraph text and joined to the
+next page's lowercase continuation, producing the input `1 3 means also...`
+and the accepted Japanese prefix “13…”. Native geometry showed that the real
+paragraph continued from the previous page's “Personal feedback” and the mark
+was a publisher footer.
+
+A generic repair recognizes short numeric/symbol marks repeated in the top or
+bottom page band as footer metadata. The boundary stitcher skips that marker
+only when geometry places it below the prior paragraph tail; it then joins the
+actual source continuation. It also requires a substantial source tail before
+generic cross-page stitching. The real paper now yields the full paragraph
+`Personal feedback means also ...` across pages 3–4 and retains `1 3` as a
+footer. The repaired real block is covered by a cached-paper regression.
+
+A fresh v35 reader-path run on that paper sampled 12 blocks: 5 submitted, 3
+accepted, 9 visible fallbacks; ordinary-body was 1/4 fallback (25%). The
+corrected block was not among the 12 sampled rows, and source-unit selection
+changed after reconstruction, so do not compare this as a causal rate change.
+Sending the exact reconstructed 2,446-character paragraph directly to the same
+server took 43.8 seconds (589 input / 766 output tokens). The model omitted
+source citation years 2015 and 2017 and shifted the four-user-experience-goal
+claim. The existing client quality evaluator scored it 0.794 and flags the
+missing years; the 0.8 threshold and invariant check should reject it. This is
+safe fallback, not a quality win: the ordinary-body goal remains <=5% and is
+not met.
+
+A fixed v36 sentence diagnostic compared a whole sentence, a manually inserted
+atomic citation placeholder, and mechanically separated complete clauses.
+Whole and clause-split variants each scored 0.723 with missing 2015/2017 citation
+years and were rejected by `isPlausibleJaTranslation`. A manually injected
+current-style `ZZCIT1ZZ` token was retained, then manually restored to the exact
+source citation. That simulation scored 1.0 and passed the current gate, but the
+Japanese output made the cited authors the grammatical agents who defined the
+goals. This is not a production false-accept measurement: the current server
+does not automatically protect this square-bracket author-year span. It is a
+controlled warning that naive bracket-citation protection could turn a rejected
+output into an unsafe accepted one. No server/model/gate change was made.
+
+Verification after the generic edge-marker change: extraction/read-order
+selection 107/107; reading-order and quality unit tests 141/141; Python
+translation-server tests 124 passed; typecheck, lint, `npm run build`, and
+`git diff --check` pass. The normal web build reports existing PDF.js direct-eval,
+large-chunk, and ineffective-dynamic-import warnings. No `.app` bundle was
+built. The translation server remains ready.
+
+Next: diagnose and repair peripheral metadata/body line grouping without
+paper-specific rules; review false rejects among the 21 v33 fallbacks, in
+particular table/source-only and scientific prose; evaluate a citation-aware
+complete-unit strategy against an alternate model on held-out papers; continue
+provenance-verified corpus expansion. The severe false-accept rate and fallback
+target remain unmet.
+
+## Previous checkpoint (2026-09-20 21:01 JST; v32)
+
+v32 audited one Springer marketing paper with 12 stratified blocks: 7 model
+submissions, 6 accepts, and 6 visible fallbacks (5 table/source-only before the
+model and 1 post-model quality fallback). Ordinary-body fallback was 1/6
+(16.7%), but table-row reclassification changed that denominator. All six
+accepts were reviewed; 3/6 had severity >=2, including the already observed
+unsupported experimental-results claim. Table 2/3 compact cell clusters were
+kept out of paragraph translation using generic caption proximity, repeated
+row spacing, x-column alignment, and neighboring cell evidence. Reliable
+structured grids remain incomplete. Details:
+`reports/translation-audit-v32-captioned-grid-row-recovery.json` and
+`reports/semantic-review-v32-marketing-grid.json`.
+
+## Historical checkpoint (2026-09-20 19:25 JST)
 
 The latest multi-paper baseline remains the fresh v20 cohort (4 papers, 48
 sampled blocks), not the older v16 broad cached-paper run described later in
