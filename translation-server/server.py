@@ -347,6 +347,8 @@ class TranslateResponse(BaseModel):
     translation_time_ms: float
     chars_per_sec: float
     tokens_per_sec: Optional[float]
+    fallback_reason: Optional[str] = None
+    fallback_stage: Optional[str] = None
 
 
 class BatchTranslateRequest(BaseModel):

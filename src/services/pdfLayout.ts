@@ -1633,7 +1633,7 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
       /^[a-z]/.test(rightHead) && !/[.!?;:]$/.test(leftTail);
     if (block.role !== "paragraph" || (!inferredTwoColumn && !labelSidebar && columns.size < 2) || columns.has("spanning") ||
         (!labelSidebar && block.bbox.width < typicalLineWidth * 1.65) || block.lines.length < 3 ||
-        (!startsMidPage && (columns.size < 2 || clearColumnContinuation)) ||
+        (!startsMidPage && !labelSidebar && (columns.size < 2 || clearColumnContinuation)) ||
         crossPageColumnContinuation) {
       result.push(block);
       continue;

@@ -17,7 +17,10 @@ from engines.segmenter import (
 
 class SegmenterTests(unittest.TestCase):
     def test_short_panel_fragment_is_marked_before_inference(self):
-        self.assertTrue(is_probable_panel_fragment("(b) the characteristics of the interaction method with peers."))
+        self.assertTrue(is_probable_panel_fragment("(b)"))
+        self.assertFalse(is_probable_panel_fragment("(b) the characteristics of the interaction method with peers."))
+        self.assertFalse(is_probable_panel_fragment("(b) shows the Thermal Earring data of P1 during fever."))
+        self.assertFalse(is_probable_panel_fragment("(a) The resulting parser models cannot easily be analyzed."))
         self.assertFalse(is_probable_panel_fragment("The paper evaluates (b) conditions in a complete paragraph."))
 
     def assert_round_trip(self, source: str) -> None:

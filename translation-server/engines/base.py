@@ -18,6 +18,11 @@ class TranslationResult:
     input_tokens: Optional[int] = None
     output_tokens: Optional[int] = None
     translation_time_ms: float = 0.0
+    # Present only when the engine deliberately returns or embeds source text
+    # after a decode/quality failure. This helps callers distinguish a model
+    # fallback from a transport error without inspecting logs.
+    fallback_reason: Optional[str] = None
+    fallback_stage: Optional[str] = None
 
     @property
     def chars_per_sec(self) -> float:
@@ -43,6 +48,8 @@ class TranslationResult:
             "input_tokens": self.input_tokens,
             "output_tokens": self.output_tokens,
             "translation_time_ms": self.translation_time_ms,
+            "fallback_reason": self.fallback_reason,
+            "fallback_stage": self.fallback_stage,
             "chars_per_sec": self.chars_per_sec,
             "tokens_per_sec": self.tokens_per_sec,
         }
