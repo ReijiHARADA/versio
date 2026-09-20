@@ -104,6 +104,21 @@ describe("applyGlossary", () => {
     ).toContain("カウンターバランス");
   });
 
+  it("normalizes stimulus-material mistranslations only when the source names that term", () => {
+    expect(
+      normalizeSourceGroundedTerminology(
+        "Stimulus material: The recorded video material was used in the task.",
+        "刺激物質:記録したビデオ物質を課題に用いた。"
+      )
+    ).toBe("刺激素材:記録したビデオ素材を課題に用いた。");
+    expect(
+      normalizeSourceGroundedTerminology(
+        "The chemical material was stored safely.",
+        "刺激物質を安全に保管した。"
+      )
+    ).toBe("刺激物質を安全に保管した。");
+  });
+
   it("repairs source-confirmed earring mistranslations without touching ear anatomy", () => {
     expect(
       normalizeSourceGroundedTerminology(

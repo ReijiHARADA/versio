@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import unittest
 import json
+import re
 from pathlib import Path
 
 from engines.madlad_mps import MADLADEngine
@@ -235,6 +236,33 @@ class SegmenterTests(unittest.TestCase):
         self.assertEqual(units[0], "The method has limitations:")
         self.assertTrue(all(f"({number})" in units[number] for number in range(1, 4)))
         self.assert_round_trip(source)
+
+    def test_statistical_degrees_of_freedom_are_not_inline_list_markers(self) -> None:
+        source = (
+            "None of the groups differed significantly with respect to their grade of final secondary school "
+            "examinations (H(2)=4.17, p=0.124), and the rule sets A and B resulted in equivalent memory "
+            "performance outcomes regarding the respective memory tasks (MCQ: U=727.0, z=−1.04, p=0.30; "
+            "CT: U=801.0, z=−0.31, p=0.741; FR: U=811.5, z=−0.23, p=0.841). Consequently, differences "
+            "between groups cannot be traced back to differences in rule sets. Regarding memory performance, "
+            "the three groups performed significantly different on the memory tasks (MCQ: H(2) = 6.06, p = "
+            "0.048; CT: H(2) = 17.01, p < 0.001; FR: H(2) = 9.52, p = 0.009)."
+        )
+        units = segment_for_translation(source)
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
+        self.assertFalse(any(unit.text.endswith("(H") for unit in units), units)
+        self.assertFalse(any(re.match(r"^\(2\)\s*=", unit.text) for unit in units), units)
+        self.assertFalse(any(re.match(r"^\(2\)=", unit.text) for unit in units), units)
+
+    def test_statistical_result_before_coordinated_clause_has_rescue_boundary(self) -> None:
+        source = "None of the groups differed significantly with respect to their grade of final secondary school examinations (H(2)=4.17, p=0.124), and the rule sets A and B resulted in equivalent memory performance outcomes regarding the respective memory tasks (MCQ: U=727.0, z=−1.04, p=0.30; CT: U=801.0, z=−0.31, p=0.741; FR: U=811.5, z=−0.23, p=0.841)."
+        units = segment_for_translation(source)
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
+        self.assertEqual(len(units), 1)  # Keep source intact; rescue splitting is retry-only.
+        rescue_units = rescue_units_for_translation(units[0].model_input)
+        self.assertEqual(len(rescue_units), 2)
+        self.assertIn("H(2)=4.17, p=0.124", rescue_units[0].text)
+        self.assertTrue(rescue_units[0].model_input.rstrip().endswith("."))
+        self.assertIn("MCQ: U=727.0", rescue_units[1].text)
 
     def test_overlong_top_level_semicolon_splits_into_safe_clauses(self) -> None:
         source = "The first clause explains the experimental context and includes enough ordinary prose to establish a meaningful translation unit for the model without relying on a shorthand notation or a citation, while also explaining the participant procedure and why the first condition matters; " + "the second clause explains the evaluation outcome and includes enough independent ordinary prose to remain meaningful after the safe boundary while preserving the original punctuation and ordering."

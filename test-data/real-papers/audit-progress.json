@@ -1,28 +1,105 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "3b-mt-v5-semantic-v71-strict-restore-v20",
+  "lastBenchmarkVersion": "3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20",
   "lastDiagnosticVersion": "scheduler-panel-and-inline-citation-v19",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
   "attributionStatus": "v6 baseline 12/48 (25.00%); audit-only semantic MiniLM v42 and coverage v66 completed; coverage found 10 exact invariant-loss rows (5 accepted), so token normalization/calibration is next; production gate unchanged",
   "latestExtractionCheckpoint": {
-    "date": "2026-09-20",
-    "scope": "held-out extraction regressions plus v32 live marketing table-row audit",
+    "date": "2026-09-21",
+    "scope": "v46 native multicell table-row detection, fresh 3-paper/36-row cohort, and full manual accept review",
     "causes": [
-      "PPG mixed-x finding was a valid bottom-left to top-right page-wrap; test now requires explicit flag and bottom/top geometry",
-      "HCI page continuation was separated by external captions/footnote/running header; stitching now allows only geometrically proven metadata gaps",
-      "Frontiers title final line was separated by y-interleaved masthead; same-style aligned short title line is reattached while retaining other affiliation lines",
-      "Marketing Springer Table 1–3 cell rows were fragmented across caption/column blocks; generic caption proximity, repeated row spacing, stable x-columns, and same-baseline cell evidence now marks compact clusters as table-related"
+      "Table rows with a long prose result cell had native PDF spans split across peer layout blocks; the original generic paragraph candidate accepted them as sentences.",
+      "Caption-proximate same-baseline native spans now provide generic multicell row evidence across peer blocks; the complete page-7 prose negative is retained as paragraph.",
+      "v46 still accepts statistical prose with changed quantifier/cardinality meaning; this is a separate MADLAD semantic false-accept cause.",
+      "A recovered full prose paragraph returns partial_unit_fallback after protected-token restoration, indicating a remaining false-reject path."
     ],
-    "verification": "selected extraction corpus + baseline + reading-order/quality 107/107; typecheck, lint, git diff --check passed; target regression asserts Table 2/3 cells stay out of paragraph translation",
+    "verification": "v46 fresh run: 3 OA papers / 36 stratified rows, 12 accepts and 24 visible fallbacks. All 12 accepts manually reviewed; 2 severity>=2 statistical semantic shifts. Two v45 flattened table false accepts are now structural table skips. The manually corrected sample has 6 genuine ordinary-body accepts and 0 visible fallbacks, too small/purposive to establish the <=5% product goal. Baseline 55/55, extraction/reading-order 107/107, default Vitest 408/408 (65 files), typecheck/lint pass. Server PID 81428 normal and ready.",
     "appBuild": "not run",
-    "translationBenchmark": "v32 completed on user-managed 127.0.0.1:8765 with MADLAD v20; marketing Springer 12 blocks, 7 model submissions, 6 accepts, 6 reader-visible fallbacks (5 pre-model table/source-only, 1 post-model quality fallback); ordinary-body 1/6 fallback (16.7%); purposive sample, and source-category denominator changed after table reclassification",
-    "manualReview": "all 6 accepts and the post-model fallback checked; 3/6 accepted outputs severity >=2, including previously confirmed accepted hallucination in b-6c425cba; see test-data/real-papers/reports/semantic-review-v32-marketing-grid.json",
+    "server": {
+      "endpoint": "http://127.0.0.1:8765",
+      "ready": true,
+      "modelVersion": "3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20",
+      "loadedProcessNeedsRestart": false,
+      "benchmarkActive": false,
+      "lastVerifiedAt": "2026-09-20T23:31:00+09:00",
+      "health": "ready; model_loaded=true",
+      "listenerPid": 80608,
+      "listenerStartedAt": "2026-09-20T23:29:00+09:00",
+      "latestCitationProtectionSourceModifiedAt": "2026-09-20T23:12:13+09:00"
+    },
+    "v42Run": "test-data/real-papers/reports/translation-audit-v42-margin-stitch.json",
+    "manualReview": "test-data/real-papers/reports/semantic-review-v46-table-grid-evidence.json",
+    "goalStatus": "not met; no broad product-rate claim. In this sample 2/12 accepts severity>=2, both statistical prose; ordinary-body denominator manually corrected to 6 accepts only.",
     "nextActions": [
-      "validate captioned repeated-cell table evidence on held-out OA formats and check for prose false positives",
-      "continue manual review of accepted and post-model-fallback rows; do not count v32 table reclassification as ordinary-body fallback improvement",
-      "continue corpus expansion beyond 52 catalog / 51 cached papers and measure ordinary-body fallback against the <=5% target"
-    ]
+      "diagnose source-protect partial fallback on the recovered complete marketing paragraph without weakening restoration checks",
+      "add held-out cross-domain fixtures for participant quantifier scope and group cardinality; reduce semantic false accepts without word blacklist",
+      "expand full manual review across more papers and use manually adjudicated body categories to estimate ordinary-body fallback",
+      "evaluate an alternate NMT/local model against stable source/translation fixtures after current extraction errors are separated"
+    ],
+    "v43Run": "test-data/real-papers/reports/translation-audit-v43-extraction-followup.json",
+    "postV43CodeChanges": [
+      "join native same-baseline same-font spanning fragments using adjacent geometry; adds abstract recovery regression",
+      "protect narrative author-year citations as atomic author+year spans",
+      "protect explicit multi-person acknowledgment proper-name lists"
+    ],
+    "v44Run": "test-data/real-papers/reports/translation-audit-v44-post-protection.json",
+    "v44Benchmark": {
+      "rows": 36,
+      "papers": 3,
+      "accepted": 12,
+      "readerVisibleFallbacks": 24,
+      "ordinaryBodyRows": 12,
+      "ordinaryBodyFallbacks": 3,
+      "ordinaryBodyFallbackRate": 0.25,
+      "acceptedReviewed": 12,
+      "acceptedSeverity2Plus": 2,
+      "acceptedUnsafeRate": 0.16666666666666666,
+      "statisticalProseAccepted": 3,
+      "statisticalProseSeverity2Plus": 2,
+      "protectionFixFindings": [
+        "Kelly 2016 narrative author citation now exact",
+        "Dimitrios Tsekouras acknowledgment name now exact",
+        "marketing abstract missing continuation recovered and translated",
+        "Tucker 2014 same-key row remains fallback; server reason changed to protected-token restoration failure"
+      ],
+      "report": "test-data/real-papers/reports/translation-audit-v44-post-protection.json",
+      "manualReview": "test-data/real-papers/reports/semantic-review-v44-post-protection.json"
+    },
+    "cacheIdentityFix": {
+      "serverClientVersion": "3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20",
+      "test": "src/test/translationModelVersion.test.ts",
+      "checks": [
+        "vitest 1/1",
+        "typecheck",
+        "lint",
+        "python 130 tests + 11 subtests"
+      ]
+    },
+    "v46Run": "test-data/real-papers/reports/translation-audit-v46-table-grid-evidence.json",
+    "v46Benchmark": {
+      "papers": 3,
+      "rows": 36,
+      "accepted": 12,
+      "readerVisibleFallbacks": 24,
+      "tableContaminationRows": 13,
+      "tableContaminationFallbacks": 13,
+      "automaticallyLabeledOrdinaryRows": 10,
+      "automaticallyLabeledOrdinaryFallbacks": 1,
+      "manuallyReviewedTrueBodyAccepts": 6,
+      "manuallyReviewedTrueBodyFallbacks": 0,
+      "acceptedReviewed": 12,
+      "acceptedSeverity2Plus": 2,
+      "acceptedUnsafeRate": 0.16666666666666666,
+      "statisticalProseAccepted": 3,
+      "statisticalProseSeverity2Plus": 2,
+      "report": "test-data/real-papers/reports/translation-audit-v46-table-grid-evidence.json",
+      "manualReview": "test-data/real-papers/reports/semantic-review-v46-table-grid-evidence.json",
+      "note": "purposive sample; automatic ordinary category includes funding metadata; body rate is not generalizable"
+    },
+    "validation": {
+      "fullVitest": "408 passed (65 files)"
+    }
   },
   "completedPapers": [
     "cognitive-psychology-gpt3",
@@ -64,7 +141,7 @@
   ],
   "pendingPapers": [],
   "reviewedBlocks": 134,
-  "lastCheckpoint": "2026-09-20-v32-captioned-grid-and-row-recovery",
+  "lastCheckpoint": "2026-09-21-v47-decode-path-isolation",
   "pendingManualReview": 60,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
@@ -80,12 +157,10 @@
     "ordinary-body fallback target <=5% not met (v16 baseline 30.3%; v32 single-paper diagnostic 1/6 = 16.7%)"
   ],
   "nextActions": [
-    "Validate v32 captioned repeated-cell table evidence on held-out publishers and confirm it does not promote nearby body prose; assess whether table rows can be reassembled into useful structured grids.",
-    "Continue manual comparison of the 60 remaining accepted fresh-v16 outputs and post-model fallbacks; do not count source-only table reclassification toward the ordinary-body fallback target.",
-    "Continue testing repaired page/column continuation and mixed-chrome separation on held-out PDFs, then measure the same stable-key ordinary-body cohort.",
-    "Investigate `protected_token_restore_failed`, `phrase_repetition`, and fluent semantic false accepts; preserve source fallback when a citation/source fragment is incomplete.",
-    "Expand metadata-verified lawful OA corpus from 52 catalog / 51 cached PDFs toward 70–90 papers with balanced field and publisher coverage.",
-    "Evaluate alternative local models only on the same source fixtures and include false accepts, false rejects, and wall time; CAT-Translate-1.4B pilot is currently unsafe and slow."
+    "diagnose and fix generic peripheral date/author rail contamination",
+    "review v33 pre/post-model fallbacks for false rejects and distinguish table/source-only from ordinary body",
+    "evaluate safe citation-aware complete translation units and alternate model on held-out papers",
+    "continue OA corpus expansion toward balanced 70–90 papers"
   ],
   "v33StructuralSafety": {
     "status": "implemented and verified",
@@ -469,7 +544,7 @@
     "ordinalReviewed": 7,
     "ordinalPending": 0
   },
-  "lastUpdated": "2026-09-18T07:39:00Z",
+  "lastUpdated": "2026-09-21T00:15:00+09:00",
   "manualReviewCompletedAt": "2026-09-16T16:25:07.633Z",
   "completedWork": [
     "Gemma 2 9B same-fixture 12-row audit completed (local Ollama, report model-quality-gemma2-9b-v1.json).",
@@ -3079,17 +3154,54 @@
     "2026-09-17: active 52-row manual review queue completed; all rows have reviewedAt and labels."
   ],
   "lastExtractionCheckpoint": {
-    "date": "2026-09-16",
-    "change": "checkpoint reconciliation after native rotation provenance",
-    "ozchiTableRegionRecall": 1,
-    "overallSourceIntegrityRate": 1,
-    "overallChromeContaminationRate": 0,
-    "extractionCorpusTests": "56 passed",
-    "fullVitest": "361 passed",
-    "nextAction": "Add a generic orientation-aware table/footnote fixture using page rotation and item transforms; then review arXiv/PMLR residuals.",
-    "latestCommit": "8d80922"
+    "date": "2026-09-20",
+    "scope": "v33 cross-field fresh semantic review plus v35 repeated edge-marker/page-stitch repair",
+    "causes": [
+      "v33 revealed a Frontiers left-side published-date rail fused with abstract body at shared baseline",
+      "v33 revealed repeated Springer edge mark `1 3` fused with a lowercase next-page continuation",
+      "page-boundary stitching now recognizes repeated short numeric/symbol edge markers as footer metadata and requires a substantial source tail",
+      "real Springer prose now stitches from `Personal feedback` into `means also...`; edge marker stays footer"
+    ],
+    "verification": "extraction/read-order selection 107/107; reading-order+quality 141/141; Python tests 124 passed; typecheck/lint/build/diff-check passed",
+    "appBuild": "not run",
+    "v33Benchmark": {
+      "report": "test-data/real-papers/reports/translation-audit-v33-cross-field-heldout.json",
+      "papers": 3,
+      "rows": 36,
+      "submitted": 22,
+      "accepted": 15,
+      "visibleFallbacks": 21,
+      "ordinaryRows": 15,
+      "ordinaryFallbacks": 3,
+      "ordinaryFallbackRate": 0.2,
+      "manualReview": "test-data/real-papers/reports/semantic-review-v33-cross-field-heldout.json",
+      "acceptedReviewed": 15,
+      "severity2PlusAccepted": 5,
+      "ordinaryAcceptedReviewed": 12,
+      "ordinarySeverity2Plus": 5,
+      "ordinaryUnsafeFalseAcceptRate": 0.4167
+    },
+    "v35Benchmark": {
+      "report": "test-data/real-papers/reports/translation-audit-v35-edge-marker-stitch.json",
+      "papers": 1,
+      "rows": 12,
+      "submitted": 5,
+      "accepted": 3,
+      "visibleFallbacks": 9,
+      "ordinaryRows": 4,
+      "ordinaryFallbacks": 1,
+      "ordinaryFallbackRate": 0.25,
+      "qualification": "sample selection changed after reconstruction; diagnostic only"
+    },
+    "v36TranslationUnitDiagnostic": "test-data/real-papers/reports/translation-unit-diagnostic-v36-experience-goals.json",
+    "nextActions": [
+      "diagnose and fix generic peripheral date/author rail contamination",
+      "review v33 pre/post-model fallbacks for false rejects and distinguish table/source-only from ordinary body",
+      "evaluate safe citation-aware complete translation units and alternate model on held-out papers",
+      "continue OA corpus expansion toward balanced 70–90 papers"
+    ]
   },
-  "nextAction": "Continue Phase 2 corpus expansion and manual semantic review; v25 is complete, no benchmark process active.",
+  "nextAction": "Fix generic peripheral metadata/body grouping; review false rejects among v33 fallback, then compare citation-safe translation units and alternatives on held-out papers; continue OA corpus expansion.",
   "lastUpdate": "2026-09-18 14:50 +0900",
   "iterationLog": [
     {
@@ -3192,7 +3304,7 @@
   "pausedAt": null,
   "activeProcess": {
     "benchmark": false,
-    "translationServer": "user-managed at 127.0.0.1:8765; /health ready after v25"
+    "translationServer": "normal server PID 81428 at 127.0.0.1:8765; model v73-source-protect-v1 ready; no debug mode"
   },
   "latestConsistency": "test-data/real-papers/reports/translation-audit-consistency-v1.json",
   "latestManualReviewQueue": "test-data/real-papers/reports/translation-manual-review-queue-v2.json",
@@ -3255,7 +3367,11 @@
       "candidateSelection": "test-data/real-papers/reports/candidate-selection-safety-v3.json",
       "selectiveCascade": "test-data/real-papers/reports/selective-cascade-audit-v2.json",
       "productionEligible": 0
-    }
+    },
+    "translationAuditV33": "test-data/real-papers/reports/translation-audit-v33-cross-field-heldout.json",
+    "semanticReviewV33": "test-data/real-papers/reports/semantic-review-v33-cross-field-heldout.json",
+    "translationAuditV35": "test-data/real-papers/reports/translation-audit-v35-edge-marker-stitch.json",
+    "translationUnitDiagnosticV36": "test-data/real-papers/reports/translation-unit-diagnostic-v36-experience-goals.json"
   },
   "activeBenchmarkRun": null,
   "activeManualReview": {
@@ -3298,31 +3414,24 @@
     ]
   },
   "latestFreshRun": {
-    "runId": "2026-09-20T10-06-01-548Z",
-    "report": "test-data/real-papers/reports/translation-audit-v24-fresh.json",
-    "papers": 4,
-    "rows": 48,
-    "allFallbacks": 35,
-    "preModelFallbacks": 23,
-    "postModelFallbacks": 12,
+    "runId": "2026-09-20T12-06-28-933Z",
+    "report": "test-data/real-papers/reports/translation-audit-v33-cross-field-heldout.json",
+    "papers": 3,
+    "rows": 36,
+    "allFallbacks": 21,
+    "preModelFallbacks": 14,
+    "postModelFallbacks": 7,
+    "accepted": 15,
     "ordinaryBodyRowsAutomaticCategory": 15,
-    "ordinaryBodyFallbacks": 5,
-    "ordinaryBodyFallbackRate": 0.3333333333333333,
-    "manualReview": "test-data/real-papers/reports/semantic-review-v24-fresh.json",
-    "acceptedOrdinaryManualReviewed": 10,
-    "severity2PlusAmongAcceptedOrdinary": 8,
-    "unsafeFalseAcceptRateAmongAcceptedOrdinary": 0.6,
-    "qualification": "same four-paper cohort/max 12 as v20; stable-key exact equality for 44 overlapping rows; automatic category may misclassify some list/chrome; not independent review",
-    "acceptedRowsManuallyReviewed": 13,
-    "acceptedOrdinaryBodyManuallyReviewed": 10,
-    "ordinaryBodySeverity2Plus": 6,
-    "allAcceptedSeverity2Plus": 8,
-    "overlapWithV20": {
-      "stableKeys": 44,
-      "sourceAndTranslationByteIdentical": 44,
-      "acceptFallbackDecisionIdentical": 44
-    },
-    "comparison": "v20 had 5/17 ordinary fallback (29.4%); v24 has 5/15 (33.3%); no fallback-rate improvement and denominators differ"
+    "ordinaryBodyFallbacks": 3,
+    "ordinaryBodyFallbackRate": 0.2,
+    "manualReview": "test-data/real-papers/reports/semantic-review-v33-cross-field-heldout.json",
+    "acceptedRowsManuallyReviewed": 15,
+    "severity2PlusAccepted": 5,
+    "ordinaryAcceptedManuallyReviewed": 12,
+    "ordinarySeverity2Plus": 5,
+    "ordinaryUnsafeFalseAcceptRate": 0.4167,
+    "sampling": "3 purposive OA papers, 12 stratified blocks each; descriptive only; not population estimate"
   },
   "latestCandidateModelEvaluation": {
     "model": "cyberagent/CAT-Translate-1.4b",
@@ -3343,18 +3452,20 @@
     "finding": "MADLAD produced one fluent SNR semantic error; scientific invariant prevented product display; 3 cases fell back due repetition/placeholder-quality failures."
   },
   "latestManualReview": {
-    "report": "test-data/real-papers/reports/translation-audit-fresh-20260920-v16.json",
-    "review": "test-data/real-papers/reports/semantic-review-fresh-20260920-v16.json",
-    "benchmarkPapers": 36,
-    "sampledUnits": 432,
-    "acceptedRows": 194,
-    "reviewedAcceptedRows": 194,
+    "report": "test-data/real-papers/reports/translation-audit-v39-stimulus-material.json",
+    "review": "test-data/real-papers/reports/semantic-review-v39-stimulus-material.json",
+    "benchmarkPapers": 1,
+    "sampledUnits": 12,
+    "acceptedRows": 8,
+    "reviewedAcceptedRows": 8,
     "pendingAcceptedRows": 0,
-    "severityGte2": 87,
-    "unsafeFalseAcceptRateOnReviewedAccepts": 0.4484536082474227,
-    "sampling": "all accepts from a section-risk-stratified sample; not an unbiased production population estimate",
-    "lastUpdated": "2026-09-20",
-    "nextAction": "Review a stratified sample of model fallbacks for false rejects; use severe accepted-error cases to design held-out generic diagnostics, then rerun fresh benchmark."
+    "severityGte2": 2,
+    "unsafeFalseAcceptRateOnReviewedAccepts": 0.25,
+    "ordinaryAcceptedRows": 5,
+    "ordinarySeverityGte2": 2,
+    "ordinaryUnsafeFalseAcceptRate": 0.4,
+    "sampling": "purposive, stable-key matched single-paper diagnostic",
+    "lastUpdated": "2026-09-20"
   },
   "v19FocusedFollowup": {
     "status": "v19 review complete; v20 extreme-compression gate implemented, tested, and validated in fresh four-paper benchmark; quality goal remains unmet",
@@ -3525,10 +3636,10 @@
     }
   },
   "latestCheckpoint": {
-    "checkedAt": "2026-09-20T19:45:00+09:00",
+    "checkedAt": "2026-09-21T00:15:00+09:00",
     "serverActive": true,
     "benchmarkActive": false,
-    "health8765": "ready_model_loaded after benchmark",
+    "health8765": "ready_model_loaded 3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20; normal server PID 81428",
     "corpus": {
       "catalogPapers": 52,
       "cachedPdfs": 51,
@@ -3604,6 +3715,206 @@
       "track and report format-family counts; add verified Springer LNCS, APA-like, MDPI/J-STAGE, scanned and thesis/report cases",
       "investigate v25 accepted hallucination/source-fragment cases by layer; improve generic paragraph reconstruction and input validation without a paper-specific rule",
       "review fallback samples for false rejects before tuning thresholds; retain <=5% ordinary-body fallback goal and semantic safety criteria"
+    ],
+    "goalMet": false,
+    "v42FreshBenchmark": {
+      "runId": "2026-09-20T13-43-32-041Z",
+      "report": "test-data/real-papers/reports/translation-audit-v42-margin-stitch.json",
+      "manualReview": "test-data/real-papers/reports/semantic-review-v42-margin-stitch.json",
+      "papers": [
+        "cognitive-vr-mnemonic-processing"
+      ],
+      "rows": 12,
+      "accepted": 6,
+      "visibleFallbacks": 6,
+      "ordinaryBodyRows": 4,
+      "ordinaryBodyVisibleFallbacks": 1,
+      "ordinaryBodyFallbackRate": 0.25,
+      "acceptedReviewed": 6,
+      "acceptedSeverity2Plus": 0,
+      "ordinaryUnsafeFalseAcceptRate": 0.0,
+      "acceptedMeanTranslationSeconds": 8.13,
+      "sampling": "purposive section-stratified single-paper diagnostic; not a population estimate"
+    },
+    "extractionValidation": {
+      "extractionCorpus": "107/107 passed",
+      "readingOrder": "67/67 passed",
+      "targetRegressions": "2/2 passed",
+      "typecheck": "passed",
+      "lint": "passed",
+      "pythonTests": "not run: system Python 3.14 has no pytest",
+      "appBuild": "not run"
+    },
+    "v43FreshBenchmark": {
+      "runId": "2026-09-20T13-59-15-694Z",
+      "report": "test-data/real-papers/reports/translation-audit-v43-extraction-followup.json",
+      "manualReview": "test-data/real-papers/reports/semantic-review-v43-extraction-followup.json",
+      "papers": [
+        "wear-scale",
+        "marketing-consumer-production-journey",
+        "cognitive-vr-mnemonic-processing"
+      ],
+      "rows": 36,
+      "accepted": 12,
+      "visibleFallbacks": 24,
+      "ordinaryBodyRows": 12,
+      "ordinaryBodyVisibleFallbacks": 3,
+      "ordinaryBodyFallbackRate": 0.25,
+      "acceptedReviewed": 12,
+      "acceptedSeverity2Plus": 3,
+      "unsafeFalseAcceptRate": 0.25,
+      "ordinaryBodyAcceptedReviewed": 9,
+      "ordinaryBodySeverity2Plus": 3,
+      "ordinaryBodyUnsafeFalseAcceptRate": 0.3333333333333333,
+      "sampling": "purposive section-stratified diagnostic, 3 OA papers; not a population estimate"
+    },
+    "postV43Fixes": {
+      "sourceFragment": "marketing abstract split across column boundary; native PDF line fragments are rejoined in spanning line",
+      "properNames": "narrative author-year and explicit acknowledgment name-list protection added",
+      "validation": {
+        "extractionCorpus": "107/107 passed",
+        "readingOrder": "67/67 passed",
+        "targetMarketingRegression": "1/1 passed",
+        "typecheck": "passed",
+        "lint": "passed",
+        "translationServerPytest": "130 passed + 11 subtests"
+      },
+      "freshBenchmark": "pending server restart; v43 predates these changes"
+    }
+  },
+  "v45ExtractionCheckpoint": {
+    "date": "2026-09-20",
+    "scope": "generic caption-neighbor table false-positive repair; fresh 3-paper/36-row reader-path cohort and full accept review",
+    "report": "test-data/real-papers/reports/translation-audit-v45-extraction-table-fix.json",
+    "manualReview": "test-data/real-papers/reports/semantic-review-v45-extraction-table-fix.json",
+    "recoveredBodyReplay": "test-data/real-papers/reports/translation-audit-v45-recovered-marketing-paragraph-replay.json",
+    "benchmark": {
+      "papers": 3,
+      "rows": 36,
+      "accepted": 15,
+      "visibleFallbacks": 21,
+      "automaticOrdinaryRows": 13,
+      "automaticOrdinaryFallbacks": 1,
+      "automaticOrdinaryFallbackRate": 0.0769230769,
+      "acceptedReviewed": 15,
+      "severityGte2": 5,
+      "unsafeFalseAcceptRateOnReviewedAccepts": 0.3333333333,
+      "note": "sample membership changed from v44; automatic body category contains two flattened accepted table rows and one funding metadata block, so the 1/13 rate is not a valid manual ordinary-body rate"
+    },
+    "fix": "captionedNeighborCellRows merges same-baseline spans and clusters nearby cell origins within 24pt; this prevents x=51pt and x=62pt paragraph line starts from creating false table evidence",
+    "validation": {
+      "baselineExtraction": "55 passed",
+      "extractionAndReadingOrder": "107 passed",
+      "typecheck": "passed",
+      "lint": "passed",
+      "translationServerTests": "unchanged from v44: 130 + 11 subtests passed"
+    },
+    "server": {
+      "endpoint": "http://127.0.0.1:8765",
+      "ready": true,
+      "modelVersion": "3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20",
+      "listenerPid": 81428,
+      "benchmarkActive": false,
+      "debugMode": false
+    },
+    "goalMet": false,
+    "nextActions": [
+      "add positive/negative held-out table-region tests and fix accepted flattened/incomplete marketing table rows",
+      "recompute ordinary-body fallback using manual category corrections",
+      "address statistical quantifier/group-scope unsafe accepts",
+      "diagnose protected-token partial fallbacks before changing quality thresholds"
     ]
+  },
+  "historicalManualReviewV16": {
+    "report": "test-data/real-papers/reports/translation-audit-fresh-20260920-v16.json",
+    "review": "test-data/real-papers/reports/semantic-review-fresh-20260920-v16.json",
+    "benchmarkPapers": 36,
+    "sampledUnits": 432,
+    "acceptedRows": 194,
+    "reviewedAcceptedRows": 194,
+    "pendingAcceptedRows": 0,
+    "severityGte2": 87,
+    "unsafeFalseAcceptRateOnReviewedAccepts": 0.4484536082474227,
+    "sampling": "all accepts from a section-risk-stratified sample; not an unbiased production population estimate",
+    "lastUpdated": "2026-09-20",
+    "nextAction": "Review a stratified sample of model fallbacks for false rejects; use severe accepted-error cases to design held-out generic diagnostics, then rerun fresh benchmark."
+  },
+  "latestFocusedRun": {
+    "runId": "2026-09-20T12-59-51-985Z",
+    "report": "test-data/real-papers/reports/translation-audit-v39-stimulus-material.json",
+    "papers": 1,
+    "rows": 12,
+    "accepted": 8,
+    "visibleFallbacks": 4,
+    "ordinaryBodyRows": 5,
+    "ordinaryBodyFallbacks": 0,
+    "modelVersion": "3b-mt-v5-semantic-v73-strict-restore-v20",
+    "sampling": "same stable keys as v33 cognitive paper cohort; descriptive only"
+  },
+  "previousManualReviewV33": {
+    "report": "test-data/real-papers/reports/translation-audit-v33-cross-field-heldout.json",
+    "review": "test-data/real-papers/reports/semantic-review-v33-cross-field-heldout.json",
+    "benchmarkPapers": 3,
+    "sampledUnits": 36,
+    "acceptedRows": 15,
+    "reviewedAcceptedRows": 15,
+    "pendingAcceptedRows": 0,
+    "severityGte2": 5,
+    "unsafeFalseAcceptRateOnReviewedAccepts": 0.3333333333,
+    "ordinaryAcceptedRows": 12,
+    "ordinarySeverityGte2": 5,
+    "ordinaryUnsafeFalseAcceptRate": 0.4166666667,
+    "sampling": "section-stratified, purposive 3-paper diagnostic; not an unbiased population estimate",
+    "lastUpdated": "2026-09-20"
+  },
+  "v46ExtractionCheckpoint": {
+    "date": "2026-09-21",
+    "report": "test-data/real-papers/reports/translation-audit-v46-table-grid-evidence.json",
+    "manualReview": "test-data/real-papers/reports/semantic-review-v46-table-grid-evidence.json",
+    "papers": 3,
+    "rows": 36,
+    "accepted": 12,
+    "visibleFallbacks": 24,
+    "acceptedReviewed": 12,
+    "severityGte2": 2,
+    "ordinaryBodyReviewedAccepts": 6,
+    "ordinaryBodyVisibleFallbacks": 0,
+    "goalMet": false,
+    "serverPid": 81428,
+    "nextAction": "diagnose source-protect partial fallback on the recovered complete marketing paragraph without weakening restoration checks",
+    "validation": {
+      "baselineExtraction": "55 passed",
+      "extractionAndReadingOrder": "107 passed",
+      "defaultVitest": "408 passed (65 files)",
+      "typecheck": "passed",
+      "lint": "passed",
+      "translationServerTests": "unchanged; latest v44 130 + 11 subtests"
+    }
+  },
+  "v47DecodeTraceCheckpoint": {
+    "date": "2026-09-21",
+    "purpose": "trace two v46 accepted severity-2 semantic shifts from exact production request through segmentation/protection/decode/quality gate",
+    "modelVersion": "3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20",
+    "diagnosticArtifacts": {
+      "log": "/tmp/paper-reader-semantic-v47.log",
+      "fullBlockReplay": "/tmp/paper-reader-semantic-v47-replay.json",
+      "sameProcessVariants": "/tmp/paper-reader-semantic-v47-variants.json"
+    },
+    "findings": [
+      "Participant scope shift reproduced with intact 161-character sentence as one chunk: various fields of study -> 各学科から88名; no fallback, numeric facts retained.",
+      "None of the groups -> 両群間 reproduced at model decode; later explicit three-group context did not fix it. Group-explicit rewrite translated as 3群間.",
+      "Same-process variant: No significant differences were found among the three groups translated as 3群間 (31 input/17 output tokens). Participant rewrites remained omission-prone or scope-ambiguous.",
+      "Primary attribution: MADLAD decode. Secondary: current quality gate has no collective cardinality/scope signal. Batching/postprocess are not first corruption point; citation protection may remove context but does not fully explain the result."
+    ],
+    "productionChanges": [],
+    "server": {
+      "pid": 83146,
+      "port": 8765,
+      "ready": true,
+      "debugMode": false,
+      "modelVersion": "3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20"
+    },
+    "benchmarkRunning": false,
+    "nextAction": "Create held-out cross-domain quantifier/cardinality fixtures and measure semantic verification/cascade signals plus false-reject rate before any production gate or rewrite."
   }
 }

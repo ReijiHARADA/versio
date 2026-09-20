@@ -1,0 +1,36 @@
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { MADLAD_MODEL_VERSION } from "../services/translation/madladEngine";
+
+const segmenterSource = readFileSync(
+  new URL("../../translation-server/engines/segmenter.py", import.meta.url),
+  "utf8"
+);
+const protectionSource = readFileSync(
+  new URL("../../translation-server/engines/citation_protect.py", import.meta.url),
+  "utf8"
+);
+const engineSource = readFileSync(
+  new URL("../../translation-server/engines/madlad_mps.py", import.meta.url),
+  "utf8"
+);
+
+describe("MADLAD translation cache identity", () => {
+  it("keeps the client cache version aligned with the server pipeline", () => {
+    const segmenterVersion = segmenterSource.match(
+      /SEGMENTER_VERSION\s*=\s*["']([^"']+)["']/
+    )?.[1];
+    const protectionVersion = protectionSource.match(
+      /SOURCE_PROTECTION_VERSION\s*=\s*["']([^"']+)["']/
+    )?.[1];
+
+    expect(segmenterVersion).toBeTruthy();
+    expect(protectionVersion).toBeTruthy();
+    expect(engineSource).toContain(
+      "f\"3b-mt-v5-{SEGMENTER_VERSION}-{SOURCE_PROTECTION_VERSION}-strict-restore-v20\""
+    );
+    expect(MADLAD_MODEL_VERSION).toBe(
+      `3b-mt-v5-${segmenterVersion}-${protectionVersion}-strict-restore-v20`
+    );
+  });
+});

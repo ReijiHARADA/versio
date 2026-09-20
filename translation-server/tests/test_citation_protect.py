@@ -150,8 +150,8 @@ class CitationProtectTests(unittest.TestCase):
     def test_protects_ascii_chi_square_statistic(self) -> None:
         source = "There was no difference (chi square test, χ2(3)=0.37, p=0.83)."
         protected, citations, nonce = protect_citations(source)
-        self.assertIn("χ2(3)=0.37", citations)
-        self.assertIn("p=0.83", citations)
+        self.assertEqual(citations, ["(chi square test, χ2(3)=0.37, p=0.83)"])
+        self.assertNotIn("χ2(3)=0.37", protected)
         self.assertEqual(restore_citations(protected, citations, nonce), source)
 
     def test_protects_bare_rank_statistic_and_figure_panel_reference(self) -> None:
@@ -226,6 +226,47 @@ class CitationProtectTests(unittest.TestCase):
         self.assertEqual(citations, ["(Sigure & Koseki, 1998; Marquardt et al., 2011)"])
         self.assertNotIn("2011", protected)
         self.assertEqual(restore_citations(protected, citations, nonce), source)
+
+    def test_protects_narrative_author_year_name_and_year_atomically(self) -> None:
+        for source, span in (
+            ("Kelly’s (2016) WEAR Scale was validated.", "Kelly’s (2016)"),
+            ("Marquardt et al. (2011) reported the result.", "Marquardt et al. (2011)"),
+            ("Smith and Lee (2019) found an effect.", "Smith and Lee (2019)"),
+        ):
+            with self.subTest(source=source):
+                protected, citations, nonce = protect_citations(source)
+                self.assertIn(span, citations)
+                self.assertNotIn(span, protected)
+                self.assertEqual(restore_citations(protected, citations, nonce), source)
+
+    def test_protects_explicit_acknowledgment_name_lists(self) -> None:
+        source = (
+            "The author thanks Nuno Camacho, Stefano Puntoni, Roland Rust, "
+            "Dimitrios Tsekouras, Sonja Wendel, and participants at the conference."
+        )
+        names = "Nuno Camacho, Stefano Puntoni, Roland Rust, Dimitrios Tsekouras, Sonja Wendel"
+        protected, citations, nonce = protect_citations(source)
+        self.assertEqual(citations, [names])
+        self.assertIn("The author thanks", protected)
+        self.assertIn("and participants at the conference", protected)
+        self.assertEqual(restore_citations(protected, citations, nonce), source)
+
+    def test_protects_and_restores_terminal_nested_statistical_result_group(self) -> None:
+        source = "Regarding memory performance, groups differed (MCQ: H(2) = 6.06, p = 0.048; CT: H(2) = 17.01, p < 0.001; FR: H(2) = 9.52, p = 0.009)."
+        protected, citations, nonce = protect_citations(source)
+        self.assertEqual(
+            citations,
+            ["(MCQ: H(2) = 6.06, p = 0.048; CT: H(2) = 17.01, p < 0.001; FR: H(2) = 9.52, p = 0.009)"],
+        )
+        self.assertEqual(
+            restore_citations("記憶成績に群間差が認められた。", citations, nonce, reject_missing=True),
+            f"記憶成績に群間差が認められた{citations[0]}。",
+        )
+
+    def test_nonterminal_nested_statistics_are_not_moved_to_a_later_claim(self) -> None:
+        source = "School results did not differ (H(2)=4.17, p=0.124), and memory outcomes were equivalent (U=10, p=0.4)."
+        _, citations, _ = protect_citations(source)
+        self.assertNotIn("(H(2)=4.17, p=0.124)", citations)
 
     def test_author_year_pattern_does_not_capture_non_citation_parentheses(self) -> None:
         self.assertIsNone(AUTHOR_YEAR_CITATION_RE.search("The value (2017 measurements) was stable."))

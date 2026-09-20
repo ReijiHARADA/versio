@@ -100,6 +100,36 @@ describe("isEquationLine", () => {
 });
 
 describe("PDF reading order regression", () => {
+  it("keeps a narrow publication-rail date out of a body line on the same baseline", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 1, width: 612, height: 792,
+      textItems: [
+        { text: "15 February 2023", x: 74, y: 406, width: 55, height: 8, fontSize: 7, fontName: "Rail", page: 1 },
+        { text: "participants had to mark the correct arrangement of building blocks, and a construction", x: 208, y: 408, width: 344, height: 9, fontSize: 9, fontName: "Body", page: 1 },
+      ],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    const body = blocks.find((block) => block.text.includes("participants had to mark"));
+    expect(body?.text).not.toContain("15 February 2023");
+    expect(blocks.some((block) => block.text.includes("15 February 2023"))).toBe(true);
+  });
+
+  it("joins a standalone figure label and caption fragments across native column bands", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 1, width: 612, height: 792,
+      textItems: [
+        { text: "FIGURE 5", x: 55, y: 100, width: 28, height: 6, fontSize: 5.5, fontName: "Small", page: 1 },
+        { text: "Mean scores of the achieved points in the respective memory task per group. The error bars depict the standard deviation from group mean. Significant", x: 55, y: 110, width: 472, height: 7, fontSize: 7, fontName: "Caption", page: 1 },
+        { text: "differences between groups are marked, respectively, (* p<0.05, ** p<0.01, *** p<0.001).", x: 55, y: 119, width: 250, height: 7, fontSize: 7, fontName: "Caption", page: 1 },
+      ],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    const caption = blocks.find((block) => block.role === "figure_caption");
+    expect(caption?.text).toContain("FIGURE 5");
+    expect(caption?.text).toContain("Significant differences between groups");
+    expect(caption?.text).toContain("p<0.001");
+  });
+
   it("stitches an unfinished paragraph across a page boundary", () => {
     const longPrefix = "Examination of the distribution of targets that were not tapped within the time limit indicated that the corners of the screen are generally prone to errors. One";
     const pages: ExtractedPage[] = [
@@ -152,6 +182,39 @@ describe("PDF reading order regression", () => {
     expect(paragraphs[0].text).toContain("to gain a better understanding");
   });
 
+  it("does not attach a short publisher mark at the page edge to lowercase prose", () => {
+    const pages: ExtractedPage[] = [
+      { pageNumber: 1, width: 612, height: 792, textItems: [
+        { text: "1 3", x: 504, y: 745, width: 17, height: 15, fontSize: 15, fontName: "PublisherMark", page: 1 },
+      ] },
+      { pageNumber: 2, width: 612, height: 792, textItems: [
+        { text: "means also that the application is intended for the personal use of the worker.", x: 51, y: 64, width: 238, height: 10, fontSize: 10, fontName: "Body", page: 2 },
+      ] },
+    ];
+    const { blocks } = reconstructDocument(pages);
+    expect(blocks.some((block) => block.text.includes("1 3 means also"))).toBe(false);
+    expect(blocks.some((block) => block.text.startsWith("means also that the application"))).toBe(true);
+  });
+
+  it("skips a repeated edge mark and joins the actual cross-page paragraph continuation", () => {
+    const pages: ExtractedPage[] = [
+      { pageNumber: 1, width: 612, height: 792, textItems: [
+        { text: "The design gives workers personal feedback", x: 338, y: 700, width: 220, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "1 3", x: 504, y: 745, width: 17, height: 15, fontSize: 15, fontName: "PublisherMark", page: 1 },
+      ] },
+      { pageNumber: 2, width: 612, height: 792, textItems: [
+        { text: "means also that the application is intended for personal use.", x: 54, y: 64, width: 280, height: 10, fontSize: 10, fontName: "Body", page: 2 },
+        { text: "1 3", x: 52, y: 745, width: 17, height: 15, fontSize: 15, fontName: "PublisherMark", page: 2 },
+      ] },
+    ];
+    const { blocks } = reconstructDocument(pages);
+    const paragraph = blocks.find((block) => block.text.includes("The design gives workers"));
+    expect(paragraph?.text).toContain("feedback means also that the application");
+    expect(paragraph?.pageStart).toBe(1);
+    expect(paragraph?.pageEnd).toBe(2);
+    expect(blocks.some((block) => block.role === "footer" && block.text === "1 3")).toBe(true);
+  });
+
   it("stitches same-column text split by a nearby affiliation line", () => {
     const pages: ExtractedPage[] = [{
       pageNumber: 1,
@@ -194,14 +257,16 @@ describe("PDF reading order regression", () => {
     const { blocks } = reconstructDocument(pages);
     const paragraphs = blocks.filter((block) => block.role === "paragraph");
     const body = paragraphs.find((block) => block.text.includes("consumer behaviour"));
-    const affiliation = blocks.find((block) => block.role === "affiliation");
+    const affiliation = blocks.find((block) => block.text.includes("Department of Events"));
+    const affiliationContinuation = blocks.find((block) => block.text.includes("Mackay Hall"));
 
     expect(body).toBeDefined();
     expect(body?.text).toContain("consumer behaviour");
     expect(body?.text).not.toContain("Department of Events");
     expect(body?.text).not.toContain("Mackay Hall");
-    expect(affiliation?.text).toContain("Department of Events");
-    expect(affiliation?.text).toContain("Mackay Hall");
+    expect(affiliation).toBeDefined();
+    expect(affiliationContinuation).toBeDefined();
+    expect(affiliationContinuation?.text).not.toContain("consumer behaviour");
   });
 
   it("excludes native text embedded inside a figure image", () => {

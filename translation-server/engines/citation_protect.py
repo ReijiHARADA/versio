@@ -10,6 +10,10 @@ from __future__ import annotations
 
 import re
 
+# Bump this whenever source-fact protection rules change. It participates in
+# the server translation/cache identity so old accepts are not reused silently.
+SOURCE_PROTECTION_VERSION = "source-protect-v1"
+
 # Numeric citations only: [8], [12], [1, 3], [12,13], [1-4], [1–4], [1, 3–5, 8]
 CITATION_RE = re.compile(
     r"\["
@@ -44,6 +48,28 @@ AUTHOR_YEAR_CITATION_RE = re.compile(
     r"(?=[^()]{0,360}\b[A-Z][A-Za-z'’-]+)"
     r"[^()]*"
     r"\)"
+)
+
+# Narrative author-year citations (including possessives) appear outside
+# parentheses: `Kelly’s (2016)` and `Marquardt et al. (2011)`. Protect the
+# author token together with its year so transliteration/decoding cannot alter
+# a cited scholar's name while leaving the year intact.
+NARRATIVE_AUTHOR_YEAR_CITATION_RE = re.compile(
+    r"\b"
+    r"(?:[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+|[a-z]{1,4}\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+)"
+    r"(?:\s+et\s+al\.?)?"
+    r"(?:\s+(?:and|&)\s+(?:[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+|[a-z]{1,4}\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+))?"
+    r"(?:['’]s)?\s*"
+    r"\(\s*(?:18|19|20)\d{2}[a-z]?\s*\)"
+)
+
+# Names in explicit acknowledgment lists are factual entities, not translation
+# targets. Capture only a list of at least three two-token proper names after
+# a clear thank/acknowledge verb; ordinary title-cased prose is not protected.
+_ACK_NAME = r"[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+(?:\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+){1,2}"
+ACKNOWLEDGMENT_NAME_LIST_RE = re.compile(
+    r"\b(?:[Tt]he\s+author|[Ww]e|I)\s+(?:would\s+like\s+to\s+)?(?:thanks?|acknowledges?)\s+"
+    r"(?P<names>" + _ACK_NAME + r"(?:,\s+" + _ACK_NAME + r"){1,}(?:,\s+(?:and\s+)?" + _ACK_NAME + r")?)"
 )
 
 # A parenthetical that contains a figure reference or an explicit statistical
@@ -130,13 +156,58 @@ def _placeholder_pattern(index: int, nonce: int) -> re.Pattern[str]:
     return re.compile(re.escape(token), re.IGNORECASE)
 
 
+def _terminal_nested_statistical_parentheticals(text: str) -> list[re.Match[str]]:
+    """Find balanced terminal result groups containing nested test notation.
+
+    The simpler regex cannot match shapes such as ``(H(2)=4.17, p=0.124)``.
+    Protecting a complete terminal group lets the existing restore path retain
+    test/value relationships when the model drops its placeholder. Nonterminal
+    groups are excluded because restoring them at sentence end could attach
+    results to a later coordinated claim.
+    """
+    matches: list[re.Match[str]] = []
+    for start, char in enumerate(text):
+        if char != "(":
+            continue
+        depth = 0
+        end = -1
+        for index in range(start, min(len(text), start + 421)):
+            if text[index] == "(":
+                depth += 1
+            elif text[index] == ")":
+                depth -= 1
+                if depth == 0:
+                    end = index + 1
+                    break
+        if end < 0 or end - start <= 2:
+            continue
+        if text[end:].strip().rstrip(".?!。！？").strip():
+            continue
+        value = text[start:end]
+        statistic = re.search(
+            r"(?:[χΧxX](?:²|2)?|[FfTtZz])\s*\([^()]{1,20}\)\s*(?:=|<|>|≤|≥)\s*[-+]?\d"
+            r"|\bH\s*\(\s*\d+\s*\)\s*(?:=|<|>|≤|≥)\s*[-+]?\d"
+            r"|(?-i:\b[UWHV])\s*=\s*[-+]?\d",
+            value,
+        )
+        p_value = re.search(r"\bp\s*(?:=|<|>|≤|≥)\s*\.?\d", value, re.I)
+        if statistic and p_value:
+            match = re.compile(re.escape(value)).match(text, start, end)
+            if match:
+                matches.append(match)
+    return matches
+
+
 def _protected_matches(text: str) -> list[re.Match[str]]:
     matches = (
         list(CITATION_RE.finditer(text))
         + list(INLINE_FOOTNOTE_CITATION_RE.finditer(text))
         + list(INLINE_NUMERIC_CITATION_RE.finditer(text))
+        + list(NARRATIVE_AUTHOR_YEAR_CITATION_RE.finditer(text))
+        + [match for match in ACKNOWLEDGMENT_NAME_LIST_RE.finditer(text)]
         + list(AUTHOR_YEAR_CITATION_RE.finditer(text))
         + list(SCIENTIFIC_PARENTHETICAL_RE.finditer(text))
+        + _terminal_nested_statistical_parentheticals(text)
         + list(SCIENTIFIC_TOKEN_RE.finditer(text))
     )
     # Do not turn ordinary uppercase function words or the conventional
@@ -154,6 +225,19 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
             and re.match(r"[A-Z]{2,8}(?=\s*[-‐‑–—]\s*\d)", text[match.start():])
         )
     ]
+    # The acknowledgment expression wraps its names in a leading sentence
+    # context. Protect only that name-list subspan, leaving the thanks clause
+    # available for translation.
+    scoped_matches: list[re.Match[str]] = []
+    for match in matches:
+        if match.re is ACKNOWLEDGMENT_NAME_LIST_RE:
+            start, end = match.span("names")
+            name_match = re.compile(re.escape(match.group("names"))).match(text, start, end)
+            if name_match:
+                scoped_matches.append(name_match)
+        else:
+            scoped_matches.append(match)
+    matches = scoped_matches
     matches.sort(key=lambda match: (match.start(), -(match.end() - match.start())))
     non_overlapping: list[re.Match[str]] = []
     end = -1

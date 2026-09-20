@@ -45,6 +45,11 @@ describe("baseline benchmark on cached real papers", () => {
       const pages = await extractPdfPages(pdfPath);
       const { blocks } = reconstructDocument(pages);
       if (paper.id === "marketing-consumer-production-journey") {
+        const abstract = blocks.find((block) =>
+          block.text.startsWith("New digital technologies not only support consumers")
+        );
+        expect(abstract?.text).toContain("analyze how marketing can support consumers’ co-production activities.");
+        expect(abstract?.text).toContain("We discuss the managerial and consumer welfare implications");
         const stitchedParagraph = blocks.find((block) =>
           block.text.includes("The first dimension describes the extent to which consumers are active")
         );
@@ -79,6 +84,23 @@ describe("baseline benchmark on cached real papers", () => {
         );
         expect(consumerProductionTableCells?.type).toBe("table");
         expect(consumerProductionTableCells?.translationStatus).toBe("skipped");
+        const consumerProductionBody = fullExtraction.blocks.find((block) =>
+          block.original.startsWith("(Wirtz et al. 2003). When they become co-producers")
+        );
+        expect(consumerProductionBody?.type).toBe("paragraph");
+        expect(consumerProductionBody?.metadata.tableSourceFallback).not.toBe(true);
+        expect(consumerProductionBody?.translationStatus).toBe("pending");
+        const flattenedNetworkTableRow = fullExtraction.blocks.find((block) =>
+          block.original.startsWith("Consumer co-production network Brodie et al. (2013)")
+        );
+        const flattenedReviewTableRow = fullExtraction.blocks.find((block) =>
+          block.original.startsWith("Mathwick and Mosteller Review products Survey")
+        );
+        expect(flattenedNetworkTableRow?.type).toBe("table");
+        expect(flattenedNetworkTableRow?.translationStatus).toBe("skipped");
+        expect(flattenedReviewTableRow?.metadata.role).toBe("table");
+        expect(flattenedReviewTableRow?.metadata.tableSourceFallback).toBe(true);
+        expect(flattenedReviewTableRow?.translationStatus).toBe("skipped");
         const marketingValueTableCells = fullExtraction.blocks.find((block) =>
           block.original.includes("Greater consumption skills") &&
           block.original.includes("Commercial gains from co-production")
@@ -98,6 +120,28 @@ describe("baseline benchmark on cached real papers", () => {
         expect(marketingJourneyLastTableRow?.metadata.role).toBe("table");
         expect(marketingJourneyLastTableRow?.translationStatus).toBe("skipped");
         expect(marketingJourneyLastTableRow?.metadata.tableSourceFallback).toBe(true);
+      }
+      if (paper.id === "ergonomics-quantified-factory-worker") {
+        const crossPageParagraph = blocks.find((block) =>
+          block.text.includes("Personal feedback means also that the application is intended")
+        );
+        expect(crossPageParagraph?.pageStart).toBe(3);
+        expect(crossPageParagraph?.pageEnd).toBe(4);
+        expect(crossPageParagraph?.text).not.toMatch(/^1\s+3\s+means also/);
+        expect(blocks.some((block) => block.role === "footer" && block.text.trim() === "1 3")).toBe(true);
+      }
+      if (paper.id === "cognitive-vr-mnemonic-processing") {
+        const methodText = blocks.find((block) => block.text.includes("participants had to mark"));
+        expect(methodText?.text).not.toContain("15 February 2023");
+        const figureFive = blocks.find((block) => block.role === "figure_caption" && block.text.includes("FIGURE 5"));
+        expect(figureFive?.text).toContain("Significant differences between groups");
+        expect(figureFive?.text).toContain("p<0.001");
+        const discussionContinuation = blocks.find((block) => block.text.startsWith("The present study aimed to further clarify"));
+        expect(discussionContinuation?.pageStart).toBe(3);
+        expect(discussionContinuation?.pageEnd).toBe(5);
+        expect(discussionContinuation?.text).toContain("by comparing memory performance after learning information");
+        expect(discussionContinuation?.text).toContain("self-relevance of the situation");
+        expect(discussionContinuation?.text).toMatch(/rules regarding the spatial arrangement of the building blocks\.$/);
       }
       const gt = loadGroundTruth(paper.id);
       const report = evaluateBaselinePaper({

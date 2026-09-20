@@ -186,6 +186,13 @@ const SOURCE_GROUNDED_TERMS: Array<{
     source: /\bmobile\s+domain\b/i,
     replacements: [[/移動領域/g, "モバイル分野"]],
   },
+  {
+    source: /\bstimulus\s+material\b/i,
+    replacements: [
+      [/刺激物質/g, "刺激素材"],
+      [/ビデオ物質/g, "ビデオ素材"],
+    ],
+  },
 ];
 
 export function normalizeSourceGroundedTerminology(
