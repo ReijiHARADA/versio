@@ -612,6 +612,37 @@ describe("unsafe extracted translation input", () => {
     ).toBe(true);
   });
 
+  it("rejects source units cut after determiners, subordinators, or list delimiters", () => {
+    const incompleteUnits = [
+      "The first dimension describes the",
+      "Pilots identified an oil pressure trend and suggested that",
+      "The observed effects were statistically reliable, and",
+      "The protocol included repeated strength and cognitive assessments,",
+      "The participant keywords were choice, availability, and",
+      "The main outcomes were cognition;",
+    ];
+    for (const source of incompleteUnits) {
+      expect(unsafeParagraphStructureReason(source), source).toContain("末尾");
+      expect(shouldTranslateParagraph(source), source).toBe(false);
+    }
+
+    expect(
+      shouldTranslateParagraph(
+        "The first dimension describes the consumer's participation in the co-production process."
+      )
+    ).toBe(true);
+    expect(
+      shouldTranslateParagraph(
+        "Pilots identified an oil pressure trend and suggested that additional information would be useful."
+      )
+    ).toBe(true);
+    expect(
+      shouldTranslateParagraph(
+        "The participant keywords were choice, availability, and purchase intention."
+      )
+    ).toBe(true);
+  });
+
   it("keeps an unpunctuated terminal infinitive from being completed by the model", () => {
     const source = "NVivo, SPSS, and AMOS programs were used to perform";
     expect(unsafeParagraphStructureReason(source)).toContain("不定詞の補語");

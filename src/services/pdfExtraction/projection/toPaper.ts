@@ -333,6 +333,31 @@ export function projectCanonicalToPaper(input: {
       continue;
     }
 
+    // A high-confidence table role can still lack enough native cells to
+    // construct a grid or crop an image. Keep its extracted text visible as
+    // source-only prose instead of silently dropping the node or translating
+    // unrelated cells as a fabricated paragraph.
+    if (node.role === "table" && node.text) {
+      pushBlock(node, layout, {
+        sectionId: currentSectionId,
+        type: "paragraph",
+        pageStart: node.pageStart,
+        pageEnd: node.pageEnd,
+        boundingBoxes: boxes,
+        original: node.text,
+        translated: null,
+        translationStatus: "skipped",
+        parentBlockId: null,
+        metadata: {
+          column,
+          role: "table",
+          tableSourceFallback: true,
+          translationInputWarning: "table-like text preserved in source because a reliable grid was unavailable",
+        },
+      });
+      continue;
+    }
+
     if (node.role === "heading") {
       const text = node.text ?? "";
       if (currentKind === "references" && !isReferencesHeading(text)) {

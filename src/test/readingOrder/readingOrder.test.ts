@@ -118,6 +118,23 @@ describe("PDF reading order regression", () => {
     expect(paragraphs).toHaveLength(1);
   });
 
+  it("stitches an author-year citation split at a page boundary", () => {
+    const pages: ExtractedPage[] = [
+      {
+        pageNumber: 1, width: 612, height: 792,
+        textItems: [{ text: "Household production theory has underlined the active role of consumers in creating value for themselves and their direct circle of family and friends (Becker 1965; Da et al. 2015; Greenwood et al. 2005; Muth", x: 54, y: 750, width: 500, height: 10, fontSize: 10, fontName: "Body", page: 1 }],
+      },
+      {
+        pageNumber: 2, width: 612, height: 792,
+        textItems: [{ text: "1966), the prominent shift is that other consumers also benefit from these activities.", x: 54, y: 110, width: 500, height: 10, fontSize: 10, fontName: "Body", page: 2 }],
+      },
+    ];
+    const { blocks } = reconstructDocument(pages);
+    const paragraph = blocks.find((block) => block.text.includes("Muth 1966), the prominent shift"));
+    expect(paragraph?.pageStart).toBe(1);
+    expect(paragraph?.pageEnd).toBe(2);
+  });
+
   it("stitches a connector ending across pages without joining a new sentence", () => {
     const pages: ExtractedPage[] = [
       {
@@ -135,6 +152,30 @@ describe("PDF reading order regression", () => {
     expect(paragraphs[0].text).toContain("to gain a better understanding");
   });
 
+  it("stitches same-column text split by a nearby affiliation line", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 1,
+      width: 612,
+      height: 792,
+      textItems: [
+        { text: "Wearable Device Acceptance", x: 390, y: 70, width: 180, height: 21, fontSize: 18, fontName: "Title", page: 1 },
+        { text: "A. Researcher and B. Scientist", x: 390, y: 120, width: 180, height: 12, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "The wearable acceptability range is a useful instrument for consumer research", x: 185, y: 245, width: 328, height: 11, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "and in this study we aimed to introduce an extended", x: 185, y: 257, width: 320, height: 11, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "Department of Events and Hospitality Apparel", x: 56, y: 262, width: 95, height: 11, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "WEAR Scale to the apparel field by applying a revised instrument", x: 185, y: 269, width: 326, height: 11, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "with four dimensions for use in product development research.", x: 185, y: 281, width: 326, height: 11, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "Management, Iowa State University", x: 56, y: 286, width: 95, height: 11, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "Introduction", x: 185, y: 330, width: 120, height: 12, fontSize: 12, fontName: "Heading", page: 1 },
+      ],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    const paragraph = blocks.find((block) => block.role === "paragraph" && block.text.includes("introduce an extended"));
+
+    expect(paragraph?.text).toContain("extended WEAR Scale to the apparel field");
+    expect(blocks.some((block) => block.role === "affiliation" && block.text.includes("Department of Events"))).toBe(true);
+  });
+
   it("separates a narrow affiliation sidebar from body text near the top of a page", () => {
     const pages: ExtractedPage[] = [{
       pageNumber: 1,
@@ -143,7 +184,7 @@ describe("PDF reading order regression", () => {
       textItems: [
         { text: "Wearable Device Acceptance", x: 390, y: 70, width: 180, height: 21, fontSize: 18, fontName: "Title", page: 1 },
         { text: "A. Researcher and B. Scientist", x: 390, y: 120, width: 180, height: 12, fontSize: 10, fontName: "Body", page: 1 },
-        { text: "The wearable acceptability range (WEAR) Scale has been a useful tool used in con-", x: 185, y: 245, width: 328, height: 11, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "The wearable acceptability range (WEAR) Scale has been a useful tool used in con‑", x: 185, y: 245, width: 328, height: 11, fontSize: 10, fontName: "Body", page: 1 },
         { text: "Department of Events, and Hospitality Apparel,", x: 56, y: 250, width: 78, height: 11, fontSize: 10, fontName: "Body", page: 1 },
         { text: "sumer behaviour and product development research to better identify the social", x: 185, y: 262, width: 320, height: 11, fontSize: 10, fontName: "Body", page: 1 },
         { text: "Management, Iowa State University, 31 Mackay Hall,", x: 56, y: 274, width: 78, height: 11, fontSize: 10, fontName: "Body", page: 1 },
@@ -153,12 +194,14 @@ describe("PDF reading order regression", () => {
     const { blocks } = reconstructDocument(pages);
     const paragraphs = blocks.filter((block) => block.role === "paragraph");
     const body = paragraphs.find((block) => block.text.includes("consumer behaviour"));
+    const affiliation = blocks.find((block) => block.role === "affiliation");
 
-    expect(paragraphs.length).toBeGreaterThanOrEqual(2);
     expect(body).toBeDefined();
+    expect(body?.text).toContain("consumer behaviour");
     expect(body?.text).not.toContain("Department of Events");
     expect(body?.text).not.toContain("Mackay Hall");
-    expect(paragraphs.some((block) => block.text.includes("Department of Events"))).toBe(true);
+    expect(affiliation?.text).toContain("Department of Events");
+    expect(affiliation?.text).toContain("Mackay Hall");
   });
 
   it("excludes native text embedded inside a figure image", () => {
@@ -203,6 +246,47 @@ describe("PDF reading order regression", () => {
     }];
     const { blocks } = reconstructDocument(pages);
     expect(blocks.some((block) => block.text.includes("left_7 the remaining clause"))).toBe(true);
+  });
+
+  it("stitches a paragraph that starts low in the left column and continues at the top right", () => {
+    const leftFiller = Array.from({ length: 7 }, (_, index) => ({
+      text: `Independent left-column paragraph ${index} contains complete prose and ends here.`,
+      x: 54,
+      y: 120 + index * 64,
+      width: 238,
+      height: 10,
+      fontSize: 10,
+      fontName: "Body",
+      page: 1,
+    }));
+    const leftFragment = [
+      { text: "Within sharing economies, firms and consumers take on different production activities in the value chain, and", x: 54, y: 650, width: 238, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      { text: "we introduce two dimensions that capture how consumers co-produce value. The first dimension describes the", x: 54, y: 666, width: 238, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+    ];
+    const rightContinuation = [
+      { text: "extent to which consumers are active as co-producers in the value creation process.", x: 338, y: 100, width: 238, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      { text: "The second dimension captures the production activity and its organization.", x: 338, y: 124, width: 238, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      ...Array.from({ length: 6 }, (_, index) => ({
+        text: `Independent right-column paragraph ${index} contains complete prose and ends here.`,
+        x: 338,
+        y: 190 + index * 64,
+        width: 238,
+        height: 10,
+        fontSize: 10,
+        fontName: "Body",
+        page: 1,
+      })),
+    ];
+    const { blocks } = reconstructDocument([{
+      pageNumber: 1,
+      width: 612,
+      height: 792,
+      textItems: [...leftFiller, ...leftFragment, ...rightContinuation],
+    }]);
+    const stitched = blocks.find((block) => block.text.includes("The first dimension describes"));
+    expect(stitched?.text).toContain("the extent to which consumers are active");
+    expect(stitched?.pageStart).toBe(1);
+    expect(stitched?.pageEnd).toBe(1);
   });
 
   it("stitches an unfinished paragraph across consecutive pages", () => {

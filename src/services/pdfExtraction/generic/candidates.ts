@@ -300,6 +300,50 @@ function tableLike(block: LayoutBlock): boolean {
   return itemGrid || proseGrid || flattenedGrid;
 }
 
+function captionedMultiColumnTableBand(
+  block: LayoutBlock,
+  blocks: LayoutBlock[],
+  pageWidth: number
+): boolean {
+  if (block.role === "table_caption" || block.lines.length < 5 || block.bbox.width < pageWidth * 0.3) return false;
+  const caption = blocks.find((candidate) =>
+    candidate.pageStart === block.pageStart && candidate.role === "table_caption" &&
+    candidate.bbox.y < block.bbox.y && block.bbox.y - candidate.bbox.y <= 520
+  );
+  if (!caption) return false;
+
+  const originCounts = new Map<number, number>();
+  for (const line of block.lines) {
+    const origin = Math.round(line.x / 12);
+    originCounts.set(origin, (originCounts.get(origin) ?? 0) + 1);
+  }
+  const repeatedOrigins = [...originCounts.values()].filter((count) => count >= 3).length;
+  const captionedGrid = block.lines.length >= 10 && block.bbox.width >= pageWidth * 0.55 && repeatedOrigins >= 3;
+  if (captionedGrid) return true;
+
+  // Some publishers keep long, sentence-shaped table-cell content as a
+  // separate one-column block. When that block is bracketed by two dense,
+  // multi-column table-like blocks with only a small vertical gap, use the
+  // surrounding native geometry to retain it as part of the captioned grid.
+  const peers = blocks.filter((candidate) =>
+    candidate !== block && candidate.pageStart === block.pageStart &&
+    candidate.role === "paragraph" && candidate.lines.length >= 6 &&
+    candidate.bbox.width >= pageWidth * 0.55 && tableLike(candidate)
+  );
+  const overlaps = (peer: LayoutBlock) =>
+    Math.min(block.bbox.x + block.bbox.width, peer.bbox.x + peer.bbox.width) -
+      Math.max(block.bbox.x, peer.bbox.x) >= Math.min(block.bbox.width, peer.bbox.width) * 0.8;
+  const above = peers.some((peer) => {
+    const gap = block.bbox.y - (peer.bbox.y + peer.bbox.height);
+    return gap >= -4 && gap <= 40 && overlaps(peer);
+  });
+  const below = peers.some((peer) => {
+    const gap = peer.bbox.y - (block.bbox.y + block.bbox.height);
+    return gap >= -4 && gap <= 40 && overlaps(peer);
+  });
+  return above && below;
+}
+
 function nearbyTableRowEvidence(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
   if (block.lines.length !== 1 || block.lines[0].items.length < 2) return false;
   // A caption can be close to the prose that introduces a table.  That prose
@@ -311,9 +355,10 @@ function nearbyTableRowEvidence(block: LayoutBlock, blocks: LayoutBlock[]): bool
   const words = text.split(/\s+/).filter(Boolean);
   const letters = (text.match(/[A-Za-z]/g) ?? []).length;
   const digits = (text.match(/\d/g) ?? []).length;
+  const numberedCellRow = /^\d{1,2}[.)]\s+/.test(text) && words.length <= 14 && !/[.!?]\s*$/.test(text);
   const sentenceLike = words.length >= 10 || /[.!?]\s*$/.test(text) ||
     (letters >= 24 && digits / Math.max(letters + digits, 1) < 0.12);
-  if (sentenceLike) return false;
+  if (sentenceLike && !numberedCellRow) return false;
   const caption = blocks.find((candidate) =>
     candidate.pageStart === block.pageStart &&
     candidate.role === "table_caption" &&
@@ -359,6 +404,91 @@ function nearbyTableRowEvidence(block: LayoutBlock, blocks: LayoutBlock[]): bool
   const overlap = Math.min(block.bbox.x + block.bbox.width, precedingGrid.bbox.x + precedingGrid.bbox.width) -
     Math.max(block.bbox.x, precedingGrid.bbox.x);
   return gap >= -4 && gap <= 36 && overlap >= Math.min(block.bbox.width, precedingGrid.bbox.width) * 0.5;
+}
+
+/**
+ * A captioned table can be split by the PDF producer at column boundaries,
+ * leaving a compact run of one-span cell rows outside the caption block. Use
+ * the nearby caption and repeated row geometry as table evidence for that
+ * remainder. Sentence-shaped prose and irregularly spaced lines are excluded.
+ */
+function captionedCompactRowCluster(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
+  if (block.role === "table_caption" || block.lines.length < 2 || block.lines.length > 8) return false;
+  if (block.lines.length === 2) {
+    const [first, second] = block.lines;
+    if (first.items.length < 2 || second.items.length < 2 || Math.abs(first.x - second.x) > 8) return false;
+  }
+  const words = block.text.trim().split(/\s+/).filter(Boolean);
+  if (words.length > 55 || /[.!?。！？]\s*$/.test(block.text.trim())) return false;
+  const lineTexts = block.lines.map((line) => line.text.trim());
+  if (lineTexts.some((text) => text.length > 100 || text.split(/\s+/).length > 14 || /[.!?。！？]\s*$/.test(text))) {
+    return false;
+  }
+  const caption = blocks.find((candidate) =>
+    candidate.pageStart === block.pageStart && candidate.role === "table_caption" &&
+    block.bbox.y >= candidate.bbox.y - 8 &&
+    block.bbox.y - (candidate.bbox.y + candidate.bbox.height) <= 120
+  );
+  if (!caption) return false;
+
+  const sorted = [...block.lines].sort((a, b) => a.y - b.y);
+  const gaps = sorted.slice(1).map((line, index) => line.y - (sorted[index].y + sorted[index].bbox.height));
+  const typicalHeight = sorted.reduce((sum, line) => sum + line.bbox.height, 0) / sorted.length;
+  if (gaps.some((gap) => gap < -2 || gap > typicalHeight * 1.25)) return false;
+  const xCounts = new Map<number, number>();
+  for (const line of sorted) {
+    const x = Math.round(line.x / 10) * 10;
+    xCounts.set(x, (xCounts.get(x) ?? 0) + 1);
+  }
+  return [...xCounts.values()].some((count) => count >= 2);
+}
+
+/**
+ * Table rows are sometimes emitted as one text span per physical line. When a
+ * captioned region contains repeated short rows with the same two x-columns,
+ * use same-baseline neighboring cells to recover the table role for each row.
+ */
+function captionedRepeatedCellRow(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
+  if (block.role === "table_caption" || block.lines.length !== 1) return false;
+  const text = block.text.trim();
+  if (text.split(/\s+/).length > 14 || /[.!?。！？]\s*$/.test(text)) return false;
+  const caption = blocks.find((candidate) =>
+    candidate.pageStart === block.pageStart && candidate.role === "table_caption" &&
+    block.bbox.y >= candidate.bbox.y - 8 &&
+    block.bbox.y - (candidate.bbox.y + candidate.bbox.height) <= 120
+  );
+  if (!caption) return false;
+
+  const top = caption.bbox.y - 8;
+  const bottom = Math.max(caption.bbox.y + caption.bbox.height, block.bbox.y) + 120;
+  const rows = new Map<number, Array<{ x: number; text: string }>>();
+  for (const candidate of blocks) {
+    if (candidate.pageStart !== block.pageStart) continue;
+    for (const line of candidate.lines) {
+      if (line.y < top || line.y > bottom) continue;
+      const cells = line.items
+        .map((item) => ({ x: Math.round(item.x / 10) * 10, text: item.text.trim() }))
+        .filter((item) => item.text && item.text.split(/\s+/).length <= 14 && !/[.!?。！？]\s*$/.test(item.text));
+      const key = Math.round(line.y / 4) * 4;
+      rows.set(key, [...(rows.get(key) ?? []), ...cells]);
+    }
+  }
+  const gridRows = [...rows.entries()].filter(([, cells]) => {
+    const uniqueXs = [...new Set(cells.map((cell) => cell.x))];
+    return cells.reduce((sum, cell) => sum + cell.text.split(/\s+/).length, 0) <= 20 &&
+      uniqueXs.some((x, index) => uniqueXs.slice(index + 1).some((other) => Math.abs(x - other) >= 32));
+  });
+  if (gridRows.length < 3) return false;
+  const xCounts = new Map<number, number>();
+  for (const [, cells] of gridRows) {
+    for (const x of new Set(cells.map((cell) => cell.x))) xCounts.set(x, (xCounts.get(x) ?? 0) + 1);
+  }
+  const repeatedColumns = new Set([...xCounts.entries()].filter(([, count]) => count >= 2).map(([x]) => x));
+  if (repeatedColumns.size < 2) return false;
+  const candidateX = Math.round(block.lines[0].x / 10) * 10;
+  const currentRow = gridRows.find(([y]) => Math.abs(y - Math.round(block.lines[0].y / 4) * 4) <= 2);
+  return Boolean(currentRow && repeatedColumns.has(candidateX) &&
+    currentRow[1].some((cell) => Math.abs(cell.x - candidateX) >= 32));
 }
 
 /** Detect a page-local grid when PDF extraction split each visual row into a
@@ -450,6 +580,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const mathRow = layoutRole === "heading" && /[∥∑∫√∞≈≠≤≥±∂∇×÷]/u.test(block.text);
     const nearbyTableCaption = blocks.some((candidate) => candidate.role === "table_caption" &&
       candidate.pageStart === block.pageStart && Math.abs(candidate.bbox.y - block.bbox.y) < 300);
+    const captionedCompactRows = captionedCompactRowCluster(block, blocks);
+    const captionedRepeatedRow = captionedRepeatedCellRow(block, blocks);
+    const captionedColumnarGrid = captionedMultiColumnTableBand(block, blocks, layout?.pageWidth ?? 612);
     const pageGrid = pageGridEvidence(block, blocks);
     const chartLabels = chartLabelEvidence(block, blocks);
     const imageLabels = imageOverlapLabelEvidence(block, pages.find((page) => page.pageNumber === block.pageStart));
@@ -635,7 +768,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
           // evidence is present.
           : 0.68;
     }
-    if (block.role !== "table_caption" && (nearbyTableRowEvidence(block, blocks) || compactTableDataRow || captionedNativeGrid)) scoreByRole.table = 0.96;
+    if (block.role !== "table_caption" && (nearbyTableRowEvidence(block, blocks) || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedRepeatedRow)) scoreByRole.table = 0.96;
     const reason =
       block.role === "title"
         ? "largest font in first-page masthead"
