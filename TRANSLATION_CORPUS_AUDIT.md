@@ -1,5 +1,34 @@
 # Cross-disciplinary translation audit
 
+## Latest checkpoint (2026-09-20 18:32 JST)
+
+The latest fresh model run is the focused v20 cohort (4 papers, 48 sampled
+blocks), not the older v16 broad cached-paper run described later in this
+document. Ordinary-body reader-visible fallback was 5/17 (29.4%). Manual review
+covered 15 accepted rows and found severity >=2 in 10; this small,
+risk-stratified sample is descriptive and is not a corpus-wide error estimate.
+Both the <=5% fallback objective and near-zero unsafe semantic error objective
+remain unmet.
+
+No translation server or benchmark process is running at this checkpoint. The
+v20 server was stopped after its isolated-port run; current host port 8765 also
+refuses connections. Historical active-PID entries below are not live jobs.
+
+An extraction diagnostic on `wear-scale.pdf` identified mixed author/department
+text introduced when a narrow left-side x-band and the main text shared aligned
+baselines. The generic layout stage now detects repeated narrow/long x-origin
+bands before combining same-baseline native spans, then separates the resulting
+sidebar from the body. Re-extraction keeps the WEAR paragraph free of the
+department/address and emits those lines separately. This repairs one observed
+paper/layout instance; extraction-corpus and cross-paper validation are still
+pending. Reading-order tests pass 60/60; full Vitest passes 398/398; typecheck,
+lint, and `git diff --check` pass. The optional native PDF.js canvas binding
+warning remains present in test output.
+
+Next: validate the extraction change on corpus regressions and neighboring PDFs;
+review v20 model fallbacks for avoidable false rejects; then run a new multi-paper
+fresh benchmark and continue manual review and verified OA corpus expansion.
+
 This audit makes real-paper translation failures reproducible without adding
 copyrighted PDFs or translations to Git. The catalog is
 `test-fixtures/real-papers/catalog.json`; PDFs and generated source/translation

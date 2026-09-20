@@ -5,6 +5,15 @@
 
 コードを source of truth とし、アーキテクチャ詳細は各専門文書へリンクする（重複しない）。
 
+## 2026-09-20 18:32 +0900 checkpoint (latest)
+
+- Translation/model evaluation is **not running**. `127.0.0.1:8765/health` refused the connection; no translation-server or benchmark process was present. The earlier v16 run/PIDs recorded below are historical and must not be restarted/resumed as current work.
+- Latest fresh focused model measurement remains v20: 4 papers / 48 blocks, ordinary-body fallback 5/17 (29.4%); accepted manual review 10/15 severity >=2 (purposive sample). The <=5% fallback and near-zero unsafe-error goals remain unmet.
+- New extraction attribution: `wear-scale.pdf` mixed department/address lines into body text when multiple x-origin bands aligned near the same baseline. Generic narrow-sidebar x-band separation was added in `pdfLayout.ts`; re-extracting that PDF now emits department/address as separate blocks and keeps the WEAR paragraph clean. This is a targeted case, not a corpus-wide extraction claim.
+- Verification after this change: reading-order regression 60/60, full Vitest 64 files / 398 tests, typecheck, lint, and `git diff --check` pass. PDF.js reports the known optional `canvas.node` polyfill warning during tests.
+- No server or benchmark remains running. Worktree contains pre-existing uncommitted translation-audit changes plus this extraction fix.
+- Resume next: assess false-reject fallbacks in the v20 focused set; evaluate the sidebar fix against extraction corpus/baseline and other real PDFs; then run a fresh multi-paper benchmark in an isolated server shell when a ready server is available. Continue provenance-verified corpus expansion and manual review; do not lower gates to reach the fallback target.
+
 ---
 
 ## 2026-09-20 15:41 fresh v16 corpus run in progress

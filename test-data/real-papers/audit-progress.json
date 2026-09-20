@@ -1,6 +1,6 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "3b-mt-v5-semantic-v71-strict-restore-v19",
+  "lastBenchmarkVersion": "3b-mt-v5-semantic-v71-strict-restore-v20",
   "lastDiagnosticVersion": "scheduler-panel-and-inline-citation-v19",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
@@ -45,7 +45,7 @@
   ],
   "pendingPapers": [],
   "reviewedBlocks": 134,
-  "lastCheckpoint": "title-resolver-regression-v2-2026-09-19",
+  "lastCheckpoint": "2026-09-20-v20-focused-and-wear-scale-sidebar-diagnostic",
   "pendingManualReview": 60,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
@@ -3236,20 +3236,7 @@
       "productionEligible": 0
     }
   },
-  "activeBenchmarkRun": {
-    "report": "test-data/real-papers/reports/translation-audit-fresh-20260920-v16.json",
-    "runId": "2026-09-20T06-26-14-626Z",
-    "modelVersion": "3b-mt-v5-semantic-v71-strict-restore-v16",
-    "command": "npm run bench:real-paper-translation -- --cached-only --report-name translation-audit-fresh-20260920-v16 --limit 12 --serial",
-    "limitMeaning": "maximum sampled blocks per paper; 36 cached papers selected, up to 432 blocks",
-    "selectedPapers": 36,
-    "completedPapers": 22,
-    "completedBlocks": 264,
-    "complete": false,
-    "serverPid": 21614,
-    "benchmarkPid": 27879,
-    "serverHealth": "ready"
-  },
+  "activeBenchmarkRun": null,
   "activeManualReview": {
     "artifact": "test-data/real-papers/reports/semantic-review-fresh-20260920-v16.json",
     "reviewedPapers": [
@@ -3661,5 +3648,44 @@
       "severityGte2Rate": 0.6666666667,
       "comparison": "The 15 outputs were byte-identical to manually reviewed v19 output; one prior severity-3 omission was newly rejected by v20."
     }
+  },
+  "latestCheckpoint": {
+    "checkedAt": "2026-09-20T18:32:00+09:00",
+    "serverActive": false,
+    "benchmarkActive": false,
+    "health8765": "connection_refused",
+    "modelRun": {
+      "version": "3b-mt-v5-semantic-v71-strict-restore-v20",
+      "report": "test-data/real-papers/reports/translation-audit-v20-focused.json",
+      "papers": 4,
+      "rows": 48,
+      "ordinaryBodyRows": 17,
+      "ordinaryBodyFallbacks": 5,
+      "ordinaryBodyFallbackRate": 0.2941176471,
+      "acceptedManuallyReviewed": 15,
+      "severity2Plus": 10,
+      "sampling": "purposive risk/section-stratified; descriptive only"
+    },
+    "extractionDiagnostic": {
+      "paper": "wear-scale",
+      "pdf": "test-data/real-papers/wear-scale.pdf",
+      "finding": "aligned narrow affiliation x-band was grouped into single-column body text",
+      "change": "detect repeated narrow/long x-origin bands before joining same-baseline items and split sidebar from body",
+      "reextraction": "WEAR body block clean; affiliation/address in separate block",
+      "scope": "single real-paper case; cross-paper validation pending"
+    },
+    "verification": {
+      "readingOrder": "60/60",
+      "vitest": "64 files / 398 tests passed",
+      "typecheck": "pass",
+      "lint": "pass",
+      "diffCheck": "pass"
+    },
+    "nextActions": [
+      "validate sidebar extraction fix against extraction corpus and neighboring papers",
+      "review v20 fallbacks for avoidable false rejects",
+      "run fresh multi-paper benchmark with isolated translation server",
+      "continue OA provenance verification and manual semantic review"
+    ]
   }
 }
