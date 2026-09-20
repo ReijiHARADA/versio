@@ -24,6 +24,12 @@ const SOURCE_NEGATION = /\b(?:(?:do|does|did|is|are|was|were|has|have|had)\s+not
 const JA_NEGATION = /(?:ない|なく|なかっ|ません|ず|ぬ|無|非|不|未|欠|否)/;
 const SOURCE_DISJUNCTIVE_BOTH = /\bor\s+both\b/i;
 const JA_BOTH = /(?:両方|双方|いずれも|ともに|同時に|両者|併せて|あわせて)/;
+const SOURCE_DIVERSE_PARTICIPANT_FIELDS = /\b(?:participants?|subjects?|respondents?)\b[^.!?]{0,120}\b(?:from|drawn\s+from|recruited\s+from|across)\s+(?:a\s+range\s+of\s+|various\s+|multiple\s+|different\s+|several\s+)(?:academic\s+)?(?:fields?(?:\s+of\s+study)?|disciplines?|departments?|faculties|majors?)\b/i;
+const SOURCE_EXPLICIT_PER_FIELD_COUNT = /\b(?:each|every|per)\s+(?:academic\s+)?(?:field|discipline|department|faculty|major)\b/i;
+const JA_FIELD_COUNT_DISPLACEMENT = /(?:各|それぞれの?)(?:学科|分野|学部|領域|専攻|部門)\s*(?:から|ごとに|あたり)?[^。！？\n]{0,12}[0-9０-９]+\s*(?:名|人)|[0-9０-９]+\s*名の(?:研究|学問)?(?:学科|分野|学部|領域|専攻|部門)/;
+const SOURCE_COLLECTIVE_GROUP_COMPARISON = /\bnone\s+of\s+the\s+(?:study\s+)?groups?\b[^.!?]{0,160}\b(?:differ(?:ed|s)?|different|difference|significant|significantly)\b/i;
+const SOURCE_THREE_OR_MORE_GROUPS = /\b(?:3|three|four|4|five|5|six|6|seven|7|eight|8|nine|9|ten|10)\s+(?:study\s+)?(?:groups?|conditions?|arms?)\b/i;
+const JA_BINARY_GROUP_COMPARISON = /(?:両群|二群|2群)\s*(?:間|間で|間に|の間)/;
 
 /** Restore valid UTF-8 byte tokens if an older bundled server emitted them. */
 export function restoreUtf8ByteEscapes(text: string): string {
@@ -253,10 +259,24 @@ export function extractScientificInvariants(source: string): ScientificInvariant
 }
 
 function normalizeInvariant(value: string): string {
-  return value.toLowerCase().replace(/[\s\u00a0]/g, "").replace(/[−–—]/g, "-").replace(/\u0338=/g, "!=").replace(/≠/g, "!=");
+  return value
+    .toLowerCase()
+    .replace(/[０-９]/g, (digit) => String.fromCharCode(digit.charCodeAt(0) - 0xfee0))
+    .replace(/[\s\u00a0]/g, "")
+    .replace(/[−–—]/g, "-")
+    .replace(/\u0338=/g, "!=")
+    .replace(/≠/g, "!=");
 }
 
-function outputContainsInvariant(output: string, invariant: ScientificInvariant): boolean {
+function invariantFactKey(item: ScientificInvariant): string {
+  let value = normalizeInvariant(item.value);
+  // PDF extraction may leave a citation as superscript `problem”15`, while a
+  // translation renders the same reference as `[15]`. Match its exact payload.
+  if (item.kind === "citation") value = value.replaceAll("[", "").replaceAll("]", "");
+  return `${item.kind}:${value}`;
+}
+
+function outputContainsInvariant(output: string, invariant: ScientificInvariant, source: string): boolean {
   const normalizedOutput = normalizeInvariant(output);
   const value = normalizeInvariant(invariant.value);
   if (invariant.kind === "structure") {
@@ -269,6 +289,26 @@ function outputContainsInvariant(output: string, invariant: ScientificInvariant)
       return new RegExp(`(?:第\\s*${escaped}\\s*[節章]|(?:セクション|section|chapter|appendix)\\s*${escaped})`, "i").test(output);
     });
   }
+  if (invariant.kind === "figure") {
+    const figure = invariant.value.match(/\b(\d+)(\s*\([a-z]\)|[a-z])?/i);
+    if (!figure) return false;
+    const number = figure[1].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const panel = (figure[2] ?? "").replace(/\s+/g, "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(?:\\bfig(?:ure)?s?\\.?|図)\\s*${number}${panel}`, "i").test(output);
+  }
+  // `SD` is often expanded instead of copied in a Japanese academic
+  // translation. Accept the expansion only when each source SD=value has the
+  // same value adjacent to the Japanese term for standard deviation; this
+  // avoids treating an unrelated mention of variance as preservation.
+  if (invariant.kind === "acronym" && value === "sd") {
+    const sourceValues = [...source.matchAll(/\bSD\s*=\s*([-+]?\d+(?:\.\d+)?)/gi)].map((match) => match[1]);
+    if (sourceValues.length > 0) {
+      return sourceValues.every((number) => {
+        const escaped = number.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        return new RegExp(`(?:標準偏差[^\\d]{0,6}${escaped}|${escaped}[^\\d]{0,6}標準偏差)`).test(output);
+      });
+    }
+  }
   if (invariant.kind !== "acronym") return normalizedOutput.includes(value);
   // `BERT` must not be treated as preserved merely because `DeBERTa` occurs.
   // Method/model identifiers are ASCII tokens even when adjacent to Japanese.
@@ -278,7 +318,7 @@ function outputContainsInvariant(output: string, invariant: ScientificInvariant)
 
 function invariantQuality(source: string, output: string): { score: number; reasons: string[]; criticalMissing: boolean } {
   const invariants = extractScientificInvariants(source);
-  const missing = invariants.filter((invariant) => !outputContainsInvariant(output, invariant));
+  const missing = invariants.filter((invariant) => !outputContainsInvariant(output, invariant, source));
   // Measurements, statistical values, references, and links are source facts.
   // A translation may express an ordinary number differently, but it must not
   // introduce a new value with a scientific unit or a new reference-like fact.
@@ -287,11 +327,11 @@ function invariantQuality(source: string, output: string): { score: number; reas
   const sourceFacts = new Set(
     invariants
       .filter((item) => ["citation", "doi", "url", "figure", "statistic", "measurement", "year", "structure"].includes(item.kind))
-      .map((item) => `${item.kind}:${normalizeInvariant(item.value)}`)
+      .map(invariantFactKey)
   );
   const unexpected = extractScientificInvariants(output).filter((item) =>
     ["citation", "doi", "url", "figure", "statistic", "measurement", "year", "structure"].includes(item.kind)
-      && !sourceFacts.has(`${item.kind}:${normalizeInvariant(item.value)}`)
+      && !sourceFacts.has(invariantFactKey(item))
   );
   if (missing.length === 0 && unexpected.length === 0) return { score: 1, reasons: [], criticalMissing: false };
   // A missing acronym can change the method, metric, or experimental
@@ -306,6 +346,32 @@ function invariantQuality(source: string, output: string): { score: number; reas
     reasons,
     criticalMissing: critical.length > 0 || unexpected.length > 0,
   };
+}
+
+/**
+ * Detect two high-impact English-to-Japanese scope shifts where numeric facts
+ * can all remain present: a collective participant total made distributive
+ * over unspecified fields, and an all-group statement narrowed to two groups
+ * despite an explicit study cardinality of at least three. These are narrow
+ * relation checks, not a general semantic correctness classifier.
+ */
+function semanticScopeRiskReasons(source: string, output: string): string[] {
+  const reasons: string[] = [];
+  if (
+    SOURCE_DIVERSE_PARTICIPANT_FIELDS.test(source)
+    && !SOURCE_EXPLICIT_PER_FIELD_COUNT.test(source)
+    && JA_FIELD_COUNT_DISPLACEMENT.test(output)
+  ) {
+    reasons.push("participant total may have shifted to field-level count");
+  }
+  if (
+    SOURCE_COLLECTIVE_GROUP_COMPARISON.test(source)
+    && SOURCE_THREE_OR_MORE_GROUPS.test(source)
+    && JA_BINARY_GROUP_COMPARISON.test(output)
+  ) {
+    reasons.push("collective group comparison narrowed to two groups");
+  }
+  return reasons;
 }
 
 export function looksLikeFrontMatterLabel(text: string): boolean {
@@ -417,6 +483,7 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   if (SOURCE_DISJUNCTIVE_BOTH.test(source) && !JA_BOTH.test(out)) {
     reasons.push("source disjunctive-both relation missing");
   }
+  reasons.push(...semanticScopeRiskReasons(source, out));
 
   if (
     /^\d+[.)]\s+\S/.test(source.trim()) &&
@@ -440,6 +507,8 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   if (lengthScore < 1) reasons.push(severeLongOmission ? "long source was implausibly shortened" : "implausible length ratio");
   const semanticSafetyScore = reasons.includes("source negation missing")
     || reasons.includes("source disjunctive-both relation missing")
+    || reasons.some((reason) => reason.startsWith("participant total may have shifted"))
+    || reasons.includes("collective group comparison narrowed to two groups")
     || reasons.includes("trailing Latin fragment") ? 0.35 : 1;
   return {
     score: Math.max(0, Math.min(1, (languageScore * 0.35 + invariant.score * 0.4 + repetitionScore * 0.15 + lengthScore * 0.1) * semanticSafetyScore)),
@@ -466,6 +535,8 @@ export function isPlausibleJaTranslation(output: string, source: string): boolea
     && !quality.reasons.includes("long source was implausibly shortened")
     && !quality.reasons.includes("source negation missing")
     && !quality.reasons.includes("source disjunctive-both relation missing")
+    && !quality.reasons.some((reason) => reason.startsWith("participant total may have shifted"))
+    && !quality.reasons.includes("collective group comparison narrowed to two groups")
     && !quality.reasons.includes("trailing Latin fragment")
     && !quality.reasons.includes("simplified Chinese mixed into Japanese")
     && !quality.reasons.some((reason) => reason.startsWith("translation contains unmodified source span"))

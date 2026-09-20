@@ -10,6 +10,7 @@ import time
 from typing import Optional
 import platform
 import torch
+import transformers
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 from .base import TranslationEngine, TranslationResult, EngineStatus
@@ -63,8 +64,10 @@ class MADLADEngine(TranslationEngine):
     """
 
     MODEL_ID = "google/madlad400-3b-mt"
+    TRANSFORMERS_RUNTIME_VERSION = "4.57.6"
     MODEL_VERSION = (
-        f"3b-mt-v5-{SEGMENTER_VERSION}-{SOURCE_PROTECTION_VERSION}-strict-restore-v20"
+        f"3b-mt-v6-transformers-{TRANSFORMERS_RUNTIME_VERSION}-{SEGMENTER_VERSION}-"
+        f"{SOURCE_PROTECTION_VERSION}-strict-restore-v21"
     )
     # Long academic units were previously capped at 256 decoder tokens,
     # causing otherwise valid output to end mid-sentence. Keep the cap finite
@@ -179,6 +182,12 @@ class MADLADEngine(TranslationEngine):
             print("[DEBUG] Model already loaded, skipping...")
             return
 
+        if transformers.__version__ != self.TRANSFORMERS_RUNTIME_VERSION:
+            raise RuntimeError(
+                f"MADLAD requires transformers=={self.TRANSFORMERS_RUNTIME_VERSION}; "
+                f"found {transformers.__version__}"
+            )
+
         print(f"\n[LOADING] MADLAD-400 model from {self.MODEL_ID}")
         load_start = time.time()
 
@@ -215,10 +224,7 @@ class MADLADEngine(TranslationEngine):
                 dtype=self._dtype,
                 low_cpu_mem_usage=True,
             )
-            # Transformers 5 silently binds MADLAD-3B encoder embeddings to
-            # lm_head. Encoder/decoder inputs must share decoder.embed_tokens;
-            # lm_head stays separate. huggingface/transformers#48154
-            self._repair_madlad_embeddings()
+            self._verify_madlad_embeddings()
             
             # Move to device
             print(f"[LOADING] Moving model to {self._device}...")
@@ -879,24 +885,29 @@ class MADLADEngine(TranslationEngine):
             return "", text
         return match.group(1), match.group(2)
 
-    def _repair_madlad_embeddings(self) -> None:
-        """Point encoder input embeddings at decoder.embed_tokens, not lm_head."""
-        decoder_emb = self._model.decoder.embed_tokens
-        self._model.shared = decoder_emb
-        self._model.encoder.embed_tokens = decoder_emb
-        enc_max = decoder_emb.weight.detach().float().abs().max().item()
-        head_max = self._model.lm_head.weight.detach().float().abs().max().item()
-        same_ptr = (
-            self._model.encoder.embed_tokens.weight.data_ptr()
-            == self._model.decoder.embed_tokens.weight.data_ptr()
-        )
+    def _verify_madlad_embeddings(self) -> None:
+        """Fail closed unless the pinned runtime loaded MADLAD input embeddings intact."""
+        encoder = self._model.encoder.embed_tokens.weight.detach()
+        decoder = self._model.decoder.embed_tokens.weight.detach()
+        shared = self._model.shared.weight.detach()
+        head = self._model.lm_head.weight.detach()
+        if self._model.config.tie_word_embeddings:
+            raise RuntimeError("MADLAD checkpoint requires tie_word_embeddings=False")
+        if not torch.equal(encoder, decoder) or not torch.equal(shared, decoder):
+            raise RuntimeError("MADLAD encoder/shared embeddings do not match decoder input embeddings")
+        if encoder.data_ptr() == head.data_ptr():
+            raise RuntimeError("MADLAD encoder embeddings are incorrectly tied to lm_head")
+        input_max = encoder.float().abs().max().item()
+        head_max = head.float().abs().max().item()
+        if input_max < 10 or head_max >= input_max:
+            raise RuntimeError(
+                f"MADLAD embedding integrity check failed (input={input_max:.2f}, lm_head={head_max:.2f})"
+            )
         print(
-            f"[LOADING] embedding repair: input absmax={enc_max:.2f}, "
-            f"lm_head absmax={head_max:.2f}, encoder==decoder={same_ptr}",
+            f"[LOADING] embedding integrity verified: encoder==decoder=True, "
+            f"input absmax={input_max:.2f}, lm_head absmax={head_max:.2f}, separate=True",
             flush=True,
         )
-        if enc_max < 10:
-            raise RuntimeError("MADLAD input embeddings still look like lm_head")
 
     def _encode_translation_inputs(
         self, text: str, target_language: str

@@ -10,6 +10,7 @@ function normalizeTitle(text: string): string {
 
 const SOURCE_WEIGHT: Record<Evidence["source"], number> = {
   "pdf-native": 1,
+  geometry: 0.75,
   "generic-heuristic": 0.75,
   "format-profile": 0.35,
   grobid: 0.9,
