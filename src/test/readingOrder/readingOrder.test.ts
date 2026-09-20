@@ -135,6 +135,31 @@ describe("PDF reading order regression", () => {
     expect(paragraphs[0].text).toContain("to gain a better understanding");
   });
 
+  it("separates a narrow affiliation sidebar from body text near the top of a page", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 1,
+      width: 612,
+      height: 792,
+      textItems: [
+        { text: "The wearable acceptability range (WEAR) Scale has been a useful tool used in con-", x: 185, y: 245, width: 328, height: 11, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "Department of Events, and Hospitality Apparel,", x: 56, y: 250, width: 78, height: 11, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "sumer behaviour and product development research to better identify the social", x: 185, y: 262, width: 320, height: 11, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "Management, Iowa State University, 31 Mackay Hall,", x: 56, y: 274, width: 78, height: 11, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "acceptance of wearable devices in this study.", x: 185, y: 274, width: 326, height: 11, fontSize: 10, fontName: "Body", page: 1 },
+      ],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    const paragraphs = blocks.filter((block) => block.role === "paragraph");
+    const bodyText = paragraphs.map((block) => block.text).join(" ");
+    console.log(blocks.map((block) => ({ role: block.role, column: block.column, text: block.text, lines: block.lines.map((line) => ({ x: line.x, y: line.y, width: line.width, column: line.column })) })));
+
+    expect(paragraphs.length).toBeGreaterThanOrEqual(2);
+    expect(bodyText).toContain("con- sumer behaviour");
+    expect(bodyText).not.toContain("Department of Events");
+    expect(bodyText).not.toContain("Mackay Hall");
+    expect(paragraphs.some((block) => block.text.includes("Department of Events"))).toBe(true);
+  });
+
   it("excludes native text embedded inside a figure image", () => {
     const pages: ExtractedPage[] = [{
       pageNumber: 1, width: 612, height: 792,

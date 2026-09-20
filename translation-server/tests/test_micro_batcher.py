@@ -63,7 +63,7 @@ def _first_piece(chunks: list[str], pieces: list[str], lang: str) -> str:
 
 
 class MicroBatcherTests(unittest.TestCase):
-    def test_panel_fragment_is_preserved_without_model_call(self) -> None:
+    def test_panel_caption_is_translated_without_losing_label(self) -> None:
         engine = FakeEngine()
         sched = MicroBatchScheduler(engine)
         with (
@@ -81,9 +81,26 @@ class MicroBatcherTests(unittest.TestCase):
                 "en",
                 "ja",
             )[0]
-        self.assertEqual(engine.calls, [("ja", ["A complete paragraph."])])
-        self.assertIn("(b) the characteristics", result.text)
+        self.assertEqual(
+            engine.calls,
+            [
+                ("ja", ["(b) the characteristics of the interaction method with peers."]),
+                ("ja", ["A complete paragraph."]),
+            ],
+        )
+        self.assertIn("ja:(b) the characteristics", result.text)
         self.assertIn("ja:A complete paragraph.", result.text)
+
+    def test_standalone_panel_label_is_preserved_without_model_call(self) -> None:
+        engine = FakeEngine()
+        sched = MicroBatchScheduler(engine)
+        with patch(
+            "engines.micro_batcher.MADLADEngine._split_for_translation",
+            staticmethod(_identity_split),
+        ):
+            result = sched.translate_many(["(b)"], "en", "ja")[0]
+        self.assertEqual(engine.calls, [])
+        self.assertEqual(result.text, "(b)")
 
     def test_same_language_pair_keeps_requests_isolated(self) -> None:
         engine = FakeEngine()
@@ -207,6 +224,15 @@ class MicroBatcherTests(unittest.TestCase):
             results = sched._flush_items(items)
         self.assertIsNotNone(results[0])
         self.assertEqual(results[0].text, "FAIL:bad")
+        self.assertEqual(results[0].fallback_stage, "whole_item_fallback")
+        self.assertEqual(
+            results[0].fallback_reason,
+            "whole_item:translation_quality_rejected:ValueError",
+        )
+        self.assertEqual(
+            results[0].to_dict()["fallback_reason"],
+            "whole_item:translation_quality_rejected:ValueError",
+        )
         self.assertEqual(items[0].future.result().text, "FAIL:bad")
         self.assertIsNotNone(results[1])
         self.assertEqual(results[1].text, "ja:ok paragraph")
@@ -237,6 +263,8 @@ class MicroBatcherTests(unittest.TestCase):
         )
         self.assertEqual(out[0].input_tokens, 5)
         self.assertEqual(out[0].output_tokens, 5)
+        self.assertEqual(out[0].fallback_stage, "partial_unit_fallback")
+        self.assertEqual(out[0].fallback_reason, "unit_1:engine_exception:RuntimeError")
 
 
 if __name__ == "__main__":

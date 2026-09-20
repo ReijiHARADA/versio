@@ -130,6 +130,14 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation(output, source)).toBe(true);
   });
 
+  it("keeps clustered unbracketed superscript citations as citation invariants", () => {
+    const source = "Participants follow the rule unconditionally29,30,32; stimulation in this case12,33 had little effect.";
+    const good = "参加者は無条件に規則に従う29,30,32。刺激はこの場合、ほとんど影響しなかった12,33。";
+    expect(extractScientificInvariants(source).map((item) => item.value)).toContain("29,30,32");
+    expect(isPlausibleJaTranslation(good, source)).toBe(true);
+    expect(isPlausibleJaTranslation("参加者は無条件に規則に従う。刺激はこの場合、ほとんど影響しなかった。", source)).toBe(false);
+  });
+
   it("rejects a fluent translation that invents a measurement absent from the source", () => {
     const source = "A moving-average filter with a window length of 60 seconds removes outliers.";
     const output = "60秒の移動平均フィルタで外れ値を除去した。さらに100mmと10mmの測定を行った。";
@@ -151,6 +159,23 @@ describe("isPlausibleJaTranslation", () => {
       "装置は11.3 mm幅で335 mgである。",
       "The device is 11.3 mm wide, weighs 335 mg, and consumes 14.4 uW."
     )).toBe(false);
+  });
+
+  it("rejects changed Celsius values while allowing a faithful temperature translation", () => {
+    const source = "Earlobe temperature decreased from 37.1 °C to 33.9 °C during the observation.";
+    expect(isPlausibleJaTranslation("観察中に耳たぶの温度は37.1°Cから33.9°Cに低下した。", source)).toBe(true);
+    const changed = evaluateJaTranslation("観察中に耳たぶの温度は37.1°Cから23.9°Cに低下した。", source);
+    expect(changed.reasons.join(" ")).toContain("33.9 °C");
+    expect(isPlausibleJaTranslation("観察中に耳たぶの温度は37.1°Cから23.9°Cに低下した。", source)).toBe(false);
+  });
+
+  it("rejects a corrupted restored measurement with an adjacent extra digit", () => {
+    const source = "The temperature decreased from 37.1 °C (98.8 °F) to 33.9 °C (93 °F).";
+    const output = "温度は37.1 °C (98.8 °F)から233.9 °C (93 °F)に低下した。";
+    const quality = evaluateJaTranslation(output, source);
+    expect(quality.reasons.join(" ")).toContain("33.9 °C");
+    expect(quality.reasons.join(" ")).toContain("233.9 °C");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
   });
 
   it("rejects fluent phrase-loop output without relying on a vocabulary blacklist", () => {
@@ -277,12 +302,32 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation(output, source)).toBe(true);
   });
 
+  it("rejects a fluent translation that drops the second branch of an explicit or-both condition", () => {
+    const source = "The decision has consequences for another person, or both another person and the decision maker.";
+    const incomplete = "決定は他の参加者に影響する。";
+    const faithful = "決定は他の参加者、または他の参加者と意思決定者の双方に影響する。";
+    expect(evaluateJaTranslation(incomplete, source).reasons).toContain("source disjunctive-both relation missing");
+    expect(isPlausibleJaTranslation(incomplete, source)).toBe(false);
+    expect(isPlausibleJaTranslation(faithful, source)).toBe(true);
+  });
+
   it("rejects an implausibly short translation of a long multi-sentence source", () => {
     const source = `${"The study reports a separate experimental finding with its interpretation. ".repeat(10)}`;
     const output = "本研究は実験結果を報告した。";
     expect(source.length).toBeGreaterThan(500);
     expect(isPlausibleJaTranslation(output, source)).toBe(false);
     expect(evaluateJaTranslation(output, source).reasons).toContain("long source was implausibly shortened");
+  });
+
+  it("rejects an extremely compressed result/list translation while allowing concise Japanese", () => {
+    const source = "We conduct real-world experiments in febrile patients demonstrating fever detection using earlobe temperature.";
+    const omitted = "耳の温度を測定する実験を行った。";
+    const conciseButComplete = "発熱患者を対象に、耳たぶ温度による発熱検出を実環境で検証した。";
+    expect(omitted.length / source.length).toBeLessThan(0.2);
+    expect(isPlausibleJaTranslation(omitted, source)).toBe(false);
+    expect(evaluateJaTranslation(omitted, source).reasons).toContain("long source was implausibly shortened");
+    expect(conciseButComplete.length / source.length).toBeGreaterThanOrEqual(0.2);
+    expect(isPlausibleJaTranslation(conciseButComplete, source)).toBe(true);
   });
 
   it("keeps a complete long translation above the audit-derived length bound", () => {
@@ -565,6 +610,13 @@ describe("unsafe extracted translation input", () => {
         "• identity: expressing identity, social status and beliefs towards the world and reconfirming them towards oneself"
       )
     ).toBe(true);
+  });
+
+  it("keeps an unpunctuated terminal infinitive from being completed by the model", () => {
+    const source = "NVivo, SPSS, and AMOS programs were used to perform";
+    expect(unsafeParagraphStructureReason(source)).toContain("不定詞の補語");
+    expect(shouldTranslateParagraph(source)).toBe(false);
+    expect(shouldTranslateParagraph("This procedure was designed to improve task performance for all study participants in the experiment.")).toBe(true);
   });
 
   it("keeps a complete long academic paragraph eligible for translation", () => {

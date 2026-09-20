@@ -45,6 +45,17 @@ class MicroBatchScheduler:
         self._thread: threading.Thread | None = None
         self._stop = False
 
+    @staticmethod
+    def _fallback_reason(error: Exception) -> str:
+        message = str(error).lower()
+        if "protected citation placeholder dropped" in message:
+            reason = "protected_token_restore_failed"
+        elif "degenerate" in message or "no_japanese_script" in message:
+            reason = "translation_quality_rejected"
+        else:
+            reason = "engine_exception"
+        return f"{reason}:{type(error).__name__}"
+
     def start(self) -> None:
         if not self._enabled:
             return
@@ -226,7 +237,11 @@ class MicroBatchScheduler:
                         # import batch into HTTP 500. Returning the source lets
                         # the existing client quality gate preserve original
                         # text for this item while other items still finish.
-                        group_results.append(self._original_result(item))
+                        group_results.append(self._original_result(
+                            item,
+                            f"item_retry_failed:{self._fallback_reason(item_error)}",
+                            "whole_item_fallback",
+                        ))
                         if not item.future.done():
                             item.future.set_result(group_results[-1])
             for item, result in zip(group, group_results):
@@ -268,7 +283,7 @@ class MicroBatchScheduler:
             spans.append((item, chunks, item_model_inputs))
 
         with engine._lock:
-            translated_spans: list[tuple[_Pending, list[str], list[str], list[str], list[int], list[int]]] = []
+            translated_spans: list[tuple[_Pending, list[str], list[str], list[str], list[int], list[int], list[str]]] = []
             for item, chunks, item_model_inputs in spans:
                 # Greedy MADLAD output is padding-sensitive. This also occurs
                 # between unequal sentence units in one paragraph, so preserve
@@ -278,6 +293,7 @@ class MicroBatchScheduler:
                 pieces: list[str] = []
                 in_toks: list[int] = []
                 out_toks: list[int] = []
+                unit_fallback_reasons: list[str] = []
                 for unit_index, (chunk, model_input) in enumerate(zip(chunks, item_model_inputs)):
                     if is_probable_panel_fragment(chunk):
                         # Panel labels are source facts, not prose. Preserve the
@@ -316,8 +332,11 @@ class MicroBatchScheduler:
                         pieces.append(chunk)
                         in_toks.append(0)
                         out_toks.append(0)
+                        unit_fallback_reasons.append(
+                            f"unit_{unit_index}:{self._fallback_reason(unit_error)}"
+                        )
                 translated_spans.append(
-                    (item, chunks, item_model_inputs, pieces, in_toks, out_toks)
+                    (item, chunks, item_model_inputs, pieces, in_toks, out_toks, unit_fallback_reasons)
                 )
 
         occupied = sum(len(chunks) for _, chunks, _ in spans)
@@ -331,7 +350,7 @@ class MicroBatchScheduler:
             )
 
         results: list[TranslationResult | None] = []
-        for item, chunks, item_model_inputs, part, in_toks, out_toks in translated_spans:
+        for item, chunks, item_model_inputs, part, in_toks, out_toks, unit_fallback_reasons in translated_spans:
             item_in = sum(in_toks)
             item_out = sum(out_toks)
             try:
@@ -345,7 +364,17 @@ class MicroBatchScheduler:
                     )
                 if item.heading_num:
                     translated = f"{item.heading_num}. {translated.lstrip()}"
-                if engine._is_degenerate(translated, item.text, item.target_language):
+                degenerate = engine._is_degenerate(translated, item.text, item.target_language)
+                if self._unit_debug:
+                    print(
+                        f"[TRANSLATION_UNIT_RESULT] source_chars={len(item.text)} "
+                        f"candidate_chars={len(translated)} degenerate={degenerate} "
+                        f"reason={engine._degenerate_reason(translated, item.text, item.target_language)}",
+                        flush=True,
+                    )
+                    print(f"SOURCE: {item.text}", flush=True)
+                    print(f"CANDIDATE: {translated}", flush=True)
+                if degenerate:
                     raise ValueError("degenerate translation output")
                 elapsed_ms = (time.time() - t0) * 1000
                 result = TranslationResult(
@@ -359,6 +388,8 @@ class MicroBatchScheduler:
                     input_tokens=item_in,
                     output_tokens=item_out,
                     translation_time_ms=elapsed_ms,
+                    fallback_reason="; ".join(unit_fallback_reasons) if unit_fallback_reasons else None,
+                    fallback_stage="partial_unit_fallback" if unit_fallback_reasons else None,
                 )
                 results.append(result)
                 if not item.future.done():
@@ -367,13 +398,23 @@ class MicroBatchScheduler:
                 # Quality failure is an expected safe fallback condition, not
                 # a transport/server failure. The caller will reject the
                 # source echo as a translation and retain the original.
-                fallback = self._original_result(item)
+                failure_reasons = [*unit_fallback_reasons, f"whole_item:{self._fallback_reason(exc)}"]
+                fallback = self._original_result(
+                    item,
+                    "; ".join(failure_reasons),
+                    "whole_item_fallback",
+                )
                 results.append(fallback)
                 if not item.future.done():
                     item.future.set_result(fallback)
         return results
 
-    def _original_result(self, item: _Pending) -> TranslationResult:
+    def _original_result(
+        self,
+        item: _Pending,
+        fallback_reason: str,
+        fallback_stage: str,
+    ) -> TranslationResult:
         return TranslationResult(
             text=item.text,
             source_language=item.source_language,
@@ -385,6 +426,8 @@ class MicroBatchScheduler:
             input_tokens=0,
             output_tokens=0,
             translation_time_ms=0.0,
+            fallback_reason=fallback_reason,
+            fallback_stage=fallback_stage,
         )
 
 

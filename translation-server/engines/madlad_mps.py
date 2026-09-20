@@ -59,7 +59,7 @@ class MADLADEngine(TranslationEngine):
     """
 
     MODEL_ID = "google/madlad400-3b-mt"
-    MODEL_VERSION = f"3b-mt-v5-{SEGMENTER_VERSION}-strict-restore-v16"
+    MODEL_VERSION = f"3b-mt-v5-{SEGMENTER_VERSION}-strict-restore-v20"
     # Long academic units were previously capped at 256 decoder tokens,
     # causing otherwise valid output to end mid-sentence. Keep the cap finite
     # while allowing a complete Japanese rendering for long source units.

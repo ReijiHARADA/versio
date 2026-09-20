@@ -26,6 +26,14 @@ INLINE_FOOTNOTE_CITATION_RE = re.compile(
     r"(?:(?<=[\"”’])|(?<=[A-Za-z]))\d{1,3}(?=\s*\()"
 )
 
+# Some publishers render clustered numeric citations as unbracketed
+# superscripts attached to the preceding word: ``unconditionally29,30,32``.
+# A comma-separated cluster is a high-precision reference signal; a lone
+# suffix (for example P1 or COVID19) is deliberately not treated as citation.
+INLINE_NUMERIC_CITATION_RE = re.compile(
+    r"(?<=[A-Za-z])\d{1,3}(?:\s*,\s*\d{1,3})+"
+)
+
 # Parenthetical author-year references are a single citation fact even when
 # they contain several authors separated by semicolons.  Keeping the entire
 # group atomic preserves years and names during decoding; the segmenter already
@@ -57,6 +65,11 @@ SCIENTIFIC_PARENTHETICAL_RE = re.compile(
 # source of fluent-looking scientific errors.
 SCIENTIFIC_TOKEN_RE = re.compile(
     r"(?:"
+    # Standalone figure-panel labels are structure, not translatable prose.
+    # Protect labels when followed by a caption so the caption still reaches
+    # the model and the exact source marker can be restored afterward.
+    r"\([a-z]\)(?=\s|[,;:]|$)"
+    r"|"
     r"\b10\.\d{4,9}/[-._;()/:A-Z0-9]+"  # DOI
     r"|https?://[^\s)>\]}]+"  # URL
     r"|\b(?:fig(?:ure)?s?\.?\s*\d+(?:[a-z]|\([a-z]\))?)"  # figure/panel reference
@@ -70,7 +83,9 @@ SCIENTIFIC_TOKEN_RE = re.compile(
     r"|\b[A-Za-z]\s*(?:\u0338\s*=|!=|≠|=|<|>|≤|≥)\s*[-+]?\d+(?:\.\d+)?"  # variable comparison
     r"|\bn\s*=\s*\d+"  # sample size
     r"|\(\s*0?\.\d+(?:\s*,\s*0?\.\d+)*\s*\)"  # compact reported p-value/effect-size decimals
-    r"|\b\d+(?:\.\d+)?\s*(?:mm|cm|km|ms|Hz|kHz|MHz|GHz|kg|mg|%)\b"  # measurement
+    r"|\b\d+(?:\.\d+)?\s*°\s*[CF]\s*\(\s*\d+(?:\.\d+)?\s*°\s*[CF]\s*\)"  # paired Celsius/Fahrenheit value
+    r"|\b\d+(?:\.\d+)?\s*°\s*[CF]\b"  # Celsius/Fahrenheit temperatures
+    r"|\b\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|Hz|kHz|MHz|GHz|kg|mg|%)\b"  # measurement
     # Technical/model identifiers such as DeepIV. A terminal run of capitals
     # is a strong identifier signal; protecting every mixed-case product name
     # can move it to the end of a Japanese sentence during greedy decoding.
@@ -119,6 +134,7 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
     matches = (
         list(CITATION_RE.finditer(text))
         + list(INLINE_FOOTNOTE_CITATION_RE.finditer(text))
+        + list(INLINE_NUMERIC_CITATION_RE.finditer(text))
         + list(AUTHOR_YEAR_CITATION_RE.finditer(text))
         + list(SCIENTIFIC_PARENTHETICAL_RE.finditer(text))
         + list(SCIENTIFIC_TOKEN_RE.finditer(text))
@@ -218,6 +234,10 @@ def _normalize_placeholder_glyphs(text: str) -> str:
     return lookalikes.sub(lambda match: match.group(0).translate(table), text)
 
 
+def _is_inline_numeric_citation(value: str) -> bool:
+    return bool(re.fullmatch(r"\s*\d{1,3}(?:\s*,\s*\d{1,3})+\s*", value))
+
+
 def restore_citations(
     text: str,
     citations: list[str],
@@ -254,10 +274,13 @@ def restore_citations(
             # tail can be restored exactly before the translated terminal mark.
             # This is deliberately limited to reference-shaped spans; numeric
             # measurements and identifiers must still fail closed when lost.
-            if citation.lstrip().startswith(("(", "[")) and re.search(r"[。！？.!?]\s*$", out):
+            if (
+                citation.lstrip().startswith(("(", "["))
+                or _is_inline_numeric_citation(citation)
+            ) and re.search(r"[。！？.!?]\s*$", out):
                 terminal = re.search(r"([。！？.!?])\s*$", out)
                 assert terminal is not None
-                out = out[:terminal.start()] + citation + terminal.group(1) + out[terminal.end():]
+                out = out[:terminal.start()] + citation.strip() + terminal.group(1) + out[terminal.end():]
             else:
                 missing.append(citation)
     leftover = (

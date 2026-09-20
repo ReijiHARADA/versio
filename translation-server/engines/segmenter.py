@@ -16,9 +16,15 @@ _ABBREVIATIONS = {"e.g.", "i.e.", "et al.", "fig.", "no.", "cf.", "dr.", "mr.", 
 
 
 def is_probable_panel_fragment(text: str) -> bool:
-    """Identify a short figure/table sub-panel unit before model inference."""
+    """Identify only a standalone panel label, not its descriptive caption.
+
+    PDF extraction often prefixes a full sentence or caption with ``(a)`` or
+    ``(b)``. Preserving such a whole unit bypasses translation entirely. The
+    label itself is protected as a scientific token, so only label-only units
+    should be skipped by the scheduler.
+    """
     compact = _compact(text)
-    return bool(re.match(r"^\([a-z]\)\s+", compact, re.I) and len(compact) <= 240)
+    return bool(re.fullmatch(r"\([a-z]\)(?:\s*[,;:]?)?", compact, re.I))
 
 
 @dataclass(frozen=True)

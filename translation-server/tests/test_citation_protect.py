@@ -8,6 +8,7 @@ from engines.citation_protect import (
     AUTHOR_YEAR_CITATION_RE,
     CITATION_RE,
     INLINE_FOOTNOTE_CITATION_RE,
+    INLINE_NUMERIC_CITATION_RE,
     protect_citations,
     restore_citations,
 )
@@ -174,6 +175,19 @@ class CitationProtectTests(unittest.TestCase):
         self.assertNotIn("Figure 1(a)", protected)
         self.assertEqual(restore_citations(protected, citations, nonce), source)
 
+    def test_protects_panel_label_while_leaving_caption_translatable(self) -> None:
+        source = "(b) shows the Thermal Earring data of P1 during fever."
+        protected, citations, nonce = protect_citations(source)
+        self.assertEqual(citations, ["(b)"])
+        self.assertTrue(protected.startswith("ZZCIT1ZZ shows"))
+        self.assertEqual(restore_citations(protected, citations, nonce), source)
+
+    def test_protects_celsius_and_fahrenheit_values_as_atomic_measurements(self) -> None:
+        source = "Temperature fell from 37.1 °C (98.8 °F) to 33.9°C."
+        protected, citations, nonce = protect_citations(source)
+        self.assertEqual(citations, ["37.1 °C (98.8 °F)", "33.9°C"])
+        self.assertEqual(restore_citations(protected, citations, nonce), source)
+
     def test_protects_variable_comparison_parenthetical(self) -> None:
         source = "OLS is used for comparison (where y \u0338= 0 when x = 0)."
         protected, citations, nonce = protect_citations(source)
@@ -223,6 +237,22 @@ class CitationProtectTests(unittest.TestCase):
         self.assertIsNotNone(INLINE_FOOTNOTE_CITATION_RE.search(source))
         self.assertNotIn("16", protected)
         self.assertEqual(restore_citations(protected, citations, nonce), source)
+
+    def test_protects_unbracketed_numeric_citation_clusters_attached_to_words(self) -> None:
+        source = "Participants follow the rule unconditionally29,30,32; brain stimulation in this case12,33 had little effect."
+        protected, citations, nonce = protect_citations(source)
+        self.assertEqual(citations, ["29,30,32", "12,33"])
+        self.assertIsNotNone(INLINE_NUMERIC_CITATION_RE.search(source))
+        self.assertNotIn("29,30,32", protected)
+        self.assertEqual(restore_citations(protected, citations, nonce), source)
+
+    def test_restores_dropped_inline_numeric_citation_at_translated_sentence_end(self) -> None:
+        _, citations, nonce = protect_citations("The prior study found little effect in this case12,33.")
+        self.assertEqual(citations, ["12,33"])
+        self.assertEqual(
+            restore_citations("先行研究では,この症例にほとんど影響がなかった。", citations, nonce, reject_missing=True),
+            "先行研究では,この症例にほとんど影響がなかった12,33。",
+        )
 
     def test_restores_inline_footnote_before_japanese_sentence_end(self) -> None:
         source = "We introduced the “cab problem”16 (Cab, see SI Appendix)."

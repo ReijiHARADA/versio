@@ -7,6 +7,7 @@
  * Usage:
  *   npx tsx scripts/benchmark-real-paper-translation.ts
  *   npx tsx scripts/benchmark-real-paper-translation.ts --paper ozchi-finger-specific-touch
+ *   npx tsx scripts/benchmark-real-paper-translation.ts --papers thermal-earring,wear-scale --limit 12 --report-name translation-audit-v19-pilot
  *   npx tsx scripts/benchmark-real-paper-translation.ts --limit 4
  *   npx tsx scripts/benchmark-real-paper-translation.ts --resume
  *   npx tsx scripts/benchmark-real-paper-translation.ts --token-file /private/tmp/paper-reader-token
@@ -54,12 +55,16 @@ type ServerTranslation = {
   input_tokens: number | null;
   output_tokens: number | null;
   translation_time_ms: number;
+  fallback_reason?: string | null;
+  fallback_stage?: string | null;
   error?: string;
 };
 
 type AuditRow = {
   /** Stable join key for audit-only candidate reports. */
   key: string;
+  /** Identifies the benchmark invocation that actually produced this row. */
+  benchmarkRunId?: string;
   paperId: string;
   blockId: string;
   role: PaperBlock["type"];
@@ -81,6 +86,8 @@ type AuditRow = {
   sourceCategory: SourceCategory;
   fallbackStage: FallbackStage;
   fallbackReason?: string;
+  serverFallbackReason?: string | null;
+  serverFallbackStage?: string | null;
   serverError?: string;
   wouldSubmitToModel: boolean;
   wouldAcceptTranslation?: boolean;
@@ -95,10 +102,17 @@ const catalog = JSON.parse(
 const args = process.argv.slice(2);
 const paperArg = args.indexOf("--paper");
 const onlyPaper = paperArg >= 0 ? args[paperArg + 1] : undefined;
+const papersArg = args.indexOf("--papers");
+const requestedPaperIds = papersArg >= 0
+  ? (args[papersArg + 1] ?? "").split(",").map((id) => id.trim()).filter(Boolean)
+  : [];
 const limitArg = args.indexOf("--limit");
 const perPaperLimit = limitArg >= 0 ? Number(args[limitArg + 1]) : 8;
 const serialArg = args.includes("--serial");
 const resumeArg = args.includes("--resume");
+const cachedOnlyArg = args.includes("--cached-only");
+const reportNameArg = args.indexOf("--report-name");
+const requestedReportName = reportNameArg >= 0 ? args[reportNameArg + 1] : undefined;
 const endpoint = process.env.MADLAD_BENCH_URL ?? "http://127.0.0.1:8765";
 const tokenFileArg = args.indexOf("--token-file");
 const tokenFile = tokenFileArg >= 0 ? args[tokenFileArg + 1] : undefined;
@@ -160,7 +174,11 @@ function fallbackReason(source: string, result: ServerTranslation | undefined, q
     return "input policy rejected paragraph";
   }
   if (result?.error) return `server request failed: ${result.error}`;
-  if (result?.text === source) return "server returned source fallback";
+  if (result?.text === source) {
+    return result.fallback_reason
+      ? `server returned source fallback: ${result.fallback_reason}`
+      : "server returned source fallback (reason unavailable)";
+  }
   if (quality?.reasons.length) return quality.reasons.join("; ");
   return undefined;
 }
@@ -323,7 +341,7 @@ function markdownReport(report: {
         `### ${row.blockId} · pages ${row.pageStart}${row.pageEnd !== row.pageStart ? `–${row.pageEnd}` : ""}`,
         "",
         `- Role: ${row.role}; quality: ${row.quality?.score ?? "request failed"}; production decision: ${row.wouldSubmitToModel ? (row.wouldAcceptTranslation ? "accept" : "original fallback after quality gate") : "original fallback before model"}; warnings: ${row.structuralWarnings.join(", ") || "none"}`,
-        `- Source category: ${row.sourceCategory}; fallback stage: ${row.fallbackStage}; fallback reason: ${row.fallbackReason ?? "none"}`,
+        `- Source category: ${row.sourceCategory}; fallback stage: ${row.fallbackStage}; fallback reason: ${row.fallbackReason ?? "none"}; server fallback: ${row.serverFallbackStage ? `${row.serverFallbackStage} (${row.serverFallbackReason ?? "reason unavailable"})` : "none"}`,
         `- Invariants: ${row.sourceInvariants.join(", ") || "none"}`,
         "",
         "**Source**",
@@ -342,6 +360,13 @@ function markdownReport(report: {
 
 async function main() {
   console.log(`[audit] start endpoint=${endpoint} paper=${onlyPaper ?? "all"} limit=${perPaperLimit}`);
+  if (onlyPaper && requestedPaperIds.length > 0) throw new Error("Use either --paper or --papers, not both");
+  if (papersArg >= 0 && requestedPaperIds.length === 0) throw new Error("--papers requires a comma-separated paper id list");
+  if (requestedReportName && !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(requestedReportName)) {
+    throw new Error("--report-name must be a simple filename stem (letters, digits, dot, underscore, hyphen)");
+  }
+  if (reportNameArg >= 0 && !requestedReportName) throw new Error("--report-name requires a filename stem");
+  const benchmarkRunId = new Date().toISOString().replace(/[:.]/g, "-");
   const readyDeadline = Date.now() + Number(process.env.MADLAD_READY_TIMEOUT_MS ?? 900_000);
   let health: Response | undefined;
   while (Date.now() < readyDeadline) {
@@ -363,14 +388,25 @@ async function main() {
   if (finalHealth.model_loaded !== true && finalHealth.phase !== "ready") {
     throw new Error(`MADLAD model did not become ready before timeout (phase=${finalHealth.phase ?? "unknown"})`);
   }
-  const selected = catalog.papers.filter((paper) => !onlyPaper || paper.id === onlyPaper);
-  console.log(`[audit] selected=${selected.length}`);
+  const requested = catalog.papers.filter((paper) =>
+    onlyPaper ? paper.id === onlyPaper : requestedPaperIds.length === 0 || requestedPaperIds.includes(paper.id)
+  );
+  const unknownPaperIds = requestedPaperIds.filter((id) => !catalog.papers.some((paper) => paper.id === id));
+  if (unknownPaperIds.length > 0) throw new Error(`Unknown catalog paper(s): ${unknownPaperIds.join(", ")}`);
+  const excludedMissingPdf = cachedOnlyArg
+    ? requested.filter((paper) => !fs.existsSync(path.join(root, catalog.pdfDir, paper.filename)))
+    : [];
+  const selected = cachedOnlyArg
+    ? requested.filter((paper) => fs.existsSync(path.join(root, catalog.pdfDir, paper.filename)))
+    : requested;
+  console.log(`[audit] selected=${selected.length}${cachedOnlyArg ? ` cached of ${requested.length}` : ""}`);
   if (onlyPaper && selected.length === 0) throw new Error(`Unknown catalog paper: ${onlyPaper}`);
-  const reportName = onlyPaper ? `translation-audit-${onlyPaper}` : "translation-audit";
+  if (cachedOnlyArg && selected.length === 0) throw new Error("No cached PDFs are eligible for this benchmark selection");
+  const reportName = requestedReportName ?? (onlyPaper ? `translation-audit-${onlyPaper}` : "translation-audit");
   const reportDir = path.join(root, catalog.pdfDir, "reports");
   const checkpointPath = path.join(reportDir, `${reportName}.json`);
   const prior = resumeArg && fs.existsSync(checkpointPath)
-    ? JSON.parse(fs.readFileSync(checkpointPath, "utf8")) as { papers?: Array<{ paper: CatalogPaper; rows: AuditRow[]; error?: string }> }
+    ? JSON.parse(fs.readFileSync(checkpointPath, "utf8")) as { runId?: string; papers?: Array<{ paper: CatalogPaper; rows: AuditRow[]; error?: string }> }
     : undefined;
   const papers: Array<{ paper: CatalogPaper; rows: AuditRow[]; error?: string }> = resumeArg
     ? (prior?.papers ?? []).filter((entry) => !entry.error)
@@ -383,7 +419,25 @@ async function main() {
     .map((entry) => entry.paper.id));
   if (resumeArg && completedIds.size > 0) console.log(`[audit] resuming; skipping ${completedIds.size} checkpointed paper(s)`);
   const saveCheckpoint = () => {
-    const report = { createdAt: new Date().toISOString(), endpoint, papers, complete: papers.length === selected.length };
+    const selectedIds = new Set(selected.map((paper) => paper.id));
+    const entriesById = new Map(papers.map((entry) => [entry.paper.id, entry]));
+    const complete = selected.every((paper) => {
+      const entry = entriesById.get(paper.id);
+      return Boolean(entry && !entry.error && selectedIds.has(entry.paper.id));
+    });
+    const report = {
+      createdAt: new Date().toISOString(),
+      runId: benchmarkRunId,
+      resumedFromRunId: prior?.runId,
+      endpoint,
+      sampleLimitPerPaper: perPaperLimit,
+      catalogPaperCount: catalog.papers.length,
+      cachedOnly: cachedOnlyArg,
+      excludedMissingPdf: excludedMissingPdf.map((paper) => ({ id: paper.id, filename: paper.filename })),
+      selectedPaperIds: selected.map((paper) => paper.id),
+      papers,
+      complete,
+    };
     fs.mkdirSync(reportDir, { recursive: true });
     const jsonPath = path.join(reportDir, `${reportName}.json`);
     fs.writeFileSync(`${jsonPath}.tmp`, `${JSON.stringify(report, null, 2)}\n`);
@@ -438,6 +492,7 @@ async function main() {
         const category = sourceCategory(block);
         return {
           key: `${paper.id}:${block.id}`,
+          benchmarkRunId,
           paperId: paper.id,
           blockId: block.id,
           role: block.type,
@@ -461,6 +516,8 @@ async function main() {
           extractionProvenance: { pageStart: block.pageStart, pageEnd: block.pageEnd, bboxCount: block.boundingBoxes.length, extractionConfidence: block.extractionConfidence },
           fallbackStage: fallbackStage(wouldSubmitToModel, readerVisibleFallback),
           fallbackReason: fallbackReason(source, result, quality),
+          serverFallbackReason: result?.fallback_reason,
+          serverFallbackStage: result?.fallback_stage,
           serverError: result?.error,
           wouldSubmitToModel,
           wouldAcceptTranslation,

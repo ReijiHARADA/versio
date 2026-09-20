@@ -22,6 +22,8 @@ const LEFTOVER_PLACEHOLDER = /[zζΖ][zζΖ]c[iιΙіІ]t\d+(?:x\d+)?[zζΖ][zζ
 // broad blacklist of English words.
 const SOURCE_NEGATION = /\b(?:(?:do|does|did|is|are|was|were|has|have|had)\s+not|not\s+(?:all|every|each|necessarily)|cannot|can\s+not|never|without|lack(?:s|ed|ing)?|absence)\b/i;
 const JA_NEGATION = /(?:ない|なく|なかっ|ません|ず|ぬ|無|非|不|未|欠|否)/;
+const SOURCE_DISJUNCTIVE_BOTH = /\bor\s+both\b/i;
+const JA_BOTH = /(?:両方|双方|いずれも|ともに|同時に|両者|併せて|あわせて)/;
 
 /** Restore valid UTF-8 byte tokens if an older bundled server emitted them. */
 export function restoreUtf8ByteEscapes(text: string): string {
@@ -201,6 +203,9 @@ const SCIENTIFIC_PATTERNS: Array<[ScientificInvariant["kind"], RegExp]> = [
   ["url", /https?:\/\/[^\s)\]}>,。、「」]+/gi],
   ["doi", /\b10\.\d{4,9}\/[\w.()/:;-]+/gi],
   ["citation", /\[\d+(?:\s*[-–—]\s*\d+)?(?:\s*,\s*\d+(?:\s*[-–—]\s*\d+)?)*\]/g],
+  // Clustered numeric citations may be extracted as superscript digits
+  // attached to a word instead of bracketed references (e.g. term29,30,32).
+  ["citation", /(?<=[A-Za-z])\d{1,3}(?:\s*,\s*\d{1,3})+/g],
   // Figure/panel labels are source references. Keeping their original form is
   // safer than allowing a decoder to omit, renumber, or detach them.
   ["figure", /\bfig(?:ure)?s?\.?\s*\d+(?:[a-z]|\([a-z]\))?/gi],
@@ -218,7 +223,7 @@ const SCIENTIFIC_PATTERNS: Array<[ScientificInvariant["kind"], RegExp]> = [
   // “before World War I” into an invented year such as 1914.
   ["year", /\b(?:1[5-9]\d{2}|20\d{2})\b/g],
   ["statistic", /(?:[χΧxX](?:²|2)?|[FfTtZz])\s*\([^)]{1,16}\)\s*(?:=|<|>|≤|≥)\s*[-+]?\d+(?:\.\d+)?|\b[UWHV]\s*=\s*[-+]?\d+(?:\.\d+)?|\bp\s*(?:=|<|>|≤|≥)\s*\.?\d+(?:\.\d+)?|\b[A-Za-z]\s*(?:\u0338\s*=|!=|≠|=|<|>|≤|≥)\s*[-+]?\d+(?:\.\d+)?/g],
-  ["measurement", /\b\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|hz|khz|mhz|ghz|uw|mw|w|kg|mg|%|°c)\b/gi],
+  ["measurement", /\b\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|hz|khz|mhz|ghz|uw|mw|w|kg|mg|%|°[cf])\b/gi],
   // Preserve all-caps acronyms and mixed-case technical identifiers. The
   // latter covers model/system names such as DeepIV without treating normal
   // prose as an invariant.
@@ -405,6 +410,13 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   // "not only" constructions and only checks explicit source negation; a
   // missing Japanese negative marker is unsafe for research results.
   if (SOURCE_NEGATION.test(source) && !JA_NEGATION.test(out)) reasons.push("source negation missing");
+  // Preserve the explicit scope of `X or both Y and Z`. An output that keeps
+  // only X or only one of Y/Z reverses an experimental condition while often
+  // remaining fluent. This narrow relation cue requires an explicit Japanese
+  // both-side marker; it does not generalize to every `or` coordination.
+  if (SOURCE_DISJUNCTIVE_BOTH.test(source) && !JA_BOTH.test(out)) {
+    reasons.push("source disjunctive-both relation missing");
+  }
 
   if (
     /^\d+[.)]\s+\S/.test(source.trim()) &&
@@ -417,14 +429,18 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   const languageScore = reasons.some((reason) => /Japanese|Latin|source echo|date|empty|simplified Chinese/.test(reason)) ? 0.15 : 1;
   const repetitionScore = isDegenerateTranslation(out) ? 0 : 1;
   const lengthRatio = out.length / Math.max(source.trim().length, 1);
-  // A many-sentence academic paragraph rendered as a very short Japanese
-  // summary is usually decode-time omission. The audit corpus contains valid
-  // long Japanese translations down to 0.22 of the English character count;
-  // use a stricter bound only for genuinely long source paragraphs.
-  const severeLongOmission = source.trim().length >= 500 && lengthRatio < 0.2;
+  // Extreme compression is strong evidence of omitted content, especially in
+  // short result/list units where sentence-count checks have little leverage.
+  // In the 194 manually reviewed accepted v16 translations, the <0.20 band
+  // for sources >=80 chars contained two rows and both were severity >=3;
+  // no reviewed safe translation fell in this band. Keep the threshold
+  // conservative to avoid rejecting normal English-to-Japanese compression.
+  const severeLongOmission = source.trim().length >= 80 && lengthRatio < 0.2;
   const lengthScore = lengthRatio < 0.12 || lengthRatio > 4 || severeLongOmission ? 0.3 : 1;
   if (lengthScore < 1) reasons.push(severeLongOmission ? "long source was implausibly shortened" : "implausible length ratio");
-  const semanticSafetyScore = reasons.includes("source negation missing") || reasons.includes("trailing Latin fragment") ? 0.35 : 1;
+  const semanticSafetyScore = reasons.includes("source negation missing")
+    || reasons.includes("source disjunctive-both relation missing")
+    || reasons.includes("trailing Latin fragment") ? 0.35 : 1;
   return {
     score: Math.max(0, Math.min(1, (languageScore * 0.35 + invariant.score * 0.4 + repetitionScore * 0.15 + lengthScore * 0.1) * semanticSafetyScore)),
     reasons,
@@ -449,6 +465,7 @@ export function isPlausibleJaTranslation(output: string, source: string): boolea
     && !invariantQuality(source, output).criticalMissing
     && !quality.reasons.includes("long source was implausibly shortened")
     && !quality.reasons.includes("source negation missing")
+    && !quality.reasons.includes("source disjunctive-both relation missing")
     && !quality.reasons.includes("trailing Latin fragment")
     && !quality.reasons.includes("simplified Chinese mixed into Japanese")
     && !quality.reasons.some((reason) => reason.startsWith("translation contains unmodified source span"))
@@ -633,6 +650,14 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   // missing equation, list, or definition must not be inferred by the model.
   if (noTerminal && /:\s*$/.test(t)) {
     return "段落の末尾が欠けている可能性があります";
+  }
+  // A terminal bare infinitive marks an open predicate complement (for
+  // example, a physical block ending `were used to perform`). The model may
+  // supply an object that was absent from the PDF text and turn an extraction
+  // fragment into a fluent but invented claim. A terminal mark can close an
+  // elliptical heading/quotation, so keep this limited to unpunctuated prose.
+  if (t.length >= 48 && noTerminal && /\bto\s+[a-z]{3,}$/i.test(t)) {
+    return "段落の末尾で不定詞の補語が欠けている可能性があります";
   }
   // Figure/table sub-panels extracted as `(a) noun phrase` are captions or
   // legends. A sentence terminator does not make the panel label prose: the
