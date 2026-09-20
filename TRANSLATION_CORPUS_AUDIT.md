@@ -1,6 +1,73 @@
 # Cross-disciplinary translation audit
 
-## Latest checkpoint (2026-09-21 00:15 JST)
+## Latest checkpoint (2026-09-21): corrected-runtime .app verified; Transformers A/B and v56 replay
+
+The MADLAD-400 3B checkpoint is affected by the reported Transformers 5.x loader defect when loaded without a workaround: 5.17.0 silently binds encoder input embeddings to the distinct `lm_head.weight`. The active Paper Reader 5.16.1 environment had a custom reassignment that masked the issue. The project now pins 4.57.6 and validates encoder/decoder/checkpoint equality at startup instead of mutating weights. Detailed tensor mapping and fixed-fixture A/B outputs are in [TRANSFORMERS_MADLAD_AB.md](TRANSFORMERS_MADLAD_AB.md); raw tensors/outputs remain in ignored local reports.
+
+Under correctly loaded 4.57.6, the same 10-paper / 40-unit v53 cohort retained matching source text and keys. There were 18 pre-model and 5 post-model fallbacks, with 17 accepted translations. Clean ordinary-body fallback was 4/17 (23.5%), unchanged from the patched 5.x baseline. The known group-cardinality and participant-count scope errors persist at direct model level and remain rejected by the client scope gate. Manual review of the changed accepted outputs also found factory-worker study-focus omission/addition, an interactive-jewellery hallucination, consumer-production terminology drift, and an unsupported WEAR construct claim. Correct weights fix runtime integrity, not MADLAD's remaining semantic limitations.
+
+The release `.app` was rebuilt successfully in fast mode at 02:48:22 JST and inspected: its bundled Python reports Transformers 4.57.6, and its server source includes the v6 cache identity plus fail-closed embedding checks. Full Vitest 418/418, Python 133 + 11 subtests, typecheck, lint, and production frontend build pass. The first bundle attempt exposed unrelated extraction-source project-reference type errors; these were fixed minimally and the full checks rerun.
+
+For next model work, keep 3B/4.57.6 as the reference and prioritize a 7B comparison before 10B. Neither weight set is cached; full safetensors are about 33.2 GB (7B) and 42.9 GB (10B), while only 37 GiB is free on this 96%-used volume. No weights were downloaded; compare already-installed Gemma/Qwen on held-out papers until more storage is available.
+
+The <=5% ordinary-body fallback and near-zero unsafe false-accept goals remain unmet. Continue held-out semantic review and jointly track fallback and unsafe accepts under 4.57.6; keep model routing unchanged until that evidence supports a safe intervention.
+
+
+## Latest checkpoint (2026-09-21 02:04 JST)
+
+### v55: generic terminology instruction probe
+
+A generic Gemma prompt addition for named methods/theories/constructs and discipline-specific terminology was tested on three known terminology failures plus two normal controls. `homophily` improved from `同性偏見` to `同質性`; `linear probing` remained `線形探索法`, and marketing/social `peers` remained `同僚`. The two controls remained natural. The existing gate accepted 4/5 but rejected correctly translated `WOM`→`口コミ` for losing the English acronym: a false-reject confirmation. Mean latency was 19.2s for five sources. This small purposive development probe is not an estimate and has not changed production prompt/routing. Raw rows: `/tmp/paper-reader-v55-generic-term-prompt.json`; discussion in `TRANSLATION_MODEL_EVAL_V52.md`.
+
+Next: evaluate document-grounded term lookup and concept-preserving acronym equivalence, then test on fresh held-out OA papers. No per-paper phrase rules. Continue broader manual review and corpus expansion; fallback <=5% and near-zero unsafe accept remain unmet.
+
+### v54: paired Gemma replay on fresh extraction source blocks
+
+Gemma 2 9B was evaluated on the identical 18 source-category ordinary-body rows from v53. Manual screening reclassified one as a figure caption, so the ordinary prose denominator is 17. Gemma generated all rows; the existing TypeScript gate accepted 17/18 and rejected one unsupported `[1]` citation. Manually corrected visible prose fallback is 1/17 (5.9%) vs current MADLAD 4/17 (23.5%). Mean time was 13.3s Gemma vs 7.3s MADLAD (1.8x), same sources.
+
+Gemma avoided several MADLAD false claims/omissions, but manual source comparison found clear high-impact terminology shifts in gate-accepted rows: `linear probing` became linear search, `peers` became coworkers, and `homophily` became same-sex bias. It also omitted prosodic features from the misclassified standalone caption. Thus candidate false accepts persist even when fallback is near target and gate score is 1.0. No production route was changed; neither switch nor gate-only rescue is safe. Full paired analysis: `TRANSLATION_MODEL_EVAL_V52.md`; raw replay: `/tmp/paper-reader-v54-fresh-gemma.json`.
+
+Next: run a generic term-preservation / terminology intervention on development examples, retain paper-independent rules, and test on new held-out papers with manual review. Continue source-category false-negative review, track false accepts and false rejects alongside fallback, and expand OA corpus. Goals remain unmet.
+
+### v53: fresh extraction cohort and targeted alternate-model rescue
+
+A newly named serial benchmark run processed ten locally cached OA PDFs through current extraction/Canonical/MADLAD code, sampling four stratified blocks per paper (40 total). All outputs were manually compared. Overall source-only/original fallback was 23/40 (57.5%), driven partly by 9 table-contamination and 18 pre-model structural/source skips; the former are safe structural preservation, not ordinary paragraph failure. Within source-category ordinary-body, 4/18 post-model fallback (22.2%); a figure caption was misclassified as ordinary prose, so the manually screened prose denominator is 17 and fallback 4/17 (23.5%). Seventeen automatically accepted outputs were reviewed; eight had severity>=2 shifts, including seven ordinary-prose errors. The existing participant-scope guard correctly rejected the `88 participants from various fields`→`88 per field` shift. No production behavior changed.
+
+The four post-model ordinary-body fallback sources were translated by Gemma 2 9B and Qwen 2.5 14B. Gemma passed the shared gate 4/4 but two outputs shift `peers` to coworkers and `linear probing` to linear search. Qwen passed 1/4 and produced an MLM expansion error; the other three were gate-rejected, including likely representation false rejects. This is insufficient evidence for cascade routing. Exact counts, sample caveats and examples are in `TRANSLATION_MODEL_EVAL_V52.md`; fresh extraction is `reports/translation-audit-fresh-v52-current-extraction.json` under ignored local data, and rescue generations are in `/tmp/paper-reader-v53-cascade-rescue.json`.
+
+The current app source still meets neither <=5% ordinary-body fallback nor near-zero unsafe-accept goals. Next: use fresh, manually screened multi-paper extraction rows to quantify false accepts and false rejects separately, investigate citation/protected-token failures and title/figure caption source contamination, and defer cascade until new-paper semantic performance supports it. Corpus expansion to 50+ provenance-verified OA papers remains outstanding.
+
+### v52: matched source-only model replay on ordinary-body candidates
+
+Replayed 20 stable-key source rows from 10 existing papers across HCI, cognitive psychology, marketing, ergonomics, and linguistics through current MADLAD v73, Gemma 2 9B, and Qwen 2.5 14B. Sampling used role/category/source form, not translation or manual-review labels; source rows span prior audit reports, so this is a fresh model run but not a fresh extraction generation. Two rows labeled ordinary body were actually a continuation fragment and a figure caption, leaving 18 clean prose comparisons after manual input screening.
+
+Server fallback: MADLAD 4/20; Gemma and Qwen 0/20. Applying the shared TypeScript plausibility API to the same outputs rejected 5/20 MADLAD, 4/20 Gemma, and 3/20 Qwen. In alternatives, citation strings `[33]` and `[24]` appear to be representation-only false rejects; invented/renumbered author-year citations remain true rejects. Yet the gate accepts several clear semantic/terminology errors: MADLAD changed a website category into a wearable product, and Gemma/Qwen outputs confused `prosody` with phonology; Qwen rendered `social cues` as `ソーシャルクイ`. Manual comparison found at least 9 severity>=2 problems among 15 MADLAD outputs passing server/client checks, 2 clear severity>=2 Gemma gate false accepts, and 2 Qwen gate false accepts. These are raw small-sample counts, not rates generalizable to product use.
+
+Mean latency: MADLAD 16.3s, Gemma 19.4s, Qwen 37.4s per block. Gemma remains faster than Qwen but its prompt changes author-year citations into unsupported numbered citations on a marketing paragraph. No production routing changed. Full findings, model token/fallback statistics, and representative failure descriptions: `TRANSLATION_MODEL_EVAL_V52.md`. Raw exact source/output rows: `/tmp/paper-reader-v52-matched-model-eval.json`; source selection/provenance: `/tmp/paper-reader-v52-selected-sources.json`.
+
+Next: select a new manually screened ordinary-body cohort from fresh extractions, broaden papers/sections, classify all outputs blind to model where practical, investigate citation false rejects and source-protection restoration fallbacks, and only then simulate a held-out selective cascade. The <=5% fallback and near-zero unsafe-accept targets remain unmet.
+
+### v51: matched five-discipline primary replay and local alternatives
+
+Selected five previously accepted severity 2–4 errors from five separate papers across HCI, neuroscience, linguistics, ergonomics, and marketing; ran the identical extracted source through current MADLAD v73 and local Qwen 2.5 14B / Gemma 2 9B with the same Paper Reader prompt/options. This is a purposive known-failure replay, not held-out or population-quality evidence.
+
+Current MADLAD reproduced all five serious historical shifts without server fallback: stronger-than-source HCAI “domination,” mangled “rule-adherence,” a missing central linguistics claim, wearable→webinar/website hallucinations, and “sharing economy”→共有経営. The client plausibility API assigned all five score 1.0 with no reasons. New Qwen14 and Gemma outputs were manually reviewed at 0/5 severity>=2 each on these cases; caveats include minor HCI omissions/compression and Gemma's nonstandard `句法` terminology. Mean latency per block: MADLAD 16.1s, Qwen14 24.5s, Gemma9 14.8s. This makes Gemma a promising selective-rescue candidate but does not prove it safe on ordinary body text or random papers.
+
+Detailed matched comparison: `test-data/real-papers/reports/semantic-model-matched-v51.md`; full raw model outputs are at `/tmp/paper-reader-v51-madlad-current.json` and `/tmp/paper-reader-v51-independent-model-eval.json`. No production model routing changed. Next: sample >=20 matched ordinary-body blocks independent of existing labels across several papers/sections, manually compare all models and explicitly count candidate false rejects, then simulate a selective route on held-out papers before implementation.
+
+### v50: add two English-to-Japanese scope/cardinality guards; track their fallback cost
+
+Added checks for a collective participant total shifted into a field-level count, and a group-wide null comparison narrowed to two despite >=3 explicit groups/conditions. Among 32 unique pairs from reviewed accepted rows, only the two known severity-2 errors in the motivating cognitive-psychology paper flagged; this is development data, not held-out precision. The checks would make the two MADLAD results visible fallback unless a safe alternate candidate is routed, so they do not improve fallback by themselves. The positive/negative controls and exact false-positive accounting are described in `CURRENT_STATE.md` and `reports/semantic-model-comparison-v48.md`.
+
+### v48: compare local alternatives on reproduced scope errors; repair one statistical-label false reject
+
+Ran the two v46 severity-2 full paragraphs through local Qwen 2.5 7B and Gemma 2 9B with Paper Reader's existing Ollama translation prompt, plus a bounded-negation negative control and a true per-group count positive control. On the participant paragraph, Qwen attached 88 to “research fields” while Gemma preserved 88 participants across varied disciplines; compensation wording in Gemma remains ambiguous. On the statistical paragraph, Qwen avoided a binary `両群間` claim but phrasing remained awkward; Gemma preserved “none of the groups” and the later three-group finding. Both models preserved the two controls. Full results, timing and human interpretation: `reports/semantic-model-comparison-v48.md`; raw outputs: `/tmp/paper-reader-v48-alternative-models.json`.
+
+Latency was 15–25s (Qwen) and 18–31s (Gemma) for full paragraphs. The production plausibility gate passed all eight outputs, including the known Qwen count error and MADLAD false accepts. This confirms that automatic gate pass is not semantic validation. The small targeted comparison does not justify blanket replacement or production routing; Gemma is only a rescue candidate pending held-out review.
+
+The Gemma participant output correctly translated `SD=value` as `標準偏差 value`, but the acronym invariant rejected it. `quality.ts` now accepts that expansion only when every `SD=value` is numerically matched next to `標準偏差`. Missing/mismatched number or label still rejects. Tests: focused quality 78/78; full Vitest 410/410 (65 files); typecheck/lint pass; Python suite 130 + 11 subtests. No app build. No extraction or generation behavior changed. The <=5% ordinary-body fallback and near-zero unsafe-accept goals remain unmet.
+
+Next: design a high-precision, language-aware count-scope/cardinality signal, test it against the de-duplicated accepted manual-review corpus and matched positive controls, and quantify false rejection before production use. Then run a held-out multi-paper selective-cascade comparison. Do not count these two target papers as held-out evidence.
 
 ### v47: trace two statistical semantic false accepts to model decode; probe input phrasing
 
@@ -4213,3 +4280,12 @@ Verification after changes: reading-order + cached real-paper baseline + quality
 The broader extraction-corpus suite initially exposed three regressions after the held-out paragraph-stitch work. Investigation distinguished one valid page-bottom column wrap in the PPG Earring paper from actual cross-column contamination; the test now permits only flagged bottom-left → top-right geometry. The HCI teaching paper's incomplete paragraph continues on page 3 below figure captions; extraction now skips only an opposite-column caption, a footnote below the source tail, a repeated page header, or page-local captions physically above the continuation, while retaining the incomplete-sentence and page-boundary checks. The Frontiers healthy-food paper's title ended in a separate “choice” line because left-margin masthead content interleaved in y-sorted line formation; a short same-font, same-x title line is recovered from its mixed block, with unrelated affiliation lines retained.
 
 Verification: selected extraction corpus + cached real-paper baseline + reading-order/quality tests **107/107 passed**; typecheck, lint, and diff check passed. No production app build or fresh model benchmark was run in this checkpoint. The shared server health provided by the user is ready. Next action is a fresh 12-row target-paper benchmark followed by complete manual review of accepted and fallback rows; report both semantic quality and fallback behavior, not just model output success.
+
+
+### 2026-09-21 v59 paired alternative-model replay
+
+Gemma 2 9B was replayed on the same 18 source rows as the v56 MADLAD extraction run, with exact source/key matching against the earlier v54 Gemma generation. All 18 generated; after a general citation-format equivalence fix, the shared gate accepts 18/18. The fix addresses source superscript references `15/16/17` rendered as `[15]/[16]/[17]`; exact citation number changes remain rejected. It changes only the invariant comparator.
+
+Manual review found one source-category error (a figure caption counted as ordinary prose), leaving 17 clean paragraphs. At least 3/17 accepted translations show a severity>=2 technical/construct shift: “linear probing” became linear search, social “peers” became coworkers, and a consumer-production “journey” was literalized as travel. Gemma's visible fallback is 0/17 after correcting the citation false reject, versus MADLAD's 4/17 (23.5%) on the matched rows, but Gemma is not safe for automatic routing because its semantic false accepts remain. This small, previously sampled development set is not a held-out or population estimate. Raw generations: ignored `test-data/real-papers/reports/gemma-v56-current-runtime-replay.json`; setup and review: `TRANSLATION_MODEL_EVAL_V52.md` v58.
+
+No model route changed. Next: test general terminology support on held-out sources, manually review all candidate accepts, and diagnose the remaining MADLAD scope paragraph fallback. Both the <=5% ordinary-body fallback goal and near-zero unsafe-accept goal remain unmet.

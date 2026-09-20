@@ -11,7 +11,7 @@ import type { TranslationEngine, TranslationResult, EngineStatus } from "./types
 // It is part of the cache identity, so stale translations produced before the
 // current source-preservation rules are never silently reused.
 export const MADLAD_MODEL_VERSION =
-  "3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20";
+  "3b-mt-v6-transformers-4.57.6-semantic-v73-source-protect-v1-strict-restore-v21";
 
 const DEFAULT_SERVER_URL = "http://127.0.0.1:8765";
 

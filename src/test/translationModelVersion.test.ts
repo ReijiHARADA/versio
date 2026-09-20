@@ -14,6 +14,14 @@ const engineSource = readFileSync(
   new URL("../../translation-server/engines/madlad_mps.py", import.meta.url),
   "utf8"
 );
+const requirementsSource = readFileSync(
+  new URL("../../translation-server/requirements.txt", import.meta.url),
+  "utf8"
+);
+const lockSource = readFileSync(
+  new URL("../../translation-server/requirements.lock", import.meta.url),
+  "utf8"
+);
 
 describe("MADLAD translation cache identity", () => {
   it("keeps the client cache version aligned with the server pipeline", () => {
@@ -26,11 +34,15 @@ describe("MADLAD translation cache identity", () => {
 
     expect(segmenterVersion).toBeTruthy();
     expect(protectionVersion).toBeTruthy();
+    expect(engineSource).toContain('TRANSFORMERS_RUNTIME_VERSION = "4.57.6"');
     expect(engineSource).toContain(
-      "f\"3b-mt-v5-{SEGMENTER_VERSION}-{SOURCE_PROTECTION_VERSION}-strict-restore-v20\""
+      'f"3b-mt-v6-transformers-{TRANSFORMERS_RUNTIME_VERSION}-{SEGMENTER_VERSION}-"'
     );
+    expect(engineSource).toContain('f"{SOURCE_PROTECTION_VERSION}-strict-restore-v21"');
+    expect(requirementsSource).toContain("transformers==4.57.6");
+    expect(lockSource).toContain("transformers==4.57.6");
     expect(MADLAD_MODEL_VERSION).toBe(
-      `3b-mt-v5-${segmenterVersion}-${protectionVersion}-strict-restore-v20`
+      `3b-mt-v6-transformers-4.57.6-${segmenterVersion}-${protectionVersion}-strict-restore-v21`
     );
   });
 });

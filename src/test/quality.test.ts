@@ -97,6 +97,18 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation("ネックレスケースを首に掛ける。Figure 1(a)。", source)).toBe(true);
   });
 
+  it("accepts Japanese figure labels while preserving the figure and panel number", () => {
+    expect(isPlausibleJaTranslation("結果を図5に示す。", "The results are shown in Figure 5.")).toBe(true);
+    expect(isPlausibleJaTranslation("結果を図1(a)に示す。", "The results are shown in Figure 1(a).")).toBe(true);
+    expect(isPlausibleJaTranslation("結果を図1に示す。", "The results are shown in Figure 1(a).")).toBe(false);
+    expect(isPlausibleJaTranslation("結果を図6に示す。", "The results are shown in Figure 5.")).toBe(false);
+  });
+
+  it("treats full-width Japanese digits as the same preserved numeric facts", () => {
+    const source = "The study included 82 participants, including 64 women.";
+    expect(isPlausibleJaTranslation("本研究の参加者は８２人で、そのうち６４人が女性だった。", source)).toBe(true);
+  });
+
   it("treats variable comparison conditions as source facts", () => {
     const source = "The OLS comparison assumes y \u0338= 0 when x = 0.";
     const values = extractScientificInvariants(source).map((item) => item.value);
@@ -130,12 +142,37 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation(output, source)).toBe(true);
   });
 
+  it("accepts a Japanese expansion of SD when its associated value is preserved", () => {
+    const source = "The mean age was 21.54 years (SD=2.16).";
+    expect(isPlausibleJaTranslation("平均年齢は21.54歳（標準偏差2.16）だった。", source)).toBe(true);
+  });
+
+  it("still rejects SD expansion when its value or statistical label is missing", () => {
+    const source = "The mean age was 21.54 years (SD=2.16).";
+    expect(isPlausibleJaTranslation("平均年齢は21.54歳（標準偏差2.61）だった。", source)).toBe(false);
+    expect(isPlausibleJaTranslation("平均年齢は21.54歳、値は2.16だった。", source)).toBe(false);
+  });
+
   it("keeps clustered unbracketed superscript citations as citation invariants", () => {
     const source = "Participants follow the rule unconditionally29,30,32; stimulation in this case12,33 had little effect.";
     const good = "参加者は無条件に規則に従う29,30,32。刺激はこの場合、ほとんど影響しなかった12,33。";
     expect(extractScientificInvariants(source).map((item) => item.value)).toContain("29,30,32");
     expect(isPlausibleJaTranslation(good, source)).toBe(true);
     expect(isPlausibleJaTranslation("参加者は無条件に規則に従う。刺激はこの場合、ほとんど影響しなかった。", source)).toBe(false);
+  });
+
+  it("accepts a superscript citation rendered with brackets when its number matches", () => {
+    const source = "The canonical “Linda problem”15 (Linda) was used in the study.";
+    const output = "標準的な「リンダ問題」[15]（Linda）を研究で用いた。";
+    expect(extractScientificInvariants(source).map((item) => item.value)).toContain("15");
+    expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
+  it("rejects a changed superscript citation even when both use brackets", () => {
+    const source = "The canonical “Linda problem”15 (Linda) was used in the study.";
+    const output = "標準的な「リンダ問題」[16]（Linda）を研究で用いた。";
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+    expect(evaluateJaTranslation(output, source).reasons.join(" ")).toMatch(/15|16/);
   });
 
   it("rejects a fluent translation that invents a measurement absent from the source", () => {
@@ -300,6 +337,44 @@ describe("isPlausibleJaTranslation", () => {
     const source = "Contrary to earlier work, not all persuasion theories are effective online.";
     const output = "以前の研究とは異なり、すべての説得理論がオンラインで有効とは限らない。";
     expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
+  it("rejects a participant total translated as a count from each unspecified field", () => {
+    const source = "Eighty-eight participants from various fields of study were recruited.";
+    const output = "各学科から88名の参加者を募集した。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("participant total may have shifted to field-level count");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("rejects attaching the participant total to an unspecified number of fields", () => {
+    const source = "Eighty-eight participants from various fields of study were recruited.";
+    const output = "88名の研究分野から参加者を募集した。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("participant total may have shifted to field-level count");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("accepts varied-field sampling when the participant total remains collective", () => {
+    const source = "Eighty-eight participants from various fields of study were recruited.";
+    expect(isPlausibleJaTranslation("様々な学問分野から88名の参加者を募集した。", source)).toBe(true);
+  });
+
+  it("allows a field-level sample count when the source explicitly states it", () => {
+    const source = "Participants were recruited from various fields, with 22 from each field (N=88).";
+    expect(isPlausibleJaTranslation("各分野から22名の参加者を募集し、総数は88名だった（N=88）。", source)).toBe(true);
+  });
+
+  it("rejects narrowing an explicit three-or-more-group comparison to two groups", () => {
+    const source = "None of the groups differed significantly in age. The study compared three groups.";
+    const output = "両群間に年齢の有意差はなかった。3群を比較した。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("collective group comparison narrowed to two groups");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("accepts faithful collective comparisons and a genuine two-group study", () => {
+    const threeGroups = "None of the groups differed significantly in age. The study compared three groups.";
+    const twoGroups = "None of the groups differed significantly in age. The study compared two groups.";
+    expect(isPlausibleJaTranslation("いずれのグループ間にも年齢の有意差はなかった。3群を比較した。", threeGroups)).toBe(true);
+    expect(isPlausibleJaTranslation("両群間に年齢の有意差はなかった。2群を比較した。", twoGroups)).toBe(true);
   });
 
   it("rejects a fluent translation that drops the second branch of an explicit or-both condition", () => {

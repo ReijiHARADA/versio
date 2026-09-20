@@ -1,6 +1,6 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20",
+  "lastBenchmarkVersion": "3b-mt-v6-transformers-4.57.6-semantic-v73-source-protect-v1-strict-restore-v21",
   "lastDiagnosticVersion": "scheduler-panel-and-inline-citation-v19",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
@@ -141,7 +141,7 @@
   ],
   "pendingPapers": [],
   "reviewedBlocks": 134,
-  "lastCheckpoint": "2026-09-21-v47-decode-path-isolation",
+  "lastCheckpoint": "2026-09-21-v56-transformers-4.57.6-loading-integrity-and-10-paper-replay",
   "pendingManualReview": 60,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
@@ -157,10 +157,10 @@
     "ordinary-body fallback target <=5% not met (v16 baseline 30.3%; v32 single-paper diagnostic 1/6 = 16.7%)"
   ],
   "nextActions": [
-    "diagnose and fix generic peripheral date/author rail contamination",
-    "review v33 pre/post-model fallbacks for false rejects and distinguish table/source-only from ordinary body",
-    "evaluate safe citation-aware complete translation units and alternate model on held-out papers",
-    "continue OA corpus expansion toward balanced 70–90 papers"
+    "finish full tests and packaged app build verification for the verified Transformers 4.57.6 runtime",
+    "continue held-out cross-disciplinary terminology and semantic false-accept review under verified 4.57.6",
+    "expand provenance-verified OA paper coverage toward 70–90 and manually review accepted ordinary body",
+    "measure ordinary-body fallback and unsafe false accepts jointly; do not change model routing without held-out evidence"
   ],
   "v33StructuralSafety": {
     "status": "implemented and verified",
@@ -472,8 +472,8 @@
       "finding": "The false ordinary fallback for emphasized NOT is now accepted, and the CHI conference-date/byline blend is classified as reference/chrome pre-model instead of ordinary body prose."
     }
   },
-  "lastBenchmarkReport": "test-data/real-papers/reports/translation-audit-v25-new-4.json",
-  "updatedAt": "2026-09-20",
+  "lastBenchmarkReport": "test-data/real-papers/reports/translation-audit-v56-transformers-4.57.6.json",
+  "updatedAt": "2026-09-21T02:49:00+09:00",
   "benchmarks": {
     "v52FullCorpus": {
       "createdAt": "2026-09-14T08:31:22.627Z",
@@ -3292,7 +3292,7 @@
   "freshOrdinaryBodyFallbacks": 9,
   "freshOrdinaryBodyFallbackRate": 0.28125,
   "freshManualReviewPending": 37,
-  "latestFreshBaseline": "test-data/real-papers/reports/translation-fresh-baseline-v6.json",
+  "latestFreshBaseline": "test-data/real-papers/reports/translation-audit-v56-transformers-4.57.6.json",
   "freshManualReviewLabelsPresent": false,
   "latestFreshManualReview": "test-data/real-papers/reports/translation-fresh-manual-review-v1.json",
   "freshManualReviewLabeledRows": 32,
@@ -3916,5 +3916,462 @@
     },
     "benchmarkRunning": false,
     "nextAction": "Create held-out cross-domain quantifier/cardinality fixtures and measure semantic verification/cascade signals plus false-reject rate before any production gate or rewrite."
+  },
+  "v48AlternativeModelCheckpoint": {
+    "date": "2026-09-21",
+    "report": "test-data/real-papers/reports/semantic-model-comparison-v48.md",
+    "rawGenerations": "/tmp/paper-reader-v48-alternative-models.json",
+    "cases": 4,
+    "generations": 8,
+    "models": [
+      "MADLAD 3B production replay",
+      "qwen2.5:7b",
+      "gemma2:9b"
+    ],
+    "manualFindings": [
+      "MADLAD and Qwen 7B retain a severity-2 participant-count scope/attachment error on the known full paragraph; Qwen attaches 88 to fields.",
+      "Gemma 9B preserved the count/field relation and collective group scope in these two examples; full participant compensation phrase remains ambiguous.",
+      "Both alternate models preserved a bounded-negation control and an explicit per-group count control.",
+      "Gemma full-block latency was 18.2s and 31.5s; Qwen 15.1s and 24.7s. Eight generations are insufficient evidence for production cascade.",
+      "The existing quality gate accepted all eight outputs including known semantic shifts, confirming it is not a semantic correctness selector."
+    ],
+    "productionChange": "quality.ts recognizes Japanese expansion SD=value -> 標準偏差 value only with exact adjacent numeric preservation; focused tests cover correct expansion and missing/mismatched values.",
+    "validation": {
+      "qualityTest": "78 passed",
+      "fullVitest": "410 passed (65 files)",
+      "typecheck": "passed",
+      "lint": "passed",
+      "pythonTests": "130 passed + 11 subtests"
+    },
+    "server": {
+      "pid": 83146,
+      "port": 8765,
+      "ready": true,
+      "modelVersion": "3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20"
+    },
+    "benchmarkRunning": false,
+    "nextAction": "Create language-aware cardinality/count-scope signal; apply against de-duplicated manually reviewed accepted pairs and positive controls; measure false reject. Then evaluate Gemma selective rescue on separate held-out multi-paper cohort."
+  },
+  "v49Qwen14Checkpoint": {
+    "date": "2026-09-21",
+    "report": "test-data/real-papers/reports/semantic-model-comparison-v48.md",
+    "rawGenerations": "/tmp/paper-reader-v49-qwen14.json",
+    "models": [
+      "qwen2.5:14b"
+    ],
+    "cases": 4,
+    "manualFindings": [
+      "Qwen14 preserved participant count as 88 total across varied fields and did not render none-of-groups as a two-group comparison on the two development cases.",
+      "Both bounded-negation and explicit per-group-count controls were preserved.",
+      "Manual review found Chinese-derived informed-consent terminology 知情同意.",
+      "Full paragraph latency 40.6s and 53.8s; control latency 3.2s and 3.8s.",
+      "Before equivalence fixes, the automatic gate false-rejected fullwidth Japanese 82/64 and Figure 5 -> 図5. Qwen14 candidates now pass after preserving numeral, figure, and panel identities. This does not establish semantic correctness."
+    ],
+    "productionChange": "normalize fullwidth digits in scientific invariants; accept Japanese 図N as Figure/Fig. N only when exact figure number and optional panel are preserved.",
+    "validation": {
+      "qualityTest": "80 passed",
+      "fullVitest": "412 passed (65 files)",
+      "typecheck": "passed",
+      "lint": "passed",
+      "pythonTests": "130 passed + 11 subtests"
+    },
+    "server": {
+      "pid": 83146,
+      "port": 8765,
+      "ready": true,
+      "modelVersion": "3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20"
+    },
+    "benchmarkRunning": false,
+    "nextAction": "Develop held-out count scope/cardinality signal and evaluate selective Qwen14/Gemma rescue across multi-paper corpus, manual labels, false rejects, terminology, and latency."
+  },
+  "v50ScopeSignalCheckpoint": {
+    "date": "2026-09-21",
+    "report": "test-data/real-papers/reports/semantic-model-comparison-v48.md",
+    "implementation": "src/services/translation/quality.ts and src/test/quality.test.ts",
+    "checks": [
+      "participant total shifted to an unspecified field-level count",
+      "collective none-of-groups comparison narrowed to two despite explicit >=3 study groups/conditions"
+    ],
+    "developmentCorpus": {
+      "uniqueManuallyReviewedAcceptedSourceTranslationPairs": 32,
+      "flagged": 2,
+      "severityGte2": 2,
+      "severityBelow2Flagged": 0,
+      "note": "Both flagged pairs belong to the same cognitive-psychology development paper that motivated the rule; this is not held-out precision."
+    },
+    "modelCandidateSignal": {
+      "MADLAD3B": {
+        "flagged": 2,
+        "knownScopeFailures": 2
+      },
+      "qwen2.5:7b": {
+        "participantCountAttachmentFlagged": true
+      },
+      "gemma2:9b": {
+        "targetedScopeSignals": 0
+      },
+      "qwen2.5:14b": {
+        "targetedScopeSignals": 0
+      },
+      "controls": {
+        "boundedNegationPreserved": true,
+        "explicitPerGroupCountPreserved": true
+      }
+    },
+    "risk": "MADLAD risky outputs now fail plausibility and can become visible fallback until a safe rescue is integrated; v48 broad ordinary-body fallback before new checks was 14/74=18.9%.",
+    "validation": {
+      "qualityTest": "86 passed",
+      "fullVitest": "418 passed (65 files)",
+      "typecheck": "passed",
+      "lint": "passed",
+      "pythonTests": "130 passed + 11 subtests"
+    },
+    "server": {
+      "pid": 83146,
+      "port": 8765,
+      "ready": true,
+      "modelVersion": "3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20"
+    },
+    "benchmarkRunning": false,
+    "nextAction": "Evaluate selective Qwen14/Gemma candidate rescue on independent multi-paper reviewed cases, including terminology and compensation-direction errors, before integrating. Must improve unsafe accepts without worsening ordinary-body fallback budget."
+  },
+  "v51MatchedModelReplayCheckpoint": {
+    "date": "2026-09-21",
+    "report": "test-data/real-papers/reports/semantic-model-matched-v51.md",
+    "rawMadlad": "/tmp/paper-reader-v51-madlad-current.json",
+    "rawAlternatives": "/tmp/paper-reader-v51-independent-model-eval.json",
+    "papers": 5,
+    "disciplines": [
+      "HCI",
+      "neuroscience",
+      "linguistics",
+      "ergonomics",
+      "marketing"
+    ],
+    "sampling": "purposive replay of previously manually reviewed accepted severity 2-4 errors; development/triage set, not held-out or population estimate",
+    "matchedOutcomes": {
+      "currentMadladV73": {
+        "acceptedByServer": 5,
+        "plausibilityScoreOne": 5,
+        "manualSeverityGte2": 5,
+        "meanLatencyMs": 16142
+      },
+      "qwen2.5:14b": {
+        "plausibilityPass": 5,
+        "manualSeverityGte2": 0,
+        "minorCaveats": 2,
+        "meanLatencyMs": 24491
+      },
+      "gemma2:9b": {
+        "plausibilityPass": 5,
+        "manualSeverityGte2": 0,
+        "minorCaveats": 2,
+        "meanLatencyMs": 14841
+      }
+    },
+    "productionRoutingChanged": false,
+    "validation": {
+      "fullVitest": "418 passed (65 files)",
+      "typecheck": "passed",
+      "lint": "passed",
+      "pythonTests": "130 passed + 11 subtests"
+    },
+    "server": {
+      "pid": 83146,
+      "port": 8765,
+      "ready": true,
+      "modelVersion": "3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20"
+    },
+    "benchmarkRunning": false,
+    "nextAction": "Sample >=20 matched ordinary-body blocks without conditioning on prior error labels across several papers/sections; run current MADLAD, Qwen14, and Gemma9 on identical text; manually review all outputs and candidate false rejects; then held-out selective-cascade simulation."
+  },
+  "v52MatchedSourceModelReplay": {
+    "completedAt": "2026-09-21T01:34:00+09:00",
+    "sample": {
+      "sourceRows": 20,
+      "papers": 10,
+      "disciplines": [
+        "HCI",
+        "cognitive psychology",
+        "marketing",
+        "ergonomics",
+        "linguistics"
+      ],
+      "selection": "source-only stable-key sampling from prior audit generations; no translation/manual-review labels consulted"
+    },
+    "sourceScreening": {
+      "cleanOrdinaryProse": 18,
+      "continuationFragments": 1,
+      "misclassifiedFigureCaptions": 1
+    },
+    "models": {
+      "madlad-v73": {
+        "rows": 20,
+        "serverFallback": 4,
+        "sharedGateReject": 5,
+        "meanLatencyMs": 16300,
+        "medianLatencyMs": 14000,
+        "manuallyObservedSeverity2PlusAmongGateAccepted": 9
+      },
+      "gemma2-9b": {
+        "rows": 20,
+        "serverErrors": 0,
+        "sharedGateReject": 4,
+        "meanLatencyMs": 19400,
+        "medianLatencyMs": 16600,
+        "clearSeverity2PlusGateFalseAccepts": 2,
+        "likelyCitationRepresentationFalseRejects": 2
+      },
+      "qwen2.5-14b": {
+        "rows": 20,
+        "serverErrors": 0,
+        "sharedGateReject": 3,
+        "meanLatencyMs": 37400,
+        "medianLatencyMs": 27500,
+        "clearSeverity2PlusGateFalseAccepts": 2,
+        "likelyCitationRepresentationFalseRejects": 2
+      }
+    },
+    "artifact": "TRANSLATION_MODEL_EVAL_V52.md",
+    "rawOutputs": "/tmp/paper-reader-v52-matched-model-eval.json",
+    "selectedSources": "/tmp/paper-reader-v52-selected-sources.json",
+    "productionRoutingChanged": false,
+    "appBuild": "not run",
+    "nextActions": [
+      "run a new fresh extraction cohort and manually screen ordinary prose before model comparison",
+      "review outputs blinded to model if practical and retain exact severity/root-cause labels",
+      "trace citation normalization false rejects and MADLAD protected-token restoration fallbacks",
+      "evaluate a selective cascade only on held-out papers after semantic and false-reject review",
+      "expand provenance-verified OA corpus toward 50+ papers"
+    ]
+  },
+  "latestFreshModelBenchmark": {
+    "reportName": "translation-audit-fresh-v52-current-extraction",
+    "generatedAt": "2026-09-20T16:41:36.573Z",
+    "papers": 10,
+    "sourceRows": 40,
+    "sourceCategories": {
+      "ordinary-body-prose": 18,
+      "damaged-extraction": 10,
+      "table-contamination": 9,
+      "list": 2,
+      "statistical-prose": 1
+    },
+    "overallReaderVisibleFallback": {
+      "count": 23,
+      "denominator": 40,
+      "rate": 0.575
+    },
+    "ordinaryCategoryFallback": {
+      "count": 4,
+      "denominator": 18,
+      "rate": 0.222
+    },
+    "manualCaptionCorrection": {
+      "ordinaryProseDenominator": 17,
+      "ordinaryFallback": 4,
+      "rate": 0.235,
+      "foundStandaloneCaptionMislabeledOrdinary": 1
+    },
+    "acceptedRowsManuallyReviewed": 17,
+    "acceptedSeverity2PlusObserved": 8,
+    "notes": [
+      "7/14 accepted ordinary-prose rows had severity>=2 observed mismatches; one additional structurally warned linguistics row appears to swap references 13 and 16",
+      "participant total scope guard correctly rejected 88 participants from various fields rendered as 88 per field",
+      "category counts are sampler outputs, not population estimates"
+    ],
+    "rawReport": "test-data/real-papers/reports/translation-audit-fresh-v52-current-extraction.json"
+  },
+  "v53TargetedCascadeRescue": {
+    "fallbackInputs": 4,
+    "models": [
+      "gemma2:9b",
+      "qwen2.5:14b"
+    ],
+    "gemmaGateAccepted": 4,
+    "gemmaObservedMaterialTerminologyErrors": 2,
+    "qwenGateAccepted": 1,
+    "qwenObservedMLMExpansionError": true,
+    "meanLatencyMs": {
+      "gemma2:9b": 35100,
+      "qwen2.5:14b": 61200
+    },
+    "rawOutputs": "/tmp/paper-reader-v53-cascade-rescue.json",
+    "productionRoutingChanged": false,
+    "conclusion": "Do not integrate gate-only rescue; false accepts remain"
+  },
+  "v54PairedGemmaCurrentSource": {
+    "sourceRows": 18,
+    "manuallyScreenedOrdinaryProse": 17,
+    "sourceCaptionMisclassifiedAsOrdinary": 1,
+    "modelErrors": 0,
+    "sharedGateAccepted": 17,
+    "sharedGateRejected": 1,
+    "manualOrdinaryFallback": {
+      "count": 1,
+      "denominator": 17,
+      "rate": 0.0588
+    },
+    "madladOrdinaryFallback": {
+      "count": 4,
+      "denominator": 17,
+      "rate": 0.2353
+    },
+    "meanLatencyMs": {
+      "gemma2:9b": 13324.5,
+      "madlad-v73": 7292.9
+    },
+    "medianLatencyMs": {
+      "gemma2:9b": 8297,
+      "madlad-v73": 5726
+    },
+    "meanTokens": {
+      "gemmaInput": 263.9,
+      "gemmaOutput": 166.9
+    },
+    "severity2PlusAcceptedTerminologyRows": 3,
+    "identifiedTerms": [
+      "linear probing→linear search",
+      "peers→coworkers",
+      "homophily→same-sex bias"
+    ],
+    "gateScoresForTermErrors": 1.0,
+    "rawOutputs": "/tmp/paper-reader-v54-fresh-gemma.json",
+    "productionRoutingChanged": false,
+    "appBuild": "not run",
+    "nextAction": "evaluate generic term preservation without paper-specific rules on development sources, then fresh held-out papers with manual review"
+  },
+  "v55GenericTermPromptProbe": {
+    "model": "gemma2:9b",
+    "sources": 5,
+    "knownTermFailureDevelopmentCases": 3,
+    "ordinaryControls": 2,
+    "termCorrections": [
+      "homophily→同質性"
+    ],
+    "termErrorsPersisted": [
+      "linear probing→線形探索法",
+      "peers→同僚"
+    ],
+    "controlFluencyDegraded": false,
+    "gateAccepted": 4,
+    "gateFalseReject": [
+      "WOM→口コミ (acronym missing although meaning preserved)"
+    ],
+    "meanLatencyMs": 19229,
+    "rawOutputs": "/tmp/paper-reader-v55-generic-term-prompt.json",
+    "productionChanged": false,
+    "nextAction": "evaluate source-grounded terminology retrieval and concept-preserving acronym equivalence on held-out cross-disciplinary papers"
+  },
+  "v57TransformersIntegrity": {
+    "status": "verified; production source and development venv pinned to 4.57.6",
+    "finding": "Unpatched Transformers 5.17.0 changes tie_word_embeddings false to true and loads encoder embedding from lm_head; strict tensor comparison confirms mismatch. The former Paper Reader reassignment masked it in the actual 5.16.1 environment.",
+    "correctedRuntime": "4.57.6; raw encoder and decoder embeddings match checkpoint decoder.embed_tokens; lm_head remains separate. Startup integrity check is fail-closed.",
+    "fixedFixtureAba": "translation-server/scripts/diagnose_transformers_madlad_ab.py; outputs and exact tensor mapping in TRANSFORMERS_MADLAD_AB.md and ignored reports under test-data/real-papers/reports/",
+    "crossPaperReplay": {
+      "papers": 10,
+      "rows": 40,
+      "sameStableKeysAndSourceAsV53": true,
+      "accepted": 17,
+      "preModelFallbacks": 18,
+      "postModelFallbacks": 5,
+      "ordinaryBodyCleanRows": 17,
+      "ordinaryBodyFallbacks": 4,
+      "ordinaryBodyFallbackRate": 0.2353,
+      "sameAsPatched5xBaseline": true
+    },
+    "semanticConclusion": "Correct loading resolves runtime corruption, but MADLAD semantic scope/cardinality and terminology errors persist under 4.57.6. The <=5% ordinary-body fallback target and near-zero unsafe false accept target remain unmet.",
+    "productionChange": "Pin transformers==4.57.6 and protobuf dependency; replace manual embedding reassignment with startup integrity verification; bump server/client cache identity to 3b-mt-v6-transformers-4.57.6-semantic-v73-source-protect-v1-strict-restore-v21.",
+    "appBuild": "success: src-tauri/target/release/bundle/macos/Paper Reader.app; modified 2026-09-21 02:48:22 JST; bundled translation-server Python 3.12.14 reports transformers 4.57.6; bundled madlad_mps.py contains v6 cache identity and embedding integrity guard; app not launched",
+    "server": {
+      "endpoint": "http://127.0.0.1:8765",
+      "ready": true,
+      "pid": 88992,
+      "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v73-source-protect-v1-strict-restore-v21"
+    },
+    "nextActions": [
+      "continue held-out cross-disciplinary terminology and semantic false-accept review under verified 4.57.6",
+      "expand provenance-verified OA paper coverage toward 70–90 and manually review accepted ordinary body",
+      "measure ordinary-body fallback and unsafe false accepts jointly; do not change model routing without held-out evidence",
+      "evaluate whether 7B/10B checkpoints or another local model offer better semantic quality after establishing comparable fixtures"
+    ],
+    "validation": "Vitest 418/418 (65 files); extraction corpus 107/107 (2 files); Python 133 tests + 11 subtests; typecheck; lint; npm run build; git diff --check; Tauri fast .app bundle succeeded.",
+    "largerModelPriority": {
+      "decision": "keep correctly loaded MADLAD 3B as baseline; prioritize a 7B comparison before 10B because semantic drift persists under the fixed runtime",
+      "availability": "Neither 7B nor 10B checkpoint is cached. Hub safetensors metadata: 7B about 33.2 GB, 10B about 42.9 GB. Current free space is 37 GiB on a 96%-used data volume; no large checkpoint was downloaded. Existing local alternatives Qwen 2.5 7B/14B and Gemma 2 9B remain available for held-out comparisons.",
+      "sources": [
+        "https://huggingface.co/api/models/google/madlad400-7b-mt/tree/main?recursive=true&expand=true",
+        "https://huggingface.co/api/models/google/madlad400-10b-mt/tree/main?recursive=true&expand=true",
+        "https://huggingface.co/google/madlad400-7b-mt",
+        "https://huggingface.co/google/madlad400-10b-mt"
+      ]
+    }
+  },
+  "v58M2M12CandidateReview": {
+    "completedAt": "2026-09-21T03:18:00+09:00",
+    "artifact": "test-data/real-papers/reports/model-cascade-v58-m2m12-ordinary.json",
+    "generatedRows": 5,
+    "manualReview": "All 5 stored generations directly reviewed against source; 5/5 unsuitable as research translation candidates. One long Linda-problem source truncates mid-discussion and confuses task names/claims; other rows show domain-term corruption, named entity/model corruption, omissions, and/or output truncation.",
+    "decision": "Do not route or spend further evaluation effort on M2M100 1.2B in the current configuration; choose the verified Transformers 4.57.6 MADLAD baseline when comparing production runtime integrity, and keep Gemma as an unshipped candidate because it has lower fallback but material false accepts.",
+    "productionChange": false,
+    "remaining": "v58 full ordinary-body fallback set has 17 cases; case-by-case cause attribution remains pending."
+  },
+  "v59PairedGemmaReplay": {
+    "completedAt": "2026-09-21T03:14:00+09:00",
+    "sourceRows": 18,
+    "papers": 10,
+    "disciplines": [
+      "HCI",
+      "cognitive psychology",
+      "marketing",
+      "ergonomics",
+      "linguistics"
+    ],
+    "selection": "All rows source-labelled ordinary-body-prose from v56 fresh extraction; exact source/key matched against v54 Gemma replay; one of 18 later manually identified as figure caption.",
+    "model": "gemma2:9b",
+    "generation": {
+      "temperature": 0.3,
+      "num_predict": 2000,
+      "meanLatencyMs": 11579,
+      "meanPromptTokens": 264,
+      "meanOutputTokens": 168
+    },
+    "currentSharedGate": {
+      "accepted": 18,
+      "rejected": 0
+    },
+    "manualReview": {
+      "cleanProse": 17,
+      "observedSeverityGte2Accepted": 3,
+      "examples": [
+        "linear probing rendered as linear search",
+        "social peers/peer influence rendered as coworkers",
+        "consumer production journey literalized as travel/itinerary"
+      ],
+      "captionMisclassifiedBySourceCategory": 1
+    },
+    "matchedMadlad": {
+      "cleanProseFallbacks": 4,
+      "denominator": 17,
+      "rate": 0.2353
+    },
+    "productionChange": "Scientific citation invariant matching treats square-bracketed and unbracketed exact citation payloads as equivalent; positive/negative tests preserve number identity. No model routing change.",
+    "artifact": "TRANSLATION_MODEL_EVAL_V52.md v58; ignored raw outputs test-data/real-papers/reports/gemma-v56-current-runtime-replay.json",
+    "benchmarkRunning": false,
+    "nextActions": [
+      "test generic domain terminology preservation/resources on held-out papers",
+      "manual-review every accepted candidate output and false reject",
+      "diagnose MADLAD cognitive ordinary-prose server fallback",
+      "continue OA corpus expansion and measure <=5% fallback jointly with unsafe acceptance"
+    ],
+    "validation": {
+      "vitest": "420 passed (65 files)",
+      "typecheck": "passed",
+      "lint": "passed",
+      "frontendBuild": "passed",
+      "pythonTests": "133 passed + 11 subtests",
+      "gitDiffCheck": "passed",
+      "tauriFastBuild": "passed; app bundle mtime 2026-09-21 03:14:43 JST; adhoc signed; app not launched"
+    }
   }
 }

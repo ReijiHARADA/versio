@@ -3,6 +3,7 @@ import type { BoundingBox } from "../../types/paper";
 export type EvidenceSource =
   | "pdf-native"
   | "generic-heuristic"
+  | "geometry"
   | "format-profile"
   | "grobid"
   | "layout-model"

@@ -54,6 +54,7 @@ export type LayoutLine = {
   bbox: BoundingBox;
   rotation?: number;
   pageHeight?: number;
+  pageWidth?: number;
 };
 
 export type LayoutBlock = {
@@ -338,7 +339,8 @@ function itemsToLine(
   items: ExtractedTextItem[],
   column: LayoutColumn,
   page: number,
-  pageHeight?: number
+  pageHeight?: number,
+  pageWidth?: number,
 ): LayoutLine {
   const bbox = unionBbox(items, page);
   const fontSize =
@@ -357,6 +359,7 @@ function itemsToLine(
     fontSize,
     bbox,
     pageHeight,
+    pageWidth,
     rotation: median(items.map((item) => item.rotation ?? 0)),
   };
 }
@@ -365,7 +368,8 @@ function clusterItemsIntoLines(
   items: ExtractedTextItem[],
   column: LayoutColumn,
   pageNumber: number,
-  pageHeight?: number
+  pageHeight?: number,
+  pageWidth?: number,
 ): LayoutLine[] {
   if (items.length === 0) return [];
 
@@ -505,7 +509,7 @@ function clusterItemsIntoLines(
     return [group];
   });
   return separatedGroups
-    .map((group) => itemsToLine(group, column, pageNumber, pageHeight))
+    .map((group) => itemsToLine(group, column, pageNumber, pageHeight, pageWidth))
     .filter((line) => line.text.length > 0)
     .sort((a, b) => a.y - b.y);
 }
@@ -539,7 +543,7 @@ function splitInlineSubheading(line: LayoutLine): LayoutLine[] {
       if (bodyText.length >= 12 && headingText.length <= 120 &&
           headingText.split(/\s+/).length <= 14 &&
           /^\d{1,2}(?:\.\d{1,2}){1,3}\.\s*[A-Z]/.test(headingText)) {
-        const make = (items: ExtractedTextItem[]): LayoutLine => itemsToLine(items, line.column, line.page, line.pageHeight);
+        const make = (items: ExtractedTextItem[]): LayoutLine => itemsToLine(items, line.column, line.page, line.pageHeight, line.pageWidth);
         return [make(bodyItems), make(headingItems)];
       }
     }
@@ -547,7 +551,7 @@ function splitInlineSubheading(line: LayoutLine): LayoutLine[] {
   }
   if (!/^[A-Z][A-Za-z\s-]{2,58}[.:]$/.test(prefix)) return [line];
   if (suffix.split(/\s+/).length < 5 || !/^[A-Z(]/.test(suffix)) return [line];
-  const make = (items: ExtractedTextItem[]): LayoutLine => itemsToLine(items, line.column, line.page, line.pageHeight);
+  const make = (items: ExtractedTextItem[]): LayoutLine => itemsToLine(items, line.column, line.page, line.pageHeight, line.pageWidth);
   return [make(prefixItems), make(suffixItems)];
 }
 
@@ -1304,7 +1308,7 @@ function buildPageLines(
   const lines: LayoutLine[] = [];
   (["spanning", "left", "right", "single"] as LayoutColumn[]).forEach((column) => {
     lines.push(
-      ...clusterItemsIntoLines(buckets[column], column, page.pageNumber, layout.pageHeight)
+      ...clusterItemsIntoLines(buckets[column], column, page.pageNumber, layout.pageHeight, layout.pageWidth)
     );
   });
 
@@ -1732,7 +1736,10 @@ function groupLinesIntoBlocks(
   }
   flush();
   const nonEmptyBlocks = splitMixedColumnBlocks(
-    splitStyledHeadingPrefixes(rejoinCaptionStatisticFragments(blocks.filter((b) => b.text.length > 0)))
+    splitStyledHeadingPrefixes(
+      rejoinCaptionStatisticFragments(blocks.filter((b) => b.text.length > 0)),
+      median(blocks.flatMap((block) => block.lines.map((line) => line.fontSize))) || 9,
+    )
   );
   logLayoutBlockBoundaries(nonEmptyBlocks);
   return splitMixedColumnBlocks(mergeColumnContinuations(nonEmptyBlocks));
