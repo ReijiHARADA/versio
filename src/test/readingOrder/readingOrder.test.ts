@@ -141,6 +141,8 @@ describe("PDF reading order regression", () => {
       width: 612,
       height: 792,
       textItems: [
+        { text: "Wearable Device Acceptance", x: 390, y: 70, width: 180, height: 21, fontSize: 18, fontName: "Title", page: 1 },
+        { text: "A. Researcher and B. Scientist", x: 390, y: 120, width: 180, height: 12, fontSize: 10, fontName: "Body", page: 1 },
         { text: "The wearable acceptability range (WEAR) Scale has been a useful tool used in con-", x: 185, y: 245, width: 328, height: 11, fontSize: 10, fontName: "Body", page: 1 },
         { text: "Department of Events, and Hospitality Apparel,", x: 56, y: 250, width: 78, height: 11, fontSize: 10, fontName: "Body", page: 1 },
         { text: "sumer behaviour and product development research to better identify the social", x: 185, y: 262, width: 320, height: 11, fontSize: 10, fontName: "Body", page: 1 },
@@ -150,13 +152,12 @@ describe("PDF reading order regression", () => {
     }];
     const { blocks } = reconstructDocument(pages);
     const paragraphs = blocks.filter((block) => block.role === "paragraph");
-    const bodyText = paragraphs.map((block) => block.text).join(" ");
-    console.log(blocks.map((block) => ({ role: block.role, column: block.column, text: block.text, lines: block.lines.map((line) => ({ x: line.x, y: line.y, width: line.width, column: line.column })) })));
+    const body = paragraphs.find((block) => block.text.includes("consumer behaviour"));
 
     expect(paragraphs.length).toBeGreaterThanOrEqual(2);
-    expect(bodyText).toContain("con- sumer behaviour");
-    expect(bodyText).not.toContain("Department of Events");
-    expect(bodyText).not.toContain("Mackay Hall");
+    expect(body).toBeDefined();
+    expect(body?.text).not.toContain("Department of Events");
+    expect(body?.text).not.toContain("Mackay Hall");
     expect(paragraphs.some((block) => block.text.includes("Department of Events"))).toBe(true);
   });
 

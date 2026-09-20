@@ -320,6 +320,37 @@ function clusterItemsIntoLines(
 
   const fontBase = median(items.map((i) => i.fontSize)) || 10;
   const yThreshold = Math.max(3.2, fontBase * 0.42);
+  const sidebarBands = (() => {
+    const bands = new Map<number, ExtractedTextItem[]>();
+    for (const item of items) {
+      const key = Math.round(item.x / 32) * 32;
+      const band = bands.get(key);
+      if (band) band.push(item);
+      else bands.set(key, [item]);
+    }
+    const candidates = [...bands.entries()].sort((a, b) => a[0] - b[0]);
+    for (let leftIndex = 0; leftIndex < candidates.length; leftIndex++) {
+      const [leftX, leftItems] = candidates[leftIndex];
+      const leftWidth = median(leftItems.map((item) => item.width));
+      if (leftItems.length < 2 || leftWidth <= 0 || leftWidth > 140) continue;
+      for (let rightIndex = leftIndex + 1; rightIndex < candidates.length; rightIndex++) {
+        const [rightX, rightItems] = candidates[rightIndex];
+        const rightWidth = median(rightItems.map((item) => item.width));
+        if (rightItems.length >= 3 && rightX - leftX >= 80 &&
+            rightWidth >= Math.max(fontBase * 10, leftWidth * 2.5)) {
+          return { leftX, rightX };
+        }
+      }
+    }
+    return null;
+  })();
+  const sidebarSide = (item: ExtractedTextItem): "left" | "right" | null => {
+    if (!sidebarBands) return null;
+    const key = Math.round(item.x / 32) * 32;
+    if (key === sidebarBands.leftX) return "left";
+    if (key === sidebarBands.rightX) return "right";
+    return null;
+  };
   const bodyItems = items.filter((i) => i.fontSize >= fontBase * 0.82);
   const superItems = items.filter((i) => i.fontSize < fontBase * 0.82);
   const primary = bodyItems.length > 0 ? bodyItems : items;
@@ -332,6 +363,11 @@ function clusterItemsIntoLines(
     let best = -1;
     let bestDist = Infinity;
     for (let i = 0; i < groups.length; i++) {
+      const itemSide = sidebarSide(item);
+      if (itemSide && groups[i].some((groupItem) => {
+        const groupSide = sidebarSide(groupItem);
+        return groupSide !== null && groupSide !== itemSide;
+      })) continue;
       const minX = Math.min(...groups[i].map((g) => g.x));
       const maxX = Math.max(...groups[i].map((g) => g.x + g.width));
       const detachedMarginAnnotation =
