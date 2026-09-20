@@ -1,33 +1,95 @@
 # Cross-disciplinary translation audit
 
-## Latest checkpoint (2026-09-20 18:32 JST)
+## Latest checkpoint (2026-09-20 21:01 JST)
 
-The latest fresh model run is the focused v20 cohort (4 papers, 48 sampled
-blocks), not the older v16 broad cached-paper run described later in this
-document. Ordinary-body reader-visible fallback was 5/17 (29.4%). Manual review
-covered 15 accepted rows and found severity >=2 in 10; this small,
-risk-stratified sample is descriptive and is not a corpus-wide error estimate.
-Both the <=5% fallback objective and near-zero unsafe semantic error objective
-remain unmet.
+The user-provided server is available at `127.0.0.1:8765` with MADLAD v20
+ready. A fresh v32 reader-path benchmark completed on the marketing Springer
+paper (`test-data/real-papers/reports/translation-audit-v32-captioned-grid-row-recovery.json`):
+12 rows, 7 model submissions, 6 accepts, 6 visible fallbacks (5 pre-model
+structural skips and 1 post-model quality fallback). The source was sampled
+section-stratified; this single-paper cohort is diagnostic only.
 
-No translation server or benchmark process is running at this checkpoint. The
-v20 server was stopped after its isolated-port run; current host port 8765 also
-refuses connections. Historical active-PID entries below are not live jobs.
+The extraction issue was table content broken into ordinary paragraph/list
+blocks across a captioned, multi-column Springer table. Native page 7 shows
+Table 2 rows split between the left and right column: before, compact cell
+labels such as `’s own needs ... Offer peer support...` were accepted as
+Japanese paragraph translations; page 8 Table 3 cells such as `Greater
+consumption skills | Greater co-production skills` were also translated as
+prose. Generic table evidence now combines caption proximity, repeated short
+row spacing, stable x-column positions, and same-baseline neighboring cells.
+Five sampled table/diagram blocks are now marked as table-related and kept
+source-only before model submission. Some are preserved as fallback text
+because the extracted geometry is not sufficient to build a reliable grid;
+structured Japanese table rendering is still unresolved.
 
-An extraction diagnostic on `wear-scale.pdf` identified mixed author/department
-text introduced when a narrow left-side x-band and the main text shared aligned
-baselines. The generic layout stage now detects repeated narrow/long x-origin
-bands before combining same-baseline native spans, then separates the resulting
-sidebar from the body. Re-extraction keeps the WEAR paragraph free of the
-department/address and emits those lines separately. This repairs one observed
-paper/layout instance; extraction-corpus and cross-paper validation are still
-pending. Reading-order tests pass 60/60; full Vitest passes 398/398; typecheck,
-lint, and `git diff --check` pass. The optional native PDF.js canvas binding
-warning remains present in test output.
+Added regression assertions for the Table 2/3 row clusters. Latest extraction,
+reading-order, real-paper, and quality selection: **107/107 passed**; typecheck,
+lint, and `git diff --check` passed. This targeted extraction improvement does
+not meet the ordinary-body fallback goal: v32 has 1/6 ordinary-body rows
+falling back (16.7%). The denominator changed from earlier runs because two
+blocks previously counted as prose are now classified as table content; do not
+claim a direct fallback-rate improvement from that reclassification.
 
-Next: validate the extraction change on corpus regressions and neighboring PDFs;
-review v20 model fallbacks for avoidable false rejects; then run a new multi-paper
-fresh benchmark and continue manual review and verified OA corpus expansion.
+Manual review in `reports/semantic-review-v32-marketing-grid.json` covers all
+six accepts and the post-model fallback. Three accepts have severity >=2,
+including an accepted hallucinated experimental-results claim that was already
+confirmed in v25/v26. The live quality gate still accepts this semantic error;
+the table extraction fix does not change model decoding or semantic validation.
+The post-model fallback was appropriate: a paragraph ends inside an author-year
+citation and the proposed Japanese output supplied a year absent from its
+source block. Table/source-only rows are not ordinary-body false rejects but
+remain untranslated content users may need to inspect in the original.
+
+Next: apply these table geometry checks to held-out cached PDFs, specifically
+verify no ordinary prose was promoted; continue accepted/fallback manual
+review and find a general semantic safeguard for unsupported added claims. The
+<=5% ordinary-body fallback target and near-zero severe false-accept objective
+remain unmet. Do not loosen all quality checks or count table/source-only
+reclassification as progress toward the target.
+
+## Previous checkpoint (2026-09-20 19:25 JST)
+
+The latest multi-paper baseline remains the fresh v20 cohort (4 papers, 48
+sampled blocks), not the older v16 broad cached-paper run described later in
+this document. Its ordinary-body reader-visible fallback was 5/17 (29.4%).
+Manual review covered 15 accepted rows and found severity >=2 in 10; this small,
+risk-stratified sample is descriptive, not a corpus-wide error estimate. The
+<=5% fallback and near-zero unsafe semantic error goals remain unmet.
+
+Three newer fresh runs (v21–v23) isolate the wear-scale real-PDF extraction
+repair and must not be mixed into v20 metrics. v23 (`2026-09-20T09-51-33-356Z`)
+sampled 20 blocks: 6 ordinary-body rows / 1 fallback (16.7%); all categories
+had 14 fallbacks (12 pre-model, 2 post-model). This purposive one-paper sample
+is diagnostic only.
+
+The PDF mixed department/address text into the WEAR lead because a narrow
+left-side x-band shared aligned baselines with body prose. Generic repeated
+narrow/long x-origin detection now separates those runs and preserves
+affiliation role. Adjacent same-column text can then be stitched across that
+affiliation only when x origin, font, and line spacing match and the prior text
+is unfinished. Nonbreaking hyphens at line ends are also joined to a lowercase
+continuation. The extracted lead now reads through “extended WEAR Scale to the
+apparel field by” without affiliation contamination.
+
+Before, MADLAD received the incomplete “...introduce an extended” fragment and
+generated unsupported dimensions (“100mm…1000m…10mm…1m”); the invariant gate
+rejected it after generation. After, extraction restored the “WEAR Scale…by”
+continuation, which reveals that the text leads into separately represented
+list items. The generic source-boundary guard now pre-model-falls back the lead;
+the hallucinated dimensions are no longer generated/displayed, but this case's
+fallback remains unresolved until list leads and items can be handled together.
+
+No server or benchmark is running. Evaluations used isolated ports 18807–18809
+and stopped each server at exit. The new real-paper regression covers the WEAR
+lead/affiliation split. Extraction-corpus suite passes 77 tests; full Vitest
+passes 399/399; typecheck, lint, and diff-check pass. The optional native PDF.js
+canvas binding warning remains in test output.
+
+Next: build and test a generic translation-unit strategy for list leads plus
+their items without flattening unrelated lists; review v23 accepted and
+post-model-fallback rows for semantic false accepts/avoidable rejects; then
+refresh the multi-paper benchmark and continue manual review and verified OA
+corpus expansion.
 
 This audit makes real-paper translation failures reproducible without adding
 copyrighted PDFs or translations to Git. The catalog is
@@ -81,6 +143,25 @@ eligible. The medical diagnostic no longer links the section heading to Tables
 When multiple table captions share a page, same-page row candidates are now
 bounded to the interval after the current caption and before the next one;
 focused diagnostics show Table 1 no longer cross-links adjacent tables.
+
+### v23 accepted-output manual review (2026-09-20 19:01 JST)
+
+A source-to-Japanese review was completed for all five accepted ordinary-body rows in the 20-row v23 wear-scale diagnostic. All five had a severity-2-or-higher issue (2/5 severity 3); the sample unsafe false-accept proportion is therefore 5/5 **within this purposive accepted subset only**, not a corpus estimate. Two severe false accepts changed wearable-product concepts to web-application/web-browser concepts. Other issues included an author-name/citation error, a terminology shift in product availability, and omission from the subjective-norms definition. The review artifact is [`reports/semantic-review-v23-wear-scale-accepted.json`](test-data/real-papers/reports/semantic-review-v23-wear-scale-accepted.json). Model quality score was 1.0 for the two severe rows, demonstrating that current automatic checks do not measure semantic correctness. No blacklist or production gate change was made.
+
+Offline M2M100 same-source comparison: the same five ordinary-body source strings were run with cached `facebook/m2m100_1.2B`, deterministic greedy decoding, and offline HF mode. Manual comparison found severity >=2 in 2/5 (both severity 3), versus 5/5 for MADLAD’s previously accepted outputs. M2M100 preserved the wearable-product concept in one block where MADLAD hallucinated web application development, but truncated the literature-review block and omitted the second sentence in the Dimension 7 block. Do not deploy it as a fallback model on this evidence. Full inputs, outputs, tokenizer-specific token counts, timings, and per-row labels: [`reports/model-quality-m2m-v23-wear-accepted.json`](test-data/real-papers/reports/model-quality-m2m-v23-wear-accepted.json). This is a 5-row, one-paper exploratory comparison; M2M100 and MADLAD token counts use different tokenizers and their generations were not run in the same process.
+
+This confirms a decode/semantic-validation problem in addition to the extraction/list-boundary fallback: correcting source structure alone does not make accepted Japanese reliable. Next evaluation should include blind manual review of accepted outputs from multiple disciplines, then evaluate general semantic checks or alternate models against a held-out set before changing production routing.
+
+
+### v24 fresh multi-paper evaluation (2026-09-20 19:25 JST)
+
+A no-resume fresh run completed on the same four papers and maximum 12 sampled units/paper as v20: HCI/ACM Thermal Earring, ergonomics/Springer WEAR Scale, neuroscience/Nature rule-following, and linguistics/arXiv syntax-prosody. Run ID `2026-09-20T10-06-01-548Z`; report: [`reports/translation-audit-v24-fresh.json`](test-data/real-papers/reports/translation-audit-v24-fresh.json). All 48 rows completed, with no server request errors. The server returned MADLAD `3b-mt-v5-semantic-v71-strict-restore-v20` for 25 model-submitted units; 23 rows were pre-model decisions.
+
+Automatic report counts: 35/48 reader-visible fallback (23 pre-model, 12 post-model); automatically categorized ordinary-body rows 15, of which 5 fell back (33.3%). v20 had 5/17 (29.4%), so this is **not an improvement**. The ordinary-body denominator changed because the PDF candidate set/source categories changed; all 44 overlapping stable keys kept byte-identical source, translation, and accept/fallback decision. The aggregate rates are descriptive and not directly comparable enough to infer model regression or gain.
+
+All 13 v24 accepted outputs were manually compared to source. Among 10 rows automatically categorized ordinary body, 6 had severity >=2 (60% conditional unsafe false-accept sample); 2 had severity 3–4. Across all accepted rows, 8/13 had severity >=2. This is a small purposive sample, not a corpus rate. Severe examples: wearables became “webinar/web-site” concepts in an aesthetics paragraph (quality score 1.0); a linguistics paragraph about role-pair comparisons was truncated/semantically broken; a source typo contrasting objects with objects was preserved while “spurious significance” became “false meaning”. Full labels and excerpts: [`reports/semantic-review-v24-fresh.json`](test-data/real-papers/reports/semantic-review-v24-fresh.json).
+
+The same five sources were also compared with cached offline M2M100-1.2B: 2/5 severity >=2, including two severe truncations. It avoided the wearable-to-web hallucination in one row but is not a safe replacement/cascade candidate. This result is in [`reports/model-quality-m2m-v23-wear-accepted.json`](test-data/real-papers/reports/model-quality-m2m-v23-wear-accepted.json). No production code, gate, or model routing was changed.
 
 ## Initial local sample (2026-09-07)
 
@@ -3894,3 +3975,34 @@ All 16 non-fallback outputs from the focused v19 run were manually compared agai
 The full v16 manually reviewed accepted set (194 rows) was used to evaluate a generic extreme-compression signal: source >=80 characters and Japanese output/source character ratio <0.20. It identified 2 rows, both severity >=3, with no severity 0–1 false positives in that reviewed cohort. Applied offline to the later v19 report, it flagged the short fever-detection list translation (112→18 characters) that the original v19 gate accepted. A concise faithful control is covered by a unit test. This adds a quality gate for this narrow severe-omission pattern and bumps the shared translation cache identity to v20; it is not evidence of lower ordinary-body fallback and does not address the fluent hallucinations or relation/terminology shifts listed above. Evaluation: `scripts/evaluate-extreme-compression-gate.ts`, `test-data/real-papers/reports/extreme-compression-gate-v20.json`.
 
 A fresh v20 reader-path run on the same four papers/stable sampled keys completed all 48 units through a new isolated server on port 18806. Report: `test-data/real-papers/reports/translation-audit-v20-focused.{json,md}`. Visible fallback was 33/48 (68.75%; 21 pre-model, 12 post-model); ordinary-body fallback remained 5/17 (29.4%), unchanged from v19. Exactly one of the prior 16 accepts changed: the same 112→18 fever-detection omission now falls back as `long source was implausibly shortened`. The other 15 outputs were unchanged; their reused manual source comparisons show 10/15 severity >=2. Review subset is risk-stratified, not a population estimate: `test-data/real-papers/reports/semantic-review-v20-focused-accepted.json`. This validates the narrow severe-omission catch while showing no progress on the ordinary-body fallback target. The benchmark server exited after completion.
+
+### Phase 2 checkpoint: expanded corpus and v25 fresh semantic review (2026-09-20)
+
+The catalog now contains **52 papers, with 51 cached PDFs** (PDFs remain gitignored; catalog provenance is tracked). Fifteen official/author-hosted OA PDFs were added after verifying first-page title and DOI against the record. New disciplines/distributions are: cognitive psychology 7, marketing 9, ergonomics 8, linguistics 6, HCI 12, medicine 3, design research 2, machine learning 2, education 1, neuroscience 1, economics 1. The 50-paper floor is crossed; the desired 70–90-paper corpus and priority-field quotas remain incomplete. Publisher coverage includes ACM, IEEE, Springer Nature journals, arXiv, Frontiers, Nature, PMLR, Elsevier, KCI and others; Springer LNCS, APA-like, MDPI, J-STAGE and scanned/thesis/report coverage still need explicit verification/additions. A J-STAGE Japanese full-text candidate was rejected because it does not provide English body text for the en→ja translation audit.
+
+The four newly added papers below were evaluated in a **fresh** 12-section-stratified-blocks-per-paper run against the already-ready user server (model `3b-mt-v5-semantic-v71-strict-restore-v20`): cognitive dual-task training, unavailable consumer choice, consumer co-production theory, and ergonomics flight-deck design. Run: `test-data/real-papers/reports/translation-audit-v25-new-4.json` and `.md`; ID `2026-09-20T10-25-31-588Z`. The run completed **48/48**: **27 visible fallbacks** (22 before model submission, 5 after) and 21 accepted outputs. Manual review compared every accepted output to its source. **12/21 accepted outputs (57.1%)** had severity >=2; among ordinary-body accepted outputs it was **8/16 (50%)**. These are purposive, four-paper descriptive samples, not estimates of population prevalence. Automatic translation quality scores were 1.0 on all but two accepted units, including examples with material hallucination.
+
+Failure labels among the 21 accepted outputs: source fragment 6, correct 2, omission 1, chrome contamination 1, minor wording 7, hallucination 2, terminology error 1, table contamination 1. Severity>=2 primary attribution: paragraph reconstruction 5, PDF extraction 3, MADLAD decode 4. Concrete high-severity examples:
+
+- A source unit ended with “The first dimension describes the”; the accepted Japanese invented a one-dimensional-space/first-order spatial position explanation (hallucination, severity 4, primary MADLAD decode, enabled by incomplete extraction).
+- A decision-journey paragraph acquired an ungrounded sentence equivalent to “these results agreed well with experimental results” and lost a table cue (hallucination, severity 4, primary MADLAD decode).
+- An incomplete Results unit had residual placeholder noise and a malformed cognitive-function/BDNF relation (source fragment, severity 3, extraction + decode).
+- Multiple other partial abstract/method units ended mid-sentence but still passed as complete Japanese paragraphs (source fragment, severity 2–3, reconstruction/extraction).
+
+Detailed concise excerpts and row-level labels: `test-data/real-papers/reports/semantic-review-v25-new-4.json` (ignored audit artifact). No production algorithm change was made during this evaluation, so no before/after improvement is claimed. The result reinforces that accepted-output semantic reliability and extraction completeness are both inadequate for unverified research use. Continue corpus expansion and manual review; do not lower gates merely to reduce fallback. The <=5% ordinary-body fallback target remains unmet, and fallback reduction must be paired with semantic false-accept and false-reject measurement.
+
+### 2026-09-20 held-out extraction repair and v26 spot evaluation
+
+The user confirmed `/health` reports `status=ok`, `model_loaded=true`, `phase=ready`. A generic geometry diagnostic isolated a two-column reconstruction defect in the Springer marketing paper `marketing-consumer-production-journey`, page 3. Before repair, the left-column paragraph ended **“The first dimension describes the”**, and the top-right continuation began **“extent to which consumers are active…”**. The first merge pass could join them, but a second mixed-column pass split the paragraph again. The repair now preserves only geometry-validated bottom-left → top-right paragraph joins through the second pass. A syntax-based source-unit gate also catches unpunctuated paragraph tails ending in a coordinator, subordinator, determiner or dangling comma/semicolon, with valid complete-prose controls.
+
+After repair, extraction contains the complete 3,080-character page-3 paragraph as one block. The same server/model translated it in one request (712 input tokens, 943 output tokens, 54.3 seconds). In v25, the truncated source was accepted with the fabricated claim that “dimension 1 represents a spatial position in one-dimensional space.” In the v26 repaired source, that hallucination did not recur: the first dimension is described as consumer co-production level, followed by examples and the second dimension. Exact source/output: `test-data/real-papers/reports/translation-unit-v26-marketing.json`.
+
+A fresh, single-paper v26 reader-path sample evaluated 12 section-stratified blocks: 9 accepted, 3 reader-visible fallbacks. All 9 accepted outputs were manually compared. Five were labeled severity >=2 (unsafe false accept **5/9 = 55.6%**); this purposive one-paper sample is descriptive only. Examples include an unrelated “experimental results” sentence inserted into the consumer-journey step list, a malformed definition contrast, and a table-like block containing separate advertising findings. Report and row-level review: `test-data/real-papers/reports/translation-audit-v26-marketing-stitch.json` and `semantic-review-v26-marketing-stitch.json`. This shows the target fragment fix removes one demonstrated hallucination while broader semantic false accepts remain severe. Ordinary-body fallback in this small sample was **3/12 = 25%**, far above the <=5% target; do not generalize from this one paper.
+
+Verification after changes: reading-order + cached real-paper baseline + quality tests **138/138 passed**; typecheck, lint, production frontend build, and `git diff --check` passed. The focused 3,080-character request took 54.3 seconds; this single request is not a throughput benchmark, so comparative latency impact is unresolved. The app-level fallback-rate effect of the syntax guard also needs a broader fresh benchmark. `CURRENT_STATE.md` and `test-data/real-papers/audit-progress.json` carry the continuation checkpoint. Next: test the column-wrap repair across held-out cached formats, audit fallback rows for false rejects, and expand manual review/corpus coverage. Neither extraction nor translation quality goals are complete.
+
+### 2026-09-20 held-out extraction regression checkpoint
+
+The broader extraction-corpus suite initially exposed three regressions after the held-out paragraph-stitch work. Investigation distinguished one valid page-bottom column wrap in the PPG Earring paper from actual cross-column contamination; the test now permits only flagged bottom-left → top-right geometry. The HCI teaching paper's incomplete paragraph continues on page 3 below figure captions; extraction now skips only an opposite-column caption, a footnote below the source tail, a repeated page header, or page-local captions physically above the continuation, while retaining the incomplete-sentence and page-boundary checks. The Frontiers healthy-food paper's title ended in a separate “choice” line because left-margin masthead content interleaved in y-sorted line formation; a short same-font, same-x title line is recovered from its mixed block, with unrelated affiliation lines retained.
+
+Verification: selected extraction corpus + cached real-paper baseline + reading-order/quality tests **107/107 passed**; typecheck, lint, and diff check passed. No production app build or fresh model benchmark was run in this checkpoint. The shared server health provided by the user is ready. Next action is a fresh 12-row target-paper benchmark followed by complete manual review of accepted and fallback rows; report both semantic quality and fallback behavior, not just model output success.

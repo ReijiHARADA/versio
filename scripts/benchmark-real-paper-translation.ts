@@ -27,6 +27,7 @@ import {
   unsafeParagraphStructureReason,
 } from "../src/services/translation/quality.ts";
 import { normalizeSourceGroundedTerminology } from "../src/services/llm/glossaryService.ts";
+import { referenceSectionIds, shouldTranslateBlock } from "../src/services/import/policy.ts";
 import type { PaperBlock } from "../src/types/paper.ts";
 import { extractPdfPages } from "../src/test/readingOrder/extractPdf.ts";
 
@@ -45,6 +46,7 @@ type SourceCategory =
   | "caption"
   | "statistical-prose"
   | "reference-chrome"
+  | "table-contamination"
   | "damaged-extraction";
 
 type FallbackStage = "none" | "pre-model" | "post-model";
@@ -68,6 +70,7 @@ type AuditRow = {
   paperId: string;
   blockId: string;
   role: PaperBlock["type"];
+  translationStatus: PaperBlock["translationStatus"];
   pageStart: number;
   pageEnd: number;
   source: string;
@@ -127,6 +130,9 @@ function compact(text: string): string {
 function structuralWarnings(block: PaperBlock): string[] {
   const text = compact(block.original ?? "");
   const warnings: string[] = [];
+  if (block.metadata.tableSourceFallback === true || block.metadata.role === "table") {
+    warnings.push("table-like text retained source-only by production policy");
+  }
   if (block.pageStart !== block.pageEnd) warnings.push("cross-page logical block");
   if (/^(?:fig(?:ure)?\.?|table)\s+\d+/i.test(text)) warnings.push("caption-shaped text");
   if (/\b(?:n\s*=|p\s*[<=>]|[FTZχ²]\s*\()/i.test(text)) warnings.push("scientific/statistical prose");
@@ -139,6 +145,7 @@ function structuralWarnings(block: PaperBlock): string[] {
 function sourceCategory(block: PaperBlock): SourceCategory {
   const text = compact(block.original ?? "");
   const warnings = structuralWarnings(block);
+  if (block.metadata.tableSourceFallback === true || block.metadata.role === "table") return "table-contamination";
   const chromeSignals = [
     /creativecommons|copyright\s+\d{4}|all rights reserved/i,
     /doi\s*:\s*10\.\d{4,9}\//i,
@@ -459,6 +466,7 @@ async function main() {
       const pages = await extractPdfPages(pdfPath);
       const extracted = extractQuietly(paper, pages);
       const sampled = sampleBlocks(extracted.blocks, perPaperLimit);
+      const refSectionIds = referenceSectionIds(extracted.sections);
       // Mirror the import path: unsafe physical fragments are retained as
       // source before MADLAD is contacted. Translating every sampled block
       // made the audit itself manufacture outputs that production can never
@@ -468,20 +476,22 @@ async function main() {
         .map((block, index) => ({
           index,
           source: compact(block.original ?? ""),
+          block,
         }))
-        .filter(({ source }) => shouldTranslateParagraph(source));
+        .filter(({ block, source }) => shouldTranslateBlock(block, refSectionIds) && shouldTranslateParagraph(source));
       const translated = await translate(modelInputs.map((entry) => entry.source));
       const resultBySampleIndex = new Map(
         modelInputs.map((entry, index) => [entry.index, translated[index]])
       );
       const rows = sampled.map((block, index): AuditRow => {
         const source = compact(block.original ?? "");
-        const wouldSubmitToModel = shouldTranslateParagraph(source);
+        const wouldSubmitToModel = shouldTranslateBlock(block, refSectionIds) && shouldTranslateParagraph(source);
         const result = resultBySampleIndex.get(index);
+        const structurallySkipped = block.translationStatus === "skipped";
         // Match the production path's deterministic, source-grounded
         // terminology pass. Per-paper LLM glossaries remain intentionally
         // excluded here because this audit must be reproducible offline.
-        const sourceFallback = !wouldSubmitToModel || result?.text === source;
+        const sourceFallback = structurallySkipped || !wouldSubmitToModel || result?.text === source;
         const normalizedTranslation = result && !sourceFallback
           ? normalizeSourceGroundedTerminology(source, result.text)
           : undefined;
@@ -496,6 +506,7 @@ async function main() {
           paperId: paper.id,
           blockId: block.id,
           role: block.type,
+          translationStatus: block.translationStatus,
           pageStart: block.pageStart,
           pageEnd: block.pageEnd,
           source,
@@ -515,7 +526,9 @@ async function main() {
           sourceIntegrity: category === "damaged-extraction" ? "mixed-chrome" : structuralWarnings(block).length ? "structural-warning" : "clean",
           extractionProvenance: { pageStart: block.pageStart, pageEnd: block.pageEnd, bboxCount: block.boundingBoxes.length, extractionConfidence: block.extractionConfidence },
           fallbackStage: fallbackStage(wouldSubmitToModel, readerVisibleFallback),
-          fallbackReason: fallbackReason(source, result, quality),
+          fallbackReason: structurallySkipped
+            ? String(block.metadata.translationInputWarning ?? "structural skip; preserved in source")
+            : fallbackReason(source, result, quality),
           serverFallbackReason: result?.fallback_reason,
           serverFallbackStage: result?.fallback_stage,
           serverError: result?.error,

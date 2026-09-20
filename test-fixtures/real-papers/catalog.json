@@ -16,7 +16,7 @@
     {
       "id": "springer-journal",
       "status": "present",
-      "notes": "AI & Society / SpringerOpen"
+      "notes": "7 Springer Nature journal papers, including AI & Society, Fashion and Textiles, and ergonomics/linguistics/marketing titles; Springer LNCS remains separate and missing."
     },
     {
       "id": "arxiv",
@@ -1211,6 +1211,484 @@
         "Mingming Zhang"
       ],
       "year": 2015
+    },
+    {
+      "id": "cognitive-dual-task-older-adults",
+      "title": "Resistance Training Combined With Cognitive Training Increases Brain Derived Neurotrophic Factor and Improves Cognitive Function in Healthy Older Adults",
+      "authors": [
+        "Luz Albany Arcila Castaño",
+        "Vivian Castillo de Lima",
+        "João Francisco Barbieri",
+        "Erick Guilherme Peixoto de Lucena",
+        "Arthur Fernandes Gáspari",
+        "Hidenori Arai",
+        "Camila Vieira Ligo Teixeira",
+        "Hélio José Coelho-Júnior",
+        "Marco Carlos Uchida"
+      ],
+      "year": 2022,
+      "discipline": "cognitive-psychology",
+      "venue": "Frontiers in Psychology",
+      "publisher": "Frontiers",
+      "doi": "10.3389/fpsyg.2022.870561",
+      "formatFamily": "journal-oa",
+      "filename": "cognitive-dual-task.pdf",
+      "downloadUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2022.870561/pdf",
+      "sourceUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2022.870561/full",
+      "oaStatus": "open",
+      "selectionReason": "Cognitive psychology randomized intervention with participant counts, neurobiology, statistics, and tables",
+      "kinds": [
+        "one-column",
+        "figures",
+        "tables",
+        "statistics",
+        "quantitative"
+      ],
+      "checks": {
+        "titleContains": "Resistance Training Combined With Cognitive Training",
+        "referencesHeading": true
+      }
+    },
+    {
+      "id": "marketing-unavailable-choice",
+      "title": "Forgo or Go for One? The Unavailable Effect in Non-comparable Choice Sets",
+      "authors": [
+        "Jing Tian",
+        "Rong Chen",
+        "Feng He"
+      ],
+      "year": 2019,
+      "discipline": "marketing",
+      "venue": "Frontiers in Psychology",
+      "publisher": "Frontiers",
+      "doi": "10.3389/fpsyg.2019.01257",
+      "formatFamily": "journal-oa",
+      "filename": "marketing-unavailable.pdf",
+      "downloadUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.01257/pdf",
+      "sourceUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.01257/full",
+      "oaStatus": "open",
+      "selectionReason": "Consumer choice article with four between-subject experiments, manipulations, and statistical prose",
+      "kinds": [
+        "one-column",
+        "figures",
+        "tables",
+        "statistics",
+        "quantitative"
+      ],
+      "checks": {
+        "titleContains": "The Unavailable Effect in Non-comparable Choice Sets",
+        "referencesHeading": true
+      }
+    },
+    {
+      "id": "marketing-framing-organic-food",
+      "title": "Influence of the Framing Effect, Anchoring Effect, and Knowledge on Consumers’ Attitude and Purchase Intention of Organic Food",
+      "authors": [
+        "Lijie Shan",
+        "Haimeng Diao",
+        "Linhai Wu"
+      ],
+      "year": 2020,
+      "discipline": "marketing",
+      "venue": "Frontiers in Psychology",
+      "publisher": "Frontiers",
+      "doi": "10.3389/fpsyg.2020.02022",
+      "formatFamily": "journal-oa",
+      "filename": "marketing-framing.pdf",
+      "downloadUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2020.02022/pdf",
+      "sourceUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2020.02022/full",
+      "oaStatus": "open",
+      "selectionReason": "Consumer behavior study with framing and anchoring manipulations, consumer survey statistics, and tables",
+      "kinds": [
+        "one-column",
+        "figures",
+        "tables",
+        "statistics",
+        "quantitative"
+      ],
+      "checks": {
+        "titleContains": "Influence of the Framing Effect, Anchoring Effect",
+        "referencesHeading": true
+      }
+    },
+    {
+      "id": "marketing-platform-attitude",
+      "title": "Does platform type matter? A semantic analysis of user attitude formation on online platforms",
+      "authors": [
+        "Liangbo Zhang",
+        "Ge Zhan",
+        "Qijing Li",
+        "Jifan Ren"
+      ],
+      "year": 2022,
+      "discipline": "marketing",
+      "venue": "Frontiers in Psychology",
+      "publisher": "Frontiers",
+      "doi": "10.3389/fpsyg.2022.1005429",
+      "formatFamily": "journal-oa",
+      "filename": "marketing-platform.pdf",
+      "downloadUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2022.1005429/pdf",
+      "sourceUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2022.1005429/full",
+      "oaStatus": "open",
+      "selectionReason": "Digital marketing paper using semantic analysis of platform reviews, combining qualitative text and quantitative modeling",
+      "kinds": [
+        "one-column",
+        "figures",
+        "tables",
+        "quantitative",
+        "text-analysis"
+      ],
+      "checks": {
+        "titleContains": "Does platform type matter? A semantic analysis",
+        "referencesHeading": true
+      }
+    },
+    {
+      "id": "marketing-consumer-production-journey",
+      "title": "The consumer production journey: marketing to consumers as co-producers in the sharing economy",
+      "authors": [
+        "Benedict G. C. Dellaert"
+      ],
+      "year": 2019,
+      "discipline": "marketing",
+      "venue": "Journal of the Academy of Marketing Science",
+      "publisher": "Springer Nature",
+      "doi": "10.1007/s11747-018-0607-4",
+      "formatFamily": "springer-journal",
+      "filename": "marketing-co-production.pdf",
+      "downloadUrl": "https://link.springer.com/content/pdf/10.1007/s11747-018-0607-4.pdf",
+      "sourceUrl": "https://link.springer.com/article/10.1007/s11747-018-0607-4",
+      "oaStatus": "open",
+      "selectionReason": "Marketing theory paper on sharing economy and consumer co-production, for conceptual prose and Springer journal layout coverage",
+      "kinds": [
+        "one-column",
+        "conceptual",
+        "citations"
+      ],
+      "checks": {
+        "titleContains": "The consumer production journey",
+        "referencesHeading": true,
+        "requireSameParagraph": [
+          [
+            "expands the consumer journey concept to",
+            "explicitly take into account the fact"
+          ],
+          [
+            "(3) increasing",
+            "the effectiveness of consumers’ money budget spending"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ergonomics-job-rotation-robotics",
+      "title": "Job rotation and human–robot collaboration for enhancing ergonomics in assembly lines by a genetic algorithm",
+      "authors": [
+        "Michela Dalle Mura",
+        "Gino Dini"
+      ],
+      "year": 2022,
+      "discipline": "ergonomics",
+      "venue": "The International Journal of Advanced Manufacturing Technology",
+      "publisher": "Springer Nature",
+      "doi": "10.1007/s00170-021-08068-1",
+      "formatFamily": "springer-journal",
+      "filename": "job-rotation-ergonomics.pdf",
+      "downloadUrl": "https://link.springer.com/content/pdf/10.1007/s00170-021-08068-1.pdf",
+      "sourceUrl": "https://link.springer.com/article/10.1007/s00170-021-08068-1",
+      "oaStatus": "open",
+      "selectionReason": "Human–robot assembly ergonomics with genetic algorithm, optimization objectives, and dense tables/equations",
+      "kinds": [
+        "two-column",
+        "tables",
+        "equations",
+        "quantitative"
+      ],
+      "checks": {
+        "titleContains": "Job rotation and human–robot collaboration",
+        "referencesHeading": true
+      }
+    },
+    {
+      "id": "ergonomics-quantified-factory-worker",
+      "title": "Quantified factory worker: field study of a web application supporting work well-being and productivity",
+      "authors": [
+        "Päivi Heikkilä",
+        "Anita Honka",
+        "Eija Kaasinen",
+        "Kaisa Väänänen"
+      ],
+      "year": 2021,
+      "discipline": "ergonomics",
+      "venue": "Cognition, Technology & Work",
+      "publisher": "Springer Nature",
+      "doi": "10.1007/s10111-021-00671-2",
+      "formatFamily": "springer-journal",
+      "filename": "ergo-worker.pdf",
+      "downloadUrl": "https://link.springer.com/content/pdf/10.1007/s10111-021-00671-2.pdf",
+      "sourceUrl": "https://link.springer.com/article/10.1007/s10111-021-00671-2",
+      "oaStatus": "open",
+      "selectionReason": "Industrial human factors field study with interviews, questionnaire measures, and qualitative/quantitative results",
+      "kinds": [
+        "one-column",
+        "figures",
+        "tables",
+        "mixed-methods"
+      ],
+      "checks": {
+        "titleContains": "Quantified factory worker",
+        "referencesHeading": true
+      }
+    },
+    {
+      "id": "ergonomics-flight-deck-applications",
+      "title": "Designing flight deck applications: combining insight from end-users and ergonomists",
+      "authors": [
+        "Katie J. Parnell",
+        "Victoria A. Banks",
+        "Craig K. Allison",
+        "Katherine L. Plant",
+        "Peter Beecroft",
+        "Neville A. Stanton"
+      ],
+      "year": 2021,
+      "discipline": "ergonomics",
+      "venue": "Cognition, Technology & Work",
+      "publisher": "Springer Nature",
+      "doi": "10.1007/s10111-020-00629-w",
+      "formatFamily": "springer-journal",
+      "filename": "ergo-flightdeck.pdf",
+      "downloadUrl": "https://link.springer.com/content/pdf/10.1007/s10111-020-00629-w.pdf",
+      "sourceUrl": "https://link.springer.com/article/10.1007/s10111-020-00629-w",
+      "oaStatus": "open",
+      "selectionReason": "Aviation human factors design paper comparing two methods and integrating qualitative end-user evidence",
+      "kinds": [
+        "one-column",
+        "qualitative",
+        "case-study"
+      ],
+      "checks": {
+        "titleContains": "Designing flight deck applications",
+        "referencesHeading": true
+      }
+    },
+    {
+      "id": "linguistics-register-web-corpus",
+      "title": "Exploring the role of lexis and grammar for the stable identification of register in an unrestricted corpus of web documents",
+      "authors": [
+        "Veronika Laippala",
+        "Jesse Egbert",
+        "Douglas Biber",
+        "Aki-Juhani Kyröläinen"
+      ],
+      "year": 2021,
+      "discipline": "linguistics",
+      "venue": "Language Resources and Evaluation",
+      "publisher": "Springer Nature",
+      "doi": "10.1007/s10579-020-09519-z",
+      "formatFamily": "springer-journal",
+      "filename": "linguistics-register.pdf",
+      "downloadUrl": "https://link.springer.com/content/pdf/10.1007/s10579-020-09519-z.pdf",
+      "sourceUrl": "https://link.springer.com/article/10.1007/s10579-020-09519-z",
+      "oaStatus": "open",
+      "selectionReason": "Corpus linguistics study on register classification, with long methods, feature analysis, tables, and a 32-page journal PDF",
+      "kinds": [
+        "one-column",
+        "corpus-study",
+        "tables",
+        "quantitative"
+      ],
+      "checks": {
+        "titleContains": "stable identification of register",
+        "referencesHeading": true
+      }
+    },
+    {
+      "id": "linguistics-appraisal-institutional-discourse",
+      "title": "Applying quantitative appraisal analysis to the study of institutional discourse: the case of EU migration documents",
+      "authors": [
+        "Mira Tupala"
+      ],
+      "year": 2019,
+      "discipline": "linguistics",
+      "venue": "Functional Linguistics",
+      "publisher": "Springer Nature",
+      "doi": "10.1186/s40554-018-0067-7",
+      "formatFamily": "springer-journal",
+      "filename": "linguistics-appraisal.pdf",
+      "downloadUrl": "https://link.springer.com/content/pdf/10.1186/s40554-018-0067-7.pdf",
+      "sourceUrl": "https://link.springer.com/article/10.1186/s40554-018-0067-7",
+      "oaStatus": "open",
+      "selectionReason": "Systemic-functional linguistics and corpus analysis of institutional discourse, useful for terminology and specialized prose",
+      "kinds": [
+        "one-column",
+        "corpus-study",
+        "tables",
+        "quantitative"
+      ],
+      "checks": {
+        "titleContains": "quantitative appraisal analysis",
+        "referencesHeading": true
+      }
+    },
+    {
+      "id": "marketing-neurophysiology-consumer-motivation",
+      "title": "Analyzing motivating functions of consumer behavior: Evidence from attention and neural responses to choices and consumption",
+      "authors": [
+        "Sanchit Pawar",
+        "Asle Fagerstrøm",
+        "Valdimar Sigurdsson",
+        "Erik Arntzen"
+      ],
+      "year": 2023,
+      "discipline": "marketing",
+      "venue": "Frontiers in Psychology",
+      "publisher": "Frontiers",
+      "doi": "10.3389/fpsyg.2023.1053528",
+      "formatFamily": "journal-oa",
+      "filename": "marketing-neuroconsumer.pdf",
+      "downloadUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2023.1053528/pdf",
+      "sourceUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2023.1053528/full",
+      "oaStatus": "open",
+      "selectionReason": "Consumer motivation experiment integrating marketing, eye tracking, EEG, choice, consumption, and statistical outcomes",
+      "kinds": [
+        "one-column",
+        "figures",
+        "statistics",
+        "mixed-methods"
+      ],
+      "checks": {
+        "titleContains": "motivating functions of consumer behavior",
+        "referencesHeading": true
+      }
+    },
+    {
+      "id": "cognitive-memory-cue-interest",
+      "title": "Effects of memory cue and interest in remembering and forgetting of gist and details",
+      "authors": [
+        "Zhongyu Hu",
+        "Jiongjiong Yang"
+      ],
+      "year": 2023,
+      "discipline": "cognitive-psychology",
+      "venue": "Frontiers in Psychology",
+      "publisher": "Frontiers",
+      "doi": "10.3389/fpsyg.2023.1244288",
+      "formatFamily": "journal-oa",
+      "filename": "cognitive-memory-cues.pdf",
+      "downloadUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2023.1244288/pdf",
+      "sourceUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2023.1244288/full",
+      "oaStatus": "open",
+      "selectionReason": "Cognitive memory experiment with multiple retention intervals, cue conditions, and behavioral/statistical results",
+      "kinds": [
+        "one-column",
+        "figures",
+        "statistics",
+        "quantitative"
+      ],
+      "checks": {
+        "titleContains": "memory cue and interest",
+        "referencesHeading": true
+      }
+    },
+    {
+      "id": "cognitive-vr-mnemonic-processing",
+      "title": "New is not always better: Virtual reality does not necessarily enhance mnemonic processing",
+      "authors": [
+        "Marike Johnsdorf",
+        "Kim Anh Pham",
+        "Tino Schmidt",
+        "Van Ly Truong",
+        "Andre Wohnig",
+        "Joanna Kisker",
+        "Thomas Gruber",
+        "Benjamin Schöne"
+      ],
+      "year": 2023,
+      "discipline": "cognitive-psychology",
+      "venue": "Frontiers in Psychology",
+      "publisher": "Frontiers",
+      "doi": "10.3389/fpsyg.2023.1089725",
+      "formatFamily": "journal-oa",
+      "filename": "cognitive-vr-memory.pdf",
+      "downloadUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2023.1089725/pdf",
+      "sourceUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2023.1089725/full",
+      "oaStatus": "open",
+      "selectionReason": "Cognitive learning experiment comparing VR and conventional modalities, with conditions, task procedure, and memory outcomes",
+      "kinds": [
+        "one-column",
+        "figures",
+        "statistics",
+        "quantitative"
+      ],
+      "checks": {
+        "titleContains": "Virtual reality does not necessarily enhance mnemonic processing",
+        "referencesHeading": true
+      }
+    },
+    {
+      "id": "cognitive-motor-incidental-memory",
+      "title": "Motor engagement enhances incidental memory for task-irrelevant items",
+      "authors": [
+        "Daisuke Shimane",
+        "Takumi Tanaka",
+        "Katsumi Watanabe",
+        "Kanji Tanaka"
+      ],
+      "year": 2022,
+      "discipline": "cognitive-psychology",
+      "venue": "Frontiers in Psychology",
+      "publisher": "Frontiers",
+      "doi": "10.3389/fpsyg.2022.914877",
+      "formatFamily": "journal-oa",
+      "filename": "cognitive-motor-memory.pdf",
+      "downloadUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2022.914877/pdf",
+      "sourceUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2022.914877/full",
+      "oaStatus": "open",
+      "selectionReason": "Cognitive neuroscience experiments on motor response and incidental memory, with multi-study result structure",
+      "kinds": [
+        "one-column",
+        "figures",
+        "statistics",
+        "quantitative"
+      ],
+      "checks": {
+        "titleContains": "incidental memory for task-irrelevant items",
+        "referencesHeading": true
+      }
+    },
+    {
+      "id": "marketing-health-goals-nudging",
+      "title": "The role of attention and health goals in nudging healthy food choice",
+      "authors": [
+        "Marleen Gillebaart",
+        "Stephanie S. A. H. Blom",
+        "Jeroen S. Benjamins",
+        "Femke de Boer",
+        "Denise T. D. De Ridder"
+      ],
+      "year": 2023,
+      "discipline": "marketing",
+      "venue": "Frontiers in Psychology",
+      "publisher": "Frontiers",
+      "doi": "10.3389/fpsyg.2023.1270207",
+      "formatFamily": "journal-oa",
+      "filename": "marketing-healthy-choice.pdf",
+      "downloadUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2023.1270207/pdf",
+      "sourceUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2023.1270207/full",
+      "oaStatus": "open",
+      "selectionReason": "Field experiment on nudging and consumer food choice with eye tracking, mixed methods, and statistical analysis",
+      "kinds": [
+        "one-column",
+        "figures",
+        "tables",
+        "field-experiment",
+        "statistics"
+      ],
+      "checks": {
+        "titleContains": "attention and health goals in nudging healthy food choice",
+        "referencesHeading": true
+      }
     }
   ]
 }

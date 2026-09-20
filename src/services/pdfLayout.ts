@@ -52,8 +52,8 @@ export type LayoutLine = {
   height: number;
   fontSize: number;
   bbox: BoundingBox;
-  pageHeight?: number;
   rotation?: number;
+  pageHeight?: number;
 };
 
 export type LayoutBlock = {
@@ -64,7 +64,9 @@ export type LayoutBlock = {
   pageEnd: number;
   column: LayoutColumn;
   bbox: BoundingBox;
+  rotation?: number;
   /** Set when geometry already proved this block crossed native columns. */
+  preserveColumnContinuation?: boolean;
 };
 
 function lineUsesBoldFace(line: LayoutLine): boolean {
@@ -1098,9 +1100,9 @@ function looksLikeTitleLine(
 }
 
 function joinHyphenated(prev: string, next: string): string {
-  if (prev.endsWith("-") && /^[a-z]/.test(next)) {
+  if (/[-\u00ad\u2010\u2011]$/u.test(prev) && /^[a-z]/.test(next)) {
     // "jewellery-, memory- and interaction-" + "perspectives"
-    if (/(?:,|and)\s+[A-Za-z]+-$/i.test(prev)) {
+    if (/(?:,|and)\s+[A-Za-z]+[-\u00ad\u2010\u2011]$/iu.test(prev)) {
       return prev + next;
     }
     return prev.slice(0, -1) + next;
@@ -1571,7 +1573,13 @@ function groupLinesIntoBlocks(
         (current[0].column === "spanning" && line.column !== "spanning" &&
           line.x < current[0].x + current[0].width &&
           line.x + line.width > current[0].x)) &&
-      line.y - current[current.length - 1].y < baseFont * 2.8 &&
+      line.y - current[current.length - 1].y <
+        Math.max(baseFont * 2.8, current[current.length - 1].fontSize * 1.35) &&
+      // Some journal title lines use the display-title size with a baseline
+      // gap slightly larger than body leading. Keep those lines together,
+      // while requiring a matching font size so nearby author metadata does
+      // not get absorbed into the title.
+      Math.abs(line.fontSize - current[current.length - 1].fontSize) <= 1.2 &&
       // A title subtitle is often one short native line with a smaller font
       // and is therefore initially classified as affiliation/paragraph. Keep
       // it with the title when it is structurally close and cannot be an
@@ -1580,7 +1588,6 @@ function groupLinesIntoBlocks(
         (line.text.trim().split(/\s+/).filter(Boolean).length <= 6 &&
           line.text.trim().length <= 48 &&
           !looksLikePersonName(line.text) &&
-          !looksLikeAffiliation(line.text) &&
           !looksLikeEmail(line.text)));
 
     const captionContinue =
@@ -1634,6 +1641,10 @@ function groupLinesIntoBlocks(
 function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
   const result: LayoutBlock[] = [];
   for (const block of blocks) {
+    if (block.preserveColumnContinuation) {
+      result.push(block);
+      continue;
+    }
     const columns = new Set(block.lines.map((line) => line.column));
     const lineWidths = block.lines.map((line) => line.width).filter((width) => width > 0);
     const typicalLineWidth = median(lineWidths) || 1;
@@ -1679,7 +1690,13 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
       const left = block.lines.filter((line) => line.x <= splitX).sort((a, b) => a.y - b.y);
       const right = block.lines.filter((line) => line.x > splitX).sort((a, b) => a.y - b.y);
       if (left.length >= 2 && right.length >= 2) {
-        for (const run of [left, right]) result.push({ role: "paragraph", text: joinLines(run), lines: run, pageStart: run[0].page, pageEnd: run[run.length - 1].page, column: run[0].column, bbox: blockBbox(run) });
+        for (const run of [left, right]) {
+          const text = joinLines(run);
+          const role = labelSidebar && run === left && looksLikeAffiliation(text)
+            ? "affiliation"
+            : "paragraph";
+          result.push({ role, text, lines: run, pageStart: run[0].page, pageEnd: run[run.length - 1].page, column: run[0].column, bbox: blockBbox(run) });
+        }
         continue;
       }
     }
@@ -1793,6 +1810,10 @@ function isSentenceContinuation(left: string, right: string): boolean {
   // into the next column/page stream.
   if (/[.!?:]$/.test(a)) return false;
   if (a.endsWith("-") && /^[a-z]/.test(b)) return true;
+  // Author-year citations can be split by a physical page/column boundary,
+  // e.g. `(Greenwood et al. 2005; Muth` → `1966), the ...`. Only treat a
+  // leading year as continuation when it closes an unmatched citation group.
+  if (a.lastIndexOf("(") > a.lastIndexOf(")") && /^(?:19|20)\d{2}(?:[;,)]|\b)/.test(b)) return true;
   if (isGrantNumberContinuation(a, b)) return true;
   // A PDF text stream may place a numbered cross-reference on the following
   // line/column (`... in Section` → `3`). Stitch only this explicit label +
@@ -1852,7 +1873,13 @@ function isUnclassifiedFootnote(block: LayoutBlock): boolean {
  * prose. Never use it as the source paragraph for cross-page stitching. */
 function isAuthorMetadataBlock(block: LayoutBlock): boolean {
   if (block.role !== "paragraph") return false;
-  return /(?:contributed equally|correspondence|corresponding author|requests for materials|should be addressed to|e-?mail\s*:)/i.test(block.text);
+  return /(?:contributed equally|correspondence|corresponding author|requests for materials|should be addressed to|e-?mail\s*:|full list of author information|served as (?:a )?(?:special issue )?editor\b)/i.test(block.text);
+}
+
+function isTransparentMetadataBlock(block: LayoutBlock, repeatedTexts: Set<string>): boolean {
+  return block.role === "header" || block.role === "footer" || block.role === "footnote" ||
+    block.role === "affiliation" || block.role === "copyright" || isUnclassifiedFootnote(block) ||
+    isAuthorMetadataBlock(block) || isRepeatedRunningHeader(block, repeatedTexts);
 }
 
 function hasRotatedNativeLine(block: LayoutBlock): boolean {
@@ -1875,6 +1902,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         result[targetIdx].role === "header" ||
         result[targetIdx].role === "footer" ||
         result[targetIdx].role === "footnote" ||
+        result[targetIdx].role === "affiliation" ||
         isUnclassifiedFootnote(result[targetIdx]) ||
         isAuthorMetadataBlock(result[targetIdx]) ||
         isRepeatedRunningHeader(result[targetIdx], repeatedTexts) ||
@@ -1886,9 +1914,100 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
     ) {
       targetIdx--;
     }
+    const skippedInterveningMetadata = targetIdx < result.length - 1;
     const target = targetIdx >= 0 ? result[targetIdx] : null;
+    const targetLine = target?.lines.at(-1);
+    const nextLine = block.lines[0];
+    const skippedBlocks = targetIdx >= 0 ? result.slice(targetIdx + 1) : [];
+    const safeColumnMetadataGap = Boolean(
+      skippedBlocks.length > 0 && target && targetLine &&
+      skippedBlocks.every((skipped) => {
+        const transparent = skipped.role === "header" || skipped.role === "footer" || skipped.role === "footnote" ||
+          skipped.role === "affiliation" || skipped.role === "copyright" ||
+          isUnclassifiedFootnote(skipped) || isAuthorMetadataBlock(skipped) ||
+          isRepeatedRunningHeader(skipped, repeatedTexts);
+        const precedesTailPage = skipped.pageEnd < targetLine.page;
+        const followsTailOnSameColumn = skipped.pageStart === targetLine.page && skipped.pageEnd === targetLine.page &&
+          skipped.column === targetLine.column && skipped.lines[0]?.y !== undefined && skipped.lines[0].y > targetLine.y;
+        if (transparent && (precedesTailPage || followsTailOnSameColumn)) return true;
+        // A floating caption/table can sit below the unfinished left-column
+        // tail while the paragraph resumes at the top of the right column.
+        // Treat it as a gap only when the caption is below the tail, ends
+        // before the continuation's x-band, and the continuation is near top.
+        return (skipped.role === "figure_caption" || skipped.role === "table_caption") &&
+          targetLine.page === nextLine?.page && skipped.pageStart === targetLine.page &&
+          skipped.pageEnd === targetLine.page && skipped.bbox.y > targetLine.y &&
+          targetLine.column === "left" && nextLine?.column === "right" &&
+          skipped.bbox.x < (nextLine?.x ?? 0) - 40 &&
+          (nextLine?.y ?? Number.MAX_SAFE_INTEGER) < (nextLine?.pageHeight ?? 0) * 0.32;
+      })
+    );
+    const safeBoundaryMetadataGap = Boolean(
+      skippedBlocks.length > 0 && target && targetLine &&
+      target.lines.at(-1)?.column !== undefined &&
+      skippedBlocks.every((skipped) => {
+        const sourcePageMetadata = skipped.pageStart === target.pageEnd && skipped.pageEnd === target.pageEnd;
+        const nextPageRunningHeader = skipped.pageStart === block.pageStart &&
+          skipped.pageEnd === block.pageStart && isRepeatedRunningHeader(skipped, repeatedTexts);
+        const nextPageCaption = skipped.pageStart === block.pageStart && skipped.pageEnd === block.pageStart &&
+          (skipped.role === "figure_caption" || skipped.role === "table_caption") &&
+          skipped.bbox.y + skipped.bbox.height < (nextLine?.y ?? Number.NEGATIVE_INFINITY);
+        if (!sourcePageMetadata && !nextPageRunningHeader && !nextPageCaption) return false;
+        if (isTransparentMetadataBlock(skipped, repeatedTexts) &&
+          skipped.lines.every((line) => line.column !== targetLine.column)) return true;
+        // A caption in the opposite visual column and a footnote below the
+        // paragraph tail can be interleaved in native reading order. They are
+        // transparent only when geometry proves they are outside source text.
+        if ((skipped.role === "figure_caption" || skipped.role === "table_caption") &&
+          skipped.bbox.x >= targetLine.x + targetLine.width - 2) return true;
+        if (nextPageCaption) return true;
+        return skipped.role === "footnote" &&
+          skipped.lines.every((line) => line.y > targetLine.y && line.column === targetLine.column);
+      })
+    );
+    const debugFlag = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_DEBUG;
+    const wrapsAcrossColumnsAtPageBottom = Boolean(
+      target && (!skippedInterveningMetadata || safeColumnMetadataGap) &&
+      target.role === "paragraph" && block.role === "paragraph" &&
+      target.column === "left" && block.column === "right" &&
+      target.pageStart === target.pageEnd && block.pageStart === block.pageEnd &&
+      target.pageEnd === block.pageStart &&
+      target.text.length >= 80 &&
+      !/[.!?:]$/.test(target.text.trim()) &&
+      targetLine && nextLine &&
+      targetLine.page === nextLine.page &&
+      Math.abs(targetLine.fontSize - nextLine.fontSize) <= 0.8 &&
+      (targetLine.y > (targetLine.pageHeight ?? 792) * 0.68 &&
+        nextLine.y < (nextLine.pageHeight ?? 792) * 0.32 ||
+        nextLine.y < targetLine.y - Math.max(30, targetLine.fontSize * 3)) &&
+      isSentenceContinuation(target.text, block.text)
+    );
+    const wrapsAcrossPhysicalColumns = Boolean(
+      target && target.role === "paragraph" && block.role === "paragraph" &&
+      (!skippedInterveningMetadata || safeColumnMetadataGap) && targetLine && nextLine &&
+      targetLine.page === nextLine.page && targetLine.column === "left" && nextLine.column === "right" &&
+      target.pageEnd === block.pageStart && target.text.length >= 80 &&
+      !/[.!?:]$/.test(target.text.trim()) &&
+      targetLine.y > (targetLine.pageHeight ?? 792) * 0.68 &&
+      nextLine.y < (nextLine.pageHeight ?? 792) * 0.32 &&
+      Math.abs(targetLine.fontSize - nextLine.fontSize) <= 0.8 &&
+      isSentenceContinuation(target.text, block.text)
+    );
+    const geometrySameLineContinuation = Boolean(
+      target && target.role === "paragraph" && block.role === "paragraph" &&
+      skippedInterveningMetadata &&
+      target.pageStart === target.pageEnd && block.pageStart === block.pageEnd &&
+      target.pageEnd === block.pageStart && target.column === block.column &&
+      target.lines.length >= 2 && block.lines.length >= 2 &&
+      target.text.length >= 80 && !/[.!?:]$/.test(target.text.trim()) &&
+      targetLine && nextLine && targetLine.page === nextLine.page &&
+      Math.abs(targetLine.x - nextLine.x) <= Math.max(4, targetLine.fontSize * 0.45) &&
+      nextLine.y > targetLine.y &&
+      nextLine.y - targetLine.y <= Math.max(targetLine.fontSize, nextLine.fontSize) * 1.65 &&
+      Math.abs(targetLine.fontSize - nextLine.fontSize) <= 0.8
+    );
     const crossesPageBoundary =
-      target &&
+      target && (!skippedInterveningMetadata || safeBoundaryMetadataGap) &&
       target.pageEnd + 1 === block.pageStart &&
       (target.column === block.column ||
         // Reading order wraps from the right column of one page to the left
@@ -1903,28 +2022,34 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       ((target.column === "single" && (block.column === "single" || block.column === "left")) ||
         (block.lines[0]?.y ?? Number.MAX_SAFE_INTEGER) <
           (block.lines[0]?.pageHeight ?? 0) * 0.32);
-    if (
-      target &&
-      target.role === "paragraph" &&
-      block.role === "paragraph" &&
-      ((target.column === "left" && block.column === "right" && target.pageEnd === block.pageStart &&
-        // A paragraph that starts well below the top of the left column is
-        // unlikely to continue at the top of the right column. Native
-        // extractors frequently expose that layout as two independent
-        // paragraphs; prefer keeping them separate when this evidence is
-        // present. The threshold preserves the explicit top-of-column
-        // continuation regression fixture.
-        (target.lines[0]?.y ?? 0) <= (target.lines[0]?.pageHeight ?? 792) * 0.35) ||
+    const canContinueAcrossColumns = Boolean(
+      target && (
+        ((!skippedInterveningMetadata || safeColumnMetadataGap) && targetLine && nextLine &&
+          targetLine.column === "left" && nextLine.column === "right" &&
+          targetLine.page === nextLine.page && target.pageEnd === block.pageStart &&
+          targetLine.y > (targetLine.pageHeight ?? 792) * 0.68 &&
+          nextLine.y < (nextLine.pageHeight ?? 792) * 0.32) ||
+        ((!skippedInterveningMetadata || safeColumnMetadataGap) && target.column === "left" && block.column === "right" && target.pageEnd === block.pageStart &&
+          ((target.lines[0]?.y ?? 0) <= (target.lines[0]?.pageHeight ?? 792) * 0.35 ||
+            (target.lines.at(-1)?.y ?? Number.MAX_SAFE_INTEGER) >
+              (target.lines.at(-1)?.pageHeight ?? 792) * 0.68)) ||
         // A full-width paragraph can continue below an intervening figure in
         // the first physical column of the same page. The continuation test
         // below still requires an unfinished source sentence and a lower-case
         // next fragment, so this does not join independent body paragraphs.
         (target.column === "single" && (block.column === "left" || block.column === "right") && target.pageEnd === block.pageStart) ||
-        crossesPageBoundary) &&
-      isSentenceContinuation(target.text, block.text)
-      && !(hasRotatedNativeLine(target) !== hasRotatedNativeLine(block))
+        crossesPageBoundary
+      )
+    );
+    if (debugFlag === "1" && target && target.column === "left" && block.column === "right") {
+      console.warn(`[PDF_LAYOUT_CROSS_COLUMN] target=${target.text.slice(-70)} next=${block.text.slice(0, 70)} skipped=${skippedInterveningMetadata} wrap=${wrapsAcrossColumnsAtPageBottom} continuation=${isSentenceContinuation(target.text, block.text)} targetY=${targetLine?.y}/${targetLine?.pageHeight} nextY=${nextLine?.y}/${nextLine?.pageHeight} targetPage=${target.pageStart}-${target.pageEnd} nextPage=${block.pageStart}-${block.pageEnd} rotated=${hasRotatedNativeLine(target)}/${hasRotatedNativeLine(block)}`);
+    }
+    if (
+      target && target.role === "paragraph" && block.role === "paragraph" &&
+      (geometrySameLineContinuation || wrapsAcrossColumnsAtPageBottom || wrapsAcrossPhysicalColumns ||
+        (canContinueAcrossColumns && isSentenceContinuation(target.text, block.text))) &&
+      !(hasRotatedNativeLine(target) !== hasRotatedNativeLine(block))
     ) {
-      const debugFlag = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_DEBUG;
       if (debugFlag === "1" && target.pageStart === block.pageStart && target.column !== block.column) {
         console.warn(`[PDF_LAYOUT_MERGE] page=${block.pageStart} ${target.column}->${block.column} targetY=${target.lines[0]?.y?.toFixed(1)} blockY=${block.lines[0]?.y?.toFixed(1)} left=${target.text.slice(-100)} right=${block.text.slice(0, 100)}`);
       }
@@ -1932,6 +2057,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       target.lines = [...target.lines, ...block.lines];
       target.pageEnd = block.pageEnd;
       target.bbox = blockBbox(target.lines);
+      if (target.column !== block.column) target.preserveColumnContinuation = true;
       continue;
     }
     result.push(block);
@@ -2140,6 +2266,43 @@ export function reconstructDocument(pages: ExtractedPage[]): {
   ) || 10;
 
   const blocks = groupLinesIntoBlocks(lines, bodyFont);
+  // A masthead in the opposite horizontal band can interrupt title lines in
+  // y-sorted native reading order. Reattach only short, same-style lines that
+  // align with the title and leave unrelated lines in their original block.
+  for (const title of blocks.filter((block) => block.role === "title" && block.pageStart === 1)) {
+    const lastTitleLine = title.lines.at(-1);
+    if (!lastTitleLine) continue;
+    for (let blockIndex = blocks.indexOf(title) + 1; blockIndex < blocks.length; blockIndex++) {
+      const candidateBlock = blocks[blockIndex];
+      if (candidateBlock.pageStart !== 1) break;
+      const matchingLines = candidateBlock.lines.filter((line) =>
+        line.y > (title.lines.at(-1)?.y ?? lastTitleLine.y) &&
+        line.y - (title.lines.at(-1)?.y ?? lastTitleLine.y) <= Math.max(bodyFont * 2.8, line.fontSize * 1.35) &&
+        Math.abs(line.x - lastTitleLine.x) <= 6 &&
+        Math.abs(line.fontSize - lastTitleLine.fontSize) <= 1.2 &&
+        line.text.trim().length <= 48 &&
+        line.text.trim().split(/\s+/).filter(Boolean).length <= 6 &&
+        !looksLikePersonName(line.text) && !looksLikeEmail(line.text)
+      );
+      if (matchingLines.length === 0) continue;
+      const matchingSet = new Set(matchingLines);
+      const remainingLines = candidateBlock.lines.filter((line) => !matchingSet.has(line));
+      title.lines.push(...matchingLines);
+      title.lines.sort((a, b) => a.y - b.y || a.x - b.x);
+      title.text = title.lines.map((line) => line.text.trim()).join(" ").replace(/\s+/g, " ").trim();
+      title.pageEnd = 1;
+      title.bbox = blockBbox(title.lines);
+      if (remainingLines.length === 0) {
+        blocks.splice(blockIndex, 1);
+        blockIndex--;
+      } else {
+        candidateBlock.lines = remainingLines;
+        candidateBlock.text = remainingLines.map((line) => line.text.trim()).join(" ").replace(/\s+/g, " ").trim();
+        candidateBlock.bbox = blockBbox(remainingLines);
+      }
+      break;
+    }
+  }
   if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_DEBUG === "1") {
     console.warn(`[PDF_GROUPED_LINES] lines=${lines.length} blocks=${blocks.length} bodyFont=${bodyFont.toFixed(2)}`);
     lines.forEach((line, index) => {

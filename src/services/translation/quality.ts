@@ -651,6 +651,18 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   if (noTerminal && /:\s*$/.test(t)) {
     return "段落の末尾が欠けている可能性があります";
   }
+  // Physical blocks can stop after an English coordinator, subordinator, or
+  // determiner. These are unambiguously open syntactic units even when the
+  // text is long enough to look like ordinary prose (for example, a PDF block
+  // ending `The first dimension describes the`). Do not let the model invent
+  // the missing clause or noun. A sentence-final mark excludes legitimate
+  // ellipses and quoted fragments from this check.
+  if (
+    noTerminal
+    && /(?:[,;]\s*|\b(?:and|or|but|that|which|who|whom|whose|where|when|although|because|while|whereas|if|unless|the|a|an|this|these|those|its|their|our|his|her)\s*)$/i.test(t)
+  ) {
+    return "段落の末尾が欠けている可能性があります";
+  }
   // A terminal bare infinitive marks an open predicate complement (for
   // example, a physical block ending `were used to perform`). The model may
   // supply an object that was absent from the PDF text and turn an extraction

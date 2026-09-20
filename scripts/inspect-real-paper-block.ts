@@ -25,7 +25,7 @@ let document: ReturnType<typeof extractFromPages>;
 try {
   console.log = () => {};
   console.info = () => {};
-  console.warn = () => {};
+  if (process.env.PDF_LAYOUT_DEBUG !== "1") console.warn = () => {};
   document = extractFromPages({
     pages,
     paperId: `translation-audit-${paperId}`,
@@ -48,6 +48,8 @@ const lastIndex = Math.min(blocks.length, matchIndex + neighborCount + 1);
 const inspected = blocks.slice(firstIndex, lastIndex);
 const report = inspected.map((block, offset) => {
   const index = firstIndex + offset;
+  const canonicalNode = document.canonical.nodes.find((node) => node.text === block.original);
+  const layoutBlock = document.layoutBlocks.find((candidate) => candidate.text === block.original);
   return {
     index,
     id: block.id,
@@ -61,6 +63,17 @@ const report = inspected.map((block, offset) => {
     boundingBoxes: block.boundingBoxes,
     extractionConfidence: block.extractionConfidence,
     metadata: block.metadata,
+    canonicalEvidence: canonicalNode?.evidence,
+    layoutDetail: layoutBlock ? {
+      role: layoutBlock.role,
+      column: layoutBlock.column,
+      lineCount: layoutBlock.lines.length,
+      lines: layoutBlock.lines.map((line) => ({
+        x: line.x, y: line.y, width: line.width, fontSize: line.fontSize, column: line.column, page: line.page,
+        itemCount: line.items.length,
+        items: line.items.map((item) => ({ text: item.text, x: item.x, width: item.width, fontName: item.fontName, fontSize: item.fontSize })),
+      })),
+    } : undefined,
   };
 });
 const firstPage = Math.max(1, inspected[0].pageStart);

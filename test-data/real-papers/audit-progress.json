@@ -5,6 +5,25 @@
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
   "attributionStatus": "v6 baseline 12/48 (25.00%); audit-only semantic MiniLM v42 and coverage v66 completed; coverage found 10 exact invariant-loss rows (5 accepted), so token normalization/calibration is next; production gate unchanged",
+  "latestExtractionCheckpoint": {
+    "date": "2026-09-20",
+    "scope": "held-out extraction regressions plus v32 live marketing table-row audit",
+    "causes": [
+      "PPG mixed-x finding was a valid bottom-left to top-right page-wrap; test now requires explicit flag and bottom/top geometry",
+      "HCI page continuation was separated by external captions/footnote/running header; stitching now allows only geometrically proven metadata gaps",
+      "Frontiers title final line was separated by y-interleaved masthead; same-style aligned short title line is reattached while retaining other affiliation lines",
+      "Marketing Springer Table 1–3 cell rows were fragmented across caption/column blocks; generic caption proximity, repeated row spacing, stable x-columns, and same-baseline cell evidence now marks compact clusters as table-related"
+    ],
+    "verification": "selected extraction corpus + baseline + reading-order/quality 107/107; typecheck, lint, git diff --check passed; target regression asserts Table 2/3 cells stay out of paragraph translation",
+    "appBuild": "not run",
+    "translationBenchmark": "v32 completed on user-managed 127.0.0.1:8765 with MADLAD v20; marketing Springer 12 blocks, 7 model submissions, 6 accepts, 6 reader-visible fallbacks (5 pre-model table/source-only, 1 post-model quality fallback); ordinary-body 1/6 fallback (16.7%); purposive sample, and source-category denominator changed after table reclassification",
+    "manualReview": "all 6 accepts and the post-model fallback checked; 3/6 accepted outputs severity >=2, including previously confirmed accepted hallucination in b-6c425cba; see test-data/real-papers/reports/semantic-review-v32-marketing-grid.json",
+    "nextActions": [
+      "validate captioned repeated-cell table evidence on held-out OA formats and check for prose false positives",
+      "continue manual review of accepted and post-model-fallback rows; do not count v32 table reclassification as ordinary-body fallback improvement",
+      "continue corpus expansion beyond 52 catalog / 51 cached papers and measure ordinary-body fallback against the <=5% target"
+    ]
+  },
   "completedPapers": [
     "cognitive-psychology-gpt3",
     "computational-linguistics-nlp-translation",
@@ -45,28 +64,27 @@
   ],
   "pendingPapers": [],
   "reviewedBlocks": 134,
-  "lastCheckpoint": "2026-09-20-v20-focused-and-wear-scale-sidebar-diagnostic",
+  "lastCheckpoint": "2026-09-20-v32-captioned-grid-and-row-recovery",
   "pendingManualReview": 60,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
     "measure partial source fallback inside accepted output before treating accept rate as fully translated rate",
     "fallback rate must be driven below 5% for product-quality reading UX",
     "unsafe false accepts dominated by semantic shift and omission without durable numeric/citation facts",
-    "expand OA corpus to 50+ verified PDFs",
-    "page/column paragraph repair",
+    "expand the verified OA corpus beyond 52 catalog / 51 cached PDFs toward 70–90 with balanced discipline and format coverage",
+    "validate page/column paragraph stitching against more held-out PDFs",
     "chrome separation",
     "evaluate replacement or cascade translation models under local/free-use constraints",
-    "v19 full cached-corpus benchmark and manual semantic review not yet run",
     "most v17 replay fallbacks remain quality/placeholder failures (29/32 source echoes)",
     "semantic clause omissions remain undetected for meaning-that explanation clauses",
-    "ordinary-body fallback target <=5% not met (v16 baseline 30.3%)"
+    "ordinary-body fallback target <=5% not met (v16 baseline 30.3%; v32 single-paper diagnostic 1/6 = 16.7%)"
   ],
   "nextActions": [
-    "Run isolated-port v19 fresh translation benchmark against the cached corpus and compare the same stable-key ordinary-body cohort; manually review accepted and fallback candidates.",
-    "Continue manual source/translation review of accepted fresh-v16 outputs (134/194 reviewed; 60 pending); separately review post-model fallbacks for false rejects.",
-    "Use cross-page and figure-contamination diagnostics to define a high-precision source-unit repair; evaluate on held-out papers before production integration.",
-    "Investigate retry causes `protected_token_restore_failed` and `phrase_repetition` on true ordinary-body fallbacks; repair source-unit/protection condition, not by lowering acceptance thresholds.",
-    "Expand metadata-verified lawful OA corpus to at least 50 papers with more balanced discipline/publisher coverage.",
+    "Validate v32 captioned repeated-cell table evidence on held-out publishers and confirm it does not promote nearby body prose; assess whether table rows can be reassembled into useful structured grids.",
+    "Continue manual comparison of the 60 remaining accepted fresh-v16 outputs and post-model fallbacks; do not count source-only table reclassification toward the ordinary-body fallback target.",
+    "Continue testing repaired page/column continuation and mixed-chrome separation on held-out PDFs, then measure the same stable-key ordinary-body cohort.",
+    "Investigate `protected_token_restore_failed`, `phrase_repetition`, and fluent semantic false accepts; preserve source fallback when a citation/source fragment is incomplete.",
+    "Expand metadata-verified lawful OA corpus from 52 catalog / 51 cached PDFs toward 70–90 papers with balanced field and publisher coverage.",
     "Evaluate alternative local models only on the same source fixtures and include false accepts, false rejects, and wall time; CAT-Translate-1.4B pilot is currently unsafe and slow."
   ],
   "v33StructuralSafety": {
@@ -379,8 +397,8 @@
       "finding": "The false ordinary fallback for emphasized NOT is now accepted, and the CHI conference-date/byline blend is classified as reference/chrome pre-model instead of ordinary body prose."
     }
   },
-  "lastBenchmarkReport": "test-data/real-papers/reports/extraction-baseline-latest.json",
-  "updatedAt": "2026-09-15T23:34:27.800931+00:00",
+  "lastBenchmarkReport": "test-data/real-papers/reports/translation-audit-v25-new-4.json",
+  "updatedAt": "2026-09-20",
   "benchmarks": {
     "v52FullCorpus": {
       "createdAt": "2026-09-14T08:31:22.627Z",
@@ -3071,7 +3089,7 @@
     "nextAction": "Add a generic orientation-aware table/footnote fixture using page rotation and item transforms; then review arXiv/PMLR residuals.",
     "latestCommit": "8d80922"
   },
-  "nextAction": "start fresh v12 benchmark when translation server is available; until then retain extraction regression and audit artifacts",
+  "nextAction": "Continue Phase 2 corpus expansion and manual semantic review; v25 is complete, no benchmark process active.",
   "lastUpdate": "2026-09-18 14:50 +0900",
   "iterationLog": [
     {
@@ -3172,7 +3190,10 @@
   "latestQualityStatus": "test-data/real-papers/reports/translation-quality-status-v1.json",
   "status": "active",
   "pausedAt": null,
-  "activeProcess": null,
+  "activeProcess": {
+    "benchmark": false,
+    "translationServer": "user-managed at 127.0.0.1:8765; /health ready after v25"
+  },
   "latestConsistency": "test-data/real-papers/reports/translation-audit-consistency-v1.json",
   "latestManualReviewQueue": "test-data/real-papers/reports/translation-manual-review-queue-v2.json",
   "latestManualReviewAddendum": "test-data/real-papers/reports/translation-manual-review-addendum-v1.json",
@@ -3277,177 +3298,31 @@
     ]
   },
   "latestFreshRun": {
-    "runId": "2026-09-20T06-26-14-626Z",
-    "benchmarkPapers": 36,
-    "selectedPapers": 36,
-    "rows": 432,
-    "wouldSubmit": 278,
-    "accepted": 194,
-    "readerVisibleFallbacks": 238,
-    "preModelFallbacks": 154,
-    "postModelFallbacks": 84,
-    "ordinaryBodyRows": 175,
-    "ordinaryBodyFallbacks": 53,
-    "ordinaryBodyFallbackRate": 0.3028571428571429,
-    "acceptedRowsManuallyReviewed": 134,
-    "acceptedRowsUnreviewed": 60,
-    "manualSeverity2Plus": 52,
-    "unsafeFalseAcceptRateReviewed": 0.3880597014925373,
-    "manualLabels": {
-      "hallucination": 10,
-      "minor_wording": 64,
-      "omission": 8,
-      "source_fragment": 12,
-      "correct": 19,
-      "semantic_shift": 9,
-      "terminology_error": 5,
-      "paragraph_merge": 1,
-      "chrome_contamination": 1,
-      "numeric_error": 1,
-      "table_contamination": 3,
-      "list_flattening": 1
+    "runId": "2026-09-20T10-06-01-548Z",
+    "report": "test-data/real-papers/reports/translation-audit-v24-fresh.json",
+    "papers": 4,
+    "rows": 48,
+    "allFallbacks": 35,
+    "preModelFallbacks": 23,
+    "postModelFallbacks": 12,
+    "ordinaryBodyRowsAutomaticCategory": 15,
+    "ordinaryBodyFallbacks": 5,
+    "ordinaryBodyFallbackRate": 0.3333333333333333,
+    "manualReview": "test-data/real-papers/reports/semantic-review-v24-fresh.json",
+    "acceptedOrdinaryManualReviewed": 10,
+    "severity2PlusAmongAcceptedOrdinary": 8,
+    "unsafeFalseAcceptRateAmongAcceptedOrdinary": 0.6,
+    "qualification": "same four-paper cohort/max 12 as v20; stable-key exact equality for 44 overlapping rows; automatic category may misclassify some list/chrome; not independent review",
+    "acceptedRowsManuallyReviewed": 13,
+    "acceptedOrdinaryBodyManuallyReviewed": 10,
+    "ordinaryBodySeverity2Plus": 6,
+    "allAcceptedSeverity2Plus": 8,
+    "overlapWithV20": {
+      "stableKeys": 44,
+      "sourceAndTranslationByteIdentical": 44,
+      "acceptFallbackDecisionIdentical": 44
     },
-    "severity2PlusPrimaryCauses": {
-      "MADLAD decode": 30,
-      "paragraph reconstruction": 11,
-      "glossary/terminology": 1,
-      "postprocess": 1,
-      "line grouping": 3,
-      "reading order": 2,
-      "PDF extraction": 4
-    },
-    "formatPapers": {
-      "acm-acmart": 8,
-      "springer-journal": 1,
-      "ieee-conference": 1,
-      "unknown": 2,
-      "arxiv": 13,
-      "springer-open": 1,
-      "kci": 1,
-      "ozchi-conference": 1,
-      "nature": 1,
-      "pmlr": 1,
-      "elsevier": 1,
-      "journal-oa": 3,
-      "arxiv-two-column": 2
-    },
-    "disciplinePaperCounts": {
-      "HCI": 1,
-      "human factors": 2,
-      "research methods": 1,
-      "cognitive psychology": 2,
-      "decision making": 1,
-      "cognitive science": 1,
-      "marketing": 1,
-      "consumer behavior": 1,
-      "quantitative marketing": 1,
-      "ergonomics": 3,
-      "intelligent HCI": 1,
-      "linguistics": 1,
-      "computational linguistics": 1,
-      "syntax": 1,
-      "education": 1,
-      "learning analytics": 1,
-      "computer science": 1,
-      "neuroscience": 1,
-      "economics": 2,
-      "causal inference": 1,
-      "machine learning": 1
-    },
-    "ordinaryFallbackByDiscipline": {
-      "unspecified": {
-        "rows": 130,
-        "fallbacks": 38
-      },
-      "HCI": {
-        "rows": 7,
-        "fallbacks": 1
-      },
-      "human factors": {
-        "rows": 7,
-        "fallbacks": 1
-      },
-      "research methods": {
-        "rows": 7,
-        "fallbacks": 1
-      },
-      "cognitive psychology": {
-        "rows": 13,
-        "fallbacks": 5
-      },
-      "decision making": {
-        "rows": 7,
-        "fallbacks": 2
-      },
-      "cognitive science": {
-        "rows": 7,
-        "fallbacks": 2
-      },
-      "marketing": {
-        "rows": 5,
-        "fallbacks": 0
-      },
-      "consumer behavior": {
-        "rows": 5,
-        "fallbacks": 0
-      },
-      "quantitative marketing": {
-        "rows": 5,
-        "fallbacks": 0
-      },
-      "ergonomics": {
-        "rows": 8,
-        "fallbacks": 4
-      },
-      "intelligent HCI": {
-        "rows": 0,
-        "fallbacks": 0
-      },
-      "linguistics": {
-        "rows": 4,
-        "fallbacks": 3
-      },
-      "computational linguistics": {
-        "rows": 4,
-        "fallbacks": 3
-      },
-      "syntax": {
-        "rows": 4,
-        "fallbacks": 3
-      },
-      "education": {
-        "rows": 5,
-        "fallbacks": 1
-      },
-      "learning analytics": {
-        "rows": 5,
-        "fallbacks": 1
-      },
-      "computer science": {
-        "rows": 5,
-        "fallbacks": 1
-      },
-      "neuroscience": {
-        "rows": 6,
-        "fallbacks": 3
-      },
-      "economics": {
-        "rows": 9,
-        "fallbacks": 4
-      },
-      "causal inference": {
-        "rows": 3,
-        "fallbacks": 1
-      },
-      "machine learning": {
-        "rows": 3,
-        "fallbacks": 1
-      }
-    },
-    "report": "test-data/real-papers/reports/translation-audit-fresh-20260920-v16.json",
-    "summary": "test-data/real-papers/reports/translation-audit-fresh-20260920-v16-summary.json",
-    "manualReview": "test-data/real-papers/reports/semantic-review-fresh-20260920-v16.json",
-    "complete": true
+    "comparison": "v20 had 5/17 ordinary fallback (29.4%); v24 has 5/15 (33.3%); no fallback-rate improvement and denominators differ"
   },
   "latestCandidateModelEvaluation": {
     "model": "cyberagent/CAT-Translate-1.4b",
@@ -3650,42 +3525,85 @@
     }
   },
   "latestCheckpoint": {
-    "checkedAt": "2026-09-20T18:32:00+09:00",
-    "serverActive": false,
+    "checkedAt": "2026-09-20T19:45:00+09:00",
+    "serverActive": true,
     "benchmarkActive": false,
-    "health8765": "connection_refused",
-    "modelRun": {
-      "version": "3b-mt-v5-semantic-v71-strict-restore-v20",
-      "report": "test-data/real-papers/reports/translation-audit-v20-focused.json",
-      "papers": 4,
-      "rows": 48,
-      "ordinaryBodyRows": 17,
-      "ordinaryBodyFallbacks": 5,
-      "ordinaryBodyFallbackRate": 0.2941176471,
-      "acceptedManuallyReviewed": 15,
-      "severity2Plus": 10,
-      "sampling": "purposive risk/section-stratified; descriptive only"
+    "health8765": "ready_model_loaded after benchmark",
+    "corpus": {
+      "catalogPapers": 52,
+      "cachedPdfs": 51,
+      "disciplineCounts": {
+        "hci": 12,
+        "marketing": 9,
+        "ergonomics": 8,
+        "cognitive-psychology": 7,
+        "linguistics": 6,
+        "medicine": 3,
+        "design-research": 2,
+        "machine-learning": 2,
+        "education": 1,
+        "neuroscience": 1,
+        "economics": 1
+      },
+      "newlyAddedPapers": [
+        "cognitive-dual-task-older-adults",
+        "marketing-unavailable-choice",
+        "marketing-framing-organic-food",
+        "marketing-platform-attitude",
+        "marketing-consumer-production-journey",
+        "ergonomics-job-rotation-robotics",
+        "ergonomics-quantified-factory-worker",
+        "ergonomics-flight-deck-applications",
+        "linguistics-register-web-corpus",
+        "linguistics-appraisal-institutional-discourse",
+        "marketing-neurophysiology-consumer-motivation",
+        "cognitive-memory-cue-interest",
+        "cognitive-vr-mnemonic-processing",
+        "cognitive-motor-incidental-memory",
+        "marketing-health-goals-nudging"
+      ],
+      "pdfsGitignored": true,
+      "goalMet": false
     },
-    "extractionDiagnostic": {
-      "paper": "wear-scale",
-      "pdf": "test-data/real-papers/wear-scale.pdf",
-      "finding": "aligned narrow affiliation x-band was grouped into single-column body text",
-      "change": "detect repeated narrow/long x-origin bands before joining same-baseline items and split sidebar from body",
-      "reextraction": "WEAR body block clean; affiliation/address in separate block",
-      "scope": "single real-paper case; cross-paper validation pending"
+    "v25FreshBenchmark": {
+      "runId": "2026-09-20T10-25-31-588Z",
+      "report": "test-data/real-papers/reports/translation-audit-v25-new-4.json",
+      "papers": [
+        "cognitive-dual-task-older-adults",
+        "marketing-unavailable-choice",
+        "marketing-consumer-production-journey",
+        "ergonomics-flight-deck-applications"
+      ],
+      "rows": 48,
+      "visibleFallbacks": 27,
+      "preModelFallbacks": 22,
+      "postModelFallbacks": 5,
+      "accepted": 21,
+      "manualReview": "test-data/real-papers/reports/semantic-review-v25-new-4.json",
+      "acceptedReviewed": 21,
+      "severity2PlusAccepted": 12,
+      "unsafeFalseAcceptRate": 0.5714285714,
+      "ordinaryAcceptedReviewed": 16,
+      "ordinarySeverity2Plus": 8,
+      "ordinaryUnsafeFalseAcceptRate": 0.5,
+      "sampling": "4 newly added papers, 12 section-stratified rows/paper; purposive, descriptive only",
+      "primaryCauseCountsSeverity2Plus": {
+        "paragraph reconstruction": 5,
+        "PDF extraction": 3,
+        "MADLAD decode": 4
+      }
     },
     "verification": {
-      "readingOrder": "60/60",
-      "vitest": "64 files / 398 tests passed",
-      "typecheck": "pass",
-      "lint": "pass",
-      "diffCheck": "pass"
+      "catalogJson": "pass",
+      "titleDoiFirstPageMatch": "pass: exact PDF metadata title and DOI text verified for all 15 new PDFs",
+      "reports": "v25 benchmark complete; semantic review all 21 accepted rows"
     },
     "nextActions": [
-      "validate sidebar extraction fix against extraction corpus and neighboring papers",
-      "review v20 fallbacks for avoidable false rejects",
-      "run fresh multi-paper benchmark with isolated translation server",
-      "continue OA provenance verification and manual semantic review"
+      "continue verified OA corpus toward 70–90 papers; highest gaps: linguistics +4 to minimum 10, cognitive psychology +3, marketing +1, ergonomics +2",
+      "add 12–20 stratified blocks/paper across current cohort and manually review every newly accepted output",
+      "track and report format-family counts; add verified Springer LNCS, APA-like, MDPI/J-STAGE, scanned and thesis/report cases",
+      "investigate v25 accepted hallucination/source-fragment cases by layer; improve generic paragraph reconstruction and input validation without a paper-specific rule",
+      "review fallback samples for false rejects before tuning thresholds; retain <=5% ordinary-body fallback goal and semantic safety criteria"
     ]
   }
 }

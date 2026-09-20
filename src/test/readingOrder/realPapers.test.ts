@@ -74,7 +74,21 @@ describe("real jewelry-corpus PDFs", () => {
           const widths = block.lines.map((line) => line.width).filter((width) => width > 0).sort((a, b) => a - b);
           const typical = widths[Math.floor(widths.length / 2)] ?? 1;
           const xs = [...new Set(block.lines.map((line) => Math.round(line.x / 24) * 24))];
-          expect(block.bbox.width >= typical * 1.65 && xs.length >= 2, `mixed x-band paragraph: ${block.text.slice(0, 80)}`).toBe(false);
+          const hasMultipleBands = block.bbox.width >= typical * 1.65 && xs.length >= 2;
+          if (!hasMultipleBands) continue;
+          const left = block.lines.filter((line) => line.column === "left");
+          const right = block.lines.filter((line) => line.column === "right");
+          const wrapsAtPageBottom =
+            block.preserveColumnContinuation === true &&
+            left.length > 0 && right.length > 0 &&
+            left.at(-1)!.y > left.at(-1)!.pageHeight! * 0.68 &&
+            right[0].y < right[0].pageHeight! * 0.32 &&
+            block.lines.findIndex((line) => line.column === "left") <
+              block.lines.findIndex((line) => line.column === "right");
+          expect(
+            wrapsAtPageBottom,
+            `mixed x-band paragraph without a verified bottom-to-top column wrap: ${block.text.slice(0, 80)}`
+          ).toBe(true);
         }
       }
 

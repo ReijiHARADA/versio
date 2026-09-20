@@ -44,6 +44,61 @@ describe("baseline benchmark on cached real papers", () => {
     it(`${paper.id} baseline + format detection`, async () => {
       const pages = await extractPdfPages(pdfPath);
       const { blocks } = reconstructDocument(pages);
+      if (paper.id === "marketing-consumer-production-journey") {
+        const stitchedParagraph = blocks.find((block) =>
+          block.text.includes("The first dimension describes the extent to which consumers are active")
+        );
+        expect(stitchedParagraph?.pageStart).toBe(3);
+        expect(stitchedParagraph?.pageEnd).toBe(3);
+        const introductionContinuation = blocks.find((block) =>
+          block.text.includes("enable them to produce new value for other consumers")
+        );
+        expect(introductionContinuation?.pageStart).toBe(1);
+        expect(introductionContinuation?.text).not.toContain("Special Issue Editor");
+        const citationContinuation = blocks.find((block) =>
+          block.text.includes("Muth 1966), the prominent shift")
+        );
+        expect(citationContinuation?.pageStart).toBe(1);
+        expect(citationContinuation?.pageEnd).toBeGreaterThan(1);
+        const fullExtraction = extractFromPages({
+          pages,
+          paperId: paper.id,
+          filePath: paper.filename,
+          fileHash: "table-row-regression",
+          metadata: { title: paper.title, pageCount: pages.length },
+        });
+        const advertisingTableCells = fullExtraction.blocks.find((block) =>
+          block.original.includes("Personalization using an algorithm results in better performance")
+        );
+        expect(advertisingTableCells?.metadata.role).toBe("table");
+        expect(advertisingTableCells?.translationStatus).toBe("skipped");
+        expect(advertisingTableCells?.metadata.tableSourceFallback).toBe(true);
+        const consumerProductionTableCells = fullExtraction.blocks.find((block) =>
+          block.original.includes("Co-design and recommend products") &&
+          block.original.includes("Offer peer support, review, and innovate")
+        );
+        expect(consumerProductionTableCells?.type).toBe("table");
+        expect(consumerProductionTableCells?.translationStatus).toBe("skipped");
+        const marketingValueTableCells = fullExtraction.blocks.find((block) =>
+          block.original.includes("Greater consumption skills") &&
+          block.original.includes("Commercial gains from co-production")
+        );
+        expect(marketingValueTableCells?.metadata.role).toBe("table");
+        expect(marketingValueTableCells?.translationStatus).toBe("skipped");
+        expect(marketingValueTableCells?.metadata.tableSourceFallback).toBe(true);
+        const marketingJourneyTableRow = fullExtraction.blocks.find((block) =>
+          block.original.includes("3. Experience") && block.original.includes("Consumption experience")
+        );
+        expect(marketingJourneyTableRow?.metadata.role).toBe("table");
+        expect(marketingJourneyTableRow?.translationStatus).toBe("skipped");
+        expect(marketingJourneyTableRow?.metadata.tableSourceFallback).toBe(true);
+        const marketingJourneyLastTableRow = fullExtraction.blocks.find((block) =>
+          block.original.includes("4. Reflect") && block.original.includes("care for products")
+        );
+        expect(marketingJourneyLastTableRow?.metadata.role).toBe("table");
+        expect(marketingJourneyLastTableRow?.translationStatus).toBe("skipped");
+        expect(marketingJourneyLastTableRow?.metadata.tableSourceFallback).toBe(true);
+      }
       const gt = loadGroundTruth(paper.id);
       const report = evaluateBaselinePaper({
         id: paper.id,
@@ -137,6 +192,24 @@ describe("baseline benchmark on cached real papers", () => {
 
   const wear = available.find(({ paper }) => paper.id === "wear-scale");
   if (wear) {
+    it("stitches the Wear Scale lead across author metadata without importing the affiliation", async () => {
+      const pages = await extractPdfPages(wear.pdfPath);
+      const result = extractFromPages({
+        pages,
+        paperId: wear.paper.id,
+        filePath: wear.pdfPath,
+        fileHash: "regression",
+        metadata: { title: wear.paper.title, pageCount: pages.length },
+      });
+      const lead = result.blocks.find((block) =>
+        block.type === "paragraph" && block.original.startsWith("The wearable acceptability range")
+      );
+
+      expect(lead?.original).toContain("consumer behaviour");
+      expect(lead?.original).toContain("extended WEAR Scale to the apparel field by");
+      expect(lead?.original).not.toContain("Department of Events");
+    }, 60_000);
+
     it("projects rotated numeric table rows without translating them", async () => {
       const pages = await extractPdfPages(wear.pdfPath);
       const result = await extractFromPages({
