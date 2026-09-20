@@ -35,11 +35,23 @@ function signals(text: string, patterns: Record<Signal, RegExp>): Signal[] {
 
 function main(): void {
   const root = path.resolve(__dirname, "..");
-  const input = path.join(root, "test-data/real-papers/audit-manual-review.json");
-  const output = path.join(root, "test-data/real-papers/reports/semantic-relation-gate-audit-v1.json");
-  const corpus = JSON.parse(fs.readFileSync(input, "utf8")) as { reviews: Review[] };
-  const rows = corpus.reviews
-    .filter((row) => row.productionDecision === "accept" && (row.severity ?? 0) >= 2 && row.translation?.trim())
+  const input = process.env.TRANSLATION_RELATION_INPUT
+    ? path.resolve(root, process.env.TRANSLATION_RELATION_INPUT)
+    : path.join(root, "test-data/real-papers/audit-manual-review.json");
+  const output = process.env.TRANSLATION_RELATION_OUTPUT
+    ? path.resolve(root, process.env.TRANSLATION_RELATION_OUTPUT)
+    : path.join(root, "test-data/real-papers/reports/semantic-relation-gate-audit-v1.json");
+  const payload = JSON.parse(fs.readFileSync(input, "utf8")) as { reviews?: Review[]; papers?: Array<{ paper: { id: string }; rows: any[] }> };
+  const reviews: Review[] = payload.reviews ?? payload.papers?.flatMap(({ paper, rows }) => rows.map((row) => ({
+    key: `${paper.id}:${row.blockId}`,
+    source: String(row.source ?? ""),
+    translation: String(row.translation ?? ""),
+    productionDecision: row.readerVisibleFallback ? "fallback" : "accept",
+    severity: 0,
+  }))) ?? [];
+  const isFresh = !payload.reviews && Boolean(payload.papers);
+  const rows = reviews
+    .filter((row) => row.productionDecision === "accept" && (isFresh || (row.severity ?? 0) >= 2) && row.translation?.trim())
     .map((row) => {
       const sourceSignals = signals(row.source, SOURCE_PATTERNS);
       const outputSignals = signals(row.translation, JA_PATTERNS);
@@ -58,13 +70,17 @@ function main(): void {
     });
   const summary = {
     generatedAt: new Date().toISOString(),
-    scope: "accepted manual-review rows with severity >= 2 and non-empty translation",
+    scope: isFresh
+      ? "non-fallback rows with non-empty translation from a translation-audit envelope"
+      : "accepted manual-review rows with severity >= 2 and non-empty translation",
     count: rows.length,
     rowsWithRelationSignal: rows.filter((row) => row.sourceSignals.length > 0).length,
     rowsWithMissingRelationSignal: rows.filter((row) => row.missingSignals.length > 0).length,
     rowsMissingSignalAndAcceptedByCurrentGate: rows.filter((row) => row.missingSignals.length > 0 && row.gateScore >= 0.8 && row.gateReasons.length === 0).length,
     rows,
   };
+  summary.input = input;
+  summary.output = output;
   fs.writeFileSync(output, `${JSON.stringify(summary, null, 2)}\n`);
   console.log(JSON.stringify({ output, ...summary }, null, 2));
 }
