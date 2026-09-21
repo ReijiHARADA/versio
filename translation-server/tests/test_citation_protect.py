@@ -376,9 +376,19 @@ class CitationProtectTests(unittest.TestCase):
     def test_protects_inline_footnote_after_quoted_term(self) -> None:
         source = "We introduced the “cab problem”16 (Cab, see SI Appendix)."
         protected, citations, nonce = protect_citations(source)
-        self.assertEqual(citations, ["16"])
+        self.assertEqual(citations, ["16", "SI Appendix"])
         self.assertIsNotNone(INLINE_FOOTNOTE_CITATION_RE.search(source))
         self.assertNotIn("16", protected)
+        self.assertEqual(restore_citations(protected, citations, nonce), source)
+
+    def test_protects_author_et_al_superscript_and_si_appendix(self) -> None:
+        source = "Ruggeri et al.18 manipulated the reasons (Toma, see SI Appendix). Baron et al.19 reported a related test."
+        protected, citations, nonce = protect_citations(source)
+        self.assertIn("Ruggeri et al.18", citations)
+        self.assertIn("SI Appendix", citations)
+        self.assertIn("Baron et al.19", citations)
+        self.assertNotIn("Ruggeri et al.18", protected)
+        self.assertNotIn("SI Appendix", protected)
         self.assertEqual(restore_citations(protected, citations, nonce), source)
 
     def test_protects_unbracketed_numeric_citation_clusters_attached_to_words(self) -> None:
@@ -420,13 +430,13 @@ class CitationProtectTests(unittest.TestCase):
         protected, citations, nonce = protect_citations(source)
         placeholder = protected.split("problem”", 1)[1].split(" ", 1)[0]
         restored = restore_citations(f"問題を提示した。{placeholder}。", citations, nonce)
-        self.assertEqual(restored, "問題を提示した16。")
+        self.assertEqual(restored, "問題を提示した16。SI Appendix")
 
     def test_restores_dropped_inline_footnote_before_japanese_sentence_end(self) -> None:
         source = "We introduced the “cab problem”16 (Cab, see SI Appendix)."
         _, citations, nonce = protect_citations(source)
         restored = restore_citations("問題を提示した。", citations, nonce)
-        self.assertEqual(restored, "問題を提示した16。")
+        self.assertEqual(restored, "問題を提示した16。SI Appendix")
 
     def test_protects_terminal_superscript_citation_after_sentence_punctuation(self) -> None:
         source = "Smugglers exploit irregular migration.3"

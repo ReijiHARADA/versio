@@ -73,8 +73,20 @@ def allows_unprotected_identifier_retry(missing: list[str]) -> bool:
             flags=re.IGNORECASE,
         ))
 
+    def is_currency_identifier(item: str) -> bool:
+        return bool(re.fullmatch(r"\s*(?:USD|EUR|GBP|JPY|CNY)\s*", item, flags=re.IGNORECASE))
+
+    def is_supplementary_reference(item: str) -> bool:
+        return bool(re.fullmatch(r"\s*SI\s+Appendix\s*", item, flags=re.IGNORECASE))
+
+    def is_author_et_al_superscript(item: str) -> bool:
+        return bool(re.fullmatch(
+            r"\s*[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+\s+et\s+al\.\s*\d{1,3}\s*",
+            item,
+        ))
+
     return bool(missing) and all(
-        is_plain_identifier(item) or is_figure_or_table_reference(item) or is_numeric_citation(item) or is_measurement(item)
+        is_plain_identifier(item) or is_figure_or_table_reference(item) or is_numeric_citation(item) or is_measurement(item) or is_currency_identifier(item) or is_supplementary_reference(item) or is_author_et_al_superscript(item)
         for item in missing
     )
 
@@ -92,7 +104,7 @@ class MADLADEngine(TranslationEngine):
     QUALITY_GATE_VERSION = "quality-v10"
     MODEL_VERSION = (
         f"3b-mt-v6-transformers-{TRANSFORMERS_RUNTIME_VERSION}-{SEGMENTER_VERSION}-"
-        f"{SOURCE_PROTECTION_VERSION}-strict-restore-v25-{QUALITY_GATE_VERSION}"
+        f"{SOURCE_PROTECTION_VERSION}-strict-restore-v28-{QUALITY_GATE_VERSION}"
     )
     # Long academic units were previously capped at 256 decoder tokens,
     # causing otherwise valid output to end mid-sentence. Keep the cap finite
@@ -995,8 +1007,12 @@ class MADLADEngine(TranslationEngine):
             # frontend quality gate and avoids rejecting valid repetition such
             # as 「広告パケット」 in adjacent Bluetooth sentences.
             if any(
-                count >= 3 and (phrase_size * count) / len(compact) >= 0.16
-                for count in counts.values()
+                count >= 3
+                and (phrase_size * count) / len(compact) >= 0.16
+                # Repeated katakana modifiers in a comma-separated inventory
+                # are list structure, not decoder looping.
+                and not (re.fullmatch(r"[\u30a0-\u30ff]+", phrase) and len(re.findall(r"[,、]", output)) >= 2)
+                for phrase, count in counts.items()
             ):
                 return True
         return False
@@ -1018,6 +1034,20 @@ class MADLADEngine(TranslationEngine):
         )
         match = marker.search(output)
         return match is not None and match.start() > 0
+
+    @staticmethod
+    def _has_unsupported_numbered_enumeration(output: str, source: str) -> bool:
+        """Detect a decoder inventing a numbered list absent from the source.
+
+        This is a retry trigger, not a content blacklist.  Academic prose can
+        contain ordinary numbers, so require three or more explicit list
+        markers in the output and fewer than two such markers in the source.
+        The subsequent rescue pass translates smaller semantic units before
+        the client-side invariant gate makes the final decision.
+        """
+        source_markers = len(re.findall(r"(?:^|[\n\s])\d{1,2}[.)](?=\s|[^\d])", source))
+        output_markers = len(re.findall(r"(?:^|[\n\s,、])\d{1,2}[.)](?=\s|[^\d])", output))
+        return source_markers < 2 and output_markers >= 3
 
     @staticmethod
     def _is_degenerate(output: str, source: str, target_language: str) -> bool:
@@ -1054,6 +1084,8 @@ class MADLADEngine(TranslationEngine):
                 return True
             if MADLADEngine._has_abnormal_phrase_repetition(output):
                 return True
+            if MADLADEngine._has_unsupported_numbered_enumeration(output, source):
+                return True
         return False
 
     @staticmethod
@@ -1066,6 +1098,8 @@ class MADLADEngine(TranslationEngine):
             return "byte_escape"
         if re.search(r"(.)\1{7,}", compact):
             return "character_repetition"
+        if MADLADEngine._has_unsupported_numbered_enumeration(output, source):
+            return "unsupported_numbered_enumeration"
         if MADLADEngine._is_implausibly_short_unit(output, source):
             return "implausibly_short"
         if MADLADEngine._contains_untranslated_source_span(output, source):

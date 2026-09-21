@@ -44,6 +44,17 @@ describe("baseline benchmark on cached real papers", () => {
     it(`${paper.id} baseline + format detection`, async () => {
       const pages = await extractPdfPages(pdfPath);
       const { blocks } = reconstructDocument(pages);
+      if (paper.id === "ppg-earring") {
+        const abstractHeading = blocks.find((block) => block.text.trim() === "Abstract");
+        expect(abstractHeading?.role).toBe("heading");
+        const abstract = blocks.find((block) => block.text.startsWith("only 54.88%"));
+        expect(abstract?.text).toContain("To address this, we developed PPG Earring");
+        expect(abstract?.text).not.toContain("Heart rate is a key vital sign");
+        expect(abstract?.text).not.toContain("ThisnationalworkLicense");
+        expect(abstract?.text).not.toContain("Creative Commons");
+        const license = blocks.find((block) => /Creative Commons Attribution-NoDerivatives/i.test(block.text));
+        expect(license?.role).toBe("copyright");
+      }
       if (paper.id === "marketing-consumer-production-journey") {
         const abstract = blocks.find((block) =>
           block.text.startsWith("New digital technologies not only support consumers")

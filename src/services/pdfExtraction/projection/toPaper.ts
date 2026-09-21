@@ -665,6 +665,31 @@ export function projectCanonicalToPaper(input: {
     return acc;
   }, []);
 
+  // Preserve uncertain cross-column continuations as source-review units.
+  // Do not concatenate them without stronger geometry evidence: a preceding
+  // prose block ending without terminal punctuation followed by a connective
+  // (`which`, `that`, `and`, ...) on the same page is a high-precision signal
+  // that the first block is physically incomplete.
+  for (let index = 0; index + 1 < rowAggregatedBlocks.length; index++) {
+    const current = rowAggregatedBlocks[index];
+    const next = rowAggregatedBlocks[index + 1];
+    if (
+      current.type !== "paragraph" ||
+      next.type !== "paragraph" ||
+      current.pageEnd !== next.pageStart ||
+      current.metadata.translationInputWarning ||
+      /[.!?。！？:]\s*$/.test(current.original.trim()) ||
+      !/^(?:which|that|and|or|but|where|while|because|although|including)\b/i.test(next.original.trim())
+    ) continue;
+    rowAggregatedBlocks[index] = {
+      ...current,
+      metadata: {
+        ...current.metadata,
+        translationInputWarning: "後続ブロックが前段の文を継続している可能性があります",
+      },
+    };
+  }
+
   const paper: Paper = {
     id: paperId,
     sourceFilePath: input.filePath,

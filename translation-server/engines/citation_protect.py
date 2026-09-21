@@ -12,7 +12,7 @@ import re
 
 # Bump this whenever source-fact protection rules change. It participates in
 # the server translation/cache identity so old accepts are not reused silently.
-SOURCE_PROTECTION_VERSION = "source-protect-v13"
+SOURCE_PROTECTION_VERSION = "source-protect-v14"
 
 # Repeated title-case technical names are factual identifiers even when they
 # do not contain an internal capital transition (for example ``Bluetooth``).
@@ -100,6 +100,19 @@ NARRATIVE_AUTHOR_YEAR_CITATION_RE = re.compile(
     r"(?:['’]s)?\s*"
     r"\(\s*(?:18|19|20)\d{2}[a-z]?\s*\)"
 )
+
+# Publisher PDFs frequently render a numeric footnote citation directly after
+# ``et al.`` without brackets or parentheses (for example ``Ruggeri et al.18``).
+# Keep the author token and marker atomic; matching the explicit ``et al.``
+# shape avoids treating ordinary alphanumeric identifiers as citations.
+AUTHOR_ET_AL_SUPERSCRIPT_RE = re.compile(
+    r"\b[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+\s+et\s+al\.\s*\d{1,3}\b"
+)
+
+# ``SI Appendix`` is a conventional supplementary-material label. Preserve the
+# complete label so a decoder cannot silently turn a cross-reference into
+# ordinary prose or drop it during semantic rescue segmentation.
+SUPPLEMENTARY_APPENDIX_RE = re.compile(r"\bSI\s+Appendix\b")
 
 # Names in explicit acknowledgment lists are factual entities, not translation
 # targets. Capture only a list of at least three two-token proper names after
@@ -252,6 +265,8 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
         + list(TERMINAL_SUPERSCRIPT_CITATION_RE.finditer(text))
         + list(INLINE_NUMERIC_CITATION_RE.finditer(text))
         + list(NARRATIVE_AUTHOR_YEAR_CITATION_RE.finditer(text))
+        + list(AUTHOR_ET_AL_SUPERSCRIPT_RE.finditer(text))
+        + list(SUPPLEMENTARY_APPENDIX_RE.finditer(text))
         + [match for match in ACKNOWLEDGMENT_NAME_LIST_RE.finditer(text)]
         + list(AUTHOR_YEAR_CITATION_RE.finditer(text))
         + list(SCIENTIFIC_PARENTHETICAL_RE.finditer(text))
