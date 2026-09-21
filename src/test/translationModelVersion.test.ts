@@ -25,7 +25,7 @@ const lockSource = readFileSync(
 );
 
 describe("MADLAD translation cache identity", () => {
-  it("keeps the client cache version aligned with the server pipeline", () => {
+  it("includes the client quality gate and server pipeline in the cache identity", () => {
     const segmenterVersion = segmenterSource.match(
       /SEGMENTER_VERSION\s*=\s*["']([^"']+)["']/
     )?.[1];
@@ -40,9 +40,10 @@ describe("MADLAD translation cache identity", () => {
       'f"3b-mt-v6-transformers-{TRANSFORMERS_RUNTIME_VERSION}-{SEGMENTER_VERSION}-"'
     );
     expect(engineSource).toContain('f"{SOURCE_PROTECTION_VERSION}-strict-restore-v25-{QUALITY_GATE_VERSION}"');
-    expect(engineSource).toContain('QUALITY_GATE_VERSION = "quality-v8"');
+    expect(engineSource).toContain('QUALITY_GATE_VERSION = "quality-v9"');
     expect(requirementsSource).toContain("transformers==4.57.6");
     expect(lockSource).toContain("transformers==4.57.6");
+    expect(TRANSLATION_QUALITY_VERSION).toBe("quality-v6");
     expect(MADLAD_MODEL_VERSION).toBe(
       `3b-mt-v6-transformers-4.57.6-${segmenterVersion}-${protectionVersion}-strict-restore-v25-${TRANSLATION_QUALITY_VERSION}`
     );

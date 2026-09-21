@@ -134,6 +134,54 @@ describe("PDF reading order regression", () => {
     expect(blocks.some((block) => block.text.includes("15 February 2023"))).toBe(true);
   });
 
+  it("keeps repeated short sidebar labels apart from word-level body spans on the same baselines", () => {
+    const pageNumber = 1;
+    const sideLabels = ["Patient data", "Pathology", "Detection", "Segmentation", "Registration"];
+    const bodyLines = [
+      "publications. Hence, a complete overview of the field of medical learning is almost impossible to",
+      "obtain and acquiring a full overview of medical sub-fields is becoming increasingly more difficult. Never-",
+      "theless, several review and survey articles about medical deep learning have been published within the",
+      "last few years. They focus, in general, on specific medical scenarios, like the analysis of medical images",
+      "containing specific pathologies. The purpose of the review is to summarize the field of medical learning.",
+    ];
+    const textItems = bodyLines.flatMap((line, lineIndex) => {
+      let x = 202;
+      return line.split(/\s+/).map((word) => {
+        const width = Math.max(3, word.length * 3.8);
+        const item = { text: word, x, y: 100 + lineIndex * 9, width, height: 7.2, fontSize: 7.2, fontName: "Body", page: pageNumber };
+        x += width + 3;
+        return item;
+      });
+    });
+    const { blocks } = reconstructDocument([{
+      pageNumber,
+      width: 595,
+      height: 792,
+      textItems: [
+        ...sideLabels.map((text, index) => ({
+          text,
+          x: 38,
+          y: 100 + index * 9,
+          width: text.length * 3.2,
+          height: 6.4,
+          fontSize: 6.4,
+          fontName: "Rail",
+          page: pageNumber,
+        })),
+        ...textItems,
+      ],
+    }]);
+    const body = blocks.find((block) => block.text.includes("publications."));
+    const railBlocks = blocks.filter((block) => sideLabels.some((label) => block.text.includes(label)));
+
+    expect(body?.text).toContain("the analysis of medical images");
+    expect(body?.text).not.toContain("Patient data");
+    expect(body?.text).not.toContain("Pathology");
+    expect(blocks.some((block) => block.text.includes("Registration"))).toBe(true);
+    expect(railBlocks.length).toBeGreaterThan(0);
+    expect(railBlocks.every((block) => !block.text.includes("publications."))).toBe(true);
+  });
+
   it("does not let a comma-ended sidebar absorb a same-height body continuation", () => {
     const pages: ExtractedPage[] = [{
       pageNumber: 1, width: 612, height: 792,

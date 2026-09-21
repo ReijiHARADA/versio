@@ -145,7 +145,7 @@
   ],
   "pendingPapers": [],
   "reviewedBlocks": 134,
-  "lastCheckpoint": "2026-09-21T08:27:00+09:00",
+  "lastCheckpoint": "2026-09-21T16:27:00+09:00",
   "pendingManualReview": 60,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
@@ -166,11 +166,12 @@
     "candidate source set v70 overlapped prior Qwen work and is exploratory only"
   ],
   "nextActions": [
-    "Verify lexical omission cue across independent sources with false-reject accounting; do not count rejection as semantic improvement unless unsafe error is reduced.",
-    "Continue cross-paper semantic relation evaluation for polarity, absence, scope, and additions; v79 proves source invariants alone do not prevent severity-3 false accepts.",
-    "Do not tune a gate on the HAI v79 target; select fresh cross-domain fixtures and count false rejects alongside unsafe false accepts.",
-    "Continue high-precision extraction/source-integrity and table classification, then widen held-out ordinary-body manual review.",
-    "Keep Transformers 4.57.6 as the tensor-verified MADLAD runtime; compare alternate models only under matched production controls."
+    "Debug why the current repeated-baseline sidebar detector still merges the HAI table-cell pair Time services based / Scope services when; add a deterministic geometry regression before changing thresholds.",
+    "Resolve the how-content-volume-landing-pages title candidate regression, or narrow the detector so it cannot perturb unrelated title resolution.",
+    "Rerun the medical meta-review compact source-block diagnostic against the exact current code; prior clean evidence predates the final 2-row tolerance change.",
+    "Run reading-order tests, the selected real-paper controls, typecheck, lint, then full extraction corpus; report assertion failures separately from any Vitest worker timeout.",
+    "Only after extraction regressions are green, continue the page-boundary continuation, COVID table/body contamination, and HFE rotated-table investigations.",
+    "Keep CAT-Translate-3.3B out of production based on v112 zero safe rescues; fallback <=5% and near-zero severity>=2 false-accept targets remain unmet."
   ],
   "v33StructuralSafety": {
     "status": "implemented and verified",
@@ -483,7 +484,7 @@
     }
   },
   "lastBenchmarkReport": "test-data/real-papers/reports/translation-audit-v56-transformers-4.57.6.json",
-  "updatedAt": "2026-09-21T11:22:23+09:00",
+  "updatedAt": "2026-09-21T13:20:21+09:00",
   "benchmarks": {
     "v52FullCorpus": {
       "createdAt": "2026-09-14T08:31:22.627Z",
@@ -554,7 +555,7 @@
     "ordinalReviewed": 7,
     "ordinalPending": 0
   },
-  "lastUpdated": "2026-09-21T00:15:00+09:00",
+  "lastUpdated": "2026-09-21T13:20:21+09:00",
   "manualReviewCompletedAt": "2026-09-16T16:25:07.633Z",
   "completedWork": [
     "Gemma 2 9B same-fixture 12-row audit completed (local Ollama, report model-quality-gemma2-9b-v1.json).",
@@ -3212,7 +3213,7 @@
     ]
   },
   "nextAction": "Fix generic peripheral metadata/body grouping; review false rejects among v33 fallback, then compare citation-safe translation units and alternatives on held-out papers; continue OA corpus expansion.",
-  "lastUpdate": "2026-09-21T11:22:23+09:00",
+  "lastUpdate": "2026-09-21T12:06:48+09:00",
   "iterationLog": [
     {
       "id": "extraction-resume-diagnostic-v1",
@@ -3312,10 +3313,7 @@
   "latestQualityStatus": "test-data/real-papers/reports/translation-quality-status-v1.json",
   "status": "Continuing research-grade translation quality work on verified Transformers 4.57.6; no automatic alternate-model route. Product fallback and semantic false-accept targets remain unmet.",
   "pausedAt": null,
-  "activeProcess": {
-    "benchmark": false,
-    "translationServer": "normal server PID 81428 at 127.0.0.1:8765; model v73-source-protect-v1 ready; no debug mode"
-  },
+  "activeProcess": null,
   "latestConsistency": "test-data/real-papers/reports/translation-audit-consistency-v1.json",
   "latestManualReviewQueue": "test-data/real-papers/reports/translation-manual-review-queue-v2.json",
   "latestManualReviewAddendum": "test-data/real-papers/reports/translation-manual-review-addendum-v1.json",
@@ -3400,50 +3398,8 @@
     "translationAuditV35": "test-data/real-papers/reports/translation-audit-v35-edge-marker-stitch.json",
     "translationUnitDiagnosticV36": "test-data/real-papers/reports/translation-unit-diagnostic-v36-experience-goals.json"
   },
-  "activeBenchmarkRun": {
-    "running": false,
-    "lastChecked": "2026-09-21T11:22:23+09:00",
-    "note": "Targeted quality-v8 replay completed; diagnostic server 8876 stopped. User server 8765 remains ready on previously running v5."
-  },
-  "activeManualReview": {
-    "artifact": "test-data/real-papers/reports/semantic-review-fresh-20260920-v16.json",
-    "reviewedPapers": [
-      "interactive-jewellery",
-      "significant-other",
-      "power-over-skin",
-      "thermal-earring",
-      "ppg-earring",
-      "design-for-wearability",
-      "dont-mind-me",
-      "speechin",
-      "step-to-charge",
-      "wear-scale",
-      "fashion-hybrid-cmf",
-      "hci-empirical-methods",
-      "cognitive-psychology-gpt3",
-      "marketing-consumer-response",
-      "linguistics-language-model-physics",
-      "ozchi-finger-specific-touch",
-      "education-learning-analytics",
-      "neuroscience-rule-following",
-      "economics-regularized-deepiv",
-      "medical-deep-learning-meta-review"
-    ],
-    "reviewedAcceptedRows": 110,
-    "severityCounts": {
-      "0": 14,
-      "1": 52,
-      "2": 12,
-      "3": 22,
-      "4": 10
-    },
-    "ordinaryRows": 103,
-    "ordinaryFallbacks": 28,
-    "interpretation": "section-stratified sample; interim counts are diagnostic and not an unbiased population estimate",
-    "reviewedNoAcceptPapers": [
-      "ergonomics-human-factors-ihci"
-    ]
-  },
+  "activeBenchmarkRun": null,
+  "activeManualReview": null,
   "latestFreshRun": {
     "runId": "2026-09-20T12-06-28-933Z",
     "report": "test-data/real-papers/reports/translation-audit-v33-cross-field-heldout.json",
@@ -4492,14 +4448,12 @@
     "routing": "no production route change; candidate false accepts remain too high"
   },
   "latestSourceGeometryDiagnostic": {
-    "completedAt": "2026-09-21T06:02:00+09:00",
-    "paper": "human-ai-interaction-guidelines",
-    "page": 3,
-    "primaryLayer": "PDF line/block reconstruction; rotated Figure 2 labels grouped by page-y before model input",
-    "fix": "orientation-aware line grouping and overlap-aware rotated paragraph merge",
-    "validation": "reading-order 68/68; real papers 52/52; extraction corpus 106/107, with known PPG captionless-grid continuation unresolved; typecheck/lint pass",
-    "server": "127.0.0.1:8765 ready; Transformers 4.57.6; MADLAD v74",
-    "followupFix": "Rotated table-cell evidence now accumulates across native text lines; three or more compact rotated cells stay separate from a sentence-sized rotated note."
+    "completedAt": "2026-09-21T16:20:00+09:00",
+    "paper": "medical-deep-learning-meta-review",
+    "primaryLayer": "PDF line/block reconstruction; repeated baseline row geometry for sidebar rail",
+    "fix": "Generic short left-band / long right-band matching with word-level body-run classification; synthetic regression passes",
+    "validation": "Synthetic reading-order 71/71. Selected real-paper controls 2 failures: HAI table pair merged; how-content-volume title candidate regression. Medical post-change diagnostic was clean before final 2-row tolerance update and must be repeated.",
+    "server": "User server 127.0.0.1:8765 left available; no isolated server or benchmark remains active."
   },
   "v73CandidateEvaluation": {
     "completedAt": "2026-09-21T06:42:00+09:00",
@@ -4891,5 +4845,232 @@
       "Expand fresh exact-source-hash ordinary-body sample; report false rejects alongside severity>=2 unsafe accepts.",
       "Keep <=5% ordinary-body fallback and near-zero severity>=2 unsafe-accept goals open."
     ]
+  },
+  "latestQualityCheckpointV9": {
+    "date": "2026-09-21",
+    "change": "Strengthen repeated phrase evidence; exclude exact protected citation/scientific spans from source-echo check.",
+    "knownFallbackReplay": {
+      "sourceKey": "linguistics-appraisal-institutional-discourse:b-28ef7a38",
+      "v8": "unit_0 normal phrase repetition and unit_9 restored citation were false rejects; unit_7 omits material analysis claim.",
+      "v9": "unit_0 and unit_9 pass; unit_7 remains rejected, whole-paper fallback unchanged.",
+      "artifacts": [
+        "test-data/real-papers/reports/translation-audit-v100-quality-v8-second-known-fallback-replay.json",
+        "test-data/real-papers/reports/translation-audit-v101-quality-v9-second-fallback-replay.json"
+      ]
+    },
+    "freshBenchmark": {
+      "version": "v102-quality-v9-low-sampled-four",
+      "papers": [
+        "ergonomics-job-rotation-robotics",
+        "linguistics-register-web-corpus",
+        "cognitive-memory-cue-interest",
+        "marketing-health-goals-nudging"
+      ],
+      "selectedRows": 48,
+      "duplicates": 14,
+      "uniqueRows": 34,
+      "uniqueOrdinaryBodyRows": 8,
+      "ordinaryBodyFallbacks": 2,
+      "ordinaryBodyFallbackRate": "25.0%",
+      "acceptedOrdinaryBodyManuallyReviewed": 6,
+      "ordinarySeverityGte2": 4,
+      "ordinaryUnsafeFalseAcceptRate": "66.7%",
+      "overallAcceptedRows": 8,
+      "overallSeverityGte2Accepted": 5,
+      "overallUnsafeFalseAcceptRate": "62.5%",
+      "preModelFallbacks": 19,
+      "postModelFallbacks": 7,
+      "notTuningSet": true,
+      "reports": [
+        "test-data/real-papers/reports/translation-audit-v102-quality-v9-low-sampled-four.json",
+        "test-data/real-papers/reports/semantic-review-v102-quality-v9-low-sampled-four.json"
+      ]
+    },
+    "validation": {
+      "pythonTranslationServerTests": "149/149",
+      "vitest": "65 files / 446 tests",
+      "typecheck": "pass",
+      "lint": "pass",
+      "diffCheck": "pass"
+    },
+    "runtime": {
+      "transformers": "4.57.6",
+      "8765": "ready, still v5",
+      "8876": "stopped",
+      "appBuild": "not performed"
+    },
+    "nextActions": [
+      "Preserve v102 as held-out; do not tune on its labels.",
+      "Select a separate development corpus for term fidelity, experiment-design relations, and statistic-to-variable mapping.",
+      "Investigate post-model protected-token restore fallback and the distinct attention/negation fallback with raw decode evidence.",
+      "Continue OA corpus expansion and account for false rejects alongside unsafe false accepts.",
+      "Keep ordinary-body fallback <=5% and severity>=2 false accepts near zero open."
+    ]
+  },
+  "latestFreshModelBenchmarkV102": {
+    "version": "v102-quality-v9-low-sampled-four",
+    "report": "test-data/real-papers/reports/translation-audit-v102-quality-v9-low-sampled-four.json",
+    "uniqueRows": 34,
+    "manualReview": "test-data/real-papers/reports/semantic-review-v102-quality-v9-low-sampled-four.json",
+    "status": "reviewed all 8 unique accepted rows; held out from tuning"
+  },
+  "latestFreshModelBenchmarkV103": {
+    "version": "v103-quality-v9-low-sampled-four-24",
+    "report": "test-data/real-papers/reports/translation-audit-v103-quality-v9-low-sampled-four-24.json",
+    "status": "completed_and_manually_reviewed",
+    "selectedPaperCount": 4,
+    "blocksPerPaper": 24,
+    "holdoutGroup": "same four-paper holdout group as v102; no algorithm tuning",
+    "selectedRows": 96,
+    "duplicates": 47,
+    "uniqueRows": 49,
+    "uniqueOrdinaryBodyRows": 23,
+    "ordinaryBodyFallbacks": 7,
+    "ordinaryBodyFallbackRate": "30.4%",
+    "ordinaryBodyAcceptedManuallyReviewed": 16,
+    "ordinarySeverityGte2": 9,
+    "ordinaryUnsafeFalseAcceptRate": "56.2%",
+    "uniqueAcceptedRowsReviewed": 19,
+    "allAcceptedSeverityGte2": 12,
+    "allAcceptedUnsafeFalseAcceptRate": "63.2%",
+    "preModelFallbacks": 21,
+    "postModelFallbacks": 9,
+    "reports": [
+      "test-data/real-papers/reports/translation-audit-v103-quality-v9-low-sampled-four-24.json",
+      "test-data/real-papers/reports/semantic-review-v103-quality-v9-low-sampled-four-24.json"
+    ],
+    "benchmarkCompleted": true,
+    "diagnosticServer8876": "stopped",
+    "mainServer8765": "left unchanged and ready",
+    "notTuningSet": true,
+    "completionNote": "Same purposive four-paper holdout expanded from v102; counts deduplicated across all prior local translation-audit reports by stable key or whitespace-normalized source hash. Manual source-to-output review covers all 19 unique accepted outputs."
+  },
+  "latestFreshModelBenchmarkV104": {
+    "status": "complete and all unique accepted outputs manually reviewed",
+    "benchmark": "test-data/real-papers/reports/translation-audit-v104-quality-v9-fresh-four.json",
+    "manualReview": "test-data/real-papers/reports/semantic-review-v104-quality-v9-fresh-four.json",
+    "papers": [
+      "human-ai-interaction-guidelines",
+      "cognitive-dual-task-older-adults",
+      "ergonomics-quantified-factory-worker",
+      "marketing-neurophysiology-consumer-motivation"
+    ],
+    "selectedRows": 96,
+    "uniqueRows": 50,
+    "ordinaryBodyRows": 21,
+    "ordinaryBodyFallbacks": 6,
+    "ordinaryBodyFallbackRate": "28.6%",
+    "ordinaryAcceptedReviewed": 15,
+    "ordinarySeverityGte2": 6,
+    "ordinaryUnsafeFalseAcceptRate": "40.0%",
+    "allAcceptedReviewed": 16,
+    "allAcceptedSeverityGte2": 7,
+    "allAcceptedUnsafeFalseAcceptRate": "43.8%",
+    "qualification": "Purposive fresh-source cohort, descriptive only; keep held out from tuning."
+  },
+  "latestCandidateModelEvaluationV104": {
+    "status": "complete diagnostic; no production model routing",
+    "input": "six unique ordinary-body post-model fallback sources from v104",
+    "models": {
+      "Helsinki-NLP/opus-mt-en-jap": {
+        "gateAccepts": 1,
+        "tested": 6,
+        "unsafeAccepted": 1
+      },
+      "Helsinki-NLP/opus-tatoeba-en-ja": {
+        "gateAccepts": 2,
+        "tested": 6,
+        "unsafeAccepted": 2
+      }
+    },
+    "manualReview": "test-data/real-papers/reports/semantic-review-v104-opus-candidates.json",
+    "rawScoredReports": [
+      "test-data/real-papers/reports/model-compare-v104-opus-en-ja-segmented-scored.json",
+      "test-data/real-papers/reports/model-compare-v104-opus-tatoeba-en-ja-segmented-scored.json"
+    ],
+    "decision": "Neither candidate is suitable for automatic routing; all accepted outputs were severity >=2. Tatoeba sanity control reversed between-group comparison."
+  },
+  "latestSourceCompletenessDiagnosticV1": {
+    "artifact": "test-data/real-papers/reports/source-completeness-diagnostic-v1.json",
+    "set": "historical development audit-manual-review-v8; retrospective source-only diagnostic",
+    "sourceFragmentCases": 23,
+    "blockedByCurrentGate": 23,
+    "cleanAcceptedControls": 63,
+    "blockedControls": 7,
+    "blockedControlInterpretation": "all 7 were references, publication metadata, or ACM classification blocks; 0 ordinary-body clean controls blocked",
+    "qualification": "not a population estimate; novel truncation misses still appear in v103/v104 held-outs"
+  },
+  "latestCandidateModelEvaluationV111": {
+    "status": "matched diagnostic complete; candidate not routed",
+    "candidate": "CyberAgent CAT-Translate-3.3b",
+    "revision": "47e382331d005acd54a42cdf088a76aa88788e0c",
+    "cohort": "six historical development/regression examples from linguistics, HCI and cognitive attention; excludes v102-v104",
+    "candidateReport": "test-data/real-papers/reports/model-compare-v111-cat-translate-3.3b-instructed-markers-dev-scored.json",
+    "matchedMadladReport": "test-data/real-papers/reports/model-compare-v110-madlad-v9-matched-dev-scored.json",
+    "manualReview": "test-data/real-papers/reports/semantic-review-v111-cat-translate-3.3b-matched-dev.json",
+    "candidateAccepts": "4/6",
+    "candidateAcceptedReviewed": "4/4 severity 0–1",
+    "madladAccepts": "3/6",
+    "madladAcceptedSeverityGte2": "1/3; negated comparison relation omitted",
+    "safeRescuesVsMatchedMadlad": "1 client-fallback block: EU context retained in CAT output",
+    "meanCandidateSecondsPerBlock": 18.8,
+    "meanMadladSecondsPerBlock": 13.8,
+    "decision": "promising but too small and purposively selected for routing; next run frozen configuration on new paper-heldout sources and manually review accepts and rejects"
+  },
+  "latestCandidateModelEvaluationV112": {
+    "date": "2026-09-21",
+    "status": "completed; audit-only; no production route",
+    "cohort": {
+      "papers": [
+        "medical-deep-learning-meta-review",
+        "covid-ml-review",
+        "modeling-human-behavior-cognitive-uncertainty",
+        "conversation-analysis-user-experience",
+        "hfe-healthcare-scoping-2024"
+      ],
+      "selectedRows": 40,
+      "readerEligibleModelInputRows": 18,
+      "sourceHashDisjointFrom": "v102-v111 heldout/development source rows",
+      "note": "purposive five-paper heldout diagnostic; not a population estimate"
+    },
+    "candidate": "CAT-Translate-3.3B pinned revision 47e382331d005acd54a42cdf088a76aa88788e0c",
+    "candidateReport": "test-data/real-papers/reports/model-compare-v112-cat-paper-heldout-scored.json",
+    "matchedMadladReport": "test-data/real-papers/reports/translation-audit-v112-cat-model-input.json",
+    "manualReview": "test-data/real-papers/reports/semantic-review-v112-cat-paper-heldout.json",
+    "candidateAccepts": "11/18",
+    "candidateSeverityGte2": "4/11",
+    "candidateUnsafeAcceptedRate": "36.36% (purposive sample)",
+    "matchedMadladAccepts": "11/18",
+    "matchedMadladSeverityGte2": "4/11",
+    "matchedMadladUnsafeAcceptedRate": "36.36% (purposive sample)",
+    "ordinaryBodyRows": 13,
+    "candidateOrdinaryFallbacks": "7/13",
+    "madladOrdinaryFallbacks": "6/13",
+    "safeRescuesVsMadlad": 0,
+    "unsafeFallbackRescues": 3,
+    "falseRejectsOfMadladAccepts": 3,
+    "meanCandidateLatencySeconds": 9.39,
+    "decision": "Do not add CAT to production cascade. No safe rescue in heldout cohort; three apparent rescues were unsafe or source-damaged. Keep MADLAD v9 baseline and prioritize generic PDF source reconstruction."
+  },
+  "latestSourceGeometryDiagnosticV112": {
+    "date": "2026-09-21",
+    "status": "diagnostics complete; generic sidebar grouping fix implemented and focused regression passes",
+    "diagnosticScript": "scripts/diagnose-translation-source-block.ts",
+    "artifacts": [
+      "test-data/real-papers/reports/source-block-diagnostic-v112-medical-crosscolumn.json",
+      "test-data/real-papers/reports/source-block-diagnostic-v112-covid-fragment.json",
+      "test-data/real-papers/reports/source-block-diagnostic-v112-cognitive-heading-boundary.json",
+      "test-data/real-papers/reports/source-block-diagnostic-v112-hfe-table.json"
+    ],
+    "findings": [
+      "Medical meta-review: repeated narrow left metadata rail joins word-level abstract body baselines (line grouping/paragraph reconstruction).",
+      "COVID review: top-of-page table header leaks into lower column prose (table-region/reading-order evidence).",
+      "Cognitive psychology: paragraph continues across page after “Potential application”; page-boundary stitching misses it.",
+      "HFE review: rotated table is assembled as prose on portrait page."
+    ],
+    "fix": "Baseline-row sidebar detector in pdfLayout.ts detects recurring narrow left runs beside word-level body runs and labels later body tokens by right-band geometry; generic regression added.",
+    "validation": "npm run typecheck; npm run lint; readingOrder.test.ts 71/71 pass.",
+    "remaining": "Rerun real-PDF diagnostics against changed topology and full cached-PDF extraction suite; investigate page-boundary and table cases with negative controls.",
+    "productionImpact": "Generic extraction behavior changed; translation route unchanged; no app build."
   }
 }

@@ -417,26 +417,106 @@ function clusterItemsIntoLines(
 ): LayoutLine[] {
   if (items.length === 0) return [];
 
-  const fontBase = median(items.map((i) => i.fontSize)) || 10;
-  const yThreshold = Math.max(3.2, fontBase * 0.42);
+    const fontBase = median(items.map((i) => i.fontSize)) || 10;
+    const yThreshold = Math.max(3.2, fontBase * 0.42);
+    const sidebarBaselineTolerance = Math.max(yThreshold, median(items.map((item) => item.height)) * 0.7);
   const sidebarBands = (() => {
-    const bands = new Map<number, ExtractedTextItem[]>();
-    for (const item of items) {
-      const key = Math.round(item.x / 32) * 32;
+    // A publisher rail can sit beside a main text column even when the page
+    // detector conservatively labels the page single-column (for example an
+    // article-information/keywords rail beside an abstract). Some PDFs emit
+    // the main text as one native item per word, so compare the assembled
+    // horizontal runs on repeated baselines rather than each token's width.
+    // Rotated table cells are excluded: their x coordinates do not describe
+    // horizontal sidebar bands.
+    const bodyStyleItems = items.filter((item) => item.fontSize <= fontBase * 1.35);
+    if (bodyStyleItems.some((item) => Math.abs(item.rotation ?? 0) >= 45)) return null;
+
+    const sorted = [...bodyStyleItems].sort((a, b) => a.y - b.y || a.x - b.x);
+    const rows: ExtractedTextItem[][] = [];
+    for (const item of sorted) {
+      const row = rows.find((candidate) =>
+        Math.abs(median(candidate.map((entry) => entry.y)) - item.y) <= yThreshold &&
+        candidate.every((entry) => sameTextOrientation(entry.rotation, item.rotation))
+      );
+      if (row) row.push(item);
+      else rows.push([item]);
+    }
+
+    const fragments: Array<{ x: number; width: number; y: number; fontSize: number }> = [];
+    // Native spans inside prose are usually separated by a small word gap;
+    // publisher tables often encode cells with a larger (but not huge) gap.
+    // Keep those cells distinct so a 3+ column grid cannot masquerade as a
+    // two-band margin rail.
+    const segmentGap = Math.max(16, fontBase * 2);
+    for (const row of rows) {
+      const ordered = [...row].sort((a, b) => a.x - b.x);
+      let segment: ExtractedTextItem[] = [];
+      const flush = () => {
+        if (segment.length === 0) return;
+        const x = Math.min(...segment.map((entry) => entry.x));
+        const right = Math.max(...segment.map((entry) => entry.x + entry.width));
+        fragments.push({
+          x,
+          width: right - x,
+          y: median(segment.map((entry) => entry.y)),
+          fontSize: median(segment.map((entry) => entry.fontSize)),
+        });
+        segment = [];
+      };
+      for (const item of ordered) {
+        const previous = segment.at(-1);
+        const gap = previous ? item.x - (previous.x + previous.width) : 0;
+        if (previous && gap > segmentGap) flush();
+        segment.push(item);
+      }
+      flush();
+    }
+
+    const bands = new Map<number, typeof fragments>();
+    for (const fragment of fragments) {
+      const key = Math.round(fragment.x / 32) * 32;
       const band = bands.get(key);
-      if (band) band.push(item);
-      else bands.set(key, [item]);
+      if (band) band.push(fragment);
+      else bands.set(key, [fragment]);
     }
     const candidates = [...bands.entries()].sort((a, b) => a[0] - b[0]);
+    const distinctRows = (ys: number[]) => {
+      const sortedY = [...ys].sort((a, b) => a - b);
+      const rows: number[] = [];
+      for (const y of sortedY) {
+        const last = rows.at(-1);
+        if (last === undefined || y - last > yThreshold) rows.push(y);
+      }
+      return rows;
+    };
     for (let leftIndex = 0; leftIndex < candidates.length; leftIndex++) {
-      const [leftX, leftItems] = candidates[leftIndex];
-      const leftWidth = median(leftItems.map((item) => item.width));
-      if (leftItems.length < 2 || leftWidth <= 0 || leftWidth > 140) continue;
+      const [leftX, leftRuns] = candidates[leftIndex];
+        if (distinctRows(leftRuns.map((run) => run.y)).length < 2) continue;
       for (let rightIndex = leftIndex + 1; rightIndex < candidates.length; rightIndex++) {
-        const [rightX, rightItems] = candidates[rightIndex];
-        const rightWidth = median(rightItems.map((item) => item.width));
-        if (rightItems.length >= 3 && rightX - leftX >= 80 &&
-            rightWidth >= Math.max(fontBase * 10, leftWidth * 2.5)) {
+        const [rightX, rightRuns] = candidates[rightIndex];
+        const matchedLeftYs: number[] = [];
+        for (const leftRun of leftRuns) {
+          if (leftRun.width <= 0 || leftRun.width > 140) continue;
+          const hasLongBodyRun = rightRuns.some((rightRun) =>
+            Math.abs(rightRun.y - leftRun.y) <= sidebarBaselineTolerance &&
+            rightRun.width >= Math.max(fontBase * 10, leftRun.width * 2.5)
+          );
+          if (hasLongBodyRun) matchedLeftYs.push(leftRun.y);
+        }
+        const matchedRows = distinctRows(matchedLeftYs);
+        if (matchedRows.length < 2 || rightX - leftX < 80) continue;
+        // A third recurring, substantial run is evidence of a multi-column
+        // grid/table, not a two-band margin rail beside prose. Without this
+        // guard, 3-column guideline tables can be flattened by treating their
+        // first cell column as a sidebar and the next as body text.
+        const hasThirdColumn = candidates.some(([x, runs], index) => {
+          if (index === leftIndex || index === rightIndex || x - leftX < 80) return false;
+          const cooccurringRows = matchedRows.filter((rowY) => runs.some((run) =>
+            Math.abs(run.y - rowY) <= sidebarBaselineTolerance && run.width >= fontBase * 2.2
+          ));
+          return cooccurringRows.length >= 2;
+        });
+        if (!hasThirdColumn) {
           return { leftX, rightX };
         }
       }
@@ -444,10 +524,15 @@ function clusterItemsIntoLines(
     return null;
   })();
   const sidebarSide = (item: ExtractedTextItem): "left" | "right" | null => {
-    if (!sidebarBands) return null;
+    if (!sidebarBands || item.fontSize > fontBase * 1.35) return null;
     const key = Math.round(item.x / 32) * 32;
     if (key === sidebarBands.leftX) return "left";
     if (key === sidebarBands.rightX) return "right";
+    // Label every token in the right-hand run, not only its first word. A
+    // word-level text layer otherwise lets later body tokens rejoin the short
+    // rail label that shares their baseline.
+    if (item.x >= sidebarBands.rightX - 12 || item.x + item.width > sidebarBands.rightX + 32) return "right";
+    if (item.x + item.width <= sidebarBands.leftX + 140) return "left";
     return null;
   };
   const bodyItems = items.filter((i) => i.fontSize >= fontBase * 0.82);

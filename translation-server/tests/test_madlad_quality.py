@@ -63,7 +63,7 @@ class MadladUnitQualityTests(unittest.TestCase):
 
     def test_rejects_fluent_japanese_phrase_repetition(self) -> None:
         source = "We present a smart necklace that recognizes silent speech commands in two languages."
-        output = "顔の顔面の顔の顔の下から撮影した画像を用いて、英語と中国語のコマンドを識別する。"
+        output = "顔面が顔面が顔面が顔面が顔面が続き、その画像を用いて英語と中国語のコマンドを識別する。"
         self.assertTrue(MADLADEngine._has_abnormal_phrase_repetition(output))
         self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
         self.assertEqual(MADLADEngine._degenerate_reason(output, source, "ja"), "phrase_repetition")
@@ -170,6 +170,22 @@ class MadladPartialSourceFallbackTests(unittest.TestCase):
         output = "IR カメラ条件をベースライン条件 [12] と比較した。"
         self.assertFalse(MADLADEngine._contains_untranslated_source_span(output, source))
         self.assertFalse(MADLADEngine._is_degenerate(output, source, "ja"))
+
+    def test_restored_author_year_citation_is_not_untranslated_source_prose(self) -> None:
+        source = (
+            "Nevertheless, explicit cases in earlier parts of the text guide the reader’s "
+            "interpretation of the following implicit cases by creating a setting through "
+            "which readers are conditioned to accept certain meanings or value positions "
+            "(see e.g. ‘dynamic reader positioning’ in Coffin and O’Halloran 2005, Coffin "
+            "and O’Halloran 2006; White 2008)."
+        )
+        output = (
+            "しかし、テキスト前半の明示的な事例は、読者が特定の意味や価値観を受け入れるよう"
+            "促す状況を作ることで、後続の暗示的な事例に対する読者の解釈を導く(see e.g. "
+            "‘dynamic reader positioning’ in Coffin and O’Halloran 2005, Coffin and O’Halloran "
+            "2006; White 2008)。"
+        )
+        self.assertFalse(MADLADEngine._contains_untranslated_source_span(output, source))
 
     def test_rejects_trailing_prefix_of_source_identifier(self) -> None:
         source = "GPT-3 identified the correct object to be removed."
