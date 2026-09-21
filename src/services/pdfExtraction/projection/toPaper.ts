@@ -385,6 +385,8 @@ export function projectCanonicalToPaper(input: {
           captionOriginal: "",
           captionTranslated: null,
           column,
+          role: "table",
+          tableSourceFallback: true,
           figureKey: `table-region-${node.id}`,
         } satisfies TableMetadata & { column: string; figureKey: string },
       });
@@ -398,7 +400,7 @@ export function projectCanonicalToPaper(input: {
     if (node.role === "table" && node.text) {
       pushBlock(node, layout, {
         sectionId: currentSectionId,
-        type: "paragraph",
+        type: "table",
         pageStart: node.pageStart,
         pageEnd: node.pageEnd,
         boundingBoxes: boxes,
@@ -639,6 +641,30 @@ export function projectCanonicalToPaper(input: {
     }
   }
 
+  // Native table cells can arrive as separate high-confidence table blocks
+  // on one visual baseline. Reconstruct the logical row before exposing
+  // PaperBlocks, while leaving sidebar-grid cells (which use distinct
+  // vertical baselines or non-table roles) untouched.
+  const rowAggregatedBlocks = blocks.reduce<PaperBlock[]>((acc, block) => {
+    const last = acc.at(-1);
+    const lastBox = last?.boundingBoxes.at(-1);
+    const box = block.boundingBoxes[0];
+    const sameRow = last?.type === "table" && block.type === "table" && lastBox && box &&
+      lastBox.page === box.page && Math.abs(lastBox.y - box.y) <= Math.max(lastBox.height, box.height) * 0.55;
+    if (sameRow) {
+      const merged = {
+        ...last,
+        original: `${last.original} ${block.original}`.replace(/\s+/g, " ").trim(),
+        boundingBoxes: [...last.boundingBoxes, ...block.boundingBoxes],
+        metadata: { ...last.metadata, tableSourceFallback: true },
+      };
+      acc[acc.length - 1] = merged;
+    } else {
+      acc.push(block);
+    }
+    return acc;
+  }, []);
+
   const paper: Paper = {
     id: paperId,
     sourceFilePath: input.filePath,
@@ -667,8 +693,8 @@ export function projectCanonicalToPaper(input: {
   };
 
   const reconciled = input.previousBlocks?.length
-    ? reconcileBlockIds(input.previousBlocks, blocks).blocks
-    : blocks;
+    ? reconcileBlockIds(input.previousBlocks, rowAggregatedBlocks).blocks
+    : rowAggregatedBlocks;
   const annotatedBlocks = reconciled.map((block) =>
     block.translationStatus === "skipped"
       ? { ...block, metadata: { ...block.metadata, translationOutcome: "structural_skip" } }

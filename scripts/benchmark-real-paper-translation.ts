@@ -124,6 +124,7 @@ const tokenFile = tokenFileArg >= 0 ? args[tokenFileArg + 1] : undefined;
 const serverToken = (process.env.MADLAD_SERVER_TOKEN?.trim() ||
   (tokenFile ? fs.readFileSync(tokenFile, "utf8").trim() : "")) || undefined;
 const requestTimeoutMs = Number(process.env.MADLAD_BENCH_REQUEST_TIMEOUT_MS ?? 180_000);
+const maxRequestAttempts = Number(process.env.MADLAD_BENCH_MAX_ATTEMPTS ?? 3);
 
 function compact(text: string): string {
   return text.replace(/\s+/g, " ").trim();
@@ -233,7 +234,7 @@ async function translate(texts: string[]): Promise<ServerTranslation[]> {
   // fallback path and made audit rows disagree with the actual reader.
   const one = async (text: string) => {
     let lastError: unknown;
-    for (let attempt = 0; attempt < 6; attempt += 1) {
+    for (let attempt = 0; attempt < maxRequestAttempts; attempt += 1) {
       try {
         const response = await fetch(`${endpoint}/translate`, {
           method: "POST",
@@ -254,7 +255,7 @@ async function translate(texts: string[]): Promise<ServerTranslation[]> {
       } catch (error) {
         lastError = error;
         const status = (error as { status?: number }).status;
-        if (attempt < 5) {
+        if (attempt + 1 < maxRequestAttempts) {
           // A ready health response can race the final warmup transition;
           // retry transient 503s long enough for the model lifecycle to settle.
           await new Promise((resolve) => setTimeout(resolve, status === 503 ? 3_000 : 1_000));

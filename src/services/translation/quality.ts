@@ -48,6 +48,32 @@ const JA_FIELD_COUNT_DISPLACEMENT = /(?:各|それぞれの?)(?:学科|分野|�
 const SOURCE_COLLECTIVE_GROUP_COMPARISON = /\bnone\s+of\s+the\s+(?:study\s+)?groups?\b[^.!?]{0,160}\b(?:differ(?:ed|s)?|different|difference|significant|significantly)\b/i;
 const SOURCE_THREE_OR_MORE_GROUPS = /\b(?:3|three|four|4|five|5|six|6|seven|7|eight|8|nine|9|ten|10)\s+(?:study\s+)?(?:groups?|conditions?|arms?)\b/i;
 const JA_BINARY_GROUP_COMPARISON = /(?:両群|二群|2群)\s*(?:間|間で|間に|の間)/;
+// Causal-model failures can append the instruction used to elicit the
+// translation (and occasionally a fresh example) after an otherwise fluent
+// Japanese result. Detect the generic instruction shape only when it appears
+// after translated content; do not blacklist domain words or named examples.
+const TRANSLATION_INSTRUCTION_MARKER = /(?:次の(?:英語|英文)(?:の学術テキスト)?を日本語に翻訳してください|英語(?:の)?学術テキストを日本語に翻訳|translate the following (?:english )?(?:academic )?text|output only the japanese translation)/i;
+
+// A common decoder failure preserves an acronym while corrupting its expanded
+// term into a mixed-script Latin fragment (for example `...アンダNCY（CRC）`).
+// Only inspect acronym expansions that are explicit in the source and only
+// flag an uppercase fragment immediately before the same acronym; ordinary
+// product names such as `Bluetooth（CRC）` are unaffected.
+function hasMalformedAcronymExpansion(source: string, output: string): boolean {
+  const expansion = /\b(?:[A-Z][a-z]+\s+){1,7}[A-Z][a-z]+\s*\(([A-Z]{2,8})\)/g;
+  for (const match of source.matchAll(expansion)) {
+    const acronym = match[1];
+    const escaped = acronym.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const malformed = new RegExp(`[\\u3040-\\u30ff\\u4e00-\\u9fff][A-Za-z]{2,8}[（(]\\s*${escaped}\\s*[)）]`, "i");
+    if (malformed.test(output)) return true;
+  }
+  return false;
+}
+
+function hasTranslationInstructionContamination(output: string): boolean {
+  const match = TRANSLATION_INSTRUCTION_MARKER.exec(output);
+  return match !== null && match.index > 0;
+}
 
 /** Restore valid UTF-8 byte tokens if an older bundled server emitted them. */
 export function restoreUtf8ByteEscapes(text: string): string {
@@ -238,7 +264,7 @@ const NON_TECHNICAL_UPPERCASE_WORDS = new Set([
   "WITH",
 ]);
 
-export const TRANSLATION_QUALITY_VERSION = "quality-v6";
+export const TRANSLATION_QUALITY_VERSION = "quality-v9";
 
 export type TranslationQuality = {
   score: number;
@@ -279,7 +305,10 @@ const SCIENTIFIC_PATTERNS: Array<[ScientificInvariant["kind"], RegExp]> = [
   // “before World War I” into an invented year such as 1914.
   ["year", /\b(?:1[5-9]\d{2}|20\d{2})\b/g],
   ["statistic", /(?:[χΧxX](?:²|2)?|[FfTtZz])\s*\([^)]{1,16}\)\s*(?:=|<|>|≤|≥)\s*[-+]?\d+(?:\.\d+)?|\b[UWHV]\s*=\s*[-+]?\d+(?:\.\d+)?|\bp\s*(?:=|<|>|≤|≥)\s*\.?\d+(?:\.\d+)?|\b[A-Za-z]\s*(?:\u0338\s*=|!=|≠|=|<|>|≤|≥)\s*[-+]?\d+(?:\.\d+)?/g],
-  ["measurement", /\b\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|hz|khz|mhz|ghz|uw|mw|w|kg|mg|%|°[cf])\b/gi],
+  // Electrical/biomedical units are frequently attached to the value in
+  // Japanese output (for example `1 pF` -> `1pF`). Treat the complete value
+  // as one invariant so the unit is not double-counted as a missing acronym.
+  ["measurement", /\b\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|hz|khz|mhz|uw|mw|w|kg|mg|pf|nf|uf|μf|mf|mah|db|%|°[cf])\b/gi],
   // Preserve all-caps acronyms and mixed-case technical identifiers. The
   // latter covers model/system names such as DeepIV without treating normal
   // prose as an invariant.
@@ -313,6 +342,10 @@ function normalizeInvariant(value: string): string {
     .toLowerCase()
     .replace(/[０-９]/g, (digit) => String.fromCharCode(digit.charCodeAt(0) - 0xfee0))
     .replace(/[\s\u00a0]/g, "")
+    // Japanese academic output commonly uses fullwidth citation brackets.
+    // Normalize punctuation shape for invariant matching while preserving the
+    // exact citation payload requirement below.
+    .replace(/[［］【】]/g, (bracket) => ({ "［": "[", "］": "]", "【": "[", "】": "]" })[bracket] ?? bracket)
     .replace(/[−–—]/g, "-")
     .replace(/\u0338=/g, "!=")
     .replace(/≠/g, "!=");
@@ -461,6 +494,19 @@ function spatialRelationRiskReasons(source: string, output: string): string[] {
   return [];
 }
 
+function signalNoiseRelationRiskReasons(source: string, output: string): string[] {
+  // A signal-to-noise definition is a relation, not merely an acronym. A
+  // fluent sentence can preserve `SNR` while changing the operation into a
+  // frequency measurement. Require both sides of the explicit source
+  // comparison in Japanese; this is a language-pair relation check, not a
+  // vocabulary blacklist for a particular paper.
+  if (!/signal(?:\s+level)?[\s\S]{0,100}\bcompared\s+to\b[\s\S]{0,100}noise/i.test(source)) return [];
+  if (!/信号/.test(output) || !/(?:雑音|ノイズ|noise)/i.test(output)) {
+    return ["signal-to-noise comparison relation missing"];
+  }
+  return [];
+}
+
 export function looksLikeFrontMatterLabel(text: string): boolean {
   return /^(?:(?:\d+[.)]\s*)?(?:author\s+keywords?|keywords?|ccs\s+concepts?|acm\s+classification\s+keywords?|index\s+terms?|categories?(?:\s+and\s+subject\s+descriptors?)?))\s*$/i.test(
     text.trim()
@@ -558,6 +604,8 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   if (source.trim().length >= 40 && hasKanji && !hasKana) reasons.push("Japanese prose lacks kana");
   if (hasKana && SIMPLIFIED_CJK_CONTAMINATION.test(out)) reasons.push("simplified Chinese mixed into Japanese");
   if (hasKana && hasUntranslatedForeignProse(out)) reasons.push("untranslated foreign-language prose");
+  if (hasTranslationInstructionContamination(out)) reasons.push("model output contains translation instruction contamination");
+  if (hasMalformedAcronymExpansion(source, out)) reasons.push("malformed acronym expansion");
 
   if (latinRatioBeyondSource(out, source) > 0.45) reasons.push("excessive new Latin text");
   // Negation changes the direction of a claim. This deliberately excludes
@@ -568,6 +616,7 @@ export function evaluateJaTranslation(output: string, source: string): Translati
     reasons.push("negation moved from reported content to reporting predicate");
   }
   reasons.push(...spatialRelationRiskReasons(source, out));
+  reasons.push(...signalNoiseRelationRiskReasons(source, out));
   const sourceSentences = source.trim().split(/(?<=[.!?])\s+(?=[A-Z])/);
   const outputSentences = out.trim().split(/(?<=[。！？])\s*/).filter(Boolean);
   if (sourceSentences.length === outputSentences.length) {
@@ -609,6 +658,7 @@ export function evaluateJaTranslation(output: string, source: string): Translati
     || reasons.includes("negation moved from reported content to reporting predicate")
     || reasons.includes("epistemic uncertainty lost")
     || reasons.includes("spatial target relation rendered as comparison")
+    || reasons.includes("signal-to-noise comparison relation missing")
     || reasons.includes("source disjunctive-both relation missing")
     || reasons.some((reason) => reason.startsWith("participant total may have shifted"))
     || reasons.includes("collective group comparison narrowed to two groups")
@@ -640,12 +690,15 @@ export function isPlausibleJaTranslation(output: string, source: string): boolea
     && !quality.reasons.includes("negation moved from reported content to reporting predicate")
     && !quality.reasons.includes("epistemic uncertainty lost")
     && !quality.reasons.includes("spatial target relation rendered as comparison")
+    && !quality.reasons.includes("signal-to-noise comparison relation missing")
     && !quality.reasons.includes("source disjunctive-both relation missing")
     && !quality.reasons.some((reason) => reason.startsWith("participant total may have shifted"))
     && !quality.reasons.includes("collective group comparison narrowed to two groups")
     && !quality.reasons.includes("trailing Latin fragment")
+    && !quality.reasons.includes("malformed acronym expansion")
     && !quality.reasons.includes("simplified Chinese mixed into Japanese")
     && !quality.reasons.includes("untranslated foreign-language prose")
+    && !quality.reasons.includes("model output contains translation instruction contamination")
     && !quality.reasons.some((reason) => reason.startsWith("translation contains unmodified source span"))
     && quality.score >= 0.8;
 }

@@ -506,7 +506,9 @@ function clusterItemsIntoLines(
           );
           if (rightRun) matchedRuns.push({ left: leftRun, right: rightRun });
         }
-        if (distinctRows(matchedRuns.map(({ left }) => left.y)).length < 2 || rightX - leftX < 80) continue;
+        const matchedRows = distinctRows(matchedRuns.map(({ left }) => left.y));
+        const rowSpan = matchedRows.length > 1 ? Math.max(...matchedRows) - Math.min(...matchedRows) : 0;
+        if ((matchedRows.length < 4 && rowSpan < fontBase * 2) || rightX - leftX < 80) continue;
         // Keep the actual co-baseline run extents. A page can contain a real
         // table or a title elsewhere; page-wide x thresholds would mislabel
         // those unrelated lines as sidebar content.
@@ -664,11 +666,29 @@ function clusterItemsIntoLines(
       for (const index of row.groupIndexes) gridRows.add(index);
     }
   });
+  if (!sidebarBands) gridRows.clear();
   if (debugLayout === "1" && gridRows.size > 0) {
     console.info(`[REPEATED_GRID] page=${pageNumber} columns=${recurringGridBands.size} rows=${gridRows.size}`);
   }
 
   const separatedGroups = groups.flatMap((group, groupIndex) => {
+    if (sidebarBands && gridRows.has(groupIndex)) {
+      const ordered = [...group].sort((a, b) => a.x - b.x);
+      const segments: ExtractedTextItem[][] = [];
+      let segment: ExtractedTextItem[] = [];
+      let right = -Infinity;
+      const cellGap = Math.max(4, fontBase * 0.65);
+      for (const item of ordered) {
+        if (segment.length > 0 && item.x - right > cellGap) {
+          segments.push(segment);
+          segment = [];
+        }
+        segment.push(item);
+        right = Math.max(right, item.x + item.width);
+      }
+      if (segment.length > 0) segments.push(segment);
+      if (segments.length >= 3) return segments.map((part) => ({ part, isGridRow: true }));
+    }
     // Rotated tables are sometimes emitted on the same baseline as a
     // horizontal footnote. Keep those native items as separate lines so the
     // table region cannot absorb the note. Only split when the rotated side
@@ -1972,10 +1992,14 @@ function groupLinesIntoBlocks(
       Math.abs(line.fontSize - current[current.length - 1].fontSize) < 0.8 &&
       /^[A-Z0-9][A-Z0-9\s–—-]+$/.test(layoutPlain(line.text));
 
+
     const repeatedGridBoundary =
-      currentRole === "paragraph" &&
-      forcedRole === "paragraph" &&
-      (current[current.length - 1].isGridRow || line.isGridRow);
+      (currentRole === "paragraph" || currentRole === "reference") &&
+      (forcedRole === "paragraph" || forcedRole === "reference") &&
+      (current[current.length - 1].isGridRow || line.isGridRow) &&
+      !(line.y - current[current.length - 1].y > baseFont * 0.55 &&
+        Math.abs(line.x - current[current.length - 1].x) <= baseFont * 2.5) &&
+      Math.abs(line.x - current[current.length - 1].x) > baseFont * 2.5;
     if (repeatedGridBoundary) {
       flush();
       current = [line];

@@ -10,11 +10,37 @@ class MadladUnitQualityTests(unittest.TestCase):
         self.assertTrue(allows_unprotected_identifier_retry(["errors"]))
         self.assertFalse(allows_unprotected_identifier_retry(["errorsAssume"]))
 
+    def test_identifier_retry_allows_numeric_citations_only(self) -> None:
+        self.assertTrue(allows_unprotected_identifier_retry(["[23]", "[6, 22]"]))
+        self.assertFalse(allows_unprotected_identifier_retry(["[23] and the result"]))
+        self.assertFalse(allows_unprotected_identifier_retry(["p < 0.001"]))
+
+    def test_identifier_retry_allows_scalar_measurements(self) -> None:
+        self.assertTrue(allows_unprotected_identifier_retry(["1 pF", "40 mAh"]))
+        self.assertFalse(allows_unprotected_identifier_retry(["F(4,33) = 2.913"]))
+
     def test_degenerate_reason_labels_are_stable(self) -> None:
         source = "This is a sufficiently long academic sentence for testing."
         self.assertEqual(MADLADEngine._degenerate_reason("", source, "ja"), "empty")
         self.assertEqual(MADLADEngine._degenerate_reason("本文 <0xE8>", source, "ja"), "byte_escape")
         self.assertEqual(MADLADEngine._degenerate_reason("aaaaaaaaaaaaaaaa", source, "ja"), "character_repetition")
+
+    def test_rejects_trailing_translation_instruction_contamination(self) -> None:
+        source = "Knowing how to enter formulae is important for spreadsheet users."
+        output = (
+            "数式を入力する方法を知っておくことは、表計算ソフトの利用者にとって重要である。\n\n"
+            "次の英語の学術テキストを日本語に翻訳してください。\n\n"
+            "The purpose of this study is to investigate the effects of various factors."
+        )
+        self.assertTrue(MADLADEngine._has_translation_instruction_contamination(output))
+        self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
+        self.assertEqual(MADLADEngine._degenerate_reason(output, source, "ja"), "instruction_contamination")
+
+    def test_allows_translation_as_ordinary_academic_content(self) -> None:
+        source = "The study examines translation practices in multilingual teams."
+        output = "本研究では、多言語チームにおける翻訳実践を検討する。"
+        self.assertFalse(MADLADEngine._has_translation_instruction_contamination(output))
+        self.assertFalse(MADLADEngine._is_degenerate(output, source, "ja"))
 
     def test_restores_contiguous_utf8_byte_escapes(self) -> None:
         encoded = "胸部の<0xE8><0x90><0xBC>片と<0xE9><0xA0><0x9A>部"

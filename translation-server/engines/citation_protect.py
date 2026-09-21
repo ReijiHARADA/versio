@@ -12,7 +12,32 @@ import re
 
 # Bump this whenever source-fact protection rules change. It participates in
 # the server translation/cache identity so old accepts are not reused silently.
-SOURCE_PROTECTION_VERSION = "source-protect-v11"
+SOURCE_PROTECTION_VERSION = "source-protect-v13"
+
+# Repeated title-case technical names are factual identifiers even when they
+# do not contain an internal capital transition (for example ``Bluetooth``).
+# Protect only repeated, sufficiently long tokens so ordinary sentence-initial
+# words and one-off proper names remain available to the translator.
+REPEATED_TITLE_CASE_TOKEN_RE = re.compile(r"\b[A-Z][a-z][A-Za-z0-9]{4,}\b")
+_COMMON_TITLE_CASE_WORDS = {
+    "Although", "Before", "Because", "Between", "During", "Figure",
+    "However", "Moreover", "Nothing", "Results", "Section", "These",
+    "Their", "There", "Therefore", "Those", "Through", "Using", "Where",
+    "Which", "While", "Within",
+}
+
+
+def _repeated_title_case_matches(text: str) -> list[re.Match[str]]:
+    matches = list(REPEATED_TITLE_CASE_TOKEN_RE.finditer(text))
+    counts = {}
+    for match in matches:
+        token = match.group(0)
+        counts[token] = counts.get(token, 0) + 1
+    return [
+        match for match in matches
+        if counts[match.group(0)] >= 2
+        and match.group(0) not in _COMMON_TITLE_CASE_WORDS
+    ]
 
 # Numeric citations only: [8], [12], [1, 3], [12,13], [1-4], [1–4], [1, 3–5, 8]
 CITATION_RE = re.compile(
@@ -128,7 +153,7 @@ SCIENTIFIC_TOKEN_RE = re.compile(
     r"|\(\s*0?\.\d+(?:\s*,\s*0?\.\d+)*\s*\)"  # compact reported p-value/effect-size decimals
     r"|\b\d+(?:\.\d+)?\s*°\s*[CF]\s*\(\s*\d+(?:\.\d+)?\s*°\s*[CF]\s*\)"  # paired Celsius/Fahrenheit value
     r"|\b\d+(?:\.\d+)?\s*°\s*[CF]\b"  # Celsius/Fahrenheit temperatures
-    r"|\b\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|Hz|kHz|MHz|GHz|kg|mg|%)\b"  # measurement
+    r"|\b\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|Hz|kHz|MHz|GHz|kg|mg|pF|nF|uF|μF|mF|mAh|dB|%)\b"  # measurement
     # Technical/model identifiers such as DeepIV. A terminal run of capitals
     # is a strong identifier signal; protecting every mixed-case product name
     # can move it to the end of a Japanese sentence during greedy decoding.
@@ -232,6 +257,7 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
         + list(SCIENTIFIC_PARENTHETICAL_RE.finditer(text))
         + _terminal_nested_statistical_parentheticals(text)
         + list(SCIENTIFIC_TOKEN_RE.finditer(text))
+        + _repeated_title_case_matches(text)
     )
     # Do not turn ordinary uppercase function words or the conventional
     # ``SI Appendix`` label into scientific placeholders. Other short
@@ -401,6 +427,20 @@ def _is_inline_numeric_citation(value: str) -> bool:
     )
 
 
+def _is_measurement_value(value: str) -> bool:
+    """Return whether a protected fact is a scalar measurement.
+
+    Japanese decoders commonly attach the unit to the number (`1 pF` ->
+    `1pF`). Such output still preserves the fact and can be restored exactly
+    without treating a dropped placeholder as a safe omission.
+    """
+    return bool(re.fullmatch(
+        r"\s*\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|Hz|kHz|MHz|GHz|kg|mg|pF|nF|uF|μF|mF|mAh|dB|%)\s*",
+        value,
+        re.IGNORECASE,
+    ))
+
+
 def restore_citations(
     text: str,
     citations: list[str],
@@ -451,6 +491,24 @@ def restore_citations(
                     out = before[:terminal.start()] + match.group(0) + punctuation + after
             out = pattern.sub(citation, out, count=1)
         elif citation not in out:
+            # A measurement placeholder may be copied by the model as a
+            # compact unit (`1pF`) rather than as the exact source spacing
+            # (`1 pF`). Recognize only the tightly scoped scalar-unit form and
+            # restore the canonical source spelling in place.
+            if _is_measurement_value(citation):
+                measurement = re.fullmatch(
+                    r"\s*(\d+(?:\.\d+)?)\s*([A-Za-zμ]+|%)\s*",
+                    citation,
+                )
+                if measurement:
+                    compact = re.compile(
+                        rf"(?<![A-Za-z0-9]){re.escape(measurement.group(1))}"
+                        rf"\s*{re.escape(measurement.group(2))}(?![A-Za-z0-9])",
+                        re.IGNORECASE,
+                    )
+                    if compact.search(out):
+                        out = compact.sub(citation, out, count=1)
+                        continue
             if (
                 reject_missing
                 and i in recoverable_terminal_indices

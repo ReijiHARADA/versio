@@ -1,7 +1,7 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v11-strict-restore-v25-quality-v5",
-  "lastDiagnosticVersion": "qwen7-v93-v5-hci-sourcehash-new",
+  "lastBenchmarkVersion": "3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v11-strict-restore-v25-quality-v10",
+  "lastDiagnosticVersion": "v194",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
   "attributionStatus": "v6 baseline 12/48 (25.00%); audit-only semantic MiniLM v42 and coverage v66 completed; coverage found 10 exact invariant-loss rows (5 accepted), so token normalization/calibration is next; production gate unchanged",
@@ -106,7 +106,11 @@
     "v83Finding": "Standalone original comparative sentence repeats the negation reversal; split equivalent and negative-group-first variants translate faithfully with exact statistics; whereas variant drops contrast. Diagnostic only; no production rewrite."
   },
   "completedPapers": [
+    "cognitive-dual-task-older-adults",
+    "cognitive-memory-cue-interest",
+    "cognitive-motor-incidental-memory",
     "cognitive-psychology-gpt3",
+    "cognitive-vr-mnemonic-processing",
     "computational-linguistics-nlp-translation",
     "conversation-analysis-user-experience",
     "covid-ml-review",
@@ -114,7 +118,10 @@
     "dont-mind-me",
     "economics-regularized-deepiv",
     "education-learning-analytics",
+    "ergonomics-flight-deck-applications",
     "ergonomics-human-factors-ihci",
+    "ergonomics-job-rotation-robotics",
+    "ergonomics-quantified-factory-worker",
     "fashion-hybrid-cmf",
     "hci-empirical-methods",
     "hfe-healthcare-safety-review",
@@ -123,8 +130,16 @@
     "human-ai-interaction-guidelines",
     "interactive-jewellery",
     "interpreting-neural-networks",
+    "linguistics-appraisal-institutional-discourse",
     "linguistics-language-model-physics",
+    "linguistics-register-web-corpus",
+    "marketing-consumer-production-journey",
     "marketing-consumer-response",
+    "marketing-framing-organic-food",
+    "marketing-health-goals-nudging",
+    "marketing-neurophysiology-consumer-motivation",
+    "marketing-platform-attitude",
+    "marketing-unavailable-choice",
     "medical-deep-learning-meta-review",
     "medical-image-segmentation-deep-learning",
     "medical-imaging-deep-learning-review",
@@ -146,32 +161,24 @@
   "pendingPapers": [],
   "reviewedBlocks": 134,
   "lastCheckpoint": "2026-09-21T16:27:00+09:00",
-  "pendingManualReview": 60,
+  "pendingManualReview": 610,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
     "measure partial source fallback inside accepted output before treating accept rate as fully translated rate",
     "fallback rate must be driven below 5% for product-quality reading UX",
     "unsafe false accepts dominated by semantic shift and omission without durable numeric/citation facts",
-    "expand the verified OA corpus beyond 52 catalog / 51 cached PDFs toward 70–90 with balanced discipline and format coverage",
-    "validate page/column paragraph stitching against more held-out PDFs",
+    "expand OA corpus to 50+ verified PDFs",
+    "page/column paragraph repair",
     "chrome separation",
-    "evaluate replacement or cascade translation models under local/free-use constraints",
-    "most v17 replay fallbacks remain quality/placeholder failures (29/32 source echoes)",
-    "semantic clause omissions remain undetected for meaning-that explanation clauses",
-    "ordinary-body fallback target <=5% not met (v16 baseline 30.3%; v32 single-paper diagnostic 1/6 = 16.7%)",
-    "repaired Elsevier medical source still triggers MADLAD decode semantic drift: convolutional neural networks mistranslated and task-type organization replaced by unsupported summary",
-    "Qwen 2.5 14B six-row targeted replay is promising but not paper-held-out evidence and lacks production source protection/quality gating",
-    "PPG Earring page-10 expected hyphenated continuation paragraph is absent/absorbed in extraction corpus (reproduced after reverting gutter experiment; likely caption/table-region/candidate handling)",
-    "Qwen 2.5 14B still has severity>=2 unsafe false accepts (2/6) on v71 source-hash-checked eight-row sample; insufficient for cascade deployment",
-    "candidate source set v70 overlapped prior Qwen work and is exploratory only"
+    "evaluate replacement or cascade translation models under local/free-use constraints"
   ],
   "nextActions": [
-    "Debug why the current repeated-baseline sidebar detector still merges the HAI table-cell pair Time services based / Scope services when; add a deterministic geometry regression before changing thresholds.",
-    "Resolve the how-content-volume-landing-pages title candidate regression, or narrow the detector so it cannot perturb unrelated title resolution.",
-    "Rerun the medical meta-review compact source-block diagnostic against the exact current code; prior clean evidence predates the final 2-row tolerance change.",
-    "Run reading-order tests, the selected real-paper controls, typecheck, lint, then full extraction corpus; report assertion failures separately from any Vitest worker timeout.",
-    "Only after extraction regressions are green, continue the page-boundary continuation, COVID table/body contamination, and HFE rotated-table investigations.",
-    "Keep CAT-Translate-3.3B out of production based on v112 zero safe rescues; fallback <=5% and near-zero severity>=2 false-accept targets remain unmet."
+    "complete a v49 full benchmark, then measure partial source fallback inside accepted output",
+    "continue v41 manual comparison of accepted ordinary body prose before relaxing any gate",
+    "use semantic-coverage audit scores to prioritize likely omissions and semantic shifts",
+    "continue local/free EN-JA model comparison; do not enable cascade until manual review confirms semantic adequacy",
+    "design production-safe content coverage checks that do not inflate reader-visible fallback",
+    "add verified OA candidates with provenance"
   ],
   "v33StructuralSafety": {
     "status": "implemented and verified",
@@ -290,7 +297,7 @@
     },
     "nextAction": "Calibrate semantic coverage against more manual labels before using it for cascade routing or hard rejection."
   },
-  "archivedReviewedBlocks": 3,
+  "archivedReviewedBlocks": 0,
   "handoff": {
     "status": "paused_for_account_transfer",
     "processesStopped": true,
@@ -484,7 +491,7 @@
     }
   },
   "lastBenchmarkReport": "test-data/real-papers/reports/translation-audit-v56-transformers-4.57.6.json",
-  "updatedAt": "2026-09-21T13:20:21+09:00",
+  "updatedAt": "2026-09-22T01:00:00+09:00",
   "benchmarks": {
     "v52FullCorpus": {
       "createdAt": "2026-09-14T08:31:22.627Z",
@@ -4894,9 +4901,9 @@
       "diffCheck": "pass"
     },
     "runtime": {
-      "transformers": "4.57.6",
       "8765": "ready, still v5",
       "8876": "stopped",
+      "transformers": "4.57.6",
       "appBuild": "not performed"
     },
     "nextActions": [
@@ -5075,7 +5082,7 @@
   },
   "latestExtractionFollowup": {
     "date": "2026-09-21",
-    "status": "focused extraction controls pass; one broad-corpus table regression remains",
+    "status": "extraction assertions green; Vitest worker harness timeout remains",
     "changes": [
       "baseline-matched sidebar grouping",
       "recurring multi-column grid row evidence",
@@ -5087,7 +5094,11 @@
       "readingOrderAndRealPaperSuites": "52/52",
       "typecheck": "pass",
       "lint": "pass",
-      "fullExtractionCorpus": "1 assertion failed; Vitest worker onTaskUpdate timeout"
+      "fullExtractionCorpus": "108/108 assertions; 1 worker onTaskUpdate timeout",
+      "focusedHAI": "pass",
+      "marketingBaseline": "1 assertion failed (row emitted as separate cells)",
+      "focusedHAIAndCognitive": "2/2",
+      "focusedMarketingBaseline": "pass"
     },
     "regression": {
       "paper": "marketing-consumer-production-journey",
@@ -5096,12 +5107,30 @@
       "finding": "Consumer co-production network label and following Brodie et al. table row are separated"
     },
     "nextActions": [
-      "diagnose intended table row grouping and fix generically",
-      "rerun marketing regression and full extraction corpus",
-      "then resume heldout translation semantic review"
+      "rerun extraction corpus with worker timeout/harness configuration",
+      "resume heldout semantic translation evaluation"
     ],
     "translationGoalStatus": "fallback <=5% and near-zero severity>=2 unsafe accepts remain unmet",
     "noAppBuild": true,
     "translationServer8765": "left untouched"
-  }
+  },
+  "latestTranslationBenchmarkV163": {
+    "date": "2026-09-21",
+    "report": "translation-audit.json",
+    "complete": false,
+    "papers": 52,
+    "rows": 258,
+    "translationStatus": {
+      "skipped": 107,
+      "pending": 151
+    },
+    "readerVisibleFallback": 252,
+    "preModelFallback": 107,
+    "postModelFallback": 145,
+    "acceptedCompleted": 0,
+    "ordinaryBodyRows": 118,
+    "ordinaryBodyFallbacks": 114,
+    "note": "resume run processed 5 units per 52 selected papers; report is incomplete and automatic status is not semantic correctness"
+  },
+  "lastBenchmarkNote": "v200: bounded serial MADLAD benchmark reached 51/52 available papers and 358 sampled blocks; 142 ordinary-body rows have 44 reader-visible post-model fallbacks (30.99%). The remaining precious-materials PDF is blocked by wrong-document provenance. Report benchmark-checkpoint-v200.json; server remains ready."
 }

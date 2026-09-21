@@ -18,6 +18,18 @@ import {
   isRetryableTranslationFailure,
   shouldTranslateBlock,
 } from "../services/importServiceV2";
+
+describe("acronym expansion safety", () => {
+  it("rejects malformed mixed-script acronym expansions while accepting intact ones", () => {
+    const source = "The payload includes the Cyclic Redundancy Check (CRC).";
+    const malformed = "ペイロードにはサイクリックレッドゥアンダNCY（CRC）が含まれる。";
+    const intact = "ペイロードには巡回冗長検査（CRC）が含まれる。";
+    const sourcePreserved = "The payload includes the Cyclic Redundancy Check（CRC）.";
+    expect(evaluateJaTranslation(malformed, source).reasons).toContain("malformed acronym expansion");
+    expect(evaluateJaTranslation(intact, source).reasons).not.toContain("malformed acronym expansion");
+    expect(evaluateJaTranslation(sourcePreserved, source).reasons).not.toContain("malformed acronym expansion");
+  });
+});
 import {
   displayProcessingStatus,
   finalizedTranslationStatus,
@@ -33,6 +45,13 @@ describe("isPlausibleJaTranslation", () => {
     const source = "Visitors preferred audio descriptions because they could listen together.";
     const output = "来訪者は一緒に聞ける音声説明を好んだ。 Note: I kept this technical term in English because its exact translation varies by context.";
     expect(evaluateJaTranslation(output, source).reasons).toContain("untranslated foreign-language prose");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("rejects trailing translation instructions appended by the model", () => {
+    const source = "Knowing how to enter formulae is important for spreadsheet users.";
+    const output = "数式を入力する方法を知っておくことは、表計算ソフトの利用者にとって重要である。\n\n次の英語の学術テキストを日本語に翻訳してください。\n\nThe purpose of this study is to investigate the effects of various factors.";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("model output contains translation instruction contamination");
     expect(isPlausibleJaTranslation(output, source)).toBe(false);
   });
 
@@ -179,6 +198,11 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation(output, source)).toBe(true);
   });
 
+  it("accepts fullwidth Japanese citation brackets", () => {
+    const source = "Uniform attention is effective (motivating follow-up work [1]).";
+    expect(isPlausibleJaTranslation("一様注意は効果的である（後続研究の動機となった［1］）。", source)).toBe(true);
+  });
+
   it("accepts a Japanese expansion of SD when its associated value is preserved", () => {
     const source = "The mean age was 21.54 years (SD=2.16).";
     expect(isPlausibleJaTranslation("平均年齢は21.54歳（標準偏差2.16）だった。", source)).toBe(true);
@@ -261,6 +285,20 @@ describe("isPlausibleJaTranslation", () => {
       "装置は11.3 mm幅で335 mgである。",
       "The device is 11.3 mm wide, weighs 335 mg, and consumes 14.4 uW."
     )).toBe(false);
+  });
+
+  it("accepts an electrical measurement when Japanese typography attaches the unit", () => {
+    const source = "The receiver is limited by a capacitance of 1 pF.";
+    const output = "受信機は1pFの容量によって制限される。";
+    expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
+  it("rejects an SNR definition that changes comparison into frequency measurement", () => {
+    const source = "Signal-to-Noise Ratio (SNR) is a common metric to measure the level of the target signal compared to the level of background noise.";
+    const drift = "標記の測定法は, 周波数特性を考慮した標的信号の周波数を測定するものである。";
+    expect(evaluateJaTranslation(drift, source).reasons).toContain("signal-to-noise comparison relation missing");
+    expect(isPlausibleJaTranslation(drift, source)).toBe(false);
+    expect(isPlausibleJaTranslation("信号対雑音比（SNR）は、標的信号のレベルを背景雑音のレベルと比較する指標である。", source)).toBe(true);
   });
 
   it("rejects changed Celsius values while allowing a faithful temperature translation", () => {
