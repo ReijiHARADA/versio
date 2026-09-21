@@ -1211,6 +1211,26 @@ describe("PDF reading order regression", () => {
     ).toBe(true);
   });
 
+  it("separates a small caps publisher badge from a large title continuation", () => {
+    const { blocks } = reconstructDocument([{
+      pageNumber: 1,
+      width: 612,
+      height: 842,
+      textItems: [
+        { text: "Motor engagement enhances", x: 222, y: 150, width: 286, height: 21, fontSize: 20.9, fontName: "Display", page: 1 },
+        { text: "OPEN ACCESS", x: 57, y: 175.8, width: 47, height: 7, fontSize: 7, fontName: "Metadata", page: 1 },
+        { text: "incidental memory for", x: 222, y: 175.5, width: 216, height: 21, fontSize: 20.9, fontName: "Display", page: 1 },
+        { text: "Pietro Spataro,", x: 57, y: 199.5, width: 47, height: 7, fontSize: 7, fontName: "Author", page: 1 },
+        { text: "task-irrelevant items", x: 222, y: 199.5, width: 198, height: 21, fontSize: 20.9, fontName: "Display", page: 1 },
+        { text: "Example University", x: 57, y: 208, width: 100, height: 7, fontSize: 7, fontName: "Affiliation", page: 1 },
+        { text: "A sentence from the abstract follows here.", x: 222, y: 325, width: 316, height: 9, fontSize: 9, fontName: "Body", page: 1 },
+      ],
+    }]);
+    const title = blocks.find((block) => block.role === "title");
+    expect(title?.text).toContain("Motor engagement enhances incidental memory for task-irrelevant items");
+    expect(blocks.some((block) => block.role === "title" && block.text.includes("OPEN ACCESS"))).toBe(false);
+  });
+
   it("hyphenated English and bibliography URLs are not displayed equations", () => {
     const { blocks } = reconstructDocument(FIXTURES["hyphenated-prose"]());
     expect(blocks.some((b) => b.role === "equation")).toBe(false);

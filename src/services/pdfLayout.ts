@@ -56,6 +56,8 @@ export type LayoutLine = {
   pageHeight?: number;
   pageWidth?: number;
   roleHint?: LayoutRole;
+  /** Repeated multi-column geometry indicates a table row; never merge it into neighboring prose rows. */
+  isGridRow?: boolean;
 };
 
 export type LayoutBlock = {
@@ -417,9 +419,9 @@ function clusterItemsIntoLines(
 ): LayoutLine[] {
   if (items.length === 0) return [];
 
-    const fontBase = median(items.map((i) => i.fontSize)) || 10;
-    const yThreshold = Math.max(3.2, fontBase * 0.42);
-    const sidebarBaselineTolerance = Math.max(yThreshold, median(items.map((item) => item.height)) * 0.7);
+  const fontBase = median(items.map((i) => i.fontSize)) || 10;
+  const yThreshold = Math.max(3.2, fontBase * 0.42);
+  const sidebarBaselineTolerance = Math.max(yThreshold, median(items.map((item) => item.height)) * 0.7);
   const sidebarBands = (() => {
     // A publisher rail can sit beside a main text column even when the page
     // detector conservatively labels the page single-column (for example an
@@ -491,48 +493,45 @@ function clusterItemsIntoLines(
     };
     for (let leftIndex = 0; leftIndex < candidates.length; leftIndex++) {
       const [leftX, leftRuns] = candidates[leftIndex];
-        if (distinctRows(leftRuns.map((run) => run.y)).length < 2) continue;
+      if (distinctRows(leftRuns.map((run) => run.y)).length < 2) continue;
       for (let rightIndex = leftIndex + 1; rightIndex < candidates.length; rightIndex++) {
         const [rightX, rightRuns] = candidates[rightIndex];
-        const matchedLeftYs: number[] = [];
+        const matchedRuns: Array<{ left: (typeof leftRuns)[number]; right: (typeof rightRuns)[number] }> = [];
         for (const leftRun of leftRuns) {
           if (leftRun.width <= 0 || leftRun.width > 140) continue;
-          const hasLongBodyRun = rightRuns.some((rightRun) =>
-            Math.abs(rightRun.y - leftRun.y) <= sidebarBaselineTolerance &&
-            rightRun.width >= Math.max(fontBase * 10, leftRun.width * 2.5)
+          const rightRun = rightRuns.find((candidateRun) =>
+            Math.abs(candidateRun.y - leftRun.y) <= sidebarBaselineTolerance &&
+            candidateRun.width >= Math.max(fontBase * 10, leftRun.width * 2.5) &&
+            Math.abs(candidateRun.fontSize - leftRun.fontSize) <= Math.max(1.2, fontBase * 0.2)
           );
-          if (hasLongBodyRun) matchedLeftYs.push(leftRun.y);
+          if (rightRun) matchedRuns.push({ left: leftRun, right: rightRun });
         }
-        const matchedRows = distinctRows(matchedLeftYs);
-        if (matchedRows.length < 2 || rightX - leftX < 80) continue;
-        // A third recurring, substantial run is evidence of a multi-column
-        // grid/table, not a two-band margin rail beside prose. Without this
-        // guard, 3-column guideline tables can be flattened by treating their
-        // first cell column as a sidebar and the next as body text.
-        const hasThirdColumn = candidates.some(([x, runs], index) => {
-          if (index === leftIndex || index === rightIndex || x - leftX < 80) return false;
-          const cooccurringRows = matchedRows.filter((rowY) => runs.some((run) =>
-            Math.abs(run.y - rowY) <= sidebarBaselineTolerance && run.width >= fontBase * 2.2
-          ));
-          return cooccurringRows.length >= 2;
-        });
-        if (!hasThirdColumn) {
-          return { leftX, rightX };
-        }
+        if (distinctRows(matchedRuns.map(({ left }) => left.y)).length < 2 || rightX - leftX < 80) continue;
+        // Keep the actual co-baseline run extents. A page can contain a real
+        // table or a title elsewhere; page-wide x thresholds would mislabel
+        // those unrelated lines as sidebar content.
+        return { leftX, rightX, matchedRuns };
       }
     }
     return null;
   })();
+  const debugLayout = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_DEBUG;
+  if (debugLayout === "1" && sidebarBands) {
+    console.info(`[SIDEBAR_BANDS] page=${pageNumber} left=${sidebarBands.leftX} right=${sidebarBands.rightX} matchedRows=${sidebarBands.matchedRuns.length}`);
+  }
   const sidebarSide = (item: ExtractedTextItem): "left" | "right" | null => {
-    if (!sidebarBands || item.fontSize > fontBase * 1.35) return null;
-    const key = Math.round(item.x / 32) * 32;
-    if (key === sidebarBands.leftX) return "left";
-    if (key === sidebarBands.rightX) return "right";
-    // Label every token in the right-hand run, not only its first word. A
-    // word-level text layer otherwise lets later body tokens rejoin the short
-    // rail label that shares their baseline.
-    if (item.x >= sidebarBands.rightX - 12 || item.x + item.width > sidebarBands.rightX + 32) return "right";
-    if (item.x + item.width <= sidebarBands.leftX + 140) return "left";
+    if (!sidebarBands) return null;
+    const itemBand = Math.round(item.x / 32) * 32;
+    const leftMatch = sidebarBands.matchedRuns.find(({ left }) =>
+      Math.abs(item.y - left.y) <= sidebarBaselineTolerance &&
+      (itemBand === sidebarBands.leftX || (item.x >= left.x - 8 && item.x <= left.x + left.width + 3))
+    );
+    if (leftMatch) return "left";
+    const rightMatch = sidebarBands.matchedRuns.find(({ right }) =>
+      Math.abs(item.y - right.y) <= sidebarBaselineTolerance &&
+      (itemBand === sidebarBands.rightX || (item.x >= right.x - 8 && item.x <= right.x + right.width + 3))
+    );
+    if (rightMatch) return "right";
     return null;
   };
   const bodyItems = items.filter((i) => i.fontSize >= fontBase * 0.82);
@@ -617,7 +616,59 @@ function clusterItemsIntoLines(
     }
   }
 
-  const separatedGroups = groups.flatMap((group) => {
+  // Detect repeated cell columns before line cells are joined into one text
+  // stream. Ordinary prose has one broad run per baseline; tables retain at
+  // least three recurring x-start bands across several rows. This keeps
+  // physical rows from collapsing into one long paragraph without guessing
+  // cell semantics or rewriting the native text.
+  // Table cell gutters can be smaller than a body font's full word gap (the
+  // HAI guideline PDF uses a ~12pt company-to-guideline gap at 7pt type).
+  // For grid evidence, split at clearly visible whitespace while preserving
+  // ordinary inter-word spacing in same-line text.
+  const gridSegmentGap = Math.max(4, fontBase * 0.65);
+  const groupSegments = groups.map((group) => {
+    const ordered = [...group].sort((a, b) => a.x - b.x);
+    const starts: number[] = [];
+    let right = -Infinity;
+    for (const item of ordered) {
+      if (item.x - right > gridSegmentGap) starts.push(item.x);
+      right = Math.max(right, item.x + item.width);
+    }
+    return [...new Set(starts.map((x) => Math.round(x / 32) * 32))];
+  });
+  const baselineRows: Array<{ y: number; rotation: number; groupIndexes: number[]; bands: Set<number> }> = [];
+  groupSegments.forEach((bands, groupIndex) => {
+    const rotation = representativeTextRotation(groups[groupIndex].map((item) => item.rotation ?? 0));
+    let row = baselineRows.find((candidate) =>
+      Math.abs(candidate.y - groupY[groupIndex]) <= yThreshold &&
+      sameTextOrientation(candidate.rotation, rotation)
+    );
+    if (!row) {
+      row = { y: groupY[groupIndex], rotation, groupIndexes: [], bands: new Set<number>() };
+      baselineRows.push(row);
+    }
+    row.groupIndexes.push(groupIndex);
+    for (const band of bands) row.bands.add(band);
+    row.y = median(row.groupIndexes.map((index) => groupY[index]));
+  });
+  const bandRows = new Map<number, number>();
+  for (const row of baselineRows) {
+    for (const band of row.bands) bandRows.set(band, (bandRows.get(band) ?? 0) + 1);
+  }
+  const recurringGridBands = new Set(
+    [...bandRows].filter(([, rowCount]) => rowCount >= 6).map(([band]) => band),
+  );
+  const gridRows = new Set<number>();
+  baselineRows.forEach((row) => {
+    if ([...row.bands].filter((band) => recurringGridBands.has(band)).length >= 3) {
+      for (const index of row.groupIndexes) gridRows.add(index);
+    }
+  });
+  if (debugLayout === "1" && gridRows.size > 0) {
+    console.info(`[REPEATED_GRID] page=${pageNumber} columns=${recurringGridBands.size} rows=${gridRows.size}`);
+  }
+
+  const separatedGroups = groups.flatMap((group, groupIndex) => {
     // Rotated tables are sometimes emitted on the same baseline as a
     // horizontal footnote. Keep those native items as separate lines so the
     // table region cannot absorb the note. Only split when the rotated side
@@ -631,7 +682,9 @@ function clusterItemsIntoLines(
     // keeps compact numeric/header cells in the rotated grid.
     const shortHorizontalProse = horizontalWords >= 3 &&
       /[a-z]/.test(horizontalText) && /[.!?,:;]$/.test(horizontalText);
-    if (rotated.length >= 4 && (horizontalWords >= 4 || shortHorizontalProse)) return [rotated, horizontal];
+    if (rotated.length >= 4 && (horizontalWords >= 4 || shortHorizontalProse)) {
+      return [rotated, horizontal].map((part) => ({ part, isGridRow: gridRows.has(groupIndex) }));
+    }
     // A rotated matrix and its explanatory footnote can share a baseline and
     // rotation.  Matrix cells are short native items; the footnote is a
     // sentence-sized item. Split only with several short rotated cells plus a
@@ -639,12 +692,15 @@ function clusterItemsIntoLines(
     const rotatedCells = rotated.filter((item) => item.width <= 48 && item.text.trim().split(/\s+/).length <= 3);
     const rotatedProse = rotated.filter((item) => item.width > 80 || item.text.trim().split(/\s+/).length >= 4);
     if (rotatedCells.length >= 3 && rotated.length >= 4 && rotatedProse.length > 0) {
-      return [rotatedCells, rotated.filter((item) => !rotatedCells.includes(item))];
+      return [rotatedCells, rotated.filter((item) => !rotatedCells.includes(item))].map((part) => ({ part, isGridRow: gridRows.has(groupIndex) }));
     }
-    return [group];
+    return [{ part: group, isGridRow: gridRows.has(groupIndex) }];
   });
   return separatedGroups
-    .map((group) => itemsToLine(group, column, pageNumber, pageHeight, pageWidth))
+    .map(({ part, isGridRow }) => ({
+      ...itemsToLine(part, column, pageNumber, pageHeight, pageWidth),
+      isGridRow,
+    }))
     .filter((line) => line.text.length > 0)
     .sort((a, b) => a.y - b.y);
 }
@@ -658,6 +714,29 @@ function clusterItemsIntoLines(
 function splitInlineSubheading(line: LayoutLine): LayoutLine[] {
   if (Math.abs(line.rotation ?? 0) >= 45 || line.items.length < 2) return [line];
   const ordered = [...line.items].sort((a, b) => a.x - b.x);
+  // Large display-title spans can share a baseline with a small, all-caps
+  // publisher label (for example an open-access badge). Separate this clear
+  // native typography/gutter transition before role resolution so the label
+  // cannot demote the title continuation to affiliation/body text.
+  for (let splitIndex = 1; splitIndex < ordered.length; splitIndex++) {
+    const leadingItems = ordered.slice(0, splitIndex);
+    const displayItems = ordered.slice(splitIndex);
+    const leadingText = joinItemTexts(leadingItems).trim();
+    const displayText = joinItemTexts(displayItems).trim();
+    const leadingWords = leadingText.split(/\s+/).filter(Boolean);
+    const leadingFont = median(leadingItems.map((item) => item.fontSize));
+    const displayFont = median(displayItems.map((item) => item.fontSize));
+    const gutter = displayItems[0].x - (leadingItems.at(-1)!.x + leadingItems.at(-1)!.width);
+    const compactCapsLabel = leadingText.length <= 32 && leadingWords.length <= 4 &&
+      /^[A-Z][A-Z\s.'’’-]*$/.test(leadingText);
+    const displaySpan = displayText.length <= 180 && displayFont >= leadingFont * 1.7;
+    if (!compactCapsLabel || !displaySpan || gutter < Math.max(36, displayFont * 2.5)) continue;
+    const makePart = (items: ExtractedTextItem[]): LayoutLine => ({
+      ...itemsToLine(items, line.column, line.page, line.pageHeight, line.pageWidth),
+      isGridRow: line.isGridRow,
+    });
+    return [makePart(leadingItems), makePart(displayItems)];
+  }
   let prefixCount = 0;
   while (prefixCount < ordered.length && /(?:bold|black|heavy|semi[- ]?bold|demi)/i.test(ordered[prefixCount].fontName)) {
     prefixCount += 1;
@@ -1892,6 +1971,17 @@ function groupLinesIntoBlocks(
       line.y - current[current.length - 1].y < baseFont * 2.2 &&
       Math.abs(line.fontSize - current[current.length - 1].fontSize) < 0.8 &&
       /^[A-Z0-9][A-Z0-9\s–—-]+$/.test(layoutPlain(line.text));
+
+    const repeatedGridBoundary =
+      currentRole === "paragraph" &&
+      forcedRole === "paragraph" &&
+      (current[current.length - 1].isGridRow || line.isGridRow);
+    if (repeatedGridBoundary) {
+      flush();
+      current = [line];
+      currentRole = forcedRole;
+      continue;
+    }
 
     if (mergeable || affiliationContinue || captionContinue || grantContinue || titleContinue || footnoteContinue || headingContinue) {
       current.push(line);
