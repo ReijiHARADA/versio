@@ -143,6 +143,21 @@ describe("baseline benchmark on cached real papers", () => {
         expect(discussionContinuation?.text).toContain("self-relevance of the situation");
         expect(discussionContinuation?.text).toMatch(/rules regarding the spatial arrangement of the building blocks\.$/);
       }
+      if (paper.id === "marketing-health-goals-nudging") {
+        const extraction = extractFromPages({
+          pages,
+          paperId: paper.id,
+          filePath: paper.filename,
+          fileHash: "cross-column-table-evidence-regression",
+          metadata: { title: paper.title, pageCount: pages.length },
+        });
+        const resultsProse = extraction.blocks.find((block) =>
+          block.original.startsWith("We first examined whether implicit attention")
+        );
+        expect(resultsProse?.type).toBe("paragraph");
+        expect(resultsProse?.metadata.tableSourceFallback).not.toBe(true);
+        expect(resultsProse?.translationStatus).toBe("pending");
+      }
       const gt = loadGroundTruth(paper.id);
       const report = evaluateBaselinePaper({
         id: paper.id,
@@ -228,9 +243,39 @@ describe("baseline benchmark on cached real papers", () => {
       expect(projected?.type).toBe("table");
       expect(projected?.translationStatus).toBe("skipped");
       const hyphenatedContinuation = result.canonical.nodes.find((node) =>
-        node.text?.trim().startsWith("- achieves 74.55")
+        node.text?.includes("achieves 74.55")
       );
       expect(hyphenatedContinuation?.role).toBe("paragraph");
+    }, 60_000);
+  }
+
+  const humanAiGuidelines = available.find(({ paper }) => paper.id === "human-ai-interaction-guidelines");
+  if (humanAiGuidelines) {
+    it("stitches a paragraph across a floated table while keeping table content separate", async () => {
+      const pages = await extractPdfPages(humanAiGuidelines.pdfPath);
+      const result = extractFromPages({
+        pages,
+        paperId: humanAiGuidelines.paper.id,
+        filePath: humanAiGuidelines.pdfPath,
+        fileHash: "regression",
+        metadata: { title: humanAiGuidelines.paper.title, pageCount: pages.length },
+      });
+      const narrative = result.blocks.find((block) =>
+        block.original.includes("as a standalone document, it may help result in a greater overall synthesis")
+      );
+      const table = result.blocks.find((block) => block.original.startsWith("Table 1: Total number of guidelines"));
+      expect(narrative?.type).toBe("paragraph");
+      expect(narrative?.original).toContain("potential issues as a standalone document");
+      expect(narrative?.metadata.tableSourceFallback).not.toBe(true);
+      expect(narrative?.metadata.translationInputWarning ?? "").not.toContain("段落の先頭が前段から続いている可能性");
+      expect(table?.type).toBe("table");
+
+      const continuation = result.canonical.relations.find((relation) =>
+        relation.kind === "CONTINUES" &&
+        result.canonical.nodes.find((node) => node.id === relation.from)?.text?.endsWith("potential issues") &&
+        result.canonical.nodes.find((node) => node.id === relation.to)?.text?.startsWith("as a standalone document")
+      );
+      expect(continuation?.score).toBe(0.9);
     }, 60_000);
   }
 

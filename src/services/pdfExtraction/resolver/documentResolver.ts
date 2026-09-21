@@ -15,6 +15,7 @@ import {
   affiliatedWithRelations,
   captionOfRelations,
   childOfRelations,
+  floatedTableContinuationRelations,
   figureNodesForCaptions,
   readsBeforeRelations,
 } from "./relationResolver";
@@ -338,6 +339,7 @@ export function resolveCanonicalDocument(input: {
     ...childOfRelations(headingNodes),
     ...captionOfRelations(nodes),
     ...affiliatedWithRelations(nodes),
+    ...floatedTableContinuationRelations(nodes, input.layouts),
   ];
 
   const layoutScores = input.blocks.map((block) => {

@@ -29,6 +29,27 @@ describe("isPlausibleJaTranslation", () => {
   const source =
     "This research was supported by STW VIDI grant number 016.128.303 Research (NWO), awarded to Elise van den Hoven.";
 
+  it("rejects a Japanese output contaminated by an English model explanation", () => {
+    const source = "Visitors preferred audio descriptions because they could listen together.";
+    const output = "来訪者は一緒に聞ける音声説明を好んだ。 Note: I kept this technical term in English because its exact translation varies by context.";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("untranslated foreign-language prose");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("rejects a long Chinese Han-only sentence embedded in Japanese output", () => {
+    const source = "The guidebook content could fit into an ongoing conversation between visitors.";
+    const output = "ガイドブックの内容は訪問者間の会話に組み込める。因為參觀的流程可以採取訪問者之間持續對話的形式。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("untranslated foreign-language prose");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("allows technical English terms within an otherwise Japanese sentence", () => {
+    const source = "The HCI system uses a guidebook to support shared listening.";
+    const output = "HCIシステムは、共有聴取を支援するためにガイドブックを使用する。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("untranslated foreign-language prose");
+    expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
   it("keeps a Japanese translation that retains grant identifiers from the source", () => {
     expect(
       isPlausibleJaTranslation(
@@ -50,6 +71,13 @@ describe("isPlausibleJaTranslation", () => {
     expect(isDegenerateTranslation(fragmented)).toBe(true);
     expect(isPlausibleJaTranslation(fragmented, "We collected open-ended responses to understand participants' attitudes toward the system.")).toBe(false);
     expect(isDegenerateTranslation(normal)).toBe(false);
+  });
+
+  it("rejects malformed scientific protection placeholders", () => {
+    const source = "Results were significant (p=0.001).";
+    const output = "結果は有意だった（p=0.001）。ZZCイT4ZZ";
+    expect(isDegenerateTranslation(output)).toBe(true);
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
   });
 
   it("treats ASCII chi-square notation as an indivisible statistic", () => {
@@ -104,6 +132,15 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation("結果を図6に示す。", "The results are shown in Figure 5.")).toBe(false);
   });
 
+  it("requires table cross-references to survive in Japanese or source form", () => {
+    const source = "The levels are shown in Table 5.";
+    expect(extractScientificInvariants(source).map((item) => item.kind)).toContain("table");
+    expect(isPlausibleJaTranslation("分類は表5に示す。", source)).toBe(true);
+    expect(isPlausibleJaTranslation("分類は第5表に示す。", source)).toBe(true);
+    expect(isPlausibleJaTranslation("分類は表5に示す。値は5である。", source)).toBe(true);
+    expect(isPlausibleJaTranslation("分類は異なるレベルである。値は5である。", source)).toBe(false);
+  });
+
   it("treats full-width Japanese digits as the same preserved numeric facts", () => {
     const source = "The study included 82 participants, including 64 women.";
     expect(isPlausibleJaTranslation("本研究の参加者は８２人で、そのうち６４人が女性だった。", source)).toBe(true);
@@ -147,6 +184,13 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation("平均年齢は21.54歳（標準偏差2.16）だった。", source)).toBe(true);
   });
 
+  it("accepts an unchanged SD token and all its source values", () => {
+    expect(isPlausibleJaTranslation(
+      "平均値は2.77（SD=1.83）で、対照群は1.86（SD=1.25）だった。",
+      "The mean was 2.77 (SD=1.83), and the control group was 1.86 (SD=1.25)."
+    )).toBe(true);
+  });
+
   it("still rejects SD expansion when its value or statistical label is missing", () => {
     const source = "The mean age was 21.54 years (SD=2.16).";
     expect(isPlausibleJaTranslation("平均年齢は21.54歳（標準偏差2.61）だった。", source)).toBe(false);
@@ -159,6 +203,27 @@ describe("isPlausibleJaTranslation", () => {
     expect(extractScientificInvariants(source).map((item) => item.value)).toContain("29,30,32");
     expect(isPlausibleJaTranslation(good, source)).toBe(true);
     expect(isPlausibleJaTranslation("参加者は無条件に規則に従う。刺激はこの場合、ほとんど影響しなかった。", source)).toBe(false);
+  });
+
+  it("treats a trailing range in an inline superscript citation cluster as critical", () => {
+    const source = "Thus, the effect was replicated for selfish decisions3,6,9,12–14.";
+    const citation = "3,6,9,12–14";
+    expect(extractScientificInvariants(source).map((item) => item.value)).toContain(citation);
+    expect(isPlausibleJaTranslation(`この効果は再現された${citation}。`, source)).toBe(true);
+    const missingFinalCitation = evaluateJaTranslation("この効果は再現された3,6,9,12。", source);
+    expect(missingFinalCitation.reasons.join(" ")).toContain(citation);
+    expect(isPlausibleJaTranslation("この効果は再現された3,6,9,12。", source)).toBe(false);
+  });
+
+  it("rejects a spatial intervention target mistranslated as a comparison", () => {
+    const source = "Cathodal tDCS over the right LPFC leads to more selfish decisions.";
+    const mistranslation = "右側のLPFCより陰極側のtDCSが、より利己的な決定に導く。";
+    const faithful = "右LPFC上の陰極tDCSは、より利己的な決定につながる。";
+    expect(evaluateJaTranslation(mistranslation, source).reasons).toContain(
+      "spatial target relation rendered as comparison",
+    );
+    expect(isPlausibleJaTranslation(mistranslation, source)).toBe(false);
+    expect(isPlausibleJaTranslation(faithful, source)).toBe(true);
   });
 
   it("accepts a superscript citation rendered with brackets when its number matches", () => {
@@ -281,6 +346,18 @@ describe("isPlausibleJaTranslation", () => {
     )).toBe(false);
   });
 
+  it("accepts a preserved method identifier when its source spacing is normalized", () => {
+    expect(isPlausibleJaTranslation(
+      "本手法は(Hartford et al., 2017)のDeepIVと類似している。",
+      "Our method shares similarities with Deep IV (Hartford et al., 2017)."
+    )).toBe(true);
+  });
+
+  it("does not accept a different identifier as a compacted method name", () => {
+    const result = evaluateJaTranslation("方法はDeeperIVである。", "The method is Deep IV.");
+    expect(result.reasons).toContain("scientific invariants missing: IV");
+  });
+
 
   it("rejects a fluent translation that silently drops a method acronym", () => {
     const source = "RDIV improves MSE for NPIV regression.";
@@ -326,6 +403,33 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation(output, source)).toBe(true);
   });
 
+  it("rejects a fluent reversal of lexical omission or exclusion claims", () => {
+    const cases = [
+      {
+        source: "This document is a primary source of practitioner knowledge, foregoing references or data.",
+        output: "この文書は実務家の知識の一次資料であり、参考資料やデータの主要な源である。",
+      },
+    ];
+    for (const { source, output } of cases) {
+      expect(evaluateJaTranslation(output, source).reasons).toContain("source negation missing");
+      expect(isPlausibleJaTranslation(output, source)).toBe(false);
+    }
+  });
+
+  it("accepts lexical omission claims when Japanese preserves the negative meaning", () => {
+    expect(isPlausibleJaTranslation(
+      "この文書は参考文献やデータを含まない実務家知識の一次資料である。",
+      "This document is a primary source of practitioner knowledge, foregoing references or data."
+    )).toBe(true);
+  });
+
+  it("detects omission verbs separated by PDF line-wrap hyphenation", () => {
+    const source = "This document is a primary source, fore-going references or data.";
+    const output = "この文書は参考資料やデータの主要な源である。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("source negation missing");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
   it("rejects a universal claim that drops quantifier negation", () => {
     const source = "Contrary to earlier work, not all persuasion theories are effective online.";
     const output = "以前の研究とは異なり、すべての説得理論がオンラインで有効である。";
@@ -336,6 +440,76 @@ describe("isPlausibleJaTranslation", () => {
   it("accepts a bounded universal claim when quantifier negation is preserved", () => {
     const source = "Contrary to earlier work, not all persuasion theories are effective online.";
     const output = "以前の研究とは異なり、すべての説得理論がオンラインで有効とは限らない。";
+    expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
+  it("rejects negation moved from reported content onto the reporting verb", () => {
+    const source = "Participants who reported not to have looked at the pictures had higher scores.";
+    const reversed = "写真を見ていないと報告しなかった参加者は、より高いスコアだった。";
+    const faithful = "写真を見ていないと報告した参加者は、より高いスコアだった。";
+    expect(evaluateJaTranslation(reversed, source).reasons).toContain(
+      "negation moved from reported content to reporting predicate"
+    );
+    expect(isPlausibleJaTranslation(reversed, source)).toBe(false);
+    expect(isPlausibleJaTranslation(faithful, source)).toBe(true);
+  });
+
+  it("rejects the negation-scope reversal found in the recovered marketing paragraph", () => {
+    const source = "Compared with participants who reported not to have looked at the pictures, those who looked at them chose healthier snacks.";
+    const output = "画像を見た被験者は、見ていないと報告しなかった被験者に比べ、より健康的なスナックを選んだ。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain(
+      "negation moved from reported content to reporting predicate"
+    );
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("accepts an unchanged SD=value invariant without requiring its Japanese expansion", () => {
+    const source = "The score was higher in the treatment group (M=1.69, SD=3.20) than in the control group (M=0.66, SD=1.09).";
+    const output = "介入群のスコアは対照群より高かった(M=1.69, SD=3.20)(M=0.66, SD=1.09)。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain(
+      "scientific invariants missing: SD"
+    );
+  });
+
+  it("accepts the faithful negative-group-first rescue candidate", () => {
+    const source = "Participants who reported not to have looked at the pictures had lower implicit attention scores (M=0.66, SD=1.09, U=528.00, p=0.009), whereas participants who reported to have looked at the pictures had higher implicit attention scores (M=1.69, SD=3.20).";
+    const output = "画像を見なかったと報告した被験者は低い潜在的注意スコアを示し, 画像をみたと報告する被験者が高い潜在性注意スコアーを示した(M=0.66, SD=1.09, U=528.00, p=0.009)(M=1.69, SD=3.20)。";
+    expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
+  it("rejects a definite result when the source only says an effect might not have been detected", () => {
+    const source = "Due to the relatively small number of participants in each condition, smaller effects might not have been detected.";
+    const overconfident = "各条件における参加者数が比較的少ないため、小さな効果は検出されなかった。";
+    const faithful = "各条件の参加者数が比較的少ないため、小さな効果は検出されなかった可能性がある。";
+    expect(evaluateJaTranslation(overconfident, source).reasons).toContain("epistemic uncertainty lost");
+    expect(isPlausibleJaTranslation(overconfident, source)).toBe(false);
+    expect(isPlausibleJaTranslation(faithful, source)).toBe(true);
+  });
+
+  it("does not require uncertainty for an explicitly definite negative result", () => {
+    const source = "Due to the relatively small number of participants in each condition, smaller effects were not detected.";
+    const output = "各条件の参加者数が少なかったため、小さな効果は検出されなかった。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("epistemic uncertainty lost");
+  });
+
+  it("checks epistemic uncertainty in the aligned translated sentence, not elsewhere in the paragraph", () => {
+    const source = "The sample size was small. Due to few participants, smaller effects might not have been detected.";
+    const overconfident = "サンプルサイズは小さかった。参加者が少なかったため、小さな効果は検出されなかった。";
+    const faithful = "サンプルサイズは小さかった。参加者が少なかったため、小さな効果は検出されなかった可能性がある。";
+    expect(evaluateJaTranslation(overconfident, source).reasons).toContain("epistemic uncertainty lost");
+    expect(isPlausibleJaTranslation(overconfident, source)).toBe(false);
+    expect(isPlausibleJaTranslation(faithful, source)).toBe(true);
+  });
+
+  it("accepts a faithful alternate-model rendering of the reported negative comparison", () => {
+    const source = "Participants who reported to have looked at the pictures had higher implicit attention scores (M=1.69, SD=3.20), compared to those who reported not to have looked at the pictures (M=0.66, SD=1.09, U=528.00, p=0.009).";
+    const output = "写真を見たと報告した参加者の暗黙の注意スコアは(M=1.69, SD=3.20)、写真を見なかったと報告した参加者に比べて高かった(M=0.66, SD=1.09, U=528.00, p=0.009)。";
+    expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
+  it("accepts an alternate-model translation that preserves epistemic uncertainty", () => {
+    const source = "Due to the relatively small number of participants in each condition, smaller effects might not have been detected.";
+    const output = "参加者の数が各条件下で相対的に少ないため、より小さな効果が検出されなかった可能性があります。";
     expect(isPlausibleJaTranslation(output, source)).toBe(true);
   });
 

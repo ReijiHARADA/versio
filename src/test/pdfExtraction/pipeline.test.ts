@@ -245,6 +245,21 @@ describe("canonical extraction pipeline", () => {
     expect(candidates.some((candidate) => candidate.evidence.some((e) => e.label === "vector-figure-label-cluster"))).toBe(true);
   });
 
+  it("keeps a long multi-sentence results paragraph out of vector-figure evidence", () => {
+    const textItems = [
+      { text: "The first condition showed a reliable increase in", x: 72, y: 120, width: 230, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      { text: "performance across all participants. The second condition", x: 300, y: 120, width: 190, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      { text: "produced a smaller effect than the baseline and", x: 96, y: 135, width: 220, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      { text: "remained stable throughout the follow-up. The final", x: 320, y: 135, width: 170, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      { text: "analysis confirmed that this pattern was consistent", x: 120, y: 150, width: 225, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      { text: "with the observations from the previous experiment", x: 350, y: 150, width: 165, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+    ];
+    const candidates = generateGenericCandidates([{ pageNumber: 1, width: 540, height: 700, textItems }]).candidates;
+    const prose = candidates.find((candidate) => candidate.text.includes("The first condition"));
+    expect(prose?.evidence.some((evidence) => evidence.label === "vector-figure-label-cluster")).toBe(false);
+    expect(prose?.roleScores.other ?? 0).toBeLessThan(0.82);
+  });
+
   it("does not promote a possessive vector-figure fragment to a title", () => {
     const candidates = generateGenericCandidates([{
       pageNumber: 1,

@@ -218,6 +218,15 @@ class SegmenterTests(unittest.TestCase):
         self.assertTrue(all(unit.startswith("•") for unit in units[1:]))
         self.assertTrue(validate_round_trip(source, units))
 
+    def test_numbered_examples_split_after_sentence_final_superscript_citation(self) -> None:
+        source = "(1) Smugglers and human traffickers exploit irregular migration.3 (2) The positive effects of migration for host societies in Europe.4"
+        units = segment_for_translation(source)
+        self.assertEqual(len(units), 2)
+        self.assertTrue(units[0].text.startswith("(1) Smugglers"))
+        self.assertTrue(units[0].text.endswith("migration.3"))
+        self.assertTrue(units[1].text.startswith("(2) The positive effects"))
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
+
     def test_complete_sentences_are_independent_translation_units(self) -> None:
         source = (
             "From the above can be concluded that neither of the design proposals uses state-of-the-art technology "

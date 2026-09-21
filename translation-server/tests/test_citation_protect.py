@@ -11,11 +11,32 @@ from engines.citation_protect import (
     INLINE_NUMERIC_CITATION_RE,
     protect_citations,
     restore_citations,
+    terminal_superscript_indices,
 )
 from engines.madlad_mps import allows_unprotected_identifier_retry
 
 
 class CitationProtectTests(unittest.TestCase):
+    def test_acronym_with_attached_superscript_number_is_atomic(self) -> None:
+        source = "Traditional education systems are classified by UNESCO6 as shown in Table 5."
+        protected, cites, nonce = protect_citations(source)
+        self.assertEqual(cites, ["UNESCO6", "Table 5"])
+        self.assertNotIn("UNESCO6", protected)
+        self.assertNotIn("Table 5", protected)
+        self.assertEqual(restore_citations(protected, cites, nonce), source)
+
+    def test_numbered_table_reference_is_atomic_without_neighboring_prose(self) -> None:
+        source = "Levels are shown in Table 5 and Figure 2a."
+        protected, cites, nonce = protect_citations(source)
+        self.assertEqual(cites, ["Table 5", "Figure 2a"])
+        self.assertEqual(restore_citations(protected, cites, nonce), source)
+
+    def test_table_keyword_without_number_is_not_protected(self) -> None:
+        source = "The table contains five rows."
+        protected, cites, _ = protect_citations(source)
+        self.assertEqual(cites, [])
+        self.assertEqual(protected, source)
+
     def test_unprotected_retry_allows_only_structural_figure_table_reference(self) -> None:
         self.assertTrue(allows_unprotected_identifier_retry(["Fig. 2"]))
         self.assertTrue(allows_unprotected_identifier_retry(["(Table 3a)"]))
@@ -37,11 +58,60 @@ class CitationProtectTests(unittest.TestCase):
         fullwidth = protected.replace("ZZCIT1ZZ", "ＺＺＣＩＴ１ＺＺ")
         self.assertEqual(restore_citations(fullwidth, cites, nonce, reject_missing=True), "see [12]")
 
+    def test_strict_restore_recovers_single_garbled_placeholder_by_index(self) -> None:
+        source = "Results include BDNF and (p=0.001)."
+        protected, cites, nonce = protect_citations(source)
+        self.assertEqual(cites, ["BDNF", "(p=0.001)"])
+        garbled = protected.replace("ZZCIT2ZZ", "ZZCイT2ZZ")
+        self.assertEqual(
+            restore_citations(garbled, cites, nonce, reject_missing=True),
+            source,
+        )
+
+    def test_strict_restore_rejects_ambiguous_garbled_placeholder(self) -> None:
+        source = "Values (p=0.001) and (p=0.002)."
+        protected, cites, nonce = protect_citations(source)
+        garbled = protected.replace("ZZCIT1ZZ", "ZZCaT1ZZ") + " ZZCaT1ZZ"
+        with self.assertRaisesRegex(ValueError, "placeholder malformed"):
+            restore_citations(garbled, cites, nonce, reject_missing=True)
+
     def test_strict_restore_recovers_dropped_terminal_figure_reference(self) -> None:
         protected, cites, nonce = protect_citations("The result is shown (Fig. 8 and Table S3).")
         self.assertEqual(
             restore_citations("結果を示した。", cites, nonce, reject_missing=True),
             "結果を示した(Fig. 8 and Table S3)。",
+        )
+
+    def test_identifier_retry_leaves_other_citations_protected(self) -> None:
+        source = (
+            "Finally, Apple announced its Human Interface Guidelines at WWDC [1]."
+        )
+        protected, citations, nonce = protect_citations(
+            source,
+            unprotected_values={"WWDC"},
+        )
+        self.assertIn("WWDC", protected)
+        self.assertNotIn("[1]", protected)
+        self.assertEqual(citations, ["[1]"])
+        self.assertEqual(
+            restore_citations(
+                "最後に,アップルはWWDCでガイドラインを発表した。",
+                citations,
+                nonce,
+                reject_missing=True,
+            ),
+            "最後に,アップルはWWDCでガイドラインを発表した[1]。",
+        )
+
+    def test_terminal_superscript_indices_follow_selective_protection_order(self) -> None:
+        source = "At WWDC, the result was significant.2"
+        self.assertEqual(terminal_superscript_indices(source), {1})
+        self.assertEqual(
+            terminal_superscript_indices(
+                source,
+                unprotected_values={"WWDC"},
+            ),
+            {0},
         )
 
     def test_strict_restore_rejects_dropped_standalone_figure_reference(self) -> None:
@@ -61,6 +131,20 @@ class CitationProtectTests(unittest.TestCase):
         protected, cites, nonce = protect_citations(src)
         self.assertEqual(cites, ["[8]", "[12]", "[3]"])
         self.assertEqual(restore_citations(protected, cites, nonce), src)
+
+    def test_narrative_author_year_protects_full_multiword_name(self) -> None:
+        source = "This is what Geoff Thompson (2014) is wary of."
+        protected, cites, nonce = protect_citations(source)
+        self.assertEqual(cites, ["Geoff Thompson (2014)"])
+        self.assertNotIn("Geoff", protected)
+        self.assertEqual(restore_citations(protected, cites, nonce), source)
+
+    def test_narrative_author_year_does_not_capture_adjacent_prose(self) -> None:
+        source = "This is what Geoff Thompson (2014) is wary of and supports the analysis."
+        protected, cites, nonce = protect_citations(source)
+        self.assertEqual(cites, ["Geoff Thompson (2014)"])
+        self.assertIn("is wary of and supports the analysis", protected)
+        self.assertEqual(restore_citations(protected, cites, nonce), source)
 
     def test_comma_list(self) -> None:
         src = "Prior work [1, 3] agrees."
@@ -287,6 +371,24 @@ class CitationProtectTests(unittest.TestCase):
         self.assertNotIn("29,30,32", protected)
         self.assertEqual(restore_citations(protected, citations, nonce), source)
 
+    def test_protects_inline_numeric_citation_cluster_with_trailing_range(self) -> None:
+        source = "The effect was replicated for selfish decisions3,6,9,12–14."
+        protected, citations, nonce = protect_citations(source)
+        self.assertEqual(citations, ["3,6,9,12–14"])
+        self.assertNotIn("12–14", protected)
+        self.assertEqual(restore_citations(protected, citations, nonce), source)
+        self.assertEqual(
+            restore_citations("効果が再現された。", citations, nonce, reject_missing=True),
+            "効果が再現された3,6,9,12–14。",
+        )
+
+    def test_restores_placeholder_with_repeated_confusable_prefix(self) -> None:
+        raw = "これによりＺｚＺＣＩｔ１ＺＺが保たれた。"
+        self.assertEqual(
+            restore_citations(raw, ["tDCS"], reject_missing=True),
+            "これによりtDCSが保たれた。",
+        )
+
     def test_restores_dropped_inline_numeric_citation_at_translated_sentence_end(self) -> None:
         _, citations, nonce = protect_citations("The prior study found little effect in this case12,33.")
         self.assertEqual(citations, ["12,33"])
@@ -307,6 +409,47 @@ class CitationProtectTests(unittest.TestCase):
         _, citations, nonce = protect_citations(source)
         restored = restore_citations("問題を提示した。", citations, nonce)
         self.assertEqual(restored, "問題を提示した16。")
+
+    def test_protects_terminal_superscript_citation_after_sentence_punctuation(self) -> None:
+        source = "Smugglers exploit irregular migration.3"
+        protected, citations, nonce = protect_citations(source)
+        self.assertEqual(citations, ["3"])
+        self.assertTrue(protected.endswith("ZZCIT1ZZ"))
+        self.assertEqual(restore_citations(protected, citations, nonce), source)
+
+    def test_strict_restore_recovers_only_terminal_superscript_at_sentence_end(self) -> None:
+        source = "Smugglers exploit irregular migration.3"
+        _, citations, nonce = protect_citations(source)
+        indices = terminal_superscript_indices(source)
+        self.assertEqual(indices, {0})
+        self.assertEqual(
+            restore_citations(
+                "不規則移民を利用する。",
+                citations,
+                nonce,
+                reject_missing=True,
+                recoverable_terminal_indices=indices,
+            ),
+            "不規則移民を利用する3。",
+        )
+
+    def test_strict_restore_still_rejects_dropped_inline_footnote(self) -> None:
+        source = "We introduced the “cab problem”16 (Cab, see SI Appendix)."
+        _, citations, nonce = protect_citations(source)
+        self.assertEqual(terminal_superscript_indices(source), set())
+        with self.assertRaisesRegex(ValueError, "placeholder dropped"):
+            restore_citations(
+                "問題を提示した。",
+                citations,
+                nonce,
+                reject_missing=True,
+                recoverable_terminal_indices=terminal_superscript_indices(source),
+            )
+
+    def test_terminal_superscript_protection_does_not_capture_decimal_digit(self) -> None:
+        source = "The measured value was 2.913."
+        _, citations, _ = protect_citations(source)
+        self.assertEqual(citations, [])
 
 
 if __name__ == "__main__":

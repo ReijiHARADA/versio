@@ -20,6 +20,8 @@ type CatalogPaper = {
     forbidEquationContains?: string[];
     forbidSameParagraph?: [string, string][];
     requireSameParagraph?: [string, string][];
+    requireParagraphContains?: string[];
+    forbidParagraphContains?: string[];
     forbidCaptionInParagraph?: boolean;
     referencesHeading?: boolean;
     titleContains?: string;
@@ -173,6 +175,14 @@ describe("real jewelry-corpus PDFs", () => {
           paragraphs.some((p) => p.includes(a) && p.toLowerCase().includes(b.toLowerCase())),
           `${paper.id} should preserve a logical paragraph across layout chrome`
         ).toBe(true);
+      }
+
+      for (const text of checks.requireParagraphContains ?? []) {
+        expect(paragraphs.some((paragraph) => paragraph.includes(text)), `${paper.id} paragraph contains ${text}`).toBe(true);
+      }
+
+      for (const text of checks.forbidParagraphContains ?? []) {
+        expect(paragraphs.some((paragraph) => paragraph.includes(text)), `${paper.id} paragraph should exclude ${text}`).toBe(false);
       }
 
       if (checks.forbidCaptionInParagraph) {

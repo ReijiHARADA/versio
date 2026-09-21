@@ -20,14 +20,22 @@ for (const { paper, row } of entries) {
   const pages = await extractPdfPages(path.join(root, catalog.pdfDir, catalogPaper.filename));
   const { candidates } = generateGenericCandidates(pages);
   const normalize = (text: string) => text.replace(/\s+/g, " ").trim();
-  const index = candidates.findIndex((candidate) => normalize(candidate.text) === normalize(row.source));
+  const normalizedSource = normalize(row.source);
+  const exactIndex = candidates.findIndex((candidate) => normalize(candidate.text) === normalizedSource);
+  const containingIndex = candidates.findIndex((candidate) => normalize(candidate.text).includes(normalizedSource));
+  const continuationIndex = candidates.findIndex((candidate) =>
+    normalize(candidate.text).includes("story complexity") && normalize(candidate.text).includes("sound complexity")
+  );
+  const index = exactIndex >= 0 ? exactIndex : containingIndex >= 0 ? containingIndex : continuationIndex;
   if (index < 0) {
-    diagnostics.push({ key: row.key, exactCandidateMatch: false });
+    diagnostics.push({ key: row.key, exactCandidateMatch: false, containingCandidateMatch: false });
     continue;
   }
   diagnostics.push({
     key: row.key,
-    exactCandidateMatch: true,
+    exactCandidateMatch: exactIndex >= 0,
+    containingCandidateMatch: containingIndex >= 0,
+    continuationCandidateMatch: continuationIndex >= 0,
     sourceCategory: row.sourceCategory,
     translationAccepted: !row.readerVisibleFallback,
     fallbackReason: row.fallbackReason,

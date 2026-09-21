@@ -12,7 +12,7 @@ import re
 
 # Bump this whenever source-fact protection rules change. It participates in
 # the server translation/cache identity so old accepts are not reused silently.
-SOURCE_PROTECTION_VERSION = "source-protect-v1"
+SOURCE_PROTECTION_VERSION = "source-protect-v11"
 
 # Numeric citations only: [8], [12], [1, 3], [12,13], [1-4], [1–4], [1, 3–5, 8]
 CITATION_RE = re.compile(
@@ -30,12 +30,21 @@ INLINE_FOOTNOTE_CITATION_RE = re.compile(
     r"(?:(?<=[\"”’])|(?<=[A-Za-z]))\d{1,3}(?=\s*\()"
 )
 
+# Some PDFs attach a reference marker after terminal punctuation and before a
+# flattened next list item (`... migration.3 (2) The positive effects ...`).
+# After list segmentation, this citation is the terminal `.<sup>3</sup>` of
+# the first unit. Require punctuation plus a preceding non-digit to avoid
+# capturing the last digit of a decimal such as `0.01`.
+TERMINAL_SUPERSCRIPT_CITATION_RE = re.compile(r"(?<=[^\d][.!?])\d{1,3}$")
+
 # Some publishers render clustered numeric citations as unbracketed
 # superscripts attached to the preceding word: ``unconditionally29,30,32``.
 # A comma-separated cluster is a high-precision reference signal; a lone
 # suffix (for example P1 or COVID19) is deliberately not treated as citation.
 INLINE_NUMERIC_CITATION_RE = re.compile(
-    r"(?<=[A-Za-z])\d{1,3}(?:\s*,\s*\d{1,3})+"
+    r"(?<=[A-Za-z])"
+    r"\d{1,3}(?:\s*[-–—]\s*\d{1,3})?"
+    r"(?:\s*,\s*\d{1,3}(?:\s*[-–—]\s*\d{1,3})?)+"
 )
 
 # Parenthetical author-year references are a single citation fact even when
@@ -56,7 +65,11 @@ AUTHOR_YEAR_CITATION_RE = re.compile(
 # a cited scholar's name while leaving the year intact.
 NARRATIVE_AUTHOR_YEAR_CITATION_RE = re.compile(
     r"\b"
-    r"(?:[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+|[a-z]{1,4}\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+)"
+    r"(?:[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+|(?!(?:what|when|where|who|whom|which|this|that|with|then|than|into|upon|also)\b)[a-z]{1,4}\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+)"
+    # Include given/middle names before the family name. Protecting only the
+    # final surname/year allowed alternate decoders to translate or replace a
+    # cited author's given name (for example, Geoff -> George Thompson).
+    r"(?:\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+){0,2}"
     r"(?:\s+et\s+al\.?)?"
     r"(?:\s+(?:and|&)\s+(?:[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+|[a-z]{1,4}\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+))?"
     r"(?:['’]s)?\s*"
@@ -98,6 +111,10 @@ SCIENTIFIC_TOKEN_RE = re.compile(
     r"|"
     r"\b10\.\d{4,9}/[-._;()/:A-Z0-9]+"  # DOI
     r"|https?://[^\s)>\]}]+"  # URL
+    # Keep numbered table cross-references atomic. A decoder may translate
+    # the label while dropping the number, or preserve a generic number in an
+    # unrelated clause and falsely appear to have retained the reference.
+    r"|\btable\s+\d+(?:[a-z]|\([a-z]\))?"  # table/panel reference
     r"|\b(?:fig(?:ure)?s?\.?\s*\d+(?:[a-z]|\([a-z]\))?)"  # figure/panel reference
     r"|(?:[χΧxX](?:²|2)?|[FfTtZz])\s*\([^)]{1,16}\)\s*(?:=|<|>|≤|≥)\s*[-+]?\d+(?:\.\d+)?"  # test statistic
     # Rank/non-parametric tests commonly report a bare uppercase statistic
@@ -127,6 +144,11 @@ SCIENTIFIC_TOKEN_RE = re.compile(
     # Alphanumeric method identifiers (M2W, TQP3M9009) are facts even when
     # they do not contain a lowercase-to-uppercase transition.
     r"|(?-i:\b[A-Z]{1,4}\d[A-Z0-9]{1,12}\b)"
+    # Native extraction may concatenate an all-caps organization/method name
+    # with a superscript reference, e.g. ``UNESCO6``. Protect the complete
+    # alphanumeric token so the model cannot localize the acronym and make the
+    # source invariant appear lost (or detach the reference number).
+    r"|(?-i:\b[A-Z]{2,10}\d{1,3}\b)"
     r"|(?-i:\b[A-Z]{2,8}\b)"
     # Hyphenated Title-Case system/method names (Power-over-Skin, Machine-to-
     # Wearable) are identifiers, not ordinary prose. Preserve them exactly so
@@ -202,6 +224,7 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
     matches = (
         list(CITATION_RE.finditer(text))
         + list(INLINE_FOOTNOTE_CITATION_RE.finditer(text))
+        + list(TERMINAL_SUPERSCRIPT_CITATION_RE.finditer(text))
         + list(INLINE_NUMERIC_CITATION_RE.finditer(text))
         + list(NARRATIVE_AUTHOR_YEAR_CITATION_RE.finditer(text))
         + [match for match in ACKNOWLEDGMENT_NAME_LIST_RE.finditer(text)]
@@ -249,6 +272,30 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
     return non_overlapping
 
 
+def terminal_superscript_indices(
+    text: str,
+    *,
+    unprotected_values: set[str] | None = None,
+) -> set[int]:
+    """Return protected-span indexes that are safe to restore at sentence end.
+
+    A missing ``.<sup>3</sup>`` marker is recoverable at the translated
+    sentence's terminal punctuation. Other bare numeric spans (for example a
+    superscript before an explanatory parenthesis) must still fail closed.
+    Indexes follow the same order as ``protect_citations``.
+    """
+    unprotected_values = unprotected_values or set()
+    matches = [
+        match for match in _protected_matches(text)
+        if match.group(0) not in unprotected_values
+    ]
+    return {
+        index
+        for index, match in enumerate(matches)
+        if match.re is TERMINAL_SUPERSCRIPT_CITATION_RE
+    }
+
+
 def protected_span_mask(text: str) -> str:
     """Mask protected spans without changing offsets for boundary scanning.
 
@@ -261,12 +308,24 @@ def protected_span_mask(text: str) -> str:
     return "".join(chars)
 
 
-def protect_citations(text: str) -> tuple[str, list[str], int]:
+def protect_citations(
+    text: str,
+    *,
+    unprotected_values: set[str] | None = None,
+) -> tuple[str, list[str], int]:
     """Replace citations and scientific facts with placeholders.
+
+    ``unprotected_values`` is used only for a narrow retry of a dropped,
+    identifier-like span. Other citations and scientific invariants remain
+    protected during that retry.
 
     The API name remains for compatibility with the engine and existing tests.
     """
-    matches = _protected_matches(text)
+    unprotected_values = unprotected_values or set()
+    matches = [
+        match for match in _protected_matches(text)
+        if match.group(0) not in unprotected_values
+    ]
     if not matches:
         return text, [], 0
 
@@ -313,13 +372,33 @@ def _normalize_placeholder_glyphs(text: str) -> str:
     # Greedy decoding can emit Greek/Cyrillic lookalikes for the fixed ASCII
     # placeholder (for example ``ΖZCIΤ2ZZ``). Normalize only the complete
     # placeholder-shaped token; ordinary scientific text is untouched.
-    lookalikes = re.compile(r"[ZΖЗ][ZΖЗ][CСϹЦ][IΙІ][TΤТЦ]\d+(?:X\d+)?[ZΖЗ][ZΖЗ]", re.IGNORECASE)
+    # MADLAD occasionally repeats a Z-like glyph at the placeholder prefix
+    # (for example `ZzZCIt1ZZ`). Normalize the whole span by its unique
+    # placeholder index; translating glyphs in place would leave the extra Z
+    # attached to the restored scientific identifier (`ZtDCS`).
+    lookalikes = re.compile(
+        r"[ZΖЗzζз]{2,4}[CСϹЦcсϲц][IΙІі][TΤТЦтц]"
+        r"\d+(?:X\d+)?[ZΖЗzζз]{2,4}",
+        re.IGNORECASE,
+    )
     table = str.maketrans({"Ζ": "Z", "З": "Z", "С": "C", "Ϲ": "C", "Ц": "C", "ц": "c", "Ι": "I", "І": "I", "Τ": "T", "Т": "T", "ζ": "z", "с": "c", "ι": "i", "і": "i", "τ": "t", "т": "t"})
-    return lookalikes.sub(lambda match: match.group(0).translate(table), text)
+
+    def canonicalize(match: re.Match[str]) -> str:
+        normalized = match.group(0).translate(table)
+        identifier = re.search(r"\d+(?:X\d+)?", normalized, re.IGNORECASE)
+        return f"{_PLACEHOLDER_PREFIX}{identifier.group(0)}{_PLACEHOLDER_SUFFIX}" if identifier else match.group(0)
+
+    return lookalikes.sub(canonicalize, text)
 
 
 def _is_inline_numeric_citation(value: str) -> bool:
-    return bool(re.fullmatch(r"\s*\d{1,3}(?:\s*,\s*\d{1,3})+\s*", value))
+    return bool(
+        re.fullmatch(
+            r"\s*\d{1,3}(?:\s*[-–—]\s*\d{1,3})?"
+            r"(?:\s*,\s*\d{1,3}(?:\s*[-–—]\s*\d{1,3})?)+\s*",
+            value,
+        )
+    )
 
 
 def restore_citations(
@@ -328,14 +407,32 @@ def restore_citations(
     nonce: int = 0,
     *,
     reject_missing: bool = False,
+    recoverable_terminal_indices: set[int] | None = None,
 ) -> str:
     """Put original citation strings back, preserving content and order."""
     if not citations:
         return _to_halfwidth(text)
     out = _normalize_placeholder_glyphs(text)
     missing: list[str] = []
+    recoverable_terminal_indices = recoverable_terminal_indices or set()
     for i, citation in enumerate(citations):
         pattern = _placeholder_pattern(i, nonce)
+        if reject_missing and not pattern.search(out):
+            # MADLAD sometimes inserts a Japanese/Latin glyph inside an
+            # otherwise recognizable placeholder (for example ZZCイT4ZZ or
+            # ZZCaT3ZZ). When the index is unambiguous, restore the exact
+            # source fact by its placeholder index instead of exposing the
+            # damaged marker or rejecting a recoverable translation.
+            numbered = (
+                rf"{re.escape(_PLACEHOLDER_PREFIX[:3])}[^\s]{{0,3}}"
+                rf"{nonce}X{i + 1}{re.escape(_PLACEHOLDER_SUFFIX)}"
+                if nonce
+                else rf"{re.escape(_PLACEHOLDER_PREFIX[:3])}[^\s]{{0,3}}T{i + 1}{re.escape(_PLACEHOLDER_SUFFIX)}"
+            )
+            candidates = list(re.finditer(numbered, out, re.IGNORECASE))
+            if len(candidates) == 1:
+                candidate = candidates[0]
+                out = out[:candidate.start()] + placeholder_for(i, nonce) + out[candidate.end():]
         if pattern.search(out):
             # Native-PDF superscript references are attached to the preceding
             # term (for example ``“hospital problem”17``).  Greedy decoding
@@ -354,6 +451,17 @@ def restore_citations(
                     out = before[:terminal.start()] + match.group(0) + punctuation + after
             out = pattern.sub(citation, out, count=1)
         elif citation not in out:
+            if (
+                reject_missing
+                and i in recoverable_terminal_indices
+                and citation.isdigit()
+                and (terminal := re.search(r"([。！？.!?])\s*$", out))
+            ):
+                # The source matcher established this was a terminal
+                # superscript reference, so it can be restored adjacent to the
+                # translated sentence mark without guessing among prose digits.
+                out = out[:terminal.start()] + citation + terminal.group(1) + out[terminal.end():]
+                continue
             # A dropped parenthetical/figure citation at the source sentence
             # tail can be restored exactly before the translated terminal mark.
             # This is deliberately limited to reference-shaped spans; numeric
@@ -375,7 +483,7 @@ def restore_citations(
     # Greedy decoding can insert or substitute glyphs inside a protected token
     # (for example ``ZZtCIT4ZZ``). Such residue is not recoverable safely and
     # must fail closed instead of reaching the reader as visible garbage.
-    malformed = re.compile(r"ZZ[^\s]{1,4}IT\d+(?:X\d+)?ZZ", re.IGNORECASE)
+    malformed = re.compile(r"ZZ[^\s]{1,12}(?=[^\s]{0,12}\d)(?=[^\s]{0,12}(?:C|I|T))[^\s]{1,12}ZZ", re.IGNORECASE)
     if reject_missing and malformed.search(out):
         raise ValueError("protected citation placeholder malformed")
     if reject_missing and missing:

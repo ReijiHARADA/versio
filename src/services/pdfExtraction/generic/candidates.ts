@@ -123,6 +123,10 @@ function imageOverlapLabelEvidence(block: LayoutBlock, page?: ExtractedPage): nu
 function vectorFigureLabelEvidence(block: LayoutBlock): number {
   if (block.lines.length === 0) return 0;
   const items = block.lines.flatMap((line) => line.items);
+  const words = block.text.trim().split(/\s+/).filter(Boolean);
+  const sentenceLikeProse = paragraphLike(block.text) && words.length >= 40 &&
+    block.text.trim().split(/(?<=[.!?])\s+/).filter((sentence) => sentence.trim().length >= 24).length >= 2;
+  if (sentenceLikeProse) return 0;
   const multiItemContinuation = block.lines.length === 1 &&
     ((items.length >= 4 && block.text.trim().startsWith("'")) ||
       (items.length === 1 && block.text.trim().startsWith("'") && block.text.trim().length <= 100)) &&
@@ -354,6 +358,7 @@ function captionedNeighborCellRows(block: LayoutBlock, blocks: LayoutBlock[]): b
     candidate.role === "table_caption" && candidate.bbox.y < block.bbox.y &&
     block.bbox.y - (candidate.bbox.y + candidate.bbox.height) <= 420);
   if (!caption) return false;
+  const repeatedCellOrigins = new Map<number, number>();
   const alignedRows = block.lines.filter((line) => {
     const origins: number[] = [];
     const alignedItems = blocks.flatMap((peer) => {
@@ -385,9 +390,18 @@ function captionedNeighborCellRows(block: LayoutBlock, blocks: LayoutBlock[]): b
         previousOrigin = origin;
       }
     }
-    return distinctOrigins >= 2;
+    if (distinctOrigins < 2) return false;
+    // Independent prose columns can align on a few baselines and expose
+    // short x fragments at line wraps. Table cells repeat the same separated
+    // column origins across rows, so require at least two stable origins
+    // instead of treating one coincidental alignment as a grid.
+    for (const origin of origins) {
+      const bucket = Math.round(origin / 24);
+      repeatedCellOrigins.set(bucket, (repeatedCellOrigins.get(bucket) ?? 0) + 1);
+    }
+    return true;
   }).length;
-  return alignedRows >= 2;
+  return alignedRows >= 2 && [...repeatedCellOrigins.values()].filter((count) => count >= 2).length >= 2;
 }
 
 /** Native PDF spans on one baseline often preserve the separate cells of a
@@ -405,9 +419,11 @@ function captionedNativeMultiCellRow(block: LayoutBlock, blocks: LayoutBlock[]):
   return block.lines.some((line) => {
     // Layout may split the final wide cell into a neighboring block while
     // retaining the first three cell spans together. Reassemble native spans
-    // from all same-baseline peers before checking the row geometry.
+    // from same-column, same-baseline peers before checking the row geometry.
+    // Items from the opposite reading column can share a y-coordinate with
+    // ordinary prose and falsely manufacture four separated "cells".
     const items = blocks
-      .filter((peer) => peer.pageStart === block.pageStart)
+      .filter((peer) => peer.pageStart === block.pageStart && peer.column === block.column)
       .flatMap((peer) => peer.lines
         .filter((peerLine) => Math.abs(peerLine.y - line.y) <= Math.max(2, line.fontSize * 0.4))
         .flatMap((peerLine) => peerLine.items))
@@ -835,6 +851,14 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         !/[.!?]\s*$/.test(block.text.trim()) &&
         block.text.trim().split(/\s+/).filter(Boolean).length <= 40;
       const proseBlock = paragraphLike(block.text) && /[.!?]\s*$/.test(block.text.trim());
+      // A long results paragraph may contain indented continuation lines or
+      // separately emitted figure references, which creates several native
+      // x origins despite reading as continuous prose. Treat multiple
+      // sentence boundaries plus substantial prose as stronger negative
+      // table evidence even when the final line is clipped at a page edge.
+      const sentenceLikeProse = paragraphLike(block.text) &&
+        block.text.trim().split(/(?<=[.!?])\s+/).filter((sentence) => sentence.trim().length >= 24).length >= 2 &&
+        block.text.trim().split(/\s+/).filter(Boolean).length >= 40;
       const sameOriginLongProse = block.lines.length > 8 &&
         new Set(block.lines.map((line) => Math.round(line.bbox.x / 12))).size === 1 &&
         block.text.trim().split(/\s+/).filter(Boolean).length > 20;
@@ -843,7 +867,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       const captionBlock = block.role === "table_caption";
       scoreByRole.table = rotatedItems.length >= 30 && rotatedNumeric / Math.max(rotatedItems.length, 1) >= 0.3
         ? 0.97
-        : (structuralGrid || flattenedGrid) && !proseBlock && !sameOriginLongProse && !listLikeBlock && !longCaption && !captionBlock
+        : (structuralGrid || flattenedGrid) && !proseBlock && !sentenceLikeProse && !sameOriginLongProse && !listLikeBlock && !longCaption && !captionBlock
           ? 0.95
           // `tableLike` also catches ordinary multi-line prose with aligned
           // native items. Keep that signal for region membership, but below

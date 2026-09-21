@@ -1,4 +1,4 @@
-import { displayHeadingText } from "../../pdfLayout";
+import { displayHeadingText, isSentenceContinuation, type PageColumnLayout } from "../../pdfLayout";
 import type { CanonicalNode, CanonicalRelation } from "../canonical/types";
 import type { RoleCandidate } from "../generic/candidates";
 
@@ -196,6 +196,51 @@ export function readsBeforeRelations(orderedIds: string[]): CanonicalRelation[] 
       to: orderedIds[i + 1],
       score: 0.9,
     });
+  }
+  return relations;
+}
+
+/**
+ * Link a paragraph that resumes below a floated table to its unfinished
+ * cross-column source paragraph. The table and caption remain independent
+ * canonical nodes. This relation is emitted only when the source text is
+ * syntactically continuous and native geometry places the intervening table
+ * in the upper right column between the two text fragments.
+ */
+export function floatedTableContinuationRelations(
+  nodes: CanonicalNode[],
+  layouts: PageColumnLayout[]
+): CanonicalRelation[] {
+  const relations: CanonicalRelation[] = [];
+  for (let i = 0; i < nodes.length; i += 1) {
+    const previous = nodes[i];
+    if (previous.role !== "paragraph" || !previous.text || previous.pageStart !== previous.pageEnd) continue;
+    const pageLayout = layouts.find((layout) => layout.page === previous.pageEnd);
+    if (!pageLayout?.isMultiColumn) continue;
+    for (let j = i + 1; j < nodes.length; j += 1) {
+      const next = nodes[j];
+      if (next.pageStart !== previous.pageEnd || next.pageEnd !== next.pageStart) break;
+      if (next.role === "heading" || next.role === "equation" || next.role === "reference") break;
+      if (next.role !== "paragraph") continue;
+      if (!next.text || previous.column !== "left" || next.column !== "right") continue;
+
+      const intervening = nodes.slice(i + 1, j);
+      if (intervening.length < 2 || !intervening.every((node) => node.role === "table" || node.role === "caption")) continue;
+      if (!intervening.some((node) => node.role === "table") || !intervening.some((node) => node.role === "caption")) continue;
+      const previousTail = previous.boundingBoxes.at(-1);
+      const nextStart = next.boundingBoxes[0];
+      if (!previousTail || !nextStart) continue;
+      if (previousTail.y <= pageLayout.pageHeight * 0.68 || nextStart.y >= pageLayout.pageHeight * 0.32) continue;
+      if (intervening.some((node) =>
+        node.column !== "right" || node.pageStart !== previous.pageEnd ||
+        node.boundingBoxes.length === 0 ||
+        node.boundingBoxes.some((box) => box.y + box.height >= nextStart.y)
+      )) continue;
+      if (previous.text.trim().length < 80 || !isSentenceContinuation(previous.text, next.text)) continue;
+
+      relations.push({ kind: "CONTINUES", from: previous.id, to: next.id, score: 0.9 });
+      break;
+    }
   }
   return relations;
 }

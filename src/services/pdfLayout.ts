@@ -55,6 +55,7 @@ export type LayoutLine = {
   rotation?: number;
   pageHeight?: number;
   pageWidth?: number;
+  roleHint?: LayoutRole;
 };
 
 export type LayoutBlock = {
@@ -90,6 +91,49 @@ function median(values: number[]): number {
   return sorted.length % 2 === 0
     ? (sorted[mid - 1] + sorted[mid]) / 2
     : sorted[mid];
+}
+
+function normalizedTextRotation(rotation: number | undefined): number {
+  const normalized = ((rotation ?? 0) % 180 + 180) % 180;
+  return normalized === 180 ? 0 : normalized;
+}
+
+function rotationDistance(a: number | undefined, b: number | undefined): number {
+  const difference = Math.abs(normalizedTextRotation(a) - normalizedTextRotation(b));
+  return Math.min(difference, 180 - difference);
+}
+
+function representativeTextRotation(rotations: number[]): number {
+  const candidates = rotations.map(normalizedTextRotation);
+  return candidates.reduce((best, candidate) =>
+    candidates.reduce((sum, value) => sum + rotationDistance(candidate, value), 0) <
+    candidates.reduce((sum, value) => sum + rotationDistance(best, value), 0)
+      ? candidate
+      : best
+  );
+}
+
+function sameTextOrientation(a: number | undefined, b: number | undefined): boolean {
+  // PDF.js can emit small per-span angle differences on one slanted line, but
+  // labels on different spokes of a radial figure are separate text objects.
+  return rotationDistance(a, b) <= 3;
+}
+
+function rotatedTextInterval(item: ExtractedTextItem, rotation: number): [number, number] {
+  const radians = normalizedTextRotation(rotation) * Math.PI / 180;
+  const start = item.x * Math.cos(radians) + item.y * Math.sin(radians);
+  const end = start + item.width;
+  return [Math.min(start, end), Math.max(start, end)];
+}
+
+function rotatedTextOverlaps(a: ExtractedTextItem, b: ExtractedTextItem): boolean {
+  if (!sameTextOrientation(a.rotation, b.rotation) || Math.abs(normalizedTextRotation(a.rotation)) < 45) return false;
+  const originDistance = Math.hypot(a.x - b.x, a.y - b.y);
+  if (originDistance > Math.max(2, Math.min(a.fontSize, b.fontSize) * 1.5)) return false;
+  const [aStart, aEnd] = rotatedTextInterval(a, a.rotation ?? 0);
+  const [bStart, bEnd] = rotatedTextInterval(b, a.rotation ?? 0);
+  const overlap = Math.min(aEnd, bEnd) - Math.max(aStart, bStart);
+  return overlap > Math.max(1, Math.min(a.width, b.width) * 0.15);
 }
 
 function unionBbox(items: ExtractedTextItem[], page: number): BoundingBox {
@@ -360,7 +404,7 @@ function itemsToLine(
     bbox,
     pageHeight,
     pageWidth,
-    rotation: median(items.map((item) => item.rotation ?? 0)),
+    rotation: representativeTextRotation(items.map((item) => item.rotation ?? 0)),
   };
 }
 
@@ -418,6 +462,9 @@ function clusterItemsIntoLines(
     let best = -1;
     let bestDist = Infinity;
     for (let i = 0; i < groups.length; i++) {
+      const groupRotation = representativeTextRotation(groups[i].map((groupItem) => groupItem.rotation ?? 0));
+      const itemRotation = normalizedTextRotation(item.rotation);
+      if (!sameTextOrientation(groupRotation, itemRotation)) continue;
       const itemSide = sidebarSide(item);
       if (itemSide && groups[i].some((groupItem) => {
         const groupSide = sidebarSide(groupItem);
@@ -432,22 +479,22 @@ function clusterItemsIntoLines(
       const existingGroupWidth = maxX - minX;
       const groupFont = median(groups[i].map((groupItem) => groupItem.fontSize));
       // A small left publication rail (dates, received/accepted labels, etc.)
-      // can land on the same baseline as the first body line. When that rail
-      // has already formed a compact group, do not prepend it to a much wider,
-      // larger-font sentence beginning well to its right. This is symmetric
-      // with detachedMarginAnnotation above and uses geometry/style rather
-      // than publisher wording.
+      // can land on the same baseline as the first body word. A large gap and
+      // font jump are enough to keep it separate even when PDF.js emits body
+      // words as individual narrow spans. This is symmetric with
+      // detachedMarginAnnotation above and uses geometry/style rather than
+      // publisher wording.
       const detachedLeadingMarginAnnotation =
         existingGroupWidth < 150 &&
-        item.width > 180 &&
         item.x - maxX > Math.max(36, fontBase * 4) &&
         groupFont <= item.fontSize * 0.84;
       const dist = Math.abs(item.y - groupY[i]);
+      const overlappingRotatedLabel = groups[i].some((groupItem) => rotatedTextOverlaps(groupItem, item));
       // A narrow publication/date annotation can share a baseline with a
       // full-width body line in publisher PDFs. It is a separate marginal
       // element, not a prefix of that prose. Keep this geometric rule narrow
       // so ordinary words and table cells remain in their native line.
-      if (!detachedMarginAnnotation && !detachedLeadingMarginAnnotation && dist <= yThreshold && dist < bestDist) {
+      if (!detachedMarginAnnotation && !detachedLeadingMarginAnnotation && !overlappingRotatedLabel && dist <= yThreshold && dist < bestDist) {
         best = i;
         bestDist = dist;
       }
@@ -457,7 +504,7 @@ function clusterItemsIntoLines(
       groupY.push(item.y);
     } else {
       groups[best].push(item);
-      groupY[best] = median(groups[best].map((g) => g.y));
+      groupY[best] = median(groups[best].map((groupItem) => groupItem.y));
     }
   }
 
@@ -465,6 +512,8 @@ function clusterItemsIntoLines(
     let best = -1;
     let bestDist = Infinity;
     for (let i = 0; i < groups.length; i++) {
+      const groupRotation = representativeTextRotation(groups[i].map((groupItem) => groupItem.rotation ?? 0));
+      if (!sameTextOrientation(groupRotation, item.rotation)) continue;
       const minX = Math.min(...groups[i].map((g) => g.x));
       const maxX = Math.max(...groups[i].map((g) => g.x + g.width));
       const xNear = item.x >= minX - 24 && item.x <= maxX + 24;
@@ -476,6 +525,7 @@ function clusterItemsIntoLines(
     }
     if (best >= 0) {
       groups[best].push(item);
+      groupY[best] = median(groups[best].map((groupItem) => groupItem.y));
     } else {
       groups.push([item]);
       groupY.push(item.y);
@@ -503,7 +553,7 @@ function clusterItemsIntoLines(
     // clearly prose-like rotated item, preserving both source texts.
     const rotatedCells = rotated.filter((item) => item.width <= 48 && item.text.trim().split(/\s+/).length <= 3);
     const rotatedProse = rotated.filter((item) => item.width > 80 || item.text.trim().split(/\s+/).length >= 4);
-    if (rotatedCells.length >= 4 && rotatedProse.length > 0) {
+    if (rotatedCells.length >= 3 && rotated.length >= 4 && rotatedProse.length > 0) {
       return [rotatedCells, rotated.filter((item) => !rotatedCells.includes(item))];
     }
     return [group];
@@ -540,6 +590,19 @@ function splitInlineSubheading(line: LayoutLine): LayoutLine[] {
       const headingItems = ordered.slice(transition);
       const bodyText = joinItemTexts(bodyItems).trim();
       const headingText = joinItemTexts(headingItems).trim();
+      const prefixWords = bodyText.split(/\s+/);
+      const suffixWords = headingText.split(/\s+/);
+      const shortLabel = prefixWords.length <= 3 && bodyText.length <= 36 &&
+        prefixWords.every((word) => /^[A-Z][A-Za-z-]*$/.test(word));
+      const gap = headingItems[0].x - (bodyItems.at(-1)!.x + bodyItems.at(-1)!.width);
+      const sentenceLikeSuffix = suffixWords.length >= 8 &&
+        /^[A-Z(]/.test(headingText) &&
+        (/[.!?]["')\]]?$/.test(headingText) || /-$/.test(headingText) || suffixWords.length >= 10);
+      const suffixFonts = new Set(headingItems.slice(0, Math.min(4, headingItems.length)).map((item) => item.fontName));
+      if (shortLabel && gap >= Math.max(5, line.fontSize * 0.55) && sentenceLikeSuffix && suffixFonts.size === 1) {
+        const make = (items: ExtractedTextItem[]): LayoutLine => itemsToLine(items, line.column, line.page, line.pageHeight, line.pageWidth);
+        return [{ ...make(bodyItems), roleHint: "heading" }, make(headingItems)];
+      }
       if (bodyText.length >= 12 && headingText.length <= 120 &&
           headingText.split(/\s+/).length <= 14 &&
           /^\d{1,2}(?:\.\d{1,2}){1,3}\.\s*[A-Z]/.test(headingText)) {
@@ -793,6 +856,15 @@ export function isEquationLine(text: string): boolean {
   const proseWords = tokens.filter((word) => /[A-Za-z]{3,}/.test(word)).length;
   const statisticalResult = /(?:\b[ntz]\s*=|[χΧxX²]\s*\(|\b[FPt]\s*\(|\bp\s*[<=>]|\b(?:AVE|CR|SE|RMSE|MAE|MPE|MAPE)\s*=)/i.test(t);
   if (statisticalResult && (proseWords >= 3 || /[,.;:]/.test(t))) return false;
+  // Numeric measurement lists are often set as ordinary prose clauses, e.g.
+  // `(2.53±0.37), sound complexity (2.32±0.29), and emotional levels ...`.
+  // Treating these as equations detaches them from the unfinished paragraph
+  // before them and lets a translator invent a grammatical claim from the
+  // fragment. A multiword, comma-delimited expression is prose evidence unless
+  // an explicit equation number anchors a displayed formula.
+  const measurementListProse = !hasEqNumber && /\d/.test(t) && /[±%°]/.test(t) &&
+    proseWords >= 2 && /(?:[,;]|\band\b)/i.test(t) && !/[=<>]/.test(t);
+  if ((!hasEqNumber && proseWords >= 3 && /[,;]/.test(t) && /\d/.test(t)) || measurementListProse) return false;
   // Unit-bearing prose often contains a single minus sign or Greek symbol
   // while remaining an ordinary sentence fragment. A displayed equation is
   // normally symbol-dense and short; six or more prose words is a strong
@@ -1165,7 +1237,7 @@ function looksLikeTitleLine(
   return true;
 }
 
-function joinHyphenated(prev: string, next: string): string {
+export function joinHyphenated(prev: string, next: string): string {
   if (/[-\u00ad\u2010\u2011]$/u.test(prev) && /^[a-z]/.test(next)) {
     // "jewellery-, memory- and interaction-" + "perspectives"
     if (/(?:,|and)\s+[A-Za-z]+[-\u00ad\u2010\u2011]$/iu.test(prev)) {
@@ -1378,6 +1450,7 @@ function roleForLine(
   titleFont: number,
   mastheadTitleTexts?: Set<string>
 ): LayoutRole {
+  if (line.roleHint) return line.roleHint;
   const text = line.text.trim();
   if (isCopyright(text, line.fontSize, baseFont) || inCopyright) {
     return "copyright";
@@ -1467,9 +1540,11 @@ function roleForLine(
 function canMerge(prev: LayoutLine, next: LayoutLine, baseFont: number): boolean {
   if (prev.page !== next.page) return false;
   if (prev.column !== next.column) return false;
+  if (!sameTextOrientation(prev.rotation, next.rotation)) return false;
   const separatedMarginAndBody = Math.abs(prev.x - next.x) > Math.max(48, baseFont * 5) &&
     ((prev.width < 160 && next.width > 180) || (next.width < 160 && prev.width > 180));
   if (separatedMarginAndBody) return false;
+  if (prev.items.some((a) => next.items.some((b) => rotatedTextOverlaps(a, b)))) return false;
   const baselineGap = next.y - prev.y;
   if (baselineGap > baseFont * 1.55) return false;
   return true;
@@ -1483,6 +1558,11 @@ function canMergeAffiliation(
   if (current.length === 0) return false;
   const prev = current[current.length - 1];
   if (prev.page !== next.page || prev.column !== next.column) return false;
+  if (!sameTextOrientation(prev.rotation, next.rotation)) return false;
+  // Affiliation-style labels in a publisher's side rail can end with a comma
+  // and share a baseline with body prose. They may only absorb a continuation
+  // from their own x band; syntactic punctuation alone is not enough evidence.
+  if (Math.abs(prev.x - next.x) > Math.max(18, baseFont * 1.8)) return false;
   if (next.y - prev.y > baseFont * 1.8) return false;
   if (next.fontSize > baseFont * 1.08) return false;
   const existing = joinLines(current);
@@ -1607,7 +1687,10 @@ function groupLinesIntoBlocks(
     const previousRotated = current[current.length - 1].items.some((item) => Math.abs(item.rotation ?? 0) >= 45);
     const nextRotated = line.items.some((item) => Math.abs(item.rotation ?? 0) >= 45);
     const rotationCompatible = previousRotated === nextRotated;
-    const previousItems = current[current.length - 1].items;
+    // Keep evidence from the full paragraph candidate: a rotated table grid
+    // can be emitted as one native item per line, so inspecting only the last
+    // line loses the repeated-cell pattern before a prose note is considered.
+    const previousItems = current.flatMap((currentLine) => currentLine.items);
     const nextItems = line.items;
     const previousCellLike = previousItems.filter((item) => item.width <= 48 && item.text.trim().split(/\s+/).length <= 3).length >= 4;
     const nextCellLike = nextItems.filter((item) => item.width <= 48 && item.text.trim().split(/\s+/).length <= 3).length >= 4;
@@ -1691,6 +1774,7 @@ function groupLinesIntoBlocks(
 
     const captionContinue =
       (currentRole === "figure_caption" || currentRole === "table_caption") &&
+      sameTextOrientation(current[current.length - 1].rotation, line.rotation) &&
       line.page === current[0].page &&
       (line.column === current[0].column ||
         // Full-width captions can be emitted as a spanning line followed by
@@ -1955,7 +2039,7 @@ function logLayoutBlockBoundaries(blocks: LayoutBlock[]): void {
   }
 }
 
-function isSentenceContinuation(left: string, right: string): boolean {
+export function isSentenceContinuation(left: string, right: string): boolean {
   const a = left.trim();
   const b = right.trim();
   if (!a || !b) return false;
@@ -2066,7 +2150,7 @@ function isDetachedSingleColumnMarginBlock(block: LayoutBlock, bodyX: number): b
   const pageWidth = block.lines[0]?.pageWidth ?? 612;
   return block.column === "single" && block.bbox.width <= 160 &&
     gapToBody >= 12 && gapToBody <= pageWidth * 0.3 &&
-    block.text.trim().length <= 420 && block.lines.length > 0 &&
+    block.lines.length > 0 &&
     block.lines.every((line) => line.column === "single");
 }
 
@@ -2126,8 +2210,8 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         // before the continuation's x-band, and the continuation is near top.
         return (skipped.role === "figure_caption" || skipped.role === "table_caption") &&
           targetLine.page === nextLine?.page && skipped.pageStart === targetLine.page &&
-          skipped.pageEnd === targetLine.page && skipped.bbox.y > targetLine.y &&
           targetLine.column === "left" && nextLine?.column === "right" &&
+          skipped.pageEnd === targetLine.page && skipped.bbox.y > targetLine.y &&
           skipped.bbox.x < (nextLine?.x ?? 0) - 40 &&
           (nextLine?.y ?? Number.MAX_SAFE_INTEGER) < (nextLine?.pageHeight ?? 0) * 0.32;
       })
