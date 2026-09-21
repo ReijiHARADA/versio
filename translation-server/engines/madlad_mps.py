@@ -50,8 +50,31 @@ def allows_unprotected_identifier_retry(missing: list[str]) -> bool:
             )
         )
 
+    def is_numeric_citation(item: str) -> bool:
+        # A dropped numeric citation placeholder can be retried as literal
+        # source text. The client invariant gate still rejects the result if
+        # the citation is omitted or changed, so this only avoids losing an
+        # otherwise usable paragraph to placeholder fragility.
+        return bool(
+            re.fullmatch(
+                r"\s*\[\s*\d+(?:\s*[-–]\s*\d+|\s*,\s*\d+)*\s*\]\s*",
+                item,
+            )
+        )
+
+    def is_measurement(item: str) -> bool:
+        # Scalar units are safe to expose on a retry because the client-side
+        # invariant gate requires the exact value/unit to survive. This is
+        # narrower than arbitrary scientific identifiers and avoids sending
+        # equations or p-values unprotected.
+        return bool(re.fullmatch(
+            r"\s*\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|Hz|kHz|MHz|GHz|kg|mg|pF|nF|uF|μF|mF|mAh|dB|%)\s*",
+            item,
+            flags=re.IGNORECASE,
+        ))
+
     return bool(missing) and all(
-        is_plain_identifier(item) or is_figure_or_table_reference(item)
+        is_plain_identifier(item) or is_figure_or_table_reference(item) or is_numeric_citation(item) or is_measurement(item)
         for item in missing
     )
 
@@ -66,7 +89,7 @@ class MADLADEngine(TranslationEngine):
 
     MODEL_ID = "google/madlad400-3b-mt"
     TRANSFORMERS_RUNTIME_VERSION = "4.57.6"
-    QUALITY_GATE_VERSION = "quality-v9"
+    QUALITY_GATE_VERSION = "quality-v10"
     MODEL_VERSION = (
         f"3b-mt-v6-transformers-{TRANSFORMERS_RUNTIME_VERSION}-{SEGMENTER_VERSION}-"
         f"{SOURCE_PROTECTION_VERSION}-strict-restore-v25-{QUALITY_GATE_VERSION}"
@@ -966,12 +989,35 @@ class MADLADEngine(TranslationEngine):
             for index in range(len(compact) - phrase_size + 1):
                 phrase = compact[index : index + phrase_size]
                 counts[phrase] = counts.get(phrase, 0) + 1
+            # A technical noun or collocation can legitimately occur twice in
+            # a short academic paragraph. Require three occurrences before
+            # treating the phrase as decoder looping; this matches the
+            # frontend quality gate and avoids rejecting valid repetition such
+            # as 「広告パケット」 in adjacent Bluetooth sentences.
             if any(
-                count >= 2 and (phrase_size * count) / len(compact) >= 0.20
+                count >= 3 and (phrase_size * count) / len(compact) >= 0.16
                 for count in counts.values()
             ):
                 return True
         return False
+
+    @staticmethod
+    def _has_translation_instruction_contamination(output: str) -> bool:
+        """Detect a generated prompt/example appended after translated prose.
+
+        This is deliberately a format marker check, rather than a blacklist of
+        content words.  Requiring the marker to occur after some output avoids
+        rejecting a source sentence that happens to discuss translation.
+        """
+        marker = re.compile(
+            r"(?:次の(?:英語|英文)(?:の学術テキスト)?を日本語に翻訳してください|"
+            r"英語(?:の)?学術テキストを日本語に翻訳|"
+            r"translate the following (?:english )?(?:academic )?text|"
+            r"output only the japanese translation)",
+            re.IGNORECASE,
+        )
+        match = marker.search(output)
+        return match is not None and match.start() > 0
 
     @staticmethod
     def _is_degenerate(output: str, source: str, target_language: str) -> bool:
@@ -1004,6 +1050,8 @@ class MADLADEngine(TranslationEngine):
                 return True
             if MADLADEngine._contains_untranslated_source_span(output, source):
                 return True
+            if MADLADEngine._has_translation_instruction_contamination(output):
+                return True
             if MADLADEngine._has_abnormal_phrase_repetition(output):
                 return True
         return False
@@ -1022,6 +1070,8 @@ class MADLADEngine(TranslationEngine):
             return "implausibly_short"
         if MADLADEngine._contains_untranslated_source_span(output, source):
             return "source_span"
+        if MADLADEngine._has_translation_instruction_contamination(output):
+            return "instruction_contamination"
         if MADLADEngine._has_abnormal_phrase_repetition(output):
             return "phrase_repetition"
         if target_language == "ja" and not re.search(r"[\u3040-\u30ff\u4e00-\u9fff]", output):

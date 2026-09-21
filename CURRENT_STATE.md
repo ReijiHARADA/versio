@@ -8022,3 +8022,292 @@ Continued the extraction work. The sidebar detector now uses baseline-matched na
 Checks: synthetic reading-order 72/72; selected real-PDF controls (cognitive-motor-incidental-memory, human-ai-interaction-guidelines, how-content-volume-landing-pages, medical-deep-learning-meta-review) 4/4; full reading-order + real-paper suites 52/52; typecheck and lint pass. The wider `npm run test:extraction-corpus -- --reporter=dot` run is **not green**: marketing-consumer-production-journey fails one existing table-row assertion at `baselineRealPapers.test.ts:99`, and the runner also reports a Vitest worker `onTaskUpdate` timeout. Confirmed the table-row assertion passes against `HEAD^`, so it is a regression in current extraction behavior. Geometry diagnostic shows a `Consumer co-production network` table label and the following `Brodie et al. (2013) Develop, Promote Netnography` row are currently separate; next step is to determine whether they should be one table block and correct this generically, then rerun that test and corpus suite. Logs/diagnostics are in ignored `tmp/v141-focused-real.log`, `tmp/v142-extraction-controls.log`, `tmp/v143-medical-current.json`, and `tmp/v144-extraction-corpus.log`/`tmp/v145-marketing.json`/`tmp/v146-network.json`.
 
 No translation code/model changes, no `.app` build, and no benchmark server started; leave the user's port 8765 service untouched. Quality goal remains open: fallback <=5% and near-zero severity>=2 unsafe accepts are unmet. Resume with the marketing table regression, not model evaluation.
+
+## 2026-09-21 extraction checkpoint — table projection follow-up
+
+Reopened the extraction issue and traced the marketing failure to table-cell topology after the repeated-grid change. Added generic horizontal cell splitting only for pages that also have a recurring sidebar/grid geometry, and changed resolver-selected source-only table fallback blocks to retain `type: "table"` plus explicit `role`/`tableSourceFallback` metadata. The HAI forbidden-cell regression now passes again, and the marketing table row's first projection assertion passes. The remaining marketing assertion for `Mathwick and Mosteller Review products Survey` is still failing because the changed grid topology emits the row as separate cell text, so this is not yet a clean corpus result.
+
+Validation: HAI focused real-paper test passes; marketing focused test still has 1 assertion failure; typecheck, lint, and diff check pass. No translation server/model changes and no `.app` build. No benchmark process is running. Resume by making table-cell aggregation preserve the canonical row text/metadata for non-sidebar table layouts without reintroducing HAI cell merging, then rerun both focused controls and the full extraction corpus.
+
+## 2026-09-21 extraction checkpoint — resumed table investigation
+
+HAI focused regression still passes after constraining cell-level splitting to rail-plus-grid pages. The marketing baseline still fails one assertion because the native row currently surfaces as `Mathwick and Mosteller` and `Review products Survey` fragments rather than the expected canonical row text. This is a genuine remaining source/table grouping issue, not a translation-server problem. Typecheck and lint remain green; no benchmark or app build is running. Next: inspect the non-sidebar table's adjacent line roles/geometry and implement a generic same-row table-fragment aggregation, then rerun both focused tests and the full corpus.
+
+## 2026-09-21 extraction checkpoint — table aggregation and full assertions green
+
+Fixed the remaining table-row topology without paper-specific text. The projection now aggregates adjacent same-baseline table cells into one logical table row and preserves table fallback metadata. Grid cell splitting remains limited to the ambiguous recurring sidebar/grid geometry. A false sidebar match on a two-row title/author layout was also narrowed using row-span evidence.
+
+Validation: synthetic reading-order 72/72; focused HAI and cognitive real-paper checks 2/2; focused marketing baseline pass; full cached extraction corpus assertions 108/108 across 2 files. The full corpus runner still reports one Vitest worker `onTaskUpdate` timeout after all assertions pass; this is runner infrastructure, not a test assertion. Typecheck, lint, and diff check pass. No translation/model change, no benchmark, and no `.app` build. Next step is to rerun the corpus with a worker/timeout configuration that removes the harness error, then continue semantic translation evaluation.
+
+## 2026-09-21 translation benchmark checkpoint — v163 resume
+
+With the user server on `127.0.0.1:8765` ready, ran `npm run bench:real-paper-translation -- --limit 5 --resume`. The runner selected 52 cached papers and processed 5 translation units per paper, saving checkpoints and writing `test-data/real-papers/reports/translation-audit.{json,md}`. The report is explicitly incomplete (`complete=false`): 258 sampled rows, 151 pending, 107 structural skips, only 6 completed accepts, 107 pre-model fallbacks and 145 post-model fallbacks. This is diagnostic evidence only; automatic status is not semantic correctness and no route/model change was made. Ordinary-body rows in this report are heavily affected by source eligibility and should not be used as a final population estimate. The server remains user-managed; no `.app` build.
+
+Next: inspect why this resume run reports mostly pending/post-model fallback, separate server/resume state from quality-gate fallback, then manually review a source-hash-disjoint ordinary-body subset before any gate/model changes. The product fallback and semantic-safety goals remain unmet.
+
+## 2026-09-21 paused checkpoint — extraction stable, translation benchmark diagnosis pending
+
+Paused at a clean boundary per user request. No benchmark process is running. The user-managed translation server on `127.0.0.1:8765` is healthy (`model_loaded=true`, `phase=ready`) and was intentionally left running. The server shell process is not a benchmark job.
+
+Extraction changes are uncommitted but validated: synthetic reading-order 72/72, focused HAI/cognitive 2/2, marketing focused baseline pass, full cached extraction assertions 108/108; the Vitest worker timeout remains harness-only. Typecheck, lint, and `git diff --check` pass. No `.app` build and no production translation/model change were made.
+
+Translation v164 serial checkpoint exists at `test-data/real-papers/reports/translation-audit-v164-serial.{json,md}`. It completed 25 rows but still recorded server-side broken-pipe failures, so it is diagnostic only and must not be interpreted as translation quality. Resume by inspecting those exact errors, then run a small serial smoke request before any corpus expansion or quality-gate/model decision.
+
+## 2026-09-21 translation benchmark checkpoint — v164 serial diagnosis
+
+The v164 five-paper serial benchmark completed 25 rows, but 12 rows failed at the HTTP/server layer with `translation server 500: {"detail":"[Errno 32] Broken pipe"}`. Failures occur across medical, HAI, marketing, linguistics, and cognitive sources, including ordinary-body lengths from 179 to 2,103 characters; this is not evidence of a model-quality failure. `/health` remains ready and the listener is PID 46951, so the service is live after the run. No model or production code was changed. The benchmark's source `translationStatus` still mirrors the original block status, so it must not be used as the model outcome; use `serverError`, `fallbackStage`, `translation`, and `wouldAcceptTranslation` instead. Next safe action is a one-request serial smoke test and inspection of the server-side broken-pipe traceback before resuming corpus evaluation.
+
+## 2026-09-21 translation runtime checkpoint — broken stdout pipe reproduced and guarded
+
+A direct one-sentence `POST /translate` reproduced HTTP 500 `{"detail":"[Errno 32] Broken pipe"}` while `/health` remained ready. This proves the v164 failures were server runtime/log-pipe failures before semantic quality could be measured. Added a generic `_BrokenPipeSafeStream` wrapper in `translation-server/server.py`; on a closed inherited stdout/stderr pipe it switches logging to `/dev/null` instead of propagating `BrokenPipeError` into the request. `python3 -m py_compile translation-server/server.py` and `git diff --check` pass. The running server still has the old code and requires one user restart before verification. No model/gate change.
+
+## 2026-09-21 translation runtime verified — v165 smoke
+
+After replacing the stale server process with the guarded `server.py`, `/health` reached `ready` and a direct translation succeeded. A serial one-paper/two-block smoke (`human-ai-interaction-guidelines`, report `translation-audit-v165-smoke`) completed with zero server errors: one block was accepted by the model quality path and one was correctly classified as a pre-model structural fallback. This separates the prior runtime failure from extraction/model outcomes. Next: inspect the pre-model sample, then run a small multi-paper serial benchmark and manually review accepted ordinary-body translations before changing any gate.
+
+## 2026-09-21 translation benchmark checkpoint — v166 clean serial sample
+
+Ran five cached papers × three units serially after the server restart: 15 rows, zero server errors. Outcomes were 7 accepted, 6 pre-model structural/reference fallbacks, and 2 post-model fallbacks. The post-model cases were different safety paths: one protected-token/quality rejection in a long marketing paragraph (the model produced a malformed citation-like `(s)`), and one acronym invariant rejection where `EU` was rendered as `欧州連合`; these are not safe to count as ordinary semantic success without review. Several accepted outputs still show terminology drift, so automatic quality score is not treated as correctness. Report: `test-data/real-papers/reports/translation-audit-v166-clean.{json,md}`. Next: manually label accepted ordinary-body rows and investigate whether acronym expansion can be handled generically without weakening scientific-fact protection.
+
+## 2026-09-21 manual review checkpoint — v166 accepted rows
+
+Manually reviewed all 7 rows that the v166 automatic path accepted. Five were severity >=2 (unsafe false-accept rate 71.4% in this intentionally small diagnostic sample). Issues included omitted clauses, terminology drift, and altered role/causal wording; quality score 1.0 was not predictive of semantic correctness. Review artifact: `test-data/real-papers/audit-manual-review-v166.json`. This is evidence for improving semantic evaluation/model selection, not a corpus-wide rate; no blacklist or indiscriminate gate change was made.
+
+## 2026-09-21 diverse benchmark checkpoint — v167
+
+Ran eight additional cached papers across HCI, cognitive psychology, marketing, ergonomics, and linguistics (two units each): 16 rows, zero server errors. Outcomes: 7 accepted, 5 pre-model structural fallbacks, 4 post-model safety fallbacks. Manual review of all 7 accepted rows found one severity-4 unsafe false accept: the `interactive-jewellery` block begins with an unrelated manufacturing claim and omits the source opening proposition, despite quality score 1.0. The other six were broadly understandable with terminology/style issues (severity 1). Diagnostic unsafe false-accept rate is therefore 1/7 = 14.3% for v167; combined with v166, 6/14 = 42.9% (small, non-population sample). Review artifact: `test-data/real-papers/audit-manual-review-v167.json`. This confirms semantic evaluation remains the main blocker; no blacklist or gate relaxation was applied.
+
+## 2026-09-21 semantic drift isolation — v168 interactive-jewellery fixture
+
+The v167 severity-4 false accept was sent directly to the same server as both the first source sentence and the full paragraph. Both conditions reproduced the same unrelated opening claim (`これらの技術を用いて…製造…`) and omitted the source proposition about understanding traditional jewellery. This rules out join/postprocess and shows decode-level model drift on this fixture; segmenter changes alone cannot fix it. Artifact: `test-data/real-papers/reports/translation-diagnostic-v168-interactive.json`. Next evaluation should compare an alternate model or a conservative semantic consistency signal before accepting such output.
+
+## 2026-09-21 alternate model probe — CAT-Translate 1.4B
+
+The local cache contains `cyberagent/CAT-Translate-1.4b` in addition to MADLAD. A production-independent CPU probe translated the v167 severity-4 first sentence correctly: it preserved both interactive and traditional jewellery and the relation between them, unlike MADLAD's unrelated manufacturing claim. A four-fixture CPU comparison was stopped after excessive runtime before results were produced; no model was changed in production. Artifact: `test-data/real-papers/reports/translation-diagnostic-v169-cat-1.4b.json`. Next: evaluate the candidate on MPS or a bounded small fixture set with identical generation conditions, then compare semantic labels and speed before considering a selective cascade.
+
+## 2026-09-21 alternate model probe — v170 CAT-Translate MPS
+
+Loaded cached CAT-Translate 1.4B on MPS and evaluated three sampled sources. It translated the known interactive-jewellery failure correctly, but the medical/HAI probes exposed adapter risks: output sometimes echoed the Japanese instruction/prompt, truncated the source sample, or added unsupported bullet points. Therefore CAT-Translate is promising for a selective cascade but cannot replace MADLAD yet. Artifact: `test-data/real-papers/reports/translation-diagnostic-v170-cat-1.4b-mps.json`. No production model change.
+
+## 2026-09-21 CAT prompt probe — v171
+
+On the same HAI sentence, explicit output-only prompts (`次の英文を自然な日本語に翻訳してください` or English equivalent) produced faithful Japanese with no prompt echo or unsupported additions. A labeled `英語: … 日本語:` prompt caused the model to echo the format. This improves the candidate adapter design, but longer multi-sentence behavior remains unverified; production remains MADLAD. Artifact: `translation-diagnostic-v171-cat-prompts.json`.
+
+## 2026-09-21 alternate-model evaluation infrastructure — v172
+
+Added evaluation-only `translation-server/scripts/bench_alternate_model.py`. It loads a locally cached causal model, uses an explicit output-only translation prompt, records source/prompt/output/tokens/latency/prompt-echo, and never changes production model selection. A one-fixture MPS run with CAT-Translate 1.4B reproduced the correct interactive-jewellery translation. Python compile and `git diff --check` pass.
+
+## 2026-09-21 CAT short-sentence comparison — v173
+
+Using the reusable alternate-model runner, CAT-Translate 1.4B on MPS translated five short academic units with no prompt echo. The medical, HAI, and marketing sentences preserved their main relations and facts; the acknowledgement retained names/date, with natural style improvements over MADLAD. Latency ranged about 1.9–12.1 seconds per unit (CPU/MPS warm-up and length dependent). This supports CAT as a selective candidate for short or rejected units, but does not establish long-paragraph safety; no production cascade change yet.
+
+## 2026-09-21 verification checkpoint — v174
+
+After adding the evaluation-only alternate-model runner, `python3 -m py_compile` (server and runner), `npm run typecheck`, `npm run lint`, `git diff --check`, and synthetic reading-order regression (72/72) all pass. The production translation server remains MADLAD; no `.app` build and no model-selection change.
+
+## 2026-09-21 matched model comparison — v175
+
+The same five short source units were sent to CAT-Translate 1.4B (MPS) and the production MADLAD server. Both had zero request errors. CAT was generally more natural and preserved the same facts; MADLAD was faster on the long acknowledgement (3.95s vs CAT 12.08s), while other latencies were similar. CAT still has occasional awkward phrasing, so this is evidence for a short-unit selective cascade, not a replacement decision. Artifact: `test-data/real-papers/reports/translation-compare-v175-cat-vs-madlad.json`.
+
+## 2026-09-21 CAT long-unit probe — v176
+
+CAT-Translate 1.4B was tested on two 700–1,400-character academic units with output-only prompting. It avoided prompt echo, but both outputs omitted source material: the HAI unit stopped before the final purpose/benefit claim, and the marketing unit compressed away the household/institutional theory details and later implications. Latency was ~29–31s per unit. This rules out using CAT as a blanket long-paragraph fallback; its safe scope is currently short units only, pending a sentence/chunk adapter and stronger coverage checks. Artifact: `translation-diagnostic-v176-cat-long.json`.
+
+## 2026-09-21 CAT sentence-unit probe — v177
+
+The same HAI long paragraph that suffered CAT omissions when sent as one 944-character unit was split into six sentence units and translated by CAT-Translate 1.4B on MPS. All six outputs completed without prompt echo; the final purpose/benefit claim was retained. Per-sentence latency was ~1.6–5.8s. This supports a sentence-level CAT cascade with exact source reconstruction, while leaving the model out of production until scientific-token protection, list handling, and held-out review are implemented.
+
+## 2026-09-21 CAT sentence held-out probe — v178
+
+Ten sentence units from diverse HCI/design samples were evaluated with CAT-Translate 1.4B on MPS. Nine were usable at a glance, preserving the main relation; one HCI sentence appended an unrelated translation instruction/example after the Japanese output. The runner's simple prompt-echo flag did not catch this trailing contamination, so a CAT adapter needs explicit output-contamination checks and source round-trip validation. This prevents claiming sentence-level CAT is automatically safe. Artifact: `translation-diagnostic-v178-cat-ten.json`.
+
+## 2026-09-21 output contamination guard — v179
+
+Added a generic quality signal for translation-instruction contamination appended after Japanese output (for example, a model-generated `次の英語の学術テキストを日本語に翻訳してください` prompt). The guard is position-aware and marker-based; it does not blacklist hallucinated domain words or alter model selection. `quality.test.ts` now covers trailing instruction/example contamination. Quality tests: 112/112; typecheck and diff check pass. CAT remains evaluation-only.
+
+## 2026-09-21 fresh server smoke — v180
+
+Ran two cached papers (interactive-jewellery and significant-other), two units each, against the ready MADLAD server. All four requests completed; the known interactive-jewellery semantic drift still reproduced in the server output, while the new TypeScript contamination guard is applied at the client quality layer and is not a model fix. This confirms the guard prevents format-contaminated outputs from being accepted, but decode-level semantic drift remains the primary unresolved risk. Artifact: `test-data/real-papers/reports/translation-audit-v180-contamination-guard.json`.
+
+## 2026-09-21 server contamination guard — v181
+
+Ported the generic trailing translation-instruction contamination guard into `MADLADEngine._is_degenerate`, so production MADLAD responses and evaluation adapters use the same format-safety rule. Bumped `QUALITY_GATE_VERSION` to `quality-v10`, added Python regressions for trailing prompt contamination and ordinary academic discussion of translation. `PYTHONPATH=translation-server translation-server/.venv/bin/python -m unittest translation-server/tests/test_madlad_quality.py`: 23/23 pass; py_compile, typecheck, lint, and diff check pass. The currently running server must be restarted before this code is loaded; no restart was forced during this checkpoint.
+
+## v181 runtime activation
+
+Restarted the foreground translation server after the v181 change. Health is `status=ok`, `model_loaded=true`, `phase=ready`; startup log reports `quality-v10` in model version. The server remains available on `127.0.0.1:8765`.
+
+## 2026-09-21 cache identity update — v182
+
+Bumped the TypeScript `TRANSLATION_QUALITY_VERSION` to `quality-v7` so cached translations cannot bypass the new contamination guard. Updated the model-version regression expectation. Quality and model-identity tests: 113/113; typecheck, lint, and diff check pass. The running server remains quality-v10; client cache identity now requests the v7 generation identity.
+
+## 2026-09-21 fresh quality-v10 replay — v183
+
+Reran the two known cached papers (four selected units) after the server restart and cache identity changes. Both translatable units returned the new server model version ending in `quality-v10`; no request failures occurred. The interactive-jewellery opening still produced the same unrelated manufacturing claim, so quality-v10 correctly protects output format but does not solve model-level semantic drift. Artifact: `test-data/real-papers/reports/translation-audit-v183-quality-v10.json`.
+
+## 2026-09-21 CAT-Translate 3.3B probe — v184/v185
+
+The cached `cyberagent/CAT-Translate-3.3b` was evaluated independently of production. On the known interactive-jewellery failure, it translated the first two sentence units faithfully and removed MADLAD's unrelated manufacturing drift. A five-sentence held-out probe produced natural, source-aligned Japanese for four ordinary HCI/design sentences and a longer jewellery sentence without instruction echo. CPU latency was approximately 3.9–9.0 seconds per sentence after loading. This is stronger evidence than CAT 1.4B for a selective short-unit cascade, but it is not yet a production change; scientific invariant validation, MPS memory/latency measurements, and broader manual review remain required. Artifacts: `translation-diagnostic-v184-cat-3.3b.json`, `translation-diagnostic-v185-cat-3.3b-five.json`.
+
+## 2026-09-21 alternate-model safety instrumentation — v186
+
+Extended the evaluation-only CAT runner to record missing numeric/citation invariants, length and EOS risk, repetition, and generic instruction contamination using the shared benchmark quality helpers. Annotated the five-unit CAT 3.3B result: all five had no missing numbers/citations, no contamination, no abnormal repetition, and no early-EOS flag. This is measurement infrastructure only; it does not claim semantic correctness or enable CAT in production. Artifact: `translation-diagnostic-v186-cat-3.3b-five-quality.json`.
+
+## 2026-09-21 CAT 3.3B scientific invariants — v187
+
+Evaluated four short scientific fixtures with CAT-Translate 3.3B: statistical notation/numbers (`n`, `F`, `p`, measurement), author-year citations, negation/group scope, and participant count. All outputs retained the recorded numeric/citation tokens; negation and group scope were rendered explicitly. Fixed the evaluation runner's direct-script import path so it can use the shared production segmenter/quality helpers. This remains evaluation evidence, not production routing.
+
+## 2026-09-21 CAT 3.3B sentence cascade probe — v188
+
+Evaluated six sentence units from the previously long HAI paragraph with CAT-Translate 3.3B. All six completed without instruction contamination, missing numeric tokens, or suspected early EOS; the purpose/benefit claim in the final unit was retained. This supports sentence-level routing for the candidate, while the earlier v176 whole-paragraph omissions and the lack of MPS/resource/large-corpus review still prohibit production enablement.
+
+## 2026-09-21 CAT 3.3B whole-paragraph boundary — v189
+
+CAT 3.3B was tested on the same two 700–1,400-character units where CAT 1.4B omitted material. Manual review found both 3.3B outputs complete enough for research reading (severity 1 wording/terminology only; no severity>=2 errors): the HAI paragraph retained the final purpose/benefit claim, and the marketing paragraph retained the two-layer framework, theories, and implications. This is a two-case result and does not justify whole-paragraph routing; sentence-level routing remains the safer candidate policy. Artifacts: `translation-diagnostic-v189-cat-3.3b-long.json`, `translation-manual-review-v189-cat-3.3b-long.json`.
+
+## 2026-09-21 CAT 3.3B held-out remainder — v190
+
+Evaluated the remaining five sentences from the prior diverse HCI/design set. Manual review found four correct and one severity-1 wording issue; no severity>=2 errors, invariant loss, instruction contamination, or early-EOS flags. Combined with the first five from v185, this is 10 short units with no observed severity>=2 error, but it remains a small selected sample and does not justify production enablement by itself. Review artifact: `translation-manual-review-v190-cat-3.3b-five.json`.
+
+## 2026-09-21 CAT 3.3B MPS probe — v191
+
+Stopped MADLAD temporarily and ran CAT-Translate 3.3B on MPS using five diverse held-out short units. All five passed invariant, contamination, repetition, and EOS surface checks; latency was 1.49–4.75 seconds per unit after load. MADLAD was then restarted and `/health` confirmed ready with `quality-v10`. CAT remains evaluation-only because memory headroom, long-form behavior, and larger manual review are not yet sufficient for production routing.
+
+## 2026-09-21 CAT MPS RSS instrumentation — v192
+
+Added RSS recording to the evaluation-only alternate-model runner and measured CAT 3.3B on MPS for two short units. Process RSS after load was ~0.15 GiB and ~0.31–0.34 GiB during generation; this excludes unified-memory/GPU allocation, so it is not a full memory-headroom measurement. Latency was 1.56–2.61 seconds. MADLAD was restarted afterward and health is ready/loaded with quality-v10.
+
+## 2026-09-21 CAT 3.3B fallback replay boundary — v193
+
+Replayed the four existing clean-source fallback fixtures with CAT 3.3B as whole units. Surface checks passed, but manual review found major omissions in the cognitive-psychology and social-advertising long units (severity 3), and compression/semantic drift in the linguistics unit (severity 2). Only the thermal-earring unit was broadly complete (severity 1). This rejects whole-paragraph CAT fallback despite its good short/sentence results: any selective cascade must segment long sources first and validate every resulting unit. Artifact: `translation-manual-review-v193-cat-3.3b-fallback.json`.
+
+## 2026-09-22 CAT 3.3B segmented fallback rescue — v194
+
+Reused the production semantic segmenter on all four clean-source fallback fixtures (22 units total) and evaluated each unit with CAT 3.3B. Unlike whole-paragraph routing, the segmented outputs retained the previously omitted cognitive-psychology and social-advertising claims. Manual review found no severity>=2 issue; three parent papers had only terminology/wording concerns (severity 1), and thermal-earring was correct. This is evidence for a sentence-level selective rescue path, not permission to route long blocks directly. Artifact: `translation-manual-review-v194-cat-3.3b-fallback-segmented.json`.
+
+## v194 summary artifact
+
+The segmented fallback replay summary records 22 units across four parents: zero missing-number units, zero missing-citation units, zero instruction-contamination units, zero early-EOS flags, and zero repetition flags. Mean CPU CAT latency was 7.01 seconds/unit (median 6.90). MADLAD health was rechecked ready after the evaluation. Summary: `translation-summary-v194-cat-3.3b-fallback-segmented.json`.
+
+## 2026-09-22 checkpoint — stopped at v194
+
+Per request, the active translation server was stopped after the v194 segmented fallback evaluation boundary. No benchmark process was running. The next continuation point is to validate/finalize the evaluation-only CAT runner's optional production-segmenter instrumentation, then continue held-out selective-cascade evaluation; no production model routing has been enabled.
+
+## 2026-09-22 evaluation instrumentation validated — v195
+
+Validated `translation-server/scripts/bench_alternate_model.py` after the checkpoint. Its optional `--segment` mode uses the production `engines.segmenter.split_for_translation`, records parent/unit indexes, and checks normalized source round-trip for every generated unit. Python compilation and CLI help pass. This remains evaluation-only; no production routing or model selection changed. The translation server remains stopped until the next fresh benchmark is intentionally started.
+
+## 2026-09-22 extraction corpus verification
+
+The full extraction corpus run executed 108 reading-order checks and reported all 108 tests passed, but Vitest also reported one worker `onTaskUpdate` timeout after roughly 116 seconds and exited 1. Treat this as an infrastructure/test-run reliability issue rather than a clean green extraction gate; no extraction behavior was changed in this step. The timeout must be isolated before claiming the corpus gate is green.
+
+Running the slow baseline file alone (including with `--silent`) reproduced the same worker timeout while all 56 assertions passed. The timeout is therefore tied to the long PDF test task/runtime rather than test-file contention or log volume; extraction correctness remains green at assertion level, but the harness gate is still nonzero.
+
+The extraction config now uses Vitest's `threads` pool for this PDF corpus. A full rerun completed cleanly: 2 test files, 108/108 assertions, no unhandled worker error. This is a test-harness-only change; extraction behavior is unchanged.
+
+## 2026-09-22 fresh translation benchmark resumed — v197
+
+Started the fresh MADLAD benchmark against the ready local server with `npm run bench:real-paper-translation -- --limit 12 --resume`. It selected the 52-paper corpus and saves per-paper checkpoints; interactive-jewellery, significant-other, and power-over-skin have checkpoint messages so far. The run remains active and is intentionally not being treated as complete until its report reaches a terminal state.
+
+## 2026-09-22 benchmark execution recovery — v198
+
+The parallel benchmark accumulated 12 long-lived HTTP requests while model quality retries were active and produced no new checkpoint for over 20 minutes. Existing six paper checkpoints were intact. I interrupted only that evaluation process and restarted from the same checkpoint with `--serial --resume`; this changes benchmark scheduling only and leaves production code untouched.
+
+The serial run still exposed a benchmark-only retry budget problem: the previous six-attempt/180-second request policy could keep one unit pending for up to 18 minutes. The runner now reads `MADLAD_BENCH_REQUEST_TIMEOUT_MS` and `MADLAD_BENCH_MAX_ATTEMPTS`, defaulting to 120 seconds and three attempts. It was restarted with those defaults explicitly and `--serial --resume`; production retry behavior is unchanged.
+
+## 2026-09-22 benchmark checkpoint — paused at 22/52
+
+Per request, the bounded serial benchmark was stopped at a clean checkpoint after 22 of 52 selected papers had at least 10 sampled blocks recorded. The report remains resumable (`complete=false`); no partial paper result was discarded. The translation server was also stopped, so the next run must start a fresh server before resuming with the same bounded serial command.
+
+## 2026-09-22 checkpoint analysis — v199
+
+The latest resumable run (`2026-09-21T12-06-58-400Z`) contains 190 sampled blocks from 22 completed papers. Of 65 ordinary-body rows, 46 were accepted and 19 were reader-visible post-model fallbacks (29.2%), so the <=5% target is not close and no gate relaxation is justified. The 19 ordinary fallbacks are primarily translation quality rejection or protected-token restoration failures; 59/64 damaged-extraction rows were correctly pre-model preserved and are tracked separately. Analysis artifact: `test-data/real-papers/reports/benchmark-checkpoint-v199.json`.
+
+The translation-server Python suite passes 151 tests when invoked with the required `PYTHONPATH=translation-server`; a plain `unittest discover` without that path is an invocation error, not a product failure. The next productive step is a fresh-server replay of the ordinary fallback rows with raw model output and quality reasons, followed by selective cascade evaluation; production routing remains unchanged.
+
+The 19 ordinary-body replay inputs were materialized in `test-data/real-papers/reports/ordinary-fallback-replay-v199.json` so the next server session can reproduce exactly the same source units without re-extracting PDFs.
+
+The local MADLAD server was restarted on 8765 (Transformers 4.57.6, model v10) and all 19 fixed inputs were replayed. Thirteen whole-item fallbacks and one partial fallback reproduced; six requests translated normally. The 13 whole-item sources were segmented and evaluated with the evaluation-only CAT-Translate 3.3B runner: 99 units across 13 parents, zero source round-trip failures, zero missing numbers, zero prompt echoes, and one apparent citation miss caused by fullwidth `［1］` rendering. Artifact: `ordinary-fallback-v199-cat-segmented-summary.json`. This supports a selective, segmented rescue investigation but is not yet a production routing decision.
+
+Parent-level manual review of those 13 CAT candidates found 7 severity-0 correct, 5 severity-1 wording/terminology issues, and 1 severity-3 source-fragment case (an affiliation block already truncated at `Louis Stokes`). The review is recorded in `ordinary-fallback-v199-cat-manual-review.json`; the source-fragment case is explicitly excluded from rescue. This is a small diagnostic cohort, not a corpus-wide quality claim.
+
+Fresh benchmark resumed with the same bounded serial settings (`MADLAD_BENCH_REQUEST_TIMEOUT_MS=120000`, `MADLAD_BENCH_MAX_ATTEMPTS=3`). It has reached 40/52 checkpointed papers so far, including additional HCI, cognitive psychology, marketing, linguistics, healthcare, and ML papers. The run remains active and resumable; no production routing change has been made.
+
+The fresh run reached its terminal checkpoint boundary for all available PDFs: 51/52 selected papers and 358 sampled blocks. The remaining `precious-materials` entry is blocked by wrong-document provenance, so the report correctly remains `complete=false`. In the latest run, ordinary-body coverage is 142 blocks: 98 accepted and 44 post-model reader-visible fallbacks (30.99%). This confirms the <=5% target remains unmet at corpus scale and separates the next work into quality-gate/model fallback analysis rather than extraction-only changes. Artifact: `test-data/real-papers/reports/benchmark-checkpoint-v200.json`.
+
+The v200 manual-review queue was regenerated from the completed report (`audit-manual-review-v200.json`, 610 deduplicated rows, 0 reviewed in this new queue). Existing v199 fallback reviews remain separate and are not silently reused as v200 labels. The next evaluation task is to review accepted ordinary-body rows for semantic false accepts while using the 44 fallback rows to test a selective cascade.
+
+A stratified evaluation-only CAT replay of 10 distinct v200 ordinary fallback rows produced 58 segmented units (mean 3.07 s/unit), with zero source round-trip failures, zero prompt echoes, zero missing numbers/citations, and zero early-EOS flags. The outputs still require parent-level semantic review; examples with malformed PDF citations remain excluded from automatic rescue. Artifact: `ordinary-fallback-v200-cat-segmented.json`.
+
+## 2026-09-22 work paused at clean checkpoint
+
+Per request, active evaluation work is paused here. No benchmark, replay, or translation-server process is currently running. The latest durable checkpoint is v200: 51/52 papers, 358 sampled blocks, ordinary-body post-model fallback 44/142 (30.99%). Production routing remains unchanged; resume from selective cascade evaluation and accepted-row semantic review.
+
+Validation at this checkpoint: `src/test/quality.test.ts` 113/113 passed and `translation-server/tests/test_madlad_quality.py` 23/23 passed. These validate the existing quality/invariant behavior only; they do not establish the corpus fallback target or semantic correctness.
+
+The corrected-runtime check was re-run from the current worktree: the active translation-server venv reports Transformers 4.57.6 and PyTorch 2.14.0, matching `translation-server/requirements.lock`; the server source still performs the encoder/decoder embedding integrity check. The prior A/B artifact remains authoritative that unpatched Transformers 5.x is unsafe for this checkpoint, while 4.57.6 is the verified baseline. No model switch or production route change was made.
+
+## 2026-09-22 fresh baseline checkpoint — v201
+
+A fresh benchmark was started against the verified 4.57.6 server. The runner's `--help` flag is not implemented as a help-only mode; it started the normal 52-paper selection with an 8-block-per-paper sample limit. It was stopped only after 9 complete paper checkpoints (72 blocks), preserving the resumable report. Artifact: `test-data/real-papers/reports/benchmark-checkpoint-v201.json`. This new cohort has 33 ordinary-body rows and 9 reader-visible post-model fallbacks (27.27%); it is a fresh baseline, not a replacement for v200. No production routing change was made. The translation server remains ready for the next controlled run.
+
+The v201 manual-review queue is materialized separately as `test-data/real-papers/audit-manual-review-v201.json` (72 rows, 0 manually reviewed). This keeps v201 source/translation pairs isolated from v200 annotations and is the next input for semantic false-accept review.
+
+## 2026-09-22 source-protection v12
+
+The v201 server trace exposed repeated technical-name drift (`Bluetooth` becoming variants such as `Blutoohth`). Source protection now atomically protects repeated title-case technical tokens of at least six characters within each semantic unit, while excluding common sentence-initial words and one-off names. This is a generic evidence rule, not a term blacklist. `SOURCE_PROTECTION_VERSION` and the frontend cache identity were bumped from v11 to v12. Tests pass: Python suite 152/152 and Vitest quality/model-version 114/114. The live server was restarted and reports v12 with embedding integrity verified. A single synthetic Bluetooth request still fell back at whole-item level despite good per-unit log pieces, so this change is not yet credited as a fallback reduction; investigate that restore/whole-unit interaction before enabling broader routing.
+
+The whole-unit interaction was isolated: server phrase-repetition detection counted a legitimate two-occurrence technical collocation (`広告パケット`) as decoder looping. The server guard now requires three occurrences, matching the frontend guard; the pathological fivefold repetition fixture remains rejected. After restart, the two-sentence Bluetooth fixture returns a Japanese translation with no fallback. Focused Python tests pass 81/81 and `git diff --check` is clean. This is a measured false-reject reduction, but corpus fallback must be rebenchmarked before assigning a new rate.
+
+One v201 fallback was replayed after the fix (`thermal-earring:b-732ce69a`, prior reason `degenerate output`). The same source now returns a non-fallback translation under v12; the complete output and source hash are in `test-data/real-papers/reports/source-protect-v12-replay.json`. This is one targeted rescue, not a corpus-wide rate claim; the output still needs semantic review before production acceptance.
+
+Three additional v201 ordinary fallbacks were replayed under v12. `significant-other:b-70cd9829` is also rescued; the PPG Earring and Dont Mind Me cases still fail their existing quality/protection checks. Summary: `test-data/real-papers/reports/source-protect-v12-replay3-summary.json` (1/3 rescued). This supports a selective false-reject reduction, but no automatic cascade is enabled and the 5% target is not claimed.
+
+For the remaining Dont Mind Me case, the new numeric-citation unprotected retry was exercised. The missing citation retry ran, but its candidate was correctly rejected by the existing `implausibly_short` guard, so no unsafe output was accepted. The new retry predicate is covered by 24/24 MADLAD quality tests and the server was restarted with v12. This confirms the protection failure is secondary to a genuine omitted-content candidate, not a reason to relax the length gate.
+
+The remaining five v201 ordinary fallback rows were replayed under v12. Three now return non-fallback text (`power-over-skin:b-40d6da32`, `thermal-earring:b-8e811c4b`, `ppg-earring:b-a248687e`); `significant-other:b-524d0815` remains a whole-item quality failure and `power-over-skin:b-d1f04ccf` remains a partial protected-token failure. Summary: `test-data/real-papers/reports/source-protect-v12-replay-rest-summary.json` (3/5 rescued). These are replay measurements only; semantic review is still required before any production cascade.
+## v12 replay checkpoint verified (2026-09-21)
+
+The live translation server is ready on `127.0.0.1:8765` and reports `3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v12-strict-restore-v25-quality-v10`; the model is loaded on MPS with the verified Transformers 4.57.6 runtime. No benchmark is currently running.
+
+The v12 replay artifacts remain the current evidence: the repeated Title Case protection and relaxed legitimate two-occurrence phrase-repetition detector rescue several prior ordinary-body fallbacks, but this is not yet a corpus-wide fallback improvement. The remaining failures include partial protected-token restoration and genuine unit-quality failures; no unsafe retry was enabled. Focused Python citation/quality tests pass (82/82), `git diff --check` passes, and the <=5% ordinary-body fallback / near-zero unsafe-accept targets remain unmet.
+
+An app-side quality-gate replay of the eight non-empty v12 rescue outputs accepted only 1/8; 7/8 were still rejected for source echo/degenerate output, missing scientific invariants, or missing source negation. Therefore server-side rescue counts must not be reported as reader-visible acceptance, and v12 has not yet earned production routing.
+
+Manual inspection of those seven rejects confirms the gate is mostly failing closed for real model defects: two outputs are largely unchanged English source, one invents a frequency-based explanation for `SNR`, one drops the source negation in a Bluetooth paragraph, and one contains a mistranslated technical explanation. The remaining scientific-token failures (`pF`, `SNR`, and a section label) need a controlled protection/retry experiment; no gate relaxation is justified.
+
+A held-out short technical fallback (`ppg-earring:b-a248687e`, SNR definition) was compared with Qwen 2.5 14B without changing routing. Qwen produced `信号対雑音比（SNR）は、目標信号のレベルと背景雑音のレベルを比較するための一般的な指標です。`; the app quality gate accepted it (score 1, no reasons). This is one diagnostic rescue only, not evidence for automatic alternative-model routing. Artifact: `test-data/real-papers/reports/model-compare-v12-snr-qwen14.json`.
+
+A longer Thermal Earring paragraph was also sent to Qwen, but the diagnostic request was capped at 300 generated tokens and therefore ended mid-sentence; the client gate correctly rejected it for missing invariants and implausible shortening. It is not counted as a rescue. Artifact: `test-data/real-papers/reports/model-compare-v12-thermal-qwen14.json`. This confirms the cascade must enforce complete-output limits and quality checks rather than selecting a model from a partial fluent prefix.
+
+The corrected full-length Thermal Earring Qwen14 run completed in 69.4s / 739 output tokens. It preserved the major numbers, UUID, CRC, I2C, battery/connection comparison, and section reference, but introduced a visible `サイクリックレッドゥアンダNCY` terminology corruption. The app gate **accepted** it (score 1.0), exposing a terminology false-accept that the current invariant checks do not catch. It is not a safe rescue; this supports adding a generic acronym-expansion consistency signal before any selective cascade. No routing change was made.
+
+Implemented a generic acronym-expansion safety signal in `src/services/translation/quality.ts`: when the source explicitly defines `Full Term (ACRONYM)`, a mixed-script uppercase fragment immediately before the preserved acronym is rejected. This catches the observed `...アンダNCY（CRC）` corruption without a term blacklist. The final plausibility decision now rejects this reason; regression coverage passes 114/114 quality tests, and replaying the Qwen Thermal output returns `false`. No production model routing changed.
+
+Post-change validation: `npm run typecheck`, `npm run lint`, and the quality/model-version test subset pass (115/115 tests). `git diff --check` remains clean.
+
+The acronym guard was tightened to require a Japanese/CJK character immediately before the stray uppercase fragment, with a preserved-English expansion as a negative control. This avoids rejecting a legitimate untranslated `Cyclic Redundancy Check（CRC）` while still rejecting the observed mixed-script corruption; quality tests remain 114/114.
+
+Full frontend regression after the quality-v8 change passes: 65 files / 452 tests. Optional PDF.js `canvas.node` warnings remain informational; no test failure occurred.
+
+Translation-server regression also passes: Python unittest discovery reports 153 tests OK. `git diff --check` is clean. The working tree still contains the broader uncommitted audit/extraction work from earlier checkpoints; no unrelated changes were reverted.
+
+Fresh v8 replay of three ordinary-body fallback rows (`ordinary-fallback-v8-3-results.json`) returned HTTP 200 for all three, but the app quality gate accepted **0/3**: two were English source echo and one was a degenerate/negation-losing output. This separates server availability from reader-visible success and confirms the current gate is correctly failing closed on these rows.
+
+A Qwen 2.5 14B diagnostic rescue of `dont-mind-me:b-be3cc3a4` completed in 44.1s (1,303 source chars, 532 Japanese chars) and passed the app gate at score 1.0. Manual spot-check of the six body-placement conditions, citation `[10, 15, 17]`, Figure 2, and the access-range rationale found them retained. This is one promising rescue, not sufficient evidence for production routing; raw output is `model-compare-v8-ordinary-qwen14.json`.
+
+A second independent fallback (`dont-mind-me:b-667e5341`) also produced a complete Qwen14 output in 38.3s, passed the gate at score 1.0, and retained citations `[23]`, `[24]`, `[1]`, `[6]`, `[5]`, `[4]`, `[22]`, the public-context condition, and the EMG example on manual spot-check. This makes fallback-only Qwen rescue worth a broader held-out trial, but two positives do not override the earlier unsafe accepted-Qwen rate; production routing remains disabled. Artifact: `model-compare-v8-ordinary-qwen14-b667.json`.
+
+The third fallback (`dont-mind-me:b-2089b50e`) completed in 45.4s, but the app gate rejected it for missing `Figure 1a`; the output also retained the English word `precedent`. Thus fallback-only Qwen was 2/3 gate-accepted in this tiny cohort, reinforcing that strict invariant checks are necessary and that acceptance is not semantic proof. Artifact: `model-compare-v8-ordinary-qwen14-b2089.json`.
+
+Because the new acronym-expansion check changes reader-visible acceptance, `TRANSLATION_QUALITY_VERSION` was bumped from `quality-v7` to `quality-v8`; the model/cache identity test passes. Existing cached generations will not silently bypass the new gate.
+
+Created reusable summary `model-compare-v8-ordinary-qwen14-summary.json` for the three fallback-only Qwen trials: 2/3 passed the automatic gate, 1/3 failed on missing Figure 1a, and production routing remains explicitly disabled.
+
+Stopped at a clean checkpoint on 2026-09-22: the resumable real-paper translation benchmark was interrupted by request after its latest saved checkpoint. The benchmark process is no longer running; the translation server remains available on 127.0.0.1:8765 for the next session. Resume with the same `--resume` command to continue without discarding completed rows.
+
+Added a generic electrical-measurement invariant/protection correction. Values such as `1 pF` and `40 mAh` are now treated as atomic measurements, including compact Japanese rendering (`1pF`), instead of reporting the unit acronym as missing. The client quality identity is `quality-v9`; source protection is `source-protect-v13`. Added TypeScript and Python regression coverage. Focused quality tests pass 116/116 and citation-protection tests pass 59/59; typecheck, lint, and diff check pass. A live pF replay still failed closed because the model omitted/garbled the protected placeholder, so this change is a false-reject reduction and is not counted as a reader-visible rescue. The server was restarted and is ready on the v13 identity; no benchmark or production alternate-model routing was started.
+
+The pF replay was then rerun with the generic scalar-measurement unprotected retry enabled. MADLAD initially dropped `ZZCIT1ZZ`, but the retry exposed only `1 pF`; the model returned `推定1pF以下`, the invariant/quality path accepted it, and the endpoint returned Japanese text instead of source fallback. Debug trace confirms the sequence and contains no paper-specific condition. This is one targeted false-reject rescue; corpus fallback metrics remain unchanged until a fresh held-out benchmark.
+
+The five-row v12 fallback replay was repeated on v13. Four rows returned non-source text, including the pF case; one long significant-other row still fell back. Manual inspection found the SNR row was a severity-3 semantic false accept despite score 1.0, so a generic signal-to-noise comparison relation guard was added: when the source explicitly compares target signal with background noise, Japanese output must retain both sides. The guard has a faithful positive and drift negative test. Client identity is now source-protect-v13/quality-v9; focused TypeScript tests pass 117/117 and Python protection/quality tests pass 84/84. This does not claim the five-row sample is safe or establish a corpus rate.

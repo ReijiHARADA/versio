@@ -11,6 +11,11 @@ export default defineConfig({
     // the default 60s per-paper timeout to turn host contention into a false
     // extraction regression.
     testTimeout: 180_000,
+    // The PDF corpus contains a few single tests that spend tens of seconds
+    // inside pdfjs. The default worker pool can time out its progress RPC
+    // while the assertion is still making progress; threads keep the worker
+    // heartbeat alive on this corpus without changing extraction behavior.
+    pool: "threads",
     maxWorkers: 1,
     minWorkers: 1,
     include: [

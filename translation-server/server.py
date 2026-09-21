@@ -24,6 +24,38 @@ from engines import get_engine
 from engines.micro_batcher import get_scheduler
 
 
+class _BrokenPipeSafeStream:
+    """Keep request handling alive when the parent terminal/log pipe closes."""
+
+    def __init__(self, stream):
+        self._stream = stream
+        self._fallback = open(os.devnull, "w", encoding="utf-8")
+
+    def write(self, value):
+        try:
+            return self._stream.write(value)
+        except (BrokenPipeError, OSError):
+            self._stream = self._fallback
+            return self._stream.write(value)
+
+    def flush(self):
+        try:
+            return self._stream.flush()
+        except (BrokenPipeError, OSError):
+            self._stream = self._fallback
+            return self._stream.flush()
+
+    def __getattr__(self, name):
+        return getattr(self._stream, name)
+
+
+# A terminal launched via a GUI or a closed shell can leave the server with a
+# closed stdout pipe. Logging must never turn an otherwise valid translation
+# request into HTTP 500.
+sys.stdout = _BrokenPipeSafeStream(sys.stdout)
+sys.stderr = _BrokenPipeSafeStream(sys.stderr)
+
+
 debug_log = os.environ.get("MADLAD_SERVER_DEBUG_LOG")
 if debug_log:
     stream = open(debug_log, "a", encoding="utf-8", buffering=1)

@@ -37,6 +37,14 @@ class CitationProtectTests(unittest.TestCase):
         self.assertEqual(cites, [])
         self.assertEqual(protected, source)
 
+    def test_repeated_title_case_technical_token_is_atomic(self) -> None:
+        source = "Bluetooth advertising uses Bluetooth packets, while These packets repeat."
+        protected, cites, nonce = protect_citations(source)
+        self.assertEqual(cites, ["Bluetooth", "Bluetooth"])
+        self.assertNotIn("Bluetooth", protected)
+        self.assertIn("These", protected)
+        self.assertEqual(restore_citations(protected, cites, nonce), source)
+
     def test_unprotected_retry_allows_only_structural_figure_table_reference(self) -> None:
         self.assertTrue(allows_unprotected_identifier_retry(["Fig. 2"]))
         self.assertTrue(allows_unprotected_identifier_retry(["(Table 3a)"]))
@@ -271,6 +279,16 @@ class CitationProtectTests(unittest.TestCase):
         protected, citations, nonce = protect_citations(source)
         self.assertEqual(citations, ["37.1 °C (98.8 °F)", "33.9°C"])
         self.assertEqual(restore_citations(protected, citations, nonce), source)
+
+    def test_protects_farad_and_battery_measurements_as_atomic_values(self) -> None:
+        source = "The coupling is below 1 pF and the battery provides 40 mAh."
+        protected, citations, nonce = protect_citations(source)
+        self.assertEqual(citations, ["1 pF", "40 mAh"])
+        self.assertEqual(restore_citations(protected, citations, nonce), source)
+        self.assertEqual(
+            restore_citations("結合は1pFで、電池は40mAhを供給する。", citations, nonce, reject_missing=True),
+            "結合は1 pFで、電池は40 mAhを供給する。",
+        )
 
     def test_protects_variable_comparison_parenthetical(self) -> None:
         source = "OLS is used for comparison (where y \u0338= 0 when x = 0)."
