@@ -410,6 +410,42 @@ function itemsToLine(
   };
 }
 
+function splitSpanningGutterLines(lines: LayoutLine[]): LayoutLine[] {
+  const result: LayoutLine[] = [];
+  for (const line of lines) {
+    if (line.items.length < 4) {
+      result.push(line);
+      continue;
+    }
+    const items = [...line.items].sort((a, b) => a.x - b.x);
+    let largestGap = 0;
+    let splitIndex = -1;
+    for (let index = 1; index < items.length; index++) {
+      const gap = items[index].x - (items[index - 1].x + items[index - 1].width);
+      if (gap > largestGap) {
+        largestGap = gap;
+        splitIndex = index;
+      }
+    }
+    const left = splitIndex > 0 ? items.slice(0, splitIndex) : [];
+    const right = splitIndex > 0 ? items.slice(splitIndex) : [];
+    const leftFont = median(left.map((item) => item.fontSize));
+    const rightFont = median(right.map((item) => item.fontSize));
+    const splitByGutter = largestGap >= Math.max(48, (line.pageWidth ?? 612) * 0.08) &&
+      left.length <= 3 && right.length >= 4 && Math.abs(leftFont - rightFont) >= 1;
+    if (!splitByGutter) {
+      result.push(line);
+      continue;
+    }
+    const pageMidpoint = (line.pageWidth ?? 612) * 0.48;
+    const leftColumn = line.column === "spanning" ? "spanning" : line.x < pageMidpoint ? "left" : line.column;
+    const rightColumn = right[0].x > pageMidpoint ? "right" : line.column;
+    result.push(itemsToLine(left, leftColumn, line.page, line.pageHeight, line.pageWidth));
+    result.push(itemsToLine(right, rightColumn, line.page, line.pageHeight, line.pageWidth));
+  }
+  return result;
+}
+
 function clusterItemsIntoLines(
   items: ExtractedTextItem[],
   column: LayoutColumn,
@@ -938,8 +974,13 @@ export function isTableCaption(text: string): boolean {
 }
 
 function isCopyright(text: string, fontSize: number, baseFont: number): boolean {
-  if (fontSize > baseFont * 0.92) return false;
-  return /permission to make digital or hard copies/i.test(text) ||
+  const explicitLicense = /^(?:©\s*\d{4}\b|open[-\s]access\b|license\s*\(\s*https?:\/\/creativecommons\.org|this\s+article\s+is\s+(?:licensed|distributed)\b)/i.test(text.trim());
+  if (fontSize > baseFont * 0.92 && !explicitLicense) return false;
+  return explicitLicense ||
+    /permission to make digital or hard copies/i.test(text) ||
+    /\b(?:this\s+work\s+is\s+)?licensed\s+under\s+a\s+creative\s+commons\b/i.test(text) ||
+    /\b(?:terms\s+of\s+the\s+)?creative\s+commons\s+(?:attribution\s+)?(?:license|licence)\b/i.test(text) ||
+    /\bopen[-\s]access\s+article\s+distributed\s+under\b/i.test(text) ||
     /copyright\s+\d{4}[^.]{0,100}\b(?:acm|ieee|springer|elsevier)\b/i.test(text);
 }
 
@@ -951,6 +992,26 @@ function splitInlineDoi(line: LayoutLine): LayoutLine[] {
   if (tail.split(/\s+/).filter(Boolean).length < 3) return [line];
   const head = line.text.slice(0, end).trim();
   const ratio = Math.max(0.2, Math.min(0.8, head.length / line.text.length));
+  return [
+    { ...line, text: head, width: line.width * ratio },
+    { ...line, text: tail, x: line.x + line.width * ratio, width: line.width * (1 - ratio) },
+  ];
+}
+
+/**
+ * Publisher license boilerplate is sometimes concatenated to a citation or
+ * the last abstract line by native PDF text extraction. Split the metadata
+ * tail before block formation so it cannot become translation input. The
+ * marker set is intentionally structural (license/open-access language), not
+ * tied to a publisher or paper.
+ */
+function splitInlineLicense(line: LayoutLine): LayoutLine[] {
+  const match = line.text.match(/(?:©\s*\d{4}\b|\bopen[-\s]access\b|\bthis\s+article\s+is\s+(?:licensed|distributed)\b|\blicense\s*\(\s*https?:\/\/creativecommons\.org)/i);
+  if (!match || match.index === undefined || match.index === 0) return [line];
+  const head = line.text.slice(0, match.index).trim();
+  const tail = line.text.slice(match.index).trim();
+  if (head.length < 20 || tail.length < 20) return [line];
+  const ratio = Math.max(0.15, Math.min(0.85, head.length / line.text.length));
   return [
     { ...line, text: head, width: line.width * ratio },
     { ...line, text: tail, x: line.x + line.width * ratio, width: line.width * (1 - ratio) },
@@ -1568,7 +1629,7 @@ function buildPageLines(
     );
   });
 
-  const structurallySplit = lines.flatMap(splitInlineSubheading);
+  const structurallySplit = splitSpanningGutterLines(lines).flatMap(splitInlineSubheading);
 
   // Opt-in line diagnostics for investigating generic caption/table boundaries.
   // Keep this disabled by default; it reports native geometry and style only.
@@ -1636,7 +1697,10 @@ function roleForLine(
 ): LayoutRole {
   if (line.roleHint) return line.roleHint;
   const text = line.text.trim();
-  if (isCopyright(text, line.fontSize, baseFont) || inCopyright) {
+  // Carry a copyright run only through similarly small continuation lines.
+  // Body-sized text in the opposite physical column may follow a footer on
+  // the same native stream (common when an abstract spans a license footer).
+  if (isCopyright(text, line.fontSize, baseFont) || (inCopyright && line.fontSize <= baseFont * 0.92)) {
     return "copyright";
   }
   // Figure labels are frequently emitted on their own native line before the
@@ -1811,7 +1875,7 @@ function groupLinesIntoBlocks(
   };
 
   for (const sourceLine of lines) {
-    for (const line of splitInlineDoi(sourceLine)) {
+    for (const doiLine of splitInlineDoi(sourceLine)) for (const line of splitInlineLicense(doiLine)) {
     if (!line.text.trim()) continue;
     if (line.page !== copyrightPage || line.column !== copyrightColumn) {
       copyrightStarted = false;

@@ -29,6 +29,14 @@ describe("acronym expansion safety", () => {
     expect(evaluateJaTranslation(intact, source).reasons).not.toContain("malformed acronym expansion");
     expect(evaluateJaTranslation(sourcePreserved, source).reasons).not.toContain("malformed acronym expansion");
   });
+
+  it("rejects an unsupported numbered enumeration introduced by the model", () => {
+    const source = "The first group asked a hypothesis-scanning question, while the second group asked a constraint-seeking question.";
+    const hallucinated = "第一群は仮説探索質問を尋ね, 第二群は制約探索質問を尋ねた。1)自転車, 2)物, 3)学校, 4)検査。";
+    const faithful = "第一群は仮説探索質問を尋ね, 第二群は制約探索質問を尋ねた。";
+    expect(evaluateJaTranslation(hallucinated, source).reasons).toContain("translation introduces an unsupported numbered enumeration");
+    expect(evaluateJaTranslation(faithful, source).reasons).not.toContain("translation introduces an unsupported numbered enumeration");
+  });
 });
 import {
   displayProcessingStatus,
@@ -301,6 +309,12 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation("信号対雑音比（SNR）は、標的信号のレベルを背景雑音のレベルと比較する指標である。", source)).toBe(true);
   });
 
+  it("accepts a localized currency when its source amount is preserved", () => {
+    const source = "The processor costs around $1 USD.";
+    expect(isPlausibleJaTranslation("プロセッサの価格は約1ドルである。", source)).toBe(true);
+    expect(isPlausibleJaTranslation("プロセッサの価格は約2ドルである。", source)).toBe(false);
+  });
+
   it("rejects changed Celsius values while allowing a faithful temperature translation", () => {
     const source = "Earlobe temperature decreased from 37.1 °C to 33.9 °C during the observation.";
     expect(isPlausibleJaTranslation("観察中に耳たぶの温度は37.1°Cから33.9°Cに低下した。", source)).toBe(true);
@@ -341,6 +355,11 @@ describe("isPlausibleJaTranslation", () => {
     const source = "Contemporary Jewellery is a rich craft discipline that seeks to extend concepts of jewellery by embracing new materials, processes and perspectives, whilst challenging preconceptions of jewellery and its role in society.";
     const output = "現代ジュエリーは, 新しい素材, プロセス, 視点を取り入れ, 社会におけるジュエリーの役割に関する先入観に挑戦することによって, ジュエリーコンセプトを拡張しようとする豊かな技術分野である。";
     expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
+  it("accepts repeated katakana modifiers in a comma-separated inventory", () => {
+    const output = "スマートジュエリーにはスマートネックレス、スマートブレスレット、スマートメガネ、スマートリング、スマートイヤリングがある。";
+    expect(isPlausibleJaTranslation(output, "Smart jewelry includes necklaces, bracelets, glasses, rings, and earrings.")).toBe(true);
   });
 
 

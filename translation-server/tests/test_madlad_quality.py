@@ -18,6 +18,11 @@ class MadladUnitQualityTests(unittest.TestCase):
     def test_identifier_retry_allows_scalar_measurements(self) -> None:
         self.assertTrue(allows_unprotected_identifier_retry(["1 pF", "40 mAh"]))
         self.assertFalse(allows_unprotected_identifier_retry(["F(4,33) = 2.913"]))
+        self.assertTrue(allows_unprotected_identifier_retry(["USD"]))
+
+    def test_identifier_retry_allows_narrow_academic_reference_spans(self) -> None:
+        self.assertTrue(allows_unprotected_identifier_retry(["SI Appendix", "Ruggeri et al.18"]))
+        self.assertFalse(allows_unprotected_identifier_retry(["Ruggeri and Baron et al.18"]))
 
     def test_degenerate_reason_labels_are_stable(self) -> None:
         source = "This is a sufficiently long academic sentence for testing."
@@ -52,6 +57,10 @@ class MadladUnitQualityTests(unittest.TestCase):
 
     def test_allows_normal_repeated_technical_term(self) -> None:
         output = "温度を測定し、温度変化を記録した。温度の推移を分析し、温度モデルを評価した。"
+        self.assertFalse(MADLADEngine._has_abnormal_phrase_repetition(output))
+
+    def test_allows_repeated_katakana_modifier_in_inventory(self) -> None:
+        output = "スマートジュエリーにはスマートネックレス、スマートブレスレット、スマートメガネ、スマートリング、スマートイヤリングがある。"
         self.assertFalse(MADLADEngine._has_abnormal_phrase_repetition(output))
 
     def test_allows_repeated_kanji_in_academic_prose(self) -> None:
@@ -93,6 +102,25 @@ class MadladUnitQualityTests(unittest.TestCase):
         self.assertTrue(MADLADEngine._has_abnormal_phrase_repetition(output))
         self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
         self.assertEqual(MADLADEngine._degenerate_reason(output, source, "ja"), "phrase_repetition")
+
+    def test_retries_unsupported_numbered_enumeration(self) -> None:
+        source = (
+            "The first group asked the hypothesis-scanning question, whereas the second group "
+            "asked the constraint-seeking question. The study then compared their responses."
+        )
+        output = "1) 自転車 2) 物体 3) 病院 4) カードを選んだ。"
+        self.assertTrue(MADLADEngine._has_unsupported_numbered_enumeration(output, source))
+        self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
+        self.assertEqual(
+            MADLADEngine._degenerate_reason(output, source, "ja"),
+            "unsupported_numbered_enumeration",
+        )
+
+    def test_allows_source_numbered_list(self) -> None:
+        source = "The procedure had three steps: 1) prepare the data, 2) fit the model, 3) report the result."
+        output = "手順は3段階である。1) データを準備し、2) モデルを適合し、3) 結果を報告した。"
+        self.assertFalse(MADLADEngine._has_unsupported_numbered_enumeration(output, source))
+        self.assertFalse(MADLADEngine._is_degenerate(output, source, "ja"))
 
     def test_rejects_long_natural_language_unit_reduced_to_its_conclusion(self) -> None:
         source = (

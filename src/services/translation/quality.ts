@@ -158,7 +158,13 @@ function hasAbnormalPhraseRepetition(text: string): boolean {
     const phrase = compact.slice(index, index + 5);
     counts.set(phrase, (counts.get(phrase) ?? 0) + 1);
   }
-  return [...counts.entries()].some(([phrase, count]) => count >= 3 && phrase.length * count / compact.length >= 0.16);
+  return [...counts.entries()].some(([phrase, count]) =>
+    count >= 3
+    && phrase.length * count / compact.length >= 0.16
+    // Repeated katakana modifiers in comma-separated inventories are list
+    // structure, not decoder looping.
+    && !(/^[\u30a0-\u30ff]+$/.test(phrase) && (text.match(/[,、]/g) ?? []).length >= 2)
+  );
 }
 
 function hasFragmentedJapaneseSpacing(text: string): boolean {
@@ -402,6 +408,21 @@ function outputContainsInvariant(output: string, invariant: ScientificInvariant,
       });
     }
   }
+  // Currency codes are often localized in Japanese (`$1 USD` -> `約1ドル`).
+  // Require the source amount to remain adjacent to a matching currency
+  // expression; accepting an unrelated `ドル` would hide a numeric drift.
+  if (invariant.kind === "acronym" && /^(?:usd|eur|gbp|jpy|cny)$/i.test(invariant.value)) {
+    const amount = source.match(new RegExp(`\\b(\\d+(?:\\.\\d+)?)\\s*${invariant.value}\\b`, "i"))?.[1];
+    if (amount) {
+      const escapedAmount = amount.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+      const currency = invariant.value.toLowerCase() === "usd" ? "(?:usd|米ドル|ドル)"
+        : invariant.value.toLowerCase() === "eur" ? "(?:eur|ユーロ)"
+          : invariant.value.toLowerCase() === "gbp" ? "(?:gbp|ポンド)"
+            : invariant.value.toLowerCase() === "jpy" ? "(?:jpy|円)"
+              : "(?:cny|元|人民元)";
+      return new RegExp(`${escapedAmount}[^\\d]{0,8}${currency}`, "i").test(output);
+    }
+  }
   if (invariant.kind !== "acronym") return normalizedOutput.includes(value);
   // Some method names are written with a space in running text and without it
   // in their canonical identifier form ("Deep IV" / "DeepIV"). Treat the
@@ -423,6 +444,9 @@ function outputContainsInvariant(output: string, invariant: ScientificInvariant,
 
 function invariantQuality(source: string, output: string): { score: number; reasons: string[]; criticalMissing: boolean } {
   const invariants = extractScientificInvariants(source);
+  const sourceEnumerationCount = (source.match(/(?:^|[\n\s])\d{1,2}[.)](?=\s|[^\d])/g) ?? []).length;
+  const outputEnumerationCount = (output.match(/(?:^|[\n\s,、])\d{1,2}[.)](?=\s|[^\d])/g) ?? []).length;
+  const unsupportedEnumeration = sourceEnumerationCount < 2 && outputEnumerationCount >= 3;
   const missing = invariants.filter((invariant) => !outputContainsInvariant(output, invariant, source));
   // Measurements, statistical values, references, and links are source facts.
   // A translation may express an ordinary number differently, but it must not
@@ -438,7 +462,7 @@ function invariantQuality(source: string, output: string): { score: number; reas
     ["citation", "doi", "url", "figure", "statistic", "measurement", "year", "structure"].includes(item.kind)
       && !sourceFacts.has(invariantFactKey(item))
   );
-  if (missing.length === 0 && unexpected.length === 0) return { score: 1, reasons: [], criticalMissing: false };
+  if (missing.length === 0 && unexpected.length === 0 && !unsupportedEnumeration) return { score: 1, reasons: [], criticalMissing: false };
   // A missing acronym can change the method, metric, or experimental
   // condition under discussion (for example MSE, NPIV, or DeepIV). It is a
   // safety failure, not merely a stylistic difference.
@@ -446,10 +470,11 @@ function invariantQuality(source: string, output: string): { score: number; reas
   const reasons: string[] = [];
   if (missing.length > 0) reasons.push(`scientific invariants missing: ${missing.slice(0, 4).map((item) => item.value).join(", ")}`);
   if (unexpected.length > 0) reasons.push(`unexpected scientific invariants: ${unexpected.slice(0, 4).map((item) => item.value).join(", ")}`);
+  if (unsupportedEnumeration) reasons.push("translation introduces an unsupported numbered enumeration");
   return {
-    score: Math.max(0, 1 - missing.length / Math.max(invariants.length, 1) - critical.length * 0.18 - unexpected.length * 0.24),
+    score: Math.max(0, 1 - missing.length / Math.max(invariants.length, 1) - critical.length * 0.18 - unexpected.length * 0.24 - (unsupportedEnumeration ? 0.4 : 0)),
     reasons,
-    criticalMissing: critical.length > 0 || unexpected.length > 0,
+    criticalMissing: critical.length > 0 || unexpected.length > 0 || unsupportedEnumeration,
   };
 }
 

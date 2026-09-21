@@ -39,13 +39,13 @@ describe("MADLAD translation cache identity", () => {
     expect(engineSource).toContain(
       'f"3b-mt-v6-transformers-{TRANSFORMERS_RUNTIME_VERSION}-{SEGMENTER_VERSION}-"'
     );
-    expect(engineSource).toContain('f"{SOURCE_PROTECTION_VERSION}-strict-restore-v25-{QUALITY_GATE_VERSION}"');
+    expect(engineSource).toContain('f"{SOURCE_PROTECTION_VERSION}-strict-restore-v28-{QUALITY_GATE_VERSION}"');
     expect(engineSource).toContain('QUALITY_GATE_VERSION = "quality-v10"');
     expect(requirementsSource).toContain("transformers==4.57.6");
     expect(lockSource).toContain("transformers==4.57.6");
     expect(TRANSLATION_QUALITY_VERSION).toBe("quality-v9");
     expect(MADLAD_MODEL_VERSION).toBe(
-      `3b-mt-v6-transformers-4.57.6-${segmenterVersion}-${protectionVersion}-strict-restore-v25-${TRANSLATION_QUALITY_VERSION}`
+      `3b-mt-v6-transformers-4.57.6-${segmenterVersion}-${protectionVersion}-strict-restore-v28-${TRANSLATION_QUALITY_VERSION}`
     );
   });
 });
