@@ -5072,5 +5072,36 @@
     "validation": "npm run typecheck; npm run lint; readingOrder.test.ts 71/71 pass.",
     "remaining": "Rerun real-PDF diagnostics against changed topology and full cached-PDF extraction suite; investigate page-boundary and table cases with negative controls.",
     "productionImpact": "Generic extraction behavior changed; translation route unchanged; no app build."
+  },
+  "latestExtractionFollowup": {
+    "date": "2026-09-21",
+    "status": "focused extraction controls pass; one broad-corpus table regression remains",
+    "changes": [
+      "baseline-matched sidebar grouping",
+      "recurring multi-column grid row evidence",
+      "mixed typography title/badge split"
+    ],
+    "validation": {
+      "syntheticReadingOrder": "72/72",
+      "focusedRealPapers": "4/4",
+      "readingOrderAndRealPaperSuites": "52/52",
+      "typecheck": "pass",
+      "lint": "pass",
+      "fullExtractionCorpus": "1 assertion failed; Vitest worker onTaskUpdate timeout"
+    },
+    "regression": {
+      "paper": "marketing-consumer-production-journey",
+      "test": "baselineRealPapers.test.ts:99",
+      "attribution": "fails current, passes against HEAD^",
+      "finding": "Consumer co-production network label and following Brodie et al. table row are separated"
+    },
+    "nextActions": [
+      "diagnose intended table row grouping and fix generically",
+      "rerun marketing regression and full extraction corpus",
+      "then resume heldout translation semantic review"
+    ],
+    "translationGoalStatus": "fallback <=5% and near-zero severity>=2 unsafe accepts remain unmet",
+    "noAppBuild": true,
+    "translationServer8765": "left untouched"
   }
 }
