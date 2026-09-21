@@ -231,10 +231,13 @@ export function extractFromPages(input: {
     regionEvidence: [...generatedRegions, ...(input.regionEvidence ?? [])],
   });
 
-  console.info(
-    "[reading-order] reconstructed paragraphs\n" +
-      formatReadingOrderLog(generic.blocks)
-  );
+  const debugLayout = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_DEBUG;
+  if (debugLayout === "1") {
+    console.info(
+      "[reading-order] reconstructed paragraphs\n" +
+        formatReadingOrderLog(generic.blocks)
+    );
+  }
 
   const projected = projectCanonicalToPaper({
     canonical,

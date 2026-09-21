@@ -892,6 +892,16 @@ describe("unsafe extracted translation input", () => {
     ).toBe(true);
   });
 
+  it("keeps extraction replacement characters out of model input without rejecting valid scientific Unicode", () => {
+    const damaged = "The value was calculated as proposed in [12, 13]: \uFFFD \uFFFD";
+    expect(unsafeParagraphStructureReason(damaged)).toContain("未復元文字");
+    expect(shouldTranslateParagraph(damaged)).toBe(false);
+
+    const valid = "The mean μ was 2.913, and the χ² test yielded p < 0.001.";
+    expect(unsafeParagraphStructureReason(valid)).toBeNull();
+    expect(shouldTranslateParagraph(valid)).toBe(true);
+  });
+
   it("keeps an unpunctuated terminal infinitive from being completed by the model", () => {
     const source = "NVivo, SPSS, and AMOS programs were used to perform";
     expect(unsafeParagraphStructureReason(source)).toContain("不定詞の補語");

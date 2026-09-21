@@ -166,7 +166,8 @@ describe("real jewelry-corpus PDFs", () => {
 
       for (const [a, b] of checks.forbidSameParagraph ?? []) {
         expect(
-          paragraphs.some((p) => p.includes(a) && p.toLowerCase().includes(b.toLowerCase()))
+          paragraphs.some((p) => p.includes(a) && p.toLowerCase().includes(b.toLowerCase())),
+          `${paper.id} merged forbidden pair: ${a} / ${b}`
         ).toBe(false);
       }
 

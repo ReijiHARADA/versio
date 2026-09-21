@@ -238,7 +238,7 @@ const NON_TECHNICAL_UPPERCASE_WORDS = new Set([
   "WITH",
 ]);
 
-export const TRANSLATION_QUALITY_VERSION = "quality-v5";
+export const TRANSLATION_QUALITY_VERSION = "quality-v6";
 
 export type TranslationQuality = {
   score: number;
@@ -798,6 +798,12 @@ export function isExpectedNonProseParagraph(text: string): boolean {
 export function unsafeParagraphStructureReason(text: string): string | null {
   const t = text.trim();
   if (!t) return null;
+  // U+FFFD is an extraction/decoding failure marker, not an academic symbol.
+  // Even a single occurrence can stand in for a missing equation or value;
+  // translating around it would invite the model to invent what was lost.
+  if (t.includes("\uFFFD")) {
+    return "抽出テキストに未復元文字が含まれています";
+  }
   const noTerminal = !/[.!?。！？]$/.test(t);
   // A physical block with an unclosed quote or an unmatched parenthesis is
   // incomplete.  Do this only without terminal punctuation: PDF text can

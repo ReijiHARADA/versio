@@ -66,7 +66,7 @@ class MADLADEngine(TranslationEngine):
 
     MODEL_ID = "google/madlad400-3b-mt"
     TRANSFORMERS_RUNTIME_VERSION = "4.57.6"
-    QUALITY_GATE_VERSION = "quality-v8"
+    QUALITY_GATE_VERSION = "quality-v9"
     MODEL_VERSION = (
         f"3b-mt-v6-transformers-{TRANSFORMERS_RUNTIME_VERSION}-{SEGMENTER_VERSION}-"
         f"{SOURCE_PROTECTION_VERSION}-strict-restore-v25-{QUALITY_GATE_VERSION}"
@@ -961,13 +961,13 @@ class MADLADEngine(TranslationEngine):
         # false rejects on otherwise readable translations. Require a repeated
         # multi-character phrase below; the existing repeated-character guard
         # still catches degenerate character loops.
-        for phrase_size in (3, 4, 5):
+        for phrase_size in (4, 5):
             counts: dict[str, int] = {}
             for index in range(len(compact) - phrase_size + 1):
                 phrase = compact[index : index + phrase_size]
                 counts[phrase] = counts.get(phrase, 0) + 1
             if any(
-                count >= 2 and (phrase_size * count) / len(compact) >= 0.15
+                count >= 2 and (phrase_size * count) / len(compact) >= 0.20
                 for count in counts.values()
             ):
                 return True
@@ -1066,6 +1066,19 @@ class MADLADEngine(TranslationEngine):
         ).strip()
         if not normalized_output:
             return False
+        # Citations and scientific identifiers are restored verbatim after
+        # decoding. Remove those exact protected spans before searching for
+        # untranslated prose so an author-year citation does not look like a
+        # model echo of the source sentence.
+        _, protected_spans, _ = protect_citations(source)
+        for span in protected_spans:
+            normalized_span = re.sub(
+                r"\s+",
+                " ",
+                MADLADEngine._normalize_for_source_overlap(span),
+            ).strip()
+            if normalized_span:
+                normalized_output = normalized_output.replace(normalized_span, " ")
         # Detect a decoder appending only the prefix of a source identifier
         # (for example ``GPT`` from ``GPT-3``) after a complete Japanese
         # sentence. This catches orphaned source fragments without a
