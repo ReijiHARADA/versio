@@ -880,7 +880,13 @@
       "filename": "human-ai-interaction-guidelines.pdf",
       "downloadUrl": "https://arxiv.org/abs/2010.11761",
       "seedPaths": [],
-      "checks": {},
+      "checks": {
+        "forbidSameParagraph": [
+          ["Learn from corrections", "Imagine potential pitfalls"],
+          ["Time services based", "Scope services when"],
+          ["What would the consequence", "Tie explanations to user actions"]
+        ]
+      },
       "sourceUrl": "https://arxiv.org/abs/2010.11761",
       "oaStatus": "oa-or-author-hosted"
     },
@@ -1588,6 +1594,10 @@
       ],
       "checks": {
         "titleContains": "memory cue and interest",
+        "requireSameParagraph": [
+          ["had medium visual complexity", "sound complexity"]
+        ],
+        "forbidEquationContains": ["sound complexity", "emotional levels"],
         "referencesHeading": true
       }
     },
@@ -1654,7 +1664,15 @@
       ],
       "checks": {
         "titleContains": "incidental memory for task-irrelevant items",
-        "referencesHeading": true
+        "referencesHeading": true,
+        "requireParagraphContains": [
+          "memory encoding for task-irrelevant items was enhanced when presented with motor-response cues",
+          "Thus, the direct link between the action and memory remains unclear",
+          "such as active learning."
+        ],
+        "forbidParagraphContains": [
+          "This article was submitted to Cognition"
+        ]
       }
     },
     {

@@ -28,6 +28,39 @@ class MadladUnitQualityTests(unittest.TestCase):
         output = "温度を測定し、温度変化を記録した。温度の推移を分析し、温度モデルを評価した。"
         self.assertFalse(MADLADEngine._has_abnormal_phrase_repetition(output))
 
+    def test_allows_repeated_kanji_in_academic_prose(self) -> None:
+        # Recurrent characters such as 的 and 評 are normal in Japanese
+        # academic terminology and do not establish phrase repetition.
+        output = (
+            "暗黙評価は、文化的または社会的参照を認識する聴衆によって"
+            "特定の文脈で態度的と解釈できる事実的、表面的に中立的な表現で伝達される。"
+        )
+        self.assertFalse(MADLADEngine._has_abnormal_phrase_repetition(output))
+
+    def test_rejects_compact_translation_that_omits_as_not_qualification(self) -> None:
+        source = (
+            "It is the implicit cases of appraisal that are the problem as they are not confined "
+            "to individual words (Kaltenbacher 2006: 274)."
+        )
+        output = "また、評価の暗黙的な場合が問題となる(Kaltenbacher 2006: 274)。"
+        self.assertTrue(MADLADEngine._is_implausibly_short_unit(output, source))
+        self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
+        complete = "暗黙の評価事例が問題となるのは、個々の語に限定されないためである(Kaltenbacher 2006: 274)。"
+        self.assertFalse(MADLADEngine._is_implausibly_short_unit(complete, source))
+
+        paragraph_source = source + (
+            " Implicit appraisal is conveyed by factual, superficially neutral expressions "
+            "that can be interpreted as attitudinal in specific contexts by audiences that "
+            "recognise the cultural or social reference (Hyatt 2007, 2009: 130) as demonstrated "
+            "in examples 3 and 4."
+        )
+        paragraph_output = (
+            "これらの評価は個々の単語(Kaltenbacher 2006: 274)に限定されないので、問題となる。"
+            "暗黙評価は、文化的または社会的参照を認識する聴衆によって、特定の文脈で態度的と"
+            "解釈できる事実的、表面的に中立な表現によって伝達される(Hyatt 2007, 2009: 130)。"
+        )
+        self.assertFalse(MADLADEngine._is_implausibly_short_unit(paragraph_output, paragraph_source))
+
     def test_rejects_fluent_japanese_phrase_repetition(self) -> None:
         source = "We present a smart necklace that recognizes silent speech commands in two languages."
         output = "顔の顔面の顔の顔の下から撮影した画像を用いて、英語と中国語のコマンドを識別する。"

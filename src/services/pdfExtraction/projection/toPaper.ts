@@ -12,6 +12,7 @@ import { reconcileBlockIds } from "../../../data/package/reconcile";
 import {
   displayHeadingText,
   figureLookupKey,
+  joinHyphenated,
   type LayoutBlock,
   type PageColumnLayout,
 } from "../../pdfLayout";
@@ -149,6 +150,63 @@ function layoutForNode(
   );
 }
 
+function projectionNodesWithContinuations(
+  orderedNodes: CanonicalNode[],
+  canonical: CanonicalDocument,
+  layoutBlocks: LayoutBlock[]
+): Array<{ node: CanonicalNode; layout: LayoutBlock | undefined }> {
+  const nodeById = new Map(canonical.nodes.map((node) => [node.id, node]));
+  const continuationByNode = new Map(
+    canonical.relations
+      .filter((relation) => relation.kind === "CONTINUES")
+      .map((relation) => [relation.from, relation.to])
+  );
+  const consumed = new Set<string>();
+  const projected: Array<{ node: CanonicalNode; layout: LayoutBlock | undefined }> = [];
+
+  for (const sourceNode of orderedNodes) {
+    if (consumed.has(sourceNode.id)) continue;
+    let node = sourceNode;
+    let layout = layoutForNode(node, layoutBlocks);
+    let nextId = continuationByNode.get(node.id);
+    while (nextId) {
+      const next = nodeById.get(nextId);
+      if (!next || node.role !== "paragraph" || next.role !== "paragraph" || !node.text || !next.text) break;
+      const nextLayout = layoutForNode(next, layoutBlocks);
+      const text = joinHyphenated(node.text, next.text).replace(/\s+/g, " ").trim();
+      const boxes = [...node.boundingBoxes, ...next.boundingBoxes];
+      const lines = [...(layout?.lines ?? []), ...(nextLayout?.lines ?? [])];
+      const x = Math.min(...boxes.map((box) => box.x));
+      const y = Math.min(...boxes.map((box) => box.y));
+      const right = Math.max(...boxes.map((box) => box.x + box.width));
+      const bottom = Math.max(...boxes.map((box) => box.y + box.height));
+      node = {
+        ...node,
+        text,
+        pageEnd: next.pageEnd,
+        boundingBoxes: boxes,
+        confidence: Math.min(node.confidence, next.confidence),
+        evidence: [...node.evidence, ...next.evidence],
+        sourceAnchor: { ...node.sourceAnchor, boundingBoxes: boxes },
+      };
+      if (layout && nextLayout) {
+        layout = {
+          ...layout,
+          text,
+          lines,
+          pageEnd: next.pageEnd,
+          column: "spanning",
+          bbox: { page: node.pageStart, x, y, width: right - x, height: bottom - y },
+        };
+      }
+      consumed.add(next.id);
+      nextId = continuationByNode.get(next.id);
+    }
+    projected.push({ node, layout });
+  }
+  return projected;
+}
+
 export type PaperProjection = {
   paper: Paper;
   sections: Section[];
@@ -221,6 +279,7 @@ export function projectCanonicalToPaper(input: {
   const orderedNodes = orderedIds
     .map((id) => nodeById.get(id))
     .filter((n): n is CanonicalNode => Boolean(n));
+  const projectionNodes = projectionNodesWithContinuations(orderedNodes, canonical, layoutBlocks);
 
   const pushBlock = (
     node: CanonicalNode,
@@ -265,8 +324,7 @@ export function projectCanonicalToPaper(input: {
     });
   };
 
-  for (const node of orderedNodes) {
-    const layout = layoutForNode(node, layoutBlocks);
+  for (const { node, layout } of projectionNodes) {
     const boxes =
       node.boundingBoxes.length > 0
         ? node.boundingBoxes

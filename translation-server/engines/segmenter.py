@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 from .citation_protect import protected_span_mask
 
-SEGMENTER_VERSION = "semantic-v73"
+SEGMENTER_VERSION = "semantic-v74"
 _ABBREVIATIONS = {"e.g.", "i.e.", "et al.", "fig.", "no.", "cf.", "dr.", "mr.", "ms.", "vs."}
 
 
@@ -222,7 +222,16 @@ def _split_inline_enumeration(text: str) -> list[str]:
     markers = [
         match
         for match in re.finditer(r"\(\d{1,2}\)", text)
-        if (match.start() == 0 or re.search(r"[:;]\s*$", text[: match.start()]))
+        if (
+            match.start() == 0
+            or re.search(r"[:;]\s*$", text[: match.start()])
+            # Superscript reference numbers are sometimes emitted after the
+            # sentence punctuation without a space (`migration.3 (2) ...`).
+            # At a numbered-item boundary this is still a sentence/list edge,
+            # not one long translation unit. Excluding a digit before the
+            # punctuation keeps decimal values from matching.
+            or re.search(r"(?<!\d)[.!?](?:\d{1,3})?\s*$", text[: match.start()])
+        )
         and re.match(r"\s+[A-Za-z]", text[match.end() :])
     ]
     if len(markers) < 2:

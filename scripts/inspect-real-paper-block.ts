@@ -70,8 +70,9 @@ const report = inspected.map((block, offset) => {
       lineCount: layoutBlock.lines.length,
       lines: layoutBlock.lines.map((line) => ({
         x: line.x, y: line.y, width: line.width, fontSize: line.fontSize, column: line.column, page: line.page,
+        rotation: line.rotation,
         itemCount: line.items.length,
-        items: line.items.map((item) => ({ text: item.text, x: item.x, width: item.width, fontName: item.fontName, fontSize: item.fontSize })),
+        items: line.items.map((item) => ({ text: item.text, x: item.x, y: item.y, width: item.width, fontName: item.fontName, fontSize: item.fontSize, rotation: item.rotation })),
       })),
     } : undefined,
   };
@@ -90,6 +91,7 @@ const nativeTextItems = pages
         y: Math.round(item.y * 10) / 10,
         width: Math.round(item.width * 10) / 10,
         height: Math.round(item.height * 10) / 10,
+        rotation: item.rotation,
         fontName: item.fontName,
         fontSize: Math.round(item.fontSize * 10) / 10,
       })),

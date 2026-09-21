@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { MADLAD_MODEL_VERSION } from "../services/translation/madladEngine";
+import { TRANSLATION_QUALITY_VERSION } from "../services/translation/quality";
 
 const segmenterSource = readFileSync(
   new URL("../../translation-server/engines/segmenter.py", import.meta.url),
@@ -38,11 +39,12 @@ describe("MADLAD translation cache identity", () => {
     expect(engineSource).toContain(
       'f"3b-mt-v6-transformers-{TRANSFORMERS_RUNTIME_VERSION}-{SEGMENTER_VERSION}-"'
     );
-    expect(engineSource).toContain('f"{SOURCE_PROTECTION_VERSION}-strict-restore-v21"');
+    expect(engineSource).toContain('f"{SOURCE_PROTECTION_VERSION}-strict-restore-v25-{QUALITY_GATE_VERSION}"');
+    expect(engineSource).toContain('QUALITY_GATE_VERSION = "quality-v8"');
     expect(requirementsSource).toContain("transformers==4.57.6");
     expect(lockSource).toContain("transformers==4.57.6");
     expect(MADLAD_MODEL_VERSION).toBe(
-      `3b-mt-v6-transformers-4.57.6-${segmenterVersion}-${protectionVersion}-strict-restore-v21`
+      `3b-mt-v6-transformers-4.57.6-${segmenterVersion}-${protectionVersion}-strict-restore-v25-${TRANSLATION_QUALITY_VERSION}`
     );
   });
 });

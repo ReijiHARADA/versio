@@ -1,41 +1,39 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "3b-mt-v6-transformers-4.57.6-semantic-v73-source-protect-v1-strict-restore-v21",
-  "lastDiagnosticVersion": "scheduler-panel-and-inline-citation-v19",
+  "lastBenchmarkVersion": "3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v11-strict-restore-v25-quality-v5",
+  "lastDiagnosticVersion": "qwen7-v93-v5-hci-sourcehash-new",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
   "attributionStatus": "v6 baseline 12/48 (25.00%); audit-only semantic MiniLM v42 and coverage v66 completed; coverage found 10 exact invariant-loss rows (5 accepted), so token normalization/calibration is next; production gate unchanged",
   "latestExtractionCheckpoint": {
     "date": "2026-09-21",
-    "scope": "v46 native multicell table-row detection, fresh 3-paper/36-row cohort, and full manual accept review",
+    "scope": "Cross-column table-evidence repair, SD invariant acceptance, negation-scope quality guard, source-protection v9 and quality-v2 cache identity",
     "causes": [
-      "Table rows with a long prose result cell had native PDF spans split across peer layout blocks; the original generic paragraph candidate accepted them as sentences.",
-      "Caption-proximate same-baseline native spans now provide generic multicell row evidence across peer blocks; the complete page-7 prose negative is retained as paragraph.",
-      "v46 still accepts statistical prose with changed quantifier/cardinality meaning; this is a separate MADLAD semantic false-accept cause.",
-      "A recovered full prose paragraph returns partial_unit_fallback after protected-token restoration, indicating a remaining false-reject path."
+      "Captioned-table candidate pooled aligned native spans from opposite reading columns; prose could be mislabeled as a table.",
+      "MADLAD moved negation from reported content to the reporting predicate in a complete ordinary-prose sentence, changing the claim.",
+      "The Japanese quality invariant treated exact unchanged SD=value as missing unless expanded to a Japanese label.",
+      "MADLAD occasionally corrupts protected placeholders; a unique indexed token can be restored, while ambiguous corruption must reject."
     ],
-    "verification": "v46 fresh run: 3 OA papers / 36 stratified rows, 12 accepts and 24 visible fallbacks. All 12 accepts manually reviewed; 2 severity>=2 statistical semantic shifts. Two v45 flattened table false accepts are now structural table skips. The manually corrected sample has 6 genuine ordinary-body accepts and 0 visible fallbacks, too small/purposive to establish the <=5% product goal. Baseline 55/55, extraction/reading-order 107/107, default Vitest 408/408 (65 files), typecheck/lint pass. Server PID 81428 normal and ready.",
+    "verification": "Focused recovered-marketing-paragraph extraction regression 1/1; full extraction corpus 108/108 assertions but exits with Vitest worker onTaskUpdate timeout even at one worker. Full frontend 436/436; quality/cache focused tests 100/100; typecheck, lint, diff check pass; Python venv tests 144/144 with Transformers 4.57.6. Restarted live server PID 36881 is ready on MPS and reports source-protect-v9 / quality-v2. Exact 1,338-char replay repeated the negative reporting-predicate shift in 15.5 s; client guard rejects via regression. v83 syntax controls reveal a possible but unvalidated rescue pattern.",
     "appBuild": "not run",
     "server": {
       "endpoint": "http://127.0.0.1:8765",
       "ready": true,
-      "modelVersion": "3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20",
-      "loadedProcessNeedsRestart": false,
+      "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v9-strict-restore-v25-quality-v2",
+      "listenerPid": 36881,
+      "debug": false,
       "benchmarkActive": false,
-      "lastVerifiedAt": "2026-09-20T23:31:00+09:00",
-      "health": "ready; model_loaded=true",
-      "listenerPid": 80608,
-      "listenerStartedAt": "2026-09-20T23:29:00+09:00",
-      "latestCitationProtectionSourceModifiedAt": "2026-09-20T23:12:13+09:00"
+      "health": "ready; model_loaded=true; MPS"
     },
     "v42Run": "test-data/real-papers/reports/translation-audit-v42-margin-stitch.json",
     "manualReview": "test-data/real-papers/reports/semantic-review-v46-table-grid-evidence.json",
-    "goalStatus": "not met; no broad product-rate claim. In this sample 2/12 accepts severity>=2, both statistical prose; ordinary-body denominator manually corrected to 6 accepts only.",
+    "goalStatus": "not met; purposive v80 manual sample found severity>=2 in 5/12 accepted ordinary-body and 2/3 accepted statistical-prose translations; 8/20 ordinary-body fallbacks. These are not population estimates.",
     "nextActions": [
-      "diagnose source-protect partial fallback on the recovered complete marketing paragraph without weakening restoration checks",
-      "add held-out cross-domain fixtures for participant quantifier scope and group cardinality; reduce semantic false accepts without word blacklist",
-      "expand full manual review across more papers and use manually adjudicated body categories to estimate ordinary-body fallback",
-      "evaluate an alternate NMT/local model against stable source/translation fixtures after current extraction errors are separated"
+      "Validate negative-group-first comparative rewriting against independent manually sourced academic sentences with positive and negative outcomes before production use.",
+      "Diagnose Vitest extraction-corpus worker onTaskUpdate timeout so the complete cached-PDF gate exits cleanly; current assertions all pass, but runner error must not be ignored.",
+      "Continue source-complete held-out review for accepted semantic scope/polarity errors and visible fallback false rejects.",
+      "Test same-column table evidence across publisher/layout families.",
+      "Keep Transformers 4.57.6 as tensor-verified baseline; compare alternative models only on held-out reader-path outputs and do not trade false accepts for lower fallback."
     ],
     "v43Run": "test-data/real-papers/reports/translation-audit-v43-extraction-followup.json",
     "postV43CodeChanges": [
@@ -99,7 +97,13 @@
     },
     "validation": {
       "fullVitest": "408 passed (65 files)"
-    }
+    },
+    "benchmarkArtifact": "test-data/real-papers/reports/translation-audit-v75-frontiers-source-repaired.json",
+    "manualReviewArtifact": "test-data/real-papers/reports/semantic-review-v75-frontiers-source-repaired.json",
+    "benchmarkActive": false,
+    "v82Run": "test-data/real-papers/reports/translation-audit-v82-negation-scope-live-replay.json",
+    "v83SyntaxExperiment": "test-data/real-papers/reports/translation-audit-v83-negated-comparison-segmentation.json",
+    "v83Finding": "Standalone original comparative sentence repeats the negation reversal; split equivalent and negative-group-first variants translate faithfully with exact statistics; whereas variant drops contrast. Diagnostic only; no production rewrite."
   },
   "completedPapers": [
     "cognitive-psychology-gpt3",
@@ -141,7 +145,7 @@
   ],
   "pendingPapers": [],
   "reviewedBlocks": 134,
-  "lastCheckpoint": "2026-09-21-v56-transformers-4.57.6-loading-integrity-and-10-paper-replay",
+  "lastCheckpoint": "2026-09-21T08:27:00+09:00",
   "pendingManualReview": 60,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
@@ -154,13 +158,19 @@
     "evaluate replacement or cascade translation models under local/free-use constraints",
     "most v17 replay fallbacks remain quality/placeholder failures (29/32 source echoes)",
     "semantic clause omissions remain undetected for meaning-that explanation clauses",
-    "ordinary-body fallback target <=5% not met (v16 baseline 30.3%; v32 single-paper diagnostic 1/6 = 16.7%)"
+    "ordinary-body fallback target <=5% not met (v16 baseline 30.3%; v32 single-paper diagnostic 1/6 = 16.7%)",
+    "repaired Elsevier medical source still triggers MADLAD decode semantic drift: convolutional neural networks mistranslated and task-type organization replaced by unsupported summary",
+    "Qwen 2.5 14B six-row targeted replay is promising but not paper-held-out evidence and lacks production source protection/quality gating",
+    "PPG Earring page-10 expected hyphenated continuation paragraph is absent/absorbed in extraction corpus (reproduced after reverting gutter experiment; likely caption/table-region/candidate handling)",
+    "Qwen 2.5 14B still has severity>=2 unsafe false accepts (2/6) on v71 source-hash-checked eight-row sample; insufficient for cascade deployment",
+    "candidate source set v70 overlapped prior Qwen work and is exploratory only"
   ],
   "nextActions": [
-    "finish full tests and packaged app build verification for the verified Transformers 4.57.6 runtime",
-    "continue held-out cross-disciplinary terminology and semantic false-accept review under verified 4.57.6",
-    "expand provenance-verified OA paper coverage toward 70–90 and manually review accepted ordinary body",
-    "measure ordinary-body fallback and unsafe false accepts jointly; do not change model routing without held-out evidence"
+    "Verify lexical omission cue across independent sources with false-reject accounting; do not count rejection as semantic improvement unless unsafe error is reduced.",
+    "Continue cross-paper semantic relation evaluation for polarity, absence, scope, and additions; v79 proves source invariants alone do not prevent severity-3 false accepts.",
+    "Do not tune a gate on the HAI v79 target; select fresh cross-domain fixtures and count false rejects alongside unsafe false accepts.",
+    "Continue high-precision extraction/source-integrity and table classification, then widen held-out ordinary-body manual review.",
+    "Keep Transformers 4.57.6 as the tensor-verified MADLAD runtime; compare alternate models only under matched production controls."
   ],
   "v33StructuralSafety": {
     "status": "implemented and verified",
@@ -473,7 +483,7 @@
     }
   },
   "lastBenchmarkReport": "test-data/real-papers/reports/translation-audit-v56-transformers-4.57.6.json",
-  "updatedAt": "2026-09-21T02:49:00+09:00",
+  "updatedAt": "2026-09-21T11:22:23+09:00",
   "benchmarks": {
     "v52FullCorpus": {
       "createdAt": "2026-09-14T08:31:22.627Z",
@@ -3202,7 +3212,7 @@
     ]
   },
   "nextAction": "Fix generic peripheral metadata/body grouping; review false rejects among v33 fallback, then compare citation-safe translation units and alternatives on held-out papers; continue OA corpus expansion.",
-  "lastUpdate": "2026-09-18 14:50 +0900",
+  "lastUpdate": "2026-09-21T11:22:23+09:00",
   "iterationLog": [
     {
       "id": "extraction-resume-diagnostic-v1",
@@ -3300,7 +3310,7 @@
   "latestSafeFallbackCandidates": "test-data/real-papers/reports/translation-safe-fallback-candidates-v1.json",
   "safeFallbackCandidateCount": 31,
   "latestQualityStatus": "test-data/real-papers/reports/translation-quality-status-v1.json",
-  "status": "active",
+  "status": "Continuing research-grade translation quality work on verified Transformers 4.57.6; no automatic alternate-model route. Product fallback and semantic false-accept targets remain unmet.",
   "pausedAt": null,
   "activeProcess": {
     "benchmark": false,
@@ -3311,7 +3321,24 @@
   "latestManualReviewAddendum": "test-data/real-papers/reports/translation-manual-review-addendum-v1.json",
   "latestManualReviewCombined": "test-data/real-papers/reports/translation-manual-review-combined-v1.json",
   "manualReviewedRows": 39,
-  "latestManualReviewMetrics": "test-data/real-papers/reports/translation-manual-review-combined-metrics-v1.json",
+  "latestManualReviewMetrics": {
+    "benchmark": "test-data/real-papers/reports/translation-audit-v61-terminal-citation-restore.json",
+    "papers": 2,
+    "blocks": 12,
+    "acceptedReviewed": 4,
+    "acceptedSeverityGte2": 1,
+    "severityCounts": {
+      "0": 1,
+      "1": 2,
+      "2": 1,
+      "3": 0,
+      "4": 0
+    },
+    "ordinaryBodyRows": 4,
+    "ordinaryBodyFallbacks": 1,
+    "ordinaryBodyFallbackRate": 0.25,
+    "warning": "Small targeted benchmark; not a population estimate. Score-1.0 accepted omission remains."
+  },
   "latestPendingProvenanceCandidates": "test-data/real-papers/reports/pending-pdf-provenance-candidates-v1.json",
   "latestCorpusProvenanceCoverage": "test-data/real-papers/reports/corpus-provenance-coverage-v3.json",
   "latestExtractionDiagnosticDetecting": "test-data/real-papers/reports/extraction-diagnostic-detecting-statistical-interactions-v1.json",
@@ -3373,7 +3400,11 @@
     "translationAuditV35": "test-data/real-papers/reports/translation-audit-v35-edge-marker-stitch.json",
     "translationUnitDiagnosticV36": "test-data/real-papers/reports/translation-unit-diagnostic-v36-experience-goals.json"
   },
-  "activeBenchmarkRun": null,
+  "activeBenchmarkRun": {
+    "running": false,
+    "lastChecked": "2026-09-21T11:22:23+09:00",
+    "note": "Targeted quality-v8 replay completed; diagnostic server 8876 stopped. User server 8765 remains ready on previously running v5."
+  },
   "activeManualReview": {
     "artifact": "test-data/real-papers/reports/semantic-review-fresh-20260920-v16.json",
     "reviewedPapers": [
@@ -3433,40 +3464,13 @@
     "ordinaryUnsafeFalseAcceptRate": 0.4167,
     "sampling": "3 purposive OA papers, 12 stratified blocks each; descriptive only; not population estimate"
   },
-  "latestCandidateModelEvaluation": {
-    "model": "cyberagent/CAT-Translate-1.4b",
-    "license": "MIT (official Hugging Face model card checked 2026-09-20)",
-    "status": "diagnostic pilot stopped at 7/9 after repeated unsafe semantic drift; not suitable for selective fallback based on current evidence",
-    "rows": 7,
-    "inputTokens": 4239,
-    "outputTokens": 763,
-    "generationSeconds": 613.7,
-    "artifacts": [
-      "test-data/real-papers/reports/cat-translate-v1-pilot-input.json",
-      "test-data/real-papers/reports/cat-translate-1.4b-v16-pilot.json"
-    ]
-  },
+  "latestCandidateModelEvaluation": "v73-qwen2.5-14b-paper-heldout-reviewed",
   "latestFallbackReplay": {
     "rows": 5,
     "artifact": "test-data/real-papers/reports/translation-fallback-replay-fresh-20260920-v16.json",
     "finding": "MADLAD produced one fluent SNR semantic error; scientific invariant prevented product display; 3 cases fell back due repetition/placeholder-quality failures."
   },
-  "latestManualReview": {
-    "report": "test-data/real-papers/reports/translation-audit-v39-stimulus-material.json",
-    "review": "test-data/real-papers/reports/semantic-review-v39-stimulus-material.json",
-    "benchmarkPapers": 1,
-    "sampledUnits": 12,
-    "acceptedRows": 8,
-    "reviewedAcceptedRows": 8,
-    "pendingAcceptedRows": 0,
-    "severityGte2": 2,
-    "unsafeFalseAcceptRateOnReviewedAccepts": 0.25,
-    "ordinaryAcceptedRows": 5,
-    "ordinarySeverityGte2": 2,
-    "ordinaryUnsafeFalseAcceptRate": 0.4,
-    "sampling": "purposive, stable-key matched single-paper diagnostic",
-    "lastUpdated": "2026-09-20"
-  },
+  "latestManualReview": "test-data/real-papers/reports/semantic-review-v61-2papers.json",
   "v19FocusedFollowup": {
     "status": "v19 review complete; v20 extreme-compression gate implemented, tested, and validated in fresh four-paper benchmark; quality goal remains unmet",
     "panelScheduler": {
@@ -3732,7 +3736,7 @@
       "ordinaryBodyFallbackRate": 0.25,
       "acceptedReviewed": 6,
       "acceptedSeverity2Plus": 0,
-      "ordinaryUnsafeFalseAcceptRate": 0.0,
+      "ordinaryUnsafeFalseAcceptRate": 0,
       "acceptedMeanTranslationSeconds": 8.13,
       "sampling": "purposive section-stratified single-paper diagnostic; not a population estimate"
     },
@@ -4235,7 +4239,7 @@
       "peers→coworkers",
       "homophily→same-sex bias"
     ],
-    "gateScoresForTermErrors": 1.0,
+    "gateScoresForTermErrors": 1,
     "rawOutputs": "/tmp/paper-reader-v54-fresh-gemma.json",
     "productionRoutingChanged": false,
     "appBuild": "not run",
@@ -4373,5 +4377,519 @@
       "gitDiffCheck": "passed",
       "tauriFastBuild": "passed; app bundle mtime 2026-09-21 03:14:43 JST; adhoc signed; app not launched"
     }
+  },
+  "v59HeldoutReview": {
+    "completedAt": "2026-09-21T03:30:00+09:00",
+    "benchmark": "test-data/real-papers/reports/translation-audit-v59-heldout-9papers.json",
+    "manualReview": "test-data/real-papers/reports/semantic-review-v59-heldout-9papers.json",
+    "papers": 9,
+    "blocks": 54,
+    "acceptedReviewed": 15,
+    "acceptedSeverityGte2": 6,
+    "acceptedUnsafeRate": 0.4,
+    "severityCounts": {
+      "0": 2,
+      "1": 7,
+      "2": 2,
+      "3": 4,
+      "4": 0
+    },
+    "model": "google/madlad400-3b-mt; Transformers 4.57.6; 3b-mt-v6-transformers-4.57.6-semantic-v73-source-protect-v1-strict-restore-v21",
+    "gateCorrection": "A source identifier written as “Deep IV” can be preserved in canonical “DeepIV” form only when the exact complete method identifier is present in the output. Negative controls ensure different/embedded model identifiers do not count.",
+    "gateRecheck": "test-data/real-papers/reports/translation-audit-v59-quality-recheck.json; 17 generated outputs; 1 false reject fixed; ordinary-body fallback 5/19 → 4/19 (21.1%).",
+    "extractionEvidence": "test-data/real-papers/reports/translation-audit-v59-source-context-diagnostic.json shows cognitive-memory-cue-interest:b-e57394a2 begins at the tail of a measurement list; previous candidate ends “...story complexity”, the next begins “(2.53±0.37), sound complexity...”. Current accepted Japanese adds an unsupported claim about sound quality.",
+    "validation": "Focused quality suite 90/90 passed after invariant rule change; full suite/typecheck/lint/build pending.",
+    "nextActions": [
+      "Add generic regression/reconstruction handling for adjacent prose plus measurement-list continuation without letting scientific fragments become display equations.",
+      "Trace numbered-example item segmentation/output for linguistics-appraisal-institutional-discourse:b-2de7017d.",
+      "Manually inspect all four remaining ordinary-body fallback rows and classify false reject vs unsafe source.",
+      "Rerun relevant extraction regression and full validation; rebuild .app after source changes.",
+      "Continue cross-disciplinary held-out papers and manual review; current 21.1% ordinary-body fallback and 40% unsafe accepts in the accepted subset are far from goal."
+    ]
+  },
+  "v61RuntimeIntegrityAndRestore": {
+    "completedAt": "2026-09-21T04:05:00+09:00",
+    "transformersA/B": "TRANSFORMERS_MADLAD_AB.md: unpatched 5.17.0 tensor mapping is corrupt; 4.57.6 correct. Current lock, venv and PID 3501 use 4.57.6.",
+    "benchmark": "test-data/real-papers/reports/translation-audit-v61-terminal-citation-restore.json",
+    "manualReview": "test-data/real-papers/reports/semantic-review-v61-2papers.json",
+    "translationPipelineVersion": "3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v3-strict-restore-v22",
+    "checks": "Full Vitest 422/422 (65 files), Python 138 tests + 11 subtests, typecheck, lint, frontend production build, and git diff --check passed. Focused citation/segmenter suite 91 tests + 11 subtests passed.",
+    "outcome": "Prior list fallback is resolved in v61. One material semantic omission remains accepted at quality score 1.0; fallback <=5% and unsafe-accept goals remain unmet.",
+    "activeServer": "PID 4174, 127.0.0.1:8765, model ready; model version 3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v3-strict-restore-v22; startup embedding check passed.",
+    "exploratoryExperiment": "A generic v75 split of a nonrestrictive which-does-not-mean caveat was tested live then reverted: the qualification translated, but the separated antecedent lost the wording-level relation. Keep as unresolved; v74 source code and cache identity retained."
+  },
+  "v62ModelCandidateComparison": {
+    "completedAt": "2026-09-21T04:19:00+09:00",
+    "scope": "2 known failure blocks from one Springer linguistics paper; not a held-out estimate.",
+    "raw": "test-data/real-papers/reports/model-compare-v61-known-failures.json",
+    "manualReview": "test-data/real-papers/reports/semantic-review-v62-model-candidates.json",
+    "models": [
+      "gemma2:9b",
+      "qwen2.5:7b",
+      "qwen2.5:14b",
+      "qwen2.5:14b+atomic author-year citation protection"
+    ],
+    "finding": "All but Qwen 7B on the caveat block score 1.0. Gemma reverses negation, every model drops the appraisal contrast from the other block, and unprotected Qwen14 changes Geoff to George. Protected Qwen14 fixes the name and caveat on one block but softens “not possible” to “difficult”. No production routing change.",
+    "next": "Evaluate source-protected alternative candidates on a broader held-out multi-field set with manual review."
+  },
+  "v62FullnameCitationProtection": {
+    "completedAt": "2026-09-21T04:19:00+09:00",
+    "translationPipelineVersion": "3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v4-strict-restore-v23",
+    "benchmark": "test-data/real-papers/reports/translation-audit-v62-fullname-citation-protect.json",
+    "readerPath": "6 rows; 4 translated/accepted; 2 source fallbacks; ordinary-body 1/4 (25%), equal to v61 same-paper subset.",
+    "manualReview": "All four accepted rows compared; b-ae5e69d9 still omits the negative qualification at score 1.0; review records in audit-manual-review.json.",
+    "liveServer": "PID 4671, ready, Transformers 4.57.6; debug confirmed Geoff Thompson (2014) one placeholder and exact restoration.",
+    "tests": "Vitest 422/422; Python 140 + 11 subtests; typecheck/lint/frontend build/git diff --check pass.",
+    "goalStatus": "fallback <=5% and near-zero semantic false accept remain unmet."
+  },
+  "v63CandidateModelPilot": {
+    "status": "diagnostic only; no production routing change",
+    "model": "qwen2.5:14b",
+    "sourceBenchmark": "test-data/real-papers/reports/translation-audit-v59-heldout-9papers.json",
+    "rawReport": "test-data/real-papers/reports/model-compare-v63-reviewed-blocks-qwen14.json",
+    "manualReview": "test-data/real-papers/reports/semantic-review-v63-qwen14-candidate.json",
+    "scope": {
+      "blocks": 6,
+      "disciplines": [
+        "marketing",
+        "ergonomics / human factors",
+        "linguistics"
+      ],
+      "papers": 5,
+      "inputTokens": 1924,
+      "outputTokens": 1651,
+      "elapsedSecondsApprox": 179
+    },
+    "review": {
+      "severity0": 1,
+      "severity1": 5,
+      "severity2Plus": 0
+    },
+    "limitations": [
+      "Previously accepted MADLAD blocks only; not a hard-failure rescue test.",
+      "Purposive and small; not an independent candidate model selection cohort.",
+      "No production quality gate or resource-budget comparison."
+    ],
+    "nextAction": "Run paper-held-out, section-stratified model comparison including hard failures and ordinary prose in more disciplines; manual review scope/negation/facts and production gate outputs."
+  },
+  "lastModelCandidatePilot": "v63-qwen2.5-14b-reviewed-prose",
+  "v72QwenPaperHeldout": {
+    "completedAt": "2026-09-21T06:02:00+09:00",
+    "scope": "14 ordinary-body rows from four additional source-hash-guarded OA papers; purposive sample, not population estimate",
+    "baseline": "translation-audit-v72-qwen-paper-heldout.json",
+    "candidate": "model-compare-v72-qwen14-paper-heldout.json",
+    "manualReview": "semantic-review-v72-qwen14-paper-heldout.json",
+    "madladFallback": "4/14",
+    "qwenFallback": "3/14",
+    "qwenAccepted": "11/14",
+    "qwenSeverityGte2": "5/11 accepted",
+    "combinedV71V72": {
+      "rows": 22,
+      "madladFallback": "7/22",
+      "qwenFallback": "5/22",
+      "qwenSeverityGte2": "7/17 accepted"
+    },
+    "routing": "no production route change; candidate false accepts remain too high"
+  },
+  "latestSourceGeometryDiagnostic": {
+    "completedAt": "2026-09-21T06:02:00+09:00",
+    "paper": "human-ai-interaction-guidelines",
+    "page": 3,
+    "primaryLayer": "PDF line/block reconstruction; rotated Figure 2 labels grouped by page-y before model input",
+    "fix": "orientation-aware line grouping and overlap-aware rotated paragraph merge",
+    "validation": "reading-order 68/68; real papers 52/52; extraction corpus 106/107, with known PPG captionless-grid continuation unresolved; typecheck/lint pass",
+    "server": "127.0.0.1:8765 ready; Transformers 4.57.6; MADLAD v74",
+    "followupFix": "Rotated table-cell evidence now accumulates across native text lines; three or more compact rotated cells stay separate from a sentence-sized rotated note."
+  },
+  "v73CandidateEvaluation": {
+    "completedAt": "2026-09-21T06:42:00+09:00",
+    "scope": "38 fresh exact-source-hash-guarded Qwen2.5-14B rows from 10 cached OA papers; one duplicate key excluded from the 39 ordinary-body baseline rows",
+    "baseline": "test-data/real-papers/reports/translation-audit-v73-qwen-paper-heldout.json",
+    "candidate": "test-data/real-papers/reports/model-compare-v73-qwen14-paper-heldout.json",
+    "manualReview": "test-data/real-papers/reports/semantic-review-v73-qwen14-paper-heldout.json",
+    "disciplines": {
+      "hci": 18,
+      "machine-learning": 2,
+      "cognitive-psychology": 4,
+      "linguistics": 2,
+      "marketing": 5,
+      "ergonomics": 7
+    },
+    "formats": {
+      "springer-journal": 20,
+      "acm-acmart": 6,
+      "arxiv": 4,
+      "arxiv-two-column": 3,
+      "journal-oa": 5
+    },
+    "qwenAccepted": "32/38",
+    "qwenVisibleFallback": "6/38 (15.8%)",
+    "madladVisibleFallback": "9/38 (23.7%)",
+    "qwenSeverityGte2": "12/32 accepted (37.5%)",
+    "madladFallbackRowsRecovered": "6/9",
+    "unsafeRecoveredRows": "2/6",
+    "meanQwenLatencySeconds": 17.61,
+    "tokens": {
+      "input": 15943,
+      "output": 6364
+    },
+    "keyFindings": [
+      "No automatic Qwen routing: lower fallback coexists with 37.5% severity>=2 false acceptance.",
+      "Two accepted source fragments and one plot/table grid show ordinary-prose source classification and paragraph integrity remain failure causes.",
+      "Fixed-fixture Transformers A/B confirms unpatched 5.17.0 embedding corruption; active lockfile/.venv/runtime are 4.57.6."
+    ],
+    "nextActions": [
+      "Keep verified Transformers 4.57.6 baseline; do not route Qwen.",
+      "Repair generic source-fragment and table/grid classification, then evaluate on newly held-out papers.",
+      "Expand semantic review across formats and disciplines; report fallback and unsafe false acceptance together."
+    ],
+    "goalStatus": "<=5% ordinary-body fallback and near-zero severity>=2 unsafe false accept remain unmet; ongoing."
+  },
+  "lastManualReview": "test-data/real-papers/reports/semantic-review-v78-hai-table-continuation.json",
+  "v78FloatedTableContinuation": {
+    "completedAt": "2026-09-20T23:02:54.161116Z",
+    "code": [
+      "src/services/pdfExtraction/resolver/relationResolver.ts",
+      "src/services/pdfExtraction/resolver/documentResolver.ts",
+      "src/services/pdfExtraction/projection/toPaper.ts"
+    ],
+    "regression": "src/test/pdfExtraction/baselineRealPapers.test.ts: stitches a paragraph across a floated table while keeping table content separate",
+    "beforeReport": "test-data/real-papers/reports/translation-audit-v76-hai-targeted-table-prose.json",
+    "afterReport": "test-data/real-papers/reports/translation-audit-v78-hai-table-continuation.json",
+    "semanticReview": "test-data/real-papers/reports/semantic-review-v78-hai-table-continuation.json",
+    "before": {
+      "sourceCharacters": 1160,
+      "fallbackStage": "pre-model",
+      "issue": "paragraph starts mid-sentence after a table region"
+    },
+    "after": {
+      "sourceCharacters": 1764,
+      "fallbackStage": "post-model",
+      "readerVisibleFallback": true,
+      "reason": [
+        "scientific invariants missing: [1]"
+      ]
+    },
+    "outcome": "Source reconstruction repaired and table nodes preserved. Reader-visible fallback rate did not improve for this single target because the post-model scientific-invariant gate correctly rejects missing citation [1].",
+    "validation": "Real-paper reading-order + extraction baselines 108/108 assertions; Vitest onTaskUpdate worker timeout; typecheck/lint/diff-check pass."
+  },
+  "transformersIntegrityRecheck": {
+    "date": "2026-09-21",
+    "checkout": {
+      "branch": "main",
+      "head": "ebb219669e196a0285ef825cc4dadb47a1ec1580",
+      "matchesOriginMain": true
+    },
+    "runtime": {
+      "lock": "4.57.6",
+      "venv": "4.57.6",
+      "server": "4.57.6",
+      "serverPid": 6311,
+      "serverReady": true,
+      "benchmarkActive": false
+    },
+    "artifact": "TRANSFORMERS_MADLAD_AB.md",
+    "fixtures": 5,
+    "checkpointSnapshot": "fa184c675da0b5c9e1c8694fccd4e12e2d422094",
+    "findings": [
+      "Unpatched 5.17.0 sets tie_word_embeddings=true and encoder embedding is exactly lm_head.weight, not checkpoint decoder input embedding.",
+      "Unpatched 4.57.6 preserves tie_word_embeddings=false and encoder/decoder exactly match checkpoint decoder input embedding.",
+      "Prior Paper Reader 5.17.0 reassignment restores the encoder tensor, but raw 5.17.0 outputs are malformed/truncated.",
+      "Correctly loaded 4.57.6 still reproduces group-count and participant-scope semantic drift; runtime repair does not solve model semantic quality."
+    ],
+    "verification": "translationModelVersion 1/1; translation-server pytest 143 + 11 subtests; git diff --check",
+    "decision": "Keep Transformers 4.57.6 as verified MADLAD baseline; continue extraction-first quality work. Defer 7B/10B ranking until controlled evaluation."
+  },
+  "citationLossLiveReproV78": {
+    "artifact": "test-data/real-papers/reports/citation-loss-live-repro-v78.json",
+    "fixture": "HAI page 2 first sentence ending with [1]",
+    "serverModelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v6-strict-restore-v25-quality-v1",
+    "observed": "A live /translate response omits [1] with fallback_reason=null. The exact unit is protected offline as ZZCIT2ZZ; local restore_citations() control restores [1] before the Japanese terminal mark.",
+    "attribution": "Unresolved discrepancy among live model decode, runtime protection/restore, chunk join, and API response. Do not infer the loss layer or change acceptance rules without server-stage instrumentation.",
+    "nextDiagnostic": "Collect TRANSLATION_UNIT_DEBUG evidence for protected model input, raw decode, restored unit, joined candidate, and response. Preserve strict citation validation."
+  },
+  "v79SelectiveCitationRetry": {
+    "benchmark": "test-data/real-papers/reports/translation-audit-v79-selective-citation-retry.json",
+    "manualReview": "test-data/real-papers/reports/semantic-review-v79-selective-citation-retry.json",
+    "debugTrace": "test-data/real-papers/reports/translation-unit-debug-v79-selective-retry.json",
+    "matchedStableKey": "human-ai-interaction-guidelines:b-ea13dc01",
+    "before": "v78 source-protect-v6 returned post-model fallback because client found [1] missing.",
+    "after": "source-protect-v7 selectively retries only dropped identifier WWDC and preserves [1]. v79 returned no reader-visible fallback and score 1.0 with all current invariants present.",
+    "manualFinding": "Severity-3 semantic false accept: “fore-going references or data” meaning reversed; Apple→Appl. This is not a net quality improvement and must be counted as unsafe acceptance.",
+    "code": "protect_citations accepts exact unprotected_values; identifier salvage now retains every other citation/scientific placeholder; client/server cache identity bumped source-protect-v7.",
+    "checks": "Full translation-server pytest: 145 passed + 11 subtests; full Vitest 65 files / 427 tests; typecheck, lint, git diff --check pass. Normal v8 server ready; first-sentence live replay retains [1]."
+  },
+  "latestQualityCheckpoint": {
+    "version": "quality-v80-lexical-absence-exclusion",
+    "date": "2026-09-21",
+    "change": "Recognize forgo/forego (including PDF line-wrap hyphenation), omit, exclude, absent, and missing as lexical absence/omission signals in the general polarity safety cue.",
+    "retrospectiveReview": {
+      "uniqueManualReviews": 58,
+      "previouslyAccepted": 55,
+      "newNegationReason": 2,
+      "newNegationSeverity2Plus": 2,
+      "newNegationSeverity0or1": 0,
+      "caveat": "Small retrospective/manual corpus check, not representative rate evidence."
+    },
+    "validation": {
+      "qualityTests": "94/94",
+      "vitest": "65 files / 430 tests",
+      "typecheck": "pass",
+      "lint": "pass",
+      "diffCheck": "pass"
+    },
+    "server": {
+      "endpoint": "http://127.0.0.1:8765",
+      "ready": true,
+      "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v8-strict-restore-v25-quality-v1"
+    },
+    "nextActions": [
+      "Draw a fresh cross-paper ordinary-prose sample to check both omissions caught and clean outputs newly rejected; blind manual semantic review.",
+      "Continue pre/post-model fallback attribution and extraction/source integrity repairs; keep the <=5% body-fallback and near-zero unsafe-accept goals open."
+    ]
+  },
+  "latestQualityCheckpointV3": {
+    "date": "2026-09-21",
+    "version": "quality-v3",
+    "trigger": "Cognitive VR source: “smaller effects might not have been detected” was accepted as a definite negative by MADLAD.",
+    "change": "Sentence-aligned epistemic uncertainty guard for may/might not have/be + participle; cache identity bumped client/server to quality-v3.",
+    "retrospectiveArtifact": "test-data/real-papers/reports/manual-reviews-quality-v3-recheck-input-quality-recheck.json (audit-quality-recheck-v2; excludes 11 incomplete excerpts)",
+    "retrospectiveOrdinaryBody": {
+      "rows": 52,
+      "excludedIncompleteEllipsisExcerpts": 11,
+      "historicalFallback": "8/52",
+      "currentPolicyFallback": "10/52 (19.2%)",
+      "caveat": "Purposive retrospective set, not a population estimate. Initial 63-row calculation was contaminated by excerpts that omitted source/output tails; corrected artifact is audit-quality-recheck-v2."
+    },
+    "alternateModelDiagnostics": {
+      "qwenSelectiveUnits": "2/2 unit outputs (modal uncertainty and negative comparison) passed current gate; audit-only, not production routing.",
+      "qwenComparisonControls": "4 syntax variants preserved groups/statistics in v87 diagnostic.",
+      "qwenFullParagraph": "Failed VR paragraph with added/omitted content and mixed-script contamination; do not use paragraph-wide rescue.",
+      "artifacts": [
+        "test-data/real-papers/reports/translation-audit-v86-qwen-epistemic-fullblock.json",
+        "test-data/real-papers/reports/translation-audit-v87-qwen-negated-comparison.json",
+        "test-data/real-papers/reports/translation-audit-v88-qwen-selective-units.json"
+      ]
+    },
+    "validation": {
+      "vitest": "441/441, 65 files",
+      "python": "144 tests passed",
+      "typecheck": "pass",
+      "lint": "pass",
+      "gitDiffCheck": "pass",
+      "recheckTool": "audit-quality-recheck-v2 excludes trailing-ellipsis excerpts"
+    },
+    "serverBeforeRestart": "Previously quality-v2; restarted as PID 40882 and now ready at 127.0.0.1:8765 with quality-v3.",
+    "appBuild": false,
+    "nextActions": [
+      "Server restart confirmed on quality-v3 and live smoke saved; keep client gate behavior covered while evaluating additional modal/negation controls.",
+      "Use complete source/output records only for fresh cross-paper Qwen selective-unit evaluation; blind manual review and keep fallback plus unsafe accepts paired.",
+      "Measure false accepts and ordinary-body fallback together; retain <=5% fallback and near-zero unsafe error as unmet goals."
+    ],
+    "liveSmoke": "test-data/real-papers/reports/translation-audit-v89-quality-v3-live-smoke.json; raw MADLAD candidate remains definite and client gate rejects it as epistemic uncertainty lost."
+  },
+  "latestQualityCheckpointV4": {
+    "date": "2026-09-21",
+    "version": "quality-v4",
+    "change": "Reject long Han-only foreign-language spans and unlocalized English prose in Japanese translation outputs; client/server cache identity bumped.",
+    "freshFiveFieldBenchmark": {
+      "papers": 5,
+      "blocks": 40,
+      "ordinaryBodyRows": 16,
+      "ordinaryBodyFallbacks": 6,
+      "ordinaryBodyFallbackRate": 0.375,
+      "acceptedOrdinaryManuallyReviewed": 10,
+      "severityGte2Accepted": 7,
+      "translationInducedSeverityGte2": 6,
+      "extractionInducedSeverityGte2": 1,
+      "artifact": "test-data/real-papers/reports/semantic-review-v90-five-field.json",
+      "caveat": "Purposive sample; not a population estimate."
+    },
+    "qwenDiagnostic": {
+      "sourceHashNovelRows": 6,
+      "previousQualityGate": "quality-v3",
+      "acceptedBefore": "4/6",
+      "severityGte2AmongAcceptedBefore": "2/4",
+      "acceptedAfterV4": "2/6",
+      "severityGte2AmongAcceptedAfter": "0/2",
+      "matchedMadladFallback": "6/16 ordinary-body rows",
+      "artifact": "test-data/real-papers/reports/semantic-review-v90-qwen14-unseen-sourcehashes.json",
+      "decision": "Do not route Qwen to production; paired set is small and overall fallback is high."
+    },
+    "additionalFalseAccept": "Statistical prose omitted citation 14 from source range 12–14 while keeping adjacent numbers; severity 2, unresolved.",
+    "server": {
+      "endpoint": "http://127.0.0.1:8765",
+      "pid": 43693,
+      "ready": true,
+      "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v9-strict-restore-v25-quality-v4",
+      "liveSmoke": "Ordinary prose translated to Japanese with no fallback."
+    },
+    "validation": {
+      "vitest": "65 files / 444 tests",
+      "python": "144 tests",
+      "typecheck": "pass",
+      "lint": "pass",
+      "diffCheck": "pass"
+    },
+    "appBuild": false,
+    "nextActions": [
+      "Measure v4 false rejects on clean multilingual and technical translations.",
+      "Address generic citation-range preservation and epistemic-strength drift with complete paired fixtures.",
+      "Continue source-complete manual review and ordinary-body fallback reduction; keep <=5% fallback and near-zero severity>=2 unsafe-accept goals open."
+    ]
+  },
+  "latestQualityCheckpointV5": {
+    "date": "2026-09-21",
+    "version": "quality-v5",
+    "changes": [
+      "Protect unbracketed superscript citation clusters with terminal ranges (e.g. 3,6,9,12–14) as atomic citation facts and restore the exact source citation if dropped.",
+      "Normalize uniquely indexed placeholder output with repeated Z-like prefix glyphs to prevent stray-letter leakage into protected identifiers.",
+      "Reject source-conditioned spatial-target relations X over directional Y when translation reverses the same preserved identifiers around Japanese comparative より."
+    ],
+    "cacheIdentity": "3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v11-strict-restore-v25-quality-v5",
+    "developmentRecheck": {
+      "artifact": "test-data/real-papers/reports/translation-audit-v90-fresh-five-field-quality-recheck.json",
+      "interpretation": "v90 is rule-development evidence, not independent holdout; its statistical citation omission is now rejected."
+    },
+    "heldoutBenchmark": {
+      "report": "test-data/real-papers/reports/translation-audit-v91-quality-v5-heldout-five-field.json",
+      "manualReview": "test-data/real-papers/reports/semantic-review-v91-quality-v5-unique-five-field.json",
+      "selectedRows": 40,
+      "duplicateRows": 24,
+      "uniqueRows": 16,
+      "uniqueDisciplines": 4,
+      "ordinaryBodyUniqueRows": 7,
+      "ordinaryBodyFallbacks": "2/7 (28.6%)",
+      "acceptedOrdinaryManuallyReviewed": 5,
+      "severityGte2Accepted": "5/5 (100%)",
+      "fallbackAttributionUniqueRows": {
+        "preModel": 9,
+        "postModel": 2
+      },
+      "caveat": "Purposive N=16 after stable-key and exact-source-hash deduplication; one selected discipline contributed no unique rows."
+    },
+    "validation": {
+      "vitest": "65 files / 446 tests",
+      "python": "146 tests",
+      "typecheck": "pass",
+      "lint": "pass",
+      "diffCheck": "pass"
+    },
+    "server": {
+      "pid": 46951,
+      "ready": true,
+      "device": "mps",
+      "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v11-strict-restore-v25-quality-v5"
+    },
+    "appBuild": false,
+    "nextActions": [
+      "Compare another translation model only on exact-source-hash-new fixtures using unchanged source, segmentation, protection, and manual review.",
+      "Do not tune quality-v5 on the 16 unique v91 rows; preserve them as evaluation evidence.",
+      "Address five high-severity accepted translations through broader model or semantic verification improvements while reducing ordinary-body fallback; keep target <=5% and near-zero unsafe accepts open."
+    ]
+  },
+  "latestQualityCheckpointV6": {
+    "date": "2026-09-21",
+    "scope": "Revalidate current-main MADLAD runtime integrity, then continue candidate model evaluation on source-hash-new ordinary prose.",
+    "main": {
+      "branch": "main",
+      "head": "ebb219669e196a0285ef825cc4dadb47a1ec1580",
+      "remoteMainMatches": true,
+      "userReferencedCommit": "7e5c1f65a3dbe3ac7380b2f71068eec66b95e849"
+    },
+    "runtime": {
+      "requirementsLock": "4.57.6",
+      "projectVenv": "4.57.6",
+      "liveStatus": "ready",
+      "listenerPid": 46951,
+      "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v11-strict-restore-v25-quality-v5",
+      "device": "mps"
+    },
+    "loaderFinding": "Existing isolated tensor-level A/B confirms unpatched Transformers 5.17.0 ties the encoder to lm_head.weight; 4.57.6 matches encoder/decoder input embeddings to the checkpoint decoder embedding. Five fixed fixtures separate raw 5.17 corruption from residual semantic drift. No runtime production change required.",
+    "candidateModel": "qwen2.5:7b",
+    "candidateRun": "test-data/real-papers/reports/model-compare-v92-qwen7-v5-unique-ordinary.json",
+    "manualReview": "test-data/real-papers/reports/semantic-review-v92-qwen7-unique-ordinary.json",
+    "candidateSample": {
+      "sourceHashNewRows": 4,
+      "disciplines": [
+        "linguistics / appraisal analysis",
+        "HCI / interactive jewellery"
+      ],
+      "matchedMadladFallbacks": "2/4",
+      "qwenQualityAccepts": "3/4",
+      "manuallyReviewedAccepted": "3",
+      "severityGte2Accepted": "2/3 (66.7%; purposive N=4)",
+      "safeRescueOfMadladFallback": "0/2; the single Qwen acceptance among MADLAD fallbacks has a severity-2 terminology shift; the other is rejected for placeholder residue",
+      "interpretation": "Candidate has no demonstrated safe rescue. On the two MADLAD-accepted HCI rows, Qwen adds a severity-3 object hallucination on one while the gate accepts it."
+    },
+    "validation": {
+      "candidateRunner": "completed 4/4 source-hash-new rows across v92/v93",
+      "typecheck": "pass",
+      "lint": "pass",
+      "diffCheck": "pass",
+      "fullTests": "not rerun; no production source changed",
+      "liveServer": "4.57.6, v5, ready"
+    },
+    "productionChanges": false,
+    "appBuild": false,
+    "nextActions": [
+      "Keep MADLAD 3B on the verified Transformers 4.57.6 runtime; do not route Qwen 7B automatically.",
+      "Expand candidate comparisons on truly new, diverse source blocks; manually review every accepted output and both false rejects and attempted fallback rescues.",
+      "Test strict placeholder restoration against overlapping/duplicated token residue with generic positive/negative controls before changing production protection.",
+      "Continue reducing ordinary-body fallback and semantic false accepts jointly; targets <=5% fallback and near-zero severity>=2 unsafe accepts remain unmet."
+    ],
+    "candidateEvaluationRuns": [
+      {
+        "run": "v92",
+        "artifact": "test-data/real-papers/reports/model-compare-v92-qwen7-v5-unique-ordinary.json",
+        "manualReview": "test-data/real-papers/reports/semantic-review-v92-qwen7-unique-ordinary.json",
+        "discipline": "linguistics / appraisal analysis",
+        "rows": 2
+      },
+      {
+        "run": "v93",
+        "artifact": "test-data/real-papers/reports/model-compare-v93-qwen7-v5-hci-fresh-two.json",
+        "manualReview": "test-data/real-papers/reports/semantic-review-v93-qwen7-v5-hci-new-sources.json",
+        "discipline": "HCI / interactive jewellery",
+        "rows": 2
+      }
+    ],
+    "interruptedReaderPathRun": {
+      "artifact": "test-data/real-papers/reports/translation-audit-v93-v5-interrupted-first-paper.json",
+      "completion": "first of 52 selected papers only; 8 rows; report marked complete=false",
+      "deduplication": "6/8 rows repeated prior stable key or exact source hash; 2 unique ordinary-body rows manually reviewed",
+      "note": "An attempted --help call is unsupported by the script and entered the default run; it was stopped after the first paper. No benchmark process remains. Use explicit paper IDs and --report-name for future runs."
+    }
+  },
+  "latestQualityCheckpointV8": {
+    "date": "2026-09-21",
+    "change": "Phrase repetition guard ignores frequent single kanji and detects repeated 3–5-character spans; short units with explicit explanatory as+negative clauses get a stronger omission floor. Full paragraphs retain the regular floor.",
+    "replay": {
+      "sourceKey": "linguistics-appraisal-institutional-discourse:b-8431d204",
+      "priorVersion": "quality-v5",
+      "newVersion": "quality-v8",
+      "prior": "English fallback after phrase_repetition rejection",
+      "new": "Japanese accepted output preserves the non-confinement claim and both citations",
+      "artifact": "test-data/real-papers/reports/translation-audit-v99-quality-v8-repeat-and-omission-guard-replay.json",
+      "scope": "single targeted replay; no cohort rate conclusion"
+    },
+    "validation": {
+      "pythonTranslationServerTests": "148/148",
+      "vitest": "65 files / 446 tests",
+      "typecheck": "pass",
+      "lint": "pass",
+      "diffCheck": "pass"
+    },
+    "runtime": {
+      "transformers": "4.57.6",
+      "mainServer": "8765 ready; old v5 process remains active",
+      "diagnosticServer8876": "stopped",
+      "appBuild": "not performed"
+    },
+    "nextActions": [
+      "Replay v91 fallback b-28ef7a38 under v8 and manually review output.",
+      "Expand fresh exact-source-hash ordinary-body sample; report false rejects alongside severity>=2 unsafe accepts.",
+      "Keep <=5% ordinary-body fallback and near-zero severity>=2 unsafe-accept goals open."
+    ]
   }
 }

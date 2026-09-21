@@ -111,6 +111,8 @@ const requestedPaperIds = papersArg >= 0
   : [];
 const limitArg = args.indexOf("--limit");
 const perPaperLimit = limitArg >= 0 ? Number(args[limitArg + 1]) : 8;
+const blockQueryArg = args.indexOf("--block-query");
+const blockQuery = blockQueryArg >= 0 ? args[blockQueryArg + 1]?.trim() : undefined;
 const serialArg = args.includes("--serial");
 const resumeArg = args.includes("--resume");
 const cachedOnlyArg = args.includes("--cached-only");
@@ -154,7 +156,12 @@ function sourceCategory(block: PaperBlock): SourceCategory {
   ].filter((pattern) => pattern.test(text)).length;
   if (chromeSignals > 0 && /[A-Za-z]{3,}\s+[A-Za-z]{3,}/.test(text)) return "damaged-extraction";
   if (warnings.includes("caption-shaped text")) return "caption";
-  if (warnings.includes("scientific/statistical prose")) return "statistical-prose";
+  // A participant-count token such as `N = 142` can appear in an otherwise
+  // ordinary abstract. Do not remove the whole unit from the ordinary-prose
+  // denominator unless it contains results evidence (test statistic, p-value,
+  // confidence interval, or estimate), not just a sample size.
+  const statisticalResultEvidence = /\bp\s*[<=>≤≥]\s*\.?\d|\b[FTZχΧ]\s*\(|\b(?:CI|confidence interval|odds ratio|OR|eta|η)\s*(?:=|:)/i.test(text);
+  if (warnings.includes("scientific/statistical prose") && statisticalResultEvidence) return "statistical-prose";
   if (warnings.includes("list-item boundary")) return "list";
   if (looksLikeBibliographyEntry(text) || isExpectedNonProseParagraph(text)) return "reference-chrome";
   if (
@@ -193,7 +200,7 @@ function fallbackReason(source: string, result: ServerTranslation | undefined, q
 function sampleBlocks(blocks: PaperBlock[], max: number): PaperBlock[] {
   const eligible = blocks.filter((block) => {
     const text = compact(block.original ?? "");
-    return block.type === "paragraph" && text.length >= 90 && text.length <= 1_800;
+    return block.type === "paragraph" && text.length >= 90 && text.length <= 3_200;
   });
   if (eligible.length <= max) return eligible;
   const result: PaperBlock[] = [];
@@ -438,6 +445,7 @@ async function main() {
       resumedFromRunId: prior?.runId,
       endpoint,
       sampleLimitPerPaper: perPaperLimit,
+      blockQuery,
       catalogPaperCount: catalog.papers.length,
       cachedOnly: cachedOnlyArg,
       excludedMissingPdf: excludedMissingPdf.map((paper) => ({ id: paper.id, filename: paper.filename })),
@@ -465,7 +473,14 @@ async function main() {
     try {
       const pages = await extractPdfPages(pdfPath);
       const extracted = extractQuietly(paper, pages);
-      const sampled = sampleBlocks(extracted.blocks, perPaperLimit);
+      const sampled = blockQuery
+        ? extracted.blocks.filter((block) =>
+            block.type === "paragraph" && compact(block.original ?? "").includes(blockQuery)
+          ).slice(0, perPaperLimit)
+        : sampleBlocks(extracted.blocks, perPaperLimit);
+      if (blockQuery && sampled.length === 0) {
+        throw new Error(`No paragraph matched --block-query ${JSON.stringify(blockQuery)}`);
+      }
       const refSectionIds = referenceSectionIds(extracted.sections);
       // Mirror the import path: unsafe physical fragments are retained as
       // source before MADLAD is contacted. Translating every sampled block

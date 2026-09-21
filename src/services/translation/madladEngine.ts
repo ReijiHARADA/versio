@@ -4,14 +4,14 @@
  * Connects to the local MADLAD translation server.
  */
 
-import { isPlausibleJaTranslation, restoreUtf8ByteEscapes } from "./quality";
+import { isPlausibleJaTranslation, restoreUtf8ByteEscapes, TRANSLATION_QUALITY_VERSION } from "./quality";
 import type { TranslationEngine, TranslationResult, EngineStatus } from "./types";
 
 // Bump whenever the server-side protection or semantic-unit pipeline changes.
 // It is part of the cache identity, so stale translations produced before the
 // current source-preservation rules are never silently reused.
 export const MADLAD_MODEL_VERSION =
-  "3b-mt-v6-transformers-4.57.6-semantic-v73-source-protect-v1-strict-restore-v21";
+  `3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v11-strict-restore-v25-${TRANSLATION_QUALITY_VERSION}`;
 
 const DEFAULT_SERVER_URL = "http://127.0.0.1:8765";
 

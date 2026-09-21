@@ -18,6 +18,7 @@ from .citation_protect import (
     SOURCE_PROTECTION_VERSION,
     protect_citations,
     restore_citations,
+    terminal_superscript_indices,
 )
 from .segmenter import (
     SEGMENTER_VERSION,
@@ -65,9 +66,10 @@ class MADLADEngine(TranslationEngine):
 
     MODEL_ID = "google/madlad400-3b-mt"
     TRANSFORMERS_RUNTIME_VERSION = "4.57.6"
+    QUALITY_GATE_VERSION = "quality-v8"
     MODEL_VERSION = (
         f"3b-mt-v6-transformers-{TRANSFORMERS_RUNTIME_VERSION}-{SEGMENTER_VERSION}-"
-        f"{SOURCE_PROTECTION_VERSION}-strict-restore-v21"
+        f"{SOURCE_PROTECTION_VERSION}-strict-restore-v25-{QUALITY_GATE_VERSION}"
     )
     # Long academic units were previously capped at 256 decoder tokens,
     # causing otherwise valid output to end mid-sentence. Keep the cap finite
@@ -634,12 +636,19 @@ class MADLADEngine(TranslationEngine):
             # authority, so a retry that loses RF/TQP3M9009 is still rejected.
             message = str(original_error)
             if "protected citation placeholder dropped by model:" in message:
-                missing = message.split(":", 1)[1].split(",")
+                missing = [value.strip() for value in message.partition(":")[2].split(", ")]
                 if allows_unprotected_identifier_retry(missing):
                     try:
-                        print("[TRANSLATE] retrying identifier-drop chunk without placeholders", flush=True)
+                        print(
+                            "[TRANSLATE] retrying with only dropped identifier spans unprotected",
+                            flush=True,
+                        )
                         return self._translate_chunk(
-                            text, target_language, text, retry_label="unprotected-identifiers", disable_protection=True
+                            text,
+                            target_language,
+                            model_input,
+                            retry_label="identifier-only-unprotected",
+                            unprotected_values=set(missing),
                         )
                     except Exception:
                         pass
@@ -729,13 +738,13 @@ class MADLADEngine(TranslationEngine):
     ) -> tuple[list[str], list[int], list[int]]:
         model_inputs = model_inputs or chunks
         protected_chunks: list[str] = []
-        cite_maps: list[tuple[list[str], int]] = []
+        cite_maps: list[tuple[list[str], int, set[int]]] = []
         enumeration_prefixes: list[str] = []
         for model_input in model_inputs:
             prefix, translate_body = self._detach_enumeration_prefix(model_input)
             protected, cites, nonce = protect_citations(translate_body)
             protected_chunks.append(protected)
-            cite_maps.append((cites, nonce))
+            cite_maps.append((cites, nonce, terminal_superscript_indices(translate_body)))
             enumeration_prefixes.append(prefix)
 
         lang_token = f"<2{target_language}>"
@@ -777,8 +786,14 @@ class MADLADEngine(TranslationEngine):
             seq = outputs[i]
             piece = self._tokenizer.decode(seq, skip_special_tokens=True).strip()
             piece = self._restore_byte_escapes(piece)
-            cites, nonce = cite_maps[i]
-            piece = restore_citations(piece, cites, nonce, reject_missing=True)
+            cites, nonce, recoverable_terminal_indices = cite_maps[i]
+            piece = restore_citations(
+                piece,
+                cites,
+                nonce,
+                reject_missing=True,
+                recoverable_terminal_indices=recoverable_terminal_indices,
+            )
             if enumeration_prefixes[i]:
                 piece = f"{enumeration_prefixes[i]} {piece}".strip()
             if self._is_degenerate(piece, chunk, target_language):
@@ -802,13 +817,16 @@ class MADLADEngine(TranslationEngine):
         model_input: str | None = None,
         num_beams: int = 1,
         retry_label: str = "",
-        disable_protection: bool = False,
+        unprotected_values: set[str] | None = None,
     ) -> tuple[str, int, int]:
         enumeration_prefix, translate_body = self._detach_enumeration_prefix(model_input or text)
-        protected, cites, nonce = (
-            (translate_body, [], 0)
-            if disable_protection
-            else protect_citations(translate_body)
+        recoverable_terminal_indices = terminal_superscript_indices(
+            translate_body,
+            unprotected_values=unprotected_values,
+        )
+        protected, cites, nonce = protect_citations(
+            translate_body,
+            unprotected_values=unprotected_values,
         )
         inputs = self._encode_translation_inputs(protected, target_language)
         input_tokens = inputs["input_ids"].shape[1]
@@ -844,7 +862,13 @@ class MADLADEngine(TranslationEngine):
                 flush=True,
             )
         translated_text = self._restore_byte_escapes(translated_text)
-        translated_text = restore_citations(translated_text, cites, nonce, reject_missing=True)
+        translated_text = restore_citations(
+            translated_text,
+            cites,
+            nonce,
+            reject_missing=True,
+            recoverable_terminal_indices=recoverable_terminal_indices,
+        )
         if os.getenv("TRANSLATION_UNIT_DEBUG") == "1":
             print(f"[TRANSLATION_RESTORED] text={translated_text!r}", flush=True)
         if enumeration_prefix:
@@ -932,17 +956,22 @@ class MADLADEngine(TranslationEngine):
         compact = "".join(re.findall(r"[\u3040-\u30ff\u4e00-\u9fff\d]", output))
         if len(compact) < 36:
             return False
-        single_counts: dict[str, int] = {}
-        for char in compact:
-            if re.match(r"[\u4e00-\u9fff]", char):
-                single_counts[char] = single_counts.get(char, 0) + 1
-        if any(count >= 4 and count / len(compact) >= 0.08 for count in single_counts.values()):
-            return True
-        counts: dict[str, int] = {}
-        for index in range(len(compact) - 4):
-            phrase = compact[index : index + 5]
-            counts[phrase] = counts.get(phrase, 0) + 1
-        return any(count >= 3 and (5 * count) / len(compact) >= 0.16 for count in counts.values())
+        # Repeated kanji alone are common in Japanese academic prose (e.g.
+        # 評価/的/性). Treating one frequent character as repetition produced
+        # false rejects on otherwise readable translations. Require a repeated
+        # multi-character phrase below; the existing repeated-character guard
+        # still catches degenerate character loops.
+        for phrase_size in (3, 4, 5):
+            counts: dict[str, int] = {}
+            for index in range(len(compact) - phrase_size + 1):
+                phrase = compact[index : index + phrase_size]
+                counts[phrase] = counts.get(phrase, 0) + 1
+            if any(
+                count >= 2 and (phrase_size * count) / len(compact) >= 0.15
+                for count in counts.values()
+            ):
+                return True
+        return False
 
     @staticmethod
     def _is_degenerate(output: str, source: str, target_language: str) -> bool:
@@ -1077,6 +1106,14 @@ class MADLADEngine(TranslationEngine):
         source_compact = "".join(source.split())
         output_compact = "".join(output.split())
         words = re.findall(r"[A-Za-z]{2,}", source)
+        has_negative_explanatory_as = bool(
+            re.search(
+                r"\bas\s+(?:they|it|this|these|the\s+\w+)\s+"
+                r"(?:are|is|was|were|do|does|did|has|have)\s+not\b",
+                source,
+                re.I,
+            )
+        )
         # A complete research sentence with at least 18 English words should
         # not collapse to a one-clause Japanese summary. The audited rLPFC
         # result sentence was 114 compact characters and lost its entire
@@ -1086,7 +1123,7 @@ class MADLADEngine(TranslationEngine):
         # lets the scheduler preserve the original instead of accepting that
         # fluent omission. The threshold is intentionally limited to prose
         # with both a meaningful word count and a non-trivial source length.
-        if len(source_compact) < 110 or len(words) < 18:
+        if (len(source_compact) < 110 and not has_negative_explanatory_as) or len(words) < 18:
             return False
         ratio_source = source_compact
         # Academic prose often wraps a complete claim in a reporting frame such
@@ -1109,8 +1146,20 @@ class MADLADEngine(TranslationEngine):
         # long units (where omitted qualifications are common), but avoid
         # rejecting a substantive 110–179 character sentence solely because
         # its faithful Japanese rendering is compact.
-        has_qualification = bool(re.search(r"\b(?:because|although|though|while|whereas|even|unless|if)\b", source, re.I))
-        floor = 0.21 if len(ratio_source) < 180 and not has_qualification else 0.28
+        has_qualification = bool(
+            re.search(
+                r"\b(?:because|although|though|while|whereas|even|unless|if)\b"
+                r"|\bas\s+(?:they|it|this|these|the\s+\w+)\s+"
+                r"(?:are|is|was|were|do|does|did|has|have)\s+not\b",
+                source,
+                re.I,
+            )
+        )
+        floor = (
+            0.42
+            if has_negative_explanatory_as and len(ratio_source) < 180
+            else 0.21 if len(ratio_source) < 180 and not has_qualification else 0.28
+        )
         return len(output_compact) / max(1, len(ratio_source)) < floor
 
     @staticmethod

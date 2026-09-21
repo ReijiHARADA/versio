@@ -58,6 +58,24 @@ describe("Japanese figure and table captions", () => {
   });
 });
 
+describe("font-transition inline labels", () => {
+  it("separates a short styled label from a complete sentence on the same baseline", () => {
+    const { lines, blocks } = reconstructDocument([{
+      pageNumber: 4,
+      width: 612,
+      height: 792,
+      textItems: [
+        { text: "Errors", x: 63, y: 493, width: 25, height: 9, fontSize: 8.8, fontName: "g_d0_f12", page: 4 },
+        { text: "Given that AI systems fundamentally lack the kind of de-", x: 96, y: 493, width: 245, height: 9, fontSize: 8.8, fontName: "g_d0_f3", page: 4 },
+      ],
+    }]);
+    expect(lines.some((line) => line.text === "Errors")).toBe(true);
+    expect(lines.some((line) => line.text.startsWith("Given that AI systems"))).toBe(true);
+    expect(blocks.some((block) => block.role === "heading" && block.text === "Errors")).toBe(true);
+    expect(blocks.some((block) => block.role === "paragraph" && block.text.startsWith("Given that AI systems"))).toBe(true);
+  });
+});
+
 describe("isEquationLine", () => {
   it("keeps a numbered displayed equation", () => {
     expect(isEquationLine("P = I × V ± Δ (1)")).toBe(true);
@@ -93,6 +111,8 @@ describe("isEquationLine", () => {
       "mum of 100 − 200μW depending upon the available energy. Further,",
       "5 − 200μW/cm3 for piezoelectric) [2, 3]. Thus, studies have been conducted",
       "CR = 0.99), self-expression (AVE = 0.56; CR = 0.96), consequences",
+      "(2.53±0.37), sound complexity (2.32±0.29), and emotional levels (valence 3.08±0.58 and arousal 2.49±0.37).",
+      "(valence 3.08±0.58 and arousal 2.49±0.37).",
       "+ CL RL +",
     ];
     for (const sample of samples) expect(isEquationLine(sample), sample).toBe(false);
@@ -112,6 +132,24 @@ describe("PDF reading order regression", () => {
     const body = blocks.find((block) => block.text.includes("participants had to mark"));
     expect(body?.text).not.toContain("15 February 2023");
     expect(blocks.some((block) => block.text.includes("15 February 2023"))).toBe(true);
+  });
+
+  it("does not let a comma-ended sidebar absorb a same-height body continuation", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 1, width: 612, height: 792,
+      textItems: [
+        { text: "This article was submitted to", x: 56, y: 339, width: 105, height: 8, fontSize: 7, fontName: "Rail", page: 1 },
+        { text: "Cognition,", x: 56, y: 348, width: 47, height: 8, fontSize: 7, fontName: "Rail", page: 1 },
+        { text: "encoding for task-irrelevant items was enhanced when presented with", x: 222, y: 349, width: 315, height: 9, fontSize: 9, fontName: "Body", page: 1 },
+      ],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    const body = blocks.find((block) => block.text.includes("encoding for task-irrelevant items"));
+    const sidebar = blocks.find((block) => block.text.includes("This article was submitted"));
+
+    expect(body?.text).toContain("encoding for task-irrelevant items");
+    expect(body?.text).not.toContain("Cognition");
+    expect(sidebar?.text).toContain("Cognition,");
   });
 
   it("joins a standalone figure label and caption fragments across native column bands", () => {
@@ -440,6 +478,28 @@ describe("PDF reading order regression", () => {
     }];
     const { lines } = reconstructDocument(pages);
     expect(lines.some((line) => line.text.includes("Table") && line.rotation === 90)).toBe(true);
+  });
+
+  it("keeps overlapping rotated figure labels out of the same translation block", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 4,
+      width: 612,
+      height: 792,
+      textItems: [
+        { text: "Time services based on context", x: 303.6, y: 170.1, width: 61.1, height: 4.7, fontSize: 4.7, fontName: "FigureLabel", page: 4, rotation: -81.85 },
+        { text: "Scope services when in doubt", x: 298.3, y: 174, width: 58, height: 4.7, fontSize: 4.7, fontName: "FigureLabel", page: 4, rotation: -79.92 },
+        { text: "Assume subversive use", x: 257.7, y: 530.8, width: 45.5, height: 4.7, fontSize: 4.7, fontName: "FigureLabel", page: 4, rotation: 69.39 },
+        { text: "Background errors", x: 330.7, y: 533.7, width: 35.6, height: 4.7, fontSize: 4.7, fontName: "FigureLabel", page: 4, rotation: 90.92 },
+      ],
+    }];
+    const { blocks, lines } = reconstructDocument(pages);
+    for (const [a, b] of [
+      ["Time services", "Scope services"],
+      ["Assume subversive", "Background errors"],
+    ]) {
+      expect(lines.some((line) => line.text.includes(a) && line.text.includes(b))).toBe(false);
+      expect(blocks.some((block) => block.text.includes(a) && block.text.includes(b))).toBe(false);
+    }
   });
 
   it("keeps a rotated caption label with its title line", () => {
