@@ -56,7 +56,7 @@ const TRANSLATION_INSTRUCTION_MARKER = /(?:次の(?:英語|英文)(?:の学術�
 // Models sometimes append a translator's note or wording advice after an
 // otherwise plausible paragraph. This is output-side meta commentary, not a
 // domain term; reject the structure without naming any paper-specific words.
-const TRANSLATION_META_COMMENTARY = /(?:^|[。！？\n]\s*)(?:注|訳注|補足|備考)\s*[:：]/u;
+const TRANSLATION_META_COMMENTARY = /(?:^|[。！？\n]\s*|[（(]\s*)(?:注|訳注|補足|備考)\s*[:：]|原文のままにし|文脈上適切な日本語に置き換えるべき|判断が必要/u;
 
 // A common decoder failure preserves an acronym while corrupting its expanded
 // term into a mixed-script Latin fragment (for example `...アンダNCY（CRC）`).
@@ -1043,6 +1043,23 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   if (/\b[A-Za-z]{2,}-$/.test(t)) {
     return "語が途中で切れている可能性があります";
   }
+  // Some native PDF extractors preserve line-break hyphens but lose the
+  // original line boundary, producing fragments such as `previ- psycho-`
+  // or `addi- review` inside an otherwise long block. A single spaced hyphen
+  // can be legitimate typography (`well- known`), so require multiple
+  // occurrences before treating the block as damaged extraction.
+  const internalHyphenBreaks = t.match(/\b[A-Za-z]{3,}-\s+[a-z]{2,}\b/g) ?? [];
+  if (internalHyphenBreaks.length >= 2) {
+    return "抽出時の改行ハイフンが残っている可能性があります";
+  }
+  // Column/table extraction can concatenate adjacent words while retaining
+  // the second word's capitalisation (`seriousImplementation`).
+  // One CamelCase token may be a legitimate method or product name, so require
+  // two long suspicious joins before classifying the source as damaged.
+  const concatenatedWords = t.match(/\b[a-z]{5,}[A-Z][a-z]{3,}\b/g) ?? [];
+  if (concatenatedWords.length >= 2) {
+    return "抽出時に隣接語が連結している可能性があります";
+  }
   if (t.length >= 48 && noTerminal && /^(?:starting\s+from|based\s+on|using|through|by|with|from)\b/i.test(t)) {
     return "段落の末尾が欠けている可能性があります";
   }
@@ -1124,6 +1141,16 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   // source until the layout layer can stitch the following block.
   if (t.length >= 48 && /\b(?:section|figure|table|appendix|chapter)\s*$/i.test(t)) {
     return "文書内参照が途中で切れている可能性があります";
+  }
+  // A block can absorb the first line of a table/figure label and stop at a
+  // title-cased parenthetical (`the Number of Deaths (in Millions)`). Such a
+  // suffix is not a complete proposition, so do not send it to a model.
+  if (
+    t.length >= 48
+    && noTerminal
+    && /\b(?:the|a|an)\s+[A-Z][A-Za-z\s]{5,}\([^)]{1,48}\)\s*$/i.test(t)
+  ) {
+    return "図表見出しが段落末尾に混ざっている可能性があります";
   }
   if (/\b[a-z]{2,}-\s+\d+(?:\.\d+)?\s+[a-z]{2,}\b/i.test(t)) {
     return "表または図の数値セルが本文に混ざっている可能性があります";

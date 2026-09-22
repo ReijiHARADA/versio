@@ -81,6 +81,20 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation(output, source)).toBe(false);
   });
 
+  it("rejects inline translator notes embedded in a sentence", () => {
+    const source = "Traditional education uses lectures and class discussion.";
+    const output = "伝統教育は講義とクラス discussion(注: 原文のままにし、文脈上適切な日本語に置き換えるべきか判断が必要です)を用いる。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("model output contains translation meta-commentary");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("rejects simplified-Chinese output that shares Japanese Han characters", () => {
+    const source = "We used the public API to run all simulations and set the temperature to zero.";
+    const output = "我々はすべてのシミュレーションを実行し、温度参数为0。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("simplified Chinese mixed into Japanese");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
   it("rejects malformed numeric citation brackets", () => {
     const source = "The effect was replicated [11].";
     const output = "この効果は再現された[[11]]。";
@@ -825,6 +839,32 @@ describe("unsafe extracted translation input", () => {
         "To evaluate the method, we compare the complete results under the same controlled experimental conditions."
       )
     ).toBe(true);
+  });
+
+  it("rejects blocks with repeated PDF line-break hyphen artifacts", () => {
+    const damaged =
+      "Physiological signals are collected from previ- psycho-physiological measurements and addi- review evidence from the literature.";
+    expect(unsafeParagraphStructureReason(damaged)).toContain("改行ハイフン");
+    expect(shouldTranslateParagraph(damaged)).toBe(false);
+  });
+
+  it("rejects repeated adjacent-word concatenation from table/column extraction", () => {
+    const damaged =
+      "Patient safety seriousImplementation outcomes and fidelityOrganisational measures were reported across the included studies.";
+    expect(unsafeParagraphStructureReason(damaged)).toContain("隣接語");
+    expect(shouldTranslateParagraph(damaged)).toBe(false);
+    expect(
+      shouldTranslateParagraph(
+        "The OpenAI model evaluates participants and reports the results in a complete academic paragraph."
+      )
+    ).toBe(true);
+  });
+
+  it("rejects a paragraph ending in a table or figure label fragment", () => {
+    const source =
+      "One study reviewed the source and described the observed trend in the Number of Deaths (in Millions)";
+    expect(unsafeParagraphStructureReason(source)).toContain("図表見出し");
+    expect(shouldTranslateParagraph(source)).toBe(false);
   });
 
   it("rejects short figure-panel units even when the extracted fragment has a period", () => {

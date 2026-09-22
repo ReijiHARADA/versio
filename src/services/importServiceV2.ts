@@ -30,6 +30,7 @@ import type { Paper, Section, PaperBlock } from "../types/paper";
 import { rememberSourcePdf } from "../data/repositories/documentRepository";
 import {
   MADLADEngine,
+  OllamaTranslationEngine,
   TranslationQueue,
   TranslationPriority,
   translationManager,
@@ -92,8 +93,11 @@ export async function importPDFV2(
   const paperId = uuidv4();
   activeImportPaperIds.add(paperId);
 
-  const translationEngine = new MADLADEngine(cfg.madladServerUrl);
   const llmProvider = new OllamaProvider(cfg.ollamaServerUrl, cfg.ollamaModel);
+  const madladEngine = new MADLADEngine(cfg.madladServerUrl);
+  const translationEngine = cfg.enableSelectiveCascade
+    ? new OllamaTranslationEngine(madladEngine, llmProvider)
+    : madladEngine;
 
   try {
     // Stage 1: Reading file

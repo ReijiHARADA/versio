@@ -12,11 +12,13 @@ import { applyGlossary, normalizeSourceGroundedTerminology } from "../llm/glossa
 import { finalizedTranslationStatus } from "../paperStatus";
 import {
   MADLADEngine,
+  OllamaTranslationEngine,
   TranslationPriority,
   translationManager,
   TranslationQueue,
   type TranslationPriorityValue,
 } from "../translation";
+import { OllamaProvider } from "../llm";
 import { isPlausibleJaTranslation, localizeNamedFigureCaption, shouldTranslateTitle, titleTranslationComplete } from "../translation/quality";
 import { checkMADLADServer } from "../translation/madladEngine";
 import {
@@ -100,7 +102,13 @@ export async function resumeIncompleteTranslation(
       await savePaper(paper);
       return;
     }
-    const translationEngine = new MADLADEngine(cfg.madladServerUrl);
+    const madladEngine = new MADLADEngine(cfg.madladServerUrl);
+    const translationEngine = cfg.enableSelectiveCascade
+      ? new OllamaTranslationEngine(
+          madladEngine,
+          new OllamaProvider(cfg.ollamaServerUrl, cfg.ollamaModel),
+        )
+      : madladEngine;
     const queue = new TranslationQueue(translationEngine, {
       concurrency: cfg.translationConcurrency,
       retryFailed: false,

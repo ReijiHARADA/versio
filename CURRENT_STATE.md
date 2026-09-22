@@ -9314,3 +9314,98 @@ Refined the mixed-script decoder guard to compare suspicious Latin fragments aga
 - Extended `scripts/recheck-audit-translation-quality.ts` to accept both production `papers[].rows[]` reports and alternate-model `results[]` reports.
 - Rechecked the eight-row Gemma cohort with v14: the repeated-label guard changes **2/8** automatic accepts to safe fallback (`Interventions`, `Assessments`); the other six remain accepted. Artifact: `alternate-model-heldout-v80-gemma-v1-quality-recheck.json`.
 - Quality tests now pass **141/141**; typecheck, lint, and `git diff --check` pass. This is a measured safety tradeoff on a diagnostic cohort, not a product fallback-rate claim; v14 still needs a live MADLAD benchmark.
+
+## Fresh v14 five-field benchmark and Gemma rescue audit (2026-09-22)
+
+- Restarted the server in a persistent session; startup reported model identity `3b-mt-v6-transformers-4.57.6-semantic-v76-source-protect-v20-strict-restore-v28-quality-v14`, embedding integrity was verified by startup, and health reached ready.
+- Fresh production-path report `live-v248-quality-v14-fivefield` completed **5 papers / 40 rows**. Ordinary-body: **19 rows, 8 reader-visible fallbacks (42.1%)**. This is far above the <=5% target; no fallback reduction is claimed.
+- Fallback causes were mixed: source fallback, disjunctive relation gate, unexpected scientific invariant, degenerate output, protected-token restore failure, and model quality rejection.
+- Audit-only Gemma comparison on the same eight fallback rows accepted all eight automatically. Manual review found seven severity 0–1 candidates and one source-fragment row whose input itself is incomplete. Artifact: `alternate-model-v248-gemma-v1-manual-review.json`. This supports a source-integrity-first selective cascade experiment, but is not enough to enable production routing.
+- The server remains ready after this checkpoint; no `.app` build was performed.
+
+## 2026-09-22 — 作業停止ポイント
+
+- ユーザー指示により、翻訳サーバーと実行中の評価処理を停止。
+- `translation-server` / `uvicorn` / `madlad_mps` の常駐プロセスは確認時点でなし。
+- 直前の確定ベンチマークは `test-data/real-papers/reports/live-v248-quality-v14-fivefield.json`（5 papers / 40 rows、complete=true）。ordinary-body 19 rows中8 rowsがreader-visible fallback（42.1%）で、目標未達。
+- Gemma 2 9Bの監査専用評価は `test-data/real-papers/reports/alternate-model-v248-gemma-v1.json` と手動レビューJSONに保存済み。production cascadeは未導入。
+- 次回再開時は、source-integrity判定（dangling continuation / mixed chrome等）の一般化と、同一shellでのfresh benchmarkから再開する。モデル切替は監査結果とheld-out評価を確認してから行う。
+
+## 2026-09-22 — 改行ハイフン抽出検出
+
+- `unsafeParagraphStructureReason` に、PDFの改行ハイフンが空白を挟んで複数残る一般的な破損（例: `previ- psycho-` / `addi- review`）を検出する証拠を追加。
+- 単一の spaced hyphen は正当な表記を誤拒否し得るため対象外とし、同一block内で2箇所以上ある場合だけ source-integrity fallback にする。
+- 回帰テストを追加。`src/test/quality.test.ts` は **134/134 passed**。
+- この変更はモデル品質を隠すための語句blacklistではなく、翻訳前のsource reconstruction破損を検出するもの。次回は実PDF extraction benchmarkでpre-model fallbackの増減を確認する。
+
+## 2026-09-22 — 抽出回帰確認
+
+- 改行ハイフン検出追加後に `npm run test:extraction-corpus -- --reporter=dot` を実行。
+- 既存の実PDF baseline / reading-order 回帰は **2 files / 108 tests passed**（約123秒）。
+- `npm run typecheck` と `npm run lint` も通過。
+- この変更による実モデル fallback率の影響は未測定。サーバーを起動したfresh benchmarkで、pre-model fallback増加とpost-model semantic failure減少を分離して測る必要がある。
+
+## 2026-09-22 — 改行ハイフン修正後 fresh benchmark
+
+- 同一シェルで翻訳サーバーを起動し、`npm run bench:real-paper-translation -- --limit 5 --resume` を完走。終了時にサーバーは自動停止し、常駐プロセスなし。
+- チェックポイント対象は52 papers。今回run id `2026-09-22T11-32-31-604Z` の新規行は95件（ordinary-body 52件）。
+- ordinary-body は 52件中18件が reader-visible fallback（**34.6%**）。v248の19件中8件（42.1%）とはサンプル・選定が異なるため単純な改善率とは扱わない。目標5%以下には未達。
+- fallbackは post-model 17件、pre-model 1件。主因は translation quality rejection / protected-token restore / scientific invariant mismatch / source overlap。改行ハイフン修正が直接効いたかは、該当artifactを別集計して確認する必要がある。
+- レポート原本は `test-data/real-papers/reports/translation-audit.{json,md}`、run保存コピーは `live-v249-quality-v14-resume.json`。reportの `complete` フラグは falseのため、次回はrun完了判定の整合性も確認する。
+
+## 2026-09-22 — 隣接語連結の抽出検出
+
+- fresh benchmarkで確認した `seriousImplementation` / `fidelityOrganisational` のような、PDF列・表の隣接語連結を一般検出する source-integrity evidence を追加。
+- 単一のCamelCase固有名詞は許容し、長い連結語が同一blockに2つ以上ある場合だけ翻訳前fallbackにする。
+- quality test **135/135 passed**、typecheck通過。実PDF回帰は前回の108/108からコード変更後の再実行が必要。
+- fallback率を下げる目的でゲートを緩めず、壊れたsourceをモデルに渡さない改善として扱う。
+
+## 2026-09-22 — 選択的代替モデルcascade（opt-in）
+
+- 既存MADLADが失敗した場合に、source-integrityが正常な英語本文だけをOllama/Gemmaへ再試行する `OllamaTranslationEngine` を追加。
+- 代替出力にも `isPlausibleJaTranslation` と `evaluateJaTranslation` を適用し、数値・引用・統計記法・否定等の品質条件を満たさなければ元の失敗として扱う。壊れた抽出fragmentは代替モデルへ送らない。
+- `ImportConfig.enableSelectiveCascade` を追加したが、既定値は **false**。held-out評価なしで本番経路を変えないため、まだproduction cascadeは有効化していない。
+- import新規処理とresume処理の双方で同じopt-in engineを利用可能にした。
+- 専用テストを追加し、quality + cascade tests **138/138 passed**、typecheck / lint通過。
+- 次はGemmaを実際に有効化した同一source-hashのheld-out benchmarkを取り、救済率とseverity>=2 false acceptを確認してから既定値を判断する。
+
+## 2026-09-22 — Qwen 2.5 14B cascade audit
+
+- `alternate-model-v249-qwen14-audit.json` を、直近MADLAD fallbackの同一source行18件に対して実行（segmenter + citation protection + invariant/quality gate）。
+- 自動ゲート受理は **9/18 (50%)**、restore errorは1件。残りは repeated source label、混在スクリプト、epistemic uncertainty欠落、citation placeholder欠落、source overlap等で拒否された。
+- したがってQwen 14Bをそのままcascadeに有効化する根拠はなく、既定値falseを維持する。受理9件も手動semantic reviewなしでは安全な救済件数に数えない。
+- この結果は「代替モデルならfallbackを5%以下にできる」とは示さない。次は受理候補の手動レビューと、拒否理由のうち一般化可能な protection/segmentation 原因を分離する。
+
+## 2026-09-22 — Cascade候補のfalse-accept補強
+
+- Qwen監査の受理出力を原文と照合し、`(注: 原文のままにし...)` のようなinline translator noteと、かな混じりの簡体字出力が自動受理され得る検出漏れを確認。
+- meta-commentary検出を括弧内にも拡張し、`原文のままにし` / `文脈上適切な日本語に置き換えるべき` 等の構造的な翻訳者注記を拒否。
+- 簡体字汚染の回帰fixtureを追加。特定語のblacklistではなく、出力言語のscript contaminationとして扱う。
+- quality + cascade tests **140/140 passed**、typecheck / lint / diff check通過。
+- Qwen v249の9/18自動受理は、品質理由も併せて再評価する必要があり、cascade既定falseは維持。
+
+## 2026-09-22 — Qwen監査のstrict recheck
+
+- `scripts/recheck-audit-translation-quality.ts` をcascade engineと同じく、`isPlausibleJaTranslation` に加えて `evaluateJaTranslation(...).reasons.length === 0` を要求するよう更新。
+- Qwen v249の18行は旧判定9/18から、strict判定 **6/18 accepted、12/18 fallback (66.7%)** に修正された。
+- 旧判定で通っていた混在script decoder corruption 2件とinline translator meta-commentary 1件を明確に除外。Qwenを本番cascadeへ有効化しない判断を強化した。
+- strict再評価 artifact: `alternate-model-v249-qwen14-audit-quality-recheck.json`。
+
+## 2026-09-22 — 図表見出し末尾fragmentの検出
+
+- cascade候補に混ざった `the Number of Deaths (in Millions)` のような図表見出し末尾fragmentを、末尾のタイトルケース＋括弧構造から一般検出。
+- source-integrityが正常な本文だけを代替モデルへ送る条件を強化し、図表断片をfluently翻訳して採用する経路を防止。
+- quality test **138/138 passed**、typecheck / lint / diff check通過。
+
+## 2026-09-22 — 図表fragment検出後の抽出回帰
+
+- `npm run test:extraction-corpus -- --reporter=dot` を再実行。
+- cached real-paper baseline / reading-order は **2 files / 108 tests passed**（約130秒）。図表末尾fragment検出による既存抽出回帰は確認されなかった。
+- 実モデルfallback率は未再測定。次回fresh server benchmarkでpre-model fallbackの変化と、代替モデルcascade候補のstrict受理率を別々に計測する。
+
+## 2026-09-22 — 作業停止ポイント
+
+- fresh port の同一shell benchmark を `--limit 5 --resume` で起動確認。
+- 既存チェックポイント52論文（351 rows）が全て揃っていたため、新規翻訳は発生せず、コマンドは正常終了。
+- translation server / benchmark process は cleanup 後に終了済み。`translation-audit.json` の既存結果は変更なし（`complete=false` はresumeレポートの状態）。
+- 次回はチェックポイントを再利用しない fresh benchmark、または未処理fixtureを追加してから、pre-model fallback と cascade候補を別々に測定する。
