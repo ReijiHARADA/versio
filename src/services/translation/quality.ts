@@ -46,8 +46,8 @@ const SOURCE_DIVERSE_PARTICIPANT_FIELDS = /\b(?:participants?|subjects?|responde
 const SOURCE_EXPLICIT_PER_FIELD_COUNT = /\b(?:each|every|per)\s+(?:academic\s+)?(?:field|discipline|department|faculty|major)\b/i;
 const JA_FIELD_COUNT_DISPLACEMENT = /(?:各|それぞれの?)(?:学科|分野|学部|領域|専攻|部門)\s*(?:から|ごとに|あたり)?[^。！？\n]{0,12}[0-9０-９]+\s*(?:名|人)|[0-9０-９]+\s*名の(?:研究|学問)?(?:学科|分野|学部|領域|専攻|部門)/;
 const SOURCE_COLLECTIVE_GROUP_COMPARISON = /\bnone\s+of\s+the\s+(?:study\s+)?groups?\b[^.!?]{0,160}\b(?:differ(?:ed|s)?|different|difference|significant|significantly)\b/i;
-const SOURCE_THREE_OR_MORE_GROUPS = /\b(?:3|three|four|4|five|5|six|6|seven|7|eight|8|nine|9|ten|10)\s+(?:study\s+)?(?:groups?|conditions?|arms?)\b/i;
-const JA_BINARY_GROUP_COMPARISON = /(?:両群|二群|2群)\s*(?:間|間で|間に|の間)/;
+const SOURCE_EXPLICIT_TWO_GROUPS = /\b(?:two|2)\s+(?:study\s+)?(?:groups?|conditions?|arms?)\b/i;
+const JA_BINARY_GROUP_COMPARISON = /(?:両群|二群|2群)\s*(?:間|間で|間に|の間|の|に|で)/;
 // Restrict relation checks to unambiguous discourse markers. Generic `but`
 // and `while` are intentionally excluded because Japanese may encode them
 // through ordinary clause ordering without a dedicated connective.
@@ -414,7 +414,7 @@ const SCIENTIFIC_PATTERNS: Array<[ScientificInvariant["kind"], RegExp]> = [
 export function extractScientificInvariants(source: string): ScientificInvariant[] {
   // Normalize locale decimal commas before applying measurement/number
   // patterns so `0,7 mm` is treated as the same fact as `0.7 mm`.
-  const invariantSource = source.normalize("NFKC").replace(/[μµ]/g, "u").replace(/℃/g, "°C").replace(
+  const invariantSource = source.normalize("NFKC").replace(/[μµ]/g, "u").replace(/◦\s*([CF])/gi, "°$1").replace(/℃/g, "°C").replace(
     /(\d),\s*(?=\d{1,2}\s*(?:mm|cm|m|km|ms|s|hz|khz|mhz|uw|mw|w|kg|mg|pf|nf|uf|μf|mf|mah|db|%|°[cf])\b)/gi,
     "$1.",
   );
@@ -465,6 +465,7 @@ function normalizeInvariant(value: string): string {
     .replace(/\u0338=/g, "!=")
     .replace(/≠/g, "!=")
     .replace(/[μµ]/g, "u")
+    .replace(/◦\s*([cf])/gi, "°$1")
     .replace(/℃/g, "°c")
     .replace(/(?<=\d)c\b/gi, "°c");
 }
@@ -626,8 +627,8 @@ function invariantQuality(source: string, output: string): { score: number; reas
  * Detect two high-impact English-to-Japanese scope shifts where numeric facts
  * can all remain present: a collective participant total made distributive
  * over unspecified fields, and an all-group statement narrowed to two groups
- * despite an explicit study cardinality of at least three. These are narrow
- * relation checks, not a general semantic correctness classifier.
+ * unless the source explicitly says that the study has two groups. These are
+ * narrow relation checks, not a general semantic correctness classifier.
  */
 function semanticScopeRiskReasons(source: string, output: string): string[] {
   const reasons: string[] = [];
@@ -640,7 +641,7 @@ function semanticScopeRiskReasons(source: string, output: string): string[] {
   }
   if (
     SOURCE_COLLECTIVE_GROUP_COMPARISON.test(source)
-    && SOURCE_THREE_OR_MORE_GROUPS.test(source)
+    && !SOURCE_EXPLICIT_TWO_GROUPS.test(source)
     && JA_BINARY_GROUP_COMPARISON.test(output)
   ) {
     reasons.push("collective group comparison narrowed to two groups");

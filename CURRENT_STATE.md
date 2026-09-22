@@ -9594,3 +9594,171 @@ Refined the mixed-script decoder guard to compare suspicious Latin fragments aga
 - v255のordinary rowsを8件まで拡張し、Gemma2 9Bで監査。全8件でrestore errorなし、形式gateは7件accept / 1件reject。
 - rejectされたaccepted-rowは、MADLADの形式品質だけでは拾えないモデル出力差の監査シグナル。残り7件も自動acceptを正解とは扱わず、manual semantic reviewが必要。
 - artifact: `test-data/real-papers/reports/alternate-model-semantic-risk-v267.json`。本監査はproduction routingに影響しない。
+
+## 2026-09-22 — cross-report semantic-risk audit v268
+
+- v254の別fresh reportから10 ordinary rowsをGemma2 9Bで監査。
+- 形式gateは **7 accept / 3 reject**、restore errorは1件。thermal-earring 2件で意味・保護品質の問題を再確認し、単純にGemmaへ置換しても安全ではない。
+- HCI/marketingを含む別reportでもprimary成功文の比較対象を確保。fallback率を下げるだけのcascade採用は不適切。
+- artifact: `test-data/real-papers/reports/alternate-model-semantic-risk-v268.json`。
+
+## 2026-09-22 — 既存cascade候補の再確認
+
+- 既存post-integrity summaryを再集計。Gemma9b v4はfallback候補のgate accept 5/6、manual severity>=2 は20%、projected fallback 16.7%。Qwen14b v4はgate accept 1/6、manual severity>=2 100%、projected fallback 83.3%。
+- したがってGemmaは改善候補だが、現時点でordinary fallback 5%とunsafe semantic error≈0を同時に保証する証拠はない。既定routingは維持。
+
+## 2026-09-22 — Celsius glyph false-reject修正
+
+- v268で確認した原文 `0.32 ◦C` と出力 `0.32℃` の表記揺れを、scientific invariant正規化で同一measurementとして扱う一般修正を追加。
+- `◦C` / `℃` / `°C` の比較を統一し、Gemma候補の不要な `unexpected scientific invariants: 0.32°C` rejectを解消。残る `exclusivity relation missing` は既存のrelation-only audit evidenceで、構造的rejectではない。
+- 回帰: quality **142/142 passed**、typecheck・lint・diff check 成功。
+
+## 2026-09-22 — glyph修正後の総合回帰
+
+- TypeScript関連テスト **153/153 passed**。
+- Python segmenter/citation/quality tests **154 passed, 11 subtests passed**。
+- DOMMatrix/Path2D warningは既存環境警告。typecheck・lint・diff checkも成功。
+
+## 2026-09-22 — extraction regression after quality change
+
+- real-paper extraction / reading-order regression: **108/108 passed** (2 test files, 134.74s)。
+- PDF.jsの既存フォント・ColorSpace警告は出るが、失敗なし。
+
+## 2026-09-22 — glyph gate recheck v269
+
+- v268のGemma 9-rowを修正後のquality gateで再計算。
+- rejectは **2件→1件** に減少。Thermal Earringの `0.32 ◦C` rowは数値variant由来の誤拒否が解消し、残るrejectは翻訳未完了・untranslated prose系。
+- artifact: `test-data/real-papers/reports/translation-quality-gate-recheck-v269.json`。
+
+## 2026-09-22 — current working tree scope
+
+- 現在の未コミット変更は、`src/services/translation/quality.ts` のUnicode measurement正規化、対応する `src/test/quality.test.ts`、およびこの状態記録のみ。
+- production default cascade・モデル選択・抽出アルゴリズムは今回のgate修正で変更していない。
+
+## 2026-09-22 — degree glyph generalization
+
+- Celsius専用ではなく、PDFの `◦C` / `◦F` を `°C` / `°F` と同一視する一般正規化へ拡張。
+- 回帰: quality **143/143 passed**、typecheck・lint・diff check 成功。
+
+## 2026-09-22 — user-requested pause
+
+- 現在、translation server / real-paper benchmark の常駐プロセスは確認されていない。
+- 作業は v269 gate recheck と degree-glyph normalization の回帰確認までで停止。
+- 未コミット変更は `quality.ts`、`quality.test.ts`、この状態記録のみ。再開時は v270 のMADLAD実機再現（Thermal Earring fixture）から続行する。
+
+## 2026-09-22 — MADLAD loading-bug verification checkpoint
+
+- `translation-server/.venv` は **Transformers 4.57.6**、lockfileも4.57.6。productionは5.xではない。
+- 既存の隔離A/B artifact（`translation-server/benchmarks/transformers-madlad-loading-diagnostic-v1.md`）で、同一checkpoint・dtype・MPS・generation条件を比較済み。
+- 5.17.0は `encoder.embed_tokens == lm_head.weight`（absmax 2.14）となり、5 fixtureすべてで壊れたdecode。4.57.6は `encoder/decoder == decoder.embed_tokens.weight`（absmax 253）、`lm_head`は別tensorで、5 fixtureが日本語/EOSを保持。
+- 判定は **Transformers 5.x loading bugの影響あり**。4.57.6 pinを維持し、production変更は追加不要。次の品質作業はモデルdecodeの残存semantic drift（v263/v270 fixture）へ進む。
+
+## 2026-09-22 — runtime integrity regression
+
+- 4.57.6環境のembedding integrity / segmenter / citation protection tests: **120 passed, 11 subtests passed**。
+- 実機serverは現在停止中のため、v270 fixtureのdecode再現は未実行。次回はserver起動後に同一fixtureを4.57.6で再現し、model outputとquality-gate判定を保存する。
+
+## 2026-09-22 — translation server restart safety
+
+- `restart-translation-server.sh` の停止パターンを `[p]ython.*server\.py` に変更し、バックグラウンド起動時に `pkill` が自分自身のコマンドラインへ誤一致する問題を解消。
+- `./restart-translation-server.sh stop` を追加し、停止操作を明示的に実行可能にした。
+- `bash -n` と stop mode の実行を確認。通常のforeground起動・production model設定は変更していない。
+
+## 2026-09-22 — v270 direct MADLAD smoke attempt
+
+- 起動後のserver logで `embedding integrity verified: encoder==decoder=True, input absmax=253.00, lm_head absmax=2.14` を確認。
+- Thermal Earringの長いBluetooth段落を直接 `/translate` へ投入し、semantic units自体は citation fragment ではなく自然な文単位で処理された。
+- 途中出力には「短温度データ伝送」「健康温度データイン」など、sourceにない/不自然な語義ずれが確認された。これは4.57.6でもdecode時点で発生する残存semantic driftの実証であり、fallback gateだけの問題ではない。
+- 実行は長文処理中にセッションのタイムアウトで終了し、完全なv270 JSON artifactは未保存。部分ログは再現の手掛かりとして扱い、結論の定量評価には使用しない。
+
+## 2026-09-22 — v270 fixed-fixture decode artifact
+
+- 4.57.6 / MPS / production serverで短い既知fixture 3件を再実行し、`test-data/real-papers/reports/translation-model-smoke-v270.json` に保存。
+- `None of the groups ...` は出力が「両群」に狭まり、sourceの不特定複数群を保持しない semantic drift を再現。
+- participant fixtureは `various fields of study` が「各学科」となり、数値・大学名・報酬は保持。
+- Thermal EarringのBluetooth比較文は数値・比較関係を保持し、fallbackなし。
+- 以上はruntime loading bugではなく、4.57.6でも残るMADLAD decodeの意味スコープ問題。quality gateが形式上acceptしてもsemantic reviewが必要であることを再確認。
+
+## 2026-09-22 — collective-group scope guard
+
+- `None of the groups ...` のようにsourceが群数を明示しない場合でも、出力が「両群/二群/2群」へ狭まったらsemantic riskとしてrejectする一般化を追加。
+- sourceが明示的にtwo groupsの場合は従来どおりaccept可能。特定論文・語句のblacklistではなく、collective-vs-binary scopeの関係検査。
+- quality test **144/144 passed**、diff check成功。ordinary-body fallback率への影響は未測定のため、次回fresh held-out benchmarkで確認する。
+- 既存 v268 Gemma 9-row recheckでは、この新規パターンによる追加decision changeは発生しなかった。artifact: `alternate-model-semantic-risk-v268-quality-recheck.json`。このreportは代替モデル監査用であり、製品fallback率の代表値には使わない。
+
+## 2026-09-22 — benchmark resume checkpoint after scope guard
+
+- 同一shellでserverを起動し `bench:real-paper-translation -- --limit 3 --resume` を実行。
+- catalogは52 papersを選択したが、checkpoint済み51件をskipしたため、新規翻訳行は追加されなかった。生成された `translation-audit.{json,md}` は既存checkpointの再集約であり、fresh fallback率の証拠には扱わない。
+- serverは検証後に停止。次回は `--resume` ではなく新しいrun/report keyで、重複除去済みheld-outを実測する。
+
+## 2026-09-22 — fresh v271 scope-guard benchmark
+
+- 新規report `translation-audit-v271-scope-guard.{json,md}` を、thermal-earring と marketing-health-goals-nudging の各3 blocksで作成。
+- ordinary-body **0/5 reader-visible fallback (0%)**。damaged-extraction 1件はpre-model fallbackとして分離。
+- Thermal Earringの2 ordinary rowsには `exclusivity relation missing` audit evidenceが残るが、source fallbackにはしていない。Marketingの3 ordinary rowsは全てaccept。
+- これは5 ordinary rowsの小標本であり、製品目標達成の証拠ではない。serverは検証後に停止。
+
+## 2026-09-22 — v271 alternate-model audit
+
+- `gemma2:9b` を同じv271 reportのsemantic-risk accepted rowsに対して監査実行し、artifact `alternate-model-v271-gemma.json` を保存。
+- 生成された1件は自動gate accept、`exclusivity relation missing` はMADLAD/Gemma双方に残る監査signal。Gemmaをproduction cascadeへ有効化する根拠には不十分で、routing変更なし。
+- この監査は1件のみのため、モデル比較の結論やfallback率には使用しない。
+
+## 2026-09-22 — v271 manual semantic spot-check
+
+- v271の長いaccepted rowsをsource/translationで直接比較したところ、Thermal Earringとmarketingの長文に内容省略・語義ずれが残る例を確認。自動gateの0/5 fallbackはsemantic correctnessを保証しない。
+- 長文の文字数比率だけを0.35へ厳格化する案は、既存の正当な日本語圧縮テストを誤拒否したため撤回。今回の作業ではquality gateを変更していない。
+- 次の改善対象は、長文のclause/content coverageを抽出・評価する一般手法であり、単純な文字数閾値や語句blacklistは採用しない。
+
+## 2026-09-22 — v271 coverage audit
+
+- `score-translation-coverage.ts` に出力先環境変数を追加し、v271を監査。artifact: `translation-coverage-v271-scope-guard.json`。
+- 5 ordinary rowsで `invariantLoss=1`、`ordinalClaimRelationLoss=1` を検出。sentence coverage低下は0件、既存のlength audit threshold（<0.28）にも該当しなかった。
+- 文字数・文数だけでは長文省略を十分に拾えないことを定量確認。coverage signalsは監査用途に留め、無差別なrejectには使っていない。
+
+## 2026-09-22 — coverage audit false-positive cleanup
+
+- coverage監査のUnicode正規化をproduction quality gateと揃え、`◦C` / `℃` を同一measurementとして扱うよう修正。
+- `Universally Unique Identifier` の `unique` をordinal claimとして誤検出しないよう監査パターンを限定。
+- v271 coverageを再計算し、`invariantLoss=0`、`ordinalClaimRelationLoss=0`（5 rows）に修正。typecheck・lint・diff check成功。
+
+## 2026-09-23 — audit content-anchor signal
+
+- `score-translation-coverage.ts` に、技術識別子・略語・固有名詞候補のcontent-anchor保持率を追加。監査用signalでありproduction rejectには使用しない。
+- 一般的な文頭語を除外してv271を再計算。`contentAnchorLoss=2/5`、既存のinvariant/relation lossは0。長文semantic reviewの優先順位付けに使える状態にした。
+- typecheck・lint・diff check成功。
+
+## 2026-09-23 — full-report coverage triage
+
+- 既存全体report（167 ordinary rows、旧modelVersion混在）をcoverage監査。`lowSentenceCoverage=2`、`invariantLoss=19`、negation relation loss 12、contrast loss 6を抽出。
+- content-anchor lossは **140/167** と高く、翻訳による正当な日本語化も含むため、そのまま品質指標やreject条件にはできない。content-anchorはmanual reviewの候補補助に限定する。
+- 旧reportのため現行品質の代表値には使用せず、次回fresh held-outで再計測する。
+
+## 2026-09-23 — fresh v274 cross-field benchmark
+
+- 医療レビュー、機械学習レビュー、HCIガイドラインの3 PDFを各4 blocksでfresh実行。artifact: `translation-audit-v274-crossfield.{json,md}`。
+- ordinary-bodyは4件中1件 fallback（**25%**）。対象は医療レビューの長文で、server側quality rejection。HCI 2件と医療1件はaccept。COVID PDFはordinary-bodyではなくdamaged-extractionが中心。
+- coverage audit `translation-coverage-v274-crossfield.json` は4 ordinary rowsで invariant/relation loss 0。自動acceptでも長文の意味完全性は未証明のため、manual review対象として扱う。
+- サーバーは検証後に停止。5%目標は未達であり、この結果を小標本の診断値として保存。
+
+## 2026-09-23 — 作業停止点
+
+- ユーザー指示により、ここで作業を停止。
+- 翻訳サーバー（127.0.0.1:8765）とベンチマークプロセスは停止済み。次回はv274医療長文 `b-597d9067` のsegmenter unit_5 / unit_7原因確認から再開する。
+
+## 2026-09-23 — v274 unit診断（再開点）
+
+- `b-597d9067` をproductionと同じ `segment_for_translation` で再分割し、診断artifact `test-data/real-papers/reports/translation-unit-diagnostic-v274-b-597d9067.json` を保存。
+- 9 units（105〜327 chars）に分かれ、問題の `unit_5` / `unit_7` はそれぞれ239 / 218 charsの通常の統計・引用を含む本文で、citation-only fragmentではないことを確認。
+- 次は同一fixtureをtranslation serverへ投入し、quality rejectionの具体的な理由（invariant、negation、候補比較など）を `TRANSLATION_UNIT_DEBUG=1` で取得する。production変更は未実施。
+
+## 2026-09-23 — v275 citation-suffix boundary fix
+
+- 実サーバー（Transformers 4.57.6 / MADLAD 3B）で `b-597d9067` を再現。旧9 unitsのうち unit_5 / unit_7 は `implausibly_short`（モデルが文頭側の主張を落とす）で post-model fallbackになっていた。
+- 原因は `algorithm.23 Other` / `infection.30 Technology` のように、文末ピリオドと数字引用が空白なしで連結し、scannerが文境界を検出できなかったこと。citation fragmentやmicro-batch対応不具合ではない。
+- top-level scannerに、英字直後の `.1–3桁` + 空白 + 大文字/引用/箇条書き開始を、数字引用を前unitに残したまま文境界とする一般ルールを追加。`SEGMENTER_VERSION` を `semantic-v77` に更新。
+- 対象は11 unitsへ分割され、問題の239/218文字unitは133+105、176+41へ分離。実サーバー再実行で fallbackなし（`fallback_reason=null`）を確認。artifact `test-data/real-papers/reports/translation-unit-diagnostic-v274-b-597d9067.json` を更新。
+- `PYTHONPATH=. .venv/bin/python -m unittest tests.test_segmenter` は51件成功。未実施: extraction回帰、全体fresh benchmark、typecheck/lint。次回はこれらを確認し、他の数値・小数・年表記への副作用を監査する。
+- 追加で `tests.test_segmenter tests.test_madlad_quality` は88件成功、`npm run typecheck` / `npm run lint` / `git diff --check` も成功。全体fresh benchmarkとextraction回帰は未実施。
+- segmenter変更後に `tests.test_segmenter tests.test_madlad_quality` は88件、Vitest quality/model-version は145件、reading-order / extraction pipeline は98件すべて成功。cache identityのsegmenter versionもv77へ更新済み。
