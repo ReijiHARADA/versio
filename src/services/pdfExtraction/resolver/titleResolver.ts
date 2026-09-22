@@ -29,6 +29,30 @@ function looksLikeRotatedMasthead(candidate: RoleCandidate): boolean {
   return /^(?:arxiv\b|http\s*:\/\/|https\s*:\/\/)/i.test(text) || Math.abs(rotation) >= 45;
 }
 
+function looksLikeDocumentMasthead(text: string): boolean {
+  const t = text.trim();
+  return /^(?:doi\s*:\s*|https?:\/\/|www\.)/i.test(t)
+    || /\b(?:original\s+paper|research\s+article|journal\s+of|volume\s+\d+|\d{4}\s*\)\s*\d{1,4}\s*[:–-])\b/i.test(t)
+    || /^(?:www\.)?nature\.com\b/i.test(t)
+    || /^\d{1,4}\s*\([^)]{0,32}\)\s*\d{4}/.test(t)
+    || /\b\d{4}\b[\s\S]*\b\d{3,6}\s*$/.test(t);
+}
+
+function isPlausibleMetadataTitle(text: string): boolean {
+  const t = text.trim();
+  if (t.length < 12 || t.length > 220 || looksLikeDocumentMasthead(t)) return false;
+  if (/\.(?:pdf|docx?)$/i.test(t) || /^(?:[/\\]|https?:\/\/)/i.test(t)) return false;
+  return (t.match(/\S+/g) ?? []).length >= 3;
+}
+
+function looksLikeTruncatedTitle(text: string): boolean {
+  const t = text.trim();
+  if (/(?:\b(?:to|of|and|for|with|in|on|from|the|a|an))$/i.test(t)) return true;
+  if (/\b[A-Z][a-z]+,\s+[A-Z][A-Za-z.'-]+(?:\s+[A-Z][A-Za-z.'-]+){0,3}(?:,|\s|$)/.test(t) && t.length > 100) return true;
+  const half = Math.floor(t.length / 2);
+  return half >= 30 && (t.slice(0, half).trim() === t.slice(half).trim() || /^(\S.{28,}?)\s+\1$/s.test(t));
+}
+
 function joinTitleParts(left: string, right: string): string {
   if (/[-\u2010-\u2014]$/.test(left)) {
     // Preserve an intentional compound such as "On-" + "Body". A lowercase
@@ -117,6 +141,27 @@ export function resolveTitle(input: {
 
   const fused = fuseTitle(native, input.extra ?? [], input.grobidTitle);
   const meta = input.metadataTitle?.trim() || "";
+  // Native extraction occasionally promotes a DOI, journal masthead, or
+  // volume line as the title. When a non-garbage metadata title exists, it is
+  // stronger identity evidence than that obvious masthead candidate. This is
+  // format-agnostic and does not replace a normal native title.
+  const metadataMatchesNativePrefix = Boolean(meta && fused.text && fused.text.startsWith(meta) && /^\s*[:–—-]/.test(fused.text.slice(meta.length)));
+  const nativeMatchesMetadataPrefix = Boolean(meta && fused.text && meta.startsWith(fused.text.trim()) && fused.text.trim().length >= 40);
+  if (fused.text && meta && isPlausibleMetadataTitle(meta) && (looksLikeDocumentMasthead(fused.text) || looksLikeTruncatedTitle(fused.text) || metadataMatchesNativePrefix || nativeMatchesMetadataPrefix)) {
+    return {
+      text: meta,
+      confidence: Math.max(0.55, fused.confidence * 0.8),
+      evidence: [
+        ...fused.evidence,
+        {
+          source: "pdf-native",
+          label: "title",
+          confidence: 0.62,
+          reason: "native candidate was a document masthead; metadata identity fallback",
+        },
+      ],
+    };
+  }
   if (!fused.text && meta && !isGarbageTitle(meta)) {
     return {
       text: meta,

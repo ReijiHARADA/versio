@@ -44,7 +44,7 @@ def _allowed_unprotected_retry_value(item: str) -> bool:
         # Keep the grammar deliberately narrow: no prose or statistical values.
         return bool(
             re.fullmatch(
-                r"\s*\(?\s*(?:fig(?:ure)?s?|table|tbl)\.?\s*\d+(?:\s*[a-z])?\s*\)?\s*",
+                r"\s*\(?\s*(?:fig(?:ure)?s?|table|tbl)\.?\s*\d+(?:\s*[a-z]|\s*\([a-z]\))?\s*\)?\s*",
                 item,
                 flags=re.IGNORECASE,
             )
@@ -78,6 +78,13 @@ def _allowed_unprotected_retry_value(item: str) -> bool:
 
     def is_supplementary_reference(item: str) -> bool:
         return bool(re.fullmatch(r"\s*SI\s+Appendix\s*", item, flags=re.IGNORECASE))
+
+    def is_figure_table_reference(item: str) -> bool:
+        return bool(re.fullmatch(
+            r"\s*(?:Fig(?:ure)?\.?|Table|Tbl\.)\s+\d+(?:\s*\([A-Za-z]\)|[A-Za-z])?\s*",
+            item,
+            flags=re.IGNORECASE,
+        ))
 
     def is_section_reference(item: str) -> bool:
         return bool(re.fullmatch(
@@ -127,11 +134,19 @@ def unprotected_identifier_retry_values(missing: list[str]) -> list[str]:
     def is_supplementary_reference(item: str) -> bool:
         return bool(re.fullmatch(r"\s*SI\s+Appendix\s*", item, flags=re.IGNORECASE))
 
+    def is_figure_table_reference(item: str) -> bool:
+        return bool(re.fullmatch(
+            r"\s*(?:Fig(?:ure)?\.?|Table|Tbl\.)\s+\d+(?:\s*\([A-Za-z]\)|[A-Za-z])?\s*",
+            item,
+            flags=re.IGNORECASE,
+        ))
+
     identifiers = [
         item for item in missing
         if is_identifier(item)
         or is_section_reference(item)
         or is_supplementary_reference(item)
+        or is_figure_table_reference(item)
     ]
     if not identifiers:
         return []
@@ -141,6 +156,7 @@ def unprotected_identifier_retry_values(missing: list[str]) -> list[str]:
         is_identifier(item)
         or is_section_reference(item)
         or is_supplementary_reference(item)
+        or is_figure_table_reference(item)
         or is_numeric_citation(item)
         or is_inline_numeric_citation(item)
         for item in missing

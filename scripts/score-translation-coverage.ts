@@ -6,7 +6,7 @@ const root = path.join(process.cwd());
 const input = process.env.TRANSLATION_AUDIT_INPUT
   ? path.resolve(root, process.env.TRANSLATION_AUDIT_INPUT)
   : path.join(root, "test-data/real-papers/reports/translation-audit.json");
-const output = path.join(root, "test-data/real-papers/reports/translation-coverage-v68.json");
+const output = path.join(root, "test-data/real-papers/reports/translation-coverage-v77.json");
 const report = JSON.parse(fs.readFileSync(input, "utf8")) as { papers: Array<{ paper: { id: string }; rows: any[] }> };
 
 const sourceSentences = (text: string) => Math.max(1, (text.match(/[.!?](?:["')\]]+)?(?=\s|$)/g) ?? []).length);
@@ -80,7 +80,7 @@ const rows = report.papers.flatMap(({ paper, rows }) => rows
   }));
 
 const summary = {
-  version: "3b-mt-v5-semantic-v68-audit-relations",
+  version: "3b-mt-v6-transformers-4.57.6-quality-v77-audit-relations",
   createdAt: new Date().toISOString(),
   rows: rows.length,
   lowSentenceCoverage: rows.filter((row) => row.sourceSentenceCount >= 3 && row.sentenceCoverage < 0.5).length,

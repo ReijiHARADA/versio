@@ -201,6 +201,43 @@ export function readsBeforeRelations(orderedIds: string[]): CanonicalRelation[] 
 }
 
 /**
+ * Link an unfinished paragraph to the first physical paragraph on the next
+ * page. This is deliberately narrower than a generic adjacency merge: both
+ * nodes must be body paragraphs, the source must be syntactically open, and
+ * native geometry must place the pair at a page boundary. Keeping the
+ * relation in the canonical layer lets projection preserve pageStart,
+ * pageEnd, and all bounding boxes while translation receives one logical unit.
+ */
+export function pageBoundaryContinuationRelations(
+  nodes: CanonicalNode[],
+  layouts: PageColumnLayout[],
+): CanonicalRelation[] {
+  const relations: CanonicalRelation[] = [];
+  for (let i = 0; i + 1 < nodes.length; i += 1) {
+    const previous = nodes[i];
+    const next = nodes[i + 1];
+    if (previous.role !== "paragraph" || next.role !== "paragraph") continue;
+    if (!previous.text || !next.text || previous.pageEnd + 1 !== next.pageStart) continue;
+    if (previous.text.trim().length < 120 || /[.!?:]\s*$/.test(previous.text.trim())) continue;
+    if (!/^(?:[a-z(]|(?:and|or|but|which|that|where|while|because|although|including)\b)/i.test(next.text.trim())) continue;
+    const pageLayout = layouts.find((layout) => layout.page === previous.pageEnd);
+    if (!pageLayout) continue;
+    const previousTail = previous.boundingBoxes.at(-1);
+    const nextStart = next.boundingBoxes[0];
+    if (!previousTail || !nextStart) continue;
+    if (previousTail.y + previousTail.height <= pageLayout.pageHeight * 0.55) continue;
+    const nextLayout = layouts.find((layout) => layout.page === next.pageStart);
+    if (nextLayout && nextStart.y >= nextLayout.pageHeight * 0.42) continue;
+    const compatibleColumns = previous.column === next.column
+      || (previous.column === "right" && next.column === "left")
+      || previous.column === "single";
+    if (!compatibleColumns || !isSentenceContinuation(previous.text, next.text)) continue;
+    relations.push({ kind: "CONTINUES", from: previous.id, to: next.id, score: 0.88 });
+  }
+  return relations;
+}
+
+/**
  * Link a paragraph that resumes below a floated table to its unfinished
  * cross-column source paragraph. The table and caption remain independent
  * canonical nodes. This relation is emitted only when the source text is

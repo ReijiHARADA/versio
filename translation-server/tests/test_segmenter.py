@@ -371,6 +371,17 @@ class SegmenterTests(unittest.TestCase):
         self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
         self.assertTrue(units[1].model_input.startswith("They found that interactive jewellery"))
 
+    def test_rescue_hence_clause_keeps_hypothesis_consequence(self) -> None:
+        source = (
+            "We hypothesized that nudge effectiveness would not be hindered by attention to the nudge, "
+            "hence that the nudge is also effective when people pay attention to the nudge either implicitly or explicitly."
+        )
+        units = rescue_units_for_translation(source)
+        self.assertEqual(len(units), 2)
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
+        self.assertTrue(units[0].model_input.endswith("."))
+        self.assertTrue(units[1].model_input.startswith("Hence that"))
+
     def test_rescue_if_so_semicolon_keeps_source_round_trip(self) -> None:
         source = (
             "As viewers we must consider whether we believe there is a gold ball within the piece; "
@@ -459,4 +470,15 @@ class RescueWhileConcessiveTests(unittest.TestCase):
         self.assertEqual(len(units), 2)
         self.assertTrue(units[0].model_input.startswith("This offers a better connection"))
         self.assertTrue(units[1].model_input.startswith("It still approximates"))
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
+
+    def test_rescue_accepts_proper_noun_after_concessive_comma(self) -> None:
+        source = (
+            "While the correct answer would be the smaller hospital "
+            "(due to the larger variance of smaller samples), GPT-3, just like people, "
+            "thought that the probability was about equal."
+        )
+        units = rescue_units_for_translation(source)
+        self.assertEqual(len(units), 2)
+        self.assertTrue(units[1].text.startswith("GPT-3, just like people"))
         self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))

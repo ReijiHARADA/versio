@@ -52,4 +52,11 @@ describe("translation audit partial source fallback detection", () => {
 
     expect(isPlausibleJaTranslation(translation, source)).toBe(true);
   });
+
+  it("does not reject a frequently repeated technical term used in Japanese prose", () => {
+    const source = "Bluetooth advertising uses Bluetooth packets. Bluetooth devices broadcast data through Bluetooth advertising mode.";
+    const translation = "Bluetooth広告ではBluetoothパケットを使用する。BluetoothデバイスはBluetooth広告モードを通じてデータを送信する。";
+
+    expect(evaluateJaTranslation(translation, source).reasons).not.toContain("untranslated repeated source label");
+  });
 });

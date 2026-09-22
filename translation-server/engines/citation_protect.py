@@ -26,6 +26,17 @@ _COMMON_TITLE_CASE_WORDS = {
     "Which", "While", "Within",
 }
 
+# Adjacent model/identifier lists are one factual unit. Protecting each item
+# separately can produce several placeholders in a short clause (`BERT,
+# DeBERTa, and GPT`), which greedy decoding is prone to drop or reorder.
+# Keep the list atomic while leaving surrounding prose available to translate.
+IDENTIFIER_GROUP_RE = re.compile(
+    r"(?<![A-Za-z])"
+    r"(?:(?:[A-Z]{2,}[A-Za-z0-9-]*|[A-Za-z]*[a-z][A-Z][A-Za-z0-9]*)\s*,\s*){1,}"
+    r"(?:and\s+|or\s+)?(?:[A-Z]{2,}[A-Za-z0-9-]*|[A-Za-z]*[a-z][A-Z][A-Za-z0-9]*)"
+    r"(?![A-Za-z0-9])"
+)
+
 
 def _repeated_title_case_matches(text: str) -> list[re.Match[str]]:
     matches = list(REPEATED_TITLE_CASE_TOKEN_RE.finditer(text))
@@ -38,6 +49,22 @@ def _repeated_title_case_matches(text: str) -> list[re.Match[str]]:
         if counts[match.group(0)] >= 2
         and match.group(0) not in _COMMON_TITLE_CASE_WORDS
     ]
+
+
+def _is_example_parenthetical_identifier(text: str, match: re.Match[str]) -> bool:
+    """Leave ordinary model-name examples readable instead of placeholdering.
+
+    Acronyms inside ``(e.g., BERT, DeBERTa)`` are already checked by the
+    post-decode scientific invariant gate. Replacing each with a placeholder
+    makes a short example list unnecessarily fragile, especially when the
+    sentence contains another example list later on.
+    """
+    opening = text.rfind("(", 0, match.start())
+    closing = text.find(")", match.end())
+    if opening < 0 or closing < 0:
+        return False
+    prefix = text[opening:match.start()]
+    return bool(re.search(r"\be\.g\.,?\s*$", prefix, re.IGNORECASE))
 
 # Numeric citations only: [8], [12], [1, 3], [12,13], [1-4], [1–4], [1, 3–5, 8]
 CITATION_RE = re.compile(
@@ -119,6 +146,14 @@ AUTHOR_ET_AL_SUPERSCRIPT_RE = re.compile(
 # complete label so a decoder cannot silently turn a cross-reference into
 # ordinary prose or drop it during semantic rescue segmentation.
 SUPPLEMENTARY_APPENDIX_RE = re.compile(r"\bSI\s+Appendix\b")
+
+# Inline footnote plus supplementary-material pointer (``17 (Hospital, see SI
+# Appendix)``) is one cross-reference unit. Keeping its pieces separate makes
+# MADLAD drop one placeholder even when the sentence is otherwise translated.
+SUPPLEMENTARY_CITATION_GROUP_RE = re.compile(
+    r"\b\d{1,3}\s*\([^()]{0,180}\bSI\s+Appendix\b[^()]{0,180}\)",
+    re.IGNORECASE,
+)
 
 # Cross-references to numbered sections/appendices are scientific structure,
 # not prose. Keeping the label and its number atomic prevents a decoder from
@@ -296,6 +331,7 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
         + list(INLINE_NUMERIC_CITATION_RE.finditer(text))
         + list(NARRATIVE_AUTHOR_YEAR_CITATION_RE.finditer(text))
         + list(AUTHOR_ET_AL_SUPERSCRIPT_RE.finditer(text))
+        + list(SUPPLEMENTARY_CITATION_GROUP_RE.finditer(text))
         + list(SUPPLEMENTARY_APPENDIX_RE.finditer(text))
         + list(FIGURE_TABLE_CROSS_REFERENCE_RE.finditer(text))
         + list(SECTION_CROSS_REFERENCE_RE.finditer(text))
@@ -303,6 +339,7 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
         + list(AUTHOR_YEAR_CITATION_RE.finditer(text))
         + list(SCIENTIFIC_PARENTHETICAL_RE.finditer(text))
         + _terminal_nested_statistical_parentheticals(text)
+        + list(IDENTIFIER_GROUP_RE.finditer(text))
         + list(SCIENTIFIC_TOKEN_RE.finditer(text))
         + _repeated_title_case_matches(text)
     )
@@ -320,6 +357,10 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
             match.group(0).isupper()
             and re.match(r"[A-Z]{2,8}(?=\s*[-‐‑–—]\s*\d)", text[match.start():])
         )
+    ]
+    matches = [
+        match for match in matches
+        if not _is_example_parenthetical_identifier(text, match)
     ]
     # The acknowledgment expression wraps its names in a leading sentence
     # context. Protect only that name-list subspan, leaving the thanks clause

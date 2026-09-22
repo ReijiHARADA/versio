@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { evaluateJaTranslation, isPlausibleJaTranslation } from "../src/services/translation/quality.ts";
+import { evaluateJaTranslation, isCascadeQualityAcceptable } from "../src/services/translation/quality.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const input = process.argv[2] ?? "test-data/real-papers/reports/translation-audit-v59-heldout-9papers.json";
@@ -32,13 +32,13 @@ const incomplete = rows.filter((row: any) => excerptReason(row));
 const eligibleRows = rows.filter((row: any) => !excerptReason(row));
 const generated = eligibleRows.filter((row: any) => typeof row.translation === "string" && row.translation.length > 0);
 const strictAccept = (row: any): boolean => {
-  if (!isPlausibleJaTranslation(row.translation, row.source)) return false;
+  if (!isCascadeQualityAcceptable(row.translation, row.source)) return false;
   // Candidate cascade paths use the full semantic quality result, not only
   // the legacy plausibility boolean. Keep the audit recheck aligned with the
   // production opt-in engine so meta-commentary, invariant drift, and scope
   // risks cannot be counted as accepted merely because Japanese characters
   // are present.
-  return evaluateJaTranslation(row.translation, row.source).reasons.length === 0;
+  return true;
 };
 const changed = generated.filter((row: any) => row.wouldAcceptTranslation !== strictAccept(row));
 const body = eligibleRows.filter((row: any) => row.sourceCategory === "ordinary-body-prose");
