@@ -299,6 +299,18 @@ describe("isPlausibleJaTranslation", () => {
     expect(evaluateJaTranslation(output, source).reasons).toEqual([]);
   });
 
+  it("treats the PDF ring-above Celsius glyph as equivalent to degree Celsius", () => {
+    const source = "Measured temperature remained stable within ±0.32 ◦C during rest.";
+    const output = "安静時の測定温度は±0.32℃以内で安定していた。";
+    expect(evaluateJaTranslation(output, source).reasons).toEqual([]);
+  });
+
+  it("normalizes ring-above Fahrenheit glyphs without changing numeric facts", () => {
+    const source = "The reference temperature was 98.6 ◦F.";
+    const output = "基準温度は98.6°Fであった。";
+    expect(evaluateJaTranslation(output, source).reasons).toEqual([]);
+  });
+
   it("accepts acronyms adjacent to Japanese text", () => {
     const source = "The I2C bus was used to connect the sensor.";
     const output = "I2Cバスを用いてセンサーを接続した。";
@@ -696,6 +708,13 @@ describe("isPlausibleJaTranslation", () => {
   it("rejects narrowing an explicit three-or-more-group comparison to two groups", () => {
     const source = "None of the groups differed significantly in age. The study compared three groups.";
     const output = "両群間に年齢の有意差はなかった。3群を比較した。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("collective group comparison narrowed to two groups");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("rejects binary wording when a collective group statement has no two-group qualifier", () => {
+    const source = "None of the groups differed significantly in their memory performance.";
+    const output = "両群の記憶性能に有意差はなかった。";
     expect(evaluateJaTranslation(output, source).reasons).toContain("collective group comparison narrowed to two groups");
     expect(isPlausibleJaTranslation(output, source)).toBe(false);
   });

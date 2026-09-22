@@ -237,6 +237,17 @@ class SegmenterTests(unittest.TestCase):
         self.assertTrue(units[1].text.startswith("(2) The positive effects"))
         self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
 
+    def test_sentence_final_numeric_citation_keeps_following_claim_independent(self) -> None:
+        source = (
+            "For example, a clinical practice guideline combined a screening checklist and a decision support algorithm.23 "
+            "Other physical tools were also included in this categorisation."
+        )
+        units = segment_for_translation(source)
+        self.assertEqual(len(units), 2)
+        self.assertTrue(units[0].text.endswith("algorithm.23"))
+        self.assertTrue(units[1].text.startswith("Other physical tools"))
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
+
     def test_complete_sentences_are_independent_translation_units(self) -> None:
         source = (
             "From the above can be concluded that neither of the design proposals uses state-of-the-art technology "

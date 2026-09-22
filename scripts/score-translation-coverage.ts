@@ -6,7 +6,9 @@ const root = path.join(process.cwd());
 const input = process.env.TRANSLATION_AUDIT_INPUT
   ? path.resolve(root, process.env.TRANSLATION_AUDIT_INPUT)
   : path.join(root, "test-data/real-papers/reports/translation-audit.json");
-const output = path.join(root, "test-data/real-papers/reports/translation-coverage-v77.json");
+const output = process.env.TRANSLATION_COVERAGE_OUTPUT
+  ? path.resolve(root, process.env.TRANSLATION_COVERAGE_OUTPUT)
+  : path.join(root, "test-data/real-papers/reports/translation-coverage-v77.json");
 const report = JSON.parse(fs.readFileSync(input, "utf8")) as { papers: Array<{ paper: { id: string }; rows: any[] }> };
 
 const sourceSentences = (text: string) => Math.max(1, (text.match(/[.!?](?:["')\]]+)?(?=\s|$)/g) ?? []).length);
@@ -20,6 +22,8 @@ const preservedInvariantCount = (row: any) => {
   const normalize = (value: string) => value
     .normalize("NFKC")
     .replace(/[‐‑‒–—−]/g, "-")
+    .replace(/◦\s*([CF])/gi, "°$1")
+    .replace(/℃/g, "°C")
     .replace(/\s+/g, "")
     .toLocaleLowerCase("en-US");
   const normalizedTranslation = normalize(translated);
@@ -35,12 +39,31 @@ const translationHasContrast = (text: string) => /(?:しかし|だが|一方|対
 // `not the first`, `only`, or `the last`). These are easy to omit while
 // still producing fluent Japanese, so they need manual review rather than
 // an automatic reject rule.
-const sourceHasOrdinalClaim = (text: string) => /\b(?:first|second|third|last|only|unique|sole|initial|final)\b/i.test(text);
+const sourceHasOrdinalClaim = (text: string) => /\b(?:first|second|third|last|only|unique|sole|initial|final)\b/i.test(
+  text.replace(/universally\s+unique\s+identifier/gi, ""),
+);
 const translationHasOrdinalClaim = (text: string) => /(?:最初|第一|第\s*[一1二2三3]|二番目|最後|唯一|ただ一つ|初め|初期|最終|のみ|だけ)/.test(text);
 // Conditions and causal qualifications are easy to omit while retaining a
 // fluent sentence. Keep this audit-only and high precision.
 const sourceHasCondition = (text: string) => /\b(?:if|unless|whether|provided that|depending on|because|therefore|thus|so that)\b/i.test(text);
 const translationHasCondition = (text: string) => /(?:もし|場合|〜なら|ならば|ない限り|によって|応じて|ため|ので|したがって|そのため|ように|かどうか|かもしれ|可能性|防ぐ|妨げ|意見が分かれ)/.test(text);
+// Audit-only lexical anchors. These are intentionally limited to technical
+// identifiers, acronyms, and proper-name-like tokens that translators often
+// preserve. They are evidence for manual review, never an automatic reject:
+// ordinary terms may be legitimately transliterated or translated.
+const contentAnchors = (source: string): string[] => {
+  const tokens = source.match(/\b(?:[A-Z]{2,}[A-Za-z0-9-]*|[A-Z][A-Za-z]{3,}(?:-[A-Za-z0-9]+)*)\b/g) ?? [];
+  const stop = new Set([
+    "This", "That", "These", "Those", "The", "When", "After", "Before", "Given", "Overall", "However",
+    "Additionally", "Using", "Further", "Advertising", "Operating", "Each", "Universally", "Unique", "Identifier",
+    "Data", "Participants", "Then", "Following", "There", "Upon", "They", "Methods", "Specifically",
+  ]);
+  return [...new Set(tokens.filter((token) => !stop.has(token)))];
+};
+const anchorPreserved = (anchors: string[], translation: string): string[] => {
+  const normalized = translation.normalize("NFKC").replace(/\s+/g, "").toLocaleLowerCase("en-US");
+  return anchors.filter((anchor) => normalized.includes(anchor.normalize("NFKC").toLocaleLowerCase("en-US")));
+};
 
 const rows = report.papers.flatMap(({ paper, rows }) => rows
   .filter((row) => isOrdinaryBody(row) && row.translation)
@@ -50,6 +73,8 @@ const rows = report.papers.flatMap(({ paper, rows }) => rows
     const sourceCount = sourceSentences(source);
     const outputCount = japaneseSentences(translation);
     const ratio = translation.replace(/\s+/g, "").length / Math.max(1, source.replace(/\s+/g, "").length);
+    const anchors = contentAnchors(source);
+    const preservedAnchors = anchorPreserved(anchors, translation);
     return {
       paperId: paper.id,
       blockId: row.blockId,
@@ -62,6 +87,8 @@ const rows = report.papers.flatMap(({ paper, rows }) => rows
       sentenceCoverage: Number(Math.min(1, outputCount / sourceCount).toFixed(3)),
       invariantCount: invariantCount(row),
       preservedInvariantCount: preservedInvariantCount(row),
+      contentAnchors: anchors,
+      preservedContentAnchors: preservedAnchors,
       relations: {
         sourceNegation: sourceHasNegation(source),
         translationNegation: translationHasNegation(translation),
@@ -86,6 +113,7 @@ const summary = {
   lowSentenceCoverage: rows.filter((row) => row.sourceSentenceCount >= 3 && row.sentenceCoverage < 0.5).length,
   lowLengthRatio: rows.filter((row) => row.sourceChars >= 400 && row.lengthRatio < 0.28).length,
   invariantLoss: rows.filter((row) => row.invariantCount > row.preservedInvariantCount).length,
+  contentAnchorLoss: rows.filter((row) => row.contentAnchors.length > 0 && row.preservedContentAnchors.length < row.contentAnchors.length).length,
   negationRelationLoss: rows.filter((row) => !row.relations.negationPreserved).length,
   contrastRelationLoss: rows.filter((row) => !row.relations.contrastPreserved).length,
   ordinalClaimRelationLoss: rows.filter((row) => !row.relations.ordinalClaimPreserved).length,

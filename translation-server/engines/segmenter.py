@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 from .citation_protect import protected_span_mask
 
-SEGMENTER_VERSION = "semantic-v76"
+SEGMENTER_VERSION = "semantic-v77"
 _ABBREVIATIONS = {"e.g.", "i.e.", "et al.", "fig.", "no.", "cf.", "dr.", "mr.", "ms.", "vs."}
 
 
@@ -112,6 +112,31 @@ def _is_abbreviation(text: str, index: int) -> bool:
     return bool(token and token.group(1).lower() in _ABBREVIATIONS) or bool(re.search(r"\b[A-Z]\.$", prefix))
 
 
+def _sentence_end_after_numeric_citation(text: str, period_index: int) -> int | None:
+    """Return the end of a sentence-final superscript citation, if present.
+
+    PDF text commonly emits a sentence period and its numeric citation without
+    a space (``algorithm.23 Other``).  Treating the period as ordinary prose
+    leaves both sentences in one translation unit, which can make the model
+    drop the first claim.  Decimal values are excluded by requiring a letter
+    before the period and an uppercase/quoted sentence starter after the
+    citation.
+    """
+    if period_index <= 0 or not text[period_index - 1].isalpha():
+        return None
+    match = re.match(r"\.(\d{1,3})(?=\s+[^\s])", text[period_index:])
+    if not match:
+        return None
+    after = period_index + match.end()
+    starter = re.search(r"\S", text[after:])
+    if not starter:
+        return None
+    char = text[after + starter.start()]
+    if not (char.isupper() or char in '“‘"\'•‣▪∙'):
+        return None
+    return after
+
+
 def _advance_quote_state(quote: str | None, char: str) -> str | None:
     """Track straight and typographic quotation pairs without leaking state.
 
@@ -160,6 +185,11 @@ def _boundary_positions(text: str) -> list[int]:
         elif char in ".!?" and not (paren or square or brace):
             if char == "." and (_is_decimal(text, i) or _is_abbreviation(text, i)):
                 continue
+            if char == ".":
+                citation_end = _sentence_end_after_numeric_citation(text, i)
+                if citation_end is not None:
+                    positions.append(citation_end)
+                    continue
             if i + 1 == len(text) or text[i + 1].isspace():
                 positions.append(i + 1)
     return positions
