@@ -304,6 +304,45 @@ function hasUntranslatedForeignProse(output: string): boolean {
   });
 }
 
+// A cascade candidate may otherwise pass all numeric/citation checks while
+// leaving one ordinary English lexical item embedded in Japanese (for example
+// `precedent`).  Keep this stricter check cascade-only: proper nouns and
+// technical identifiers are common in accepted academic Japanese and must not
+// make the primary translation fail.
+const CASCADE_LATIN_STOPWORDS = new Set([
+  "about", "after", "also", "among", "because", "before", "between",
+  "could", "during", "every", "first", "from", "given", "have", "into",
+  "more", "most", "other", "over", "same", "such", "than", "that",
+  "their", "these", "they", "this", "through", "under", "using", "were",
+  "which", "while", "with", "would",
+]);
+
+function hasUntranslatedCascadeLexeme(source: string, output: string): boolean {
+  if (!KANA.test(output)) return false;
+  const sourceWords = source.match(/\b[a-z][a-z'-]{6,}\b/g) ?? [];
+  const outputWords = output.match(/\b[a-z][a-z'-]{6,}\b/gi) ?? [];
+  const outputSet = new Set(outputWords.map((word) => word.toLowerCase()));
+  return sourceWords.some((word) => {
+    const lower = word.toLowerCase();
+    if (CASCADE_LATIN_STOPWORDS.has(lower) || !outputSet.has(lower)) return false;
+    // Capitalized source terms are commonly names, product names, or method
+    // labels. Lowercase lexical items are the higher-confidence signal.
+    if (word !== lower) return false;
+    const occurrences = outputWords.filter((candidate) => candidate.toLowerCase() === lower).length;
+    return occurrences === 1;
+  });
+}
+
+function hasCascadeSentenceCompression(source: string, output: string): boolean {
+  const sourceSentenceCount = (source.match(/[.!?](?:\s|$)/g) ?? []).length;
+  // Japanese prose normally places no whitespace after `。`; count the
+  // punctuation itself rather than requiring an English-style separator.
+  const outputSentenceCount = (output.match(/[。！？]/g) ?? []).length;
+  // Japanese may legitimately join short English sentences, so only apply
+  // this to long multi-sentence units and require a substantial loss.
+  return sourceSentenceCount >= 8 && outputSentenceCount < sourceSentenceCount * 0.6;
+}
+
 function hasUntranslatedSourceLabel(source: string, output: string): boolean {
   const sourceWords = source.match(/\b[A-Za-z]{8,}\b/g) ?? [];
   const counts = new Map<string, number>();
@@ -353,7 +392,7 @@ const NON_TECHNICAL_UPPERCASE_WORDS = new Set([
   "WITH",
 ]);
 
-export const TRANSLATION_QUALITY_VERSION = "quality-v14";
+export const TRANSLATION_QUALITY_VERSION = "quality-v16";
 
 export type TranslationQuality = {
   score: number;
@@ -908,6 +947,8 @@ export function isPlausibleJaTranslation(output: string, source: string): boolea
  */
 export function isCascadeQualityAcceptable(output: string, source: string): boolean {
   if (!isPlausibleJaTranslation(output, source)) return false;
+  if (hasUntranslatedCascadeLexeme(source, output)) return false;
+  if (hasCascadeSentenceCompression(source, output)) return false;
   const reasons = evaluateJaTranslation(output, source).reasons;
   const relationOnly = reasons.length > 0 && reasons.every((reason) =>
     / relation missing$/.test(reason)

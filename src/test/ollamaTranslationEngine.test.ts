@@ -57,6 +57,17 @@ describe("OllamaTranslationEngine", () => {
     expect(provider.complete).not.toHaveBeenCalled();
   });
 
+  it("rejects an alternate candidate with an untranslated ordinary lexeme", async () => {
+    const provider = providerReturning("先行研究は評価の precedent を確立した。");
+    const engine = new OllamaTranslationEngine(primaryThatFails(), provider);
+    await expect(engine.translate(
+      "Prior work established a precedent for evaluating the interaction.",
+      "en",
+      "ja",
+    )).rejects.toThrow("primary failed");
+    expect(provider.complete).toHaveBeenCalledOnce();
+  });
+
   it("keeps a successful primary result without contacting Ollama", async () => {
     const primary = primaryThatFails();
     primary.translate = vi.fn(async () => result);
