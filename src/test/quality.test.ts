@@ -1268,4 +1268,22 @@ describe("isRetryableTranslationFailure", () => {
     expect(isCascadeQualityAcceptable("サンプルは小さかったが、推定値は安定していた。", source)).toBe(true);
     expect(isCascadeQualityAcceptable("sample", source)).toBe(false);
   });
+
+  it("rejects a cascade candidate that leaves an ordinary lowercase source lexeme", () => {
+    const source = "Prior work established a precedent for evaluating the interaction.";
+    const output = "先行研究はインタラクションを評価する precedent を確立した。";
+    expect(isCascadeQualityAcceptable(output, source)).toBe(false);
+  });
+
+  it("allows source product and method names to remain in a cascade candidate", () => {
+    const source = "The SpeeChin prototype used a Thermal Earring sensor.";
+    const output = "SpeeChinプロトタイプはThermal Earringセンサーを使用した。";
+    expect(isCascadeQualityAcceptable(output, source)).toBe(true);
+  });
+
+  it("rejects a long cascade candidate that drops most source sentences", () => {
+    const source = "First result was positive. Second result was stable. Third result was replicated. Fourth result was significant. Fifth result was measured. Sixth result was confirmed. Seventh result was reported. Eighth result was reviewed.";
+    const output = "第1の結果は良好でした。第2の結果も安定していました。第3の結果が再現されました。";
+    expect(isCascadeQualityAcceptable(output, source)).toBe(false);
+  });
 });

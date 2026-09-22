@@ -9762,3 +9762,80 @@ Refined the mixed-script decoder guard to compare suspicious Latin fragments aga
 - `PYTHONPATH=. .venv/bin/python -m unittest tests.test_segmenter` は51件成功。未実施: extraction回帰、全体fresh benchmark、typecheck/lint。次回はこれらを確認し、他の数値・小数・年表記への副作用を監査する。
 - 追加で `tests.test_segmenter tests.test_madlad_quality` は88件成功、`npm run typecheck` / `npm run lint` / `git diff --check` も成功。全体fresh benchmarkとextraction回帰は未実施。
 - segmenter変更後に `tests.test_segmenter tests.test_madlad_quality` は88件、Vitest quality/model-version は145件、reading-order / extraction pipeline は98件すべて成功。cache identityのsegmenter versionもv77へ更新済み。
+- `semantic-v77` のfresh real-paper benchmark（`npm run bench:real-paper-translation -- --limit 12 --resume`）を同一serverで実行中。論文単位のcheckpointは保存されており、完了後に `translation-audit.json` の世代と v274 を比較する。server/sessionは継続中。
+
+## 2026-09-23 — v275 fresh benchmark checkpoint / triage
+
+- 52 selected papersのうち51 papers（612 rows）が実行完了。`precious-materials` はPDF未取得で0 rowsのため、production metricには含めない。report本体は `complete=false` のため、51-paper artifact `translation-audit-v275-semantic-v77-partial.json` を別保存。
+- 51-paper scopeのordinary-bodyは244 rows、fallback 70（28.7%）、うちpre-model 3 / post-model 67。5%目標は未達。
+- post-model ordinary fallbackの暫定分類: model omission/quality rejection 24、invariant preservation 16、untranslated source span 9、protected-token restore 8、semantic relation gate 3、other 7。詳細 `translation-v275-failure-triage.json`。
+- v77で直った医療長文の特定例とは別に、広域corpusではMADLADの省略、科学トークン復元、保守的な意味ゲートが残る。次は分類ごとに、正常翻訳をrejectせずfallbackを下げるselective cascade / 入力単位改善を評価する。無差別なgate緩和はしない。
+- benchmark終了後、translation serverは停止済み。
+- 集計artifact `translation-audit-v275-semantic-v77-partial.{json,md}` を追加。ordinary-body fallbackは70/244（28.7%）で、post-model 67件。現目標5%は明確に未達であり、次段階はモデル省略・invariant・placeholder復元を対象にした選択的cascade評価が必要。
+- 代替モデルの切り分けとして、同じpost-model fallback本文1件をローカル `qwen2.5:7b` に投入。出力にも未翻訳/不自然な `demographic`、情報欠落、意味ずれが残り、無条件cascade採用は不可と判定。artifact `alternate-model-v275-qwen7b-single.json`。モデル変更だけで5%目標を保証できないため、候補選択にはsource invariantsとmanual semantic reviewが必要。
+- 追加で `qwen2.5:14b` をpost-model fallback 5件に同一条件で評価。4件は概ね採用候補、1件は `precedent` / gesture terminologyの未翻訳・語義問題（severity 2）を確認。artifact `alternate-model-v275-qwen14b-sample.json`。14Bは候補になり得るが、現時点の5件だけではproduction cascade採用根拠にならない。
+
+## 2026-09-23 — 作業停止チェックポイント
+
+- ユーザー指示により、ここで実行を停止。
+- `127.0.0.1:8765/health` は接続不可で、translation server は停止済み。
+- benchmark / vite-node / uvicorn の実行プロセスは残っていない。
+- 次回再開点は、既存 selective cascade の実装・設定・テストを確認し、qwen2.5:14b の候補選択を十分なサンプルで監査すること。現時点の ordinary-body fallback は 70/244 (28.7%) で、5%目標は未達。
+
+## 2026-09-23 — v276 Qwen14 fallback-candidate audit
+
+- With the translation server still stopped, replayed 8 clean ordinary-body rows that MADLAD rejected post-model through local `qwen2.5:14b` (temperature 0, same conservative academic prompt, no production routing). Artifact: `test-data/real-papers/reports/alternate-model-v276-qwen14b-8fallbacks.json`.
+- Manual review: 7/8 candidate outputs were severity 0–1 and retained salient relations in the visible source; 1/8 (`dont-mind-me:b-2089b50e`) was severity 2 because `precedent` remained untranslated and gesture-input terminology was malformed. Candidate unsafe rate in this purposive sample is 12.5%; it is not safe for automatic cascade yet.
+- Several long rows end at the same extracted source boundary, so apparent truncation is an extraction/unit issue rather than evidence of a complete-sentence model rescue. Qwen14 is promising for selective rescue only after source completeness and a stricter candidate gate are addressed. No production code or model route changed.
+
+- Rechecked v276 candidate outputs through the current `evaluateJaTranslation` / `isCascadeQualityAcceptable` gate. The known severity-2 `dont-mind-me:b-2089b50e` is rejected automatically for missing `Figure 1a`, but the other semantic risks pass; therefore the gate catches representation loss, not terminology/meaning drift. This supports continued manual/held-out review before enabling cascade.
+
+## 2026-09-23 — v277 cascade-only untranslated lexeme guard
+
+- Added a conservative cascade-only check for an isolated lowercase English lexical item (7+ letters) left inside otherwise Japanese output. It does not affect primary MADLAD acceptance and excludes capitalized product/method names plus common function words.
+- This targets the v276 `precedent` failure without a word blacklist. Added positive/negative regression tests. Quality/cache identity advanced from `quality-v14` to `quality-v15` so prior candidate decisions are not reused.
+- Validation: quality/model-version/cascade tests 150 passed; typecheck, lint, and diff check passed. No server or app build was run.
+- Full Vitest after v277: 67 files / 494 tests passed. The existing optional PDF.js `canvas.node` warnings remain non-fatal. No translation server or `.app` build was run.
+- Python translation-server suite after v277: 185 tests passed. No server process was started.
+- Replayed all 8 v276 outputs through v277: 7 remain cascade-eligible under automatic checks; the known bad row remains rejected (missing Figure 1a). The new isolated-English-word guard is covered by direct regression tests; it is intentionally cascade-only and not claimed as a corpus-wide semantic detector.
+
+## v277 gate-impact audit
+
+- Replayed the v277 cascade gate against 174 saved ordinary-body translations that had been accepted in v275. It would accept 163 and reject 11 (6.3%) if applied blindly to primary outputs. Rejections were mostly existing invariant/relation signals; some rows had no printed reasons because `isCascadeQualityAcceptable` rejects non-relation quality failures through the primary plausibility gate.
+- This confirms the new lexeme check must remain cascade-only. It must not be promoted to the primary acceptance path without manual false-reject review. Artifact: `test-data/real-papers/reports/gate-impact-v277.json`.
+- Added an integration regression for `OllamaTranslationEngine`: a candidate containing an untranslated ordinary lexeme is queried but rejected, and the original primary error is preserved. Focused quality/cascade tests now pass 150 tests; typecheck, lint, and diff check pass.
+
+## 2026-09-23 — v278 Gemma/Qwen matched fallback audit
+
+- Replayed the same 8 post-model ordinary-body rows through local `gemma2:9b` (temperature 0), alongside the v276 Qwen14 outputs. Artifact: `test-data/real-papers/reports/model-compare-v278-qwen14-gemma9.json`.
+- Automatic cascade gate: Gemma 8/8 accepted, Qwen 7/8 accepted. Mean latency was about 16.2s for Gemma vs 29.6s for Qwen14 on this machine.
+- Gemma outputs were visibly more complete on the reviewed `precedent` row and did not retain that English lexeme. However, several long rows terminate at extracted source boundaries, so this is not evidence that a model cascade can safely rescue them; source completeness must be fixed first.
+- This matched 8-row sample is too small and purposive to enable Gemma routing. No production default or cascade setting changed.
+- Added manual notes to v278 comparison: the 8 Gemma outputs had no observed severity>=2 issue in this purposive sample, but the artifact remains audit-only and does not justify enabling production routing. This is candidate evidence, not a corpus quality claim.
+
+## 2026-09-23 — v279 Gemma9 20-row held-out fallback audit
+
+- Evaluated 20 source-hash-unique post-model ordinary-body fallback rows from the v275 51-paper corpus with local `gemma2:9b`, temperature 0, no production route. Artifact: `test-data/real-papers/reports/alternate-model-v279-gemma9-20fallbacks.json`.
+- Current cascade gate accepted 16/20 (80%), rejected 4. Rejections were useful safety behavior: a translated list/label block missing `tDCS` and disjunctive scope, an affiliation/metadata block missing country abbreviations, and a numeric grid returned as source echo; one cognitive block retained a repeated source label. Mean latency was 19.3s/row.
+- This is the first broader Gemma fallback sample. It suggests a potentially useful selective rescue, but automatic acceptance is not yet justified: the 16 accepted outputs still require independent semantic review across disciplines, and the sample is selected from MADLAD failures. No production setting changed.
+
+## 2026-09-23 — v280 cascade sentence-compression guard
+
+- v279 showed Gemma outputs that passed numeric/language checks while omitting most sentences in long units (for example 20 source sentences reduced to 6 Japanese sentences). Added a cascade-only sentence-count compression guard for long multi-sentence units; the primary MADLAD acceptance path is unchanged.
+- Cache/quality identity advanced to `quality-v16`. Added regression coverage for severe sentence loss. Focused quality/cascade tests: 151 passed; model-version test, typecheck, lint, and diff check passed.
+- This deliberately rejects unsafe alternate candidates; it does not claim a fallback-rate reduction. Source segmentation and complete-unit reconstruction remain required before enabling Gemma routing.
+- Full Vitest after v280: 67 files / 496 tests passed. Existing optional PDF.js `canvas.node` warnings remain non-fatal. No server or `.app` build.
+
+## v281 sentence-count guard correction
+
+- Fixed the v280 guard to count Japanese sentence punctuation without requiring whitespace after `。`. The initial implementation used an English-style separator and undercounted Japanese output; this was found by re-gating the v279 artifact.
+- After correction, v279 Gemma sample changes from 16/20 to 15/20 cascade-eligible; two clear long-unit omissions are rejected (`step-to-charge`, medical-imaging affiliation/metadata), while outputs whose Japanese sentence boundaries remain comparable are retained. No primary-path behavior changed.
+- Quality tests 147 passed; typecheck, lint, and diff check passed.
+
+## 2026-09-23 — CAT 3.5 availability check
+
+- Rechecked the current local alternate-model environment before scheduling another CAT comparison. Ollama currently exposes `qwen2.5:3b`, `qwen2.5:7b`, `qwen2.5:14b`, and `gemma2:9b`; no `cat3.5`/CAT 3.5 model is installed or referenced by the current evaluation artifacts.
+- CAT evidence in this worktree is for CAT 1.4B and CAT 3.3B. CAT 3.3B was already evaluated on short/scientific units, long whole paragraphs, four clean fallback fixtures, and 22 production-segmented units (v186–v194). Whole-paragraph routing produced severity 2–3 omissions, while segmented units had no observed severity >=2 issue in that small diagnostic set.
+- Therefore the recent focus on Gemma/Qwen was a prioritization of available models and held-out safety evaluation, not a conclusion that CAT is unsuitable. CAT 3.5 requires an explicit model source/install and must be compared on the same source-hash-guarded segmented cohort before any routing decision. No production route changed.
+- Verification after this checkpoint: `npm run typecheck`, `npm run lint`, and focused Vitest (`quality`, `ollamaTranslationEngine`, `translationModelVersion`) pass, 152 tests total. The existing optional PDF.js `canvas.node` warnings remain non-fatal. No server, model route, or `.app` build changed.
+- Additional regression check: reading-order plus quality suites pass (219 tests). This confirms the current source-reconstruction and gate changes have no observed reading-order regression; the v275 fallback target remains unmet and requires fresh model/server measurement before further routing changes.
