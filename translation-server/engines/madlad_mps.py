@@ -107,8 +107,13 @@ def unprotected_identifier_retry_values(missing: list[str]) -> list[str]:
     def is_numeric_citation(item: str) -> bool:
         return bool(re.fullmatch(r"\s*\[\s*\d+(?:\s*[-–]\s*\d+|\s*,\s*\d+)*\s*\]\s*", item))
 
-    # Only expose standalone identifier-like spans. Measurements, figures,
-    # and citations remain protected even when they appear in the same error.
+    def is_inline_numeric_citation(item: str) -> bool:
+        return bool(re.fullmatch(r"\s*\d{1,3}\s*", item))
+
+    # Expose only compact factual spans on this retry. The normal invariant
+    # gate still rejects the result if a citation/reference is lost, but
+    # literal retry lets MADLAD preserve short labels it otherwise drops as a
+    # placeholder (notably `17` together with `SI Appendix`).
     def is_identifier(item: str) -> bool:
         return bool(re.fullmatch(r"\s*[A-Za-z][A-Za-z0-9._-]{1,31}\s*", item))
 
@@ -119,12 +124,27 @@ def unprotected_identifier_retry_values(missing: list[str]) -> list[str]:
             flags=re.IGNORECASE,
         ))
 
-    identifiers = [item for item in missing if (is_identifier(item) or is_section_reference(item)) and not is_numeric_citation(item)]
+    def is_supplementary_reference(item: str) -> bool:
+        return bool(re.fullmatch(r"\s*SI\s+Appendix\s*", item, flags=re.IGNORECASE))
+
+    identifiers = [
+        item for item in missing
+        if is_identifier(item)
+        or is_section_reference(item)
+        or is_supplementary_reference(item)
+    ]
     if not identifiers:
         return []
     # Every missing value must be a recognized safe span. Do not selectively
     # expose an unknown scientific token merely because another span is safe.
-    if not all(is_identifier(item) or is_section_reference(item) or is_numeric_citation(item) for item in missing):
+    if not all(
+        is_identifier(item)
+        or is_section_reference(item)
+        or is_supplementary_reference(item)
+        or is_numeric_citation(item)
+        or is_inline_numeric_citation(item)
+        for item in missing
+    ):
         return []
     return identifiers
 
@@ -160,7 +180,7 @@ class MADLADEngine(TranslationEngine):
 
     MODEL_ID = "google/madlad400-3b-mt"
     TRANSFORMERS_RUNTIME_VERSION = "4.57.6"
-    QUALITY_GATE_VERSION = "quality-v11"
+    QUALITY_GATE_VERSION = "quality-v14"
     MODEL_VERSION = (
         f"3b-mt-v6-transformers-{TRANSFORMERS_RUNTIME_VERSION}-{SEGMENTER_VERSION}-"
         f"{SOURCE_PROTECTION_VERSION}-strict-restore-v28-{QUALITY_GATE_VERSION}"
@@ -893,6 +913,10 @@ class MADLADEngine(TranslationEngine):
         enumeration_prefixes: list[str] = []
         for model_input in model_inputs:
             prefix, translate_body = self._detach_enumeration_prefix(model_input)
+            # Native PDF bullets are layout markers, not translation content.
+            # Keep them in the source chunk for deterministic reassembly, but
+            # remove them from the model input so decoding starts with prose.
+            translate_body = re.sub(r"^[•‣▪∙・]\s+", "", translate_body)
             protected, cites, nonce = protect_citations(translate_body)
             protected_chunks.append(protected)
             cite_maps.append((cites, nonce, terminal_superscript_indices(translate_body)))
@@ -971,6 +995,7 @@ class MADLADEngine(TranslationEngine):
         unprotected_values: set[str] | None = None,
     ) -> tuple[str, int, int]:
         enumeration_prefix, translate_body = self._detach_enumeration_prefix(model_input or text)
+        translate_body = re.sub(r"^[•‣▪∙・]\s+", "", translate_body)
         recoverable_terminal_indices = terminal_superscript_indices(
             translate_body,
             unprotected_values=unprotected_values,
@@ -1368,9 +1393,16 @@ class MADLADEngine(TranslationEngine):
                 re.I,
             )
         )
+        # Multi-sentence units carry independent claims. A compact decode of
+        # only the final clause can look fluent while omitting the first claim
+        # (common when a PDF list marker is present). Keep the stricter floor
+        # for substantial multi-sentence units without changing short-label
+        # behavior.
+        has_multiple_sentences = len(re.findall(r"[.!?]\s+[A-Z(]", source)) >= 1
         floor = (
             0.42
             if has_negative_explanatory_as and len(ratio_source) < 180
+            else 0.35 if has_multiple_sentences and len(ratio_source) >= 180
             else 0.21 if len(ratio_source) < 180 and not has_qualification else 0.28
         )
         return len(output_compact) / max(1, len(ratio_source)) < floor

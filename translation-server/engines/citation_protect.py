@@ -12,7 +12,7 @@ import re
 
 # Bump this whenever source-fact protection rules change. It participates in
 # the server translation/cache identity so old accepts are not reused silently.
-SOURCE_PROTECTION_VERSION = "source-protect-v17"
+SOURCE_PROTECTION_VERSION = "source-protect-v20"
 
 # Repeated title-case technical names are factual identifiers even when they
 # do not contain an internal capital transition (for example ``Bluetooth``).
@@ -54,6 +54,12 @@ CITATION_RE = re.compile(
 INLINE_FOOTNOTE_CITATION_RE = re.compile(
     r"(?:(?<=[\"”’])|(?<=[A-Za-z]))\d{1,3}(?=\s*\()"
 )
+
+# Some publisher PDFs attach a short footnote marker directly before sentence
+# punctuation (`simulations14.`). Restrict this to a lowercase word boundary
+# and a 1–2 digit marker so ordinary years and alphanumeric identifiers stay
+# translatable.
+INLINE_TERMINAL_FOOTNOTE_RE = re.compile(r"(?<=[a-z])\d{1,2}(?=[.!?,])")
 
 # Some PDFs attach a reference marker after terminal punctuation and before a
 # flattened next list item (`... migration.3 (2) The positive effects ...`).
@@ -285,6 +291,7 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
     matches = (
         list(CITATION_RE.finditer(text))
         + list(INLINE_FOOTNOTE_CITATION_RE.finditer(text))
+        + list(INLINE_TERMINAL_FOOTNOTE_RE.finditer(text))
         + list(TERMINAL_SUPERSCRIPT_CITATION_RE.finditer(text))
         + list(INLINE_NUMERIC_CITATION_RE.finditer(text))
         + list(NARRATIVE_AUTHOR_YEAR_CITATION_RE.finditer(text))
@@ -435,6 +442,16 @@ def _normalize_placeholder_glyphs(text: str) -> str:
         text,
         flags=re.IGNORECASE,
     )
+    # MADLAD can drop the leading `ZZ` while retaining a source footnote
+    # immediately before the placeholder (`15CIT2ZZ`). Recover only the
+    # unmistakable CIT/index/ZZ suffix when it is directly preceded by a
+    # digit; the digit itself remains source text and is restored separately.
+    text = re.sub(
+        rf"(?<=\d)CIT(\d+(?:X\d+)?)({re.escape(_PLACEHOLDER_SUFFIX)})",
+        rf"{_PLACEHOLDER_PREFIX}\1\2",
+        text,
+        flags=re.IGNORECASE,
+    )
     # Greedy decoding can emit Greek/Cyrillic lookalikes for the fixed ASCII
     # placeholder (for example ``ΖZCIΤ2ZZ``). Normalize only the complete
     # placeholder-shaped token; ordinary scientific text is untouched.
@@ -496,6 +513,11 @@ def restore_citations(
     missing: list[str] = []
     recoverable_terminal_indices = recoverable_terminal_indices or set()
     for i, citation in enumerate(citations):
+        # Restoring an earlier placeholder can expose a digit immediately
+        # before a later merged token (`15CIT2ZZ`). Re-run the narrowly scoped
+        # glyph normalizer at each step so adjacent placeholders are handled
+        # deterministically in their source order.
+        out = _normalize_placeholder_glyphs(out)
         pattern = _placeholder_pattern(i, nonce)
         if reject_missing and not pattern.search(out):
             # MADLAD sometimes inserts a Japanese/Latin glyph inside an
@@ -510,6 +532,26 @@ def restore_citations(
                 else rf"{re.escape(_PLACEHOLDER_PREFIX[:3])}[^\s]{{0,3}}T{i + 1}{re.escape(_PLACEHOLDER_SUFFIX)}"
             )
             candidates = list(re.finditer(numbered, out, re.IGNORECASE))
+            # When two placeholders are adjacent, MADLAD can merge the
+            # suffix/prefix Z glyphs and emit the second token as `ZCIT2ZZ`
+            # (or with a lookalike glyph). Accept only the expected index and
+            # a short Z-prefixed token; this cannot match ordinary prose.
+            if not candidates:
+                adjacent = (
+                    rf"Z{{1,4}}[^\s]{{0,3}}{nonce}X{i + 1}{re.escape(_PLACEHOLDER_SUFFIX)}"
+                    if nonce
+                    else rf"Z{{3,6}}[A-Za-zΙІіСсЦцΤТтц]{{0,3}}T{i + 1}{re.escape(_PLACEHOLDER_SUFFIX)}"
+                )
+                candidates = list(re.finditer(adjacent, out, re.IGNORECASE))
+            if not candidates and not nonce:
+                # A decoder may collapse the shared boundary completely,
+                # yielding `ZZCIT1ZZCIT2ZZ`. The expected index and the
+                # preceding canonical suffix make this unambiguous.
+                candidates = list(re.finditer(
+                    rf"(?<=ZZ)CIT{i + 1}{re.escape(_PLACEHOLDER_SUFFIX)}",
+                    out,
+                    re.IGNORECASE,
+                ))
             if len(candidates) == 1:
                 candidate = candidates[0]
                 out = out[:candidate.start()] + placeholder_for(i, nonce) + out[candidate.end():]

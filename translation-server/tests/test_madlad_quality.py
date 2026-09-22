@@ -63,6 +63,12 @@ class MadladUnitQualityTests(unittest.TestCase):
         self.assertTrue(allows_unprotected_identifier_retry(["SI Appendix", "Ruggeri et al.18"]))
         self.assertFalse(allows_unprotected_identifier_retry(["Ruggeri and Baron et al.18"]))
 
+    def test_identifier_retry_exposes_compact_reference_group(self) -> None:
+        self.assertEqual(
+            unprotected_identifier_retry_values(["17", "SI Appendix"]),
+            ["SI Appendix"],
+        )
+
     def test_degenerate_reason_labels_are_stable(self) -> None:
         source = "This is a sufficiently long academic sentence for testing."
         self.assertEqual(MADLADEngine._degenerate_reason("", source, "ja"), "empty")
@@ -170,6 +176,16 @@ class MadladUnitQualityTests(unittest.TestCase):
         output = "正解は小さい群である。"
         self.assertTrue(MADLADEngine._is_implausibly_short_unit(output, source))
         self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
+
+    def test_rejects_multisentence_list_item_that_drops_first_claim(self) -> None:
+        source = (
+            "The PPG Earring was rated as highly comfortable by all six participants in the "
+            "whole-day in-the-wild study. All participants found it as comfortable as their "
+            "regular earrings, with five participants expressing a strong willingness to wear "
+            "it all the time every day."
+        )
+        output = "PPGイヤリングは、全日野外実験の6名全員にとって高い快適性を評価された。耳かきの使用は、耳かきを着用する意欲が高い5名が多かった。"
+        self.assertTrue(MADLADEngine._is_implausibly_short_unit(output, source))
 
     def test_rejects_a_sentence_that_drops_its_material_qualification(self) -> None:
         source = (
