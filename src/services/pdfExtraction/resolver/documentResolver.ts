@@ -16,6 +16,7 @@ import {
   captionOfRelations,
   childOfRelations,
   floatedTableContinuationRelations,
+  pageBoundaryContinuationRelations,
   figureNodesForCaptions,
   readsBeforeRelations,
 } from "./relationResolver";
@@ -339,6 +340,7 @@ export function resolveCanonicalDocument(input: {
     ...childOfRelations(headingNodes),
     ...captionOfRelations(nodes),
     ...affiliatedWithRelations(nodes),
+    ...pageBoundaryContinuationRelations(nodes, input.layouts),
     ...floatedTableContinuationRelations(nodes, input.layouts),
   ];
 

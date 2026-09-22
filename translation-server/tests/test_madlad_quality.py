@@ -63,6 +63,11 @@ class MadladUnitQualityTests(unittest.TestCase):
         self.assertTrue(allows_unprotected_identifier_retry(["SI Appendix", "Ruggeri et al.18"]))
         self.assertFalse(allows_unprotected_identifier_retry(["Ruggeri and Baron et al.18"]))
 
+    def test_identifier_retry_allows_figure_table_reference_spans(self) -> None:
+        self.assertTrue(allows_unprotected_identifier_retry(["Figure 1A", "Table 2"]))
+        self.assertTrue(allows_unprotected_identifier_retry(["Fig. 3(b)"]))
+        self.assertFalse(allows_unprotected_identifier_retry(["Figure 1A and the result"]))
+
     def test_identifier_retry_exposes_compact_reference_group(self) -> None:
         self.assertEqual(
             unprotected_identifier_retry_values(["17", "SI Appendix"]),

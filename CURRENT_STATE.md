@@ -9409,3 +9409,188 @@ Refined the mixed-script decoder guard to compare suspicious Latin fragments aga
 - 既存チェックポイント52論文（351 rows）が全て揃っていたため、新規翻訳は発生せず、コマンドは正常終了。
 - translation server / benchmark process は cleanup 後に終了済み。`translation-audit.json` の既存結果は変更なし（`complete=false` はresumeレポートの状態）。
 - 次回はチェックポイントを再利用しない fresh benchmark、または未処理fixtureを追加してから、pre-model fallback と cascade候補を別々に測定する。
+
+## 2026-09-22 — 現在状態の再検証
+
+- 既存のMADLAD Transformers A/B診断を再確認。`transformers==5.17.0` では encoder embedding が `lm_head.weight` と一致し、`4.57.6` では decoder embedding と一致する。production lockfile / venv は `4.57.6` のまま。
+- TypeScript quality / selective-cascade tests は **141/141 passed**。
+- Python embedding-integrity / MADLAD quality tests は **39 passed**。
+- これはモデルruntimeの既知破損を解決済みであることの回帰確認であり、ordinary-body fallback **34.6%**（v249 checkpoint集計）は未解決。fallback目標5%以下を達成したとは扱わない。
+
+## 2026-09-22 — relation coverage を監査Evidence化
+
+- `score-translation-coverage.ts` の既存監査で、現行52-paper reportの ordinary-body accepted rows について、invariant loss 19、negation loss 12、contrast loss 6、ordinal loss 15、condition loss 2を確認。
+- `evaluateJaTranslation` に、強い対比（unlike/despite）、排他（only/sole/unique）、条件（if/unless/whether等）の構造Evidenceを追加。日本語の自然な言い換えを一律fallbackにしないため、現段階では監査/selector向け理由として保持し、production gateのhard rejectにはしていない。
+- 回帰確認: quality + cascade **143/143 passed**、typecheck / lint / diff check通過。
+- 13行で新Evidenceが出たが、うち一部は物理的に途中で切れたsourceだった。次はsource completenessを含むheld-outで、relation Evidenceをcascade選択に使った場合の救済率とfalse acceptを測る。
+
+## 2026-09-22 — relation coverage artifact v77
+
+- `live-v251-quality-v14-resume.json` を入力に relation coverage を再計算し、`test-data/real-papers/reports/translation-coverage-v77.json` として保存。
+- 167 ordinary-body rows: low sentence coverage 2、invariant loss 19、negation loss 12、contrast loss 6、ordinal loss 15、condition loss 2。
+- artifact versionを現行の Transformers 4.57.6 / quality-v77 と明示し、旧v68 artifactとの混同を防止。
+
+## 2026-09-22 — Qwen cascade recheck with relation Evidence
+
+- 同一source-hashのQwen 14B候補18件を現行qualityで再評価。
+- strict accepted **5/18**、fallback **13/18 (72.2%)**。`condition relation missing` を含む候補1件が追加で除外され、混在script・meta-commentaryも引き続き除外。
+- この結果はQwen cascadeを既定有効化する根拠にならない。既定falseを維持し、source completenessを含む新規held-outで比較する。
+
+## 2026-09-22 — cascade selectorのrelation Evidence扱い
+
+- `isCascadeQualityAcceptable` を追加。対比・排他・条件のrelation Evidenceだけが残る場合は、自然な日本語の暗黙表現を理由に一律fallbackしない。構造破損、言語汚染、invariant欠落、source echo等は引き続き拒否。
+- Qwen 14B既存18件を再評価すると strict accepted は **6/18**（fallback **66.7%**）に戻った。関係Evidenceだけで候補を過剰rejectしていた1件を救済したが、Qwenを本番cascadeへ有効化する根拠にはならない。
+- 回帰確認: quality + cascade **144/144 passed**、typecheck / lint / diff check通過。
+
+## 2026-09-22 — Canonical page-boundary continuation relation
+
+- `pageBoundaryContinuationRelations` を追加。長さ・未完端・lowercase/connector開始・前ページ下部/次ページ上部の相対geometry・column互換性を同時に満たす場合だけ `CONTINUES` をCanonicalDocumentへ追加。
+- `toPaper` の既存 continuation projection が `pageStart/pageEnd/boundingBoxes` を保持したまま論理段落として結合できるようにした。固定pixel閾値やpaper固有文字列には依存しない。
+- 新規relation unit testsを追加。既存実PDF extraction / reading-order regression **108/108 passed**（126秒）。quality + cascade **144/144 passed**、typecheck / lint / diff check通過。
+- fresh model benchmarkは未実行。次はこの修正後に、同一source hash cohortでsource-fragment fallbackが実際に減ったかを測定する。
+
+## 2026-09-22 — title identity extraction improvement
+
+- `titleResolver` に、DOI/URL/誌名・巻号・年頁のmasthead候補、重複title、metadataのprefixで途中切れたnative titleを一般検出するEvidenceを追加。
+- 有効なmetadata titleがあり、native候補が明らかなmastheadまたは途中切れの場合だけmetadataへ戻す。通常のnative titleは優先し、filename/URL metadataは採用しない。
+- 51-paper extraction benchmarkのtitle exact率が **74.5% → 86.3% → 92.2% → 98.0%** に改善（最終 **50/51**）。残り1件はmetadata/native title競合の個別診断対象で、paper固有ifは追加していない。
+- 最終後の既存実PDF extraction / reading-order regression **108/108 passed**。pipeline/relation tests **28/28**、typecheck / lint / diff check通過。
+
+## 2026-09-22 — title benchmark final
+
+- metadata titleのslashを正当な学術タイトルで許容し、再ベンチマーク。
+- 51-paper extraction benchmarkのtitle exact率 **100%（51/51）** を確認。
+- title resolverは通常native titleを優先し、DOI/誌名masthead・重複候補・metadata prefixで切れた候補だけを一般条件で補正。
+- 最終の実PDF extraction / reading-order regression **108/108 passed**（約115秒）。
+
+## 2026-09-22 — checkpoint（停止）
+
+- ユーザー指示により、実行中の評価をこの時点で停止。translation-server / real-paper benchmark の常駐プロセスは残っていない（Ollamaの常駐daemonはホスト共用サービスのため停止していない）。
+- 最新の抽出結果は title exact **51/51**、extraction / reading-order regression **108/108**。未コミット変更は title resolver、page-boundary continuation relation、quality cascade Evidence、ベンチマーク出力更新。
+- 最新 fresh translation benchmark `translation-audit-fresh-v252` は4論文16 blocks。ordinary-body 11件中 visible fallback 2件（18.2%）で、目標5%未達。1件は見出し+本文が同一translation unitになった source-label rejection、1件はMADLAD quality rejection。
+- Gemma 2 9Bの補助比較では上記2件に自然な候補訳が得られたが、既存held-outでは source fragment / metadata混入を含む失敗もあり、既定cascade有効化は未実施。
+- 次回再開点: (1) `translation-audit-fresh-v252.json` の2 fallbackを source-unit / quality理由別に診断、(2) heading+paragraph境界の一般修正を検討、(3) 同一shellのfresh benchmarkでbefore/afterを測定。production defaultやモデル切替は未変更。
+
+## 2026-09-22 — fallback diagnosis and technical-label false reject
+
+- `translation-audit-fresh-v252` の ordinary-body fallback 2件を固定し、Gemma 2 9B（temperature 0）を同一sourceで比較。`thermal-earring` は Gemma訳が品質検査上 accept 可能だが、`marketing-health-goals-nudging` は citation year `2017` を欠落させるため accept 不可。代替モデルを既定cascadeへ有効化する根拠にはならない。
+- `hasUntranslatedSourceLabel` が段落中に3回以上現れる高頻度の技術・固有語（例: Bluetooth）まで未翻訳ラベルとして拒否していたため、重複抽出ラベル（通常2回）と区別する一般条件を追加。既存品質テスト **148/148 passed**。
+- 比較出力は `test-data/real-papers/reports/gemma-v252-fallback.json` に保存。MADLAD側は依然として関係Evidence（exclusive relation）や長文の意味保持に課題があり、fallback目標5%は未達。
+
+## 2026-09-22 — post-fix verification
+
+- typecheck / lint 通過。
+- translation quality・partial-source・Ollama engine tests **151/151 passed**。
+- `git diff --check` 通過。
+- localhost:8765 は停止中。次の実モデル比較は、既存手順どおり同一shellでtranslation-serverを起動してから実行する。
+- 抽出回帰を再実行し、2 test files / **108/108 passed**（約131秒）。品質判定変更によるPDF extraction / reading-order回帰は確認されなかった。
+
+## 2026-09-22 — fresh translation benchmark v253
+
+- 一時serverを同一shellで起動し、4論文16 blocksを再評価。完了後にcleanupでserverを停止。
+- ordinary-body は **11件中1件 fallback（9.1%）**。v252の2/11（18.2%）から、頻出技術用語のfalse reject修正により1件減少した。
+- 残るordinary fallbackは marketing-health-goals-nudging の長い仮説段落で、server側 quality rejection。Gemma候補は引用年2017を欠落するため安全に採用できない。
+- 全分類では5/16 visible fallbackだが、reference-chrome・damaged-extraction・statistical-proseを含むため製品目標の分母には使わない。ordinary-body目標5%は未達。
+- artifact: `test-data/real-papers/reports/translation-audit-fresh-v253.{json,md}`。MADLADのモデルversion/runtimeは従来どおり、既定cascadeは変更していない。
+
+## 2026-09-22 — semantic rescue benchmark v254
+
+- `segmenter.py` に、トップレベルの `, hence that ...` 帰結節を再試行時だけ2 unitへ分ける一般ルールを追加。括弧・引用のbalanced条件とsource round-tripを維持し、元のsource文字列は変更しない。
+- 同一shellのfresh serverで4論文16 blocksを再評価。ordinary-body visible fallback は **1/11（9.1%）→ 0/11（0%）**。残る非ordinary fallbackは damaged-extraction 1、reference-chrome 2、statistical-prose 1。
+- marketing-health-goals-nudgingの長い仮説段落は、帰結節を保持した日本語へ復旧し、引用年2022/2017も保持。表現上の軽微な不自然さは残るが、source fallbackではなくなった。
+- artifact: `test-data/real-papers/reports/translation-audit-fresh-v254.{json,md}`。serverはbenchmark終了後に停止。production default cascadeやモデル変更は未実施。
+
+## 2026-09-22 — cross-discipline benchmark v255
+
+- 認知心理学・マーケティング・人間工学・言語学の4論文、16 blocksを同一shellのfresh serverで評価。
+- ordinary-body は **8件中3件 fallback（37.5%）**。内訳は、protected token restore failure 2件、科学的invariant（`SI`, `20`）欠落1件。後者は安全な拒否であり、前者も引用/識別子を壊さないための安全側失敗。
+- 追加corpusではv254の `hence that` 修正の回帰は発生していない。数値・引用保持を無条件に緩和しない。
+- 非ordinary fallback（damaged-extraction 5、list 2、reference-chrome 1）は分母から分離して記録。
+- artifact: `test-data/real-papers/reports/translation-audit-fresh-v255.{json,md}`。この結果により、4論文だけで製品目標達成とは扱わず、次はprotected-token retryの一般改善を検討する。
+
+## 2026-09-22 — protected retry v256
+
+- 構造参照（`Figure/Fig/Table`）だけを無保護で再試行できる狭い条件と回帰テストを追加。数値・p値・通常の引用本文は対象外。Python quality tests **37 passed**。
+- 失敗2論文を再評価したが ordinary fallback は **3/6** のまま。今回の2件は構造参照単体ではなく、複数tokenのrestore失敗または `SI`/`20` invariant欠落であり、figure/table retryの効果範囲外だった。
+- したがって、この変更だけでfallback目標達成とは扱わない。次は複数保護tokenを含む長文unitの分割・restore診断を行う。
+- artifact: `test-data/real-papers/reports/translation-audit-fresh-v256.{json,md}`。serverは終了後に停止。
+
+## 2026-09-22 — identifier grouping / example-parenthetical diagnostic
+
+- 複数の技術identifierを個別placeholderにせず、隣接列をatomic spanとして保護する一般ルールを追加。
+- `(e.g., BERT, DeBERTa)` の例示括弧内はplaceholder化せず、通常文字列として渡す。後段のscientific invariant検査は維持する。
+- citation protection tests **67 passed**。直接診断で言語学失敗unitのplaceholder数は減少し、`BERT/DeBERTa/GPT` 列はsource文字列としてモデル入力に残った。最終的な全paper fallback率は未再測定。
+- debug artifact: `/tmp/paper-reader-debug-v259.log`（一時ファイル）。次はcognitiveの `17 / SI Appendix` unitを同じ方法で検証する。
+## 2026-09-22 — 作業一時停止
+
+- ユーザー指示により、追加のベンチマーク・サーバー起動はここで停止。
+- 現在、translation-server / benchmark の常駐プロセスは確認されていない。
+- 最新の未完了地点は v259 の identifier grouping と、cognitive の `17 (Hospital, see SI Appendix)` 保護検証。
+- 次回再開時は、まず `translation-server/engines/segmenter.py` の concessive rescue 条件を確認し、segmenter/citation/madlad のPython回帰テスト後、必要なら cognitive・linguistics のfresh benchmarkを同一shellで再実行する。
+- 未コミット変更は保持しており、productionの既定cascadeやモデル設定は変更していない。
+
+## 2026-09-22 — 停止前の回帰確認
+
+- `segmenter.py` の concessive rescue は、従属節後に通常の大文字語（例: `GPT-3`）が続くケースも対象にする一般条件へ更新済み。
+- segmenter回帰: **49 passed, 8 subtests passed**。
+- citation protection / MADLAD quality回帰: **104 passed, 3 subtests passed**。
+- 実モデルを起動するfresh benchmarkはこの時点では実施していない。次回は cognitive target の直接再現で、`17 (Hospital, see SI Appendix)` と `While ... GPT-3 ...` の両方が source fallback なしで処理されるか確認する。
+
+## 2026-09-22 — concessive rescue regression追加
+
+- `While ... , GPT-3 ...` のように従属節後の固有名詞・モデル名で始まる主節を、意味単位として再試行分割できる回帰テストを追加。
+- source round-trip と2 unit分割を検証。segmenter全体 **50 passed, 8 subtests passed**。
+- 実モデル出力の改善はまだ未確認であり、次回はfresh serverで当該fixtureを再実行する。
+
+## 2026-09-22 — TypeScript品質回帰
+
+- `npm run typecheck` 成功。
+- quality / partial fallback / Ollama関連 Vitest は **152/152 passed**。
+- DOMMatrix/Path2D の既存canvas警告は出るが、テスト結果には影響なし。
+
+## 2026-09-22 — lint / Python総合回帰
+
+- `npm run lint` 成功。
+- segmenter / citation protection / MADLAD quality のPython回帰は **154 passed, 11 subtests passed**。
+- 実モデルのcognitive再評価だけが未実施。サーバー起動後に実行する。
+
+## 2026-09-22 — 実モデル cognitive 最小再現 v263
+
+- サーバーを起動し、cognitive fixture の2 unitを直接 `/translate` へ送信。
+- `While ... GPT-3 ...` は concessive rescue後に **fallbackなし**。`GPT-3` と比較関係は保持したが、`hospital` の一部が「小規格病院」となり用語品質に課題を確認。
+- `17 (Hospital, see SI Appendix)` を含む長文も atomic保護後に **fallbackなし**。参照は保持されたが、`hospital` が「大規模病棟」となり、意味上の語義ずれと一部情報省略を確認。
+- 原因帰属は、今回の2例では extraction / segmentation / placeholder restore ではなく、MADLAD 3Bのdecode品質。安全な自動accept判定にはまだ不十分。
+- artifact: `test-data/real-papers/reports/translation-model-diagnostic-v263.json`。実測後、サーバーは停止予定。
+
+## 2026-09-22 — 代替モデル cognitive 比較 v264
+
+- 同じ2 source、temperature 0、直接 Ollama chat で `qwen2.5:14b` と `gemma2:9b` を評価。
+- 両モデルとも `hospital` を「病院」として保持し、MADLADの「病棟／小規格病院」より意味品質が明確に良い。
+- Qwen14bは `SI Appendix` を「補足情報付録」、Gemma9bは「SI補遺」と訳した。参照番号17はGemmaでは保持、Qwenでは自然文に吸収されたため、引用保護付きproduction経路では復元検証が必要。
+- MADLADはこのfixtureでfallbackなしでも語義ずれを起こすため、現在の「primaryがacceptしたらcascadeしない」方針ではunsafe false acceptを防げない。
+- artifact: `test-data/real-papers/reports/alternate-model-cognitive-v264.json`。production routingは変更していない。
+
+## 2026-09-22 — 代替モデル heldout failures v265
+
+- v255でMADLADがfallbackした cognitive 2 blocks と linguistics 1 block を、Qwen2.5 14B / Gemma2 9Bで再評価。全6件で restore errorなし・自動形式gateは通過。
+- cognitiveでは両モデルともMADLADより自然で、参加者条件・比較関係を概ね保持。ただしQwenは英語語句が残る例、Gemmaは引用ラベルの自然化があるため、即時production採用はしない。
+- linguisticsでは両モデルとも長文構造を概ね保持したが、専門用語・数値の完全性は追加レビューが必要。
+- 既存の品質gateは `quality.score=1` でも意味誤りを保証しない。primary成功時にもcross-model auditが必要な証拠が増えた。
+- artifact: `test-data/real-papers/reports/alternate-model-known-failures-v265.json`。Ollama比較はaudit-onlyで、既定cascadeは未変更。
+
+## 2026-09-22 — cognitive alternate manual review
+
+- v264の4出力をsourceと照合し、hospital・比較・因果関係は保持されていると判定（severity 1以下）。引用ラベルの自然化は、productionのplaceholder restore経路では別途検証が必要。
+- この手動判定は固定fixtureの小規模レビューであり、production採用の根拠にはしない。
+
+## 2026-09-22 — accepted-row semantic-risk audit v266
+
+- `diagnose-alternate-models.ts` に `ALT_INCLUDE_ACCEPTED=1` を追加し、長文・比較/因果・統計記法を含むordinary行も代替モデル監査対象にできるようにした。production routingは変更なし。
+- v255の4 rowsをGemma2 9Bで監査。fallback rows 2件は復元可能な訳、accepted rows 2件のうち1件は `gateAccept=false`（MADLAD結果と別モデルの意味差を検出する監査信号）、もう1件は形式上accept。
+- これは自動的な意味正解判定ではなく、primary成功でも代替モデルとの比較対象を作るための監査基盤。artifact: `test-data/real-papers/reports/alternate-model-semantic-risk-v266.json`。
+
+## 2026-09-22 — accepted semantic-risk audit v267
+
+- v255のordinary rowsを8件まで拡張し、Gemma2 9Bで監査。全8件でrestore errorなし、形式gateは7件accept / 1件reject。
+- rejectされたaccepted-rowは、MADLADの形式品質だけでは拾えないモデル出力差の監査シグナル。残り7件も自動acceptを正解とは扱わず、manual semantic reviewが必要。
+- artifact: `test-data/real-papers/reports/alternate-model-semantic-risk-v267.json`。本監査はproduction routingに影響しない。

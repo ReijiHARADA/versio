@@ -1,7 +1,7 @@
 import type { LLMProvider } from "../llm/types";
 import {
   evaluateJaTranslation,
-  isPlausibleJaTranslation,
+  isCascadeQualityAcceptable,
   shouldTranslateParagraph,
   unsafeParagraphStructureReason,
 } from "./quality";
@@ -41,7 +41,7 @@ export class OllamaTranslationEngine implements TranslationEngine {
       );
       const translated = completion.text.trim();
       const quality = evaluateJaTranslation(translated, text);
-      if (!isPlausibleJaTranslation(translated, text) || quality.reasons.length > 0) {
+      if (!isCascadeQualityAcceptable(translated, text) || (quality.reasons.length > 0 && !quality.reasons.every((reason) => / relation missing$/.test(reason)))) {
         throw primaryError;
       }
       return {

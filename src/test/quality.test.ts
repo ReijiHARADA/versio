@@ -7,6 +7,7 @@ import {
   shouldTranslateHeading,
   looksLikeSubjectClassification,
   evaluateJaTranslation,
+  isCascadeQualityAcceptable,
   extractScientificInvariants,
   isExpectedNonProseParagraph,
   unsafeParagraphStructureReason,
@@ -1219,5 +1220,33 @@ describe("isRetryableTranslationFailure", () => {
     expect(
       displayProcessingStatus("partial", [block], isRetryableTranslationFailure)
     ).toBe("partial");
+  });
+
+  it("rejects fluent output that drops an explicit condition or exclusivity claim", () => {
+    const conditional = "If the signal is absent, the participant was excluded from analysis.";
+    const conditionalLoss = "信号がない。参加者を分析から除外した。";
+    const conditionalKept = "信号がない場合、参加者を分析から除外した。";
+    expect(evaluateJaTranslation(conditionalLoss, conditional).reasons).toContain("condition relation missing");
+    expect(evaluateJaTranslation(conditionalKept, conditional).reasons).not.toContain("condition relation missing");
+
+    const exclusive = "Only the intervention group received the training.";
+    const exclusiveLoss = "介入群が訓練を受けた。";
+    const exclusiveKept = "介入群のみが訓練を受けた。";
+    expect(evaluateJaTranslation(exclusiveLoss, exclusive).reasons).toContain("exclusivity relation missing");
+    expect(evaluateJaTranslation(exclusiveKept, exclusive).reasons).not.toContain("exclusivity relation missing");
+  });
+
+  it("preserves strong contrast markers without requiring generic conjunctions", () => {
+    const source = "Unlike the control condition, the intervention improved recall.";
+    expect(evaluateJaTranslation("対照条件とは異なり、介入により再認が改善した。", source).reasons)
+      .not.toContain("strong contrast relation missing");
+    expect(evaluateJaTranslation("介入により再認が改善した。", source).reasons)
+      .toContain("strong contrast relation missing");
+  });
+
+  it("allows relation-only cascade evidence without allowing structural failures", () => {
+    const source = "Despite the small sample, the estimate was stable.";
+    expect(isCascadeQualityAcceptable("サンプルは小さかったが、推定値は安定していた。", source)).toBe(true);
+    expect(isCascadeQualityAcceptable("sample", source)).toBe(false);
   });
 });

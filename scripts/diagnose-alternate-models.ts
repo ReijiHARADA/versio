@@ -11,13 +11,23 @@ const baseUrl = process.env.OLLAMA_BASE_URL ?? "http://127.0.0.1:11434";
 const models = (process.env.ALT_MODELS ?? "qwen2.5:14b,qwen2.5:7b,gemma2:9b").split(",").map((x) => x.trim()).filter(Boolean);
 const report: any = JSON.parse(fs.readFileSync(inputPath, "utf8"));
 const maxRows = Number.parseInt(process.env.ALT_MAX_ROWS ?? "0", 10);
-const rows = report.papers.flatMap((p: any) => p.rows).filter((r: any) => r.sourceCategory === "ordinary-body-prose" && r.readerVisibleFallback).slice(0, Number.isFinite(maxRows) && maxRows > 0 ? maxRows : undefined);
+const includeAccepted = process.env.ALT_INCLUDE_ACCEPTED === "1";
+const semanticRiskSource = (source: string): boolean => {
+  const text = String(source ?? "");
+  return text.length >= 280
+    || /\b(?:although|while|however|whereas|unlike|because|therefore|thus|hence|if|unless)\b/i.test(text)
+    || /\b(?:p\s*[<=>]|F\s*\(|t\s*\(|χ2?|participants?|sample|odds|confidence interval)\b/i.test(text);
+};
+const rows = report.papers.flatMap((p: any) => p.rows).filter((r: any) =>
+  r.sourceCategory === "ordinary-body-prose"
+  && (r.readerVisibleFallback || (includeAccepted && semanticRiskSource(r.source))),
+).slice(0, Number.isFinite(maxRows) && maxRows > 0 ? maxRows : undefined);
 const python = path.join(root, "translation-server/.venv/bin/python");
 const protectCode = `import json,sys\nfrom engines.segmenter import segment_for_translation\nfrom engines.citation_protect import protect_citations\nx=json.load(sys.stdin)\nout=[]\nfor u in segment_for_translation(x):\n p,c,n=protect_citations(u.model_input)\n out.append({'source':u.text,'input':p,'citations':c,'nonce':n})\nprint(json.dumps(out,ensure_ascii=False))`;
 const restoreCode = `import json,sys\nfrom engines.citation_protect import restore_citations\nx=json.load(sys.stdin)\ntry: print(json.dumps({'ok':True,'text':restore_citations(x['text'],x['citations'],x['nonce'],reject_missing=True)},ensure_ascii=False))\nexcept Exception as e: print(json.dumps({'ok':False,'error':str(e)},ensure_ascii=False))`;
 function py(code: string, value: unknown): any { return JSON.parse(execFileSync(python, ["-c", code], { cwd: path.join(root, "translation-server"), input: JSON.stringify(value), encoding: "utf8" })); }
 const prompt = "You are a professional academic translator. Translate English academic text into faithful Japanese. Preserve every number, citation, negation, comparison, condition, and technical term. Output only the translation.";
-const out: any = { version: "alternate-model-diagnostic-v2", createdAt: new Date().toISOString(), sourceReport: path.basename(inputPath), models, baseUrl, selection: "ordinary-body rows that fell back in the supplied MADLAD report; audit-only, no production routing", results: [] };
+const out: any = { version: "alternate-model-diagnostic-v3", createdAt: new Date().toISOString(), sourceReport: path.basename(inputPath), models, baseUrl, selection: includeAccepted ? "ordinary-body fallback rows plus semantic-risk accepted rows; audit-only, no production routing" : "ordinary-body rows that fell back in the supplied MADLAD report; audit-only, no production routing", results: [] };
 for (const row of rows) {
   const units = py(protectCode, row.source);
   for (const model of models) {

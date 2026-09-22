@@ -412,7 +412,7 @@ class CitationProtectTests(unittest.TestCase):
     def test_protects_inline_footnote_after_quoted_term(self) -> None:
         source = "We introduced the “cab problem”16 (Cab, see SI Appendix)."
         protected, citations, nonce = protect_citations(source)
-        self.assertEqual(citations, ["16", "SI Appendix"])
+        self.assertEqual(citations, ["16 (Cab, see SI Appendix)"])
         self.assertIsNotNone(INLINE_FOOTNOTE_CITATION_RE.search(source))
         self.assertNotIn("16", protected)
         self.assertEqual(restore_citations(protected, citations, nonce), source)
@@ -466,13 +466,13 @@ class CitationProtectTests(unittest.TestCase):
         protected, citations, nonce = protect_citations(source)
         placeholder = protected.split("problem”", 1)[1].split(" ", 1)[0]
         restored = restore_citations(f"問題を提示した。{placeholder}。", citations, nonce)
-        self.assertEqual(restored, "問題を提示した16。SI Appendix")
+        self.assertEqual(restored, "問題を提示した。16 (Cab, see SI Appendix).。")
 
     def test_restores_dropped_inline_footnote_before_japanese_sentence_end(self) -> None:
         source = "We introduced the “cab problem”16 (Cab, see SI Appendix)."
         _, citations, nonce = protect_citations(source)
         restored = restore_citations("問題を提示した。", citations, nonce)
-        self.assertEqual(restored, "問題を提示した16。SI Appendix")
+        self.assertEqual(restored, "問題を提示した。16 (Cab, see SI Appendix)")
 
     def test_protects_terminal_superscript_citation_after_sentence_punctuation(self) -> None:
         source = "Smugglers exploit irregular migration.3"
@@ -514,6 +514,15 @@ class CitationProtectTests(unittest.TestCase):
         source = "The measured value was 2.913."
         _, citations, _ = protect_citations(source)
         self.assertEqual(citations, [])
+
+    def test_protects_adjacent_identifier_list_as_one_atomic_span(self) -> None:
+        source = "Encoder-only models such as BERT, DeBERTa, and GPT struggle on CFG tasks."
+        protected, citations, nonce = protect_citations(source)
+        self.assertEqual(citations, ["BERT, DeBERTa, and GPT", "CFG"])
+        self.assertEqual(
+            restore_citations(protected, citations, nonce, reject_missing=True),
+            source,
+        )
 
     def test_strict_restore_recovers_adjacent_placeholder_z_merge(self) -> None:
         source = 'The canonical “Linda problem”15 (Linda, see Figure 1A).'

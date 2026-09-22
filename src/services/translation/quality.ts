@@ -48,6 +48,15 @@ const JA_FIELD_COUNT_DISPLACEMENT = /(?:各|それぞれの?)(?:学科|分野|�
 const SOURCE_COLLECTIVE_GROUP_COMPARISON = /\bnone\s+of\s+the\s+(?:study\s+)?groups?\b[^.!?]{0,160}\b(?:differ(?:ed|s)?|different|difference|significant|significantly)\b/i;
 const SOURCE_THREE_OR_MORE_GROUPS = /\b(?:3|three|four|4|five|5|six|6|seven|7|eight|8|nine|9|ten|10)\s+(?:study\s+)?(?:groups?|conditions?|arms?)\b/i;
 const JA_BINARY_GROUP_COMPARISON = /(?:両群|二群|2群)\s*(?:間|間で|間に|の間)/;
+// Restrict relation checks to unambiguous discourse markers. Generic `but`
+// and `while` are intentionally excluded because Japanese may encode them
+// through ordinary clause ordering without a dedicated connective.
+const SOURCE_STRONG_CONTRAST = /\b(?:unlike|despite|in spite of)\b/i;
+const JA_STRONG_CONTRAST = /(?:異なり|異なる|対照的|にもかかわらず|にも拘らず|ものの|一方で|反面)/;
+const SOURCE_EXCLUSIVITY = /\b(?:only|sole|solely|unique|uniquely)\b/i;
+const JA_EXCLUSIVITY = /(?:のみ|だけ|唯一|ただ一つ|単独で|専ら|もっぱら)/;
+const SOURCE_CONDITION = /\b(?:if|unless|provided that|as long as|depending on|whether)\b/i;
+const JA_CONDITION = /(?:場合|ならば?|ない限り|である限り|に応じて|かどうか|か否か|条件|依存|により)/;
 // Causal-model failures can append the instruction used to elicit the
 // translation (and occasionally a fresh example) after an otherwise fluent
 // Japanese result. Detect the generic instruction shape only when it appears
@@ -301,6 +310,12 @@ function hasUntranslatedSourceLabel(source: string, output: string): boolean {
   for (const word of sourceWords) counts.set(word.toLowerCase(), (counts.get(word.toLowerCase()) ?? 0) + 1);
   for (const [word, count] of counts) {
     if (count < 2) continue;
+    // A technical/proper noun repeated throughout a paragraph is often
+    // intentionally transliterated (for example “Bluetooth広告”).  The
+    // source-label detector targets duplicated extraction labels, which are
+    // normally adjacent at the start of a unit; do not reject a high-frequency
+    // domain term merely because the model preserved its Latin spelling.
+    if (count >= 3) continue;
     const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const adjacent = new RegExp(`(?:[\\u3040-\\u30ff\\u3400-\\u9fff]${escaped}|${escaped}[\\u3040-\\u30ff\\u3400-\\u9fff])`, "i");
     if (adjacent.test(output)) return true;
@@ -633,6 +648,24 @@ function semanticScopeRiskReasons(source: string, output: string): string[] {
   return reasons;
 }
 
+function discourseRelationRiskReasons(source: string, output: string): string[] {
+  // These signals are intentionally evidence for audit/selector decisions,
+  // rather than an unconditional production fallback. Japanese often encodes
+  // a relation through clause order or punctuation; requiring a fixed marker
+  // here would trade unsafe accepts for an opaque increase in fallback.
+  const reasons: string[] = [];
+  if (SOURCE_STRONG_CONTRAST.test(source) && !JA_STRONG_CONTRAST.test(output)) {
+    reasons.push("strong contrast relation missing");
+  }
+  if (SOURCE_EXCLUSIVITY.test(source) && !JA_EXCLUSIVITY.test(output)) {
+    reasons.push("exclusivity relation missing");
+  }
+  if (SOURCE_CONDITION.test(source) && !JA_CONDITION.test(output)) {
+    reasons.push("condition relation missing");
+  }
+  return reasons;
+}
+
 function spatialRelationRiskReasons(source: string, output: string): string[] {
   SOURCE_OVER_IDENTIFIER_RELATION.lastIndex = 0;
   for (const match of source.matchAll(SOURCE_OVER_IDENTIFIER_RELATION)) {
@@ -791,6 +824,7 @@ export function evaluateJaTranslation(output: string, source: string): Translati
     reasons.push("source disjunctive-both relation missing");
   }
   reasons.push(...semanticScopeRiskReasons(source, out));
+  reasons.push(...discourseRelationRiskReasons(source, out));
 
   if (
     /^\d+[.)]\s+\S/.test(source.trim()) &&
@@ -862,6 +896,22 @@ export function isPlausibleJaTranslation(output: string, source: string): boolea
     && !quality.reasons.includes("malformed citation structure")
     && !quality.reasons.some((reason) => reason.startsWith("translation contains unmodified source span"))
     && quality.score >= 0.8;
+}
+
+/**
+ * Cascade selector helper. Relation markers are retained as audit evidence,
+ * but Japanese can encode them implicitly; they are therefore not sufficient
+ * on their own to reject an otherwise invariant-safe alternate translation.
+ * All structural, language, scientific, and source-integrity reasons remain
+ * hard failures.
+ */
+export function isCascadeQualityAcceptable(output: string, source: string): boolean {
+  if (!isPlausibleJaTranslation(output, source)) return false;
+  const reasons = evaluateJaTranslation(output, source).reasons;
+  const relationOnly = reasons.length > 0 && reasons.every((reason) =>
+    / relation missing$/.test(reason)
+  );
+  return relationOnly || reasons.length === 0;
 }
 
 /**

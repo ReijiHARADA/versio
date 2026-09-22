@@ -551,7 +551,10 @@ def _rescue_while_concessive_main_clause(text: str) -> list[TranslationUnit]:
         return []
     left = text[:split_index].strip()
     right = text[split_index:].strip()
-    if not re.match(r"(?:directly\s+)?[a-z]+ing\b|(?:this|these|the|it|they|we|a|an)\b", right, re.I):
+    if not re.match(
+        r"(?:directly\s+)?[a-z]+ing\b|(?:this|these|the|it|they|we|a|an)\b|[A-Z][A-Za-z0-9-]*\b",
+        right,
+    ):
         return []
     left_body = re.sub(r"^(?:while|although)\s+", "", left.rstrip(", "), flags=re.I).strip()
     if not left_body or not right:
@@ -589,6 +592,32 @@ def _rescue_top_level_conjunction(text: str) -> list[TranslationUnit]:
         right_model = right[0].upper() + right[1:] if right else right
         return _split_rescue_at(text, match.start() + 1, left_model, right_model)
     return []
+
+
+def _rescue_hence_clause(text: str) -> list[TranslationUnit]:
+    """Retry a top-level `, hence that ...` clause as a complete unit.
+
+    A hypothesis sentence can contain a short reporting clause followed by a
+    consequence introduced with ``hence that``.  Greedy decoding sometimes
+    keeps only the first clause; both slices are meaningful when sentence
+    punctuation is supplied to the model, and the source reconstruction stays
+    exact.  Parenthesized citations and nested commas are excluded.
+    """
+    if len(text) < 160:
+        return []
+    masked = protected_span_mask(text)
+    match = re.search(r",\s+hence\s+that\s+", masked, re.I)
+    if not match:
+        return []
+    left = text[: match.start() + 1].strip()
+    right = text[match.start() + 1 :].strip()
+    if len(left.split()) < 10 or len(right.split()) < 8:
+        return []
+    if left.count("(") != left.count(")") or right.count("(") != right.count(")"):
+        return []
+    left_model = left.rstrip(",") + "."
+    right_model = right[0].upper() + right[1:] if right else right
+    return _split_rescue_at(text, match.start() + 1, left_model, right_model)
 
 
 def _rescue_top_level_clause_comma(text: str) -> list[TranslationUnit]:
@@ -639,6 +668,7 @@ def rescue_units_for_translation(source: str) -> list[TranslationUnit]:
     if not compact:
         return []
     for splitter in (
+        _rescue_hence_clause,
         _rescue_while_concessive_main_clause,
         _rescue_found_that_coordination,
         _rescue_if_so_semicolon,
