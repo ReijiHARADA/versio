@@ -31,7 +31,16 @@ const excerptReason = (row: any): string | undefined => {
 const incomplete = rows.filter((row: any) => excerptReason(row));
 const eligibleRows = rows.filter((row: any) => !excerptReason(row));
 const generated = eligibleRows.filter((row: any) => typeof row.translation === "string" && row.translation.length > 0);
-const changed = generated.filter((row: any) => row.wouldAcceptTranslation !== isPlausibleJaTranslation(row.translation, row.source));
+const strictAccept = (row: any): boolean => {
+  if (!isPlausibleJaTranslation(row.translation, row.source)) return false;
+  // Candidate cascade paths use the full semantic quality result, not only
+  // the legacy plausibility boolean. Keep the audit recheck aligned with the
+  // production opt-in engine so meta-commentary, invariant drift, and scope
+  // risks cannot be counted as accepted merely because Japanese characters
+  // are present.
+  return evaluateJaTranslation(row.translation, row.source).reasons.length === 0;
+};
+const changed = generated.filter((row: any) => row.wouldAcceptTranslation !== strictAccept(row));
 const body = eligibleRows.filter((row: any) => row.sourceCategory === "ordinary-body-prose");
 const allBody = rows.filter((row: any) => row.sourceCategory === "ordinary-body-prose");
 const bodyFallbackBefore = body.filter((row: any) => row.readerVisibleFallback).length;
@@ -39,7 +48,7 @@ const acceptedAfter = body.filter((row: any) =>
   typeof row.translation === "string"
   && row.translation.length > 0
   && !row.sourceFallback
-  && isPlausibleJaTranslation(row.translation, row.source)
+  && strictAccept(row)
 ).length;
 const bodyFallbackAfter = body.length - acceptedAfter;
 const result = {
@@ -53,7 +62,7 @@ const result = {
     key: row.key,
     sourceCategory: row.sourceCategory,
     beforeAccepted: row.wouldAcceptTranslation,
-    afterAccepted: isPlausibleJaTranslation(row.translation, row.source),
+    afterAccepted: strictAccept(row),
     beforeReasons: row.quality?.reasons ?? [],
     after: evaluateJaTranslation(row.translation, row.source),
   })),

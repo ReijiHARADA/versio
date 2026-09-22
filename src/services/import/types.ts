@@ -41,6 +41,8 @@ export type ImportConfig = {
   madladServerUrl?: string;
   ollamaServerUrl?: string;
   ollamaModel?: string;
+  /** Opt-in alternate translation after a primary-model failure. */
+  enableSelectiveCascade?: boolean;
   generateGlossary?: boolean;
   translationConcurrency?: number;
   useCache?: boolean;
