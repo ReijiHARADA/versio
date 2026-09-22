@@ -127,7 +127,7 @@ def main() -> None:
         results.append({
             **{k: row.get(k) for k in ('key', 'paperId', 'blockId', 'source')},
             'model': args.model,
-            'segmenterVersion': 'semantic-v74',
+            'segmenterVersion': 'semantic-v75',
             'sourceProtectionVersion': None if args.no_protection else ('source-protect-v11; explicit-marker-instruction' if args.explicit_placeholder_instruction else 'source-protect-v11'),
             'promptTemplate': 'CAT-Translate model card: Translate the following {src_lang} text into {tgt_lang}.',
             'translation': joined,

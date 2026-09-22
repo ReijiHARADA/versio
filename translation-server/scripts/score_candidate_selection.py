@@ -45,6 +45,17 @@ def signals(source: str, output: str) -> dict:
     # Candidate safety signals only: a sentence ending in a continuation word
     # or a stream of isolated spaced characters is not a rescue.
     continuation = bool(re.search(r"(?:の|が|を|に|と|で|は|も|そして|または|および|、)$", output.strip()))
+    # Long candidate outputs that stop without terminal punctuation are a
+    # common early-EOS signature. Keep this as an audit safety signal rather
+    # than a language-specific rejection rule: short labels and source
+    # fragments are intentionally excluded.
+    source_sentences = len([part for part in re.split(r"[.!?。！？]+", source) if part.strip()])
+    output_sentences = len([part for part in re.split(r"[.!?。！？]+", output) if part.strip()])
+    early_eos = (
+        len(source.replace(" ", "")) >= 300
+        and output_sentences < source_sentences
+        and not re.search(r"[.!?。！？]$", output.strip())
+    )
     spaced_chars = len(re.findall(r"(?:\b\S\b\s+){4,}", output)) > 0
     simplified_only = sorted(set(ch for ch in output if ch in SIMPLIFIED_ONLY_CJK))
     technical_tokens = sorted(set(TECHNICAL_TOKEN.findall(source)))
@@ -63,6 +74,7 @@ def signals(source: str, output: str) -> dict:
             "conditionPreserved": condition, "temporalRelationPreserved": temporal,
             "trendPreserved": trend,
             "lengthRatio": round(ratio, 3), "likelyTruncated": continuation,
+            "earlyEosSuspected": early_eos,
             "garbledSpacing": spaced_chars,
             "simplifiedOnlyCjk": simplified_only,
             "mixedScriptRisk": bool(simplified_only)}
@@ -74,6 +86,8 @@ def main() -> None:
                     help="JSON report containing a results array")
     ap.add_argument("--require-relations", action="store_true",
                     help="audit-only: reject selections missing relation signals")
+    ap.add_argument("--require-safety", action="store_true",
+                    help="audit-only: reject candidates with hard preservation or early-EOS risks")
     ap.add_argument("--semantic-coverage",
                     help="audit-only semantic-coverage JSON keyed by paper/block")
     ap.add_argument("--min-semantic-sim", type=float, default=0.0,
@@ -89,6 +103,11 @@ def main() -> None:
         # fixture and must not make the audit harness silently unusable.
         if row.get("key"):
             return str(row["key"])
+        # Alternate-model runner records the stable join key as `id`.
+        # Accept it explicitly so audit selection cannot silently discard a
+        # complete candidate report.
+        if row.get("id"):
+            return str(row["id"])
         block_id = row.get("blockId")
         if not block_id:
             return ""
@@ -136,6 +155,7 @@ def main() -> None:
             r["signals"]["conditionPreserved"], r["signals"]["temporalRelationPreserved"],
             r["signals"]["trendPreserved"],
             not r["signals"]["likelyTruncated"], not r["signals"]["garbledSpacing"],
+            not r["signals"]["earlyEosSuspected"],
             r["signals"]["lengthRatio"] >= 0.28), reverse=True)
         selected = ranked[0]
         coverage = semantic.get(key)
@@ -152,18 +172,36 @@ def main() -> None:
                 selected = None
         if args.require_relations and not all(selected["signals"].get(k, True) for k in ("conditionPreserved", "temporalRelationPreserved", "trendPreserved")):
             selected = None
+        if args.require_safety and selected:
+            safety = selected["signals"]
+            if (
+                safety.get("numericKept") != safety.get("numericTotal")
+                or safety.get("technicalTokenKept", 0) != safety.get("technicalTokenTotal", 0)
+                or not safety.get("claimStructurePreserved", True)
+                or not safety.get("negationPreserved", True)
+                or not safety.get("contrastPreserved", True)
+                or safety.get("likelyTruncated", False)
+                or safety.get("earlyEosSuspected", False)
+                or safety.get("garbledSpacing", False)
+                or safety.get("mixedScriptRisk", False)
+            ):
+                selected = None
+        rejected_reason = None
+        if selected is None:
+            rejected_reason = "safety_or_relation_gate" if args.require_safety else "relation_gate"
         rows.append({"key": key, "severity": unsafe[key].get("severity"),
                      "reviewLabel": unsafe[key].get("reviewLabel"),
                      "candidates": options, "auditSelection": selected["model"] if selected else None,
-                     "selectionSignals": ({**selected["signals"], "semanticCoverage": semantic_selection} if selected else {"rejectedByRelationGate": True, "semanticCoverage": semantic_selection})})
+                     "selectionSignals": ({**selected["signals"], "semanticCoverage": semantic_selection} if selected else {"rejectedByRelationGate": True, "rejectedReason": rejected_reason, "semanticCoverage": semantic_selection})})
     summary = {"rows": len(rows), "candidateCount": len(candidates),
                "unmatchedCandidateRows": unmatched_candidates,
                "unmatchedCandidateKeys": unmatched_keys,
                "selectionIsAuditOnly": True,
-        "hardSignalPass": sum(1 for r in rows if r["selectionSignals"].get("numericKept") == r["selectionSignals"].get("numericTotal") and r["selectionSignals"].get("technicalTokenKept", 0) == r["selectionSignals"].get("technicalTokenTotal", 0) and r["selectionSignals"].get("claimStructurePreserved", True) and r["selectionSignals"].get("negationPreserved") and r["selectionSignals"].get("contrastPreserved") and not r["selectionSignals"].get("likelyTruncated") and not r["selectionSignals"].get("garbledSpacing")),
+        "hardSignalPass": sum(1 for r in rows if r["selectionSignals"].get("numericKept") == r["selectionSignals"].get("numericTotal") and r["selectionSignals"].get("technicalTokenKept", 0) == r["selectionSignals"].get("technicalTokenTotal", 0) and r["selectionSignals"].get("claimStructurePreserved", True) and r["selectionSignals"].get("negationPreserved") and r["selectionSignals"].get("contrastPreserved") and not r["selectionSignals"].get("likelyTruncated") and not r["selectionSignals"].get("earlyEosSuspected") and not r["selectionSignals"].get("garbledSpacing")),
                "relationSignalPass": sum(1 for r in rows if all(r["selectionSignals"].get(k, True) for k in ("conditionPreserved", "temporalRelationPreserved", "trendPreserved"))),
                "relationRiskRows": [r["key"] for r in rows if not all(r["selectionSignals"].get(k, True) for k in ("conditionPreserved", "temporalRelationPreserved", "trendPreserved"))],
-               "rejectedByRelationGate": sum(1 for r in rows if r["auditSelection"] is None)}
+               "rejectedByRelationGate": sum(1 for r in rows if r["auditSelection"] is None),
+               "rejectedBySafety": sum(1 for r in rows if r["auditSelection"] is None and r["selectionSignals"].get("rejectedReason") == "safety_or_relation_gate")}
     Path(args.output).write_text(json.dumps({"summary": summary, "rows": rows}, ensure_ascii=False, indent=2) + "\n")
     print(json.dumps(summary))
 

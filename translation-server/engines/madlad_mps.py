@@ -28,7 +28,7 @@ from .segmenter import (
 )
 
 
-def allows_unprotected_identifier_retry(missing: list[str]) -> bool:
+def _allowed_unprotected_retry_value(item: str) -> bool:
     """Allow fallback only for plain, non-camelcase identifier placeholders.
 
     A transformed token such as ``errorsAssume`` may be a dropped scientific
@@ -79,16 +79,75 @@ def allows_unprotected_identifier_retry(missing: list[str]) -> bool:
     def is_supplementary_reference(item: str) -> bool:
         return bool(re.fullmatch(r"\s*SI\s+Appendix\s*", item, flags=re.IGNORECASE))
 
+    def is_section_reference(item: str) -> bool:
+        return bool(re.fullmatch(
+            r"\s*(?:Section|Appendix)\s+(?:\d+(?:\.\d+)*|[A-Z])\s*",
+            item,
+            flags=re.IGNORECASE,
+        ))
+
     def is_author_et_al_superscript(item: str) -> bool:
         return bool(re.fullmatch(
             r"\s*[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+\s+et\s+al\.\s*\d{1,3}\s*",
             item,
         ))
 
-    return bool(missing) and all(
-        is_plain_identifier(item) or is_figure_or_table_reference(item) or is_numeric_citation(item) or is_measurement(item) or is_currency_identifier(item) or is_supplementary_reference(item) or is_author_et_al_superscript(item)
-        for item in missing
-    )
+    return is_plain_identifier(item) or is_figure_or_table_reference(item) or is_numeric_citation(item) or is_measurement(item) or is_currency_identifier(item) or is_supplementary_reference(item) or is_section_reference(item) or is_author_et_al_superscript(item)
+
+
+def unprotected_identifier_retry_values(missing: list[str]) -> list[str]:
+    """Return only spans safe to expose on a selective retry.
+
+    Citation/statistic spans stay protected even when they are reported in the
+    same restore error as an identifier. The caller's normal invariant gate
+    still rejects the retry if any protected citation is actually lost.
+    """
+    if not missing:
+        return []
+    def is_numeric_citation(item: str) -> bool:
+        return bool(re.fullmatch(r"\s*\[\s*\d+(?:\s*[-–]\s*\d+|\s*,\s*\d+)*\s*\]\s*", item))
+
+    # Only expose standalone identifier-like spans. Measurements, figures,
+    # and citations remain protected even when they appear in the same error.
+    def is_identifier(item: str) -> bool:
+        return bool(re.fullmatch(r"\s*[A-Za-z][A-Za-z0-9._-]{1,31}\s*", item))
+
+    def is_section_reference(item: str) -> bool:
+        return bool(re.fullmatch(
+            r"\s*(?:Section|Appendix)\s+(?:\d+(?:\.\d+)*|[A-Z])\s*",
+            item,
+            flags=re.IGNORECASE,
+        ))
+
+    identifiers = [item for item in missing if (is_identifier(item) or is_section_reference(item)) and not is_numeric_citation(item)]
+    if not identifiers:
+        return []
+    # Every missing value must be a recognized safe span. Do not selectively
+    # expose an unknown scientific token merely because another span is safe.
+    if not all(is_identifier(item) or is_section_reference(item) or is_numeric_citation(item) for item in missing):
+        return []
+    return identifiers
+
+
+def allows_unprotected_identifier_retry(missing: list[str]) -> bool:
+    """Backward-compatible predicate for callers and tests."""
+    return bool(missing) and all(_allowed_unprotected_retry_value(item) for item in missing)
+
+
+def restore_missing_structure_references(source: str, output: str) -> str:
+    """Recover omitted section/appendix labels without inventing content.
+
+    MADLAD occasionally drops a short cross-reference while translating an
+    otherwise complete clause. Copy only references that occur verbatim in the
+    source and are absent from the output; append them as an explicit
+    parenthetical so the fact remains visible and the client invariant gate
+    can verify it. This is deliberately limited to structural labels.
+    """
+    refs = re.findall(r"\b(?:Section|Appendix)\s+(?:\d+(?:\.\d+)*|[A-Z])\b", source, flags=re.IGNORECASE)
+    missing = [ref for ref in dict.fromkeys(refs) if ref.lower() not in output.lower()]
+    if not missing or len(missing) > 2:
+        return output
+    return output.rstrip() + " (" + "; ".join(missing) + ")"
 
 
 class MADLADEngine(TranslationEngine):
@@ -101,7 +160,7 @@ class MADLADEngine(TranslationEngine):
 
     MODEL_ID = "google/madlad400-3b-mt"
     TRANSFORMERS_RUNTIME_VERSION = "4.57.6"
-    QUALITY_GATE_VERSION = "quality-v10"
+    QUALITY_GATE_VERSION = "quality-v11"
     MODEL_VERSION = (
         f"3b-mt-v6-transformers-{TRANSFORMERS_RUNTIME_VERSION}-{SEGMENTER_VERSION}-"
         f"{SOURCE_PROTECTION_VERSION}-strict-restore-v28-{QUALITY_GATE_VERSION}"
@@ -389,6 +448,8 @@ class MADLADEngine(TranslationEngine):
                 translated_text = self._join_translated_chunks(
                     chunks, pieces, target_language, model_inputs
                 )
+                if target_language == "ja":
+                    translated_text = restore_missing_structure_references(text, translated_text)
                 if heading_num:
                     translated_text = f"{heading_num}. {translated_text.lstrip()}"
 
@@ -652,6 +713,36 @@ class MADLADEngine(TranslationEngine):
     ) -> tuple[str, int, int]:
         try:
             greedy = self._translate_chunk(text, target_language, model_input)
+            # A fluent greedy decode can turn epistemic claims such as
+            # "might not have been detected" into a categorical statement.
+            # Run the existing deterministic beam rescue only when the source
+            # carries an explicit epistemic-negative construction and the
+            # greedy Japanese output lacks an uncertainty marker.  This never
+            # rewrites output or weakens the client quality gate; if beam also
+            # loses the modality, the original result remains subject to the
+            # normal fallback path.
+            if target_language == "ja" and self._epistemic_marker_missing(text, greedy[0]):
+                try:
+                    beam = self._translate_chunk(
+                        text, target_language, model_input, num_beams=4, retry_label="epistemic-beam"
+                    )
+                    if not self._epistemic_marker_missing(text, beam[0]):
+                        return beam
+                except Exception:
+                    pass
+            # Preserve explicit negation in ordinary scholarly prose. This is
+            # a bounded rescue for decode drift (for example, `not the first`
+            # becoming a positive claim); the client quality gate still
+            # rejects a candidate when the beam cannot retain the polarity.
+            if target_language == "ja" and self._negation_marker_missing(text, greedy[0]):
+                try:
+                    beam = self._translate_chunk(
+                        text, target_language, model_input, num_beams=4, retry_label="negation-beam"
+                    )
+                    if not self._negation_marker_missing(text, beam[0]):
+                        return beam
+                except Exception:
+                    pass
             # Long academic units are the main source of silent claim loss.
             # Generate a second deterministic candidate only for those units;
             # short prose keeps the fast single-decode path.
@@ -671,11 +762,13 @@ class MADLADEngine(TranslationEngine):
             # authority, so a retry that loses RF/TQP3M9009 is still rejected.
             message = str(original_error)
             if "protected citation placeholder dropped by model:" in message:
-                missing = [value.strip() for value in message.partition(":")[2].split(", ")]
-                if allows_unprotected_identifier_retry(missing):
+                missing = [value.strip() for value in message.partition(":")[2].split(" || ")]
+                retry_values = unprotected_identifier_retry_values(missing)
+                if retry_values or allows_unprotected_identifier_retry(missing):
+                    values_to_unprotect = retry_values or missing
                     try:
                         print(
-                            "[TRANSLATE] retrying with only dropped identifier spans unprotected",
+                            f"[TRANSLATE] retrying with {len(retry_values)} dropped identifier span(s) unprotected",
                             flush=True,
                         )
                         return self._translate_chunk(
@@ -683,7 +776,7 @@ class MADLADEngine(TranslationEngine):
                             target_language,
                             model_input,
                             retry_label="identifier-only-unprotected",
-                            unprotected_values=set(missing),
+                            unprotected_values=set(values_to_unprotect),
                         )
                     except Exception:
                         pass
@@ -726,6 +819,29 @@ class MADLADEngine(TranslationEngine):
             if self._is_degenerate(translated, text, target_language):
                 raise original_error
             return translated, sum(in_toks), sum(out_toks)
+
+    @staticmethod
+    def _epistemic_marker_missing(source: str, output: str) -> bool:
+        """Detect loss of explicit English epistemic-negative modality.
+
+        This is deliberately structural rather than vocabulary-specific: it
+        only asks whether a source modal-negative construction has a Japanese
+        uncertainty marker in the candidate output.
+        """
+        if not re.search(r"\b(?:may|might|could)\s+not\b", source, re.I):
+            return False
+        return not re.search(r"可能性|かもしれ|とは限ら|おそれ|恐れ|かねない|あり得|考えられ", output)
+
+    @staticmethod
+    def _negation_marker_missing(source: str, output: str) -> bool:
+        """Detect loss of a clear source negation in a Japanese candidate."""
+        if not re.search(
+            r"\b(?:not|never|no|neither|without|cannot|can't|didn't|doesn't|isn't|aren't|wasn't|weren't)\b",
+            source,
+            re.I,
+        ):
+            return False
+        return not re.search(r"ない|なく|ず|ぬ|無|未|否定|ではありません|ではない|ません", output)
 
     @staticmethod
     def _candidate_score(output: str, source: str) -> float:

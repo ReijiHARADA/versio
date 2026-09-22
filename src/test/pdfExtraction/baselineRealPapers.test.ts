@@ -47,11 +47,16 @@ describe("baseline benchmark on cached real papers", () => {
       if (paper.id === "ppg-earring") {
         const abstractHeading = blocks.find((block) => block.text.trim() === "Abstract");
         expect(abstractHeading?.role).toBe("heading");
-        const abstract = blocks.find((block) => block.text.startsWith("only 54.88%"));
-        expect(abstract?.text).toContain("To address this, we developed PPG Earring");
-        expect(abstract?.text).not.toContain("Heart rate is a key vital sign");
-        expect(abstract?.text).not.toContain("ThisnationalworkLicense");
-        expect(abstract?.text).not.toContain("Creative Commons");
+        const stitchedAbstract = blocks.find((block) =>
+          block.text.startsWith("Heart rate is a key vital sign")
+        );
+        expect(stitchedAbstract?.text).toContain("only 54.88% of the time");
+        expect(stitchedAbstract?.text).toContain("which measures 14 mm in diameter");
+        expect(stitchedAbstract?.text).toContain("To address this, we developed PPG Earring");
+        expect(stitchedAbstract?.text).not.toMatch(/\bOur$/);
+        expect(stitchedAbstract?.text).not.toContain("ThisnationalworkLicense");
+        expect(stitchedAbstract?.text).not.toContain("Creative Commons");
+        expect(blocks.some((block) => block.text.trim().startsWith("which measures 14 mm"))).toBe(false);
         const license = blocks.find((block) => /Creative Commons Attribution-NoDerivatives/i.test(block.text));
         expect(license?.role).toBe("copyright");
       }

@@ -103,6 +103,16 @@ class SegmenterTests(unittest.TestCase):
         self.assertEqual(inputs, ["Neither cathodal nor anodal tDCS altered the fairness perception of participants (Fig. 8 and Table S3)."])
         self.assert_round_trip(source)
 
+    def test_model_input_makes_metric_comparison_explicit_without_changing_source(self) -> None:
+        source = "Signal-to-Noise Ratio (SNR) is a common metric to measure the level of the target signal compared to the level of background noise."
+        units = segment_for_translation(source)
+        self.assertEqual([unit.text for unit in units], [source])
+        self.assertEqual(
+            [unit.model_input for unit in units],
+            ["Signal-to-Noise Ratio (SNR) is a common metric. It measures the level of the target signal compared with the level of background noise."],
+        )
+        self.assert_round_trip(source)
+
     def test_empty_source_can_still_be_segmented(self) -> None:
         units = segment_for_translation("   ")
         self.assertEqual(len(units), 1)
@@ -295,6 +305,18 @@ class SegmenterTests(unittest.TestCase):
     def test_author_year_semicolon_never_becomes_a_clause_boundary(self) -> None:
         source = "The first clause explains the experimental context with enough ordinary prose to make a long translation unit for the model, citing (Sigure & Koseki, 1998; Marquardt et al., 2011; Benko et al., 2009) as prior work before continuing through a detailed explanation of why the setup matters for later analysis and interpretation in the study."
         self.assertEqual(split_for_translation(source), [source])
+
+    def test_cross_reference_wording_is_normalized_only_for_model_input(self) -> None:
+        source = "Our results, along with Section 5 next, shall provide evidence for the proposed model."
+        units = segment_for_translation(source)
+        self.assertEqual(units[0].text, source)
+        self.assertIn("as discussed in Section 5", units[0].model_input)
+
+    def test_epistemic_detection_wording_is_normalized_only_for_model_input(self) -> None:
+        source = "Smaller effects might not have been detected in the study."
+        units = segment_for_translation(source)
+        self.assertEqual(units[0].text, source)
+        self.assertIn("may have gone undetected", units[0].model_input)
 
     def test_quoted_figure_caption_lead_can_split_from_long_description(self) -> None:
         source = "“Traces” (Fig.7), made for one participant; a jeweller who does not wear jewellery discusses strong attachments that can pass from generation to generation, and the piece uses a porcelain pearl, clasps, and velvet to show contours, folds, and hinges as etched lines across the surface of the fabric, while the arrangement preserves the material history and intimate significance described by the participant."

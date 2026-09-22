@@ -24,6 +24,15 @@ class CandidateSelectionSignalsTest(unittest.TestCase):
         self.assertFalse(result["likelyTruncated"])
         self.assertFalse(result["garbledSpacing"])
 
+    def test_long_output_without_terminal_sentence_is_early_eos_signal(self):
+        source = " ".join(["This is a complete academic sentence with a claim."] * 8)
+        output = "これは学術的な主張を含む文です。" * 3 + "最後の主張が途中で"
+        result = signals(source, output)
+        self.assertTrue(result["earlyEosSuspected"])
+
+    def test_short_label_is_not_early_eos(self):
+        self.assertFalse(signals("Figure 2.", "図2") ["earlyEosSuspected"])
+
     def test_simplified_cjk_is_audit_only_mixed_script_signal(self):
         result = signals("The result was significant.", "結果は显著でした。")
         self.assertTrue(result["mixedScriptRisk"])
@@ -128,6 +137,18 @@ class CandidateSelectionSignalsTest(unittest.TestCase):
             self.assertEqual(report["summary"]["rows"], 1)
             self.assertEqual(report["summary"]["unmatchedCandidateRows"], 0)
 
+    def test_cli_joins_alternate_runner_id(self):
+        baseline = {"rows": [{"key": "paper:block", "severity": 0, "source": "A result.", "translation": "結果。"}]}
+        candidate = {"results": [{"id": "paper:block", "model": "fixture", "source": "A result.", "translation": "結果。"}]}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); b, c, o = root / "b.json", root / "c.json", root / "o.json"
+            b.write_text(json.dumps(baseline)); c.write_text(json.dumps(candidate), encoding="utf-8")
+            with patch("sys.argv", ["score_candidate_selection.py", "--baseline", str(b), "--candidate", str(c), "--output", str(o)]):
+                main()
+            report = json.loads(o.read_text())
+            self.assertEqual(report["summary"]["rows"], 1)
+            self.assertEqual(report["summary"]["unmatchedCandidateRows"], 0)
+
     def test_semantic_threshold_can_reject_candidate_audit_only(self):
         baseline = {"rows": [{"blockId": "heldout-1", "source": "A result was significant.", "translation": "結果。"}]}
         candidate = {"results": [{"blockId": "heldout-1", "model": "fixture", "source": "A result was significant.", "translation": "結果。"}]}
@@ -137,6 +158,16 @@ class CandidateSelectionSignalsTest(unittest.TestCase):
             b, c, s, o = [root / name for name in ("b.json", "c.json", "s.json", "o.json")]
             b.write_text(json.dumps(baseline), encoding="utf-8"); c.write_text(json.dumps(candidate), encoding="utf-8"); s.write_text(json.dumps(coverage), encoding="utf-8")
             with patch("sys.argv", ["score_candidate_selection.py", "--baseline", str(b), "--candidate", str(c), "--semantic-coverage", str(s), "--min-semantic-sim", "0.65", "--output", str(o)]):
+                main()
+            self.assertIsNone(json.loads(o.read_text())["rows"][0]["auditSelection"])
+
+    def test_require_safety_rejects_early_eos_candidate(self):
+        baseline = {"rows": [{"key": "paper:block", "severity": 0, "source": "A result.", "translation": "結果。"}]}
+        candidate = {"results": [{"id": "paper:block", "model": "fixture", "source": "A result. " * 80, "translation": "結果が途中で"}]}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); b, c, o = root / "b.json", root / "c.json", root / "o.json"
+            b.write_text(json.dumps(baseline)); c.write_text(json.dumps(candidate), encoding="utf-8")
+            with patch("sys.argv", ["score_candidate_selection.py", "--baseline", str(b), "--candidate", str(c), "--require-safety", "--output", str(o)]):
                 main()
             self.assertIsNone(json.loads(o.read_text())["rows"][0]["auditSelection"])
 

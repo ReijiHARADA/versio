@@ -15,6 +15,19 @@ const reportName = process.env.TRANSLATION_AUDIT_REPORT ?? "translation-audit.js
 const report = JSON.parse(fs.readFileSync(path.join(root, "test-data/real-papers/reports", reportName), "utf8")) as { papers: Array<{ paper: { id: string; title: string; filename: string }; rows: any[] }> };
 
 const compact = (value: string) => value.replace(/\s+/g, " ").trim();
+function inferAttribution(row: any, matchCount: number, sourceIntegrity: any): { primary: string; secondary?: string; basis: string } {
+  const reason = String(row.fallbackReason ?? "").toLowerCase();
+  if (/(?:invariant|protected|citation|scientific|placeholder|identifier|measurement)/.test(reason)) {
+    return { primary: "E", basis: "fallback reason identifies scientific/citation preservation or invariant failure" };
+  }
+  if (sourceIntegrity.status === "review" || matchCount !== 1) {
+    return { primary: "D", basis: "source geometry or structure requires review before model attribution" };
+  }
+  if (matchCount === 1 && sourceIntegrity.status === "provisional-pass") {
+    return { primary: "A", basis: "canonical source matches one coherent layout block; remaining fallback is model/quality candidate" };
+  }
+  return { primary: "G", basis: "insufficient evidence for layer attribution" };
+}
 const output: any[] = [];
 const hypothesisByBlock: Record<string, { primary: string; secondary?: string; basis: string }> = {
   "significant-other/b-bb2064ca": { primary: "A", basis: "complete single-column ordinary prose; degenerate decode despite clean source" },
@@ -63,6 +76,19 @@ for (const entry of report.papers) {
   for (const row of failures) {
     const matches = extracted.blocks.filter((block) => compact(block.original ?? "") === compact(row.source));
     const layoutMatches = extracted.layoutBlocks.filter((block) => compact(block.text ?? "") === compact(row.source));
+    const matchedLines = layoutMatches[0]?.lines ?? [];
+    const matchedColumns = [...new Set(matchedLines.map((line: any) => line.column))];
+    const matchedListLines = matchedLines.filter((line: any) => /^(?:[-•‣∙]|\d+[.)])\s+/.test(line.text)).length;
+    const startsContinuation = /^(?:and|or|but|to|of|for|where|which|that|one|exception)\b/i.test(row.source);
+    const endsContinuation = /\b(?:and|or|but|to|of|for|where|which|that|one)\s*$/i.test(row.source);
+    const sourceIntegrity = {
+      status: matchedColumns.length > 1 || matchedListLines > 0 || startsContinuation || endsContinuation ? "review" : "provisional-pass",
+      columnCount: matchedColumns.length,
+      listLines: matchedListLines,
+      startsContinuation,
+      endsContinuation,
+      pageSwitches: new Set(matchedLines.map((line: any) => line.page)).size - 1,
+    };
     output.push({
       paperId: entry.paper.id,
       blockId: row.blockId,
@@ -73,7 +99,7 @@ for (const entry of report.papers) {
       translation: row.translation,
       fallbackReason: row.fallbackReason,
       diagnostics: row.structuralWarnings,
-      attribution: hypothesisByBlock[`${entry.paper.id}/${row.blockId}`] ?? { primary: "G", basis: "unclassified" },
+      attribution: hypothesisByBlock[`${entry.paper.id}/${row.blockId}`] ?? inferAttribution(row, matches.length, sourceIntegrity),
       matchCount: matches.length,
       layoutMatchCount: layoutMatches.length,
       attributionStatus: matches.length === 1 ? "matched" : matches.length === 0 ? "unmatched" : "ambiguous",
@@ -94,19 +120,7 @@ for (const entry of report.papers) {
       })),
     });
     const geometry = output[output.length - 1];
-    const lines = geometry.matches[0]?.lines ?? [];
-    const columns = [...new Set(lines.map((line: any) => line.column))];
-    const listLines = lines.filter((line: any) => /^(?:[-•‣∙]|\d+[.)])\s+/.test(line.text)).length;
-    const startsContinuation = /^(?:and|or|but|to|of|for|where|which|that|one|exception)\b/i.test(row.source);
-    const endsContinuation = /\b(?:and|or|but|to|of|for|where|which|that|one)\s*$/i.test(row.source);
-    geometry.sourceIntegrity = {
-      status: columns.length > 1 || listLines > 0 || startsContinuation || endsContinuation ? "review" : "provisional-pass",
-      columnCount: columns.length,
-      listLines,
-      startsContinuation,
-      endsContinuation,
-      pageSwitches: new Set(lines.map((line: any) => line.page)).size - 1,
-    };
+    geometry.sourceIntegrity = sourceIntegrity;
   }
 }
 

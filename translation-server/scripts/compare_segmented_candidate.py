@@ -89,7 +89,7 @@ def main() -> None:
         result = {
             **{k: row.get(k) for k in ('key', 'paperId', 'blockId', 'source')},
             'model': args.model,
-            'segmenterVersion': 'semantic-v74',
+            'segmenterVersion': 'semantic-v75',
             'sourceProtectionVersion': 'source-protect-v11',
             'translation': joined,
             'unitCount': len(translated_units),

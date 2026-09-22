@@ -51,6 +51,10 @@ export function shouldTranslateBlock(
   }
   if (block.type === "heading") return false;
   if (block.type === "paragraph" || block.type === "footnote") {
+    // Extraction can attach geometry-backed warnings when a physical block
+    // is likely an unfinished continuation. Preserve the source until the
+    // layout resolver repairs it instead of sending the fragment to MADLAD.
+    if (block.metadata?.translationInputWarning) return false;
     return shouldTranslateParagraph(block.original);
   }
   if (block.type === "figure" || block.type === "table") {

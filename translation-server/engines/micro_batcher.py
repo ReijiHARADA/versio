@@ -17,7 +17,7 @@ from typing import Optional
 from .base import TranslationResult
 from .citation_protect import protect_citations
 from .segmenter import is_probable_panel_fragment, segment_for_translation
-from .madlad_mps import MADLADEngine, get_engine
+from .madlad_mps import MADLADEngine, get_engine, restore_missing_structure_references
 
 
 @dataclass
@@ -362,6 +362,8 @@ class MicroBatchScheduler:
                     translated = MADLADEngine._join_translated_chunks(
                         chunks, part, item.target_language, item_model_inputs
                     )
+                if item.target_language == "ja":
+                    translated = restore_missing_structure_references(item.text, translated)
                 if item.heading_num:
                     translated = f"{item.heading_num}. {translated.lstrip()}"
                 degenerate = engine._is_degenerate(translated, item.text, item.target_language)

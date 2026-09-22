@@ -2,10 +2,27 @@ from __future__ import annotations
 
 import unittest
 
-from engines.madlad_mps import MADLADEngine, allows_unprotected_identifier_retry
+from engines.madlad_mps import (
+    MADLADEngine,
+    allows_unprotected_identifier_retry,
+    restore_missing_structure_references,
+    unprotected_identifier_retry_values,
+)
 
 
 class MadladUnitQualityTests(unittest.TestCase):
+    def test_epistemic_retry_only_triggers_for_missing_uncertainty_marker(self) -> None:
+        source = "Smaller effects might not have been detected."
+        self.assertTrue(MADLADEngine._epistemic_marker_missing(source, "小さな効果は検出されなかった。"))
+        self.assertFalse(MADLADEngine._epistemic_marker_missing(source, "小さな効果は検出されなかった可能性があります。"))
+        self.assertFalse(MADLADEngine._epistemic_marker_missing("The effect was not detected.", "効果は検出されなかった。"))
+
+    def test_negation_retry_only_triggers_when_polarity_is_lost(self) -> None:
+        source = "We are not the first to explore this interaction."
+        self.assertTrue(MADLADEngine._negation_marker_missing(source, "この相互作用を最初に探求した。"))
+        self.assertFalse(MADLADEngine._negation_marker_missing(source, "この相互作用を最初に探求したわけではない。"))
+        self.assertFalse(MADLADEngine._negation_marker_missing("We explore this interaction.", "この相互作用を探求する。"))
+
     def test_identifier_retry_rejects_camelcase_placeholder_drift(self) -> None:
         self.assertTrue(allows_unprotected_identifier_retry(["errors"]))
         self.assertFalse(allows_unprotected_identifier_retry(["errorsAssume"]))
@@ -14,6 +31,28 @@ class MadladUnitQualityTests(unittest.TestCase):
         self.assertTrue(allows_unprotected_identifier_retry(["[23]", "[6, 22]"]))
         self.assertFalse(allows_unprotected_identifier_retry(["[23] and the result"]))
         self.assertFalse(allows_unprotected_identifier_retry(["p < 0.001"]))
+
+    def test_selective_retry_keeps_citation_protected(self) -> None:
+        self.assertEqual(
+            unprotected_identifier_retry_values(["ErgoSALBP", "[24]"]),
+            ["ErgoSALBP"],
+        )
+        self.assertFalse(allows_unprotected_identifier_retry(["ErgoSALBP", "[24]"]))
+
+    def test_selective_retry_allows_section_reference(self) -> None:
+        self.assertEqual(
+            unprotected_identifier_retry_values(["Section 5", "Appendix G"]),
+            ["Section 5", "Appendix G"],
+        )
+
+    def test_missing_structure_reference_is_recovered_verbatim(self) -> None:
+        self.assertEqual(
+            restore_missing_structure_references(
+                "The results are discussed in Section 5.",
+                "結果を示す。",
+            ),
+            "結果を示す。 (Section 5)",
+        )
 
     def test_identifier_retry_allows_scalar_measurements(self) -> None:
         self.assertTrue(allows_unprotected_identifier_retry(["1 pF", "40 mAh"]))
@@ -200,7 +239,6 @@ class MadladUnitQualityTests(unittest.TestCase):
         preserved = "この方法は2つの条件を区別しない。"
         omitted = "この方法は2つの条件を区別する。"
         self.assertGreater(MADLADEngine._candidate_score(preserved, source), MADLADEngine._candidate_score(omitted, source))
-
 
 class MadladPartialSourceFallbackTests(unittest.TestCase):
     def test_rejects_partial_untranslated_source_span(self) -> None:
