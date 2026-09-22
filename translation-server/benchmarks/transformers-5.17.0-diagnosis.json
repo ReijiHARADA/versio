@@ -1,0 +1,289 @@
+{
+  "model_id": "google/madlad400-3b-mt",
+  "model_snapshot": "/Users/harada/.cache/huggingface/hub/models--google--madlad400-3b-mt/snapshots/fa184c675da0b5c9e1c8694fccd4e12e2d422094",
+  "transformers_version": "5.17.0",
+  "torch_version": "2.14.0",
+  "tokenizers_version": "0.23.2",
+  "safetensors_version": "0.8.0",
+  "dtype": "torch.bfloat16",
+  "device": "mps",
+  "generation": {
+    "num_beams": 1,
+    "do_sample": false,
+    "no_repeat_ngram_size": 4,
+    "input_truncation": 512,
+    "max_new_tokens": "min(max(input_tokens*3+24,48),384)"
+  },
+  "repair_applied": false,
+  "checkpoint_tensor_mapping_before_repair": {
+    "config_tie_word_embeddings": true,
+    "checkpoint_keys": {
+      "shared.weight": {
+        "present": false,
+        "shape": null
+      },
+      "encoder.embed_tokens.weight": {
+        "present": false,
+        "shape": null
+      },
+      "decoder.embed_tokens.weight": {
+        "present": true,
+        "shape": [
+          256000,
+          1024
+        ]
+      },
+      "lm_head.weight": {
+        "present": true,
+        "shape": [
+          256000,
+          1024
+        ]
+      }
+    },
+    "loaded": {
+      "encoder.embed_tokens": {
+        "dtype": "torch.bfloat16",
+        "device": "mps:0",
+        "absmax": 2.140625,
+        "checkpoint_equal_after_cast": {
+          "decoder.embed_tokens.weight": false,
+          "lm_head.weight": true
+        }
+      },
+      "decoder.embed_tokens": {
+        "dtype": "torch.bfloat16",
+        "device": "mps:0",
+        "absmax": 253.0,
+        "checkpoint_equal_after_cast": {
+          "decoder.embed_tokens.weight": true,
+          "lm_head.weight": false
+        }
+      },
+      "lm_head": {
+        "dtype": "torch.bfloat16",
+        "device": "mps:0",
+        "absmax": 2.140625,
+        "checkpoint_equal_after_cast": {
+          "decoder.embed_tokens.weight": false,
+          "lm_head.weight": true
+        }
+      },
+      "encoder_equals_decoder": false
+    }
+  },
+  "checkpoint_tensor_mapping_after_repair": {
+    "config_tie_word_embeddings": true,
+    "checkpoint_keys": {
+      "shared.weight": {
+        "present": false,
+        "shape": null
+      },
+      "encoder.embed_tokens.weight": {
+        "present": false,
+        "shape": null
+      },
+      "decoder.embed_tokens.weight": {
+        "present": true,
+        "shape": [
+          256000,
+          1024
+        ]
+      },
+      "lm_head.weight": {
+        "present": true,
+        "shape": [
+          256000,
+          1024
+        ]
+      }
+    },
+    "loaded": {
+      "encoder.embed_tokens": {
+        "dtype": "torch.bfloat16",
+        "device": "mps:0",
+        "absmax": 2.140625,
+        "checkpoint_equal_after_cast": {
+          "decoder.embed_tokens.weight": false,
+          "lm_head.weight": true
+        }
+      },
+      "decoder.embed_tokens": {
+        "dtype": "torch.bfloat16",
+        "device": "mps:0",
+        "absmax": 253.0,
+        "checkpoint_equal_after_cast": {
+          "decoder.embed_tokens.weight": true,
+          "lm_head.weight": false
+        }
+      },
+      "lm_head": {
+        "dtype": "torch.bfloat16",
+        "device": "mps:0",
+        "absmax": 2.140625,
+        "checkpoint_equal_after_cast": {
+          "decoder.embed_tokens.weight": false,
+          "lm_head.weight": true
+        }
+      },
+      "encoder_equals_decoder": false
+    }
+  },
+  "fixtures": [
+    {
+      "id": "group_cardinality_known_false_accept",
+      "paper": "cognitive-vr-mnemonic-processing",
+      "block_id": "b-0948b947",
+      "source_sha256": "477693a58115ed2e9b8fcb151db55979f804d2019a4121c925cebec12dadd6fa",
+      "source_chars": 340,
+      "segmenter_units": 1,
+      "input_tokens": 70,
+      "output_tokens": 156,
+      "units": [
+        {
+          "source": "None of the groups differed significantly with respect to their grade of final secondary school examinations (H(2)=4.17, p=0.124), and the rule sets A and B resulted in equivalent memory performance outcomes regarding the respective memory tasks (MCQ: U=727.0, z=−1.04, p=0.30; CT: U=801.0, z=−0.31, p=0.741; FR: U=811.5, z=−0.23, p=0.841).",
+          "model_input": "None of the groups differed significantly with respect to their grade of final secondary school examinations (H(2)=4.17, ZZCIT1ZZ), and the rule sets A and B resulted in equivalent memory performance outcomes regarding the respective memory tasks ZZCIT2ZZ.",
+          "input_token_ids_sha256": "73d6962e887b73610549e93bd0e0c2c6dfa4af4bcda72fe087dff3cc76e07d39",
+          "input_tokens": 70,
+          "raw_output": "ะะะะ ะะ ั้ ะ ะ ั ะ ๊ ๊ ะ ้ ้ ๊ ้ ะะ้ ้้ ้ะ ้ะะ ้้ะ ๊ะ ๊า ๊าะ ้่ ้ ่ ้้้ ๊าาาา ้ะ้ ๊ะะ ๊้้้้ง ้้ง้้้ย ้ะ๊ะะ้้้ะ้้ ง้้งง้้ ่้้้ว้้้่้้วววว ้้ว ้วว ววว้วว้้ว",
+          "restored_output": "ะะะะ ะะ ั้ ะ ะ ั ะ ๊ ๊ ะ ้ ้ ๊ ้ ะะ้ ้้ ้ะ ้ะะ ้้ะ ๊ะ ๊า ๊าะ ้่ ้ ่ ้้้ ๊าาาา ้ะ้ ๊ะะ ๊้้้้ง ้้ง้้้ย ้ะ๊ะะ้้้ะ้้ ง้้งง้้ ่้้้ว้้้่้้วววว ้้ว ้วว ววว้วว้้วp=0.124(MCQ: U=727.0, z=−1.04, p=0.30; CT: U=801.0, z=−0.31, p=0.741; FR: U=811.5, z=−0.23, p=0.841)",
+          "output_tokens": 156,
+          "reached_eos": true,
+          "hit_generation_cap": false,
+          "max_new_tokens": 234
+        }
+      ],
+      "joined_output": "ะะะะ ะะ ั้ ะ ะ ั ะ ๊ ๊ ะ ้ ้ ๊ ้ ะะ้ ้้ ้ะ ้ะะ ้้ะ ๊ะ ๊า ๊าะ ้่ ้ ่ ้้้ ๊าาาา ้ะ้ ๊ะะ ๊้้้้ง ้้ง้้้ย ้ะ๊ะะ้้้ะ้้ ง้้งง้้ ่้้้ว้้้่้้วววว ้้ว ้วว ววว้วว้้วp=0.124(MCQ: U=727.0, z=−1.04, p=0.30; CT: U=801.0, z=−0.31, p=0.741; FR: U=811.5, z=−0.23, p=0.841)",
+      "elapsed_seconds": 7.938
+    },
+    {
+      "id": "participant_total_scope_known_fallback",
+      "paper": "cognitive-vr-mnemonic-processing",
+      "block_id": "b-7570f515",
+      "source_sha256": "ad2be591e8df00c20cbc0e3d3618ee84cb3a6eb4ceb1155083505486394209bd",
+      "source_chars": 161,
+      "segmenter_units": 1,
+      "input_tokens": 38,
+      "output_tokens": 73,
+      "units": [
+        {
+          "source": "Eighty-eight participants from various fields of study were recruited from Osnabrück University and received partial course credit or 5€ for their participation.",
+          "model_input": "Eighty-eight participants from various fields of study were recruited from Osnabrück University and received partial course credit or 5€ for their participation.",
+          "input_token_ids_sha256": "d7e90fcbe503d608ff0b0fcb9bf2abfa000a677a633461fae103dafe50d33183",
+          "input_tokens": 38,
+          "raw_output": "ě ě ĕ ě ă ă ě ę ě ė ě ê ě ế ě ẹ ě ẽ ě ề ě ể ě ệ ě ẻ ě ů ě ű ě ŭ ě ỹ ě.",
+          "restored_output": "ě ě ĕ ě ă ă ě ę ě ė ě ê ě ế ě ẹ ě ẽ ě ề ě ể ě ệ ě ẻ ě ů ě ű ě ŭ ě ỹ ě.",
+          "output_tokens": 73,
+          "reached_eos": true,
+          "hit_generation_cap": false,
+          "max_new_tokens": 138
+        }
+      ],
+      "joined_output": "ě ě ĕ ě ă ă ě ę ě ė ě ê ě ế ě ẹ ě ẽ ě ề ě ể ě ệ ě ẻ ě ů ě ű ě ŭ ě ỹ ě.",
+      "elapsed_seconds": 3.292
+    },
+    {
+      "id": "parallel_clause_phrase_repetition",
+      "paper": "hci-empirical-methods",
+      "block_id": "b-f82706b9",
+      "source_sha256": "5e4b52452a47d6796c320af0eb6aad7b2e909b84a40d9878acfd9edd056c87fd",
+      "source_chars": 146,
+      "segmenter_units": 1,
+      "input_tokens": 32,
+      "output_tokens": 39,
+      "units": [
+        {
+          "source": "This course will teach how to pose testable research questions, how to make and measure observations, and how to design and conduct an experiment.",
+          "model_input": "This course will teach how to pose testable research questions, how to make and measure observations, and how to design and conduct an experiment.",
+          "input_token_ids_sha256": "4e47b8df3d180df2051c7de5840aa3af72a824100a1fe4388dee311c1d91d9c1",
+          "input_tokens": 32,
+          "raw_output": "ü ü ü ü Ü ü ü ü ű ü ü üü ü ü ü ə ü ü ü ä ü ü ü ı ü ü ü u ü ü ü e ü ü ü.",
+          "restored_output": "ü ü ü ü Ü ü ü ü ű ü ü üü ü ü ü ə ü ü ü ä ü ü ü ı ü ü ü u ü ü ü e ü ü ü.",
+          "output_tokens": 39,
+          "reached_eos": true,
+          "hit_generation_cap": false,
+          "max_new_tokens": 120
+        }
+      ],
+      "joined_output": "ü ü ü ü Ü ü ü ü ű ü ü üü ü ü ü ə ü ü ü ä ü ü ü ı ü ü ü u ü ü ü e ü ü ü.",
+      "elapsed_seconds": 1.8
+    },
+    {
+      "id": "dense_statistical_results",
+      "paper": "cognitive-vr-mnemonic-processing",
+      "block_id": "b-0948b947",
+      "source_sha256": "522d607947750eb46635bd213ed31e9269475be04db2c4da2e6baa79c7e5d838",
+      "source_chars": 188,
+      "segmenter_units": 1,
+      "input_tokens": 28,
+      "output_tokens": 108,
+      "units": [
+        {
+          "source": "Regarding memory performance, the three groups performed significantly different on the memory tasks (MCQ: H(2) = 6.06, p = 0.048; CT: H(2) = 17.01, p < 0.001; FR: H(2) = 9.52, p = 0.009).",
+          "model_input": "Regarding memory performance, the three groups performed significantly different on the memory tasks ZZCIT1ZZ.",
+          "input_token_ids_sha256": "e051398b41365f57c0699f99799682a546491dde38c3f5c5fafebd532ca45cb7",
+          "input_tokens": 28,
+          "raw_output": "ęęęęėęęęêęęęăęęęəęęęěęęęĕęęęįęęęąęęęőęęę ęęėėęęėįęęėąęęėăęęėêęęėəęęėĕęęėőęęėěęęė ęęăėęęăəęęăêęęăăęęăěęęăĕęę",
+          "restored_output": "ęęęęėęęęêęęęăęęęəęęęěęęęĕęęęįęęęąęęęőęęę ęęėėęęėįęęėąęęėăęęėêęęėəęęėĕęęėőęęėěęęė ęęăėęęăəęęăêęęăăęęăěęęăĕęę(MCQ: H(2) = 6.06, p = 0.048; CT: H(2) = 17.01, p < 0.001; FR: H(2) = 9.52, p = 0.009)",
+          "output_tokens": 108,
+          "reached_eos": false,
+          "hit_generation_cap": true,
+          "max_new_tokens": 108
+        }
+      ],
+      "joined_output": "ęęęęėęęęêęęęăęęęəęęęěęęęĕęęęįęęęąęęęőęęę ęęėėęęėįęęėąęęėăęęėêęęėəęęėĕęęėőęęėěęęė ęęăėęęăəęęăêęęăăęęăěęęăĕęę(MCQ: H(2) = 6.06, p = 0.048; CT: H(2) = 17.01, p < 0.001; FR: H(2) = 9.52, p = 0.009)",
+      "elapsed_seconds": 4.727
+    },
+    {
+      "id": "ordinary_body_historical_post_model_fallback",
+      "paper": "linguistics-register-web-corpus",
+      "block_id": "b-4f4e757b",
+      "historical_fallback_reason": "server returned source fallback: unit_2:translation_quality_rejected:ValueError; whole_item:translation_quality_rejected:ValueError",
+      "source_sha256": "e461dbf89af30034d23544f25cd71dece0e7406af14e37f55e2c4331726e20da",
+      "source_chars": 489,
+      "segmenter_units": 3,
+      "input_tokens": 103,
+      "output_tokens": 258,
+      "units": [
+        {
+          "source": "In the previous section, the analysis of the model performances suggested that the discriminative importance of grammar varies across registers.",
+          "model_input": "In the previous section, the analysis of the model performances suggested that the discriminative importance of grammar varies across registers.",
+          "input_token_ids_sha256": "8590c20650fea6f79921ee0bd47c2cf85e7732ce5fb646ce52109eddedec5c55",
+          "input_tokens": 31,
+          "raw_output": "은 은 는 은 을 을 은 에 은 으 은 え 은 이 은 에서 을 에 을 에서 에 에 에서 에서 은.",
+          "restored_output": "은 은 는 은 을 을 은 에 은 으 은 え 은 이 은 에서 을 에 을 에서 에 에 에서 에서 은.",
+          "output_tokens": 53,
+          "reached_eos": true,
+          "hit_generation_cap": false,
+          "max_new_tokens": 117
+        },
+        {
+          "source": "In this section, we continue this discussion by analyzing the models qualitatively through discriminative features.",
+          "model_input": "In this section, we continue this discussion by analyzing the models qualitatively through discriminative features.",
+          "input_token_ids_sha256": "f4645fd6f3209de7461c66763901fcef6fbadae7c9951b11d7b541987a45a846",
+          "input_tokens": 24,
+          "raw_output": "2019.01.15.-0001:0000 2020.01:59:00",
+          "restored_output": "2019.01.15.-0001:0000 2020.01:59:00",
+          "output_tokens": 37,
+          "reached_eos": true,
+          "hit_generation_cap": false,
+          "max_new_tokens": 96
+        },
+        {
+          "source": "We present examples from three registers: Interview, for which lexicogrammatical information displayed the highest performance, and Travel blog and Discussion forum, for which lexical information alone achieved high performance.",
+          "model_input": "We present examples from three registers: Interview, for which lexicogrammatical information displayed the highest performance, and Travel blog and Discussion forum, for which lexical information alone achieved high performance.",
+          "input_token_ids_sha256": "0523f8a4215770fcb7b2e96e0c055c0d5d427ad503c40fdd580ffbc4f3d3ccec",
+          "input_tokens": 48,
+          "raw_output": "ςηηηηεεεε ςηεηεε εεεε ε εεε ε ςη εεεηε εε εεηεη εεηηε ε εηεεη ε εεη εηεηη εε εηε εη εη εε ηεηε ηεεηηη εηηηαηηη ηηηηοηηη ςησσσσςσςσσσ σσσσ ςσσςςσςςςσσ σςσς σςσσ ιεηηιεηε ςσς ςσ ςςσ ι εηε ηηηεηαηε",
+          "restored_output": "ςηηηηεεεε ςηεηεε εεεε ε εεε ε ςη εεεηε εε εεηεη εεηηε ε εηεεη ε εεη εηεηη εε εηε εη εη εε ηεηε ηεεηηη εηηηαηηη ηηηηοηηη ςησσσσςσςσσσ σσσσ ςσσςςσςςςσσ σςσς σςσσ ιεηηιεηε ςσς ςσ ςςσ ι εηε ηηηεηαηε",
+          "output_tokens": 168,
+          "reached_eos": false,
+          "hit_generation_cap": true,
+          "max_new_tokens": 168
+        }
+      ],
+      "joined_output": "은 은 는 은 을 을 은 에 은 으 은 え 은 이 은 에서 을 에 을 에서 에 에 에서 에서 은. 2019.01.15.-0001:0000 2020.01:59:00 ςηηηηεεεε ςηεηεε εεεε ε εεε ε ςη εεεηε εε εεηεη εεηηε ε εηεεη ε εεη εηεηη εε εηε εη εη εε ηεηε ηεεηηη εηηηαηηη ηηηηοηηη ςησσσσςσςσσσ σσσσ ςσσςςσςςςσσ σςσς σςσσ ιεηηιεηε ςσς ςσ ςςσ ι εηε ηηηεηαηε",
+      "elapsed_seconds": 11.622
+    }
+  ]
+}

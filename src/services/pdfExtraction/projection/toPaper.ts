@@ -679,8 +679,18 @@ export function projectCanonicalToPaper(input: {
       current.pageEnd !== next.pageStart ||
       current.metadata.translationInputWarning ||
       /[.!?。！？:]\s*$/.test(current.original.trim()) ||
-      !/^(?:which|that|and|or|but|where|while|because|although|including)\b/i.test(next.original.trim())
+      !/^(?:which|that|and|or|but|where|while|because|although|including)\b/i.test(next.original.trim()) &&
+      !/^[a-z]/.test(next.original.trim())
     ) continue;
+    const currentBox = current.boundingBoxes[0];
+    const nextBox = next.boundingBoxes[0];
+    const currentBottom = current.boundingBoxes.reduce((max, box) => Math.max(max, box.y + box.height), 0);
+    const currentTop = current.boundingBoxes.reduce((min, box) => Math.min(min, box.y), Number.POSITIVE_INFINITY);
+    const nextBottom = next.boundingBoxes.reduce((max, box) => Math.max(max, box.y + box.height), 0);
+    const nextTop = next.boundingBoxes.reduce((min, box) => Math.min(min, box.y), Number.POSITIVE_INFINITY);
+    const adjacentBand = currentBox && nextBox && nextBox.x > currentBox.x + currentBox.width + 12 &&
+      currentTop <= nextBottom && nextTop <= currentBottom;
+    if (!adjacentBand) continue;
     rowAggregatedBlocks[index] = {
       ...current,
       metadata: {

@@ -12,7 +12,7 @@ import re
 
 # Bump this whenever source-fact protection rules change. It participates in
 # the server translation/cache identity so old accepts are not reused silently.
-SOURCE_PROTECTION_VERSION = "source-protect-v14"
+SOURCE_PROTECTION_VERSION = "source-protect-v17"
 
 # Repeated title-case technical names are factual identifiers even when they
 # do not contain an internal capital transition (for example ``Bluetooth``).
@@ -114,6 +114,22 @@ AUTHOR_ET_AL_SUPERSCRIPT_RE = re.compile(
 # ordinary prose or drop it during semantic rescue segmentation.
 SUPPLEMENTARY_APPENDIX_RE = re.compile(r"\bSI\s+Appendix\b")
 
+# Cross-references to numbered sections/appendices are scientific structure,
+# not prose. Keeping the label and its number atomic prevents a decoder from
+# dropping the reference while translating a long multi-clause paragraph.
+SECTION_CROSS_REFERENCE_RE = re.compile(
+    r"\b(?:Section|Appendix)\s+(?:\d+(?:\.\d+)*|[A-Z])\b",
+    re.IGNORECASE,
+)
+
+# Keep a figure/table label and its optional subpanel together. Treating
+# `Figure 2` and `(a)` as separate placeholders makes long paragraphs prone to
+# partial restoration failure; the complete structural reference is atomic.
+FIGURE_TABLE_CROSS_REFERENCE_RE = re.compile(
+    r"\b(?:Figure|Fig\.|Table|Tbl\.)\s+\d+(?:\s*\([A-Za-z]\))?(?![A-Za-z0-9])",
+    re.IGNORECASE,
+)
+
 # Names in explicit acknowledgment lists are factual entities, not translation
 # targets. Capture only a list of at least three two-token proper names after
 # a clear thank/acknowledge verb; ordinary title-cased prose is not protected.
@@ -163,10 +179,17 @@ SCIENTIFIC_TOKEN_RE = re.compile(
     r"|\bp\s*(?:=|<|>|≤|≥)\s*\.?\d+(?:\.\d+)?"  # p-value
     r"|\b[A-Za-z]\s*(?:\u0338\s*=|!=|≠|=|<|>|≤|≥)\s*[-+]?\d+(?:\.\d+)?"  # variable comparison
     r"|\bn\s*=\s*\d+"  # sample size
+    # Participant/condition labels such as `(P4)` are source structure.
+    # Keep the delimiters atomic with the identifier so quoted observations do
+    # not fail closed when a decoder drops the marker.
+    r"|\([A-Z]{1,4}\d{1,3}\)"
     r"|\(\s*0?\.\d+(?:\s*,\s*0?\.\d+)*\s*\)"  # compact reported p-value/effect-size decimals
     r"|\b\d+(?:\.\d+)?\s*°\s*[CF]\s*\(\s*\d+(?:\.\d+)?\s*°\s*[CF]\s*\)"  # paired Celsius/Fahrenheit value
     r"|\b\d+(?:\.\d+)?\s*°\s*[CF]\b"  # Celsius/Fahrenheit temperatures
-    r"|\b\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|Hz|kHz|MHz|GHz|kg|mg|pF|nF|uF|μF|mF|mAh|dB|%)\b"  # measurement
+    # Math-font SI symbols are common in native PDF text (for example
+    # ``1.49𝑚𝑚``). Keep them atomic just like their ASCII equivalents;
+    # otherwise MADLAD may turn the unit into unrelated kana/Latin glyphs.
+    r"|\b\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|Hz|kHz|MHz|GHz|kg|mg|pF|nF|uF|μF|mF|mAh|dB|%|𝑚𝑚|𝑚)\b"  # measurement
     # Technical/model identifiers such as DeepIV. A terminal run of capitals
     # is a strong identifier signal; protecting every mixed-case product name
     # can move it to the end of a Japanese sentence during greedy decoding.
@@ -267,6 +290,8 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
         + list(NARRATIVE_AUTHOR_YEAR_CITATION_RE.finditer(text))
         + list(AUTHOR_ET_AL_SUPERSCRIPT_RE.finditer(text))
         + list(SUPPLEMENTARY_APPENDIX_RE.finditer(text))
+        + list(FIGURE_TABLE_CROSS_REFERENCE_RE.finditer(text))
+        + list(SECTION_CROSS_REFERENCE_RE.finditer(text))
         + [match for match in ACKNOWLEDGMENT_NAME_LIST_RE.finditer(text)]
         + list(AUTHOR_YEAR_CITATION_RE.finditer(text))
         + list(SCIENTIFIC_PARENTHETICAL_RE.finditer(text))
@@ -561,8 +586,11 @@ def restore_citations(
         raise ValueError("protected citation placeholder malformed")
     if reject_missing and missing:
         raise ValueError(
+            # Use a separator that cannot be confused with commas inside a
+            # numeric citation such as `[8, 18, 20]`; the rescue path parses
+            # this diagnostic to expose only safe identifier spans.
             "protected citation placeholder dropped by model: "
-            + ", ".join(missing[:4])
+            + " || ".join(missing[:4])
         )
     out = leftover.sub("", out)
     for citation in missing:

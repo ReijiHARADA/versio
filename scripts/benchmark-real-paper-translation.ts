@@ -125,6 +125,12 @@ const serverToken = (process.env.MADLAD_SERVER_TOKEN?.trim() ||
   (tokenFile ? fs.readFileSync(tokenFile, "utf8").trim() : "")) || undefined;
 const requestTimeoutMs = Number(process.env.MADLAD_BENCH_REQUEST_TIMEOUT_MS ?? 180_000);
 const maxRequestAttempts = Number(process.env.MADLAD_BENCH_MAX_ATTEMPTS ?? 3);
+// MPS generation is single-device work; unbounded Promise.all fan-out can
+// leave several requests waiting behind one generate() call indefinitely.
+// Keep benchmark execution bounded and reproducible without changing the
+// production server's micro-batch behavior. Set MADLAD_BENCH_CONCURRENCY=1
+// for fully serial diagnostics.
+const requestConcurrency = Math.max(1, Number(process.env.MADLAD_BENCH_CONCURRENCY ?? 2));
 
 function compact(text: string): string {
   return text.replace(/\s+/g, " ").trim();
@@ -133,6 +139,7 @@ function compact(text: string): string {
 function structuralWarnings(block: PaperBlock): string[] {
   const text = compact(block.original ?? "");
   const warnings: string[] = [];
+  if (block.metadata.translationInputWarning) warnings.push(String(block.metadata.translationInputWarning));
   if (block.metadata.tableSourceFallback === true || block.metadata.role === "table") {
     warnings.push("table-like text retained source-only by production policy");
   }
@@ -276,7 +283,17 @@ async function translate(texts: string[]): Promise<ServerTranslation[]> {
     for (const text of texts) results.push(await one(text));
     return results;
   }
-  return Promise.all(texts.map(one));
+  const results: ServerTranslation[] = new Array(texts.length);
+  let next = 0;
+  const worker = async () => {
+    while (true) {
+      const index = next++;
+      if (index >= texts.length) return;
+      results[index] = await one(texts[index]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(requestConcurrency, texts.length) }, worker));
+  return results;
 }
 
 function extractQuietly(paper: CatalogPaper, pages: Awaited<ReturnType<typeof extractPdfPages>>) {
@@ -494,14 +511,14 @@ async function main() {
           source: compact(block.original ?? ""),
           block,
         }))
-        .filter(({ block, source }) => shouldTranslateBlock(block, refSectionIds) && shouldTranslateParagraph(source));
+        .filter(({ block, source }) => shouldTranslateBlock(block, refSectionIds) && shouldTranslateParagraph(source) && !block.metadata.translationInputWarning);
       const translated = await translate(modelInputs.map((entry) => entry.source));
       const resultBySampleIndex = new Map(
         modelInputs.map((entry, index) => [entry.index, translated[index]])
       );
       const rows = sampled.map((block, index): AuditRow => {
         const source = compact(block.original ?? "");
-        const wouldSubmitToModel = shouldTranslateBlock(block, refSectionIds) && shouldTranslateParagraph(source);
+        const wouldSubmitToModel = shouldTranslateBlock(block, refSectionIds) && shouldTranslateParagraph(source) && !block.metadata.translationInputWarning;
         const result = resultBySampleIndex.get(index);
         const structurallySkipped = block.translationStatus === "skipped";
         // Match the production path's deterministic, source-grounded

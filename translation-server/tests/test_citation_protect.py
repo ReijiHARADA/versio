@@ -31,6 +31,14 @@ class CitationProtectTests(unittest.TestCase):
         self.assertEqual(cites, ["Table 5", "Figure 2a"])
         self.assertEqual(restore_citations(protected, cites, nonce), source)
 
+    def test_section_and_appendix_cross_references_are_atomic(self) -> None:
+        source = "Our results, along with Section 5 next, refer to Appendix G."
+        protected, cites, nonce = protect_citations(source)
+        self.assertIn("Section 5", cites)
+        self.assertIn("Appendix G", cites)
+        self.assertNotIn("Section 5", protected)
+        self.assertEqual(restore_citations(protected, cites, nonce), source)
+
     def test_table_keyword_without_number_is_not_protected(self) -> None:
         source = "The table contains five rows."
         protected, cites, _ = protect_citations(source)
@@ -289,6 +297,19 @@ class CitationProtectTests(unittest.TestCase):
             restore_citations("結合は1pFで、電池は40mAhを供給する。", citations, nonce, reject_missing=True),
             "結合は1 pFで、電池は40 mAhを供給する。",
         )
+
+    def test_protects_math_font_measurements_from_native_pdf_text(self) -> None:
+        source = "The sensor measures 1.49𝑚𝑚×1.49𝑚𝑚."
+        protected, citations, nonce = protect_citations(source)
+        self.assertEqual(citations, ["1.49𝑚𝑚", "1.49𝑚𝑚"])
+        self.assertNotIn("1.49𝑚𝑚", protected)
+        self.assertEqual(restore_citations(protected, citations, nonce), source)
+
+    def test_protects_parenthesized_participant_label(self) -> None:
+        source = "The participant said the signal was wrong (P4)."
+        protected, citations, nonce = protect_citations(source)
+        self.assertIn("(P4)", citations)
+        self.assertEqual(restore_citations(protected, citations, nonce), source)
 
     def test_protects_variable_comparison_parenthetical(self) -> None:
         source = "OLS is used for comparison (where y \u0338= 0 when x = 0)."

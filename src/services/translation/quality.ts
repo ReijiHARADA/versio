@@ -53,6 +53,10 @@ const JA_BINARY_GROUP_COMPARISON = /(?:両群|二群|2群)\s*(?:間|間で|間�
 // Japanese result. Detect the generic instruction shape only when it appears
 // after translated content; do not blacklist domain words or named examples.
 const TRANSLATION_INSTRUCTION_MARKER = /(?:次の(?:英語|英文)(?:の学術テキスト)?を日本語に翻訳してください|英語(?:の)?学術テキストを日本語に翻訳|translate the following (?:english )?(?:academic )?text|output only the japanese translation)/i;
+// Models sometimes append a translator's note or wording advice after an
+// otherwise plausible paragraph. This is output-side meta commentary, not a
+// domain term; reject the structure without naming any paper-specific words.
+const TRANSLATION_META_COMMENTARY = /(?:^|[。！？\n]\s*)(?:注|訳注|補足|備考)\s*[:：]/u;
 
 // A common decoder failure preserves an acronym while corrupting its expanded
 // term into a mixed-script Latin fragment (for example `...アンダNCY（CRC）`).
@@ -70,9 +74,43 @@ function hasMalformedAcronymExpansion(source: string, output: string): boolean {
   return false;
 }
 
+// Decoder corruption can splice a Latin suffix/prefix directly into Japanese
+// text (for example `ニUDGE`, `ローティORY`, or `スーパーvised`). These are
+// not ordinary bilingual terms: academic identifiers normally place Latin
+// text before Japanese or separate it with punctuation/whitespace. Keep this
+// structural check independent of any vocabulary blacklist.
+function hasMixedScriptCorruption(source: string, output: string): boolean {
+  const sourceTokens = new Set((source.match(/[A-Za-z]{2,}/g) ?? []).map((token) => token.toLowerCase()));
+  const candidates = [
+    ...output.matchAll(/[\u3040-\u30ff]([A-Z]{2,})/g),
+    ...output.matchAll(/[\u3040-\u30ff]([a-z]{3,})/g),
+    ...output.matchAll(/[\u3040-\u30ff]\s+([a-z]{4,})\b/g),
+  ];
+  return candidates.some((match) => {
+    const candidate = match[1].toLowerCase();
+    // PDF/model tokenization can expose the uppercase prefix of a mixed-case
+    // identifier (e.g. `SAL` from source token `SALbp`). Treat that as the
+    // same source token; genuinely new Latin prose still fails closed.
+    if (sourceTokens.has(candidate)) return false;
+    if (/^[A-Z]{2,}$/.test(match[1]) && [...sourceTokens].some((token) => token.startsWith(candidate) && token.length > candidate.length)) return false;
+    return true;
+  });
+}
+
 function hasTranslationInstructionContamination(output: string): boolean {
   const match = TRANSLATION_INSTRUCTION_MARKER.exec(output);
   return match !== null && match.index > 0;
+}
+
+function hasTranslationMetaCommentary(output: string): boolean {
+  return TRANSLATION_META_COMMENTARY.test(output);
+}
+
+function hasMalformedCitationStructure(source: string, output: string): boolean {
+  if (/\[\s*\]/.test(output)) return true;
+  const sourceHasNumericCitation = /\[\d+(?:\s*[-–—]\s*\d+)?(?:\s*,\s*\d+(?:\s*[-–—]\s*\d+)?)*\]/.test(source);
+  if (!sourceHasNumericCitation) return false;
+  return /\[\[\s*\d|\[\s*\]/.test(output);
 }
 
 /** Restore valid UTF-8 byte tokens if an older bundled server emitted them. */
@@ -270,7 +308,7 @@ const NON_TECHNICAL_UPPERCASE_WORDS = new Set([
   "WITH",
 ]);
 
-export const TRANSLATION_QUALITY_VERSION = "quality-v9";
+export const TRANSLATION_QUALITY_VERSION = "quality-v11";
 
 export type TranslationQuality = {
   score: number;
@@ -314,7 +352,10 @@ const SCIENTIFIC_PATTERNS: Array<[ScientificInvariant["kind"], RegExp]> = [
   // Electrical/biomedical units are frequently attached to the value in
   // Japanese output (for example `1 pF` -> `1pF`). Treat the complete value
   // as one invariant so the unit is not double-counted as a missing acronym.
-  ["measurement", /\b\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|hz|khz|mhz|uw|mw|w|kg|mg|pf|nf|uf|μf|mf|mah|db|%|°[cf])\b/gi],
+  ["measurement", /(?:\b|(?<=[x×]))\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|hz|khz|mhz|uw|mw|w|kg|mg|pf|nf|uf|μf|mf|mah|db|%|°[cf]|[cf])\b/gi],
+  // Native PDF text can split an SI prefix from its unit (`1M Hz`). Keep it
+  // equivalent to the compact form (`1MHz`) during invariant comparison.
+  ["measurement", /\b\d+(?:\.\d+)?\s*[kKmMgG]\s+Hz\b/gi],
   // Preserve all-caps acronyms and mixed-case technical identifiers. The
   // latter covers model/system names such as DeepIV without treating normal
   // prose as an invariant.
@@ -326,13 +367,31 @@ const SCIENTIFIC_PATTERNS: Array<[ScientificInvariant["kind"], RegExp]> = [
 ];
 
 export function extractScientificInvariants(source: string): ScientificInvariant[] {
+  // Normalize locale decimal commas before applying measurement/number
+  // patterns so `0,7 mm` is treated as the same fact as `0.7 mm`.
+  const invariantSource = source.normalize("NFKC").replace(/[μµ]/g, "u").replace(/℃/g, "°C").replace(
+    /(\d),\s*(?=\d{1,2}\s*(?:mm|cm|m|km|ms|s|hz|khz|mhz|uw|mw|w|kg|mg|pf|nf|uf|μf|mf|mah|db|%|°[cf])\b)/gi,
+    "$1.",
+  );
   const found: ScientificInvariant[] = [];
   const covered: Array<[number, number]> = [];
   for (const [kind, pattern] of SCIENTIFIC_PATTERNS) {
     pattern.lastIndex = 0;
-    for (const match of source.matchAll(pattern)) {
+    for (const match of invariantSource.matchAll(pattern)) {
       const start = match.index ?? 0;
       const end = start + match[0].length;
+      // Digits attached to a mixed-case identifier are usually a model
+      // suffix (AirPodsPro2, ATTiny85), not a superscript citation.  Treating
+      // them as citations makes a faithful localized identifier look like an
+      // invented reference in the output.  Lowercase prose forms such as
+      // `decisions3,6` remain citation candidates.
+      if (kind === "citation" && start > 0 && /[A-Za-z]/.test(source[start - 1]) && /^\d/.test(match[0])) {
+        const prefix = invariantSource.slice(0, start).match(/[A-Za-z]+$/)?.[0] ?? "";
+        if (/[A-Z]/.test(prefix) && /[a-z]/.test(prefix)) continue;
+        // Dimension chains such as `x0.7 mm` are measurements, not a
+        // superscript citation beginning with zero.
+        if (/[x×]$/.test(prefix)) continue;
+      }
       // Do not also record each component number inside a protected statistic.
       if ((kind === "number" || kind === "year" || kind === "acronym") && covered.some(([left, right]) => start >= left && end <= right)) continue;
       if (kind === "acronym" && NON_TECHNICAL_UPPERCASE_WORDS.has(match[0].toUpperCase())) continue;
@@ -345,6 +404,7 @@ export function extractScientificInvariants(source: string): ScientificInvariant
 
 function normalizeInvariant(value: string): string {
   return value
+    .normalize("NFKC")
     .toLowerCase()
     .replace(/[０-９]/g, (digit) => String.fromCharCode(digit.charCodeAt(0) - 0xfee0))
     .replace(/[\s\u00a0]/g, "")
@@ -353,12 +413,24 @@ function normalizeInvariant(value: string): string {
     // exact citation payload requirement below.
     .replace(/[［］【】]/g, (bracket) => ({ "［": "[", "］": "]", "【": "[", "】": "]" })[bracket] ?? bracket)
     .replace(/[−–—]/g, "-")
+    .replace(/(\d),\s*(?=\d{1,2}\s*(?:mm|cm|m|km|ms|s|hz|khz|mhz|uw|mw|w|kg|mg|pf|nf|uf|μf|mf|mah|db|%|°[cf])\b)/gi, "$1.")
+    // Some academic Japanese decodes use locale-style decimal commas
+    // (`0,7 mm`). Treat a comma between two digits as a decimal separator for
+    // invariant comparison; ordinary list punctuation remains unchanged.
     .replace(/\u0338=/g, "!=")
-    .replace(/≠/g, "!=");
+    .replace(/≠/g, "!=")
+    .replace(/[μµ]/g, "u")
+    .replace(/℃/g, "°c")
+    .replace(/(?<=\d)c\b/gi, "°c");
 }
 
 function invariantFactKey(item: ScientificInvariant): string {
   let value = normalizeInvariant(item.value);
+  // Figure/table labels may be localized or abbreviated (`Figure 2(c)` ↔
+  // `Fig. 2(c)`, `Table 5` ↔ `Tbl. 5`). Canonicalize only the structural
+  // label; the numeric/panel payload remains exact.
+  if (item.kind === "figure") value = value.replace(/^fig(?:ure)?s?\.?/, "fig");
+  if (item.kind === "table") value = value.replace(/^tbl(?:table)?\.?/, "tbl");
   // PDF extraction may leave a citation as superscript `problem”15`, while a
   // translation renders the same reference as `[15]`. Match its exact payload.
   if (item.kind === "citation") value = value.replaceAll("[", "").replaceAll("]", "");
@@ -375,7 +447,12 @@ function outputContainsInvariant(output: string, invariant: ScientificInvariant,
       const escaped = number.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       // Require a structural label near the number; an unrelated count such
       // as `3つ` must not satisfy `Section 3`.
-      return new RegExp(`(?:第\\s*${escaped}\\s*[節章]|(?:セクション|section|chapter|appendix)\\s*${escaped})`, "i").test(output);
+      if (new RegExp(`(?:第\\s*${escaped}\\s*[節章]|(?:セクション|section|chapter|appendix)\\s*${escaped})`, "i").test(output)) return true;
+      // Japanese academic prose often elides the repeated label when a
+      // sentence begins `5.2で説明した...` or `5.2に示す...`. Accept that
+      // compact form only with an explicit reference verb, never a bare
+      // number, so ordinary measurements/counts cannot satisfy a section ref.
+      return new RegExp(`(?:^|[^0-9])${escaped}(?:で説明|に示|において|を参照)`, "i").test(output);
     });
   }
   if (invariant.kind === "figure") {
@@ -430,6 +507,13 @@ function outputContainsInvariant(output: string, invariant: ScientificInvariant,
   // in the output; a coincidental substring in an unrelated model name must
   // not satisfy the invariant.
   const escapedAcronym = invariant.value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // A brand/model phrase may be compacted during Japanese typography
+  // (`AirPods Pro 2` -> `AirPodsPro2`).  When the source acronym is followed
+  // by a model descriptor and numeric suffix, accept the compact identifier
+  // only when it still begins with the exact source acronym.
+  if (new RegExp(`\\b${escapedAcronym}\\s+[A-Za-z]+\\s+\\d+\\b`, "i").test(source)) {
+    if (new RegExp(`(?:^|[^a-z0-9])${escapedAcronym}[A-Za-z0-9]+(?:$|[^a-z0-9])`, "i").test(output)) return true;
+  }
   const splitIdentifier = new RegExp(`\\b([A-Z][a-z][A-Za-z0-9]*)\\s+(${escapedAcronym})\\b`, "g");
   for (const match of source.matchAll(splitIdentifier)) {
     const identifier = `${match[1]}${match[2]}`;
@@ -439,7 +523,23 @@ function outputContainsInvariant(output: string, invariant: ScientificInvariant,
   // `BERT` must not be treated as preserved merely because `DeBERTa` occurs.
   // Method/model identifiers are ASCII tokens even when adjacent to Japanese.
   const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`(?:^|[^a-z0-9])${escaped}(?:$|[^a-z0-9])`, "i").test(output);
+  // Japanese text is commonly adjacent to an unchanged ASCII acronym
+  // (`I2C線`, `BERTについて`).  Treat only ASCII letters/digits as identifier
+  // characters at the boundary; a Unicode script boundary must not make a
+  // correctly preserved technical token look missing.
+  // `normalizeInvariant` removes whitespace for numeric matching. Preserve
+  // whitespace here so separate acronyms such as `STW VIDI` do not become one
+  // synthetic identifier and incorrectly hide both tokens.
+  const lowerOutput = output.normalize("NFKC").toLowerCase();
+  const lowerValue = invariant.value.normalize("NFKC").toLowerCase();
+  let offset = lowerOutput.indexOf(lowerValue);
+  while (offset >= 0) {
+    const before = offset > 0 ? lowerOutput[offset - 1] : "";
+    const after = lowerOutput[offset + lowerValue.length] ?? "";
+    if (!/[a-z0-9]/i.test(before) && !/[a-z0-9]/i.test(after)) return true;
+    offset = lowerOutput.indexOf(lowerValue, offset + 1);
+  }
+  return false;
 }
 
 function invariantQuality(source: string, output: string): { score: number; reasons: string[]; criticalMissing: boolean } {
@@ -630,7 +730,10 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   if (hasKana && SIMPLIFIED_CJK_CONTAMINATION.test(out)) reasons.push("simplified Chinese mixed into Japanese");
   if (hasKana && hasUntranslatedForeignProse(out)) reasons.push("untranslated foreign-language prose");
   if (hasTranslationInstructionContamination(out)) reasons.push("model output contains translation instruction contamination");
+  if (hasTranslationMetaCommentary(out)) reasons.push("model output contains translation meta-commentary");
+  if (hasMalformedCitationStructure(source, out)) reasons.push("malformed citation structure");
   if (hasMalformedAcronymExpansion(source, out)) reasons.push("malformed acronym expansion");
+  if (hasMixedScriptCorruption(source, out)) reasons.push("mixed-script decoder corruption");
 
   if (latinRatioBeyondSource(out, source) > 0.45) reasons.push("excessive new Latin text");
   // Negation changes the direction of a claim. This deliberately excludes
@@ -724,6 +827,8 @@ export function isPlausibleJaTranslation(output: string, source: string): boolea
     && !quality.reasons.includes("simplified Chinese mixed into Japanese")
     && !quality.reasons.includes("untranslated foreign-language prose")
     && !quality.reasons.includes("model output contains translation instruction contamination")
+    && !quality.reasons.includes("model output contains translation meta-commentary")
+    && !quality.reasons.includes("malformed citation structure")
     && !quality.reasons.some((reason) => reason.startsWith("translation contains unmodified source span"))
     && quality.score >= 0.8;
 }
@@ -882,7 +987,13 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   if (t.includes("\uFFFD")) {
     return "抽出テキストに未復元文字が含まれています";
   }
-  const noTerminal = !/[.!?。！？]$/.test(t);
+  // Native PDF extraction often places a superscript/numeric citation after
+  // the sentence terminator (`... non-unique.25` or `... result. [25]`).
+  // Treat that citation suffix as terminal punctuation; otherwise a complete
+  // paragraph is incorrectly classified as a page fragment and never sent to
+  // translation.
+  const terminalCitationSuffix = /[.!?。！？]\s*(?:\[\s*\d+(?:\s*[-–—,]\s*\d+)*\s*\]|\d{1,3})$/.test(t);
+  const noTerminal = !/[.!?。！？]$/.test(t) && !terminalCitationSuffix;
   // A physical block with an unclosed quote or an unmatched parenthesis is
   // incomplete.  Do this only without terminal punctuation: PDF text can
   // contain decorative punctuation in an otherwise complete sentence.
@@ -994,6 +1105,7 @@ export function unsafeParagraphStructureReason(text: string): string | null {
 
 export function shouldTranslateParagraph(text: string): boolean {
   const t = text.trim();
+  const terminalCitationSuffix = /[.!?。！？]\s*(?:\[\s*\d+(?:\s*[-–—,]\s*\d+)*\s*\]|\d{1,3})$/.test(t);
   if (isExpectedNonProseParagraph(t)) return false;
   // Journal mastheads often place an author byline and editorial state on one
   // native-text line.  It is publication metadata, not research prose; a
@@ -1026,6 +1138,7 @@ export function shouldTranslateParagraph(text: string): boolean {
   if (
     t.length >= 48
     && !/[.!?。！？]$/.test(t)
+    && !terminalCitationSuffix
     && /^(?:starting\s+from|based\s+on|using|through|by|with|from)\b/i.test(t)
   ) return false;
   // Long native-text prose without a terminal mark is almost always a
@@ -1033,7 +1146,7 @@ export function shouldTranslateParagraph(text: string): boolean {
   // period, so keep those structural forms eligible; otherwise preserve the
   // source instead of asking the model to complete a missing clause.
   const isClosedQuote = /^(?:["“]).*(?:["”])(?:\s*\[[^\]]+\])?$/s.test(t);
-  if (t.length >= 400 && !/[.!?。！？]$/.test(t) && !isClosedQuote && !/^(?:[-•‣▪∙*]|\d+[.)])\s+/.test(t)) return false;
+  if (t.length >= 400 && !/[.!?。！？]$/.test(t) && !terminalCitationSuffix && !isClosedQuote && !/^(?:[-•‣▪∙*]|\d+[.)])\s+/.test(t)) return false;
   if (/^(?:of|and|or|but|to|for|with|where|which|that)\b/.test(t)) return false;
   // A lower-case lexical fragment followed by a coordinating conjunction is
   // strong evidence that extraction started mid-sentence ("data, and ...").

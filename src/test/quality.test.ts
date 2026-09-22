@@ -30,6 +30,17 @@ describe("acronym expansion safety", () => {
     expect(evaluateJaTranslation(sourcePreserved, source).reasons).not.toContain("malformed acronym expansion");
   });
 
+  it("rejects decoder-spliced Japanese/Latin tokens without rejecting normal identifier order", () => {
+    const source = "The study evaluates nudging and rotary embeddings.";
+    const corrupted = "本研究はニUDGEとローティORYエンベディングを評価する。";
+    const intact = "本研究はナッジング、rotary embeddingsを評価する。";
+    const identifier = "本研究ではモデルGPTを評価する。";
+    expect(evaluateJaTranslation(corrupted, source).reasons).toContain("mixed-script decoder corruption");
+    expect(evaluateJaTranslation(intact, source).reasons).not.toContain("mixed-script decoder corruption");
+    expect(evaluateJaTranslation(identifier, "This study evaluates model GPT.").reasons).not.toContain("mixed-script decoder corruption");
+    expect(evaluateJaTranslation("組立ラインのErgoSALBPモデルを評価する。", "The ErgoSALBP model is evaluated in the assembly line.").reasons).not.toContain("mixed-script decoder corruption");
+  });
+
   it("rejects an unsupported numbered enumeration introduced by the model", () => {
     const source = "The first group asked a hypothesis-scanning question, while the second group asked a constraint-seeking question.";
     const hallucinated = "第一群は仮説探索質問を尋ね, 第二群は制約探索質問を尋ねた。1)自転車, 2)物, 3)学校, 4)検査。";
@@ -60,6 +71,27 @@ describe("isPlausibleJaTranslation", () => {
     const source = "Knowing how to enter formulae is important for spreadsheet users.";
     const output = "数式を入力する方法を知っておくことは、表計算ソフトの利用者にとって重要である。\n\n次の英語の学術テキストを日本語に翻訳してください。\n\nThe purpose of this study is to investigate the effects of various factors.";
     expect(evaluateJaTranslation(output, source).reasons).toContain("model output contains translation instruction contamination");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("rejects translator meta-commentary appended after otherwise fluent Japanese", () => {
+    const source = "Class discussion was organized through weekly meetings.";
+    const output = "クラスでの議論は毎週の会議を通じて組織された。注: より自然な日本語としては別の表現も可能です。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("model output contains translation meta-commentary");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("rejects malformed numeric citation brackets", () => {
+    const source = "The effect was replicated [11].";
+    const output = "この効果は再現された[[11]]。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("malformed citation structure");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("rejects an empty citation placeholder left in translated prose", () => {
+    const source = "Participants followed the rule across all trials [29,30,32].";
+    const output = "参加者はすべての試行でルールに従った [ ]。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("malformed citation structure");
     expect(isPlausibleJaTranslation(output, source)).toBe(false);
   });
 
@@ -152,11 +184,24 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation("ネックレスケースを首に掛ける。Figure 1(a)。", source)).toBe(true);
   });
 
+  it("does not treat digits attached to mixed-case model names as citations", () => {
+    const source = "The latest AirPods Pro 2 uses a 0.182 Wh battery.";
+    const output = "最新のAirPodsPro2は0.182Whの電池を使用する。";
+    const values = extractScientificInvariants(output).map((item) => `${item.kind}:${item.value}`);
+    expect(values).not.toContain("citation:2");
+    expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
   it("accepts Japanese figure labels while preserving the figure and panel number", () => {
     expect(isPlausibleJaTranslation("結果を図5に示す。", "The results are shown in Figure 5.")).toBe(true);
     expect(isPlausibleJaTranslation("結果を図1(a)に示す。", "The results are shown in Figure 1(a).")).toBe(true);
     expect(isPlausibleJaTranslation("結果を図1に示す。", "The results are shown in Figure 1(a).")).toBe(false);
     expect(isPlausibleJaTranslation("結果を図6に示す。", "The results are shown in Figure 5.")).toBe(false);
+  });
+
+  it("accepts Fig. abbreviations when the source uses Figure", () => {
+    const source = "The result is shown in Figure 2(c).";
+    expect(isPlausibleJaTranslation("結果をFig. 2(c)に示す。", source)).toBe(true);
   });
 
   it("requires table cross-references to survive in Japanese or source form", () => {
@@ -166,6 +211,18 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation("分類は第5表に示す。", source)).toBe(true);
     expect(isPlausibleJaTranslation("分類は表5に示す。値は5である。", source)).toBe(true);
     expect(isPlausibleJaTranslation("分類は異なるレベルである。値は5である。", source)).toBe(false);
+  });
+
+  it("accepts a compact Japanese section reference with an explicit reference verb", () => {
+    const source = "The result is discussed in Section 5.2.";
+    expect(isPlausibleJaTranslation("結果は5.2で説明した。", source)).toBe(true);
+    expect(isPlausibleJaTranslation("結果は5.2だった。", source)).toBe(false);
+  });
+
+  it("treats PDF-split SI prefixes as the same measurement", () => {
+    const source = "The resonant frequency is 1M Hz.";
+    expect(isPlausibleJaTranslation("共振周波数は1MHzである。", source)).toBe(true);
+    expect(isPlausibleJaTranslation("共振周波数は2MHzである。", source)).toBe(false);
   });
 
   it("treats full-width Japanese digits as the same preserved numeric facts", () => {
@@ -204,6 +261,33 @@ describe("isPlausibleJaTranslation", () => {
     const output = "n = 20では、9.6 mmにおいてF(4,33) = 2.913、p < 0.001という結果が観察された[12]。";
     expect(extractScientificInvariants(source).map((item) => item.value)).toContain("F(4,33) = 2.913");
     expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
+  it("treats locale decimal commas as equivalent scientific measurements", () => {
+    const source = "The package measures 2.0 x 2.0 x 0.7 mm.";
+    const output = "パッケージの寸法は2.0×2.0×0,7 mmである。";
+    expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
+  it("normalizes mathematical italic units before checking invariants", () => {
+    const source = "The package measures 1.49𝑚𝑚×1.49𝑚𝑚 and consumes 0.9 𝑢𝑊.";
+    const values = extractScientificInvariants(source).map((item) => item.value);
+    expect(values).toContain("1.49mm");
+    expect(values).toContain("0.9 uW");
+    expect(evaluateJaTranslation("パッケージは1.49ml×1.49ni、消費電力は0.9 uWである。", source).reasons)
+      .toContain("scientific invariants missing: 1.49mm");
+  });
+
+  it("treats micro and Celsius glyph variants as equivalent units", () => {
+    const source = "Power is 2 uW and accuracy is ±0.2C.";
+    const output = "消費電力は2 μW、精度は±0.2℃である。";
+    expect(evaluateJaTranslation(output, source).reasons).toEqual([]);
+  });
+
+  it("accepts acronyms adjacent to Japanese text", () => {
+    const source = "The I2C bus was used to connect the sensor.";
+    const output = "I2Cバスを用いてセンサーを接続した。";
+    expect(evaluateJaTranslation(output, source).reasons).toEqual([]);
   });
 
   it("accepts fullwidth Japanese citation brackets", () => {
@@ -959,6 +1043,12 @@ describe("unsafe extracted translation input", () => {
     expect(shouldTranslateParagraph(valid)).toBe(true);
   });
 
+  it("treats terminal superscript citations as sentence completion", () => {
+    const source = "A notable feature is global ambiguity in this language, resulting in multiple parses.25";
+    expect(unsafeParagraphStructureReason(source)).toBeNull();
+    expect(shouldTranslateParagraph(source)).toBe(true);
+  });
+
   it("keeps an unpunctuated terminal infinitive from being completed by the model", () => {
     const source = "NVivo, SPSS, and AMOS programs were used to perform";
     expect(unsafeParagraphStructureReason(source)).toContain("不定詞の補語");
@@ -1043,6 +1133,13 @@ describe("isRetryableTranslationFailure", () => {
     const block = makeBlock({});
     expect(shouldTranslateBlock(block)).toBe(true);
     expect(isRetryableTranslationFailure(block)).toBe(true);
+  });
+
+  it("keeps geometry-backed continuation warnings out of the translation queue", () => {
+    const block = makeBlock({
+      metadata: { translationInputWarning: "後続ブロックが前段の文を継続している可能性があります" },
+    });
+    expect(shouldTranslateBlock(block)).toBe(false);
   });
 
   it("does not count failed heading blocks that the reader never renders", () => {

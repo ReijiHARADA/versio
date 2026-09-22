@@ -71,6 +71,8 @@ export type LayoutBlock = {
   rotation?: number;
   /** Set when geometry already proved this block crossed native columns. */
   preserveColumnContinuation?: boolean;
+  /** Set when a same-page adjacent text-band continuation was proven. */
+  adjacentBandContinuation?: boolean;
 };
 
 function lineUsesBoldFace(line: LayoutLine): boolean {
@@ -2089,7 +2091,86 @@ function groupLinesIntoBlocks(
     )
   );
   logLayoutBlockBoundaries(nonEmptyBlocks);
-  return splitMixedColumnBlocks(mergeColumnContinuations(nonEmptyBlocks));
+  const merged = mergeColumnContinuations(nonEmptyBlocks);
+  const ordered = repairInterleavedContinuationOrder(splitMixedColumnBlocks(merged));
+  return trimOrphanTailBeforeChrome(ordered);
+}
+
+function repairInterleavedContinuationOrder(blocks: LayoutBlock[]): LayoutBlock[] {
+  const result = [...blocks];
+  for (let i = 0; i + 1 < result.length; i += 1) {
+    const current = result[i];
+    const next = result[i + 1];
+    if (current.role !== "paragraph" || next.role !== "paragraph" ||
+        current.pageStart !== current.pageEnd || next.pageStart !== next.pageEnd ||
+        current.pageStart !== next.pageStart || !/^[a-z]/.test(current.text.trim()) ||
+        !/^[A-Z]/.test(next.text.trim()) || current.bbox.x <= next.bbox.x ||
+        current.bbox.y > next.bbox.y + next.bbox.height ||
+        next.bbox.y > current.bbox.y + current.bbox.height ||
+        isDetachedSingleColumnMarginBlock(current, next.bbox.x) ||
+        isDetachedSingleColumnMarginBlock(next, current.bbox.x)) continue;
+    [result[i], result[i + 1]] = [next, current];
+    const left = result[i];
+    const right = result[i + 1];
+    if (left.role === "paragraph" && right.role === "paragraph" &&
+        left.pageStart === left.pageEnd && right.pageStart === right.pageEnd &&
+        left.pageStart === right.pageStart && !/[.!?:]$/.test(left.text.trim()) &&
+        /^[a-z]/.test(right.text.trim()) &&
+        left.bbox.x + left.bbox.width + 18 <= right.bbox.x &&
+        left.bbox.y <= right.bbox.y + right.bbox.height &&
+        right.bbox.y <= left.bbox.y + left.bbox.height) {
+      left.text = joinHyphenated(left.text, right.text).replace(/\s+/g, " ").trim();
+      left.lines = [...left.lines, ...right.lines];
+      left.bbox = blockBbox(left.lines);
+      left.preserveColumnContinuation = true;
+      left.adjacentBandContinuation = true;
+      result.splice(i + 1, 1);
+      i -= 1;
+    }
+  }
+  return result;
+}
+
+/** Remove a high-confidence orphan native line emitted immediately before a
+ * publisher chrome block. Some PDFs leave one short word from the next
+ * column in the body paragraph; translating it would make a complete source
+ * paragraph look syntactically unfinished. The geometry and neighboring
+ * chrome checks keep this conservative and format-agnostic. */
+function trimOrphanTailBeforeChrome(blocks: LayoutBlock[]): LayoutBlock[] {
+  for (let index = 0; index + 1 < blocks.length; index += 1) {
+    const block = blocks[index];
+    const next = blocks[index + 1];
+    if (block.role !== "paragraph" || block.pageStart !== block.pageEnd ||
+        next.pageStart !== next.pageEnd || block.pageEnd !== next.pageStart ||
+        !["copyright", "header", "footer"].includes(next.role)) continue;
+    if (block.text.length < 200 || block.lines.length < 2) continue;
+    const last = block.lines.at(-1);
+    const beforeLast = block.lines.at(-2);
+    if (!last || !beforeLast) continue;
+    const orphan = last.text.trim();
+    const pageWidth = last.pageWidth ?? 612;
+    const finalItem = last.items.at(-1);
+    const itemOrphan = finalItem?.text.trim() ?? "";
+    if ((!/^[A-Za-z]{1,12}[.]?$/.test(orphan) &&
+         !/(?:[.!?])\s+[A-Za-z]{1,12}[.]?$/.test(orphan)) ||
+        !/^[A-Za-z]{1,12}[.]?$/.test(itemOrphan) ||
+        (finalItem?.width ?? 0) > 24 || (finalItem?.x ?? 0) < pageWidth * 0.72 ||
+        next.lines[0]?.y === undefined || next.lines[0].y < last.y) continue;
+    last.items = last.items.slice(0, -1);
+    if (last.items.length === 0) {
+      block.lines = block.lines.slice(0, -1);
+    } else {
+      last.text = joinItemTexts(last.items);
+      last.x = Math.min(...last.items.map((item) => item.x));
+      const right = Math.max(...last.items.map((item) => item.x + item.width));
+      last.width = right - last.x;
+      last.bbox = { page: last.page, x: last.x, y: last.y, width: last.width, height: last.height };
+    }
+    block.text = joinLines(block.lines);
+    block.bbox = blockBbox(block.lines);
+    block.pageEnd = block.lines.at(-1)?.page ?? block.pageEnd;
+  }
+  return blocks;
 }
 
 /**
@@ -2456,6 +2537,29 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
     const targetLine = target?.lines.at(-1);
     const nextLine = block.lines[0];
     const skippedBlocks = targetIdx >= 0 ? result.slice(targetIdx + 1) : [];
+    // A narrow rail label can be emitted between two same-column body lines
+    // at the same baseline. It is neither transparent metadata nor part of
+    // the paragraph: keep the label separate, while allowing the following
+    // body fragment to rejoin its actual body predecessor.
+    const currentIsDetachedMargin = Boolean(
+      target && target.role === "paragraph" && block.role === "paragraph" &&
+      targetLine && nextLine && block.pageStart === target.pageEnd &&
+      block.column === target.column &&
+      isDetachedSingleColumnMarginBlock(block, targetLine.x) &&
+      Math.abs(nextLine.y - targetLine.y) <= Math.max(targetLine.fontSize, nextLine.fontSize) * 1.65
+    );
+    const safeDetachedMarginGap = Boolean(
+      skippedBlocks.length > 0 && target && targetLine && nextLine &&
+      target.role === "paragraph" && block.role === "paragraph" &&
+      target.column === "single" && block.column === "single" &&
+      Math.abs(targetLine.x - nextLine.x) <= 18 &&
+      skippedBlocks.every((skipped) =>
+        isDetachedSingleColumnMarginBlock(skipped, targetLine.x) &&
+        skipped.pageStart === targetLine.page && skipped.pageEnd === targetLine.page &&
+        Math.abs((skipped.lines[0]?.y ?? 0) - targetLine.y) <=
+          Math.max(targetLine.fontSize, nextLine.fontSize) * 1.65
+      )
+    );
     const safeColumnMetadataGap = Boolean(
       skippedBlocks.length > 0 && target && targetLine &&
       skippedBlocks.every((skipped) => {
@@ -2507,8 +2611,8 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       })
     );
     const safeContinuationMetadataGap = skippedBlocks.length > 0 && skippedBlocks.every((skipped) => {
+      if (safeDetachedMarginGap) return true;
       if (isTransparentMetadataBlock(skipped, repeatedTexts)) return true;
-      if (isDetachedSingleColumnMarginBlock(skipped, targetLine?.x ?? Number.NEGATIVE_INFINITY)) return true;
       if (skipped.role !== "figure_caption" && skipped.role !== "table_caption") return false;
       const captionBottom = skipped.bbox.y + skipped.bbox.height;
       const captionOnEarlierPage = skipped.pageEnd < (targetLine?.page ?? Number.NEGATIVE_INFINITY);
@@ -2602,6 +2706,19 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       nextLine.y - targetLine.y <= Math.max(targetLine.fontSize, nextLine.fontSize) * 1.65 &&
       Math.abs(targetLine.fontSize - nextLine.fontSize) <= 0.8
     );
+    const interleavedBandTarget = targetIdx > 0 ? result[targetIdx - 1] : null;
+    const rejoinInterleavedBand = Boolean(
+      !currentIsDetachedMargin &&
+      interleavedBandTarget && target &&
+      target.role === "paragraph" && block.role === "paragraph" &&
+      target.column === "single" && block.column === "single" &&
+      target.pageStart === target.pageEnd && block.pageStart === block.pageEnd &&
+      interleavedBandTarget.pageStart === block.pageStart &&
+      Math.abs(interleavedBandTarget.bbox.x - block.bbox.x) <= 24 &&
+      target.bbox.x + target.bbox.width + 18 <= block.bbox.x &&
+      /^[a-z]/.test(block.text.trim()) &&
+      /[,;]$/.test(interleavedBandTarget.text.trim())
+    );
     const crossesPageBoundary =
       target && (!skippedInterveningMetadata || safeBoundaryMetadataGap || safeContinuationMetadataGap) &&
       target.pageEnd + 1 === block.pageStart &&
@@ -2624,8 +2741,26 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       ((target.column === "right" && block.column === "left" && skippedInterveningMetadata &&
           (safeBoundaryMetadataGap || safeContinuationMetadataGap) && isSentenceContinuation(target.text, block.text)) ||
         (target.column === "single" && (block.column === "single" || block.column === "left")) ||
-        (block.lines[0]?.y ?? Number.MAX_SAFE_INTEGER) <
+          (block.lines[0]?.y ?? Number.MAX_SAFE_INTEGER) <
           (block.lines[0]?.pageHeight ?? 0) * 0.32);
+    // Some publishers leave a substantial bottom margin after the final body
+    // line (or float a figure below it), so a genuine paragraph continuation
+    // can end above the usual 68% tail threshold.  Permit the same-column,
+    // lowercase continuation only when both blocks are long, styles match,
+    // the next block is near the page top, and the source tail is syntactically
+    // unfinished.  This keeps independent page-start paragraphs separate.
+    const crossesPageBoundaryWithModerateTail = Boolean(
+      target && (!skippedInterveningMetadata || safeBoundaryMetadataGap || safeContinuationMetadataGap) &&
+      target.role === "paragraph" && block.role === "paragraph" &&
+      target.pageEnd + 1 === block.pageStart && target.column === block.column &&
+      target.text.trim().length >= 140 && block.text.trim().length >= 24 &&
+      !/[.!?:]$/.test(target.text.trim()) && /^[a-z(]/.test(block.text.trim()) &&
+      targetLine && nextLine &&
+      (targetLine.y ?? 0) > (targetLine.pageHeight ?? 792) * 0.52 &&
+      (nextLine.y ?? Number.MAX_SAFE_INTEGER) < (nextLine.pageHeight ?? 792) * 0.35 &&
+      Math.abs(targetLine.fontSize - nextLine.fontSize) <= 0.8 &&
+      isSentenceContinuation(target.text, block.text)
+    );
     const canContinueAcrossColumns = Boolean(
       target && (
         ((!skippedInterveningMetadata || safeColumnMetadataGap) && targetLine && nextLine &&
@@ -2642,7 +2777,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         // below still requires an unfinished source sentence and a lower-case
         // next fragment, so this does not join independent body paragraphs.
         (target.column === "single" && (block.column === "left" || block.column === "right") && target.pageEnd === block.pageStart) ||
-        crossesPageBoundary
+        crossesPageBoundary || crossesPageBoundaryWithModerateTail
       )
     );
     if (debugFlag === "1" && target && target.column === "left" && block.column === "right") {
@@ -2650,6 +2785,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
     }
     if (
       target && target.role === "paragraph" && block.role === "paragraph" &&
+      !currentIsDetachedMargin &&
       (joinsCompleteLeadingContinuation || joinsSameColumnContinuation || geometrySameLineContinuation || wrapsAcrossColumnsAtPageBottom || wrapsAcrossPhysicalColumns || wrapsAcrossAdjacentColumnTails ||
         (canContinueAcrossColumns && isSentenceContinuation(target.text, block.text))) &&
       !(hasRotatedNativeLine(target) !== hasRotatedNativeLine(block))
@@ -2675,6 +2811,13 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       }
       target.bbox = blockBbox(target.lines);
       if (target.column !== block.column) target.preserveColumnContinuation = true;
+      continue;
+    }
+    if (rejoinInterleavedBand && interleavedBandTarget) {
+      if (debugFlag === "1") console.warn(`[PDF_LAYOUT_REJOIN] ${interleavedBandTarget.text.slice(-30)} -> ${block.text.slice(0,30)}`);
+      interleavedBandTarget.text = joinHyphenated(interleavedBandTarget.text, block.text).replace(/\s+/g, " ").trim();
+      interleavedBandTarget.lines = [...interleavedBandTarget.lines, ...block.lines];
+      interleavedBandTarget.bbox = blockBbox(interleavedBandTarget.lines);
       continue;
     }
     result.push(block);

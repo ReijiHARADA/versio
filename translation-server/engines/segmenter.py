@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 from .citation_protect import protected_span_mask
 
-SEGMENTER_VERSION = "semantic-v74"
+SEGMENTER_VERSION = "semantic-v76"
 _ABBREVIATIONS = {"e.g.", "i.e.", "et al.", "fig.", "no.", "cf.", "dr.", "mr.", "ms.", "vs."}
 
 
@@ -57,6 +57,37 @@ def _normalize_model_input(text: str) -> str:
     # Removing only that optional comma preserves the logical form while
     # presenting the standard English construction to the model.
     normalized = re.sub(r"\bNeither\s+([^,.;:()]{1,80}),\s+nor\b", r"Neither \1 nor", normalized, flags=re.I)
+    # Cross-reference wording extracted from PDFs sometimes appears as
+    # ``along with Section 5 next``. Make the reference grammatical without
+    # changing the source slice, so the model is less likely to omit the
+    # section label from the translated claim.
+    normalized = re.sub(
+        r"\balong\s+with\s+((?:Section|Appendix)\s+(?:\d+(?:\.\d+)*|[A-Z]))\s+next,",
+        r"as discussed in \1,",
+        normalized,
+        flags=re.I,
+    )
+    # Make epistemic scope explicit for a common academic construction that
+    # MADLAD tends to render as a categorical negative. The paraphrase keeps
+    # the same uncertainty while reducing omission of the modal meaning.
+    normalized = re.sub(
+        r"\bmight\s+not\s+have\s+been\s+detected\b",
+        "may have gone undetected",
+        normalized,
+        flags=re.I,
+    )
+    # MADLAD can collapse the relation in long copular definitions of the
+    # form "X is a common metric to measure A compared to B".  Present the
+    # same relation as two grammatical sentences while keeping the exact
+    # source slice in ``TranslationUnit.text`` for reconstruction.  This is
+    # intentionally narrow: both the metric predicate and the comparative
+    # phrase must be present, and no source facts are added.
+    normalized = re.sub(
+        r"(?P<head>\b[^.;]{1,100}\bis\s+a\s+common\s+metric)\s+to\s+measure\s+(?P<left>[^.;]{2,120})\s+compared\s+to\s+(?P<right>[^.;]{2,120})\.",
+        lambda match: f"{match.group('head')}. It measures {match.group('left')} compared with {match.group('right')}.",
+        normalized,
+        flags=re.I,
+    )
     return normalized
 
 
@@ -539,7 +570,11 @@ def _rescue_top_level_conjunction(text: str) -> list[TranslationUnit]:
     ignored, and both clauses must be substantial. The original source slices
     remain exact while the model inputs receive a sentence-final marker.
     """
-    if len(text) < 260:
+    # MADLAD can omit the first clause in 220–260 character academic
+    # sentences, so the retry/proactive boundary must cover that range too.
+    # The structural guards below still require a top-level conjunction and
+    # substantial clauses on both sides.
+    if len(text) < 220:
         return []
     masked = protected_span_mask(text)
     for match in re.finditer(r",\s+(but|however|while|which|and)\s+", masked, re.I):
@@ -657,6 +692,17 @@ def segment_for_translation(source: str) -> list[TranslationUnit]:
         # proactive rewrite for genuinely long units where decode drift is a
         # greater risk.
         rescue = _rescue_while_concessive_main_clause(part) if len(part) >= 260 else []
+        # Proactively split only concessive/contrastive conjunctions. Plain
+        # ``and`` remains retry-only because it is common in statistical
+        # result prose and can create unnecessary short units.
+        if (
+            not rescue
+            and len(part) >= 220
+            and ";" not in part
+            and not re.match(r"^[a-z]", part)
+            and re.search(r",\s+(?:while|however|but)\b", part, re.I)
+        ):
+            rescue = _rescue_top_level_conjunction(part)
         if rescue:
             expanded.extend(unit.text for unit in rescue)
             proactive_inputs.update({unit.text: unit.model_input for unit in rescue})
