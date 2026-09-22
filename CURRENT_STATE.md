@@ -9157,3 +9157,160 @@ Refined the mixed-script decoder guard to compare suspicious Latin fragments aga
 - Fixed fixture test: `test_citation_protect.py` **62 passed + 3 subtests**; frontend quality/model tests **134/134**; typecheck and `git diff --check` passed.
 - Fresh same-server PPG benchmark `live-v239-ppg-mathfont-v16` completed **12/12**. Block `b-93499466` changed from post-model invariant fallback to accepted translation with score 1.0 and exact `1.49𝑚𝑚×1.49𝑚𝑚` restoration. The run had 0 ordinary-body reader-visible fallbacks; remaining fallbacks were list/structural extraction cases.
 - Translation server was stopped after the benchmark; no server or benchmark process remains.
+
+## Parenthesized participant-marker protection (2026-09-22)
+
+- Root cause of the PPG quoted-list fallback `b-e8e52e85` was a dropped/corrupted participant marker `(P4)` during scientific-token restoration, not a source extraction failure.
+- Added generic atomic protection for parenthesized participant/condition labels matching `(P4)`-style structure and bumped protection identity to `source-protect-v17`.
+- Fixed tests: citation protection **63 passed + 3 subtests**, model-version test passed, typecheck passed, `git diff --check` passed.
+- Fresh PPG run `live-v240-ppg-participant-v17` completed **12/12**: 3 reader-visible fallbacks, **0/5 ordinary-body fallbacks**. The `(P4)` list item is now accepted; remaining fallbacks are one list item with an implausibly short decode and one structurally skipped damaged-extraction block plus one continuation-like ordinary block.
+- The remaining ordinary-body candidates are not being accepted by relaxing the gate: the direct output for `b-ab4e1fb8` omits the source's experience/requirements scope, so source fallback remains the safe result.
+- Translation server stopped after the benchmark; no server or benchmark process remains.
+
+## Multi-sentence omission gate (2026-09-22)
+
+- A direct control exposed an unsafe accepted decode for a two-sentence list item: the model kept the participant count and final willingness claim but omitted the independent “all participants found it as comfortable as their regular earrings” claim.
+- The quality gate now applies a 0.35 compact-length floor to substantial multi-sentence units, while retaining the existing narrower thresholds for short/ordinary single-sentence units. This rejects fluent partial summaries instead of displaying them as translations.
+- Added a regression test for this exact structural pattern; Python quality/protection suite passed **98 tests + 3 subtests** after the change.
+- Bullet markers are stripped from MADLAD model input while remaining in the source chunk for deterministic reassembly; direct testing confirmed the list item still falls back because of semantic omission, not because of the bullet glyph.
+- Quality/cache identity is now `quality-v12`; frontend quality/model-version tests and typecheck remain green.
+- Translation server stopped after direct controls; no server process remains.
+
+## Quality-v12 verification checkpoint (2026-09-22)
+
+- Full translation-server test suite passed **179 tests + 11 subtests** after the multi-sentence completeness gate and bullet-input handling.
+- Frontend quality/model-version tests passed **134/134**; TypeScript typecheck and `git diff --check` passed.
+- Direct bullet control confirms the PPG two-sentence item is rejected because its decode omits the first independent comfort claim; removing the bullet does not change that safety decision.
+- This is an unsafe-semantic-error reduction, not a blanket fallback increase: the stricter floor is limited to substantial multi-sentence units. A fresh broad-paper benchmark is still required to measure ordinary-body fallback impact.
+- No translation server or benchmark process is running.
+
+## Attached footnote citation protection (2026-09-22)
+
+- Fresh 3-discipline benchmark `live-v241-quality-v12-3disciplines` exposed ordinary-body fallbacks in the cognitive-psychology paper caused by source-fact handling: attached citation markers such as `simulations14.` and repeated `SI Appendix` references.
+- Added a generic lowercase-word + 1–2 digit terminal footnote matcher (`simulations14.`) and bumped source protection identity to `source-protect-v18`. The matcher excludes uppercase identifiers and ordinary years.
+- Citation protection tests now pass **64 + 3 subtests**; no production benchmark result is claimed yet for v18 because the long direct control was interrupted after server logs confirmed attached author-year markers were preserved.
+- The v241 benchmark baseline remains: 36 units across 3 papers, 10 ordinary-body units, 4 ordinary-body fallbacks. This is a diagnostic baseline, not a completion metric; the ergonomics sample was dominated by structural/reference blocks.
+- Server stopped after the control run; no translation process remains.
+
+## v18 cognitive recheck (2026-09-22)
+
+- Fresh `live-v242-cognitive-v18` completed 12/12. Ordinary-body fallback remained **4/5**, so the attached-terminal-footnote matcher alone did not reach the target.
+- Server logs identified the remaining hard failure precisely: MADLAD sometimes mutates protected placeholders into residue such as `15CIT2ZZ`, causing `protected_token_restore_failed`; other blocks drop `SI Appendix`/numeric facts and are rejected by invariant checks.
+- This confirms the remaining issue is placeholder robustness on long multi-unit academic blocks, not a reason to relax the semantic gate. No unsafe fallback reduction was shipped from this run.
+- The v18 matcher is retained because it correctly recognizes `simulations14.` in fixed protection tests, but its corpus effect requires a stronger placeholder canonicalization experiment.
+- Server stopped after the recheck; no benchmark/server process remains.
+
+## Placeholder prefix recovery experiment (2026-09-22)
+
+- Added a narrowly scoped normalizer for MADLAD residue where the leading `ZZ` is dropped before a placeholder that follows a numeric footnote (`15CIT2ZZ`). It only fires on a digit-adjacent `CIT<index>ZZ` shape and leaves the source digit untouched.
+- Bumped source protection identity to `source-protect-v19` and synchronized the frontend model identity.
+- Tests after the experiment: citation + MADLAD quality **100 passed + 3 subtests**; model-version test passed; typecheck and `git diff --check` passed.
+- This requires a fresh cognitive benchmark before being considered effective. The prior v18 run remains the authoritative corpus result (4/5 ordinary-body fallback); no claim of fallback reduction is made yet.
+
+## Verification checkpoint after v19 (2026-09-22)
+
+- Frontend quality/model-version tests passed **134/134** and TypeScript typecheck passed.
+- Canonical translation-server test scope (`translation-server/test_mps_stages.py`, `test_translation.py`, and `translation-server/tests`) passed **181 tests + 11 subtests**.
+- A repository-wide unscoped `pytest -q` still has an existing collection issue because identical test module names are present in both `src-tauri/target/debug` and `src-tauri/target/release`; it is not used as the canonical validation command.
+- No translation server or benchmark process is running.
+- v19 placeholder recovery still needs a fresh cognitive benchmark; no quality-target improvement is claimed yet.
+
+## v19 cognitive benchmark result (2026-09-22)
+
+- Fresh same-server `live-v243-cognitive-v19` completed **12/12** translation units using model identity `3b-mt-v6-transformers-4.57.6-semantic-v76-source-protect-v19-strict-restore-v28-quality-v12`.
+- Ordinary-body sample: **5 units; 4 reader-visible fallbacks (80%)**. This is unchanged from v18 (`live-v242-cognitive-v18`), so the `15CIT2ZZ` prefix recovery experiment did not improve the measured fallback rate.
+- Overall report: 12 units, 10 original fallbacks, 2 fully translated accepts; no request failures. Four ordinary failures include protected-token restoration/quality rejection, missing `SI, 20`, source-echo protection failure, and statistical/protected-token rejection.
+- The run confirms the v19 normalizer is insufficient; no gate relaxation or hallucination blacklist was added. Report artifacts: `test-data/real-papers/reports/live-v243-cognitive-v19.{json,md}`.
+- Server was stopped after the run; no translation process remains. Next work should inspect placeholder transport/restore at the model-input boundary or evaluate a selective alternate-model cascade, rather than iterating another residue regex.
+
+## Adjacent placeholder restoration fix and v20 benchmark (2026-09-22)
+
+- Debug instrumentation reproduced the exact failure: MADLAD decoded adjacent protected spans as `ＺＺＣＩＴ１ＺＺＺＣｉＴ２ＺＺ`; restoring the first span exposed `15CIT2ZZ`, leaving visible placeholder residue and forcing a whole-item fallback.
+- `restore_citations` now re-normalizes after each prior replacement and recognizes only the expected-index shared-boundary form. This is a generic restore-order fix, not a paper-specific rule.
+- Added a regression test for the observed merged-placeholder shape. Citation protection + quality tests pass **101 tests + 3 subtests**; frontend quality/model-version tests pass **134/134**; typecheck and `git diff --check` pass.
+- Bumped cache/model identity to `source-protect-v20` / `3b-mt-v6-transformers-4.57.6-semantic-v76-source-protect-v20-strict-restore-v28-quality-v12`.
+- Direct fixed-code control now restores `15` and `(Linda, see Figure 1A)` exactly. Fresh v20 cognitive report `live-v245-cognitive-v20` completed **12/12**, but ordinary-body remains **4/5 reader-visible fallbacks (80%)**: the adjacent first citation is fixed, while other units still fail due dropped `SI Appendix`/citation facts, source-echo protection, or semantic omission.
+- The v20 change improves a confirmed corruption path but does not meet the <=5% target. Server stopped after the benchmark; no translation process remains.
+
+## Full canonical test verification after v20 (2026-09-22)
+
+- Canonical translation-server source scope passed **182 tests + 11 subtests** after the adjacent-placeholder restore fix.
+- This includes the new regression for `ZZCIT1ZZZCIT2ZZ` / fullwidth-lookalike decoding.
+- No translation server or benchmark process is running; `git diff --check` remains clean.
+
+## Selective supplementary-reference retry and v13 benchmark (2026-09-22)
+
+- Added a narrow retry path that exposes only `SI Appendix` when its placeholder is dropped; inline numeric citations remain protected and the invariant gate still rejects missing facts. Added regression coverage for mixed `17` + `SI Appendix` drops.
+- Bumped quality/cache identity to `quality-v13`; model identity is now `3b-mt-v6-transformers-4.57.6-semantic-v76-source-protect-v20-strict-restore-v28-quality-v13`.
+- Fresh `live-v246-cognitive-v13` completed **12/12**, but ordinary-body remained **4/5 reader-visible fallbacks (80%)**, unchanged from v20. The retry did not solve the remaining model omissions or source-echo case, so no further retry relaxation was retained.
+- Targeted Python tests passed **102 tests + 3 subtests**; frontend quality/model-version tests **134/134**; typecheck passed. Server stopped after benchmark.
+
+## Full canonical verification after quality-v13 (2026-09-22)
+
+- Canonical translation-server source scope passed **183 tests + 11 subtests**.
+- No translation server or benchmark process is running; `git diff --check` remains clean.
+
+## Verification checkpoint after resumed inspection (2026-09-22)
+
+- Confirmed the active project environment and lockfile both use Transformers **4.57.6** with PyTorch 2.14.0; no translation server was started.
+- Re-ran the canonical translation-server source scope: **183 passed, 11 subtests passed** in 108.28s.
+- TypeScript typecheck, lint, and `git diff --check` completed successfully; lint reports only the existing unused-variable warning in `src/services/translation/quality.ts`.
+- No benchmark, alternate-model diagnostic, or translation-server process is running after this checkpoint. The <=5% ordinary-body fallback and near-zero unsafe-semantic-error goals remain unmet.
+
+## Lint cleanup checkpoint (2026-09-22)
+
+- Removed an unused acronym-regex local from `src/services/translation/quality.ts`; this changes no acceptance behavior and clears the prior lint warning.
+- Re-ran `npm run typecheck`, `npm run lint`, and `git diff --check`; all pass cleanly.
+- No server or benchmark was started. The next quality-impacting step remains a fresh, source-hash-held-out comparison of fallback rows before any alternate-model routing change.
+
+## Audit-only Gemma held-out fallback comparison (2026-09-22)
+
+- Extended `scripts/diagnose-alternate-models.ts` with input-report and row-limit parameters, without changing production routing.
+- Compared `gemma2:9b` against four source-hash-distinct ordinary-body fallback rows from `live-v241-quality-v12-3disciplines` using the same citation protection, restoration, and current quality gate.
+- All four candidates passed automatic quality and strict restoration. Manual review found **0/4 severity >=2**: one correct translation and three severity-1 wording/terminology issues. Artifacts: `alternate-model-heldout-gemma-v2.json` and `alternate-model-heldout-gemma-v2-manual-review.json`.
+- This is only a four-row, single-domain cohort and is insufficient to enable production cascade. Gemma remains audit-only; independent held-out disciplines and false-accept review are still required.
+
+## Citation-context source-echo false-reject fix (2026-09-22)
+
+- The five-field Gemma audit exposed a generic false reject: a mostly translated paragraph retained an English `see e.g.` author/year citation clause, which `detectPartialSourceFallback` treated as untranslated prose.
+- Added citation-context evidence to the source-overlap detector, including author/year slices that lose their leading citation marker during clause splitting. This only exempts citation-shaped spans; ordinary long English source sentences remain rejected.
+- Added regression coverage. Focused Vitest passed **5/5**, typecheck, lint, and `git diff --check` passed.
+- Five-field Gemma audit artifact: `alternate-model-heldout-fivefield-gemma-v1.json`. Manual inspection found 4 automatic accepts with no observed severe issue and 1 safe reject; this remains audit-only and does not justify production routing yet.
+
+## Five-field Gemma manual review (2026-09-22)
+
+- Manually reviewed all five outputs in `alternate-model-heldout-fivefield-gemma-v1.json`, spanning HCI, linguistics, and marketing rows from the five-field held-out report.
+- Labels: **0/5 severity >=2**, four minor wording cases and one correct case. The previously rejected row is semantically usable; its rejection was the citation-context false positive addressed above.
+- Review artifact: `alternate-model-heldout-fivefield-gemma-v1-manual-review.json`. This improves evidence for a future audit-only selector but remains too small and not independent enough to enable production routing.
+
+## Cross-field Gemma fallback audit (2026-09-22)
+
+- Compared Gemma 2 9B on six additional source-hash-distinct ordinary-body fallback rows spanning neuroscience, medicine, conversation analysis, and computational linguistics.
+- Five candidates passed the automatic gate and one medical candidate was rejected for missing negation plus a truncated `Registration` fragment. Manual review classified the five accepted outputs as severity 1 and the rejected output as severity 3; the gate correctly prevented that unsafe result.
+- Artifacts: `alternate-model-heldout-v90-gemma-v1.json` and `alternate-model-heldout-v90-gemma-v1-manual-review.json`.
+- Combined evidence now covers 15 audit rows, but the accepted cohort is still manually reviewed by the agent and not an independent blinded benchmark. Gemma remains audit-only; no production cascade is enabled.
+
+## Repeated source-label false-accept guard (2026-09-22)
+
+- The next eight-row audit found a new generic false accept pattern: duplicated extracted labels such as `Interventions` and `Assessments` remained embedded in otherwise Japanese output. The old long source-overlap detector intentionally ignored these short fragments.
+- Added a conservative repeated-source-label check: only an ASCII word of at least eight letters that appears at least twice in the source and remains adjacent to Japanese is rejected. Technical identifiers such as `GPT-3` are excluded by construction and covered by regression tests.
+- Quality tests now pass **140/140**, typecheck, lint, and `git diff --check` pass. This is a safety correction; it may turn these rows into source fallback until a translation retry/cascade supplies a clean candidate.
+- Eight-row audit artifact: `alternate-model-heldout-v80-gemma-v1.json`; manual review is next. No production cascade is enabled.
+
+## Eight-row Gemma manual review (2026-09-22)
+
+- Reviewed all eight outputs from `alternate-model-heldout-v80-gemma-v1.json`.
+- Three rows are not safe to display as translations: two contain duplicated extracted labels (`Interventions`, `Assessments`) and one begins with a dangling paragraph fragment. Five are severity 0–1 after considering their structure and preserved facts; no severity 3+ case occurred.
+- Review artifact: `alternate-model-heldout-v80-gemma-v1-manual-review.json`. The repeated-label guard addresses the first two; the dangling comparison remains an extraction/source-integrity issue. This cohort reinforces that alternate-model gating cannot replace source validation.
+
+## Quality-v14 cache identity update (2026-09-22)
+
+- Bumped the frontend and translation-server quality/cache identity from `quality-v13` to `quality-v14` because the repeated source-label guard changes acceptance behavior. Existing cached translations therefore cannot silently bypass the new gate.
+- Focused frontend quality/model tests passed **140/140**; targeted Python quality/protection tests passed **102 + 3 subtests**; typecheck, lint, and `git diff --check` passed.
+- No translation server or benchmark was started. A fresh server benchmark is still required to measure the reader-visible fallback effect of v14.
+
+## v14 audit recheck on eight-row Gemma cohort (2026-09-22)
+
+- Extended `scripts/recheck-audit-translation-quality.ts` to accept both production `papers[].rows[]` reports and alternate-model `results[]` reports.
+- Rechecked the eight-row Gemma cohort with v14: the repeated-label guard changes **2/8** automatic accepts to safe fallback (`Interventions`, `Assessments`); the other six remain accepted. Artifact: `alternate-model-heldout-v80-gemma-v1-quality-recheck.json`.
+- Quality tests now pass **141/141**; typecheck, lint, and `git diff --check` pass. This is a measured safety tradeoff on a diagnostic cohort, not a product fallback-rate claim; v14 still needs a live MADLAD benchmark.

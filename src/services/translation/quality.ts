@@ -158,6 +158,17 @@ function sourceSentencesForOverlap(source: string): string[] {
   return candidates;
 }
 
+function looksLikeCitationContext(text: string): boolean {
+  const hasCitationMarker = /(?:\bsee\s+(?:e\.g\.\s*)?|\bet\s+al\.?\b|\bcf\.\s*)/i.test(text);
+  const yearCount = (text.match(/\b(?:19|20)\d{2}\b/g) ?? []).length;
+  if (hasCitationMarker && yearCount >= 1) return true;
+  // Clause splitting can remove the leading “see e.g.” marker. A remaining
+  // author/year slice is still citation context when it contains multiple
+  // capitalized name tokens around a publication year.
+  const authorYearSlice = yearCount >= 1 && (text.match(/\b[A-Z][A-Za-z'’-]+\b/g) ?? []).length >= 2;
+  return authorYearSlice;
+}
+
 export function detectPartialSourceFallback(source: string, translation: string | undefined): PartialSourceFallbackDetection {
   if (!translation) return { partial: false };
   const normalizedTranslation = normalizeForSourceOverlap(translation);
@@ -169,6 +180,10 @@ export function detectPartialSourceFallback(source: string, translation: string 
     if (normalizedCandidate.length < 48 || wordCount < 7 || letterCount < 35) continue;
     if (/^(?:fig(?:ure)?|table)\s+\d+/i.test(candidate)) continue;
     if (looksLikeBibliographyEntry(candidate) || isExpectedNonProseParagraph(candidate)) continue;
+    // Author/year references and “see e.g.” clauses are often intentionally
+    // retained verbatim. They are protected scientific context, not evidence
+    // that the surrounding paragraph was left untranslated.
+    if (looksLikeCitationContext(candidate)) continue;
     if (normalizedTranslation.includes(normalizedCandidate)) {
       return {
         partial: true,
@@ -280,6 +295,21 @@ function hasUntranslatedForeignProse(output: string): boolean {
   });
 }
 
+function hasUntranslatedSourceLabel(source: string, output: string): boolean {
+  const sourceWords = source.match(/\b[A-Za-z]{8,}\b/g) ?? [];
+  const counts = new Map<string, number>();
+  for (const word of sourceWords) counts.set(word.toLowerCase(), (counts.get(word.toLowerCase()) ?? 0) + 1);
+  for (const [word, count] of counts) {
+    if (count < 2) continue;
+    const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const adjacent = new RegExp(`(?:[\\u3040-\\u30ff\\u3400-\\u9fff]${escaped}|${escaped}[\\u3040-\\u30ff\\u3400-\\u9fff])`, "i");
+    if (adjacent.test(output)) return true;
+    const repeatedWithJapanese = new RegExp(`${escaped}[\\s　]*(?:[\\u3040-\\u30ff\\u3400-\\u9fff]{1,6}[\\s　]*)${escaped}`, "i");
+    if (repeatedWithJapanese.test(output)) return true;
+  }
+  return false;
+}
+
 /** ACM CCS 1998-style classifier: H.5.2, H.5.m, I.2.10 */
 const CCS_CODE = /[A-K]\.\d+(?:\.\d+)*(?:\.[a-z])?/i;
 
@@ -308,7 +338,7 @@ const NON_TECHNICAL_UPPERCASE_WORDS = new Set([
   "WITH",
 ]);
 
-export const TRANSLATION_QUALITY_VERSION = "quality-v11";
+export const TRANSLATION_QUALITY_VERSION = "quality-v14";
 
 export type TranslationQuality = {
   score: number;
@@ -522,7 +552,6 @@ function outputContainsInvariant(output: string, invariant: ScientificInvariant,
   }
   // `BERT` must not be treated as preserved merely because `DeBERTa` occurs.
   // Method/model identifiers are ASCII tokens even when adjacent to Japanese.
-  const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // Japanese text is commonly adjacent to an unchanged ASCII acronym
   // (`I2C線`, `BERTについて`).  Treat only ASCII letters/digits as identifier
   // characters at the boundary; a Unicode script boundary must not make a
@@ -729,6 +758,7 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   if (source.trim().length >= 40 && hasKanji && !hasKana) reasons.push("Japanese prose lacks kana");
   if (hasKana && SIMPLIFIED_CJK_CONTAMINATION.test(out)) reasons.push("simplified Chinese mixed into Japanese");
   if (hasKana && hasUntranslatedForeignProse(out)) reasons.push("untranslated foreign-language prose");
+  if (hasKana && hasUntranslatedSourceLabel(source, out)) reasons.push("untranslated repeated source label");
   if (hasTranslationInstructionContamination(out)) reasons.push("model output contains translation instruction contamination");
   if (hasTranslationMetaCommentary(out)) reasons.push("model output contains translation meta-commentary");
   if (hasMalformedCitationStructure(source, out)) reasons.push("malformed citation structure");
@@ -826,6 +856,7 @@ export function isPlausibleJaTranslation(output: string, source: string): boolea
     && !quality.reasons.includes("malformed acronym expansion")
     && !quality.reasons.includes("simplified Chinese mixed into Japanese")
     && !quality.reasons.includes("untranslated foreign-language prose")
+    && !quality.reasons.includes("untranslated repeated source label")
     && !quality.reasons.includes("model output contains translation instruction contamination")
     && !quality.reasons.includes("model output contains translation meta-commentary")
     && !quality.reasons.includes("malformed citation structure")

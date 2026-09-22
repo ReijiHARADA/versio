@@ -6,7 +6,18 @@ import { evaluateJaTranslation, isPlausibleJaTranslation } from "../src/services
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const input = process.argv[2] ?? "test-data/real-papers/reports/translation-audit-v59-heldout-9papers.json";
 const report = JSON.parse(fs.readFileSync(path.resolve(root, input), "utf8"));
-const rows = report.papers.flatMap((paper: any) => paper.rows.map((row: any) => ({ ...row, paperId: paper.paper.id })));
+const rows = Array.isArray(report.papers)
+  ? report.papers.flatMap((paper: any) => paper.rows.map((row: any) => ({ ...row, paperId: paper.paper.id })))
+  : (Array.isArray(report.results) ? report.results.map((row: any) => ({
+      ...row,
+      // Candidate diagnostics do not carry benchmark paper metadata; preserve
+      // their key as a stable paper identifier for the recheck artifact.
+      paperId: row.paperId ?? String(row.key ?? "").split(":")[0],
+      sourceFallback: false,
+      readerVisibleFallback: false,
+      sourceCategory: row.sourceCategory ?? "ordinary-body-prose",
+      wouldAcceptTranslation: row.gateAccept,
+    })) : []);
 // Manual-review exports sometimes contain short, editorial excerpts ending in
 // an ellipsis. Comparing those snippets against full-translation invariants
 // invents false missing/unexpected facts (e.g. a citation year present only in

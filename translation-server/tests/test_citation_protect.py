@@ -311,6 +311,21 @@ class CitationProtectTests(unittest.TestCase):
         self.assertIn("(P4)", citations)
         self.assertEqual(restore_citations(protected, citations, nonce), source)
 
+    def test_protects_attached_terminal_footnote_marker(self) -> None:
+        source = "We used the public API for all simulations14. The settings were fixed."
+        protected, citations, nonce = protect_citations(source)
+        self.assertIn("14", citations)
+        self.assertEqual(restore_citations(protected, citations, nonce), source)
+
+    def test_recovers_placeholder_with_dropped_prefix_after_footnote(self) -> None:
+        source = "The first result was reported15. The second result was reported16."
+        protected, citations, nonce = protect_citations(source)
+        self.assertGreaterEqual(len(citations), 2)
+        malformed = protected.replace("ZZCIT2ZZ", "15CIT2ZZ")
+        restored = restore_citations(malformed, citations, nonce, reject_missing=True)
+        self.assertIn("reported15", restored)
+        self.assertIn("reported1516", restored)
+
     def test_protects_variable_comparison_parenthetical(self) -> None:
         source = "OLS is used for comparison (where y \u0338= 0 when x = 0)."
         protected, citations, nonce = protect_citations(source)
@@ -499,6 +514,19 @@ class CitationProtectTests(unittest.TestCase):
         source = "The measured value was 2.913."
         _, citations, _ = protect_citations(source)
         self.assertEqual(citations, [])
+
+    def test_strict_restore_recovers_adjacent_placeholder_z_merge(self) -> None:
+        source = 'The canonical “Linda problem”15 (Linda, see Figure 1A).'
+        _, citations, nonce = protect_citations(source)
+        self.assertEqual(citations, ["15", "(Linda, see Figure 1A)"])
+        # Exact decode shape observed in the cognitive-paper debug run:
+        # the second placeholder loses its leading ZZ and shares a Z with
+        # the first placeholder suffix.
+        malformed = "ＧＰＴ‐３の調査はＺＺＣＩＴ１ＺＺＺＣｉＴ２ＺＺを誘導した。"
+        restored = restore_citations(malformed, citations, nonce, reject_missing=True)
+        self.assertIn("15", restored)
+        self.assertIn("(Linda, see Figure 1A)", restored)
+        self.assertNotIn("CIT2ZZ", restored)
 
 
 if __name__ == "__main__":
