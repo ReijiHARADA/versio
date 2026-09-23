@@ -54,6 +54,24 @@ class MadladUnitQualityTests(unittest.TestCase):
             "結果を示す。 (Section 5)",
         )
 
+    def test_missing_table_and_figure_references_are_recovered_verbatim(self) -> None:
+        self.assertEqual(
+            restore_missing_structure_references(
+                "The result is shown in Figure 2 and summarized in Table 5.",
+                "結果を示す。",
+            ),
+            "結果を示す。 (Figure 2; Table 5)",
+        )
+
+    def test_structural_recovery_does_not_copy_unrelated_numbers(self) -> None:
+        self.assertEqual(
+            restore_missing_structure_references(
+                "The study recruited 82 participants in 2024.",
+                "参加者を募集した。",
+            ),
+            "参加者を募集した。",
+        )
+
     def test_identifier_retry_allows_scalar_measurements(self) -> None:
         self.assertTrue(allows_unprotected_identifier_retry(["1 pF", "40 mAh"]))
         self.assertFalse(allows_unprotected_identifier_retry(["F(4,33) = 2.913"]))
@@ -72,6 +90,10 @@ class MadladUnitQualityTests(unittest.TestCase):
         self.assertEqual(
             unprotected_identifier_retry_values(["17", "SI Appendix"]),
             ["SI Appendix"],
+        )
+        self.assertEqual(
+            unprotected_identifier_retry_values(["17"], allow_inline_numeric=True),
+            ["17"],
         )
 
     def test_degenerate_reason_labels_are_stable(self) -> None:

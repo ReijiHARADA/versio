@@ -1420,7 +1420,7 @@ export function shouldTranslateParagraph(text: string): boolean {
   // Coordinators and prepositions at the physical block end require material
   // from the next column/page. Translating them independently asks the model
   // to invent that missing complement.
-  if (/\b(?:albeit|although|though|because|while|whereas|with|without|including|concerning|between|than)\s*$/i.test(t)) return false;
+  if (/\b(?:albeit|although|though|because|while|whereas|with|without|including|concerning|between|than|let)\s*$/i.test(t)) return false;
   if (/\b(?:is|are|was|were|be|been|being|has|have|had|do|does|did|can|could|will|would|should|may|might)\s*$/i.test(t)) return false;
   // A word split around a standalone numeric cell ("dol- 2 lars") is not a
   // legitimate hyphenation. It indicates a chart/table value was interleaved

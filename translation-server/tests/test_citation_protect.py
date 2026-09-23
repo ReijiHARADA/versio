@@ -45,6 +45,18 @@ class CitationProtectTests(unittest.TestCase):
         self.assertEqual(cites, [])
         self.assertEqual(protected, source)
 
+    def test_bare_superscript_references_are_protected_without_touching_decimals(self) -> None:
+        source = (
+            "The coaching29 and review28 findings were replicated in the tool,31. "
+            "The redesigned record (EHR)30 followed the infection.30 protocol. "
+            "The method version2 was stable at 2.913."
+        )
+        protected, cites, nonce = protect_citations(source)
+        for citation in ("29", "28", "31", "30"):
+            self.assertIn(citation, cites)
+        self.assertNotIn("2.913", cites)
+        self.assertEqual(restore_citations(protected, cites, nonce), source)
+
     def test_repeated_title_case_technical_token_is_atomic(self) -> None:
         source = "Bluetooth advertising uses Bluetooth packets, while These packets repeat."
         protected, cites, nonce = protect_citations(source)

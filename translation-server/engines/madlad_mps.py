@@ -16,6 +16,7 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from .base import TranslationEngine, TranslationResult, EngineStatus
 from .citation_protect import (
     SOURCE_PROTECTION_VERSION,
+    bare_reference_values,
     protect_citations,
     restore_citations,
     terminal_superscript_indices,
@@ -102,7 +103,9 @@ def _allowed_unprotected_retry_value(item: str) -> bool:
     return is_plain_identifier(item) or is_figure_or_table_reference(item) or is_numeric_citation(item) or is_measurement(item) or is_currency_identifier(item) or is_supplementary_reference(item) or is_section_reference(item) or is_author_et_al_superscript(item)
 
 
-def unprotected_identifier_retry_values(missing: list[str]) -> list[str]:
+def unprotected_identifier_retry_values(
+    missing: list[str], *, allow_inline_numeric: bool = False
+) -> list[str]:
     """Return only spans safe to expose on a selective retry.
 
     Citation/statistic spans stay protected even when they are reported in the
@@ -147,6 +150,7 @@ def unprotected_identifier_retry_values(missing: list[str]) -> list[str]:
         or is_section_reference(item)
         or is_supplementary_reference(item)
         or is_figure_table_reference(item)
+        or (allow_inline_numeric and is_inline_numeric_citation(item))
     ]
     if not identifiers:
         return []
@@ -171,15 +175,21 @@ def allows_unprotected_identifier_retry(missing: list[str]) -> bool:
 
 
 def restore_missing_structure_references(source: str, output: str) -> str:
-    """Recover omitted section/appendix labels without inventing content.
+    """Recover omitted structural references without inventing content.
 
     MADLAD occasionally drops a short cross-reference while translating an
     otherwise complete clause. Copy only references that occur verbatim in the
     source and are absent from the output; append them as an explicit
     parenthetical so the fact remains visible and the client invariant gate
-    can verify it. This is deliberately limited to structural labels.
+    can verify it. This is deliberately limited to section, appendix, table,
+    and figure labels; it does not recover arbitrary names or numbers.
     """
-    refs = re.findall(r"\b(?:Section|Appendix)\s+(?:\d+(?:\.\d+)*|[A-Z])\b", source, flags=re.IGNORECASE)
+    refs = re.findall(
+        r"\b(?:Section|Appendix)\s+(?:\d+(?:\.\d+)*|[A-Z])\b"
+        r"|\b(?:Figure|Fig\.?|Table|Tbl\.?)\s+\d+(?:\s*\([A-Za-z]\)|[A-Za-z])?\b",
+        source,
+        flags=re.IGNORECASE,
+    )
     missing = [ref for ref in dict.fromkeys(refs) if ref.lower() not in output.lower()]
     if not missing or len(missing) > 2:
         return output
@@ -799,7 +809,9 @@ class MADLADEngine(TranslationEngine):
             message = str(original_error)
             if "protected citation placeholder dropped by model:" in message:
                 missing = [value.strip() for value in message.partition(":")[2].split(" || ")]
-                retry_values = unprotected_identifier_retry_values(missing)
+                retry_values = unprotected_identifier_retry_values(
+                    missing, allow_inline_numeric=True
+                )
                 if retry_values or allows_unprotected_identifier_retry(missing):
                     values_to_unprotect = retry_values or missing
                     try:
@@ -933,7 +945,13 @@ class MADLADEngine(TranslationEngine):
             # Keep them in the source chunk for deterministic reassembly, but
             # remove them from the model input so decoding starts with prose.
             translate_body = re.sub(r"^[•‣▪∙・]\s+", "", translate_body)
-            protected, cites, nonce = protect_citations(translate_body)
+            protected, cites, nonce = protect_citations(
+                translate_body,
+                # Literal bare superscript markers are more stable than a
+                # large set of ZZCIT placeholders in citation-heavy prose;
+                # the client invariant gate still requires exact retention.
+                unprotected_values=bare_reference_values(translate_body),
+            )
             protected_chunks.append(protected)
             cite_maps.append((cites, nonce, terminal_superscript_indices(translate_body)))
             enumeration_prefixes.append(prefix)
@@ -1023,7 +1041,8 @@ class MADLADEngine(TranslationEngine):
         else:
             protected, cites, nonce = protect_citations(
                 translate_body,
-                unprotected_values=unprotected_values,
+                unprotected_values=(unprotected_values or set())
+                | bare_reference_values(translate_body),
             )
         inputs = self._encode_translation_inputs(protected, target_language)
         input_tokens = inputs["input_ids"].shape[1]
