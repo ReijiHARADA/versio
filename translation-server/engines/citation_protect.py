@@ -112,11 +112,12 @@ INLINE_NUMERIC_CITATION_RE = re.compile(
 # omit them while the client invariant gate only discovered the loss later.
 # Keep the context deliberately narrow: require either four preceding
 # lowercase letters, a closing/list punctuation mark, or a period that is not
-# part of a decimal and is followed by a new capitalized sentence.
+# part of a decimal. Sentence-boundary logic separately decides whether the
+# following text starts a new sentence.
 INLINE_BARE_REFERENCE_RE = re.compile(
     r"(?:"
     r"(?:(?<=[a-z]{4})|(?<=[)\],;:]))\d{1,3}(?=\s|[.,;:)]|$)"
-    r"|(?<!\d)(?<=\.)\d{1,3}(?=\s+[A-Z]|$)"
+    r"|(?<!\d)(?<=\.)\d{1,3}(?=\s|$)"
     r")"
 )
 _BARE_REFERENCE_IDENTIFIER_WORDS = {
@@ -147,6 +148,33 @@ def bare_reference_values(text: str) -> set[str]:
     survive unchanged.
     """
     return {match.group(0) for match in _bare_reference_matches(text)}
+
+
+def restore_missing_bare_references(source: str, output: str) -> str:
+    """Restore source-derived bare markers omitted by the decoder.
+
+    Bare PDF superscripts are intentionally left literal because placeholder
+    tokens are unstable in citation-heavy units. If decoding still omits one,
+    append the exact missing marker(s) immediately before the unit's terminal
+    punctuation. This preserves the scientific invariant without inventing a
+    number or silently accepting a loss; the placement remains within the
+    same translation unit and is recorded by the client invariant gate.
+    """
+    required = [match.group(0) for match in _bare_reference_matches(source)]
+    if not required:
+        return output
+    remaining = list(required)
+    for match in re.finditer(r"(?<!\d)\d{1,3}(?!\d)", output):
+        value = match.group(0)
+        if value in remaining:
+            remaining.remove(value)
+    if not remaining:
+        return output
+    suffix = " " + ",".join(remaining)
+    terminal = re.search(r"([。！？.!?])\s*$", output)
+    if terminal:
+        return f"{output[:terminal.start()]}{suffix}{output[terminal.start():]}"
+    return f"{output}{suffix}"
 
 # Parenthetical author-year references are a single citation fact even when
 # they contain several authors separated by semicolons.  Keeping the entire

@@ -18,6 +18,7 @@ from .citation_protect import (
     SOURCE_PROTECTION_VERSION,
     bare_reference_values,
     protect_citations,
+    restore_missing_bare_references,
     restore_citations,
     terminal_superscript_indices,
 )
@@ -1003,6 +1004,7 @@ class MADLADEngine(TranslationEngine):
                 reject_missing=True,
                 recoverable_terminal_indices=recoverable_terminal_indices,
             )
+            piece = restore_missing_bare_references(chunk, piece)
             if enumeration_prefixes[i]:
                 piece = f"{enumeration_prefixes[i]} {piece}".strip()
             if self._is_degenerate(piece, chunk, target_language):
@@ -1085,6 +1087,7 @@ class MADLADEngine(TranslationEngine):
             reject_missing=True,
             recoverable_terminal_indices=recoverable_terminal_indices,
         )
+        translated_text = restore_missing_bare_references(text, translated_text)
         if os.getenv("TRANSLATION_UNIT_DEBUG") == "1":
             print(f"[TRANSLATION_RESTORED] text={translated_text!r}", flush=True)
         if enumeration_prefix:
