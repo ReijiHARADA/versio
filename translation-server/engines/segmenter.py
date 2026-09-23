@@ -132,7 +132,11 @@ def _sentence_end_after_numeric_citation(text: str, period_index: int) -> int | 
     if not starter:
         return None
     char = text[after + starter.start()]
-    if not (char.isupper() or char in '“‘"\'•‣▪∙'):
+    # Numeric sentence starters occur frequently in review prose (`.27 10
+    # studies ...`) after a bare superscript citation. They are distinct from
+    # decimals because the boundary scanner only calls this after a letter
+    # followed by a period and a 1–3 digit marker.
+    if not (char.isupper() or char.isdigit() or char in '“‘"\'•‣▪∙'):
         return None
     return after
 

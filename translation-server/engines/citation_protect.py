@@ -12,7 +12,7 @@ import re
 
 # Bump this whenever source-fact protection rules change. It participates in
 # the server translation/cache identity so old accepts are not reused silently.
-SOURCE_PROTECTION_VERSION = "source-protect-v20"
+SOURCE_PROTECTION_VERSION = "source-protect-v21"
 
 # Repeated title-case technical names are factual identifiers even when they
 # do not contain an internal capital transition (for example ``Bluetooth``).
@@ -104,6 +104,49 @@ INLINE_NUMERIC_CITATION_RE = re.compile(
     r"\d{1,3}(?:\s*[-–—]\s*\d{1,3})?"
     r"(?:\s*,\s*\d{1,3}(?:\s*[-–—]\s*\d{1,3})?)+"
 )
+
+# A number of journal PDFs render bibliography references as bare superscripts
+# attached to a word or punctuation (`coaching29`, `tool,31`, `EHR)30`,
+# `infection.30`).  The previous patterns covered clusters and terminal
+# markers but left these single references translatable, so a decoder could
+# omit them while the client invariant gate only discovered the loss later.
+# Keep the context deliberately narrow: require either four preceding
+# lowercase letters, a closing/list punctuation mark, or a period that is not
+# part of a decimal and is followed by a new capitalized sentence.
+INLINE_BARE_REFERENCE_RE = re.compile(
+    r"(?:"
+    r"(?:(?<=[a-z]{4})|(?<=[)\],;:]))\d{1,3}(?=\s|[.,;:)]|$)"
+    r"|(?<!\d)(?<=\.)\d{1,3}(?=\s+[A-Z]|$)"
+    r")"
+)
+_BARE_REFERENCE_IDENTIFIER_WORDS = {
+    "version", "model", "type", "step", "part", "chapter", "page",
+    "item", "table", "figure", "sample", "group", "condition", "trial",
+    "study", "factor", "case", "number", "example", "method", "dataset",
+    "class", "level", "round", "block", "section",
+}
+
+
+def _bare_reference_matches(text: str) -> list[re.Match[str]]:
+    matches = []
+    for match in INLINE_BARE_REFERENCE_RE.finditer(text):
+        prefix = text[:match.start()]
+        word = re.search(r"([A-Za-z]+)$", prefix)
+        if word and word.group(1).lower() in _BARE_REFERENCE_IDENTIFIER_WORDS:
+            continue
+        matches.append(match)
+    return matches
+
+
+def bare_reference_values(text: str) -> set[str]:
+    """Return high-confidence bare superscript markers in *text*.
+
+    These markers are kept literal by the engine because placeholder tokens
+    are more likely to be dropped when a sentence contains many inline
+    references. The client invariant gate still requires every value to
+    survive unchanged.
+    """
+    return {match.group(0) for match in _bare_reference_matches(text)}
 
 # Parenthetical author-year references are a single citation fact even when
 # they contain several authors separated by semicolons.  Keeping the entire
@@ -329,6 +372,7 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
         + list(INLINE_TERMINAL_FOOTNOTE_RE.finditer(text))
         + list(TERMINAL_SUPERSCRIPT_CITATION_RE.finditer(text))
         + list(INLINE_NUMERIC_CITATION_RE.finditer(text))
+        + _bare_reference_matches(text)
         + list(NARRATIVE_AUTHOR_YEAR_CITATION_RE.finditer(text))
         + list(AUTHOR_ET_AL_SUPERSCRIPT_RE.finditer(text))
         + list(SUPPLEMENTARY_CITATION_GROUP_RE.finditer(text))
@@ -418,6 +462,11 @@ def protected_span_mask(text: str) -> str:
     """
     chars = list(text)
     for match in _protected_matches(text):
+        # Bare superscript markers stay literal in the engine; leave their
+        # digits visible so the segmenter can recognize `algorithm.23 Other`
+        # as a sentence boundary.
+        if match.re is INLINE_BARE_REFERENCE_RE:
+            continue
         chars[match.start():match.end()] = "X" * (match.end() - match.start())
     return "".join(chars)
 

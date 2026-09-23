@@ -907,6 +907,11 @@ describe("unsafe extracted translation input", () => {
     ).toBe(true);
   });
 
+  it("rejects a page or column fragment ending at a mathematical let", () => {
+    const source = "A statistical interaction describes a joint influence that is not additive. Let";
+    expect(shouldTranslateParagraph(source)).toBe(false);
+  });
+
   it("rejects blocks with repeated PDF line-break hyphen artifacts", () => {
     const damaged =
       "Physiological signals are collected from previ- psycho-physiological measurements and addi- review evidence from the literature.";
