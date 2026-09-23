@@ -353,6 +353,7 @@ class MicroBatchScheduler:
         for item, chunks, item_model_inputs, part, in_toks, out_toks, unit_fallback_reasons in translated_spans:
             item_in = sum(in_toks)
             item_out = sum(out_toks)
+            assembled_partial: str | None = None
             try:
                 if item_model_inputs == chunks:
                     translated = MADLADEngine._join_translated_chunks(
@@ -366,6 +367,8 @@ class MicroBatchScheduler:
                     translated = restore_missing_structure_references(item.text, translated)
                 if item.heading_num:
                     translated = f"{item.heading_num}. {translated.lstrip()}"
+                if unit_fallback_reasons:
+                    assembled_partial = translated
                 degenerate = engine._is_degenerate(translated, item.text, item.target_language)
                 if self._unit_debug:
                     print(
@@ -378,6 +381,12 @@ class MicroBatchScheduler:
                     print(f"CANDIDATE: {translated}", flush=True)
                 if degenerate:
                     raise ValueError("degenerate translation output")
+                failed_indices = sorted({
+                    int(match.group(1))
+                    for reason in unit_fallback_reasons
+                    if (match := re.match(r"unit_(\d+):", reason))
+                })
+                failed_sources = [chunks[index] for index in failed_indices]
                 elapsed_ms = (time.time() - t0) * 1000
                 result = TranslationResult(
                     text=translated,
@@ -392,6 +401,10 @@ class MicroBatchScheduler:
                     translation_time_ms=elapsed_ms,
                     fallback_reason="; ".join(unit_fallback_reasons) if unit_fallback_reasons else None,
                     fallback_stage="partial_unit_fallback" if unit_fallback_reasons else None,
+                    unit_fallback_indices=failed_indices or None,
+                    partial_text=assembled_partial,
+                    partial_source_units=failed_sources or None,
+                    partial_unit_texts=part,
                 )
                 results.append(result)
                 if not item.future.done():
@@ -406,6 +419,17 @@ class MicroBatchScheduler:
                     "; ".join(failure_reasons),
                     "whole_item_fallback",
                 )
+                if unit_fallback_reasons:
+                    failed_indices: list[int] = []
+                    for reason in unit_fallback_reasons:
+                        match = re.match(r"unit_(\d+):", reason)
+                        if match:
+                            failed_indices.append(int(match.group(1)))
+                    failed_indices = sorted(set(failed_indices))
+                    fallback.unit_fallback_indices = failed_indices or None
+                    fallback.partial_text = assembled_partial
+                    fallback.partial_source_units = [chunks[index] for index in failed_indices]
+                    fallback.partial_unit_texts = part
                 results.append(fallback)
                 if not item.future.done():
                     item.future.set_result(fallback)

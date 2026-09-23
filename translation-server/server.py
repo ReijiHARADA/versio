@@ -381,6 +381,10 @@ class TranslateResponse(BaseModel):
     tokens_per_sec: Optional[float]
     fallback_reason: Optional[str] = None
     fallback_stage: Optional[str] = None
+    unit_fallback_indices: Optional[list[int]] = None
+    partial_text: Optional[str] = None
+    partial_source_units: Optional[list[str]] = None
+    partial_unit_texts: Optional[list[str]] = None
 
 
 class BatchTranslateRequest(BaseModel):

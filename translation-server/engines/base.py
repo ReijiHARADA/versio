@@ -23,6 +23,17 @@ class TranslationResult:
     # fallback from a transport error without inspecting logs.
     fallback_reason: Optional[str] = None
     fallback_stage: Optional[str] = None
+    # Indexes of semantic translation units that failed while the paragraph
+    # was being assembled. This is diagnostic metadata only; callers must not
+    # infer that the remaining units are safe to display without re-running
+    # the document-level quality gate.
+    unit_fallback_indices: Optional[list[int]] = None
+    # Candidate assembled from successful units plus exact source slices for
+    # failed units. It is diagnostic-only until a caller independently
+    # validates it; `text` remains the authoritative source fallback.
+    partial_text: Optional[str] = None
+    partial_source_units: Optional[list[str]] = None
+    partial_unit_texts: Optional[list[str]] = None
 
     @property
     def chars_per_sec(self) -> float:
@@ -50,6 +61,10 @@ class TranslationResult:
             "translation_time_ms": self.translation_time_ms,
             "fallback_reason": self.fallback_reason,
             "fallback_stage": self.fallback_stage,
+            "unit_fallback_indices": self.unit_fallback_indices,
+            "partial_text": self.partial_text,
+            "partial_source_units": self.partial_source_units,
+            "partial_unit_texts": self.partial_unit_texts,
             "chars_per_sec": self.chars_per_sec,
             "tokens_per_sec": self.tokens_per_sec,
         }

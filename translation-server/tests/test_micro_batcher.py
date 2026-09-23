@@ -265,6 +265,16 @@ class MicroBatcherTests(unittest.TestCase):
         self.assertEqual(out[0].output_tokens, 5)
         self.assertEqual(out[0].fallback_stage, "partial_unit_fallback")
         self.assertEqual(out[0].fallback_reason, "unit_1:engine_exception:RuntimeError")
+        self.assertEqual(out[0].unit_fallback_indices, [1])
+        self.assertEqual(
+            out[0].partial_text,
+            "ja:good sentence. bad sentence. ja:another good sentence.",
+        )
+        self.assertEqual(out[0].partial_source_units, ["bad sentence."])
+        self.assertEqual(
+            out[0].partial_unit_texts,
+            ["ja:good sentence.", "bad sentence.", "ja:another good sentence."],
+        )
 
 
 if __name__ == "__main__":

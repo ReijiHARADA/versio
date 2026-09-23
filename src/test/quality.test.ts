@@ -7,6 +7,8 @@ import {
   shouldTranslateHeading,
   looksLikeSubjectClassification,
   evaluateJaTranslation,
+  evaluatePartialJaTranslation,
+  diagnosePartialUnits,
   isCascadeQualityAcceptable,
   extractScientificInvariants,
   isExpectedNonProseParagraph,
@@ -48,6 +50,50 @@ describe("acronym expansion safety", () => {
     const faithful = "第一群は仮説探索質問を尋ね, 第二群は制約探索質問を尋ねた。";
     expect(evaluateJaTranslation(hallucinated, source).reasons).toContain("translation introduces an unsupported numbered enumeration");
     expect(evaluateJaTranslation(faithful, source).reasons).not.toContain("translation introduces an unsupported numbered enumeration");
+  });
+});
+
+describe("partial translation diagnostics", () => {
+  it("only exempts an explicitly preserved failed source unit", () => {
+    const source = "The first sentence is ordinary prose. The second sentence is difficult.";
+    const output = "最初の文は通常の散文です。The second sentence is difficult.";
+    const quality = evaluatePartialJaTranslation(output, source, ["The second sentence is difficult."]);
+    expect(quality.preservedSourceUnitsValidated).toBe(true);
+    expect(quality.reasons).not.toContain("untranslated foreign-language prose");
+    expect(quality.reasons.some((reason) => reason.startsWith("translation contains unmodified source span"))).toBe(false);
+  });
+
+  it("does not exempt an unreported English span", () => {
+    const source = "The first sentence is ordinary prose. The second sentence is difficult.";
+    const output = "The first sentence is ordinary prose。2番目の文は難しい。";
+    const quality = evaluatePartialJaTranslation(output, source, ["The second sentence is difficult."]);
+    expect(quality.preservedSourceUnitsValidated).toBe(false);
+  });
+
+  it("marks a preserved unit and detects a short translated unit independently", () => {
+    const result = diagnosePartialUnits(
+      ["A complete English sentence with enough context.", "A preserved source unit."],
+      ["完全な文脈を持つ完全な英文です。", "A preserved source unit."],
+      [1],
+    );
+    expect(result[0].accepted).toBe(true);
+    expect(result[1].preserved).toBe(true);
+    expect(result[1].accepted).toBe(false);
+  });
+});
+
+describe("contextual experimental counts", () => {
+  it("rejects a translation that drops a clip count", () => {
+    const source = "Because of the smaller number of clips (36 in total), 30 participants were included in the experiment.";
+    const output = "クリップ数が少ないため、30人の参加者を実験に含めた。";
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+    expect(evaluateJaTranslation(output, source).reasons).toContain("scientific invariants missing: 36");
+  });
+
+  it("does not make an isolated ordinary number critical", () => {
+    const source = "The procedure was repeated in 2019 and the discussion follows in the next section.";
+    const output = "手順は2019年に再実施され、次の節で議論する。";
+    expect(isPlausibleJaTranslation(output, source)).toBe(true);
   });
 });
 import {
@@ -1263,9 +1309,10 @@ describe("isRetryableTranslationFailure", () => {
       .toContain("strong contrast relation missing");
   });
 
-  it("allows relation-only cascade evidence without allowing structural failures", () => {
-    const source = "Despite the small sample, the estimate was stable.";
-    expect(isCascadeQualityAcceptable("サンプルは小さかったが、推定値は安定していた。", source)).toBe(true);
+  it("rejects cascade candidates that lose a critical semantic relation", () => {
+    const source = "If the signal is absent, the participant was excluded from analysis.";
+    expect(isCascadeQualityAcceptable("信号がない。参加者を分析から除外した。", source)).toBe(false);
+    expect(isCascadeQualityAcceptable("信号がない場合、参加者を分析から除外した。", source)).toBe(true);
     expect(isCascadeQualityAcceptable("sample", source)).toBe(false);
   });
 

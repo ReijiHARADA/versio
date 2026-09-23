@@ -9839,3 +9839,485 @@ Refined the mixed-script decoder guard to compare suspicious Latin fragments aga
 - Therefore the recent focus on Gemma/Qwen was a prioritization of available models and held-out safety evaluation, not a conclusion that CAT is unsuitable. CAT 3.5 requires an explicit model source/install and must be compared on the same source-hash-guarded segmented cohort before any routing decision. No production route changed.
 - Verification after this checkpoint: `npm run typecheck`, `npm run lint`, and focused Vitest (`quality`, `ollamaTranslationEngine`, `translationModelVersion`) pass, 152 tests total. The existing optional PDF.js `canvas.node` warnings remain non-fatal. No server, model route, or `.app` build changed.
 - Additional regression check: reading-order plus quality suites pass (219 tests). This confirms the current source-reconstruction and gate changes have no observed reading-order regression; the v275 fallback target remains unmet and requires fresh model/server measurement before further routing changes.
+- Added an audit-only machine triage of the 15 v279 candidate accepts: 9 have source/output character ratio below 0.45 (some also have fewer Japanese sentence marks). This is not treated as a semantic rejection because Japanese compression is legitimate in some translations, but it identifies rows requiring source-to-output review before any cascade route. Artifact: `test-data/real-papers/reports/alternate-model-v282-gemma-completeness-screen.json`. No production behavior changed.
+- Added a stored-metadata layer audit for all 70 ordinary-body fallback rows in v275. The heuristic classification yields 31 model/quality-gate, 26 invariant/protection, and 13 other rows; it did not identify a clean extraction class from the existing metadata, so this is diagnostic only and must not be treated as semantic ground truth. Artifact: `test-data/real-papers/reports/translation-fallback-layer-audit-v283.json`.
+- With the local MADLAD server ready, reran the cached `interactive-jewellery` paper through the current reader path (8 units, serial, v284). Four of eight units still fell back: two structural/source-preservation cases and two incomplete-block cases. This is consistent with the v275 source-completeness problem; no model or gate route was changed. Artifacts: `translation-audit-v284-interactive-jewellery.{json,md}`.
+- Reran the cached `cognitive-memory-cue-interest` paper (8 units, v285). Six of eight units fell back. One accepted translation omitted the source fact `36 clips` while the current gate only reported a non-critical missing number (`scientific invariants missing: 36`) and still marked it acceptable; this is a concrete unsafe false-accept candidate, not a reason to blindly tighten every numeric invariant. Other fallbacks were split between incomplete physical blocks, protected-token restore, and server quality rejection. Artifact: `translation-audit-v285-cognitive-memory.json`.
+- Added a generic contextual-count invariant rule: a missing number is critical when nearby source text explicitly binds it to experimental counts (`participants`, `clips`, `trials`, `conditions`, `groups`, `sessions`, etc.); isolated ordinary numbers and years remain non-critical. Quality/cache identity advanced to `quality-v17`, with positive/negative tests.
+- Reran the same 8-unit cognitive-memory paper as v286. The previously accepted translation that dropped `36 clips` now falls back; fallback changes 6/8 → 7/8 in this diagnostic cohort. This is an intentional safety correction for a confirmed unsafe accept, not a claimed fallback improvement. Focused quality tests, typecheck, lint, and diff check pass; no `.app` build.
+- Gate-impact check for `quality-v17`: all 174 ordinary-body translations previously accepted in v275 remain accepted (`174/174`, 0 false rejects) under the contextual-count rule. This is a saved-translation check, not a fresh semantic evaluation, but it shows no immediate broad over-rejection on the existing accepted cohort.
+- Ran a three-paper quality-v17 pilot (24 section-stratified units): interactive-jewellery 4/8 fallback, thermal-earring 4/8, and cognitive-memory-cue-interest 7/8. The sample deliberately includes risky/structural units and is not a corpus fallback metric. The cognitive result confirms the `36 clips` safety fallback; no new broad false-reject pattern was observed. Artifact: `translation-audit-v287-quality-v17-pilot.{json,md}`.
+- Started a quality-v17 corpus replay with the existing `--limit 12 --resume` command. The option limits blocks per paper, so it selected all 52 catalog papers; after ~1h54m, only `interactive-jewellery` (12 units) had completed. Stopped at that clean checkpoint to avoid an unexpectedly multi-hour run. Partial artifact: `translation-audit-v288-quality-v17-12paper.json` (`complete=false`, 1/52 papers). No data or production route was changed; resume is possible with the same report name.
+- Resumed v288 and completed the next paper, `significant-other` (12 units), then stopped at the checkpoint. Current partial artifact contains 2/52 papers: interactive-jewellery 4/12 fallback and significant-other 3/12 (7/24 total, 29.2%). This is a diagnostic, structurally sampled subset and must not replace the 70/244 v275 corpus metric. No additional code or routing change.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (3/52)
+
+- Resumed the same fresh-server benchmark process and completed `power-over-skin` (12 units), then stopped at the clean paper checkpoint.
+- Current artifact `test-data/real-papers/reports/translation-audit-v288-quality-v17-12paper.json` remains `complete=false` with 3/52 papers and 36 section-stratified rows: `interactive-jewellery` 4/12 fallback, `significant-other` 3/12, `power-over-skin` 4/12 (11/36 total, 30.6%). This is a diagnostic subset, not the corpus-wide ordinary-body metric.
+- The benchmark process is stopped; no `benchmark-real-paper-translation`/`vite-node` process remains. No production route, model, or `.app` build changed.
+- CAT evaluation is intentionally out of scope per user instruction. The next useful continuation is to resume v288 with the same report name when a fresh translation server is available, or analyze the saved rows for generalizable extraction/model causes before any routing change.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (4/52)
+
+- Resumed v288 with the ready local translation server and completed `thermal-earring` (12 units), then stopped at the clean paper checkpoint.
+- The saved artifact now has 4/52 papers and 48 rows: interactive-jewellery 4/12, significant-other 3/12, power-over-skin 4/12, thermal-earring 7/12; 18/48 rows are reader-visible fallback (37.5%). This remains a structurally sampled diagnostic subset, not the ordinary-body corpus rate.
+- The benchmark process is stopped and no production routing or `.app` build changed. CAT remains out of scope.
+- Ran the existing geometry-backed fallback attribution against the saved v288 report. Only 3 of the 18 reader-visible fallbacks are ordinary-body-prose in this sampled set: two clean single-column units are model/adequacy candidates (`interactive-jewellery:b-4d8fd90a`, `thermal-earring:b-327fbccb`), and one clean scientific unit is an invariant/protection failure (`thermal-earring:b-658de6d8-3`). The remaining 15 are structural/list/reference/damaged-extraction cases and should not be “fixed” by loosening the translation gate. Artifact: `test-data/real-papers/reports/translation-fallback-attribution.json`.
+- Ran an audit-only Gemma 2 9B comparison on the 3 ordinary-body fallbacks from v288 (`alternate-model-v289-v288-gemma9.json`). All 3 passed the automatic gate. Manual spot review: interactive-jewellery preserves the negated “not the first” claim (minor wording awkwardness); thermal-earring methods output preserves the experimental sequence but the gate reports a condition-relation warning; the statistical paragraph preserves 5.67, 0.0024, temperatures, times, and participant count but contains a minor `paired t-test` rendering typo. This is promising candidate evidence, not enough to enable production cascade: one output has a relation warning and all need broader held-out semantic review.
+- Verification after the v289 audit: focused quality, Ollama engine, and translation-version tests pass (154 tests); typecheck and lint pass. The PDF.js optional `canvas.node` warnings remain non-fatal. No production cascade default was enabled.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (5/52)
+
+- Resumed the fresh-server replay and completed `ppg-earring` (12 units), then stopped at the paper checkpoint.
+- v288 now contains 5/52 papers and 60 rows: interactive-jewellery 4/12, significant-other 3/12, power-over-skin 4/12, thermal-earring 7/12, ppg-earring 4/12; 22/60 rows are reader-visible fallback (36.7%). This mixed section-stratified diagnostic sample is not the ordinary-body denominator.
+- Benchmark process is stopped; no production routing or `.app` build changed.
+- Tightened `isCascadeQualityAcceptable` for the selective alternate-model path: candidates that lose critical condition, exclusivity, negation, uncertainty, comparison, disjunctive, or participant-total relations are now rejected; ordinary implicit contrast remains allowed. Primary MADLAD acceptance is unchanged. Regression coverage updated. Focused quality/Ollama/version tests pass (154), typecheck and lint pass; `git diff --check` passes.
+- Full Vitest after the selective-cascade relation guard: 67 files / 498 tests passed. Existing optional PDF.js canvas warnings remain non-fatal. No `.app` build or production server restart.
+- Re-gated the stored v289 Gemma candidates after the stricter cascade rule: 2/3 remain eligible; the methods paragraph is now rejected because its condition relation is missing. The two retained candidates have no quality reasons. This confirms the change removes a concrete unsafe rescue rather than merely changing a metric.
+- Translation-server tests were rerun with explicit source paths (avoiding duplicated bundled test copies): 188 passed, 11 subtests passed in 160.34s. A broad `pytest` invocation also exposed only collection-time duplicate-module errors from `src-tauri/target/{debug,release}` copies; production source tests pass when scoped correctly.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (6/52)
+
+- Completed `design-for-wearability` (12 units) in the resumed fresh-server replay, then stopped at the paper checkpoint.
+- v288 now contains 6/52 papers and 72 rows; the mixed diagnostic sample has 27/72 reader-visible fallbacks (37.5%). This includes structural/list/reference rows and is not the ordinary-body denominator; no fallback target claim is made.
+- Benchmark process is stopped. No production cascade default or `.app` build changed.
+- Correction: the exact JSON count is 25/72 (34.7%), not 27/72; the per-paper counts are 4, 3, 4, 7, 4, and 3.
+- Computed a separate denominator for the 6-paper v288 sample: 36 ordinary-body rows, 3 reader-visible fallbacks, 8.3%, all post-model. This is closer to the product metric than the mixed 25/72 rate but remains too small and structurally selected to claim the <=5% target. Artifact: `test-data/real-papers/reports/translation-audit-v288-ordinary-body-summary.json`.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (7/52)
+
+- Completed `dont-mind-me` (12 units) and stopped at the clean paper checkpoint.
+- v288 now contains 7/52 papers and 84 rows. Exact mixed-sample fallback count and ordinary-body summary were recomputed from JSON: see `translation-audit-v288-ordinary-body-summary.json` for the prior checkpoint; this new checkpoint should be regenerated before reporting a final aggregate.
+- Benchmark process is stopped. No production route or `.app` build changed.
+- Updated the ordinary-body summary after the 7-paper checkpoint: 44 ordinary-body rows, 6 reader-visible fallbacks, 13.6% in this structurally selected sample. This increase shows why the 6-paper 8.3% figure was not stable; it is not a production metric and does not justify enabling cascade by default.
+- Extended Gemma 2 9B audit to all 6 ordinary-body fallback rows currently present in v288 (`alternate-model-v290-v288-gemma9.json`). The primary plausibility gate marked 6/6 acceptable, but the stricter selective-cascade gate retains only 3/6: it rejects two candidates with missing condition relations and one with an untranslated/compression safety signal. This is evidence against enabling a broad automatic cascade; source/model candidates require the stricter gate and further semantic review.
+- Ran the same six v288 ordinary-body fallbacks through Qwen 2.5 14B (`alternate-model-v291-v288-qwen14.json`). Primary gate accepted 4/6; the stricter cascade gate accepted only 2/6 (interactive-jewellery and the statistical thermal-earring block). Other candidates had condition, language, or source-invariant signals. Gemma retained 3/6 under the same strict gate, so neither model is a safe universal cascade; candidate selection must remain evidence-driven and opt-in.
+- Consolidated the matched Gemma/Qwen six-row audit as `test-data/real-papers/reports/v292-same-fallback-model-compare.json`, preserving both outputs, primary gate results, and quality reasons for reproducibility. Strict cascade re-gating remains 3/6 for Gemma and 2/6 for Qwen; this is audit-only and not a routing decision.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (8/52)
+
+- Completed `speechin` (12 units) and stopped at the checkpoint. The report now contains 8/52 papers and 96 rows.
+- Recomputed the ordinary-body summary from the JSON after this checkpoint and updated `translation-audit-v288-ordinary-body-summary.json`. No production route or `.app` build changed.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (9/52)
+
+- Completed `step-to-charge` (12 units) and stopped at the paper checkpoint.
+- Recomputed the ordinary-body summary from the current JSON and updated `translation-audit-v288-ordinary-body-summary.json`. No production route or `.app` build changed.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (10/52)
+
+- Completed `wear-scale` (12 units) and stopped at the paper checkpoint.
+- Recomputed and saved the ordinary-body summary from the current JSON; no production route or `.app` build changed.
+- Correction after inspecting the checkpoint JSON: the run saved two papers during this session (`wear-scale` and `precious-materials`), so the authoritative count is 11/52 papers, 120 rows, 55 ordinary-body rows, 9 ordinary-body fallbacks (16.4%).
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (11/52)
+
+- Completed `fashion-hybrid-cmf` (12 units) and stopped at the paper checkpoint.
+- Recomputed and saved the ordinary-body summary from the current JSON. No production route or `.app` build changed.
+- Correction: checkpoint JSON contains 12/52 papers, 132 rows, 57 ordinary-body rows, and 9 ordinary-body fallbacks (15.8%); the run saved two papers during this session.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (13/52)
+
+- Completed `hci-empirical-methods` (12 units) and stopped at the checkpoint.
+- Recomputed and saved the ordinary-body summary from the current JSON. No production route or `.app` build changed.
+- Added an integration regression proving the selective alternate-model engine rejects a candidate that drops an experimental condition before it can replace a failed MADLAD result. Focused quality/Ollama/version tests pass (155), typecheck and lint pass, and `git diff --check` passes.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (16/52)
+
+- The resumed run saved three additional paper checkpoints before stopping: `cognitive-psychology-gpt3`, `marketing-consumer-response`, and `ergonomics-human-factors-ihci`.
+- Recomputed the authoritative JSON summary and updated `translation-audit-v288-ordinary-body-summary.json`. No production route or `.app` build changed.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (17/52)
+
+- Completed `linguistics-language-model-physics` (12 units) and stopped at the checkpoint.
+- Recomputed and saved the ordinary-body summary from the current JSON. No production route or `.app` build changed.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (18/52)
+
+- Completed `ozchi-finger-specific-touch` (12 units) and stopped at the checkpoint.
+- Recomputed and saved the ordinary-body summary from the current JSON. No production route or `.app` build changed.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (19/52)
+
+- Completed `education-learning-analytics` (12 units) and stopped at the checkpoint.
+- Recomputed and saved the ordinary-body summary from the current JSON. No production route or `.app` build changed.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (20/52)
+
+- Completed `neuroscience-rule-following` (12 units) and stopped at the checkpoint.
+- Recomputed and saved the ordinary-body summary from the current JSON. No production route or `.app` build changed.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (22/52 authoritative)
+
+- Resumed the benchmark after the CAT scope clarification. The run saved two additional papers before becoming idle on the next request; the authoritative report now contains 22/52 papers and 252 rows.
+- Recomputed `test-data/real-papers/reports/translation-audit-v288-ordinary-body-summary.json`: 93 ordinary-body rows, 18 reader-visible fallbacks (19.4%), with the current fallback stage breakdown stored in the artifact. This remains a diagnostic corpus result, above the <=5% target, and is not being hidden by broad fallback changes.
+- The benchmark process was stopped after a verified idle period (no report progress for over two minutes while the server remained ready). No production routing, CAT evaluation, or `.app` build changed. Resume remains safe with `--resume` from the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (23/52)
+
+- Resumed the same fresh-server benchmark session and completed `medical-imaging-deep-learning-review` (12 translation units); stopped immediately after its checkpoint.
+- Authoritative report now contains 23/52 papers and 264 rows. Recomputed the ordinary-body summary: 99 ordinary-body rows, 18 reader-visible fallbacks (18.2%). Stage counts and exact fallback keys are in `translation-audit-v288-ordinary-body-summary.json`.
+- This remains above the <=5% target and is diagnostic evidence, not a completion claim. No production routing, CAT evaluation, or `.app` build changed.
+
+## Correction — v288 quality-v17 replay checkpoint (authoritative JSON)
+
+- After inspecting the saved JSON, the exact totals are 23 papers, 264 rows, 97 ordinary-body rows, and 19 reader-visible fallbacks (19.6%). The prior paragraph's 99/18 figures were a manual arithmetic error; use the JSON and ordinary-body summary artifact as authoritative.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (24/52)
+
+- Resumed the fresh-server replay and completed `covid-ml-review` (12 translation units), then stopped at the checkpoint.
+- Authoritative JSON now contains 24/52 papers and 276 rows. The regenerated ordinary-body summary is the source of truth for fallback counts and keys; no production routing or `.app` build changed.
+- CAT remains out of scope. Resume is safe with the same report and `--resume`.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (25/52)
+
+- Completed `medical-image-segmentation-deep-learning` (12 translation units) in the resumed fresh-server replay, then stopped at the paper checkpoint.
+- The report now contains 25/52 papers and 288 rows. Ordinary-body fallback counts were recomputed into `translation-audit-v288-ordinary-body-summary.json`; that artifact and the raw report are authoritative.
+- No production route, `.app` bundle, or CAT evaluation changed.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (26/52)
+
+- Completed `interpreting-neural-networks` (12 translation units) and stopped at its checkpoint. A non-fatal PDF.js ColorSpace warning was observed; the checkpoint was saved.
+- Authoritative report now contains 26/52 papers and 300 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (27/52)
+
+- Completed `human-ai-interaction-guidelines` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 27/52 papers and 312 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (28/52)
+
+- Completed `social-influence-social-advertising` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 28/52 papers and 324 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (29/52)
+
+- Completed `modeling-human-behavior-cognitive-uncertainty` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 29/52 papers and 336 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (30/52)
+
+- Completed `osworld-multimodal-agents` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 30/52 papers and 348 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (31/52)
+
+- Completed `conversation-analysis-user-experience` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 31/52 papers and 360 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (31/52)
+
+- Completed `computational-linguistics-nlp-translation` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 31/52 papers and 360 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## Correction — v288 quality-v17 replay checkpoint (authoritative JSON)
+
+- The saved report contains 32/52 papers and 372 rows, not 31/52 and 360. Ordinary-body is 142 rows with 37 fallbacks (26.1%). Use the raw JSON and regenerated summary as authoritative.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (32/52)
+
+- Completed `how-content-volume-landing-pages` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 32/52 papers and 372 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## Correction — v288 quality-v17 replay checkpoint (authoritative JSON)
+
+- The saved report contains 33/52 papers and 384 rows, not 32/52 and 372. Ordinary-body is 148 rows with 38 fallbacks (25.7%). Use the raw JSON and regenerated summary as authoritative.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (34/52)
+
+- Completed `using-cognitive-psychology-gpt3` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 34/52 papers and 396 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (35/52)
+
+- Completed `syntax-prosody-correlation` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 35/52 papers and 408 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (36/52)
+
+- Completed `hfe-healthcare-scoping-2024` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 36/52 papers and 420 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (37/52)
+
+- Completed `hfe-healthcare-safety-review` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 37/52 papers and 432 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (38/52)
+
+- Completed `cognitive-dual-task-older-adults` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 38/52 papers and 444 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (39/52)
+
+- Completed `marketing-unavailable-choice` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 39/52 papers and 456 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (40/52)
+
+- Completed `marketing-framing-organic-food` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 40/52 papers and 468 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (41/52)
+
+- Completed `marketing-platform-attitude` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 41/52 papers and 480 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (42/52)
+
+- Completed `marketing-consumer-production-journey` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 42/52 papers and 492 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (43/52)
+
+- Completed `ergonomics-job-rotation-robotics` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 43/52 papers and 504 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (44/52)
+
+- Completed `ergonomics-quantified-factory-worker` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 44/52 papers and 516 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (45/52)
+
+- Completed `ergonomics-flight-deck-applications` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 45/52 papers and 528 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (46/52)
+
+- Completed `linguistics-register-web-corpus` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 46/52 papers and 540 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (47/52)
+
+- Completed `linguistics-appraisal-institutional-discourse` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 47/52 papers and 552 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (48/52)
+
+- Completed `marketing-neurophysiology-consumer-motivation` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 48/52 papers and 564 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (49/52)
+
+- Completed `cognitive-memory-cue-interest` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 49/52 papers and 576 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (50/52)
+
+- Completed `cognitive-vr-mnemonic-processing` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 50/52 papers and 588 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay checkpoint (51/52)
+
+- Completed `cognitive-motor-incidental-memory` (12 translation units) and stopped at the checkpoint.
+- Authoritative report now contains 51/52 papers and 600 rows. Ordinary-body counts were recomputed in `translation-audit-v288-ordinary-body-summary.json`.
+- No production routing, CAT evaluation, or `.app` build changed; resume remains safe with the same report.
+
+## 2026-09-23 — v288 quality-v17 replay completed (52/52)
+
+- Completed the final paper in the v288 quality-v17 replay: 52/52 papers, 612 rows.
+- Recomputed the authoritative ordinary-body summary after completion.
+- The benchmark process exited after the final paper; no production routing or CAT evaluation was changed.
+- Next step is to analyze the completed fallback taxonomy and implement the next generalizable quality improvement; the <=5% ordinary-body fallback target is not yet achieved.
+
+## 2026-09-23 — v288 fallback taxonomy recorded
+
+- Added `test-data/real-papers/reports/translation-audit-v288-fallback-taxonomy.json` from the completed 52-paper report.
+- Ordinary-body fallback is dominated by post-model failures: protected-token restoration, model-quality rejection, and invariant/semantic gates; this is evidence for targeted recovery rather than a blanket gate relaxation.
+- CAT remains out of scope. The <=5% fallback target remains open.
+
+## 2026-09-23 — restore-path audit
+
+- Reviewed `restore_citations()` and `_translate_chunk_with_rescue()` against the 8 protected-token fallback rows.
+- Existing behavior already recovers unambiguous glyph corruption, adjacent placeholder merges, compact measurement forms, and terminal numeric citations; it intentionally fails closed for ambiguous or missing scientific spans.
+- No blanket relaxation was made. The next implementation candidate must be evaluated with source-position evidence because appending a dropped citation at sentence end would be unsafe.
+- Focused quality/cascade tests: 154 passed.
+
+## 2026-09-23 — noncritical identifier invariant refinement
+
+- Adjusted `invariantQuality` so omitted mixed-case brand/system names with a leading lowercase (for example `iPhone`) and short all-caps venue abbreviations (2–3 letters, except `SD`) remain diagnostic reasons but are no longer hard fallback triggers.
+- Method/statistical identifiers such as `DeepIV`, `H4`, `SD`, measurements, citations, figures, tables, years, and contextual counts remain hard-protected.
+- This targets false fallback without weakening numeric, statistical, relation, or method safety gates. A fresh benchmark is required before quantifying the reduction.
+- `src/test/quality.test.ts`: 149 passed; `git diff --check`: passed.
+
+## 2026-09-23 — v293 identifier refinement benchmark checkpoint (6/52)
+
+- Fresh report `translation-audit-v293-identifier-refinement-12paper.json` reached 6/52 papers (72 units).
+- The next request remained in MPS generation for over 13 minutes without a checkpoint; benchmark was interrupted at the safe checkpoint rather than duplicating a stalled run.
+- This is an execution/performance issue, not evidence of translation quality. The completed 6-paper subset is retained for comparison; full before/after fallback metrics require a resumed or fresh run after the MPS stall is addressed.
+
+## 2026-09-23 — v293 resume checkpoint (stalled again at 6/52)
+
+- Resumed v293 from the 6-paper checkpoint; the next paper request again remained in MPS generation for more than two minutes with no checkpoint.
+- Stopped the benchmark at the same safe checkpoint. This repeated stall indicates missing client-side request timeout/abort handling; it is not a quality result.
+- Preserve v293 report and resume only after adding bounded request diagnostics or running a smaller isolated fixture.
+
+## 2026-09-23 — bounded MADLAD request timeout
+
+- Added a 180-second per-attempt timeout to `fetchTranslation()` using `AbortController`.
+- Timeout errors are classified as translation request failures and still use the existing bounded retry loop; no quality gate was loosened.
+- This prevents an MPS graph compilation/dead request from blocking an import or benchmark forever.
+- Validation: MADLAD client/model-version tests 6 passed; typecheck and diff check passed.
+
+### v294 benchmark checkpoint (2026-09-23)
+- `translation-audit-v293-identifier-refinement-12paper.json` resumed after adding a 180s per-request timeout.
+- Current progress: 12/52 papers, 132 rows.
+- Translation server PID 25610 remains healthy; benchmark PID 76258 remains active.
+- CAT evaluation remains out of scope. Continue ordinary-body translation quality evaluation and selective-cascade/model assessment.
+
+### v295 benchmark checkpoint (2026-09-23)
+- Fresh v293 resume advanced to 18/52 papers, 204 rows.
+- Server PID 25610 and benchmark PID 76258 are active; no restart performed.
+- Continue quality benchmark; CAT remains explicitly out of scope.
+
+### v296 benchmark checkpoint (2026-09-23)
+- Fresh v293 resume advanced to 19/52 papers, 216 rows.
+- Translation server and benchmark remain active; no CAT work included.
+
+### v297 benchmark checkpoint (2026-09-23)
+- Fresh v293 resume advanced to 22/52 papers, 252 rows.
+- Translation server PID 25610 and benchmark PID 76258 remain active.
+
+### v298 benchmark checkpoint (2026-09-23)
+- Fresh v293 resume advanced to 26/52 papers, 300 rows.
+- Server and benchmark remain active; CAT is out of scope.
+
+### v299 fresh benchmark completion (2026-09-23)
+- `translation-audit-v293-identifier-refinement-12paper.json` completed: 52/52 papers, 612 rows.
+- Fresh ordinary-body summary: 244 rows, 67 reader-visible fallbacks, rate 27.4590% (64 post-model, 3 pre-model).
+- Compared with v288: 70/244 = 28.6885% (67 post-model, 3 pre-model); v293 is a 3-row reduction but remains far above the <=5% product target.
+- Benchmark process exited after completion; translation server PID 25610 is idle/ready.
+- CAT remains out of scope. Next action: inspect v293 fallback taxonomy and prioritize general quality-gate/cascade improvements without blanket fallback relaxation.
+
+### v300 fallback taxonomy (2026-09-23)
+- Added `test-data/real-papers/reports/translation-audit-v293-fallback-taxonomy.json` from the completed fresh report.
+- Ordinary-body fallback is dominated by model/quality rejection and restore failures (64/67 post-model), with 3 pre-model cases; this is not an extraction-only problem.
+- Common rejection classes include source fallback after `translation_quality_rejected`, protected-token restore failures, untranslated source spans/foreign prose, missing scientific invariants, and relation/negation failures.
+- No blanket gate relaxation was applied; the <=5% target remains unmet and requires general cascade/model-quality work.
+
+### v301 validation (2026-09-23)
+- Typecheck passed.
+- Targeted translation/quality tests passed: 155 tests across 3 files.
+- The fresh benchmark remains the authoritative quality result; no production gate was loosened.
+
+### v302 selective cascade audit (2026-09-23)
+- Ollama is available with qwen2.5:14b, qwen2.5:7b, and gemma2:9b installed.
+- Ran audit-only Qwen2.5-14B on 10 ordinary-body rows from v293 fallback set; 7 passed the existing gate, 3 were rejected, and 1 had citation restore errors.
+- Artifact: `test-data/real-papers/reports/alternate-model-diagnostic-v301-qwen14-v293.json`.
+- This is evidence for selective cascade evaluation, not production routing; the sample is too small to claim <=5% or enable cascade globally.
+
+### v303 selective cascade audit completion (2026-09-23)
+- Qwen2.5-14B audit-only run completed on 20 v293 ordinary-body fallback rows.
+- Results: 12 gate-accepted, 8 rejected, 2 citation restore-error rows (60% accepted in this sample).
+- Artifact: `test-data/real-papers/reports/alternate-model-diagnostic-v302-qwen14-v293-20.json`.
+- Rejection/restore failures remain material; selective cascade is not enabled globally.
+
+### v305 alternate-model comparison (2026-09-23)
+- Qwen2.5-7B audit-only on the same first 10 v293 fallback rows: 7/10 gate-accepted, 0 restore errors.
+- Qwen2.5-14B on the first 10: 7/10 accepted, 1 restore error; on 20 rows: 12/20 accepted, 2 restore errors.
+- 7B did not show a clear acceptance advantage over 14B in this sample; no production cascade change.
+
+### v307 alternate-model comparison (2026-09-23)
+- Gemma2-9B audit-only on the same first 10 v293 fallback rows: 8/10 gate-accepted, 1 restore error.
+- Qwen2.5-7B: 7/10 accepted, 0 restore errors; Qwen2.5-14B: 7/10 accepted, 1 restore error.
+- Gemma2-9B is the best of this small sample, but 20% rejection/restore failure is still far from a safe global cascade; production routing unchanged.
+
+## v308 cascade safety-regex repair (2026-09-23)
+
+CAT関連は対象外として、翻訳品質改善を継続。`src/services/translation/quality.ts` の `isCascadeQualityAcceptable` にある危険理由フィルタを点検したところ、単語境界が正規表現の `\\b` ではなく実文字 U+0008 (backspace) になっており、一般的な `invariant` / `missing` / `untranslated` / `malformed` 等の理由をこの補助フィルタが検出できない状態だった。専用の関係理由リストは動作していたが、理由の追加時に安全側へ倒れない欠陥だったため、正規表現のエスケープを修正した。モデル、抽出器、fallback閾値は変更していない。
+
+検証: `npm run typecheck` passed。focused Vitest 3 files / 155 tests passed (`quality.test.ts` 149, `ollamaTranslationEngine.test.ts` 5, `translationModelVersion.test.ts` 1)。PDF.jsの任意canvas.node警告は既存環境由来。v293 fresh auditのordinary-body fallbackは67/244 (27.46%)で、<=5%目標は未達。次は修正後のcascade候補に対する held-out評価と、fallback原因のうち protected-token restore / model quality rejectionを分離して一般化可能な改善を進める。
+
+The v293 ordinary-body fallback attribution was saved as `test-data/real-papers/reports/translation-audit-v308-ordinary-fallback-attribution.json`: among 67 reader-visible fallbacks / 244 ordinary-body rows, 56 were quality/model rejection, 8 involved protected-token restoration, and 3 were pre-model extraction/structure skips. This is an attribution of the existing v293 report, not a new benchmark and not evidence that fallback quality is solved. It directs the next work toward model-output rescue and protection robustness while preserving the extraction safety boundary.
+
+A `--resume` invocation on 2026-09-23 regenerated the generic `translation-audit.json` from checkpoints (`selected=52`, `skipping 51 checkpointed papers`); it did not provide a fresh post-v308 model comparison, so its 70/244 ordinary fallback count is intentionally not used as evidence. The fixed-cohort v293 attribution remains the authoritative baseline until a non-resumed run is completed.
+
+## v309 fresh 52-paper benchmark (2026-09-23)
+
+Completed a non-resumed fresh run (`npm run bench:real-paper-translation -- --limit 12`) against all 52 selected papers. The flag is per-paper block count, so this processed 612 rows / 244 ordinary-body rows; it was not a checkpoint replay. Artifacts: `test-data/real-papers/reports/translation-audit-v309-fresh-52paper-quality-regex.json` and `translation-audit-v309-fresh-summary.json`.
+
+Result: ordinary-body reader-visible fallback 67/244 = 27.459%, unchanged from the v293 baseline. Fallback stages: 64 post-model, 3 pre-model. Attribution: 56 quality/model, 8 protected-token restore, 3 extraction/structure. The v308 TypeScript cascade-regex repair therefore did not change this MADLAD benchmark because the benchmark path uses the server's primary result and selective cascade remains disabled; it remains a correctness fix for the opt-in cascade path, not a fallback-rate improvement. The <=5% target remains unmet. All 52 papers completed; no process remains from the benchmark.
+
+The fresh v309 run used the currently running server, whose `/status` reported `3b-mt-v6-transformers-4.57.6-semantic-v77-source-protect-v20-strict-restore-v28-quality-v14`; the working-tree TypeScript client quality identity is now `quality-v17`. Therefore v309 is authoritative for the server/model path and fallback attribution, but it is not an isolated measurement of the v17 client-side quality change. No claim is made that the regex repair reduced fallback. A future client-path/cascade benchmark must record both server and client identities explicitly.
+
+## v310 benchmark provenance metadata (2026-09-23)
+
+Updated `scripts/benchmark-real-paper-translation.ts` to query `/status` after readiness and persist the server model/version/device/phase in every JSON and Markdown audit report. This prevents future fresh runs from being mistaken for the current client quality gate when a stale translation-server process is running. Health remains the readiness authority; status metadata is observational and does not change production behavior.
+
+Validation: `npm run typecheck` passed; focused quality/version tests passed 150/150. Existing PDF.js canvas warnings remain environmental.
+
+The v310 status-metadata smoke benchmark (`translation-audit-v310-status-smoke.{json,md}`) completed for one paper / two blocks and includes the live server identity (`3b-mt-v6-transformers-4.57.6-semantic-v77-source-protect-v20-strict-restore-v28-quality-v14`, MPS, ready) in the report. This verifies the provenance guard without rerunning the full corpus.
+
+## v311 Gemma restore-failure rescue audit (2026-09-23)
+
+Audit-only replay of the eight v309 ordinary-body rows whose MADLAD path failed protected-token restoration through local `gemma2:9b`: `test-data/real-papers/reports/alternate-model-diagnostic-v310-restore-gemma.json`. Gemma passed the existing automatic gate on 3/8 rows; one row still had a restore error and 5/8 were rejected. This is not sufficient evidence for production cascade routing, and no routing was enabled. Several rejected sources contain malformed PDF extraction or dense scientific/citation structure, so accepting them would risk trading fallback for semantic errors. The result supports keeping the restoration failures visible while evaluating a more targeted, held-out rescue policy.
+## 2026-09-23 — v312 pre-model fallback attribution
+
+- CAT/Claude系モデル評価は当面スコープ外とする。
+- v309 fresh 52-paper benchmark の ordinary-body 244 blocks を再確認した。
+- pre-model fallback は 3/244 (1.23%)。内訳は次の通り。
+  - `wear-scale:b-c4ef514d-3`: 前段から続く可能性のある `(b)` 断片。抽出ブロック境界の問題。
+  - `medical-deep-learning-meta-review:b-7fbc656d-4`: 改行ハイフンを含む不自然な抽出文。抽出品質の問題。
+  - `hfe-healthcare-scoping-2024:b-0627fbde`: 後続文への継続警告を持つ不完全な文。段落再構成の問題。
+- 3件とも、モデル品質ではなく入力構造の警告で停止している。共通する安全な一般化修正はまだ確認できないため、品質ゲートを緩めない。
+- ordinary-body の reader-visible fallback は 67/244 = 27.459%。v309 から改善していない。次の優先作業は post-model 64件の原因を、抽出/構造・保護復元・モデル品質に分解して、反復する一般原因だけを修正すること。
+- v312 targeted smoke (`thermal-earring`, 4 blocks) は同じ現行サーバー identity (`3b-mt-v6-transformers-4.57.6-semantic-v77-source-protect-v20-strict-restore-v28-quality-v14`) で完了。4件中2件がpre-model structural fallbackで、server/modelの停止や古いreport再利用ではないことを確認した。artifact: `test-data/real-papers/reports/translation-audit-v312-thermal.json`。
+- v312 partial-unit inventory: v309のpost-model fallback 64件のうち24件は、サーバーが一部unitの失敗を記録した後、クライアントの段落全体quality gateで拒否された。再評価用の固定artifactを `test-data/real-papers/reports/translation-partial-fallback-v1.json` に保存。部分採用はまだ本番へ導入していない。
+- v312 direct replay (`dont-mind-me:b-2089b50e`) confirmed the server currently returns the entire original paragraph with `whole_item_fallback` even when the internal reason includes `unit_8:translation_quality_rejected`; no mixed translated/source output is exposed to the client. Therefore a partial-acceptance change requires an explicit server response contract and cannot be safely implemented as a client-only gate relaxation.
+- v313 unit-failure observability: added optional `unit_fallback_indices` to the translation result/API and benchmark row metadata. This is diagnostic-only and does not change fallback or acceptance behavior. Microbatch tests now assert that a failed second unit is reported as index `[1]`. Validation: TypeScript typecheck, Python compile, microbatch tests 9/9, and `git diff --check` passed.
+- v313 full Python validation: `pytest -q translation-server/tests --import-mode=importlib` passed 188 tests / 11 subtests. Plain repository-wide pytest still encounters duplicate module names under `src-tauri/target/{debug,release}`; this is a test discovery/build-artifact issue, not a failing source test.
+- v313 response-contract smoke: constructed `TranslationResult` with `[2, 4]` and validated `TranslateResponse` preserves `unit_fallback_indices`. No live server restart was performed, so the currently running process may not expose this new field until restarted.
+- v314 live server verification: restarted the development translation server (PID 13891), confirmed health ready and model embedding integrity, then replayed `dont-mind-me:b-2089b50e`. The live response now exposes `unit_fallback_indices: [8]` with `whole_item_fallback`; response text remains the full source. No partial display behavior was enabled.
+- v314 contract smoke benchmark (`thermal-earring`, 2 blocks) completed against the restarted server and persisted server identity in `test-data/real-papers/reports/translation-audit-v314-contract-smoke.json`. Rows with no unit failure store null/undefined as expected; the response contract is active without changing acceptance behavior.
+- v315 partial-candidate observability: added `partial_text` and `partial_source_units` to the diagnostic response. After restart (PID 15095), replay of `dont-mind-me:b-2089b50e` returned `unit_fallback_indices: [8]`, the exact failed source unit, and a mixed candidate while keeping `text` as the full source fallback. Typecheck, Python compile, microbatch tests 9/9, and diff check passed. No caller displays `partial_text` yet.
+- v316 partial-quality diagnostic: added `evaluatePartialJaTranslation` and 2 focused tests. On the live `dont-mind-me:b-2089b50e` candidate, the preserved source unit was validated and source-span/foreign-prose reasons were removed, but `degenerate output` remained; the candidate is still rejected. This confirms the partial path cannot be made safe by merely ignoring English source spans.
+- v317 partial source provenance: added `partial_source_units` alongside `partial_text` and unit indexes so a future evaluator can verify the exact preserved slices. This remains diagnostic-only. Validation: typecheck, Python compile, microbatch tests 9/9, quality tests 151/151, and diff check passed.
+- v318 partial-candidate inspection: the representative source segments into 9 units (60–282 chars). The mixed candidate is unsafe beyond the preserved unit: its beginning omits the first clause of unit 0 and the join is not a complete translation. This explains the remaining `degenerate output`; partial acceptance must require per-unit completeness, not only exact source-unit provenance.
+- v319 per-unit candidate observability: added `partial_unit_texts` to the response and benchmark metadata. After server restart (PID 15939), the live replay exposes 9 unit candidates and one failed source unit at index 8. No display or acceptance behavior changed. Validation: typecheck, Python compile, microbatch tests 9/9, diff check.
+- v320 per-unit quality diagnostics: added `diagnosePartialUnits` with preserved-unit and per-unit completeness checks, plus a focused test. Quality tests now pass 152/152 and typecheck passes. This remains audit-only; no partial candidate is accepted automatically.
+- v321 live per-unit diagnostic artifact: `test-data/real-papers/reports/partial-unit-diagnostic-v320.json`. On a fresh replay of the same source, unit 8 was preserved and unit 1 was independently degenerate while units 0, 2–7 passed the unit-level checks. This run-to-run variation reinforces that partial acceptance needs per-unit retry/determinism checks; the candidate remains rejected.
+- v322 repeatability check: two consecutive live requests for `dont-mind-me:b-2089b50e` produced the same unit failure index `[8]` and identical 9-unit candidate strings (`differingUnitIndexes: []`). The earlier differing diagnostic was therefore not reproduced in this pair; acceptance still remains disabled because the stable unit-1/partial completeness failures are unsafe. Artifact: `test-data/real-papers/reports/partial-repeat-diagnostic-v321.json`.
+- v323 degenerate-reason attribution: exposed `explainDegenerateTranslation` and reran the corrected same-boundary diagnostic. Unit 1 is rejected for actual foreign-script contamination: the output contains Korean `스` (U+C2A4) inside Japanese `ジェスチャー`, not a false positive from repetition or length. This confirms the gate is catching decoder corruption. Quality tests remain 152/152 and typecheck passes.
+- v324 isolated unit replay: sent the problematic citation-heavy unit alone three times. All three outputs were identical and contained the same Korean `스` contamination in `ジェ스チャー`; citations were preserved and no fallback was returned by the server because the server accepts this only at its own gate boundary. This is reproducible decoder script corruption, not a batching or extraction artifact. No character blacklist or blind replacement was added.
+- v325 protection A/B: enabled the opt-in diagnostic `MADLAD_DISABLE_PROTECTION=1`, ran the problematic unit without citation/scientific placeholder protection, and observed the same Korean `스` contamination. Protection is therefore not the cause. The server was restarted normally afterward (PID 17521); the diagnostic switch is off in production.
+- v326 validation after CAT scope removal: normal translation server health is ready (`model_loaded=true`); TypeScript typecheck passed; quality suite passed 152/152; translation-server Python suite passed 188 tests plus 11 subtests. No production behavior was changed in this turn.
+- v327 Transformers A/B evidence confirmed from persisted artifacts: 5.17.0 misloads `encoder.embed_tokens` as `lm_head.weight` (encoder absmax 2.14, decoder absmax 253) and produces broken scripts/repetition across all five fixed fixtures; 4.57.6 maps encoder/decoder to the checkpoint input embedding and produces Japanese output with EOS on all five. Production remains pinned to 4.57.6. CAT comparisons are out of scope; this runtime finding is independent of CAT.
+- v328 baseline restated for next optimization: authoritative fresh v309 cohort remains 244 ordinary-body rows with 67 reader-visible fallbacks (27.459%). This is not a completion claim; it is the immutable baseline for subsequent non-CAT model/cascade and extraction changes.
+- v329 fresh one-block-per-paper replay completed through the normal 4.57.6 server path (`npm run bench:real-paper-translation -- --limit 1`, no resume). The harness processed 52 papers and wrote the checkpoint/report; this is a structural smoke cohort (one selected block per paper), not a replacement for the 244-row v309 quality baseline. It confirms the server remained available across the full corpus run without CAT.
+- v330 post-replay regression validation: reading-order plus quality suites passed 224/224 after the full normal-server smoke replay. No extraction or quality code was changed based on the one-block cohort because its abstract-tail warnings require block-neighbor evidence before a safe general fix.
+- v331 generalized extraction repair: publisher bibliographic footer text emitted as a paragraph at the physical page edge is now treated as transparent metadata only when it contains explicit publication/volume/article/ISSN/DOI markers. The continuation scan also skips this classification, allowing an unfinished body paragraph to rejoin across such a footer. On `speechin.pdf`, the page-2 paragraph ending `...without the need for word-level training. To` now joins the page-3 continuation beginning `investigate...` while the footer remains excluded. Typecheck and 129 reading-order/pdf-extraction tests pass; full extraction corpus run emitted expected PDF warnings but did not return a final summary and needs a separate completion run.
+- v332 full extraction regression after publication-footer stitching: `npm run test:extraction-corpus -- --reporter=dot` passed 108/108 across the cached real-paper baseline and reading-order corpus (114.63s). PDF.js emitted pre-existing canvas/TT/ColorSpace warnings only; no test regression.
+- v333 speechin focused re-audit after footer stitching: 12 units processed through normal server; the former page-2 `...training. To` fragment is now part of a cross-page logical block rather than being sent as a standalone fragment. Remaining warnings are in later page-4/5 boundaries and one model-quality fallback, so the change is not treated as a global fallback-rate result. Artifact: `test-data/real-papers/reports/translation-audit-v333-speechin.json`.
+- v334 boundary diagnostic on IEEE-style `medical-imaging-deep-learning-review`: the incomplete `...Imaging data account` block is separated from its lowercase continuation `for about 90%...` by author affiliation and a figure on the same page. This is not a safe publication-footer-only merge; the intervening figure/affiliation requires geometry-aware evidence before any broader stitching. No further merge rule was added.
+- v335 conservative float-continuation guard added: a paragraph may cross from left to right column only when the intervening items are affiliation/author metadata or a right-column figure/table proven to end above the lowercase continuation, with unfinished source and matching typography. The medical-imaging case did not satisfy the geometry (the figure extends below the continuation), so it remains unmerged. Typecheck and 129 focused extraction tests pass; this guard did not alter that case.
+- v336 full extraction regression after v335: cached real-paper baseline and reading-order corpus passed 108/108 (114.49s). Existing PDF.js canvas/TT/ColorSpace warnings remain non-failing.
+- v337 full post-stitch benchmark started with `MADLAD_BENCH_CONCURRENCY=1`, `--limit 8 --cached-only`, report name `translation-audit-v337-footer-stitch`; it is still running under session 83073 with checkpoints for interactive-jewellery, significant-other, power-over-skin, thermal-earring, ppg-earring, and design-for-wearability completed. Server health remains ready. Do not interpret partial output as a final metric.
+- v337 progress update: the active benchmark session 83073 has now checkpointed 11 papers through hci-empirical-methods (including speechin, step-to-charge, wear-scale, fashion-hybrid-cmf). It remains live; no aggregate metric is published until completion.
+- v337 progress update: active session 83073 has advanced through ozchi-finger-specific-touch (at least 17 papers checkpointed). It remains live; metrics still withheld until the report is complete.
+- v337 progress update: active session 83073 has checkpointed through how-content-volume-landing-pages, including social-influence, modeling-human-behavior, osworld, conversation-analysis, and computational-linguistics. It remains live; no aggregate metric yet.

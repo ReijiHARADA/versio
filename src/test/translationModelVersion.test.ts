@@ -43,7 +43,7 @@ describe("MADLAD translation cache identity", () => {
     expect(engineSource).toContain('QUALITY_GATE_VERSION = "quality-v14"');
     expect(requirementsSource).toContain("transformers==4.57.6");
     expect(lockSource).toContain("transformers==4.57.6");
-    expect(TRANSLATION_QUALITY_VERSION).toBe("quality-v16");
+    expect(TRANSLATION_QUALITY_VERSION).toBe("quality-v17");
     expect(MADLAD_MODEL_VERSION).toBe(
       `3b-mt-v6-transformers-4.57.6-${segmenterVersion}-${protectionVersion}-strict-restore-v28-${TRANSLATION_QUALITY_VERSION}`
     );

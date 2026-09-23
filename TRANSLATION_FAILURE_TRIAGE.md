@@ -108,6 +108,18 @@ Prioritized general fixes supported by the audit:
 
 No paper-specific rule or hallucinated-term blacklist is justified by the audit. The next implementation checkpoint must record before/after metrics against this 300-block baseline and keep the baseline immutable.
 
+### v312 pre-model fallback attribution (2026-09-23)
+
+The v309 fresh 52-paper run has 244 ordinary-body rows, of which 67 are
+reader-visible fallbacks. Only three are pre-model fallbacks (1.23%). Their
+sources are respectively a continuation fragment beginning with `(b)`, a
+hyphenated extraction with visibly malformed wording, and an incomplete
+continuation/title-like fragment. They share structural warnings and should
+not be sent to MADLAD merely to lower the fallback percentage. The remaining
+64 post-model fallbacks are the current optimization target; repeated groups
+include strict server source fallback, protected-token restore failures, and
+semantic/invariant gate failures. No paper-specific rule is justified.
+
 ### Vector-figure diagnostic checkpoint (2026-09-19)
 
 `PDF_LAYOUT_DEBUG=1` now emits both the reconstructed block inventory and per-candidate geometry. Running the compact-label regression still produces 23/24 passing tests, with no candidate diagnostic for the failing vector-figure evidence. This establishes that the failing input is separated or discarded before `vectorFigureLabelEvidence()` is evaluated. The next change should instrument native line grouping immediately after `reconstructDocument()` and compare the retained lines/items against the source fixture. Do not lower the vector-label threshold until that evidence is available.

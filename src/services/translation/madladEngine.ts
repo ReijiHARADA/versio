@@ -18,12 +18,23 @@ const DEFAULT_SERVER_URL = "http://127.0.0.1:8765";
 let cachedServerToken: string | null | undefined;
 
 const TRANSLATION_REQUEST_ATTEMPTS = 3;
+// Prevent a single MPS graph compilation or dead request from blocking an
+// entire import queue indefinitely. The timeout is deliberately generous for
+// long academic paragraphs and applies per attempt.
+const TRANSLATION_REQUEST_TIMEOUT_MS = 180_000;
 
 async function fetchTranslation(url: string, init: RequestInit): Promise<Response> {
   let lastError: unknown;
   for (let attempt = 0; attempt < TRANSLATION_REQUEST_ATTEMPTS; attempt += 1) {
     try {
-      const response = await fetch(url, init);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), TRANSLATION_REQUEST_TIMEOUT_MS);
+      let response: Response;
+      try {
+        response = await fetch(url, { ...init, signal: controller.signal });
+      } finally {
+        clearTimeout(timeout);
+      }
       // A sidecar can be briefly unavailable while the model is loading or
       // restarting. Retry only transient gateway/service responses; preserve
       // deterministic client errors for the caller's failure classification.
@@ -32,8 +43,10 @@ async function fetchTranslation(url: string, init: RequestInit): Promise<Respons
       }
       lastError = new Error(`Translation server temporary error: ${response.status}`);
     } catch (error) {
-      lastError = error;
-      if (attempt === TRANSLATION_REQUEST_ATTEMPTS - 1) throw error;
+      lastError = error instanceof DOMException && error.name === "AbortError"
+        ? new Error(`Translation server request timed out after ${TRANSLATION_REQUEST_TIMEOUT_MS}ms`)
+        : error;
+      if (attempt === TRANSLATION_REQUEST_ATTEMPTS - 1) throw lastError;
     }
     await new Promise((resolve) => setTimeout(resolve, 150 * (attempt + 1)));
   }
