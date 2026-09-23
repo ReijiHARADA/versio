@@ -10509,3 +10509,57 @@ With the translation server ready but app traffic excluded, Qwen 14B was evaluat
 ## v100 full regression checkpoint (2026-09-23)
 
 Full `npm test` passed: **67 test files / 504 tests**. The first run exposed a pre-existing client/server cache-identity mismatch (`source-protect-v20` in the client versus v21 in the server); `MADLAD_MODEL_VERSION` was corrected to v21 so stale translations cannot be reused, and the complete suite then passed. The expected canvas DOMMatrix warnings remain environmental and do not fail tests.
+
+## v101 extraction regression checkpoint (2026-09-23)
+
+Ran `npm run lint` successfully and `npm run test:extraction-corpus` successfully: **2 test files / 108 tests passed** (56 extraction baseline + 52 reading-order real-paper checks). PDF parser warnings (missing canvas bindings and a few malformed PDF operators) were non-fatal and all corpus assertions passed.
+
+## v102 frontend build checkpoint (2026-09-23)
+
+`npm run build` currently fails on pre-existing TypeScript errors in PDF extraction (`toPaper.ts` table metadata/nullability and `pdfLayout.ts` role-union comparisons). These errors are outside the selective-cascade changes; full Vitest, extraction corpus, lint, and typecheck all pass. `.app` was not built.
+
+## v103 build repair checkpoint (2026-09-23)
+
+Fixed TypeScript-only PDF projection/layout errors that had prevented the frontend build: removed unsupported table metadata fields, guarded nullable block text, and made role comparisons explicit where the declared union omits legacy roles. `npm run build` now succeeds (Vite production bundle generated). Targeted extraction/reading-order/model-version tests passed **99/99** after the repair. No extraction behavior or translation thresholds were intentionally changed.
+
+## v104 protection A/B diagnostic checkpoint (2026-09-23)
+
+Added diagnostic-only `translation-server/scripts/benchmark_protection_ab.py` and ran 30 clean `ordinary-body-prose` blocks from the stable `translation-audit.json` cohort under identical MADLAD v6 / Transformers 4.57.6 greedy decoding. Conditions were Raw (protection disabled), Minimal (literal numeric/measurement/year/citation spans left visible; opaque spans protected), and Current (production protection). Artifact: `test-data/real-papers/reports/protection-ab-diagnostic-v1.{json,md}`. Automatic engine errors were Raw 22/30 (73.3%), Minimal 23/30 (76.7%), Current 23/30 (76.7%); mean latency 3.48s/3.63s/3.61s. Raw improved some paired outputs (notably the jewellery and healthcare rows), while Current preserved reference facts Raw omitted; Minimal did not reduce errors in this sample. These are automatic/fallback signals, not semantic truth. No production protection or routing was changed. Blind semantic review and a larger held-out sample remain required before any architecture change.
+
+## v105 protection A/B held-out expansion (2026-09-23)
+
+Expanded the protection diagnostic to a non-overlapping second slice (20 additional clean ordinary-body blocks; 50 total). Combined artifact: `test-data/real-papers/reports/protection-ab-diagnostic-combined-v1.{json,md}`. Automatic engine errors: Raw 35/50 (70.0%), Minimal 36/50 (72.0%), Current 36/50 (72.0%); mean latency 3.90s/3.83s/4.01s. Raw sometimes improved wording but also dropped figure/citation facts; Current preserved facts in other pairs. The 2-point difference is not evidence for changing production protection. Manual blind semantic review is the next required step.
+
+## v106 protection paired semantic review checkpoint (2026-09-23)
+
+Created provisional paired semantic review artifact `test-data/real-papers/reports/protection-ab-manual-review-v1.json` covering 10 representative Raw/Minimal/Current differences from the 50-block diagnostic. Review is explicitly unblinded and provisional. Findings separate protection benefits (figure/citation retention and RT+CT relation) from model/extraction failures (missing final sentences, SNR relation drift, terminology hallucination). No production change is justified yet; a blinded review and broader sample remain required.
+
+## v107 quality-gate attribution diagnostic (2026-09-23)
+
+Added diagnostic-only `MADLAD_DIAGNOSTIC_ALLOW_SHORT=1` to measure the `implausibly_short` gate without changing production behavior, then ran 10 representative blocks across Raw/Minimal/Current. With the bypass all 10 conditions produced an output; the normal gate rejected 7/10 in the corresponding slice. Inspection showed several bypassed outputs omitted most of a multi-sentence paragraph (memory study, cognitive GPT-3, wearability), while shorter complete outputs also became visible. Therefore the gate is catching real omissions but is also exposed to overly long translation units; relaxing it globally would increase unsafe accepts. The next fix must improve semantic unit segmentation / sentence-level retries and evaluate completeness there. Production gate remains unchanged.
+
+## v108 segmented-unit protection diagnostic (2026-09-23)
+
+Ran the same Raw/Minimal/Current comparison on 30 actual `segment_for_translation()` units (>=70 chars) rather than whole canonical blocks. Artifact: `test-data/real-papers/reports/protection-ab-segmented-v1.json`. Automatic errors: Raw 1/30 (3.3%), Minimal 3/30 (10.0%), Current 3/30 (10.0%). The three Current/Minimal errors were two protected-span drops (`17 (Hospital, see SI Appendix)` and `VR`) plus one genuine short-unit decode; Raw also failed the short-unit case. This confirms production segmentation dramatically reduces the long-unit fallback artifact and that remaining protection cost is concentrated in fragile citation/identifier placeholders. It does not justify removing protection: Raw outputs also omitted citations and sometimes changed claims. Next step is a narrowly scoped citation/identifier rescue experiment on segmented units, followed by invariant and semantic review; no production change yet.
+
+## v109 protection rescue attribution (2026-09-23)
+
+Ran `translation-server/scripts/diagnose_protection_rescue.py` on the three direct segmented-unit failures. Unprotecting all spans recovered the VR unit (the existing production identifier retry policy is designed for this case) but left the hospital citation absent; the short hospital-result unit failed under all modes. An atomic citation marker did not reliably preserve the hospital citation. This separates a recoverable placeholder fragility (uppercase identifier) from a genuine model/gate failure and a citation-preservation risk. The experiment used direct `_translate_chunk`, so its error counts are diagnostic and not a production fallback estimate. Artifact: `test-data/real-papers/reports/protection-rescue-diagnostic-v1.json`; no production behavior changed.
+
+## v110 production rescue segmented benchmark (2026-09-23)
+
+Ran 30 actual segmenter units through `_translate_chunk_with_rescue`, the production retry/rescue path (Current protection only). Artifact: `test-data/real-papers/reports/production-rescue-segmented-v1.json`. All 30 units completed without terminal errors. The hospital result unit triggered semantic rescue splitting and completed; the VR unit triggered the existing identifier-only-unprotected retry and completed. This demonstrates that the direct diagnostic 3/30 error count overestimated reader-visible fallback because it bypassed production rescue. It does not prove semantic correctness; the rescued outputs still require review. No production behavior changed.
+
+## v111 alternative-relation quality guard (2026-09-23)
+
+Added a generic `either ... or ...` discourse invariant to `src/services/translation/quality.ts`. Japanese output must retain an explicit alternative marker; otherwise it receives `alternative relation missing` and is unsafe for acceptance/cascade. This catches the observed cognitive-memory unit where `either gist or detailed cues` collapsed to an unqualified detail cue, without naming paper-specific terms. Added a regression test in `src/test/quality.test.ts`; quality suite passed **154/154**. Production fallback impact has not yet been benchmarked; semantic safety takes precedence until held-out measurement.
+
+## v112 protection guard held-out impact (2026-09-23)
+
+Re-ran the same 30 production-segmented units through the live translation server and evaluated them with the updated quality evaluator. Artifact: `test-data/real-papers/reports/guard-impact-v1.json`. The new generic `either … or …` invariant identified 1 additional high-risk omission (`alternative relation missing`); existing checks identified one negation risk and one condition-relation risk. The guard did not change model output or server fallback in this diagnostic run, and it is not evidence that fallback is acceptable: the outputs still contain semantic errors that require cascade/manual review. `npx tsc --noEmit` passed. No global model/protection change was made.
+
+Current decision: retain production protection and rescue path; keep the new relation guard because it catches a real claim-scope loss without paper-specific terms. Next work is held-out semantic review and selective-cascade measurement, with fallback impact measured before enabling any new default.
+
+## v113 targeted semantic review of accepted rescue outputs (2026-09-23)
+
+Created `test-data/real-papers/reports/production-rescue-semantic-review-v1.json` from the new guard-impact artifact. Six accepted production-rescue outputs were reviewed: five had severity >=2, including omission of an either/or manipulation and outcome, a “vinyl” terminology drift, a condition-scope shift, and an added/incorrect hospital comparison claim. One VR paragraph was a severity-1 wording comparator. This targeted sample is intentionally non-random and cannot estimate corpus-wide rates, but it confirms that the remaining primary risk is semantic false acceptance by MADLAD, not terminal server fallback. The relation guard is retained; no blacklist or global gate relaxation was added. Selective cascade evaluation remains the next action.

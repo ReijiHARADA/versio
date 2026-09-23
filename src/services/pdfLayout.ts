@@ -2030,7 +2030,7 @@ function groupLinesIntoBlocks(
         // Full-width captions can be emitted as a spanning line followed by
         // separate left/right fragments. Allow only unfinished caption text
         // with close vertical spacing to continue across those column labels.
-        (currentRole === "figure_caption" &&
+        ((currentRole as string) === "figure_caption" &&
           !/[.!?]\s*$/.test(joinLines(current)) &&
           line.y - current[current.length - 1].y < baseFont * 2.4)) &&
       line.y - current[current.length - 1].y < baseFont * 2.4 &&
@@ -2060,8 +2060,8 @@ function groupLinesIntoBlocks(
 
 
     const repeatedGridBoundary =
-      (currentRole === "paragraph" || currentRole === "reference") &&
-      (forcedRole === "paragraph" || forcedRole === "reference") &&
+      (currentRole === "paragraph" || (currentRole as string) === "reference") &&
+      (forcedRole === "paragraph" || (forcedRole as string) === "reference") &&
       (current[current.length - 1].isGridRow || line.isGridRow) &&
       !(line.y - current[current.length - 1].y > baseFont * 0.55 &&
         Math.abs(line.x - current[current.length - 1].x) <= baseFont * 2.5) &&
@@ -2656,7 +2656,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       isSentenceContinuation(target.text, block.text) &&
       skippedBlocks.length > 0 && skippedBlocks.every((skipped) => {
         if (skipped.role === "affiliation" || isAuthorMetadataBlock(skipped)) return true;
-        if (skipped.role !== "figure" && skipped.role !== "table") return false;
+        if ((skipped.role as string) !== "figure" && (skipped.role as string) !== "table") return false;
         return skipped.column === "right" &&
           skipped.bbox.y + skipped.bbox.height <= nextLine.y;
       })

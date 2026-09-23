@@ -1306,6 +1306,14 @@ describe("isRetryableTranslationFailure", () => {
     expect(evaluateJaTranslation(exclusiveKept, exclusive).reasons).not.toContain("exclusivity relation missing");
   });
 
+  it("rejects output that collapses an either-or experimental condition", () => {
+    const source = "Participants watched clips accompanied by either gist or detailed cues.";
+    expect(evaluateJaTranslation("参加者は映画を見た。", source).reasons)
+      .toContain("alternative relation missing");
+    expect(evaluateJaTranslation("参加者は要点または詳細な手がかりを伴う映画を見た。", source).reasons)
+      .not.toContain("alternative relation missing");
+  });
+
   it("preserves strong contrast markers without requiring generic conjunctions", () => {
     const source = "Unlike the control condition, the intervention improved recall.";
     expect(evaluateJaTranslation("対照条件とは異なり、介入により再認が改善した。", source).reasons)

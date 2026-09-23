@@ -1260,7 +1260,9 @@ class MADLADEngine(TranslationEngine):
                 r"\d{4}-\d{2}-\d{2}", source
             ):
                 return True
-            if MADLADEngine._is_implausibly_short_unit(output, source):
+            # Diagnostic-only bypass used by protection/gate attribution
+            # benchmarks. Production keeps the conservative rejection.
+            if os.getenv("MADLAD_DIAGNOSTIC_ALLOW_SHORT") != "1" and MADLADEngine._is_implausibly_short_unit(output, source):
                 return True
             if MADLADEngine._contains_untranslated_source_span(output, source):
                 return True
@@ -1284,7 +1286,7 @@ class MADLADEngine(TranslationEngine):
             return "character_repetition"
         if MADLADEngine._has_unsupported_numbered_enumeration(output, source):
             return "unsupported_numbered_enumeration"
-        if MADLADEngine._is_implausibly_short_unit(output, source):
+        if os.getenv("MADLAD_DIAGNOSTIC_ALLOW_SHORT") != "1" and MADLADEngine._is_implausibly_short_unit(output, source):
             return "implausibly_short"
         if MADLADEngine._contains_untranslated_source_span(output, source):
             return "source_span"
