@@ -10434,3 +10434,78 @@ The active benchmark reached 8/51 papers (64 rows; 34 ordinary-body rows; 19 rea
 ## Pre-resume TypeScript verification (2026-09-23)
 
 - `npm run typecheck` passed with no errors while the translation server is stopped.
+## v84 benchmark isolation checkpoint (2026-09-23)
+
+The resumed v343 benchmark was stopped after confirming that the interactive app was sending unrelated translation requests to the same local server. Its checkpoints remain valid for completed units, but the run is not a clean benchmark and must not be used for aggregate quality metrics. Re-run with the app closed or an isolated server/port. Extraction and reading-order regression remains 108/108 passing.
+
+## v84 benchmark isolation checkpoint (2026-09-23)
+
+The resumed v343 benchmark was stopped after confirming that the interactive app was sending unrelated translation requests to the same local server. Its checkpoints remain valid for completed units, but the run is not a clean benchmark and must not be used for aggregate quality metrics. Re-run with the app closed or an isolated server/port. Extraction and reading-order regression remains 108/108 passing.
+
+## v85 clean benchmark checkpoint (2026-09-23)
+
+After disabling app-side translation, the resumed v343 run completed cleanly across 51/51 cached papers (191 model responses; 165 fully translated accepts; 243 original fallbacks; 7 partial source fallbacks; 26 production-gate rejects; 0 failed requests). Report: `test-data/real-papers/reports/translation-audit-v343-citation-restoration-8.{json,md}`. This is a production automatic-audit result, not a semantic accuracy estimate: ordinary-body-prose fallback was 42/171 (24.6%) and requires manual review; structural/damaged extraction rows dominate overall fallback. The server was exclusive to the benchmark after app translation was stopped.
+
+## v86 manual semantic review checkpoint (2026-09-23)
+
+Using the clean v343 report, six additional accepted ordinary/near-ordinary rows were reviewed and recorded in `test-data/real-papers/audit-manual-review.json`; the queue is now 21/408 reviewed (387 pending). The reviewed sample confirms that automatic acceptance is not a semantic correctness guarantee: two accepted prose rows had severity >=2 issues (a malformed Go/No-go continuation and a long cognitive-memory paragraph with unsupported/shifted claims), while one long motor-memory row had severity 3 semantic drift. The provisional reviewed-sample unsafe false-accept rate is 50% overall and 45.5% for ordinary-body-prose (small sample; not a corpus estimate). No model, extraction threshold, or production behavior was changed in this step. Next action is to continue stratified manual review and then implement only general fixes supported by repeated failures.
+
+## v87 manual semantic review checkpoint (2026-09-23)
+
+Reviewed five more accepted ordinary-body rows from v343 (queue 26/408; 382 pending). Findings include a comparative-pair error in the Linda/hospital paragraph, a malformed scoring clause, and terminology/identifier issues in GPT-3 and VR-memory prose. The provisional ordinary-body unsafe false-accept rate is now 37.5% across 17 reviewed ordinary rows; semantic-error rate is 23.5%. These are small-sample measurements, not final corpus metrics. No production code or thresholds were changed; review continues before general algorithm changes.
+
+## v88 manual semantic review checkpoint (2026-09-23)
+
+Five further accepted rows were reviewed (31/408 total; 377 pending). A computational-linguistics block exposed a severe source-fragment/paragraph-boundary failure: the source ended mid-sentence while the accepted translation appeared to continue beyond the supplied source and also distorted a tool name. Other HCI/conversation-analysis rows were mostly faithful but showed domain-term and role-relation weaknesses. No production behavior was changed; the next implementation candidate is general fragment detection and boundary repair, validated against held-out PDFs.
+
+## v89 manual semantic review checkpoint (2026-09-23)
+
+Five more accepted rows were reviewed (36/408; 372 pending). This batch found two high-severity model false accepts: a COVID review block with a leading figure-reference fragment and invented search-accuracy content, and a wearability paragraph where unrelated web-site content replaced the wearable-object/body/interview discussion. One medical/ML block also had acronym and terminology drift. These are model/source-semantic failures, not safe fallback successes; no production rule was changed yet.
+
+## v90 manual semantic review checkpoint (2026-09-23)
+
+Reviewed four long accepted ordinary-body rows selected by source length (40/408 total; 368 pending). A marketing paragraph showed severity-4 hallucination: a short factor argument became a repetitive invented list of consumption concepts. An ergonomics literature-review opening also changed its subject/action. Linguistics and Bluetooth rows were mostly faithful with terminology issues. The recurring pattern is fluent topic drift in long prose; it is not safe to fix by blanket fallback. No production code changed.
+
+## v91 manual semantic review checkpoint (2026-09-23)
+
+Four more ordinary-body rows were reviewed (44/408; 364 pending). Two wearability/future-work rows showed terminology or topic drift, including an insertion of unrelated “website users/social cognition” content. Two other wearability/social-acceptability rows were mostly faithful. The repeated failures support a general source/output topic-consistency check and selective retry, but not a paper-specific word blacklist. No production code changed.
+
+## v92 manual semantic review checkpoint (2026-09-23)
+
+Reviewed four more accepted ordinary rows (48/408; 360 pending). One wearable-technology paragraph changed the central noun category to “web applications” and was marked severity 3. A DeepIV technical paragraph preserved equations and causal claims; the remaining education/social-acceptability rows were mostly faithful with wording issues. No production code changed; the review corpus is now broad enough to prioritize a general central-term/topic-consistency cascade rather than additional extraction heuristics.
+
+## v92 manual semantic review checkpoint (2026-09-23)
+
+Reviewed four more accepted ordinary rows (48/408; 360 pending). One wearable-technology paragraph changed the central noun category to “web applications” and was marked severity 3. A DeepIV technical paragraph preserved equations and causal claims; the remaining education/social-acceptability rows were mostly faithful with wording issues. No production code changed; the review corpus is now broad enough to prioritize a general central-term/topic-consistency cascade rather than additional extraction heuristics.
+
+## v93 review aggregate checkpoint (2026-09-23)
+
+The 48 manually reviewed rows currently contain 10 severity-0, 16 severity-1, 15 severity-2, 6 severity-3, and 1 severity-4 findings. Among 39 ordinary-body rows, 38 were automatically accepted and 16 had severity >=2, giving a provisional unsafe false-accept rate of 42.1% (16/38). Primary causes are predominantly MADLAD decode (28 reviewed rows), followed by extraction (5) and paragraph reconstruction (3). This is not a final corpus estimate, but it is sufficient evidence that the next quality work must target model semantic drift and selective cascade, while preserving the existing extraction repairs.
+
+## v94 alternate-model diagnostic checkpoint (2026-09-23)
+
+Ran an isolated four-row diagnostic against local Ollama `qwen2.5:14b` and `qwen2.5:7b` using the same segmenter/protection and production quality evaluator; no production routing changed. Artifact: `test-data/real-papers/reports/alternate-model-diagnostic-v343-sample.json`. Qwen 14B passed the automatic gate on all four sampled rows, while Qwen 7B was rejected on two (translation meta-commentary and simplified-Chinese contamination). Manual inspection still found Qwen 14B wording/term issues on some rows, so “gate accepted” is not equivalent to semantic correctness. This supports evaluating Qwen 14B as a selective fallback candidate only after a larger held-out semantic review, not replacing MADLAD globally.
+
+## v95 severe-row alternate diagnostic checkpoint (2026-09-23)
+
+Ran Qwen 14B on four manually identified high-severity MADLAD false-accept rows with the same segmenter/protection. Artifact: `test-data/real-papers/reports/alternate-model-diagnostic-severe-v1.json`. Qwen 14B passed the automatic gate on the wearability row and the previously malformed motor-memory row, but manual review is still required; it rejected the marketing row because citation restoration failed and rejected the motor row on a source/quality reason in this run. This demonstrates selective cascade can expose different failure modes, but Qwen 14B is not safe to auto-accept based on gate status alone. No production routing changed.
+
+## v96 manual semantic review checkpoint (2026-09-23)
+
+Four additional ordinary rows were reviewed (52/408; 356 pending). Education and user-centred-design paragraphs were mostly faithful; a method paragraph showed a moderate purpose/causal shift and several acronym issues. This helps separate model terminology drift from severe topic hallucination. No production code changed.
+
+## v97 selective cascade implementation checkpoint (2026-09-23)
+
+Implemented a narrow selective-cascade path in `src/services/translation/ollamaTranslationEngine.ts`: successful MADLAD output is re-evaluated, and Ollama is consulted only when the existing quality evidence reports a high-impact relation/invariant risk (negation, condition/comparison, citation/acronym/statistical invariant, or implausible shortening) and the source is structurally safe. Ordinary successful primary translations remain on the fast path; if the alternate fails, the primary result is retained. Added a regression test for conditional-negation rescue. Verification: `src/test/ollamaTranslationEngine.test.ts` 6/6 and `npm run typecheck` passed. This is not enabled as a global model replacement and still needs held-out benchmark measurement.
+
+## v98 cascade configuration note (2026-09-23)
+
+`enableSelectiveCascade` remains opt-in (`false` by default) until a larger held-out run demonstrates that alternate-model rescue lowers unsafe false accepts without unacceptable latency or fallback growth. The type documentation now reflects that the cascade can run after either a primary failure or a high-impact quality risk. No `.app` build was performed.
+
+## v99 held-risk Qwen diagnostic checkpoint (2026-09-23)
+
+With the translation server ready but app traffic excluded, Qwen 14B was evaluated on six previously reviewed severity>=2 rows. Artifact: `test-data/real-papers/reports/alternate-model-diagnostic-severe6-v1.json`. It passed the automatic gate on 3/6 and rejected 3/6 (including the long motor-memory row); the three accepted rows still require semantic review. This confirms the cascade can reduce some bad candidates but cannot be enabled solely from automatic gate status. No production default changed.
+
+## v100 full regression checkpoint (2026-09-23)
+
+Full `npm test` passed: **67 test files / 504 tests**. The first run exposed a pre-existing client/server cache-identity mismatch (`source-protect-v20` in the client versus v21 in the server); `MADLAD_MODEL_VERSION` was corrected to v21 so stale translations cannot be reused, and the complete suite then passed. The expected canvas DOMMatrix warnings remain environmental and do not fail tests.

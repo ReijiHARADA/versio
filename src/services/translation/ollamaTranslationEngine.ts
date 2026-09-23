@@ -27,12 +27,42 @@ export class OllamaTranslationEngine implements TranslationEngine {
 
   async translate(text: string, sourceLanguage: string, targetLanguage: string): Promise<TranslationResult> {
     try {
-      return await this.primary.translate(text, sourceLanguage, targetLanguage);
+      const primary = await this.primary.translate(text, sourceLanguage, targetLanguage);
+      // A primary response can be syntactically valid while violating a
+      // high-impact source relation (negation, condition, comparison, or a
+      // scientific invariant). Give the opt-in alternate model one chance on
+      // those evidence-backed risks. Ordinary successful translations stay on
+      // the fast path and never contact Ollama.
+      if (
+        sourceLanguage === "en"
+        && targetLanguage === "ja"
+        && this.shouldCascadeRiskyPrimary(primary.text, text)
+        && this.isSafeSource(text)
+      ) {
+        try {
+          return await this.translateWithAlternate(text, sourceLanguage, targetLanguage);
+        } catch {
+          // Preserve the primary result when the alternate is unavailable or
+          // fails its stricter checks; a cascade must not turn a usable primary
+          // response into a hard failure.
+        }
+      }
+      return primary;
     } catch (primaryError) {
       if (sourceLanguage !== "en" || targetLanguage !== "ja" || !this.isSafeSource(text)) {
         throw primaryError;
       }
 
+      return await this.translateWithAlternate(text, sourceLanguage, targetLanguage, primaryError);
+    }
+  }
+
+  private async translateWithAlternate(
+    text: string,
+    sourceLanguage: string,
+    targetLanguage: string,
+    primaryError?: unknown,
+  ): Promise<TranslationResult> {
       const started = Date.now();
       const completion = await this.provider.complete(
         `Translate the following academic English into precise Japanese. Preserve every number, citation, acronym, statistical notation, negation, comparison, and causal relation. Output only the Japanese translation.\n\nSOURCE:\n${text}`,
@@ -42,7 +72,7 @@ export class OllamaTranslationEngine implements TranslationEngine {
       const translated = completion.text.trim();
       const quality = evaluateJaTranslation(translated, text);
       if (!isCascadeQualityAcceptable(translated, text) || (quality.reasons.length > 0 && !quality.reasons.every((reason) => / relation missing$/.test(reason)))) {
-        throw primaryError;
+        throw primaryError ?? new Error("alternate translation failed quality checks");
       }
       return {
         text: translated,
@@ -60,7 +90,13 @@ export class OllamaTranslationEngine implements TranslationEngine {
           ? completion.outputTokens / Math.max((Date.now() - started) / 1000, 0.001)
           : undefined,
       };
-    }
+  }
+
+  private shouldCascadeRiskyPrimary(output: string, source: string): boolean {
+    const quality = evaluateJaTranslation(output, source);
+    return quality.reasons.some((reason) =>
+      /negation|condition|comparison|relation missing|invariant|citation|acronym|statistical|implausibly shortened|source fragment/i.test(reason),
+    );
   }
 
   async translateBatch(texts: string[], sourceLanguage: string, targetLanguage: string): Promise<TranslationResult[]> {

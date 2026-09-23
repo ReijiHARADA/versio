@@ -87,4 +87,21 @@ describe("OllamaTranslationEngine", () => {
     await expect(engine.translate("Participants compared the results.", "en", "ja")).resolves.toEqual(result);
     expect(provider.complete).not.toHaveBeenCalled();
   });
+
+  it("selectively retries a primary result with a high-impact relation risk", async () => {
+    const primary = primaryThatFails();
+    primary.translate = vi.fn(async () => ({
+      ...result,
+      text: "参加者を分析した。",
+    }));
+    const provider = providerReturning("信号がない場合,参加者を分析から除外した。");
+    const engine = new OllamaTranslationEngine(primary, provider);
+    const translated = await engine.translate(
+      "If the signal is absent, the participant was excluded from analysis.",
+      "en",
+      "ja",
+    );
+    expect(translated.model).toBe("gemma2:9b");
+    expect(provider.complete).toHaveBeenCalledOnce();
+  });
 });
