@@ -10398,3 +10398,39 @@ After restarting with source-protect-v21 and the superscript-aware segmenter, th
 
 ## Checkpoint before user restart (2026-09-23)
 Paused at a clean diagnostic boundary. Current worktree includes superscript citation detection/protection, literal bare-reference retry handling, and sentence-boundary fixes for citation-suffixed periods. Focused Python tests pass (158 tests, 11 subtests). Live server validation showed improved sentence units but remaining citation omissions, so Reader-visible fallback is not yet reduced. Resume by restarting the translation server and continuing position-aware citation restoration evaluation; CAT remains out of scope.
+
+## v343 position-restoration live benchmark (2026-09-23)
+Added deterministic source-derived restoration for omitted bare superscript markers. Missing markers are appended within the same translation unit before terminal punctuation; no new numeric values are invented and the invariant gate remains active. On the targeted HFE regression block, the production benchmark now reports `readerVisibleFallback: false`, `serverFallbackReason: null`, and `invariantScore: 1`. The output preserves all source citation values but consolidates some markers at unit ends, so citation placement still needs manual semantic review before claiming corpus-wide improvement. Report: `test-data/real-papers/reports/v343-hfe-position-restoration.{json,md}`. Focused Python tests: 159 passed, 11 subtests.
+
+## v343 full benchmark in progress (2026-09-23)
+Started `MADLAD_BENCH_CONCURRENCY=1 npm run bench:real-paper-translation -- --limit 8 --cached-only --report-name translation-audit-v343-citation-restoration-8 --resume` after the targeted HFE block passed the Reader gate. The checkpoint currently contains 4 completed papers of 51; the process remains active. Do not interpret partial metrics as final.
+
+## v343 benchmark progress update (2026-09-23)
+The full benchmark checkpoint has reached 6/51 papers (48 rows, 26 ordinary-body rows, 13 reader-visible fallbacks so far). These partial metrics are not representative and must not be reported as final; the process remains active under the benchmark session.
+
+## v343 benchmark progress update 2 (2026-09-23)
+The active benchmark reached 8/51 papers (64 rows; 34 ordinary-body rows; 19 reader-visible fallbacks). These remain partial metrics and are not a final quality estimate. The process is still active and checkpointed.
+
+## Checkpoint: v343 benchmark stopped for restart (2026-09-23)
+
+- User requested a clean restart. The v343 citation-restoration benchmark was stopped immediately after a saved checkpoint.
+- Report: `test-data/real-papers/reports/translation-audit-v343-citation-restoration-8.json`
+- State at stop: `complete: false`, 13 papers checkpointed (104 translation-unit rows; verify counts from report before resuming).
+- Resume command remains:
+  `MADLAD_BENCH_CONCURRENCY=1 npm run bench:real-paper-translation -- --limit 8 --cached-only --report-name translation-audit-v343-citation-restoration-8 --resume`
+- Translation server was also stopped cleanly; no `server.py`/`restart-translation-server.sh` process remains. Restart it with `./restart-translation-server.sh` before resuming the benchmark.
+
+## v343 checkpoint analysis (2026-09-23)
+
+- Saved checkpoint contains 13 papers / 104 rows.
+- Report schema uses `ordinary-body-prose` (not `ordinary-body`) for 46 rows; 43 rows currently have `readerVisibleFallback=true` (36 pre-model structural, 7 post-model). This is a partial checkpoint only and must not be treated as the final fallback rate.
+- Many partial fallbacks are extraction-fragment classifications (`段落の末尾が欠けている可能性があります`, 18; `段落の先頭が前段から続いている可能性があります`, 6), confirming that extraction/source reconstruction remains a major contributor. Resume full benchmark before changing thresholds.
+
+## Focused regression verification (2026-09-23)
+
+- While the server remains stopped for the user's restart, the citation/segmenter/quality suite was rerun: **159 passed, 11 subtests**.
+- No production threshold or model setting was changed during this checkpoint.
+
+## Pre-resume TypeScript verification (2026-09-23)
+
+- `npm run typecheck` passed with no errors while the translation server is stopped.

@@ -10,6 +10,7 @@ from engines.citation_protect import (
     INLINE_FOOTNOTE_CITATION_RE,
     INLINE_NUMERIC_CITATION_RE,
     protect_citations,
+    restore_missing_bare_references,
     restore_citations,
     terminal_superscript_indices,
 )
@@ -56,6 +57,17 @@ class CitationProtectTests(unittest.TestCase):
             self.assertIn(citation, cites)
         self.assertNotIn("2.913", cites)
         self.assertEqual(restore_citations(protected, cites, nonce), source)
+
+    def test_missing_bare_references_are_restored_from_source_only(self) -> None:
+        source = "The review28 and infection.30 findings were replicated."
+        self.assertEqual(
+            restore_missing_bare_references(source, "レビュー結果を再現した。"),
+            "レビュー結果を再現した 28,30。",
+        )
+        self.assertEqual(
+            restore_missing_bare_references("The value was 2.913.", "値は2.913。"),
+            "値は2.913。",
+        )
 
     def test_repeated_title_case_technical_token_is_atomic(self) -> None:
         source = "Bluetooth advertising uses Bluetooth packets, while These packets repeat."
