@@ -1,6 +1,6 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v11-strict-restore-v25-quality-v10",
+  "lastBenchmarkVersion": "3b-mt-v6-transformers-4.57.6-semantic-v77-source-protect-v21-strict-restore-v28-quality-v14",
   "lastDiagnosticVersion": "v194",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
@@ -161,7 +161,7 @@
   "pendingPapers": [],
   "reviewedBlocks": 134,
   "lastCheckpoint": "2026-09-21T16:27:00+09:00",
-  "pendingManualReview": 610,
+  "pendingManualReview": 393,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
     "measure partial source fallback inside accepted output before treating accept rate as fully translated rate",
