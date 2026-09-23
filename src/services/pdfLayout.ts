@@ -2462,6 +2462,24 @@ function isAuthorMetadataBlock(block: LayoutBlock): boolean {
   return /(?:contributed equally|correspondence|corresponding author|requests for materials|should be addressed to|e-?mail\s*:|full list of author information|served as (?:a )?(?:special issue )?editor\b)/i.test(block.text);
 }
 
+/**
+ * Some publisher footers are emitted as ordinary paragraphs rather than a
+ * footer role.  Treat only explicit bibliographic footer language at the
+ * physical page edge as transparent; ordinary body prose mentioning a venue
+ * or date must remain opaque.  This lets an unfinished paragraph continue
+ * across a footer without adding a publisher-specific rule.
+ */
+function isPublicationChromeBlock(block: LayoutBlock): boolean {
+  if (block.role !== "paragraph" || block.lines.length === 0) return false;
+  const text = block.text.trim();
+  if (text.length < 24 || text.length > 240) return false;
+  const edgeLine = block.lines[0];
+  const pageHeight = edgeLine.pageHeight ?? 792;
+  const atEdge = edgeLine.y > pageHeight * 0.82 || edgeLine.y < pageHeight * 0.18;
+  if (!atEdge) return false;
+  return /\b(?:publication\s+date|article\s+\d+|vol(?:ume)?\.?\s+\d+|issn\b|doi\s*:\s*10\.)/i.test(text);
+}
+
 /** Short publisher marks can be emitted as ordinary text at the page edge.
  * They are often mirrored between recto/verso pages, so exact x alignment is
  * weaker evidence than repeated text plus edge geometry. Keep this limited to
@@ -2481,7 +2499,7 @@ function isRepeatedEdgeMarker(block: LayoutBlock, repeatedTexts: Set<string>): b
 function isTransparentMetadataBlock(block: LayoutBlock, repeatedTexts: Set<string>): boolean {
   return block.role === "header" || block.role === "footer" || block.role === "footnote" ||
     block.role === "affiliation" || block.role === "copyright" || isUnclassifiedFootnote(block) ||
-    isAuthorMetadataBlock(block) || isRepeatedRunningHeader(block, repeatedTexts) ||
+    isAuthorMetadataBlock(block) || isPublicationChromeBlock(block) || isRepeatedRunningHeader(block, repeatedTexts) ||
     isRepeatedEdgeMarker(block, repeatedTexts);
 }
 
@@ -2521,6 +2539,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         result[targetIdx].role === "affiliation" ||
         isUnclassifiedFootnote(result[targetIdx]) ||
         isAuthorMetadataBlock(result[targetIdx]) ||
+        isPublicationChromeBlock(result[targetIdx]) ||
         isRepeatedRunningHeader(result[targetIdx], repeatedTexts) ||
         isRepeatedEdgeMarker(result[targetIdx], repeatedTexts) ||
         isDetachedSingleColumnMarginBlock(result[targetIdx], block.bbox.x) ||
@@ -2620,6 +2639,28 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       const precedesContinuation = skipped.pageStart === block.pageStart && captionBottom < (nextLine?.y ?? Number.NEGATIVE_INFINITY);
       return captionOnEarlierPage || precedesSourceTail || precedesContinuation;
     });
+    // A two-column page can place a figure in the continuation column while
+    // the preceding paragraph ends at the bottom of the other column.  Allow
+    // the paragraph to resume only when geometry proves that every intervening
+    // item is affiliation metadata or a float above the continuation, and the
+    // next text is a lowercase syntactic continuation.  This is deliberately
+    // stricter than treating every figure as transparent.
+    const wrapsAcrossColumnAfterFloat = Boolean(
+      target && target.role === "paragraph" && block.role === "paragraph" &&
+      target.pageStart === target.pageEnd && block.pageStart === block.pageEnd &&
+      target.pageEnd === block.pageStart && target.column === "left" && block.column === "right" &&
+      target.text.trim().length >= 140 && !/[.!?:]$/.test(target.text.trim()) &&
+      /^[a-z(]/.test(block.text.trim()) && targetLine && nextLine &&
+      targetLine.y > (targetLine.pageHeight ?? 792) * 0.62 &&
+      Math.abs(targetLine.fontSize - nextLine.fontSize) <= 1.0 &&
+      isSentenceContinuation(target.text, block.text) &&
+      skippedBlocks.length > 0 && skippedBlocks.every((skipped) => {
+        if (skipped.role === "affiliation" || isAuthorMetadataBlock(skipped)) return true;
+        if (skipped.role !== "figure" && skipped.role !== "table") return false;
+        return skipped.column === "right" &&
+          skipped.bbox.y + skipped.bbox.height <= nextLine.y;
+      })
+    );
     const completeLeadingContinuation = (() => {
       if (!target || target.role !== "paragraph" || block.role !== "paragraph" || !targetLine || !nextLine) return null;
       if (!skippedInterveningMetadata || !safeContinuationMetadataGap) return null;
@@ -2777,7 +2818,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         // below still requires an unfinished source sentence and a lower-case
         // next fragment, so this does not join independent body paragraphs.
         (target.column === "single" && (block.column === "left" || block.column === "right") && target.pageEnd === block.pageStart) ||
-        crossesPageBoundary || crossesPageBoundaryWithModerateTail
+        crossesPageBoundary || crossesPageBoundaryWithModerateTail || wrapsAcrossColumnAfterFloat
       )
     );
     if (debugFlag === "1" && target && target.column === "left" && block.column === "right") {
@@ -2787,7 +2828,8 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       target && target.role === "paragraph" && block.role === "paragraph" &&
       !currentIsDetachedMargin &&
       (joinsCompleteLeadingContinuation || joinsSameColumnContinuation || geometrySameLineContinuation || wrapsAcrossColumnsAtPageBottom || wrapsAcrossPhysicalColumns || wrapsAcrossAdjacentColumnTails ||
-        (canContinueAcrossColumns && isSentenceContinuation(target.text, block.text))) &&
+        (canContinueAcrossColumns && isSentenceContinuation(target.text, block.text)) ||
+        wrapsAcrossColumnAfterFloat) &&
       !(hasRotatedNativeLine(target) !== hasRotatedNativeLine(block))
     ) {
       if (debugFlag === "1" && target.pageStart === block.pageStart && target.column !== block.column) {

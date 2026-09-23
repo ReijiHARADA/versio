@@ -59,6 +59,10 @@ type ServerTranslation = {
   translation_time_ms: number;
   fallback_reason?: string | null;
   fallback_stage?: string | null;
+  unit_fallback_indices?: number[] | null;
+  partial_text?: string | null;
+  partial_source_units?: string[] | null;
+  partial_unit_texts?: string[] | null;
   error?: string;
 };
 
@@ -91,11 +95,24 @@ type AuditRow = {
   fallbackReason?: string;
   serverFallbackReason?: string | null;
   serverFallbackStage?: string | null;
+  unitFallbackIndices?: number[] | null;
+  partialText?: string | null;
+  partialSourceUnits?: string[] | null;
+  partialUnitTexts?: string[] | null;
   serverError?: string;
   wouldSubmitToModel: boolean;
   wouldAcceptTranslation?: boolean;
   sourceIntegrity: "clean" | "mixed-chrome" | "structural-warning";
   extractionProvenance: { pageStart: number; pageEnd: number; bboxCount: number; extractionConfidence: number | null };
+};
+
+type BenchmarkServerStatus = {
+  available?: boolean;
+  model_loaded?: boolean;
+  model_name?: string;
+  model_version?: string;
+  device?: string;
+  phase?: string;
 };
 
 const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "..");
@@ -323,6 +340,7 @@ function extractQuietly(paper: CatalogPaper, pages: Awaited<ReturnType<typeof ex
 function markdownReport(report: {
   createdAt: string;
   endpoint: string;
+  serverStatus?: BenchmarkServerStatus | null;
   papers: Array<{ paper: CatalogPaper; rows: AuditRow[]; error?: string }>;
 }): string {
   const completed = report.papers.flatMap((entry) => entry.rows).filter((row) => row.translation);
@@ -350,6 +368,7 @@ function markdownReport(report: {
     "",
     `- Generated: ${report.createdAt}`,
     `- Endpoint: ${report.endpoint}`,
+    `- Server status at start: ${report.serverStatus?.model_version ?? "unknown"} (${report.serverStatus?.device ?? "unknown"}; phase=${report.serverStatus?.phase ?? "unknown"})`,
     `- Papers evaluated: ${report.papers.filter((entry) => !entry.error).length}/${report.papers.length}`,
     `- Model responses: ${completed.length}; original fallbacks: ${fallbacks.length}; partial source fallbacks inside accepted output: ${partialSourceFallbacks.length}; fully translated accepts: ${fullyTranslatedAccepts.length}; failed requests: ${failed.length}`,
     `- Score below 0.80: ${lowQuality.length}; rejected by the production quality gate: ${rejected.length}`,
@@ -420,6 +439,13 @@ async function main() {
   if (finalHealth.model_loaded !== true && finalHealth.phase !== "ready") {
     throw new Error(`MADLAD model did not become ready before timeout (phase=${finalHealth.phase ?? "unknown"})`);
   }
+  let serverStatus: BenchmarkServerStatus | null = null;
+  try {
+    const response = await fetch(`${endpoint}/status`);
+    if (response.ok) serverStatus = await response.json() as BenchmarkServerStatus;
+  } catch {
+    // Health is authoritative for readiness; status is audit metadata only.
+  }
   const requested = catalog.papers.filter((paper) =>
     onlyPaper ? paper.id === onlyPaper : requestedPaperIds.length === 0 || requestedPaperIds.includes(paper.id)
   );
@@ -462,6 +488,7 @@ async function main() {
       runId: benchmarkRunId,
       resumedFromRunId: prior?.runId,
       endpoint,
+      serverStatus,
       sampleLimitPerPaper: perPaperLimit,
       blockQuery,
       catalogPaperCount: catalog.papers.length,
@@ -564,6 +591,10 @@ async function main() {
             : fallbackReason(source, result, quality),
           serverFallbackReason: result?.fallback_reason,
           serverFallbackStage: result?.fallback_stage,
+          unitFallbackIndices: result?.unit_fallback_indices,
+          partialText: result?.partial_text,
+          partialSourceUnits: result?.partial_source_units,
+          partialUnitTexts: result?.partial_unit_texts,
           serverError: result?.error,
           wouldSubmitToModel,
           wouldAcceptTranslation,

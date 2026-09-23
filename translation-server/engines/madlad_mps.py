@@ -1016,10 +1016,15 @@ class MADLADEngine(TranslationEngine):
             translate_body,
             unprotected_values=unprotected_values,
         )
-        protected, cites, nonce = protect_citations(
-            translate_body,
-            unprotected_values=unprotected_values,
-        )
+        if os.environ.get("MADLAD_DISABLE_PROTECTION") == "1":
+            # Diagnostic-only A/B switch. Never enable in production: the
+            # normal path protects citations/scientific tokens before decode.
+            protected, cites, nonce = translate_body, [], 0
+        else:
+            protected, cites, nonce = protect_citations(
+                translate_body,
+                unprotected_values=unprotected_values,
+            )
         inputs = self._encode_translation_inputs(protected, target_language)
         input_tokens = inputs["input_ids"].shape[1]
         max_new_tokens = min(max(input_tokens * 3 + 24, 48), self.MAX_NEW_TOKENS)

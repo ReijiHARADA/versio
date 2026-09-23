@@ -392,7 +392,7 @@ const NON_TECHNICAL_UPPERCASE_WORDS = new Set([
   "WITH",
 ]);
 
-export const TRANSLATION_QUALITY_VERSION = "quality-v16";
+export const TRANSLATION_QUALITY_VERSION = "quality-v17";
 
 export type TranslationQuality = {
   score: number;
@@ -626,6 +626,14 @@ function outputContainsInvariant(output: string, invariant: ScientificInvariant,
   return false;
 }
 
+function isContextualCountInvariant(item: ScientificInvariant, source: string): boolean {
+  if (item.kind !== "number") return false;
+  const index = source.indexOf(item.value);
+  if (index < 0) return false;
+  const context = source.slice(Math.max(0, index - 48), Math.min(source.length, index + item.value.length + 72));
+  return /\b(?:participant|subject|clip|trial|condition|group|item|session|document|experiment|measurement|sample|observation)s?\b/i.test(context);
+}
+
 function invariantQuality(source: string, output: string): { score: number; reasons: string[]; criticalMissing: boolean } {
   const invariants = extractScientificInvariants(source);
   const sourceEnumerationCount = (source.match(/(?:^|[\n\s])\d{1,2}[.)](?=\s|[^\d])/g) ?? []).length;
@@ -650,7 +658,22 @@ function invariantQuality(source: string, output: string): { score: number; reas
   // A missing acronym can change the method, metric, or experimental
   // condition under discussion (for example MSE, NPIV, or DeepIV). It is a
   // safety failure, not merely a stylistic difference.
-  const critical = missing.filter((item) => ["citation", "doi", "url", "figure", "table", "statistic", "measurement", "year", "acronym", "structure"].includes(item.kind));
+  const critical = missing.filter((item) => {
+    if (["citation", "doi", "url", "figure", "table", "statistic", "measurement", "year", "structure"].includes(item.kind)) return true;
+    // Mixed-case product/system names (iPhone, MouseLab) and very short
+    // venue abbreviations (SI, CHI) are often intentionally translated or
+    // omitted by otherwise faithful Japanese prose. Keep method-like
+    // identifiers such as DeepIV and H4 hard-protected, but do not turn a
+    // harmless proper-name omission into a whole-block fallback.
+    if (item.kind === "acronym") {
+      const value = item.value;
+      const isLeadingLowerBrand = /^[a-z][A-Za-z0-9]*$/.test(value) && /[A-Z]/.test(value);
+      const isShortAllCaps = /^[A-Z]{2,3}$/.test(value) && value !== "SD";
+      if (isLeadingLowerBrand || isShortAllCaps) return false;
+      return true;
+    }
+    return isContextualCountInvariant(item, source);
+  });
   const reasons: string[] = [];
   if (missing.length > 0) reasons.push(`scientific invariants missing: ${missing.slice(0, 4).map((item) => item.value).join(", ")}`);
   if (unexpected.length > 0) reasons.push(`unexpected scientific invariants: ${unexpected.slice(0, 4).map((item) => item.value).join(", ")}`);
@@ -779,27 +802,32 @@ export function toHalfwidthAscii(text: string): string {
     .replace(/([,;:])(?=[\u3040-\u30FF\u4E00-\u9FFF])/g, "$1 ");
 }
 
-export function isDegenerateTranslation(text: string): boolean {
+export function explainDegenerateTranslation(text: string): string[] {
+  const reasons: string[] = [];
   const compact = text.replace(/\s+/g, "");
-  if (!compact) return true;
-  if (BYTE_ESCAPE.test(text)) return true;
-  if (LEFTOVER_PLACEHOLDER.test(toHalfwidthAscii(text))) return true;
-  if (/(.)\1{7,}/u.test(compact)) return true;
-  if (THAI.test(text) || HANGUL.test(text)) return true;
+  if (!compact) reasons.push("empty output");
+  if (BYTE_ESCAPE.test(text)) reasons.push("byte escape");
+  if (LEFTOVER_PLACEHOLDER.test(toHalfwidthAscii(text))) reasons.push("leftover placeholder");
+  if (/(.)\1{7,}/u.test(compact)) reasons.push("character repetition");
+  if (THAI.test(text) || HANGUL.test(text)) reasons.push("foreign script contamination");
+  if (!compact) return reasons;
 
   const counts = new Map<string, number>();
   for (const ch of compact) {
     counts.set(ch, (counts.get(ch) || 0) + 1);
   }
   const max = Math.max(...counts.values());
-  if (compact.length >= 16 && max / compact.length > 0.4) return true;
+  if (compact.length >= 16 && max / compact.length > 0.4) reasons.push("character concentration");
 
   const uniqueRatio = counts.size / compact.length;
-  if (compact.length >= 40 && uniqueRatio < 0.08) return true;
-  if (hasAbnormalPhraseRepetition(text)) return true;
-  if (hasFragmentedJapaneseSpacing(text)) return true;
+  if (compact.length >= 40 && uniqueRatio < 0.08) reasons.push("low character diversity");
+  if (hasAbnormalPhraseRepetition(text)) reasons.push("phrase repetition");
+  if (hasFragmentedJapaneseSpacing(text)) reasons.push("fragmented Japanese spacing");
+  return reasons;
+}
 
-  return false;
+export function isDegenerateTranslation(text: string): boolean {
+  return explainDegenerateTranslation(text).length > 0;
 }
 
 export function isGarbageTitle(text: string): boolean {
@@ -905,6 +933,61 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   };
 }
 
+/**
+ * Diagnose a server-provided mixed candidate while allowing only explicitly
+ * reported failed source units to remain in English. This does not accept the
+ * candidate; callers must apply their normal safety policy afterward.
+ */
+export function evaluatePartialJaTranslation(
+  output: string,
+  source: string,
+  preservedSourceUnits: string[],
+): TranslationQuality & { preservedSourceUnitsValidated: boolean } {
+  const quality = evaluateJaTranslation(output, source);
+  const normalize = (value: string) => value.replace(/\s+/g, " ").trim();
+  const normalizedOutput = normalize(output);
+  const validated = preservedSourceUnits.length > 0
+    && preservedSourceUnits.every((unit) => normalizedOutput.includes(normalize(unit)));
+  if (!validated) return { ...quality, preservedSourceUnitsValidated: false };
+  const reasons = quality.reasons.filter((reason) =>
+    !reason.startsWith("translation contains unmodified source span")
+    && reason !== "untranslated foreign-language prose"
+  );
+  return { ...quality, reasons, preservedSourceUnitsValidated: true };
+}
+
+export type PartialUnitDiagnostic = {
+  index: number;
+  source: string;
+  output: string;
+  preserved: boolean;
+  accepted: boolean;
+  reasons: string[];
+};
+
+/** Diagnose each source/output unit independently; never changes acceptance. */
+export function diagnosePartialUnits(
+  sourceUnits: string[],
+  outputUnits: string[],
+  preservedIndexes: number[] = [],
+): PartialUnitDiagnostic[] {
+  return sourceUnits.map((source, index) => {
+    const output = outputUnits[index] ?? "";
+    const preserved = preservedIndexes.includes(index) && output.trim() === source.trim();
+    if (preserved) {
+      return { index, source, output, preserved: true, accepted: false, reasons: ["preserved source unit"] };
+    }
+    const quality = evaluateJaTranslation(output, source);
+    const lengthRatio = output.trim().length / Math.max(source.trim().length, 1);
+    const reasons = [...quality.reasons];
+    if (reasons.includes("degenerate output")) {
+      reasons.push(...explainDegenerateTranslation(output).map((reason) => `degenerate: ${reason}`));
+    }
+    if (source.trim().length >= 80 && lengthRatio < 0.25) reasons.push("unit output is too short");
+    return { index, source, output, preserved: false, accepted: reasons.length === 0, reasons };
+  });
+}
+
 export function isPlausibleJaTranslation(output: string, source: string): boolean {
   const quality = evaluateJaTranslation(output, source);
   const repetitionOnly = quality.reasons.length === 1 && quality.reasons[0] === "degenerate output";
@@ -939,21 +1022,33 @@ export function isPlausibleJaTranslation(output: string, source: string): boolea
 }
 
 /**
- * Cascade selector helper. Relation markers are retained as audit evidence,
- * but Japanese can encode them implicitly; they are therefore not sufficient
- * on their own to reject an otherwise invariant-safe alternate translation.
- * All structural, language, scientific, and source-integrity reasons remain
- * hard failures.
+ * Cascade selector helper. Alternate models must preserve relations whose
+ * loss changes the experimental claim. Japanese may encode ordinary contrast
+ * implicitly, but missing conditions, exclusivity, negation, or comparisons
+ * are unsafe semantic guesses.
  */
 export function isCascadeQualityAcceptable(output: string, source: string): boolean {
   if (!isPlausibleJaTranslation(output, source)) return false;
   if (hasUntranslatedCascadeLexeme(source, output)) return false;
   if (hasCascadeSentenceCompression(source, output)) return false;
   const reasons = evaluateJaTranslation(output, source).reasons;
-  const relationOnly = reasons.length > 0 && reasons.every((reason) =>
-    / relation missing$/.test(reason)
+  const unsafeRelation = reasons.some((reason) =>
+    reason === "condition relation missing"
+    || reason === "exclusivity relation missing"
+    || reason === "source negation missing"
+    || reason === "negation moved from reported content to reporting predicate"
+    || reason === "epistemic uncertainty lost"
+    || reason === "spatial target relation rendered as comparison"
+    || reason === "signal-to-noise comparison relation missing"
+    || reason === "source disjunctive-both relation missing"
+    || reason.startsWith("participant total may have shifted")
+    || reason === "collective group comparison narrowed to two groups"
   );
-  return relationOnly || reasons.length === 0;
+  // Keep the boundary escapes in the source as a regex, rather than literal
+  // backspace characters. A previous edit inserted U+0008 here, which made
+  // this safety filter silently match nothing and allowed unsafe cascade
+  // candidates through whenever the dedicated relation list missed them.
+  return !unsafeRelation && reasons.every((reason) => !/\b(?:invariant|source echo|degenerate|missing|malformed|untranslated|implausible|compression)\b/i.test(reason));
 }
 
 /**

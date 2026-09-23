@@ -68,6 +68,17 @@ describe("OllamaTranslationEngine", () => {
     expect(provider.complete).toHaveBeenCalledOnce();
   });
 
+  it("rejects an alternate candidate that drops an experimental condition", async () => {
+    const provider = providerReturning("信号がない。参加者を分析から除外した。");
+    const engine = new OllamaTranslationEngine(primaryThatFails(), provider);
+    await expect(engine.translate(
+      "If the signal is absent, the participant was excluded from analysis.",
+      "en",
+      "ja",
+    )).rejects.toThrow("primary failed");
+    expect(provider.complete).toHaveBeenCalledOnce();
+  });
+
   it("keeps a successful primary result without contacting Ollama", async () => {
     const primary = primaryThatFails();
     primary.translate = vi.fn(async () => result);
