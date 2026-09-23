@@ -57,6 +57,11 @@ const SOURCE_EXCLUSIVITY = /\b(?:only|sole|solely|unique|uniquely)\b/i;
 const JA_EXCLUSIVITY = /(?:のみ|だけ|唯一|ただ一つ|単独で|専ら|もっぱら)/;
 const SOURCE_CONDITION = /\b(?:if|unless|provided that|as long as|depending on|whether)\b/i;
 const JA_CONDITION = /(?:場合|ならば?|ない限り|である限り|に応じて|かどうか|か否か|条件|依存|により)/;
+// Alternative experimental conditions are easy to collapse into one branch
+// while leaving a fluent Japanese sentence. Require an explicit alternative
+// marker whenever the source uses the unambiguous "either ... or ..." form.
+const SOURCE_ALTERNATIVE = /\beither\b[^.!?]{0,180}\bor\b/i;
+const JA_ALTERNATIVE = /(?:または|あるいは|もしくは|いずれか|どちらか|か(?:、|,|\s|$))/;
 // Causal-model failures can append the instruction used to elicit the
 // translation (and occasionally a fresh example) after an otherwise fluent
 // Japanese result. Detect the generic instruction shape only when it appears
@@ -726,6 +731,9 @@ function discourseRelationRiskReasons(source: string, output: string): string[] 
   if (SOURCE_CONDITION.test(source) && !JA_CONDITION.test(output)) {
     reasons.push("condition relation missing");
   }
+  if (SOURCE_ALTERNATIVE.test(source) && !JA_ALTERNATIVE.test(output)) {
+    reasons.push("alternative relation missing");
+  }
   return reasons;
 }
 
@@ -920,6 +928,7 @@ export function evaluateJaTranslation(output: string, source: string): Translati
     || reasons.includes("spatial target relation rendered as comparison")
     || reasons.includes("signal-to-noise comparison relation missing")
     || reasons.includes("source disjunctive-both relation missing")
+    || reasons.includes("alternative relation missing")
     || reasons.some((reason) => reason.startsWith("participant total may have shifted"))
     || reasons.includes("collective group comparison narrowed to two groups")
     || reasons.includes("trailing Latin fragment") ? 0.35 : 1;
@@ -1041,6 +1050,7 @@ export function isCascadeQualityAcceptable(output: string, source: string): bool
     || reason === "spatial target relation rendered as comparison"
     || reason === "signal-to-noise comparison relation missing"
     || reason === "source disjunctive-both relation missing"
+    || reason === "alternative relation missing"
     || reason.startsWith("participant total may have shifted")
     || reason === "collective group comparison narrowed to two groups"
   );

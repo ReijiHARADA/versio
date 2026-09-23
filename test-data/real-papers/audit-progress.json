@@ -3220,7 +3220,7 @@
     ]
   },
   "nextAction": "Fix generic peripheral metadata/body grouping; review false rejects among v33 fallback, then compare citation-safe translation units and alternatives on held-out papers; continue OA corpus expansion.",
-  "lastUpdate": "2026-09-21T12:06:48+09:00",
+  "lastUpdate": "2026-09-23 alternative relation guard v111",
   "iterationLog": [
     {
       "id": "extraction-resume-diagnostic-v1",
@@ -5132,5 +5132,60 @@
     "ordinaryBodyFallbacks": 114,
     "note": "resume run processed 5 units per 52 selected papers; report is incomplete and automatic status is not semantic correctness"
   },
-  "lastBenchmarkNote": "v200: bounded serial MADLAD benchmark reached 51/52 available papers and 358 sampled blocks; 142 ordinary-body rows have 44 reader-visible post-model fallbacks (30.99%). The remaining precious-materials PDF is blocked by wrong-document provenance. Report benchmark-checkpoint-v200.json; server remains ready."
+  "lastBenchmarkNote": "v200: bounded serial MADLAD benchmark reached 51/52 available papers and 358 sampled blocks; 142 ordinary-body rows have 44 reader-visible post-model fallbacks (30.99%). The remaining precious-materials PDF is blocked by wrong-document provenance. Report benchmark-checkpoint-v200.json; server remains ready.",
+  "latestProtectionABDiagnostic": {
+    "date": "2026-09-23",
+    "artifact": "test-data/real-papers/reports/protection-ab-diagnostic-v1.json",
+    "script": "translation-server/scripts/benchmark_protection_ab.py",
+    "sampleBlocks": 50,
+    "conditions": [
+      "raw",
+      "minimal",
+      "current"
+    ],
+    "automaticErrors": {
+      "raw": "35/50",
+      "minimal": "36/50",
+      "current": "36/50"
+    },
+    "status": "guard impact measured; no production routing/protection change",
+    "next": "held-out selective-cascade evaluation on relation-risk rows",
+    "combinedArtifact": "test-data/real-papers/reports/protection-ab-diagnostic-combined-v1.json",
+    "manualReviewArtifact": "test-data/real-papers/reports/protection-ab-manual-review-v1.json",
+    "manualReviewRows": 10,
+    "gateDiagnostic": "test-data/real-papers/reports/protection-gate-diagnostic-v1.json",
+    "gateFinding": "implausibly_short catches genuine omissions on long units; global relaxation unsafe; improve segmentation/retry",
+    "segmentedArtifact": "test-data/real-papers/reports/protection-ab-segmented-v1.json",
+    "segmentedSampleBlocks": 30,
+    "segmentedErrors": {
+      "raw": "1/30",
+      "minimal": "3/30",
+      "current": "3/30"
+    },
+    "rescueArtifact": "test-data/real-papers/reports/protection-rescue-diagnostic-v1.json",
+    "rescueFinding": "VR recovered by unprotected identifier retry; hospital citation still omitted; short result fails all modes",
+    "productionRescueArtifact": "test-data/real-papers/reports/production-rescue-segmented-v1.json",
+    "productionRescueSample": 30,
+    "productionRescueErrors": "0/30",
+    "latestQualityGuardImpactArtifact": "test-data/real-papers/reports/guard-impact-v1.json",
+    "latestQualityGuardImpactSample": 30,
+    "latestQualityGuardImpact": {
+      "alternativeRelationMissing": "1/30",
+      "sourceNegationMissing": "1/30",
+      "conditionRelationMissing": "1/30",
+      "serverTerminalFallback": "not measured as a production queue outcome"
+    },
+    "semanticReviewArtifact": "test-data/real-papers/reports/production-rescue-semantic-review-v1.json",
+    "semanticReviewRows": 6,
+    "semanticReviewSeverityGe2": 5,
+    "semanticReviewNote": "targeted non-random review; not a corpus estimate"
+  },
+  "latestQualityGuardChange": {
+    "date": "2026-09-23",
+    "change": "generic either-or alternative relation invariant",
+    "file": "src/services/translation/quality.ts",
+    "test": "src/test/quality.test.ts 154/154",
+    "status": "implemented; held-out fallback impact pending",
+    "next": "run production benchmark and measure semantic rescue/fallback"
+  }
 }

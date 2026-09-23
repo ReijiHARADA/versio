@@ -385,8 +385,6 @@ export function projectCanonicalToPaper(input: {
           captionOriginal: "",
           captionTranslated: null,
           column,
-          role: "table",
-          tableSourceFallback: true,
           figureKey: `table-region-${node.id}`,
         } satisfies TableMetadata & { column: string; figureKey: string },
       });
@@ -678,9 +676,9 @@ export function projectCanonicalToPaper(input: {
       next.type !== "paragraph" ||
       current.pageEnd !== next.pageStart ||
       current.metadata.translationInputWarning ||
-      /[.!?。！？:]\s*$/.test(current.original.trim()) ||
-      !/^(?:which|that|and|or|but|where|while|because|although|including)\b/i.test(next.original.trim()) &&
-      !/^[a-z]/.test(next.original.trim())
+      /[.!?。！？:]\s*$/.test((current.original ?? "").trim()) ||
+      !/^(?:which|that|and|or|but|where|while|because|although|including)\b/i.test((next.original ?? "").trim()) &&
+      !/^[a-z]/.test((next.original ?? "").trim())
     ) continue;
     const currentBox = current.boundingBoxes[0];
     const nextBox = next.boundingBoxes[0];
