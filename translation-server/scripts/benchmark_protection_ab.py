@@ -41,9 +41,18 @@ _KEEP_LITERAL = re.compile(
 )
 
 
-def minimal_protection(source: str):
+def minimal_protection(source: str, *, expose_repeated_acronyms: bool = False):
     current, spans, nonce = protect_citations(source)
     literal = {span for span in spans if _KEEP_LITERAL.match(span.strip())}
+    if expose_repeated_acronyms:
+        # Diagnostic arm only: repeated short acronyms are often opaque
+        # placeholders that the decoder drops. Keep them visible so we can
+        # measure whether context beats placeholder fidelity. This does not
+        # alter production protection.
+        counts: dict[str, int] = {}
+        for match in re.finditer(r"\b[A-Z][A-Z0-9]{1,5}\b", source):
+            counts[match.group(0)] = counts.get(match.group(0), 0) + 1
+        literal.update({value for value, count in counts.items() if count >= 2})
     protected, kept_spans, kept_nonce = protect_citations(source, unprotected_values=literal)
     return protected, kept_spans, kept_nonce, sorted(literal)
 
@@ -59,6 +68,11 @@ def load_rows(limit: int, offset: int = 0, segment_units: bool = False):
             if row.get("sourceIntegrity") != "clean" or not row.get("wouldSubmitToModel"):
                 continue
             source = str(row.get("source", "")).strip()
+            # Older audit generations could label a wrapped acknowledgements
+            # paragraph as ordinary prose. Keep author/grant text out of the
+            # protection-quality denominator even when using those reports.
+            if re.match(r"^acknowledg(?:e)?ments?\b", source, re.I):
+                continue
             key = (row.get("paperId"), source)
             if len(source) < 90 or key in seen:
                 continue
@@ -84,12 +98,14 @@ def decode(engine: MADLADEngine, model_input: str):
             "latencyMs": round((time.perf_counter() - started) * 1000, 1)}
 
 
-def run_condition(engine, source: str, condition: str, production_rescue: bool = False):
+def run_condition(engine, source: str, condition: str, production_rescue: bool = False, *, expose_repeated_acronyms: bool = False):
     if condition == "raw":
         model_input, spans, nonce, literal = source, [], 0, []
         unprotected = set()
     elif condition == "minimal":
-        model_input, spans, nonce, literal = minimal_protection(source)
+        model_input, spans, nonce, literal = minimal_protection(
+            source, expose_repeated_acronyms=expose_repeated_acronyms
+        )
         unprotected = set(literal)
     else:
         model_input, spans, nonce = protect_citations(source)
@@ -133,6 +149,7 @@ def main():
     parser.add_argument("--allow-short", action="store_true", help="diagnostic only: bypass implausibly_short gate")
     parser.add_argument("--segment-units", action="store_true", help="diagnostic: sample production segmenter units")
     parser.add_argument("--production-rescue", action="store_true", help="use production retry/rescue path")
+    parser.add_argument("--expose-repeated-acronyms", action="store_true", help="diagnostic minimal arm: keep repeated short acronyms literal")
     parser.add_argument("--out", type=Path, default=OUT)
     args = parser.parse_args()
     if args.allow_short:
@@ -144,13 +161,14 @@ def main():
     for index, row in enumerate(rows, 1):
         print(f"[{index}/{len(rows)}] {row['paperId']} {row['key']}", flush=True)
         names = ("current",) if args.production_rescue else ("raw", "minimal", "current")
-        conditions = [run_condition(engine, row["source"], name, args.production_rescue) for name in names]
+        conditions = [run_condition(engine, row["source"], name, args.production_rescue, expose_repeated_acronyms=args.expose_repeated_acronyms) for name in names]
         records.append({**row, "conditions": conditions})
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps({"version": "protection-ab-v1", "sourceReport": str(REPORT),
                                     "model": engine.MODEL_ID, "modelVersion": engine.model_version,
                                     "generation": {"numBeams": 1, "doSample": False},
                                     "offset": args.offset, "segmentUnits": args.segment_units, "productionRescue": args.production_rescue,
+                                    "exposeRepeatedAcronyms": args.expose_repeated_acronyms,
                                     "sampleCount": len(records), "records": records},
                                    ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(args.out)

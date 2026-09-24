@@ -18,6 +18,12 @@ from engines.madlad_mps import allows_unprotected_identifier_retry
 
 
 class CitationProtectTests(unittest.TestCase):
+    def test_power_measurement_keeps_decimal_and_unit_atomic(self) -> None:
+        source = "The prototype consumes only 14.4 uW and operates below 1pF."
+        protected, cites, nonce = protect_citations(source)
+        self.assertNotIn("14.ZZCIT", protected)
+        self.assertEqual(restore_citations(protected, cites, nonce), source)
+
     def test_acronym_with_attached_superscript_number_is_atomic(self) -> None:
         source = "Traditional education systems are classified by UNESCO6 as shown in Table 5."
         protected, cites, nonce = protect_citations(source)

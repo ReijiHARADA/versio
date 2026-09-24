@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import unittest
+import re
 
 from engines.madlad_mps import (
     MADLADEngine,
+    MEASUREMENT_PATTERN,
     allows_unprotected_identifier_retry,
     restore_missing_structure_references,
     unprotected_identifier_retry_values,
@@ -22,6 +24,37 @@ class MadladUnitQualityTests(unittest.TestCase):
         self.assertTrue(MADLADEngine._negation_marker_missing(source, "この相互作用を最初に探求した。"))
         self.assertFalse(MADLADEngine._negation_marker_missing(source, "この相互作用を最初に探求したわけではない。"))
         self.assertFalse(MADLADEngine._negation_marker_missing("We explore this interaction.", "この相互作用を探求する。"))
+
+    def test_relation_risk_source_is_conservative(self) -> None:
+        self.assertTrue(MADLADEngine._relation_risk_source("Participants chose either A or B."))
+        self.assertTrue(MADLADEngine._relation_risk_source("Gist memory was forgotten more slowly than detailed memory."))
+        self.assertTrue(MADLADEngine._relation_risk_source("Fitbit measures valid heart rates only 54.88% of the time."))
+        self.assertTrue(MADLADEngine._relation_risk_source("The effect was observed solely in adults."))
+        self.assertFalse(MADLADEngine._relation_risk_source("Participants watched film clips and rated interest."))
+
+    def test_exclusivity_marker_loss_is_detected(self) -> None:
+        source = "Fitbit measures valid heart rates only 54.88% of the time."
+        self.assertTrue(MADLADEngine._exclusivity_marker_missing(source, "54.88%の時間で測定した。"))
+        self.assertFalse(MADLADEngine._exclusivity_marker_missing(source, "54.88%しか測定しなかった。"))
+
+    def test_alternative_marker_loss_is_detected(self) -> None:
+        source = "Participants received either gist or detailed cues."
+        self.assertTrue(MADLADEngine._alternative_marker_missing(source, "参加者は手がかりを受けた。"))
+        self.assertFalse(MADLADEngine._alternative_marker_missing(source, "参加者はいずれかの手がかりを受けた。"))
+
+    def test_coordinated_clause_rescue_requires_substantive_clauses(self) -> None:
+        parts = MADLADEngine._coordinated_clause_parts(
+            "All participants found the PPG Earring as comfortable as their regular earrings, and most participants expressed a strong willingness to wear the PPG Earring all the time every day."
+        )
+        self.assertEqual(len(parts or []), 2)
+        self.assertIsNone(MADLADEngine._coordinated_clause_parts("A short clause, and the rest."))
+
+    def test_coordinated_clause_rescue_allows_commas_inside_right_clause(self) -> None:
+        parts = MADLADEngine._coordinated_clause_parts(
+            "The forward path is through the body, and the return path is formed by the parasitic capacitance between the receiver and earth, referred to as Cret, as shown in Fig. 2 (a)."
+        )
+        self.assertEqual(len(parts or []), 2)
+        self.assertIn("the return path", parts[1] if parts else "")
 
     def test_identifier_retry_rejects_camelcase_placeholder_drift(self) -> None:
         self.assertTrue(allows_unprotected_identifier_retry(["errors"]))
@@ -63,6 +96,22 @@ class MadladUnitQualityTests(unittest.TestCase):
             "結果を示す。 (Figure 2; Table 5)",
         )
 
+    def test_missing_equation_reference_is_recovered_but_localized_equation_is_kept(self) -> None:
+        source = "The result is given by Eqn. 20 and Eqn. 7."
+        self.assertEqual(
+            restore_missing_structure_references(source, "結果は式7で与えられる。"),
+            "結果は式7で与えられる。 (Eqn. 20)",
+        )
+
+    def test_parenthesized_figure_panel_reference_is_recovered(self) -> None:
+        self.assertEqual(
+            restore_missing_structure_references(
+                "The result is shown by Fig. 2 (e) over Fig. 2 (d).",
+                "結果はFig. 2 (d)に示される。",
+            ),
+            "結果はFig. 2 (d)に示される。 (Fig. 2 (e))",
+        )
+
     def test_structural_recovery_does_not_copy_unrelated_numbers(self) -> None:
         self.assertEqual(
             restore_missing_structure_references(
@@ -76,6 +125,11 @@ class MadladUnitQualityTests(unittest.TestCase):
         self.assertTrue(allows_unprotected_identifier_retry(["1 pF", "40 mAh"]))
         self.assertFalse(allows_unprotected_identifier_retry(["F(4,33) = 2.913"]))
         self.assertTrue(allows_unprotected_identifier_retry(["USD"]))
+
+    def test_measurement_rescue_recognizes_comparators_and_si_prefix_spacing(self) -> None:
+        for value in ("≤ 30M Hz", "≤ 1pF", "±0.32 m", "11.3 mm"):
+            self.assertIsNotNone(re.fullmatch(MEASUREMENT_PATTERN, value, flags=re.IGNORECASE))
+        self.assertIsNone(re.fullmatch(MEASUREMENT_PATTERN, "F(4,33) = 2.913", flags=re.IGNORECASE))
 
     def test_identifier_retry_allows_narrow_academic_reference_spans(self) -> None:
         self.assertTrue(allows_unprotected_identifier_retry(["SI Appendix", "Ruggeri et al.18"]))
@@ -194,6 +248,18 @@ class MadladUnitQualityTests(unittest.TestCase):
         self.assertFalse(MADLADEngine._has_unsupported_numbered_enumeration(output, source))
         self.assertFalse(MADLADEngine._is_degenerate(output, source, "ja"))
 
+    def test_rejects_missing_leading_section_marker(self) -> None:
+        source = "4.3.1 Board Design describes the prototype and its constraints."
+        self.assertTrue(
+            MADLADEngine._has_missing_section_marker(
+                "基板設計ではプロトタイプと制約を説明する。", source
+            )
+        )
+        self.assertFalse(
+            MADLADEngine._has_missing_section_marker(
+                "4.3.1 基板設計ではプロトタイプと制約を説明する。", source
+            )
+        )
     def test_rejects_long_natural_language_unit_reduced_to_its_conclusion(self) -> None:
         source = (
             "While the smaller sample has a larger variance, the correct answer "

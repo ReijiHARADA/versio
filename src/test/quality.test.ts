@@ -39,6 +39,7 @@ describe("acronym expansion safety", () => {
     const intact = "本研究はナッジング、rotary embeddingsを評価する。";
     const identifier = "本研究ではモデルGPTを評価する。";
     expect(evaluateJaTranslation(corrupted, source).reasons).toContain("mixed-script decoder corruption");
+    expect(isPlausibleJaTranslation(corrupted, source)).toBe(false);
     expect(evaluateJaTranslation(intact, source).reasons).not.toContain("mixed-script decoder corruption");
     expect(evaluateJaTranslation(identifier, "This study evaluates model GPT.").reasons).not.toContain("mixed-script decoder corruption");
     expect(evaluateJaTranslation("組立ラインのErgoSALBPモデルを評価する。", "The ErgoSALBP model is evaluated in the assembly line.").reasons).not.toContain("mixed-script decoder corruption");
@@ -50,6 +51,26 @@ describe("acronym expansion safety", () => {
     const faithful = "第一群は仮説探索質問を尋ね, 第二群は制約探索質問を尋ねた。";
     expect(evaluateJaTranslation(hallucinated, source).reasons).toContain("translation introduces an unsupported numbered enumeration");
     expect(evaluateJaTranslation(faithful, source).reasons).not.toContain("translation introduces an unsupported numbered enumeration");
+  });
+});
+
+describe("negation detection", () => {
+  it("does not treat forgotten as an English negation marker", () => {
+    const result = evaluateJaTranslation(
+      "具体的には、要点記憶は詳細記憶よりゆっくり忘れられた。",
+      "Specifically, gist memory was forgotten more slowly than detailed memory.",
+    );
+    expect(result.reasons).not.toContain("source negation missing");
+  });
+});
+
+describe("compact acronym descriptors", () => {
+  it("accepts an intact acronym when a descriptor is compacted", () => {
+    const result = evaluateJaTranslation(
+      "PPGイヤリングは14 mmである。",
+      "The PPG Earring measures 14 mm.",
+    );
+    expect(result.reasons).not.toContain("scientific invariants missing: PPG");
   });
 });
 
@@ -214,6 +235,24 @@ describe("isPlausibleJaTranslation", () => {
     expect(evaluateJaTranslation(output, source).reasons).toContain("orphaned source invariant sentence");
   });
 
+  it("rejects accepted-looking output that leaves a source phrase untranslated", () => {
+    const source =
+      "The increase in received power is due to the higher-order harmonics also contributing to power delivery (notably 120 MHz, the 3rd harmonic of 40 MHz, which is also an effective frequency for IBPT; see Figure 2).";
+    const output =
+      "受信電力の増加は, 電力伝達に寄与する高次高調波によると考えた(notably 120 MHz, the 3rd harmonic of 40 MHz, which is also an effective frequency for IBPT; see Figure 2)。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("untranslated source phrase");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("rejects output that drops a numbered section marker", () => {
+    const source =
+      "4.3.1 Board Design. As with the transmitter, careful board design of the receiver is paramount to high performance.";
+    const output =
+      "受信機の設計は, 送信機と同様に, 高性能化のためには, 注意深い設計が必要である。";
+    expect(evaluateJaTranslation(output, source).reasons.some((reason) => reason.startsWith("scientific invariants missing:"))).toBe(true);
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
   it("allows source facts embedded in Japanese prose", () => {
     const source =
       "The result was consistent with prior observations (Fig. 8 and Table S3), suggesting that the intervention did not change the underlying evaluation process.";
@@ -221,6 +260,12 @@ describe("isPlausibleJaTranslation", () => {
       "結果は先行観察（Fig. 8 and Table S3）と一致し、この介入が基礎的な評価過程を変えなかったことを示唆する。";
     expect(evaluateJaTranslation(output, source).reasons).not.toContain("orphaned source invariant sentence");
     expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
+  it("does not reject a citation emitted as a detached punctuation span", () => {
+    const source = "We explored the history of wearable objects and related cultures [5,6]. The findings inform the guidelines.";
+    const output = "ウェアラブル物体と関連文化の歴史を調査した。[5,6]。この知見はガイドラインに反映される。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("orphaned source invariant sentence");
   });
 
   it("rejects a fluent result that loses a bare rank statistic or figure panel", () => {
@@ -256,6 +301,7 @@ describe("isPlausibleJaTranslation", () => {
   it("accepts Japanese figure labels while preserving the figure and panel number", () => {
     expect(isPlausibleJaTranslation("結果を図5に示す。", "The results are shown in Figure 5.")).toBe(true);
     expect(isPlausibleJaTranslation("結果を図1(a)に示す。", "The results are shown in Figure 1(a).")).toBe(true);
+    expect(isPlausibleJaTranslation("結果を図1(a)に示す。", "The results are shown in Figure 1a.")).toBe(true);
     expect(isPlausibleJaTranslation("結果を図1に示す。", "The results are shown in Figure 1(a).")).toBe(false);
     expect(isPlausibleJaTranslation("結果を図6に示す。", "The results are shown in Figure 5.")).toBe(false);
   });
@@ -286,6 +332,12 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation("共振周波数は2MHzである。", source)).toBe(false);
   });
 
+  it("treats PDF-inserted scalar-unit hyphens as the same measurement", () => {
+    const source = "The 10-m walk test was completed before the 4-6s grip test.";
+    expect(isPlausibleJaTranslation("10m歩行試験は4-6sの握力試験の前に完了した。", source)).toBe(true);
+    expect(isPlausibleJaTranslation("11m歩行試験は4-6sの握力試験の前に完了した。", source)).toBe(false);
+  });
+
   it("treats full-width Japanese digits as the same preserved numeric facts", () => {
     const source = "The study included 82 participants, including 64 women.";
     expect(isPlausibleJaTranslation("本研究の参加者は８２人で、そのうち６４人が女性だった。", source)).toBe(true);
@@ -307,9 +359,23 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation(output, source)).toBe(false);
   });
 
+  it("rejects a missing study-count invariant in screening results", () => {
+    const source = "Initial sifting based on title, abstract and full text resulted in exclusion of 6336 studies; 30 studies were reviewed.";
+    const output = "タイトル、要旨、全文に基づく初期選別により、多数の研究が除外され、30件がレビューされた。";
+    expect(evaluateJaTranslation(output, source).reasons.join(" ")).toContain("6336");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
   it("rejects simplified-Chinese contamination inside Japanese output", () => {
     const source = "Deep learning methods are widely used in medical image segmentation and improve the accuracy of diagnosis.";
     expect(isPlausibleJaTranslation("医療画像のセグメンテーションにディープ学习手法を用いる。", source)).toBe(false);
+  });
+
+  it("rejects isolated simplified forms embedded in otherwise Japanese prose", () => {
+    const source = "The gist and details of an event are important for episodic memory.";
+    const output = "出来事の概要と詳細はエピソデ的记忆に重要である。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("simplified Chinese mixed into Japanese");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
   });
 
   it("rejects a pure Chinese decode for an English source", () => {
@@ -907,6 +973,27 @@ describe("unsafe extracted translation input", () => {
     ).toBe(true);
   });
 
+  it("rejects impossible function-word joins caused by extraction loss", () => {
+    expect(
+      unsafeParagraphStructureReason(
+        "This section gives an introduction about the of radiology and describes the study design."
+      )
+    ).toContain("機能語");
+    expect(
+      unsafeParagraphStructureReason(
+        "The study gives an overview of radiology and describes the study design."
+      )
+    ).toBeNull();
+  });
+
+  it("treats thousands separators as numeric formatting", () => {
+    const quality = evaluateJaTranslation(
+      "We excluded 6,336 studies and included 3,227 participants.",
+      "6,336件の研究を除外し,3,227人の参加者を含めた。",
+    );
+    expect(quality.reasons.some((reason) => reason.startsWith("scientific invariants missing"))).toBe(false);
+  });
+
   it("rejects a page or column fragment ending at a mathematical let", () => {
     const source = "A statistical interaction describes a joint influence that is not additive. Let";
     expect(shouldTranslateParagraph(source)).toBe(false);
@@ -1151,6 +1238,8 @@ describe("unsafe extracted translation input", () => {
 
     const valid = "The mean μ was 2.913, and the χ² test yielded p < 0.001.";
     expect(unsafeParagraphStructureReason(valid)).toBeNull();
+
+    expect(unsafeParagraphStructureReason("which measures 14 mm in diameter, weighs 2.0 g, and offers 21 hours of continuous sensing.")).toContain("先頭");
     expect(shouldTranslateParagraph(valid)).toBe(true);
   });
 
@@ -1304,6 +1393,16 @@ describe("isRetryableTranslationFailure", () => {
     const exclusiveKept = "介入群のみが訓練を受けた。";
     expect(evaluateJaTranslation(exclusiveLoss, exclusive).reasons).toContain("exclusivity relation missing");
     expect(evaluateJaTranslation(exclusiveKept, exclusive).reasons).not.toContain("exclusivity relation missing");
+
+    const whether = "Participants discussed whether the suggestion could be incorporated into their design.";
+    expect(evaluateJaTranslation("参加者は、その提案を設計に組み込めるかを議論した。", whether).reasons)
+      .not.toContain("condition relation missing");
+  });
+
+  it("detects loss of comparative likelihood", () => {
+    const source = "Participants were asked if Linda was more likely to be a bank teller or an active feminist.";
+    expect(evaluateJaTranslation(source, source).reasons).toContain("comparative likelihood relation missing");
+    expect(evaluateJaTranslation("リンダが銀行員である可能性が高いかを尋ねた。", source).reasons).not.toContain("comparative likelihood relation missing");
   });
 
   it("rejects output that collapses an either-or experimental condition", () => {
@@ -1320,6 +1419,20 @@ describe("isRetryableTranslationFailure", () => {
       .not.toContain("strong contrast relation missing");
     expect(evaluateJaTranslation("介入により再認が改善した。", source).reasons)
       .toContain("strong contrast relation missing");
+  });
+
+  it("preserves evidence suggestion and future specification strength", () => {
+    const evidence = "First evidence suggests that memory formation in VR differs from the conventional laboratory.";
+    expect(evaluateJaTranslation("VRにおける記憶形成は通常の実験室と異なる。", evidence).reasons)
+      .toContain("evidence suggestion strengthened to assertion");
+    expect(evaluateJaTranslation("初期の証拠は、VRにおける記憶形成が通常の実験室と異なることを示唆している。", evidence).reasons)
+      .not.toContain("evidence suggestion strengthened to assertion");
+
+    const pending = "The precise circumstances under which VR leads to efficient mnemonic processing remain to be further specified.";
+    expect(evaluateJaTranslation("VRが効率的な記憶処理に導く正確な条件は、教育で適用すべきである。", pending).reasons)
+      .toContain("future specification requirement omitted");
+    expect(evaluateJaTranslation("VRが効率的な記憶処理に導く正確な条件は、今後さらに特定する必要がある。", pending).reasons)
+      .not.toContain("future specification requirement omitted");
   });
 
   it("rejects cascade candidates that lose a critical semantic relation", () => {
@@ -1342,6 +1455,33 @@ describe("isRetryableTranslationFailure", () => {
     expect(isCascadeQualityAcceptable(output, source)).toBe(false);
   });
 
+  it("rejects a retained multiword figure explanation but allows the figure label", () => {
+    const source = "The receiver was iterated repeatedly (major milestones shown in Figure 8).";
+    expect(evaluateJaTranslation("受信機は繰り返し改良された（major milestones shown in Figure 8）。", source).reasons)
+      .toContain("untranslated source phrase");
+    expect(evaluateJaTranslation("受信機は図8に示すように繰り返し改良された。", source).reasons)
+      .not.toContain("untranslated source phrase");
+  });
+
+  it("allows an intentional source-backed technical noun phrase", () => {
+    const source = "We used a deep neural network model for classification.";
+    expect(evaluateJaTranslation("分類にはdeep neural network modelを使用した。", source).reasons)
+      .not.toContain("untranslated source phrase");
+  });
+
+  it("rejects a lowercase English decoder fragment attached to Japanese", () => {
+    const source = "Photoplethysmography sensors struggle with accuracy during motion.";
+    const output = "光干渉metryセンサは運動中の精度に問題がある。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("untranslated mixed-script lexeme");
+    expect(isCascadeQualityAcceptable(output, source)).toBe(false);
+  });
+
+  it("allows a source-backed lowercase technical word in Japanese", () => {
+    const source = "The wearable sensor records heart rate.";
+    const output = "wearableセンサーは心拍数を記録する。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("untranslated mixed-script lexeme");
+  });
+
   it("allows source product and method names to remain in a cascade candidate", () => {
     const source = "The SpeeChin prototype used a Thermal Earring sensor.";
     const output = "SpeeChinプロトタイプはThermal Earringセンサーを使用した。";
@@ -1352,5 +1492,60 @@ describe("isRetryableTranslationFailure", () => {
     const source = "First result was positive. Second result was stable. Third result was replicated. Fourth result was significant. Fifth result was measured. Sixth result was confirmed. Seventh result was reported. Eighth result was reviewed.";
     const output = "第1の結果は良好でした。第2の結果も安定していました。第3の結果が再現されました。";
     expect(isCascadeQualityAcceptable(output, source)).toBe(false);
+  });
+
+  it("does not count dotted academic labels as lost sentences", () => {
+    const source = "The output voltage given by Eqn. 20 is independent of the load resistance (RL), given enough current can be supplied. This ensures higher power is delivered to the receiver at the resonant frequency. Eqn. 20 further illustrates the benefits of using a portable device where the floating ground plane of the device is held away from the body, as shown by Fig. 2 (e) over a small form factor wearable device (Fig. 2 (d)). A portable device maximizes the potential of a resonant human body channel by increasing Cret with a large ground plate. Moreover, as the ground plane is further away from the body, CGB is small with respect to Cret. The resonant frequency and the corresponding voltage at the resonant frequency are given by Eqn. 7.";
+    const output = "式（20）によって与えられる出力電圧は、十分な電流が供給できる場合、負荷抵抗（RL）に依存しない。これにより、共鳴周波数において受信機に高い電力が供給されることを保証する。式（20）はさらに、浮動接地平面が体から離されている携帯型デバイス（図2（e））が、小型のウェアラブルデバイス（図2（d））よりも利点があることを示している。携帯型デバイスは、大きな接地プレートを使用することでCRETを増加させ、共鳴人間体チャネルの潜在能力を最大化する。また、接地平面が体から遠ざかるにつれて、CRETに対してCGBは小さくなる。共鳴周波数とその周波数における電圧は式（7）によって与えられる。";
+    expect(isCascadeQualityAcceptable(output, source)).toBe(true);
+  });
+
+  it("rejects a measurement list whose scientific values are reordered", () => {
+    const source = "The prototype measured 11.3 mm wide, 31 mm long, weighed 335 mg, and consumed 14.4 uW.";
+    const output = "試作機を開発した。14.4uWを消費し、11.3 mm、31 mm、335 mgだった。";
+    const quality = evaluateJaTranslation(output, source);
+    expect(quality.reasons).toContain("scientific measurement order changed");
+    expect(isCascadeQualityAcceptable(output, source)).toBe(false);
+  });
+
+  it("keeps a normally ordered measurement list acceptable", () => {
+    const source = "The prototype measured 11.3 mm wide, 31 mm long, weighed 335 mg, and consumed 14.4 uW.";
+    const output = "試作機は幅11.3 mm、長さ31 mm、重量335 mgで、消費電力は14.4 uWだった。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("scientific measurement order changed");
+  });
+});
+
+import { hasAcronymExpansionDrift, hasDetachedNumericCitationRisk, hasExtremeTranslationCompression, missingTechnicalNameCandidates } from "../services/translation/quality";
+
+describe("technical name audit diagnostics", () => {
+  it("flags a dropped internal proper name without making it a production rejection", () => {
+    const source = "We compare the Xapian project with specialised corpus tools.";
+    expect(missingTechnicalNameCandidates(source, "Xapプロジェクトと専門ツールを比較する。"))
+      .toContain("Xapian");
+  });
+
+  it("does not treat sentence-initial prose as a technical name", () => {
+    expect(missingTechnicalNameCandidates("This chapter introduces methods.", "本章では方法を紹介する。"))
+      .toEqual([]);
+  });
+
+  it("flags detached numeric citation runs as an audit signal", () => {
+    const source = "The studies used the protocol,27,28,29 and reported outcomes.";
+    expect(hasDetachedNumericCitationRisk(source, "研究ではプロトコルを用い、27、28、29の結果を報告した。"))
+      .toBe(true);
+  });
+
+  it("flags a changed Latin expansion when the acronym survives", () => {
+    expect(hasAcronymExpansionDrift("Deep Learning (DL) improves diagnosis.", "Dip Learning (DL) は診断を改善する。"))
+      .toBe(true);
+    expect(hasAcronymExpansionDrift("Deep Learning (DL) improves diagnosis.", "深層学習（DL）は診断を改善する。"))
+      .toBe(false);
+  });
+
+  it("flags extreme compression only for long source units", () => {
+    expect(hasExtremeTranslationCompression("word ".repeat(140), "短い訳。"))
+      .toBe(true);
+    expect(hasExtremeTranslationCompression("word ".repeat(20), "短い訳。"))
+      .toBe(false);
   });
 });

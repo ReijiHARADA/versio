@@ -48,7 +48,10 @@ class MicroBatchScheduler:
     @staticmethod
     def _fallback_reason(error: Exception) -> str:
         message = str(error).lower()
-        if "protected citation placeholder dropped" in message:
+        if (
+            "protected citation placeholder dropped" in message
+            or "protected citation placeholder malformed" in message
+        ):
             reason = "protected_token_restore_failed"
         elif "degenerate" in message or "no_japanese_script" in message:
             reason = "translation_quality_rejected"

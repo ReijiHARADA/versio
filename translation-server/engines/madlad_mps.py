@@ -29,6 +29,11 @@ from .segmenter import (
     split_for_translation,
 )
 
+MEASUREMENT_PATTERN = (
+    r"(?<!\w)(?:[≤≥<>]=?|±)?[ \t]*\d+(?:\.\d+)?[ \t]*"
+    r"(?:[kMGTmunpfμu]?\s*(?:mAh|MHz|GHz|kHz|Hz|mm|cm|km|ms|kg|mg|pF|nF|uF|μF|mF|uW|mW|kW|W|mV|kV|V|mA|kA|A|dB|Ω|kΩ|MΩ|m|s|%))\s*"
+)
+
 
 def _allowed_unprotected_retry_value(item: str) -> bool:
     """Allow fallback only for plain, non-camelcase identifier placeholders.
@@ -69,11 +74,7 @@ def _allowed_unprotected_retry_value(item: str) -> bool:
         # invariant gate requires the exact value/unit to survive. This is
         # narrower than arbitrary scientific identifiers and avoids sending
         # equations or p-values unprotected.
-        return bool(re.fullmatch(
-            r"\s*\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|Hz|kHz|MHz|GHz|kg|mg|pF|nF|uF|μF|mF|mAh|dB|%)\s*",
-            item,
-            flags=re.IGNORECASE,
-        ))
+        return bool(re.fullmatch(MEASUREMENT_PATTERN, item, flags=re.IGNORECASE))
 
     def is_currency_identifier(item: str) -> bool:
         return bool(re.fullmatch(r"\s*(?:USD|EUR|GBP|JPY|CNY)\s*", item, flags=re.IGNORECASE))
@@ -150,6 +151,7 @@ def unprotected_identifier_retry_values(
         if is_identifier(item)
         or is_section_reference(item)
         or is_supplementary_reference(item)
+
         or is_figure_table_reference(item)
         or (allow_inline_numeric and is_inline_numeric_citation(item))
     ]
@@ -161,6 +163,7 @@ def unprotected_identifier_retry_values(
         is_identifier(item)
         or is_section_reference(item)
         or is_supplementary_reference(item)
+
         or is_figure_table_reference(item)
         or is_numeric_citation(item)
         or is_inline_numeric_citation(item)
@@ -187,11 +190,18 @@ def restore_missing_structure_references(source: str, output: str) -> str:
     """
     refs = re.findall(
         r"\b(?:Section|Appendix)\s+(?:\d+(?:\.\d+)*|[A-Z])\b"
-        r"|\b(?:Figure|Fig\.?|Table|Tbl\.?)\s+\d+(?:\s*\([A-Za-z]\)|[A-Za-z])?\b",
+        r"|\b(?:Figure|Fig\.?|Table|Tbl\.?)\s+\d+(?:\s*\([A-Za-z]\)|[A-Za-z])?(?![A-Za-z0-9])"
+        r"|\b(?:Equation|Eqn?\.?)\s+\d+\b",
         source,
         flags=re.IGNORECASE,
     )
-    missing = [ref for ref in dict.fromkeys(refs) if ref.lower() not in output.lower()]
+    def present(ref: str) -> bool:
+        if ref.lower() in output.lower():
+            return True
+        equation = re.fullmatch(r"(?:Equation|Eqn?\.?)\s+(\d+)", ref, re.I)
+        return bool(equation and re.search(rf"(?:式|equation|eqn?\.?)\s*{equation.group(1)}(?!\d)", output, re.I))
+
+    missing = [ref for ref in dict.fromkeys(refs) if not present(ref)]
     if not missing or len(missing) > 2:
         return output
     return output.rstrip() + " (" + "; ".join(missing) + ")"
@@ -200,14 +210,14 @@ def restore_missing_structure_references(source: str, output: str) -> str:
 class MADLADEngine(TranslationEngine):
     """
     Translation engine using Google's MADLAD-400 model.
-    
+
     Optimized for Apple Silicon (M4) with MPS support.
     Falls back to CPU only if MPS is unavailable or fails.
     """
 
     MODEL_ID = "google/madlad400-3b-mt"
     TRANSFORMERS_RUNTIME_VERSION = "4.57.6"
-    QUALITY_GATE_VERSION = "quality-v14"
+    QUALITY_GATE_VERSION = "quality-v15-relation-candidate-v6-section-marker"
     MODEL_VERSION = (
         f"3b-mt-v6-transformers-{TRANSFORMERS_RUNTIME_VERSION}-{SEGMENTER_VERSION}-"
         f"{SOURCE_PROTECTION_VERSION}-strict-restore-v28-{QUALITY_GATE_VERSION}"
@@ -224,7 +234,7 @@ class MADLADEngine(TranslationEngine):
     def __init__(self, device: Optional[str] = None, dtype: Optional[torch.dtype] = None):
         """
         Initialize the MADLAD engine.
-        
+
         Args:
             device: Device to use ("mps", "cuda", "cpu", or None for auto-detect)
             dtype: Data type to use (torch.bfloat16, torch.float16, torch.float32, or None for auto)
@@ -243,10 +253,10 @@ class MADLADEngine(TranslationEngine):
         # Sweep 2026-09-04: 24 is slightly faster than 8 on long paragraphs and
         # matches 12/32 quality. 1 restores one generate() per chunk.
         self._batch_size = max(1, int(os.environ.get("MADLAD_BATCH_SIZE", "24")))
-        
+
         # Enable MPS fallback for unsupported operations
         os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
-        
+
         # ログ出力
         self._log_environment()
 
@@ -258,10 +268,10 @@ class MADLADEngine(TranslationEngine):
         print(f"Python version: {platform.python_version()}")
         print(f"Platform: {platform.platform()}")
         print(f"Machine: {platform.machine()}")
-        
+
         if platform.system() == "Darwin":
             print(f"macOS version: {platform.mac_ver()[0]}")
-        
+
         print(f"PyTorch version: {torch.__version__}")
         print(f"MPS built: {torch.backends.mps.is_built()}")
         print(f"MPS available: {torch.backends.mps.is_available()}")
@@ -272,7 +282,7 @@ class MADLADEngine(TranslationEngine):
     def _detect_device(self) -> torch.device:
         """
         Detect the best available device.
-        
+
         Priority:
         1. MPS (Apple Silicon GPU) - best for M4 Mac
         2. CUDA (NVIDIA GPU)
@@ -291,15 +301,15 @@ class MADLADEngine(TranslationEngine):
     def _select_dtype(self, device: torch.device) -> torch.dtype:
         """
         Select optimal dtype for the device.
-        
+
         For MPS:
         1. Try bfloat16 (best speed/quality tradeoff)
         2. Fallback to float16 if bfloat16 fails
         3. Fallback to float32 if both fail
-        
+
         For CUDA:
         - Use float16 (standard for inference)
-        
+
         For CPU:
         - Use float32 (CPU doesn't benefit from lower precision)
         """
@@ -341,15 +351,15 @@ class MADLADEngine(TranslationEngine):
                 print(f"[DEVICE] Using specified device: {self._device}")
             else:
                 self._device = self._detect_device()
-            
+
             # Select dtype
             if self._dtype is None:
                 self._dtype = self._select_dtype(self._device)
             else:
                 print(f"[DTYPE] Using specified dtype: {self._dtype}")
-            
+
             print(f"[CONFIG] Device: {self._device}, Dtype: {self._dtype}")
-            
+
             # Load tokenizer. Language tags like <2ja> must remain whole tokens.
             print("[LOADING] Loading tokenizer...")
             self._tokenizer = AutoTokenizer.from_pretrained(
@@ -358,38 +368,38 @@ class MADLADEngine(TranslationEngine):
             )
             self._tokenizer.padding_side = "right"
             print("[LOADING] ✓ Tokenizer loaded")
-            
+
             # Load model with selected dtype
             print(f"[LOADING] Loading model with dtype={self._dtype}...")
-            
+
             self._model = AutoModelForSeq2SeqLM.from_pretrained(
                 self.MODEL_ID,
                 dtype=self._dtype,
                 low_cpu_mem_usage=True,
             )
             self._verify_madlad_embeddings()
-            
+
             # Move to device
             print(f"[LOADING] Moving model to {self._device}...")
             self._model = self._model.to(self._device)
             self._model.eval()
-            
+
             # Verify
             actual_device = next(self._model.parameters()).device
             actual_dtype = next(self._model.parameters()).dtype
             print(f"[LOADING] ✓ Model on device: {actual_device}")
             print(f"[LOADING] ✓ Model dtype: {actual_dtype}")
-            
+
             self._model_loaded = True
             self._load_time = time.time() - load_start
-            
+
             print(f"[LOADING] ✓ Model loaded successfully in {self._load_time:.2f}s\n")
-            
+
         except Exception as e:
             print(f"[ERROR] Failed to load model: {e}")
             import traceback
             traceback.print_exc()
-            
+
             # Fallback to CPU if MPS fails
             if self._device and self._device.type == "mps":
                 print("\n[FALLBACK] MPS failed, trying CPU...")
@@ -410,7 +420,7 @@ class MADLADEngine(TranslationEngine):
             del self._tokenizer
             self._tokenizer = None
         self._model_loaded = False
-        
+
         # Clear cache
         if self._device and self._device.type == "mps":
             torch.mps.empty_cache()
@@ -425,7 +435,7 @@ class MADLADEngine(TranslationEngine):
     ) -> TranslationResult:
         """
         Translate text using MADLAD-400.
-        
+
         MADLAD uses language tags: <2xx> where xx is the language code.
         Example: <2ja> for Japanese, <2en> for English.
         """
@@ -758,8 +768,21 @@ class MADLADEngine(TranslationEngine):
     def _translate_chunk_with_rescue(
         self, text: str, target_language: str, model_input: str | None = None
     ) -> tuple[str, int, int]:
+        debug_candidates = os.getenv("TRANSLATION_UNIT_DEBUG") == "1"
+
+        def log_candidate(label: str, candidate: str) -> None:
+            if not debug_candidates:
+                return
+            print(
+                f"[TRANSLATION_CANDIDATE] label={label} chars={len(candidate)} "
+                f"score={self._candidate_score(candidate, text):.3f} "
+                f"source_chars={len(text)} output={candidate!r}",
+                flush=True,
+            )
+
         try:
             greedy = self._translate_chunk(text, target_language, model_input)
+            log_candidate("greedy", greedy[0])
             # A fluent greedy decode can turn epistemic claims such as
             # "might not have been detected" into a categorical statement.
             # Run the existing deterministic beam rescue only when the source
@@ -773,6 +796,7 @@ class MADLADEngine(TranslationEngine):
                     beam = self._translate_chunk(
                         text, target_language, model_input, num_beams=4, retry_label="epistemic-beam"
                     )
+                    log_candidate("epistemic-beam", beam[0])
                     if not self._epistemic_marker_missing(text, beam[0]):
                         return beam
                 except Exception:
@@ -786,7 +810,33 @@ class MADLADEngine(TranslationEngine):
                     beam = self._translate_chunk(
                         text, target_language, model_input, num_beams=4, retry_label="negation-beam"
                     )
+                    log_candidate("negation-beam", beam[0])
                     if not self._negation_marker_missing(text, beam[0]):
+                        return beam
+                except Exception:
+                    pass
+            # A small set of explicit comparison/choice constructions often
+            # loses its second clause under greedy decoding. Try one beam
+            # candidate and keep it only when the existing conservative
+            # candidate score improves; this is not a blanket beam fallback.
+            if target_language == "ja" and self._relation_risk_source(text):
+                try:
+                    beam = self._translate_chunk(
+                        text, target_language, model_input, num_beams=4, retry_label="relation-candidate-beam"
+                    )
+                    log_candidate("relation-candidate-beam", beam[0])
+                    if (
+                        self._candidate_score(beam[0], text) > self._candidate_score(greedy[0], text)
+                        or len(beam[0]) >= len(greedy[0]) * 1.1
+                        or (
+                            self._exclusivity_marker_missing(text, greedy[0])
+                            and not self._exclusivity_marker_missing(text, beam[0])
+                        )
+                        or (
+                            self._alternative_marker_missing(text, greedy[0])
+                            and not self._alternative_marker_missing(text, beam[0])
+                        )
+                    ):
                         return beam
                 except Exception:
                     pass
@@ -798,6 +848,7 @@ class MADLADEngine(TranslationEngine):
                     beam = self._translate_chunk(
                         text, target_language, model_input, num_beams=4, retry_label="candidate-beam"
                     )
+                    log_candidate("candidate-beam", beam[0])
                     if self._candidate_score(beam[0], text) > self._candidate_score(greedy[0], text):
                         return beam
                 except Exception:
@@ -808,8 +859,88 @@ class MADLADEngine(TranslationEngine):
             # without protection. The client invariant gate remains the final
             # authority, so a retry that loses RF/TQP3M9009 is still rejected.
             message = str(original_error)
-            if "protected citation placeholder dropped by model:" in message:
-                missing = [value.strip() for value in message.partition(":")[2].split(" || ")]
+            protection_failure = (
+                "protected citation placeholder dropped by model:" in message
+                or "protected citation placeholder malformed" in message
+            )
+            if protection_failure:
+                missing = [value.strip() for value in message.partition(":")[2].split(" || ") if value.strip()]
+                # Malformed placeholders do not carry a trustworthy index.
+                # Recompute the exact protected spans from the source and
+                # expose those spans only for this rescue attempt; the normal
+                # invariant/quality gate still decides whether the result is
+                # usable. This avoids turning a restore failure into a whole
+                # paragraph fallback without disabling protection globally.
+                if not missing and "malformed" in message:
+                    _, protected_values, _ = protect_citations(text)
+                    missing = list(protected_values)
+                # Measurements are semantic facts that often occur inside a
+                # coordinated hardware description.  If their placeholders
+                # were dropped, retry the *complete* sentence with only those
+                 # spans exposed before splitting at commas. Splitting first
+                 # can turn `prototype ... 11.3 mm ... 335 mg` into unrelated
+                # fragments and permanently lose the dimensions.
+                measurement_values_in_source = re.findall(
+                    MEASUREMENT_PATTERN, text, flags=re.IGNORECASE
+                )
+                measurement_missing = bool(measurement_values_in_source) and (
+                    not missing
+                    or any(
+                    re.fullmatch(MEASUREMENT_PATTERN, value, flags=re.IGNORECASE)
+                        for value in missing
+                    )
+                )
+                if measurement_missing:
+                    try:
+                        retry_values = unprotected_identifier_retry_values(
+                            missing, allow_inline_numeric=True
+                        )
+                        if not retry_values and measurement_values_in_source:
+                            retry_values = measurement_values_in_source
+                        if retry_values:
+                            print(
+                                f"[TRANSLATE] retrying complete unit with {len(retry_values)} measurement span(s) unprotected",
+                                flush=True,
+                            )
+                            return self._translate_chunk(
+                                text,
+                                target_language,
+                                model_input,
+                                retry_label="measurement-complete-unit",
+                                unprotected_values=set(retry_values),
+                            )
+                    except Exception:
+                        pass
+                # A repeated opaque identifier can destabilize an otherwise
+                # valid coordinated sentence. Retry its independent clauses
+                # separately before exposing the identifier to the decoder.
+                # This is punctuation/structure driven and only runs after a
+                # placeholder-drop failure; ordinary prose keeps one unit.
+                clause_parts = self._coordinated_clause_parts(text)
+                coordinated_attempted = bool(clause_parts and missing)
+                if clause_parts and missing:
+                    try:
+                        pieces = [
+                            self._translate_chunk(
+                                part,
+                                target_language,
+                                part,
+                                retry_label="coordinated-clause-rescue",
+                                unprotected_values=set(missing),
+                            )
+                            for part in clause_parts
+                        ]
+                        uppercase_ids = [value for value in missing if re.fullmatch(r"[A-Z][A-Z0-9_-]{1,}", value)]
+                        if any(
+                            uppercase_ids
+                            and not any(identifier in piece[0] for identifier in uppercase_ids)
+                            for piece in pieces
+                        ):
+                            raise ValueError("coordinated clause lost uppercase identifier")
+                        joined = ", ".join(piece[0] for piece in pieces)
+                        return joined, sum(piece[1] for piece in pieces), sum(piece[2] for piece in pieces)
+                    except Exception:
+                        pass
                 retry_values = unprotected_identifier_retry_values(
                     missing, allow_inline_numeric=True
                 )
@@ -829,6 +960,8 @@ class MADLADEngine(TranslationEngine):
                         )
                     except Exception:
                         pass
+                if coordinated_attempted:
+                    raise original_error
             try:
                 print(
                     "[TRANSLATE] retrying rejected chunk with beam search",
@@ -852,12 +985,22 @@ class MADLADEngine(TranslationEngine):
             )
             rescue_chunks = [unit.text for unit in rescue_units]
             rescue_inputs = [unit.model_input for unit in rescue_units]
+            # Carry only the identifier spans proven safe by the failed
+            # restore attempt into each smaller retry unit.  Without this,
+            # rescue segmentation re-protects the same acronym (for example
+            # EMG), reproducing the placeholder drop that triggered rescue.
+            rescue_unprotected = set(
+                unprotected_identifier_retry_values(missing, allow_inline_numeric=True)
+            ) if protection_failure else set()
             pieces: list[str] = []
             in_toks: list[int] = []
             out_toks: list[int] = []
             for rescue_chunk, rescue_input in zip(rescue_chunks, rescue_inputs):
                 piece, in_tok, out_tok = self._translate_chunk(
-                    rescue_chunk, target_language, rescue_input
+                    rescue_chunk,
+                    target_language,
+                    rescue_input,
+                    unprotected_values=rescue_unprotected,
                 )
                 pieces.append(piece)
                 in_toks.append(in_tok)
@@ -891,6 +1034,48 @@ class MADLADEngine(TranslationEngine):
         ):
             return False
         return not re.search(r"ない|なく|ず|ぬ|無|未|否定|ではありません|ではない|ません", output)
+
+    @staticmethod
+    def _relation_risk_source(source: str) -> bool:
+        """Return true only for explicit choice/comparison constructions."""
+        return bool(re.search(
+            r"\b(?:either\b[^.!?]{0,180}\bor\b|whether\b[^.!?]{0,180}\bor\b|"
+            r"more\s+(?:likely|slowly|quickly)\b|less\s+(?:likely|slowly|quickly)\b|"
+            r"\bonly\b|\bsolely\b|"
+            r"rather\s+than|greater\s+than|smaller\s+than)\b",
+            source,
+            re.I,
+        ))
+
+    @staticmethod
+    def _coordinated_clause_parts(source: str) -> list[str] | None:
+        """Split one top-level comma-coordinated sentence into safe clauses."""
+        for match in re.finditer(r",\s+(?:and|but|or)\s+(?=[A-Za-z])", source, re.I):
+            left = source[: match.start()].strip().rstrip(".") + "."
+            right = source[match.end():].strip().rstrip(".")
+            # Only split a genuine top-level coordination. This avoids
+            # breaking author citations/lists inside delimiters while allowing
+            # the right clause to contain its own commas.
+            if left.count("(") != left.count(")") or left.count("[") != left.count("]"):
+                continue
+            if len(left.split()) < 6 or len(right.split()) < 8:
+                continue
+            return [left, right]
+        return None
+
+    @staticmethod
+    def _exclusivity_marker_missing(source: str, output: str) -> bool:
+        """Detect loss of an explicit only/solely relation in Japanese."""
+        if not re.search(r"\b(?:only|solely)\b", source, re.I):
+            return False
+        return not re.search(r"しか|だけ|のみ|に限(?:る|られ)|唯一", output)
+
+    @staticmethod
+    def _alternative_marker_missing(source: str, output: str) -> bool:
+        """Detect loss of an explicit either/whether...or choice relation."""
+        if not re.search(r"\b(?:either|whether)\b[^.!?]{0,180}\bor\b", source, re.I):
+            return False
+        return not re.search(r"(?:いずれか|どちらか|どちら|または|あるいは|か(?:どうか|、|。|$))", output)
 
     @staticmethod
     def _candidate_score(output: str, source: str) -> float:
@@ -1234,6 +1419,21 @@ class MADLADEngine(TranslationEngine):
         return source_markers < 2 and output_markers >= 3
 
     @staticmethod
+    def _has_missing_section_marker(output: str, source: str) -> bool:
+        """Reject a translated block that drops its leading section marker.
+
+        Numbered headings/subheadings are structural facts. If a block starts
+        with a marker such as ``4.3.1`` and the decode omits that marker, the
+        translated text can no longer be placed reliably in the document
+        hierarchy. This is deliberately limited to a marker at the source
+        start; ordinary numeric prose remains untouched.
+        """
+        marker = re.match(r"^\s*(\d+(?:\.\d+)+)\b", source)
+        if not marker:
+            return False
+        return not re.search(rf"(?<!\d){re.escape(marker.group(1))}(?!\d)", output)
+
+    @staticmethod
     def _is_degenerate(output: str, source: str, target_language: str) -> bool:
         compact = "".join(output.split())
         if not compact:
@@ -1272,6 +1472,8 @@ class MADLADEngine(TranslationEngine):
                 return True
             if MADLADEngine._has_unsupported_numbered_enumeration(output, source):
                 return True
+            if MADLADEngine._has_missing_section_marker(output, source):
+                return True
         return False
 
     @staticmethod
@@ -1286,6 +1488,8 @@ class MADLADEngine(TranslationEngine):
             return "character_repetition"
         if MADLADEngine._has_unsupported_numbered_enumeration(output, source):
             return "unsupported_numbered_enumeration"
+        if MADLADEngine._has_missing_section_marker(output, source):
+            return "missing_section_marker"
         if os.getenv("MADLAD_DIAGNOSTIC_ALLOW_SHORT") != "1" and MADLADEngine._is_implausibly_short_unit(output, source):
             return "implausibly_short"
         if MADLADEngine._contains_untranslated_source_span(output, source):
@@ -1470,7 +1674,7 @@ class MADLADEngine(TranslationEngine):
     def get_status(self) -> EngineStatus:
         """Get the current status of the engine."""
         device_str = str(self._device) if self._device else "not initialized"
-        
+
         return EngineStatus(
             available=True,
             model_loaded=self._model_loaded,

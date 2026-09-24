@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { MADLADEngine } from "../services/translation/madladEngine";
+import { projectPartialTranslation } from "../services/translation/partialProjection";
 
 describe("MADLADEngine batch integrity", () => {
   it("rejects a result count that cannot be mapped to the input units", async () => {
@@ -94,5 +95,52 @@ describe("MADLADEngine batch integrity", () => {
       .rejects.toThrow("Translation failed: 400");
     expect(fetchMock).toHaveBeenCalledTimes(1);
     vi.unstubAllGlobals();
+  });
+
+  it("preserves unit-level fallback metadata for later partial projection", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        text: "前半は翻訳済み。後半は原文。",
+        source_language: "en",
+        target_language: "ja",
+        model: "madlad",
+        model_version: "test",
+        fallback_stage: "partial_unit_fallback",
+        fallback_reason: "unit_1:protected_token_restore_failed",
+        unit_fallback_indices: [1],
+        partial_text: "前半は翻訳済み。後半は原文。",
+        partial_source_units: ["The second sentence."],
+        partial_unit_texts: ["前半は翻訳済み。", "The second sentence."],
+      }),
+    }));
+
+    await expect(new MADLADEngine().translate("The first sentence. The second sentence.", "en", "ja"))
+      .resolves.toMatchObject({
+        fallbackStage: "partial_unit_fallback",
+        unitFallbackIndices: [1],
+        partialSourceUnits: ["The second sentence."],
+      });
+    vi.unstubAllGlobals();
+  });
+
+  it("projects partial units only as an explicitly unsafe audit candidate", () => {
+    const candidate = projectPartialTranslation({
+      fallbackStage: "partial_unit_fallback",
+      unitFallbackIndices: [1],
+      partialUnitTexts: ["前半は翻訳済み。", "The second sentence."],
+      partialSourceUnits: ["The second sentence."],
+    });
+    expect(candidate).toEqual({
+      text: "前半は翻訳済み。 The second sentence.",
+      failedIndices: [1],
+      complete: false,
+      safeForReader: false,
+    });
+  });
+
+  it("rejects malformed or whole-item fallback metadata", () => {
+    expect(projectPartialTranslation({ fallbackStage: "whole_item_fallback", unitFallbackIndices: [0], partialUnitTexts: ["x"], partialSourceUnits: ["x"] })).toBeNull();
+    expect(projectPartialTranslation({ fallbackStage: "partial_unit_fallback", unitFallbackIndices: [2], partialUnitTexts: ["x"], partialSourceUnits: ["missing"] })).toBeNull();
   });
 });

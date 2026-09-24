@@ -1,110 +1,11 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "3b-mt-v6-transformers-4.57.6-semantic-v77-source-protect-v21-strict-restore-v28-quality-v14",
+  "lastBenchmarkVersion": "v405-rescue-partial",
   "lastDiagnosticVersion": "v194",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
   "attributionStatus": "v6 baseline 12/48 (25.00%); audit-only semantic MiniLM v42 and coverage v66 completed; coverage found 10 exact invariant-loss rows (5 accepted), so token normalization/calibration is next; production gate unchanged",
-  "latestExtractionCheckpoint": {
-    "date": "2026-09-21",
-    "scope": "Cross-column table-evidence repair, SD invariant acceptance, negation-scope quality guard, source-protection v9 and quality-v2 cache identity",
-    "causes": [
-      "Captioned-table candidate pooled aligned native spans from opposite reading columns; prose could be mislabeled as a table.",
-      "MADLAD moved negation from reported content to the reporting predicate in a complete ordinary-prose sentence, changing the claim.",
-      "The Japanese quality invariant treated exact unchanged SD=value as missing unless expanded to a Japanese label.",
-      "MADLAD occasionally corrupts protected placeholders; a unique indexed token can be restored, while ambiguous corruption must reject."
-    ],
-    "verification": "Focused recovered-marketing-paragraph extraction regression 1/1; full extraction corpus 108/108 assertions but exits with Vitest worker onTaskUpdate timeout even at one worker. Full frontend 436/436; quality/cache focused tests 100/100; typecheck, lint, diff check pass; Python venv tests 144/144 with Transformers 4.57.6. Restarted live server PID 36881 is ready on MPS and reports source-protect-v9 / quality-v2. Exact 1,338-char replay repeated the negative reporting-predicate shift in 15.5 s; client guard rejects via regression. v83 syntax controls reveal a possible but unvalidated rescue pattern.",
-    "appBuild": "not run",
-    "server": {
-      "endpoint": "http://127.0.0.1:8765",
-      "ready": true,
-      "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v74-source-protect-v9-strict-restore-v25-quality-v2",
-      "listenerPid": 36881,
-      "debug": false,
-      "benchmarkActive": false,
-      "health": "ready; model_loaded=true; MPS"
-    },
-    "v42Run": "test-data/real-papers/reports/translation-audit-v42-margin-stitch.json",
-    "manualReview": "test-data/real-papers/reports/semantic-review-v46-table-grid-evidence.json",
-    "goalStatus": "not met; purposive v80 manual sample found severity>=2 in 5/12 accepted ordinary-body and 2/3 accepted statistical-prose translations; 8/20 ordinary-body fallbacks. These are not population estimates.",
-    "nextActions": [
-      "Validate negative-group-first comparative rewriting against independent manually sourced academic sentences with positive and negative outcomes before production use.",
-      "Diagnose Vitest extraction-corpus worker onTaskUpdate timeout so the complete cached-PDF gate exits cleanly; current assertions all pass, but runner error must not be ignored.",
-      "Continue source-complete held-out review for accepted semantic scope/polarity errors and visible fallback false rejects.",
-      "Test same-column table evidence across publisher/layout families.",
-      "Keep Transformers 4.57.6 as tensor-verified baseline; compare alternative models only on held-out reader-path outputs and do not trade false accepts for lower fallback."
-    ],
-    "v43Run": "test-data/real-papers/reports/translation-audit-v43-extraction-followup.json",
-    "postV43CodeChanges": [
-      "join native same-baseline same-font spanning fragments using adjacent geometry; adds abstract recovery regression",
-      "protect narrative author-year citations as atomic author+year spans",
-      "protect explicit multi-person acknowledgment proper-name lists"
-    ],
-    "v44Run": "test-data/real-papers/reports/translation-audit-v44-post-protection.json",
-    "v44Benchmark": {
-      "rows": 36,
-      "papers": 3,
-      "accepted": 12,
-      "readerVisibleFallbacks": 24,
-      "ordinaryBodyRows": 12,
-      "ordinaryBodyFallbacks": 3,
-      "ordinaryBodyFallbackRate": 0.25,
-      "acceptedReviewed": 12,
-      "acceptedSeverity2Plus": 2,
-      "acceptedUnsafeRate": 0.16666666666666666,
-      "statisticalProseAccepted": 3,
-      "statisticalProseSeverity2Plus": 2,
-      "protectionFixFindings": [
-        "Kelly 2016 narrative author citation now exact",
-        "Dimitrios Tsekouras acknowledgment name now exact",
-        "marketing abstract missing continuation recovered and translated",
-        "Tucker 2014 same-key row remains fallback; server reason changed to protected-token restoration failure"
-      ],
-      "report": "test-data/real-papers/reports/translation-audit-v44-post-protection.json",
-      "manualReview": "test-data/real-papers/reports/semantic-review-v44-post-protection.json"
-    },
-    "cacheIdentityFix": {
-      "serverClientVersion": "3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20",
-      "test": "src/test/translationModelVersion.test.ts",
-      "checks": [
-        "vitest 1/1",
-        "typecheck",
-        "lint",
-        "python 130 tests + 11 subtests"
-      ]
-    },
-    "v46Run": "test-data/real-papers/reports/translation-audit-v46-table-grid-evidence.json",
-    "v46Benchmark": {
-      "papers": 3,
-      "rows": 36,
-      "accepted": 12,
-      "readerVisibleFallbacks": 24,
-      "tableContaminationRows": 13,
-      "tableContaminationFallbacks": 13,
-      "automaticallyLabeledOrdinaryRows": 10,
-      "automaticallyLabeledOrdinaryFallbacks": 1,
-      "manuallyReviewedTrueBodyAccepts": 6,
-      "manuallyReviewedTrueBodyFallbacks": 0,
-      "acceptedReviewed": 12,
-      "acceptedSeverity2Plus": 2,
-      "acceptedUnsafeRate": 0.16666666666666666,
-      "statisticalProseAccepted": 3,
-      "statisticalProseSeverity2Plus": 2,
-      "report": "test-data/real-papers/reports/translation-audit-v46-table-grid-evidence.json",
-      "manualReview": "test-data/real-papers/reports/semantic-review-v46-table-grid-evidence.json",
-      "note": "purposive sample; automatic ordinary category includes funding metadata; body rate is not generalizable"
-    },
-    "validation": {
-      "fullVitest": "408 passed (65 files)"
-    },
-    "benchmarkArtifact": "test-data/real-papers/reports/translation-audit-v75-frontiers-source-repaired.json",
-    "manualReviewArtifact": "test-data/real-papers/reports/semantic-review-v75-frontiers-source-repaired.json",
-    "benchmarkActive": false,
-    "v82Run": "test-data/real-papers/reports/translation-audit-v82-negation-scope-live-replay.json",
-    "v83SyntaxExperiment": "test-data/real-papers/reports/translation-audit-v83-negated-comparison-segmentation.json",
-    "v83Finding": "Standalone original comparative sentence repeats the negation reversal; split equivalent and negative-group-first variants translate faithfully with exact statistics; whereas variant drops contrast. Diagnostic only; no production rewrite."
-  },
+  "latestExtractionCheckpoint": "translation-audit-v405-rescue-summary.json",
   "completedPapers": [
     "cognitive-dual-task-older-adults",
     "cognitive-memory-cue-interest",
@@ -160,8 +61,8 @@
   ],
   "pendingPapers": [],
   "reviewedBlocks": 134,
-  "lastCheckpoint": "2026-09-21T16:27:00+09:00",
-  "pendingManualReview": 393,
+  "lastCheckpoint": "2026-09-25T06:09:00+09:00",
+  "pendingManualReview": 612,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
     "measure partial source fallback inside accepted output before treating accept rate as fully translated rate",
@@ -173,6 +74,70 @@
     "evaluate replacement or cascade translation models under local/free-use constraints"
   ],
   "nextActions": [
+    "Resume v405 rescue benchmark for remaining selected papers: covid-ml-review, ergonomics-quantified-factory-worker, ergonomics-flight-deck-applications.",
+    "Compare rescue summary against v399 baseline; do not infer corpus-wide fallback from partial 24-row sample.",
+    "Investigate benchmark checkpoint/long-request behavior before rerunning large batches.",
+    "v271 measurement-complete rescue verified on Thermal Earring: placeholder-drop now retries full unit with measurements exposed before clause splitting; 11.3/31 mm, 335 mg, 14.4uW preserved coherently. Tests 94+8 pass.",
+    "v270 candidate diagnostics added (TRANSLATION_UNIT_DEBUG=1 only) and server restarted ready; next replay should capture greedy/beam/relation candidate scores.",
+    "v269 inspected existing MADLAD rescue: beam, relation-risk candidate, and rescue-unit retries already exist. Thermal omission survived them; capture chunk candidates before adding more retries.",
+    "v268 reviewed existing alternate-model evidence: gemma2:9b had 2/6 severity>=2; Qwen14 automatic pass is insufficient. No new cascade or production routing without fresh controlled evaluation.",
+    "v267 live replay of thermal-earring exclusivity-relation fallback showed real unsafe omission/distortion (11.3/31 mm, 335 mg, uW, participant/activity claims), so relation gate was valid for this sample; do not relax it.",
+    "v266 quality recheck: stricter evaluator raises ordinary-body fallback 62/234 (26.5%) to 88/234 (37.6%), 33 decision changes; some are relation-only rejects with perfect language/invariant/length scores. Manual review required before gate changes.",
+    "v265 latest translation-audit.json: 612 rows, 234 ordinary-body, 62 reader-visible fallbacks (26.5%), zero server errors. Use as current single-generation baseline; do not mix with v288.",
+    "v264 ordinary-body attribution: 70/244 fallback; stage pre-model 3, post-model 67. Reason patterns: 35 server/translation-quality/protected-restore, 24 semantic/invariant relation gates, with 17 structural-warning overlaps. Separate model quality from extraction before changes.",
+    "v263 single-generation aggregate: 612 rows, 244 ordinary-body, 70 reader-visible fallbacks (28.7%); no server errors. Attribute fallback layers before changing production.",
+    "v262 attribution artifact separates the v261 sample into 5 translated, 6 extraction-structure warnings, and 1 model-quality fallback; inspect warning blocks with geometry before any gate change.",
+    "v261 endpoint regression completed 12 sampled units after scalar-unit normalization; no request failures. Keep corpus-wide fallback estimate separate from this single-paper run.",
+    "Run latest-per-paper aggregate on fresh reports and compare false reject reasons before further quality changes.",
+    "v260 fixed a general PDF scalar-unit normalization false reject (`10-m` vs `10m`); quality 172/172, typecheck/lint/diff check pass. Measure fresh endpoint fallback after server restart.",
+    "Continue paired endpoint evaluation and manual semantic review; do not relax scientific invariant checks for invented facts.",
+    "Correction: live /translate whole request already segments internally (952 chars) and explicit 17-unit join is 968 chars; no production segmentation delta established. Do not use the earlier 512-char low-level decode as endpoint evidence.",
+    "Use low-level vs endpoint traces separately; next measure endpoint fallback and semantic labels on fresh long blocks.",
+    "Implement an audit-only paired reassembly evaluator over held-out long units; measure claim coverage and false rejects before routing.",
+    "v258 manual review: Qwen 7B passed the gate on 5/5 segmented units but 2/5 had severity-2 semantic/terminology errors; do not enable automatic cascade.",
+    "Expand paired segmented MADLAD/Qwen review with held-out rows and terminology/claim labels.",
+    "v258 Qwen 7B segmented diagnostic: 5 semantic-risk units completed and passed gate; perform manual paired review against MADLAD before any cascade routing.",
+    "Expand segmented MADLAD/Qwen paired evaluation across held-out disciplines with exact fact and relation labels.",
+    "v257 segment-unit diagnostic and Python regression: 12 segmented units showed improved numeric/claim behavior; tests 94 + 8 subtests pass. Build paired reassembly/invariant benchmark before production promotion.",
+    "Keep production protection unchanged; next compare segmented MADLAD against selective alternate-model candidates on the same held-out units.",
+    "Keep protection policy unchanged; combine safe semantic units with deterministic fact verification and selective cascade.",
+    "v256 manual review: 8 raw/current divergences show long-unit omissions in both arms; protection helps citation fidelity but does not solve claim coverage.",
+    "Evaluate safe semantic chunking or selective alternate-model cascade on long units; preserve current fact invariants and do not accept raw-mode fallback reduction as quality.",
+    "v256 repeated-acronym diagnostic: exposing repeated short acronyms in minimal protection did not materially improve semantic drift on 12 rows; keep production unchanged.",
+    "Review v254 queue and focus next experiment on long-unit semantic coverage and selective cascade/alternate model, while preserving exact fact verification.",
+    "v255 GPT-3 production-path check: 7 translatable sampled rows, 5 source fallbacks; keep extraction skips separate from model fallback.",
+    "Manually review reports/protection-ab-v254-review-queue.json (18 raw/current divergences or protection errors) before changing protection.",
+    "Investigate selective handling of repeated short acronyms (VR, MCQ, CT, SI Appendix) and protected-token rescue; validate on held-out rows with invariant and semantic labels.",
+    "v254 held-out protection A/B/C: 30 rows / 9 papers. Raw 30/30 completed; minimal/current 20/30 due protected-token drops. Keep production policy unchanged; inspect high-span rescue and post-translation fact verification.",
+    "Manually review a blinded stratified subset of v254 where raw/current diverge and all protection errors; label numeric/citation/claim/negation/scope errors and false rejects.",
+    "Use v254 summary span buckets to design selective protection: retain opaque protection only for identifiers/citations that cannot safely be translated, expose ordinary measurements/statistics to the model, then verify exact invariants after decode.",
+    "v253 expanded protection A/B/C diagnostic to 12 clean rows (artifacts protection-ab-v253-6.json and -6b.json); raw completed all rows but changed facts/surface in citation-rich cases, while protection caused token-drop errors on a long measurement row and still did not solve long-row semantic drift.",
+    "Next: add a stratified 30-row protection A/B/C run and manual-review a blinded subset; quantify protection-span-count buckets, invariant errors, semantic severity, and latency before production changes.",
+    "Expand protection A/B/C on a stratified held-out sample (target 30-100 rows), report fallback, invariant, and manual semantic errors by protection-span count.",
+    "v252 malformed protected-token rescue is deployed in source; measure on fresh held-out papers after server restart.",
+    "v252 added malformed protected-token rescue and microbatch attribution; restart server then rerun one held-out paper to measure restore-fallback reduction.",
+    "v251 attribution: 8/16 fresh ordinary fallbacks are server quality/restore failures; inspect protected-token retry/partial restoration before gate relaxation.",
+    "Fresh baseline v250: latest-per-paper 8 papers / 38 ordinary rows / 16 fallback (42.1%); continue targeted model/extraction experiments without presenting this as full-paper rate.",
+    "v249 OSWorld review: 4/4 accepted HCI rows severity>=2. Prioritize claim/omission guard or selective alternate-model evaluation before production routing.",
+    "Full regression v247 is green (67 files/525 tests); continue fresh semantic review and do not promote audit-only signals without held-out precision.",
+    "Use manual-review-summary-v246 only as a mixed historical baseline; build a fresh held-out semantic review set before gate integration.",
+    "Use compression audit v245 as a review queue only; validate whether flagged long Japanese outputs omit claims before any gate integration.",
+    "v244 medical meta-review found severity-3 omission/addition in an automatic accept; prioritize claim coverage/addition diagnostics and selective cascade evaluation.",
+    "Use acronym-expansion drift audit in future reports; v242 catches Deep Learning -> Dip Learning while allowing Japanese transliteration.",
+    "v241 COVID review found severity-3 Deep Learning -> Dip Learning plus repeated claim in an automatic accept; add held-out terminology consistency audit before gate changes.",
+    "Citation-placement diagnostic v239 flags 1/19 accepted ordinary rows (the confirmed HFE failure); extend to more disciplines before production gate integration.",
+    "Use citation-placement audit field on next fresh reports; v237 HFE review found detached numeric citations in an automatic accept.",
+    "Manual review v237 found 2/3 accepted HFE rows severity>=2; prioritize citation placement and long-unit semantic relation diagnostics before relaxing fallback.",
+    "Use Markdown technical-name audit lines during the next manual review; keep production gate unchanged until false-positive rate is measured on a larger held-out corpus.",
+    "Candidate diagnostic calibration v235 leaves only known Facebook hallucination flags in 16 accepted ordinary rows; collect more held-out rows before gate integration.",
+    "Use the new audit-only technical-name fields in the next fresh benchmark; review missing candidates manually before any production gate change.",
+    "Review remaining audit-only candidate flags (Facebook hallucination rows) and validate transliteration/false-positive behavior on a larger held-out set before gate integration.",
+    "Validate audit-only technical-name candidate diagnostics on held-out accepted translations before any gate integration; v231 catches Xapian -> Xap.",
+    "Add held-out named-entity/tool identity checks to audit metrics; v229 has one severity-3 unsafe false accept (Xapian -> Xap) despite automatic acceptance.",
+    "Manual-review the two ordinary-body source-fallback rows from extraction-v229-cl; keep the small denominator explicit.",
+    "Manual triage complete for conversation-v227: 1/2 fallback rows severity>=2, 1/2 false reject; compare against next held-out paper.",
+    "Continue held-out fresh-paper sampling; do not relax quality gates based on automatic acceptance.",
+    "Prioritize context-aware paragraph continuation diagnostics for the remaining extraction failures.",
     "complete a v49 full benchmark, then measure partial source fallback inside accepted output",
     "continue v41 manual comparison of accepted ordinary body prose before relaxing any gate",
     "use semantic-coverage audit scores to prioritize likely omissions and semantic shifts",
@@ -491,7 +456,7 @@
     }
   },
   "lastBenchmarkReport": "test-data/real-papers/reports/translation-audit-v56-transformers-4.57.6.json",
-  "updatedAt": "2026-09-22T01:00:00+09:00",
+  "updatedAt": "2026-09-24T17:42:00+09:00",
   "benchmarks": {
     "v52FullCorpus": {
       "createdAt": "2026-09-14T08:31:22.627Z",
@@ -562,7 +527,7 @@
     "ordinalReviewed": 7,
     "ordinalPending": 0
   },
-  "lastUpdated": "2026-09-21T13:20:21+09:00",
+  "lastUpdated": "2026-09-24",
   "manualReviewCompletedAt": "2026-09-16T16:25:07.633Z",
   "completedWork": [
     "Gemma 2 9B same-fixture 12-row audit completed (local Ollama, report model-quality-gemma2-9b-v1.json).",
@@ -3219,7 +3184,7 @@
       "continue OA corpus expansion toward balanced 70–90 papers"
     ]
   },
-  "nextAction": "Fix generic peripheral metadata/body grouping; review false rejects among v33 fallback, then compare citation-safe translation units and alternatives on held-out papers; continue OA corpus expansion.",
+  "nextAction": "Keep strict production behavior; use the three reviewed severity>=2 rows for alternate cascade experiments only.",
   "lastUpdate": "2026-09-23 alternative relation guard v111",
   "iterationLog": [
     {
@@ -3295,7 +3260,7 @@
       "next": "Refresh corpus benchmark and inspect whether vector evidence improves candidate labeling without false promotions."
     }
   ],
-  "lastAction": "2026-09-18 14:45: manual review/baseline artifact consistency verified",
+  "lastAction": "full frontend regression 67 files / 519 tests passed after quality-v27",
   "pendingReviewBlocks": 0,
   "aggregateRows": 300,
   "aggregatePapers": 36,
@@ -3403,29 +3368,26 @@
     "translationAuditV33": "test-data/real-papers/reports/translation-audit-v33-cross-field-heldout.json",
     "semanticReviewV33": "test-data/real-papers/reports/semantic-review-v33-cross-field-heldout.json",
     "translationAuditV35": "test-data/real-papers/reports/translation-audit-v35-edge-marker-stitch.json",
-    "translationUnitDiagnosticV36": "test-data/real-papers/reports/translation-unit-diagnostic-v36-experience-goals.json"
+    "translationUnitDiagnosticV36": "test-data/real-papers/reports/translation-unit-diagnostic-v36-experience-goals.json",
+    "translationAuditV399": "test-data/real-papers/reports/translation-audit-v399-summary.json",
+    "translationAuditV399FallbackQueue": "test-data/real-papers/reports/translation-audit-v399-fallback-review-queue.json",
+    "translationRescueV401": "test-data/real-papers/reports/translation-rescue-v401-dont-mind-me.json",
+    "translationAuditV402Dont": "test-data/real-papers/reports/translation-audit-v402-dont.json"
   },
   "activeBenchmarkRun": null,
   "activeManualReview": null,
   "latestFreshRun": {
-    "runId": "2026-09-20T12-06-28-933Z",
-    "report": "test-data/real-papers/reports/translation-audit-v33-cross-field-heldout.json",
-    "papers": 3,
-    "rows": 36,
-    "allFallbacks": 21,
-    "preModelFallbacks": 14,
-    "postModelFallbacks": 7,
-    "accepted": 15,
-    "ordinaryBodyRowsAutomaticCategory": 15,
-    "ordinaryBodyFallbacks": 3,
-    "ordinaryBodyFallbackRate": 0.2,
-    "manualReview": "test-data/real-papers/reports/semantic-review-v33-cross-field-heldout.json",
-    "acceptedRowsManuallyReviewed": 15,
-    "severity2PlusAccepted": 5,
-    "ordinaryAcceptedManuallyReviewed": 12,
-    "ordinarySeverity2Plus": 5,
-    "ordinaryUnsafeFalseAcceptRate": 0.4167,
-    "sampling": "3 purposive OA papers, 12 stratified blocks each; descriptive only; not population estimate"
+    "report": "test-data/real-papers/reports/translation-audit.json",
+    "papersSelected": 52,
+    "papersWithRows": 51,
+    "blocks": 612,
+    "ordinaryRows": 234,
+    "rawOrdinaryFallbacks": 62,
+    "rawOrdinaryFallbackRate": 0.26495726495726496,
+    "v24RecheckFallbacks": 90,
+    "v24RecheckFallbackRate": 0.38461538461538464,
+    "serverModelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v77-source-protect-v21-strict-restore-v28-quality-v14-relation-candidate-v6",
+    "failedRequests": 0
   },
   "latestCandidateModelEvaluation": "v73-qwen2.5-14b-paper-heldout-reviewed",
   "latestFallbackReplay": {
@@ -3433,7 +3395,14 @@
     "artifact": "test-data/real-papers/reports/translation-fallback-replay-fresh-20260920-v16.json",
     "finding": "MADLAD produced one fluent SNR semantic error; scientific invariant prevented product display; 3 cases fell back due repetition/placeholder-quality failures."
   },
-  "latestManualReview": "test-data/real-papers/reports/semantic-review-v61-2papers.json",
+  "latestManualReview": {
+    "artifact": "reports/semantic-review-v187-fresh-sample.json",
+    "rows": 19,
+    "correct": 7,
+    "severity1": 6,
+    "severity2plus": 6,
+    "isPopulationEstimate": false
+  },
   "v19FocusedFollowup": {
     "status": "v19 review complete; v20 extreme-compression gate implemented, tested, and validated in fresh four-paper benchmark; quality goal remains unmet",
     "panelScheduler": {
@@ -5134,70 +5103,544 @@
   },
   "lastBenchmarkNote": "v200: bounded serial MADLAD benchmark reached 51/52 available papers and 358 sampled blocks; 142 ordinary-body rows have 44 reader-visible post-model fallbacks (30.99%). The remaining precious-materials PDF is blocked by wrong-document provenance. Report benchmark-checkpoint-v200.json; server remains ready.",
   "latestProtectionABDiagnostic": {
-    "date": "2026-09-23",
-    "artifact": "test-data/real-papers/reports/protection-ab-diagnostic-v1.json",
-    "script": "translation-server/scripts/benchmark_protection_ab.py",
-    "sampleBlocks": 50,
+    "artifact": "test-data/real-papers/reports/protection-ab-diagnostic-v5-30-allow-short.json",
+    "records": 30,
     "conditions": [
       "raw",
       "minimal",
       "current"
     ],
-    "automaticErrors": {
-      "raw": "35/50",
-      "minimal": "36/50",
-      "current": "36/50"
+    "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v77-source-protect-v21-strict-restore-v28-quality-v14",
+    "diagnostic": "allow_short_gate",
+    "successByCondition": {
+      "raw": 28,
+      "minimal": 19,
+      "current": 19
     },
-    "status": "relation guard retained; alternate model remains audit-only",
-    "next": "fresh held-out impact measurement of source-phrase guard, then blind review of Qwen accepted rescues",
-    "combinedArtifact": "test-data/real-papers/reports/protection-ab-diagnostic-combined-v1.json",
-    "manualReviewArtifact": "test-data/real-papers/reports/protection-ab-manual-review-v1.json",
-    "manualReviewRows": 10,
-    "gateDiagnostic": "test-data/real-papers/reports/protection-gate-diagnostic-v1.json",
-    "gateFinding": "implausibly_short catches genuine omissions on long units; global relaxation unsafe; improve segmentation/retry",
-    "segmentedArtifact": "test-data/real-papers/reports/protection-ab-segmented-v1.json",
-    "segmentedSampleBlocks": 30,
-    "segmentedErrors": {
-      "raw": "1/30",
-      "minimal": "3/30",
-      "current": "3/30"
+    "errorsByCondition": {
+      "raw": 2,
+      "minimal": 11,
+      "current": 11
     },
-    "rescueArtifact": "test-data/real-papers/reports/protection-rescue-diagnostic-v1.json",
-    "rescueFinding": "VR recovered by unprotected identifier retry; hospital citation still omitted; short result fails all modes",
-    "productionRescueArtifact": "test-data/real-papers/reports/production-rescue-segmented-v1.json",
-    "productionRescueSample": 30,
-    "productionRescueErrors": "0/30",
-    "latestQualityGuardImpactArtifact": "test-data/real-papers/reports/guard-impact-v1.json",
-    "latestQualityGuardImpactSample": 30,
-    "latestQualityGuardImpact": {
-      "alternativeRelationMissing": "1/30",
-      "sourceNegationMissing": "1/30",
-      "conditionRelationMissing": "1/30",
-      "serverTerminalFallback": "not measured as a production queue outcome"
-    },
-    "semanticReviewArtifact": "test-data/real-papers/reports/production-rescue-semantic-review-v1.json",
-    "semanticReviewRows": 6,
-    "semanticReviewSeverityGe2": 5,
-    "semanticReviewNote": "targeted non-random review; not a corpus estimate",
-    "alternateTargetedArtifact": "test-data/real-papers/reports/targeted-qwen14-v1.json",
-    "alternateTargetedModel": "qwen2.5:14b",
-    "alternateTargetedRows": 6,
-    "alternateFinding": "Qwen improves several MADLAD omissions/terminology cases but still has semantic and quality-gate risks; no default cascade",
-    "heldoutQwenFallbackArtifact": "test-data/real-papers/reports/qwen14-heldout-fallback-v1.json",
-    "heldoutQwenFallbackRows": 20,
-    "heldoutQwenAutoAccept": "11/20",
-    "heldoutQwenRejected": "9/20",
-    "heldoutQwenNote": "fallback-selected cohort; auto-accept is not semantic rescue evidence",
-    "latestQualityGuardChange": "untranslated source phrase structural overlap guard",
-    "latestQualityGuardChangeVersion": "v116",
-    "latestQualityGuardTests": "155/155"
+    "dominantProtectedFailure": "protected citation placeholder dropped by model",
+    "sharedErrorRows": "pending_manual_semantic_review",
+    "result": "completed_no_production_change",
+    "next": "blind paired semantic review; evaluate minimal protection plus post-translation invariant verification"
   },
   "latestQualityGuardChange": {
-    "date": "2026-09-23",
-    "change": "generic either-or alternative relation invariant",
-    "file": "src/services/translation/quality.ts",
-    "test": "src/test/quality.test.ts 154/154",
-    "status": "implemented; held-out fallback impact pending",
-    "next": "run production benchmark and measure semantic rescue/fallback"
-  }
+    "version": "quality-v24",
+    "change": "multiword source phrase guard no longer exempts Figure/Table explanatory clauses",
+    "retrospectiveCatchCount": 3,
+    "artifact": "test-data/real-papers/reports/translation-audit-v24-source-phrase-catches.json",
+    "note": "Retrospective old audit only; not a fresh product rate. Catches include one severe retained English clause, one mixed extraction/partial translation, and one large partial source."
+  },
+  "latestQualityRecheck": {
+    "artifacts": [
+      "protection-ab-v8-heldout-5.json",
+      "protection-ab-v9-heldout-5.json"
+    ],
+    "newMeasurementOrderFlags": 1,
+    "flaggedKey": "thermal-earring:b-22de2c20#unit-2",
+    "otherRowsFlagged": 0,
+    "interpretation": "guard catches known scramble without newly flagging the other 9 probe outputs"
+  },
+  "partialFallbackMetadata": {
+    "version": "v120",
+    "status": "plumbed",
+    "fields": [
+      "fallback_stage",
+      "fallback_reason",
+      "unit_fallback_indices",
+      "partial_text",
+      "partial_source_units",
+      "partial_unit_texts"
+    ],
+    "behaviorChanged": false,
+    "next": "fresh server run and safe partial projection benchmark"
+  },
+  "partialProjectionAudit": {
+    "status": "implemented_audit_only",
+    "safeForReader": false,
+    "tests": "madladEngine 8/8",
+    "server": "pending_8765_unavailable"
+  },
+  "latestProtectionABReviewQueue": {
+    "artifact": "test-data/real-papers/reports/protection-ab-manual-review-v1.json",
+    "rows": 10,
+    "blind": false,
+    "severityGe2": 7,
+    "causeCounts": {
+      "protection benefit": 3,
+      "model decode": 3,
+      "protection-induced fallback/context loss": 3,
+      "model terminology": 1
+    },
+    "result": "protection has measurable benefits and costs; no global removal justified",
+    "next": "evaluate selective protected-span rescue on held-out rows and separate model decode failures"
+  },
+  "latestProtectionABSegmentedDiagnostic": {
+    "artifact": "test-data/real-papers/reports/protection-ab-diagnostic-v6-segmented-30.json",
+    "records": 30,
+    "segmentUnits": true,
+    "successByCondition": {
+      "raw": 30,
+      "minimal": 28,
+      "current": 28
+    },
+    "wholeParagraphComparison": "v5 raw 28/30, minimal/current 19/30",
+    "remainingFailure": "2 minimal/current placeholder-drop errors",
+    "result": "segmentation substantially reduces long-unit truncation; protection remains a separate fallback source",
+    "next": "paired semantic review and selective protection design"
+  },
+  "latestProtectionABRescueDiagnostic": {
+    "artifact": "test-data/real-papers/reports/protection-ab-diagnostic-v7-segmented-rescue-30.json",
+    "records": 30,
+    "segmentUnits": true,
+    "productionRescue": true,
+    "successByCondition": {
+      "current": 30
+    },
+    "v6DirectCurrent": 28,
+    "finding": "bounded identifier-only retry recovered both direct placeholder-drop failures",
+    "semanticReview": "pending",
+    "result": "reader-visible completion improved diagnostically; no production policy change"
+  },
+  "latestProtectionABQualityEvaluation": {
+    "artifact": "test-data/real-papers/reports/protection-ab-v7-quality-eval.json",
+    "sourceArtifact": "test-data/real-papers/reports/protection-ab-diagnostic-v7-segmented-rescue-30.json",
+    "rows": 30,
+    "flagged": 4,
+    "reasons": {
+      "alternative relation missing": 1,
+      "source negation missing": 1,
+      "condition relation missing": 1,
+      "long source was implausibly shortened": 1
+    },
+    "evaluator": "quality-v17",
+    "interpretation": "completion is not safe acceptance; semantic risks remain"
+  },
+  "latestRelationRescueChange": {
+    "version": "relation-rescue-v1",
+    "status": "rolled_back_after_remeasurement",
+    "artifact": "test-data/real-papers/reports/relation-rescue-remeasure-v1.json",
+    "finding": "no verified reader-safe improvement; existing rescue already fixed long hospital case",
+    "reason": "avoid unproductive beam latency",
+    "tests": "python 39/39; model-version 1/1"
+  },
+  "latestAlternateModelAvailability": {
+    "provider": "ollama",
+    "endpoint": "http://127.0.0.1:11434",
+    "available": false,
+    "checked": "2026-09-24",
+    "impact": "no alternate output measured; production cascade unchanged",
+    "next": "evaluate when a configured alternate model is available"
+  },
+  "latestAlternateModelProbe": {
+    "artifact": "test-data/real-papers/reports/alternate-opus-remeasure-v1.json",
+    "model": "Helsinki-NLP/opus-mt-en-jap",
+    "rows": 4,
+    "result": "rejected",
+    "finding": "unrelated/gibberish output on all four flagged units",
+    "productionChange": false
+  },
+  "latestAlternateModelProbeM2M100": {
+    "artifact": "test-data/real-papers/reports/alternate-m2m100-418m-remeasure-v1.json",
+    "model": "facebook/m2m100_418M",
+    "rows": 4,
+    "automaticReasons": "accepted 4/4 by quality-v17",
+    "manualFinding": "2 relation examples structurally better; 2 memory-cue examples have severe terminology/semantic corruption",
+    "productionChange": false,
+    "status": "candidate_requires_heldout_review"
+  },
+  "latestAlternateModelM2M100Segmented": {
+    "artifact": "test-data/real-papers/reports/alternate-m2m100-418m-segmented-30.json",
+    "model": "facebook/m2m100_418M",
+    "rows": 30,
+    "qualityFlagged": 4,
+    "comparison": "MADLAD v7 4/30",
+    "manualFinding": "terminology corruption in memory-cue units; no safe cascade advantage",
+    "status": "rejected_for_now",
+    "productionChange": false
+  },
+  "latestRelationCandidateChange": {
+    "version": "relation-candidate-v6",
+    "date": "2026-09-24",
+    "artifact": "test-data/real-papers/reports/relation-candidate-v6-cohort0-30.json",
+    "result": {
+      "n": 30,
+      "flags": 2,
+      "unchanged": true
+    },
+    "status": "no-verified-cohort-improvement"
+  },
+  "latestRelationCandidateHeldout": {
+    "artifact": "test-data/real-papers/reports/relation-candidate-heldout-v1-30.json",
+    "offset": 30,
+    "rows": 30,
+    "serverCompletion": "30/30",
+    "qualityVersion": "quality-v18",
+    "qualityFlagged": 4,
+    "reasons": {
+      "long source was implausibly shortened": 1,
+      "exclusivity relation missing": 1,
+      "scientific invariants missing: PPG": 1,
+      "orphaned source invariant sentence": 1
+    },
+    "interpretation": "no measured fallback reduction yet; no broad gate relaxation"
+  },
+  "latestQualityV19Change": {
+    "version": "quality-v19",
+    "change": "generic compact acronym+descriptor invariant preservation; forgotten negation false-positive retained from v18",
+    "heldoutArtifact": "test-data/real-papers/reports/relation-candidate-heldout-v1-30.json",
+    "flags": "4/30 -> 3/30",
+    "removedFlag": "PPG invariant false positive",
+    "remaining": [
+      "long source shortening",
+      "exclusivity relation missing",
+      "orphaned source invariant sentence"
+    ],
+    "tests": "quality 157/157",
+    "productionChange": "quality gate/cache identity only"
+  },
+  "latestRegression": {
+    "testFiles": 67,
+    "tests": 520,
+    "qualityVersion": "quality-v28",
+    "status": "passed",
+    "warnings": "optional canvas.node polyfill only"
+  },
+  "latestDecodeProbe": {
+    "date": "2026-09-24",
+    "fixture": "either gist or detailed cues",
+    "result": "relation omitted in full/short/split greedy and beam",
+    "cause": "MADLAD semantic limitation"
+  },
+  "latestAlternateModel": {
+    "model": "facebook/m2m100_1.2B",
+    "artifact": "test-data/real-papers/reports/alternate-m2m100-1.2b-relation-v1.json",
+    "result": "rejected: gist mistranslation and Linda terminology error"
+  },
+  "latestQualityV21Change": {
+    "date": "2026-09-24",
+    "change": "more/less likely relation invariant",
+    "tests": "159/159 frontend targeted",
+    "status": "safety evaluator improvement"
+  },
+  "latestAggregate": {
+    "artifact": "test-data/real-papers/reports/relation-candidate-v6-aggregate-60.json",
+    "version": "v6-only",
+    "sampleCount": 60,
+    "completed": 59,
+    "explicitFallback": 1,
+    "evaluatorFlagged": 3
+  },
+  "latestProtectionABHeldout": {
+    "artifact": "test-data/real-papers/reports/protection-ab-v8-heldout-5.json",
+    "records": 5,
+    "productionRescue": true,
+    "completed": 5,
+    "fallback": 0,
+    "identifierRetryUsed": 1,
+    "semanticReview": "pending",
+    "interpretation": "coverage evidence only; no quality-rate claim"
+  },
+  "latestProtectionABHeldoutReview": {
+    "artifact": "test-data/real-papers/reports/protection-ab-manual-review-v2-heldout-5.json",
+    "rows": 5,
+    "severityGe2": 1,
+    "sourceFragmentRows": 1,
+    "ordinaryBodySeverityGe2": 0,
+    "result": "2 correct, 2 minor terminology, 1 source-incomplete row; no ordinary-body severity>=2 in this tiny probe",
+    "next": "expand held-out review across papers and compare selective cascade candidates"
+  },
+  "latestProtectionABHeldoutReviewV3": {
+    "artifact": "test-data/real-papers/reports/protection-ab-manual-review-v3-ppg-heldout-5.json",
+    "rows": 5,
+    "completed": 4,
+    "fallback": 1,
+    "severityGe2Accepted": 1,
+    "finding": "one wearables→web browser terminology hallucination remains an unsafe accept; one strict fallback is safe",
+    "result": "selective identifier rescue reduces some fallback but does not solve model terminology drift",
+    "next": "evaluate alternate-model rescue or terminology-aware cascade on held-out rows"
+  },
+  "latestAlternateModelProbeV183": {
+    "artifact": "test-data/real-papers/reports/model-compare-v183-qwen-ppg.json",
+    "model": "qwen2.5:14b",
+    "rows": 4,
+    "finding": "one mixed-language malformed output, one Chinese output rejected by gate, two broadly faithful with terminology caveats",
+    "productionRouteChanged": false,
+    "result": "not safe for automatic cascade on this cohort"
+  },
+  "latestProtectionABControl": {
+    "artifact": "reports/protection-ab-v10-heldout-12.json",
+    "units": 12,
+    "calls": 36,
+    "errors": 0,
+    "protectedSpanUnits": 0,
+    "interpretation": "determinism control, not protection estimate"
+  },
+  "latestProtectionDelta": {
+    "artifact": "reports/protection-ab-delta-v1.json",
+    "protectedUnits": 11,
+    "rawSuccessCurrentFallback": 2,
+    "interpretation": "placeholder-induced fallback signal; benefits/costs still mixed"
+  },
+  "latestImplementation": {
+    "version": "v190",
+    "change": "selective placeholder rescue for compact structural references",
+    "tests": "44/44 Python quality",
+    "productionActivated": false
+  },
+  "latestRuntimeCheck": {
+    "artifact": "reports/protection-rescue-runtime-v190.json",
+    "fixtures": 2,
+    "fallbacks": 0,
+    "scope": "targeted only"
+  },
+  "latestProtectedRuntime": {
+    "artifact": "reports/protection-rescue-runtime-v191-protected-11.json",
+    "blocks": 11,
+    "fallbacks": 0,
+    "scope": "targeted runtime cohort"
+  },
+  "latestProtectedManualReview": {
+    "artifact": "reports/protection-runtime-manual-review-v1.json",
+    "rows": 11,
+    "correct": 4,
+    "severity1": 5,
+    "severity2plus": 2,
+    "isPopulationEstimate": false
+  },
+  "latestQualityChange": {
+    "version": "quality-v28",
+    "change": "cascade sentence compression ignores dotted academic labels such as Eqn. 20 and Fig. 2",
+    "status": "tested"
+  },
+  "latestV25Recheck": {
+    "artifact": "reports/translation-audit-quality-recheck.json",
+    "ordinaryRows": 234,
+    "fallbacks": 90,
+    "rate": 0.38461538461538464
+  },
+  "latestDecisionTriage": {
+    "artifact": "reports/translation-audit-quality-recheck.json",
+    "changedRows": 35,
+    "reasonCounts": {
+      "exclusivity relation missing": 6,
+      "comparative likelihood relation missing": 5,
+      "condition relation missing": 4,
+      "untranslated source phrase": 4
+    },
+    "interpretation": "manual review required; no blanket gate loosening"
+  },
+  "latestV26Recheck": {
+    "artifact": "reports/translation-audit-quality-recheck.json",
+    "ordinaryRows": 234,
+    "fallbacks": 88,
+    "rate": 0.37606837606837606
+  },
+  "latestQwenProbe": {
+    "artifact": "reports/model-compare-v198-qwen7-fresh-fallback-5.json",
+    "rows": 5,
+    "strictGatePass": 1,
+    "strictGateReject": 4,
+    "productionEnabled": false
+  },
+  "latestQwen14Probe": {
+    "artifact": "reports/model-compare-v199-qwen14-fresh-fallback-5.json",
+    "rows": 5,
+    "strictGatePass": 2,
+    "strictGateReject": 3,
+    "productionEnabled": false,
+    "note": "step-to-charge false reject diagnosed as dotted-label sentence-count inflation; quality-v28 regression added; production cascade still disabled",
+    "qualityV28Recheck": {
+      "artifact": "reports/model-compare-v203-qwen14-quality-v28-recheck.json",
+      "strictGatePass": 3,
+      "strictGateReject": 2,
+      "productionEnabled": false
+    }
+  },
+  "latestProtectionABQualitySummary": {
+    "artifact": "reports/protection-ab-quality-v28-summary.json",
+    "sampleCount": 30,
+    "rawQualityAccept": 20,
+    "minimalQualityAccept": 21,
+    "currentQualityAccept": 22,
+    "interpretation": "automatic only; no production protection change"
+  },
+  "latestProtectionDeltaReview": {
+    "artifact": "reports/protection-ab-delta-review-v1.json",
+    "allRows": 30,
+    "changedRows": 9,
+    "benefitRows": 5,
+    "costRows": 3,
+    "severity2Rows": 2,
+    "blind": false,
+    "decision": "retain protection; use selective rescue and further held-out review"
+  },
+  "latestHeldoutQwen14Recheck": {
+    "artifact": "reports/model-compare-v221-quality-v28-recheck.json",
+    "rows": 20,
+    "strictAccept": 7,
+    "decision": "do not enable automatic Qwen14 fallback"
+  },
+  "latestBenchmarkRun": {
+    "command": "npm run bench:real-paper-translation -- --limit 12 --resume",
+    "selected": 52,
+    "checkpointedSkipped": 51,
+    "newRequests": 0,
+    "status": "resume-check-only"
+  },
+  "latestFallbackAttribution": {
+    "ordinaryBodyServerFallback": 62,
+    "ordinaryBodyRows": 234,
+    "qualityV28ClientFallback": 88,
+    "qualityV28Rate": 0.3760683761,
+    "otherFallbackCategories": {
+      "damaged-extraction": 242,
+      "reference-chrome": 32,
+      "list": 26,
+      "statistical-prose": 15,
+      "caption": 3
+    },
+    "interpretation": "keep extraction categories separate from ordinary-body target"
+  },
+  "latestExtractionAdjacencyDiagnostic": {
+    "artifact": "reports/extraction-adjacency-diagnostic-v1.json",
+    "paragraphRows": 612,
+    "candidatePairs": 65,
+    "samePage": 48,
+    "crossPage": 13,
+    "status": "diagnostic only; no merge rule change"
+  },
+  "latestExtractionAdjacencyTextCheck": {
+    "artifact": "reports/extraction-adjacency-diagnostic-v2.json",
+    "candidatePairs": 65,
+    "textContinuationTrue": 65,
+    "decision": "text-only merge unsafe; require geometry evidence"
+  },
+  "latestGeometryDiagnostic": {
+    "script": "scripts/diagnose-extraction-geometry.ts",
+    "fixture": "human-ai-interaction-guidelines.pdf",
+    "artifact": "reports/human-ai-extraction-geometry-v1.json",
+    "blocks": 1065,
+    "candidates": 20,
+    "strictGeometryCandidates": 3,
+    "productionChanged": false
+  },
+  "latestGeometryMultiLayout": {
+    "probes": [
+      {
+        "paper": "human-ai-interaction-guidelines",
+        "blocks": 1065,
+        "candidates": 20,
+        "strict": 3
+      },
+      {
+        "paper": "covid-ml-review",
+        "blocks": 331,
+        "candidates": 45,
+        "strict": 0
+      },
+      {
+        "paper": "osworld-multimodal-agents",
+        "blocks": 1250,
+        "candidates": 47,
+        "strict": 4
+      },
+      {
+        "paper": "social-influence-social-advertising",
+        "blocks": 174,
+        "candidates": 13,
+        "strict": 3
+      }
+    ],
+    "status": "diagnostic only"
+  },
+  "latestNativeItemDiagnosis": {
+    "artifact": "reports/human-ai-extraction-geometry-v2.json",
+    "finding": "one-character native items with drifting baselines/x in chart-like region; not safe paragraph merge",
+    "productionChanged": false
+  },
+  "last_update": "v404 post-version-bump focused regression",
+  "last_update_date": "2026-09-25",
+  "next_actions": [
+    "Do not enable Gemma automatic cascade: historical manual review shows severity>=3 failures. Evaluate stronger verifier or selective, human-audited routing.",
+    "Expand Gemma blind semantic review to at least 20 held-out ordinary-body rows before any selective cascade; keep v395 six-row result as preliminary only.",
+    "Expand Gemma2 9B held-out sample beyond six rows with blind semantic review; use v394 only for prioritization, not routing.",
+    "Use v393 severity labels in Gemma cascade analysis; terminology errors remain above zero, so require terminology-aware review or retry before automatic acceptance.",
+    "Manually review v392 Gemma accepted rows for terminology/claim severity before considering selective routing; preserve score-1-is-not-correctness warning.",
+    "Use v391 as evidence that citation-only layout can be repaired; expand Gemma paired review before routing, and check for any new false accepts after the gate change.",
+    "Re-evaluate the saved Gemma v388 Design row through v390 to verify the citation-only repair removes the false reject and preserves citation invariants.",
+    "Expand Gemma2 9B on held-out multi-field rows; separately assess detached-citation postprocessing before treating its v389 sample as a cascade candidate.",
+    "Use the green v387 regression as the baseline while evaluating stronger translation models; do not enable a cascade from the small Qwen sample.",
+    "Use the v386 replay as evidence when measuring Qwen cascade false-reject rates; keep semantic review mandatory for accepted alternate outputs.",
+    "Re-run the healthcare Qwen14B row or an equivalent held-out numeric sample to verify thousands normalization removes the false reject without accepting altered values.",
+    "Do not route all MADLAD fallbacks to Qwen14; its cross-field probe had placeholder-loss and untranslated-span failures. Evaluate a stronger/translation-specialized model or a bounded per-domain cascade with human review.",
+    "Expand Qwen2.5 14B paired evaluation on held-out ordinary-body rows; separately fix/evaluate comma-formatted numeric invariant normalization before using it in a cascade.",
+    "Do not treat semantic anchors as a complete verifier; compare stronger translation models or human-reviewed semantic checks on v381-like accepted outputs.",
+    "Treat v381 Design for Wearability as a held-out catastrophic semantic false accept; evaluate stronger semantic validation/model routing before any fallback reduction.",
+    "Expand v380 into a held-out multi-field sample and manually review accepted ordinary-body outputs; do not infer rates from the three-block probe.",
+    "Run a fresh bounded audit after the server is available to measure whether v376 reduces semantic false accepts without pushing ordinary-body fallback above the current baseline.",
+    "Manually review the 16 spaced-thousands and 63 continuation-ending historical rows before proposing any additional source-integrity gates.",
+    "Expand source-integrity precision/recall evaluation on held-out extracted blocks before adding more corruption patterns.",
+    "Review v376 function-word extraction guard against held-out clean prose before widening source-integrity patterns.",
+    "Keep Qwen verifier diagnostic-only; preserve deterministic gates and evaluate stronger model/source fact validation next.",
+    "Evaluate semantic verifier on mixed severity-0/1/3 rows before considering any gate integration.",
+    "Re-review accepted outputs carefully; separate true severity>=2 semantic errors from terminology/style issues before changing gates.",
+    "Expand blind manual review of accepted cross-field rows; do not interpret small-sample fallback as product rate.",
+    "Use held-out semantic verifier/model comparison before any routing or gate change; automatic accept remains untrusted.",
+    "Do not alter beam/length settings without paired held-out evidence; evaluate stronger model or semantic verifier next.",
+    "Evaluate model/decode or safe semantic verification on already-segmented units; do not blindly re-split all prose.",
+    "Resume the real-paper audit in bounded serial/low-concurrency batches; keep v358 partial report as baseline.",
+    "Review ordinary-body accepted rows manually for semantic false accepts; automatic acceptance is not ground truth.",
+    "Do not enable alternate-model routing until held-out semantic review improves.",
+    "Preserve timeout/checkpoint artifacts for the next session.",
+    "v397: extraction and reading-order corpus remains green at 108/108 after latest quality-guard changes; continue held-out semantic review before any alternate-model production routing.",
+    "v398: translation-server suite 203 passed + 11 subtests; typecheck and lint pass. Fresh multi-paper model run with blind semantic review remains next.",
+    "v399: fresh 52-paper benchmark measured ordinary-body fallback at 26.5% (172/234 accepted); review 58 post-model fallbacks before changing gates.",
+    "v400: materialized 62-row ordinary-body fallback review queue; review P1 model/restore and extraction cases before any quality-gate change.",
+    "v402: confirmed and fixed one real model/restore fallback via discourse-aware retry segmentation; rerun broad fresh audit to measure fallback delta before further gate changes.",
+    "v403: targeted dont-mind-me replay 9/12 accepted; repaired citation/EMG unit completes, while independent extraction/degenerate fallbacks remain.",
+    "v404: semantic-v78 cache bump verified; focused TypeScript suites 188/188, Python 205 + 11, extraction 108/108."
+  ],
+  "validation": {
+    "focused_translation_tests": "188/188",
+    "extraction_corpus": "108/108",
+    "typecheck": "pass",
+    "lint": "pass",
+    "translation_server_tests": "205 passed + 11 subtests",
+    "fresh_translation_audit": "52 papers / 612 blocks; ordinary 172/234 accepted; fallback 26.5%",
+    "segmenter_tests": "54 passed + 8 subtests",
+    "targeted_replay": "dont-mind-me 9/12 accepted; repaired citation/EMG block completed"
+  },
+  "unresolved_failures": [
+    "MADLAD accepts fluent domain/claim substitutions in wearability/jewellery/thermal samples",
+    "ordinary-body fallback remains above target",
+    "Cross-field accepted outputs reproduce fluent claim/terminology drift in marketing and linguistics",
+    "Qwen3B probe had one unsafe-looking automatic accept and two quality rejects; no cascade candidate",
+    "Qwen3B semantic judge missed thermal measurement/claim drift; cannot be automatic verifier",
+    "Qwen3B semantic reviewer changed from detecting 3 unsafe rows to detecting 0 under mixed-set prompt; verifier is unstable",
+    "Medical review block was malformed but classified ordinary and translated; extraction warning attribution needs strengthening",
+    "v376 now catches article/function-word joins such as the of; broader extraction corruption patterns still require held-out precision review",
+    "v377 guard smoke passed clean controls, but corpus-level precision/recall for extraction corruption is not yet measured",
+    "v378 historical audit found one the-of corruption among 1,791 deduplicated rows; other signals are lower precision and remain audit-only",
+    "v379 production API integration verified for malformed medical-style block; fresh post-change reader-visible rate still pending",
+    "v380 confirms malformed medical block is pre-model damaged-extraction; accepted economics output still needs independent semantic review",
+    "v381 accepted Design for Wearability output had severity-4 unsupported web-service hallucination despite quality score 1.0",
+    "v382 anchor diagnostic passed the severity-4 Design for Wearability hallucination; anchors only verify facts/relations they explicitly cover",
+    "v383 Qwen14 improved the v381 catastrophic design translation, but had a numeric-format false reject and Chinese-script contamination on other rows",
+    "v384 Qwen14 accepted one linguistics row but failed cognitive/marketing rows through placeholder loss and untranslated spans",
+    "v385 normalizes thousands separators; re-evaluation on a live model row is still pending",
+    "v386 confirms healthcare numeric-format false reject is removed; design semantic safety still requires human/strong verifier evidence",
+    "v387 regression is green; semantic false accepts and broad fallback target remain unresolved",
+    "v389 Gemma9B was faithful on healthcare/cognition and citation-layout rejected on design; broader held-out semantic review still required",
+    "v390 citation-only span repair is untested against a fresh model request; semantic verification remains required",
+    "v391 makes all three saved Gemma outputs gate-accepted; semantic safety remains unverified by automatic checks",
+    "v392 Gemma accepted three cross-field rows but marketing has terminology/format issues despite score 1.0",
+    "v393 manual review found a severity-2 marketing terminology error in a Gemma score-1 accepted row",
+    "v394 Gemma aggregate is 5/6 accepted but includes one severity-2 terminology error; sample too small for cascade safety",
+    "v395 Gemma six-row manual sample has no severity>=3 failures but one severity-2 terminology error; statistical confidence remains insufficient",
+    "v396 historical Gemma manual aggregate: severity>=3 semantic errors 22.2% (4/18), despite recent six-row success"
+  ]
 }

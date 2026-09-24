@@ -11,8 +11,8 @@ from dataclasses import dataclass
 
 from .citation_protect import protected_span_mask
 
-SEGMENTER_VERSION = "semantic-v77"
-_ABBREVIATIONS = {"e.g.", "i.e.", "et al.", "fig.", "no.", "cf.", "dr.", "mr.", "ms.", "vs."}
+SEGMENTER_VERSION = "semantic-v78"
+_ABBREVIATIONS = {"e.g.", "i.e.", "et al.", "fig.", "eqn.", "eq.", "no.", "cf.", "dr.", "mr.", "ms.", "vs."}
 
 
 def is_probable_panel_fragment(text: str) -> bool:
@@ -654,6 +654,82 @@ def _rescue_hence_clause(text: str) -> list[TranslationUnit]:
     return _split_rescue_at(text, match.start() + 1, left_model, right_model)
 
 
+def _rescue_discourse_marker_clause(text: str) -> list[TranslationUnit]:
+    """Retry a long sentence at a top-level discourse marker.
+
+    Markers such as ``to our knowledge`` and ``in our view`` introduce a
+    separate claim after a long evidence clause.  MADLAD can preserve only
+    that final claim, especially when the preceding clause contains a list of
+    citations or acronyms.  Split only at a delimiter-aware comma and keep
+    both source slices exact; the model inputs receive sentence boundaries so
+    neither side is sent as an orphaned continuation.
+    """
+    if len(text) < 160:
+        return []
+    masked = protected_span_mask(text)
+    match = re.search(
+        r",\s+(?P<marker>to\s+our\s+knowledge|in\s+our\s+view|from\s+our\s+perspective|therefore|thus),\s+",
+        masked,
+        re.IGNORECASE,
+    )
+    if not match:
+        return []
+    left = text[: match.start() + 1].strip()
+    right = text[match.start() + 1 :].strip()
+    if len(left.split()) < 14 or len(right.split()) < 8:
+        return []
+    if any(left.count(opening) != left.count(closing) for opening, closing in (("(", ")"), ("[", "]"), ("{", "}"))):
+        return []
+    left_model = left.rstrip(",") + "."
+    right_model = right[0].upper() + right[1:] if right else right
+    return _split_rescue_at(text, match.start() + 1, left_model, right_model)
+
+
+def _rescue_as_well_as_clause(text: str) -> list[TranslationUnit]:
+    """Retry a long coordinated ``as well as`` evidence clause.
+
+    Citation-heavy literature reviews often coordinate two substantial
+    findings with ``as well as``.  When the first coordinated list contains an
+    acronym, MADLAD may emit only the final claim.  Split only long,
+    top-level coordinates and give each model input an explicit subject;
+    source slices remain unchanged for exact reconstruction.
+    """
+    if len(text) < 220:
+        return []
+    masked = protected_span_mask(text)
+    match = re.search(r"\s+as\s+well\s+as\s+", masked, re.IGNORECASE)
+    if not match:
+        return []
+    left = text[: match.start()].strip()
+    # Keep the coordinator in the exact right-hand source slice so the
+    # concatenated slices reconstruct the input byte-for-byte (after spacing
+    # normalization).
+    right = text[match.start() :].strip()
+    if len(left.split()) < 10 or len(right.split()) < 10:
+        return []
+    if any(left.count(opening) != left.count(closing) for opening, closing in (("(", ")"), ("[", "]"), ("{", "}"))):
+        return []
+    # Remove a subordinate leading marker only in the model-facing text; the
+    # original slice and its relation are preserved for reconstruction.
+    left_model = re.sub(r"^while\s+", "", left, flags=re.IGNORECASE).rstrip(",") + "."
+    right_model = "It also examined " + text[match.end() :].strip() if right else right
+    left_unit = TranslationUnit(left, protected_span_mask(left), left_model)
+    # Apply the same safe discourse split to the second coordinate when it
+    # contains a trailing ``to our knowledge`` claim. This keeps each retry
+    # unit substantive instead of asking one decode to handle both a citation
+    # list and a long qualification.
+    nested = _rescue_discourse_marker_clause(right)
+    if len(nested) > 1:
+        nested[0] = TranslationUnit(
+            nested[0].text,
+            nested[0].protected,
+            "It also examined "
+            + re.sub(r"^as\s+well\s+as\s+", "", nested[0].model_input, flags=re.IGNORECASE),
+        )
+        return [left_unit, *nested]
+    return [left_unit, TranslationUnit(right, protected_span_mask(right), right_model)]
+
+
 def _rescue_top_level_clause_comma(text: str) -> list[TranslationUnit]:
     """Last-resort retry split for an exceptionally long comma-bound sentence.
 
@@ -703,6 +779,8 @@ def rescue_units_for_translation(source: str) -> list[TranslationUnit]:
         return []
     for splitter in (
         _rescue_hence_clause,
+        _rescue_as_well_as_clause,
+        _rescue_discourse_marker_clause,
         _rescue_while_concessive_main_clause,
         _rescue_found_that_coordination,
         _rescue_if_so_semicolon,
