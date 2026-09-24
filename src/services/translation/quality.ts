@@ -208,6 +208,21 @@ export function detectPartialSourceFallback(source: string, translation: string 
   return { partial: false };
 }
 
+// A decoder can leave a short, fluent-looking English clause inside otherwise
+// Japanese output.  Long source-overlap detection intentionally ignores these
+// shorter spans, but four or more ordinary lower-case words are strong evidence
+// that a clause was never translated.  Capitalized names, citations, URLs and
+// identifiers are excluded so normal academic terminology is not penalized.
+function hasUntranslatedSourcePhrase(source: string, output: string): boolean {
+  const normalizedOutput = output.toLowerCase().replace(/\s+/g, " ");
+  const spans = source.match(/\b[a-z][a-z'-]{2,}(?:\s+[a-z][a-z'-]{2,}){3,}\b/g) ?? [];
+  return spans.some((span) => {
+    if (looksLikeCitationContext(span) || /\b(?:figure|table|appendix|api|model|study)\b/i.test(span)) return false;
+    const phrase = span.toLowerCase().replace(/\s+/g, " ");
+    return phrase.length >= 24 && normalizedOutput.includes(phrase);
+  });
+}
+
 /**
  * Greedy decoding occasionally repeats a fluent Japanese phrase many times.
  * Character repetition misses this failure because every character is valid.
@@ -863,6 +878,7 @@ export function evaluateJaTranslation(output: string, source: string): Translati
 
   const hasKana = KANA.test(out);
   const hasKanji = KANJI.test(out);
+  if (hasKana && hasUntranslatedSourcePhrase(source, out)) reasons.push("untranslated source phrase");
   if (!hasKana && !hasKanji) reasons.push("no Japanese script");
   if (source.trim().length >= 40 && hasKanji && !hasKana) reasons.push("Japanese prose lacks kana");
   if (hasKana && SIMPLIFIED_CJK_CONTAMINATION.test(out)) reasons.push("simplified Chinese mixed into Japanese");
