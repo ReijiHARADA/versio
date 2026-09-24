@@ -34,6 +34,18 @@ export interface TranslationResult {
   charsPerSec: number;
   /** Tokens per second (if available) */
   tokensPerSec?: number;
+  /** Server-side fallback classification, when the backend had to preserve source text. */
+  fallbackStage?: string;
+  /** Backend reason(s) for a fallback or partial result. */
+  fallbackReason?: string;
+  /** Indices of semantic units that were preserved as source text. */
+  unitFallbackIndices?: number[];
+  /** Assembled partial candidate, retained for diagnostics and safe projection. */
+  partialText?: string;
+  /** Source units preserved after a unit-level failure. */
+  partialSourceUnits?: string[];
+  /** Per-unit candidate texts before final assembly. */
+  partialUnitTexts?: string[];
 }
 
 /**

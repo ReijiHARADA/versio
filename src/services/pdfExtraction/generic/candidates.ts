@@ -104,6 +104,26 @@ function chartLabelEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
   return clamp(0.76 + Math.min(0.16, (samePageColumn.length - 3) * 0.03));
 }
 
+/** Text-only axis labels often sit beside several numeric tick blocks. The
+ * repeated numeric geometry is stronger evidence than the label vocabulary;
+ * keep the label as non-prose content without hard-coding chart terms. */
+function axisLabelEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
+  const text = block.text.trim();
+  if (!text || text.length > 80 || /[.!?:;。！？]$/.test(text)) return 0;
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length < 1 || words.length > 8 || (text.match(/[A-Za-z]/g) ?? []).length < 3) return 0;
+  const nearbyNumeric = blocks.filter((candidate) => {
+    if (candidate === block || candidate.pageStart !== block.pageStart || candidate.column !== block.column) return false;
+    const candidateText = candidate.text.trim();
+    const density = (candidateText.match(/\d/g) ?? []).length / Math.max(candidateText.length, 1);
+    return density >= 0.45 && candidateText.length <= 40 &&
+      Math.abs(candidate.bbox.x - block.bbox.x) <= 180 &&
+      Math.abs(candidate.bbox.y - block.bbox.y) <= 140;
+  });
+  if (nearbyNumeric.length < 3) return 0;
+  return 0.86;
+}
+
 function imageOverlapLabelEvidence(block: LayoutBlock, page?: ExtractedPage): number {
   if (!page || block.role !== "paragraph" || block.lines.length < 3 || /[.!?。！？]$/.test(block.text.trim())) return 0;
   const items = block.lines.flatMap((line) => line.items);
@@ -141,6 +161,44 @@ function vectorFigureLabelEvidence(block: LayoutBlock): number {
   const xBands = new Set(block.lines.flatMap((line) => line.items.map((item) => Math.round(item.x / 24))));
   if (xBands.size < 3) return 0;
   return 0.82;
+}
+
+/**
+ * Some vector charts emit each glyph as its own paragraph-sized native block.
+ * A short cluster with drifting baselines is strong evidence of a graphic
+ * label, while ordinary prose and numbered lists have stable baselines or
+ * substantially longer text. Keep this as `other` evidence so the resolver
+ * can suppress translation without inventing a figure/table role.
+ */
+function fragmentedGraphicLabelEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
+  const text = block.text.trim();
+  if (!text || text.length > 8 || /[.!?:;。！？]$/.test(text)) return 0;
+  const fontSize = block.lines[0]?.fontSize ?? 0;
+  if (!fontSize || block.lines[0]?.items.length > 3) return 0;
+  const nearby = blocks.filter((candidate) => {
+    if (candidate === block || candidate.pageStart !== block.pageStart || candidate.column !== block.column) return false;
+    const candidateText = candidate.text.trim();
+    if (!candidateText || candidateText.length > 8 || /[.!?:;。！？]$/.test(candidateText)) return false;
+    const candidateFont = candidate.lines[0]?.fontSize ?? 0;
+    if (!candidateFont || Math.abs(candidateFont - fontSize) > 0.8) return false;
+    const dx = Math.abs(candidate.bbox.x - block.bbox.x);
+    const dy = Math.abs(candidate.bbox.y - block.bbox.y);
+    return dx <= 90 && dy <= 90;
+  });
+  const cluster = [block, ...nearby];
+  const shortGlyphBlocks = cluster.filter((candidate) =>
+    candidate.text.trim().replace(/\s+/g, "").length <= 3 &&
+    candidate.lines.length === 1 && candidate.lines[0].items.length <= 3
+  );
+  if (shortGlyphBlocks.length < 5) return 0;
+  const baselineRange = Math.max(...shortGlyphBlocks.map((candidate) => candidate.bbox.y)) -
+    Math.min(...shortGlyphBlocks.map((candidate) => candidate.bbox.y));
+  const xRange = Math.max(...shortGlyphBlocks.map((candidate) => candidate.bbox.x)) -
+    Math.min(...shortGlyphBlocks.map((candidate) => candidate.bbox.x));
+  // A stable horizontal text run has little baseline drift. Require visible
+  // drift or a compact diagonal x trajectory before treating it as graphic.
+  if (baselineRange < Math.max(2.5, fontSize * 0.35) && xRange < fontSize * 1.5) return 0;
+  return 0.9;
 }
 
 function median(values: number[]): number {
@@ -684,8 +742,10 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const captionedNativeCellRow = captionedNativeMultiCellRow(block, blocks);
     const pageGrid = pageGridEvidence(block, blocks);
     const chartLabels = chartLabelEvidence(block, blocks);
+    const axisLabels = axisLabelEvidence(block, blocks);
     const imageLabels = imageOverlapLabelEvidence(block, pages.find((page) => page.pageNumber === block.pageStart));
     const vectorLabels = vectorFigureLabelEvidence(block);
+    const fragmentedLabels = fragmentedGraphicLabelEvidence(block, blocks);
     const alignedTableRow = block.lines.length === 1 &&
       block.lines[0].items.length >= 2 && tableLike(block) && nearbyTableCaption;
     const tableHeaderRow = block.lines.length === 1 &&
@@ -738,8 +798,23 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     };
     if (pageGrid > 0 && block.role !== "table_caption") scoreByRole.table = pageGrid;
     if (chartLabels > 0) scoreByRole.other = chartLabels;
+    if (axisLabels > 0) scoreByRole.other = Math.max(scoreByRole.other ?? 0, axisLabels);
     if (imageLabels > 0) scoreByRole.other = Math.max(scoreByRole.other ?? 0, imageLabels);
     if (vectorLabels > 0) scoreByRole.other = Math.max(scoreByRole.other ?? 0, vectorLabels);
+    if (fragmentedLabels > 0) {
+      // A two-character uppercase fragment can otherwise win the generic
+      // heading shape heuristic. Graphic-cluster evidence is stronger here:
+      // keep the node as non-translatable `other` instead of a heading.
+      scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.2);
+      scoreByRole.other = Math.max(scoreByRole.other ?? 0, fragmentedLabels);
+    }
+    if (axisLabels > 0) {
+      scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.2);
+      scoreByRole.other = Math.max(scoreByRole.other ?? 0, axisLabels);
+    }
+    if (axisLabels > 0) {
+      scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.2);
+    }
     // Some journal/preprint mastheads use a large centered title whose line
     // is title-cased, so the layout pass can mistake it for an author line.
     // Native size/length/position evidence is sufficient to compete for the
@@ -876,6 +951,12 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
           : 0.68;
     }
     if (block.role !== "table_caption" && (nearbyTableRowEvidence(block, blocks) || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedRepeatedRow || captionedNeighborRows || captionedNativeCellRow)) scoreByRole.table = 0.96;
+    if (fragmentedLabels > 0) {
+      // Apply after all style/heading boosts so graphic fragments cannot be
+      // promoted back to headings by a later generic style rule.
+      scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.2);
+      scoreByRole.other = Math.max(scoreByRole.other ?? 0, fragmentedLabels);
+    }
     const reason =
       block.role === "title"
         ? "largest font in first-page masthead"
@@ -900,6 +981,16 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         reason: "repeated numeric native labels share a page/column x-band",
       });
     }
+    if (axisLabels > 0) {
+      evidence.push({
+        source: "geometry",
+        label: "axis-label-numeric-neighborhood",
+        confidence: axisLabels,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "short text block is adjacent to repeated numeric tick-like blocks",
+      });
+    }
     if (imageLabels > 0) {
       evidence.push({
         source: "generic-heuristic",
@@ -918,6 +1009,17 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         page: block.pageStart,
         bbox: block.bbox,
         reason: "dense short native text items span multiple x-bands without sentence punctuation",
+      });
+    }
+    if (fragmentedLabels > 0) {
+      scoreByRole.other = Math.max(scoreByRole.other ?? 0, fragmentedLabels);
+      evidence.push({
+        source: "geometry",
+        label: "fragmented-graphic-label-cluster",
+        confidence: fragmentedLabels,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "short native blocks with matching font and drifting baselines form a compact graphic-label cluster",
       });
     }
     if (captionedNeighborRows) {

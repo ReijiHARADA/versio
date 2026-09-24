@@ -654,7 +654,7 @@ export function projectCanonicalToPaper(input: {
         ...last,
         original: `${last.original} ${block.original}`.replace(/\s+/g, " ").trim(),
         boundingBoxes: [...last.boundingBoxes, ...block.boundingBoxes],
-        metadata: { ...last.metadata, tableSourceFallback: true },
+        metadata: { ...last.metadata, role: "table", tableSourceFallback: true },
       };
       acc[acc.length - 1] = merged;
     } else {

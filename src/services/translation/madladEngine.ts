@@ -4,14 +4,14 @@
  * Connects to the local MADLAD translation server.
  */
 
-import { isPlausibleJaTranslation, restoreUtf8ByteEscapes, TRANSLATION_QUALITY_VERSION } from "./quality";
+import { isPlausibleJaTranslation, restoreUtf8ByteEscapes } from "./quality";
 import type { TranslationEngine, TranslationResult, EngineStatus } from "./types";
 
 // Bump whenever the server-side protection or semantic-unit pipeline changes.
 // It is part of the cache identity, so stale translations produced before the
 // current source-preservation rules are never silently reused.
 export const MADLAD_MODEL_VERSION =
-  `3b-mt-v6-transformers-4.57.6-semantic-v77-source-protect-v21-strict-restore-v28-${TRANSLATION_QUALITY_VERSION}`;
+  `3b-mt-v6-transformers-4.57.6-semantic-v78-source-protect-v21-strict-restore-v28-quality-v15-relation-candidate-v6-section-marker`;
 
 const DEFAULT_SERVER_URL = "http://127.0.0.1:8765";
 
@@ -140,6 +140,12 @@ export class MADLADEngine implements TranslationEngine {
       translationTimeMs: data.translation_time_ms,
       charsPerSec: data.chars_per_sec,
       tokensPerSec: data.tokens_per_sec ?? undefined,
+      fallbackStage: typeof data.fallback_stage === "string" ? data.fallback_stage : undefined,
+      fallbackReason: typeof data.fallback_reason === "string" ? data.fallback_reason : undefined,
+      unitFallbackIndices: Array.isArray(data.unit_fallback_indices) ? data.unit_fallback_indices.filter((value: unknown): value is number => typeof value === "number") : undefined,
+      partialText: typeof data.partial_text === "string" ? restoreUtf8ByteEscapes(data.partial_text) : undefined,
+      partialSourceUnits: Array.isArray(data.partial_source_units) ? data.partial_source_units.filter((value: unknown): value is string => typeof value === "string") : undefined,
+      partialUnitTexts: Array.isArray(data.partial_unit_texts) ? data.partial_unit_texts.filter((value: unknown): value is string => typeof value === "string") : undefined,
     };
   }
 
@@ -191,6 +197,12 @@ export class MADLADEngine implements TranslationEngine {
         translationTimeMs: r.translation_time_ms as number,
         charsPerSec: r.chars_per_sec as number,
         tokensPerSec: (r.tokens_per_sec as number) ?? undefined,
+        fallbackStage: typeof r.fallback_stage === "string" ? r.fallback_stage : undefined,
+        fallbackReason: typeof r.fallback_reason === "string" ? r.fallback_reason : undefined,
+        unitFallbackIndices: Array.isArray(r.unit_fallback_indices) ? r.unit_fallback_indices.filter((value): value is number => typeof value === "number") : undefined,
+        partialText: typeof r.partial_text === "string" ? restoreUtf8ByteEscapes(r.partial_text) : undefined,
+        partialSourceUnits: Array.isArray(r.partial_source_units) ? r.partial_source_units.filter((value): value is string => typeof value === "string") : undefined,
+        partialUnitTexts: Array.isArray(r.partial_unit_texts) ? r.partial_unit_texts.filter((value): value is string => typeof value === "string") : undefined,
       };
     });
   }

@@ -301,7 +301,7 @@ SCIENTIFIC_TOKEN_RE = re.compile(
     # Math-font SI symbols are common in native PDF text (for example
     # ``1.49𝑚𝑚``). Keep them atomic just like their ASCII equivalents;
     # otherwise MADLAD may turn the unit into unrelated kana/Latin glyphs.
-    r"|\b\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|Hz|kHz|MHz|GHz|kg|mg|pF|nF|uF|μF|mF|mAh|dB|%|𝑚𝑚|𝑚)\b"  # measurement
+    r"|(?<!\w)(?:≤|≥|<|>|±)?[ \t]*\d+(?:\.\d+)?[ \t]*(?:mAh|MHz|GHz|kHz|Hz|mm|cm|km|ms|kg|mg|pF|nF|uF|μF|mF|uW|mW|kW|W|mV|kV|V|mA|kA|A|dB|Ω|kΩ|MΩ|m|s|%|𝑚𝑚|𝑚)\b"  # measurement
     # Technical/model identifiers such as DeepIV. A terminal run of capitals
     # is a strong identifier signal; protecting every mixed-case product name
     # can move it to the end of a Japanese sentence during greedy decoding.

@@ -33,6 +33,14 @@ class SegmenterTests(unittest.TestCase):
         source = "In line with van Dijk et al. [8] we treat social resources as part of the interaction context."
         units = split_for_translation(source)
         self.assertEqual(len(units), 1)
+
+    def test_equation_abbreviation_stays_with_following_number(self) -> None:
+        source = "The output voltage given by Eqn. 20 is independent of the load resistance. Eqn. 7 gives the corresponding value."
+        units = split_for_translation(source)
+        self.assertEqual(len(units), 2)
+        self.assertTrue(units[0].startswith("The output voltage given by Eqn. 20"))
+        self.assertTrue(units[1].startswith("Eqn. 7"))
+        self.assertTrue(validate_round_trip(source, units))
         self.assertTrue(validate_round_trip(source, units))
 
     def test_proactively_splits_long_although_clause(self) -> None:
@@ -457,6 +465,32 @@ if __name__ == "__main__":
 
 
 class RescueWhileConcessiveTests(unittest.TestCase):
+    def test_rescue_splits_discourse_marker_after_citation_list(self) -> None:
+        source = (
+            "Existing studies have examined social acceptability of mobile gesture techniques [23] and workplace "
+            "interaction contexts [24], to our knowledge, limited research "
+            "has been conducted to assess third-party attitudes toward e-textile system interaction."
+        )
+        units = rescue_units_for_translation(source)
+        self.assertEqual(len(units), 2)
+        self.assertIn("workplace interaction contexts [24]", units[0].text)
+        self.assertTrue(units[0].model_input.rstrip().endswith("."))
+        self.assertTrue(units[1].model_input.startswith("To our knowledge"))
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
+
+    def test_rescue_splits_long_as_well_as_evidence_clause(self) -> None:
+        source = (
+            "While current research has looked at the user perceptions of gesture-based mobile control techniques "
+            "[23] as well as the feasibility of hands-free mobile control techniques (e.g. head-tilting [6], "
+            "foot tapping [5], EMG controllers [4], and wrist-tilting [22]), to our knowledge, limited research "
+            "has been conducted to assess third-party attitudes toward e-textile system interaction."
+        )
+        units = rescue_units_for_translation(source)
+        self.assertEqual(len(units), 3)
+        self.assertTrue(units[0].model_input.startswith("current research has looked"))
+        self.assertTrue(units[1].model_input.startswith("It also examined the feasibility"))
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
+
     def test_rescue_splits_while_concessive_after_decode_failure(self) -> None:
         source = (
             "While we have shown that an increase in core body temperature can be reflected "

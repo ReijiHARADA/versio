@@ -20,6 +20,11 @@ import {
   detectPartialSourceFallback,
   evaluateJaTranslation,
   extractScientificInvariants,
+  extractTechnicalNameCandidates,
+  hasAcronymExpansionDrift,
+  hasExtremeTranslationCompression,
+  hasDetachedNumericCitationRisk,
+  missingTechnicalNameCandidates,
   isExpectedNonProseParagraph,
   isPlausibleJaTranslation,
   looksLikeBibliographyEntry,
@@ -88,6 +93,11 @@ type AuditRow = {
   outputTokens?: number | null;
   translationTimeMs?: number;
   sourceInvariants: string[];
+  technicalNameCandidates: string[];
+  missingTechnicalNameCandidates: string[];
+  detachedNumericCitationRisk: boolean;
+  acronymExpansionDrift: boolean;
+  extremeTranslationCompression: boolean;
   quality?: ReturnType<typeof evaluateJaTranslation>;
   structuralWarnings: string[];
   sourceCategory: SourceCategory;
@@ -188,6 +198,15 @@ function sourceCategory(block: PaperBlock): SourceCategory {
   const statisticalResultEvidence = /\bp\s*[<=>≤≥]\s*\.?\d|\b[FTZχΧ]\s*\(|\b(?:CI|confidence interval|odds ratio|OR|eta|η)\s*(?:=|:)/i.test(text);
   if (warnings.includes("scientific/statistical prose") && statisticalResultEvidence) return "statistical-prose";
   if (warnings.includes("list-item boundary")) return "list";
+  // A wrapped acknowledgements section can arrive as a paragraph whose first
+  // line contains the section label. Keep it out of the ordinary-body
+  // denominator so protection failures in grant/author names do not distort
+  // model-quality measurements.
+  if (/^acknowledg(?:e)?ments?\b/i.test(text)) return "reference-chrome";
+  // A lowercase-leading unit is normally a continuation fragment in the
+  // extracted paper stream. Do not let it inflate the ordinary-body quality
+  // denominator when an older report omitted the structural warning.
+  if (/^[a-z]/.test(text)) return "damaged-extraction";
   if (looksLikeBibliographyEntry(text) || isExpectedNonProseParagraph(text)) return "reference-chrome";
   if (
     warnings.includes("starts like continuation")
@@ -391,9 +410,13 @@ function markdownReport(report: {
       lines.push(
         `### ${row.blockId} · pages ${row.pageStart}${row.pageEnd !== row.pageStart ? `–${row.pageEnd}` : ""}`,
         "",
-        `- Role: ${row.role}; quality: ${row.quality?.score ?? "request failed"}; production decision: ${row.wouldSubmitToModel ? (row.wouldAcceptTranslation ? "accept" : "original fallback after quality gate") : "original fallback before model"}; warnings: ${row.structuralWarnings.join(", ") || "none"}`,
+        `- Role: ${row.role}; quality: ${row.quality?.score ?? "request failed"}; production decision: ${row.wouldSubmitToModel ? (row.wouldAcceptTranslation ? "accept" : "original fallback after quality gate") : "original fallback before model"}; warnings: ${(row.structuralWarnings ?? []).join(", ") || "none"}`,
         `- Source category: ${row.sourceCategory}; fallback stage: ${row.fallbackStage}; fallback reason: ${row.fallbackReason ?? "none"}; server fallback: ${row.serverFallbackStage ? `${row.serverFallbackStage} (${row.serverFallbackReason ?? "reason unavailable"})` : "none"}`,
-        `- Invariants: ${row.sourceInvariants.join(", ") || "none"}`,
+        `- Invariants: ${(row.sourceInvariants ?? []).join(", ") || "none"}`,
+        `- Technical-name audit: ${(row.technicalNameCandidates ?? []).join(", ") || "none"}; missing from output: ${(row.missingTechnicalNameCandidates ?? []).join(", ") || "none"}`,
+        `- Citation-placement audit: ${row.detachedNumericCitationRisk ? "risk" : "none"}`,
+        `- Acronym-expansion audit: ${row.acronymExpansionDrift ? "risk" : "none"}`,
+        `- Compression audit: ${row.extremeTranslationCompression ? "risk" : "none"}`,
         "",
         "**Source**",
         "",
@@ -580,6 +603,19 @@ async function main() {
           outputTokens: result?.output_tokens,
           translationTimeMs: result?.translation_time_ms,
           sourceInvariants: extractScientificInvariants(source).map((item) => item.value),
+          technicalNameCandidates: extractTechnicalNameCandidates(source),
+          missingTechnicalNameCandidates: normalizedTranslation
+            ? missingTechnicalNameCandidates(source, normalizedTranslation)
+            : [],
+          detachedNumericCitationRisk: normalizedTranslation
+            ? hasDetachedNumericCitationRisk(source, normalizedTranslation)
+            : false,
+          acronymExpansionDrift: normalizedTranslation
+            ? hasAcronymExpansionDrift(source, normalizedTranslation)
+            : false,
+          extremeTranslationCompression: normalizedTranslation
+            ? hasExtremeTranslationCompression(source, normalizedTranslation)
+            : false,
           quality,
           structuralWarnings: structuralWarnings(block),
           sourceCategory: category,

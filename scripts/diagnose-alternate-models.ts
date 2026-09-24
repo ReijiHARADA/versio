@@ -18,6 +18,20 @@ const semanticRiskSource = (source: string): boolean => {
     || /\b(?:although|while|however|whereas|unlike|because|therefore|thus|hence|if|unless)\b/i.test(text)
     || /\b(?:p\s*[<=>]|F\s*\(|t\s*\(|χ2?|participants?|sample|odds|confidence interval)\b/i.test(text);
 };
+const sourceRiskProfile = (source: string) => {
+  const text = String(source ?? "");
+  const flags = {
+    long: text.length >= 280,
+    numeric: /\b\d+(?:\.\d+)?\b|%|\b(?:mm|cm|kg|mg|Hz|kHz|GHz|mA|W\/kg)\b/i.test(text),
+    citation: /\[[0-9][0-9,\-–— ]*\]|\b[A-Z][A-Za-z'’-]+(?:\s+et al\.?)?,?\s+\d{4}\b/.test(text),
+    negation: /\b(?:not|no|never|neither|without|cannot|did not|does not|excluded?|exclusion|non[- ]\w+)\b/i.test(text),
+    condition: /\b(?:if|unless|when|whereas|although|while|provided that)\b/i.test(text),
+    comparison: /\b(?:higher|lower|greater|less|more|fewer|compared|comparative|non[- ]comparative|than|versus|vs\.)\b/i.test(text),
+    causality: /\b(?:because|therefore|thus|hence|caused|leads? to|result(?:ed|s)? in)\b/i.test(text),
+    structural: /\b(?:figure|fig\.?|table|section|appendix|equation)\b/i.test(text),
+  };
+  return { ...flags, riskCount: Object.values(flags).filter(Boolean).length, lowRisk: Object.values(flags).every((value) => !value) };
+};
 const rows = report.papers.flatMap((p: any) => p.rows).filter((r: any) =>
   r.sourceCategory === "ordinary-body-prose"
   && (r.readerVisibleFallback || (includeAccepted && semanticRiskSource(r.source))),
@@ -40,7 +54,7 @@ for (const row of rows) {
       if (restored.ok) pieces.push(restored.text); else { pieces.push(unit.source); errors.push(restored.error); }
     }
     const translation = pieces.join(" ").trim(); const quality = evaluateJaTranslation(translation, row.source);
-    out.results.push({ key: row.key, model, source: row.source, units: units.length, rawPieces, translation, restoreErrors: errors, quality, gateAccept: isPlausibleJaTranslation(translation, row.source), madladFallbackReason: row.fallbackReason ?? null });
+    out.results.push({ key: row.key, model, source: row.source, sourceRiskProfile: sourceRiskProfile(row.source), units: units.length, rawPieces, translation, restoreErrors: errors, quality, gateAccept: isPlausibleJaTranslation(translation, row.source), madladFallbackReason: row.fallbackReason ?? null });
     fs.writeFileSync(outputPath, JSON.stringify(out, null, 2));
     console.log(`${model} ${row.key} accept=${isPlausibleJaTranslation(translation, row.source)} restoreErrors=${errors.length}`);
   }
