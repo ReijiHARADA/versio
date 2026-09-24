@@ -5148,8 +5148,8 @@
       "minimal": "36/50",
       "current": "36/50"
     },
-    "status": "guard impact measured; no production routing/protection change",
-    "next": "held-out selective-cascade evaluation on relation-risk rows",
+    "status": "relation guard retained; alternate model remains audit-only",
+    "next": "fresh held-out impact measurement of source-phrase guard, then blind review of Qwen accepted rescues",
     "combinedArtifact": "test-data/real-papers/reports/protection-ab-diagnostic-combined-v1.json",
     "manualReviewArtifact": "test-data/real-papers/reports/protection-ab-manual-review-v1.json",
     "manualReviewRows": 10,
@@ -5178,7 +5178,19 @@
     "semanticReviewArtifact": "test-data/real-papers/reports/production-rescue-semantic-review-v1.json",
     "semanticReviewRows": 6,
     "semanticReviewSeverityGe2": 5,
-    "semanticReviewNote": "targeted non-random review; not a corpus estimate"
+    "semanticReviewNote": "targeted non-random review; not a corpus estimate",
+    "alternateTargetedArtifact": "test-data/real-papers/reports/targeted-qwen14-v1.json",
+    "alternateTargetedModel": "qwen2.5:14b",
+    "alternateTargetedRows": 6,
+    "alternateFinding": "Qwen improves several MADLAD omissions/terminology cases but still has semantic and quality-gate risks; no default cascade",
+    "heldoutQwenFallbackArtifact": "test-data/real-papers/reports/qwen14-heldout-fallback-v1.json",
+    "heldoutQwenFallbackRows": 20,
+    "heldoutQwenAutoAccept": "11/20",
+    "heldoutQwenRejected": "9/20",
+    "heldoutQwenNote": "fallback-selected cohort; auto-accept is not semantic rescue evidence",
+    "latestQualityGuardChange": "untranslated source phrase structural overlap guard",
+    "latestQualityGuardChangeVersion": "v116",
+    "latestQualityGuardTests": "155/155"
   },
   "latestQualityGuardChange": {
     "date": "2026-09-23",

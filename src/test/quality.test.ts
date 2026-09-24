@@ -1335,6 +1335,13 @@ describe("isRetryableTranslationFailure", () => {
     expect(isCascadeQualityAcceptable(output, source)).toBe(false);
   });
 
+  it("rejects a Japanese candidate that leaves a multiword English clause untranslated", () => {
+    const source = "The participant was outspoken bright and politically active.";
+    const output = "participant was outspoken bright and politically active と記述された。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("untranslated source phrase");
+    expect(isCascadeQualityAcceptable(output, source)).toBe(false);
+  });
+
   it("allows source product and method names to remain in a cascade candidate", () => {
     const source = "The SpeeChin prototype used a Thermal Earring sensor.";
     const output = "SpeeChinプロトタイプはThermal Earringセンサーを使用した。";
