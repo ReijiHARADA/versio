@@ -217,7 +217,7 @@ class MADLADEngine(TranslationEngine):
 
     MODEL_ID = "google/madlad400-3b-mt"
     TRANSFORMERS_RUNTIME_VERSION = "4.57.6"
-    QUALITY_GATE_VERSION = "quality-v15-relation-candidate-v6-section-marker"
+    QUALITY_GATE_VERSION = "quality-v34-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue"
     MODEL_VERSION = (
         f"3b-mt-v6-transformers-{TRANSFORMERS_RUNTIME_VERSION}-{SEGMENTER_VERSION}-"
         f"{SOURCE_PROTECTION_VERSION}-strict-restore-v28-{QUALITY_GATE_VERSION}"
@@ -496,9 +496,31 @@ class MADLADEngine(TranslationEngine):
                     flush=True,
                 )
 
-                pieces, in_toks, out_toks = self._translate_chunks(
-                    chunks, target_language, model_inputs
-                )
+                try:
+                    pieces, in_toks, out_toks = self._translate_chunks(
+                        chunks, target_language, model_inputs
+                    )
+                except Exception as initial_error:
+                    # A single independently valid-looking unit can still be
+                    # too difficult for the decoder (for example a long
+                    # coordinate clause).  Previously this exception escaped
+                    # before the existing retry-only rescue path ran, turning
+                    # a recoverable unit failure into a whole-block fallback.
+                    # Retry only when the delimiter-aware rescue actually
+                    # produces more units; otherwise preserve the original
+                    # error and fail closed.
+                    rescue_units = rescue_units_for_translation(translate_body)
+                    if len(rescue_units) <= len(chunks):
+                        raise initial_error
+                    print(
+                        f"[TRANSLATE] unit failure; retrying with {len(rescue_units)} rescue unit(s)",
+                        flush=True,
+                    )
+                    chunks = [unit.text for unit in rescue_units]
+                    model_inputs = [unit.model_input for unit in rescue_units]
+                    pieces, in_toks, out_toks = self._translate_chunks(
+                        chunks, target_language, model_inputs
+                    )
                 input_tokens = sum(in_toks)
                 output_tokens = sum(out_toks)
 
@@ -544,8 +566,40 @@ class MADLADEngine(TranslationEngine):
                                 input_tokens = sum(rescue_in)
                                 output_tokens = sum(rescue_out)
                     if self._is_degenerate(translated_text, text, target_language):
-                        print(f"[TRANSLATE] Rejected degenerate output: {translated_text[:120]!r}")
-                        raise ValueError("degenerate translation output")
+                        # A long logical paragraph can be safely assembled
+                        # from independently validated sentence units. In
+                        # that case the whole-text compression heuristic
+                        # compares Japanese output with the unsegmented source
+                        # and can reject a valid chunked result. Keep all
+                        # source-span, repetition, marker, and instruction
+                        # checks; relax only this aggregate-length case when
+                        # every unit passed its own quality gate.
+                        chunked_length_only = (
+                            len(chunks) > 1
+                            and self._degenerate_reason(translated_text, text, target_language) == "implausibly_short"
+                        )
+                        if not chunked_length_only:
+                            print(f"[TRANSLATE] Rejected degenerate output: {translated_text[:120]!r}")
+                            raise ValueError("degenerate translation output")
+                        print("[TRANSLATE] accepted chunked output despite aggregate compression", flush=True)
+
+                # Validate the assembled logical block after all ordinary and
+                # rescue retries. A split can make every individual unit look
+                # valid while the joined result still omits one of several
+                # quoted experimental conditions.
+                if (
+                    target_language == "ja"
+                    and (
+                        self._quoted_content_span_count(text) >= 2
+                        or (
+                            self._quoted_content_span_count(text) >= 1
+                            and re.search(r"\be\.g\.,?\s*[\u201c\"]", text, re.I)
+                        )
+                    )
+                    and self._quoted_content_span_count(translated_text)
+                    < self._quoted_content_span_count(text)
+                ):
+                    raise ValueError("quoted content span dropped from assembled translation")
 
                 print(f"[TRANSLATE] Output: {translated_text[:200]!r}", flush=True)
 
@@ -783,6 +837,75 @@ class MADLADEngine(TranslationEngine):
         try:
             greedy = self._translate_chunk(text, target_language, model_input)
             log_candidate("greedy", greedy[0])
+            if target_language == "ja":
+                missing_supplement = self._missing_supplementary_references(text, greedy[0])
+                if missing_supplement:
+                    try:
+                        literal = self._translate_chunk(
+                            text, target_language, model_input,
+                            retry_label="supplementary-reference-literal",
+                            unprotected_values=set(missing_supplement),
+                        )
+                        log_candidate("supplementary-reference-literal", literal[0])
+                        if not self._missing_supplementary_references(text, literal[0]):
+                            return literal
+                    except Exception:
+                        pass
+            # Quoted coined names (for example a prototype name) are source
+            # facts. A fluent decode that drops one is unsafe even when its
+            # length and Japanese-script checks pass. Try one deterministic
+            # beam candidate and keep it only when every quoted name survives.
+            if target_language == "ja":
+                missing_names = self._missing_quoted_technical_names(text, greedy[0])
+                if missing_names:
+                    try:
+                        literal = self._translate_chunk(
+                            text,
+                            target_language,
+                            model_input,
+                            retry_label="quoted-name-literal",
+                            unprotected_values=set(missing_names),
+                        )
+                        log_candidate("quoted-name-literal", literal[0])
+                        if not self._missing_quoted_technical_names(text, literal[0]):
+                            return literal
+                    except Exception:
+                        pass
+                    try:
+                        beam = self._translate_chunk(
+                            text, target_language, model_input, num_beams=4,
+                            retry_label="quoted-name-beam",
+                        )
+                        log_candidate("quoted-name-beam", beam[0])
+                        if not self._missing_quoted_technical_names(text, beam[0]):
+                            return beam
+                    except Exception:
+                        pass
+                    raise ValueError(
+                        "quoted technical name dropped by model: " + " || ".join(missing_names)
+                    )
+                # Preserve multiple quoted content spans as structural
+                # evidence.  A fluent partial translation can otherwise drop
+                # one experimental cue or condition while passing length and
+                # numeric checks.  Only enforce this when there are at least
+                # two substantive source spans; a single ordinary quotation
+                # can legitimately be rendered without quote punctuation.
+                source_quote_count = self._quoted_content_span_count(text)
+                requires_quoted_content = source_quote_count >= 2 or (
+                    source_quote_count >= 1 and re.search(r"\be\.g\.,?\s*[\u201c\"]", text, re.I)
+                )
+                if requires_quoted_content and self._quoted_content_span_count(greedy[0]) < source_quote_count:
+                    try:
+                        beam = self._translate_chunk(
+                            text, target_language, model_input, num_beams=4,
+                            retry_label="quoted-content-beam",
+                        )
+                        log_candidate("quoted-content-beam", beam[0])
+                        if self._quoted_content_span_count(beam[0]) >= self._quoted_content_span_count(text):
+                            return beam
+                    except Exception:
+                        pass
+                    raise ValueError("quoted content span dropped by model")
             # A fluent greedy decode can turn epistemic claims such as
             # "might not have been detected" into a categorical statement.
             # Run the existing deterministic beam rescue only when the source
@@ -836,7 +959,32 @@ class MADLADEngine(TranslationEngine):
                             self._alternative_marker_missing(text, greedy[0])
                             and not self._alternative_marker_missing(text, beam[0])
                         )
+                        or (
+                            self._comparative_likelihood_marker_missing(text, greedy[0])
+                            and not self._comparative_likelihood_marker_missing(text, beam[0])
+                        )
+                        or (
+                            self._condition_marker_missing(text, greedy[0])
+                            and not self._condition_marker_missing(text, beam[0])
+                        )
                     ):
+                        return beam
+                except Exception:
+                    pass
+            # Short academic sentences can silently drop the second predicate
+            # of a coordination even when they are too small for the long-unit
+            # retry below.  Probe one deterministic beam candidate only when
+            # the greedy result is unusually compressed and the source has an
+            # explicit coordination. Candidate scoring remains the authority,
+            # so a shorter/less factual beam output is not selected.
+            if target_language == "ja" and self._claim_compression_risk(text, greedy[0]):
+                try:
+                    beam = self._translate_chunk(
+                        text, target_language, model_input, num_beams=4,
+                        retry_label="claim-compression-beam",
+                    )
+                    log_candidate("claim-compression-beam", beam[0])
+                    if self._candidate_score(beam[0], text) > self._candidate_score(greedy[0], text):
                         return beam
                 except Exception:
                     pass
@@ -863,6 +1011,13 @@ class MADLADEngine(TranslationEngine):
                 "protected citation placeholder dropped by model:" in message
                 or "protected citation placeholder malformed" in message
             )
+            quoted_name_failure = "quoted technical name dropped by model:" in message
+            # The quoted-name beam was already attempted in the greedy path.
+            # Do not let the generic beam rescue re-accept the same fluent
+            # omission; it must remain a safe fallback unless a structural
+            # rescue unit can preserve the name.
+            if quoted_name_failure:
+                raise original_error
             if protection_failure:
                 missing = [value.strip() for value in message.partition(":")[2].split(" || ") if value.strip()]
                 # Malformed placeholders do not carry a trustworthy index.
@@ -1013,6 +1168,30 @@ class MADLADEngine(TranslationEngine):
             return translated, sum(in_toks), sum(out_toks)
 
     @staticmethod
+    def _missing_quoted_technical_names(source: str, output: str) -> list[str]:
+        names = [
+            match.group(1)
+            for match in re.finditer(r"[\u201c\"]([A-Z][A-Za-z0-9][A-Za-z0-9_-]{3,})[\u201d\"]", source)
+        ]
+        normalized = output.casefold()
+        return sorted({name for name in names if name.casefold() not in normalized})
+
+    @staticmethod
+    def _quoted_content_span_count(text: str) -> int:
+        """Count substantive quoted spans across English and Japanese quotes."""
+        return sum(
+            1
+            for match in re.finditer(r'[\u201c"]([^\u201d"]{3,})[\u201d"]|「([^」]{3,})」', text)
+            if any((group or "").strip() for group in match.groups())
+        )
+
+    @staticmethod
+    def _missing_supplementary_references(source: str, output: str) -> list[str]:
+        refs = sorted(set(re.findall(r"\bSI\s+Appendix\b", source, flags=re.IGNORECASE)))
+        normalized = output.casefold()
+        return [ref for ref in refs if ref.casefold() not in normalized]
+
+    @staticmethod
     def _epistemic_marker_missing(source: str, output: str) -> bool:
         """Detect loss of explicit English epistemic-negative modality.
 
@@ -1042,10 +1221,38 @@ class MADLADEngine(TranslationEngine):
             r"\b(?:either\b[^.!?]{0,180}\bor\b|whether\b[^.!?]{0,180}\bor\b|"
             r"more\s+(?:likely|slowly|quickly)\b|less\s+(?:likely|slowly|quickly)\b|"
             r"\bonly\b|\bsolely\b|"
-            r"rather\s+than|greater\s+than|smaller\s+than)\b",
+            r"rather\s+than|greater\s+than|smaller\s+than|\bunless\b|\bif\b|\bwhen\b)",
             source,
             re.I,
         ))
+
+    @staticmethod
+    def _claim_compression_risk(source: str, output: str) -> bool:
+        """Identify compact coordinated prose worth one beam probe.
+
+        This is a retry trigger only.  It deliberately does not reject an
+        output or require a particular translated word.  The source must be a
+        substantive sentence with an explicit conjunction and the greedy
+        output must be substantially shorter than the source.  Compact valid
+        translations may still trigger a probe, but candidate scoring decides
+        whether the beam result is retained.
+        """
+        source_compact = "".join(source.split())
+        output_compact = "".join(output.split())
+        if len(source_compact) < 90 or len(output_compact) == 0:
+            return False
+        if len(output_compact) / len(source_compact) >= 0.30:
+            return False
+        return bool(re.search(r"\b(?:and|or)\b", source, re.IGNORECASE))
+
+    @staticmethod
+    def _condition_marker_missing(source: str, output: str) -> bool:
+        """Detect loss of an explicit conditional or exception qualifier."""
+        if re.search(r"\bunless\b", source, re.I):
+            return not re.search(r"ない限り|場合を除|記載がない限り|ただし", output)
+        if re.search(r"\b(?:if|when)\b", source, re.I):
+            return not re.search(r"場合|なら|れば|とき|時|条件", output)
+        return False
 
     @staticmethod
     def _coordinated_clause_parts(source: str) -> list[str] | None:
@@ -1076,6 +1283,13 @@ class MADLADEngine(TranslationEngine):
         if not re.search(r"\b(?:either|whether)\b[^.!?]{0,180}\bor\b", source, re.I):
             return False
         return not re.search(r"(?:いずれか|どちらか|どちら|または|あるいは|か(?:どうか|、|。|$))", output)
+
+    @staticmethod
+    def _comparative_likelihood_marker_missing(source: str, output: str) -> bool:
+        """Detect loss of an explicit more/less-likely comparison."""
+        if not re.search(r"\b(?:more|less)\s+likely\b", source, re.I):
+            return False
+        return not re.search(r"可能性が(?:高|低)|より(?:も)?可能性|尤度", output)
 
     @staticmethod
     def _candidate_score(output: str, source: str) -> float:
@@ -1405,6 +1619,25 @@ class MADLADEngine(TranslationEngine):
         return match is not None and match.start() > 0
 
     @staticmethod
+    def _has_adjacent_repeated_latin_token(output: str) -> bool:
+        """Detect placeholder restoration or decode glue duplicating a token."""
+        return bool(re.search(r"(?<![A-Za-z])([A-Za-z]{3,})\1(?![A-Za-z])", output, re.IGNORECASE))
+
+    @staticmethod
+    def _has_corrupted_identifier_glue(source: str, output: str) -> bool:
+        """Catch mutated protected acronym compounds such as ``RTz+CTz``.
+
+        The check is structural: it only runs when the source contains an
+        uppercase experimental compound and looks for an impossible lowercase
+        glue suffix on the same uppercase pieces. It does not name a domain or
+        reject ordinary ``z`` variables.
+        """
+        compounds = re.findall(r"(?<![A-Za-z0-9])[A-Z]{2,}\s*[+/&]\s*[A-Z]{2,}(?![A-Za-z0-9])", source)
+        if not compounds:
+            return False
+        return bool(re.search(r"(?<![A-Za-z0-9])[A-Z]{2,}z\s*[+/&]\s*[A-Z]{2,}z(?![A-Za-z0-9])", output))
+
+    @staticmethod
     def _has_unsupported_numbered_enumeration(output: str, source: str) -> bool:
         """Detect a decoder inventing a numbered list absent from the source.
 
@@ -1417,6 +1650,20 @@ class MADLADEngine(TranslationEngine):
         source_markers = len(re.findall(r"(?:^|[\n\s])\d{1,2}[.)](?=\s|[^\d])", source))
         output_markers = len(re.findall(r"(?:^|[\n\s,、])\d{1,2}[.)](?=\s|[^\d])", output))
         return source_markers < 2 and output_markers >= 3
+
+    @staticmethod
+    def _has_unsupported_inventory(output: str, source: str) -> bool:
+        """Detect a decode that invents a long comma-separated inventory.
+
+        A short prose claim can occasionally drift into a fluent list even
+        though the source contains no list (for example, two reasons becoming
+        a catalogue of unrelated factors).  Compare structural separators,
+        rather than matching any domain term.  Requiring a large gap keeps
+        ordinary translated lists and Japanese comma usage unaffected.
+        """
+        source_separators = len(re.findall(r"[,;、；]", source))
+        output_separators = len(re.findall(r"[,、;；]", output))
+        return source_separators <= 2 and output_separators >= 8
 
     @staticmethod
     def _has_missing_section_marker(output: str, source: str) -> bool:
@@ -1434,6 +1681,47 @@ class MADLADEngine(TranslationEngine):
         return not re.search(rf"(?<!\d){re.escape(marker.group(1))}(?!\d)", output)
 
     @staticmethod
+    def _missing_contextual_count(source: str, output: str) -> str | None:
+        """Return a missing multi-digit study/participant count.
+
+        A fluent decode that drops a screening total or participant count is
+        unsafe even when the remaining numbers survive. Keep this deliberately
+        narrow: require a 3+ digit count adjacent to an academic count noun,
+        and compare exact digits after normalizing comma grouping.
+        """
+        source_counts = re.findall(
+            r"(?<![\d.,])(?:\d{1,3}(?:,\d{3})+|\d{3,})(?=\s*(?:stud(?:y|ies)|participant|subject|sample|record|article|paper)s?\b)",
+            source,
+            re.I,
+        )
+        if not source_counts:
+            return None
+        output_digits = {value.replace(",", "") for value in re.findall(r"\d[\d,]*", output)}
+        for value in source_counts:
+            if value.replace(",", "") not in output_digits:
+                return value
+        return None
+
+    @staticmethod
+    def _has_unexpected_contextual_number(source: str, output: str) -> str | None:
+        """Detect a new 3+ digit number in count-heavy research prose."""
+        source_numbers = {
+            value.replace(",", "")
+            for value in re.findall(r"(?<![\d.,])(?:\d{1,3}(?:,\d{3})+|\d{3,})", source)
+        }
+        contextual = re.findall(
+            r"(?<![\d.,])(?:\d{1,3}(?:,\d{3})+|\d{3,})(?=\s*(?:stud(?:y|ies)|participant|subject|sample|record|article|paper)s?\b)",
+            source,
+            re.I,
+        )
+        if len(contextual) < 2:
+            return None
+        for value in re.findall(r"(?<![\d.,])(?:\d{1,3}(?:,\d{3})+|\d{3,})(?![\d.,])", output):
+            if value.replace(",", "") not in source_numbers:
+                return value
+        return None
+
+    @staticmethod
     def _is_degenerate(output: str, source: str, target_language: str) -> bool:
         compact = "".join(output.split())
         if not compact:
@@ -1441,6 +1729,12 @@ class MADLADEngine(TranslationEngine):
         if re.search(r"(.)\1{7,}", compact):
             return True
         if re.search(r"[\u0e00-\u0e7f]", output):
+            return True
+        # MADLAD occasionally inserts a single Korean syllable into an
+        # otherwise fluent Japanese sentence. Japanese output may contain
+        # Latin identifiers, but Hangul is never a valid Japanese translation
+        # span; reject it before it becomes reader-visible.
+        if target_language == "ja" and re.search(r"[\uac00-\ud7af]", output):
             return True
         counts: dict[str, int] = {}
         for ch in compact:
@@ -1468,11 +1762,21 @@ class MADLADEngine(TranslationEngine):
                 return True
             if MADLADEngine._has_translation_instruction_contamination(output):
                 return True
+            if MADLADEngine._has_adjacent_repeated_latin_token(output):
+                return True
+            if MADLADEngine._has_corrupted_identifier_glue(source, output):
+                return True
             if MADLADEngine._has_abnormal_phrase_repetition(output):
                 return True
             if MADLADEngine._has_unsupported_numbered_enumeration(output, source):
                 return True
+            if MADLADEngine._has_unsupported_inventory(output, source):
+                return True
             if MADLADEngine._has_missing_section_marker(output, source):
+                return True
+            if MADLADEngine._missing_contextual_count(source, output):
+                return True
+            if MADLADEngine._has_unexpected_contextual_number(source, output):
                 return True
         return False
 
@@ -1484,18 +1788,32 @@ class MADLADEngine(TranslationEngine):
             return "empty"
         if re.search(r"<0x[0-9a-f]{2}>", output, re.I):
             return "byte_escape"
+        if target_language == "ja" and re.search(r"[\uac00-\ud7af]", output):
+            return "foreign_script:hangul"
         if re.search(r"(.)\1{7,}", compact):
             return "character_repetition"
         if MADLADEngine._has_unsupported_numbered_enumeration(output, source):
             return "unsupported_numbered_enumeration"
+        if MADLADEngine._has_unsupported_inventory(output, source):
+            return "unsupported_inventory"
+        if MADLADEngine._has_corrupted_identifier_glue(source, output):
+            return "corrupted_identifier_glue"
         if MADLADEngine._has_missing_section_marker(output, source):
             return "missing_section_marker"
+        missing_count = MADLADEngine._missing_contextual_count(source, output)
+        if missing_count:
+            return f"missing_contextual_count:{missing_count}"
+        unexpected_count = MADLADEngine._has_unexpected_contextual_number(source, output)
+        if unexpected_count:
+            return f"unexpected_contextual_number:{unexpected_count}"
         if os.getenv("MADLAD_DIAGNOSTIC_ALLOW_SHORT") != "1" and MADLADEngine._is_implausibly_short_unit(output, source):
             return "implausibly_short"
         if MADLADEngine._contains_untranslated_source_span(output, source):
             return "source_span"
         if MADLADEngine._has_translation_instruction_contamination(output):
             return "instruction_contamination"
+        if MADLADEngine._has_adjacent_repeated_latin_token(output):
+            return "adjacent_repeated_latin_token"
         if MADLADEngine._has_abnormal_phrase_repetition(output):
             return "phrase_repetition"
         if target_language == "ja" and not re.search(r"[\u3040-\u30ff\u4e00-\u9fff]", output):
@@ -1593,6 +1911,11 @@ class MADLADEngine(TranslationEngine):
         source_compact = "".join(source.split())
         output_compact = "".join(output.split())
         words = re.findall(r"[A-Za-z]{2,}", source)
+        has_multiple_sentences = len(re.findall(r"[.!?][\"”’')\]]*\s+[A-Z(]", source)) >= 1
+        citation_count = len(re.findall(
+            r"\([A-Z][A-Za-z'’-]+(?:\s+et\s+al\.?)?,?\s+\d{4}[a-z]?[^)]*\)",
+            source,
+        ))
         has_negative_explanatory_as = bool(
             re.search(
                 r"\bas\s+(?:they|it|this|these|the\s+\w+)\s+"
@@ -1610,7 +1933,9 @@ class MADLADEngine(TranslationEngine):
         # lets the scheduler preserve the original instead of accepting that
         # fluent omission. The threshold is intentionally limited to prose
         # with both a meaningful word count and a non-trivial source length.
-        if (len(source_compact) < 110 and not has_negative_explanatory_as) or len(words) < 18:
+        if (len(source_compact) < 110 and not has_negative_explanatory_as) or (
+            len(words) < 18 and not (has_multiple_sentences and len(source_compact) >= 180)
+        ):
             return False
         ratio_source = source_compact
         # Academic prose often wraps a complete claim in a reporting frame such
@@ -1647,10 +1972,11 @@ class MADLADEngine(TranslationEngine):
         # (common when a PDF list marker is present). Keep the stricter floor
         # for substantial multi-sentence units without changing short-label
         # behavior.
-        has_multiple_sentences = len(re.findall(r"[.!?]\s+[A-Z(]", source)) >= 1
         floor = (
             0.42
             if has_negative_explanatory_as and len(ratio_source) < 180
+            else 0.40
+            if citation_count >= 3 and len(ratio_source) >= 250
             else 0.35 if has_multiple_sentences and len(ratio_source) >= 180
             else 0.21 if len(ratio_source) < 180 and not has_qualification else 0.28
         )

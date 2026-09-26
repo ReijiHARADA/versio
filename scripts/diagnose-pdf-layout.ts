@@ -11,7 +11,20 @@ type SuspiciousBlock = {
   bbox: { x: number; y: number; width: number; height: number };
   columns: string[];
   xClusters: number[];
+  geometryFlags: {
+    mixedColumns: boolean;
+    xPositionJump: boolean;
+    continuationMarker: boolean;
+    listLike: boolean;
+  };
   text: string;
+  lines: Array<{
+    y: number;
+    x: number;
+    width: number;
+    text: string;
+    items: Array<{ x: number; width: number; text: string; fontSize: number; fontName: string }>;
+  }>;
 };
 
 function clusterXs(xs: number[]): number[] {
@@ -44,7 +57,29 @@ const suspicious: SuspiciousBlock[] = blocks.flatMap((block, index) => {
     bbox: block.bbox,
     columns: [...new Set(block.lines.map((line) => line.column))],
     xClusters,
+    geometryFlags: {
+      mixedColumns: new Set(block.lines.map((line) => line.column)).size > 1,
+      xPositionJump: block.lines.some((line, lineIndex) => {
+        const previous = block.lines[lineIndex - 1];
+        return previous !== undefined && Math.abs(line.x - previous.x) > Math.max(24, typicalWidth * 0.35);
+      }),
+      continuationMarker: /\(continued on (?:the )?next page\)|continued on next page/i.test(block.text),
+      listLike: block.lines.some((line) => /^(?:[-–—•‣∙]|\([a-z]\)|\d+[.)])\s+/i.test(line.text.trim())),
+    },
     text: block.text.slice(0, 240),
+    lines: block.lines.map((line) => ({
+      y: line.y,
+      x: line.x,
+      width: line.width,
+      text: line.text,
+      items: line.items.map((item) => ({
+        x: item.x,
+        width: item.width,
+        text: item.text,
+        fontSize: item.fontSize,
+        fontName: item.fontName,
+      })),
+    })),
   }];
 });
 const report = { version: "pdf-layout-diagnostic-v1", pdf: pdfPath, pages: pages.length, suspiciousBlocks: suspicious };

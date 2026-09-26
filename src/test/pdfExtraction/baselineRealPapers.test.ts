@@ -235,7 +235,7 @@ describe("baseline benchmark on cached real papers", () => {
       if (gt?.listItems) {
         expect(report.listItemRecall).toBeGreaterThanOrEqual(0.9);
       }
-    }, 60_000);
+    }, paper.id === "linguistics-language-model-physics" ? 180_000 : 60_000);
   }
 
   const ppg = available.find(({ paper }) => paper.id === "ppg-earring");

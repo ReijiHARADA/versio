@@ -49,6 +49,7 @@ type SourceCategory =
   | "ordinary-body-prose"
   | "list"
   | "caption"
+  | "section-heading"
   | "statistical-prose"
   | "reference-chrome"
   | "table-contamination"
@@ -172,8 +173,27 @@ function structuralWarnings(block: PaperBlock): string[] {
   }
   if (block.pageStart !== block.pageEnd) warnings.push("cross-page logical block");
   if (/^(?:fig(?:ure)?\.?|table)\s+\d+/i.test(text)) warnings.push("caption-shaped text");
+  // Short numbered or title-like section labels are structural units, even
+  // when a PDF resolver exposes them as paragraphs. Keep them out of the
+  // ordinary-body model denominator; this is audit attribution only.
+  if (
+    text.length <= 96 &&
+    (/^\d+(?:\.\d+)+\s+\S/.test(text) ||
+      /^[A-Z][A-Za-z0-9'’:-]*(?:\s+[A-Z][A-Za-z0-9'’:-]*){0,5}\.?$/.test(text)) &&
+    !/[!?;,]/.test(text)
+  ) warnings.push("section-heading-shaped text");
+  if (
+    /^\d+(?:\.\d+)+\s+[^.]{1,80}\.\s+[A-Z]/.test(text) ||
+    /^(?:[A-Z][A-Za-z0-9'’:-]*\s*){1,4}\.\s+[A-Z]/.test(text)
+  ) warnings.push("section-label-prefix");
+  if (/^(?:[A-Z][A-Za-z]{1,24}\s+\d+[A-Za-z]?\s+){2,}/.test(text)) {
+    warnings.push("repeated numbered chart/table labels");
+  }
   if (/\b(?:n\s*=|p\s*[<=>]|[FTZχ²]\s*\()/i.test(text)) warnings.push("scientific/statistical prose");
-  if (/^(?:[-•‣∙]|\d+[.)])\s+/.test(text)) warnings.push("list-item boundary");
+  // PDF list bullets are often emitted as en/em dashes or parenthesized
+  // letters. Treat these as structural boundaries so extracted list fragments
+  // do not inflate the ordinary-prose translation denominator.
+  if (/^(?:[-–—•‣∙]|\([a-z]\)|\d+[.)])\s+/i.test(text)) warnings.push("list-item boundary");
   if (/\b(?:and|or|but|to|of|for|where|which|that)\s*$/i.test(text)) warnings.push("ends like continuation");
   if (/^(?:and|or|but|to|of|for|where|which|that|one|exception)\b/i.test(text)) warnings.push("starts like continuation");
   return warnings;
@@ -183,14 +203,22 @@ function sourceCategory(block: PaperBlock): SourceCategory {
   const text = compact(block.original ?? "");
   const warnings = structuralWarnings(block);
   if (block.metadata.tableSourceFallback === true || block.metadata.role === "table") return "table-contamination";
+  if (warnings.includes("repeated numbered chart/table labels")) return "table-contamination";
   const chromeSignals = [
     /creativecommons|copyright\s+\d{4}|all rights reserved/i,
     /doi\s*:\s*10\.\d{4,9}\//i,
     /isbn\s*\d|acm\s+\d{4}/i,
     /licensed under a creative commons/i,
   ].filter((pattern) => pattern.test(text)).length;
+  // Affiliation lines can be emitted as paragraphs when a PDF loses its
+  // author/affiliation role boundary. Keep them out of the ordinary-body
+  // denominator; their correct fix belongs to extraction/resolver.
+  if (/^\d+\s+[^.!?]{0,180}\b(?:University|Institute|College|Department|School)\b/i.test(text)) {
+    return "reference-chrome";
+  }
   if (chromeSignals > 0 && /[A-Za-z]{3,}\s+[A-Za-z]{3,}/.test(text)) return "damaged-extraction";
   if (warnings.includes("caption-shaped text")) return "caption";
+  if (warnings.includes("section-heading-shaped text") || warnings.includes("section-label-prefix")) return "section-heading";
   // A participant-count token such as `N = 142` can appear in an otherwise
   // ordinary abstract. Do not remove the whole unit from the ordinary-prose
   // denominator unless it contains results evidence (test statistic, p-value,
@@ -364,6 +392,12 @@ function markdownReport(report: {
 }): string {
   const completed = report.papers.flatMap((entry) => entry.rows).filter((row) => row.translation);
   const fallbacks = report.papers.flatMap((entry) => entry.rows).filter((row) => row.readerVisibleFallback ?? row.sourceFallback);
+  // Pending/failed rows are excluded from the reader-visible denominator. They
+  // are reported separately so an interrupted run cannot look artificially
+  // safe or unsafe by changing the denominator.
+  const evaluable = report.papers.flatMap((entry) => entry.rows).filter((row) =>
+    Boolean(row.translation || row.readerVisibleFallback || row.sourceFallback),
+  );
   const partialSourceFallbacks = completed.filter((row) => row.partialSourceFallback);
   const fullyTranslatedAccepts = completed.filter((row) => row.wouldAcceptTranslation && !row.partialSourceFallback);
   const failed = report.papers.flatMap((entry) => entry.rows).filter((row) => !row.translation && !(row.readerVisibleFallback ?? row.sourceFallback));
@@ -372,14 +406,18 @@ function markdownReport(report: {
   const blockedBeforeModel = report.papers.flatMap((entry) => entry.rows).filter((row) => !row.wouldSubmitToModel);
   const warnings = completed.filter((row) => row.structuralWarnings.length > 0);
   const rows = report.papers.flatMap((entry) => entry.rows);
+  const nonEvaluable = rows.filter((row) => !row.translation && !(row.readerVisibleFallback ?? row.sourceFallback));
+  const ordinaryBody = evaluable.filter((row) => row.sourceCategory === "ordinary-body-prose");
+  const ordinaryBodyFallbacks = ordinaryBody.filter((row) => row.readerVisibleFallback ?? row.sourceFallback);
   const categories = [...new Set(rows.map((row) => row.sourceCategory))].sort();
   const categoryLines = categories.flatMap((category) => {
     const scoped = rows.filter((row) => row.sourceCategory === category);
+    const scopedEvaluable = scoped.filter((row) => row.translation || row.readerVisibleFallback || row.sourceFallback);
     const visibleFallbacks = scoped.filter((row) => row.readerVisibleFallback ?? row.sourceFallback).length;
     const partials = scoped.filter((row) => row.partialSourceFallback).length;
     const fullyTranslated = scoped.filter((row) => row.fallbackStage === "none" && !row.partialSourceFallback).length;
     return [
-      `- ${category}: ${scoped.length} rows; accepts ${scoped.filter((row) => row.fallbackStage === "none").length}; fully translated accepts ${fullyTranslated}; partial source fallbacks ${partials}; fallbacks ${visibleFallbacks} (${(visibleFallbacks / Math.max(1, scoped.length) * 100).toFixed(1)}%)`,
+      `- ${category}: ${scoped.length} rows (${scopedEvaluable.length} evaluable); accepts ${scoped.filter((row) => row.fallbackStage === "none").length}; fully translated accepts ${fullyTranslated}; partial source fallbacks ${partials}; fallbacks ${visibleFallbacks} (${(visibleFallbacks / Math.max(1, scopedEvaluable.length) * 100).toFixed(1)}% of evaluable)`,
     ];
   });
   const lines = [
@@ -389,7 +427,8 @@ function markdownReport(report: {
     `- Endpoint: ${report.endpoint}`,
     `- Server status at start: ${report.serverStatus?.model_version ?? "unknown"} (${report.serverStatus?.device ?? "unknown"}; phase=${report.serverStatus?.phase ?? "unknown"})`,
     `- Papers evaluated: ${report.papers.filter((entry) => !entry.error).length}/${report.papers.length}`,
-    `- Model responses: ${completed.length}; original fallbacks: ${fallbacks.length}; partial source fallbacks inside accepted output: ${partialSourceFallbacks.length}; fully translated accepts: ${fullyTranslatedAccepts.length}; failed requests: ${failed.length}`,
+    `- Evaluable units: ${evaluable.length}; model responses: ${completed.length}; original fallbacks: ${fallbacks.length} (${(fallbacks.length / Math.max(1, evaluable.length) * 100).toFixed(1)}% of evaluable); partial source fallbacks inside accepted output: ${partialSourceFallbacks.length}; fully translated accepts: ${fullyTranslatedAccepts.length}; failed/pending requests: ${nonEvaluable.length}`,
+    `- Ordinary-body fallback: ${ordinaryBodyFallbacks.length}/${ordinaryBody.length} (${(ordinaryBodyFallbacks.length / Math.max(1, ordinaryBody.length) * 100).toFixed(1)}% of evaluable ordinary-body units)`,
     `- Score below 0.80: ${lowQuality.length}; rejected by the production quality gate: ${rejected.length}`,
     `- Blocked by the production input policy before model submission: ${blockedBeforeModel.length}`,
     `- Units needing structural review: ${warnings.length}`,
@@ -574,7 +613,12 @@ async function main() {
         // Match the production path's deterministic, source-grounded
         // terminology pass. Per-paper LLM glossaries remain intentionally
         // excluded here because this audit must be reproducible offline.
-        const sourceFallback = structurallySkipped || !wouldSubmitToModel || result?.text === source;
+        // A server fallback may still carry an assembled partial text for
+        // audit diagnostics. It is never a completed reader translation:
+        // classify it as visible fallback before running the client gate so
+        // the benchmark cannot overstate quality by accepting partial units.
+        const serverFallback = Boolean(result?.fallback_stage && result.fallback_stage !== "none");
+        const sourceFallback = structurallySkipped || !wouldSubmitToModel || result?.text === source || serverFallback;
         const normalizedTranslation = result && !sourceFallback
           ? normalizeSourceGroundedTerminology(source, result.text)
           : undefined;

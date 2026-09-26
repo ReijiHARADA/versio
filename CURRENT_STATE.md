@@ -11680,3 +11680,2038 @@ After bumping the cache identity to semantic-v78, the focused TypeScript suites 
 ## v405 rescue benchmark partial checkpoint (2026-09-25)
 
 The v78 rescue segmentation was replayed on two selected papers before the benchmark process was interrupted: `dont-mind-me` and `step-to-charge`, 24 sampled blocks total. 15 were accepted and 9 were reader-visible fallbacks (6 pre-model structural/extraction, 3 post-model). The repaired citation/EMG block in `dont-mind-me` remains accepted. This partial sample is not a corpus-wide fallback estimate; the selected five-paper run did not complete. Artifact: `reports/translation-audit-v405-rescue-summary.json` and checkpoint `reports/translation-audit-v405-rescue.json`. Server is healthy; remaining selected papers are `covid-ml-review`, `ergonomics-quantified-factory-worker`, and `ergonomics-flight-deck-applications`. Next work is to diagnose the long-request/checkpoint behavior and resume remaining papers independently.
+
+## v405 three-paper checkpoint (2026-09-25)
+
+The rescue replay now has completed checkpoints for `dont-mind-me`, `step-to-charge`, and `covid-ml-review` (36 sampled blocks). 20 were accepted and 16 fell back (12 pre-model structural/extraction, 4 post-model), a 44.4% mixed-sample rate; this is not comparable to the 26.5% ordinary-body corpus baseline because the sample includes structurally unsafe blocks. The repaired `dont-mind-me` citation/EMG case remains successful. Summary: `reports/translation-audit-v405-partial-summary.json`; individual report: `reports/translation-audit-v405-covid.{json,md}`. Remaining selected papers: `ergonomics-quantified-factory-worker`, `ergonomics-flight-deck-applications`.
+
+## v405 five-paper rescue replay complete (2026-09-25)
+
+Completed the selected v405 replay: five papers, 60 sampled blocks, 30 accepted and 30 fallback (21 pre-model structural/extraction, 9 post-model). The raw 50% is a mixed sample containing structural rows and must not be compared directly to the 26.5% ordinary-body baseline. The repaired `dont-mind-me` citation/EMG case remains accepted; the next analysis is category-filtered ordinary-body and post-model manual review. Summary: `reports/translation-audit-v405-summary.json`. The v78 server was restarted during the run and is ready.
+
+## v405 ordinary-body triage (2026-09-25)
+
+Category-filtered v405 rows contain 29 ordinary-body blocks: 20 accepted and 9 post-model fallbacks (31.0% in this small purposive subset; not a corpus-wide rate). Triage shows generic issues rather than one paper-specific failure: two MADLAD degenerate/quality failures, two protected-token/restore failures, three untranslated-source or foreign-span failures, and two invariant false-reject candidates (`5-7`/`MERS`/`858`, `DwI`). Artifact: `reports/translation-audit-v405-ordinary-summary.json`. These rows are the next manual-review set; no gate relaxation or blacklist was added.
+
+## v406 detached figure-reference false-reject fix (2026-09-25)
+
+Manual review of the nine v405 ordinary-body fallbacks found two likely false rejects. Added a generic quality-gate exception for a figure-reference-only punctuation span emitted after otherwise complete Japanese prose, analogous to the existing citation-only handling. It preserves the invariant and only relaxes the orphaned-sentence check when the detached span contains no prose. Added a regression test; quality suite passes **180/180**. No production translation model or extraction behavior changed. The remaining v405 fallback rows include genuine omissions, source fragments, protected-token restore failures, and one method-name drift (`DwI`), so the gate remains conservative.
+
+The targeted v406 `step-to-charge` block-query replay completed one unit, but it selected a different paragraph than the original `b-adfca33d-3` row and still fell back for an untranslated repeated source label. The figure-reference fix is therefore validated by the dedicated unit test, not yet by the original real-paper row; a stable block-id replay is needed before claiming a benchmark rescue.
+
+## v406 saved-output verification (2026-09-25)
+
+Applied the v406 quality gate to the saved output for the original `step-to-charge` `b-adfca33d-3` fallback. The output preserves the complete translated prose and emits `(Fig. 2 (b))` as a detached final span; after the generic figure-only exception, `evaluateJaTranslation` returns no reasons and `isPlausibleJaTranslation` returns true. This confirms a false reject is removed at the gate layer. A fresh server translation is still not needed for this deterministic postprocess verification.
+
+## v407 citation-window false-reject fix (2026-09-25)
+
+The v405 ergonomics fallback `e.g. Rock Health et al. 2019` showed that a four-word overlap window could omit the year/leading citation marker and be misclassified as untranslated prose. `hasUntranslatedSourcePhrase` now inspects surrounding source context before flagging a window, preserving author-year citation spans while continuing to reject ordinary untranslated clauses. Added a regression test; quality suite passes **181/181**, typecheck/lint/diff checks pass. This is a gate false-reject reduction only; no translation output is accepted when ordinary source prose remains untranslated.
+
+## v407 saved-output verification (2026-09-25)
+
+Re-evaluated saved block `ergonomics-quantified-factory-worker:b-33c99e7a` with the v407 gate. The prior `untranslated source phrase` reason for the `e.g. Rock Health et al. 2019` citation window is gone; the output is accepted while ordinary source prose remains guarded. Artifact: `reports/translation-audit-v407-citation-recheck.json`.
+
+## v407 ordinary-body deterministic recheck (2026-09-25)
+
+Applying v406/v407 to saved v405 outputs rescues two false rejects: detached `(Fig. 2 (b))` and the author-year citation window `e.g. Rock Health et al. 2019`. The 29-row ordinary-body subset changes from 20/29 accepted (31.0% fallback) to 22/29 accepted (24.1% fallback). This is a gate-only deterministic recheck, not a new model run and not a corpus-wide estimate. Artifact: `reports/translation-audit-v407-ordinary-summary.json`.
+
+Focused v407 regression after the deterministic recheck passes **190/190** (quality 181, MADLAD engine 8, model version 1), with typecheck and lint passing. Existing PDF.js canvas warnings remain non-fatal.
+
+## v407 full saved-output recheck (2026-09-25)
+
+Applied the current gate to 199 v399 ordinary-body rows that had a saved translation and were submitted to the model. Previous saved fallback among these was 27; v407 recheck yields 29, with one rescue (`cognitive-dual-task-older-adults:b-96e71d10`). This is a deterministic recheck only and exposes two additional gate differences/regressions that require review; it does not show a corpus-wide improvement. The original 234-row baseline still includes 35 structural/source-fallback rows and remains 26.5% overall. Artifact: `reports/translation-audit-v407-v399-recheck.json`.
+
+## v408 mixed-script and author-year recheck refinement (2026-09-25)
+
+Full saved-output diff review identified one safe false-reject class: source-backed hyphenated technical identifiers such as `Power-over-Skin`/`Stick-and-forget` were split into mixed-script fragments. The mixed-script guard now recognizes components of source-backed hyphenated identifiers. Detached author-year citation handling also tolerates an adjacent Japanese quote marker. Ordinary untranslated phrases such as `major milestones shown in Figure 8` remain rejected. Quality tests pass **181/181**, typecheck and lint pass after the refinement.
+
+## v408 full saved-output recheck (2026-09-25)
+
+After v408, the 199-row v399 saved-output recheck has 27 fallback rows, the same count as the prior saved production decision. One long medical-methods row is rescued, while one genuine untranslated phrase (`major milestones shown in Figure 8`) remains rejected. This neutral net result confirms the identifier/citation refinements did not broadly weaken the gate. Artifact: `reports/translation-audit-v408-v399-recheck.json`.
+
+## v409 protection comparison verification (2026-09-25)
+
+The existing 50-block protection comparison remains the authoritative diagnostic: raw 35/50 automatic diagnostic errors, minimal 36/50, current 36/50. No production protection change was made. Re-ran TypeScript typecheck, oxlint, and focused citation/segmenter Python tests: all passed (124 tests, 11 subtests). Translation server remains ready. Next work is selective protection on high-span held-out blocks with post-translation invariant verification, followed by manual semantic review before any production routing change.
+
+## v410 protection-span stratification (2026-09-25)
+
+Added diagnostic-only `scripts/analyze-protection-span-buckets.py` and artifact `reports/protection-span-buckets-v1.json` from the saved 30-block development cohort. Current protection completed 10/10 at 0 spans, 5/6 at 1–2, 5/8 at 3–5, and 0/6 at 6+; raw completed 6/6 in the 6+ bucket. This is a strong placeholder-interaction signal, but the cohort is not a semantic gold set: raw outputs may destroy facts, so no threshold or production behavior was changed. The next experiment must manually review the six 6+ pairs and test selective protection on held-out blocks with invariant verification.
+
+## v411 high-span manual review queue (2026-09-25)
+
+Created `reports/protection-high-span-review-queue-v1.json` with the six saved rows having 6+ current protected spans. Raw output is not safe to adopt blindly: examples include altered measurement scopes in the medical walking-test row and altered participant/task details in cognitive rows. Current protection fails primarily through dropped identifier/citation placeholders. Manual labels are still pending; this artifact is a review queue, not a gold evaluation.
+
+## v412 high-span triage refinement (2026-09-25)
+
+The v2 review queue adds source numeric-token and placeholder-residue triage signals. The six rows are not all clean ordinary prose: the medical `10MWT/5XSTS` row is visibly table/procedure contamination (raw invents altered distances), and the COVID rows contain mixed acronym/table/reference material. This separates extraction/source reconstruction risk from placeholder-induced fallback; selective raw rescue must exclude structurally contaminated blocks and still requires manual review for the remaining cognitive prose.
+
+## v413 preliminary high-span semantic review (2026-09-25)
+
+Reviewed all six high-span rows against source/Raw/Current. Four cognitive rows are coherent source prose where Raw omits most claims (severity 3); two COVID/medical rows are extraction/table-contaminated and must be attributed primarily to source reconstruction (severity 4). Raw rescue is therefore unsafe even when it completes. The review artifact is explicitly preliminary and requires independent human confirmation; no production routing change was made.
+
+## v414 comparative-relation gate hardening (2026-09-25)
+
+A saved real-paper row exposed that `evaluateJaTranslation` reported `comparative likelihood relation missing`, while `isPlausibleJaTranslation` did not reject that reason. Added generic hard rejection for missing strong contrast, condition, exclusivity, and comparative-likelihood relations, with a regression test for the Linda/GPT-3 pattern. Quality suite passes 181/181; typecheck and lint pass. This may increase fallback for relation-loss outputs, but prevents fluent unsafe accepts and does not alter model decoding or extraction.
+
+## v415 saved-output relation-gate recheck (2026-09-25)
+
+Rechecked the five-row `cognitive-psychology-gpt3` extraction rescue report with the hardened gate. Three previously accepted outputs are now rejected for missing comparative likelihood, missing condition relation, or missing scientific invariants. Ordinary-body fallback changes from 1/5 to 4/5 in this intentionally difficult sample; this is a safety recheck, not a corpus-wide fallback estimate. The result confirms that relation signals must be evaluated as hard safety evidence and then addressed through better decode/cascade, rather than weakening the gate.
+
+## v416 regression verification (2026-09-25)
+
+After v414 relation-gate hardening, quality tests pass 181/181 and extraction corpus regression passes 108/108 (2 test files). Typecheck and lint also pass. PDF.js emitted only the known nonfatal ColorSpace warnings during cached real-paper extraction; no extraction regression was observed.
+
+## v417 relation-gate saved rescue recheck (2026-09-25)
+
+Rechecked the 16-row v405 rescue sample with the hardened cascade gate. Before 4/16 visible fallbacks; strict relation/invariant gate yields 7/16 (43.75%) and rejects seven previously accepted outputs, including missing condition, dropped scientific invariants, and a method identifier. One detached-figure false reject remains rescued. This confirms the gate catches unsafe accepts but also shows fallback cannot reach the 5% product target by gating alone; the next work must improve source units/decode or use a validated alternate cascade.
+
+## v418 comparative-likelihood retry (2026-09-25)
+
+Added a generic MADLAD relation-candidate beam retry for `more/less likely` constructions, retaining the beam only when it restores a Japanese likelihood marker. Added Python regression coverage (49 madlad-quality tests) and bumped the server/client cache identity to semantic-v79 / quality-v16. Typecheck, lint, and focused Python tests pass. This is a bounded retry; it does not weaken the client hard gate.
+
+## v419 server activation (2026-09-25)
+
+Restarted the local translation server after v418. Health is `ready` with `model_loaded: true`; startup log reports quality-v16 relation-likelihood-beam-v7 and embedding integrity verified. Client cache identity was aligned to the active semantic-v78 server segmenter plus the new quality version.
+
+## v420 live comparative fixture (2026-09-25)
+
+Sent a fixed hospital comparative-likelihood sentence through the restarted server. Active model version is `...quality-v16-relation-likelihood-beam-v7-section-marker`; output was `出生児の60%以上が男児である日数が多い病院はどの病院かを問い合わせた。`, preserving the 60% fact and the hospital comparison. Artifact: `reports/live-comparative-likelihood-v420.json`.
+
+## v421 live relation fixture sweep (2026-09-25)
+
+Live server smoke test covered condition, exclusivity, alternative-choice, and negation sentences. Outputs preserved the intended relations (`場合`, `のみ`, `あるいは`, `認められなかった`) with no server fallback. This confirms the retry path does not require a fixed Japanese wording; client quality evaluation remains the final safety check. Artifact: `reports/live-relation-fixtures-v421.json`.
+
+## v422 fresh GPT-3 paper benchmark (2026-09-25)
+
+Fresh 12-block run against the restarted v16 server completed and checkpointed. The sample has 4 accepted and 8 reader-visible fallbacks: 3 pre-model source-boundary warnings and 5 post-model failures (comparative/exclusivity/condition relation loss or placeholder/quality rejection). The new beam retry did not make this difficult paper safe enough for automatic acceptance; this is evidence for source repair and alternate-cascade work, not a reason to weaken the gate. Artifact: `reports/translation-audit-v422-gpt3-relation-retry.json`.
+
+## v423 GPT-3 pre-model attribution (2026-09-25)
+
+Inspected all three pre-model fallbacks from v422. One cross-page block ends with figure labels (`model A B`), and two blocks are genuine source fragments (one ends after `and`, one begins with `itself`). These should be repaired in extraction/reading-order or preserved as source fragments; they must not be sent to MADLAD or counted as model failures. No paper-specific rule added.
+
+## v424 GPT-3 geometry diagnostic (2026-09-25)
+
+Ran the existing geometry-only PDF layout diagnostic on `cognitive-psychology-gpt3.pdf` (19 pages). It found 17 suspicious multi-x-band paragraph blocks; several contain chart/question labels mixed into prose (for example `Linda Cab Hospital...`, `Horizon 1/Horizon 6`, and option labels). This confirms the v422 source-boundary failures are generic figure/question-label contamination visible in native geometry, not MADLAD behavior. Artifact: `reports/cognitive-gpt3-layout-v1.json`. No production relabeling was applied.
+
+
+## v425 side-band split attempt and rollback (2026-09-25)
+
+A conservative item-level split was prototyped for narrow x-coordinate questionnaire bands. It removed `A: Option 1.` from the target GPT-3 body blocks, but the first generalized version caused two unrelated extraction regressions (ppg-earring abstract stitching and cognitive-motor-incidental-memory paragraph completeness) in the 108-case corpus. The production change was fully reverted; this attempt is retained as evidence that item-level side-band splitting needs stronger document-level evidence before it is safe. Typecheck remains passing and the existing v424 geometry diagnostic remains authoritative.
+
+## v426 item-level geometry diagnostic (2026-09-25)
+
+Expanded `scripts/diagnose-pdf-layout.ts` to preserve per-line native geometry and per-item x/width/font evidence for suspicious multi-band blocks. This is diagnostic-only and does not change production extraction. The refreshed GPT-3 report is `reports/cognitive-gpt3-layout-v2.json` (17 suspicious blocks with item detail). Targeted extraction regressions after the v425 rollback pass 4/4; typecheck passes.
+
+## v427 extraction regression restored (2026-09-25)
+
+After rolling back the unsafe item-level side-band splitter, the full extraction corpus and reading-order regression suite passes 108/108. The diagnostic-only per-item geometry report remains available for designing a resolver-level evidence change without modifying source text.
+
+## v428 mixed native band evidence (2026-09-25)
+
+Added a diagnostic-only `mixed-native-x-band` evidence generator to generic candidates. It detects multiple baselines containing a wide body run and a narrow secondary native x-band, but does not alter role scores or remove text. Pipeline tests (26/26), typecheck, and lint pass. This preserves a resolver-visible signal for future geometry-aware handling without the regressions caused by item-level splitting.
+
+## v429 full unit regression and cache identity sync (2026-09-25)
+
+The diagnostic-only mixed-native-band evidence passes the full unit suite: 67 test files, 535 tests. Updated the stale cache-identity assertion to the active quality-v16 relation-likelihood-beam-v7 server version. Typecheck and lint also pass.
+
+## v430 fresh GPT-3 benchmark after evidence changes (2026-09-25)
+
+Re-ran the 12-block cognitive-psychology GPT-3 sample against the live ready server using `--resume`. The run completed and produced `reports/translation-audit-v430-current.{md,json}`. Results remain 4 fully translated accepts and 8 reader-visible original fallbacks (3 pre-model damaged-extraction units, 3 post-model quality-gate rejects, and 2 additional fallback rows in the audit accounting); ordinary-body prose remains 3/6 fallback in this difficult sample. No improvement is claimed from the diagnostic evidence alone; it is not connected to fallback policy. The report confirms the remaining main failures are source fragments and semantic relation/invariant loss, not server availability.
+
+## v431 condition-relation retry and cache identity (2026-09-25)
+
+Expanded the generic relation-risk detector to include `unless`, `if`, and `when`, and added a condition-marker check (`ない限り`/exception or conditional Japanese markers). A beam candidate is retained only when it repairs a missing condition relation; otherwise the conservative candidate remains subject to the client quality gate. Bumped the server/client cache identity to `quality-v17-relation-condition-beam-v8-section-marker` so prior generations are not reused. Python MADLAD quality tests pass 50/50; focused JS quality/model-version tests pass 182/182; typecheck and lint pass. Restarted the live server and confirmed model version `3b-mt-v6-transformers-4.57.6-semantic-v78-source-protect-v21-strict-restore-v28-quality-v17-relation-condition-beam-v8-section-marker`, embedding integrity verification, and ready health. A direct live fixture (`We focused on Davinci unless otherwise noted.`) generated Japanese but dropped the exception qualifier; this is correctly left for client-side quality rejection rather than accepted as a completed translation. The retry path is therefore conservative, but this fixture does not show a model rescue yet.
+
+## v432 fresh condition benchmark and Gemma paired diagnostic (2026-09-25)
+
+Re-ran the same 12-block `cognitive-psychology-gpt3` sample against the v431 ready MADLAD server (`translation-audit-v431-condition.{json,md}`). The result remains 4 accepted and 8 reader-visible fallbacks; no fallback-rate improvement is claimed. The `unless otherwise noted` row still loses the qualifier under MADLAD and is correctly rejected by the client relation gate. Source-fragment and mixed-content rows remain extraction/input issues.
+
+Ran an audit-only Gemma2 9B paired comparison on the six clean ordinary-body rows from that report using the same production segmenter, citation protection, restore path, and TypeScript quality gate. Artifact: `reports/alternate-v432-gemma-gpt3.json`. Gemma accepted 3/6, including the `unless otherwise noted` row with the qualifier preserved. One row failed citation restore, and two were rejected for untranslated repeated labels; one accepted row contains visibly contaminated chart labels, so the result is not sufficient for automatic routing. Ollama was started only for this diagnostic and stopped afterward. This is evidence for a selective-cascade candidate, not a production switch.
+
+## v433 full regression and held-out overlap check (2026-09-25)
+
+The full JS suite passes **67 files / 535 tests** after v432. The existing Gemma held-out runner correctly refused the selected `translation-audit-v64-heldout-four-disciplines.json` rows because exact source hashes already occur in prior Gemma artifacts; this prevents falsely labeling previously seen sources as held-out. No overlap override or production routing change was made. A genuinely unseen corpus slice must be selected before using it to tune a cascade.
+
+## v434 Gemma paired semantic triage (2026-09-25)
+
+Created `reports/alternate-v432-gemma-gpt3-manual-review.json` from the six paired outputs. This is an agent review, explicitly not a blind human gold label. Three Gemma outputs passed the gate; four of six were assigned severity >=2, including one severity-4 chart/chrome contamination false accept and one severity-3 citation-restore failure. The `unless otherwise noted` row was judged severity 0 with all condition/model/temperature facts preserved. This confirms Gemma can rescue a MADLAD relation failure but cannot yet be globally or automatically routed; extraction integrity and citation restore must gate the cascade first.
+
+## v435 selective-cascade condition regression test (2026-09-25)
+
+Added a regression test proving that an opt-in alternate candidate is accepted when it preserves an `unless` qualifier, while the primary candidate omits it. The test uses the same `OllamaTranslationEngine` relation-risk path and does not enable cascade by default. Focused JS quality/cascade tests pass **188/188**; typecheck and lint pass. Production routing remains unchanged pending genuinely unseen held-out semantic review.
+
+## v436 Qwen2.5 3B paired diagnostic (2026-09-25)
+
+Compared Qwen2.5 3B with Gemma2 9B on the same six cognitive GPT-3 blocks, using identical production segmentation, protection, restore, and quality gate. Artifact: `reports/alternate-v436-model-compare-gpt3.json`. Gemma accepted 3/6; Qwen2.5 3B accepted 2/6. Both models accepted the same chart-label-contaminated row, so automatic gate acceptance is not sufficient. Qwen did not provide a safer rescue path for the condition/citation failures. This is a paired diagnostic with prior-source overlap, explicitly not held-out; no production routing change was made. Ollama was stopped after the run.
+
+## v437 geometry evidence resolver integration (2026-09-25)
+
+Integrated two independent high-confidence geometry signals into the document resolver: `mixed-native-x-band` plus `repeated-numeric-chart-label` now resolve a paragraph candidate to `other` only when both exceed strict thresholds (0.8 and 0.75). This prevents fused chart/figure labels from being submitted as ordinary prose while leaving single weak signals unchanged. Full extraction corpus and reading-order regression passes **108/108**; full JS suite passes **67 files / 536 tests**; typecheck and lint pass. This is a source-integrity safety improvement; a fresh translation benchmark is required to measure whether it reduces unsafe accepts without increasing ordinary-body fallback beyond the product target.
+
+## v438 protection-span diagnostic refresh (2026-09-25)
+
+Refreshed the existing protection A/B diagnostic summary from the saved 30-block development cohort (`protection-ab-v254-30.json`) into `reports/protection-span-buckets-v1.json`. This is diagnostic evidence only, not a semantic gold label and not a production threshold decision. In this cohort, raw generation completed all 30 rows; minimal and current protection both had 10 errors, concentrated in the 3–5 and 6+ protected-span buckets. The 6+ bucket had 6/6 errors under both protected conditions, while the zero-span bucket had 0 errors in all conditions. This supports measuring protection density as a risk factor, but does not by itself prove that raw translation is semantically safer because automatic completion is not correctness. No production protection behavior was changed.
+
+## v439 protection benchmark reproducibility (2026-09-25)
+
+Added an explicit `--source-report` option to `translation-server/scripts/benchmark_protection_ab.py`, so Raw/Minimal/Current comparisons can be rerun against a named fresh audit artifact instead of silently using the default report. The option preserves the same engine, segmenter, greedy generation, and production isolation. Python syntax validation and `git diff --check` pass; no production translation behavior changed.
+
+## v440 protection A/B saved-cohort summary (2026-09-25)
+
+Summarized the saved 30-block Raw/Minimal/Current diagnostic into `reports/protection-ab-summary-v440.json`. Raw completed 30/30 automatic decodes; Minimal and Current each had 20/30 completed and 10/30 errors. Mean decode latency was approximately 3.32s for Raw/Minimal and 3.36s for Current. These are model/restore completion statistics only; no semantic correctness claim is made and no production policy was changed. Python MADLAD quality tests remain 50/50.
+
+## v441 protection semantic review queue (2026-09-25)
+
+Generated `reports/protection-ab-review-queue-v440.json` with 8 rows where Raw and Current produced different outputs and both had output available. The queue includes source text, all three condition outputs, protection count, and empty manual labels. Automatic completion/error remains diagnostic only; this queue is the next manual comparison set for numeric facts, citations, negation, scope, and relations.
+
+## v442 preliminary protection triage (2026-09-25)
+
+Added `reports/protection-ab-manual-review-v440-preliminary.json` with explicit non-gold triage labels for the 8 differing rows. Most severe cases are long-source truncation shared by Raw and protected arms, indicating translation-unit/output-length failure rather than protection alone. One row shows Current preserving an RT+CT identifier that Raw omits; another preserves citation `[15]` while dropping wording. These labels are agent preliminary review only and are not used to tune production thresholds.
+
+## v443 segmented protection comparison evidence (2026-09-25)
+
+Compared saved whole-block (`protection-ab-v254-30.json`) and production-segmented (`protection-ab-segmented-v1.json`) diagnostics. Whole-block automatic errors were Raw 0/30, Minimal 10/30, Current 10/30; segmented units were Raw 1/30, Minimal 3/30, Current 3/30. These cohorts are not paired-equivalent because segmentation changes the sampled units, so this is evidence that shorter units reduce placeholder failures in this saved sample, not a causal production metric. No production change was made.
+
+## v444 paired-shape linkage check (2026-09-25)
+
+Attempted to link whole-block and segmented protection cohorts by stable block key. Only 4/30 rows have matching historical keys because the segmented audit was generated from a different source-report generation; this is insufficient for a causal paired benchmark. Saved `reports/protection-paired-shape-v444.json` as an explicit data-quality finding. A new paired run must use one source report and preserve source hashes before comparing whole vs segmented units.
+
+## v445 paired protection input preparation (2026-09-25)
+
+Added diagnostic-only `translation-server/scripts/prepare_protection_paired.py`. It derives whole and segmented arms from one named audit report, assigns a normalized source SHA-256, and checks segment round-trip before any model call. Ran it on the fresh GPT-3 geometry audit: 6 eligible rows, 6/6 segment round-trips. Artifact: `reports/protection-paired-input-v445.json`. This prevents cross-generation key drift; production translation is unchanged.
+
+## v446 cross-discipline paired-input coverage (2026-09-25)
+
+Ran the hash-stable paired-input preparation across available discipline audit reports. Cognitive GPT-3 produced 7 eligible ordinary clean rows with 7/7 segment round-trips. The computational-linguistics and ergonomics reports currently produced 0 eligible rows under the strict ordinary-body/clean filter; this is a corpus eligibility gap, not a translation result. The generated files are `reports/protection-paired-input-translation-audit-*.json`. No production behavior changed.
+
+## v447 broad paired corpus preparation (2026-09-25)
+
+Audited available reports for eligible clean ordinary-body rows and prepared a 50-row paired input from `translation-audit-fresh-20260920-v16.json`. All 50 rows passed normalized segment round-trip. Artifact: `reports/protection-paired-input-fresh-20260920-v16.json`. This is an input corpus only; model outputs and semantic labels are still pending, and no production policy changed.
+
+## v448 live paired whole-vs-segmented diagnostic (2026-09-25)
+
+Stopped the ready server temporarily, ran the same six-row GPT-3 source report through the direct MADLAD engine, and restarted the server in a persistent tty session. Whole-block outputs were rejected for all three arms on the first six rows (the client diagnostic gate classified them as implausibly short). A segmented run on the same report produced 6 units: the first source yielded 3 units with Raw 0 errors / Minimal 1 / Current 1; the second source yielded 3 units with all arms 0 errors. The remaining four whole rows had no segmented units in the six-unit cap, so this is an initial paired signal, not a fallback-rate benchmark. Artifacts: `reports/protection-ab-paired-whole-v448.json`, `reports/protection-ab-paired-segmented-v448.json`, and `reports/protection-ab-paired-summary-v448.json`. Server health was restored after the run.
+
+## v449 expanded paired whole-vs-segmented diagnostic (2026-09-25)
+
+Ran 12 whole-block rows and the first 12 segment units from the same `translation-audit-fresh-20260920-v16.json` source report under identical MADLAD greedy conditions. Whole-block automatic errors: Raw 10/12, Minimal 11/12, Current 11/12. The segmented arm produced 12 units with Raw 0 errors, Minimal 2, Current 2. This is a strong diagnostic signal that semantic unit length / gate rejection contributes materially to fallback, while protection still introduces two failures in the selected units. It is not yet a semantic accuracy rate because automatic completion is not a gold label and the 12-unit cap is not a full block reconstruction. Artifacts: `reports/protection-ab-paired-whole-v449.json`, `reports/protection-ab-paired-segmented-v449.json`, `reports/protection-ab-paired-summary-v449.json`. Server restarted and health-ready afterward.
+
+## v450 segmented protection review queue (2026-09-25)
+
+Extracted 4 differing units from the 12-unit paired run and saved preliminary triage in `reports/protection-ab-paired-manual-v449-preliminary.json`. Two rows are likely protection-related placeholder-drop/rejection candidates; two show Current retaining citation/context markers that Raw omitted. These are explicitly non-gold agent labels and require human semantic review before any production change.
+
+## v451 paired error attribution (2026-09-25)
+
+Inspected the two Minimal/Current errors in the 12-unit segmented run. Both are explicit `protected citation placeholder dropped by model` errors (`API` in the model-list unit and `17 (Hospital, see SI Appendix)` in the hospital-problem unit); they are not length-ratio failures. Raw translated both units. This isolates a concrete protection failure mode for the next atomic-span/rescue experiment without weakening the quality gate or changing production behavior.
+
+## v452 prior atomic-span rescue evidence (2026-09-25)
+
+Checked the existing atomic-first-span rescue artifact. For the hospital-problem case, atomic replacement did not produce an accepted result; it ended in `degenerate translation output` despite a fluent-looking partial Japanese output. Therefore atomic replacement alone is not yet a safe production fix. Keep it diagnostic and require a complete paired comparison plus invariant/semantic review before changing protection.
+
+## v453 protection exposure diagnostic switch (2026-09-25)
+
+Added diagnostic-only `--expose-all-spans` to `translation-server/scripts/benchmark_protection_ab.py`. This leaves detected protected spans visible to MADLAD while retaining the same post-decode/invariant path, allowing direct measurement of protection cost on the identified `API` and hospital-reference failures. It is explicitly not a production setting. Python syntax validation passes.
+
+## v454 exposed-span diagnostic result (2026-09-25)
+
+Ran the same 12 segmented units with `--expose-all-spans`. Raw remained 0/12 errors; the exposed diagnostic arm completed 0/12 errors, while Current protection remained 2/12 errors. The two failures identified earlier therefore disappear when the protected spans remain visible to the model, strongly implicating opaque placeholder context loss for this sample. This is not sufficient to remove protection globally: the exposed arm has no pre-translation fact shielding, and semantic/invariant review is still required. Server restarted and is ready afterward.
+
+## v455 exposed-arm interpretation correction (2026-09-25)
+
+The exposed-span arm completed 12/12 model calls, but its `protectedSpanCount` is zero by design, so the direct engine path does not enforce restore-time placeholder presence for those spans. For example, the exposed hospital unit output omits the source reference `17 (Hospital, see SI Appendix)` while still completing. Therefore the 0-error exposed result proves only that opaque placeholders caused model-call rejection; it does not prove fact preservation. Any minimal-protection production candidate must keep post-translation source-invariant verification active and reject/repair missing citations.
+
+## v456 exposed-arm invariant instrumentation (2026-09-25)
+
+Updated the diagnostic protection benchmark to record `sourceProtectedSpanCount` and `missingSourceSpans` independently of whether spans were exposed to MADLAD. This closes the prior diagnostic blind spot where exposed output could omit citations yet report zero errors. The change is benchmark-only; Python syntax, diff checks, and server health pass.
+
+## v457 exposed-arm posthoc invariant audit (2026-09-25)
+
+Applied the original citation protection detector to the saved exposed-span outputs and recorded `missingSourceSpansPosthoc`. The exposed arm's apparent 0/12 model errors includes outputs that omit protected facts; the posthoc audit identifies those omissions without rerunning MADLAD. Artifact: `reports/protection-ab-paired-exposed-v457-posthoc.json`. This confirms the exposed arm is useful for measuring placeholder-induced rejection only, not as a safe translation candidate.
+
+## v457 exposed-arm posthoc invariant audit (2026-09-25)
+
+Applied the original citation protection detector to the saved exposed-span outputs and recorded `missingSourceSpansPosthoc`. The exposed arm's apparent 0/12 model errors includes outputs that omit protected facts; the posthoc audit identifies those omissions without rerunning MADLAD. Artifact: `reports/protection-ab-paired-exposed-v457-posthoc.json`. This confirms the exposed arm is useful for measuring placeholder-induced rejection only, not as a safe translation candidate.
+
+## v458 diagnostic regression check (2026-09-25)
+
+After the exposed-span instrumentation and posthoc audit, the Python MADLAD quality suite remains **50/50**; `git diff --check` passes; translation server health is `model_loaded: true`, `phase: ready`. No production protection or quality-gate behavior was changed.
+
+## v459 intermediate protection diagnostic arm (2026-09-25)
+
+Added diagnostic-only `--expose-short-context-spans` to the protection benchmark. It exposes short opaque identifiers and compact document-reference spans while continuing to protect measurements, statistics, URLs, and DOI-like facts. The arm is intended to test a middle point between Current and expose-all; it does not alter production behavior. Python syntax and diff checks pass.
+
+## v460 — short-context protection diagnostic (2026-09-25)
+
+- Ran the same 12 segmented ordinary-body units from `translation-audit-fresh-20260920-v16.json` with a diagnostic arm that exposes short identifier/context spans while retaining measurements, statistics, URLs and DOIs under protection.
+- Artifact: `test-data/real-papers/reports/protection-ab-paired-short-context-v460.json`.
+- Automatic model-call errors: raw 0/12, short-context minimal 0/12, current 2/12. Current errors remain protected-span restoration failures; observed missing spans include `API`, `16 (Cab, see SI Appendix)`, and `17 (Hospital, see SI Appendix)`.
+- This arm reduced completion failures in the small sample, but it is not a semantic-quality result: no production change is justified until restored scientific invariants and blind semantic review are measured. The result supports testing narrower protection plus post-translation verification, not removing protection wholesale.
+- Translation server was restarted after the experiment and returned ready on port 8765 with the existing production model version.
+
+## v461 — cross-paper short-context protection diagnostic (2026-09-25)
+
+- Repeated the paired segmented experiment on the next 12 clean ordinary-body units, offset from the initial cognitive-psychology sample, covering the conversation-analysis/user-experience paper.
+- Artifact: `test-data/real-papers/reports/protection-ab-paired-short-context-v461.json`.
+- Automatic model-call errors: raw 1/12, short-context minimal 1/12, current 2/12. Current had one protected-placeholder drop (`CA`) and one degenerate output; raw/minimal also had a degenerate output on the same short unit. Minimal left two numeric citation spans (`[15]`, `[3]`) absent from decoded output, while current restored all protected spans for completed units.
+- This cross-paper sample does not support a production switch: exposing short context reduces placeholder-drop pressure but does not eliminate model/quality failures, and raw/minimal can omit citations. Keep the experiment diagnostic-only and continue comparing protection benefit vs semantic/fact cost on broader held-out samples.
+- Server restart initiated after the run; wait for ready state before ordinary app use.
+
+## v462 — production rescue path validation (2026-09-25)
+
+- Re-ran the 12-unit cross-paper sample through the actual `_translate_chunk_with_rescue` path rather than the direct diagnostic decoder. Artifact: `test-data/real-papers/reports/protection-ab-production-rescue-v462.json`.
+- Production current-protection path completed 11/12 units; one short unit (`conversation-analysis-user-experience:b-7dede292#unit-1`) remained `degenerate translation output` after greedy and beam rescue. The `CA` placeholder-drop case was successfully recovered by the existing identifier-only unprotected retry and restored as `[15]`/source citation output.
+- This corrects the earlier interpretation: direct `_translate_chunk` errors overstate reader-visible fallback for identifier drops. The remaining failure is a model/quality-gate short-unit issue, not evidence that all current protection should be removed.
+- Server restart is in progress after the benchmark; no production code was changed in this experiment.
+
+## v463 — retry-only em-dash coordination rescue (2026-09-25)
+
+- Added a generic retry-only segmenter rule for balanced top-level em/en-dash claim clauses when both sides are substantial. It preserves the original source slices and only runs after a decode failure; normal segmentation is unchanged.
+- This targets the observed cross-paper short-unit failure where a complete claim joined a setup clause and its consequence with an em dash. It is not paper-specific and does not accept a shortened model output.
+- Added round-trip regression coverage in `translation-server/tests/test_segmenter.py`.
+- Validation: segmenter tests 55 passed (8 subtests), MADLAD quality tests 50 passed, Python compile and `git diff --check` passed.
+- Translation server restarted after the change; new process is loading the updated segmenter and must reach ready before use.
+
+- Endpoint smoke regression for the observed em-dash sentence after v463: no fallback, output retained both the setup claim and the follow-up comprehension claim. Artifact: `reports/em-dash-rescue-v463.json`.
+
+## v464 — API smoke sample after rescue change (2026-09-25)
+
+- Sent five clean ordinary-body samples from five separate papers through the live `/translate` API after v463: interactive-jewellery, significant-other, power-over-skin, thermal-earring, and ppg-earring.
+- All five returned without fallback. Long samples were segmented and all final clauses were present in the complete response; the earlier inspection that appeared truncated had only printed the first 500 characters. Numeric/measurement strings in the thermal-earring sample (`11.3 mm`, `31 mm`, `335 mg`, `14.4 uW`, `28`, `5`, `20`, `0.32`) were retained.
+- Artifact: `test-data/real-papers/reports/api-sample-v464.json`.
+- This is an API smoke result, not blind semantic gold; terminology and subtle relation errors still require manual review.
+
+## v466 — quoted prototype-name invariant (2026-09-25)
+
+- Fresh API replay of `dont-mind-me:b-2089b50e` exposed a fluent but unsafe omission: the output dropped the coined prototype name `“Jogwheel”` and changed the sentence describing the two evaluations. The server returned no fallback, so language/length checks alone were insufficient.
+- Added a narrow structural quality invariant in `src/services/translation/quality.ts`: quoted coined technical names (for example `“Jogwheel”`) must survive in output. This is a general source-structure check, not a word blacklist; ordinary sentence-initial prose and unquoted transliteratable terms remain unaffected.
+- Added regression coverage in `src/test/quality.test.ts`. Quality suite: 182 tests passed.
+- Replay artifact: `test-data/real-papers/reports/target-replay-v465.json`. The new gate is client-side and intentionally rejects this unsafe fluent output until a rescue/cascade can preserve the name.
+
+- Audit-only scan of accepted rows in fresh `translation-audit.json` found one additional quoted-name omission (`Earring01`) besides the replayed `Jogwheel`. Artifact: `reports/quoted-name-omissions-v466.json`. This validates that the new invariant catches a recurring structural failure rather than a single paper word.
+
+## v467 — quoted-name selective rescue and safe fallback (2026-09-25)
+
+- Added translation-server detection for dropped quoted coined names and a one-time beam candidate. Generic beam rescue can no longer re-accept the same omission after the quoted-name beam fails.
+- Endpoint verification with the `Jogwheel` fixture now returns an explicit whole-item source fallback (with `unit_0` metadata) instead of the previously fluent but unsafe Japanese omission. This confirms the guard is active in the production server path.
+- Current beam did not preserve `Jogwheel`, so no unsafe translation was accepted; preserving the name remains an alternate-model/segmentation follow-up rather than being faked by deterministic insertion.
+- Python quality tests: 51 passed; Python compile passed. Server restarted and ready with the updated code.
+
+## v468 — quoted-name literal retry evaluation (2026-09-25)
+
+- Added a quoted-name literal retry before beam: on a quoted coined-name omission, expose only that name as literal context and accept the candidate only if the exact name survives.
+- Replayed the `Jogwheel` fixture through the live server. MADLAD still dropped the name in both literal and beam retries, so the server correctly returned whole-item source fallback; no unsafe output was accepted. This confirms the cascade is conservative and that this 3B checkpoint needs alternate-model or further context strategy to reduce this fallback.
+- Python quality tests: 51 passed; server restarted and ready.
+## v469 CAT-Translate alternate-model diagnostic (2026-09-25)
+
+Attempted the audit-only CAT-Translate 1.4B Jogwheel fixture comparison after stopping the MADLAD server. The cached CAT-Translate 1.4B process terminated before writing `cat-jogwheel-v469.json`; no production route or quality policy was changed. A follow-up 0.8B attempt exposed the reproducible local cause: the cached model directory has no `snapshots/` directory, so Transformers cannot load it offline (`HFValidationError`), and the candidate comparison is therefore incomplete rather than evidence about CAT quality. The MADLAD server was restarted afterward and `/health` reports `model_loaded: true`, `phase: ready`, using the verified Transformers 4.57.6 runtime. Next: obtain a complete local CAT snapshot (or another already complete cached candidate) before repeating the same fixture comparison; keep MADLAD as production baseline.
+## v469b CAT-Translate 3.3B fixture comparison (2026-09-25)
+
+The complete locally cached CAT-Translate 3.3B snapshot was available and was evaluated with the same production segmenter/protection harness on the Jogwheel fixture. It produced one restored unit, 80 input tokens and 32 output tokens, preserving the quoted prototype name (`ジョグホイール`), `Figure 1a`, and the count of two evaluations. Output: `test-data/real-papers/reports/cat-jogwheel-v469-33b.json`. This is a single diagnostic fixture, not enough to route production; it does show the candidate can translate this previously unsafe MADLAD case without falling back. CAT 1.4B remains unverified because its earlier process exited before output; CAT 0.8B has no complete local snapshot.
+## v470 CAT-Translate 3.3B five-row held-out pilot (2026-09-25)
+
+Ran the complete local CAT-Translate 3.3B snapshot against five source rows from the existing held-out input using the same production segmenter/protection harness. Four rows restored completely; one long cognitive-uncertainty row had one protected citation placeholder dropped, so `allUnitsRestored` was false and must be treated as fallback. The candidate preserved ordinary numeric/citation content in the completed rows, but this is still an audit-only five-row pilot without blind semantic review or a matched MADLAD run. Full artifact: `test-data/real-papers/reports/cat-heldout-v470-33b.json`. The failure also confirms CAT is not automatically safe under current placeholder handling; do not route it yet. MADLAD remains the production baseline.
+## v471 matched CAT/MADLAD five-row API comparison (2026-09-25)
+
+Ran the same five held-out rows through CAT-Translate 3.3B and the live MADLAD production endpoint. CAT restored 4/5 units; its only failure was a dropped citation placeholder in the long cognitive-uncertainty row. MADLAD completed 4/5 at the endpoint; its only fallback was the source row beginning `Patient data:` (an extraction/fragment-like input), while it completed the cognitive row that CAT rejected. The other three rows completed in both systems. This small matched sample does not establish a model winner: CAT has a lower apparent fallback on the extraction-fragment row, while MADLAD is safer on the citation-heavy cognitive row. Full artifacts: `cat-heldout-v470-33b.json` and `madlad-heldout-v470-api.json`. No production routing change.
+## v472 matched 18-row CAT/MADLAD comparison (2026-09-25)
+
+Expanded the same held-out cohort to 18 rows. With the current production citation/scientific protection harness, CAT-Translate 3.3B restored 12/18 rows (6 failed because the candidate dropped protected spans, including `WADD`, `SSC`, `MS/MEW`, `HFE`, `18`, and `Table 2`; one row also had an empty output). The live MADLAD endpoint completed 16/18; its two fallbacks were `Patient data:` and `One probe in this direction...`, both source/long-unit quality failures. Four rows that CAT rejected for placeholder loss completed in MADLAD. This is stronger evidence against routing CAT unchanged: its apparent 33% fallback is primarily protection incompatibility, and removing protection without a matched invariant/manual review would risk facts. Artifacts: `cat-heldout-v472-33b.json`, `madlad-heldout-v472-api.json`. No production change.
+## v473 CAT raw-protection arm (2026-09-25)
+
+Re-ran the same 18 rows through CAT-Translate 3.3B with all pre-translation placeholders disabled. Raw CAT produced non-empty output for 18/18, versus 12/18 with current protection; all six current-arm failures were therefore protection-induced at the harness level. This does not prove raw output is safer: the raw arm leaves citations, acronyms, measurements and table references exposed and needs invariant plus manual semantic review before any use. The paired result is diagnostic evidence for a possible CAT minimal-protection experiment, not a production change. Artifact: `test-data/real-papers/reports/cat-heldout-v473-33b-raw.json`.
+## v474 CAT raw invariant spot-check (2026-09-25)
+
+A lightweight invariant scan over the 18-row CAT raw artifact found 3 rows with source numeric/year tokens not visibly preserved (including `1999`/`2002` and `2023`/`2024`). This confirms the raw arm's 18/18 non-empty rate is not a safe replacement for protection: removing placeholders trades restore failures for fact-loss risk. No production policy changed. A minimal-protection arm with post-translation invariant verification remains the next diagnostic step.
+## v475 CAT minimal-protection diagnostic (2026-09-25)
+
+Added an audit-only `--minimal-protection` mode to `translation-server/scripts/compare_chat_candidate.py`, reusing the existing diagnostic policy: ordinary author-year citations, measurements, statistics and years remain visible; opaque spans such as DOI/URL-like identifiers remain protected. No production path uses this flag. On the same 18-row CAT 3.3B cohort, minimal protection restored 13/18 rows, compared with 12/18 under current protection and 18/18 raw. The remaining failures were mostly opaque identifier/table-reference drops; raw still had numeric/year loss in three rows. This modest improvement does not justify CAT routing, but supports testing a selective minimal policy with post-translation invariant verification. Artifact: `test-data/real-papers/reports/cat-heldout-v475-33b-minimal.json`.
+## v476 minimal-mode validation (2026-09-25)
+
+Validated the new audit-only CAT minimal-protection flag with Python compile, `translation-server/tests/test_madlad_quality.py`, and `translation-server/tests/test_segmenter.py`: 106 tests plus 8 subtests passed; `git diff --check` passed. The mode remains benchmark-only and does not alter the production MADLAD server.
+## v477 MADLAD protection A/B smoke (2026-09-25)
+
+Ran the existing direct MADLAD protection diagnostic on three ordinary rows (`raw`, `minimal`, `current`). The short first row was rejected as degenerate in all three arms, so protection is not its root cause. The two longer rows completed in all arms; current protection preserved author/identifier spans but introduced no additional fallback, while raw/minimal exposed spelling/abbreviation variation. Artifact: `test-data/real-papers/reports/madlad-protection-ab-v477.json`. This small smoke does not justify production protection changes; expand only on clean, sufficiently long ordinary prose and evaluate invariants plus semantics.
+## v478 extracted-list boundary classification (2026-09-25)
+
+The fresh audit showed several supposed ordinary-body rows were actually PDF list/fragment text beginning with an en/em dash or a parenthesized list letter, such as `(b) validating ...` and `– Sport-specific ...`. Generalized `structuralWarnings` now recognizes these boundaries (`-`, en/em dash, bullet, `(a)`, numbered items), so future audits classify them as list/source structure instead of ordinary prose. This changes measurement attribution, not translation acceptance, and avoids loosening quality gates for damaged input. Typecheck passes.
+## v479 extraction regression verification (2026-09-25)
+
+Ran the full reading-order regression suite after broadening list-boundary classification: `src/test/readingOrder/readingOrder.test.ts` passed 72/72. The change did not alter canonical block extraction behavior; it only improves audit attribution for dash/letter list fragments.
+## v480 fresh extraction classification spot-check (2026-09-25)
+
+Re-ran the cached `wear-scale` paper with the current audit classifier (8 sampled units). The four `(a)`–`(d)` items are now classified as `list`, and two continuation-like units are `damaged-extraction`; only two complete units remain `ordinary-body-prose`, both translated without fallback. This confirms the boundary change affects real-paper attribution rather than merely synthetic tests. Report: `test-data/real-papers/reports/extraction-classification-v480.json`.
+## v481 page-boundary stitching experiment reverted (2026-09-25)
+
+Prototyped a conservative cross-page paragraph stitcher using page-edge geometry, same-column origin, unfinished punctuation, and continuation-start evidence. The existing reading-order suite exposed two false merges: a publication metadata tail was joined to body prose, and an independent page-edge paragraph was joined after a margin mark. The experiment was reverted immediately; the baseline reading-order suite is back to 72/72. This confirms page-boundary repair needs an explicit chrome/metadata barrier and stronger paragraph identity evidence before production integration.
+## v482 cross-paper extraction classification spot-check (2026-09-25)
+
+Ran the medical deep-learning review as a second real-paper check (8 units). Four dash-led items were classified as `list`, three lowercase/line-wrap continuations as `damaged-extraction`, and one complete ordinary paragraph translated with no fallback. The same boundary behavior observed in `wear-scale` therefore generalizes across a different medical review layout. Report: `test-data/real-papers/reports/extraction-classification-v482.json`.
+
+## v483 medical layout geometry diagnosis (2026-09-25)
+
+- Ran `scripts/diagnose-pdf-layout.ts` on `medical-deep-learning-meta-review.pdf` and inspected the suspicious multi-column blocks.
+- The damaged rows are attributable to extraction geometry rather than translation alone: several blocks combine dash-led table/list cells at different x positions, one crosses a left/right column boundary, and one contains hyphenated continuation text plus an explicit `(continued on next page)` marker.
+- A separate mixed-column block on page 14 starts at the right-column x position and then continues from the left-column origin. These are unsafe candidates for generic paragraph stitching.
+- No production extraction change was made. The evidence supports stronger column/table barriers before any page-boundary merge, rather than broadening continuation heuristics. Existing reading-order regression remains authoritative after the reverted stitch experiment.
+
+## v484 reusable layout diagnostic flags (2026-09-25)
+
+- Extended `scripts/diagnose-pdf-layout.ts` with audit-only geometry flags: `mixedColumns`, `xPositionJump`, `continuationMarker`, and `listLike`.
+- Re-ran the medical review diagnostic: 5 of 8 suspicious blocks show an x-position jump, 2 are explicitly mixed-column, 1 has a continuation marker, and the table/list block is identified as list-like. This gives a repeatable attribution signal without changing extraction or translation behavior.
+- `npm run typecheck` and `git diff --check` pass. No production rule was loosened and no page stitcher was reintroduced.
+
+## v485 fresh benchmark scope correction (2026-09-25)
+
+- Started a fresh production-path benchmark with the ready local server. The command selected all 52 catalog papers; `--limit 12` is per paper, so this was larger than intended.
+- Two papers completed and checkpoints were saved (`interactive-jewellery`, `significant-other`); the run was stopped before continuing through the full catalog to avoid an unnecessarily long uncontrolled batch.
+- Artifact: `test-data/real-papers/reports/fresh-quality-v485.json` (2 papers, 24 sampled units). This is a partial diagnostic artifact, not an aggregate quality claim. A smaller stratified paper set is the next benchmark target.
+
+## v486 stratified fresh benchmark and heading attribution (2026-09-25)
+
+- Ran six representative papers across HCI/wearable, cognitive, marketing, linguistics, and medical layouts, four sampled units per paper, against the ready production endpoint. Artifact: `test-data/real-papers/reports/stratified-quality-v486.json`.
+- The 24 sampled units contained 9 ordinary-body rows, 12 damaged-extraction rows, 3 list rows, and no trustworthy aggregate semantic result yet. Ordinary-body reader-visible fallback was 2/9 (22.2%); both are structural/quality-gate cases (`exclusivity relation missing` and a short section-like label mixed into a paragraph), so this confirms the target is not yet met and requires semantic review.
+- Added audit-only `section-heading-shaped` attribution for short numbered/title-like labels that PDF resolution exposes as paragraphs. This prevents section labels such as `4.2.1 Bluetooth Advertising` from inflating the ordinary-body denominator; it does not change production extraction or translation.
+- `npm run typecheck` and `git diff --check` pass.
+
+## v487 section-label prefix attribution (2026-09-25)
+
+- Review of the v486 ordinary fallbacks showed two rows beginning with a section label (`4.2.1 Bluetooth Advertising.` and `Results.`) followed by body prose. They were being measured as ordinary paragraphs even though the source unit is structurally mixed.
+- Extended the audit-only classifier with a generic `section-label-prefix` signal for numbered/title-like prefixes followed by prose, mapping these units to `section-heading`. This is layout-agnostic attribution and does not change production extraction, translation, or quality gates.
+- Typecheck and diff validation remain clean. A rerun is required before using revised category rates.
+
+## v488 natural exclusivity relation evidence (2026-09-25)
+
+- The v486 thermal-earring fallback was a fluent translation rejected because the Japanese used a natural replacement construction for English exclusivity (`代わりに` / `ではなく`), which the relation detector did not recognize.
+- Extended the generic Japanese exclusivity evidence to include these constructions. This only reduces a false rejection when the relation is explicitly expressed; it does not bypass invariant, negation, numeric, or source-fragment checks.
+- Added a regression assertion to `src/test/quality.test.ts`. Quality suite: 182 tests passed; typecheck and `git diff --check` remain clean.
+
+## v489 cross-discipline layout diagnostic (2026-09-25)
+
+- Applied the reusable geometry diagnostic to `modeling-human-behavior-cognitive-uncertainty.pdf` (27 pages). It found one suspicious block with an x-position jump and no mixed-column/list/continuation marker, showing the diagnostic runs on a different discipline and layout family without adding paper-specific rules.
+- The cognitive sample does not yet justify a production stitch or relabel rule; the block requires surrounding-line inspection before any behavior change.
+
+## v490 regression verification (2026-09-25)
+
+- Re-ran the quality and reading-order suites after the natural exclusivity evidence change: 254 tests passed (quality 182, reading-order 72).
+- TypeScript typecheck and `git diff --check` passed. No extraction stitch, model route, or broad quality-gate relaxation was introduced.
+
+## v491 exclusivity replay correction (2026-09-25)
+
+- Re-evaluated the saved thermal-earring output with the current evaluator. The row still reports `exclusivity relation missing`; the output uses comparative `より` rather than the newly recognized explicit replacement forms.
+- Therefore v488's detector extension is a general false-reject reduction for translations that explicitly say `代わりに`/`ではなく`, but it does not resolve this particular row. The row remains an unresolved semantic/quality-gate case and is not counted as fixed.
+
+## v492 instead-of comparative evidence (2026-09-25)
+
+- The saved thermal-earring translation was re-evaluated after adding a narrowly scoped rule: when the source explicitly contains `instead of`, Japanese comparative `より／よりも` is accepted as evidence for that replacement relation. The same output now scores 1 with no quality reasons.
+- Added a regression test for this exact relation pattern. This does not accept generic `より` output for unrelated source text; the source-side `instead of` condition is required.
+- Quality suite: 182 passed; typecheck and `git diff --check` passed. This reduces a demonstrated false reject without changing model output or weakening invariant/negation checks.
+
+## v493 thermal production-path verification (2026-09-25)
+
+- Re-ran the full extraction → translation endpoint → quality gate path for `thermal-earring` (4 sampled units) after the `instead of` relation fix.
+- Result: the long section-label/body unit is now classified as `section-heading` and accepted; the only remaining fallbacks are two independently flagged damaged-extraction continuations. The one clean ordinary-body unit completed without fallback (0/1 in this targeted sample).
+- Artifact: `test-data/real-papers/reports/thermal-quality-v493.json`. This is a targeted verification, not a corpus-wide rate claim.
+
+## v494 cognitive suspicious-block attribution (2026-09-25)
+
+- Inspected the one suspicious block from the cognitive uncertainty PDF at line level. It contains `Section-4.2`, `Section-4.3`, `Theory`, and `Section-4.1` at alternating x positions, indicating figure/table or layout-label content grouped as a paragraph rather than a continued body paragraph.
+- Classified this as a geometry/table-boundary extraction issue. No page stitch or generic paragraph merge was added because doing so would risk joining unrelated visual labels; the evidence will guide a future table/figure barrier change with a dedicated regression fixture.
+
+## v495 canonical resolver attribution (2026-09-25)
+
+- Traced the cognitive suspicious block through `extractFromPages` and `resolveCanonicalDocument`.
+- The block carries `mixed-native-x-band` evidence at confidence `0.6969`, just below the resolver's `0.7` exclusion threshold, and lacks the independent repeated-chart-label evidence required by the current precision-first rule. It therefore remains a paragraph in the canonical projection.
+- This identifies an evidence gap, not a justified threshold tweak: lowering the threshold globally could turn legitimate inline annotations into `other`. No resolver behavior was changed. A future fix needs a second general geometry/graphics signal and a regression fixture before changing the role decision.
+
+## v496 canonical diagnostic CLI and vector-label resolver fix (2026-09-25)
+
+- Added `scripts/diagnose-canonical-layout.ts`, an audit CLI that reports matching layout blocks and canonical nodes with resolver Evidence.
+- The CLI confirmed the cognitive block had strong `vector-figure-label-cluster` evidence (0.82) but remained a paragraph because the resolver required a second mixed-band condition. Added a conservative resolver rule: vector label evidence may suppress translation when no strong table role is present (`table score < 0.8`).
+- Re-running the cognitive PDF now resolves the label block to `other`, while the neighboring flattened table remains `table`.
+- Validation: pdf extraction pipeline 26 tests, reading-order 72 tests, quality 182 tests passed (280 total); typecheck and `git diff --check` passed.
+
+## v497 cognitive production-path verification (2026-09-25)
+
+- Re-ran the cognitive uncertainty paper through extraction, the ready translation server, and the audit gate (4 sampled units). The figure-label block is now excluded at canonical role resolution; sampled section-label/body and continuation units remain correctly identified as structural/damaged rather than clean ordinary prose.
+- Artifact: `test-data/real-papers/reports/cognitive-quality-v497.json`. The sample still contains model/structure fallbacks, so it is not evidence that the corpus-wide 5% target is met; it confirms the new resolver rule does not silently convert damaged input into accepted ordinary translation.
+
+## v498 full extraction regression after vector-label resolver change (2026-09-25)
+
+- Ran the real-paper extraction corpus and reading-order regression after the resolver change. Cached corpus baseline: 56 tests passed; real-paper reading-order: 52 tests passed (108 total).
+- The change did not regress the existing 52-paper reading-order corpus or the baseline extraction/format checks. PDF.js emitted existing ColorSpace/font warnings only; no test failures.
+
+## v499 static validation (2026-09-25)
+
+- `npm run lint`, TypeScript typecheck, and `git diff --check` pass after adding the canonical diagnostic CLI and vector-label resolver rule.
+
+## v500 fresh product-quality aggregation (2026-09-25)
+
+- Ran `npm run audit:product-quality` over the current fresh-v2 cohort. It reports 37 ordinary rows, 9 reader-visible fallbacks (24.3%), and 4 accepted risk candidates.
+- This remains above the <=5% target; the aggregate combines earlier fresh reports and requires another clean post-v496 stratified cohort before measuring the resolver change as a rate improvement. The result is recorded as a gap, not a success claim.
+- Output: `test-data/real-papers/reports/fresh-v2-product-quality-v2.json`.
+
+## v501 clean post-resolver stratified cohort (2026-09-25)
+
+- Re-ran the same six-discipline/layout sample after the vector-label resolver change, with two blocks per paper and a new report generation.
+- 12 rows: 5 ordinary-body, 3 damaged-extraction, 3 list, 1 section-heading. Ordinary-body reader-visible fallback was 0/5 (0%) in this clean targeted cohort; all 3 damaged-extraction and the section-heading unit were correctly kept separate from the clean denominator.
+- Artifact: `test-data/real-papers/reports/clean-postresolver-v501.json`. This is encouraging but too small to establish the corpus-wide <=5% target; expand the same post-change cohort before claiming the goal.
+
+## v502 expanded post-resolver cohort (2026-09-25)
+
+- Completed a fresh benchmark request covering the selected cross-discipline paper set after the canonical vector-label resolver change. The report contains 14 usable rows from 7 paper entries; several requested paper IDs had no eligible sampled block and therefore did not contribute rows.
+- The 14 rows split into 6 `ordinary-body-prose` and 8 `damaged-extraction`. Reader-visible fallback was 3/6 (50.0%) for the clean ordinary sample and 7/8 (87.5%) for the damaged-extraction sample. This is an unstable, still small sample and does not supersede the broader fresh-v2 aggregate; it shows that the expanded run needs stricter eligible-block selection and targeted semantic review before measuring the <=5% target.
+- Artifact: `test-data/real-papers/reports/clean-postresolver-v502.json`. No production model or broad quality-gate relaxation was introduced.
+
+## v503 v502 ordinary fallback triage (2026-09-25)
+
+- Manually inspected all six `ordinary-body-prose` rows in v502. One thermal-style relation row was accepted; three rows fell back.
+- The touch-screen row omitted the source's explicit `one finger only` constraint in the Japanese output, so its `exclusivity relation missing` fallback is a real omission safeguard rather than an obvious false reject.
+- The GPT-3 decision-making row was rejected for a missing comparative-likelihood cue; its output preserves the alternatives but weakens/omits the explicit `more likely` comparison. This remains conservative pending a broader sample of equivalent Japanese question constructions; no gate relaxation was made.
+- The remaining ordinary fallback was a server-side quality rejection with no usable output (`Experimental Design` block). It needs a fresh replay with server debug output to distinguish decode failure from quality-gate rejection.
+- This triage does not justify changing the ordinary-body denominator or claiming the <=5% target. The next action is targeted replay of the server-fallback source plus a held-out relation review.
+
+## v504 targeted server-fallback replay (2026-09-25)
+
+- Replayed `cognitive-dual-task-older-adults` against the ready production server with `TRANSLATION_UNIT_DEBUG=1`. Four units completed: two ordinary-body, one statistical-prose, and one clean conclusion; three returned translated output without fallback.
+- The `Experimental Design` ordinary block reproduced the server fallback exactly: `whole_item:translation_quality_rejected:ValueError`, with no partial translation returned. This confirms the earlier row was a deterministic model/quality rejection rather than a benchmark transport or resume failure.
+- The same run produced a valid Japanese result for the short background block and statistical/results block, so the server and model were healthy. The failing block is a long, mixed heading/body unit (635 characters) and remains a candidate for semantic-unit segmentation or targeted rescue, not a blanket gate relaxation.
+- Artifact: `test-data/real-papers/reports/cognitive-dual-replay-v504.json`. No production behavior changed in this replay.
+
+## v505 baseline-overlap subsection split (2026-09-25)
+
+- Canonical diagnostics showed `Experimental Design` was a 12pt native heading immediately followed by 9.5pt body text at the same x band and overlapping PDF baselines. The existing line merge used only the horizontal gutter and combined both into one 635-character translation unit.
+- Added a generic, typography-based barrier in `src/services/pdfLayout.ts`: a short title-shaped line with a larger native font than the following sentence is kept separate even when the x gutter is zero. This does not name the paper or change translation quality thresholds.
+- The diagnostic now resolves `Experimental Design` as its own canonical heading and leaves the body as a separate paragraph. This directly removes the mixed heading/body input that triggered the v504 server fallback path.
+- Validation: pipeline 26, reading-order 72, and quality 182 tests passed (280 total); TypeScript typecheck and `git diff --check` passed.
+
+## v506-v509 chunked-compression and acronym safety (2026-09-25)
+
+- The first post-split replay still fell back because the microbatch scheduler re-applied the aggregate `implausibly_short` check after all five sentence units had individually passed. The guard lived in `translation-server/engines/micro_batcher.py`, so changing only the engine-level check could not affect reader-visible behavior.
+- Added a narrow exception for multi-unit assembly: aggregate compression alone no longer rejects a result when every underlying unit has already passed engine validation. Other degenerate checks remain active. Replay `cognitive-dual-replay-v508.json` produced no reader-visible fallback for the four sampled units, but the long body output exposed malformed `RTz+CTz` identifiers.
+- Strengthened the generic scientific invariant rule for short all-caps acronyms when they form an experimental-arm compound such as `RT+CT`; malformed restored variants now fallback instead of being accepted as fluent Japanese. Added a regression test; quality suite now has 183 passing tests and typecheck/diff checks pass.
+- This reduces a demonstrated false fallback while preserving a safety fallback for corrupted treatment-arm identifiers. The long-body output still needs semantic review before counting the change as a quality improvement.
+
+## v510 translation-server regression verification (2026-09-25)
+
+- The first Python microbatch test run exposed three compatibility failures because the new aggregate-length diagnostic assumed the production engine helper existed on the test `FakeEngine`. Guarded that optional diagnostic call without changing production acceptance logic.
+- Translation-server tests now pass: 115 tests plus 8 subtests. TypeScript quality tests remain at 183 passing tests; typecheck and diff checks remain clean.
+
+## v511-v514 clean cohort and noncritical acronym false-reject (2026-09-25)
+
+- Expanded post-resolver cohort `clean-postresolver-v511.json`: 12 rows across six papers, with 5 ordinary-body and 7 damaged-extraction rows. Ordinary fallback was 3/5; two were relation-safety fallbacks and one was a short-acronym invariant notice (`EU`) despite a faithful Japanese expansion (`欧州連合`).
+- Added a general quality-gate exception for standalone two/three-letter acronyms that are not experimental-arm compounds and are the only invariant notice. `RT+CT` remains critical; `SD` and numeric/statistical invariants remain strict.
+- Replayed the linguistics row in `linguistics-replay-v513.json`; the translation still reports the noncritical `EU` diagnostic in the audit payload, but the direct plausibility predicate now accepts this class. The benchmark wrapper still records the old fallback for that replay because it ran against the pre-change module load; a fresh process is required before measuring the rate change.
+- Quality tests 183 passed; TypeScript typecheck and diff checks passed. No paper-specific acronym rule was added.
+
+## v515 acronym re-measurement (2026-09-25)
+
+- Re-ran the linguistics paper in a fresh benchmark process after the plausibility change: `linguistics-replay-v514.json` has 2 ordinary-body rows and 0 reader-visible fallbacks. The EU row still records `scientific invariants missing: EU` as an audit diagnostic, but its faithful Japanese expansion is accepted.
+- This is a targeted 2-row confirmation, not a corpus-wide fallback claim. Experimental-arm acronyms and statistical abbreviations remain protected by the critical-invariant path.
+
+## v516 clean cohort after acronym gate fix (2026-09-25)
+
+- Re-ran the six-paper cross-discipline cohort with the current quality module: 12 rows total, 5 ordinary-body and 7 damaged-extraction.
+- Ordinary-body fallback improved from 3/5 (v511) to 2/5 (40%). The removed fallback was the faithful `EU` expansion; the remaining two are the previously identified comparative-likelihood and one-finger exclusivity omissions.
+- Damaged-extraction remained 6/7 and is kept outside the clean denominator. Artifact: `test-data/real-papers/reports/clean-postresolver-v516.json`.
+- This is a measurable false-reject reduction, but 40% is still far above the <=5% target. The remaining relation fallbacks require model rescue or improved source-unit context, not broad gate weakening.
+
+## v517 comparative-choice relation evidence (2026-09-25)
+
+- Added a generic Japanese evidence pattern for English `more/less likely` questions when the translation preserves both alternatives as `Aか、あるいはBかを問う／尋ねる`. This does not accept a translation that drops one alternative; the existing relation test still rejects that case.
+- Regression suite remains at 183 passing quality tests; typecheck and diff checks pass.
+- Targeted replay `relation-replay-v517.json`: the GPT-3 comparative-likelihood row now passes, while the touch-screen one-finger exclusivity omission still correctly falls back. Among the three ordinary rows sampled (one structural row was damaged extraction), fallback is 1/3.
+
+## v518 protection A/B diagnostic (2026-09-25)
+
+- Ran the same MADLAD process and greedy generation conditions for Raw / Minimal / Current protection on four audit-selected rows; artifact: `test-data/real-papers/reports/protection-ab-v1-4.json` and `.md`.
+- The sample exposed a selector flaw: it admitted a mixed heading/body block and an author/masthead row despite the ordinary-body label. Those rows are not valid semantic protection evidence and will be filtered before the next cohort.
+- The clean Background row translated in all three arms. Raw dropped `BNDF`, while Minimal and Current preserved the scientific span, demonstrating a concrete benefit of protection. This is not evidence that current protection improves overall semantics; the sample is too small.
+- No production protection behavior was changed. Next step is a larger, independently filtered ordinary-body cohort with manual review of Raw / Minimal / Current outputs and placeholder-count buckets.
+
+## v519 protection diagnostic selector cleanup (2026-09-25)
+
+- Added a conservative, diagnostic-only body selector to `translation-server/scripts/benchmark_protection_ab.py`. It excludes stale-label masthead/author rows and obvious title-plus-body mixed blocks while retaining ambiguous prose for manual review.
+- The selector now yields 30 eligible rows from the current audit report without the previously observed author line or `Experimental Design` mixed block in the first sample. It does not affect production extraction or translation routing.
+- Python syntax check and `git diff --check` passed. The next A/B run should use this selector and record the excluded-row reason before expanding beyond the initial sample.
+
+## v520 clean protection A/B rerun (2026-09-25)
+
+- Re-ran four selector-clean rows under Raw / Minimal / Current protection in one MADLAD process; artifacts: `test-data/real-papers/reports/protection-ab-v2-4.json` and `.md`.
+- Two shorter rows produced output in all arms. On the scientific Background row, Raw omitted `BNDF`, while Minimal and Current preserved `BNDF` and `RT+CT`; this is evidence for fact-protection benefit.
+- Two long ordinary-body rows hit the same `implausibly_short` gate in all three arms. This is attributable to long-unit/model or aggregate quality behavior, not source protection. It must be measured separately from protection fallback.
+- No production behavior changed. The next experiment will use semantically complete shorter units for manual Raw/Minimal/Current review and keep long-unit failures in a separate model/gate bucket.
+
+## v521 segment-unit protection comparison (2026-09-25)
+
+- Ran six production segmenter units (all >=70 characters) under Raw / Minimal / Current protection with identical greedy decoding; artifacts: `test-data/real-papers/reports/protection-ab-v3-segment6.json` and `.md`.
+- All 18 decodes produced output; no protection-specific fallback occurred. The scientific unit again had one missing span under Raw, while Minimal and Current preserved it. Four units with no protected spans were identical across arms.
+- This supports retaining narrow fact protection while avoiding a broad production change. Manual semantic labels and a larger cross-discipline sample remain required before any protection redesign.
+
+## v522 manual review of protection A/B v4 (2026-09-25)
+
+- Manually reviewed all 18 segment units in `protection-ab-v4-segment18.json`; labels and severity are stored per record, with summary in the companion `.md`.
+- The same semantic shifts occurred in Raw, Minimal, and Current (e.g. gist/detail cue scope and objective/forgetting relations), and one unit fell back in all three arms. These are MADLAD/translation-unit limitations, not costs introduced by protection.
+- The scientific unit is the opposite case: Raw loses `CT` while protected arms retain `RT+CT` and `BNDF`. Current protection therefore has measured fact-preservation benefit in this sample.
+- This sample still has a high semantic-error rate and does not meet the product goal; the next action is selective cascade/model evaluation for these model-limited units, while preserving protection and avoiding a gate-only fallback increase.
+
+## v522 manual review of protection A/B v4 (2026-09-25)
+
+- Manually reviewed all 18 segment units in `protection-ab-v4-segment18.json`; labels and severity are stored per record, with summary in the companion `.md`.
+- The same semantic shifts occurred in Raw, Minimal, and Current (e.g. gist/detail cue scope and objective/forgetting relations), and one unit fell back in all three arms. These are MADLAD/translation-unit limitations, not costs introduced by protection.
+- The scientific unit is the opposite case: Raw loses `CT` while protected arms retain `RT+CT` and `BNDF`. Current protection therefore has measured fact-preservation benefit in this sample.
+- This sample still has a high semantic-error rate and does not meet the product goal; the next action is selective cascade/model evaluation for these model-limited units, while preserving protection and avoiding a gate-only fallback increase.
+
+## v523 M2M100 1.2B cascade probe (2026-09-25)
+
+- Evaluated the seven severity>=2 MADLAD units from v522 with cached `facebook/m2m100_1.2B`; artifact: `test-data/real-papers/reports/m2m12-cascade-v522.json` and `.md`.
+- M2M100 did not rescue any sampled semantic-risk unit. It repeatedly rendered the technical term `gist` as `酵母`, causing unsupported content and relation loss. It is not safe for selective production routing on this corpus.
+- This is a negative model-evaluation result, not a production change. MADLAD remains the baseline while a better alternate model or context/prompt strategy is evaluated.
+
+## v524 OPUS-MT en-ja cascade probe (2026-09-25)
+
+- Evaluated cached `Helsinki-NLP/opus-mt-en-jap` on the same seven high-risk units used for the M2M probe; artifact: `test-data/real-papers/reports/opus-en-ja-cascade-v524.json` and `.md`.
+- All seven outputs were severity 4: unrelated Japanese content, broken terminology, and unsupported names. This model is not a safe cascade candidate and remains audit-only.
+- No production route changed. The local alternate-model candidates tested so far (M2M100 1.2B and OPUS-MT) are worse than MADLAD on this held sample; a stronger cached model or external evaluation is required before routing.
+
+## v525 repeated technical-term atomic placeholder diagnostic (2026-09-25)
+
+- Ran an isolated MADLAD diagnostic on six previously reviewed cognitive units, replacing repeated source term `gist` with one atomic placeholder before decode and restoring it afterward. Artifact: `test-data/real-papers/reports/gist-atomic-placeholder-v525.json` and `.md`.
+- The atomic arm materially improved the observed relation failures: it restored gist/detail alternatives, temporal scope, comparison, and objective/forgetting relations in the sampled outputs. This is evidence that repeated-term decoding drift contributes to some MADLAD errors, separate from citation protection.
+- This is not a production `gist` rule. A generic repeated-domain-term evidence policy must be evaluated on held-out disciplines and exact placeholder restore tests before adoption.
+
+## v526 generic repeated-term detector (2026-09-25)
+
+- Added audit-only `translation-server/scripts/diagnose_repeated_terms.py` to detect repeated lower-case content-term candidates and perform exact marker round-trip checks. It supports document/parent grouping so a term repeated across production segment units is not missed.
+- Applied it to the 18 reviewed units; grouped detection finds `gist` across the cognitive paper while filtering common academic prose terms. All candidate replacements round-trip exactly. Artifact: `test-data/real-papers/reports/repeated-term-candidates-v526-grouped.json`.
+- This detector is diagnostic only. It is not connected to production protection until held-out precision, placeholder count, and semantic benefit are measured across disciplines.
+
+- The first grouped run also surfaced a precision issue: generic frequency alone selects additional domain nouns (`episodic`, `forgetting`, `memories`, `film`) alongside `gist`. This confirms the detector must gain a salience/term-confidence score before any production use; no broad frequency-based protection was enabled.
+- Translation-server regression tests remain **115 passed / 8 subtests** and `git diff --check` is clean.
+
+## v527 corpus-level term salience diagnostic (2026-09-25)
+
+- Extended the audit-only repeated-term harness with corpus-level inverse-document-frequency scoring. It ranks terms repeated within a source but rare across the audit corpus without using manual labels or paper-specific dictionaries.
+- On the current 18-unit sample, `gist` receives a high salience score (8.6778) in the units where it repeats; common prose terms are filtered. Parent/document aggregation still needs to be applied to score terms that span multiple segment units.
+- Artifact: `test-data/real-papers/reports/repeated-term-salience-v527.json`. No production protection change.
+
+## v528 parent-level salience aggregation (2026-09-25)
+
+- Fixed the diagnostic salience harness to compute local repetition across all segment units belonging to the same parent block, then apply corpus-level IDF. This captures terms that occur once per segment but repeatedly in the logical paragraph/document.
+- On the sample, `gist` ranks highest (30.3725), above `episodic` (11.4504), `forgetting` (9.2532), `memories` (8.0409), and `film` (13.4174). Ranking is evidence for prioritization, not an automatic protection threshold.
+- Artifact: `test-data/real-papers/reports/repeated-term-salience-v528.json`. Production behavior remains unchanged.
+
+## v529 corpus candidate scan and round-trip fix (2026-09-25)
+
+- Scanned 189 clean ordinary-body rows with corpus-level salience. The first run exposed title-case sentence-start candidates that broke exact restoration; the detector now restricts this diagnostic arm to lower-case term candidates and preserves exact round-trip semantics.
+- Recomputed `repeated-term-salience-v529.json`: all 189 rows now round-trip, with candidates in 158 rows. Candidate volume remains intentionally diagnostic (919 unique terms before stricter ranking), so no production threshold is enabled.
+
+- Corrected the diagnostic replacement to be case-sensitive for lower-case candidates, so a repeated lower-case term no longer rewrites a sentence-initial title-case occurrence. The corpus scan now satisfies the exact round-trip invariant for all 189 rows.
+
+## v530 marketing repeated-term atomic diagnostic (2026-09-25)
+
+- Replayed two clean marketing/social-advertising units with `advertising` atomically protected. Artifact: `test-data/real-papers/reports/marketing-term-atomic-v530.json` and `.md`.
+- One ordinary unit changed from MADLAD `implausibly_short` fallback to coherent output after atomic term protection and restore. A much longer unit still fell back in both arms, separating term drift from long-unit failure.
+- This cross-discipline result supports testing high-confidence repeated-term evidence, but does not justify a production threshold yet. No word-specific rule was added.
+
+## v531 generic term context evidence (2026-09-25)
+
+- Added an audit-only context evidence score to repeated-term diagnostics. It combines corpus salience with generic nearby technical/definition cues (`cue`, `memory`, `model`, `condition`, `effect`, `defined`, etc.); it does not use paper labels or a word blacklist.
+- Artifact: `test-data/real-papers/reports/repeated-term-evidence-v531.json`. This score is for candidate ranking only; production protection remains unchanged. Round-trip remains required before any model experiment.
+
+## v532 term evidence threshold scan (2026-09-25)
+
+- Added a diagnostic-only `--min-combined` filter to make candidate coverage measurable without enabling production protection. A threshold-50 scan artifact is `test-data/real-papers/reports/repeated-term-evidence-v532-threshold50.json`.
+- The threshold is a measurement knob, not a production recommendation; candidates still require manual semantic benefit and overprotection review. All source round-trips remain enforced.
+
+## v533 nudge experimental-condition diagnostic (2026-09-25)
+
+- Tested atomic protection of `nudge` in a clean marketing methods sentence; artifact: `test-data/real-papers/reports/marketing-nudge-atomic-v533.json` and `.md`.
+- Raw and atomic arms both fell back and omitted the control-condition relation and snack-choice outcome. This separates term drift from a broader experimental-condition/long-unit failure; repeated-term protection alone is insufficient.
+- No production behavior changed. Relation-aware segmentation or a validated alternate model remains necessary for this class.
+
+## v534 nudge clause rephrase diagnostic (2026-09-25)
+
+- Tested a model-input-only split of the coordinated nudge/control sentence into assignment and outcome sentences; artifact: `test-data/real-papers/reports/marketing-nudge-rephrase-v534.json` and `.md`.
+- Original and rephrased inputs both hit the same `implausibly_short` fallback. This rules out a simple conjunction rewrite as a sufficient fix and avoids adding a speculative production transform.
+
+## v535 current fresh product-quality baseline (2026-09-25)
+
+- Recomputed the current fresh product-quality summary: 37 ordinary rows, 28 accepted, 9 reader-visible fallbacks, fallback rate **24.32%**; 4 accepted rows are relation-risk candidates. Artifact: `test-data/real-papers/reports/fresh-v2-product-quality-v2.json`.
+- This remains well above the <=5% target. The metric mixes extraction/model cases; the next changes must reduce model/relation failures without weakening safety or hiding them in accepted output.
+
+## v536 — fresh-v2 fallback triage (2026-09-25)
+- `test-data/real-papers/reports/fresh-v2-product-quality-v2.json` の ordinary-body 37行・reader-visible fallback 9件を原因別に再分類した。
+- `test-data/real-papers/reports/fresh-v2-fallback-triage-v536.json` / `.md` を追加。
+- 内訳: benchmark transport/server availability 3件、model/quality gate degenerate 3件、protection/restore 1件、quality gate language (簡体字混入) 2件。
+- 接続失敗3件は翻訳品質の失敗として扱わず、再測定対象。実質的な品質/ゲート側は6件であり、現行24.3%は監査中のserver availabilityを含む上限値。
+- production behaviorは変更していない。次は接続が安定したfresh server上で、degenerate 3件と簡体字混入2件を同一source再試行し、保護方式A/B/Cと区別して評価する。
+
+## v537 — meaningful fallback replay on ready server (2026-09-25)
+- fresh-v2の接続失敗を除く6行を、ready状態の同一translation serverへ1回ずつ再送し、`fresh-v2-meaningful-fallback-replay-v536.json` に保存。
+- 6/6 HTTP 200。したがって接続失敗とは別に、品質問題が再現する。
+- healthcare safety review: unit-level quality rejectionで部分fallback（原文保持が安全側）。
+- neuroscience rule-following: unit-level + whole-item quality rejectionで部分fallback。
+- human-ai interaction: 26文字の不自然な短い出力が返り、現行復元保護経路のfallback理由が応答に残らないケースを確認。これは protection/restore と quality observability の追加調査対象。
+- interpreting neural networks / medical image segmentation: HTTP 200で出力が返るが「学习」など簡体字混入をproduction quality gateが拒否することを再現。
+- cognitive psychology GPT-3: HTTP 200で長文出力は返るが、`ビニール` 等の明らかな語義ずれを含む。これはfallbackではなくunsafe semantic false accept候補として手動レビュー対象。
+- production behaviorは変更していない。次は再現artifactのpartial_text/unit fallbackとsource protection span数を突き合わせる。
+
+## v538 — fresh risk candidate spot review (2026-09-25)
+- `semantic-risk-fresh-v2-v1.json` の5候補を、source fragment / decode / terminology / likely-correct に手動spot分類し、`fresh-v2-manual-review-v538.json` に保存。
+- 内訳: source fragment 1（masthead/title/body混在、extraction primary）、semantic shift 1（CHI courseの内容が参加者体験へ変質、severity 3）、terminology 1（簡体字混入、severity 2）、likely-correct 2、うち source fragmentは翻訳モデル評価から除外すべきケース。
+- これはagentによる予備レビューであり、盲検人手レビューの代替ではない。production gateは変更していない。
+- Translation-server regression subset rerun after diagnostics: `115 passed, 8 subtests passed`.
+
+## v539 — multi-semicolon logical-unit guard (2026-09-25)
+- `segmenter.py` のoverlong top-level semicolon処理を、同一logical paragraph内に複数のtop-level semicolonがある場合は分割しないよう変更。分割された継続句が単独MADLAD入力になるケースを避ける。
+- author-year citationは従来どおりmasked、単一top-level semicolonの既存safe-clauseテストは維持。
+- healthcare safety-review再現文は3 unitから1 logical unitへ戻る。source round-tripは維持。
+- Regression: `116 passed, 8 subtests passed`。
+
+## v540 — semicolon guard replay result (2026-09-25)
+- Healthcare safety-review blockを複数semicolon guard後に再送したが、`unit_1:translation_quality_rejected` のpartial fallbackが継続。分割由来のcitation/continuation fragmentは減ったが、このblockのfallback原因は単純なsemicolon分割だけではない。
+- 出力は「6336件…」以降が英語のまま残り、source reconstruction自体にも `8, 949studies` / `).Finally` の抽出汚染がある。次の改善対象は extraction cleanup または部分単位の再試行であり、品質ゲート緩和は行わない。
+
+## v541 — native extracted spacing repair (2026-09-25)
+- `pdfLayout.ts` に汎用 `normalizeNativeSpacing` を追加。native PDF text layer由来の明白な `949studies`、` ).Finally` 相当の境界欠落、`8, 949studies` の桁区切り崩れを限定的に修復する。`3D`や`rLPFC`のようなidentifierは対象外。
+- production extraction pathに入るため、特定paper文字列ではなくdigit→lowercase-word / punctuation→uppercase-wordのgeometry-independentな明白な境界だけを対象にした。
+- `npm run typecheck` 成功。
+- `npm run test:extraction-corpus` 成功: 2 files / 108 tests passed（baseline 56、reading-order 52）。
+- healthcare replayは、このspacing修正後の再測定が次の確認対象。既存のv539 replayは修正前入力を用いた結果として保持。
+
+## v542 — contextual count safety gate (2026-09-25)
+- 現行抽出では `8, 949studies` が `8949 studies` に修復され、source自体は改善した。一方MADLAD出力は `8949` を落としてもHTTP 200で返り、既存server側では受理されていた。
+- `madlad_mps.py` に、studies/participants/subjects等に結び付く3桁以上の数値（桁区切り含む）の欠落を検出する狭いquality guardを追加。数値を勝手に復元せず、retry/fallbackへ送る。
+- 試験対象: 8949 studiesの欠落を検出し、完全保持は通過。一般的な短い数値やidentifierは対象外。
+- Regression: translation-server `117 passed, 8 subtests passed`。
+- 実行中のserver processへ反映するには再起動が必要。再起動前の既存benchmark結果は旧serverの結果として扱う。
+- Static server verification confirms the new guard returns `missing_contextual_count:8949` and rejects the unsafe output that omitted that screening total. The running server has not been restarted, so no live benchmark claim is made yet.
+
+## v543 — cache identity bump for contextual-count guard (2026-09-25)
+- Client/server model versionを `quality-v18-relation-condition-beam-v8-section-marker-contextual-count` に更新。旧generation cacheを再利用しないようにした。
+- `src/test/translationModelVersion.test.ts`、typecheck、`git diff --check` 成功。
+- Live `/status` はまだ旧quality-v17のため、再起動後に新versionを確認する必要がある。
+
+## v544 — live v18 server replay (2026-09-25)
+- 翻訳serverを再起動し、startup logで `quality-v18-relation-condition-beam-v8-section-marker-contextual-count` を確認。
+- `/tmp/hfe-current-fixture` を同一serverへ再送。`unit_0` と `whole_item` のquality rejectionとなり、8949欠落出力をreader-visible translationとして受理せず、原文fallbackにした。
+- 旧v17では同じsourceでHTTP 200・fallback reasonなしの欠落出力だったため、安全ゲートが実稼働で効いていることを確認。
+- 新出力のpartial textには後半の部分訳が残るが、最終`text`はsource fallback。翻訳の一部だけを成功扱いする経路は次の改善対象。
+
+## v545 — multi-semicolon rescue + contextual-number guard live replay (2026-09-25)
+- 追加したretry-only multi-semicolon rescueは、8949/6336/30/2の各節を3 rescue unitへ分け、source round-tripを維持することを確認。
+- しかし最終出力にsourceにない末尾の数値 `227` が混入したため、v19のunexpected contextual number guardがwhole-item fallbackにした。安全性は維持されたが、このfixtureのfallback率は下がっていない。
+- これは数値ゲートの過剰拒否ではなく、モデルの新規数値生成を検出して原文へ戻した結果。次は新規数値を除去するのではなく、原因（Fig 1 / citation restore周辺）を診断する。
+- v19 live server startupを確認し、replay artifactは `hfe-current-extraction-replay-v545.json`。
+
+## v546 — thousands-group citation false positive repair (2026-09-25)
+- 原因を `citation_protect.py` の bare-reference検出に特定。`3,227 participants` の桁区切り末尾 `227` を裸の引用番号として扱い、`restore_missing_bare_references()` が翻訳末尾へ余計な `227` を追加していた。
+- bare-reference候補が直前の桁区切りに属する場合は引用扱いしない一般則を追加し、回帰テストを追加。保護仕様を `source-protect-v22` へ更新して旧cacheを再利用しないようにした。
+- Python回帰: citation/segmenter/quality/microbatch **190 passed, 11 subtests passed**。モデル版テスト、typecheck、diff checkも成功。
+- v22 serverを再起動し、`hfe-current-extraction-replay-v546.json` を実行。以前の出力にあった末尾 `227` は消え、HTTP 200・fallbackなしで `8949 / 6336 / 30 / 2 / 28 / 3,227` を保持した日本語が返った。
+- 残る課題は、`初期検索` や `標題, 摘要` などの訳語品質・句読点であり、今回の数値混入は解消した。fallback率全体の改善はfresh benchmarkで別途再測定する。
+
+## v547 — post-v22 corpus audit checkpoint (2026-09-25)
+- v22 serverを使用して `bench:real-paper-translation -- --limit 12 --resume` を完走。既存checkpoint 51件を再利用し、現行reportは52 papers / 612 sampled blocks（各paper最大12）を保持。未取得PDFは1件のみで、benchmarkプロセス自体は完了した。
+- 現行report全体では reader-visible fallback 380/612。ただし内訳は damaged-extraction 242/257、reference-chrome 32/33を含むため、ordinary-bodyだけを別集計した。
+- ordinary-body-proseは234 blocks、reader-visible fallback 62（26.5%）。pre-model 4、post-model 58で、目標5%には未達。post-modelの主因はtranslation quality rejection、protected-token restore、関係/数値quality gateであり、fallbackを安全性の証拠とはみなさない。
+- 次の改善対象は ordinary-bodyのpost-model failuresを、サーバー拒否理由・quality gate false reject・実際のsemantic errorに分解すること。Extraction由来のdamaged/reference-chromeは別トラックで扱う。
+- 原因別サンプルを `test-data/real-papers/reports/ordinary-postmodel-triage-v547.json` に保存。単一のfallback率ではなく、quality rejection、protected-token restore、relation/invariant gate、未翻訳/言語混入を個別に追跡できる状態にした。
+
+## v548 — fresh v22 three-paper replay (2026-09-25)
+- 旧checkpointを再利用しない `fresh-v22-replay-3` を、HCI・認知心理・医療の3論文、36ブロックで実行。現行v22 serverの結果を `test-data/real-papers/reports/fresh-v22-replay-3.json` に保存。
+- 全体は20 accepted / 16 reader-visible fallback。ordinary-bodyは13件中10件 accepted、3件 fallback（23.1%）。3件はいずれも、否定（`We are not the first`）、条件（`unless otherwise noted` と既定パラメータ）、または長い引用英文の未翻訳残存を検出したもので、サンプル確認では過剰拒否とは判断できなかった。
+- この小標本ではfallback削減のためにrelation/invariant gateを緩和する根拠は得られなかった。次は同じ現行v22条件で分野別サンプルを増やし、accepted側のmanual semantic reviewを行う。
+
+## v549 — accepted-side semantic review (2026-09-25)
+- fresh-v22のordinary-body accepted 10件を原文/訳文で確認し、`test-data/real-papers/reports/fresh-v22-manual-review-v549.json` に保存。
+- severity >= 2 は5/10。段落冒頭の主張欠落、認知心理の例の圧縮・表現崩れ、図表由来断片のaccepted、医療文の役割関係の一般化を確認した。
+- automatic gateのaccepted率だけでは品質を示せないことを再確認。現時点でfallback緩和や単純な再試行追加は行わず、図表/断片のpre-model分類と、accepted translationのrelation/coverage検査を優先する。
+
+## v550 — repeated numbered chart-label guard (2026-09-25)
+- accepted側で発見した `Horizon 1 Horizon 6 ...` のような、図表ヘッダと本文がflattenされた入力を一般的な構造条件で検出するよう `shouldTranslateParagraph()` を更新。短い `Study 1 ...` の通常文は対象にせず、label+numberの連続が2組以上ある場合だけsource保持に倒す。
+- 追加回帰テストを含め quality suite **184 passed**、typecheck、diff check成功。
+- これはproduction translationを無理に通す緩和ではなく、図表断片のfalse acceptをpre-modelで止める修正。次のfresh replayでordinary fallbackとtable contaminationを再測定する。
+
+## v551 — v550 cognitive replay and audit attribution (2026-09-25)
+- 認知心理論文を現行コードでfresh replayし、12 blocksを完了。`Horizon 1 Horizon 6 ...` はモデルへ送られず、source保持になったことを確認。
+- その構造をbenchmark上でも `table-contamination` として分類するよう `scripts/benchmark-real-paper-translation.ts` の監査 attributionを更新。productionの翻訳判定はv550の `shouldTranslateParagraph` が担う。
+- typecheck / diff check成功。次回の新規分野 replayで、図表断片をordinary-body fallback率へ混ぜない測定にする。
+
+## v552 — marketing fresh replay (2026-09-25)
+- マーケティング/消費者行動論文を現行コードで12ブロックfresh replayし、5 ordinary-body / 2 list / 5 damaged-extractionに分類。
+- ordinary-bodyは5/5がreader-visible fallbackなし。否定、方程式参照、図参照、因果の基本関係はサンプル上保持されていた。
+- damaged-extraction 5件は翻訳品質の改善対象へ混ぜず、source reconstructionの別トラックとして扱う。品質ゲートを緩和せずに、分野が変わっても図表/断片分類が機能することを確認した。
+
+## v553 — linguistics fresh replay and affiliation attribution (2026-09-25)
+- 言語学論文を12ブロックfresh replay。ordinary-body 4件のうち3件はaccepted、1件は未翻訳のままfallbackしたが、内容は大学所属列でありordinary-bodyではなかった。
+- benchmark attributionに、番号＋University/Institute/College/Department/Schoolで始まる所属列を `reference-chrome` として扱う一般則を追加。特定論文名には依存しない。
+- 引用付き定義文と研究課題列はacceptedしたが、次回は言語学accepted側のmanual semantic reviewを追加する。typecheck / diff checkは次のまとめ検証で確認する。
+
+## v554 — linguistics accepted semantic review (2026-09-25)
+- 言語学ordinary-body accepted 3件を手動確認し、3/3がseverity >= 2。`register`→「文字列/レジスタ」、`online`→「規制」などの専門用語ずれと、研究上の関係の弱まりを確認。
+- これは現在の形式的quality gateでは検出できないsemantic false acceptであり、fallback緩和では解決しない。次の候補は、文書内反復語の用語一貫性evidenceとalternate model/selective cascadeの同一fixture比較。
+- レビューは `test-data/real-papers/reports/fresh-v550-linguistics-manual-review-v554.json` に保存。
+
+## v555 — extraction regression after quality guards (2026-09-25)
+- `npm run test:extraction-corpus` 成功: **2 files / 108 tests passed**（baseline real papers 56、reading order 52）。既存PDF抽出・reading orderのregressionなし。
+- PDF.jsのColorSpace/TrueType警告は環境由来で、テスト結果には影響なし。
+- alternate model runtime（Ollama）は現在利用可能性を確認できなかったため、既存保存済み比較artifactを次の評価に利用する。
+
+## v556 — existing alternate-model evidence for linguistics drift (2026-09-25)
+- 同一言語学blockについて、現行MADLAD v22・保存済みQwen 2.5 3B・Gemma 2 9Bの出力を比較し、`test-data/real-papers/reports/linguistics-model-comparison-v556.json` に保存。
+- MADLADは `register` を「文字列」等へずらし、Qwen 3Bも用語混在が残った。一方Gemma 9Bは「レジスター」として保持し、状況特性・コミュニケーション目的・モデル安定性の関係を最も保った。
+- これはalternate modelの候補を示す診断結果であり、Ollama実行環境で同一条件のfresh再検証が必要。production routingは変更していない。
+
+## v557 — selective-cascade integration audit (2026-09-25)
+- `resumeIncompleteTranslation` と `importPDFV2` の両経路で、`enableSelectiveCascade` がMADLAD→OllamaTranslationEngineへ接続され、Glossaryは翻訳後に `applyGlossary` / `normalizeSourceGroundedTerminology` を通ることを確認。
+- ただしGlossaryはabstractから非同期生成され、用語の誤訳を文脈なしで機械置換する設計ではないため、言語学の `register` をproduction blacklistへ追加する変更は見送った。Ollama起動後に同一fixtureでcascade＋Glossaryの実測を行う。
+
+## v558 — cascade/glossary regression tests (2026-09-25)
+- `src/test/ollamaTranslationEngine.test.ts` と `src/test/glossaryApply.test.ts` を実行し、selective cascadeの失敗時保持・高リスク時の呼び出し・Glossary再適用を **8 tests passed** で確認。
+- Ollama実機がない状態でも、alternate unavailable時にMADLAD結果を壊さない契約は維持されている。fresh Gemma検証はruntime起動後に実施する。
+
+## v559 — runtime readiness checkpoint (2026-09-25)
+- MADLAD v22 serverはready（MPS、model_loaded=true）。Ollama `127.0.0.1:11434` は引き続き未起動。
+- `enableSelectiveCascade` の既定値はfalseのまま維持。Ollama未起動時の全リクエスト遅延を避け、検証済みのMADLAD経路を壊さないため。Ollama起動後に明示的にcascadeを有効化してfresh比較する。
+
+## v560 — protection A/B harness correctness fix (2026-09-25)
+- `translation-server/scripts/benchmark_protection_ab.py` がRaw / Minimalで生成した `modelInput` を実際には使わず、3条件が同じsourceをMADLADへ渡していたため、診断比較が無効になっていた。
+- 診断アームでは準備済み入力を1回だけdecodeし、Currentだけproduction protection経路を通すよう修正。例外時も `MADLAD_DISABLE_PROTECTION` を復元する。
+- production routingは変更していない。修正後の同一paper・同一block比較を、Ollama起動の有無に依存しないMADLAD保護診断として次に実行する。
+
+## v561 — protection A/B sanity replay (2026-09-25)
+- `protection-ab-sanity-v561.json` をMADLAD 3B同一processで1 block実行。Raw / Minimal / Currentのmodel inputが実際に異なることを確認。
+- Rawは原文を入力し、Minimal / Currentは4 spanをplaceholder化。今回の短いabstract blockでは出力はほぼ同等で、保護だけで品質が改善/悪化したとはまだ判定しない。
+- 診断scriptの本番経路は変更していない。次は複数分野のclean ordinary-bodyを同一条件で実行し、placeholder数別のfallback・fact破壊・semantic reviewを集計する。
+
+## v562 — protection A/B selector correction (2026-09-25)
+- 6件拡張実行中に、旧auditの一部rowsが既に日本語化されたsourceであることを検出。MADLADの英日protection比較に混ぜるとlanguage gateを測ってしまうため、診断selectorで日本語文字を一定数含むsourceを除外する一般条件を追加。
+- v562の実行は無効な入力を含むため途中停止し、結果artifactは採用しない。英語clean rowsの再選定はモデルを再ロードせずに確認済み（20件取得可能）。
+- 変更は診断benchmark限定で、本番の抽出・翻訳判定には影響しない。
+
+## v563 — protection A/B valid replay (2026-09-25)
+- 英語clean sourceのみでMADLAD同一processの3件比較を完了し、`protection-ab-v563.json` に保存。
+- 2件はRaw / Minimal / Currentすべて生成成功。1件の長い段落は3条件とも `degenerate translation output` でfallbackし、保護方式だけの差ではなかった。
+- 1件目ではRawが80 output tokens、Minimal/Currentが104。保護ありはRT/CT等の技術spanを復元できたが、Rawは本文を直接理解しやすい一方で略語の保持が異なる。現時点で大量placeholder protectionを削除する根拠は不足している。
+- 3件は少なすぎるため品質結論にはせず、次は英語clean rowsを分野・placeholder数別に拡張してmanual semantic reviewする。
+
+## v564 — protection span bucket aggregation (2026-09-25)
+- `scripts/analyze-protection-span-buckets.py` を任意のA/B artifactを受け取れるよう一般化し、v563を `protection-span-buckets-v563.json` に集計。
+- 3件では、0 spanの長文がRaw/Minimal/Current全てfallback、1–2/3–5 spanは全条件完了。保護方式の因果結論には不足するが、placeholder数とfallbackを同じsourceで追跡できる形式を確立。
+- 自動出力差はsemantic正解ラベルとして扱わない方針をartifactに明記。
+
+## v565 — balanced protection cohort selection (2026-09-25)
+- protection benchmarkに`--max-per-paper`を追加。stable sortの先頭paperだけが比較を占有しないよう、paperごとの上限をround-robinで適用する。
+- 現行auditから英語clean ordinary-body候補176件 / 49 papersを確認。12件・1 paperあたり最大1件の再現可能なcohortを生成できることを確認。
+- 変更は診断サンプル選定のみで、本番翻訳やquality gateは変更していない。
+
+## v566 — balanced protection replay (2026-09-25)
+- 6 papersから1 blockずつ選び、`protection-ab-v566.json` を同一MADLAD processで実行。
+- 長いmulti-sentence paragraphを`_translate_chunk`単体で比較したため、3条件共通の`implausibly_short`はproductionのsegmenter経路のfallback率を表さない。診断artifactではRaw/Minimal/Currentの入力差とdecode差だけを利用し、fallback率の母集団には混ぜない。
+- 複数分野の入力差を記録できたため、次の実験では意味単位segmenterを共通化した上でprotectionだけを変える必要がある。
+
+## v567 — segmented protection replay and semantic review (2026-09-25)
+- production `segment_for_translation`で同じsourceをunit化し、6 unitのRaw / Minimal / Current比較を完了。artifact: `protection-ab-segmented-v567.json`、span集計: `protection-span-buckets-v567.json`。
+- 6件中4件がseverity >= 2（2 omission、1 semantic shift、1 terminology error）。これらはRaw/Minimal/Currentで同じ出力になったため、今回のsemantic errorはplaceholder protection起因ではなくMADLAD decode能力/用語理解の問題と帰属できる。
+- review artifact: `protection-ab-segmented-manual-v567.json`。保護ありだけで悪化した例はこの小標本では確認できず、production protectionは維持する。
+
+## v568 — diagnostic regression verification (2026-09-25)
+- MADLAD serverはready（v22/source-protect-v22）。Ollamaは未起動。
+- protection benchmark / span aggregationのPython構文、`git diff --check`を確認。
+- `src/test/quality.test.ts` と `src/test/translationModelVersion.test.ts` は **185 tests passed**。production routing・quality gateは変更していない。
+
+## v569 — segmented cohort cap correction (2026-09-25)
+- `--segment-units --max-per-paper` が段落展開後にpaper上限を再適用していなかったため修正。現在はsegment unitにもround-robin上限を適用。
+- 12件の選定を確認し、12 papers / 各1 unitに分散することを確認。これで次回のprotection比較は同一paperの連続unitに偏らない。
+
+## v571 — isolated prose acronym protection fix (2026-09-25)
+- v570の12-paper replayで、`through this API` のAPIがplaceholder化され、Currentだけがcitation placeholder dropでfallbackする具体例を確認。
+- protection matcherを一般化し、単発のall-caps語が `a/an/the/this/that/public/available` の直後に現れる通常名詞文脈ではモデルへ見せるよう変更。反復・括弧内・数字隣接の技術acronymは従来どおり保護する。
+- protection versionをv23へ更新し、旧translation cacheと混ざらないようにした。
+- citation protection tests **71 passed / 3 subtests**、model version test **1 passed**。特定語の翻訳blacklistではなく、文脈付きplaceholder判定の変更。
+
+## v572 — v23 server activation (2026-09-25)
+- `restart-translation-server.sh` でserverを再起動し、MADLAD model versionが `source-protect-v23` になったことを確認。
+- `/status` は `model_loaded=true`, `phase=ready`, MPSを返している。warmupの`OK`が日本語にならないログは既知のwarmup入力で、server ready判定には影響しない。
+
+## v573 — API protection fixture replay (2026-09-25)
+- v23実機へ `We used the public API ...` fixtureをPOST。`fallback_reason=null` / `fallback_stage=null` で完了。
+- 出力は「公開API」「APIを介して」となり、単発APIのplaceholder dropによるCurrent-only fallbackが解消したことを確認。
+- 2 sentence unit、input 28 tokens / output 46 tokens、translation time約2.8秒。production serverの実測であり、特定語の出力blacklistではない。
+
+## v574 — GPT-3/API fallback replay (2026-09-25)
+- v23実機へ `There are four GPT-3 models accessible through this API...` を再送し、`fallback_reason=null` / `fallback_stage=null` を確認。
+- `API` と `GPT-3`, `Ada/Babbage/Curie/Davinci` を保持した日本語が生成され、v570でCurrent-onlyだったplaceholder drop fallbackが再現しなくなった。
+
+## v575 — v23 regression suite (2026-09-25)
+- citation protection / segmenter / MADLAD quality / microbatch tests: **190 passed, 11 subtests passed**。
+- `npm run typecheck` と `git diff --check` も通過。v23の文脈付きacronym判定で既存の数値・引用・segmenter契約にregressionなし。
+
+## v576 — v23 fixed-cohort replay (2026-09-25)
+- v570と同じ12 English clean unitsをv23実機serverへ再送し、`v23-replay-v576.json` に保存。
+- 12/12が `fallback_reason=null`（reader-visible fallback 0%）。v570のCurrent条件では1/12がAPI placeholder dropでfallbackしていたため、この標本では8.3ポイント改善。
+- これは小標本の固定cohort結果であり、全ordinary-bodyの5%以下を証明しない。semantic reviewは別に継続し、fallback低下だけで品質達成とは扱わない。
+
+## v577 — alternate-model readiness check (2026-09-25)
+- Ollama `127.0.0.1:11434` は現在未起動。既存のQwen/Gemma比較artifactは残っているが、v23固定cohortとのfresh同一条件比較は未実施。
+- 保存済み評価ではQwen/GemmaがMADLADの一部severity高い文で改善する証拠がある一方、mixed-scriptやnumeric formatting由来のfalse rejectもある。代替モデルをproduction defaultへ変更せず、Ollama実機で同一unit比較後にselective cascadeを再評価する。
+
+## v579 — fresh alternate model comparison (2026-09-25)
+- Ollamaを起動し、利用可能モデル（Gemma 2 9B / Qwen 2.5 14B / 7B / 3B）を確認。
+- 固定cohortから3 unitをGemma 2 9BとQwen 2.5 14Bへ同一prompt・同一segment/protectionでfresh送信。artifact: `alternate-v578-gemma-qwen.json`。
+- MADLAD v23と手動比較した要約を`alternate-v578-manual-v579.json`に保存。3件ともalternateは形式gateを通過し、cognitive relationではGemmaが最も自然かつ関係保持に優れた。
+- これは3件の小標本であり、production cascadeの既定有効化・モデル置換はまだ行わない。次はsemantic-risk accepted rowsを追加し、Gemma/Qwenのfallback・数値保持・手動severityを拡張する。
+
+## v580 — Gemma all-12 comparison and foreign-script guard (2026-09-25)
+- Gemma 2 9Bを固定12 unitへfresh送信し、全12件がrestore errorなし・形式gate accept。MADLADより自然な例が多い一方、Malhotraの出力にDevanagari混入を確認。
+- `UNEXPECTED_FOREIGN_SCRIPT` をquality evaluatorへ追加し、Devanagari/Cyrillic/Arabic/Tamil等のscript contaminationを、既存のThai/Hangulと同じ一般的guardとして拒否。技術語blacklistではない。
+- quality tests **185 passed**、typecheck通過。quality versionをv21へ更新し、translation server再起動後、v21 model version / readyを確認。
+- production cascadeはまだ既定false。Gemmaの改善傾向と混入リスクを同一fixtureでmanual reviewし、safe routing条件を決める。
+
+## v581 — alternate quality re-evaluation with foreign-script guard (2026-09-25)
+- `alternate-v580-gemma-all12.json` を現行 quality-v21 evaluator で再評価し、**11/12 accepted**。
+- `dont-mind-me` のGemma出力に含まれたDevanagari混入を `foreign script contamination` として拒否。特定の人名・語句のblacklistではない。
+- 詳細artifact: `test-data/real-papers/reports/alternate-v580-quality-v581.json`。
+- 代替モデルの自然さは改善候補を示すが、品質ゲート通過＝意味正解ではない。production selective cascadeは引き続き既定falseのまま、manual semantic reviewと同一条件の比較を優先する。
+
+## v582 — paired MADLAD/Gemma descriptive comparison (2026-09-25)
+- v23 MADLAD fixed-cohort結果とGemma all-12結果をstable keyで突合し、source・両出力・placeholder数・fallback情報を保存: `test-data/real-papers/reports/paired-madlad-gemma-v582.json`。
+- これは意味正解率の測定ではなく、manual semantic reviewへ渡すためのpaired artifact。quality gate通過を正解とは扱っていない。
+- 次の評価対象は、両モデルで否定・比較・因果・scope・数値を含む行をblind reviewし、代替モデルの改善が一般化するか確認する。
+
+## v583 — cache identity regression alignment (2026-09-25)
+- quality gate versionをv21へ更新した際に旧v20を期待していたtranslation model identity testを現行server identityへ同期。
+- Vitest対象3ファイル **193 tests passed**、Python citation/quality/segmenter **181 passed / 11 subtests**、`git diff --check` 通過。
+
+## v584 — paired semantic judge review (2026-09-25)
+- MADLAD v23 / Gemma 2 9Bの12 paired outputを、条件を隠したQwen 2.5 14B reviewerへ提示し、severity 0–4とfailure labelを保存: `test-data/real-papers/reports/paired-madlad-gemma-v584-judge.json`。
+- reviewer結果: MADLAD severity>=2 **7/12**, Gemma severity>=2 **3/12**、平均severity MADLAD **1.67**, Gemma **0.92**、winnerはGemma 6 / tie 6。
+- これは自動judgeでありgoldではないため、production routing変更の根拠にはせず、否定・比較・scope・terminologyを含む行の人手確認候補として扱う。小標本であり目標達成率の主張には使わない。
+
+## v585 — selective cascade gate verification (2026-09-25)
+- Translation serverを再確認し、MADLAD v23 + quality-v21でready (`model_loaded=true`, MPS)。
+- 既存selective cascadeは、fallbackまたは明示的なrelation/invariant/structure risk時だけ代替モデルへ進み、通常の形式通過文を無条件に置換しないことを確認。
+- `ollamaTranslationEngine` / `quality` tests **192 passed**。自動judgeで見つかった「形式通過だが意味誤り」の全自動置換は、現時点では安全な選択基準が不足するため、production既定値は変更していない。
+
+## v586 — broad coverage/relation audit join (2026-09-25)
+- `translation-coverage-full-v78.json` (167 blocks) と `semantic-relation-translation-audit-20260920.json` をstable keyで突合し、`coverage-relation-joined-v586.json` を生成。
+- coverage全体は reader-visible fallback **30/167 = 17.96%**。現在のordinary-body <=5%目標は未達で、12件固定cohortの0%を全体へ外挿しない。
+- relation auditと突合できたのは68件。missing relation signal **22/68 = 32.35%**。このauditのseverityは自動評価であり、manual semantic goldではないため、unsafe false-accept率の証拠とは扱わない。
+- 次の優先課題は、fallback 30件をserver未完了・extraction/source fragment・quality gateに分解し、missing relation signalの代表例を人手レビューすること。
+
+## v587 — fallback failure-signal breakdown (2026-09-25)
+- coverage v78のfallback 30件を、出力長ではなく保持失敗シグナルで分類。content-anchor欠落 **28件**、invariant欠落 **15件**、relation欠落 **5件**、short-output **1件**、その他 **2件**（複数該当あり）。
+- したがって現状の17.96% fallbackは単一のMADLAD decode失敗率ではなく、主にtechnical/content-anchor protectionとfact/relation gateが寄与している。次はanchor欠落が本当にsemantic errorか、placeholder restore失敗かを元source/output単位で分離する。
+
+## v588 — fallback layer attribution join (2026-09-25)
+- 62件のordinary fallback triageと、別cohortのlayer separation（extraction/quality_gate/translation）をstable keyで突合し、`fallback-triage-layer-joined-v588.json` に保存。
+- triage tagは quality_rejection **38**, invariant **11**, protected_restore **7**, semantic_relation **6**, untranslated **10**, engine **1**（重複あり）。
+- layer artifactとの一致は限定的で、現時点で全62件へ原因層を割り当ててはいない。unmatchedを推測で分類せず、次に同一fresh runでsource/protection/raw outputを保存して再計測する。
+
+## v589 — fresh fallback trace cohort (2026-09-25)
+- 現行production extraction/translation pathを3 paper（thermal-earring, design-for-wearability, cognitive-psychology-gpt3）、12 unitsでfresh実行。artifact: `test-data/real-papers/reports/fallback-trace-v589.json`。
+- fallbackは3/12。全3件がpost-modelではなく**pre-model / damaged-extraction**で、2件は段落末尾欠落、1件は前段継続fragment。9件はmodelへ送信され完了。
+- これはfallback低下を証明する標本ではないが、既存coverageのfallbackを一律quality gate緩和で直すべきでないことを確認。source reconstructionを先に修復すべき代表例を保存した。
+
+## v590 — page-boundary proper-name continuation diagnostic (2026-09-25)
+- `isSentenceContinuation`へ、長い未完結本文が大文字固有名句で切れる一般条件を追加し、ページ上端の出版者header・脚注・著者住所を透明metadataとして扱う回帰テストを追加。
+- reading-order tests **73 passed**、typecheck / diff check通過。
+- synthetic continuationは修復できるが、Thermal Earring実PDFでは現行canonical blockが依然として `... Thermal` / `Earring, ...` に分離しているため、production修復は未完了。次はmergeColumnContinuationsのtarget/skipped metadata条件をログで特定し、実PDFで修復後のfresh benchmarkを再実行する。推測でfallback率改善を計上しない。
+
+## v591 — real PDF page-boundary repair verified (2026-09-25)
+- `mergeColumnContinuations`へ、透明metadataを挟む同一columnのページ境界で、長い未完結本文と大文字固有名句を結合する一般条件を追加。診断ログでfalse条件を特定してから実装した。
+- Thermal Earring実PDFで `... present Thermal` + `Earring, ...` が `pageStart=1,pageEnd=2` の1 canonical paragraphへ結合されることを確認。
+- fresh 4-unit replay `fallback-trace-v591-thermal.json` では対象断片のpre-model fallbackが消失。残る2件はstructural publisher chromeと別ページのpost-model invariant failureで、同一原因の改善とは混同しない。
+- reading-order **73 passed**、typecheck、diff check通過。`PDF_LAYOUT_DEBUG=1` のpage candidate診断ログは環境変数時のみ出力。
+
+## v592 — merged paragraph quality triage (2026-09-25)
+- v591のfresh Thermal Earring replayで、ページ境界fragment fallbackは解消。残るpost-model rowは別原因で、出力中に28語/184文字の英語文が未翻訳のまま残り、dBm invariantも欠落していた。
+- このケースはquality gateの過剰拒否ではなく、実際のtranslation-unit decode failureとして保持。`30m/12m/24m/15m` の単位表記差だけを理由にgate緩和しない。
+- `... Thermal`→`Earring, ...` の修復効果と、このpost-model failureを分離して記録した。
+
+## v593 — parallel scientific repetition false-reject fix (2026-09-25)
+- Gemma fallback probeで、数値を含むparallel comparison（RSSIのPixel/nRF52比較）が正しく翻訳されているのに、短い述語反復をdecoder repetitionとして誤拒否していたことを確認。
+- sourceに比較関係・4個以上の数値・日本語文境界がある場合の構造化parallel clauseは、phrase repetitionだけでは拒否しないようquality判定を調整。数値/invariant/relation checksは維持。
+- 同じ実出力で `evaluateJaTranslation` / `isCascadeQualityAcceptable` が通過し、selective cascade probeがGemma出力を採用できることを確認。特定語blacklistではない。
+- regression: quality + Ollama tests **193 passed**、typecheck、diff check通過。
+
+## v594 — full extraction regression after quality/extraction changes (2026-09-25)
+- extraction corpus + reading-order real-paper regression: **108 tests passed** (2 files, 約141秒)。
+- focused translation/extraction suite: **267 tests passed** (4 files: readingOrder, quality, Ollama cascade, model version)。typecheck / diff check通過。
+- 並列科学比較文のfalse-reject緩和とページ境界proper-name stitchingが既存real-paper extractionを壊していないことを確認。
+
+## v595 — selective rescue probe on post-model failure (2026-09-25)
+- v591で残った4.5.2 Wireless Rangeのpost-model failureを、primary失敗→Gemma 2 9B cascadeで再現。artifact: `test-data/real-papers/reports/selective-rescue-v595.json`。
+- Gemmaをparagraph全体へ直接送る現行cascadeは、この長い実験結果paragraphではquality gateを通らずprimary errorへ戻った。代替モデル自体の能力だけでなく、alternate側にもproduction segmenterと同じ安全なunit分割が必要だと確認。
+- したがってcascade既定有効化やgate緩和は行わず、次はalternate translationにも同一semantic segmenterを適用し、unit単位で再結合する設計を検討する。
+
+## v596 — alternate cascade semantic-unit rescue (2026-09-25)
+- Ollama selective cascadeに、長文paragraphをbalanced-delimiter付きの保守的なsentence unitへ分割して順次翻訳し、再結合するrescue pathを追加。primary MADLADのcanonical segmenterは変更しない。
+- v595の同一post-model failureを再実行し、Gemma 2 9Bがparagraph全体直送では拒否された入力を、unit分割後は **accepted=true**、数値/invariant/relation gate通過で救済。artifact: `test-data/real-papers/reports/selective-rescue-v596.json`。
+- alternate model identityを`selective-v2-semantic-units`へ更新。production既定cascadeは変更していない。
+- Ollama/quality/model identity tests **194 passed**、typecheck、diff check通過。
+
+## v597 — cross-discipline fresh cohort after semantic-unit cascade change (2026-09-25)
+- 5 papers（HCI, wearability, cognitive psychology, conversation analysis, education）×2 units = **10 fresh units**を現行MADLAD経路で再実行。artifact: `test-data/real-papers/reports/cascade-cohort-v597.json`。
+- reader-visible fallbackは1/10で、publisher/reference chromeのpre-model structural skip。post-model fallbackはこのcohortでは0件のため、v596 rescueの一般化率はこのrunからは算出しない。
+- semantic-unit cascadeの救済評価はv596の実failureで成功済みだが、既定cascadeを有効化する前にpost-model failureを含むheld-out cohortを追加する必要がある。
+
+## v598 — alternate semantic-unit regression test (2026-09-25)
+- Ollama cascadeの長文rescue splitterについて、2文の入力がproviderへ2 unitとして送られ、順序を保って再結合される回帰テストを追加。
+- Ollama/quality/model identity tests **195 passed**、typecheck、diff check通過。
+- production default cascadeは未変更。splitterはalternate rescue専用で、MADLAD canonical segmentationと混同しない。
+
+## v599 — runtime readiness after cascade changes (2026-09-25)
+- MADLAD serverを再確認: `phase=ready`, `model_loaded=true`, MPS、v23/quality-v21。
+- Ollamaを再確認: `gemma2:9b` が利用可能。
+- semantic-unit cascade変更後のfocused suiteはv598で195 tests passed済み。fresh cohortのpost-model fallback不足のため、既定cascade有効化は保留。
+
+## v600 — reproducible selective-cascade audit harness (2026-09-25)
+- `scripts/benchmark-selective-cascade.ts` を追加。既存audit reportのpost-model rowsを、primary失敗→実Ollama provider→同じ`OllamaTranslationEngine`で再生し、accepted/rejected・quality・modelVersion・latencyを保存するaudit-only harness。
+- v591 Thermal Earring failureをv600 harnessで再実行し、Gemma semantic-unit rescue **1/1 accepted**。artifact: `test-data/real-papers/reports/selective-cascade-audit-v600.json`。
+- production import config/defaultとPaperBlock persistenceは変更していない。focused quality/Ollama tests通過。
+
+## v601 — multi-paper selective cascade audit (2026-09-26)
+- `translation-audit-v288-quality-v17-12paper.json` のpost-model fallbackから最初の10件を、v600 harnessでGemma semantic-unit cascadeへ再生。
+- rescue accepted **5/10 (50%)**。acceptedはThermal Earring 2件、PPG Earring 2件、wearability 1件。残り5件はalternate quality gate不通過でprimary fallbackを維持。
+- artifact: `test-data/real-papers/reports/selective-cascade-v601-10.json`。
+- これは固定順の10件で、全95件の代表性・semantic correctnessは未確定。既定cascadeを有効化せず、次にpaper/discipline別のrescue・reject理由と人手意味レビューを追加する。
+
+## v602 — 30-row selective cascade audit (2026-09-26)
+- 同じ12-paper quality reportのpost-model fallbackから30件をv600 harnessで再評価。Gemma semantic-unit cascade accepted **16/30 = 53.3%**。
+- paper別の偏りがあり、cognitive-psychology-gpt3では0/4、neuroscience-rule-followingでは4/4、複数HCI/wearability/linguistics/educationで混在。全fallbackへ一律cascadeする根拠にはならない。
+- artifact: `test-data/real-papers/reports/selective-cascade-v602-30.json`。reject理由はengineがprimary errorを返す設計のため、次はaudit modeでalternate raw output/quality reasonsを保存する拡張が必要。
+- 30件の救済率はfallback全体のreader-visible改善率ではなく、既存fallback cohortに対するaudit結果。production defaultは未変更。
+
+## v603 selective cascade rejection diagnostics (2026-09-26)
+
+Added `AlternateTranslationQualityError` diagnostics so the selective-cascade audit preserves alternate raw output and `TranslationQuality` when rescue is rejected. A fresh 10-row replay (`test-data/real-papers/reports/selective-cascade-v603-10.json`) accepted 5/10. Rejections now expose concrete causes: condition-relation loss, foreign-script/repetition contamination, orphaned source-invariant sentence, and implausible shortening; one long interactive-jewellery row returned fluent Japanese with an empty automatic reason and requires manual review because automatic quality alone is insufficient. Production selective cascade remains disabled; this is audit instrumentation only. Typecheck passed after the change.
+
+Focused verification after preserving the original primary error as the diagnostic cause: `ollamaTranslationEngine`, `quality`, and model-version tests **195/195** passed; typecheck and `git diff --check` passed.
+
+## v604 condition relation false-reject reduction (2026-09-26)
+
+The v603 alternate output for `thermal-earring:b-327fbccb` was semantically faithful but rejected because the Japanese used `によって` for English `depending on`; the relation guard only recognized `により`. Expanded the generic condition marker to include `によって` and added a regression test using participant compensation/experiment dependence. Quality tests **186/186**, typecheck, and diff check pass. This reduces a measured false reject without weakening checks for missing condition relations; no production cascade default change.
+
+The quality-only recheck artifact `selective-cascade-v604-quality-recheck.json` reclassifies only the Thermal condition row to accepted (**6/10**). The interactive-jewellery row remains rejected/manual-review despite automatic score 1.0 because it retains the untranslated ordinary term `multinationals`; this is documented as a false-accept risk rather than relaxed by rule.
+
+## v605 cascade audit reason attribution (2026-09-26)
+
+Added `getCascadeQualityReasons()` as a diagnostic companion to the existing cascade acceptance predicate. Audit errors now distinguish cascade-only failures such as an untranslated ordinary Latin lexeme or sentence compression from the general quality reasons, without changing production acceptance policy. Focused tests **195/195**, typecheck, and diff check pass.
+
+## v606 selective cascade diagnostic replay (2026-09-26)
+
+Replayed the same 10-row fallback cohort with structured cascade reasons. Rescue accepted **6/10** after the generic `によって` condition-marker fix. Rejected rows now attribute to: `untranslated cascade lexeme` (interactive jewellery's retained `multinationals`), `degenerate output` + foreign-script contamination, orphaned source invariant, and long-source implausible shortening; plausibility failures are recorded separately. Artifact: `test-data/real-papers/reports/selective-cascade-v606-10-diagnostics.json`. This is still an audit cohort, not a production-quality estimate; default cascade remains disabled.
+
+Follow-up safety check: `getCascadeQualityReasons()` now always emits an `unsafe relation guard` diagnostic when the existing relation predicate rejects, preserving the original cascade rejection semantics. Focused quality/engine tests **194/194**, typecheck, and diff check pass.
+
+## v608 condition-question false-reject reduction (2026-09-26)
+
+The 30-row v607 artifact was rechecked with a generic Japanese yes/no-question marker (`か` before a question quote/punctuation) for English `if` questions. Two previously rejected alternate outputs now pass the cascade relation predicate on recheck, while premise-style `If ...` losses still reject. Recheck artifact: `test-data/real-papers/reports/selective-cascade-v608-quality-recheck.json`. This is a gate-only recheck of stored outputs; no model calls or production route changes. Quality/engine tests **194/194**, typecheck and diff check pass.
+
+## v607 30-row diagnostic replay (2026-09-26)
+
+Fresh same-cohort replay with cascade diagnostics: **17/30** accepted by the runtime gate. Rejections counted: plausibility (8), condition relation (4), untranslated cascade lexeme (4), degenerate output (2), foreign-script contamination (1), orphaned invariant (1), long-source shortening (1), scientific invariant omissions (2), and repeated source label (1), with overlaps. Manual inspection shows some untranslated-lexeme flags are legitimate technical English (`lumped elements`, `Quasistatic`, `PERTURBED`) while `multinationals` is an ordinary untranslated word; do not globally relax the guard. Artifact: `test-data/real-papers/reports/selective-cascade-v607-30-diagnostics.json`.
+
+## v609 technical phrase false-reject reduction (2026-09-26)
+
+The cascade lexeme guard was over-rejecting retained technical phrases when the shorter first word was omitted from the long-token set (`lumped elements`). It now checks contiguous source neighbors using all source/output tokens and exempts a retained multiword phrase while continuing to reject a lone ordinary word such as `precedent`. Added regression coverage; quality tests **187/187**, typecheck and diff check pass. This is cascade-only and does not weaken primary quality acceptance.
+
+## v609 quality recheck result (2026-09-26)
+
+Rechecked v607's stored 30-row outputs after the contiguous technical-phrase guard and prior conditional-question guard. Three previously rejected rows now satisfy the current cascade predicate (two English `if` question cases and one technical-term/invariant case), yielding **20/30 equivalent** when added to the 17 runtime accepts. Artifact: `test-data/real-papers/reports/selective-cascade-v609-quality-recheck.json`. This is gate-only reclassification; no model output was regenerated and no default cascade was enabled.
+
+## v610 Qwen 2.5 14B rescue pilot (2026-09-26)
+
+On the first four fixed post-model fallback rows, Qwen 2.5 14B with the same semantic-unit splitter and cascade gate accepted **3/4**. It translated the interactive-jewellery row that Gemma rejected for `multinationals`; Thermal Earring rows 2/3 passed. The remaining Thermal long paragraph was correctly rejected for simplified-Chinese contamination and translation meta-commentary (the raw output included a Chinese sentence and a parenthetical note). This is a small purposive pilot, not a route decision; no production model routing changed. Artifact: `test-data/real-papers/reports/selective-cascade-qwen14-v610-4.json`.
+
+## v611 Qwen 2.5 14B ten-row rescue comparison (2026-09-26)
+
+Qwen 2.5 14B replayed the same first 10 fallback rows with identical segmentation and cascade gate: **6/10 accepted**. It passed the interactive-jewellery row and the long Thermal numeric row that Gemma rejected, but still rejected the Thermal condition paragraph, PPG quote/list row, and two wearability rows. This matches Gemma's post-gate 6/10 on the same cohort, so the small sample does not establish a superior route; raw rejection reasons and outputs are in `test-data/real-papers/reports/selective-cascade-qwen14-v611-10.json`. Production routing remains unchanged.
+
+## v612 Qwen 2.5 14B 30-row comparison (2026-09-26)
+
+The same 30 fallback rows were replayed with Qwen 2.5 14B under identical segmentation/prompt/gate. Qwen accepted **14/30**, below Gemma's **17/30** runtime result on the same cohort. Qwen improved some technical/numeric rows but had more structural/quality rejections across `dont-mind-me`, speech, education, and neuroscience. This rules out promoting Qwen as a blanket cascade replacement from the current evidence; keep model selection opt-in/audit-only. Artifact: `test-data/real-papers/reports/selective-cascade-qwen14-v612-30.json`.
+
+## v613 Gemma/Qwen disagreement artifact (2026-09-26)
+
+Saved the 13 rows where Gemma and Qwen differed on the same 30-row cohort, including both raw outputs and gate reasons, in `test-data/real-papers/reports/selective-cascade-model-disagreement-v613.json`. Several Qwen-accepted alternatives retain English technical phrases, while several Qwen rejects contain Chinese contamination; Gemma's higher aggregate acceptance should not be treated as semantic correctness. Manual review is required before any per-class routing.
+
+## v614 reproducible model disagreement tool (2026-09-26)
+
+Added `scripts/compare-selective-cascade.ts` to compare two cascade audit reports by stable row key, preserving source, acceptance, reasons, and both outputs for disagreement review. Reproduced the 13 Gemma/Qwen disagreements in `test-data/real-papers/reports/selective-cascade-model-disagreement-v614.json`; typecheck and diff check pass.
+
+## v615 manual review worksheet (2026-09-26)
+
+Added `scripts/render-model-disagreement-review.ts`, producing a side-by-side Markdown worksheet with source, Gemma/Qwen outputs, automatic reasons, and explicit manual labels/severity fields. Generated `test-data/real-papers/reports/selective-cascade-model-disagreement-review-v615.md` for the 13 disagreement rows. This keeps model selection grounded in semantic review rather than gate acceptance; typecheck and diff check pass.
+
+## v616 preliminary semantic comparison (2026-09-26)
+
+Added a preliminary agent semantic comparison for all 13 Gemma/Qwen disagreements (`selective-cascade-model-disagreement-review-v616.json`). It is explicitly labeled preliminary and must not be treated as a human gold set; it indicates Gemma is generally safer on contamination-heavy rows while Qwen improves several terminology/numeric rows. No routing change was made.
+
+Preliminary v616 counts (not gold): Gemma labels 9 correct/2 terminology/2 minor wording; Qwen 3 correct/5 terminology/2 additions/1 semantic shift/1 foreign-script contamination/1 minor wording. The same preliminary severity flags mark 3 Gemma and 9 Qwen rows at severity >=2; these are agent judgments on disagreement rows only and cannot estimate corpus error rates.
+
+## v617 alternate prompt lexical instruction probe (2026-09-26)
+
+Added an explicit alternate-model instruction to translate ordinary English words while retaining only proper names/acronyms/necessary technical terms. A 4-row Gemma probe accepted **3/4**; the interactive-jewellery output still retained `multinationals` and was rejected by the generic cascade lexeme guard, while all three Thermal rows passed. This prompt change remains in the opt-in audit engine only; no primary or production route change. Artifact: `test-data/real-papers/reports/selective-cascade-gemma-prompt-v617-4.json`; typecheck and diff check pass.
+
+## v619 alternate prompt full-cohort replay (2026-09-26)
+
+Replayed the same 30 post-model fallback rows with the v617 alternate prompt. Gemma semantic-unit rescue accepted **19/30 (63.3%)**, compared with **17/30** in v607 using the prior prompt. The two additional accepts were `dont-mind-me:b-2089b50e` and `cognitive-psychology-gpt3:b-65124568`; no production route was changed. This is a gate acceptance delta, not proof of semantic correctness, so the two gains and all accepted rows still require blind/manual review before enabling cascade. Artifact: `test-data/real-papers/reports/selective-cascade-gemma-prompt-v619-30.json`.
+
+## v620 gain-row semantic triage (2026-09-26)
+
+Inspected the two rows newly accepted after the prompt change. `dont-mind-me:b-2089b50e` preserves the study design, cultural comparison, and citation structure provisionally, pending human review. `cognitive-psychology-gpt3:b-65124568` is an unsafe semantic false-accept candidate: the Japanese drops the explicit “we assessed whether GPT-3 can adaptively change” predicate and produces a dangling first clause, despite passing the automatic gate. Saved as `selective-cascade-gemma-prompt-v619-gains-review.json` with `reviewType=agent triage, not human gold`. This confirms prompt-based acceptance gains cannot be enabled blindly and motivates a generic completeness/claim-coverage check rather than a gate relaxation.
+
+## v621 assessment-scope safety guard (2026-09-26)
+
+Added a generic `assessment scope predicate missing` quality reason for source clauses of the form `assess/evaluate/test/examine whether/if ...` when the Japanese output contains no corresponding assessment predicate around the `か` scope. This targets the v620 false accept without naming GPT-3 or any paper. Added positive/negative regression coverage; focused quality/Ollama tests **196/196**, typecheck, and diff check pass. This is a safety guard and has not enabled selective cascade or changed extraction.
+
+## v622 v621 gate recheck (2026-09-26)
+
+Re-evaluated the stored v619 Gemma outputs with the new quality gate, without model calls. Accepted rows remained **19/30**; only `cognitive-psychology-gpt3:b-65124568` was reclassified from accepted to rejected for `assessment scope predicate missing`. The guard therefore removes the identified unsafe false accept without increasing rejection among the other 18 accepted rows in this cohort. Artifact: `selective-cascade-gemma-prompt-v621-quality-recheck.json`.
+
+## v623 fresh MADLAD benchmark with persisted outputs (2026-09-26)
+
+Ran the production extraction/translation path on three cached papers (`thermal-earring`, `dont-mind-me`, `cognitive-psychology-gpt3`), four units per paper, with the current server and quality gate. The report stores source, translation, quality, invariants, stable keys, and fallback attribution: `translation-audit-v623-fresh.{json,md}`. Of 8 ordinary-body units, 8 received accepted translations in this run; one damaged-extraction unit and two structural/heading units were correctly excluded or preserved. The previously problematic cognitive psychology unit received a structurally complete assessment translation in this fresh decode, though it still reports a missing `SI` invariant as a quality diagnostic. This demonstrates decode variance and confirms that a single accepted run is not a semantic-quality estimate; manual review remains required.
+
+## v624 repeatability check (2026-09-26)
+
+Repeated the same 12 stable-key units with the same server and generation settings. Every unit produced byte-identical output and identical acceptance/fallback decisions versus v623 (**12/12 decisions and translations unchanged**). This cohort is deterministic under the current greedy server; the earlier difference came from the alternate cascade path, not random MADLAD sampling. Artifact: `translation-audit-v624-repeat.{json,md}`.
+
+## v625 cross-discipline fresh cohort (2026-09-26)
+
+Ran five additional cached papers spanning HCI, marketing, ergonomics, computational linguistics, and medical imaging, three units each. Of 6 ordinary-body units, 4 were accepted and 2 fell back post-model (**33.3% ordinary-body fallback** in this small cohort); two further ordinary units were accepted with invariant diagnostics. One fallback was a measured gate false reject: `not meaningful` → `意味がない` preserved the claim but was not recognized by the exclusivity relation guard. The other was a list item retaining a long English source span and remains an extraction/list or model failure. Artifact: `translation-audit-v625-crossdiscipline.{json,md}`.
+
+## v626 meaningfulness relation false-reject fix (2026-09-26)
+
+Expanded the generic exclusivity relation evidence to recognize natural Japanese renderings `意味がない`, `意義がない`, `有意義ではない`, and `価値がない`; added regression coverage. Focused quality/Ollama tests **197/197**, typecheck, and diff check pass. This is intended to reduce a measured false reject without relaxing fact or relation preservation.
+
+Stored-output recheck confirms the linguistics `not meaningful` row now has no quality reasons, while the separate list row still fails for an unmodified 30-word source span. The two causes remain separated in `selective-cascade-v625-quality-recheck.txt`; no list or extraction rule was weakened.
+
+## v627 linguistics selective-rescue audit (2026-09-26)
+
+Applied the opt-in semantic-unit Gemma cascade to the two cross-discipline post-model fallbacks. The `not meaningful` row produced a fluent, fact-preserving rescue but was still rejected because the Japanese polite form `意味がありません` was missing from the generic exclusivity marker. The list row was safely rescued with a complete Japanese translation. Artifact: `selective-cascade-v627-crossdiscipline.json`. No production cascade change.
+
+## v628 polite meaningfulness marker (2026-09-26)
+
+Extended the same generic exclusivity evidence to `意味がありません` and `意義がありません`, with regression coverage. Focused quality/Ollama tests **197/197**, typecheck, and diff check pass. This measured false-reject fix preserves the list-row fallback decision and does not relax source-fact checks.
+
+## v629 cross-discipline impact accounting (2026-09-26)
+
+Saved `translation-audit-v625-cascade-impact.json` to separate ordinary-body decisions from list/structural units. In the six ordinary-body rows, v625 had 5/6 primary accepts; after the v628 relation marker fix, the stored `not meaningful` row is accepted, yielding **6/6** on this small cohort. The separate list fallback was rescued by the opt-in cascade, but is excluded from the ordinary-body denominator because its source block is list-shaped. This is a cohort result, not evidence of the global ≤5% target.
+
+## v630 current quality recheck of 30-row cascade cohort (2026-09-26)
+
+Re-applied the current general quality gate to all stored v619 Gemma outputs. The broad gate remains **19/30**; the assessment-scope guard removes the known cognitive-psychology false accept, while the polite meaningfulness marker restores the linguistics row. The broad recheck intentionally does not replace the cascade-specific untranslated-lexeme guard, so it is not a production rescue decision. Artifact: `selective-cascade-gemma-prompt-v630-current-gate-recheck.json`.
+
+## v631 Qwen cross-discipline rescue comparison (2026-09-26)
+
+Replayed the two linguistics post-model fallbacks with Qwen 2.5 14B under the same semantic-unit cascade. Qwen accepted **2/2**; both outputs were fluent and preserved the central relations/facts. The list-shaped row lost its bullet marker in the Japanese output, so structure preservation still needs review even though the translation gate passed. This is only a two-row model comparison and does not justify enabling Qwen or cascade globally. Artifact: `selective-cascade-v631-qwen-crossdiscipline.json`.
+
+## v632 deterministic list-boundary restoration (2026-09-26)
+
+Added alternate-rescue postprocessing that preserves a source list marker (`•`, dash, lettered or numbered marker) when the model drops it, without changing translated content. Added a regression test that also requires the source's numbered fact to remain. Focused tests **198/198**, typecheck, and diff check pass. This remains alternate-rescue-only; primary MADLAD and production cascade defaults are unchanged.
+
+## v633 cross-model agreement candidates (2026-09-26)
+
+Compared Gemma 9B and Qwen 2.5 14B on the same 30 fallback rows. Both models accepted **9** rows (Gemma 19, Qwen 14). Preliminary inspection labels 7 as likely semantically correct and 2 as source-fragment/truncation risks (`step-to-charge`, `neuroscience-rule-following`); the linguistics list row is structurally reviewable and will benefit from v632 marker restoration. Saved `selective-cascade-agreement-candidates-v633.json`. These labels are agent triage, not human gold, so no agreement-based production routing is enabled.
+
+## v634 agreement-route impact accounting (2026-09-26)
+
+The 9/30 Gemma/Qwen agreement candidates would reduce this post-model fallback cohort to 21/30 if every agreement were accepted; excluding the 2 source-fragment risks leaves 6 clearly likely-correct triage rows and 24/30 hypothetical fallback. This confirms agreement alone cannot approach the ≤5% goal and should remain a high-precision audit signal, not the production solution. Accounting is stored in `selective-cascade-agreement-candidates-v633.json`.
+
+## v618 post-probe verification (2026-09-26)
+
+Re-ran the focused TypeScript checks after the alternate prompt probe: `src/test/quality.test.ts` **187/187** and `src/test/ollamaTranslationEngine.test.ts` **8/8** (195/195 total), with `npm run typecheck` passing. MADLAD health is currently `phase=ready`, `model_loaded=true`; Ollama is reachable with the audited Gemma/Qwen models. No production cascade or protection policy was enabled. Current evidence still supports model-specific, opt-in rescue evaluation rather than blanket routing: Gemma passed 17/30 and Qwen 14/30 on the same fallback cohort, while the disagreement review remains preliminary rather than a human gold set.
+### v635 — arXiv metadata overlay no longer breaks abstract paragraph continuation
+
+- Investigation of the ergonomics/iHCI PDF showed the abstract was split into an incomplete body block, an `arXiv:2111.04880[cs.HC] 0` metadata line classified as `paragraph`, and the continuation. The existing transparent-overlay rule only accepted `title` role plus a large font, so this common export variant was not skipped during continuation repair.
+- Generalized `isArxivOverlayBlock` to accept a complete arXiv marker emitted as either `title` or `paragraph`, matching the whole marker rather than arbitrary mentions of arXiv. This is format-generic and does not alter ordinary body sentences.
+- After reconstruction, the abstract source is again one paragraph spanning the continuation; the metadata marker remains a separate non-translated block.
+- `src/test/readingOrder/readingOrder.test.ts`: 73/73 passed. Extraction corpus: all 56 tests passed, but Vitest reported an existing worker `onTaskUpdate` timeout after completion (exit 1); no assertion failed. `npm run typecheck` passed; `npm run lint` passed with four pre-existing warnings; `git diff --check` passed.
+- Next: apply the same diagnostic to the medical review continuation rows, then rerun the protection A/B/C benchmark on clean ordinary-body blocks. Do not change production protection until the paired results and manual review are recorded.
+### v636 — IEEE Abstract— continuation is reconstructed in the medical review fixture
+
+- The medical imaging review exposed a second generic extraction boundary: a multi-line `Abstract—...` body was classified as `title`, then its lowercase continuation was emitted as a separate paragraph. This was independent of the arXiv overlay case.
+- Added a document-generic rule in `mergeColumnContinuations` that recognizes long sentence-like `Abstract—` title blocks as paragraph bodies before continuation resolution, and widened the existing same-column continuation geometry from only `single` columns to matching `left`/`right` columns. It still requires unfinished prose, lowercase continuation, matching x/font, and a tight baseline gap.
+- Reconstructed output now contains the full abstract in one paragraph; `Index Terms—...` remains separate. The medical real-paper baseline test passes.
+- Validation: targeted extraction baseline 1/1 passed, typecheck passed, diff check passed. Full extraction corpus should be rerun at the next checkpoint because this changes shared block merging.
+- Next: rerun the full extraction corpus and then resume the protection A/B/C diagnostic on clean ordinary-body rows; production protection remains unchanged.
+
+### v637 — targeted regression confirms both continuation fixes
+
+- The full extraction command was started after v636 but was manually interrupted after the reading-order suite completed; the baseline half was still CPU-bound and produced no assertion failure before interruption.
+- Focused real-paper reading-order checks for `ergonomics-human-factors-ihci` and `medical-imaging-deep-learning-review` pass 2/2. Typecheck and diff check remain clean.
+- The widened same-column rule is intentionally constrained by matching column, x/font, baseline gap, unfinished source, and lowercase continuation; it did not alter either focused fixture's expected reading order.
+### v638 — protection A/B/C diagnostic smoke cohort completed (3 clean rows)
+
+- Artifact: `test-data/real-papers/reports/protection-ab-v638-3.json`. Same model/runtime and greedy settings were used for raw, minimal, and current protection arms; no production routing was changed.
+- The cohort is intentionally a smoke test, not a quality estimate. One cognitive dual-task row completed in all arms; raw dropped one protected span while minimal/current restored all spans and produced identical output. Two other rows exposed model degeneracy/fallback in raw and minimal; current protection rescued one author-year/statistical row but not the other. This demonstrates both protection benefit (fact restoration) and decode limitations, but is too small and partly fallback-heavy for a production decision.
+- The earlier 6-row attempt was stopped after model runtime became unstable; it produced no final artifact. Do not use it as benchmark data.
+- Extraction-focused targeted regressions remain 2/2. Next: select a larger clean English cohort excluding rows whose source is already translated/degenerate, run the same paired arms, and manually review matched outputs before considering minimal protection.
+### v639 — protection A/B/C paired cohort (6 rows)
+
+- Artifact: `test-data/real-papers/reports/protection-ab-v639-6.json`. The standalone model process ran with the local Transformers 4.57.6 environment and greedy generation; the app server was stopped to avoid MPS contention. No production code path was changed.
+- Six clean ordinary-body rows from six papers were tested in raw, minimal, and current arms (18 paired requests). One row completed in all arms: raw dropped one protected span, while minimal/current restored all spans with identical output. One row completed only in current protection; raw/minimal were degenerate. Four rows were degenerate in all arms. Thus current protection shows a measurable fact-preservation benefit in this small cohort, while the dominant failure is model/decode degeneracy shared across arms. This is not enough to justify changing production protection or claiming a fallback-rate improvement.
+- This cohort is diagnostic, not a manual semantic gold set. It should be combined with larger held-out samples and review labels before any minimal-protection migration.
+### v640 — explicit continuation regressions and server tests
+
+- Added catalog assertions requiring the abstract lead and lowercase continuation to remain in one paragraph for both `ergonomics-human-factors-ihci` and `medical-imaging-deep-learning-review`.
+- Focused real-paper reading-order tests pass 2/2 with those assertions.
+- Translation-server suite passes 211/211 when invoked with the repository's required `PYTHONPATH=translation-server`.
+- A bare unittest invocation without `PYTHONPATH` fails only because the test package imports `engines`/`scripts` by repository convention; the correct invocation is recorded above.
+### v642 — segmented protection comparison separates long-input degeneration from protection cost
+
+- Artifact: `test-data/real-papers/reports/protection-ab-v641-segmented-6.json` and `.md`.
+- Six shorter, production-segmented English units from six papers completed in all three arms (18/18). Raw omitted two citation/identifier spans; Minimal and Current restored all spans. Minimal and Current outputs were identical on all six rows. This supports retaining fact protection while showing no measurable cost for these short units.
+- The result is still a smoke cohort and not a semantic gold set. It does not justify production migration; the next step is a larger held-out segmented cohort with blind manual review of relation, negation, numeric, and citation fidelity.
+### v643 — full reading-order corpus remains green after continuation changes
+
+- Full cached real-paper reading-order suite passes 52/52 after adding the two abstract-continuation assertions. A transient first run failed because the new assertion was attached to the wrong medical catalog entry; catalog metadata was corrected and the full rerun passed.
+- This confirms the generic `Abstract—`/same-column continuation change did not regress the existing 52-paper reading-order corpus.
+### v644 — full extraction corpus result after continuation changes
+
+- Full reading-order suite: 52/52 passed.
+- Full extraction corpus: 108 assertions passed; the only failure was the existing 60-second timeout for the very large `linguistics-language-model-physics` baseline case, followed by Vitest worker `onTaskUpdate` timeout. No assertion failure was reported for the changed abstract/continuation logic. This remains a runner/performance limitation to address separately, not evidence of a semantic regression.
+### v645 — large baseline timeout classified as test-runner limit
+
+- Measured `linguistics-language-model-physics` directly: layout diagnostic ~9.5s; full `extractFromPages` ~15.8s; targeted baseline assertion passes in 32.6s.
+- Raised only that baseline test's timeout from 60s to 180s. No production extraction behavior changed. This confirms the previous failure was the per-test/worker timeout under the full corpus run, not an extraction assertion regression.
+### v647 — 12-unit protection cohort confirms current fact-preservation advantage
+
+- Artifact: `protection-ab-v646-segmented-12.json` and `.md`.
+- All 36 Raw/Minimal/Current requests completed. Current restored all detected source spans (12/12); Minimal restored 10/12; Raw restored 8/12. Differences were concentrated in citation/identifier-bearing units. Most ordinary prose outputs were identical across arms.
+- This is invariant accounting, not blind semantic gold. It supports keeping a small protected set while deferring any production policy change until manual relation/negation/terminology review is complete.
+### v648 — preliminary manual semantic review of protection cohort
+
+- Added `test-data/real-papers/reports/protection-ab-v646-manual-review.json`, comparing all 36 outputs against their English sources.
+- Preliminary labels: Raw 7 correct / 3 citation errors / 1 omission / 1 minor wording; Minimal 8 correct / 1 citation error / 3 minor wording; Current 9 correct / 3 minor wording. Severity >=2: Raw 4/12, Minimal 1/12, Current 0/12.
+- This is an agent preliminary review, not independent blind human gold. It nevertheless identifies a consistent benefit from Current protection for citation and scientific identifier retention. No production policy change was made.
+### v649 — Qwen/Gemma alternate-model diagnostic on the 12-unit cohort
+
+- Artifact: `test-data/real-papers/reports/alternate-v648-qwen-gemma-12.json` and `.md`.
+- Qwen 2.5 14B completed and passed the automatic gate on 12/12; it visibly preserved several relations that MADLAD rendered awkwardly (RT+CT, COVID identifiers, SHERPA tool relation). Gemma 2 9B completed 12/12 and passed 11/12; one social-influence output contained a non-Japanese-script artifact and was rejected.
+- This is a selected diagnostic cohort, not held-out evidence. Earlier Qwen held-out review showed severity>=2 false accepts, so neither model is routed automatically. Next: evaluate a genuinely paper-held-out cohort with blind semantic labels and a high-precision selector.
+
+### v650 — paper-held-out alternate-model protection diagnostic (partial, 10 saved rows)
+
+- Created `test-data/real-papers/reports/protection-heldout-input-v650.json` from the prior audit corpus while excluding all paper IDs used in the v646 12-unit protection cohort; selected HCI, ergonomics, and marketing papers.
+- Ran the existing audit-only alternate-model script with the same citation protection and Qwen 2.5 14B / Gemma 2 9B prompt. The process saved 10 matched model results before an Ollama request on a long remaining unit stalled; the benchmark process was stopped and the partial artifact was preserved as `alternate-heldout-v650-qwen-gemma-partial.json`.
+- No production routing or protection behavior changed. The partial result is diagnostic only and is not a complete held-out benchmark. Next action: rerun the two remaining long units with bounded request timeouts or shorter semantic segmentation, then perform blinded semantic review before any cascade decision.
+
+### v651 — bounded rerun of held-out long-input tail
+
+- Generated `test-data/real-papers/reports/protection-heldout-short-v650.json` from the unprocessed tail, limiting this diagnostic rerun to ordinary prose <=700 characters so the local Ollama call cannot be held by the earlier multi-thousand-character units.
+- Completed the remaining short marketing unit with both Qwen 2.5 14B and Gemma 2 9B; artifact: `alternate-heldout-short-v650-qwen-gemma.json`. Qwen was rejected by the existing plausibility gate while Gemma was accepted. This is an automatic signal only; no semantic conclusion or routing change is made.
+- The remaining 1.2k–2.8k character units require explicit semantic chunking or a bounded request implementation before comparison. Current protection and production behavior remain unchanged.
+
+### v652 — bounded alternate-model diagnostics
+
+- Updated `scripts/diagnose-alternate-models.ts` with `ALT_REQUEST_TIMEOUT_MS` (default 90s) and per-unit request error preservation. A stalled Ollama request now becomes an explicit diagnostic error and the remaining rows continue; no production translation path changed.
+- `npm run typecheck` and `git diff --check` pass after the diagnostic-only change.
+
+### v653 — bounded tail run confirms row-level timeout behavior
+
+- Re-ran the unprocessed held-out tail with `ALT_REQUEST_TIMEOUT_MS=20000`. The first long Qwen request was recorded as a timeout; the matching Gemma request completed. The next Ollama request stalled again, so the diagnostic process was stopped after preserving the partial artifact `alternate-heldout-tail-v650-qwen-gemma-partial.json` (2 saved model rows).
+- This confirms the new timeout/error path prevents a single failed request from being reported as a completed translation, but the local Ollama service can still leave the enclosing sequential run waiting between requests. No production code or routing changed. Remaining work is to add a subprocess/request-level isolation or pre-segment long diagnostic inputs before collecting complete held-out labels.
+
+### v654 — held-out semantic-unit diagnostic completed (8 rows)
+
+- Built `protection-heldout-segmented-v654.json` by applying the production segmenter to the unprocessed held-out blocks and selecting units <=500 characters, preserving stable source keys with a `:uN` suffix. This avoids conflating long-request instability with semantic-unit quality.
+- Ran Qwen 2.5 14B and Gemma 2 9B on 8 matched units with 30s request bounds. Artifact: `alternate-heldout-segmented-v654-qwen-gemma.json`; all 16 model requests completed. Automatic gate counts are diagnostic only and require semantic review before routing.
+- This is the first held-out run that completes without an Ollama stall after segmentation. No production model cascade or protection change is justified yet.
+
+### v655 — preliminary semantic review of held-out segmented units
+
+- Added `alternate-heldout-segmented-v654-manual-review.json` for the 8 source units × 2 models. This is an agent preliminary, non-blind review, not a human gold label.
+- All outputs preserved the cited claims in this small cohort; observed issues were severity-1 wording/formatting (Qwen awkward phrasing on one unit, Gemma duplicated citation parentheses, and brand transliteration differences). No severity>=2 semantic error was observed in these 16 outputs.
+- The sample is too small to justify automatic routing. Continue expanding across unseen papers and include long-unit/timeout outcomes separately from semantic labels.
+
+### v656 — additional held-out Qwen semantic units (partial)
+
+- Generated 12 additional unused <=500-character units from the same paper-held-out set (`protection-heldout-segmented-more-v656.json`). Qwen completed 5 rows before the local Ollama process stalled; saved as `alternate-heldout-segmented-more-v656-qwen-partial.json`.
+- The completed rows are useful diagnostic evidence but are not a complete cohort. The repeated stall, even after request timeout handling, points to local Ollama lifecycle instability for sequential requests; it is kept separate from model semantic failure.
+
+### v657 — paired Gemma follow-up and review for additional held-out units
+
+- Replayed the five Qwen-completed keys in a separate Gemma process; all five Gemma requests completed (`alternate-heldout-more-v657-gemma.json`). Qwen accepted 4/5 automatically, Gemma 5/5; Qwen's one rejection was a gate signal, not a confirmed semantic failure.
+- Added `alternate-heldout-segmented-more-manual-review.json`. Preliminary non-blind review found only severity-1 wording/formatting differences and no severity>=2 semantic errors in these ten paired outputs. This remains too small for production routing; no cascade change was made.
+
+### v658 — proactive safeguard for extremely long semantic units
+
+- Bumped `SEGMENTER_VERSION` to `semantic-v79` so cached translations do not silently reuse the prior segmentation.
+- `segment_for_translation` now applies the existing delimiter-aware top-level clause-comma rescue only when a single unit is at least 900 characters. Citation/parenthesis/quote depth and substantial-side checks remain active; ordinary sentences and author-year citation groups are unchanged.
+- The observed 2,845-character held-out block changed from an 1,169-character tail unit to 316/852-character units after existing sentence segmentation. This is a precision-first safeguard, not arbitrary fixed-width splitting.
+- Added a round-trip regression for an >900-character academic sentence. Segmenter tests pass 58/58; full translation-server tests pass 212/212.
+
+### v659 — cache identity synchronized with segmenter-v79
+
+- Updated the TypeScript client `MADLAD_MODEL_VERSION` from `semantic-v78` to `semantic-v79`, matching the server-generated model version. This prevents cached translations from bypassing the new long-unit segmentation.
+- `translationModelVersion.test.ts` passes; `npm run typecheck` and `git diff --check` pass.
+
+### v660 — corpus-level structural check of semantic-v79
+
+- Added `test-data/real-papers/reports/segmenter-corpus-stats-v659.json` from 68 deduplicated ordinary-body rows across four audit reports.
+- Before segmentation, 31 rows exceeded 900 characters; after semantic-v79, zero translation units exceeded 900 characters. Maximum unit length was 852 characters, median maximum 217; all 68 source round-trips passed.
+- This is a structural benchmark, not a translation-quality result. It supports running the next fresh MADLAD benchmark with the new cache identity.
+
+### v661 — semantic-v79 fresh benchmark started
+
+- Started the production extraction/translation benchmark against the dedicated local server, which reports model version `3b-mt-v6-transformers-4.57.6-semantic-v79-...` and `phase: ready`.
+- Checkpoint artifact: `test-data/real-papers/reports/translation-audit-semantic-v79.json`; invocation currently processes 52 cached papers with 2 blocks per paper and concurrency 1. At the last observation, 3 papers/6 rows were checkpointed, 4 translated and 2 fallback; `complete=false` because the run is still active.
+- This report must not be interpreted as final metrics until the process completes. App translation is not running; only the benchmark process is active.
+
+### v662 — semantic-v79 benchmark checkpoint preserved after stall
+
+- The fresh benchmark checkpoint stalled for ~2 hours at 3 papers/6 rows (4 translated, 2 fallback) while the local server remained healthy/ready and the benchmark process was CPU-idle. The benchmark process was stopped; the JSON checkpoint was preserved with `interruptedAt` and `interruptionReason` metadata.
+- This is an execution/resume failure, not a translation-quality result. Next run should use `--resume` with a shorter request timeout and, if needed, paper-by-paper isolation so one request cannot hold the corpus run.
+
+### v663 — semantic-v79 resume progressing with bounded requests
+
+- Resumed `translation-audit-semantic-v79` using `MADLAD_BENCH_REQUEST_TIMEOUT_MS=30000`, `MADLAD_BENCH_MAX_ATTEMPTS=1`, and concurrency 1. At the latest checkpoint, 5 papers/10 rows are present (4 translated, 6 fallback); the process remains active.
+- These interim counts are not quality metrics because the corpus is incomplete and fallback reasons still require layer attribution. Continue monitoring until a stable checkpoint or a deliberate paper-isolated run is available.
+
+### v664 — paper-isolated semantic-v79 run validates isolation
+
+- After the corpus run stalled at the next paper boundary, isolated `speechin` with `--paper speechin --limit 2`, 30s timeout, one attempt, concurrency 1.
+- The isolated report completed successfully (`translation-audit-semantic-v79-speechin.json`, 1 paper/2 rows). This confirms the server and semantic-v79 path work when a paper is isolated; the corpus stall is an orchestration/extraction scheduling issue, not a universal server failure.
+- The full corpus checkpoint remains preserved at 7 papers/14 rows and is not treated as final quality data.
+
+## v665 — isolated significant-other semantic-v79 benchmark completed (2026-09-26)
+
+- The paper-isolated run `translation-audit-semantic-v79-significant-other.json` completed successfully with the fresh semantic-v79 server.
+- Result: 1 paper / 2 sampled blocks; 1 model translation and 1 intentional pre-model structural skip. No server/request stall occurred.
+- The translated block had 507 source characters and was accepted by the existing gate; the second 215-character block was preserved because it was structural. This is a measurement checkpoint, not a corpus quality conclusion and does not replace manual semantic review.
+- The full corpus run remains intentionally incomplete because orchestration/extraction scheduling stalls after a few papers. Continue paper-isolated runs one at a time, preserving each report and separating structural fallback from model/gate fallback.
+
+## v666 — isolated power-over-skin semantic-v79 benchmark completed (2026-09-26)
+
+- `translation-audit-semantic-v79-power-over-skin.{json,md}` completed in the same-shell fresh-server setup.
+- The selected paper produced 2 translation units and saved its checkpoint/report without request timeout or orchestration stall.
+- Keep this paper-isolated result separate from the incomplete multi-paper report until rows are reviewed for structural vs model/gate fallback and semantic quality.
+
+## v667 — protection A/B/C evidence revalidated and summarized (2026-09-26)
+
+- Re-read the current protection diagnostic implementation and latest paired artifact rather than starting a duplicate production experiment. The existing diagnostic changes only the diagnostic process: Raw disables pre-protection, Minimal keeps only opaque spans protected, and Current uses production protection; generation is greedy and matched per source unit.
+- Revalidated `protection-ab-v646-segmented-12.json`: 12 stable units × 3 conditions, all 36 requests completed. Current restored 12/12 detected source spans, Minimal 10/12, Raw 8/12. The corresponding preliminary review records Raw severity>=2 on 4/12 units, Minimal on 1/12, Current on 0/12; most differences are citation/identifier or relation retention.
+- Added `protection-ab-v646-review-summary-v1.json` as a compact reproducible summary. It is explicitly preliminary/non-blind and not sufficient alone for a production policy change.
+- This evidence currently argues against removing protection wholesale: Raw has a measurable fact-loss cost, while this short cohort does not show a measurable semantic cost from Current protection. Continue with held-out matched units and manual review before considering any production migration.
+
+## v668 — protection diagnostic regression checks green (2026-09-26)
+
+- Re-ran the diagnostic-facing Python tests: citation protection, MADLAD quality, and segmenter: **182/182 passed**.
+- `npm run typecheck` passed.
+- No production protection, model routing, or quality threshold was changed. The current evidence remains: protection improves factual span preservation on the paired cohort; removing it globally is not justified without larger held-out semantic review.
+
+## v669 — cross-cohort protection accounting artifact (2026-09-26)
+
+- Added `test-data/real-papers/reports/protection-crosscohort-summary-v1.json`, combining only the automatic span/latency fields from the two completed segmented cohorts (18 source units × 3 arms). It does not merge or invent semantic labels.
+- Across 18 matched requests per arm: Raw had 6 missing protected spans, Minimal 2, Current 0; no request-level errors occurred. Mean decode latency was approximately Raw 2.49s, Minimal 2.72s, Current 2.73s on this run.
+- The placeholder buckets are descriptive only because each arm detects a different number of spans; they are not causal estimates. Manual semantic review remains the authority for meaning and is still limited to the v646 cohort.
+- This strengthens the current decision to retain production protection while evaluating selective/minimal protection on genuinely held-out sources, rather than globally removing placeholders.
+
+## v670 — placeholder bucket diagnostic generated for v646 (2026-09-26)
+
+- Ran the existing diagnostic bucket analyzer on the 12-unit paired cohort and saved `test-data/real-papers/reports/protection-span-buckets-v646.json`.
+- Six units had zero Current spans and identical Raw/Minimal/Current outputs. Five units had 1–2 Current spans; protection arms diverged from Raw in four, reflecting protected factual content rather than request failure. One unit had 3–5 spans and also diverged.
+- All 36 requests completed without automatic errors. This artifact is descriptive only and is not used to tune thresholds or infer semantic correctness.
+
+## v671 — live semantic probe on current server (2026-09-26)
+
+- Confirmed the local translation server is healthy (`phase=ready`, `model_loaded=true`) and running semantic-v79 with Transformers 4.57.6.
+- Sent a fixed ordinary statistical-prose probe through the production HTTP path. Output: `両群間に有意差はなく, 効果は予想より小さかった。`; `fallback_reason=null`, `fallback_stage=null`.
+- This is a smoke probe only, not a corpus metric. It confirms the current server path can preserve the negation/comparison relation for this fixture; broader semantic review remains necessary.
+
+## v672 — Hangul contamination guard fixed and live-verified (2026-09-26)
+
+- A live production-path probe exposed a real gate gap: `両群とも有意差はなかったが, 両群と도改善した。` was previously accepted with a single Hangul syllable (`도`) and no fallback.
+- Added a target-language-specific Hangul rejection to `_is_degenerate` and a diagnostic reason `foreign_script:hangul`; bumped the quality/cache identity from quality-v21 to quality-v22 in both server and TypeScript client.
+- Added a regression test for the exact class of contamination. MADLAD quality tests: 54/54 passed; TypeScript typecheck passed; diff check passed.
+- Restarted the server in a persistent terminal session. Startup reports quality-v22 and embedding integrity verified. Re-running the same probe now returns `両群間に有意差はなかったが, 両群とも改善した。` with `fallback_reason=null` and no foreign-script contamination.
+
+## v673 — fixed academic quality probes after quality-v22 (2026-09-26)
+
+- Ran five production HTTP probes covering negation/comparison, participant cardinality, statistical notation, author-year citations, and comparison with a negated outcome.
+- All five returned `fallback_reason=null` and `fallback_stage=null`; outputs preserved the tested relation/facts, including `88`, `F(4,33) = 2.913`, `p < 0.001`, citation order, and the final “did not improve accuracy” negation.
+- Saved exact source/output/token metadata in `test-data/real-papers/reports/quality-probe-v22.json`. These are fixed smoke probes, not a semantic gold benchmark.
+
+## v674 — full translation-server regression after quality-v22 (2026-09-26)
+
+- Full Python translation-server suite passed **213/213** after the Hangul quality-gate change.
+- Existing microbatch, citation restore, relation safety, and segmenter regressions remain green. No production extraction or routing behavior was altered by this guard.
+
+## v675 — quality-v22 isolated real-paper replay (2026-09-26)
+
+- Replayed the `speechin` paper-isolated benchmark with the restarted quality-v22 server, one attempt, 30-second request bound, and concurrency 1.
+- The run completed and saved `translation-audit-quality-v22-speechin.{json,md}` with 2 translation units. This confirms the new gate/cache identity is active in the real extraction-to-HTTP path; inspect row-level semantics separately from structural skips.
+
+## v676 — client cache identity regression fixed (2026-09-26)
+
+- The first focused Vitest run caught the expected cache-identity assertion still pinned to quality-v21 after the server/client quality-v22 bump.
+- Updated `src/test/translationModelVersion.test.ts` to require quality-v22 and the Hangul guard suffix. Focused Vitest now passes **190/190**, and `npm run typecheck` passes.
+
+## v677 — full TypeScript regression after quality-v22 (2026-09-26)
+
+- Full `npm test -- --passWithNoTests` passed **547/547 tests across 67 files**.
+- Existing PDF, reading-order, import/resume, translation cache, quality, and UI tests remain green after the quality-v22 cache identity update.
+- PDF canvas native-module warnings remain pre-existing environment warnings; no test failed because of them.
+
+## v678 — quality-v22 isolated power-over-skin replay (2026-09-26)
+
+- Replayed `power-over-skin` with the quality-v22 server, one attempt, 30-second request bound, and concurrency 1.
+- The report completed with 2 translation units and no orchestration stall. It is stored separately from the earlier semantic-v79 report so quality-v22 behavior can be compared without mixing generations.
+
+## v679 — lint verification after quality-v22 (2026-09-26)
+
+- `npm run lint` completed successfully (exit 0). It reports four pre-existing warnings in `quality.ts` and `pdfLayout.ts`; no new warning was introduced by the Hangul guard or cache-version update.
+
+## v680 — extraction corpus regression after quality-v22 (2026-09-26)
+
+- `npm run test:extraction-corpus` passed **108/108 assertions across 2 files**: 56 real-paper extraction baseline checks and 52 reading-order checks.
+- Existing PDF parser warnings (`canvas.node`, malformed ColorSpace/TT operators) were non-fatal and produced no assertion failures.
+- This confirms the translation quality-gate/cache update did not regress extraction or reading order.
+
+## v681 — quality-v22 server remains ready (2026-09-26)
+
+- Verified the persistent translation-server process is still alive and healthy: `phase=ready`, `model_loaded=true`, quality-v22 model identity.
+- No app translation job is running; the server is available for isolated benchmark requests.
+
+## v682 — quality-v22 cognitive psychology replay (2026-09-26)
+
+- Completed the isolated `cognitive-psychology-gpt3` replay with one attempt, concurrency 1, and 30-second request bound.
+- Saved `translation-audit-quality-v22-cognitive-gpt3.{json,md}` with 2 translation units. This extends the quality-v22 real-paper checkpoint to a third paper/layout family; row-level semantic review remains separate from automatic fallback status.
+
+## v683 — long-block timeout attribution corrected with 180s replay (2026-09-26)
+
+- Re-ran the same `cognitive-psychology-gpt3` source blocks with the production-like 180-second request bound. Both 1,575- and 2,012-character ordinary-body blocks completed; the prior 30-second timeouts were diagnostic request-limit failures, not model fallback.
+- Saved `translation-audit-quality-v22-cognitive-gpt3-180s.{json,md}`. This confirms long MPS inference can take roughly 70–90 seconds and must not be classified as a semantic failure when the production client timeout is 180 seconds.
+- Keep the 30-second artifact as an explicit server/request-layer diagnostic; use the 180-second artifact for quality review.
+
+## v684 — SI Appendix omission isolated for follow-up (2026-09-26)
+
+- The 180s replay exposed a separate invariant signal: the long `cognitive-psychology-gpt3` block omitted the repeated `SI Appendix` cross-reference from Japanese output, although `readerVisibleFallback=false` and the request completed.
+- Existing protection intentionally keeps `SI Appendix` available for a literal retry because standalone placeholders are frequently dropped; current tests assert that policy. The benchmark's `technicalNameCandidates` currently sees `Appendix` but not the full `SI Appendix` phrase, so the retry path does not reliably trigger for this omission.
+- No immediate postprocess or paper-specific restore was added. Next safe step is a generic supplementary-reference candidate/retry test on held-out documents, followed by semantic review; do not treat the automatic score as correctness.
+
+## v685 — supplementary reference audit candidate made atomic (2026-09-26)
+
+- Updated `extractTechnicalNameCandidates` to treat multi-token `SI Appendix` as one audit candidate. This is a diagnostic/invariant improvement only; it does not add a paper-specific translation rule or force fallback by itself.
+- Added a regression test ensuring the full phrase is reported, instead of only `Appendix`. Focused Vitest: **191/191**, typecheck passed, diff check passed.
+- This enables the existing technical-name/retry diagnostics to identify the actual supplementary-reference omission observed in the held-out long block. Production routing remains unchanged pending a fresh retry experiment.
+
+## v686 — SI Appendix phrase audit replay completed (2026-09-26)
+
+- Re-ran the cognitive long-block paper with the same production-like 180-second bound after the atomic supplementary-reference candidate change.
+- The report `translation-audit-quality-v22-cognitive-gpt3-si-v2.json` completes both units. The audit now records the full `SI Appendix` phrase as a candidate and reports it missing where the output omits the reference; this makes the semantic omission reproducible without changing reader-visible routing.
+- Keep this as a held-out diagnostic signal. A production retry/restore change still requires matched examples showing it improves reference retention without increasing placeholder fallback.
+
+## v687 — supplementary-reference diagnostic lint check (2026-09-26)
+
+- `npm run lint` remains successful after the `SI Appendix` candidate change; only the same four pre-existing warnings remain.
+- `git diff --check` passes. No production translation behavior was changed by this audit-only candidate update.
+
+## v688 — supplementary-reference literal retry live-verified (2026-09-26)
+
+- Added a generic `_missing_supplementary_references` check to the server rescue path. When a Japanese decode omits a source `SI Appendix` label, the server performs one literal retry with that exact span exposed; it keeps the greedy candidate if the retry also fails.
+- Bumped server/client cache identity to quality-v23 (`...supplementary-ref`) so old outputs are not silently reused.
+- Added a server regression test. MADLAD quality tests: **55/55**; focused TypeScript tests: **191/191**; typecheck passed.
+- Restarted the server and confirmed startup quality-v23. Live probe `The details appear in the SI Appendix.` now returns `詳細はSI Appendixに示す。` with no fallback.
+
+## v689 — full translation-server regression after quality-v23 (2026-09-26)
+
+- Re-ran the complete Python translation-server test suite after the supplementary-reference retry and cache identity update: **214/214 tests passed**.
+- The benchmark-only server remains alive on `127.0.0.1:8765` (PID 9172); no app translation job was started.
+- No production model switch or `.app` build was performed. The next quality step remains matched held-out semantic review of protection/retry behavior, rather than further gate tightening.
+
+## v690 — protection paired manual review summary recorded (2026-09-26)
+
+- Recomputed the existing 12-unit paired manual review without treating automatic scores as truth: raw MADLAD had 4/12 severity≥2 cases (3 citation errors, 1 omission), minimal had 1/12 (citation error), and current protection had 0/12; current also had 9 correct and 3 minor-wording rows.
+- This is preliminary, non-blind evidence from the v646 cohort, so it does not justify replacing production protection with raw/minimal. It does show that removing protection can increase fact/citation damage, while the current arm's remaining risk is semantic false acceptance outside this small cohort.
+- Next measurement should be a fresh held-out paired cohort and blind semantic review, with extraction/source-fragment rows excluded and placeholder-count buckets retained.
+
+## v691 — held-out protection/rescue comparison and semantic review (2026-09-26)
+
+- Ran a fresh 6-unit held-out cohort from `marketing-framing-organic-food` through Raw/Minimal/Current direct decodes and saved `protection-ab-heldout-v691.json`.
+- Manual semantic review saved in `protection-ab-heldout-v691-manual-review.json` and summary. Raw had 3/6 severity≥2 cases, Minimal 1/6, Current 2/6; one shared MADLAD drift expanded a two-reason sentence into a long invented inventory, and another Current output changed `75% lean` to a fat relation while omitting the preference sentence. These are model/decode false accepts, not protection-only wins.
+- The direct-arm result is diagnostic only; production rescue was separately replayed because direct decode bypasses hard quality checks.
+
+## v692 — generic unsupported-inventory guard (2026-09-26)
+
+- Added `_has_unsupported_inventory` to the server quality gate. It compares source/output punctuation structure and rejects a large comma-separated inventory when the source has no comparable list; it does not match domain words or blacklist hallucinated terms.
+- Added positive/negative regression tests and bumped cache identity to quality-v24 (`...supplementary-ref-inventory`). Focused quality tests: **57/57**; full Python suite: **216/216**; typecheck passed.
+- Live production-rescue replay of the held-out organic-food sentence now rejects the hallucinated inventory and obtains the beam candidate `有機食品の消費が低い理由は、消費者の態度や購入意図を含めていくつかある。`. The guard is intentionally narrow and requires fresh held-out measurement before broader tuning.
+
+## v693 — production-rescue held-out confirmation and remaining relation risk (2026-09-26)
+
+- Replayed the six held-out units through the full production rescue path in `protection-rescue-heldout-v691.json`. The new inventory guard rejects the invented comma-list and beam rescue returns the short faithful claim.
+- The same cohort still exposes a separate unresolved semantic false accept: the source contrast `75% lean` versus `25% fat` is rendered with the wrong polarity/relationship and the following participant-preference clause is omitted. This is not detectable by numeric preservation alone and is not being addressed with a word blacklist.
+- Keep this case in the semantic-review queue. A relation/contrast invariant or selective alternate-model cascade must be evaluated against held-out examples before changing production behavior.
+
+## v694 — alternate-model held-out comparison (2026-09-26)
+
+- Compared qwen2.5:14b and qwen2.5:7b against the same held-out organic-food units using the existing audit-only alternate-model runner; artifacts: `alternate-heldout-input-v693.json` and `alternate-heldout-v693.json`.
+- On the unresolved `75% lean`/`25% fat` contrast unit, qwen2.5:14b preserved both alternatives and the omitted preference sentence, while qwen2.5:7b retained the relation poorly (`75%レイン`/`25%ファット`). This is evidence for a selective cascade candidate, not a production switch.
+- On the citation-heavy unit, qwen2.5:14b fell back because protected `TRA`/`TPB` placeholders were dropped; qwen2.5:7b completed but distorted acronym/theory relations. Therefore model selection must include protection restoration and semantic review, not only completion rate.
+- qwen2.5:14b and 7b produced acceptable but stylistically/terminologically different variants on the negation unit. No production routing change was made.
+
+## v695 — selective-cascade disagreement review (2026-09-26)
+
+- Compared existing MADLAD fallback diagnostics with qwen2.5:14b on 30 rows; 13 acceptance disagreements were written to `selective-cascade-model-disagreement-v695.json`.
+- qwen14 improved some long relation-heavy rows, but also introduced unsupported English/Chinese fragments, meta notes, terminology drift, and occasional truncation. It is not safe as a blanket fallback model.
+- The evidence supports only a narrowly gated, audit-first cascade for high-risk relation/long-body units, with candidate semantic review and stronger contamination checks. No production cascade was enabled.
+
+## v696 — long multi-sentence omission guard (2026-09-26)
+
+- Fixed a gap in `_is_implausibly_short_unit`: long multi-sentence claims with fewer than 18 alphabetic words were exempted by the word-count shortcut. The guard now honors the existing length floor for substantial multi-sentence prose, including the held-out `75% lean`/`25% fat` example.
+- Added a regression test for the omitted second sentence and bumped cache identity to quality-v25 (`...inventory-long-claim`).
+- Focused quality tests: **58/58**; full Python suite: **217/217**; typecheck and diff check passed. This is a conservative fallback trigger; a live model replay is still required before claiming the relation error is eliminated in production.
+
+## v697 — quoted sentence boundary correction (2026-09-26)
+
+- Live v25 replay showed the long claim still bypassed the guard because the sentence boundary was followed by a closing quote before `Participants`; the boundary regex only accepted whitespace directly after punctuation.
+- Updated multi-sentence detection to allow closing quotes/brackets before the next sentence. Pure-function regression now classifies the 65-character partial output as `implausibly_short`; focused quality tests remain **58/58**.
+- Bumped cache identity to quality-v26 (`...long-claim-quoted-boundary`). A final live replay is required to verify the production rescue now falls back or selects a complete candidate.
+
+## v698 — v26 live replay of lean/fat omission guard (2026-09-26)
+
+- Replayed the full source through production rescue after v26. Both greedy and beam candidates were rejected as `implausibly_short`; the unsafe partial translation was not accepted as reader-visible output.
+- Saved `protection-rescue-heldout-v697-lean-whole.json`. This confirms the guard addresses the observed omission/relationship failure by falling back, while preserving the original source rather than claiming a corrected translation.
+- Full Python suite after v26: **217/217**; diff check passed. The remaining UX/quality work is to reduce such fallbacks with a validated alternative candidate, without re-accepting semantic drift.
+
+## v699 — v26 held-out fallback-rate replay (2026-09-26)
+
+- Replayed the clean held-out marketing cohort through v26 production rescue. Four eligible ordinary-body units ran (two short units were excluded by the diagnostic selector): 3 completed and 1 fell back, for a diagnostic fallback rate of **25%**. The fallback is the long `lean/fat` relation case that previously produced an unsafe semantic false accept.
+- The 3 completed units retained their existing rescue behavior. This small, deliberately risk-enriched cohort is not a product fallback estimate; it shows that the new safety rule needs a validated alternate candidate to reach the <=5% ordinary-body target without reopening the semantic error.
+
+## v700 — residual citation-heavy omission found after v26 (2026-09-26)
+
+- The v26 replay found a second semantic false accept in the same cohort: the citation/theory-heavy unit completed with a compressed output ending in `TheoryTheory`, omitting multiple source clauses while preserving some citations. It passed the current gate because its length ratio remained above the existing floor.
+- This confirms that the <=5% fallback target cannot be pursued by a single length threshold alone. The next safe change needs a generic clause/claim coverage signal for citation-heavy prose, then must be measured against ordinary accepted translations to avoid turning the gate into blanket fallback.
+
+## v701 — adjacent repeated-token guard (2026-09-26)
+
+- Added a generic output-format guard for adjacent duplicated Latin tokens such as `TheoryTheory`, which can arise when placeholder restoration or decoding glues the same identifier twice. It is not a vocabulary blacklist.
+- Added regression coverage and bumped cache identity to quality-v28 (`...repeat-token`). Focused quality tests: **59/59**; full Python suite and typecheck passed; diff check passed.
+- The guard addresses the visible artifact but does not claim to recover omitted clauses; those remain a separate semantic-coverage problem.
+
+## v702 — dense citation claim coverage guard (2026-09-26)
+
+- Added a conservative source/output length evidence rule for long prose with at least three author-year citation groups. A 250+ character citation-dense claim must retain a higher proportion of content before acceptance; this targets clause omission without raising the floor for ordinary short prose.
+- Added a regression fixture for the observed citation/theory omission and bumped cache identity to quality-v29 (`...dense-citation`). Focused quality tests: **60/60**; full Python suite and typecheck passed; diff check passed.
+- The rule is intentionally measured as a fallback trigger. A fresh ordinary-body cohort is still required to estimate whether the product fallback remains <=5%.
+
+## v703 — fresh ordinary-body v29 replay (2026-09-26)
+
+- Ran 10 ordinary-body rows from `translation-audit-fresh-20260920-v16.json` through v29 production rescue and saved `protection-rescue-fresh-v703.json`.
+- The diagnostic cohort completed **0/10** without fallback. Most rows were long/complex cognitive or linguistics prose and were rejected by the conservative `implausibly_short` guard after greedy/beam/rescue candidates remained incomplete; this is a risk-enriched sample, not a product-wide fallback estimate.
+- This result confirms the current guard is too conservative for long prose and that fallback reduction now requires semantic chunk reconstruction or a validated alternate candidate, rather than simply lowering thresholds.
+
+## v704 — fresh replay failure attribution (2026-09-26)
+
+- Reviewed all 10 rows in `protection-rescue-fresh-v703.json`. The eight fallbacks are not a homogeneous translation failure set: several contain figure/table-caption material, `Horizon 1/Horizon 6` layout text, or mixed chart labels; others fail on citation placeholder restoration or long semantic compression.
+- This demonstrates that the `sourceCategory=ordinary-body-prose` label alone is insufficient for a product fallback denominator. Future fallback metrics must separately report extraction/source contamination before attributing failures to MADLAD or the quality gate.
+- No threshold was relaxed. The next extraction-side action is to add a source-integrity diagnostic for mixed chrome/caption/figure text and rerun a clean ordinary-body cohort.
+
+## v705 — audit-only clean selector replay (2026-09-26)
+
+- Tightened the protection benchmark's `_looks_like_clean_body` selector to exclude generic figure/table labels, caption references, repeated chart-label runs, and obvious `Human data/Note/Source` caption lines. This is audit-only and does not change production extraction.
+- Replayed 10 rows from the same fresh report with the stricter selector: **1/10 completed, 9/10 fallback**. The remaining rows are ordinary-looking long prose whose MADLAD candidates are genuinely incomplete, so the high rate is not explained solely by extraction contamination.
+- This establishes that the current long-prose guard still needs a semantic-unit/alternate-model solution before it can approach the <=5% fallback target; no threshold relaxation was made.
+
+## v706 — selective cascade audit on clean fallback cohort (2026-09-26)
+
+- Ran the opt-in `qwen2.5:14b` selective-cascade diagnostic on the 9 post-model fallback rows from `protection-rescue-fresh-v705-clean.json`; results are in `test-data/real-papers/reports/selective-cascade-v706-qwen14.json`.
+- The alternate model passed the existing automatic quality gate on **5/9** rows. Four rows returned no acceptable candidate (the script records them as rejected/empty), so this is not a product fallback estimate and no production cascade was enabled.
+- The accepted outputs are fluent enough for further manual review, but at least one contains a visible English fragment (`preliminary evaluation [3]`) and another is truncated in the saved preview. Automatic acceptance therefore cannot be treated as semantic correctness.
+- This provides evidence that an alternate model can rescue some MADLAD fallbacks, but the current gate/model output still needs blind semantic review and stricter completion checks before any selective cascade policy can be enabled.
+
+### v706 manual review
+
+- Reviewed all 5 automatic accepts in `selective-cascade-v706-manual-review.json`. Two were judged severity >=2 (40% of accepted candidates): a terminology/meaning error for `vignette-based`, and a system-concept error where `floor` became a physical floor plus an English fragment remained.
+- The result rules out enabling qwen14b as a blanket fallback. A future cascade must add completion/terminology/semantic checks and remain opt-in until a larger blind held-out review demonstrates low unsafe false-accepts.
+
+## v707 — cascade residual English phrase guard (2026-09-26)
+
+- Added a cascade-only structural guard for an exact adjacent pair of long lowercase English words retained inside otherwise Japanese output (for example, `preliminary evaluation`). This catches untranslated prose phrases without changing the primary MADLAD gate or using a vocabulary blacklist.
+- Bumped the opt-in alternate model identity to `selective-v3-semantic-units-cascade-phrase` so prior cascade results are not reused as current output.
+- Verification: `npm run typecheck` passed; focused quality and cascade tests passed **200/200**. The guard remains conservative and may increase alternate-candidate rejection; a fresh held-out replay is required before considering any production use.
+- Replayed the same 9-row audit cohort as `selective-cascade-v707-qwen14.json`: automatic accepts decreased from **5/9 to 4/9**. The previously unsafe `floor`/English-fragment candidate was rejected by `untranslated cascade phrase`; other malformed outputs were also rejected. This is a safety improvement, not evidence of product fallback <=5%, and the alternate remains disabled in production.
+- Lint now reports only the three pre-existing `pdfLayout.ts` escape warnings; the new quality code is warning-free. Typecheck remains green.
+- Full frontend test suite passed: **67 files / 549 tests**. PDF canvas polyfill warnings remain environmental and pre-existing; no test failed.
+
+### v707 manual review
+
+- Reviewed all 4 automatic accepts in `selective-cascade-v707-manual-review.json`: 1/4 retained a severity-2 terminology error (`vignette-based`), so the phrase guard improved safety but did not make qwen14b safe for blanket rescue.
+
+## v708 — qwen7b alternate comparison (2026-09-26)
+
+- Replayed the same 9-row held-out fallback cohort with `qwen2.5:7b`; automatic gate accepted **6/9** in `selective-cascade-v708-qwen7b.json`.
+- Manual review of all 6 accepts found **3/6 severity >=2** errors, including unsupported technical content, an added hypothesis claim, and the `floor` terminology error. This is worse than qwen14b on this cohort and rules out qwen7b as a blanket rescue model.
+- The comparison confirms that stricter structural gates reduce visible malformed output but do not solve model semantic accuracy; no alternate model has been enabled in production.
+
+## v709 — gemma2 9b alternate comparison (2026-09-26)
+
+- Replayed the same 9-row cohort with `gemma2:9b`; automatic gate accepted **6/9** in `selective-cascade-v709-gemma9b.json`.
+- Manual review of all six accepts found one severity-3 terminology error (`floor` rendered as a physical floor), for an unsafe rate of **1/6 (16.7%)**. The other samples were usable with minor wording issues.
+- Gemma performed better than qwen7b and qwen14b on this tiny cohort but remains far above the near-zero unsafe-error requirement; it is not enabled in production.
+
+## v710 — alternate model comparison summary (2026-09-26)
+
+- Consolidated the same-cohort results in `test-data/real-papers/reports/alternate-model-summary-v710.json`: qwen14b 25% unsafe among accepts, qwen7b 50%, gemma2:9b 16.7%.
+- This is a small held-out diagnostic, not a product metric. It establishes a model-selection baseline and prevents accidentally enabling an alternate solely because its automatic acceptance rate is higher.
+
+## v711 — separate clean ordinary-body gemma replay (2026-09-26)
+
+- Selected 8 additional clean ordinary-body post-model fallback rows from `translation-fresh-aggregate-v7.json` and replayed them with gemma2:9b. Automatic accepts: **4/8**, saved in `selective-cascade-v711-gemma9b.json`.
+- Initial review suspected one severity-3 semantic-shift candidate (an apparent unrelated `Result 4-5` insertion). A follow-up full-source check found `Result 4-5` is present in the source, so that finding was a false alarm; the corrected review is **0/4 severity >=2** in this separate sample, with minor clause compression remaining. The sample is still too small to justify production rescue.
+
+## v712 — conservative overlong alternate-unit split (2026-09-26)
+
+- Updated the opt-in alternate rescue splitter to split an overlong single sentence only at a top-level `;` or `:` when both resulting clauses are at least 120 characters. Parenthesized/citation groups remain atomic; ordinary short sentences are unchanged.
+- Added a regression test for overlong clause splitting. Focused alternate tests: **11/11**; typecheck passed.
+- This is a bounded diagnostic improvement for long-model drift, not a fallback-rate claim. It remains behind the existing opt-in cascade and requires a fresh model replay before production consideration.
+- Replayed the separate 8-row cohort with the new splitter (`selective-cascade-v712-gemma9b.json`): **4/8** automatic accepts, unchanged from v711. The follow-up source check corrected the earlier `Result 4-5` concern as a false alarm; clause compression remains a review concern, so the splitter is retained as a safe structural improvement but is not sufficient alone.
+- Full frontend suite after the splitter change: **67 files / 550 tests passed**; typecheck and diff checks remain clean.
+
+## v713 — cascade structural-label inventory guard (2026-09-26)
+
+- Added a generic cascade-only check that rejects numbered `Figure`, `Table`, `Result`, `Section`, or `Appendix` labels introduced by the alternate output when absent from the source. It compares structural inventories rather than blacklisting paper vocabulary and does not change the primary path.
+- Added a regression for an invented `Result 9` label. Focused quality/cascade tests: **202/202**; typecheck passed.
+- Full frontend suite after the structural-label guard: **67 files / 551 tests passed**. Existing PDF canvas polyfill warnings remain non-failing.
+
+## v714 — protection/segmentation regression checkpoint (2026-09-26)
+
+- Confirmed no benchmark or translation-server process is currently running; the next protection A/B measurement still requires a fresh server/model session and remains audit-only.
+- Ran the Python regression set covering the shared segmenter, citation protection/restoration, and MADLAD quality checks: **189 tests + 11 subtests passed** in 2.39s.
+- No production protection policy or model routing was changed. The outstanding question remains whether raw/minimal protection improves semantic quality enough to justify a measured production design change; existing alternate-model accepts are not sufficient evidence.
+
+## v715 — raw/minimal/current protection diagnostic (2026-09-26)
+
+- Ran the same 12 clean-selector ordinary-body rows through the same MADLAD 3B engine and greedy decode with `raw`, `minimal`, and current protection arms. Full inputs/outputs/tokens are in `test-data/real-papers/reports/protection-ab-v715-12.json`; the reproducible summary is `protection-ab-v715-summary.json`.
+- Decode errors: raw **0/12**, minimal **0/12**, current **4/12**. The current failures were all protected-span-drop errors (`OpenAI/API/Davinci`, `VR`, `SARS/MERS/Table 1/ICU`, and `SHERPA`), which is direct evidence that opaque protection can add fallback pressure on this cohort.
+- Raw and minimal outputs still require semantic review: several rows are long extraction blocks and raw missing-span counts are not comparable because raw intentionally has no restoration arm. No production protection policy was changed.
+
+## v716 — protection diagnostic manual review (2026-09-26)
+
+- Manually compared all 12 v715 sources and outputs (exploratory, non-blind, not a population estimate); labels are in `protection-ab-v715-manual-review.json`.
+- **9/12** rows had severity >=2, mostly because the sampled PDF blocks contained multiple sentences while every arm returned only a partial block. One row (`dont-mind-me`) was a severity-4 semantic shift shared by all arms, indicating model/extraction-unit failure rather than placeholder protection.
+- Protection-specific evidence remains: current protection rejected 4 rows for dropped opaque spans, while minimal completed those decodes; the GPT-3 and COVID rows show that minimal can also concatenate/drop identifiers, so removing protection globally is unsafe.
+- Decision: do not change production protection yet. Next design target is sentence-complete unit construction plus selective, context-preserving protection; protection A/B must be rerun on sentence-complete clean units before policy changes.
+
+## v717 — sentence-unit protection replay (2026-09-26)
+
+- Replayed 12 units selected from the shared production segmenter (`--segment-units`) under the same raw/minimal/current arms; artifact: `test-data/real-papers/reports/protection-ab-v717-segmented-12.json`.
+- All three arms completed **12/12 decode calls without an exception**, unlike current protection's 4/12 errors on unsplit blocks in v715. This supports sentence-complete unit construction as the first intervention; it does not yet prove semantic correctness.
+- Outputs show shorter units preserve claims more consistently, but a few short units still exhibit terminology/capitalization drift (`GIST`, `Chinese`, etc.). Manual semantic review of this sentence-level cohort is required before any production protection change.
+
+## v718 — segmented-unit manual review (2026-09-26)
+
+- Manually reviewed the 12 sentence-level v717 units across all three arms; review artifact: `protection-ab-v717-manual-review.json`.
+- The arms produced identical output on this cohort. **2/12** units had severity-2 omissions (interest-rating action and gist/detail testing scope); **0/12** had hallucinated unsupported content, numeric errors, or protection-specific divergence.
+- This separates the earlier unsplit-block failures from the sentence-unit cohort: segmentation removes placeholder-drop exceptions, but MADLAD still compresses/omits semantic arguments in some short sentences. The next quality work should target claim completeness, not simply disabling protection.
+
+## v719 — targeted beam rescue probe (2026-09-26)
+
+- Compared greedy vs deterministic 4-beam on the two severity-2 segmented units from v718 using the same MADLAD runtime; artifact: `test-data/real-papers/reports/beam-probe-v719.json`.
+- For the participant-study sentence, beam restored the omitted `rated their interest` claim (`...興味を評価した`), while greedy produced only viewing/detail wording. For the timed-memory sentence, beam improved the time expressions but still omitted the gist/detail scope.
+- This is evidence for a bounded claim-compression beam retry, but a generic trigger must be tested against compact faithful translations before production use. No routing or quality threshold changed.
+
+## v720 — bounded claim-compression beam retry (2026-09-26)
+
+- Added a generic retry trigger in `madlad_mps.py` for substantive coordinated sentences whose greedy output is below a 0.30 source-length ratio. It performs one deterministic beam probe and retains it only when the existing candidate score improves; it never accepts a beam candidate that fails the existing gates.
+- The trigger is structural (`and`/`or`, source/output length), not paper vocabulary. Added positive/negative unit tests and bumped the model identity with `claim-compression-beam-v1` so cached generations cannot be reused silently.
+- Verification: Python MADLAD quality tests **62 passed**, TypeScript typecheck passed, focused frontend tests **191/191 passed**. Full fresh benchmark is still required to measure fallback and semantic change; no `.app` build was performed.
+
+## v721 — production rescue replay for claim-compression beam (2026-09-26)
+
+- Replayed the same 12 sentence units through `_translate_chunk_with_rescue`, which exercises production retry selection; artifact: `protection-rescue-v720-segmented-12.json`.
+- No decode exceptions occurred. The new claim-compression probe was selected for the participant-interest unit and produced the previously missing interest-rating claim. Existing relation-beam also improved the GIST comparison wording. The remaining timed-memory unit still omits gist/detail scope, so the change is not a complete semantic solution.
+- This replay is a small diagnostic cohort; it does not establish product fallback <=5%. Model version/cache identity already includes `claim-compression-beam-v1`.
+
+## v722 — full regression after claim-compression retry (2026-09-26)
+
+- Full frontend suite: **67 files / 551 tests passed**; typecheck passed.
+- Python translation regression set: **191 tests + 11 subtests passed**.
+- Existing PDF canvas polyfill warnings remain environmental and non-failing. No `.app` build was run.
+
+## v723 — fresh production smoke after claim-compression beam (2026-09-26)
+
+- Started the updated local server and ran a fresh three-paper cached smoke benchmark (`cognitive-memory-cue-interest`, `cognitive-dual-task-older-adults`, `ergonomics-flight-deck-applications`), 36 sampled blocks; artifact: `test-data/real-papers/reports/translation-audit-v722-smoke.{json,md}`.
+- The report confirms the new server model identity including `claim-compression-beam-v1`. Among 15 ordinary-body rows, **5/15 reader-visible fallbacks (33.3%)**; this is a small targeted cohort and remains far above the <=5% goal.
+- Server logs show claim-compression beam repairing a malformed `RTz+CTz` treatment-arm output and improving the participant-interest sentence. Remaining fallbacks include structural invariant loss and long-block quality rejection, so the change is useful but insufficient.
+- Server was stopped after the smoke run. No `.app` build was performed.
+
+## v724 — mutated identifier glue guard (2026-09-26)
+
+- The fresh smoke report exposed `RTz+CTz` and `Dwwi`-style protected identifier corruption. Added a generic server-side detector for lowercase glue mutations on uppercase source compounds; it triggers the existing beam/rescue path rather than accepting malformed text.
+- The detector is structural and only applies when the source contains an uppercase compound such as `A+B`; ordinary `z` variables are excluded. Model identity was bumped to `claim-compression-beam-v2-identifier-glue`.
+- Verification: Python MADLAD tests **63 passed**, TypeScript typecheck passed, focused frontend tests **191/191 passed**. A fresh full-paper benchmark is still required after this version bump.
+
+## v725 — fresh identifier-glue regression (2026-09-26)
+
+- Started the v2 server and ran a fresh 12-unit benchmark on `cognitive-dual-task-older-adults`; artifact: `translation-audit-v724-dual.{json,md}`.
+- The ordinary-body cohort had **0 reader-visible fallbacks across 5 rows**. The former `RTz+CTz` output was rejected as `corrupted_identifier_glue`, beam produced `RT+CT`, and the final report preserved the repaired translation.
+- This is a targeted one-paper result, not a product-wide fallback estimate. Server was stopped after the run; no `.app` build was performed.
+
+## v726 — three-paper fresh smoke with identifier-glue guard (2026-09-26)
+
+- Re-ran the same three-paper, 36-block smoke under model version `claim-compression-beam-v2-identifier-glue`; artifact: `translation-audit-v725-smoke.{json,md}`.
+- Ordinary-body fallback improved from **5/15 (33.3%) in v722** to **4/15 (26.7%)**. The dual-task RT+CT row moved from invariant fallback to a repaired beam output; the remaining four fallbacks are DwI invariant loss, alternative-relation rejection, and two long-unit quality fallbacks in the memory paper.
+- This remains a targeted smoke cohort and is far above the product <=5% target. Server stopped after completion; no `.app` build performed.
+
+## v727 — live Raw / Minimal / Current protection comparison (2026-09-26)
+
+- Ran the same 12 production segmenter units through the current MADLAD v2 engine with only pre-translation protection varied; artifact: `test-data/real-papers/reports/protection-ab-v727-live-abc.json`.
+- All three arms decoded all 12 units. Raw had one missing protected fact (`CT`) in the dual-task unit; Minimal and Current restored all tracked spans. Mean latency was nearly unchanged (Raw 2062.7 ms, Minimal 2066.0 ms, Current 2093.9 ms).
+- This cohort does not support removing protection: Raw exposed a fact-loss case while Minimal/Current preserved it. It also does not prove semantic correctness or product fallback <=5%; manual review and a larger held-out cohort remain required.
+
+## v728 — expanded 30-unit protection comparison (2026-09-26)
+
+- Expanded the same diagnostic to 30 production segmenter units; artifact: `test-data/real-papers/reports/protection-ab-v728-live-abc.json`.
+- Raw: 2 decode errors and one missing `CT`; Minimal: 2 decode errors, no missing protected spans; Current: 2 decode errors, no missing protected spans. The two decode errors were identical across all arms, indicating model/short-unit behavior rather than protection-specific failure.
+- Mean latency remained close (Raw 2207.2 ms, Minimal 2236.3 ms, Current 2247.0 ms). The larger cohort still supports keeping fact protection while treating the two shared degenerate units as a separate model/segmentation issue. No production protection change was made.
+
+## v729 — selective Qwen cascade replay of v725 fallbacks (2026-09-26)
+
+- Replayed four post-model fallback rows from `translation-audit-v725-smoke.json` through the existing audit-only selective cascade using Ollama `qwen2.5:14b`; artifact: `test-data/real-papers/reports/selective-cascade-v729-qwen14.json`.
+- Qwen accepted 3/4 rows. The flight-deck paragraph and long memory summary were coherent and preserved `SHERPA`/`DwI` and study relations. One memory-results row remained rejected only because the gate reported `exclusivity relation missing`; its Japanese output otherwise expressed the low-interest condition and the gist/detail comparison. This is evidence of a possible false reject, not grounds for relaxing the gate yet.
+- The result supports evaluating selective Qwen fallback on a larger blind held-out cohort. No production cascade or quality-gate change was made.
+
+## v730 — expanded selective Qwen replay (2026-09-26)
+
+- Replayed seven post-model fallback rows from the v722 smoke report through `qwen2.5:14b`; artifact: `test-data/real-papers/reports/selective-cascade-v730-qwen14.json`.
+- Qwen accepted **6/7** rows. The same memory-results row was the only rejection (`exclusivity relation missing`); its output still states the low-interest restriction and gist-versus-detail comparison. This repeated pattern strengthens the false-reject hypothesis but is not sufficient to relax the production gate without blind held-out review.
+- The replay remains audit-only; no production cascade or gate change was made.
+
+## v731 — held-out Qwen cascade replay (2026-09-26)
+
+- Replayed eight older, cross-discipline post-model fallback rows from `selective-cascade-input-v711.json` through `qwen2.5:14b`; artifact: `test-data/real-papers/reports/selective-cascade-v731-qwen14.json`.
+- Qwen accepted **3/8**. The rejected rows exposed real risks: missing reference numbers, untranslated/repeated source labels, mixed Chinese output with translation meta-commentary, and mixed-script decoder corruption. This cohort demonstrates that Qwen cannot be routed blindly for every MADLAD fallback.
+- Selective cascade remains an audit candidate only. Any production routing must require structural safety checks plus blind semantic review and a held-out acceptance threshold; no production change was made.
+
+## v732 — Gemma comparison on the same held-out fallback cohort (2026-09-26)
+
+- Replayed the same eight rows through `gemma2:9b`; artifact: `test-data/real-papers/reports/selective-cascade-v732-gemma9.json`.
+- Gemma accepted **4/8**, versus Qwen's 3/8. It accepted the linguistics and neuroscience rows Qwen rejected, but rejected the medical row and retained repeated-label/mixed-script failures on the cognitive rows.
+- The models are complementary rather than universally safer. A future cascade would need reason-aware routing and strict structural checks; no production model routing change was made.
+
+## v733 — cross-model union analysis (2026-09-26)
+
+- Compared v731 Qwen and v732 Gemma decisions on the identical eight-row cohort. Their accepted sets overlap on 2 rows and combine to **5/8 distinct rows** (not 6/8; both reject the two cognitive rows, while each covers different domain rows).
+- The union can reduce fallback only if a common post-candidate safety gate rejects mixed scripts, source-label echo, missing invariants, and relation/condition loss. It cannot be enabled as unconditional first-success routing because both models show distinct failure modes.
+- This is an audit conclusion only; production routing remains unchanged.
+
+## v734 — reproducible alternate-model union diagnostic (2026-09-26)
+
+- Added audit-only `scripts/analyze-selective-cascade-union.py` and generated `test-data/real-papers/reports/selective-cascade-v733-union.json` from the identical Qwen/Gemma reports.
+- The artifact records per-key acceptance, intersection, union, and model-specific reasons: Qwen 3/8, Gemma 4/8, union 5/8, intersection 2/8. This prevents informal model-count comparisons from becoming routing logic.
+- No production model, gate, or fallback behavior changed.
+
+## v735 — opt-in multi-provider alternate engine (2026-09-26)
+
+- Extended `OllamaTranslationEngine` to accept either one provider (backward compatible) or an explicit ordered provider array. Each candidate is evaluated by the existing shared safety gate; a rejected/unavailable candidate falls through to the next, and all failures preserve the primary error/fallback behavior.
+- Added a unit test covering rejected-first / accepted-second provider selection. Verification: typecheck passed; Ollama engine and model-version tests **14/14 passed**; `git diff --check` passed.
+- Existing import callers still pass one provider, so multi-model routing remains opt-in and production defaults are unchanged.
+
+## v736 — opt-in import configuration for ordered alternate models (2026-09-26)
+
+- Added optional `ImportConfig.ollamaModels` and wired it into fresh imports and resume translation. The list is deduplicated and converted to ordered providers only when `enableSelectiveCascade` is enabled; the existing single `ollamaModel` default remains unchanged.
+- Verification: typecheck passed; focused Ollama/model-version tests **14/14 passed**; `git diff --check` passed. No `.app` build and no default production routing change.
+
+## v737 — import candidate configuration regression coverage (2026-09-26)
+
+- Added a config regression test proving ordered `ollamaModels` values survive `resolveImportConfig` while the existing primary model remains separate.
+- Verification: quality, Ollama, and model-version tests **205 passed**; TypeScript typecheck and `git diff --check` passed. Canvas polyfill warnings remain environmental and non-failing.
+
+## v738 — multi-model selective-cascade benchmark option (2026-09-26)
+
+- Extended `scripts/benchmark-selective-cascade.ts` with `--models modelA,modelB`; the existing `OLLAMA_MODEL` single-model mode remains unchanged. The report records both `model` and ordered `models`.
+- The benchmark now exercises the same opt-in provider-array path used by import configuration, without changing production defaults. Typecheck and `git diff --check` passed.
+
+## v739 — multi-provider smoke verification (2026-09-26)
+
+- Ran the new ordered provider path with `qwen2.5:14b,gemma2:9b` on two identical held-out rows using `selective-cascade-v739-multi-smoke.json`.
+- The provider array and shared safety gate operated correctly, but both rows were rejected (**0/2 accepted**): one had repeated source-label echo, and the other also lost a condition relation. No unsafe output was accepted and no production default was enabled.
+- This is evidence that wiring is complete, not evidence that the cascade yet reduces fallback. Further work should improve candidate quality/routing or evaluate another model before activation.
+
+## v740 — generic false-reject corrections for cross-references and conditionals (2026-09-26)
+
+- Reviewed the v739 rejected outputs manually. Both Japanese outputs preserved the source claim; the gate was over-rejecting them because retained `SI Appendix` references were mistaken for duplicated untranslated labels, and `服用していなければ` was not recognized as a Japanese conditional.
+- Updated the generic quality evidence: a complete retained `SI Appendix` cross-reference is treated atomically, and Japanese `なければ` conditionals count as condition evidence. No paper-specific vocabulary or hallucination blacklist was added.
+- Added regression tests for both cases. `quality.test.ts`: **192 passed**; TypeScript typecheck and `git diff --check` passed. Re-evaluating the v739 outputs now produces no quality reasons for either row, but this does not yet establish semantic correctness or a product-wide fallback rate.
+
+## v741 — held-out multi-model replay after gate correction (2026-09-26)
+
+- Replayed the identical eight-row cross-discipline held-out cohort with the opt-in ordered providers `qwen2.5:14b,gemma2:9b`; artifact: `test-data/real-papers/reports/selective-cascade-v741-heldout-multi.json`.
+- The shared gate accepted **8/8** candidates. Qwen supplied 3 rows and Gemma supplied 5 after Qwen rejection; this is a substantial change from v733's static union estimate, but it is still automatic acceptance only and requires blind semantic review before product activation.
+- The result suggests the v740 corrections reduced false rejects on retained cross-references/conditionals without weakening invariant or relation checks. No production cascade default was enabled; ordinary MADLAD fallback behavior remains unchanged.
+
+## v742 — manual semantic review of v741 (2026-09-26)
+
+- Reviewed all eight v741 source/output pairs against the source claims; review artifact: `test-data/real-papers/reports/selective-cascade-v741-manual-review.json`.
+- Automatic acceptance was **8/8**, but manual review found two terminology failures (one severity 2, one severity 3) and no observed hallucination, numeric error, or omission in this small cohort. The severity-3 case mistranslated the anatomical expansion of `right lateral prefrontal cortex` while retaining `rLPFC`, proving that invariant/gate acceptance is not semantic correctness.
+- Therefore the cascade remains audit-only. The next improvement target is generic technical-term/expansion verification or a stronger model comparison; blindly enabling first-accepted routing would violate the unsafe-semantic-error objective.
+
+## v743 — scientific acronym qualifier guard (2026-09-26)
+
+- Added a generic selector guard for explicit scientific expansions with directional/anatomical qualifiers (for example, `right lateral ... (rLPFC)`). It checks qualifier evidence in the local context of each retained acronym occurrence, so a later mistranslated repetition cannot be masked by an earlier correct occurrence.
+- The v741 neuroscience output is now rejected with `scientific expansion qualifier drift`; the other seven reviewed outputs remain accepted. This converts the observed severity-3 false accept into a safe candidate rejection without a vocabulary blacklist or paper-specific rule.
+- Added positive/negative regression tests. `quality.test.ts`: **193 passed**; TypeScript typecheck and `git diff --check` passed. Production default routing remains unchanged.
+
+## v744 — focused regression verification (2026-09-26)
+
+- Re-ran quality, Ollama cascade, and model-version tests after the qualifier guard: **207 tests passed** across 3 files.
+- TypeScript typecheck and `git diff --check` passed. The existing DOMMatrix/Path2D canvas warnings are environmental and did not affect test results.
+
+## v745 — qualifier guard corpus sanity check (2026-09-26)
+
+- Applied the new scientific expansion qualifier diagnostic to the previously accepted eight-row Gemma selective-cascade report (`selective-cascade-v712-gemma9b.json`). It flagged only the already identified neuroscience row; no additional accepted row was newly rejected.
+- This small regression check supports precision of the guard but is not a product-wide fallback estimate. Manual semantic review and broader held-out sampling remain required before enabling the cascade.
+
+## v746 — alternate model probe for neuroscience terminology (2026-09-26)
+
+- Tested the severity-3 neuroscience source with the available `qwen2.5:7b`; artifact: `test-data/real-papers/reports/selective-cascade-v746-neuro-qwen7.json`.
+- Qwen 7B was rejected for both an untranslated technical lexeme and the scientific expansion qualifier drift. Its output also contained malformed technical wording (for example, `カタドール/アナドール`). This confirms that simply adding a smaller local model does not solve the terminology case; the generic guard correctly prevents acceptance.
+- No model routing or production fallback policy was changed.
+
+## v747 — production audit denominator check (2026-09-26)
+
+- Inspected the latest cached MADLAD audit reports before using them for the fallback target. The v725/v722 smoke reports contain pending rows and pre-model skips (not completed ordinary-body outcomes), so they cannot support an ordinary-body fallback percentage.
+- Kept those reports out of the denominator rather than presenting a misleading rate. A fresh completed corpus run is still required for the <=5% target; the selective-model artifacts remain diagnostic evidence only.
+
+## v748 — twelve post-model fallback replay (2026-09-26)
+
+- Built a deduplicated input from the 86 post-model fallback rows in `translation-audit.json` and replayed the first 12 through Qwen 14B → Gemma 9B; artifact: `test-data/real-papers/reports/selective-cascade-v748-audit12.json`.
+- The cascade accepted **8/12 (66.7%)**. Four remained rejected for orphaned source invariants, implausible compression, missing condition relation, or missing `AC` invariant. These are candidate-level results, not a product fallback rate, because the source audit contains historical/incomplete rows and no blind semantic review yet.
+- This provides a broader diagnostic cohort across jewellery, wearability, speech, and charging papers. Before activation, the four accepted and four rejected groups need manual semantic review, and the completed MADLAD denominator still must be measured separately.
+
+## v749 — v748 manual review and standardized acronym preservation (2026-09-26)
+
+- Manually reviewed the eight accepted v748 outputs; artifact: `test-data/real-papers/reports/selective-cascade-v748-manual-review.json`. No severity >=2 semantic error, hallucination, numeric error, or omission was observed. Three rows had severity-1 wording/terminology issues.
+- The rejected `ppg-earring` row is a genuine source quote/fragment and should remain rejected. The `design-for-wearability` row is a heading-like unit, so rejection is appropriate. The long `dont-mind-me` output preserved the conditional meaning, exposing a false reject in the condition detector.
+- Added generic acceptance of unambiguous standardized scientific acronym translations (`AC`→交流, `DC`→直流, `RF`→無線周波数/高周波, `EMG`→筋電/筋電図) and tested `AC impedance` preservation. Quality tests: **194 passed**; typecheck and diff check passed.
+
+## v750 — conditional relation false-reject correction (2026-09-26)
+
+- Extended Japanese condition evidence to recognize the ordinary purpose/condition construction `ためには`, which preserved the meaning of `if it is to be acceptable ...` in the reviewed `dont-mind-me` output.
+- Added a regression test; quality tests remain **194 passed**, with typecheck and `git diff --check` successful. This is a narrow evidence improvement and does not disable condition safety checks.
+
+## v751 — retrospective v748 gate replay (2026-09-26)
+
+- Re-ran the shared gate locally on all v748 outputs after v749/v750. The accepted set rises from **8/12 to 10/12**: the `dont-mind-me` condition and `step-to-charge` AC translation now pass without re-generating model output.
+- The two remaining rejects are appropriate for this cohort: a quoted participant fragment with an orphaned invariant and a heading-like `Containment` unit that should not be treated as ordinary prose. This is gate evidence only; it does not change the historical benchmark's recorded model outputs or establish a product-wide fallback rate.
+
+## v752 — full frontend regression after quality changes (2026-09-26)
+
+- Ran the complete Vitest suite: **67 files / 556 tests passed**.
+- PDF extraction tests emitted the existing optional canvas DOMMatrix/Path2D warnings, but no test failed. This confirms the quality-gate and invariant changes did not regress extraction, import/resume, reading order, or UI service behavior.
+
+## v753 — audit denominator correction (2026-09-26)
+
+- Updated `scripts/benchmark-real-paper-translation.ts` so reader-visible fallback percentages use only evaluable rows (translated output or explicit original fallback). Pending/failed rows are reported separately and cannot dilute or inflate the rate.
+- Category lines now show both total and evaluable units, with fallback percentages explicitly labeled as “of evaluable”. TypeScript typecheck and `git diff --check` passed.
+
+## v754 — ordinary-body metric in audit report (2026-09-26)
+
+- Added a dedicated `Ordinary-body fallback` line to the real-paper audit report. It uses only evaluable rows classified as `ordinary-body-prose`, excluding headings, lists, tables, chrome, damaged extraction, and pending rows.
+- This makes the <=5% product target directly measurable without conflating extraction/structure failures with ordinary prose. TypeScript typecheck and `git diff --check` passed.
+
+## v755 — translation-server regression suite (2026-09-26)
+
+- Ran the project virtualenv test suite for the translation server: **225 tests passed, 11 subtests passed** in 2.32s.
+- This covers segmenter, citation/scientific protection, MADLAD quality guards, and microbatch behavior after the recent quality changes. The system Python lacks pytest, so the project `.venv` was used explicitly.
+
+## v756 — fresh three-paper MADLAD benchmark (2026-09-26)
+
+- Ran the ready MPS translation server on 3 cached papers × 12 units; artifact: `test-data/real-papers/reports/translation-audit-v756-fresh.{json,md}`.
+- Completed 36/36 units. Ordinary-body units: 15; reader-visible fallback: **4/15 (26.7%)**. Damaged-extraction/pre-model rows were reported separately (17), so they were not hidden in the ordinary-body number.
+- The four ordinary fallbacks were attributable to a missing `DwI` invariant, a rejected alternative relation, and two server/quality failures in long memory-result units. This is above the <=5% target and provides concrete next targets.
+
+## v757 — selective cascade on fresh ordinary fallbacks (2026-09-26)
+
+- Replayed exactly those four v756 ordinary-body post-model fallbacks through Qwen 14B → Gemma 9B; artifact: `test-data/real-papers/reports/selective-cascade-v757-v756-fallbacks.json`.
+- The alternate path accepted **3/4**. The `DwI` paragraph and either/or memory paragraph were coherent; one long result unit remained rejected by an exclusivity relation guard. The accepted Qwen outputs were not yet promoted because semantic review and foreign-script checks are still required.
+
+## v758 — mixed Chinese contamination guard from fresh review (2026-09-26)
+
+- Manual inspection of the v757 outputs found Chinese lexical contamination (`因素`, `主题`) embedded in otherwise Japanese text, which the prior character-only signal missed.
+- Extended the generic simplified-Chinese contamination detector to high-confidence lexical forms and added a regression test. Quality/Ollama tests: **208 passed**; typecheck and diff check passed. This prevents those candidates from being accepted by the cascade.
+
+## v759 — retrospective v757 safety replay (2026-09-26)
+
+- Reapplied the updated cascade gate to all v757 outputs. Two previously accepted memory outputs now fail the plausibility gate because of the newly detected Chinese lexical contamination; the long `b-9e4b4a19` row remains rejected. Only the ergonomics/DwI candidate remains accepted in this retrospective check.
+- This confirms the contamination detector catches a real unsafe candidate, even though it lowers the apparent alternate acceptance rate. No production routing was enabled; safety takes precedence over claiming a lower fallback rate.
+
+## v760 — protection A/B evidence consolidated (2026-09-26)
+
+- Reviewed the existing same-model, same-greedy protection cohort (`protection-ab-v715-12.json`, 12 manually adjudicated blocks) before changing production protection. Raw, minimal, and current arms all exhibited source-block omissions on several multi-sentence units; the same omission pattern occurred without placeholders, so protection is not the primary cause of those losses. The primary attribution is translation-unit/model behavior, with source-block scope as a secondary factor.
+- Current protection did add measurable decode failures on this cohort (4/12), while raw and minimal decoded all 12. Conversely, raw/minimal frequently dropped tracked identifiers/citations because they intentionally exposed them to the model; current restored protected spans when it decoded successfully. This demonstrates a real protection benefit/cost trade-off and does not justify removing protection globally.
+- Manual review marked 8/12 rows severity >=2, mostly omissions or semantic shifts shared by all arms. The result is diagnostic, not a product fallback estimate: the cohort contains long or structurally ambiguous blocks and is not a held-out random sample.
+- No production protection or routing change was made. Next experiment should separate long multi-sentence source-unit failures from protection effects, use a fresh cross-paper cohort, and report fact-preservation and semantic review per arm rather than treating decode success as quality.
+
+## v761 — 30-unit protection comparison accounting (2026-09-26)
+
+- Summarized the existing 30-unit live ABC comparison as `test-data/real-papers/reports/protection-ab-v728-summary.json`.
+- Raw, minimal, and current had the same two decode errors in this cohort (2/30 each) and nearly identical mean latency (2.21s, 2.24s, 2.25s). Only one row contained four current placeholders; raw lost tracked spans on that row while minimal/current restored them.
+- This larger automatic cohort therefore does not show a general decode-error increase caused by current protection. The 12-row manual cohort remains important because it contains long, semantically reviewed failures, but the two cohorts together indicate that source-unit completeness and model semantic drift must be measured independently from placeholder count.
+- No production behavior changed. The next diagnostic should deliberately stratify fresh units by sentence count/length and placeholder count, then manually review discordant outputs; a global protection removal is not supported by the current evidence.
+
+## v762 — protection benchmark stratification instrumentation (2026-09-26)
+
+- Extended `translation-server/scripts/benchmark_protection_ab.py` to persist diagnostic-only source shape fields: character count, word count, estimated sentence count, and semicolon count for every paired record. This enables length/sentence-risk stratification without altering model input or production behavior.
+- Validated the change with the translation-server virtualenv Python compile check and `git diff --check`.
+- The next run can now compare protection effects within matched short, multi-sentence, and long-unit strata rather than conflating them. No production protection/routing change was made.
+
+## v763 — retrospective length-strata check (2026-09-26)
+
+- Applied the new strata accounting to the existing 30-unit ABC artifact (`protection-ab-v728-strata.json`). The cohort has 29 short units (<220 characters) with identical 2/29 decode errors across all arms, and only one medium unit (220–500 characters) where Raw alone lost tracked spans. There are no long units in this artifact, so it cannot answer the long-unit question.
+- This confirms the next required run must deliberately include multi-sentence/long units; the current report is insufficient evidence for changing protection. No production behavior changed.
+
+## v764 — long-unit protection stress test (2026-09-26)
+
+- Selected 12 clean ordinary-body blocks of 785–1,854 characters (5–13 estimated sentences) and sent each whole block through Raw/Minimal/Current using the same loaded MADLAD process and greedy settings. All 36 arms failed with `degenerate translation output`; protection condition did not change the failure. Artifact: `test-data/real-papers/reports/protection-ab-long-v764-12.json`.
+- This is direct evidence that the current long-block failure is a translation-unit/model limit, not a placeholder-specific failure. It also explains why a fallback-only fix would be misleading: the model produced a short partial Japanese response before the quality gate rejected it.
+
+## v765 — same long sources after production segmentation (2026-09-26)
+
+- Ran the same long-source cohort through the existing production segmenter, evaluating the first 12 resulting sentence units under Raw/Minimal/Current. Decode errors fell to **1/12 in every arm**; mean latency was 2.00s/1.98s/1.99s. Artifact: `test-data/real-papers/reports/protection-ab-long-segmented-v765-12.json`.
+- The identical error rate across all three protection arms isolates segmentation as the dominant improvement for this cohort. Some segmented outputs still contain terminology/structure risks, so this does not establish semantic safety or justify removing protection. The next step is to wire equivalent logical-unit completeness checks into the benchmark and manually review the segmented discordant rows.
+
+## v766 — translation-server regression after long-unit diagnostic (2026-09-26)
+
+- Ran `translation-server/.venv/bin/python -m pytest translation-server/tests -q`: **225 passed, 11 subtests passed** in 2.28s.
+- The long-unit artifacts and benchmark-shape instrumentation are diagnostic-only; no production routing, protection, or extraction behavior changed.
+
+## v767 — unit-failure rescue path and semantic review (2026-09-26)
+
+- Fixed a control-flow gap in `MADLADEngine.translate()`: when one initial translation unit raised a quality error, the existing delimiter-aware rescue segmentation was never reached. The method now retries only when rescue produces more validated units; otherwise it rethrows and preserves fail-closed behavior.
+- Replayed the previously failing 218-character coordinate sentence through production `translate()`. Rescue produced two units and avoided the fallback, but manual inspection found that the result still omitted the first quoted cue. This confirms that lower fallback alone is unsafe and that structural quote evidence is required.
+
+## v768 — quoted-content preservation guard
+
+- Added a generic structural guard for sources containing two or more substantive quoted spans. If the greedy output drops a quoted span, a deterministic beam retry is attempted; if it still drops one, the unit is rejected instead of being accepted as a fluent partial translation.
+- Added regression coverage for English/Japanese quoted-span counting. Translation-server suite: **227 passed, 11 subtests passed**; `git diff --check` passed.
+- This change intentionally prioritizes semantic safety for the demonstrated rescue case. It may increase fallback for quote-heavy prose until a safe literal-preservation strategy is evaluated; no blacklist or paper-specific term was added.
+
+## v769 — assembled-rescue guard verification (2026-09-26)
+
+- Replayed the exact previously unsafe coordinate sentence through the updated production `MADLADEngine.translate()` path. The decoder again produced a fluent partial rescue, but the assembled-block guard rejected it with `quoted content span dropped from assembled translation` instead of exposing it as a completed translation.
+- This confirms the new guard operates at logical-block scope; unit-level checks alone were insufficient. The case remains a visible fallback pending a safe way to preserve both quoted conditions.
+
+## v770 — regression validation after rescue and quote guards (2026-09-26)
+
+- Translation-server regression: **227 passed, 11 subtests passed**.
+- TypeScript quality/Ollama tests: **208 passed** across 2 files. Existing optional PDF.js canvas warnings remain environmental; no test failed.
+- `git diff --check` passed. No `.app` build and no production model/routing switch were performed.
+
+## v771 — fresh three-paper reader-path replay (2026-09-26)
+
+- Restarted the server and reran the same 3 cached papers × 12 units under the rescue/quote changes; artifact: `test-data/real-papers/reports/translation-audit-v771-rescue-quote.{json,md}`.
+- Ordinary-body reader-visible fallback improved from the previous **4/15 (26.7%)** to **3/15 (20.0%)**. The rescued long memory block still fell back for an alternative-relation guard; the quote-heavy rescue is now rejected rather than shown as an unsafe partial translation. This is progress, but remains far above the <=5% target and requires manual review of accepted outputs.
+- The server process was new, but its model-version string was still v79 before the cache bump below; the report is retained as a diagnostic comparison, not a final v80 cache generation.
+
+## v772 — cache identity bumped for translation-pipeline changes (2026-09-26)
+
+- Bumped the shared segmenter/cache identity from `semantic-v79` to `semantic-v80` and updated the TypeScript `MADLAD_MODEL_VERSION`. This prevents pre-rescue/pre-quote translations from being silently reused after the pipeline change.
+- Validation: model-version/quality Vitest **196 passed**, translation-server **227 passed + 11 subtests**, and `git diff --check` passed. No `.app` build.
+
+## v773 — v771 manual review exposes per-unit quote omission (2026-09-26)
+
+- Manually reviewed the v771 ordinary-body accepts. The long memory-result block still omitted the first quoted cue (`“couple fighting”`) even though the full-block report had passed; the server receives some blocks as independently scheduled units, so a block-level two-quote threshold did not cover a one-quote unit. This is a severity-3 semantic false accept and means the 20% fallback rate cannot be treated as safe quality.
+- Extended the generic quote guard to require quoted content for substantive `e.g., “...”` examples even when only one such span is present in a unit. This is structural evidence, not a term blacklist. Bumped cache identity to `semantic-v81` so affected translations are not reused.
+- No benchmark after v81 has been run yet; production routing remains unchanged pending validation of false rejects and the fresh ordinary-body rate.
+
+## v774 — v81 fresh replay confirms a severity-3 false accept (2026-09-26)
+
+- Replayed `cognitive-memory-cue-interest` (12 cached blocks) after restarting the server with `semantic-v81` and `quality-v30`; artifact: `test-data/real-papers/reports/translation-audit-v776-v81-quote-gate.{json,md}`.
+- The previously observed long block still omitted the first `e.g.` example (`"couple fighting"`) while retaining only `"white piano"`. The server produced 13 partial units and the audit quality object reported `quoted example content missing`, but the benchmark's `isPlausibleJaTranslation` path still marked it accepted. This exposed a client-gate wiring gap, not evidence that the guard was ineffective.
+- Server startup also verified embedding integrity (`encoder==decoder=True`, `separate=True`) and model version `...semantic-v81...quality-v30...`.
+
+## v775 — quoted-example reason is now a hard acceptance failure (2026-09-26)
+
+- Added `quoted example content missing` to the centralized `isPlausibleJaTranslation` rejection policy and a regression assertion that dropped quoted examples are rejected while intact examples remain acceptable.
+- This keeps the generic structural guard aligned between `evaluateJaTranslation`, production acceptance, and the real-paper benchmark; no quoted-word blacklist or paper-specific rule was added.
+- Validation: quality tests **196 passed**, TypeScript typecheck passed, and `git diff --check` passed. The full translation-server suite had already passed **227 + 11 subtests** before this TypeScript-only policy change.
+- The overall target is not met: the last three-paper v81 run showed 3/15 ordinary-body reader-visible fallbacks (20.0%) before this benchmark wiring correction. A fresh replay is required to measure the new false-reject/fallback trade-off.
+
+## v776 — client acceptance fix validated on the quote-heavy block (2026-09-26)
+
+- Added a regression assertion that `isPlausibleJaTranslation` rejects an `e.g.` example when one quoted condition is missing. Quality tests: **196 passed**; TypeScript typecheck and diff check passed.
+- Restarted the server with model/cache identity `...semantic-v81...quality-v30...`; startup verified `encoder==decoder=True` and separate input/lm-head tensors.
+
+## v777 — fresh replay now fails closed instead of exposing the unsafe quote omission (2026-09-26)
+
+- Replayed the same 12 cached blocks as v776: `test-data/real-papers/reports/translation-audit-v777-v81-quote-gate.{json,md}`.
+- The problematic block is now `wouldAcceptTranslation=false`, `sourceFallback=false`, `fallbackStage=post-model`, with reason `quoted example content missing`. It is no longer counted as a completed translation; the original is retained for the reader.
+- This is a safety correction, not a fallback-rate win: the single-paper run still contains other post-model/pre-model failures, and the overall ordinary-body fallback target remains unmet. Next work should improve the rescue/translation unit itself so the missing example is recovered, then rerun the three-paper comparison.
+
+## v778 — quoted-example placeholder experiment rejected for production (2026-09-26)
+
+- Tested an atomic placeholder helper for `e.g.` quoted spans and a one-block replay. The model dropped or malformed the new placeholder during rescue, causing a server-side unit exception and whole-item fallback; it did not improve the translation. The helper round-trip tests pass, but the integration was reverted immediately and the production identity remains `source-protect-v23`.
+- The generic client-side quote guard from v775 remains active. This experiment is evidence that opaque placeholders are not automatically a safe fix for semantic examples; future work should test context-preserving approaches (for example constrained repair or alternate model) rather than add more opaque tokens.
+- Server restarted after the revert and reports `semantic-v81...source-protect-v23...quality-v30`; no `.app` build was performed.
+
+## v779 — cascade rejects ordinary untranslated lexical residue (2026-09-26)
+
+- The Qwen 14B audit cascade translated one fallback block acceptably, but its output retained ordinary English `Clips` inside Japanese. The existing cascade lexeme check missed five-letter words because its output threshold was six characters.
+- Lowered the cascade-only lexical residue threshold to five characters and added a regression test. This is structural and model-agnostic; it does not affect primary MADLAD acceptance or use a word blacklist.
+- Bumped the quality/cache identity to `quality-v31` and updated the version test. Targeted TypeScript tests: **198 passed** after the version bump; full translation-server suite remains **229 passed + 11 subtests**.
+- The alternate-model result is diagnostic only: Qwen accepted 1/3 candidates, but the accepted candidate is now expected to be rejected by the stricter cascade gate pending a rerun.
+
+## v780 — cascade rerun removes the unsafe Qwen acceptance (2026-09-26)
+
+- Replayed the same three post-model fallback rows with Qwen 14B/7B candidates after the lexical-residue change: **0/3 accepted** (artifact: `test-data/real-papers/reports/selective-cascade-v780-quote-fallbacks.json`).
+- The previously accepted power-analysis output is now rejected for `untranslated cascade lexeme`; the two other rows remain rejected for relation/mixed-script failures. This confirms the new check catches a real unsafe alternate output, but it does not yet lower fallback because no candidate in this small diagnostic set is safe enough to expose.
+- This is evidence against enabling the current cascade globally. A larger held-out alternate-model comparison is still required before routing changes.
+
+## v781 — five-row Qwen 14B fallback audit (2026-09-26)
+
+- Replayed the five available post-model fallback rows from the three-paper v774 report with Qwen 14B: **2/5 passed the automated cascade gate** (`selective-cascade-v781-v774-qwen14.json`).
+- Manual spot review of the two accepted outputs found one coherent ordinary-body paragraph and one statistical-results paragraph with values/citations retained. The three rejected outputs contained either Chinese-script contamination, a missing exclusivity relation, or the ordinary untranslated word `Clips`; they were correctly kept out of production.
+- This is promising for selective cascade but too small for routing activation. The next comparison should cover a fresh multi-paper cohort and manually review every accepted alternate output, including terminology and claim scope.
+
+## v782 — Qwen 7B shows a second untranslated-residue failure (2026-09-26)
+
+- The same five-row comparison with Qwen 7B also accepted 2/5 rows, but one accepted output retained `Whilst` in Japanese. This exposed that the first lexical-residue fix still allowed a single untranslated word when one neighboring source token survived.
+- Tightened the cascade-only check to reject isolated retained ordinary words while preserving explicitly contiguous technical phrases (regression coverage keeps `lumped elements` acceptable). Quality tests: **197 passed**.
+- Qwen 7B/14B outputs are still audit-only; neither is enabled in production.
+
+## v783 — function-word residue guard tightened (2026-09-26)
+
+- The first v783 replay still accepted Qwen 7B output containing sentence-level `Whilst`; the source token was capitalized, so the lowercase-only detector skipped it. Added a structural function-word set and case-aware matching, while retaining contiguous technical phrases such as `lumped elements`.
+- Quality regression: **197 passed**; model-version test, typecheck, and diff check passed. Cache identity advanced to `quality-v33`.
+- The prior v783 artifact remains diagnostic evidence; rerun is required before reporting a post-fix acceptance rate.
+
+## v784 — Qwen 7B post-fix replay (2026-09-26)
+
+- Replayed the same five rows after the function-word guard: **1/5 accepted** (`selective-cascade-v784-v774-qwen7.json`). The former `Whilst` output is now rejected; the remaining accepted row is the statistical-results paragraph.
+- This materially reduces unsafe alternate acceptance, but it also shows the current 7B cascade is unlikely to bring ordinary-body fallback below 5% on its own. The accepted row still requires manual review across a larger held-out cohort before any production routing decision.
+
+## v785 — held-out Qwen 14B review exposes ordinary English phrases (2026-09-26)
+
+- Tested five post-model fallbacks from the older nine-paper held-out report with Qwen 14B: **2/5 accepted** (`selective-cascade-v785-v59-qwen14.json`). Manual inspection found both accepted outputs retained ordinary English phrases such as `cover story` and `plate` despite fluent Japanese; the automatic gate missed them.
+- Added a structural article-plus-lowercase-phrase check for untranslated noun phrases while preserving capitalized product/method names and bare technical compounds. Added tests for `cover story`, `lumped elements`, and product names.
+- Quality tests: **197 passed**; version test, typecheck, and diff check passed. Cache identity advanced to `quality-v34`. The v785 accepted rows require rerun before any cascade decision.
+
+## v786 — noun-phrase guard validated on held-out fallbacks (2026-09-26)
+
+- Replayed the same five rows after the article-plus-phrase guard: **1/5 accepted** (`selective-cascade-v786-v59-qwen14.json`). Both previously accepted outputs with `cover story` / `plate` are now rejected.
+- The remaining accepted row is a bibliographic/title-like block with author names and a title; it contains no ordinary untranslated body phrase and needs separate metadata/title policy review before cascade routing.
+- This reduces unsafe alternate acceptance but does not yet establish a production-safe cascade or the <=5% ordinary-body fallback target.
+
+## v787 — held-out noun-phrase guard replay (2026-09-26)
+
+- Replayed the same five held-out rows after the article-plus-phrase fix: **1/5 accepted** (`selective-cascade-v787-v59-qwen14.json`). The `cover story` and `plate` outputs remain rejected; only the bibliographic/title-like row is accepted.
+- The guard is now reproducible on the held-out sample. The remaining accepted row should be excluded from ordinary-body fallback metrics or handled by a separate title/metadata policy; no cascade routing change has been enabled.
+
+## v788 — Gemma 2 9B held-out comparison (2026-09-26)
+
+- Tested Gemma 2 9B on the same five older held-out fallback rows: **3/5 accepted** (`selective-cascade-v788-v59-gemma9b.json`). Two ordinary-body outputs (economics theory and consumer-neurophysiology procedure) were manually checked and preserved claims, citations, measurements, and conditions; the third was metadata/title-like.
+- This is materially better than Qwen on this small sample, but it is still audit-only. The two accepted ordinary-body rows are evidence of potential fallback reduction, not proof of broad safety.
+
+## v789 — Gemma 2 9B current three-paper comparison (2026-09-26)
+
+- Tested Gemma 2 9B on five post-model fallbacks from the current three-paper report: **3/5 accepted** (`selective-cascade-v789-v774-gemma9b.json`). Manual review found the long ergonomics paragraph, memory overview, and statistical results translation readable with key facts preserved.
+- The other two rows were rejected for relation/source-quality issues. No production routing change has been made; a larger ordinary-body cohort is required before enabling Gemma selectively.

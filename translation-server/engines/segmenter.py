@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 from .citation_protect import protected_span_mask
 
-SEGMENTER_VERSION = "semantic-v78"
+SEGMENTER_VERSION = "semantic-v81"
 _ABBREVIATIONS = {"e.g.", "i.e.", "et al.", "fig.", "eqn.", "eq.", "no.", "cf.", "dr.", "mr.", "ms.", "vs."}
 
 
@@ -322,6 +322,7 @@ def _split_overlong_safe_clauses(text: str) -> list[str]:
         return [text]
     masked = protected_span_mask(text)
     candidates: list[int] = []
+    top_level_semicolons = 0
     paren = square = brace = 0
     quote: str | None = None
     for i, char in enumerate(masked):
@@ -337,8 +338,17 @@ def _split_overlong_safe_clauses(text: str) -> list[str]:
         elif char == "{": brace += 1
         elif char == "}": brace = max(0, brace - 1)
         elif char == ";" and not (paren or square or brace):
+            top_level_semicolons += 1
             if i >= 90 and len(text) - i - 1 >= 80:
                 candidates.append(i + 1)
+    # Multiple top-level semicolons are often a flattened screening/list or a
+    # sequence of closely related claims. Splitting each clause creates units
+    # that begin with continuation words and loses the shared context. Keep
+    # the logical unit intact; sentence punctuation or the retry-only rescue
+    # can still provide a safe boundary later. Citation semicolons are already
+    # masked and therefore do not affect this count.
+    if top_level_semicolons >= 2:
+        return [text]
     if not candidates:
         # Figure/artwork captions often start with a short quoted title and a
         # figure marker, then use one semicolon before a much longer material
@@ -451,6 +461,33 @@ def _split_rescue_at(text: str, index: int, left_model: str, right_model: str) -
     ]
 
 
+def _rescue_em_dash_coordination(text: str) -> list[TranslationUnit]:
+    """Retry a complete claim split at a top-level em dash.
+
+    Academic prose often uses an em dash to introduce the observable
+    consequence of a setup clause.  A failed decode can keep only one side.
+    Split only when both sides are substantial, delimiter-balanced clauses;
+    this is a retry-only operation and preserves the original source slices.
+    """
+    if len(text) < 150 or text.count("\u2013") + text.count("\u2014") != 1:
+        return []
+    masked = protected_span_mask(text)
+    match = re.search(r"\s+[\u2013\u2014]\s+", masked)
+    if not match:
+        return []
+    left = text[:match.start()].strip()
+    right = text[match.end():].strip()
+    if len(left.split()) < 12 or len(right.split()) < 12:
+        return []
+    if any(left.count(a) != left.count(b) for a, b in (("(", ")"), ("[", "]"), ("{", "}"))):
+        return []
+    if any(right.count(a) != right.count(b) for a, b in (("(", ")"), ("[", "]"), ("{", "}"))):
+        return []
+    left_model = left.rstrip(" ,;:") + "."
+    right_model = right[0].upper() + right[1:] if right else right
+    return _split_rescue_at(text, match.start(), left_model, right_model)
+
+
 def _rescue_found_that_coordination(text: str) -> list[TranslationUnit]:
     """Recover ``found that A and that B`` units after greedy omission.
 
@@ -498,6 +535,43 @@ def _rescue_if_so_semicolon(text: str) -> list[TranslationUnit]:
         left.rstrip(",;") + ".",
         right[0].upper() + right[1:] if right else right,
     )
+
+
+def _rescue_top_level_semicolon_sequence(text: str) -> list[TranslationUnit]:
+    """Retry a long multi-semicolon paragraph as balanced clause units."""
+    if len(text) < 220:
+        return []
+    masked = protected_span_mask(text)
+    positions: list[int] = []
+    paren = square = brace = 0
+    for i, char in enumerate(masked):
+        if char == "(": paren += 1
+        elif char == ")": paren = max(0, paren - 1)
+        elif char == "[": square += 1
+        elif char == "]": square = max(0, square - 1)
+        elif char == "{": brace += 1
+        elif char == "}": brace = max(0, brace - 1)
+        elif char == ";" and not (paren or square or brace): positions.append(i + 1)
+    if len(positions) < 2:
+        return []
+    bounds = [0, *positions, len(text)]
+    parts = [text[left:right].strip() for left, right in zip(bounds, bounds[1:]) if text[left:right].strip()]
+    merged: list[str] = []
+    for part in parts:
+        if merged and len(part.split()) < 8:
+            merged[-1] = f"{merged[-1]} {part}"
+        else:
+            merged.append(part)
+    if len(merged) < 2 or any(len(part.split()) < 8 for part in merged):
+        return []
+    return [
+        TranslationUnit(
+            part,
+            protected_span_mask(part),
+            _normalize_model_input(part.rstrip(" ;") + ("." if index < len(merged) - 1 else "")),
+        )
+        for index, part in enumerate(merged)
+    ]
 
 
 def _rescue_nonrestrictive_where_clause(text: str) -> list[TranslationUnit]:
@@ -607,11 +681,11 @@ def _rescue_top_level_conjunction(text: str) -> list[TranslationUnit]:
     ignored, and both clauses must be substantial. The original source slices
     remain exact while the model inputs receive a sentence-final marker.
     """
-    # MADLAD can omit the first clause in 220–260 character academic
+    # MADLAD can omit the first clause in roughly 200–260 character academic
     # sentences, so the retry/proactive boundary must cover that range too.
     # The structural guards below still require a top-level conjunction and
     # substantial clauses on both sides.
-    if len(text) < 220:
+    if len(text) < 200:
         return []
     masked = protected_span_mask(text)
     for match in re.finditer(r",\s+(but|however|while|which|and)\s+", masked, re.I):
@@ -778,12 +852,14 @@ def rescue_units_for_translation(source: str) -> list[TranslationUnit]:
     if not compact:
         return []
     for splitter in (
+        _rescue_em_dash_coordination,
         _rescue_hence_clause,
         _rescue_as_well_as_clause,
         _rescue_discourse_marker_clause,
         _rescue_while_concessive_main_clause,
         _rescue_found_that_coordination,
         _rescue_if_so_semicolon,
+        _rescue_top_level_semicolon_sequence,
         _rescue_nonrestrictive_where_clause,
         _rescue_appositive_region_clause,
         _rescue_top_level_conjunction,
@@ -828,18 +904,25 @@ def segment_for_translation(source: str) -> list[TranslationUnit]:
     expanded: list[str] = []
     proactive_inputs: dict[str, str] = {}
     for part in parts:
+        # Very long single sentences are unsafe model units even when their
+        # punctuation is grammatically valid.  Use the existing
+        # delimiter-aware comma rescue only at this high threshold and only
+        # when both sides are substantial; ordinary academic sentences and
+        # citation groups therefore keep their original unit.
+        rescue = _rescue_top_level_clause_comma(part) if len(part) >= 900 else []
         # Keep ordinary sentence-sized concessive clauses intact. Splitting a
         # short subordinate clause creates a low-context unit that MADLAD may
         # reject even when the complete sentence is translatable; reserve the
         # proactive rewrite for genuinely long units where decode drift is a
         # greater risk.
-        rescue = _rescue_while_concessive_main_clause(part) if len(part) >= 260 else []
+        if not rescue:
+            rescue = _rescue_while_concessive_main_clause(part) if len(part) >= 260 else []
         # Proactively split only concessive/contrastive conjunctions. Plain
         # ``and`` remains retry-only because it is common in statistical
         # result prose and can create unnecessary short units.
         if (
             not rescue
-            and len(part) >= 220
+            and len(part) >= 200
             and ";" not in part
             and not re.match(r"^[a-z]", part)
             and re.search(r",\s+(?:while|however|but)\b", part, re.I)

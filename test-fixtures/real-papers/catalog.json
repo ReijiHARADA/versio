@@ -563,7 +563,10 @@
       "downloadUrl": "https://arxiv.org/pdf/2111.04880",
       "seedPaths": [],
       "checks": {
-        "mostlySingleColumn": true
+        "mostlySingleColumn": true,
+        "requireSameParagraph": [
+          ["Starting from the design philosophy", "of intelligent human-computer interaction"]
+        ]
       },
       "discipline": "ergonomics",
       "selectionReason": "human-factors or wearable ergonomics format",
@@ -796,7 +799,11 @@
       "filename": "medical-imaging-deep-learning-review.pdf",
       "downloadUrl": "https://arxiv.org/abs/2008.09104",
       "seedPaths": [],
-      "checks": {},
+      "checks": {
+        "requireSameParagraph": [
+          ["Abstract—Since its renaissance", "propelling us into the so-called artificial intelligence"]
+        ]
+      },
       "sourceUrl": "https://arxiv.org/abs/2008.09104",
       "oaStatus": "oa-or-author-hosted"
     },

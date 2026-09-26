@@ -268,6 +268,22 @@ describe("PDF reading order regression", () => {
     expect(paragraphs[0].text).toContain("to gain a better understanding");
   });
 
+  it("stitches a proper-name phrase split at a page boundary", () => {
+    const pages: ExtractedPage[] = [
+      { pageNumber: 1, width: 612, height: 792, textItems: [
+        { text: "Body temperature is an important vital sign which can indicate fever and is known to be correlated with activities such as eating, exercise and stress. However, continuous temperature monitoring poses a significant challenge. We present Thermal", x: 54, y: 700, width: 500, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      ] },
+      { pageNumber: 2, width: 612, height: 792, textItems: [
+        { text: "Earring, a first-of-its-kind smart earring that enables a reliable wearable solution for continuous temperature monitoring.", x: 54, y: 110, width: 500, height: 10, fontSize: 10, fontName: "Body", page: 2 },
+      ] },
+    ];
+    const { blocks } = reconstructDocument(pages);
+    const paragraph = blocks.find((block) => block.role === "paragraph");
+    expect(paragraph?.text).toContain("present Thermal Earring, a first-of-its-kind");
+    expect(paragraph?.pageStart).toBe(1);
+    expect(paragraph?.pageEnd).toBe(2);
+  });
+
   it("does not attach a short publisher mark at the page edge to lowercase prose", () => {
     const pages: ExtractedPage[] = [
       { pageNumber: 1, width: 612, height: 792, textItems: [

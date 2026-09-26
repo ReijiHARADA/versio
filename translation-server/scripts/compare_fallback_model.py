@@ -29,7 +29,7 @@ REPORT_DIR = ROOT / "test-data/real-papers/reports"
 def _load_rows(category: str, limit: int, input_path: Path | None = None) -> list[dict[str, str]]:
     if input_path is not None:
         payload = json.loads(input_path.read_text(encoding="utf-8"))
-        source_rows = payload.get("rows", payload if isinstance(payload, list) else [])
+        source_rows = payload if isinstance(payload, list) else payload.get("rows", [])
         rows = []
         for row in source_rows:
             if row.get("source"):

@@ -382,8 +382,22 @@ class MicroBatchScheduler:
                     )
                     print(f"SOURCE: {item.text}", flush=True)
                     print(f"CANDIDATE: {translated}", flush=True)
-                if degenerate:
+                # Each `part` was already validated independently by the
+                # engine. For a multi-sentence logical unit, the aggregate
+                # Japanese text can look implausibly short only because the
+                # heuristic compares it with the unsegmented English source.
+                # Preserve all other quality checks and allow this narrow
+                # chunk-assembly false positive.
+                chunked_length_only = (
+                    len(chunks) > 1
+                    and getattr(engine, "_degenerate_reason", lambda *_args: "")(
+                        translated, item.text, item.target_language
+                    ) == "implausibly_short"
+                )
+                if degenerate and not chunked_length_only:
                     raise ValueError("degenerate translation output")
+                if degenerate and chunked_length_only and self._unit_debug:
+                    print("[TRANSLATION_UNIT_RESULT] accepted chunked output despite aggregate compression", flush=True)
                 failed_indices = sorted({
                     int(match.group(1))
                     for reason in unit_fallback_reasons

@@ -1,11 +1,11 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "v405-rescue-partial",
+  "lastBenchmarkVersion": "v437",
   "lastDiagnosticVersion": "v194",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
   "attributionStatus": "v6 baseline 12/48 (25.00%); audit-only semantic MiniLM v42 and coverage v66 completed; coverage found 10 exact invariant-loss rows (5 accepted), so token normalization/calibration is next; production gate unchanged",
-  "latestExtractionCheckpoint": "translation-audit-v405-rescue-summary.json",
+  "latestExtractionCheckpoint": "translation-audit-v407-ordinary-summary.json",
   "completedPapers": [
     "cognitive-dual-task-older-adults",
     "cognitive-memory-cue-interest",
@@ -61,7 +61,7 @@
   ],
   "pendingPapers": [],
   "reviewedBlocks": 134,
-  "lastCheckpoint": "2026-09-25T06:09:00+09:00",
+  "lastCheckpoint": "2026-09-25T16:19:00+09:00",
   "pendingManualReview": 612,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
@@ -74,76 +74,7 @@
     "evaluate replacement or cascade translation models under local/free-use constraints"
   ],
   "nextActions": [
-    "Resume v405 rescue benchmark for remaining selected papers: covid-ml-review, ergonomics-quantified-factory-worker, ergonomics-flight-deck-applications.",
-    "Compare rescue summary against v399 baseline; do not infer corpus-wide fallback from partial 24-row sample.",
-    "Investigate benchmark checkpoint/long-request behavior before rerunning large batches.",
-    "v271 measurement-complete rescue verified on Thermal Earring: placeholder-drop now retries full unit with measurements exposed before clause splitting; 11.3/31 mm, 335 mg, 14.4uW preserved coherently. Tests 94+8 pass.",
-    "v270 candidate diagnostics added (TRANSLATION_UNIT_DEBUG=1 only) and server restarted ready; next replay should capture greedy/beam/relation candidate scores.",
-    "v269 inspected existing MADLAD rescue: beam, relation-risk candidate, and rescue-unit retries already exist. Thermal omission survived them; capture chunk candidates before adding more retries.",
-    "v268 reviewed existing alternate-model evidence: gemma2:9b had 2/6 severity>=2; Qwen14 automatic pass is insufficient. No new cascade or production routing without fresh controlled evaluation.",
-    "v267 live replay of thermal-earring exclusivity-relation fallback showed real unsafe omission/distortion (11.3/31 mm, 335 mg, uW, participant/activity claims), so relation gate was valid for this sample; do not relax it.",
-    "v266 quality recheck: stricter evaluator raises ordinary-body fallback 62/234 (26.5%) to 88/234 (37.6%), 33 decision changes; some are relation-only rejects with perfect language/invariant/length scores. Manual review required before gate changes.",
-    "v265 latest translation-audit.json: 612 rows, 234 ordinary-body, 62 reader-visible fallbacks (26.5%), zero server errors. Use as current single-generation baseline; do not mix with v288.",
-    "v264 ordinary-body attribution: 70/244 fallback; stage pre-model 3, post-model 67. Reason patterns: 35 server/translation-quality/protected-restore, 24 semantic/invariant relation gates, with 17 structural-warning overlaps. Separate model quality from extraction before changes.",
-    "v263 single-generation aggregate: 612 rows, 244 ordinary-body, 70 reader-visible fallbacks (28.7%); no server errors. Attribute fallback layers before changing production.",
-    "v262 attribution artifact separates the v261 sample into 5 translated, 6 extraction-structure warnings, and 1 model-quality fallback; inspect warning blocks with geometry before any gate change.",
-    "v261 endpoint regression completed 12 sampled units after scalar-unit normalization; no request failures. Keep corpus-wide fallback estimate separate from this single-paper run.",
-    "Run latest-per-paper aggregate on fresh reports and compare false reject reasons before further quality changes.",
-    "v260 fixed a general PDF scalar-unit normalization false reject (`10-m` vs `10m`); quality 172/172, typecheck/lint/diff check pass. Measure fresh endpoint fallback after server restart.",
-    "Continue paired endpoint evaluation and manual semantic review; do not relax scientific invariant checks for invented facts.",
-    "Correction: live /translate whole request already segments internally (952 chars) and explicit 17-unit join is 968 chars; no production segmentation delta established. Do not use the earlier 512-char low-level decode as endpoint evidence.",
-    "Use low-level vs endpoint traces separately; next measure endpoint fallback and semantic labels on fresh long blocks.",
-    "Implement an audit-only paired reassembly evaluator over held-out long units; measure claim coverage and false rejects before routing.",
-    "v258 manual review: Qwen 7B passed the gate on 5/5 segmented units but 2/5 had severity-2 semantic/terminology errors; do not enable automatic cascade.",
-    "Expand paired segmented MADLAD/Qwen review with held-out rows and terminology/claim labels.",
-    "v258 Qwen 7B segmented diagnostic: 5 semantic-risk units completed and passed gate; perform manual paired review against MADLAD before any cascade routing.",
-    "Expand segmented MADLAD/Qwen paired evaluation across held-out disciplines with exact fact and relation labels.",
-    "v257 segment-unit diagnostic and Python regression: 12 segmented units showed improved numeric/claim behavior; tests 94 + 8 subtests pass. Build paired reassembly/invariant benchmark before production promotion.",
-    "Keep production protection unchanged; next compare segmented MADLAD against selective alternate-model candidates on the same held-out units.",
-    "Keep protection policy unchanged; combine safe semantic units with deterministic fact verification and selective cascade.",
-    "v256 manual review: 8 raw/current divergences show long-unit omissions in both arms; protection helps citation fidelity but does not solve claim coverage.",
-    "Evaluate safe semantic chunking or selective alternate-model cascade on long units; preserve current fact invariants and do not accept raw-mode fallback reduction as quality.",
-    "v256 repeated-acronym diagnostic: exposing repeated short acronyms in minimal protection did not materially improve semantic drift on 12 rows; keep production unchanged.",
-    "Review v254 queue and focus next experiment on long-unit semantic coverage and selective cascade/alternate model, while preserving exact fact verification.",
-    "v255 GPT-3 production-path check: 7 translatable sampled rows, 5 source fallbacks; keep extraction skips separate from model fallback.",
-    "Manually review reports/protection-ab-v254-review-queue.json (18 raw/current divergences or protection errors) before changing protection.",
-    "Investigate selective handling of repeated short acronyms (VR, MCQ, CT, SI Appendix) and protected-token rescue; validate on held-out rows with invariant and semantic labels.",
-    "v254 held-out protection A/B/C: 30 rows / 9 papers. Raw 30/30 completed; minimal/current 20/30 due protected-token drops. Keep production policy unchanged; inspect high-span rescue and post-translation fact verification.",
-    "Manually review a blinded stratified subset of v254 where raw/current diverge and all protection errors; label numeric/citation/claim/negation/scope errors and false rejects.",
-    "Use v254 summary span buckets to design selective protection: retain opaque protection only for identifiers/citations that cannot safely be translated, expose ordinary measurements/statistics to the model, then verify exact invariants after decode.",
-    "v253 expanded protection A/B/C diagnostic to 12 clean rows (artifacts protection-ab-v253-6.json and -6b.json); raw completed all rows but changed facts/surface in citation-rich cases, while protection caused token-drop errors on a long measurement row and still did not solve long-row semantic drift.",
-    "Next: add a stratified 30-row protection A/B/C run and manual-review a blinded subset; quantify protection-span-count buckets, invariant errors, semantic severity, and latency before production changes.",
-    "Expand protection A/B/C on a stratified held-out sample (target 30-100 rows), report fallback, invariant, and manual semantic errors by protection-span count.",
-    "v252 malformed protected-token rescue is deployed in source; measure on fresh held-out papers after server restart.",
-    "v252 added malformed protected-token rescue and microbatch attribution; restart server then rerun one held-out paper to measure restore-fallback reduction.",
-    "v251 attribution: 8/16 fresh ordinary fallbacks are server quality/restore failures; inspect protected-token retry/partial restoration before gate relaxation.",
-    "Fresh baseline v250: latest-per-paper 8 papers / 38 ordinary rows / 16 fallback (42.1%); continue targeted model/extraction experiments without presenting this as full-paper rate.",
-    "v249 OSWorld review: 4/4 accepted HCI rows severity>=2. Prioritize claim/omission guard or selective alternate-model evaluation before production routing.",
-    "Full regression v247 is green (67 files/525 tests); continue fresh semantic review and do not promote audit-only signals without held-out precision.",
-    "Use manual-review-summary-v246 only as a mixed historical baseline; build a fresh held-out semantic review set before gate integration.",
-    "Use compression audit v245 as a review queue only; validate whether flagged long Japanese outputs omit claims before any gate integration.",
-    "v244 medical meta-review found severity-3 omission/addition in an automatic accept; prioritize claim coverage/addition diagnostics and selective cascade evaluation.",
-    "Use acronym-expansion drift audit in future reports; v242 catches Deep Learning -> Dip Learning while allowing Japanese transliteration.",
-    "v241 COVID review found severity-3 Deep Learning -> Dip Learning plus repeated claim in an automatic accept; add held-out terminology consistency audit before gate changes.",
-    "Citation-placement diagnostic v239 flags 1/19 accepted ordinary rows (the confirmed HFE failure); extend to more disciplines before production gate integration.",
-    "Use citation-placement audit field on next fresh reports; v237 HFE review found detached numeric citations in an automatic accept.",
-    "Manual review v237 found 2/3 accepted HFE rows severity>=2; prioritize citation placement and long-unit semantic relation diagnostics before relaxing fallback.",
-    "Use Markdown technical-name audit lines during the next manual review; keep production gate unchanged until false-positive rate is measured on a larger held-out corpus.",
-    "Candidate diagnostic calibration v235 leaves only known Facebook hallucination flags in 16 accepted ordinary rows; collect more held-out rows before gate integration.",
-    "Use the new audit-only technical-name fields in the next fresh benchmark; review missing candidates manually before any production gate change.",
-    "Review remaining audit-only candidate flags (Facebook hallucination rows) and validate transliteration/false-positive behavior on a larger held-out set before gate integration.",
-    "Validate audit-only technical-name candidate diagnostics on held-out accepted translations before any gate integration; v231 catches Xapian -> Xap.",
-    "Add held-out named-entity/tool identity checks to audit metrics; v229 has one severity-3 unsafe false accept (Xapian -> Xap) despite automatic acceptance.",
-    "Manual-review the two ordinary-body source-fallback rows from extraction-v229-cl; keep the small denominator explicit.",
-    "Manual triage complete for conversation-v227: 1/2 fallback rows severity>=2, 1/2 false reject; compare against next held-out paper.",
-    "Continue held-out fresh-paper sampling; do not relax quality gates based on automatic acceptance.",
-    "Prioritize context-aware paragraph continuation diagnostics for the remaining extraction failures.",
-    "complete a v49 full benchmark, then measure partial source fallback inside accepted output",
-    "continue v41 manual comparison of accepted ordinary body prose before relaxing any gate",
-    "use semantic-coverage audit scores to prioritize likely omissions and semantic shifts",
-    "continue local/free EN-JA model comparison; do not enable cascade until manual review confirms semantic adequacy",
-    "design production-safe content coverage checks that do not inflate reader-visible fallback",
-    "add verified OA candidates with provenance"
+    "Run fresh extraction/translation audit after geometry resolver integration; compare chart-contamination false accepts and ordinary-body fallback; keep selective cascade opt-in until hash-clean review."
   ],
   "v33StructuralSafety": {
     "status": "implemented and verified",
@@ -5642,5 +5573,117 @@
     "v394 Gemma aggregate is 5/6 accepted but includes one severity-2 terminology error; sample too small for cascade safety",
     "v395 Gemma six-row manual sample has no severity>=3 failures but one severity-2 terminology error; statistical confidence remains insufficient",
     "v396 historical Gemma manual aggregate: severity>=3 semantic errors 22.2% (4/18), despite recent six-row success"
+  ],
+  "updates": [
+    {
+      "version": "v409",
+      "date": "2026-09-25",
+      "summary": "Reconfirmed protection A/B diagnostic and focused regression checks; no production protection change. Next: held-out selective protection by span count with manual semantic review."
+    },
+    {
+      "version": "v410",
+      "date": "2026-09-25",
+      "summary": "Stratified saved 30-block protection cohort by current protected-span count. 6+ spans had 0/6 current completions vs 6/6 raw; diagnostic only, requires manual fact review before selective policy."
+    },
+    {
+      "version": "v411",
+      "date": "2026-09-25",
+      "summary": "Created six-row 6+ protected-span manual review queue. Raw outputs show factual scope/measurement risks, so no automatic selective rescue or production change."
+    },
+    {
+      "version": "v412",
+      "date": "2026-09-25",
+      "summary": "Enriched high-span review queue with numeric/placeholder triage. Several rows are extraction/table or acronym contamination, so raw rescue must be gated by source structure."
+    },
+    {
+      "version": "v413",
+      "date": "2026-09-25",
+      "summary": "Preliminary semantic review of all six 6+ span rows: four coherent cognitive prose rows have severity-3 Raw omissions; two medical/COVID rows are extraction/table contamination severity 4. No production change."
+    },
+    {
+      "version": "v414",
+      "date": "2026-09-25",
+      "summary": "Hardened isPlausibleJaTranslation against relation-loss reasons including comparative likelihood; regression test passes. Prevents known fluent unsafe accept."
+    },
+    {
+      "version": "v415",
+      "date": "2026-09-25",
+      "summary": "Saved extraction-v255 recheck: 3 previously accepted cognitive GPT-3 rows now reject for missing relation/invariant evidence. Safety gain, not corpus-wide fallback estimate."
+    },
+    {
+      "version": "v416",
+      "date": "2026-09-25",
+      "summary": "Relation-gate hardening regression checks: quality 181/181, extraction corpus 108/108, typecheck/lint pass; only known nonfatal PDF.js ColorSpace warnings."
+    },
+    {
+      "version": "v417",
+      "date": "2026-09-25",
+      "summary": "Strict gate recheck of 16-row v405 rescue: fallback 4/16 to 7/16; seven unsafe accepts rejected, one figure false-reject rescued. Gate alone cannot meet <=5%; decode/source/cascade needed."
+    },
+    {
+      "version": "v418",
+      "date": "2026-09-25",
+      "summary": "Added bounded relation-candidate beam retry for more/less-likely constructions; cache identity bumped semantic-v79/quality-v16. Tests pass; client hard gate remains."
+    },
+    {
+      "version": "v419",
+      "date": "2026-09-25",
+      "summary": "Restarted server with relation-likelihood beam retry active; health ready/model_loaded true and embedding integrity verified. Client cache identity aligned."
+    },
+    {
+      "version": "v420",
+      "date": "2026-09-25",
+      "summary": "Live server comparative-likelihood fixture preserved 60% and hospital comparison under quality-v16 retry; artifact saved."
+    },
+    {
+      "version": "v421",
+      "date": "2026-09-25",
+      "summary": "Live relation fixture sweep preserved condition, exclusivity, alternative, and negation markers with no server fallback; artifact saved."
+    },
+    {
+      "version": "v422",
+      "date": "2026-09-25",
+      "summary": "Fresh 12-block GPT-3 paper run: 4 accepted, 8 reader-visible fallbacks (3 pre-model source-boundary, 5 post-model relation/protection failures). Beam retry did not justify gate relaxation."
+    },
+    {
+      "version": "v423",
+      "date": "2026-09-25",
+      "summary": "Inspected all v422 pre-model fallbacks: one figure-label contamination and two source fragments. Attributed to extraction/reading order; no model change or paper-specific rule."
+    },
+    {
+      "version": "v424",
+      "date": "2026-09-25",
+      "summary": "Geometry diagnostic on GPT-3 PDF found 17 suspicious multi-x-band blocks with chart/question labels mixed into prose. Confirms generic native-geometry contamination; no production change."
+    },
+    {
+      "version": "v426-item-level-geometry-diagnostic",
+      "date": "2026-09-25",
+      "status": "in_progress",
+      "notes": "Expanded PDF geometry diagnostic with per-line native item x/width/font evidence. Production side-band split was rolled back after unrelated regressions; targeted extraction checks pass 4/4."
+    },
+    {
+      "version": "v427-extraction-regression-restored",
+      "date": "2026-09-25",
+      "status": "in_progress",
+      "notes": "Full extraction and reading-order regression passes 108/108 after rollback of unsafe side-band split."
+    },
+    {
+      "version": "v428-mixed-native-band-evidence",
+      "date": "2026-09-25",
+      "status": "in_progress",
+      "notes": "Added diagnostic-only mixed-native-x-band evidence; pipeline 26/26, typecheck and lint pass."
+    },
+    {
+      "version": "v429-full-unit-regression",
+      "date": "2026-09-25",
+      "status": "in_progress",
+      "notes": "Full unit suite passes 67 files / 535 tests; cache identity assertion synchronized to active quality-v16 server."
+    },
+    {
+      "version": "v430-fresh-gpt3-current",
+      "date": "2026-09-25",
+      "status": "in_progress",
+      "notes": "Fresh resumed benchmark completed against ready server; 12 blocks, 4 accepted and 8 reader-visible fallbacks, same as v422. Diagnostic mixed-band evidence remains non-behavioral."
+    }
   ]
 }
