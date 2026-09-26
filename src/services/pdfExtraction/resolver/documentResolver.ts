@@ -31,6 +31,34 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   const imageLabelEvidence = candidate.evidence.some((entry) =>
     entry.label === "image-overlap-label-cluster" || entry.label === "vector-figure-label-cluster"
   );
+  const mixedNativeBand = candidate.evidence.find((entry) => entry.label === "mixed-native-x-band");
+  const vectorFigureLabels = candidate.evidence.find((entry) => entry.label === "vector-figure-label-cluster");
+  const repeatedChartLabels = candidate.evidence.find((entry) => entry.label === "repeated-numeric-chart-label");
+  // Two independent geometry signals are required before excluding a block
+  // from ordinary translation. A mixed x-band alone can be a legitimate
+  // inline annotation; repeated numeric labels alone can occur in prose.
+  // Their high-confidence combination is strong evidence that native figure
+  // labels were fused into a paragraph. Preserve the text as `other` so a
+  // later figure/table resolver can handle it without sending it to MADLAD.
+  if (
+    candidate.role === "paragraph" &&
+    mixedNativeBand && mixedNativeBand.confidence >= 0.7 &&
+    repeatedChartLabels && repeatedChartLabels.confidence >= 0.75
+  ) {
+    return { role: "other", confidence: Math.max(mixedNativeBand.confidence, repeatedChartLabels.confidence) };
+  }
+  // A dense, punctuation-free vector label cluster spanning multiple native
+  // x-bands is independently strong evidence of diagram text. Allow it to
+  // suppress translation even if the paragraph score is marginally higher.
+  // The sentence-like prose guard lives in the generic evidence generator, so
+  // this does not demote ordinary multi-column prose.
+  if (
+    candidate.role === "paragraph" &&
+    vectorFigureLabels && vectorFigureLabels.confidence >= 0.82 &&
+    (candidate.roleScores.table ?? 0) < 0.8
+  ) {
+    return { role: "other", confidence: vectorFigureLabels.confidence };
+  }
   if (imageLabelEvidence && (scores.other ?? 0) >= paragraph + 0.06) {
     return { role: "other", confidence: scores.other ?? score };
   }

@@ -55,6 +55,18 @@ class SegmenterTests(unittest.TestCase):
         self.assertTrue(units[1].model_input.startswith("It still"))
         self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
 
+    def test_proactively_splits_200_character_coordinate_clause(self) -> None:
+        source = (
+            "During encoding, participants watched a series of film clips, half of which were presented "
+            "following gist cues (e.g., ‘couple fighting’), and the other half were presented following "
+            "detailed cues (e.g., ‘white piano’)."
+        )
+        units = rescue_units_for_translation(source)
+        self.assertEqual(len(units), 2)
+        self.assertTrue(units[0].text.startswith("During encoding"))
+        self.assertTrue(units[1].text.startswith("and the other half"))
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
+
     def test_keeps_medium_while_sentence_intact_for_context(self) -> None:
         source = (
             "While we have shown that an increase in core body temperature can be reflected "
@@ -80,6 +92,37 @@ class SegmenterTests(unittest.TestCase):
         units = split_for_translation(source)
         self.assertEqual(units, [source])
         self.assert_round_trip(source)
+
+    def test_extremely_long_sentence_uses_safe_top_level_clause_boundary(self) -> None:
+        source = (
+            "The study presents a longitudinal evaluation of a worker feedback dashboard that combines "
+            "wearable sensing, daily self reports, and supervisor observations across several factory sites, "
+            "the evaluation covers health, safety, and productivity outcomes over repeated measurement periods, "
+            "and the authors discuss how these observations can guide future intervention design while preserving "
+            "the workers' privacy and the interpretability of the collected data, and the analysis also compares "
+            "differences between production lines, shift patterns, and task assignments, reports uncertainty "
+            "around every estimate, and explains why the dashboard should be treated as decision support rather "
+            "than as a replacement for established occupational health procedures, while the discussion considers "
+            "how managers, workers, and researchers can interpret the measurements responsibly in settings where "
+            "the available sensors, schedules, and reporting practices differ substantially across sites."
+        )
+        self.assertGreater(len(source), 900)
+        units = segment_for_translation(source)
+        self.assertGreaterEqual(len(units), 2)
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
+        self.assertTrue(all(len(unit.text.split()) >= 8 for unit in units), units)
+
+    def test_multi_semicolon_retry_rescue_keeps_counts_and_balances_units(self) -> None:
+        source = (
+            "We identified 8949 studies based on our initial searching; Initial sifting "
+            "based on title, abstract and full text resulted in exclusion of 6336 studies; "
+            "30 studies were further reviewed and two studies were excluded before the final analysis."
+        )
+        units = rescue_units_for_translation(source)
+        self.assertGreaterEqual(len(units), 2)
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
+        self.assertTrue(any("8949" in unit.text for unit in units))
+        self.assertTrue(all(len(unit.text.split()) >= 8 for unit in units))
 
     def test_clean_source_fallback_fixtures_round_trip(self) -> None:
         fixture_path = Path(__file__).parents[1] / "benchmarks" / "translation-unit-fallback-fixtures-v66.json"
@@ -321,6 +364,16 @@ class SegmenterTests(unittest.TestCase):
         self.assertTrue(units[1].startswith("and adding"))
         self.assert_round_trip(source)
 
+    def test_multiple_top_level_semicolons_keep_shared_logical_unit(self) -> None:
+        source = (
+            "We identified 8,949 studies based on our initial searching; initial sifting "
+            "based on title, abstract and full text resulted in exclusion of 6336 studies; "
+            "30 studies were further reviewed and two studies were excluded before the final analysis."
+        )
+        units = segment_for_translation(source)
+        self.assertEqual(len(units), 1)
+        self.assert_round_trip(source)
+
     def test_author_year_semicolon_never_becomes_a_clause_boundary(self) -> None:
         source = "The first clause explains the experimental context with enough ordinary prose to make a long translation unit for the model, citing (Sigure & Koseki, 1998; Marquardt et al., 2011; Benko et al., 2009) as prior work before continuing through a detailed explanation of why the setup matters for later analysis and interpretation in the study."
         self.assertEqual(split_for_translation(source), [source])
@@ -389,6 +442,18 @@ class SegmenterTests(unittest.TestCase):
         self.assertEqual(len(units), 2)
         self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
         self.assertTrue(units[1].model_input.startswith("They found that interactive jewellery"))
+
+    def test_rescue_em_dash_claim_keeps_both_sides(self) -> None:
+        source = (
+            "When the system operates properly, the resulting experience is much like that in co-present "
+            "conversation – you can easily follow the speech of people with whom you are conversing, and "
+            "others can be understood with effort."
+        )
+        units = rescue_units_for_translation(source)
+        self.assertEqual(len(units), 2)
+        self.assertTrue(validate_round_trip(source, [unit.text for unit in units]))
+        self.assertTrue(units[0].model_input.endswith("."))
+        self.assertTrue(units[1].model_input.startswith("You can easily"))
 
     def test_rescue_hence_clause_keeps_hypothesis_consequence(self) -> None:
         source = (

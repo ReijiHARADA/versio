@@ -19,6 +19,27 @@ class MadladUnitQualityTests(unittest.TestCase):
         self.assertFalse(MADLADEngine._epistemic_marker_missing(source, "小さな効果は検出されなかった可能性があります。"))
         self.assertFalse(MADLADEngine._epistemic_marker_missing("The effect was not detected.", "効果は検出されなかった。"))
 
+    def test_quoted_technical_name_missing_is_structural(self) -> None:
+        source = 'We developed a prototype dubbed the “Jogwheel” (Figure 1a).'
+        self.assertEqual(
+            MADLADEngine._missing_quoted_technical_names(
+                source, "電子テキスタイルの試作機を開発した(Figure 1a)。"
+            ),
+            ["Jogwheel"],
+        )
+        self.assertEqual(
+            MADLADEngine._missing_quoted_technical_names(
+                source, "「Jogwheel」と呼ばれる試作機を開発した。"
+            ),
+            [],
+        )
+
+    def test_quoted_content_span_count_detects_dropped_condition(self) -> None:
+        source = 'The clips followed gist cues (e.g., “couple fighting”) or detailed cues (e.g., “white piano”).'
+        self.assertEqual(MADLADEngine._quoted_content_span_count(source), 2)
+        self.assertEqual(MADLADEngine._quoted_content_span_count('クリップは「白いピアノ」に従った。'), 1)
+        self.assertEqual(MADLADEngine._quoted_content_span_count('クリップは「カップルの喧嘩」または「白いピアノ」に従った。'), 2)
+
     def test_negation_retry_only_triggers_when_polarity_is_lost(self) -> None:
         source = "We are not the first to explore this interaction."
         self.assertTrue(MADLADEngine._negation_marker_missing(source, "この相互作用を最初に探求した。"))
@@ -41,6 +62,27 @@ class MadladUnitQualityTests(unittest.TestCase):
         source = "Participants received either gist or detailed cues."
         self.assertTrue(MADLADEngine._alternative_marker_missing(source, "参加者は手がかりを受けた。"))
         self.assertFalse(MADLADEngine._alternative_marker_missing(source, "参加者はいずれかの手がかりを受けた。"))
+
+    def test_comparative_likelihood_marker_loss_is_detected(self) -> None:
+        source = "Participants were asked which hospital was more likely to report more days above the threshold."
+        self.assertTrue(MADLADEngine._comparative_likelihood_marker_missing(source, "参加者は病院について質問された。"))
+        self.assertFalse(MADLADEngine._comparative_likelihood_marker_missing(source, "どちらの病院が報告する可能性が高いかを尋ねた。"))
+
+    def test_condition_marker_loss_is_detected(self) -> None:
+        source = "We focused on Davinci unless otherwise noted."
+        self.assertTrue(MADLADEngine._condition_marker_missing(source, "Davinciに注目した。"))
+        self.assertFalse(MADLADEngine._condition_marker_missing(source, "特に記載がない限りDavinciに注目した。"))
+
+    def test_missing_contextual_count_is_rejected(self) -> None:
+        source = "We identified 8949 studies and included 28 studies with 3,227 participants."
+        self.assertEqual(MADLADEngine._missing_contextual_count(source, "8949件の研究と28件を含む3,227名。"), None)
+        self.assertEqual(MADLADEngine._missing_contextual_count(source, "28件の研究と3,227名。"), "8949")
+        self.assertTrue(MADLADEngine._is_degenerate("28件の研究と3,227名。", source, "ja"))
+
+    def test_unexpected_contextual_number_is_rejected(self) -> None:
+        source = "We identified 8949 studies and included 28 studies with 3,227 participants."
+        self.assertIsNone(MADLADEngine._has_unexpected_contextual_number(source, "8949件と3,227名。"))
+        self.assertEqual(MADLADEngine._has_unexpected_contextual_number(source, "8949件と3,227名。227"), "227")
 
     def test_coordinated_clause_rescue_requires_substantive_clauses(self) -> None:
         parts = MADLADEngine._coordinated_clause_parts(
@@ -167,6 +209,23 @@ class MadladUnitQualityTests(unittest.TestCase):
         self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
         self.assertEqual(MADLADEngine._degenerate_reason(output, source, "ja"), "instruction_contamination")
 
+    def test_rejects_hangul_inserted_into_japanese_output(self) -> None:
+        source = "None of the groups showed a significant difference, whereas both groups improved."
+        output = "両群とも有意差はなかったが、両群と도改善した。"
+        self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
+        self.assertEqual(MADLADEngine._degenerate_reason(output, source, "ja"), "foreign_script:hangul")
+
+    def test_detects_missing_supplementary_reference(self) -> None:
+        source = "The details appear in the SI Appendix."
+        self.assertEqual(
+            MADLADEngine._missing_supplementary_references(source, "詳細は補足資料に記載されている。"),
+            ["SI Appendix"],
+        )
+        self.assertEqual(
+            MADLADEngine._missing_supplementary_references(source, "詳細はSI Appendixに記載されている。"),
+            [],
+        )
+
     def test_allows_translation_as_ordinary_academic_content(self) -> None:
         source = "The study examines translation practices in multilingual teams."
         output = "本研究では、多言語チームにおける翻訳実践を検討する。"
@@ -229,6 +288,13 @@ class MadladUnitQualityTests(unittest.TestCase):
         self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
         self.assertEqual(MADLADEngine._degenerate_reason(output, source, "ja"), "phrase_repetition")
 
+    def test_rejects_adjacent_repeated_latin_token(self) -> None:
+        source = "The theory was applied to the planned behavior model."
+        output = "計画的行動理論（TRA）のTheoryTheoryモデルを適用した。"
+        self.assertTrue(MADLADEngine._has_adjacent_repeated_latin_token(output))
+        self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
+        self.assertEqual(MADLADEngine._degenerate_reason(output, source, "ja"), "adjacent_repeated_latin_token")
+
     def test_retries_unsupported_numbered_enumeration(self) -> None:
         source = (
             "The first group asked the hypothesis-scanning question, whereas the second group "
@@ -247,6 +313,39 @@ class MadladUnitQualityTests(unittest.TestCase):
         output = "手順は3段階である。1) データを準備し、2) モデルを適合し、3) 結果を報告した。"
         self.assertFalse(MADLADEngine._has_unsupported_numbered_enumeration(output, source))
         self.assertFalse(MADLADEngine._is_degenerate(output, source, "ja"))
+
+    def test_rejects_unsupported_comma_inventory(self) -> None:
+        source = "There are several reasons for the low consumption of organic food, including consumers' attitudes and purchase intentions."
+        output = "消費者の有機食品への意識は、消費の意識、消費意欲、消費行動、消費習慣、消費環境、消費動機、消費状況、消費量、消費期限、消費方法、消費目的、消費傾向、消費態度、消費計画、消費経験、消費理由。"
+        self.assertTrue(MADLADEngine._has_unsupported_inventory(output, source))
+        self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
+        self.assertEqual(MADLADEngine._degenerate_reason(output, source, "ja"), "unsupported_inventory")
+
+    def test_allows_source_comma_inventory(self) -> None:
+        source = "The study measured attention, memory, and response time across three conditions."
+        output = "この研究では、3条件で注意、記憶、反応時間を測定した。"
+        self.assertFalse(MADLADEngine._has_unsupported_inventory(output, source))
+        self.assertFalse(MADLADEngine._is_degenerate(output, source, "ja"))
+
+    def test_rejects_short_decode_of_long_multi_sentence_claim(self) -> None:
+        source = (
+            "For example, Levin and Gaeth (1988) presented an advertisement for ground beef to two groups: "
+            "one was framed as lean and the other as fat. Participants responded more favorably toward the beef "
+            "when it was described as lean."
+        )
+        output = "例えば、Levin and Gaeth (1988)は、「75%脂肪」と「25%脂質」の2つのグループに広告を提示した。"
+        self.assertTrue(MADLADEngine._is_implausibly_short_unit(output, source))
+        self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
+
+    def test_rejects_compressed_dense_citation_claim(self) -> None:
+        source = (
+            "Most of the existing literature focus on the factors that influence these aspects, including consumers' "
+            "product knowledge (Wu et al., 2019), trust (Yue et al., 2017), health awareness, and individual "
+            "characteristics (Asioli et al., 2017) on the basis of the Theory of Reasoned Action (TRA) and the "
+            "Theory of Planned Behavior (TPB) (Zagata, 2012)."
+        )
+        output = "これらの要因は、合理的行動理論(TRA)と計画的行動論(TPB)に基づく(Wu et al., 2019)(Yue et al., 2017)(Asioli et al., 2017)(Zagata, 2012)。"
+        self.assertTrue(MADLADEngine._is_implausibly_short_unit(output, source))
 
     def test_rejects_missing_leading_section_marker(self) -> None:
         source = "4.3.1 Board Design describes the prototype and its constraints."
@@ -348,6 +447,28 @@ class MadladUnitQualityTests(unittest.TestCase):
         preserved = "この方法は2つの条件を区別しない。"
         omitted = "この方法は2つの条件を区別する。"
         self.assertGreater(MADLADEngine._candidate_score(preserved, source), MADLADEngine._candidate_score(omitted, source))
+
+    def test_claim_compression_risk_targets_short_coordinated_omission(self) -> None:
+        source = (
+            "In this study, 29 participants watched film clips accompanied by either gist or detailed "
+            "cues and rated their interest in these clips."
+        )
+        omitted = "29名の被験者に、映画クリップを見せ、その内容を詳細に説明した。"
+        self.assertTrue(MADLADEngine._claim_compression_risk(source, omitted))
+
+    def test_claim_compression_risk_does_not_probe_short_or_complete_output(self) -> None:
+        source = "Participants watched film clips and rated interest in them."
+        output = "参加者は映画クリップを見て、興味を評価した。"
+        self.assertFalse(MADLADEngine._claim_compression_risk(source, output))
+
+    def test_rejects_mutated_identifier_glue_only_for_source_compounds(self) -> None:
+        source = "The trial compared TRT and RT+CT across the same outcomes."
+        self.assertTrue(MADLADEngine._has_corrupted_identifier_glue(
+            source, "TRTとRTz+CTzの結果を比較した。"
+        ))
+        self.assertFalse(MADLADEngine._has_corrupted_identifier_glue(
+            "The z score was reported for each group.", "各群のz値を報告した。"
+        ))
 
 class MadladPartialSourceFallbackTests(unittest.TestCase):
     def test_rejects_partial_untranslated_source_span(self) -> None:

@@ -201,6 +201,27 @@ function fragmentedGraphicLabelEvidence(block: LayoutBlock, blocks: LayoutBlock[
   return 0.9;
 }
 
+/** Preserve evidence for a paragraph whose native lines contain a body run
+ * plus a second, narrow x-band on several baselines. This is intentionally
+ * diagnostic-only: the evidence must not discard text or relabel the block by
+ * itself, because legitimate tables and side annotations can share the shape.
+ */
+function mixedNativeBandEvidence(block: LayoutBlock): number {
+  if (block.role !== "paragraph" || block.lines.length < 3) return 0;
+  const multiBandLines = block.lines.filter((line) => {
+    const starts = new Set(line.items.map((item) => Math.round(item.x / 24)));
+    return starts.size >= 2;
+  });
+  if (multiBandLines.length < 2) return 0;
+  const itemWidths = multiBandLines.flatMap((line) => line.items.map((item) => item.width));
+  const wide = itemWidths.filter((width) => width >= 80);
+  const narrow = itemWidths.filter((width) => width > 0 && width <= 100);
+  if (wide.length < 2 || narrow.length < 2 || narrow.length / itemWidths.length > 0.7) return 0;
+  const bands = new Set(multiBandLines.flatMap((line) => line.items.map((item) => Math.round(item.x / 24))));
+  if (bands.size < 2) return 0;
+  return Math.min(0.86, 0.62 + multiBandLines.length / Math.max(block.lines.length, 1) * 0.2);
+}
+
 function median(values: number[]): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -746,6 +767,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const imageLabels = imageOverlapLabelEvidence(block, pages.find((page) => page.pageNumber === block.pageStart));
     const vectorLabels = vectorFigureLabelEvidence(block);
     const fragmentedLabels = fragmentedGraphicLabelEvidence(block, blocks);
+    const mixedNativeBand = mixedNativeBandEvidence(block);
     const alignedTableRow = block.lines.length === 1 &&
       block.lines[0].items.length >= 2 && tableLike(block) && nearbyTableCaption;
     const tableHeaderRow = block.lines.length === 1 &&
@@ -971,6 +993,16 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         reason,
       },
     ];
+    if (mixedNativeBand > 0) {
+      evidence.push({
+        source: "geometry",
+        label: "mixed-native-x-band",
+        confidence: mixedNativeBand,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "multiple baselines contain a wide body run and a narrow secondary native x-band; preserve for resolver review",
+      });
+    }
     if (chartLabels > 0) {
       evidence.push({
         source: "generic-heuristic",

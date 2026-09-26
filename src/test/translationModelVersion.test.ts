@@ -40,12 +40,12 @@ describe("MADLAD translation cache identity", () => {
       'f"3b-mt-v6-transformers-{TRANSFORMERS_RUNTIME_VERSION}-{SEGMENTER_VERSION}-"'
     );
     expect(engineSource).toContain('f"{SOURCE_PROTECTION_VERSION}-strict-restore-v28-{QUALITY_GATE_VERSION}"');
-    expect(engineSource).toContain('QUALITY_GATE_VERSION = "quality-v15-relation-candidate-v6-section-marker"');
+    expect(engineSource).toContain('QUALITY_GATE_VERSION = "quality-v34-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue"');
     expect(requirementsSource).toContain("transformers==4.57.6");
     expect(lockSource).toContain("transformers==4.57.6");
-    expect(TRANSLATION_QUALITY_VERSION).toBe("quality-v29");
+    expect(TRANSLATION_QUALITY_VERSION).toBe("quality-v34");
     expect(MADLAD_MODEL_VERSION).toBe(
-      `3b-mt-v6-transformers-4.57.6-${segmenterVersion}-${protectionVersion}-strict-restore-v28-quality-v15-relation-candidate-v6-section-marker`
+      `3b-mt-v6-transformers-4.57.6-${segmenterVersion}-${protectionVersion}-strict-restore-v28-quality-v34-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue`
     );
   });
 });

@@ -103,10 +103,13 @@ export async function resumeIncompleteTranslation(
       return;
     }
     const madladEngine = new MADLADEngine(cfg.madladServerUrl);
+    const llmProviders = [cfg.ollamaModel, ...(cfg.ollamaModels ?? [])]
+      .filter((model, index, models): model is string => Boolean(model) && models.indexOf(model) === index)
+      .map((model) => new OllamaProvider(cfg.ollamaServerUrl, model));
     const translationEngine = cfg.enableSelectiveCascade
       ? new OllamaTranslationEngine(
           madladEngine,
-          new OllamaProvider(cfg.ollamaServerUrl, cfg.ollamaModel),
+          llmProviders,
         )
       : madladEngine;
     const queue = new TranslationQueue(translationEngine, {

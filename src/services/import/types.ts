@@ -41,6 +41,8 @@ export type ImportConfig = {
   madladServerUrl?: string;
   ollamaServerUrl?: string;
   ollamaModel?: string;
+  /** Optional ordered alternate-model candidates; used only with selective cascade. */
+  ollamaModels?: string[];
   /** Opt-in alternate translation after a primary failure or high-impact quality risk. */
   enableSelectiveCascade?: boolean;
   generateGlossary?: boolean;

@@ -10,6 +10,7 @@ export const DEFAULT_IMPORT_CONFIG: Required<ImportConfig> = {
   madladServerUrl: "http://127.0.0.1:8765",
   ollamaServerUrl: "http://localhost:11434",
   ollamaModel: "gemma2:9b",
+  ollamaModels: [],
   enableSelectiveCascade: false,
   generateGlossary: true,
   translationConcurrency: 8,

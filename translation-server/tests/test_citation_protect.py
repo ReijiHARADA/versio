@@ -10,6 +10,8 @@ from engines.citation_protect import (
     INLINE_FOOTNOTE_CITATION_RE,
     INLINE_NUMERIC_CITATION_RE,
     protect_citations,
+    protect_quoted_examples,
+    restore_quoted_examples,
     restore_missing_bare_references,
     restore_citations,
     terminal_superscript_indices,
@@ -18,6 +20,17 @@ from engines.madlad_mps import allows_unprotected_identifier_retry
 
 
 class CitationProtectTests(unittest.TestCase):
+    def test_quoted_examples_round_trip_as_atomic_spans(self) -> None:
+        source = 'The cues included e.g., “couple fighting” and e.g. "white piano".'
+        protected, values, nonce = protect_quoted_examples(source)
+        self.assertEqual(values, ["“couple fighting”", '"white piano"'])
+        self.assertNotIn("couple fighting", protected)
+        self.assertEqual(restore_quoted_examples(protected, values, nonce), source)
+
+    def test_dropped_quoted_example_fails_closed(self) -> None:
+        with self.assertRaises(ValueError):
+            restore_quoted_examples("文脈 ZZQTE1N0ZZ", ["“first”", '"second"'], 0)
+
     def test_power_measurement_keeps_decimal_and_unit_atomic(self) -> None:
         source = "The prototype consumes only 14.4 uW and operates below 1pF."
         protected, cites, nonce = protect_citations(source)
@@ -74,6 +87,17 @@ class CitationProtectTests(unittest.TestCase):
             restore_missing_bare_references("The value was 2.913.", "値は2.913。"),
             "値は2.913。",
         )
+
+    def test_thousands_group_tail_is_not_restored_as_bare_reference(self) -> None:
+        source = "The review included 3,227 participants."
+        protected, cites, nonce = protect_citations(source)
+        self.assertNotIn("227", cites)
+        translated = "レビューには3,227名が含まれた。"
+        self.assertEqual(
+            restore_missing_bare_references(source, translated),
+            translated,
+        )
+        self.assertEqual(restore_citations(protected, cites, nonce), source)
 
     def test_repeated_title_case_technical_token_is_atomic(self) -> None:
         source = "Bluetooth advertising uses Bluetooth packets, while These packets repeat."
@@ -345,6 +369,7 @@ class CitationProtectTests(unittest.TestCase):
         source = "We used the public API for all simulations14. The settings were fixed."
         protected, citations, nonce = protect_citations(source)
         self.assertIn("14", citations)
+        self.assertNotIn("API", citations)
         self.assertEqual(restore_citations(protected, citations, nonce), source)
 
     def test_recovers_placeholder_with_dropped_prefix_after_footnote(self) -> None:

@@ -93,10 +93,12 @@ export async function importPDFV2(
   const paperId = uuidv4();
   activeImportPaperIds.add(paperId);
 
-  const llmProvider = new OllamaProvider(cfg.ollamaServerUrl, cfg.ollamaModel);
+  const llmProviders = [cfg.ollamaModel, ...(cfg.ollamaModels ?? [])]
+    .filter((model, index, models): model is string => Boolean(model) && models.indexOf(model) === index)
+    .map((model) => new OllamaProvider(cfg.ollamaServerUrl, model));
   const madladEngine = new MADLADEngine(cfg.madladServerUrl);
   const translationEngine = cfg.enableSelectiveCascade
-    ? new OllamaTranslationEngine(madladEngine, llmProvider)
+    ? new OllamaTranslationEngine(madladEngine, llmProviders)
     : madladEngine;
 
   try {

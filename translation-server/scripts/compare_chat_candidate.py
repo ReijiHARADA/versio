@@ -17,6 +17,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from engines.citation_protect import placeholder_for, protect_citations, restore_citations
 from engines.segmenter import segment_for_translation
+from scripts.benchmark_protection_ab import minimal_protection
 
 
 def main() -> None:
@@ -28,6 +29,7 @@ def main() -> None:
     ap.add_argument('--limit', type=int, default=0)
     ap.add_argument('--max-new-tokens', type=int, default=512)
     ap.add_argument('--no-protection', action='store_true', help='Diagnostic only: send source without citation/scientific placeholders')
+    ap.add_argument('--minimal-protection', action='store_true', help='Diagnostic only: keep ordinary citations, measurements, statistics and years visible; protect only opaque spans')
     ap.add_argument('--explicit-placeholder-instruction', action='store_true', help='Diagnostic only: explicitly ask the model to copy protected spans unchanged')
     args = ap.parse_args()
 
@@ -55,8 +57,12 @@ def main() -> None:
         total_input_tokens = total_output_tokens = 0
         started = time.time()
         for unit_index, unit in enumerate(units):
+            if args.no_protection and args.minimal_protection:
+                raise ValueError('--no-protection and --minimal-protection are mutually exclusive')
             if args.no_protection:
                 protected, spans, nonce = unit.model_input, [], 0
+            elif args.minimal_protection:
+                protected, spans, nonce, _literal = minimal_protection(unit.model_input)
             else:
                 protected, spans, nonce = protect_citations(unit.model_input)
             model_protected = protected
@@ -128,7 +134,7 @@ def main() -> None:
             **{k: row.get(k) for k in ('key', 'paperId', 'blockId', 'source')},
             'model': args.model,
             'segmenterVersion': 'semantic-v75',
-            'sourceProtectionVersion': None if args.no_protection else ('source-protect-v11; explicit-marker-instruction' if args.explicit_placeholder_instruction else 'source-protect-v11'),
+            'sourceProtectionVersion': ('raw' if args.no_protection else ('minimal-diagnostic-v1' if args.minimal_protection else ('source-protect-v11; explicit-marker-instruction' if args.explicit_placeholder_instruction else 'source-protect-v11'))),
             'promptTemplate': 'CAT-Translate model card: Translate the following {src_lang} text into {tgt_lang}.',
             'translation': joined,
             'unitCount': len(translated_units),

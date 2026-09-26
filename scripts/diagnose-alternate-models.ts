@@ -9,6 +9,7 @@ const inputPath = path.resolve(root, process.env.ALT_INPUT_REPORT ?? "test-data/
 const outputPath = path.resolve(root, process.env.ALT_OUTPUT_REPORT ?? "test-data/real-papers/reports/alternate-model-diagnostic-v1.json");
 const baseUrl = process.env.OLLAMA_BASE_URL ?? "http://127.0.0.1:11434";
 const models = (process.env.ALT_MODELS ?? "qwen2.5:14b,qwen2.5:7b,gemma2:9b").split(",").map((x) => x.trim()).filter(Boolean);
+const requestTimeoutMs = Number.parseInt(process.env.ALT_REQUEST_TIMEOUT_MS ?? "90000", 10);
 const report: any = JSON.parse(fs.readFileSync(inputPath, "utf8"));
 const maxRows = Number.parseInt(process.env.ALT_MAX_ROWS ?? "0", 10);
 const includeAccepted = process.env.ALT_INCLUDE_ACCEPTED === "1";
@@ -47,8 +48,21 @@ for (const row of rows) {
   for (const model of models) {
     const pieces: string[] = []; const rawPieces: string[] = []; const errors: string[] = [];
     for (const unit of units) {
-      const response = await fetch(`${baseUrl}/api/chat`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ model, messages: [{ role: "system", content: prompt }, { role: "user", content: `Translate this text to Japanese:\n\n${unit.input}` }], stream: false, options: { temperature: 0.1, num_predict: 2000 } }) });
-      if (!response.ok) throw new Error(`${model} ${response.status}: ${await response.text()}`);
+      let response: Response;
+      try {
+        response = await fetch(`${baseUrl}/api/chat`, { method: "POST", headers: { "content-type": "application/json" }, signal: AbortSignal.timeout(requestTimeoutMs), body: JSON.stringify({ model, messages: [{ role: "system", content: prompt }, { role: "user", content: `Translate this text to Japanese:\n\n${unit.input}` }], stream: false, options: { temperature: 0.1, num_predict: 2000 } }) });
+      } catch (error) {
+        errors.push(`${model} request failed: ${error instanceof Error ? error.message : String(error)}`);
+        pieces.push(unit.source);
+        rawPieces.push("");
+        continue;
+      }
+      if (!response.ok) {
+        errors.push(`${model} ${response.status}: ${await response.text()}`);
+        pieces.push(unit.source);
+        rawPieces.push("");
+        continue;
+      }
       const data: any = await response.json(); const raw = String(data.message?.content ?? "").trim(); rawPieces.push(raw);
       const restored = py(restoreCode, { text: raw, citations: unit.citations, nonce: unit.nonce });
       if (restored.ok) pieces.push(restored.text); else { pieces.push(unit.source); errors.push(restored.error); }

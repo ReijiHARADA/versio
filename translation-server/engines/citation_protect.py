@@ -12,7 +12,8 @@ import re
 
 # Bump this whenever source-fact protection rules change. It participates in
 # the server translation/cache identity so old accepts are not reused silently.
-SOURCE_PROTECTION_VERSION = "source-protect-v21"
+SOURCE_PROTECTION_VERSION = "source-protect-v23"
+QUOTED_EXAMPLE_PROTECTION_VERSION = "quoted-example-v1"
 
 # Repeated title-case technical names are factual identifiers even when they
 # do not contain an internal capital transition (for example ``Bluetooth``).
@@ -131,6 +132,12 @@ _BARE_REFERENCE_IDENTIFIER_WORDS = {
 def _bare_reference_matches(text: str) -> list[re.Match[str]]:
     matches = []
     for match in INLINE_BARE_REFERENCE_RE.finditer(text):
+        # A comma inside a thousands-grouped number (`3,227`) is not a
+        # superscript citation. The generic punctuation lookbehind above must
+        # not turn the trailing group into a bare reference that gets appended
+        # after translation.
+        if match.start() >= 2 and text[match.start() - 1] == "," and text[match.start() - 2].isdigit():
+            continue
         prefix = text[:match.start()]
         word = re.search(r"([A-Za-z]+)$", prefix)
         if word and word.group(1).lower() in _BARE_REFERENCE_IDENTIFIER_WORDS:
@@ -447,6 +454,28 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
         else:
             scoped_matches.append(match)
     matches = scoped_matches
+    # Isolated all-caps words in ordinary prose (for example, ``this API``)
+    # are usually readable nouns rather than opaque identifiers. The blanket
+    # acronym rule can otherwise replace them with a placeholder that MADLAD
+    # drops. Keep acronyms protected when repeated, parenthetical, or attached
+    # to a digit; expose a one-off prose acronym to the model.
+    acronym_counts: dict[str, int] = {}
+    for token in re.findall(r"(?-i:\b[A-Z]{2,8}\b)", text):
+        acronym_counts[token] = acronym_counts.get(token, 0) + 1
+    filtered: list[re.Match[str]] = []
+    for match in matches:
+        value = match.group(0)
+        if re.fullmatch(r"[A-Z]{2,8}", value):
+            start, end = match.span()
+            inside_parenthetical = text.rfind("(", 0, start) > text.rfind(")", 0, start)
+            adjacent_digit = (start > 0 and text[start - 1].isdigit()) or (end < len(text) and text[end].isdigit())
+            preceding = text[max(0, start - 18):start]
+            ordinary_noun_context = bool(re.search(r"\b(?:a|an|the|this|that|public|available)\s+$", preceding, re.I))
+            if (acronym_counts.get(value, 0) == 1 and not inside_parenthetical
+                    and not adjacent_digit and ordinary_noun_context):
+                continue
+        filtered.append(match)
+    matches = filtered
     matches.sort(key=lambda match: (match.start(), -(match.end() - match.start())))
     non_overlapping: list[re.Match[str]] = []
     end = -1
@@ -535,6 +564,45 @@ def protect_citations(
         idx = len(matches) - 1 - i
         out = out[: match.start()] + placeholder_for(idx, nonce) + out[match.end() :]
     return out, citations, nonce
+
+
+_QUOTED_EXAMPLE_RE = re.compile(
+    r"\be\.g\.,?\s*([\u201c\"'][^\u201d\"']{3,}[\u201d\"'])",
+    re.IGNORECASE,
+)
+
+
+def protect_quoted_examples(text: str) -> tuple[str, list[str], int]:
+    """Keep substantive ``e.g.`` examples atomic while translating context.
+
+    Examples are source content, not identifiers: exposing the whole phrase
+    to a small model can cause it to omit one example during clause rescue.
+    Only the quoted span is masked, leaving ``e.g.`` and the surrounding
+    grammar visible.  The exact source span is restored after decoding.
+    """
+    matches = list(_QUOTED_EXAMPLE_RE.finditer(text))
+    if not matches:
+        return text, [], 0
+    nonce = 0
+    while True:
+        tokens = [f"ZZQTE{i}N{nonce}ZZ" for i in range(len(matches))]
+        if all(token not in text for token in tokens):
+            break
+        nonce += 1
+    out = text
+    values = [match.group(1) for match in matches]
+    for i, match in reversed(list(enumerate(matches))):
+        out = out[: match.start(1)] + f"ZZQTE{i}N{nonce}ZZ" + out[match.end(1) :]
+    return out, values, nonce
+
+
+def restore_quoted_examples(text: str, values: list[str], nonce: int) -> str:
+    for i, value in enumerate(values):
+        token = f"ZZQTE{i}N{nonce}ZZ"
+        if token not in text:
+            raise ValueError(f"quoted example placeholder dropped by model: {value}")
+        text = text.replace(token, value)
+    return text
 
 
 def _to_halfwidth(text: str) -> str:

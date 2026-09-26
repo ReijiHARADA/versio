@@ -344,6 +344,20 @@ function assignColumn(
   return item.x + item.width / 2 < layout.gutterX ? "left" : "right";
 }
 
+function normalizeNativeSpacing(text: string): string {
+  // Some native PDF text layers place a word immediately after a numeric
+  // token (for example `949studies`) or omit the space after a sentence
+  // terminator (`).Finally`). These are extraction boundaries, not source
+  // content. Repair only unambiguous digit→lowercase-word and punctuation→
+  // uppercase-word joins; identifiers such as `3D` and `rLPFC` are untouched.
+  return text
+    .replace(/(\d{2,})(?=[a-z]{3,}\b)/g, "$1 ")
+    .replace(/([.!?\)])(?=[A-Z][a-z])/g, "$1 ")
+    .replace(/(\d),\s+(?=\d{3}\s*[a-z])/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function joinItemTexts(items: ExtractedTextItem[]): string {
   // PDF text layers occasionally duplicate an entire span at nearly the same
   // coordinates (an invisible accessibility layer over visible text). Drop
@@ -380,7 +394,7 @@ function joinItemTexts(items: ExtractedTextItem[]): string {
     if (needsSpace) out += " ";
     out += cur.text;
   }
-  return out.replace(/\s+/g, " ").trim();
+  return normalizeNativeSpacing(out);
 }
 
 function itemsToLine(
@@ -821,7 +835,16 @@ function splitInlineSubheading(line: LayoutLine): LayoutLine[] {
         /^[A-Z(]/.test(headingText) &&
         (/[.!?]["')\]]?$/.test(headingText) || /-$/.test(headingText) || suffixWords.length >= 10);
       const suffixFonts = new Set(headingItems.slice(0, Math.min(4, headingItems.length)).map((item) => item.fontName));
-      if (shortLabel && gap >= Math.max(5, line.fontSize * 0.55) && sentenceLikeSuffix && suffixFonts.size === 1) {
+      const prefixFontSize = median(bodyItems.map((item) => item.fontSize));
+      const suffixFontSize = median(headingItems.map((item) => item.fontSize));
+      // Some two-column PDFs place a larger subsection label on the same
+      // baseline as the first body line. There is no horizontal gutter to
+      // rely on, but the native font-size transition remains strong evidence
+      // when the prefix is short and the suffix is sentence-like. Keep the
+      // existing gutter path and require a conservative 12% size increase for
+      // the baseline-overlap path so ordinary mixed-font prose is not split.
+      const fontTransition = prefixFontSize >= suffixFontSize * 1.12;
+      if (shortLabel && (gap >= Math.max(5, line.fontSize * 0.55) || fontTransition) && sentenceLikeSuffix && suffixFonts.size === 1) {
         const make = (items: ExtractedTextItem[]): LayoutLine => itemsToLine(items, line.column, line.page, line.pageHeight, line.pageWidth);
         return [{ ...make(bodyItems), roleHint: "heading" }, make(headingItems)];
       }
@@ -1141,8 +1164,16 @@ function styleStartsSubheading(
   const uppercase = text.replace(/[^A-Za-z]/g, "").replace(/[^A-Z]/g, "").length >= 4 &&
     text.replace(/[^A-Z]/g, "").length / Math.max(1, text.replace(/[^A-Za-z]/g, "").length) > 0.7;
   const boldTransition = lineUsesBoldFace(next) && !lineUsesBoldFace(previous);
-  const fontTransition = next.fontSize >= previous.fontSize + Math.max(0.35, baseFont * 0.04);
-  return (titleCase || uppercase) && (boldTransition || fontTransition);
+  const nextStartsSubheading = next.fontSize >= previous.fontSize + Math.max(0.35, baseFont * 0.04);
+  // A larger heading immediately followed by a smaller body line is the
+  // common baseline-overlap pattern in two-column journal PDFs. The previous
+  // line is the candidate label in that direction, so keep the barrier
+  // symmetric with the existing body-to-subheading check.
+  const previousStartsSubheading = previous.fontSize >= next.fontSize + Math.max(0.35, baseFont * 0.04);
+  const previousText = layoutPlain(previous.text);
+  const previousTitleCase = /^[A-Z][A-Za-z]*(?:[\s:–—-]+[A-Z][A-Za-z]*)*/.test(previousText) &&
+    previousText.length <= 100 && previousText.split(/\s+/).length <= 15 && !/[.!?。．]$/.test(previousText);
+  return (titleCase || uppercase) && (boldTransition || nextStartsSubheading) || previousTitleCase && previousStartsSubheading;
 }
 
 function isRepeatedHeadingLead(heading: LayoutLine, body: LayoutLine): boolean {
@@ -1512,7 +1543,7 @@ function joinLines(lines: LayoutLine[]): string {
     if (!next) continue;
     text = joinHyphenated(text, next);
   }
-  return text.replace(/\s+/g, " ").trim();
+  return normalizeNativeSpacing(text);
 }
 
 /** Checks that block text is reproducible from its native lines. */
@@ -1736,6 +1767,15 @@ function roleForLine(
   if (isFootnoteLine(line, line.pageHeight ?? 792, baseFont)) {
     if (line.page === 1 && looksLikeAffiliation(text)) return "affiliation";
     return "footnote";
+  }
+
+  // IEEE-style exports often prefix the abstract body with `Abstract—` and
+  // the masthead scorer can otherwise label the long multi-line block as a
+  // title. Treat a sentence-like abstract marker as body prose so a lowercase
+  // continuation can be reconstructed by the normal paragraph resolver.
+  if (/^abstract\s*[—–-]\s*/i.test(text) && text.length >= 96 &&
+      (/[.!?]$/.test(text) || text.split(/\s+/).length >= 16)) {
+    return "paragraph";
   }
 
   // Some arXiv/proceedings templates use a centered, body-sized title above
@@ -2444,6 +2484,18 @@ export function isSentenceContinuation(left: string, right: string): boolean {
   // independent title/paragraph blocks from being merged merely because the
   // left block lacks terminal punctuation.
   const lastWord = a.match(/[A-Za-z][A-Za-z'’-]*$/)?.[0].toLowerCase();
+  // A page/column break can occur inside a capitalized proper-name phrase
+  // (for example, a paragraph ending in `... present Thermal` followed by
+  // `Earring, ...`).  Treat this as a continuation only when the preceding
+  // token is ordinary lowercase prose and the left fragment is substantial;
+  // this avoids joining two independent short headings or edge marks.
+  if (
+    a.length >= 140 &&
+    /[a-z]\s+[A-Z][A-Za-z'’-]*$/.test(a) &&
+    /^[A-Z][A-Za-z'’(\-]/.test(b)
+  ) {
+    return true;
+  }
   return (
     a.length >= 80 &&
     !!lastWord &&
@@ -2492,7 +2544,7 @@ function isUnclassifiedFootnote(block: LayoutBlock): boolean {
  * prose. Never use it as the source paragraph for cross-page stitching. */
 function isAuthorMetadataBlock(block: LayoutBlock): boolean {
   if (block.role !== "paragraph") return false;
-  return /(?:contributed equally|correspondence|corresponding author|requests for materials|should be addressed to|e-?mail\s*:|full list of author information|served as (?:a )?(?:special issue )?editor\b)/i.test(block.text);
+  return /(?:authors?[’']?\s+addresses|contributed equally|correspondence|corresponding author|requests for materials|should be addressed to|e-?mail\s*:|full list of author information|served as (?:a )?(?:special issue )?editor\b)/i.test(block.text);
 }
 
 /**
@@ -2517,10 +2569,12 @@ function isPublicationChromeBlock(block: LayoutBlock): boolean {
  * over the final line of an abstract. It is safe to treat this very specific
  * geometry as metadata; ordinary arXiv title lines remain hard boundaries. */
 function isArxivOverlayBlock(block: LayoutBlock): boolean {
-  if (block.role !== "title" || block.lines.length !== 1) return false;
-  const line = block.lines[0];
-  return /\barXiv:\s*\d{4}\.\d{4,}(?:v\d+)?\b/i.test(block.text) &&
-    line.fontSize >= 16 && line.width >= 180;
+  if ((block.role !== "title" && block.role !== "paragraph") || block.lines.length !== 1) return false;
+  // Some PDF producers classify this metadata band as ordinary paragraph text
+  // and use the same body-sized font as the abstract. Match the complete
+  // arXiv marker rather than any sentence that merely mentions arXiv.
+  const marker = /^arXiv:\s*\d{4}\.\d{4,}(?:v\d+)?(?:\s*\[[^\]]+\])?(?:\s+\d+)?$/i;
+  return marker.test(block.text.trim());
 }
 
 /** Short publisher marks can be emitted as ordinary text at the page edge.
@@ -2539,11 +2593,29 @@ function isRepeatedEdgeMarker(block: LayoutBlock, repeatedTexts: Set<string>): b
   });
 }
 
+/** ACM/IEEE-style running headers may contain a page/article marker and an
+ * author surname while being emitted as an ordinary paragraph. At the top
+ * edge of a page these are metadata, not body text. */
+function isPageHeaderMarker(block: LayoutBlock): boolean {
+  if (block.role !== "paragraph" || block.text.trim().length > 96 || block.lines.length > 2) return false;
+  const line = block.lines[0];
+  const height = line.pageHeight ?? 792;
+  if (line.y >= height * 0.18) return false;
+  return /\b\d+\s*:\s*\d+\b/.test(block.text) && /[•·|]/.test(block.text);
+}
+
+function isInlineFootnoteBlock(block: LayoutBlock): boolean {
+  if (block.role !== "paragraph" || block.text.trim().length > 180 || block.lines.length > 2) return false;
+  const line = block.lines[0];
+  const height = line.pageHeight ?? 792;
+  return line.y > height * 0.62 && /^(?:[*†‡∗]|\d+[.)])\s*/.test(block.text.trim());
+}
+
 function isTransparentMetadataBlock(block: LayoutBlock, repeatedTexts: Set<string>): boolean {
   return block.role === "header" || block.role === "footer" || block.role === "footnote" || block.role === "chrome" ||
     block.role === "affiliation" || block.role === "copyright" || isUnclassifiedFootnote(block) ||
     isAuthorMetadataBlock(block) || isPublicationChromeBlock(block) || isArxivOverlayBlock(block) || isRepeatedRunningHeader(block, repeatedTexts) ||
-    isRepeatedEdgeMarker(block, repeatedTexts);
+    isRepeatedEdgeMarker(block, repeatedTexts) || isPageHeaderMarker(block) || isInlineFootnoteBlock(block);
 }
 
 /** A narrow single-column margin item may be interleaved in reading order
@@ -2592,6 +2664,11 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       /^[A-Z][A-Za-z'’-]{1,24},\s*et\s+al\.\s*$/i.test(candidate.text.trim()) &&
       Math.max(...candidate.lines.map((line) => line.fontSize), 0) <= pageMedian * 0.84;
   };
+  const isAbstractBodyTitleBlock = (candidate: LayoutBlock): boolean =>
+    candidate.role === "title" && candidate.pageStart === candidate.pageEnd &&
+    candidate.text.length >= 96 &&
+    /^abstract\s*[—–-]\s*/i.test(candidate.text.trim()) &&
+    candidate.lines.length >= 2;
   const figureBandBlocks = new Set<LayoutBlock>();
   for (const caption of blocks.filter((block) => block.role === "figure_caption" || block.role === "table_caption")) {
     const pageMedian = pageFontMedians.get(caption.pageStart) ?? 9;
@@ -2606,6 +2683,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
   }
   const result: LayoutBlock[] = [];
   for (const block of blocks) {
+    if (isAbstractBodyTitleBlock(block)) block.role = "paragraph";
     if (isDetachedAuthorLabelBlock(block)) {
       result.push({ ...block, role: "chrome" });
       continue;
@@ -2631,6 +2709,8 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         result[targetIdx].role === "table_caption" ||
         figureBandBlocks.has(result[targetIdx]) ||
         isRepeatedRunningHeader(result[targetIdx], repeatedTexts) ||
+        isPageHeaderMarker(result[targetIdx]) ||
+        isInlineFootnoteBlock(result[targetIdx]) ||
         isRepeatedEdgeMarker(result[targetIdx], repeatedTexts) ||
         isDetachedSingleColumnMarginBlock(result[targetIdx], block.bbox.x) ||
         isFigureBandLabel(result[targetIdx], result[targetIdx + 1]) ||
@@ -2678,7 +2758,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
           skipped.role === "chrome" ||
           skipped.role === "affiliation" || skipped.role === "copyright" ||
           isUnclassifiedFootnote(skipped) || isAuthorMetadataBlock(skipped) ||
-          isRepeatedRunningHeader(skipped, repeatedTexts);
+          isRepeatedRunningHeader(skipped, repeatedTexts) || isPageHeaderMarker(skipped) || isInlineFootnoteBlock(skipped);
         const precedesTailPage = skipped.pageEnd < targetLine.page;
         const followsTailOnSameColumn = skipped.pageStart === targetLine.page && skipped.pageEnd === targetLine.page &&
           skipped.column === targetLine.column && skipped.lines[0]?.y !== undefined && skipped.lines[0].y > targetLine.y;
@@ -2775,9 +2855,10 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       isSentenceContinuation(target.text, completeLeadingContinuation.text)
     );
     const joinsSameColumnContinuation = Boolean(
-      target && target.role === "paragraph" && block.role === "paragraph" &&
+      target && (target.role === "paragraph" || isAbstractBodyTitleBlock(target)) && block.role === "paragraph" &&
       (!skippedInterveningMetadata || safeContinuationMetadataGap) && targetLine && nextLine &&
-      targetLine.page === nextLine.page && targetLine.column === "single" && nextLine.column === "single" &&
+      targetLine.page === nextLine.page && targetLine.column === nextLine.column &&
+      (targetLine.column === "single" || targetLine.column === "left" || targetLine.column === "right") &&
       Math.abs(targetLine.x - nextLine.x) <= 18 && nextLine.y > targetLine.y &&
       nextLine.y - targetLine.y <= Math.max(targetLine.fontSize, nextLine.fontSize) * 3.2 &&
       Math.abs(targetLine.fontSize - nextLine.fontSize) <= 0.8 &&
@@ -2926,6 +3007,18 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       Math.abs(targetLine.fontSize - nextLine.fontSize) <= 0.8 &&
       isSentenceContinuation(target.text, block.text)
     );
+    const crossesPageBoundaryProperName = Boolean(
+      target && target.role === "paragraph" && block.role === "paragraph" &&
+      target.pageEnd + 1 === block.pageStart && target.column === block.column &&
+      target.text.trim().length >= 140 && block.text.trim().length >= 24 &&
+      !/[.!?:]$/.test(target.text.trim()) &&
+      /[a-z]\s+[A-Z][A-Za-z'’-]*$/.test(target.text.trim()) &&
+      /^[A-Z][A-Za-z'’(\-]/.test(block.text.trim()) &&
+      safeContinuationMetadataGap && targetLine && nextLine &&
+      (targetLine.y ?? 0) > (targetLine.pageHeight ?? 792) * 0.52 &&
+      (nextLine.y ?? Number.MAX_SAFE_INTEGER) < (nextLine.pageHeight ?? 792) * 0.35 &&
+      Math.abs(targetLine.fontSize - nextLine.fontSize) <= 0.8
+    );
     const canContinueAcrossColumns = Boolean(
       target && (
         ((!skippedInterveningMetadata || safeColumnMetadataGap) && targetLine && nextLine &&
@@ -2942,18 +3035,22 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         // below still requires an unfinished source sentence and a lower-case
         // next fragment, so this does not join independent body paragraphs.
         (target.column === "single" && (block.column === "left" || block.column === "right") && target.pageEnd === block.pageStart) ||
-        crossesPageBoundary || crossesPageBoundaryWithModerateTail || crossesPageBoundaryAfterFigureBand || wrapsAcrossColumnAfterFloat
+        crossesPageBoundary || crossesPageBoundaryWithModerateTail || crossesPageBoundaryAfterFigureBand || crossesPageBoundaryProperName || wrapsAcrossColumnAfterFloat
       )
     );
+    if (debugFlag === "1" && target && block.role === "paragraph" && target.role === "paragraph" &&
+        target.pageEnd + 1 === block.pageStart && /[A-Z][A-Za-z'’-]*$/.test(target.text.trim()) && /^[A-Z]/.test(block.text.trim())) {
+      console.warn(`[PDF_LAYOUT_PAGE_CANDIDATE] target=${target.text.slice(-90)} next=${block.text.slice(0, 90)} skipped=${skippedBlocks.map((item) => `${item.role}:${item.text.slice(0, 32)}`).join("|")} safeColumn=${safeColumnMetadataGap} safeBoundary=${safeBoundaryMetadataGap} safeContinuation=${safeContinuationMetadataGap} cross=${crossesPageBoundary} moderate=${crossesPageBoundaryWithModerateTail} sentence=${isSentenceContinuation(target.text, block.text)} targetLen=${target.text.length} nextLen=${block.text.length} pages=${target.pageEnd}->${block.pageStart} y=${targetLine?.y}/${targetLine?.pageHeight}->${nextLine?.y}/${nextLine?.pageHeight} font=${targetLine?.fontSize}/${nextLine?.fontSize} col=${target.column}/${block.column}`);
+    }
     if (debugFlag === "1" && target && target.column === "left" && block.column === "right") {
       console.warn(`[PDF_LAYOUT_CROSS_COLUMN] target=${target.text.slice(-70)} next=${block.text.slice(0, 70)} skipped=${skippedInterveningMetadata} wrap=${wrapsAcrossColumnsAtPageBottom} continuation=${isSentenceContinuation(target.text, block.text)} targetY=${targetLine?.y}/${targetLine?.pageHeight} nextY=${nextLine?.y}/${nextLine?.pageHeight} targetPage=${target.pageStart}-${target.pageEnd} nextPage=${block.pageStart}-${block.pageEnd} rotated=${hasRotatedNativeLine(target)}/${hasRotatedNativeLine(block)}`);
     }
     if (
-      target && target.role === "paragraph" && block.role === "paragraph" &&
+      target && (target.role === "paragraph" || isAbstractBodyTitleBlock(target)) && block.role === "paragraph" &&
       !currentIsDetachedMargin &&
         (joinsCompleteLeadingContinuation || joinsSameColumnContinuation || joinsHyphenatedContinuation || geometrySameLineContinuation || wrapsAcrossColumnsAtPageBottom || wrapsAcrossColumnsAtModerateTop || wrapsAcrossPhysicalColumns || wrapsAcrossAdjacentColumnTails ||
         (canContinueAcrossColumns && isSentenceContinuation(target.text, block.text)) ||
-        crossesPageBoundaryAfterFigureBand ||
+        crossesPageBoundaryAfterFigureBand || crossesPageBoundaryProperName ||
         wrapsAcrossColumnAfterFloat) &&
       !(hasRotatedNativeLine(target) !== hasRotatedNativeLine(block))
     ) {
@@ -2972,6 +3069,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
           result.push(block);
         }
       } else {
+        if (isAbstractBodyTitleBlock(target)) target.role = "paragraph";
         target.text = joinHyphenated(target.text, block.text).replace(/\s+/g, " ").trim();
         target.lines = [...target.lines, ...block.lines];
         target.pageEnd = block.pageEnd;
