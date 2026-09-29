@@ -49,22 +49,37 @@ export class OllamaProvider implements LLMProvider {
     }
     messages.push({ role: "user", content: prompt });
 
-    const response = await fetch(`${this.baseUrl}/api/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: this._model,
-        messages,
-        stream: false,
-        options: {
-          temperature: options?.temperature ?? 0.3,
-          num_predict: options?.maxTokens ?? 2000,
-          stop: options?.stopSequences,
+    const timeoutMs = options?.timeoutMs;
+    const controller = timeoutMs && timeoutMs > 0 ? new AbortController() : undefined;
+    const timeout = controller ? setTimeout(() => controller.abort(), timeoutMs) : undefined;
+    let response: Response;
+    try {
+      response = await fetch(`${this.baseUrl}/api/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      }),
-    });
+        body: JSON.stringify({
+          model: this._model,
+          messages,
+          stream: false,
+          ...(options?.think === undefined ? {} : { think: options.think }),
+          options: {
+            temperature: options?.temperature ?? 0.3,
+            num_predict: options?.maxTokens ?? 2000,
+            stop: options?.stopSequences,
+          },
+        }),
+        signal: controller?.signal,
+      });
+    } catch (error) {
+      if (controller?.signal.aborted) {
+        throw new Error(`Ollama request timed out after ${timeoutMs}ms`);
+      }
+      throw error;
+    } finally {
+      if (timeout) clearTimeout(timeout);
+    }
 
     if (!response.ok) {
       const error = await response.text();

@@ -8,11 +8,12 @@ scripts/bench_citation_protect.py).
 
 from __future__ import annotations
 
+import os
 import re
 
 # Bump this whenever source-fact protection rules change. It participates in
 # the server translation/cache identity so old accepts are not reused silently.
-SOURCE_PROTECTION_VERSION = "source-protect-v23"
+SOURCE_PROTECTION_VERSION = "source-protect-v25"
 QUOTED_EXAMPLE_PROTECTION_VERSION = "quoted-example-v1"
 
 # Repeated title-case technical names are factual identifiers even when they
@@ -25,6 +26,10 @@ _COMMON_TITLE_CASE_WORDS = {
     "However", "Moreover", "Nothing", "Results", "Section", "These",
     "Their", "There", "Therefore", "Those", "Through", "Using", "Where",
     "Which", "While", "Within",
+    # Generic framework names are semantic context, not opaque identifiers.
+    # Protecting repeated words such as `Theory` creates fragile placeholders
+    # that MADLAD may drop from otherwise ordinary academic prose.
+    "Theory", "Reasoned", "Action", "Planned", "Behavior", "Model",
 }
 
 # Adjacent model/identifier lists are one factual unit. Protecting each item
@@ -471,6 +476,13 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
             adjacent_digit = (start > 0 and text[start - 1].isdigit()) or (end < len(text) and text[end].isdigit())
             preceding = text[max(0, start - 18):start]
             ordinary_noun_context = bool(re.search(r"\b(?:a|an|the|this|that|public|available)\s+$", preceding, re.I))
+            # Short parenthetical acronyms such as `(TRA)` and `(TPB)` are
+            # usually readable framework labels. Placeholdering them creates
+            # a high-risk drop point while adding little protection; leave
+            # them literal unless they are repeated or attached to a number.
+            if (inside_parenthetical and acronym_counts.get(value, 0) == 1
+                    and not adjacent_digit):
+                continue
             if (acronym_counts.get(value, 0) == 1 and not inside_parenthetical
                     and not adjacent_digit and ordinary_noun_context):
                 continue
@@ -542,10 +554,29 @@ def protect_citations(
     The API name remains for compatibility with the engine and existing tests.
     """
     unprotected_values = unprotected_values or set()
-    matches = [
-        match for match in _protected_matches(text)
-        if match.group(0) not in unprotected_values
-    ]
+    expose_inline_numeric = os.getenv("MADLAD_EXPOSE_INLINE_NUMERIC_CITATIONS", "").lower() in {"1", "true", "yes"}
+    matches = []
+    for match in _protected_matches(text):
+        value = match.group(0)
+        if value in unprotected_values:
+            continue
+        # Diagnostic-only arm: keep simple bracketed numeric citations visible
+        # so the model can use their sentence context. The post-translation
+        # invariant checker still verifies that the citation remains present.
+        # Author-year groups, statistics, measurements, identifiers, and other
+        # opaque facts remain protected. The flag is opt-in and does not alter
+        # production defaults.
+        if (
+            expose_inline_numeric
+            and match.re is CITATION_RE
+            and re.fullmatch(
+                r"\[\s*\d{1,3}(?:\s*[-–—]\s*\d{1,3})?"
+                r"(?:\s*,\s*\d{1,3}(?:\s*[-–—]\s*\d{1,3})?)*\s*\]",
+                value.strip(),
+            )
+        ):
+            continue
+        matches.append(match)
     if not matches:
         return text, [], 0
 

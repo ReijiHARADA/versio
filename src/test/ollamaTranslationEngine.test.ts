@@ -71,6 +71,14 @@ describe("OllamaTranslationEngine", () => {
     expect(provider.complete).not.toHaveBeenCalled();
   });
 
+  it("does not send a lowercase continuation behind a dash to the alternate model", async () => {
+    const provider = providerReturning("断片を翻訳した。");
+    const engine = new OllamaTranslationEngine(primaryThatFails(), provider);
+    await expect(engine.translate("– with a strong interrelation that continued from the previous block.", "en", "ja"))
+      .rejects.toThrow("primary failed");
+    expect(provider.complete).not.toHaveBeenCalled();
+  });
+
   it("rejects an alternate candidate with an untranslated ordinary lexeme", async () => {
     const provider = providerReturning("先行研究は評価の precedent を確立した。");
     const engine = new OllamaTranslationEngine(primaryThatFails(), provider);
@@ -79,7 +87,7 @@ describe("OllamaTranslationEngine", () => {
       "en",
       "ja",
     )).rejects.toThrow("primary failed");
-    expect(provider.complete).toHaveBeenCalledOnce();
+    expect(provider.complete).toHaveBeenCalledTimes(2);
   });
 
   it("rejects an alternate candidate with an untranslated multi-word phrase", async () => {
@@ -111,7 +119,18 @@ describe("OllamaTranslationEngine", () => {
       "en",
       "ja",
     )).rejects.toThrow("primary failed");
-    expect(provider.complete).toHaveBeenCalledOnce();
+    expect(provider.complete).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects an alternate candidate that negates a positive equivalence result", async () => {
+    const provider = providerReturning("絶縁布に匹敵する材料なし条件は存在しない。");
+    const engine = new OllamaTranslationEngine(primaryThatFails(), provider);
+    await expect(engine.translate(
+      "The no-material condition performed comparably to the insulating fabric.",
+      "en",
+      "ja",
+    )).rejects.toThrow("primary failed");
+    expect(provider.complete).toHaveBeenCalledTimes(2);
   });
 
   it("keeps a successful primary result without contacting Ollama", async () => {

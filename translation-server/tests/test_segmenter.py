@@ -17,6 +17,13 @@ from engines.segmenter import (
 
 
 class SegmenterTests(unittest.TestCase):
+    def test_sentence_boundary_after_period_inside_closing_quote(self) -> None:
+        source = 'One group was framed as “75% lean.” Participants responded more favorably toward beef.'
+        self.assertEqual(
+            split_for_translation(source),
+            ['One group was framed as “75% lean.”', 'Participants responded more favorably toward beef.'],
+        )
+
     def test_short_panel_fragment_is_marked_before_inference(self):
         self.assertTrue(is_probable_panel_fragment("(b)"))
         self.assertFalse(is_probable_panel_fragment("(b) the characteristics of the interaction method with peers."))

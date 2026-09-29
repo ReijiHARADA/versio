@@ -367,6 +367,10 @@ class MicroBatchScheduler:
                         chunks, part, item.target_language, item_model_inputs
                     )
                 if item.target_language == "ja":
+                    translated = getattr(
+                        engine, "_restore_numeric_quote_labels", lambda _source, value: value
+                    )(item.text, translated)
+                if item.target_language == "ja":
                     translated = restore_missing_structure_references(item.text, translated)
                 if item.heading_num:
                     translated = f"{item.heading_num}. {translated.lstrip()}"
@@ -394,8 +398,18 @@ class MicroBatchScheduler:
                         translated, item.text, item.target_language
                     ) == "implausibly_short"
                 )
+                # Failed units are represented by their exact source slice in
+                # `assembled_partial`. An English-heavy aggregate is expected
+                # in that case and must not discard the successful translations.
+                partial_unit_result = bool(unit_fallback_reasons and assembled_partial)
                 if degenerate and not chunked_length_only:
-                    raise ValueError("degenerate translation output")
+                    if not partial_unit_result:
+                        raise ValueError("degenerate translation output")
+                    if self._unit_debug:
+                        print(
+                            "[TRANSLATION_UNIT_RESULT] accepted partial assembly despite aggregate quality failure",
+                            flush=True,
+                        )
                 if degenerate and chunked_length_only and self._unit_debug:
                     print("[TRANSLATION_UNIT_RESULT] accepted chunked output despite aggregate compression", flush=True)
                 failed_indices = sorted({

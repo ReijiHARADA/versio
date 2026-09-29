@@ -14,6 +14,7 @@ import {
   extractScientificInvariants,
   isExpectedNonProseParagraph,
   unsafeParagraphStructureReason,
+  diagnoseIncompleteSource,
   restoreUtf8ByteEscapes,
   extractTechnicalNameCandidates,
 } from "../services/translation/quality";
@@ -55,6 +56,7 @@ describe("acronym expansion safety", () => {
     expect(getCascadeQualityReasons(output, source)).toContain("untranslated cascade lexeme");
     expect(isCascadeQualityAcceptable("参加者は映画を見た。Whilst これは重要だった。", "Participants watched films. Whilst this was important.")).toBe(false);
     expect(isCascadeQualityAcceptable("参加者には cover story が提示された。", "Participants were shown a cover story.")).toBe(false);
+    expect(isCascadeQualityAcceptable("社会的慣習が such 新しい相互作用方法に影響する。", "Social conventions affect such novel interaction methods.")).toBe(false);
   });
 
   it("rejects malformed mixed-script acronym expansions while accepting intact ones", () => {
@@ -85,6 +87,23 @@ describe("acronym expansion safety", () => {
     const faithful = "第一群は仮説探索質問を尋ね, 第二群は制約探索質問を尋ねた。";
     expect(evaluateJaTranslation(hallucinated, source).reasons).toContain("translation introduces an unsupported numbered enumeration");
     expect(evaluateJaTranslation(faithful, source).reasons).not.toContain("translation introduces an unsupported numbered enumeration");
+  });
+});
+
+describe("source completeness diagnostics", () => {
+  it("flags a long physical continuation without changing translation routing", () => {
+    const source = "Previous studies established the relationship between the intervention and the measured outcome, and the subsequent analysis focused on the participants who were assigned to the rule and were then asked to respond to".repeat(4);
+    expect(diagnoseIncompleteSource(source).incomplete).toBe(true);
+  });
+
+  it("does not flag a complete ordinary sentence", () => {
+    const source = "The experiment measured response accuracy across three retention intervals.";
+    expect(diagnoseIncompleteSource(source).incomplete).toBe(false);
+  });
+
+  it("flags a lowercase continuation detached behind a dash", () => {
+    expect(diagnoseIncompleteSource("– with a strong interrelation that has been a long-running topic.").incomplete).toBe(true);
+    expect(diagnoseIncompleteSource("- Results were consistent across studies.").incomplete).toBe(false);
   });
 });
 
@@ -200,6 +219,13 @@ describe("isPlausibleJaTranslation", () => {
   it("rejects Chinese lexical contamination when it uses shared Han scripts", () => {
     const source = "External and internal factors affect memory.";
     const output = "外部と内部因素が記憶に影響する。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("simplified Chinese mixed into Japanese");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("rejects simplified Chinese character forms embedded in Japanese output", () => {
+    const source = "The first evaluation assessed attitudes toward placement, while the second assessed attitudes toward gesture interaction.";
+    const output = "1つ目は配置に関する态度を调查し、2つ目はジェスチャ相互作用に関する态度を评估した。";
     expect(evaluateJaTranslation(output, source).reasons).toContain("simplified Chinese mixed into Japanese");
     expect(isPlausibleJaTranslation(output, source)).toBe(false);
   });
@@ -493,6 +519,24 @@ describe("isPlausibleJaTranslation", () => {
   it("accepts fullwidth Japanese citation brackets", () => {
     const source = "Uniform attention is effective (motivating follow-up work [1]).";
     expect(isPlausibleJaTranslation("一様注意は効果的である（後続研究の動機となった［1］）。", source)).toBe(true);
+  });
+
+  it("accepts citation payloads wrapped in harmless HTML markup", () => {
+    const source = "The benchmark followed prior work26, 27 and tested 13,000 problems.";
+    const output = "ベンチマークは先行研究<sup>26</sup>、<sup>27</sup>に従い、13,000件を検証した。";
+    expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
+  it("preserves statistical comparison operators in Japanese output", () => {
+    const source = "The smaller models did not solve the task (all p > 0.05).";
+    const output = "小型モデルは課題を解けなかった（すべてp > 0.05）。";
+    expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
+  it("does not flag a retained compound tool name as untranslated prose", () => {
+    const source = "An a priori power analysis using G*Power 3.1 was conducted.";
+    const output = "G*Power 3.1を用いて事前の検出力分析を実施した。";
+    expect(isCascadeQualityAcceptable(output, source)).toBe(true);
   });
 
   it("accepts a Japanese expansion of SD when its associated value is preserved", () => {
@@ -980,6 +1024,19 @@ describe("subject classification lines", () => {
       "However, H.5.2 style interfaces are common in this field of research today and deserve a full translated paragraph.";
     expect(looksLikeSubjectClassification(prose)).toBe(false);
     expect(shouldTranslateParagraph(prose)).toBe(true);
+  });
+
+  it("accepts complete formula-definition sentences beginning with where", () => {
+    const prose =
+      "where Φ(x) is the cumulative distribution function of the standard normal distribution.";
+    expect(unsafeParagraphStructureReason(prose)).toBeNull();
+    expect(shouldTranslateParagraph(prose)).toBe(true);
+  });
+
+  it("still rejects an incomplete where continuation", () => {
+    const fragment = "where Φ(x)";
+    expect(unsafeParagraphStructureReason(fragment)).toContain("先頭");
+    expect(shouldTranslateParagraph(fragment)).toBe(false);
   });
 
   it("marks classification catalog paragraphs as skipped at structure time", () => {
@@ -1486,6 +1543,13 @@ describe("isRetryableTranslationFailure", () => {
       .not.toContain("condition relation missing");
     expect(evaluateJaTranslation("公の場で使用されるためには、より厳密な検討が必要である。", "The method requires greater scrutiny if it is to be acceptable for use in public.").reasons)
       .not.toContain("condition relation missing");
+
+    const equivalence = "The no-material condition performed comparably to the insulating fabric.";
+    expect(evaluateJaTranslation("材料なし条件は絶縁布と同程度の性能を示した。", equivalence).reasons)
+      .not.toContain("positive equivalence relation negated");
+    expect(evaluateJaTranslation("絶縁布に匹敵する材料なし条件は存在しない。", equivalence).reasons)
+      .toContain("positive equivalence relation negated");
+    expect(isCascadeQualityAcceptable("絶縁布に匹敵する材料なし条件は存在しない。", equivalence)).toBe(false);
   });
 
   it("does not reject a retained SI Appendix cross-reference as a repeated source label", () => {
@@ -1495,10 +1559,19 @@ describe("isRetryableTranslationFailure", () => {
       .not.toContain("untranslated repeated source label");
   });
 
+  it("does not treat ASCII fragments inside retained technical names as cascade residue", () => {
+    const source = "The MouseLab scenario rediscovered Take-The-Best and Weight-Additive Strategy.";
+    const output = "MouseLabシナリオはTake-The-BestとWeight-Additive Strategyを再発見した。";
+    expect(getCascadeQualityReasons(output, source)).not.toContain("untranslated cascade lexeme");
+  });
+
+
   it("detects loss of comparative likelihood", () => {
     const source = "Participants were asked if Linda was more likely to be a bank teller or an active feminist.";
     expect(evaluateJaTranslation(source, source).reasons).toContain("comparative likelihood relation missing");
     expect(evaluateJaTranslation("リンダが銀行員である可能性が高いかを尋ねた。", source).reasons).not.toContain("comparative likelihood relation missing");
+    expect(evaluateJaTranslation("高分散試験では、他の結果よりもはるかに可能性の高い結果を意味する。", source).reasons).not.toContain("comparative likelihood relation missing");
+    expect(evaluateJaTranslation("知識が豊富な参加者は、知識が浅い参加者に比べて影響を受けにくい。", "Participants who are more likely to be influenced than those with less knowledge.").reasons).not.toContain("comparative likelihood relation missing");
     expect(evaluateJaTranslation("リンダが銀行員か、あるいは活動的なフェミニストかを問うた。", source).reasons).not.toContain("comparative likelihood relation missing");
     expect(isPlausibleJaTranslation(source, source)).toBe(false);
   });
@@ -1647,6 +1720,28 @@ describe("isRetryableTranslationFailure", () => {
     const quality = evaluateJaTranslation(output, source);
     expect(quality.reasons).toContain("scientific invariants missing: RT, CT");
     expect(isCascadeQualityAcceptable(output, source)).toBe(false);
+  });
+
+  it("rejects reordered figure panel references", () => {
+    const source = "The portable device is shown in Fig. 2 (e) over the wearable device (Fig. 2 (d)).";
+    const output = "携帯デバイスを図2(d)としてウェアラブルデバイスを図2(e)に示す。";
+    const quality = evaluateJaTranslation(output, source);
+    expect(quality.reasons).toContain("figure/panel reference order changed");
+    expect(isCascadeQualityAcceptable(output, source)).toBe(false);
+  });
+
+  it("rejects detached localized figure labels when panel order changes", () => {
+    const source = "The result is shown by Fig. 2 (e) over a wearable device (Fig. 2 (d)).";
+    const output = "結果を図に示す。2 (e) ウェアラブルデバイス（図2 (d)）。";
+    expect(evaluateJaTranslation(output, source).reasons)
+      .toContain("detached figure reference");
+  });
+
+  it("accepts normally ordered localized figure panel references", () => {
+    const source = "The portable device is shown in Fig. 2 (e) over the wearable device (Fig. 2 (d)).";
+    const output = "携帯デバイスを図2(e)としてウェアラブルデバイスを図2(d)に示す。";
+    expect(evaluateJaTranslation(output, source).reasons)
+      .not.toContain("figure/panel reference order changed");
   });
 });
 

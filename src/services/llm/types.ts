@@ -88,6 +88,10 @@ export interface LLMCompletionOptions {
   maxTokens?: number;
   /** Stop sequences */
   stopSequences?: string[];
+  /** Optional request deadline used by audits and bounded UI operations. */
+  timeoutMs?: number;
+  /** Optional Ollama reasoning toggle (supported by reasoning-capable models). */
+  think?: boolean;
 }
 
 /**

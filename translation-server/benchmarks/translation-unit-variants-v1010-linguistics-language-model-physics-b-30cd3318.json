@@ -1,0 +1,128 @@
+{
+  "fixture": "linguistics-language-model-physics-b-30cd3318",
+  "model_version": "3b-mt-v6-transformers-4.57.6-semantic-v81-source-protect-v23-strict-restore-v28-quality-v34-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue",
+  "source": "Related work. Linear probing at least traces back to Hewitt and Manning [15], who examines the correlation between BERT’s hidden states and the parse tree distance metric (similar to NTdistance in our language). Subsequent studies [8, 18, 20, 30, 34, 36, 40] also explored probing techniques to suggest that BERT-like transformers can approximate CFGs from natural languages. Our approach differs not only in the multi-head probing formula that we proposed; also that we use synthetic data to demonstrate that linear probing can almost perfectly recover NT ancestors and boundaries, even for complex and ambiguous CFG strings exceeding hundreds of tokens.",
+  "rows": [
+    {
+      "condition": "whole_unprotected",
+      "protection_mode": "none",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "[15]",
+          "[8, 18, 20, 30, 34, 36, 40]",
+          "CFG"
+        ]
+      },
+      "model_input": "Related work. Linear probing at least traces back to Hewitt and Manning [15], who examines the correlation between BERT’s hidden states and the parse tree distance metric (similar to NTdistance in our language). Subsequent studies [8, 18, 20, 30, 34, 36, 40] also explored probing techniques to suggest that BERT-like transformers can approximate CFGs from natural languages. Our approach differs not only in the multi-head probing formula that we proposed; also that we use synthetic data to demonstrate that linear probing can almost perfectly recover NT ancestors and boundaries, even for complex and ambiguous CFG strings exceeding hundreds of tokens.",
+      "units": [
+        "Related work. Linear probing at least traces back to Hewitt and Manning [15], who examines the correlation between BERT’s hidden states and the parse tree distance metric (similar to NTdistance in our language). Subsequent studies [8, 18, 20, 30, 34, 36, 40] also explored probing techniques to suggest that BERT-like transformers can approximate CFGs from natural languages. Our approach differs not only in the multi-head probing formula that we proposed; also that we use synthetic data to demonstrate that linear probing can almost perfectly recover NT ancestors and boundaries, even for complex and ambiguous CFG strings exceeding hundreds of tokens."
+      ],
+      "output": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "error": "ValueError: degenerate translation output"
+    },
+    {
+      "condition": "whole_current_protection",
+      "protection_mode": "current",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "[15]",
+          "[8, 18, 20, 30, 34, 36, 40]",
+          "CFG"
+        ]
+      },
+      "model_input": "Related work. Linear probing at least traces back to Hewitt and Manning ZZCIT1ZZ, who examines the correlation between ZZCIT2ZZ’s hidden states and the parse tree distance metric (similar to NTdistance in our language). Subsequent studies ZZCIT3ZZ also explored probing techniques to suggest that ZZCIT4ZZ-like transformers can approximate CFGs from natural languages. Our approach differs not only in the multi-head probing formula that we proposed; also that we use synthetic data to demonstrate that linear probing can almost perfectly recover ZZCIT5ZZ ancestors and boundaries, even for complex and ambiguous ZZCIT6ZZ strings exceeding hundreds of tokens.",
+      "units": [
+        "Related work. Linear probing at least traces back to Hewitt and Manning [15], who examines the correlation between BERT’s hidden states and the parse tree distance metric (similar to NTdistance in our language). Subsequent studies [8, 18, 20, 30, 34, 36, 40] also explored probing techniques to suggest that BERT-like transformers can approximate CFGs from natural languages. Our approach differs not only in the multi-head probing formula that we proposed; also that we use synthetic data to demonstrate that linear probing can almost perfectly recover NT ancestors and boundaries, even for complex and ambiguous CFG strings exceeding hundreds of tokens."
+      ],
+      "output": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "error": "ValueError: protected citation placeholder dropped by model: CFG"
+    },
+    {
+      "condition": "unit_0_current_protection",
+      "protection_mode": "current",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "[15]",
+          "[8, 18, 20, 30, 34, 36, 40]",
+          "CFG"
+        ]
+      },
+      "model_input": "Related work. Linear probing at least traces back to Hewitt and Manning ZZCIT1ZZ, who examines the correlation between ZZCIT2ZZ’s hidden states and the parse tree distance metric (similar to NTdistance in our language).",
+      "units": [
+        "Related work. Linear probing at least traces back to Hewitt and Manning [15], who examines the correlation between BERT’s hidden states and the parse tree distance metric (similar to NTdistance in our language)."
+      ],
+      "output": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "error": "ValueError: protected citation placeholder dropped by model: BERT"
+    },
+    {
+      "condition": "unit_1_current_protection",
+      "protection_mode": "current",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "[15]",
+          "[8, 18, 20, 30, 34, 36, 40]",
+          "CFG"
+        ]
+      },
+      "model_input": "Subsequent studies ZZCIT1ZZ also explored probing techniques to suggest that BERT-like transformers can approximate CFGs from natural languages.",
+      "units": [
+        "Subsequent studies [8, 18, 20, 30, 34, 36, 40] also explored probing techniques to suggest that BERT-like transformers can approximate CFGs from natural languages."
+      ],
+      "output": "次の研究では,BERT型変換器が自然言語からCFGを近似できることを示すためのプロービング技術を探索した[8, 18, 20, 30, 34, 36, 40]。",
+      "coverage": {
+        "requiredTokenPresence": {
+          "[15]": false,
+          "[8, 18, 20, 30, 34, 36, 40]": true,
+          "CFG": true
+        },
+        "relationTokenPresence": []
+      },
+      "input_tokens": 37,
+      "output_tokens": 45,
+      "error": null
+    },
+    {
+      "condition": "unit_2_current_protection",
+      "protection_mode": "current",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "[15]",
+          "[8, 18, 20, 30, 34, 36, 40]",
+          "CFG"
+        ]
+      },
+      "model_input": "Our approach differs not only in the multi-head probing formula that we proposed; also that we use synthetic data to demonstrate that linear probing can almost perfectly recover ZZCIT1ZZ ancestors and boundaries, even for complex and ambiguous ZZCIT2ZZ strings exceeding hundreds of tokens.",
+      "units": [
+        "Our approach differs not only in the multi-head probing formula that we proposed; also that we use synthetic data to demonstrate that linear probing can almost perfectly recover NT ancestors and boundaries, even for complex and ambiguous CFG strings exceeding hundreds of tokens."
+      ],
+      "output": "提案した多重ヘッドプロビング公式だけでなく,複雑で曖昧な数百個のトークンを超えるCFG文字列に対しても,線形プロビングがNTの祖先と境界をほぼ完全に回復できることを示すために合成データを用いた。",
+      "coverage": {
+        "requiredTokenPresence": {
+          "[15]": false,
+          "[8, 18, 20, 30, 34, 36, 40]": false,
+          "CFG": true
+        },
+        "relationTokenPresence": []
+      },
+      "input_tokens": 77,
+      "output_tokens": 93,
+      "error": null
+    }
+  ]
+}

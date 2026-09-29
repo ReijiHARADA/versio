@@ -1,0 +1,288 @@
+{
+  "fixture": "cognitive-psychology-gpt3-b-9c57b65a",
+  "model_version": "3b-mt-v6-transformers-4.57.6-semantic-v81-source-protect-v23-strict-restore-v28-quality-v34-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue",
+  "source": "In a second test, we asked GPT-3 to intervene in a scenario by removing the correct object to prevent an effect after having read about three different objects, one causing and two not causing the effect (in this case, an allergic reaction; Intervene, see SI Appendix). GPT-3 identified the correct object to be removed. In the final test, we probed GPT-3’s ability of mature causal reasoning24 (Mature, see SI Appendix). In this task, GPT-3 was told that there were four pills: A, B, C and D. While A and B individually could kill someone, C and D could not.",
+  "rows": [
+    {
+      "condition": "whole_unprotected",
+      "protection_mode": "none",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "GPT-3",
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "mustKeepRelations": [
+          [
+            "A",
+            "B"
+          ],
+          [
+            "C",
+            "D"
+          ]
+        ]
+      },
+      "model_input": "In a second test, we asked GPT-3 to intervene in a scenario by removing the correct object to prevent an effect after having read about three different objects, one causing and two not causing the effect (in this case, an allergic reaction; Intervene, see SI Appendix). GPT-3 identified the correct object to be removed. In the final test, we probed GPT-3’s ability of mature causal reasoning24 (Mature, see SI Appendix). In this task, GPT-3 was told that there were four pills: A, B, C and D. While A and B individually could kill someone, C and D could not.",
+      "units": [
+        "In a second test, we asked GPT-3 to intervene in a scenario by removing the correct object to prevent an effect after having read about three different objects, one causing and two not causing the effect (in this case, an allergic reaction; Intervene, see SI Appendix). GPT-3 identified the correct object to be removed. In the final test, we probed GPT-3’s ability of mature causal reasoning24 (Mature, see SI Appendix). In this task, GPT-3 was told that there were four pills: A, B, C and D. While A and B individually could kill someone, C and D could not."
+      ],
+      "output": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "error": "ValueError: degenerate translation output"
+    },
+    {
+      "condition": "whole_minimal_protection",
+      "protection_mode": "minimal",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "GPT-3",
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "mustKeepRelations": [
+          [
+            "A",
+            "B"
+          ],
+          [
+            "C",
+            "D"
+          ]
+        ]
+      },
+      "model_input": "In a second test, we asked GPT-3 to intervene in a scenario by removing the correct object to prevent an effect after having read about three different objects, one causing and two not causing the effect (in this case, an allergic reaction; Intervene, see SI Appendix). GPT-3 identified the correct object to be removed. In the final test, we probed GPT-3’s ability of mature causal reasoningZZCIT1ZZ (Mature, see SI Appendix). In this task, GPT-3 was told that there were four pills: A, B, C and D. While A and B individually could kill someone, C and D could not.",
+      "units": [
+        "In a second test, we asked GPT-3 to intervene in a scenario by removing the correct object to prevent an effect after having read about three different objects, one causing and two not causing the effect (in this case, an allergic reaction; Intervene, see SI Appendix). GPT-3 identified the correct object to be removed. In the final test, we probed GPT-3’s ability of mature causal reasoning24 (Mature, see SI Appendix). In this task, GPT-3 was told that there were four pills: A, B, C and D. While A and B individually could kill someone, C and D could not."
+      ],
+      "output": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "error": "ValueError: protected citation placeholder dropped by model: 24"
+    },
+    {
+      "condition": "whole_current_protection",
+      "protection_mode": "current",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "GPT-3",
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "mustKeepRelations": [
+          [
+            "A",
+            "B"
+          ],
+          [
+            "C",
+            "D"
+          ]
+        ]
+      },
+      "model_input": "In a second test, we asked GPT-3 to intervene in a scenario by removing the correct object to prevent an effect after having read about three different objects, one causing and two not causing the effect (in this case, an allergic reaction; Intervene, see ZZCIT1ZZ). GPT-3 identified the correct object to be removed. In the final test, we probed GPT-3’s ability of mature causal reasoningZZCIT2ZZ (Mature, see ZZCIT3ZZ). In this task, GPT-3 was told that there were four pills: A, B, C and D. While A and B individually could kill someone, C and D could not.",
+      "units": [
+        "In a second test, we asked GPT-3 to intervene in a scenario by removing the correct object to prevent an effect after having read about three different objects, one causing and two not causing the effect (in this case, an allergic reaction; Intervene, see SI Appendix). GPT-3 identified the correct object to be removed. In the final test, we probed GPT-3’s ability of mature causal reasoning24 (Mature, see SI Appendix). In this task, GPT-3 was told that there were four pills: A, B, C and D. While A and B individually could kill someone, C and D could not."
+      ],
+      "output": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "error": "ValueError: protected citation placeholder dropped by model: SI Appendix || SI Appendix"
+    },
+    {
+      "condition": "unit_0_current_protection",
+      "protection_mode": "current",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "GPT-3",
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "mustKeepRelations": [
+          [
+            "A",
+            "B"
+          ],
+          [
+            "C",
+            "D"
+          ]
+        ]
+      },
+      "model_input": "In a second test, we asked GPT-3 to intervene in a scenario by removing the correct object to prevent an effect after having read about three different objects, one causing and two not causing the effect (in this case, an allergic reaction; Intervene, see ZZCIT1ZZ).",
+      "units": [
+        "In a second test, we asked GPT-3 to intervene in a scenario by removing the correct object to prevent an effect after having read about three different objects, one causing and two not causing the effect (in this case, an allergic reaction; Intervene, see SI Appendix)."
+      ],
+      "output": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "error": "ValueError: protected citation placeholder dropped by model: SI Appendix"
+    },
+    {
+      "condition": "unit_1_current_protection",
+      "protection_mode": "current",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "GPT-3",
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "mustKeepRelations": [
+          [
+            "A",
+            "B"
+          ],
+          [
+            "C",
+            "D"
+          ]
+        ]
+      },
+      "model_input": "GPT-3 identified the correct object to be removed.",
+      "units": [
+        "GPT-3 identified the correct object to be removed."
+      ],
+      "output": "GPT‐3は除去すべき正しい対象を識別した。",
+      "coverage": {
+        "requiredTokenPresence": {
+          "GPT-3": false,
+          "A": false,
+          "B": false,
+          "C": false,
+          "D": false
+        },
+        "relationTokenPresence": [
+          {
+            "tokens": [
+              "A",
+              "B"
+            ],
+            "allPresent": false
+          },
+          {
+            "tokens": [
+              "C",
+              "D"
+            ],
+            "allPresent": false
+          }
+        ]
+      },
+      "input_tokens": 17,
+      "output_tokens": 23,
+      "error": null
+    },
+    {
+      "condition": "unit_2_current_protection",
+      "protection_mode": "current",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "GPT-3",
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "mustKeepRelations": [
+          [
+            "A",
+            "B"
+          ],
+          [
+            "C",
+            "D"
+          ]
+        ]
+      },
+      "model_input": "In the final test, we probed GPT-3’s ability of mature causal reasoningZZCIT1ZZ (Mature, see ZZCIT2ZZ).",
+      "units": [
+        "In the final test, we probed GPT-3’s ability of mature causal reasoning24 (Mature, see SI Appendix)."
+      ],
+      "output": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "error": "ValueError: protected citation placeholder dropped by model: SI Appendix"
+    },
+    {
+      "condition": "unit_3_current_protection",
+      "protection_mode": "current",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "GPT-3",
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "mustKeepRelations": [
+          [
+            "A",
+            "B"
+          ],
+          [
+            "C",
+            "D"
+          ]
+        ]
+      },
+      "model_input": "In this task, GPT-3 was told that there were four pills: A, B, C and D. While A and B individually could kill someone, C and D could not.",
+      "units": [
+        "In this task, GPT-3 was told that there were four pills: A, B, C and D. While A and B individually could kill someone, C and D could not."
+      ],
+      "output": "GPT‐3は,A,B,C,Dの4錠剤を与えられた。",
+      "coverage": {
+        "requiredTokenPresence": {
+          "GPT-3": false,
+          "A": true,
+          "B": true,
+          "C": true,
+          "D": true
+        },
+        "relationTokenPresence": [
+          {
+            "tokens": [
+              "A",
+              "B"
+            ],
+            "allPresent": true
+          },
+          {
+            "tokens": [
+              "C",
+              "D"
+            ],
+            "allPresent": true
+          }
+        ]
+      },
+      "input_tokens": 44,
+      "output_tokens": 27,
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "version": "protection-ab-v1",
+  "sourceReport": "/tmp/protection-citation-drop.json",
+  "model": "google/madlad400-3b-mt",
+  "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v82-source-protect-v25-strict-restore-v28-quality-v34-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue",
+  "generation": {
+    "numBeams": 1,
+    "doSample": false
+  },
+  "offset": 0,
+  "segmentUnits": false,
+  "productionRescue": false,
+  "exposeRepeatedAcronyms": false,
+  "exposeAllSpans": false,
+  "exposeShortContextSpans": false,
+  "sampleCount": 1,
+  "records": [
+    {
+      "paperId": "dont-mind-me",
+      "key": "dont-mind-me:b-667e5341#unit-0",
+      "source": "Rico et al. explored the social acceptability of novel full motion gesture types to control a mobile phone [23] and the social acceptability of gesture-based interactions in specific contexts (public, home, workplace, etc.) [24].",
+      "sourceShape": {
+        "charCount": 229,
+        "wordCount": 34,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Rico et al. explored the social acceptability of novel full motion gesture types to control a mobile phone [23] and the social acceptability of gesture-based interactions in specific contexts (public, home, workplace, etc.) [24].",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "latencyMs": 3573.0,
+          "error": "ValueError: visible numeric citation dropped: [23], [24]"
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "Rico et al. explored the social acceptability of novel full motion gesture types to control a mobile phone [23] and the social acceptability of gesture-based interactions in specific contexts (public, home, workplace, etc.) [24].",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "latencyMs": 3145.6,
+          "error": "ValueError: visible numeric citation dropped: [23], [24]"
+        },
+        {
+          "condition": "current",
+          "modelInput": "Rico et al. explored the social acceptability of novel full motion gesture types to control a mobile phone [23] and the social acceptability of gesture-based interactions in specific contexts (public, home, workplace, etc.) [24].",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "latencyMs": 3109.6,
+          "error": "ValueError: visible numeric citation dropped: [23], [24]"
+        }
+      ]
+    }
+  ]
+}

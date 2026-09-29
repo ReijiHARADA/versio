@@ -2,17 +2,58 @@ from __future__ import annotations
 
 import unittest
 import re
+from unittest.mock import patch
 
 from engines.madlad_mps import (
     MADLADEngine,
     MEASUREMENT_PATTERN,
     allows_unprotected_identifier_retry,
+    restore_unambiguous_terminal_numeric_citations,
     restore_missing_structure_references,
     unprotected_identifier_retry_values,
 )
 
 
 class MadladUnitQualityTests(unittest.TestCase):
+    def test_terminal_visible_numeric_citation_is_repaired_only_at_sentence_end(self) -> None:
+        source = "The studies reduced risk [13]."
+        output = "研究はリスクを低減した。"
+        with patch.dict("os.environ", {"MADLAD_EXPOSE_INLINE_NUMERIC_CITATIONS": "1"}):
+            self.assertEqual(
+                restore_unambiguous_terminal_numeric_citations(source, output),
+                "研究はリスクを低減した[13]。",
+            )
+
+    def test_mid_clause_visible_numeric_citation_is_not_moved(self) -> None:
+        source = "The studies reduced risk [13] and improved safety."
+        output = "研究はリスクを低減し、安全性を改善した。"
+        with patch.dict("os.environ", {"MADLAD_EXPOSE_INLINE_NUMERIC_CITATIONS": "1"}):
+            self.assertEqual(
+                restore_unambiguous_terminal_numeric_citations(source, output),
+                output,
+            )
+
+    def test_numeric_quote_labels_are_restored_from_source(self) -> None:
+        source = 'One group was framed as “75% lean” and the other as “25% fat.”'
+        output = '一方は「75%希薄」と、もう一方は「25%脂肪」とされた。'
+        self.assertEqual(
+            MADLADEngine._restore_numeric_quote_labels(source, output),
+            '一方は「75% lean」と、もう一方は「25% fat」とされた。',
+        )
+
+    def test_repeated_numeric_condition_with_inconsistent_labels_is_rejected(self) -> None:
+        source = 'It was framed as “75% lean” and participants preferred it when described as 75% lean.'
+        output = '「75% lean」と示され, 75%希薄と記述された。'
+        self.assertTrue(MADLADEngine._has_inconsistent_repeated_measurement_labels(source, output))
+
+    def test_repeated_numeric_condition_label_is_repaired_consistently(self) -> None:
+        source = 'It was framed as “75% lean” and preferred when described as 75% lean.'
+        output = '「75%希薄」と示され, 75%希薄と記述された。'
+        self.assertEqual(
+            MADLADEngine._restore_numeric_quote_labels(source, output),
+            '「75% lean」と示され, 75% leanと記述された。',
+        )
+
     def test_epistemic_retry_only_triggers_for_missing_uncertainty_marker(self) -> None:
         source = "Smaller effects might not have been detected."
         self.assertTrue(MADLADEngine._epistemic_marker_missing(source, "小さな効果は検出されなかった。"))
@@ -51,6 +92,9 @@ class MadladUnitQualityTests(unittest.TestCase):
         self.assertTrue(MADLADEngine._relation_risk_source("Gist memory was forgotten more slowly than detailed memory."))
         self.assertTrue(MADLADEngine._relation_risk_source("Fitbit measures valid heart rates only 54.88% of the time."))
         self.assertTrue(MADLADEngine._relation_risk_source("The effect was observed solely in adults."))
+        self.assertTrue(MADLADEngine._relation_risk_source("Despite the improvement, the effect was not significant."))
+        self.assertTrue(MADLADEngine._relation_risk_source("Both groups improved, and therefore the intervention was retained."))
+        self.assertTrue(MADLADEngine._relation_risk_source("The model includes age, including participants with prior training."))
         self.assertFalse(MADLADEngine._relation_risk_source("Participants watched film clips and rated interest."))
 
     def test_exclusivity_marker_loss_is_detected(self) -> None:
@@ -460,6 +504,15 @@ class MadladUnitQualityTests(unittest.TestCase):
         source = "Participants watched film clips and rated interest in them."
         output = "参加者は映画クリップを見て、興味を評価した。"
         self.assertFalse(MADLADEngine._claim_compression_risk(source, output))
+
+    def test_collapsed_measurement_labels_catches_attribute_inversion(self) -> None:
+        source = 'One group saw "75% lean" and another saw "25% fat".'
+        inverted = '一方は75%脂肪分,もう一方は25%脂肪分と説明された。'
+        correct = '一方は75%低脂肪,もう一方は25%脂肪分と説明された。'
+        self.assertTrue(MADLADEngine._has_collapsed_measurement_labels(source, inverted))
+        self.assertFalse(MADLADEngine._has_collapsed_measurement_labels(source, correct))
+        self.assertTrue(MADLADEngine._is_degenerate(inverted, source, "ja"))
+        self.assertFalse(MADLADEngine._is_degenerate(correct, source, "ja"))
 
     def test_rejects_mutated_identifier_glue_only_for_source_compounds(self) -> None:
         source = "The trial compared TRT and RT+CT across the same outcomes."

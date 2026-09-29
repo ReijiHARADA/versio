@@ -30,6 +30,7 @@ import {
   looksLikeBibliographyEntry,
   shouldTranslateParagraph,
   unsafeParagraphStructureReason,
+  diagnoseIncompleteSource,
 } from "../src/services/translation/quality.ts";
 import { normalizeSourceGroundedTerminology } from "../src/services/llm/glossaryService.ts";
 import { referenceSectionIds, shouldTranslateBlock } from "../src/services/import/policy.ts";
@@ -114,6 +115,7 @@ type AuditRow = {
   wouldSubmitToModel: boolean;
   wouldAcceptTranslation?: boolean;
   sourceIntegrity: "clean" | "mixed-chrome" | "structural-warning";
+  sourceCompleteness: { incomplete: boolean; reason?: string };
   extractionProvenance: { pageStart: number; pageEnd: number; bboxCount: number; extractionConfidence: number | null };
 };
 
@@ -159,6 +161,7 @@ const maxRequestAttempts = Number(process.env.MADLAD_BENCH_MAX_ATTEMPTS ?? 3);
 // production server's micro-batch behavior. Set MADLAD_BENCH_CONCURRENCY=1
 // for fully serial diagnostics.
 const requestConcurrency = Math.max(1, Number(process.env.MADLAD_BENCH_CONCURRENCY ?? 2));
+const dryRun = process.argv.includes("--dry-run");
 
 function compact(text: string): string {
   return text.replace(/\s+/g, " ").trim();
@@ -173,6 +176,13 @@ function structuralWarnings(block: PaperBlock): string[] {
   }
   if (block.pageStart !== block.pageEnd) warnings.push("cross-page logical block");
   if (/^(?:fig(?:ure)?\.?|table)\s+\d+/i.test(text)) warnings.push("caption-shaped text");
+  // A short label followed by a dash and a sentence is often a section/card
+  // label that was merged into the body block by PDF extraction (for example
+  // `Context - ...`). Keep this as diagnostic evidence rather than silently
+  // treating the whole block as clean prose.
+  if (/^[A-Za-z][A-Za-z ]{1,24}\s*[-–—:]\s+[A-Z]/.test(text) && !/\b(?:Figure|Table)\s+\d+/i.test(text.slice(0, 40))) {
+    warnings.push("label-prefix");
+  }
   // Short numbered or title-like section labels are structural units, even
   // when a PDF resolver exposes them as paragraphs. Keep them out of the
   // ordinary-body model denominator; this is audit attribution only.
@@ -218,6 +228,7 @@ function sourceCategory(block: PaperBlock): SourceCategory {
   }
   if (chromeSignals > 0 && /[A-Za-z]{3,}\s+[A-Za-z]{3,}/.test(text)) return "damaged-extraction";
   if (warnings.includes("caption-shaped text")) return "caption";
+  if (warnings.includes("label-prefix")) return "damaged-extraction";
   if (warnings.includes("section-heading-shaped text") || warnings.includes("section-label-prefix")) return "section-heading";
   // A participant-count token such as `N = 142` can appear in an otherwise
   // ordinary abstract. Do not remove the whole unit from the ordinary-prose
@@ -272,7 +283,16 @@ function fallbackReason(source: string, result: ServerTranslation | undefined, q
 function sampleBlocks(blocks: PaperBlock[], max: number): PaperBlock[] {
   const eligible = blocks.filter((block) => {
     const text = compact(block.original ?? "");
-    return block.type === "paragraph" && text.length >= 90 && text.length <= 3_200;
+    // Untagged PDFs often expose the references section as ordinary paragraphs.
+    // Those citation lists are not ordinary-body translation units and can be
+    // several thousand characters long, which both distorts the audit and can
+    // monopolize a single-device generation request. Keep them out even when
+    // section resolution failed to identify the references heading.
+    const referenceLike =
+      /^\s*\[\d{1,3}\]/.test(text) &&
+      ((text.match(/\b(?:19|20)\d{2}\b/g)?.length ?? 0) >= 2 ||
+        (text.match(/\b(?:doi|https?:\/\/|et al\.)\b/gi)?.length ?? 0) >= 2);
+    return block.type === "paragraph" && !referenceLike && text.length >= 90 && text.length <= 3_200;
   });
   if (eligible.length <= max) return eligible;
   const result: PaperBlock[] = [];
@@ -482,7 +502,7 @@ async function main() {
   const benchmarkRunId = new Date().toISOString().replace(/[:.]/g, "-");
   const readyDeadline = Date.now() + Number(process.env.MADLAD_READY_TIMEOUT_MS ?? 900_000);
   let health: Response | undefined;
-  while (Date.now() < readyDeadline) {
+  while (!dryRun && Date.now() < readyDeadline) {
     try {
       const response = await fetch(`${endpoint}/health`);
       health = response;
@@ -496,13 +516,16 @@ async function main() {
     }
     await new Promise((resolve) => setTimeout(resolve, 5_000));
   }
-  if (!health?.ok) throw new Error(`MADLAD health check failed at ${endpoint}`);
-  const finalHealth = await (await fetch(`${endpoint}/health`)).json() as { model_loaded?: boolean; phase?: string };
-  if (finalHealth.model_loaded !== true && finalHealth.phase !== "ready") {
-    throw new Error(`MADLAD model did not become ready before timeout (phase=${finalHealth.phase ?? "unknown"})`);
+  if (!dryRun) {
+    if (!health?.ok) throw new Error(`MADLAD health check failed at ${endpoint}`);
+    const finalHealth = await (await fetch(`${endpoint}/health`)).json() as { model_loaded?: boolean; phase?: string };
+    if (finalHealth.model_loaded !== true && finalHealth.phase !== "ready") {
+      throw new Error(`MADLAD model did not become ready before timeout (phase=${finalHealth.phase ?? "unknown"})`);
+    }
   }
   let serverStatus: BenchmarkServerStatus | null = null;
   try {
+    if (dryRun) throw new Error("dry-run: server metadata skipped");
     const response = await fetch(`${endpoint}/status`);
     if (response.ok) serverStatus = await response.json() as BenchmarkServerStatus;
   } catch {
@@ -601,7 +624,7 @@ async function main() {
           block,
         }))
         .filter(({ block, source }) => shouldTranslateBlock(block, refSectionIds) && shouldTranslateParagraph(source) && !block.metadata.translationInputWarning);
-      const translated = await translate(modelInputs.map((entry) => entry.source));
+      const translated = dryRun ? [] : await translate(modelInputs.map((entry) => entry.source));
       const resultBySampleIndex = new Map(
         modelInputs.map((entry, index) => [entry.index, translated[index]])
       );
@@ -627,6 +650,7 @@ async function main() {
         const readerVisibleFallback = !wouldAcceptTranslation;
         const partialSourceFallback = detectPartialSourceFallback(source, normalizedTranslation);
         const category = sourceCategory(block);
+        const sourceCompleteness = diagnoseIncompleteSource(source);
         return {
           key: `${paper.id}:${block.id}`,
           benchmarkRunId,
@@ -664,6 +688,7 @@ async function main() {
           structuralWarnings: structuralWarnings(block),
           sourceCategory: category,
           sourceIntegrity: category === "damaged-extraction" ? "mixed-chrome" : structuralWarnings(block).length ? "structural-warning" : "clean",
+          sourceCompleteness,
           extractionProvenance: { pageStart: block.pageStart, pageEnd: block.pageEnd, bboxCount: block.boundingBoxes.length, extractionConfidence: block.extractionConfidence },
           fallbackStage: fallbackStage(wouldSubmitToModel, readerVisibleFallback),
           fallbackReason: structurallySkipped
