@@ -234,6 +234,26 @@ describe("PDF reading order regression", () => {
     expect(paragraphs).toHaveLength(1);
   });
 
+  it("stitches an abstract continuation past an author metadata line", () => {
+    const pages: ExtractedPage[] = [
+      {
+        pageNumber: 1, width: 612, height: 792,
+        textItems: [
+          { text: `${"The Internet offers possibilities for scientific disciplines. ".repeat(12)} registers can be`, x: 54, y: 750, width: 500, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+          { text: "& Veronika Laippala", x: 54, y: 770, width: 300, height: 8, fontSize: 8, fontName: "Author", page: 1 },
+        ],
+      },
+      {
+        pageNumber: 2, width: 612, height: 792,
+        textItems: [{ text: "placed in a continuum based on the discriminative importance of lexis and grammar.", x: 54, y: 110, width: 500, height: 10, fontSize: 8, fontName: "Body", page: 2 }],
+      },
+    ];
+    const { blocks } = reconstructDocument(pages);
+    const paragraph = blocks.find((block) => block.text.includes("registers can be placed in a continuum"));
+    expect(paragraph?.pageStart).toBe(1);
+    expect(paragraph?.pageEnd).toBe(2);
+  });
+
   it("stitches an author-year citation split at a page boundary", () => {
     const pages: ExtractedPage[] = [
       {

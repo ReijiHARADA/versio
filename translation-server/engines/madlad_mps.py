@@ -34,6 +34,42 @@ MEASUREMENT_PATTERN = (
     r"(?:[kMGTmunpfμu]?\s*(?:mAh|MHz|GHz|kHz|Hz|mm|cm|km|ms|kg|mg|pF|nF|uF|μF|mF|uW|mW|kW|W|mV|kV|V|mA|kA|A|dB|Ω|kΩ|MΩ|m|s|%))\s*"
 )
 
+INLINE_NUMERIC_CITATION_PATTERN = re.compile(
+    r"\[\s*\d{1,3}(?:\s*[-–—]\s*\d{1,3})?"
+    r"(?:\s*,\s*\d{1,3}(?:\s*[-–—]\s*\d{1,3})?)*\s*\]"
+)
+
+
+def missing_visible_numeric_citations(source: str, translated: str) -> list[str]:
+    """Return visible bracket citations lost during an opt-in diagnostic decode."""
+    if os.getenv("MADLAD_EXPOSE_INLINE_NUMERIC_CITATIONS", "").lower() not in {"1", "true", "yes"}:
+        return []
+    return [value for value in INLINE_NUMERIC_CITATION_PATTERN.findall(source) if value not in translated]
+
+
+def restore_unambiguous_terminal_numeric_citations(source: str, translated: str) -> str:
+    """Restore exposed citations only when their source position is sentence-final.
+
+    This is deliberately conservative: a citation in the middle of a
+    coordinated clause is not moved, because its attachment cannot be inferred
+    from text alone. A citation immediately followed only by terminal
+    punctuation has one safe destination in the translated sentence.
+    """
+    if os.getenv("MADLAD_EXPOSE_INLINE_NUMERIC_CITATIONS", "").lower() not in {"1", "true", "yes"}:
+        return translated
+    terminal_values: list[str] = []
+    for match in INLINE_NUMERIC_CITATION_PATTERN.finditer(source):
+        if re.fullmatch(r"\s*[.!?。！？]*\s*", source[match.end():]):
+            if match.group(0) not in translated:
+                terminal_values.append(match.group(0))
+    if not terminal_values:
+        return translated
+    terminal = re.search(r"([.!?。！？])\s*$", translated)
+    insertion = "".join(terminal_values)
+    if terminal:
+        return translated[:terminal.start()] + insertion + translated[terminal.start():]
+    return translated.rstrip() + insertion
+
 
 def _allowed_unprotected_retry_value(item: str) -> bool:
     """Allow fallback only for plain, non-camelcase identifier placeholders.
@@ -529,6 +565,7 @@ class MADLADEngine(TranslationEngine):
                 )
                 if target_language == "ja":
                     translated_text = restore_missing_structure_references(text, translated_text)
+                    translated_text = self._restore_numeric_quote_labels(text, translated_text)
                 if heading_num:
                     translated_text = f"{heading_num}. {translated_text.lstrip()}"
 
@@ -547,6 +584,8 @@ class MADLADEngine(TranslationEngine):
                             beam_in.append(in_tok)
                             beam_out.append(out_tok)
                         beam_text = self._join_translated_chunks(chunks, beam_pieces, target_language, model_inputs)
+                        if target_language == "ja":
+                            beam_text = self._restore_numeric_quote_labels(text, beam_text)
                         if not self._is_degenerate(beam_text, text, target_language):
                             translated_text = beam_text
                             input_tokens = sum(beam_in)
@@ -1020,6 +1059,28 @@ class MADLADEngine(TranslationEngine):
                 raise original_error
             if protection_failure:
                 missing = [value.strip() for value in message.partition(":")[2].split(" || ") if value.strip()]
+                if os.getenv("TRANSLATION_UNIT_DEBUG") == "1":
+                    # Diagnostic-only evidence for restore failures.  Keep this
+                    # before any rescue attempt so the original model input,
+                    # protected spans and failure reason remain observable.
+                    try:
+                        debug_protected, debug_values, debug_nonce = protect_citations(
+                            self._detach_enumeration_prefix(model_input or text)[1],
+                            unprotected_values=set(),
+                        )
+                        print(
+                            "[TRANSLATION_PROTECTION_FAILURE] "
+                            f"reason={message!r} source={text!r} model_input={(model_input or text)!r} "
+                            f"protected={debug_protected!r} values={debug_values!r} "
+                            f"nonce={debug_nonce} missing={missing!r}",
+                            flush=True,
+                        )
+                    except Exception as debug_error:
+                        print(
+                            f"[TRANSLATION_PROTECTION_FAILURE] reason={message!r} "
+                            f"diagnostic_error={debug_error!r}",
+                            flush=True,
+                        )
                 # Malformed placeholders do not carry a trustworthy index.
                 # Recompute the exact protected spans from the source and
                 # expose those spans only for this rescue attempt; the normal
@@ -1216,12 +1277,21 @@ class MADLADEngine(TranslationEngine):
 
     @staticmethod
     def _relation_risk_source(source: str) -> bool:
-        """Return true only for explicit choice/comparison constructions."""
+        """Return true for relations whose omission changes an academic claim.
+
+        This is a retry trigger only.  The candidate score still decides
+        whether a beam result is retained, so ordinary prose is not rejected
+        or rewritten merely because it contains a conjunction.
+        """
         return bool(re.search(
             r"\b(?:either\b[^.!?]{0,180}\bor\b|whether\b[^.!?]{0,180}\bor\b|"
             r"more\s+(?:likely|slowly|quickly)\b|less\s+(?:likely|slowly|quickly)\b|"
             r"\bonly\b|\bsolely\b|"
-            r"rather\s+than|greater\s+than|smaller\s+than|\bunless\b|\bif\b|\bwhen\b)",
+            r"rather\s+than|greater\s+than|smaller\s+than|\bunless\b|\bif\b|\bwhen\b|"
+            r"\bhowever\b|\balthough\b|\bthough\b|\bdespite\b|\bwhereas\b|"
+            r"\btherefore\b|\bthus\b|\bconsequently\b|\bbecause\b|\bsince\b|"
+            r"\bincluding\b|\bsuch\s+as\b|\bboth\b[^.!?]{0,120}\band\b|"
+            r"\bnot\s+only\b[^.!?]{0,120}\bbut\b)",
             source,
             re.I,
         ))
@@ -1404,6 +1474,13 @@ class MADLADEngine(TranslationEngine):
                 recoverable_terminal_indices=recoverable_terminal_indices,
             )
             piece = restore_missing_bare_references(chunk, piece)
+            piece = self._restore_numeric_quote_labels(chunk, piece)
+            piece = restore_unambiguous_terminal_numeric_citations(chunk, piece)
+            missing_visible = missing_visible_numeric_citations(chunk, piece)
+            if missing_visible:
+                raise ValueError(
+                    "visible numeric citation dropped: " + ", ".join(missing_visible)
+                )
             if enumeration_prefixes[i]:
                 piece = f"{enumeration_prefixes[i]} {piece}".strip()
             if self._is_degenerate(piece, chunk, target_language):
@@ -1487,6 +1564,13 @@ class MADLADEngine(TranslationEngine):
             recoverable_terminal_indices=recoverable_terminal_indices,
         )
         translated_text = restore_missing_bare_references(text, translated_text)
+        translated_text = self._restore_numeric_quote_labels(text, translated_text)
+        translated_text = restore_unambiguous_terminal_numeric_citations(translate_body, translated_text)
+        missing_visible = missing_visible_numeric_citations(translate_body, translated_text)
+        if missing_visible:
+            raise ValueError(
+                "visible numeric citation dropped: " + ", ".join(missing_visible)
+            )
         if os.getenv("TRANSLATION_UNIT_DEBUG") == "1":
             print(f"[TRANSLATION_RESTORED] text={translated_text!r}", flush=True)
         if enumeration_prefix:
@@ -1722,6 +1806,105 @@ class MADLADEngine(TranslationEngine):
         return None
 
     @staticmethod
+    def _has_collapsed_measurement_labels(source: str, output: str) -> bool:
+        """Detect distinct source labels collapsing onto one translated label.
+
+        Academic prose often contrasts measurements such as ``75% lean`` and
+        ``25% fat``.  Numeric invariant checks alone cannot catch a polarity
+        inversion when both numbers survive.  Compare only paired numeric
+        labels in the source and the short output windows immediately after
+        the same numbers; this is structural and does not blacklist words.
+        """
+        source_items = list(re.finditer(r"(?P<num>\d+(?:\.\d+)?%)\s+(?P<label>[A-Za-z][A-Za-z-]*)", source))
+        if len(source_items) < 2:
+            return False
+        for left_index, left in enumerate(source_items):
+            for right in source_items[left_index + 1:]:
+                if right.start() - left.end() > 240 or left.group("label").lower() == right.group("label").lower():
+                    continue
+                output_labels: list[str] = []
+                for item in (left, right):
+                    number = item.group("num")
+                    match = re.search(
+                        re.escape(number) +
+                        r"\s*([^。！？.!?;,、；:]{1,24}?)(?=と|で|に|を|は|が|[,、。！？.!?]|$)",
+                        output,
+                    )
+                    if not match:
+                        output_labels = []
+                        break
+                    label = re.sub(r"[\s\d%]+", "", match.group(1)).strip("()[]")
+                    output_labels.append(label)
+                if len(output_labels) == 2 and output_labels[0] and output_labels[0] == output_labels[1]:
+                    return True
+        return False
+
+    @staticmethod
+    def _has_inconsistent_repeated_measurement_labels(source: str, output: str) -> bool:
+        """Reject drift when one numeric condition receives two labels.
+
+        A repeated source condition such as `75% lean ... 75% lean` should
+        retain one stable translated label. Different output labels indicate
+        polarity/scope drift even when every number survives.
+        """
+        source_items = re.findall(r"(\d+(?:\.\d+)?%)\s+[A-Za-z][A-Za-z-]*", source)
+        counts = {value: source_items.count(value) for value in set(source_items)}
+        repeated = {value for value, count in counts.items() if count >= 2}
+        if not repeated:
+            return False
+        for number in repeated:
+            labels = re.findall(
+                re.escape(number) + r"\s*(?:[\"'“”「」])?"
+                r"([A-Za-z][A-Za-z-]*|[\u3040-\u30ff\u4e00-\u9fff]{1,8})",
+                output,
+            )
+            if len(labels) >= 2 and len({label.lower() for label in labels[:2]}) > 1:
+                return True
+        return False
+
+    @staticmethod
+    def _restore_numeric_quote_labels(source: str, output: str) -> str:
+        """Keep paired numeric experimental labels exact when decoding drifts.
+
+        Quoted stimuli such as ``"75% lean"`` / ``"25% fat"`` are data
+        conditions, not ordinary prose. When a decoder preserves the numbers
+        but mistranslates the labels, retaining the source labels is safer and
+        still readable in an academic translation. This is structural (quoted
+        numeric spans), not a vocabulary blacklist.
+        """
+        spans = re.findall(r"[\u201c\"'](\d+(?:\.\d+)?%\s+[A-Za-z][A-Za-z-]*)(?:[.!?])?[\u201d\"']", source)
+        source_items = re.findall(r"(\d+(?:\.\d+)?%)\s+([A-Za-z][A-Za-z-]*)", source)
+        if len(spans) < 1 and len(source_items) < 2:
+            return output
+        repaired = output
+        for span in spans:
+            number = re.match(r"\d+(?:\.\d+)?%", span)
+            if not number:
+                continue
+            quoted = re.compile(
+                r"([\u201c\"'「]\s*" + re.escape(number.group(0))
+                + r"\s*)([^\u201d\"'」]{1,32})([\u201d\"'」])"
+            )
+            label = span[len(number.group(0)):].lstrip()
+            repaired = quoted.sub(lambda match, value=label: match.group(1).rstrip() + " " + value + match.group(3), repaired, count=1)
+        # The same condition is often mentioned again outside quotes. Keep
+        # that repeated label consistent as well; otherwise one occurrence
+        # can drift to a different polarity while all numeric invariants pass.
+        for number, label in source_items:
+            if sum(item[0] == number for item in source_items) < 2:
+                continue
+            repeated = re.compile(
+                re.escape(number) + r"(\s*)([A-Za-z][A-Za-z-]*|[\u3040-\u30ff\u4e00-\u9fff]{1,8}?)(?=[とにをはがで、。,.!?]|$)"
+            )
+            def replace_label(match: re.Match[str], desired: str = label) -> str:
+                current = match.group(2)
+                if current in {"の", "に", "を", "は", "が", "で", "と"}:
+                    return match.group(0)
+                return f"{number} {desired}"
+            repaired = repeated.sub(replace_label, repaired)
+        return repaired
+
+    @staticmethod
     def _is_degenerate(output: str, source: str, target_language: str) -> bool:
         compact = "".join(output.split())
         if not compact:
@@ -1778,6 +1961,10 @@ class MADLADEngine(TranslationEngine):
                 return True
             if MADLADEngine._has_unexpected_contextual_number(source, output):
                 return True
+            if MADLADEngine._has_collapsed_measurement_labels(source, output):
+                return True
+            if MADLADEngine._has_inconsistent_repeated_measurement_labels(source, output):
+                return True
         return False
 
     @staticmethod
@@ -1806,6 +1993,10 @@ class MADLADEngine(TranslationEngine):
         unexpected_count = MADLADEngine._has_unexpected_contextual_number(source, output)
         if unexpected_count:
             return f"unexpected_contextual_number:{unexpected_count}"
+        if MADLADEngine._has_collapsed_measurement_labels(source, output):
+            return "collapsed_measurement_labels"
+        if MADLADEngine._has_inconsistent_repeated_measurement_labels(source, output):
+            return "inconsistent_repeated_measurement_labels"
         if os.getenv("MADLAD_DIAGNOSTIC_ALLOW_SHORT") != "1" and MADLADEngine._is_implausibly_short_unit(output, source):
             return "implausibly_short"
         if MADLADEngine._contains_untranslated_source_span(output, source):

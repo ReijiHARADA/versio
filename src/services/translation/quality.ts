@@ -12,7 +12,7 @@ const KANJI = /[\u4E00-\u9FFF]/;
 // Keep this as a script-contamination signal rather than a vocabulary
 // blacklist; it catches mixed Chinese/Japanese decoder output such as
 // `エピソデ的记忆` while leaving ordinary Japanese kanji untouched.
-const SIMPLIFIED_CJK_CONTAMINATION = /[习这们该过现为发见后还进对个从认说时实开结统处变关记忆]|(?:因素|主题|详细|结果|影响|内在因素|外在因素)/;
+const SIMPLIFIED_CJK_CONTAMINATION = /[习这们该过现为发见后还进对个从认说时实开结统处变关记忆态调评]|(?:因素|主题|详细|结果|影响|内在因素|外在因素)/;
 const HANGUL = /[\uAC00-\uD7AF]/;
 // Scripts outside Japanese, Latin identifiers, and ordinary CJK are strong
 // decoder-contamination signals in an English→Japanese translation. This is
@@ -88,6 +88,12 @@ const JA_INSTEAD_OF = /より(?:も)?/;
 const SOURCE_CONDITION = /\b(?:if|unless|provided that|as long as|depending on|whether)\b/i;
 const SOURCE_WHETHER = /\bwhether\b/i;
 const SOURCE_COMPARATIVE_LIKELIHOOD = /\b(?:more|less)\s+likely\b/i;
+// Preserve positive equivalence claims such as “performs comparably to”. A
+// fluent decoder can keep the equivalence vocabulary while negating the
+// predicate (e.g. “the comparable material does not exist”), which changes a
+// reported result without dropping any number or identifier.
+const SOURCE_POSITIVE_EQUIVALENCE = /\b(?:performs?|performed|is|are|was|were)\s+(?:roughly\s+)?compar(?:ably|able)\s+to\b|\b(?:similar|equivalent)\s+to\b/i;
+const JA_NEGATED_EQUIVALENCE = /(?:匹敵|同等|同程度|同じ程度|同様)[^。！？\n]{0,28}(?:ない|なく|なかっ|ません|存在しない|存在しません)/;
 const JA_COMPARATIVE_CHOICE = /(?:どちら|いずれ|あるいは|それとも)[^。！？\n]{0,80}(?:かを|かどうか|か尋ね|か問|か調べ)/;
 const JA_CONDITION = /(?:場合|ならば?|なければ|ない限り|である限り|に応じて|かどうか|か否か|条件|依存|により|によって|ためには)/;
 // Alternative experimental conditions are easy to collapse into one branch
@@ -239,6 +245,35 @@ export function detectPartialSourceFallback(source: string, translation: string 
     }
   }
   return { partial: false };
+}
+
+/**
+ * Reports high-confidence signs that a native PDF block is a physical
+ * continuation rather than a complete translation unit. This deliberately
+ * reuses the layout safety evidence without changing production routing: the
+ * caller can attribute the row to extraction or stitch it upstream instead
+ * of counting it as a model-quality failure.
+ */
+export function diagnoseIncompleteSource(source: string): { incomplete: boolean; reason?: string } {
+  const text = source.replace(/\s+/g, " ").trim();
+  if (!text) return { incomplete: false };
+  // A dash followed immediately by a lowercase word is typically a detached
+  // continuation from the preceding PDF line/column, rather than a complete
+  // list item. Numbered and capitalized dash items remain eligible.
+  if (/^[–—-]\s+[a-z]/.test(text)) {
+    return { incomplete: true, reason: "source begins with a continuation dash" };
+  }
+  const reason = unsafeParagraphStructureReason(text);
+  if (reason) return { incomplete: true, reason };
+  // Audit-only evidence: long prose blocks normally end at a sentence mark.
+  // Keep this out of production routing because some publishers omit the
+  // final period; the benchmark can report these rows for manual review.
+  const looksLikeClosedQuote = /^(?:["“]).*(?:["”])(?:\s*\[[^\]]+\])?$/s.test(text);
+  const looksLikeList = /^(?:[-•‣▪∙*]|\d+[.)])\s+/.test(text);
+  if (text.length >= 180 && !/[.!?。！？]$/.test(text) && !looksLikeClosedQuote && !looksLikeList) {
+    return { incomplete: true, reason: "long prose block has no terminal sentence mark" };
+  }
+  return { incomplete: false };
 }
 
 // A decoder can leave a short, fluent-looking English clause inside otherwise
@@ -430,12 +465,19 @@ const CASCADE_LATIN_FUNCTION_WORDS = new Set([
 
 function hasUntranslatedCascadeLexeme(source: string, output: string): boolean {
   if (!KANA.test(output)) return false;
-  // Five-letter lowercase words are enough to catch ordinary lexical residue
-  // such as `Clips` in a Japanese sentence. Shorter tokens are too often
-  // acronyms or conventional measurement labels.
-  const sourceWords = source.match(/\b[a-z][a-z'-]{4,}\b/gi) ?? [];
-  const outputWords = output.match(/\b[a-z][a-z'-]{4,}\b/gi) ?? [];
-  const outputSet = new Set((output.match(/\b[a-z][a-z'-]*\b/gi) ?? []).map((word) => word.toLowerCase()));
+  // Four-letter lowercase function words (such as `such` or `with`) can also
+  // reveal an untranslated clause. Restrict the additional short-token check
+  // to the explicit stop-word set below; domain acronyms and short technical
+  // labels remain outside this guard.
+  const sourceWords = source.match(/\b[a-z][a-z'-]{3,}\b/gi) ?? [];
+  // Do not require ASCII word boundaries: Japanese kana/kanji adjacent to a
+  // retained English token (`such新しい`) still represents lexical residue.
+  // Keep ASCII token boundaries intact while still allowing a retained
+  // technical token to touch Japanese (`MouseLabシナリオ`). Without the
+  // ASCII guards, fragments such as `ouse` inside `MouseLab` or `ake-` inside
+  // `Take-The-Best` are falsely classified as untranslated English.
+  const outputWords = output.match(/(?<![A-Za-z])[a-z][a-z'-]{3,}(?![A-Za-z])/gi) ?? [];
+  const outputSet = new Set((output.match(/(?<![A-Za-z])[a-z][a-z'-]*(?![A-Za-z])/gi) ?? []).map((word) => word.toLowerCase()));
   const sourceTokens = source.match(/\b[a-z][a-z'-]*\b/gi) ?? [];
   const sourceRawTokens = source.match(/\b[A-Za-z][A-Za-z'-]*\b/g) ?? [];
   for (let i = 0; i + 1 < sourceTokens.length; i += 1) {
@@ -451,12 +493,36 @@ function hasUntranslatedCascadeLexeme(source: string, output: string): boolean {
   }
   return sourceWords.some((word) => {
     const lower = word.toLowerCase();
-    if (CASCADE_LATIN_STOPWORDS.has(lower) || !outputSet.has(lower)) return false;
+    if (!outputSet.has(lower)) return false;
+    // A lowercase token can be part of a source-backed product/tool name
+    // (`G*Power`, `WebPower`) that the model correctly retains. Count the
+    // complete compound as a technical identifier before flagging its tail as
+    // untranslated ordinary prose.
+    const escapedWord = lower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const compound = new RegExp(`\\b[A-Z][A-Za-z0-9]*(?:[*_-])[A-Za-z0-9]*${escapedWord}\\b`, "i").exec(source);
+    if (compound && new RegExp(compound[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i").test(output)) return false;
     // Capitalized source terms are commonly names, product names, or method
     // labels. Lowercase lexical items are the higher-confidence signal.
     if (word !== lower && !CASCADE_LATIN_FUNCTION_WORDS.has(lower)) return false;
     const occurrences = outputWords.filter((candidate) => candidate.toLowerCase() === lower).length;
     if (occurrences !== 1) return false;
+    // A source lowercase word may legitimately be retained with an initial
+    // capital as part of a named method (`Weight-Additive Strategy`). Only
+    // flag an exact lowercase residue; sentence-initial/function-word cases
+    // remain covered by the explicit function-word set above.
+    if (!outputWords.some((candidate) => candidate === lower)) {
+      // Allow a capitalized tail of a source-backed hyphenated method label,
+      // such as `Weight-Additive Strategy`; an arbitrary capitalized rendering
+      // of a lowercase noun (`a strategy` -> `Strategy`) remains suspicious.
+      const escaped = lower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const methodLabel = new RegExp(`\\b(?:[A-Z][A-Za-z]+-)+[A-Z][A-Za-z]+\\s+${escaped}\\b`, "i").test(source);
+      if (methodLabel) return false;
+      return true;
+    }
+    // Lowercase stopwords are never required technical vocabulary. A single
+    // retained token such as `such` or `with` therefore indicates untranslated
+    // ordinary prose; proper-name and acronym handling remains unchanged.
+    if (CASCADE_LATIN_STOPWORDS.has(lower)) return true;
     // Preserve an explicitly retained multi-word technical phrase, but do
     // not let a single neighboring word hide ordinary residue (for example
     // `Whilst this ...`).
@@ -766,6 +832,10 @@ export function extractScientificInvariants(source: string): ScientificInvariant
     for (const match of invariantSource.matchAll(pattern)) {
       const start = match.index ?? 0;
       const end = start + match[0].length;
+      // A thousands-separated value such as `13,000` is one numeric fact;
+      // do not emit the separator tail (`000`) as an independent invariant.
+      if (kind === "number" && start > 0 && invariantSource[start - 1] === "," &&
+          start > 1 && /\d/.test(invariantSource[start - 2])) continue;
       // Digits attached to a mixed-case identifier are usually a model
       // suffix (AirPodsPro2, ATTiny85), not a superscript citation.  Treating
       // them as citations makes a faithful localized identifier look like an
@@ -791,6 +861,14 @@ export function extractScientificInvariants(source: string): ScientificInvariant
 function normalizeInvariant(value: string): string {
   return value
     .normalize("NFKC")
+    // Alternate local models occasionally wrap preserved citations or figure
+    // labels in harmless HTML (`<sup>26</sup>`). Compare the scientific
+    // payload rather than the presentation markup; the structural/citation
+    // checks below still require the exact number or label to be present.
+    // Strip actual markup tags only. A broad `<[^>]*>` pattern would mistake
+    // mathematical comparisons such as `p < .001 ... p > 0.05` for one HTML
+    // tag and erase the intervening statistical evidence.
+    .replace(/<\/?[A-Za-z][^>]*>/g, "")
     .toLowerCase()
     .replace(/[０-９]/g, (digit) => String.fromCharCode(digit.charCodeAt(0) - 0xfee0))
     .replace(/[\s\u00a0]/g, "")
@@ -843,6 +921,36 @@ function measurementOrderChanged(source: string, output: string): boolean {
     if (cursor === sourceValues.length) return false;
   }
   return true;
+}
+
+/** Detect reordered multi-panel figure references. */
+function figureReferenceOrderChanged(source: string, output: string): boolean {
+  const parse = (value: string): string[] => [...value.matchAll(/(?:\b(?:fig(?:ure)?)\.?|図)\s*(\d+)\s*(?:[（(]([a-z])[）)]|([a-z]))?/gi)]
+    .map((match) => `${match[1]}${(match[2] ?? match[3] ?? "").toLowerCase()}`);
+  const sourceRefs = parse(source);
+  if (sourceRefs.length < 2) return false;
+  let outputRefs = parse(output);
+  // A decoder can detach the localized label (`図に示す。2 (e)`). If the
+  // source has multiple panel references, recover these numeric/panel pairs
+  // as a conservative diagnostic rather than treating label loss as harmless.
+  if (outputRefs.length < sourceRefs.length) {
+    outputRefs = [...output.matchAll(/(\d+)\s*[（(]([a-z])[）)]/gi)]
+      .map((match) => `${match[1]}${match[2].toLowerCase()}`);
+  }
+  if (outputRefs.length < sourceRefs.length) return false;
+  let cursor = 0;
+  for (const ref of outputRefs) {
+    if (ref === sourceRefs[cursor]) cursor += 1;
+    if (cursor === sourceRefs.length) return false;
+  }
+  return true;
+}
+
+function hasDetachedFigureReference(source: string, output: string): boolean {
+  if (!/(?:\b(?:fig(?:ure)?)\.?|図)\s*\d+/i.test(source)) return false;
+  // `図に示す。2 (e)` loses the figure-number attachment and can attach a
+  // panel to the wrong claim even when both numeric panels survive.
+  return /図[^0-9\n]{4,}\d+\s*[（(][a-z][）)]/i.test(output);
 }
 
 function invariantFactKey(item: ScientificInvariant): string {
@@ -924,6 +1032,15 @@ function outputContainsInvariant(output: string, invariant: ScientificInvariant,
       return new RegExp(`${escapedAmount}[^\\d]{0,8}${currency}`, "i").test(output);
     }
   }
+  if (invariant.kind === "citation") {
+    // Citation groups may be rendered as separate superscripts or with
+    // localized punctuation (`<sup>26</sup>、<sup>27</sup>`). Preserve every
+    // numeric payload while allowing presentation markup/separators to vary.
+    const citationNumbers = invariant.value.match(/\d+/g) ?? [];
+    if (citationNumbers.length > 1 && citationNumbers.every((number) =>
+      new RegExp(`(?:^|\\D)${number}(?:$|\\D)`).test(normalizedOutput)
+    )) return true;
+  }
   // A small set of standardized scientific abbreviations has an unambiguous
   // Japanese expansion. Accept the translated form only when the acronym is
   // used in the source's corresponding technical context; this avoids
@@ -1001,6 +1118,8 @@ function invariantQuality(source: string, output: string): { score: number; reas
   const outputEnumerationCount = (output.match(/(?:^|[\n\s,、])\d{1,2}[.)](?=\s|[^\d])/g) ?? []).length;
   const unsupportedEnumeration = sourceEnumerationCount < 2 && outputEnumerationCount >= 3;
   const missing = invariants.filter((invariant) => !outputContainsInvariant(output, invariant, source));
+  const figureOrderChanged = figureReferenceOrderChanged(source, output);
+  const detachedFigureReference = hasDetachedFigureReference(source, output);
   // Measurements, statistical values, references, and links are source facts.
   // A translation may express an ordinary number differently, but it must not
   // introduce a new value with a scientific unit or a new reference-like fact.
@@ -1015,7 +1134,7 @@ function invariantQuality(source: string, output: string): { score: number; reas
     ["citation", "doi", "url", "figure", "statistic", "measurement", "year", "structure"].includes(item.kind)
       && !sourceFacts.has(invariantFactKey(item))
   );
-  if (missing.length === 0 && unexpected.length === 0 && !unsupportedEnumeration) return { score: 1, reasons: [], criticalMissing: false };
+  if (missing.length === 0 && unexpected.length === 0 && !unsupportedEnumeration && !figureOrderChanged && !detachedFigureReference) return { score: 1, reasons: [], criticalMissing: false };
   // A missing acronym can change the method, metric, or experimental
   // condition under discussion (for example MSE, NPIV, or DeepIV). It is a
   // safety failure, not merely a stylistic difference.
@@ -1046,10 +1165,12 @@ function invariantQuality(source: string, output: string): { score: number; reas
   if (missing.length > 0) reasons.push(`scientific invariants missing: ${missing.slice(0, 4).map((item) => item.value).join(", ")}`);
   if (unexpected.length > 0) reasons.push(`unexpected scientific invariants: ${unexpected.slice(0, 4).map((item) => item.value).join(", ")}`);
   if (unsupportedEnumeration) reasons.push("translation introduces an unsupported numbered enumeration");
+  if (figureOrderChanged) reasons.push("figure/panel reference order changed");
+  if (detachedFigureReference) reasons.push("detached figure reference");
   return {
     score: Math.max(0, 1 - missing.length / Math.max(invariants.length, 1) - critical.length * 0.18 - unexpected.length * 0.24 - (unsupportedEnumeration ? 0.4 : 0)),
     reasons,
-    criticalMissing: critical.length > 0 || unexpected.length > 0 || unsupportedEnumeration,
+    criticalMissing: critical.length > 0 || unexpected.length > 0 || unsupportedEnumeration || figureOrderChanged || detachedFigureReference,
   };
 }
 
@@ -1107,8 +1228,11 @@ function discourseRelationRiskReasons(source: string, output: string): string[] 
   if (SOURCE_ALTERNATIVE.test(source) && !JA_ALTERNATIVE.test(output)) {
     reasons.push("alternative relation missing");
   }
-  if (SOURCE_COMPARATIVE_LIKELIHOOD.test(source) && !/(?:可能性が高|可能性が低|よりも可能性|尤度)/.test(output) && !JA_COMPARATIVE_CHOICE.test(output)) {
+  if (SOURCE_COMPARATIVE_LIKELIHOOD.test(source) && !/(?:可能性(?:が|の)高|可能性(?:が|の)低|よりも可能性|尤度|に比べ|と比べ|よりも)/.test(output) && !JA_COMPARATIVE_CHOICE.test(output)) {
     reasons.push("comparative likelihood relation missing");
+  }
+  if (SOURCE_POSITIVE_EQUIVALENCE.test(source) && JA_NEGATED_EQUIVALENCE.test(output)) {
+    reasons.push("positive equivalence relation negated");
   }
   return reasons;
 }
@@ -1338,10 +1462,13 @@ export function evaluateJaTranslation(output: string, source: string): Translati
     || reasons.includes("alternative relation missing")
     || reasons.some((reason) => reason.startsWith("participant total may have shifted"))
     || reasons.includes("collective group comparison narrowed to two groups")
+    || reasons.includes("positive equivalence relation negated")
     || reasons.includes("evidence suggestion strengthened to assertion")
     || reasons.includes("assessment scope predicate missing")
     || reasons.includes("future specification requirement omitted")
     || reasons.includes("scientific measurement order changed")
+    || reasons.includes("figure/panel reference order changed")
+    || reasons.includes("detached figure reference")
     || reasons.some((reason) => reason.startsWith("quoted technical name missing:"))
     || reasons.includes("trailing Latin fragment") ? 0.35 : 1;
   return {
@@ -1506,6 +1633,7 @@ export function getCascadeQualityReasons(output: string, source: string): string
     || reason === "signal-to-noise comparison relation missing"
     || reason === "source disjunctive-both relation missing"
     || reason === "alternative relation missing"
+    || reason === "positive equivalence relation negated"
     || reason.startsWith("participant total may have shifted")
     || reason === "collective group comparison narrowed to two groups"
   );
@@ -1673,6 +1801,7 @@ export function isExpectedNonProseParagraph(text: string): boolean {
 export function unsafeParagraphStructureReason(text: string): string | null {
   const t = text.trim();
   if (!t) return null;
+  const isCompleteFormulaDefinition = /^where\s+(?:[A-Za-zΦφαβγδμσΣ][A-Za-z0-9_²³⁻-]*(?:\([^)]{1,24}\))?)\s+is\b/i.test(t) && /[.!?。！？]$/.test(t);
   // A dropped token during native PDF extraction can leave an impossible
   // function-word join such as "the of".  This is a source
   // integrity failure; sending it to MADLAD would make the model guess the
@@ -1779,7 +1908,7 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   }
   // Lower-case connective starts are physical continuations. Upper-case
   // `To`, `For`, `But`, and `With` can begin complete scholarly sentences.
-  if (/^(?:of|and|or|but|to|for|with|where|which|that)\b/.test(t) || /^[a-z][a-z-]{2,},\s+(?:and|or|but)\b/.test(t)) {
+  if ((!isCompleteFormulaDefinition && /^(?:of|and|or|but|to|for|with|where|which|that)\b/.test(t)) || /^[a-z][a-z-]{2,},\s+(?:and|or|but)\b/.test(t)) {
     return "段落の先頭が前段から続いている可能性があります";
   }
   // Native PDF streams can lose the preceding line while leaving an
@@ -1788,7 +1917,7 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   // scholarly sentences conventionally begin with an uppercase token; reject
   // this high-precision fragment signal before translation rather than asking
   // the model to invent the missing subject.
-  if (/^[a-z][a-z-]{2,}\b/.test(t)) {
+  if (!isCompleteFormulaDefinition && /^[a-z][a-z-]{2,}\b/.test(t)) {
     return "段落の先頭が前段から続いている可能性があります";
   }
   // A bare lower-case phrase that also lacks sentence-ending punctuation is
@@ -1803,10 +1932,10 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   ) {
     return "段落の先頭が前段から続いている可能性があります";
   }
-  if (/^[a-z][a-z-]{2,}\.\s+[A-Z]/.test(t) && t.length >= 180) {
+  if (!isCompleteFormulaDefinition && /^[a-z][a-z-]{2,}\.\s+[A-Z]/.test(t) && t.length >= 180) {
     return "段落の先頭が前段から続いている可能性があります";
   }
-  if (/^[a-z]/.test(t) && t.length >= 180 && !/^(?:e\.g\.|i\.e\.|et\s+al\.|vs\.|in\s+(?:particular|contrast|addition),)/i.test(t)) {
+  if (!isCompleteFormulaDefinition && /^[a-z]/.test(t) && t.length >= 180 && !/^(?:e\.g\.|i\.e\.|et\s+al\.|vs\.|in\s+(?:particular|contrast|addition),)/i.test(t)) {
     return "段落の先頭が前段から続いている可能性があります";
   }
   if (/\b(?:the|an?)\s+(?:entire|following|same|former|latter)\s*$/i.test(t) || /\b(?:albeit|although|though|because|while|whereas|with|without|including|concerning|between|than|to|of|for|at|in|on|from|by|as)\s*$/i.test(t) || /\b(?:about|above|across|after|against|among|around|at|before|behind|below|beneath|beside|between|beyond|by|during|for|from|in|inside|into|near|of|on|onto|over|through|to|toward|under|with|within|without)\s+(?:the|a|an|this|that|these|those|its|their|our|his|her)\s*$/i.test(t) || /\b(?:is|are|was|were|be|been|being|has|have|had|do|does|did|can|could|will|would|should|may|might)\s*$/i.test(t) || /\b(?:and|or)\s+(?:standard|mean|median|confidence|statistical)\s*$/i.test(t)) {
@@ -1840,6 +1969,7 @@ export function unsafeParagraphStructureReason(text: string): string | null {
 
 export function shouldTranslateParagraph(text: string): boolean {
   const t = text.trim();
+  const isCompleteFormulaDefinition = /^where\s+(?:[A-Za-zΦφαβγδμσΣ][A-Za-z0-9_²³⁻-]*(?:\([^)]{1,24}\))?)\s+is\b/i.test(t) && /[.!?。！？]$/.test(t);
   const terminalCitationSuffix = /[.!?。！？]\s*(?:\[\s*\d+(?:\s*[-–—,]\s*\d+)*\s*\]|\d{1,3})$/.test(t);
   if (isExpectedNonProseParagraph(t)) return false;
   // A native text stream can flatten chart/table headers into the beginning
@@ -1888,7 +2018,7 @@ export function shouldTranslateParagraph(text: string): boolean {
   // source instead of asking the model to complete a missing clause.
   const isClosedQuote = /^(?:["“]).*(?:["”])(?:\s*\[[^\]]+\])?$/s.test(t);
   if (t.length >= 400 && !/[.!?。！？]$/.test(t) && !terminalCitationSuffix && !isClosedQuote && !/^(?:[-•‣▪∙*]|\d+[.)])\s+/.test(t)) return false;
-  if (/^(?:of|and|or|but|to|for|with|where|which|that)\b/.test(t)) return false;
+  if (!isCompleteFormulaDefinition && /^(?:of|and|or|but|to|for|with|where|which|that)\b/.test(t)) return false;
   // A lower-case lexical fragment followed by a coordinating conjunction is
   // strong evidence that extraction started mid-sentence ("data, and ...").
   // Complete English paragraphs do not normally begin this way.
@@ -1896,12 +2026,12 @@ export function shouldTranslateParagraph(text: string): boolean {
   // A lower-case word followed by a period at the physical block start is
   // normally the tail of a sentence from the preceding column/page ("data.
   // This procedure …"), not a complete paragraph start.
-  if (/^[a-z][a-z-]{2,}\.\s+[A-Z]/.test(t) && t.length >= 180) return false;
+  if (!isCompleteFormulaDefinition && /^[a-z][a-z-]{2,}\.\s+[A-Z]/.test(t) && t.length >= 180) return false;
   // Native academic paragraphs virtually always begin with a capital letter,
   // number, quotation mark, or bullet. A long block beginning mid-word in
   // lowercase is usually a column/page continuation ("substantially improves
   // …"), except for the common discourse abbreviations below.
-  if (
+  if (!isCompleteFormulaDefinition &&
     /^[a-z]/.test(t)
     && t.length >= 180
     && !/^(?:e\.g\.|i\.e\.|et\s+al\.|vs\.|in\s+(?:particular|contrast|addition),)/i.test(t)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import unittest
 from pathlib import Path
 
@@ -106,6 +107,18 @@ class CitationProtectTests(unittest.TestCase):
         self.assertNotIn("Bluetooth", protected)
         self.assertIn("These", protected)
         self.assertEqual(restore_citations(protected, cites, nonce), source)
+
+    def test_repeated_generic_theory_words_remain_translation_context(self) -> None:
+        source = (
+            "on the basis of the Theory of Reasoned Action (TRA) and "
+            "the Theory of Planned Behavior (TPB)"
+        )
+        protected, cites, _ = protect_citations(source)
+        for value in ("Theory", "Reasoned", "Action", "Planned", "Behavior"):
+            self.assertNotIn(value, cites)
+        self.assertNotIn("TRA", cites)
+        self.assertNotIn("TPB", cites)
+        self.assertIn("Theory", protected)
 
     def test_unprotected_retry_allows_only_structural_figure_table_reference(self) -> None:
         self.assertTrue(allows_unprotected_identifier_retry(["Fig. 2"]))
@@ -569,6 +582,23 @@ class CitationProtectTests(unittest.TestCase):
         source = "The measured value was 2.913."
         _, citations, _ = protect_citations(source)
         self.assertEqual(citations, [])
+
+    def test_diagnostic_inline_numeric_citation_exposure_keeps_other_facts_protected(self) -> None:
+        source = "Studies report this effect [13] and cite (Smith et al., 2020). The value was 9.6 mm."
+        previous = os.environ.get("MADLAD_EXPOSE_INLINE_NUMERIC_CITATIONS")
+        os.environ["MADLAD_EXPOSE_INLINE_NUMERIC_CITATIONS"] = "1"
+        try:
+            protected, citations, nonce = protect_citations(source)
+        finally:
+            if previous is None:
+                os.environ.pop("MADLAD_EXPOSE_INLINE_NUMERIC_CITATIONS", None)
+            else:
+                os.environ["MADLAD_EXPOSE_INLINE_NUMERIC_CITATIONS"] = previous
+        self.assertIn("[13]", protected)
+        self.assertNotIn("[13]", citations)
+        self.assertIn("(Smith et al., 2020)", citations)
+        self.assertIn("9.6 mm", citations)
+        self.assertEqual(restore_citations(protected, citations, nonce), source)
 
     def test_protects_adjacent_identifier_list_as_one_atomic_span(self) -> None:
         source = "Encoder-only models such as BERT, DeBERTa, and GPT struggle on CFG tasks."

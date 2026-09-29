@@ -1,0 +1,1130 @@
+{
+  "version": "protection-ab-v1",
+  "sourceReport": "/Users/harada/Desktop/codex/projects/paper-reader/test-data/real-papers/reports/translation-audit-v1079-three-paper-regression.json",
+  "model": "google/madlad400-3b-mt",
+  "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v82-source-protect-v25-strict-restore-v28-quality-v34-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue",
+  "generation": {
+    "numBeams": 1,
+    "doSample": false
+  },
+  "offset": 0,
+  "segmentUnits": true,
+  "productionRescue": false,
+  "exposeRepeatedAcronyms": false,
+  "exposeAllSpans": false,
+  "exposeShortContextSpans": false,
+  "sampleCount": 20,
+  "records": [
+    {
+      "paperId": "cognitive-dual-task-older-adults",
+      "key": "cognitive-dual-task-older-adults:b-2a4eab0c#unit-0",
+      "source": "Background: The present study compared the effects of a traditional resistance training (TRT) and resistance training combined with cognitive task (RT+CT) on body composition, physical performance, cognitive function, and plasma brain-derived neurotrophic factor (BNDF) levels",
+      "sourceShape": {
+        "charCount": 276,
+        "wordCount": 36,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Background: The present study compared the effects of a traditional resistance training (TRT) and resistance training combined with cognitive task (RT+CT) on body composition, physical performance, cognitive function, and plasma brain-derived neurotrophic factor (BNDF) levels",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "体組成,身体能力,認知機能,血しょう脳由来神経栄養因子(BNDF)レベルに及ぼす従来の抵抗トレーニング(TRT)と抵抗トレニングと認知作業を組み合わせたトレーニングの効果を比較した。",
+          "output": "体組成,身体能力,認知機能,血しょう脳由来神経栄養因子(BNDF)レベルに及ぼす従来の抵抗トレーニング(TRT)と抵抗トレニングと認知作業を組み合わせたトレーニングの効果を比較した。",
+          "inputTokens": 61,
+          "outputTokens": 80,
+          "latencyMs": 3610.5,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "Background: The present study compared the effects of a traditional resistance training (TRT) and resistance training combined with cognitive task (RT+CT) on body composition, physical performance, cognitive function, and plasma brain-derived neurotrophic factor (BNDF) levels",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "体組成,身体能力,認知機能,血しょう脳由来神経栄養因子(BNDF)レベルに及ぼす従来の抵抗トレーニング(TRT)と抵抗トレニングと認知作業を組み合わせたトレーニングの効果を比較した。",
+          "output": "体組成,身体能力,認知機能,血しょう脳由来神経栄養因子(BNDF)レベルに及ぼす従来の抵抗トレーニング(TRT)と抵抗トレニングと認知作業を組み合わせたトレーニングの効果を比較した。",
+          "inputTokens": 61,
+          "outputTokens": 80,
+          "latencyMs": 3342.8,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "Background: The present study compared the effects of a traditional resistance training (TRT) and resistance training combined with cognitive task (RT+CT) on body composition, physical performance, cognitive function, and plasma brain-derived neurotrophic factor (BNDF) levels",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "体組成,身体能力,認知機能,血しょう脳由来神経栄養因子(BNDF)レベルに及ぼす従来の抵抗トレーニング(TRT)と抵抗トレニングと認知作業を組み合わせたトレーニングの効果を比較した。",
+          "output": "体組成,身体能力,認知機能,血しょう脳由来神経栄養因子(BNDF)レベルに及ぼす従来の抵抗トレーニング(TRT)と抵抗トレニングと認知作業を組み合わせたトレーニングの効果を比較した。",
+          "inputTokens": 61,
+          "outputTokens": 80,
+          "latencyMs": 3310.2,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "cognitive-memory-cue-interest",
+      "key": "cognitive-memory-cue-interest:b-4d910394#unit-0",
+      "source": "The participants had higher accuracy for the clips with gist than detailed cues and for those with higher than lower interest.",
+      "sourceShape": {
+        "charCount": 126,
+        "wordCount": 21,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "The participants had higher accuracy for the clips with gist than detailed cues and for those with higher than lower interest.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "参加者は,詳細な情報よりも要点を含むクリップの方が正確で,興味の高いものの方が低いものよりも正確であった。",
+          "output": "参加者は,詳細な情報よりも要点を含むクリップの方が正確で,興味の高いものの方が低いものよりも正確であった。",
+          "inputTokens": 31,
+          "outputTokens": 47,
+          "latencyMs": 1919.0,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "The participants had higher accuracy for the clips with gist than detailed cues and for those with higher than lower interest.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "参加者は,詳細な情報よりも要点を含むクリップの方が正確で,興味の高いものの方が低いものよりも正確であった。",
+          "output": "参加者は,詳細な情報よりも要点を含むクリップの方が正確で,興味の高いものの方が低いものよりも正確であった。",
+          "inputTokens": 31,
+          "outputTokens": 47,
+          "latencyMs": 1872.0,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "The participants had higher accuracy for the clips with gist than detailed cues and for those with higher than lower interest.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "参加者は,詳細な情報よりも要点を含むクリップの方が正確で,興味の高いものの方が低いものよりも正確であった。",
+          "output": "参加者は,詳細な情報よりも要点を含むクリップの方が正確で,興味の高いものの方が低いものよりも正確であった。",
+          "inputTokens": 31,
+          "outputTokens": 47,
+          "latencyMs": 1871.4,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "cognitive-psychology-gpt3",
+      "key": "cognitive-psychology-gpt3:b-65124568#unit-0",
+      "source": "Information search: Questions and hypothesis tests First, we assessed if GPT-3 can adaptively change between constraint-seeking vs. hypothesis-scanning questions.",
+      "sourceShape": {
+        "charCount": 162,
+        "wordCount": 19,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Information search: Questions and hypothesis tests First, we assessed if GPT-3 can adaptively change between constraint-seeking vs. hypothesis-scanning questions.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "まず,GPT‐3が制約探索対仮説スキャン問題の間で適応的に変化できるかを評価した。",
+          "output": "まず,GPT‐3が制約探索対仮説スキャン問題の間で適応的に変化できるかを評価した。",
+          "inputTokens": 40,
+          "outputTokens": 38,
+          "latencyMs": 1526.5,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "Information search: Questions and hypothesis tests First, we assessed if GPT-3 can adaptively change between constraint-seeking vs. hypothesis-scanning questions.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "まず,GPT‐3が制約探索対仮説スキャン問題の間で適応的に変化できるかを評価した。",
+          "output": "まず,GPT‐3が制約探索対仮説スキャン問題の間で適応的に変化できるかを評価した。",
+          "inputTokens": 40,
+          "outputTokens": 38,
+          "latencyMs": 1519.0,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "Information search: Questions and hypothesis tests First, we assessed if GPT-3 can adaptively change between constraint-seeking vs. hypothesis-scanning questions.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "まず,GPT‐3が制約探索対仮説スキャン問題の間で適応的に変化できるかを評価した。",
+          "output": "まず,GPT‐3が制約探索対仮説スキャン問題の間で適応的に変化できるかを評価した。",
+          "inputTokens": 40,
+          "outputTokens": 38,
+          "latencyMs": 1560.9,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "cognitive-vr-mnemonic-processing",
+      "key": "cognitive-vr-mnemonic-processing:b-2d5b1cb6#unit-0",
+      "source": "However, the specific conditions under which VR is more beneficial than conventional learning methods remain unclear.",
+      "sourceShape": {
+        "charCount": 117,
+        "wordCount": 16,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "However, the specific conditions under which VR is more beneficial than conventional learning methods remain unclear.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "しかし,VRが従来の学習法よりも有利な具体的条件は不明である。",
+          "output": "しかし,VRが従来の学習法よりも有利な具体的条件は不明である。",
+          "inputTokens": 24,
+          "outputTokens": 32,
+          "latencyMs": 1453.3,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "However, the specific conditions under which ZZCIT1ZZ is more beneficial than conventional learning methods remain unclear.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "しかし,VRが従来の学習法よりも有利な具体的条件は不明である。",
+          "output": "しかし,ZZCIT1ZZが従来の学習法よりも有利な具体的条件は不明である。",
+          "inputTokens": 28,
+          "outputTokens": 38,
+          "latencyMs": 2324.0,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "However, the specific conditions under which ZZCIT1ZZ is more beneficial than conventional learning methods remain unclear.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "しかし,VRが従来の学習法よりも有利な具体的条件は不明である。",
+          "output": "しかし,VRが従来の学習法よりも有利な具体的条件は不明である。",
+          "inputTokens": 28,
+          "outputTokens": 38,
+          "latencyMs": 2579.7,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "computational-linguistics-nlp-translation",
+      "key": "computational-linguistics-nlp-translation:b-36e302e9#unit-0",
+      "source": "Broadly defined, the term computational linguistics refers to the use of computational methods and tools in the study of linguistic phenomena.",
+      "sourceShape": {
+        "charCount": 142,
+        "wordCount": 21,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Broadly defined, the term computational linguistics refers to the use of computational methods and tools in the study of linguistic phenomena.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "計算言語学は,言語現象の研究における計算手法とツールの使用を指す。",
+          "output": "計算言語学は,言語現象の研究における計算手法とツールの使用を指す。",
+          "inputTokens": 35,
+          "outputTokens": 33,
+          "latencyMs": 2244.4,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "Broadly defined, the term computational linguistics refers to the use of computational methods and tools in the study of linguistic phenomena.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "計算言語学は,言語現象の研究における計算手法とツールの使用を指す。",
+          "output": "計算言語学は,言語現象の研究における計算手法とツールの使用を指す。",
+          "inputTokens": 35,
+          "outputTokens": 33,
+          "latencyMs": 2292.7,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "Broadly defined, the term computational linguistics refers to the use of computational methods and tools in the study of linguistic phenomena.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "計算言語学は,言語現象の研究における計算手法とツールの使用を指す。",
+          "output": "計算言語学は,言語現象の研究における計算手法とツールの使用を指す。",
+          "inputTokens": 35,
+          "outputTokens": 33,
+          "latencyMs": 2220.3,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "conversation-analysis-user-experience",
+      "key": "conversation-analysis-user-experience:b-0d5b12a9#unit-0",
+      "source": "We provide two case studies in the application of ideas drawn from conversation analysis to the design of technologies that enhance the experience of human conversation.",
+      "sourceShape": {
+        "charCount": 169,
+        "wordCount": 26,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "We provide two case studies in the application of ideas drawn from conversation analysis to the design of technologies that enhance the experience of human conversation.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "人間の会話の経験を向上させる技術の設計に対して,会話分析から得られたアイデアを適用した2つの事例を示した。",
+          "output": "人間の会話の経験を向上させる技術の設計に対して,会話分析から得られたアイデアを適用した2つの事例を示した。",
+          "inputTokens": 31,
+          "outputTokens": 48,
+          "latencyMs": 3141.0,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "We provide two case studies in the application of ideas drawn from conversation analysis to the design of technologies that enhance the experience of human conversation.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "人間の会話の経験を向上させる技術の設計に対して,会話分析から得られたアイデアを適用した2つの事例を示した。",
+          "output": "人間の会話の経験を向上させる技術の設計に対して,会話分析から得られたアイデアを適用した2つの事例を示した。",
+          "inputTokens": 31,
+          "outputTokens": 48,
+          "latencyMs": 3238.6,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "We provide two case studies in the application of ideas drawn from conversation analysis to the design of technologies that enhance the experience of human conversation.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "人間の会話の経験を向上させる技術の設計に対して,会話分析から得られたアイデアを適用した2つの事例を示した。",
+          "output": "人間の会話の経験を向上させる技術の設計に対して,会話分析から得られたアイデアを適用した2つの事例を示した。",
+          "inputTokens": 31,
+          "outputTokens": 48,
+          "latencyMs": 3255.0,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "design-for-wearability",
+      "key": "design-for-wearability:b-86e8c6d5#unit-0",
+      "source": "Digital Technology is constantly improving as information becomes wireless.",
+      "sourceShape": {
+        "charCount": 75,
+        "wordCount": 9,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Digital Technology is constantly improving as information becomes wireless.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "情報が無線化されるにつれて,ディジタル技術は常に進歩している。",
+          "output": "情報が無線化されるにつれて,ディジタル技術は常に進歩している。",
+          "inputTokens": 17,
+          "outputTokens": 27,
+          "latencyMs": 1793.2,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "Digital Technology is constantly improving as information becomes wireless.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "情報が無線化されるにつれて,ディジタル技術は常に進歩している。",
+          "output": "情報が無線化されるにつれて,ディジタル技術は常に進歩している。",
+          "inputTokens": 17,
+          "outputTokens": 27,
+          "latencyMs": 1821.9,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "Digital Technology is constantly improving as information becomes wireless.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "情報が無線化されるにつれて,ディジタル技術は常に進歩している。",
+          "output": "情報が無線化されるにつれて,ディジタル技術は常に進歩している。",
+          "inputTokens": 17,
+          "outputTokens": 27,
+          "latencyMs": 1956.1,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "dont-mind-me",
+      "key": "dont-mind-me:b-667e5341#unit-0",
+      "source": "Rico et al. explored the social acceptability of novel full motion gesture types to control a mobile phone [23] and the social acceptability of gesture-based interactions in specific contexts (public, home, workplace, etc.) [24].",
+      "sourceShape": {
+        "charCount": 229,
+        "wordCount": 34,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Rico et al. explored the social acceptability of novel full motion gesture types to control a mobile phone [23] and the social acceptability of gesture-based interactions in specific contexts (public, home, workplace, etc.) [24].",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "移動電話を制御するための新しいフルモーションジェスチャータイプの社会的受容性と,特定の文脈(公共,家庭,職場など)におけるジェスチャベースの相互作用の社会的接受性をRicoらは調べた。",
+          "output": "移動電話を制御するための新しいフルモーションジェスチャータイプの社会的受容性と,特定の文脈(公共,家庭,職場など)におけるジェスチャベースの相互作用の社会的接受性をRicoらは調べた。",
+          "inputTokens": 62,
+          "outputTokens": 78,
+          "latencyMs": 5217.7,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "Rico et al. explored the social acceptability of novel full motion gesture types to control a mobile phone [23] and the social acceptability of gesture-based interactions in specific contexts (public, home, workplace, etc.) [24].",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "移動電話を制御するための新しいフルモーションジェスチャータイプの社会的受容性と,特定の文脈(公共,家庭,職場など)におけるジェスチャベースの相互作用の社会的接受性をRicoらは調べた。",
+          "output": "移動電話を制御するための新しいフルモーションジェスチャータイプの社会的受容性と,特定の文脈(公共,家庭,職場など)におけるジェスチャベースの相互作用の社会的接受性をRicoらは調べた。",
+          "inputTokens": 62,
+          "outputTokens": 78,
+          "latencyMs": 5309.1,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "Rico et al. explored the social acceptability of novel full motion gesture types to control a mobile phone [23] and the social acceptability of gesture-based interactions in specific contexts (public, home, workplace, etc.) [24].",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "移動電話を制御するための新しいフルモーションジェスチャータイプの社会的受容性と,特定の文脈(公共,家庭,職場など)におけるジェスチャベースの相互作用の社会的接受性をRicoらは調べた。",
+          "output": "移動電話を制御するための新しいフルモーションジェスチャータイプの社会的受容性と,特定の文脈(公共,家庭,職場など)におけるジェスチャベースの相互作用の社会的接受性をRicoらは調べた。",
+          "inputTokens": 62,
+          "outputTokens": 78,
+          "latencyMs": 5217.9,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "education-learning-analytics",
+      "key": "education-learning-analytics:b-0d816d5c#unit-0",
+      "source": "It refers to a web-based class designed to support a large number of participants.",
+      "sourceShape": {
+        "charCount": 82,
+        "wordCount": 14,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "It refers to a web-based class designed to support a large number of participants.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "これは,多数の参加者をサポートするために設計されたウェブベースのクラスを指す。",
+          "output": "これは,多数の参加者をサポートするために設計されたウェブベースのクラスを指す。",
+          "inputTokens": 21,
+          "outputTokens": 32,
+          "latencyMs": 2043.2,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "It refers to a web-based class designed to support a large number of participants.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "これは,多数の参加者をサポートするために設計されたウェブベースのクラスを指す。",
+          "output": "これは,多数の参加者をサポートするために設計されたウェブベースのクラスを指す。",
+          "inputTokens": 21,
+          "outputTokens": 32,
+          "latencyMs": 2199.0,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "It refers to a web-based class designed to support a large number of participants.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "これは,多数の参加者をサポートするために設計されたウェブベースのクラスを指す。",
+          "output": "これは,多数の参加者をサポートするために設計されたウェブベースのクラスを指す。",
+          "inputTokens": 21,
+          "outputTokens": 32,
+          "latencyMs": 2188.3,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "ergonomics-flight-deck-applications",
+      "key": "ergonomics-flight-deck-applications:b-9dfe64ee#unit-0",
+      "source": "The DwI method (Lockton et al. 2010) was developed to support novel product refinement, with a focus on usercentred design.",
+      "sourceShape": {
+        "charCount": 123,
+        "wordCount": 20,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "The DwI method (Lockton et al. 2010) was developed to support novel product refinement, with a focus on usercentred design.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 2,
+          "missingSourceSpans": [
+            "DwI",
+            "(Lockton et al. 2010)"
+          ],
+          "literalSpans": [],
+          "restoredOutput": "ユーザ中心設計に焦点を当てた新しい製品精製を支援するために,Dwwi法(Locktonら,2010)を開発した。",
+          "output": "ユーザ中心設計に焦点を当てた新しい製品精製を支援するために,Dwwi法(Locktonら,2010)を開発した。",
+          "inputTokens": 38,
+          "outputTokens": 53,
+          "latencyMs": 3632.9,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "The ZZCIT1ZZ method (Lockton et al. 2010) was developed to support novel product refinement, with a focus on usercentred design.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 2,
+          "missingSourceSpans": [
+            "(Lockton et al. 2010)"
+          ],
+          "literalSpans": [
+            "(Lockton et al. 2010)"
+          ],
+          "restoredOutput": "ユーザ中心設計に焦点を当てた新しい製品精製を支援するために,DwI法(Locktonら,2010)を開発した。",
+          "output": "ユーザ中心設計に焦点を当てた新しい製品精製を支援するために,ZZCIT1ZZ法(Locktonら,2010)を開発した。",
+          "inputTokens": 41,
+          "outputTokens": 57,
+          "latencyMs": 3836.9,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "The ZZCIT1ZZ method ZZCIT2ZZ was developed to support novel product refinement, with a focus on usercentred design.",
+          "protectedSpanCount": 2,
+          "sourceProtectedSpanCount": 2,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "ユーザ中心設計に焦点を当てた新しい製品精製を支援するために,DwI法(Lockton et al. 2010)を開発した。",
+          "output": "ユーザ中心設計に焦点を当てた新しい製品精製を支援するために,DwI法(Lockton et al. 2010)を開発した。",
+          "inputTokens": 33,
+          "outputTokens": 50,
+          "latencyMs": 3424.2,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "ergonomics-job-rotation-robotics",
+      "key": "ergonomics-job-rotation-robotics:b-5b0516ff#unit-0",
+      "source": "In the scientific literature, different studies investigate ergonomics in assembly systems, mainly with the objective of reducing the ergonomic risk in terms of worker posture [13].",
+      "sourceShape": {
+        "charCount": 181,
+        "wordCount": 26,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "In the scientific literature, different studies investigate ergonomics in assembly systems, mainly with the objective of reducing the ergonomic risk in terms of worker posture [13].",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "組立システムの人間工学的リスクを低減するために,組立作業者の姿勢を考慮した人間工學的リスクの低減を目的とした研究が行われている。",
+          "output": "組立システムの人間工学的リスクを低減するために,組立作業者の姿勢を考慮した人間工學的リスクの低減を目的とした研究が行われている。",
+          "inputTokens": 43,
+          "outputTokens": 56,
+          "latencyMs": 3888.9,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "In the scientific literature, different studies investigate ergonomics in assembly systems, mainly with the objective of reducing the ergonomic risk in terms of worker posture [13].",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "組立システムの人間工学的リスクを低減するために,組立作業者の姿勢を考慮した人間工學的リスクの低減を目的とした研究が行われている。",
+          "output": "組立システムの人間工学的リスクを低減するために,組立作業者の姿勢を考慮した人間工學的リスクの低減を目的とした研究が行われている。",
+          "inputTokens": 43,
+          "outputTokens": 56,
+          "latencyMs": 3747.3,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "In the scientific literature, different studies investigate ergonomics in assembly systems, mainly with the objective of reducing the ergonomic risk in terms of worker posture [13].",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "組立システムの人間工学的リスクを低減するために,組立作業者の姿勢を考慮した人間工學的リスクの低減を目的とした研究が行われている。",
+          "output": "組立システムの人間工学的リスクを低減するために,組立作業者の姿勢を考慮した人間工學的リスクの低減を目的とした研究が行われている。",
+          "inputTokens": 43,
+          "outputTokens": 56,
+          "latencyMs": 3744.6,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "ergonomics-quantified-factory-worker",
+      "key": "ergonomics-quantified-factory-worker:b-3b26bcdd#unit-0",
+      "source": "In this paper, we first give an overview of the related research on health and well-being tracking at work and the vision of Operator 4.0.",
+      "sourceShape": {
+        "charCount": 138,
+        "wordCount": 26,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "In this paper, we first give an overview of the related research on health and well-being tracking at work and the vision of Operator 4.0.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "まず,職場での健康と福祉の追跡に関する研究とオペレータ4.0のビジョンについて概説した。",
+          "output": "まず,職場での健康と福祉の追跡に関する研究とオペレータ4.0のビジョンについて概説した。",
+          "inputTokens": 38,
+          "outputTokens": 38,
+          "latencyMs": 2751.7,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "In this paper, we first give an overview of the related research on health and well-being tracking at work and the vision of Operator 4.0.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "まず,職場での健康と福祉の追跡に関する研究とオペレータ4.0のビジョンについて概説した。",
+          "output": "まず,職場での健康と福祉の追跡に関する研究とオペレータ4.0のビジョンについて概説した。",
+          "inputTokens": 38,
+          "outputTokens": 38,
+          "latencyMs": 2886.6,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "In this paper, we first give an overview of the related research on health and well-being tracking at work and the vision of Operator 4.0.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "まず,職場での健康と福祉の追跡に関する研究とオペレータ4.0のビジョンについて概説した。",
+          "output": "まず,職場での健康と福祉の追跡に関する研究とオペレータ4.0のビジョンについて概説した。",
+          "inputTokens": 38,
+          "outputTokens": 38,
+          "latencyMs": 2578.6,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "fashion-hybrid-cmf",
+      "key": "fashion-hybrid-cmf:b-7cf26226#unit-0",
+      "source": "Material, Finishing) trend of mobile products evolve to become more human, emotional, natural look and feel.",
+      "sourceShape": {
+        "charCount": 108,
+        "wordCount": 16,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Material, Finishing) trend of mobile products evolve to become more human, emotional, natural look and feel.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "携帯電話の素材,仕上げ,デザイン,機能,デザインの特徴,機能の特徴を紹介した。",
+          "output": "携帯電話の素材,仕上げ,デザイン,機能,デザインの特徴,機能の特徴を紹介した。",
+          "inputTokens": 27,
+          "outputTokens": 35,
+          "latencyMs": 2393.8,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "Material, Finishing) trend of mobile products evolve to become more human, emotional, natural look and feel.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "携帯電話の素材,仕上げ,デザイン,機能,デザインの特徴,機能の特徴を紹介した。",
+          "output": "携帯電話の素材,仕上げ,デザイン,機能,デザインの特徴,機能の特徴を紹介した。",
+          "inputTokens": 27,
+          "outputTokens": 35,
+          "latencyMs": 2383.7,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "Material, Finishing) trend of mobile products evolve to become more human, emotional, natural look and feel.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "携帯電話の素材,仕上げ,デザイン,機能,デザインの特徴,機能の特徴を紹介した。",
+          "output": "携帯電話の素材,仕上げ,デザイン,機能,デザインの特徴,機能の特徴を紹介した。",
+          "inputTokens": 27,
+          "outputTokens": 35,
+          "latencyMs": 2369.5,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "hci-empirical-methods",
+      "key": "hci-empirical-methods:b-bf6aefa9#unit-0",
+      "source": "This course caters to attendees who are motivated to learn about, and use, empirical research methods in HCI research.",
+      "sourceShape": {
+        "charCount": 118,
+        "wordCount": 19,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "This course caters to attendees who are motivated to learn about, and use, empirical research methods in HCI research.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "HCI研究における経験的研究方法を学び,利用したい参加者を対象とした。",
+          "output": "HCI研究における経験的研究方法を学び,利用したい参加者を対象とした。",
+          "inputTokens": 30,
+          "outputTokens": 32,
+          "latencyMs": 2198.9,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "This course caters to attendees who are motivated to learn about, and use, empirical research methods in ZZCIT1ZZ research.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "これは,HCI研究における経験的研究方法を学び,利用する意欲を持つ参加者を対象としている。",
+          "output": "これは,ZZCIT1ZZ研究における経験的研究方法を学び,利用する意欲を持つ参加者を対象としている。",
+          "inputTokens": 33,
+          "outputTokens": 44,
+          "latencyMs": 2981.9,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "This course caters to attendees who are motivated to learn about, and use, empirical research methods in ZZCIT1ZZ research.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "これは,HCI研究における経験的研究方法を学び,利用する意欲を持つ参加者を対象としている。",
+          "output": "これは,HCI研究における経験的研究方法を学び,利用する意欲を持つ参加者を対象としている。",
+          "inputTokens": 33,
+          "outputTokens": 44,
+          "latencyMs": 3103.3,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "hfe-healthcare-safety-review",
+      "key": "hfe-healthcare-safety-review:b-a648a6a8#unit-0",
+      "source": "We identified 8949 studies based on our initial searching; Initial sifting based on title, abstract and full text resulted in exclusion of 6336 studies; 30 studies were further reviewed and two studies were excluded (non-comparative study [23], ergonomics intervention both in the control and intervention groups [24]).",
+      "sourceShape": {
+        "charCount": 319,
+        "wordCount": 47,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 2
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "We identified 8949 studies based on our initial searching; Initial sifting based on title, abstract and full text resulted in exclusion of 6336 studies; 30 studies were further reviewed and two studies were excluded (non-comparative study [23], ergonomics intervention both in the control and intervention groups [24]).",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "latencyMs": 1696.1,
+          "error": "ValueError: degenerate translation output"
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "We identified 8949 studies based on our initial searching; Initial sifting based on title, abstract and full text resulted in exclusion of 6336 studies; 30 studies were further reviewed and two studies were excluded (non-comparative study [23], ergonomics intervention both in the control and intervention groups [24]).",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "latencyMs": 1678.5,
+          "error": "ValueError: degenerate translation output"
+        },
+        {
+          "condition": "current",
+          "modelInput": "We identified 8949 studies based on our initial searching; Initial sifting based on title, abstract and full text resulted in exclusion of 6336 studies; 30 studies were further reviewed and two studies were excluded (non-comparative study [23], ergonomics intervention both in the control and intervention groups [24]).",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "latencyMs": 1619.0,
+          "error": "ValueError: degenerate translation output"
+        }
+      ]
+    },
+    {
+      "paperId": "how-content-volume-landing-pages",
+      "key": "how-content-volume-landing-pages:b-29bb773d#unit-1",
+      "source": "An established traditional theory is the Means-End Theory that suggests that to influence and persuade, the message should aim to lead the consumer to a desired end-state (Gutman, 1982).",
+      "sourceShape": {
+        "charCount": 186,
+        "wordCount": 29,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "An established traditional theory is the Means-End Theory that suggests that to influence and persuade, the message should aim to lead the consumer to a desired end-state (Gutman, 1982).",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 2,
+          "missingSourceSpans": [
+            "Means-End",
+            "(Gutman, 1982)"
+          ],
+          "literalSpans": [],
+          "restoredOutput": "伝統的な理論としては,影響を与え,説得するためには,メッセージは消費者を望ましい終末状態に導くことを目的とする手段‐目的理論がある(Gutman,1982)。",
+          "output": "伝統的な理論としては,影響を与え,説得するためには,メッセージは消費者を望ましい終末状態に導くことを目的とする手段‐目的理論がある(Gutman,1982)。",
+          "inputTokens": 53,
+          "outputTokens": 71,
+          "latencyMs": 4667.3,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "An established traditional theory is the ZZCIT1ZZ Theory that suggests that to influence and persuade, the message should aim to lead the consumer to a desired end-state (Gutman, 1982).",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 2,
+          "missingSourceSpans": [
+            "(Gutman, 1982)"
+          ],
+          "literalSpans": [
+            "(Gutman, 1982)"
+          ],
+          "restoredOutput": "伝統的な理論としては,影響を与え,説得するためには,メッセージは消費者を望ましい終末状態に導くことを目的とするべきであると提案するMeans-End理論がある(Gutman,1982)。",
+          "output": "伝統的な理論としては,影響を与え,説得するためには,メッセージは消費者を望ましい終末状態に導くことを目的とするべきであると提案するZZCIT1ZZ理論がある(Gutman,1982)。",
+          "inputTokens": 53,
+          "outputTokens": 81,
+          "latencyMs": 5535.1,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "An established traditional theory is the ZZCIT1ZZ Theory that suggests that to influence and persuade, the message should aim to lead the consumer to a desired end-state ZZCIT2ZZ.",
+          "protectedSpanCount": 2,
+          "sourceProtectedSpanCount": 2,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "伝統的な理論としては,影響を与え,説得するためには,メッセージは消費者を望ましい終末状態(Gutman, 1982)に導くことを目的とするべきであると提案するMeans-End理論がある。",
+          "output": "伝統的な理論としては,影響を与え,説得するためには,メッセージは消費者を望ましい終末状態(Gutman, 1982)に導くことを目的とするべきであると提案するMeans-End理論がある。",
+          "inputTokens": 49,
+          "outputTokens": 77,
+          "latencyMs": 5379.9,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "human-ai-interaction-guidelines",
+      "key": "human-ai-interaction-guidelines:b-3d6e8ba2#unit-0",
+      "source": "In this work, we have surveyed nearly 200 guidelines for building AI systems from three major technology companies.",
+      "sourceShape": {
+        "charCount": 115,
+        "wordCount": 18,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "In this work, we have surveyed nearly 200 guidelines for building AI systems from three major technology companies.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "3大技術企業からのAIシステム構築のための200近いガイドラインを調査した。",
+          "output": "3大技術企業からのAIシステム構築のための200近いガイドラインを調査した。",
+          "inputTokens": 29,
+          "outputTokens": 34,
+          "latencyMs": 2348.5,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "In this work, we have surveyed nearly 200 guidelines for building ZZCIT1ZZ systems from three major technology companies.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "3大技術企業からのAIシステム構築のための200近いガイドラインを調査した。",
+          "output": "3大技術企業からのZZCIT1ZZシステム構築のための200近いガイドラインを調査した。",
+          "inputTokens": 33,
+          "outputTokens": 40,
+          "latencyMs": 2704.4,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "In this work, we have surveyed nearly 200 guidelines for building ZZCIT1ZZ systems from three major technology companies.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "3大技術企業からのAIシステム構築のための200近いガイドラインを調査した。",
+          "output": "3大技術企業からのAIシステム構築のための200近いガイドラインを調査した。",
+          "inputTokens": 33,
+          "outputTokens": 40,
+          "latencyMs": 2836.8,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "interactive-jewellery",
+      "key": "interactive-jewellery:b-c1e9695a#unit-0",
+      "source": "Before we can say anything about interactive jewellery, we have to better understand traditional jewellery.",
+      "sourceShape": {
+        "charCount": 107,
+        "wordCount": 15,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Before we can say anything about interactive jewellery, we have to better understand traditional jewellery.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "これらの技術を用いて,インタラクティブジュエリーの製造を行う。",
+          "output": "これらの技術を用いて,インタラクティブジュエリーの製造を行う。",
+          "inputTokens": 25,
+          "outputTokens": 28,
+          "latencyMs": 1910.6,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "Before we can say anything about interactive jewellery, we have to better understand traditional jewellery.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "これらの技術を用いて,インタラクティブジュエリーの製造を行う。",
+          "output": "これらの技術を用いて,インタラクティブジュエリーの製造を行う。",
+          "inputTokens": 25,
+          "outputTokens": 28,
+          "latencyMs": 1880.5,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "Before we can say anything about interactive jewellery, we have to better understand traditional jewellery.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "これらの技術を用いて,インタラクティブジュエリーの製造を行う。",
+          "output": "これらの技術を用いて,インタラクティブジュエリーの製造を行う。",
+          "inputTokens": 25,
+          "outputTokens": 28,
+          "latencyMs": 1933.4,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "interpreting-neural-networks",
+      "key": "interpreting-neural-networks:b-212878dd#unit-0",
+      "source": "Interpreting neural networks is a crucial and challenging task in machine learning.",
+      "sourceShape": {
+        "charCount": 83,
+        "wordCount": 12,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Interpreting neural networks is a crucial and challenging task in machine learning.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "ニューラルネットワークの解釈は機械学習において重要で挑戦的な課題である。",
+          "output": "ニューラルネットワークの解釈は機械学習において重要で挑戦的な課題である。",
+          "inputTokens": 22,
+          "outputTokens": 31,
+          "latencyMs": 2206.2,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "Interpreting neural networks is a crucial and challenging task in machine learning.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "ニューラルネットワークの解釈は機械学習において重要で挑戦的な課題である。",
+          "output": "ニューラルネットワークの解釈は機械学習において重要で挑戦的な課題である。",
+          "inputTokens": 22,
+          "outputTokens": 31,
+          "latencyMs": 2199.5,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "Interpreting neural networks is a crucial and challenging task in machine learning.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "ニューラルネットワークの解釈は機械学習において重要で挑戦的な課題である。",
+          "output": "ニューラルネットワークの解釈は機械学習において重要で挑戦的な課題である。",
+          "inputTokens": 22,
+          "outputTokens": 31,
+          "latencyMs": 2194.9,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "linguistics-appraisal-institutional-discourse",
+      "key": "linguistics-appraisal-institutional-discourse:b-732d4b54#unit-0",
+      "source": "This article addresses the methodological issues related to applying the appraisal framework quantitatively with a corpus of institutional texts.",
+      "sourceShape": {
+        "charCount": 145,
+        "wordCount": 19,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "This article addresses the methodological issues related to applying the appraisal framework quantitatively with a corpus of institutional texts.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "評価枠組みを定量的に適用する方法論的課題を,制度的テキストコーパスに関して検討した。",
+          "output": "評価枠組みを定量的に適用する方法論的課題を,制度的テキストコーパスに関して検討した。",
+          "inputTokens": 33,
+          "outputTokens": 39,
+          "latencyMs": 2676.7,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "This article addresses the methodological issues related to applying the appraisal framework quantitatively with a corpus of institutional texts.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "評価枠組みを定量的に適用する方法論的課題を,制度的テキストコーパスに関して検討した。",
+          "output": "評価枠組みを定量的に適用する方法論的課題を,制度的テキストコーパスに関して検討した。",
+          "inputTokens": 33,
+          "outputTokens": 39,
+          "latencyMs": 2609.2,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "This article addresses the methodological issues related to applying the appraisal framework quantitatively with a corpus of institutional texts.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "評価枠組みを定量的に適用する方法論的課題を,制度的テキストコーパスに関して検討した。",
+          "output": "評価枠組みを定量的に適用する方法論的課題を,制度的テキストコーパスに関して検討した。",
+          "inputTokens": 33,
+          "outputTokens": 39,
+          "latencyMs": 2666.9,
+          "error": null
+        }
+      ]
+    }
+  ]
+}

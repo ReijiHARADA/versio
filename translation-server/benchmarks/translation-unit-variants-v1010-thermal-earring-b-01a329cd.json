@@ -1,0 +1,114 @@
+{
+  "fixture": "thermal-earring-b-01a329cd",
+  "model_version": "3b-mt-v6-transformers-4.57.6-semantic-v81-source-protect-v23-strict-restore-v28-quality-v34-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue",
+  "source": "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study. It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc. While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge.",
+  "rows": [
+    {
+      "condition": "whole_unprotected",
+      "protection_mode": "none",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "6.1"
+        ]
+      },
+      "model_input": "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study. It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc. While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge.",
+      "units": [
+        "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study. It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc. While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge."
+      ],
+      "output": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "error": "ValueError: degenerate translation output"
+    },
+    {
+      "condition": "whole_current_protection",
+      "protection_mode": "current",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "6.1"
+        ]
+      },
+      "model_input": "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by ZZCIT1ZZ ZZCIT2ZZ in ZZCIT3ZZ, directly estimating the core body temperature from the earlobe temperature requires further study. It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc. While the ZZCIT4ZZ ZZCIT5ZZ can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge.",
+      "units": [
+        "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study. It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc. While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge."
+      ],
+      "output": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "error": "ValueError: protected citation placeholder dropped by model: section 6.1"
+    },
+    {
+      "condition": "unit_0_current_protection",
+      "protection_mode": "current",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "6.1"
+        ]
+      },
+      "model_input": "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in ZZCIT1ZZ, directly estimating the core body temperature from the earlobe temperature requires further study.",
+      "units": [
+        "While we have shown that an increase in core body temperature can be reflected in earlobe temperature measurements made by Thermal Earring in section 6.1, directly estimating the core body temperature from the earlobe temperature requires further study."
+      ],
+      "output": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "error": "ValueError: protected citation placeholder dropped by model: section 6.1"
+    },
+    {
+      "condition": "unit_1_current_protection",
+      "protection_mode": "current",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "6.1"
+        ]
+      },
+      "model_input": "It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc.",
+      "units": [
+        "It is known that skin temperature, including earlobe temperature, is affected by a number of factors beyond core body temperature such as ambient temperature, gender, age, metabolic rate, body mass index, etc."
+      ],
+      "output": "耳介温を含む皮膚温は,周囲温度,性別,年齢,代謝率,BMIなどの核心体温以外の多くの因子に影響されることが知られている。",
+      "coverage": {
+        "requiredTokenPresence": {
+          "6.1": false
+        },
+        "relationTokenPresence": []
+      },
+      "input_tokens": 48,
+      "output_tokens": 56,
+      "error": null
+    },
+    {
+      "condition": "unit_2_current_protection",
+      "protection_mode": "current",
+      "expected": {
+        "roundTrip": true,
+        "minWords": 35,
+        "mustKeep": [
+          "6.1"
+        ]
+      },
+      "model_input": "While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge.",
+      "units": [
+        "While the Thermal Earring can provide information to exclude the ambient temperature effect, resolving these other factors such as user dependence or metabolic rate remains an open challenge."
+      ],
+      "output": "サーマルイヤリングは環境温度の影響を排除する情報を提供するが,ユーザ依存性や代謝率などの他の因子を解決するのは開かれた課題である。",
+      "coverage": {
+        "requiredTokenPresence": {
+          "6.1": false
+        },
+        "relationTokenPresence": []
+      },
+      "input_tokens": 41,
+      "output_tokens": 56,
+      "error": null
+    }
+  ]
+}

@@ -46,6 +46,7 @@ const out: any = { version: "alternate-model-diagnostic-v3", createdAt: new Date
 for (const row of rows) {
   const units = py(protectCode, row.source);
   for (const model of models) {
+    const modelStartedAt = Date.now();
     const pieces: string[] = []; const rawPieces: string[] = []; const errors: string[] = [];
     for (const unit of units) {
       let response: Response;
@@ -68,7 +69,7 @@ for (const row of rows) {
       if (restored.ok) pieces.push(restored.text); else { pieces.push(unit.source); errors.push(restored.error); }
     }
     const translation = pieces.join(" ").trim(); const quality = evaluateJaTranslation(translation, row.source);
-    out.results.push({ key: row.key, model, source: row.source, sourceRiskProfile: sourceRiskProfile(row.source), units: units.length, rawPieces, translation, restoreErrors: errors, quality, gateAccept: isPlausibleJaTranslation(translation, row.source), madladFallbackReason: row.fallbackReason ?? null });
+    out.results.push({ key: row.key, model, source: row.source, sourceRiskProfile: sourceRiskProfile(row.source), units: units.length, rawPieces, translation, restoreErrors: errors, quality, gateAccept: isPlausibleJaTranslation(translation, row.source), madladFallbackReason: row.fallbackReason ?? null, elapsedMs: Date.now() - modelStartedAt });
     fs.writeFileSync(outputPath, JSON.stringify(out, null, 2));
     console.log(`${model} ${row.key} accept=${isPlausibleJaTranslation(translation, row.source)} restoreErrors=${errors.length}`);
   }

@@ -1,0 +1,80 @@
+{
+  "version": "protection-ab-v1",
+  "sourceReport": "/tmp/protection-repeat-source.json",
+  "model": "google/madlad400-3b-mt",
+  "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v82-source-protect-v25-strict-restore-v28-quality-v34-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue",
+  "generation": {
+    "numBeams": 1,
+    "doSample": false
+  },
+  "offset": 0,
+  "segmentUnits": false,
+  "productionRescue": false,
+  "exposeRepeatedAcronyms": false,
+  "exposeAllSpans": false,
+  "exposeShortContextSpans": false,
+  "sampleCount": 1,
+  "records": [
+    {
+      "paperId": "ergonomics-job-rotation-robotics",
+      "key": "ergonomics-job-rotation-robotics:b-5b0516ff#unit-0",
+      "source": "In the scientific literature, different studies investigate ergonomics in assembly systems, mainly with the objective of reducing the ergonomic risk in terms of worker posture [13].",
+      "sourceShape": {
+        "charCount": 181,
+        "wordCount": 26,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "In the scientific literature, different studies investigate ergonomics in assembly systems, mainly with the objective of reducing the ergonomic risk in terms of worker posture [13].",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [
+            "[13]"
+          ],
+          "literalSpans": [],
+          "restoredOutput": "組立システムの人間工学的リスクを低減するために,組立作業者の姿勢を考慮した人間工學的リスクの低減を目的とした研究が行われている。",
+          "output": "組立システムの人間工学的リスクを低減するために,組立作業者の姿勢を考慮した人間工學的リスクの低減を目的とした研究が行われている。",
+          "inputTokens": 43,
+          "outputTokens": 56,
+          "latencyMs": 2652.6,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "In the scientific literature, different studies investigate ergonomics in assembly systems, mainly with the objective of reducing the ergonomic risk in terms of worker posture [13].",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [
+            "[13]"
+          ],
+          "literalSpans": [
+            "[13]"
+          ],
+          "restoredOutput": "組立システムの人間工学的リスクを低減するために,組立作業者の姿勢を考慮した人間工學的リスクの低減を目的とした研究が行われている。",
+          "output": "組立システムの人間工学的リスクを低減するために,組立作業者の姿勢を考慮した人間工學的リスクの低減を目的とした研究が行われている。",
+          "inputTokens": 43,
+          "outputTokens": 56,
+          "latencyMs": 2285.5,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "In the scientific literature, different studies investigate ergonomics in assembly systems, mainly with the objective of reducing the ergonomic risk in terms of worker posture ZZCIT1ZZ.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "組立システムにおける人間工学的リスクの低減を目的として,組立シミュレーションを行った[13]。",
+          "output": "組立システムにおける人間工学的リスクの低減を目的として,組立シミュレーションを行った[13]。",
+          "inputTokens": 44,
+          "outputTokens": 38,
+          "latencyMs": 1576.2,
+          "error": null
+        }
+      ]
+    }
+  ]
+}

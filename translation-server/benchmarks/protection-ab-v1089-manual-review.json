@@ -1,0 +1,24 @@
+{
+  "version": "protection-ab-v1089-manual-review-v1",
+  "source": "protection-ab-v1089-twelve.json",
+  "reviews": [
+    {
+      "paperId": "dont-mind-me",
+      "label": "current_benefit_fact_preservation",
+      "severity": 0,
+      "finding": "Raw/Minimal preserve the author name but omit explicit citation numbers in the Japanese surface; Current restores [23] and [24] deterministically and preserves both clauses. No unsupported claim observed."
+    },
+    {
+      "paperId": "ergonomics-flight-deck-applications",
+      "label": "minimal_current_benefit_identifier_preservation",
+      "severity": 0,
+      "finding": "Raw renders opaque method identifier DwI as Dwwi; Minimal and Current preserve DwI. The source citation year is retained."
+    },
+    {
+      "paperId": "ergonomics-job-rotation-robotics",
+      "label": "semantic_addition_possible_decode_drift",
+      "severity": 3,
+      "finding": "Current says assembly simulation was performed, while the source only says studies investigate ergonomics with the objective of reducing risk. Raw/Minimal repeat the risk-reduction claim but do not add simulation. Current alone replaces the visible [13] with ZZCIT1ZZ; a same-input repeat reproduced the exact Current output, so this is deterministic protection-context drift rather than random MPS variation."
+    }
+  ]
+}

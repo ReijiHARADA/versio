@@ -10,7 +10,7 @@ sys.path.insert(0, str(ROOT))
 from engines.madlad_mps import MADLADEngine  # noqa: E402
 import engines.madlad_mps as madlad_module  # noqa: E402
 from engines.segmenter import segment_for_translation, rescue_units_for_translation  # noqa: E402
-from engines.citation_protect import protect_citations, restore_citations  # noqa: E402
+from engines.citation_protect import protect_citations, restore_citations, _protected_matches  # noqa: E402
 import re
 
 FIXTURES = ROOT / "benchmarks" / "translation-unit-fallback-fixtures-v66.json"
@@ -39,6 +39,17 @@ def main() -> None:
     # translate()'s production segmentation/retry so protection effects are
     # measured independently and remain comparable.
     direct_variants = [("whole_unprotected", source, "none")]
+    # Audit-only minimal mode: keep opaque author/year and numeric facts
+    # protected, but expose readable identifiers/cross-reference labels to
+    # MADLAD so they retain sentence context. Production behavior is unchanged.
+    minimal_values = {
+        match.group(0)
+        for match in _protected_matches(source)
+        if not re.search(r"\d", match.group(0))
+        or re.fullmatch(r"\d{1,3}", match.group(0))
+        or re.match(r"\b(?:Section|Appendix)\b", match.group(0), re.I)
+    }
+    direct_variants.append(("whole_minimal_protection", source, "minimal"))
     direct_variants.append(("whole_current_protection", source, "current"))
     match = re.search(r"\((?=[^()]*\b(?:18|19|20)\d{2}\b)[^()]+\)", source)
     if match:
@@ -53,8 +64,12 @@ def main() -> None:
     for name, text, mode in direct_variants:
         if mode == "none":
             protected, citations, nonce = text, [], 0
-            madlad_module.protect_citations = lambda value: (value, [], 0)
+            madlad_module.protect_citations = lambda value, **_kw: (value, [], 0)
             madlad_module.restore_citations = lambda value, _c, _n, **_kw: value
+        elif mode == "minimal":
+            protected, citations, nonce = original_protect(text, unprotected_values=minimal_values)
+            madlad_module.protect_citations = lambda value, **_kw: original_protect(value, unprotected_values=minimal_values)
+            madlad_module.restore_citations = original_restore
         elif mode == "current":
             protected, citations, nonce = original_protect(text)
             madlad_module.protect_citations = original_protect
@@ -64,7 +79,7 @@ def main() -> None:
             token = "ZZREF1ZZ"
             protected = text[:match.start()] + token + text[match.end():]
             citations, nonce = [match.group(0)], 0
-            madlad_module.protect_citations = lambda value: (protected if value == text else value, citations, nonce)
+            madlad_module.protect_citations = lambda value, **_kw: (protected if value == text else value, citations, nonce)
             def restore_atomic(value, c, _n, **_kw):
                 if not c:
                     return value

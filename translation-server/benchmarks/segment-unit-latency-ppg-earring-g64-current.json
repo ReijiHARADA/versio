@@ -1,0 +1,169 @@
+{
+  "unit_count": 20,
+  "source_chars": 2451,
+  "units": [
+    {
+      "index": 0,
+      "source": "This makes the green light ideal for areas with good blood perfusion near the skin.",
+      "chars": 83,
+      "latency_s": 1.768,
+      "error": null,
+      "translation": "緑色光は皮膚近傍の血流の良い領域に適している。"
+    },
+    {
+      "index": 1,
+      "source": "In contrast, red and IR light penetrates deeper into tissue and can provide better signal quality when stable.",
+      "chars": 110,
+      "latency_s": 4.252,
+      "error": null,
+      "translation": "対照的に, 赤色とIR光は組織に深く浸透し, 安定であればより良い信号品質を与えることができる。"
+    },
+    {
+      "index": 2,
+      "source": "They are also more suitable for oxygen saturation measurement.",
+      "chars": 62,
+      "latency_s": 0.78,
+      "error": null,
+      "translation": "また, 酸素飽和度測定にも適している。"
+    },
+    {
+      "index": 3,
+      "source": "Several factors can affect the PPG signal quality.",
+      "chars": 50,
+      "latency_s": 0.986,
+      "error": null,
+      "translation": "PPG信号の品質に影響する要因はいくつかある。"
+    },
+    {
+      "index": 4,
+      "source": "One of the main factors is motion artifacts and the contact pressure between the sensor and the skin.",
+      "chars": 101,
+      "latency_s": 1.325,
+      "error": null,
+      "translation": "センサと皮膚の接触圧力は, センサの動作アーチファクトの主な要因である。"
+    },
+    {
+      "index": 5,
+      "source": "As shown in Figure 2 (c), when a small movement happens, the PPG sensor can be slightly shifted from the skin which largely changes the optical path, resulting a significant different signal reflected to the photodetector.",
+      "chars": 222,
+      "latency_s": 6.691,
+      "error": null,
+      "translation": "Figure 2 (c)で示したように, 小さな動きが起こると,PPGセンサは皮膚からわずかにシフトし, 光路が大きく変化し, 光検出器に反射される信号が著しく異なる。"
+    },
+    {
+      "index": 6,
+      "source": "The appropriate amount of pressure between the PPG sensor and the skin is crucial, as too much pressure can reduce blood flow,",
+      "chars": 126,
+      "latency_s": 1.736,
+      "error": null,
+      "translation": "PPGセンサと皮膚との間の適切な圧力は, 圧力が過大になると血流を減少させるために重要である。"
+    },
+    {
+      "index": 7,
+      "source": "while too little pressure may lead to poor contact and a lot of movements.",
+      "chars": 74,
+      "latency_s": 1.036,
+      "error": null,
+      "translation": "圧力が少ないと接触が悪く, 多くの動きを生じる。"
+    },
+    {
+      "index": 8,
+      "source": "We implemented the PPG sensing on the earring using MAX30101 from Analog Devices, as shown in Figure 3.",
+      "chars": 103,
+      "latency_s": 2.309,
+      "error": null,
+      "translation": "Figure 3では,Analog DivisionsのMAX30101を用いて耳飾り上のPPGセンシングを実現した。"
+    },
+    {
+      "index": 9,
+      "source": "The MAX30101 senses the PPG signal through reflective PPG and is an integrated pulse oximetry and heart-rate monitor module that includes internal LEDs, photodetectors, optical elements, and low-noise electronics with ambient light rejection.",
+      "chars": 242,
+      "latency_s": 3.988,
+      "error": null,
+      "translation": "MAX30101は反射型PPGを通してPPG信号を検出し, 内部LED, フォト検出器, 光学素子, 環境光を拒絶する低雑音電子部品を含む集積化パルスオキシメータと心拍モニタモジュールである。"
+    },
+    {
+      "index": 10,
+      "source": "In addition, the sensor has an integrated cover glass for optimal and robust performance.",
+      "chars": 89,
+      "latency_s": 1.394,
+      "error": null,
+      "translation": "さらに, センサは最適でロバストな性能を得るために, カバーガラスを一体化した。"
+    },
+    {
+      "index": 11,
+      "source": "MAX30101 comes in a tiny package of 5.6 mm x 3.3 mm x 1.55 mm and fea-tures a low power consumption of less than 1 mW (varies with light intensity setting).",
+      "chars": 156,
+      "latency_s": 9.384,
+      "error": null,
+      "translation": "MAX30101は,5.6 mm×3.3 mm×1.55mmの小型パッケージで,1 mWより低消費電力(光強度設定により異なる)を特徴とする。"
+    },
+    {
+      "index": 12,
+      "source": "The MAX30101 integrates red, green, and IR LEDs with programmable light strength from 0 to 50 mA.",
+      "chars": 97,
+      "latency_s": 6.229,
+      "error": null,
+      "translation": "MAX30101は0〜50 mAのプログラマブル光強度を持つ赤, 緑,IRLEDを集積した。"
+    },
+    {
+      "index": 13,
+      "source": "The LED pulse width can be programmed from 69 μs to 411 μs to allow balancing PPG accuracy and power consumption based on use cases.",
+      "chars": 132,
+      "latency_s": 4.234,
+      "error": null,
+      "translation": "LEDパルス幅は69μsから411μsまでプログラムでき, ユースケースに基づいてPPGの精度と消費電力をバランスさせることができる。"
+    },
+    {
+      "index": 14,
+      "source": "In our setup, we experimented with all lights and different light power settings in later Section.6.1.",
+      "chars": 102,
+      "latency_s": 1.726,
+      "error": null,
+      "translation": "また, 光源の種類と光の強さを変えて実験した。"
+    },
+    {
+      "index": 15,
+      "source": "The MAX30101 PPG sensor is connected to the system microcontroller through an I2C line and is programmed to a sampling rate of 50 Hz.",
+      "chars": 133,
+      "latency_s": 4.234,
+      "error": null,
+      "translation": "MAX30101,PPGセンサは,I2C線を通してシステムマイクロコントローラに接続され,50 Hzのサンプリングレートにプログラムされる。"
+    },
+    {
+      "index": 16,
+      "source": "Beyond PPG, the MAX30101 sensor can also measure blood oxygen saturation (SpO2), similar to many pulse oximeters.",
+      "chars": 113,
+      "latency_s": 2.801,
+      "error": null,
+      "translation": "PPGのほか, 多くのパルスオキシメータと同様に,MAX30101センサは血中酸素飽和度(SpO2)を測定することができる。"
+    },
+    {
+      "index": 17,
+      "source": "Low SpO2 levels may signal respiratory or circulatory issues, with readings below 92% often requiring immediate treatment to prevent organ damage [18].",
+      "chars": 151,
+      "latency_s": 2.323,
+      "error": null,
+      "translation": "低いSpO2レベルは呼吸器や循環器の問題を示唆し,92%以下の値は器官損傷を防ぐために即時治療を必要とする[18]。"
+    },
+    {
+      "index": 18,
+      "source": "The SpO2 monitoring from the earring can provide timely assessments to help verify if the respiratory and circulatory systems are working properly.",
+      "chars": 147,
+      "latency_s": 4.834,
+      "error": null,
+      "translation": "耳かきからのSpO2モニタリングは呼吸・循環系が正常に機能しているかを確認するための適時な評価を提供する。"
+    },
+    {
+      "index": 19,
+      "source": "However, a comprehensive evaluation of SpO2 accuracy would require extensive experiments and is, therefore, beyond the scope of this paper.",
+      "chars": 139,
+      "latency_s": 4.467,
+      "error": null,
+      "translation": "しかし,SpO2の精度の総合的評価には広範な実験が必要であり, 本論文の範囲を超えている。"
+    }
+  ],
+  "paper_id": "ppg-earring",
+  "block_id": "g-64",
+  "source_sha256": "d706157a5a6c22f7656b34d7f069986329a99c3aebbb7b8333507eaeec622a0d"
+}

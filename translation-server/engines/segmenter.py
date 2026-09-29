@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 from .citation_protect import protected_span_mask
 
-SEGMENTER_VERSION = "semantic-v81"
+SEGMENTER_VERSION = "semantic-v82"
 _ABBREVIATIONS = {"e.g.", "i.e.", "et al.", "fig.", "eqn.", "eq.", "no.", "cf.", "dr.", "mr.", "ms.", "vs."}
 
 
@@ -179,6 +179,17 @@ def _boundary_positions(text: str) -> list[int]:
             quote = _advance_quote_state(quote, char)
             continue
         if quote:
+            # A sentence-final period is often inside a closing quotation
+            # mark: `... “condition.” Participants ...`.  Waiting for the
+            # closing mark before considering boundaries leaves the next
+            # sentence glued to the quoted condition.  Treat the paired
+            # punctuation+closing-mark as one boundary while preserving the
+            # exact source slice.
+            if char in ".!?" and i + 1 < len(text) and text[i + 1] in '”"':
+                after = i + 2
+                if after == len(text) or text[after].isspace():
+                    positions.append(after)
+                    continue
             continue
         if char == "(": paren += 1
         elif char == ")": paren = max(0, paren - 1)

@@ -426,10 +426,10 @@ function itemsToLine(
   };
 }
 
-function splitSpanningGutterLines(lines: LayoutLine[]): LayoutLine[] {
+function splitSpanningGutterLines(lines: LayoutLine[], pageLayouts?: Map<number, PageColumnLayout>): LayoutLine[] {
   const result: LayoutLine[] = [];
   for (const line of lines) {
-    if (line.items.length < 4) {
+    if (line.items.length < 2) {
       result.push(line);
       continue;
     }
@@ -447,8 +447,30 @@ function splitSpanningGutterLines(lines: LayoutLine[]): LayoutLine[] {
     const right = splitIndex > 0 ? items.slice(splitIndex) : [];
     const leftFont = median(left.map((item) => item.fontSize));
     const rightFont = median(right.map((item) => item.fontSize));
-    const splitByGutter = largestGap >= Math.max(48, (line.pageWidth ?? 612) * 0.08) &&
-      left.length <= 3 && right.length >= 4 && Math.abs(leftFont - rightFont) >= 1;
+    const pageWidth = line.pageWidth ?? 612;
+    const layout = pageLayouts?.get(line.page);
+    const gutterGap = largestGap >= Math.max(48, pageWidth * 0.08);
+    const shortRailPair = left.length <= 3 && right.length >= 4 && Math.abs(leftFont - rightFont) >= 1;
+    // Some single-column journal pages place a narrow editor/reviewer rail
+    // beside a full-width body line. Native PDF extraction can put both spans
+    // into one line even when the gap is only ~15–25pt. Require a short rail,
+    // a body-sized right span, and a clear font/width distinction before
+    // splitting; ordinary prose word gaps do not satisfy this combination.
+    const shortRailBodyPair = left.length <= 3 && right.length >= 1 &&
+      left.reduce((sum, item) => sum + item.width, 0) <= Math.min(120, pageWidth * 0.2) &&
+      right.reduce((max, item) => Math.max(max, item.width), 0) >= pageWidth * 0.45 &&
+      largestGap >= Math.max(12, leftFont * 1.6) &&
+      (Math.abs(leftFont - rightFont) >= 1 || leftFont <= rightFont * 0.86);
+    const leftStart = left[0]?.x ?? Number.POSITIVE_INFINITY;
+    const rightStart = right[0]?.x ?? Number.NEGATIVE_INFINITY;
+    const fullColumnPair = Boolean(layout?.isMultiColumn && line.column === "spanning" &&
+      left.length >= 4 && right.length >= 4 &&
+      leftStart <= layout.leftX + pageWidth * 0.08 &&
+      rightStart >= layout.rightX - pageWidth * 0.08 &&
+      left.reduce((max, item) => Math.max(max, item.x + item.width), 0) - leftStart >= pageWidth * 0.28 &&
+      right.reduce((max, item) => Math.max(max, item.x + item.width), 0) - rightStart >= pageWidth * 0.28 &&
+      Math.abs(leftFont - rightFont) <= 1.5);
+    const splitByGutter = (gutterGap && (shortRailPair || fullColumnPair)) || shortRailBodyPair;
     if (!splitByGutter) {
       result.push(line);
       continue;
@@ -1671,11 +1693,17 @@ function buildPageLines(
     );
   });
 
-  const structurallySplit = splitSpanningGutterLines(lines).flatMap(splitInlineSubheading);
+  const pageLayouts = new Map<number, PageColumnLayout>([[page.pageNumber, layout]]);
+  const structurallySplit = splitSpanningGutterLines(lines, pageLayouts).flatMap(splitInlineSubheading);
 
   // Opt-in line diagnostics for investigating generic caption/table boundaries.
   // Keep this disabled by default; it reports native geometry and style only.
   const lineDebug = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_DEBUG;
+  if (lineDebug === "all") {
+    for (const line of structurallySplit.filter((candidate) => candidate.page === 1)) {
+      console.warn(`[PDF_LAYOUT_NATIVE_LINE] page=${line.page} column=${line.column} y=${line.y.toFixed(2)} x=${line.x.toFixed(2)} width=${line.width.toFixed(2)} font=${line.fontSize.toFixed(2)} items=${line.items.map((item) => `${JSON.stringify(item.text)}@${item.x.toFixed(2)}+${item.width.toFixed(2)}/${item.fontSize.toFixed(2)}`).join("|")}`);
+    }
+  }
   if (lineDebug === "lines") {
     for (const line of structurallySplit) {
       if (/^(?:table|tables?|figure|fig\.?|表|図)\b/i.test(line.text.trim())) {
@@ -2020,6 +2048,13 @@ function groupLinesIntoBlocks(
     const authorKindOk =
       currentRole !== "author" ||
       looksLikeEmail(joinLines(current)) === looksLikeEmail(line.text);
+    const detachedRailLineBoundary = currentRole === "paragraph" && forcedRole === "paragraph" && (() => {
+      const previous = current[current.length - 1];
+      const body = previous.fontSize >= baseFont * 0.95 && previous.width >= (previous.pageWidth ?? 612) * 0.45;
+      const rail = line.fontSize <= previous.fontSize * 0.84 && line.width <= Math.min(160, (line.pageWidth ?? 612) * 0.3) &&
+        line.x + line.width + 12 <= previous.x && Math.abs(line.y - previous.y) <= Math.max(18, previous.fontSize * 1.8);
+      return body && rail;
+    })();
     const mergeable =
       sameRole &&
       !atomic &&
@@ -2032,6 +2067,7 @@ function groupLinesIntoBlocks(
       !styleStartsSubheading(current[current.length - 1], line, baseFont) &&
       rotationCompatible &&
       rotationContentCompatible &&
+      !detachedRailLineBoundary &&
       canMerge(current[current.length - 1], line, baseFont);
 
     const affiliationContinue =
@@ -2141,8 +2177,102 @@ function groupLinesIntoBlocks(
   );
   logLayoutBlockBoundaries(nonEmptyBlocks);
   const merged = mergeColumnContinuations(nonEmptyBlocks);
-  const ordered = repairInterleavedContinuationOrder(splitMixedColumnBlocks(merged));
+  const split = splitMixedColumnBlocks(merged);
+  const ordered = repairInterleavedContinuationOrder(repairPageBoundaryContinuations(repairDetachedMarginContinuations(split)));
   return trimOrphanTailBeforeChrome(ordered);
+}
+
+/** Rejoin a paragraph across a page boundary when intervening blocks are
+ * transparent metadata (author/affiliation/header) and both text blocks have
+ * strong continuation geometry. */
+function repairPageBoundaryContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
+  const result = [...blocks];
+  const emptyRepeated = new Set<string>();
+  const affiliationLike = (block: LayoutBlock) => block.role === "paragraph" &&
+    block.text.length < 300 && block.lines.length <= 6 &&
+    /\b(?:university|institute|college|faculty|department|laboratory|school)\b/i.test(block.text);
+  const authorMetadataLike = (block: LayoutBlock) => block.role === "paragraph" &&
+    block.text.length < 220 && block.lines.length <= 4 && !/[.!?]$/.test(block.text.trim()) &&
+    ((block.text.match(/\b[A-Z][A-Za-z'’-]{2,}\b/g) ?? []).length >= 2 &&
+      (block.text.includes(",") || block.text.includes("&")) ||
+      looksLikeLatinAuthorLine(block.text) || /^[&]/.test(block.text.trim()) ||
+      (/^[A-Z][A-Za-z'’-]+(?:\s+[A-Z][A-Za-z'’-]+){1,5}(?:,|\s+&)/.test(block.text.trim()) && block.text.includes(",")));
+  for (let i = 0; i < result.length; i += 1) {
+    const target = result[i];
+    if (target.role !== "paragraph" || target.pageStart !== target.pageEnd ||
+        affiliationLike(target) || authorMetadataLike(target) ||
+        /[.!?:]$/.test(target.text.trim()) || target.text.trim().length < 80) continue;
+    let nextIdx = i + 1;
+    const skipped: LayoutBlock[] = [];
+    while (nextIdx < result.length && (result[nextIdx].role === "author" || result[nextIdx].role === "affiliation" || isTransparentMetadataBlock(result[nextIdx], emptyRepeated) || affiliationLike(result[nextIdx]) || authorMetadataLike(result[nextIdx]))) {
+      skipped.push(result[nextIdx]);
+      nextIdx += 1;
+    }
+    const next = result[nextIdx];
+    const targetLast = target.lines.at(-1);
+    const nextFirst = next?.lines[0];
+    const compatibleColumn = Boolean(
+      next && nextFirst && (
+        target.column === next.column ||
+        (target.column === "single" && next.column === "spanning" &&
+          Math.abs((target.lines[0]?.x ?? target.bbox.x) - nextFirst.x) <= 24)
+      )
+    );
+    const longAbstractContinuation = Boolean(
+      next && skipped.length > 0 && target.text.length >= 500 && next.text.length >= 120 &&
+      next.pageStart === target.pageEnd + 1 && /^[a-z(]/.test(next.text.trim()) &&
+      skipped.every((item) => item.role === "author" || item.role === "affiliation" || affiliationLike(item) || authorMetadataLike(item) || isTransparentMetadataBlock(item, emptyRepeated))
+    );
+    if (!next || next.role !== "paragraph" ||
+        target.pageEnd + 1 !== next.pageStart || next.pageEnd !== next.pageStart ||
+        !compatibleColumn || !/^[a-z(]/.test(next.text.trim()) ||
+        (!longAbstractContinuation && Math.abs((targetLast?.fontSize ?? 9) - (nextFirst?.fontSize ?? 9)) > 1.0) ||
+        !targetLast || !nextFirst || (!longAbstractContinuation && (
+          (targetLast?.y ?? 0) < (targetLast?.pageHeight ?? 792) * 0.45 ||
+          (nextFirst?.y ?? Number.MAX_SAFE_INTEGER) > (nextFirst?.pageHeight ?? 792) * 0.42
+        ))) continue;
+    target.text = joinHyphenated(target.text, next.text).replace(/\s+/g, " ").trim();
+    target.lines = [...target.lines, ...next.lines];
+    target.pageEnd = next.pageEnd;
+    target.bbox = blockBbox(target.lines);
+    result.splice(nextIdx, 1);
+    i -= 1;
+  }
+  return result;
+}
+
+/** Rejoin an unfinished body sentence when only a proven narrow margin rail
+ * lies between its physical lines. This runs after normal continuation merge
+ * so it cannot make a detached label part of the translated paragraph. */
+function repairDetachedMarginContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
+  const result = [...blocks];
+  for (let i = 0; i < result.length; i += 1) {
+    const target = result[i];
+    if (target.role !== "paragraph" || target.pageStart !== target.pageEnd ||
+        /[.!?:]$/.test(target.text.trim())) continue;
+    let nextIdx = i + 1;
+    const skipped: LayoutBlock[] = [];
+    while (nextIdx < result.length && isDetachedSingleColumnMarginBlock(result[nextIdx], target.bbox.x)) {
+      skipped.push(result[nextIdx]);
+      nextIdx += 1;
+    }
+    const next = result[nextIdx];
+    if (!next || skipped.length === 0 || next.role !== "paragraph" ||
+        next.pageStart !== target.pageEnd || next.pageEnd !== target.pageEnd ||
+        next.column !== target.column || /^[A-Z0-9]/.test(next.text.trim()) ||
+        !/^[a-z(]/.test(next.text.trim()) ||
+        Math.abs(target.bbox.x - next.bbox.x) > 12 ||
+        next.bbox.y <= target.bbox.y ||
+        next.bbox.y - (target.bbox.y + target.bbox.height) > Math.max(48, (target.lines.at(-1)?.fontSize ?? 9) * 5) ||
+        Math.abs((target.lines.at(-1)?.fontSize ?? 9) - (next.lines[0]?.fontSize ?? 9)) > 1.0) continue;
+    target.text = joinHyphenated(target.text, next.text).replace(/\s+/g, " ").trim();
+    target.lines = [...target.lines, ...next.lines];
+    target.pageEnd = next.pageEnd;
+    target.bbox = blockBbox(target.lines);
+    result.splice(nextIdx, 1);
+    i -= 1;
+  }
+  return result;
 }
 
 function repairInterleavedContinuationOrder(blocks: LayoutBlock[]): LayoutBlock[] {
@@ -2315,9 +2445,16 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
       const right = block.lines.filter((line) => line.x > splitX);
       const leftMedian = median(left.map((line) => line.width).filter((width) => width > 0));
       const rightMedian = median(right.map((line) => line.width).filter((width) => width > 0));
-      return left.length >= 2 && right.length >= 3 && leftMedian > 0 && rightMedian > 0 &&
+      // A detached margin can contribute only one native line to a mixed
+      // block (the remaining labels may be on adjacent lines/blocks).  The
+      // geometry/style contrast is stronger evidence than requiring a fixed
+      // number of sidebar lines.
+      return left.length >= 1 && right.length >= 2 && leftMedian > 0 && rightMedian > 0 &&
         leftMedian <= rightMedian * 0.35 && rightMedian >= typicalLineWidth * 0.85;
     })();
+    if (process.env.PDF_LAYOUT_DEBUG === "all" && block.pageStart === 1 && block.bbox.y < 500 && xBands.length > 1) {
+      console.error(`[PDF_LAYOUT_MIXED_DEBUG] role=${block.role} lines=${block.lines.length} columns=${[...columns].join(",")} xBands=${xBands.join(",")} labelSidebar=${labelSidebar} text=${JSON.stringify(block.text.slice(0, 140))}`);
+    }
     const orderedColumns = [...new Set(block.lines.map((line) => line.column))];
     const leftLines = block.lines.filter((line) => line.column === "left");
     const rightLines = block.lines.filter((line) => line.column === "right");
@@ -2333,7 +2470,7 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
     const clearColumnContinuation = orderedColumns.includes("left") && orderedColumns.includes("right") &&
       /^[a-z]/.test(rightHead) && !/[.!?;:]$/.test(leftTail);
     if (block.role !== "paragraph" || (!inferredTwoColumn && !labelSidebar && columns.size < 2) || columns.has("spanning") ||
-        (!labelSidebar && block.bbox.width < typicalLineWidth * 1.65) || block.lines.length < 3 ||
+        (!labelSidebar && block.bbox.width < typicalLineWidth * 1.65) || block.lines.length < (labelSidebar ? 2 : 3) ||
         (!startsMidPage && !labelSidebar && (columns.size < 2 || clearColumnContinuation)) ||
         crossPageColumnContinuation) {
       result.push(block);
@@ -2343,7 +2480,7 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
       const splitX = (Math.min(...xBands) + Math.max(...xBands)) / 2;
       const left = block.lines.filter((line) => line.x <= splitX).sort((a, b) => a.y - b.y);
       const right = block.lines.filter((line) => line.x > splitX).sort((a, b) => a.y - b.y);
-      if (left.length >= 2 && right.length >= 2) {
+      if (left.length >= (labelSidebar ? 1 : 2) && right.length >= (labelSidebar ? 1 : 2)) {
         for (const run of [left, right]) {
           const text = joinLines(run);
           const role = labelSidebar && run === left && looksLikeAffiliation(text)
@@ -2573,7 +2710,7 @@ function isArxivOverlayBlock(block: LayoutBlock): boolean {
   // Some PDF producers classify this metadata band as ordinary paragraph text
   // and use the same body-sized font as the abstract. Match the complete
   // arXiv marker rather than any sentence that merely mentions arXiv.
-  const marker = /^arXiv:\s*\d{4}\.\d{4,}(?:v\d+)?(?:\s*\[[^\]]+\])?(?:\s+\d+)?$/i;
+  const marker = /^arXiv:\s*\d{4}\.\d{4,}(?:v\d+)?(?:\s*\[[^\]]+\])?(?:\s+(?:\d{1,4}\s+[A-Za-z]{3,9}\s+\d{4}|\d{1,4}))?$/i;
   return marker.test(block.text.trim());
 }
 
@@ -2614,7 +2751,9 @@ function isInlineFootnoteBlock(block: LayoutBlock): boolean {
 function isTransparentMetadataBlock(block: LayoutBlock, repeatedTexts: Set<string>): boolean {
   return block.role === "header" || block.role === "footer" || block.role === "footnote" || block.role === "chrome" ||
     block.role === "affiliation" || block.role === "copyright" || isUnclassifiedFootnote(block) ||
-    isAuthorMetadataBlock(block) || isPublicationChromeBlock(block) || isArxivOverlayBlock(block) || isRepeatedRunningHeader(block, repeatedTexts) ||
+    isAuthorMetadataBlock(block) ||
+    (block.role === "paragraph" && block.text.length < 260 && block.lines.length <= 5 && looksLikeAffiliation(block.text)) ||
+    isPublicationChromeBlock(block) || isArxivOverlayBlock(block) || isRepeatedRunningHeader(block, repeatedTexts) ||
     isRepeatedEdgeMarker(block, repeatedTexts) || isPageHeaderMarker(block) || isInlineFootnoteBlock(block);
 }
 
@@ -2625,10 +2764,10 @@ function isTransparentMetadataBlock(block: LayoutBlock, repeatedTexts: Set<strin
 function isDetachedSingleColumnMarginBlock(block: LayoutBlock, bodyX: number): boolean {
   const gapToBody = bodyX - (block.bbox.x + block.bbox.width);
   const pageWidth = block.lines[0]?.pageWidth ?? 612;
-  return block.column === "single" && block.bbox.width <= 160 &&
+  return (block.column === "single" || block.column === "left") && block.bbox.width <= 160 &&
     gapToBody >= 12 && gapToBody <= pageWidth * 0.3 &&
     block.lines.length > 0 &&
-    block.lines.every((line) => line.column === "single");
+    block.lines.every((line) => line.column === "single" || line.column === "left");
 }
 
 function hasRotatedNativeLine(block: LayoutBlock): boolean {
@@ -2864,6 +3003,14 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       Math.abs(targetLine.fontSize - nextLine.fontSize) <= 0.8 &&
       !/[.!?:]$/.test(target.text.trim()) && isSentenceContinuation(target.text, block.text)
     );
+    if (process.env.PDF_LAYOUT_CONTINUATION_DEBUG === "1" && target && target.pageStart === block.pageStart &&
+        target.column === block.column && target.role !== "heading" && block.role !== "heading") {
+      console.warn(`[PDF_LAYOUT_CONTINUATION] targetRole=${target.role} blockRole=${block.role} ` +
+        `targetEnd=${JSON.stringify(target.text.slice(-90))} blockStart=${JSON.stringify(block.text.slice(0, 90))} ` +
+        `sameColumn=${targetLine?.column === nextLine?.column} yGap=${((nextLine?.y ?? 0) - (targetLine?.y ?? 0)).toFixed(2)} ` +
+        `fontDelta=${Math.abs((targetLine?.fontSize ?? 0) - (nextLine?.fontSize ?? 0)).toFixed(2)} ` +
+        `sentence=${isSentenceContinuation(target.text, block.text)} joins=${joinsSameColumnContinuation}`);
+    }
     const debugFlag = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_DEBUG;
     const wrapsAcrossColumnsAtPageBottom = Boolean(
       target && (!skippedInterveningMetadata || safeColumnMetadataGap) &&
@@ -2938,6 +3085,21 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       nextLine.y > targetLine.y &&
       nextLine.y - targetLine.y <= Math.max(targetLine.fontSize, nextLine.fontSize) * 1.65 &&
       Math.abs(targetLine.fontSize - nextLine.fontSize) <= 0.8
+    );
+    // A sparse margin can occupy several native y-lines between two body
+    // lines.  Once every intervening block is proven to be a narrow detached
+    // rail, allow the body sentence to rejoin across that vertical band.
+    const rejoinAfterDetachedMargin = Boolean(
+      skippedInterveningMetadata && target && target.role === "paragraph" &&
+      block.role === "paragraph" && target.column === "single" &&
+      block.column === "single" && target.pageStart === target.pageEnd &&
+      block.pageStart === block.pageEnd && target.pageStart === block.pageStart &&
+      targetLine && nextLine && Math.abs(targetLine.x - nextLine.x) <= 12 &&
+      target.text.trim().length >= 80 && !/[.!?:]$/.test(target.text.trim()) &&
+      /^[a-z(]/.test(block.text.trim()) &&
+      Math.abs(targetLine.fontSize - nextLine.fontSize) <= 1.0 &&
+      nextLine.y > targetLine.y && nextLine.y - targetLine.y <= Math.max(48, targetLine.fontSize * 5) &&
+      skippedBlocks.every((skipped) => isDetachedSingleColumnMarginBlock(skipped, targetLine.x))
     );
     const interleavedBandTarget = targetIdx > 0 ? result[targetIdx - 1] : null;
     const rejoinInterleavedBand = Boolean(
@@ -3048,7 +3210,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
     if (
       target && (target.role === "paragraph" || isAbstractBodyTitleBlock(target)) && block.role === "paragraph" &&
       !currentIsDetachedMargin &&
-        (joinsCompleteLeadingContinuation || joinsSameColumnContinuation || joinsHyphenatedContinuation || geometrySameLineContinuation || wrapsAcrossColumnsAtPageBottom || wrapsAcrossColumnsAtModerateTop || wrapsAcrossPhysicalColumns || wrapsAcrossAdjacentColumnTails ||
+        (joinsCompleteLeadingContinuation || joinsSameColumnContinuation || joinsHyphenatedContinuation || geometrySameLineContinuation || rejoinAfterDetachedMargin || wrapsAcrossColumnsAtPageBottom || wrapsAcrossColumnsAtModerateTop || wrapsAcrossPhysicalColumns || wrapsAcrossAdjacentColumnTails ||
         (canContinueAcrossColumns && isSentenceContinuation(target.text, block.text)) ||
         crossesPageBoundaryAfterFigureBand || crossesPageBoundaryProperName ||
         wrapsAcrossColumnAfterFloat) &&

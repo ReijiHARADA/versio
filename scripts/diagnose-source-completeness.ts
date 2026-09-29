@@ -5,21 +5,34 @@ const [, , inputPath, outputPath] = process.argv;
 if (!inputPath || !outputPath) {
   throw new Error("Usage: vite-node --script scripts/diagnose-source-completeness.ts <manual-review.json> <report.json>");
 }
-const input = JSON.parse(readFileSync(inputPath, "utf8")) as { reviews: Array<Record<string, unknown>> };
-const relevant = input.reviews.filter((row) => ["source_fragment", "correct", "minor_wording"].includes(String(row.reviewLabel)));
+const input = JSON.parse(readFileSync(inputPath, "utf8")) as {
+  reviews?: Array<Record<string, unknown>>;
+  archivedReviews?: Array<Record<string, unknown>>;
+};
+// Manual-review exports keep active and archived rows separately and use the
+// durable `labels` array. Accept the older `reviewLabel` shape as well so this
+// diagnostic does not silently report zero rows on the current corpus.
+const allReviews = [...(input.reviews ?? []), ...(input.archivedReviews ?? [])];
+const labelOf = (row: Record<string, unknown>): string | undefined => {
+  const labels = Array.isArray(row.labels) ? row.labels.map(String) : [];
+  return labels[0] ?? (row.reviewLabel ? String(row.reviewLabel) : undefined);
+};
+const relevant = allReviews
+  .map((row) => ({ row, reviewLabel: labelOf(row) }))
+  .filter(({ reviewLabel }) => ["source_fragment", "correct", "minor_wording"].includes(String(reviewLabel)));
 const rows = relevant.map((row) => {
-  const source = String(row.source ?? "");
+  const source = String(row.row.source ?? "");
   const eligible = shouldTranslateParagraph(source);
   return {
-    key: row.key,
-    paperId: row.paperId,
-    blockId: row.blockId,
+    key: row.row.key,
+    paperId: row.row.paperId,
+    blockId: row.row.blockId,
     reviewLabel: row.reviewLabel,
-    severity: row.severity,
+    severity: row.row.severity,
     currentEligible: eligible,
     currentReason: unsafeParagraphStructureReason(source),
     source,
-    historicalNotes: row.notes,
+    historicalNotes: row.row.notes,
   };
 });
 const positives = rows.filter((row) => row.reviewLabel === "source_fragment");
@@ -35,6 +48,12 @@ const report = {
     cleanTranslationControls: controls.length,
     cleanControlsEligibleNow: controls.filter((row) => row.currentEligible).length,
     cleanControlsBlockedNow: controls.filter((row) => !row.currentEligible).length,
+    sourceFragmentBlockRecall: positives.length > 0
+      ? positives.filter((row) => !row.currentEligible).length / positives.length
+      : null,
+    cleanControlFalseBlockRate: controls.length > 0
+      ? controls.filter((row) => !row.currentEligible).length / controls.length
+      : null,
   },
   rows,
 };
