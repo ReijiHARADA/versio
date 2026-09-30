@@ -82,8 +82,16 @@ export class OllamaTranslationEngine implements TranslationEngine {
           try {
             const completions = [];
             for (const unit of units) {
+              // Each semantic unit gets only the literal citation guidance
+              // present in that unit. Supplying every paragraph citation to
+              // every unit encourages small local models to repeat author-year
+              // references as standalone sentences.
+              const unitInstruction = instruction.replace(
+                citationLiteralInstruction(text),
+                citationLiteralInstruction(unit),
+              );
               completions.push(await provider.complete(
-                `${instruction}\n\nSOURCE:\n${unit}`,
+                `${unitInstruction}\n\nSOURCE:\n${unit}`,
                 "You are a conservative academic translator. Never add facts or omit source facts. Do not explain your answer.",
                 {
                   temperature: 0,
@@ -288,7 +296,7 @@ function citationLiteralInstruction(source: string): string {
   ].map((value) => value.replace(/\s+/g, " ").trim());
   const unique = [...new Set(groups)].filter((value) => /\b(?:19\d{2}|20\d{2})\b|\[\d/.test(value));
   if (unique.length === 0) return "";
-  return ` Copy these citation groups exactly as written (do not translate, reorder, or omit them): ${unique.join(" | ")}.`;
+  return ` Copy these citation groups exactly as written (do not translate, reorder, or omit them). Emit each citation group once, attached to the sentence or clause where it occurs; never repeat a citation as a standalone sentence: ${unique.join(" | ")}.`;
 }
 
 function comparisonLiteralInstruction(source: string): string {

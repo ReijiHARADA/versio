@@ -559,6 +559,12 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation("一様注意は効果的である（後続研究の動機となった［1］）。", source)).toBe(true);
   });
 
+  it("accepts citation groups split into separate brackets by the decoder", () => {
+    const source = "The result was reported previously [13, 19–23].";
+    const output = "この結果は以前に報告されている[13] [19–23]。";
+    expect(evaluateJaTranslation(output, source).reasons).toEqual([]);
+  });
+
   it("accepts citation payloads wrapped in harmless HTML markup", () => {
     const source = "The benchmark followed prior work26, 27 and tested 13,000 problems.";
     const output = "ベンチマークは先行研究<sup>26</sup>、<sup>27</sup>に従い、13,000件を検証した。";
