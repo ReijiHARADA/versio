@@ -50,6 +50,22 @@ describe("OllamaTranslationEngine", () => {
     expect(provider.complete).toHaveBeenCalled();
   });
 
+  it("scopes citation guidance to each alternate semantic unit", async () => {
+    const provider = providerReturning("結果が報告された。参加者は条件下で改善した。");
+    const engine = new OllamaTranslationEngine(primaryThatFails(), provider);
+    await expect(engine.translate(
+      "The result was reported by (Smith, 2020) in the primary analysis of the study. Participants improved under the condition during the follow-up comparison.",
+      "en",
+      "ja",
+    )).rejects.toThrow("primary failed");
+    const prompts = (provider.complete as ReturnType<typeof vi.fn>).mock.calls.map(([prompt]) => String(prompt));
+    expect(prompts.length).toBeGreaterThan(0);
+    expect(prompts[0]).toContain("(Smith, 2020)");
+    const secondUnitPrompt = prompts.find((prompt) => prompt.includes("Participants improved under the condition"));
+    expect(secondUnitPrompt).toBeDefined();
+    expect(secondUnitPrompt).not.toContain("(Smith, 2020)");
+  });
+
   it("tries the next opt-in provider when the first candidate fails the shared gate", async () => {
     const rejected = providerReturning("先行研究は評価の precedent を確立した。");
     const accepted = providerReturning("参加者は制御された条件で結果を比較した。");
