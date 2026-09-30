@@ -543,6 +543,10 @@ export function hasDuplicatedYearCitationSpan(source: string, output: string): b
     .normalize("NFKC")
     .replace(/\s+/g, " ")
     .replace(/[、，]/g, ",")
+    // `e.g.,` is a discourse cue, not part of the author/year citation
+    // identity. Models may naturally omit it while preserving the full
+    // citation group; do not treat that formatting change as duplication.
+    .replace(/^\(?\s*e\.g\.,?\s*/i, "(")
     .trim()
     .toLowerCase();
   const sourceCounts = new Map<string, number>();

@@ -565,6 +565,12 @@ describe("isPlausibleJaTranslation", () => {
     expect(evaluateJaTranslation(output, source).reasons).toEqual([]);
   });
 
+  it("does not flag an omitted e.g. cue as a duplicated citation group", () => {
+    const source = "Snacks are consumed at home (e.g., Kerr et al., 2010; Myhre et al., 2015).";
+    const output = "スナックは家庭で消費される（Kerr et al., 2010; Myhre et al., 2015）。";
+    expect(evaluateJaTranslation(output, source).reasons).toEqual([]);
+  });
+
   it("accepts citation payloads wrapped in harmless HTML markup", () => {
     const source = "The benchmark followed prior work26, 27 and tested 13,000 problems.";
     const output = "ベンチマークは先行研究<sup>26</sup>、<sup>27</sup>に従い、13,000件を検証した。";

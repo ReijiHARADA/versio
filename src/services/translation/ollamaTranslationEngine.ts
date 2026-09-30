@@ -296,7 +296,7 @@ function citationLiteralInstruction(source: string): string {
   ].map((value) => value.replace(/\s+/g, " ").trim());
   const unique = [...new Set(groups)].filter((value) => /\b(?:19\d{2}|20\d{2})\b|\[\d/.test(value));
   if (unique.length === 0) return "";
-  return ` Copy these citation groups exactly as written (do not translate, reorder, or omit them). Emit each citation group once, attached to the sentence or clause where it occurs; never repeat a citation as a standalone sentence: ${unique.join(" | ")}.`;
+  return ` Copy these citation groups exactly as written (do not translate, reorder, or omit them). Emit each citation group once, attached directly to the sentence or clause where it occurs; place it before that sentence's final punctuation and never repeat a citation after a Japanese full stop or as a standalone sentence: ${unique.join(" | ")}.`;
 }
 
 function comparisonLiteralInstruction(source: string): string {
