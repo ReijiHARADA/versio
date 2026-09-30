@@ -15346,3 +15346,555 @@ Re-ran the focused TypeScript checks after the alternate prompt probe: `src/test
 - Re-ran extraction regression after the diagnostic classification change: **108/108 tests passed** (2 test files; baseline and real-paper reading-order corpus). Existing PDF.js warnings remain non-fatal.
 - An attempted benchmark `--dry-run` still waits for the translation-server readiness check, so it was stopped without producing a result; the current server is no longer running. This confirms the benchmark harness couples dry-run sampling to server startup and should be decoupled before using it for pure extraction diagnostics.
 - Decoupled dry-run from server readiness in `scripts/benchmark-real-paper-translation.ts`. A dry-run over the cached corpus now completes without a translation server, producing 51 rows across 52 catalog entries; 1 entry is correctly marked missing cached PDF. Two rows receive the generic `label-prefix` warning, and source categories are 31 ordinary-body, 14 damaged-extraction, 3 list, 2 reference-chrome, 1 caption. `npm run typecheck` passes.
+
+## 2026-09-29 v1121: label-prefix geometry attribution
+
+- Added audit-only title/layout diagnostics for the two `label-prefix` rows in `translation-audit-v1120-dry-run.json`: `ergonomics-human-factors-ihci` and `cognitive-dual-task-older-adults`.
+- The native PDF evidence shows the labels are real, separate native text runs on the same baseline as the following prose, with distinct x bands/fonts: `Keywords:` at x=72.0 (font `g_d0_f7`) followed by keyword text at x=121.2 (font `g_d0_f9`), and `Background:` at x=175.7 (font `g_d0_f6`) followed by the abstract prose at x=230.7 (font `g_d0_f7`).
+- Current line/block grouping merges these runs into paragraph blocks; this is a generic label/body boundary problem, not a paper-specific hallucination or title-scoring issue. The diagnostics are saved as `test-data/real-papers/reports/title-geometry-ergonomics-v1121.json` and `title-geometry-cognitive-v1121.json`.
+- No production extraction rule was changed yet. A safe generic fix must use same-baseline style/x-band evidence and must be checked against the full extraction corpus before implementation.
+
+### v1122: generic inline metadata-label split
+
+- Updated `splitInlineSubheading()` to split a compact colon-terminated native run from substantial prose/keyword content when the runs have distinct font/style evidence and compatible geometry. This handles inline metadata labels such as `Background:` and `Keywords:` without paper-specific strings or regex-only text matching.
+- Diagnostic replay now produces separate `heading` blocks for `Background:` and `Keywords:` instead of merging each with the following body/keyword text. The cognitive paper's author-row plus later keyword contamination remains a separate geometry/order issue and was not conflated with this fix.
+- Validation: `npm run typecheck` passed; `npm run test:extraction-corpus` passed **108/108** (56 baseline + 52 reading-order). `git diff --check` passed.
+- Follow-up geometry replay found a second case where the label and keyword values shared one native item (`Keywords: BDNF, ...`) beside a citation rail. The splitter now exposes that embedded label with proportional synthetic geometry while preserving the exact text; the resulting block is `Keywords: BDNF, ...` and no longer includes the author citation row. Typecheck and diff checks pass; the preceding full extraction run remained **108/108** before this whitespace-only geometry adjustment.
+- Re-ran the full extraction corpus after the final synthetic-spacing adjustment: **108/108 passed** (56 baseline extraction + 52 real-paper reading-order), duration 137.70s. Existing PDF.js warnings remain non-fatal and unchanged.
+- Re-ran the audit-only cached dry-run after the extraction fix (`translation-audit-v1124-dry-run.json`): 51 rows across 52 catalog papers (one missing cached PDF), now categorized as ordinary-body-prose 32, damaged-extraction 12, list 4, reference-chrome 2, caption 1. The previous two `label-prefix` warnings are gone, so this change moved those samples out of the damaged category without changing translation behavior.
+- Started a fresh post-extraction model audit on three papers (`translation-audit-v1125-post-extraction.json`, 12 blocks) with the live MADLAD server. The three clean ordinary-body rows had one reader-visible post-model fallback and two accepted translations; the fallback was an interactive-jewellery long unit, so this small stratified sample is not a rate estimate. The two cognitive ordinary units completed without fallback, confirming the new metadata separation reaches the normal translation path.
+- Completed a cross-field fresh audit (`translation-audit-v1126-crossfield.json`): 10 papers / 20 blocks, including HCI, cognitive psychology, marketing, linguistics, education, economics, medical review, and agents. Of 13 clean ordinary-body rows, 12 completed without reader-visible fallback and one economics row was rejected post-model for relation/semantic quality reasons (7.7% in this small sample). Other fallbacks were attributable to extraction/list boundaries, including a section-label prefix and bibliography-like cross-page blocks. The quality gate caught an economics output with altered IV/identification meaning rather than accepting it, so this run does not justify gate relaxation.
+- Completed a second cross-field fresh audit (`translation-audit-v1127-crossfield.json`): 10 additional papers / 20 blocks. Of 12 clean ordinary-body rows, 10 completed and 2 were rejected post-model (16.7% in this sample). Both rejected units were semantic-relation cases (`disjunctive-both` / long cross-page linguistic prose), not extraction fallback; the gate rejected outputs rather than exposing them. Across v1125–v1127 there are 25 clean rows and 4 reader-visible fallbacks (16.0%), so the <=5% target is not yet met and broader model/cascade work remains necessary.
+- Ran an audit-only Qwen3:14b cascade on the five post-model rows from v1126/v1127 (`selective-cascade-v1128-qwen.json`). Qwen produced one accepted translation (linguistics) and four candidates rejected by the existing safety checks. The thermal-earring candidate preserved `4.5.1` as `4.5.1節`, but the invariant checker treated that as missing; this was a false reject caused by a structural suffix form, not a semantic loss.
+- Added a narrow, language-aware structural invariant acceptance for `<section-number>節/章` when the exact numeric hierarchy is preserved, with a regression test. It does not accept a bare or wrong number. Quality tests now pass **211/211**, typecheck and diff checks pass. Re-evaluating the saved thermal cascade output with the updated gate yields `isCascadeQualityAcceptable=true`; the other four candidates remain rejected for semantic relation/qualifier reasons.
+
+## 2026-09-29 v1129: long-unit rescue replay evidence
+
+- Replayed the linguistics cross-page source (`/tmp/ling-source.txt`, 2,307 chars) directly against the ready MADLAD server, comparing the normal production segmenter unit with retry-only `rescue_units_for_translation()` candidates. Artifact: `test-data/real-papers/reports/segment-rescue-v1129-linguistics.json`.
+- The problematic normal unit (index 8, 435 chars) took 50.5s and returned English source echo (no Japanese), demonstrating decode failure before any postprocess. Its rescue split produced two units (322/112 chars); both returned Japanese, with coherent content, in 10.9s and 1.7s. This is direct evidence that semantic rescue segmentation can recover a unit that fails as one long decode.
+- A later 164-character unit (index 10) translated normally in 5.5s; no rescue candidate was proposed. The result is diagnostic only; no production behavior changed.
+- Next action: verify the production retry path invokes this rescue for the same quality failure and add a narrowly-scoped regression fixture/test for rescued long units before changing thresholds.
+
+## 2026-09-29 v1130: rescue aggregate gate check
+
+- Rebuilt/restarted the live server with the rescue-unit validation change and replayed the same 435-character linguistics unit through the actual `/translate` path.
+- The individual rescue calls still produced coherent Japanese, but the full production request remained `whole_item_fallback` (`whole_item:translation_quality_rejected:ValueError`). Therefore the remaining rejection is a later whole-item semantic/structure gate, not the original long-unit decode alone. The patch was retained because it is safe (each rescue unit must pass its own degeneracy checks), but it is not counted as a fallback reduction yet.
+- Do not relax the whole-item gate based on this one source. Next diagnostic should expose the exact quality reason after rescue (relation/claim/list preservation) and compare the joined rescue output against that gate before deciding whether a generic per-unit aggregate exception is justified.
+- Tests after the change: segmenter + MADLAD quality **130 passed, 8 subtests**.
+
+## 2026-09-29 v1131: parenthesized claim enumeration guard
+
+- Static inspection of the rescued linguistics output found the first concrete aggregate-gate reason: `_has_unsupported_numbered_enumeration` counted translated `(1)…(2)…(3)` claims as an invented list because the source markers were parenthesized and the detector only recognized bare `1)`. This was a false reject of preserved source structure.
+- Generalized the detector to count parenthesized source/output markers, with a regression test for `(1) … (2) … (3) …`. No domain words or paper-specific rule were added.
+- Tests: MADLAD quality + segmenter **131 passed, 8 subtests**; `git diff --check` passed. A fresh live replay is still needed after server restart to verify whether this was the final rejection reason; until then, fallback reduction is not claimed.
+
+## 2026-09-29 v1132: live rescue success
+
+- Restarted the translation server with the v1131 parenthesized-enumeration fix and replayed the same 435-character linguistics unit through `/translate`.
+- Result: `fallback_stage=null` (no reader-visible fallback), 143-character Japanese output, ~22.0s. The output preserved the three numbered claims as `1) … 2) … 3)` and retained the source claim structure.
+- Artifact: `test-data/real-papers/reports/segment-rescue-v1132-live.json`.
+- This is one confirmed recovered ordinary-body case, not yet a corpus-level fallback rate. The next validation is to replay the other post-model long/relation fallbacks and confirm that the broadened marker detector does not mask genuinely invented lists.
+
+## 2026-09-29 v1133: post-fix regression checks
+
+- After v1132 live recovery, reran TypeScript typecheck, frontend quality tests, and Python translation tests: typecheck passed; `src/test/quality.test.ts` **211/211**; MADLAD quality + segmenter **131 passed, 8 subtests**.
+- Existing PDF.js canvas/DOMMatrix warnings remain non-fatal and unchanged.
+
+## 2026-09-29 v1134: cross-field fallback replay
+
+- Replayed the five post-model fallback rows from v1126/v1127 through the updated live MADLAD path; artifact: `test-data/real-papers/reports/fallback-replay-v1134.json`.
+- 3/5 recovered without fallback: thermal-earring, economics DeepIV, and one neuroscience block. The economics output retained the numbered constraints and no longer hit the previous gate; thermal preserved `4.2.1` structure.
+- 2/5 remained partial-unit fallback: neuroscience unit 5 (English output for a difficult long sentence) and linguistics unit 10 (short concluding sentence). These are different failure modes from the recovered long enumerated unit and require separate model/decode or source-context work.
+- This is a diagnostic replay, not a new corpus rate. It demonstrates the v1131 gate fix recovers 60% of this previously failing sample without relaxing semantic checks.
+
+## 2026-09-29 v1135: selective alternate replay for residual failures
+
+- Replayed the two residual v1134 failures through the audit-only Qwen3:14b cascade (`selective-cascade-v1135-qwen.json`).
+- Linguistics long paper: Qwen candidate accepted by the existing invariant/quality gate, providing an alternate to the MADLAD fallback. Manual review is still required before production use because the output includes citation prose and long-claim structure.
+- Neuroscience: Qwen candidate was correctly rejected for changing `right lateral prefrontal cortex` to `right temporal prefrontal cortex`; this confirms the gate is catching a real qualifier drift rather than treating any fluent Japanese as safe.
+- No production model switch was made. The evidence supports a selective cascade only for high-confidence alternate candidates, with human/held-out review before enabling it.
+
+## 2026-09-29 v1136: alternate-model cross-check
+
+- Compared `qwen2.5:14b` on the two residual failures (`selective-cascade-v1136-qwen25.json`). It accepted **0/2**: neuroscience drifted qualifiers and left English technical lexemes; linguistics left a 24-word citation/source span untranslated.
+- This makes the earlier Qwen3 acceptance on linguistics model-specific and reinforces that alternate candidates must pass the existing source/invariant/semantic gates. No model is promoted based on fallback reduction alone.
+
+## 2026-09-29 v1137: manual review of alternate acceptance
+
+- Manually reviewed the one Qwen3 candidate that passed the automatic gate in v1135. It is **not safe to accept**: the output repeats the single Biber citation multiple times and mistranslates `register` as `記録` near the conclusion. Labelled addition/citation_error/repetition/terminology_error, severity 3.
+- This is a confirmed semantic false accept in the alternate cascade. The candidate is now explicitly marked `productionDecision: reject` in `selective-cascade-v1135-manual-review.json`; no cascade relaxation was made.
+- The evidence reinforces that automatic invariant/quality checks are necessary but insufficient for semantic correctness, and that the <=5% reader fallback target cannot be pursued by accepting fluent alternate output without stronger semantic review.
+
+## 2026-09-29 v1138: duplicate author-year citation guard
+
+- Added `hasDuplicatedYearCitationSpan()` to the cascade-only quality gate. It compares normalized parenthesized author/year citation spans (ASCII or fullwidth brackets) in source and candidate output, rejecting candidates that repeat an opaque citation more times than the source.
+- This directly covers the manually confirmed Qwen3 false accept without a paper/name blacklist; primary MADLAD acceptance behavior is unchanged.
+- Added regression coverage for one source citation versus a duplicated Japanese-form citation. Quality tests now **212/212**, TypeScript typecheck passed, and `git diff --check` passed.
+
+## 2026-09-29 v1139: guard replay verification
+
+- Re-evaluated the previously accepted Qwen3 linguistics candidate with the updated cascade gate. It now returns `duplicated year citation span`, confirming the new detector catches the real manual-review false accept.
+- No production cascade behavior was enabled; the change remains a safety gate for alternate candidates only.
+
+## 2026-09-29 v1140: citation guard precision regression
+
+- Added a precision regression showing that when the source itself cites the same author/year span twice and the output preserves it twice, the new duplicate-span guard accepts it.
+- Quality tests remain **212/212**.
+
+## 2026-09-29 v1141: final static checks for citation guard
+
+- `npm run lint` passes with the existing warnings only (no new warning from the citation guard).
+- Python MADLAD quality + segmenter tests: **131 passed, 8 subtests**.
+
+## 2026-09-29 v1142: fresh three-paper smoke audit
+
+- Ran a fresh serial audit over cached `interactive-jewellery`, `significant-other`, and `thermal-earring` (2 selected units per paper), artifact `test-data/real-papers/reports/translation-audit-v1142-fresh.{json,md}`.
+- Six sampled units: 3 ordinary-body, 1 ordinary-body post-model fallback (interactive-jewellery), 1 ordinary-body success (significant-other), 1 ordinary-body success (thermal-earring); the remaining two were correctly classified structural/reference skips. Smoke-sample ordinary fallback is 1/3 (33.3%), too small for a rate estimate and still above the <=5% target.
+- Thermal's second unit was a structural-heading invariant fallback (UUID), not ordinary body. Existing PDF.js canvas warnings remained non-fatal.
+
+## 2026-09-29 v1143: interactive-jewellery alternate replay
+
+- Replayed the fresh interactive-jewellery ordinary-body fallback through Qwen3:14b. The candidate passed the updated cascade gate and manual review found no claim, numeric, citation, or relation error (label `correct`, severity 0); it preserves the five-sentence argumentative sequence and three design explorations.
+- This is a promising selective-cascade candidate, not a production switch. Artifact: `test-data/real-papers/reports/selective-cascade-v1143-qwen.json` with manual review in `selective-cascade-v1143-manual-review.json`.
+
+## 2026-09-29 v1144: smoke audit cascade projection
+
+- The v1142 fresh smoke audit had 3 ordinary-body units with 1 MADLAD fallback. The single fallback was manually reviewed through Qwen3 in v1143 and accepted as correct, so the diagnostic projected rate for this tiny sample is 0/3 if the cascade candidate were enabled.
+- This is not a production rate and does not justify enabling the cascade globally; the same Qwen3 model produced a severity-3 citation/terminology false accept on another paper. Keep selective cascade opt-in until a held-out semantic review set supports a model-specific policy.
+
+## 2026-09-29 v1145: second fresh smoke audit
+
+- Ran three additional cached papers (`power-over-skin`, `ppg-earring`, `design-for-wearability`), two units each, serially. Artifact: `test-data/real-papers/reports/translation-audit-v1145-fresh.{json,md}`.
+- Of five ordinary-body units, **5/5 completed without fallback**. One power-over-skin unit was correctly classified damaged-extraction and one design-for-wearability unit was a list.
+- Combined with v1142, the fresh smoke set has 8 ordinary-body units, 1 MADLAD fallback (interactive jewellery), and 7 direct successes. The one fallback has a manually reviewed Qwen3 candidate, but the direct MADLAD rate remains 12.5% on this small, selected sample; it is not a corpus estimate.
+
+## 2026-09-29 v1146: held-out protection A/B/C replay (6 segmented units)
+
+- Ran `translation-server/scripts/benchmark_protection_ab.py` in the project venv with the same MADLAD 3B / greedy generation and production segmenter, using six additional cached rows not used in the earlier 20-unit summary. Artifact: `translation-server/benchmarks/protection-ab-v1146-heldout6.json`.
+- All 18 condition calls reached decode; one current-protection arm (`education-learning-analytics`) failed on malformed placeholder restoration. That source is a comma-separated title/keyword list mislabeled as ordinary prose, so it is extraction/source categorization noise rather than clean-body evidence.
+- Among the five actually sentence-like units, current protection did not add a runtime fallback. Raw and minimal differed from current on two units: the opaque citation `[13]` was omitted by raw/minimal but preserved by current, and the visible `SHERPA` identifier remained faithful under all arms with different clause wording. Three units were identical across arms. The HCI course sentence showed Raw output closer to the source subject (`このコース`) while Minimal/Current added `これは`; this is a semantic-review candidate, not an automatic gate result.
+- The held-out replay therefore reinforces the earlier conclusion: blanket protection removal is unsafe, but current protection can alter context and occasionally trigger restore failures on structurally misclassified list-like rows. No production protection policy changed.
+
+## 2026-09-29 v1147: protection benchmark selector contamination guard
+
+- Updated the audit-only protection A/B/C selector to exclude conservative keyword/index-term blocks: at least four short comma-separated segments, no sentence punctuation, and no clause-like function words. This addresses the v1146 education-learning-analytics row without changing extraction or production translation behavior.
+- The rule is intentionally conjunction-based to avoid removing ordinary enumerative prose from the denominator. Python syntax and `git diff --check` pass.
+
+## 2026-09-29 v1148: keyword-list selector precision correction
+
+- Corrected the v1147 diagnostic selector to permit a terminal period and to treat title-style prepositions (`on`, `in`, `of`) as compatible with keyword lists. The education-learning-analytics keyword block now correctly returns `clean-body=false`; clause markers such as `and/or/which/that` still prevent exclusion of ordinary enumerative prose.
+- `py_compile` and `git diff --check` pass. The system `pytest` command is unavailable in this shell; no production code or routing changed.
+
+## 2026-09-29 v1149: corrected-selector held-out protection cohort (12 units)
+
+- Ran the corrected audit-only Raw/Minimal/Current comparison across 12 segmented units spanning cognitive psychology, computational linguistics, HCI/conversation analysis, medicine, design, education, and ergonomics. Artifact: `translation-server/benchmarks/protection-ab-v1149-heldout12.json`.
+- All 36 decodes completed without runtime fallback. Eight sources produced identical restored output across all three arms. Four were condition-dependent: cognitive motor memory (Current preserved an author-year citation that Raw omitted), COVID review (Current/Minimal placeholder handling changed SARS-CoV-2/citation formatting and Raw was closer to the source identifier), `dont-mind-me` (Current restored `[18]` while Raw/Minimal omitted it), and flight-deck SHERPA (Current/Minimal added a contextual “tool” clause while Raw stayed closer to the source).
+- This cohort shows protection has both measurable benefit (citation retention) and cost (identifier/claim wording drift) even when it does not cause fallback. It does not justify global removal or global retention changes. The next policy experiment should expose inline citations and short contextual identifiers while retaining opaque scientific spans, then manually review the four divergent cases plus held-out controls.
+
+### v1149 manual divergence review
+
+- `cognitive-motor-incidental-memory`: Minimal/Current are preferable for citation fidelity; Raw drops `(2019)`. Both retain the claim and salience relation; terminology remains awkward but no severity>=2 scope error.
+- `covid-ml-review`: source itself contains malformed `CoV- -2` spacing. Raw produces the best identifier normalization and keeps the `[1-3]` citation placement; Current preserves the malformed double hyphen and moves the citation before the “called” relation. Primary attribution is extraction/source tokenization, with protection amplifying identifier formatting drift. This row is not clean evidence for a protection policy change.
+- `dont-mind-me`: Current is preferable because it restores `[18]`; Raw/Minimal omit the citation but preserve the claim.
+- `ergonomics-flight-deck-applications`: Raw is closer to source; Minimal/Current add a “tool” framing but preserve the causal recommendation claim. Treat as wording drift (severity 1), not unsafe semantic failure.
+
+## 2026-09-29 v1150: short-context minimal-protection replay (12 units)
+
+- Ran a second 12-unit cohort with the diagnostic `--expose-short-context-spans` arm. Artifact: `translation-server/benchmarks/protection-ab-v1150-short-context12.json`.
+- Raw and short-context Minimal were identical for all 12 rows. Current protection diverged on four: COVID (source identifier itself is malformed; Current retains double hyphen and citation relocation), `dont-mind-me` (Current preserves `[18]`), flight-deck SHERPA (Current adds a tool/context phrase), and job-rotation (Current preserves `[13]` but also produces a materially different “assembly simulation” claim). HCI course also differs only in Current versus Raw/Minimal by adding `これは` and changing aspect wording.
+- Exposing short contextual spans alone did not improve the model output over Raw/Minimal in this cohort. It preserves citation/identifier benefits only when the span is left literal, so a production change is not justified yet. The job-rotation divergence is a high-priority manual-review regression candidate because citation preservation coincides with a possible unsupported claim.
+
+## 2026-09-29 v1151: quality-gate false accept found in protection replay
+
+- Evaluated the divergent job-rotation output with the production TypeScript `evaluateJaTranslation`. The Current-protection candidate (`...組立シミュレーションを行った...`) receives score **1.0 with no reasons**, even though the source only says studies investigate ergonomics to reduce risk and contains no simulation claim. Raw/Minimal preserve the investigation wording.
+- This is a genuine semantic false accept discovered by the protection ablation, not a fallback-rate artifact. It shows the current invariant/quality gate cannot detect fluent unsupported technical predicate additions, and that placeholder protection can change the decode into a stronger invented claim.
+- No blacklist or production gate relaxation was added. The finding is now a held-out regression candidate for a generic claim-relation/unsupported-predicate detector or selective alternate-model review.
+
+## 2026-09-29 v1152: alternate-model check for unsupported predicate
+
+- Replayed the job-rotation source without Paper Reader placeholders through local Ollama models. Both `qwen3:14b` and `qwen2.5:14b` preserved the source meaning (“studies investigate ... objective to reduce risk”) and citation `[13]`; neither introduced an assembly-simulation claim.
+- Artifact: `test-data/real-papers/reports/unsupported-predicate-alt-model-v1152.json`.
+- This strengthens attribution to the MADLAD Current-protection decode path rather than an inherently ambiguous source. It also supports selective alternate-model review for high-risk divergent outputs, but does not justify enabling Qwen globally without broader held-out precision/fallback measurement.
+
+## 2026-09-29 v1153: generic unsupported-method predicate guard
+
+- Added a category-level quality check in `src/services/translation/quality.ts`: if the English source has no explicit experiment/method evidence but the Japanese output asserts a method action, return `unsupported method predicate introduced`. This is relation-based and does not blacklist `シミュレーション` or any paper-specific term.
+- Added positive/negative regression tests for the job-rotation false accept. Quality tests now pass **213/213**; `npm run typecheck` and `git diff --check` pass.
+- This guard has not yet been measured on a fresh broad corpus, so production fallback impact is unknown. The next step is a held-out replay to measure precision/recall and false rejects before relying on it globally.
+
+## 2026-09-29 v1154: unsupported-method guard precision correction and audit recheck
+
+- Corrected method-evidence matching for `simulations14`-style PDF tokenization and added `construct` as method evidence. The guard still catches the clean job-rotation regression fixture while not flagging the legitimate OpenAI “run all our simulations14” source.
+- Quality tests remain **213/213**. A full recheck of the 271-row `translation-audit.json` report found **no accepted row newly rejected solely by `unsupported method predicate introduced`**, so there is no measured broad fallback increase from this guard in the historical cohort.
+- The historical recheck still reports 234 ordinary-body rows and 86 strict-gate fallbacks (36.8%), but most decision changes come from pre-existing stricter cascade checks and are not attributable to this new guard. Fresh measurement remains required.
+
+## 2026-09-29 v1155: route unsupported-method findings into cascade rejection
+
+- The new `unsupported method predicate introduced` reason is now included in the centralized cascade unsafe-relation policy. The previously reproduced job-rotation output now returns `isCascadeQualityAcceptable=false` with `unsafe relation guard`, instead of merely exposing an audit reason while still being accepted.
+- Regression suite remains **213/213**; direct fixture check confirms `plausible=true` but `cascade=false`; typecheck and diff check pass.
+- This is a safety correction for a confirmed false accept. Fresh corpus measurement is still required to quantify any fallback increase and identify legitimate method descriptions that need a precise control.
+
+## 2026-09-29 v1156: quality guard validation checkpoint
+
+- Ran `npm run lint` (existing warnings only), `src/test/quality.test.ts` (**213/213**), and `git diff --check` after routing unsupported-method findings into the cascade policy.
+- No new lint warning was introduced by the guard. The target remains incomplete: broad fresh semantic review is still needed before asserting ordinary-body fallback <=5% or near-zero unsafe accepts.
+
+## 2026-09-29 v1157: method-predicate negative control
+
+- Added a regression control with source-backed `simulations14` and citation `[14]`; it remains cascade-acceptable when the Japanese output preserves those facts.
+- Quality tests now pass **214/214** and typecheck passes. This confirms the unsupported-method guard targets a relation addition rather than rejecting legitimate method descriptions.
+
+## 2026-09-29 v1159: sentence-local method evidence
+
+- Fresh v1158 audit showed paragraph-level method evidence could mask an unsupported predicate in the first sentence of a long paragraph. Updated the guard to compare the first source sentence with the first translated sentence, rather than using evidence from later sentences in the block.
+- Added a long-paragraph regression control. Quality tests remain **214/214** and typecheck passes.
+- Rechecking v1158 now rejects the job-rotation ordinary row for `unsupported method predicate introduced`; the tiny four-row ordinary sample becomes 2/4 accepted (50%), so this is a safety finding, not evidence of a product-level rate. Broader fresh evaluation is required to tune precision without hiding unsafe claims.
+
+## 2026-09-29 v1160: primary plausibility gate wiring
+
+- Wired `unsupported method predicate introduced` into `isPlausibleJaTranslation`, so the confirmed hallucinated simulation claim is rejected on the primary MADLAD path as well as the alternate cascade path. Previously it only affected cascade acceptance.
+- Updated regression expectations; quality tests remain **214/214**, typecheck and diff check pass.
+- This intentionally changes reader-visible fallback for unsafe unsupported-method claims; fresh corpus measurement is required before judging the UX tradeoff.
+
+## 2026-09-29 v1161: primary-gate fresh audit after method guard
+
+- Re-ran the same three-paper/two-unit fresh audit after wiring the guard into `isPlausibleJaTranslation`. Artifact: `test-data/real-papers/reports/translation-audit-v1161-primary-guard-fresh.{json,md}`.
+- Four rows were ordinary-body; three completed and one job-rotation row now correctly became a **post-model fallback** with reason `unsupported method predicate introduced`. The other pre-model/source-continuation and SI rows remain structurally attributed.
+- This confirms the primary path no longer displays the known invented simulation claim. The tiny ordinary sample is 1/4 fallback (25%), so safety improved at a UX cost that must be reduced through better source/model routing rather than weakening the guard.
+
+## 2026-09-29 v1162: alternate cascade probe timeout
+
+- Started an audit-only Qwen3/Qwen2.5 replay of the single v1161 post-model fallback. The Ollama Qwen3 request did not return within the configured 180s request timeout (the client process remained alive for several minutes without producing a result), so it was interrupted and the transient llama-server child was stopped. No partial report was written and no production process was changed.
+- This is an execution/benchmark timeout, not evidence about model quality. The direct Qwen comparison for the same source remains available in `unsupported-predicate-alt-model-v1152.json`.
+
+## 2026-09-29 v1163: no-think Qwen cascade replay
+
+- Replayed the v1161 job-rotation fallback through Qwen3:14b with `OLLAMA_THINK=false`, one attempt, 90s timeout. The request completed in ~88s but was correctly rejected by the shared quality gate: score 0.4565 with repetition, mixed-script/foreign-script contamination, invariant drift, and plausibility failure.
+- Artifact: `test-data/real-papers/reports/selective-cascade-v1163-qwen-no-think.json`.
+- This confirms selective cascade does not automatically recover every MADLAD fallback; the long paragraph remains unsafe for Qwen3 as well. Keep the source fallback for this case and do not enable a blanket alternate route.
+
+## 2026-09-29 v1164: Qwen2.5 cascade replay
+
+- Replayed the same v1161 fallback through Qwen2.5:14b with thinking disabled. It completed within 77s but was rejected (score 0.5525) for degenerate output, untranslated source phrase/mixed-script lexeme, foreign-script contamination, and plausibility failure.
+- The candidate preserved the opening claim better than MADLAD but left English `ergonomics`/technical fragments and degraded later terminology, so automatic acceptance would be unsafe. Artifact: `test-data/real-papers/reports/selective-cascade-v1164-qwen25-no-think.json`.
+- Both tested Qwen models therefore reject this long source under the shared gate; keep source fallback and do not enable blanket cascade routing.
+
+## 2026-09-29 v1165: expose exact translation-unit mapping
+
+- Added an audit-safe `translation_units` field to the Python server result, HTTP schema, TypeScript `TranslationResult`, and MADLAD client parser. The server now returns exact source slices one-to-one with `partial_unit_texts`, including partial/fallback responses.
+- This does not change reader behavior yet. It provides the missing mapping needed to validate each semantic unit independently and safely retain good units while falling back only failed units.
+- Added a micro-batch regression for the mapping; Python micro-batch tests **9 passed**, typecheck and diff check pass.
+
+## 2026-09-29 v1166: per-unit safe projection path
+
+- Added `projectSafeUnitTranslation()` and connected it to the import completion path. When the backend supplies exact `translation_units` plus `partial_unit_texts`, each unit is validated independently; unsafe units are replaced by exact source text, safe units remain Japanese, and an incomplete projection is marked `translationOutcome=partial_unit_source_fallback` with failed indices. If all units fail or mapping is absent, the existing whole-block fallback remains.
+- Added mapping/projection regressions. Tests: MADLAD/quality focused suite **224/224**, Python micro-batch **9 passed**, typecheck and diff check pass.
+- The running server process predates the new `translation_units` field; restart is required before measuring this behavior in a real paper. No `.app` build was made.
+
+## 2026-09-29 v1167: benchmark records exact unit mapping
+
+- Extended `scripts/benchmark-real-paper-translation.ts` to persist the server's `translation_units` alongside `partial_unit_texts` in audit rows. This makes fresh reports sufficient to verify whether a failed semantic unit can be source-fallbacked while neighboring units remain translated.
+- TypeScript typecheck passes. No production behavior changed; a server restart is still required for runtime evidence because the currently observed PID predates the mapping response.
+
+## 2026-09-29 v1168: fresh unit-mapping audit
+
+- Replaced the stale server by terminating the old child and starting `translation-server/.venv/bin/python server.py` directly (PID 25893). Health reached `ready`; startup reported model `3b-mt-v6-...` and embedding integrity `encoder==decoder=True`, `separate=True`.
+- Ran `translation-audit-v1168-unit-projection-fresh` against three cached papers, two units each. Report now persists exact `translation_units` fields for runtime inspection. All three papers checkpointed and report written.
+- This is the first fresh runtime artifact after the mapping implementation; inspect row-level unit counts and fallback attribution before changing thresholds. The benchmark remains diagnostic and does not by itself establish the <=5% ordinary-body target.
+
+## 2026-09-29 v1169: runtime mapping identifies recoverable units
+
+- The fresh report contains exact one-to-one mappings for all translated rows. Running the production `projectSafeUnitTranslation` helper over the artifact marked only unit 3 in `cognitive-psychology-gpt3` and unit 0 in `ergonomics-job-rotation-robotics` unsafe; the other units remain acceptable. The ergonomics unit is the previously observed invented “assembly simulation” claim, and the helper replaces it with the exact English source while retaining the other 13 Japanese units.
+- `dont-mind-me` (2 ordinary units) and the remaining cognitive unit were accepted unit-by-unit. This demonstrates the intended recovery mechanism on a fresh server response, but it is not yet an end-to-end reader measurement or a population estimate for the <=5% target.
+
+## 2026-09-29 v1170: multi-paper unit-projection audit in progress
+
+- Started `translation-audit-v1170-unit-projection-12` against the cached corpus. The selector currently expands `--limit 12` to 51 cached papers under its existing selection semantics, with 12 units per paper and serial requests.
+- Checkpoint evidence currently contains 2/51 papers (`interactive-jewellery`, `significant-other`); the server remains healthy and model-ready. The run is intentionally left resumable and will be summarized after completion rather than treating the early sample as a final rate.
+
+## 2026-09-30 v1171: bounded benchmark interruption and timeout hardening
+
+- The v1170 run reached 27/51 papers and then remained on one in-flight request for many hours while the server stayed CPU-bound. The benchmark was interrupted with SIGINT; its 27-paper JSON/Markdown checkpoints remain intact, and the translation server was left running.
+- Replaced benchmark reliance on `AbortSignal.timeout()` with an explicit per-request `AbortController` timer that is always cleared in `finally`. This prevents a pathological fetch from occupying the serial audit indefinitely; the existing retry count and timeout values remain unchanged.
+- TypeScript typecheck and `git diff --check` pass. The next run should use a new report name or resume only after verifying the bounded timeout behavior.
+
+## 2026-09-30 v1172: timeout smoke verification
+
+- Ran a one-paper/two-unit smoke audit with `MADLAD_BENCH_REQUEST_TIMEOUT_MS=60000` and `MADLAD_BENCH_MAX_ATTEMPTS=1`; it completed and wrote `translation-audit-v1171-timeout-smoke.{json,md}` in about 78 seconds.
+- The explicit abort timer therefore works for normal requests. The earlier v1170 stall was an anomalous long-running server generation, and the 27-paper checkpoint remains the authoritative partial corpus for follow-up analysis.
+
+## 2026-09-30 v1173: partial-corpus diagnostic summary
+
+- Generated `test-data/real-papers/reports/translation-audit-v1170-partial-summary.{json,md}` from the preserved 27-paper checkpoint: 322 rows total, 112 ordinary-body rows, 758 mapped units across 151 rows.
+- The observed ordinary fallback is 33/112 (29.5%), but this is censored by the interrupted run: many late rows are timeout artifacts and no population claim is valid. The report explicitly labels this limitation.
+- The partial artifact separates structural categories and server partial/whole-item fallback counts so the next bounded run can compare true model failures against transport timeouts.
+
+## 2026-09-30 v1174: bounded resume smoke
+
+- Selected the next cached pending paper and ran it with `MADLAD_BENCH_REQUEST_TIMEOUT_MS=60000`, `MADLAD_BENCH_MAX_ATTEMPTS=1`, and serial concurrency. `modeling-human-behavior-cognitive-uncertainty` completed its two units and wrote `translation-audit-v1173-bounded-next2.{json,md}` without a long-running stall.
+- The bounded per-request path is therefore usable for incremental corpus expansion. Continue in small batches and aggregate only completed, non-timeout rows.
+
+## 2026-09-30 v1175: two-paper bounded continuation
+
+- Ran `osworld-multimodal-agents` and `conversation-analysis-user-experience` with the bounded 60-second/no-retry configuration; both completed two units and wrote `translation-audit-v1174-bounded-next2.{json,md}` in under a minute.
+- This confirms small batches remain stable after the earlier long-running request. No production threshold or model behavior was changed.
+
+## 2026-09-30 v1176: linguistics/marketing bounded continuation
+
+- Ran `computational-linguistics-nlp-translation` and `how-content-volume-landing-pages` with the bounded 60-second/no-retry configuration. Both completed two units and wrote `translation-audit-v1175-bounded-next2.{json,md}` in about 35 seconds.
+- The bounded runner remains stable across HCI, linguistics, and marketing-layout samples.
+
+## 2026-09-30 v1177: cognitive/linguistics bounded continuation
+
+- Ran `using-cognitive-psychology-gpt3` and `syntax-prosody-correlation` with the bounded 60-second/no-retry configuration. Both completed two units and wrote `translation-audit-v1176-bounded-next2.{json,md}`.
+- The incremental corpus now includes additional cognitive psychology and linguistics layouts without transport-timeout contamination in this batch.
+
+## 2026-09-30 v1178: healthcare ergonomics bounded continuation
+
+- Ran `hfe-healthcare-scoping-2024` and `hfe-healthcare-safety-review` under the bounded 60-second/no-retry configuration. Both completed two units and wrote `translation-audit-v1177-bounded-next2.{json,md}`.
+- Healthcare/human-factors samples completed without transport-timeout contamination.
+
+## 2026-09-30 v1179: cognitive/marketing bounded continuation
+
+- Ran `cognitive-dual-task-older-adults` and `marketing-unavailable-choice` with the bounded 60-second/no-retry configuration. Both completed two units and wrote `translation-audit-v1178-bounded-next2.{json,md}`.
+- The incremental run remains stable across cognitive psychology and marketing samples.
+
+## 2026-09-30 v1180: marketing bounded continuation
+
+- Completed the bounded `marketing-framing-organic-food` / `marketing-platform-attitude` run with 60-second request timeout and one attempt; report `translation-audit-v1179-bounded-next2.{json,md}` is present.
+- The runner wrote the report but its wrapper remained alive after completion, so only the benchmark wrapper was terminated; the translation server was left untouched.
+- This batch includes pre-model structural fallback for damaged/incomplete extraction, which is recorded separately from model quality and is not counted as a protection experiment result.
+
+## 2026-09-30 v1181: protection diagnostic aggregation
+
+- Aggregated the existing held-out protection cohorts `protection-ab-v1149-heldout12` and `protection-ab-v1150-short-context12` into `test-data/real-papers/reports/protection-ab-summary-v1181.{json,md}` (24 paired ordinary-body records; no new model calls).
+- Current protection had 0/24 rows with detected source-span loss; raw had 6/24 and minimal had 5/24. Mean latency was approximately 2.88s current, 2.52s raw, and 2.56s minimal in these cohorts.
+- This only measures fact-span retention and runtime behavior. It does not prove semantic superiority; manual semantic review remains required before production protection changes.
+
+## 2026-09-30 v1182: marketing/ergonomics bounded continuation
+
+- Completed `marketing-consumer-production-journey` and `ergonomics-job-rotation-robotics` with the bounded 60-second/no-retry runner; report `translation-audit-v1182-bounded-next2.{json,md}` was written and the runner exited normally.
+- The batch preserves separate attribution for pre-model extraction fallback, post-model quality fallback, and completed mapped units; no production thresholds or protection rules were changed.
+
+## 2026-09-30 v1183: protection manual-review queue
+
+- Generated `test-data/real-papers/reports/protection-ab-manual-review-v1181.md`, a side-by-side source/output queue for the 24 paired Raw/Minimal/Current records. It flags span loss, empty output, compression, repetition, and possible negation review; flags are prompts, not automatic labels.
+- Existing corpus manual review remains small (6 records, only 2 with reviewer timestamps), so no semantic-error rate or <=5% claim is made yet. The next quality step is to review this queue blind and record severity/cause labels rather than loosening gates from automatic scores.
+
+## 2026-09-30 v1184: protection-induced hallucination review evidence
+
+- Manual review added for `ergonomics-job-rotation-robotics:b-5b0516ff#unit-0`: the current-protection arm produced an unsupported “assembly simulation” claim (severity 3; hallucination/semantic shift/citation error), while Raw and Minimal produced no such predicate in the same deterministic cohort.
+- The source span was `[13]`, protected as `ZZCIT1ZZ`; the current arm's model input therefore differs materially from Raw/Minimal. The production quality gate already has the generic `unsupported method predicate introduced` reason and should reject this output; the observation is evidence for protection-cost investigation, not a paper-specific rule or a production change.
+
+## 2026-09-30 v1185: focused regression verification
+
+- Ran `npx vitest run src/test/quality.test.ts src/test/madladEngine.test.ts`: **224/224 passed**. The generic unsupported-method predicate regression covers the observed protection-induced “assembly simulation” hallucination without a paper-specific blacklist.
+- No production behavior was changed in this turn; the next action remains blind semantic review of the protection queue and, only after repeated evidence, a general minimal-protection/cascade design.
+
+## 2026-09-30 v1186: protection-span diagnostic compatibility
+
+- Fixed `scripts/analyze-protection-span-buckets.py` to read both legacy `output` and aggregated `restoredOutput`; the previous run silently reported zero divergence on v1181 summary data.
+- Recomputed `protection-span-buckets-v1186.json`: 14/24 records had zero protected spans; among 10 records with 1–2 spans, Minimal diverged from Raw in 3 and Current in 9. These are diagnostic divergences, not semantic labels, but they identify the protected-span cohort for manual review.
+- No production behavior changed.
+
+## 2026-09-30 v1187: manual review progress summary
+
+- Current manual review artifact now has 7 records, 3 with reviewer timestamps; severity >=2 appears in 2 records and severity >=3 in 1. The severe item is the previously documented protection-induced unsupported method predicate; the other is extraction fragment/paragraph split.
+- Wrote `test-data/real-papers/reports/manual-review-summary-v1187.md`. The denominator remains too small for fallback or unsafe-false-accept estimates; no production protection change is justified yet.
+
+## 2026-09-30 v1188: ergonomics bounded continuation
+
+- Completed `ergonomics-quantified-factory-worker` and `ergonomics-flight-deck-applications` with the bounded 60-second/no-retry runner; report `translation-audit-v1188-bounded-next2.{json,md}` was written successfully.
+- The batch completed two units per paper and preserved separate extraction/model fallback attribution. No production threshold or protection behavior changed.
+
+## 2026-09-30 v1189: linguistics bounded continuation
+
+- Completed `linguistics-register-web-corpus` and `linguistics-appraisal-institutional-discourse` with the bounded 60-second/no-retry runner; report `translation-audit-v1189-bounded-next2.{json,md}` was written successfully.
+- Both papers produced two translation units; any structural fallback remains separately attributed from model output. No production behavior changed.
+
+## 2026-09-30 v1190: marketing/cognitive bounded continuation
+
+- Completed `marketing-neurophysiology-consumer-motivation` and `cognitive-memory-cue-interest` with the bounded 60-second/no-retry runner; report `translation-audit-v1190-bounded-next2.{json,md}` was written successfully.
+- Both papers produced two translation units and this batch had no transport timeout. Any fallback is recorded by its actual stage in the report.
+
+## 2026-09-30 v1191: cognitive/marketing bounded continuation
+
+- Completed `cognitive-vr-mnemonic-processing` and `marketing-health-goals-nudging` with the bounded 60-second/no-retry runner; report `translation-audit-v1191-bounded-next2.{json,md}` was written successfully.
+- Both papers yielded two translation units; the batch completed without a transport timeout. Fallback attribution remains row-specific in the report.
+
+## 2026-09-30 v1192: cognitive/marketing bounded continuation
+
+- Completed `cognitive-motor-incidental-memory` and `marketing-platform-attitude` with the bounded 60-second/no-retry runner; report `translation-audit-v1192-bounded-next2.{json,md}` was written successfully.
+- Both papers yielded two units; the batch completed without transport timeout. Row-level extraction and quality outcomes remain separated in the report.
+
+## 2026-09-30 v1193: bounded ordinary-body aggregation
+
+- Aggregated all v1173–v1192 bounded reports with stable-key deduplication into `test-data/real-papers/reports/bounded-ordinary-summary-v1193.{json,md}`.
+- The artifact separates translated rows, pre-model extraction fallback, post-model quality fallback, and request abort/timeout rows. It is explicitly marked intermediate and non-representative; semantic false-accept rates still require manual review.
+
+## 2026-09-30 v1194: fallback aggregation correction
+
+- Corrected the bounded ordinary summary to use the authoritative `readerVisibleFallback` flag instead of treating `fallbackStage=none` as acceptance. The previous v1193 count understated visible fallback because rows can carry a fallback reason while stage is `none`.
+- Recomputed `bounded-ordinary-summary-v1194.{json,md}` with explicit transport, pre-model, post-model, and reader-visible categories. It remains an intermediate, non-representative sample.
+
+## 2026-09-30 v1195: HCI/computational-linguistics bounded continuation
+
+- Completed `osworld-multimodal-agents` and `computational-linguistics-nlp-translation` with the bounded 60-second/no-retry runner; report `translation-audit-v1195-bounded-next2.{json,md}` was written successfully.
+- Both papers yielded two units and exited without transport timeout. No production behavior changed.
+
+## 2026-09-30 v1196: HCI/ergonomics bounded continuation
+
+- Completed `conversation-analysis-user-experience` and `ergonomics-flight-deck-applications` with the bounded 60-second/no-retry runner; report `translation-audit-v1196-bounded-next2.{json,md}` was written successfully.
+- Both papers produced two units and no transport timeout occurred. No production behavior changed.
+
+## 2026-09-30 v1197: transport-separated aggregation
+
+- Recomputed the bounded ordinary summary including v1195/v1196 reports and explicitly separated transport failures from non-transport rows.
+- Saved `bounded-ordinary-summary-v1197.{json,md}` with both total reader-visible fallback and non-transport fallback views. It remains diagnostic and non-representative; semantic review is still required.
+
+## 2026-09-30 v1198: non-transport fallback triage
+
+- Triage of deduplicated bounded reports found 4 reader-visible ordinary rows after excluding abort/fetch failures: one `alternative relation missing`, one `unsupported method predicate introduced`, and two unspecified reasons.
+- Saved `test-data/real-papers/reports/nontransport-fallback-triage-v1198.md`. The two unspecified rows are retained for manual source/output review; no gate was loosened and no paper-specific rule was added.
+
+## 2026-09-30 v1199: row-level fallback triage
+
+- Inspected the two previously unspecified non-transport fallback rows. Both had no persisted translation text, so they are recorded as incomplete post-model results rather than semantic errors until server/quality logs are available.
+- The relation-rejected cognitive-memory row has persisted output and remains a manual review candidate; no gate change was made.
+
+## 2026-09-30 v1200: relation fallback manual confirmation
+
+- Manually reviewed `cognitive-memory-cue-interest:b-7227f846`: the output omitted the source's either-gist-or-detailed experimental condition, so `alternative relation missing` is a valid severity-2 omission/semantic-shift fallback, not an over-reject.
+- Added this review to `audit-manual-review.json`; no relation gate relaxation was made.
+
+## 2026-09-30 v1201: review statistics refresh
+
+- Refreshed `test-data/real-papers/reports/manual-review-summary-v1201.json` after confirming the alternative-condition omission. The review corpus now includes both a valid severity-2 relation fallback and the severity-3 protection-induced hallucination, so these are retained as separate failure causes.
+- No production gate was relaxed; this artifact is the baseline for comparing future model/cascade experiments.
+
+## 2026-09-30 v1202: regression verification
+
+- Re-ran focused quality/engine tests: **224/224 passed**; `git diff --check` passed.
+- The worktree still contains the intentional translation-quality changes and diagnostic benchmark artifacts; no new production rule was introduced in this verification turn.
+
+## 2026-09-30 v1203: social-advertising/HCI-methods bounded continuation
+
+- Completed `social-influence-social-advertising` and `hci-empirical-methods` with the bounded 60-second/no-retry runner; report `translation-audit-v1203-bounded-next2.{json,md}` was written successfully.
+- Both papers yielded two ordinary units and no transport timeout. No production behavior changed.
+
+## 2026-09-30 v1204: list-block manual review
+
+- Reviewed the social-advertising list-like block: it contains multiple omissions and relation drift, so fallback is appropriate. However, `unsupported method predicate introduced` is over-broad for this block because the source explicitly says field experiments; the semantic failure is primarily MADLAD/list flattening, not that predicate.
+- Added severity-3 omission/semantic-shift/list-flattening review. No gate relaxation was made; this is a candidate for list-aware cascade attribution rather than a blacklist.
+
+## 2026-09-30 v1205: selective-cascade input validation
+
+- Ran the selective-cascade benchmark in dry-run mode against the preserved v1170 report. It found 54 post-model source candidates and excluded 1 incomplete source without invoking an alternate model.
+- Artifact: `test-data/real-papers/reports/selective-cascade-v1205-dry-run.json`. This validates candidate selection and source preservation; no cascade route was enabled and no production behavior changed.
+
+## 2026-09-30 v1206: Qwen3 14B selective-cascade probe
+
+- Ollama is available with local `qwen3:14b`; ran one preserved post-model candidate through the existing selective-cascade benchmark with a 120-second timeout and one attempt.
+- Result: `interactive-jewellery:b-c1e9695a` was **not accepted** by the shared quality gate (0/1). Artifact: `test-data/real-papers/reports/selective-cascade-v1206-qwen3-14b-one.json`.
+- This is evidence against enabling a blanket alternate route; no production routing changed. More held-out candidates are needed before judging Qwen3 selectively.
+
+## 2026-09-30 v1207: second Qwen3 selective-cascade probe
+
+- Ran a second preserved candidate (`interactive-jewellery:b-4d8fd90a`) through `qwen3:14b` with the shared quality gate; result was **0/1 accepted**.
+- Artifact: `test-data/real-papers/reports/selective-cascade-v1207-qwen3-14b-skip1.json`. Two independent long/ordinary candidates have now failed alternate acceptance, so blanket Qwen3 cascade remains disabled.
+
+## 2026-09-30 v1208: Qwen2.5 14B selective-cascade probe
+
+- Ran one additional post-model candidate (`power-over-skin:b-150e520c`) through `qwen2.5:14b` and the shared quality gate.
+- Result: **0/1 accepted**; artifact `test-data/real-papers/reports/selective-cascade-v1208-qwen25-14b-skip2.json`. No alternate model has yet produced a safe accepted recovery in the current held-out probes; no production cascade change was made.
+
+## 2026-09-30 v1209: unit projection safety summary
+
+- Summarized fresh v1168 mapping evidence in `test-data/real-papers/reports/unit-projection-summary-v1209.md`: 46 mapped units across 5 rows; 4 rows fully safe, 1 row had 13 safe units and 1 unsafe unit.
+- The production projection path can retain those 13 safe Japanese units and source-fallback only the unsafe unit, directly reducing fallback area without weakening semantic gates. Population impact remains unmeasured.
+
+## 2026-09-30 v1210: fresh held-out ordinary-body benchmark
+
+- Ran a fresh same-server benchmark on `covid-ml-review` and `human-ai-interaction-guidelines` (2 translation units per paper, serial, one attempt, 120s request timeout).
+- Artifact: `test-data/real-papers/reports/translation-audit-v1210-fresh2.{json,md}`. Both papers completed and checkpointed; no production behavior changed.
+- Fresh ordinary-body result: 1 ordinary row, 0 reader-visible fallbacks; two damaged-extraction rows were correctly attributed to pre-model extraction and excluded from the translation denominator. This is not a product-wide rate.
+
+## 2026-09-30 v1211: fresh extraction diagnostics
+
+- Diagnosed the two pre-model damaged rows from v1210. COVID review is a same-column paragraph continuation split after `evaluate`; the human-AI paper ends at a contribution-list colon across columns. Native geometry confirms both are extraction/list-boundary issues, not MADLAD failures.
+- Saved `test-data/real-papers/reports/diagnostic-covid-v1211.json`, `diagnostic-human-ai-v1211.json`, and summary `extraction-diagnostic-v1211.md`.
+- Did not add a paper-specific merge rule; a generic fix needs list-aware continuation evidence and regression tests first.
+- Focused regression verification after diagnostics: `npx vitest run src/test/quality.test.ts src/test/madladEngine.test.ts` passed 224/224. The first attempt included unsupported `--runInBand`; rerun with Vitest-supported options passed.
+
+## 2026-09-30 v1212: generic spanning-to-body continuation repair
+
+- Added a geometry- and syntax-gated continuation path in `src/services/pdfLayout.ts` for full-width (`spanning`) paragraph blocks that continue in a normal body column. It requires matching x/font, same page, unfinished source, lowercase continuation, and sentence-continuation evidence.
+- Replayed the COVID review diagnostic: the previously split paragraph now includes the following `the effectiveness...` continuation (13 native lines). Replayed the human-AI contribution case: it remains a list boundary and is not merged because the source ends with a colon.
+- Focused quality/MADLAD tests remain 224/224 passed.
+- Extraction regression verification after v1212: `npm run test:extraction-corpus` passed 108/108 (56 baseline real-paper tests + 52 reading-order tests). Warnings are existing PDF parser warnings; no test failures.
+- Typecheck passed. Lint passed with pre-existing warnings only (no new warning at the spanning continuation code).
+
+## 2026-09-30 v1213: fresh marketing/linguistics benchmark
+
+- Ran serial fresh translation audit on `marketing-platform-attitude` and `linguistics-appraisal-institutional-discourse`, three units per paper, one server attempt, 120s timeout.
+- Artifact: `test-data/real-papers/reports/translation-audit-v1213-fresh2.{json,md}`. Both papers completed and checkpointed; detailed category/fallback attribution is in the JSON.
+- v1213 attribution: 5 ordinary rows, 2 reader-visible fallbacks (one model unit rejection in a long marketing block; one pre-model incomplete extraction excluded from the translation denominator; one cross-page linguistics block had one rejected unit). The marketing and linguistics rows retain safe unit mappings where available; this requires area-based review rather than block-level fallback counting.
+- Translation segmenter suite on the actual server venv: `PYTHONPATH=translation-server translation-server/.venv/bin/python -m unittest translation-server.tests.test_segmenter -v` passed 60/60. Direct replay showed both v1213 rejected units currently have no safe rescue split; no unverified splitter was enabled.
+
+## 2026-09-30 v1214: deterministic long-unit reproduction
+
+- Replayed the two v1213 rejected units directly against the ready server. Both deterministically returned `unit_0:translation_quality_rejected:ValueError`.
+- Normal segmentation kept each as one unit, and `rescue_units_for_translation()` produced no safe split for either source. Saved `test-data/real-papers/reports/long-unit-reproduction-v1214.json`.
+- This isolates the remaining issue to model/quality behavior on two long single-sentence units; no gate relaxation or unsafe split was introduced.
+
+## 2026-09-30 v1215: fresh cognitive/ergonomics benchmark
+
+- Ran serial fresh audit on `cognitive-memory-cue-interest` and `ergonomics-job-rotation-robotics`, three units per paper, one attempt, 120s timeout.
+- Artifact: `test-data/real-papers/reports/translation-audit-v1215-fresh2.{json,md}`. Both papers completed; row-level fallback attribution is persisted in JSON.
+- v1215 interpretation: five ordinary rows yielded one normal acceptance and four post-model rejections; the gate correctly rejected a known unsupported-method hallucination even when the raw quality score was 1.0. This reinforces the need to reduce model errors/reader-visible fallback without weakening semantic guards.
+
+## 2026-09-30 v1216: fallback area measurement
+
+- Combined fresh ordinary-body reports v1210/v1213/v1215 using source-character area and unit fallback indices. 11 rows, 14,126 source characters, conservative reader-visible fallback area 4,448 characters = 31.49%.
+- Artifact: `test-data/real-papers/reports/fallback-area-summary-v1216.{json,md}`. This is a small diagnostic sample, but it confirms the <=5% target is not yet met; no gate relaxation was made.
+
+## 2026-09-30 v1217: Gemma 2 selective-cascade probe
+
+- Replayed one ordinary post-model fallback (`ergonomics-job-rotation-robotics:b-9336ffe9`) through local `gemma2:9b`; shared quality gate accepted 1/1.
+- Manual spot review found minor wording/terminology roughness (severity 1) but no observed unsupported method or claim addition in the tested sample.
+- Artifact: `test-data/real-papers/reports/selective-cascade-v1217-gemma2-one.json` and review `selective-cascade-v1217-gemma2-review.md`. Audit-only; no production routing change.
+
+## 2026-09-30 v1218: second Gemma 2 cascade probe
+
+- Replayed `cognitive-memory-cue-interest:b-7227f846` through `gemma2:9b`; shared quality gate accepted 1/1.
+- Manual comparison retained participant count, gist/detail contrast, three time points, and final comparison; wording was awkward but no clear claim loss observed (provisional severity 1).
+- Artifact: `test-data/real-papers/reports/selective-cascade-v1218-gemma2-cognitive.json` plus review markdown. Production routing remains disabled; two accepted probes are insufficient for cascade enablement.
+
+## 2026-09-30 v1219: Gemma 2 long marketing probe
+
+- Replayed the long marketing fallback `marketing-platform-attitude:b-329e52b1` through `gemma2:9b`; result **0/1 accepted** by the shared gate.
+- Artifact: `test-data/real-papers/reports/selective-cascade-v1219-gemma2-marketing.json`. This prevents treating Gemma as a blanket fix; its apparent benefit is limited to some ordinary/relation cases.
+
+## 2026-09-30 v1220: protection A/B evidence consolidation
+
+- Consolidated the saved held-out Raw / Minimal / Current protection cohorts into `test-data/real-papers/reports/protection-ab-summary-v1220.{json,md}`.
+- In the recorded v1150 cohort (12 units), current protection restored all protected spans; raw/minimal each had missing-span rows. Several outputs differed materially. One known ergonomics case retained a source-faithful claim under raw/minimal but current protection produced the unsupported `組立シミュレーション`, which is correctly rejected by the semantic gate.
+- This is historical saved evidence, not a fresh v1220 model run. It supports keeping semantic guards and measuring protection benefit/cost, but is insufficient to change production protection or enable a cascade. A fresh same-process cohort remains the next experiment.
+
+## 2026-09-30 v1221: fresh same-process protection A/B
+
+- Ran `benchmark_protection_ab.py` in a newly loaded MADLAD process on the v1215 clean ordinary-body cohort. Artifact: `test-data/real-papers/reports/protection-ab-fresh-v1221.{json,md}`.
+- Five eligible rows were compared under Raw / Minimal / Current protection with identical greedy decoding. One short cognitive result translated identically in all arms; four difficult rows failed in all or nearly all arms. The long ergonomics row failed by decode quality in Raw/Minimal and by protected-placeholder restoration failure in Current.
+- This fresh run shows that protection is a distinct failure source in some rows, but it is not the dominant explanation for the entire fallback sample. No production protection or gate change was made.
+
+## 2026-09-30 v1222: Gemma cascade probe on cognitive long fallback
+
+- Replayed `cognitive-memory-cue-interest:b-9e4b4a19` through `gemma2:9b`; the shared gate accepted 1/1.
+- Manual spot review found that the key forgetting/interest interaction, comparison scope, and external/internal-factor conclusion were preserved. Japanese wording remains awkward (`異なって`, repeated `示唆`, retained gist terminology), provisionally severity 1.
+- Artifact: `test-data/real-papers/reports/selective-cascade-v1222-gemma2-cognitive.json` and review markdown. This is evidence for selective use on some MADLAD long-unit fallbacks, not blanket production routing.
+
+## 2026-09-30 v1223: Gemma unsupported-method control
+
+- Replayed `ergonomics-job-rotation-robotics:b-5b0516ff` through `gemma2:9b`; it was rejected 0/1 by the shared gate (`invariantScore=0.76`, unexpected citation range `[19–23]`).
+- Manual inspection found no previously observed unsupported `組立シミュレーション` addition, but the citation-range invariant mismatch prevents automatic acceptance. This identifies a possible gate false-reject/invariant-normalization issue without justifying gate relaxation.
+- Artifact: `test-data/real-papers/reports/selective-cascade-v1223-gemma2-unsupported-method.json` and review markdown. Production routing remains unchanged.

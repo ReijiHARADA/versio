@@ -70,6 +70,7 @@ type ServerTranslation = {
   partial_text?: string | null;
   partial_source_units?: string[] | null;
   partial_unit_texts?: string[] | null;
+  translation_units?: string[] | null;
   error?: string;
 };
 
@@ -111,6 +112,7 @@ type AuditRow = {
   partialText?: string | null;
   partialSourceUnits?: string[] | null;
   partialUnitTexts?: string[] | null;
+  translationUnits?: string[] | null;
   serverError?: string;
   wouldSubmitToModel: boolean;
   wouldAcceptTranslation?: boolean;
@@ -326,6 +328,8 @@ async function translate(texts: string[]): Promise<ServerTranslation[]> {
   const one = async (text: string) => {
     let lastError: unknown;
     for (let attempt = 0; attempt < maxRequestAttempts; attempt += 1) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
       try {
         const response = await fetch(`${endpoint}/translate`, {
           method: "POST",
@@ -334,7 +338,7 @@ async function translate(texts: string[]): Promise<ServerTranslation[]> {
             ...(serverToken ? { "X-Paper-Reader-Token": serverToken } : {}),
           },
           body: JSON.stringify({ text, source_language: "en", target_language: "ja" }),
-          signal: AbortSignal.timeout(requestTimeoutMs),
+          signal: controller.signal,
         });
         if (!response.ok) {
           const detail = await response.text();
@@ -351,6 +355,8 @@ async function translate(texts: string[]): Promise<ServerTranslation[]> {
           // retry transient 503s long enough for the model lifecycle to settle.
           await new Promise((resolve) => setTimeout(resolve, status === 503 ? 3_000 : 1_000));
         }
+      } finally {
+        clearTimeout(timeout);
       }
     }
     return {
@@ -700,6 +706,7 @@ async function main() {
           partialText: result?.partial_text,
           partialSourceUnits: result?.partial_source_units,
           partialUnitTexts: result?.partial_unit_texts,
+          translationUnits: result?.translation_units,
           serverError: result?.error,
           wouldSubmitToModel,
           wouldAcceptTranslation,

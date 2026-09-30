@@ -385,6 +385,7 @@ class TranslateResponse(BaseModel):
     partial_text: Optional[str] = None
     partial_source_units: Optional[list[str]] = None
     partial_unit_texts: Optional[list[str]] = None
+    translation_units: Optional[list[str]] = None
 
 
 class BatchTranslateRequest(BaseModel):

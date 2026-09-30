@@ -46,6 +46,8 @@ export interface TranslationResult {
   partialSourceUnits?: string[];
   /** Per-unit candidate texts before final assembly. */
   partialUnitTexts?: string[];
+  /** Exact source slices corresponding one-to-one with partialUnitTexts. */
+  translationUnits?: string[];
 }
 
 /**

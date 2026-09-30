@@ -11,6 +11,7 @@ import {
   diagnosePartialUnits,
   isCascadeQualityAcceptable,
   getCascadeQualityReasons,
+  hasDuplicatedYearCitationSpan,
   extractScientificInvariants,
   isExpectedNonProseParagraph,
   unsafeParagraphStructureReason,
@@ -26,6 +27,17 @@ import {
 } from "../services/importServiceV2";
 
 describe("acronym expansion safety", () => {
+  it("rejects alternate output that duplicates an author-year citation span", () => {
+    const source = "Online registers vary (see Biber in Corpus Linguist Theory 8:9–37, 2012). The results are mixed.";
+    const output = "オンラインレジスタは変動する（see Biber in Corpus Linguist Theory 8:9–37, 2012）。結果は混在する。（see Biber in Corpus Linguist Theory 8:9–37, 2012）";
+    const faithful = "オンラインレジスタは変動する（see Biber in Corpus Linguist Theory 8:9–37, 2012）。結果は混在する。";
+    const sourceRepeated = "オンラインレジスタは変動する（see Biber in Corpus Linguist Theory 8:9–37, 2012）。先行研究でも同じ引用（see Biber in Corpus Linguist Theory 8:9–37, 2012）がある。";
+    const outputRepeated = "オンラインレジスタは変動する（see Biber in Corpus Linguist Theory 8:9–37, 2012）。先行研究でも同じ引用（see Biber in Corpus Linguist Theory 8:9–37, 2012）がある。";
+    expect(hasDuplicatedYearCitationSpan(source, output)).toBe(true);
+    expect(hasDuplicatedYearCitationSpan(source, faithful)).toBe(false);
+    expect(hasDuplicatedYearCitationSpan(sourceRepeated, outputRepeated)).toBe(false);
+    expect(getCascadeQualityReasons(output, source)).toContain("duplicated year citation span");
+  });
   it("keeps supplementary-material labels atomic in the technical audit", () => {
     const source = "The task is described in the SI Appendix and the SI Appendix contains details.";
     expect(extractTechnicalNameCandidates(source)).toContain("SI Appendix");
@@ -87,6 +99,26 @@ describe("acronym expansion safety", () => {
     const faithful = "第一群は仮説探索質問を尋ね, 第二群は制約探索質問を尋ねた。";
     expect(evaluateJaTranslation(hallucinated, source).reasons).toContain("translation introduces an unsupported numbered enumeration");
     expect(evaluateJaTranslation(faithful, source).reasons).not.toContain("translation introduces an unsupported numbered enumeration");
+  });
+
+  it("rejects a method predicate added to an observational research claim", () => {
+    const source = "Different studies investigate ergonomics in assembly systems, mainly with the objective of reducing ergonomic risk in terms of worker posture [13].";
+    const hallucinated = "組立システムにおける人間工学的リスクの低減を目的として、組立シミュレーションを行った[13]。";
+    const faithful = "さまざまな研究が組立システムの人間工学を調査しており、主に作業者の姿勢に関する人間工学的リスクの低減を目的としている[13]。";
+    expect(evaluateJaTranslation(hallucinated, source).reasons).toContain("unsupported method predicate introduced");
+    expect(isPlausibleJaTranslation(hallucinated, source)).toBe(false);
+    expect(evaluateJaTranslation(faithful, source).reasons).not.toContain("unsupported method predicate introduced");
+    expect(isCascadeQualityAcceptable(hallucinated, source)).toBe(false);
+    expect(getCascadeQualityReasons(hallucinated, source)).toContain("plausibility gate failed");
+    const longSource = `${source} Other works develop digital tools for simulating the assembly process.`;
+    expect(evaluateJaTranslation(`${hallucinated} 他の研究では組立工程をシミュレーションするデジタルツールを開発している。`, longSource).reasons).toContain("unsupported method predicate introduced");
+  });
+
+  it("does not reject a method predicate when the source explicitly reports the method", () => {
+    const source = "We used the public OpenAI API to run all our simulations14 and set the temperature parameter to 0.";
+    const output = "公開のOpenAI APIを使用してすべてのシミュレーションを実行した[14]。温度パラメータを0に設定した。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("unsupported method predicate introduced");
+    expect(isCascadeQualityAcceptable(output, source)).toBe(true);
   });
 });
 
@@ -411,6 +443,12 @@ describe("isPlausibleJaTranslation", () => {
     const source = "The result is discussed in Section 5.2.";
     expect(isPlausibleJaTranslation("結果は5.2で説明した。", source)).toBe(true);
     expect(isPlausibleJaTranslation("結果は5.2だった。", source)).toBe(false);
+  });
+
+  it("accepts a preserved numbered section followed by the Japanese section suffix", () => {
+    const source = "The results are presented in Section 4.5.1.";
+    expect(isPlausibleJaTranslation("結果は4.5.1節に示されている。", source)).toBe(true);
+    expect(isPlausibleJaTranslation("結果は4.5節に示されている。", source)).toBe(false);
   });
 
   it("treats PDF-split SI prefixes as the same measurement", () => {

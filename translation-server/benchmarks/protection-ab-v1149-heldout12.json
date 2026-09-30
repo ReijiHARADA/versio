@@ -1,0 +1,693 @@
+{
+  "version": "protection-ab-v1",
+  "sourceReport": "/Users/harada/Desktop/codex/projects/paper-reader/test-data/real-papers/reports/translation-audit.json",
+  "model": "google/madlad400-3b-mt",
+  "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v82-source-protect-v25-strict-restore-v28-quality-v34-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue",
+  "generation": {
+    "numBeams": 1,
+    "doSample": false
+  },
+  "offset": 0,
+  "segmentUnits": true,
+  "productionRescue": false,
+  "exposeRepeatedAcronyms": false,
+  "exposeAllSpans": false,
+  "exposeShortContextSpans": false,
+  "sampleCount": 12,
+  "records": [
+    {
+      "paperId": "cognitive-dual-task-older-adults",
+      "key": "cognitive-dual-task-older-adults:b-2a4eab0c#unit-0",
+      "source": "Background: The present study compared the effects of a traditional resistance training (TRT) and resistance training combined with cognitive task (RT+CT) on body composition, physical performance, cognitive function, and plasma brain-derived neurotrophic factor (BNDF) levels",
+      "sourceShape": {
+        "charCount": 276,
+        "wordCount": 36,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Background: The present study compared the effects of a traditional resistance training (TRT) and resistance training combined with cognitive task (RT+CT) on body composition, physical performance, cognitive function, and plasma brain-derived neurotrophic factor (BNDF) levels",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "体組成,身体能力,認知機能,血しょう脳由来神経栄養因子(BNDF)レベルに及ぼす従来の抵抗トレーニング(TRT)と抵抗トレニングと認知作業を組み合わせたトレーニングの効果を比較した。",
+          "output": "体組成,身体能力,認知機能,血しょう脳由来神経栄養因子(BNDF)レベルに及ぼす従来の抵抗トレーニング(TRT)と抵抗トレニングと認知作業を組み合わせたトレーニングの効果を比較した。",
+          "inputTokens": 61,
+          "outputTokens": 80,
+          "latencyMs": 3544.9,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "Background: The present study compared the effects of a traditional resistance training (TRT) and resistance training combined with cognitive task (RT+CT) on body composition, physical performance, cognitive function, and plasma brain-derived neurotrophic factor (BNDF) levels",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "体組成,身体能力,認知機能,血しょう脳由来神経栄養因子(BNDF)レベルに及ぼす従来の抵抗トレーニング(TRT)と抵抗トレニングと認知作業を組み合わせたトレーニングの効果を比較した。",
+          "output": "体組成,身体能力,認知機能,血しょう脳由来神経栄養因子(BNDF)レベルに及ぼす従来の抵抗トレーニング(TRT)と抵抗トレニングと認知作業を組み合わせたトレーニングの効果を比較した。",
+          "inputTokens": 61,
+          "outputTokens": 80,
+          "latencyMs": 3240.0,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "Background: The present study compared the effects of a traditional resistance training (TRT) and resistance training combined with cognitive task (RT+CT) on body composition, physical performance, cognitive function, and plasma brain-derived neurotrophic factor (BNDF) levels",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "体組成,身体能力,認知機能,血しょう脳由来神経栄養因子(BNDF)レベルに及ぼす従来の抵抗トレーニング(TRT)と抵抗トレニングと認知作業を組み合わせたトレーニングの効果を比較した。",
+          "output": "体組成,身体能力,認知機能,血しょう脳由来神経栄養因子(BNDF)レベルに及ぼす従来の抵抗トレーニング(TRT)と抵抗トレニングと認知作業を組み合わせたトレーニングの効果を比較した。",
+          "inputTokens": 61,
+          "outputTokens": 80,
+          "latencyMs": 3349.0,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "cognitive-memory-cue-interest",
+      "key": "cognitive-memory-cue-interest:b-7227f846#unit-0",
+      "source": "The gist and details of an event are both important for us to establish and maintain episodic memory.",
+      "sourceShape": {
+        "charCount": 101,
+        "wordCount": 18,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "The gist and details of an event are both important for us to establish and maintain episodic memory.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "事件の要点と詳細は,エピソード記憶の確立と維持にとって重要である。",
+          "output": "事件の要点と詳細は,エピソード記憶の確立と維持にとって重要である。",
+          "inputTokens": 25,
+          "outputTokens": 32,
+          "latencyMs": 1265.2,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "The gist and details of an event are both important for us to establish and maintain episodic memory.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "事件の要点と詳細は,エピソード記憶の確立と維持にとって重要である。",
+          "output": "事件の要点と詳細は,エピソード記憶の確立と維持にとって重要である。",
+          "inputTokens": 25,
+          "outputTokens": 32,
+          "latencyMs": 1250.9,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "The gist and details of an event are both important for us to establish and maintain episodic memory.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "事件の要点と詳細は,エピソード記憶の確立と維持にとって重要である。",
+          "output": "事件の要点と詳細は,エピソード記憶の確立と維持にとって重要である。",
+          "inputTokens": 25,
+          "outputTokens": 32,
+          "latencyMs": 1253.1,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "cognitive-motor-incidental-memory",
+      "key": "cognitive-motor-incidental-memory:b-483b456a#unit-0",
+      "source": "Yebra et al. (2019) did not favor the attentional account of AIME and suggested that the Go cues were as frequent as the No-go cues and thus not highly salient.",
+      "sourceShape": {
+        "charCount": 160,
+        "wordCount": 30,
+        "sentenceCountEstimate": 2,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Yebra et al. (2019) did not favor the attentional account of AIME and suggested that the Go cues were as frequent as the No-go cues and thus not highly salient.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 2,
+          "missingSourceSpans": [
+            "Yebra et al. (2019)"
+          ],
+          "literalSpans": [],
+          "restoredOutput": "YebraらはAIMEの注意的説明を支持せず,GoキューはNo‐goキューと同じくらい頻繁で,高度に突出していないことを示唆した。",
+          "output": "YebraらはAIMEの注意的説明を支持せず,GoキューはNo‐goキューと同じくらい頻繁で,高度に突出していないことを示唆した。",
+          "inputTokens": 50,
+          "outputTokens": 59,
+          "latencyMs": 2344.6,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "ZZCIT1ZZ did not favor the attentional account of ZZCIT2ZZ and suggested that the Go cues were as frequent as the No-go cues and thus not highly salient.",
+          "protectedSpanCount": 2,
+          "sourceProtectedSpanCount": 2,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "Yebra et al. (2019)はAIMEの注意記述を好まず,GoキューはNo‐goキューと同じくらい頻繁で,高度に突出していないことを示唆した。",
+          "output": "ZZCIT1ZZはZZCΙT2ZZの注意記述を好まず,GoキューはNo‐goキューと同じくらい頻繁で,高度に突出していないことを示唆した。",
+          "inputTokens": 47,
+          "outputTokens": 64,
+          "latencyMs": 2532.1,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "ZZCIT1ZZ did not favor the attentional account of ZZCIT2ZZ and suggested that the Go cues were as frequent as the No-go cues and thus not highly salient.",
+          "protectedSpanCount": 2,
+          "sourceProtectedSpanCount": 2,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "Yebra et al. (2019)はAIMEの注意記述を好まず,GoキューはNo‐goキューと同じくらい頻繁で,高度に突出していないことを示唆した。",
+          "output": "Yebra et al. (2019)はAIMEの注意記述を好まず,GoキューはNo‐goキューと同じくらい頻繁で,高度に突出していないことを示唆した。",
+          "inputTokens": 47,
+          "outputTokens": 64,
+          "latencyMs": 2600.2,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "cognitive-psychology-gpt3",
+      "key": "cognitive-psychology-gpt3:b-5096fc7a#unit-1",
+      "source": "There are four GPT-3 models accessible through this API: “Ada”, “Babbage”, “Curie” and “Davinci” (sorted from the least to the most complex model).",
+      "sourceShape": {
+        "charCount": 147,
+        "wordCount": 23,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "There are four GPT-3 models accessible through this API: “Ada”, “Babbage”, “Curie” and “Davinci” (sorted from the least to the most complex model).",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "GPT‐3モデルは,Ada,Babbage,Curie,Davinciの4つである。",
+          "output": "GPT‐3モデルは,Ada,Babbage,Curie,Davinciの4つである。",
+          "inputTokens": 45,
+          "outputTokens": 42,
+          "latencyMs": 2217.9,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "There are four GPT-3 models accessible through this API: “Ada”, “Babbage”, “Curie” and “Davinci” (sorted from the least to the most complex model).",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "GPT‐3モデルは,Ada,Babbage,Curie,Davinciの4つである。",
+          "output": "GPT‐3モデルは,Ada,Babbage,Curie,Davinciの4つである。",
+          "inputTokens": 45,
+          "outputTokens": 42,
+          "latencyMs": 2301.9,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "There are four GPT-3 models accessible through this API: “Ada”, “Babbage”, “Curie” and “Davinci” (sorted from the least to the most complex model).",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "GPT‐3モデルは,Ada,Babbage,Curie,Davinciの4つである。",
+          "output": "GPT‐3モデルは,Ada,Babbage,Curie,Davinciの4つである。",
+          "inputTokens": 45,
+          "outputTokens": 42,
+          "latencyMs": 2389.6,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "cognitive-vr-mnemonic-processing",
+      "key": "cognitive-vr-mnemonic-processing:b-2d5b1cb6#unit-0",
+      "source": "However, the specific conditions under which VR is more beneficial than conventional learning methods remain unclear.",
+      "sourceShape": {
+        "charCount": 117,
+        "wordCount": 16,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "However, the specific conditions under which VR is more beneficial than conventional learning methods remain unclear.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "しかし,VRが従来の学習法よりも有利な具体的条件は不明である。",
+          "output": "しかし,VRが従来の学習法よりも有利な具体的条件は不明である。",
+          "inputTokens": 24,
+          "outputTokens": 32,
+          "latencyMs": 1785.7,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "However, the specific conditions under which ZZCIT1ZZ is more beneficial than conventional learning methods remain unclear.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "しかし,VRが従来の学習法よりも有利な具体的条件は不明である。",
+          "output": "しかし,ZZCIT1ZZが従来の学習法よりも有利な具体的条件は不明である。",
+          "inputTokens": 28,
+          "outputTokens": 38,
+          "latencyMs": 2242.6,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "However, the specific conditions under which ZZCIT1ZZ is more beneficial than conventional learning methods remain unclear.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "しかし,VRが従来の学習法よりも有利な具体的条件は不明である。",
+          "output": "しかし,VRが従来の学習法よりも有利な具体的条件は不明である。",
+          "inputTokens": 28,
+          "outputTokens": 38,
+          "latencyMs": 2268.1,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "computational-linguistics-nlp-translation",
+      "key": "computational-linguistics-nlp-translation:b-36e302e9#unit-0",
+      "source": "Broadly defined, the term computational linguistics refers to the use of computational methods and tools in the study of linguistic phenomena.",
+      "sourceShape": {
+        "charCount": 142,
+        "wordCount": 21,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Broadly defined, the term computational linguistics refers to the use of computational methods and tools in the study of linguistic phenomena.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "計算言語学は,言語現象の研究における計算手法とツールの使用を指す。",
+          "output": "計算言語学は,言語現象の研究における計算手法とツールの使用を指す。",
+          "inputTokens": 35,
+          "outputTokens": 33,
+          "latencyMs": 2071.5,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "Broadly defined, the term computational linguistics refers to the use of computational methods and tools in the study of linguistic phenomena.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "計算言語学は,言語現象の研究における計算手法とツールの使用を指す。",
+          "output": "計算言語学は,言語現象の研究における計算手法とツールの使用を指す。",
+          "inputTokens": 35,
+          "outputTokens": 33,
+          "latencyMs": 1857.7,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "Broadly defined, the term computational linguistics refers to the use of computational methods and tools in the study of linguistic phenomena.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "計算言語学は,言語現象の研究における計算手法とツールの使用を指す。",
+          "output": "計算言語学は,言語現象の研究における計算手法とツールの使用を指す。",
+          "inputTokens": 35,
+          "outputTokens": 33,
+          "latencyMs": 1881.3,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "conversation-analysis-user-experience",
+      "key": "conversation-analysis-user-experience:b-0d5b12a9#unit-0",
+      "source": "We provide two case studies in the application of ideas drawn from conversation analysis to the design of technologies that enhance the experience of human conversation.",
+      "sourceShape": {
+        "charCount": 169,
+        "wordCount": 26,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "We provide two case studies in the application of ideas drawn from conversation analysis to the design of technologies that enhance the experience of human conversation.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "人間の会話の経験を向上させる技術の設計に対して,会話分析から得られたアイデアを適用した2つの事例を示した。",
+          "output": "人間の会話の経験を向上させる技術の設計に対して,会話分析から得られたアイデアを適用した2つの事例を示した。",
+          "inputTokens": 31,
+          "outputTokens": 48,
+          "latencyMs": 2835.7,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "We provide two case studies in the application of ideas drawn from conversation analysis to the design of technologies that enhance the experience of human conversation.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "人間の会話の経験を向上させる技術の設計に対して,会話分析から得られたアイデアを適用した2つの事例を示した。",
+          "output": "人間の会話の経験を向上させる技術の設計に対して,会話分析から得られたアイデアを適用した2つの事例を示した。",
+          "inputTokens": 31,
+          "outputTokens": 48,
+          "latencyMs": 3008.6,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "We provide two case studies in the application of ideas drawn from conversation analysis to the design of technologies that enhance the experience of human conversation.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "人間の会話の経験を向上させる技術の設計に対して,会話分析から得られたアイデアを適用した2つの事例を示した。",
+          "output": "人間の会話の経験を向上させる技術の設計に対して,会話分析から得られたアイデアを適用した2つの事例を示した。",
+          "inputTokens": 31,
+          "outputTokens": 48,
+          "latencyMs": 3007.3,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "covid-ml-review",
+      "key": "covid-ml-review:b-0309e36f#unit-0",
+      "source": "From December 2019, a novel coronavirus named as severe acute respiratory syndrome coronavirus 2 (SARs-CoV- -2) has caused a fatal disease called coronavirus disease (COVID-19) [1-3].",
+      "sourceShape": {
+        "charCount": 183,
+        "wordCount": 26,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "From December 2019, a novel coronavirus named as severe acute respiratory syndrome coronavirus 2 (SARs-CoV- -2) has caused a fatal disease called coronavirus disease (COVID-19) [1-3].",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 2,
+          "missingSourceSpans": [
+            "[1-3]"
+          ],
+          "literalSpans": [],
+          "restoredOutput": "2019年12月より,重症急性呼吸器症候群コロナウイルス2(SARs‐CoV‐2)と命名された新規コロナ ウイルスがコロナ病(COVID‐19)と呼ばれる致命的な疾患を引き起こしている[1‐3]。",
+          "output": "2019年12月より,重症急性呼吸器症候群コロナウイルス2(SARs‐CoV‐2)と命名された新規コロナ ウイルスがコロナ病(COVID‐19)と呼ばれる致命的な疾患を引き起こしている[1‐3]。",
+          "inputTokens": 59,
+          "outputTokens": 90,
+          "latencyMs": 5155.4,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "From December 2019, a novel coronavirus named as severe acute respiratory syndrome coronavirus 2 (SARs-ZZCIT1ZZ- -2) has caused a fatal disease called coronavirus disease (COVID-19) [1-3].",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 2,
+          "missingSourceSpans": [
+            "[1-3]"
+          ],
+          "literalSpans": [
+            "[1-3]"
+          ],
+          "restoredOutput": "2019年12月より,重症急性呼吸器症候群コロナウイルス2(SARs‐CoV‐‐2)と命名された新規コロナ ウイルスがコロナ病(COVID‐19)と呼ばれる致命的な疾患を引き起こしている[1‐3]。",
+          "output": "2019年12月より,重症急性呼吸器症候群コロナウイルス2(SARs‐ZZCIT1ZZ‐‐2)と命名された新規コロナ ウイルスがコロナ病(COVID‐19)と呼ばれる致命的な疾患を引き起こしている[1‐3]。",
+          "inputTokens": 61,
+          "outputTokens": 96,
+          "latencyMs": 5478.8,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "From December 2019, a novel coronavirus named as severe acute respiratory syndrome coronavirus 2 (SARs-ZZCIT1ZZ- -2) has caused a fatal disease called coronavirus disease (COVID-19) ZZCIT2ZZ.",
+          "protectedSpanCount": 2,
+          "sourceProtectedSpanCount": 2,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "2019年12月より,重症急性呼吸器症候群コロナウイルス2(SARs‐CoV‐‐2)と命名された新規コロナ ウイルスがコロナ病(COVID‐19)[1-3]と呼ばれる致命的な疾患を引き起こしている。",
+          "output": "2019年12月より,重症急性呼吸器症候群コロナウイルス2(SARs‐CoV‐‐2)と命名された新規コロナ ウイルスがコロナ病(COVID‐19)[1-3]と呼ばれる致命的な疾患を引き起こしている。",
+          "inputTokens": 61,
+          "outputTokens": 99,
+          "latencyMs": 5716.6,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "design-for-wearability",
+      "key": "design-for-wearability:b-4655d14e#unit-0",
+      "source": "Applying these criteria results in the most unobtrusive locations for placement of wearable objects.",
+      "sourceShape": {
+        "charCount": 100,
+        "wordCount": 14,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Applying these criteria results in the most unobtrusive locations for placement of wearable objects.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "これらの基準を適用することにより,着用可能な物体の配置に対して最も注意を引かない位置を得ることができる。",
+          "output": "これらの基準を適用することにより,着用可能な物体の配置に対して最も注意を引かない位置を得ることができる。",
+          "inputTokens": 28,
+          "outputTokens": 42,
+          "latencyMs": 2426.5,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "Applying these criteria results in the most unobtrusive locations for placement of wearable objects.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "これらの基準を適用することにより,着用可能な物体の配置に対して最も注意を引かない位置を得ることができる。",
+          "output": "これらの基準を適用することにより,着用可能な物体の配置に対して最も注意を引かない位置を得ることができる。",
+          "inputTokens": 28,
+          "outputTokens": 42,
+          "latencyMs": 2337.2,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "Applying these criteria results in the most unobtrusive locations for placement of wearable objects.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "これらの基準を適用することにより,着用可能な物体の配置に対して最も注意を引かない位置を得ることができる。",
+          "output": "これらの基準を適用することにより,着用可能な物体の配置に対して最も注意を引かない位置を得ることができる。",
+          "inputTokens": 28,
+          "outputTokens": 42,
+          "latencyMs": 2495.7,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "dont-mind-me",
+      "key": "dont-mind-me:b-176cf815#unit-0",
+      "source": "Malhotra and Galletta ascertained that social influences will have a large impact on system usage and acceptance of new technologies [18].",
+      "sourceShape": {
+        "charCount": 138,
+        "wordCount": 21,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Malhotra and Galletta ascertained that social influences will have a large impact on system usage and acceptance of new technologies [18].",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [
+            "[18]"
+          ],
+          "literalSpans": [],
+          "restoredOutput": "MalhotraとGallettaは,社会的影響がシステムの使用と新技術の受容に大きな影響を与えると確認した。",
+          "output": "MalhotraとGallettaは,社会的影響がシステムの使用と新技術の受容に大きな影響を与えると確認した。",
+          "inputTokens": 36,
+          "outputTokens": 51,
+          "latencyMs": 2929.8,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "Malhotra and Galletta ascertained that social influences will have a large impact on system usage and acceptance of new technologies [18].",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [
+            "[18]"
+          ],
+          "literalSpans": [
+            "[18]"
+          ],
+          "restoredOutput": "MalhotraとGallettaは,社会的影響がシステムの使用と新技術の受容に大きな影響を与えると確認した。",
+          "output": "MalhotraとGallettaは,社会的影響がシステムの使用と新技術の受容に大きな影響を与えると確認した。",
+          "inputTokens": 36,
+          "outputTokens": 51,
+          "latencyMs": 2821.9,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "Malhotra and Galletta ascertained that social influences will have a large impact on system usage and acceptance of new technologies ZZCIT1ZZ.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "MalhotraとGallettaは,社会的影響がシステムの使用と新技術の受容に大きな影響を与えると確認した[18]。",
+          "output": "MalhotraとGallettaは,社会的影響がシステムの使用と新技術の受容に大きな影響を与えると確認した[18]。",
+          "inputTokens": 37,
+          "outputTokens": 51,
+          "latencyMs": 3192.9,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "education-learning-analytics",
+      "key": "education-learning-analytics:b-0d816d5c#unit-0",
+      "source": "It refers to a web-based class designed to support a large number of participants.",
+      "sourceShape": {
+        "charCount": 82,
+        "wordCount": 14,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "It refers to a web-based class designed to support a large number of participants.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "これは,多数の参加者をサポートするために設計されたウェブベースのクラスを指す。",
+          "output": "これは,多数の参加者をサポートするために設計されたウェブベースのクラスを指す。",
+          "inputTokens": 21,
+          "outputTokens": 32,
+          "latencyMs": 1425.4,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "It refers to a web-based class designed to support a large number of participants.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "これは,多数の参加者をサポートするために設計されたウェブベースのクラスを指す。",
+          "output": "これは,多数の参加者をサポートするために設計されたウェブベースのクラスを指す。",
+          "inputTokens": 21,
+          "outputTokens": 32,
+          "latencyMs": 1879.6,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "It refers to a web-based class designed to support a large number of participants.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "これは,多数の参加者をサポートするために設計されたウェブベースのクラスを指す。",
+          "output": "これは,多数の参加者をサポートするために設計されたウェブベースのクラスを指す。",
+          "inputTokens": 21,
+          "outputTokens": 32,
+          "latencyMs": 2071.0,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "ergonomics-flight-deck-applications",
+      "key": "ergonomics-flight-deck-applications:b-334898e6#unit-0",
+      "source": "Applying SHERPA to the current tools used to assess engine condition monitoring can identify potential errors in the current system and also generate recommendations for remedial measures to overcome the identified errors.",
+      "sourceShape": {
+        "charCount": 222,
+        "wordCount": 32,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Applying SHERPA to the current tools used to assess engine condition monitoring can identify potential errors in the current system and also generate recommendations for remedial measures to overcome the identified errors.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "SHERPAをエンジン状態監視に適用することにより,現行システムの潜在的なエラーを同定し,同定されたエラーを克服するための修正策の推奨を生成できる。",
+          "output": "SHERPAをエンジン状態監視に適用することにより,現行システムの潜在的なエラーを同定し,同定されたエラーを克服するための修正策の推奨を生成できる。",
+          "inputTokens": 49,
+          "outputTokens": 63,
+          "latencyMs": 3794.2,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "Applying ZZCIT1ZZ to the current tools used to assess engine condition monitoring can identify potential errors in the current system and also generate recommendations for remedial measures to overcome the identified errors.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "また,エンジン状態監視のためのツールにSHERPAを適用することにより,現行システムにおける潜在的なエラーを同定し,同定されたエラーを克服するための補正措置の推奨を生成できる。",
+          "output": "また,エンジン状態監視のためのツールにZZCIT1ZZを適用することにより,現行システムにおける潜在的なエラーを同定し,同定されたエラーを克服するための補正措置の推奨を生成できる。",
+          "inputTokens": 51,
+          "outputTokens": 77,
+          "latencyMs": 4464.4,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "Applying ZZCIT1ZZ to the current tools used to assess engine condition monitoring can identify potential errors in the current system and also generate recommendations for remedial measures to overcome the identified errors.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "また,エンジン状態監視のためのツールにSHERPAを適用することにより,現行システムにおける潜在的なエラーを同定し,同定されたエラーを克服するための補正措置の推奨を生成できる。",
+          "output": "また,エンジン状態監視のためのツールにSHERPAを適用することにより,現行システムにおける潜在的なエラーを同定し,同定されたエラーを克服するための補正措置の推奨を生成できる。",
+          "inputTokens": 51,
+          "outputTokens": 77,
+          "latencyMs": 4303.6,
+          "error": null
+        }
+      ]
+    }
+  ]
+}

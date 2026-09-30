@@ -275,6 +275,10 @@ class MicroBatcherTests(unittest.TestCase):
             out[0].partial_unit_texts,
             ["ja:good sentence.", "bad sentence.", "ja:another good sentence."],
         )
+        self.assertEqual(
+            out[0].translation_units,
+            ["good sentence.", "bad sentence.", "another good sentence."],
+        )
 
 
 if __name__ == "__main__":

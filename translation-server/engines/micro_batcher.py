@@ -436,6 +436,7 @@ class MicroBatchScheduler:
                     partial_text=assembled_partial,
                     partial_source_units=failed_sources or None,
                     partial_unit_texts=part,
+                    translation_units=chunks,
                 )
                 results.append(result)
                 if not item.future.done():
@@ -461,6 +462,7 @@ class MicroBatchScheduler:
                     fallback.partial_text = assembled_partial
                     fallback.partial_source_units = [chunks[index] for index in failed_indices]
                     fallback.partial_unit_texts = part
+                    fallback.translation_units = chunks
                 results.append(fallback)
                 if not item.future.done():
                     item.future.set_result(fallback)

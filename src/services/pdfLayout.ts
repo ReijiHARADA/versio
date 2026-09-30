@@ -807,7 +807,35 @@ function clusterItemsIntoLines(
  */
 function splitInlineSubheading(line: LayoutLine): LayoutLine[] {
   if (Math.abs(line.rotation ?? 0) >= 45 || line.items.length < 2) return [line];
-  const ordered = [...line.items].sort((a, b) => a.x - b.x);
+  const ordered = [...line.items].sort((a, b) => a.x - b.x).flatMap((item) => {
+    // A PDF producer may keep a rail prefix and a body label/content in one
+    // native item. Preserve round-trip text while exposing the label boundary
+    // to the structural splitter using proportional synthetic geometry.
+    const match = item.text.match(/^([A-Za-z][A-Za-z -]{1,31}:)\s+(.+)$/);
+    if (!match) return [item];
+    const labelWidth = item.width * (match[1].length / (match[1].length + match[2].length));
+    return [
+      { ...item, text: match[1], width: labelWidth },
+      { ...item, text: match[2], x: item.x + labelWidth + Math.max(1.5, item.fontSize * 0.2), width: Math.max(0, item.width - labelWidth) },
+    ];
+  });
+  // A sidebar citation/author run can share a baseline with a body metadata
+  // label (`... authors, Keywords: ...`). Split at the native label run when
+  // the right-hand band is substantial and the left band is rail-sized.
+  for (let splitIndex = 1; splitIndex < ordered.length; splitIndex++) {
+    const label = ordered[splitIndex].text.trim();
+    if (!/^[A-Za-z][A-Za-z -]{1,31}:$/.test(label)) continue;
+    const leftItems = ordered.slice(0, splitIndex);
+    const rightItems = ordered.slice(splitIndex);
+    const leftText = joinItemTexts(leftItems).trim();
+    const rightText = joinItemTexts(rightItems).trim();
+    const leftRight = leftItems.at(-1)!.x + leftItems.at(-1)!.width;
+    const gap = rightItems[0].x - leftRight;
+    if (leftText.length < 12 || leftText.length > 180 || rightText.split(/\s+/).length < 4 ||
+        leftRight > (line.pageWidth ?? 612) * 0.34 || gap < Math.max(4, line.fontSize * 0.35)) continue;
+    const make = (items: ExtractedTextItem[]): LayoutLine => itemsToLine(items, line.column, line.page, line.pageHeight, line.pageWidth);
+    return [make(leftItems), { ...make(rightItems), roleHint: "heading" }];
+  }
   // Large display-title spans can share a baseline with a small, all-caps
   // publisher label (for example an open-access badge). Separate this clear
   // native typography/gutter transition before role resolution so the label
@@ -831,6 +859,36 @@ function splitInlineSubheading(line: LayoutLine): LayoutLine[] {
     });
     return [makePart(leadingItems), makePart(displayItems)];
   }
+
+  // Some publisher templates render an abstract metadata label and its prose
+  // on the same baseline, with neither run named "bold" (for example
+  // `Background:` / `Methods:` / `Keywords:`).  Preserve the native run
+  // boundary when a compact colon-terminated prefix has a distinct font and
+  // the suffix is substantial prose or a keyword list.  This is deliberately
+  // geometry/style based; it does not depend on a paper or publisher name.
+  for (let splitIndex = 1; splitIndex < ordered.length; splitIndex++) {
+    const prefixItems = ordered.slice(0, splitIndex);
+    const suffixItems = ordered.slice(splitIndex);
+    const prefix = joinItemTexts(prefixItems).trim();
+    const suffix = joinItemTexts(suffixItems).trim();
+    const prefixWords = prefix.replace(/:$/, "").trim().split(/\s+/).filter(Boolean);
+    const suffixWords = suffix.split(/\s+/).filter(Boolean);
+    const prefixFontNames = new Set(prefixItems.map((item) => item.fontName));
+    const suffixFontNames = new Set(suffixItems.map((item) => item.fontName));
+    const prefixFont = median(prefixItems.map((item) => item.fontSize));
+    const suffixFont = median(suffixItems.map((item) => item.fontSize));
+    const gap = suffixItems[0].x - (prefixItems.at(-1)!.x + prefixItems.at(-1)!.width);
+    const compactLabel = prefix.length <= 32 && prefixWords.length <= 4 && /:$/.test(prefix) &&
+      /^[A-Za-z][A-Za-z -]*:$/.test(prefix);
+    const distinctStyle = [...prefixFontNames].some((font) => !suffixFontNames.has(font));
+    const substantialSuffix = suffixWords.length >= 5 || /,/.test(suffix);
+    if (!compactLabel || !distinctStyle || !substantialSuffix ||
+        gap < -1 || gap > Math.max(line.fontSize * 2.2, 18) ||
+        prefixFont < suffixFont * 0.8 || prefixFont > suffixFont * 1.25) continue;
+    const make = (items: ExtractedTextItem[]): LayoutLine => itemsToLine(items, line.column, line.page, line.pageHeight, line.pageWidth);
+    return [{ ...make(prefixItems), roleHint: "heading" }, make(suffixItems)];
+  }
+
   let prefixCount = 0;
   while (prefixCount < ordered.length && /(?:bold|black|heavy|semi[- ]?bold|demi)/i.test(ordered[prefixCount].fontName)) {
     prefixCount += 1;
@@ -1894,6 +1952,10 @@ function canMergeAffiliation(
   if (next.fontSize > baseFont * 1.08) return false;
   const existing = joinLines(current);
   const nextText = next.text.trim();
+  // A metadata label on the next line starts a new structural band. Do not
+  // let a preceding author/affiliation row absorb `Keywords:` or a similar
+  // colon-terminated label merely because the preceding row ended in a comma.
+  if (/^[A-Za-z][A-Za-z -]{1,31}:\s+/.test(nextText)) return false;
   // An affiliation often wraps after a comma or conjunction.  Require either
   // that syntactic continuation or an institution/country marker on the next
   // line so a misclassified body paragraph cannot be absorbed into metadata.
@@ -3003,6 +3065,23 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       Math.abs(targetLine.fontSize - nextLine.fontSize) <= 0.8 &&
       !/[.!?:]$/.test(target.text.trim()) && isSentenceContinuation(target.text, block.text)
     );
+    // Abstracts and other full-width masthead paragraphs can be classified as
+    // `spanning` because their first line crosses the column band, while the
+    // remaining lines are emitted as a normal body column.  Preserve a clear
+    // same-column continuation in that case, but require the same geometric
+    // baseline, matching font, an unfinished source tail, and a lowercase
+    // continuation so a new heading/list is never absorbed.
+    const joinsSpanningBodyContinuation = Boolean(
+      target && target.role === "paragraph" && block.role === "paragraph" &&
+      target.column === "spanning" && (block.column === "left" || block.column === "right" || block.column === "single") &&
+      target.pageStart === target.pageEnd && block.pageStart === block.pageEnd &&
+      target.pageEnd === block.pageStart && targetLine && nextLine &&
+      Math.abs(targetLine.x - nextLine.x) <= 18 && nextLine.y > targetLine.y &&
+      nextLine.y - targetLine.y <= Math.max(targetLine.fontSize, nextLine.fontSize) * 3.2 &&
+      Math.abs(targetLine.fontSize - nextLine.fontSize) <= 0.8 &&
+      target.text.trim().length >= 80 && !/[.!?:]$/.test(target.text.trim()) &&
+      /^[a-z(]/.test(block.text.trim()) && isSentenceContinuation(target.text, block.text)
+    );
     if (process.env.PDF_LAYOUT_CONTINUATION_DEBUG === "1" && target && target.pageStart === block.pageStart &&
         target.column === block.column && target.role !== "heading" && block.role !== "heading") {
       console.warn(`[PDF_LAYOUT_CONTINUATION] targetRole=${target.role} blockRole=${block.role} ` +
@@ -3210,7 +3289,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
     if (
       target && (target.role === "paragraph" || isAbstractBodyTitleBlock(target)) && block.role === "paragraph" &&
       !currentIsDetachedMargin &&
-        (joinsCompleteLeadingContinuation || joinsSameColumnContinuation || joinsHyphenatedContinuation || geometrySameLineContinuation || rejoinAfterDetachedMargin || wrapsAcrossColumnsAtPageBottom || wrapsAcrossColumnsAtModerateTop || wrapsAcrossPhysicalColumns || wrapsAcrossAdjacentColumnTails ||
+        (joinsCompleteLeadingContinuation || joinsSameColumnContinuation || joinsSpanningBodyContinuation || joinsHyphenatedContinuation || geometrySameLineContinuation || rejoinAfterDetachedMargin || wrapsAcrossColumnsAtPageBottom || wrapsAcrossColumnsAtModerateTop || wrapsAcrossPhysicalColumns || wrapsAcrossAdjacentColumnTails ||
         (canContinueAcrossColumns && isSentenceContinuation(target.text, block.text)) ||
         crossesPageBoundaryAfterFigureBand || crossesPageBoundaryProperName ||
         wrapsAcrossColumnAfterFloat) &&

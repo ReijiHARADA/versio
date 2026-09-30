@@ -1,0 +1,363 @@
+{
+  "version": "protection-ab-v1",
+  "sourceReport": "/Users/harada/Desktop/codex/projects/paper-reader/test-data/real-papers/reports/translation-audit.json",
+  "model": "google/madlad400-3b-mt",
+  "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v82-source-protect-v25-strict-restore-v28-quality-v34-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue",
+  "generation": {
+    "numBeams": 1,
+    "doSample": false
+  },
+  "offset": 37,
+  "segmentUnits": true,
+  "productionRescue": false,
+  "exposeRepeatedAcronyms": false,
+  "exposeAllSpans": false,
+  "exposeShortContextSpans": false,
+  "sampleCount": 6,
+  "records": [
+    {
+      "paperId": "education-learning-analytics",
+      "key": "education-learning-analytics:b-b2ffb43d#unit-0",
+      "source": "Educational Data Mining, Learning Analytics, Data Mining on Education, Data-Driven Decision Making in Education, Big Data in Education, Educational Data Science.",
+      "sourceShape": {
+        "charCount": 161,
+        "wordCount": 21,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Educational Data Mining, Learning Analytics, Data Mining on Education, Data-Driven Decision Making in Education, Big Data in Education, Educational Data Science.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 8,
+          "missingSourceSpans": [
+            "Educational",
+            "Mining",
+            "Mining",
+            "Education",
+            "Data-Driven",
+            "Education",
+            "Education",
+            "Educational"
+          ],
+          "literalSpans": [],
+          "restoredOutput": "教育データマイニング,学習分析,教育に関するデータマインディング,教育におけるデータ駆動意思決定,教育に対するビッグデータ,教育データサイエンス。",
+          "output": "教育データマイニング,学習分析,教育に関するデータマインディング,教育におけるデータ駆動意思決定,教育に対するビッグデータ,教育データサイエンス。",
+          "inputTokens": 37,
+          "outputTokens": 55,
+          "latencyMs": 2778.2,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "ZZCIT1ZZ Data ZZCIT2ZZ, Learning Analytics, Data ZZCIT3ZZ on ZZCIT4ZZ, ZZCIT5ZZ Decision Making in ZZCIT6ZZ, Big Data in ZZCIT7ZZ, ZZCIT8ZZ Data Science.",
+          "protectedSpanCount": 8,
+          "sourceProtectedSpanCount": 8,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "Educationalデータ,Mining,学習分析,Education上のデータ,Data-Driven意思決定,Education,ZZtiT7ZZ,Data Science,ZZsit8ZZのビッグデータ。",
+          "output": "ZZCIT1ZZデータ,ZZCiT2ZZ,学習分析,ZZciT4ZZ上のデータ,ΖZcit5ZZ意思決定,ZZciT6ZZ,ZZtiT7ZZ,Data Science,ZZsit8ZZのビッグデータ。",
+          "inputTokens": 64,
+          "outputTokens": 98,
+          "latencyMs": 4109.5,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "ZZCIT1ZZ Data ZZCIT2ZZ, Learning Analytics, Data ZZCIT3ZZ on ZZCIT4ZZ, ZZCIT5ZZ Decision Making in ZZCIT6ZZ, Big Data in ZZCIT7ZZ, ZZCIT8ZZ Data Science.",
+          "protectedSpanCount": 8,
+          "sourceProtectedSpanCount": 8,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": null,
+          "inputTokens": null,
+          "outputTokens": null,
+          "latencyMs": 4001.5,
+          "error": "ValueError: protected citation placeholder malformed"
+        }
+      ]
+    },
+    {
+      "paperId": "ergonomics-flight-deck-applications",
+      "key": "ergonomics-flight-deck-applications:b-334898e6#unit-0",
+      "source": "Applying SHERPA to the current tools used to assess engine condition monitoring can identify potential errors in the current system and also generate recommendations for remedial measures to overcome the identified errors.",
+      "sourceShape": {
+        "charCount": 222,
+        "wordCount": 32,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Applying SHERPA to the current tools used to assess engine condition monitoring can identify potential errors in the current system and also generate recommendations for remedial measures to overcome the identified errors.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "SHERPAをエンジン状態監視に適用することにより,現行システムの潜在的なエラーを同定し,同定されたエラーを克服するための修正策の推奨を生成できる。",
+          "output": "SHERPAをエンジン状態監視に適用することにより,現行システムの潜在的なエラーを同定し,同定されたエラーを克服するための修正策の推奨を生成できる。",
+          "inputTokens": 49,
+          "outputTokens": 63,
+          "latencyMs": 2534.1,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "Applying ZZCIT1ZZ to the current tools used to assess engine condition monitoring can identify potential errors in the current system and also generate recommendations for remedial measures to overcome the identified errors.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "また,エンジン状態監視のためのツールにSHERPAを適用することにより,現行システムにおける潜在的なエラーを同定し,同定されたエラーを克服するための補正措置の推奨を生成できる。",
+          "output": "また,エンジン状態監視のためのツールにZZCIT1ZZを適用することにより,現行システムにおける潜在的なエラーを同定し,同定されたエラーを克服するための補正措置の推奨を生成できる。",
+          "inputTokens": 51,
+          "outputTokens": 77,
+          "latencyMs": 3122.2,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "Applying ZZCIT1ZZ to the current tools used to assess engine condition monitoring can identify potential errors in the current system and also generate recommendations for remedial measures to overcome the identified errors.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "また,エンジン状態監視のためのツールにSHERPAを適用することにより,現行システムにおける潜在的なエラーを同定し,同定されたエラーを克服するための補正措置の推奨を生成できる。",
+          "output": "また,エンジン状態監視のためのツールにSHERPAを適用することにより,現行システムにおける潜在的なエラーを同定し,同定されたエラーを克服するための補正措置の推奨を生成できる。",
+          "inputTokens": 51,
+          "outputTokens": 77,
+          "latencyMs": 3060.3,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "ergonomics-job-rotation-robotics",
+      "key": "ergonomics-job-rotation-robotics:b-5b0516ff#unit-0",
+      "source": "In the scientific literature, different studies investigate ergonomics in assembly systems, mainly with the objective of reducing the ergonomic risk in terms of worker posture [13].",
+      "sourceShape": {
+        "charCount": 181,
+        "wordCount": 26,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "In the scientific literature, different studies investigate ergonomics in assembly systems, mainly with the objective of reducing the ergonomic risk in terms of worker posture [13].",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [
+            "[13]"
+          ],
+          "literalSpans": [],
+          "restoredOutput": "組立システムの人間工学的リスクを低減するために,組立作業者の姿勢を考慮した人間工學的リスクの低減を目的とした研究が行われている。",
+          "output": "組立システムの人間工学的リスクを低減するために,組立作業者の姿勢を考慮した人間工學的リスクの低減を目的とした研究が行われている。",
+          "inputTokens": 43,
+          "outputTokens": 56,
+          "latencyMs": 2372.5,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "In the scientific literature, different studies investigate ergonomics in assembly systems, mainly with the objective of reducing the ergonomic risk in terms of worker posture [13].",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [
+            "[13]"
+          ],
+          "literalSpans": [
+            "[13]"
+          ],
+          "restoredOutput": "組立システムの人間工学的リスクを低減するために,組立作業者の姿勢を考慮した人間工學的リスクの低減を目的とした研究が行われている。",
+          "output": "組立システムの人間工学的リスクを低減するために,組立作業者の姿勢を考慮した人間工學的リスクの低減を目的とした研究が行われている。",
+          "inputTokens": 43,
+          "outputTokens": 56,
+          "latencyMs": 3084.2,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "In the scientific literature, different studies investigate ergonomics in assembly systems, mainly with the objective of reducing the ergonomic risk in terms of worker posture ZZCIT1ZZ.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "組立システムにおける人間工学的リスクの低減を目的として,組立シミュレーションを行った[13]。",
+          "output": "組立システムにおける人間工学的リスクの低減を目的として,組立シミュレーションを行った[13]。",
+          "inputTokens": 44,
+          "outputTokens": 38,
+          "latencyMs": 2275.5,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "ergonomics-quantified-factory-worker",
+      "key": "ergonomics-quantified-factory-worker:b-2876d205#unit-0",
+      "source": "The work on the factory floor is gradually changing to resemble knowledge work due to highly automated manufacturing machines.",
+      "sourceShape": {
+        "charCount": 126,
+        "wordCount": 19,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "The work on the factory floor is gradually changing to resemble knowledge work due to highly automated manufacturing machines.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "工場内の作業は,高度自動化された製造機械のために,徐々に知識作業に近づいていく。",
+          "output": "工場内の作業は,高度自動化された製造機械のために,徐々に知識作業に近づいていく。",
+          "inputTokens": 27,
+          "outputTokens": 39,
+          "latencyMs": 2306.4,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "The work on the factory floor is gradually changing to resemble knowledge work due to highly automated manufacturing machines.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "工場内の作業は,高度自動化された製造機械のために,徐々に知識作業に近づいていく。",
+          "output": "工場内の作業は,高度自動化された製造機械のために,徐々に知識作業に近づいていく。",
+          "inputTokens": 27,
+          "outputTokens": 39,
+          "latencyMs": 2223.8,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "The work on the factory floor is gradually changing to resemble knowledge work due to highly automated manufacturing machines.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "工場内の作業は,高度自動化された製造機械のために,徐々に知識作業に近づいていく。",
+          "output": "工場内の作業は,高度自動化された製造機械のために,徐々に知識作業に近づいていく。",
+          "inputTokens": 27,
+          "outputTokens": 39,
+          "latencyMs": 2387.9,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "fashion-hybrid-cmf",
+      "key": "fashion-hybrid-cmf:b-7cf26226#unit-0",
+      "source": "Material, Finishing) trend of mobile products evolve to become more human, emotional, natural look and feel.",
+      "sourceShape": {
+        "charCount": 108,
+        "wordCount": 16,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "Material, Finishing) trend of mobile products evolve to become more human, emotional, natural look and feel.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "携帯電話の素材,仕上げ,デザイン,機能,デザインの特徴,機能の特徴を紹介した。",
+          "output": "携帯電話の素材,仕上げ,デザイン,機能,デザインの特徴,機能の特徴を紹介した。",
+          "inputTokens": 27,
+          "outputTokens": 35,
+          "latencyMs": 2032.4,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "Material, Finishing) trend of mobile products evolve to become more human, emotional, natural look and feel.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "携帯電話の素材,仕上げ,デザイン,機能,デザインの特徴,機能の特徴を紹介した。",
+          "output": "携帯電話の素材,仕上げ,デザイン,機能,デザインの特徴,機能の特徴を紹介した。",
+          "inputTokens": 27,
+          "outputTokens": 35,
+          "latencyMs": 2029.1,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "Material, Finishing) trend of mobile products evolve to become more human, emotional, natural look and feel.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 0,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "携帯電話の素材,仕上げ,デザイン,機能,デザインの特徴,機能の特徴を紹介した。",
+          "output": "携帯電話の素材,仕上げ,デザイン,機能,デザインの特徴,機能の特徴を紹介した。",
+          "inputTokens": 27,
+          "outputTokens": 35,
+          "latencyMs": 2103.6,
+          "error": null
+        }
+      ]
+    },
+    {
+      "paperId": "hci-empirical-methods",
+      "key": "hci-empirical-methods:b-bf6aefa9#unit-0",
+      "source": "This course caters to attendees who are motivated to learn about, and use, empirical research methods in HCI research.",
+      "sourceShape": {
+        "charCount": 118,
+        "wordCount": 19,
+        "sentenceCountEstimate": 1,
+        "semicolonCount": 0
+      },
+      "conditions": [
+        {
+          "condition": "raw",
+          "modelInput": "This course caters to attendees who are motivated to learn about, and use, empirical research methods in HCI research.",
+          "protectedSpanCount": 0,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "HCI研究における経験的研究方法を学び,利用したい参加者を対象とした。",
+          "output": "HCI研究における経験的研究方法を学び,利用したい参加者を対象とした。",
+          "inputTokens": 30,
+          "outputTokens": 32,
+          "latencyMs": 1892.4,
+          "error": null
+        },
+        {
+          "condition": "minimal",
+          "modelInput": "This course caters to attendees who are motivated to learn about, and use, empirical research methods in ZZCIT1ZZ research.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "これは,HCI研究における経験的研究方法を学び,利用する意欲を持つ参加者を対象としている。",
+          "output": "これは,ZZCIT1ZZ研究における経験的研究方法を学び,利用する意欲を持つ参加者を対象としている。",
+          "inputTokens": 33,
+          "outputTokens": 44,
+          "latencyMs": 2529.3,
+          "error": null
+        },
+        {
+          "condition": "current",
+          "modelInput": "This course caters to attendees who are motivated to learn about, and use, empirical research methods in ZZCIT1ZZ research.",
+          "protectedSpanCount": 1,
+          "sourceProtectedSpanCount": 1,
+          "missingSourceSpans": [],
+          "literalSpans": [],
+          "restoredOutput": "これは,HCI研究における経験的研究方法を学び,利用する意欲を持つ参加者を対象としている。",
+          "output": "これは,HCI研究における経験的研究方法を学び,利用する意欲を持つ参加者を対象としている。",
+          "inputTokens": 33,
+          "outputTokens": 44,
+          "latencyMs": 2396.2,
+          "error": null
+        }
+      ]
+    }
+  ]
+}

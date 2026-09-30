@@ -530,6 +530,35 @@ function hasUntranslatedCascadeLexeme(source: string, output: string): boolean {
   });
 }
 
+/**
+ * Detect a cascade candidate that duplicates an opaque author/year citation
+ * span. A model may copy a citation once per sentence after it has been
+ * detached from the source context; that is an addition even when every
+ * numeric invariant is present. Compare normalized parenthesized year spans
+ * against the source count and keep the rule independent of author names.
+ */
+export function hasDuplicatedYearCitationSpan(source: string, output: string): boolean {
+  const spanPattern = /(?:\([^()\n]{0,180}\b(?:19|20)\d{2}\b[^()\n]{0,180}\)|（[^（）\n]{0,180}\b(?:19|20)\d{2}\b[^（）\n]{0,180}）)/g;
+  const normalize = (value: string) => value
+    .normalize("NFKC")
+    .replace(/\s+/g, " ")
+    .replace(/[、，]/g, ",")
+    .trim()
+    .toLowerCase();
+  const sourceCounts = new Map<string, number>();
+  for (const match of source.matchAll(spanPattern)) {
+    const key = normalize(match[0]);
+    sourceCounts.set(key, (sourceCounts.get(key) ?? 0) + 1);
+  }
+  if (sourceCounts.size === 0) return false;
+  const outputCounts = new Map<string, number>();
+  for (const match of output.matchAll(spanPattern)) {
+    const key = normalize(match[0]);
+    outputCounts.set(key, (outputCounts.get(key) ?? 0) + 1);
+  }
+  return [...outputCounts].some(([key, count]) => count > (sourceCounts.get(key) ?? 0));
+}
+
 // Alternate models can leave an ordinary multi-word English phrase untouched
 // while surrounding it with fluent Japanese. Keep this cascade-only and
 // conservative: two adjacent lowercase words of at least eight letters must
@@ -981,7 +1010,8 @@ function outputContainsInvariant(output: string, invariant: ScientificInvariant,
       // sentence begins `5.2で説明した...` or `5.2に示す...`. Accept that
       // compact form only with an explicit reference verb, never a bare
       // number, so ordinary measurements/counts cannot satisfy a section ref.
-      return new RegExp(`(?:^|[^0-9])${escaped}(?:で説明|に示|において|を参照)`, "i").test(output);
+      return new RegExp(`(?:^|[^0-9])${escaped}(?:節|章)(?:で説明|に示|において|を参照)?`, "i").test(output)
+        || new RegExp(`(?:^|[^0-9])${escaped}(?:で説明|に示|において|を参照)`, "i").test(output);
     });
   }
   if (invariant.kind === "figure") {
@@ -1247,6 +1277,19 @@ function claimStrengthRiskReasons(source: string, output: string): string[] {
   }
   if (SOURCE_REMAINS_UNSPECIFIED.test(source) && !JA_REMAINS_UNSPECIFIED.test(output)) {
     reasons.push("future specification requirement omitted");
+  }
+  // A fluent decoder can turn an academic observation (“studies investigate
+  // ...”) into an unsupported method claim (“a simulation was conducted”).
+  // Detect the relation mismatch generically: the source must lack explicit
+  // method/experiment evidence while the Japanese output asserts a method
+  // action. This is deliberately a category-level cue, not a paper- or
+  // hallucinated-word blacklist.
+  const firstSourceSentence = source.match(/^[\s\S]*?[.!?](?=\s|$)/)?.[0] ?? source;
+  const firstOutputSentence = output.match(/^[\s\S]*?[。！？](?=\s|$)/u)?.[0] ?? output;
+  const sourceHasMethodEvidence = /\b(?:experiment(?:al)?|simulat(?:e|ed|ion|ions)(?:\d+)?|prototype|implement(?:ed|ation)?|construct(?:ed|ion)?|measure(?:d|ment)?|test(?:ed|ing)?|survey(?:ed)?|randomi[sz]ed|trial|evaluate(?:d|ion)?)\b/i.test(firstSourceSentence);
+  const outputAssertsMethod = /(?:シミュレーション|実験|試験|プロトタイプ|実装|測定|計測|ランダム化|試行|評価).{0,12}(?:行(?:った|われた|う)|実施|実験した|測定した|評価した|構築した|作成した)/u.test(firstOutputSentence);
+  if (!sourceHasMethodEvidence && outputAssertsMethod) {
+    reasons.push("unsupported method predicate introduced");
   }
   return reasons;
 }
@@ -1586,6 +1629,7 @@ export function isPlausibleJaTranslation(output: string, source: string): boolea
     && !quality.reasons.includes("untranslated source phrase")
     && !quality.reasons.includes("orphaned source invariant sentence")
     && !quality.reasons.includes("quoted example content missing")
+    && !quality.reasons.includes("unsupported method predicate introduced")
     // Section labels are structural facts. If a block begins with a numbered
     // section and its numeric invariant is missing, keep the source rather
     // than silently dropping the hierarchy marker.
@@ -1610,6 +1654,7 @@ export function getCascadeQualityReasons(output: string, source: string): string
   const cascadeReasons: string[] = [];
   if (hasUntranslatedCascadeLexeme(source, output)) cascadeReasons.push("untranslated cascade lexeme");
   else if (hasUntranslatedCascadePhrase(source, output)) cascadeReasons.push("untranslated cascade phrase");
+  if (hasDuplicatedYearCitationSpan(source, output)) cascadeReasons.push("duplicated year citation span");
   if (hasUnsupportedStructuralLabel(source, output)) cascadeReasons.push("unsupported structural label");
   if (hasScientificExpansionQualifierDrift(source, output)) cascadeReasons.push("scientific expansion qualifier drift");
   if (hasCascadeSentenceCompression(source, output)) cascadeReasons.push("cascade sentence compression");
@@ -1634,6 +1679,7 @@ export function getCascadeQualityReasons(output: string, source: string): string
     || reason === "source disjunctive-both relation missing"
     || reason === "alternative relation missing"
     || reason === "positive equivalence relation negated"
+    || reason === "unsupported method predicate introduced"
     || reason.startsWith("participant total may have shifted")
     || reason === "collective group comparison narrowed to two groups"
   );

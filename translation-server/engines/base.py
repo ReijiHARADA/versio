@@ -34,6 +34,9 @@ class TranslationResult:
     partial_text: Optional[str] = None
     partial_source_units: Optional[list[str]] = None
     partial_unit_texts: Optional[list[str]] = None
+    # Exact source slices corresponding one-to-one with partial_unit_texts.
+    # This enables callers to validate or safely fall back per unit.
+    translation_units: Optional[list[str]] = None
 
     @property
     def chars_per_sec(self) -> float:
@@ -65,6 +68,7 @@ class TranslationResult:
             "partial_text": self.partial_text,
             "partial_source_units": self.partial_source_units,
             "partial_unit_texts": self.partial_unit_texts,
+            "translation_units": self.translation_units,
             "chars_per_sec": self.chars_per_sec,
             "tokens_per_sec": self.tokens_per_sec,
         }
