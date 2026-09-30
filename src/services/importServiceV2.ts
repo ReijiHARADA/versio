@@ -42,6 +42,7 @@ import {
   shouldTranslateTitle,
   localizeNamedFigureCaption,
 } from "./translation/quality";
+import { projectSafeUnitTranslation } from "./translation/partialProjection";
 import { OllamaProvider, generateGlossary } from "./llm";
 import type { GlossaryEntry } from "./llm/types";
 import { resolveMadladServerUrl, MADLAD_MODEL_VERSION } from "./translation/madladEngine";
@@ -356,12 +357,18 @@ export async function importPDFV2(
         return;
       }
 
+      const safeUnitProjection = projectSafeUnitTranslation(task.result);
+      const projectedText = safeUnitProjection && !safeUnitProjection.complete
+        ? safeUnitProjection.text
+        : task.result.text;
       const translated = normalizeSourceGroundedTerminology(
         task.text,
-        applyGlossary(task.result.text, glossaryEntries)
+        applyGlossary(projectedText, glossaryEntries)
       );
       const figureCaption = localizeNamedFigureCaption(task.text);
-      const acceptedTranslation = isPlausibleJaTranslation(translated, task.text)
+      const acceptedTranslation = safeUnitProjection && !safeUnitProjection.complete
+        ? translated
+        : isPlausibleJaTranslation(translated, task.text)
         ? translated
         : figureCaption;
       if (!acceptedTranslation) {
@@ -398,6 +405,13 @@ export async function importPDFV2(
         const block = blocks.find((b) => b.id === task.blockId);
         if (block) {
           assignBlockTranslation(block, acceptedTranslation);
+          if (safeUnitProjection && !safeUnitProjection.complete) {
+            block.metadata = {
+              ...block.metadata,
+              translationOutcome: "partial_unit_source_fallback",
+              unitFallbackIndices: safeUnitProjection.failedIndices,
+            };
+          }
           await updateBlock(block);
           callbacks.onBlockTranslated?.(block);
         }

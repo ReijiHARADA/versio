@@ -22,14 +22,18 @@ for rec in data['records']:
     spans = int(conds.get('current', {}).get('protectedSpanCount', 0))
     bucket = '0' if spans == 0 else '1-2' if spans <= 2 else '3-5' if spans <= 5 else '6+'
     b = buckets[bucket]; b['n'] += 1
-    raw = conds.get('raw', {}).get('output')
+    # Reports before v1181 used `output`; the paired summary stores the
+    # post-restore value as `restoredOutput`. Accept both so the diagnostic
+    # cannot silently report zero divergence after aggregation.
+    raw = conds.get('raw', {}).get('output', conds.get('raw', {}).get('restoredOutput'))
     for name, c in conds.items():
         row = b['conditions'][name]
         if c.get('error'):
             row['errors'] += 1
         else:
             row['completed'] += 1
-            if name != 'raw' and raw is not None and c.get('output') != raw:
+            output = c.get('output', c.get('restoredOutput'))
+            if name != 'raw' and raw is not None and output != raw:
                 row['divergent_from_raw'] += 1
 result = {
     'version': 'protection-span-buckets-v1',

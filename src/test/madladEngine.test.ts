@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { MADLADEngine } from "../services/translation/madladEngine";
-import { projectPartialTranslation } from "../services/translation/partialProjection";
+import { projectPartialTranslation, projectSafeUnitTranslation } from "../services/translation/partialProjection";
 
 describe("MADLADEngine batch integrity", () => {
   it("rejects a result count that cannot be mapped to the input units", async () => {
@@ -137,6 +137,25 @@ describe("MADLADEngine batch integrity", () => {
       complete: false,
       safeForReader: false,
     });
+  });
+
+  it("falls back only unsafe mapped units while retaining safe Japanese units", () => {
+    const candidate = projectSafeUnitTranslation({
+      translationUnits: ["A study investigates posture.", "The experiment measured accuracy."],
+      partialUnitTexts: ["姿勢を調査する研究である。", "The measurement result remains English."],
+    });
+    expect(candidate).toEqual({
+      text: "姿勢を調査する研究である。 The experiment measured accuracy.",
+      failedIndices: [1],
+      complete: false,
+    });
+  });
+
+  it("does not project when every mapped unit fails", () => {
+    expect(projectSafeUnitTranslation({
+      translationUnits: ["First study.", "Second study."],
+      partialUnitTexts: ["First study.", "Second study."],
+    })).toBeNull();
   });
 
   it("rejects malformed or whole-item fallback metadata", () => {

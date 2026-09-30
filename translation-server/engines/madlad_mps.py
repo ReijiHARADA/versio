@@ -600,10 +600,26 @@ class MADLADEngine(TranslationEngine):
                             rescue_inputs = [unit.model_input for unit in rescue_units]
                             rescue_pieces, rescue_in, rescue_out = self._translate_chunks(rescue_chunks, target_language, rescue_inputs)
                             rescued = self._join_translated_chunks(rescue_chunks, rescue_pieces, target_language, rescue_inputs)
-                            if not self._is_degenerate(rescued, text, target_language):
+                            rescue_units_valid = all(
+                                not self._is_degenerate(piece, chunk, target_language)
+                                for chunk, piece in zip(rescue_chunks, rescue_pieces)
+                            )
+                            rescue_aggregate_only = (
+                                self._degenerate_reason(rescued, text, target_language)
+                                == "implausibly_short"
+                            )
+                            if not self._is_degenerate(rescued, text, target_language) or (
+                                rescue_units_valid and rescue_aggregate_only
+                            ):
                                 translated_text = rescued
                                 input_tokens = sum(rescue_in)
                                 output_tokens = sum(rescue_out)
+                                # Keep the accepted rescue structure for the
+                                # final aggregate check below. Otherwise the
+                                # original one-unit shape would make a valid
+                                # chunked rescue look like a short paragraph.
+                                chunks = rescue_chunks
+                                model_inputs = rescue_inputs
                     if self._is_degenerate(translated_text, text, target_language):
                         # A long logical paragraph can be safely assembled
                         # from independently validated sentence units. In
@@ -1224,7 +1240,16 @@ class MADLADEngine(TranslationEngine):
             translated = self._join_translated_chunks(
                 rescue_chunks, pieces, target_language, rescue_inputs
             )
-            if self._is_degenerate(translated, text, target_language):
+            # A valid rescue can be shorter than the original long unit when
+            # the source contains repeated academic scaffolding.  Validate
+            # each rescue unit against its own source before applying the
+            # aggregate-length check; otherwise a successful semantic rescue
+            # is discarded as an implausibly short whole paragraph.
+            rescue_units_valid = all(
+                not self._is_degenerate(piece, rescue_chunk, target_language)
+                for rescue_chunk, piece in zip(rescue_chunks, pieces)
+            )
+            if self._is_degenerate(translated, text, target_language) and not rescue_units_valid:
                 raise original_error
             return translated, sum(in_toks), sum(out_toks)
 
@@ -1731,8 +1756,11 @@ class MADLADEngine(TranslationEngine):
         The subsequent rescue pass translates smaller semantic units before
         the client-side invariant gate makes the final decision.
         """
-        source_markers = len(re.findall(r"(?:^|[\n\s])\d{1,2}[.)](?=\s|[^\d])", source))
-        output_markers = len(re.findall(r"(?:^|[\n\s,、])\d{1,2}[.)](?=\s|[^\d])", output))
+        # Academic prose commonly writes enumerations as ``(1) ... (2) ...``;
+        # count those as source markers too so a translation that preserves
+        # the numbered claims is not mistaken for an invented list.
+        source_markers = len(re.findall(r"(?:^|[\n\s,(（])\d{1,2}[.)](?=\s|[^\d])", source))
+        output_markers = len(re.findall(r"(?:^|[\n\s,、(（])\d{1,2}[.)](?=\s|[^\d])", output))
         return source_markers < 2 and output_markers >= 3
 
     @staticmethod

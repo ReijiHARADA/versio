@@ -358,6 +358,11 @@ class MadladUnitQualityTests(unittest.TestCase):
         self.assertFalse(MADLADEngine._has_unsupported_numbered_enumeration(output, source))
         self.assertFalse(MADLADEngine._is_degenerate(output, source, "ja"))
 
+    def test_allows_parenthesized_source_claim_enumeration(self) -> None:
+        source = "We show that (1) lexical features matter, (2) grammar improves stability, and (3) registers form a continuum."
+        output = "(1)語彙特徴が重要であり、(2)文法が安定性を改善し、(3)レジスタは連続体を形成することを示す。"
+        self.assertFalse(MADLADEngine._has_unsupported_numbered_enumeration(output, source))
+
     def test_rejects_unsupported_comma_inventory(self) -> None:
         source = "There are several reasons for the low consumption of organic food, including consumers' attitudes and purchase intentions."
         output = "消費者の有機食品への意識は、消費の意識、消費意欲、消費行動、消費習慣、消費環境、消費動機、消費状況、消費量、消費期限、消費方法、消費目的、消費傾向、消費態度、消費計画、消費経験、消費理由。"

@@ -144,6 +144,21 @@ def _looks_like_clean_body(source: str, row: dict) -> bool:
     # experiment; extraction attribution is measured separately.
     if re.match(r"^\s*(?:fig(?:ure)?|table)\s*\d+[A-Za-z]?\b", source, re.I):
         return False
+    # A PDF can expose keyword/index terms as a paragraph-like block.  These
+    # are not ordinary prose and are especially prone to placeholder-only
+    # decoding, so keep them out of the protection comparison.  Require a
+    # conservative conjunction (many comma-separated short segments, no
+    # sentence punctuation, and no clause-like function word) to avoid
+    # excluding normal enumerative prose.
+    keyword_candidate = source.strip().rstrip(".")
+    parts = [part.strip() for part in keyword_candidate.split(",")]
+    if (
+        len(parts) >= 4
+        and not re.search(r"[!?;:]", keyword_candidate)
+        and all(1 <= len(re.findall(r"\b[\wÀ-ÖØ-öø-ÿ'’-]+\b", part)) <= 8 for part in parts)
+        and not re.search(r"\b(?:and|or|but|because|which|that|where)\b", source, re.I)
+    ):
+        return False
     if re.search(r"\b(?:see|shown in|as shown in)\s+(?:fig(?:ure)?|table)\s*\d+", source, re.I):
         return False
     if re.match(r"^(?:[A-Z][A-Za-z]{1,24}\s+\d+[A-Za-z]?\s+){2,}", source):

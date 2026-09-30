@@ -146,6 +146,7 @@ export class MADLADEngine implements TranslationEngine {
       partialText: typeof data.partial_text === "string" ? restoreUtf8ByteEscapes(data.partial_text) : undefined,
       partialSourceUnits: Array.isArray(data.partial_source_units) ? data.partial_source_units.filter((value: unknown): value is string => typeof value === "string") : undefined,
       partialUnitTexts: Array.isArray(data.partial_unit_texts) ? data.partial_unit_texts.filter((value: unknown): value is string => typeof value === "string") : undefined,
+      translationUnits: Array.isArray(data.translation_units) ? data.translation_units.filter((value: unknown): value is string => typeof value === "string") : undefined,
     };
   }
 
@@ -203,6 +204,7 @@ export class MADLADEngine implements TranslationEngine {
         partialText: typeof r.partial_text === "string" ? restoreUtf8ByteEscapes(r.partial_text) : undefined,
         partialSourceUnits: Array.isArray(r.partial_source_units) ? r.partial_source_units.filter((value): value is string => typeof value === "string") : undefined,
         partialUnitTexts: Array.isArray(r.partial_unit_texts) ? r.partial_unit_texts.filter((value): value is string => typeof value === "string") : undefined,
+        translationUnits: Array.isArray(r.translation_units) ? r.translation_units.filter((value): value is string => typeof value === "string") : undefined,
       };
     });
   }
