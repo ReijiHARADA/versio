@@ -995,7 +995,41 @@ function invariantFactKey(item: ScientificInvariant): string {
   return `${item.kind}:${value}`;
 }
 
+/**
+ * Citation brackets are formatting, not semantics. A decoder may split a
+ * source group such as `[13, 19–23]` into `[13] ... [19–23]`; compare the
+ * atomic labels/ranges so this does not become a false scientific invariant
+ * addition. The range itself remains atomic and is never expanded.
+ */
+function citationAtoms(value: string): string[] {
+  const body = value.replace(/^\s*\[|\]\s*$/g, "");
+  return body
+    .split(/\s*,\s*/)
+    .map((part) => normalizeInvariant(part).replace(/[\[\]]/g, ""))
+    .filter(Boolean);
+}
+
+function citationFactKeys(item: ScientificInvariant): string[] {
+  if (item.kind !== "citation") return [invariantFactKey(item)];
+  return citationAtoms(item.value).map((atom) => `citation:${atom}`);
+}
+
 function outputContainsInvariant(output: string, invariant: ScientificInvariant, source: string): boolean {
+  if (invariant.kind === "citation") {
+    const outputCitationAtoms = extractScientificInvariants(output)
+      .filter((item) => item.kind === "citation")
+      .flatMap((item) => citationAtoms(item.value));
+    const sourceAtoms = citationAtoms(invariant.value);
+    if (sourceAtoms.every((atom) => outputCitationAtoms.includes(atom))) return true;
+    // Preserve the established handling for inline/superscript references
+    // (`...29,30,32`) and harmless markup (`<sup>29</sup>`), which are not
+    // always recognized by the citation extractor because they are adjacent
+    // to Japanese text or HTML tags.
+    const markupFree = output.replace(/<[^>]+>/g, "");
+    const normalized = normalizeInvariant(markupFree);
+    return normalized.includes(normalizeInvariant(invariant.value))
+      || sourceAtoms.every((atom) => normalized.includes(atom));
+  }
   const normalizedOutput = normalizeInvariant(output);
   const value = normalizeInvariant(invariant.value);
   if (invariant.kind === "structure") {
@@ -1158,11 +1192,11 @@ function invariantQuality(source: string, output: string): { score: number; reas
   const sourceFacts = new Set(
     invariants
       .filter((item) => ["citation", "doi", "url", "figure", "statistic", "measurement", "year", "structure"].includes(item.kind))
-      .map(invariantFactKey)
+      .flatMap(citationFactKeys)
   );
   const unexpected = extractScientificInvariants(output).filter((item) =>
     ["citation", "doi", "url", "figure", "statistic", "measurement", "year", "structure"].includes(item.kind)
-      && !sourceFacts.has(invariantFactKey(item))
+      && citationFactKeys(item).some((key) => !sourceFacts.has(key))
   );
   if (missing.length === 0 && unexpected.length === 0 && !unsupportedEnumeration && !figureOrderChanged && !detachedFigureReference) return { score: 1, reasons: [], criticalMissing: false };
   // A missing acronym can change the method, metric, or experimental

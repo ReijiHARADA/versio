@@ -15898,3 +15898,63 @@ Re-ran the focused TypeScript checks after the alternate prompt probe: `src/test
 - Replayed `ergonomics-job-rotation-robotics:b-5b0516ff` through `gemma2:9b`; it was rejected 0/1 by the shared gate (`invariantScore=0.76`, unexpected citation range `[19–23]`).
 - Manual inspection found no previously observed unsupported `組立シミュレーション` addition, but the citation-range invariant mismatch prevents automatic acceptance. This identifies a possible gate false-reject/invariant-normalization issue without justifying gate relaxation.
 - Artifact: `test-data/real-papers/reports/selective-cascade-v1223-gemma2-unsupported-method.json` and review markdown. Production routing remains unchanged.
+
+## 2026-09-30 v1224: citation-group invariant normalization
+
+- Fixed a general quality-gate false reject where a citation group such as `[13, 19–23]` is rendered as separate citations `[13] [19–23]`. Citation ranges remain atomic, while comma-separated citation atoms are compared as a set.
+- Preserved existing inline/superscript and harmless-HTML citation handling. Added a regression test in `src/test/quality.test.ts`.
+- Verification: quality tests 215/215 passed, typecheck passed, `git diff --check` passed. This only reduces citation-format false rejects; it does not relax missing/extra citation facts or semantic guards.
+
+## 2026-09-30 v1225: regression verification after citation normalization
+
+- Quality + MADLAD tests passed 225/225.
+- Extraction and reading-order corpus passed 108/108. PDF parser warnings remain pre-existing; no failures.
+- The citation normalization change is therefore regression-safe across current quality and real-paper extraction fixtures.
+
+## 2026-09-30 v1226: citation false-reject recomputation
+
+- Re-applied the updated quality gate to the saved Gemma control output from v1223. It changed from rejected to accepted (1/1) after treating split citation brackets as equivalent atomic citation sets.
+- Artifact: `test-data/real-papers/reports/selective-cascade-v805-quality-recompute.json`. This is a gate false-reject reduction only; the model output still requires manual semantic review and no cascade routing was enabled.
+
+## 2026-09-30 v1227: selective-cascade recomputation after citation fix
+
+- Recomputed five saved Gemma 2 probes with the updated quality gate: **4/5 accepted**, up from the prior recorded 3/5. The newly accepted case is the ergonomics control whose only prior issue was split citation-group formatting.
+- The marketing long block remains rejected for an untranslated cascade lexeme; no lexical allowlist was added. Existing manual reviews cover the accepted relation/cognitive probes, but the cohort remains too small for production cascade routing.
+- Summary: `test-data/real-papers/reports/selective-cascade-summary-v1227.md`; detailed recomputation remains in `selective-cascade-v805-quality-recompute.json`.
+
+## 2026-09-30 v1228: held-out Gemma cascade cohort
+
+- Replayed five post-model fallback rows from the archived manual-review input through `gemma2:9b`: 3/5 passed the shared gate.
+- Two economics/ML outputs were correctly rejected for repeated/orphaned author-year citations despite fluent Japanese; the gate prevented silent structural degradation. Accepted rows included two ordinary-body paragraphs and one figure caption, with spot checks preserving the main claims/conditions.
+- Artifact: `test-data/real-papers/reports/selective-cascade-v1228-gemma2-heldout5.json` and review markdown. This increases evidence for a narrowly scoped cascade but does not justify blanket routing or changing production defaults.
+
+## 2026-09-30 v1229: citation duplication guard for cascade prompts
+
+- Updated the opt-in Ollama cascade citation instruction to emit each citation group once at its source clause and never repeat it as a standalone sentence. This is a general prompt-level safeguard for the held-out economics/ML failure; MADLAD and default production routing are unchanged.
+- Verification after the change: quality + MADLAD tests 225/225, typecheck passed, lint passed, `git diff --check` passed.
+- A fresh model replay is still required to quantify whether the prompt removes the duplicated-citation failures; no automatic postprocessor was added.
+
+## 2026-09-30 v1230: citation-duplication prompt retry result
+
+- Replayed the economics/DeepIV failure after adding the cascade citation-once instruction. Gemma still repeated `(Hartford et al., 2017)` as orphaned sentence-level citations and was rejected by the existing gate.
+- The prompt change did not solve this failure, so no citation deduplication postprocessor or gate relaxation was introduced. The safety rejection remains correct; future cascade work should use a model/decoding strategy that avoids this pattern rather than deleting repeated citations after generation.
+- Artifact: `test-data/real-papers/reports/selective-cascade-v1230-gemma2-economics-retry.json`.
+
+## 2026-09-30 v1231: Gemma held-out cascade expansion
+
+- Expanded the archived held-out cascade evaluation to nine eligible post-model rows: Gemma 2 passed **6/9 (66.7%)** under the strict gate.
+- Failures were informative and safely rejected: two orphaned citation-repeat outputs and one mixed-script decoder corruption. Accepted rows covered medical, cognitive, and marketing ordinary prose plus one caption.
+- Summary artifact: `test-data/real-papers/reports/selective-cascade-summary-v1231.md`; raw second cohort: `selective-cascade-v1231-gemma2-heldout-next5.json`.
+- This is promising for a narrowly scoped cascade, but not enough to claim the <=5% product fallback target or enable blanket routing. Manual semantic review and a representative fresh denominator remain required.
+
+## 2026-09-30 v1232: citation dedup repair rejected
+
+- Tested a cascade-only deterministic removal of duplicate citation-only sentences on the DeepIV failure. The actual output form was not safely matched, so the repair was reverted rather than risking citation deletion.
+- The strict `duplicated year citation span` gate remains active; the fresh replay stays rejected. No production behavior changed.
+- After reverting: typecheck and quality + MADLAD tests passed; `git diff --check` passed.
+
+## 2026-09-30 v1233: cascade decision denominator
+
+- Consolidated the nine held-out Gemma rows: 6/9 accepted; excluding the one figure caption leaves 5/8 ordinary-body rows accepted (62.5% rescue within fallback candidates).
+- Rejections remain two citation-structure failures and one mixed-script/degenerate failure. The strict gate is providing meaningful safety protection.
+- Saved `test-data/real-papers/reports/selective-cascade-summary-v1233.md`. Rates are fallback-candidate rates, not the full product denominator; cascade stays opt-in pending representative fresh evaluation and manual review.
