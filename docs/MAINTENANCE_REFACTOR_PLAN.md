@@ -24,7 +24,7 @@
 ## 分割方針
 
 1. `quality.ts` を当面public facadeとして維持する。
-2. 最初に依存の少ない `degeneration` と `sourceIntegrity` を内部モジュールへ移す。
+2. 最初に依存の少ない `degeneration` を内部モジュールへ移す（完了）。次に `sourceIntegrity` を依存関係確認後に検討する。
 3. facadeは旧export名を再exportし、既存importを変更しない。
 4. 各段階で `npm test`、typecheck、git diff --checkを実行する。
 5. quality threshold、fallback判定、translation model versionは変更しない。
@@ -38,7 +38,7 @@
   - `shouldTranslateParagraph`
   - `shouldTranslateCaption`
   - `shouldTranslateTitle`
-- `src/services/translation/quality/degeneration.ts`
+- `src/services/translation/quality/degeneration.ts`（第一段階完了）
   - `restoreUtf8ByteEscapes`
   - `explainDegenerateTranslation`
   - `isDegenerateTranslation`

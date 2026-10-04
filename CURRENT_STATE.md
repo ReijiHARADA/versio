@@ -33,6 +33,14 @@
 
 ## 直近の変更
 
+### v1543 — 保守性リファクタリング第一段階（2026-10-05）
+
+- `quality.ts` の退化出力検出を `src/services/translation/quality/degeneration.ts` に分離。
+- `quality.ts` は既存のexport名・import pathをfacadeとして維持。品質閾値、fallback条件、モデル設定は変更していない。
+- 対象テスト 258/258、全体テスト 624/624、typecheck、`git diff --check` を通過。
+- 分割計画と残りの候補は [`docs/MAINTENANCE_REFACTOR_PLAN.md`](docs/MAINTENANCE_REFACTOR_PLAN.md) に記録。
+
+
 - リスト導入文（コロン終端）を、直後の箇条書き・番号付き項目とは別の安全な翻訳単位として扱うよう改善。
 - 実PDFで従来pre-model fallbackだった導入文がMADLADへ送られ、既存ゲートで受理されることを確認。
 - 全Vitest **624/624 across 69 files**、抽出pipeline **26/26**、quality tests **250/250**、typecheck pass。
