@@ -649,14 +649,14 @@ async function main() {
           source: compact(block.original ?? ""),
           block,
         }))
-        .filter(({ block, source }) => shouldTranslateBlock(block, refSectionIds) && shouldTranslateParagraph(source) && !block.metadata.translationInputWarning);
+        .filter(({ block }) => shouldTranslateBlock(block, refSectionIds) && !block.metadata.translationInputWarning);
       const translated = dryRun ? [] : await translate(modelInputs.map((entry) => entry.source));
       const resultBySampleIndex = new Map(
         modelInputs.map((entry, index) => [entry.index, translated[index]])
       );
       const rows = sampled.map((block, index): AuditRow => {
         const source = compact(block.original ?? "");
-        const wouldSubmitToModel = shouldTranslateBlock(block, refSectionIds) && shouldTranslateParagraph(source) && !block.metadata.translationInputWarning;
+        const wouldSubmitToModel = shouldTranslateBlock(block, refSectionIds) && !block.metadata.translationInputWarning;
         const result = resultBySampleIndex.get(index);
         const structurallySkipped = block.translationStatus === "skipped";
         // Match the production path's deterministic, source-grounded

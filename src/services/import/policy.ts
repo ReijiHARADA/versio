@@ -55,6 +55,11 @@ export function shouldTranslateBlock(
     // is likely an unfinished continuation. Preserve the source until the
     // layout resolver repairs it instead of sending the fragment to MADLAD.
     if (block.metadata?.translationInputWarning) return false;
+    // A colon-ended lead-in immediately followed by a projected list is a
+    // complete translation unit in its own right. The layout resolver marks
+    // it explicitly after seeing the list successor, so the generic
+    // single-block completeness heuristic must not reject it again.
+    if (block.metadata?.listRole === "intro") return true;
     return shouldTranslateParagraph(block.original);
   }
   if (block.type === "figure" || block.type === "table") {

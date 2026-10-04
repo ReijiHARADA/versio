@@ -75,8 +75,8 @@ export class OllamaTranslationEngine implements TranslationEngine {
       let lastError: unknown;
       for (const provider of this.providers) {
         const prompts = [
-          `Translate the following academic English into precise Japanese. Translate ordinary English words into Japanese; retain Latin text only for proper names, acronyms, citations, and necessary technical terms. Preserve every number, citation, acronym, statistical notation, negation, comparison, and causal relation. Do not replace a technical term with a different concept; when a domain term has no high-confidence Japanese equivalent, retain the original term in parentheses rather than guessing. Output only the Japanese translation.${repeatedTermInstruction(text)}${statisticalLiteralInstruction(text)}${factLiteralInstruction(text)}${citationLiteralInstruction(text)}${comparisonLiteralInstruction(text)}`,
-          `Correction retry: translate every ordinary English word and do not leave mixed English-Japanese words. Recheck every claim, comparison, exclusivity condition, negation, number, citation, named method, causal relation, and sentence ending. Output only the Japanese translation.${repeatedTermInstruction(text)}${statisticalLiteralInstruction(text)}${factLiteralInstruction(text)}${citationLiteralInstruction(text)}${comparisonLiteralInstruction(text)}`,
+          `Translate the following academic English into precise Japanese. Translate ordinary English words into Japanese; retain Latin text only for proper names, acronyms, citations, and necessary technical terms. Preserve every number, citation, acronym, statistical notation, negation, comparison, and causal relation. Do not expand an acronym unless the source itself provides that expansion; if the domain meaning is uncertain, retain the acronym exactly instead of inventing a Japanese expansion. Do not replace a technical term with a different concept; when a domain term has no high-confidence Japanese equivalent, retain the original term in parentheses rather than guessing. Output only the Japanese translation.${repeatedTermInstruction(text)}${statisticalLiteralInstruction(text)}${factLiteralInstruction(text)}${citationLiteralInstruction(text)}${comparisonLiteralInstruction(text)}`,
+          `Correction retry: translate every ordinary English word and do not leave mixed English-Japanese words. Recheck every claim, comparison, exclusivity condition, negation, number, citation, named method, causal relation, and sentence ending. Keep every source acronym unchanged unless its expansion is explicitly present in the source; never invent an acronym expansion. Output only the Japanese translation.${repeatedTermInstruction(text)}${statisticalLiteralInstruction(text)}${factLiteralInstruction(text)}${citationLiteralInstruction(text)}${comparisonLiteralInstruction(text)}`,
         ];
         for (const [attempt, instruction] of prompts.slice(0, this.maxAttempts).entries()) {
           try {
@@ -90,7 +90,7 @@ export class OllamaTranslationEngine implements TranslationEngine {
                 citationLiteralInstruction(text),
                 citationLiteralInstruction(unit),
               );
-              completions.push(await provider.complete(
+              const completion = await provider.complete(
                 `${unitInstruction}\n\nSOURCE:\n${unit}`,
                 "You are a conservative academic translator. Never add facts or omit source facts. Do not explain your answer.",
                 {
@@ -99,7 +99,8 @@ export class OllamaTranslationEngine implements TranslationEngine {
                   timeoutMs: this.requestTimeoutMs,
                   think: this.think,
                 },
-              ));
+              );
+              completions.push(completion);
             }
             const completion = {
               text: completions.map((item) => item.text.trim()).join(" ").trim(),

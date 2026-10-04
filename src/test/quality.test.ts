@@ -121,6 +121,74 @@ describe("acronym expansion safety", () => {
     expect(evaluateJaTranslation(output, source).reasons).not.toContain("unsupported method predicate introduced");
     expect(isCascadeQualityAcceptable(output, source)).toBe(true);
   });
+
+  it("does not reject a method predicate when method evidence appears later in the source block", () => {
+    const source = "This wearable offers continuous monitoring in daily life. We develop a hardware prototype and measure temperature during rest.";
+    const output = "このウェアラブルは日常生活で連続モニタリングを提供します。ハードウェアプロトタイプを開発しました。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("unsupported method predicate introduced");
+  });
+
+  it("recognizes Japanese sufficiency as preserving an English only constraint", () => {
+    const source = "Only general HCI knowledge is required.";
+    const output = "一般的なHCI知識があれば十分です。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("exclusivity relation missing");
+  });
+
+  it("recognizes an explicitly conducted study as method evidence", () => {
+    const source = "A pilot study was conducted in a real-world commercial setting.";
+    const output = "実世界の商業環境でパイロット研究を実施した。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("unsupported method predicate introduced");
+  });
+
+  it("recognizes plural experiments and reported user-study evidence", () => {
+    expect(evaluateJaTranslation(
+      "2011年にFacebook上で2つの大規模なフィールド実験を実施した。",
+      "We conducted two large field experiments on Facebook during a short period in 2011.",
+    ).reasons).not.toContain("unsupported method predicate introduced");
+    expect(evaluateJaTranslation(
+      "20名を対象としたユーザースタディの結果、性能が示された。",
+      "A user study with 20 participants showed that the system performed well.",
+    ).reasons).not.toContain("unsupported method predicate introduced");
+  });
+
+  it("recognizes translated unique and distinct constraints", () => {
+    const source = "The benchmark has 134 unique evaluation functions.";
+    const output = "ベンチマークには134のユニークな評価関数がある。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("exclusivity relation missing");
+  });
+
+  it("recognizes development and training as method evidence", () => {
+    const source = "We developed the interface and trained the model on captured images.";
+    const output = "インターフェースを開発し、取得画像でモデルを学習した。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("unsupported method predicate introduced");
+  });
+
+  it("flags a participant-to-researcher role shift", () => {
+    const source = "Eighty-eight participants from various fields of study were recruited from the university.";
+    const output = "大学から様々な分野の研究者88名が募集された。";
+    const quality = evaluateJaTranslation(output, source);
+    expect(quality.reasons).toContain("participant role shifted to researcher");
+    expect(isCascadeQualityAcceptable(output, source)).toBe(false);
+  });
+
+  it("checks participant role per aligned sentence", () => {
+    const source = "Eighty-eight participants were recruited. Participants gave consent.";
+    const output = "88名の研究者が募集された。参加者は同意した。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("participant role shifted to researcher");
+  });
+
+  it("allows participants who are explicitly researchers", () => {
+    const source = "The participants were researchers from several laboratories.";
+    const output = "参加者は複数の研究室に所属する研究者だった。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("participant role shifted to researcher");
+  });
+
+  it("treats a short acronym as critical when its source context is technical", () => {
+    const source = "We compare reinforcement learning (RL) with a supervised learning model.";
+    const output = "強化学習と教師あり学習モデルを比較した。";
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+    expect(evaluateJaTranslation(output, source).reasons.join(" ")).toContain("RL");
+  });
 });
 
 describe("source completeness diagnostics", () => {
@@ -129,9 +197,26 @@ describe("source completeness diagnostics", () => {
     expect(diagnoseIncompleteSource(source).incomplete).toBe(true);
   });
 
+  it("flags a medium block ending in a continuation cue", () => {
+    const source = "A pilot study was conducted in a real-world commercial setting, followed by a series of large-scale online experiments. Both studies";
+    expect(diagnoseIncompleteSource(source)).toEqual({ incomplete: true, reason: "source ends with a continuation cue" });
+  });
+
   it("does not flag a complete ordinary sentence", () => {
     const source = "The experiment measured response accuracy across three retention intervals.";
     expect(diagnoseIncompleteSource(source).incomplete).toBe(false);
+  });
+
+  it("flags a long ordinary block that ends in an extraction ellipsis", () => {
+    const source = "Technological advancement brings opportunities for enhanced information, support, and functionality within the flight deck. Whilst this has many benefits to the pilot and the…";
+    expect(diagnoseIncompleteSource(source).incomplete).toBe(true);
+    expect(diagnoseIncompleteSource(source).reason).toContain("省略記号");
+  });
+
+  it("flags a paragraph cut at a document cross-reference", () => {
+    const source = "The rest of the paper is organized as follows: we first review related work and define notations in Section";
+    expect(diagnoseIncompleteSource(source).incomplete).toBe(true);
+    expect(diagnoseIncompleteSource(source).reason).toContain("文書内参照");
   });
 
   it("flags a lowercase continuation detached behind a dash", () => {
@@ -367,6 +452,12 @@ describe("isPlausibleJaTranslation", () => {
       "結果は先行観察（Fig. 8 and Table S3）と一致し、この介入が基礎的な評価過程を変えなかったことを示唆する。";
     expect(evaluateJaTranslation(output, source).reasons).not.toContain("orphaned source invariant sentence");
     expect(isPlausibleJaTranslation(output, source)).toBe(true);
+  });
+
+  it("does not reject a short opening sentence in a quoted epigraph", () => {
+    const source = '"In memory of my Mother. Whilst sorting through her belongings, I found several objects." [Marzee 2001 p.25]';
+    const output = '母を偲んで。遺品を整理しているうちに、いくつかの品物が見つかりました。［Marzee 2001 p.25］';
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("orphaned source invariant sentence");
   });
 
   it("does not reject a citation emitted as a detached punctuation span", () => {
@@ -1702,6 +1793,15 @@ describe("isRetryableTranslationFailure", () => {
     expect(isPlausibleJaTranslation(source, source)).toBe(false);
   });
 
+  it("detects collapsed paired choice questions", () => {
+    const source = "Consumers with an activated which-to-buy mindset differed from those with an activated whether-to-buy mindset.";
+    expect(evaluateJaTranslation("購入マインドセットが活性化した消費者は、購入マインドセットが活性化した消費者と異なった。", source).reasons)
+      .toContain("paired choice contrast collapsed");
+    expect(evaluateJaTranslation("どれを買うべきかというマインドセットと、買うかどうかというマインドセットを比較した。", source).reasons)
+      .not.toContain("paired choice contrast collapsed");
+    expect(isPlausibleJaTranslation("購入マインドセットが活性化した消費者は、購入マインドセットが活性化した消費者と異なった。", source)).toBe(false);
+  });
+
   it("rejects output that collapses an either-or experimental condition", () => {
     const source = "Participants watched clips accompanied by either gist or detailed cues.";
     expect(evaluateJaTranslation("参加者は映画を見た。", source).reasons)
@@ -1716,6 +1816,18 @@ describe("isRetryableTranslationFailure", () => {
       .not.toContain("strong contrast relation missing");
     expect(evaluateJaTranslation("介入により再認が改善した。", source).reasons)
       .toContain("strong contrast relation missing");
+  });
+
+  it("accepts 異なり as the natural rendering of unlike for exclusivity evidence", () => {
+    const source = "The earring is tightly coupled to the body unlike watches worn loosely on the extremities.";
+    expect(evaluateJaTranslation("イヤリングは、四肢にゆるく装着される時計とは異なり、身体との結合が強い。", source).reasons)
+      .not.toContain("exclusivity relation missing");
+  });
+
+  it("accepts 確率が高い as the natural rendering of more likely", () => {
+    const source = "The conjunction fallacy occurs when a specific condition is assumed to be more likely than a general one.";
+    expect(evaluateJaTranslation("特定の条件が一般的な条件よりも確率が高いと仮定する誤謬である。", source).reasons)
+      .not.toContain("comparative likelihood relation missing");
   });
 
   it("accepts a natural Japanese rendering of an English meaningfulness negation", () => {
@@ -1871,7 +1983,7 @@ describe("isRetryableTranslationFailure", () => {
   });
 });
 
-import { hasAcronymExpansionDrift, hasDetachedNumericCitationRisk, hasExtremeTranslationCompression, hasScientificExpansionQualifierDrift, missingTechnicalNameCandidates } from "../services/translation/quality";
+import { hasAcronymExpansionDrift, hasDetachedNumericCitationRisk, hasExtremeTranslationCompression, hasScientificExpansionQualifierDrift, hasUnsupportedJapaneseAcronymExpansion, missingTechnicalNameCandidates } from "../services/translation/quality";
 
 describe("technical name audit diagnostics", () => {
   it("flags a dropped internal proper name without making it a production rejection", () => {
@@ -1898,11 +2010,67 @@ describe("technical name audit diagnostics", () => {
       .toBe(false);
   });
 
+  it("flags an unsupported Japanese acronym expansion as an audit signal", () => {
+    expect(hasUnsupportedJapaneseAcronymExpansion(
+      "The HFE team reviewed the intervention.",
+      "HFE（ヘルス・ファシリテーション・エデュケーション）チームが介入を確認した。",
+    )).toBe(true);
+    expect(hasUnsupportedJapaneseAcronymExpansion(
+      "The Systems Engineering Initiative for Patient Safety (SEIPS) model was used.",
+      "患者安全のためのシステム工学イニシアチブ（SEIPS）モデルを用いた。",
+    )).toBe(false);
+    expect(hasUnsupportedJapaneseAcronymExpansion(
+      "The HFE team reviewed the intervention.",
+      "HFEチームが介入を確認した。",
+    )).toBe(false);
+  });
+
   it("accepts standardized scientific acronym translations", () => {
     const source = "The AC impedance of the return path is large.";
     const output = "帰路の交流インピーダンスは大きい。";
     expect(evaluateJaTranslation(output, source).reasons)
       .not.toContain("scientific invariants missing: AC");
+  });
+
+  it("preserves zero-valued percentage facts", () => {
+    const source = "Some application subsets reached 0%.";
+    const output = "一部のアプリケーションサブセットは0％に達した。";
+    expect(evaluateJaTranslation(output, source).reasons)
+      .not.toContain("scientific invariants missing: 0%");
+    expect(evaluateJaTranslation("一部のサブセットに到達した。", source).reasons)
+      .toContain("scientific invariants missing: 0%");
+  });
+
+  it("accepts equivalent decimal formatting with trailing zeros", () => {
+    const source = "The narrow-face probability was 0.60.";
+    const output = "狭い顔の確率は0.6であった。";
+    expect(evaluateJaTranslation(output, source).reasons)
+      .not.toContain("scientific invariants missing: 0.60");
+  });
+
+  it("does not require flattened footnote markers after Roman-numeral names", () => {
+    const source = "The duration predictor by Hal Daumé III5 was trained on MaryTTS [20].";
+    const output = "Hal Daumé IIIによる持続時間予測器はMaryTTS[20]で学習された。";
+    expect(evaluateJaTranslation(output, source).reasons)
+      .not.toContain("scientific invariants missing: III5");
+  });
+
+  it("accepts exact Japanese conversion of standalone million magnitudes", () => {
+    const source = "The corpus contains 3 M word tokens.";
+    const output = "コーパスには300万語トークンが含まれる。";
+    expect(evaluateJaTranslation(output, source).reasons)
+      .not.toContain("scientific invariants missing: 3 M");
+  });
+
+  it("accepts stable Japanese expansions for USA and TV acronyms", () => {
+    expect(evaluateJaTranslation(
+      "本研究は米国と韓国で実施した。",
+      "We ran the study in the United States of America (USA) and South Korea.",
+    ).reasons).not.toContain("scientific invariants missing: USA");
+    expect(evaluateJaTranslation(
+      "最も少ないカテゴリは詩、正式スピーチ、テレビ脚本である。",
+      "The least frequent categories are Poem, Formal speech, and TV scripts.",
+    ).reasons).not.toContain("scientific invariants missing: TV");
   });
 
   it("flags lost directional qualifiers in scientific acronym expansions", () => {

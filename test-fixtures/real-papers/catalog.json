@@ -565,7 +565,10 @@
       "checks": {
         "mostlySingleColumn": true,
         "requireSameParagraph": [
-          ["Starting from the design philosophy", "of intelligent human-computer interaction"]
+          [
+            "Starting from the design philosophy",
+            "of intelligent human-computer interaction"
+          ]
         ]
       },
       "discipline": "ergonomics",
@@ -801,7 +804,10 @@
       "seedPaths": [],
       "checks": {
         "requireSameParagraph": [
-          ["Abstract—Since its renaissance", "propelling us into the so-called artificial intelligence"]
+          [
+            "Abstract—Since its renaissance",
+            "propelling us into the so-called artificial intelligence"
+          ]
         ]
       },
       "sourceUrl": "https://arxiv.org/abs/2008.09104",
@@ -889,9 +895,18 @@
       "seedPaths": [],
       "checks": {
         "forbidSameParagraph": [
-          ["Learn from corrections", "Imagine potential pitfalls"],
-          ["Time services based", "Scope services when"],
-          ["What would the consequence", "Tie explanations to user actions"]
+          [
+            "Learn from corrections",
+            "Imagine potential pitfalls"
+          ],
+          [
+            "Time services based",
+            "Scope services when"
+          ],
+          [
+            "What would the consequence",
+            "Tie explanations to user actions"
+          ]
         ]
       },
       "sourceUrl": "https://arxiv.org/abs/2010.11761",
@@ -1602,9 +1617,15 @@
       "checks": {
         "titleContains": "memory cue and interest",
         "requireSameParagraph": [
-          ["had medium visual complexity", "sound complexity"]
+          [
+            "had medium visual complexity",
+            "sound complexity"
+          ]
         ],
-        "forbidEquationContains": ["sound complexity", "emotional levels"],
+        "forbidEquationContains": [
+          "sound complexity",
+          "emotional levels"
+        ],
         "referencesHeading": true
       }
     },
@@ -1714,6 +1735,1196 @@
         "titleContains": "attention and health goals in nudging healthy food choice",
         "referencesHeading": true
       }
+    },
+    {
+      "id": "hfe-healthcare-patient-safety-review",
+      "title": "An Evaluation of the Effects of Human Factors and Ergonomics on Health Care and Patient Safety Practices: A Systematic Review",
+      "authors": [
+        "Hassan Hignett",
+        "others"
+      ],
+      "year": 2015,
+      "discipline": "ergonomics",
+      "venue": "PLOS ONE",
+      "publisher": "PLOS",
+      "doi": "10.1371/journal.pone.0126478",
+      "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4466322/",
+      "oaStatus": "open",
+      "filename": "hfe-healthcare-patient-safety-review.pdf",
+      "formatFamily": "journal-oa",
+      "selectionReason": "PMC OA systematic review with evidence tables and clinical terminology",
+      "kinds": [
+        "one-column",
+        "tables",
+        "statistics",
+        "review"
+      ],
+      "checks": {
+        "titleContains": "Human Factors and Ergonomics"
+      }
+    },
+    {
+      "id": "marketing-online-context-web-evolution",
+      "title": "Studying Consumer Behavior in an Online Context: The Impact of the Evolution of the World Wide Web for New Avenues in Research",
+      "authors": [
+        "authors as published"
+      ],
+      "year": 2019,
+      "discipline": "marketing",
+      "venue": "Frontiers in Psychology",
+      "publisher": "Frontiers",
+      "doi": "10.3389/fpsyg.2019.02731",
+      "sourceUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.02731/full",
+      "oaStatus": "open",
+      "filename": "marketing-online-context-web-evolution.pdf",
+      "formatFamily": "journal-oa",
+      "selectionReason": "Frontiers OA consumer-behavior review with figures and web terminology",
+      "kinds": [
+        "one-column",
+        "figures",
+        "review",
+        "qualitative"
+      ]
+    },
+    {
+      "id": "hci-social-touch-in-human-computer-interaction",
+      "title": "Social Touch in Human–Computer Interaction",
+      "authors": [],
+      "year": 2015,
+      "discipline": "hci",
+      "venue": "Frontiers in Digital Humanities",
+      "publisher": "Frontiers Media",
+      "doi": "10.3389/fdigh.2015.00002",
+      "sourceUrl": "https://doi.org/10.3389/fdigh.2015.00002",
+      "oaStatus": "open",
+      "filename": "hci-social-touch-in-human-computer-interaction.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for hci format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "hci-human-computer-interaction",
+      "title": "Human Computer Interaction",
+      "authors": [],
+      "year": 2017,
+      "discipline": "hci",
+      "venue": "IJARCCE",
+      "publisher": "",
+      "doi": "10.17148/ijarcce.2017.6329",
+      "sourceUrl": "https://doi.org/10.17148/ijarcce.2017.6329",
+      "oaStatus": "open",
+      "filename": "hci-human-computer-interaction.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for hci format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "hci-human-computer-interaction-as-science",
+      "title": "Human-computer interaction as science",
+      "authors": [],
+      "year": 2015,
+      "discipline": "hci",
+      "venue": "Aarhus Series on Human Centered Computing",
+      "publisher": "Århus State and University Library",
+      "doi": "10.7146/aahcc.v1i1.21296",
+      "sourceUrl": "https://doi.org/10.7146/aahcc.v1i1.21296",
+      "oaStatus": "open",
+      "filename": "hci-human-computer-interaction-as-science.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for hci format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "cognitive-psychology-study-on-the-optimization-effect-of-memory-on-vocabulary-teaching-in-c",
+      "title": "Study on the Optimization Effect of Memory on Vocabulary Teaching in Cognitive Psychology",
+      "authors": [],
+      "year": 2016,
+      "discipline": "cognitive-psychology",
+      "venue": "Advances in computer science research",
+      "publisher": "Atlantis Press",
+      "doi": "10.2991/emcs-16.2016.452",
+      "sourceUrl": "https://doi.org/10.2991/emcs-16.2016.452",
+      "oaStatus": "open",
+      "filename": "cognitive-psychology-study-on-the-optimization-effect-of-memory-on-vocabulary-teaching-in-c.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for cognitive-psychology format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "cognitive-psychology-research-progress-of-memory-mechanism-in-cognitive-psychology",
+      "title": "Research Progress of Memory Mechanism in Cognitive Psychology",
+      "authors": [],
+      "year": 2025,
+      "discipline": "cognitive-psychology",
+      "venue": "International Journal of Public Health and Medical Research",
+      "publisher": "",
+      "doi": "10.62051/ijphmr.v3n1.10",
+      "sourceUrl": "https://doi.org/10.62051/ijphmr.v3n1.10",
+      "oaStatus": "open",
+      "filename": "cognitive-psychology-research-progress-of-memory-mechanism-in-cognitive-psychology.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for cognitive-psychology format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "cognitive-psychology-a-tribute-to-the-memory-of-professor-neisser-the-godfather-of-cognitiv",
+      "title": "A tribute to the memory of Professor Neisser, “the godfather of cognitive psychology”",
+      "authors": [],
+      "year": 2015,
+      "discipline": "cognitive-psychology",
+      "venue": "The Japanese Journal of Cognitive Psychology",
+      "publisher": "",
+      "doi": "10.5265/jcogpsy.13.31",
+      "sourceUrl": "https://doi.org/10.5265/jcogpsy.13.31",
+      "oaStatus": "open",
+      "filename": "cognitive-psychology-a-tribute-to-the-memory-of-professor-neisser-the-godfather-of-cognitiv.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for cognitive-psychology format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "cognitive-psychology-cognitive-psychology-first-language-and-false-memories",
+      "title": "Cognitive Psychology: First language and false memories",
+      "authors": [],
+      "year": 2023,
+      "discipline": "cognitive-psychology",
+      "venue": "Communications Psychology",
+      "publisher": "Springer Science+Business Media",
+      "doi": "10.1038/s44271-023-00015-y",
+      "sourceUrl": "https://doi.org/10.1038/s44271-023-00015-y",
+      "oaStatus": "open",
+      "filename": "cognitive-psychology-cognitive-psychology-first-language-and-false-memories.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for cognitive-psychology format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "cognitive-psychology-role-of-educational-psychology-in-the-study-of-memory-conceptual-proce",
+      "title": "Role of Educational Psychology in the Study of Memory, Conceptual Processes, and Individual Differences (Via Cognitive Psychology) in Conceptualizing new Strategies for Learning Processes in Humans",
+      "authors": [],
+      "year": 2022,
+      "discipline": "cognitive-psychology",
+      "venue": "Technoarete Transactions on Application of Information and Communication Technology(ICT) in Education",
+      "publisher": "",
+      "doi": "10.36647/ttaicte/01.01.a003",
+      "sourceUrl": "https://doi.org/10.36647/ttaicte/01.01.a003",
+      "oaStatus": "open",
+      "filename": "cognitive-psychology-role-of-educational-psychology-in-the-study-of-memory-conceptual-proce.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for cognitive-psychology format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "cognitive-psychology-a-study-on-the-teaching-of-chinese-characters-memorization-for-foreign",
+      "title": "A Study on the Teaching of Chinese Characters Memorization for Foreigners based on the Memory Principle of Cognitive Psychology",
+      "authors": [],
+      "year": 2024,
+      "discipline": "cognitive-psychology",
+      "venue": "Region - Educational Research and Reviews",
+      "publisher": "",
+      "doi": "10.32629/rerr.v6i6.2233",
+      "sourceUrl": "https://doi.org/10.32629/rerr.v6i6.2233",
+      "oaStatus": "open",
+      "filename": "cognitive-psychology-a-study-on-the-teaching-of-chinese-characters-memorization-for-foreign.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for cognitive-psychology format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "cognitive-psychology-the-underlying-reasons-for-making-reminders-an-investigation-on-memory",
+      "title": "The underlying reasons for making reminders: An investigation on memory offloading from the perspective of cognitive psychology",
+      "authors": [],
+      "year": 2023,
+      "discipline": "cognitive-psychology",
+      "venue": "Journal of Education Humanities and Social Sciences",
+      "publisher": "",
+      "doi": "10.54097/ehss.v8i.4678",
+      "sourceUrl": "https://doi.org/10.54097/ehss.v8i.4678",
+      "oaStatus": "open",
+      "filename": "cognitive-psychology-the-underlying-reasons-for-making-reminders-an-investigation-on-memory.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for cognitive-psychology format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "cognitive-psychology-participant-nonnaivet-and-the-reproducibility-of-cognitive-psychology",
+      "title": "Participant Nonnaiveté and the reproducibility of cognitive psychology",
+      "authors": [],
+      "year": 2017,
+      "discipline": "cognitive-psychology",
+      "venue": "Psychonomic Bulletin & Review",
+      "publisher": "Springer Science+Business Media",
+      "doi": "10.3758/s13423-017-1348-y",
+      "sourceUrl": "https://doi.org/10.3758/s13423-017-1348-y",
+      "oaStatus": "open",
+      "filename": "cognitive-psychology-participant-nonnaivet-and-the-reproducibility-of-cognitive-psychology.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for cognitive-psychology format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "marketing-consumer-behavior-marketing-and-supply-chains-of-fermented-foods-and-h",
+      "title": "Consumer Behavior, Marketing, and Supply Chains of Fermented Foods and Health Supplements in Southeast Asia and India",
+      "authors": [],
+      "year": 2026,
+      "discipline": "marketing",
+      "venue": "Community and Social Development Journal",
+      "publisher": "",
+      "doi": "10.57260/csdj.2026.288534",
+      "sourceUrl": "https://doi.org/10.57260/csdj.2026.288534",
+      "oaStatus": "open",
+      "filename": "marketing-consumer-behavior-marketing-and-supply-chains-of-fermented-foods-and-h.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for marketing format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "marketing-a-review-of-rural-consumer-behavior-marketing-strategies-and-consumer-",
+      "title": "A review of rural consumer behavior marketing strategies and consumer protection for FMCG",
+      "authors": [],
+      "year": 2021,
+      "discipline": "marketing",
+      "venue": "International Journal of Research in Marketing Management and Sales",
+      "publisher": "",
+      "doi": "10.33545/26633329.2021.v3.i1a.100",
+      "sourceUrl": "https://doi.org/10.33545/26633329.2021.v3.i1a.100",
+      "oaStatus": "open",
+      "filename": "marketing-a-review-of-rural-consumer-behavior-marketing-strategies-and-consumer-.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for marketing format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "marketing-integrating-value-at-risk-var-model-into-behavior-economics-for-consum",
+      "title": "Integrating Value at Risk (VaR) Model into Behavior Economics for Consumer Behavior Marketing and Decision Analysis",
+      "authors": [],
+      "year": 2024,
+      "discipline": "marketing",
+      "venue": "Advances in Economics Management and Political Sciences",
+      "publisher": "",
+      "doi": "10.54254/2754-1169/70/20231682",
+      "sourceUrl": "https://doi.org/10.54254/2754-1169/70/20231682",
+      "oaStatus": "open",
+      "filename": "marketing-integrating-value-at-risk-var-model-into-behavior-economics-for-consum.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for marketing format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "marketing-the-blind-box-economy-exploring-consumer-behavior-marketing-strategies",
+      "title": "The Blind Box Economy: Exploring Consumer Behavior, Marketing Strategies, and Economic Drivers of Its Popularity",
+      "authors": [],
+      "year": 2025,
+      "discipline": "marketing",
+      "venue": "Advances in Economics Management and Political Sciences",
+      "publisher": "",
+      "doi": "10.54254/2754-1169/2025.cau25950",
+      "sourceUrl": "https://doi.org/10.54254/2754-1169/2025.cau25950",
+      "oaStatus": "open",
+      "filename": "marketing-the-blind-box-economy-exploring-consumer-behavior-marketing-strategies.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for marketing format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "marketing-digital-marketing-consumer-behavior",
+      "title": "DIGITAL MARKETING: CONSUMER BEHAVIOR",
+      "authors": [],
+      "year": 2019,
+      "discipline": "marketing",
+      "venue": "Vestnik Universiteta",
+      "publisher": "Saint Petersburg State University",
+      "doi": "10.26425/1816-4277-2019-5-5-11",
+      "sourceUrl": "https://doi.org/10.26425/1816-4277-2019-5-5-11",
+      "oaStatus": "open",
+      "filename": "marketing-digital-marketing-consumer-behavior.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for marketing format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "ergonomics-6-virtual-reality-and-ergonomics-human-factors",
+      "title": "6. Virtual Reality and Ergonomics / Human Factors",
+      "authors": [],
+      "year": 2019,
+      "discipline": "ergonomics",
+      "venue": "The Journal of The Institute of Image Information and Television Engineers",
+      "publisher": "",
+      "doi": "10.3169/itej.73.34",
+      "sourceUrl": "https://doi.org/10.3169/itej.73.34",
+      "oaStatus": "open",
+      "filename": "ergonomics-6-virtual-reality-and-ergonomics-human-factors.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for ergonomics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "ergonomics-2s2-1-ergonomics-human-factors-in-around-1964",
+      "title": "2S2-1 Ergonomics & Human Factors in around 1964",
+      "authors": [],
+      "year": 2015,
+      "discipline": "ergonomics",
+      "venue": "The Japanese Journal of Ergonomics",
+      "publisher": "Japan Human Factors and Ergonomics Society",
+      "doi": "10.5100/jje.51.s74",
+      "sourceUrl": "https://doi.org/10.5100/jje.51.s74",
+      "oaStatus": "open",
+      "filename": "ergonomics-2s2-1-ergonomics-human-factors-in-around-1964.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for ergonomics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "ergonomics-analisis-pemetaan-bibliometrik-komputational-publikasi-pada-ergonomics",
+      "title": "Analisis Pemetaan Bibliometrik Komputational Publikasi Pada “Ergonomics”, “Human Factor” dan “Occupational Health” dengan Menggunakan VOSviewer",
+      "authors": [],
+      "year": 2025,
+      "discipline": "ergonomics",
+      "venue": "Jurnal SENOPATI Sustainability Ergonomics Optimization and Application of Industrial Engineering",
+      "publisher": "",
+      "doi": "10.31284/j.senopati.2026.v7i2.8030",
+      "sourceUrl": "https://doi.org/10.31284/j.senopati.2026.v7i2.8030",
+      "oaStatus": "open",
+      "filename": "ergonomics-analisis-pemetaan-bibliometrik-komputational-publikasi-pada-ergonomics.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for ergonomics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "linguistics-the-role-of-applied-linguistics-and-language-discourse-analysis-in-eng",
+      "title": "The role of applied linguistics and language discourse analysis in English language teaching",
+      "authors": [],
+      "year": 2023,
+      "discipline": "linguistics",
+      "venue": "Current Issues in Philology and Pedagogical Linguistics",
+      "publisher": "",
+      "doi": "10.29025/2079-6021-2023-4-17-27",
+      "sourceUrl": "http://dx.doi.org/10.29025/2079-6021-2023-4-17-27",
+      "oaStatus": "open",
+      "filename": "linguistics-the-role-of-applied-linguistics-and-language-discourse-analysis-in-eng.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for linguistics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "linguistics-eco-linguistics-in-english-reviewing-the-role-of-language-in-environme",
+      "title": "Eco-Linguistics in English: Reviewing the role of language in environmental discourse",
+      "authors": [],
+      "year": 2026,
+      "discipline": "linguistics",
+      "venue": "International Journal of Literacy and Education",
+      "publisher": "",
+      "doi": "10.22271/27891607.2026.v6.i1a.375",
+      "sourceUrl": "https://doi.org/10.22271/27891607.2026.v6.i1a.375",
+      "oaStatus": "open",
+      "filename": "linguistics-eco-linguistics-in-english-reviewing-the-role-of-language-in-environme.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for linguistics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "linguistics-internet-linguistics-a-linguistic-analysis-of-electronic-discourse-as-",
+      "title": "Internet Linguistics: A Linguistic Analysis of Electronic Discourse as a New Variety of Language",
+      "authors": [],
+      "year": 2015,
+      "discipline": "linguistics",
+      "venue": "International Journal of English Linguistics",
+      "publisher": "Canadian Center of Science and Education",
+      "doi": "10.5539/ijel.v5n1p135",
+      "sourceUrl": "https://doi.org/10.5539/ijel.v5n1p135",
+      "oaStatus": "open",
+      "filename": "linguistics-internet-linguistics-a-linguistic-analysis-of-electronic-discourse-as-.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for linguistics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "linguistics-text-discourse-dicteme-language-personality-as-basic-concepts-of-text-",
+      "title": "Text, Discourse, Dicteme, Language Personality as Basic Concepts of Text Linguistics",
+      "authors": [],
+      "year": 2024,
+      "discipline": "linguistics",
+      "venue": "RUDN Journal of Language Studies Semiotics and Semantics",
+      "publisher": "Peoples' Friendship University of Russia",
+      "doi": "10.22363/2313-2299-2024-15-1-138-151",
+      "sourceUrl": "https://doi.org/10.22363/2313-2299-2024-15-1-138-151",
+      "oaStatus": "open",
+      "filename": "linguistics-text-discourse-dicteme-language-personality-as-basic-concepts-of-text-.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for linguistics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "linguistics-the-importance-of-discourse-studies-in-linguistics-language-teaching-a",
+      "title": "The Importance of Discourse Studies in Linguistics, Language Teaching and Translation",
+      "authors": [],
+      "year": 2018,
+      "discipline": "linguistics",
+      "venue": "US-China Foreign Language",
+      "publisher": "David Publishing Company",
+      "doi": "10.17265/1539-8080/2018.06.001",
+      "sourceUrl": "https://doi.org/10.17265/1539-8080/2018.06.001",
+      "oaStatus": "open",
+      "filename": "linguistics-the-importance-of-discourse-studies-in-linguistics-language-teaching-a.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for linguistics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "linguistics-discussion-on-second-language-acquisition-in-cognitive-linguistics-in-",
+      "title": "Discussion on Second Language Acquisition in Cognitive Linguistics in the Context of Ecological Discourse",
+      "authors": [],
+      "year": 2018,
+      "discipline": "linguistics",
+      "venue": "OA repository",
+      "publisher": "",
+      "doi": "10.25236/icepms.2018.217",
+      "sourceUrl": "https://doi.org/10.25236/icepms.2018.217",
+      "oaStatus": "open",
+      "filename": "linguistics-discussion-on-second-language-acquisition-in-cognitive-linguistics-in-.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for linguistics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "linguistics-study-of-animal-discourse-in-language-textbooks-from-the-perspective-o",
+      "title": "Study of Animal Discourse in Language Textbooks from the Perspective of Ecological Linguistics",
+      "authors": [],
+      "year": 2024,
+      "discipline": "linguistics",
+      "venue": "Lecture Notes on Language and Literature",
+      "publisher": "",
+      "doi": "10.23977/langl.2024.070520",
+      "sourceUrl": "http://dx.doi.org/10.23977/langl.2024.070520",
+      "oaStatus": "open",
+      "filename": "linguistics-study-of-animal-discourse-in-language-textbooks-from-the-perspective-o.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for linguistics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "hci-introduction-to-human-computer-interaction",
+      "title": "Introduction to Human Computer Interaction",
+      "authors": [],
+      "year": 2021,
+      "discipline": "hci",
+      "venue": "International Journal of Science and Research (IJSR)",
+      "publisher": "",
+      "doi": "10.21275/sr21908212158",
+      "sourceUrl": "https://doi.org/10.21275/sr21908212158",
+      "oaStatus": "open",
+      "filename": "hci-introduction-to-human-computer-interaction.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for hci format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "hci-intelligent-human-computer-interaction",
+      "title": "Intelligent Human Computer Interaction",
+      "authors": [],
+      "year": 2017,
+      "discipline": "hci",
+      "venue": "Lecture notes in computer science",
+      "publisher": "Springer Science+Business Media",
+      "doi": "10.1007/978-3-319-72038-8",
+      "sourceUrl": "https://doi.org/10.1007/978-3-319-72038-8",
+      "oaStatus": "open",
+      "filename": "hci-intelligent-human-computer-interaction.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for hci format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "cognitive-psychology-research-on-the-effects-of-different-listening-process-models-in-liste",
+      "title": "Research on the Effects of Different Listening Process Models in Listening Comprehension and Memory Based on Cognitive Psychology",
+      "authors": [],
+      "year": 2017,
+      "discipline": "cognitive-psychology",
+      "venue": "OA repository",
+      "publisher": "",
+      "doi": "10.2991/icemct-17.2017.143",
+      "sourceUrl": "https://doi.org/10.2991/icemct-17.2017.143",
+      "oaStatus": "open",
+      "filename": "cognitive-psychology-research-on-the-effects-of-different-listening-process-models-in-liste.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for cognitive-psychology format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "cognitive-psychology-chronometric-constructive-cognitive-learning-evaluation-model-measurin",
+      "title": "Chronometric Constructive Cognitive Learning Evaluation Model: Measuring the Consolidation of the Human Cognition Schema in Psychology Students’ Memory",
+      "authors": [],
+      "year": 2021,
+      "discipline": "cognitive-psychology",
+      "venue": "International Journal of Learning Teaching and Educational Research",
+      "publisher": "Tresorix Ltd",
+      "doi": "10.26803/ijlter.20.5.4",
+      "sourceUrl": "https://doi.org/10.26803/ijlter.20.5.4",
+      "oaStatus": "open",
+      "filename": "cognitive-psychology-chronometric-constructive-cognitive-learning-evaluation-model-measurin.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for cognitive-psychology format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "cognitive-psychology-editorial-the-role-of-the-distinctions-between-identification-producti",
+      "title": "Editorial: The Role of the Distinctions between Identification/Production and Perceptual/Conceptual Processes in Implicit Memory: Findings from Cognitive Psychology, Neuroscience and Neuropsychology",
+      "authors": [],
+      "year": 2017,
+      "discipline": "cognitive-psychology",
+      "venue": "Frontiers in Psychology",
+      "publisher": "Frontiers Media",
+      "doi": "10.3389/fpsyg.2017.01129",
+      "sourceUrl": "https://doi.org/10.3389/fpsyg.2017.01129",
+      "oaStatus": "open",
+      "filename": "cognitive-psychology-editorial-the-role-of-the-distinctions-between-identification-producti.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for cognitive-psychology format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "cognitive-psychology-the-validity-of-the-specific-coding-principle-the-explanations-from-co",
+      "title": "The Validity of the Specific Coding Principle: the Explanations from Cognitive Psychology and Psychoanalysis",
+      "authors": [],
+      "year": 2023,
+      "discipline": "cognitive-psychology",
+      "venue": "Journal of Education Humanities and Social Sciences",
+      "publisher": "",
+      "doi": "10.54097/ehss.v8i.4460",
+      "sourceUrl": "https://doi.org/10.54097/ehss.v8i.4460",
+      "oaStatus": "open",
+      "filename": "cognitive-psychology-the-validity-of-the-specific-coding-principle-the-explanations-from-co.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for cognitive-psychology format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "cognitive-psychology-grand-challenges-in-environmental-psychology",
+      "title": "Grand Challenges in Environmental Psychology",
+      "authors": [],
+      "year": 2016,
+      "discipline": "cognitive-psychology",
+      "venue": "Frontiers in Psychology",
+      "publisher": "Frontiers Media",
+      "doi": "10.3389/fpsyg.2016.00583",
+      "sourceUrl": "https://doi.org/10.3389/fpsyg.2016.00583",
+      "oaStatus": "open",
+      "filename": "cognitive-psychology-grand-challenges-in-environmental-psychology.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for cognitive-psychology format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "marketing-the-influence-of-social-media-marketing-on-consumers-behavior",
+      "title": "The Influence of Social Media Marketing on Consumers' Behavior",
+      "authors": [],
+      "year": 2023,
+      "discipline": "marketing",
+      "venue": "Advances in Economics Management and Political Sciences",
+      "publisher": "",
+      "doi": "10.54254/2754-1169/20/20230181",
+      "sourceUrl": "https://doi.org/10.54254/2754-1169/20/20230181",
+      "oaStatus": "open",
+      "filename": "marketing-the-influence-of-social-media-marketing-on-consumers-behavior.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for marketing format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "marketing-impact-of-sensory-marketing-on-consumer-behavior",
+      "title": "Impact of sensory marketing on consumer behavior",
+      "authors": [],
+      "year": 2020,
+      "discipline": "marketing",
+      "venue": "Bastina",
+      "publisher": "Faculty of Agronomy in Čačak",
+      "doi": "10.5937/bastina30-25613",
+      "sourceUrl": "https://doi.org/10.5937/bastina30-25613",
+      "oaStatus": "open",
+      "filename": "marketing-impact-of-sensory-marketing-on-consumer-behavior.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for marketing format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "marketing-impact-of-e-marketing-on-consumer-behavior",
+      "title": "Impact of e-marketing on consumer behavior",
+      "authors": [],
+      "year": 2015,
+      "discipline": "marketing",
+      "venue": "Ekonomski pogledi",
+      "publisher": "",
+      "doi": "10.5937/ekopog1504067p",
+      "sourceUrl": "https://doi.org/10.5937/ekopog1504067p",
+      "oaStatus": "open",
+      "filename": "marketing-impact-of-e-marketing-on-consumer-behavior.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for marketing format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "marketing-marketing-communication-and-consumer-behavior-in-digital-era",
+      "title": "MARKETING COMMUNICATION AND CONSUMER BEHAVIOR IN DIGITAL ERA",
+      "authors": [],
+      "year": 2016,
+      "discipline": "marketing",
+      "venue": "Journal of communication and innovation NIDA",
+      "publisher": "",
+      "doi": "10.14456/jcin.2016.15",
+      "sourceUrl": "https://so02.tci-thaijo.org/index.php/jcin/article/view/78547",
+      "oaStatus": "open",
+      "filename": "marketing-marketing-communication-and-consumer-behavior-in-digital-era.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for marketing format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "marketing-impact-of-green-marketing-on-consumer-behavior",
+      "title": "Impact of Green Marketing on Consumer Behavior",
+      "authors": [],
+      "year": 2025,
+      "discipline": "marketing",
+      "venue": "ANALISTA International Journal of Multidisciplinary Research",
+      "publisher": "",
+      "doi": "10.71182/aijmr.2412.0202.5005",
+      "sourceUrl": "https://doi.org/10.71182/aijmr.2412.0202.5005",
+      "oaStatus": "open",
+      "filename": "marketing-impact-of-green-marketing-on-consumer-behavior.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for marketing format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "ergonomics-human-factors-and-ergonomics",
+      "title": "Human Factors and Ergonomics",
+      "authors": [],
+      "year": 2024,
+      "discipline": "ergonomics",
+      "venue": "OA repository",
+      "publisher": "",
+      "doi": "10.62311/nesx/rb978-81-974226-6-9",
+      "sourceUrl": "https://doi.org/10.62311/nesx/rb978-81-974226-6-9",
+      "oaStatus": "open",
+      "filename": "ergonomics-human-factors-and-ergonomics.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for ergonomics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "ergonomics-human-factors-ergonomics-in-hydrocarbon-facilities",
+      "title": "Human Factors \"Ergonomics\" in Hydrocarbon Facilities",
+      "authors": [],
+      "year": 2019,
+      "discipline": "ergonomics",
+      "venue": "International Journal of Science and Research (IJSR)",
+      "publisher": "",
+      "doi": "10.21275/art20196205",
+      "sourceUrl": "https://doi.org/10.21275/art20196205",
+      "oaStatus": "open",
+      "filename": "ergonomics-human-factors-ergonomics-in-hydrocarbon-facilities.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for ergonomics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "linguistics-an-empirical-analysis-of-the-use-of-discourse-markers-by-second-langua",
+      "title": "An Empirical Analysis of the Use of Discourse Markers by Second Language Learners Based on Cognitive Linguistics",
+      "authors": [],
+      "year": 2023,
+      "discipline": "linguistics",
+      "venue": "International Journal of Science and Engineering Applications",
+      "publisher": "",
+      "doi": "10.7753/ijsea1203.1020",
+      "sourceUrl": "https://doi.org/10.7753/ijsea1203.1020",
+      "oaStatus": "open",
+      "filename": "linguistics-an-empirical-analysis-of-the-use-of-discourse-markers-by-second-langua.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for linguistics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "linguistics-linguistics-and-politics-russianisms-in-the-western-english-language-p",
+      "title": "Linguistics and politics: Russianisms in the western English-Language political discourse with Russia",
+      "authors": [],
+      "year": 2021,
+      "discipline": "linguistics",
+      "venue": "Language Studies and Modern Humanities",
+      "publisher": "",
+      "doi": "10.33910/2686-830x-2021-3-2-138-152",
+      "sourceUrl": "https://doi.org/10.33910/2686-830x-2021-3-2-138-152",
+      "oaStatus": "open",
+      "filename": "linguistics-linguistics-and-politics-russianisms-in-the-western-english-language-p.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for linguistics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "linguistics-constructing-or-disrupting-peace-through-language-a-peace-linguistics-",
+      "title": "Constructing or Disrupting Peace through Language: A Peace Linguistics Analysis of the Trump-Zelensky Diplomatic Discourse",
+      "authors": [],
+      "year": 2026,
+      "discipline": "linguistics",
+      "venue": "Langkit Journal of Social Sciences and Humanities",
+      "publisher": "",
+      "doi": "10.62071/8x29zf06",
+      "sourceUrl": "https://doi.org/10.62071/8x29zf06",
+      "oaStatus": "open",
+      "filename": "linguistics-constructing-or-disrupting-peace-through-language-a-peace-linguistics-.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for linguistics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "linguistics-gender-linguistics-in-the-linguo-limological-aspect-by-the-material-of",
+      "title": "GENDER LINGUISTICS IN THE LINGUO-LIMOLOGICAL ASPECT (BY THE MATERIAL OF THE ENGLISH-LANGUAGE NETWORK DISCOURSE)",
+      "authors": [],
+      "year": 2019,
+      "discipline": "linguistics",
+      "venue": "Philology Theory & Practice",
+      "publisher": "Gramota Publishers",
+      "doi": "10.30853/filnauki.2019.11.57",
+      "sourceUrl": "https://doi.org/10.30853/filnauki.2019.11.57",
+      "oaStatus": "open",
+      "filename": "linguistics-gender-linguistics-in-the-linguo-limological-aspect-by-the-material-of.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for linguistics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "hci-development-of-user-interface-user-experience-using-design-thinking-ap",
+      "title": "Development of User Interface/User Experience using Design Thinking Approach for GMS Service Company",
+      "authors": [],
+      "year": 2022,
+      "discipline": "hci",
+      "venue": "Journal of Information Systems and Informatics",
+      "publisher": "",
+      "doi": "10.51519/journalisi.v4i2.344",
+      "sourceUrl": "https://doi.org/10.51519/journalisi.v4i2.344",
+      "oaStatus": "open",
+      "filename": "hci-development-of-user-interface-user-experience-using-design-thinking-ap.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for hci format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "hci-user-experience-analysis-on-mobile-application-design-using-user-exper",
+      "title": "User Experience Analysis on Mobile Application Design Using User Experience Questionnaire",
+      "authors": [],
+      "year": 2021,
+      "discipline": "hci",
+      "venue": "Indonesian Journal of Information Systems",
+      "publisher": "Atma Jaya University, Yogyakarta",
+      "doi": "10.24002/ijis.v4i1.4646",
+      "sourceUrl": "https://doi.org/10.24002/ijis.v4i1.4646",
+      "oaStatus": "open",
+      "filename": "hci-user-experience-analysis-on-mobile-application-design-using-user-exper.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for hci format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "hci-a-comparative-research-on-usability-and-user-experience-of-user-interf",
+      "title": "A Comparative Research on Usability and User Experience of User Interface Design Software",
+      "authors": [],
+      "year": 2022,
+      "discipline": "hci",
+      "venue": "International Journal of Advanced Computer Science and Applications",
+      "publisher": "Science and Information Organization",
+      "doi": "10.14569/ijacsa.2022.0130804",
+      "sourceUrl": "https://doi.org/10.14569/ijacsa.2022.0130804",
+      "oaStatus": "open",
+      "filename": "hci-a-comparative-research-on-usability-and-user-experience-of-user-interf.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for hci format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "hci-user-experience-design-using-machine-learning-a-systematic-review",
+      "title": "User Experience Design Using Machine Learning: A Systematic Review",
+      "authors": [],
+      "year": 2022,
+      "discipline": "hci",
+      "venue": "IEEE Access",
+      "publisher": "Institute of Electrical and Electronics Engineers",
+      "doi": "10.1109/access.2022.3173289",
+      "sourceUrl": "https://doi.org/10.1109/access.2022.3173289",
+      "oaStatus": "open",
+      "filename": "hci-user-experience-design-using-machine-learning-a-systematic-review.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for hci format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "hci-redesign-of-user-experience-in-inaportnet-using-the-user-experience-qu",
+      "title": "Redesign of User Experience in Inaportnet Using the User Experience Questionnaire Method TND User-Centered Design",
+      "authors": [],
+      "year": 2025,
+      "discipline": "hci",
+      "venue": "INOVTEK Polbeng - Seri Informatika",
+      "publisher": "",
+      "doi": "10.35314/dpf22c38",
+      "sourceUrl": "https://doi.org/10.35314/dpf22c38",
+      "oaStatus": "open",
+      "filename": "hci-redesign-of-user-experience-in-inaportnet-using-the-user-experience-qu.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for hci format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "cognitive-psychology-the-role-of-attention-memory-and-cognition-in-the-decision-making-proc",
+      "title": "The Role of Attention, Memory and Cognition in the Decision-Making Process of Adolescent Students",
+      "authors": [],
+      "year": 2020,
+      "discipline": "cognitive-psychology",
+      "venue": "Anuarul Universitatii Petre Andrei din Iasi Fascicula Asistenta sociala sociologie psihologie",
+      "publisher": "",
+      "doi": "10.18662/upasw/25/43",
+      "sourceUrl": "https://doi.org/10.18662/upasw/25/43",
+      "oaStatus": "open",
+      "filename": "cognitive-psychology-the-role-of-attention-memory-and-cognition-in-the-decision-making-proc.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for cognitive-psychology format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "cognitive-psychology-attention-and-entrepreneurial-cognition",
+      "title": "Attention and Entrepreneurial Cognition",
+      "authors": [],
+      "year": 2018,
+      "discipline": "cognitive-psychology",
+      "venue": "Springer eBooks",
+      "publisher": "Springer Nature",
+      "doi": "10.1007/978-3-319-71782-1_4",
+      "sourceUrl": "https://doi.org/10.1007/978-3-319-71782-1_4",
+      "oaStatus": "open",
+      "filename": "cognitive-psychology-attention-and-entrepreneurial-cognition.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for cognitive-psychology format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "marketing-the-impact-of-online-advertising-on-consumer-choice-consumption-traps-",
+      "title": "The Impact of Online Advertising on Consumer Choice: Consumption Traps and Digital Marketing Ethics",
+      "authors": [],
+      "year": 2025,
+      "discipline": "marketing",
+      "venue": "Business and Social Sciences Proceedings",
+      "publisher": "",
+      "doi": "10.71222/5kygtw17",
+      "sourceUrl": "https://doi.org/10.71222/5kygtw17",
+      "oaStatus": "open",
+      "filename": "marketing-the-impact-of-online-advertising-on-consumer-choice-consumption-traps-.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for marketing format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "marketing-a-study-on-the-relationship-between-advertising-value-choice-of-media-",
+      "title": "A Study on the Relationship between Advertising Value, Choice of Media and Consumer Purchasing Behaviour: In the Use of TikTok and Digital TV",
+      "authors": [],
+      "year": 2024,
+      "discipline": "marketing",
+      "venue": "Advances in Social Science, Education and Humanities Research/Advances in social science, education and humanities research",
+      "publisher": "",
+      "doi": "10.2991/978-2-38476-287-3_16",
+      "sourceUrl": "https://doi.org/10.2991/978-2-38476-287-3_16",
+      "oaStatus": "open",
+      "filename": "marketing-a-study-on-the-relationship-between-advertising-value-choice-of-media-.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for marketing format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the",
+      "title": "Is digital advertising effective under conditions of low attention? : the impact of low attention processing on consumer brand consideration and choice : a thesis presented in partial fulfilment of the requirements for the degree of Doctor of Philosophy in Marketing at Massey University, Palmerston North, New Zealand",
+      "authors": [],
+      "year": 2020,
+      "discipline": "marketing",
+      "venue": "Massey Research Online (Massey University)",
+      "publisher": "Massey University",
+      "doi": null,
+      "sourceUrl": "http://hdl.handle.net/10179/16133",
+      "oaStatus": "open",
+      "filename": "marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for marketing format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "marketing-influence-of-advertising-incentives-on-consumers-in-the-digital-enviro",
+      "title": "Influence Of Advertising Incentives On Consumers In The Digital Environment (Russian Experience)",
+      "authors": [],
+      "year": 2020,
+      "discipline": "marketing",
+      "venue": "The European Proceedings of Social & Behavioural Sciences",
+      "publisher": "",
+      "doi": "10.15405/epsbs.2020.03.172",
+      "sourceUrl": "https://doi.org/10.15405/epsbs.2020.03.172",
+      "oaStatus": "open",
+      "filename": "marketing-influence-of-advertising-incentives-on-consumers-in-the-digital-enviro.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for marketing format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport",
+      "title": "Fatigue and occupational safety in short haul, light transport",
+      "authors": [],
+      "year": 2022,
+      "discipline": "ergonomics",
+      "venue": "UNSWorks (University of New South Wales, Sydney, Australia)",
+      "publisher": "Australian Defence Force Academy",
+      "doi": "10.26190/unsworks/16272",
+      "sourceUrl": "http://hdl.handle.net/1959.4/52808",
+      "oaStatus": "open",
+      "filename": "ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for ergonomics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "ergonomics-analysis-of-burnout-and-occupational-safety-in-nurses-a-literature-rev",
+      "title": "Analysis of Burnout and Occupational Safety in Nurses: A Literature Review",
+      "authors": [],
+      "year": 2025,
+      "discipline": "ergonomics",
+      "venue": "Proceeding of International Seminar and Workshop on Public Health Action",
+      "publisher": "",
+      "doi": "10.60074/iswopha.v1i1.14002",
+      "sourceUrl": "https://doi.org/10.60074/iswopha.v1i1.14002",
+      "oaStatus": "open",
+      "filename": "ergonomics-analysis-of-burnout-and-occupational-safety-in-nurses-a-literature-rev.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for ergonomics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "ergonomics-risk-factors-for-occupational-fatigue-in-construction-workers-a-system",
+      "title": "Risk Factors for Occupational Fatigue in Construction Workers: A Systematic Review",
+      "authors": [],
+      "year": 2025,
+      "discipline": "ergonomics",
+      "venue": "Jurnal Indonesia Sosial Sains",
+      "publisher": "",
+      "doi": "10.59141/jiss.v6i1.1595",
+      "sourceUrl": "https://doi.org/10.59141/jiss.v6i1.1595",
+      "oaStatus": "open",
+      "filename": "ergonomics-risk-factors-for-occupational-fatigue-in-construction-workers-a-system.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for ergonomics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "linguistics-the-role-of-morphology-in-computational-linguistics-its-significance-i",
+      "title": "THE ROLE OF MORPHOLOGY IN COMPUTATIONAL LINGUISTICS: ITS SIGNIFICANCE IN NATURAL LANGUAGE PROCESSING",
+      "authors": [],
+      "year": 2026,
+      "discipline": "linguistics",
+      "venue": "Journal of Agriculture & Horticulture",
+      "publisher": "",
+      "doi": "10.5281/zenodo.18456227",
+      "sourceUrl": "https://internationalbulletins.com/intjour/index.php/jah/article/view/2386",
+      "oaStatus": "open",
+      "filename": "linguistics-the-role-of-morphology-in-computational-linguistics-its-significance-i.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for linguistics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
+    },
+    {
+      "id": "linguistics-computational-linguistics",
+      "title": "Computational Linguistics",
+      "authors": [],
+      "year": 2024,
+      "discipline": "linguistics",
+      "venue": "International Journal of Advances in Scientific Research and Engineering",
+      "publisher": "",
+      "doi": "10.31695/ijasre.2024.1.1",
+      "sourceUrl": "http://dx.doi.org/10.31695/ijasre.2024.1.1",
+      "oaStatus": "open",
+      "filename": "linguistics-computational-linguistics.pdf",
+      "formatFamily": "oa-repository",
+      "selectionReason": "OpenAlex OA candidate for linguistics format variation; PDF URL exposed by an OA location",
+      "kinds": [
+        "oa",
+        "ordinary-body"
+      ]
     }
   ]
 }

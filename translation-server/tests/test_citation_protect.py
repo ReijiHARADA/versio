@@ -7,6 +7,7 @@ from pathlib import Path
 
 from engines.citation_protect import (
     AUTHOR_YEAR_CITATION_RE,
+    BRACKET_AUTHOR_YEAR_CITATION_RE,
     CITATION_RE,
     INLINE_FOOTNOTE_CITATION_RE,
     INLINE_NUMERIC_CITATION_RE,
@@ -21,6 +22,20 @@ from engines.madlad_mps import allows_unprotected_identifier_retry, unprotected_
 
 
 class CitationProtectTests(unittest.TestCase):
+    def test_bracket_author_year_citations_are_atomic(self) -> None:
+        source = "Randomized experiments are the gold standard [Rubin 1974], with follow-up work [Shadish and Cook 2009]."
+        protected, cites, nonce = protect_citations(source)
+        self.assertIn("[Rubin 1974]", cites)
+        self.assertIn("[Shadish and Cook 2009]", cites)
+        self.assertNotIn("Rubin 1974", protected)
+        self.assertEqual(restore_citations(protected, cites, nonce), source)
+
+    def test_bracketed_non_citation_prose_is_not_atomic(self) -> None:
+        source = "The bracketed note [see methods for details] remains readable."
+        protected, cites, _ = protect_citations(source)
+        self.assertEqual(cites, [])
+        self.assertEqual(protected, source)
+
     def test_quoted_examples_round_trip_as_atomic_spans(self) -> None:
         source = 'The cues included e.g., “couple fighting” and e.g. "white piano".'
         protected, values, nonce = protect_quoted_examples(source)
@@ -554,6 +569,13 @@ class CitationProtectTests(unittest.TestCase):
         _, citations, nonce = protect_citations(source)
         restored = restore_citations("問題を提示した。", citations, nonce)
         self.assertEqual(restored, "問題を提示した。16 (Cab, see SI Appendix)")
+
+    def test_strict_restore_appends_dropped_bracket_reference_without_terminal_mark(self) -> None:
+        source = "The archive contains several ear scrolls. [Marzee 2001 p.25]"
+        _, citations, nonce = protect_citations(source)
+        self.assertEqual(citations, ["[Marzee 2001 p.25]"])
+        restored = restore_citations("アーカイブには複数の耳飾りがある", citations, nonce, reject_missing=True)
+        self.assertEqual(restored, "アーカイブには複数の耳飾りがある [Marzee 2001 p.25]")
 
     def test_protects_terminal_superscript_citation_after_sentence_punctuation(self) -> None:
         source = "Smugglers exploit irregular migration.3"
