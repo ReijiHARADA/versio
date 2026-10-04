@@ -130,11 +130,13 @@ type BenchmarkServerStatus = {
   phase?: string;
 };
 
-const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "..");
-const catalog = JSON.parse(
-  fs.readFileSync(path.join(root, "test-fixtures/real-papers/catalog.json"), "utf8")
-) as { pdfDir: string; papers: CatalogPaper[] };
 const args = process.argv.slice(2);
+const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "..");
+const catalogArg = args.indexOf("--catalog");
+const catalogPath = catalogArg >= 0
+  ? path.resolve(root, args[catalogArg + 1] ?? "")
+  : path.join(root, "test-fixtures/real-papers/catalog.json");
+const catalog = JSON.parse(fs.readFileSync(catalogPath, "utf8")) as { pdfDir: string; reportDir?: string; papers: CatalogPaper[] };
 const paperArg = args.indexOf("--paper");
 const onlyPaper = paperArg >= 0 ? args[paperArg + 1] : undefined;
 const papersArg = args.indexOf("--papers");
@@ -201,6 +203,15 @@ function structuralWarnings(block: PaperBlock): string[] {
   if (/^(?:[A-Z][A-Za-z]{1,24}\s+\d+[A-Za-z]?\s+){2,}/.test(text)) {
     warnings.push("repeated numbered chart/table labels");
   }
+  // Author/masthead lines in conference PDFs often retain affiliation markers
+  // (for example ♠, ♣, ♥, or ♦) between names. They are not prose even when
+  // the resolver exposes the line as a paragraph. Keep this evidence generic:
+  // it depends on repeated marker geometry/syntax, never on author names.
+  const mastheadMarkers = (text.match(/[♠♣♥♦♢]/g) ?? []).length;
+  const mastheadWords = text.match(/\b[A-Z][A-Za-z'’-]+\b/g)?.length ?? 0;
+  if (mastheadMarkers >= 2 && mastheadWords >= 6 && !/[.!?。！？]/.test(text)) {
+    warnings.push("author-masthead marker line");
+  }
   if (/\b(?:n\s*=|p\s*[<=>]|[FTZχ²]\s*\()/i.test(text)) warnings.push("scientific/statistical prose");
   // PDF list bullets are often emitted as en/em dashes or parenthesized
   // letters. Treat these as structural boundaries so extracted list fragments
@@ -216,6 +227,7 @@ function sourceCategory(block: PaperBlock): SourceCategory {
   const warnings = structuralWarnings(block);
   if (block.metadata.tableSourceFallback === true || block.metadata.role === "table") return "table-contamination";
   if (warnings.includes("repeated numbered chart/table labels")) return "table-contamination";
+  if (warnings.includes("author-masthead marker line")) return "reference-chrome";
   const chromeSignals = [
     /creativecommons|copyright\s+\d{4}|all rights reserved/i,
     /doi\s*:\s*10\.\d{4,9}\//i,
@@ -271,6 +283,15 @@ function fallbackReason(source: string, result: ServerTranslation | undefined, q
     if (structural) return structural;
     if (looksLikeBibliographyEntry(source) || isExpectedNonProseParagraph(source)) return "expected non-prose paragraph";
     return "input policy rejected paragraph";
+  }
+  // Preserve the server's reason even when it returned a partial text.  A
+  // partial-unit fallback is still reader-visible, and comparing only
+  // `result.text === source` loses the attribution needed to separate model
+  // failures from extraction failures in the audit.
+  if (result?.fallback_stage && result.fallback_stage !== "none") {
+    return result.fallback_reason
+      ? `server ${result.fallback_stage}: ${result.fallback_reason}`
+      : `server ${result.fallback_stage}`;
   }
   if (result?.error) return `server request failed: ${result.error}`;
   if (result?.text === source) {
@@ -426,7 +447,6 @@ function markdownReport(report: {
   );
   const partialSourceFallbacks = completed.filter((row) => row.partialSourceFallback);
   const fullyTranslatedAccepts = completed.filter((row) => row.wouldAcceptTranslation && !row.partialSourceFallback);
-  const failed = report.papers.flatMap((entry) => entry.rows).filter((row) => !row.translation && !(row.readerVisibleFallback ?? row.sourceFallback));
   const lowQuality = completed.filter((row) => (row.quality?.score ?? 1) < 0.8);
   const rejected = completed.filter((row) => row.wouldAcceptTranslation === false);
   const blockedBeforeModel = report.papers.flatMap((entry) => entry.rows).filter((row) => !row.wouldSubmitToModel);
@@ -552,7 +572,7 @@ async function main() {
   if (onlyPaper && selected.length === 0) throw new Error(`Unknown catalog paper: ${onlyPaper}`);
   if (cachedOnlyArg && selected.length === 0) throw new Error("No cached PDFs are eligible for this benchmark selection");
   const reportName = requestedReportName ?? (onlyPaper ? `translation-audit-${onlyPaper}` : "translation-audit");
-  const reportDir = path.join(root, catalog.pdfDir, "reports");
+  const reportDir = path.join(root, catalog.reportDir ?? path.join(catalog.pdfDir, "reports"));
   const checkpointPath = path.join(reportDir, `${reportName}.json`);
   const prior = resumeArg && fs.existsSync(checkpointPath)
     ? JSON.parse(fs.readFileSync(checkpointPath, "utf8")) as { runId?: string; papers?: Array<{ paper: CatalogPaper; rows: AuditRow[]; error?: string }> }

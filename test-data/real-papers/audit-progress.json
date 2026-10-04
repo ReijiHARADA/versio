@@ -1,6 +1,6 @@
 {
   "phase": "phase-2",
-  "lastBenchmarkVersion": "v437",
+  "lastBenchmarkVersion": "3b-mt-v5-semantic-v71-strict-restore-v11",
   "lastDiagnosticVersion": "v194",
   "lastVariantDiagnosisVersion": "translation-unit-variants-v79",
   "lastAttributionReport": "test-data/real-papers/reports/translation-fallback-attribution.json",
@@ -62,7 +62,7 @@
   "pendingPapers": [],
   "reviewedBlocks": 134,
   "lastCheckpoint": "2026-09-25T16:19:00+09:00",
-  "pendingManualReview": 612,
+  "pendingManualReview": 4,
   "unresolvedFailures": [
     "manual semantic review of current accepts",
     "measure partial source fallback inside accepted output before treating accept rate as fully translated rate",
@@ -74,7 +74,12 @@
     "evaluate replacement or cascade translation models under local/free-use constraints"
   ],
   "nextActions": [
-    "Run fresh extraction/translation audit after geometry resolver integration; compare chart-contamination false accepts and ordinary-body fallback; keep selective cascade opt-in until hash-clean review."
+    "complete a v49 full benchmark, then measure partial source fallback inside accepted output",
+    "continue v41 manual comparison of accepted ordinary body prose before relaxing any gate",
+    "use semantic-coverage audit scores to prioritize likely omissions and semantic shifts",
+    "continue local/free EN-JA model comparison; do not enable cascade until manual review confirms semantic adequacy",
+    "design production-safe content coverage checks that do not inflate reader-visible fallback",
+    "add verified OA candidates with provenance"
   ],
   "v33StructuralSafety": {
     "status": "implemented and verified",
@@ -193,7 +198,7 @@
     },
     "nextAction": "Calibrate semantic coverage against more manual labels before using it for cascade routing or hard rejection."
   },
-  "archivedReviewedBlocks": 0,
+  "archivedReviewedBlocks": 3,
   "handoff": {
     "status": "paused_for_account_transfer",
     "processesStopped": true,
@@ -458,7 +463,7 @@
     "ordinalReviewed": 7,
     "ordinalPending": 0
   },
-  "lastUpdated": "2026-09-24",
+  "lastUpdated": "2026-10-04T04:39:11.565Z",
   "manualReviewCompletedAt": "2026-09-16T16:25:07.633Z",
   "completedWork": [
     "Gemma 2 9B same-fixture 12-row audit completed (local Ollama, report model-quality-gemma2-9b-v1.json).",
@@ -3308,17 +3313,14 @@
   "activeBenchmarkRun": null,
   "activeManualReview": null,
   "latestFreshRun": {
-    "report": "test-data/real-papers/reports/translation-audit.json",
-    "papersSelected": 52,
-    "papersWithRows": 51,
-    "blocks": 612,
-    "ordinaryRows": 234,
-    "rawOrdinaryFallbacks": 62,
-    "rawOrdinaryFallbackRate": 0.26495726495726496,
-    "v24RecheckFallbacks": 90,
-    "v24RecheckFallbackRate": 0.38461538461538464,
-    "serverModelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v77-source-protect-v21-strict-restore-v28-quality-v14-relation-candidate-v6",
-    "failedRequests": 0
+    "artifact": "test-data/real-papers/reports/heldout-v4-madlad-fresh.json",
+    "papers": 6,
+    "rows": 72,
+    "ordinaryBodyRows": 26,
+    "ordinaryBodyFallbacks": 10,
+    "ordinaryBodyFallbackRate": 0.3846153846,
+    "server": "MADLAD Transformers 4.57.6 embedding-integrity-verified",
+    "completedAt": "2026-10-04T04:39:11.561Z"
   },
   "latestCandidateModelEvaluation": "v73-qwen2.5-14b-paper-heldout-reviewed",
   "latestFallbackReplay": {
@@ -5247,9 +5249,14 @@
     "cause": "MADLAD semantic limitation"
   },
   "latestAlternateModel": {
-    "model": "facebook/m2m100_1.2B",
-    "artifact": "test-data/real-papers/reports/alternate-m2m100-1.2b-relation-v1.json",
-    "result": "rejected: gist mistranslation and Linda terminology error"
+    "artifact": "test-data/real-papers/reports/heldout-v4-qwen3-cascade.json",
+    "model": "qwen3:14b",
+    "postModelCandidates": 12,
+    "accepted": 8,
+    "rejected": 4,
+    "manualReview": "test-data/real-papers/reports/heldout-v4-qwen3-manual-review.json",
+    "severityGe2": 0,
+    "productionActivated": false
   },
   "latestQualityV21Change": {
     "date": "2026-09-24",

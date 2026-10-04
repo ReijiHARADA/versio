@@ -13,7 +13,7 @@ import re
 
 # Bump this whenever source-fact protection rules change. It participates in
 # the server translation/cache identity so old accepts are not reused silently.
-SOURCE_PROTECTION_VERSION = "source-protect-v25"
+SOURCE_PROTECTION_VERSION = "source-protect-v27-space-footnote-citation"
 QUOTED_EXAMPLE_PROTECTION_VERSION = "quoted-example-v1"
 
 # Repeated title-case technical names are factual identifiers even when they
@@ -85,7 +85,10 @@ CITATION_RE = re.compile(
 # The following parenthesis is the high-precision context that distinguishes a
 # reference marker from ordinary identifiers such as X16 or a year.
 INLINE_FOOTNOTE_CITATION_RE = re.compile(
+    r"(?:"
     r"(?:(?<=[\"”’])|(?<=[A-Za-z]))\d{1,3}(?=\s*\()"
+    r"|(?<=\s)\d{1,3}(?=\s*\((?=[^()]{0,180}\b(?:18|19|20)\d{2}\b))"
+    r")"
 )
 
 # Some publisher PDFs attach a short footnote marker directly before sentence

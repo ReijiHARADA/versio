@@ -95,7 +95,7 @@ const SOURCE_COMPARATIVE_LIKELIHOOD = /\b(?:more|less)\s+likely\b/i;
 const SOURCE_POSITIVE_EQUIVALENCE = /\b(?:performs?|performed|is|are|was|were)\s+(?:roughly\s+)?compar(?:ably|able)\s+to\b|\b(?:similar|equivalent)\s+to\b/i;
 const JA_NEGATED_EQUIVALENCE = /(?:匹敵|同等|同程度|同じ程度|同様)[^。！？\n]{0,28}(?:ない|なく|なかっ|ません|存在しない|存在しません)/;
 const JA_COMPARATIVE_CHOICE = /(?:どちら|いずれ|あるいは|それとも)[^。！？\n]{0,80}(?:かを|かどうか|か尋ね|か問|か調べ)/;
-const JA_CONDITION = /(?:場合|ならば?|なければ|ない限り|である限り|に応じて|かどうか|か否か|条件|依存|により|によって|ためには)/;
+const JA_CONDITION = /(?:場合|ならば?|なければ|ければ|れば|たら|ない限り|である限り|に応じて|かどうか|か否か|条件|依存|により|によって|ためには)/;
 // Alternative experimental conditions are easy to collapse into one branch
 // while leaving a fluent Japanese sentence. Require an explicit alternative
 // marker whenever the source uses the unambiguous "either ... or ..." form.
@@ -282,7 +282,15 @@ export function diagnoseIncompleteSource(source: string): { incomplete: boolean;
 // that a clause was never translated.  Capitalized names, citations, URLs and
 // identifiers are excluded so normal academic terminology is not penalized.
 function hasUntranslatedSourcePhrase(source: string, output: string): boolean {
-  const normalizedOutput = output.toLowerCase().replace(/\s+/g, " ");
+  // Author/year citations may contain journal titles and ordinary English
+  // (`see Biber in ...`). Those spans are intentional retained source facts,
+  // so exclude them before looking for untranslated prose.
+  const citationSpan = /(?:\([^()\n]{0,240}\b(?:19|20)\d{2}\b[^()\n]{0,240}\)|（[^（）\n]{0,240}\b(?:19|20)\d{2}\b[^（）\n]{0,240}）)/g;
+  const namedTechnicalSpan = /\b(?:(?:[A-Z][A-Za-z'-]+|of|in|the|and)\s+){2,}[A-Z][A-Za-z'-]+\s*\([A-Z]{2,}\)/g;
+  const maskProtected = (value: string) => value
+    .replace(citationSpan, " ")
+    .replace(namedTechnicalSpan, " ");
+  const normalizedOutput = maskProtected(output).toLowerCase().replace(/\s+/g, " ");
   const words = source.match(/[a-z][a-z'-]{1,}/gi) ?? [];
   for (let i = 0; i <= words.length - 4; i += 1) {
     const phraseWords = words.slice(i, i + 4);
@@ -295,6 +303,12 @@ function hasUntranslatedSourcePhrase(source: string, output: string): boolean {
     if (sourceIndex >= 0) {
       const context = source.slice(Math.max(0, sourceIndex - 48), sourceIndex + phrase.length + 48);
       if (looksLikeCitationContext(context)) continue;
+      namedTechnicalSpan.lastIndex = 0;
+      if (namedTechnicalSpan.test(context)) {
+        namedTechnicalSpan.lastIndex = 0;
+        continue;
+      }
+      namedTechnicalSpan.lastIndex = 0;
     }
     // A retained noun phrase can be an intentional technical identifier.
     // Require clause-like evidence (a function word or common predicate) so
@@ -390,7 +404,15 @@ function hasOrphanedInvariantSentence(output: string, source: string): boolean {
     if (/^(?:\[(?:\d{1,3}(?:\s*[-–—,]\s*\d{1,3})*)\]|\d{1,3})[。.!！？!?]?$/.test(compact)) return false;
     // Author/year references can also be detached after Japanese prose. Keep them when the span contains only a name, year, and optional page marker.
     const citationOnly = sentence.replace(/^[「『"”」\s]+/u, "");
-    if (/^[[(]?[A-Z][A-Za-z'’-]{1,40}\s+(?:19|20)\d{2}(?:\s+p\.?\s*\d+)?[\])。.!！？!?]*$/.test(citationOnly)) return false;
+    if (/^[[(]?(?:[A-Z][A-Za-z'’-]{1,40}(?:\s+et\s+al\.)?(?:\s*&\s*[A-Z][A-Za-z'’-]{1,40})?\s+(?:19|20)\d{2})(?:\s*;\s*[A-Z][A-Za-z'’-]{1,40}(?:\s+et\s+al\.)?(?:\s*&\s*[A-Z][A-Za-z'’-]{1,40})?\s+(?:19|20)\d{2})*[\]),;。.!！？!?]*$/.test(citationOnly)) return false;
+    // Author names may contain diacritics or non-ASCII letters. If a short
+    // detached span contains a year and citation syntax but no Japanese prose,
+    // treat it as a preserved citation layout defect rather than an orphaned
+    // translation fragment.
+    if (/(?:19|20)\d{2}/.test(citationOnly)
+      && /(?:\bet\s+al\.|&|,)/i.test(citationOnly)
+      && !/[\u3040-\u30ff\u3400-\u9fff]/u.test(citationOnly)
+      && /^[\p{L}\p{M}\d\s.,;:&'’()\[\]\-]+[。.!！？!?]*$/u.test(citationOnly)) return false;
     // Figure references can be emitted as a detached punctuation span by
     // models that preserve the reference but move it after the translated
     // sentence (`...である。 (Fig. 2 (b))`).  As with citation-only spans,
@@ -469,21 +491,27 @@ function hasUntranslatedCascadeLexeme(source: string, output: string): boolean {
   // reveal an untranslated clause. Restrict the additional short-token check
   // to the explicit stop-word set below; domain acronyms and short technical
   // labels remain outside this guard.
-  const sourceWords = source.match(/\b[a-z][a-z'-]{3,}\b/gi) ?? [];
+  // Citation author names are source facts, not untranslated prose. Remove
+  // year-bearing parenthesized spans before comparing lexical residue; the
+  // scientific-invariant checks validate those spans separately.
+  const citationSpan = /(?:\([^()\n]{0,240}\b(?:19|20)\d{2}\b[^()\n]{0,240}\)|（[^（）\n]{0,240}\b(?:19|20)\d{2}\b[^（）\n]{0,240}）)/g;
+  const sourceForLexeme = source.replace(citationSpan, " ");
+  const outputForLexeme = output.replace(citationSpan, " ");
+  const sourceWords = sourceForLexeme.match(/\b[a-z][a-z'-]{3,}\b/gi) ?? [];
   // Do not require ASCII word boundaries: Japanese kana/kanji adjacent to a
   // retained English token (`such新しい`) still represents lexical residue.
   // Keep ASCII token boundaries intact while still allowing a retained
   // technical token to touch Japanese (`MouseLabシナリオ`). Without the
   // ASCII guards, fragments such as `ouse` inside `MouseLab` or `ake-` inside
   // `Take-The-Best` are falsely classified as untranslated English.
-  const outputWords = output.match(/(?<![A-Za-z])[a-z][a-z'-]{3,}(?![A-Za-z])/gi) ?? [];
-  const outputSet = new Set((output.match(/(?<![A-Za-z])[a-z][a-z'-]*(?![A-Za-z])/gi) ?? []).map((word) => word.toLowerCase()));
-  const sourceTokens = source.match(/\b[a-z][a-z'-]*\b/gi) ?? [];
-  const sourceRawTokens = source.match(/\b[A-Za-z][A-Za-z'-]*\b/g) ?? [];
+  const outputWords = outputForLexeme.match(/(?<![A-Za-z])[a-z][a-z'-]{3,}(?![A-Za-z])/gi) ?? [];
+  const outputSet = new Set((outputForLexeme.match(/(?<![A-Za-z])[a-z][a-z'-]*(?![A-Za-z])/gi) ?? []).map((word) => word.toLowerCase()));
+  const sourceTokens = sourceForLexeme.match(/\b[a-z][a-z'-]*\b/gi) ?? [];
+  const sourceRawTokens = sourceForLexeme.match(/\b[A-Za-z][A-Za-z'-]*\b/g) ?? [];
   for (let i = 0; i + 1 < sourceTokens.length; i += 1) {
     const first = sourceTokens[i].toLowerCase();
     const second = sourceTokens[i + 1].toLowerCase();
-    if (first.length >= 5 && second.length >= 5 && sourceRawTokens[i] === first && sourceRawTokens[i + 1] === second && new RegExp(`\\b${first}\\s+${second}\\b`, "i").test(output)) {
+    if (first.length >= 5 && second.length >= 5 && sourceRawTokens[i] === first && sourceRawTokens[i + 1] === second && new RegExp(`\\b${first}\\s+${second}\\b`, "i").test(outputForLexeme)) {
       const previous = sourceTokens[i - 1]?.toLowerCase();
       // A phrase introduced as an ordinary noun (`a cover story`) is likely
       // untranslated content; a bare technical compound (`lumped elements`)
@@ -500,7 +528,7 @@ function hasUntranslatedCascadeLexeme(source: string, output: string): boolean {
     // untranslated ordinary prose.
     const escapedWord = lower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const compound = new RegExp(`\\b[A-Z][A-Za-z0-9]*(?:[*_-])[A-Za-z0-9]*${escapedWord}\\b`, "i").exec(source);
-    if (compound && new RegExp(compound[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i").test(output)) return false;
+    if (compound && new RegExp(compound[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i").test(outputForLexeme)) return false;
     // Capitalized source terms are commonly names, product names, or method
     // labels. Lowercase lexical items are the higher-confidence signal.
     if (word !== lower && !CASCADE_LATIN_FUNCTION_WORDS.has(lower)) return false;
@@ -511,11 +539,16 @@ function hasUntranslatedCascadeLexeme(source: string, output: string): boolean {
     // flag an exact lowercase residue; sentence-initial/function-word cases
     // remain covered by the explicit function-word set above.
     if (!outputWords.some((candidate) => candidate === lower)) {
+      const retainedTitleCaseLabel = new RegExp(
+        `\\b[A-Z][A-Za-z'-]+\\s+[A-Z][A-Za-z'-]+\\b`,
+      ).test(output)
+        && new RegExp(`\\b${escapedWord}\\b`, "i").test(outputForLexeme);
+      if (retainedTitleCaseLabel) return false;
       // Allow a capitalized tail of a source-backed hyphenated method label,
       // such as `Weight-Additive Strategy`; an arbitrary capitalized rendering
       // of a lowercase noun (`a strategy` -> `Strategy`) remains suspicious.
       const escaped = lower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const methodLabel = new RegExp(`\\b(?:[A-Z][A-Za-z]+-)+[A-Z][A-Za-z]+\\s+${escaped}\\b`, "i").test(source);
+      const methodLabel = new RegExp(`\\b(?:[A-Z][A-Za-z]+-)+[A-Z][A-Za-z]+\\s+${escaped}\\b`, "i").test(sourceForLexeme);
       if (methodLabel) return false;
       return true;
     }
@@ -543,6 +576,12 @@ export function hasDuplicatedYearCitationSpan(source: string, output: string): b
     .normalize("NFKC")
     .replace(/\s+/g, " ")
     .replace(/[、，]/g, ",")
+    .replace(/\s*:\s*/g, ":")
+    // Japanese decoders commonly emit fullwidth citation parentheses while
+    // the PDF source uses ASCII parentheses. They are the same citation span
+    // for invariant comparison and must not create a false duplicate.
+    .replace(/[（]/g, "(")
+    .replace(/[）]/g, ")")
     // `e.g.,` is a discourse cue, not part of the author/year citation
     // identity. Models may naturally omit it while preserving the full
     // citation group; do not treat that formatting change as duplication.
@@ -560,7 +599,48 @@ export function hasDuplicatedYearCitationSpan(source: string, output: string): b
     const key = normalize(match[0]);
     outputCounts.set(key, (outputCounts.get(key) ?? 0) + 1);
   }
-  return [...outputCounts].some(([key, count]) => count > (sourceCounts.get(key) ?? 0));
+  const citationAtomPattern = /\b[A-Z][A-Za-zÀ-ÿ'’-]+(?:\s+et\s+al\.)?\s*,?\s*(?:19|20)\d{2}[a-z]?\b/gi;
+  const atomCounts = (value: string) => {
+    const counts = new Map<string, number>();
+    for (const atom of value.match(citationAtomPattern) ?? []) {
+      const key = atom.replace(/\s+/g, " ").replace(/\s*,\s*/g, ", ").trim().toLowerCase();
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return counts;
+  };
+  const sourceAtoms = atomCounts(source);
+  return [...outputCounts].some(([key, count]) => {
+    if (count <= (sourceCounts.get(key) ?? 0)) return false;
+    // Extraction can split one author/year group (for example a malformed
+    // trailing bare year) while the model restores the atomic author/year
+    // citation. If every atom is present no more often than in the source,
+    // this is regrouping rather than an added citation.
+    if (!sourceCounts.has(key)) {
+      const span = [...output.matchAll(spanPattern)].map((match) => match[0]).find((value) => normalize(value) === key);
+      const atoms = span ? atomCounts(span) : new Map<string, number>();
+      const regrouped = atoms.size > 0 && [...atoms].every(([atom, atomCount]) => atomCount <= (sourceAtoms.get(atom) ?? 0));
+      if (regrouped) return false;
+    }
+    return true;
+  });
+}
+
+// A citation year must not be reintroduced as a standalone calendar year in
+// unrelated Japanese prose. This catches scope drift such as a source ending
+// with `(Parker and Schrift, 2011)` becoming `2011年、研究2で...` earlier in
+// the translated claim. Years that are ordinary source prose remain allowed.
+function hasCitationYearScopeDrift(source: string, output: string): boolean {
+  const citationSpan = /(?:\([^()\n]{0,240}\b(?:19|20)\d{2}\b[^()\n]{0,240}\)|（[^（）\n]{0,240}\b(?:19|20)\d{2}\b[^（）\n]{0,240}）)/g;
+  const sourceOutsideCitations = source.replace(citationSpan, " ");
+  const outputOutsideCitations = output.replace(citationSpan, " ");
+  const citationYears = new Set<string>();
+  for (const match of source.matchAll(citationSpan)) {
+    for (const year of match[0].match(/\b(?:19|20)\d{2}\b/g) ?? []) citationYears.add(year);
+  }
+  return [...citationYears].some((year) =>
+    !new RegExp(`\\b${year}\\b`).test(sourceOutsideCitations)
+    && new RegExp(`(?:^|[^0-9])${year}年`).test(outputOutsideCitations),
+  );
 }
 
 // Alternate models can leave an ordinary multi-word English phrase untouched
@@ -570,13 +650,46 @@ export function hasDuplicatedYearCitationSpan(source: string, output: string): b
 function hasUntranslatedCascadePhrase(source: string, output: string): boolean {
   if (!KANA.test(output)) return false;
   const sourceWords = source.match(/\b[a-z][a-z'-]{7,}\b/g) ?? [];
-  const outputWords = (output.match(/\b[a-z][a-z'-]*\b/gi) ?? []).map((word) => word.toLowerCase());
+  const outputRawWords = output.match(/\b[a-z][a-z'-]*\b/gi) ?? [];
+  const outputWords = outputRawWords.map((word) => word.toLowerCase());
   for (let index = 0; index < sourceWords.length - 1; index += 1) {
     const first = sourceWords[index].toLowerCase();
     const second = sourceWords[index + 1].toLowerCase();
-    if (outputWords.some((word, i) => word === first && outputWords[i + 1] === second)) return true;
+    for (let outputIndex = 0; outputIndex < outputWords.length - 1; outputIndex += 1) {
+      if (outputWords[outputIndex] !== first || outputWords[outputIndex + 1] !== second) continue;
+      // Title-cased multiword names (often a retained application or method
+      // label) are intentional technical identifiers, not untranslated prose.
+      // Ordinary English left in a Japanese sentence remains lowercase and is
+      // still rejected.
+      if (/^[A-Z][A-Za-z'-]*$/.test(outputRawWords[outputIndex])
+        && /^[A-Z][A-Za-z'-]*$/.test(outputRawWords[outputIndex + 1])) continue;
+      return true;
+    }
   }
   return false;
+}
+
+// A repeated ordinary source term should be translated consistently. If a
+// lowercase term occurs at least three times in the source but only some of
+// its occurrences remain in otherwise Japanese output, the model likely
+// mixed a translated equivalent with an untranslated lexical residue. This
+// is cascade-only and ignores citations, acronyms, and title-case identifiers.
+function hasInconsistentRepeatedLexeme(source: string, output: string): boolean {
+  if (!KANA.test(output)) return false;
+  const citationSpan = /(?:\([^()\n]{0,240}\b(?:19|20)\d{2}\b[^()\n]{0,240}\)|（[^（）\n]{0,240}\b(?:19|20)\d{2}\b[^（）\n]{0,240}）)/g;
+  const namedTechnicalSpan = /\b(?:(?:[A-Z][A-Za-z'-]+|of|in|the|and)\s+){2,}[A-Z][A-Za-z'-]+\s*\([A-Z]{2,}\)/g;
+  const mask = (value: string) => value.replace(citationSpan, " ").replace(namedTechnicalSpan, " ");
+  const sourceBody = mask(source);
+  const outputBody = mask(output);
+  const sourceWords = sourceBody.match(/\b[a-z][a-z'-]{3,}\b/gi) ?? [];
+  const outputWords = outputBody.match(/(?<![A-Za-z])[a-z][a-z'-]{3,}(?![A-Za-z])/gi) ?? [];
+  const counts = new Map<string, number>();
+  for (const word of sourceWords) counts.set(word, (counts.get(word) ?? 0) + 1);
+  return [...counts].some(([word, count]) => {
+    if (count < 3 || CASCADE_LATIN_STOPWORDS.has(word)) return false;
+    const retained = outputWords.filter((candidate) => candidate.toLowerCase() === word).length;
+    return retained > 0 && retained < count;
+  });
 }
 
 // Structural labels are facts about document navigation. Reject a cascade
@@ -869,6 +982,14 @@ export function extractScientificInvariants(source: string): ScientificInvariant
       // do not emit the separator tail (`000`) as an independent invariant.
       if (kind === "number" && start > 0 && invariantSource[start - 1] === "," &&
           start > 1 && /\d/.test(invariantSource[start - 2])) continue;
+      // A superscript footnote marker can be flattened by PDF extraction into
+      // `3 (Jones 2019; ...)`. It is document structure, not a numeric claim.
+      // Exclude only this unambiguous citation-adjacent shape; participant
+      // counts such as `n = 3` and ordinary measurements remain protected.
+      if (kind === "number" && /^\s*\(\s*[A-Z][A-Za-z'’-]*(?:\s+(?:and|et\s+al\.?|[A-Z][A-Za-z'’-]*))*\s*,?\s*(?:19|20)\d{2}\b/.test(invariantSource.slice(end, end + 180))) {
+        const before = invariantSource.slice(Math.max(0, start - 12), start);
+        if (!/\b(?:n|N)\s*=\s*$/u.test(before)) continue;
+      }
       // Digits attached to a mixed-case identifier are usually a model
       // suffix (AirPodsPro2, ATTiny85), not a superscript citation.  Treating
       // them as citations makes a faithful localized identifier look like an
@@ -1457,6 +1578,7 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   const partialSourceFallback = detectPartialSourceFallback(source, out);
   if (partialSourceFallback.partial) reasons.push(partialSourceFallback.reason ?? "partial source fallback");
   if (hasOrphanedInvariantSentence(out, source)) reasons.push("orphaned source invariant sentence");
+  if (hasCitationYearScopeDrift(source, out)) reasons.push("citation year scope drift");
   if (hasTrailingLatinFragment(out, source)) reasons.push("trailing Latin fragment");
 
   const hasKana = KANA.test(out);
@@ -1666,6 +1788,7 @@ export function isPlausibleJaTranslation(output: string, source: string): boolea
     && !quality.reasons.includes("malformed citation structure")
     && !quality.reasons.includes("untranslated source phrase")
     && !quality.reasons.includes("orphaned source invariant sentence")
+    && !quality.reasons.includes("citation year scope drift")
     && !quality.reasons.includes("quoted example content missing")
     && !quality.reasons.includes("unsupported method predicate introduced")
     // Section labels are structural facts. If a block begins with a numbered
@@ -1690,7 +1813,8 @@ export function isCascadeQualityAcceptable(output: string, source: string): bool
 export function getCascadeQualityReasons(output: string, source: string): string[] {
   if (!isPlausibleJaTranslation(output, source)) return ["plausibility gate failed"];
   const cascadeReasons: string[] = [];
-  if (hasUntranslatedCascadeLexeme(source, output)) cascadeReasons.push("untranslated cascade lexeme");
+  if (hasInconsistentRepeatedLexeme(source, output)) cascadeReasons.push("inconsistent repeated lexeme");
+  else if (hasUntranslatedCascadeLexeme(source, output)) cascadeReasons.push("untranslated cascade lexeme");
   else if (hasUntranslatedCascadePhrase(source, output)) cascadeReasons.push("untranslated cascade phrase");
   if (hasDuplicatedYearCitationSpan(source, output)) cascadeReasons.push("duplicated year citation span");
   if (hasUnsupportedStructuralLabel(source, output)) cascadeReasons.push("unsupported structural label");
@@ -1899,6 +2023,20 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   if (t.includes("\uFFFD")) {
     return "抽出テキストに未復元文字が含まれています";
   }
+  // PDF text streams can reorder delimiters around table/set contents while
+  // leaving a terminal period, so the usual no-terminal guard is not enough.
+  // A closing brace before any open brace is unambiguous structural damage;
+  // reject it before translation rather than letting the model invent the
+  // missing item (for example `{“a”}, {“b”}, and { fragment`).
+  let braceDepth = 0;
+  for (const character of t) {
+    if (character === "{") braceDepth += 1;
+    else if (character === "}") {
+      if (braceDepth === 0) return "抽出時に集合記法の区切りが壊れている可能性があります";
+      braceDepth -= 1;
+    }
+  }
+  if (braceDepth !== 0) return "抽出時に集合記法の区切りが壊れている可能性があります";
   // Native PDF extraction often places a superscript/numeric citation after
   // the sentence terminator (`... non-unique.25` or `... result. [25]`).
   // Treat that citation suffix as terminal punctuation; otherwise a complete
