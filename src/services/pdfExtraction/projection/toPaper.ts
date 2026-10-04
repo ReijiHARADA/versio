@@ -671,6 +671,34 @@ export function projectCanonicalToPaper(input: {
   for (let index = 0; index + 1 < rowAggregatedBlocks.length; index++) {
     const current = rowAggregatedBlocks[index];
     const next = rowAggregatedBlocks[index + 1];
+
+    // A complete lead-in sentence can intentionally end in a colon immediately
+    // before a separately projected numbered/bulleted list.  The generic
+    // incomplete-source guard treats every terminal colon as a damaged PDF
+    // fragment, which unnecessarily sends these ordinary introductions to
+    // source fallback.  Keep the list items separate, but allow the lead-in to
+    // translate as its own grammatical unit when geometry and list evidence
+    // agree.  This is document-structure evidence, not a paper-specific rule.
+    const currentText = (current.original ?? "").trim();
+    const listSuccessor = rowAggregatedBlocks.slice(index + 1, index + 6).find((candidate) =>
+      candidate.type === "paragraph" && candidate.metadata.listRole === "item"
+    );
+    const followsListIntro = current.type === "paragraph" &&
+      (next.type === "paragraph" || listSuccessor?.type === "paragraph") &&
+      current.metadata.translationInputWarning?.includes("末尾") &&
+      /:\s*$/.test(currentText) &&
+      (next.metadata.listRole === "item" || listSuccessor?.metadata.listRole === "item") &&
+      current.pageEnd <= next.pageStart &&
+      (listSuccessor?.pageStart ?? next.pageStart) - current.pageEnd <= 1 &&
+      !current.metadata.flattenedListPart;
+    if (followsListIntro) {
+      rowAggregatedBlocks[index] = {
+        ...current,
+        translationStatus: "pending",
+        metadata: { ...current.metadata, translationInputWarning: undefined, listRole: "intro" },
+      };
+      continue;
+    }
     if (
       current.type !== "paragraph" ||
       next.type !== "paragraph" ||

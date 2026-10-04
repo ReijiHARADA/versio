@@ -13,7 +13,7 @@ import re
 
 # Bump this whenever source-fact protection rules change. It participates in
 # the server translation/cache identity so old accepts are not reused silently.
-SOURCE_PROTECTION_VERSION = "source-protect-v27-space-footnote-citation"
+SOURCE_PROTECTION_VERSION = "source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore"
 QUOTED_EXAMPLE_PROTECTION_VERSION = "quoted-example-v1"
 
 # Repeated title-case technical names are factual identifiers even when they
@@ -201,6 +201,19 @@ AUTHOR_YEAR_CITATION_RE = re.compile(
     r"(?=[^()]{0,360}\b[A-Z][A-Za-z'’-]+)"
     r"[^()]*"
     r"\)"
+)
+
+# Some publisher styles place author-year references in square brackets,
+# for example ``[Rubin 1974]`` or ``[Shadish and Cook 2009]``.  Numeric
+# bracket citations are handled separately by ``CITATION_RE``; this pattern
+# deliberately requires both an author-like capitalized token and a four-digit
+# year so ordinary bracketed prose and section labels remain translatable.
+BRACKET_AUTHOR_YEAR_CITATION_RE = re.compile(
+    r"\["
+    r"(?=[^\[\]]{0,180}\b(?:18|19|20)\d{2}[a-z]?\b)"
+    r"(?=[^\[\]]*\b[A-Z][A-Za-z'’-]+\b)"
+    r"[^\[\]]+"
+    r"\]"
 )
 
 # Narrative author-year citations (including possessives) appear outside
@@ -418,6 +431,7 @@ def _protected_matches(text: str) -> list[re.Match[str]]:
         + _bare_reference_matches(text)
         + list(NARRATIVE_AUTHOR_YEAR_CITATION_RE.finditer(text))
         + list(AUTHOR_ET_AL_SUPERSCRIPT_RE.finditer(text))
+        + list(BRACKET_AUTHOR_YEAR_CITATION_RE.finditer(text))
         + list(SUPPLEMENTARY_CITATION_GROUP_RE.finditer(text))
         + list(SUPPLEMENTARY_APPENDIX_RE.finditer(text))
         + list(FIGURE_TABLE_CROSS_REFERENCE_RE.finditer(text))
@@ -833,6 +847,16 @@ def restore_citations(
                 terminal = re.search(r"([。！？.!?])\s*$", out)
                 assert terminal is not None
                 out = out[:terminal.start()] + citation.strip() + terminal.group(1) + out[terminal.end():]
+            elif citation.lstrip().startswith(("(", "[")):
+                # Author/year and parenthetical references are source facts,
+                # not translatable prose.  A decoder can drop their
+                # placeholder when the translated sentence has no terminal
+                # punctuation (common for PDF blocks ending at a quote or
+                # layout boundary).  Restore the exact source span at the
+                # unit tail rather than rejecting an otherwise usable
+                # translation.  This is limited to reference-shaped spans;
+                # measurements and identifiers continue to fail closed.
+                out = out.rstrip() + " " + citation.strip()
             else:
                 missing.append(citation)
     leftover = (

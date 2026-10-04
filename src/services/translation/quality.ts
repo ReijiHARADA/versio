@@ -2,6 +2,21 @@
  * Guardrails for what to send to MADLAD and what to keep as a translation.
  */
 
+import {
+  explainDegenerateTranslation,
+  hasAbnormalPhraseRepetition,
+  isDegenerateTranslation,
+  restoreUtf8ByteEscapes,
+  toHalfwidthAscii,
+} from "./quality/degeneration";
+
+export {
+  explainDegenerateTranslation,
+  isDegenerateTranslation,
+  restoreUtf8ByteEscapes,
+  toHalfwidthAscii,
+} from "./quality/degeneration";
+
 const THAI = /[\u0E00-\u0E7F]/;
 const KANA = /[\u3040-\u30FF]/;
 const KANJI = /[\u4E00-\u9FFF]/;
@@ -67,6 +82,10 @@ const JA_BOTH = /(?:両方|双方|いずれも|ともに|同時に|両者|併せ
 // comparative `より` changes that relation into a comparison.
 const SOURCE_OVER_IDENTIFIER_RELATION = /\b(?<agent>[A-Za-z][A-Za-z0-9-]*[A-Z][A-Za-z0-9-]*)\s+over\s+(?:the\s+)?(?:(?:right|left|upper|lower|anterior|posterior|dorsal|ventral)\s+)?(?<target>[A-Z][A-Za-z0-9-]*)\b/g;
 const SOURCE_DIVERSE_PARTICIPANT_FIELDS = /\b(?:participants?|subjects?|respondents?)\b[^.!?]{0,120}\b(?:from|drawn\s+from|recruited\s+from|across)\s+(?:a\s+range\s+of\s+|various\s+|multiple\s+|different\s+|several\s+)(?:academic\s+)?(?:fields?(?:\s+of\s+study)?|disciplines?|departments?|faculties|majors?)\b/i;
+const SOURCE_PARTICIPANT_ROLE = /\b(?:participants?|subjects?|respondents?)\b/i;
+const SOURCE_RESEARCHER_ROLE = /\b(?:researchers?|investigators?|scientists?|academics?)\b/i;
+const JA_PARTICIPANT_ROLE = /(?:参加者|被験者|回答者|対象者|研究協力者)/;
+const JA_RESEARCHER_ROLE = /(?:研究者|研究員|調査者|科学者|学者)/;
 const SOURCE_EXPLICIT_PER_FIELD_COUNT = /\b(?:each|every|per)\s+(?:academic\s+)?(?:field|discipline|department|faculty|major)\b/i;
 const JA_FIELD_COUNT_DISPLACEMENT = /(?:各|それぞれの?)(?:学科|分野|学部|領域|専攻|部門)\s*(?:から|ごとに|あたり)?[^。！？\n]{0,12}[0-9０-９]+\s*(?:名|人)|[0-9０-９]+\s*名の(?:研究|学問)?(?:学科|分野|学部|領域|専攻|部門)/;
 const SOURCE_COLLECTIVE_GROUP_COMPARISON = /\bnone\s+of\s+the\s+(?:study\s+)?groups?\b[^.!?]{0,160}\b(?:differ(?:ed|s)?|different|difference|significant|significantly)\b/i;
@@ -76,18 +95,23 @@ const JA_BINARY_GROUP_COMPARISON = /(?:両群|二群|2群)\s*(?:間|間で|間�
 // and `while` are intentionally excluded because Japanese may encode them
 // through ordinary clause ordering without a dedicated connective.
 const SOURCE_STRONG_CONTRAST = /\b(?:unlike|despite|in spite of)\b/i;
-const JA_STRONG_CONTRAST = /(?:異なり|異なる|対照的|にもかかわらず|にも拘らず|ものの|一方で|反面)/;
+const JA_STRONG_CONTRAST = /(?:異なり|異なる|対照的|にもかかわらず|にも拘らず|ものの|一方で|反面|に対し(?:て)?)/;
 const SOURCE_EXCLUSIVITY = /\b(?:only|sole|solely|unique|uniquely|instead\s+of)\b/i;
 const SOURCE_REPLACEMENT = /\binstead\s+of\b/i;
 // Japanese often renders exclusive/alternative English clauses with an
 // explicit replacement construction ("instead of" -> "代わりに" / "ではなく")
 // rather than a literal しか/のみ marker. Keep these as relation evidence so
 // a faithful translation is not rejected solely for choosing a natural form.
-const JA_EXCLUSIVITY = /(?:しか|のみ|だけ|唯一|ただ一つ|単独で|専ら|もっぱら|代わりに|替わりに|(?:の)?ではなく|意味が(?:ない|ありません)|意義が(?:ない|ありません)|有意義ではない|価値がない)/;
+const JA_EXCLUSIVITY = /(?:しか|のみ|だけ|唯一|ただ一つ|単独で|専ら|もっぱら|わずか|代わりに|替わりに|(?:の)?ではなく|異なり|異なる|対照的に|一意(?:に)?|固有|ユニーク|あれば十分|で十分|必要(?:なの)?は[^。！？\n]{0,24}(?:だけ|のみ)|意味が(?:ない|ありません)|意義が(?:ない|ありません)|有意義ではない|価値がない)/;
 const JA_INSTEAD_OF = /より(?:も)?/;
 const SOURCE_CONDITION = /\b(?:if|unless|provided that|as long as|depending on|whether)\b/i;
 const SOURCE_WHETHER = /\bwhether\b/i;
 const SOURCE_COMPARATIVE_LIKELIHOOD = /\b(?:more|less)\s+likely\b/i;
+// Paired choice constructions encode two distinct decision questions. A
+// fluent output can collapse them while preserving every number and citation.
+const SOURCE_PAIRED_CHOICE_CONTRAST = /\bwhich-to-[a-z-]+\b[\s\S]{0,180}\bwhether-to-[a-z-]+\b|\bwhether-to-[a-z-]+\b[\s\S]{0,180}\bwhich-to-[a-z-]+\b/i;
+const JA_WHETHER_CHOICE = /(?:かどうか|べきか|するか否か)/;
+const JA_WHICH_CHOICE = /(?:どれ|どの|いずれの|何を|どちらを|選択する)/;
 // Preserve positive equivalence claims such as “performs comparably to”. A
 // fluent decoder can keep the equivalence vocabulary while negating the
 // predicate (e.g. “the comparable material does not exist”), which changes a
@@ -165,19 +189,6 @@ function hasMalformedCitationStructure(source: string, output: string): boolean 
   if (!sourceHasNumericCitation) return false;
   return /\[\[\s*\d|\[\s*\]/.test(output);
 }
-
-/** Restore valid UTF-8 byte tokens if an older bundled server emitted them. */
-export function restoreUtf8ByteEscapes(text: string): string {
-  return text.replace(/(?:<0x[0-9a-f]{2}>)+/gi, (run) => {
-    const bytes = [...run.matchAll(/<0x([0-9a-f]{2})>/gi)].map((m) => Number.parseInt(m[1], 16));
-    try {
-      return new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(bytes));
-    } catch {
-      return run;
-    }
-  });
-}
-
 
 export type PartialSourceFallbackDetection = { partial: boolean; reason?: string };
 
@@ -273,6 +284,13 @@ export function diagnoseIncompleteSource(source: string): { incomplete: boolean;
   if (text.length >= 180 && !/[.!?。！？]$/.test(text) && !looksLikeClosedQuote && !looksLikeList) {
     return { incomplete: true, reason: "long prose block has no terminal sentence mark" };
   }
+  // Shorter PDF blocks can still end at a hard page/column boundary. These
+  // discourse tails are high-precision continuation cues when no terminal
+  // punctuation is present; keep the threshold high enough to avoid rejecting
+  // legitimate headings or list labels.
+  if (text.length >= 70 && !/[.!?。！？]$/.test(text) && /(?:both\s+(?:studies|experiments|groups)|and|or|to|of|which|while|because|such\s+as)$/i.test(text)) {
+    return { incomplete: true, reason: "source ends with a continuation cue" };
+  }
   return { incomplete: false };
 }
 
@@ -341,52 +359,6 @@ function hasUntranslatedMixedScriptLexeme(source: string, output: string): boole
   });
 }
 
-/**
- * Greedy decoding occasionally repeats a fluent Japanese phrase many times.
- * Character repetition misses this failure because every character is valid.
- * Only reject a repeated phrase when it occupies a material part of the
- * output, so ordinary repeated terminology remains valid.
- */
-function hasAbnormalPhraseRepetition(text: string): boolean {
-  const compact = text.replace(/[^\p{L}\p{N}]/gu, "");
-  if (compact.length < 36) return false;
-  // Parallel scientific clauses often repeat a short predicate around
-  // different measurements (for example, two RSSI values). Preserve that
-  // legitimate structure when the source itself has comparison language and
-  // multiple numeric facts; the repetition detector is for decoder loops,
-  // not grammatical parallelism.
-  const counts = new Map<string, number>();
-  // Five Japanese characters are enough to distinguish a repeated proposition
-  // such as 「実験の結果」, while the density threshold avoids rejecting one
-  // recurring technical noun in an otherwise independent translation.
-  for (let index = 0; index <= compact.length - 5; index += 1) {
-    const phrase = compact.slice(index, index + 5);
-    counts.set(phrase, (counts.get(phrase) ?? 0) + 1);
-  }
-  return [...counts.entries()].some(([phrase, count]) =>
-    count >= 3
-    && phrase.length * count / compact.length >= 0.16
-    // Repeated katakana modifiers in comma-separated inventories are list
-    // structure, not decoder looping.
-    && !(/^[\u30a0-\u30ff]+$/.test(phrase) && (text.match(/[,、]/g) ?? []).length >= 2)
-  );
-}
-
-function hasFragmentedJapaneseSpacing(text: string): boolean {
-  const spacedJapaneseTokens = text.match(/(?:^|\s)[\u3040-\u30ff\u4e00-\u9fff]{1,2}(?=\s|$)/g) ?? [];
-  if (spacedJapaneseTokens.length < 14) return false;
-  const japaneseChars = (text.match(/[\u3040-\u30ff\u4e00-\u9fff]/g) ?? []).length;
-  if (japaneseChars < 40) return false;
-  const compactLength = text.replace(/\s+/g, "").length;
-  const whitespaceCount = (text.match(/\s/g) ?? []).length;
-  // Normal Japanese prose may include spaces around citations or Latin terms,
-  // but it should not look like a stream of one-character SentencePiece
-  // fragments. This catches alternate-model decoder failures without naming
-  // any hallucinated word.
-  return spacedJapaneseTokens.length / Math.max(japaneseChars, 1) > 0.18
-    && whitespaceCount / Math.max(compactLength, 1) > 0.12;
-}
-
 function hasOrphanedInvariantSentence(output: string, source: string): boolean {
   if (source.trim().length < 120) return false;
   const sentences = output
@@ -394,9 +366,15 @@ function hasOrphanedInvariantSentence(output: string, source: string): boolean {
     .map((sentence) => sentence.trim())
     .filter(Boolean);
   if (sentences.length < 2) return false;
-  return sentences.some((sentence) => {
+  const sourceStartsQuoted = /^["“‘]/u.test(source.trim());
+  return sentences.some((sentence, sentenceIndex) => {
     const compact = sentence.replace(/\s+/g, "");
     if (compact.length < 4 || compact.length > 80) return false;
+    // Dedications and epigraphs often begin with a short quoted sentence
+    // followed by ordinary prose and a trailing citation. That first sentence
+    // has no scientific invariant by design; do not mistake it for an
+    // orphaned fact merely because a later citation is preserved separately.
+    if (sourceStartsQuoted && sentenceIndex === 0 && compact.length <= 20) return false;
     // A citation may be emitted after the preceding Japanese sentence as its
     // own punctuation-delimited span (`...探求した。[5,6]。`).  The fact is
     // still preserved; treat this as a layout defect rather than an orphaned
@@ -720,11 +698,24 @@ function hasCascadeSentenceCompression(source: string, output: string): boolean 
 }
 
 function hasUntranslatedSourceLabel(source: string, output: string): boolean {
-  const sourceWords = source.match(/\b[A-Za-z]{8,}\b/g) ?? [];
+  // Repeated author names and venue/proper-noun mentions are expected to
+  // remain in Latin script. Remove citation groups before looking for a
+  // duplicated extraction label, then skip capitalized terms that have the
+  // shape of a proper noun rather than a copied UI label.
+  const citationSpan = /(?:\([^()\n]{0,240}\b(?:19|20)\d{2}\b[^()\n]{0,240}\)|\[[^\]\n]{0,240}\b(?:19|20)\d{2}\b[^\]\n]{0,240}\])/g;
+  const sourceWords = source.replace(citationSpan, " ").match(/\b[A-Za-z]{8,}\b/g) ?? [];
+  const properNounWords = new Set(sourceWords.filter((word) => /^[A-Z]/.test(word)).map((word) => word.toLowerCase()));
   const counts = new Map<string, number>();
   for (const word of sourceWords) counts.set(word.toLowerCase(), (counts.get(word.toLowerCase()) ?? 0) + 1);
   for (const [word, count] of counts) {
     if (count < 2) continue;
+    // A duplicated capitalized label at the beginning of a block is a common
+    // extraction artifact (`Procedures Interventions Interventions ...`).
+    // Treat its position as stronger evidence than capitalization; genuine
+    // proper nouns are handled by the later frequency/compound safeguards.
+    const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const repeatedAtBlockStart = new RegExp(`^(?:\\s*\\S+\\s+){0,3}${escaped}\\s+${escaped}\\b`, "i").test(source);
+    if (properNounWords.has(word) && !repeatedAtBlockStart) continue;
     // A retained `SI Appendix` is an intentional document cross-reference,
     // not an untranslated extraction label. Keep the complete label atomic.
     if (word === "appendix" && /\bSI\s+Appendix\b/i.test(source) && /\bSI\s+Appendix\b/i.test(output)) continue;
@@ -734,7 +725,6 @@ function hasUntranslatedSourceLabel(source: string, output: string): boolean {
     // normally adjacent at the start of a unit; do not reject a high-frequency
     // domain term merely because the model preserved its Latin spelling.
     if (count >= 3) continue;
-    const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const adjacent = new RegExp(`(?:[\\u3040-\\u30ff\\u3400-\\u9fff]${escaped}|${escaped}[\\u3040-\\u30ff\\u3400-\\u9fff])`, "i");
     if (adjacent.test(output)) return true;
     const repeatedWithJapanese = new RegExp(`${escaped}[\\s　]*(?:[\\u3040-\\u30ff\\u3400-\\u9fff]{1,6}[\\s　]*)${escaped}`, "i");
@@ -866,6 +856,25 @@ export function hasAcronymExpansionDrift(source: string, output: string): boolea
 }
 
 /**
+ * Audit signal for an acronym that gains an unsupported Japanese expansion.
+ * Only flags output that adds Japanese text in parentheses immediately after
+ * an acronym whose English source has no explicit expansion. It is deliberately
+ * separate from the main gate until its false-positive rate is measured.
+ */
+export function hasUnsupportedJapaneseAcronymExpansion(source: string, output: string): boolean {
+  const acronyms = [...new Set(source.match(/\b[A-Z][A-Z0-9-]{2,7}\b/g) ?? [])];
+  for (const acronym of acronyms) {
+    const escaped = acronym.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const sourceHasExpansion = new RegExp(`(?:[A-Za-z][A-Za-z -]{2,80})\\(\\s*${escaped}\\s*\\)`, "i").test(source);
+    if (sourceHasExpansion) continue;
+    const outputExpansion = new RegExp(`\\b${escaped}\\s*[（(]([^）)]{2,80})[）)]`, "u");
+    const match = outputExpansion.exec(output);
+    if (match && /[ぁ-ゖァ-ヺ一-龯々]/u.test(match[1])) return true;
+  }
+  return false;
+}
+
+/**
  * Detect high-risk loss of semantic qualifiers in an explicitly expanded
  * scientific acronym. This is deliberately limited to directional/anatomical
  * qualifiers that have stable Japanese realizations; it is evidence for the
@@ -947,7 +956,7 @@ const SCIENTIFIC_PATTERNS: Array<[ScientificInvariant["kind"], RegExp]> = [
   // Electrical/biomedical units are frequently attached to the value in
   // Japanese output (for example `1 pF` -> `1pF`). Treat the complete value
   // as one invariant so the unit is not double-counted as a missing acronym.
-  ["measurement", /(?:\b|(?<=[x×]))\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|hz|khz|mhz|uw|mw|w|kg|mg|pf|nf|uf|μf|mf|mah|db|%|°[cf]|[cf])\b/gi],
+  ["measurement", /(?:\b|(?<=[x×]))\d+(?:\.\d+)?\s*(?:mm|cm|m|km|ms|s|hz|khz|mhz|uw|mw|w|kg|mg|pf|nf|uf|μf|mf|mah|db|%|°[cf]|[cf])(?![A-Za-z])/gi],
   // Native PDF text can split an SI prefix from its unit (`1M Hz`). Keep it
   // equivalent to the compact form (`1MHz`) during invariant comparison.
   ["measurement", /\b\d+(?:\.\d+)?\s*[kKmMgG]\s+Hz\b/gi],
@@ -1005,6 +1014,14 @@ export function extractScientificInvariants(source: string): ScientificInvariant
       // Do not also record each component number inside a protected statistic.
       if ((kind === "number" || kind === "year" || kind === "acronym") && covered.some(([left, right]) => start >= left && end <= right)) continue;
       if (kind === "acronym" && NON_TECHNICAL_UPPERCASE_WORDS.has(match[0].toUpperCase())) continue;
+      // PDF text often flattens a footnote marker onto a Roman-numeral name
+      // suffix (`Hal Daumé III5`). Treat the trailing digit as a footnote
+      // marker when a personal-name-shaped token precedes it; it is document
+      // chrome rather than a model/technical identifier that must be copied.
+      if (kind === "acronym" && /^[IVXLCDM]{2,}\d{1,2}$/i.test(match[0])) {
+        const before = invariantSource.slice(Math.max(0, start - 48), start);
+        if (/\b[A-ZÀ-ÖØ-Ý][\p{L}\p{M}'’-]{2,}\s+$/u.test(before)) continue;
+      }
       found.push({ kind, value: match[0] });
       if (kind !== "number") covered.push([start, end]);
     }
@@ -1031,6 +1048,14 @@ function normalizeInvariant(value: string): string {
     // exact citation payload requirement below.
     .replace(/[［］【】]/g, (bracket) => ({ "［": "[", "］": "]", "【": "[", "】": "]" })[bracket] ?? bracket)
     .replace(/[−–—]/g, "-")
+    // Decimal trailing zeros are representational formatting, not a changed
+    // scientific value (`0.60` and `0.6` carry the same quantity). Canonicalize
+    // only decimal tokens; integers, years, identifiers and ranges remain
+    // exact so this cannot hide a changed count or citation label.
+    .replace(/\b(\d+\.\d+)\b/g, (token) => {
+      const numeric = Number(token);
+      return Number.isFinite(numeric) ? String(numeric) : token;
+    })
     // Thousands separators are formatting, not a changed scientific value
     // (`6,336` and `6336` must compare equal after translation).
     .replace(/(?<=\d),(?=\d{3}\b)/g, "")
@@ -1157,6 +1182,20 @@ function outputContainsInvariant(output: string, invariant: ScientificInvariant,
   }
   const normalizedOutput = normalizeInvariant(output);
   const value = normalizeInvariant(invariant.value);
+  // SI-style magnitude prefixes are often localized in academic Japanese
+  // (`3 M word tokens` → `300万語トークン`). Accept only the exact decimal
+  // conversion for a standalone M prefix; ordinary model identifiers and
+  // unrelated capital letters remain strict.
+  if (invariant.kind === "measurement") {
+    const magnitude = invariant.value.match(/^(\d+(?:\.\d+)?)\s*M$/i);
+    if (magnitude) {
+      const converted = Number(magnitude[1]) * 1_000_000;
+      if (Number.isInteger(converted)) {
+        const japaneseMan = String(converted / 10_000).replace(/\.0+$/, "");
+        if (new RegExp(`${japaneseMan}万`).test(output.normalize("NFKC"))) return true;
+      }
+    }
+  }
   if (invariant.kind === "structure") {
     const sourceNumbers = invariant.value.match(/\d+(?:\.\d+)*/g) ?? [];
     if (sourceNumbers.length === 0) return false;
@@ -1240,6 +1279,12 @@ function outputContainsInvariant(output: string, invariant: ScientificInvariant,
       dc: /直流/u,
       rf: /無線周波数|高周波/u,
       emg: /筋電|筋電図/u,
+      // Widely used academic abbreviations are often rendered as their
+      // unambiguous Japanese expansion. Keep this limited to terms whose
+      // expansion is stable; arbitrary product/model identifiers must still
+      // remain exact.
+      usa: /米国|アメリカ合衆国|米/u,
+      tv: /テレビ|テレビ放送|TV/u,
     };
     const expansion = commonScientificExpansions[invariant.value.toLowerCase()];
     if (expansion && expansion.test(output)) return true;
@@ -1338,13 +1383,19 @@ function invariantQuality(source: string, output: string): { score: number; reas
       const value = item.value;
       const isLeadingLowerBrand = /^[a-z][A-Za-z0-9]*$/.test(value) && /[A-Z]/.test(value);
       const isShortAllCaps = /^[A-Z]{2,3}$/.test(value) && value !== "SD";
+      const acronymIndex = source.indexOf(value);
+      const acronymContext = acronymIndex >= 0
+        ? source.slice(Math.max(0, acronymIndex - 72), Math.min(source.length, acronymIndex + value.length + 96))
+        : "";
+      const isTechnicalContextualAcronym = isShortAllCaps
+        && /\b(?:model|method|metric|measure|learning|algorithm|network|task|condition|experiment|analysis|score|regression|classification|reinforcement|prediction)\b/i.test(acronymContext);
       // Short all-caps tokens are usually harmless venue/proper-name
       // omissions, but treatment-arm compounds such as `RT+CT` carry an
       // experimental condition. Treat those identifiers as critical so a
       // malformed restored token (`RTz+CTz`) cannot be accepted as fluent
       // Japanese.
       const isExperimentalCompound = new RegExp(`\\b${value}\\s*[+/&]\\s*[A-Z]{2,4}\\b|\\b[A-Z]{2,4}\\s*[+/&]\\s*${value}\\b`).test(source);
-      if (isExperimentalCompound) return true;
+      if (isExperimentalCompound || isTechnicalContextualAcronym) return true;
       if (isLeadingLowerBrand || isShortAllCaps) return false;
       return true;
     }
@@ -1372,6 +1423,17 @@ function invariantQuality(source: string, output: string): { score: number; reas
  */
 function semanticScopeRiskReasons(source: string, output: string): string[] {
   const reasons: string[] = [];
+  // A common fluent drift changes study participants into researchers. Keep
+  // this as a role-preservation invariant, while exempting sources that
+  // explicitly describe the participants as researchers themselves.
+  const sourceSentences = source.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const outputSentences = output.split(/(?<=[。！？])\s*/).filter(Boolean);
+  const roleShifted = sourceSentences.some((sourceSentence, index) => {
+    if (!SOURCE_PARTICIPANT_ROLE.test(sourceSentence) || SOURCE_RESEARCHER_ROLE.test(sourceSentence)) return false;
+    const candidate = outputSentences[index] ?? output;
+    return JA_RESEARCHER_ROLE.test(candidate) && !JA_PARTICIPANT_ROLE.test(candidate);
+  });
+  if (roleShifted) reasons.push("participant role shifted to researcher");
   if (
     SOURCE_DIVERSE_PARTICIPANT_FIELDS.test(source)
     && !SOURCE_EXPLICIT_PER_FIELD_COUNT.test(source)
@@ -1417,8 +1479,11 @@ function discourseRelationRiskReasons(source: string, output: string): string[] 
   if (SOURCE_ALTERNATIVE.test(source) && !JA_ALTERNATIVE.test(output)) {
     reasons.push("alternative relation missing");
   }
-  if (SOURCE_COMPARATIVE_LIKELIHOOD.test(source) && !/(?:可能性(?:が|の)高|可能性(?:が|の)低|よりも可能性|尤度|に比べ|と比べ|よりも)/.test(output) && !JA_COMPARATIVE_CHOICE.test(output)) {
+  if (SOURCE_COMPARATIVE_LIKELIHOOD.test(source) && !/(?:可能性(?:が|の)高|可能性(?:が|の)低|よりも可能性|確率(?:が|の)高|確率(?:が|の)低|尤度|に比べ|と比べ|よりも|感じやす|しやす|しにく|しづら)/.test(output) && !JA_COMPARATIVE_CHOICE.test(output)) {
     reasons.push("comparative likelihood relation missing");
+  }
+  if (SOURCE_PAIRED_CHOICE_CONTRAST.test(source) && !(JA_WHETHER_CHOICE.test(output) && JA_WHICH_CHOICE.test(output))) {
+    reasons.push("paired choice contrast collapsed");
   }
   if (SOURCE_POSITIVE_EQUIVALENCE.test(source) && JA_NEGATED_EQUIVALENCE.test(output)) {
     reasons.push("positive equivalence relation negated");
@@ -1443,9 +1508,11 @@ function claimStrengthRiskReasons(source: string, output: string): string[] {
   // method/experiment evidence while the Japanese output asserts a method
   // action. This is deliberately a category-level cue, not a paper- or
   // hallucinated-word blacklist.
-  const firstSourceSentence = source.match(/^[\s\S]*?[.!?](?=\s|$)/)?.[0] ?? source;
   const firstOutputSentence = output.match(/^[\s\S]*?[。！？](?=\s|$)/u)?.[0] ?? output;
-  const sourceHasMethodEvidence = /\b(?:experiment(?:al)?|simulat(?:e|ed|ion|ions)(?:\d+)?|prototype|implement(?:ed|ation)?|construct(?:ed|ion)?|measure(?:d|ment)?|test(?:ed|ing)?|survey(?:ed)?|randomi[sz]ed|trial|evaluate(?:d|ion)?)\b/i.test(firstSourceSentence);
+  const sourceHasMethodEvidence = /\b(?:experiments?|experimental|simulat(?:e|ed|ion|ions)(?:\d+)?|prototype|implement(?:ed|ation)?|construct(?:ed|ion)?|measure(?:d|ment)?|test(?:ed|ing)?|survey(?:ed)?|randomi[sz]ed|trial|evaluate(?:d|ion)?|annotat(?:e|ed|ion|ing))\b/i.test(source)
+    || /\b(?:study|studies|research)\b[^.!?]{0,48}\b(?:conducted|carried\s+out|undertook|performed)\b/i.test(source)
+    || /\b(?:user\s+)?stud(?:y|ies)\b[^.!?]{0,64}\b(?:showed|found|demonstrated|revealed)\b/i.test(source)
+    || /\b(?:we|this\s+(?:paper|study)|the\s+(?:paper|study|system|model))\b[^.!?]{0,48}\b(?:develop(?:ed|ment)?|train(?:ed|ing)?|captur(?:e|ed|ing)|collect(?:ed|ion)?|recruit(?:ed|ment)?|administer(?:ed|ing)?|annotat(?:e|ed|ion|ing)?)\b/i.test(source);
   const outputAssertsMethod = /(?:シミュレーション|実験|試験|プロトタイプ|実装|測定|計測|ランダム化|試行|評価).{0,12}(?:行(?:った|われた|う)|実施|実験した|測定した|評価した|構築した|作成した)/u.test(firstOutputSentence);
   if (!sourceHasMethodEvidence && outputAssertsMethod) {
     reasons.push("unsupported method predicate introduced");
@@ -1515,43 +1582,6 @@ export function looksLikeSubjectClassification(text: string): boolean {
   if (!/^[A-Z(]/.test(after)) return false;
   if (after.split(/\s+/).length > 24) return false;
   return true;
-}
-
-export function toHalfwidthAscii(text: string): string {
-  return text
-    .replace(/[\uFF01-\uFF5E]/g, (ch) =>
-      String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
-    )
-    .replace(/\u3000/g, " ")
-    .replace(/([,;:])(?=[\u3040-\u30FF\u4E00-\u9FFF])/g, "$1 ");
-}
-
-export function explainDegenerateTranslation(text: string): string[] {
-  const reasons: string[] = [];
-  const compact = text.replace(/\s+/g, "");
-  if (!compact) reasons.push("empty output");
-  if (BYTE_ESCAPE.test(text)) reasons.push("byte escape");
-  if (LEFTOVER_PLACEHOLDER.test(toHalfwidthAscii(text))) reasons.push("leftover placeholder");
-  if (/(.)\1{7,}/u.test(compact)) reasons.push("character repetition");
-  if (THAI.test(text) || HANGUL.test(text) || UNEXPECTED_FOREIGN_SCRIPT.test(text)) reasons.push("foreign script contamination");
-  if (!compact) return reasons;
-
-  const counts = new Map<string, number>();
-  for (const ch of compact) {
-    counts.set(ch, (counts.get(ch) || 0) + 1);
-  }
-  const max = Math.max(...counts.values());
-  if (compact.length >= 16 && max / compact.length > 0.4) reasons.push("character concentration");
-
-  const uniqueRatio = counts.size / compact.length;
-  if (compact.length >= 40 && uniqueRatio < 0.08) reasons.push("low character diversity");
-  if (hasAbnormalPhraseRepetition(text)) reasons.push("phrase repetition");
-  if (hasFragmentedJapaneseSpacing(text)) reasons.push("fragmented Japanese spacing");
-  return reasons;
-}
-
-export function isDegenerateTranslation(text: string): boolean {
-  return explainDegenerateTranslation(text).length > 0;
 }
 
 export function isGarbageTitle(text: string): boolean {
@@ -1664,8 +1694,10 @@ export function evaluateJaTranslation(output: string, source: string): Translati
     || reasons.includes("source disjunctive-both relation missing")
     || reasons.includes("alternative relation missing")
     || reasons.some((reason) => reason.startsWith("participant total may have shifted"))
+    || reasons.includes("participant role shifted to researcher")
     || reasons.includes("collective group comparison narrowed to two groups")
     || reasons.includes("positive equivalence relation negated")
+    || reasons.includes("paired choice contrast collapsed")
     || reasons.includes("evidence suggestion strengthened to assertion")
     || reasons.includes("assessment scope predicate missing")
     || reasons.includes("future specification requirement omitted")
@@ -1743,10 +1775,26 @@ export function isPlausibleJaTranslation(output: string, source: string): boolea
   const quality = evaluateJaTranslation(output, source);
   const missingNotice = quality.reasons.find((reason) => reason.startsWith("scientific invariants missing:"));
   const missingValues = missingNotice?.replace("scientific invariants missing:", "").split(",").map((value) => value.trim()).filter(Boolean) ?? [];
+  const technicalAcronymMissing = missingValues.length > 0
+    && missingValues.every((value) => /^[A-Z]{2,3}$/.test(value))
+    && /\b(?:model|method|metric|measure|learning|algorithm|network|task|condition|experiment|analysis|score|regression|classification|reinforcement|prediction|attention|credit|LSTM|RNN)\b/i.test(source);
+  if (technicalAcronymMissing && quality.reasons.every((reason) => reason.startsWith("scientific invariants missing:"))) {
+    return false;
+  }
   const nonCriticalAcronymOnly = missingValues.length > 0
     && missingValues.every((value) => /^[A-Z]{2,3}$/.test(value))
     && !missingValues.includes("SD")
-    && !missingValues.some((value) => new RegExp(`\\b${value}\\s*[+/&]\\s*[A-Z]{2,4}\\b|\\b[A-Z]{2,4}\\s*[+/&]\\s*${value}\\b`).test(source));
+    // A short acronym in a technical block is potentially a method/metric
+    // identifier even when the immediately adjacent phrase is translated.
+    // Keep the bypass conservative: any technical cue in the source makes a
+    // missing acronym safety-critical and eligible for retry/fallback.
+    && !/\b(?:model|method|metric|measure|learning|algorithm|network|task|condition|experiment|analysis|score|regression|classification|reinforcement|prediction|attention|credit|LSTM|RNN)\b/i.test(source)
+    && !missingValues.some((value) => {
+      const index = source.indexOf(value);
+      const context = index >= 0 ? source.slice(Math.max(0, index - 72), Math.min(source.length, index + value.length + 96)) : "";
+      return new RegExp(`\\b${value}\\s*[+/&]\\s*[A-Z]{2,4}\\b|\\b[A-Z]{2,4}\\s*[+/&]\\s*${value}\\b`).test(source)
+        || /\b(?:model|method|metric|measure|learning|algorithm|network|task|condition|experiment|analysis|score|regression|classification|reinforcement|prediction|attention|credit|LSTM|RNN)\b/i.test(context);
+    });
   if (nonCriticalAcronymOnly && quality.reasons.every((reason) => reason.startsWith("scientific invariants missing:"))) {
     return true;
   }
@@ -1772,6 +1820,7 @@ export function isPlausibleJaTranslation(output: string, source: string): boolea
     && !quality.reasons.includes("condition relation missing")
     && !quality.reasons.includes("exclusivity relation missing")
     && !quality.reasons.includes("comparative likelihood relation missing")
+    && !quality.reasons.includes("paired choice contrast collapsed")
     && !quality.reasons.includes("spatial target relation rendered as comparison")
     && !quality.reasons.includes("signal-to-noise comparison relation missing")
     && !quality.reasons.includes("source disjunctive-both relation missing")
@@ -2044,6 +2093,21 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   // translation.
   const terminalCitationSuffix = /[.!?。！？]\s*(?:\[\s*\d+(?:\s*[-–—,]\s*\d+)*\s*\]|\d{1,3})$/.test(t);
   const noTerminal = !/[.!?。！？]$/.test(t) && !terminalCitationSuffix;
+  // A native block ending in an ellipsis is commonly a truncated page/column
+  // continuation. Do not let the model turn the visible prefix into a fluent
+  // but invented completion. Short quoted examples may intentionally use an
+  // ellipsis, so apply this only to ordinary-length prose without a closing
+  // quote or list marker.
+  if (t.length >= 80 && /(?:\.\.\.|…)$/.test(t) && !/["”’']$/.test(t) && !/^(?:[-•‣▪∙*]|\d+[.)])\s+/.test(t)) {
+    return "抽出テキストが省略記号で終わっている可能性があります";
+  }
+  // Cross-reference labels at the physical block end are another common
+  // page/column cut (`... define notations in Section`). They are not a
+  // complete proposition and should be stitched with the following block
+  // before translation rather than completed by the model.
+  if (t.length >= 48 && /\b(?:in|see|as|from|to|of)\s+(?:Section|Chapter|Appendix)\s*$/i.test(t)) {
+    return "抽出テキストが文書内参照の途中で切れている可能性があります";
+  }
   // A physical block with an unclosed quote or an unmatched parenthesis is
   // incomplete.  Do this only without terminal punctuation: PDF text can
   // contain decorative punctuation in an otherwise complete sentence.

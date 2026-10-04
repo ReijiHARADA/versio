@@ -66,6 +66,18 @@ describe("OllamaTranslationEngine", () => {
     expect(secondUnitPrompt).not.toContain("(Smith, 2020)");
   });
 
+  it("instructs the alternate model not to invent acronym expansions", async () => {
+    const provider = providerReturning("HFEの原則を理解するための指針である。");
+    const engine = new OllamaTranslationEngine(primaryThatFails(), provider);
+    await engine.translate(
+      "The review supports understanding the principles of HFE in healthcare.",
+      "en",
+      "ja",
+    );
+    const prompts = (provider.complete as ReturnType<typeof vi.fn>).mock.calls.map(([prompt]) => String(prompt));
+    expect(prompts[0]).toContain("Do not expand an acronym unless the source itself provides that expansion");
+  });
+
   it("tries the next opt-in provider when the first candidate fails the shared gate", async () => {
     const rejected = providerReturning("先行研究は評価の precedent を確立した。");
     const accepted = providerReturning("参加者は制御された条件で結果を比較した。");
