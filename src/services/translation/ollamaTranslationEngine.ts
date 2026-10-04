@@ -75,8 +75,8 @@ export class OllamaTranslationEngine implements TranslationEngine {
       let lastError: unknown;
       for (const provider of this.providers) {
         const prompts = [
-          `Translate the following academic English into precise Japanese. Translate ordinary English words into Japanese; retain Latin text only for proper names, acronyms, citations, and necessary technical terms. Preserve every number, citation, acronym, statistical notation, negation, comparison, and causal relation. Do not replace a technical term with a different concept; when a domain term has no high-confidence Japanese equivalent, retain the original term in parentheses rather than guessing. Output only the Japanese translation.${statisticalLiteralInstruction(text)}${factLiteralInstruction(text)}${citationLiteralInstruction(text)}${comparisonLiteralInstruction(text)}`,
-          `Correction retry: translate every ordinary English word and do not leave mixed English-Japanese words. Recheck every claim, comparison, exclusivity condition, negation, number, citation, named method, causal relation, and sentence ending. Output only the Japanese translation.${statisticalLiteralInstruction(text)}${factLiteralInstruction(text)}${citationLiteralInstruction(text)}${comparisonLiteralInstruction(text)}`,
+          `Translate the following academic English into precise Japanese. Translate ordinary English words into Japanese; retain Latin text only for proper names, acronyms, citations, and necessary technical terms. Preserve every number, citation, acronym, statistical notation, negation, comparison, and causal relation. Do not replace a technical term with a different concept; when a domain term has no high-confidence Japanese equivalent, retain the original term in parentheses rather than guessing. Output only the Japanese translation.${repeatedTermInstruction(text)}${statisticalLiteralInstruction(text)}${factLiteralInstruction(text)}${citationLiteralInstruction(text)}${comparisonLiteralInstruction(text)}`,
+          `Correction retry: translate every ordinary English word and do not leave mixed English-Japanese words. Recheck every claim, comparison, exclusivity condition, negation, number, citation, named method, causal relation, and sentence ending. Output only the Japanese translation.${repeatedTermInstruction(text)}${statisticalLiteralInstruction(text)}${factLiteralInstruction(text)}${citationLiteralInstruction(text)}${comparisonLiteralInstruction(text)}`,
         ];
         for (const [attempt, instruction] of prompts.slice(0, this.maxAttempts).entries()) {
           try {
@@ -199,6 +199,20 @@ function readOllamaMaxAttempts(): number {
   const raw = typeof process !== "undefined" ? process.env.OLLAMA_MAX_ATTEMPTS : undefined;
   const value = raw ? Number(raw) : NaN;
   return Number.isInteger(value) && value > 0 ? Math.min(value, 2) : 2;
+}
+
+function repeatedTermInstruction(source: string): string {
+  const citationSpan = /(?:\([^()\n]{0,240}\b(?:19|20)\d{2}\b[^()\n]{0,240}\)|（[^（）\n]{0,240}\b(?:19|20)\d{2}\b[^（）\n]{0,240}）)/g;
+  const stopwords = new Set(["about", "after", "also", "among", "because", "before", "between", "could", "during", "every", "first", "from", "given", "have", "into", "more", "most", "other", "over", "same", "such", "than", "that", "their", "these", "they", "this", "through", "under", "using", "were", "which", "while", "with", "would"]);
+  const counts = new Map<string, number>();
+  for (const word of source.replace(citationSpan, " ").match(/\b[a-z][a-z'-]{4,}\b/gi) ?? []) {
+    const term = word.toLowerCase();
+    if (!stopwords.has(term)) counts.set(term, (counts.get(term) ?? 0) + 1);
+  }
+  const repeated = [...counts].filter(([, count]) => count >= 2).map(([term]) => term).slice(0, 8);
+  return repeated.length > 0
+    ? ` Recurring source terms (${repeated.join(", ")}) must be translated consistently; do not leave ordinary terms in English unless they are proper names, acronyms, citations, or necessary technical identifiers.`
+    : "";
 }
 
 export class AlternateTranslationQualityError extends Error {

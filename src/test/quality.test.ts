@@ -69,6 +69,7 @@ describe("acronym expansion safety", () => {
     expect(isCascadeQualityAcceptable("参加者は映画を見た。Whilst これは重要だった。", "Participants watched films. Whilst this was important.")).toBe(false);
     expect(isCascadeQualityAcceptable("参加者には cover story が提示された。", "Participants were shown a cover story.")).toBe(false);
     expect(isCascadeQualityAcceptable("社会的慣習が such 新しい相互作用方法に影響する。", "Social conventions affect such novel interaction methods.")).toBe(false);
+    expect(isCascadeQualityAcceptable("「Worker Feedback Dashboard」を実装した。", "We implemented the Worker Feedback Dashboard.")).toBe(true);
   });
 
   it("rejects malformed mixed-script acronym expansions while accepting intact ones", () => {
@@ -381,6 +382,43 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation(output, source)).toBe(true);
   });
 
+  it("does not reject citation page spacing normalization", () => {
+    const source = "Evaluation is founded on earlier evaluations (see Coffin and O’Halloran 2005), and the discussion cites prior work (Caffarel and Rechniewski 2009: 33). Coffin and O’Halloran (2005: 144) describe this pattern.";
+    const output = "評価は以前の評価に基づく（see Coffin and O’Halloran 2005）。先行研究を参照する（Caffarel and Rechniewski 2009:33）。Coffin and O’Halloran（2005:144）はこのパターンを説明する。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("duplicated year citation span");
+  });
+
+  it("does not treat citation author names as untranslated cascade lexemes", () => {
+    const source = "The platform supports interaction (Liao et al., 2022; Bruggeman et al., 2019).";
+    const output = "このプラットフォームは相互作用を支援する。(Liao et al., 2022; Bruggeman et al., 2019)";
+    expect(getCascadeQualityReasons(output, source)).not.toContain("untranslated cascade lexeme");
+  });
+
+  it("rejects a citation year moved into an unrelated Japanese claim", () => {
+    const source = "The study examined remaining options. The effect was reported previously (Parker and Schrift, 2011).";
+    const output = "この研究は残りの選択肢を検討した。2011年、研究2で効果が報告された。(Parker and Schrift, 2011)";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("citation year scope drift");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("rejects inconsistent partial retention of a repeated ordinary term", () => {
+    const source = "Gist memory was compared with detailed memory. Gist cues improved gist memory, while detailed cues improved detailed memory.";
+    const output = "要旨記憶を詳細記憶と比較した。Gist手がかりは要旨記憶を改善し、詳細な手がかりは詳細記憶を改善した。";
+    expect(getCascadeQualityReasons(output, source)).toEqual(expect.arrayContaining([expect.stringMatching(/(?:inconsistent repeated lexeme|untranslated cascade lexeme)/)]));
+  });
+
+  it("allows repeated words inside an acronym-bearing technical label", () => {
+    const source = "We model online registers in the Corpus of Online Registers of English (CORE), the largest online corpus.";
+    const output = "Corpus of Online Registers of English (CORE)を用いてオンラインレジスターをモデル化した。これは最大のオンラインコーパスである。";
+    expect(getCascadeQualityReasons(output, source)).not.toContain("inconsistent repeated lexeme");
+  });
+
+  it("does not reject a detached author-year citation group", () => {
+    const source = "Digital media connects people on a platform (Möller et al., 2020). It also supports influencers (Prilop et al., 2020).";
+    const output = "デジタルメディアはプラットフォーム上で人々をつなぐ。(Möller et al., 2020)。インフルエンサーも支援する。(Prilop et al., 2020)。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("orphaned source invariant sentence");
+  });
+
   it("does not treat an author-year citation window as untranslated prose", () => {
     const source = "Recent work has examined wearable health tracking (e.g. Rock Health et al. 2019), which informs this design.";
     const output = "近年の研究ではウェアラブル健康追跡が検討されている(e.g. Rock Health et al. 2019)。これはこの設計に影響する。";
@@ -515,6 +553,15 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation(output, source)).toBe(true);
   });
 
+  it("does not treat a citation-adjacent footnote marker as a scientific number", () => {
+    const source = "The tool was used in the Genealogies of Knowledge projects 3 (Jones 2019; Luz and Sheehan 2020).";
+    const values = extractScientificInvariants(source).map((item) => item.value);
+    expect(values).not.toContain("3");
+    expect(values).toContain("2019");
+    expect(values).toContain("2020");
+    expect(isPlausibleJaTranslation("このツールはGenealogies of Knowledgeプロジェクトで使用された(Jones 2019; Luz and Sheehan 2020)。", source)).toBe(true);
+  });
+
   it("treats locale decimal commas as equivalent scientific measurements", () => {
     const source = "The package measures 2.0 x 2.0 x 0.7 mm.";
     const output = "パッケージの寸法は2.0×2.0×0,7 mmである。";
@@ -569,6 +616,21 @@ describe("isPlausibleJaTranslation", () => {
     const source = "Snacks are consumed at home (e.g., Kerr et al., 2010; Myhre et al., 2015).";
     const output = "スナックは家庭で消費される（Kerr et al., 2010; Myhre et al., 2015）。";
     expect(evaluateJaTranslation(output, source).reasons).toEqual([]);
+  });
+  it("treats fullwidth and ASCII author-year parentheses as the same span", () => {
+    const source = "Prior work reported the effect (Lavallière et al. 2016).";
+    const output = "先行研究ではこの効果が報告された（Lavallière et al. 2016）。";
+    expect(hasDuplicatedYearCitationSpan(source, output)).toBe(false);
+  });
+  it("allows a citation atom regrouped from a split source group", () => {
+    const source = "Prior work reported mixed effects (Choe et al. 2014; Li et al. 2010). A malformed extraction left (2010).";
+    const output = "先行研究では効果が混在している（Choe et al. 2014; Li et al. 2010）。";
+    expect(hasDuplicatedYearCitationSpan(source, output)).toBe(false);
+  });
+  it("does not treat retained journal text inside a citation as untranslated prose", () => {
+    const source = "Register variation is important (see Biber in Corpus Linguist Linguist Theory 8:9–37, 2012).";
+    const output = "文体の変動は重要である（see Biber in Corpus Linguist Linguist Theory 8:9–37, 2012）。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("untranslated source phrase");
   });
 
   it("accepts citation payloads wrapped in harmless HTML markup", () => {
@@ -1202,6 +1264,18 @@ describe("unsafe extracted translation input", () => {
     ).toBe(true);
   });
 
+  it("rejects reordered or unclosed set delimiters from native PDF extraction", () => {
+    const damaged =
+      "A clustering result produced {\u201ctwa\u201d}, {\u201cacquire\u201d, \u201cacquisition\u201d}, and { itively appear to share similar semantics.";
+    expect(unsafeParagraphStructureReason(damaged)).toContain("集合記法");
+    expect(shouldTranslateParagraph(damaged)).toBe(false);
+    expect(
+      unsafeParagraphStructureReason(
+        "A clustering result produced {\"twa\"}, {\"acquire\", \"acquisition\"}."
+      )
+    ).toBeNull();
+  });
+
   it("rejects a paragraph ending in a table or figure label fragment", () => {
     const source =
       "One study reviewed the source and described the observed trend in the Number of Deaths (in Millions)";
@@ -1592,6 +1666,8 @@ describe("isRetryableTranslationFailure", () => {
     expect(evaluateJaTranslation("ピルBを服用していなければ、それでも死亡した可能性はあるか。", counterfactual).reasons)
       .not.toContain("condition relation missing");
     expect(evaluateJaTranslation("公の場で使用されるためには、より厳密な検討が必要である。", "The method requires greater scrutiny if it is to be acceptable for use in public.").reasons)
+      .not.toContain("condition relation missing");
+    expect(evaluateJaTranslation("登録者が多ければ、講師はコースを複数回教えることを検討する。", "If the number of registrations is large, the instructors may consider teaching the course multiple times.").reasons)
       .not.toContain("condition relation missing");
 
     const equivalence = "The no-material condition performed comparably to the insulating fabric.";

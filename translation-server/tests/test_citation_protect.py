@@ -17,7 +17,7 @@ from engines.citation_protect import (
     restore_citations,
     terminal_superscript_indices,
 )
-from engines.madlad_mps import allows_unprotected_identifier_retry
+from engines.madlad_mps import allows_unprotected_identifier_retry, unprotected_identifier_retry_values
 
 
 class CitationProtectTests(unittest.TestCase):
@@ -125,6 +125,13 @@ class CitationProtectTests(unittest.TestCase):
         self.assertTrue(allows_unprotected_identifier_retry(["(Table 3a)"]))
         self.assertFalse(allows_unprotected_identifier_retry(["Fig. 2 and the result"]))
         self.assertFalse(allows_unprotected_identifier_retry(["p < 0.001"]))
+
+    def test_author_year_group_is_exposed_as_one_selective_retry_span(self) -> None:
+        group = "(Sigure & Koseki, 1998; Marquardt et al., 2011; Benko et al, 2009)"
+        self.assertEqual(unprotected_identifier_retry_values([group]), [group])
+        self.assertEqual(unprotected_identifier_retry_values(["Mitchell 1997"]), ["Mitchell 1997"])
+        self.assertEqual(unprotected_identifier_retry_values(["to Mitchell (1997)"]), ["to Mitchell (1997)"])
+        self.assertEqual(unprotected_identifier_retry_values(["(Sigure & Koseki, 1998)", "p < 0.001"]), [])
 
     def test_hyphenated_model_identifier_is_not_split_into_acronym_placeholder(self) -> None:
         protected, cites, _ = protect_citations("GPT-3 identified the object.")
@@ -383,6 +390,12 @@ class CitationProtectTests(unittest.TestCase):
         protected, citations, nonce = protect_citations(source)
         self.assertIn("14", citations)
         self.assertNotIn("API", citations)
+        self.assertEqual(restore_citations(protected, citations, nonce), source)
+
+    def test_protects_space_separated_footnote_marker_before_author_year(self) -> None:
+        source = "The tool was used in the Genealogies of Knowledge projects 3 (Jones 2019; Luz and Sheehan 2020)."
+        protected, citations, nonce = protect_citations(source)
+        self.assertIn("3", citations)
         self.assertEqual(restore_citations(protected, citations, nonce), source)
 
     def test_recovers_placeholder_with_dropped_prefix_after_footnote(self) -> None:

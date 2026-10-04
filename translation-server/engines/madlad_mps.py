@@ -125,6 +125,20 @@ def _allowed_unprotected_retry_value(item: str) -> bool:
             flags=re.IGNORECASE,
         ))
 
+    def is_author_year_citation_group(item: str) -> bool:
+        """Allow only a bounded author-year group on a restore retry.
+
+        The citation stays opaque on the normal path. If its placeholder is
+        dropped, exposing the complete parenthesized group gives MADLAD the
+        surrounding factual context; the ordinary invariant gate still
+        verifies the final citation, so this cannot silently accept a changed
+        or missing reference.
+        """
+        author = r"[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+(?:\s+et\s+al\.?)?(?:\s+(?:&|and)\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+)?"
+        year = r"(?:\(\s*(?:18|19|20)\d{2}[a-z]?\s*\)|,?\s*(?:18|19|20)\d{2}[a-z]?)"
+        entry = rf"(?:to\s+)?{author}\s*{year}"
+        return bool(re.fullmatch(rf"\(?\s*{entry}(?:\s*;\s*{entry}){{0,3}}\s*\)?", item))
+
     def is_section_reference(item: str) -> bool:
         return bool(re.fullmatch(
             r"\s*(?:Section|Appendix)\s+(?:\d+(?:\.\d+)*|[A-Z])\s*",
@@ -182,6 +196,13 @@ def unprotected_identifier_retry_values(
             flags=re.IGNORECASE,
         ))
 
+    def is_author_year_citation_group(item: str) -> bool:
+        """Allow a bounded author-year group on a selective retry."""
+        author = r"[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+(?:\s+et\s+al\.?)?(?:\s+(?:&|and)\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+)?"
+        year = r"(?:\(\s*(?:18|19|20)\d{2}[a-z]?\s*\)|,?\s*(?:18|19|20)\d{2}[a-z]?)"
+        entry = rf"(?:to\s+)?{author}\s*{year}"
+        return bool(re.fullmatch(rf"\(?\s*{entry}(?:\s*;\s*{entry}){{0,3}}\s*\)?", item))
+
     identifiers = [
         item for item in missing
         if is_identifier(item)
@@ -189,6 +210,7 @@ def unprotected_identifier_retry_values(
         or is_supplementary_reference(item)
 
         or is_figure_table_reference(item)
+        or is_author_year_citation_group(item)
         or (allow_inline_numeric and is_inline_numeric_citation(item))
     ]
     if not identifiers:
@@ -201,6 +223,7 @@ def unprotected_identifier_retry_values(
         or is_supplementary_reference(item)
 
         or is_figure_table_reference(item)
+        or is_author_year_citation_group(item)
         or is_numeric_citation(item)
         or is_inline_numeric_citation(item)
         for item in missing

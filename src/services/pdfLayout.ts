@@ -790,13 +790,26 @@ function clusterItemsIntoLines(
     }
     return [{ part: group, isGridRow: gridRows.has(groupIndex) }];
   });
-  return separatedGroups
+  const outputLines = separatedGroups
     .map(({ part, isGridRow }) => ({
       ...itemsToLine(part, column, pageNumber, pageHeight, pageWidth),
       isGridRow,
     }))
     .filter((line) => line.text.length > 0)
     .sort((a, b) => a.y - b.y);
+  const tracePage = Number.parseInt(
+    (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_TRACE_PAGE ?? "",
+    10,
+  );
+  if (Number.isFinite(tracePage) && tracePage === pageNumber) {
+    for (const line of outputLines) {
+      const xBands = [...new Set(line.items.map((item) => Math.round(item.x / 32) * 32))];
+      if (xBands.length > 1 || line.width > (pageWidth ?? 612) * 0.72) {
+        console.info(`[PDF_LAYOUT_TRACE] page=${pageNumber} column=${line.column} y=${line.y.toFixed(2)} x=${line.x.toFixed(2)} width=${line.width.toFixed(2)} bands=${xBands.join(",")} text=${JSON.stringify(line.text)}`);
+      }
+    }
+  }
+  return outputLines;
 }
 
 /** Split a bold inline subsection label from the body text that follows it.
@@ -2517,6 +2530,9 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
     if (process.env.PDF_LAYOUT_DEBUG === "all" && block.pageStart === 1 && block.bbox.y < 500 && xBands.length > 1) {
       console.error(`[PDF_LAYOUT_MIXED_DEBUG] role=${block.role} lines=${block.lines.length} columns=${[...columns].join(",")} xBands=${xBands.join(",")} labelSidebar=${labelSidebar} text=${JSON.stringify(block.text.slice(0, 140))}`);
     }
+    if (process.env.PDF_LAYOUT_TRACE_TEXT && block.text.includes(process.env.PDF_LAYOUT_TRACE_TEXT)) {
+      console.error(`[PDF_LAYOUT_TRACE_BLOCK] stage=splitMixed role=${block.role} lines=${block.lines.length} columns=${[...columns].join(",")} xBands=${xBands.join(",")} preserve=${Boolean(block.preserveColumnContinuation)} text=${JSON.stringify(block.text.slice(0, 260))}`);
+    }
     const orderedColumns = [...new Set(block.lines.map((line) => line.column))];
     const leftLines = block.lines.filter((line) => line.column === "left");
     const rightLines = block.lines.filter((line) => line.column === "right");
@@ -2929,6 +2945,43 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
     const targetLine = target?.lines.at(-1);
     const nextLine = block.lines[0];
     const skippedBlocks = targetIdx >= 0 ? result.slice(targetIdx + 1) : [];
+    const detachedInlineCitationBand = Boolean(
+      target && target.role === "paragraph" && block.role === "paragraph" &&
+      target.column === "spanning" && block.column === "right" &&
+      target.pageStart === target.pageEnd && block.pageStart === block.pageEnd &&
+      target.pageEnd === block.pageStart && targetLine && nextLine &&
+      /^\s*\d{1,2}\s*\(/.test(block.text) &&
+      !/[.!?:;)]\s*$/.test(targetLine.text.trim()) &&
+      Math.abs(nextLine.y - targetLine.y) <= Math.max(targetLine.fontSize, nextLine.fontSize) * 1.8 &&
+      target.bbox.y <= block.bbox.y + block.bbox.height &&
+      block.bbox.y <= target.bbox.y + target.bbox.height
+    );
+    if (detachedInlineCitationBand && target) {
+      target.text = `${target.text} ${block.text}`.replace(/\s+/g, " ").trim();
+      target.bbox = blockBbox([...target.lines, ...block.lines]);
+      target.preserveColumnContinuation = true;
+      continue;
+    }
+    const reorderInterleavedListBand = Boolean(
+      target && target.role === "paragraph" && block.role === "paragraph" &&
+      target.column === "spanning" && block.column === "right" &&
+      target.pageStart === target.pageEnd && block.pageStart === block.pageEnd &&
+      target.pageEnd === block.pageStart && targetLine && nextLine &&
+      Math.abs(nextLine.y - (target.lines.find((line) => /\b(?:for|including|such\s+as)\s*$/i.test(line.text.trim()))?.y ?? nextLine.y)) <=
+        Math.max(targetLine.fontSize, nextLine.fontSize) * 2.2 &&
+      /^\s*[{“"'(\[]/.test(block.text) &&
+      target.lines.some((line) => /\b(?:for|including|such\s+as)\s*$/i.test(line.text.trim())) &&
+      target.bbox.y <= block.bbox.y + block.bbox.height &&
+      block.bbox.y <= target.bbox.y + target.bbox.height
+    );
+    if (reorderInterleavedListBand && target) {
+      target.lines = [...target.lines, ...block.lines].sort((a, b) => a.page - b.page || a.y - b.y || a.x - b.x);
+      target.text = joinLines(target.lines).replace(/\s+/g, " ").trim();
+      target.pageEnd = target.lines.at(-1)?.page ?? target.pageEnd;
+      target.bbox = blockBbox(target.lines);
+      target.preserveColumnContinuation = true;
+      continue;
+    }
     // A narrow rail label can be emitted between two same-column body lines
     // at the same baseline. It is neither transparent metadata nor part of
     // the paragraph: keep the label separate, while allowing the following
@@ -3285,6 +3338,10 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
     }
     if (debugFlag === "1" && target && target.column === "left" && block.column === "right") {
       console.warn(`[PDF_LAYOUT_CROSS_COLUMN] target=${target.text.slice(-70)} next=${block.text.slice(0, 70)} skipped=${skippedInterveningMetadata} wrap=${wrapsAcrossColumnsAtPageBottom} continuation=${isSentenceContinuation(target.text, block.text)} targetY=${targetLine?.y}/${targetLine?.pageHeight} nextY=${nextLine?.y}/${nextLine?.pageHeight} targetPage=${target.pageStart}-${target.pageEnd} nextPage=${block.pageStart}-${block.pageEnd} rotated=${hasRotatedNativeLine(target)}/${hasRotatedNativeLine(block)}`);
+    }
+    const traceText = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_TRACE_TEXT;
+    if (traceText && target && block && (target.text.includes(traceText) || block.text.includes(traceText))) {
+      console.warn(`[PDF_LAYOUT_TRACE_MERGE] targetRole=${target.role} blockRole=${block.role} targetColumn=${target.column} blockColumn=${block.column} targetEnd=${JSON.stringify(target.text.slice(-120))} blockStart=${JSON.stringify(block.text.slice(0, 120))} joinsSame=${joinsSameColumnContinuation} joinsSpan=${joinsSpanningBodyContinuation} joinsHyphen=${joinsHyphenatedContinuation} wrapsPhysical=${wrapsAcrossPhysicalColumns} targetPreserve=${Boolean(target.preserveColumnContinuation)}`);
     }
     if (
       target && (target.role === "paragraph" || isAbstractBodyTitleBlock(target)) && block.role === "paragraph" &&

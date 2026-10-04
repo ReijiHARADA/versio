@@ -13,6 +13,13 @@ const requestTimeoutMs = Number.parseInt(process.env.ALT_REQUEST_TIMEOUT_MS ?? "
 const report: any = JSON.parse(fs.readFileSync(inputPath, "utf8"));
 const maxRows = Number.parseInt(process.env.ALT_MAX_ROWS ?? "0", 10);
 const includeAccepted = process.env.ALT_INCLUDE_ACCEPTED === "1";
+const stratifyPapers = process.env.ALT_STRATIFY_PAPERS === "1";
+const keyFilter = new Set((process.env.ALT_KEYS ?? "").split(",").map((x) => x.trim()).filter(Boolean));
+const protectionMode = process.env.ALT_PROTECTION === "raw"
+  ? "raw"
+  : process.env.ALT_PROTECTION === "minimal"
+    ? "minimal"
+    : "current";
 const semanticRiskSource = (source: string): boolean => {
   const text = String(source ?? "");
   return text.length >= 280
@@ -33,17 +40,41 @@ const sourceRiskProfile = (source: string) => {
   };
   return { ...flags, riskCount: Object.values(flags).filter(Boolean).length, lowRisk: Object.values(flags).every((value) => !value) };
 };
-const rows = report.papers.flatMap((p: any) => p.rows).filter((r: any) =>
-  r.sourceCategory === "ordinary-body-prose"
-  && (r.readerVisibleFallback || (includeAccepted && semanticRiskSource(r.source))),
-).slice(0, Number.isFinite(maxRows) && maxRows > 0 ? maxRows : undefined);
+const eligibleByPaper = report.papers.map((paper: any) => ({
+  paperId: paper.paper?.id ?? paper.paper?.title ?? "unknown-paper",
+  rows: paper.rows.filter((r: any) => r.sourceCategory === "ordinary-body-prose"
+    && (keyFilter.size === 0 || keyFilter.has(r.key))
+    && (r.readerVisibleFallback || (includeAccepted && semanticRiskSource(r.source)))),
+})).filter((group: any) => group.rows.length > 0);
+const selected: Array<{ paperId: string; row: any }> = [];
+if (stratifyPapers) {
+  for (let index = 0; selected.length < (Number.isFinite(maxRows) && maxRows > 0 ? maxRows : Number.MAX_SAFE_INTEGER); index += 1) {
+    let added = false;
+    for (const group of eligibleByPaper) {
+      const row = group.rows[index];
+      if (row) { selected.push({ paperId: group.paperId, row }); added = true; }
+      if (Number.isFinite(maxRows) && maxRows > 0 && selected.length >= maxRows) break;
+    }
+    if (!added) break;
+  }
+} else {
+  for (const group of eligibleByPaper) selected.push(...group.rows.map((row: any) => ({ paperId: group.paperId, row })));
+}
+const rows = selected.slice(0, Number.isFinite(maxRows) && maxRows > 0 ? maxRows : undefined);
 const python = path.join(root, "translation-server/.venv/bin/python");
-const protectCode = `import json,sys\nfrom engines.segmenter import segment_for_translation\nfrom engines.citation_protect import protect_citations\nx=json.load(sys.stdin)\nout=[]\nfor u in segment_for_translation(x):\n p,c,n=protect_citations(u.model_input)\n out.append({'source':u.text,'input':p,'citations':c,'nonce':n})\nprint(json.dumps(out,ensure_ascii=False))`;
-const restoreCode = `import json,sys\nfrom engines.citation_protect import restore_citations\nx=json.load(sys.stdin)\ntry: print(json.dumps({'ok':True,'text':restore_citations(x['text'],x['citations'],x['nonce'],reject_missing=True)},ensure_ascii=False))\nexcept Exception as e: print(json.dumps({'ok':False,'error':str(e)},ensure_ascii=False))`;
+const protectCode = protectionMode === "raw"
+  ? `import json,sys\nfrom engines.segmenter import segment_for_translation\nx=json.load(sys.stdin)\nout=[]\nfor u in segment_for_translation(x):\n out.append({'source':u.text,'input':u.model_input,'citations':[],'nonce':0})\nprint(json.dumps(out,ensure_ascii=False))`
+  : protectionMode === "minimal"
+    ? `import json,sys,os\nfrom engines.segmenter import segment_for_translation\nfrom engines.citation_protect import protect_citations\nos.environ['MADLAD_EXPOSE_INLINE_NUMERIC_CITATIONS']='1'\nx=json.load(sys.stdin)\nout=[]\nfor u in segment_for_translation(x):\n p,c,n=protect_citations(u.model_input)\n out.append({'source':u.text,'input':p,'citations':c,'nonce':n})\nprint(json.dumps(out,ensure_ascii=False))`
+    : `import json,sys\nfrom engines.segmenter import segment_for_translation\nfrom engines.citation_protect import protect_citations\nx=json.load(sys.stdin)\nout=[]\nfor u in segment_for_translation(x):\n p,c,n=protect_citations(u.model_input)\n out.append({'source':u.text,'input':p,'citations':c,'nonce':n})\nprint(json.dumps(out,ensure_ascii=False))`;
+const restoreCode = protectionMode === "raw"
+  ? `import json,sys\nx=json.load(sys.stdin)\nprint(json.dumps({'ok':True,'text':x['text']},ensure_ascii=False))`
+  : `import json,sys\nfrom engines.citation_protect import restore_citations\nx=json.load(sys.stdin)\ntry: print(json.dumps({'ok':True,'text':restore_citations(x['text'],x['citations'],x['nonce'],reject_missing=True)},ensure_ascii=False))\nexcept Exception as e: print(json.dumps({'ok':False,'error':str(e)},ensure_ascii=False))`;
 function py(code: string, value: unknown): any { return JSON.parse(execFileSync(python, ["-c", code], { cwd: path.join(root, "translation-server"), input: JSON.stringify(value), encoding: "utf8" })); }
 const prompt = "You are a professional academic translator. Translate English academic text into faithful Japanese. Preserve every number, citation, negation, comparison, condition, and technical term. Output only the translation.";
-const out: any = { version: "alternate-model-diagnostic-v3", createdAt: new Date().toISOString(), sourceReport: path.basename(inputPath), models, baseUrl, selection: includeAccepted ? "ordinary-body fallback rows plus semantic-risk accepted rows; audit-only, no production routing" : "ordinary-body rows that fell back in the supplied MADLAD report; audit-only, no production routing", results: [] };
-for (const row of rows) {
+const out: any = { version: "alternate-model-diagnostic-v5", createdAt: new Date().toISOString(), sourceReport: path.basename(inputPath), models, baseUrl, protectionMode, selection: includeAccepted ? "ordinary-body fallback rows plus semantic-risk accepted rows; audit-only, no production routing" : "ordinary-body rows that fell back in the supplied MADLAD report; audit-only, no production routing", results: [] };
+for (const selectedRow of rows) {
+  const { paperId, row } = selectedRow;
   const units = py(protectCode, row.source);
   for (const model of models) {
     const modelStartedAt = Date.now();
@@ -69,7 +100,7 @@ for (const row of rows) {
       if (restored.ok) pieces.push(restored.text); else { pieces.push(unit.source); errors.push(restored.error); }
     }
     const translation = pieces.join(" ").trim(); const quality = evaluateJaTranslation(translation, row.source);
-    out.results.push({ key: row.key, model, source: row.source, sourceRiskProfile: sourceRiskProfile(row.source), units: units.length, rawPieces, translation, restoreErrors: errors, quality, gateAccept: isPlausibleJaTranslation(translation, row.source), madladFallbackReason: row.fallbackReason ?? null, elapsedMs: Date.now() - modelStartedAt });
+    out.results.push({ paperId, key: row.key, model, source: row.source, sourceRiskProfile: sourceRiskProfile(row.source), units: units.length, protection: { mode: protectionMode, protectedSpanCount: units.reduce((sum: number, unit: any) => sum + (Array.isArray(unit.citations) ? unit.citations.length : 0), 0), inputCharacters: units.reduce((sum: number, unit: any) => sum + String(unit.input ?? "").length, 0), sourceCharacters: units.reduce((sum: number, unit: any) => sum + String(unit.source ?? "").length, 0) }, rawPieces, translation, restoreErrors: errors, quality, gateAccept: isPlausibleJaTranslation(translation, row.source), madladFallbackReason: row.fallbackReason ?? null, elapsedMs: Date.now() - modelStartedAt });
     fs.writeFileSync(outputPath, JSON.stringify(out, null, 2));
     console.log(`${model} ${row.key} accept=${isPlausibleJaTranslation(translation, row.source)} restoreErrors=${errors.length}`);
   }

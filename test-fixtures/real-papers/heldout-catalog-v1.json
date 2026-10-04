@@ -1,0 +1,86 @@
+{
+  "pdfDir": "test-fixtures/real-papers/pending-pdfs",
+  "reportDir": "test-data/real-papers/reports",
+  "papers": [
+    {
+      "id": "heldout-computational-linguistics-nlp-translation",
+      "title": "Computational linguistics and Natural Language Processing",
+      "filename": "computational-linguistics-nlp-translation.pdf",
+      "formatFamily": "arxiv",
+      "templateVersion": "arxiv",
+      "discipline": "computational linguistics",
+      "venue": "arXiv",
+      "publisher": "arXiv",
+      "sourceUrl": "https://arxiv.org/abs/2206.07026",
+      "doi": null,
+      "checks": {}
+    },
+    {
+      "id": "heldout-osworld-multimodal-agents",
+      "title": "OSWorld: Benchmarking Multimodal Agents for Open-Ended Tasks in Real Computer Environments",
+      "filename": "osworld-multimodal-agents.pdf",
+      "formatFamily": "arxiv",
+      "templateVersion": "arxiv",
+      "discipline": "HCI",
+      "venue": "arXiv",
+      "publisher": "arXiv",
+      "sourceUrl": "https://arxiv.org/abs/2404.07972",
+      "doi": null,
+      "checks": {}
+    },
+    {
+      "id": "heldout-medical-deep-learning-meta-review",
+      "title": "Medical deep learning—A systematic meta-review",
+      "filename": "medical-deep-learning-meta-review.pdf",
+      "formatFamily": "elsevier",
+      "templateVersion": "journal",
+      "discipline": "medicine",
+      "venue": "Computer Methods and Programs in Biomedicine",
+      "publisher": "Elsevier",
+      "sourceUrl": "https://doi.org/10.1016/j.cmpb.2022.106874",
+      "doi": "10.1016/j.cmpb.2022.106874",
+      "checks": {}
+    },
+    {
+      "id": "heldout-human-ai-interaction-guidelines",
+      "title": "A Comparative Analysis of Industry Human-AI Interaction Guidelines",
+      "filename": "human-ai-interaction-guidelines.pdf",
+      "formatFamily": "arxiv",
+      "templateVersion": "arxiv",
+      "discipline": "HCI",
+      "venue": "arXiv",
+      "publisher": "arXiv",
+      "sourceUrl": "https://arxiv.org/abs/2010.11761",
+      "doi": null,
+      "checks": {}
+    },
+    {
+      "id": "heldout-interpreting-neural-networks",
+      "title": "Detecting Statistical Interactions From Neural Network Weights",
+      "filename": "interpreting-neural-networks.pdf",
+      "formatFamily": "arxiv",
+      "templateVersion": "iclr-arxiv",
+      "discipline": "machine learning",
+      "venue": "ICLR",
+      "publisher": "arXiv",
+      "sourceUrl": "https://arxiv.org/abs/1705.04977",
+      "doi": null,
+      "checks": {}
+    },
+    {
+      "id": "heldout-hfe-healthcare-safety-review",
+      "title": "An Evaluation of the Effects of Human Factors and Ergonomics on Health Care and Patient Safety Practices: A Systematic Review",
+      "filename": "hfe-healthcare-safety-review.pdf",
+      "formatFamily": "plos",
+      "templateVersion": "journal",
+      "discipline": "ergonomics",
+      "venue": "PLOS ONE",
+      "publisher": "PLOS",
+      "sourceUrl": "https://doi.org/10.1371/journal.pone.0129948",
+      "doi": "10.1371/journal.pone.0129948",
+      "checks": {
+        "provenance": "Crossref title/author/date match"
+      }
+    }
+  ]
+}
