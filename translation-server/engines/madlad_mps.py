@@ -961,6 +961,24 @@ class MADLADEngine(TranslationEngine):
                     pass
             return greedy
         except Exception as original_error:
+            # A repeated comparative-results sentence can fail because the
+            # decoder sees many opaque statistic placeholders as unrelated
+            # symbols. Retry one time with only the compact inline statistics
+            # visible. The normal invariant gate still rejects any candidate
+            # that changes or drops a number, so this improves context without
+            # weakening scientific-fact safety.
+            if target_language == "ja" and self._comparative_stat_retry_values(text):
+                try:
+                    retry = self._translate_chunk(
+                        text,
+                        target_language,
+                        model_input,
+                        retry_label="comparative-inline-statistics",
+                        unprotected_values=set(self._comparative_stat_retry_values(text)),
+                    )
+                    return retry
+                except Exception:
+                    pass
             # If only identifier-like placeholders were dropped, retry once
             # without protection. The client invariant gate remains the final
             # authority, so a retry that loses RF/TQP3M9009 is still rejected.
@@ -1156,6 +1174,13 @@ class MADLADEngine(TranslationEngine):
             if self._is_degenerate(translated, text, target_language) and not rescue_units_valid:
                 raise original_error
             return translated, sum(in_toks), sum(out_toks)
+
+    @staticmethod
+    def _comparative_stat_retry_values(source: str) -> list[str]:
+        if len(re.findall(r"\b(?:less|more|higher|lower|greater|smaller)\b", source, re.I)) < 4:
+            return []
+        values = re.findall(r"\(\s*[-+]?\d+(?:\.\d+)?\s*\)|\bp\s*[<=>≤≥]\s*[-+]?\d+(?:\.\d+)?", source, re.I)
+        return list(dict.fromkeys(values))
 
     @staticmethod
     def _missing_quoted_technical_names(source: str, output: str) -> list[str]:
