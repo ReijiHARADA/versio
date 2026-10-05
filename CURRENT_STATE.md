@@ -446,3 +446,7 @@ Runtime validation after the three-item threshold showed the rescue could return
 Added unit tests covering the comparative-statistics rescue integrity contract: all source numeric values must be present and unchanged; missing or altered values are rejected. The focused MADLAD quality test file now passes 74 tests.
 
 Added `scripts/diagnose-comparative-rescue.py` to replay the known statistical unit against a running server and persist the complete response. It is diagnostic-only and does not alter production settings; use it after restarting the server to verify fallback reason, unit indices, and elapsed time consistently.
+
+## Runtime replay safety finding
+
+The replay script exposed an unsafe case: the server returned `fallback_stage=null` while a partial comparative-list output changed several p-values (for example source `0.0/0.001` becoming `0.1/0.2`). Added a global server-side statistical numeric-drift guard so any missing/changed parenthesized statistic or p-value rejects the candidate. This is a safety correction; it may increase fallback until a semantically valid alternate candidate exists. Quality tests now include 75 MADLAD cases; full Python suite should be rerun after the next server restart.
