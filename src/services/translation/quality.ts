@@ -1360,6 +1360,15 @@ function outputContainsInvariant(output: string, invariant: ScientificInvariant,
   // synthetic identifier and incorrectly hide both tokens.
   const lowerOutput = output.normalize("NFKC").toLowerCase();
   const lowerValue = invariant.value.normalize("NFKC").toLowerCase();
+  // Technical identifiers are often glued to a hexadecimal literal in native
+  // PDF text (`UUID0x1809`).  Treat the identifier prefix as preserved when
+  // the complete identifier+hex payload is present; requiring the hex suffix
+  // prevents a bare `UUID` mention from satisfying the invariant.
+  if (invariant.kind === "acronym" && /^(?:uuid|guid|hex)$/i.test(invariant.value)) {
+    const hexSource = new RegExp(`${invariant.value}\\s*0x[0-9a-f]+\\b`, "i").test(source);
+    const hexOutput = new RegExp(`${invariant.value}\\s*0x[0-9a-f]+\\b`, "i").test(output);
+    if (hexSource && hexOutput) return true;
+  }
   let offset = lowerOutput.indexOf(lowerValue);
   while (offset >= 0) {
     const before = offset > 0 ? lowerOutput[offset - 1] : "";
