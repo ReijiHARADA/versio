@@ -1,0 +1,54 @@
+{
+  "version": "cat-source-disjoint-auth-v3-manual-review",
+  "scope": "Five clean source-disjoint ordinary-body fallback rows evaluated with CAT-Translate 3.3B",
+  "isProductionDecision": false,
+  "rows": [
+    {
+      "key": "cognitive-psychology-gpt3:b-f3a69090",
+      "automaticGate": "accept",
+      "label": "citation_error",
+      "severity": 2,
+      "safeForCascade": false,
+      "reason": "The prose claims are largely preserved, but inline citation numbers are shifted/reattached in the opening examples (source citations 2/3/4 do not remain aligned with the corresponding claims). Do not treat as safe until citation alignment is checked."
+    },
+    {
+      "key": "ozchi-finger-specific-touch:b-093948bb",
+      "automaticGate": "accept",
+      "label": "correct",
+      "severity": 0,
+      "safeForCascade": true,
+      "reason": "Fat-finger problem, back-of-device interaction, thumb contact size, one-finger interaction, and zooming examples are preserved."
+    },
+    {
+      "key": "neuroscience-rule-following:b-9ba3fd27",
+      "automaticGate": "accept",
+      "label": "minor_wording",
+      "severity": 1,
+      "safeForCascade": true,
+      "reason": "Claims, contrast between cathodal/anodal tDCS, rule-following/pro-sociality distinction, and rLPFC role are preserved; one phrase is slightly literal/awkward."
+    },
+    {
+      "key": "neuroscience-rule-following:b-3d81a1fc",
+      "automaticGate": "accept",
+      "label": "correct",
+      "severity": 0,
+      "safeForCascade": true,
+      "reason": "28 trials, free/rule parts, selfish/pro-social choices, 10/0 and 5/5 examples, and randomised order are preserved."
+    },
+    {
+      "key": "economics-regularized-deepiv:b-6f58c36d",
+      "automaticGate": "accept",
+      "label": "correct",
+      "severity": 0,
+      "safeForCascade": true,
+      "reason": "Bibliographic title, authors, journal, volume/issue, pages, and year are preserved."
+    }
+  ],
+  "summary": {
+    "rows": 5,
+    "manualSafeAccept": 4,
+    "severity2Plus": 1,
+    "citationRisk": 1,
+    "note": "Small diagnostic sample; citation alignment risk remains despite fluent output. No production routing decision."
+  }
+}

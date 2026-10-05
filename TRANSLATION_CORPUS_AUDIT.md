@@ -4676,3 +4676,7 @@ Post-change focused verification confirms both Step-to-Charge rows receive the e
 A generic source-integrity rule now flags a numbered dash item embedded after a completed sentence, preventing list/body merges from being used as clean translation evidence. Regression coverage passes; no full-corpus rerun was performed.
 
 Post-list-boundary verification: the same CAT v2 cohort now has 1 clean row, 4 source-excluded rows, and 1/1 clean quality acceptance. The cognitive list-contaminated row is explicitly classified as an embedded numbered-list boundary. This is a focused verification, not a corpus metric.
+
+### CAT source-disjoint v3 clean cohort
+
+Five clean complete fallback rows were evaluated with CAT-Translate 3.3B. The automatic gate accepted 5/5; manual review found four usable outputs (three severity 0, one severity 1) and one severity-2 citation alignment risk in the GPT-3 cognitive-psychology paragraph. Fluent output alone is therefore insufficient for cascade enablement; citation integrity remains a required review dimension.
