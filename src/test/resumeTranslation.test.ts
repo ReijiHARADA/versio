@@ -116,6 +116,52 @@ describe("resumeIncompleteTranslation", () => {
     const savedPaper = await getPaper(paper.id);
     expect(savedPaper?.processingStatus).toBe("translating");
   });
+
+  it("persists safe translated units while preserving failed source units", async () => {
+    const paper = basePaper("partial-unit-paper");
+    const block = {
+      ...baseBlock(paper.id, "partial-unit-block"),
+      original: "The first sentence describes the method. The second sentence is retained in English.",
+    };
+    await savePaper(paper);
+    await saveBlocks([block]);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes("/health")) {
+          return new Response(JSON.stringify({ status: "ok", model_loaded: true }), { status: 200 });
+        }
+        return new Response(JSON.stringify({
+          text: "前半の方法を説明する文。The second sentence is retained in English.",
+          source_language: "en",
+          target_language: "ja",
+          model: "madlad400-3b-mt",
+          model_version: "test",
+          fallback_stage: "partial_unit_fallback",
+          fallback_reason: "unit_1:translation_quality_rejected:ValueError",
+          unit_fallback_indices: [1],
+          translation_units: [
+            "The first sentence describes the method.",
+            "The second sentence is retained in English.",
+          ],
+          partial_unit_texts: [
+            "前半の方法を説明する文。",
+            "The second sentence is retained in English.",
+          ],
+        }), { status: 200, headers: { "Content-Type": "application/json" } });
+      }),
+    );
+
+    await resumeIncompleteTranslation(paper.id, {}, { useCache: false });
+
+    const [result] = await getBlocksByPaper(paper.id);
+    expect(result.translationStatus).toBe("completed");
+    expect(result.translated).toContain("前半の方法を説明する文");
+    expect(result.translated).toContain("The second sentence is retained in English.");
+    expect(result.metadata?.translationOutcome).toBe("partial_source_preserved");
+    expect(result.metadata?.partialFailedUnitIndices).toEqual([1]);
+  });
 });
 
 describe("translation server ready signaling", () => {

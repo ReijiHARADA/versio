@@ -18,7 +18,7 @@ from engines.citation_protect import (
     restore_citations,
     terminal_superscript_indices,
 )
-from engines.madlad_mps import allows_unprotected_identifier_retry, unprotected_identifier_retry_values
+from engines.identifier_retry import allows_unprotected_identifier_retry, unprotected_identifier_retry_values
 
 
 class CitationProtectTests(unittest.TestCase):

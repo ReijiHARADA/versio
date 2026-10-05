@@ -21,6 +21,7 @@ import {
 import { OllamaProvider } from "../llm";
 import { isPlausibleJaTranslation, localizeNamedFigureCaption, shouldTranslateTitle, titleTranslationComplete } from "../translation/quality";
 import { checkMADLADServer } from "../translation/madladEngine";
+import { projectSafeUnitTranslation } from "../translation/partialProjection";
 import {
   finalizeJapaneseLayoutOnly,
   isJapaneseLayoutOnlyPaper,
@@ -146,9 +147,19 @@ export async function resumeIncompleteTranslation(
         applyGlossary(task.result.text, glossaryEntries)
       );
       const figureCaption = localizeNamedFigureCaption(task.text);
-      const acceptedTranslation = isPlausibleJaTranslation(translated, task.text)
+      const directTranslation = isPlausibleJaTranslation(translated, task.text)
         ? translated
-        : figureCaption;
+        : undefined;
+      // A server partial-unit result is safe to expose only when the backend
+      // supplies a one-to-one unit mapping.  `projectSafeUnitTranslation`
+      // keeps failed units as their exact source text and rejects an
+      // all-failed result, so a quality failure can never become a fluent
+      // guess.  Titles and section labels remain all-or-nothing.
+      const partialProjection = !directTranslation && !task.blockId.startsWith("title-")
+        && !task.blockId.startsWith("section-")
+        ? projectSafeUnitTranslation(task.result)
+        : null;
+      const acceptedTranslation = directTranslation ?? figureCaption ?? partialProjection?.text;
       if (!acceptedTranslation) {
         const block = blocks.find((item) => item.id === task.blockId);
         if (block) {
@@ -176,6 +187,13 @@ export async function resumeIncompleteTranslation(
         const block = blocks.find((item) => item.id === task.blockId);
         if (block) {
           assignBlockTranslation(block, acceptedTranslation);
+          if (partialProjection && !directTranslation) {
+            block.metadata = {
+              ...block.metadata,
+              translationOutcome: "partial_source_preserved",
+              partialFailedUnitIndices: partialProjection.failedIndices,
+            };
+          }
           await updateBlock(block);
           callbacks.onBlockTranslated?.(block);
         }
