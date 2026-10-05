@@ -25,6 +25,7 @@
 - 翻訳サーバーの既存品質回帰（`test_madlad_quality` + `test_mixed_quality_fixture`）を再実行し、74 tests が pass。現時点ではproduction変更を追加せず、上記4件の再現fixture比較を次の実装前提とする。
 - `dont-mind-me:b-4c16bae3` の長文統計本文は、現行segmenterで7つの完結文（94〜217 chars）へ分割され、round-trip可能だった。したがってこのfailureは「段落全体を1回で送った」問題ではなく、protected input/decode/quality gate側を優先して切り分ける。診断: `focused-long-unit-segmentation-dont-mind-me-v1.json`。
 - 統計値placeholderの影響を比較するため、`MADLAD_EXPOSE_INLINE_STATISTICS=1` の診断専用armを追加。`(0.005)` 等のcompact statisticsだけをモデルへ見せ、citation・測定値等は従来どおり保護する。production defaultは変更していない。citation protection tests 81/81 pass（commit `3493ab7`）。
+- 対象unitの現行production出力を保存し、`partial_unit_fallback`（unit 1/3）と統計値由来の英文残留を再現。診断armサーバーはバックグラウンド起動制約でmodel比較まで進められなかったため、通常設定のserverを復旧済み。armの採用判断は未実施。
 - `translation-audit.json` および別コホートの `CURRENT_STATE` 記録と混ぜず、auth-v1 の完了値を正式な比較対象とする。
 - 中間集計（47本/493 units）では全体 fallback 293件、通常本文187件中47件（25.1%）。これは未完了の暫定値であり、目標達成とは扱わない。
 
