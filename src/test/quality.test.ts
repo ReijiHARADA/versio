@@ -1770,6 +1770,10 @@ describe("isRetryableTranslationFailure", () => {
     const exclusiveKept = "介入群のみが訓練を受けた。";
     expect(evaluateJaTranslation(exclusiveLoss, exclusive).reasons).toContain("exclusivity relation missing");
     expect(evaluateJaTranslation(exclusiveKept, exclusive).reasons).not.toContain("exclusivity relation missing");
+    expect(evaluateJaTranslation(
+      "表面は独自の物理的歴史を語る。",
+      "The surface tells a unique physical history.",
+    ).reasons).not.toContain("exclusivity relation missing");
     expect(evaluateJaTranslation("介入群ではなく対照群を用いた。", "The control group was used instead of the intervention group.").reasons).not.toContain("exclusivity relation missing");
     expect(evaluateJaTranslation("接続を維持するより、広告モードで伝送した。", "We transmitted using advertising mode instead of maintaining a connection.").reasons).not.toContain("exclusivity relation missing");
 
