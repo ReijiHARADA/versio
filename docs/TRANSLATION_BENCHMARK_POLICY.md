@@ -43,3 +43,7 @@ Paper Reader の翻訳評価は、変更の大きさに応じて段階化する�
 - ordinary-body reader-visible fallback: 118/404 (29.2%)
 - 目標: ordinary-body fallback <= 5%、unsafe semantic error ≈ 0
 - 次の全件計測は、モデル、抽出、segmenter、protection、quality gate、cascadeのいずれかに大きな変更を入れた後に実施する
+
+## 最新の重点コホート
+
+2026-10-05 に `speechin`, `dont-mind-me`, `interactive-jewellery`, `thermal-earring` の4本・48ユニットを `focused-cohort-current-v3` として再計測した。通常本文22件のうち、7件がpost-model fallback、19件が構造由来のpre-model fallbackだった。これは全113本の推定値ではなく、MADLADの品質拒否と抽出境界を追跡するための診断値として扱う。成果物は `test-data/real-papers/reports/focused-cohort-current-v3.{json,md}`。
