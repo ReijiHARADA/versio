@@ -1,0 +1,48 @@
+{
+  "artifact": "CAT focused fallback v3 manual semantic review",
+  "sourceReport": "test-data/real-papers/reports/cat-focused-fallback-v3.json",
+  "reviews": [
+    {
+      "key": "interactive-jewellery:b-c1e9695a",
+      "label": "correct",
+      "severity": 0,
+      "primaryCause": "none",
+      "notes": "claim, number, and causal relations retained",
+      "source": "Before we can say anything about interactive jewellery, we have to better understand traditional jewellery. In the remainder of this paper we therefore first frame traditional jewellery and outline how contemporary jewellery explores the boundaries of this framework. Then we describe how interactive jewellery fits in the framework and we present related work. In order to further understand the promises and limitations of interactive jewellery we present 3 design explorations and discuss them in the context of the framework. We conclude by sketching future research directions.",
+      "translation": "インタラクティブジュエリーについて論じる前に、まず従来のジュエリーについてより深く理解する必要があります。したがって本稿では、まず従来のジュエリーを枠組みとして提示し、現代ジュエリーがその枠組みの境界をどのように探求しているかを概説します。その後、インタラクティブジュエリーが当該枠組みにどのように位置付けられるかを述べ、関連研究を紹介します。インタラクティブジュエリーの期待と限界をさらに明らかにするため、3つのデザイン探索を提示し、枠組みの文脈で議論します。最後に、今後の研究方向性を概観して結論とします。"
+    },
+    {
+      "key": "significant-other:b-a4349c52",
+      "label": "terminology_error",
+      "severity": 1,
+      "primaryCause": "model decode",
+      "notes": "“ear scrolls” rendered as 耳飾りのスクロール; meaning broadly retained",
+      "source": "\"In memory of my Mother. Whilst sorting through her belongings, I came across several ear scrolls that did not belong to an earring. After putting her affairs in order, I gave the lost scrolls a meaning once more in the form of new jewellery.\" [Marzee 2001 p.25]",
+      "translation": "母を偲んで。遺品を整理しているうちに、イヤリングではない耳飾りのスクロールが数枚見つかりました。彼女の遺品を整理した後、失くしたスクロールに再び意味を与える形で、新しいジュエリーとして生まれ変わりました。［Marzee 2001 p.25］"
+    },
+    {
+      "key": "power-over-skin:b-51971114",
+      "label": "correct",
+      "severity": 0,
+      "primaryCause": "none",
+      "notes": "Figure 8 reference and development relation retained",
+      "source": "We now describe the development considerations of our receiver board, which went through many iterations to reduce size and increase received power (major milestones shown in Figure 8).",
+      "translation": "ここでは、サイズを縮小し受信電力を向上させるために多くの改良を重ねた受信ボードの開発上の考慮事項について説明します（主要なマイルストーンは図8に示されています）。"
+    },
+    {
+      "key": "design-for-wearability:b-86e8c6d5",
+      "label": "minor_wording",
+      "severity": 1,
+      "primaryCause": "model decode",
+      "notes": "No material semantic loss observed",
+      "source": "Digital Technology is constantly improving as information becomes wireless. These advances demand more wearable and mobile form factors for products that access information. A product that is wearable should have wearability. This paper explores the concept of dynamic wearability through design research. Wearability is defined as the interaction between the human body and the wearable object. Dynamic wearability extends that definition to include the human body in motion. Our research has been to locate, understand, and define the spaces on the human body where solid and flexible forms can rest – without interfering with fluid human movement. The result is a set of design guidelines embodied in a set of wearable forms. These wearable forms describe the three dimensional spaces on the body best suited for comfortable and unobtrusive wearability by design.",
+      "translation": "デジタル技術は、情報がワイヤレス化するにつれて常に進化しています。これらの進歩に伴い、情報にアクセスする製品には、よりウェアラブルでモバイルな形態が求められます。ウェアラブルな製品は、装着感を備えている必要があります。本稿では、デザイン研究を通じて動的装着感の概念を探ります。装着感とは、人体とウェアラブルオブジェクトとの相互作用を指します。動的装着感は、その定義を拡張し、人体が動いている状態も含めます。我々の研究は、固体および柔軟な形状が人体上で安定して配置できる領域を特定し、理解した上で定義することを目的としています。これにより、流体的な人体の動きを妨げない形で、快適な装着感を実現するウェアラブル形態のセットが生まれました。これらのウェアラブル形態は、設計上最も適した三次元空間を示し、快適で目立たない装着感を提供します。"
+    }
+  ],
+  "summary": {
+    "reviewed": 4,
+    "severityGte2": 0,
+    "correct": 2,
+    "minorOrTerminology": 2
+  }
+}
