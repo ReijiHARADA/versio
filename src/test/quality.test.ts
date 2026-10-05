@@ -50,6 +50,21 @@ describe("acronym expansion safety", () => {
     expect(evaluateJaTranslation(dropped, source).reasons).toContain("quoted technical name missing: Jogwheel");
     expect(evaluateJaTranslation(intact, source).reasons).not.toContain("quoted technical name missing: Jogwheel");
   });
+  it("does not treat ordinary quoted labels as coined technical names", () => {
+    const source = 'The terms “Normal” and “Awkward” described participant perceptions.';
+    const output = '参加者の知覚を「正常」と「不快」で表した。';
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("quoted technical name missing: Normal, Awkward");
+  });
+  it("accepts standard scientific acronyms when their Japanese expansion is preserved", () => {
+    const source = "A customized infrared (IR) imaging system was used to measure BPM.";
+    const output = "カスタム赤外線イメージングシステムを用いて心拍を測定した。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("scientific invariants missing: IR, BPM");
+  });
+  it("classifies an open citation list at a block boundary as an extraction fragment", () => {
+    expect(unsafeParagraphStructureReason(
+      "Besides movement on the surface of the head, vocalizing speech also involves movements of different articulators. To capture the tongue movements for SSR, researchers placed magnets on the tongue and head [4, 9, 29",
+    )).toBe("引用列が途中で切れている可能性があります");
+  });
 
   it("rejects output that drops an academic e.g. quoted condition", () => {
     const source = 'The clips followed gist cues (e.g., “couple fighting”) and detailed cues (e.g., “white piano”).';
@@ -92,6 +107,12 @@ describe("acronym expansion safety", () => {
     expect(evaluateJaTranslation(intact, source).reasons).not.toContain("mixed-script decoder corruption");
     expect(evaluateJaTranslation(identifier, "This study evaluates model GPT.").reasons).not.toContain("mixed-script decoder corruption");
     expect(evaluateJaTranslation("組立ラインのErgoSALBPモデルを評価する。", "The ErgoSALBP model is evaluated in the assembly line.").reasons).not.toContain("mixed-script decoder corruption");
+  });
+
+  it("allows a transliterated technical name with an uppercase suffix", () => {
+    const source = "The CycleGAN model improves image conversion between domains.";
+    const output = "サイクルGANモデルはドメイン間の画像変換を改善する。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("mixed-script decoder corruption");
   });
 
   it("rejects an unsupported numbered enumeration introduced by the model", () => {
@@ -344,6 +365,13 @@ describe("isPlausibleJaTranslation", () => {
   it("rejects simplified Chinese character forms embedded in Japanese output", () => {
     const source = "The first evaluation assessed attitudes toward placement, while the second assessed attitudes toward gesture interaction.";
     const output = "1つ目は配置に関する态度を调查し、2つ目はジェスチャ相互作用に関する态度を评估した。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("simplified Chinese mixed into Japanese");
+    expect(isPlausibleJaTranslation(output, source)).toBe(false);
+  });
+
+  it("rejects a Chinese connective compound missed by single-character checks", () => {
+    const source = "Second, several jewellery examples contain valuable but unreachable content.";
+    const output = "其次、価値はあるが手に入らない内容を含む宝飾品の例がいくつかある。";
     expect(evaluateJaTranslation(output, source).reasons).toContain("simplified Chinese mixed into Japanese");
     expect(isPlausibleJaTranslation(output, source)).toBe(false);
   });
@@ -2086,5 +2114,19 @@ describe("technical name audit diagnostics", () => {
       .toBe(true);
     expect(hasExtremeTranslationCompression("word ".repeat(20), "短い訳。"))
       .toBe(false);
+  });
+
+  it("rejects reviewed hallucination with changed participant facts", () => {
+    const source = "We recruited 10 participants for the English study and 10 participants for the Chinese study (M_age = 20.6; male = 3, female = 7).";
+    const output = "英語と中国語の研究に10名ずつ招集した。英語と中国語の流暢度はそれぞれ100%、90%であった。";
+    const reasons = evaluateJaTranslation(output, source).reasons;
+    expect(reasons.some((reason) => /invariant|unexpected|degenerate|compression/i.test(reason))).toBe(true);
+  });
+
+  it("rejects reviewed bibliographic hallucination", () => {
+    const source = "Anas Barakat and Pascal Bianchi. Convergence and dynamical behavior of the adam algorithm for nonconvex stochastic optimization. SIAM Journal on Optimization, 31(1):244–274, 2021.";
+    const output = "アナス・バラカットとパスカル・ビアンキ。非凸確率最適化に対するadamアルゴリズムの収束と動的挙動を調べた。『日本の歴史』岩波書店、2013年、244-247頁。";
+    const reasons = evaluateJaTranslation(output, source).reasons;
+    expect(reasons.some((reason) => /invariant|unexpected|citation|year/i.test(reason))).toBe(true);
   });
 });

@@ -271,7 +271,19 @@ export function projectCanonicalToPaper(input: {
   // visible as table blocks instead of being sent through paragraph logic.
   const skip = new Set(["header", "footer", "title", "copyright", "author", "affiliation", "figure", "table"]);
 
-  const readable = canonical.nodes.filter((n) => !skip.has(n.role) || (n.role === "table" && Boolean(n.text)));
+  const readable = canonical.nodes.filter((n) => {
+    if (skip.has(n.role)) return n.role === "table" && Boolean(n.text);
+    // `other` is normally retained because it may contain useful native text,
+    // but a resolver-selected vector/chart label cluster is text painted inside
+    // a figure. Sending that flattened label stream to translation creates a
+    // guaranteed model-quality failure; the figure/caption projection carries
+    // the visible region instead.
+    if (n.role === "other" && n.evidence.some((entry) =>
+      entry.label === "vector-figure-label-cluster" || entry.label === "repeated-numeric-chart-label" ||
+      entry.label === "image-overlap-label-cluster"
+    )) return false;
+    return true;
+  });
   const fallbackIds = readable.map((n) => n.id);
   const orderedIds =
     topologicalOrder(fallbackIds, canonical.relations) ?? fallbackIds;

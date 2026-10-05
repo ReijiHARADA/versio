@@ -2355,6 +2355,54 @@ function repairInterleavedContinuationOrder(blocks: LayoutBlock[]): LayoutBlock[
   for (let i = 0; i + 1 < result.length; i += 1) {
     const current = result[i];
     const next = result[i + 1];
+    // A spanning paragraph can end in a citation list at the left edge while
+    // the PDF emits the closing bracket and continuation in the right column
+    // at the same y coordinate. This is a high-confidence physical
+    // continuation: require an open numeric citation, a closing bracket at
+    // the next block, overlapping vertical bands, and matching body text size.
+    if (current.role === "paragraph" && next.role === "paragraph" &&
+        current.pageStart === current.pageEnd && next.pageStart === next.pageEnd &&
+        current.pageStart === next.pageStart &&
+        /\[[^\]]*\d\s*$/.test(current.text.trim()) && /^\]\s*(?:,|and\b|or\b)/i.test(next.text.trim()) &&
+        current.bbox.x < next.bbox.x &&
+        current.bbox.y <= next.bbox.y + next.bbox.height &&
+        next.bbox.y <= current.bbox.y + current.bbox.height &&
+        Math.abs((current.lines.at(-1)?.fontSize ?? 9) - (next.lines[0]?.fontSize ?? 9)) <= 1.0) {
+      current.text = joinHyphenated(current.text, next.text).replace(/\s+/g, " ").trim();
+      current.lines = [...current.lines, ...next.lines];
+      current.bbox = blockBbox(current.lines);
+      current.preserveColumnContinuation = true;
+      current.adjacentBandContinuation = true;
+      result.splice(i + 1, 1);
+      i -= 1;
+      continue;
+    }
+    // A paragraph may contain a final word from the next physical line when
+    // the extractor interleaves two columns. Rejoin only a long paragraph
+    // ending in a short title-case word with a same-column lowercase
+    // continuation immediately below it. This avoids joining headings,
+    // captions, or complete sentences while repairing word-level splits.
+    const currentTail = current.text.trim().match(/\b([A-Z][A-Za-z]{1,20})$/)?.[1];
+    const nextHead = next.text.trim();
+    const currentLastLine = current.lines.at(-1);
+    const nextFirstLine = next.lines.at(0);
+    const currentBottom = current.bbox.y + current.bbox.height;
+    if (current.role === "paragraph" && next.role === "paragraph" &&
+        current.text.length >= 180 && current.pageStart === current.pageEnd &&
+        next.pageStart === next.pageEnd && current.pageStart === next.pageStart &&
+        currentTail && /^[a-z(]/.test(nextHead) &&
+        Math.abs(current.bbox.x - next.bbox.x) <= 12 &&
+        next.bbox.y >= currentBottom && next.bbox.y - currentBottom <= Math.max(28, (currentLastLine?.fontSize ?? 9) * 2.5) &&
+        Math.abs((currentLastLine?.fontSize ?? 9) - (nextFirstLine?.fontSize ?? 9)) <= 1.0) {
+      current.text = joinHyphenated(current.text, next.text).replace(/\s+/g, " ").trim();
+      current.lines = [...current.lines, ...next.lines];
+      current.bbox = blockBbox(current.lines);
+      current.preserveColumnContinuation = true;
+      current.adjacentBandContinuation = true;
+      result.splice(i + 1, 1);
+      i -= 1;
+      continue;
+    }
     if (current.role !== "paragraph" || next.role !== "paragraph" ||
         current.pageStart !== current.pageEnd || next.pageStart !== next.pageEnd ||
         current.pageStart !== next.pageStart || !/^[a-z]/.test(current.text.trim()) ||
