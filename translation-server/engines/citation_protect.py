@@ -572,6 +572,7 @@ def protect_citations(
     """
     unprotected_values = unprotected_values or set()
     expose_inline_numeric = os.getenv("MADLAD_EXPOSE_INLINE_NUMERIC_CITATIONS", "").lower() in {"1", "true", "yes"}
+    expose_inline_statistics = os.getenv("MADLAD_EXPOSE_INLINE_STATISTICS", "").lower() in {"1", "true", "yes"}
     matches = []
     for match in _protected_matches(text):
         value = match.group(0)
@@ -591,6 +592,17 @@ def protect_citations(
                 r"(?:\s*,\s*\d{1,3}(?:\s*[-–—]\s*\d{1,3})?)*\s*\]",
                 value.strip(),
             )
+        ):
+            continue
+        # Diagnostic-only arm: keep compact parenthesized decimal statistics
+        # visible so the model can read their relation to the surrounding
+        # claim. The post-translation scientific-invariant checker still
+        # verifies exact preservation. Production remains protected unless
+        # this flag is explicitly enabled for an isolated comparison.
+        if (
+            expose_inline_statistics
+            and match.re in {SCIENTIFIC_TOKEN_RE, SCIENTIFIC_PARENTHETICAL_RE}
+            and re.fullmatch(r"\(\s*0?\.\d+(?:\s*,\s*0?\.\d+)*\s*\)", value.strip())
         ):
             continue
         matches.append(match)

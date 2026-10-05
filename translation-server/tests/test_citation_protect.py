@@ -4,6 +4,7 @@ import json
 import os
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from engines.citation_protect import (
     AUTHOR_YEAR_CITATION_RE,
@@ -341,6 +342,15 @@ class CitationProtectTests(unittest.TestCase):
         protected, citations, nonce = protect_citations(source)
         self.assertEqual(citations, ["(chi square test, χ2(3)=0.37, p=0.83)"])
         self.assertNotIn("χ2(3)=0.37", protected)
+        self.assertEqual(restore_citations(protected, citations, nonce), source)
+
+    def test_diagnostic_flag_can_expose_compact_statistics_without_disabling_other_protection(self) -> None:
+        source = "The effect was less awkward (0.005), with p < 0.001 and [8] cited."
+        with patch.dict(os.environ, {"MADLAD_EXPOSE_INLINE_STATISTICS": "1"}, clear=False):
+            protected, citations, nonce = protect_citations(source)
+        self.assertIn("(0.005)", protected)
+        self.assertNotIn("[8]", protected)
+        self.assertEqual(citations, ["p < 0.001", "[8]"])
         self.assertEqual(restore_citations(protected, citations, nonce), source)
 
     def test_protects_bare_rank_statistic_and_figure_panel_reference(self) -> None:
