@@ -147,6 +147,27 @@ describe("MADLADEngine batch integrity", () => {
     vi.unstubAllGlobals();
   });
 
+  it("projects mapped units even when the server labels the aggregate fallback as whole-item", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        text: "The first sentence. The second sentence.",
+        source_language: "en",
+        target_language: "ja",
+        model: "madlad",
+        model_version: "test",
+        fallback_stage: "whole_item_fallback",
+        translation_units: ["The first sentence.", "The second sentence."],
+        partial_unit_texts: ["前半は翻訳済み。", "The second sentence."],
+        unit_fallback_indices: [1],
+      }),
+    }));
+
+    await expect(new MADLADEngine().translate("The first sentence. The second sentence.", "en", "ja"))
+      .resolves.toMatchObject({ text: "前半は翻訳済み。 The second sentence." });
+    vi.unstubAllGlobals();
+  });
+
   it("projects partial units only as an explicitly unsafe audit candidate", () => {
     const candidate = projectPartialTranslation({
       fallbackStage: "partial_unit_fallback",
