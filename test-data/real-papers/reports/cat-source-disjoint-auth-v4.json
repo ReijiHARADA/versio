@@ -1,0 +1,67 @@
+{
+  "version": "cat-translate-audit-v1",
+  "model": "cyberagent/CAT-Translate-3.3b",
+  "results": [
+    {
+      "paperId": "interpreting-neural-networks",
+      "key": "interpreting-neural-networks:b-d14aa6b0",
+      "source": "In Table 6, we report precision and recall scores of Shooter and NID, where the scores for NID are averaged over 10 trials. While Shooter performs near perfectly, NID obtains fair precision scores but generally low recall. When we observe the interactions identified by NID per level of interaction order, we find that the interactions across levels are always subsets or supersets of another predicted interaction. This strict hierarchical correspondence would inevitably cause NID to miss many true interactions under this experimental setting. The limitation of Shooter is that it must assume the form of interactions, which in this case is multiplicative.",
+      "translation": "表6には、ShooterとNIDの精度および再現率を示しています。NIDのスコアは10回の試行で平均したものです。Shooterはほぼ完璧な性能を示すのに対し、NIDは精度はまずまずですが、再現率は低い傾向にあります。NIDが特定した相互作用を相互作用の順序ごとに観察すると、レベル間の相互作用は常に別の予測相互作用の部分集合または上位集合であることが分かります。この厳格な階層的対応関係により、実験条件下ではNIDが多くの真の相互作用を見逃すことになります。Shooterの限界は、相互作用の形を仮定しなければならない点にあり、今回のケースでは乗法的相互作用を前提としています。",
+      "inputTokens": 169,
+      "outputTokens": 124,
+      "elapsedMs": 11256,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "human-ai-interaction-guidelines",
+      "key": "human-ai-interaction-guidelines:b-bd5b6ec5",
+      "source": "We believe our work may serve as a helpful resource for a broad audience, including practitioners aiming to use AI in new products, researchers hoping to understand Human-AI Interaction, and com-panies in understanding the current state of industry-driven best practices. This work differs from other surveys [6, 9, 12, 13] on explainability and trust for AI in two ways. First, this work focuses in particular on guidelines put forth by industry; which, while they are informed by academia, do not necessarily match exactly. Furthermore, the scope of these guidelines tends to be broader beyond ensuring explainability or trust in AI but also includes guidelines for all of the other aspects that AI systems differ from other software. Therefore these guidelines can provide a more practically useful overall tool for AI developers.",
+      "translation": "本研究は、新製品にAIを導入しようとする実務者、ヒューマン・AIインタラクションを理解しようとする研究者、そして業界主導のベストプラクティスの現状を把握したい企業など、幅広い読者にとって有用なリソースとなり得ると考えています。本研究は、AIの説明可能性と信頼性に関する他の調査文献（[6, 9, 12, 13]）とは、以下の二点で異なります。第一に、本研究は業界が提示するガイドラインに焦点を当てています。これらのガイドラインは学術界からの情報に基づいていますが、必ずしも完全に一致するわけではありません。さらに、これらのガイドラインの範囲は、AIの説明可能性や信頼性の確保にとどまらず、AIシステムが他のソフトウェアと異なるすべての側面に関するガイドラインも含んでいます。したがって、これらのガイドラインはAI開発者にとって、より実践的に有用な総合ツールとなり得ます。",
+      "inputTokens": 210,
+      "outputTokens": 156,
+      "elapsedMs": 13414,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "osworld-multimodal-agents",
+      "key": "osworld-multimodal-agents:b-3e363137",
+      "source": "When there is insufficient grounding evidence (such as when no screenshot is inputted, the accessibility tree lacks a specific element, or the multimodal model cannot comprehend the user interface), employing this function to retrieve the correct icon image could present an interesting method.",
+      "translation": "十分な根拠が得られないケース（例えば、スクリーンショットが入力されていない、アクセシビリティツリーに特定の要素が存在しない、またはマルチモーダルモデルがユーザーインターフェースを理解できない場合）において、この機能を用いて正しいアイコン画像を取得することは、興味深い手法となり得ます。",
+      "inputTokens": 80,
+      "outputTokens": 51,
+      "elapsedMs": 4390,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "osworld-multimodal-agents",
+      "key": "osworld-multimodal-agents:b-aa73b575",
+      "source": "A.3.1 PYAUTOGUI pyautogui is an open-source, cross-platform Python module utilized for programmatically controlling the mouse and keyboard. It can control simple movements, clicks, as well as keyboard inputs, and can provide screen capture features or locate where the screen-specific images reside that can be useful for GUI automation. Compared with other Python packages such as xdotool 9, mouse 10 and keyboard 11, pyautogui has better compatibility across different OSes as found in our early attempts, so that we adapt that as our core component of computer controlling as well as an official valid action space.",
+      "translation": "A.3.1 PYAUTOGUI PYAUTOGUIは、マウスとキーボードをプログラムで制御するために使用されるオープンソースのクロスプラットフォームPythonモジュールです。単純な移動やクリック、キーボード入力を制御できるほか、画面キャプチャ機能や、GUI自動化に有用な画面固有の画像が存在する位置を特定する機能も提供します。xdotool 9、mouse 10、keyboard 11などの他のPythonパッケージと比較して、PYAUTOGUIは初期テストで確認したとおり、異なるOS間での互換性が優れているため、コンピュータ制御のコアコンポーネントおよび公式の有効なアクションスペースとして採用しています。",
+      "inputTokens": 169,
+      "outputTokens": 117,
+      "elapsedMs": 9703,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "computational-linguistics-nlp-translation",
+      "key": "computational-linguistics-nlp-translation:b-c8fbde6e",
+      "source": "Gathering, storing, indexing and managing access to a collection of electronic texts are usually the first steps in any type of corpus based study. A number of tools have been developed over the years to support these tasks, sometimes individually, as in the case of UNIX directory structures and command line tools for search and filtering of text (Schmitt et al. 2007), sometimes as part of larger general-purpose packages such as the indexing tools provided by the Xapian project2, and sometimes as specialised corpus linguistics tools. While reviewing the first two kinds of tools falls outside the scope of this chapter, and an exhaustive review of specialised corpus linguistics tools would be impractical, we describe three tools used for corpus management and analysis which illustrate the main characteristics of the various existing tools and their differences. As regards differences, existing tools can be can be grouped into broad categories with respect to their mode of distribution, the way they store and provide access to corpora, and their licensing terms. The mode of distribution of corpus software can be distribution through conventional stand-alone software packages, distribution through web-services and on-line interfaces, or mixed web-based distribution of specialised software “clients” interacting with one or more “servers”.",
+      "translation": "電子テキストのコレクションの収集、保存、索引付け、およびアクセス管理は、コーパスベースの研究において通常最初のステップとなります。これらのタスクを支援するために、長年にわたりさまざまなツールが開発されてきました。例えば、UNIXのディレクトリ構造やテキストの検索・フィルタリング用コマンドラインツール（Schmittら、2007年）のように個別に提供されるものもあれば、Xapianプロジェクトが提供する索引付けツールのように、より大規模な汎用パッケージの一部として提供されるもの、さらには専門的なコーパス言語学ツールもあります。本章の範囲外となる最初の2種類のツールについてはここでは取り上げませんが、専門的なコーパス言語学ツールの徹底的なレビューは実用的ではありません。そこで、本稿ではコーパスの管理と分析に使用される3つのツールを紹介し、既存の各種ツールの主な特徴と相違点を示します。相違点に関しては、既存のツールは配布形態、コーパスの保存・アクセス方法、ライセンス条項の観点から大きく分類できます。コーパスソフトウェアの配布形態は、従来のスタンドアロンソフトウェアパッケージによる配布、ウェブサービスやオンラインインターフェースによる配布、あるいは1つ以上の「サーバー」と相互作用する専門的なソフトウェア「クライアント」のウェブベース配布の混合形態のいずれかです。",
+      "inputTokens": 330,
+      "outputTokens": 221,
+      "elapsedMs": 19552,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "sourceIntegrityFlagged": 0,
+    "cleanSourceRows": 5,
+    "duplicateSourceCount": 0
+  }
+}

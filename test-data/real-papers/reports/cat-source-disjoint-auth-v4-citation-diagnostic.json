@@ -1,0 +1,87 @@
+{
+  "version": "citation-alignment-diagnostic-v2",
+  "sourceReport": "test-data/real-papers/reports/cat-source-disjoint-auth-v4.json",
+  "productionGate": false,
+  "rows": [
+    {
+      "key": "interpreting-neural-networks:b-d14aa6b0",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "human-ai-interaction-guidelines:b-bd5b6ec5",
+      "sourceCitationTokens": [
+        "6",
+        "9",
+        "12",
+        "13"
+      ],
+      "outputCitationTokens": [
+        "6",
+        "9",
+        "12",
+        "13"
+      ],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "osworld-multimodal-agents:b-3e363137",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "osworld-multimodal-agents:b-aa73b575",
+      "sourceCitationTokens": [
+        "9",
+        "11"
+      ],
+      "outputCitationTokens": [
+        "9",
+        "10"
+      ],
+      "missingCitationOccurrences": [
+        "11"
+      ],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": true
+    },
+    {
+      "key": "computational-linguistics-nlp-translation:b-c8fbde6e",
+      "sourceCitationTokens": [
+        "2"
+      ],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [
+        "2"
+      ],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": true
+    }
+  ],
+  "eligibleCount": 5,
+  "sourceExcludedCount": 0,
+  "flaggedCount": 2
+}

@@ -1,0 +1,361 @@
+{
+  "version": "cat-source-disjoint-auth-v4-input",
+  "rows": [
+    {
+      "key": "interpreting-neural-networks:b-d14aa6b0",
+      "benchmarkRunId": "2026-10-05T01-29-19-119Z",
+      "paperId": "interpreting-neural-networks",
+      "blockId": "b-d14aa6b0",
+      "role": "paragraph",
+      "translationStatus": "pending",
+      "pageStart": 20,
+      "pageEnd": 20,
+      "source": "In Table 6, we report precision and recall scores of Shooter and NID, where the scores for NID are averaged over 10 trials. While Shooter performs near perfectly, NID obtains fair precision scores but generally low recall. When we observe the interactions identified by NID per level of interaction order, we find that the interactions across levels are always subsets or supersets of another predicted interaction. This strict hierarchical correspondence would inevitably cause NID to miss many true interactions under this experimental setting. The limitation of Shooter is that it must assume the form of interactions, which in this case is multiplicative.",
+      "sourceFallback": true,
+      "readerVisibleFallback": true,
+      "partialSourceFallback": false,
+      "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v83-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+      "inputTokens": 137,
+      "outputTokens": 182,
+      "translationTimeMs": 22428.30181121826,
+      "sourceInvariants": [
+        "Table 6",
+        "NID",
+        "10"
+      ],
+      "technicalNameCandidates": [
+        "Shooter"
+      ],
+      "missingTechnicalNameCandidates": [],
+      "detachedNumericCitationRisk": false,
+      "acronymExpansionDrift": false,
+      "extremeTranslationCompression": false,
+      "structuralWarnings": [],
+      "sourceCategory": "ordinary-body-prose",
+      "sourceIntegrity": "clean",
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "extractionProvenance": {
+        "pageStart": 20,
+        "pageEnd": 20,
+        "bboxCount": 7,
+        "extractionConfidence": 0.96
+      },
+      "fallbackStage": "post-model",
+      "fallbackReason": "server partial_unit_fallback: unit_2:translation_quality_rejected:ValueError",
+      "serverFallbackReason": "unit_2:translation_quality_rejected:ValueError",
+      "serverFallbackStage": "partial_unit_fallback",
+      "unitFallbackIndices": [
+        2
+      ],
+      "partialText": "Table 6では,ShooterとNIDの精度と思い出スコアを報告した。Shooterはほぼ完璧に動作するが,NIDは良い精度を得るが, 一般に低い呼び出し率を示した。When we observe the interactions identified by NID per level of interaction order, we find that the interactions across levels are always subsets or supersets of another predicted interaction.この厳密な階層的対応は, この実験的設定下で,NIDが多くの真の相互作用を見逃すことを必然的に引き起こす。Shooterの制約は, 相互作用の形をとらなければならないことである。",
+      "partialSourceUnits": [
+        "When we observe the interactions identified by NID per level of interaction order, we find that the interactions across levels are always subsets or supersets of another predicted interaction."
+      ],
+      "partialUnitTexts": [
+        "Table 6では,ShooterとNIDの精度と思い出スコアを報告した。",
+        "Shooterはほぼ完璧に動作するが,NIDは良い精度を得るが,一般に低い呼び出し率を示した。",
+        "When we observe the interactions identified by NID per level of interaction order, we find that the interactions across levels are always subsets or supersets of another predicted interaction.",
+        "この厳密な階層的対応は,この実験的設定下で,NIDが多くの真の相互作用を見逃すことを必然的に引き起こす。",
+        "Shooterの制約は,相互作用の形をとらなければならないことである。"
+      ],
+      "translationUnits": [
+        "In Table 6, we report precision and recall scores of Shooter and NID, where the scores for NID are averaged over 10 trials.",
+        "While Shooter performs near perfectly, NID obtains fair precision scores but generally low recall.",
+        "When we observe the interactions identified by NID per level of interaction order, we find that the interactions across levels are always subsets or supersets of another predicted interaction.",
+        "This strict hierarchical correspondence would inevitably cause NID to miss many true interactions under this experimental setting.",
+        "The limitation of Shooter is that it must assume the form of interactions, which in this case is multiplicative."
+      ],
+      "wouldSubmitToModel": true,
+      "wouldAcceptTranslation": false
+    },
+    {
+      "key": "human-ai-interaction-guidelines:b-bd5b6ec5",
+      "benchmarkRunId": "2026-10-05T01-29-19-119Z",
+      "paperId": "human-ai-interaction-guidelines",
+      "blockId": "b-bd5b6ec5",
+      "role": "paragraph",
+      "translationStatus": "pending",
+      "pageStart": 1,
+      "pageEnd": 2,
+      "source": "We believe our work may serve as a helpful resource for a broad audience, including practitioners aiming to use AI in new products, researchers hoping to understand Human-AI Interaction, and com-panies in understanding the current state of industry-driven best practices. This work differs from other surveys [6, 9, 12, 13] on explainability and trust for AI in two ways. First, this work focuses in particular on guidelines put forth by industry; which, while they are informed by academia, do not necessarily match exactly. Furthermore, the scope of these guidelines tends to be broader beyond ensuring explainability or trust in AI but also includes guidelines for all of the other aspects that AI systems differ from other software. Therefore these guidelines can provide a more practically useful overall tool for AI developers.",
+      "sourceFallback": true,
+      "readerVisibleFallback": true,
+      "partialSourceFallback": false,
+      "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v83-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+      "inputTokens": 174,
+      "outputTokens": 245,
+      "translationTimeMs": 62609.22908782959,
+      "sourceInvariants": [
+        "[6, 9, 12, 13]",
+        "AI"
+      ],
+      "technicalNameCandidates": [
+        "Human-AI"
+      ],
+      "missingTechnicalNameCandidates": [],
+      "detachedNumericCitationRisk": false,
+      "acronymExpansionDrift": false,
+      "extremeTranslationCompression": false,
+      "structuralWarnings": [
+        "cross-page logical block"
+      ],
+      "sourceCategory": "ordinary-body-prose",
+      "sourceIntegrity": "structural-warning",
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "extractionProvenance": {
+        "pageStart": 1,
+        "pageEnd": 2,
+        "bboxCount": 13,
+        "extractionConfidence": 0.97
+      },
+      "fallbackStage": "post-model",
+      "fallbackReason": "server partial_unit_fallback: unit_2:translation_quality_rejected:ValueError",
+      "serverFallbackReason": "unit_2:translation_quality_rejected:ValueError",
+      "serverFallbackStage": "partial_unit_fallback",
+      "unitFallbackIndices": [
+        2
+      ],
+      "partialText": "これらの研究は, 新製品にAIを使用することを目指す実践者, ヒト‐AI相互作用を理解することを望む研究者, および産業主導のベストプラクティスの現状を理解する企業を含む広い聴衆にとって有用なリソースとなると信じる。AIの説明性と信頼性に関する他の調査とは,2つの点で異なる[6, 9, 12, 13]。First, this work focuses in particular on guidelines put forth by industry; which, while they are informed by academia, do not necessarily match exactly.さらに, これらのガイドラインの範囲は,AIの説明可能性や信頼性を確保することを超え,AIシステムが他のソフトウェアと異なる他のすべての側面に対するガイドラインを含む傾向がある。従って, このガイドラインは,AI開発者にとってより実用的な総合的ツールを提供できる。",
+      "partialSourceUnits": [
+        "First, this work focuses in particular on guidelines put forth by industry; which, while they are informed by academia, do not necessarily match exactly."
+      ],
+      "partialUnitTexts": [
+        "これらの研究は,新製品にAIを使用することを目指す実践者,ヒト‐AI相互作用を理解することを望む研究者,および産業主導のベストプラクティスの現状を理解する企業を含む広い聴衆にとって有用なリソースとなると信じる。",
+        "AIの説明性と信頼性に関する他の調査とは,2つの点で異なる[6, 9, 12, 13]。",
+        "First, this work focuses in particular on guidelines put forth by industry; which, while they are informed by academia, do not necessarily match exactly.",
+        "さらに,これらのガイドラインの範囲は,AIの説明可能性や信頼性を確保することを超え,AIシステムが他のソフトウェアと異なる他のすべての側面に対するガイドラインを含む傾向がある。",
+        "従って,このガイドラインは,AI開発者にとってより実用的な総合的ツールを提供できる。"
+      ],
+      "translationUnits": [
+        "We believe our work may serve as a helpful resource for a broad audience, including practitioners aiming to use AI in new products, researchers hoping to understand Human-AI Interaction, and com-panies in understanding the current state of industry-driven best practices.",
+        "This work differs from other surveys [6, 9, 12, 13] on explainability and trust for AI in two ways.",
+        "First, this work focuses in particular on guidelines put forth by industry; which, while they are informed by academia, do not necessarily match exactly.",
+        "Furthermore, the scope of these guidelines tends to be broader beyond ensuring explainability or trust in AI but also includes guidelines for all of the other aspects that AI systems differ from other software.",
+        "Therefore these guidelines can provide a more practically useful overall tool for AI developers."
+      ],
+      "wouldSubmitToModel": true,
+      "wouldAcceptTranslation": false
+    },
+    {
+      "key": "osworld-multimodal-agents:b-3e363137",
+      "benchmarkRunId": "2026-10-05T01-29-19-119Z",
+      "paperId": "osworld-multimodal-agents",
+      "blockId": "b-3e363137",
+      "role": "paragraph",
+      "translationStatus": "pending",
+      "pageStart": 25,
+      "pageEnd": 25,
+      "source": "When there is insufficient grounding evidence (such as when no screenshot is inputted, the accessibility tree lacks a specific element, or the multimodal model cannot comprehend the user interface), employing this function to retrieve the correct icon image could present an interesting method.",
+      "sourceFallback": true,
+      "readerVisibleFallback": true,
+      "partialSourceFallback": false,
+      "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v83-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "translationTimeMs": 4808.753967285156,
+      "sourceInvariants": [],
+      "technicalNameCandidates": [],
+      "missingTechnicalNameCandidates": [],
+      "detachedNumericCitationRisk": false,
+      "acronymExpansionDrift": false,
+      "extremeTranslationCompression": false,
+      "structuralWarnings": [],
+      "sourceCategory": "ordinary-body-prose",
+      "sourceIntegrity": "clean",
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "extractionProvenance": {
+        "pageStart": 25,
+        "pageEnd": 25,
+        "bboxCount": 3,
+        "extractionConfidence": 0.96
+      },
+      "fallbackStage": "post-model",
+      "fallbackReason": "server partial_unit_fallback: unit_0:translation_quality_rejected:ValueError",
+      "serverFallbackReason": "unit_0:translation_quality_rejected:ValueError",
+      "serverFallbackStage": "partial_unit_fallback",
+      "unitFallbackIndices": [
+        0
+      ],
+      "partialText": "When there is insufficient grounding evidence (such as when no screenshot is inputted, the accessibility tree lacks a specific element, or the multimodal model cannot comprehend the user interface), employing this function to retrieve the correct icon image could present an interesting method.",
+      "partialSourceUnits": [
+        "When there is insufficient grounding evidence (such as when no screenshot is inputted, the accessibility tree lacks a specific element, or the multimodal model cannot comprehend the user interface), employing this function to retrieve the correct icon image could present an interesting method."
+      ],
+      "partialUnitTexts": [
+        "When there is insufficient grounding evidence (such as when no screenshot is inputted, the accessibility tree lacks a specific element, or the multimodal model cannot comprehend the user interface), employing this function to retrieve the correct icon image could present an interesting method."
+      ],
+      "translationUnits": [
+        "When there is insufficient grounding evidence (such as when no screenshot is inputted, the accessibility tree lacks a specific element, or the multimodal model cannot comprehend the user interface), employing this function to retrieve the correct icon image could present an interesting method."
+      ],
+      "wouldSubmitToModel": true,
+      "wouldAcceptTranslation": false
+    },
+    {
+      "key": "osworld-multimodal-agents:b-aa73b575",
+      "benchmarkRunId": "2026-10-05T01-29-19-119Z",
+      "paperId": "osworld-multimodal-agents",
+      "blockId": "b-aa73b575",
+      "role": "paragraph",
+      "translationStatus": "pending",
+      "pageStart": 23,
+      "pageEnd": 24,
+      "source": "A.3.1 PYAUTOGUI pyautogui is an open-source, cross-platform Python module utilized for programmatically controlling the mouse and keyboard. It can control simple movements, clicks, as well as keyboard inputs, and can provide screen capture features or locate where the screen-specific images reside that can be useful for GUI automation. Compared with other Python packages such as xdotool 9, mouse 10 and keyboard 11, pyautogui has better compatibility across different OSes as found in our early attempts, so that we adapt that as our core component of computer controlling as well as an official valid action space.",
+      "translation": "PYAUTOGUIは, マウスとキーボードをプログラム的に制御するためのオープンソースのクロスプラットフォームPythonモジュールである 1。これは, 簡単な動作, クリック, キーボード入力を制御し, 画面キャプチャ機能を提供し, また,GUI自動化に有用な画面特有の画像の位置を特定できる。xdotool9,mause10,klaviature11のような他のPythonパッケージと比較して,pyautoguiは異なるOS間の互換性が良好である。",
+      "sourceFallback": false,
+      "readerVisibleFallback": true,
+      "partialSourceFallback": false,
+      "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v83-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+      "inputTokens": 158,
+      "outputTokens": 200,
+      "translationTimeMs": 28733.143091201782,
+      "sourceInvariants": [
+        "PYAUTOGUI",
+        "GUI",
+        "3.1",
+        "9",
+        "10",
+        "11"
+      ],
+      "technicalNameCandidates": [
+        "PYAUTOGUI",
+        "Python",
+        "OSes"
+      ],
+      "missingTechnicalNameCandidates": [
+        "OSes"
+      ],
+      "detachedNumericCitationRisk": false,
+      "acronymExpansionDrift": false,
+      "extremeTranslationCompression": false,
+      "quality": {
+        "score": 0.6453333333333333,
+        "reasons": [
+          "scientific invariants missing: 3.1",
+          "unexpected scientific invariants: 9, 10, 11"
+        ],
+        "languageScore": 1,
+        "invariantScore": 0.1133333333333334,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "structuralWarnings": [
+        "cross-page logical block"
+      ],
+      "sourceCategory": "ordinary-body-prose",
+      "sourceIntegrity": "structural-warning",
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "extractionProvenance": {
+        "pageStart": 23,
+        "pageEnd": 24,
+        "bboxCount": 8,
+        "extractionConfidence": 0.96
+      },
+      "fallbackStage": "post-model",
+      "fallbackReason": "scientific invariants missing: 3.1; unexpected scientific invariants: 9, 10, 11",
+      "serverFallbackReason": null,
+      "serverFallbackStage": null,
+      "unitFallbackIndices": null,
+      "partialText": null,
+      "partialSourceUnits": null,
+      "partialUnitTexts": [
+        "PYAUTOGUIは,マウスとキーボードをプログラム的に制御するためのオープンソースのクロスプラットフォームPythonモジュールである 1。",
+        "これは,簡単な動作,クリック,キーボード入力を制御し,画面キャプチャ機能を提供し,また,GUI自動化に有用な画面特有の画像の位置を特定できる。",
+        "xdotool9,mause10,klaviature11のような他のPythonパッケージと比較して,pyautoguiは異なるOS間の互換性が良好である。"
+      ],
+      "translationUnits": [
+        "A.3.1 PYAUTOGUI pyautogui is an open-source, cross-platform Python module utilized for programmatically controlling the mouse and keyboard.",
+        "It can control simple movements, clicks, as well as keyboard inputs, and can provide screen capture features or locate where the screen-specific images reside that can be useful for GUI automation.",
+        "Compared with other Python packages such as xdotool 9, mouse 10 and keyboard 11, pyautogui has better compatibility across different OSes as found in our early attempts, so that we adapt that as our core component of computer controlling as well as an official valid action space."
+      ],
+      "wouldSubmitToModel": true,
+      "wouldAcceptTranslation": false
+    },
+    {
+      "key": "computational-linguistics-nlp-translation:b-c8fbde6e",
+      "benchmarkRunId": "2026-10-05T01-29-19-119Z",
+      "paperId": "computational-linguistics-nlp-translation",
+      "blockId": "b-c8fbde6e",
+      "role": "paragraph",
+      "translationStatus": "pending",
+      "pageStart": 3,
+      "pageEnd": 4,
+      "source": "Gathering, storing, indexing and managing access to a collection of electronic texts are usually the first steps in any type of corpus based study. A number of tools have been developed over the years to support these tasks, sometimes individually, as in the case of UNIX directory structures and command line tools for search and filtering of text (Schmitt et al. 2007), sometimes as part of larger general-purpose packages such as the indexing tools provided by the Xapian project2, and sometimes as specialised corpus linguistics tools. While reviewing the first two kinds of tools falls outside the scope of this chapter, and an exhaustive review of specialised corpus linguistics tools would be impractical, we describe three tools used for corpus management and analysis which illustrate the main characteristics of the various existing tools and their differences. As regards differences, existing tools can be can be grouped into broad categories with respect to their mode of distribution, the way they store and provide access to corpora, and their licensing terms. The mode of distribution of corpus software can be distribution through conventional stand-alone software packages, distribution through web-services and on-line interfaces, or mixed web-based distribution of specialised software “clients” interacting with one or more “servers”.",
+      "translation": "電子テキストの収集, 保存, 索引化, アクセス管理は, どのようなコーパス研究においても, 通常最初のステップである。これらのタスクを支援するために, 数年間にわたって多くのツールが開発されてきた(Schmitt et al. 2007)。これらのプロジェクトは,Xapのような一般的なパッケージの一部として, または特殊なコーパス言語学ツールとして, 利用される 2。最初の2種類のツールのレビューは本章の範囲外であり, 専門的なコーパス言語学ツールの徹底的なレビューは不実際であるが, コーパス管理と解析に用いられる3つのツールについて述べ, 既存の各種ツールの主な特徴とそれらの違いを示した。また, 既存のツールの違いについては, その分布形態, コーパスの保存・アクセス方式, ライセンス条件などにより広いカテゴリーに分けることができる。コーパスソフトウェアの配布形態は, 従来の独立したソフトウェアパッケージを通しての配布, ウェブサービスやオンラインインタフェースを通した配布, あるいは1つまたは複数の「サーバ」と相互作用する専門的なソフトウェア「クライアント」の混合したウェブベースの配布である。",
+      "sourceFallback": false,
+      "readerVisibleFallback": true,
+      "partialSourceFallback": false,
+      "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v83-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+      "inputTokens": 309,
+      "outputTokens": 369,
+      "translationTimeMs": 61491.384744644165,
+      "sourceInvariants": [
+        "2",
+        "2007",
+        "UNIX"
+      ],
+      "technicalNameCandidates": [
+        "UNIX"
+      ],
+      "missingTechnicalNameCandidates": [
+        "UNIX"
+      ],
+      "detachedNumericCitationRisk": false,
+      "acronymExpansionDrift": false,
+      "extremeTranslationCompression": false,
+      "quality": {
+        "score": 0.7946666666666666,
+        "reasons": [
+          "scientific invariants missing: UNIX"
+        ],
+        "languageScore": 1,
+        "invariantScore": 0.48666666666666675,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "structuralWarnings": [
+        "cross-page logical block"
+      ],
+      "sourceCategory": "ordinary-body-prose",
+      "sourceIntegrity": "structural-warning",
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "extractionProvenance": {
+        "pageStart": 3,
+        "pageEnd": 4,
+        "bboxCount": 16,
+        "extractionConfidence": 0.96
+      },
+      "fallbackStage": "post-model",
+      "fallbackReason": "scientific invariants missing: UNIX",
+      "serverFallbackReason": null,
+      "serverFallbackStage": null,
+      "unitFallbackIndices": null,
+      "partialText": null,
+      "partialSourceUnits": null,
+      "partialUnitTexts": [
+        "電子テキストの収集,保存,索引化,アクセス管理は,どのようなコーパス研究においても,通常最初のステップである。",
+        "これらのタスクを支援するために, 数年間にわたって多くのツールが開発されてきた(Schmitt et al. 2007)。これらのプロジェクトは,Xapのような一般的なパッケージの一部として, または特殊なコーパス言語学ツールとして, 利用される 2。",
+        "最初の2種類のツールのレビューは本章の範囲外であり,専門的なコーパス言語学ツールの徹底的なレビューは不実際であるが,コーパス管理と解析に用いられる3つのツールについて述べ,既存の各種ツールの主な特徴とそれらの違いを示した。",
+        "また,既存のツールの違いについては,その分布形態,コーパスの保存・アクセス方式,ライセンス条件などにより広いカテゴリーに分けることができる。",
+        "コーパスソフトウェアの配布形態は,従来の独立したソフトウェアパッケージを通しての配布,ウェブサービスやオンラインインタフェースを通した配布,あるいは1つまたは複数の「サーバ」と相互作用する専門的なソフトウェア「クライアント」の混合したウェブベースの配布である。"
+      ],
+      "translationUnits": [
+        "Gathering, storing, indexing and managing access to a collection of electronic texts are usually the first steps in any type of corpus based study.",
+        "A number of tools have been developed over the years to support these tasks, sometimes individually, as in the case of UNIX directory structures and command line tools for search and filtering of text (Schmitt et al. 2007), sometimes as part of larger general-purpose packages such as the indexing tools provided by the Xapian project2, and sometimes as specialised corpus linguistics tools.",
+        "While reviewing the first two kinds of tools falls outside the scope of this chapter, and an exhaustive review of specialised corpus linguistics tools would be impractical, we describe three tools used for corpus management and analysis which illustrate the main characteristics of the various existing tools and their differences.",
+        "As regards differences, existing tools can be can be grouped into broad categories with respect to their mode of distribution, the way they store and provide access to corpora, and their licensing terms.",
+        "The mode of distribution of corpus software can be distribution through conventional stand-alone software packages, distribution through web-services and on-line interfaces, or mixed web-based distribution of specialised software “clients” interacting with one or more “servers”."
+      ],
+      "wouldSubmitToModel": true,
+      "wouldAcceptTranslation": false
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "version": "cat-source-disjoint-auth-v4-manual-review",
+  "scope": "Five source-hash-disjoint clean ordinary-body fallback rows evaluated with CAT-Translate 3.3B",
+  "isProductionDecision": false,
+  "rows": [
+    {
+      "key": "interpreting-neural-networks:b-d14aa6b0",
+      "automaticGate": "accept",
+      "label": "correct",
+      "severity": 0,
+      "safeForCascade": true,
+      "reason": "Table 6, precision/recall, 10 trials, hierarchy, missed interactions, and multiplicative interaction assumption are preserved."
+    },
+    {
+      "key": "human-ai-interaction-guidelines:b-bd5b6ec5",
+      "automaticGate": "accept",
+      "label": "correct",
+      "severity": 0,
+      "safeForCascade": true,
+      "reason": "Audience, industry-guideline scope, contrast with academic surveys, explainability/trust distinction, and practical utility are preserved; numeric citation group is retained."
+    },
+    {
+      "key": "osworld-multimodal-agents:b-3e363137",
+      "automaticGate": "accept",
+      "label": "correct",
+      "severity": 0,
+      "safeForCascade": true,
+      "reason": "All three grounding-failure examples and the icon-retrieval proposal are preserved."
+    },
+    {
+      "key": "osworld-multimodal-agents:b-aa73b575",
+      "automaticGate": "accept",
+      "label": "citation_error",
+      "severity": 2,
+      "safeForCascade": false,
+      "reason": "The prose is faithful, but source citation 11 after `keyboard` is absent in the Japanese output; citation diagnostic agrees."
+    },
+    {
+      "key": "computational-linguistics-nlp-translation:b-c8fbde6e",
+      "automaticGate": "accept",
+      "label": "citation_error",
+      "severity": 2,
+      "safeForCascade": false,
+      "reason": "The source contains an inline citation marker `Xapian project2`; the output omits the citation 2. Citation diagnostic agrees. Other claims are largely preserved."
+    }
+  ],
+  "summary": {
+    "rows": 5,
+    "manualSafeAccept": 3,
+    "severity2Plus": 2,
+    "citationErrors": 2,
+    "note": "All five passed the automatic gate; citation preservation reduced the manually safe subset to 3/5. CAT remains disabled in production."
+  }
+}
