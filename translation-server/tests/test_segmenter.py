@@ -171,6 +171,22 @@ class SegmenterTests(unittest.TestCase):
         )
         self.assert_round_trip(source)
 
+    def test_model_input_repairs_dropped_author_year_opening_parenthesis(self) -> None:
+        source = (
+            "People react to direct and mediated social touch in similar ways "
+            "Bailenson and Yee (2007), at the physiological and social level."
+        )
+        units = segment_for_translation(source)
+        self.assertEqual([unit.text for unit in units], [source])
+        self.assertEqual(
+            [unit.model_input for unit in units],
+            [
+                "People react to direct and mediated social touch in similar ways "
+                "(Bailenson and Yee, 2007), at the physiological and social level."
+            ],
+        )
+        self.assert_round_trip(source)
+
     def test_empty_source_can_still_be_segmented(self) -> None:
         units = segment_for_translation("   ")
         self.assertEqual(len(units), 1)

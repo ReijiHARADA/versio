@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 from .citation_protect import protected_span_mask
 
-SEGMENTER_VERSION = "semantic-v83"
+SEGMENTER_VERSION = "semantic-v84"
 _ABBREVIATIONS = {"e.g.", "i.e.", "et al.", "fig.", "eqn.", "eq.", "no.", "cf.", "dr.", "mr.", "ms.", "vs."}
 
 
@@ -75,6 +75,19 @@ def _normalize_model_input(text: str) -> str:
         "may have gone undetected",
         normalized,
         flags=re.I,
+    )
+    # Some native PDF streams drop the opening parenthesis before an
+    # author-year citation (`similar ways Bailenson and Yee (2007), at ...`).
+    # The text is still reconstructable, but MADLAD tends to treat the author
+    # name as the object of `ways` and corrupts the remainder of the clause.
+    # Restore only this high-confidence citation boundary in model input; the
+    # exact source slice remains unchanged for round-trip and invariant checks.
+    normalized = re.sub(
+        r"(?P<lead>\b(?:ways|manner|fashion)\s+)"
+        r"(?P<authors>[A-Z][A-Za-z'’\-]+(?:\s+(?:and|&)\s+[A-Z][A-Za-z'’\-]+|\s+et\s+al\.)?)\s+"
+        r"\((?P<year>\d{4}[a-z]?)\)(?=\s*[,.;])",
+        lambda match: f"{match.group('lead')}({match.group('authors')}, {match.group('year')})",
+        normalized,
     )
     # MADLAD can collapse the relation in long copular definitions of the
     # form "X is a common metric to measure A compared to B".  Present the
