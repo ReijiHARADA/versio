@@ -401,3 +401,7 @@
 ## CAT-Translate fallback review
 
 Manual source/output review was completed for the four-row fallback-enriched CAT-Translate 3.3B artifact (`test-data/real-papers/reports/cat-focused-fallback-v1-manual-review.json`). All four rows had no severity>=2 semantic error; three were gate-accepted and the long statistical row was semantically correct but rejected by the existing degenerate-output gate, indicating one false reject. The interactive-jewellery row remains a source continuation fragment (severity 1 extraction/unit issue). This supports CAT as a bounded audit candidate, but the sample is too small to enable production cascade; expand with held-out fallback rows and numeric/claim review first.
+
+## CAT-Translate expanded fallback review
+
+A second audit-only run evaluated all seven post-model fallback rows from the focused cohort with cached CAT-Translate 3.3B (`cat-focused-fallback-v2.json`). Manual review found 6/7 rows without a severity>=2 issue; one SpeeChin methods row changed “current and previous utterances” to “current and previous sessions” (severity 2 scope shift). The existing quality gate also false-rejected one semantically faithful long statistical row. This rules out enabling CAT solely on automatic acceptance: it can improve readability, but relation/scope review and a conservative cascade policy are still required. See `cat-focused-fallback-v2-manual-review.json`.
