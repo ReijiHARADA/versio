@@ -1,7 +1,8 @@
 /**
  * Baseline academic-PDF extraction benchmark. Does not change import.
  *
- *   npx tsx scripts/benchmark-pdf-extraction.ts
+ *   npx tsx scripts/benchmark-pdf-extraction.ts --papers interactive-jewellery,thermal-earring
+ *   npx tsx scripts/benchmark-pdf-extraction.ts --all
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -20,12 +21,23 @@ type CatalogPaper = {
 };
 
 const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "..");
+const args = process.argv.slice(2);
+const papersIndex = args.indexOf("--papers");
+const requestedIds = papersIndex >= 0
+  ? new Set((args[papersIndex + 1] ?? "").split(",").map((id) => id.trim()).filter(Boolean))
+  : undefined;
+const runAll = args.includes("--all");
 const catalog = JSON.parse(
   fs.readFileSync(path.join(root, "test-fixtures/real-papers/catalog.json"), "utf8")
 ) as { pdfDir: string; papers: CatalogPaper[] };
 
+if (!requestedIds && !runAll && catalog.papers.length > 12) {
+  throw new Error("抽出全件ベンチマークには --all を明示してください。通常は --papers id1,id2 で重点fixtureを指定します。");
+}
+
 const reports = [];
 for (const paper of catalog.papers) {
+  if (requestedIds && !requestedIds.has(paper.id)) continue;
   const pdfPath = path.join(root, catalog.pdfDir, paper.filename);
   if (!fs.existsSync(pdfPath)) continue;
   const pages = await extractPdfPages(pdfPath);
