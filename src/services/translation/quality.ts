@@ -2008,6 +2008,12 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   // translation.
   const terminalCitationSuffix = /[.!?。！？]\s*(?:\[\s*\d+(?:\s*[-–—,]\s*\d+)*\s*\]|\d{1,3})$/.test(t);
   const noTerminal = !/[.!?。！？]$/.test(t) && !terminalCitationSuffix;
+  // A paragraph followed by a bare figure/table label is commonly a native
+  // block-boundary or caption merge. Keep the structural marker with the
+  // layout review instead of sending the mixed unit to a translation model.
+  if (t.length >= 80 && /(?:Figure|Fig\.?|Table|Tbl\.?)\s*\d{1,3}(?:\s*\([a-z]\))?$/i.test(t)) {
+    return "図表ラベルが段落末尾に混入している可能性があります";
+  }
   // A citation list cut at a PDF page/column boundary often leaves an open
   // square bracket at the block end (`... [4, 9, 29`). Preserve the source
   // until the following block can be stitched; translating this fragment

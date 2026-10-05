@@ -234,6 +234,11 @@ describe("source completeness diagnostics", () => {
     expect(diagnoseIncompleteSource(source).reason).toContain("省略記号");
   });
 
+  it("flags a paragraph with a trailing figure label", () => {
+    const source = "The safety analysis estimates induced electric and magnetic fields across the operating range and reports the corresponding average exposure values. Fig. 3";
+    expect(diagnoseIncompleteSource(source)).toEqual({ incomplete: true, reason: "図表ラベルが段落末尾に混入している可能性があります" });
+  });
+
   it("flags a paragraph cut at a document cross-reference", () => {
     const source = "The rest of the paper is organized as follows: we first review related work and define notations in Section";
     expect(diagnoseIncompleteSource(source).incomplete).toBe(true);
