@@ -433,7 +433,7 @@ Saved `test-data/real-papers/reports/server-stat-unit-diagnostic-v1.json` from a
 
 ## Comparative-statistics rescue
 
-Added a bounded server rescue for comparative-result sentences that fail quality: when four or more comparative predicates are present, retry once with only compact inline statistic literals visible to MADLAD. The normal scientific invariant gate still rejects altered or missing values; this does not globally expose placeholders. Python tests pass (246). This requires a translation-server restart before runtime validation.
+Added a bounded server rescue for comparative-result sentences that fail quality: when three or more comparative predicates are present, retry once with only compact inline statistic literals visible to MADLAD. The normal scientific invariant gate still rejects altered or missing values; this does not globally expose placeholders. Python tests pass (246). This requires a translation-server restart before runtime validation.
 
 ## Three-item comparative-list attribution
 
