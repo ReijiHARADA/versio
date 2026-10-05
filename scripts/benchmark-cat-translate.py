@@ -1,5 +1,6 @@
 """Audit-only CAT-Translate comparison for the existing ordinary-body cohort."""
 import json
+import hashlib
 import os
 import re
 import time
@@ -79,8 +80,22 @@ def main() -> None:
         rows = []
         for index in range(max((len(items) for _, items in groups), default=0)):
             for paper_id, items in groups:
-                if index < len(items) and len(rows) < MAX_ROWS:
+                if index < len(items):
                     rows.append({**items[index], "paperId": paper_id})
+    # A source may appear in several report generations or under different
+    # block keys. Deduplicate before applying the row limit so a small model
+    # cohort is genuinely source-disjoint.
+    seen_sources: set[str] = set()
+    deduplicated_rows = []
+    duplicate_source_count = 0
+    for row in rows:
+        source_key = hashlib.sha256(" ".join(str(row.get("source", "")).split()).encode("utf-8")).hexdigest()
+        if source_key in seen_sources:
+            duplicate_source_count += 1
+            continue
+        seen_sources.add(source_key)
+        deduplicated_rows.append(row)
+    rows = deduplicated_rows[:MAX_ROWS]
     dtype = torch.bfloat16 if torch.backends.mps.is_available() else torch.float32
     device = "mps" if torch.backends.mps.is_available() else "cpu"
     print(f"[CAT] loading {MODEL_ID} on {device} dtype={dtype}")
@@ -130,6 +145,7 @@ def main() -> None:
                 "total": len(results),
                 "sourceIntegrityFlagged": sum(bool(item["sourceIntegrityFlags"]) for item in results),
                 "cleanSourceRows": sum(not item["sourceIntegrityFlags"] for item in results),
+                "duplicateSourceCount": duplicate_source_count,
             },
         }
         OUT.write_text(json.dumps(report_payload, ensure_ascii=False, indent=2))
