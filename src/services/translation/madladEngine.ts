@@ -5,6 +5,7 @@
  */
 
 import { isPlausibleJaTranslation, restoreUtf8ByteEscapes } from "./quality";
+import { projectSafeUnitTranslation } from "./partialProjection";
 import type { TranslationEngine, TranslationResult, EngineStatus } from "./types";
 
 // Bump whenever the server-side protection or semantic-unit pipeline changes.
@@ -120,15 +121,25 @@ export class MADLADEngine implements TranslationEngine {
       ""
     );
 
-    if (!translatedText) {
+    const translationUnits = Array.isArray(data.translation_units)
+      ? data.translation_units.filter((value: unknown): value is string => typeof value === "string")
+      : undefined;
+    const partialUnitTexts = Array.isArray(data.partial_unit_texts)
+      ? data.partial_unit_texts.filter((value: unknown): value is string => typeof value === "string")
+      : undefined;
+    const safePartial = projectSafeUnitTranslation({ translationUnits, partialUnitTexts });
+    const effectiveText = !isPlausibleJaTranslation(translatedText, text) && safePartial
+      ? safePartial.text
+      : translatedText;
+    if (!effectiveText) {
       throw new Error("Translation server returned empty text");
     }
-    if (targetLanguage === "ja" && !isPlausibleJaTranslation(translatedText, text)) {
+    if (targetLanguage === "ja" && !isPlausibleJaTranslation(effectiveText, text) && !safePartial) {
       throw new Error("Translation output looked degenerate and was discarded");
     }
 
     return {
-      text: translatedText,
+      text: effectiveText,
       sourceLanguage: data.source_language,
       targetLanguage: data.target_language,
       model: data.model,
@@ -146,7 +157,7 @@ export class MADLADEngine implements TranslationEngine {
       partialText: typeof data.partial_text === "string" ? restoreUtf8ByteEscapes(data.partial_text) : undefined,
       partialSourceUnits: Array.isArray(data.partial_source_units) ? data.partial_source_units.filter((value: unknown): value is string => typeof value === "string") : undefined,
       partialUnitTexts: Array.isArray(data.partial_unit_texts) ? data.partial_unit_texts.filter((value: unknown): value is string => typeof value === "string") : undefined,
-      translationUnits: Array.isArray(data.translation_units) ? data.translation_units.filter((value: unknown): value is string => typeof value === "string") : undefined,
+      translationUnits,
     };
   }
 
@@ -179,14 +190,26 @@ export class MADLADEngine implements TranslationEngine {
 
     return data.results.map((r: Record<string, unknown>, index: number) => {
       const translatedText = restoreUtf8ByteEscapes(r.text as string);
+      const translationUnits = Array.isArray(r.translation_units)
+        ? r.translation_units.filter((value): value is string => typeof value === "string")
+        : undefined;
+      const partialUnitTexts = Array.isArray(r.partial_unit_texts)
+        ? r.partial_unit_texts.filter((value): value is string => typeof value === "string")
+        : undefined;
+      const safePartial = projectSafeUnitTranslation({ translationUnits, partialUnitTexts });
+      const effectiveText = targetLanguage === "ja"
+        && !isPlausibleJaTranslation(translatedText, texts[index] ?? "")
+        && safePartial
+        ? safePartial.text
+        : translatedText;
       // Keep single and batch APIs semantically identical.  The server may
       // return its source as a safe per-unit fallback; it must never be
       // treated as a completed Japanese translation by a future batch caller.
-      if (targetLanguage === "ja" && !isPlausibleJaTranslation(translatedText, texts[index] ?? "")) {
+      if (targetLanguage === "ja" && !isPlausibleJaTranslation(effectiveText, texts[index] ?? "") && !safePartial) {
         throw new Error("Translation output looked degenerate and was discarded");
       }
       return {
-        text: translatedText,
+        text: effectiveText,
         sourceLanguage: r.source_language as string,
         targetLanguage: r.target_language as string,
         model: r.model as string,
@@ -203,8 +226,8 @@ export class MADLADEngine implements TranslationEngine {
         unitFallbackIndices: Array.isArray(r.unit_fallback_indices) ? r.unit_fallback_indices.filter((value): value is number => typeof value === "number") : undefined,
         partialText: typeof r.partial_text === "string" ? restoreUtf8ByteEscapes(r.partial_text) : undefined,
         partialSourceUnits: Array.isArray(r.partial_source_units) ? r.partial_source_units.filter((value): value is string => typeof value === "string") : undefined,
-        partialUnitTexts: Array.isArray(r.partial_unit_texts) ? r.partial_unit_texts.filter((value): value is string => typeof value === "string") : undefined,
-        translationUnits: Array.isArray(r.translation_units) ? r.translation_units.filter((value): value is string => typeof value === "string") : undefined,
+        partialUnitTexts,
+        translationUnits,
       };
     });
   }

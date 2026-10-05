@@ -22,16 +22,16 @@ from .citation_protect import (
     restore_citations,
     terminal_superscript_indices,
 )
+from .identifier_retry import (
+    MEASUREMENT_PATTERN,
+    allows_unprotected_identifier_retry,
+    unprotected_identifier_retry_values,
+)
 from .segmenter import (
     SEGMENTER_VERSION,
     rescue_units_for_translation,
     segment_for_translation,
     split_for_translation,
-)
-
-MEASUREMENT_PATTERN = (
-    r"(?<!\w)(?:[≤≥<>]=?|±)?[ \t]*\d+(?:\.\d+)?[ \t]*"
-    r"(?:[kMGTmunpfμu]?\s*(?:mAh|MHz|GHz|kHz|Hz|mm|cm|km|ms|kg|mg|pF|nF|uF|μF|mF|uW|mW|kW|W|mV|kV|V|mA|kA|A|dB|Ω|kΩ|MΩ|m|s|%))\s*"
 )
 
 INLINE_NUMERIC_CITATION_PATTERN = re.compile(
@@ -81,167 +81,6 @@ def restore_unambiguous_terminal_numeric_citations(source: str, translated: str)
     return translated.rstrip() + insertion
 
 
-def _allowed_unprotected_retry_value(item: str) -> bool:
-    """Allow fallback only for plain, non-camelcase identifier placeholders.
-
-    A transformed token such as ``errorsAssume`` may be a dropped scientific
-    placeholder; retrying without protection could silently lose facts.
-    """
-    def is_plain_identifier(item: str) -> bool:
-        return bool(re.fullmatch(r"\s*[A-Za-z][A-Za-z0-9._-]{1,31}\s*", item)) and not re.search(r"[a-z][A-Z]", item)
-
-    def is_figure_or_table_reference(item: str) -> bool:
-        # Figure/table labels are structural references. If MADLAD drops only
-        # this low-semantic-span token, a second decode without the placeholder
-        # is safer than falling back the entire otherwise complete paragraph.
-        # Keep the grammar deliberately narrow: no prose or statistical values.
-        return bool(
-            re.fullmatch(
-                r"\s*\(?\s*(?:fig(?:ure)?s?|table|tbl)\.?\s*\d+(?:\s*[a-z]|\s*\([a-z]\))?\s*\)?\s*",
-                item,
-                flags=re.IGNORECASE,
-            )
-        )
-
-    def is_numeric_citation(item: str) -> bool:
-        # A dropped numeric citation placeholder can be retried as literal
-        # source text. The client invariant gate still rejects the result if
-        # the citation is omitted or changed, so this only avoids losing an
-        # otherwise usable paragraph to placeholder fragility.
-        return bool(
-            re.fullmatch(
-                r"\s*\[\s*\d+(?:\s*[-–]\s*\d+|\s*,\s*\d+)*\s*\]\s*",
-                item,
-            )
-        )
-
-    def is_measurement(item: str) -> bool:
-        # Scalar units are safe to expose on a retry because the client-side
-        # invariant gate requires the exact value/unit to survive. This is
-        # narrower than arbitrary scientific identifiers and avoids sending
-        # equations or p-values unprotected.
-        return bool(re.fullmatch(MEASUREMENT_PATTERN, item, flags=re.IGNORECASE))
-
-    def is_currency_identifier(item: str) -> bool:
-        return bool(re.fullmatch(r"\s*(?:USD|EUR|GBP|JPY|CNY)\s*", item, flags=re.IGNORECASE))
-
-    def is_supplementary_reference(item: str) -> bool:
-        return bool(re.fullmatch(r"\s*SI\s+Appendix\s*", item, flags=re.IGNORECASE))
-
-    def is_figure_table_reference(item: str) -> bool:
-        return bool(re.fullmatch(
-            r"\s*(?:Fig(?:ure)?\.?|Table|Tbl\.)\s+\d+(?:\s*\([A-Za-z]\)|[A-Za-z])?\s*",
-            item,
-            flags=re.IGNORECASE,
-        ))
-
-    def is_author_year_citation_group(item: str) -> bool:
-        """Allow only a bounded author-year group on a restore retry.
-
-        The citation stays opaque on the normal path. If its placeholder is
-        dropped, exposing the complete parenthesized group gives MADLAD the
-        surrounding factual context; the ordinary invariant gate still
-        verifies the final citation, so this cannot silently accept a changed
-        or missing reference.
-        """
-        author = r"[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+(?:\s+et\s+al\.?)?(?:\s+(?:&|and)\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+)?"
-        year = r"(?:\(\s*(?:18|19|20)\d{2}[a-z]?\s*\)|,?\s*(?:18|19|20)\d{2}[a-z]?)"
-        entry = rf"(?:to\s+)?{author}\s*{year}"
-        return bool(re.fullmatch(rf"\(?\s*{entry}(?:\s*;\s*{entry}){{0,3}}\s*\)?", item))
-
-    def is_section_reference(item: str) -> bool:
-        return bool(re.fullmatch(
-            r"\s*(?:Section|Appendix)\s+(?:\d+(?:\.\d+)*|[A-Z])\s*",
-            item,
-            flags=re.IGNORECASE,
-        ))
-
-    def is_author_et_al_superscript(item: str) -> bool:
-        return bool(re.fullmatch(
-            r"\s*[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+\s+et\s+al\.\s*\d{1,3}\s*",
-            item,
-        ))
-
-    return is_plain_identifier(item) or is_figure_or_table_reference(item) or is_numeric_citation(item) or is_measurement(item) or is_currency_identifier(item) or is_supplementary_reference(item) or is_section_reference(item) or is_author_et_al_superscript(item)
-
-
-def unprotected_identifier_retry_values(
-    missing: list[str], *, allow_inline_numeric: bool = False
-) -> list[str]:
-    """Return only spans safe to expose on a selective retry.
-
-    Citation/statistic spans stay protected even when they are reported in the
-    same restore error as an identifier. The caller's normal invariant gate
-    still rejects the retry if any protected citation is actually lost.
-    """
-    if not missing:
-        return []
-    def is_numeric_citation(item: str) -> bool:
-        return bool(re.fullmatch(r"\s*\[\s*\d+(?:\s*[-–]\s*\d+|\s*,\s*\d+)*\s*\]\s*", item))
-
-    def is_inline_numeric_citation(item: str) -> bool:
-        return bool(re.fullmatch(r"\s*\d{1,3}\s*", item))
-
-    # Expose only compact factual spans on this retry. The normal invariant
-    # gate still rejects the result if a citation/reference is lost, but
-    # literal retry lets MADLAD preserve short labels it otherwise drops as a
-    # placeholder (notably `17` together with `SI Appendix`).
-    def is_identifier(item: str) -> bool:
-        return bool(re.fullmatch(r"\s*[A-Za-z][A-Za-z0-9._-]{1,31}\s*", item))
-
-    def is_section_reference(item: str) -> bool:
-        return bool(re.fullmatch(
-            r"\s*(?:Section|Appendix)\s+(?:\d+(?:\.\d+)*|[A-Z])\s*",
-            item,
-            flags=re.IGNORECASE,
-        ))
-
-    def is_supplementary_reference(item: str) -> bool:
-        return bool(re.fullmatch(r"\s*SI\s+Appendix\s*", item, flags=re.IGNORECASE))
-
-    def is_figure_table_reference(item: str) -> bool:
-        return bool(re.fullmatch(
-            r"\s*(?:Fig(?:ure)?\.?|Table|Tbl\.)\s+\d+(?:\s*\([A-Za-z]\)|[A-Za-z])?\s*",
-            item,
-            flags=re.IGNORECASE,
-        ))
-
-    def is_author_year_citation_group(item: str) -> bool:
-        """Allow a bounded author-year group on a selective retry."""
-        author = r"[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+(?:\s+et\s+al\.?)?(?:\s+(?:&|and)\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+)?"
-        year = r"(?:\(\s*(?:18|19|20)\d{2}[a-z]?\s*\)|,?\s*(?:18|19|20)\d{2}[a-z]?)"
-        entry = rf"(?:to\s+)?{author}\s*{year}"
-        return bool(re.fullmatch(rf"\(?\s*{entry}(?:\s*;\s*{entry}){{0,3}}\s*\)?", item))
-
-    identifiers = [
-        item for item in missing
-        if is_identifier(item)
-        or is_section_reference(item)
-        or is_supplementary_reference(item)
-
-        or is_figure_table_reference(item)
-        or is_author_year_citation_group(item)
-        or (allow_inline_numeric and is_inline_numeric_citation(item))
-    ]
-    if not identifiers:
-        return []
-    # Every missing value must be a recognized safe span. Do not selectively
-    # expose an unknown scientific token merely because another span is safe.
-    if not all(
-        is_identifier(item)
-        or is_section_reference(item)
-        or is_supplementary_reference(item)
-
-        or is_figure_table_reference(item)
-        or is_author_year_citation_group(item)
-        or is_numeric_citation(item)
-        or is_inline_numeric_citation(item)
-        for item in missing
-    ):
-        return []
-    return identifiers
-
-
 def classify_protected_spans(spans: list[str]) -> dict[str, list[str]]:
     """Classify spans reported by a protection-restore failure.
 
@@ -276,11 +115,6 @@ def classify_protected_spans(spans: list[str]) -> dict[str, list[str]]:
             category = "other"
         categories[category].append(value)
     return categories
-
-
-def allows_unprotected_identifier_retry(missing: list[str]) -> bool:
-    """Backward-compatible predicate for callers and tests."""
-    return bool(missing) and all(_allowed_unprotected_retry_value(item) for item in missing)
 
 
 def restore_missing_structure_references(source: str, output: str) -> str:

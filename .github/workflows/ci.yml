@@ -53,6 +53,8 @@ jobs:
         working-directory: src-tauri
     steps:
       - uses: actions/checkout@v5
+      - name: Stub bundled translation-server for Tauri resource check
+        run: mkdir -p src-tauri/bundled-resources/translation-server
       - name: Install Tauri Linux system dependencies
         run: |
           sudo apt-get update

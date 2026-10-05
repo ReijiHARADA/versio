@@ -320,16 +320,28 @@ try {
     await shot("library-favorite");
 
     await check("inline memo popover stays on reader", async () => {
-      await page.getByText(SAMPLE_TITLE_JA).first().click();
+      const card = page.locator("article").filter({ hasText: "Attention" }).first();
+      await card.click();
       await page.waitForURL(/#\/reader\//, { timeout: 10_000 });
       const translation = page.locator("[data-text-role='translation']").first();
       await translation.waitFor({ timeout: 10_000 });
-      const box = await translation.boundingBox();
-      if (!box) throw new Error("translation box missing");
-      await page.mouse.move(box.x + 24, box.y + 10);
-      await page.mouse.down();
-      await page.mouse.move(box.x + Math.min(box.width - 12, 180), box.y + 10);
-      await page.mouse.up();
+      await translation.scrollIntoViewIfNeeded();
+      await page.evaluate(() => {
+        const root = document.querySelector('[data-testid="reader-body"]');
+        const el = root?.querySelector('[data-text-role="translation"]');
+        if (!el) throw new Error("translation paragraph missing");
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        const textNode = walker.nextNode();
+        if (!textNode || !textNode.textContent) throw new Error("translation text missing");
+        const end = Math.min(12, textNode.textContent.length);
+        const range = document.createRange();
+        range.setStart(textNode, 0);
+        range.setEnd(textNode, end);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+        root?.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+      });
       const dialog = page.getByRole("dialog", { name: "メモを追加" });
       await dialog.waitFor({ state: "visible", timeout: 5_000 });
       // Header button also has aria-label メモ一覧; the inspector is an <aside>.

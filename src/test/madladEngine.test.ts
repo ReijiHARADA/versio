@@ -124,6 +124,29 @@ describe("MADLADEngine batch integrity", () => {
     vi.unstubAllGlobals();
   });
 
+  it("accepts a safe partial projection from the batch endpoint", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        results: [{
+          text: "前半は翻訳済み。The second sentence.",
+          source_language: "en",
+          target_language: "ja",
+          model: "madlad",
+          model_version: "test",
+          translation_units: ["The first sentence.", "The second sentence."],
+          partial_unit_texts: ["前半は翻訳済み。", "The second sentence."],
+          fallback_stage: "partial_unit_fallback",
+          unit_fallback_indices: [1],
+        }],
+      }),
+    }));
+
+    await expect(new MADLADEngine().translateBatch(["The first sentence. The second sentence."], "en", "ja"))
+      .resolves.toEqual([expect.objectContaining({ text: "前半は翻訳済み。The second sentence." })]);
+    vi.unstubAllGlobals();
+  });
+
   it("projects partial units only as an explicitly unsafe audit candidate", () => {
     const candidate = projectPartialTranslation({
       fallbackStage: "partial_unit_fallback",
