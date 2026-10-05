@@ -5,6 +5,7 @@
 - 2026-10-05: 同じ2件でCATの監査専用citation placeholderを有効化して比較。引用欠落は解消せず、`[2]`/`[16]` がなお欠落し、別unitでは `ZZCIT` 指示文が出力へ漏れた。単純placeholder/prompt方式はCAT rescueの根拠にならず、本番へ接続しない。
 - 2026-10-05: CAT同一cohortで検出した「less easy to access」と「easier to access」が同じ日本語述語へ潰れる比較極性の欠落を、一般化したcascade専用relation guard `opposite comparative polarity collapsed` として追加。quality tests **271/271**、typecheck、diff check pass。反対極性を別表現で保持する受理回帰も追加し、全件再計測は不要な局所品質修正として未実施。
 - 同ガード後の全TypeScript回帰は **70 files / 652 tests pass**。PDF抽出・reading order・cascade・import/resumeに回帰なし。
+- 抽出ベンチマークの範囲ガードを追加後、`--papers thermal-earring` の1本実行を確認。title exactness、source integrity、figure/table caption・region指標はいずれも1.0、heading recall 0.973。引数なし全件実行は明示的に拒否される。
 - 比較極性ガード後に同一CAT cohort（2件）を再採点し、自動受理が **1/2→0/2** になった。dont-mind-meの数値保持候補も、反対極性のcollapseを安全側で拒否できることを確認。CATを本番cascadeへ接続する前の安全基準として保存。
 - 2026-10-05: CAT比較前のMADLAD重点基準 `focused-before-cat-v1`（4本・16 units）を完了。ordinary-bodyは2/6 fallback（33.3%）、全体は9/16 fallbackだが、6件は構造不良によるpre-model除外。これは全体推定ではなく、CAT cascade比較用の基準値として保存。
 
