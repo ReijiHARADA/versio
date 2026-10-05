@@ -686,6 +686,12 @@ async function main() {
         const quality = normalizedTranslation ? evaluateJaTranslation(normalizedTranslation, source) : undefined;
         const wouldAcceptTranslation = sourceFallback ? false : normalizedTranslation ? isPlausibleJaTranslation(normalizedTranslation, source) : undefined;
         const readerVisibleFallback = !wouldAcceptTranslation;
+        const rowFallbackStage = fallbackStage(wouldSubmitToModel, readerVisibleFallback);
+        const rowFallbackReason = rowFallbackStage === "none"
+          ? undefined
+          : structurallySkipped
+            ? String(block.metadata.translationInputWarning ?? "structural skip; preserved in source")
+            : fallbackReason(source, result, quality);
         const partialSourceFallback = detectPartialSourceFallback(source, normalizedTranslation);
         const category = sourceCategory(block);
         const sourceCompleteness = diagnoseIncompleteSource(source);
@@ -728,10 +734,8 @@ async function main() {
           sourceIntegrity: category === "damaged-extraction" ? "mixed-chrome" : structuralWarnings(block).length ? "structural-warning" : "clean",
           sourceCompleteness,
           extractionProvenance: { pageStart: block.pageStart, pageEnd: block.pageEnd, bboxCount: block.boundingBoxes.length, extractionConfidence: block.extractionConfidence },
-          fallbackStage: fallbackStage(wouldSubmitToModel, readerVisibleFallback),
-          fallbackReason: structurallySkipped
-            ? String(block.metadata.translationInputWarning ?? "structural skip; preserved in source")
-            : fallbackReason(source, result, quality),
+          fallbackStage: rowFallbackStage,
+          fallbackReason: rowFallbackReason,
           serverFallbackReason: result?.fallback_reason,
           serverFallbackStage: result?.fallback_stage,
           unitFallbackIndices: result?.unit_fallback_indices,
