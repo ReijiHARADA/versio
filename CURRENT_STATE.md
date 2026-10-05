@@ -421,3 +421,7 @@ Applied the same source-aware comparative-list repetition guard to the Python MA
 ## Post-restart server probe
 
 Restarted the translation server from the updated Python source (model version reports the current v84 pipeline) and probed the known 1,161-character statistical list unit directly. It still returned `partial_unit_fallback`, so the remaining failure is not solely the generic phrase-repetition gate; further attribution must inspect the unit-level reason (protected scientific spans, decode output, or another invariant) before weakening additional server checks.
+
+## Unit-level fallback attribution
+
+Saved `test-data/real-papers/reports/server-stat-unit-diagnostic-v1.json` from a single post-restart request for `dont-mind-me:b-4c16bae3`. The server reports `unit_1` and `unit_3` as `translation_quality_rejected:degenerate translation output`; both are complete comparative-statistics sentences, not extraction fragments. The other five units return Japanese. Their preserved source units and partial outputs show that the model can produce malformed comparative lists (including altered p-values) before the fallback gate, so simply permitting repetition would be unsafe. The next fix should target a structured comparative-list rescue or alternate model, with numeric verification, rather than weakening the gate.
