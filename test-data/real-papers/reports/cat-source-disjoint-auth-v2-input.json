@@ -1,0 +1,333 @@
+{
+  "version": "cat-source-disjoint-auth-v2-input",
+  "rows": [
+    {
+      "key": "power-over-skin:b-51971114",
+      "benchmarkRunId": "2026-10-05T01-29-19-119Z",
+      "paperId": "power-over-skin",
+      "blockId": "b-51971114",
+      "role": "paragraph",
+      "translationStatus": "pending",
+      "pageStart": 6,
+      "pageEnd": 6,
+      "source": "We now describe the development considerations of our receiver board, which went through many iterations to reduce size and increase received power (major milestones shown in Figure 8).",
+      "translation": "受信機ボードの開発にあたっては, 小型化と受信電力の増大を目的として, 多くの反復を経てきた(major milestones shown in Figure 8)。",
+      "sourceFallback": false,
+      "readerVisibleFallback": true,
+      "partialSourceFallback": false,
+      "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v83-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+      "inputTokens": 35,
+      "outputTokens": 44,
+      "translationTimeMs": 2643.157958984375,
+      "sourceInvariants": [
+        "Figure 8"
+      ],
+      "technicalNameCandidates": [],
+      "missingTechnicalNameCandidates": [],
+      "detachedNumericCitationRisk": false,
+      "acronymExpansionDrift": false,
+      "extremeTranslationCompression": false,
+      "quality": {
+        "score": 1,
+        "reasons": [
+          "untranslated source phrase"
+        ],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "structuralWarnings": [],
+      "sourceCategory": "ordinary-body-prose",
+      "sourceIntegrity": "clean",
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "extractionProvenance": {
+        "pageStart": 6,
+        "pageEnd": 6,
+        "bboxCount": 3,
+        "extractionConfidence": 0.97
+      },
+      "fallbackStage": "post-model",
+      "fallbackReason": "untranslated source phrase",
+      "serverFallbackReason": null,
+      "serverFallbackStage": null,
+      "unitFallbackIndices": null,
+      "partialText": null,
+      "partialSourceUnits": null,
+      "partialUnitTexts": [
+        "受信機ボードの開発にあたっては,小型化と受信電力の増大を目的として,多くの反復を経てきた(major milestones shown in Figure 8)。"
+      ],
+      "translationUnits": [
+        "We now describe the development considerations of our receiver board, which went through many iterations to reduce size and increase received power (major milestones shown in Figure 8)."
+      ],
+      "wouldSubmitToModel": true,
+      "wouldAcceptTranslation": false
+    },
+    {
+      "key": "step-to-charge:b-7abc7b89",
+      "benchmarkRunId": "2026-10-05T01-29-19-119Z",
+      "paperId": "step-to-charge",
+      "blockId": "b-7abc7b89",
+      "role": "paragraph",
+      "translationStatus": "pending",
+      "pageStart": 11,
+      "pageEnd": 12,
+      "source": "10M Hz). Thus, to further verify the observations in the Finite Element Analysis based EM simulations, we perform experiments to determine the safe operation range of Step-to-Charge. Fig. 3",
+      "translation": "これらの結果を基に,Step-to-Chargeの安全運転範囲を決定する実験を行った。 (Fig. 3)",
+      "sourceFallback": false,
+      "readerVisibleFallback": true,
+      "partialSourceFallback": false,
+      "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v83-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+      "inputTokens": 51,
+      "outputTokens": 36,
+      "translationTimeMs": 29140.95687866211,
+      "sourceInvariants": [
+        "Fig. 3",
+        "10M",
+        "10M Hz",
+        "EM"
+      ],
+      "technicalNameCandidates": [
+        "Step-to-Charge"
+      ],
+      "missingTechnicalNameCandidates": [],
+      "detachedNumericCitationRisk": false,
+      "acronymExpansionDrift": false,
+      "extremeTranslationCompression": false,
+      "quality": {
+        "score": 0.6,
+        "reasons": [
+          "scientific invariants missing: 10M, 10M Hz, EM"
+        ],
+        "languageScore": 1,
+        "invariantScore": 0,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "structuralWarnings": [
+        "cross-page logical block"
+      ],
+      "sourceCategory": "ordinary-body-prose",
+      "sourceIntegrity": "structural-warning",
+      "sourceCompleteness": {
+        "incomplete": true,
+        "reason": "long prose block has no terminal sentence mark"
+      },
+      "extractionProvenance": {
+        "pageStart": 11,
+        "pageEnd": 12,
+        "bboxCount": 21,
+        "extractionConfidence": 0.96
+      },
+      "fallbackStage": "post-model",
+      "fallbackReason": "scientific invariants missing: 10M, 10M Hz, EM",
+      "serverFallbackReason": null,
+      "serverFallbackStage": null,
+      "unitFallbackIndices": null,
+      "partialText": null,
+      "partialSourceUnits": null,
+      "partialUnitTexts": [
+        "これらの結果を基に,Step-to-Chargeの安全運転範囲を決定する実験を行った。"
+      ],
+      "translationUnits": [
+        "10M Hz). Thus, to further verify the observations in the Finite Element Analysis based EM simulations, we perform experiments to determine the safe operation range of Step-to-Charge. Fig. 3"
+      ],
+      "wouldSubmitToModel": true,
+      "wouldAcceptTranslation": false
+    },
+    {
+      "key": "step-to-charge:b-c826d75e",
+      "benchmarkRunId": "2026-10-05T01-29-19-119Z",
+      "paperId": "step-to-charge",
+      "blockId": "b-c826d75e",
+      "role": "paragraph",
+      "translationStatus": "pending",
+      "pageStart": 10,
+      "pageEnd": 10,
+      "source": "A safety study is essential to ascertain and analyze the operation range of Stepto-Charge for use by the general public. As illustrated by a previous study investigating the safety aspects of Electro-Quasistatic Human Body Communications (EQS-HBC) [32], the Institute of Electrical and Electronics Engineers (IEEE) [33] and the International Commission on Non-Ionizing Radiation Protection (ICNIRP) [34] have separately recommended the maximum safety limits concerning human exposure to radio frequency (RF) electromagnetic fields. The frequency of operation in Step-to-Charge is 100kHz − 10M Hz, which falls well within the EQS regime. ICNIRP guidelines are primarily used to perform the safety study. The ICNIRP guidelines consider people with preexisting medical conditions, metallic implants, and implanted medical devices outside the scope of this study. The ICNIRP guidelines adopt conservative estimates to provide “basic restriction” levels, which provide limits on the parameters “Specific Absorption Rate” (SAR) level and the ”Induced Electric Field” inside the body at the frequency range of interest (100kHz to 10M Hz). These quantities are difficult to measure experimentally. We use Finite Element Analysis based electromagnetic simulations using Ansys High Frequency Structure Simulator (HFSS) to estimate the values of the quantities (induced electric and magnetic field inside body, Average SAR). Fig. 3",
+      "sourceFallback": true,
+      "readerVisibleFallback": true,
+      "partialSourceFallback": false,
+      "sourceInvariants": [
+        "[32]",
+        "[33]",
+        "[34]",
+        "Fig. 3",
+        "100kHz",
+        "10M",
+        "10M Hz",
+        "EQS",
+        "HBC",
+        "IEEE",
+        "ICNIRP",
+        "RF",
+        "SAR",
+        "HFSS"
+      ],
+      "technicalNameCandidates": [
+        "Stepto-Charge",
+        "Electro-Quasistatic",
+        "IEEE",
+        "ICNIRP",
+        "Step-to-Charge",
+        "HFSS"
+      ],
+      "missingTechnicalNameCandidates": [],
+      "detachedNumericCitationRisk": false,
+      "acronymExpansionDrift": false,
+      "extremeTranslationCompression": false,
+      "structuralWarnings": [
+        "段落の括弧または引用符が閉じていない可能性があります"
+      ],
+      "sourceCategory": "ordinary-body-prose",
+      "sourceIntegrity": "structural-warning",
+      "sourceCompleteness": {
+        "incomplete": true,
+        "reason": "long prose block has no terminal sentence mark"
+      },
+      "extractionProvenance": {
+        "pageStart": 10,
+        "pageEnd": 10,
+        "bboxCount": 35,
+        "extractionConfidence": 0.96
+      },
+      "fallbackStage": "pre-model",
+      "wouldSubmitToModel": false,
+      "wouldAcceptTranslation": false
+    },
+    {
+      "key": "hci-empirical-methods:b-7686f78c",
+      "benchmarkRunId": "2026-10-05T01-29-19-119Z",
+      "paperId": "hci-empirical-methods",
+      "blockId": "b-7686f78c",
+      "role": "paragraph",
+      "translationStatus": "pending",
+      "pageStart": 2,
+      "pageEnd": 3,
+      "source": "Early in session 1, participants are divided into groups of two and participate in an experiment. A hand-out is distributed for the inclass experiment. See Fig. 2. Following brief instructions, the in-class experiment proceeds. During the experiment, participants take turns acting as a \"participant\" and as an \"investigator\". The participant does an experimental task",
+      "translation": "まず, 参加者を2人ずつのグループに分け, 実験に参加させる。実験の結果, 実験の効果は, 実験結果と実験結論の間にある関係が明らかになった。簡単な指示に従って, クラス内実験を行う。実験中, 参加者は「参加者」と「調査者」として交互に行動する。参加者は実験的な作業を行う (Fig. 2)",
+      "sourceFallback": false,
+      "readerVisibleFallback": true,
+      "partialSourceFallback": false,
+      "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v83-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+      "inputTokens": 102,
+      "outputTokens": 135,
+      "translationTimeMs": 16231.661796569824,
+      "sourceInvariants": [
+        "Fig. 2",
+        "1"
+      ],
+      "technicalNameCandidates": [],
+      "missingTechnicalNameCandidates": [],
+      "detachedNumericCitationRisk": false,
+      "acronymExpansionDrift": false,
+      "extremeTranslationCompression": false,
+      "quality": {
+        "score": 0.728,
+        "reasons": [
+          "scientific invariants missing: 1"
+        ],
+        "languageScore": 1,
+        "invariantScore": 0.32,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "structuralWarnings": [
+        "cross-page logical block"
+      ],
+      "sourceCategory": "ordinary-body-prose",
+      "sourceIntegrity": "structural-warning",
+      "sourceCompleteness": {
+        "incomplete": true,
+        "reason": "long prose block has no terminal sentence mark"
+      },
+      "extractionProvenance": {
+        "pageStart": 2,
+        "pageEnd": 3,
+        "bboxCount": 30,
+        "extractionConfidence": 0.96
+      },
+      "fallbackStage": "post-model",
+      "fallbackReason": "scientific invariants missing: 1",
+      "serverFallbackReason": null,
+      "serverFallbackStage": null,
+      "unitFallbackIndices": null,
+      "partialText": null,
+      "partialSourceUnits": null,
+      "partialUnitTexts": [
+        "まず,参加者を2人ずつのグループに分け,実験に参加させる。",
+        "実験の結果,実験の効果は,実験結果と実験結論の間にある関係が明らかになった。",
+        "簡単な指示に従って,クラス内実験を行う。",
+        "実験中,参加者は「参加者」と「調査者」として交互に行動する。",
+        "参加者は実験的な作業を行う"
+      ],
+      "translationUnits": [
+        "Early in session 1, participants are divided into groups of two and participate in an experiment.",
+        "A hand-out is distributed for the inclass experiment. See Fig. 2.",
+        "Following brief instructions, the in-class experiment proceeds.",
+        "During the experiment, participants take turns acting as a \"participant\" and as an \"investigator\".",
+        "The participant does an experimental task"
+      ],
+      "wouldSubmitToModel": true,
+      "wouldAcceptTranslation": false
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-b4ed26af",
+      "benchmarkRunId": "2026-10-05T01-29-19-119Z",
+      "paperId": "cognitive-psychology-gpt3",
+      "blockId": "b-b4ed26af",
+      "role": "paragraph",
+      "translationStatus": "pending",
+      "pageStart": 6,
+      "pageEnd": 6,
+      "source": "You have received the following amount of dollars 6 when playing in the past: - Machine F delivered 51 dollars. - Machine J delivered 39 dollars. - Machine J delivered 40 dollars. 4 - Machine J delivered 26 dollars.",
+      "sourceFallback": true,
+      "readerVisibleFallback": true,
+      "partialSourceFallback": false,
+      "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v83-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "translationTimeMs": 0,
+      "sourceInvariants": [
+        "6",
+        "51",
+        "39",
+        "40",
+        "4",
+        "26"
+      ],
+      "technicalNameCandidates": [
+        "Machine"
+      ],
+      "missingTechnicalNameCandidates": [],
+      "detachedNumericCitationRisk": false,
+      "acronymExpansionDrift": false,
+      "extremeTranslationCompression": false,
+      "structuralWarnings": [],
+      "sourceCategory": "ordinary-body-prose",
+      "sourceIntegrity": "clean",
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "extractionProvenance": {
+        "pageStart": 6,
+        "pageEnd": 6,
+        "bboxCount": 6,
+        "extractionConfidence": 0.96
+      },
+      "fallbackStage": "post-model",
+      "fallbackReason": "server whole_item_fallback: whole_item:translation_quality_rejected:ValueError",
+      "serverFallbackReason": "whole_item:translation_quality_rejected:ValueError",
+      "serverFallbackStage": "whole_item_fallback",
+      "unitFallbackIndices": null,
+      "partialText": null,
+      "partialSourceUnits": null,
+      "partialUnitTexts": null,
+      "translationUnits": null,
+      "wouldSubmitToModel": true,
+      "wouldAcceptTranslation": false
+    }
+  ]
+}

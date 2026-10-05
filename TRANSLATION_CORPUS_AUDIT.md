@@ -4658,3 +4658,7 @@ The 113-paper measurement is now reserved for major cross-cutting changes or rel
 ### CAT source-disjoint manual review
 
 Manual review of the five source-hash-disjoint CAT rows found 3 automatic accepts, all usable in this small sample (two severity 0, one severity 1), and one rejected row with a severity-2 procedure-scope shift (`utterances` rendered as `sessions`). The remaining rejected row was degenerate. This supports further bounded CAT evaluation but does not justify production routing. See `reports/cat-source-disjoint-auth-v1-manual-review.json`.
+
+### CAT source-disjoint v2 probe
+
+Five additional CAT rows were generated. Two clean complete rows were usable (severity 0); three contained dangling frequency/Figure boundaries or an orphaned list number and were classified as source-fragment inputs rather than model-quality evidence. This probe supports stricter input stratification and does not change production routing.
