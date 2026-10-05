@@ -217,12 +217,17 @@ function repeatedTermInstruction(source: string): string {
 }
 
 export class AlternateTranslationQualityError extends Error {
+  readonly translation: string;
+  readonly quality: ReturnType<typeof evaluateJaTranslation>;
+
   constructor(
     message: string,
-    readonly translation: string,
-    readonly quality: ReturnType<typeof evaluateJaTranslation>,
+    translation: string,
+    quality: ReturnType<typeof evaluateJaTranslation>,
   ) {
     super(message);
+    this.translation = translation;
+    this.quality = quality;
     this.name = "AlternateTranslationQualityError";
   }
 }

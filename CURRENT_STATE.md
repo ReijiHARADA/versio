@@ -36,6 +36,25 @@
 
 ## 直近の変更
 
+### v1551 — 自動折りたたみ設定プレビューを実UI寄りに更新（2026-10-05）
+
+- 「自動で折りたたむ」の before/after GIF を現行サイドバー＋リーダー風メイン面で再キャプチャ。
+- フィクスチャを `修士研究 / Interactive jewelry` 系に更新し、スケルトン棒のプレビューをやめた。
+
+### v1550 — 折りたたみ時は最上位だけ表示の設定を削除（2026-10-05）
+
+- 設定「折りたたみ時は最上位だけ表示」と関連 GIF プレビューを削除。
+- アイコンレール時は最上位フォルダのみ、展開時に入れ子を出す挙動は固定のまま。
+
+### v1549 — ワークスペースパスの1行省略（2026-10-05）
+
+- 左上の場所パス（例: `修士研究 / Interactive jewelry / …`）が折り返して2行にならないよう、1行固定＋`…` 省略に変更。祖先セグメントを先に縮める。
+
+### v1548 — サイドバー見出しと新規フォルダ導線（2026-10-05）
+
+- 「ワークスペース」「ライブラリ」のセクション見出しを一段階大きくした。
+- 検索直下にあった「新規フォルダ」ボタンを削除し、「ワークスペース」見出し右の + から同じ作成フローを開くようにした。
+
 ### v1545 — quality policy facade refactor（2026-10-05）
 
 - `quality.ts` からタイトル、出版メタデータ、参考文献、名称付き見出しの判定を `quality/documentPolicy.ts` へ分離。旧exportはfacadeで維持。
@@ -70,6 +89,21 @@
 4. borderless table と flattened numeric rows の汎用抽出。
 5. `quality.ts` の責務集中と、品質判定・翻訳ポリシーの依存関係整理。
 6. CAT / alternate model の本番統合可否は未決定。
+
+## 2026-10-05: quality policy refactor checkpoint
+
+- `quality.ts` の caption/title の純粋なsource-shape policyを `src/services/translation/quality/sourceIntegrity.ts` へ分離した。旧facadeのexport名と判定順は維持している。
+- 品質テスト **257/257**、typecheck、`git diff --check` を通過。品質閾値・fallback条件・モデル設定は変更していない。
+- 次は paragraph structure policy の依存（`unsafeParagraphStructureReason` と `shouldTranslateParagraph`）を挙動固定テスト付きで分離するか判断する。翻訳品質の現状目標は未達であり、今回のrefactorを品質改善の実測結果とは扱わない。
+
+## 2026-10-05: packaged-server replay checkpoint
+
+- `.app` 同梱translation serverは `MADLAD_SERVER_TOKEN` を要求するため、診断用 `scripts/replay-translation-fallbacks.mjs` が401になっていた。スクリプトが環境変数を `X-Paper-Reader-Token` として送るよう修正し、トークン自体は保存・出力しない。
+- 同一`.app`サーバーで3件を再実行。長いJogwheel本文は約182秒後に `whole_item_fallback`、Silent Speech本文は約101秒後に protected-token restore failureを伴う `whole_item_fallback`、参考文献行はサーバー終了により未完了。これは品質改善の証拠ではなく、長文decodeと保護復元の再現診断である。
+- 実行中に`.app`サーバーが終了し、後続の直接再生は接続失敗になった。レポートは `test-data/real-papers/reports/madlad-fallback-replay-v3.json` に保存済み。production routingやgateは変更していない。
+- protected-token restore failureのdebugログに、missing spanを `author_year_citation` / `numeric_citation` / `measurement` / `structural_reference` / `identifier` / `other` へ分類する診断情報を追加。判定・retry可否・出力は変更しない。Python品質テスト **153 passed + 3 subtests**、py_compile、差分チェックを通過。
+- 翻訳サーバー全体のPython回帰 **247 passed + 11 subtests** を確認。診断分類追加によるsegmenter、micro-batch、citation保護の回帰はない。
+- `.app`の稼働サーバー `/status` は `model_version=...semantic-v73...` を返し、現在ソースのv83系より古い同梱物であることを確認。`npm run tauri:build` は clean Python bundle staging まで成功したが、残っている未整理TypeScript/UI差分に起因する build-only typecheck（`LayoutRole`/`process`、Ollama enum、sidebar型など）で停止し、`.app`は更新されていない。`importServiceV2.ts` の未定義 `llmProvider` は修正済み。品質変更の失敗とは分離して記録する。
 
 ## 次の作業
 
@@ -198,3 +232,5 @@
 - A qwen3:14b probe was started but the first long candidate exceeded the 240-second request budget and was terminated; `selective-cascade-qwen3-14b-v1.json` is explicitly incomplete (1 result). It is not a quality conclusion.
 - Consolidated the small alternate-model probes in `selective-cascade-model-comparison-v1.{json,md}`. qwen2.5:7b accepted 1/3 (mean 8.4s), qwen2.5:14b accepted 2/3 (mean 15.1s with Chinese contamination in an accepted output), and qwen3:14b is incomplete (1/3, 137.6s). These are diagnostic only and do not justify production routing.
 - Added a regression guard for the observed Chinese connective compound `其次` in mixed Japanese output. This extends the existing script-contamination detector (rather than a hallucinated-content blacklist); quality suite now passes 257 tests.
+- Re-evaluated the saved qwen2.5:14b outputs with the updated gate in `selective-cascade-qwen25-14b-post-gate-v1.json`: the previously accepted contaminated output is now rejected, leaving 1/3 accepted. This is a gate-safety improvement, not a model-quality improvement or production cascade decision.
+- A broader qwen2.5:14b run was started for 10 candidates but was stopped after 3 long results (1 accepted) because the first three already took nearly two minutes each. `selective-cascade-qwen25-14b-v2-10.json` is explicitly partial and must not be treated as a 10-case benchmark.

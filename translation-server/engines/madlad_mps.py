@@ -242,6 +242,42 @@ def unprotected_identifier_retry_values(
     return identifiers
 
 
+def classify_protected_spans(spans: list[str]) -> dict[str, list[str]]:
+    """Classify spans reported by a protection-restore failure.
+
+    This is diagnostic-only. It deliberately shares the same narrow shapes as
+    the retry policy, but does not decide whether a span may be exposed. The
+    resulting categories make long-unit fallback reports actionable without
+    logging the source text or changing production acceptance.
+    """
+    categories: dict[str, list[str]] = {
+        "author_year_citation": [],
+        "numeric_citation": [],
+        "measurement": [],
+        "structural_reference": [],
+        "identifier": [],
+        "other": [],
+    }
+    for raw in spans:
+        value = raw.strip()
+        if not value:
+            continue
+        if re.fullmatch(r"\(?\s*[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+(?:\s+et\s+al\.?)?(?:\s+(?:&|and)\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’.-]+)?\s*,?\s*(?:18|19|20)\d{2}[a-z]?(?:\s*;\s*[^()]*)*\s*\)?", value):
+            category = "author_year_citation"
+        elif re.fullmatch(r"\[\s*\d+(?:\s*[-–]\s*\d+|\s*,\s*\d+)*\s*\]", value):
+            category = "numeric_citation"
+        elif re.fullmatch(MEASUREMENT_PATTERN, value, flags=re.IGNORECASE):
+            category = "measurement"
+        elif re.fullmatch(r"(?:Fig(?:ure)?|Table|Tbl\.?|Section|Appendix|Equation|Eqn?\.?)\s+[^\s]+(?:\s*\([A-Za-z]\))?", value, flags=re.IGNORECASE):
+            category = "structural_reference"
+        elif re.fullmatch(r"[A-Za-z][A-Za-z0-9._-]{1,31}", value):
+            category = "identifier"
+        else:
+            category = "other"
+        categories[category].append(value)
+    return categories
+
+
 def allows_unprotected_identifier_retry(missing: list[str]) -> bool:
     """Backward-compatible predicate for callers and tests."""
     return bool(missing) and all(_allowed_unprotected_retry_value(item) for item in missing)
@@ -1121,7 +1157,8 @@ class MADLADEngine(TranslationEngine):
                             "[TRANSLATION_PROTECTION_FAILURE] "
                             f"reason={message!r} source={text!r} model_input={(model_input or text)!r} "
                             f"protected={debug_protected!r} values={debug_values!r} "
-                            f"nonce={debug_nonce} missing={missing!r}",
+                            f"nonce={debug_nonce} missing={missing!r} "
+                            f"categories={classify_protected_spans(missing)!r}",
                             flush=True,
                         )
                     except Exception as debug_error:

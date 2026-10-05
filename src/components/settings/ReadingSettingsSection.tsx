@@ -14,8 +14,6 @@ import { BehaviorComparison } from "./BehaviorComparison";
 import {
   SIDEBAR_AUTO_COLLAPSE_OFF,
   SIDEBAR_AUTO_COLLAPSE_ON,
-  SIDEBAR_ROOTS_ONLY_OFF,
-  SIDEBAR_ROOTS_ONLY_ON,
 } from "./settingsPreviewAssets";
 import styles from "./SettingsScreen.module.css";
 
@@ -27,7 +25,6 @@ const DEFAULT_READING_SETTINGS: DisplaySettings = {
   originalDisplay: "on-demand",
   sidebarMode: "auto",
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-  sidebarCollapseRootsOnly: true,
 };
 
 const ORIGINAL_DISPLAY_OPTIONS: {
@@ -201,26 +198,6 @@ export function ReadingSettingsSection() {
             value={displaySettings.sidebarMode === "auto"}
             off={SIDEBAR_AUTO_COLLAPSE_OFF}
             on={SIDEBAR_AUTO_COLLAPSE_ON}
-          />
-
-          <SettingsRow
-            label="折りたたみ時は最上位だけ表示"
-            description="オン（推奨）: アイコンだけのとき、入れ子フォルダ／論文を隠します。"
-            htmlFor="sidebar-roots-only"
-          >
-            <Toggle
-              id="sidebar-roots-only"
-              checked={displaySettings.sidebarCollapseRootsOnly}
-              onChange={(checked) =>
-                setDisplaySettings({ sidebarCollapseRootsOnly: checked })
-              }
-            />
-          </SettingsRow>
-
-          <BehaviorComparison
-            value={displaySettings.sidebarCollapseRootsOnly}
-            off={SIDEBAR_ROOTS_ONLY_OFF}
-            on={SIDEBAR_ROOTS_ONLY_ON}
           />
         </SettingsCard>
       </div>

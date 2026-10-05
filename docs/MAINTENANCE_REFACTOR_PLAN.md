@@ -24,7 +24,7 @@
 ## 分割方針
 
 1. `quality.ts` を当面public facadeとして維持する。
-2. 依存の少ない `degeneration` と出版メタデータ判定を内部モジュールへ移す（完了）。次に `sourceIntegrity` は依存関係が広いため、挙動固定テストを先に追加してから検討する。
+2. 依存の少ない `degeneration` と出版メタデータ判定を内部モジュールへ移す（完了）。`sourceIntegrity` の caption/title policy を分離済み。paragraph structure policy は依存が広いため、挙動固定テストを先に追加してから検討する。
 3. facadeは旧export名を再exportし、既存importを変更しない。
 4. 各段階で `npm test`、typecheck、git diff --checkを実行する。
 5. quality threshold、fallback判定、translation model versionは変更しない。
@@ -33,11 +33,9 @@
 ## 予定モジュール
 
 - `src/services/translation/quality/sourceIntegrity.ts`
-  - `diagnoseIncompleteSource`
-  - `unsafeParagraphStructureReason`
-  - `shouldTranslateParagraph`
   - `shouldTranslateCaption`
   - `shouldTranslateTitle`
+  - `diagnoseIncompleteSource` / `unsafeParagraphStructureReason` / `shouldTranslateParagraph`（依存関係を整理してから次段階）
 - `src/services/translation/quality/degeneration.ts`（第一段階完了）
   - `restoreUtf8ByteEscapes`
   - `explainDegenerateTranslation`

@@ -56,9 +56,6 @@ export function AppSidebar({
   const sidebarMode = useAppStore((state) => state.displaySettings.sidebarMode);
   const storedWidth = useAppStore((state) => state.displaySettings.sidebarWidth);
   const setDisplaySettings = useAppStore((state) => state.setDisplaySettings);
-  const collapseRootsOnly = useAppStore(
-    (state) => state.displaySettings.sidebarCollapseRootsOnly
-  );
   const draggingPaperId = usePaperDragStore((state) => state.draggingPaperId);
   const dropTargetId = usePaperDragStore((state) => state.dropTargetId);
   const pointerX = usePaperDragStore((state) => state.pointerX);
@@ -152,7 +149,7 @@ export function AppSidebar({
   return (
     <aside
       ref={sidebarRef}
-      className={`${styles.sidebar} ${modeClass} ${pointerOverSidebar ? styles.sidebarDropReady : ""} ${collapseRootsOnly ? styles.sidebarRootsOnly : ""} ${resizing ? styles.sidebarResizing : ""}`}
+      className={`${styles.sidebar} ${modeClass} ${pointerOverSidebar ? styles.sidebarDropReady : ""} ${resizing ? styles.sidebarResizing : ""}`}
       style={
         {
           "--sidebar-expanded-w": `${sidebarWidth}px`,
@@ -185,17 +182,19 @@ export function AppSidebar({
         />
       </label>
 
-      <button type="button" className={styles.newProject} onClick={onNewWorkspace} title="新規フォルダ">
-        <span className={styles.iconSlot}>
-          <Plus size={16} />
-        </span>
-        <span className={styles.label}>新規フォルダ</span>
-      </button>
-
       <div className={styles.scroll}>
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>
             <span className={styles.label}>ワークスペース</span>
+            <button
+              type="button"
+              className={styles.sectionAdd}
+              onClick={onNewWorkspace}
+              title="新規フォルダ"
+              aria-label="新規フォルダ"
+            >
+              <Plus size={14} />
+            </button>
           </h2>
           <WorkspaceTree
             nodes={workspaceNodes}

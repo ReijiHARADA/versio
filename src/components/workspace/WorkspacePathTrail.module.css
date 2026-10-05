@@ -1,18 +1,26 @@
 .trail {
   display: flex;
   align-items: baseline;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0;
   min-width: 0;
   max-width: 100%;
+  overflow: hidden;
   line-height: 1.35;
 }
 
 .segmentWrap {
-  display: inline-flex;
+  display: flex;
   align-items: baseline;
   min-width: 0;
-  max-width: 100%;
+  flex: 0 2 auto;
+  overflow: hidden;
+}
+
+.segmentWrap:last-child {
+  /* Prefer keeping the current label visible; still ellipsis if needed. */
+  flex: 0 1 auto;
+  min-width: 3ch;
 }
 
 .sep {

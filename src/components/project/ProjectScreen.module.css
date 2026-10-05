@@ -22,11 +22,14 @@
   color: var(--color-text);
   margin: 0;
   min-width: 0;
+  overflow: hidden;
 }
 
 .headerText {
   min-width: 0;
   flex: 1;
+  overflow: hidden;
+  padding-right: var(--spacing-md);
 }
 
 .description {

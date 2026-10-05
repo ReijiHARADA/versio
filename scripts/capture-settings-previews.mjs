@@ -17,7 +17,7 @@ const root = path.resolve(__dirname, "..");
 const outDir = path.join(root, "src/assets/settings-previews");
 const workRoot = path.join("/tmp", "paper-reader-settings-previews");
 const CAPTURE_URL = "http://127.0.0.1:5199/";
-const VIEWPORT = { width: 640, height: 300 };
+const VIEWPORT = { width: 680, height: 340 };
 const DPR = 2;
 const FPS = 12;
 /** GIF netscape loop: 2 ⇒ play, then loop twice more = 3 plays total. */
@@ -25,27 +25,13 @@ const GIF_LOOP_COUNT = 2;
 
 const CLIPS = [
   {
-    id: "sidebar-roots-only-off",
-    mode: "auto",
-    rootsOnly: false,
-    kind: "roots",
-  },
-  {
-    id: "sidebar-roots-only-on",
-    mode: "auto",
-    rootsOnly: true,
-    kind: "roots",
-  },
-  {
     id: "sidebar-mode-auto",
     mode: "auto",
-    rootsOnly: true,
     kind: "auto",
   },
   {
     id: "sidebar-mode-expanded",
     mode: "expanded",
-    rootsOnly: true,
     kind: "expanded",
   },
 ];
@@ -76,7 +62,7 @@ async function moveCursor(page, from, to, ms) {
 }
 
 async function runHoverExpandCycle(page, away, over) {
-  // Collapsed → hover expand → hold → leave collapse (same for roots OFF/ON and auto mode).
+  // Collapsed → hover expand → hold → leave collapse.
   await sleep(700);
   await moveCursor(page, away, over, 500);
   await page.locator("[data-capture-root] aside").hover({
@@ -107,12 +93,12 @@ async function waitForApi(page) {
   });
 }
 
-async function configure(page, mode, rootsOnly) {
+async function configure(page, mode) {
   await page.evaluate(
-    ({ mode, rootsOnly }) => {
-      window.__sidebarCapture.configure({ mode, rootsOnly });
+    ({ mode }) => {
+      window.__sidebarCapture.configure({ mode });
     },
-    { mode, rootsOnly }
+    { mode }
   );
   await sleep(250);
 }
@@ -243,12 +229,12 @@ async function main() {
     await page.goto(CAPTURE_URL, { waitUntil: "networkidle" });
     await waitForApi(page);
 
-    const away = { x: 420, y: 200 };
-    const over = { x: 32, y: 120 };
+    const away = { x: 460, y: 210 };
+    const over = { x: 36, y: 140 };
 
     for (const clip of CLIPS) {
       console.log(`Capturing ${clip.id}…`);
-      await configure(page, clip.mode, clip.rootsOnly);
+      await configure(page, clip.mode);
       await setCursorVisible(page, true);
       await page.evaluate(
         ({ x, y }) => {
@@ -269,7 +255,6 @@ async function main() {
           await runExpandedCursorCycle(page, away, over);
           return;
         }
-        // roots OFF/ON and auto mode: show expand ↔ collapse; rootsOnly changes collapsed tree.
         await runHoverExpandCycle(page, away, over);
       });
 

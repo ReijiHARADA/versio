@@ -697,7 +697,7 @@ export function projectCanonicalToPaper(input: {
     );
     const followsListIntro = current.type === "paragraph" &&
       (next.type === "paragraph" || listSuccessor?.type === "paragraph") &&
-      current.metadata.translationInputWarning?.includes("末尾") &&
+      String(current.metadata.translationInputWarning ?? "").includes("末尾") &&
       /:\s*$/.test(currentText) &&
       (next.metadata.listRole === "item" || listSuccessor?.metadata.listRole === "item") &&
       current.pageEnd <= next.pageStart &&

@@ -33,6 +33,10 @@ const sourcePath = path.resolve(root, value(
 ));
 const endpoint = value("--endpoint", "http://127.0.0.1:8765").replace(/\/$/, "");
 const timeoutMs = Number(value("--timeout-ms", "240000"));
+// The packaged sidecar enables the same token used by the Tauri client. Keep
+// the diagnostic tool compatible with both tokenless dev servers and the
+// authenticated .app server without ever persisting or printing the token.
+const serverToken = (process.env.MADLAD_SERVER_TOKEN ?? "").trim();
 
 const review = JSON.parse(fs.readFileSync(sourcePath, "utf8"));
 const items = review.source?.items ?? [];
@@ -47,7 +51,10 @@ async function translate(item) {
   try {
     const response = await fetch(`${endpoint}/translate`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        ...(serverToken ? { "X-Paper-Reader-Token": serverToken } : {}),
+      },
       body: JSON.stringify({
         text: item.source,
         source_language: "en",

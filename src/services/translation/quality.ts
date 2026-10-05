@@ -17,6 +17,10 @@ import {
   isReferencesHeading,
   looksLikeBibliographyEntry,
 } from "./quality/documentPolicy";
+import {
+  shouldTranslateCaption as shouldTranslateCaptionPolicy,
+  shouldTranslateTitle as shouldTranslateTitlePolicy,
+} from "./quality/sourceIntegrity";
 
 export {
   explainDegenerateTranslation,
@@ -1190,7 +1194,7 @@ function citationFactKeys(item: ScientificInvariant): string[] {
 }
 
 function outputContainsInvariant(output: string, invariant: ScientificInvariant, source: string): boolean {
-  if (invariant.kind === "citation") {
+  if (String(invariant.kind) === "citation") {
     const outputCitationAtoms = extractScientificInvariants(output)
       .filter((item) => item.kind === "citation")
       .flatMap((item) => citationAtoms(item.value));
@@ -2272,22 +2276,11 @@ export function shouldTranslateParagraph(text: string): boolean {
 }
 
 export function shouldTranslateCaption(text: string): boolean {
-  const t = toHalfwidthAscii(text)
-    .trim()
-    .replace(/^(?:figure|fig\.?|tables?|図|表)\s+\S+\s*[:.：–—-]?\s*/i, "");
-  if (t.length < 8) return false;
-  if (looksLikeBibliographyEntry(t)) return false;
-  return /[A-Za-z]{3,}/.test(t);
+  return shouldTranslateCaptionPolicy(text, toHalfwidthAscii);
 }
 
 export function shouldTranslateTitle(text: string): boolean {
-  const t = text.trim();
-  if (!shouldTranslateHeading(t) && t.length < 8) return false;
-  if (isGarbageTitle(t)) return false;
-  if (/@/.test(t)) return false;
-  if (/^[\d.\s]+$/.test(t)) return false;
-  if (/^\d{2,}(?:\.\d+){2,}/.test(t)) return false;
-  return t.length >= 8 && t.length <= 220;
+  return shouldTranslateTitlePolicy(text, shouldTranslateHeading);
 }
 
 export function pickPaperTitle(
