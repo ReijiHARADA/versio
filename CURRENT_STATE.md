@@ -3,7 +3,7 @@
 - 2026-10-05: CAT-Translate 3.3BをMADLAD fallback入力4件で再評価（`cat-focused-fallback-v3`）。4/4が日本語生成（2.8〜12.7秒/件）し、現行cascade品質ゲート再計算では3/4を自動受理。これは小規模監査であり、本番cascade接続や全113本の再計測はまだ行わない。成果物は `test-data/real-papers/reports/cat-focused-fallback-v3.json` と `selective-cascade-v805-quality-recompute.json`。
 - 2026-10-05: 同一source cohortでCATを再評価（MADLADのordinary-body post-model fallback 2件）。CAT自動受理は1/2。interactive-jewelleryは引用 `[2]`/`[16]` の欠落で拒否、dont-mind-meは数値保持を通過したが access表現の重複がありmanual確認対象。異なるsource cohortのCAT結果と混同しない。成果物は `test-data/real-papers/reports/cat-same-cohort-v1.json` と品質再計算レポート。
 - 2026-10-05: 同じ2件でCATの監査専用citation placeholderを有効化して比較。引用欠落は解消せず、`[2]`/`[16]` がなお欠落し、別unitでは `ZZCIT` 指示文が出力へ漏れた。単純placeholder/prompt方式はCAT rescueの根拠にならず、本番へ接続しない。
-- 2026-10-05: CAT同一cohortで検出した「less easy to access」と「easier to access」が同じ日本語述語へ潰れる比較極性の欠落を、一般化したcascade専用relation guard `opposite comparative polarity collapsed` として追加。quality tests **270/270**、typecheck、diff check pass。全件再計測は不要な局所品質修正として未実施。
+- 2026-10-05: CAT同一cohortで検出した「less easy to access」と「easier to access」が同じ日本語述語へ潰れる比較極性の欠落を、一般化したcascade専用relation guard `opposite comparative polarity collapsed` として追加。quality tests **271/271**、typecheck、diff check pass。反対極性を別表現で保持する受理回帰も追加し、全件再計測は不要な局所品質修正として未実施。
 - 2026-10-05: CAT比較前のMADLAD重点基準 `focused-before-cat-v1`（4本・16 units）を完了。ordinary-bodyは2/6 fallback（33.3%）、全体は9/16 fallbackだが、6件は構造不良によるpre-model除外。これは全体推定ではなく、CAT cascade比較用の基準値として保存。
 
 最終更新: 2026-10-05
