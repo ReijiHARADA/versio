@@ -413,3 +413,7 @@ The CAT fallback review exposed a generic false reject: repeated Japanese predic
 ## Focused cohort after comparative-list gate fix
 
 Re-ran the same 4-paper/48-unit cohort as `focused-cohort-current-v2` after the TypeScript quality-gate change. The cohort remained 19 ordinary-body units with 4 reader-visible fallbacks (21.1%) and 7 post-model fallback rows. This is expected: the changed gate currently affects client/cascade quality evaluation, while the server-side MADLAD fallback classification remains unchanged. The change removes a proven false reject from alternate-candidate evaluation but does not by itself solve the primary server fallback rate.
+
+## Server-side comparative-list gate
+
+Applied the same source-aware comparative-list repetition guard to the Python MADLAD server. This keeps the server and TypeScript quality gates aligned: repeated predicates in a source list of four or more comparisons are not treated as decoder looping when the output is sentence-level Japanese. All translation-server Python tests pass (246 tests). The running server must be restarted before this change is active; no benchmark restart was performed automatically.
