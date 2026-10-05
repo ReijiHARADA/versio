@@ -244,6 +244,11 @@ describe("source completeness diagnostics", () => {
     expect(diagnoseIncompleteSource(source)).toEqual({ incomplete: true, reason: "図表ラベルが段落末尾に混入している可能性があります" });
   });
 
+  it("flags a paragraph cut immediately after an abbreviated figure label", () => {
+    const source = "The proposed chromosome structure is shown in the final comparison of task assignments and workstation layouts in Fig.";
+    expect(diagnoseIncompleteSource(source)).toEqual({ incomplete: true, reason: "図表ラベルが段落末尾に混入している可能性があります" });
+  });
+
   it("flags a paragraph cut at a document cross-reference", () => {
     const source = "The rest of the paper is organized as follows: we first review related work and define notations in Section";
     expect(diagnoseIncompleteSource(source).incomplete).toBe(true);

@@ -2021,7 +2021,17 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   // A paragraph followed by a bare figure/table label is commonly a native
   // block-boundary or caption merge. Keep the structural marker with the
   // layout review instead of sending the mixed unit to a translation model.
-  if (t.length >= 80 && /(?:Figure|Fig\.?|Table|Tbl\.?)\s*\d{1,3}(?:\s*\([a-z]\))?$/i.test(t)) {
+  if (
+    t.length >= 80
+    && /(?:Figure|Fig\.?|Table|Tbl\.?)\s*\d{1,3}(?:\s*\([a-z]\))?$/i.test(t)
+  ) {
+    return "図表ラベルが段落末尾に混入している可能性があります";
+  }
+  // A page/column cut can stop immediately after the abbreviated label
+  // itself (`... is shown in Fig.` or `... summarized in Table`). Treat this
+  // as the same incomplete cross-reference rather than sending the prefix to
+  // the model to invent a number.
+  if (t.length >= 80 && /\b(?:Fig\.|Figure|Table|Tbl\.)$/i.test(t)) {
     return "図表ラベルが段落末尾に混入している可能性があります";
   }
   // A numbered dash item embedded after a completed sentence indicates a
