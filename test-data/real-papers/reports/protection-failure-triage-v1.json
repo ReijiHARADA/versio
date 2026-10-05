@@ -1,0 +1,94 @@
+{
+  "version": "protection-failure-triage-v1",
+  "source": "test-data/real-papers/reports/translation-failure-triage-v1.json",
+  "scope": "audit-only; no production routing or quality-gate changes",
+  "serverProtectionRows": 55,
+  "buckets": {
+    "engine_exception": 1,
+    "other": 1,
+    "protected_token_restore_failed": 10,
+    "translation_quality_rejected": 43
+  },
+  "protectedTokenRestoreRows": [
+    {
+      "key": "dont-mind-me:b-667e5341",
+      "paperId": "dont-mind-me",
+      "discipline": "hci",
+      "sourceIntegrity": "clean",
+      "source": "Rico et al. explored the social acceptability of novel full motion gesture types to control a mobile phone [23] and the social acceptability of gesture-based interactions in specific contexts (public, home, workplace, etc.) [24]. The results indicated a significant relationship between audience/ location and the willingness to perform a particular gesture. This relationship indicates that gesture techniques (as a byproduct of the challenges of overall interface design) require a higher level of scrutiny if they are to be acceptable for use within a public context. In examining how to design mobile device control gestures that would have the possibility of false triggering, Ashbrook [1] explicitly instructed study participants to create socially acceptable gestures. The resulting gestures were often surprisingly inappropriate, suggesting that his gesture designers had difficulty with the task. While current research has looked at the user perceptions of gesture-based mobile control techniques [23] as well as the feasibility of hands-free mobile control techniques (e.g. head-tilting [6], foot tapping [5], EMG controllers [4], and wrist-tilting [22]), to our knowledge, limited research has been conducted to assess third-party attitudes toward e-textile system interaction.",
+      "fallbackReason": "server returned source fallback: unit_5:protected_token_restore_failed:ValueError; whole_item:translation_quality_rejected:ValueError"
+    },
+    {
+      "key": "step-to-charge:b-43efb21d",
+      "paperId": "step-to-charge",
+      "discipline": "hci",
+      "sourceIntegrity": "clean",
+      "source": "The output voltage given by Eqn. 20 is independent of the load resistance (RL), given enough current can be supplied. This ensures higher power is delivered to the receiver at the resonant frequency. Eqn. 20 further illustrates the benefits of using a portable device where the floating ground plane of the device is held away from the body, as shown by Fig. 2 (e) over a small form factor wearable device (Fig. 2 (d)). A portable device maximizes the potential of a resonant human body channel by increasing Cret with a large ground plate. Moreover, as the ground plane is further away from the body, CGB is small with respect to Cret. The resonant frequency and the corresponding voltage at the resonant frequency are given by Eqn. 7.",
+      "fallbackReason": "server returned source fallback: unit_3:protected_token_restore_failed:ValueError; whole_item:translation_quality_rejected:ValueError"
+    },
+    {
+      "key": "covid-ml-review:b-0309e36f",
+      "paperId": "covid-ml-review",
+      "discipline": "medicine",
+      "sourceIntegrity": "clean",
+      "source": "From December 2019, a novel coronavirus named as severe acute respiratory syndrome coronavirus 2 (SARs-CoV- -2) has caused a fatal disease called coronavirus disease (COVID-19) [1-3]. Although COVID-19 started in Wuhan city, China, the whole world is currently heavily suffering from the disease [4]. SARs-CoV-2 has caused more harmful effects than other previous coronaviruses, namely severe acute respiratory syndrome coronavirus (SARS-CoV), which killed 774 people, and Middle East respiratory syndrome (MERS-CoV) killing 858 people5-7].[ Table 1 shows a comparison of COVID-19 and other pandemics recfirmed cases in COVID-19 [8], the health systems in many countries are becoming overwhelmed, and the demand for intensive care unit (ICU) is increasing beyond capacity.",
+      "fallbackReason": "server returned source fallback: unit_2:protected_token_restore_failed:ValueError; whole_item:translation_quality_rejected:ValueError"
+    },
+    {
+      "key": "covid-ml-review:b-869cf56f",
+      "paperId": "covid-ml-review",
+      "discipline": "medicine",
+      "sourceIntegrity": "clean",
+      "source": "This section provides a systematic review of the research works on the application of ML in forecasting the pattern of of COVID-19. Table 2 depicts works on ML for forecasting and predicting COVID-19 cases. The future development trend of this coronavirus has recently gained significant research interest. Several research papers [15-23] focused on using ML techniques on different aspects of COVID-19. The authors used three different mathematical models to perform model-fitting analysis on werethe confirmed cases of COVID-19 [15]. The models applied in [10] were logistic, Bertalanffy, and Gompertz models. In the analysis of 15],[ coefficient of determination or Rsquared values R2(C) and R2(N) represented the fitting goodness of the cumulative confirmed cases and the new confirmed cases, respectively. Moreover, the above three models were used to predict the number of deaths due to COVID-19. For that, R2 (DC) parameter was used to indicate the fitting goodness of the cumulative number of death cases. Those three models were able to predict the epidemic more accurately in the later stages than in the earlier stages. For Wuhan city of China, the logistic model showed better performance than the other two in predicting the confirmed cases [15]. The work in [17] used a dataset from the repository of Johns Hopkins University. The dataset had three tables, each for confirmed cases, death cases, and recovered cases. Each of the tables had six attributes: province/state, country/region, last update, confirmed cases, death cases, and recovered cases. The study in [17] used a number of ML and DL algorithms such as Support Vector Regression (SVR), Polynomial Regression (PR), Deep Neural Networkon (DNN), and Long/Short Term Memory (LSTM) for predicting the cases for the next 10 days. The Root Mean Square Error (RMSE) score was used as a metric to evaluate the effectiveness of the algorithms in predicting the COVID-19 cases.",
+      "fallbackReason": "server returned source fallback: unit_6:protected_token_restore_failed:ValueError; whole_item:translation_quality_rejected:ValueError"
+    },
+    {
+      "key": "ergonomics-quantified-factory-worker:b-f1214e7d",
+      "paperId": "ergonomics-quantified-factory-worker",
+      "discipline": "ergonomics",
+      "sourceIntegrity": "structural-warning",
+      "source": "Promoting health and well-being tracking at work may come with many benefits, such as reducing the physical and cognitive burden of the workers (Lavallière et al. 2016), early detection of health problems (Li et al. 2017) and fos-tering healthy behavior (Asimakopoulos et al. 2017). The benefits include increasing awareness of one’s daily activity and personal accountability towards health goals (Chung et al. 2017). Wearable trackers have a potential to provide a new kind of worker feedback, which is personal, immedi-ate and objective (Piwek et al. 2016). For the factory floor workers of the future, wearable trackers are expected to have the potential in supporting the workers’ occupational health, safety and productivity (Romero et al. 2018). Despite the potential benefits, health and well-being tracking involve a variety of ethical issues, such as concerns related to privacy, data security or true voluntariness of selftracking (Heikkilä et al. 2018b; Lupton 2016; Moore and Piwek 2016). Furthermore, receiving personally meaningful insights through self-tracking may be challenging. Selftracking at work has been found to focus on easily measurable metrics, and not on supporting personal health goals or well-being in a more holistic way (Chung et al. 2017). This may decrease long-term motivation for self-tracking. In one qualitative study (Masson et al. 2016), activity trackers were given to 13 users at the same workplace, and they all stopped using them within three months. One reason for this was the limitations of the current technology, for example frustration caused by mechanistic feedback of the device due to simplistic models of data analysis. The studies among active self-trackers have identified also other pitfalls or barriers of self-tracking, such as tracking fatigue due to tracking too many things (Choe et al. 2014), not receiving meaningful insight due to lack of contextual data (Choe et al. 2014; Li et al. 2010) as well as insufficient motivation, lack of time or forgetting to self-track (Li et al. (2010). In contrast to the identified barriers, providing visualizations and contextual information have been found to make the data more meaningful to self-trackers, increasing a sense of accomplishment (Pantzar and Ruckenstein 2015). When activity-tracking practices were studied with video methods (Gouveia et al. 2018), the study revealed the relevance of providing glanceable information, which enables immediate learning of the information, as well as facilitating of micro-plans, such as reaching 1000 steps in the next hour, instead of deep retrospective analysis of self-tracking data. Supporting these practices with design could be applicable to the work context as well, as long as self-tracking does not provoke too frequent checking of data not to distract the user from the work tasks.",
+      "fallbackReason": "server returned source fallback: unit_10:protected_token_restore_failed:ValueError; whole_item:translation_quality_rejected:ValueError"
+    },
+    {
+      "key": "ergonomics-flight-deck-applications:b-334898e6",
+      "paperId": "ergonomics-flight-deck-applications",
+      "discipline": "ergonomics",
+      "sourceIntegrity": "clean",
+      "source": "Applying SHERPA to the current tools used to assess engine condition monitoring can identify potential errors in the current system and also generate recommendations for remedial measures to overcome the identified errors. This process can, however, omit any other design concepts that may suggest radical design changes if they do not immediately relate to errors in the current system. Early stages of the design process, where SHERPA is utilised, is also an essential stage at which the views of the end-user of the system can be incorporated to ensure that future designs are usable, safe, and that they are well integrated with the other features of a system (Gould and Lewis 1985). The inclusion of potential end-users of the system within the early design phases is a valuable way of ensuring that designs reflect the users’ requirements (Kujala 2003, 2008). In the field of aviation where the user is a highly trained professional, their integration into the design process can pose additional complexities. Availability and engagement of users can be difficult to achieve, yet the benefits of pilot integration into the design process are essential to cater to their knowledge base. Furthermore, they are best suited to understand how possible designs may influence their interactions with the other aspects of the flight deck and, therefore, the viability of a design.",
+      "fallbackReason": "server returned source fallback: unit_2:protected_token_restore_failed:ValueError; whole_item:translation_quality_rejected:ValueError"
+    },
+    {
+      "key": "ergonomics-analisis-pemetaan-bibliometrik-komputational-publikasi-pada-ergonomics:b-6cfe8e26",
+      "paperId": "ergonomics-analisis-pemetaan-bibliometrik-komputational-publikasi-pada-ergonomics",
+      "discipline": "ergonomics",
+      "sourceIntegrity": "clean",
+      "source": "1Program Studi Keselamatan dan Kesehatan Kerja, Universitas Indonesia, Depok, Indonesia 2Program Studi Keselamatan dan Kesehatan Kerja, Universitas Indonesia, Depok, Indonesia",
+      "fallbackReason": "server partial_unit_fallback: unit_0:protected_token_restore_failed:ValueError"
+    },
+    {
+      "key": "marketing-impact-of-e-marketing-on-consumer-behavior:b-d9150da3",
+      "paperId": "marketing-impact-of-e-marketing-on-consumer-behavior",
+      "discipline": "marketing",
+      "sourceIntegrity": "clean",
+      "source": "Impact of e-marketing on consumer behavior understand the consumer behavior (Belch and Belch, 2003). The understanding of the consumer behavior, in fact, is an important competitive advantage for companies. Marketing strategies and tactics are built on a series of explicit and implicit assumptions about consumer behavior. The decisions which are based on explicit assumptions and research will be more successful than those decisions that are based on intuition (Hawkins and Mothersbaugh, 2010). A key factor that directly affect consumer behavior, and also the success of electronic marketing, is the degree of involvement of consumers in the methods of electronic marketing. Different degrees of involvement bring different groups of consumers for the companies, with different behaviors (Wu, 2002). According to Brinker (2009), and as noted by Smith and Zook (2011), modern companies should include five new skills in modern marketing communications sector for successful communication with the modern consumer. Those are: \u0001 Analytical skills. Skills related to research on the flow of feedback from social media, web analysis, transaction histories and profiles of consumer behavior. \u0001 Effective project management. The tactical campaigns are detailed and fragmented, and directed to tens, hundreds or thousands of different contexts, which requires greater skills in project management. \u0001 Experimental curiosity. Modern markets require constant improvement and increased return on investment. Because of that, the marketing communications sector must constantly make tests, analyses and researches. \u0001 System thinking. Marketing is a set of processes. This implies the need of connecting the parts or the results of the various analyses of processes. \u0001 Connecting different software. Modern marketing offers applications, pictures, videos, games. Integration of these different methods is needed for success. The ability to adapt is the biggest advantage of any modern and successful enterprise. Consumer orientation is the main precondition for successful adjustment and performance in the modern world. Successful adaptation is not just implementing new technologies and methods of communication, but leading a company to create a marketing strategy that will separate it from the competition and will guarantee success (Zivkovic, 2011).",
+      "fallbackReason": "server partial_unit_fallback: unit_6:protected_token_restore_failed:ValueError"
+    },
+    {
+      "key": "marketing-marketing-communication-and-consumer-behavior-in-digital-era:b-92481647",
+      "paperId": "marketing-marketing-communication-and-consumer-behavior-in-digital-era",
+      "discipline": "marketing",
+      "sourceIntegrity": "clean",
+      "source": "New media selection for marketing communication reflects important issues as Rosen (2014) points that reliance on reviews can vary across customer segments, rely primarily on reviews and more on the marketer as a source for information. This analysis should drive the marketing strategies to influence each segment. By behavior, the way consumers make decisions is constantly changing, so marketers should be on the game-changing technologies that can change the influence mix for marketing effectiveness. Marketing communications as strategic function emphasizes the strategic importance of such communication and its long-term effect on consumers that help to define an organization's relationship with its customers.",
+      "fallbackReason": "server partial_unit_fallback: unit_0:protected_token_restore_failed:ValueError"
+    },
+    {
+      "key": "ergonomics-human-factors-ergonomics-in-hydrocarbon-facilities:b-b1dbbfbc",
+      "paperId": "ergonomics-human-factors-ergonomics-in-hydrocarbon-facilities",
+      "discipline": "ergonomics",
+      "sourceIntegrity": "clean",
+      "source": "Associate Member, Institution of Mechanical Engineers (IMechE), Graduate Member, Engineers New Zealand",
+      "fallbackReason": "server partial_unit_fallback: unit_0:protected_token_restore_failed:ValueError"
+    }
+  ]
+}
