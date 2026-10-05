@@ -18,6 +18,7 @@ import {
 export type LayoutColumn = "left" | "right" | "spanning" | "single";
 
 export type LayoutRole =
+  | "chrome"
   | "header"
   | "footer"
   | "title"

@@ -54,6 +54,7 @@ const ROLE_CONFIDENCE: Partial<Record<LayoutRole, number>> = {
 
 function layoutRoleToCanonical(role: LayoutRole): CanonicalRole {
   if (role === "figure_caption" || role === "table_caption") return "caption";
+  if (role === "chrome") return "other";
   return role;
 }
 

@@ -24,11 +24,6 @@ export type DisplaySettings = {
   sidebarMode: SidebarMode;
   /** Expanded sidebar width in px (collapsed rail stays fixed). */
   sidebarWidth: number;
-  /**
-   * true (default): icon-rail ではワークスペースの最上位だけ表示し、入れ子は隠す。
-   * false: 以前どおり、フォルダが開いていれば折りたたみ中も入れ子アイコンを並べる。
-   */
-  sidebarCollapseRootsOnly: boolean;
 };
 
 type AppUiState = {
@@ -51,7 +46,6 @@ const defaultDisplaySettings: DisplaySettings = {
   originalDisplay: "on-demand",
   sidebarMode: "auto",
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-  sidebarCollapseRootsOnly: true,
 };
 
 export const useAppStore = create<AppUiState>()(
@@ -95,11 +89,19 @@ export const useAppStore = create<AppUiState>()(
     }),
     {
       name: "paper-reader-storage",
-      version: 6,
+      version: 7,
       migrate: (persisted) => {
-        const value = persisted as { displaySettings?: Partial<DisplaySettings> & { sidebarMode?: string } } | undefined;
-        const merged = { ...defaultDisplaySettings, ...value?.displaySettings };
-        const sidebarMode =
+        const value = persisted as {
+          displaySettings?: Partial<DisplaySettings> & {
+            sidebarMode?: string;
+            sidebarCollapseRootsOnly?: unknown;
+          };
+        } | undefined;
+        const legacy = value?.displaySettings ?? {};
+        const rest = { ...legacy };
+        delete rest.sidebarCollapseRootsOnly;
+        const merged = { ...defaultDisplaySettings, ...rest };
+        const sidebarMode: SidebarMode =
           merged.sidebarMode === "expanded" ? "expanded" : "auto";
         return {
           displaySettings: {

@@ -224,7 +224,7 @@ export async function importPDFV2(
     let glossaryEntries: GlossaryEntry[] = await getGlossary(paperId);
 
     // Stage 4: Glossary in the background — never block translation
-    if (cfg.generateGlossary) {
+    if (cfg.generateGlossary && llmProviders[0]) {
       void (async () => {
         try {
           callbacks.onStageChange("glossary");
@@ -247,7 +247,7 @@ export async function importPDFV2(
             .join(" ");
 
           const glossary = await generateGlossary(
-            llmProvider,
+            llmProviders[0],
             paper.titleOriginal || "",
             abstractText,
             []

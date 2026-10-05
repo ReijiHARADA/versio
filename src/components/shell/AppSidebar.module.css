@@ -166,7 +166,6 @@
    Rows: always full sidebar width; icon column fixed
 ──────────────────────────────────────────────── */
 .search,
-.newProject,
 .item {
   display: flex;
   align-items: center;
@@ -186,19 +185,14 @@
 }
 
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .search,
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .newProject,
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .item,
 .sidebarExpanded .search,
 .sidebarResizing .search,
-.sidebarExpanded .newProject,
-.sidebarResizing .newProject,
 .sidebarExpanded .item,
 .sidebarResizing .item,
 .sidebarDropReady .search,
-.sidebarDropReady .newProject,
 .sidebarDropReady .item,
 .sidebar:has([data-workspace-editing]) .search,
-.sidebar:has([data-workspace-editing]) .newProject,
 .sidebar:has([data-workspace-editing]) .item {
   gap: var(--spacing-sm);
 }
@@ -245,25 +239,6 @@
   color: var(--color-text-tertiary);
 }
 
-/* ────────────────────────────────────────────────
-   New folder
-──────────────────────────────────────────────── */
-.newProject {
-  border: 1px dashed var(--color-border);
-  background: var(--color-bg);
-  color: var(--color-text);
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.newProject:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  background: var(--color-accent-light);
-}
-
 .folderItem {
   appearance: none;
   border: none;
@@ -306,12 +281,14 @@
 }
 
 .sectionTitle {
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   color: var(--color-text-tertiary);
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 4px;
   height: 0;
   padding: 0 var(--spacing-sm);
   margin: 0;
@@ -329,10 +306,31 @@
 .sidebarResizing .sectionTitle,
 .sidebarDropReady .sectionTitle,
 .sidebar:has([data-workspace-editing]) .sectionTitle {
-  height: 24px;
+  height: 28px;
   padding: 4px var(--spacing-sm);
   opacity: 1;
   pointer-events: auto;
+}
+
+.sectionAdd {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: -4px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+
+.sectionAdd:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text);
 }
 
 .empty {
@@ -642,8 +640,8 @@
 }
 
 /*
- * Roots-only (default): while the rail is icon-only, hide nested folders/papers
- * so only top-level workspace items remain. Expanding the sidebar reveals them again.
+ * Icon-rail: hide nested folders/papers so only top-level workspace items remain.
+ * Expanding the sidebar reveals them again.
  *
  * Collapse uses a single grid row (0fr/1fr) wrapping ALL children via .treeNestedClip.
  * Without the clip wrapper, extra children create implicit auto rows that keep
@@ -651,8 +649,9 @@
  */
 .treeNested {
   display: grid;
-  grid-template-rows: 1fr;
-  opacity: 1;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  pointer-events: none;
   transition:
     grid-template-rows var(--sidebar-motion),
     opacity var(--sidebar-motion);
@@ -666,17 +665,11 @@
   gap: 2px;
 }
 
-.sidebarRootsOnly .treeNested {
-  grid-template-rows: 0fr;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.sidebarRootsOnly.sidebarAuto:is(:hover, :has([data-workspace-editing])) .treeNested,
-.sidebarRootsOnly.sidebarExpanded .treeNested,
-.sidebarRootsOnly.sidebarResizing .treeNested,
-.sidebarRootsOnly.sidebarDropReady .treeNested,
-.sidebarRootsOnly:has([data-workspace-editing]) .treeNested {
+.sidebarAuto:is(:hover, :has([data-workspace-editing])) .treeNested,
+.sidebarExpanded .treeNested,
+.sidebarResizing .treeNested,
+.sidebarDropReady .treeNested,
+.sidebar:has([data-workspace-editing]) .treeNested {
   grid-template-rows: 1fr;
   opacity: 1;
   pointer-events: auto;

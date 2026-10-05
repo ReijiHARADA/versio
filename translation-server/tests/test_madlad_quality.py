@@ -8,6 +8,7 @@ from engines.madlad_mps import (
     MADLADEngine,
     MEASUREMENT_PATTERN,
     allows_unprotected_identifier_retry,
+    classify_protected_spans,
     restore_unambiguous_terminal_numeric_citations,
     restore_missing_structure_references,
     unprotected_identifier_retry_values,
@@ -15,6 +16,25 @@ from engines.madlad_mps import (
 
 
 class MadladUnitQualityTests(unittest.TestCase):
+    def test_classify_protected_spans_is_diagnostic_only_and_preserves_values(self) -> None:
+        self.assertEqual(
+            classify_protected_spans([
+                "(Smith, 2021; Lee, 2022)",
+                "[4, 9, 29]",
+                "9.6 mm",
+                "Figure 8(b)",
+                "CycleGAN",
+                "F(4,33) = 2.913",
+            ]),
+            {
+                "author_year_citation": ["(Smith, 2021; Lee, 2022)"],
+                "numeric_citation": ["[4, 9, 29]"],
+                "measurement": ["9.6 mm"],
+                "structural_reference": ["Figure 8(b)"],
+                "identifier": ["CycleGAN"],
+                "other": ["F(4,33) = 2.913"],
+            },
+        )
     def test_terminal_visible_numeric_citation_is_repaired_only_at_sentence_end(self) -> None:
         source = "The studies reduced risk [13]."
         output = "研究はリスクを低減した。"

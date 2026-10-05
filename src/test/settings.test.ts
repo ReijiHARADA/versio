@@ -49,7 +49,6 @@ describe("display settings defaults", () => {
   it("defaults sidebar mode to auto hover expand", async () => {
     const { useAppStore } = await import("../stores/appStore");
     expect(useAppStore.getState().displaySettings.sidebarMode).toBe("auto");
-    expect(useAppStore.getState().displaySettings.sidebarCollapseRootsOnly).toBe(true);
     expect(useAppStore.getState().displaySettings.sidebarWidth).toBe(220);
   });
 });
