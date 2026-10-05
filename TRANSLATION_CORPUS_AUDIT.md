@@ -4650,3 +4650,7 @@ The extraction-corpus run completed 108/108 reading-order assertions, but Vitest
 The slow baseline file reproduced the same worker timeout when run alone and with `--silent` (56/56 assertions passed). This localizes the issue to the long-running PDF test task/runtime rather than parallel-file contention or console output.
 
 The extraction config now uses Vitest's `threads` pool for this PDF corpus. A full rerun completed cleanly with 2 files and 108/108 assertions, with no unhandled worker error. This changes test execution only, not extraction behavior.
+
+## Evaluation cadence policy (2026-10-05)
+
+The 113-paper measurement is now reserved for major cross-cutting changes or release acceptance. Routine extraction, gate, diagnostic, and refactor changes use focused representative papers (normally 4–12), the affected failure cohort, regression tests, typecheck, and lint. Full-corpus runs must use `--resume` and stable source keys; an incomplete report is never treated as a corpus metric. The operational policy is documented in [`docs/TRANSLATION_BENCHMARK_POLICY.md`](docs/TRANSLATION_BENCHMARK_POLICY.md).
