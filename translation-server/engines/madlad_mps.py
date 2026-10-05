@@ -976,6 +976,8 @@ class MADLADEngine(TranslationEngine):
                         retry_label="comparative-inline-statistics",
                         unprotected_values=set(self._comparative_stat_retry_values(text)),
                     )
+                    if not self._comparative_stat_values_preserved(text, retry[0]):
+                        raise ValueError("comparative statistic value changed or dropped")
                     return retry
                 except Exception:
                     pass
@@ -1181,6 +1183,17 @@ class MADLADEngine(TranslationEngine):
             return []
         values = re.findall(r"\(\s*[-+]?\d+(?:\.\d+)?\s*\)|\bp\s*[<=>≤≥]\s*[-+]?\d+(?:\.\d+)?", source, re.I)
         return list(dict.fromkeys(values))
+
+    @staticmethod
+    def _comparative_stat_values_preserved(source: str, output: str) -> bool:
+        source_values = re.findall(r"[-+]?\d+(?:\.\d+)?", " ".join(MADLADEngine._comparative_stat_retry_values(source)))
+        output_values = re.findall(r"[-+]?\d+(?:\.\d+)?", output)
+        remaining = list(output_values)
+        for value in source_values:
+            if value not in remaining:
+                return False
+            remaining.remove(value)
+        return True
 
     @staticmethod
     def _missing_quoted_technical_names(source: str, output: str) -> list[str]:
