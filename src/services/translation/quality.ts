@@ -2014,6 +2014,13 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   if (t.length >= 80 && /(?:Figure|Fig\.?|Table|Tbl\.?)\s*\d{1,3}(?:\s*\([a-z]\))?$/i.test(t)) {
     return "図表ラベルが段落末尾に混入している可能性があります";
   }
+  // A numbered dash item embedded after a completed sentence indicates a
+  // list/body merge (`... delivered 40 dollars. 4 - Machine J ...`). Keep
+  // it out of clean prose evaluation so the model does not reinterpret the
+  // orphan marker as part of the sentence.
+  if (t.length >= 48 && /[.!?。！？]\s+\d{1,3}\s*[-–—]\s+[A-Z]/.test(t)) {
+    return "箇条書き番号が本文に混入している可能性があります";
+  }
   // A citation list cut at a PDF page/column boundary often leaves an open
   // square bracket at the block end (`... [4, 9, 29`). Preserve the source
   // until the following block can be stitched; translating this fragment
