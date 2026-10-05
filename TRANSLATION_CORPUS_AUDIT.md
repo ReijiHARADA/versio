@@ -4674,3 +4674,5 @@ Post-change focused verification confirms both Step-to-Charge rows receive the e
 ### Embedded numbered-list boundary guard
 
 A generic source-integrity rule now flags a numbered dash item embedded after a completed sentence, preventing list/body merges from being used as clean translation evidence. Regression coverage passes; no full-corpus rerun was performed.
+
+Post-list-boundary verification: the same CAT v2 cohort now has 1 clean row, 4 source-excluded rows, and 1/1 clean quality acceptance. The cognitive list-contaminated row is explicitly classified as an embedded numbered-list boundary. This is a focused verification, not a corpus metric.
