@@ -14,9 +14,9 @@
 
 ### 2026-10-05: active translation audit checkpoint
 
-- `translation-audit-auth-v1` を `--resume --cached-only --limit 12` で継続中。
-- 現在 **54/114 papers、561 sampled units** をチェックポイント保存済み（最新: `hci-social-touch-in-human-computer-interaction`）。
-- この実行は翻訳サーバーと同一環境で継続中。完了後に現行レポート単独で fallback / extraction / quality-gate / semantic-review を再集計する。
+- `translation-audit-auth-v1` は `--resume --cached-only --limit 12` で完了済み。
+- **113/114 papers、1,155 sampled units** をチェックポイント保存済み（`precious-materials` のPDFのみ未取得）。
+- ベンチマークプロセスは終了済み。現在稼働しているのは翻訳サーバーのみで、後続の全件再計測は実施しない。
 - `translation-audit.json` および別コホートの `CURRENT_STATE` 記録と混ぜず、auth-v1 の完了値を正式な比較対象とする。
 - 中間集計（47本/493 units）では全体 fallback 293件、通常本文187件中47件（25.1%）。これは未完了の暫定値であり、目標達成とは扱わない。
 
