@@ -1,0 +1,71 @@
+{
+  "version": "citation-alignment-diagnostic-v2",
+  "sourceReport": "test-data/real-papers/reports/cat-source-disjoint-auth-v5.json",
+  "productionGate": false,
+  "rows": [
+    {
+      "key": "cognitive-psychology-gpt3:b-5096fc7a",
+      "sourceCitationTokens": [
+        "14",
+        "0"
+      ],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [
+        "14",
+        "0"
+      ],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": true
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-b4361dd7",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-bd4d3a92",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-be6d482b",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-ebeb028c",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    }
+  ],
+  "eligibleCount": 5,
+  "sourceExcludedCount": 0,
+  "flaggedCount": 1
+}

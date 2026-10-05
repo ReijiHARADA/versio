@@ -122,6 +122,7 @@
 
 - 2026-10-05: citation-alignment audit module追加後の全体回帰を再確認。Vitest **70 files / 641 tests**、typecheck pass。localhost translation server は `semantic-v84` / `phase=ready`。この局所的な監査変更では113本全件再計測を行わず、production routingも変更していない。
 - 2026-10-05: 既知の抽出・長文・引用系failureを含む4本（16 units）の限定cohort `post-citation-audit-cohort-v1` を再測定。ordinary-body 6 unitsは **0/6 reader-visible fallback**、構造破損は5件をpre-model source fallbackとして維持、長文citation保護のproduction緩和は行わない。小標本のため全体指標へ一般化しない。
+- 2026-10-05: CAT-Translate source-disjoint v5 を5件実行（認知心理学）。自動quality gateは5/5、citation診断は1/5 flagged。手動確認では3件が概ねusable、2件は図・表由来の断片混入（うち1件は `GPT-3 Humans` の配置崩れ）で、CATの安全なproduction cascade根拠にはならない。成果物: `cat-source-disjoint-auth-v5{,-quality,-citation-diagnostic}.json`。
 
 - `docs/MAINTENANCE_REFACTOR_PLAN.md` の順に、挙動固定テストを維持しながら品質モジュールを段階分割する。
 - 抽出変更は113本ベンチマークと既存回帰を毎回実行する。
