@@ -77,6 +77,8 @@ export function useReaderAnnotations(opts: {
           fallback,
         };
       });
+      // Body draft highlight replaces the native selection once the memo opens.
+      window.getSelection()?.removeAllRanges();
       return;
     }
     if (selectionResult?.kind === "cross-block") {
@@ -298,6 +300,14 @@ export function useReaderAnnotations(opts: {
     activeAnnotationIds,
     flashAnnotationIds,
     memoSurface,
+    draftHighlight:
+      memoSurface?.mode === "compose"
+        ? {
+            blockId: memoSurface.selection.blockId,
+            start: memoSurface.selection.startOffset,
+            end: memoSurface.selection.endOffset,
+          }
+        : null,
     setMemoSurface,
     reloadAnnotations,
     closeMemoSurface,

@@ -127,6 +127,7 @@ export function ReaderScreen() {
     activeAnnotationIds,
     flashAnnotationIds,
     memoSurface,
+    draftHighlight,
     setMemoSurface,
     closeMemoSurface,
     handleSaveDraft,
@@ -370,6 +371,7 @@ export function ReaderScreen() {
             highlightText={searchQuery}
             onBlockUpdated={handleBlockUpdated}
             annotations={annotations}
+            draftHighlight={draftHighlight}
             flashAnnotationIds={flashAnnotationIds}
             onHighlightClick={handleHighlightClick}
             onOpenSourcePdf={(block) => void handleOpenSourcePdf(block.pageStart)}
@@ -404,7 +406,6 @@ export function ReaderScreen() {
         <MemoPopover
           mode={memoSurface.mode}
           anchor={memoSurface.fallback}
-          selection={memoSurface.mode === "compose" ? memoSurface.selection : null}
           annotation={
             memoSurface.mode === "view" || memoSurface.mode === "edit"
               ? memoSurface.annotation

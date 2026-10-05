@@ -77,6 +77,7 @@ type PaperContentProps = {
   highlightText?: string;
   onBlockUpdated?: (block: PaperBlock) => void;
   annotations?: Annotation[];
+  draftHighlight?: { blockId: string; start: number; end: number } | null;
   flashAnnotationIds?: string[];
   onHighlightClick?: (annotationIds: string[], rect: DOMRect) => void;
   onOpenSourcePdf?: (block: PaperBlock) => void;
@@ -89,6 +90,7 @@ type PaperBlockViewProps = {
   highlightText?: string;
   onBlockUpdated?: (block: PaperBlock) => void;
   annotations: Annotation[];
+  draftHighlight?: { start: number; end: number } | null;
   flashAnnotationIds?: string[];
   onHighlightClick?: (annotationIds: string[], rect: DOMRect) => void;
   onOpenSourcePdf?: (block: PaperBlock) => void;
@@ -104,6 +106,7 @@ const PaperBlockView = memo(function PaperBlockView({
   highlightText,
   onBlockUpdated,
   annotations,
+  draftHighlight,
   flashAnnotationIds,
   onHighlightClick,
   onOpenSourcePdf,
@@ -125,6 +128,7 @@ const PaperBlockView = memo(function PaperBlockView({
           highlightText={highlightText}
           onBlockUpdated={onBlockUpdated}
           annotations={annotations}
+          draftHighlight={draftHighlight}
           flashAnnotationIds={flashAnnotationIds}
           onHighlightClick={onHighlightClick}
           onOpenSourcePdf={onOpenSourcePdf}
@@ -199,6 +203,7 @@ export const PaperContent = memo(
       highlightText,
       onBlockUpdated,
       annotations = EMPTY_ANNOTATIONS,
+      draftHighlight = null,
       flashAnnotationIds = [],
       onHighlightClick,
       onOpenSourcePdf,
@@ -470,6 +475,11 @@ export const PaperContent = memo(
           highlightText={highlightText}
           onBlockUpdated={onBlockUpdated}
           annotations={annotationsByBlock.get(block.id) ?? EMPTY_ANNOTATIONS}
+          draftHighlight={
+            draftHighlight && draftHighlight.blockId === block.id
+              ? { start: draftHighlight.start, end: draftHighlight.end }
+              : null
+          }
           flashAnnotationIds={flashAnnotationIds}
           onHighlightClick={onHighlightClick}
           onOpenSourcePdf={onOpenSourcePdf}

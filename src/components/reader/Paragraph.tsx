@@ -33,6 +33,8 @@ type ParagraphProps = {
   highlightText?: string;
   onBlockUpdated?: (block: PaperBlock) => void;
   annotations?: Annotation[];
+  /** Unsaved selection highlight while composing a memo. */
+  draftHighlight?: { start: number; end: number } | null;
   flashAnnotationIds?: string[];
   onHighlightClick?: (annotationIds: string[], rect: DOMRect) => void;
   onOpenSourcePdf?: (block: PaperBlock) => void;
@@ -42,6 +44,8 @@ type ParagraphProps = {
   onOpenGlossaryInspector?: () => void;
   onJumpToTarget?: (targetId: string) => void;
 };
+
+const COMPOSE_DRAFT_ID = "__compose-draft__";
 
 function highlightMatches(text: string, query: string): ReactNode {
   if (!query || query.length < 2) return text;
@@ -66,6 +70,7 @@ export function Paragraph({
   highlightText,
   onBlockUpdated,
   annotations = [],
+  draftHighlight = null,
   flashAnnotationIds = [],
   onHighlightClick,
   onOpenSourcePdf,
@@ -273,22 +278,44 @@ export function Paragraph({
   };
 
   const renderTranslated = (text: string): ReactNode => {
-    if (annotations.length === 0) return renderCited(text);
-    const segments = splitHighlightedText(
-      text,
-      annotations.map((a) => ({
+    const ranges = [
+      ...annotations.map((a) => ({
         id: a.id,
         start: a.startOffset,
         end: a.endOffset,
         status: a.status,
-      }))
-    );
+      })),
+    ];
+    if (draftHighlight && draftHighlight.end > draftHighlight.start) {
+      ranges.push({
+        id: COMPOSE_DRAFT_ID,
+        start: draftHighlight.start,
+        end: draftHighlight.end,
+        status: "active",
+      });
+    }
+    if (ranges.length === 0) return renderCited(text);
+
+    const segments = splitHighlightedText(text, ranges);
 
     return segments.map((seg, i) => {
       if (seg.annotationIds.length === 0) {
         return <span key={i}>{renderCited(seg.text)}</span>;
       }
-      const flashing = flashAnnotationIds.some((id) => seg.annotationIds.includes(id));
+      const realIds = seg.annotationIds.filter((id) => id !== COMPOSE_DRAFT_ID);
+      const isDraftOnly = realIds.length === 0;
+      const flashing = flashAnnotationIds.some((id) => realIds.includes(id));
+      if (isDraftOnly) {
+        return (
+          <mark
+            key={i}
+            data-draft-highlight=""
+            className={styles.draftMark}
+          >
+            {highlightText ? highlightMatches(seg.text, highlightText) : seg.text}
+          </mark>
+        );
+      }
       return (
         <mark
           key={i}
@@ -298,7 +325,7 @@ export function Paragraph({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            onHighlightClick?.(seg.annotationIds, e.currentTarget.getBoundingClientRect());
+            onHighlightClick?.(realIds, e.currentTarget.getBoundingClientRect());
           }}
         >
           {highlightText ? highlightMatches(seg.text, highlightText) : seg.text}

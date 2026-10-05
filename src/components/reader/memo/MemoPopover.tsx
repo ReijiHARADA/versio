@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Annotation } from "../../../types/annotation";
-import type { TranslationSelection } from "../selection/selectionAnchor";
 import {
   clampPopoverPosition,
   type AnchorBox,
@@ -12,7 +11,6 @@ export type MemoPopoverMode = "compose" | "view" | "edit" | "cross-block";
 type MemoPopoverProps = {
   mode: MemoPopoverMode;
   anchor: AnchorBox;
-  selection?: TranslationSelection | null;
   annotation?: Annotation | null;
   note: string;
   saving?: boolean;
@@ -27,7 +25,6 @@ type MemoPopoverProps = {
 export function MemoPopover({
   mode,
   anchor,
-  selection,
   annotation,
   note,
   saving = false,
@@ -76,6 +73,7 @@ export function MemoPopover({
       const target = event.target as HTMLElement | null;
       if (target?.closest("[data-memo-popover]")) return;
       if (target?.closest("[data-annotation-mark]")) return;
+      if (target?.closest("[data-draft-highlight]")) return;
       onCancel();
     };
     window.addEventListener("pointerdown", onPointer);
@@ -83,7 +81,6 @@ export function MemoPopover({
   }, [onCancel]);
 
   const placement = clampPopoverPosition(anchor, size);
-  const quote = annotation?.selectedText || selection?.selectedText || "";
   const title =
     mode === "cross-block"
       ? "複数段落"
@@ -107,7 +104,6 @@ export function MemoPopover({
         </p>
       ) : (
         <>
-          {quote && <blockquote className={styles.quote}>“{quote}”</blockquote>}
           {annotation?.status === "orphaned" && (
             <p className={styles.orphaned}>
               元の翻訳文が変更されたため、現在の本文上で位置を特定できません。
