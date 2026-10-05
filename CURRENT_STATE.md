@@ -4,6 +4,8 @@
 
 ## 現在の実装状態
 
+- 2026-10-05: サーバーが返す one-to-one translation unit mapping に失敗unitが含まれる場合、集約文字列のplausibility判定よりも unit projection を優先するよう修正。成功unitを保持し、失敗unitだけ原文へ戻す経路を単体・batch・resumeで統一した。品質/engine回帰282件、typecheck、diff check pass。113本全件の再計測はこの局所変更では実施しない。
+
 - 翻訳モデル: MADLAD-400 3B、Transformers 4.57.6 runtime。
 - 翻訳品質ガード、科学的 invariant、引用保護、partial fallback、選択的 cascade の監査実装が存在する。
 - CAT-Translate は監査・比較用で、本番ルーティングには未統合。

@@ -128,9 +128,15 @@ export class MADLADEngine implements TranslationEngine {
       ? data.partial_unit_texts.filter((value: unknown): value is string => typeof value === "string")
       : undefined;
     const safePartial = projectSafeUnitTranslation({ translationUnits, partialUnitTexts }, text);
-    const effectiveText = !isPlausibleJaTranslation(translatedText, text) && safePartial
+    // Once the backend supplies a one-to-one unit map, prefer that projection
+    // whenever any unit failed.  An aggregate can still look plausible while
+    // silently containing an untranslated/unsafe unit; using the mapped
+    // projection keeps the failure local and preserves the exact source slice.
+    const effectiveText = safePartial && !safePartial.complete
       ? safePartial.text
-      : translatedText;
+      : !isPlausibleJaTranslation(translatedText, text) && safePartial
+        ? safePartial.text
+        : translatedText;
     if (!effectiveText) {
       throw new Error("Translation server returned empty text");
     }
@@ -197,11 +203,13 @@ export class MADLADEngine implements TranslationEngine {
         ? r.partial_unit_texts.filter((value): value is string => typeof value === "string")
         : undefined;
       const safePartial = projectSafeUnitTranslation({ translationUnits, partialUnitTexts }, texts[index] ?? "");
-      const effectiveText = targetLanguage === "ja"
-        && !isPlausibleJaTranslation(translatedText, texts[index] ?? "")
-        && safePartial
+      const effectiveText = safePartial && !safePartial.complete
         ? safePartial.text
-        : translatedText;
+        : targetLanguage === "ja"
+          && !isPlausibleJaTranslation(translatedText, texts[index] ?? "")
+          && safePartial
+          ? safePartial.text
+          : translatedText;
       // Keep single and batch APIs semantically identical.  The server may
       // return its source as a safe per-unit fallback; it must never be
       // treated as a completed Japanese translation by a future batch caller.

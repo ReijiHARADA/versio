@@ -159,7 +159,14 @@ export async function resumeIncompleteTranslation(
         && !task.blockId.startsWith("section-")
         ? projectSafeUnitTranslation(task.result, task.text)
         : null;
-      const acceptedTranslation = directTranslation ?? figureCaption ?? partialProjection?.text;
+      // A mapped partial result is authoritative even when the concatenated
+      // string happens to pass the paragraph-level plausibility check.  It
+      // prevents a single failed unit from being silently exposed as a
+      // seemingly complete translation.
+      const mappedPartial = partialProjection && !partialProjection.complete
+        ? partialProjection.text
+        : undefined;
+      const acceptedTranslation = mappedPartial ?? directTranslation ?? figureCaption ?? partialProjection?.text;
       if (!acceptedTranslation) {
         const block = blocks.find((item) => item.id === task.blockId);
         if (block) {

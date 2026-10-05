@@ -143,7 +143,7 @@ describe("MADLADEngine batch integrity", () => {
     }));
 
     await expect(new MADLADEngine().translateBatch(["The first sentence. The second sentence."], "en", "ja"))
-      .resolves.toEqual([expect.objectContaining({ text: "前半は翻訳済み。The second sentence." })]);
+      .resolves.toEqual([expect.objectContaining({ text: "前半は翻訳済み。 The second sentence." })]);
     vi.unstubAllGlobals();
   });
 
