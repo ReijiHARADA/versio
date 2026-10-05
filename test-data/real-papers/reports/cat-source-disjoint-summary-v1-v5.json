@@ -1,0 +1,42 @@
+{
+  "version": "cat-source-disjoint-summary-v1-v5",
+  "productionDecision": false,
+  "cohorts": {
+    "v1": {
+      "rows": 5,
+      "safeForCascade": 3,
+      "severity2Plus": 1,
+      "sourceOrFallback": 1
+    },
+    "v2": {
+      "rows": 5,
+      "safeForCascade": 1,
+      "severity2Plus": 4,
+      "sourceOrFallback": 4
+    },
+    "v3": {
+      "rows": 5,
+      "safeForCascade": 4,
+      "severity2Plus": 1,
+      "sourceOrFallback": 0
+    },
+    "v4": {
+      "rows": 5,
+      "safeForCascade": 3,
+      "severity2Plus": 2,
+      "sourceOrFallback": 0
+    },
+    "v5": {
+      "rows": 5,
+      "safeForCascade": 3,
+      "severity2Plus": 0,
+      "sourceOrFallback": 2
+    }
+  },
+  "allRows": 25,
+  "cleanRows": 18,
+  "manualSafeCleanRows": 14,
+  "severity2PlusCleanRows": 4,
+  "citationDiagnosticFlaggedRows": 4,
+  "note": "Diagnostic only. v3-v5 are source-hash-disjoint; v4/v5 citation flags identify omissions or alignment risk. CAT remains disabled until a larger held-out cohort and blind review establish safe rescue and transport integration."
+}

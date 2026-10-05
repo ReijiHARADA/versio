@@ -1,0 +1,51 @@
+{
+  "version": "cat-source-disjoint-auth-v5-manual-review-v1",
+  "sourceReport": "test-data/real-papers/reports/cat-source-disjoint-auth-v5.json",
+  "scope": "five new source-disjoint CAT rows",
+  "reviewer": "Codex audit",
+  "reviews": [
+    {
+      "key": "cognitive-psychology-gpt3:b-5096fc7a",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null,
+      "notes": "CAT output is coherent and source-complete."
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-b4361dd7",
+      "label": "usable",
+      "severity": 1,
+      "primaryCause": null,
+      "notes": "CAT output is coherent and source-complete."
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-bd4d3a92",
+      "label": "source_structure_excluded",
+      "severity": null,
+      "primaryCause": "extraction/figure-table fragment",
+      "notes": "Source contains flattened figure/table content; exclude from model-quality conclusion."
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-be6d482b",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null,
+      "notes": "CAT output is coherent and source-complete."
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-ebeb028c",
+      "label": "source_structure_excluded",
+      "severity": null,
+      "primaryCause": "extraction/figure-table fragment",
+      "notes": "Source contains flattened figure/table content; exclude from model-quality conclusion."
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "usable": 3,
+    "sourceStructureExcluded": 2,
+    "severityGte2": 0,
+    "citationDiagnosticFlagged": 1,
+    "productionDecision": "disabled"
+  }
+}
