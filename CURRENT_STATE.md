@@ -8,6 +8,7 @@
 - 同変更の重点再測定 `partial-projection-focused-v1` は2/4本・24 unitsをチェックポイント保存（complete=false）。サーバーはreadyのまま、残り要求が長時間進まなかったためクライアントのみ停止。成果物は `test-data/real-papers/reports/partial-projection-focused-v1.{json,md}` に残し、`--resume` で再開できる。保存済み24 unitsの段階分類は pre-model 10、post-model 3、通常完了11で、全体指標には一般化しない。
 - 同レポートに保存された `thermal-earring` 出力には `earring`→「耳かき」の漂移が残っているが、これは保存時点の診断結果。現行の `normalizeSourceGroundedTerminology` にはsource確認済みの `earrings?` 修復と回帰テストがあり、再測定時に正規化後の値を確認する。自動受理を品質達成とは扱わない。
 - 監査スクリプトもproductionと同じ `projectSafeUnitTranslation` を使うよう更新。serverがpartial/whole-item fallbackを返しても、one-to-one mappingが検証できれば成功unitを評価し、失敗unitだけを `partialSourceFallback` として記録する。これにより監査のreader-visible fallbackがproduction経路と一致する。typecheck、quality/engine 282 tests pass。
+- smoke benchmark `partial-projection-smoke-v1`（thermal-earring、1 unit）を新監査経路で完了。`sourceFallback=false`、`readerVisibleFallback=false`、`wouldAcceptTranslation=true` を確認し、出力中の「耳かき」漂移は現行source-grounded normalization後には発生しなかった。`missingTechnicalNameCandidates` は英語名を日本語転写したため診断値として残る。
 
 - 翻訳モデル: MADLAD-400 3B、Transformers 4.57.6 runtime。
 - 翻訳品質ガード、科学的 invariant、引用保護、partial fallback、選択的 cascade の監査実装が存在する。
