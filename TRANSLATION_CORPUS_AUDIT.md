@@ -4662,3 +4662,5 @@ Manual review of the five source-hash-disjoint CAT rows found 3 automatic accept
 ### CAT source-disjoint v2 probe
 
 Five additional CAT rows were generated. Two clean complete rows were usable (severity 0); three contained dangling frequency/Figure boundaries or an orphaned list number and were classified as source-fragment inputs rather than model-quality evidence. This probe supports stricter input stratification and does not change production routing.
+
+Correction: the HCI v2 row was also classified incomplete by the existing source-integrity diagnostic because it lacks terminal punctuation. The clean-complete v2 sample is therefore 1 row, not 2; four rows are excluded from clean model-quality evidence.

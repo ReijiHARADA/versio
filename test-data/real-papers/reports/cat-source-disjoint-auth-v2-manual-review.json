@@ -30,10 +30,10 @@
     {
       "key": "hci-empirical-methods:b-7686f78c",
       "automaticGate": "unreviewed",
-      "label": "correct",
-      "severity": 0,
-      "safeForCascade": true,
-      "reason": "Roles, pair grouping, handout, Figure 2, turn-taking, and experimental task are preserved."
+      "label": "source_fragment",
+      "severity": 2,
+      "safeForCascade": false,
+      "reason": "The translation is semantically faithful, but the source ends without terminal punctuation and is classified incomplete by the existing source-integrity diagnostic; exclude it from clean model-quality evidence."
     },
     {
       "key": "cognitive-psychology-gpt3:b-b4ed26af",
@@ -46,10 +46,10 @@
   ],
   "summary": {
     "rows": 5,
-    "cleanCompleteRows": 2,
-    "cleanRowsUsable": 2,
-    "sourceFragmentRows": 3,
-    "severity2Plus": 3,
-    "note": "Three rows are excluded from model-quality conclusions because extraction/list boundary artifacts are present."
+    "cleanCompleteRows": 1,
+    "cleanRowsUsable": 1,
+    "sourceFragmentRows": 4,
+    "severity2Plus": 4,
+    "note": "Four rows are excluded from clean model-quality conclusions because source completeness or list/figure boundary artifacts are present."
   }
 }
