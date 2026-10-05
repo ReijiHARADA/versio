@@ -234,6 +234,11 @@ describe("source completeness diagnostics", () => {
     expect(diagnoseIncompleteSource(source).reason).toContain("省略記号");
   });
 
+  it("flags an orphaned numbered list item embedded in prose", () => {
+    const source = "You have received 51 dollars. 4 - Machine J delivered 26 dollars.";
+    expect(diagnoseIncompleteSource(source)).toEqual({ incomplete: true, reason: "箇条書き番号が本文に混入している可能性があります" });
+  });
+
   it("flags a paragraph with a trailing figure label", () => {
     const source = "The safety analysis estimates induced electric and magnetic fields across the operating range and reports the corresponding average exposure values. Fig. 3";
     expect(diagnoseIncompleteSource(source)).toEqual({ incomplete: true, reason: "図表ラベルが段落末尾に混入している可能性があります" });
