@@ -181,6 +181,13 @@ describe("MADLADEngine batch integrity", () => {
     })).toBeNull();
   });
 
+  it("rejects a partial projection whose units do not reconstruct the source", () => {
+    expect(projectSafeUnitTranslation({
+      translationUnits: ["The first sentence.", "An invented sentence."],
+      partialUnitTexts: ["最初の文。", "An invented sentence."],
+    }, "The first sentence. The second sentence.")).toBeNull();
+  });
+
   it("rejects malformed or whole-item fallback metadata", () => {
     expect(projectPartialTranslation({ fallbackStage: "whole_item_fallback", unitFallbackIndices: [0], partialUnitTexts: ["x"], partialSourceUnits: ["x"] })).toBeNull();
     expect(projectPartialTranslation({ fallbackStage: "partial_unit_fallback", unitFallbackIndices: [2], partialUnitTexts: ["x"], partialSourceUnits: ["missing"] })).toBeNull();
