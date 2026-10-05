@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 import { OllamaProvider } from "../src/services/llm/ollamaProvider";
 import { AlternateTranslationQualityError, OllamaTranslationEngine } from "../src/services/translation/ollamaTranslationEngine";
 import { diagnoseIncompleteSource, evaluateJaTranslation } from "../src/services/translation/quality";
+import { diagnoseCitationAlignment } from "../src/services/translation/audit/citationAlignment";
 import type { TranslationEngine } from "../src/services/translation/types";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -100,12 +101,15 @@ for (const row of candidates) {
   const started = Date.now();
   try {
     const result = await engine.translate(row.source, "en", "ja");
+    const citationAlignment = diagnoseCitationAlignment(row.source, result.text);
     report.results.push({
       key: row.key ?? `${row.paperId}:${row.blockId}`,
       source: row.source,
       accepted: true,
       translation: result.text,
       quality: evaluateJaTranslation(result.text, row.source),
+      citationAlignment,
+      acceptedForCascade: !citationAlignment.flagged,
       modelVersion: result.modelVersion,
       elapsedMs: Date.now() - started,
     });
