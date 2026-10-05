@@ -1015,6 +1015,13 @@ describe("isPlausibleJaTranslation", () => {
     expect(evaluateJaTranslation(output, source).reasons).not.toContain("scientific invariants missing: UUID");
   });
 
+  it("accepts a hexadecimal payload when PDF extraction separates its identifier phrase", () => {
+    const source = "The Universally Unique Identifier (UUID) of 0x1809 is used.";
+    const output = "UUID0x1809を使用する。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("scientific invariants missing: UUID");
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("unexpected scientific invariants: 0");
+  });
+
   it("accepts a preserved method identifier when its source spacing is normalized", () => {
     expect(isPlausibleJaTranslation(
       "本手法は(Hartford et al., 2017)のDeepIVと類似している。",

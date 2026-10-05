@@ -1044,6 +1044,11 @@ export function extractScientificInvariants(source: string): ScientificInvariant
         // superscript citation beginning with zero.
         if (/[x×]$/.test(prefix)) continue;
       }
+      // Hexadecimal payloads such as `0x1809` are identifiers, not a
+      // standalone citation `0`.  Avoid inventing an unexpected citation
+      // invariant from the zero prefix.
+      if (kind === "citation" && /0x$/i.test(invariantSource.slice(Math.max(0, start - 2), start))) continue;
+      if (kind === "citation" && match[0] === "0" && /^x/i.test(invariantSource.slice(end))) continue;
       // Do not also record each component number inside a protected statistic.
       if ((kind === "number" || kind === "year" || kind === "acronym") && covered.some(([left, right]) => start >= left && end <= right)) continue;
       if (kind === "acronym" && NON_TECHNICAL_UPPERCASE_WORDS.has(match[0].toUpperCase())) continue;
@@ -1369,7 +1374,7 @@ function outputContainsInvariant(output: string, invariant: ScientificInvariant,
   // the complete identifier+hex payload is present; requiring the hex suffix
   // prevents a bare `UUID` mention from satisfying the invariant.
   if (invariant.kind === "acronym" && /^(?:uuid|guid|hex)$/i.test(invariant.value)) {
-    const hexSource = new RegExp(`${invariant.value}\\s*0x[0-9a-f]+\\b`, "i").test(source);
+    const hexSource = new RegExp(`${invariant.value}[^.]{0,30}?0x[0-9a-f]+\\b`, "i").test(source);
     const hexOutput = new RegExp(`${invariant.value}\\s*0x[0-9a-f]+\\b`, "i").test(output);
     if (hexSource && hexOutput) return true;
   }
