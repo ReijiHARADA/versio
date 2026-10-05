@@ -442,3 +442,5 @@ The server log from the diagnostic request showed the failing units each had thr
 ## Comparative rescue safety correction
 
 Runtime validation after the three-item threshold showed the rescue could return a no-fallback response while its partial unit text omitted parenthesized p-values. Added an explicit multiset check for all numeric values in the comparative-statistics retry; a rescue candidate is now rejected if any value is missing or changed. This preserves the original safe fallback behavior until a candidate keeps every statistic. Python tests remain green (246).
+
+Added unit tests covering the comparative-statistics rescue integrity contract: all source numeric values must be present and unchanged; missing or altered values are rejected. The focused MADLAD quality test file now passes 74 tests.
