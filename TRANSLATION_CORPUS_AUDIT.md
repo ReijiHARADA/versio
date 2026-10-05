@@ -4680,3 +4680,7 @@ Post-list-boundary verification: the same CAT v2 cohort now has 1 clean row, 4 s
 ### CAT source-disjoint v3 clean cohort
 
 Five clean complete fallback rows were evaluated with CAT-Translate 3.3B. The automatic gate accepted 5/5; manual review found four usable outputs (three severity 0, one severity 1) and one severity-2 citation alignment risk in the GPT-3 cognitive-psychology paragraph. Fluent output alone is therefore insufficient for cascade enablement; citation integrity remains a required review dimension.
+
+### Citation alignment gate investigation
+
+A candidate occurrence-count gate was tested against the CAT v3 citation-shift example. It falsely rejected established valid forms (HTML-wrapped superscripts, clustered citations, and inline superscript references), so it was reverted. Citation alignment remains a manual-review/diagnostic gap; no broad gate was added without a representation-aware matcher.
