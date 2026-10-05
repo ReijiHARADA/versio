@@ -126,6 +126,7 @@
 - 2026-10-05: `cognitive-psychology-gpt3` を現行抽出経路で4 units再検証。旧CAT入力にあった `Horizon 1 Horizon 6` 型の図表ラベル列は今回の抽出サンプルには出ず、3件の不完全ブロックはpre-model source fallbackとして保持された。抽出ガードの緩和や追加特例は不要と判断。成果物: `post-figure-label-cognitive-v1.{json,md}`。
 - 2026-10-05: CAT source-disjoint v1〜v5を統合。25 rows中、source/structure除外7、clean 18、手動usable 14、severity>=2は4。citation診断flagは4 rows。CATは引き続き本番無効。集計: `cat-source-disjoint-summary-v1-v5.json`。
 - 2026-10-05: CAT source-disjoint v6を追加（10 rows）。source/structure除外3、clean 7、usable 7、citation flag 0。v1〜v6累計は35 rows、clean 25、manual usable 21、severity>=2は4。CATは依然として本番無効。集計: `cat-source-disjoint-summary-v1-v6.json`。
+- 2026-10-05: CAT v1で確認された手順単位の意味ずれ（`utterance` を `session` と訳す）を、実験記述一般に適用できるsemantic scope guardとして追加。sourceに片方の単位しかない場合の一方向置換だけをcascade拒否し、両方を保持する文は許可。quality **264/264**、typecheck、diff check pass。
 
 - `docs/MAINTENANCE_REFACTOR_PLAN.md` の順に、挙動固定テストを維持しながら品質モジュールを段階分割する。
 - 抽出変更は113本ベンチマークと既存回帰を毎回実行する。
