@@ -18,6 +18,28 @@ MAX_NEW_TOKENS = int(os.environ.get("CAT_MAX_NEW_TOKENS", "1200"))
 PROTECT_ACRONYMS = os.environ.get("CAT_PROTECT_ACRONYMS", "0") == "1"
 PROMPT_SUFFIX = os.environ.get("CAT_PROMPT_SUFFIX", "").strip()
 SYSTEM_PROMPT = os.environ.get("CAT_SYSTEM_PROMPT", "").strip()
+DYNAMIC_TERM_HINTS = os.environ.get("CAT_DYNAMIC_TERM_HINTS", "0") == "1"
+
+STOPWORDS = {
+    "about", "after", "again", "against", "among", "because", "before", "being", "between",
+    "could", "during", "every", "first", "from", "having", "other", "should", "their", "there",
+    "these", "those", "through", "under", "using", "which", "while", "where", "would", "without",
+}
+
+
+def dynamic_term_hints(text: str) -> list[str]:
+    """Return repeated content words for an audit-only terminology hint.
+
+    This is deliberately frequency/shape based: it must not contain a
+    paper-specific glossary or hand-authored translation mapping.
+    """
+    words = re.findall(r"\b[A-Za-z][A-Za-z-]{5,}\b", text.lower())
+    counts: dict[str, int] = {}
+    for word in words:
+        if word in STOPWORDS:
+            continue
+        counts[word] = counts.get(word, 0) + 1
+    return sorted((word for word, count in counts.items() if count >= 2), key=lambda word: (-counts[word], word))[:24]
 
 
 def protect_acronyms(text: str) -> tuple[str, dict[str, str]]:
@@ -113,8 +135,16 @@ def main() -> None:
             prompt += f"\n{PROMPT_SUFFIX}"
         prompt += f"\n\n{model_source}"
         messages = []
-        if SYSTEM_PROMPT:
-            messages.append({"role": "system", "content": SYSTEM_PROMPT})
+        system_content = SYSTEM_PROMPT
+        if DYNAMIC_TERM_HINTS:
+            hints = dynamic_term_hints(source)
+            if hints:
+                system_content = (system_content + "\n" if system_content else "") + (
+                    "Preserve the meaning and distinction of these repeated source terms; do not "
+                    "collapse one term into another: " + ", ".join(hints) + "."
+                )
+        if system_content:
+            messages.append({"role": "system", "content": system_content})
         messages.append({"role": "user", "content": prompt})
         inputs = tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt")
         inputs = inputs.to(device)
@@ -142,6 +172,7 @@ def main() -> None:
             "model": MODEL_ID,
             "promptSuffix": PROMPT_SUFFIX or None,
             "systemPrompt": SYSTEM_PROMPT or None,
+            "dynamicTermHints": DYNAMIC_TERM_HINTS,
             "acronymProtection": PROTECT_ACRONYMS,
             "results": results,
             "summary": {
