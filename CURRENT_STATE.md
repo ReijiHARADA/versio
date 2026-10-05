@@ -13,6 +13,7 @@
 - `partial-projection-focused-v2` を4本×4 unitsで完了（16 units、`MADLAD_BENCH_MAX_ATTEMPTS=1`）。ordinary-bodyは6 units中4完了・2 partial source fallback。post-model 3件は全体原文fallbackではなく、one-to-one projectionで成功unitを保持したpartialとして記録された。小標本であり5%目標へ一般化しないが、局所fallback経路が実測できた。成果物は `test-data/real-papers/reports/partial-projection-focused-v2.{json,md}`。
 - v2のordinary fallback keyのうち `interactive-jewellery:b-fd49dd32` には既存CAT audit出力が対応し、CATは段落全体を日本語化した候補を生成している。ただしこの出力は同一条件の新規blind review前なので、本番cascadeへの接続根拠にはせず、次の比較対象として記録する。
 - 保存済みCAT候補を現行quality evaluatorで再計算すると score 0.871、`scientific invariants missing: [16]` で不合格だった。見た目が流暢でもcitation保持を満たさないため、CATをこのfallbackへ自動投入するだけでは安全なrescueにならない。
+- CAT監査スクリプトに bracket citation atomic-protection arm（`CAT_PROTECT_CITATIONS=1`）を追加し、同一1件で実測。`[16]` は復元できたが別の `[22]` が欠落し、quality score 0.871 / `scientific invariants missing: [22]` のまま不合格。単純placeholderでは不十分で、MADLAD側の既存placeholder復元・retry相当が必要と判明。本番変更には未接続。
 
 - 翻訳モデル: MADLAD-400 3B、Transformers 4.57.6 runtime。
 - 翻訳品質ガード、科学的 invariant、引用保護、partial fallback、選択的 cascade の監査実装が存在する。

@@ -20,6 +20,7 @@ PROMPT_SUFFIX = os.environ.get("CAT_PROMPT_SUFFIX", "").strip()
 SYSTEM_PROMPT = os.environ.get("CAT_SYSTEM_PROMPT", "").strip()
 DYNAMIC_TERM_HINTS = os.environ.get("CAT_DYNAMIC_TERM_HINTS", "0") == "1"
 PROTECT_REPEATED_TERMS = os.environ.get("CAT_PROTECT_REPEATED_TERMS", "0") == "1"
+PROTECT_CITATIONS = os.environ.get("CAT_PROTECT_CITATIONS", "0") == "1"
 
 STOPWORDS = {
     "about", "after", "again", "against", "among", "because", "before", "being", "between",
@@ -87,6 +88,28 @@ def restore_acronyms(text: str, replacements: dict[str, str]) -> str:
     return text
 
 
+def protect_citations(text: str) -> tuple[str, dict[str, str]]:
+    """Audit-only protection for bracketed numeric citation spans."""
+    replacements: dict[str, str] = {}
+    index = 0
+
+    def replace(match: re.Match[str]) -> str:
+        nonlocal index
+        token = match.group(0)
+        placeholder = f"ZZCIT{index}ZZ"
+        replacements[placeholder] = token
+        index += 1
+        return placeholder
+
+    return re.sub(r"\[(?=[^\]]*\d)[^\]]{1,40}\]", replace, text), replacements
+
+
+def restore_citations(text: str, replacements: dict[str, str]) -> str:
+    for placeholder, token in replacements.items():
+        text = text.replace(placeholder, token)
+    return text
+
+
 def source_integrity_flags(source: str) -> list[str]:
     """Audit-only flags matching high-confidence incomplete-source evidence.
 
@@ -148,7 +171,8 @@ def main() -> None:
     for row in rows:
         source = row["source"]
         integrity_flags = source_integrity_flags(source)
-        model_source, acronym_map = protect_acronyms(source) if PROTECT_ACRONYMS else (source, {})
+        model_source, citation_map = protect_citations(source) if PROTECT_CITATIONS else (source, {})
+        model_source, acronym_map = protect_acronyms(model_source) if PROTECT_ACRONYMS else (model_source, {})
         term_map: dict[str, str] = {}
         if PROTECT_REPEATED_TERMS:
             model_source, term_map = protect_repeated_terms(model_source)
@@ -179,6 +203,8 @@ def main() -> None:
             text = restore_acronyms(text, acronym_map)
         if term_map:
             text = restore_terms(text, term_map)
+        if citation_map:
+            text = restore_citations(text, citation_map)
         result = {
             "paperId": row.get("paperId"),
             "key": row["key"],
@@ -199,6 +225,7 @@ def main() -> None:
             "dynamicTermHints": DYNAMIC_TERM_HINTS,
             "repeatedTermProtection": PROTECT_REPEATED_TERMS,
             "acronymProtection": PROTECT_ACRONYMS,
+            "citationProtection": PROTECT_CITATIONS,
             "results": results,
             "summary": {
                 "total": len(results),
