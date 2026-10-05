@@ -348,7 +348,9 @@ function PaperItem({
       to={`/reader/${paper.id}`}
       title={label}
       draggable={false}
-      className={`${styles.item} ${styles.treePaper}`}
+      className={({ isActive }) =>
+        `${styles.item} ${styles.treePaper} ${isActive ? styles.active : ""}`
+      }
       style={{ "--tree-indent": `${depth * 16}px` } as React.CSSProperties}
       onPointerDown={drag.onPointerDown}
       onDragStart={(event) => event.preventDefault()}

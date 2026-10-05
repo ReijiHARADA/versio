@@ -7,9 +7,9 @@ import { useLibraryCache } from "../stores/libraryCache";
 import { useProjectStore } from "../stores/projectStore";
 import {
   SIDEBAR_CAPTURE_VIEWPORT,
-  SIDEBAR_PREVIEW_ACTIVE_NODE_ID,
   SIDEBAR_PREVIEW_COLLAPSED_IDS,
   SIDEBAR_PREVIEW_MEMBERSHIPS,
+  SIDEBAR_PREVIEW_PAPER_ID,
   SIDEBAR_PREVIEW_PAPERS,
   SIDEBAR_PREVIEW_WORKSPACE,
 } from "./sidebarPreviewFixture";
@@ -97,7 +97,7 @@ export function SidebarBehaviorCapture() {
   }, []);
 
   return (
-    <MemoryRouter initialEntries={[`/project/${SIDEBAR_PREVIEW_ACTIVE_NODE_ID}`]}>
+    <MemoryRouter initialEntries={[`/reader/${SIDEBAR_PREVIEW_PAPER_ID}`]}>
       <div
         ref={shellRef}
         data-capture-root
@@ -126,7 +126,7 @@ export function SidebarBehaviorCapture() {
             onNewChild={noop}
             onDeleteNode={noopAsync}
             onAddPaperToWorkspace={noop}
-            activeNodeId={SIDEBAR_PREVIEW_ACTIVE_NODE_ID}
+            activeNodeId={null}
             inboxCount={1}
             showSettings={false}
             initialCollapsedIds={SIDEBAR_PREVIEW_COLLAPSED_IDS}

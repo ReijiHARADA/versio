@@ -45,7 +45,8 @@ export const SIDEBAR_PREVIEW_WORKSPACE: WorkspaceNode[] = [
 /** Folder ids that start collapsed in the capture mount. */
 export const SIDEBAR_PREVIEW_COLLAPSED_IDS = ["ws-aa", "ws-m1"] as const;
 
-export const SIDEBAR_PREVIEW_ACTIVE_NODE_ID = "ws-jewelry";
+/** Open paper in Reader so the tree highlights the paper row, not its folder. */
+export const SIDEBAR_PREVIEW_PAPER_ID = "paper-interactive-jewelry";
 
 export const SIDEBAR_PREVIEW_PAPERS: Paper[] = [
   {
