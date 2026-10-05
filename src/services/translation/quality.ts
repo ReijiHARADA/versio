@@ -1484,15 +1484,15 @@ function semanticScopeRiskReasons(source: string, output: string): string[] {
   // fluent translation that swaps these units changes the scope of the
   // procedure even when all numbers and citations survive. Flag only the
   // one-way substitution, while allowing Japanese to retain both terms.
-  const sourceHasUtterance = /\butterances?\b/i.test(source);
-  const sourceHasSession = /\bsessions?\b/i.test(source);
-  const outputHasUtterance = /(?:発話|発言)/u.test(output);
-  const outputHasSession = /セッション/u.test(output);
-  if (sourceHasUtterance && !sourceHasSession && outputHasSession && !outputHasUtterance) {
-    reasons.push("utterance unit shifted to session");
-  }
-  if (sourceHasSession && !sourceHasUtterance && outputHasUtterance && !outputHasSession) {
-    reasons.push("session unit shifted to utterance");
+  const unitShifted = sourceSentences.some((sourceSentence, index) => {
+    const candidate = outputSentences[index] ?? output;
+    const sourceUtteranceOnly = /\butterances?\b/i.test(sourceSentence) && !/\bsessions?\b/i.test(sourceSentence);
+    return sourceUtteranceOnly && /セッション/u.test(candidate) && !/(?:発話|発言)/u.test(candidate);
+  });
+  if (unitShifted) {
+    if (sourceSentences.some((sentence, index) => /\butterances?\b/i.test(sentence) && !/\bsessions?\b/i.test(sentence) && /セッション/u.test(outputSentences[index] ?? output))) {
+      reasons.push("utterance unit shifted to session");
+    }
   }
   return reasons;
 }
