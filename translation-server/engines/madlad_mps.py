@@ -980,7 +980,16 @@ class MADLADEngine(TranslationEngine):
                         raise ValueError("comparative statistic value changed or dropped")
                     return retry
                 except Exception:
-                    pass
+                    try:
+                        beam_retry = self._translate_chunk(
+                            text, target_language, model_input, num_beams=4,
+                            retry_label="comparative-inline-statistics-beam",
+                            unprotected_values=set(self._comparative_stat_retry_values(text)),
+                        )
+                        if self._comparative_stat_values_preserved(text, beam_retry[0]):
+                            return beam_retry
+                    except Exception:
+                        pass
             # If only identifier-like placeholders were dropped, retry once
             # without protection. The client invariant gate remains the final
             # authority, so a retry that loses RF/TQP3M9009 is still rejected.
