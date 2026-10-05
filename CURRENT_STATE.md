@@ -450,3 +450,5 @@ Added `scripts/diagnose-comparative-rescue.py` to replay the known statistical u
 ## Runtime replay safety finding
 
 The replay script exposed an unsafe case: the server returned `fallback_stage=null` while a partial comparative-list output changed several p-values (for example source `0.0/0.001` becoming `0.1/0.2`). Added a global server-side statistical numeric-drift guard so any missing/changed parenthesized statistic or p-value rejects the candidate. This is a safety correction; it may increase fallback until a semantically valid alternate candidate exists. Quality tests now include 75 MADLAD cases; full Python suite should be rerun after the next server restart.
+
+Full translation-server test suite after the global statistical numeric-drift guard: **248 tests passed**. Candidate selection, microbatch, citation protection, and segmenter regressions remain green.
