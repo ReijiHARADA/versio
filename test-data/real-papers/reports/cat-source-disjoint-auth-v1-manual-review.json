@@ -1,0 +1,55 @@
+{
+  "version": "cat-source-disjoint-auth-v1-manual-review",
+  "scope": "Five source-hash-disjoint ordinary-body fallback rows evaluated with CAT-Translate 3.3B",
+  "isProductionDecision": false,
+  "rows": [
+    {
+      "key": "interactive-jewellery:b-d753999d",
+      "automaticGate": "accept",
+      "label": "minor_wording",
+      "severity": 1,
+      "safeForCascade": true,
+      "reason": "Claims, contrast, and example are preserved. Japanese wording is somewhat literal (patina and physical history), but no material semantic shift was found."
+    },
+    {
+      "key": "dont-mind-me:b-4c16bae3",
+      "automaticGate": "reject",
+      "label": "fallback",
+      "severity": 0,
+      "safeForCascade": false,
+      "reason": "The server rejected the output as degenerate; reader-visible output must remain the source."
+    },
+    {
+      "key": "dont-mind-me:b-b45338de",
+      "automaticGate": "accept",
+      "label": "correct",
+      "severity": 0,
+      "safeForCascade": true,
+      "reason": "The emergence, applications, design challenges, and usability/social-appropriateness claims are retained without observed unsupported additions."
+    },
+    {
+      "key": "dont-mind-me:b-68e941f0",
+      "automaticGate": "accept",
+      "label": "correct",
+      "severity": 0,
+      "safeForCascade": true,
+      "reason": "Participant concerns, 55.7% statistic, moisture/price/electromagnetic-wave effects, and comparison with the American study are retained."
+    },
+    {
+      "key": "speechin:b-95af9399",
+      "automaticGate": "reject",
+      "label": "semantic_shift",
+      "severity": 2,
+      "safeForCascade": false,
+      "reason": "The output changes the source's image-discard scope from the current and previous utterances to the current and previous sessions (発話→セッション), which can alter the experimental procedure. The gate also rejected participant-role drift."
+    }
+  ],
+  "summary": {
+    "rows": 5,
+    "automaticAccept": 3,
+    "manualSafeAccept": 3,
+    "manualSeverity2Plus": 1,
+    "readerVisibleFallback": 2,
+    "note": "This is a small source-disjoint diagnostic sample, not a corpus estimate. It supports continued CAT evaluation but not production routing."
+  }
+}
