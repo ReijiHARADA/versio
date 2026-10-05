@@ -191,3 +191,14 @@ spelling or a naming frame (`dubbed`, `called`, `named`, `prototype`,
 `interface`, `system`). Direct same-server replay changed all four affected
 units from partial fallback to accepted Japanese output. The server/cache
 identity is `quality-v36-...-quoted-label-policy`.
+# Partial-unit projection policy (2026-10-05)
+
+When the translation server returns `translation_units` and `partial_unit_texts`
+with a one-to-one mapping, the client may persist translated units while
+keeping failed units as their exact English source. This is recorded as
+`translationOutcome: partial_source_preserved` with
+`partialFailedUnitIndices`. The projection is rejected when the mapping is
+missing, malformed, or all units fail; titles and section headings remain
+all-or-nothing. This policy preserves source facts and avoids replacing a
+failed unit with a fluent guess. Partial results must be counted separately
+from fully translated blocks in future audit reports.
