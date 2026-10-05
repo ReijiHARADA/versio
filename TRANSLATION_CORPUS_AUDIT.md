@@ -4684,3 +4684,7 @@ Five clean complete fallback rows were evaluated with CAT-Translate 3.3B. The au
 ### Citation alignment gate investigation
 
 A candidate occurrence-count gate was tested against the CAT v3 citation-shift example. It falsely rejected established valid forms (HTML-wrapped superscripts, clustered citations, and inline superscript references), so it was reverted. Citation alignment remains a manual-review/diagnostic gap; no broad gate was added without a representation-aware matcher.
+
+### Audit-only citation alignment diagnostic
+
+Added `scripts/diagnose-citation-alignment.ts` (`npm run audit:citation-alignment`) to report missing bracketed/inline citation occurrences before manual review. On the five-row CAT v3 clean cohort it flags only the GPT-3 cognitive-psychology row (tokens `2` and `6`), while ordinary numeric rows remain unflagged. The diagnostic is deliberately not a production quality gate because citation surface forms vary.
