@@ -33,6 +33,7 @@ import {
   diagnoseIncompleteSource,
 } from "../src/services/translation/quality.ts";
 import { normalizeSourceGroundedTerminology } from "../src/services/llm/glossaryService.ts";
+import { projectSafeUnitTranslation } from "../src/services/translation/partialProjection.ts";
 import { referenceSectionIds, shouldTranslateBlock } from "../src/services/import/policy.ts";
 import type { PaperBlock } from "../src/types/paper.ts";
 import { extractPdfPages } from "../src/test/readingOrder/extractPdf.ts";
@@ -683,9 +684,23 @@ async function main() {
         // classify it as visible fallback before running the client gate so
         // the benchmark cannot overstate quality by accepting partial units.
         const serverFallback = Boolean(result?.fallback_stage && result.fallback_stage !== "none");
-        const sourceFallback = structurallySkipped || !wouldSubmitToModel || result?.text === source || serverFallback;
-        const normalizedTranslation = result && !sourceFallback
-          ? normalizeSourceGroundedTerminology(source, result.text)
+        // Mirror the client engine: a one-to-one unit map can safely preserve
+        // successful units even when the server labels the aggregate as a
+        // partial/whole-item fallback.  Count only the failed units as a
+        // partial source fallback instead of discarding the whole paragraph.
+        const mappedProjection = result
+          ? projectSafeUnitTranslation({
+              translationUnits: result.translation_units,
+              partialUnitTexts: result.partial_unit_texts,
+            }, source)
+          : null;
+        const effectiveResultText = mappedProjection && !mappedProjection.complete
+          ? mappedProjection.text
+          : result?.text;
+        const sourceFallback = structurallySkipped || !wouldSubmitToModel || result?.text === source
+          || (serverFallback && !mappedProjection);
+        const normalizedTranslation = effectiveResultText && !sourceFallback
+          ? normalizeSourceGroundedTerminology(source, effectiveResultText)
           : undefined;
         const quality = normalizedTranslation ? evaluateJaTranslation(normalizedTranslation, source) : undefined;
         const wouldAcceptTranslation = sourceFallback ? false : normalizedTranslation ? isPlausibleJaTranslation(normalizedTranslation, source) : undefined;
@@ -712,7 +727,7 @@ async function main() {
           translation: normalizedTranslation,
           sourceFallback,
           readerVisibleFallback,
-          partialSourceFallback: partialSourceFallback.partial,
+          partialSourceFallback: partialSourceFallback.partial || Boolean(mappedProjection && !mappedProjection.complete),
           partialSourceFallbackReason: partialSourceFallback.reason,
           modelVersion: result?.model_version,
           inputTokens: result?.input_tokens,
