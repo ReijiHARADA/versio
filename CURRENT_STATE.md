@@ -417,3 +417,7 @@ Re-ran the same 4-paper/48-unit cohort as `focused-cohort-current-v2` after the 
 ## Server-side comparative-list gate
 
 Applied the same source-aware comparative-list repetition guard to the Python MADLAD server. This keeps the server and TypeScript quality gates aligned: repeated predicates in a source list of four or more comparisons are not treated as decoder looping when the output is sentence-level Japanese. All translation-server Python tests pass (246 tests). The running server must be restarted before this change is active; no benchmark restart was performed automatically.
+
+## Post-restart server probe
+
+Restarted the translation server from the updated Python source (model version reports the current v84 pipeline) and probed the known 1,161-character statistical list unit directly. It still returned `partial_unit_fallback`, so the remaining failure is not solely the generic phrase-repetition gate; further attribution must inspect the unit-level reason (protected scientific spans, decode output, or another invariant) before weakening additional server checks.
