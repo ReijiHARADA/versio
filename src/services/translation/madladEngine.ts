@@ -127,7 +127,7 @@ export class MADLADEngine implements TranslationEngine {
     const partialUnitTexts = Array.isArray(data.partial_unit_texts)
       ? data.partial_unit_texts.filter((value: unknown): value is string => typeof value === "string")
       : undefined;
-    const safePartial = projectSafeUnitTranslation({ translationUnits, partialUnitTexts });
+    const safePartial = projectSafeUnitTranslation({ translationUnits, partialUnitTexts }, text);
     const effectiveText = !isPlausibleJaTranslation(translatedText, text) && safePartial
       ? safePartial.text
       : translatedText;
@@ -196,7 +196,7 @@ export class MADLADEngine implements TranslationEngine {
       const partialUnitTexts = Array.isArray(r.partial_unit_texts)
         ? r.partial_unit_texts.filter((value): value is string => typeof value === "string")
         : undefined;
-      const safePartial = projectSafeUnitTranslation({ translationUnits, partialUnitTexts });
+      const safePartial = projectSafeUnitTranslation({ translationUnits, partialUnitTexts }, texts[index] ?? "");
       const effectiveText = targetLanguage === "ja"
         && !isPlausibleJaTranslation(translatedText, texts[index] ?? "")
         && safePartial

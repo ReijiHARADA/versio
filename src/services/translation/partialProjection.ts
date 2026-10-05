@@ -22,10 +22,15 @@ export interface SafeUnitProjectionCandidate {
  */
 export function projectSafeUnitTranslation(
   result: Pick<TranslationResult, "translationUnits" | "partialUnitTexts">,
+  sourceText?: string,
 ): SafeUnitProjectionCandidate | null {
   const sources = result.translationUnits;
   const texts = result.partialUnitTexts;
   if (!sources?.length || !texts?.length || sources.length !== texts.length) return null;
+  if (sourceText !== undefined) {
+    const normalize = (value: string) => value.replace(/\s+/g, " ").trim();
+    if (normalize(sources.join(" ")) !== normalize(sourceText)) return null;
+  }
   const failedIndices: number[] = [];
   const units = texts.map((text, index) => {
     const source = sources[index];

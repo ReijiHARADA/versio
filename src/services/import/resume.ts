@@ -157,7 +157,7 @@ export async function resumeIncompleteTranslation(
       // guess.  Titles and section labels remain all-or-nothing.
       const partialProjection = !directTranslation && !task.blockId.startsWith("title-")
         && !task.blockId.startsWith("section-")
-        ? projectSafeUnitTranslation(task.result)
+        ? projectSafeUnitTranslation(task.result, task.text)
         : null;
       const acceptedTranslation = directTranslation ?? figureCaption ?? partialProjection?.text;
       if (!acceptedTranslation) {
