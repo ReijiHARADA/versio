@@ -118,6 +118,17 @@ describe("OllamaTranslationEngine", () => {
     expect(provider.complete).toHaveBeenCalledTimes(2);
   });
 
+  it("rejects an alternate candidate that drops an eligible numeric citation", async () => {
+    const provider = providerReturning("先行研究では参加者の結果を比較した。");
+    const engine = new OllamaTranslationEngine(primaryThatFails(), provider);
+    await expect(engine.translate(
+      "Prior work compared the participant results [12] under controlled conditions.",
+      "en",
+      "ja",
+    )).rejects.toThrow("primary failed");
+    expect(provider.complete).toHaveBeenCalledTimes(2);
+  });
+
   it("rejects an alternate candidate with an untranslated multi-word phrase", async () => {
     const provider = providerReturning("システムの preliminary evaluation は完了した。");
     const engine = new OllamaTranslationEngine(primaryThatFails(), provider);
