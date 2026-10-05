@@ -1,0 +1,107 @@
+{
+  "version": "cat-audit-quality-v1",
+  "sourceReport": "test-data/real-papers/reports/cat-source-disjoint-auth-v5.json",
+  "total": 5,
+  "cleanSourceRows": 5,
+  "sourceExcluded": 0,
+  "qualityAccepted": 5,
+  "qualityAcceptedRate": 1,
+  "reasonCounts": {},
+  "results": [
+    {
+      "key": "cognitive-psychology-gpt3:b-5096fc7a",
+      "paperId": "cognitive-psychology-gpt3",
+      "source": "We used the public OpenAI API to run all our simulations14. There are four GPT-3 models accessible through this API: “Ada”, “Babbage”, “Curie” and “Davinci” (sorted from the least to the most complex model). We focused our investigation on the most powerful of these models (“Davinci”) unless otherwise noted. We furthermore set the temperature parameter to 0, leading to deterministic answers, and kept the default values for all other parameters.",
+      "translation": "我々はすべてのシミュレーションに公開版のOpenAI APIを使用しました（14）。このAPIからアクセスできるGPT-3モデルは4つあり、「Ada」、「Babbage」、「Curie」、そして「Davinci」（難易度の低い順に並べています）。特に断りのない限り、本研究では最も高性能なモデル「Davinci」に焦点を当てました。さらに、温度パラメータを0に設定し、決定論的な回答を得るようにし、その他のパラメータはすべてデフォルト値のままとしました。",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": false
+      },
+      "quality": {
+        "score": 1,
+        "reasons": [],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": true
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-b4361dd7",
+      "paperId": "cognitive-psychology-gpt3",
+      "source": "Task-based investigations The results from the previous section indicate that GPT-3 can produce passable responses in some vignette-based tasks. It is, however, not possible to decide whether it is merely behaving like a parrot, repeating what it has seen in the training data, or whether it is reasoning successfully. We, therefore, next turned our lens of investigation to a more challenging setting and tested GPT-3 on actual, task-based experiments. In order to do so, we selected a set of four classical experiments that we believe to be representative of the cognitive psychology literature. For each of these, we programmatically generated a description that was entered as a prompt and –if there were multiple trials– updated the text with GPT-3’s response and the received feedback.",
+      "translation": "タスクベースの調査 前節の結果から、GPT‑3はいくつかのビネットベースのタスクにおいて合格レベルの回答を生成できることが示されました。しかし、単に訓練データで見たものをオウムのように繰り返しているだけなのか、あるいは適切に推論しているのかを判断することはできません。そこで、我々は次により挑戦的な設定へと調査の視点を移し、実際のタスクベースの実験でGPT‑3を検証しました。そのために、認知心理学の文献を代表すると考えられる4つの古典的実験を選定しました。これら各実験について、プログラムで生成した説明文をプロンプトとして入力し、複数試行がある場合はGPT‑3の回答とフィードバックでテキストを更新しました。",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": false
+      },
+      "quality": {
+        "score": 1,
+        "reasons": [],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": true
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-bd4d3a92",
+      "paperId": "cognitive-psychology-gpt3",
+      "source": "Horizon 1 Horizon 6 You are going to a casino that owns two slot machines. You earn money each time you play on one GPT-3 Humans of these machines. random",
+      "translation": "ホライズン1 ホライズン6 あなたはスロットマシンを2台所有するカジノへ行く予定です。これらのマシンのGPT-3ヒューマンがランダムにプレイするたびに、あなたはお金を獲得します。",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": false
+      },
+      "quality": {
+        "score": 1,
+        "reasons": [],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": true
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-be6d482b",
+      "paperId": "cognitive-psychology-gpt3",
+      "source": "Human data taken from Zaller et al.33. C: Probability of selecting option “J” in the equal information condition for both GPT-3 and human subjects by horizon condition. D: Probability of selecting the more informative option in the unequal information condition for both GPT-3 and human subjects by horizon condition.",
+      "translation": "Zallerら33から取得した人間データ。C：等情報条件下で、GPT‑3と人間被験者の両方がホライズン条件に応じてオプション「J」を選択する確率。D：不等情報条件下で、GPT‑3と人間被験者の両方がより情報量の多いオプションを選択する確率。",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": false
+      },
+      "quality": {
+        "score": 1,
+        "reasons": [],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": true
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-ebeb028c",
+      "paperId": "cognitive-psychology-gpt3",
+      "source": "We study GPT-3, a recent large language model, using tools from cognitive psychology. More specifically, we assess GPT-3’s decision-making, information search, deliberation, and causal reasoning abilities on a battery of canonical experiments from the literature. We find that much of GPT-3’s behavior is impressive: it solves vignette-based tasks similarly or better than human subjects, is able to make decent decisions from descriptions, outperforms humans in a multi-armed bandit task, and shows signatures of model-based reinforcement learning. Yet we also find that small perturbations to vignette-based tasks can lead GPT-3 vastly astray, that it shows no signatures of directed exploration, and that it fails miserably in causal reasoning task. These results enrich our understanding of current large language models and pave the way for future investigations using tools from cognitive psychology to study increasingly capable and opaque artificial agents.",
+      "translation": "我々は、最新の大規模言語モデルであるGPT‑3を認知心理学の手法を用いて研究します。具体的には、文献に掲載されている標準的な実験群を用いて、GPT‑3の意思決定、情報検索、熟慮、因果推論能力を評価しましした。その結果、GPT‑3の多くの挙動は印象的であることが判明しました。具体的には、ヴィネット形式のタスクにおいて人間と同等かそれ以上の性能を示し、記述から適切な判断を下すことができ、マルチアームドバンディットタスクでは人間を上回り、モデルベースの強化学習の兆候も示しました。一方で、ヴィネット形式のタスクにわずかな摂動を加えるだけでGPT‑3は大きく誤動作し、指向的探索の兆候は見られず、因果推論タスクでは壊滅的な失敗に終わりました。これらの結果は、現在の大規模言語モデルに対する理解を深め、ますます高度で不透明な人工知能エージェントを認知心理学的手法で研究する今後の研究への道を切り開きます。",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": false
+      },
+      "quality": {
+        "score": 1,
+        "reasons": [],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": true
+    }
+  ]
+}

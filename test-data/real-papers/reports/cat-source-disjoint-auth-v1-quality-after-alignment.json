@@ -1,0 +1,54 @@
+{
+  "version": "cat-audit-quality-v1",
+  "sourceReport": "test-data/real-papers/reports/cat-source-disjoint-auth-v1.json",
+  "total": 2,
+  "cleanSourceRows": 2,
+  "sourceExcluded": 0,
+  "qualityAccepted": 1,
+  "qualityAcceptedRate": 0.5,
+  "reasonCounts": {
+    "degenerate output": 1
+  },
+  "results": [
+    {
+      "key": "interactive-jewellery:b-d753999d",
+      "paperId": "interactive-jewellery",
+      "source": "From a jewellery-perspective the awarely scratching of the cover reminds of the patina that a piece of jewellery grows through wearing. A first scratch may feel like damage, yet after some time the traces of its use become an intrinsic part of the piece: the surface tells an unique physical history. Secondly there are several examples of jewellery holding unreachable, yet valuable content. For example pendants for commemoration that hold the ash of the deceased.",
+      "translation": "ジュエリーの観点から見ると、意図的にカバーに傷をつけることは、着用によってジュエリーに自然に生じるパティーナを思い起こさせます。最初の傷は損傷のように見えるかもしれませんが、しばらくするとその使用痕跡は作品の本質的要素となります。表面は独自の物理的歴史を語ります。次に、手の届かない場所にあるにもかかわらず貴重な価値を持つジュエリーの例がいくつかあります。例えば、故人の遺灰を収めた記念用のペンダントなどです。",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": false
+      },
+      "quality": {
+        "score": 1,
+        "reasons": [],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": true
+    },
+    {
+      "key": "dont-mind-me:b-4c16bae3",
+      "paperId": "dont-mind-me",
+      "source": "Attitudes toward Jogwheel interaction on the torso were significantly less awkward (0.005), less silly (0.0), less bothering (0.0), less embarrassing (0.0), less weird (0.0), and less impolite (0.0) on a male actor. This corresponds to the fact that torso interactions also appeared less natural (0.02), less normal (0.001), and less cool (0.004) when performed on a female actor. However, attitudes toward interaction on the pocket were less awkward (0.0), less silly (0.0), less impolite (0.0), less weird (0.001), less embarrassing (0.001), and less bothering (0.008) when performed on a female. The pocket interaction was rated as less natural (0.0), less cool (0.002), and less normal (0.0) when performed by a male actor. The results also revealed that interaction at the collarbone looked more embarrassing (0.047), more impolite (0.002), less natural (0.012), and less cool (0.007) when performed by a female actor versus a male actor. Wrist interaction looked less embarrassing (0.04), less silly (0.012), and less bothering (0.04) when performed by a male. Finally, waist interactions looked significantly less easy to perform (0.025) by a male actor.",
+      "translation": "胴体へのジョグホイール操作に対する態度は、男性俳優に対して有意にぎこちなさが低く（0.005）、馬鹿げている度合いが低く（0.0）、迷惑度が低く（0.0）、恥ずかしさが低く（0.0）、奇妙さが低く（0.0）、無礼さが低く（0.0）なりました。これは、女性俳優に対して胴体操作が自然さが低く（0.02）、普通さが低く（0.001）、クールさが低く（0.004）なるという事実と一致します。一方、ポケットへの操作に対する態度は、女性に対して有意にぎこちなさが低く（0.0）、馬鹿げている度合いが低く（0.0）、無礼さが低く（0.0）、奇妙さが低く（0.001）、恥ずかしさが低く（0.001）、迷惑度が低く（0.008）なりました。男性俳優によるポケット操作は、自然さが低く（0.0）、クールさが低く（0.002）、普通さが低く（0.0）と評価されました。また、結果からは、鎖骨への操作は女性俳優が行うと、恥ずかしさが高く（0.047）、無礼さが高く（0.002）、自然さが低く（0.012）、クールさが低く（0.007）なることが明らかになりました。手首への操作は、男性俳優が行うと恥ずかしさが低く（0.04）、馬鹿げている度合いが低く（0.012）、迷惑度が低く（0.04）なりました。最後に、ウエストへの操作は男性俳優にとって実施が容易でないことが有意に示されました（0.025）。",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": false
+      },
+      "quality": {
+        "score": 0.85,
+        "reasons": [
+          "degenerate output"
+        ],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 0,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": false
+    }
+  ]
+}

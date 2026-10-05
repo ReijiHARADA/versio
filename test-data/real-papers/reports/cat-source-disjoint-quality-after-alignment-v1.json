@@ -1,0 +1,67 @@
+{
+  "version": "cat-source-disjoint-quality-after-alignment-v1",
+  "source": "cat-source-disjoint-auth-v1..v8",
+  "gateChange": "participant role sentence alignment across count mismatch",
+  "cohorts": [
+    {
+      "cohort": "1",
+      "total": 2,
+      "cleanSourceRows": 2,
+      "qualityAccepted": 1,
+      "qualityAcceptedRate": 0.5
+    },
+    {
+      "cohort": "2",
+      "total": 5,
+      "cleanSourceRows": 1,
+      "qualityAccepted": 1,
+      "qualityAcceptedRate": 1
+    },
+    {
+      "cohort": "3",
+      "total": 5,
+      "cleanSourceRows": 5,
+      "qualityAccepted": 5,
+      "qualityAcceptedRate": 1
+    },
+    {
+      "cohort": "4",
+      "total": 5,
+      "cleanSourceRows": 5,
+      "qualityAccepted": 5,
+      "qualityAcceptedRate": 1
+    },
+    {
+      "cohort": "5",
+      "total": 5,
+      "cleanSourceRows": 5,
+      "qualityAccepted": 5,
+      "qualityAcceptedRate": 1
+    },
+    {
+      "cohort": "6",
+      "total": 10,
+      "cleanSourceRows": 7,
+      "qualityAccepted": 7,
+      "qualityAcceptedRate": 1
+    },
+    {
+      "cohort": "7",
+      "total": 5,
+      "cleanSourceRows": 5,
+      "qualityAccepted": 5,
+      "qualityAcceptedRate": 1
+    },
+    {
+      "cohort": "8",
+      "total": 5,
+      "cleanSourceRows": 3,
+      "qualityAccepted": 2,
+      "qualityAcceptedRate": 0.6666666666666666
+    }
+  ],
+  "totalRows": 42,
+  "cleanRows": 33,
+  "qualityAccepted": 31,
+  "note": "Model outputs unchanged; this is a gate-only recomputation. Manual semantic safety remains governed by the v1-v8 reviews."
+}
