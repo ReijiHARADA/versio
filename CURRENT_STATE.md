@@ -28,6 +28,7 @@
 - 対象unitの現行production出力を保存し、`partial_unit_fallback`（unit 1/3）と統計値由来の英文残留を再現。診断armサーバーはバックグラウンド起動制約でmodel比較まで進められなかったため、通常設定のserverを復旧済み。armの採用判断は未実施。
 - 同一model・同一decode条件で統計値公開armをPTY内で再実行。現行保護は `partial_unit_fallback`（298 input tokens）、公開armは fallbackなし（398 input tokens）になった一方、`0.02→1.00`、`0.001→0.1` 等の数値破壊が発生した。したがってplaceholder削減だけでは採用不可で、数値を文脈付きで見せつつ exact restore/検証する方式が必要。比較 artifact: `test-data/real-papers/reports/inline-statistics-ab-v1.json`。通常serverへ復旧済み。
 - 公開armの数値破壊を検出するためcompact parenthetical statisticsをinvariantへ追加する案は、既存の統計値再配置を正当に受理するテストを誤拒否したため撤回。quality test 267/267 pass、production quality behaviorは変更なし。
+- 同じ4本コホートのpost-model fallback 4件を既存Gemma 2 9Bでselective-cascade監査。quality/citation gateの自動受理は **1/4**（`dont-mind-me:b-68e941f0`）で、残り3件は数値・foreign-script・未翻訳lexeme・否定関係などで拒否。自動受理を手動正解とは扱わず、CAT未導入の代替モデル基準として `test-data/real-papers/reports/selective-cascade-focused-gemma-v1.json` に保存。本番cascadeは変更していない。
 - `translation-audit.json` および別コホートの `CURRENT_STATE` 記録と混ぜず、auth-v1 の完了値を正式な比較対象とする。
 - 中間集計（47本/493 units）では全体 fallback 293件、通常本文187件中47件（25.1%）。これは未完了の暫定値であり、目標達成とは扱わない。
 
