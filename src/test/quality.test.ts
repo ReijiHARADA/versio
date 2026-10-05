@@ -1300,6 +1300,20 @@ describe("subject classification lines", () => {
   });
 });
 
+describe("affiliation metadata lines", () => {
+  it("does not send credential and institution lines to translation", () => {
+    const affiliation =
+      "Associate Member, Institution of Mechanical Engineers (IMechE), Graduate Member, Engineers New Zealand";
+    expect(shouldTranslateParagraph(affiliation)).toBe(false);
+  });
+
+  it("keeps ordinary prose about members and institutions eligible", () => {
+    const prose =
+      "Associate members at the university participated in the study and completed the evaluation.";
+    expect(shouldTranslateParagraph(prose)).toBe(true);
+  });
+});
+
 describe("unsafe extracted translation input", () => {
   it("keeps repeated numbered chart labels out of paragraph translation", () => {
     expect(
