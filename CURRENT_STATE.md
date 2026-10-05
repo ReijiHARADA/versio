@@ -425,3 +425,7 @@ Restarted the translation server from the updated Python source (model version r
 ## Unit-level fallback attribution
 
 Saved `test-data/real-papers/reports/server-stat-unit-diagnostic-v1.json` from a single post-restart request for `dont-mind-me:b-4c16bae3`. The server reports `unit_1` and `unit_3` as `translation_quality_rejected:degenerate translation output`; both are complete comparative-statistics sentences, not extraction fragments. The other five units return Japanese. Their preserved source units and partial outputs show that the model can produce malformed comparative lists (including altered p-values) before the fallback gate, so simply permitting repetition would be unsafe. The next fix should target a structured comparative-list rescue or alternate model, with numeric verification, rather than weakening the gate.
+
+## Comparative-statistics rescue
+
+Added a bounded server rescue for comparative-result sentences that fail quality: when four or more comparative predicates are present, retry once with only compact inline statistic literals visible to MADLAD. The normal scientific invariant gate still rejects altered or missing values; this does not globally expose placeholders. Python tests pass (246). This requires a translation-server restart before runtime validation.
