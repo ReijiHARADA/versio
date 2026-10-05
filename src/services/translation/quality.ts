@@ -1480,6 +1480,20 @@ function semanticScopeRiskReasons(source: string, output: string): string[] {
   ) {
     reasons.push("collective group comparison narrowed to two groups");
   }
+  // Experimental procedures distinguish an utterance from a session. A
+  // fluent translation that swaps these units changes the scope of the
+  // procedure even when all numbers and citations survive. Flag only the
+  // one-way substitution, while allowing Japanese to retain both terms.
+  const sourceHasUtterance = /\butterances?\b/i.test(source);
+  const sourceHasSession = /\bsessions?\b/i.test(source);
+  const outputHasUtterance = /(?:発話|発言)/u.test(output);
+  const outputHasSession = /セッション/u.test(output);
+  if (sourceHasUtterance && !sourceHasSession && outputHasSession && !outputHasUtterance) {
+    reasons.push("utterance unit shifted to session");
+  }
+  if (sourceHasSession && !sourceHasUtterance && outputHasUtterance && !outputHasSession) {
+    reasons.push("session unit shifted to utterance");
+  }
   return reasons;
 }
 
@@ -1878,6 +1892,8 @@ export function getCascadeQualityReasons(output: string, source: string): string
     || reason === "unsupported method predicate introduced"
     || reason.startsWith("participant total may have shifted")
     || reason === "collective group comparison narrowed to two groups"
+    || reason === "utterance unit shifted to session"
+    || reason === "session unit shifted to utterance"
   );
   // Keep the boundary escapes in the source as a regex, rather than literal
   // backspace characters. A previous edit inserted U+0008 here, which made

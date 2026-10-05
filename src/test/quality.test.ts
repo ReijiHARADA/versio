@@ -204,6 +204,20 @@ describe("acronym expansion safety", () => {
     expect(evaluateJaTranslation(output, source).reasons).not.toContain("participant role shifted to researcher");
   });
 
+  it("flags an experimental utterance unit translated as a session", () => {
+    const source = "The current and previous utterances were discarded before the next trial.";
+    const output = "次の試行の前に、現在および以前のセッションを破棄した。";
+    const quality = evaluateJaTranslation(output, source);
+    expect(quality.reasons).toContain("utterance unit shifted to session");
+    expect(isCascadeQualityAcceptable(output, source)).toBe(false);
+  });
+
+  it("allows an utterance to remain an utterance", () => {
+    const source = "The current and previous utterances were discarded before the next trial.";
+    const output = "次の試行の前に、現在および以前の発話を破棄した。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("utterance unit shifted to session");
+  });
+
   it("treats a short acronym as critical when its source context is technical", () => {
     const source = "We compare reinforcement learning (RL) with a supervised learning model.";
     const output = "強化学習と教師あり学習モデルを比較した。";
