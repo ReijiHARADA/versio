@@ -4692,3 +4692,7 @@ Added `scripts/diagnose-citation-alignment.ts` (`npm run audit:citation-alignmen
 The citation diagnostic was also run on existing CAT artifacts: v1 single/tail 0 flags, v2 2 flags (both source-contaminated rows), and v3 1 flag (the manually identified citation-shift row). It should be applied after source-integrity filtering and remains audit-only.
 
 Citation diagnostic v2 now applies source-completeness filtering internally and excludes Figure/Table labels from inline citation detection. On CAT v2 it reports 1 eligible / 4 source-excluded / 0 citation flags; on CAT v3 it reports 5 eligible / 1 known citation flag.
+
+### CAT source deduplication
+
+The CAT benchmark now hashes whitespace-normalized source text and removes duplicates before applying its row limit. It records `duplicateSourceCount` in each report, preventing repeated blocks from different audit generations from being treated as independent evidence.
