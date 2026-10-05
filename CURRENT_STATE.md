@@ -120,6 +120,8 @@
 
 ## 次の作業
 
+- 2026-10-05: citation-alignment audit module追加後の全体回帰を再確認。Vitest **70 files / 641 tests**、typecheck pass。localhost translation server は `semantic-v84` / `phase=ready`。この局所的な監査変更では113本全件再計測を行わず、production routingも変更していない。
+
 - `docs/MAINTENANCE_REFACTOR_PLAN.md` の順に、挙動固定テストを維持しながら品質モジュールを段階分割する。
 - 抽出変更は113本ベンチマークと既存回帰を毎回実行する。
 - 翻訳変更はfresh cohort・manual review・semantic false acceptを確認してから採用する。
