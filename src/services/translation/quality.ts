@@ -119,7 +119,7 @@ const SOURCE_REPLACEMENT = /\binstead\s+of\b/i;
 // explicit replacement construction ("instead of" -> "代わりに" / "ではなく")
 // rather than a literal しか/のみ marker. Keep these as relation evidence so
 // a faithful translation is not rejected solely for choosing a natural form.
-const JA_EXCLUSIVITY = /(?:しか|のみ|だけ|唯一|ただ一つ|単独で|専ら|もっぱら|わずか|代わりに|替わりに|(?:の)?ではなく|異なり|異なる|対照的に|一意(?:に)?|固有|ユニーク|あれば十分|で十分|必要(?:なの)?は[^。！？\n]{0,24}(?:だけ|のみ)|意味が(?:ない|ありません)|意義が(?:ない|ありません)|有意義ではない|価値がない)/;
+const JA_EXCLUSIVITY = /(?:しか|のみ|だけ|唯一|ただ一つ|単独で|専ら|もっぱら|わずか|代わりに|替わりに|(?:の)?ではなく|異なり|異なる|対照的に|一意(?:に)?|固有|独自|独特|ユニーク|あれば十分|で十分|必要(?:なの)?は[^。！？\n]{0,24}(?:だけ|のみ)|意味が(?:ない|ありません)|意義が(?:ない|ありません)|有意義ではない|価値がない)/;
 const JA_INSTEAD_OF = /より(?:も)?/;
 const SOURCE_CONDITION = /\b(?:if|unless|provided that|as long as|depending on|whether)\b/i;
 const SOURCE_WHETHER = /\bwhether\b/i;
