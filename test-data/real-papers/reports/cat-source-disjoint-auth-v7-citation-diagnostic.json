@@ -1,0 +1,65 @@
+{
+  "version": "citation-alignment-diagnostic-v2",
+  "sourceReport": "test-data/real-papers/reports/cat-source-disjoint-auth-v7.json",
+  "productionGate": false,
+  "rows": [
+    {
+      "key": "interpreting-neural-networks:b-212878dd",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "interpreting-neural-networks:b-36af2726",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "interpreting-neural-networks:b-4b3c7b84",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "interpreting-neural-networks:b-5905cac6",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "interpreting-neural-networks:b-e04a7b0a",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    }
+  ],
+  "eligibleCount": 5,
+  "sourceExcludedCount": 0,
+  "flaggedCount": 0
+}

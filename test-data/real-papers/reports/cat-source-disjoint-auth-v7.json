@@ -1,0 +1,67 @@
+{
+  "version": "cat-translate-audit-v1",
+  "model": "cyberagent/CAT-Translate-3.3b",
+  "results": [
+    {
+      "paperId": "interpreting-neural-networks",
+      "key": "interpreting-neural-networks:b-212878dd",
+      "source": "Interpreting neural networks is a crucial and challenging task in machine learning. In this paper, we develop a novel framework for detecting statistical interactions captured by a feedforward multilayer neural network by directly interpreting its learned weights. Depending on the desired interactions, our method can achieve significantly better or similar interaction detection performance compared to the state-of-the-art without searching an exponential solution space of possible interactions. We obtain this accuracy and efficiency by observing that interactions between input features are created by the non-additive effect of nonlinear activation functions, and that interacting paths are encoded in weight matrices. We demonstrate the performance of our method and the importance of discovered interactions via experimental results on both synthetic datasets and real-world application datasets.",
+      "translation": "ニューラルネットワークの解釈は、機械学習において重要かつ困難な課題です。本稿では、学習された重みを直接解釈することにより、フィードフォワード多層ニューラルネットワークが捉える統計的相互作用を検出する新しいフレームワークを提案します。対象となる相互作用に応じて、本手法は可能な相互作用の指数関数的探索空間を検索することなく、最先端手法と比較して大幅に優れた、あるいは同等の相互作用検出性能を達成できます。この精度と効率性は、入力特徴間の相互作用が非線形活性化関数の非加法的効果によって生み出され、相互作用経路が重み行列にエンコードされていることを観測することで実現しました。合成データセットおよび実世界応用データセットを用いた実験結果により、本手法の性能と発見された相互作用の重要性を示します。",
+      "inputTokens": 210,
+      "outputTokens": 140,
+      "elapsedMs": 13843,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "interpreting-neural-networks",
+      "key": "interpreting-neural-networks:b-36af2726",
+      "source": "It has been commonly believed that one major advantage of neural networks is their capability of modeling complex statistical interactions between features for automatic feature learning. Statistical interactions capture important information on where features often have joint effects with other features on predicting an outcome. The discovery of interactions is especially useful for scientific discoveries and hypothesis validation. For example, physicists may be interested in understanding what joint factors provide evidence for new elementary particles; doctors may want to know what interactions are accounted for in risk prediction models, to compare against known interactions from existing medical literature.",
+      "translation": "ニューラルネットワークの主要な利点の一つは、特徴間の複雑な統計的相互作用をモデル化できる点にあると一般に考えられています。統計的相互作用は、特徴が他の特徴と同時に作用して結果を予測する上で重要な情報を把握します。相互作用の発見は、科学的発見や仮説の検証に特に有用です。例えば、物理学者は新しい素粒子の存在を示す証拠となる共同因子が何であるかを理解したいと考えるでしょうし、医師はリスク予測モデルにどのような相互作用が組み込まれているかを知り、既存の医学文献に報告されている既知の相互作用と比較したいと考えるかもしれません。",
+      "inputTokens": 163,
+      "outputTokens": 109,
+      "elapsedMs": 9850,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "interpreting-neural-networks",
+      "key": "interpreting-neural-networks:b-4b3c7b84",
+      "source": "Additive Groves is another method that conducts individual tests for interactions and hence must face the same computational difficulties; however, it is special because the interactions it detects are not constrained to any functional form e.g. multiplicative interactions. The unconstrained manner by which interactions are detected is advantageous when the interactions are present in highly nonlinear data (Sorokina et al., 2007; 2008). Additive Groves accomplishes this by comparing two regression trees, one that fits all interactions, and the other that has the interaction of interest forcibly removed.",
+      "translation": "Additive Grovesは、相互作用ごとの個別テストを実施するため、同様の計算上の課題に直面しますが、検出される相互作用が特定の関数形（例えば乗法的相互作用）に限定されないという特徴があります。相互作用を制約のない方法で検出できることは、相互作用が高度に非線形なデータに存在する場合に有利です（Sorokina et al., 2007; 2008）。Additive Grovesは、すべての相互作用に適合する回帰木と、関心のある相互作用を強制的に除外した回帰木を比較することで、これを実現します。",
+      "inputTokens": 160,
+      "outputTokens": 110,
+      "elapsedMs": 9742,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "interpreting-neural-networks",
+      "key": "interpreting-neural-networks:b-5905cac6",
+      "source": "In this paper, we propose an accurate and efficient framework, called Neural Interaction Detection (NID), which detects statistical interactions of any order or form captured by a feedforward neural network, by examining its weight matrices. Our approach is efficient because it avoids searching over an exponential solution space of interaction candidates by making an approximation of hidden unit importance at the first hidden layer via all weights above and doing a 2D traversal of the input weight matrix. We provide theoretical justifications on why interactions between features are created at hidden units and why our hidden unit importance approximation satisfies bounds on hidden unit gradients. Top-K true interactions are determined from interaction rankings by using a special form of generalized additive model, which accounts for interactions of variable order (Wood, 2006; Lou et al., 2013). Experimental results on simulated datasets and real-world datasets demonstrate the effectiveness of NID compared to the state-of-the-art methods in detecting statistical interactions.",
+      "translation": "本稿では、ニューラル相互作用検出（Neural Interaction Detection、NID）と呼ばれる、フィードフォワードニューラルネットワークの重み行列を解析することで、任意の次数・形態の統計的相互作用を検出する正確かつ効率的なフレームワークを提案する。我々の手法は、全重みを用いて第一隠れ層のユニット重要度を近似し、入力重み行列を2次元で走査することで、相互作用候補の指数関数的探索空間を回避するため、効率的である。特徴間の相互作用が隠れ層でどのように生成されるか、また我々の隠れ層重要度近似が隠れ層の勾配に対する上限を満たす理由について、理論的根拠を示す。上位K個の真正な相互作用は、変数次数の相互作用を考慮した一般化加法モデル（Wood, 2006; Lou et al., 2013）の特殊な形態を用いて相互作用ランキングから抽出する。シミュレーションデータセットおよび実データセットに対する実験結果は、統計的相互作用の検出において、最先端手法と比較してNIDの有効性を実証している。",
+      "inputTokens": 268,
+      "outputTokens": 200,
+      "elapsedMs": 18402,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "interpreting-neural-networks",
+      "key": "interpreting-neural-networks:b-e04a7b0a",
+      "source": "Despite their strong predictive power, neural networks have traditionally been treated as “black box” models, preventing their adoption in many application domains. It has been noted that complex machine learning models can learn unintended patterns from data, raising significant risks to stakeholders (Varshney & Alemzadeh, 2016). Therefore, in applications where machine learning models are intended for making critical decisions, such as healthcare or finance, it is paramount to understand how they make predictions (Caruana et al., 2015; Goodman & Flaxman, 2016).",
+      "translation": "その強力な予測能力にもかかわらず、ニューラルネットワークは従来「ブラックボックス」モデルとして扱われており、多くの応用分野での採用が阻まれています。複雑な機械学習モデルがデータから意図しないパターンを学習し、ステークホルダーに重大なリスクをもたらすことが指摘されています（Varshney & Alemzadeh, 2016）。したがって、医療や金融など、機械学習モデルが重要な意思決定に用いられる応用分野では、どのように予測を行っているかを理解することが極めて重要です（Caruana et al., 2015; Goodman & Flaxman, 2016）。",
+      "inputTokens": 159,
+      "outputTokens": 115,
+      "elapsedMs": 10121,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "sourceIntegrityFlagged": 0,
+    "cleanSourceRows": 5,
+    "duplicateSourceCount": 0
+  }
+}
