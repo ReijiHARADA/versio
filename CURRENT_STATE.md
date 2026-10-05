@@ -429,3 +429,7 @@ Saved `test-data/real-papers/reports/server-stat-unit-diagnostic-v1.json` from a
 ## Comparative-statistics rescue
 
 Added a bounded server rescue for comparative-result sentences that fail quality: when four or more comparative predicates are present, retry once with only compact inline statistic literals visible to MADLAD. The normal scientific invariant gate still rejects altered or missing values; this does not globally expose placeholders. Python tests pass (246). This requires a translation-server restart before runtime validation.
+
+## Three-item comparative-list attribution
+
+The server log from the diagnostic request showed the failing units each had three repeated comparative predicates (`less natural`, `less normal`, `less cool`), so the previous four-item threshold never applied. Lowered the source-structure threshold to three in both gates and in the bounded inline-statistics rescue. Tests remain green (267 TypeScript quality tests; 246 Python translation-server tests). Runtime revalidation is pending a clean server restart because the prior process was handling queued requests when interrupted.
