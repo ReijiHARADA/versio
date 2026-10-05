@@ -1,0 +1,124 @@
+{
+  "version": "cat-translate-audit-v1",
+  "model": "cyberagent/CAT-Translate-3.3b",
+  "results": [
+    {
+      "paperId": "covid-ml-review",
+      "key": "covid-ml-review:b-77db4961",
+      "source": "This section describes the process of data-driven COVID-19 diagnosis. Fig. (2) illustrates a framework for COVID-19 diagnosis and that there are five major layers of operation. Firstly, the input database is studied, and then a suitable imaging technique is selected by physicians or by the telemedicine system. Next imaging-based techniques: Xray, CT scan, or ultrasound imaging are used. AI-based processing and optimisation are then performed. Finally, results are estimated and reported. The overall diagnosis has some other process steps. These steps are preprocessing, segmenta-tion, feature selection, classification, and detection. The following literature review is made on preprocessing and seg-mentation stages.",
+      "translation": "本セクションでは、データ駆動型COVID-19診断プロセスについて説明します。図2は、COVID-19診断のフレームワークを示しており、5つの主要層から構成されていることが確認できます。まず、入力データベースを解析し、次に医師または遠隔医療システムによって適切な画像診断技術を選択します。その後、X線、CTスキャン、超音波画像などの画像診断技術を使用します。続いて、AIベースの処理と最適化が行われます。最後に、結果が推定され、報告されます。全体的な診断には、前処理、セグメンテーション、特徴選択、分類、検出といった他のプロセスステップがあります。以下の文献レビューでは、前処理およびセグメンテーション段階について取り上げます。",
+      "inputTokens": 193,
+      "outputTokens": 136,
+      "elapsedMs": 13462,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "dont-mind-me",
+      "key": "dont-mind-me:b-e93e395c",
+      "source": "The survey consisted of a study introduction, a demographic questionnaire, the wearable technology acceptability assessment, and a follow-up questionnaire. Participants were required to be of legal consenting age: 18 in America and 19 in South Korea, and were screened based on self-reported nationality to ensure attitude correspondence with country-specific values. To establish full participant comprehension of the e-textile system, a qualifying question, “Do you understand what a wearable controller is?” was administered after the introduction.",
+      "translation": "本調査は、研究概要、人口統計学的質問票、ウェアラブル技術受容性評価、およびフォローアップ質問票から構成されていました。参加者は、米国では18歳、韓国では19歳という法定同意年齢に達していること、そして自己申告による国籍に基づいてスクリーニングされ、国ごとの価値観との整合性が確保されました。eテキスタイルシステムへの参加者の完全な理解を確認するため、導入後に「ウェアラブルコントローラーとは何か理解していますか？」という適格性質問を実施しました。",
+      "inputTokens": 148,
+      "outputTokens": 88,
+      "elapsedMs": 8176,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "hci-empirical-methods",
+      "key": "hci-empirical-methods:b-16b8efce",
+      "source": "In this two-session course, attendees will learn how to conduct empirical research in human-computer interaction (HCI). This course delivers an A-to-Z tutorial on designing and doing a user study",
+      "translation": "本2回構成の講座では、参加者はヒューマン・コンピュータ・インタラクション（HCI）における実証研究の方法を学びます。本講座では、ユーザー調査の設計と実施に関するAからZまでのチュートリアルを提供します。",
+      "inputTokens": 64,
+      "outputTokens": 44,
+      "elapsedMs": 3913,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "hci-empirical-methods",
+      "key": "hci-empirical-methods:b-b855d0a3",
+      "source": "benefit anyone interested in conducting a user study or writing a CHI paper. Only a general HCI knowledge is required.",
+      "translation": "ユーザー調査を実施したい方やCHI論文を執筆したい方にとって有益です。一般的なHCIの知識があれば十分です。",
+      "inputTokens": 44,
+      "outputTokens": 22,
+      "elapsedMs": 1978,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "hci-empirical-methods",
+      "key": "hci-empirical-methods:b-be861440",
+      "source": "Empirical research; user study; experiment design; quantitative methods; writing a CHI paper.",
+      "translation": "実証研究；ユーザー調査；実験デザイン；定量的手法；CHI論文の書き方。",
+      "inputTokens": 38,
+      "outputTokens": 18,
+      "elapsedMs": 1573,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "hci-empirical-methods",
+      "key": "hci-empirical-methods:b-bf6aefa9",
+      "source": "This course caters to attendees who are motivated to learn about, and use, empirical research methods in HCI research. Specifically, it is for those in academia or industry who evaluate interaction techniques using quantitative methods, or those who make decisions based on usability tests, and, in particular, user studies following an experimental methodology. Approximately 75 attendees is the maximum practical size for this course. If the number of registrations is large, the instructors may consider teaching the course multiple times.",
+      "translation": "本コースは、HCI（ヒューマン・コンピュータ・インタラクション）研究における実証的研究手法について学び、活用したいという意欲のある参加者を対象としています。具体的には、定量的手法を用いてインタラクション技術を評価している学術機関や産業界の研究者、あるいはユーザビリティテストや、特に実験的手法に基づくユーザー調査に基づいて意思決定を行っている方々向けです。本コースの実際の定員は約75名です。登録人数が多数になる場合は、講師が複数回にわたって授業を実施することを検討することがあります。",
+      "inputTokens": 142,
+      "outputTokens": 95,
+      "elapsedMs": 8189,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "hci-empirical-methods",
+      "key": "hci-empirical-methods:b-d508a89e",
+      "source": "No specific background is required other than a general knowledge of human-computer interaction as conveyed, for example, through an undergraduate HCI course or attendance at CHI conferences. Knowing how to enter formulae in a Microsoft Excel spreadsheet to compute means, standard deviations, etc., would be an asset. Knowledge of advanced statistics, such as the analysis of variance, is NOT required. Additionally, there is no linkage between this and any other CHI course.",
+      "translation": "特に必要な背景知識はありません。例えば、学部レベルのHCIコースやCHI会議への参加を通じて得られるような、ヒューマン・コンピュータ・インタラクションに関する一般的な知識があれば十分です。Microsoft Excelで数式を入力して平均値や標準偏差などを算出する方法を知っていると有利です。分散分析などの高度な統計知識は求められません。また、本コースと他のCHIコースとの関連性はありません。",
+      "inputTokens": 129,
+      "outputTokens": 76,
+      "elapsedMs": 6829,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "hci-empirical-methods",
+      "key": "hci-empirical-methods:b-f82706b9",
+      "source": "Most attendees at CHI conferences will agree that an experiment (user study) is the hallmark of good research in human-computer interaction. But what constitutes an experiment? And how does one go from an experiment to a CHI paper? This course will teach how to pose testable research questions, how to make and measure observations, and how to design and conduct an experiment. Specifically, attendees will participate in a real experiment to gain experience as both an investigator and as a participant. The second session covers the statistical tools typically used to analyze data. Most notably, attendees will learn how to organize experiment results and write a CHI paper.",
+      "translation": "CHI会議の参加者のほとんどは、実験（ユーザー調査）がヒューマン・コンピュータ・インタラクションにおける優れた研究の指標であることに同意するでしょう。しかし、実験とは何でしょうか？そして、実験からCHI論文へとどのようにつなげていくのでしょうか？本コースでは、検証可能な研究課題の設定方法、観察の実施と測定方法、そして実験の設計と実施方法について学びます。具体的には、参加者が実際の実験に参加し、研究者としてだけでなく参加者としても経験を積むことができます。第2セッションでは、データ解析に一般的に使用される統計手法について取り上げます。特に、参加者は実験結果の整理方法とCHI論文の書き方を学びます。",
+      "inputTokens": 172,
+      "outputTokens": 117,
+      "elapsedMs": 10242,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "how-content-volume-landing-pages",
+      "key": "how-content-volume-landing-pages:b-aa5dfd86",
+      "source": "Background Content is a term commonly used to describe the information made available by a website or other electronic medium. A pertinent debate among scholars and practitioners relate to information volume and consumer behavior: do more details elicit engagement and compliance, operationalized through conversions, or the other way around?",
+      "translation": "バックグラウンドコンテンツとは、ウェブサイトやその他の電子メディアが提供する情報を指す用語です。学者や実務家の間で議論されているのは、情報の量と消費者行動の関係です。すなわち、詳細情報がエンゲージメントやコンプライアンス（コンバージョンとして測定される）を高めるのか、それともその逆なのか、という点です。",
+      "inputTokens": 87,
+      "outputTokens": 54,
+      "elapsedMs": 4739,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "interpreting-neural-networks",
+      "key": "interpreting-neural-networks:b-1732daba",
+      "source": "The rest of the paper is organized as follows: we first review related work and define notations in Section",
+      "translation": "本稿の残りの部分は、以下のように構成されています。まず、関連研究をレビューし、セクションで記号を定義します。",
+      "inputTokens": 38,
+      "outputTokens": 24,
+      "elapsedMs": 2052,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": [
+        "source_ends_at_document_reference"
+      ]
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "sourceIntegrityFlagged": 1,
+    "cleanSourceRows": 9,
+    "duplicateSourceCount": 0
+  }
+}
