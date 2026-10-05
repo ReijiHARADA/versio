@@ -982,6 +982,10 @@ const SCIENTIFIC_PATTERNS: Array<[ScientificInvariant["kind"], RegExp]> = [
   // “before World War I” into an invented year such as 1914.
   ["year", /\b(?:1[5-9]\d{2}|20\d{2})\b/g],
   ["statistic", /(?:[χΧxX](?:²|2)?|[FfTtZz])\s*\([^)]{1,16}\)\s*(?:=|<|>|≤|≥)\s*[-+]?\d+(?:\.\d+)?|\b[UWHV]\s*=\s*[-+]?\d+(?:\.\d+)?|\bp\s*(?:=|<|>|≤|≥)\s*\.?\d+(?:\.\d+)?|\b[A-Za-z]\s*(?:\u0338\s*=|!=|≠|=|<|>|≤|≥)\s*[-+]?\d+(?:\.\d+)?/g],
+  // PDF text commonly glues protocol identifiers to hexadecimal payloads
+  // (`UUID0x1809`), so capture the identifier prefix independently of the
+  // generic acronym token pattern below.
+  ["acronym", /\b(?:UUID|GUID|HEX)(?=\s*0x[0-9a-f]+\b)/gi],
   // Electrical/biomedical units are frequently attached to the value in
   // Japanese output (for example `1 pF` -> `1pF`). Treat the complete value
   // as one invariant so the unit is not double-counted as a missing acronym.
