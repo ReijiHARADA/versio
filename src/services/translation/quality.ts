@@ -1575,6 +1575,19 @@ function discourseRelationRiskReasons(source: string, output: string): string[] 
   if (SOURCE_POSITIVE_EQUIVALENCE.test(source) && JA_NEGATED_EQUIVALENCE.test(output)) {
     reasons.push("positive equivalence relation negated");
   }
+  // A frequent results-table drift collapses opposite comparative polarity
+  // into one Japanese predicate (for example, both "less easy to access" and
+  // "easier to access" becoming 「アクセスしやすい」). Detect only when the
+  // English contains the same comparison tail with opposite polarity and the
+  // Japanese output repeats one quoted predicate, so ordinary repeated list
+  // items are not rejected.
+  const lessEasy = /\bless\s+easy\s+to\s+([a-z]+)\b/i.exec(source)?.[1]?.toLowerCase();
+  const easier = /\beasier\s+to\s+([a-z]+)\b/i.exec(source)?.[1]?.toLowerCase();
+  if (lessEasy && easier && lessEasy === easier) {
+    const quoted = [...output.matchAll(/「([^」]{2,30})」/gu)].map((match) => match[1]);
+    const repeated = quoted.some((value, index) => quoted.indexOf(value) !== index);
+    if (repeated) reasons.push("opposite comparative polarity collapsed");
+  }
   return reasons;
 }
 
@@ -1942,6 +1955,7 @@ export function getCascadeQualityReasons(output: string, source: string): string
     || reason === "unsupported method predicate introduced"
     || reason.startsWith("participant total may have shifted")
     || reason === "collective group comparison narrowed to two groups"
+    || reason === "opposite comparative polarity collapsed"
     || reason === "utterance unit shifted to session"
     || reason === "session unit shifted to utterance"
   );
