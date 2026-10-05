@@ -59,6 +59,11 @@
 
 ## 直近の変更
 
+### v1553 — 自動折りたたみプレビューを青背景の浮かぶウィンドウに（2026-10-05）
+
+- 「自動で折りたたむ」比較プレビューから OFF/ON ラベル・説明キャプション・トグル下の説明文を削除。
+- 強い青ステージ上に macOS 風タイトルバー付きウィンドウが浮かぶ見た目に変更。選択中は白いリングで示す。
+
 ### v1552 — Reader 中のサイドバー青ハイライトを論文に付ける（2026-10-05）
 
 - 論文を開いているとき、格納フォルダではなくサイドバー上の当該論文行を現在位置としてハイライトするよう修正。
@@ -433,3 +438,7 @@ Added a bounded server rescue for comparative-result sentences that fail quality
 ## Three-item comparative-list attribution
 
 The server log from the diagnostic request showed the failing units each had three repeated comparative predicates (`less natural`, `less normal`, `less cool`), so the previous four-item threshold never applied. Lowered the source-structure threshold to three in both gates and in the bounded inline-statistics rescue. Tests remain green (267 TypeScript quality tests; 246 Python translation-server tests). Runtime revalidation is pending a clean server restart because the prior process was handling queued requests when interrupted.
+
+## Comparative rescue safety correction
+
+Runtime validation after the three-item threshold showed the rescue could return a no-fallback response while its partial unit text omitted parenthesized p-values. Added an explicit multiset check for all numeric values in the comparative-statistics retry; a rescue candidate is now rejected if any value is missing or changed. This preserves the original safe fallback behavior until a candidate keeps every statistic. Python tests remain green (246).
