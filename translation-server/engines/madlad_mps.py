@@ -1625,6 +1625,19 @@ class MADLADEngine(TranslationEngine):
         return False
 
     @staticmethod
+    def _repetition_shape_allowed(source: str, output: str) -> bool:
+        """Allow repetition that mirrors an explicit comparative result list.
+
+        Statistical prose commonly repeats ``less``/``more`` for each item in
+        a list. A Japanese rendering repeats the predicate as well, which can
+        look like a decoder loop to a source-agnostic n-gram detector. This
+        relaxation is gated by source structure and sentence-level Japanese;
+        it does not weaken repetition, placeholder, or fact checks elsewhere.
+        """
+        comparative_count = len(re.findall(r"\b(?:less|more|higher|lower|greater|smaller)\b", source, re.I))
+        return comparative_count >= 4 and bool(re.search(r"[。！？]", output))
+
+    @staticmethod
     def _has_translation_instruction_contamination(output: str) -> bool:
         """Detect a generated prompt/example appended after translated prose.
 
@@ -1894,7 +1907,7 @@ class MADLADEngine(TranslationEngine):
                 return True
             if MADLADEngine._has_corrupted_identifier_glue(source, output):
                 return True
-            if MADLADEngine._has_abnormal_phrase_repetition(output):
+            if MADLADEngine._has_abnormal_phrase_repetition(output) and not MADLADEngine._repetition_shape_allowed(source, output):
                 return True
             if MADLADEngine._has_unsupported_numbered_enumeration(output, source):
                 return True
@@ -1952,7 +1965,7 @@ class MADLADEngine(TranslationEngine):
             return "instruction_contamination"
         if MADLADEngine._has_adjacent_repeated_latin_token(output):
             return "adjacent_repeated_latin_token"
-        if MADLADEngine._has_abnormal_phrase_repetition(output):
+        if MADLADEngine._has_abnormal_phrase_repetition(output) and not MADLADEngine._repetition_shape_allowed(source, output):
             return "phrase_repetition"
         if target_language == "ja" and not re.search(r"[\u3040-\u30ff\u4e00-\u9fff]", output):
             return "no_japanese_script"
