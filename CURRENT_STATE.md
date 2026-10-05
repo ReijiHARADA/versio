@@ -4,6 +4,7 @@
 - 2026-10-05: 同一source cohortでCATを再評価（MADLADのordinary-body post-model fallback 2件）。CAT自動受理は1/2。interactive-jewelleryは引用 `[2]`/`[16]` の欠落で拒否、dont-mind-meは数値保持を通過したが access表現の重複がありmanual確認対象。異なるsource cohortのCAT結果と混同しない。成果物は `test-data/real-papers/reports/cat-same-cohort-v1.json` と品質再計算レポート。
 - 2026-10-05: 同じ2件でCATの監査専用citation placeholderを有効化して比較。引用欠落は解消せず、`[2]`/`[16]` がなお欠落し、別unitでは `ZZCIT` 指示文が出力へ漏れた。単純placeholder/prompt方式はCAT rescueの根拠にならず、本番へ接続しない。
 - 2026-10-05: CAT同一cohortで検出した「less easy to access」と「easier to access」が同じ日本語述語へ潰れる比較極性の欠落を、一般化したcascade専用relation guard `opposite comparative polarity collapsed` として追加。quality tests **271/271**、typecheck、diff check pass。反対極性を別表現で保持する受理回帰も追加し、全件再計測は不要な局所品質修正として未実施。
+- 同ガード後の全TypeScript回帰は **70 files / 652 tests pass**。PDF抽出・reading order・cascade・import/resumeに回帰なし。
 - 2026-10-05: CAT比較前のMADLAD重点基準 `focused-before-cat-v1`（4本・16 units）を完了。ordinary-bodyは2/6 fallback（33.3%）、全体は9/16 fallbackだが、6件は構造不良によるpre-model除外。これは全体推定ではなく、CAT cascade比較用の基準値として保存。
 
 最終更新: 2026-10-05
