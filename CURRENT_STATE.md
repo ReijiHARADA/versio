@@ -124,6 +124,7 @@
 - 2026-10-05: 既知の抽出・長文・引用系failureを含む4本（16 units）の限定cohort `post-citation-audit-cohort-v1` を再測定。ordinary-body 6 unitsは **0/6 reader-visible fallback**、構造破損は5件をpre-model source fallbackとして維持、長文citation保護のproduction緩和は行わない。小標本のため全体指標へ一般化しない。
 - 2026-10-05: CAT-Translate source-disjoint v5 を5件実行（認知心理学）。自動quality gateは5/5、citation診断は1/5 flagged。手動確認では3件が概ねusable、2件は図・表由来の断片混入（うち1件は `GPT-3 Humans` の配置崩れ）で、CATの安全なproduction cascade根拠にはならない。成果物: `cat-source-disjoint-auth-v5{,-quality,-citation-diagnostic}.json`。
 - 2026-10-05: `cognitive-psychology-gpt3` を現行抽出経路で4 units再検証。旧CAT入力にあった `Horizon 1 Horizon 6` 型の図表ラベル列は今回の抽出サンプルには出ず、3件の不完全ブロックはpre-model source fallbackとして保持された。抽出ガードの緩和や追加特例は不要と判断。成果物: `post-figure-label-cognitive-v1.{json,md}`。
+- 2026-10-05: CAT source-disjoint v1〜v5を統合。25 rows中、source/structure除外7、clean 18、手動usable 14、severity>=2は4。citation診断flagは4 rows。CATは引き続き本番無効。集計: `cat-source-disjoint-summary-v1-v5.json`。
 
 - `docs/MAINTENANCE_REFACTOR_PLAN.md` の順に、挙動固定テストを維持しながら品質モジュールを段階分割する。
 - 抽出変更は113本ベンチマークと既存回帰を毎回実行する。
