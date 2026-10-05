@@ -24,19 +24,6 @@
   }
 }
 
-.quote {
-  margin: 0;
-  padding: 8px 10px;
-  background: var(--color-bg-secondary);
-  border-left: 3px solid var(--color-accent);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
-  line-height: 1.45;
-  max-height: 4.5em;
-  overflow: hidden;
-}
-
 .body {
   margin: 0;
   font-size: 0.875rem;

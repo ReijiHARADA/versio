@@ -254,6 +254,12 @@
   background-color: #ffe066;
 }
 
+.draftMark {
+  background-color: #fff59d;
+  padding: 0 1px;
+  border-radius: 2px;
+}
+
 [data-theme="dark"] .annotationMark {
   background-color: #5d4037;
   color: #fff59d;
@@ -262,6 +268,11 @@
 [data-theme="dark"] .annotationMark:hover,
 [data-theme="dark"] .annotationFlash {
   background-color: #7a5a2b;
+}
+
+[data-theme="dark"] .draftMark {
+  background-color: #5d4037;
+  color: #fff59d;
 }
 
 .citation {
