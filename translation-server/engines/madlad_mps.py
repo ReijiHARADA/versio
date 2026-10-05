@@ -1177,7 +1177,7 @@ class MADLADEngine(TranslationEngine):
 
     @staticmethod
     def _comparative_stat_retry_values(source: str) -> list[str]:
-        if len(re.findall(r"\b(?:less|more|higher|lower|greater|smaller)\b", source, re.I)) < 4:
+        if len(re.findall(r"\b(?:less|more|higher|lower|greater|smaller)\b", source, re.I)) < 3:
             return []
         values = re.findall(r"\(\s*[-+]?\d+(?:\.\d+)?\s*\)|\bp\s*[<=>≤≥]\s*[-+]?\d+(?:\.\d+)?", source, re.I)
         return list(dict.fromkeys(values))
@@ -1660,7 +1660,7 @@ class MADLADEngine(TranslationEngine):
         it does not weaken repetition, placeholder, or fact checks elsewhere.
         """
         comparative_count = len(re.findall(r"\b(?:less|more|higher|lower|greater|smaller)\b", source, re.I))
-        return comparative_count >= 4 and bool(re.search(r"[。！？]", output))
+        return comparative_count >= 3 and bool(re.search(r"[。！？]", output))
 
     @staticmethod
     def _has_translation_instruction_contamination(output: str) -> bool:

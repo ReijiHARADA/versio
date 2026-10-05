@@ -1630,7 +1630,7 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   // phrase-loop detector otherwise turns that list into a false fallback.
   // Require both a repeated comparative source pattern and sentence-level
   // Japanese output before relaxing this shape-only signal.
-  const repeatedComparativeList = (source.match(/\b(?:less|more|higher|lower|greater|smaller)\b/gi) ?? []).length >= 4 &&
+  const repeatedComparativeList = (source.match(/\b(?:less|more|higher|lower|greater|smaller)\b/gi) ?? [] ).length >= 3 &&
     (out.match(/[。！？]/g) ?? []).length >= 1;
   const repetitionShapeAllowed = (parallelScientificOutput || repeatedComparativeList) && hasAbnormalPhraseRepetition(out);
   if (isDegenerateTranslation(out) && !repetitionShapeAllowed) reasons.push("degenerate output");
