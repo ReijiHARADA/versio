@@ -14,6 +14,7 @@
 - v2のordinary fallback keyのうち `interactive-jewellery:b-fd49dd32` には既存CAT audit出力が対応し、CATは段落全体を日本語化した候補を生成している。ただしこの出力は同一条件の新規blind review前なので、本番cascadeへの接続根拠にはせず、次の比較対象として記録する。
 - 保存済みCAT候補を現行quality evaluatorで再計算すると score 0.871、`scientific invariants missing: [16]` で不合格だった。見た目が流暢でもcitation保持を満たさないため、CATをこのfallbackへ自動投入するだけでは安全なrescueにならない。
 - CAT監査スクリプトに bracket citation atomic-protection arm（`CAT_PROTECT_CITATIONS=1`）を追加し、同一1件で実測。`[16]` は復元できたが別の `[22]` が欠落し、quality score 0.871 / `scientific invariants missing: [22]` のまま不合格。単純placeholderでは不十分で、MADLAD側の既存placeholder復元・retry相当が必要と判明。本番変更には未接続。
+- citation placeholder保持を明示するpromptも追加して再実測したが、欠落対象が `[22]` から `[16]` へ移っただけで、quality score 0.871のまま不合格。単発prompt強化では解決しないことを確認。
 
 - 翻訳モデル: MADLAD-400 3B、Transformers 4.57.6 runtime。
 - 翻訳品質ガード、科学的 invariant、引用保護、partial fallback、選択的 cascade の監査実装が存在する。

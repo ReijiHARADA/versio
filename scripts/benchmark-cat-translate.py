@@ -177,6 +177,8 @@ def main() -> None:
         if PROTECT_REPEATED_TERMS:
             model_source, term_map = protect_repeated_terms(model_source)
         prompt = "Translate the following English text into Japanese."
+        if PROTECT_CITATIONS:
+            prompt += " Preserve every ZZCIT placeholder exactly once and in order; do not omit or translate these placeholders."
         if PROMPT_SUFFIX:
             prompt += f"\n{PROMPT_SUFFIX}"
         prompt += f"\n\n{model_source}"
