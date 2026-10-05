@@ -19,6 +19,7 @@ PROTECT_ACRONYMS = os.environ.get("CAT_PROTECT_ACRONYMS", "0") == "1"
 PROMPT_SUFFIX = os.environ.get("CAT_PROMPT_SUFFIX", "").strip()
 SYSTEM_PROMPT = os.environ.get("CAT_SYSTEM_PROMPT", "").strip()
 DYNAMIC_TERM_HINTS = os.environ.get("CAT_DYNAMIC_TERM_HINTS", "0") == "1"
+PROTECT_REPEATED_TERMS = os.environ.get("CAT_PROTECT_REPEATED_TERMS", "0") == "1"
 
 STOPWORDS = {
     "about", "after", "again", "against", "among", "because", "before", "being", "between",
@@ -40,6 +41,24 @@ def dynamic_term_hints(text: str) -> list[str]:
             continue
         counts[word] = counts.get(word, 0) + 1
     return sorted((word for word, count in counts.items() if count >= 2), key=lambda word: (-counts[word], word))[:24]
+
+
+def protect_repeated_terms(text: str) -> tuple[str, dict[str, str]]:
+    """Audit-only protection for repeated content terms, without a glossary."""
+    terms = dynamic_term_hints(text)
+    replacements: dict[str, str] = {}
+    protected = text
+    for index, term in enumerate(terms):
+        placeholder = f"ZZTERM{index}ZZ"
+        protected = re.sub(rf"\b{re.escape(term)}\b", placeholder, protected, flags=re.IGNORECASE)
+        replacements[placeholder] = term
+    return protected, replacements
+
+
+def restore_terms(text: str, replacements: dict[str, str]) -> str:
+    for placeholder, term in replacements.items():
+        text = text.replace(placeholder, term)
+    return text
 
 
 def protect_acronyms(text: str) -> tuple[str, dict[str, str]]:
@@ -130,6 +149,9 @@ def main() -> None:
         source = row["source"]
         integrity_flags = source_integrity_flags(source)
         model_source, acronym_map = protect_acronyms(source) if PROTECT_ACRONYMS else (source, {})
+        term_map: dict[str, str] = {}
+        if PROTECT_REPEATED_TERMS:
+            model_source, term_map = protect_repeated_terms(model_source)
         prompt = "Translate the following English text into Japanese."
         if PROMPT_SUFFIX:
             prompt += f"\n{PROMPT_SUFFIX}"
@@ -155,6 +177,8 @@ def main() -> None:
         text = tokenizer.decode(generated, skip_special_tokens=True).strip()
         if acronym_map:
             text = restore_acronyms(text, acronym_map)
+        if term_map:
+            text = restore_terms(text, term_map)
         result = {
             "paperId": row.get("paperId"),
             "key": row["key"],
@@ -173,6 +197,7 @@ def main() -> None:
             "promptSuffix": PROMPT_SUFFIX or None,
             "systemPrompt": SYSTEM_PROMPT or None,
             "dynamicTermHints": DYNAMIC_TERM_HINTS,
+            "repeatedTermProtection": PROTECT_REPEATED_TERMS,
             "acronymProtection": PROTECT_ACRONYMS,
             "results": results,
             "summary": {
