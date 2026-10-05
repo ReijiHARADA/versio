@@ -131,6 +131,7 @@
 - 2026-10-05: scope guardの文単位対応へ微修正後も全体回帰を再確認。Vitest **70 files / 643 tests**、typecheck pass。全件翻訳ベンチマークの再実行は不要な局所変更として保留。
 - 2026-10-05: CAT v1 tailを新scope guardで再評価。4 clean rows中、自動受理は **2/4**。`utterance unit shifted to session` を実際に拒否し、他は既存のdegenerate/participant-role guardで拒否。artifact: `cat-source-disjoint-auth-v1-tail-quality-after-scope.json`。
 - 2026-10-05: 実CAT出力の `current and previous utterances` → `そのセッションおよび直前のセッション` を固定再現し、文境界がずれてもpaired scope patternで検出するguardを追加。quality **265/265**、typecheck pass。cascade判定はreject。
+- 2026-10-05: CAT v1〜v6の保存済み32結果を新guardで再計算。clean 32件中quality gate受理29件。既存のv1 mainにはpaired scope行が含まれず、実例はv1 tailの別artifactで拒否を確認済み。集計は監査用で、本番routingは未変更。
 
 - `docs/MAINTENANCE_REFACTOR_PLAN.md` の順に、挙動固定テストを維持しながら品質モジュールを段階分割する。
 - 抽出変更は113本ベンチマークと既存回帰を毎回実行する。
