@@ -10,6 +10,7 @@
 - 監査スクリプトもproductionと同じ `projectSafeUnitTranslation` を使うよう更新。serverがpartial/whole-item fallbackを返しても、one-to-one mappingが検証できれば成功unitを評価し、失敗unitだけを `partialSourceFallback` として記録する。これにより監査のreader-visible fallbackがproduction経路と一致する。typecheck、quality/engine 282 tests pass。
 - smoke benchmark `partial-projection-smoke-v1`（thermal-earring、1 unit）を新監査経路で完了。`sourceFallback=false`、`readerVisibleFallback=false`、`wouldAcceptTranslation=true` を確認し、出力中の「耳かき」漂移は現行source-grounded normalization後には発生しなかった。`missingTechnicalNameCandidates` は英語名を日本語転写したため診断値として残る。
 - `cadence-dry-run-v1` で重点4本×4 unitsの選択・抽出・チェックポイントだけを確認（モデル呼び出しなし）。通常の確認コマンドが113本全体へ暗黙拡大しないことを再確認した。
+- `partial-projection-focused-v2` を4本×4 unitsで完了（16 units、`MADLAD_BENCH_MAX_ATTEMPTS=1`）。ordinary-bodyは6 units中4完了・2 partial source fallback。post-model 3件は全体原文fallbackではなく、one-to-one projectionで成功unitを保持したpartialとして記録された。小標本であり5%目標へ一般化しないが、局所fallback経路が実測できた。成果物は `test-data/real-papers/reports/partial-projection-focused-v2.{json,md}`。
 
 - 翻訳モデル: MADLAD-400 3B、Transformers 4.57.6 runtime。
 - 翻訳品質ガード、科学的 invariant、引用保護、partial fallback、選択的 cascade の監査実装が存在する。
