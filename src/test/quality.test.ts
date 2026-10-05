@@ -1009,6 +1009,12 @@ describe("isPlausibleJaTranslation", () => {
     )).toBe(false);
   });
 
+  it("accepts an acronym glued to its hexadecimal payload", () => {
+    const source = "The service UUID0x1809 is encoded in the packet.";
+    const output = "パケットにはサービスUUID0x1809が符号化される。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("scientific invariants missing: UUID");
+  });
+
   it("accepts a preserved method identifier when its source spacing is normalized", () => {
     expect(isPlausibleJaTranslation(
       "本手法は(Hartford et al., 2017)のDeepIVと類似している。",
