@@ -1463,7 +1463,15 @@ function semanticScopeRiskReasons(source: string, output: string): string[] {
   const roleShifted = sourceSentences.some((sourceSentence, index) => {
     if (!SOURCE_PARTICIPANT_ROLE.test(sourceSentence) || SOURCE_RESEARCHER_ROLE.test(sourceSentence)) return false;
     const candidate = outputSentences[index] ?? output;
-    return JA_RESEARCHER_ROLE.test(candidate) && !JA_PARTICIPANT_ROLE.test(candidate);
+    if (!JA_RESEARCHER_ROLE.test(candidate) || JA_PARTICIPANT_ROLE.test(candidate)) return false;
+    // Translation can split one source sentence into two Japanese sentences.
+    // When sentence counts differ, an adjacent sentence containing the
+    // participant role is evidence that the index-only comparison is misaligned.
+    if (sourceSentences.length !== outputSentences.length) {
+      const nearby = [outputSentences[index - 1], outputSentences[index + 1]].filter(Boolean).join(" ");
+      if (JA_PARTICIPANT_ROLE.test(nearby)) return false;
+    }
+    return true;
   });
   if (roleShifted) reasons.push("participant role shifted to researcher");
   if (
