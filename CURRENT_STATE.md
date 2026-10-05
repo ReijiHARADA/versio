@@ -30,6 +30,7 @@
 - 公開armの数値破壊を検出するためcompact parenthetical statisticsをinvariantへ追加する案は、既存の統計値再配置を正当に受理するテストを誤拒否したため撤回。quality test 267/267 pass、production quality behaviorは変更なし。
 - 同じ4本コホートのpost-model fallback 4件を既存Gemma 2 9Bでselective-cascade監査。quality/citation gateの自動受理は **1/4**（`dont-mind-me:b-68e941f0`）で、残り3件は数値・foreign-script・未翻訳lexeme・否定関係などで拒否。自動受理を手動正解とは扱わず、CAT未導入の代替モデル基準として `test-data/real-papers/reports/selective-cascade-focused-gemma-v1.json` に保存。本番cascadeは変更していない。
 - 同一4件をQwen 2.5 7Bでも監査し、自動受理は **0/4**。Gemma 1/4を上回らず、いずれも本番cascadeへ追加しない。artifact: `test-data/real-papers/reports/selective-cascade-focused-qwen7b-v1.json`。Ollamaは停止済み。
+- 同一4件をQwen 2.5 14Bでも監査し、自動受理は **1/4**。Gemma 2 9Bと同率で、CAT比較がない現段階では本番cascadeへ追加しない。artifact: `test-data/real-papers/reports/selective-cascade-focused-qwen14b-v1.json`。Ollamaは停止済み。
 - `translation-audit.json` および別コホートの `CURRENT_STATE` 記録と混ぜず、auth-v1 の完了値を正式な比較対象とする。
 - 中間集計（47本/493 units）では全体 fallback 293件、通常本文187件中47件（25.1%）。これは未完了の暫定値であり、目標達成とは扱わない。
 
