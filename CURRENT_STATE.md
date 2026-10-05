@@ -1,5 +1,7 @@
 # Paper Reader 現在状態
 
+- 2026-10-05: CAT-Translate 3.3BをMADLAD fallback入力4件で再評価（`cat-focused-fallback-v3`）。4/4が日本語生成（2.8〜12.7秒/件）し、現行cascade品質ゲート再計算では3/4を自動受理。これは小規模監査であり、本番cascade接続や全113本の再計測はまだ行わない。成果物は `test-data/real-papers/reports/cat-focused-fallback-v3.json` と `selective-cascade-v805-quality-recompute.json`。
+
 最終更新: 2026-10-05
 
 ## 現在の実装状態
