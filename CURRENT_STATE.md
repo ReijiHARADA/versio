@@ -13,6 +13,7 @@
 - 最新回帰: TypeScript 70 files / 648 tests、Python translation-server 248 tests、typecheck passed。113本全件計測は未実施。
 - 直近修正: UUID/GUID/HEXと16進payloadの連結をinvariantとして認識（`a7a89c9`）、whole-item fallbackの単位投影回帰を追加（`62fc557`）。
 - UUIDの前後に説明語があるPDF抽出形（`UUID) of 0x1809` → `UUID0x1809`）と、`0x`内の`0`をcitationとして誤認する問題を修正（`82fe640`）。品質テスト269件、typecheck passed。
+- 保存済み `thermal-earring` 出力の再評価ではUUID/`0x1809`保持は通過したが、`Unique Identifier` の一意性表現欠落を `exclusivity relation missing` として検出した。これは識別子のfalse rejectではなく意味欠落のため、gateは緩和しない。
 
 ## 主要指標
 
