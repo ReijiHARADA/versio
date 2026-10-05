@@ -7,6 +7,7 @@ import {
   shouldTranslateParagraph,
   unsafeParagraphStructureReason,
 } from "./quality";
+import { diagnoseCitationAlignment } from "./audit/citationAlignment";
 import type { EngineStatus, TranslationEngine, TranslationResult } from "./types";
 
 /**
@@ -111,7 +112,10 @@ export class OllamaTranslationEngine implements TranslationEngine {
             const translated = restoreListBoundary(text, completion.text);
             const quality = evaluateJaTranslation(translated, text);
             const cascadeReasons = getCascadeQualityReasons(translated, text);
+            const citationAlignment = diagnoseCitationAlignment(text, translated);
+            if (citationAlignment.flagged) cascadeReasons.push("citation occurrence missing");
             const acceptable = isCascadeQualityAcceptable(translated, text)
+              && !citationAlignment.flagged
               && (quality.reasons.length === 0 || quality.reasons.every((reason) => / relation missing$/.test(reason)));
             if (acceptable) {
               return {
