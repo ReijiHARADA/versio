@@ -4668,3 +4668,5 @@ Correction: the HCI v2 row was also classified incomplete by the existing source
 ### Trailing figure-label boundary guard
 
 A generic source-integrity guard now excludes long prose blocks ending in a bare `Figure`/`Fig.`/`Table` label, a pattern observed in the CAT v2 follow-up. The rule is length-gated and applies to structural boundary evidence rather than a paper-specific term. Quality tests and typecheck pass.
+
+Post-change focused verification confirms both Step-to-Charge rows receive the explicit trailing figure-label boundary reason. The HCI row remains incomplete for missing terminal punctuation; the cognitive row remains a model degeneration. No full-corpus rerun was needed.
