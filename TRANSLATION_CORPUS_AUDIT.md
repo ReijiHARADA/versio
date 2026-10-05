@@ -4690,3 +4690,5 @@ A candidate occurrence-count gate was tested against the CAT v3 citation-shift e
 Added `scripts/diagnose-citation-alignment.ts` (`npm run audit:citation-alignment`) to report missing bracketed/inline citation occurrences before manual review. On the five-row CAT v3 clean cohort it flags only the GPT-3 cognitive-psychology row (tokens `2` and `6`), while ordinary numeric rows remain unflagged. The diagnostic is deliberately not a production quality gate because citation surface forms vary.
 
 The citation diagnostic was also run on existing CAT artifacts: v1 single/tail 0 flags, v2 2 flags (both source-contaminated rows), and v3 1 flag (the manually identified citation-shift row). It should be applied after source-integrity filtering and remains audit-only.
+
+Citation diagnostic v2 now applies source-completeness filtering internally and excludes Figure/Table labels from inline citation detection. On CAT v2 it reports 1 eligible / 4 source-excluded / 0 citation flags; on CAT v3 it reports 5 eligible / 1 known citation flag.

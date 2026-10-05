@@ -1,0 +1,84 @@
+{
+  "version": "citation-alignment-diagnostic-v2",
+  "sourceReport": "test-data/real-papers/reports/cat-source-disjoint-auth-v2.json",
+  "productionGate": false,
+  "rows": [
+    {
+      "key": "power-over-skin:b-51971114",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "step-to-charge:b-7abc7b89",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [
+        "3"
+      ],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": true,
+        "reason": "図表ラベルが段落末尾に混入している可能性があります"
+      },
+      "eligible": false,
+      "flagged": false
+    },
+    {
+      "key": "step-to-charge:b-c826d75e",
+      "sourceCitationTokens": [
+        "32",
+        "33",
+        "34"
+      ],
+      "outputCitationTokens": [
+        "32",
+        "33",
+        "34",
+        "3"
+      ],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": true,
+        "reason": "図表ラベルが段落末尾に混入している可能性があります"
+      },
+      "eligible": false,
+      "flagged": false
+    },
+    {
+      "key": "hci-empirical-methods:b-7686f78c",
+      "sourceCitationTokens": [
+        "1"
+      ],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [
+        "1"
+      ],
+      "sourceCompleteness": {
+        "incomplete": true,
+        "reason": "long prose block has no terminal sentence mark"
+      },
+      "eligible": false,
+      "flagged": false
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-b4ed26af",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": true,
+        "reason": "箇条書き番号が本文に混入している可能性があります"
+      },
+      "eligible": false,
+      "flagged": false
+    }
+  ],
+  "eligibleCount": 1,
+  "sourceExcludedCount": 4,
+  "flaggedCount": 0
+}
