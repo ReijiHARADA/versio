@@ -1,0 +1,117 @@
+{
+  "version": "cat-audit-quality-v1",
+  "sourceReport": "test-data/real-papers/reports/cat-source-disjoint-auth-v2.json",
+  "total": 5,
+  "cleanSourceRows": 2,
+  "sourceExcluded": 3,
+  "qualityAccepted": 1,
+  "qualityAcceptedRate": 0.5,
+  "reasonCounts": {
+    "degenerate output": 1
+  },
+  "results": [
+    {
+      "key": "power-over-skin:b-51971114",
+      "paperId": "power-over-skin",
+      "source": "We now describe the development considerations of our receiver board, which went through many iterations to reduce size and increase received power (major milestones shown in Figure 8).",
+      "translation": "ここでは、サイズを縮小し受信電力を向上させるために多くの改良を重ねた受信ボードの開発上の考慮事項について説明します（主要なマイルストーンは図8に示されています）。",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": false
+      },
+      "quality": {
+        "score": 1,
+        "reasons": [],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": true
+    },
+    {
+      "key": "step-to-charge:b-7abc7b89",
+      "paperId": "step-to-charge",
+      "source": "10M Hz). Thus, to further verify the observations in the Finite Element Analysis based EM simulations, we perform experiments to determine the safe operation range of Step-to-Charge. Fig. 3",
+      "translation": "（10MHz）。したがって、有限要素解析に基づく電磁シミュレーションにおける観測をさらに検証するため、ステップ・トゥ・チャージの安全動作範囲を決定する実験を実施しました。図3",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": true,
+        "reason": "図表ラベルが段落末尾に混入している可能性があります"
+      },
+      "quality": {
+        "score": 0.8280000000000001,
+        "reasons": [
+          "orphaned source invariant sentence",
+          "scientific invariants missing: EM"
+        ],
+        "languageScore": 1,
+        "invariantScore": 0.5700000000000001,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": false
+    },
+    {
+      "key": "step-to-charge:b-c826d75e",
+      "paperId": "step-to-charge",
+      "source": "A safety study is essential to ascertain and analyze the operation range of Stepto-Charge for use by the general public. As illustrated by a previous study investigating the safety aspects of Electro-Quasistatic Human Body Communications (EQS-HBC) [32], the Institute of Electrical and Electronics Engineers (IEEE) [33] and the International Commission on Non-Ionizing Radiation Protection (ICNIRP) [34] have separately recommended the maximum safety limits concerning human exposure to radio frequency (RF) electromagnetic fields. The frequency of operation in Step-to-Charge is 100kHz − 10M Hz, which falls well within the EQS regime. ICNIRP guidelines are primarily used to perform the safety study. The ICNIRP guidelines consider people with preexisting medical conditions, metallic implants, and implanted medical devices outside the scope of this study. The ICNIRP guidelines adopt conservative estimates to provide “basic restriction” levels, which provide limits on the parameters “Specific Absorption Rate” (SAR) level and the ”Induced Electric Field” inside the body at the frequency range of interest (100kHz to 10M Hz). These quantities are difficult to measure experimentally. We use Finite Element Analysis based electromagnetic simulations using Ansys High Frequency Structure Simulator (HFSS) to estimate the values of the quantities (induced electric and magnetic field inside body, Average SAR). Fig. 3",
+      "translation": "安全性研究は、一般市民がStepto‑Chargeを使用する際の動作範囲を確認し、分析するために不可欠です。Electro‑Quasistatic Human Body Communications（EQS‑HBC）の安全性に関する先行研究[32]で示されているように、米国電気電子技術者協会（IEEE）[33]および国際非電離放射線防護委員会（ICNIRP）[34]は、それぞれ無線周波数（RF）電磁場への人体曝露に関する最大安全限度を推奨しています。Stepto‑Chargeの動作周波数は100kHz〜10MHzで、EQS領域に十分収まります。安全性研究は主にICNIRPガイドラインに基づいて実施されます。ICNIRPガイドラインは、本研究の対象外である既往疾患を有する人、金属インプラント、埋め込み型医療機器を考慮しています。ICNIRPガイドラインは「基本制限」レベルを提供するために保守的な推定を採用しており、これにより関心のある周波数範囲（100kHz〜10MHz）における「比吸収率（SAR）」レベルおよび体内誘導電界の上限が定められます。これらの量は実験的に測定が困難です。本研究では、Ansys High Frequency Structure Simulator（HFSS）を用いた有限要素解析に基づく電磁シミュレーションにより、体内誘導電界・磁界および平均SARの値を推定します。図3",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": true,
+        "reason": "図表ラベルが段落末尾に混入している可能性があります"
+      },
+      "quality": {
+        "score": 1,
+        "reasons": [],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": true
+    },
+    {
+      "key": "hci-empirical-methods:b-7686f78c",
+      "paperId": "hci-empirical-methods",
+      "source": "Early in session 1, participants are divided into groups of two and participate in an experiment. A hand-out is distributed for the inclass experiment. See Fig. 2. Following brief instructions, the in-class experiment proceeds. During the experiment, participants take turns acting as a \"participant\" and as an \"investigator\". The participant does an experimental task",
+      "translation": "セッション1の冒頭で、参加者は2人ずつのグループに分けられ、実験に参加します。授業内実験用の資料が配布されます。図2を参照してください。簡単な指示の後、授業内実験が開始されます。実験中は、参加者が「参加者」と「調査員」の役割を交互に務めます。参加者は実験課題を実施します。",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": true,
+        "reason": "long prose block has no terminal sentence mark"
+      },
+      "quality": {
+        "score": 1,
+        "reasons": [],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": true
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-b4ed26af",
+      "paperId": "cognitive-psychology-gpt3",
+      "source": "You have received the following amount of dollars 6 when playing in the past: - Machine F delivered 51 dollars. - Machine J delivered 39 dollars. - Machine J delivered 40 dollars. 4 - Machine J delivered 26 dollars.",
+      "translation": "過去にプレイした際に、以下の金額（ドル）を獲得しました： - マシンFから51ドル。 - マシンJから39ドル。 - マシンJから40ドル。 4 - マシンJから26ドル。",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": false
+      },
+      "quality": {
+        "score": 0.85,
+        "reasons": [
+          "degenerate output"
+        ],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 0,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": false
+    }
+  ]
+}
