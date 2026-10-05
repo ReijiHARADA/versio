@@ -4696,3 +4696,7 @@ Citation diagnostic v2 now applies source-completeness filtering internally and 
 ### CAT source deduplication
 
 The CAT benchmark now hashes whitespace-normalized source text and removes duplicates before applying its row limit. It records `duplicateSourceCount` in each report, preventing repeated blocks from different audit generations from being treated as independent evidence.
+
+### CAT source-disjoint v4 clean cohort
+
+After excluding all v1–v3 source hashes, five new clean rows were evaluated. CAT passed the automatic gate 5/5, but manual review found only 3/5 usable: two severity-2 citation omissions (`keyboard 11` and inline Xapian citation `2`). The audit-only citation diagnostic flagged exactly those two rows. This is evidence that citation preservation must remain a cascade condition; CAT is still production-disabled.
