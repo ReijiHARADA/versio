@@ -1,0 +1,123 @@
+{
+  "version": "citation-alignment-diagnostic-v2",
+  "sourceReport": "test-data/real-papers/reports/cat-source-disjoint-auth-v6.json",
+  "productionGate": false,
+  "rows": [
+    {
+      "key": "covid-ml-review:b-77db4961",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "dont-mind-me:b-e93e395c",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "hci-empirical-methods:b-16b8efce",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": true,
+        "reason": "long prose block has no terminal sentence mark"
+      },
+      "eligible": false,
+      "flagged": false
+    },
+    {
+      "key": "hci-empirical-methods:b-b855d0a3",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": true,
+        "reason": "段落の先頭が前段から続いている可能性があります"
+      },
+      "eligible": false,
+      "flagged": false
+    },
+    {
+      "key": "hci-empirical-methods:b-be861440",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "hci-empirical-methods:b-bf6aefa9",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "hci-empirical-methods:b-d508a89e",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "hci-empirical-methods:b-f82706b9",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "how-content-volume-landing-pages:b-aa5dfd86",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "interpreting-neural-networks:b-1732daba",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": true,
+        "reason": "抽出テキストが文書内参照の途中で切れている可能性があります"
+      },
+      "eligible": false,
+      "flagged": false
+    }
+  ],
+  "eligibleCount": 7,
+  "sourceExcludedCount": 3,
+  "flaggedCount": 0
+}

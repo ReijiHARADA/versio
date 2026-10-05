@@ -1,0 +1,48 @@
+{
+  "version": "cat-source-disjoint-summary-v1-v6",
+  "productionDecision": false,
+  "allRows": 35,
+  "cleanRows": 25,
+  "manualSafeCleanRows": 21,
+  "severity2PlusCleanRows": 4,
+  "citationDiagnosticFlaggedRows": 4,
+  "cohorts": {
+    "v1": {
+      "rows": 5,
+      "safeForCascade": 3,
+      "severity2Plus": 1,
+      "sourceOrFallback": 1
+    },
+    "v2": {
+      "rows": 5,
+      "safeForCascade": 1,
+      "severity2Plus": 4,
+      "sourceOrFallback": 4
+    },
+    "v3": {
+      "rows": 5,
+      "safeForCascade": 4,
+      "severity2Plus": 1,
+      "sourceOrFallback": 0
+    },
+    "v4": {
+      "rows": 5,
+      "safeForCascade": 3,
+      "severity2Plus": 2,
+      "sourceOrFallback": 0
+    },
+    "v5": {
+      "rows": 5,
+      "safeForCascade": 3,
+      "severity2Plus": 0,
+      "sourceOrFallback": 2
+    },
+    "v6": {
+      "rows": 10,
+      "safeForCascade": 7,
+      "severity2Plus": 0,
+      "sourceOrFallback": 3
+    }
+  },
+  "note": "Diagnostic only. v3-v6 are source-hash-disjoint; CAT remains disabled because 4 severity>=2 cases remain among clean rows and runtime integration/blind review are incomplete."
+}

@@ -1,0 +1,76 @@
+{
+  "version": "cat-source-disjoint-auth-v6-manual-review-v1",
+  "sourceReport": "test-data/real-papers/reports/cat-source-disjoint-auth-v6.json",
+  "scope": "ten new source-disjoint CAT rows",
+  "reviewer": "Codex audit",
+  "reviews": [
+    {
+      "key": "covid-ml-review:b-77db4961",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null
+    },
+    {
+      "key": "dont-mind-me:b-e93e395c",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null
+    },
+    {
+      "key": "hci-empirical-methods:b-16b8efce",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null
+    },
+    {
+      "key": "hci-empirical-methods:b-b855d0a3",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null
+    },
+    {
+      "key": "hci-empirical-methods:b-be861440",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null
+    },
+    {
+      "key": "hci-empirical-methods:b-bf6aefa9",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null
+    },
+    {
+      "key": "hci-empirical-methods:b-d508a89e",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null
+    },
+    {
+      "key": "hci-empirical-methods:b-f82706b9",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null
+    },
+    {
+      "key": "how-content-volume-landing-pages:b-aa5dfd86",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null
+    },
+    {
+      "key": "interpreting-neural-networks:b-1732daba",
+      "label": "source_structure_excluded",
+      "severity": null,
+      "primaryCause": "source incomplete/structure"
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "usable": 7,
+    "sourceStructureExcluded": 3,
+    "severityGte2": 0,
+    "citationDiagnosticFlagged": 0,
+    "productionDecision": "disabled"
+  }
+}
