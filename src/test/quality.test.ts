@@ -1234,6 +1234,12 @@ describe("isPlausibleJaTranslation", () => {
     expect(isPlausibleJaTranslation("両群間に年齢の有意差はなかった。2群を比較した。", twoGroups)).toBe(true);
   });
 
+  it("rejects collapsing opposite access comparisons into one predicate", () => {
+    const source = "The waist location was less easy to access on a female, while the torso location was easier to access on a male.";
+    const output = "女性ではウエスト位置が「アクセスしやすい」と評価され、男性では胴体位置も「アクセスしやすい」と評価された。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("opposite comparative polarity collapsed");
+  });
+
   it("rejects a fluent translation that drops the second branch of an explicit or-both condition", () => {
     const source = "The decision has consequences for another person, or both another person and the decision maker.";
     const incomplete = "決定は他の参加者に影響する。";
