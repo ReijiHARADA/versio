@@ -128,6 +128,7 @@
 - 2026-10-05: CAT source-disjoint v6を追加（10 rows）。source/structure除外3、clean 7、usable 7、citation flag 0。v1〜v6累計は35 rows、clean 25、manual usable 21、severity>=2は4。CATは依然として本番無効。集計: `cat-source-disjoint-summary-v1-v6.json`。
 - 2026-10-05: CAT v1で確認された手順単位の意味ずれ（`utterance` を `session` と訳す）を、実験記述一般に適用できるsemantic scope guardとして追加。sourceに片方の単位しかない場合の一方向置換だけをcascade拒否し、両方を保持する文は許可。quality **264/264**、typecheck、diff check pass。
 - 2026-10-05: scope guard後の全体回帰を実行。Vitest **70 files / 643 tests**、typecheck pass。既存のcanvas.node警告のみ。
+- 2026-10-05: scope guardの文単位対応へ微修正後も全体回帰を再確認。Vitest **70 files / 643 tests**、typecheck pass。全件翻訳ベンチマークの再実行は不要な局所変更として保留。
 
 - `docs/MAINTENANCE_REFACTOR_PLAN.md` の順に、挙動固定テストを維持しながら品質モジュールを段階分割する。
 - 抽出変更は113本ベンチマークと既存回帰を毎回実行する。
