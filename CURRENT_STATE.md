@@ -21,6 +21,7 @@
 - 全件再計測を行う場合は、開始理由・対象commit・比較する基準値を先に記録し、完了後に本節へ結果を追記する。長時間プロセスを常駐させず、チェックポイント付きで実行する。
 - `benchmark-real-paper-translation.ts` は、カタログ全体を暗黙に選ばないよう変更済み。12本を超えるカタログで全件を実行する場合は `--full-corpus` が必須（commit `31da674`）。
 - focused cohort `focused-cohort-current-v1`（speechin / dont-mind-me / interactive-jewellery / thermal-earring、48 units）を再計測。ordinary-body は 4/19 fallback (21.1%)、構造入力ポリシーによる事前除外が19件、post-model rejectionは4件。全件指標ではなく、次の修正候補を絞るための診断値として扱う。レポートは `test-data/real-papers/reports/focused-cohort-current-v1.{json,md}`。
+- 同コホートのpost-model ordinary failureは `dont-mind-me` の長い統計/本文3件、`speechin` の数値・foreign-script汚染1件。`thermal-earring` のUUID/invariant行はordinary本文ではなくカテゴリ誤分類を伴うため、quality gate緩和の根拠にしない。次の実装候補は長文unitの品質拒否と数値/foreign-script rescueの一般化検証。
 - `translation-audit.json` および別コホートの `CURRENT_STATE` 記録と混ぜず、auth-v1 の完了値を正式な比較対象とする。
 - 中間集計（47本/493 units）では全体 fallback 293件、通常本文187件中47件（25.1%）。これは未完了の暫定値であり、目標達成とは扱わない。
 
