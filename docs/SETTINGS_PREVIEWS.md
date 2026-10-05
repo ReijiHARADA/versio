@@ -31,6 +31,8 @@ GIF netscape loop count is finite; UI starts playback when the preview enters th
 
 Collapsed icon-rail always shows top-level workspace items only; nested folders/papers appear when the sidebar expands. This is fixed behavior (not a setting).
 
+Settings UI wraps each GIF in a strong-blue stage with a floating macOS window chrome (traffic lights + title). Visible OFF/ON labels and captions are omitted; the toggle is the control of record.
+
 ### Regenerate
 
 ```bash

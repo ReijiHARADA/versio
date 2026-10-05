@@ -11,6 +11,8 @@ type ReplayablePreviewProps = {
   playCount?: number;
   /** Still image only (no GIF playback / overlay). */
   still?: boolean;
+  /** Drop outer frame styles when nested inside a window chrome. */
+  embedded?: boolean;
   alt?: string;
 };
 
@@ -24,6 +26,7 @@ export function ReplayablePreview({
   cycleDurationMs,
   playCount = 3,
   still = false,
+  embedded = false,
   alt = "",
 }: ReplayablePreviewProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -93,7 +96,10 @@ export function ReplayablePreview({
     : `${src}${src.includes("?") ? "&" : "?"}r=${token}`;
 
   return (
-    <div ref={rootRef} className={styles.root}>
+    <div
+      ref={rootRef}
+      className={`${styles.root} ${embedded ? styles.embedded : ""}`}
+    >
       <img
         className={styles.image}
         src={imageSrc}

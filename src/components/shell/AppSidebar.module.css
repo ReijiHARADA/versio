@@ -8,6 +8,9 @@
   --sidebar-motion: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
   /* Invisible hit strip to the right of the icon rail (easier hover-open). */
   --sidebar-hover-bridge: 14px;
+  /* Shared content inset. Chevron hangs into this pad so icons share one left edge. */
+  --sidebar-pad-x: 8px;
+  --sidebar-chevron: 14px;
 }
 
 /* Shared “is open” selector pieces applied below */
@@ -20,7 +23,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: var(--spacing-md) var(--spacing-sm);
+  padding: var(--spacing-md) var(--sidebar-pad-x);
   background-color: var(--color-bg-secondary);
   border-right: 1px solid var(--color-border-light);
   /* visible so the hover bridge can extend past the border into main content */
@@ -290,7 +293,7 @@
   justify-content: space-between;
   gap: 4px;
   height: 0;
-  padding: 0 var(--spacing-sm);
+  padding: 0;
   margin: 0;
   opacity: 0;
   overflow: hidden;
@@ -307,7 +310,7 @@
 .sidebarDropReady .sectionTitle,
 .sidebar:has([data-workspace-editing]) .sectionTitle {
   height: 28px;
-  padding: 4px var(--spacing-sm);
+  padding: 4px 0;
   opacity: 1;
   pointer-events: auto;
 }
@@ -337,7 +340,7 @@
   font-size: 0.75rem;
   color: var(--color-text-tertiary);
   height: 0;
-  padding: 0 var(--spacing-sm);
+  padding: 0;
   margin: 0;
   opacity: 0;
   overflow: hidden;
@@ -354,7 +357,7 @@
 .sidebarDropReady .empty,
 .sidebar:has([data-workspace-editing]) .empty {
   height: 24px;
-  padding: 4px var(--spacing-sm);
+  padding: 4px 0;
   opacity: 1;
   pointer-events: auto;
 }
@@ -558,10 +561,12 @@
 }
 
 .treeRow {
+  position: relative;
   display: flex;
   align-items: center;
   user-select: none;
   touch-action: none;
+  /* Nesting indent only — chevron is out of flow so icons share the library left edge. */
   padding-left: 0;
   transition: padding-left var(--sidebar-motion);
 }
@@ -571,23 +576,22 @@
 }
 
 .chevron {
+  position: absolute;
+  top: 0;
+  left: calc(var(--tree-indent, 0px) - var(--sidebar-chevron));
+  z-index: 1;
   display: flex;
-  flex: 0 0 0;
-  width: 0;
+  width: var(--sidebar-chevron);
+  height: var(--sidebar-icon-box);
   align-items: center;
   justify-content: center;
   padding: 0;
   border: 0;
   background: transparent;
   color: var(--color-text-secondary);
-  height: 28px;
   opacity: 0;
-  overflow: hidden;
   pointer-events: none;
-  transition:
-    flex-basis var(--sidebar-motion),
-    width var(--sidebar-motion),
-    opacity var(--sidebar-motion);
+  transition: opacity var(--sidebar-motion);
 }
 
 .sidebarAuto:is(:hover, :has([data-workspace-editing])) .chevron,
@@ -595,8 +599,6 @@
 .sidebarResizing .chevron,
 .sidebarDropReady .chevron,
 .sidebar:has([data-workspace-editing]) .chevron {
-  flex: 0 0 18px;
-  width: 18px;
   opacity: 1;
   pointer-events: auto;
 }
@@ -619,7 +621,6 @@
 .sidebarResizing .treeLabel,
 .sidebarDropReady .treeLabel,
 .sidebar:has([data-workspace-editing]) .treeLabel {
-  padding-left: 2px;
   padding-right: 28px;
   cursor: grab;
 }
@@ -636,7 +637,8 @@
 .sidebarResizing .treePaper,
 .sidebarDropReady .treePaper,
 .sidebar:has([data-workspace-editing]) .treePaper {
-  padding-left: calc(var(--tree-indent) + 20px);
+  /* Same nest indent as sibling folders (chevron no longer consumes layout width). */
+  padding-left: var(--tree-indent);
 }
 
 /*
