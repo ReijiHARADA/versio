@@ -9,7 +9,7 @@
  *   npx tsx scripts/benchmark-real-paper-translation.ts --paper ozchi-finger-specific-touch
  *   npx tsx scripts/benchmark-real-paper-translation.ts --papers thermal-earring,wear-scale --limit 12 --report-name translation-audit-v19-pilot
  *   npx tsx scripts/benchmark-real-paper-translation.ts --limit 4
- *   npx tsx scripts/benchmark-real-paper-translation.ts --resume
+ *   npx tsx scripts/benchmark-real-paper-translation.ts --resume --full-corpus
  *   npx tsx scripts/benchmark-real-paper-translation.ts --token-file /private/tmp/paper-reader-token
  */
 import fs from "node:fs";
@@ -149,6 +149,7 @@ const blockQueryArg = args.indexOf("--block-query");
 const blockQuery = blockQueryArg >= 0 ? args[blockQueryArg + 1]?.trim() : undefined;
 const serialArg = args.includes("--serial");
 const resumeArg = args.includes("--resume");
+const fullCorpusArg = args.includes("--full-corpus");
 const cachedOnlyArg = args.includes("--cached-only");
 const reportNameArg = args.indexOf("--report-name");
 const requestedReportName = reportNameArg >= 0 ? args[reportNameArg + 1] : undefined;
@@ -521,6 +522,9 @@ async function main() {
   console.log(`[audit] start endpoint=${endpoint} paper=${onlyPaper ?? "all"} limit=${perPaperLimit}`);
   if (onlyPaper && requestedPaperIds.length > 0) throw new Error("Use either --paper or --papers, not both");
   if (papersArg >= 0 && requestedPaperIds.length === 0) throw new Error("--papers requires a comma-separated paper id list");
+  if (!onlyPaper && requestedPaperIds.length === 0 && catalog.papers.length > 12 && !fullCorpusArg) {
+    throw new Error("全カタログ評価を実行するには --full-corpus を明示してください。通常は --paper / --papers で代表コホートを指定します。");
+  }
   if (requestedReportName && !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(requestedReportName)) {
     throw new Error("--report-name must be a simple filename stem (letters, digits, dot, underscore, hyphen)");
   }
