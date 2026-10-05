@@ -409,3 +409,7 @@ A second audit-only run evaluated all seven post-model fallback rows from the fo
 ## Quality-gate false reject fix
 
 The CAT fallback review exposed a generic false reject: repeated Japanese predicates in a faithful statistical comparison list were classified as phrase degeneration. `evaluateJaTranslation` now permits the shape-only repetition signal when the source contains four or more explicit comparative predicates and the output is sentence-level Japanese; all other degeneration checks remain active. This is a narrow source-structure condition, not a vocabulary exception. Quality tests remain 267/267, and the reviewed CAT statistical row now scores without `degenerate output`.
+
+## Focused cohort after comparative-list gate fix
+
+Re-ran the same 4-paper/48-unit cohort as `focused-cohort-current-v2` after the TypeScript quality-gate change. The cohort remained 19 ordinary-body units with 4 reader-visible fallbacks (21.1%) and 7 post-model fallback rows. This is expected: the changed gate currently affects client/cascade quality evaluation, while the server-side MADLAD fallback classification remains unchanged. The change removes a proven false reject from alternate-candidate evaluation but does not by itself solve the primary server fallback rate.
