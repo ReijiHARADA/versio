@@ -1,0 +1,85 @@
+{
+  "version": "semantic-v84-author-year-spotcheck-v1",
+  "rows": [
+    {
+      "key": "marketing-online-context-web-evolution:b-0cde4fbe",
+      "source": "(2019) Studying Consumer Behavior in an Online Context: The Impact of the Evolution of the World Wide Web for New Avenues in Research.",
+      "result": {
+        "text": "2019年度の研究課題は,「オンライン環境における消費者行動の研究:WWWの進化が研究に与える影響」である。",
+        "source_language": "en",
+        "target_language": "ja",
+        "model": "google/madlad400-3b-mt",
+        "model_version": "3b-mt-v6-transformers-4.57.6-semantic-v84-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+        "input_chars": 134,
+        "output_chars": 54,
+        "input_tokens": 39,
+        "output_tokens": 49,
+        "translation_time_ms": 2414.6711826324463,
+        "chars_per_sec": 55.49409831193445,
+        "tokens_per_sec": 20.292618039438718,
+        "fallback_reason": null,
+        "fallback_stage": null,
+        "unit_fallback_indices": null,
+        "partial_text": null,
+        "partial_source_units": null,
+        "partial_unit_texts": [
+          "2019年度の研究課題は,「オンライン環境における消費者行動の研究:WWWの進化が研究に与える影響」である。"
+        ],
+        "translation_units": [
+          "(2019) Studying Consumer Behavior in an Online Context: The Impact of the Evolution of the World Wide Web for New Avenues in Research."
+        ]
+      },
+      "elapsedMs": 2463
+    },
+    {
+      "key": "hci-social-touch-in-human-computer-interaction:b-83cc23c4",
+      "source": "Although the field generally lacks serious validation studies, there is mounting evidence that people use, experience, and react to direct and mediated social touch in similar ways Bailenson and Yee (2007), at the physiological, psychological, behavioral, and social level. At a physiological and psychological level, mediated affective touch on the forearm can reduce heart rate of participants that experienced a sad event (Cabibihan et al. 2012). Mediated touch affects the quality of a shared experience and increases the intimacy felt toward the other person (Takahashi et al. 2011). Stimulation of someone’s hand through mediated touch can modulate the quality of a remotely shared experience (e.g., the hilariousness of a movie) and increase sympathy for the communication partner (Takahashi et al. 2011). In a storytelling paradigm, participants experienced a significantly higher degree of connectedness with the storyteller when the speech was accompanied by remotely administered squeezes in the upper arm (Wang et al. 2012). Additional evidence for the potential effects of mediated touch are found in the fact that hugging a robot medium while talking increases affective feelings and attraction toward a conversation partner (Kuwamura et al. 2013; Nakanishi et al. 2013). Participants receiving tactile facial stimulation experienced a stranger receiving similar stimulation to be closer, more positive and more similar to themselves when they were provided with synchronous visual feedback (Paladino et al. 2010). At a behavioral level, the most important observation is that the effect of a mediated touch on people’s pro-social behavior is similar to that of a real touch. According to Haans and IJsselsteijn (2009a), a virtual Midas touch has effects in the same order of magnitude as a real Midas touch. At the social level, the use of mediated touch is only considered appropriate as a means of communication between people in close personal relationships (Rantala et al. 2013), and the mere fact that two people are willing to touch implies an element of trust and mutual understanding (Collier 1985). The interpretation of mediated touch depends on the type of interrelationship between sender and receiver (Rantala et al. 2013), similar to direct touch (Coan et al. 2006; Thompson and Hampton 2011) and like direct touch, mediated touch communication between strangers can cause discomfort (Smith and MacLean 2007).",
+      "result": {
+        "text": "人間は, 生理的, 心理的, 行動的および社会的レベルで, 直接および媒介された社会的接触に対して,(Bailenson and Yee, 2007)と同様の方法で使用, 経験および反応するという証拠が増加している。生理学的, 心理学的レベルでは, 前腕に対する媒介された情動的触覚は悲しい出来事を経験した参加者の心拍数を減少させた(Cabibihan et al. 2012)。また, 共有体験の質に影響を与え, 他者に対する親密感を増加させる(Takahashi et al. 2011)。また, 遠隔共有経験の質を変化させ, コミュニケーションパートナーに対する共感を増加させる手の刺激を調べた(Takahashi et al. 2011)。ストーリーテリングパラダイムにおいて, 参加者は話者との結びつきの度合いが有意に高かった(Wang et al. 2012)。また, ロボットを抱擁すると, 会話相手に対する感情的感情と惹きつけが増加することから, 媒介された触覚の効果が示唆された(Kuwamura et al. 2013; Nakanishi et al. 2013)。触覚顔面刺激を受けた被験者は, 同期視覚フィードバックを与えられたとき, 同様の刺激を与えられる知らない人をより近く, よりポジティブで, 自分と同じように感じた(Paladino et al. 2010)。行動レベルでは, 最も重要な観察は, 人々のプロ社会行動に対する媒介された触れ合いの効果が, 実際の触れ合いと同様であることである。HaansとIjselstein(2009a)によれば, 仮想ミダスタッチは実際のミダス タッチと同じ程度の効果を持つ。社会的レベルでは, 仲介触手の使用は, 親密な個人間のコミュニケーション手段としてのみ適切と考えられ,2人の人が触手を望むという事実だけで, 信頼や相互理解の要素を含んでいる(Rantala et al. 2013)(Collier 1985)。また, 直接接触と同様に, 未知の人間との間での媒介された触覚コミュニケーションは不快感を引き起こすことがある(Rantala et al. 2013)(Coan et al. 2006; Thompson and Hampton 2011)(Smith and MacLean 2007)。",
+        "source_language": "en",
+        "target_language": "ja",
+        "model": "google/madlad400-3b-mt",
+        "model_version": "3b-mt-v6-transformers-4.57.6-semantic-v84-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+        "input_chars": 2438,
+        "output_chars": 993,
+        "input_tokens": 542,
+        "output_tokens": 600,
+        "translation_time_ms": 49720.574140548706,
+        "chars_per_sec": 49.034027505562,
+        "tokens_per_sec": 12.067439090786383,
+        "fallback_reason": null,
+        "fallback_stage": null,
+        "unit_fallback_indices": null,
+        "partial_text": null,
+        "partial_source_units": null,
+        "partial_unit_texts": [
+          "人間は,生理的,心理的,行動的および社会的レベルで,直接および媒介された社会的接触に対して,(Bailenson and Yee, 2007)と同様の方法で使用,経験および反応するという証拠が増加している。",
+          "生理学的,心理学的レベルでは,前腕に対する媒介された情動的触覚は悲しい出来事を経験した参加者の心拍数を減少させた(Cabibihan et al. 2012)。",
+          "また,共有体験の質に影響を与え,他者に対する親密感を増加させる(Takahashi et al. 2011)。",
+          "また,遠隔共有経験の質を変化させ,コミュニケーションパートナーに対する共感を増加させる手の刺激を調べた(Takahashi et al. 2011)。",
+          "ストーリーテリングパラダイムにおいて,参加者は話者との結びつきの度合いが有意に高かった(Wang et al. 2012)。",
+          "また,ロボットを抱擁すると,会話相手に対する感情的感情と惹きつけが増加することから,媒介された触覚の効果が示唆された(Kuwamura et al. 2013; Nakanishi et al. 2013)。",
+          "触覚顔面刺激を受けた被験者は,同期視覚フィードバックを与えられたとき,同様の刺激を与えられる知らない人をより近く,よりポジティブで,自分と同じように感じた(Paladino et al. 2010)。",
+          "行動レベルでは,最も重要な観察は,人々のプロ社会行動に対する媒介された触れ合いの効果が,実際の触れ合いと同様であることである。",
+          "HaansとIjselstein(2009a)によれば,仮想ミダスタッチは実際のミダス タッチと同じ程度の効果を持つ。",
+          "社会的レベルでは,仲介触手の使用は,親密な個人間のコミュニケーション手段としてのみ適切と考えられ,2人の人が触手を望むという事実だけで,信頼や相互理解の要素を含んでいる(Rantala et al. 2013)(Collier 1985)。",
+          "また,直接接触と同様に,未知の人間との間での媒介された触覚コミュニケーションは不快感を引き起こすことがある(Rantala et al. 2013)(Coan et al. 2006; Thompson and Hampton 2011)(Smith and MacLean 2007)。"
+        ],
+        "translation_units": [
+          "Although the field generally lacks serious validation studies, there is mounting evidence that people use, experience, and react to direct and mediated social touch in similar ways Bailenson and Yee (2007), at the physiological, psychological, behavioral, and social level.",
+          "At a physiological and psychological level, mediated affective touch on the forearm can reduce heart rate of participants that experienced a sad event (Cabibihan et al. 2012).",
+          "Mediated touch affects the quality of a shared experience and increases the intimacy felt toward the other person (Takahashi et al. 2011).",
+          "Stimulation of someone’s hand through mediated touch can modulate the quality of a remotely shared experience (e.g., the hilariousness of a movie) and increase sympathy for the communication partner (Takahashi et al. 2011).",
+          "In a storytelling paradigm, participants experienced a significantly higher degree of connectedness with the storyteller when the speech was accompanied by remotely administered squeezes in the upper arm (Wang et al. 2012).",
+          "Additional evidence for the potential effects of mediated touch are found in the fact that hugging a robot medium while talking increases affective feelings and attraction toward a conversation partner (Kuwamura et al. 2013; Nakanishi et al. 2013).",
+          "Participants receiving tactile facial stimulation experienced a stranger receiving similar stimulation to be closer, more positive and more similar to themselves when they were provided with synchronous visual feedback (Paladino et al. 2010).",
+          "At a behavioral level, the most important observation is that the effect of a mediated touch on people’s pro-social behavior is similar to that of a real touch.",
+          "According to Haans and IJsselsteijn (2009a), a virtual Midas touch has effects in the same order of magnitude as a real Midas touch.",
+          "At the social level, the use of mediated touch is only considered appropriate as a means of communication between people in close personal relationships (Rantala et al. 2013), and the mere fact that two people are willing to touch implies an element of trust and mutual understanding (Collier 1985).",
+          "The interpretation of mediated touch depends on the type of interrelationship between sender and receiver (Rantala et al. 2013), similar to direct touch (Coan et al. 2006; Thompson and Hampton 2011) and like direct touch, mediated touch communication between strangers can cause discomfort (Smith and MacLean 2007)."
+        ]
+      },
+      "elapsedMs": 49755
+    }
+  ]
+}
