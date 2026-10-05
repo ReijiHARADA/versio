@@ -36,6 +36,10 @@
 
 ## 直近の変更
 
+### v1552 — Reader 中のサイドバー青ハイライトを論文に付ける（2026-10-05）
+
+- 論文を開いているとき、格納フォルダではなくサイドバー上の当該論文行を現在位置としてハイライトするよう修正。
+
 ### v1551 — 自動折りたたみ設定プレビューを実UI寄りに更新（2026-10-05）
 
 - 「自動で折りたたむ」の before/after GIF を現行サイドバー＋リーダー風メイン面で再キャプチャ。
@@ -104,6 +108,7 @@
 - protected-token restore failureのdebugログに、missing spanを `author_year_citation` / `numeric_citation` / `measurement` / `structural_reference` / `identifier` / `other` へ分類する診断情報を追加。判定・retry可否・出力は変更しない。Python品質テスト **153 passed + 3 subtests**、py_compile、差分チェックを通過。
 - 翻訳サーバー全体のPython回帰 **247 passed + 11 subtests** を確認。診断分類追加によるsegmenter、micro-batch、citation保護の回帰はない。
 - `.app`の稼働サーバー `/status` は `model_version=...semantic-v73...` を返し、現在ソースのv83系より古い同梱物であることを確認。`npm run tauri:build` は clean Python bundle staging まで成功したが、残っている未整理TypeScript/UI差分に起因する build-only typecheck（`LayoutRole`/`process`、Ollama enum、sidebar型など）で停止し、`.app`は更新されていない。`importServiceV2.ts` の未定義 `llmProvider` は修正済み。品質変更の失敗とは分離して記録する。
+- その後、build-only型エラーを修正し、`npx tsc -b` を通過。`npm run tauri:build` が成功し、`.app`とDMGを生成した。`.app`更新日時は **2026-10-05 10:15:39**。同梱 `segmenter.py` は `semantic-v83` で、開発ツリーとbyte一致を確認。現在起動中の旧プロセスは再起動するまで旧bundleのままなので、実機反映には旧アプリとserverを終了して新しい`.app`を起動する必要がある。
 
 ## 次の作業
 
@@ -216,6 +221,11 @@
 - Added two behavior-locking quality tests for reviewed participant-fact and bibliographic hallucinations; quality suite now passes 256 tests.
 - Benchmark accounting correction: 114 catalog entries were selected, but `precious-materials` had no cached PDF and produced no rows; the measured corpus is therefore 113 papers / 1,155 units, with the missing PDF tracked separately.
 ## 2026-10-05 validation checkpoint
+
+- Final post-build verification: `npm test` passes (69 files / 631 tests), `npx tsc -b --pretty false` passes, `git diff --check` passes, and translation-server `pytest translation-server/tests -q` passes (247 tests, 11 subtests). The `npm test -- --runInBand` invocation itself is unsupported by Vitest; the plain `npm test` run is the authoritative result.
+- The rebuilt macOS bundle is at `src-tauri/target/release/bundle/macos/Paper Reader.app` (mtime 2026-10-05 10:15:39), with bundled `segmenter.py` byte-identical to source and `SEGMENTER_VERSION="semantic-v83"`. The bundled MADLAD source includes the Transformers 4.57.6 / semantic-v83 version components. Fully quit the currently running app/server before launching this bundle; the old process previously reported semantic-v73.
+- Resumed fresh benchmark with the ready local server (`translation-audit` run `2026-10-05T01-19-33-121Z`): 112/114 papers, 1,266 evaluable units, 322 model responses, 994 original fallbacks; ordinary-body fallback was 242/447 (54.1%). The run is diagnostic only because 672 units were blocked by the production input policy and 538 damaged-extraction rows dominated the fallback rate. This confirms that relaxing the quality gate alone would not reach the target; the next work must reduce structural/source blocking and separately evaluate the 322 model outputs semantically. One catalog entry still had no eligible blocks and is recorded in the report.
+- Started a clean authenticated-free benchmark as `test-data/real-papers/reports/translation-audit-auth-v1.{json,md}` after stopping the packaged app server and launching `restart-translation-server.sh`. The live process is still running; it has checkpointed `interactive-jewellery`, `significant-other`, and `power-over-skin` so far. This run must be allowed to finish before using its fallback metrics.
 
 - Post-extraction continuation benchmark remains available at `test-data/real-papers/reports/post-extraction-continuation-cohort-v1.{json,md}`. The catalog contains 114 entries and 1,155 sampled units; the raw report currently has 109 paper entries with non-empty rows because four catalog entries have empty cached-row results and `precious-materials` is explicitly missing its PDF. Treat `papersWithRows` from the summary artifact as the authoritative paper count until those entries are repaired; do not describe this as 114 fully measured papers.
 - Verification after the latest benchmark: `npm run lint` passes with existing warning-only escape/comparison diagnostics; `git diff --check` passes; `npm run typecheck` passes; `npm test -- --run src/test/quality.test.ts` passes (256 tests).
