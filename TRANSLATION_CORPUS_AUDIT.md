@@ -4654,3 +4654,7 @@ The extraction config now uses Vitest's `threads` pool for this PDF corpus. A fu
 ## Evaluation cadence policy (2026-10-05)
 
 The 113-paper measurement is now reserved for major cross-cutting changes or release acceptance. Routine extraction, gate, diagnostic, and refactor changes use focused representative papers (normally 4–12), the affected failure cohort, regression tests, typecheck, and lint. Full-corpus runs must use `--resume` and stable source keys; an incomplete report is never treated as a corpus metric. The operational policy is documented in [`docs/TRANSLATION_BENCHMARK_POLICY.md`](docs/TRANSLATION_BENCHMARK_POLICY.md).
+
+### CAT source-disjoint manual review
+
+Manual review of the five source-hash-disjoint CAT rows found 3 automatic accepts, all usable in this small sample (two severity 0, one severity 1), and one rejected row with a severity-2 procedure-scope shift (`utterances` rendered as `sessions`). The remaining rejected row was degenerate. This supports further bounded CAT evaluation but does not justify production routing. See `reports/cat-source-disjoint-auth-v1-manual-review.json`.
