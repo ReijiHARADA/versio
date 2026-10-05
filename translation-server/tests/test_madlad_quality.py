@@ -605,3 +605,10 @@ class MadladPartialSourceFallbackTests(unittest.TestCase):
         output = "正しい対象を除去すべきだとGPT。"
         self.assertTrue(MADLADEngine._contains_untranslated_source_span(output, source))
         self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
+
+    def test_comparative_stat_retry_requires_every_numeric_value(self) -> None:
+        source = "Attitudes were less natural (0.02), less normal (0.001), and less cool (0.004) when performed on a female actor."
+        self.assertEqual(MADLADEngine._comparative_stat_retry_values(source), ["(0.02)", "(0.001)", "(0.004)"])
+        self.assertTrue(MADLADEngine._comparative_stat_values_preserved(source, "自然 (0.02)、普通 (0.001)、クール (0.004)。"))
+        self.assertFalse(MADLADEngine._comparative_stat_values_preserved(source, "自然、普通、クール。"))
+        self.assertFalse(MADLADEngine._comparative_stat_values_preserved(source, "自然 (0.02)、普通 (0.1)、クール (0.004)。"))
