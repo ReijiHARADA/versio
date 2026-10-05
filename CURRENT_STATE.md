@@ -326,3 +326,5 @@
 
 - CAT source-disjoint v2 probe (2026-10-05): five additional fallback rows were generated with CAT-Translate 3.3B (`cat-source-disjoint-auth-v2.json`). Manual review found 2 clean complete rows, both usable (severity 0), while 3 rows contained extraction/list-boundary artifacts and were excluded from model-quality conclusions. This reinforces the need to separate source reconstruction failures before comparing models; no production cascade change was made.
 - CAT v2 review correction (2026-10-05): the HCI row initially marked clean was reclassified as `source_fragment` after running the existing `diagnoseIncompleteSource` evaluator; it ends without terminal punctuation. The corrected v2 review has 1 clean complete row, 4 source/structure-excluded rows. CAT quality artifact: `cat-source-disjoint-auth-v2-quality.json`.
+
+- Source-boundary fix (2026-10-05): `diagnoseIncompleteSource` now flags long prose ending in a bare Figure/Fig/Table label as a structural boundary (`図表ラベルが段落末尾に混入している可能性があります`), preventing caption/paragraph blends from entering clean model comparisons. Added regression coverage; quality suite 258/258 and typecheck pass.
