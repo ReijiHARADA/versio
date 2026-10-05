@@ -1,0 +1,46 @@
+{
+  "version": "cat-source-disjoint-auth-v7-manual-review-v1",
+  "sourceReport": "test-data/real-papers/reports/cat-source-disjoint-auth-v7.json",
+  "scope": "five new source-disjoint CAT rows from interpreting-neural-networks",
+  "reviewer": "Codex audit",
+  "reviews": [
+    {
+      "key": "interpreting-neural-networks:b-212878dd",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null
+    },
+    {
+      "key": "interpreting-neural-networks:b-36af2726",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null
+    },
+    {
+      "key": "interpreting-neural-networks:b-4b3c7b84",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null
+    },
+    {
+      "key": "interpreting-neural-networks:b-5905cac6",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null
+    },
+    {
+      "key": "interpreting-neural-networks:b-e04a7b0a",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "usable": 5,
+    "sourceStructureExcluded": 0,
+    "severityGte2": 0,
+    "citationDiagnosticFlagged": 0,
+    "productionDecision": "disabled"
+  }
+}
