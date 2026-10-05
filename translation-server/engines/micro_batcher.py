@@ -57,7 +57,13 @@ class MicroBatchScheduler:
             reason = "translation_quality_rejected"
         else:
             reason = "engine_exception"
-        return f"{reason}:{type(error).__name__}"
+        # Keep the existing stable prefix while retaining a bounded diagnostic
+        # detail. This lets corpus audits distinguish degenerate output,
+        # invariant failures, and other quality rejects without changing the
+        # fallback decision or exposing an unbounded exception payload.
+        detail = " ".join(str(error).split())[:120]
+        suffix = f":{detail}" if detail else ""
+        return f"{reason}:{type(error).__name__}{suffix}"
 
     def start(self) -> None:
         if not self._enabled:
