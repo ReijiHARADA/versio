@@ -227,11 +227,11 @@ class MicroBatcherTests(unittest.TestCase):
         self.assertEqual(results[0].fallback_stage, "whole_item_fallback")
         self.assertEqual(
             results[0].fallback_reason,
-            "whole_item:translation_quality_rejected:ValueError",
+            "whole_item:translation_quality_rejected:ValueError:degenerate translation output",
         )
         self.assertEqual(
             results[0].to_dict()["fallback_reason"],
-            "whole_item:translation_quality_rejected:ValueError",
+            "whole_item:translation_quality_rejected:ValueError:degenerate translation output",
         )
         self.assertEqual(items[0].future.result().text, "FAIL:bad")
         self.assertIsNotNone(results[1])
@@ -264,7 +264,7 @@ class MicroBatcherTests(unittest.TestCase):
         self.assertEqual(out[0].input_tokens, 5)
         self.assertEqual(out[0].output_tokens, 5)
         self.assertEqual(out[0].fallback_stage, "partial_unit_fallback")
-        self.assertEqual(out[0].fallback_reason, "unit_1:engine_exception:RuntimeError")
+        self.assertEqual(out[0].fallback_reason, "unit_1:engine_exception:RuntimeError:unit failed")
         self.assertEqual(out[0].unit_fallback_indices, [1])
         self.assertEqual(
             out[0].partial_text,
