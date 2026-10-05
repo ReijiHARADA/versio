@@ -1676,6 +1676,21 @@ class MADLADEngine(TranslationEngine):
         return comparative_count >= 3 and bool(re.search(r"[。！？]", output))
 
     @staticmethod
+    def _has_statistical_numeric_drift(source: str, output: str) -> bool:
+        """Reject changed/dropped parenthesized statistics and p-values."""
+        pattern = r"\(\s*[-+]?\d+(?:\.\d+)?\s*\)|\bp\s*[<=>≤≥]\s*[-+]?\d+(?:\.\d+)?"
+        source_values = re.findall(r"[-+]?\d+(?:\.\d+)?", " ".join(re.findall(pattern, source, re.I)))
+        if not source_values:
+            return False
+        output_values = re.findall(r"[-+]?\d+(?:\.\d+)?", output)
+        remaining = list(output_values)
+        for value in source_values:
+            if value not in remaining:
+                return True
+            remaining.remove(value)
+        return False
+
+    @staticmethod
     def _has_translation_instruction_contamination(output: str) -> bool:
         """Detect a generated prompt/example appended after translated prose.
 
@@ -1942,6 +1957,8 @@ class MADLADEngine(TranslationEngine):
             if MADLADEngine._has_translation_instruction_contamination(output):
                 return True
             if MADLADEngine._has_adjacent_repeated_latin_token(output):
+                return True
+            if MADLADEngine._has_statistical_numeric_drift(source, output):
                 return True
             if MADLADEngine._has_corrupted_identifier_glue(source, output):
                 return True
