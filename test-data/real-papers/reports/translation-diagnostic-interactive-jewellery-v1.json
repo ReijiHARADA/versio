@@ -1,0 +1,316 @@
+{
+  "createdAt": "2026-10-05T08:25:31.232Z",
+  "runId": "2026-10-05T08-25-11-558Z",
+  "endpoint": "http://127.0.0.1:8765",
+  "serverStatus": {
+    "available": true,
+    "model_loaded": true,
+    "model_name": "google/madlad400-3b-mt",
+    "model_version": "3b-mt-v6-transformers-4.57.6-semantic-v84-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+    "device": "mps",
+    "error": null,
+    "phase": "ready",
+    "progress": 1,
+    "message": "翻訳の準備ができました",
+    "downloaded_bytes": null,
+    "total_bytes": null,
+    "progress_indeterminate": false
+  },
+  "sampleLimitPerPaper": 4,
+  "catalogPaperCount": 114,
+  "cachedOnly": false,
+  "excludedMissingPdf": [],
+  "selectedPaperIds": [
+    "interactive-jewellery"
+  ],
+  "papers": [
+    {
+      "paper": {
+        "id": "interactive-jewellery",
+        "title": "Interactive Jewellery: a design exploration",
+        "doi": "10.1145/2839462.2839504",
+        "publisher": "ACM",
+        "venue": "TEI 2016",
+        "formatFamily": "acm-acmart",
+        "templateVersion": "sigconf-unknown",
+        "kinds": [
+          "two-column",
+          "figures",
+          "citations"
+        ],
+        "filename": "interactive-jewellery.pdf",
+        "downloadUrl": null,
+        "seedPaths": [
+          "~/Desktop/2839462.2839504.pdf"
+        ],
+        "checks": {
+          "expectMultiColumnOnPages": [
+            1,
+            3
+          ],
+          "tokensInOrder": [
+            "second half of the 20",
+            "In terms of renewing interaction"
+          ],
+          "headingContains": [
+            "INTERACTIVE JEWELLERY: RELATED WORK"
+          ],
+          "titleContains": "Interactive Jewellery",
+          "forbidHeadingContains": [
+            "tue.nl",
+            "Industrial Design Architecture",
+            "College of Art and Centre"
+          ],
+          "forbidEquationContains": [
+            "jewellery-, memory-",
+            "Unger-de Boer",
+            "golsteijn.pdf",
+            "tednoten.com",
+            "artefactgroup.com"
+          ],
+          "captionContains": [
+            "Figure 2"
+          ],
+          "forbidSameParagraph": [
+            [
+              "second half of the 20",
+              "kinetic jewellery"
+            ]
+          ],
+          "referencesHeading": true
+        },
+        "discipline": "hci",
+        "selectionReason": "HCI layout and two-column conference variation",
+        "oaStatus": "local-seed"
+      },
+      "rows": [
+        {
+          "key": "interactive-jewellery:b-b11f9f2e",
+          "benchmarkRunId": "2026-10-05T08-25-11-558Z",
+          "paperId": "interactive-jewellery",
+          "blockId": "b-b11f9f2e",
+          "role": "paragraph",
+          "translationStatus": "skipped",
+          "pageStart": 1,
+          "pageEnd": 1,
+          "source": "Many current wearables have a technology-driven background: the focus is primarily on functionality, while their possible personal and social-cultural value is underappreciated. We think that developing wearables from a jewellery perspective can compensate for this. The personal and social cultural values embodied by traditional jewellery are often tightly connected to their function as memento. In this paper we reflect from a jewellery perspective, a memory-studies perspective and a TEI-perspective on three design proposals for interactive jewellery. We identify",
+          "sourceFallback": true,
+          "readerVisibleFallback": true,
+          "partialSourceFallback": false,
+          "sourceInvariants": [
+            "TEI"
+          ],
+          "technicalNameCandidates": [],
+          "missingTechnicalNameCandidates": [],
+          "detachedNumericCitationRisk": false,
+          "acronymExpansionDrift": false,
+          "extremeTranslationCompression": false,
+          "structuralWarnings": [],
+          "sourceCategory": "damaged-extraction",
+          "sourceIntegrity": "mixed-chrome",
+          "sourceCompleteness": {
+            "incomplete": true,
+            "reason": "段落の末尾が欠けている可能性があります"
+          },
+          "extractionProvenance": {
+            "pageStart": 1,
+            "pageEnd": 1,
+            "bboxCount": 15,
+            "extractionConfidence": 0.97
+          },
+          "fallbackStage": "pre-model",
+          "fallbackReason": "structural skip; preserved in source",
+          "wouldSubmitToModel": false,
+          "wouldAcceptTranslation": false
+        },
+        {
+          "key": "interactive-jewellery:b-fd49dd32",
+          "benchmarkRunId": "2026-10-05T08-25-11-558Z",
+          "paperId": "interactive-jewellery",
+          "blockId": "b-fd49dd32",
+          "role": "paragraph",
+          "translationStatus": "pending",
+          "pageStart": 2,
+          "pageEnd": 3,
+          "source": "The framework that we sketched above describes jewellery in general. Even those who don’t wear jewellery themselves will recognise the personal and social cultural values of jewellery we described, as they are inherently part of human culture. In this first paragraph on related work we’ll focus on the less generally known segment of contemporary jewellery (see Den Besten [1:9–11] for an extensive reflections on possible labels for this segment). In the second half of the 20th century a growing group of jewellers in Western Europe [2] and North America [16] started to claim their creative independency and to challenge the general perception of jewellery [22]. At first the approaches differed hugely on both sides of the ocean [1:9], in recent decades contemporary jewellery has become a global scene. It would be impossible to give a complete overview of contemporary jewellery (for that, see [1,3,23]). Instead we present three examples that in different ways challenge the framework we sketched above.",
+          "translation": "これらの枠組みは, 一般に宝飾品を記述するものである。宝石を着用しない人でも, 宝石は人間の文化の固有の一部であるとして, 私的および社会的文化的価値を認識する。本稿では, 現代ジュエリーの一般的に知られていないセグメントに焦点を当てる。20世紀後半に西ヨーロッパと北米で成長する宝飾家のグループが創造的独立性を主張し, 宝飾の一般的な認識に挑戦し始めた[2][16][22]。当初は, 大西洋の両岸でアプローチが大きく異なっていたが, 近年, 現代ジュエリーはグローバルなシーンとなっている。現代宝飾の全体像を示すことは不可能である(詳細は[1,3,23]を参照)。代わりに, 異なる方法で上記の枠組みに挑戦する3つの例を示した。",
+          "sourceFallback": false,
+          "readerVisibleFallback": false,
+          "partialSourceFallback": false,
+          "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v84-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+          "inputTokens": 266,
+          "outputTokens": 263,
+          "translationTimeMs": 18965.606927871704,
+          "sourceInvariants": [
+            "[2]",
+            "[16]",
+            "[22]",
+            "[1,3,23]",
+            "1",
+            "9",
+            "11"
+          ],
+          "technicalNameCandidates": [],
+          "missingTechnicalNameCandidates": [],
+          "detachedNumericCitationRisk": false,
+          "acronymExpansionDrift": false,
+          "extremeTranslationCompression": true,
+          "quality": {
+            "score": 0.8857142857142857,
+            "reasons": [
+              "scientific invariants missing: 9, 11"
+            ],
+            "languageScore": 1,
+            "invariantScore": 0.7142857142857143,
+            "repetitionScore": 1,
+            "lengthScore": 1
+          },
+          "structuralWarnings": [
+            "cross-page logical block"
+          ],
+          "sourceCategory": "ordinary-body-prose",
+          "sourceIntegrity": "structural-warning",
+          "sourceCompleteness": {
+            "incomplete": false
+          },
+          "extractionProvenance": {
+            "pageStart": 2,
+            "pageEnd": 3,
+            "bboxCount": 18,
+            "extractionConfidence": 0.97
+          },
+          "fallbackStage": "none",
+          "fallbackReason": "scientific invariants missing: 9, 11",
+          "serverFallbackReason": null,
+          "serverFallbackStage": null,
+          "unitFallbackIndices": null,
+          "partialText": null,
+          "partialSourceUnits": null,
+          "partialUnitTexts": [
+            "これらの枠組みは,一般に宝飾品を記述するものである。",
+            "宝石を着用しない人でも,宝石は人間の文化の固有の一部であるとして,私的および社会的文化的価値を認識する。",
+            "本稿では,現代ジュエリーの一般的に知られていないセグメントに焦点を当てる。",
+            "20世紀後半に西ヨーロッパと北米で成長する宝飾家のグループが創造的独立性を主張し,宝飾の一般的な認識に挑戦し始めた[2][16][22]。",
+            "当初は,大西洋の両岸でアプローチが大きく異なっていたが,近年,現代ジュエリーはグローバルなシーンとなっている。",
+            "現代宝飾の全体像を示すことは不可能である(詳細は[1,3,23]を参照)。",
+            "代わりに,異なる方法で上記の枠組みに挑戦する3つの例を示した。"
+          ],
+          "translationUnits": [
+            "The framework that we sketched above describes jewellery in general.",
+            "Even those who don’t wear jewellery themselves will recognise the personal and social cultural values of jewellery we described, as they are inherently part of human culture.",
+            "In this first paragraph on related work we’ll focus on the less generally known segment of contemporary jewellery (see Den Besten [1:9–11] for an extensive reflections on possible labels for this segment).",
+            "In the second half of the 20th century a growing group of jewellers in Western Europe [2] and North America [16] started to claim their creative independency and to challenge the general perception of jewellery [22].",
+            "At first the approaches differed hugely on both sides of the ocean [1:9], in recent decades contemporary jewellery has become a global scene.",
+            "It would be impossible to give a complete overview of contemporary jewellery (for that, see [1,3,23]).",
+            "Instead we present three examples that in different ways challenge the framework we sketched above."
+          ],
+          "wouldSubmitToModel": true,
+          "wouldAcceptTranslation": true
+        },
+        {
+          "key": "interactive-jewellery:b-828da077",
+          "benchmarkRunId": "2026-10-05T08-25-11-558Z",
+          "paperId": "interactive-jewellery",
+          "blockId": "b-828da077",
+          "role": "paragraph",
+          "translationStatus": "skipped",
+          "pageStart": 4,
+          "pageEnd": 4,
+          "source": "White and Steel kept the digital layer separated from the physical object and explored if participants could relate to a screen-based animation that was activated by a piece of jewellery. Among other things they found that an emotional relation with an",
+          "sourceFallback": true,
+          "readerVisibleFallback": true,
+          "partialSourceFallback": false,
+          "sourceInvariants": [],
+          "technicalNameCandidates": [],
+          "missingTechnicalNameCandidates": [],
+          "detachedNumericCitationRisk": false,
+          "acronymExpansionDrift": false,
+          "extremeTranslationCompression": false,
+          "structuralWarnings": [],
+          "sourceCategory": "damaged-extraction",
+          "sourceIntegrity": "mixed-chrome",
+          "sourceCompleteness": {
+            "incomplete": true,
+            "reason": "段落の末尾が欠けている可能性があります"
+          },
+          "extractionProvenance": {
+            "pageStart": 4,
+            "pageEnd": 4,
+            "bboxCount": 9,
+            "extractionConfidence": 0.97
+          },
+          "fallbackStage": "pre-model",
+          "fallbackReason": "structural skip; preserved in source",
+          "wouldSubmitToModel": false,
+          "wouldAcceptTranslation": false
+        },
+        {
+          "key": "interactive-jewellery:b-76b88e30",
+          "benchmarkRunId": "2026-10-05T08-25-11-558Z",
+          "paperId": "interactive-jewellery",
+          "blockId": "b-76b88e30",
+          "role": "paragraph",
+          "translationStatus": "pending",
+          "pageStart": 6,
+          "pageEnd": 6,
+          "source": "Context - In this digital era we take more pictures during one holiday trip than our grandparents took in their whole life. The curating of these files is almost undoable, which makes it complicated to retrieve them. As a result our hard drives are filled with files we never look at any more, but that do hold emotional meaning.",
+          "translation": "コンテキスト‐今日のデジタル時代では,1回の休暇旅行で祖父母が一生で撮影した写真よりも多くの写真を撮影している。これらのファイルの整理はほとんど不可能であり, その検索は複雑である。結果として, 私たちのハードドライブは, もはや見ることのないファイルで満たされているが, それは感情的な意味を持っている。",
+          "sourceFallback": false,
+          "readerVisibleFallback": false,
+          "partialSourceFallback": false,
+          "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v84-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+          "inputTokens": 84,
+          "outputTokens": 124,
+          "translationTimeMs": 18966.542959213257,
+          "sourceInvariants": [],
+          "technicalNameCandidates": [],
+          "missingTechnicalNameCandidates": [],
+          "detachedNumericCitationRisk": false,
+          "acronymExpansionDrift": false,
+          "extremeTranslationCompression": false,
+          "quality": {
+            "score": 1,
+            "reasons": [],
+            "languageScore": 1,
+            "invariantScore": 1,
+            "repetitionScore": 1,
+            "lengthScore": 1
+          },
+          "structuralWarnings": [
+            "label-prefix"
+          ],
+          "sourceCategory": "damaged-extraction",
+          "sourceIntegrity": "mixed-chrome",
+          "sourceCompleteness": {
+            "incomplete": false
+          },
+          "extractionProvenance": {
+            "pageStart": 6,
+            "pageEnd": 6,
+            "bboxCount": 6,
+            "extractionConfidence": 0.97
+          },
+          "fallbackStage": "none",
+          "serverFallbackReason": null,
+          "serverFallbackStage": null,
+          "unitFallbackIndices": null,
+          "partialText": null,
+          "partialSourceUnits": null,
+          "partialUnitTexts": [
+            "コンテキスト‐今日のデジタル時代では,1回の休暇旅行で祖父母が一生で撮影した写真よりも多くの写真を撮影している。",
+            "これらのファイルの整理はほとんど不可能であり,その検索は複雑である。",
+            "結果として,私たちのハードドライブは,もはや見ることのないファイルで満たされているが,それは感情的な意味を持っている。"
+          ],
+          "translationUnits": [
+            "Context - In this digital era we take more pictures during one holiday trip than our grandparents took in their whole life.",
+            "The curating of these files is almost undoable, which makes it complicated to retrieve them.",
+            "As a result our hard drives are filled with files we never look at any more, but that do hold emotional meaning."
+          ],
+          "wouldSubmitToModel": true,
+          "wouldAcceptTranslation": true
+        }
+      ]
+    }
+  ],
+  "complete": true
+}

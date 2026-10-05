@@ -1,0 +1,327 @@
+{
+  "createdAt": "2026-10-05T08:24:47.733Z",
+  "runId": "2026-10-05T08-24-24-575Z",
+  "endpoint": "http://127.0.0.1:8765",
+  "serverStatus": {
+    "available": true,
+    "model_loaded": true,
+    "model_name": "google/madlad400-3b-mt",
+    "model_version": "3b-mt-v6-transformers-4.57.6-semantic-v84-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+    "device": "mps",
+    "error": null,
+    "phase": "ready",
+    "progress": 1,
+    "message": "翻訳の準備ができました",
+    "downloaded_bytes": null,
+    "total_bytes": null,
+    "progress_indeterminate": false
+  },
+  "sampleLimitPerPaper": 4,
+  "catalogPaperCount": 114,
+  "cachedOnly": false,
+  "excludedMissingPdf": [],
+  "selectedPaperIds": [
+    "speechin"
+  ],
+  "papers": [
+    {
+      "paper": {
+        "id": "speechin",
+        "title": "SpeeChin: A Smart Necklace for Silent Speech Recognition",
+        "doi": null,
+        "publisher": null,
+        "venue": null,
+        "formatFamily": "unknown",
+        "templateVersion": null,
+        "kinds": [
+          "figures"
+        ],
+        "filename": "speechin.pdf",
+        "downloadUrl": "https://czhang.org/assets/pdf/Speechin.pdf",
+        "seedPaths": [],
+        "checks": {
+          "titleContains": "SpeeChin",
+          "forbidCaptionInParagraph": true
+        },
+        "discipline": "linguistics",
+        "selectionReason": "language or speech research structure",
+        "sourceUrl": "https://czhang.org/assets/pdf/Speechin.pdf",
+        "oaStatus": "oa-or-author-hosted"
+      },
+      "rows": [
+        {
+          "key": "speechin:b-f0741298",
+          "benchmarkRunId": "2026-10-05T08-24-24-575Z",
+          "paperId": "speechin",
+          "blockId": "b-f0741298",
+          "role": "paragraph",
+          "translationStatus": "skipped",
+          "pageStart": 2,
+          "pageEnd": 3,
+          "source": "Silent speech recognition (SSR) was invented as an alternative input method for scenarios where vocalizing speech is inappropriate, or speech recognition is compromised by high background noise or for people who have challenges in vocalizing speech [19]. It recognizes speech without requiring the user to voice any sounds into the environment. Researchers have developed a variety of SSR technologies. Based on whether the sensing technology is worn on the body, existing SSR techniques can be classified into two categories: wearable and non-wearable approaches. Most non-wearable SSR techniques use frontal cameras to capture the face and lip movements to distinguish silent speech commands. However, these systems require the user to be in front of a camera without occlusion, which is neither sustainable nor socially appropriate in daily activities. Wearable-based SSR techniques usually attach different sensors (e.g., EEG [7, 55], sEMG [33, 34, 58, 70], magnetic [4, 9, 29, 36, 37, 57], ultrasonic [18, 32, 40], acoustic [27, 50, 51], capacitive [38, 43]), camera [39] on or around the head to detect the movements of articulators (e.g., skin, ear, tongue, muscles) involved in speech. However, compared to non-wearable-based SSR methods, wearable-based approaches have limitations. Some require the user to attach electrodes on the face or mouth, which is uncomfortable in real-life scenarios. Others do not work well after remounting the sensor, or can only recognize a small set of commands[39]. Thus, there is an apparent need for a minimally obtrusive wearable sensing device that can recognize a rich set of silent speech commands without compromising comfort or performance. To address this challenge, we present SpeeChin, the first necklace-based SSR technology that can recognize 54 English and 44 Chinese silent speech commands. It uses a customized neck-mounted IR camera to capture the images of the neck and face from under the chin. These images are pre-possessed and sent to an end-to-end convolutional-recurrent-neural-network (CRNN) model for silent speech recognition. An overview of SpeeChin is illustrated in Figure 1. A user study with 20 participants shows that it can recognize 54 English commands and 44 Chinese commands with an average accuracy of 90.5% and 91.6%, respectively. Unlike standard voice recognition systems, current wearable SSR devices can only recognize a limited set of pre-trained words. However, if they could recognize sound on a phoneme level, they could instead map phoneme patterns to words, allowing them to recognize a much larger dataset without the need for word-level training. To investigate the potential of SpeeChin on distinguishing between more silent speech commands, we conducted a third study with 10 participants to recognize 72 one-syllable nonwords. The results are presented and analyzed in the discussion section. To the best of our knowledge, SpeeChin is the first smart necklace that can recognize silent speech phrases in two languages (54 English and 44 Chinese commands) with over 90% accuracy after remounting the device (session-independently) without using frontal cameras. The contributions of SpeeChin are:",
+          "sourceFallback": true,
+          "readerVisibleFallback": true,
+          "partialSourceFallback": false,
+          "sourceInvariants": [
+            "[19]",
+            "[7, 55]",
+            "[33, 34, 58, 70]",
+            "[4, 9, 29, 36, 37, 57]",
+            "[18, 32, 40]",
+            "[27, 50, 51]",
+            "[38, 43]",
+            "[39]",
+            "Figure 1",
+            "90.5%",
+            "91.6%",
+            "90%",
+            "SSR",
+            "EEG",
+            "sEMG",
+            "SpeeChin",
+            "IR",
+            "CRNN",
+            "54",
+            "44",
+            "20",
+            "10",
+            "72"
+          ],
+          "technicalNameCandidates": [
+            "SpeeChin",
+            "English",
+            "Chinese",
+            "CRNN"
+          ],
+          "missingTechnicalNameCandidates": [],
+          "detachedNumericCitationRisk": false,
+          "acronymExpansionDrift": false,
+          "extremeTranslationCompression": false,
+          "structuralWarnings": [
+            "cross-page logical block"
+          ],
+          "sourceCategory": "damaged-extraction",
+          "sourceIntegrity": "mixed-chrome",
+          "sourceCompleteness": {
+            "incomplete": true,
+            "reason": "段落の末尾が欠けている可能性があります"
+          },
+          "extractionProvenance": {
+            "pageStart": 2,
+            "pageEnd": 3,
+            "bboxCount": 40,
+            "extractionConfidence": 0.96
+          },
+          "fallbackStage": "pre-model",
+          "fallbackReason": "structural skip; preserved in source",
+          "wouldSubmitToModel": false,
+          "wouldAcceptTranslation": false
+        },
+        {
+          "key": "speechin:b-29bed79d",
+          "benchmarkRunId": "2026-10-05T08-24-24-575Z",
+          "paperId": "speechin",
+          "blockId": "b-29bed79d",
+          "role": "paragraph",
+          "translationStatus": "pending",
+          "pageStart": 1,
+          "pageEnd": 1,
+          "source": "This paper presents SpeeChin, a smart necklace that can recognize 54 English and 44 Chinese silent speech commands. A customized infrared (IR) imaging system is mounted on a necklace to capture images of the neck and face from under the chin. These images are first pre-processed and then deep learned by an end-to-end deep convolutional-recurrent-neural-network (CRNN) model to infer different silent speech commands. A user study with 20 participants (10 participants for each language) showed that SpeeChin could recognize 54 English and 44 Chinese silent speech commands with average cross-session accuracies of 90.5% and 91.6%, respectively. To further investigate the potential of SpeeChin in recognizing other silent speech commands, we conducted another study with 10 participants distinguishing between 72 one-syllable nonwords. Based on the results from the user studies, we further discuss the challenges and opportunities of deploying SpeeChin in real-world applications.",
+          "translation": "54の英語と44の中国語の無声音声コマンドを認識するスマートネックレスSpeeChinを紹介した。ネックレスに装着したカスタム赤外線イメージングシステムは, 頚部と顔の顔面からの画像を捕捉する。これらの画像を最初に予備処理し, 次にエンドツーエンドの深い巻き込み再帰ニューラルネットワーク(CRNN)モデルによって深く学習し, 異なる無声音声コマンドを推論する。20人の参加者(各言語10人)を対象としたユーザ研究では,SpeeChinは54の英語と44の中国語の無声音声コマンドを認識でき, クロスセッション平均精度はそれぞれ90.5%と91.6%であった。また,SpeeChinの他の無声音声コマンドの認識に対する可能性を調べるため,10人の参加者を対象に72の一音節非単語の識別を行った。ユーザ研究の結果に基づいて, 実世界の応用におけるSpeeChinの展開の課題と機会を議論した。",
+          "sourceFallback": false,
+          "readerVisibleFallback": false,
+          "partialSourceFallback": false,
+          "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v84-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+          "inputTokens": 266,
+          "outputTokens": 354,
+          "translationTimeMs": 22211.628913879395,
+          "sourceInvariants": [
+            "90.5%",
+            "91.6%",
+            "SpeeChin",
+            "IR",
+            "CRNN",
+            "54",
+            "44",
+            "20",
+            "10",
+            "72"
+          ],
+          "technicalNameCandidates": [
+            "SpeeChin",
+            "English",
+            "Chinese",
+            "CRNN"
+          ],
+          "missingTechnicalNameCandidates": [
+            "English",
+            "Chinese"
+          ],
+          "detachedNumericCitationRisk": false,
+          "acronymExpansionDrift": false,
+          "extremeTranslationCompression": false,
+          "quality": {
+            "score": 1,
+            "reasons": [],
+            "languageScore": 1,
+            "invariantScore": 1,
+            "repetitionScore": 1,
+            "lengthScore": 1
+          },
+          "structuralWarnings": [],
+          "sourceCategory": "ordinary-body-prose",
+          "sourceIntegrity": "clean",
+          "sourceCompleteness": {
+            "incomplete": false
+          },
+          "extractionProvenance": {
+            "pageStart": 1,
+            "pageEnd": 1,
+            "bboxCount": 9,
+            "extractionConfidence": 0.96
+          },
+          "fallbackStage": "none",
+          "serverFallbackReason": null,
+          "serverFallbackStage": null,
+          "unitFallbackIndices": null,
+          "partialText": null,
+          "partialSourceUnits": null,
+          "partialUnitTexts": [
+            "54の英語と44の中国語の無声音声コマンドを認識するスマートネックレスSpeeChinを紹介した。",
+            "ネックレスに装着したカスタム赤外線イメージングシステムは,頚部と顔の顔面からの画像を捕捉する。",
+            "これらの画像を最初に予備処理し,次にエンドツーエンドの深い巻き込み再帰ニューラルネットワーク(CRNN)モデルによって深く学習し,異なる無声音声コマンドを推論する。",
+            "20人の参加者(各言語10人)を対象としたユーザ研究では,SpeeChinは54の英語と44の中国語の無声音声コマンドを認識でき,クロスセッション平均精度はそれぞれ90.5%と91.6%であった。",
+            "また,SpeeChinの他の無声音声コマンドの認識に対する可能性を調べるため,10人の参加者を対象に72の一音節非単語の識別を行った。",
+            "ユーザ研究の結果に基づいて,実世界の応用におけるSpeeChinの展開の課題と機会を議論した。"
+          ],
+          "translationUnits": [
+            "This paper presents SpeeChin, a smart necklace that can recognize 54 English and 44 Chinese silent speech commands.",
+            "A customized infrared (IR) imaging system is mounted on a necklace to capture images of the neck and face from under the chin.",
+            "These images are first pre-processed and then deep learned by an end-to-end deep convolutional-recurrent-neural-network (CRNN) model to infer different silent speech commands.",
+            "A user study with 20 participants (10 participants for each language) showed that SpeeChin could recognize 54 English and 44 Chinese silent speech commands with average cross-session accuracies of 90.5% and 91.6%, respectively.",
+            "To further investigate the potential of SpeeChin in recognizing other silent speech commands, we conducted another study with 10 participants distinguishing between 72 one-syllable nonwords.",
+            "Based on the results from the user studies, we further discuss the challenges and opportunities of deploying SpeeChin in real-world applications."
+          ],
+          "wouldSubmitToModel": true,
+          "wouldAcceptTranslation": true
+        },
+        {
+          "key": "speechin:b-f0741298-4",
+          "benchmarkRunId": "2026-10-05T08-24-24-575Z",
+          "paperId": "speechin",
+          "blockId": "b-f0741298-4",
+          "role": "paragraph",
+          "translationStatus": "pending",
+          "pageStart": 2,
+          "pageEnd": 3,
+          "source": "• We conducted another user study with 10 participants to understand how SpeeChin can distinguish between phonemes and conducted a corresponding linguistic analysis.",
+          "translation": "• また,10名のユーザを対象に,SpeeChinがどのように音素を区別するかを理解するためのユーザー研究を行い, それに対応した言語解析を行った。",
+          "sourceFallback": false,
+          "readerVisibleFallback": false,
+          "partialSourceFallback": false,
+          "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v84-source-protect-v29-space-footnote-citation-bracket-author-year-tail-restore-strict-restore-v28-quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy",
+          "inputTokens": 35,
+          "outputTokens": 63,
+          "translationTimeMs": 22212.109088897705,
+          "sourceInvariants": [
+            "SpeeChin",
+            "10"
+          ],
+          "technicalNameCandidates": [
+            "SpeeChin"
+          ],
+          "missingTechnicalNameCandidates": [],
+          "detachedNumericCitationRisk": false,
+          "acronymExpansionDrift": false,
+          "extremeTranslationCompression": false,
+          "quality": {
+            "score": 1,
+            "reasons": [],
+            "languageScore": 1,
+            "invariantScore": 1,
+            "repetitionScore": 1,
+            "lengthScore": 1
+          },
+          "structuralWarnings": [
+            "cross-page logical block",
+            "list-item boundary"
+          ],
+          "sourceCategory": "list",
+          "sourceIntegrity": "structural-warning",
+          "sourceCompleteness": {
+            "incomplete": false
+          },
+          "extractionProvenance": {
+            "pageStart": 2,
+            "pageEnd": 3,
+            "bboxCount": 40,
+            "extractionConfidence": 0.96
+          },
+          "fallbackStage": "none",
+          "serverFallbackReason": null,
+          "serverFallbackStage": null,
+          "unitFallbackIndices": null,
+          "partialText": null,
+          "partialSourceUnits": null,
+          "partialUnitTexts": [
+            "また,10名のユーザを対象に,SpeeChinがどのように音素を区別するかを理解するためのユーザー研究を行い,それに対応した言語解析を行った。"
+          ],
+          "translationUnits": [
+            "• We conducted another user study with 10 participants to understand how SpeeChin can distinguish between phonemes and conducted a corresponding linguistic analysis."
+          ],
+          "wouldSubmitToModel": true,
+          "wouldAcceptTranslation": true
+        },
+        {
+          "key": "speechin:b-4d4d581c",
+          "benchmarkRunId": "2026-10-05T08-24-24-575Z",
+          "paperId": "speechin",
+          "blockId": "b-4d4d581c",
+          "role": "paragraph",
+          "translationStatus": "skipped",
+          "pageStart": 4,
+          "pageEnd": 4,
+          "source": "Besides movement on the surface of the head, vocalizing speech also involves movements of different articulators (e.g., mouth, tongue) inside the mouth. To capture the tongue and mouth movements for SSR, researchers placed magnets on the tongue and head [4, 9, 29, 36, 37, 57 ], and capacitive sensors in the mouth [38, 43]. Tongue movement can also be inferred by placing medical-purpose ultrasonic probes tightly under the chin for SSR",
+          "sourceFallback": true,
+          "readerVisibleFallback": true,
+          "partialSourceFallback": false,
+          "sourceInvariants": [
+            "[38, 43]",
+            "SSR",
+            "4",
+            "9",
+            "29",
+            "36",
+            "37",
+            "57"
+          ],
+          "technicalNameCandidates": [],
+          "missingTechnicalNameCandidates": [],
+          "detachedNumericCitationRisk": false,
+          "acronymExpansionDrift": false,
+          "extremeTranslationCompression": false,
+          "structuralWarnings": [
+            "段落の末尾が欠けている可能性があります"
+          ],
+          "sourceCategory": "damaged-extraction",
+          "sourceIntegrity": "mixed-chrome",
+          "sourceCompleteness": {
+            "incomplete": true,
+            "reason": "段落の末尾が欠けている可能性があります"
+          },
+          "extractionProvenance": {
+            "pageStart": 4,
+            "pageEnd": 4,
+            "bboxCount": 5,
+            "extractionConfidence": 0.96
+          },
+          "fallbackStage": "pre-model",
+          "fallbackReason": "段落の末尾が欠けている可能性があります",
+          "wouldSubmitToModel": false,
+          "wouldAcceptTranslation": false
+        }
+      ]
+    }
+  ],
+  "complete": true
+}
