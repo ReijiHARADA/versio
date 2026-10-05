@@ -23,6 +23,7 @@
 - focused cohort `focused-cohort-current-v1`（speechin / dont-mind-me / interactive-jewellery / thermal-earring、48 units）を再計測。ordinary-body は 4/19 fallback (21.1%)、構造入力ポリシーによる事前除外が19件、post-model rejectionは4件。全件指標ではなく、次の修正候補を絞るための診断値として扱う。レポートは `test-data/real-papers/reports/focused-cohort-current-v1.{json,md}`。
 - 同コホートのpost-model ordinary failureは `dont-mind-me` の長い統計/本文3件、`speechin` の数値・foreign-script汚染1件。`thermal-earring` のUUID/invariant行はordinary本文ではなくカテゴリ誤分類を伴うため、quality gate緩和の根拠にしない。次の実装候補は長文unitの品質拒否と数値/foreign-script rescueの一般化検証。
 - 翻訳サーバーの既存品質回帰（`test_madlad_quality` + `test_mixed_quality_fixture`）を再実行し、74 tests が pass。現時点ではproduction変更を追加せず、上記4件の再現fixture比較を次の実装前提とする。
+- `dont-mind-me:b-4c16bae3` の長文統計本文は、現行segmenterで7つの完結文（94〜217 chars）へ分割され、round-trip可能だった。したがってこのfailureは「段落全体を1回で送った」問題ではなく、protected input/decode/quality gate側を優先して切り分ける。診断: `focused-long-unit-segmentation-dont-mind-me-v1.json`。
 - `translation-audit.json` および別コホートの `CURRENT_STATE` 記録と混ぜず、auth-v1 の完了値を正式な比較対象とする。
 - 中間集計（47本/493 units）では全体 fallback 293件、通常本文187件中47件（25.1%）。これは未完了の暫定値であり、目標達成とは扱わない。
 
