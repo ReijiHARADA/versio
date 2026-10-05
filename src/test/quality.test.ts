@@ -198,6 +198,12 @@ describe("acronym expansion safety", () => {
     expect(evaluateJaTranslation(output, source).reasons).toContain("participant role shifted to researcher");
   });
 
+  it("does not treat a sentence-boundary shift as a participant role change", () => {
+    const source = "Participants completed the procedure. The participant then took a break.";
+    const output = "参加者は手順を完了しました。研究者は記録を確認しました。参加者はその後休憩しました。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("participant role shifted to researcher");
+  });
+
   it("allows participants who are explicitly researchers", () => {
     const source = "The participants were researchers from several laboratories.";
     const output = "参加者は複数の研究室に所属する研究者だった。";
