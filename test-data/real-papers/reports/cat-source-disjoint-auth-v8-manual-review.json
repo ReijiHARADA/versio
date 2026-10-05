@@ -1,0 +1,46 @@
+{
+  "version": "cat-source-disjoint-auth-v8-manual-review-v1",
+  "sourceReport": "test-data/real-papers/reports/cat-source-disjoint-auth-v8.json",
+  "scope": "five new source-hash-disjoint CAT rows from ordinary-body fallback cohort",
+  "reviewer": "Codex audit",
+  "reviews": [
+    {
+      "key": "dont-mind-me:b-b45338de",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null
+    },
+    {
+      "key": "dont-mind-me:b-68e941f0",
+      "label": "usable",
+      "severity": 0,
+      "primaryCause": null
+    },
+    {
+      "key": "speechin:b-95af9399",
+      "label": "semantic_shift",
+      "severity": 2,
+      "primaryCause": "model semantic relation"
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-55cd365a",
+      "label": "source_structure_excluded",
+      "severity": null,
+      "primaryCause": "source incomplete/structure"
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-b294a0d8",
+      "label": "source_structure_excluded",
+      "severity": null,
+      "primaryCause": "source incomplete/structure"
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "usable": 2,
+    "sourceStructureExcluded": 2,
+    "severityGte2": 1,
+    "citationDiagnosticFlagged": 0,
+    "productionDecision": "disabled"
+  }
+}
