@@ -1624,7 +1624,16 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   const parallelScientificOutput = /\b(?:in contrast|respectively|whereas|compared|while|similarly)\b/i.test(source) &&
     (source.match(/\d+(?:\.\d+)?/g) ?? []).length >= 4 &&
     (out.match(/[。！？]/g) ?? []).length >= 1;
-  if (isDegenerateTranslation(out) && !(parallelScientificOutput && hasAbnormalPhraseRepetition(out))) reasons.push("degenerate output");
+  // Results prose often contains a compact list of repeated comparative
+  // predicates ("less awkward, less silly, ..."). A faithful Japanese
+  // translation necessarily repeats the same predicate and the generic
+  // phrase-loop detector otherwise turns that list into a false fallback.
+  // Require both a repeated comparative source pattern and sentence-level
+  // Japanese output before relaxing this shape-only signal.
+  const repeatedComparativeList = (source.match(/\b(?:less|more|higher|lower|greater|smaller)\b/gi) ?? []).length >= 4 &&
+    (out.match(/[。！？]/g) ?? []).length >= 1;
+  const repetitionShapeAllowed = (parallelScientificOutput || repeatedComparativeList) && hasAbnormalPhraseRepetition(out);
+  if (isDegenerateTranslation(out) && !repetitionShapeAllowed) reasons.push("degenerate output");
   if (DATE_STAMP.test(out) && !DATE_STAMP.test(source)) reasons.push("unexpected date");
   if (out === source.trim()) reasons.push("source echo");
   const partialSourceFallback = detectPartialSourceFallback(source, out);
@@ -1697,7 +1706,7 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   reasons.push(...invariant.reasons);
   if (measurementOrderChanged(source, out)) reasons.push("scientific measurement order changed");
   const languageScore = reasons.some((reason) => /Japanese|Latin|source echo|date|empty|simplified Chinese|untranslated foreign-language|mixed-script lexeme/.test(reason)) ? 0.15 : 1;
-  const repetitionScore = isDegenerateTranslation(out) && !(parallelScientificOutput && hasAbnormalPhraseRepetition(out)) ? 0 : 1;
+  const repetitionScore = isDegenerateTranslation(out) && !repetitionShapeAllowed ? 0 : 1;
   const lengthRatio = out.length / Math.max(source.trim().length, 1);
   // Extreme compression is strong evidence of omitted content, especially in
   // short result/list units where sentence-count checks have little leverage.
