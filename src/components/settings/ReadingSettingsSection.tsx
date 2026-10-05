@@ -178,11 +178,7 @@ export function ReadingSettingsSection() {
         </SettingsCard>
 
         <SettingsCard title="ナビゲーション">
-          <SettingsRow
-            label="自動で折りたたむ"
-            description="オンのときはホバーで開閉します。オフのときは常に開いた状態です。"
-            htmlFor="sidebar-auto-collapse"
-          >
+          <SettingsRow label="自動で折りたたむ" htmlFor="sidebar-auto-collapse">
             <Toggle
               id="sidebar-auto-collapse"
               checked={displaySettings.sidebarMode === "auto"}

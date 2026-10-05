@@ -6,8 +6,8 @@ export type BehaviorPreviewSide = {
   src: string;
   /** Still frame for prefers-reduced-motion / paused state. */
   poster: string;
-  label: string;
-  caption: string;
+  /** Screen-reader only name for this column. */
+  ariaLabel: string;
   cycleDurationMs?: number;
   still?: boolean;
 };
@@ -20,7 +20,7 @@ type BehaviorComparisonProps = {
 };
 
 /**
- * Side-by-side OFF / ON behavior previews for boolean settings.
+ * Side-by-side behavior previews for boolean settings.
  * Does not own the setting — Toggle elsewhere is the control of record.
  */
 export function BehaviorComparison({ value, off, on }: BehaviorComparisonProps) {
@@ -42,25 +42,30 @@ function ComparisonColumn({
   return (
     <figure
       className={`${styles.column} ${selected ? styles.selected : ""}`}
+      aria-label={side.ariaLabel}
       aria-current={selected ? "true" : undefined}
     >
-      <figcaption className={styles.heading}>
-        <span className={styles.label}>{side.label}</span>
-        {selected ? (
-          <span className={styles.check} aria-hidden="true">
-            ✓
-          </span>
-        ) : null}
-      </figcaption>
-      <div className={styles.media}>
-        <ReplayablePreview
-          src={side.src}
-          poster={side.poster}
-          cycleDurationMs={side.cycleDurationMs ?? 3500}
-          still={side.still}
-        />
+      <div className={styles.stage}>
+        <div className={styles.window}>
+          <div className={styles.titlebar} aria-hidden="true">
+            <span className={styles.traffic}>
+              <span className={`${styles.dot} ${styles.close}`} />
+              <span className={`${styles.dot} ${styles.minimize}`} />
+              <span className={`${styles.dot} ${styles.zoom}`} />
+            </span>
+            <span className={styles.windowTitle}>Paper Reader</span>
+          </div>
+          <div className={styles.media}>
+            <ReplayablePreview
+              src={side.src}
+              poster={side.poster}
+              cycleDurationMs={side.cycleDurationMs ?? 3500}
+              still={side.still}
+              embedded
+            />
+          </div>
+        </div>
       </div>
-      <p className={styles.caption}>{side.caption}</p>
     </figure>
   );
 }

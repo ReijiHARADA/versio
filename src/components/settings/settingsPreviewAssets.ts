@@ -10,8 +10,7 @@ import { SIDEBAR_CAPTURE_CYCLE_MS } from "../../capture/sidebarPreviewFixture";
 export const SIDEBAR_AUTO_COLLAPSE_ON: BehaviorPreviewSide = {
   src: sidebarModeAuto,
   poster: sidebarModeAutoPoster,
-  label: "ON",
-  caption: "ホバーで開き、離すとアイコンのみに戻ります",
+  ariaLabel: "自動で折りたたむオンのプレビュー",
   cycleDurationMs: SIDEBAR_CAPTURE_CYCLE_MS,
 };
 
@@ -19,7 +18,6 @@ export const SIDEBAR_AUTO_COLLAPSE_ON: BehaviorPreviewSide = {
 export const SIDEBAR_AUTO_COLLAPSE_OFF: BehaviorPreviewSide = {
   src: sidebarModeExpanded,
   poster: sidebarModeExpandedPoster,
-  label: "OFF",
-  caption: "常にラベル付きで開いた状態です",
+  ariaLabel: "自動で折りたたむオフのプレビュー",
   cycleDurationMs: SIDEBAR_CAPTURE_CYCLE_MS,
 };
