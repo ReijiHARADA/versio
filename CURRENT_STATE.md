@@ -27,11 +27,27 @@
 
 - MADLAD既存held-out: 30 rows。受理 20/30。
 - CAT比較: 30 rows。自動受理 27/30、手動レビューで severity 2 以上 0件。ただし本番未統合。
+- Qwen2.5 14B cascade probe: 同一held-out 5 rowsで受理1/5。4件は反復語、未翻訳・foreign-script、科学的invariant欠落などで拒否。本番統合の根拠には不十分。
 - 選択的 cascade の監査投影: reader-visible fallback 1/30（3.3%）。同一held-out上の監査値であり、本番保証ではない。
 - 新規OAサンプル: 16 papers / 16 blocks、10受理・6 fallback。1論文1ブロックの診断値で、製品fallback率ではない。
+- 114本を選択した fresh translation audit を完了（PDF取得済み113本、評価954 units。`precious-materials` はPDF未取得）。全体fallback 624/954 (65.4%)。ordinary-body は 111/360 (30.8%)で、目標5%を未達。内訳は pre-model 4、post-model 107（server/model 由来55、quality gate 32、extraction/structure 17、その他7）。これは現行の実測ベースラインであり、次の改善対象をモデル/品質ゲートと抽出境界に分離できた。
 - 追加fresh sample: 4 papers / 8 blocks、3受理・5 fallback。4件は抽出構造由来、1件は長い本文のpost-model品質拒否。
+- ordinary-body fallback 111件のsource/fallback段階/quality理由を [`translation-failure-triage-v1.json`](test-data/real-papers/reports/translation-failure-triage-v1.json) に固定。server/protection 55、quality-gate 43、extraction/structure 5、その他8（分類はtriage用で重複理由を含む）。
 
 ## 直近の変更
+
+### v1545 — quality policy facade refactor（2026-10-05）
+
+- `quality.ts` からタイトル、出版メタデータ、参考文献、名称付き見出しの判定を `quality/documentPolicy.ts` へ分離。旧exportはfacadeで維持。
+- 品質テスト 250/250、全Vitest 624/624、typecheck、lint、diff checkを通過。品質閾値・fallback条件・モデル設定は変更していない。
+
+
+### v1544 — fresh benchmark再開（2026-10-05、完了）
+
+- 114本コーパスのstable checkpointを `--resume` で再開。先行実行で63本分を保存後、長文要求が長時間返らない状態を検出したため、翻訳サーバーは維持し、クライアントのみ終了。
+- 再開時は1論文あたり4 unitsに縮小し、checkpointを追記してレポートを生成済み。productionの翻訳ロジックは変更していない。
+- レポート生成後にordinary-body fallbackと原因分類を再集計済み。
+
 
 ### v1543 — 保守性リファクタリング第一段階（2026-10-05）
 
@@ -60,3 +76,125 @@
 - `docs/MAINTENANCE_REFACTOR_PLAN.md` の順に、挙動固定テストを維持しながら品質モジュールを段階分割する。
 - 抽出変更は113本ベンチマークと既存回帰を毎回実行する。
 - 翻訳変更はfresh cohort・manual review・semantic false acceptを確認してから採用する。
+
+### v1546 — plural possessive segmentation fix (2026-10-05)
+
+- `segmenter.py` が `linguistics' cognition` の末尾アポストロフィを開き引用符と誤認し、段落内の文境界を隠していた。所有格アポストロフィを引用状態に入れない一般修正を適用し、`SEGMENTER_VERSION` を `semantic-v83` に更新。
+- セグメンター回帰 **61/61**。長文診断の単一unitは2件から1件へ減少し、該当本文は4つの文単位へ分割。残る1件は表由来のflattened numeric rowで抽出課題。
+- 続けて、resolverが `vector-figure-label-cluster` 等を `other` としたノードを翻訳projectionから除外。医療画像PDFのflattened `1×1 Conv / Rate / Channel` 行はPaperBlockにならず、図内ラベルとして扱われる。抽出pipeline関連テスト **28/28**。
+- `speechin` のFigure参照fallbackをPDF外で再現。完全文・第2文単独の両方でMADLADが `The necklace case` を落とすため、原因はplaceholderやPDF結合ではなくdecode側。入力の受動表現を自然な能動表現へ正規化すると改善したが、一般化検証前のproduction適用は保留。
+- HCI/心理/マーケティング/人間工学/言語学の受動構文5文でraw/正規化ABを実測。明確な改善はHCI例のみで、他は同等または視点・用語が変化したため、全体rewriteは採用しない。結果は `test-data/real-papers/reports/passive-construction-ab-v1.json`。
+- 医療論文の簡体字混入fallbackについて、既存の汚染検出をserver decode rescueにも適用。beam再試行後、`学习` を含んだ出力が通常の `学習` を含む日本語へ変わり、fallbackなしで受理可能になった。held-out全体での改善率は未測定。証拠: `server-simplified-cjk-rescue-v1.json`。
+- 同一医療論文を新serverで再監査。ordinary-bodyは **2/2 fallback → 1/2 fallback**、全体は6/8→6/8以外の構造fallbackを含むため、改善をordinary-bodyの1件に限定して記録。残るordinary-bodyはmixed-script decoder corruptionではなく、他の品質理由を別途確認する。
+- 残った `CycleGAN` 例は、`サイクルGAN` という正しい技術語表記を混在スクリプト破損と誤判定していた。source identifierのuppercase suffix（`CycleGAN`→`GAN`）を許容する一般条件を追加。quality tests **251/251**、typecheck pass。
+- 同一医療論文を品質ゲート修正後に再監査し、ordinary-body fallback **1/2 → 0/2** を確認。全体fallbackは構造fallbackを含むため62.5%だが、今回の改善対象はordinary-body 2件。report: `post-cyclegan-gate-medical-v1`。
+
+### v1547 — fresh quality cohort (2026-10-05)
+
+- `post-quality-12-v1` は指定12件のうち、PDFがローカルに存在する11件（44 units）を処理。`precious-materials` はPDF未取得のため未評価で、レポートの `complete` は false のまま保存されている。
+- 抽出構造を除外した evaluable 33 units では fallback **10/33 (30.3%)**、ordinary-body は **1/18 (5.6%)**。ordinary-bodyの唯一のfallbackは `dont-mind-me` の複数unit server partial fallbackで、目標5%に近いが、サンプル18件では達成判定しない。
+- 既存のfallback率を達成扱いせず、missing PDFを補完した上で同一cohortを再実行し、manual semantic reviewを追加する。
+- 12本コホートの唯一のordinary-body server fallbackを再現し、`“Normal”` / `“Awkward”` を技術名として誤保護する一般的な誤判定を修正。識別子形状または命名文脈を持つ引用名だけを保護し、サーバー quality gate を v36 に更新した。4つの問題文を同一サーバーで再実行し、4/4が日本語訳を返し、fallbackなしになった。
+- 修正後の同一11本・44-unit再監査（`post-quality-quoted-label-v1`）は完了。構造除外後33 evaluable unitsのreader-visible fallbackは **14/33 (42.4%)**、ordinary-bodyは **2/18 (11.1%)**。ラベル誤保護は消えたが、`speechin` のIR/SSR・引用欠落、`thermal-earring` の否定/BPM、図参照順、UUIDなど別のpost-model問題が残るため、5%達成とはみなさない。
+- IR/BPM/SSRのように本文中で正式名称が展開され、日本語側で自然な展開語になる標準科学略語を、対応する日本語展開（赤外線・心拍・無声音声等）が保持されていれば受理する一般ルールを追加。quality tests **254/254**、全Vitest **628/628**。引用番号欠落や切断文は引き続きfallback対象とする。
+- `speechin` の再監査では `infrared (IR)` を「赤外線」とした本文がfallbackなしになったことを確認（`post-acronym-expansion-speechin-v1`）。残る `SSR, [4, 9, 29, ...` の行はPDFページ境界で切れた引用列を含むsource fragmentであり、保護緩和せずExtraction側の課題として扱う。
+
+## 2026-10-05: citation-column stitch verification
+
+- Added a high-precision same-page layout repair in `pdfLayout.ts` for a paragraph whose left-column block ends with an open numeric citation and whose right-column continuation begins with `], and ...`. It requires paragraph roles, same page, horizontal left-to-right order, overlapping vertical bands, and matching body font size.
+- On `speechin.pdf`, the extracted text now joins `...[4, 9, 29, 36, 37, 57 ], and capacitive sensors in the mouth [38, 43].` into the preceding paragraph. The paragraph still ends in `Tongue` and is therefore correctly retained as damaged extraction rather than being sent to translation as a complete claim; the next block begins `movement can also ...` and needs a separate conservative continuation repair.
+- `post-citation-stitch-speechin-v1` rerun: 4 units; 1 ordinary-body block remains reader-visible fallback because the source still ends at `Tongue`; the clean abstract and list units completed without fallback. This confirms the citation fragment was repaired, while the remaining failure is a word-level column continuation/extraction issue.
+- Verification: targeted TS tests 354/354 (quality 254, extraction pipeline 26, reading order 74); typecheck and lint pass. Full-suite rerun remains pending after this extraction change.
+- Added a second conservative same-column continuation repair: a long paragraph ending in a short title-case token followed immediately by a lowercase paragraph at the same x/y flow is joined only when font size and vertical gap match. On `speechin.pdf`, `Tongue` now correctly joins `movement can also be inferred...`; the resulting 437-character block remains marked damaged-extraction only because the source block still contains mixed multi-column provenance, but it is no longer sent as an isolated fragment.
+- `post-word-continuation-speechin-v1`: the ordinary-body abstract and list completed with no reader-visible fallback; the two extraction-damaged blocks were preserved before model translation. This removes the prior ordinary post-model fallback from the sampled units without relaxing the quality gate.
+- Started fresh broad regression `post-extraction-continuation-cohort-v1` with all 114 cached OA catalog papers and 12 section-stratified units/paper (separate report/checkpoint; no prior report mixing). The process is still running in the active benchmark session. First completed papers: `interactive-jewellery`, `significant-other`, `power-over-skin` (36 units total). Early reader-visible fallbacks are being separated into damaged extraction, structural/list, and post-model quality failures; no production gate has been relaxed.
+- Fresh cohort progress update: `neuroscience-rule-following` completed; 20/114 papers and 213 sampled units are now checkpointed in `post-extraction-continuation-cohort-v1`.
+- Fresh cohort progress: 24/114 papers and 233 units checkpointed; latest `medical-imaging-deep-learning-review` (4 units) and `covid-ml-review` (3 units).
+- Fresh cohort progress: 25/114 papers and 245 units checkpointed; latest `medical-image-segmentation-deep-learning`.
+- Fresh cohort progress: 27/114 papers and 269 units checkpointed; latest `human-ai-interaction-guidelines`.
+- Fresh cohort progress: 28/114 papers and 281 units checkpointed; latest `social-influence-social-advertising`.
+- Fresh cohort progress: 29/114 papers and 293 units checkpointed; latest `modeling-human-behavior-cognitive-uncertainty`.
+- Fresh cohort progress: 31/114 papers and 305 units checkpointed; latest `osworld-multimodal-agents` (12 units) and `conversation-analysis-user-experience` (0 units).
+- Fresh cohort progress: 33/114 papers and 329 units checkpointed; latest `computational-linguistics-nlp-translation` and `how-content-volume-landing-pages`.
+- Fresh cohort progress: 34/114 papers and 341 units checkpointed; latest `using-cognitive-psychology-gpt3`.
+- Fresh cohort progress: 37/114 papers and 369 units checkpointed; latest `hfe-healthcare-2024` and `hfe-healthcare-safety-review`.
+- Fresh cohort progress: 39/114 papers and 393 units checkpointed; latest `cognitive-dual-task-older-adults` and `marketing-unavailable-choice`.
+- Fresh cohort progress: 40/114 papers and 405 units checkpointed; latest `marketing-framing-organic-food`.
+- Fresh cohort progress: 41/114 papers and 413 units checkpointed; latest `marketing-platform-attitude`.
+- Fresh cohort progress: 42/114 papers and 421 units checkpointed; latest `marketing-consumer-production-journey`.
+- Fresh cohort progress: 43/114 papers and 433 units checkpointed; latest `ergonomics-job-rotation-robotics`.
+- Fresh cohort progress: 44/114 papers and 445 units checkpointed; latest `ergonomics-quantified-factory-worker`.
+- Fresh cohort progress: 45/114 papers and 457 units checkpointed; latest `ergonomics-flight-deck-applications`.
+- Fresh cohort progress: 46/114 papers and 469 units checkpointed; latest `linguistics-register-web-corpus`.
+- Fresh cohort progress: 47/114 papers and 481 units checkpointed; latest `linguistics-appraisal-institutional-discourse`.
+- Fresh cohort progress: 48/114 papers and 493 units checkpointed; latest `marketing-neurophysiology-consumer-motivation`.
+- Fresh cohort progress: 50/114 papers and 505 units checkpointed; latest `cognitive-memory-cue-interest` and `cognitive-vr-mnemonic-processing`.
+- Fresh cohort progress: 51/114 papers and 513 units checkpointed; latest `cognitive-motor-incidental-memory`.
+- Fresh cohort progress: 54/114 papers and 549 units checkpointed; latest `marketing-health-goals-nudging`, `hfe-healthcare-patient-safety-review`, and `marketing-online-context-web-evolution`.
+- Fresh cohort progress: 55/114 papers and 561 units checkpointed; latest `hci-social-touch-in-human-computer-interaction`.
+- Fresh cohort progress: 56/114 papers and 573 units checkpointed; latest `hci-human-computer-interaction`.
+- Fresh cohort progress: 58/114 papers and 587 units checkpointed; latest `hci-human-computer-interaction-as-science` and `cognitive-psychology-study-on-the-optimization-effect-of-memory-on-vocabulary-teaching-in-c`.
+- Fresh cohort progress: 59/114 papers and 599 units checkpointed; latest `cognitive-psychology-research-progress-of-memory-mechanism-in-cognitive-psychology`.
+- Fresh cohort progress: 60/114 papers and 609 units checkpointed; latest `cognitive-psychology-a-tribute-to-the-memory-of-professor-neisser-the-godfather-of-cognitiv`.
+- Fresh cohort progress: 61/114 papers and 612 units checkpointed; latest `cognitive-psychology-cognitive-psychology-first-language-and-false-memories`.
+- Fresh cohort progress: 63/114 papers and 636 units checkpointed; latest `cognitive-psychology-role-of-educational-psychology-in-the-study-of-memory-conceptual-proce` and `cognitive-psychology-a-study-on-the-teaching-of-chinese-characters-memorization-for-foreign`.
+- Fresh cohort progress: 64/114 papers and 648 units checkpointed; latest `cognitive-psychology-the-underlying-reasons-for-making-reminders-an-investigation-on-memory`.
+- Fresh cohort progress: 65/114 papers and 659 units checkpointed; latest `cognitive-psychology-participant-nonnaivet-and-the-reproducibility-of-cognitive-psychology`.
+- Fresh cohort progress: 66/114 papers and 671 units checkpointed; latest `marketing-consumer-behavior-marketing-and-supply-chains-of-fermented-foods-and-h`.
+- Fresh cohort progress: 67/114 papers and 672 units checkpointed; latest `marketing-a-review-of-rural-consumer-behavior-marketing-strategies-and-consumer-`.
+- Fresh cohort progress: 68/114 papers and 684 units checkpointed; latest `marketing-integrating-value-at-risk-var-model-into-behavior-economics-for-consum`.
+- Fresh cohort progress: 72/114 papers and 711 units checkpointed; latest `marketing-the-blind-box-economy-exploring-consumer-behavior-marketing-strategies`, `marketing-digital-marketing-consumer-behavior`, `ergonomics-6-virtual-reality-and-ergonomics-human-factors`, and `ergonomics-2s2-1-ergonomics-human-factors-in-around-1964`.
+- Fresh cohort progress: 74/114 papers and 735 units checkpointed; latest `ergonomics-analisis-pemetaan-bibliometrik-komputational-publikasi-pada-ergonomics` and `linguistics-the-role-of-applied-linguistics-and-language-discourse-analysis-in-eng`.
+- Fresh cohort progress: 75/114 papers and 747 units checkpointed; latest `linguistics-eco-linguistics-in-english-reviewing-the-role-of-language-in-environme`.
+- Fresh cohort progress: 78/114 papers and 783 units checkpointed; latest `linguistics-internet-linguistics-a-linguistic-analysis-of-electronic-discourse-as-`, `linguistics-text-discourse-dicteme-language-personality-as-basic-concepts-of-text-`, and `linguistics-the-importance-of-discourse-studies-in-linguistics-language-teaching-a`.
+- Fresh cohort progress: 79/114 papers and 795 units checkpointed; latest `linguistics-discussion-on-second-language-acquisition-in-cognitive-linguistics-in-`.
+- Fresh cohort progress: 80/114 papers and 807 units checkpointed; latest `linguistics-study-of-animal-discourse-in-language-textbooks-from-the-perspective-o`.
+- Fresh cohort progress: 81/114 papers and 819 units checkpointed; latest `hci-introduction-to-human-computer-interaction`.
+- Fresh cohort progress: 82/114 papers and 831 units checkpointed; latest `hci-intelligent-human-computer-interaction`.
+- Fresh cohort progress: 84/114 papers and 843 units checkpointed; latest `cognitive-psychology-research-on-the-effects-of-different-listening-process-models-in-liste` and `cognitive-psychology-chronometric-constructive-cognitive-learning-evaluation-model-measurin`.
+- Fresh cohort progress: 85/114 papers and 849 units checkpointed; latest `cognitive-psychology-editorial-the-role-of-the-distinctions-between-identification-producti`.
+- Fresh cohort progress: 87/114 papers and 863 units checkpointed; latest `cognitive-psychology-the-validity-of-the-specific-coding-principle-the-explanations-from-co` and `cognitive-psychology-grand-challenges-in-environmental-psychology`.
+- Fresh cohort progress: 88/114 papers and 875 units checkpointed; latest `marketing-the-influence-of-social-media-marketing-on-consumers-behavior`.
+- Fresh cohort progress: 89/114 papers and 887 units checkpointed; latest `marketing-impact-of-sensory-marketing-on-consumer-behavior`.
+- Fresh cohort progress: 90/114 papers and 899 units checkpointed; latest `marketing-impact-of-e-marketing-on-consumer-behavior`.
+- Fresh cohort progress: 91/114 papers and 909 units checkpointed; latest `marketing-marketing-communication-and-consumer-behavior-in-digital-era`.
+- Fresh cohort progress: 92/114 papers and 921 units checkpointed; latest `marketing-impact-of-green-marketing-on-consumer-behavior`.
+- Fresh cohort progress: 93/114 papers and 933 units checkpointed; latest `ergonomics-human-factors-and-ergonomics`.
+- Fresh cohort progress: 94/114 papers and 945 units checkpointed; latest `ergonomics-human-factors-ergonomics-in-hydrocarbon-facilities`.
+- Fresh cohort progress: 96/114 papers and 959 units checkpointed; latest `linguistics-an-empirical-analysis-of-the-use-of-discourse-markers-by-second-langua` and `linguistics-linguistics-and-politics-russianisms-in-the-western-english-language-p`.
+- Fresh cohort progress: 98/114 papers and 983 units checkpointed; latest `linguistics-constructing-or-disrupting-peace-through-language-a-peace-linguistics-` and `linguistics-gender-linguistics-in-the-linguo-limological-aspect-by-the-material-of`.
+- Fresh cohort progress: 100/114 papers and 997 units checkpointed; latest `hci-development-of-user-interface-user-experience-using-design-thinking-ap` and `hci-user-experience-analysis-on-mobile-application-design-using-user-exper`.
+- Fresh cohort progress: 101/114 papers and 1003 units checkpointed; latest `hci-a-comparative-research-on-usability-and-user-experience-of-user-interf`.
+- Fresh cohort progress: 102/114 papers and 1015 units checkpointed; latest `hci-user-experience-design-using-machine-learning-a-systematic-review`.
+- Fresh cohort progress: 104/114 papers and 1039 units checkpointed; latest `hci-redesign-of-user-experience-in-inaportnet-using-the-user-experience-qu` and `cognitive-psychology-the-role-of-attention-memory-and-cognition-in-the-decision-making-proc`.
+- Fresh cohort progress: 105/114 papers and 1051 units checkpointed; latest `cognitive-psychology-attention-and-entrepreneurial-cognition`.
+- Fresh cohort progress: 106/114 papers and 1059 units checkpointed; latest `marketing-the-impact-of-online-advertising-on-consumer-choice-consumption-traps-`.
+- Fresh cohort progress: 107/114 papers and 1071 units checkpointed; latest `marketing-a-study-on-the-relationship-between-advertising-value-choice-of-media-`.
+- Fresh cohort progress: 108/114 papers and 1083 units checkpointed; latest `marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the`.
+- Fresh cohort progress: 109/114 papers and 1095 units checkpointed; latest `marketing-influence-of-advertising-incentives-on-consumers-in-the-digital-enviro`.
+- Fresh cohort progress: 110/114 papers and 1107 units checkpointed; latest `ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport`.
+- Fresh cohort progress: 112/114 papers and 1131 units checkpointed; latest `ergonomics-analysis-of-burnout-and-occupational-safety-in-nurses-a-literature-rev` and `ergonomics-risk-factors-for-occupational-fatigue-in-construction-workers-a-system`.
+- Fresh cohort progress: 113/114 papers and 1143 units checkpointed; latest `linguistics-the-role-of-morphology-in-computational-linguistics-its-significance-i`.
+- Fresh cohort completed: report `post-extraction-continuation-cohort-v1` contains 114 papers and 1,155 sampled units. Automatic attribution: 440 damaged-extraction, 404 ordinary-body-prose, 172 list, 41 statistical-prose, 35 section-heading, 61 reference-chrome, 2 caption. Ordinary-body reader-visible fallback is 118/404 (29.2%), so the <=5% target is not met. Across all rows, 607 fallbacks are pre-model and 155 post-model; this is evidence for a broad extraction/source-completeness problem plus a separate model/quality problem, not evidence to relax gates. Manual semantic review and category-specific fixes remain required.
+- Ordinary-body fallback attribution is more specific: 116/118 are post-model and 2/118 are pre-model. The broad pre-model count is dominated by damaged/list/reference rows; ordinary prose needs model-quality and semantic-review analysis rather than an indiscriminate extraction-gate change. Review queue saved as `test-data/real-papers/reports/ordinary-fallback-review-v1.{json,md}`.
+- Preliminary semantic review of 17 representative ordinary fallback rows found 9 omissions, 2 hallucinations, 3 semantic shifts, 1 numeric/invariant failure, and 2 source fragments; 11 had severity 4. This confirms that reducing fallback by accepting current outputs would be unsafe. Review artifact: `test-data/real-papers/reports/ordinary-fallback-manual-review-v1.json`.
+- Selective-cascade audit dry-run over the fresh report identifies 140 post-model rows with source text eligible for an alternate model and excludes 15 rows with incomplete source; no Ollama endpoint is currently available, so no alternate output was accepted. Dry-run artifact: `test-data/real-papers/reports/selective-cascade-post-cohort-v1.json`.
+- Added two behavior-locking quality tests for reviewed participant-fact and bibliographic hallucinations; quality suite now passes 256 tests.
+- Benchmark accounting correction: 114 catalog entries were selected, but `precious-materials` had no cached PDF and produced no rows; the measured corpus is therefore 113 papers / 1,155 units, with the missing PDF tracked separately.
+## 2026-10-05 validation checkpoint
+
+- Post-extraction continuation benchmark remains available at `test-data/real-papers/reports/post-extraction-continuation-cohort-v1.{json,md}`. The catalog contains 114 entries and 1,155 sampled units; the raw report currently has 109 paper entries with non-empty rows because four catalog entries have empty cached-row results and `precious-materials` is explicitly missing its PDF. Treat `papersWithRows` from the summary artifact as the authoritative paper count until those entries are repaired; do not describe this as 114 fully measured papers.
+- Verification after the latest benchmark: `npm run lint` passes with existing warning-only escape/comparison diagnostics; `git diff --check` passes; `npm run typecheck` passes; `npm test -- --run src/test/quality.test.ts` passes (256 tests).
+- Translation server and Ollama are stopped/unavailable after the benchmark. No alternate-model result has been collected yet, so no production cascade/protection change is justified from that experiment.
+- Benchmark bookkeeping was tightened in `scripts/benchmark-real-paper-translation.ts`: `--resume` now treats an entry as complete only when it has at least the requested per-paper sample count, preventing empty extraction/server checkpoints from being silently counted as complete.
+- Added `test-data/real-papers/reports/empty-entry-diagnostic-v2.{json,md}`. The four empty cached entries are now attributed explicitly: no eligible audit blocks after the 90-character paragraph filter (23/1/0/6 paragraph candidates respectively), rather than being reported as silent zero-row successes. This is an audit-sampling/extraction eligibility issue, not evidence that translation succeeded or failed.
+- Re-ran those four entries with the server ready; `missing-four-cohort-v1.{json,md}` confirms the same eligibility errors, so no model output was produced for them. The server was then stopped to avoid leaving the local model resident.
+- Post-change verification: lint exits 0 with existing warning-only diagnostics, typecheck exits 0, and `translation-server/tests/test_segmenter.py` passes (61 tests, 8 subtests).
+- Added `ordinary-fallback-triage-v2.json`: the 118 ordinary-body fallbacks split into 47 server quality rejections, 38 scientific-invariant failures, 13 semantic-relation failures, 8 protected-token restore failures, 4 language/degeneration failures, 2 pre-model cases, and 6 other cases. This confirms the next optimization target is post-model handling/model output, not broad extraction relaxation; the counts remain automatic diagnostics, not semantic ground truth.
+- Replayed three held-out ordinary fallback sources directly against the current server in `madlad-fallback-replay-v1.json`. The long participant-method block still triggered partial-unit fallback (52s); the speechin block produced mixed-script/unsupported-content output in 83s; the bibliography block produced an unrelated Japanese citation in 7s, but the production audit's invariant gate correctly rejects that row. These direct outputs reinforce that model decode can drift and that the invariant gate is preventing at least this hallucination from reaching the reader.
+- Promoted the replay helper to `scripts/replay-translation-fallbacks.mjs` so future model/protection comparisons can reproduce the same sources without touching production caches. `node --check`, typecheck, and diff checks pass.
+- Added the human-readable companion `test-data/real-papers/reports/madlad-fallback-replay-v1.md` with source/output pairs for manual semantic review.
+- Local Ollama was available with pre-existing `qwen2.5:7b` and `qwen2.5:14b` models. Audit-only selective-cascade probes were run on three fallback rows: qwen2.5:7b accepted 1/3, while qwen2.5:14b accepted 2/3 by the current gate. The 14B accepted output still contained the Chinese conjunction `其次`, so this is not production-ready evidence; the rejected cases correctly caught mixed Chinese, missing invariants, or untranslated lexemes. Reports: `selective-cascade-qwen25-7b-v1.json`, `selective-cascade-qwen25-14b-v1.json`. Ollama was stopped after the probe.
+- A qwen3:14b probe was started but the first long candidate exceeded the 240-second request budget and was terminated; `selective-cascade-qwen3-14b-v1.json` is explicitly incomplete (1 result). It is not a quality conclusion.
+- Consolidated the small alternate-model probes in `selective-cascade-model-comparison-v1.{json,md}`. qwen2.5:7b accepted 1/3 (mean 8.4s), qwen2.5:14b accepted 2/3 (mean 15.1s with Chinese contamination in an accepted output), and qwen3:14b is incomplete (1/3, 137.6s). These are diagnostic only and do not justify production routing.
+- Added a regression guard for the observed Chinese connective compound `其次` in mixed Japanese output. This extends the existing script-contamination detector (rather than a hallucinated-content blacklist); quality suite now passes 257 tests.

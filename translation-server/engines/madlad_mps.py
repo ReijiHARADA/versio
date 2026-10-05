@@ -39,6 +39,16 @@ INLINE_NUMERIC_CITATION_PATTERN = re.compile(
     r"(?:\s*,\s*\d{1,3}(?:\s*[-–—]\s*\d{1,3})?)*\s*\]"
 )
 
+# A small script-contamination detector shared conceptually with the client
+# quality gate. These characters are strong evidence of a Simplified Chinese
+# decode leaking into Japanese; ordinary Japanese kanji are intentionally not
+# listed. Rejecting here enables the existing beam/rescue cascade before the
+# contaminated output reaches the client.
+SIMPLIFIED_CJK_CONTAMINATION = re.compile(
+    r"[习这们该过现为发见后还进对个从认说时实开结统处变关记忆态调评]"
+    r"|(?:因素|主题|详细|结果|影响|内在因素|外在因素)"
+)
+
 
 def missing_visible_numeric_citations(source: str, translated: str) -> list[str]:
     """Return visible bracket citations lost during an opt-in diagnostic decode."""
@@ -276,7 +286,7 @@ class MADLADEngine(TranslationEngine):
 
     MODEL_ID = "google/madlad400-3b-mt"
     TRANSFORMERS_RUNTIME_VERSION = "4.57.6"
-    QUALITY_GATE_VERSION = "quality-v34-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue"
+    QUALITY_GATE_VERSION = "quality-v36-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue-simplified-cjk-rescue-quoted-label-policy"
     MODEL_VERSION = (
         f"3b-mt-v6-transformers-{TRANSFORMERS_RUNTIME_VERSION}-{SEGMENTER_VERSION}-"
         f"{SOURCE_PROTECTION_VERSION}-strict-restore-v28-{QUALITY_GATE_VERSION}"
@@ -1278,10 +1288,21 @@ class MADLADEngine(TranslationEngine):
 
     @staticmethod
     def _missing_quoted_technical_names(source: str, output: str) -> list[str]:
-        names = [
-            match.group(1)
-            for match in re.finditer(r"[\u201c\"]([A-Z][A-Za-z0-9][A-Za-z0-9_-]{3,})[\u201d\"]", source)
-        ]
+        names = []
+        for match in re.finditer(r"[\u201c\"]([A-Z][A-Za-z0-9][A-Za-z0-9_-]{3,})[\u201d\"]", source):
+            name = match.group(1)
+            # Ordinary title-cased labels such as “Normal” and “Awkward” are
+            # meant to be translated. Keep the invariant for coined names,
+            # identifiers, and names introduced by a generic naming frame.
+            identifier_like = bool(re.search(r"[a-z][A-Z]|\d|[-_]", name))
+            context = source[max(0, match.start() - 48):match.start()]
+            naming_frame = bool(re.search(
+                r"(?:dubbed|called|named|prototype|interface|system)\s+(?:the\s+)?$",
+                context,
+                re.I,
+            ))
+            if identifier_like or naming_frame:
+                names.append(name)
         normalized = output.casefold()
         return sorted({name for name in names if name.casefold() not in normalized})
 
@@ -1964,6 +1985,8 @@ class MADLADEngine(TranslationEngine):
             return True
         if re.search(r"[\u0e00-\u0e7f]", output):
             return True
+        if target_language == "ja" and SIMPLIFIED_CJK_CONTAMINATION.search(output):
+            return True
         # MADLAD occasionally inserts a single Korean syllable into an
         # otherwise fluent Japanese sentence. Japanese output may contain
         # Latin identifiers, but Hangul is never a valid Japanese translation
@@ -2028,6 +2051,8 @@ class MADLADEngine(TranslationEngine):
             return "byte_escape"
         if target_language == "ja" and re.search(r"[\uac00-\ud7af]", output):
             return "foreign_script:hangul"
+        if target_language == "ja" and SIMPLIFIED_CJK_CONTAMINATION.search(output):
+            return "foreign_script:simplified_cjk"
         if re.search(r"(.)\1{7,}", compact):
             return "character_repetition"
         if MADLADEngine._has_unsupported_numbered_enumeration(output, source):

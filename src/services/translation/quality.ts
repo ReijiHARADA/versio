@@ -6,9 +6,17 @@ import {
   explainDegenerateTranslation,
   hasAbnormalPhraseRepetition,
   isDegenerateTranslation,
-  restoreUtf8ByteEscapes,
   toHalfwidthAscii,
 } from "./quality/degeneration";
+import {
+  isGarbageTitle,
+  looksLikeFrontMatterLabel,
+  looksLikeSubjectClassification,
+  looksLikeNamedWorkHeading,
+  formatNamedWorkHeading,
+  isReferencesHeading,
+  looksLikeBibliographyEntry,
+} from "./quality/documentPolicy";
 
 export {
   explainDegenerateTranslation,
@@ -16,8 +24,16 @@ export {
   restoreUtf8ByteEscapes,
   toHalfwidthAscii,
 } from "./quality/degeneration";
+export {
+  isGarbageTitle,
+  looksLikeFrontMatterLabel,
+  looksLikeSubjectClassification,
+  looksLikeNamedWorkHeading,
+  formatNamedWorkHeading,
+  isReferencesHeading,
+  looksLikeBibliographyEntry,
+} from "./quality/documentPolicy";
 
-const THAI = /[\u0E00-\u0E7F]/;
 const KANA = /[\u3040-\u30FF]/;
 const KANJI = /[\u4E00-\u9FFF]/;
 // Characters that are standard simplified-Chinese forms but are not used in
@@ -27,8 +43,7 @@ const KANJI = /[\u4E00-\u9FFF]/;
 // Keep this as a script-contamination signal rather than a vocabulary
 // blacklist; it catches mixed Chinese/Japanese decoder output such as
 // `エピソデ的记忆` while leaving ordinary Japanese kanji untouched.
-const SIMPLIFIED_CJK_CONTAMINATION = /[习这们该过现为发见后还进对个从认说时实开结统处变关记忆态调评]|(?:因素|主题|详细|结果|影响|内在因素|外在因素)/;
-const HANGUL = /[\uAC00-\uD7AF]/;
+const SIMPLIFIED_CJK_CONTAMINATION = /[习这们该过现为发见后还进对个从认说时实开结统处变关记忆态调评]|(?:因素|主题|详细|结果|影响|内在因素|外在因素|其次)/;
 // Scripts outside Japanese, Latin identifiers, and ordinary CJK are strong
 // decoder-contamination signals in an English→Japanese translation. This is
 // deliberately script-level (not a word blacklist), so it catches outputs
@@ -39,11 +54,9 @@ const DATE_STAMP = /\d{4}-\d{2}-\d{2}/;
 // Tokenizer/decode failures can surface as literal byte escapes (for example
 // `<0xE9><0xA0><0x9A>`). They are not meaningful Japanese and a fluent-looking
 // surrounding sentence must not make the result acceptable.
-const BYTE_ESCAPE = /<0x[0-9a-f]{2}>/i;
 // MADLAD can mutate a placeholder internally (`ZZCイT4ZZ`, `ZZCaT3ZZ`).
 // Catch the broader token shape after glyph normalization so malformed
 // protected spans cannot pass as fluent Japanese.
-const LEFTOVER_PLACEHOLDER = /[zζΖ][zζЗ][cсϲц][^\s]{0,8}(?=[^\s]{0,8}\d)(?=[^\s]{0,8}[itτтц])[^\s]{1,8}[zζΖ][zζЗ]/i;
 // Include quantifier negation ("not all/every/..."), which is a semantic
 // reversal when translated as an unrestricted universal claim even though it
 // has no auxiliary verb.  Keep this lexical and bounded rather than using a
@@ -170,6 +183,11 @@ function hasMixedScriptCorruption(source: string, output: string): boolean {
     // same source token; genuinely new Latin prose still fails closed.
     if (sourceTokens.has(candidate)) return false;
     if (/^[A-Z]{2,}$/.test(match[1]) && [...sourceTokens].some((token) => token.startsWith(candidate) && token.length > candidate.length)) return false;
+    // Technical names are often rendered as a Japanese transliteration plus
+    // the source acronym suffix (`CycleGAN` -> `サイクルGAN`). This is a
+    // bilingual identifier boundary, not decoder corruption, when the Latin
+    // suffix is an uppercase ending of a source token.
+    if (/^[A-Z]{2,}$/.test(match[1]) && [...sourceTokens].some((token) => token.endsWith(candidate) && token.length > candidate.length)) return false;
     return true;
   });
 }
@@ -733,9 +751,6 @@ function hasUntranslatedSourceLabel(source: string, output: string): boolean {
   return false;
 }
 
-/** ACM CCS 1998-style classifier: H.5.2, H.5.m, I.2.10 */
-const CCS_CODE = /[A-K]\.\d+(?:\.\d+)*(?:\.[a-z])?/i;
-
 export type ScientificInvariant = { kind: "citation" | "doi" | "url" | "figure" | "table" | "statistic" | "measurement" | "year" | "number" | "acronym" | "structure"; value: string };
 
 const NON_TECHNICAL_UPPERCASE_WORDS = new Set([
@@ -820,8 +835,18 @@ export function missingTechnicalNameCandidates(source: string, output: string): 
  */
 export function missingQuotedTechnicalNames(source: string, output: string): string[] {
   const names = [...source.matchAll(/[“"]([A-Z][A-Za-z0-9][A-Za-z0-9_-]{3,})[”"]/g)]
-    .map((match) => match[1])
-    .filter((name) => !COMMON_CAPITALIZED_PROSE.has(name));
+    .filter((match) => {
+      const name = match[1];
+      if (COMMON_CAPITALIZED_PROSE.has(name)) return false;
+      // A title-cased adjective used as an experimental label (e.g.
+      // “Normal”) is ordinary prose. Treat a single-word label as a coined
+      // name only when it has identifier-like spelling or is introduced by a
+      // naming frame such as “dubbed the …”.
+      const identifierLike = /[a-z][A-Z]|\d|[-_]/.test(name);
+      const context = source.slice(Math.max(0, (match.index ?? 0) - 48), match.index ?? 0);
+      return identifierLike || /(?:dubbed|called|named|prototype|interface|system)\s+(?:the\s+)?$/i.test(context);
+    })
+    .map((match) => match[1]);
   const normalized = output.normalize("NFKC").toLocaleLowerCase();
   return [...new Set(names)].filter((name) => !normalized.includes(name.normalize("NFKC").toLocaleLowerCase()));
 }
@@ -912,7 +937,7 @@ export function hasExtremeTranslationCompression(source: string, output: string)
   return output.trim().length / sourceLength < 0.36;
 }
 
-export const TRANSLATION_QUALITY_VERSION = "quality-v34";
+export const TRANSLATION_QUALITY_VERSION = "quality-v36";
 
 export type TranslationQuality = {
   score: number;
@@ -1279,6 +1304,9 @@ function outputContainsInvariant(output: string, invariant: ScientificInvariant,
       dc: /直流/u,
       rf: /無線周波数|高周波/u,
       emg: /筋電|筋電図/u,
+      ir: /赤外線|赤外/u,
+      ssr: /無声音声|静音音声|サイレント音声/u,
+      bpm: /心拍|拍動|ビート毎分/u,
       // Widely used academic abbreviations are often rendered as their
       // unambiguous Japanese expansion. Keep this limited to terms whose
       // expansion is stable; arbitrary product/model identifiers must still
@@ -1546,53 +1574,6 @@ function signalNoiseRelationRiskReasons(source: string, output: string): string[
     return ["signal-to-noise comparison relation missing"];
   }
   return [];
-}
-
-export function looksLikeFrontMatterLabel(text: string): boolean {
-  return /^(?:(?:\d+[.)]\s*)?(?:author\s+keywords?|keywords?|ccs\s+concepts?|acm\s+classification\s+keywords?|index\s+terms?|categories?(?:\s+and\s+subject\s+descriptors?)?))\s*$/i.test(
-    text.trim()
-  );
-}
-
-/**
- * Subject-classification / CCS catalog lines, not body prose.
- * Matches ACM CCS 1998 codes (including the miscellaneous letter suffix),
- * CCS 2012 concept trees, and IEEE-style index-term labels.
- */
-export function looksLikeSubjectClassification(text: string): boolean {
-  const t = text.trim();
-  if (!t || t.length > 320) return false;
-  if (/[→⟶]/.test(t) && /(?:^|[•·‣∙*])/.test(t)) return true;
-  if (
-    /^(?:index\s+terms?|keywords?|ccs\s+concepts?|acm\s+classification\s+keywords?)\s*[—–:-]\s*\S/i.test(
-      t
-    )
-  ) {
-    return true;
-  }
-
-  const start = t.match(new RegExp(`^(${CCS_CODE.source})\\b`, "i"));
-  if (!start) return false;
-
-  const codes = t.match(new RegExp(CCS_CODE.source, "gi")) ?? [];
-  if (codes.length >= 2) return true;
-
-  const after = t.slice(start[0].length).replace(/^[.\s]+/, "");
-  if (!after) return true;
-  if (!/^[A-Z(]/.test(after)) return false;
-  if (after.split(/\s+/).length > 24) return false;
-  return true;
-}
-
-export function isGarbageTitle(text: string): boolean {
-  const t = text.trim();
-  if (!t) return true;
-  if (DATE_STAMP.test(t) && t.length < 80) return true;
-  if (/proceedings of/i.test(t)) return true;
-  if (/^(acm|ieee|tei|chi)\s+\d{4}/i.test(t)) return true;
-  if (/没留下|请联系/.test(t)) return true;
-  if (isDegenerateTranslation(t)) return true;
-  return false;
 }
 
 export function evaluateJaTranslation(output: string, source: string): TranslationQuality {
@@ -1941,76 +1922,6 @@ function latinRatioBeyondSource(output: string, source: string): number {
   return latin / compact.length;
 }
 
-export function looksLikeNamedWorkHeading(text: string): boolean {
-  return /^(?:\d+(?:\.\d+)*[.)]\s+)?.{1,80}?\s+by\s+[A-Z][A-Za-z.'’-]+(?:\s+[A-Z][A-Za-z.'’-]+){0,5}\s*$/.test(
-    text.trim()
-  );
-}
-
-export function formatNamedWorkHeading(text: string): string {
-  const match = text
-    .trim()
-    .match(
-      /^(?:(\d+(?:\.\d+)*)[.)]\s+)?(.+?)\s+by\s+(.+)$/i
-    );
-  if (!match) return text.trim();
-  const num = match[1];
-  const title = match[2].trim();
-  const author = match[3].trim().replace(/[.:;]+$/, "");
-  const body = `${title} (${author})`;
-  return num ? `${num}. ${body}` : body;
-}
-
-export function isReferencesHeading(text: string): boolean {
-  return /^(?:\d+[.)]\s*)?(references|bibliography|works cited|literature cited|参考文献|引用文献)\s*$/i.test(
-    toHalfwidthAscii(text).trim()
-  );
-}
-
-export function looksLikeBibliographyEntry(text: string): boolean {
-  const t = text.trim();
-  if (!t) return false;
-  if (/^\[\d+\]/.test(t)) return true;
-  // Author–year styles can omit a numeric reference label. Require the
-  // distinctive all-caps surname/byline pattern, a second author connector,
-  // and a parenthesized year so ordinary prose about people is not hidden.
-  if (
-    /^[A-Z][A-Z'’-]+,\s*(?:[A-Z]\.|[A-Z][a-z]+).*?\b(?:and|&)\s+[A-Z][A-Z'’-]+,.*?\((?:19|20)\d{2}\)\./.test(t)
-  ) return true;
-  if (/^\d+\.\s+[A-Z]/.test(t)) {
-    if (/\b(19|20)\d{2}\b/.test(t)) return true;
-    if (/\b[A-Z]\.\s+[A-Z]/.test(t)) return true;
-    if (/\band\b/.test(t) && /[A-Z][a-z]+\s+[A-Z]/.test(t)) return true;
-  }
-  if (
-    /\b(in proceedings|proc\.|extended abstracts|journal of|transactions on|doi:\s*10\.|https?:\/\/doi|retrieved .{0,24} from|acm conference|ieee )/i.test(
-      t
-    )
-  ) {
-    return true;
-  }
-  if (
-    /\b(19|20)\d{2}\.\s+\S/.test(t) &&
-    /\b(in proceedings|proc\.|journal|conference|acm|ieee|doi|isbn|pp\.|vol\.)/i.test(t)
-  ) {
-    return true;
-  }
-  if (
-    /\b(arnoldsche|springer|elsevier|wiley|lark jewelry|black dog publishing|010 publishers)\b/i.test(
-      t
-    )
-  ) {
-    return true;
-  }
-  if (
-    /\bIn [A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+){0,6},/.test(t) &&
-    (/\(eds?\.\)/.test(t) || /,\s+[A-Z]\.\s/.test(t))
-  ) {
-    return true;
-  }
-  return false;
-}
-
 export function shouldTranslateHeading(text: string): boolean {
   const t = text.trim();
   if (t.length < 3 || t.length > 140) return false;
@@ -2093,6 +2004,13 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   // translation.
   const terminalCitationSuffix = /[.!?。！？]\s*(?:\[\s*\d+(?:\s*[-–—,]\s*\d+)*\s*\]|\d{1,3})$/.test(t);
   const noTerminal = !/[.!?。！？]$/.test(t) && !terminalCitationSuffix;
+  // A citation list cut at a PDF page/column boundary often leaves an open
+  // square bracket at the block end (`... [4, 9, 29`). Preserve the source
+  // until the following block can be stitched; translating this fragment
+  // encourages the model to invent the missing references.
+  if (t.length >= 48 && /\[[^\]]*$/.test(t) && /\[\s*\d/.test(t)) {
+    return "引用列が途中で切れている可能性があります";
+  }
   // A native block ending in an ellipsis is commonly a truncated page/column
   // continuation. Do not let the model turn the visible prefix into a fluent
   // but invented completion. Short quoted examples may intentionally use an

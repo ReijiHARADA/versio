@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 from .citation_protect import protected_span_mask
 
-SEGMENTER_VERSION = "semantic-v82"
+SEGMENTER_VERSION = "semantic-v83"
 _ABBREVIATIONS = {"e.g.", "i.e.", "et al.", "fig.", "eqn.", "eq.", "no.", "cf.", "dr.", "mr.", "ms.", "vs."}
 
 
@@ -164,9 +164,12 @@ def _is_quote_marker(text: str, index: int) -> bool:
     if char not in '\"\'“”‘’':
         return False
     # An ASCII apostrophe inside a word is a contraction/possessive, not an
-    # opening quote (for example, "doesn't" or "model's").
+    # opening quote (for example, "doesn't" or "model's"). A trailing
+    # apostrophe in plural possessives (``linguistics' cognition``) has no
+    # alphanumeric character on its right, but is still part of the word.
     if char == "'" and 0 < index < len(text) - 1:
-        return not (text[index - 1].isalnum() and text[index + 1].isalnum())
+        if text[index - 1].isalnum():
+            return False
     return True
 
 

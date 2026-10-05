@@ -592,7 +592,16 @@ async function main() {
     const entriesById = new Map(papers.map((entry) => [entry.paper.id, entry]));
     const complete = selected.every((paper) => {
       const entry = entriesById.get(paper.id);
-      return Boolean(entry && !entry.error && selectedIds.has(entry.paper.id));
+      // An entry with an empty/partial row set is not a completed audit. This
+      // matters when a previous run checkpointed an extraction or transient
+      // server failure without setting `error`; otherwise --resume would
+      // report a complete corpus while silently omitting that paper.
+      return Boolean(
+        entry
+        && !entry.error
+        && selectedIds.has(entry.paper.id)
+        && entry.rows.length >= perPaperLimit,
+      );
     });
     const report = {
       createdAt: new Date().toISOString(),
@@ -634,8 +643,11 @@ async function main() {
             block.type === "paragraph" && compact(block.original ?? "").includes(blockQuery)
           ).slice(0, perPaperLimit)
         : sampleBlocks(extracted.blocks, perPaperLimit);
-      if (blockQuery && sampled.length === 0) {
-        throw new Error(`No paragraph matched --block-query ${JSON.stringify(blockQuery)}`);
+      if (sampled.length === 0) {
+        const paragraphCount = extracted.blocks.filter((block) => block.type === "paragraph").length;
+        throw new Error(
+          `No eligible audit blocks (paragraphs=${paragraphCount}, minimum source length=90, maximum=3200)`,
+        );
       }
       const refSectionIds = referenceSectionIds(extracted.sections);
       // Mirror the import path: unsafe physical fragments are retained as

@@ -74,6 +74,13 @@ class MadladUnitQualityTests(unittest.TestCase):
             ),
             [],
         )
+        self.assertEqual(
+            MADLADEngine._missing_quoted_technical_names(
+                'The terms “Normal” and “Awkward” described participant perceptions.',
+                '参加者の知覚を「正常」と「不快」で表した。',
+            ),
+            [],
+        )
 
     def test_quoted_content_span_count_detects_dropped_condition(self) -> None:
         source = 'The clips followed gist cues (e.g., “couple fighting”) or detailed cues (e.g., “white piano”).'
@@ -258,6 +265,12 @@ class MadladUnitQualityTests(unittest.TestCase):
         output = "両群とも有意差はなかったが、両群と도改善した。"
         self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
         self.assertEqual(MADLADEngine._degenerate_reason(output, source, "ja"), "foreign_script:hangul")
+
+    def test_rejects_simplified_chinese_leak_into_japanese_output(self) -> None:
+        source = "Deep learning has been widely used for medical image segmentation."
+        output = "深度学习は医療画像のセグメンテーションに広く用いられている。"
+        self.assertTrue(MADLADEngine._is_degenerate(output, source, "ja"))
+        self.assertEqual(MADLADEngine._degenerate_reason(output, source, "ja"), "foreign_script:simplified_cjk")
 
     def test_detects_missing_supplementary_reference(self) -> None:
         source = "The details appear in the SI Appendix."

@@ -198,6 +198,17 @@ class SegmenterTests(unittest.TestCase):
         self.assertEqual(units, ["J. Smith reported the result.", "We then replicated it."])
         self.assert_round_trip(source)
 
+    def test_plural_possessive_apostrophe_does_not_hide_sentence_boundaries(self) -> None:
+        source = (
+            "Cognitive linguistics' cognition reflects translation activity. "
+            "Experience is based on the real world, and human language is formed based on cognition. "
+            "It can be seen that experience determines human language."
+        )
+        units = split_for_translation(source)
+        self.assertEqual(len(units), 3)
+        self.assertEqual(units[0], "Cognitive linguistics' cognition reflects translation activity.")
+        self.assert_round_trip(source)
+
 
     def test_second_author_year_citation_stays_with_its_sentence(self) -> None:
         source = "Unlike most touch screen research seeking to extend the input vocabulary, which does not distinguish between different fingers (e.g. Baudisch & Chu, 2009; Boring et al., 2012; Holleis et al., 2008), we focus on identifying the fingers and assigning different functions to them."

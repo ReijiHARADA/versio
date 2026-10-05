@@ -123,3 +123,71 @@ semantic/invariant gate failures. No paper-specific rule is justified.
 ### Vector-figure diagnostic checkpoint (2026-09-19)
 
 `PDF_LAYOUT_DEBUG=1` now emits both the reconstructed block inventory and per-candidate geometry. Running the compact-label regression still produces 23/24 passing tests, with no candidate diagnostic for the failing vector-figure evidence. This establishes that the failing input is separated or discarded before `vectorFigureLabelEvidence()` is evaluated. The next change should instrument native line grouping immediately after `reconstructDocument()` and compare the retained lines/items against the source fixture. Do not lower the vector-label threshold until that evidence is available.
+
+### 2026-10-05: 114-paper fresh audit baseline
+
+The resumed fresh audit evaluated 113 cached PDFs (one selected catalog item, `precious-materials`, was unavailable), 954 units total. Reader-visible fallback was 624/954 (65.4% overall) and 111/360 (30.8%) for ordinary-body prose. Ordinary-body fallback attribution was: pre-model 4; post-model 107, including 55 server/model failures, 32 quality-gate failures, 17 extraction/structure cases, and 7 other cases. This is a baseline, not a semantic acceptance proof: automatic acceptance still requires manual review.
+
+The largest actionable production-side cluster is server/model or restoration failure (55 ordinary-body rows), followed by quality-gate rejection (32). The 17 extraction/structure cases should be repaired upstream rather than admitted by relaxing translation checks. The 4-unit benchmark resume avoided the earlier long-request hang and preserved stable checkpoints.
+
+### 2026-10-05 protection fixture evidence
+
+既存の v1010 protection fixture 3件を再集計し、production変更なしで保護の影響を固定した。raw/current の同一source・同一generation条件で、current armの失敗は `protected citation placeholder dropped by model`（`SI Appendix`、`Section 6.1`、`CFG` など）として記録されている。これは「引用を保護すべきでない」という結論ではなく、opaque placeholderをモデルが保持しない失敗層が存在する証拠である。詳細は `test-data/real-papers/reports/protection-fixture-analysis-v1.json`。
+
+### 2026-10-05 segmented protection trade-off
+
+既存のheld-out segmented 18-block risk summaryも確認した。raw armは numeric omission 7/18、citation omission 8/18、minimal armはそれぞれ5/18、5/18、current protectionは0/18、0/18だった。一方、3 armとも decode error は1/18で、current protectionは事実保持を改善する代わりにplaceholder復元失敗という別のfallback経路を持つ。したがって、保護を一括解除する変更は採用せず、opaque structural referenceだけを対象に段階的なrescueを比較する。
+
+### 2026-10-05 rescue-stage evidence
+
+`protection-rescue-diagnostic-v1.json` の3ケースを再確認した。placeholder drop 2件（`SI Appendix`を含む引用、`VR`）は `unprotected_retry` で2/2成功し、rawと同じ出力になった。一方、placeholderなしの長文は current / unprotected retry / raw の全条件で退化出力になった。これは「保護解除を常時行う」より、placeholder drop時だけ、失われたspanを限定的に可視化して再試行する現行方針が安全であることを示す。`atomic_first_span` は一部で別の退化を起こすため、既定経路には採用しない。
+
+### 2026-10-05 Qwen2.5 14B cascade probe
+
+ローカルOllamaを同一shellで一時起動し、既存held-outの3 post-model rowsを `qwen2.5:14b` で監査した。受理は1/3。1件は `inconsistent repeated lexeme`、1件は未翻訳英語・foreign-script混入・科学的invariant欠落で拒否された。受理1件は引用・数値を保持したが、3件のみで本番統合の根拠にはならない。Ollamaはベンチマーク終了後に停止済み。
+
+### 2026-10-05 Qwen2.5 14B held-out 5-row result
+
+同一held-out cohortの残り2 rowsも同条件で実行し、合計5 rowsに拡張した。Qwen2.5 14Bは **1/5 accepted**。4 rowsはquality gateで拒否され、内訳は反復語、未翻訳英語/foreign-script、科学的invariant欠落など。受理1件は引用・数値保持を確認したが、現時点でMADLADを置換できる品質証拠ではない。結合report: `test-data/real-papers/reports/selective-cascade-qwen25-14b-v1-combined.json`。
+
+### 2026-10-05 long-unit segmentation diagnostic
+
+server/protection fallback 55 rowsをproduction `segment_for_translation()`で再分割した。300文字以上47 rowsのうち、単一unitのまま残ったのは2 rowsだけ（図表由来のflattened numeric row 1件、抽出品質が疑われる本文1件）。残り45 rowsは3〜22 unitsへ分割されていた。したがって、ordinary fallbackの大部分は「長文を1回で送った」だけでは説明できず、分割後unitのdecode・placeholder・quality gateが主な次の調査対象になる。詳細: `test-data/real-papers/reports/long-unit-segmentation-diagnostic-v1.json`。
+## 2026-10-05 — figure-label projection follow-up
+
+The remaining long single-unit diagnostic row was not ordinary prose: it was a
+flattened vector figure label stream (`1×1 Conv`, `Rate`, `Channel`). The
+resolver already emitted `vector-figure-label-cluster` evidence, but projection
+still exposed `other` nodes to translation. Projection now omits `other` nodes
+with vector/chart/image-label evidence while retaining other native `other`
+text. The medical-image fixture no longer produces that flattened row as a
+translation block; the existing pipeline and 28 projection tests remain green.
+
+## 2026-10-05 — direct model check for Figure-reference fallback
+
+The `speechin` ordinary-body fallback was reproduced against the ready local
+server without PDF extraction. The complete source produced `予備実験の結果に基づき…
+首に銀の鎖を巻き付ける。 (Figure 1(a))`; the second sentence alone produced
+the same omission of `The necklace case`. This is therefore a MADLAD decode
+failure, not a source-unit join or figure-placeholder restore failure. A
+semantically equivalent normalized input (`The necklace case hangs around the
+neck ...`) preserved the subject, but introducing such rewrites globally would
+be unsafe; it remains a candidate for a separately evaluated English
+normalization layer rather than a production patch.
+
+The medical-paper re-audit after the simplified-CJK server rescue reduced its
+ordinary-body fallback from 2/2 to 1/2 (same paper, new report
+`post-simplified-cjk-medical-v1`). The remaining ordinary-body failure is a
+separate mixed-script decoder case; this is a one-paper effect, not a corpus
+fallback-rate claim.
+## 2026-10-05: quoted ordinary labels caused false fallback
+
+The 12-paper fresh cohort isolated the only ordinary-body fallback in the
+sample (`dont-mind-me`) to quoted-label protection. `“Normal”` and `“Awkward”`
+were treated as coined technical names, so the model's valid Japanese labels
+were rejected as missing-name output and the unit fell back after beam rescue.
+The generic policy now protects quoted spans only when they have identifier-like
+spelling or a naming frame (`dubbed`, `called`, `named`, `prototype`,
+`interface`, `system`). Direct same-server replay changed all four affected
+units from partial fallback to accepted Japanese output. The server/cache
+identity is `quality-v36-...-quoted-label-policy`.

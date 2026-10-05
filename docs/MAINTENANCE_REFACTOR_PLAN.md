@@ -24,7 +24,7 @@
 ## 分割方針
 
 1. `quality.ts` を当面public facadeとして維持する。
-2. 最初に依存の少ない `degeneration` を内部モジュールへ移す（完了）。次に `sourceIntegrity` を依存関係確認後に検討する。
+2. 依存の少ない `degeneration` と出版メタデータ判定を内部モジュールへ移す（完了）。次に `sourceIntegrity` は依存関係が広いため、挙動固定テストを先に追加してから検討する。
 3. facadeは旧export名を再exportし、既存importを変更しない。
 4. 各段階で `npm test`、typecheck、git diff --checkを実行する。
 5. quality threshold、fallback判定、translation model versionは変更しない。
@@ -43,6 +43,7 @@
   - `explainDegenerateTranslation`
   - `isDegenerateTranslation`
   - script contamination / placeholder residue helpers
+- `src/services/translation/quality/documentPolicy.ts`（第二段階完了：タイトル、見出し、参考文献、出版メタデータ判定）
 - `src/services/translation/quality/scientificInvariants.ts`
   - `ScientificInvariant`
   - invariant extraction and missing technical-name checks
