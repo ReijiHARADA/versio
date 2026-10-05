@@ -140,6 +140,9 @@ def main() -> None:
         report_payload = {
             "version": "cat-translate-audit-v1",
             "model": MODEL_ID,
+            "promptSuffix": PROMPT_SUFFIX or None,
+            "systemPrompt": SYSTEM_PROMPT or None,
+            "acronymProtection": PROTECT_ACRONYMS,
             "results": results,
             "summary": {
                 "total": len(results),

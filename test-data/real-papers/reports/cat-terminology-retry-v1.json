@@ -1,0 +1,29 @@
+{
+  "version": "cat-translate-audit-v1",
+  "model": "cyberagent/CAT-Translate-3.3b",
+  "results": [
+    {
+      "paperId": "speechin",
+      "key": "speechin:b-95af9399",
+      "source": "We recruited 10 participants for the English Silent Speech Commands study (𝑀𝑎𝑔𝑒 = 20.6; male = 3, female = 7) and 10 participants for the Chinese Silent Speech Commands study (𝑀𝑎𝑔𝑒 = 20.6; male = 8, female = 2). All participants in the studies self-reported being fluent in English and Chinese Mandarin, respectively. Both user studies shared the same overall procedure. The researcher first introduced the procedures and helped participants set up the necklace and front-facing cameras. The participant was then handed a single button to hold (shown in Figure 8(b)). The participant could decide when to start, pause, or resume a session to take breaks using the button. Once the study started, the researcher did not interrupt or provide any assistance until the end of the experiment. The user study setup is shown in Figure 8(b). Each study contained 9 sessions, including a short practice session at the beginning where the participant repeated each phrase twice to get familiarized with the system. The following 8 sessions were used for training/testing, where each phrase was repeated 4 times every session in a random order. As the necklace would likely be taken on and off frequently in real life scenarios, we asked the participants to remount the device by themselves after each session. The participants were free to move around or take a break between sessions. During each session, a random command would appear on the screen and remain for 2 seconds. The participant was asked to mouth the utterances shown on the screen quietly without voicing a sound. Two progress bars appeared on the screen: one tracked the current utterance progress (2 seconds), and the other tracked the current session progress. The exact time that the command appeared and disappeared on the screen was recorded as ground truth. The participant was instructed to remain relatively still and avoid activities such as touching the face, coughing, swallowing, drinking water, or licking the lips, while uttering commands. However, they were free to move and do these activities after pausing the system. In order to ensure data quality, we only kept images with a frame rate of 60 ± 2.4 fps. In the event of mistakenly speaking a wrong command, the participant was instructed to press the button to pause the system and then resume it. If there was a disturbance in frame rate (out of range of 60 ± 2.4 fps) or the participant pressed the button to pause, all images recorded for the current and previous utterances were discarded. The corresponding utterances were then added to the end of the current session. In all the user studies combined, 820 out of 55470 utterances (1.48%) were discarded due to participant errors, and 250 (0.45%) were discarded due to a disturbance in frame rate.",
+      "translation": "ドメイン固有の実験用語は、意味を正確に保持してください。特に、測定単位、実験単位、参加者行動、手順用語を、より広い概念や異なる概念に置き換えないでください。発話とは、口頭または口述による命令を指す場合に使用し、セッションはセッションと訳してください。これらは区別して使用してください。\n\n本研究では、英語サイレントスピーチコマンド研究に10名（平均年齢20.6歳、男性3名、女性7名）と、中国語サイレントスピーチコマンド研究に10名（平均年齢20.6歳、男性8名、女性2名）を募集しました。両研究の参加者は、それぞれ英語と中国語（普通話）に堪能であると自己申告しました。両ユーザー研究は、同じ手順を共有しました。研究者はまず手順を紹介し、参加者にネックレスと正面カメラの設置を手伝いました。その後、参加者には単一のボタン（図8(b)参照）が渡されました。参加者はこのボタンを使って、セッションの開始、一時停止、再開を決定し、休憩を取ることができました。研究開始後は、実験終了まで研究者は介入せず、支援も提供しませんでした。ユーザー研究の設定は図8(b)に示されています。各研究には9つのセッションが含まれ、最初の短い練習セッションでは、参加者が各フレーズを2回繰り返してシステムに慣れました。その後、8つのセッションが訓練/テストに使用され、各フレーズはランダムな順序で各セッションで4回繰り返されました。実際の生活シナリオではネックレスの着脱が頻繁に行われることが予想されたため、参加者は各セッション後にデバイスを自分で再装着するよう指示されました。参加者はセッション間で自由に移動したり休憩を取ったりできました。各セッション中、画面にランダムなコマンドが表示され、2秒間表示されます。参加者は画面に表示される発話を静かに口パクで発声するよう指示されました。画面には2つの進捗バーが表示されました。1つは現在の発話進捗（2秒）を追跡し、もう1つは現在のセッション進捗を追跡しました。コマンドが表示され、消える正確な時間はグラウンドトゥルースとして記録されました。参加者は、顔に触れたり、咳をしたり、飲み込んだり、水を飲んだり、唇を舐めたりするなどの活動を避け、コマンドを発声するよう指示されました。ただし、システムを停止した後には自由に移動したりこれらの活動を行ったりできました。データ品質を確保するために、フレームレートは60±2.4fpsの画像をのみ保持しました。誤って誤ったコマンドを発声した場合、参加者はボタン押してシステムを停止し、再開するよう指示されました。フレームレートが60±2.4fpsの範囲外になった場合や、参加者がボタンで停止した場合、現在の発話および前の発話のすべての画像は破棄されました。該当する発話は現在のセッションの最後に追加されました。全ユーザー研究を合わせた結果、55470発話中820発話（1.48%）が参加者エラーにより破棄され、250発話（0.45%）がフレームレートの乱れにより破棄されました。",
+      "inputTokens": 803,
+      "outputTokens": 579,
+      "elapsedMs": 55280,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "sourceIntegrityFlagged": 0,
+    "cleanSourceRows": 1,
+    "duplicateSourceCount": 0
+  },
+  "promptSuffix": "Preserve domain-specific experimental terms exactly in meaning. In particular, do not substitute a measurement unit, experimental unit, participant action, or procedure term with a broader or different concept. Translate utterance as 発話 when it refers to a spoken or mouthed command, and translate session as セッション; keep these distinct.",
+  "systemPrompt": null,
+  "experimentValidity": {
+    "valid": false,
+    "reason": "CAT output translated the instruction suffix itself before the source; not a model-quality comparison"
+  }
+}
