@@ -1958,6 +1958,16 @@ export function isExpectedNonProseParagraph(text: string): boolean {
   // marker such as `• 195:3`. They carry no sentence boundary and native PDF
   // order can otherwise present them as a paragraph on a later page.
   if (/(?:[•·]|\|)\s*\d{1,4}:\d{1,3}\s*$/.test(t)) return true;
+  // Author affiliation blocks can be extracted as ordinary paragraphs when a
+  // PDF has no tagged structure. Credential/member phrases followed by an
+  // institution or department are publication metadata, not research prose.
+  // Keep this deliberately narrow so body sentences mentioning a member or
+  // institution remain eligible for translation.
+  if (
+    /^(?:associate|graduate|senior|student|postdoctoral)\s+(?:member|student|researcher|fellow)\b/i.test(t)
+    && /\b(?:institution|university|department|faculty|school|engineers?|institute)\b/i.test(t)
+    && !/[.!?。！？]$/.test(t)
+  ) return true;
   // Multilingual author affiliations are metadata, not source prose.  Native
   // extraction often keeps a local-language author name beside an English
   // department/university line; translating the mixed line invites invented
