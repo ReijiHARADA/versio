@@ -413,7 +413,7 @@ A second audit-only run evaluated all seven post-model fallback rows from the fo
 
 ## Quality-gate false reject fix
 
-The CAT fallback review exposed a generic false reject: repeated Japanese predicates in a faithful statistical comparison list were classified as phrase degeneration. `evaluateJaTranslation` now permits the shape-only repetition signal when the source contains four or more explicit comparative predicates and the output is sentence-level Japanese; all other degeneration checks remain active. This is a narrow source-structure condition, not a vocabulary exception. Quality tests remain 267/267, and the reviewed CAT statistical row now scores without `degenerate output`.
+The CAT fallback review exposed a generic false reject: repeated Japanese predicates in a faithful statistical comparison list were classified as phrase degeneration. `evaluateJaTranslation` now permits the shape-only repetition signal when the source contains three or more explicit comparative predicates and the output is sentence-level Japanese; all other degeneration checks remain active. This is a narrow source-structure condition, not a vocabulary exception. Quality tests remain 267/267, and the reviewed CAT statistical row now scores without `degenerate output`.
 
 ## Focused cohort after comparative-list gate fix
 
