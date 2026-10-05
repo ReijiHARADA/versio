@@ -1,0 +1,83 @@
+{
+  "version": "citation-alignment-diagnostic-v2",
+  "sourceReport": "test-data/real-papers/reports/cat-source-disjoint-auth-v8.json",
+  "productionGate": false,
+  "rows": [
+    {
+      "key": "dont-mind-me:b-b45338de",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "dont-mind-me:b-68e941f0",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "speechin:b-95af9399",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [
+        "20",
+        "20",
+        "55"
+      ],
+      "missingCitationOccurrences": [],
+      "sourceCompleteness": {
+        "incomplete": false
+      },
+      "eligible": true,
+      "flagged": false
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-55cd365a",
+      "sourceCitationTokens": [
+        "4",
+        "3"
+      ],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [
+        "4",
+        "3"
+      ],
+      "sourceCompleteness": {
+        "incomplete": true,
+        "reason": "long prose block has no terminal sentence mark"
+      },
+      "eligible": false,
+      "flagged": false
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-b294a0d8",
+      "sourceCitationTokens": [
+        "6",
+        "3"
+      ],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [
+        "6",
+        "3"
+      ],
+      "sourceCompleteness": {
+        "incomplete": true,
+        "reason": "long prose block has no terminal sentence mark"
+      },
+      "eligible": false,
+      "flagged": false
+    }
+  ],
+  "eligibleCount": 3,
+  "sourceExcludedCount": 2,
+  "flaggedCount": 0
+}

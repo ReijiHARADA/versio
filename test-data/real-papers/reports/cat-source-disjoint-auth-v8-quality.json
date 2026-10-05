@@ -1,0 +1,119 @@
+{
+  "version": "cat-audit-quality-v1",
+  "sourceReport": "test-data/real-papers/reports/cat-source-disjoint-auth-v8.json",
+  "total": 5,
+  "cleanSourceRows": 3,
+  "sourceExcluded": 2,
+  "qualityAccepted": 2,
+  "qualityAcceptedRate": 0.6666666666666666,
+  "reasonCounts": {
+    "participant role shifted to researcher": 1,
+    "utterance unit shifted to session": 1
+  },
+  "results": [
+    {
+      "key": "dont-mind-me:b-b45338de",
+      "paperId": "dont-mind-me",
+      "source": "The past decade has witnessed the emergence of electronic textile-based wearable computing systems that combine technology and fashion. This innovative advancement enables a plethora of opportunities for mobile computing as electronic textiles (e-textiles) allow for a seamless integration of technology into clothing. Potential applications of e-textiles include interacting with one’s clothing to interface with a mobile phone or any number of portable electronic devices carried on-body. Implementing such wearable systems poses a number of challenges as these systems need to be not only usable but actually designed to be worn and used in public. Two challenges designers face when coming up with e-textile interfaces are where to put the interface and how to design an interface that can be manipulated easily. To that end, designers of etextile wearable systems need to focus on designing interfaces that are both usable and socially appropriate.",
+      "translation": "過去10年間で、技術とファッションを融合した電子テキスタイルベースのウェアラブルコンピューティングシステムが登場しました。この革新的な進歩により、電子テキスタイル（eテキスタイル）が衣服に技術をシームレスに統合できるため、モバイルコンピューティングの多様な可能性が生まれました。eテキスタイルの潜在的な応用例としては、衣服と相互作用して携帯電話やその他の携帯型電子機器と接続することが挙げられます。このようなウェアラブルシステムを実装するには、単に使用できるだけでなく、実際に着用して公共の場で使用できる設計が求められます。eテキスタイルインターフェースを設計する際にデザイナーが直面する課題は、インターフェースをどこに配置するか、そして操作しやすいインターフェースをどのようにデザインするかという点です。そのため、eテキスタイルウェアラブルシステムのデザイナーは、実用性と社会的適合性の両方を兼ね備えたインターフェースの設計に注力する必要があります。",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": false
+      },
+      "quality": {
+        "score": 1,
+        "reasons": [],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": true
+    },
+    {
+      "key": "dont-mind-me:b-68e941f0",
+      "paperId": "dont-mind-me",
+      "source": "The findings also yielded pertinent concerns and desired system attributes regarding our wearable interface. For Americans, the most common concern was accidental triggering. Many other concerns revolved around system robustness, questioning its stability, attachment, and breakage, as well as its durability with respect to sweat, weather, and washing. A number of participants indicated the importance of pure aesthetics, specifying that they found the system useful so long as it did not unfavorably draw attention to a person. One user described not wanting “to explain something unusual to people.” Participants felt that the system should be smaller and less conspicuous so as not to interfere with clothing or activities. A few participants indicated optimal system features, highlighting comfort, speed, and an easy connection to electronics. Mention of the overall safety of the system was also present as a few participants were concerned about the hazards of electrical waves. Over half (55.7%) of the South Korean participants also indicated concern with the interface, expressing the same sentiment about hardware malfunctions and accidental triggering. Statements about moisture, price, and side effects from electro-magnetic waves were also listed, showing consistency with the American study.",
+      "translation": "これらの調査結果は、ウェアラブルインターフェースに関する重要な懸念事項や望ましいシステム特性も明らかにしました。米国人参加者で最も多かった懸念は、偶発的な作動でした。その他多くの懸念は、システムの堅牢性、安定性、装着性、破損の可能性、さらに汗や天候、洗濯に対する耐久性に関するものでした。参加者の多くからは、純粋なデザイン性の重要性が指摘され、システムが人に注目を引かない限り有用であると述べました。あるユーザーは「他人に何か異常なことを説明したくない」と述べています。参加者は、システムが衣服や活動に支障を来さないよう、より小型で目立たないものであるべきだと考えていました。数名の参加者は、快適性、速度、電子機器への接続の容易さといった最適なシステム機能を強調しました。システム全体の安全性についても言及があり、一部の参加者は電磁波の危険性を懸念していました。韓国参加者の半数以上（55.7％）もインターフェースに対して懸念を示し、ハードウェアの故障や偶発的な作動について同様の意見を述べていました。水分、価格、電磁波による副作用に関する記述も見られ、米国での調査と一致しています。",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": false
+      },
+      "quality": {
+        "score": 1,
+        "reasons": [],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": true
+    },
+    {
+      "key": "speechin:b-95af9399",
+      "paperId": "speechin",
+      "source": "We recruited 10 participants for the English Silent Speech Commands study (𝑀𝑎𝑔𝑒 = 20.6; male = 3, female = 7) and 10 participants for the Chinese Silent Speech Commands study (𝑀𝑎𝑔𝑒 = 20.6; male = 8, female = 2). All participants in the studies self-reported being fluent in English and Chinese Mandarin, respectively. Both user studies shared the same overall procedure. The researcher first introduced the procedures and helped participants set up the necklace and front-facing cameras. The participant was then handed a single button to hold (shown in Figure 8(b)). The participant could decide when to start, pause, or resume a session to take breaks using the button. Once the study started, the researcher did not interrupt or provide any assistance until the end of the experiment. The user study setup is shown in Figure 8(b). Each study contained 9 sessions, including a short practice session at the beginning where the participant repeated each phrase twice to get familiarized with the system. The following 8 sessions were used for training/testing, where each phrase was repeated 4 times every session in a random order. As the necklace would likely be taken on and off frequently in real life scenarios, we asked the participants to remount the device by themselves after each session. The participants were free to move around or take a break between sessions. During each session, a random command would appear on the screen and remain for 2 seconds. The participant was asked to mouth the utterances shown on the screen quietly without voicing a sound. Two progress bars appeared on the screen: one tracked the current utterance progress (2 seconds), and the other tracked the current session progress. The exact time that the command appeared and disappeared on the screen was recorded as ground truth. The participant was instructed to remain relatively still and avoid activities such as touching the face, coughing, swallowing, drinking water, or licking the lips, while uttering commands. However, they were free to move and do these activities after pausing the system. In order to ensure data quality, we only kept images with a frame rate of 60 ± 2.4 fps. In the event of mistakenly speaking a wrong command, the participant was instructed to press the button to pause the system and then resume it. If there was a disturbance in frame rate (out of range of 60 ± 2.4 fps) or the participant pressed the button to pause, all images recorded for the current and previous utterances were discarded. The corresponding utterances were then added to the end of the current session. In all the user studies combined, 820 out of 55470 utterances (1.48%) were discarded due to participant errors, and 250 (0.45%) were discarded due to a disturbance in frame rate.",
+      "translation": "本研究では、英語サイレントスピーチコマンド実験に10名（平均年齢20.6歳、男性3名、女性7名）を、中国語サイレントスピーチコマンド実験に10名（平均年齢20.6歳、男性8名、女性2名）を募集しました。両実験の参加者は、それぞれ英語と中国語（普通話）に堪能であると自己申告しました。両ユーザースタディは同一の手順を共有しました。まず研究者が手順を説明し、参加者にネックレスと正面カメラの設置を手伝いました。その後、参加者には単一ボタン（図8(b)参照）が渡され、このボタンを使ってセッションの開始、一時停止、再開を決定し、休憩を取ることができました。実験開始後は、実験終了まで研究者は介入せず、支援も行いませんでした。ユーザースタディの設定は図8(b)に示されています。各スタディは9セッションで構成され、最初のセッションではシステムに慣れるため、各フレーズを2回繰り返しました。続く8セッションは訓練・テストに使用され、各フレーズはランダムな順序で各セッションごとに4回繰り返されました。実際の使用状況ではネックレスの着脱が頻繁に行われることが予想されたため、各セッション後に参加者自身にデバイスを再装着させました。参加者はセッション間を自由に移動したり休憩を取ったりできました。各セッション中、画面にランダムなコマンドが表示され、2秒間表示されます。参加者は画面に表示される発話を声に出さないで口パクで発音するよう指示されました。画面には2つの進捗バーが表示され、1つは現在の発話進捗（2秒）を、もう1つは現在のセッション進捗を追跡しました。コマンドが表示されてから消えるまでの時間は、グラウンドトゥルースとして記録されました。参加者はコマンドを発音している間、顔に触れたり、咳をしたり、飲み込んだり、水を飲んだり、唇を舐めたりするなどの行為を避け、比較的静止した状態でいることが求められました。ただし、システムを停止した後はこれらの行為を自由に行うことができました。データ品質を確保するため、フレームレートは60±2.4fpsの範囲でのみ画像を保持しました。誤って誤ったコマンドを発音した場合は、参加者はボタンでシステムを停止し、その後再開するよう指示されました。フレームレートが60±2.4fpsの範囲外になった場合、または参加者がボタンで停止した場合、そのセッションおよび直前のセッションのすべての画像は破棄されました。該当する発話は現在のセッションの最後に追加されました。全ユーザースタディを合わせた結果、参加者のミスにより55,470発話中820発話（1.48％）が破棄され、フレームレートの乱れにより250発話（0.45％）が破棄されました。",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": false
+      },
+      "quality": {
+        "score": 0.35,
+        "reasons": [
+          "participant role shifted to researcher",
+          "utterance unit shifted to session"
+        ],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 1,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": false
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-55cd365a",
+      "paperId": "cognitive-psychology-gpt3",
+      "source": "8 Q: Which option do you prefer? 0.37691269 - Option F: 20% chance of losing 4,000 dollars (80% chance of losing 0 dollars). - Option J: 25% chance of losing 3,000 dollars (75% chance of losing 0 dollars). A: Option",
+      "translation": "8 Q: どちらのオプションがお好みですか？ 0.37691269 - オプションF：4,000ドルを失う確率20％（0ドルを失う確率80％）。 - オプションJ：3,000ドルを失う確率25％（0ドルを失う確率75％）。 A: オプション",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": true,
+        "reason": "long prose block has no terminal sentence mark"
+      },
+      "quality": {
+        "score": 0.85,
+        "reasons": [
+          "degenerate output"
+        ],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 0,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": false
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-b294a0d8",
+      "paperId": "cognitive-psychology-gpt3",
+      "source": "9 Q: Which option do you prefer? 0.49701181 - Option F: 45% chance of losing 6,000 dollars (55% chance of losing 0 dollars). - Option J: 90% chance of losing 3,000 dollars (10% chance of losing 0 dollars). A: Option",
+      "translation": "9 Q: どちらのオプションがお好みですか？ 0.49701181 - オプションF：6,000ドルを失う確率45%（0ドルを失う確率55%）。 - オプションJ：3,000ドルを失う確率90%（0ドルを失う確率10%）。 A: オプション",
+      "sourceIntegrityFlags": [],
+      "incompleteSource": {
+        "incomplete": true,
+        "reason": "long prose block has no terminal sentence mark"
+      },
+      "quality": {
+        "score": 0.85,
+        "reasons": [
+          "degenerate output"
+        ],
+        "languageScore": 1,
+        "invariantScore": 1,
+        "repetitionScore": 0,
+        "lengthScore": 1
+      },
+      "acceptedByQualityGate": false
+    }
+  ]
+}
