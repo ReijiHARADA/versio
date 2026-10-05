@@ -1,0 +1,15 @@
+{
+  "version": "citation-alignment-diagnostic-v1",
+  "sourceReport": "test-data/real-papers/reports/cat-source-disjoint-auth-v1-single.json",
+  "productionGate": false,
+  "rows": [
+    {
+      "key": "interactive-jewellery:b-d753999d",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "flagged": false
+    }
+  ],
+  "flaggedCount": 0
+}

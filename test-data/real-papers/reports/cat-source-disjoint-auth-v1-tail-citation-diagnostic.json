@@ -1,0 +1,40 @@
+{
+  "version": "citation-alignment-diagnostic-v1",
+  "sourceReport": "test-data/real-papers/reports/cat-source-disjoint-auth-v1-tail.json",
+  "productionGate": false,
+  "rows": [
+    {
+      "key": "dont-mind-me:b-4c16bae3",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "flagged": false
+    },
+    {
+      "key": "dont-mind-me:b-b45338de",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "flagged": false
+    },
+    {
+      "key": "dont-mind-me:b-68e941f0",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [],
+      "missingCitationOccurrences": [],
+      "flagged": false
+    },
+    {
+      "key": "speechin:b-95af9399",
+      "sourceCitationTokens": [],
+      "outputCitationTokens": [
+        "20",
+        "20",
+        "55"
+      ],
+      "missingCitationOccurrences": [],
+      "flagged": false
+    }
+  ],
+  "flaggedCount": 0
+}
