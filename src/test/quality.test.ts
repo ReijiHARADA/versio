@@ -218,6 +218,12 @@ describe("acronym expansion safety", () => {
     expect(evaluateJaTranslation(output, source).reasons).not.toContain("utterance unit shifted to session");
   });
 
+  it("catches a paired current/previous utterance scope shift across sentence boundaries", () => {
+    const source = "If the frame rate was out of range, all images recorded for the current and previous utterances were discarded.";
+    const output = "フレームレートが範囲外の場合、そのセッションおよび直前のセッションの画像は破棄された。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("utterance unit shifted to session");
+  });
+
   it("treats a short acronym as critical when its source context is technical", () => {
     const source = "We compare reinforcement learning (RL) with a supervised learning model.";
     const output = "強化学習と教師あり学習モデルを比較した。";

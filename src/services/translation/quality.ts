@@ -1494,6 +1494,16 @@ function semanticScopeRiskReasons(source: string, output: string): string[] {
       reasons.push("utterance unit shifted to session");
     }
   }
+  // Preserve the common paired scope phrase even when sentence boundaries
+  // differ between English and Japanese (for example, "current and previous
+  // utterances" becoming two sessions). This remains shape-based rather than
+  // tied to a paper or a particular device.
+  if (
+    /\bcurrent\s+and\s+previous\s+utterances?\b/i.test(source)
+    && /(?:現在|当該|その)[^。！？\n]{0,18}セッション[^。！？\n]{0,24}(?:以前|直前)[^。！？\n]{0,12}セッション/u.test(output)
+  ) {
+    reasons.push("utterance unit shifted to session");
+  }
   return reasons;
 }
 
