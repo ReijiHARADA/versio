@@ -47,3 +47,5 @@ Paper Reader の翻訳評価は、変更の大きさに応じて段階化する�
 ## 最新の重点コホート
 
 2026-10-05 に `speechin`, `dont-mind-me`, `interactive-jewellery`, `thermal-earring` の4本・48ユニットを `focused-cohort-current-v3` として再計測した。通常本文22件のうち、7件がpost-model fallback、19件が構造由来のpre-model fallbackだった。これは全113本の推定値ではなく、MADLADの品質拒否と抽出境界を追跡するための診断値として扱う。成果物は `test-data/real-papers/reports/focused-cohort-current-v3.{json,md}`。
+
+この19件を確認したところ、13件は参考文献・ACM metadata・URLなどの翻訳対象外情報、5件はページ境界の本文継続候補、1件は図説明の補助情報だった。したがって、このコホートのpre-model率をそのまま「翻訳品質」と解釈しない。本文継続候補だけを抽出回帰の対象にし、metadata除外の妥当性と分けて集計する。
