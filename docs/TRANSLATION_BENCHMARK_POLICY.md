@@ -18,6 +18,14 @@ Paper Reader の翻訳評価は、変更の大きさに応じて段階化する�
 3. 変更対象のfailure cohortまたはheld-out fixture
 4. typecheck / lint
 
+抽出ベンチマークも同じ範囲管理を使う。通常は対象IDを明示する。
+
+```bash
+npx tsx scripts/benchmark-pdf-extraction.ts --papers id1,id2
+```
+
+全fixtureを走査する場合だけ、意図を明示して `--all` を付ける。引数なしの実行は、カタログが大きい場合に安全のため拒否される。
+
 ## 全件計測を行う条件
 
 次のいずれかに該当する場合だけ、113本（現行catalogではPDF取得済み113本、catalog 114件）の全件計測を行う。
