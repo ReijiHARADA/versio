@@ -1495,7 +1495,12 @@ function semanticScopeRiskReasons(source: string, output: string): string[] {
   const unitShifted = sourceSentences.some((sourceSentence, index) => {
     const candidate = outputSentences[index] ?? output;
     const sourceUtteranceOnly = /\butterances?\b/i.test(sourceSentence) && !/\bsessions?\b/i.test(sourceSentence);
-    return sourceUtteranceOnly && /セッション/u.test(candidate) && !/(?:発話|発言)/u.test(candidate);
+    if (!sourceUtteranceOnly || !/セッション/u.test(candidate) || /(?:発話|発言)/u.test(candidate)) return false;
+    if (sourceSentences.length !== outputSentences.length) {
+      const nearby = [outputSentences[index - 1], outputSentences[index + 1]].filter(Boolean).join(" ");
+      if (/(?:発話|発言)/u.test(nearby)) return false;
+    }
+    return true;
   });
   if (unitShifted) {
     if (sourceSentences.some((sentence, index) => /\butterances?\b/i.test(sentence) && !/\bsessions?\b/i.test(sentence) && /セッション/u.test(outputSentences[index] ?? output))) {
