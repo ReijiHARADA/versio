@@ -612,3 +612,8 @@ class MadladPartialSourceFallbackTests(unittest.TestCase):
         self.assertTrue(MADLADEngine._comparative_stat_values_preserved(source, "自然 (0.02)、普通 (0.001)、クール (0.004)。"))
         self.assertFalse(MADLADEngine._comparative_stat_values_preserved(source, "自然、普通、クール。"))
         self.assertFalse(MADLADEngine._comparative_stat_values_preserved(source, "自然 (0.02)、普通 (0.1)、クール (0.004)。"))
+
+    def test_rejects_statistical_numeric_drift(self) -> None:
+        source = "The result was less natural (0.02), less normal (0.001), and less cool (0.004)."
+        self.assertFalse(MADLADEngine._has_statistical_numeric_drift(source, "自然 (0.02)、普通 (0.001)、クール (0.004)。"))
+        self.assertTrue(MADLADEngine._has_statistical_numeric_drift(source, "自然 (0.02)、普通 (0.1)、クール (0.004)。"))
