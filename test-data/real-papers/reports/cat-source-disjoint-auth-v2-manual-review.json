@@ -1,0 +1,55 @@
+{
+  "version": "cat-source-disjoint-auth-v2-manual-review",
+  "scope": "Five additional source-disjoint CAT rows",
+  "isProductionDecision": false,
+  "rows": [
+    {
+      "key": "power-over-skin:b-51971114",
+      "automaticGate": "unreviewed",
+      "label": "correct",
+      "severity": 0,
+      "safeForCascade": true,
+      "reason": "Complete ordinary prose; receiver-board iteration, size reduction, received-power increase, and Figure 8 reference are preserved."
+    },
+    {
+      "key": "step-to-charge:b-7abc7b89",
+      "automaticGate": "unreviewed",
+      "label": "source_fragment",
+      "severity": 2,
+      "safeForCascade": false,
+      "reason": "Source begins with a dangling frequency fragment and ends at Fig. 3; extraction/structural boundary is incomplete, so this is not a model-quality sample."
+    },
+    {
+      "key": "step-to-charge:b-c826d75e",
+      "automaticGate": "unreviewed",
+      "label": "source_fragment",
+      "severity": 2,
+      "safeForCascade": false,
+      "reason": "Source ends at Fig. 3 after a complete paragraph; likely caption/paragraph boundary contamination. CAT preserves most claims, but this row is excluded from semantic model acceptance."
+    },
+    {
+      "key": "hci-empirical-methods:b-7686f78c",
+      "automaticGate": "unreviewed",
+      "label": "correct",
+      "severity": 0,
+      "safeForCascade": true,
+      "reason": "Roles, pair grouping, handout, Figure 2, turn-taking, and experimental task are preserved."
+    },
+    {
+      "key": "cognitive-psychology-gpt3:b-b4ed26af",
+      "automaticGate": "unreviewed",
+      "label": "source_fragment",
+      "severity": 2,
+      "safeForCascade": false,
+      "reason": "The source contains an orphaned list number (4) between bullets; CAT preserves the amounts but the input is structurally contaminated and should not be used as a clean model comparison."
+    }
+  ],
+  "summary": {
+    "rows": 5,
+    "cleanCompleteRows": 2,
+    "cleanRowsUsable": 2,
+    "sourceFragmentRows": 3,
+    "severity2Plus": 3,
+    "note": "Three rows are excluded from model-quality conclusions because extraction/list boundary artifacts are present."
+  }
+}
