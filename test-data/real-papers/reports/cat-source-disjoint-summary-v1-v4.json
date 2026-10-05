@@ -1,0 +1,35 @@
+{
+  "version": "cat-source-disjoint-summary-v1-v4",
+  "productionDecision": false,
+  "cohorts": {
+    "v1": {
+      "rows": 5,
+      "safeForCascade": 3,
+      "severity2Plus": 1,
+      "sourceOrFallback": 1
+    },
+    "v2": {
+      "rows": 5,
+      "safeForCascade": 1,
+      "severity2Plus": 4,
+      "sourceOrFallback": 4
+    },
+    "v3": {
+      "rows": 5,
+      "safeForCascade": 4,
+      "severity2Plus": 1,
+      "sourceOrFallback": 0
+    },
+    "v4": {
+      "rows": 5,
+      "safeForCascade": 3,
+      "severity2Plus": 2,
+      "sourceOrFallback": 0
+    }
+  },
+  "allRows": 20,
+  "cleanRows": 15,
+  "manualSafeCleanRows": 11,
+  "severity2PlusCleanRows": 4,
+  "note": "Small diagnostic evidence only; cohorts are source-hash-disjoint within v3/v4 and v4 excludes v1-v3 hashes. v1/v2 historical rows are retained with structural exclusions."
+}
