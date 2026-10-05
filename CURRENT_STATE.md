@@ -129,6 +129,7 @@
 - 2026-10-05: CAT v1で確認された手順単位の意味ずれ（`utterance` を `session` と訳す）を、実験記述一般に適用できるsemantic scope guardとして追加。sourceに片方の単位しかない場合の一方向置換だけをcascade拒否し、両方を保持する文は許可。quality **264/264**、typecheck、diff check pass。
 - 2026-10-05: scope guard後の全体回帰を実行。Vitest **70 files / 643 tests**、typecheck pass。既存のcanvas.node警告のみ。
 - 2026-10-05: scope guardの文単位対応へ微修正後も全体回帰を再確認。Vitest **70 files / 643 tests**、typecheck pass。全件翻訳ベンチマークの再実行は不要な局所変更として保留。
+- 2026-10-05: CAT v1 tailを新scope guardで再評価。4 clean rows中、自動受理は **2/4**。`utterance unit shifted to session` を実際に拒否し、他は既存のdegenerate/participant-role guardで拒否。artifact: `cat-source-disjoint-auth-v1-tail-quality-after-scope.json`。
 - 2026-10-05: 実CAT出力の `current and previous utterances` → `そのセッションおよび直前のセッション` を固定再現し、文境界がずれてもpaired scope patternで検出するguardを追加。quality **265/265**、typecheck pass。cascade判定はreject。
 
 - `docs/MAINTENANCE_REFACTOR_PLAN.md` の順に、挙動固定テストを維持しながら品質モジュールを段階分割する。
