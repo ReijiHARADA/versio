@@ -1,0 +1,66 @@
+{
+  "version": "cat-translate-audit-v1",
+  "model": "cyberagent/CAT-Translate-3.3b",
+  "results": [
+    {
+      "paperId": "cognitive-psychology-gpt3",
+      "key": "cognitive-psychology-gpt3:b-f3a69090",
+      "source": "With the advent of increasingly capable artificial agents, comes the urgency to improve our understanding of how they learn and make decisions1. Take as an example large language models2. These models’ abilities are, by many standards, impressive. They can generate text that human evaluators have difficulty distinguishing from text written by other humans2, generate computer code3, or converse with humans about a range of different topics4. What is perhaps even more surprising, is that these models’ abilities go beyond mere language generation: they can, for instance, also play chess at a reasonable level5 and solve university-level math problems6. These observations have prompted some to argue that this new class of foundation models, which are models trained on broad data at scale and adapted to a wide range of downstream tasks, shows some form of general intelligence7. Yet others have been more skeptical, pointing out that these models are still a far cry away from a human-level understanding of language and semantics8. But how can we evaluate whether or not these models –at least in some situations– learn and think like people? One approach towards evaluating a model’s human-likeness comes from cognitive psychology. Psychologists, after all, are experienced in trying to formally understand another notoriously impenetrable algorithm: the human mind. In the present article, we investigate the Generative Pre-trained Transformer 3 model (or short: GPT-3)2 on several experiments taken from the cognitive psychology literature. Our analyses cover two types of experiments: vignette-based and task-based experiments. While vignette-based experiments involve a short and predefined description of a hypothetical scenario, task-based experiments are programmatically generated on a trail-by-trial basis. The selected tasks for both of these settings cover well-known areas of cognitive psychology: decision-making, information search, deliberation, and causal reasoning. We are primarily interested in whether GPT-3 can solve these tasks appropriately as well as how its behavior compares to human subjects. Our results show that GPT-3 can solve challenging vignette-based problems. Yet, we also highlight that these vignettes or similar texts might have been part of its training set. Moreover, we find that GPT-3’s behavior strongly depends on how the vignettes are presented. Thus, we also subject GPT-3 to a battery of task-based problems. The results from these task-based assessments show that GPT-3 can make human-level decisions in both description-based and experience-based decision-making experiments, yet does not learn and explore in a human-like fashion. Furthermore, even though GPT-3 shows signatures of model-based reinforcement learning, it fails altogether in a causal reasoning task. Taken together, our results improve our understanding of current large language models, suggest ways in which they can be improved, and pave the way for future investigations using tools from cognitive psychology to study increasingly capable and opaque artificial agents.",
+      "translation": "ますます高度な人工知能エージェントの登場に伴い、彼らがどのように学習し意思決定を行うかを理解する必要性が高まっています1。例として大規模言語モデル2を取り上げます。これらのモデルの能力は多くの基準で驚くべきものです。人間評価者が他の人間が書いたテキストと区別しにくいテキストを生成したり3、コンピュータコードを生成したり4、さまざまなトピックについて人間と会話したりできます。さらに驚くべきことに、これらのモデルの能力はそれにとどまらず、例えばチェスを合理的なレベルでプレイしたり5、大学レベルの数学問題を解いたり6することも可能です。これらの観察から、広範なデータで大規模に学習し、さまざまな下流タスクに適応したこの新しいクラスの基盤モデルが、ある種の汎用知能を示していると主張する声もあります7。一方で、これらのモデルは依然として人間の言語や意味の理解からは程遠いと懐疑的な意見もあります8。しかし、これらのモデルが少なくともある状況下で人間のように学習し思考しているかどうかをどのように評価すればよいのでしょうか？モデルの人らしさを評価する一つのアプローチは認知心理学にあります。心理学者は、結局のところ、人間の心という極めて難解なアルゴリズムを形式的に理解しようとする経験が豊富です。本稿では、認知心理学の文献から抽出した複数の実験を用いて、Generative Pre-trained Transformer 3（略称：GPT-3）2を検証します。我々の分析は、ビネット型実験とタスク型実験の2種類の実験を対象としています。ビネット型実験は、仮想シナリオの短い事前定義された記述を用いるのに対し、タスク型実験は試行ごとにプログラム的に生成されます。両設定において選択したタスクは、認知心理学の有名な領域である意思決定、情報検索、熟慮、因果推論をカバーしています。我々は主に、GPT-3がこれらのタスクを適切に解決できるか、そしてその行動が人間被験者とどのように比較されるかに関心があります。結果は、GPT-3が難解なビネット型問題を解決できることを示しています。しかし、これらのビネットや類似テキストが学習データに含まれていた可能性があることも指摘します。さらに、GPT-3の行動はビネットの提示方法に強く依存することが判明しています。したがって、GPT-3に対してタスク型問題のバッテリーも実施しました。これらのタスク型評価の結果、GPT-3は記述ベースおよび経験ベースの意思決定実験において人間レベルの意思決定を行えるものの、人間のように学習・探索することはできません。さらに、GPT-3はモデルベースの強化学習の兆候を示すものの、因果推論タスクでは完全に失敗します。総合すると、本研究の結果は現在の大規模言語モデルに対する理解を深め、改善の方向性を示唆するとともに、ますます高度な不透明な人工知能エージェントを研究するための認知心理学的ツールの活用への道を切り開きます。",
+      "inputTokens": 746,
+      "outputTokens": 488,
+      "elapsedMs": 52036,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "ozchi-finger-specific-touch",
+      "key": "ozchi-finger-specific-touch:b-093948bb",
+      "source": "Other examples of related work where the challenges of finger-based touch screen input have gained attention include e.g. the fat finger problem, where the finger obscures part of the screen area and thus making target selection harder. Here, back-of-device interaction has been proposed as a potential solution (Baudisch & Chu, 2009). Measuring the thumb’s contact size with the touchscreen has been proposed in (Boring et al., 2012) as a potential method to enhance the interaction with one finger only, and the approach could be used e.g. for zooming in and out when viewing photos.",
+      "translation": "指によるタッチスクリーン入力の課題が注目を集めている関連分野の他の例としては、例えば「太い指問題」が挙げられます。これは、指が画面領域の一部を覆い隠すため、ターゲット選択が困難になるものです。ここでは、デバイス背面でのインタラクションが潜在的な解決策として提案されています（Baudisch & Chu, 2009）。タッチスクリーンに対する親指の接触サイズの測定は、（Boring et al., 2012）において、単一の指だけでのインタラクションを強化する潜在的な手法として提案されており、例えば写真閲覧時にズームイン・ズームアウトを行う際に利用できます。",
+      "inputTokens": 166,
+      "outputTokens": 120,
+      "elapsedMs": 10984,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "neuroscience-rule-following",
+      "key": "neuroscience-rule-following:b-9ba3fd27",
+      "source": "Decisions are often governed by rules on adequate social behaviour. Recent research suggests that the right lateral prefrontal cortex (rLPFC) is involved in the implementation of internal fairness rules (norms), by controlling the impulse to act selfishly. A drawback of these studies is that the assumed norms and impulses have to be deduced from behaviour and that norm-following and pro-sociality are indistinguishable. Here, we directly confronted participants with a rule that demanded to make advantageous or disadvantageous monetary allocations for themselves or another person. To disentangle its functional role in rule-following and pro-sociality, we divergently manipulated the rLPFC by applying cathodal or anodal transcranial direct current stimulation (tDCS). Cathodal tDCS increased participants’ rule-following, even of rules that demanded to lose money or hurt another person financially. In contrast, anodal tDCS led participants to specifically violate more often those rules that were at odds with what participants chose freely. Brain stimulation over the rLPFC thus did not simply increase or decrease selfishness. Instead, by disentangling rule-following and pro-sociality, our results point to a broader role of the rLPFC in integrating the costs and benefits of rules in order to align decisions with internal goals, ultimately enabling to flexibly adapt social behaviour.",
+      "translation": "意思決定はしばしば適切な社会的行動に関するルールによって支配されます。最近の研究では、右前頭前皮質（rLPFC）が内部的な公平性ルール（規範）の実施に関与し、自己中心的な衝動を制御することが示唆されています。これらの研究の欠点は、想定される規範や衝動が行動から推測されなければならず、規範遵守と利他性が区別できないことです。本研究では、参加者に自分自身または他者に対して有利または不利な金銭配分を要求するルールを直接提示しました。規範遵守と利他性の機能的役割を分離するために、陰極性または陽極性経頭蓋直流刺激（tDCS）を用いてrLPFCを異種的に操作しました。陰極性tDCSは、金銭を失うことや他者を金銭的に害することを要求するルールであっても、参加者の規範遵守を高めました。対照的に、陽極性tDCSは、参加者が自由に選択したものと矛盾するルールを特に頻繁に違反させました。したがって、rLPFCへの脳刺激は単に自己中心性を高めたり低下させたりするものではなく、規範遵守と利他性を分離することで、rLPFCがルールのコストとベネフィットを統合し、意思決定を内部目標に合わせる役割を担っていることを示唆しています。これにより、社会的行動を柔軟に適応させることが可能になるのです。",
+      "inputTokens": 353,
+      "outputTokens": 253,
+      "elapsedMs": 24178,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "neuroscience-rule-following",
+      "key": "neuroscience-rule-following:b-3d81a1fc",
+      "source": "Participants had to make choices for all possible combinations of these allocations (in total 28 trials in both, the ‘free’ part and the ‘rule’ part). Participants, thus, repeatedly faced the option to either distribute a sum of money more selfishly (taking a bigger share of the money), or more pro-socially (giving more or splitting the amount equally). When a rule was in place (‘rule’ part), the rule demanded to choose the selfish option in half of the trials (e.g. 10 cents for oneself and 0 cents for the other person). In the other half of the trials, the rule demanded to choose the pro-social option (e.g. 5 cents for oneself and 5 cents for the other person). Trial order was randomised across participants.",
+      "translation": "参加者は、これらの配分のすべての組み合わせについて選択を行う必要がありました（「自由」パートと「ルール」パートを合わせて合計28回の試行）。したがって、参加者は繰り返し、金銭をより自己中心的に配分する（より多くの金額を受け取る）か、より社会的に貢献する（より多く与えるか、金額を均等に分ける）かという選択肢に直面しました。ルールが設定されている「ルール」パートでは、ルールは試行の半分で自己中心的オプションを選択させることを要求しました（例：10セントを自分に、0セントを相手に）。残りの半分の試行では、ルールは社会的に貢献するオプションを選択させることを要求しました（例：5セントを自分に、5セントを相手に）。試行の順序は参加者ごとにランダムに設定されました。",
+      "inputTokens": 194,
+      "outputTokens": 136,
+      "elapsedMs": 12296,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    },
+    {
+      "paperId": "economics-regularized-deepiv",
+      "key": "economics-regularized-deepiv:b-6f58c36d",
+      "source": "Anas Barakat and Pascal Bianchi. Convergence and dynamical behavior of the adam algorithm for nonconvex stochastic optimization. SIAM Journal on Optimization, 31(1):244–274, 2021.",
+      "translation": "アナス・バラカット、パスカル・ビアンキ。非凸確率的最適化におけるアダムアルゴリズムの収束性と動的挙動。SIAMジャーナル・オン・オプティマイゼーション、31(1)：244–274、2021年。",
+      "inputTokens": 77,
+      "outputTokens": 56,
+      "elapsedMs": 5083,
+      "model": "cyberagent/CAT-Translate-3.3b",
+      "sourceIntegrityFlags": []
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "sourceIntegrityFlagged": 0,
+    "cleanSourceRows": 5
+  }
+}
