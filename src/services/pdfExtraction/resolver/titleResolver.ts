@@ -250,9 +250,18 @@ export function resolveTitle(input: {
   // format-agnostic and does not replace a normal native title.
   const metadataMatchesNativePrefix = Boolean(meta && fused.text && fused.text.startsWith(meta) && /^\s*[:–—-]/.test(fused.text.slice(meta.length)));
   const nativeMatchesMetadataPrefix = Boolean(meta && fused.text && meta.startsWith(fused.text.trim()) && fused.text.trim().length >= 40);
+  const nativePrefixRepair = (() => {
+    if (!meta || !fused.text || fused.text.trim().length < 28) return false;
+    const normalizeWord = (word: string) => word.toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+    const nativeWords = fused.text.trim().split(/\s+/).map(normalizeWord).filter(Boolean);
+    const metadataWords = meta.split(/\s+/).map(normalizeWord).filter(Boolean);
+    const common = Math.min(3, nativeWords.length, metadataWords.length);
+    return common >= 3 && nativeWords.slice(0, common).join(" ") === metadataWords.slice(0, common).join(" ") &&
+      metadataWords.length > nativeWords.length && metadataWords.length - nativeWords.length <= 5;
+  })();
   const weakSectionTitle = Boolean(fused.text && fused.text.length <= 24 && meta &&
     meta.length >= fused.text.length * 2 && titles[0]?.role === "title");
-  if (fused.text && meta && isPlausibleMetadataTitle(meta) && (looksLikeDocumentMasthead(fused.text) || looksLikeTruncatedTitle(fused.text) || looksLikeBodyTitleCandidate(fused.text) || metadataMatchesNativePrefix || nativeMatchesMetadataPrefix || weakSectionTitle)) {
+  if (fused.text && meta && isPlausibleMetadataTitle(meta) && (looksLikeDocumentMasthead(fused.text) || looksLikeTruncatedTitle(fused.text) || looksLikeBodyTitleCandidate(fused.text) || metadataMatchesNativePrefix || nativeMatchesMetadataPrefix || nativePrefixRepair || weakSectionTitle)) {
     return {
       text: meta,
       confidence: Math.max(0.55, fused.confidence * 0.8),
