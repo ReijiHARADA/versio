@@ -120,6 +120,11 @@ function detectHeadingLevel(text: string, fontSize: number, baseFontSize: number
 }
 
 function isReferenceText(text: string, currentKind: NormalizedSectionKind | null): boolean {
+  // A column/page reorder can leave an in-text author-year citation at the
+  // start of a paragraph after the resolver has entered the references
+  // section.  The closing citation followed by a finite sentence is strong
+  // evidence of body prose; do not hide it as a bibliography entry.
+  if (currentKind === "references" && /^\([^)]{2,100}\)\.\s+[A-Z][a-z]+\b/.test(text.trim())) return false;
   if (currentKind === "references") return true;
   // A numbered list item is not a bibliography entry. Outside an explicit
   // References section, require citation-shaped evidence such as a year.
