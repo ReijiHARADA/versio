@@ -793,7 +793,8 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       !/[.!?]\s*$/.test(block.text.trim());
     const numericMultiItemRow = block.lines.length === 1 &&
       block.lines[0].items.length >= 2 && numericDensity >= 0.18 &&
-      !/[.!?]$/.test(block.text.trim());
+      !/[.!?]$/.test(block.text.trim()) &&
+      !/^(?:\d+\.){1,3}\d+\s+\S/.test(block.text.trim());
     const tableAdjacentNumericRow = layoutRole === "heading" && block.lines.length === 1 &&
       block.lines[0].items.length >= 1 && numericDensity >= 0.12 &&
       /[A-Za-z]/.test(block.text) &&
@@ -801,6 +802,14 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const compactTableDataRow = nearbyTableCaption && block.lines.length === 1 &&
       block.lines[0].items.length >= 3 && block.text.trim().split(/\s+/).filter(Boolean).length <= 10 &&
       !/[.!?;:]/.test(block.text);
+    // Numbered subsection labels are structural evidence even when the
+    // publisher uses the same font size as body text. Require a hierarchical
+    // number (4.3, 2.1.1), a short non-sentence label, and a following block;
+    // this excludes ordinary numbered list items such as "1. We measured…".
+    const numberedSubheading = /^(?:\d+\.){1,3}\d+\s+[^\d\s]/.test(block.text.trim()) &&
+      block.text.trim().split(/\s+/).filter(Boolean).length <= 12 &&
+      !/[.!?]\s*$/.test(block.text.trim()) &&
+      Boolean(blocks[index + 1]) && blocks[index + 1].role === "paragraph";
     // Some native PDF producers flatten a complete table into one LayoutBlock:
     // header rows may have a few items while data rows retain 4–6 cells.  The
     // regular `tableLike` score is intentionally conservative for this shape,
@@ -813,7 +822,8 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       !/[.!?]\s*$/.test(block.text.trim()) &&
       block.text.trim().split(/\s+/).filter(Boolean).length <= 140 &&
       block.lines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length >= 2;
-    const role = denseCjkBody || numericRow || mathRow || alignedTableRow || numericMultiItemRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || rotatedNumericGrid ? "paragraph" : layoutRole;
+    const role = denseCjkBody || numericRow || mathRow || alignedTableRow || numericMultiItemRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || rotatedNumericGrid ? "paragraph" :
+      numberedSubheading ? "heading" : layoutRole;
     const style = styleSignature(block, layouts, baseFontSize, blocks[index - 1], blocks[index + 1]);
     const scoreByRole: Partial<Record<CanonicalRole, number>> = {
       paragraph: role === "paragraph" ? confidence : 0.22,

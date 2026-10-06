@@ -38,6 +38,18 @@ describe("canonical extraction pipeline", () => {
     expect(row?.roleScores.heading ?? 0).toBeLessThan(0.68);
   });
 
+  it("promotes hierarchical subsection labels even at body font size", () => {
+    const textItems = [
+      { text: "4.3", x: 80, y: 180, width: 18, height: 8, fontSize: 9, fontName: "Body", page: 1 },
+      { text: "Battery", x: 103, y: 180, width: 42, height: 8, fontSize: 9, fontName: "Body", page: 1 },
+      { text: "The battery section begins with ordinary prose.", x: 80, y: 198, width: 260, height: 8, fontSize: 9, fontName: "Body", page: 1 },
+    ];
+    const candidates = generateGenericCandidates([{ pageNumber: 1, width: 500, height: 700, textItems }]).candidates;
+    const heading = candidates.find((candidate) => candidate.text === "4.3 Battery");
+    expect(heading?.role).toBe("heading");
+    expect(heading?.roleScores.heading ?? 0).toBeGreaterThan(0.68);
+  });
+
   it("keeps wide native column lines assigned to their column", () => {
     const textItems = Array.from({ length: 10 }, (_, row) => [
       { text: `Left column sentence ${row} with enough words for layout detection.`, x: 40, y: 120 + row * 18, width: 280, height: 8, fontSize: 8, fontName: "Body", page: 1 },
