@@ -734,3 +734,10 @@ an accepted same-page cross-column join unmarked. Title geometry now wins over
 name-list heuristics, headings are hard boundaries, and verified overlapping
 column joins carry explicit provenance. Focused regressions for the two title
 cases and PPG Earring reading order pass.
+
+### Full extraction regression suite (2026-10-06)
+
+After these fixes, `npm run test:extraction-corpus -- --reporter=dot` completed
+successfully: 2 test files, 232 tests passed, 0 failed (386.55s). This verifies
+the automated extraction and reading-order corpus; it does not replace visual
+review of every page or semantic review of affiliations and body text.
