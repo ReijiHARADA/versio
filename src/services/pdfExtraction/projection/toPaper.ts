@@ -345,7 +345,8 @@ export function projectCanonicalToPaper(input: {
   const mastheadExcludedByLabel = (node: (typeof canonical.nodes)[number]): boolean => {
     const y = node.boundingBoxes[0]?.y ?? Infinity;
     const previousHeadingNode = pageOneNodesByY
-      .filter((candidate) => (candidate.boundingBoxes[0]?.y ?? Infinity) < y && candidate.role === "heading")
+      .filter((candidate) => (candidate.boundingBoxes[0]?.y ?? Infinity) < y &&
+        /^(?:edited by|reviewed by|specialty section|correspondence)\s*:?$/i.test(candidate.text?.trim() ?? ""))
       .at(-1);
     const previousHeading = previousHeadingNode?.text?.trim() ?? "";
     const nodeX = node.boundingBoxes[0]?.x ?? Infinity;
@@ -354,8 +355,9 @@ export function projectCanonicalToPaper(input: {
       candidate.role === "author" && candidate !== node &&
       (candidate.boundingBoxes[0]?.y ?? Infinity) < y &&
       y - (candidate.boundingBoxes[0]?.y ?? 0) < 55);
-    return !hasRecentAuthor && Math.abs(nodeX - headingX) < 120 &&
-      /^(?:edited by|reviewed by|specialty section|correspondence)\b/i.test(previousHeading);
+    const labelMatch = /^(?:edited by|reviewed by|specialty section|correspondence)\b/i.test(previousHeading);
+    const closeToLabel = y - (previousHeadingNode?.boundingBoxes[0]?.y ?? y) < 25;
+    return Math.abs(nodeX - headingX) < 120 && labelMatch && (closeToLabel || !hasRecentAuthor);
   };
   const authorNodes = canonical.nodes.filter((n) => n.role === "author" && n.text &&
     n.pageStart === 1 && (n.boundingBoxes[0]?.y ?? 0) < firstBodyY &&
@@ -378,6 +380,8 @@ export function projectCanonicalToPaper(input: {
       ((n.boundingBoxes[0]?.y ?? 9999) < 390 && n.text.trim().length <= 400 &&
         (n.text.match(/,/g)?.length ?? 0) >= 2 &&
         (n.text.match(/[A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’-]+)?/gu)?.length ?? 0) >= 3 &&
+        ((n.text.match(/[A-Z][\p{L}'’-]+/gu)?.length ?? 0) >= 6 ||
+          (n.text.match(/,/g)?.length ?? 0) >= 4) &&
         !/[.!?]$/.test(n.text.trim()))));
   const authorSourceNodes = [...authorNodes, ...authorContinuationNodes];
   const affiliationNodes = canonical.nodes.filter((n) => n.role === "affiliation" && n.text);
