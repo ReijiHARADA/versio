@@ -1,0 +1,39 @@
+{
+  "artifact": "CAT non-citation fallback cohort v2 manual review",
+  "sourceReport": "test-data/real-papers/reports/cat-noncitation-cohort-v2.json",
+  "reviews": [
+    {
+      "key": "thermal-earring:b-8e811c4b",
+      "label": "correct",
+      "severity": 0,
+      "primaryCause": "model decode",
+      "notes": "Complete Bluetooth advertising explanation; section marker and technical facts retained.",
+      "source": "4.2.1 Bluetooth Advertising. We utilize Bluetooth in advertising mode, which is well-suited for the Thermal Earring’s short-temperature data transmission needs. Bluetooth advertising mode is a feature that enables Bluetooth devices to broadcast their presence and identity to other Bluetooth-enabled devices such as smartphones. This mode allows embedding customized data of up to 31 bytes in short advertising packets. Bluetooth advertising is significantly lower power compared to establishing a continuous Bluetooth connection which requires sending a series of packets to synchronize and negotiate the frequency hopping sequence as well as regular transmissions to keep the connection alive. The series of packets needed to set up the connection requires significant energy over a short time period which is significantly greater than our small sub-centimeter battery can support. We observe the voltage begins to decrease upon transmitting a packet due to its current limitation. Operating in advertising mode with sufficient time between packets enables the battery voltage to recover prior to the next transmission. Given that each temperature data point sent by the Thermal Earring can be compressed into two bytes, it is more energy-efficient to transmit the data using Bluetooth advertising mode instead of maintaining a constant Bluetooth connection with the smartphone. The Bluetooth chip communicates with two temperature sensors via I2C and packs the temperature data into advertising packets. These packets adhere to the standard Bluetooth advertising structure, beginning with a fixed preamble pattern, access address, header, payload, and the Cyclic Redundancy Check (CRC). The payload of the Bluetooth packet contains the temperature data and the customized name of the Thermal Earring. Each temperature data is wrapped as service data, starting with a 2-byte Universally Unique Identifier (UUID) of 0x1809, which corresponds to health temperature data in the Bluetooth protocol. The customized name of the Thermal Earring typically ranges from four to ten bytes. For our experiments in this paper, we used names such as \"Earring01\" to \"Earring14,\" which occupy nine bytes. In the Thermal Earring system, there are several programming pins for programming the NRF52832 chip. Bluetooth can be configured to transmit advertising packets at different intervals to balance the need for visibility with power consumption. We also conducted experiments to explore how different Bluetooth advertising intervals affect the Thermal Earring’s battery life. The results are presented in section 4.5.1. Overall, our approach provides an efficient way to transmit temperature data in wearable devices using Bluetooth advertising mode without draining the battery.",
+      "translation": "4.2.1 Bluetooth広告  \n本システムは、サーマルイヤリングの短時間温度データ伝送ニーズに適したBluetooth広告モードを使用します。Bluetooth広告モードは、BluetoothデバイスがスマートフォンなどのBluetooth対応デバイスに対して自身の存在と識別情報をブロードキャストできる機能です。このモードでは、最大31バイトまでのカスタマイズデータを短い広告パケットに埋め込むことが可能です。Bluetooth広告は、連続的なBluetooth接続を確立する際に必要となる一連のパケット送信（周波数ホッピングシーケンスの同期・交渉や接続維持のための定期的な送信）に比べて、消費電力が大幅に低減されます。接続設定に必要なパケット群は短時間で大量のエネルギーを消費しますが、これは当社の小型サブセンチメートルバッテリーがサポートできる範囲をはるかに超えています。パケット送信時に電流制限により電圧が低下することが観測されます。パケット間の十分な時間を確保して広告モードで動作させることで、次の送信前にバッテリー電圧を回復させることができます。サーマルイヤリングが送信する各温度データ点は2バイトに圧縮できるため、スマートフォンとの常時Bluetooth接続を維持するよりも、Bluetooth広告モードでデータを送信した方がエネルギー効率が高くなります。BluetoothチップはI2Cを介して2つの温度センサーと通信し、温度データを広告パケットにパックします。これらのパケットは標準的なBluetooth広告構造に従い、固定プレアンブルパターン、アクセスアドレス、ヘッダー、ペイロード、および巡回冗長検査（CRC）で始まります。Bluetoothパケットのペイロードには温度データとサーマルイヤリングのカスタマイズ名が含まれます。各温度データはサービスデータとしてラップされ、Bluetoothプロトコルのヘルス温度データに対応する0x1809という2バイトのユニバーサルユニーク識別子（UUID）から始まります。サーマルイヤリングのカスタマイズ名は一般的に4〜10バイトの範囲です。本稿の実験では、「Earring01」から「Earring14」までの9バイトの名前を使用しました。サーマルイヤリングシステムには、NRF52832チップをプログラムするための複数のプログラミングピンがあります。Bluetoothは、可視性と消費電力のバランスを取るために、異なる間隔で広告パケットを送信するように設定できます。また、異なるBluetooth広告間隔がサーマルイヤリングのバッテリー寿命に与える影響を検証する実験も実施しました。その結果は第4.5.1節に示します。総じて、本アプローチはバッテリーを消耗させることなく、ウェアラブルデバイスで温度データをBluetooth広告モードで効率的に送信する手段を提供します。"
+    },
+    {
+      "key": "dont-mind-me:b-966f2caf",
+      "label": "semantic_shift",
+      "severity": 3,
+      "primaryCause": "model decode",
+      "notes": "Numeric values retained, but less easy/easier to access collapse into the same Japanese predicate.",
+      "source": "South Koreans rated the Jogwheel collarbone placement as less embarrassing (0.003) and less weird (0.002) on a male actor, while placement on the wrist looked more natural (0.038) on a female. Attitudes regarding the waist location appeared more awkward (0.017), more embarrassing (0.008), less easy to access (0.021), and less normal (0.046) on a female. Finally, the torso location looked easier to access (0.032), more comfortable to access (0.018), less embarrassing (0.012), and less weird (0.034) on a male.",
+      "translation": "韓国人は、男性俳優に対してジョグホイールの鎖骨位置を「恥ずかしさが少ない」（0.003）、「奇妙さが少ない」（0.002）と評価しました。一方、女性に対しては手首への位置が「より自然に見える」（0.038）と評価されました。ウエスト位置に関する評価は、女性において「不自然さが増す」（0.017）、「恥ずかしさが増す」（0.008）、「アクセスしにくい」（0.021）、「普通さが低い」（0.046）という結果でした。最後に、男性に対しては胴体への位置が「アクセスしやすい」（0.032）、「アクセスしやすい」（0.018）、「恥ずかしさが少ない」（0.012）、「奇妙さが少ない」（0.034）と評価されました。"
+    },
+    {
+      "key": "dont-mind-me:b-b45338de",
+      "label": "correct",
+      "severity": 0,
+      "primaryCause": "model decode",
+      "notes": "Claims and e-textile terminology retained in fluent Japanese.",
+      "source": "The past decade has witnessed the emergence of electronic textile-based wearable computing systems that combine technology and fashion. This innovative advancement enables a plethora of opportunities for mobile computing as electronic textiles (e-textiles) allow for a seamless integration of technology into clothing. Potential applications of e-textiles include interacting with one’s clothing to interface with a mobile phone or any number of portable electronic devices carried on-body. Implementing such wearable systems poses a number of challenges as these systems need to be not only usable but actually designed to be worn and used in public. Two challenges designers face when coming up with e-textile interfaces are where to put the interface and how to design an interface that can be manipulated easily. To that end, designers of etextile wearable systems need to focus on designing interfaces that are both usable and socially appropriate.",
+      "translation": "過去10年間で、技術とファッションを融合した電子テキスタイルベースのウェアラブルコンピューティングシステムが登場しました。この革新的な進歩により、電子テキスタイル（eテキスタイル）が衣服に技術をシームレスに統合できるため、モバイルコンピューティングの多様な可能性が生まれました。eテキスタイルの潜在的な応用例としては、衣服と相互作用して携帯電話やその他の携帯型電子機器と接続することが挙げられます。このようなウェアラブルシステムを実装するには、単に使用できるだけでなく、実際に着用して公共の場で使用できる設計が求められます。eテキスタイルインターフェースを設計する際にデザイナーが直面する課題は、インターフェースをどこに配置するか、そして操作しやすいインターフェースをどのようにデザインするかという点です。そのため、eテキスタイルウェアラブルシステムのデザイナーは、実用性と社会的適合性の両方を兼ね備えたインターフェースの設計に注力する必要があります。"
+    }
+  ],
+  "summary": {
+    "reviewed": 3,
+    "severityGte2": 1,
+    "acceptedQualityGate": 2,
+    "safeReviewed": 2
+  }
+}
