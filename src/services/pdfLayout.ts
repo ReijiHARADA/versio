@@ -1809,6 +1809,16 @@ function orderPageLines(lines: LayoutLine[], layout: PageColumnLayout): LayoutLi
   return result;
 }
 
+function splitSameBaselineNameRuns(lines: LayoutLine[]): LayoutLine[] {
+  return lines.flatMap((line) => {
+    if (line.items.length < 2 || line.items.some((item) => !looksLikePersonName(item.text))) return [line];
+    const items = [...line.items].sort((a, b) => a.x - b.x);
+    const gaps = items.slice(1).map((item, index) => item.x - (items[index].x + items[index].width));
+    if (gaps.some((gap) => gap < Math.max(3, line.fontSize * 0.18))) return [line];
+    return items.map((item) => itemsToLine([item], line.column, line.page, line.pageHeight, line.pageWidth));
+  });
+}
+
 function buildPageLines(
   page: ExtractedPage,
   layout: PageColumnLayout,
@@ -1870,7 +1880,9 @@ function buildPageLines(
   });
 
   const pageLayouts = new Map<number, PageColumnLayout>([[page.pageNumber, layout]]);
-  const structurallySplit = splitSpanningGutterLines(lines, pageLayouts).flatMap(splitInlineSubheading);
+  const structurallySplit = splitSameBaselineNameRuns(
+    splitSpanningGutterLines(lines, pageLayouts)
+  ).flatMap(splitInlineSubheading);
 
   // Opt-in line diagnostics for investigating generic caption/table boundaries.
   // Keep this disabled by default; it reports native geometry and style only.
@@ -2260,6 +2272,10 @@ function groupLinesIntoBlocks(
     const authorKindOk =
       currentRole !== "author" ||
       looksLikeEmail(joinLines(current)) === looksLikeEmail(line.text);
+    const authorColumnBoundary = currentRole === "author" &&
+      looksLikePersonName(joinLines(current)) && looksLikePersonName(line.text) &&
+      Math.abs(line.y - current[current.length - 1].y) <= Math.max(2.5, baseFont * 0.3) &&
+      Math.abs(line.x - current[current.length - 1].x) > baseFont * 2;
     const detachedRailLineBoundary = currentRole === "paragraph" && forcedRole === "paragraph" && (() => {
       const previous = current[current.length - 1];
       const body = previous.fontSize >= baseFont * 0.95 && previous.width >= (previous.pageWidth ?? 612) * 0.45;
@@ -2280,6 +2296,7 @@ function groupLinesIntoBlocks(
       rotationCompatible &&
       rotationContentCompatible &&
       !detachedRailLineBoundary &&
+      !authorColumnBoundary &&
       canMerge(current[current.length - 1], line, baseFont);
 
     const affiliationContinue =
