@@ -616,3 +616,7 @@ The cognitive dual-task fixture revealed that the PDF resolver marked bibliograp
 ### 2026-10-06: masthead location row excluded
 
 `conversation-analysis-user-experience` had `Palo Alto, CA 94304-1314 USA` classified as an author row. The projection now excludes location-only masthead candidates while retaining the two real authors. Typecheck and the 29-case pipeline suite pass.
+
+### 2026-10-06: author benchmark after location/citation cleanup
+
+Reran the 27-paper author benchmark after the masthead location and citation-noise fixes. Mean author F1 is now 0.864 (previous 0.812), with 19/27 perfect papers. Remaining failures are eight layouts: two clinical reviews, four cognitive/marketing mastheads, and two marketing publisher formats. The temporary report was restored after measurement.
