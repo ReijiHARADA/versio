@@ -784,3 +784,14 @@ should be rerun after this title change.
 The title-change replay completed successfully: 2 test files, 232 tests passed,
 0 failed (431.54s). Title fusion did not regress reading order, tables, or other
 structural extraction checks.
+
+### Vector figure label containment (2026-10-06)
+
+Visual review of the GPT-3 cognitive-psychology paper showed a vector-only
+diagram whose labels shared the native text stream with the Linda vignette.
+The generic vector-label evidence now also uses a dense graphics page plus a
+nearby Figure caption to suppress short, punctuation-free labels above the
+caption. It does not suppress sentence-shaped prose. The regression confirms
+that `Decision-making Information search` is not sent as a pending translation
+block; focused test and typecheck pass. A full corpus replay is still required
+after this change.

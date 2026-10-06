@@ -141,13 +141,27 @@ function imageOverlapLabelEvidence(block: LayoutBlock, page?: ExtractedPage): nu
 /** Native vector figures have no image placement metadata. Dense short text
  * items arranged across several x-bands are still strong evidence of a
  * diagram label cluster, provided the stream does not read like sentences. */
-function vectorFigureLabelEvidence(block: LayoutBlock): number {
+function vectorFigureLabelEvidence(block: LayoutBlock, blocks?: LayoutBlock[], page?: ExtractedPage): number {
   if (block.lines.length === 0) return 0;
   const items = block.lines.flatMap((line) => line.items);
   const words = block.text.trim().split(/\s+/).filter(Boolean);
   const sentenceLikeProse = paragraphLike(block.text) && words.length >= 40 &&
     block.text.trim().split(/(?<=[.!?])\s+/).filter((sentence) => sentence.trim().length >= 24).length >= 2;
   if (sentenceLikeProse) return 0;
+  // Vector diagrams often expose a large graphics stream but no image
+  // placement. A nearby Figure caption gives a document-level anchor for
+  // short, punctuation-free labels above it. This path is intentionally
+  // conservative: it never classifies sentence-shaped text or blocks below
+  // the caption as figure content.
+  const figureCaption = blocks?.find((candidate) =>
+    candidate.pageStart === block.pageStart && candidate.role === "figure_caption" &&
+    candidate.bbox.y > block.bbox.y && candidate.bbox.y - block.bbox.y <= 280
+  );
+  if (figureCaption && (page?.graphicsPrimitives?.length ?? 0) >= 100 &&
+      block.bbox.y < figureCaption.bbox.y && words.length >= 2 && words.length <= 10 &&
+      block.text.trim().length <= 90 && !/[.!?。！？:;]/.test(block.text.trim())) {
+    return 0.86;
+  }
   const multiItemContinuation = block.lines.length === 1 &&
     ((items.length >= 4 && block.text.trim().startsWith("'")) ||
       (items.length === 1 && block.text.trim().startsWith("'") && block.text.trim().length <= 100)) &&
@@ -783,7 +797,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const chartLabels = chartLabelEvidence(block, blocks);
     const axisLabels = axisLabelEvidence(block, blocks);
     const imageLabels = imageOverlapLabelEvidence(block, pages.find((page) => page.pageNumber === block.pageStart));
-    const vectorLabels = vectorFigureLabelEvidence(block);
+    const vectorLabels = vectorFigureLabelEvidence(block, blocks, pages.find((page) => page.pageNumber === block.pageStart));
     const fragmentedLabels = fragmentedGraphicLabelEvidence(block, blocks);
     const mixedNativeBand = mixedNativeBandEvidence(block);
     const alignedTableRow = block.lines.length === 1 &&
