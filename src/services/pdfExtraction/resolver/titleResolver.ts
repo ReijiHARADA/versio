@@ -64,6 +64,17 @@ function looksLikeObviousMastheadTitle(text: string): boolean {
       (t.match(/\d/g)?.length ?? 0) >= 2;
 }
 
+function looksLikeMastheadGeometry(candidate: RoleCandidate): boolean {
+  const box = candidate.boundingBoxes[0];
+  const line = candidate.layoutBlock.lines[0];
+  const words = candidate.text.trim().split(/\s+/).filter(Boolean).length;
+  // Publisher journal labels are commonly emitted as a tiny line at the top
+  // of page one.  Use this only together with a supplied metadata title; a
+  // small article title without metadata must remain untouched.
+  return candidate.pageStart === 1 && (box?.y ?? Infinity) < 100 &&
+    (line?.fontSize ?? Infinity) <= 8 && words <= 10;
+}
+
 function isPlausibleMetadataTitle(text: string): boolean {
   const t = text.trim();
   // Repository and thesis records legitimately include a subtitle and degree
@@ -335,7 +346,8 @@ export function resolveTitle(input: {
   })();
   const weakSectionTitle = Boolean(fused.text && fused.text.length <= 24 && meta &&
     meta.length >= fused.text.length * 2 && titles[0]?.role === "title");
-  if (fused.text && meta && isPlausibleMetadataTitle(meta) && (looksLikeDocumentMasthead(fused.text) || looksLikeJournalNameMasthead(fused.text) || looksLikeTruncatedTitle(fused.text) || looksLikeBodyTitleCandidate(fused.text) || metadataMatchesNativePrefix || nativeMatchesMetadataPrefix || nativePrefixRepair || weakSectionTitle)) {
+  const geometryMasthead = titles.length > 0 && looksLikeMastheadGeometry(titles[0]);
+  if (fused.text && meta && isPlausibleMetadataTitle(meta) && (looksLikeObviousMastheadTitle(fused.text) || geometryMasthead || looksLikeTruncatedTitle(fused.text) || looksLikeBodyTitleCandidate(fused.text) || metadataMatchesNativePrefix || nativeMatchesMetadataPrefix || nativePrefixRepair || weakSectionTitle)) {
     return {
       text: meta,
       confidence: Math.max(0.55, fused.confidence * 0.8),

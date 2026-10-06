@@ -49,6 +49,11 @@ export type BaselinePaperReport = {
   pageKind: ReturnType<typeof classifyDocument>;
   scannedByItemAverage: boolean;
   titlePredicted: string | null;
+  /** Title selected from native evidence before metadata identity fallback. */
+  nativeTitleCandidate?: string | null;
+  /** True when the canonical title differs from the native candidate. */
+  titleUsedMetadataFallback?: boolean;
+  nativeTitleExact?: boolean;
   titleExpected?: string;
   titleExact?: boolean;
   authorF1?: number;
@@ -183,6 +188,12 @@ export function evaluateBaselinePaper(input: {
     // Report the resolver's logical title, which may span multiple native
     // lines. Using the first layout block understated wrapped titles.
     titlePredicted: canonicalTitle ?? titles[0] ?? null,
+    nativeTitleCandidate: fused.text || null,
+    titleUsedMetadataFallback: Boolean(fused.text && canonicalTitle &&
+      fused.text.trim().toLocaleLowerCase() !== canonicalTitle.trim().toLocaleLowerCase()),
+    nativeTitleExact: expectedTitle
+      ? titleExactMatch(fused.text || "", expectedTitle)
+      : undefined,
     titleExpected: expectedTitle,
     titleExact: expectedTitle
       ? titleExactMatch(canonicalTitle ?? titles.join(" "), expectedTitle)
