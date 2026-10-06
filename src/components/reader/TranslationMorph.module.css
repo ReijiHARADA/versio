@@ -1,0 +1,60 @@
+.root {
+  position: relative;
+  display: grid;
+  isolation: isolate;
+}
+
+.layer {
+  grid-area: 1 / 1;
+  margin: 0;
+  color: var(--color-text);
+  will-change: opacity, filter;
+}
+
+.from {
+  position: relative;
+  z-index: 1;
+}
+
+.to {
+  position: relative;
+  z-index: 2;
+}
+
+/* Waiting: barely-soft English — “not resolved yet”, no loud aura. */
+.waiting .from {
+  color: var(--color-text);
+}
+
+.waiting::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: -2px 0;
+  pointer-events: none;
+  opacity: 0.25;
+  background: radial-gradient(
+    80% 60% at 50% 50%,
+    rgba(0, 0, 0, 0.04),
+    transparent 70%
+  );
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waiting::before {
+    opacity: 0.15;
+  }
+
+  .layer {
+    will-change: auto;
+  }
+}

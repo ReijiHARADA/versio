@@ -4,17 +4,24 @@
 :root {
   --sidebar-collapsed-w: 48px;
   --sidebar-expanded-w: 220px;
-  /* Partial widen when the cursor is in the outer approach zone. */
-  --sidebar-peek-w: 72px;
   --sidebar-icon-box: 32px;
   --sidebar-motion: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
   /* Full-open hit strip just outside the collapsed rail. */
   --sidebar-hover-bridge: 14px;
-  /* Further-right approach zone → peek width only. */
+  /* Further-right approach zone → same expand motion, paused mid-way. */
   --sidebar-peek-bridge: 40px;
+  /* 0–1 progress along the normal expand (peek uses a mid value). */
+  --sidebar-peek-t: 0.42;
   /* Shared content inset. Chevron hangs into this pad so icons share one left edge. */
   --sidebar-pad-x: 8px;
   --sidebar-chevron: 14px;
+}
+
+/* Animate expand progress as one continuous motion (peek = mid-point). */
+@property --sidebar-expand-t {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
 }
 
 /* Outer flex item: owns peek hit zone without counting as shell :hover. */
@@ -27,12 +34,15 @@
 
 /* Width owner for collapsed / peek / expanded. */
 .shell {
-  --sidebar-open: 0;
+  --sidebar-expand-t: 0;
   position: relative;
-  width: var(--sidebar-collapsed-w);
+  width: calc(
+    var(--sidebar-collapsed-w) +
+      (var(--sidebar-expanded-w) - var(--sidebar-collapsed-w)) * var(--sidebar-expand-t)
+  );
   height: 100%;
   overflow: visible;
-  transition: width var(--sidebar-motion);
+  transition: --sidebar-expand-t var(--sidebar-motion);
 }
 
 .sidebar {
@@ -42,12 +52,11 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: calc(2px + 2px * var(--sidebar-expand-t));
   padding: var(--spacing-md) var(--sidebar-pad-x);
   background-color: var(--color-bg-secondary);
   border-right: 1px solid var(--color-border-light);
   overflow: visible;
-  transition: gap var(--sidebar-motion);
   box-sizing: border-box;
 }
 
@@ -74,12 +83,15 @@
   width: var(--sidebar-peek-bridge);
 }
 
-/* Outer zone: widen a little (labels stay collapsed). */
+/*
+ * Outer zone: continue the same expand motion to ~42% (not a separate micro-open).
+ * Full-open selectors below win when the cursor reaches the rail / near bridge.
+ */
 .rail:has(.peekBridge:hover)
   .sidebarAuto:not(:has(.sidebar:hover)):not(:has(.fullBridge:hover)):not(
     :has([data-workspace-editing])
   ):not(.sidebarDropReady):not(.sidebarResizing) {
-  width: var(--sidebar-peek-w);
+  --sidebar-expand-t: var(--sidebar-peek-t);
 }
 
 /* Auto: sidebar / near bridge / rename / drop expands fully */
@@ -87,16 +99,7 @@
 .sidebarExpanded,
 .sidebarDropReady,
 .sidebarResizing {
-  --sidebar-open: 1;
-  width: var(--sidebar-expanded-w);
-}
-
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing]))
-  .sidebar,
-.sidebarExpanded .sidebar,
-.sidebarDropReady .sidebar,
-.sidebarResizing .sidebar {
-  gap: 4px;
+  --sidebar-expand-t: 1;
 }
 
 .sidebarResizing {
@@ -151,8 +154,9 @@
 .itemLabel,
 .searchInput,
 .badge {
-  opacity: 0;
-  max-width: 0;
+  /* Follows --sidebar-expand-t so peek is mid-flight of the same fade/clip. */
+  opacity: var(--sidebar-expand-t);
+  max-width: calc(160px * var(--sidebar-expand-t));
   white-space: nowrap;
   overflow: hidden;
   flex: 0 0 auto;
@@ -160,9 +164,6 @@
   margin: 0;
   border: none;
   pointer-events: none;
-  transition:
-    opacity var(--sidebar-motion),
-    max-width var(--sidebar-motion);
 }
 
 .sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .label,
@@ -185,8 +186,6 @@
 .sidebar:has([data-workspace-editing]) .itemLabel,
 .sidebar:has([data-workspace-editing]) .searchInput,
 .sidebar:has([data-workspace-editing]) .badge {
-  opacity: 1;
-  max-width: 160px;
   pointer-events: auto;
 }
 
@@ -213,7 +212,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 0;
+  gap: calc(var(--spacing-sm) * var(--sidebar-expand-t));
   width: 100%;
   min-width: 0;
   height: var(--sidebar-icon-box);
@@ -221,23 +220,9 @@
   flex-shrink: 0;
   box-sizing: border-box;
   transition:
-    gap var(--sidebar-motion),
     background-color var(--transition-fast),
     color var(--transition-fast),
     border-color var(--transition-fast);
-}
-
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .search,
-.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .item,
-.sidebarExpanded .search,
-.sidebarResizing .search,
-.sidebarExpanded .item,
-.sidebarResizing .item,
-.sidebarDropReady .search,
-.sidebarDropReady .item,
-.sidebar:has([data-workspace-editing]) .search,
-.sidebar:has([data-workspace-editing]) .item {
-  gap: var(--spacing-sm);
 }
 
 .iconSlot,
@@ -332,16 +317,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 4px;
-  height: 0;
-  padding: 0;
+  height: calc(28px * var(--sidebar-expand-t));
+  padding: calc(4px * var(--sidebar-expand-t)) 0;
   margin: 0;
-  opacity: 0;
+  opacity: var(--sidebar-expand-t);
   overflow: hidden;
   pointer-events: none;
-  transition:
-    height var(--sidebar-motion),
-    opacity var(--sidebar-motion),
-    padding var(--sidebar-motion);
 }
 
 .sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .sectionTitle,
@@ -349,9 +330,6 @@
 .sidebarResizing .sectionTitle,
 .sidebarDropReady .sectionTitle,
 .sidebar:has([data-workspace-editing]) .sectionTitle {
-  height: 28px;
-  padding: 4px 0;
-  opacity: 1;
   pointer-events: auto;
 }
 
@@ -379,16 +357,12 @@
 .empty {
   font-size: 0.75rem;
   color: var(--color-text-tertiary);
-  height: 0;
-  padding: 0;
+  height: calc(24px * var(--sidebar-expand-t));
+  padding: calc(4px * var(--sidebar-expand-t)) 0;
   margin: 0;
-  opacity: 0;
+  opacity: var(--sidebar-expand-t);
   overflow: hidden;
   pointer-events: none;
-  transition:
-    height var(--sidebar-motion),
-    opacity var(--sidebar-motion),
-    padding var(--sidebar-motion);
 }
 
 .sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .empty,
@@ -396,9 +370,6 @@
 .sidebarResizing .empty,
 .sidebarDropReady .empty,
 .sidebar:has([data-workspace-editing]) .empty {
-  height: 24px;
-  padding: 4px 0;
-  opacity: 1;
   pointer-events: auto;
 }
 
@@ -629,9 +600,8 @@
   border: 0;
   background: transparent;
   color: var(--color-text-secondary);
-  opacity: 0;
+  opacity: var(--sidebar-expand-t);
   pointer-events: none;
-  transition: opacity var(--sidebar-motion);
 }
 
 .sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .chevron,
@@ -639,7 +609,6 @@
 .sidebarResizing .chevron,
 .sidebarDropReady .chevron,
 .sidebar:has([data-workspace-editing]) .chevron {
-  opacity: 1;
   pointer-events: auto;
 }
 

@@ -31,7 +31,7 @@ GIF netscape loop count is finite; UI starts playback when the preview enters th
 
 Collapsed icon-rail always shows top-level workspace items only; nested folders/papers appear when the sidebar expands. This is fixed behavior (not a setting).
 
-In auto mode, a near hit-strip fully expands the rail; a further approach zone only peeks the width slightly (labels stay hidden) before the cursor reaches the rail.
+In auto mode, a near hit-strip fully expands the rail; a further approach zone advances the same expand progress to ~42% (width + labels mid-flight) before the cursor reaches the rail.
 
 Settings UI wraps each GIF in a strong-blue stage with a floating macOS window chrome (traffic lights + title). The window is cropped on the right and bottom edges of the stage. The active setting column is full opacity; the inactive column is ~60%. Visible OFF/ON labels and captions are omitted; the toggle is the control of record.
 
