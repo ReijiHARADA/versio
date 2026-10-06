@@ -4,21 +4,41 @@
 :root {
   --sidebar-collapsed-w: 48px;
   --sidebar-expanded-w: 220px;
+  /* Partial widen when the cursor is in the outer approach zone. */
+  --sidebar-peek-w: 72px;
   --sidebar-icon-box: 32px;
   --sidebar-motion: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  /* Invisible hit strip to the right of the icon rail (easier hover-open). */
+  /* Full-open hit strip just outside the collapsed rail. */
   --sidebar-hover-bridge: 14px;
+  /* Further-right approach zone → peek width only. */
+  --sidebar-peek-bridge: 40px;
   /* Shared content inset. Chevron hangs into this pad so icons share one left edge. */
   --sidebar-pad-x: 8px;
   --sidebar-chevron: 14px;
 }
 
-/* Shared “is open” selector pieces applied below */
-.sidebar {
+/* Outer flex item: owns peek hit zone without counting as shell :hover. */
+.rail {
+  position: relative;
+  flex-shrink: 0;
+  height: 100%;
+  z-index: 2;
+}
+
+/* Width owner for collapsed / peek / expanded. */
+.shell {
   --sidebar-open: 0;
   position: relative;
   width: var(--sidebar-collapsed-w);
-  flex-shrink: 0;
+  height: 100%;
+  overflow: visible;
+  transition: width var(--sidebar-motion);
+}
+
+.sidebar {
+  position: relative;
+  z-index: 2;
+  width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -26,36 +46,56 @@
   padding: var(--spacing-md) var(--sidebar-pad-x);
   background-color: var(--color-bg-secondary);
   border-right: 1px solid var(--color-border-light);
-  /* visible so the hover bridge can extend past the border into main content */
   overflow: visible;
-  transition:
-    width var(--sidebar-motion),
-    gap var(--sidebar-motion);
-  z-index: 2;
+  transition: gap var(--sidebar-motion);
+  box-sizing: border-box;
 }
 
 /*
- * Pseudo hit area to the right of the collapsed rail.
- * Hovering it still counts as :hover on .sidebarAuto, so auto-expand is easier.
+ * Hit strips are anchored to the collapsed edge so widening the shell
+ * does not slide them out from under the cursor. z-index stays under
+ * .sidebar so they only receive events where they extend past the rail.
  */
-.sidebarAuto::before {
-  content: "";
+.fullBridge,
+.peekBridge {
   position: absolute;
   top: 0;
-  left: 100%;
   z-index: 1;
-  width: var(--sidebar-hover-bridge);
   height: 100%;
 }
 
-/* Auto: hover / rename / drop expands */
-.sidebarAuto:is(:hover, :has([data-workspace-editing])),
+.fullBridge {
+  left: var(--sidebar-collapsed-w);
+  width: var(--sidebar-hover-bridge);
+}
+
+.peekBridge {
+  left: calc(var(--sidebar-collapsed-w) + var(--sidebar-hover-bridge));
+  width: var(--sidebar-peek-bridge);
+}
+
+/* Outer zone: widen a little (labels stay collapsed). */
+.rail:has(.peekBridge:hover)
+  .sidebarAuto:not(:has(.sidebar:hover)):not(:has(.fullBridge:hover)):not(
+    :has([data-workspace-editing])
+  ):not(.sidebarDropReady):not(.sidebarResizing) {
+  width: var(--sidebar-peek-w);
+}
+
+/* Auto: sidebar / near bridge / rename / drop expands fully */
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])),
 .sidebarExpanded,
 .sidebarDropReady,
-.sidebarResizing,
-.sidebar:has([data-workspace-editing]) {
+.sidebarResizing {
   --sidebar-open: 1;
   width: var(--sidebar-expanded-w);
+}
+
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing]))
+  .sidebar,
+.sidebarExpanded .sidebar,
+.sidebarDropReady .sidebar,
+.sidebarResizing .sidebar {
   gap: 4px;
 }
 
@@ -89,7 +129,7 @@
   transition: background-color var(--transition-fast);
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .resizeHandle,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .resizeHandle,
 .sidebarExpanded .resizeHandle,
 .sidebarDropReady .resizeHandle,
 .sidebarResizing .resizeHandle,
@@ -125,10 +165,10 @@
     max-width var(--sidebar-motion);
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .label,
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .itemLabel,
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .searchInput,
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .badge,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .label,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .itemLabel,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .searchInput,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .badge,
 .sidebarExpanded .label,
 .sidebarResizing .label,
 .sidebarExpanded .itemLabel,
@@ -150,8 +190,8 @@
   pointer-events: auto;
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .itemLabel,
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .searchInput,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .itemLabel,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .searchInput,
 .sidebarExpanded .itemLabel,
 .sidebarResizing .itemLabel,
 .sidebarExpanded .searchInput,
@@ -187,8 +227,8 @@
     border-color var(--transition-fast);
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .search,
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .item,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .search,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .item,
 .sidebarExpanded .search,
 .sidebarResizing .search,
 .sidebarExpanded .item,
@@ -267,7 +307,7 @@
   margin-top: var(--sidebar-icon-box);
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .section,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .section,
 .sidebarExpanded .section,
 .sidebarResizing .section,
 .sidebarDropReady .section,
@@ -275,7 +315,7 @@
   margin-top: var(--spacing-sm);
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .section + .section,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .section + .section,
 .sidebarExpanded .section + .section,
 .sidebarResizing .section + .section,
 .sidebarDropReady .section + .section,
@@ -304,7 +344,7 @@
     padding var(--sidebar-motion);
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .sectionTitle,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .sectionTitle,
 .sidebarExpanded .sectionTitle,
 .sidebarResizing .sectionTitle,
 .sidebarDropReady .sectionTitle,
@@ -351,7 +391,7 @@
     padding var(--sidebar-motion);
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .empty,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .empty,
 .sidebarExpanded .empty,
 .sidebarResizing .empty,
 .sidebarDropReady .empty,
@@ -433,7 +473,7 @@
   transition: opacity var(--sidebar-motion);
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .projectMenuButton,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .projectMenuButton,
 .sidebarExpanded .projectMenuButton,
 .sidebarResizing .projectMenuButton,
 .sidebarDropReady .projectMenuButton,
@@ -498,7 +538,7 @@
   text-align: center;
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .badge,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .badge,
 .sidebarExpanded .badge,
 .sidebarResizing .badge,
 .sidebarDropReady .badge,
@@ -524,7 +564,7 @@
   transition: gap var(--sidebar-motion);
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .scroll,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .scroll,
 .sidebarExpanded .scroll,
 .sidebarResizing .scroll,
 .sidebarDropReady .scroll,
@@ -542,7 +582,7 @@
     border-color var(--sidebar-motion);
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .footer,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .footer,
 .sidebarExpanded .footer,
 .sidebarResizing .footer,
 .sidebarDropReady .footer,
@@ -594,7 +634,7 @@
   transition: opacity var(--sidebar-motion);
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .chevron,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .chevron,
 .sidebarExpanded .chevron,
 .sidebarResizing .chevron,
 .sidebarDropReady .chevron,
@@ -603,7 +643,7 @@
   pointer-events: auto;
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .treeRow,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .treeRow,
 .sidebarExpanded .treeRow,
 .sidebarResizing .treeRow,
 .sidebarDropReady .treeRow,
@@ -616,7 +656,7 @@
   min-width: 0;
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .treeLabel,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .treeLabel,
 .sidebarExpanded .treeLabel,
 .sidebarResizing .treeLabel,
 .sidebarDropReady .treeLabel,
@@ -632,7 +672,7 @@
   transition: padding-left var(--sidebar-motion);
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .treePaper,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .treePaper,
 .sidebarExpanded .treePaper,
 .sidebarResizing .treePaper,
 .sidebarDropReady .treePaper,
@@ -667,7 +707,7 @@
   gap: 2px;
 }
 
-.sidebarAuto:is(:hover, :has([data-workspace-editing])) .treeNested,
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .treeNested,
 .sidebarExpanded .treeNested,
 .sidebarResizing .treeNested,
 .sidebarDropReady .treeNested,
