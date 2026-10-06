@@ -120,6 +120,18 @@ describe("isEquationLine", () => {
 });
 
 describe("PDF reading order regression", () => {
+  it("separates an embedded publisher license tail from body prose", () => {
+    const mixed = `${"This abstract contains a sufficiently long body paragraph that should remain translatable. ".repeat(3)}ThisnationalworkLicense.is licensed under a Creative Commons Attribution-NoDerivatives 4.0 International license. ©ACM 2025`;
+    const { blocks } = reconstructDocument([{
+      pageNumber: 1, width: 612, height: 792,
+      textItems: [{ text: mixed, x: 54, y: 300, width: 500, height: 10, fontSize: 10, fontName: "Body", page: 1 }],
+    }]);
+    const body = blocks.find((block) => block.role === "paragraph" && block.text.includes("This abstract"));
+    const chrome = blocks.find((block) => block.role === "copyright");
+    expect(body?.text).not.toContain("ThisnationalworkLicense");
+    expect(chrome?.text).toContain("ThisnationalworkLicense");
+  });
+
   it("keeps a narrow publication-rail date out of a body line on the same baseline", () => {
     const pages: ExtractedPage[] = [{
       pageNumber: 1, width: 612, height: 792,
