@@ -1664,6 +1664,7 @@ function claimStrengthRiskReasons(source: string, output: string): string[] {
   const firstOutputSentence = output.match(/^[\s\S]*?[。！？](?=\s|$)/u)?.[0] ?? output;
   const sourceHasMethodEvidence = /\b(?:experiments?|experimental|simulat(?:e|ed|ion|ions)(?:\d+)?|prototype|implement(?:ed|ation)?|construct(?:ed|ion)?|measure(?:d|ment)?|test(?:ed|ing)?|survey(?:ed)?|randomi[sz]ed|trial|evaluate(?:d|ion)?|annotat(?:e|ed|ion|ing))\b/i.test(source)
     || /\b(?:study|studies|research)\b[^.!?]{0,48}\b(?:conducted|carried\s+out|undertook|performed)\b/i.test(source)
+    || /\bconduct(?:ing|ed)?\b[^.!?]{0,48}\b(?:quantitative\s+)?(?:appraisal|assessment|analysis)\b/i.test(source)
     || /\b(?:user\s+)?stud(?:y|ies)\b[^.!?]{0,64}\b(?:showed|found|demonstrated|revealed)\b/i.test(source)
     || /\b(?:we|this\s+(?:paper|study)|the\s+(?:paper|study|system|model))\b[^.!?]{0,48}\b(?:develop(?:ed|ment)?|train(?:ed|ing)?|captur(?:e|ed|ing)|collect(?:ed|ion)?|recruit(?:ed|ment)?|administer(?:ed|ing)?|annotat(?:e|ed|ion|ing)?)\b/i.test(source);
   const outputAssertsMethod = /(?:シミュレーション|実験|試験|プロトタイプ|実装|測定|計測|ランダム化|試行|評価).{0,12}(?:行(?:った|われた|う)|実施|実験した|測定した|評価した|構築した|作成した)/u.test(firstOutputSentence);
