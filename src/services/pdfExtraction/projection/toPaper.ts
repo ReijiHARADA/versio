@@ -81,7 +81,7 @@ function expandAuthorLine(text: string): string[] {
     return markerParts;
   }
   const commaParts = cleaned
-    .split(/\s*(?:,|;|\band\b|&)\s*/i)
+    .split(/\s*(?:,|;|·|\band\b|&)\s*/i)
     .map((part) => part.trim())
     .filter((part) => part.split(/\s+/).length >= 2 && !/@/.test(part));
   if (commaParts.length >= 2 && commaParts.every((part) => part.split(/\s+/).length <= 5) &&
@@ -297,7 +297,8 @@ export function projectCanonicalToPaper(input: {
 }): PaperProjection {
   const { canonical, paperId, layoutBlocks, layouts, baseFontSize } = input;
   const titleNode = canonical.nodes.find((n) => n.role === "title");
-  const authorNodes = canonical.nodes.filter((n) => n.role === "author" && n.text && !/@/.test(n.text));
+  const authorNodes = canonical.nodes.filter((n) => n.role === "author" && n.text && !/@/.test(n.text) &&
+    !/^(?:original article|research article|conceptual\/theoretical paper|©|the author\(s\))/i.test(n.text.trim()));
   const affiliationNodes = canonical.nodes.filter((n) => n.role === "affiliation" && n.text);
   const affiliated = canonical.relations.filter((r) => r.kind === "AFFILIATED_WITH");
   const authorsStructured = authorNodes.map((node) => ({
