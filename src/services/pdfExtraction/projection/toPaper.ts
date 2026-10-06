@@ -535,10 +535,16 @@ export function projectCanonicalToPaper(input: {
       .split(/(?=\b\d{1,2}(?=[A-Z]))/)
       .map((part) => part.replace(/^\d{1,2}\s*/, "").trim())
       .filter(Boolean);
-    if (numberedParts.length >= 2 && numberedParts.every((part) =>
+    const letteredParts = (node.text ?? "")
+      .trim()
+      .split(/(?=\b[a-z]\s+(?=[A-Z]))/)
+      .map((part) => part.replace(/^[a-z]\s+/, "").trim())
+      .filter(Boolean);
+    const markerParts = numberedParts.length >= 2 ? numberedParts : letteredParts;
+    if (markerParts.length >= 2 && markerParts.every((part) =>
       part.split(/\s+/).length >= 3 &&
-      /\b(?:university|department|institute|school|faculty|college|hospital|laboratory|center|centre)\b/i.test(part))) {
-      return numberedParts.map((name, index) => ({
+      /\b(?:university|department|institute|school|faculty|college|hospital|laboratory|center|centre|consortium)\b/i.test(part))) {
+      return markerParts.map((name, index) => ({
         id: `${node.id}-numbered-${index + 1}`,
         name: normalizeAffiliationName(name),
         _x: node.boundingBoxes[0]?.x ?? 0,
@@ -583,7 +589,7 @@ export function projectCanonicalToPaper(input: {
     !/[{}@]/.test(affiliation.name) &&
     !/^(?:corresponding author|these authors contributed|author note|keywords?)\b/i.test(affiliation.name) &&
     !/^available from .*\bat:\s*$/i.test(affiliation.name) &&
-    !/^(?:contents|article history)\b/i.test(affiliation.name) &&
+    !/^(?:contents|article history|lists available at)\b/i.test(affiliation.name) &&
     (affiliation.name.match(/\b[a-z]\b/g)?.length ?? 0) < 3 &&
     (affiliation.name.split(/\s+/).length > 2 ||
       /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center)\b/i.test(affiliation.name) ||

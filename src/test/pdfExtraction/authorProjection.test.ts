@@ -9,6 +9,7 @@ const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "../../..")
 const pdf = path.join(root, "test-data/real-papers/power-over-skin.pdf");
 const particlePdf = path.join(root, "test-data/real-papers/interactive-jewellery.pdf");
 const acmPdf = path.join(root, "test-data/real-papers/ppg-earring.pdf");
+const letteredAffiliationPdf = path.join(root, "test-data/real-papers/medical-deep-learning-meta-review.pdf");
 
 describe("author masthead projection", () => {
   it("keeps same-baseline multi-column names separate and excludes locations", async () => {
@@ -47,5 +48,14 @@ describe("author masthead projection", () => {
       "Qiuyue (Shirley) Xue", "Dilini Nissanka", "Jiachen Tammy Yan", "Ruiqing Wang", "Shwetak Patel", "Vikram Iyer",
     ]));
     expect(result.paper.authors.some((name) => /Seattle|Engineering|@/.test(name))).toBe(false);
+  }, 60_000);
+
+  it("splits lettered affiliation blocks from journal mastheads", async () => {
+    if (!fs.existsSync(letteredAffiliationPdf)) return;
+    const pages = await extractPdfPages(letteredAffiliationPdf);
+    const result = extractFromPages({ pages, paperId: "medical-deep-learning-meta-review", filePath: letteredAffiliationPdf, fileHash: "lettered-affiliation-regression", metadata: { pageCount: pages.length } });
+    expect(result.paper.affiliations).toHaveLength(6);
+    expect(result.paper.affiliations.every((affiliation) => !/contents|lists available|article history/i.test(affiliation.name))).toBe(true);
+    expect(result.paper.affiliations.some((affiliation) => /German Cancer Consortium/i.test(affiliation.name))).toBe(true);
   }, 60_000);
 });
