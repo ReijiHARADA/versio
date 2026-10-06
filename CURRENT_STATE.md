@@ -906,3 +906,11 @@ publisher loses the delimiter between two adjacent two-token names. The
 `dont-mind-me` masthead now exposes `James Clawson` and `Thad Starner`
 separately while preserving the other authors. The rule is limited to
 comma-bounded name-shaped runs and does not apply to institution prose.
+# 2026-10-07: affiliation marker cleanup
+
+Affiliation normalization now removes duplicated flattened superscript
+markers (for example `1 1New Delhi`) and rejects isolated initial runs such as
+`M N` unless an explicit institution term is present. The single-author report
+fixture now yields `National Education Services, New Delhi, India` without the
+spurious `M N` affiliation. Author projection tests remain 8/8 and TypeScript
+passes.

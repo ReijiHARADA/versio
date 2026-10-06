@@ -192,12 +192,17 @@ function normalizeAffiliationName(text: string): string {
     // not part of the affiliation label.
     .replace(/\s*\{[\s\S]*$/, "")
     .replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "")
+    // Superscript affiliation markers can be flattened as repeated `1 1`
+    // before a continuation line. Remove only that duplicated-marker shape;
+    // ordinary street numbers remain intact.
+    .replace(/\b(\d{1,2})\s+\1(?=\s*[A-Z])/g, "")
     // Native PDF text sometimes loses spaces at font-run boundaries
     // (e.g. `IowaStateUniversity` or `ofEvents`). Restore only a lower-to-
     // upper transition; this cannot split ordinary all-caps institution names.
     .replace(/([\p{Ll}])([\p{Lu}])/gu, "$1 $2")
     .replace(/\s+/g, " ")
     .replace(/\s+,/g, ",")
+    .replace(/,\s*/g, ", ")
     .replace(/^[*†‡§☯\s]+/, "")
     .trim());
 }
@@ -798,6 +803,11 @@ export function projectCanonicalToPaper(input: {
     // Keep short acronym-only affiliations, but reject unfinished connector
     // phrases, rule lines, and glyph-spaced text that cannot identify a body.
     !/^[_\s.,-]+$/.test(affiliation.name) &&
+    // Isolated initials are usually a leaked author marker rather than an
+    // institution. Keep acronym-like institutions (MIT, IBM) and any row
+    // carrying an explicit institution term.
+    !(/^[A-Z](?:\s+[A-Z]){1,3}$/.test(affiliation.name) &&
+      !/\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research|design|computing)\b/i.test(affiliation.name)) &&
     !/(?:\b(?:of|and|in|the|for|&))\s*[,;]?$/i.test(affiliation.name) &&
     ((affiliation.name.match(/\b\S\b/g)?.length ?? 0) * 2 <= affiliation.name.split(/\s+/).length ||
       /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research|design|computing)\b/i.test(affiliation.name) ||
