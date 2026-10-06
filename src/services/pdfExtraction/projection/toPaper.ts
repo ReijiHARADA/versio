@@ -422,11 +422,38 @@ export function projectCanonicalToPaper(input: {
   const authorSourceNodes = [...authorNodes, ...authorContinuationNodes, ...markedAuthorParagraphs];
   const affiliationNodes = canonical.nodes.filter((n) => n.role === "affiliation" && n.text && !isSidebarChromeNode(n));
   const affiliated = canonical.relations.filter((r) => r.kind === "AFFILIATED_WITH");
-  const authorsStructured = authorSourceNodes.map((node) => ({
+  const projectionAuthorText = (node: (typeof canonical.nodes)[number]): string => {
+    const box = node.boundingBoxes[0];
+    // A native line can span the sidebar/body gutter. When its left edge is
+    // inside the sidebar and it contains comma-separated names, discard only
+    // the leftmost sidebar segment and retain the body-side continuation.
+    if (hasSidebarBody && (box?.x ?? Infinity) < sidebarRight && (box?.width ?? 0) > 180) {
+      return (node.text ?? "").replace(/^[^,]+,\s*/, "");
+    }
+    return node.text ?? "";
+  };
+  const mergedMastheadPredecessors = new Set<string>();
+  const authorsStructured = authorSourceNodes.map((node) => {
+    const box = node.boundingBoxes[0];
+    const predecessor = node.role === "author"
+      ? canonical.nodes
+        .filter((candidate) => candidate.role === "paragraph" && candidate.pageStart === 1 && candidate.text &&
+          Math.abs((candidate.boundingBoxes[0]?.x ?? Infinity) - (box?.x ?? -Infinity)) <= 2 &&
+          (box?.y ?? Infinity) > (candidate.boundingBoxes[0]?.y ?? -Infinity) &&
+          (box?.y ?? Infinity) - (candidate.boundingBoxes[0]?.y ?? 0) < 28 &&
+          (candidate.boundingBoxes[0]?.y ?? Infinity) < 390 &&
+          (candidate.text.match(/,/g)?.length ?? 0) >= 3 &&
+          /\d[*†‡]?/.test(candidate.text))
+        .sort((a, b) => (b.boundingBoxes[0]?.y ?? 0) - (a.boundingBoxes[0]?.y ?? 0))[0]
+      : undefined;
+    if (predecessor) mergedMastheadPredecessors.add(predecessor.id);
+    return {
     id: node.id,
-    name: (node.text ?? "").trim(),
+    name: `${predecessor ? `${predecessor.text} ` : ""}${projectionAuthorText(node)}`.trim(),
     affiliationIds: affiliated.filter((rel) => rel.from === node.id).map((rel) => rel.to),
-  }));
+    predecessorId: predecessor?.id,
+  };
+  }).filter((author) => !mergedMastheadPredecessors.has(author.id));
   const affiliations = affiliationNodes.map((node) => ({
     id: node.id,
     name: normalizeAffiliationName(node.text ?? ""),
