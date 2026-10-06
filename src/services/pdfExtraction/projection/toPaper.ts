@@ -59,8 +59,9 @@ function normalizeSection(title: string): NormalizedSectionKind {
 }
 
 function expandAuthorLine(text: string): string[] {
+  const markedSource = text.replace(/\s+/g, " ").trim();
   const cleaned = text
-    .replace(/[*,†‡§]/g, " ")
+    .replace(/[*†‡§]/g, " ")
     .replace(/(\p{L})\d+/gu, "$1")
     .replace(/\s+/g, " ")
     .trim();
@@ -72,6 +73,21 @@ function expandAuthorLine(text: string): string[] {
     .replace(/\s+/g, " ")
     .trim();
   const names: string[] = [];
+  const markerParts = markedSource
+    .split(/(?<=[♠♣♡♢∗†‡§])\s*/u)
+    .map((part) => part.replace(/[♠♣♡♢∗†‡§]/gu, "").trim())
+    .filter((part) => part && /\p{L}/u.test(part));
+  if (markerParts.length >= 2) {
+    return markerParts;
+  }
+  const commaParts = cleaned
+    .split(/\s*(?:,|;|\band\b|&)\s*/i)
+    .map((part) => part.trim())
+    .filter((part) => part.split(/\s+/).length >= 2 && !/@/.test(part));
+  if (commaParts.length >= 2 && commaParts.every((part) => part.split(/\s+/).length <= 5) &&
+      commaParts.every((part) => !/(?:university|department|institute|school|faculty|hospital|laboratory)/i.test(part))) {
+    return commaParts;
+  }
   if (cjkTokens.length >= 2 && cjkTokens.length % 2 === 0) {
     for (let i = 0; i < cjkTokens.length; i += 2) {
       names.push(`${cjkTokens[i]} ${cjkTokens[i + 1]}`);
