@@ -795,3 +795,7 @@ caption. It does not suppress sentence-shaped prose. The regression confirms
 that `Decision-making Information search` is not sent as a pending translation
 block; focused test and typecheck pass. A full corpus replay is still required
 after this change.
+
+The vector-label change replay completed successfully: 2 test files, 232 tests
+passed, 0 failed (406.96s). Existing structural and reading-order checks remain
+green after the new graphics/caption evidence.
