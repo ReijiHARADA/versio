@@ -584,3 +584,7 @@ A second author extraction failure was reproduced in `modeling-human-behavior-co
 ### 2026-10-06: publisher location/email contamination in author projection
 
 A conference PDF (`how-content-volume-landing-pages`) exposed a generic masthead split where author lines included an email or a city/country continuation (`Ruti Gafni* email`, `Tel Aviv, Israel Nim Dvir`, `Albany, NY, USA`). Projection now removes email tokens before author expansion, strips recognized location prefixes only when they precede a name, and rejects sentence-shaped/location-only author candidates. The public author list is now `Ruti Gafni`, `Nim Dvir`; typecheck and the 29-case PDF pipeline suite pass. This remains an extraction projection repair; affiliation cleanup is still incomplete for some publisher layouts.
+
+### 2026-10-06: affiliation projection normalization
+
+Affiliation projection now removes email tokens and footnote-only labels (`corresponding author`, equal-contribution notes), normalizes marker punctuation, and applies the same cleanup to recovered masthead affiliations. This prevents contact metadata from appearing as an institution in the public Paper object. Typecheck and the 29-case PDF pipeline suite pass.
