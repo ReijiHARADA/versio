@@ -2070,6 +2070,27 @@ describe("isRetryableTranslationFailure", () => {
     expect(evaluateJaTranslation(output, source).reasons).not.toContain("scientific measurement order changed");
   });
 
+  it("rejects measurements attached to the wrong named quantity", () => {
+    const source = "The method transfers more than 2mW peak power for > 1m channel lengths.";
+    const output = "この方法は1mのピーク電力に対して2mW以上のチャネル長を伝送する。";
+    const quality = evaluateJaTranslation(output, source);
+    expect(quality.reasons).toContain("scientific measurement role changed");
+    expect(isCascadeQualityAcceptable(output, source)).toBe(false);
+  });
+
+  it("rejects the observed peak-power/channel-length role swap", () => {
+    const source = "The proposed powering methodology allows more than 2mW peak power to be transferred to a wearable device for > 1m channel lengths, which is > 90X greater than the state-of-the-art.";
+    const output = "提案した電源方式は,2mWチャネル長に対して> 1mピーク電力以上を装着可能なデバイスに伝達する。";
+    expect(evaluateJaTranslation(output, source).reasons).toContain("scientific measurement role changed");
+  });
+
+  it("does not reject a faithful power and length association", () => {
+    const source = "The method transfers more than 2mW peak power for > 1m channel lengths.";
+    const output = "この方法は1mを超えるチャネル長で2mWを超えるピーク電力を伝送する。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("scientific measurement role changed");
+    expect(isCascadeQualityAcceptable(output, source)).toBe(true);
+  });
+
   it("rejects malformed experimental-arm acronyms after placeholder restoration", () => {
     const source = "The trial compared TRT and RT+CT on cognitive function and BDNF levels.";
     const output = "認知機能とBDNFレベルに対するTRTとRTz+CTzの効果を比較した。";
