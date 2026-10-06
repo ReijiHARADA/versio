@@ -1,0 +1,25 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { describe, expect, it } from "vitest";
+import { extractPdfPages } from "../readingOrder/extractPdf";
+import { extractFromPages } from "../../services/pdfExtraction/pipeline/extractAcademicPdf";
+
+const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "../../..");
+const pdf = path.join(root, "test-data/real-papers/power-over-skin.pdf");
+
+describe("author masthead projection", () => {
+  it("keeps same-baseline multi-column names separate and excludes locations", async () => {
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "power-over-skin",
+      filePath: pdf,
+      fileHash: "author-regression",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["Andy Kong", "Daehwa Kim", "Chris Harrison"]));
+    expect(result.paper.authors).not.toEqual(expect.arrayContaining(["Pittsburgh, USA"]));
+  }, 60_000);
+});
