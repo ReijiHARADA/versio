@@ -640,3 +640,7 @@ The Frontiers marketing fixture had dagger-marked authors (`Maria Pilar Martinez
 ### 2026-10-06: post-marker 27-paper check
 
 The post-marker 27-paper run is 0.896 mean author F1 with 18/27 perfect papers. This is slightly below the previous 0.901 run because marker cleanup changes exposed additional catalog/layout mismatches in clinical and marketing fixtures; no aggregate-only heuristic relaxation was made. The temporary benchmark report was restored. Next work should compare the affected rows by source content before changing projection rules.
+
+### 2026-10-06: author projection bounded by masthead region
+
+`marketing-unavailable-choice` contained later reviewer/editor names as author-role nodes. Projection now derives the first page body/abstract y-boundary and only projects author nodes above that masthead boundary. The fixture now returns exactly Jing Tian, Rong Chen, and Feng He; the cognitive dual-task masthead remains intact. Typecheck and the 29-case pipeline suite pass.
