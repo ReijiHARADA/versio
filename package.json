@@ -16,6 +16,7 @@
     "audit:pending-corpus": "node scripts/check-pending-corpus.mjs",
     "fetch:pending-corpus": "node scripts/fetch-pending-corpus.mjs",
     "bench:pdf-extraction": "npx tsx scripts/benchmark-pdf-extraction.ts",
+    "bench:pdf-extraction:isolated": "npx tsx scripts/benchmark-pdf-extraction-isolated.ts",
     "diagnose:column-occupancy": "npx tsx scripts/diagnose-column-occupancy.ts",
     "scan:pdf-boundaries": "npx vite-node scripts/scan-extraction-boundaries.ts",
     "diagnose:pdf-layout": "npx tsx scripts/diagnose-pdf-layout.ts",
