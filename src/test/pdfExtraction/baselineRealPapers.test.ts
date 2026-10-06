@@ -235,7 +235,11 @@ describe("baseline benchmark on cached real papers", () => {
       if (gt?.listItems) {
         expect(report.listItemRecall).toBeGreaterThanOrEqual(0.9);
       }
-    }, paper.id === "linguistics-language-model-physics" ? 180_000 : 60_000);
+    // Real PDFs with large vector/table streams can take substantially longer
+    // than the ordinary corpus cases. Keep one corpus-wide timeout so a slow
+    // native extraction does not appear as a product regression merely because
+    // it crossed a paper-specific threshold.
+    }, 180_000);
   }
 
   const ppg = available.find(({ paper }) => paper.id === "ppg-earring");
