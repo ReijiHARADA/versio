@@ -368,7 +368,8 @@ export function projectCanonicalToPaper(input: {
     .filter((name) => name.split(/\s+/).length <= 6 && !/[!?]/.test(name) &&
       !/\b(?:movement|science|sport|psychology|department|university|institute|research|council|resistance|training|edited|published)\b/i.test(name) &&
       !(/\s[A-Z]{1,3}$/.test(name) && !/^[A-Z][A-Z'’-]*(?:\s+[A-Z][A-Z'’-]*)+$/.test(name)) &&
-      !/(?:^|,\s*)(?:usa|u\.s\.a?\.?|israel|italy|china|japan|uk|united kingdom|ny|california|new york|tel aviv|albany)(?:\s*,|$)/i.test(name) &&
+      !/(?:^|,\s*)(?:usa|u\.s\.a?\.?|israel|italy|china|japan|uk|united kingdom|ny|california|new york|tel aviv|albany|palo alto)(?:\s*,|$)/i.test(name) &&
+      !/^(?:palo alto|tel aviv|albany|new york)$/i.test(name) &&
       !/\b(?:,\s*)?(?:ny|ca),\s*usa\b/i.test(name))
     .filter((name, index, all) => all.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase()) === index)
     .filter(Boolean);
