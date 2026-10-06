@@ -16,6 +16,16 @@ export function pagesNeedingOcr(pages: ExtractedPage[]): Set<number> {
   return needed;
 }
 
+/** Keep native text when Vision returned an unexpectedly sparse page. */
+export function shouldAcceptOcr(nativeText: string, ocrText: string): boolean {
+  const nativeChars = nativeText.replace(/\s+/g, "").length;
+  const ocrChars = ocrText.replace(/\s+/g, "").length;
+  if (ocrChars === 0) return false;
+  // Scanned pages have little native text, so any non-empty OCR result wins.
+  if (nativeChars < 80) return true;
+  return ocrChars >= Math.max(80, nativeChars * 0.35);
+}
+
 export const visionOcrEnricher: ExtractionEnricher = {
   id: "vision-ocr",
   shouldRun(context) {
@@ -50,6 +60,9 @@ export async function applyVisionOcr(
     if (!needed.has(ocrPage.pageNumber) || ocrPage.lines.length === 0) continue;
     const pdfPage = pages.find((p) => p.pageNumber === ocrPage.pageNumber);
     if (!pdfPage) continue;
+    const nativeText = pdfPage.textItems.map((item) => item.text).join(" ");
+    const ocrText = ocrPage.lines.map((line) => line.text).join(" ");
+    if (!shouldAcceptOcr(nativeText, ocrText)) continue;
     pdfPage.textItems = ocrPage.lines.map((line, idx) => {
       const bounds = line.bounds;
       const width = pdfPage.width;
