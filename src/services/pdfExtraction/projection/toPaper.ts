@@ -387,7 +387,13 @@ export function projectCanonicalToPaper(input: {
   // only the same strict uppercase name-prefix pattern and merge it with the
   // author projection, preserving the canonical role assignment.
   const affiliationAuthorNames = affiliationNodes
-    .flatMap((node) => splitAffiliationNamePrefix(node.text ?? "").map((pair) => pair.author));
+    .flatMap((node) => {
+      const text = node.text ?? "";
+      const recovered = splitAffiliationNamePrefix(text).map((pair) => pair.author);
+      const nameOnly = !/(?:university|department|institute|school|college|hospital|laboratory|center|centre|japan|china|israel|sweden)/i.test(text) &&
+        text.length <= 180 && /\b(?:and|,)\b/.test(text) ? expandAuthorLine(text) : [];
+      return [...recovered, ...nameOnly];
+    });
   for (const name of affiliationAuthorNames) {
     if (!authorNames.some((existing) => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
       authorNames.push(name);
