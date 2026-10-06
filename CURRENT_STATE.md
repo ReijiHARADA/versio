@@ -596,3 +596,7 @@ The explicit `--all` extraction benchmark completed after the author/affiliation
 ### 2026-10-06: split masthead continuation guard
 
 A generic continuation candidate was added for publisher layouts that place a middle-dot-prefixed author continuation in a paragraph-role node on the same baseline as the first author row. The candidate is restricted to short name-shaped text with multiple capitalized name pairs; it does not relabel canonical nodes. Initial author extraction remains stable for `ergonomics-flight-deck-applications`; the remaining continuation inclusion needs a dedicated fixture assertion before claiming full recovery. Typecheck and the 29-case pipeline suite pass.
+
+### 2026-10-06: initialed continuation names recovered
+
+The split masthead guard initially missed continuation rows containing middle initials (`Katherine L. Plant`, `Neville A. Stanton`). The name-shape evidence now allows an optional initial, and `ergonomics-flight-deck-applications` projects all six authors instead of only the first three. Typecheck and the 29-case pipeline suite pass.
