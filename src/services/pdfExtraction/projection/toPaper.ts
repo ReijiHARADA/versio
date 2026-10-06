@@ -59,10 +59,12 @@ function normalizeSection(title: string): NormalizedSectionKind {
 }
 
 function expandAuthorLine(text: string): string[] {
-  const markedSource = text.replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, " ").replace(/\s+/g, " ").trim();
+  const markedSource = text.replace(/^\s*and\s+/i, "").replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, " ").replace(/\s+/g, " ").trim();
   const cleaned = text
+    .replace(/^\s*and\s+/i, "")
     .replace(/[*†‡§]/g, " ")
     .replace(/(\p{L})\d+/gu, "$1")
+    .replace(/\d+[*†‡§]/g, "")
     .replace(/(\p{Ll})(\p{Lu})/gu, "$1 $2")
     .replace(/(?:^|[\s,])\d{1,2}(?=$|[\s,])/gu, " ")
     .replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, " ")
@@ -105,6 +107,15 @@ function expandAuthorLine(text: string): string[] {
 }
 
 type MastheadPair = { author: string; affiliation: string };
+
+function normalizeAffiliationName(text: string): string {
+  return text
+    .replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/\s+,/g, ",")
+    .replace(/^[*†‡§☯\s]+/, "")
+    .trim();
+}
 
 /**
  * Recover the common publisher layout where an all-caps author and their
@@ -330,8 +341,9 @@ export function projectCanonicalToPaper(input: {
   }));
   const affiliations = affiliationNodes.map((node) => ({
     id: node.id,
-    name: (node.text ?? "").trim(),
-  }));
+    name: normalizeAffiliationName(node.text ?? ""),
+  })).filter((affiliation) => affiliation.name &&
+    !/^(?:corresponding author|these authors contributed|author note|keywords?)\b/i.test(affiliation.name));
   const authorNames = authorsStructured
     .flatMap((author) => expandAuthorLine(author.name))
     .filter((name) => name.split(/\s+/).length <= 6 && !/[.!?]/.test(name) &&
@@ -351,7 +363,7 @@ export function projectCanonicalToPaper(input: {
       authorNames.push(...recovered.map((pair) => pair.author));
       affiliations.splice(0, affiliations.length, ...recovered.map((pair, index) => ({
         id: `recovered-affiliation-${index}`,
-        name: pair.affiliation,
+        name: normalizeAffiliationName(pair.affiliation),
       })));
     }
   }
