@@ -89,6 +89,26 @@ function expandAuthorLine(text: string): string[] {
     return uppercaseNames;
   }
   const spacedNameTokens = cleaned.split(/\s+/).filter(Boolean);
+  // Native mastheads sometimes lose the delimiter between two adjacent
+  // two-token names while retaining commas around the run, e.g.
+  // `..., James Clawson Thad Starner3, Jim Budd`. Split only a comma-bounded
+  // run of exactly four ordinary title-case tokens; this is conservative and
+  // avoids guessing inside compound surnames or prose.
+  const commaBoundedNames = cleaned
+    .split(/[,;]/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .flatMap((part) => {
+      const tokens = part.split(/\s+/).filter(Boolean);
+      return tokens.length === 4 && tokens.every((token) => /^[A-Z][\p{Ll}’'’-]+$/u.test(token))
+        ? [tokens.slice(0, 2).join(" "), tokens.slice(2).join(" ")]
+        : [part];
+    });
+  if (commaBoundedNames.length > 1 && commaBoundedNames.every((part) =>
+    /^(?:[A-Z][\p{Ll}’'’-]+\s+){1,3}[A-Z][\p{Ll}’'’-]+$/u.test(part)
+  ) && commaBoundedNames.some((part) => part.split(/\s+/).length === 2)) {
+    return commaBoundedNames;
+  }
   if (spacedNameTokens.length === 4 && spacedNameTokens.every((token) => /^[A-Z][\p{Ll}’'’-]+$/u.test(token))) {
     return [spacedNameTokens.slice(0, 2).join(" "), spacedNameTokens.slice(2).join(" ")];
   }
