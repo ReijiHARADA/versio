@@ -168,6 +168,9 @@ function normalizeAffiliationName(text: string): string {
     // Some publishers omit the label but leave `Reviewer Name, NIH ...`
     // inline after the final institution. Cut that person-shaped tail.
     .replace(/,\s+[A-Z][\p{Ll}'’-]+(?:\s+[A-Z][\p{Ll}'’-]+){1,2},\s+(?=(?:NIH|University|Hospital|Institute|Center|Centre)\b)[\s\S]*$/u, "")
+    // Contact aliases can follow the final institution in braces; they are
+    // not part of the affiliation label.
+    .replace(/\s*\{[\s\S]*$/, "")
     .replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "")
     // Native PDF text sometimes loses spaces at font-run boundaries
     // (e.g. `IowaStateUniversity` or `ofEvents`). Restore only a lower-to-
@@ -649,6 +652,18 @@ export function projectCanonicalToPaper(input: {
     // geometry path below instead of splitting the contaminated string by
     // superscript markers.
     const markerParts = sidebarMixed ? [] : (numberedParts.length >= 2 ? numberedParts : letteredParts);
+    const institutionPhraseParts = [...markerSource.matchAll(/(?:^|\d|\s)([A-Z][A-Za-z-]+\s+(?:Design|Computing))\b/g)]
+      .map((match) => match[1].trim())
+      .filter((part, index, all) => all.findIndex((other) => other.toLowerCase() === part.toLowerCase()) === index);
+    if (institutionPhraseParts.length >= 2 && /\d/.test(markerSource)) {
+      return institutionPhraseParts.map((name, index) => ({
+        id: `${node.id}-institution-phrase-${index + 1}`,
+        name: normalizeAffiliationName(name),
+        _x: node.boundingBoxes[0]?.x ?? 0,
+        _marker: undefined,
+        ...base,
+      }));
+    }
     if (markerParts.length >= 2 && markerParts.every((part) =>
       part.split(/\s+/).length >= 3 &&
       /\b(?:university|department|institute|school|faculty|college|hospital|laboratory|center|centre|consortium)\b/i.test(part))) {
@@ -757,7 +772,7 @@ export function projectCanonicalToPaper(input: {
     !/^(?:contents|article history|lists available at)\b/i.test(affiliation.name) &&
     (affiliation.name.match(/\b[a-z]\b/g)?.length ?? 0) < 3 &&
     (affiliation.name.split(/\s+/).length > 2 ||
-      /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research)\b/i.test(affiliation.name) ||
+      /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research|design|computing)\b/i.test(affiliation.name) ||
       /^[A-Z0-9& -]{2,12}$/.test(affiliation.name)) &&
     // Do not expose fragments created by a column boundary as institutions.
     // Keep short acronym-only affiliations, but reject unfinished connector
@@ -765,7 +780,7 @@ export function projectCanonicalToPaper(input: {
     !/^[_\s.,-]+$/.test(affiliation.name) &&
     !/(?:\b(?:of|and|in|the|for|&))\s*[,;]?$/i.test(affiliation.name) &&
     ((affiliation.name.match(/\b\S\b/g)?.length ?? 0) * 2 <= affiliation.name.split(/\s+/).length ||
-      /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research)\b/i.test(affiliation.name) ||
+      /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research|design|computing)\b/i.test(affiliation.name) ||
       /^[A-Z0-9& -]{2,12}$/.test(affiliation.name)));
   const markedCandidates = affiliationCandidates.filter((candidate) => candidate._marker);
   // Wrapped rows usually carry the superscript only on the first row. Propagate

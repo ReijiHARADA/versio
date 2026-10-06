@@ -879,3 +879,14 @@ path is only used when the inferred result has multiple author and affiliation
 groups; otherwise the existing resolver projection remains authoritative. The
 PPG Earring regression now recovers all six authors and removes figure-caption
 text from affiliations. PDF extraction tests: 27 suites / 75 tests passed.
+# 2026-10-07: numbered institution spans in flattened mastheads
+
+For publisher mastheads where a single affiliation node contains author names
+followed by numbered institution phrases, projection now extracts distinct
+capitalized `... Design` / `... Computing` institution spans and removes brace
+contact aliases from the final affiliation label. This is gated on multiple
+numbered spans and does not change normal single-affiliation rows. The
+`dont-mind-me.pdf` regression now exposes Department of Computer Science,
+University of Colorado, Industrial Design, Interactive Computing, and Georgia
+Institute of Technology without author/contact contamination. PDF extraction
+tests: 27 suites / 76 tests passed.

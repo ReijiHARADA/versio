@@ -11,6 +11,7 @@ const particlePdf = path.join(root, "test-data/real-papers/interactive-jewellery
 const acmPdf = path.join(root, "test-data/real-papers/ppg-earring.pdf");
 const letteredAffiliationPdf = path.join(root, "test-data/real-papers/medical-deep-learning-meta-review.pdf");
 const reviewerMastheadPdf = path.join(root, "test-data/real-papers/cognitive-dual-task.pdf");
+const interleavedAffiliationPdf = path.join(root, "test-data/real-papers/dont-mind-me.pdf");
 
 describe("author masthead projection", () => {
   it("keeps same-baseline multi-column names separate and excludes locations", async () => {
@@ -85,5 +86,20 @@ describe("author masthead projection", () => {
     expect(names.some((name) => /Applied Kinesiology.*University of Campinas/i.test(name))).toBe(true);
     expect(names.some((name) => /Laboratory of Electromyography.*University of Campinas/i.test(name))).toBe(true);
     expect(names.some((name) => /NIH Biomedical Research Center.*University of Maryland/i.test(name))).toBe(true);
+  }, 60_000);
+
+  it("separates numbered institutions from an interleaved author row", async () => {
+    if (!fs.existsSync(interleavedAffiliationPdf)) return;
+    const pages = await extractPdfPages(interleavedAffiliationPdf);
+    const result = await extractFromPages({ pages, paperId: "interleaved-affiliation", filePath: interleavedAffiliationPdf, fileHash: "interleaved-affiliation", metadata: { pageCount: pages.length } });
+    const names = result.paper.affiliations.map((affiliation) => affiliation.name);
+    expect(names).toEqual(expect.arrayContaining([
+      "Department of Computer Science",
+      "University of Colorado",
+      "Industrial Design",
+      "Interactive Computing",
+      "Georgia Institute of Technology",
+    ]));
+    expect(names.every((name) => !/Scott Gilliland|Clint Zeagler|Ellen Yi-Luen|\{jamer/i.test(name))).toBe(true);
   }, 60_000);
 });
