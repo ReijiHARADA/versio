@@ -1181,7 +1181,7 @@ function measurementRoleAssociationChanged(source: string, output: string): bool
         if (!nearest || distance < nearest.distance) nearest = { role, distance };
       }
     }
-    return nearest?.distance <= 32 ? nearest.role : null;
+    return nearest != null && nearest.distance <= 32 ? nearest.role : null;
   };
   const [first, second] = captured;
   // The source order is role-bearing (power first, length second). A direct
