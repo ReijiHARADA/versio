@@ -68,6 +68,14 @@ describe("canonical extraction pipeline", () => {
     expect(detectPageColumns({ pageNumber: 1, width: 595, height: 790, textItems }).isMultiColumn).toBe(true);
   });
 
+  it("does not promote a header rail with sparse right-side text to two columns", () => {
+    const textItems = Array.from({ length: 12 }, (_, row) => [
+      { text: `Body ${row} left`, x: 88, y: 280 + row * 14, width: 72, height: 8, fontSize: 8, fontName: "Body", page: 1 },
+      ...(row < 5 ? [{ text: `Header ${row}`, x: 304, y: 280 + row * 14, width: 56, height: 8, fontSize: 8, fontName: "Body", page: 1 }] : []),
+    ]).flat();
+    expect(detectPageColumns({ pageNumber: 1, width: 595, height: 790, textItems }).isMultiColumn).toBe(false);
+  });
+
   it("preserves repeated values in distinct native table cells", () => {
     const page = { pageNumber: 1, width: 500, height: 700, textItems: [
       { text: "42", x: 80, y: 180, width: 16, height: 8, fontSize: 9, fontName: "Body", page: 1 },

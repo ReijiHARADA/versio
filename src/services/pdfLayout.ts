@@ -348,13 +348,13 @@ function findTwoRowStarts(
     if (row) row.push(item);
     else rows.push([item]);
   }
-  const starts: number[] = [];
+  const starts: Array<{ x: number; y: number }> = [];
   for (const row of rows) {
     if (row.length < 2) continue;
     const left = Math.min(...row.map((item) => item.x));
     const right = Math.max(...row.map((item) => item.x + item.width));
     if (right - left <= pageWidth * 0.55) {
-      starts.push(left);
+      starts.push({ x: left, y: row[0].y });
       continue;
     }
     // When both columns share a baseline, the row itself spans the gutter.
@@ -362,13 +362,13 @@ function findTwoRowStarts(
     // full-width title or figure line.
     const leftItems = row.filter((item) => item.x + item.width <= pageWidth * 0.5);
     const rightItems = row.filter((item) => item.x >= pageWidth * 0.5);
-    if (leftItems.length >= 2) starts.push(Math.min(...leftItems.map((item) => item.x)));
-    if (rightItems.length >= 2) starts.push(Math.min(...rightItems.map((item) => item.x)));
+    if (leftItems.length >= 2) starts.push({ x: Math.min(...leftItems.map((item) => item.x)), y: row[0].y });
+    if (rightItems.length >= 2) starts.push({ x: Math.min(...rightItems.map((item) => item.x)), y: row[0].y });
   }
   const binSize = 8;
   const bins = new Map<number, number>();
-  for (const x of starts) {
-    const bin = Math.round(x / binSize) * binSize;
+  for (const point of starts) {
+    const bin = Math.round(point.x / binSize) * binSize;
     bins.set(bin, (bins.get(bin) || 0) + 1);
   }
   const ranked = [...bins.entries()].sort((a, b) => b[1] - a[1]);
@@ -376,7 +376,18 @@ function findTwoRowStarts(
   const second = first && ranked.find((peak) =>
     Math.abs(peak[0] - first[0]) >= pageWidth * 0.28
   );
-  if (!first || !second || first[1] < MIN_COLUMN_ITEMS || second[1] < MIN_COLUMN_ITEMS) {
+  if (!first || !second || first[1] < MIN_COLUMN_ITEMS || second[1] < MIN_COLUMN_ITEMS ||
+      second[1] < first[1] * 0.55) {
+    return null;
+  }
+  const yRange = (x: number) => {
+    const ys = starts.filter((point) => Math.abs(point.x - x) <= binSize).map((point) => point.y);
+    return { min: Math.min(...ys), max: Math.max(...ys) };
+  };
+  const leftRange = yRange(first[0]);
+  const rightRange = yRange(second[0]);
+  const overlap = Math.min(leftRange.max, rightRange.max) - Math.max(leftRange.min, rightRange.min);
+  if (overlap < 80 || leftRange.max - leftRange.min < 120 || rightRange.max - rightRange.min < 120) {
     return null;
   }
   return [Math.min(first[0], second[0]), Math.max(first[0], second[0])];
