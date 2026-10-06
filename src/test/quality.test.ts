@@ -161,6 +161,12 @@ describe("acronym expansion safety", () => {
     expect(evaluateJaTranslation(output, source).reasons).not.toContain("unsupported method predicate introduced");
   });
 
+  it("recognizes conducting quantitative appraisal analysis as method evidence", () => {
+    const source = "The issues are worth considering when conducting quantitative appraisal analysis on institutional texts.";
+    const output = "機関文書に対する定量的評価分析を行う際に考慮すべき課題である。";
+    expect(evaluateJaTranslation(output, source).reasons).not.toContain("unsupported method predicate introduced");
+  });
+
   it("recognizes plural experiments and reported user-study evidence", () => {
     expect(evaluateJaTranslation(
       "2011年にFacebook上で2つの大規模なフィールド実験を実施した。",

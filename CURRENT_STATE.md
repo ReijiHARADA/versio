@@ -14,6 +14,7 @@
 - 測定役割ガード `scientific measurement role changed` を追加。英語側で明示された2つの測定役割（power / channel length）と、日本語側の値の最近傍役割が反転した場合だけ拒否し、役割が不明な通常文は変更しない。quality tests 274件、typecheck pass。`focused-heldout-v4`（同2論文・4 units）ではstep-to-chargeの問題出力がreader-visible fallbackへ倒れ、ppg-earring本文は従来どおり完了した。なおstep-to-chargeは未翻訳英文残留も同時に検出されており、ガード単独の寄与率は追加分離が必要。
 - CAT独立fallback cohort `cat-independent-heldout-v2`（post-model ordinary-body fallback 4件）を同一ゲートで評価。自動受理2/4、手動では安全な受理1/4。1件はThai metadata + detached numberのsource fragmentをCATが流暢に補完したseverity 4、1件は数値4の omissionで拒否、1件は意味上は妥当だがmethod guardのfalse reject、1件は正しく受理。CAT本番cascadeはまだ統合しない。レビューは `cat-independent-heldout-v2-manual-review.json`。入力抽出スクリプトはfallbackかつpost-modelに限定する修正を追加。
 - CAT held-out入力のsource integrityを追加確認し、先頭foreign metadataに加えて `Mage = 25.6...` のような代入途中から始まる断片も除外するよう準備スクリプトを強化。v3ではThai行は除外できたが、代入断片が残ったため、CAT受理率を本番品質の推定には使わない。再評価結果は `cat-independent-heldout-v3.json` に保存。
+- `conducting quantitative appraisal analysis` を明示的なmethod evidenceとして認識する一般ルールを追加し、CATのlinguistics行で確認されたfalse rejectを解消。quality tests 275件 pass。保存済みv3 CAT結果の再計算では受理2/4→3/4になったが、代入途中source fragmentが1件残るため、本番cascade統合の判断には使わない。
 - 2026-10-05: CAT比較前のMADLAD重点基準 `focused-before-cat-v1`（4本・16 units）を完了。ordinary-bodyは2/6 fallback（33.3%）、全体は9/16 fallbackだが、6件は構造不良によるpre-model除外。これは全体推定ではなく、CAT cascade比較用の基準値として保存。
 
 最終更新: 2026-10-05
