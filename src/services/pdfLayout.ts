@@ -2418,7 +2418,47 @@ function groupLinesIntoBlocks(
   const merged = mergeColumnContinuations(nonEmptyBlocks);
   const split = splitMixedColumnBlocks(merged);
   const ordered = repairInterleavedContinuationOrder(repairPageBoundaryContinuations(repairDetachedMarginContinuations(split)));
-  return trimOrphanTailBeforeChrome(ordered);
+  return trimInterleavedHyphenFragments(trimOrphanTailBeforeChrome(ordered));
+}
+
+/**
+ * PDF producers sometimes leave a short hyphenated tail from the neighbouring
+ * column at the beginning of a paragraph block (for example `evi- 5. ...` or
+ * a standalone `miss-` line).  These are not normal line-wraps when the next
+ * text starts a new heading/sentence.  Remove only that narrow shape; a
+ * hyphenated word followed by a lowercase continuation remains untouched.
+ */
+function trimInterleavedHyphenFragments(blocks: LayoutBlock[]): LayoutBlock[] {
+  for (const block of blocks) {
+    if (block.role !== "paragraph" || block.lines.length < 2) continue;
+    const cleaned = block.lines.filter((line, index, lines) => {
+      const text = line.text.trim();
+      if (/^\.\s+[a-z]/.test(text)) return false;
+      if (/^[A-Za-z]{1,6}-$/.test(text)) {
+        const next = lines[index + 1]?.text.trim() ?? "";
+        // Keep a legitimate line-wrap (`inter-` followed by `action`).
+        if (/^[a-z]/.test(next)) return true;
+        return false;
+      }
+      const inline = text.match(/^([A-Za-z]{1,6}|[.]{1,3})-\s+(.+)$/);
+      if (!inline) return true;
+      // A punctuation-only prefix cannot be a word wrap; it is a stray glyph
+      // from an adjacent text stream even when the following word is lower
+      // case (for example `.- tively`).
+      if (/^[.]+$/.test(inline[1])) return false;
+      // A new sentence/heading after the fragment indicates an interleaved
+      // column artifact; lowercase continuation is a legitimate hyphenated
+      // word and must be preserved.
+      return /^[a-z]/.test(inline[2]);
+    });
+    if (cleaned.length === block.lines.length || cleaned.length === 0) continue;
+    block.lines = cleaned;
+    block.text = joinLines(cleaned);
+    block.bbox = blockBbox(cleaned);
+    block.pageStart = cleaned[0].page;
+    block.pageEnd = cleaned.at(-1)?.page ?? block.pageEnd;
+  }
+  return blocks;
 }
 
 /** Rejoin a paragraph across a page boundary when intervening blocks are
