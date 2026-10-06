@@ -767,3 +767,6 @@ The first full replay exposed and fixed a null-signature reference in this
 fallback; the focused suite now passes 5/5 and typecheck is clean. A complete
 232-test replay after that null fix remains pending before this change can be
 called corpus-wide green.
+
+The pending replay is now complete: 2 test files, 232 tests passed, 0 failed
+(386.86s) after the null-signature fix.
