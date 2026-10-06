@@ -1149,6 +1149,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         const text = other.text.trim();
         return Boolean(otherBox) && Math.abs((otherBox?.y ?? 0) - box.y) <= 12 &&
           (otherBox?.x ?? 0) < box.x && text.length >= 2 && text.length <= 80 &&
+          /^[a-z\u00e0-\u024f]/.test(candidate.text.trim()) &&
           !/[.!?]$/.test(text) &&
           !/\b(?:university|department|institute|laboratory|college|school|hospital|faculty)\b/i.test(text);
       })
