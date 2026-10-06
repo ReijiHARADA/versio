@@ -652,3 +652,7 @@ The 27-paper benchmark after the masthead y-boundary repair reached mean author 
 ### 2026-10-06: sidebar editor/reviewer exclusion
 
 `marketing-neurophysiology-consumer-motivation` mixed editor/reviewer sidebar names with the article masthead. A minimum masthead width guard excludes narrow sidebar author-role nodes while retaining the full-width article row. The PDF confirms five article authors (`Sanchit Pawar`, `Asle Fagerstrøm`, `Valdimar Sigurdsson`, `Aurelija Burinskiene`, `Erik Arntzen`); the catalog ground truth was corrected to include Aurelija. Typecheck and the 29-case pipeline suite pass.
+
+### 2026-10-06: narrow author-row regression avoided
+
+A global minimum-width filter intended to remove Frontiers sidebar reviewers caused regressions across valid narrow-column publisher mastheads (27-paper mean F1 fell to 0.837). It was removed; the masthead-boundary and label/keyword safeguards remain. The corrected 27-paper benchmark returned to mean author F1 0.921 with 19/27 perfect papers. Sidebar reviewer handling remains a targeted follow-up rather than a global width rule.
