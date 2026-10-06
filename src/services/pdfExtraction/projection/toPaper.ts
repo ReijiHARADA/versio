@@ -125,7 +125,22 @@ function isReferenceText(text: string, currentKind: NormalizedSectionKind | null
   // section.  The closing citation followed by a finite sentence is strong
   // evidence of body prose; do not hide it as a bibliography entry.
   if (currentKind === "references" && /^\([^)]{2,100}\)\.\s+[A-Z][a-z]+\b/.test(text.trim())) return false;
-  if (currentKind === "references") return true;
+  if (currentKind === "references") {
+    // Section state can leak across a reordered column or a floating figure.
+    // Do not hide every following paragraph as a bibliography entry.  Native
+    // reference candidates are still preserved by their canonical `reference`
+    // role; this fallback only classifies paragraph-shaped nodes when they
+    // contain bibliographic evidence.
+    const trimmed = text.trim();
+    const hasYear = /\b(?:19|20)\d{2}[a-z]?\b/.test(trimmed);
+    const hasBibliographicShape =
+      /^(?:\[\d+\]|\d+[.)])\s+[^.!?]{2,140}\b(?:19|20)\d{2}[a-z]?\b/.test(trimmed) ||
+      /\b(?:doi\s*:|https?:\/\/|journal|proceedings|conference|出版社|大学紀要)\b/i.test(trimmed);
+    // A long sentence containing an inline year is usually body prose with a
+    // citation, not a bibliography record.  Keep it visible for translation.
+    if (trimmed.length > 180 && /[.!?]\s*$/.test(trimmed) && hasYear) return false;
+    return hasBibliographicShape;
+  }
   // A numbered list item is not a bibliography entry. Outside an explicit
   // References section, require citation-shaped evidence such as a year.
   return /^\[\d+\]/.test(text) ||
@@ -138,6 +153,13 @@ function isReferenceText(text: string, currentKind: NormalizedSectionKind | null
 function isNumberedProseListItem(text: string): boolean {
   return /^(?:[1-9]|1[0-9]|20)[.)]\s+/.test(text) &&
     !/\b(?:19|20)\d{2}\b/.test(text.slice(0, 180));
+}
+
+function isLikelyNarrativeText(text: string): boolean {
+  const trimmed = text.trim();
+  if (trimmed.length < 80) return false;
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  return words.length >= 12 && /[.!?](?:\s|$)/.test(trimmed);
 }
 
 function layoutForNode(
@@ -286,7 +308,7 @@ export function projectCanonicalToPaper(input: {
     if (n.role === "other" && n.evidence.some((entry) =>
       entry.label === "vector-figure-label-cluster" || entry.label === "repeated-numeric-chart-label" ||
       entry.label === "image-overlap-label-cluster"
-    )) return false;
+    ) && !isLikelyNarrativeText(n.text ?? "")) return false;
     return true;
   });
   const fallbackIds = readable.map((n) => n.id);
