@@ -337,7 +337,7 @@ export function projectCanonicalToPaper(input: {
   // middle-dot marker plus multiple name-shaped tokens as continuation.
   const authorContinuationNodes = canonical.nodes.filter((n) => n.role === "paragraph" && n.text &&
     /^\s*[·•]\s*[A-Z][^!?]{8,220}$/.test(n.text.trim()) &&
-    (n.text.match(/[A-Z][a-z]+\s+[A-Z][a-z]+/g)?.length ?? 0) >= 2);
+    (n.text.match(/[A-Z][a-z]+(?:\s+[A-Z]\.)?\s+[A-Z][a-z]+/g)?.length ?? 0) >= 2);
   const authorSourceNodes = [...authorNodes, ...authorContinuationNodes];
   const affiliationNodes = canonical.nodes.filter((n) => n.role === "affiliation" && n.text);
   const affiliated = canonical.relations.filter((r) => r.kind === "AFFILIATED_WITH");
