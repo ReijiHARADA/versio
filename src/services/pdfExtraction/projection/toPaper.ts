@@ -385,7 +385,15 @@ export function projectCanonicalToPaper(input: {
         !/[.!?]$/.test(n.text.trim())) ||
       (/\d[*†‡]?/.test(n.text) && n.text.trim().length <= 400 &&
         (n.text.match(/,/g)?.length ?? 0) >= 3 && !/[.!?]$/.test(n.text.trim()))));
-  const authorSourceNodes = [...authorNodes, ...authorContinuationNodes];
+  // Some two-column journals classify the first half of an italic author row
+  // as paragraph text and the next visual line as author. Recover the marked
+  // prefix as a source node before projection; the strict marker/count/height
+  // checks keep ordinary abstract prose out of this path.
+  const markedAuthorParagraphs = canonical.nodes.filter((n) => n.role === "paragraph" && n.text &&
+    n.pageStart === 1 && (n.boundingBoxes[0]?.y ?? Infinity) < 390 &&
+    n.text.trim().length <= 400 && /\d[*†‡]?/.test(n.text) &&
+    (n.text.match(/,/g)?.length ?? 0) >= 3 && !/[.!?]$/.test(n.text.trim()));
+  const authorSourceNodes = [...authorNodes, ...authorContinuationNodes, ...markedAuthorParagraphs];
   const affiliationNodes = canonical.nodes.filter((n) => n.role === "affiliation" && n.text);
   const affiliated = canonical.relations.filter((r) => r.kind === "AFFILIATED_WITH");
   const authorsStructured = authorSourceNodes.map((node) => ({
