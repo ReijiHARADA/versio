@@ -23,11 +23,36 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
     const tableItems = page.textItems.filter((item) => item.y >= captionY - 420 && item.y <= captionY + 420);
     const tableGraphics = (page.graphicsPrimitives ?? []).filter((item) => item.y + item.height >= captionY - 420 && item.y <= captionY + 420);
     const signature = buildCaptionAnchoredTableSignature(tableItems, tableGraphics);
-    if (!signature) continue;
+    // A few PDFs expose the table text but omit usable vector rule geometry.
+    // The caption is still a strong structural anchor: recover a region from
+    // several nearby table-scored rows, while requiring compact geometry and
+    // rejecting sentence-shaped candidates. This is deliberately conservative
+    // so a caption alone never turns surrounding prose into a table.
+    const captionFallback = !signature
+      ? candidates.filter((candidate) => {
+        if (candidate.pageStart !== page.pageNumber || (candidate.roleScores.table ?? 0) < 0.94) return false;
+        const box = candidate.boundingBoxes[0];
+        if (!box || /[.!?]\s*$/.test(candidate.text.trim())) return false;
+        return box.y >= captionY - 420 && box.y <= captionY + 80;
+      })
+      : [];
+    if (!signature && captionFallback.length < 3) continue;
+    const effectiveSignature = signature ?? {
+      bbox: {
+        page: page.pageNumber,
+        x: Math.min(...captionFallback.map((candidate) => candidate.boundingBoxes[0].x)),
+        y: Math.min(...captionFallback.map((candidate) => candidate.boundingBoxes[0].y)),
+        width: Math.max(...captionFallback.map((candidate) => candidate.boundingBoxes[0].x + candidate.boundingBoxes[0].width)) - Math.min(...captionFallback.map((candidate) => candidate.boundingBoxes[0].x)),
+        height: Math.max(...captionFallback.map((candidate) => candidate.boundingBoxes[0].y + candidate.boundingBoxes[0].height)) - Math.min(...captionFallback.map((candidate) => candidate.boundingBoxes[0].y)),
+      },
+      horizontalRules: 0,
+      verticalRules: 0,
+      columnX: [...new Set(captionFallback.map((candidate) => Math.round(candidate.boundingBoxes[0].x)))].sort((a, b) => a - b),
+    };
     const group = candidates.filter((candidate) => {
       if (candidate.pageStart !== page.pageNumber || (candidate.roleScores.table ?? 0) < 0.94) return false;
       const box = candidate.boundingBoxes[0];
-      return Boolean(box && intersects(box, signature.bbox));
+      return Boolean(box && intersects(box, effectiveSignature.bbox));
     });
     // Borderless tables (common in ACM/CHI papers) have no vector rules and
     // therefore cannot satisfy the ruled-grid threshold. A caption plus a
@@ -50,9 +75,11 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
     if (selectedGroup.length < 2) continue;
     const prose = selectedGroup.filter((candidate) => /[.!?]\s*$/.test(candidate.text.trim())).length;
     if (prose > Math.floor(selectedGroup.length / 3)) continue;
-    const confidence = borderlessGroup.length >= 2
+    const confidence = !signature
+      ? 0.982
+      : borderlessGroup.length >= 2
       ? 0.985
-      : Math.min(0.995, 0.96 + Math.min(0.03, (signature.horizontalRules + signature.verticalRules) * 0.002));
+      : Math.min(0.995, 0.96 + Math.min(0.03, (effectiveSignature.horizontalRules + effectiveSignature.verticalRules) * 0.002));
     if (confidence < 0.98) continue;
     regions.push({
       id: `table-region-p${page.pageNumber}-${groupIndex + 1}`,
@@ -61,11 +88,11 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
       pageEnd: page.pageNumber,
       boundingBoxes: [{ page: page.pageNumber, x: Math.min(...selectedGroup.map(c=>c.boundingBoxes[0].x)), y: Math.min(...selectedGroup.map(c=>c.boundingBoxes[0].y)), width: Math.max(...selectedGroup.map(c=>c.boundingBoxes[0].x+c.boundingBoxes[0].width))-Math.min(...selectedGroup.map(c=>c.boundingBoxes[0].x)), height: Math.max(...selectedGroup.map(c=>c.boundingBoxes[0].y+c.boundingBoxes[0].height))-Math.min(...selectedGroup.map(c=>c.boundingBoxes[0].y)) }],
       memberCandidateIds: selectedGroup.map((candidate) => candidate.id),
-      columnX: signature.columnX,
+      columnX: effectiveSignature.columnX,
       graphicsEvidence: [],
       repeatedHeaderEvidence: [],
       confidence,
-      provenance: [{ source: "layout-model", label: "caption-anchored-grid-region", confidence, page: page.pageNumber, bbox: { page: page.pageNumber, ...signature.bbox }, reason: "multiple table-scored candidates intersect a caption-anchored ruled grid" }],
+      provenance: [{ source: "layout-model", label: signature ? "caption-anchored-grid-region" : "caption-anchored-text-region", confidence, page: page.pageNumber, bbox: { page: page.pageNumber, ...effectiveSignature.bbox }, reason: signature ? "multiple table-scored candidates intersect a caption-anchored ruled grid" : "multiple table-scored candidates form a compact caption-anchored text region without reliable vector rules" }],
     });
     }
   }

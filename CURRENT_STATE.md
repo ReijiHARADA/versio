@@ -755,3 +755,11 @@ and retains Iowa State University. Focused baseline tests (2/2) and typecheck pa
 The full extraction corpus was rerun after this projection change: 2 test files,
 232 tests passed, 0 failed (380.77s), confirming no regression in the existing
 reading-order and structural extraction checks.
+
+### Caption-anchored table fallback (2026-10-06)
+
+Visual inspection of education-learning-analytics page 20 found three ruled
+tables whose native rule geometry was incomplete. The table-region builder now
+uses a caption-anchored text-region fallback only when at least three nearby
+table-scored, non-sentence rows exist; a caption alone cannot promote prose.
+Typecheck and the focused education/Wear Scale/rotated-table tests pass.
