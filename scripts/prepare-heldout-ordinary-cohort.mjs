@@ -21,6 +21,9 @@ const limit = limitArg >= 0 ? Number(process.argv[limitArg + 1]) : 30;
 
 const stableHash = (source) => crypto.createHash("sha256").update(source.replace(/\s+/g, " ").trim()).digest("hex");
 const readJson = (file) => { try { return JSON.parse(fs.readFileSync(file, "utf8")); } catch { return null; } };
+const startsWithForeignMetadata = (source) =>
+  /^[\s\u0E00-\u0E7F\u0400-\u04FF\u0600-\u06FF]{8,}[\s\S]*\b[A-Za-z]{3,}\b/.test(source) ||
+  /^\s*[A-Za-z]{1,12}\s*=\s*\d/.test(source);
 const report = readJson(input);
 if (!report) throw new Error(`Could not read ${input}`);
 
@@ -35,6 +38,7 @@ const rows = (report.papers ?? []).flatMap((entry) => {
 }).filter((row) => row.sourceCategory === "ordinary-body-prose" &&
   row.readerVisibleFallback === true &&
   row.fallbackStage === "post-model" &&
+  !startsWithForeignMetadata(String(row.source ?? "")) &&
   typeof row.source === "string" && row.source.trim().length >= 240);
 
 const excluded = new Set();
@@ -92,7 +96,7 @@ const result = {
   version: "heldout-ordinary-cohort-v1",
   generatedAt: new Date().toISOString(),
   input: path.relative(root, input),
-  selection: "ordinary-body post-model reader-visible fallback rows >=240 chars; source hashes found in other report artifacts excluded; deterministic discipline/format round-robin",
+  selection: "ordinary-body post-model reader-visible fallback rows >=240 chars; leading foreign-script metadata excluded; source hashes found in other report artifacts excluded; deterministic discipline/format round-robin",
   candidateRows: candidates.length,
   excludedSourceHashCount: excluded.size,
   selectedRows: selected.length,
