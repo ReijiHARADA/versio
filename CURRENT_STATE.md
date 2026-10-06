@@ -1,5 +1,7 @@
 ## Current extraction status (2026-10-07)
 
+- 2026-10-07: 最新コードで重点3PDF（interactive-jewellery、linguistics-language-model-physics、medical-deep-learning-meta-review）のisolated extractionを再実行。3/3 process成功、title exact 3/3、heading/reading-order/caption/table指標は各fixtureの期待値を通過、source integrity 1.0。medical PDFは `pageKind=garbled` となりOCR routing対象。
+
 - Latest code includes generic title/author/affiliation projection, transparent text-layer detection, Vision OCR routing, sparse-OCR protection, and figure/table label suppression.
 - Verified: extraction corpus and reading-order **232/232**, page-class/OCR tests **9/9**, typecheck and lint pass.
 - Automated 113-paper title exact metrics are historical regression signals, not visual accuracy; native OCR/runtime validation and full-page visual review remain outstanding.
