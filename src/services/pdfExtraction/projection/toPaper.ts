@@ -342,6 +342,24 @@ export function projectCanonicalToPaper(input: {
     .filter((n) => n.pageStart === 1 && n.boundingBoxes[0]?.y != null)
     .slice()
     .sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0));
+  const sidebarLabels = pageOneNodesByY.filter((n) =>
+    /^(?:open access|edited by|reviewed by|correspondence|specialty section|citation|received|accepted|published)\s*:?$/i.test(n.text?.trim() ?? "")
+  );
+  const sidebarRight = sidebarLabels.length > 0
+    ? Math.max(...sidebarLabels.map((n) => {
+      const box = n.boundingBoxes[0];
+      return (box?.x ?? 0) + (box?.width ?? 0);
+    }))
+    : 0;
+  const hasSidebarBody = sidebarLabels.length >= 2 && canonical.nodes.some((n) => {
+    const box = n.boundingBoxes[0];
+    return n.pageStart === 1 && (n.role === "paragraph" || n.role === "author" || n.role === "title") &&
+      (box?.x ?? 0) > sidebarRight + 12 && (box?.width ?? 0) >= 180;
+  });
+  const isSidebarChromeNode = (node: (typeof canonical.nodes)[number]): boolean => {
+    const box = node.boundingBoxes[0];
+    return hasSidebarBody && node.pageStart === 1 && (box?.x ?? 0) + (box?.width ?? 0) <= sidebarRight + 18;
+  };
   const mastheadExcludedByLabel = (node: (typeof canonical.nodes)[number]): boolean => {
     const y = node.boundingBoxes[0]?.y ?? Infinity;
     const previousHeadingNode = pageOneNodesByY
@@ -361,6 +379,7 @@ export function projectCanonicalToPaper(input: {
   };
   const authorNodes = canonical.nodes.filter((n) => n.role === "author" && n.text &&
     n.pageStart === 1 && (n.boundingBoxes[0]?.y ?? 0) < firstBodyY &&
+    !isSidebarChromeNode(n) &&
     !mastheadExcludedByLabel(n) &&
     // Long mastheads can contain many marker-separated authors. Keep them
     // eligible for expansion; the marker/separator checks in expandAuthorLine
@@ -373,6 +392,7 @@ export function projectCanonicalToPaper(input: {
   // row in a paragraph-role node at the same baseline. Treat only a leading
   // middle-dot marker plus multiple name-shaped tokens as continuation.
   const authorContinuationNodes = canonical.nodes.filter((n) => n.role === "paragraph" && n.text && n.pageStart === 1 &&
+    !isSidebarChromeNode(n) &&
     (n.boundingBoxes[0]?.y ?? 9999) < 520 &&
     !/^\s*(?:keywords?|key words?)\s*:/i.test(n.text.trim()) &&
     ((/^\s*[·•]\s*[A-Z][^!?]{8,220}$/.test(n.text.trim()) &&
@@ -391,10 +411,11 @@ export function projectCanonicalToPaper(input: {
   // checks keep ordinary abstract prose out of this path.
   const markedAuthorParagraphs = canonical.nodes.filter((n) => n.role === "paragraph" && n.text &&
     n.pageStart === 1 && (n.boundingBoxes[0]?.y ?? Infinity) < 390 &&
+    !/^(?:keywords?|key words?)\s*:/i.test(n.text.trim()) &&
     n.text.trim().length <= 400 && /\d[*†‡]?/.test(n.text) &&
     (n.text.match(/,/g)?.length ?? 0) >= 3 && !/[.!?]$/.test(n.text.trim()));
   const authorSourceNodes = [...authorNodes, ...authorContinuationNodes, ...markedAuthorParagraphs];
-  const affiliationNodes = canonical.nodes.filter((n) => n.role === "affiliation" && n.text);
+  const affiliationNodes = canonical.nodes.filter((n) => n.role === "affiliation" && n.text && !isSidebarChromeNode(n));
   const affiliated = canonical.relations.filter((r) => r.kind === "AFFILIATED_WITH");
   const authorsStructured = authorSourceNodes.map((node) => ({
     id: node.id,
@@ -428,6 +449,7 @@ export function projectCanonicalToPaper(input: {
   const affiliationAuthorNames = affiliationNodes
     .flatMap((node) => {
       const text = node.text ?? "";
+      if (/^(?:keywords?|key words?)\s*:/i.test(text.trim())) return [];
       const recovered = splitAffiliationNamePrefix(text).map((pair) => pair.author);
       const nameOnly = !/(?:university|department|institute|school|college|hospital|laboratory|center|centre|japan|china|israel|sweden)/i.test(text) &&
         text.length <= 180 && /\b(?:and|,)\b/.test(text) ? expandAuthorLine(text) : [];
