@@ -161,6 +161,13 @@ function normalizeAffiliationName(text: string): string {
     return value;
   };
   return collapseExactRepeat(text
+    // Reviewer/editor metadata can share the native block with the final
+    // affiliation row in journal mastheads. It is a hard boundary, not part
+    // of an institution name.
+    .replace(/\s+(?:edited|reviewed)\s+by\s*:\s*[\s\S]*$/i, "")
+    // Some publishers omit the label but leave `Reviewer Name, NIH ...`
+    // inline after the final institution. Cut that person-shaped tail.
+    .replace(/,\s+[A-Z][\p{Ll}'’-]+(?:\s+[A-Z][\p{Ll}'’-]+){1,2},\s+(?=(?:NIH|University|Hospital|Institute|Center|Centre)\b)[\s\S]*$/u, "")
     .replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "")
     // Native PDF text sometimes loses spaces at font-run boundaries
     // (e.g. `IowaStateUniversity` or `ofEvents`). Restore only a lower-to-
@@ -608,6 +615,13 @@ export function projectCanonicalToPaper(input: {
   }).filter((affiliation) => affiliation.name &&
     !/[{}@]/.test(affiliation.name) &&
     !/^(?:corresponding author|these authors contributed|author note|keywords?)\b/i.test(affiliation.name) &&
+    !/^(?:edited|reviewed)\s+by\s*:/i.test(affiliation.name) &&
+    // Reviewer rows and leaked body fragments can be classified as
+    // affiliations after a native stream interleave. A person-shaped prefix
+    // followed by an institution, or a lowercase sentence fragment, is not an
+    // institution candidate.
+    !/^[A-Z][\p{Ll}'’-]+(?:\s+[A-Z][\p{Ll}'’-]+){1,3},\s+.*\b(?:university|institute|center|centre|laboratory|biomedical)\b/i.test(affiliation.name) &&
+    !/^[a-z]/.test(affiliation.name) &&
     !/^available from .*\bat:\s*$/i.test(affiliation.name) &&
     !/^(?:contents|article history|lists available at)\b/i.test(affiliation.name) &&
     (affiliation.name.match(/\b[a-z]\b/g)?.length ?? 0) < 3 &&
