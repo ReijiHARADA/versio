@@ -656,3 +656,7 @@ The 27-paper benchmark after the masthead y-boundary repair reached mean author 
 ### 2026-10-06: narrow author-row regression avoided
 
 A global minimum-width filter intended to remove Frontiers sidebar reviewers caused regressions across valid narrow-column publisher mastheads (27-paper mean F1 fell to 0.837). It was removed; the masthead-boundary and label/keyword safeguards remain. The corrected 27-paper benchmark returned to mean author F1 0.921 with 19/27 perfect papers. Sidebar reviewer handling remains a targeted follow-up rather than a global width rule.
+
+### 2026-10-06: name-only affiliation masthead rows
+
+`marketing-health-goals-nudging` stored `Jeroen S. Benjamins` and `Femke de Boer` in an affiliation-role row because the publisher separated the name list from its numbered institution block. A strict name-only affiliation recovery now handles short comma/and-separated rows without accepting institution-shaped text. The fixture now projects all five catalog authors. Typecheck and the 29-case pipeline suite pass.
