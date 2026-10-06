@@ -426,9 +426,15 @@ export function projectCanonicalToPaper(input: {
     const box = node.boundingBoxes[0];
     // A native line can span the sidebar/body gutter. When its left edge is
     // inside the sidebar and it contains comma-separated names, discard only
-    // the leftmost sidebar segment and retain the body-side continuation.
+    // the leftmost sidebar segment when it is immediately below a sidebar
+    // label; farther-down mixed lines may contain a genuine article author.
     if (hasSidebarBody && (box?.x ?? Infinity) < sidebarRight && (box?.width ?? 0) > 180) {
-      return (node.text ?? "").replace(/^[^,]+,\s*/, "");
+      const y = box?.y ?? Infinity;
+      const nearestLabelY = sidebarLabels
+        .map((label) => label.boundingBoxes[0]?.y ?? -Infinity)
+        .filter((labelY) => labelY < y)
+        .sort((a, b) => b - a)[0] ?? -Infinity;
+      if (y - nearestLabelY < 30) return (node.text ?? "").replace(/^[^,]+,\s*/, "");
     }
     return node.text ?? "";
   };
