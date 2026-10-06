@@ -1452,8 +1452,13 @@ export function projectCanonicalToPaper(input: {
   // `АПФАПФ` while still looking like a plausible title to generic scoring.
   // Treat that pattern as unusable so a trusted metadata title (or a later
   // OCR pass) can win instead of exposing the corrupted glyph stream.
-  const titleLooksCorrupt = /([\p{L}]{2,6})\1(?:\1)?/iu.test(extractedTitleText) &&
+  const repeatedGlyphRun = /([\p{L}]{2,6})\1(?:\1)?/iu.test(extractedTitleText) &&
     !/[\s-]{2,}/.test(extractedTitleText);
+  const titleHasFlattenedAuthorTail = extractedTitleText.length > 100 &&
+    /\d/.test(extractedTitleText) && /,/.test(extractedTitleText) &&
+    (/(?:\b(?:and|the|of|in|with|for)\b).+\d[,\s]/i.test(extractedTitleText) ||
+      ((extractedTitleText.match(/[\u0400-\u04ff]/g)?.length ?? 0) / extractedTitleText.length > 0.35));
+  const titleLooksCorrupt = repeatedGlyphRun || titleHasFlattenedAuthorTail;
   const titleForProjection = titleLooksCorrupt ? undefined : extractedTitleText;
   const paper: Paper = {
     id: paperId,
