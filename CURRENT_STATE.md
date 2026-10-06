@@ -724,3 +724,13 @@ The post-change corpus replay completed 113/114 catalog entries again (the same
 missing `precious-materials` PDF), with table-region recall remaining 1.0 and
 the minimum source-integrity rate improving to 0.99698. The rotated-table
 change did not regress the title or structural metrics.
+
+### Masthead and cross-column boundaries (2026-10-06)
+
+Two generic reading-order issues found by the corpus suite were fixed: a large
+first-page title containing the word `and` could be misclassified as an author
+list, and continuation repair could absorb a body line into a heading or leave
+an accepted same-page cross-column join unmarked. Title geometry now wins over
+name-list heuristics, headings are hard boundaries, and verified overlapping
+column joins carry explicit provenance. Focused regressions for the two title
+cases and PPG Earring reading order pass.

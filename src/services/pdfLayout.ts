@@ -1929,6 +1929,18 @@ function roleForLine(
   if (line.page === 1 && /^[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}(?:\s*[;,]\s*[\w.+-]+@[\w.-]+\.[A-Za-z]{2,})*$/i.test(text)) {
     return "chrome";
   }
+  // A large, centered first-page line is a title anchor even when its words
+  // happen to look like a multi-person name list (for example titles joined
+  // with “and”). Resolve this geometry before masthead name heuristics.
+  if (line.page === 1 && line.y < 230 && line.fontSize >= baseFont * 1.22 &&
+      line.width >= (line.pageWidth ?? 612) * 0.42 &&
+      !looksLikePersonName(text) && !looksLikeAffiliation(text)) {
+    return "title";
+  }
+  // arXiv's identifier/date header is not the article title. Keep it as
+  // chrome so it cannot win the title resolver after the real title has been
+  // recovered from the masthead region.
+  if (/^arXiv:\s*\d{4}\.\d{4,}/i.test(text)) return "chrome";
   // Explicit author-list geometry must override a stale paragraph hint from
   // line grouping. The predicate is conservative and excludes institutions,
   // sentence punctuation, and section labels.
@@ -3528,6 +3540,13 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
     if (traceText && target && block && (target.text.includes(traceText) || block.text.includes(traceText))) {
       console.warn(`[PDF_LAYOUT_TRACE_MERGE] targetRole=${target.role} blockRole=${block.role} targetColumn=${target.column} blockColumn=${block.column} targetEnd=${JSON.stringify(target.text.slice(-120))} blockStart=${JSON.stringify(block.text.slice(0, 120))} joinsSame=${joinsSameColumnContinuation} joinsSpan=${joinsSpanningBodyContinuation} joinsHyphen=${joinsHyphenatedContinuation} wrapsPhysical=${wrapsAcrossPhysicalColumns} targetPreserve=${Boolean(target.preserveColumnContinuation)}`);
     }
+    // Structural headings/titles are hard boundaries. A continuation repair
+    // must never absorb the first body line into a heading (notably an
+    // `Abstract` label in ACM two-column PDFs).
+    if (target && (target.role === "heading" || target.role === "title")) {
+      result.push(block);
+      continue;
+    }
     if (
       target && (target.role === "paragraph" || isAbstractBodyTitleBlock(target)) && block.role === "paragraph" &&
       !currentIsDetachedMargin &&
@@ -3558,7 +3577,18 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         target.pageEnd = block.pageEnd;
       }
       target.bbox = blockBbox(target.lines);
-      if (target.column !== block.column) target.preserveColumnContinuation = true;
+      if (target.column !== block.column) {
+        target.preserveColumnContinuation = true;
+        // Same-page cross-column joins are accepted only from the geometry
+        // continuation branches above. Record that provenance explicitly so
+        // downstream reading-order validation can distinguish them from an
+        // accidental mixed-column paragraph.
+        if (target.pageStart === block.pageStart && targetLine && nextLine &&
+            target.bbox.y <= block.bbox.y + block.bbox.height &&
+            block.bbox.y <= target.bbox.y + target.bbox.height) {
+          target.adjacentBandContinuation = true;
+        }
+      }
       continue;
     }
     if (rejoinInterleavedBand && interleavedBandTarget) {
