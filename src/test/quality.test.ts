@@ -297,6 +297,14 @@ describe("source completeness diagnostics", () => {
     expect(diagnoseIncompleteSource("– with a strong interrelation that has been a long-running topic.").incomplete).toBe(true);
     expect(diagnoseIncompleteSource("- Results were consistent across studies.").incomplete).toBe(false);
   });
+
+  it("flags a block that begins inside an assignment expression", () => {
+    const source = "Mage = 25.6 years) participated in this study in exchange for credit. This fragment begins after a detached participant label.";
+    expect(diagnoseIncompleteSource(source)).toEqual({
+      incomplete: true,
+      reason: "source begins inside an assignment expression",
+    });
+  });
 });
 
 describe("negation detection", () => {
