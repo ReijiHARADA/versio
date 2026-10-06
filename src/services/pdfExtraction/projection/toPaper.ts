@@ -339,7 +339,6 @@ export function projectCanonicalToPaper(input: {
     .sort((a, b) => a - b)[0] ?? Infinity;
   const authorNodes = canonical.nodes.filter((n) => n.role === "author" && n.text &&
     n.pageStart === 1 && (n.boundingBoxes[0]?.y ?? 0) < firstBodyY &&
-    (n.boundingBoxes[0]?.width ?? Infinity) >= 80 &&
     // Long mastheads can contain many marker-separated authors. Keep them
     // eligible for expansion; the marker/separator checks in expandAuthorLine
     // still prevent ordinary prose from becoming an author list.
