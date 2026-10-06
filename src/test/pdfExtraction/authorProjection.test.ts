@@ -10,6 +10,7 @@ const pdf = path.join(root, "test-data/real-papers/power-over-skin.pdf");
 const particlePdf = path.join(root, "test-data/real-papers/interactive-jewellery.pdf");
 const acmPdf = path.join(root, "test-data/real-papers/ppg-earring.pdf");
 const letteredAffiliationPdf = path.join(root, "test-data/real-papers/medical-deep-learning-meta-review.pdf");
+const reviewerMastheadPdf = path.join(root, "test-data/real-papers/cognitive-dual-task.pdf");
 
 describe("author masthead projection", () => {
   it("keeps same-baseline multi-column names separate and excludes locations", async () => {
@@ -69,5 +70,13 @@ describe("author masthead projection", () => {
     expect(result.paper.affiliations).toHaveLength(6);
     expect(result.paper.affiliations.every((affiliation) => !/contents|lists available|article history/i.test(affiliation.name))).toBe(true);
     expect(result.paper.affiliations.some((affiliation) => /German Cancer Consortium/i.test(affiliation.name))).toBe(true);
+  }, 60_000);
+
+  it("does not project editor/reviewer chrome as an affiliation", async () => {
+    if (!fs.existsSync(reviewerMastheadPdf)) return;
+    const pages = await extractPdfPages(reviewerMastheadPdf);
+    const result = extractFromPages({ pages, paperId: "reviewer-chrome-affiliation", filePath: reviewerMastheadPdf, fileHash: "reviewer-chrome", metadata: { pageCount: pages.length } });
+    const names = result.paper.affiliations.map((affiliation) => affiliation.name);
+    expect(names.every((name) => !/edited by|reviewed by|tongjian you|yi sun/i.test(name))).toBe(true);
   }, 60_000);
 });
