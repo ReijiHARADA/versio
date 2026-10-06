@@ -50,16 +50,22 @@ export async function applyVisionOcr(
     if (!needed.has(ocrPage.pageNumber) || ocrPage.lines.length === 0) continue;
     const pdfPage = pages.find((p) => p.pageNumber === ocrPage.pageNumber);
     if (!pdfPage) continue;
-    pdfPage.textItems = ocrPage.lines.map((line, idx) => ({
-      text: line.text,
-      x: 0,
-      y: idx * 20,
-      width: 500,
-      height: 14,
-      fontSize: 12,
-      fontName: "ocr",
-      page: ocrPage.pageNumber,
-    }));
+    pdfPage.textItems = ocrPage.lines.map((line, idx) => {
+      const bounds = line.bounds;
+      const width = pdfPage.width;
+      const height = pdfPage.height;
+      return {
+        text: line.text,
+        x: bounds ? bounds.x * width : 0,
+        // Vision uses a bottom-left origin; layout uses a top-left origin.
+        y: bounds ? (1 - bounds.y - bounds.height) * height : idx * 20,
+        width: bounds ? bounds.width * width : width,
+        height: bounds ? bounds.height * height : 14,
+        fontSize: bounds ? Math.max(8, bounds.height * height) : 12,
+        fontName: "ocr",
+        page: ocrPage.pageNumber,
+      };
+    });
     ocrPages.add(ocrPage.pageNumber);
   }
   return { pages, ocrPages };

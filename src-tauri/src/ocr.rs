@@ -5,6 +5,15 @@
 pub struct OcrResult {
     pub text: String,
     pub confidence: f32,
+    pub bounds: Option<OcrBounds>,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct OcrBounds {
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
 }
 
 #[cfg(target_os = "macos")]
@@ -60,6 +69,15 @@ fn recognize_text_inner(image_b64: &str, languages: &[String]) -> Result<Vec<Ocr
                 results.push(OcrResult {
                     text: candidate.string().to_string(),
                     confidence: candidate.confidence(),
+                    bounds: Some({
+                        let rect = unsafe { obs.boundingBox() };
+                        OcrBounds {
+                            x: rect.origin.x,
+                            y: rect.origin.y,
+                            width: rect.size.width,
+                            height: rect.size.height,
+                        }
+                    }),
                 });
             }
         }
