@@ -159,6 +159,8 @@ export function resolveTitle(input: {
   const titles = input.candidates.filter(
     (c) => (c.role === "title" || (c.roleScores?.title ?? 0) >= 0.85) && !looksLikeRotatedMasthead(c)
   );
+  const titleDebug = typeof process !== "undefined" && process.env.PDF_TITLE_DEBUG === "1";
+  if (titleDebug) console.info("[title-debug] candidates", titles.map((c) => ({ role: c.role, text: c.text, y: c.boundingBoxes[0]?.y, x: c.boundingBoxes[0]?.x, font: c.layoutBlock.lines[0]?.fontSize })));
   let native: string[] = [];
 
   if (titles.length > 0) {
@@ -181,12 +183,14 @@ export function resolveTitle(input: {
     // later article-title candidate before falling back to external metadata.
     // This matters in production imports where `metadataTitle` is commonly
     // absent; the prior implementation only repaired journal-name cases.
-    if (looksLikeObviousMastheadTitle(titles[0].text)) {
+    if (looksLikeObviousMastheadTitle(titles[0].text) || looksLikeMastheadGeometry(titles[0])) {
+      if (titleDebug) console.info("[title-debug] masthead branch", looksLikeObviousMastheadTitle(titles[0].text), looksLikeMastheadGeometry(titles[0]));
       const firstY = titles[0].boundingBoxes[0]?.y ?? 0;
       const authorY = input.candidates
         .filter((candidate) => candidate.pageStart === 1 && candidate.role === "author")
         .map((candidate) => candidate.boundingBoxes[0]?.y ?? Number.POSITIVE_INFINITY)
         .sort((a, b) => a - b)[0] ?? Number.POSITIVE_INFINITY;
+      if (titleDebug) console.info("[title-debug] authorY", authorY);
       const later = titles
         .filter((candidate) => candidate.pageStart === titles[0].pageStart &&
           (candidate.boundingBoxes[0]?.y ?? 0) > firstY + 18 &&
@@ -195,8 +199,33 @@ export function resolveTitle(input: {
           !looksLikeMastheadGeometry(candidate) &&
           !looksLikeAuthorish(candidate.text))
         .sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0));
+      if (titleDebug) console.info("[title-debug] later", later.map((c) => c.text));
+      const lastTitle = titles.at(-1);
+      if (titleDebug) console.info("[title-debug] last", lastTitle?.text, lastTitle?.boundingBoxes[0]?.y);
+      if (lastTitle && lastTitle !== titles[0] && (lastTitle.boundingBoxes[0]?.y ?? 0) > firstY + 24) {
+        const y = lastTitle.boundingBoxes[0]?.y ?? 0;
+        // Keep the final title-role span as a safe fallback even if a nearby
+        // prefix was conservatively classified as affiliation.
+        native = [lastTitle.text.trim()];
+        const sameBaseline = input.candidates
+          .filter((candidate) => {
+            const box = candidate.boundingBoxes[0];
+            const text = candidate.text.trim();
+            return candidate.pageStart === 1 &&
+              Math.abs((box?.y ?? 0) - y) <= 12 &&
+              candidate.role !== "author" && candidate.role !== "header" && candidate.role !== "footer" &&
+              !looksLikeObviousMastheadTitle(text) && !looksLikeAuthorish(text) && text.length <= 100;
+          })
+          .sort((a, b) => (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0));
+        if (titleDebug) console.info("[title-debug] baseline", sameBaseline.map((c) => ({ role: c.role, text: c.text, y: c.boundingBoxes[0]?.y })));
+        if (sameBaseline.length > 0) native = [sameBaseline.map((candidate) => stripMastheadSuffix(candidate.text)).join(" ").replace(/\s+/g, " ").trim()];
+      }
       if (later[0]) {
-        const anchor = later[0];
+        // The final title candidate before the author band is usually the
+        // article title; earlier candidates are often the journal label and
+        // issue line.  Selecting the last candidate also handles title text
+        // split across a short prefix and a second native span.
+        const anchor = later.at(-1)!;
         const y = anchor.boundingBoxes[0]?.y ?? 0;
         const cluster = titles
           .filter((candidate) => candidate.pageStart === anchor.pageStart &&
@@ -288,12 +317,13 @@ export function resolveTitle(input: {
     // native title is a short masthead and nearby chrome confirms that layout,
     // rebuild only the later same-baseline title cluster from geometry. This
     // is deliberately structural; it does not name a publisher or journal.
+    const articleTitleRecovered = native[0] !== combined;
     const hasJournalChrome = input.candidates.some((candidate) =>
       candidate.pageStart === 1 && /^(?:contents\s+lists|journal\s+homepage|available\s+at\s+sciencedirect)\b/i.test(candidate.text.trim())
     );
     const firstTitle = titles[0];
     const firstTitleWords = firstTitle.text.trim().split(/\s+/).length;
-    if (hasJournalChrome) {
+    if (hasJournalChrome && !articleTitleRecovered) {
       const laterTitles = titles.filter((candidate) =>
         candidate.pageStart === firstTitle.pageStart &&
         (candidate.boundingBoxes[0]?.y ?? 0) > (firstTitle.boundingBoxes[0]?.y ?? 0) + 32 &&
