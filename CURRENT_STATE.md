@@ -644,3 +644,7 @@ The post-marker 27-paper run is 0.896 mean author F1 with 18/27 perfect papers. 
 ### 2026-10-06: author projection bounded by masthead region
 
 `marketing-unavailable-choice` contained later reviewer/editor names as author-role nodes. Projection now derives the first page body/abstract y-boundary and only projects author nodes above that masthead boundary. The fixture now returns exactly Jing Tian, Rong Chen, and Feng He; the cognitive dual-task masthead remains intact. Typecheck and the 29-case pipeline suite pass.
+
+### 2026-10-06: author benchmark after masthead boundary
+
+The 27-paper benchmark after the masthead y-boundary repair reached mean author F1 0.918, with 19/27 perfect papers. `marketing-unavailable-choice` left the failing set. Remaining failures are eight layouts, including two catalog/PDF metadata cases and several publisher-specific mastheads. The temporary report was restored after measurement.
