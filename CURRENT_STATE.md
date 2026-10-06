@@ -648,3 +648,7 @@ The post-marker 27-paper run is 0.896 mean author F1 with 18/27 perfect papers. 
 ### 2026-10-06: author benchmark after masthead boundary
 
 The 27-paper benchmark after the masthead y-boundary repair reached mean author F1 0.918, with 19/27 perfect papers. `marketing-unavailable-choice` left the failing set. Remaining failures are eight layouts, including two catalog/PDF metadata cases and several publisher-specific mastheads. The temporary report was restored after measurement.
+
+### 2026-10-06: sidebar editor/reviewer exclusion
+
+`marketing-neurophysiology-consumer-motivation` mixed editor/reviewer sidebar names with the article masthead. A minimum masthead width guard excludes narrow sidebar author-role nodes while retaining the full-width article row. The PDF confirms five article authors (`Sanchit Pawar`, `Asle Fagerstrøm`, `Valdimar Sigurdsson`, `Aurelija Burinskiene`, `Erik Arntzen`); the catalog ground truth was corrected to include Aurelija. Typecheck and the 29-case pipeline suite pass.
