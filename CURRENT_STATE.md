@@ -719,3 +719,8 @@ figure. Generic page-level rotated/numeric evidence now promotes the matrix
 rows to skipped table blocks, and `rotation-aware-table-caption` evidence
 projects the caption as a table block. This keeps the matrix and explanatory
 footnote out of normal paragraph translation without relying on the paper ID.
+
+The post-change corpus replay completed 113/114 catalog entries again (the same
+missing `precious-materials` PDF), with table-region recall remaining 1.0 and
+the minimum source-integrity rate improving to 0.99698. The rotated-table
+change did not regress the title or structural metrics.
