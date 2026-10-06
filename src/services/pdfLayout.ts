@@ -1203,6 +1203,26 @@ function splitInlineLicense(line: LayoutLine): LayoutLine[] {
   ];
 }
 
+/**
+ * Some journal PDFs concatenate a running bibliographic band (ISSN/volume/
+ * issue/date) with the first words of the next body line.  Split only when a
+ * complete structural band is followed by sentence-like text; ordinary body
+ * mentions of a volume or date remain untouched.
+ */
+function splitInlineBibliographicBand(line: LayoutLine): LayoutLine[] {
+  const match = line.text.match(/\b(?:e[-\s]?issn|issn)\s*:\s*\S+\s+vol(?:ume)?\.?\s*\d+\b[^\n]{0,90}?\b(?:no\.?\s*\d+|issue\s*\d+|\d{4})\b\s+/i);
+  if (!match || match.index === undefined || match.index > 24) return [line];
+  const end = match.index + match[0].length;
+  const head = line.text.slice(0, end).trim();
+  const tail = line.text.slice(end).trim();
+  if (head.length < 18 || tail.length < 28 || !/[A-Za-z]{3,}/.test(tail)) return [line];
+  const ratio = Math.max(0.15, Math.min(0.85, head.length / line.text.length));
+  return [
+    { ...line, text: head, width: line.width * ratio },
+    { ...line, text: tail, x: line.x + line.width * ratio, width: line.width * (1 - ratio) },
+  ];
+}
+
 function isFootnoteLine(
   line: { text: string; y: number; fontSize: number },
   pageHeight: number,
@@ -2146,7 +2166,7 @@ function groupLinesIntoBlocks(
   };
 
   for (const sourceLine of lines) {
-    for (const doiLine of splitInlineDoi(sourceLine)) for (const line of splitInlineLicense(doiLine)) {
+    for (const doiLine of splitInlineDoi(sourceLine)) for (const licenseLine of splitInlineLicense(doiLine)) for (const line of splitInlineBibliographicBand(licenseLine)) {
     if (!line.text.trim()) continue;
     if (line.page !== copyrightPage || line.column !== copyrightColumn) {
       copyrightStarted = false;
