@@ -6,6 +6,7 @@ import {
   scannedByItemAverage,
 } from "../../services/pdfExtraction/pageClass";
 import type { ExtractedPage } from "../../services/pdfService";
+import { pagesNeedingOcr } from "../../services/pdfExtraction/enrichers/ocr";
 
 function page(
   texts: string[],
@@ -66,5 +67,9 @@ describe("page classification", () => {
     ]));
     expect(signals.brokenTokenHits).toBeGreaterThanOrEqual(2);
     expect(classifyPage(signals)).toBe("garbled");
+    expect(pagesNeedingOcr([page([
+      "АПФ&ПЛ&ПЛ АПФ CIPCIP&PL&PL " + "ordinary Russian body text ".repeat(12),
+      ...Array.from({ length: 11 }, () => "body"),
+    ])])).toEqual(new Set([1]));
   });
 });
