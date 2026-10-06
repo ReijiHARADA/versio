@@ -815,3 +815,5 @@ green after the new graphics/caption evidence.
 - Added resolver regression tests in `src/test/pdfExtraction/titleResolver.test.ts`.
 - `npm run typecheck -- --pretty false` and the PDF extraction test suite (64 tests) pass after this change.
 - Remaining unresolved extraction case: malformed embedded-font PDFs (notably the Russian-title sample) still need macOS Vision OCR runtime validation; catalog metadata must not be treated as proof of native extraction quality.
+- Added benchmark diagnostics `nativeTitleCandidate`, `nativeTitleExact`, and `titleUsedMetadataFallback`; this prevents the corpus score from confusing metadata repair with successful native extraction.
+- A selected no-metadata replay found generic journal masthead candidates (e.g. volume/date lines) and malformed embedded-font title text; metadata-backed production now repairs tiny page-one mastheads, while native extraction remains explicitly reported as a failure.
