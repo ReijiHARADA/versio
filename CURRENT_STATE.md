@@ -576,3 +576,7 @@ Added one bounded beam-search retry after an inline-statistics greedy rescue fai
 The author projection filter had a 220-character cutoff. This excluded valid long author rows such as the 17-author OSWORLD masthead before `expandAuthorLine` could split marker-separated names, yielding an empty public author list despite the canonical node being correctly classified. The cutoff is now 500 characters; ordinary prose remains excluded by the existing punctuation/role/separator checks. OSWORLD now projects all 17 authors again. Typecheck and the focused PDF extraction/reading-order suite pass (104 tests).
 
 The 113-paper extraction percentages remain automated ground-truth comparisons, not visual inspection. The masthead sample artifact is a manual-review queue; it must not be described as completed visual QA.
+
+### 2026-10-06: flattened uppercase affiliation rows
+
+A second author extraction failure was reproduced in `modeling-human-behavior-cognitive-uncertainty`: the PDF flattened `ANDREW FUCHS, institution` and `ANDREA PASSARELLA and MARCO CONTI, institution` into affiliation-role nodes, so the public author list was empty. A generic institution-tail/name-prefix recovery now handles uppercase publisher rows and conjunction-separated names, without changing canonical roles. The fixture now recovers all three names; typecheck and the 29-case PDF pipeline suite pass. This is a targeted generic recovery, not a claim that all masthead formats are solved.
