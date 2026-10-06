@@ -21,6 +21,7 @@ SYSTEM_PROMPT = os.environ.get("CAT_SYSTEM_PROMPT", "").strip()
 DYNAMIC_TERM_HINTS = os.environ.get("CAT_DYNAMIC_TERM_HINTS", "0") == "1"
 PROTECT_REPEATED_TERMS = os.environ.get("CAT_PROTECT_REPEATED_TERMS", "0") == "1"
 PROTECT_CITATIONS = os.environ.get("CAT_PROTECT_CITATIONS", "0") == "1"
+INCLUDE_INCOMPLETE_SOURCE = os.environ.get("CAT_INCLUDE_INCOMPLETE", "0") == "1"
 
 STOPWORDS = {
     "about", "after", "again", "against", "among", "because", "before", "being", "between",
@@ -121,6 +122,8 @@ def source_integrity_flags(source: str) -> list[str]:
     flags: list[str] = []
     if len(text) >= 80 and (text.endswith("…") or text.endswith("...")):
         flags.append("source_ends_with_ellipsis")
+    if len(text) >= 80 and re.match(r"^(?:[-–—]|[a-z])\s", text):
+        flags.append("source_starts_like_continuation")
     if len(text) >= 48 and any(text.lower().endswith(f" {label}") for label in ("section", "chapter", "appendix")):
         if any(f" {prefix} " in text.lower() for prefix in ("in", "see", "as", "from", "to", "of")):
             flags.append("source_ends_at_document_reference")
@@ -159,7 +162,11 @@ def main() -> None:
             continue
         seen_sources.add(source_key)
         deduplicated_rows.append(row)
-    rows = deduplicated_rows[:MAX_ROWS]
+    if not INCLUDE_INCOMPLETE_SOURCE:
+        rows = [row for row in deduplicated_rows if not source_integrity_flags(str(row.get("source", "")))]
+    else:
+        rows = deduplicated_rows
+    rows = rows[:MAX_ROWS]
     dtype = torch.bfloat16 if torch.backends.mps.is_available() else torch.float32
     device = "mps" if torch.backends.mps.is_available() else "cpu"
     print(f"[CAT] loading {MODEL_ID} on {device} dtype={dtype}")
