@@ -34,6 +34,7 @@ function looksLikeDocumentMasthead(text: string): boolean {
   return /^(?:doi\s*:\s*|https?:\/\/|www\.)/i.test(t)
     || /\b(?:original\s+paper|research\s+article|journal\s+of|volume\s+\d+|\d{4}\s*\)\s*\d{1,4}\s*[:–-])\b/i.test(t)
     || /^(?:www\.)?nature\.com\b/i.test(t)
+    || /^(?:contents\s+lists|journal\s+homepage|available\s+at\s+sciencedirect)\b/i.test(t)
     || /^\d{1,4}\s*\([^)]{0,32}\)\s*\d{4}/.test(t)
     // Repository cover sheets and event headers often put the venue/event
     // before the actual article title. Their slash/date pattern is stable
@@ -119,6 +120,41 @@ export function resolveTitle(input: {
       combined = joinTitleParts(combined, stripMastheadSuffix(cur.text));
     }
     native = [combined];
+
+    // Some publisher PDFs place the journal masthead above the article title
+    // and emit the article title as several same-baseline spans. If the first
+    // native title is a short masthead and nearby chrome confirms that layout,
+    // rebuild only the later same-baseline title cluster from geometry. This
+    // is deliberately structural; it does not name a publisher or journal.
+    const hasJournalChrome = input.candidates.some((candidate) =>
+      candidate.pageStart === 1 && /^(?:contents\s+lists|journal\s+homepage|available\s+at\s+sciencedirect)\b/i.test(candidate.text.trim())
+    );
+    const firstTitle = titles[0];
+    const firstTitleWords = firstTitle.text.trim().split(/\s+/).length;
+    if (hasJournalChrome && firstTitleWords <= 4) {
+      const laterTitles = titles.filter((candidate) =>
+        candidate.pageStart === firstTitle.pageStart &&
+        (candidate.boundingBoxes[0]?.y ?? 0) > (firstTitle.boundingBoxes[0]?.y ?? 0) + 32
+      );
+      const anchor = laterTitles.sort((a, b) =>
+        (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0) ||
+        (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0)
+      )[0];
+      if (anchor) {
+        const y = anchor.boundingBoxes[0]?.y ?? 0;
+        const cluster = input.candidates
+          .filter((candidate) => {
+            const box = candidate.boundingBoxes[0];
+            return candidate.pageStart === anchor.pageStart &&
+              Math.abs((box?.y ?? 0) - y) <= 5 &&
+              candidate.role !== "author" && candidate.role !== "paragraph" &&
+              candidate.role !== "header" && candidate.role !== "footer" &&
+              candidate.text.trim().length >= 3;
+          })
+          .sort((a, b) => (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0));
+        if (cluster.length >= 2) native = [cluster.map((candidate) => stripMastheadSuffix(candidate.text)).join(" ").replace(/\s+/g, " ").trim()];
+      }
+    }
 
     const last = titles[titles.length - 1];
     const lastText = native[0];
