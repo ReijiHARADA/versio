@@ -620,3 +620,7 @@ The cognitive dual-task fixture revealed that the PDF resolver marked bibliograp
 ### 2026-10-06: author benchmark after location/citation cleanup
 
 Reran the 27-paper author benchmark after the masthead location and citation-noise fixes. Mean author F1 is now 0.864 (previous 0.812), with 19/27 perfect papers. Remaining failures are eight layouts: two clinical reviews, four cognitive/marketing mastheads, and two marketing publisher formats. The temporary report was restored after measurement.
+
+### 2026-10-06: clinical masthead boundary diagnosis
+
+The clinical scoping fixture now recovers its four native title-page authors cleanly. Two catalog names (`Margaret Codd`, `Mary Browne`) are not present in the recovered title-page text; they appear only in a citation-style `et al.` line, so adding them from metadata would be unsafe extraction overreach. This is recorded as a native-text/fixture limitation for later PDF geometry investigation, not silently patched.
