@@ -580,3 +580,7 @@ The 113-paper extraction percentages remain automated ground-truth comparisons, 
 ### 2026-10-06: flattened uppercase affiliation rows
 
 A second author extraction failure was reproduced in `modeling-human-behavior-cognitive-uncertainty`: the PDF flattened `ANDREW FUCHS, institution` and `ANDREA PASSARELLA and MARCO CONTI, institution` into affiliation-role nodes, so the public author list was empty. A generic institution-tail/name-prefix recovery now handles uppercase publisher rows and conjunction-separated names, without changing canonical roles. The fixture now recovers all three names; typecheck and the 29-case PDF pipeline suite pass. This is a targeted generic recovery, not a claim that all masthead formats are solved.
+
+### 2026-10-06: publisher location/email contamination in author projection
+
+A conference PDF (`how-content-volume-landing-pages`) exposed a generic masthead split where author lines included an email or a city/country continuation (`Ruti Gafni* email`, `Tel Aviv, Israel Nim Dvir`, `Albany, NY, USA`). Projection now removes email tokens before author expansion, strips recognized location prefixes only when they precede a name, and rejects sentence-shaped/location-only author candidates. The public author list is now `Ruti Gafni`, `Nim Dvir`; typecheck and the 29-case PDF pipeline suite pass. This remains an extraction projection repair; affiliation cleanup is still incomplete for some publisher layouts.
