@@ -604,3 +604,7 @@ The split masthead guard initially missed continuation rows containing middle in
 ### 2026-10-06: author benchmark after split-row repair
 
 The 27-paper author benchmark was rerun after the initialed continuation fix. Mean author F1 improved from 0.693 to 0.786; perfect papers increased from 12/27 to 16/27. The remaining 11 failures are concentrated in social-influence, cognitive dual-task, several marketing mastheads, and one clinical review; their layouts need separate generic diagnostics. The benchmark artifact is `/tmp/author-27-after-cont.json`; the tracked working report was restored.
+
+### 2026-10-06: institution-labelled author rows
+
+`social-influence-social-advertising` used affiliation-role rows for `EYTAN BAKSHY, Facebook` and `DEAN ECKLES, Stanford University & Facebook`, while another author block concatenated `RONG YAN` and `ITAMAR ROSENN`. A strict uppercase name-prefix parser now recovers institution-labelled author rows and separates adjacent all-caps names without treating organization names as authors. The fixture now projects all four authors. Typecheck and the 29-case pipeline suite pass; the 27-paper aggregate will be rerun after this change.
