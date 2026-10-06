@@ -592,3 +592,7 @@ Affiliation projection now removes email tokens and footnote-only labels (`corre
 ### 2026-10-06: full 113-paper extraction rerun
 
 The explicit `--all` extraction benchmark completed after the author/affiliation projection fixes. Title exact match is 108/113 (95.6%), with all 113 having a known title comparison. The five misses are primarily native non-English titles compared with English catalog metadata (Russian/Serbian/Indonesian cases) plus one English spelling/wording variant; they require language-aware ground truth handling rather than blindly replacing healthy native titles. Author metrics are available for 27 catalog-author papers: mean F1 0.693, 12 perfect; remaining failures are publisher-specific masthead layouts and remain under investigation. The generated report was copied to `/tmp/extraction-113-latest.json` for diagnostics and the ignored working report was restored. No visual review is implied by these automated figures.
+
+### 2026-10-06: split masthead continuation guard
+
+A generic continuation candidate was added for publisher layouts that place a middle-dot-prefixed author continuation in a paragraph-role node on the same baseline as the first author row. The candidate is restricted to short name-shaped text with multiple capitalized name pairs; it does not relabel canonical nodes. Initial author extraction remains stable for `ergonomics-flight-deck-applications`; the remaining continuation inclusion needs a dedicated fixture assertion before claiming full recovery. Typecheck and the 29-case pipeline suite pass.
