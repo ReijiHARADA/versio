@@ -566,3 +566,5 @@ Added one bounded beam-search retry after an inline-statistics greedy rescue fai
 - Duplicate title collapse (2026-10-06): title resolution now removes an exact repeated title caused by duplicated native masthead lines, while preserving legitimate subtitles and distinct title spans. HFE scoping-study title now resolves to one copy. Pipeline tests (29) and typecheck pass.
 
 - Weak native title fallback (2026-10-06): when a PDF promotes a short section label (for example a localized “Abstract” heading) as the only title candidate, a substantially longer verified metadata title can now repair the identity. The rule requires a short native title and a large length gap; it does not replace normal native titles.
+
+- Truncated title prefix repair (2026-10-06): title resolution now recognizes a native title sharing its first three normalized words with a longer metadata title when only a few words are missing (for example `Human Factors “Ergonomics” Facilities`). Quotes and punctuation are normalized for comparison; the native text remains the source evidence.
