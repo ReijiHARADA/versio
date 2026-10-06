@@ -4,6 +4,7 @@
 - 2026-10-06: 既存real-paper extraction baseline 118/118 tests passed after the column change. The Vitest worker emitted one `onTaskUpdate` timeout after all tests had passed during the 206-second run; this is test-runner reporting noise, not a failed extraction assertion. No baseline assertion failed.
 - 2026-10-06: 113本の抽出ベンチマークも完走。title exact は 90.27%（102/113）で、残りは主にジャーナルのマストヘッド・リポジトリ表紙・PDF内タイトル分割/別言語タイトルが原因。抽出全体を完了扱いにはせず、次の改善対象としてタイトル候補の文書構造判定を記録。
 - 2026-10-06: ジャーナル表紙の `Contents lists` / `Journal homepage` 等を構造証拠として使い、同一ベースラインに分割された記事タイトル候補を再結合するResolver補正を追加。`medical-deep-learning-meta-review` は `Computer Methods` から `Medical deep learning—A systematic meta-review` に復元できた。pipeline/reading-order/list 104/104、typecheck pass。113本全体の再計測は次の大きな抽出変更時に行う。
+- 2026-10-06: 上記Resolver変更後に113本を再計測し、title exact は 102/113 (90.27%) から 104/113 (92.04%) に改善。残り9件の多くはPDF自体の別言語タイトル・翻訳題・表紙題で、英語カタログ題との単純一致では抽出失敗と断定できない。`extraction-baseline-latest.json` は生成物のためコミットせず、数値と代表例をここへ記録。
 
 - 2026-10-06: 大規模PDFの抽出回帰を180秒共通タイムアウトで再確認。`ergonomics-human-factors-and-ergonomics` は抽出内容を含め **37.7秒で合格**し、従来の60秒タイムアウトは実抽出失敗ではないことを確認。抽出固有の追加修正はせず、テストの誤判定だけを解消した（`f2ca78c`）。
 - 2026-10-06: PDF抽出回帰を再実行（232 checks中229 pass）。`education-learning-analytics` の番号付き本文リストが図ラベル誤判定で消える問題を修正し、`human-ai-interaction-guidelines` の段落が参考文献状態へ誤分類される問題も修正。重点2件は再テスト合格。変更は `7f50d02`。残る1件は大規模PDFの既存60秒テストタイムアウトで、抽出内容の失敗ではなくテスト時間設定の課題。
