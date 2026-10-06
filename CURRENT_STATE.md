@@ -628,3 +628,7 @@ The clinical scoping fixture now recovers its four native title-page authors cle
 ### 2026-10-06: benchmark ground-truth mismatch corrected
 
 `hfe-healthcare-patient-safety-review` was not an extraction failure: its catalog incorrectly listed `Hassan Hignett / others`, which belongs to a different paper. The PDF-native masthead contains six authors (`Xuanyue Mao`, `Pengli Jia`, `Longhao Zhang`, `Pujing Zhao`, `Ying Chen`, `Mingming Zhang`), and the catalog ground truth was corrected after title/PDF verification. The single-paper benchmark now reports author F1 1.0. This prevents a metadata error from driving extraction changes.
+
+### 2026-10-06: corrected 27-paper author benchmark
+
+After correcting the mislabeled patient-safety catalog entry, the 27-paper author benchmark is 0.901 mean F1 with 20/27 perfect papers. Seven remaining cases are either genuine missing native author rows or publisher-specific formatting; no further broad heuristic was added from aggregate scores alone. The temporary report was restored after measurement.
