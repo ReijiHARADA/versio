@@ -614,6 +614,27 @@ export function projectCanonicalToPaper(input: {
     .filter((name, index, all) => all.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase()) === index)
     .filter((name) => !/^(?:correspondence|corresponding author|teaching assistant professor|assistant professor|associate professor|professor|research fellow)\s*:?[,.]?$/i.test(name.trim()))
     .filter(Boolean);
+  // ACM papers often repeat a clean, comma-delimited author list in their
+  // reference-format paragraph. Use it only when the geometry projection is
+  // visibly contaminated (locations, emails, or institution fragments); the
+  // native masthead remains the primary source otherwise.
+  const acmReferenceText = canonical.nodes
+    .map((node) => node.text ?? "")
+    .find((text) => /^ACM Reference Format\s*:/i.test(text.trim()));
+  if (acmReferenceText && authorNames.some((name) =>
+    /@|\b(?:usa|university|department|engineering|seattle|washington)\b/i.test(name) ||
+    /[&]/.test(name))) {
+    const authorPrefix = acmReferenceText.replace(/^ACM Reference Format\s*:\s*/i, "");
+    const beforeYear = authorPrefix.split(/\b20\d{2}\b/)[0] ?? authorPrefix;
+    const recoveredAuthors = beforeYear
+      .replace(/\s+and\s+/gi, ",")
+      .split(",")
+      .map((name) => name.replace(/[.]+(?=\s*$)/g, "").replace(/\s+/g, " ").trim())
+      .filter((name) => name.split(/\s+/).length >= 2 && name.split(/\s+/).length <= 6 && /^[\p{L} .()'’’-]+$/u.test(name));
+    if (recoveredAuthors.length >= 2) {
+      authorNames.splice(0, authorNames.length, ...recoveredAuthors);
+    }
+  }
   // Some publisher templates label individual `NAME, institution` rows as
   // affiliation even when the neighboring rows are author-labelled. Recover
   // only the same strict uppercase name-prefix pattern and merge it with the
