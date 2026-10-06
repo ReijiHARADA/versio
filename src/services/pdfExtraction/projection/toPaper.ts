@@ -300,7 +300,10 @@ export function projectCanonicalToPaper(input: {
   const { canonical, paperId, layoutBlocks, layouts, baseFontSize } = input;
   const titleNode = canonical.nodes.find((n) => n.role === "title");
   const authorNodes = canonical.nodes.filter((n) => n.role === "author" && n.text && !/@/.test(n.text) &&
-    n.text.trim().length <= 220 && !/:\s/.test(n.text) &&
+    // Long mastheads can contain many marker-separated authors. Keep them
+    // eligible for expansion; the marker/separator checks in expandAuthorLine
+    // still prevent ordinary prose from becoming an author list.
+    n.text.trim().length <= 500 && !/:\s/.test(n.text) &&
     (!input.metadata.title || (n.text.trim().toLocaleLowerCase() !== input.metadata.title.trim().toLocaleLowerCase() &&
       !n.text.trim().toLocaleLowerCase().startsWith(input.metadata.title.trim().toLocaleLowerCase().slice(0, 28)))) &&
     !/^(?:original article|research article|conceptual\/theoretical paper|additional key words?|phrases?|acm reference format|©|the author\(s\))/i.test(n.text.trim()));
