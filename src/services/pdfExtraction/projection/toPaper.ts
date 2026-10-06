@@ -114,6 +114,18 @@ function expandAuthorLine(text: string): string[] {
   return names.length > 0 ? names : [cleaned];
 }
 
+/** Reject metadata lines that a publisher sometimes labels as author rows. */
+function isNonAuthorMastheadLine(text: string): boolean {
+  const value = text.replace(/\s+/g, " ").trim();
+  if (!value) return true;
+  const locationPart = /^[A-Z][\p{L}'’-]*(?:\s+[A-Z][\p{L}'’-]*){0,3},\s*(?:[A-Z]{2,}|(?:Australia|Austria|Belgium|Canada|China|France|Germany|India|Israel|Italy|Japan|Netherlands|Russia|Spain|Sweden|Taiwan|UK|USA|United Kingdom|United States|The Netherlands))(?:,\s*(?:[A-Z]{2,}|(?:Australia|Canada|China|France|Germany|India|Israel|Italy|Japan|Netherlands|Russia|Spain|Sweden|Taiwan|UK|USA|United Kingdom|United States)))?$/u;
+  if (locationPart.test(value) || value.split(/\s{2,}/).filter(Boolean).every((part) => locationPart.test(part))) return true;
+  if (/https?:\/\/|\b(?:19|20)\d{2}\b|\b(?:article|journal|proceedings|volume|issue)\b/i.test(value)) return true;
+  if (/@[\w.-]+\.[A-Za-z]{2,}/.test(value)) return true;
+  if (/\b(?:and|or|the|its|of|at|in|from|to)\s*$/i.test(value) && value.split(/\s+/).length >= 3) return true;
+  return false;
+}
+
 type MastheadPair = { author: string; affiliation: string };
 
 function normalizeAffiliationName(text: string): string {
@@ -389,6 +401,7 @@ export function projectCanonicalToPaper(input: {
     // eligible for expansion; the marker/separator checks in expandAuthorLine
     // still prevent ordinary prose from becoming an author list.
     n.text.trim().length <= 500 && !/:\s/.test(n.text) &&
+    !isNonAuthorMastheadLine(n.text) &&
     (!input.metadata.title || (n.text.trim().toLocaleLowerCase() !== input.metadata.title.trim().toLocaleLowerCase() &&
       !n.text.trim().toLocaleLowerCase().startsWith(input.metadata.title.trim().toLocaleLowerCase().slice(0, 28)))) &&
     !/^(?:original article|research article|conceptual\/theoretical paper|additional key words?|phrases?|keywords?|acm reference format|©|the author\(s\))/i.test(n.text.trim()));
@@ -400,6 +413,7 @@ export function projectCanonicalToPaper(input: {
     !isSidebarChromeNode(n) &&
     (n.boundingBoxes[0]?.y ?? 9999) < 520 &&
     !/^\s*(?:keywords?|key words?)\s*:/i.test(n.text.trim()) &&
+    !isNonAuthorMastheadLine(n.text) &&
     ((n.role === "heading" && n.text.trim().length <= 240 &&
       (n.text.match(/,/g)?.length ?? 0) >= 1 &&
       (n.text.match(/[A-Z][\p{L}'’-]+/gu)?.length ?? 0) >= 2 &&
@@ -421,6 +435,7 @@ export function projectCanonicalToPaper(input: {
   const markedAuthorParagraphs = canonical.nodes.filter((n) => n.role === "paragraph" && n.text &&
     n.pageStart === 1 && (n.boundingBoxes[0]?.y ?? Infinity) < 390 &&
     !/^(?:keywords?|key words?)\s*:/i.test(n.text.trim()) &&
+    !isNonAuthorMastheadLine(n.text) &&
     n.text.trim().length <= 400 && /\d[*†‡]?/.test(n.text) &&
     (n.text.match(/,/g)?.length ?? 0) >= 3 && !/[.!?]$/.test(n.text.trim()));
   const authorSourceNodes = [...authorNodes, ...authorContinuationNodes, ...markedAuthorParagraphs];
@@ -479,11 +494,12 @@ export function projectCanonicalToPaper(input: {
     name: normalizeAffiliationName(node.text ?? ""),
   })).filter((affiliation) => affiliation.name &&
     !/[{}@]/.test(affiliation.name) &&
-    !/^(?:corresponding author|these authors contributed|author note|keywords?)\b/i.test(affiliation.name));
+    !/^(?:corresponding author|these authors contributed|author note|keywords?)\b/i.test(affiliation.name) &&
+    !/^available from .*\bat:\s*$/i.test(affiliation.name));
   const authorNames = authorsStructured
     .flatMap((author) => expandAuthorLine(author.name))
     .map((name) => name.replace(/[,;]+$/, "").trim())
-    .filter((name) => name.split(/\s+/).length <= 6 && !/[!?]/.test(name) &&
+    .filter((name) => !isNonAuthorMastheadLine(name) && name.split(/\s+/).length <= 6 && !/[!?]/.test(name) &&
       !/[@{}]/.test(name) &&
       !/[\[\]]/.test(name) &&
       !/^(?:general terms?|categories and subject descriptors?)\b/i.test(name) &&
