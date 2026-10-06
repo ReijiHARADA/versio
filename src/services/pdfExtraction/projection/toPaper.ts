@@ -63,6 +63,8 @@ function expandAuthorLine(text: string): string[] {
   const cleaned = text
     .replace(/[*†‡§]/g, " ")
     .replace(/(\p{L})\d+/gu, "$1")
+    .replace(/(\p{Ll})(\p{Lu})/gu, "$1 $2")
+    .replace(/(?:^|[\s,])\d{1,2}(?=$|[\s,])/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
   if (!cleaned) return [];
@@ -298,7 +300,10 @@ export function projectCanonicalToPaper(input: {
   const { canonical, paperId, layoutBlocks, layouts, baseFontSize } = input;
   const titleNode = canonical.nodes.find((n) => n.role === "title");
   const authorNodes = canonical.nodes.filter((n) => n.role === "author" && n.text && !/@/.test(n.text) &&
-    !/^(?:original article|research article|conceptual\/theoretical paper|©|the author\(s\))/i.test(n.text.trim()));
+    n.text.trim().length <= 220 && !/:\s/.test(n.text) &&
+    (!input.metadata.title || (n.text.trim().toLocaleLowerCase() !== input.metadata.title.trim().toLocaleLowerCase() &&
+      !n.text.trim().toLocaleLowerCase().startsWith(input.metadata.title.trim().toLocaleLowerCase().slice(0, 28)))) &&
+    !/^(?:original article|research article|conceptual\/theoretical paper|additional key words?|phrases?|acm reference format|©|the author\(s\))/i.test(n.text.trim()));
   const affiliationNodes = canonical.nodes.filter((n) => n.role === "affiliation" && n.text);
   const affiliated = canonical.relations.filter((r) => r.kind === "AFFILIATED_WITH");
   const authorsStructured = authorNodes.map((node) => ({
