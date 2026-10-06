@@ -78,5 +78,6 @@ describe("author masthead projection", () => {
     const result = extractFromPages({ pages, paperId: "reviewer-chrome-affiliation", filePath: reviewerMastheadPdf, fileHash: "reviewer-chrome", metadata: { pageCount: pages.length } });
     const names = result.paper.affiliations.map((affiliation) => affiliation.name);
     expect(names.every((name) => !/edited by|reviewed by|tongjian you|yi sun/i.test(name))).toBe(true);
+    expect(names.every((name) => !/University of Massachusetts Boston/i.test(name))).toBe(true);
   }, 60_000);
 });
