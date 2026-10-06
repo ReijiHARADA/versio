@@ -371,6 +371,7 @@ export function projectCanonicalToPaper(input: {
     id: node.id,
     name: normalizeAffiliationName(node.text ?? ""),
   })).filter((affiliation) => affiliation.name &&
+    !/[{}@]/.test(affiliation.name) &&
     !/^(?:corresponding author|these authors contributed|author note|keywords?)\b/i.test(affiliation.name));
   const authorNames = authorsStructured
     .flatMap((author) => expandAuthorLine(author.name))
@@ -395,7 +396,8 @@ export function projectCanonicalToPaper(input: {
       const nameOnly = !/(?:university|department|institute|school|college|hospital|laboratory|center|centre|japan|china|israel|sweden)/i.test(text) &&
         text.length <= 180 && /\b(?:and|,)\b/.test(text) ? expandAuthorLine(text) : [];
       return [...recovered, ...nameOnly];
-    });
+    })
+    .filter((name) => !/[{}@]/.test(name));
   for (const name of affiliationAuthorNames) {
     if (!authorNames.some((existing) => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
       authorNames.push(name);
