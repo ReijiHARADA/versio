@@ -7,6 +7,8 @@ export type PageClassSignals = {
   charCount: number;
   replacementCount: number;
   spacedLetterHits: number;
+  /** Words split by a single glyph token (e.g. `Transla T ion`). */
+  splitWordHits: number;
   repeatedGlyphHits: number;
   brokenTokenHits: number;
   imageHint: boolean;
@@ -23,6 +25,8 @@ export function pageClassSignals(page: ExtractedPage): PageClassSignals {
     replacementCount: (text.match(/\uFFFD/g) ?? []).length,
     spacedLetterHits: (text.match(/\b[A-Za-z]\s+[A-Za-z]\s+[A-Za-z]/g) ?? [])
       .length,
+    splitWordHits: (text.match(/\b[A-Za-z\u00C0-\u024F]{2,}\s+[A-Za-z\u00C0-\u024F]\s+[A-Za-z\u00C0-\u024F]{2,}\b/gu) ?? [])
+      .length,
     repeatedGlyphHits,
     brokenTokenHits,
     imageHint: false,
@@ -33,7 +37,7 @@ export function classifyPage(signals: PageClassSignals): PageTextKind {
   if (signals.itemCount < 10 && signals.charCount < 40) return "scanned";
   const replacementRate =
     signals.charCount === 0 ? 1 : signals.replacementCount / signals.charCount;
-  if (replacementRate >= 0.04 || signals.spacedLetterHits >= 3 ||
+  if (replacementRate >= 0.04 || signals.spacedLetterHits >= 3 || signals.splitWordHits >= 2 ||
       (signals.repeatedGlyphHits >= 2 && signals.charCount >= 80) ||
       (signals.brokenTokenHits >= 2 && signals.charCount >= 200)) return "garbled";
   if (signals.itemCount < 10) return "scanned";

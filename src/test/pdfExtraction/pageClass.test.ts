@@ -72,4 +72,17 @@ describe("page classification", () => {
       ...Array.from({ length: 11 }, () => "body"),
     ])])).toEqual(new Set([1]));
   });
+
+  it("flags words split by a stray single glyph", () => {
+    const signals = pageClassSignals(page([
+      "Transla T ion and The r ole remain in the native text",
+      ...Array.from({ length: 12 }, () => "body"),
+    ]));
+    expect(signals.splitWordHits).toBeGreaterThanOrEqual(2);
+    expect(classifyPage(signals)).toBe("garbled");
+    expect(pagesNeedingOcr([page([
+      "Transla T ion and The r ole remain in the native text",
+      ...Array.from({ length: 12 }, () => "body"),
+    ])])).toEqual(new Set([1]));
+  });
 });
