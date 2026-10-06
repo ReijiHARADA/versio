@@ -914,3 +914,10 @@ markers (for example `1 1New Delhi`) and rejects isolated initial runs such as
 fixture now yields `National Education Services, New Delhi, India` without the
 spurious `M N` affiliation. Author projection tests remain 8/8 and TypeScript
 passes.
+# 2026-10-07: reject repeated-glyph title candidates
+
+Projection now treats repeated short Unicode glyph runs (for example
+`АПФАПФ`) as corrupted ToUnicode output before calling `pickPaperTitle`.
+Trusted metadata or OCR can then supply the title instead of exposing the
+garbled native candidate. Existing title-resolver and author-projection tests
+remain green.
