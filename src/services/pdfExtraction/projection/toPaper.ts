@@ -338,8 +338,28 @@ export function projectCanonicalToPaper(input: {
        (n.role === "abstract") || (n.role === "paragraph" && n.text.length > 260)))
     .map((n) => n.boundingBoxes[0]?.y ?? Infinity)
     .sort((a, b) => a - b)[0] ?? Infinity;
+  const pageOneNodesByY = canonical.nodes
+    .filter((n) => n.pageStart === 1 && n.boundingBoxes[0]?.y != null)
+    .slice()
+    .sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0));
+  const mastheadExcludedByLabel = (node: (typeof canonical.nodes)[number]): boolean => {
+    const y = node.boundingBoxes[0]?.y ?? Infinity;
+    const previousHeadingNode = pageOneNodesByY
+      .filter((candidate) => (candidate.boundingBoxes[0]?.y ?? Infinity) < y && candidate.role === "heading")
+      .at(-1);
+    const previousHeading = previousHeadingNode?.text?.trim() ?? "";
+    const nodeX = node.boundingBoxes[0]?.x ?? Infinity;
+    const headingX = previousHeadingNode?.boundingBoxes[0]?.x ?? -Infinity;
+    const hasRecentAuthor = pageOneNodesByY.some((candidate) =>
+      candidate.role === "author" && candidate !== node &&
+      (candidate.boundingBoxes[0]?.y ?? Infinity) < y &&
+      y - (candidate.boundingBoxes[0]?.y ?? 0) < 55);
+    return !hasRecentAuthor && Math.abs(nodeX - headingX) < 120 &&
+      /^(?:edited by|reviewed by|specialty section|correspondence)\b/i.test(previousHeading);
+  };
   const authorNodes = canonical.nodes.filter((n) => n.role === "author" && n.text &&
     n.pageStart === 1 && (n.boundingBoxes[0]?.y ?? 0) < firstBodyY &&
+    !mastheadExcludedByLabel(n) &&
     // Long mastheads can contain many marker-separated authors. Keep them
     // eligible for expansion; the marker/separator checks in expandAuthorLine
     // still prevent ordinary prose from becoming an author list.
@@ -378,6 +398,8 @@ export function projectCanonicalToPaper(input: {
     .map((name) => name.replace(/[,;]+$/, "").trim())
     .filter((name) => name.split(/\s+/).length <= 6 && !/[!?]/.test(name) &&
       !/[@{}]/.test(name) &&
+      !/[\[\]]/.test(name) &&
+      !/^(?:general terms?|categories and subject descriptors?)\b/i.test(name) &&
       !/\b(?:movement|science|sport|psychology|department|university|institute|research|council|resistance|training|edited|published)\b/i.test(name) &&
       !(/\s[A-Z]{1,3}$/.test(name) && !/^[A-Z][A-Z'’-]*(?:\s+[A-Z][A-Z'’-]*)+$/.test(name)) &&
       !/(?:^|,\s*)(?:usa|u\.s\.a?\.?|israel|italy|china|japan|uk|united kingdom|ny|california|new york|tel aviv|albany|palo alto)(?:\s*,|$)/i.test(name) &&
@@ -397,7 +419,8 @@ export function projectCanonicalToPaper(input: {
         text.length <= 180 && /\b(?:and|,)\b/.test(text) ? expandAuthorLine(text) : [];
       return [...recovered, ...nameOnly];
     })
-    .filter((name) => !/[{}@]/.test(name));
+    .filter((name) => !/[{}@\[\]]/.test(name) &&
+      !/^(?:general terms?|categories and subject descriptors?)\b/i.test(name));
   for (const name of affiliationAuthorNames) {
     if (!authorNames.some((existing) => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
       authorNames.push(name);
