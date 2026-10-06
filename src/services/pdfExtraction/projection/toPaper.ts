@@ -552,7 +552,15 @@ export function projectCanonicalToPaper(input: {
   }).filter((affiliation) => affiliation.name &&
     !/[{}@]/.test(affiliation.name) &&
     !/^(?:corresponding author|these authors contributed|author note|keywords?)\b/i.test(affiliation.name) &&
-    !/^available from .*\bat:\s*$/i.test(affiliation.name));
+    !/^available from .*\bat:\s*$/i.test(affiliation.name) &&
+    // Do not expose fragments created by a column boundary as institutions.
+    // Keep short acronym-only affiliations, but reject unfinished connector
+    // phrases, rule lines, and glyph-spaced text that cannot identify a body.
+    !/^[_\s.,-]+$/.test(affiliation.name) &&
+    !/(?:\b(?:of|and|in|the|for|&))\s*[,;]?$/i.test(affiliation.name) &&
+    ((affiliation.name.match(/\b\S\b/g)?.length ?? 0) * 2 <= affiliation.name.split(/\s+/).length ||
+      /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center)\b/i.test(affiliation.name) ||
+      /^[A-Z0-9& -]{2,12}$/.test(affiliation.name)));
   const affiliations = affiliationCandidates.filter((affiliation, index, all) =>
     all.findIndex((candidate) => candidate.name.toLocaleLowerCase() === affiliation.name.toLocaleLowerCase()) === index);
   const authorNames = authorsStructured
