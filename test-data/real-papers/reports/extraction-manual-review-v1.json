@@ -104,8 +104,8 @@
       "severity": 3,
       "finding": "Rendered PDF title is Russian: “Взаимосвязь прикладной лингвистики и лингводискурсивного анализа с практикой преподавания английского языка”. Native pdf.js extraction produces unreadable “АПФАПФ...” glyph mapping, so the visible title is not recovered.",
       "rootCause": "embedded font ToUnicode/text encoding; the catalog English title is a translated metadata title, not the visible article title",
-      "status": "open",
-      "action": "add a general low-unicode-confidence alternate text/OCR fallback; do not paper-specific map"
+      "status": "fixed-generic-fallback",
+      "action": "reject repeated-glyph/flattened-author title candidates and recover the title sentence from a same-line For citation DOI paragraph when metadata is unavailable; OCR remains the production fallback for other garbled page content"
     },
     {
       "paperId": "marketing-impact-of-sensory-marketing-on-consumer-behavior",
