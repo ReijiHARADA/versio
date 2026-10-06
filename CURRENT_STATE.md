@@ -838,3 +838,4 @@ green after the new graphics/caption evidence.
 - 2026-10-06: 著者行の `First Last Second van den Surname` 形式を汎用分割し、同一native blockに結合された複数著者を分離。`interactive-jewellery` の `Maarten Versteeg` / `Elise van den Hoven` / `Caroline Hummels` を正しく投影する回帰を追加。author projection **2/2 pass**。所属列の混線は別の未解決課題として残る。
 - 2026-10-06: 所属投影の列境界で生じた `Department of` やglyph間隔だけの罫線を公開affiliationへ出さない汎用品質フィルタを追加。短い未完接続句・罫線・単一glyph連結を除外し、著者/本文抽出を保全。author/pipeline **31 tests pass**、typecheck pass。複数行・複数列の所属再結合は引き続き課題。
 - 2026-10-06: `interactive-jewellery` の所属座標を再診断。各行のx列自体は安定しているが、単純なページ内x帯結合は別機関（Duncan/University等）を誤結合するため採用せず破棄。所属再構築は著者マーカー・番号・列の縦連続性を同時に使う必要がある。保守的な現行出力を維持し、回帰 **31/31** pass。
+- 2026-10-06: 所属番号が先頭行にだけ現れる複数行mastheadで、番号を同一x帯の後続行へ伝播してから投影する処理を追加。`interactive-jewellery` の所属断片数を12→4へ減らし、列の縦継続を保った。著者/pipeline **31/31 pass**、typecheck pass。機関名の意味的な分割（同一列に複数機関が並ぶ形式）はなお手動確認対象。
