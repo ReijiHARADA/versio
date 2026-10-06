@@ -115,6 +115,7 @@ describe("author masthead projection", () => {
     const result = await extractFromPages({ pages, paperId: "single-author-report", filePath: singleAuthorReportPdf, fileHash: "single-author-report", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).toContain("Murali Krishna Pasupuleti");
     expect(result.paper.affiliations.some((affiliation) => /National Education Services/i.test(affiliation.name))).toBe(true);
+    expect(result.paper.affiliations).not.toContainEqual(expect.objectContaining({ name: "M N" }));
     expect(result.paper.authors).not.toContain("Research Book Title :Human Factors and Ergonomics");
   }, 60_000);
 
