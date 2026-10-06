@@ -668,3 +668,5 @@ The 27-paper benchmark after the name-only affiliation change is 0.915 mean auth
 ### 2026-10-06: linguistics masthead email noise
 
 `syntax-prosody-correlation` had a continuation author row beginning with a comma and a separate brace-wrapped email row classified as author. Author expansion now trims leading punctuation and rejects brace/email candidates. The fixture projects Arne Köhn, Timo Baumann, and Oskar Dörfler only. Typecheck and the 29-case pipeline suite pass.
+
+- Masthead contact-row cleanup (2026-10-06): affiliation-derived author recovery could reintroduce brace-wrapped email rows after the primary author filter. The projection now excludes contact-only rows in both recovery and affiliation outputs. `syntax-prosody-correlation` projects Arne Köhn, Timo Baumann, and Oskar Dörfler only. Typecheck and the 29-case extraction pipeline suite pass; automated metrics remain distinct from visual QA.
