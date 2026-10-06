@@ -564,3 +564,5 @@ Added one bounded beam-search retry after an inline-statistics greedy rescue fai
 - Publisher masthead recovery (2026-10-06): added middle-dot author separators and a post-grouping author-list recheck for stale paragraph hints; filtered publisher labels such as `ORIGINAL ARTICLE` and copyright lines from projected authors. Quantified Factory Worker author F1 improved 0→1.0. Focused tests and typecheck pass. Commit: `f504291`.
 
 - Duplicate title collapse (2026-10-06): title resolution now removes an exact repeated title caused by duplicated native masthead lines, while preserving legitimate subtitles and distinct title spans. HFE scoping-study title now resolves to one copy. Pipeline tests (29) and typecheck pass.
+
+- Weak native title fallback (2026-10-06): when a PDF promotes a short section label (for example a localized “Abstract” heading) as the only title candidate, a substantially longer verified metadata title can now repair the identity. The rule requires a short native title and a large length gap; it does not replace normal native titles.
