@@ -45,6 +45,11 @@ function looksLikeDocumentMasthead(text: string): boolean {
     || /\b\d{4}\b[\s\S]*\b\d{3,6}\s*$/.test(t);
 }
 
+function looksLikeDecoderGarbageTitle(text: string): boolean {
+  const t = text.trim();
+  return /[&∧]/u.test(t) && /([\p{Lu}]{2,8})\1/u.test(t);
+}
+
 function looksLikeJournalNameMasthead(text: string): boolean {
   const t = text.trim();
   return /\b(?:journal|transactions|proceedings|international\s+journal|advances\s+in\s+(?:scientific|engineering))\b/i.test(t);
@@ -159,7 +164,8 @@ export function resolveTitle(input: {
   // allow strong native title evidence to participate without discarding the
   // original candidate role used by other resolver decisions.
   const titles = input.candidates.filter(
-    (c) => (c.role === "title" || (c.roleScores?.title ?? 0) >= 0.85) && !looksLikeRotatedMasthead(c)
+    (c) => (c.role === "title" || (c.roleScores?.title ?? 0) >= 0.85) &&
+      !looksLikeRotatedMasthead(c) && !looksLikeDecoderGarbageTitle(c.text)
   );
   const titleDebug = typeof process !== "undefined" && process.env.PDF_TITLE_DEBUG === "1";
   if (titleDebug) console.info("[title-debug] candidates", titles.map((c) => ({ role: c.role, text: c.text, y: c.boundingBoxes[0]?.y, x: c.boundingBoxes[0]?.x, font: c.layoutBlock.lines[0]?.fontSize })));
