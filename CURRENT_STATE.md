@@ -870,3 +870,12 @@ the projection keeps the author list empty rather than publishing an
 institution as a person. Focused author projection tests and TypeScript
 typecheck remain green; representative PDFs still require geometry-specific
 follow-up for heavily interleaved publisher mastheads.
+# 2026-10-07: interleaved multi-column masthead recovery
+
+Added a conservative column-anchor recovery path in the canonical projection.
+It uses author-sized text anchors and native item x positions to reconstruct
+publisher mastheads whose same-baseline columns were flattened together. The
+path is only used when the inferred result has multiple author and affiliation
+groups; otherwise the existing resolver projection remains authoritative. The
+PPG Earring regression now recovers all six authors and removes figure-caption
+text from affiliations. PDF extraction tests: 27 suites / 75 tests passed.
