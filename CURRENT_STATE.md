@@ -841,3 +841,4 @@ green after the new graphics/caption evidence.
 - 2026-10-06: 所属番号が先頭行にだけ現れる複数行mastheadで、番号を同一x帯の後続行へ伝播してから投影する処理を追加。`interactive-jewellery` の所属断片数を12→4へ減らし、列の縦継続を保った。著者/pipeline **31/31 pass**、typecheck pass。機関名の意味的な分割（同一列に複数機関が並ぶ形式）はなお手動確認対象。
 - 2026-10-06: ACM系の重なったmastheadで、native text内の `ACM Reference Format:` 著者列を汎用的な二次構造証拠として利用。PPG Earringで壊れた座標投影を6著者へ復元し、地名・所属・メールの著者混入を除去。author projection **3/3 pass**、typecheck pass。所属機関の列再構築は別課題。
 - 2026-10-06: ACM `Reference Format` fallbackにより、座標が重なったmastheadの著者投影を修正。PDF extraction全体 **13 files / 70 tests pass**、typecheck pass。113本全体の再計測は大きな抽出変更時の方針に従い未実施。
+- 2026-10-06: 番号付き所属が1つのnative blockへ潰れる形式（`1Institute... 2Center...`）を番号境界で分割。`neuroscience-rule-following` の5所属を個別投影できることを確認。author/pipeline **32/32 pass**、typecheck pass。番号なし・列混在の所属は引き続き要診断。
