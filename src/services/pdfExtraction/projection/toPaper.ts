@@ -1459,7 +1459,31 @@ export function projectCanonicalToPaper(input: {
     (/(?:\b(?:and|the|of|in|with|for)\b).+\d[,\s]/i.test(extractedTitleText) ||
       ((extractedTitleText.match(/[\u0400-\u04ff]/g)?.length ?? 0) / extractedTitleText.length > 0.35));
   const titleLooksCorrupt = repeatedGlyphRun || titleHasFlattenedAuthorTail;
-  const titleForProjection = titleLooksCorrupt ? undefined : extractedTitleText;
+  const citationTitleFallback = titleLooksCorrupt
+    ? (() => {
+        const citationHeading = canonical.nodes.find((node) =>
+          node.pageStart <= 2 && /^for\s+citation\s*:/i.test(node.text?.trim() ?? "")
+        );
+        if (!citationHeading) return undefined;
+        const headingBox = citationHeading.boundingBoxes[0];
+        const citationCandidates = canonical.nodes
+          .filter((node) => {
+            const box = node.boundingBoxes[0];
+            return node.pageStart === citationHeading.pageStart && node.role === "paragraph" &&
+              Math.abs((box?.y ?? Infinity) - (headingBox?.y ?? -Infinity)) <= 14 &&
+              (box?.x ?? -Infinity) > (headingBox?.x ?? Infinity);
+          })
+          .sort((a, b) => (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0));
+        const citation = citationCandidates.find((node) => /https?:\/\/|doi\.org/i.test(node.text ?? ""))?.text ?? citationCandidates[0]?.text ?? "";
+        const sentences = citation.split(/(?<=[.!?])\s+/).map((part) => part.trim()).filter(Boolean);
+        return sentences.find((sentence) =>
+          sentence.split(/\s+/).length >= 6 &&
+          /\b(?:the|of|in|and|for|analysis|language|teaching|interaction|system)\b/i.test(sentence) &&
+          !/https?:\/\/|\b(?:19|20)\d{2}\b|\b(?:university|journal|volume|issue|doi)\b/i.test(sentence)
+        )?.replace(/[.!?]\s*$/, "");
+      })()
+    : undefined;
+  const titleForProjection = titleLooksCorrupt ? citationTitleFallback : extractedTitleText;
   const paper: Paper = {
     id: paperId,
     sourceFilePath: input.filePath,

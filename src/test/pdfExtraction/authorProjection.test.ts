@@ -123,7 +123,7 @@ describe("author masthead projection", () => {
     if (!fs.existsSync(brokenUnicodeTitlePdf)) return;
     const pages = await extractPdfPages(brokenUnicodeTitlePdf);
     const expected = "The role of applied linguistics and language discourse analysis in English language teaching";
-    const result = await extractFromPages({ pages, paperId: "broken-unicode-title", filePath: brokenUnicodeTitlePdf, fileHash: "broken-unicode-title", metadata: { pageCount: pages.length, title: expected } });
+    const result = await extractFromPages({ pages, paperId: "broken-unicode-title", filePath: brokenUnicodeTitlePdf, fileHash: "broken-unicode-title", metadata: { pageCount: pages.length } });
     expect(result.paper.titleOriginal).toBe(expected);
     expect(result.paper.titleOriginal).not.toMatch(/АПФАПФ|CIPCIP/i);
   }, 60_000);
