@@ -59,15 +59,18 @@ function normalizeSection(title: string): NormalizedSectionKind {
 }
 
 function expandAuthorLine(text: string): string[] {
-  const markedSource = text.replace(/\s+/g, " ").trim();
+  const markedSource = text.replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, " ").replace(/\s+/g, " ").trim();
   const cleaned = text
     .replace(/[*†‡§]/g, " ")
     .replace(/(\p{L})\d+/gu, "$1")
     .replace(/(\p{Ll})(\p{Lu})/gu, "$1 $2")
     .replace(/(?:^|[\s,])\d{1,2}(?=$|[\s,])/gu, " ")
+    .replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
   if (!cleaned) return [];
+  const withoutLocation = cleaned.replace(/^(?:Tel\s+Aviv,?\s+Israel|Albany,?\s+NY,?\s+USA|New\s+York,?\s+NY,?\s+USA)\s+/i, "").trim();
+  if (withoutLocation !== cleaned) return expandAuthorLine(withoutLocation);
 
   const cjkTokens = cleaned.match(/[\u3040-\u30ff\u4e00-\u9fff]{1,4}/g) ?? [];
   const latin = cleaned
@@ -310,7 +313,7 @@ export function projectCanonicalToPaper(input: {
 }): PaperProjection {
   const { canonical, paperId, layoutBlocks, layouts, baseFontSize } = input;
   const titleNode = canonical.nodes.find((n) => n.role === "title");
-  const authorNodes = canonical.nodes.filter((n) => n.role === "author" && n.text && !/@/.test(n.text) &&
+  const authorNodes = canonical.nodes.filter((n) => n.role === "author" && n.text &&
     // Long mastheads can contain many marker-separated authors. Keep them
     // eligible for expansion; the marker/separator checks in expandAuthorLine
     // still prevent ordinary prose from becoming an author list.
@@ -331,6 +334,9 @@ export function projectCanonicalToPaper(input: {
   }));
   const authorNames = authorsStructured
     .flatMap((author) => expandAuthorLine(author.name))
+    .filter((name) => name.split(/\s+/).length <= 6 && !/[.!?]/.test(name) &&
+      !/(?:^|,\s*)(?:usa|u\.s\.a?\.?|israel|italy|china|japan|uk|united kingdom|ny|california|new york|tel aviv|albany)(?:\s*,|$)/i.test(name) &&
+      !/\b(?:,\s*)?(?:ny|ca),\s*usa\b/i.test(name))
     .filter(Boolean);
   // When the native PDF flattened a complete author/affiliation masthead into
   // affiliation nodes, recover the names and clean institution tails for the
