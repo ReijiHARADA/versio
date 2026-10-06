@@ -563,18 +563,38 @@ export function projectCanonicalToPaper(input: {
     }
     const substantive = lines.flatMap((line) => line.items.filter((item) => item.fontSize >= line.fontSize * 0.7));
     const xs = [...new Set(substantive.map((item) => item.x).sort((a, b) => a - b))];
-    const clusterXs: number[] = [];
-    for (const x of xs) {
-      const previous = clusterXs.at(-1);
-      if (previous === undefined || x - previous > 50) clusterXs.push(x);
-    }
+    // A wrapped cell can start farther to the right than the first row (for
+    // example a short country name). Treat the first multi-item row as the
+    // column geometry anchor, then assign later items to the nearest anchor.
+    // Clustering every observed x independently incorrectly creates a third
+    // column and mixes the two institutions.
+    const anchorRow = lines
+      .map((line) => line.items.filter((item) => item.fontSize >= line.fontSize * 0.7))
+      .find((items) => items.length >= 2);
+    const clusterXs: number[] = anchorRow && anchorRow.length >= 2
+      ? anchorRow.map((item) => item.x).slice(0, 2).sort((a, b) => a - b)
+      : (() => {
+          const clusters: number[] = [];
+          for (const x of xs) {
+            const previous = clusters.at(-1);
+            if (previous === undefined || x - previous > 50) clusters.push(x);
+          }
+          return clusters;
+        })();
     const columns: string[][] = clusterXs.map(() => []);
     for (const line of lines) {
       const rowItems = line.items.filter((candidate) => candidate.fontSize >= line.fontSize * 0.7);
       for (const [rowIndex, item] of rowItems.entries()) {
         let index = clusterXs.reduce((best, x, candidate) => Math.abs(x - item.x) < Math.abs(clusterXs[best] - item.x) ? candidate : best, 0);
         const text = item.text.replace(/^\d+\s*/, "").trim();
-        if (rowIndex < rowItems.length - 1 && /^(?:Australia|Austria|Belgium|Canada|China|France|Germany|India|Israel|Italy|Japan|Netherlands|Russia|Spain|Sweden|Taiwan|UK|USA|United Kingdom|United States|The Netherlands)$/i.test(text)) index = Math.min(index + 1, columns.length - 1);
+        // A short country token can be visually pulled into the preceding
+        // column when it continues the institution in the next column. Only
+        // shift it when the following item is substantive; if both items are
+        // countries they represent independent affiliation continuations.
+        const countryOnly = /^(?:Australia|Austria|Belgium|Canada|China|France|Germany|India|Israel|Italy|Japan|Netherlands|Russia|Spain|Sweden|Taiwan|UK|USA|United Kingdom|United States|The Netherlands)$/i.test(text);
+        const nextText = rowItems[rowIndex + 1]?.text.replace(/^\d+\s*/, "").trim() ?? "";
+        const nextIsCountry = /^(?:Australia|Austria|Belgium|Canada|China|France|Germany|India|Israel|Italy|Japan|Netherlands|Russia|Spain|Sweden|Taiwan|UK|USA|United Kingdom|United States|The Netherlands)$/i.test(nextText);
+        if (countryOnly && rowIndex < rowItems.length - 1 && !nextIsCountry) index = Math.min(index + 1, columns.length - 1);
         columns[index].push(text);
       }
     }
@@ -592,7 +612,7 @@ export function projectCanonicalToPaper(input: {
     !/^(?:contents|article history|lists available at)\b/i.test(affiliation.name) &&
     (affiliation.name.match(/\b[a-z]\b/g)?.length ?? 0) < 3 &&
     (affiliation.name.split(/\s+/).length > 2 ||
-      /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center)\b/i.test(affiliation.name) ||
+      /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research)\b/i.test(affiliation.name) ||
       /^[A-Z0-9& -]{2,12}$/.test(affiliation.name)) &&
     // Do not expose fragments created by a column boundary as institutions.
     // Keep short acronym-only affiliations, but reject unfinished connector
@@ -600,7 +620,7 @@ export function projectCanonicalToPaper(input: {
     !/^[_\s.,-]+$/.test(affiliation.name) &&
     !/(?:\b(?:of|and|in|the|for|&))\s*[,;]?$/i.test(affiliation.name) &&
     ((affiliation.name.match(/\b\S\b/g)?.length ?? 0) * 2 <= affiliation.name.split(/\s+/).length ||
-      /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center)\b/i.test(affiliation.name) ||
+      /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research)\b/i.test(affiliation.name) ||
       /^[A-Z0-9& -]{2,12}$/.test(affiliation.name)));
   const markedCandidates = affiliationCandidates.filter((candidate) => candidate._marker);
   // Wrapped rows usually carry the superscript only on the first row. Propagate

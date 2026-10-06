@@ -40,6 +40,18 @@ describe("author masthead projection", () => {
     expect(result.paper.authors).not.toContain("Maarten Versteeg Elise van den Hoven");
   }, 60_000);
 
+  it("keeps wrapped two-column affiliations in their source columns", async () => {
+    if (!fs.existsSync(particlePdf)) return;
+    const pages = await extractPdfPages(particlePdf);
+    const result = extractFromPages({ pages, paperId: "interactive-jewellery-affiliations", filePath: particlePdf, fileHash: "affiliation-columns", metadata: { pageCount: pages.length } });
+    const names = result.paper.affiliations.map((affiliation) => affiliation.name);
+    expect(names).toHaveLength(4);
+    expect(names.some((name) => /Industrial Design.*Eindhoven University of Technology.*The Netherlands/i.test(name))).toBe(true);
+    expect(names.some((name) => /Faculty of Design.*Architecture.*Sydney Australia/i.test(name))).toBe(true);
+    expect(names.some((name) => /Australian Research.*Macquarie University/i.test(name))).toBe(true);
+    expect(names.some((name) => /Faculty of Design.*The Netherlands/i.test(name))).toBe(false);
+  }, 60_000);
+
   it("uses a clean ACM reference-format author list when masthead columns overlap", async () => {
     if (!fs.existsSync(acmPdf)) return;
     const pages = await extractPdfPages(acmPdf);
