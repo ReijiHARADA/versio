@@ -624,3 +624,7 @@ Reran the 27-paper author benchmark after the masthead location and citation-noi
 ### 2026-10-06: clinical masthead boundary diagnosis
 
 The clinical scoping fixture now recovers its four native title-page authors cleanly. Two catalog names (`Margaret Codd`, `Mary Browne`) are not present in the recovered title-page text; they appear only in a citation-style `et al.` line, so adding them from metadata would be unsafe extraction overreach. This is recorded as a native-text/fixture limitation for later PDF geometry investigation, not silently patched.
+
+### 2026-10-06: benchmark ground-truth mismatch corrected
+
+`hfe-healthcare-patient-safety-review` was not an extraction failure: its catalog incorrectly listed `Hassan Hignett / others`, which belongs to a different paper. The PDF-native masthead contains six authors (`Xuanyue Mao`, `Pengli Jia`, `Longhao Zhang`, `Pujing Zhao`, `Ying Chen`, `Mingming Zhang`), and the catalog ground truth was corrected after title/PDF verification. The single-paper benchmark now reports author F1 1.0. This prevents a metadata error from driving extraction changes.
