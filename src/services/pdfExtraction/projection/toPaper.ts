@@ -391,11 +391,16 @@ export function projectCanonicalToPaper(input: {
   // Two-column publisher mastheads can place the continuation of an author
   // row in a paragraph-role node at the same baseline. Treat only a leading
   // middle-dot marker plus multiple name-shaped tokens as continuation.
-  const authorContinuationNodes = canonical.nodes.filter((n) => n.role === "paragraph" && n.text && n.pageStart === 1 &&
+  const authorContinuationNodes = canonical.nodes.filter((n) =>
+    (n.role === "paragraph" || n.role === "heading") && n.text && n.pageStart === 1 &&
     !isSidebarChromeNode(n) &&
     (n.boundingBoxes[0]?.y ?? 9999) < 520 &&
     !/^\s*(?:keywords?|key words?)\s*:/i.test(n.text.trim()) &&
-    ((/^\s*[·•]\s*[A-Z][^!?]{8,220}$/.test(n.text.trim()) &&
+    ((n.role === "heading" && n.text.trim().length <= 240 &&
+      (n.text.match(/,/g)?.length ?? 0) >= 1 &&
+      (n.text.match(/[A-Z][\p{L}'’-]+/gu)?.length ?? 0) >= 2 &&
+      /\d\s*[A-Z]/.test(n.text)) ||
+      (/^\s*[·•]\s*[A-Z][^!?]{8,220}$/.test(n.text.trim()) &&
       (n.text.match(/[A-Z][a-z]+(?:\s+[A-Z]\.)?\s+[A-Z][a-z]+/g)?.length ?? 0) >= 2) ||
       ((n.boundingBoxes[0]?.y ?? 9999) < 390 && n.text.trim().length <= 400 &&
         (n.text.match(/,/g)?.length ?? 0) >= 2 &&
