@@ -660,3 +660,7 @@ A global minimum-width filter intended to remove Frontiers sidebar reviewers cau
 ### 2026-10-06: name-only affiliation masthead rows
 
 `marketing-health-goals-nudging` stored `Jeroen S. Benjamins` and `Femke de Boer` in an affiliation-role row because the publisher separated the name list from its numbered institution block. A strict name-only affiliation recovery now handles short comma/and-separated rows without accepting institution-shaped text. The fixture now projects all five catalog authors. Typecheck and the 29-case pipeline suite pass.
+
+### 2026-10-06: author benchmark after name-only affiliation recovery
+
+The 27-paper benchmark after the name-only affiliation change is 0.915 mean author F1 with 18/27 perfect papers. The targeted health-goals fixture is corrected, while social-influence and several publisher formats still need source-level review; aggregate score alone is not used to add another heuristic. The temporary report was restored after measurement.
