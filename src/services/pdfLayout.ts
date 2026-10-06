@@ -3771,6 +3771,7 @@ export function reconstructDocument(pages: ExtractedPage[]): {
   ) || 10;
 
   const blocks = groupLinesIntoBlocks(lines, bodyFont);
+  const mastheadBoundary = blocks.find((block) => block.pageStart === 1 && block.role === "paragraph" && block.text.length >= 240)?.bbox.y ?? 420;
   // A masthead in the opposite horizontal band can interrupt title lines in
   // y-sorted native reading order. Reattach only short, same-style lines that
   // align with the title and leave unrelated lines in their original block.
@@ -3815,6 +3816,12 @@ export function reconstructDocument(pages: ExtractedPage[]): {
     if (block.pageStart === 1 && block.role === "paragraph" && block.lines.length <= 2 &&
         block.text.length <= 320 && looksLikeAuthorList(block.text)) {
       block.role = "author";
+    }
+    if (block.pageStart === 1 && block.role === "paragraph" && block.lines.length <= 3 &&
+        block.text.length <= 220 && block.bbox.y < mastheadBoundary + 80 &&
+        looksLikeAffiliation(block.text) && !/[.!?。！？]$/.test(block.text.trim()) &&
+        !looksLikeAuthorList(block.text)) {
+      block.role = "affiliation";
     }
   }
   if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_DEBUG === "1") {
