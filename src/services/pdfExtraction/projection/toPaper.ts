@@ -332,9 +332,16 @@ export function projectCanonicalToPaper(input: {
     (!input.metadata.title || (n.text.trim().toLocaleLowerCase() !== input.metadata.title.trim().toLocaleLowerCase() &&
       !n.text.trim().toLocaleLowerCase().startsWith(input.metadata.title.trim().toLocaleLowerCase().slice(0, 28)))) &&
     !/^(?:original article|research article|conceptual\/theoretical paper|additional key words?|phrases?|acm reference format|©|the author\(s\))/i.test(n.text.trim()));
+  // Two-column publisher mastheads can place the continuation of an author
+  // row in a paragraph-role node at the same baseline. Treat only a leading
+  // middle-dot marker plus multiple name-shaped tokens as continuation.
+  const authorContinuationNodes = canonical.nodes.filter((n) => n.role === "paragraph" && n.text &&
+    /^\s*[·•]\s*[A-Z][^!?]{8,220}$/.test(n.text.trim()) &&
+    (n.text.match(/[A-Z][a-z]+\s+[A-Z][a-z]+/g)?.length ?? 0) >= 2);
+  const authorSourceNodes = [...authorNodes, ...authorContinuationNodes];
   const affiliationNodes = canonical.nodes.filter((n) => n.role === "affiliation" && n.text);
   const affiliated = canonical.relations.filter((r) => r.kind === "AFFILIATED_WITH");
-  const authorsStructured = authorNodes.map((node) => ({
+  const authorsStructured = authorSourceNodes.map((node) => ({
     id: node.id,
     name: (node.text ?? "").trim(),
     affiliationIds: affiliated.filter((rel) => rel.from === node.id).map((rel) => rel.to),
@@ -346,7 +353,7 @@ export function projectCanonicalToPaper(input: {
     !/^(?:corresponding author|these authors contributed|author note|keywords?)\b/i.test(affiliation.name));
   const authorNames = authorsStructured
     .flatMap((author) => expandAuthorLine(author.name))
-    .filter((name) => name.split(/\s+/).length <= 6 && !/[.!?]/.test(name) &&
+    .filter((name) => name.split(/\s+/).length <= 6 && !/[!?]/.test(name) &&
       !/(?:^|,\s*)(?:usa|u\.s\.a?\.?|israel|italy|china|japan|uk|united kingdom|ny|california|new york|tel aviv|albany)(?:\s*,|$)/i.test(name) &&
       !/\b(?:,\s*)?(?:ny|ca),\s*usa\b/i.test(name))
     .filter(Boolean);
