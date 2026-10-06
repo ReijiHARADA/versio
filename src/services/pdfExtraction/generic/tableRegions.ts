@@ -16,27 +16,51 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
     // the input window per caption so multiple tables on one page each get
     // independent geometry evidence.
     const captionY = caption.boundingBoxes[0]?.y ?? 0;
-    const tableItems = page.textItems.filter((item) => item.y >= captionY - 2 && item.y <= captionY + 420);
-    const tableGraphics = (page.graphicsPrimitives ?? []).filter((item) => item.y + item.height >= captionY - 2 && item.y <= captionY + 420);
+    // Tables in academic PDFs may place the caption below the last row (the
+    // common ACM layout) or above it. Keep a bounded window on both sides so
+    // the signature helper can choose the stronger anchored grid without
+    // pulling in the whole page.
+    const tableItems = page.textItems.filter((item) => item.y >= captionY - 420 && item.y <= captionY + 420);
+    const tableGraphics = (page.graphicsPrimitives ?? []).filter((item) => item.y + item.height >= captionY - 420 && item.y <= captionY + 420);
     const signature = buildCaptionAnchoredTableSignature(tableItems, tableGraphics);
-    if (!signature || signature.horizontalRules + signature.verticalRules < 4) continue;
+    if (!signature) continue;
     const group = candidates.filter((candidate) => {
       if (candidate.pageStart !== page.pageNumber || (candidate.roleScores.table ?? 0) < 0.94) return false;
       const box = candidate.boundingBoxes[0];
       return Boolean(box && intersects(box, signature.bbox));
     });
-    if (group.length < 2) continue;
-    const prose = group.filter((candidate) => /[.!?]\s*$/.test(candidate.text.trim())).length;
-    if (prose > Math.floor(group.length / 3)) continue;
-    const confidence = Math.min(0.995, 0.96 + Math.min(0.03, (signature.horizontalRules + signature.verticalRules) * 0.002));
+    // Borderless tables (common in ACM/CHI papers) have no vector rules and
+    // therefore cannot satisfy the ruled-grid threshold. A caption plus a
+    // compact set of aligned, non-sentence rows is still strong evidence: use
+    // the candidate geometry, but never promote prose-shaped rows.
+    const borderlessGroup = signature.horizontalRules + signature.verticalRules < 4
+      ? candidates.filter((candidate) => {
+        const tableScore = candidate.roleScores.table ?? 0;
+        const tableLikeWithoutRole = candidate.roleScores.table === undefined && candidate.text.trim().length <= 140;
+        if (candidate.pageStart !== page.pageNumber || (tableScore < 0.8 && !tableLikeWithoutRole)) return false;
+        const box = candidate.boundingBoxes[0];
+        if (!box || /[.!?]\s*$/.test(candidate.text.trim())) return false;
+        const yDistance = Math.abs((box.y + box.height / 2) - captionY);
+        const xOverlap = box.x < caption.boundingBoxes[0].x + caption.boundingBoxes[0].width &&
+          caption.boundingBoxes[0].x < box.x + box.width;
+        return xOverlap && yDistance <= 120;
+      })
+      : [];
+    const selectedGroup = borderlessGroup.length >= 2 ? borderlessGroup : group;
+    if (selectedGroup.length < 2) continue;
+    const prose = selectedGroup.filter((candidate) => /[.!?]\s*$/.test(candidate.text.trim())).length;
+    if (prose > Math.floor(selectedGroup.length / 3)) continue;
+    const confidence = borderlessGroup.length >= 2
+      ? 0.985
+      : Math.min(0.995, 0.96 + Math.min(0.03, (signature.horizontalRules + signature.verticalRules) * 0.002));
     if (confidence < 0.98) continue;
     regions.push({
       id: `table-region-p${page.pageNumber}-${groupIndex + 1}`,
       kind: "table",
       pageStart: page.pageNumber,
       pageEnd: page.pageNumber,
-      boundingBoxes: [{ page: page.pageNumber, x: Math.min(...group.map(c=>c.boundingBoxes[0].x)), y: Math.min(...group.map(c=>c.boundingBoxes[0].y)), width: Math.max(...group.map(c=>c.boundingBoxes[0].x+c.boundingBoxes[0].width))-Math.min(...group.map(c=>c.boundingBoxes[0].x)), height: Math.max(...group.map(c=>c.boundingBoxes[0].y+c.boundingBoxes[0].height))-Math.min(...group.map(c=>c.boundingBoxes[0].y)) }],
-      memberCandidateIds: group.map((candidate) => candidate.id),
+      boundingBoxes: [{ page: page.pageNumber, x: Math.min(...selectedGroup.map(c=>c.boundingBoxes[0].x)), y: Math.min(...selectedGroup.map(c=>c.boundingBoxes[0].y)), width: Math.max(...selectedGroup.map(c=>c.boundingBoxes[0].x+c.boundingBoxes[0].width))-Math.min(...selectedGroup.map(c=>c.boundingBoxes[0].x)), height: Math.max(...selectedGroup.map(c=>c.boundingBoxes[0].y+c.boundingBoxes[0].height))-Math.min(...selectedGroup.map(c=>c.boundingBoxes[0].y)) }],
+      memberCandidateIds: selectedGroup.map((candidate) => candidate.id),
       columnX: signature.columnX,
       graphicsEvidence: [],
       repeatedHeaderEvidence: [],
