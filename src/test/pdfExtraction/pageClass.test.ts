@@ -51,4 +51,20 @@ describe("page classification", () => {
     const scanned = page(["x"], 2);
     expect(classifyDocument([native, scanned])).toBe("mixed");
   });
+
+  it("flags repeated short glyph runs as garbled text", () => {
+    const signals = pageClassSignals(page(Array.from({ length: 12 }, (_, i) =>
+      i % 2 === 0 ? "АПФАПФАПФ" : "CIPCIPCIP")));
+    expect(signals.repeatedGlyphHits).toBeGreaterThanOrEqual(2);
+    expect(classifyPage(signals)).toBe("garbled");
+  });
+
+  it("flags broken symbol-joined masthead tokens", () => {
+    const signals = pageClassSignals(page([
+      "АПФ&ПЛ&ПЛ АПФ CIPCIP&PL&PL " + "ordinary Russian body text ".repeat(12),
+      ...Array.from({ length: 11 }, () => "body"),
+    ]));
+    expect(signals.brokenTokenHits).toBeGreaterThanOrEqual(2);
+    expect(classifyPage(signals)).toBe("garbled");
+  });
 });

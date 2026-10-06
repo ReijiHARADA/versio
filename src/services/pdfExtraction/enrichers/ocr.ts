@@ -44,7 +44,7 @@ export async function applyVisionOcr(
     return { pages, ocrPages: new Set() };
   }
 
-  const ocrResults = await ocrDocument(pdfDoc, ["en-US", "ja-JP"], onProgress);
+  const ocrResults = await ocrDocument(pdfDoc, ["en-US", "ja-JP", "ru-RU"], onProgress);
   const ocrPages = new Set<number>();
   for (const ocrPage of ocrResults) {
     if (!needed.has(ocrPage.pageNumber) || ocrPage.lines.length === 0) continue;
