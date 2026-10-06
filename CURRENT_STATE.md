@@ -840,3 +840,4 @@ green after the new graphics/caption evidence.
 - 2026-10-06: `interactive-jewellery` の所属座標を再診断。各行のx列自体は安定しているが、単純なページ内x帯結合は別機関（Duncan/University等）を誤結合するため採用せず破棄。所属再構築は著者マーカー・番号・列の縦連続性を同時に使う必要がある。保守的な現行出力を維持し、回帰 **31/31** pass。
 - 2026-10-06: 所属番号が先頭行にだけ現れる複数行mastheadで、番号を同一x帯の後続行へ伝播してから投影する処理を追加。`interactive-jewellery` の所属断片数を12→4へ減らし、列の縦継続を保った。著者/pipeline **31/31 pass**、typecheck pass。機関名の意味的な分割（同一列に複数機関が並ぶ形式）はなお手動確認対象。
 - 2026-10-06: ACM系の重なったmastheadで、native text内の `ACM Reference Format:` 著者列を汎用的な二次構造証拠として利用。PPG Earringで壊れた座標投影を6著者へ復元し、地名・所属・メールの著者混入を除去。author projection **3/3 pass**、typecheck pass。所属機関の列再構築は別課題。
+- 2026-10-06: ACM `Reference Format` fallbackにより、座標が重なったmastheadの著者投影を修正。PDF extraction全体 **13 files / 70 tests pass**、typecheck pass。113本全体の再計測は大きな抽出変更時の方針に従い未実施。
