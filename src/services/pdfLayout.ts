@@ -1602,7 +1602,7 @@ function looksLikeAuthorList(text: string): boolean {
   const words = t.split(/\s+/).filter(Boolean);
   if (words.length < 4) return false;
   const capitalized = words.filter((word) => /^[A-ZÀ-ÖØ-Ý][A-Za-zÀ-ÿ'’.-]{1,}$/.test(word.replace(/[,;]+$/g, "")));
-  const separators = (text.match(/[,;]|\band\b|&|♠|♣|♡|♢/gi) ?? []).length;
+  const separators = (text.match(/[,;·]|\band\b|&|♠|♣|♡|♢/gi) ?? []).length;
   // At least two separators or an explicit marker run is required. This
   // avoids promoting ordinary title/abstract fragments while covering
   // multi-author rows emitted without affiliation markers.
@@ -1933,6 +1933,10 @@ function roleForLine(
   // line grouping. The predicate is conservative and excludes institutions,
   // sentence punctuation, and section labels.
   if (line.page === 1 && looksLikeAuthorList(text)) return "author";
+  if (line.page === 1 && mastheadEndY >= 0 && line.y < mastheadEndY &&
+      looksLikeAffiliation(text) && text.length <= 220 && !/[.!?。！？]$/.test(text)) {
+    return "affiliation";
+  }
   if (line.roleHint) return line.roleHint;
   // Carry a copyright run only through similarly small continuation lines.
   // Body-sized text in the opposite physical column may follow a footer on
@@ -3802,6 +3806,15 @@ export function reconstructDocument(pages: ExtractedPage[]): {
         candidateBlock.bbox = blockBbox(remainingLines);
       }
       break;
+    }
+  }
+  // A few journal templates attach a stale paragraph hint to a complete
+  // author row. Re-evaluate the finished block once, after line grouping, so
+  // the user-visible metadata does not depend on that hint.
+  for (const block of blocks) {
+    if (block.pageStart === 1 && block.role === "paragraph" && block.lines.length <= 2 &&
+        block.text.length <= 320 && looksLikeAuthorList(block.text)) {
+      block.role = "author";
     }
   }
   if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_DEBUG === "1") {
