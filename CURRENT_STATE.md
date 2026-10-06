@@ -600,3 +600,7 @@ A generic continuation candidate was added for publisher layouts that place a mi
 ### 2026-10-06: initialed continuation names recovered
 
 The split masthead guard initially missed continuation rows containing middle initials (`Katherine L. Plant`, `Neville A. Stanton`). The name-shape evidence now allows an optional initial, and `ergonomics-flight-deck-applications` projects all six authors instead of only the first three. Typecheck and the 29-case pipeline suite pass.
+
+### 2026-10-06: author benchmark after split-row repair
+
+The 27-paper author benchmark was rerun after the initialed continuation fix. Mean author F1 improved from 0.693 to 0.786; perfect papers increased from 12/27 to 16/27. The remaining 11 failures are concentrated in social-influence, cognitive dual-task, several marketing mastheads, and one clinical review; their layouts need separate generic diagnostics. The benchmark artifact is `/tmp/author-27-after-cont.json`; the tracked working report was restored.
