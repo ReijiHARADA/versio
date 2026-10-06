@@ -44,4 +44,14 @@ describe("title resolver masthead filtering", () => {
     });
     expect(result.text).toBe("A general method for reliable document extraction");
   });
+
+  it("skips duplicated glyph runs produced by a broken ToUnicode map", () => {
+    const result = resolveTitle({
+      candidates: [
+        candidate("АПФАПФ&ПЛ&ПЛ ПАРАДИГМЕ", 80),
+        candidate("Взаимосвязь прикладной лингвистики и практики преподавания", 150),
+      ],
+    });
+    expect(result.text).toBe("Взаимосвязь прикладной лингвистики и практики преподавания");
+  });
 });

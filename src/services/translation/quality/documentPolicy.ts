@@ -36,6 +36,10 @@ export function isGarbageTitle(text: string): boolean {
   if (/proceedings of/i.test(t)) return true;
   if (/^(acm|ieee|tei|chi)\s+\d{4}/i.test(t)) return true;
   if (/没留下|请联系/.test(t)) return true;
+  // Broken ToUnicode maps can duplicate short uppercase glyph runs and join
+  // them with symbols (for example `АПФАПФ&ПЛ&ПЛ`). Treat this as decoder
+  // garbage so a later article-title candidate or metadata fallback wins.
+  if (/[&∧]/u.test(t) && /([\p{Lu}]{2,8})\1/u.test(t)) return true;
   return isDegenerateTranslation(t);
 }
 
@@ -108,4 +112,3 @@ export function looksLikeBibliographyEntry(text: string): boolean {
   }
   return false;
 }
-
