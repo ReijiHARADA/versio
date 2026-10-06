@@ -228,6 +228,9 @@ describe("baseline benchmark on cached real papers", () => {
       if (paper.id === "marketing-impact-of-green-marketing-on-consumer-behavior") {
         expect(report.titlePredicted).toMatch(/IMPACT OF GREEN MARKETING ON CONSUMER BEHAVIOU?R/i);
       }
+      if (paper.id === "linguistics-computational-linguistics") {
+        expect(report.titlePredicted).toBe("Computational Linguistics");
+      }
       if (paper.formatFamily === "acm-acmart" && report.formatApplied === "acm") {
         expect(report.formatScores.acm).toBeGreaterThanOrEqual(0.75);
       }

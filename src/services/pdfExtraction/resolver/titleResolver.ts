@@ -43,6 +43,11 @@ function looksLikeDocumentMasthead(text: string): boolean {
     || /\b\d{4}\b[\s\S]*\b\d{3,6}\s*$/.test(t);
 }
 
+function looksLikeJournalNameMasthead(text: string): boolean {
+  const t = text.trim();
+  return /\b(?:journal|transactions|proceedings|international\s+journal|advances\s+in\s+(?:scientific|engineering))\b/i.test(t);
+}
+
 function isPlausibleMetadataTitle(text: string): boolean {
   const t = text.trim();
   // Repository and thesis records legitimately include a subtitle and degree
@@ -50,7 +55,11 @@ function isPlausibleMetadataTitle(text: string): boolean {
   // bounded ceiling to avoid accepting an accidentally stored full document.
   if (t.length < 12 || t.length > 500 || looksLikeDocumentMasthead(t)) return false;
   if (/\.(?:pdf|docx?)$/i.test(t) || /^(?:[/\\]|https?:\/\/)/i.test(t)) return false;
-  return (t.match(/\S+/g) ?? []).length >= 3;
+  const words = t.match(/\S+/g) ?? [];
+  // Short legitimate article titles (for example “Computational Linguistics”)
+  // are common in journal PDFs. Keep the two-word allowance narrow so a
+  // generic one- or two-word masthead label is not promoted as metadata.
+  return words.length >= 3 || (words.length === 2 && /[A-Za-z\u00C0-\u024F]/.test(t) && words.every((word) => /[A-Z\u00C0-\u024F]/.test(word)));
 }
 
 function looksLikeTruncatedTitle(text: string): boolean {
@@ -201,6 +210,25 @@ export function resolveTitle(input: {
       }
     }
 
+    // A common journal layout has the journal name as a large first title,
+    // followed by volume/date metadata and then the article title.  When the
+    // later title candidate is still above the author masthead, prefer that
+    // structurally later candidate.  This uses document order and masthead
+    // vocabulary only; it does not depend on a publisher or paper name.
+    if (looksLikeJournalNameMasthead(firstTitle.text)) {
+      const authorY = input.candidates
+        .filter((candidate) => candidate.pageStart === 1 && candidate.role === "author")
+        .map((candidate) => candidate.boundingBoxes[0]?.y ?? Number.POSITIVE_INFINITY)
+        .sort((a, b) => a - b)[0] ?? Number.POSITIVE_INFINITY;
+      const later = titles
+        .filter((candidate) => candidate.pageStart === 1 &&
+          (candidate.boundingBoxes[0]?.y ?? 0) > (firstTitle.boundingBoxes[0]?.y ?? 0) + 36 &&
+          (candidate.boundingBoxes[0]?.y ?? 0) < authorY - 4 &&
+          !looksLikeJournalNameMasthead(candidate.text))
+        .sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0))[0];
+      if (later) native = [stripMastheadSuffix(later.text)];
+    }
+
     const last = titles[titles.length - 1];
     const lastText = native[0];
     if (/[-\u2010-\u2014]$/.test(lastText) || /\bOn-$/.test(lastText)) {
@@ -261,7 +289,7 @@ export function resolveTitle(input: {
   })();
   const weakSectionTitle = Boolean(fused.text && fused.text.length <= 24 && meta &&
     meta.length >= fused.text.length * 2 && titles[0]?.role === "title");
-  if (fused.text && meta && isPlausibleMetadataTitle(meta) && (looksLikeDocumentMasthead(fused.text) || looksLikeTruncatedTitle(fused.text) || looksLikeBodyTitleCandidate(fused.text) || metadataMatchesNativePrefix || nativeMatchesMetadataPrefix || nativePrefixRepair || weakSectionTitle)) {
+  if (fused.text && meta && isPlausibleMetadataTitle(meta) && (looksLikeDocumentMasthead(fused.text) || looksLikeJournalNameMasthead(fused.text) || looksLikeTruncatedTitle(fused.text) || looksLikeBodyTitleCandidate(fused.text) || metadataMatchesNativePrefix || nativeMatchesMetadataPrefix || nativePrefixRepair || weakSectionTitle)) {
     return {
       text: meta,
       confidence: Math.max(0.55, fused.confidence * 0.8),
