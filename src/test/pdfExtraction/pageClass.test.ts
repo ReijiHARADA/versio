@@ -6,7 +6,7 @@ import {
   scannedByItemAverage,
 } from "../../services/pdfExtraction/pageClass";
 import type { ExtractedPage } from "../../services/pdfService";
-import { pagesNeedingOcr } from "../../services/pdfExtraction/enrichers/ocr";
+import { pagesNeedingOcr, shouldAcceptOcr } from "../../services/pdfExtraction/enrichers/ocr";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -114,5 +114,11 @@ describe("page classification", () => {
     expect(signals.interleavedFragmentHits).toBeGreaterThanOrEqual(3);
     expect(classifyPage(signals)).toBe("garbled");
     expect(pagesNeedingOcr([fragments])).toEqual(new Set([1]));
+  });
+
+  it("keeps native text when OCR is unexpectedly sparse", () => {
+    expect(shouldAcceptOcr("native body ".repeat(100), "short OCR")).toBe(false);
+    expect(shouldAcceptOcr("", "short OCR")).toBe(true);
+    expect(shouldAcceptOcr("native body ".repeat(100), "ocr body ".repeat(60))).toBe(true);
   });
 });
