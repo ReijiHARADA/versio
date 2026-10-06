@@ -7,6 +7,7 @@
 - 2026-10-06: 上記Resolver変更後に113本を再計測し、title exact は 102/113 (90.27%) から 104/113 (92.04%) に改善。残り9件の多くはPDF自体の別言語タイトル・翻訳題・表紙題で、英語カタログ題との単純一致では抽出失敗と断定できない。`extraction-baseline-latest.json` は生成物のためコミットせず、数値と代表例をここへ記録。
 - 2026-10-06: 段組検出の追加回帰で、単段組PDFのヘッダーだけが左右に分かれる誤検出を確認。左右の行数比、縦方向の重なり、各列のYスパンを要求する条件を追加し、`ergonomics-human-factors-and-ergonomics` は単段組へ戻り、`ppg-earring` は二段組を維持。pipeline 28/28、reading-order/listを含む直近104件 pass。変更は未コミットのUI差分と分離して次のコミットに保存。
 - 2026-10-06: 上記条件変更後、`ppg-earring` と `ergonomics-human-factors-and-ergonomics` の実PDF回帰を再通過（2/2）。後者のAbstractが単段組の論理順で保持されることを確認。
+- 2026-10-06: 段組誤検出修正後に113本全体を再計測。title exact は 104/113 (92.04%) から 105/113 (92.92%) に改善。heading recall平均 0.9932、figure caption recall 1.0、table caption recall 1.0、table region recall平均 0.95、source integrity平均 0.9999。生成JSONはコミットせず、ベンチマーク値のみ記録。
 
 - 2026-10-06: 大規模PDFの抽出回帰を180秒共通タイムアウトで再確認。`ergonomics-human-factors-and-ergonomics` は抽出内容を含め **37.7秒で合格**し、従来の60秒タイムアウトは実抽出失敗ではないことを確認。抽出固有の追加修正はせず、テストの誤判定だけを解消した（`f2ca78c`）。
 - 2026-10-06: PDF抽出回帰を再実行（232 checks中229 pass）。`education-learning-analytics` の番号付き本文リストが図ラベル誤判定で消える問題を修正し、`human-ai-interaction-guidelines` の段落が参考文献状態へ誤分類される問題も修正。重点2件は再テスト合格。変更は `7f50d02`。残る1件は大規模PDFの既存60秒テストタイムアウトで、抽出内容の失敗ではなくテスト時間設定の課題。
@@ -104,6 +105,10 @@
 - ordinary-body fallback 111件のsource/fallback段階/quality理由を [`translation-failure-triage-v1.json`](test-data/real-papers/reports/translation-failure-triage-v1.json) に固定。server/protection 55、quality-gate 43、extraction/structure 5、その他8（分類はtriage用で重複理由を含む）。
 
 ## 直近の変更
+
+### v1560 — 重複PDFインポート行の整理（2026-10-06）
+
+- 同じPDFが既にあるときのライブラリ行をコンパクト化。重複バッジ・重複する説明文・生エラーをやめ、ファイル名＋一行の案内と「既存の論文を開く」／閉じる（×）だけにした。
 
 ### v1559 — 翻訳切り替えの粒子モーフィング（2026-10-06）
 
