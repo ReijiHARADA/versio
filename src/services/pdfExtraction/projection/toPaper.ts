@@ -885,11 +885,30 @@ export function projectCanonicalToPaper(input: {
   // public projection. Keep canonical nodes untouched so resolver evidence and
   // source traceability remain available.
   if (authorNames.length === 0) {
+    // A few report/book templates flatten a single author, role, and
+    // institution into one affiliation node (for example
+    // `1Murali Krishna Pasupuleti 1Research Director 1National Education
+    // Services`). Recover the person only when a role marker and an
+    // institution-shaped tail are both present; this keeps ordinary
+    // affiliation prose from becoming an author.
+    const flattenedSingleAuthor = affiliationNodes.flatMap((node) => {
+      const text = (node.text ?? "").replace(/\s+/g, " ").trim();
+      const match = text.match(/^\d?\s*([A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’-]+){1,4})\s+\d?\s*(?:research director|professor|associate professor|assistant professor|researcher|author)\s+\d?\s*(.+)$/iu);
+      if (!match || !/\b(?:university|institute|department|school|services|college|laboratory|center|centre|hospital)\b/i.test(match[2])) return [];
+      return [{ author: match[1].trim(), affiliation: match[2].trim() }];
+    });
+    if (flattenedSingleAuthor.length > 0) {
+      authorNames.push(flattenedSingleAuthor[0].author);
+      affiliations.splice(0, affiliations.length, ...flattenedSingleAuthor.map((pair, index) => ({
+        id: `recovered-single-author-affiliation-${index}`,
+        name: normalizeAffiliationName(pair.affiliation),
+      })));
+    }
     const recovered = affiliationNodes.flatMap((node) => [
       ...splitFlattenedMasthead(node.text ?? ""),
       ...splitAffiliationNamePrefix(node.text ?? ""),
     ]);
-    if (recovered.length >= 2) {
+    if (authorNames.length === 0 && recovered.length >= 2) {
       authorNames.push(...recovered.map((pair) => pair.author));
       affiliations.splice(0, affiliations.length, ...recovered.map((pair, index) => ({
         id: `recovered-affiliation-${index}`,
