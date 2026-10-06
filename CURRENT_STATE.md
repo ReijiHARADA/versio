@@ -770,3 +770,13 @@ called corpus-wide green.
 
 The pending replay is now complete: 2 test files, 232 tests passed, 0 failed
 (386.86s) after the null-signature fix.
+
+### Title fragment fusion (2026-10-06)
+
+Title diagnostics found a genuine two-line title split in the Indonesian
+ergonomics paper and a two-column title split in the green-marketing paper.
+The line grouper now fuses adjacent title columns and a preceding same-style
+title prefix that was misclassified as an author. Diagnostics now recover the
+full Indonesian title and `IMPACT OF GREEN MARKETING ON CONSUMER BEHAVIOUR`.
+Focused reading-order regressions and typecheck pass; the full corpus replay
+should be rerun after this title change.

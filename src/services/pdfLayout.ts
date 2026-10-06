@@ -3807,6 +3807,43 @@ export function reconstructDocument(pages: ExtractedPage[]): {
 
   const blocks = groupLinesIntoBlocks(lines, bodyFont);
   const mastheadBoundary = blocks.find((block) => block.pageStart === 1 && block.role === "paragraph" && block.text.length >= 240)?.bbox.y ?? 420;
+  // Some native streams split a title at a column/font-run boundary. Merge
+  // only strongly aligned title fragments, and recover a preceding title
+  // prefix that was conservatively labelled as an author when it ends in a
+  // separator. Name-shaped author rows do not satisfy these constraints.
+  for (const title of blocks.filter((block) => block.role === "title" && block.pageStart === 1)) {
+    const titleY = title.bbox.y;
+    const horizontal = blocks.find((candidate) =>
+      candidate !== title && candidate.role === "title" && candidate.pageStart === 1 &&
+      Math.abs(candidate.bbox.y - titleY) <= Math.max(2, title.bbox.height * 0.35) &&
+      Math.abs(candidate.bbox.x - (title.bbox.x + title.bbox.width)) <= 18
+    );
+    if (horizontal) {
+      const ordered = [title, horizontal].sort((a, b) => a.bbox.x - b.bbox.x);
+      title.lines = ordered.flatMap((block) => block.lines).sort((a, b) => a.x - b.x);
+      title.text = ordered.map((block) => block.text.trim()).join(" ").replace(/\s+/g, " ").trim();
+      title.bbox = blockBbox(title.lines);
+      const index = blocks.indexOf(horizontal);
+      if (index >= 0) blocks.splice(index, 1);
+    }
+    const previous = blocks
+      .filter((candidate) => candidate !== title && candidate.pageStart === 1 && candidate.role === "author" && candidate.bbox.y < titleY)
+      .sort((a, b) => b.bbox.y - a.bbox.y)[0];
+    const previousLooksLikeTitlePrefix = previous &&
+      previous.text.trim().length >= 40 && /[,：:]\s*$/.test(previous.text.trim()) &&
+      (/['“”"「」『』]/.test(previous.text) ||
+       Math.abs((previous.lines[0]?.fontSize ?? bodyFont) - (title.lines[0]?.fontSize ?? bodyFont)) <= 1.2);
+    if (previous && previousLooksLikeTitlePrefix &&
+        titleY - previous.bbox.y <= Math.max(28, bodyFont * 2.8) &&
+        /[a-z\p{Ll}]/u.test(previous.text)) {
+      title.lines = [...previous.lines, ...title.lines].sort((a, b) => a.y - b.y || a.x - b.x);
+      title.text = `${previous.text.trim()} ${title.text.trim()}`.replace(/\s+/g, " ").trim();
+      title.bbox = blockBbox(title.lines);
+      title.role = "title";
+      const index = blocks.indexOf(previous);
+      if (index >= 0) blocks.splice(index, 1);
+    }
+  }
   // A masthead in the opposite horizontal band can interrupt title lines in
   // y-sorted native reading order. Reattach only short, same-style lines that
   // align with the title and leave unrelated lines in their original block.
