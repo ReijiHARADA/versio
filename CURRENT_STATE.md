@@ -938,3 +938,12 @@ Ran `npm run test:extraction-corpus -- --reporter=dot` in a foreground PTY and
 collected the terminal result: **2 test files / 232 tests passed**, exit code 0,
 including the cached real-paper baseline and reading-order corpus. PDF.js
 canvas/font/ColorSpace warnings appeared but produced no test failures.
+# 2026-10-07: citation-line title recovery without metadata
+
+When a corrupt title candidate is present and PDF metadata is empty, the
+projection now uses a same-line `For citation:` paragraph with a DOI as a
+structured fallback. It selects the title sentence while excluding authors,
+journal metadata, and the DOI. The linguistics fixture now recovers
+`The role of applied linguistics and language discourse analysis in English
+language teaching` without metadata. PDF extraction tests: 13 suites / 78
+tests passed.
