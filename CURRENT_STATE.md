@@ -7,6 +7,7 @@
 - 同ガード後の全TypeScript回帰は **70 files / 652 tests pass**。PDF抽出・reading order・cascade・import/resumeに回帰なし。
 - 抽出ベンチマークの範囲ガードを追加後、`--papers thermal-earring` の1本実行を確認。title exactness、source integrity、figure/table caption・region指標はいずれも1.0、heading recall 0.973。引数なし全件実行は明示的に拒否される。
 - 比較極性ガード後に同一CAT cohort（2件）を再採点し、自動受理が **1/2→0/2** になった。dont-mind-meの数値保持候補も、反対極性のcollapseを安全側で拒否できることを確認。CATを本番cascadeへ接続する前の安全基準として保存。
+- 追加のCAT非citation cohort（4件）は自動ゲート3/4だったが、1件は先頭が`– encourages...`のsource fragmentだったため、CAT品質比較から分離。監査スクリプトに継続断片の除外（`CAT_INCLUDE_INCOMPLETE=1`で診断時のみ含める）を追加し、source reconstruction failureをmodel rescue率へ混ぜない。
 - 2026-10-05: CAT比較前のMADLAD重点基準 `focused-before-cat-v1`（4本・16 units）を完了。ordinary-bodyは2/6 fallback（33.3%）、全体は9/16 fallbackだが、6件は構造不良によるpre-model除外。これは全体推定ではなく、CAT cascade比較用の基準値として保存。
 
 最終更新: 2026-10-05
