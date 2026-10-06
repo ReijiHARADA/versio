@@ -1,3 +1,4 @@
+- 2026-10-06: 113本のmastheadサンプルから、著者投影に地名（`Pittsburgh, USA`）、書誌行、メールアドレス、末尾が接続語の断片が混入する一般的な誤抽出を確認。`isNonAuthorMastheadLine` を追加し、著者候補・継続候補・所属候補の境界で除外する補正を実装（`3af9d3b`, `71a879e`）。typecheckとreal-paper extraction回帰118/118は通過。複数著者が同一native lineへ潰れるケース（例: `Daehwa Kim Chris Harrison`）は別のgeometry分離課題として残る。
 # Paper Reader 現在状態
 
 - 2026-10-06: 113本の自動抽出指標だけでは見逃す本文汚染を、タイトル診断で追加確認した。インドネシア語ジャーナルPDFでは、ISSN/巻号/発行日帯が本文の先頭行と同じnative line/blockへ連結される形式を確認。`splitInlineBibliographicBand` を行形成前に追加し、構造帯と本文を分離する汎用修正を実装（`e79ba73`）。既存のreal-paper extraction regression **118/118**、typecheck、diff check pass。これは113本全件の目視完了を意味せず、引き続き書式別の目視レビューが必要。
