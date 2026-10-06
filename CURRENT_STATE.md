@@ -845,3 +845,4 @@ green after the new graphics/caption evidence.
 - 2026-10-06: affiliation公開フィルタを強化し、`Contents`/`Article history`、単一文字マーカーが多数混ざる列断片、短い非機関語を除外。既存著者・パイプライン回帰は維持。複数列の機関名自体を完全再構築する代わりに、確信のない文字列を公開しない方針を継続。
 - 2026-10-07: 著者・所属変更後の代表4本（interactive-jewellery / power-over-skin / ppg-earring / neuroscience-rule-following）をisolated benchmark。4/4でcanonical titleExact、source integrity 1.0、figure/table relation 1.0。著者投影はACM重複mastheadと番号付き所属の回帰を維持。全113本のレポートはこの局所計測で上書きされるため、113本の旧集計値とは混同しない。
 - 2026-10-07: 文字付き所属マーカー（`a Institute... b Department...`）を番号付き所属と同じ構造証拠として分割。medical-deep-learning-meta-reviewの混在1 blockを6所属へ復元し、ScienceDirect chromeを除外。author projection **4/4 pass**、typecheck pass。
+- 2026-10-07: 文字付き所属マーカー修正後のPDF extraction回帰 **13 files / 71 tests pass**。既存の表・図・読み順・著者投影への副作用なし。typecheck pass。
