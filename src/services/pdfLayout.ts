@@ -2247,7 +2247,7 @@ function groupLinesIntoBlocks(
   flush();
   const nonEmptyBlocks = splitMixedColumnBlocks(
     splitStyledHeadingPrefixes(
-      rejoinCaptionStatisticFragments(blocks.filter((b) => b.text.length > 0)),
+      splitEmbeddedChromeBlocks(rejoinCaptionStatisticFragments(blocks.filter((b) => b.text.length > 0))),
       median(blocks.flatMap((block) => block.lines.map((line) => line.fontSize))) || 9,
     )
   );
@@ -2516,6 +2516,33 @@ function rejoinCaptionStatisticFragments(blocks: LayoutBlock[]): LayoutBlock[] {
     }
   }
   return blocks.filter((block) => !removed.has(block));
+}
+
+/** Split an unambiguous license/copyright tail that a PDF producer embedded
+ * in the same native span as a body paragraph. */
+function splitEmbeddedChromeBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
+  const result: LayoutBlock[] = [];
+  const marker = /(?:this(?:nationalwork)?license\.?is\s+licensed|(?:©\s*(?:acm|ieee|springer|elsevier))|copyright\s+\d{4})/i;
+  for (const block of blocks) {
+    if (block.role !== "paragraph" || block.text.length < 180) {
+      result.push(block);
+      continue;
+    }
+    const match = marker.exec(block.text);
+    if (!match || match.index < 80) {
+      result.push(block);
+      continue;
+    }
+    const prefix = block.text.slice(0, match.index).trim();
+    const suffix = block.text.slice(match.index).trim();
+    if (prefix.length < 80 || suffix.length < 20) {
+      result.push(block);
+      continue;
+    }
+    result.push({ ...block, text: prefix });
+    result.push({ ...block, role: "copyright", text: suffix });
+  }
+  return result;
 }
 
 /** Keep a paragraph from spanning two native columns when the extractor has
