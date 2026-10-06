@@ -699,3 +699,14 @@ truncation, or `behaviour` spelling), so this is not a visual accuracy score.
 The run also exposed three small source-integrity losses (0.993–0.997), which
 remain queued for visual review. This benchmark does not replace manual
 comparison of body blocks, tables, figures, or affiliations.
+
+### Provenance repair (2026-10-06)
+
+Fixed a generic column-continuation path where a detached inline citation band
+was appended to `LayoutBlock.text` but its native `lines` were left on the
+separate block. That made the canonical text look lossy to integrity checks and
+could also discard source bounding-box provenance downstream. The merge now
+updates text and lines together. Focused extraction tests remain 29/29 passing;
+the four affected-paper replay reduced two integrity failures to 1. The
+remaining Russian-language and long rotated-page cases are native-layout cases
+queued for visual review rather than being hidden by a looser metric.

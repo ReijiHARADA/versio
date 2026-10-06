@@ -3138,7 +3138,12 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
     );
     if (detachedInlineCitationBand && target) {
       target.text = `${target.text} ${block.text}`.replace(/\s+/g, " ").trim();
-      target.bbox = blockBbox([...target.lines, ...block.lines]);
+      // Keep provenance lines in lockstep with the text. Without this, a
+      // citation band can be appended to the canonical string while its
+      // native lines remain on the detached block, making the block appear
+      // lossy to source-integrity checks and downstream consumers.
+      target.lines = [...target.lines, ...block.lines];
+      target.bbox = blockBbox(target.lines);
       target.preserveColumnContinuation = true;
       continue;
     }
