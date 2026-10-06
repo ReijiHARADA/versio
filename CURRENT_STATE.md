@@ -932,3 +932,9 @@ Extended the repeated-glyph title guard to long title candidates that contain
 numeric markers and comma-separated author-like tails. When detected, the
 candidate is rejected so metadata/OCR can supply the title. The guard is
 projection-only and does not alter ordinary title candidates.
+# 2026-10-07: full extraction regression completed
+
+Ran `npm run test:extraction-corpus -- --reporter=dot` in a foreground PTY and
+collected the terminal result: **2 test files / 232 tests passed**, exit code 0,
+including the cached real-paper baseline and reading-order corpus. PDF.js
+canvas/font/ColorSpace warnings appeared but produced no test failures.
