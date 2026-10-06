@@ -570,3 +570,9 @@ Added one bounded beam-search retry after an inline-statistics greedy rescue fai
 - Truncated title prefix repair (2026-10-06): title resolution now recognizes a native title sharing its first three normalized words with a longer metadata title when only a few words are missing (for example `Human Factors “Ergonomics” Facilities`). Quotes and punctuation are normalized for comparison; the native text remains the source evidence.
 
 - Author projection normalization (2026-10-06): author lists now preserve comma/middle-dot boundaries, split PDF producer camel-case joins such as `ZhongyuHu`, remove standalone superscript numbers, and filter publisher labels/title-like nodes from projected authors. This targets the remaining catalog-author F1 failures without changing canonical source evidence. Typecheck passed. Commit: `9770eec`.
+
+### 2026-10-06: long marker-separated author masthead regression fixed
+
+The author projection filter had a 220-character cutoff. This excluded valid long author rows such as the 17-author OSWORLD masthead before `expandAuthorLine` could split marker-separated names, yielding an empty public author list despite the canonical node being correctly classified. The cutoff is now 500 characters; ordinary prose remains excluded by the existing punctuation/role/separator checks. OSWORLD now projects all 17 authors again. Typecheck and the focused PDF extraction/reading-order suite pass (104 tests).
+
+The 113-paper extraction percentages remain automated ground-truth comparisons, not visual inspection. The masthead sample artifact is a manual-review queue; it must not be described as completed visual QA.
