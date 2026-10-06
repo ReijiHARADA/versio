@@ -192,6 +192,7 @@ export function resolveTitle(input: {
           (candidate.boundingBoxes[0]?.y ?? 0) > firstY + 18 &&
           (candidate.boundingBoxes[0]?.y ?? 0) < authorY - 3 &&
           !looksLikeObviousMastheadTitle(candidate.text) &&
+          !looksLikeMastheadGeometry(candidate) &&
           !looksLikeAuthorish(candidate.text))
         .sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0));
       if (later[0]) {
@@ -204,6 +205,56 @@ export function resolveTitle(input: {
             !looksLikeAuthorish(candidate.text))
           .sort((a, b) => (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0));
         native = [cluster.map((candidate) => stripMastheadSuffix(candidate.text)).join(" ").replace(/\s+/g, " ").trim()];
+      }
+
+      // Some layouts classify the article title as a paragraph because the
+      // journal masthead consumed the strongest title score. Recover a
+      // paragraph-role candidate in the narrow masthead-to-author band. The
+      // geometry boundary and sentence/metadata filters keep abstract/body
+      // prose out of this recovery path.
+      if (!later[0]) {
+        const firstBox = titles[0].boundingBoxes[0];
+        const firstFont = titles[0].layoutBlock.lines[0]?.fontSize ?? 0;
+        const alternate = input.candidates
+          .filter((candidate) => {
+            const box = candidate.boundingBoxes[0];
+            const text = candidate.text.trim();
+            const words = text.split(/\s+/).filter(Boolean).length;
+            const font = candidate.layoutBlock.lines[0]?.fontSize ?? 0;
+            return candidate.pageStart === 1 &&
+              (candidate.role === "paragraph" || candidate.role === "heading" || candidate.role === "title") &&
+              (box?.y ?? 0) > (firstBox?.y ?? 0) + 16 &&
+              (box?.y ?? 0) < authorY - 3 &&
+              text.length >= 20 && text.length <= 280 && words >= 3 &&
+              (text.match(/[.!?](?:\s|$)/g)?.length ?? 0) <= 1 &&
+              !/[.!?]$/.test(text) &&
+              !looksLikeObviousMastheadTitle(text) &&
+              !looksLikeAuthorish(text) &&
+              !/^(?:abstract|keywords?|introduction|received|accepted|published)\b/i.test(text) &&
+              font >= Math.max(0, firstFont * 0.9);
+          })
+          .sort((a, b) => {
+            const fontA = a.layoutBlock.lines[0]?.fontSize ?? 0;
+            const fontB = b.layoutBlock.lines[0]?.fontSize ?? 0;
+            const lengthA = Math.min(a.text.trim().length, 180);
+            const lengthB = Math.min(b.text.trim().length, 180);
+            return (fontB * 4 + lengthB * 0.01) - (fontA * 4 + lengthA * 0.01);
+          })[0];
+        if (alternate) {
+          const anchorBox = alternate.boundingBoxes[0];
+          const cluster = input.candidates
+            .filter((candidate) => {
+              const box = candidate.boundingBoxes[0];
+              const text = candidate.text.trim();
+              return candidate.pageStart === 1 && candidate !== titles[0] &&
+                Math.abs((box?.y ?? 0) - (anchorBox?.y ?? 0)) <= 5 &&
+                (candidate.role === "title" || candidate.role === "paragraph" ||
+                  (candidate.role === "affiliation" && text.length <= 80 && !/\b(?:university|department|institute|laboratory)\b/i.test(text))) &&
+                !looksLikeObviousMastheadTitle(text) && !looksLikeAuthorish(text);
+            })
+            .sort((a, b) => (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0));
+          native = [cluster.map((candidate) => stripMastheadSuffix(candidate.text)).join(" ").replace(/\s+/g, " ").trim()];
+        }
       }
     }
 
@@ -242,15 +293,18 @@ export function resolveTitle(input: {
     );
     const firstTitle = titles[0];
     const firstTitleWords = firstTitle.text.trim().split(/\s+/).length;
-    if (hasJournalChrome && firstTitleWords <= 4) {
+    if (hasJournalChrome) {
       const laterTitles = titles.filter((candidate) =>
         candidate.pageStart === firstTitle.pageStart &&
-        (candidate.boundingBoxes[0]?.y ?? 0) > (firstTitle.boundingBoxes[0]?.y ?? 0) + 32
+        (candidate.boundingBoxes[0]?.y ?? 0) > (firstTitle.boundingBoxes[0]?.y ?? 0) + 32 &&
+        !looksLikeObviousMastheadTitle(candidate.text) &&
+        !looksLikeMastheadGeometry(candidate)
       );
-      const anchor = laterTitles.sort((a, b) =>
+      const sortedLaterTitles = laterTitles.sort((a, b) =>
         (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0) ||
         (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0)
-      )[0];
+      );
+      const anchor = sortedLaterTitles.at(-1);
       if (anchor) {
         const y = anchor.boundingBoxes[0]?.y ?? 0;
         const cluster = input.candidates
