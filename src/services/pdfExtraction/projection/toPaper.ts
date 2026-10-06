@@ -80,6 +80,12 @@ function expandAuthorLine(text: string): string[] {
     .replace(/\s+/g, " ")
     .trim();
   const names: string[] = [];
+  const uppercaseNames = [...cleaned.matchAll(/\b[A-Z][A-Z'’-]+(?:\s+[A-Z][A-Z'’-]+){1,3}\b/g)]
+    .map((match) => match[0].trim())
+    .filter((name) => !/^(?:FACEBOOK|GOOGLE|MICROSOFT|AMAZON|APPLE|STANFORD|UNIVERSITY|DEPARTMENT|SCHOOL|INSTITUTE|COLLEGE)$/i.test(name));
+  if (uppercaseNames.length >= 2 || (uppercaseNames.length === 1 && /[,·]/.test(cleaned))) {
+    return uppercaseNames;
+  }
   const markerParts = markedSource
     .split(/(?<=[♠♣♡♢∗†‡§])\s*/u)
     .map((part) => part.replace(/[♠♣♡♢∗†‡§]/gu, "").trim())
@@ -357,6 +363,17 @@ export function projectCanonicalToPaper(input: {
       !/(?:^|,\s*)(?:usa|u\.s\.a?\.?|israel|italy|china|japan|uk|united kingdom|ny|california|new york|tel aviv|albany)(?:\s*,|$)/i.test(name) &&
       !/\b(?:,\s*)?(?:ny|ca),\s*usa\b/i.test(name))
     .filter(Boolean);
+  // Some publisher templates label individual `NAME, institution` rows as
+  // affiliation even when the neighboring rows are author-labelled. Recover
+  // only the same strict uppercase name-prefix pattern and merge it with the
+  // author projection, preserving the canonical role assignment.
+  const affiliationAuthorNames = affiliationNodes
+    .flatMap((node) => splitAffiliationNamePrefix(node.text ?? "").map((pair) => pair.author));
+  for (const name of affiliationAuthorNames) {
+    if (!authorNames.some((existing) => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+      authorNames.push(name);
+    }
+  }
   // When the native PDF flattened a complete author/affiliation masthead into
   // affiliation nodes, recover the names and clean institution tails for the
   // public projection. Keep canonical nodes untouched so resolver evidence and
