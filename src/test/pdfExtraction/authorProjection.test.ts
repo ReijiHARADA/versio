@@ -94,6 +94,10 @@ describe("author masthead projection", () => {
     const pages = await extractPdfPages(interleavedAffiliationPdf);
     const result = await extractFromPages({ pages, paperId: "interleaved-affiliation", filePath: interleavedAffiliationPdf, fileHash: "interleaved-affiliation", metadata: { pageCount: pages.length } });
     const names = result.paper.affiliations.map((affiliation) => affiliation.name);
+    expect(result.paper.authors).toEqual(expect.arrayContaining([
+      "Halley Profita", "James Clawson", "Thad Starner", "Jim Budd", "Scott Gilliland", "Clint Zeagler", "Ellen Yi-Luen Do",
+    ]));
+    expect(result.paper.authors).not.toContain("James Clawson Thad Starner");
     expect(names).toEqual(expect.arrayContaining([
       "Department of Computer Science",
       "University of Colorado",

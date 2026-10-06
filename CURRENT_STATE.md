@@ -899,3 +899,10 @@ institution-shaped tail, so it does not relabel ordinary body prose. The
 `ergonomics-human-factors-and-ergonomics` fixture now projects **Murali Krishna
 Pasupuleti** and **National Education Services**. Author projection tests:
 8 passed; TypeScript check passed.
+# 2026-10-07: adjacent author names in flattened mastheads
+
+Author projection now splits a comma-bounded four-token title-case run when a
+publisher loses the delimiter between two adjacent two-token names. The
+`dont-mind-me` masthead now exposes `James Clawson` and `Thad Starner`
+separately while preserving the other authors. The rule is limited to
+comma-bounded name-shaped runs and does not apply to institution prose.
