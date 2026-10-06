@@ -13,6 +13,7 @@ const letteredAffiliationPdf = path.join(root, "test-data/real-papers/medical-de
 const reviewerMastheadPdf = path.join(root, "test-data/real-papers/cognitive-dual-task.pdf");
 const interleavedAffiliationPdf = path.join(root, "test-data/real-papers/dont-mind-me.pdf");
 const singleAuthorReportPdf = path.join(root, "test-data/real-papers/ergonomics-human-factors-and-ergonomics.pdf");
+const brokenUnicodeTitlePdf = path.join(root, "test-data/real-papers/linguistics-the-role-of-applied-linguistics-and-language-discourse-analysis-in-eng.pdf");
 
 describe("author masthead projection", () => {
   it("keeps same-baseline multi-column names separate and excludes locations", async () => {
@@ -115,5 +116,14 @@ describe("author masthead projection", () => {
     expect(result.paper.authors).toContain("Murali Krishna Pasupuleti");
     expect(result.paper.affiliations.some((affiliation) => /National Education Services/i.test(affiliation.name))).toBe(true);
     expect(result.paper.authors).not.toContain("Research Book Title :Human Factors and Ergonomics");
+  }, 60_000);
+
+  it("does not expose repeated-glyph ToUnicode output as the paper title", async () => {
+    if (!fs.existsSync(brokenUnicodeTitlePdf)) return;
+    const pages = await extractPdfPages(brokenUnicodeTitlePdf);
+    const expected = "The role of applied linguistics and language discourse analysis in English language teaching";
+    const result = await extractFromPages({ pages, paperId: "broken-unicode-title", filePath: brokenUnicodeTitlePdf, fileHash: "broken-unicode-title", metadata: { pageCount: pages.length, title: expected } });
+    expect(result.paper.titleOriginal).toBe(expected);
+    expect(result.paper.titleOriginal).not.toMatch(/АПФАПФ|CIPCIP/i);
   }, 60_000);
 });
