@@ -125,6 +125,17 @@ function splitFlattenedMasthead(text: string): MastheadPair[] {
   }).filter((pair) => pair.affiliation.length >= 12 && /(?:university|school|department|engineering|medicine|institute|college|laboratory|\busa\b)/i.test(pair.affiliation));
 }
 
+/** Recover title-page names when a publisher flattens `NAME, institution`
+ * rows into affiliation nodes. This is deliberately limited to an
+ * institution-shaped tail and uppercase name-shaped prefixes. */
+function splitAffiliationNamePrefix(text: string): MastheadPair[] {
+  const match = text.match(/^\s*((?:[A-Z][A-Z'’-]+(?:\s+[A-Z][A-Z'’-]+){1,4})(?:\s+and\s+(?:[A-Z][A-Z'’-]+(?:\s+[A-Z][A-Z'’-]+){1,4}))?)\s*,\s*(.+)$/);
+  if (!match || !/(?:university|institute|department|school|college|hospital|laboratory|research council|pisa|italy|usa)/i.test(match[2])) return [];
+  const names = match[1].split(/\s+and\s+/i).map((name) => name.trim()).filter(Boolean);
+  if (!names.length) return [];
+  return names.map((author) => ({ author, affiliation: match[2].trim() }));
+}
+
 /** Split flattened bullet lists into independent canonical blocks. */
 export function splitFlattenedList(text: string): string[] {
   // Academic PDFs often encode bullet lists as en/em dashes rather than a
@@ -326,7 +337,10 @@ export function projectCanonicalToPaper(input: {
   // public projection. Keep canonical nodes untouched so resolver evidence and
   // source traceability remain available.
   if (authorNames.length === 0) {
-    const recovered = affiliationNodes.flatMap((node) => splitFlattenedMasthead(node.text ?? ""));
+    const recovered = affiliationNodes.flatMap((node) => [
+      ...splitFlattenedMasthead(node.text ?? ""),
+      ...splitAffiliationNamePrefix(node.text ?? ""),
+    ]);
     if (recovered.length >= 2) {
       authorNames.push(...recovered.map((pair) => pair.author));
       affiliations.splice(0, affiliations.length, ...recovered.map((pair, index) => ({
