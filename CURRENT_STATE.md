@@ -608,3 +608,7 @@ The 27-paper author benchmark was rerun after the initialed continuation fix. Me
 ### 2026-10-06: institution-labelled author rows
 
 `social-influence-social-advertising` used affiliation-role rows for `EYTAN BAKSHY, Facebook` and `DEAN ECKLES, Stanford University & Facebook`, while another author block concatenated `RONG YAN` and `ITAMAR ROSENN`. A strict uppercase name-prefix parser now recovers institution-labelled author rows and separates adjacent all-caps names without treating organization names as authors. The fixture now projects all four authors. Typecheck and the 29-case pipeline suite pass; the 27-paper aggregate will be rerun after this change.
+
+### 2026-10-06: citation-style author noise filtered
+
+The cognitive dual-task fixture revealed that the PDF resolver marked bibliography-style short forms (`Castaño LAA`, `Arai H`, etc.) as author nodes alongside the real masthead. Projection now removes mixed-case names ending in citation initials, organization-like tokens, and duplicate names, while retaining full names with legitimate middle initials. The fixture now returns the full masthead names without the citation list noise. Typecheck and the 29-case pipeline suite pass.
