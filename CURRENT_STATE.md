@@ -751,3 +751,7 @@ projection now filters metadata labels, admits institution-shaped page-one
 continuations before the body, and restores spaces lost at native font-run
 boundaries. The regression asserts the two expected authors, excludes the labels,
 and retains Iowa State University. Focused baseline tests (2/2) and typecheck pass.
+
+The full extraction corpus was rerun after this projection change: 2 test files,
+232 tests passed, 0 failed (380.77s), confirming no regression in the existing
+reading-order and structural extraction checks.
