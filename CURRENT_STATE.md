@@ -859,3 +859,14 @@ green after the new graphics/caption evidence.
 - 2026-10-07: markerSource変更後のpdfExtraction全回帰を実行し、**13 files / 75 tests pass**。既存のheading、table、list、OCR classification、author/affiliation regressionに失敗なし。所属1〜4の完全分離は未達のため、全件benchmark値は更新せずfocused regressionとして扱う。
 - 2026-10-07: marker順序を行内x順ではなくPDF native item順で読むようにし、`cognitive-dual-task` の機関1〜4を4所属へ分離。確認結果: Applied Kinesiology、Electromyography Studies、National Center、NIH Biomedical Centerが各別ブロックになり、編集者/査読者所属は除外。author projection **6/6**、typecheck pass。サイドバー混在専用経路として実装し、通常2段組への影響を回帰で確認する。
 - 2026-10-07: numbered-affiliation順序復元後の全pdfExtraction回帰を再実行し、**13 files / 75 tests pass**、typecheck pass。サイドバー混在経路の追加でも既存の段組・表・見出し・OCR分類へ回帰なし。
+# 2026-10-07: affiliation author contamination guard
+
+The production projection now rejects affiliation-derived author candidates
+that contain generic institution/role phrases (for example `Research
+Director`, `Industrial Design`, or `Interactive Computing`). This prevents
+malformed column-interleaved affiliation text from being exposed as people.
+The change is intentionally conservative: when no reliable author remains,
+the projection keeps the author list empty rather than publishing an
+institution as a person. Focused author projection tests and TypeScript
+typecheck remain green; representative PDFs still require geometry-specific
+follow-up for heavily interleaved publisher mastheads.

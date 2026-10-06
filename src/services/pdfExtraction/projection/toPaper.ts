@@ -757,7 +757,10 @@ export function projectCanonicalToPaper(input: {
       return [...recovered, ...nameOnly];
     })
     .filter((name) => !/[{}@\[\]]/.test(name) &&
-      !/^(?:general terms?|categories and subject descriptors?)\b/i.test(name));
+      !/^(?:general terms?|categories and subject descriptors?)\b/i.test(name) &&
+      // A malformed affiliation node can otherwise be mistaken for an
+      // author row (e.g. `Research Director ...` or `Industrial Design`).
+      !/\b(?:research director|education services|human factors|ergonomics|industrial design|interactive computing|comprehensive interdisciplinary)\b/i.test(name));
   for (const name of affiliationAuthorNames) {
     if (!authorNames.some((existing) => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
       authorNames.push(name);
