@@ -1,7 +1,7 @@
 # Paper Reader 現在状態
 
 - 2026-10-06: 113本の自動抽出指標だけでは見逃す本文汚染を、タイトル診断で追加確認した。インドネシア語ジャーナルPDFでは、ISSN/巻号/発行日帯が本文の先頭行と同じnative line/blockへ連結される形式を確認。`splitInlineBibliographicBand` を行形成前に追加し、構造帯と本文を分離する汎用修正を実装（`e79ba73`）。既存のreal-paper extraction regression **118/118**、typecheck、diff check pass。これは113本全件の目視完了を意味せず、引き続き書式別の目視レビューが必要。
-- 2026-10-06: 上記修正後に113本のisolated extraction benchmarkを再実行。取得済み113/114（`precious-materials`はPDF未取得）。自動title exactは **108/113 (95.58%)**。残る5件のうち3件はPDF内の別言語タイトル、1件は英米綴り差、1件は雑誌マストヘッドが記事タイトル候補を上回るケース。これは目視確認済みの正解率ではないため、タイトル・本文混入のmanual reviewを継続する。
+- 2026-10-06: 上記修正後に113本のisolated extraction benchmarkを再実行。取得済み113/114（`precious-materials`はPDF未取得）。自動title exactは **109/113 (96.46%)**（108/113から改善）。残る4件はPDF内の別言語タイトル3件と英米綴り差1件で、雑誌マストヘッド混同は解消。見出しprecision/recall、図表caption、table-regionはこの計測で1.0、source integrity平均1.0（最小0.997）。これは目視確認済みの正解率ではないため、タイトル・本文混入のmanual reviewを継続する。
 - 2026-10-06: `linguistics-computational-linguistics` のページ1を目視相当のgeometry診断。`International Journal of Advances in Scientific` が記事題 `Computational Linguistics` より先に選ばれていたため、journal/volume/date → article-title → author の文書順を使う汎用Resolver補正を追加。2語の正当な記事題もメタデータ候補として扱う。代表workerで記事題を復元し、real-paper extraction **118/118**、typecheck pass（`fbe1a7e`）。全件自動再計測は次の大きな抽出変更時に行う。
 
 - 2026-10-06: Word-level native text向けの幾何ベース段組検出を追加。タイトル・著者・図が上部を占める `ppg-earring.pdf` でも本文の二段組（leftX=56/rightX=320）を検出し、Abstractを左段→右段の論理順に復元できることを確認。`Our results validate...` の先頭欠落を解消。pipeline 27/27、reading-order/list 77/77、重点real-paper 3件の回帰を通過。全PDFで完了したことを意味せず、段組・表・ページ境界の残課題は継続。
