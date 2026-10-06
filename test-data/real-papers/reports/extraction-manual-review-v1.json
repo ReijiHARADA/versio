@@ -1,6 +1,6 @@
 {
   "version": "extraction-manual-review-v1",
-  "reviewedAt": "2026-09-16",
+  "reviewedAt": "2026-10-06",
   "source": "Rendered native PDFs compared with current reconstructDocument output",
   "cases": [
     {
@@ -94,6 +94,51 @@
       "rootCause": "vector figure text shares native text stream with body; geometry region evidence missing",
       "action": "graphics-density plus caption-anchored vector label evidence",
       "reviewedAt": "2026-10-06"
+    },
+    {
+      "paperId": "linguistics-the-role-of-applied-linguistics-and-language-discourse-analysis-in-eng",
+      "page": 1,
+      "labels": [
+        "title_encoding_failure"
+      ],
+      "severity": 3,
+      "finding": "Rendered PDF title is Russian: “Взаимосвязь прикладной лингвистики и лингводискурсивного анализа с практикой преподавания английского языка”. Native pdf.js extraction produces unreadable “АПФАПФ...” glyph mapping, so the visible title is not recovered.",
+      "rootCause": "embedded font ToUnicode/text encoding; the catalog English title is a translated metadata title, not the visible article title",
+      "status": "open",
+      "action": "add a general low-unicode-confidence alternate text/OCR fallback; do not paper-specific map"
+    },
+    {
+      "paperId": "marketing-impact-of-sensory-marketing-on-consumer-behavior",
+      "page": 1,
+      "labels": [
+        "title_variant"
+      ],
+      "severity": 0,
+      "finding": "Rendered PDF title is Serbian/Cyrillic “СЕНЗОРНИ МАРКЕТИНГ – ИНТЕГРИСАЊЕ ЉУДСКИХ ЧУЛА У БРЕНД КОМУНИКАЦИЈЕ”; extracted title matches the visible title. English catalog title is a translated metadata variant.",
+      "rootCause": "ground-truth metadata language mismatch",
+      "status": "accepted"
+    },
+    {
+      "paperId": "marketing-impact-of-green-marketing-on-consumer-behavior",
+      "page": 1,
+      "labels": [
+        "title_variant"
+      ],
+      "severity": 0,
+      "finding": "Rendered PDF title is “IMPACT OF GREEN MARKETING ON CONSUMER BEHAVIOUR”; extraction is correct. Catalog uses American spelling “Behavior”.",
+      "rootCause": "British/American spelling difference",
+      "status": "accepted"
+    },
+    {
+      "paperId": "linguistics-linguistics-and-politics-russianisms-in-the-western-english-language-p",
+      "page": 1,
+      "labels": [
+        "title_variant"
+      ],
+      "severity": 0,
+      "finding": "Rendered PDF title is Russian/Cyrillic and extraction matches the visible title. English catalog title is a translated metadata variant.",
+      "rootCause": "ground-truth metadata language mismatch",
+      "status": "accepted"
     }
   ]
 }
