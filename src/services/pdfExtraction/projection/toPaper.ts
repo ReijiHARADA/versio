@@ -129,7 +129,17 @@ function isNonAuthorMastheadLine(text: string): boolean {
 type MastheadPair = { author: string; affiliation: string };
 
 function normalizeAffiliationName(text: string): string {
-  return text
+  const collapseExactRepeat = (value: string): string => {
+    const words = value.split(/\s+/).filter(Boolean);
+    if (words.length >= 4 && words.length % 2 === 0) {
+      const half = words.length / 2;
+      const left = words.slice(0, half).join(" ");
+      const right = words.slice(half).join(" ");
+      if (left.toLocaleLowerCase() === right.toLocaleLowerCase()) return left;
+    }
+    return value;
+  };
+  return collapseExactRepeat(text
     .replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "")
     // Native PDF text sometimes loses spaces at font-run boundaries
     // (e.g. `IowaStateUniversity` or `ofEvents`). Restore only a lower-to-
@@ -138,7 +148,7 @@ function normalizeAffiliationName(text: string): string {
     .replace(/\s+/g, " ")
     .replace(/\s+,/g, ",")
     .replace(/^[*†‡§☯\s]+/, "")
-    .trim();
+    .trim());
 }
 
 /**
@@ -485,17 +495,22 @@ export function projectCanonicalToPaper(input: {
     return {
     id: node.id,
     name: `${predecessor ? `${predecessor.text} ` : ""}${projectionAuthorText(node)}`.trim(),
-    affiliationIds: affiliated.filter((rel) => rel.from === node.id).map((rel) => rel.to),
+    affiliationIds: affiliated.filter((rel) => rel.from === node.id)
+      .map((rel) => affiliationIdByNodeId.get(rel.to) ?? rel.to),
     predecessorId: predecessor?.id,
   };
   }).filter((author) => !mergedMastheadPredecessors.has(author.id));
-  const affiliations = affiliationNodes.map((node) => ({
+  const affiliationCandidates = affiliationNodes.map((node) => ({
     id: node.id,
     name: normalizeAffiliationName(node.text ?? ""),
   })).filter((affiliation) => affiliation.name &&
     !/[{}@]/.test(affiliation.name) &&
     !/^(?:corresponding author|these authors contributed|author note|keywords?)\b/i.test(affiliation.name) &&
     !/^available from .*\bat:\s*$/i.test(affiliation.name));
+  const affiliations = affiliationCandidates.filter((affiliation, index, all) =>
+    all.findIndex((candidate) => candidate.name.toLocaleLowerCase() === affiliation.name.toLocaleLowerCase()) === index);
+  const affiliationIdByNodeId = new Map(affiliationCandidates.map((candidate) => [candidate.id,
+    affiliations.find((item) => item.name.toLocaleLowerCase() === candidate.name.toLocaleLowerCase())?.id ?? candidate.id]));
   const authorNames = authorsStructured
     .flatMap((author) => expandAuthorLine(author.name))
     .map((name) => name.replace(/[,;]+$/, "").trim())
