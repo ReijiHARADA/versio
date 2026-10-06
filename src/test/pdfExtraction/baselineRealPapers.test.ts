@@ -317,6 +317,9 @@ describe("baseline benchmark on cached real papers", () => {
       expect(lead?.original).toContain("consumer behaviour");
       expect(lead?.original).toContain("extended WEAR Scale to the apparel field by");
       expect(lead?.original).not.toContain("Department of Events");
+      expect(result.paper.authors).toEqual(expect.arrayContaining(["Changhyun Nam", "Young‑A Lee"]));
+      expect(result.paper.authors).not.toEqual(expect.arrayContaining(["Correspondence:", "Teaching Assistant Professor"]));
+      expect(result.paper.affiliations?.some((item) => /Iowa State University/i.test(item.name))).toBe(true);
     }, 60_000);
 
     it("projects rotated numeric table rows without translating them", async () => {

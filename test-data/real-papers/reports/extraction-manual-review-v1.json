@@ -1,0 +1,96 @@
+{
+  "version": "extraction-manual-review-v1",
+  "reviewedAt": "2026-09-16",
+  "source": "Rendered native PDFs compared with current reconstructDocument output",
+  "cases": [
+    {
+      "paperId": "ozchi-finger-specific-touch",
+      "page": 5,
+      "labels": [
+        "paragraph_merge"
+      ],
+      "severity": 0,
+      "finding": "The paragraph beginning 'Examination of the distribution...' continues across the page boundary with 'One exception...'; the merged canonical block spans pages 5-6 and preserves source provenance.",
+      "rootCause": "none; expected page continuation",
+      "status": "accepted"
+    },
+    {
+      "paperId": "education-learning-analytics",
+      "page": 20,
+      "labels": [
+        "table_contamination"
+      ],
+      "severity": 2,
+      "finding": "Tables 9 and 10 have visible ruled grids, but native extraction does not expose stable cell-level text items for all rows. Captions remain separate; rows remain source-preserving text blocks.",
+      "rootCause": "pdf-native geometry limitation",
+      "status": "unresolved-safe-fallback"
+    },
+    {
+      "paperId": "significant-other",
+      "page": 1,
+      "labels": [
+        "heading_false_positive",
+        "author_boundary"
+      ],
+      "severity": 1,
+      "finding": "Rendered Springer repository cover shows the line FISHER, T. is a continuation of the author masthead, but the layout role previously projected it as heading. The generic masthead continuation evidence now resolves it as author while title, archive metadata, and body boundaries remain separate.",
+      "rootCause": "generic masthead continuation was missing from resolver evidence",
+      "status": "fixed-generic-evidence"
+    },
+    {
+      "paperId": "neuroscience-rule-following",
+      "page": 2,
+      "labels": [
+        "inline-subheading_boundary"
+      ],
+      "severity": 1,
+      "finding": "Rendered Nature page has bold inline subheadings “Subjects.” and “Experimental Procedure.” followed by prose on the same line. Native extraction preserves the text and font distinction, but current block projection keeps each complete line as paragraph; the inline subheading is not a separate canonical heading node. The mixed-font line is now split into a heading node and a paragraph node with source text preserved.",
+      "rootCause": "line/block formation does not yet split a bold prefix from following same-line body text",
+      "status": "fixed-generic-evidence"
+    },
+    {
+      "paperId": "step-to-charge",
+      "page": 7,
+      "label": "figure-embedded-native-labels",
+      "status": "accepted",
+      "severity": 0,
+      "finding": "Figure 2 contains native labels such as Wearable Rx inside the image rectangle; they should remain out of body translation blocks.",
+      "rootCause": "figure-image text overlap",
+      "action": "retain conservative image-geometry exclusion"
+    },
+    {
+      "paperId": "linguistics-language-model-physics",
+      "page": 7,
+      "label": "figure-embedded-axis-values",
+      "status": "accepted",
+      "severity": 0,
+      "finding": "Figure 4 chart values and axis labels overlap image placements; they are figure content, not paragraph prose.",
+      "rootCause": "figure-image text overlap",
+      "action": "retain conservative image-geometry exclusion"
+    },
+    {
+      "key": "wear-scale:p14:table6-boundary",
+      "paperId": "wear-scale",
+      "page": 14,
+      "source": "Table 6 rotated inter-item correlation matrix followed by Cronbach footnote",
+      "label": "table_contamination",
+      "severity": 3,
+      "rootCause": "line grouping / table region boundary",
+      "status": "fixed-generic-evidence",
+      "reviewBasis": "Rendered original p.14; table cells occupy rotated central grid and footnote is visually outside table.",
+      "finding": "Visual review confirmed the rotated correlation matrix and outside footnote are now separate skipped table blocks; no table text is sent as ordinary paragraph.",
+      "action": "retained generic rotated-table region detection and caption projection",
+      "reviewedAt": "2026-10-06"
+    },
+    {
+      "paperId": "cognitive-psychology-gpt3",
+      "page": 2,
+      "label": "vector-figure-labels",
+      "status": "unresolved-safe-fallback",
+      "severity": 2,
+      "finding": "Native layout shows figure labels interleaved with the Linda vignette paragraph; labels are vector text and have no raster image overlap.",
+      "rootCause": "vector figure text shares native text stream with body; geometry region evidence missing",
+      "action": "retain native text and avoid lexical splitting until geometry-only region evidence is validated"
+    }
+  ]
+}
