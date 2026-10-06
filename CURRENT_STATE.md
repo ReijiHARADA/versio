@@ -11,6 +11,7 @@
 - fragment除外後の完全source 3件ではCAT自動受理2/3。manual reviewでは2件がseverity 0、dont-mind-meの比較極性collapseがseverity 3で品質ゲート拒否と一致。非citation ordinary-bodyでもCATを無条件統合せず、relation guardを通す必要がある。レビューは `cat-noncitation-cohort-v2-manual-review.json`。
 - 追加のheld-out focused benchmark `focused-heldout-v1`（ppg-earring / design-for-wearability / step-to-charge / wear-scale、各2 units）を完了。ordinary-body 4件は4/4がreader-visible fallbackなし。fallbackはsection-headingの未翻訳・図参照順、listの継続断片、damaged-extractionの未完括弧に限定された。今回の小規模結果ではquality gate緩和やCAT本番接続の根拠は得られず、抽出構造failureとして分離した。全件再計測は未実施。
 - 同held-outのordinary-body 2件を手動確認したところ、自動受理2件中2件にseverity>=2の意味ずれがあった。`ppg-earring` はwearablesを「ウェブアプリケーション」と誤訳し、`step-to-charge` は2mWのpeak powerと1mのchannel lengthの関係を崩した。数値の存在だけでは検出できない用語・測定役割のsemantic false acceptとして `focused-heldout-v1-manual-review.json` に保存。品質ゲートの一般化可能な用語/測定役割検出を次の改善候補とする。
+- 測定役割ガード `scientific measurement role changed` を追加。英語側で明示された2つの測定役割（power / channel length）と、日本語側の値の最近傍役割が反転した場合だけ拒否し、役割が不明な通常文は変更しない。quality tests 274件、typecheck pass。`focused-heldout-v4`（同2論文・4 units）ではstep-to-chargeの問題出力がreader-visible fallbackへ倒れ、ppg-earring本文は従来どおり完了した。なおstep-to-chargeは未翻訳英文残留も同時に検出されており、ガード単独の寄与率は追加分離が必要。
 - 2026-10-05: CAT比較前のMADLAD重点基準 `focused-before-cat-v1`（4本・16 units）を完了。ordinary-bodyは2/6 fallback（33.3%）、全体は9/16 fallbackだが、6件は構造不良によるpre-model除外。これは全体推定ではなく、CAT cascade比較用の基準値として保存。
 
 最終更新: 2026-10-05
@@ -88,6 +89,11 @@
 - ordinary-body fallback 111件のsource/fallback段階/quality理由を [`translation-failure-triage-v1.json`](test-data/real-papers/reports/translation-failure-triage-v1.json) に固定。server/protection 55、quality-gate 43、extraction/structure 5、その他8（分類はtriage用で重複理由を含む）。
 
 ## 直近の変更
+
+### v1557 — 自動折りたたみプレビューのクロップと透明度（2026-10-06）
+
+- 設定プレビューのウィンドウを青ステージの右端・下端で途切れるクロップに変更。
+- 現在の設定側を不透明度 100%、もう一方を約 60% にして選択状態を示す。
 
 ### v1556 — メモ作成時は本文ハイライトのみ（2026-10-05）
 

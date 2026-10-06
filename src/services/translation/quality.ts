@@ -1140,6 +1140,59 @@ function measurementOrderChanged(source: string, output: string): boolean {
   return true;
 }
 
+/**
+ * Detect a more subtle measurement error than numeric reordering: the values
+ * survive, but are attached to the wrong quantity (for example power being
+ * described as a channel length). Only run this when the English source names
+ * two explicit roles and the Japanese output names both roles near the values;
+ * otherwise the signal is inconclusive and must not reject natural prose.
+ */
+function measurementRoleAssociationChanged(source: string, output: string): boolean {
+  const value = String.raw`(?:\d+(?:\.\d+)?)\s*(?:mm|cm|m|km|ms|s|hz|khz|mhz|uw|mw|w|kg|mg|pf|nf|uf|μf|mf|mah|db|%|°[cf])`;
+  const sourceRoles = [
+    { role: "power", pattern: new RegExp(`(${value})\\s+(?:peak\\s+)?power\\b`, "i") },
+    { role: "length", pattern: new RegExp(`(${value})\\s+(?:channel\\s+)?lengths?\\b`, "i") },
+  ];
+  const captured = sourceRoles
+    .map(({ role, pattern }) => ({ role, match: source.match(pattern) }))
+    .filter((entry): entry is { role: string; match: RegExpMatchArray } => Boolean(entry.match))
+    .map(({ role, match }) => ({
+      role,
+      number: match[1].match(/\d+(?:\.\d+)?/)?.[0],
+      token: match[1].replace(/\s+/g, "").toLowerCase(),
+    }));
+  if (captured.length !== 2 || captured.some((entry) => !entry.number)) return false;
+
+  const outputText = output.normalize("NFKC");
+  const roleMarkers: Record<string, RegExp> = {
+    power: /(?:ピーク電力|電力|電源|パワー|power)/i,
+    length: /(?:長さ|距離|チャネル長|チャンネル長|length|meter|メートル)/i,
+  };
+  const nearestRole = (number: string, token: string): string | null => {
+    const tokenIndex = outputText.toLowerCase().indexOf(token);
+    const numberIndex = tokenIndex >= 0 ? tokenIndex : outputText.indexOf(number);
+    if (numberIndex < 0) return null;
+    let nearest: { role: string; distance: number } | null = null;
+    for (const [role, marker] of Object.entries(roleMarkers)) {
+      const matches = [...outputText.matchAll(new RegExp(marker.source, marker.flags.includes("i") ? "gi" : "g"))];
+      for (const match of matches) {
+        if (match.index === undefined) continue;
+        const distance = Math.abs(match.index - (numberIndex + number.length));
+        if (!nearest || distance < nearest.distance) nearest = { role, distance };
+      }
+    }
+    return nearest?.distance <= 32 ? nearest.role : null;
+  };
+  const [first, second] = captured;
+  // The source order is role-bearing (power first, length second). A direct
+  // reverse association is sufficient evidence; requiring the expected role
+  // to be absent would be too brittle because Japanese clauses often repeat a
+  // role noun nearby for readability.
+  const firstRole = nearestRole(first.number!, first.token);
+  const secondRole = nearestRole(second.number!, second.token);
+  return firstRole === second.role && secondRole === first.role;
+}
+
 /** Detect reordered multi-panel figure references. */
 function figureReferenceOrderChanged(source: string, output: string): boolean {
   const parse = (value: string): string[] => [...value.matchAll(/(?:\b(?:fig(?:ure)?)\.?|図)\s*(\d+)\s*(?:[（(]([a-z])[）)]|([a-z]))?/gi)]
@@ -1736,6 +1789,7 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   const invariant = invariantQuality(source, out);
   reasons.push(...invariant.reasons);
   if (measurementOrderChanged(source, out)) reasons.push("scientific measurement order changed");
+  if (measurementRoleAssociationChanged(source, out)) reasons.push("scientific measurement role changed");
   const languageScore = reasons.some((reason) => /Japanese|Latin|source echo|date|empty|simplified Chinese|untranslated foreign-language|mixed-script lexeme/.test(reason)) ? 0.15 : 1;
   const repetitionScore = isDegenerateTranslation(out) && !repetitionShapeAllowed ? 0 : 1;
   const lengthRatio = out.length / Math.max(source.trim().length, 1);
@@ -1764,6 +1818,7 @@ export function evaluateJaTranslation(output: string, source: string): Translati
     || reasons.includes("assessment scope predicate missing")
     || reasons.includes("future specification requirement omitted")
     || reasons.includes("scientific measurement order changed")
+    || reasons.includes("scientific measurement role changed")
     || reasons.includes("figure/panel reference order changed")
     || reasons.includes("detached figure reference")
     || reasons.some((reason) => reason.startsWith("quoted technical name missing:"))
