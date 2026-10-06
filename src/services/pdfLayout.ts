@@ -1903,8 +1903,15 @@ function roleForLine(
   titleFont: number,
   mastheadTitleTexts?: Set<string>
 ): LayoutRole {
-  if (line.roleHint) return line.roleHint;
   const text = line.text.trim();
+  // Native superscript markers and email-only rows are not standalone
+  // canonical metadata. Apply this before inherited role hints so a hint from
+  // an adjacent masthead line cannot resurrect these fragments.
+  if (line.page === 1 && /^[\d,*†‡§∗\u2020\u2021\s]+$/u.test(text)) return "chrome";
+  if (line.page === 1 && /^[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}(?:\s*[;,]\s*[\w.+-]+@[\w.-]+\.[A-Za-z]{2,})*$/i.test(text)) {
+    return "chrome";
+  }
+  if (line.roleHint) return line.roleHint;
   // Carry a copyright run only through similarly small continuation lines.
   // Body-sized text in the opposite physical column may follow a footer on
   // the same native stream (common when an abstract spans a license footer).
@@ -1920,6 +1927,10 @@ function roleForLine(
   if (isFigureCaption(text)) return "figure_caption";
   if (isTableCaption(text)) return "table_caption";
   if (isEquationLine(text)) return "equation";
+  // Superscript affiliation markers and email-only rows are metadata
+  // fragments, not standalone authors or affiliations. Keep them out of the
+  // canonical author/affiliation lists; nearby name/institution rows retain
+  // their own evidence and relation resolution.
   if (
     line.page > 1 &&
     line.y < (line.pageHeight ?? 792) * 0.12 &&

@@ -121,6 +121,31 @@ export function resolveTitle(input: {
     }
     native = [combined];
 
+    // PDF producers sometimes split one title line into adjacent native text
+    // spans.  Treat a same-baseline, touching title cluster as one title even
+    // when there is no journal-masthead marker.  This is geometry evidence:
+    // author/affiliation candidates and vertically separated lines remain
+    // excluded, so the rule does not absorb the masthead below the title.
+    const first = titles[0];
+    const firstBox = first.boundingBoxes[0];
+    if (firstBox && first.pageStart === 1 && first.text.trim().split(/\s+/).length <= 6) {
+      const baselineCluster = titles
+        .filter((candidate) => {
+          if (candidate === first || candidate.pageStart !== first.pageStart) return false;
+          const box = candidate.boundingBoxes[0];
+          if (!box || Math.abs(box.y - firstBox.y) > Math.max(3, firstBox.height * 0.35)) return false;
+          if (looksLikeAuthorish(candidate.text)) return false;
+          const gap = box.x - (firstBox.x + firstBox.width);
+          return gap >= -3 && gap <= Math.max(24, firstBox.height * 2.5);
+        })
+        .sort((a, b) => (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0));
+      if (baselineCluster.length > 0) {
+        native = [[first, ...baselineCluster]
+          .map((candidate) => stripMastheadSuffix(candidate.text))
+          .join(" ").replace(/\s+/g, " ").trim()];
+      }
+    }
+
     // Some publisher PDFs place the journal masthead above the article title
     // and emit the article title as several same-baseline spans. If the first
     // native title is a short masthead and nearby chrome confirms that layout,
