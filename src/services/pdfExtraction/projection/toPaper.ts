@@ -523,11 +523,19 @@ export function projectCanonicalToPaper(input: {
   const affiliationCandidates = affiliationNodes.flatMap((node) => {
     const layout = layoutForNode(node, layoutBlocks);
     const lines = layout?.lines ?? [];
+    const markerPositions = lines.flatMap((line) => line.items
+      .filter((item) => item.fontSize < line.fontSize * 0.8 && /^\d{1,2}$/.test(item.text.trim()))
+      .map((item) => ({ marker: item.text.trim(), x: item.x })));
+    const base = { _page: node.pageStart, _y: node.boundingBoxes[0]?.y ?? 0 };
     const multiColumnLineCount = lines.filter((line) =>
       line.items.filter((item) => item.fontSize >= line.fontSize * 0.7).length >= 2).length;
     const multiColumn = multiColumnLineCount > 0 &&
       (lines.length <= 2 || multiColumnLineCount / lines.length >= 0.5);
-    if (!multiColumn) return [{ id: node.id, name: normalizeAffiliationName(node.text ?? "") }];
+    if (!multiColumn) {
+      const x = node.boundingBoxes[0]?.x ?? 0;
+      const marker = markerPositions.slice().sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x))[0]?.marker;
+      return [{ id: node.id, name: normalizeAffiliationName(node.text ?? ""), _x: x, _marker: marker, ...base }];
+    }
     const substantive = lines.flatMap((line) => line.items.filter((item) => item.fontSize >= line.fontSize * 0.7));
     const xs = [...new Set(substantive.map((item) => item.x).sort((a, b) => a - b))];
     const clusterXs: number[] = [];
@@ -548,6 +556,9 @@ export function projectCanonicalToPaper(input: {
     return columns.filter((parts) => parts.length > 0).map((parts, index) => ({
       id: index === 0 ? node.id : `${node.id}-column-${index}`,
       name: normalizeAffiliationName(parts.join(" ")),
+      _x: clusterXs[index] ?? node.boundingBoxes[0]?.x ?? 0,
+      _marker: markerPositions.slice().sort((a, b) => Math.abs(a.x - (clusterXs[index] ?? 0)) - Math.abs(b.x - (clusterXs[index] ?? 0)))[0]?.marker,
+      ...base,
     }));
   }).filter((affiliation) => affiliation.name &&
     !/[{}@]/.test(affiliation.name) &&
@@ -561,8 +572,33 @@ export function projectCanonicalToPaper(input: {
     ((affiliation.name.match(/\b\S\b/g)?.length ?? 0) * 2 <= affiliation.name.split(/\s+/).length ||
       /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center)\b/i.test(affiliation.name) ||
       /^[A-Z0-9& -]{2,12}$/.test(affiliation.name)));
-  const affiliations = affiliationCandidates.filter((affiliation, index, all) =>
-    all.findIndex((candidate) => candidate.name.toLocaleLowerCase() === affiliation.name.toLocaleLowerCase()) === index);
+  const markedCandidates = affiliationCandidates.filter((candidate) => candidate._marker);
+  // Wrapped rows usually carry the superscript only on the first row. Propagate
+  // that marker to later rows using the same page/x band before grouping.
+  for (const candidate of affiliationCandidates) {
+    if (candidate._marker) continue;
+    const nearest = markedCandidates
+      .filter((marked) => marked._page === candidate._page && marked._y <= candidate._y &&
+        candidate._y - marked._y <= 180 && Math.abs(marked._x - candidate._x) <= 55)
+      .sort((a, b) => (candidate._y - a._y) - (candidate._y - b._y))[0];
+    if (nearest) candidate._marker = nearest._marker;
+  }
+  const groupedAffiliations = markedCandidates.length >= 2
+    ? affiliationCandidates.reduce((groups, candidate) => {
+      const marker = candidate._marker;
+      const group = marker ? groups.find((items) => items[0]._marker === marker) : undefined;
+      if (group) group.push(candidate);
+      else groups.push([candidate]);
+      return groups;
+    }, [] as Array<typeof affiliationCandidates>).map((group) => {
+      if (group.length === 1) return group[0];
+      const first = group[0];
+      return { ...first, name: normalizeAffiliationName(group.slice().sort((a, b) => a._y - b._y).map((item) => item.name).join(" ")) };
+    })
+    : affiliationCandidates;
+  const affiliations = groupedAffiliations.filter((affiliation, index, all) =>
+    all.findIndex((candidate) => candidate.name.toLocaleLowerCase() === affiliation.name.toLocaleLowerCase()) === index)
+    .map(({ _page, _y, _x, _marker, ...affiliation }) => affiliation);
   const authorNames = authorsStructured
     .flatMap((author) => expandAuthorLine(author.name))
     .map((name) => name.replace(/[,;]+$/, "").trim())
