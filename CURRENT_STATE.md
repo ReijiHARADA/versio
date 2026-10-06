@@ -780,3 +780,7 @@ title prefix that was misclassified as an author. Diagnostics now recover the
 full Indonesian title and `IMPACT OF GREEN MARKETING ON CONSUMER BEHAVIOUR`.
 Focused reading-order regressions and typecheck pass; the full corpus replay
 should be rerun after this title change.
+
+The title-change replay completed successfully: 2 test files, 232 tests passed,
+0 failed (431.54s). Title fusion did not regress reading order, tables, or other
+structural extraction checks.
