@@ -510,10 +510,34 @@ export function projectCanonicalToPaper(input: {
     predecessorId: predecessor?.id,
   };
   }).filter((author) => !mergedMastheadPredecessors.has(author.id));
-  const affiliationCandidates = affiliationNodes.map((node) => ({
-    id: node.id,
-    name: normalizeAffiliationName(node.text ?? ""),
-  })).filter((affiliation) => affiliation.name &&
+  const affiliationCandidates = affiliationNodes.flatMap((node) => {
+    const layout = layoutForNode(node, layoutBlocks);
+    const lines = layout?.lines ?? [];
+    const multiColumn = lines.length > 0 && lines.some((line) =>
+      line.items.filter((item) => item.fontSize >= line.fontSize * 0.7).length >= 2);
+    if (!multiColumn) return [{ id: node.id, name: normalizeAffiliationName(node.text ?? "") }];
+    const substantive = lines.flatMap((line) => line.items.filter((item) => item.fontSize >= line.fontSize * 0.7));
+    const xs = [...new Set(substantive.map((item) => item.x).sort((a, b) => a - b))];
+    const clusterXs: number[] = [];
+    for (const x of xs) {
+      const previous = clusterXs.at(-1);
+      if (previous === undefined || x - previous > 50) clusterXs.push(x);
+    }
+    const columns: string[][] = clusterXs.map(() => []);
+    for (const line of lines) {
+      const rowItems = line.items.filter((candidate) => candidate.fontSize >= line.fontSize * 0.7);
+      for (const [rowIndex, item] of rowItems.entries()) {
+        let index = clusterXs.reduce((best, x, candidate) => Math.abs(x - item.x) < Math.abs(clusterXs[best] - item.x) ? candidate : best, 0);
+        const text = item.text.replace(/^\d+\s*/, "").trim();
+        if (rowIndex < rowItems.length - 1 && /^(?:Australia|Austria|Belgium|Canada|China|France|Germany|India|Israel|Italy|Japan|Netherlands|Russia|Spain|Sweden|Taiwan|UK|USA|United Kingdom|United States|The Netherlands)$/i.test(text)) index = Math.min(index + 1, columns.length - 1);
+        columns[index].push(text);
+      }
+    }
+    return columns.filter((parts) => parts.length > 0).map((parts, index) => ({
+      id: index === 0 ? node.id : `${node.id}-column-${index}`,
+      name: normalizeAffiliationName(parts.join(" ")),
+    }));
+  }).filter((affiliation) => affiliation.name &&
     !/[{}@]/.test(affiliation.name) &&
     !/^(?:corresponding author|these authors contributed|author note|keywords?)\b/i.test(affiliation.name) &&
     !/^available from .*\bat:\s*$/i.test(affiliation.name));
