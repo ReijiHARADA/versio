@@ -341,9 +341,14 @@ export function projectCanonicalToPaper(input: {
   // Two-column publisher mastheads can place the continuation of an author
   // row in a paragraph-role node at the same baseline. Treat only a leading
   // middle-dot marker plus multiple name-shaped tokens as continuation.
-  const authorContinuationNodes = canonical.nodes.filter((n) => n.role === "paragraph" && n.text &&
-    /^\s*[·•]\s*[A-Z][^!?]{8,220}$/.test(n.text.trim()) &&
-    (n.text.match(/[A-Z][a-z]+(?:\s+[A-Z]\.)?\s+[A-Z][a-z]+/g)?.length ?? 0) >= 2);
+  const authorContinuationNodes = canonical.nodes.filter((n) => n.role === "paragraph" && n.text && n.pageStart === 1 &&
+    (n.boundingBoxes[0]?.y ?? 9999) < 520 &&
+    ((/^\s*[·•]\s*[A-Z][^!?]{8,220}$/.test(n.text.trim()) &&
+      (n.text.match(/[A-Z][a-z]+(?:\s+[A-Z]\.)?\s+[A-Z][a-z]+/g)?.length ?? 0) >= 2) ||
+      ((n.boundingBoxes[0]?.y ?? 9999) < 390 && n.text.trim().length <= 400 &&
+        (n.text.match(/,/g)?.length ?? 0) >= 2 &&
+        (n.text.match(/[A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’-]+)?/gu)?.length ?? 0) >= 3 &&
+        !/[.!?]$/.test(n.text.trim()))));
   const authorSourceNodes = [...authorNodes, ...authorContinuationNodes];
   const affiliationNodes = canonical.nodes.filter((n) => n.role === "affiliation" && n.text);
   const affiliated = canonical.relations.filter((r) => r.kind === "AFFILIATED_WITH");
@@ -359,9 +364,13 @@ export function projectCanonicalToPaper(input: {
     !/^(?:corresponding author|these authors contributed|author note|keywords?)\b/i.test(affiliation.name));
   const authorNames = authorsStructured
     .flatMap((author) => expandAuthorLine(author.name))
+    .map((name) => name.replace(/[,;]+$/, "").trim())
     .filter((name) => name.split(/\s+/).length <= 6 && !/[!?]/.test(name) &&
+      !/\b(?:movement|science|sport|psychology|department|university|institute|research|council|resistance|training|edited|published)\b/i.test(name) &&
+      !(/\s[A-Z]{1,3}$/.test(name) && !/^[A-Z][A-Z'’-]*(?:\s+[A-Z][A-Z'’-]*)+$/.test(name)) &&
       !/(?:^|,\s*)(?:usa|u\.s\.a?\.?|israel|italy|china|japan|uk|united kingdom|ny|california|new york|tel aviv|albany)(?:\s*,|$)/i.test(name) &&
       !/\b(?:,\s*)?(?:ny|ca),\s*usa\b/i.test(name))
+    .filter((name, index, all) => all.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase()) === index)
     .filter(Boolean);
   // Some publisher templates label individual `NAME, institution` rows as
   // affiliation even when the neighboring rows are author-labelled. Recover
