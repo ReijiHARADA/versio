@@ -32,7 +32,10 @@ const rows = (report.papers ?? []).flatMap((entry) => {
     discipline: paper.disciplines?.[0] ?? "unclassified",
     formatFamily: paper.formatFamily ?? "unknown",
   }));
-}).filter((row) => row.sourceCategory === "ordinary-body-prose" && typeof row.source === "string" && row.source.trim().length >= 240);
+}).filter((row) => row.sourceCategory === "ordinary-body-prose" &&
+  row.readerVisibleFallback === true &&
+  row.fallbackStage === "post-model" &&
+  typeof row.source === "string" && row.source.trim().length >= 240);
 
 const excluded = new Set();
 for (const file of fs.readdirSync(reportsDir)) {
@@ -89,7 +92,7 @@ const result = {
   version: "heldout-ordinary-cohort-v1",
   generatedAt: new Date().toISOString(),
   input: path.relative(root, input),
-  selection: "ordinary-body source rows >=240 chars; source hashes found in other report artifacts excluded; deterministic discipline/format round-robin",
+  selection: "ordinary-body post-model reader-visible fallback rows >=240 chars; source hashes found in other report artifacts excluded; deterministic discipline/format round-robin",
   candidateRows: candidates.length,
   excludedSourceHashCount: excluded.size,
   selectedRows: selected.length,
