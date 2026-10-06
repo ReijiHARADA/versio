@@ -1595,6 +1595,24 @@ function looksLikeLatinAuthorLine(text: string): boolean {
   return caps.length >= 2 && caps.length <= 8 && caps.length >= words.length - 2;
 }
 
+function looksLikeAuthorList(text: string): boolean {
+  if (looksLikeEmail(text) || looksLikeAffiliation(text) || looksLikeUrl(text)) return false;
+  const t = layoutPlain(text).replace(/[*†‡§♠♣♡♢∗]/g, " ").replace(/\s+/g, " ").trim();
+  if (t.length < 10 || t.length > 320 || /[.!?。！？:]$/.test(t)) return false;
+  const words = t.split(/\s+/).filter(Boolean);
+  if (words.length < 4) return false;
+  const capitalized = words.filter((word) => /^[A-ZÀ-ÖØ-Ý][A-Za-zÀ-ÿ'’.-]{1,}$/.test(word.replace(/[,;]+$/g, "")));
+  const separators = (text.match(/[,;]|\band\b|&|♠|♣|♡|♢/gi) ?? []).length;
+  // At least two separators or an explicit marker run is required. This
+  // avoids promoting ordinary title/abstract fragments while covering
+  // multi-author rows emitted without affiliation markers.
+  const hasMixedCaseName = words.some((word) => /[a-zà-öø-ÿ]/u.test(word));
+  const hasAuthorMarker = /[♠♣♡♢∗†‡§]/u.test(text);
+  return capitalized.length >= 4 && capitalized.length / words.length >= 0.65 && separators >= 1 &&
+    (hasMixedCaseName || hasAuthorMarker) &&
+    !/^(?:abstract|introduction|background|keywords?)\b/i.test(t);
+}
+
 
 const NAME_PARTICLE = /^(van|von|de|den|der|di|da|la|le|du|del|st|ter|bin|al)$/i;
 const NAME_JOINER = /^(and|&)$/i;
@@ -1911,6 +1929,10 @@ function roleForLine(
   if (line.page === 1 && /^[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}(?:\s*[;,]\s*[\w.+-]+@[\w.-]+\.[A-Za-z]{2,})*$/i.test(text)) {
     return "chrome";
   }
+  // Explicit author-list geometry must override a stale paragraph hint from
+  // line grouping. The predicate is conservative and excludes institutions,
+  // sentence punctuation, and section labels.
+  if (line.page === 1 && looksLikeAuthorList(text)) return "author";
   if (line.roleHint) return line.roleHint;
   // Carry a copyright run only through similarly small continuation lines.
   // Body-sized text in the opposite physical column may follow a footer on
@@ -2002,7 +2024,8 @@ function roleForLine(
     if (
       looksLikeEmail(text) ||
       looksLikePersonName(text) ||
-      looksLikeLatinAuthorLine(text)
+      looksLikeLatinAuthorLine(text) ||
+      looksLikeAuthorList(text)
     ) {
       return "author";
     }

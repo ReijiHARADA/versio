@@ -115,10 +115,6 @@ export function evaluateBaselinePaper(input: {
   );
 
   const titles = input.blocks.filter((b) => b.role === "title").map((b) => b.text);
-  const authors = input.blocks.filter((b) => b.role === "author").map((b) => b.text);
-  const affiliations = input.blocks
-    .filter((b) => b.role === "affiliation")
-    .map((b) => b.text);
   const gold = input.groundTruth;
   const expectedTitle = gold?.title ?? input.catalogTitle;
   const extracted = extractFromPages({
@@ -128,6 +124,11 @@ export function evaluateBaselinePaper(input: {
     fileHash: input.id,
     metadata: { title: input.catalogTitle, pageCount: input.pages.length },
   });
+  // Compare the projection consumed by Paper Reader, which expands author
+  // lists and applies flattened-masthead recovery. Layout blocks are retained
+  // for diagnostics but are not the user-visible metadata surface.
+  const authors = extracted.paper.authors ?? [];
+  const affiliations = extracted.paper.affiliations?.map((affiliation) => affiliation.name) ?? [];
   const headings = extracted.canonical.nodes
     .filter((node) => node.role === "heading")
     .map((node) => node.text ?? "");
