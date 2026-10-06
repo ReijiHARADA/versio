@@ -21,9 +21,11 @@
         "table_contamination"
       ],
       "severity": 2,
-      "finding": "Tables 9 and 10 have visible ruled grids, but native extraction does not expose stable cell-level text items for all rows. Captions remain separate; rows remain source-preserving text blocks.",
+      "finding": "Visual table review plus post-change replay confirms Tables 9 and 10 remain separate from prose and receive caption-anchored table-region evidence even when native rules are incomplete.",
       "rootCause": "pdf-native geometry limitation",
-      "status": "unresolved-safe-fallback"
+      "status": "fixed-generic-evidence",
+      "action": "caption-anchored text-region fallback with compact non-sentence rows",
+      "reviewedAt": "2026-10-06"
     },
     {
       "paperId": "significant-other",
@@ -86,11 +88,12 @@
       "paperId": "cognitive-psychology-gpt3",
       "page": 2,
       "label": "vector-figure-labels",
-      "status": "unresolved-safe-fallback",
+      "status": "fixed-generic-evidence",
       "severity": 2,
-      "finding": "Native layout shows figure labels interleaved with the Linda vignette paragraph; labels are vector text and have no raster image overlap.",
+      "finding": "Figure 1 vector labels are suppressed from pending translation when dense graphics and a nearby Figure caption anchor the label band; sentence-shaped vignette prose remains eligible.",
       "rootCause": "vector figure text shares native text stream with body; geometry region evidence missing",
-      "action": "retain native text and avoid lexical splitting until geometry-only region evidence is validated"
+      "action": "graphics-density plus caption-anchored vector label evidence",
+      "reviewedAt": "2026-10-06"
     }
   ]
 }
