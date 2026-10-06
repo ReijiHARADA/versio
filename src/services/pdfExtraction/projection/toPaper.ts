@@ -69,6 +69,7 @@ function expandAuthorLine(text: string): string[] {
     .replace(/(\p{Ll})(\p{Lu})/gu, "$1 $2")
     .replace(/(?:^|[\s,])\d{1,2}(?=$|[\s,])/gu, " ")
     .replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, " ")
+    .replace(/^[,;·\s]+/, "")
     .replace(/\s+/g, " ")
     .trim();
   if (!cleaned) return [];
@@ -89,7 +90,7 @@ function expandAuthorLine(text: string): string[] {
   }
   const markerParts = markedSource
     .split(/(?<=[♠♣♡♢∗†‡§])\s*/u)
-    .map((part) => part.replace(/[♠♣♡♢∗†‡§*]/gu, "").replace(/\d+/g, "").replace(/^\s*and\s+/i, "").replace(/\s+/g, " ").trim())
+    .map((part) => part.replace(/[♠♣♡♢∗†‡§*]/gu, "").replace(/\d+/g, "").replace(/^\s*and\s+/i, "").replace(/^[,;·\s]+/, "").replace(/\s+/g, " ").trim())
     .filter((part) => part && /\p{L}/u.test(part));
   if (markerParts.length >= 2) {
     return markerParts;
@@ -375,6 +376,7 @@ export function projectCanonicalToPaper(input: {
     .flatMap((author) => expandAuthorLine(author.name))
     .map((name) => name.replace(/[,;]+$/, "").trim())
     .filter((name) => name.split(/\s+/).length <= 6 && !/[!?]/.test(name) &&
+      !/[@{}]/.test(name) &&
       !/\b(?:movement|science|sport|psychology|department|university|institute|research|council|resistance|training|edited|published)\b/i.test(name) &&
       !(/\s[A-Z]{1,3}$/.test(name) && !/^[A-Z][A-Z'’-]*(?:\s+[A-Z][A-Z'’-]*)+$/.test(name)) &&
       !/(?:^|,\s*)(?:usa|u\.s\.a?\.?|israel|italy|china|japan|uk|united kingdom|ny|california|new york|tel aviv|albany|palo alto)(?:\s*,|$)/i.test(name) &&
