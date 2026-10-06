@@ -119,6 +119,10 @@ type MastheadPair = { author: string; affiliation: string };
 function normalizeAffiliationName(text: string): string {
   return text
     .replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "")
+    // Native PDF text sometimes loses spaces at font-run boundaries
+    // (e.g. `IowaStateUniversity` or `ofEvents`). Restore only a lower-to-
+    // upper transition; this cannot split ordinary all-caps institution names.
+    .replace(/([\p{Ll}])([\p{Lu}])/gu, "$1 $2")
     .replace(/\s+/g, " ")
     .replace(/\s+,/g, ",")
     .replace(/^[*†‡§☯\s]+/, "")
@@ -420,7 +424,17 @@ export function projectCanonicalToPaper(input: {
     n.text.trim().length <= 400 && /\d[*†‡]?/.test(n.text) &&
     (n.text.match(/,/g)?.length ?? 0) >= 3 && !/[.!?]$/.test(n.text.trim()));
   const authorSourceNodes = [...authorNodes, ...authorContinuationNodes, ...markedAuthorParagraphs];
-  const affiliationNodes = canonical.nodes.filter((n) => n.role === "affiliation" && n.text && !isSidebarChromeNode(n));
+  // Some journal templates emit wrapped institution lines as ordinary
+  // paragraphs.  Recover only metadata-shaped lines on page 1, before the
+  // body starts; ordinary prose must remain a paragraph.
+  const affiliationNodes = canonical.nodes.filter((n) => {
+    if (!n.text || isSidebarChromeNode(n) || n.pageStart !== 1) return false;
+    if (n.role === "affiliation") return true;
+    if (n.role !== "paragraph") return false;
+    const y = n.boundingBoxes[0]?.y ?? Infinity;
+    if (y >= firstBodyY || n.text.length > 320 || /[.!?。！？]$/.test(n.text.trim())) return false;
+    return /\b(?:department|faculty|school|college|university|institute|laboratory|laboratories|hospital|center|centre|management)\b/i.test(n.text);
+  });
   const affiliated = canonical.relations.filter((r) => r.kind === "AFFILIATED_WITH");
   const projectionAuthorText = (node: (typeof canonical.nodes)[number]): string => {
     const box = node.boundingBoxes[0];
@@ -479,6 +493,7 @@ export function projectCanonicalToPaper(input: {
       !/^(?:palo alto|tel aviv|albany|new york)$/i.test(name) &&
       !/\b(?:,\s*)?(?:ny|ca),\s*usa\b/i.test(name))
     .filter((name, index, all) => all.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase()) === index)
+    .filter((name) => !/^(?:correspondence|corresponding author|teaching assistant professor|assistant professor|associate professor|professor|research fellow)\s*:?[,.]?$/i.test(name.trim()))
     .filter(Boolean);
   // Some publisher templates label individual `NAME, institution` rows as
   // affiliation even when the neighboring rows are author-labelled. Recover

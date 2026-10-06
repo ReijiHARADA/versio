@@ -741,3 +741,13 @@ After these fixes, `npm run test:extraction-corpus -- --reporter=dot` completed
 successfully: 2 test files, 232 tests passed, 0 failed (386.55s). This verifies
 the automated extraction and reading-order corpus; it does not replace visual
 review of every page or semantic review of affiliations and body text.
+
+### Masthead projection repair (2026-10-06)
+
+A real-paper replay of the Wear Scale PDF exposed two generic metadata errors:
+correspondence/academic-rank labels were being returned as authors, and wrapped
+institution lines emitted as paragraph roles were omitted from affiliations. The
+projection now filters metadata labels, admits institution-shaped page-one
+continuations before the body, and restores spaces lost at native font-run
+boundaries. The regression asserts the two expected authors, excludes the labels,
+and retains Iowa State University. Focused baseline tests (2/2) and typecheck pass.
