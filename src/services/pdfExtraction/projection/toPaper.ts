@@ -321,7 +321,7 @@ function recoverColumnMasthead(
   firstBodyY: number,
 ): RecoveredColumnMasthead | undefined {
   const lines = layoutBlocks
-    .filter((block) => block.pageStart === 1 && block.pageEnd === 1)
+    .filter((block) => block.pageStart === 1)
     .flatMap((block) => block.lines ?? [])
     // The title itself is often the largest text on page 1 and must not become
     // a masthead column anchor.
