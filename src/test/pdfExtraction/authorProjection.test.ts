@@ -12,6 +12,7 @@ const acmPdf = path.join(root, "test-data/real-papers/ppg-earring.pdf");
 const letteredAffiliationPdf = path.join(root, "test-data/real-papers/medical-deep-learning-meta-review.pdf");
 const reviewerMastheadPdf = path.join(root, "test-data/real-papers/cognitive-dual-task.pdf");
 const interleavedAffiliationPdf = path.join(root, "test-data/real-papers/dont-mind-me.pdf");
+const singleAuthorReportPdf = path.join(root, "test-data/real-papers/ergonomics-human-factors-and-ergonomics.pdf");
 
 describe("author masthead projection", () => {
   it("keeps same-baseline multi-column names separate and excludes locations", async () => {
@@ -101,5 +102,14 @@ describe("author masthead projection", () => {
       "Georgia Institute of Technology",
     ]));
     expect(names.every((name) => !/Scott Gilliland|Clint Zeagler|Ellen Yi-Luen|\{jamer/i.test(name))).toBe(true);
+  }, 60_000);
+
+  it("recovers a single author from a flattened report masthead", async () => {
+    if (!fs.existsSync(singleAuthorReportPdf)) return;
+    const pages = await extractPdfPages(singleAuthorReportPdf);
+    const result = await extractFromPages({ pages, paperId: "single-author-report", filePath: singleAuthorReportPdf, fileHash: "single-author-report", metadata: { pageCount: pages.length } });
+    expect(result.paper.authors).toContain("Murali Krishna Pasupuleti");
+    expect(result.paper.affiliations.some((affiliation) => /National Education Services/i.test(affiliation.name))).toBe(true);
+    expect(result.paper.authors).not.toContain("Research Book Title :Human Factors and Ergonomics");
   }, 60_000);
 });

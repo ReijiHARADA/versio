@@ -890,3 +890,12 @@ numbered spans and does not change normal single-affiliation rows. The
 University of Colorado, Industrial Design, Interactive Computing, and Georgia
 Institute of Technology without author/contact contamination. PDF extraction
 tests: 27 suites / 76 tests passed.
+# 2026-10-07: flattened single-author report masthead
+
+The generic author projection now recovers a single person when a report/book
+template flattens `author -> role -> institution` into one affiliation node.
+The pattern requires a person-shaped prefix, an academic role marker, and an
+institution-shaped tail, so it does not relabel ordinary body prose. The
+`ergonomics-human-factors-and-ergonomics` fixture now projects **Murali Krishna
+Pasupuleti** and **National Education Services**. Author projection tests:
+8 passed; TypeScript check passed.
