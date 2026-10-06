@@ -10,6 +10,16 @@ import { splitFlattenedList } from "../../services/pdfExtraction/projection/toPa
 import { detectPageColumns, reconstructDocument } from "../../services/pdfLayout";
 
 describe("canonical extraction pipeline", () => {
+  it("drops punctuation-only interleaved column fragments before a new sentence", () => {
+    const textItems = [
+      { text: ".-", x: 270, y: 120, width: 10, height: 8, fontSize: 9, fontName: "Times", page: 1 },
+      { text: "tively, some tasks were evaluated.", x: 282, y: 120, width: 180, height: 8, fontSize: 9, fontName: "Times", page: 1 },
+      { text: "The results were consistent.", x: 270, y: 135, width: 150, height: 8, fontSize: 9, fontName: "Times", page: 1 },
+    ];
+    const blocks = reconstructDocument([{ pageNumber: 1, width: 540, height: 700, textItems }]).blocks;
+    expect(blocks.map((block) => block.text).join(" ")).not.toContain(".-");
+  });
+
   it("splits repeated dash bullets without splitting a single inline dash", () => {
     expect(splitFlattenedList("– First item – Second item – Third item")).toEqual([
       "– First item",
