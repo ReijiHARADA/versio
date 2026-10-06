@@ -1,16 +1,37 @@
+.failedRow {
+  align-items: flex-start;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  cursor: default;
+}
+
+.duplicateRow {
+  align-items: center;
+}
+
 .failureDetail {
-  margin-top: 6px;
+  margin-top: 2px;
   display: flex;
   flex-direction: column;
   gap: 2px;
   max-width: 36rem;
 }
 
+.duplicateRow .failureDetail {
+  margin-top: 1px;
+}
+
 .failureTitle {
   margin: 0;
   font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-text);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.duplicateRow .failureTitle {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-tertiary);
 }
 
 .failureGuidance,
@@ -25,12 +46,20 @@
   color: var(--color-text-tertiary);
 }
 
+.failedTrailing {
+  padding-top: 2px;
+}
+
+.duplicateRow .failedTrailing {
+  padding-top: 0;
+}
+
 .primaryAction {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   border: 1px solid var(--color-border);
-  background: var(--color-bg-secondary);
+  background: var(--color-bg);
   color: var(--color-text);
   border-radius: var(--radius-sm);
   padding: 4px 8px;
@@ -42,6 +71,26 @@
 .primaryAction:focus-visible {
   border-color: var(--color-accent);
   color: var(--color-accent);
+}
+
+.dismissAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+
+.dismissAction:hover,
+.dismissAction:focus-visible {
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
 }
 
 .actionText {

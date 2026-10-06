@@ -224,6 +224,7 @@ export function WorkspaceTree({
     const links = memberships
       .filter((link) => link.nodeId === node.id)
       .sort((a, b) => a.order - b.order);
+    const hasNested = node.children.length > 0 || links.length > 0;
     const toggle = () =>
       setCollapsed((current) => ({ ...current, [node.id]: !current[node.id] }));
 
@@ -236,15 +237,17 @@ export function WorkspaceTree({
           style={{ "--tree-indent": `${depth * 16}px` } as React.CSSProperties}
           onPointerDown={(event) => drag.onPointerDown(event, node.id)}
         >
-          <button
-            type="button"
-            className={styles.chevron}
-            aria-label={`${node.name}を${isOpen ? "折りたたむ" : "展開"}`}
-            aria-expanded={isOpen}
-            onClick={toggle}
-          >
-            {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          </button>
+          {hasNested ? (
+            <button
+              type="button"
+              className={styles.chevron}
+              aria-label={`${node.name}を${isOpen ? "折りたたむ" : "展開"}`}
+              aria-expanded={isOpen}
+              onClick={toggle}
+            >
+              {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </button>
+          ) : null}
           {editingId === node.id ? (
             <div className={`${styles.item} ${styles.treeLabel}`} data-workspace-editing>
               <span className={styles.icon}>
