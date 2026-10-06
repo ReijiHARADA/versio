@@ -63,6 +63,7 @@ function expandAuthorLine(text: string): string[] {
   const cleaned = text
     .replace(/^\s*and\s+/i, "")
     .replace(/[*†‡§]/g, " ")
+    .replace(/\d+/g, "")
     .replace(/(\p{L})\d+/gu, "$1")
     .replace(/\d+[*†‡§]/g, "")
     .replace(/(\p{Ll})(\p{Lu})/gu, "$1 $2")
@@ -88,7 +89,7 @@ function expandAuthorLine(text: string): string[] {
   }
   const markerParts = markedSource
     .split(/(?<=[♠♣♡♢∗†‡§])\s*/u)
-    .map((part) => part.replace(/[♠♣♡♢∗†‡§]/gu, "").trim())
+    .map((part) => part.replace(/[♠♣♡♢∗†‡§*]/gu, "").replace(/\d+/g, "").replace(/^\s*and\s+/i, "").replace(/\s+/g, " ").trim())
     .filter((part) => part && /\p{L}/u.test(part));
   if (markerParts.length >= 2) {
     return markerParts;
@@ -337,12 +338,13 @@ export function projectCanonicalToPaper(input: {
     n.text.trim().length <= 500 && !/:\s/.test(n.text) &&
     (!input.metadata.title || (n.text.trim().toLocaleLowerCase() !== input.metadata.title.trim().toLocaleLowerCase() &&
       !n.text.trim().toLocaleLowerCase().startsWith(input.metadata.title.trim().toLocaleLowerCase().slice(0, 28)))) &&
-    !/^(?:original article|research article|conceptual\/theoretical paper|additional key words?|phrases?|acm reference format|©|the author\(s\))/i.test(n.text.trim()));
+    !/^(?:original article|research article|conceptual\/theoretical paper|additional key words?|phrases?|keywords?|acm reference format|©|the author\(s\))/i.test(n.text.trim()));
   // Two-column publisher mastheads can place the continuation of an author
   // row in a paragraph-role node at the same baseline. Treat only a leading
   // middle-dot marker plus multiple name-shaped tokens as continuation.
   const authorContinuationNodes = canonical.nodes.filter((n) => n.role === "paragraph" && n.text && n.pageStart === 1 &&
     (n.boundingBoxes[0]?.y ?? 9999) < 520 &&
+    !/^\s*(?:keywords?|key words?)\s*:/i.test(n.text.trim()) &&
     ((/^\s*[·•]\s*[A-Z][^!?]{8,220}$/.test(n.text.trim()) &&
       (n.text.match(/[A-Z][a-z]+(?:\s+[A-Z]\.)?\s+[A-Z][a-z]+/g)?.length ?? 0) >= 2) ||
       ((n.boundingBoxes[0]?.y ?? 9999) < 390 && n.text.trim().length <= 400 &&
