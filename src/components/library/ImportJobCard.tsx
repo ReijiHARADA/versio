@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { AlertCircle, Loader2, RotateCcw, Trash2, ExternalLink, X } from "lucide-react";
+import { AlertCircle, Loader2, RotateCcw, ExternalLink, X } from "lucide-react";
 import type { ImportJob } from "../../stores/importJobStore";
 import {
   actionLabel,
@@ -41,6 +41,16 @@ export function ImportJobCard({
         : null,
     [failed, job.error, job.message, job.failureKind, job.stage]
   );
+  const isDuplicate = classified?.kind === "duplicate";
+  const showGuidance = Boolean(classified && !isDuplicate && classified.guidance);
+  const showRaw = Boolean(
+    failed &&
+      classified &&
+      !isDuplicate &&
+      job.error &&
+      job.error !== classified.title &&
+      job.error !== classified.guidance
+  );
 
   const runAction = (action: ImportRecoveryAction) => {
     switch (action) {
@@ -72,7 +82,7 @@ export function ImportJobCard({
 
   return (
     <article
-      className={styles.row}
+      className={`${styles.row} ${failed ? jobStyles.failedRow : ""} ${isDuplicate ? jobStyles.duplicateRow : ""}`}
       aria-busy={running && !cancelling}
       aria-label={
         failed
@@ -86,35 +96,33 @@ export function ImportJobCard({
         <div className={styles.titleRow}>
           <h3 className={styles.title}>{job.fileName}</h3>
         </div>
-        {failed && classified && (
+        {failed && classified ? (
           <div className={jobStyles.failureDetail}>
             <p className={jobStyles.failureTitle}>{classified.title}</p>
-            <p className={jobStyles.failureGuidance}>{classified.guidance}</p>
-            {job.error && job.error !== classified.title ? (
-              <p className={jobStyles.failureRaw}>{job.error}</p>
-            ) : null}
+            {showGuidance ? <p className={jobStyles.failureGuidance}>{classified.guidance}</p> : null}
+            {showRaw ? <p className={jobStyles.failureRaw}>{job.error}</p> : null}
           </div>
-        )}
+        ) : null}
       </div>
-      <div className={styles.trailing}>
-        <span className={styles.status}>
-          {failed || cancelled ? (
-            <AlertCircle size={14} className={styles.statusFailed} />
-          ) : (
-            <Loader2 size={14} className={styles.statusProcessing} />
-          )}
-          <span className={styles.statusLabel}>
-            {job.stage === "duplicate"
-              ? "重複"
-              : failed
+      <div className={`${styles.trailing} ${failed ? jobStyles.failedTrailing : ""}`}>
+        {!isDuplicate ? (
+          <span className={styles.status}>
+            {failed || cancelled ? (
+              <AlertCircle size={14} className={styles.statusFailed} />
+            ) : (
+              <Loader2 size={14} className={styles.statusProcessing} />
+            )}
+            <span className={styles.statusLabel}>
+              {failed
                 ? "要確認"
                 : cancelling
                   ? "キャンセル中"
                   : cancelled
                     ? "キャンセル済"
                     : "準備中"}
+            </span>
           </span>
-        </span>
+        ) : null}
         {running && !cancelling && (
           <span className={styles.date}>{percent > 0 ? `${percent}%` : job.message}</span>
         )}
@@ -141,11 +149,23 @@ export function ImportJobCard({
               if (action === "restore_existing" && !job.existingPaperId) return null;
               if (action === "readd" && !onReadd) return null;
               const label = actionLabel(action);
+              if (action === "dismiss") {
+                return (
+                  <button
+                    key={action}
+                    type="button"
+                    className={jobStyles.dismissAction}
+                    title={label}
+                    aria-label={label}
+                    onClick={() => runAction(action)}
+                  >
+                    <X size={14} />
+                  </button>
+                );
+              }
               const icon =
-                action === "open_existing" ? (
+                action === "open_existing" || action === "restore_existing" ? (
                   <ExternalLink size={14} />
-                ) : action === "dismiss" ? (
-                  <Trash2 size={14} />
                 ) : (
                   <RotateCcw size={14} />
                 );

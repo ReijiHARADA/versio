@@ -53,11 +53,17 @@
   display: flex;
   flex-direction: column;
   gap: calc(2px + 2px * var(--sidebar-expand-t));
+  /* Grow left pad with expand so depth-0 chevrons sit on the parent row (not clipped). */
   padding: var(--spacing-md) var(--sidebar-pad-x);
+  padding-left: calc(
+    var(--sidebar-pad-x) +
+      (var(--sidebar-chevron) - var(--sidebar-pad-x)) * var(--sidebar-expand-t)
+  );
   background-color: var(--color-bg-secondary);
   border-right: 1px solid var(--color-border-light);
   overflow: visible;
   box-sizing: border-box;
+  transition: padding-left var(--sidebar-motion);
 }
 
 /*
@@ -588,7 +594,7 @@
 
 .chevron {
   position: absolute;
-  top: 0;
+  top: 50%;
   left: calc(var(--tree-indent, 0px) - var(--sidebar-chevron));
   z-index: 1;
   display: flex;
@@ -602,6 +608,12 @@
   color: var(--color-text-secondary);
   opacity: var(--sidebar-expand-t);
   pointer-events: none;
+  transform: translateY(-50%);
+  line-height: 0;
+}
+
+.chevron svg {
+  display: block;
 }
 
 .sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .chevron,

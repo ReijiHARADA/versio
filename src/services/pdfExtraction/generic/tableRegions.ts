@@ -10,18 +10,21 @@ const intersects = (a: { x: number; y: number; width: number; height: number }, 
 export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: RoleCandidate[]): TableRegionEvidence[] {
   const regions: TableRegionEvidence[] = [];
   for (const page of pages) {
-    const signature = buildCaptionAnchoredTableSignature(page.textItems, page.graphicsPrimitives ?? []);
+    const captionCandidates = candidates.filter((candidate) => candidate.pageStart === page.pageNumber && (candidate.roleScores.caption ?? 0) >= 0.8 && /^\s*table\b/i.test(candidate.text)).sort((a,b)=>a.boundingBoxes[0].y-b.boundingBoxes[0].y);
+    for (const [groupIndex, caption] of captionCandidates.entries()) {
+    // The legacy signature helper anchors to the first caption it sees. Limit
+    // the input window per caption so multiple tables on one page each get
+    // independent geometry evidence.
+    const captionY = caption.boundingBoxes[0]?.y ?? 0;
+    const tableItems = page.textItems.filter((item) => item.y >= captionY - 2 && item.y <= captionY + 420);
+    const tableGraphics = (page.graphicsPrimitives ?? []).filter((item) => item.y + item.height >= captionY - 2 && item.y <= captionY + 420);
+    const signature = buildCaptionAnchoredTableSignature(tableItems, tableGraphics);
     if (!signature || signature.horizontalRules + signature.verticalRules < 4) continue;
-    const members = candidates.filter((candidate) => {
+    const group = candidates.filter((candidate) => {
       if (candidate.pageStart !== page.pageNumber || (candidate.roleScores.table ?? 0) < 0.94) return false;
       const box = candidate.boundingBoxes[0];
       return Boolean(box && intersects(box, signature.bbox));
     });
-    const captionCandidates = candidates.filter((candidate) => candidate.pageStart === page.pageNumber && (candidate.roleScores.caption ?? 0) >= 0.8 && /^\s*table\b/i.test(candidate.text)).sort((a,b)=>a.boundingBoxes[0].y-b.boundingBoxes[0].y);
-    const memberGroups = captionCandidates.length > 1 ? captionCandidates.map((caption,index) => members.filter(m => {
-      const y=m.boundingBoxes[0].y; const lo=index===0 ? -Infinity : (captionCandidates[index-1].boundingBoxes[0].y+caption.boundingBoxes[0].y)/2; const hi=index===captionCandidates.length-1 ? Infinity : (caption.boundingBoxes[0].y+captionCandidates[index+1].boundingBoxes[0].y)/2; return y>=lo && y<hi;
-    })) : [members];
-    for (const [groupIndex, group] of memberGroups.entries()) {
     if (group.length < 2) continue;
     const prose = group.filter((candidate) => /[.!?]\s*$/.test(candidate.text.trim())).length;
     if (prose > Math.floor(group.length / 3)) continue;
