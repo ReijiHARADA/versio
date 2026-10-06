@@ -506,8 +506,7 @@ export function projectCanonicalToPaper(input: {
     return {
     id: node.id,
     name: `${predecessor ? `${predecessor.text} ` : ""}${projectionAuthorText(node)}`.trim(),
-    affiliationIds: affiliated.filter((rel) => rel.from === node.id)
-      .map((rel) => affiliationIdByNodeId.get(rel.to) ?? rel.to),
+    affiliationIds: affiliated.filter((rel) => rel.from === node.id).map((rel) => rel.to),
     predecessorId: predecessor?.id,
   };
   }).filter((author) => !mergedMastheadPredecessors.has(author.id));
@@ -520,8 +519,6 @@ export function projectCanonicalToPaper(input: {
     !/^available from .*\bat:\s*$/i.test(affiliation.name));
   const affiliations = affiliationCandidates.filter((affiliation, index, all) =>
     all.findIndex((candidate) => candidate.name.toLocaleLowerCase() === affiliation.name.toLocaleLowerCase()) === index);
-  const affiliationIdByNodeId = new Map(affiliationCandidates.map((candidate) => [candidate.id,
-    affiliations.find((item) => item.name.toLocaleLowerCase() === candidate.name.toLocaleLowerCase())?.id ?? candidate.id]));
   const authorNames = authorsStructured
     .flatMap((author) => expandAuthorLine(author.name))
     .map((name) => name.replace(/[,;]+$/, "").trim())
