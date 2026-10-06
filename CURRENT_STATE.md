@@ -921,3 +921,8 @@ Projection now treats repeated short Unicode glyph runs (for example
 Trusted metadata or OCR can then supply the title instead of exposing the
 garbled native candidate. Existing title-resolver and author-projection tests
 remain green.
+# 2026-10-07: repeated-glyph title regression coverage
+
+Added a real-PDF regression asserting that the linguistics fixture's broken
+`АПФАПФ...` title stream is never projected when a trusted metadata title is
+available. Author/title projection tests now pass 9/9.
