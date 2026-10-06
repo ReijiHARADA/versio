@@ -16,7 +16,10 @@ export type PageClassSignals = {
 
 export function pageClassSignals(page: ExtractedPage): PageClassSignals {
   const items = page.textItems;
-  const text = items.map((item) => item.text).join("");
+  // Keep item boundaries visible to token-level corruption heuristics. PDF.js
+  // often emits `word`, `&`, and `word` as separate items; concatenating them
+  // hides malformed masthead tokens such as `АПФАПФ & ПЛ & ПЛ`.
+  const text = items.map((item) => item.text).join(" ");
   const repeatedGlyphHits = (text.match(/([A-Za-z\u0400-\u04FF]{2,6})\1\1/gu) ?? []).length;
   const brokenTokenHits = (text.match(/[A-Za-z\u0400-\u04FF]{2,8}(?:\s*&\s*[A-Za-z\u0400-\u04FF]{2,8})+/gu) ?? []).length;
   return {

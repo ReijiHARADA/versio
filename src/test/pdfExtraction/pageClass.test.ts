@@ -7,6 +7,10 @@ import {
 } from "../../services/pdfExtraction/pageClass";
 import type { ExtractedPage } from "../../services/pdfService";
 import { pagesNeedingOcr } from "../../services/pdfExtraction/enrichers/ocr";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { extractPdfPages } from "../readingOrder/extractPdf";
 
 function page(
   texts: string[],
@@ -30,6 +34,15 @@ function page(
 }
 
 describe("page classification", () => {
+  it("routes split-glyph Cyrillic mastheads to OCR", async () => {
+    const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "../../..");
+    const pdf = path.join(root, "test-data/real-papers/linguistics-the-role-of-applied-linguistics-and-language-discourse-analysis-in-eng.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    expect(classifyPage(pageClassSignals(pages[0]))).toBe("garbled");
+    expect(pagesNeedingOcr(pages)).toContain(1);
+  }, 60_000);
+
   it("keeps the scanned-by-item-average baseline", () => {
     const scanned = [page(["a", "b"], 1), page(["c"], 2)];
     expect(scannedByItemAverage(scanned)).toBe(true);
