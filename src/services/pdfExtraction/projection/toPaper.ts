@@ -99,6 +99,16 @@ function expandAuthorLine(text: string): string[] {
       /^[A-Z][\p{Ll}’'’-]+$/u.test(spacedNameTokens[4])) {
     return [spacedNameTokens.slice(0, 2).join(" "), spacedNameTokens.slice(2).join(" ")];
   }
+  // Multi-author rows can contain a compound surname (for example
+  // `First Last Second van den Surname`). Keep the particle sequence with
+  // the second author instead of treating the whole row as one name.
+  if (spacedNameTokens.length >= 6 &&
+      spacedNameTokens.slice(0, 3).every((token) => /^[A-Z][\p{Ll}’'’-]+$/u.test(token)) &&
+      /^(?:van|von|de|den|der|di|da|la|le)$/i.test(spacedNameTokens[3]) &&
+      /^(?:van|von|de|den|der|di|da|la|le)$/i.test(spacedNameTokens[4]) &&
+      /^[A-Z][\p{Ll}’'’-]+$/u.test(spacedNameTokens[5])) {
+    return [spacedNameTokens.slice(0, 2).join(" "), spacedNameTokens.slice(2).join(" ")];
+  }
   const markerParts = markedSource
     .split(/(?<=[♠♣♡♢∗†‡§])\s*/u)
     .map((part) => part.replace(/[♠♣♡♢∗†‡§*]/gu, "").replace(/\d+/g, "").replace(/^\s*and\s+/i, "").replace(/^[,;·\s]+/, "").replace(/\s+/g, " ").trim())

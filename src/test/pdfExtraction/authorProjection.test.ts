@@ -7,6 +7,7 @@ import { extractFromPages } from "../../services/pdfExtraction/pipeline/extractA
 
 const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const pdf = path.join(root, "test-data/real-papers/power-over-skin.pdf");
+const particlePdf = path.join(root, "test-data/real-papers/interactive-jewellery.pdf");
 
 describe("author masthead projection", () => {
   it("keeps same-baseline multi-column names separate and excludes locations", async () => {
@@ -21,5 +22,19 @@ describe("author masthead projection", () => {
     });
     expect(result.paper.authors).toEqual(expect.arrayContaining(["Andy Kong", "Daehwa Kim", "Chris Harrison"]));
     expect(result.paper.authors).not.toEqual(expect.arrayContaining(["Pittsburgh, USA"]));
+  }, 60_000);
+
+  it("splits adjacent authors when the second surname has a particle sequence", async () => {
+    if (!fs.existsSync(particlePdf)) return;
+    const pages = await extractPdfPages(particlePdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "interactive-jewellery",
+      filePath: particlePdf,
+      fileHash: "author-particle-regression",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["Maarten Versteeg", "Elise van den Hoven", "Caroline Hummels"]));
+    expect(result.paper.authors).not.toContain("Maarten Versteeg Elise van den Hoven");
   }, 60_000);
 });
