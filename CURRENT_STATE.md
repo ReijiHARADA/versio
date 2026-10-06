@@ -664,3 +664,7 @@ A global minimum-width filter intended to remove Frontiers sidebar reviewers cau
 ### 2026-10-06: author benchmark after name-only affiliation recovery
 
 The 27-paper benchmark after the name-only affiliation change is 0.915 mean author F1 with 18/27 perfect papers. The targeted health-goals fixture is corrected, while social-influence and several publisher formats still need source-level review; aggregate score alone is not used to add another heuristic. The temporary report was restored after measurement.
+
+### 2026-10-06: linguistics masthead email noise
+
+`syntax-prosody-correlation` had a continuation author row beginning with a comma and a separate brace-wrapped email row classified as author. Author expansion now trims leading punctuation and rejects brace/email candidates. The fixture projects Arne Köhn, Timo Baumann, and Oskar Dörfler only. Typecheck and the 29-case pipeline suite pass.
