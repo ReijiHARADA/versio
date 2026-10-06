@@ -1811,11 +1811,17 @@ function orderPageLines(lines: LayoutLine[], layout: PageColumnLayout): LayoutLi
 
 function splitSameBaselineNameRuns(lines: LayoutLine[]): LayoutLine[] {
   return lines.flatMap((line) => {
-    if (line.items.length < 2 || line.items.some((item) => !looksLikePersonName(item.text))) return [line];
-    const items = [...line.items].sort((a, b) => a.x - b.x);
+    const significant = line.items.filter((item) => item.fontSize >= line.fontSize * 0.7);
+    if (significant.length < 2 || significant.some((item) => !looksLikePersonName(item.text) && !/^[A-Z][\p{Ll}’’-]+(?:\s+(?:van|von|de|den|der|[A-Z][\p{Ll}’’-]+)){1,3}$/u.test(item.text.trim()))) return [line];
+    const items = [...significant].sort((a, b) => a.x - b.x);
     const gaps = items.slice(1).map((item, index) => item.x - (items[index].x + items[index].width));
     if (gaps.some((gap) => gap < Math.max(3, line.fontSize * 0.18))) return [line];
-    return items.map((item) => itemsToLine([item], line.column, line.page, line.pageHeight, line.pageWidth));
+    const markers = line.items.filter((item) => item.fontSize < line.fontSize * 0.7);
+    return items.map((item, index) => {
+      const nextX = items[index + 1]?.x ?? Number.POSITIVE_INFINITY;
+      const attached = markers.filter((marker) => marker.x >= item.x + item.width - 2 && marker.x < nextX);
+      return itemsToLine([item, ...attached], line.column, line.page, line.pageHeight, line.pageWidth);
+    });
   });
 }
 
@@ -2272,10 +2278,14 @@ function groupLinesIntoBlocks(
     const authorKindOk =
       currentRole !== "author" ||
       looksLikeEmail(joinLines(current)) === looksLikeEmail(line.text);
-    const authorColumnBoundary = currentRole === "author" &&
-      looksLikePersonName(joinLines(current)) && looksLikePersonName(line.text) &&
-      Math.abs(line.y - current[current.length - 1].y) <= Math.max(2.5, baseFont * 0.3) &&
-      Math.abs(line.x - current[current.length - 1].x) > baseFont * 2;
+    const authorColumnBoundary = currentRole === "author" && (() => {
+      const currentItems = current[current.length - 1].items.filter((item) => item.fontSize >= baseFont * 0.7);
+      const nextItems = line.items.filter((item) => item.fontSize >= baseFont * 0.7);
+      return currentItems.length === 1 && nextItems.length === 1 &&
+        looksLikePersonName(currentItems[0].text) && looksLikePersonName(nextItems[0].text) &&
+        Math.abs(line.y - current[current.length - 1].y) <= Math.max(2.5, baseFont * 0.3) &&
+        Math.abs(line.x - current[current.length - 1].x) > baseFont * 2;
+    })();
     const detachedRailLineBoundary = currentRole === "paragraph" && forcedRole === "paragraph" && (() => {
       const previous = current[current.length - 1];
       const body = previous.fontSize >= baseFont * 0.95 && previous.width >= (previous.pageWidth ?? 612) * 0.45;
