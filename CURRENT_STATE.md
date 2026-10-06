@@ -1,3 +1,10 @@
+## Current extraction status (2026-10-07)
+
+- Latest code includes generic title/author/affiliation projection, transparent text-layer detection, Vision OCR routing, sparse-OCR protection, and figure/table label suppression.
+- Verified: extraction corpus and reading-order **232/232**, page-class/OCR tests **9/9**, typecheck and lint pass.
+- Automated 113-paper title exact metrics are historical regression signals, not visual accuracy; native OCR/runtime validation and full-page visual review remain outstanding.
+- Highest-priority remaining cases: transparent text-layer fragments in mixed-column PDFs, complex table/list reconstruction, and real Tauri Vision OCR output verification.
+
 - 2026-10-06: 著者・所属補正後に113本（取得済み113/114、`precious-materials`欠損）のisolated extraction benchmarkを再実行。title exact **105/113 (92.92%)**、native title exact **53/113**、metadata fallback **56/113**。heading/caption/table-region/reading-order指標は既存値を維持し、source integrity平均は約0.99997。今回のベンチマークは著者・所属の完全目視評価ではなく、既存Ground Truth範囲の自動指標である。
 - 2026-10-06: Multi-column affiliation blocks now use `LayoutBlock.lines[].items` and x-band clustering to project separate institution strings instead of concatenating columns. Country-only continuation tokens are attached to the neighboring institution column when geometry indicates a wrapped row. Focused author/pipeline tests (30/30) and typecheck pass; broader publisher layouts remain queued for review.
 - 2026-10-06: Affiliation projection now collapses exact repeated institution spans while retaining canonical relation IDs. `power-over-skin` now emits one Carnegie Mellon University entry; focused author regression and typecheck pass.
