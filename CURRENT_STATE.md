@@ -636,3 +636,7 @@ After correcting the mislabeled patient-safety catalog entry, the 27-paper autho
 ### 2026-10-06: marked author names and keyword contamination
 
 The Frontiers marketing fixture had dagger-marked authors (`Maria Pilar Martinez-Ruiz1*† and Karin S. Moser2†`) projected with markers/digits, while the keyword paragraph was misread as an author continuation. Marker-part cleanup now removes footnote digits/symbols and leading conjunctions, and continuation candidates exclude keyword rows. The fixture now projects exactly the two authors. Typecheck and the 29-case pipeline suite pass.
+
+### 2026-10-06: post-marker 27-paper check
+
+The post-marker 27-paper run is 0.896 mean author F1 with 18/27 perfect papers. This is slightly below the previous 0.901 run because marker cleanup changes exposed additional catalog/layout mismatches in clinical and marketing fixtures; no aggregate-only heuristic relaxation was made. The temporary benchmark report was restored. Next work should compare the affected rows by source content before changing projection rules.
