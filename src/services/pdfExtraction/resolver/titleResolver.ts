@@ -35,12 +35,19 @@ function looksLikeDocumentMasthead(text: string): boolean {
     || /\b(?:original\s+paper|research\s+article|journal\s+of|volume\s+\d+|\d{4}\s*\)\s*\d{1,4}\s*[:–-])\b/i.test(t)
     || /^(?:www\.)?nature\.com\b/i.test(t)
     || /^\d{1,4}\s*\([^)]{0,32}\)\s*\d{4}/.test(t)
+    // Repository cover sheets and event headers often put the venue/event
+    // before the actual article title. Their slash/date pattern is stable
+    // across publishers and should be treated as masthead evidence.
+    || /\b(?:seminar|conference|proceedings|journal)\b[\s\S]{0,100}\b20\d{2}\b/i.test(t)
     || /\b\d{4}\b[\s\S]*\b\d{3,6}\s*$/.test(t);
 }
 
 function isPlausibleMetadataTitle(text: string): boolean {
   const t = text.trim();
-  if (t.length < 12 || t.length > 220 || looksLikeDocumentMasthead(t)) return false;
+  // Repository and thesis records legitimately include a subtitle and degree
+  // context, so metadata titles can be longer than a journal title. Keep a
+  // bounded ceiling to avoid accepting an accidentally stored full document.
+  if (t.length < 12 || t.length > 500 || looksLikeDocumentMasthead(t)) return false;
   if (/\.(?:pdf|docx?)$/i.test(t) || /^(?:[/\\]|https?:\/\/)/i.test(t)) return false;
   return (t.match(/\S+/g) ?? []).length >= 3;
 }
@@ -51,6 +58,21 @@ function looksLikeTruncatedTitle(text: string): boolean {
   if (/\b[A-Z][a-z]+,\s+[A-Z][A-Za-z.'-]+(?:\s+[A-Z][A-Za-z.'-]+){0,3}(?:,|\s|$)/.test(t) && t.length > 100) return true;
   const half = Math.floor(t.length / 2);
   return half >= 30 && (t.slice(0, half).trim() === t.slice(half).trim() || /^(\S.{28,}?)\s+\1$/s.test(t));
+}
+
+/**
+ * Native extraction can promote the first abstract/body paragraph (or a
+ * publisher masthead followed by body text) to the title role.  Such a
+ * candidate is structurally distinguishable from a real title even when it
+ * starts with title-case words: it is unusually long and contains multiple
+ * sentence boundaries.  Keep this format-agnostic so metadata can repair
+ * title identity without adding publisher-specific rules.
+ */
+function looksLikeBodyTitleCandidate(text: string): boolean {
+  const t = text.trim();
+  if (t.length < 240) return false;
+  const sentenceBoundaries = t.match(/[.!?](?:\s|$)/g)?.length ?? 0;
+  return sentenceBoundaries >= 2 || /^(?:copyright|permission is given|this (?:paper|thesis)\b)/i.test(t);
 }
 
 function joinTitleParts(left: string, right: string): string {
@@ -147,7 +169,7 @@ export function resolveTitle(input: {
   // format-agnostic and does not replace a normal native title.
   const metadataMatchesNativePrefix = Boolean(meta && fused.text && fused.text.startsWith(meta) && /^\s*[:–—-]/.test(fused.text.slice(meta.length)));
   const nativeMatchesMetadataPrefix = Boolean(meta && fused.text && meta.startsWith(fused.text.trim()) && fused.text.trim().length >= 40);
-  if (fused.text && meta && isPlausibleMetadataTitle(meta) && (looksLikeDocumentMasthead(fused.text) || looksLikeTruncatedTitle(fused.text) || metadataMatchesNativePrefix || nativeMatchesMetadataPrefix)) {
+  if (fused.text && meta && isPlausibleMetadataTitle(meta) && (looksLikeDocumentMasthead(fused.text) || looksLikeTruncatedTitle(fused.text) || looksLikeBodyTitleCandidate(fused.text) || metadataMatchesNativePrefix || nativeMatchesMetadataPrefix)) {
     return {
       text: meta,
       confidence: Math.max(0.55, fused.confidence * 0.8),
