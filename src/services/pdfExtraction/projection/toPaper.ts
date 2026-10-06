@@ -382,7 +382,9 @@ export function projectCanonicalToPaper(input: {
         (n.text.match(/[A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’-]+)?/gu)?.length ?? 0) >= 3 &&
         ((n.text.match(/[A-Z][\p{L}'’-]+/gu)?.length ?? 0) >= 6 ||
           (n.text.match(/,/g)?.length ?? 0) >= 4) &&
-        !/[.!?]$/.test(n.text.trim()))));
+        !/[.!?]$/.test(n.text.trim())) ||
+      (/\d[*†‡]?/.test(n.text) && n.text.trim().length <= 400 &&
+        (n.text.match(/,/g)?.length ?? 0) >= 3 && !/[.!?]$/.test(n.text.trim()))));
   const authorSourceNodes = [...authorNodes, ...authorContinuationNodes];
   const affiliationNodes = canonical.nodes.filter((n) => n.role === "affiliation" && n.text);
   const affiliated = canonical.relations.filter((r) => r.kind === "AFFILIATED_WITH");
