@@ -13,7 +13,7 @@ type CatalogPaper = {
   title: string;
   filename: string;
   formatFamily?: string;
-  checks: { tokensInOrder?: string[]; captionContains?: string[]; tableCaptionContains?: string[] };
+  checks?: { tokensInOrder?: string[]; captionContains?: string[]; tableCaptionContains?: string[] };
 };
 
 const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "../../..");
@@ -190,14 +190,14 @@ describe("baseline benchmark on cached real papers", () => {
                 (paper.checks.tokensInOrder && paper.checks.tokensInOrder.length >= 2
                   ? [paper.checks.tokensInOrder[0], paper.checks.tokensInOrder[1]]
                   : undefined),
-              figureCaptions: gt.figureCaptions ?? paper.checks.captionContains,
-              tableCaptions: gt.tableCaptions ?? paper.checks.tableCaptionContains,
+              figureCaptions: gt.figureCaptions ?? paper.checks?.captionContains,
+              tableCaptions: gt.tableCaptions ?? paper.checks?.tableCaptionContains,
             }
           : {
               id: paper.id,
               title: paper.title,
-              figureCaptions: paper.checks.captionContains,
-              tableCaptions: paper.checks.tableCaptionContains,
+              figureCaptions: paper.checks?.captionContains,
+              tableCaptions: paper.checks?.tableCaptionContains,
             },
       });
 
