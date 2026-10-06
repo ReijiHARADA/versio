@@ -534,15 +534,25 @@ export function projectCanonicalToPaper(input: {
       .filter((item) => item.fontSize < line.fontSize * 0.8 && /^\d{1,2}$/.test(item.text.trim()))
       .map((item) => ({ marker: item.text.trim(), x: item.x })));
     const base = { _page: node.pageStart, _y: node.boundingBoxes[0]?.y ?? 0 };
+    const sidebarMixed = hasSidebarBody &&
+      (node.boundingBoxes[0]?.x ?? Infinity) < sidebarRight &&
+      (node.boundingBoxes[0]?.width ?? 0) > 180;
+    const markerSource = sidebarMixed
+      ? lines.map((line) => line.items
+          .filter((item) => item.x > sidebarRight + 8)
+          .sort((a, b) => a.x - b.x)
+          .map((item) => item.text)
+          .join(" ")).join(" ")
+      : (node.text ?? "");
     // Some journal templates place all numbered affiliations in one native
     // line/block. Split only when each segment starts with a short superscript
     // marker immediately followed by an institution-shaped capitalized token.
-    const numberedParts = (node.text ?? "")
+    const numberedParts = markerSource
       .trim()
       .split(/(?=\b\d{1,2}(?=[A-Z]))/)
       .map((part) => part.replace(/^\d{1,2}\s*/, "").trim())
       .filter(Boolean);
-    const letteredParts = (node.text ?? "")
+    const letteredParts = markerSource
       .trim()
       .split(/(?=\b[a-z]\s+(?=[A-Z]))/)
       .map((part) => part.replace(/^[a-z]\s+/, "").trim())
@@ -551,9 +561,6 @@ export function projectCanonicalToPaper(input: {
     // layout the flattened text loses column ownership, so defer to the
     // geometry path below instead of splitting the contaminated string by
     // superscript markers.
-    const sidebarMixed = hasSidebarBody &&
-      (node.boundingBoxes[0]?.x ?? Infinity) < sidebarRight &&
-      (node.boundingBoxes[0]?.width ?? 0) > 180;
     const markerParts = sidebarMixed ? [] : (numberedParts.length >= 2 ? numberedParts : letteredParts);
     if (markerParts.length >= 2 && markerParts.every((part) =>
       part.split(/\s+/).length >= 3 &&
