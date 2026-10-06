@@ -331,7 +331,14 @@ export function projectCanonicalToPaper(input: {
 }): PaperProjection {
   const { canonical, paperId, layoutBlocks, layouts, baseFontSize } = input;
   const titleNode = canonical.nodes.find((n) => n.role === "title");
+  const firstBodyY = canonical.nodes
+    .filter((n) => n.pageStart === 1 && n.text &&
+      ((n.role === "heading" && /^abstract$/i.test(n.text.trim())) ||
+       (n.role === "abstract") || (n.role === "paragraph" && n.text.length > 260)))
+    .map((n) => n.boundingBoxes[0]?.y ?? Infinity)
+    .sort((a, b) => a - b)[0] ?? Infinity;
   const authorNodes = canonical.nodes.filter((n) => n.role === "author" && n.text &&
+    n.pageStart === 1 && (n.boundingBoxes[0]?.y ?? 0) < firstBodyY &&
     // Long mastheads can contain many marker-separated authors. Keep them
     // eligible for expansion; the marker/separator checks in expandAuthorLine
     // still prevent ordinary prose from becoming an author list.
