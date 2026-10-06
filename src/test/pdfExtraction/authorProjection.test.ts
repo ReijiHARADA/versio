@@ -79,5 +79,9 @@ describe("author masthead projection", () => {
     const names = result.paper.affiliations.map((affiliation) => affiliation.name);
     expect(names.every((name) => !/edited by|reviewed by|tongjian you|yi sun/i.test(name))).toBe(true);
     expect(names.every((name) => !/University of Massachusetts Boston/i.test(name))).toBe(true);
+    expect(names).toHaveLength(4);
+    expect(names.some((name) => /Applied Kinesiology.*University of Campinas/i.test(name))).toBe(true);
+    expect(names.some((name) => /Laboratory of Electromyography.*University of Campinas/i.test(name))).toBe(true);
+    expect(names.some((name) => /NIH Biomedical Research Center.*University of Maryland/i.test(name))).toBe(true);
   }, 60_000);
 });

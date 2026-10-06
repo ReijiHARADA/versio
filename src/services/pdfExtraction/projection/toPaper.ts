@@ -583,6 +583,28 @@ export function projectCanonicalToPaper(input: {
           items: line.items.filter((item) => item.x > sidebarRight + 8),
         }))
       : lines;
+    if (sidebarMixed) {
+      const ordered = candidateLines
+        .flatMap((line) => line.items.map((item) => ({ item, y: line.y })))
+        .sort((a, b) => a.y - b.y);
+      const parts: string[][] = [[]];
+      for (const { item } of ordered) {
+        const marker = item.text.trim();
+        const isMarker = item.fontSize < 8 && /^\d{1,2}$/.test(marker);
+        if (isMarker && Number(marker) >= 2) parts.push([]);
+        else if (!isMarker && item.text.trim()) parts.at(-1)?.push(item.text.trim());
+      }
+      const sequentialParts = parts.map((part) => part.join(" ").trim()).filter(Boolean);
+      if (sequentialParts.length >= 2 && sequentialParts.every((part) => part.split(/\s+/).length >= 3)) {
+        return sequentialParts.map((name, index) => ({
+          id: `${node.id}-ordered-${index + 1}`,
+          name: normalizeAffiliationName(name),
+          _x: node.boundingBoxes[0]?.x ?? 0,
+          _marker: String(index + 1),
+          ...base,
+        }));
+      }
+    }
     const multiColumn = multiColumnLineCount > 0 &&
       (candidateLines.length <= 2 || multiColumnLineCount / candidateLines.length >= 0.5);
     if (!multiColumn) {
