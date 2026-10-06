@@ -926,3 +926,9 @@ remain green.
 Added a real-PDF regression asserting that the linguistics fixture's broken
 `АПФАПФ...` title stream is never projected when a trusted metadata title is
 available. Author/title projection tests now pass 9/9.
+# 2026-10-07: flattened-author title guard
+
+Extended the repeated-glyph title guard to long title candidates that contain
+numeric markers and comma-separated author-like tails. When detected, the
+candidate is rejected so metadata/OCR can supply the title. The guard is
+projection-only and does not alter ordinary title candidates.
