@@ -632,3 +632,7 @@ The clinical scoping fixture now recovers its four native title-page authors cle
 ### 2026-10-06: corrected 27-paper author benchmark
 
 After correcting the mislabeled patient-safety catalog entry, the 27-paper author benchmark is 0.901 mean F1 with 20/27 perfect papers. Seven remaining cases are either genuine missing native author rows or publisher-specific formatting; no further broad heuristic was added from aggregate scores alone. The temporary report was restored after measurement.
+
+### 2026-10-06: marked author names and keyword contamination
+
+The Frontiers marketing fixture had dagger-marked authors (`Maria Pilar Martinez-Ruiz1*† and Karin S. Moser2†`) projected with markers/digits, while the keyword paragraph was misread as an author continuation. Marker-part cleanup now removes footnote digits/symbols and leading conjunctions, and continuation candidates exclude keyword rows. The fixture now projects exactly the two authors. Typecheck and the 29-case pipeline suite pass.
