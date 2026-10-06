@@ -40,6 +40,8 @@ function looksLikeDocumentMasthead(text: string): boolean {
     // before the actual article title. Their slash/date pattern is stable
     // across publishers and should be treated as masthead evidence.
     || /\b(?:seminar|conference|proceedings|journal)\b[\s\S]{0,100}\b20\d{2}\b/i.test(t)
+    || /\b20\d{2}\b[\s,|:-]*(?:volume|vol\.?|issue|no\.?)\b/i.test(t)
+    || /\b(?:volume|vol\.?|issue|no\.?)\s*\d+[\s,|:-]*\b20\d{2}\b/i.test(t)
     || /\b\d{4}\b[\s\S]*\b\d{3,6}\s*$/.test(t);
 }
 
