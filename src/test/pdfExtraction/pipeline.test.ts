@@ -53,6 +53,21 @@ describe("canonical extraction pipeline", () => {
     expect(blocks.some((block) => block.column === "spanning")).toBe(true);
   });
 
+  it("detects word-level columns when masthead lines dominate the page", () => {
+    const textItems = Array.from({ length: 10 }, (_, row) => [
+      ...["Left", "column", "body", String(row)].map((text, index) => ({
+        text, x: 52 + index * 28, y: 300 + row * 14, width: 22, height: 8,
+        fontSize: 8, fontName: "Body", page: 1,
+      })),
+      ...["Right", "column", "body", String(row)].map((text, index) => ({
+        text, x: 318 + index * 28, y: 300 + row * 14, width: 22, height: 8,
+        fontSize: 8, fontName: "Body", page: 1,
+      })),
+    ]).flat();
+    textItems.push({ text: "A full-width title", x: 52, y: 90, width: 480, height: 12, fontSize: 16, fontName: "Title", page: 1 });
+    expect(detectPageColumns({ pageNumber: 1, width: 595, height: 790, textItems }).isMultiColumn).toBe(true);
+  });
+
   it("preserves repeated values in distinct native table cells", () => {
     const page = { pageNumber: 1, width: 500, height: 700, textItems: [
       { text: "42", x: 80, y: 180, width: 16, height: 8, fontSize: 9, fontName: "Body", page: 1 },

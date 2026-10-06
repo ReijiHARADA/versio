@@ -244,9 +244,11 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     if (!alignedColumnPairs) return fallback;
   }
 
+  const rowStartPeaks = findTwoRowStarts(usable, page.width);
   const peaks = alignedColumnPairs
     ? [alignedColumnPairs.leftX, alignedColumnPairs.rightX] as [number, number]
-    : findTwoXPeaks(sample.map((item) => item.x), page.width * 0.18);
+    : rowStartPeaks ??
+      findTwoXPeaks(sample.map((item) => item.x), page.width * 0.18);
   if (!peaks) {
     return fallback;
   }
@@ -279,9 +281,9 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     ? rightX - leftX >= page.width * 0.22 && leftShare >= 0.22 && rightShare >= 0.22
     : leftItems.length >= MIN_COLUMN_ITEMS &&
       rightItems.length >= MIN_COLUMN_ITEMS &&
-      (leftLong.length >= MIN_COLUMN_ITEMS &&
+      (rowStartPeaks != null || (leftLong.length >= MIN_COLUMN_ITEMS &&
         rightLong.length >= MIN_COLUMN_ITEMS ||
-        (denseWordColumns || denseUsableColumns)) &&
+        (denseWordColumns || denseUsableColumns))) &&
       rightX - leftX >= page.width * 0.22 &&
       leftShare >= 0.22 &&
       rightShare >= 0.22 &&
@@ -325,6 +327,59 @@ function findTwoXPeaks(
   const left = Math.min(first[0], second[0]);
   const right = Math.max(first[0], second[0]);
   return [left, right];
+}
+
+/**
+ * Detect column origins from native word rows. Some PDFs emit one text item
+ * per word, so a histogram of individual x positions is too diffuse to see
+ * the two columns. Grouping by baseline first preserves the repeated origins
+ * without depending on a publisher-specific font or title layout.
+ */
+function findTwoRowStarts(
+  items: ExtractedTextItem[],
+  pageWidth: number
+): [number, number] | null {
+  const sorted = [...items].sort((a, b) => a.y - b.y || a.x - b.x);
+  const rows: ExtractedTextItem[][] = [];
+  for (const item of sorted) {
+    const row = rows.find((candidate) =>
+      Math.abs(candidate[0].y - item.y) <= Math.max(2.5, item.fontSize * 0.3)
+    );
+    if (row) row.push(item);
+    else rows.push([item]);
+  }
+  const starts: number[] = [];
+  for (const row of rows) {
+    if (row.length < 2) continue;
+    const left = Math.min(...row.map((item) => item.x));
+    const right = Math.max(...row.map((item) => item.x + item.width));
+    if (right - left <= pageWidth * 0.55) {
+      starts.push(left);
+      continue;
+    }
+    // When both columns share a baseline, the row itself spans the gutter.
+    // Count each side independently instead of discarding the row as a
+    // full-width title or figure line.
+    const leftItems = row.filter((item) => item.x + item.width <= pageWidth * 0.5);
+    const rightItems = row.filter((item) => item.x >= pageWidth * 0.5);
+    if (leftItems.length >= 2) starts.push(Math.min(...leftItems.map((item) => item.x)));
+    if (rightItems.length >= 2) starts.push(Math.min(...rightItems.map((item) => item.x)));
+  }
+  const binSize = 8;
+  const bins = new Map<number, number>();
+  for (const x of starts) {
+    const bin = Math.round(x / binSize) * binSize;
+    bins.set(bin, (bins.get(bin) || 0) + 1);
+  }
+  const ranked = [...bins.entries()].sort((a, b) => b[1] - a[1]);
+  const first = ranked[0];
+  const second = first && ranked.find((peak) =>
+    Math.abs(peak[0] - first[0]) >= pageWidth * 0.28
+  );
+  if (!first || !second || first[1] < MIN_COLUMN_ITEMS || second[1] < MIN_COLUMN_ITEMS) {
+    return null;
+  }
+  return [Math.min(first[0], second[0]), Math.max(first[0], second[0])];
 }
 
 function assignColumn(
