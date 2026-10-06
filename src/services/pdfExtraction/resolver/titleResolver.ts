@@ -250,7 +250,9 @@ export function resolveTitle(input: {
   // format-agnostic and does not replace a normal native title.
   const metadataMatchesNativePrefix = Boolean(meta && fused.text && fused.text.startsWith(meta) && /^\s*[:–—-]/.test(fused.text.slice(meta.length)));
   const nativeMatchesMetadataPrefix = Boolean(meta && fused.text && meta.startsWith(fused.text.trim()) && fused.text.trim().length >= 40);
-  if (fused.text && meta && isPlausibleMetadataTitle(meta) && (looksLikeDocumentMasthead(fused.text) || looksLikeTruncatedTitle(fused.text) || looksLikeBodyTitleCandidate(fused.text) || metadataMatchesNativePrefix || nativeMatchesMetadataPrefix)) {
+  const weakSectionTitle = Boolean(fused.text && fused.text.length <= 24 && meta &&
+    meta.length >= fused.text.length * 2 && titles[0]?.role === "title");
+  if (fused.text && meta && isPlausibleMetadataTitle(meta) && (looksLikeDocumentMasthead(fused.text) || looksLikeTruncatedTitle(fused.text) || looksLikeBodyTitleCandidate(fused.text) || metadataMatchesNativePrefix || nativeMatchesMetadataPrefix || weakSectionTitle)) {
     return {
       text: meta,
       confidence: Math.max(0.55, fused.confidence * 0.8),
