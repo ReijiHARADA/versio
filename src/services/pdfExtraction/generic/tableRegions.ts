@@ -58,7 +58,7 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
     // therefore cannot satisfy the ruled-grid threshold. A caption plus a
     // compact set of aligned, non-sentence rows is still strong evidence: use
     // the candidate geometry, but never promote prose-shaped rows.
-    const borderlessGroup = signature.horizontalRules + signature.verticalRules < 4
+    const borderlessGroup = effectiveSignature.horizontalRules + effectiveSignature.verticalRules < 4
       ? candidates.filter((candidate) => {
         const tableScore = candidate.roleScores.table ?? 0;
         const tableLikeWithoutRole = candidate.roleScores.table === undefined && candidate.text.trim().length <= 140;
