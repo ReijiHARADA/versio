@@ -33,7 +33,7 @@ Collapsed icon-rail always shows top-level workspace items only; nested folders/
 
 In auto mode, a near hit-strip fully expands the rail; a further approach zone advances the same expand progress to ~42% (width + labels mid-flight) before the cursor reaches the rail.
 
-Settings UI wraps each GIF in a strong-blue stage with a floating macOS window chrome (traffic lights + title). The window is cropped on the right and bottom edges of the stage. The active setting column is full opacity; the inactive column is ~60%. Visible OFF/ON labels and captions are omitted; the toggle is the control of record.
+Settings UI wraps each GIF in a strong-blue stage with a floating macOS window chrome (traffic lights + title). Top/left keep a wider blue frame; the window is cropped on the right and bottom edges of the stage. The active setting column is full opacity; the inactive column is ~60%. Visible OFF/ON labels and captions are omitted; the toggle is the control of record.
 
 ### Regenerate
 

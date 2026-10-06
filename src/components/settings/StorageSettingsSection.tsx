@@ -16,7 +16,7 @@ import {
   trashRetentionOptionLabel,
   type TrashRetentionDays,
 } from "../../services/trashRetention";
-import { purgeExpiredTrash } from "../../services/trashService";
+import { renewTrashItemsPastCutoff } from "../../services/trashService";
 import { SettingsCard, SettingsRow } from "./SettingsPrimitives";
 import { SettingsSelect } from "./SettingsSelect";
 import styles from "./SettingsScreen.module.css";
@@ -56,8 +56,10 @@ export function StorageSettingsSection({
   const handleRetentionChange = async (days: TrashRetentionDays) => {
     const next = await setTrashRetentionDays(days);
     setRetentionDays(next);
-    void purgeExpiredTrash().catch((error) => {
-      console.warn("Failed to purge trash after retention change:", error);
+    // Do not purge on change — items that would expire under the new window
+    // get a fresh retention period from now.
+    void renewTrashItemsPastCutoff(next).catch((error) => {
+      console.warn("Failed to renew trash after retention change:", error);
     });
   };
 
@@ -178,7 +180,7 @@ export function StorageSettingsSection({
         <SettingsCard title="ゴミ箱">
           <SettingsRow
             label="自動削除までの日数"
-            description="ゴミ箱の項目を自動で完全削除するまでの日数です。「設定しない」では手動削除のみです。変更直後に期限切れがあれば削除します。"
+            description="ゴミ箱の項目を自動で完全削除するまでの日数です。"
             htmlFor="trash-retention"
           >
             <SettingsSelect

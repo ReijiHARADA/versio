@@ -22,12 +22,15 @@ import { showToast } from "../../stores/toastStore";
 import styles from "./LibraryScreen.module.css";
 import trashStyles from "./TrashScreen.module.css";
 
+function itemKey(item: Pick<TrashItem, "kind" | "id">): string {
+  return `${item.kind}:${item.id}`;
+}
+
 export function TrashScreen() {
   const [items, setItems] = useState<TrashItem[]>([]);
   const [retentionDays, setRetentionDays] = useState(3);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [confirmPermanentId, setConfirmPermanentId] = useState<string | null>(null);
   const [confirmEmpty, setConfirmEmpty] = useState(false);
   const addPaper = useLibraryCache((s) => s.addPaper);
   const removePaper = useLibraryCache((s) => s.removePaper);
@@ -66,7 +69,6 @@ export function TrashScreen() {
   const handleRestore = async (item: TrashItem) => {
     if (busyId) return;
     setBusyId(item.id);
-    setConfirmPermanentId(null);
     try {
       if (item.kind === "paper") {
         const restored = await restorePaperFromTrash(item.id);
@@ -88,9 +90,7 @@ export function TrashScreen() {
     }
   };
 
-  const handlePermanent = async (item: TrashItem) => {
-    if (busyId) return;
-    setBusyId(item.id);
+  const commitPermanent = async (item: TrashItem) => {
     try {
       if (item.kind === "paper") {
         await permanentlyDeletePaper(item.id);
@@ -102,17 +102,39 @@ export function TrashScreen() {
         removeWorkspaceNodesLocal(removed);
         setMemberships(await getAllWorkspacePapers());
       }
-      setConfirmPermanentId(null);
-      await refresh();
-      showToast({ kind: "info", message: `「${item.name}」を完全に削除しました` });
     } catch (error) {
       showToast({
         kind: "error",
         message: error instanceof Error ? error.message : "完全削除に失敗しました",
       });
-    } finally {
-      setBusyId(null);
+      void refresh();
     }
+  };
+
+  const handlePermanent = (item: TrashItem) => {
+    if (busyId) return;
+    const key = itemKey(item);
+    setBusyId(item.id);
+    // Optimistic hide; real delete waits for toast expiry so「元に戻す」can cancel.
+    setItems((current) => current.filter((entry) => itemKey(entry) !== key));
+    setBusyId(null);
+
+    let cancelled = false;
+    showToast({
+      kind: "info",
+      message: `「${item.name}」を完全に削除しました`,
+      actionLabel: "元に戻す",
+      onAction: () => {
+        cancelled = true;
+        void refresh().catch(() => {
+          /* refresh errors surface via next load */
+        });
+      },
+      onExpire: () => {
+        if (cancelled) return;
+        void commitPermanent(item);
+      },
+    });
   };
 
   const handleEmpty = async () => {
@@ -224,35 +246,14 @@ export function TrashScreen() {
                   >
                     元に戻す
                   </button>
-                  {confirmPermanentId === item.id ? (
-                    <div className={trashStyles.confirmInline}>
-                      <span>完全に削除しますか？</span>
-                      <button
-                        type="button"
-                        className={trashStyles.dangerButton}
-                        disabled={busyId === item.id}
-                        onClick={() => void handlePermanent(item)}
-                      >
-                        削除する
-                      </button>
-                      <button
-                        type="button"
-                        className={trashStyles.ghostButton}
-                        onClick={() => setConfirmPermanentId(null)}
-                      >
-                        キャンセル
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      className={trashStyles.dangerButton}
-                      disabled={Boolean(busyId)}
-                      onClick={() => setConfirmPermanentId(item.id)}
-                    >
-                      今すぐ完全に削除
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className={trashStyles.dangerButton}
+                    disabled={Boolean(busyId)}
+                    onClick={() => handlePermanent(item)}
+                  >
+                    今すぐ完全に削除
+                  </button>
                 </div>
               </li>
             ))}

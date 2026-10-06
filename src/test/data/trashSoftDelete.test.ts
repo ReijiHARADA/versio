@@ -161,6 +161,25 @@ describe("trash / soft-delete", () => {
     expect(expired).toEqual(["old"]);
   });
 
+  it("renews trashed_at for items past a shortened retention cutoff", () => {
+    upsertPaperIndex(db, makePaper("old"));
+    setPaperTrashedAt(db, "old", "2026-09-01T12:00:00.000Z");
+    const nowAt = new Date("2026-09-15T12:00:00.000Z");
+    const cutoff = trashExpiryCutoffIso(3, nowAt);
+    const expired = db
+      .query("SELECT id FROM papers WHERE trashed_at IS NOT NULL AND trashed_at <= ?", [cutoff])
+      .map((row) => String(row.id));
+    expect(expired).toEqual(["old"]);
+
+    const renewedAt = nowAt.toISOString();
+    setPaperTrashedAt(db, "old", renewedAt);
+    const stillExpired = db
+      .query("SELECT id FROM papers WHERE trashed_at IS NOT NULL AND trashed_at <= ?", [cutoff])
+      .map((row) => String(row.id));
+    expect(stillExpired).toEqual([]);
+    expect(getPaperIndex(db, "old")?.trashedAt).toBe(renewedAt);
+  });
+
   it("migrates v6 libraries to v7 soft-delete columns", async () => {
     const req = createRequire(import.meta.url);
     const wasm = readFileSync(req.resolve("sql.js/dist/sql-wasm.wasm"));
