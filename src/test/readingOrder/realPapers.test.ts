@@ -9,7 +9,7 @@ type CatalogPaper = {
   id: string;
   title: string;
   filename: string;
-  checks: {
+  checks?: {
     expectMultiColumnOnPages?: number[];
     tokensInOrder?: string[];
     tokensInOrderPage?: number;
@@ -59,7 +59,7 @@ describe("real jewelry-corpus PDFs", () => {
     it(`${paper.id} reading-order checks`, async () => {
       const pages = await extractPdfPages(pdfPath);
       const { blocks, layouts } = reconstructDocument(pages);
-      const checks = paper.checks;
+      const checks = paper.checks ?? {};
       const headings = blocks.filter((b) => b.role === "heading").map((b) => b.text);
       const captions = blocks
         .filter((b) => b.role === "figure_caption")
