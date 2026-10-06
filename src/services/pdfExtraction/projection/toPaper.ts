@@ -527,6 +527,25 @@ export function projectCanonicalToPaper(input: {
       .filter((item) => item.fontSize < line.fontSize * 0.8 && /^\d{1,2}$/.test(item.text.trim()))
       .map((item) => ({ marker: item.text.trim(), x: item.x })));
     const base = { _page: node.pageStart, _y: node.boundingBoxes[0]?.y ?? 0 };
+    // Some journal templates place all numbered affiliations in one native
+    // line/block. Split only when each segment starts with a short superscript
+    // marker immediately followed by an institution-shaped capitalized token.
+    const numberedParts = (node.text ?? "")
+      .trim()
+      .split(/(?=\b\d{1,2}(?=[A-Z]))/)
+      .map((part) => part.replace(/^\d{1,2}\s*/, "").trim())
+      .filter(Boolean);
+    if (numberedParts.length >= 2 && numberedParts.every((part) =>
+      part.split(/\s+/).length >= 3 &&
+      /\b(?:university|department|institute|school|faculty|college|hospital|laboratory|center|centre)\b/i.test(part))) {
+      return numberedParts.map((name, index) => ({
+        id: `${node.id}-numbered-${index + 1}`,
+        name: normalizeAffiliationName(name),
+        _x: node.boundingBoxes[0]?.x ?? 0,
+        _marker: String(index + 1),
+        ...base,
+      }));
+    }
     const multiColumnLineCount = lines.filter((line) =>
       line.items.filter((item) => item.fontSize >= line.fontSize * 0.7).length >= 2).length;
     const multiColumn = multiColumnLineCount > 0 &&
