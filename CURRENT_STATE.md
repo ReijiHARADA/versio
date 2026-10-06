@@ -763,3 +763,7 @@ tables whose native rule geometry was incomplete. The table-region builder now
 uses a caption-anchored text-region fallback only when at least three nearby
 table-scored, non-sentence rows exist; a caption alone cannot promote prose.
 Typecheck and the focused education/Wear Scale/rotated-table tests pass.
+The first full replay exposed and fixed a null-signature reference in this
+fallback; the focused suite now passes 5/5 and typecheck is clean. A complete
+232-test replay after that null fix remains pending before this change can be
+called corpus-wide green.
