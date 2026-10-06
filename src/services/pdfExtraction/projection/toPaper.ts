@@ -583,6 +583,11 @@ export function projectCanonicalToPaper(input: {
     !/[{}@]/.test(affiliation.name) &&
     !/^(?:corresponding author|these authors contributed|author note|keywords?)\b/i.test(affiliation.name) &&
     !/^available from .*\bat:\s*$/i.test(affiliation.name) &&
+    !/^(?:contents|article history)\b/i.test(affiliation.name) &&
+    (affiliation.name.match(/\b[a-z]\b/g)?.length ?? 0) < 3 &&
+    (affiliation.name.split(/\s+/).length > 2 ||
+      /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center)\b/i.test(affiliation.name) ||
+      /^[A-Z0-9& -]{2,12}$/.test(affiliation.name)) &&
     // Do not expose fragments created by a column boundary as institutions.
     // Keep short acronym-only affiliations, but reject unfinished connector
     // phrases, rule lines, and glyph-spaced text that cannot identify a body.
