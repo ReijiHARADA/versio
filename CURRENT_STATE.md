@@ -842,3 +842,4 @@ green after the new graphics/caption evidence.
 - 2026-10-06: ACM系の重なったmastheadで、native text内の `ACM Reference Format:` 著者列を汎用的な二次構造証拠として利用。PPG Earringで壊れた座標投影を6著者へ復元し、地名・所属・メールの著者混入を除去。author projection **3/3 pass**、typecheck pass。所属機関の列再構築は別課題。
 - 2026-10-06: ACM `Reference Format` fallbackにより、座標が重なったmastheadの著者投影を修正。PDF extraction全体 **13 files / 70 tests pass**、typecheck pass。113本全体の再計測は大きな抽出変更時の方針に従い未実施。
 - 2026-10-06: 番号付き所属が1つのnative blockへ潰れる形式（`1Institute... 2Center...`）を番号境界で分割。`neuroscience-rule-following` の5所属を個別投影できることを確認。author/pipeline **32/32 pass**、typecheck pass。番号なし・列混在の所属は引き続き要診断。
+- 2026-10-06: affiliation公開フィルタを強化し、`Contents`/`Article history`、単一文字マーカーが多数混ざる列断片、短い非機関語を除外。既存著者・パイプライン回帰は維持。複数列の機関名自体を完全再構築する代わりに、確信のない文字列を公開しない方針を継続。
