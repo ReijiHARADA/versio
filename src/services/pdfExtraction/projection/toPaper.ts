@@ -119,7 +119,7 @@ function isNonAuthorMastheadLine(text: string): boolean {
   const value = text.replace(/\s+/g, " ").trim();
   if (!value) return true;
   const locationPart = /^[A-Z][\p{L}'’-]*(?:\s+[A-Z][\p{L}'’-]*){0,3},\s*(?:[A-Z]{2,}|(?:Australia|Austria|Belgium|Canada|China|France|Germany|India|Israel|Italy|Japan|Netherlands|Russia|Spain|Sweden|Taiwan|UK|USA|United Kingdom|United States|The Netherlands))(?:,\s*(?:[A-Z]{2,}|(?:Australia|Canada|China|France|Germany|India|Israel|Italy|Japan|Netherlands|Russia|Spain|Sweden|Taiwan|UK|USA|United Kingdom|United States)))?$/u;
-  if (locationPart.test(value) || value.split(/\s{2,}/).filter(Boolean).every((part) => locationPart.test(part))) return true;
+  if (locationPart.test(value) || value.split(/\s{2,}/).filter(Boolean).every((part) => locationPart.test(part)) || /\b([A-Z][\p{L}'’-]+),\s*(USA|Australia|Canada|China|Japan|UK)\s+\1,\s*\2\b/iu.test(value)) return true;
   if (/https?:\/\/|\b(?:19|20)\d{2}\b|\b(?:article|journal|proceedings|volume|issue)\b/i.test(value)) return true;
   if (/@[\w.-]+\.[A-Za-z]{2,}/.test(value)) return true;
   if (/\b(?:and|or|the|its|of|at|in|from|to)\s*$/i.test(value) && value.split(/\s+/).length >= 3) return true;
