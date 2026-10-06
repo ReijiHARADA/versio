@@ -209,6 +209,13 @@ describe("baseline benchmark on cached real papers", () => {
         expect(report.titleExact).toBe(true);
         expect(report.titlePredicted?.toLowerCase()).not.toMatch(/arxiv:/);
       }
+      if (paper.id === "ergonomics-analisis-pemetaan-bibliometrik-komputational-publikasi-pada-ergonomics") {
+        expect(report.titlePredicted).toContain("Human Factor");
+        expect(report.titlePredicted).toContain("VOSviewer");
+      }
+      if (paper.id === "marketing-impact-of-green-marketing-on-consumer-behavior") {
+        expect(report.titlePredicted).toMatch(/IMPACT OF GREEN MARKETING ON CONSUMER BEHAVIOU?R/i);
+      }
       if (paper.formatFamily === "acm-acmart" && report.formatApplied === "acm") {
         expect(report.formatScores.acm).toBeGreaterThanOrEqual(0.75);
       }
