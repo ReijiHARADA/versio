@@ -61,6 +61,8 @@ describe("author masthead projection", () => {
       "Qiuyue (Shirley) Xue", "Dilini Nissanka", "Jiachen Tammy Yan", "Ruiqing Wang", "Shwetak Patel", "Vikram Iyer",
     ]));
     expect(result.paper.authors.some((name) => /Seattle|Engineering|@/.test(name))).toBe(false);
+    expect(result.paper.affiliations.some((affiliation) => /Paul G\. Allen School.*University of Washington/i.test(affiliation.name))).toBe(true);
+    expect(result.paper.affiliations.every((affiliation) => !/Figure 1|smartphone app|real-time PPG/i.test(affiliation.name))).toBe(true);
   }, 60_000);
 
   it("splits lettered affiliation blocks from journal mastheads", async () => {

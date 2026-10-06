@@ -306,6 +306,93 @@ function layoutForNode(
   );
 }
 
+type RecoveredColumnMasthead = {
+  authors: string[];
+  affiliations: string[];
+};
+
+/**
+ * Recover publisher mastheads whose native text stream interleaves columns at
+ * the same baseline.  This is deliberately conservative and only activates
+ * when at least two stable author-sized column anchors can be inferred.
+ */
+function recoverColumnMasthead(
+  layoutBlocks: LayoutBlock[],
+  firstBodyY: number,
+): RecoveredColumnMasthead | undefined {
+  const lines = layoutBlocks
+    .filter((block) => block.pageStart === 1 && block.pageEnd === 1)
+    .flatMap((block) => block.lines ?? [])
+    // The title itself is often the largest text on page 1 and must not become
+    // a masthead column anchor.
+    .filter((line) => line.y < Math.min(firstBodyY, 360) && line.y > 110);
+  const items = lines.flatMap((line) => line.items.map((item) => ({
+    ...item,
+    y: line.y,
+    lineFontSize: line.fontSize,
+  }))).filter((item) => item.x >= 70);
+  if (items.length < 8) return undefined;
+  const likelyAuthorItems = items.filter((item) => item.fontSize >= 10.5);
+  const xs = [...new Set(likelyAuthorItems.map((item) => item.x).sort((a, b) => a - b))];
+  const anchors: number[] = [];
+  for (const x of xs) {
+    const previous = anchors.at(-1);
+    if (previous === undefined || x - previous > 90) anchors.push(x);
+  }
+  if (anchors.length < 2 || anchors.length > 5) return undefined;
+
+  const records = items.map((item) => ({
+    ...item,
+    column: anchors.reduce((best, anchor, index) =>
+      Math.abs(anchor - item.x) < Math.abs(anchors[best] - item.x) ? index : best, 0),
+  }));
+  const groups: Array<{ column: number; y: number; text: string; fontSize: number }> = [];
+  for (const record of records.sort((a, b) => a.y - b.y || a.x - b.x)) {
+    const previous = groups.find((group) => group.column === record.column && Math.abs(group.y - record.y) < 2);
+    if (previous) {
+      previous.text = `${previous.text} ${record.text}`.replace(/\s+/g, " ").trim();
+      previous.fontSize = Math.max(previous.fontSize, record.fontSize);
+    } else {
+      groups.push({ column: record.column, y: record.y, text: record.text.trim(), fontSize: record.fontSize });
+    }
+  }
+  const bodyFont = groups
+    .map((group) => group.fontSize)
+    .sort((a, b) => a - b)[Math.floor(groups.length / 2)] ?? 10;
+  const institution = /\b(?:university|department|school|faculty|college|institute|laboratory|hospital|center|centre|exchange|engineering|computer|design)\b|@[\w.-]+\.[A-Za-z]{2,}|,\s*(?:USA|UK|Canada|Australia)\b/i;
+  const nameLike = (text: string, fontSize: number) => {
+    const value = text.replace(/[\d,*†‡§]/g, " ").replace(/\s+/g, " ").trim();
+    const words = value.split(/\s+/).filter(Boolean);
+    const capitalizedWords = words.filter((word) => /^[A-Z(]/.test(word)).length;
+    return words.length >= 1 && words.length <= 5 && !institution.test(value) &&
+      fontSize >= bodyFont + 0.6 && capitalizedWords >= Math.min(2, words.length);
+  };
+  const authorGroups = groups.filter((group) => nameLike(group.text, group.fontSize));
+  if (authorGroups.length < 3) return undefined;
+  const authors: string[] = [];
+  const affiliations: string[] = [];
+  for (const author of authorGroups) {
+    const following = groups
+      .filter((group) => group.column === author.column && group.y > author.y)
+      .sort((a, b) => a.y - b.y);
+    const nextAuthorY = following.find((group) => nameLike(group.text, group.fontSize))?.y ?? Infinity;
+    const affiliation = following
+      .filter((group) => group.y < nextAuthorY && !/@[\w.-]+\.[A-Za-z]{2,}/.test(group.text))
+      .map((group) => group.text)
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+    authors.push(author.text.replace(/[\d,*†‡§]/g, " ").replace(/\s+/g, " ").trim());
+    if (affiliation) affiliations.push(normalizeAffiliationName(affiliation));
+  }
+  const uniqueAuthors = authors.filter((name, index) => authors.findIndex((other) => other.toLowerCase() === name.toLowerCase()) === index);
+  const affiliationKey = (name: string) => name.toLowerCase().replace(/&/g, "and").replace(/\s+/g, " ").trim();
+  const uniqueAffiliations = affiliations.filter((name, index) => affiliations.findIndex((other) => affiliationKey(other) === affiliationKey(name)) === index);
+  return uniqueAuthors.length >= 3 && uniqueAffiliations.length >= 2
+    ? { authors: uniqueAuthors, affiliations: uniqueAffiliations }
+    : undefined;
+}
+
 function projectionNodesWithContinuations(
   orderedNodes: CanonicalNode[],
   canonical: CanonicalDocument,
@@ -707,7 +794,7 @@ export function projectCanonicalToPaper(input: {
   const affiliations = groupedAffiliations.filter((affiliation, index, all) =>
     all.findIndex((candidate) => candidate.name.toLocaleLowerCase() === affiliation.name.toLocaleLowerCase()) === index)
     .map(({ _page, _y, _x, _marker, ...affiliation }) => affiliation);
-  const authorNames = authorsStructured
+  let authorNames = authorsStructured
     .flatMap((author) => expandAuthorLine(author.name))
     .map((name) => name.replace(/[,;]+$/, "").trim())
     .filter((name) => !isNonAuthorMastheadLine(name) && name.split(/\s+/).length <= 6 && !/[!?]/.test(name) &&
@@ -722,6 +809,18 @@ export function projectCanonicalToPaper(input: {
     .filter((name, index, all) => all.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase()) === index)
     .filter((name) => !/^(?:correspondence|corresponding author|teaching assistant professor|assistant professor|associate professor|professor|research fellow)\s*:?[,.]?$/i.test(name.trim()))
     .filter(Boolean);
+  const recoveredMasthead = recoverColumnMasthead(layoutBlocks, firstBodyY);
+  const contaminatedAuthor = authorNames.some((name) =>
+    /@|\b(?:university|department|school|institute|design|engineering|seattle|washington),?\b/i.test(name));
+  if (recoveredMasthead && (authorNames.length === 0 ||
+      (contaminatedAuthor && recoveredMasthead.authors.length >= authorNames.length) ||
+      affiliations.length > recoveredMasthead.affiliations.length + 1)) {
+    if (authorNames.length === 0 || contaminatedAuthor) authorNames = recoveredMasthead.authors;
+    affiliations.splice(0, affiliations.length, ...recoveredMasthead.affiliations.map((name, index) => ({
+      id: `recovered-column-affiliation-${index}`,
+      name,
+    })));
+  }
   // ACM papers often repeat a clean, comma-delimited author list in their
   // reference-format paragraph. Use it only when the geometry projection is
   // visibly contaminated (locations, emails, or institution fragments); the
