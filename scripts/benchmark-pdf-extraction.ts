@@ -16,6 +16,7 @@ type CatalogPaper = {
   id: string;
   title: string;
   filename: string;
+  authors?: string[];
   formatFamily?: string;
   checks: { tokensInOrder?: string[]; captionContains?: string[]; tableCaptionContains?: string[] };
 };
@@ -50,6 +51,12 @@ for (const paper of catalog.papers) {
   const gt = fs.existsSync(gtPath)
     ? (JSON.parse(fs.readFileSync(gtPath, "utf8")) as PartialGroundTruth)
     : undefined;
+  // Catalog authors are independently verified acquisition metadata. Use
+  // them as a presence/normalization benchmark when a fixture has no richer
+  // hand-authored ground truth; do not overwrite explicit fixture labels.
+  const benchmarkGroundTruth = gt
+    ? { ...gt, authors: gt.authors?.length ? gt.authors : paper.authors }
+    : { id: paper.id, title: paper.title, authors: paper.authors };
   reports.push(
     evaluateBaselinePaper({
       id: paper.id,
@@ -58,7 +65,7 @@ for (const paper of catalog.papers) {
       blocks,
       catalogFormatFamily: paper.formatFamily,
       catalogTitle: paper.title,
-      groundTruth: gt ?? { id: paper.id, title: paper.title },
+      groundTruth: benchmarkGroundTruth,
     })
   );
 }

@@ -94,8 +94,12 @@ type MastheadPair = { author: string; affiliation: string };
  */
 function splitFlattenedMasthead(text: string): MastheadPair[] {
   const name = `[A-Z][A-Z'’-]+(?:\\s+\\([A-Z][^)]+\\))?(?:\\s+[A-Z][A-Z'’-]+){1,3}`;
-  const starts = [...text.matchAll(new RegExp(`(?:^|[,;]\\s*|\\s)(${name})\\s*,`, "g"))]
-    .map((match) => ({ index: match.index ?? 0, name: match[1].trim(), end: (match.index ?? 0) + match[0].length }));
+  const starts = [...text.matchAll(new RegExp(`(${name})\\s*,`, "g"))]
+    .map((match) => ({
+      index: match.index ?? 0,
+      name: match[1].trim().replace(/^(?:USA|UK|China|Japan|Canada|Australia)\\s+/i, ""),
+      end: (match.index ?? 0) + match[0].length,
+    }));
   if (starts.length < 2) return [];
   return starts.map((entry, index) => {
     const end = starts[index + 1]?.index ?? text.length;
