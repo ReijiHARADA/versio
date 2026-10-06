@@ -88,6 +88,17 @@ function expandAuthorLine(text: string): string[] {
   if (uppercaseNames.length >= 2 || (uppercaseNames.length === 1 && /[,·]/.test(cleaned))) {
     return uppercaseNames;
   }
+  const spacedNameTokens = cleaned.split(/\s+/).filter(Boolean);
+  if (spacedNameTokens.length === 4 && spacedNameTokens.every((token) => /^[A-Z][\p{Ll}’'’-]+$/u.test(token))) {
+    return [spacedNameTokens.slice(0, 2).join(" "), spacedNameTokens.slice(2).join(" ")];
+  }
+  if (spacedNameTokens.length >= 5 && /^[A-Z][\p{Ll}’'’-]+$/u.test(spacedNameTokens[0]) &&
+      /^[A-Z][\p{Ll}’'’-]+$/u.test(spacedNameTokens[1]) &&
+      /^[A-Z][\p{Ll}’'’-]+$/u.test(spacedNameTokens[2]) &&
+      /^(?:van|von|de|den|der|di|da|la|le)$/i.test(spacedNameTokens[3]) &&
+      /^[A-Z][\p{Ll}’'’-]+$/u.test(spacedNameTokens[4])) {
+    return [spacedNameTokens.slice(0, 2).join(" "), spacedNameTokens.slice(2).join(" ")];
+  }
   const markerParts = markedSource
     .split(/(?<=[♠♣♡♢∗†‡§])\s*/u)
     .map((part) => part.replace(/[♠♣♡♢∗†‡§*]/gu, "").replace(/\d+/g, "").replace(/^\s*and\s+/i, "").replace(/^[,;·\s]+/, "").replace(/\s+/g, " ").trim())
