@@ -787,7 +787,7 @@ export function projectCanonicalToPaper(input: {
           boundingBoxes: boxes,
           original: text,
           translated: null,
-          translationStatus: "pending",
+          translationStatus: rotationTableCaption ? "skipped" : "pending",
           parentBlockId: null,
           metadata: {
             imageUrl: "",
