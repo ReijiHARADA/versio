@@ -87,6 +87,26 @@ function joinTitleParts(left: string, right: string): string {
   return `${left} ${right}`.replace(/\s+/g, " ").trim();
 }
 
+function collapseRepeatedTitle(text: string): string {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  const midpoint = Math.floor(normalized.length / 2);
+  if (midpoint < 24) return normalized;
+  const left = normalized.slice(0, midpoint).trim();
+  const right = normalized.slice(midpoint).trim();
+  if (left === right) return left;
+  // PDF line grouping may insert one space/newline between two identical
+  // masthead copies. Compare token halves to avoid deleting legitimate
+  // subtitles that merely repeat a short phrase.
+  const words = normalized.split(/\s+/);
+  if (words.length >= 8 && words.length % 2 === 0) {
+    const half = words.length / 2;
+    if (words.slice(0, half).join(" ") === words.slice(half).join(" ")) {
+      return words.slice(0, half).join(" ");
+    }
+  }
+  return normalized;
+}
+
 /**
  * Choose a native title string. Never replace healthy pdf.js text with
  * GROBID/VLM output. Joins a hyphen-truncated line with the next native block.
@@ -222,7 +242,7 @@ export function resolveTitle(input: {
     }
   }
 
-  const fused = fuseTitle(native, input.extra ?? [], input.grobidTitle);
+  const fused = fuseTitle(native.map(collapseRepeatedTitle), input.extra ?? [], input.grobidTitle);
   const meta = input.metadataTitle?.trim() || "";
   // Native extraction occasionally promotes a DOI, journal masthead, or
   // volume line as the title. When a non-garbage metadata title exists, it is
