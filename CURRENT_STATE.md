@@ -220,6 +220,8 @@
 - 全Vitest **624/624 across 69 files**、抽出pipeline **26/26**、quality tests **250/250**、typecheck pass。
 - 詳細な実験ログは [`docs/history/CURRENT_STATE-2026-10-05.md`](history/CURRENT_STATE-2026-10-05.md) を参照。
 
+- 2026-10-07: OCR品質ガード追加後にlint、pageClass 9 tests、typecheckを通過。native本文が十分あるページを短いOCR結果で置換しない条件を確定。残る実機確認はTauriアプリでのVision OCR再抽出のみ。
+
 ## 未解決課題
 
 1. 100本規模コーパスの section-stratified translation sampling と manual semantic review が不足。
