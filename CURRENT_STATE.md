@@ -588,3 +588,7 @@ A conference PDF (`how-content-volume-landing-pages`) exposed a generic masthead
 ### 2026-10-06: affiliation projection normalization
 
 Affiliation projection now removes email tokens and footnote-only labels (`corresponding author`, equal-contribution notes), normalizes marker punctuation, and applies the same cleanup to recovered masthead affiliations. This prevents contact metadata from appearing as an institution in the public Paper object. Typecheck and the 29-case PDF pipeline suite pass.
+
+### 2026-10-06: full 113-paper extraction rerun
+
+The explicit `--all` extraction benchmark completed after the author/affiliation projection fixes. Title exact match is 108/113 (95.6%), with all 113 having a known title comparison. The five misses are primarily native non-English titles compared with English catalog metadata (Russian/Serbian/Indonesian cases) plus one English spelling/wording variant; they require language-aware ground truth handling rather than blindly replacing healthy native titles. Author metrics are available for 27 catalog-author papers: mean F1 0.693, 12 perfect; remaining failures are publisher-specific masthead layouts and remain under investigation. The generated report was copied to `/tmp/extraction-113-latest.json` for diagnostics and the ignored working report was restored. No visual review is implied by these automated figures.
