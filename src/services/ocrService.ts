@@ -10,6 +10,8 @@ import { isTauriApp } from "../utils/serverReady";
 export type OcrLine = {
   text: string;
   confidence: number;
+  /** Vision normalized bounds (origin at bottom-left). */
+  bounds?: { x: number; y: number; width: number; height: number };
 };
 
 export type PageOcrResult = {
