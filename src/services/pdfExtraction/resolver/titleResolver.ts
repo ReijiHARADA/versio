@@ -48,6 +48,22 @@ function looksLikeJournalNameMasthead(text: string): boolean {
   return /\b(?:journal|transactions|proceedings|international\s+journal|advances\s+in\s+(?:scientific|engineering))\b/i.test(t);
 }
 
+/**
+ * A page-one title candidate can be promoted from a publisher's running
+ * masthead (DOI, URL, volume/date, event name) before the actual article
+ * title.  Treat these as navigation metadata when a later title candidate is
+ * available.  This is intentionally vocabulary/geometry based rather than
+ * publisher-specific so PDFs without embedded metadata still resolve a real
+ * article title.
+ */
+function looksLikeObviousMastheadTitle(text: string): boolean {
+  const t = text.trim();
+  return looksLikeDocumentMasthead(t) || looksLikeJournalNameMasthead(t) ||
+    /^(?:doi\s*:\s*|https?:\/\/|www\.)/i.test(t) ||
+    /\b(?:issn|e-?issn|volume|vol\.?|issue|no\.?|pages?|pp\.?|received|accepted|published)\b/i.test(t) &&
+      (t.match(/\d/g)?.length ?? 0) >= 2;
+}
+
 function isPlausibleMetadataTitle(text: string): boolean {
   const t = text.trim();
   // Repository and thesis records legitimately include a subtitle and degree
@@ -149,6 +165,36 @@ export function resolveTitle(input: {
       combined = joinTitleParts(combined, stripMastheadSuffix(cur.text));
     }
     native = [combined];
+
+    // If the first title candidate is clearly publisher furniture, prefer a
+    // later article-title candidate before falling back to external metadata.
+    // This matters in production imports where `metadataTitle` is commonly
+    // absent; the prior implementation only repaired journal-name cases.
+    if (looksLikeObviousMastheadTitle(titles[0].text)) {
+      const firstY = titles[0].boundingBoxes[0]?.y ?? 0;
+      const authorY = input.candidates
+        .filter((candidate) => candidate.pageStart === 1 && candidate.role === "author")
+        .map((candidate) => candidate.boundingBoxes[0]?.y ?? Number.POSITIVE_INFINITY)
+        .sort((a, b) => a - b)[0] ?? Number.POSITIVE_INFINITY;
+      const later = titles
+        .filter((candidate) => candidate.pageStart === titles[0].pageStart &&
+          (candidate.boundingBoxes[0]?.y ?? 0) > firstY + 18 &&
+          (candidate.boundingBoxes[0]?.y ?? 0) < authorY - 3 &&
+          !looksLikeObviousMastheadTitle(candidate.text) &&
+          !looksLikeAuthorish(candidate.text))
+        .sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0));
+      if (later[0]) {
+        const anchor = later[0];
+        const y = anchor.boundingBoxes[0]?.y ?? 0;
+        const cluster = titles
+          .filter((candidate) => candidate.pageStart === anchor.pageStart &&
+            Math.abs((candidate.boundingBoxes[0]?.y ?? 0) - y) <= 5 &&
+            !looksLikeObviousMastheadTitle(candidate.text) &&
+            !looksLikeAuthorish(candidate.text))
+          .sort((a, b) => (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0));
+        native = [cluster.map((candidate) => stripMastheadSuffix(candidate.text)).join(" ").replace(/\s+/g, " ").trim()];
+      }
+    }
 
     // PDF producers sometimes split one title line into adjacent native text
     // spans.  Treat a same-baseline, touching title cluster as one title even
