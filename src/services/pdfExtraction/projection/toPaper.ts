@@ -83,6 +83,26 @@ function expandAuthorLine(text: string): string[] {
   return names.length > 0 ? names : [cleaned];
 }
 
+type MastheadPair = { author: string; affiliation: string };
+
+/**
+ * Recover the common publisher layout where an all-caps author and their
+ * institution are flattened into one affiliation block. This deliberately
+ * accepts only name-shaped all-caps runs followed by a comma and an
+ * institution-shaped tail; ordinary prose and title-case names stay on the
+ * canonical path.
+ */
+function splitFlattenedMasthead(text: string): MastheadPair[] {
+  const name = `[A-Z][A-Z'’-]+(?:\\s+\\([A-Z][^)]+\\))?(?:\\s+[A-Z][A-Z'’-]+){1,3}`;
+  const starts = [...text.matchAll(new RegExp(`(?:^|[,;]\\s*|\\s)(${name})\\s*,`, "g"))]
+    .map((match) => ({ index: match.index ?? 0, name: match[1].trim(), end: (match.index ?? 0) + match[0].length }));
+  if (starts.length < 2) return [];
+  return starts.map((entry, index) => {
+    const end = starts[index + 1]?.index ?? text.length;
+    return { author: entry.name, affiliation: text.slice(entry.end, end).replace(/^[,;\s]+|[,;\s]+$/g, "").trim() };
+  }).filter((pair) => pair.affiliation.length >= 12 && /(?:university|school|department|engineering|medicine|institute|college|laboratory|\busa\b)/i.test(pair.affiliation));
+}
+
 /** Split flattened bullet lists into independent canonical blocks. */
 export function splitFlattenedList(text: string): string[] {
   // Academic PDFs often encode bullet lists as en/em dashes rather than a
@@ -272,6 +292,20 @@ export function projectCanonicalToPaper(input: {
   const authorNames = authorsStructured
     .flatMap((author) => expandAuthorLine(author.name))
     .filter(Boolean);
+  // When the native PDF flattened a complete author/affiliation masthead into
+  // affiliation nodes, recover the names and clean institution tails for the
+  // public projection. Keep canonical nodes untouched so resolver evidence and
+  // source traceability remain available.
+  if (authorNames.length === 0) {
+    const recovered = affiliationNodes.flatMap((node) => splitFlattenedMasthead(node.text ?? ""));
+    if (recovered.length >= 2) {
+      authorNames.push(...recovered.map((pair) => pair.author));
+      affiliations.splice(0, affiliations.length, ...recovered.map((pair, index) => ({
+        id: `recovered-affiliation-${index}`,
+        name: pair.affiliation,
+      })));
+    }
+  }
   const doiMatch = canonical.nodes
     .map((node) => node.text ?? "")
     .join("\n")
