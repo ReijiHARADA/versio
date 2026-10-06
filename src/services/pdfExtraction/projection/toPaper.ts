@@ -513,8 +513,10 @@ export function projectCanonicalToPaper(input: {
   const affiliationCandidates = affiliationNodes.flatMap((node) => {
     const layout = layoutForNode(node, layoutBlocks);
     const lines = layout?.lines ?? [];
-    const multiColumn = lines.length > 0 && lines.some((line) =>
-      line.items.filter((item) => item.fontSize >= line.fontSize * 0.7).length >= 2);
+    const multiColumnLineCount = lines.filter((line) =>
+      line.items.filter((item) => item.fontSize >= line.fontSize * 0.7).length >= 2).length;
+    const multiColumn = multiColumnLineCount > 0 &&
+      (lines.length <= 2 || multiColumnLineCount / lines.length >= 0.5);
     if (!multiColumn) return [{ id: node.id, name: normalizeAffiliationName(node.text ?? "") }];
     const substantive = lines.flatMap((line) => line.items.filter((item) => item.fontSize >= line.fontSize * 0.7));
     const xs = [...new Set(substantive.map((item) => item.x).sort((a, b) => a - b))];
