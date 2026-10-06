@@ -1,5 +1,7 @@
 # Paper Reader 現在状態
 
+- 2026-10-06: 113本の自動抽出指標だけでは見逃す本文汚染を、タイトル診断で追加確認した。インドネシア語ジャーナルPDFでは、ISSN/巻号/発行日帯が本文の先頭行と同じnative line/blockへ連結される形式を確認。`splitInlineBibliographicBand` を行形成前に追加し、構造帯と本文を分離する汎用修正を実装（`e79ba73`）。既存のreal-paper extraction regression **118/118**、typecheck、diff check pass。これは113本全件の目視完了を意味せず、引き続き書式別の目視レビューが必要。
+
 - 2026-10-06: Word-level native text向けの幾何ベース段組検出を追加。タイトル・著者・図が上部を占める `ppg-earring.pdf` でも本文の二段組（leftX=56/rightX=320）を検出し、Abstractを左段→右段の論理順に復元できることを確認。`Our results validate...` の先頭欠落を解消。pipeline 27/27、reading-order/list 77/77、重点real-paper 3件の回帰を通過。全PDFで完了したことを意味せず、段組・表・ページ境界の残課題は継続。
 - 2026-10-06: 既存real-paper extraction baseline 118/118 tests passed after the column change. The Vitest worker emitted one `onTaskUpdate` timeout after all tests had passed during the 206-second run; this is test-runner reporting noise, not a failed extraction assertion. No baseline assertion failed.
 - 2026-10-06: 113本の抽出ベンチマークも完走。title exact は 90.27%（102/113）で、残りは主にジャーナルのマストヘッド・リポジトリ表紙・PDF内タイトル分割/別言語タイトルが原因。抽出全体を完了扱いにはせず、次の改善対象としてタイトル候補の文書構造判定を記録。
