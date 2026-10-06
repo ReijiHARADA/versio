@@ -612,3 +612,7 @@ The 27-paper author benchmark was rerun after the initialed continuation fix. Me
 ### 2026-10-06: citation-style author noise filtered
 
 The cognitive dual-task fixture revealed that the PDF resolver marked bibliography-style short forms (`Castaño LAA`, `Arai H`, etc.) as author nodes alongside the real masthead. Projection now removes mixed-case names ending in citation initials, organization-like tokens, and duplicate names, while retaining full names with legitimate middle initials. The fixture now returns the full masthead names without the citation list noise. Typecheck and the 29-case pipeline suite pass.
+
+### 2026-10-06: masthead location row excluded
+
+`conversation-analysis-user-experience` had `Palo Alto, CA 94304-1314 USA` classified as an author row. The projection now excludes location-only masthead candidates while retaining the two real authors. Typecheck and the 29-case pipeline suite pass.
