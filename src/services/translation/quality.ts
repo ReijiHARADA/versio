@@ -296,6 +296,13 @@ export function diagnoseIncompleteSource(source: string): { incomplete: boolean;
   if (/^[–—-]\s+[a-z]/.test(text)) {
     return { incomplete: true, reason: "source begins with a continuation dash" };
   }
+  // A native extractor can split a participant/measurement clause immediately
+  // after its label (`Age = 25.6 years) participated...`). This is a physical
+  // fragment, not a complete claim; keep it out of model translation until
+  // the layout layer can stitch the preceding text.
+  if (text.length >= 48 && /^\s*[A-Za-z]{1,12}\s*=\s*\d/.test(text)) {
+    return { incomplete: true, reason: "source begins inside an assignment expression" };
+  }
   const reason = unsafeParagraphStructureReason(text);
   if (reason) return { incomplete: true, reason };
   // Audit-only evidence: long prose blocks normally end at a sentence mark.
