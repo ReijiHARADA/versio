@@ -98,4 +98,21 @@ describe("page classification", () => {
       ...Array.from({ length: 12 }, () => "body"),
     ])])).toEqual(new Set([1]));
   });
+
+  it("routes pages with repeated transparent column fragments to OCR", () => {
+    const fragments: ExtractedPage = {
+      pageNumber: 1,
+      width: 612,
+      height: 792,
+      textItems: [".", "two", "argue", "some", "more", "data", "from", "this"].flatMap((text, index) => [
+        { text, x: 270, y: 100 + index * 18, width: 10, height: 8, fontSize: 8, fontName: "Times", page: 1 },
+        ...["ordinary", "body", "text", "continues", "here", "with", "enough", "content", "to", "trigger", "the", "guard"].map((word, wordIndex) =>
+          ({ text: word, x: 306 + wordIndex * 28, y: 100 + index * 18, width: 22, height: 8, fontSize: 8, fontName: "Times", page: 1 })),
+      ]),
+    };
+    const signals = pageClassSignals(fragments);
+    expect(signals.interleavedFragmentHits).toBeGreaterThanOrEqual(3);
+    expect(classifyPage(signals)).toBe("garbled");
+    expect(pagesNeedingOcr([fragments])).toEqual(new Set([1]));
+  });
 });
