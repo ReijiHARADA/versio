@@ -106,6 +106,20 @@
 
 ## 直近の変更
 
+### v1563 — ゴミ箱自動削除の説明と日数変更時の猶予（2026-10-06）
+
+- 設定の説明を「ゴミ箱の項目を自動で完全削除するまでの日数です。」に短縮。
+- 日数変更直後に期限切れになる項目はすぐ消さず、変更後の日数分の猶予を付ける（trashed_at を更新）。
+
+### v1562 — ゴミ箱の完全削除をトースト取り消しに（2026-10-06）
+
+- 「今すぐ完全に削除」は行内の二段確認なし。赤塗り白文字ボタン一回でリストから外し、下部トーストの「元に戻す」でキャンセルできる（確定はトースト消失時）。
+- 青ステージ上・左余白は 36px に統一済み（v1561）。
+
+### v1561 — ナビゲーションプレビューの青余白（2026-10-06）
+
+- 設定の自動折りたたみ比較プレビューで、青ステージの上・左の余白を 36px に揃えた（右・下のクロップはそのまま）。
+
 ### v1560 — 重複PDFインポート行の整理（2026-10-06）
 
 - 同じPDFが既にあるときのライブラリ行をコンパクト化。重複バッジ・重複する説明文・生エラーをやめ、ファイル名＋一行の案内と「既存の論文を開く」／閉じる（×）だけにした。
@@ -534,3 +548,5 @@ The replay script exposed an unsafe case: the server returned `fallback_stage=nu
 Full translation-server test suite after the global statistical numeric-drift guard: **248 tests passed**. Candidate selection, microbatch, citation protection, and segmenter regressions remain green.
 
 Added one bounded beam-search retry after an inline-statistics greedy rescue fails. The beam candidate is accepted only when every source statistic/p-value is preserved exactly; otherwise the original fallback remains. MADLAD quality tests pass (75).
+
+- Borderless table recovery (2026-10-06): `buildTableRegionEvidence` now searches a bounded window above and below each caption and can promote a compact set of aligned, non-sentence rows when vector rules are absent. This fixes captions placed below borderless tables (e.g. OzCHI Table 3) without promoting sentence-shaped prose. OzCHI table-region recall improved 0.8→1.0; the full 113-paper extraction run retained titleExact 105/113 (92.92%) and all 4 papers with table-region ground truth at 1.0. Focused extraction tests (111) and typecheck pass. Commit: `684f087`.

@@ -195,6 +195,30 @@ export function getExpiredTrashedWorkspaceRoots(db: SqliteClient, cutoffIso: str
     .map((row) => String(row.id));
 }
 
+/** Push trashed_at forward for a trash root + its members (retention grace after setting change). */
+export function renewWorkspaceTrashRootTimestamps(
+  db: SqliteClient,
+  trashRootId: string,
+  trashedAt: string
+): number {
+  const nodes = listAllWorkspaceNodesIncludingTrashed(db);
+  const group = nodes.filter(
+    (node) => node.trashRootId === trashRootId || (node.id === trashRootId && node.trashedAt)
+  );
+  if (group.length === 0) return 0;
+  db.transaction(() => {
+    for (const node of group) {
+      writeNode(db, {
+        ...node,
+        trashedAt,
+        trashRootId: node.trashRootId ?? trashRootId,
+        updatedAt: trashedAt,
+      });
+    }
+  });
+  return group.length;
+}
+
 /** Hard-delete node + descendants (permanent). Prefer permanentlyDeleteWorkspaceSubtree for trash. */
 export function deleteWorkspaceNode(db: SqliteClient, id: string): string[] {
   const nodes = listAllWorkspaceNodesIncludingTrashed(db);

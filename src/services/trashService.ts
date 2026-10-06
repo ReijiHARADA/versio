@@ -11,6 +11,7 @@ import {
   getExpiredTrashedWorkspaceRoots,
   listTrashedWorkspaceNodes,
   permanentlyDeleteWorkspaceSubtree,
+  renewWorkspaceTrashRootTimestamps,
   restoreWorkspaceTrashRoot,
   trashWorkspaceSubtree,
 } from "../data/repositories/workspaceRepository";
@@ -152,6 +153,34 @@ export async function purgeExpiredTrash(now = new Date()): Promise<{
   const expiredRoots = getExpiredTrashedWorkspaceRoots(db, cutoff);
   for (const rootId of expiredRoots) {
     permanentlyDeleteWorkspaceSubtree(db, rootId);
+  }
+
+  return { papers: expiredPapers.length, folders: expiredRoots.length };
+}
+
+/**
+ * After retention days change: items that would already be past the new cutoff
+ * get a fresh window of `retentionDays` from `now` instead of being deleted.
+ */
+export async function renewTrashItemsPastCutoff(
+  retentionDays: number,
+  now = new Date()
+): Promise<{ papers: number; folders: number }> {
+  if (!isTrashAutoDeleteEnabled(retentionDays)) {
+    return { papers: 0, folders: 0 };
+  }
+  const cutoff = trashExpiryCutoffIso(retentionDays, now);
+  const renewedAt = now.toISOString();
+  const { db } = await getStorage();
+
+  const expiredPapers = getExpiredTrashedPaperIndexes(db, cutoff);
+  for (const paper of expiredPapers) {
+    setPaperTrashedAt(db, paper.id, renewedAt);
+  }
+
+  const expiredRoots = getExpiredTrashedWorkspaceRoots(db, cutoff);
+  for (const rootId of expiredRoots) {
+    renewWorkspaceTrashRootTimestamps(db, rootId, renewedAt);
   }
 
   return { papers: expiredPapers.length, folders: expiredRoots.length };

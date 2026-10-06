@@ -65,8 +65,13 @@
 }
 
 .dangerButton {
-  color: var(--color-danger, #b42318);
-  border-color: color-mix(in srgb, var(--color-danger, #b42318) 35%, var(--color-border));
+  color: #fff;
+  background: var(--color-danger, #b42318);
+  border-color: var(--color-danger, #b42318);
+}
+
+.dangerButton:hover:not(:disabled) {
+  filter: brightness(1.08);
 }
 
 .ghostButton {
