@@ -52,7 +52,7 @@ export function AppSidebar({
   showSettings = true,
   initialCollapsedIds,
 }: AppSidebarProps) {
-  const sidebarRef = useRef<HTMLElement>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
   const sidebarMode = useAppStore((state) => state.displaySettings.sidebarMode);
   const storedWidth = useAppStore((state) => state.displaySettings.sidebarWidth);
   const setDisplaySettings = useAppStore((state) => state.setDisplaySettings);
@@ -146,10 +146,12 @@ export function AppSidebar({
   const modeClass =
     sidebarMode === "expanded" ? styles.sidebarExpanded : styles.sidebarAuto;
 
+  const autoMode = sidebarMode === "auto";
+
   return (
-    <aside
+    <div
       ref={sidebarRef}
-      className={`${styles.sidebar} ${modeClass} ${pointerOverSidebar ? styles.sidebarDropReady : ""} ${resizing ? styles.sidebarResizing : ""}`}
+      className={styles.rail}
       style={
         {
           "--sidebar-expanded-w": `${sidebarWidth}px`,
@@ -157,99 +159,107 @@ export function AppSidebar({
       }
     >
       <div
-        className={styles.resizeHandle}
-        role="separator"
-        aria-orientation="vertical"
-        aria-label="サイドバーの幅を変更"
-        title="ドラッグで幅を変更 · ダブルクリックで戻す"
-        onPointerDown={onResizePointerDown}
-        onDoubleClick={onResizeDoubleClick}
-      />
-
-      <label className={styles.search} title="ライブラリを検索 (⌘K)">
-        <span className={styles.iconSlot}>
-          <Search size={16} className={styles.searchIcon} />
-        </span>
-        <input
-          id="library-search"
-          type="search"
-          placeholder="ライブラリを検索"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className={styles.searchInput}
-          aria-label="ライブラリを検索"
-          data-testid="library-search"
-        />
-      </label>
-
-      <div className={styles.scroll}>
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>
-            <span className={styles.label}>ワークスペース</span>
-            <button
-              type="button"
-              className={styles.sectionAdd}
-              onClick={onNewWorkspace}
-              title="新規フォルダ"
-              aria-label="新規フォルダ"
-            >
-              <Plus size={14} />
-            </button>
-          </h2>
-          <WorkspaceTree
-            nodes={workspaceNodes}
-            activeNodeId={activeNodeId}
-            dropTargetId={dropTargetId}
-            draggingPaperId={draggingPaperId}
-            onDelete={onDeleteNode}
-            onNewChild={onNewChild}
-            onAddPaper={onAddPaperToWorkspace}
-            initialCollapsedIds={initialCollapsedIds}
+        className={`${styles.shell} ${modeClass} ${pointerOverSidebar ? styles.sidebarDropReady : ""} ${resizing ? styles.sidebarResizing : ""}`}
+      >
+        <aside className={styles.sidebar}>
+          <div
+            className={styles.resizeHandle}
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="サイドバーの幅を変更"
+            title="ドラッグで幅を変更 · ダブルクリックで戻す"
+            onPointerDown={onResizePointerDown}
+            onDoubleClick={onResizeDoubleClick}
           />
-        </section>
 
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>
-            <span className={styles.label}>ライブラリ</span>
-          </h2>
-          <nav className={styles.nav}>
-            <LibItem to="/" end icon={<Library size={16} />} label="すべての論文" />
-            <LibItem
-              to="/inbox"
-              icon={<Inbox size={16} />}
-              label="インボックス"
-              badge={inboxCount > 0 ? inboxCount : undefined}
-              inboxDrop
-              dropTarget={dropTargetId === INBOX_DROP_ID}
-              preventNav={Boolean(draggingPaperId)}
-            />
-            <LibItem to="/favorites" icon={<Star size={16} />} label="お気に入り" />
-            <LibItem to="/recent" icon={<Clock size={16} />} label="最近読んだ論文" />
-            <LibItem to="/trash" icon={<Trash2 size={16} />} label="ゴミ箱" />
-          </nav>
-        </section>
-      </div>
-
-      {showSettings ? (
-        <div className={styles.footer}>
-          <NavLink
-            to="/settings"
-            className={({ isActive }) =>
-              `${styles.item} ${styles.footerButton} ${isActive ? styles.active : ""}`
-            }
-            title="設定"
-            onClick={(event) => {
-              if (draggingPaperId) event.preventDefault();
-            }}
-          >
+          <label className={styles.search} title="ライブラリを検索 (⌘K)">
             <span className={styles.iconSlot}>
-              <Settings size={16} />
+              <Search size={16} className={styles.searchIcon} />
             </span>
-            <span className={styles.itemLabel}>設定</span>
-          </NavLink>
-        </div>
-      ) : null}
-    </aside>
+            <input
+              id="library-search"
+              type="search"
+              placeholder="ライブラリを検索"
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className={styles.searchInput}
+              aria-label="ライブラリを検索"
+              data-testid="library-search"
+            />
+          </label>
+
+          <div className={styles.scroll}>
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>
+                <span className={styles.label}>ワークスペース</span>
+                <button
+                  type="button"
+                  className={styles.sectionAdd}
+                  onClick={onNewWorkspace}
+                  title="新規フォルダ"
+                  aria-label="新規フォルダ"
+                >
+                  <Plus size={14} />
+                </button>
+              </h2>
+              <WorkspaceTree
+                nodes={workspaceNodes}
+                activeNodeId={activeNodeId}
+                dropTargetId={dropTargetId}
+                draggingPaperId={draggingPaperId}
+                onDelete={onDeleteNode}
+                onNewChild={onNewChild}
+                onAddPaper={onAddPaperToWorkspace}
+                initialCollapsedIds={initialCollapsedIds}
+              />
+            </section>
+
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>
+                <span className={styles.label}>ライブラリ</span>
+              </h2>
+              <nav className={styles.nav}>
+                <LibItem to="/" end icon={<Library size={16} />} label="すべての論文" />
+                <LibItem
+                  to="/inbox"
+                  icon={<Inbox size={16} />}
+                  label="インボックス"
+                  badge={inboxCount > 0 ? inboxCount : undefined}
+                  inboxDrop
+                  dropTarget={dropTargetId === INBOX_DROP_ID}
+                  preventNav={Boolean(draggingPaperId)}
+                />
+                <LibItem to="/favorites" icon={<Star size={16} />} label="お気に入り" />
+                <LibItem to="/recent" icon={<Clock size={16} />} label="最近読んだ論文" />
+                <LibItem to="/trash" icon={<Trash2 size={16} />} label="ゴミ箱" />
+              </nav>
+            </section>
+          </div>
+
+          {showSettings ? (
+            <div className={styles.footer}>
+              <NavLink
+                to="/settings"
+                className={({ isActive }) =>
+                  `${styles.item} ${styles.footerButton} ${isActive ? styles.active : ""}`
+                }
+                title="設定"
+                onClick={(event) => {
+                  if (draggingPaperId) event.preventDefault();
+                }}
+              >
+                <span className={styles.iconSlot}>
+                  <Settings size={16} />
+                </span>
+                <span className={styles.itemLabel}>設定</span>
+              </NavLink>
+            </div>
+          ) : null}
+        </aside>
+        {autoMode ? <div className={styles.fullBridge} aria-hidden="true" /> : null}
+      </div>
+      {autoMode ? <div className={styles.peekBridge} aria-hidden="true" /> : null}
+    </div>
   );
 }
 
