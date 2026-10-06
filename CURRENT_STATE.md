@@ -686,3 +686,16 @@ The 27-paper benchmark after the name-only affiliation change is 0.915 mean auth
 - Frontiers sidebar/author gutter recovery (2026-10-06): native lines can combine a left sidebar name with a right-column author on one baseline. Projection now uses the node's x/width geometry to remove only the sidebar prefix, and merges a numbered paragraph-role prefix with a following author line when both share the masthead baseline. This recovered the full nine-author list for the dual-task paper and removed the reviewer Melissa Meade from the motor-memory paper. The 27-paper author subset now reaches mean F1 0.996 with 26/27 perfect. One remaining case (`marketing-neurophysiology-consumer-motivation`) has an actual author (`Aurelija Burinskiene`) sharing a mixed sidebar/body line and needs item-level provenance to distinguish the prefix safely.
 
 - Final masthead mixed-line fix (2026-10-06): when a line spans the sidebar/body gutter, the projection now strips the left segment only when it is immediately below a sidebar label; a farther mixed line is retained as a genuine article-author candidate. This recovers `Aurelija Burinskiene` while still excluding reviewer `Melissa Meade`. The 27-paper catalog-author benchmark is now 27/27 perfect, mean F1 1.0. Typecheck and the 29-case extraction suite pass. This is still an author-metadata benchmark; full visual QA of all PDF content remains a separate task.
+### Extraction corpus isolation benchmark (2026-10-06)
+
+Added `npm run bench:pdf-extraction:isolated -- --all`, which evaluates each
+catalog PDF in a child process. Native PDF.js/Poppler failures can therefore be
+reported per paper instead of aborting the complete corpus. The first full run
+processed 113 of 114 catalog entries; one entry (`precious-materials`) is
+missing its PDF and was recorded as an acquisition failure. Among processed
+papers, the automated title exact rate was 95.58% (108/113). The five misses
+include catalog/native-title disagreements (language, transliteration,
+truncation, or `behaviour` spelling), so this is not a visual accuracy score.
+The run also exposed three small source-integrity losses (0.993–0.997), which
+remain queued for visual review. This benchmark does not replace manual
+comparison of body blocks, tables, figures, or affiliations.
