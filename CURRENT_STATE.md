@@ -807,3 +807,11 @@ after this change.
 The vector-label change replay completed successfully: 2 test files, 232 tests
 passed, 0 failed (406.96s). Existing structural and reading-order checks remain
 green after the new graphics/caption evidence.
+
+## 2026-10-06 title extraction audit follow-up
+
+- The 113-paper extraction report's `titleExact` metric compares the canonical title after metadata fallback; it therefore can hide a wrong native title candidate. The report shows many cases where `fusedTitle` is DOI/journal/event furniture while `canonicalTitle` is correct only because catalog metadata was supplied.
+- Added generic masthead filtering in `src/services/pdfExtraction/resolver/titleResolver.ts`. When the first title candidate is an obvious DOI/URL/volume/event/journal masthead, a later article-title candidate on page 1 is preferred before metadata fallback. No publisher- or paper-specific rule was added.
+- Added resolver regression tests in `src/test/pdfExtraction/titleResolver.test.ts`.
+- `npm run typecheck -- --pretty false` and the PDF extraction test suite (64 tests) pass after this change.
+- Remaining unresolved extraction case: malformed embedded-font PDFs (notably the Russian-title sample) still need macOS Vision OCR runtime validation; catalog metadata must not be treated as proof of native extraction quality.
