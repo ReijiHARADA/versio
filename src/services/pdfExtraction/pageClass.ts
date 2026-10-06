@@ -34,7 +34,7 @@ export function pageClassSignals(page: ExtractedPage): PageClassSignals {
     const ordered = [...row].sort((a, b) => a.x - b.x);
     if (ordered.length < 5) return false;
     const first = ordered[0].text.trim();
-    const punctuationFragment = /^(?:[.]{1,3}|[”’\")]+[.]?)$/.test(first);
+    const punctuationFragment = /^(?:[.]{1,3}|[”’")]+[.]?)$/.test(first);
     const shortToken = /^[a-z]{1,4}[-.]?$/i.test(first);
     return punctuationFragment || shortToken;
   }).length;
