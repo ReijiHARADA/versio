@@ -137,6 +137,18 @@ describe("baseline benchmark on cached real papers", () => {
         expect(marketingJourneyLastTableRow?.translationStatus).toBe("skipped");
         expect(marketingJourneyLastTableRow?.metadata.tableSourceFallback).toBe(true);
       }
+      if (paper.id === "cognitive-psychology-gpt3") {
+        const projected = extractFromPages({
+          pages,
+          paperId: paper.id,
+          filePath: pdfPath,
+          fileHash: "figure-label-regression",
+          metadata: { title: paper.title, pageCount: pages.length },
+        });
+        expect(projected.blocks.some((block) =>
+          block.original.includes("Decision-making Information search") && block.translationStatus === "pending"
+        )).toBe(false);
+      }
       if (paper.id === "ergonomics-quantified-factory-worker") {
         const crossPageParagraph = blocks.find((block) =>
           block.text.includes("Personal feedback means also that the application is intended")
