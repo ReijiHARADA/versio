@@ -675,6 +675,23 @@ function captionedRepeatedCellRow(block: LayoutBlock, blocks: LayoutBlock[]): bo
  * satisfy this geometry pattern. */
 function pageGridEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
   if (block.role === "author" || block.role === "affiliation" || block.role === "title") return 0;
+  // A fully rotated statistical matrix is often emitted as one native item
+  // per visual row, so the ordinary same-baseline grid test cannot see it.
+  // Use page-level geometry only when the page has a substantial rotated,
+  // numeric population and the candidate itself is a short cell/row rather
+  // than prose. This keeps explanatory footnotes and rotated annotations out
+  // of the table role while preventing numeric rows from reaching translation.
+  const rotatedPage = blocks.filter((candidate) => candidate.pageStart === block.pageStart);
+  const rotatedItems = rotatedPage.flatMap((candidate) => candidate.lines.flatMap((line) => line.items))
+    .filter((item) => Math.abs(item.rotation ?? 0) >= 45);
+  if (rotatedItems.length >= 24 &&
+      rotatedItems.filter((item) => /\d/.test(item.text)).length / rotatedItems.length >= 0.35 &&
+      block.role === "paragraph" &&
+      block.lines.some((line) => line.items.some((item) => Math.abs(item.rotation ?? 0) >= 45)) &&
+      block.text.trim().split(/\s+/).filter(Boolean).length <= 24 &&
+      !/[.!?;:]/.test(block.text.trim())) {
+    return 0.97;
+  }
   const peers = blocks.filter((candidate) =>
     candidate.pageStart === block.pageStart &&
     candidate.column === block.column &&

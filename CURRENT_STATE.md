@@ -710,3 +710,12 @@ updates text and lines together. Focused extraction tests remain 29/29 passing;
 the four affected-paper replay reduced two integrity failures to 1. The
 remaining Russian-language and long rotated-page cases are native-layout cases
 queued for visual review rather than being hidden by a looser metric.
+
+### Rotated table containment (2026-10-06)
+
+Visual review of `wear-scale` page 14 found a rotated inter-item correlation
+matrix emitted as paragraph blocks, with its caption title projected as a
+figure. Generic page-level rotated/numeric evidence now promotes the matrix
+rows to skipped table blocks, and `rotation-aware-table-caption` evidence
+projects the caption as a table block. This keeps the matrix and explanatory
+footnote out of normal paragraph translation without relying on the paper ID.
