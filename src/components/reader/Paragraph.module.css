@@ -85,24 +85,9 @@
   font-style: italic;
 }
 
-/* Pending/Processing state */
+/* Waiting: English layout stays readable (aura in TranslationMorph). */
 .container.pending {
-  opacity: 0.7;
-}
-
-.pendingContent {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-md);
-  border-left: 3px solid var(--color-accent);
-}
-
-.spinner {
-  color: var(--color-accent);
-  animation: spin 1s linear infinite;
+  opacity: 1;
 }
 
 @keyframes spin {
@@ -112,19 +97,6 @@
   to {
     transform: rotate(360deg);
   }
-}
-
-.pendingText {
-  font-size: 0.875rem;
-  color: var(--color-accent);
-  font-weight: 500;
-}
-
-.originalPreview {
-  font-size: 0.8125rem;
-  color: var(--color-text-tertiary);
-  line-height: 1.5;
-  font-style: italic;
 }
 
 /* Failed state */

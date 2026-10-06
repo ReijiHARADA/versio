@@ -2,6 +2,7 @@ import type { TranslationSettingsV2 } from "../../utils/translationSettings";
 import type { ServiceStatus } from "./settingsTypes";
 import { Toggle } from "../ui/Toggle";
 import { SettingsCard, SettingsRow, SettingsStatusRow } from "./SettingsPrimitives";
+import { TranslationMorphPreview } from "./TranslationMorphPreview";
 import styles from "./SettingsScreen.module.css";
 
 type Props = {
@@ -79,6 +80,10 @@ export function TranslationSettingsSection({
               ))}
             </div>
           </SettingsRow>
+        </SettingsCard>
+
+        <SettingsCard title="翻訳演出プレビュー">
+          <TranslationMorphPreview />
         </SettingsCard>
 
         <SettingsCard title="ステータス">

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, Eye, EyeOff, Loader2, RefreshCw } from "lucide-react";
+import { AlertTriangle, Eye, EyeOff, RefreshCw } from "lucide-react";
 import type { PaperBlock } from "../../types/paper";
 import type { Annotation } from "../../types/annotation";
 import type { GlossaryEntry } from "../../services/llm/types";
@@ -26,6 +26,7 @@ import { anchorFromEventTarget } from "./popoverAnchor";
 import { segmentTextWithGlossary } from "./glossary/glossaryTerms";
 import { GlossaryTermPopover } from "./glossary/GlossaryTermPopover";
 import type { AnchorBox } from "./memo/popoverPosition";
+import { TranslationMorph } from "./TranslationMorph";
 import styles from "./Paragraph.module.css";
 
 type ParagraphProps = {
@@ -94,6 +95,8 @@ export function Paragraph({
     entry: GlossaryEntry;
     anchor: AnchorBox;
   } | null>(null);
+  const [morph, setMorph] = useState<{ from: string; to: string } | null>(null);
+  const wasWaitingRef = useRef(false);
 
   const skipTranslation =
     block.translationStatus === "skipped" ||
@@ -118,6 +121,16 @@ export function Paragraph({
   const handleToggle = () => {
     toggleOriginalExpanded(block.id);
   };
+
+  useEffect(() => {
+    if (isWaiting) wasWaitingRef.current = true;
+  }, [isWaiting]);
+
+  useEffect(() => {
+    if (!translated || !block.original || !wasWaitingRef.current || morph) return;
+    wasWaitingRef.current = false;
+    setMorph({ from: block.original, to: translated });
+  }, [translated, block.original, morph]);
 
   useEffect(() => {
     if (!showConfidenceMenu) return;
@@ -336,24 +349,26 @@ export function Paragraph({
 
   const displayText = translated || block.original || "";
 
+  const showMorphWaiting = isWaiting && Boolean(block.original);
+  const showMorphReveal = Boolean(morph);
+
   return (
     <div
       className={`${styles.container} ${isWaiting ? styles.pending : ""} ${isExpanded ? styles.expanded : ""} ${lowConfidence ? styles.lowConfidence : ""}`}
     >
-      {isWaiting ? (
-        <div className={styles.pendingContent}>
-          <Loader2 size={16} className={styles.spinner} />
-          <span className={styles.pendingText}>
-            {isProcessing ? "翻訳中..." : "翻訳待ち"}
-          </span>
-          {block.original && (
-            <p className={styles.originalPreview}>
-              {block.original.length > 200
-                ? block.original.substring(0, 200) + "..."
-                : block.original}
-            </p>
-          )}
-        </div>
+      {showMorphWaiting || showMorphReveal ? (
+        <TranslationMorph
+          fromText={showMorphReveal ? morph!.from : block.original!}
+          toText={showMorphReveal ? morph!.to : undefined}
+          phase={showMorphReveal ? "revealing" : "waiting"}
+          onRevealComplete={() => setMorph(null)}
+          textProps={{
+            className: styles.translated,
+            "data-paper-block-id": block.id,
+            "data-text-role": "original",
+            "data-translating": showMorphWaiting ? "" : undefined,
+          }}
+        />
       ) : isFailed ? (
         <div className={styles.failedContent}>
           <div className={styles.failedHeader}>
