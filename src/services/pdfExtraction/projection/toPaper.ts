@@ -764,7 +764,15 @@ export function projectCanonicalToPaper(input: {
     if (node.role === "caption") {
       const text = node.text ?? "";
       const layoutRole = layout?.role;
-      if (layoutRole === "table_caption" || /^(?:table|表)\s/i.test(text)) {
+      // Rotated statistical tables may emit the caption title without its
+      // `Table N` prefix. The generic resolver records this geometry as
+      // rotation-aware-table-caption evidence; preserve it as a table block
+      // instead of projecting it as a figure and sending it through image
+      // translation.
+      const rotationTableCaption = node.evidence.some((evidence) =>
+        evidence.label === "rotation-aware-table-caption"
+      );
+      if (layoutRole === "table_caption" || rotationTableCaption || /^(?:table|表)\s/i.test(text)) {
         const match = text.match(/^(table|表)\s*(\S+)/i);
         const tableNumber = match
           ? /表/.test(match[1])
