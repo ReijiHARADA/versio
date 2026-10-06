@@ -1447,13 +1447,21 @@ export function projectCanonicalToPaper(input: {
     };
   }
 
+  const extractedTitleText = titleNode?.text?.trim() ?? "";
+  // Broken ToUnicode maps can produce repeated short glyph runs such as
+  // `АПФАПФ` while still looking like a plausible title to generic scoring.
+  // Treat that pattern as unusable so a trusted metadata title (or a later
+  // OCR pass) can win instead of exposing the corrupted glyph stream.
+  const titleLooksCorrupt = /([\p{L}]{2,6})\1(?:\1)?/iu.test(extractedTitleText) &&
+    !/[\s-]{2,}/.test(extractedTitleText);
+  const titleForProjection = titleLooksCorrupt ? undefined : extractedTitleText;
   const paper: Paper = {
     id: paperId,
     sourceFilePath: input.filePath,
     sourceFileName: input.filePath,
     sourceStoredPath: null,
     sourceFileHash: input.fileHash,
-    titleOriginal: pickPaperTitle(input.metadata.title, titleNode?.text ?? undefined),
+    titleOriginal: pickPaperTitle(input.metadata.title, titleForProjection),
     titleTranslated: null,
     authors:
       authorNames.length > 0
