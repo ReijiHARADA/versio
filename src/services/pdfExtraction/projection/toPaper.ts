@@ -547,7 +547,14 @@ export function projectCanonicalToPaper(input: {
       .split(/(?=\b[a-z]\s+(?=[A-Z]))/)
       .map((part) => part.replace(/^[a-z]\s+/, "").trim())
       .filter(Boolean);
-    const markerParts = numberedParts.length >= 2 ? numberedParts : letteredParts;
+    // A full-width affiliation node can include a left sidebar. In that
+    // layout the flattened text loses column ownership, so defer to the
+    // geometry path below instead of splitting the contaminated string by
+    // superscript markers.
+    const sidebarMixed = hasSidebarBody &&
+      (node.boundingBoxes[0]?.x ?? Infinity) < sidebarRight &&
+      (node.boundingBoxes[0]?.width ?? 0) > 180;
+    const markerParts = sidebarMixed ? [] : (numberedParts.length >= 2 ? numberedParts : letteredParts);
     if (markerParts.length >= 2 && markerParts.every((part) =>
       part.split(/\s+/).length >= 3 &&
       /\b(?:university|department|institute|school|faculty|college|hospital|laboratory|center|centre|consortium)\b/i.test(part))) {
@@ -561,21 +568,29 @@ export function projectCanonicalToPaper(input: {
     }
     const multiColumnLineCount = lines.filter((line) =>
       line.items.filter((item) => item.fontSize >= line.fontSize * 0.7).length >= 2).length;
+    const candidateLines = hasSidebarBody &&
+      (node.boundingBoxes[0]?.x ?? Infinity) < sidebarRight &&
+      (node.boundingBoxes[0]?.width ?? 0) > 180
+      ? lines.map((line) => ({
+          ...line,
+          items: line.items.filter((item) => item.x > sidebarRight + 8),
+        }))
+      : lines;
     const multiColumn = multiColumnLineCount > 0 &&
-      (lines.length <= 2 || multiColumnLineCount / lines.length >= 0.5);
+      (candidateLines.length <= 2 || multiColumnLineCount / candidateLines.length >= 0.5);
     if (!multiColumn) {
       const x = node.boundingBoxes[0]?.x ?? 0;
       const marker = markerPositions.slice().sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x))[0]?.marker;
       return [{ id: node.id, name: normalizeAffiliationName(node.text ?? ""), _x: x, _marker: marker, ...base }];
     }
-    const substantive = lines.flatMap((line) => line.items.filter((item) => item.fontSize >= line.fontSize * 0.7));
+    const substantive = candidateLines.flatMap((line) => line.items.filter((item) => item.fontSize >= line.fontSize * 0.7));
     const xs = [...new Set(substantive.map((item) => item.x).sort((a, b) => a - b))];
     // A wrapped cell can start farther to the right than the first row (for
     // example a short country name). Treat the first multi-item row as the
     // column geometry anchor, then assign later items to the nearest anchor.
     // Clustering every observed x independently incorrectly creates a third
     // column and mixes the two institutions.
-    const anchorRow = lines
+    const anchorRow = candidateLines
       .map((line) => line.items.filter((item) => item.fontSize >= line.fontSize * 0.7))
       .find((items) => items.length >= 2);
     const clusterXs: number[] = anchorRow && anchorRow.length >= 2
@@ -589,7 +604,7 @@ export function projectCanonicalToPaper(input: {
           return clusters;
         })();
     const columns: string[][] = clusterXs.map(() => []);
-    for (const line of lines) {
+    for (const line of candidateLines) {
       const rowItems = line.items.filter((candidate) => candidate.fontSize >= line.fontSize * 0.7);
       for (const [rowIndex, item] of rowItems.entries()) {
         let index = clusterXs.reduce((best, x, candidate) => Math.abs(x - item.x) < Math.abs(clusterXs[best] - item.x) ? candidate : best, 0);
