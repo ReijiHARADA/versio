@@ -1134,5 +1134,49 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     };
   });
 
-  return { layouts, blocks, baseFontSize, candidates };
+  // Native PDF producers may split the first words of an article title into a
+  // short metadata/affiliation block on the same baseline. Reattach only a
+  // compact, institution-free prefix immediately to the left of a title
+  // candidate; full affiliation rows and body text remain untouched.
+  const fusedCandidates = candidates.map((candidate) => {
+    if (candidate.role !== "title" || candidate.pageStart !== 1) return candidate;
+    const box = candidate.boundingBoxes[0];
+    if (!box) return candidate;
+    const prefix = candidates
+      .filter((other) => {
+        if (other === candidate || other.pageStart !== 1 || other.role !== "affiliation") return false;
+        const otherBox = other.boundingBoxes[0];
+        const text = other.text.trim();
+        return Boolean(otherBox) && Math.abs((otherBox?.y ?? 0) - box.y) <= 12 &&
+          (otherBox?.x ?? 0) < box.x && text.length >= 2 && text.length <= 80 &&
+          !/[.!?]$/.test(text) &&
+          !/\b(?:university|department|institute|laboratory|college|school|hospital|faculty)\b/i.test(text);
+      })
+      .sort((a, b) => (b.boundingBoxes[0]?.x ?? 0) - (a.boundingBoxes[0]?.x ?? 0))[0];
+    if (!prefix) return candidate;
+    const prefixBox = prefix.boundingBoxes[0];
+    return {
+      ...candidate,
+      text: `${prefix.text.trim()} ${candidate.text.trim()}`.replace(/\s+/g, " "),
+      boundingBoxes: [{
+        ...box,
+        x: prefixBox.x,
+        width: Math.max(box.x + box.width, prefixBox.x + prefixBox.width) - prefixBox.x,
+      }],
+      layoutBlock: {
+        ...candidate.layoutBlock,
+        text: `${prefix.text.trim()} ${candidate.text.trim()}`.replace(/\s+/g, " "),
+      },
+      evidence: [...candidate.evidence, {
+        source: "geometry",
+        label: "same-baseline-title-prefix",
+        confidence: 0.88,
+        page: candidate.pageStart,
+        bbox: box,
+        reason: "short affiliation-role prefix is aligned immediately left of title candidate",
+      }],
+    };
+  });
+
+  return { layouts, blocks, baseFontSize, candidates: fusedCandidates };
 }
