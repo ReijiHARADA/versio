@@ -65,6 +65,23 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /^2\. For each layer\b/.test(node.text ?? ""))).toBe(true);
   }, 60_000);
 
+  it("keeps a captionless method/goal table out of paragraph translation", async () => {
+    const pdf = path.resolve("test-data/real-papers/education-learning-analytics.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "captionless-method-table-regression",
+      filePath: pdf,
+      fileHash: "captionless-method-table-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const rows = result.blocks.filter((block) => block.pageStart === 18 && /^(?:To find causal relationship|To identify groups of similar|Knowledge tracing required)/i.test(block.original ?? ""));
+    expect(rows.length).toBeGreaterThanOrEqual(3);
+    expect(rows.every((block) => block.type === "table")).toBe(true);
+    expect(rows.every((block) => block.translationStatus === "skipped")).toBe(true);
+  }, 60_000);
+
   it("does not append a repeated top-margin proceedings URL to body paragraphs", async () => {
     const pdf = path.resolve("test-data/real-papers/marketing-the-impact-of-online-advertising-on-consumer-choice-consumption-traps-.pdf");
     if (!fs.existsSync(pdf)) return;
