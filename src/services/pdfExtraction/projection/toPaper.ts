@@ -887,6 +887,35 @@ export function projectCanonicalToPaper(input: {
         all.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase()) === index)
       .map((name, index) => ({ id: `affiliation-fallback-${index}`, name }));
   }
+  // When the native stream emits a wrapped institution as separate short
+  // nodes, retain the adjacent same-column run as one affiliation. This
+  // repairs narrow publisher mastheads without merging unrelated body text.
+  const nativeAffiliationNodes = affiliations.length <= 1 ? affiliationNodes
+    .filter((node) => /\b(?:university|department|school|faculty|college|hospital|centre|center|institute|laboratory|management)\b/i.test(node.text ?? ""))
+    .sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0)) : [];
+  const wrappedAffiliationNodes = nativeAffiliationNodes.length === 2 ? nativeAffiliationNodes : [];
+  for (const node of wrappedAffiliationNodes) {
+    const box = node.boundingBoxes[0];
+    const prior = nativeAffiliationNodes
+      .filter((candidate) => candidate !== node &&
+        (candidate.boundingBoxes[0]?.y ?? 0) < (box?.y ?? 0) &&
+        (box?.y ?? 0) - (candidate.boundingBoxes[0]?.y ?? 0) <= 24 &&
+        Math.abs((candidate.boundingBoxes[0]?.x ?? 0) - (box?.x ?? 0)) <= 8)
+      .sort((a, b) => (b.boundingBoxes[0]?.y ?? 0) - (a.boundingBoxes[0]?.y ?? 0))[0];
+    const candidateName = normalizeAffiliationName(`${prior?.text ?? ""} ${node.text ?? ""}`.replace(/^[\d☯*†‡\s]+/, "").trim());
+    if (candidateName.length >= 24) {
+      const candidateLower = candidateName.toLocaleLowerCase();
+      const contained = affiliations.findIndex((item) => {
+        const existingLower = item.name.toLocaleLowerCase();
+        return candidateLower.includes(existingLower) || existingLower.includes(candidateLower);
+      });
+      if (contained >= 0 && candidateLower.length > affiliations[contained].name.length) {
+        affiliations[contained] = { id: `affiliation-adjacent-${node.id}`, name: candidateName };
+      } else if (contained < 0) {
+        affiliations.push({ id: `affiliation-adjacent-${node.id}`, name: candidateName });
+      }
+    }
+  }
   let authorNames = authorsStructured
     .flatMap((author) => expandAuthorLine(author.name))
     .map((name) => name.replace(/[,;]+$/, "").trim())
