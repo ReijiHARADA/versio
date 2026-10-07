@@ -170,5 +170,6 @@ describe("author masthead projection", () => {
     expect(result.paper.authors).toEqual(expect.arrayContaining(["ABDALLAH M. H. ABBAS", "KHAIRIL IMRAN GHAUTH", "CHOO-YEE TING"]));
     expect(result.paper.authors.every((name) => !/Faculty|Multimedia|Malaysia|Corresponding/i.test(name))).toBe(true);
     expect(result.paper.affiliations.some((affiliation) => /Faculty of Computing.*Multimedia University/i.test(affiliation.name))).toBe(true);
+    expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /associate editor coordinating/i.test(node.text ?? ""))).toBe(false);
   }, 60_000);
 });
