@@ -53,7 +53,7 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   // The sentence-like prose guard lives in the generic evidence generator, so
   // this does not demote ordinary multi-column prose.
   if (
-    candidate.role === "paragraph" &&
+    candidate.role !== "title" && candidate.role !== "figure_caption" && candidate.role !== "table_caption" &&
     vectorFigureLabels && vectorFigureLabels.confidence >= 0.82 &&
     (candidate.roleScores.table ?? 0) < 0.8
   ) {
@@ -183,6 +183,16 @@ function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
 function suppressVectorLabelClusters(nodes: CanonicalNode[]): CanonicalNode[] {
   const captions = nodes.filter((node) => node.role === "caption");
   return nodes.map((node) => {
+    const strongVectorLabel = node.evidence.some((entry) =>
+      entry.label === "vector-figure-label-cluster" && entry.confidence >= 0.82
+    );
+    if (strongVectorLabel && (node.role === "heading" || node.role === "paragraph")) {
+      return {
+        ...node,
+        role: "other" as const,
+        confidence: Math.max(node.confidence, 0.84),
+      };
+    }
     if (!node.text || !["heading", "paragraph"].includes(node.role) || node.text.length > 40) return node;
     const text = node.text.trim();
     if (!text || /[.!?。！？]$/.test(text)) return node;
