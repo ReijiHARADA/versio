@@ -957,6 +957,33 @@ export function projectCanonicalToPaper(input: {
   let affiliations = groupedAffiliations.filter((affiliation, index, all) =>
     all.findIndex((candidate) => candidate.name.toLocaleLowerCase() === affiliation.name.toLocaleLowerCase()) === index)
     .map(({ _page, _y, _x, _marker, ...affiliation }) => affiliation);
+  // Reconstruct lettered affiliation records when two native columns are
+  // interleaved. The source stream retains the marker at each institution
+  // boundary, which is stronger evidence than the flattened column order.
+  const titleY = titleNode?.boundingBoxes[0]?.y ?? 0;
+  const letteredNodes = [
+    ...affiliationNodes,
+    ...canonical.nodes.filter((node) => node.role === "author" && node.pageStart === 1 &&
+      /^\s*[a-z]\s+/i.test(node.text?.trim() ?? "")),
+  ].filter((node) => {
+    const y = node.boundingBoxes[0]?.y ?? Infinity;
+    return y > titleY + 20 && y < firstBodyY && y < 320 && (node.text?.length ?? 0) <= 220;
+  }).sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0) ||
+    (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0));
+  const letteredText = letteredNodes.map((node) => node.text?.replace(/\s+/g, " ").trim() ?? "")
+    .filter((text) => text && !/^(?:[a-z](?:\s*,\s*[a-z])+|[a-z])$/i.test(text)).join(" ");
+  const markerMatches = [...letteredText.matchAll(/(?:^|\s)([a-z])\s+(?=[A-Z])/g)];
+  if (markerMatches.length >= 3) {
+    const starts = markerMatches.map((match) => match.index ?? 0);
+    const reconstructed = starts.map((start, index) => normalizeAffiliationName(
+      letteredText.slice(start, starts[index + 1] ?? letteredText.length).replace(/^\s*[a-z]\s+/, "").trim()
+    )).filter((name) => name.length >= 20 &&
+      /\b(?:university|department|school|faculty|college|hospital|centre|center|institute|laboratory|research|consortium|partner)\b/i.test(name) &&
+      !/\b(?:article history|keywords?|abstract|contents lists available|journal homepage)\b/i.test(name));
+    if (reconstructed.length >= 3 && reconstructed.length <= 8) {
+      affiliations = reconstructed.map((name, index) => ({ id: `lettered-affiliation-${index}`, name }));
+    }
+  }
   // A few publisher streams attach the first institution directly to an
   // author node. Recover only the institution-shaped suffix; the author
   // projection above has already removed the same suffix from the name.

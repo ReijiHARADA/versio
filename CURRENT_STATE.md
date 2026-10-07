@@ -1070,3 +1070,12 @@ text. Projection now retains name-shaped email rows, promotes strict
 top-of-page author continuations, and normalizes `authorsStructured` through
 the same author expansion used for display names. Regression coverage was
 added for the landing-page and GPT-3 fixtures.
+
+# 2026-10-07: lettered affiliation reconstruction
+
+Elsevier mastheads with two interleaved columns could produce fragmented or
+duplicated affiliations because the native order separated the `a`–`f`
+markers from their institution lines. The projection now reconstructs the
+bounded masthead band at marker boundaries and retains only institution-shaped
+segments. The medical meta-review affiliation regression passes; the separate
+editor/reviewer chrome case remains under investigation.
