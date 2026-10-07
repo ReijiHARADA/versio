@@ -55,6 +55,16 @@ function looksLikeJournalNameMasthead(text: string): boolean {
   return /\b(?:journal|transactions|proceedings|international\s+journal|advances\s+in\s+(?:scientific|engineering))\b/i.test(t);
 }
 
+function looksLikeEventMasthead(text: string): boolean {
+  const t = text.trim();
+  const words = t.split(/\s+/).filter(Boolean);
+  // Conference/event names commonly sit between a small running header and
+  // the article title. Keep this bounded so an article whose title mentions
+  // a workshop or seminar is not discarded.
+  return words.length <= 14 && /\b(?:seminar|workshop|conference|symposium|public\s+health\s+action)\b/i.test(t) &&
+    !/[.!?]$/.test(t);
+}
+
 /**
  * A page-one title candidate can be promoted from a publisher's running
  * masthead (DOI, URL, volume/date, event name) before the actual article
@@ -65,7 +75,7 @@ function looksLikeJournalNameMasthead(text: string): boolean {
  */
 function looksLikeObviousMastheadTitle(text: string): boolean {
   const t = text.trim();
-  return looksLikeDocumentMasthead(t) || looksLikeJournalNameMasthead(t) ||
+  return looksLikeDocumentMasthead(t) || looksLikeJournalNameMasthead(t) || looksLikeEventMasthead(t) ||
     /^(?:doi\s*:\s*|https?:\/\/|www\.)/i.test(t) ||
     /\b(?:issn|e-?issn|volume|vol\.?|issue|no\.?|pages?|pp\.?|received|accepted|published)\b/i.test(t) &&
       (t.match(/\d/g)?.length ?? 0) >= 2;
@@ -98,6 +108,11 @@ function isPlausibleMetadataTitle(text: string): boolean {
 
 function looksLikeTruncatedTitle(text: string): boolean {
   const t = text.trim();
+  // A body paragraph cut at the native block limit often ends in a line-break
+  // hyphen. A long, prose-like candidate with that shape is safer to repair
+  // from document metadata than to expose as the article title.
+  if (/-$/.test(t) && t.length > 100 && (t.match(/\s+/g)?.length ?? 0) >= 14) return true;
+  if (t.length >= 180 && /^(?:while|although|because|this\s+(?:study|paper)|we\s+)/i.test(t)) return true;
   if (/(?:\b(?:to|of|and|for|with|in|on|from|the|a|an))$/i.test(t)) return true;
   if (/\b[A-Z][a-z]+,\s+[A-Z][A-Za-z.'-]+(?:\s+[A-Z][A-Za-z.'-]+){0,3}(?:,|\s|$)/.test(t) && t.length > 100) return true;
   const half = Math.floor(t.length / 2);
@@ -116,7 +131,10 @@ function looksLikeBodyTitleCandidate(text: string): boolean {
   const t = text.trim();
   if (t.length < 240) return false;
   const sentenceBoundaries = t.match(/[.!?](?:\s|$)/g)?.length ?? 0;
-  return sentenceBoundaries >= 2 || /^(?:copyright|permission is given|this (?:paper|thesis)\b)/i.test(t);
+  return sentenceBoundaries >= 2 || /^(?:copyright|permission is given|this (?:paper|thesis)\b)/i.test(t) ||
+    // A native block can be truncated before the second sentence. Citation
+    // parentheses plus prose length still distinguish it from a real title.
+    (t.length >= 140 && /\([A-Z][A-Za-z-]+(?:\s+\d{4})?$/.test(t) && /\b(?:while|because|managers|research|study)\b/i.test(t));
 }
 
 function joinTitleParts(left: string, right: string): string {
@@ -128,6 +146,17 @@ function joinTitleParts(left: string, right: string): string {
     return `${left.replace(/[-\u2010-\u2014]+$/, "")}${right}`;
   }
   return `${left} ${right}`.replace(/\s+/g, " ").trim();
+}
+
+function stripInlineAuthorTail(candidate: RoleCandidate): string {
+  const lines = candidate.layoutBlock.lines.map((line) => line.text.trim()).filter(Boolean);
+  if (lines.length < 2) return candidate.text.trim();
+  const cut = lines.findIndex((line, index) => index > 0 &&
+    // Numbered author markers and comma-separated name lists are stable
+    // geometry-independent signs that a title block swallowed its author row.
+    /\b\p{L}{2,}\s*[¹²³⁴⁵⁶⁷⁸⁹0-9]+\b/u.test(line) && /[,，]/.test(line));
+  if (cut <= 0) return candidate.text.trim();
+  return lines.slice(0, cut).join(" ").replace(/\s+/g, " ").trim();
 }
 
 function collapseRepeatedTitle(text: string): string {
@@ -172,7 +201,7 @@ export function resolveTitle(input: {
   let native: string[] = [];
 
   if (titles.length > 0) {
-    let combined = stripMastheadSuffix(titles[0].text);
+    let combined = stripMastheadSuffix(stripInlineAuthorTail(titles[0]));
     for (let i = 1; i < titles.length; i++) {
       const prev = titles[i - 1];
       const cur = titles[i];
@@ -216,7 +245,7 @@ export function resolveTitle(input: {
         const y = lastTitle.boundingBoxes[0]?.y ?? 0;
         // Keep the final title-role span as a safe fallback even if a nearby
         // prefix was conservatively classified as affiliation.
-        native = [lastTitle.text.trim()];
+        native = [stripInlineAuthorTail(lastTitle)];
         const sameBaseline = input.candidates
           .filter((candidate) => {
             const box = candidate.boundingBoxes[0];

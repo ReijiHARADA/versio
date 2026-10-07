@@ -1486,7 +1486,15 @@ export function projectCanonicalToPaper(input: {
     /\d/.test(extractedTitleText) && /,/.test(extractedTitleText) &&
     (/(?:\b(?:and|the|of|in|with|for)\b).+\d[,\s]/i.test(extractedTitleText) ||
       ((extractedTitleText.match(/[\u0400-\u04ff]/g)?.length ?? 0) / extractedTitleText.length > 0.35));
-  const titleLooksCorrupt = repeatedGlyphRun || titleHasFlattenedAuthorTail;
+  // Bilingual journal PDFs may expose a native Cyrillic title while their
+  // nearby `For citation:` record contains the stable English article title.
+  // Prefer that explicit bibliographic identity when available; otherwise
+  // preserve the native-language title.
+  const hasCitationHeading = canonical.nodes.some((node) =>
+    node.pageStart <= 2 && /^for\s+citation\s*:/i.test(node.text?.trim() ?? ""));
+  const bilingualTitleWithCitation = hasCitationHeading &&
+    (extractedTitleText.match(/[\u0400-\u04ff]/g)?.length ?? 0) / Math.max(extractedTitleText.length, 1) > 0.35;
+  const titleLooksCorrupt = repeatedGlyphRun || titleHasFlattenedAuthorTail || bilingualTitleWithCitation;
   const citationTitleFallback = titleLooksCorrupt
     ? (() => {
         const citationHeading = canonical.nodes.find((node) =>
