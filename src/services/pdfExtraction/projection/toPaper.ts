@@ -574,13 +574,14 @@ export function projectCanonicalToPaper(input: {
     (n.boundingBoxes[0]?.y ?? 9999) < 520 &&
     !/^\s*(?:keywords?|key words?)\s*:/i.test(n.text.trim()) &&
     !isNonAuthorMastheadLine(n.text) &&
-    ((n.role === "heading" && n.text.trim().length <= 240 &&
+      ((n.role === "heading" && n.text.trim().length <= 240 &&
       (n.text.match(/,/g)?.length ?? 0) >= 1 &&
       (n.text.match(/[A-Z][\p{L}'’-]+/gu)?.length ?? 0) >= 2 &&
       /\d\s*[A-Z]/.test(n.text)) ||
       (/^\s*[·•]\s*[A-Z][^!?]{8,220}$/.test(n.text.trim()) &&
       (n.text.match(/[A-Z][a-z]+(?:\s+[A-Z]\.)?\s+[A-Z][a-z]+/g)?.length ?? 0) >= 2) ||
       ((n.boundingBoxes[0]?.y ?? 9999) < 390 && n.text.trim().length <= 400 &&
+        !/^[a-z]/.test(n.text.trim()) &&
         (n.text.match(/,/g)?.length ?? 0) >= 2 &&
         (n.text.match(/[A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’-]+)?/gu)?.length ?? 0) >= 3 &&
         ((n.text.match(/[A-Z][\p{L}'’-]+/gu)?.length ?? 0) >= 6 ||
@@ -815,6 +816,10 @@ export function projectCanonicalToPaper(input: {
     !/[{}@]/.test(affiliation.name) &&
     !/^(?:corresponding author|these authors contributed|author note|keywords?)\b/i.test(affiliation.name) &&
     !/^(?:edited|reviewed)\s+by\s*:/i.test(affiliation.name) &&
+    // Bibliographic bands often receive the affiliation role because they
+    // share the same font/column as the masthead. They are never institutions
+    // and must not be exposed as author affiliations.
+    !/\b(?:vol\.?|volume|issue|issn|e-?issn|open\s+access|research\s+article|journal)\b/i.test(affiliation.name) &&
     // Reviewer rows and leaked body fragments can be classified as
     // affiliations after a native stream interleave. A person-shaped prefix
     // followed by an institution, or a lowercase sentence fragment, is not an
@@ -864,9 +869,24 @@ export function projectCanonicalToPaper(input: {
       return { ...first, name: normalizeAffiliationName(group.slice().sort((a, b) => a._y - b._y).map((item) => item.name).join(" ")) };
     })
     : affiliationCandidates;
-  const affiliations = groupedAffiliations.filter((affiliation, index, all) =>
+  let affiliations = groupedAffiliations.filter((affiliation, index, all) =>
     all.findIndex((candidate) => candidate.name.toLocaleLowerCase() === affiliation.name.toLocaleLowerCase()) === index)
     .map(({ _page, _y, _x, _marker, ...affiliation }) => affiliation);
+  // PLOS-like layouts sometimes assign the institution line a valid
+  // affiliation role but its leading footnote glyphs prevent the strict
+  // candidate filter from retaining it. Recover the complete native line as
+  // a conservative fallback when no affiliation survived at all.
+  if (affiliations.length === 0) {
+    affiliations = affiliationNodes
+      .flatMap((node) => (node.text ?? "")
+        .split(/(?=\b\d{1,2}\s+(?=[A-Z]))/)
+        .map((part) => normalizeAffiliationName(part.replace(/^[\d☯*†‡\s]+/, "").trim())))
+      .filter((name, index, all) => name.length >= 20 &&
+        /\b(?:university|department|school|faculty|college|hospital|centre|center|institute|laboratory)\b/i.test(name) &&
+        !/\b(?:vol\.?|volume|issue|issn|open\s+access|research\s+article|journal)\b/i.test(name) &&
+        all.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase()) === index)
+      .map((name, index) => ({ id: `affiliation-fallback-${index}`, name }));
+  }
   let authorNames = authorsStructured
     .flatMap((author) => expandAuthorLine(author.name))
     .map((name) => name.replace(/[,;]+$/, "").trim())
@@ -924,7 +944,8 @@ export function projectCanonicalToPaper(input: {
       const text = node.text ?? "";
       if (/^(?:keywords?|key words?)\s*:/i.test(text.trim())) return [];
       const recovered = splitAffiliationNamePrefix(text).map((pair) => pair.author);
-      const nameOnly = !/(?:university|department|institute|school|college|hospital|laboratory|center|centre|japan|china|israel|sweden)/i.test(text) &&
+      const nameOnly = !/^[a-z]/.test(text.trim()) &&
+        !/(?:university|department|institute|school|college|hospital|laboratory|center|centre|japan|china|israel|sweden)/i.test(text) &&
         text.length <= 180 && /\b(?:and|,)\b/.test(text) ? expandAuthorLine(text) : [];
       return [...recovered, ...nameOnly];
     })

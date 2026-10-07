@@ -14,6 +14,8 @@ const reviewerMastheadPdf = path.join(root, "test-data/real-papers/cognitive-dua
 const interleavedAffiliationPdf = path.join(root, "test-data/real-papers/dont-mind-me.pdf");
 const singleAuthorReportPdf = path.join(root, "test-data/real-papers/ergonomics-human-factors-and-ergonomics.pdf");
 const brokenUnicodeTitlePdf = path.join(root, "test-data/real-papers/linguistics-the-role-of-applied-linguistics-and-language-discourse-analysis-in-eng.pdf");
+const journalMastheadPdf = path.join(root, "test-data/real-papers/hci-human-computer-interaction.pdf");
+const plosAffiliationPdf = path.join(root, "test-data/real-papers/hfe-healthcare-safety-review.pdf");
 
 describe("author masthead projection", () => {
   it("keeps same-baseline multi-column names separate and excludes locations", async () => {
@@ -126,5 +128,27 @@ describe("author masthead projection", () => {
     const result = await extractFromPages({ pages, paperId: "broken-unicode-title", filePath: brokenUnicodeTitlePdf, fileHash: "broken-unicode-title", metadata: { pageCount: pages.length } });
     expect(result.paper.titleOriginal).toBe(expected);
     expect(result.paper.titleOriginal).not.toMatch(/АПФАПФ|CIPCIP/i);
+  }, 60_000);
+
+  it("does not project journal metadata or body fragments as authors", async () => {
+    if (!fs.existsSync(journalMastheadPdf)) return;
+    const pages = await extractPdfPages(journalMastheadPdf);
+    const result = await extractFromPages({ pages, paperId: "journal-masthead-boundary", filePath: journalMastheadPdf, fileHash: "journal-masthead-boundary", metadata: { pageCount: pages.length } });
+    expect(result.paper.authors).toEqual(["Suvrunda Jadhav", "T.R. Patil"]);
+    expect(result.paper.authors.some((name) => /field, common architectures|journal|issue|volume/i.test(name))).toBe(false);
+    expect(result.paper.affiliations).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: expect.stringMatching(/IT Department.*School of Engineering/i) }),
+    ]));
+    expect(result.paper.affiliations.some((affiliation) => /Vol\.\s*6|Issue 3/i.test(affiliation.name))).toBe(false);
+  }, 60_000);
+
+  it("recovers numbered institutions from a PLOS affiliation line", async () => {
+    if (!fs.existsSync(plosAffiliationPdf)) return;
+    const pages = await extractPdfPages(plosAffiliationPdf);
+    const result = await extractFromPages({ pages, paperId: "plos-affiliation-fallback", filePath: plosAffiliationPdf, fileHash: "plos-affiliation-fallback", metadata: { pageCount: pages.length } });
+    expect(result.paper.affiliations).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: expect.stringMatching(/Chinese Evidence-based Medicine Centre.*Sichuan University/i) }),
+      expect.objectContaining({ name: expect.stringMatching(/School of Foreign Languages.*Sichuan University/i) }),
+    ]));
   }, 60_000);
 });
