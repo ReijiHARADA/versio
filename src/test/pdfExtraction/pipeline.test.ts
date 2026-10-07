@@ -45,6 +45,7 @@ describe("canonical extraction pipeline", () => {
     expect(figure?.original).toContain("Human data taken from Zaller");
     expect(result.blocks.filter((block) => block.original?.startsWith("Human data taken from Zaller")).length).toBe(0);
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /\bThe model A B$/.test(node.text ?? ""))).toBe(false);
+    expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /Linda Cab Hospital|Toma Test Wason/.test(node.text ?? ""))).toBe(false);
   }, 60_000);
 
   it("does not append a repeated top-margin proceedings URL to body paragraphs", async () => {
