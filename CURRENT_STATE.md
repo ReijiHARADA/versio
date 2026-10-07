@@ -1184,3 +1184,13 @@ and excludes pages with figure captions. The rows are projected as skipped
 table blocks; the pipeline suite passes 39/39. A first broader heuristic was
 reverted after the full corpus caught a Wear Scale author regression. The
 strict version preserves the full extraction corpus: **232/232 passed**.
+# 2026-10-07: CJK comparison table rows and caption recovery
+
+The ergonomics/HF regression PDF contains a CJK comparison matrix whose rows
+use repeated x positions and checkmarks (`√`, `✓`, `☑`, `☒`). The generic
+candidate layer now promotes only geometry-matched checkmark rows to table
+evidence and promotes a nearby `表 N` line to caption evidence only when at
+least three such rows and two repeated column origins are present. A regression
+verifies the rows are tables, `表 3` is a canonical caption, and nearby `其次`
+prose remains a paragraph. Targeted pipeline tests pass 40/40; the full
+extraction corpus remains 232/232 after this change.
