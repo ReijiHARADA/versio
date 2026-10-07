@@ -166,6 +166,8 @@
 - `ergonomics-human-factors-ihci` page 11 の長文本文で table score が 0.95→0.68 に下がり、Resolverのtable昇格閾値を下回ることを確認。
 - 全コーパス回帰はこの変更後に再実行する。
 - `scripts/diagnose-table-geometry.ts` を追加し、caption候補から300px以内の行帯、native x位置、反復列をJSONで確認できるようにした。`ergonomics-human-factors-ihci` では、表1〜3の実際の行帯と本文断片のx列が混在していることを可視化できた。
+- CJK比較表で、`√/✓` 記号・短いCJK行・近傍反復x列が揃う場合だけ `cjkComparisonTableRow` をtable evidenceとして追加。対象PDFの4行をtableへ投影し、周辺本文はparagraphのまま保持した。
+- 回帰結果: pipeline 40/40、全件抽出コーパス 232/232。
 
 ### v1563 — ゴミ箱自動削除の説明と日数変更時の猶予（2026-10-06）
 
