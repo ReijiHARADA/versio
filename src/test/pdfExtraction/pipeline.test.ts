@@ -134,6 +134,7 @@ describe("canonical extraction pipeline", () => {
     expect(result.paper.affiliations.some((item) => /^This work was supported/i.test(item.name))).toBe(false);
     expect(result.canonical.nodes.some((node) => node.role === "other" && /associate editor coordinating.*approving/i.test(node.text ?? ""))).toBe(true);
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /^approving it for publication/i.test(node.text ?? ""))).toBe(false);
+    expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /experience design, UX, ED, machine learning, ML, HCI, UX design, user interaction, user behavior\./i.test(node.text ?? ""))).toBe(true);
   }, 60_000);
 
   it("keeps a captionless method/goal table out of paragraph translation", async () => {
