@@ -13,6 +13,18 @@ import fs from "node:fs";
 import path from "node:path";
 
 describe("canonical extraction pipeline", () => {
+  it("does not link a table caption to a nearby figure in a mixed thesis page", async () => {
+    const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({ pages, paperId: "thesis-table-figure-boundary", filePath: pdf, fileHash: "thesis-table-figure-boundary", metadata: { pageCount: pages.length } });
+    const tableCaption = result.canonical.nodes.find((node) => /^Table 4\.1:/i.test(node.text ?? ""));
+    expect(tableCaption?.role).toBe("caption");
+    const relation = result.canonical.relations.find((candidate) => candidate.kind === "CAPTION_OF" && candidate.from === tableCaption?.id);
+    const target = relation ? result.canonical.nodes.find((node) => node.id === relation.to) : undefined;
+    expect(target?.role).not.toBe("figure");
+  }, 60_000);
+
   it("keeps an unedited author-copy notice out of body paragraphs", async () => {
     const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/computational-linguistics-nlp-translation.pdf");
     if (!fs.existsSync(pdf)) return;
