@@ -24,8 +24,18 @@ const virtualRealityPdf = path.join(root, "test-data/real-papers/ergonomics-6-vi
 const medicalAffiliationStatementPdf = path.join(root, "test-data/real-papers/medical-image-segmentation-deep-learning.pdf");
 const landingPagePdf = path.join(root, "test-data/real-papers/how-content-volume-landing-pages.pdf");
 const gpt3AuthorsPdf = path.join(root, "test-data/real-papers/using-cognitive-psychology-gpt3.pdf");
+const frontiersAndContinuationPdf = path.join(root, "test-data/real-papers/marketing-neuroconsumer.pdf");
 
 describe("author masthead projection", () => {
+  it("keeps a central Frontiers author row ending in `and`", async () => {
+    if (!fs.existsSync(frontiersAndContinuationPdf)) return;
+    const pages = await extractPdfPages(frontiersAndContinuationPdf);
+    const result = extractFromPages({ pages, paperId: "frontiers-author-continuation", filePath: frontiersAndContinuationPdf, fileHash: "frontiers-author-continuation", metadata: { pageCount: pages.length } });
+    expect(result.paper.authors).toEqual(expect.arrayContaining([
+      "Sanchit Pawar", "Asle Fagerstrøm", "Valdimar Sigurdsson", "Aurelija Burinskiene", "Erik Arntzen",
+    ]));
+  }, 60_000);
+
   it("recovers adjacent title-case authors from mixed email and location columns", async () => {
     if (!fs.existsSync(landingPagePdf)) return;
     const pages = await extractPdfPages(landingPagePdf);

@@ -1089,3 +1089,11 @@ retains the post-label author institution column, and shares a wrapped
 university continuation across the relevant author rows. It also uses existing
 laboratory evidence to avoid losing the left-column institution. The complete
 author projection suite now passes **20/20**.
+
+# 2026-10-07: Frontiers author continuation ending in `and`
+
+The marketing neuroconsumer PDF placed the first three authors in a central
+row ending with `and`; the generic masthead filter treated that row as prose
+and dropped them. Name-pair evidence now retains such a short author row while
+the existing author expansion removes the conjunction. Added a real-paper
+regression; author projection now passes **21/21**.
