@@ -1987,6 +1987,12 @@ function roleForLine(
       looksLikeAffiliation(text) && text.length <= 220 && !/[.!?。！？]$/.test(text)) {
     return "affiliation";
   }
+  // Publisher mastheads sometimes emit the associate-editor credit as a
+  // paragraph-sized line between the two body columns. It is publication
+  // metadata, never article prose, even though it ends in a full stop.
+  if (/^(?:the\s+)?(?:associate|handling|guest)\s+editor\b.*\b(?:coordinating|manuscript|review|approving)\b/i.test(text)) {
+    return "chrome";
+  }
   if (line.roleHint) return line.roleHint;
   // Carry a copyright run only through similarly small continuation lines.
   // Body-sized text in the opposite physical column may follow a footer on
