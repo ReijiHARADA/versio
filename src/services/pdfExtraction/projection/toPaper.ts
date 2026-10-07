@@ -58,9 +58,34 @@ function normalizeSection(title: string): NormalizedSectionKind {
   return "other";
 }
 
+function separateSwallowedAffiliation(text: string): string {
+  // Some IEEE layouts emit the author row and the institution as one native
+  // line. Preserve an all-caps author suffix after the institution while
+  // dropping the institution from author projection. This is deliberately
+  // geometry-independent and only fires on an institution keyword followed
+  // by a comma-bounded all-caps name run.
+  const institution = text.search(/(?:faculty|department|school|university|institute|college|hospital|laboratory)/i);
+  if (institution < 0) return text;
+  const prefix = text.slice(0, institution).replace(/[\s,]+$/, "").trim();
+  const suffixMatch = text.match(/,\s*((?:AND\s+)?[A-Z][A-Z'’.-]*(?:\s+[A-Z][A-Z'’.-]*){1,8})\s*$/);
+  if (prefix && suffixMatch) return `${prefix}, ${suffixMatch[1]}`;
+  return prefix || text;
+}
+
+function extractSwallowedAffiliation(text: string): string | undefined {
+  const institution = text.search(/(?:faculty|department|school|university|institute|college|hospital|laboratory)/i);
+  if (institution < 0) return undefined;
+  const tail = text.slice(institution)
+    .replace(/,\s*((?:AND\s+)?[A-Z][A-Z'’.-]*(?:\s+[A-Z][A-Z'’.-]*){1,8})\s*$/, "")
+    .replace(/^[,\s]+|[,\s]+$/g, "")
+    .trim();
+  return tail.length >= 20 ? tail : undefined;
+}
+
 function expandAuthorLine(text: string): string[] {
-  const markedSource = text.replace(/^\s*and\s+/i, "").replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, " ").replace(/\s+/g, " ").trim();
-  const cleaned = text
+  const sourceWithoutAffiliation = separateSwallowedAffiliation(text);
+  const markedSource = sourceWithoutAffiliation.replace(/^\s*and\s+/i, "").replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, " ").replace(/\s+/g, " ").trim();
+  const cleaned = sourceWithoutAffiliation
     .replace(/^\s*and\s+/i, "")
     .replace(/[*†‡§]/g, " ")
     .replace(/\d+/g, "")
@@ -85,8 +110,12 @@ function expandAuthorLine(text: string): string[] {
   const uppercaseNames = [...cleaned.matchAll(/\b[A-Z][A-Z'’-]+(?:\s+[A-Z][A-Z'’-]+){1,3}\b/g)]
     .map((match) => match[0].trim())
     .filter((name) => !/^(?:FACEBOOK|GOOGLE|MICROSOFT|AMAZON|APPLE|STANFORD|UNIVERSITY|DEPARTMENT|SCHOOL|INSTITUTE|COLLEGE)$/i.test(name));
-  if (uppercaseNames.length >= 2 || (uppercaseNames.length === 1 && /[,·]/.test(cleaned))) {
-    return uppercaseNames;
+  const initialUppercaseNames = [...cleaned.matchAll(/\b[A-Z][A-Z'’-]+(?:\s+[A-Z]\.){1,3}\s+[A-Z][A-Z'’-]+/g)]
+    .map((match) => match[0].trim());
+  const uppercaseAuthorNames = [...new Set([...initialUppercaseNames, ...uppercaseNames])]
+    .map((name) => name.replace(/^AND\s+/i, "").trim());
+  if (uppercaseAuthorNames.length >= 2 || (uppercaseAuthorNames.length === 1 && /[,·]/.test(cleaned))) {
+    return uppercaseAuthorNames;
   }
   const spacedNameTokens = cleaned.split(/\s+/).filter(Boolean);
   // Native mastheads sometimes lose the delimiter between two adjacent
@@ -872,6 +901,15 @@ export function projectCanonicalToPaper(input: {
   let affiliations = groupedAffiliations.filter((affiliation, index, all) =>
     all.findIndex((candidate) => candidate.name.toLocaleLowerCase() === affiliation.name.toLocaleLowerCase()) === index)
     .map(({ _page, _y, _x, _marker, ...affiliation }) => affiliation);
+  // A few publisher streams attach the first institution directly to an
+  // author node. Recover only the institution-shaped suffix; the author
+  // projection above has already removed the same suffix from the name.
+  for (const node of authorNodes) {
+    const recovered = extractSwallowedAffiliation(node.text ?? "");
+    if (recovered && !affiliations.some((item) => item.name.toLocaleLowerCase() === recovered.toLocaleLowerCase())) {
+      affiliations.push({ id: `affiliation-swallowed-${node.id}`, name: normalizeAffiliationName(recovered) });
+    }
+  }
   // PLOS-like layouts sometimes assign the institution line a valid
   // affiliation role but its leading footnote glyphs prevent the strict
   // candidate filter from retaining it. Recover the complete native line as
@@ -918,7 +956,7 @@ export function projectCanonicalToPaper(input: {
   }
   let authorNames = authorsStructured
     .flatMap((author) => expandAuthorLine(author.name))
-    .map((name) => name.replace(/[,;]+$/, "").trim())
+    .map((name) => name.replace(/^and\s+/i, "").replace(/[,;]+$/, "").trim())
     .filter((name) => !isNonAuthorMastheadLine(name) && name.split(/\s+/).length <= 6 && !/[!?]/.test(name) &&
       !/[@{}]/.test(name) &&
       !/[\[\]]/.test(name) &&
@@ -984,8 +1022,9 @@ export function projectCanonicalToPaper(input: {
       // author row (e.g. `Research Director ...` or `Industrial Design`).
       !/\b(?:research director|education services|human factors|ergonomics|industrial design|interactive computing|comprehensive interdisciplinary)\b/i.test(name));
   for (const name of affiliationAuthorNames) {
-    if (!authorNames.some((existing) => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
-      authorNames.push(name);
+    const normalizedName = name.replace(/^and\s+/i, "").trim();
+    if (!authorNames.some((existing) => existing.toLocaleLowerCase() === normalizedName.toLocaleLowerCase())) {
+      authorNames.push(normalizedName);
     }
   }
   // When the native PDF flattened a complete author/affiliation masthead into
