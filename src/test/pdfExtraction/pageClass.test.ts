@@ -105,6 +105,15 @@ describe("page classification", () => {
     ])])).toEqual(new Set([1]));
   });
 
+  it("does not route ordinary author pairs and journal titles to OCR", () => {
+    const signals = pageClassSignals(page([
+      "Arnold & Hartley (2001). Accident Analysis & Prevention. ".repeat(8),
+      ...Array.from({ length: 11 }, () => "body"),
+    ]));
+    expect(signals.brokenTokenHits).toBe(0);
+    expect(classifyPage(signals)).toBe("native-text");
+  });
+
   it("flags words split by a stray single glyph", () => {
     const signals = pageClassSignals(page([
       "Transla T ion and The r ole remain in the native text",

@@ -24,7 +24,11 @@ export function pageClassSignals(page: ExtractedPage): PageClassSignals {
   // hides malformed masthead tokens such as `АПФАПФ & ПЛ & ПЛ`.
   const text = items.map((item) => item.text).join(" ");
   const repeatedGlyphHits = (text.match(/([A-Za-z\u0400-\u04FF]{2,6})\1\1/gu) ?? []).length;
-  const brokenTokenHits = (text.match(/[A-Za-z\u0400-\u04FF]{2,8}(?:\s*&\s*[A-Za-z\u0400-\u04FF]{2,8})+/gu) ?? []).length;
+  // A single ampersand is ordinary in author pairs and journal titles
+  // (`Arnold & Hartley`, `Analysis & Prevention`). Count only short all-caps
+  // symbol pairs, which are the characteristic flattened forms (`АПФ & ПЛ`,
+  // `CIP & PL`); normal title-case prose is left on native extraction.
+  const brokenTokenHits = (text.match(/(?<![\p{L}])[A-ZА-ЯЁЇІЄҐ]{2,8}\s*&\s*[A-ZА-ЯЁЇІЄҐ]{2,8}(?![\p{L}])/gu) ?? []).length;
   const yTolerance = 2.5;
   const rows: ExtractedPage["textItems"][] = [];
   for (const item of [...items].sort((a, b) => a.y - b.y || a.x - b.x)) {
