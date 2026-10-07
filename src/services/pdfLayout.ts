@@ -1960,6 +1960,12 @@ function roleForLine(
   mastheadTitleTexts?: Set<string>
 ): LayoutRole {
   const text = line.text.trim();
+  // Repeated proceedings URLs in the top margin are publisher chrome. Keep
+  // URL-only lines out of page-boundary paragraph stitching; inline URLs in
+  // ordinary prose remain unchanged.
+  if (line.y < (line.pageHeight ?? 792) * 0.18 && /^https?:\/\/\S+$/i.test(text)) {
+    return "header";
+  }
   // Native superscript markers and email-only rows are not standalone
   // canonical metadata. Apply this before inherited role hints so a hint from
   // an adjacent masthead line cannot resurrect these fragments.

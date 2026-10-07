@@ -902,6 +902,15 @@ short papers as `underSampled` instead of aborting; three papers had 9–11
 candidates because they contain fewer extractable structural/body blocks. This
 is a sampling-tool fix only and does not change production extraction.
 
+# 2026-10-07: repeated top-margin URL contamination
+
+The 113-paper review sample exposed a generic reading-order defect in
+proceedings PDFs: a repeated URL at the top margin was being appended to the
+preceding body paragraph across a page boundary (and sometimes became a
+standalone paragraph). URL-only top-margin lines are now classified as header
+chrome before continuation stitching. A real-paper regression for the CPCIG
+conference PDF passes; inline body URLs are intentionally not changed.
+
 # 2026-10-07: affiliation author contamination guard
 
 The production projection now rejects affiliation-derived author candidates
