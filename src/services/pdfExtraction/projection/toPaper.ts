@@ -82,14 +82,21 @@ function extractSwallowedAffiliation(text: string): string | undefined {
   return tail.length >= 20 ? tail : undefined;
 }
 
-function extractAffiliationStatement(text: string): string | undefined {
+function extractAffiliationStatements(text: string): string[] {
   if (!/(?:\bare|\bis)\s+with\s+/i.test(text) ||
-      !/\b(?:university|department|school|faculty|institute|hospital|laboratory|college)\b/i.test(text)) return undefined;
-  const start = text.search(/(?:\bare|\bis)\s+with\s+/i);
-  const tail = text.slice(start).replace(/^(?:are|is)\s+with\s+/i, "")
-    .replace(/\s*\((?:corresponding author|e-?mail)[\s\S]*$/i, "")
-    .replace(/\s+/g, " ").trim();
-  return tail.length >= 30 ? tail : undefined;
+      !/\b(?:university|department|school|faculty|institute|hospital|laboratory|college)\b/i.test(text)) return [];
+  // IEEE and similar publishers sometimes put several `X is/are with ...`
+  // clauses in one native paragraph. Split only at a new person-shaped clause;
+  // ordinary prose containing "is with" is left untouched by the institution
+  // guard above and the minimum-length check below.
+  const clauses = text.replace(/\s+/g, " ").trim().split(/\s+(?=[A-Z](?:\.?\s*[A-Z][\p{L}'’-]*){0,5}\s+(?:is|are)\s+with\b)/u);
+  return clauses.map((clause) => {
+    const start = clause.search(/(?:\bare|\bis)\s+with\s+/i);
+    if (start < 0) return "";
+    return clause.slice(start).replace(/^(?:are|is)\s+with\s+/i, "")
+      .replace(/\s*\((?:corresponding author|e-?mail)[\s\S]*$/i, "")
+      .replace(/\s+/g, " ").trim();
+  }).filter((value) => value.length >= 30 && /\b(?:university|department|school|faculty|institute|hospital|laboratory|college)\b/i.test(value));
 }
 
 function expandAuthorLine(text: string): string[] {
@@ -923,9 +930,10 @@ export function projectCanonicalToPaper(input: {
     }
   }
   for (const node of canonical.nodes) {
-    const recovered = extractAffiliationStatement(node.text ?? "");
-    if (recovered && !affiliations.some((item) => item.name.toLocaleLowerCase() === recovered.toLocaleLowerCase())) {
-      affiliations.push({ id: `affiliation-statement-${node.id}`, name: normalizeAffiliationName(recovered) });
+    for (const recovered of extractAffiliationStatements(node.text ?? "")) {
+      if (!affiliations.some((item) => item.name.toLocaleLowerCase() === recovered.toLocaleLowerCase())) {
+        affiliations.push({ id: `affiliation-statement-${node.id}-${affiliations.length}`, name: normalizeAffiliationName(recovered) });
+      }
     }
   }
   // PLOS-like layouts sometimes assign the institution line a valid
