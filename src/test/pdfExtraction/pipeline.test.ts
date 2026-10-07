@@ -115,6 +115,27 @@ describe("canonical extraction pipeline", () => {
     expect(title?.text).not.toContain("ненгах");
   }, 60_000);
 
+  it("separates flattened IEEE authors, funding, and editor credit", async () => {
+    const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/hci-user-experience-design-using-machine-learning-a-systematic-review.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "ieee-flattened-masthead-regression",
+      filePath: pdf,
+      fileHash: "ieee-flattened-masthead-regression",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(expect.arrayContaining([
+      "ABDALLAH M. H. ABBAS",
+      "KHAIRIL IMRAN GHAUTH",
+      "CHOO-YEE TING",
+    ]));
+    expect(result.paper.affiliations.some((item) => /^This work was supported/i.test(item.name))).toBe(false);
+    expect(result.canonical.nodes.some((node) => node.role === "other" && /associate editor coordinating.*approving/i.test(node.text ?? ""))).toBe(true);
+    expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /^approving it for publication/i.test(node.text ?? ""))).toBe(false);
+  }, 60_000);
+
   it("keeps a captionless method/goal table out of paragraph translation", async () => {
     const pdf = path.resolve("test-data/real-papers/education-learning-analytics.pdf");
     if (!fs.existsSync(pdf)) return;

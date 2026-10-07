@@ -309,11 +309,17 @@ function splitFlattenedMasthead(text: string): MastheadPair[] {
  * rows into affiliation nodes. This is deliberately limited to an
  * institution-shaped tail and uppercase name-shaped prefixes. */
 function splitAffiliationNamePrefix(text: string): MastheadPair[] {
-  const match = text.match(/^\s*((?:[A-Z][A-Z'’-]+(?:\s+[A-Z][A-Z'’-]+){1,4})(?:\s+and\s+(?:[A-Z][A-Z'’-]+(?:\s+[A-Z][A-Z'’-]+){1,4}))?)\s*,\s*(.+)$/);
+  // A native stream can omit the separator before the institution
+  // (`ABBASFaculty of Computing ...`). Insert a boundary only before a
+  // known institution lead, then apply the same strict all-caps name rule.
+  const normalized = text.replace(/([A-Z])(?=(?:Faculty|Department|School|University|Institute|College|Hospital|Laboratory)\b)/g, "$1, ");
+  const match = normalized.match(/^\s*((?:[A-Z][A-Z'’-]+(?:\s+[A-Z][A-Z'’-]+){1,4})(?:\s+and\s+(?:[A-Z][A-Z'’-]+(?:\s+[A-Z][A-Z'’-]+){1,4}))?)\s*,\s*(.+)$/);
   if (!match || !/(?:university|institute|department|school|college|hospital|laboratory|research council|pisa|italy|usa)/i.test(match[2])) return [];
-  const names = match[1].split(/\s+and\s+/i).map((name) => name.trim()).filter(Boolean);
+  const affiliation = match[2].replace(/,\s*((?:[A-Z][A-Z'’-]+\s+){1,6}[A-Z][A-Z'’-]+)\s*$/u, "").trim();
+  const tailAuthor = match[2].match(/,\s*((?:[A-Z][A-Z'’-]+\s+){1,6}[A-Z][A-Z'’-]+)\s*$/u)?.[1];
+  const names = [...match[1].split(/\s+and\s+/i).map((name) => name.trim()), ...(tailAuthor ? [tailAuthor.trim()] : [])].filter(Boolean);
   if (!names.length) return [];
-  return names.map((author) => ({ author, affiliation: match[2].trim() }));
+  return names.map((author) => ({ author, affiliation }));
 }
 
 /** Split flattened bullet lists into independent canonical blocks. */
@@ -903,6 +909,7 @@ export function projectCanonicalToPaper(input: {
     !/^(?:edited|reviewed)\s+by\s*:/i.test(affiliation.name)) || (affiliation.name &&
     !/[{}@]/.test(affiliation.name) &&
     !/^(?:corresponding author|these authors contributed|author note|keywords?)\b/i.test(affiliation.name) &&
+    !/^(?:this work was supported|funding|funded by|acknowledg(?:e?ments?)?)\b/i.test(affiliation.name) &&
     !/^(?:edited|reviewed)\s+by\s*:/i.test(affiliation.name) &&
     // Bibliographic bands often receive the affiliation role because they
     // share the same font/column as the masthead. They are never institutions
