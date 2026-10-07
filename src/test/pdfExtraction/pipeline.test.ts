@@ -89,6 +89,23 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /journal-isi\.org/i.test(node.text ?? ""))).toBe(false);
   }, 60_000);
 
+  it("keeps an asymmetric article-info rail separate from the abstract", async () => {
+    const pdf = path.resolve("test-data/real-papers/medical-deep-learning-meta-review.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "asymmetric-article-info-rail",
+      filePath: pdf,
+      fileHash: "asymmetric-article-info-rail",
+      metadata: { pageCount: pages.length },
+    });
+    const abstract = result.canonical.nodes.find((node) => /Deep learning has remarkably impacted/.test(node.text ?? ""));
+    expect(abstract?.text).toMatch(/^Deep learning has remarkably impacted/);
+    expect(abstract?.text).not.toMatch(/\bpa\s+tient\b/);
+    expect(abstract?.text).not.toMatch(/^tient data/);
+  }, 60_000);
+
   it("drops punctuation-only interleaved column fragments before a new sentence", () => {
     const textItems = [
       { text: ".-", x: 270, y: 120, width: 10, height: 8, fontSize: 9, fontName: "Times", page: 1 },
