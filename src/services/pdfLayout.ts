@@ -1068,6 +1068,39 @@ function splitInlineSubheading(line: LayoutLine): LayoutLine[] {
   return [make(prefixItems), make(suffixItems)];
 }
 
+/** Vector figures may paint labels on the same baseline as nearby prose.
+ * PDF.js then returns one native line containing a body run plus distant
+ * label runs (for example `...demonstrations` beside `Linda Cab Hospital`).
+ * When a dense graphics page has a nearby figure caption, split only those
+ * large geometric gaps before block formation so labels cannot enter prose.
+ */
+function splitVectorFigureOverlayLines(lines: LayoutLine[], page: ExtractedPage): LayoutLine[] {
+  if ((page.graphicsPrimitives?.length ?? 0) < 100) return lines;
+  if (process.env.PDF_LAYOUT_DEBUG === "vector-split") console.warn(`[VECTOR_PAGE] page=${page.pageNumber} graphics=${page.graphicsPrimitives?.length ?? 0} lines=${lines.length}`);
+  const captions = lines.filter((line) => /^(?:figure|fig\.?|図)\s*\d+[a-z]?\b/i.test(line.text.trim()) && line.y > 0);
+  if (process.env.PDF_LAYOUT_DEBUG === "vector-split") console.warn(`[VECTOR_CAPTIONS] page=${page.pageNumber} ${captions.map((c) => `${c.y}:${c.text.slice(0,30)}`).join("|")}`);
+  if (captions.length === 0) return lines;
+  return lines.flatMap((line) => {
+    if (line.items.length < 3 || captions.every((caption) => caption.y <= line.y || caption.y - line.y > 280)) return [line];
+    const items = [...line.items].sort((a, b) => a.x - b.x);
+    const groups: ExtractedTextItem[][] = [[]];
+    for (const item of items) {
+      const previous = groups.at(-1)!.at(-1);
+      const gap = previous ? item.x - (previous.x + previous.width) : 0;
+      if (previous && gap >= Math.max(24, line.fontSize * 2.8)) groups.push([]);
+      groups.at(-1)!.push(item);
+    }
+    if (groups.length < 2) return [line];
+    const distant = groups.slice(1).flat();
+    const distantText = joinItemTexts(distant).trim();
+    const distantWords = distantText.split(/\s+/).filter(Boolean);
+    if (process.env.PDF_LAYOUT_DEBUG === "vector-split" && page.pageNumber === 2 && line.y < 300) console.warn(`[VECTOR_CANDIDATE] y=${line.y} groups=${groups.length} text=${JSON.stringify(distantText)}`);
+    if (distantText.length > 90 || distantWords.length > 16 || /[.!?]$/.test(distantText)) return [line];
+    if (process.env.PDF_LAYOUT_DEBUG === "vector-split") console.warn(`[VECTOR_SPLIT] ${line.page}:${line.y} groups=${groups.length} distant=${JSON.stringify(distantText)}`);
+    return groups.map((group) => itemsToLine(group, line.column, line.page, line.pageHeight, line.pageWidth));
+  });
+}
+
 function isRepeatedHeaderFooter(text: string, patterns: Set<string>): boolean {
   return patterns.has(normalizeChromeKey(text));
 }
@@ -1934,24 +1967,25 @@ function buildPageLines(
   const structurallySplit = splitSameBaselineNameRuns(
     splitSpanningGutterLines(lines, pageLayouts)
   ).flatMap(splitInlineSubheading);
+  const figureSeparated = splitVectorFigureOverlayLines(structurallySplit, page);
 
   // Opt-in line diagnostics for investigating generic caption/table boundaries.
   // Keep this disabled by default; it reports native geometry and style only.
   const lineDebug = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_DEBUG;
   if (lineDebug === "all") {
-    for (const line of structurallySplit.filter((candidate) => candidate.page === 1)) {
+    for (const line of figureSeparated.filter((candidate) => candidate.page === 1)) {
       console.warn(`[PDF_LAYOUT_NATIVE_LINE] page=${line.page} column=${line.column} y=${line.y.toFixed(2)} x=${line.x.toFixed(2)} width=${line.width.toFixed(2)} font=${line.fontSize.toFixed(2)} items=${line.items.map((item) => `${JSON.stringify(item.text)}@${item.x.toFixed(2)}+${item.width.toFixed(2)}/${item.fontSize.toFixed(2)}`).join("|")}`);
     }
   }
   if (lineDebug === "lines") {
-    for (const line of structurallySplit) {
+    for (const line of figureSeparated) {
       if (/^(?:table|tables?|figure|fig\.?|表|図)\b/i.test(line.text.trim())) {
         console.warn(`[PDF_LAYOUT_LINE] page=${line.page} column=${line.column} y=${line.y.toFixed(2)} x=${line.x.toFixed(2)} width=${line.width.toFixed(2)} font=${line.items[0]?.fontName ?? "unknown"} size=${line.fontSize.toFixed(2)} items=${line.items.length} text=${JSON.stringify(line.text)}`);
       }
     }
   }
 
-  const visible = structurallySplit.filter((line) => !isEdgeChrome(line, layout, patterns));
+  const visible = figureSeparated.filter((line) => !isEdgeChrome(line, layout, patterns));
   const splitCandidates = visible.filter((line) => isBodyStartHeading(line.text));
   const splitAt =
     splitCandidates.length > 0
@@ -3256,6 +3290,36 @@ function hasRotatedNativeLine(block: LayoutBlock): boolean {
 }
 
 function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
+  // Split a paragraph block whose native lines contain a compact right-side
+  // vector-label run and a left-side body run. This occurs when figure text
+  // shares a baseline with prose; keeping the label in the paragraph block
+  // makes later continuation merging reintroduce it.
+  const expandedBlocks = blocks.flatMap((block) => {
+    if (block.role !== "paragraph" || block.lines.length < 2) return [block];
+    const pageWidth = block.lines[0]?.pageWidth ?? 612;
+    const hasCaptionBelow = blocks.some((candidate) =>
+      candidate.role === "figure_caption" && candidate.pageStart === block.pageStart &&
+      candidate.bbox.y > block.bbox.y && candidate.bbox.y - block.bbox.y <= 280
+    );
+    if (!hasCaptionBelow) return [block];
+    const labelLines = block.lines.filter((line) =>
+      line.x > pageWidth * 0.45 && line.text.trim().length <= 80 &&
+      line.text.trim().split(/\s+/).filter(Boolean).length <= 12 &&
+      !/[.!?。！？:;]/.test(line.text.trim())
+    );
+    if (labelLines.length === 0 || labelLines.length === block.lines.length) return [block];
+    const bodyLines = block.lines.filter((line) => !labelLines.includes(line));
+    const make = (lines: LayoutLine[]): LayoutBlock => ({
+      ...block,
+      lines,
+      text: joinLines(lines),
+      pageStart: lines[0].page,
+      pageEnd: lines.at(-1)!.page,
+      bbox: blockBbox(lines),
+    });
+    return [make(bodyLines), make(labelLines)];
+  });
+  blocks = expandedBlocks;
   const textCounts = new Map<string, number>();
   for (const block of blocks) {
     const text = normalizedRunningText(block.text);
@@ -3307,6 +3371,14 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
           maxFont <= pageMedian * 0.9 && candidate.text.length <= 180 && !/[.!?]$/.test(candidate.text.trim())) {
         figureBandBlocks.add(candidate);
       }
+      const graphicLabelBand = (candidate.lines[0]?.pageWidth ?? 612) > 0 &&
+        (candidate.lines[0]?.pageWidth ?? 612) === (caption.lines[0]?.pageWidth ?? 0) &&
+        (candidate.bbox.x > (candidate.lines[0]?.pageWidth ?? 612) * 0.45) &&
+        (candidate.lines.length <= 3) && candidate.text.length <= 80 &&
+        candidate.text.split(/\s+/).filter(Boolean).length <= 12 &&
+        !/[.!?。！？:;]/.test(candidate.text.trim()) &&
+        (candidate.lines[0]?.items.length ?? 0) >= 1;
+      if (graphicLabelBand && (candidate.lines[0]?.pageWidth ?? 0) > 0) figureBandBlocks.add(candidate);
     }
   }
   const result: LayoutBlock[] = [];
