@@ -1042,3 +1042,11 @@ kept separate from the masthead and the abstract starts at the correct word.
 A false positive on the PPG Earring first page was found during the full
 regression and constrained by requiring the article-info labels; the affected
 PPG and cognitive reading-order regressions now pass.
+# 2026-10-07: vector figure labels separated from prose
+
+The cognitive-psychology GPT-3 fixture contained vector labels such as `Linda
+Cab Hospital` and `Toma Test Wason` on the same native stream as body prose.
+A figure-caption-anchored, geometry/style-gated split now isolates compact
+right-side labels before continuation merging. It is limited to figure
+captions and smaller-font label lines so floated tables and ordinary two-column
+prose are unchanged. Full extraction corpus regression: **232/232 passed**.
