@@ -20,6 +20,8 @@ describe("canonical extraction pipeline", () => {
     const result = extractFromPages({ pages, paperId: "thesis-table-figure-boundary", filePath: pdf, fileHash: "thesis-table-figure-boundary", metadata: { pageCount: pages.length } });
     const tableCaption = result.canonical.nodes.find((node) => /^Table 4\.1:/i.test(node.text ?? ""));
     expect(tableCaption?.role).toBe("caption");
+    expect(tableCaption?.text).not.toMatch(/Driver fatigue a problem/);
+    expect(result.canonical.nodes.some((node) => node.role === "table" && /n\s+No\s+Minor\s+Substantial\s+Major/.test(node.text ?? ""))).toBe(true);
     const relation = result.canonical.relations.find((candidate) => candidate.kind === "CAPTION_OF" && candidate.from === tableCaption?.id);
     const target = relation ? result.canonical.nodes.find((node) => node.id === relation.to) : undefined;
     expect(target?.role).not.toBe("figure");
