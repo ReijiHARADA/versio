@@ -248,6 +248,60 @@ function dedupeExactCaptions(nodes: CanonicalNode[]): CanonicalNode[] {
   return result;
 }
 
+/** Join a figure caption that was split by a native text stream.  This is
+ * intentionally narrower than paragraph stitching: it requires an explicit
+ * Figure caption, the caption to end like an unfinished label/description,
+ * and a nearby same-page paragraph whose geometry is aligned with it. */
+function mergeFigureCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[] {
+  const result: CanonicalNode[] = [];
+  for (const node of nodes) {
+    const directPrevious = result[result.length - 1];
+    const captionIndex = directPrevious?.role === "caption"
+      ? result.length - 1
+      : result.findLastIndex((candidate) => candidate.role === "caption");
+    const previous = captionIndex >= 0 ? result[captionIndex] : directPrevious;
+    const previousBox = previous?.boundingBoxes[previous.boundingBoxes.length - 1];
+    const nodeBox = node.boundingBoxes[0];
+    const captionText = previous?.text?.trim() ?? "";
+    const continuation = node.text?.trim() ?? "";
+    const verticalGap = previousBox && nodeBox ? nodeBox.y - (previousBox.y + previousBox.height) : Infinity;
+    const xAligned = previousBox && nodeBox
+      ? Math.abs(nodeBox.x - previousBox.x) <= Math.max(24, previousBox.width * 0.35)
+      : false;
+    const intervening = captionIndex >= 0 ? result.slice(captionIndex + 1) : [];
+    const harmlessIntervening = intervening.every((candidate) =>
+      candidate.role === "other" ||
+      (candidate.role === "paragraph" && candidate.text.trim().length <= 24 &&
+        (candidate.text.match(/[A-Za-z]/g) ?? []).length <= 8)
+    );
+    const labeledFigureContinuation = /\b(?:[A-D]|Panel\s+[A-D])\s*:/i.test(continuation) &&
+      /\b(?:human|model|probability|condition|error bars|data)\b/i.test(continuation);
+    const canMerge = previous?.role === "caption" &&
+      /^\s*(?:figure|fig\.?|図)\s*\d+/i.test(captionText) &&
+      previous.pageStart === node.pageStart &&
+      node.role === "paragraph" &&
+      continuation.length >= 12 &&
+      verticalGap >= -18 && verticalGap <= 42 &&
+      (xAligned || (harmlessIntervening && verticalGap <= 180)) &&
+      (!/[.!?]\s*$/.test(captionText) || labeledFigureContinuation) &&
+      !/^(?:table|figure|fig\.?|図|references?|introduction|methods?|results?)\b/i.test(continuation);
+    if (canMerge) {
+      result[captionIndex] = {
+        ...previous,
+        text: `${captionText} ${continuation}`.replace(/\s+/g, " ").trim(),
+        pageEnd: node.pageEnd,
+        boundingBoxes: [...previous.boundingBoxes, ...node.boundingBoxes],
+        confidence: Math.min(previous.confidence, node.confidence),
+        evidence: [...previous.evidence, ...node.evidence.filter((evidence) => evidence.label === "page-boundary-continuation")],
+      };
+      if (captionIndex < result.length - 1) result.splice(captionIndex + 1);
+      continue;
+    }
+    result.push(node);
+  }
+  return result;
+}
+
 function average(values: number[], fallback = 0.8): number {
   if (values.length === 0) return fallback;
   return values.reduce((a, b) => a + b, 0) / values.length;
@@ -319,6 +373,7 @@ export function resolveCanonicalDocument(input: {
   nodes = markAbstracts(nodes);
   nodes = suppressVectorLabelClusters(nodes);
   nodes = dedupeExactCaptions(nodes);
+  nodes = mergeFigureCaptionContinuations(nodes);
 
   const resolvedTitleText = titleResolved.text;
   const titleNode = nodes.find((n) => n.role === "title");
