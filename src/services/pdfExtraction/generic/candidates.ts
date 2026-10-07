@@ -1018,15 +1018,18 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         block.lines.every((line) => line.bbox.width <= 260) &&
         !/[.!?]\s*$/.test(block.text.trim()) &&
         block.text.trim().split(/\s+/).filter(Boolean).length <= 40;
-      const proseBlock = paragraphLike(block.text) && /[.!?]\s*$/.test(block.text.trim());
+      const cjkSentenceLikeProse = /[\u3400-\u9fff]/u.test(block.text) &&
+        block.text.length >= 80 &&
+        (block.text.match(/[，。；：！？]/gu) ?? []).length >= 2;
+      const proseBlock = (paragraphLike(block.text) && /[.!?]\s*$/.test(block.text.trim())) || cjkSentenceLikeProse;
       // A long results paragraph may contain indented continuation lines or
       // separately emitted figure references, which creates several native
       // x origins despite reading as continuous prose. Treat multiple
       // sentence boundaries plus substantial prose as stronger negative
       // table evidence even when the final line is clipped at a page edge.
-      const sentenceLikeProse = paragraphLike(block.text) &&
+      const sentenceLikeProse = (paragraphLike(block.text) &&
         block.text.trim().split(/(?<=[.!?])\s+/).filter((sentence) => sentence.trim().length >= 24).length >= 2 &&
-        block.text.trim().split(/\s+/).filter(Boolean).length >= 40;
+        block.text.trim().split(/\s+/).filter(Boolean).length >= 40) || cjkSentenceLikeProse;
       const sameOriginLongProse = block.lines.length > 8 &&
         new Set(block.lines.map((line) => Math.round(line.bbox.x / 12))).size === 1 &&
         block.text.trim().split(/\s+/).filter(Boolean).length > 20;
