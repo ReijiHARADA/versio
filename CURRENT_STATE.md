@@ -7,6 +7,7 @@
 - 2026-10-07: 同PDFのページ上部に繰り返される `et al.: <article title>` running headerも本文段落として残ることを確認。ページ上端・`et al.:`・短い定型行の組み合わせを `header` として扱う汎用補正を追加。author/pipeline/pageClass **52/52** pass、typecheck pass。
 - 2026-10-07: 出版社横断の10本診断で、日付メタデータの所属混入、引用タイトル説明の所属混入、`PA USA`の地名著者混入を確認。所属フィルタと著者地名フィルタを一般化し、authorProjection **16/16**、pipeline/pageClass **39/39**、typecheck pass。診断では別途、Japanese spacingと所属欠落の残課題も記録した。
 - 2026-10-07: 追加診断で、日本語著者名の字間分割（`河 合 隆 史`）をCJK文字間の空白正規化で修正。IEEEの`R. Wang ... are with ...`形式を所属文として復元する汎用抽出を追加し、医療PDFの所属欠落を改善。authorProjection **18/18**、typecheck pass。
+- 2026-10-07: 表構造の実PDF診断を実施。`medical-image-segmentation` はtable node 17件、`education-learning-analytics` 90件、`wear-scale` 50件を確認し、既知の数値グリッドはparagraphへ潰れずtable roleへ投影されている。現時点で安全に一般化できる新規table修正は特定できず、誤結合を避けて現行挙動を維持。次はtable nodeとcaption/relationの対応を目視サンプルで検証する。
 
 - 2026-10-07: `cognitive-dual-task.pdf` の所属回帰を実PDFで再診断。4機関が上付き番号と段組の同一 native block に交互配置され、編集者欄も同じ block に混在するため、現行 projection は最後の2機関しか安定復元できないことを確認した。番号の後処理だけでは著者/編集者の混入を解消できないため、次の修正対象は line/block grouping 段階での masthead boundary 分離とする。実験的な後処理は誤抽出を増やすため採用していない。
 - 2026-10-07: 上記PDFの実データで、所属候補が `sidebarMixed` と誤判定され左列を捨てていたこと、および `Reviewed by:` 以降の正当な所属まで正規化で削除していたことを修正。番号付き候補の低信頼上書きを抑制し、国名が列間混入した `University of ...` を構造的に修復した。`authorProjection` **9/9**、pipeline/pageClass **48/48**、typecheck pass。対象PDFの所属は **4/4** 復元。
