@@ -1031,3 +1031,14 @@ is unchanged.
 Environment setup: rebuilt the native `canvas.node` binding after installing
 Homebrew `pkg-config`, Pixman/Cairo/Pango and image dependencies. The PDF.js
 DOMMatrix/Path2D warnings no longer occur in the extraction test process.
+# 2026-10-07: asymmetric article-info rail detection
+
+A real Elsevier first page exposed a reading-order defect: the narrow
+`Article history`/`Keywords` rail was treated as one stream with the wide
+abstract, producing fragments such as `pa` + `tient`. Geometry now detects
+this asymmetric rail only when article-info labels and persistent x/y bands
+are present, while ordinary ACM-style abstracts remain unchanged. The rail is
+kept separate from the masthead and the abstract starts at the correct word.
+A false positive on the PPG Earring first page was found during the full
+regression and constrained by requiring the article-info labels; the affected
+PPG and cognitive reading-order regressions now pass.
