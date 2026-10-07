@@ -1097,3 +1097,12 @@ row ending with `and`; the generic masthead filter treated that row as prose
 and dropped them. Name-pair evidence now retains such a short author row while
 the existing author expansion removes the conjunction. Added a real-paper
 regression; author projection now passes **21/21**.
+# 2026-10-07: publication metadata emitted as adjacent title candidate
+
+The 113-paper benchmark exposed a generic title-resolution failure where a
+publication line immediately below the article title was classified as a
+second `title` candidate and concatenated into the article title (for example,
+`www... IJRMMS 2021; 3(1): 63-65`). The resolver now treats an adjacent
+document/journal masthead candidate as a boundary and keeps it out of the
+article title. A direct suffix regression and the real rural-consumer PDF now
+pass; title-resolver tests pass 7/7 and TypeScript passes.
