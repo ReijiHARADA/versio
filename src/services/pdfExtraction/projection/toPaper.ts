@@ -196,6 +196,13 @@ function normalizeAffiliationName(text: string): string {
     // before a continuation line. Remove only that duplicated-marker shape;
     // ordinary street numbers remain intact.
     .replace(/\b(\d{1,2})\s+\1(?=\s*[A-Z])/g, "")
+    // A superscript marker can be flattened at the end of a wrapped
+    // affiliation line. It is metadata, not part of the institution name.
+    .replace(/[,;\s]+\d{1,2}\s*$/, "")
+    // Column interleaving can insert a country-only token between an
+    // institution's `University of` and its city. Remove only this
+    // country-shaped artifact; ordinary institution names remain untouched.
+    .replace(/\bUniversity\s+of\s+(?:the\s+)?(?:United\s+States|Australia|Canada|Brazil|China|Japan|Germany|France|Italy|India|Netherlands)\s+(?=[A-Z][a-z])/i, "University of ")
     // Native PDF text sometimes loses spaces at font-run boundaries
     // (e.g. `IowaStateUniversity` or `ofEvents`). Restore only a lower-to-
     // upper transition; this cannot split ordinary all-caps institution names.
@@ -657,7 +664,8 @@ export function projectCanonicalToPaper(input: {
       .filter((item) => item.fontSize < line.fontSize * 0.8 && /^\d{1,2}$/.test(item.text.trim()))
       .map((item) => ({ marker: item.text.trim(), x: item.x })));
     const base = { _page: node.pageStart, _y: node.boundingBoxes[0]?.y ?? 0 };
-    const sidebarMixed = hasSidebarBody &&
+    const startsWithSidebarLabel = /^(?:open access|edited by|reviewed by|correspondence|specialty section|citation|received|accepted|published)\s*:/i.test((node.text ?? "").trim());
+    const sidebarMixed = hasSidebarBody && startsWithSidebarLabel &&
       (node.boundingBoxes[0]?.x ?? Infinity) < sidebarRight &&
       (node.boundingBoxes[0]?.width ?? 0) > 180;
     const markerSource = sidebarMixed
@@ -700,13 +708,23 @@ export function projectCanonicalToPaper(input: {
     if (markerParts.length >= 2 && markerParts.every((part) =>
       part.split(/\s+/).length >= 3 &&
       /\b(?:university|department|institute|school|faculty|college|hospital|laboratory|center|centre|consortium)\b/i.test(part))) {
-      return markerParts.map((name, index) => ({
-        id: `${node.id}-numbered-${index + 1}`,
-        name: normalizeAffiliationName(name),
-        _x: node.boundingBoxes[0]?.x ?? 0,
-        _marker: String(index + 1),
-        ...base,
-      }));
+      return markerParts.flatMap((rawName, index) => {
+        const leadingEditorialInstitution = index === 0 &&
+          /\b(?:edited|reviewed)\s+by\s*:/i.test(node.text ?? "")
+          ? rawName.replace(/^(?:University|Institute|College|Hospital)\b[^,]{3,80},\s+(?=(?:Applied|Laboratory|Department|School|Faculty|Center|Centre|Research)\b)/i, "")
+          : rawName;
+        const reviewerTail = leadingEditorialInstitution.match(/^(.*?),\s+[A-Z][a-zà-öø-ÿ'’-]+(?:\s+[A-Z][a-zà-öø-ÿ'’-]+){1,2},\s+(?=(?:NIH|University|Hospital|Institute|Center|Centre)\b)(.*)$/i);
+        const names = reviewerTail
+          ? [reviewerTail[1], reviewerTail[2]]
+          : [leadingEditorialInstitution];
+        return names.map((name, offset) => ({
+          id: `${node.id}-numbered-${index + offset + 1}`,
+          name: normalizeAffiliationName(name),
+          _x: node.boundingBoxes[0]?.x ?? 0,
+          _marker: String(index + offset + 1),
+          ...base,
+        }));
+      });
     }
     const multiColumnLineCount = lines.filter((line) =>
       line.items.filter((item) => item.fontSize >= line.fontSize * 0.7).length >= 2).length;
@@ -791,7 +809,9 @@ export function projectCanonicalToPaper(input: {
       _marker: markerPositions.slice().sort((a, b) => Math.abs(a.x - (clusterXs[index] ?? 0)) - Math.abs(b.x - (clusterXs[index] ?? 0)))[0]?.marker,
       ...base,
     }));
-  }).filter((affiliation) => affiliation.name &&
+  }).filter((affiliation) => (affiliation._marker &&
+    /\b(?:university|department|institute|school|faculty|college|hospital|laboratory|center|centre|research|design|computing)\b/i.test(affiliation.name) &&
+    !/^(?:edited|reviewed)\s+by\s*:/i.test(affiliation.name)) || (affiliation.name &&
     !/[{}@]/.test(affiliation.name) &&
     !/^(?:corresponding author|these authors contributed|author note|keywords?)\b/i.test(affiliation.name) &&
     !/^(?:edited|reviewed)\s+by\s*:/i.test(affiliation.name) &&
@@ -819,7 +839,7 @@ export function projectCanonicalToPaper(input: {
     !/(?:\b(?:of|and|in|the|for|&))\s*[,;]?$/i.test(affiliation.name) &&
     ((affiliation.name.match(/\b\S\b/g)?.length ?? 0) * 2 <= affiliation.name.split(/\s+/).length ||
       /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research|design|computing)\b/i.test(affiliation.name) ||
-      /^[A-Z0-9& -]{2,12}$/.test(affiliation.name)));
+      /^[A-Z0-9& -]{2,12}$/.test(affiliation.name))));
   const markedCandidates = affiliationCandidates.filter((candidate) => candidate._marker);
   // Wrapped rows usually carry the superscript only on the first row. Propagate
   // that marker to later rows using the same page/x band before grouping.
