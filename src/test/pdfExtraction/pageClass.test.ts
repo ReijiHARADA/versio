@@ -43,6 +43,15 @@ describe("page classification", () => {
     expect(pagesNeedingOcr(pages)).toContain(1);
   }, 60_000);
 
+  it("does not route ordinary prose rows with short words to OCR", async () => {
+    const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "../../..");
+    const pdf = path.join(root, "test-data/real-papers/hfe-healthcare-scoping-2024.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    expect(classifyDocument(pages)).toBe("native-text");
+    expect(pagesNeedingOcr(pages)).toEqual(new Set());
+  }, 60_000);
+
   it("keeps the scanned-by-item-average baseline", () => {
     const scanned = [page(["a", "b"], 1), page(["c"], 2)];
     expect(scannedByItemAverage(scanned)).toBe(true);
