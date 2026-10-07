@@ -60,6 +60,20 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /cpcig-conferences\.com/i.test(node.text ?? ""))).toBe(false);
   }, 60_000);
 
+  it("does not stitch a displaced statistics-table header into body prose", async () => {
+    const pdf = path.resolve("test-data/real-papers/marketing-platform.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "displaced-table-header",
+      filePath: pdf,
+      fileHash: "displaced-table-header",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /Variable\s+N\s+Mean\s+Std\.\s+Min\s+Max/i.test(node.text ?? ""))).toBe(false);
+  }, 60_000);
+
   it("drops punctuation-only interleaved column fragments before a new sentence", () => {
     const textItems = [
       { text: ".-", x: 270, y: 120, width: 10, height: 8, fontSize: 9, fontName: "Times", page: 1 },
