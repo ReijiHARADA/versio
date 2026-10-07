@@ -2440,6 +2440,18 @@ function groupLinesIntoBlocks(
       line.y - current[current.length - 1].y < baseFont * 3.2 &&
       isGrantNumberContinuation(joinLines(current), line.text);
 
+    const keywordContinuation =
+      currentRole === "paragraph" && current.length === 1 &&
+      current[0].page === line.page &&
+      line.y - current[0].y < baseFont * 2.4 &&
+      // Keyword rails are short comma-delimited fragments, often indented on
+      // the first line and reset to the body margin on the wrapped line.
+      (joinLines(current).match(/,/g)?.length ?? 0) >= 3 &&
+      joinLines(current).length <= 180 &&
+      line.text.trim().split(/\s+/).filter(Boolean).length <= 8 &&
+      /^[a-z\d]/.test(line.text.trim()) &&
+      !/[.!?。！？]$/.test(joinLines(current).trim());
+
     const titleContinue =
       currentRole === "title" &&
       line.page === current[0].page &&
@@ -2525,7 +2537,7 @@ function groupLinesIntoBlocks(
       continue;
     }
 
-    if (mergeable || affiliationContinue || captionContinue || grantContinue || titleContinue || footnoteContinue || headingContinue) {
+    if (mergeable || affiliationContinue || captionContinue || grantContinue || keywordContinuation || titleContinue || footnoteContinue || headingContinue) {
       current.push(line);
       continue;
     }
