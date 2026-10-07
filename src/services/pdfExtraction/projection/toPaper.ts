@@ -630,7 +630,10 @@ export function projectCanonicalToPaper(input: {
     // eligible for expansion; the marker/separator checks in expandAuthorLine
     // still prevent ordinary prose from becoming an author list.
     n.text.trim().length <= 500 && !/:\s/.test(n.text) &&
-    !isNonAuthorMastheadLine(n.text) &&
+    // Contact email is common on author rows; retain a name-shaped prefix
+    // even though generic masthead filtering rejects standalone email lines.
+    (!isNonAuthorMastheadLine(n.text) ||
+      /^[A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’-]+){1,4}\s*[,*]?\s*[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/u.test(n.text.trim())) &&
     (!input.metadata.title || (n.text.trim().toLocaleLowerCase() !== input.metadata.title.trim().toLocaleLowerCase() &&
       !n.text.trim().toLocaleLowerCase().startsWith(input.metadata.title.trim().toLocaleLowerCase().slice(0, 28)))) &&
     !/^(?:original article|research article|conceptual\/theoretical paper|additional key words?|phrases?|keywords?|acm reference format|©|the author\(s\))/i.test(n.text.trim()));
@@ -657,7 +660,13 @@ export function projectCanonicalToPaper(input: {
           (n.text.match(/,/g)?.length ?? 0) >= 4) &&
         !/[.!?]$/.test(n.text.trim())) ||
       (/\d[*†‡]?/.test(n.text) && n.text.trim().length <= 400 &&
-        (n.text.match(/,/g)?.length ?? 0) >= 3 && !/[.!?]$/.test(n.text.trim()))));
+        (n.text.match(/,/g)?.length ?? 0) >= 3 && !/[.!?]$/.test(n.text.trim())) ||
+      // A two-column masthead can emit the second author as a same-line
+      // paragraph beginning with `and`. Promote only a short name-shaped
+      // continuation near the top of page one; ordinary prose is excluded by
+      // the strict prefix, length, and punctuation checks.
+      ((n.boundingBoxes[0]?.y ?? 9999) < 220 &&
+        /^\s*and\s+[A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’-]+){1,3}\s*$/u.test(n.text.trim()))));
   // Some two-column journals classify the first half of an italic author row
   // as paragraph text and the next visual line as author. Recover the marked
   // prefix as a source node before projection; the strict marker/count/height
@@ -720,9 +729,15 @@ export function projectCanonicalToPaper(input: {
         .sort((a, b) => (b.boundingBoxes[0]?.y ?? 0) - (a.boundingBoxes[0]?.y ?? 0))[0]
       : undefined;
     if (predecessor) mergedMastheadPredecessors.add(predecessor.id);
+    const rawName = `${predecessor ? `${predecessor.text} ` : ""}${projectionAuthorText(node)}`.trim();
+    const expandedName = expandAuthorLine(rawName)
+      .map((name) => name.replace(/^and\s+/i, "").replace(/[,;]+$/, "").trim())
+      .filter(Boolean);
     return {
     id: node.id,
-    name: `${predecessor ? `${predecessor.text} ` : ""}${projectionAuthorText(node)}`.trim(),
+    // Keep structured author metadata aligned with the display projection;
+    // native lines often include an adjacent email or city column.
+    name: expandedName.length > 0 ? expandedName.join(", ") : rawName,
     affiliationIds: affiliated.filter((rel) => rel.from === node.id).map((rel) => rel.to),
     predecessorId: predecessor?.id,
   };

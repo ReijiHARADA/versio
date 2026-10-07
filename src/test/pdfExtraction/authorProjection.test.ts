@@ -22,8 +22,26 @@ const registerPdf = path.join(root, "test-data/real-papers/linguistics-register.
 const wearabilityPdf = path.join(root, "test-data/real-papers/design-for-wearability.pdf");
 const virtualRealityPdf = path.join(root, "test-data/real-papers/ergonomics-6-virtual-reality-and-ergonomics-human-factors.pdf");
 const medicalAffiliationStatementPdf = path.join(root, "test-data/real-papers/medical-image-segmentation-deep-learning.pdf");
+const landingPagePdf = path.join(root, "test-data/real-papers/how-content-volume-landing-pages.pdf");
+const gpt3AuthorsPdf = path.join(root, "test-data/real-papers/using-cognitive-psychology-gpt3.pdf");
 
 describe("author masthead projection", () => {
+  it("recovers adjacent title-case authors from mixed email and location columns", async () => {
+    if (!fs.existsSync(landingPagePdf)) return;
+    const pages = await extractPdfPages(landingPagePdf);
+    const result = extractFromPages({ pages, paperId: "landing-page-authors", filePath: landingPagePdf, fileHash: "landing-page-authors", metadata: { pageCount: pages.length } });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["Ruti Gafni", "Nim Dvir"]));
+    expect(result.paper.authors.some((name) => /@|Tel Aviv|Israel/i.test(name))).toBe(false);
+    expect(result.paper.authorsStructured?.every((author) => !/@|Tel Aviv|Israel/i.test(author.name))).toBe(true);
+  }, 60_000);
+
+  it("promotes a same-line `and` author continuation in a two-column masthead", async () => {
+    if (!fs.existsSync(gpt3AuthorsPdf)) return;
+    const pages = await extractPdfPages(gpt3AuthorsPdf);
+    const result = extractFromPages({ pages, paperId: "gpt3-authors", filePath: gpt3AuthorsPdf, fileHash: "gpt3-authors", metadata: { pageCount: pages.length } });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["Marcel Binz", "Eric Schulz"]));
+  }, 60_000);
+
   it("keeps same-baseline multi-column names separate and excludes locations", async () => {
     if (!fs.existsSync(pdf)) return;
     const pages = await extractPdfPages(pdf);
