@@ -35,6 +35,16 @@ describe("canonical extraction pipeline", () => {
     expect(title?.text).toBe("Principles for the conduct of human factors/ergonomics in healthcare: a scoping study of the published evidence");
   }, 60_000);
 
+  it("does not project vector figure labels as headings", async () => {
+    const pdf = path.resolve("test-data/real-papers/interpreting-neural-networks.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({ pages, paperId: "vector-label-role", filePath: pdf, fileHash: "vector-label-role", metadata: { pageCount: pages.length } });
+    const labels = result.canonical.nodes.filter((node) => /F1 F2 F3 F4 F5/.test(node.text ?? ""));
+    expect(labels.length).toBeGreaterThan(0);
+    expect(labels.every((node) => node.role === "other")).toBe(true);
+  }, 60_000);
+
   it("keeps the wear-scale correlation matrix as skipped table blocks", async () => {
     const pdf = path.resolve("test-data/real-papers/wear-scale.pdf");
     if (!fs.existsSync(pdf)) return;
