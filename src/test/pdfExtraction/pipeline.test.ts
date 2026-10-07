@@ -8,8 +8,28 @@ import { nativeDocumentFromExtracted } from "../../services/pdfExtraction/native
 import { generateGenericCandidates } from "../../services/pdfExtraction/generic/candidates";
 import { splitFlattenedList } from "../../services/pdfExtraction/projection/toPaper";
 import { detectPageColumns, reconstructDocument } from "../../services/pdfLayout";
+import { extractPdfPages } from "../readingOrder/extractPdf";
+import fs from "node:fs";
+import path from "node:path";
 
 describe("canonical extraction pipeline", () => {
+  it("keeps the wear-scale correlation matrix as skipped table blocks", async () => {
+    const pdf = path.resolve("test-data/real-papers/wear-scale.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "wear-scale-table-regression",
+      filePath: pdf,
+      fileHash: "wear-scale-table-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const pageFourteen = result.blocks.filter((block) => block.pageStart === 14);
+    expect(pageFourteen.length).toBeGreaterThan(10);
+    expect(pageFourteen.every((block) => block.type === "table")).toBe(true);
+    expect(pageFourteen.every((block) => block.translationStatus === "skipped")).toBe(true);
+  }, 60_000);
+
   it("drops punctuation-only interleaved column fragments before a new sentence", () => {
     const textItems = [
       { text: ".-", x: 270, y: 120, width: 10, height: 8, fontSize: 9, fontName: "Times", page: 1 },
