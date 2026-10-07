@@ -276,6 +276,7 @@ function mergeFigureCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[
     );
     const labeledFigureContinuation = /\b(?:[A-D]|Panel\s+[A-D])\s*:/i.test(continuation) &&
       /\b(?:human|model|probability|condition|error bars|data)\b/i.test(continuation);
+    const numberedProcedureContinuation = (continuation.match(/(?:^|\s)\d+\.\s+/g) ?? []).length >= 2;
     const canMerge = previous?.role === "caption" &&
       /^\s*(?:figure|fig\.?|図)\s*\d+/i.test(captionText) &&
       previous.pageStart === node.pageStart &&
@@ -284,6 +285,7 @@ function mergeFigureCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[
       verticalGap >= -18 && verticalGap <= 42 &&
       (xAligned || (harmlessIntervening && verticalGap <= 180)) &&
       (!/[.!?]\s*$/.test(captionText) || labeledFigureContinuation) &&
+      !numberedProcedureContinuation &&
       !/^(?:table|figure|fig\.?|図|references?|introduction|methods?|results?)\b/i.test(continuation);
     if (canMerge) {
       result[captionIndex] = {

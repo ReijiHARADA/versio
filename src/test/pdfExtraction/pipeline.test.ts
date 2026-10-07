@@ -48,6 +48,23 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /Linda Cab Hospital|Toma Test Wason/.test(node.text ?? ""))).toBe(false);
   }, 60_000);
 
+  it("does not absorb numbered procedure steps into a figure caption", async () => {
+    const pdf = path.resolve("test-data/real-papers/linguistics-language-model-physics.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "caption-procedure-boundary-regression",
+      filePath: pdf,
+      fileHash: "caption-procedure-boundary-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const figure = result.canonical.nodes.find((node) => node.role === "caption" && /^Figure 3:/i.test(node.text ?? ""));
+    expect(figure?.text).toContain("CFG visual comparisons");
+    expect(figure?.text).not.toMatch(/\b2\. For each layer\b/);
+    expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /^2\. For each layer\b/.test(node.text ?? ""))).toBe(true);
+  }, 60_000);
+
   it("does not append a repeated top-margin proceedings URL to body paragraphs", async () => {
     const pdf = path.resolve("test-data/real-papers/marketing-the-impact-of-online-advertising-on-consumer-choice-consumption-traps-.pdf");
     if (!fs.existsSync(pdf)) return;
