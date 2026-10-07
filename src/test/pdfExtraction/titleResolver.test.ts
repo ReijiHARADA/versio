@@ -107,4 +107,11 @@ describe("title resolver masthead filtering", () => {
     const result = resolveTitle({ candidates: [labeled, candidate("Abstract: Human Factors and Ergonomics presents a comprehensive interdisciplinary", 260)] });
     expect(result.text).toBe("Human Factors and Ergonomics");
   });
+
+  it("removes an inline journal rail between wrapped title fragments", () => {
+    const result = resolveTitle({
+      candidates: [candidate("Eco-Linguistics in English: Reviewing the role", 120), candidate("IJLE 2026; 6(1): 05-09 language in environmental discourse", 136)],
+    });
+    expect(result.text).toBe("Eco-Linguistics in English: Reviewing the role language in environmental discourse");
+  });
 });

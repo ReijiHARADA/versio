@@ -15,6 +15,19 @@ function stripExplicitTitleLabel(text: string): string {
 
 function stripMastheadSuffix(text: string): string {
   const trimmed = text.trim();
+  // A title line can be split around an inline journal/year marker when the
+  // PDF places the publication rail between two title fragments. Remove only
+  // the bounded metadata token and retain both title sides.
+  const inlinePublication = trimmed.match(
+    /^(.*?)(?:\b[A-Z][A-Z0-9.-]{1,}\s+20\d{2}\s*[;,]\s*\d+\([^)]{0,12}\)\s*:\s*[\d-]+)\s+([a-z\u00c0-\u024f])/u,
+  );
+  if (inlinePublication && inlinePublication[1].trim().length >= 24) {
+    return `${inlinePublication[1].trim()} ${inlinePublication[2]}`.replace(/\s+/g, " ").trim();
+  }
+  const leadingPublication = trimmed.match(
+    /^(?:[A-Z][A-Z0-9.-]{1,}\s+20\d{2}\s*[;,]\s*\d+\([^)]{0,12}\)\s*:\s*[\d-]+)\s+([a-z\u00c0-\u024f].*)$/u,
+  );
+  if (leadingPublication) return leadingPublication[1].trim();
   // ORCID/URL and email tokens are unambiguous masthead metadata when they
   // occur after a substantial title prefix. Keep URLs that make up the whole
   // candidate out of this rule so a metadata fallback is not truncated.

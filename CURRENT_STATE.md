@@ -1120,3 +1120,11 @@ The refreshed 113-paper benchmark after both title-boundary fixes is
 **103/113 title-exact (91.15%)**, up from 101/113. The remaining ten cases
 are isolated for triage; several are source-PDF/catalog mismatches or
 legitimate language/spelling variants rather than native extraction loss.
+
+# 2026-10-07: inline journal rail between wrapped title fragments
+
+Some PDFs place a journal/year/page rail between two native title fragments,
+for example `... role` followed by `IJLE 2026; 6(1): 05-09 language ...`.
+The title resolver now removes the bounded publication token while retaining
+the surrounding title text. The real eco-linguistics PDF now resolves exactly;
+title-resolver tests pass 9/9.
