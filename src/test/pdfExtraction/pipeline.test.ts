@@ -74,6 +74,20 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /Variable\s+N\s+Mean\s+Std\.\s+Min\s+Max/i.test(node.text ?? ""))).toBe(false);
   }, 60_000);
 
+  it("keeps repeated journal ISSN headers out of body paragraphs", async () => {
+    const pdf = path.resolve("test-data/real-papers/hci-development-of-user-interface-user-experience-using-design-thinking-ap.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "repeated-issn-header",
+      filePath: pdf,
+      fileHash: "repeated-issn-header",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /journal-isi\.org/i.test(node.text ?? ""))).toBe(false);
+  }, 60_000);
+
   it("drops punctuation-only interleaved column fragments before a new sentence", () => {
     const textItems = [
       { text: ".-", x: 270, y: 120, width: 10, height: 8, fontSize: 9, fontName: "Times", page: 1 },

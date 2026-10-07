@@ -853,7 +853,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       !/[.!?]\s*$/.test(block.text.trim()) &&
       block.text.trim().split(/\s+/).filter(Boolean).length <= 140 &&
       block.lines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length >= 2;
-    const role = denseCjkBody || numericRow || mathRow || alignedTableRow || numericMultiItemRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || rotatedNumericGrid ? "paragraph" :
+    const role = block.role === "header" || block.role === "footer" || block.role === "copyright" || block.role === "chrome"
+      ? layoutRole
+      : denseCjkBody || numericRow || mathRow || alignedTableRow || numericMultiItemRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || rotatedNumericGrid ? "paragraph" :
       numberedSubheading ? "heading" : layoutRole;
     const style = styleSignature(block, layouts, baseFontSize, blocks[index - 1], blocks[index + 1]);
     const scoreByRole: Partial<Record<CanonicalRole, number>> = {
