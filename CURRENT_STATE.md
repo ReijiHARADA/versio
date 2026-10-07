@@ -1106,3 +1106,12 @@ second `title` candidate and concatenated into the article title (for example,
 document/journal masthead candidate as a boundary and keeps it out of the
 article title. A direct suffix regression and the real rural-consumer PDF now
 pass; title-resolver tests pass 7/7 and TypeScript passes.
+
+# 2026-10-07: explicit research-book title anchor
+
+Report/book PDFs can label the title as `Research Book Title:` while the
+generic role classifier assigns that line to the masthead and promotes the
+following `Abstract:` line as the title. The resolver now recognizes explicit
+title labels as document-level title evidence and keeps them ahead of nearby
+abstract text. The human-factors report fixture now resolves to
+`Human Factors and Ergonomics`; title-resolver tests pass 8/8.
