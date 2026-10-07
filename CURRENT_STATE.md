@@ -1116,8 +1116,8 @@ title labels as document-level title evidence and keeps them ahead of nearby
 abstract text. The human-factors report fixture now resolves to
 `Human Factors and Ergonomics`; title-resolver tests pass 8/8.
 
-The refreshed 113-paper benchmark after both title-boundary fixes is
-**103/113 title-exact (91.15%)**, up from 101/113. The remaining ten cases
+The refreshed 113-paper benchmark after the title-boundary fixes is
+**104/113 title-exact (92.04%)**, up from 101/113. The remaining nine cases
 are isolated for triage; several are source-PDF/catalog mismatches or
 legitimate language/spelling variants rather than native extraction loss.
 
