@@ -30,6 +30,22 @@ describe("canonical extraction pipeline", () => {
     expect(pageFourteen.every((block) => block.translationStatus === "skipped")).toBe(true);
   }, 60_000);
 
+  it("keeps a multi-part vector figure caption in one figure block", async () => {
+    const pdf = path.resolve("test-data/real-papers/cognitive-psychology-gpt3.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "gpt3-figure-caption-regression",
+      filePath: pdf,
+      fileHash: "gpt3-figure-caption-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const figure = result.blocks.find((block) => block.type === "figure" && block.original?.startsWith("Figure 3."));
+    expect(figure?.original).toContain("Human data taken from Zaller");
+    expect(result.blocks.filter((block) => block.original?.startsWith("Human data taken from Zaller")).length).toBe(0);
+  }, 60_000);
+
   it("drops punctuation-only interleaved column fragments before a new sentence", () => {
     const textItems = [
       { text: ".-", x: 270, y: 120, width: 10, height: 8, fontSize: 9, fontName: "Times", page: 1 },

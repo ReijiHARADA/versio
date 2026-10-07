@@ -10,6 +10,7 @@
 - 2026-10-07: 追加診断で、日本語著者名の字間分割（`河 合 隆 史`）をCJK文字間の空白正規化で修正。IEEEの`R. Wang ... are with ...`形式を所属文として復元する汎用抽出を追加し、医療PDFの所属欠落を改善。authorProjection **18/18**、typecheck pass。
 - 2026-10-07: 表構造の実PDF診断を実施。`medical-image-segmentation` はtable node 17件、`education-learning-analytics` 90件、`wear-scale` 50件を確認し、既知の数値グリッドはparagraphへ潰れずtable roleへ投影されている。現時点で安全に一般化できる新規table修正は特定できず、誤結合を避けて現行挙動を維持。次はtable nodeとcaption/relationの対応を目視サンプルで検証する。
 - 2026-10-07: `wear-scale.pdf` のページ14相関マトリクスを現行Canonical→Paper投影で再確認。数値セル/行は31個以上の`table`ブロックとして`translationStatus=skipped`になり、通常段落としてMADLADへ送られないことを回帰テスト化。pipeline **31/31** pass。
+- 2026-10-07: `cognitive-psychology-gpt3.pdf` のFigure 3 captionが、ベクター図の軸ラベルを挟んで2ブロックに分かれる問題を確認。`Figure` caption直後の同一ページで、パネル記号（A-D）を含む近接caption continuationだけを結合し、`Human data taken from... C:` を別段落として翻訳しないようにした。実PDF回帰を追加し、pipeline **32/32**、typecheck pass。
 - 2026-10-07: table/caption relationを3本で再診断。caption **41件中41件**（20+16+5）が`CAPTION_OF` relationを持ち、孤立captionは0件。孤立table nodeは表セル/行の個別regionで、paragraphへの混入ではなかったため、無理なcaption結合は追加していない。
 
 - 2026-10-07: `cognitive-dual-task.pdf` の所属回帰を実PDFで再診断。4機関が上付き番号と段組の同一 native block に交互配置され、編集者欄も同じ block に混在するため、現行 projection は最後の2機関しか安定復元できないことを確認した。番号の後処理だけでは著者/編集者の混入を解消できないため、次の修正対象は line/block grouping 段階での masthead boundary 分離とする。実験的な後処理は誤抽出を増やすため採用していない。
