@@ -911,6 +911,15 @@ standalone paragraph). URL-only top-margin lines are now classified as header
 chrome before continuation stitching. A real-paper regression for the CPCIG
 conference PDF passes; inline body URLs are intentionally not changed.
 
+# 2026-10-07: displaced table-header boundary
+
+The manual-review sample also found a page-boundary merge in which a short
+statistics header (`Variable N Mean Std. Min Max`) from a displaced table
+column was appended to the preceding prose paragraph. A conservative geometry
+plus header-token boundary now prevents that merge while leaving ordinary
+sentences containing statistical terms unchanged. The marketing-platform real
+PDF regression passes.
+
 # 2026-10-07: affiliation author contamination guard
 
 The production projection now rejects affiliation-derived author candidates

@@ -3123,6 +3123,24 @@ function isInlineFootnoteBlock(block: LayoutBlock): boolean {
   return line.y > height * 0.62 && /^(?:[*†‡∗]|\d+[.)])\s*/.test(block.text.trim());
 }
 
+/** A short, column-displaced row of statistical/table headings is not a prose
+ * continuation, even when the preceding paragraph ends in a connector such as
+ * "refers to the".  This catches flattened table headers without treating
+ * ordinary sentences containing one of these words as a table. */
+function isDetachedTableHeaderBlock(block: LayoutBlock, previous: LayoutBlock): boolean {
+  if (block.role !== "paragraph" || block.text.length < 12 || block.text.length > 120 || block.lines.length > 2) return false;
+  const text = block.text.trim();
+  if (/[.!?:;]$/.test(text)) return false;
+  const words = text.match(/[A-Za-z][A-Za-z.]*/g) ?? [];
+  if (words.length < 3) return false;
+  const headerWords = new Set(["variable", "factor", "measure", "item", "group", "condition", "n", "mean", "median", "std", "sd", "se", "min", "max", "range", "p", "t", "f"]);
+  const headerCount = words.filter((word) => headerWords.has(word.toLowerCase().replace(/\.$/, ""))).length;
+  if (headerCount < 2 || headerCount / words.length < 0.45) return false;
+  const previousLine = previous.lines.at(-1);
+  const nextLine = block.lines[0];
+  return Boolean(previousLine && nextLine && Math.abs(previousLine.x - nextLine.x) >= 80);
+}
+
 function isTransparentMetadataBlock(block: LayoutBlock, repeatedTexts: Set<string>): boolean {
   return block.role === "header" || block.role === "footer" || block.role === "footnote" || block.role === "chrome" ||
     block.role === "affiliation" || block.role === "copyright" || isUnclassifiedFootnote(block) ||
@@ -3667,6 +3685,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
     if (
       target && (target.role === "paragraph" || isAbstractBodyTitleBlock(target)) && block.role === "paragraph" &&
       !currentIsDetachedMargin &&
+        !isDetachedTableHeaderBlock(block, target) &&
         (joinsCompleteLeadingContinuation || joinsSameColumnContinuation || joinsSpanningBodyContinuation || joinsHyphenatedContinuation || geometrySameLineContinuation || rejoinAfterDetachedMargin || wrapsAcrossColumnsAtPageBottom || wrapsAcrossColumnsAtModerateTop || wrapsAcrossPhysicalColumns || wrapsAcrossAdjacentColumnTails ||
         (canContinueAcrossColumns && isSentenceContinuation(target.text, block.text)) ||
         crossesPageBoundaryAfterFigureBand || crossesPageBoundaryProperName ||
