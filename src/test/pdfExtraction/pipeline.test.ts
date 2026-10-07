@@ -165,6 +165,20 @@ describe("canonical extraction pipeline", () => {
     expect(blocks.map((block) => block.text).join(" ")).not.toContain(".-");
   });
 
+  it("recognizes CJK checkmark comparison rows without promoting nearby prose", async () => {
+    const pdf = path.resolve("test-data/real-papers/ergonomics-human-factors-ihci.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages, paperId: "cjk-checkmark-table", filePath: pdf, fileHash: "cjk-checkmark-table",
+      metadata: { pageCount: pages.length },
+    });
+    const rows = result.blocks.filter((block) => block.pageStart === 11 && /√/.test(block.original));
+    expect(rows.length).toBeGreaterThanOrEqual(3);
+    expect(rows.every((block) => block.type === "table")).toBe(true);
+    expect(result.blocks.some((block) => block.pageStart === 11 && block.type === "paragraph" && block.original.includes("其次"))).toBe(true);
+  }, 30_000);
+
   it("splits repeated dash bullets without splitting a single inline dash", () => {
     expect(splitFlattenedList("– First item – Second item – Third item")).toEqual([
       "– First item",

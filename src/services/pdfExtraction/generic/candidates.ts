@@ -624,6 +624,32 @@ function headeredTableRow(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
   return rows.length >= 3 && rows.includes(block);
 }
 
+/** Comparison tables in CJK papers often have no usable caption signal and
+ * use checkmarks instead of numeric cells. Require a local repeated row band,
+ * short non-sentence text, and a structural marker on the candidate itself;
+ * this keeps ordinary CJK prose fragments out of the table role. */
+function cjkComparisonTableRow(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
+  if (block.role === "table_caption" || block.pageStart !== block.pageEnd) return false;
+  const text = block.text.trim();
+  if (!/[\u3400-\u9fff]/u.test(text) || !/[√✓☑☒]/u.test(text) || /[。！？.!?]$/.test(text)) return false;
+  if (text.length > 180 || block.lines.length > 3) return false;
+  const peers = blocks.filter((candidate) => {
+    if (candidate === block || candidate.pageStart !== block.pageStart || candidate.pageEnd !== block.pageEnd) return false;
+    if (Math.abs(candidate.bbox.y - block.bbox.y) > 150 || candidate.lines.length > 3) return false;
+    const peerText = candidate.text.trim();
+    return /[\u3400-\u9fff]/u.test(peerText) && !/[。！？.!?]$/.test(peerText) &&
+      peerText.length <= 180 && candidate.lines.some((line) => line.items.length >= 2);
+  });
+  if (peers.length < 2) return false;
+  const rows = [block, ...peers];
+  const xCounts = new Map<number, number>();
+  for (const row of rows) {
+    const origins = new Set(row.lines.flatMap((line) => line.items).map((item) => Math.round(item.x / 12) * 12));
+    for (const x of origins) xCounts.set(x, (xCounts.get(x) ?? 0) + 1);
+  }
+  return [...xCounts.values()].filter((count) => count >= 3).length >= 2;
+}
+
 /**
  * A captioned table can be split by the PDF producer at column boundaries,
  * leaving a compact run of one-span cell rows outside the caption block. Use
@@ -1046,7 +1072,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
           // evidence is present.
           : 0.68;
     }
-    if (block.role !== "table_caption" && (nearbyTableRowEvidence(block, blocks) || headeredTableRow(block, blocks) || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedRepeatedRow || captionedNeighborRows || captionedNativeCellRow)) scoreByRole.table = 0.96;
+    if (block.role !== "table_caption" && (nearbyTableRowEvidence(block, blocks) || headeredTableRow(block, blocks) || cjkComparisonTableRow(block, blocks) || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedRepeatedRow || captionedNeighborRows || captionedNativeCellRow)) scoreByRole.table = 0.96;
     if (fragmentedLabels > 0) {
       // Apply after all style/heading boosts so graphic fragments cannot be
       // promoted back to headings by a later generic style rule.
