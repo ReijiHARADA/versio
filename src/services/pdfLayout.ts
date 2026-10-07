@@ -2462,7 +2462,11 @@ function groupLinesIntoBlocks(
         (line.text.trim().split(/\s+/).filter(Boolean).length <= 6 &&
           line.text.trim().length <= 48 &&
           !looksLikePersonName(line.text) &&
-          !looksLikeEmail(line.text)));
+          !looksLikeEmail(line.text))) &&
+      // A title can be followed immediately by an author row carrying
+      // superscript affiliation markers. Do not absorb that metadata into a
+      // title block even when the producer uses the same font and leading.
+      !line.items.some((item) => item.fontSize < line.fontSize * 0.75 && /^\d{1,3}$/.test(item.text.trim()));
 
     const captionContinue =
       (currentRole === "figure_caption" || currentRole === "table_caption") &&
