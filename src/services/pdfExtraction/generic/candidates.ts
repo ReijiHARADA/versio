@@ -1037,7 +1037,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     ];
     if (mixedNativeBand > 0) {
       evidence.push({
-        source: "geometry",
+        source: "geometry" as EvidenceSource,
         label: "mixed-native-x-band",
         confidence: mixedNativeBand,
         page: block.pageStart,
@@ -1057,7 +1057,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     }
     if (axisLabels > 0) {
       evidence.push({
-        source: "geometry",
+        source: "geometry" as EvidenceSource,
         label: "axis-label-numeric-neighborhood",
         confidence: axisLabels,
         page: block.pageStart,
@@ -1088,7 +1088,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     if (fragmentedLabels > 0) {
       scoreByRole.other = Math.max(scoreByRole.other ?? 0, fragmentedLabels);
       evidence.push({
-        source: "geometry",
+        source: "geometry" as EvidenceSource,
         label: "fragmented-graphic-label-cluster",
         confidence: fragmentedLabels,
         page: block.pageStart,
@@ -1098,7 +1098,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     }
     if (captionedNeighborRows) {
       evidence.push({
-        source: "geometry",
+        source: "geometry" as EvidenceSource,
         label: "captioned-neighbor-cell-rows",
         confidence: 0.96,
         page: block.pageStart,
@@ -1108,7 +1108,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     }
     if (captionedNativeCellRow) {
       evidence.push({
-        source: "geometry",
+        source: "geometry" as EvidenceSource,
         label: "captioned-native-multicell-row",
         confidence: 0.96,
         page: block.pageStart,
@@ -1169,7 +1169,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         text: `${prefix.text.trim()} ${candidate.text.trim()}`.replace(/\s+/g, " "),
       },
       evidence: [...candidate.evidence, {
-        source: "geometry",
+        source: "geometry" as EvidenceSource,
         label: "same-baseline-title-prefix",
         confidence: 0.88,
         page: candidate.pageStart,

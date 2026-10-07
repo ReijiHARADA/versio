@@ -330,7 +330,6 @@ export function resolveTitle(input: {
       candidate.pageStart === 1 && /^(?:contents\s+lists|journal\s+homepage|available\s+at\s+sciencedirect)\b/i.test(candidate.text.trim())
     );
     const firstTitle = titles[0];
-    const firstTitleWords = firstTitle.text.trim().split(/\s+/).length;
     if (hasJournalChrome && !articleTitleRecovered) {
       const laterTitles = titles.filter((candidate) =>
         candidate.pageStart === firstTitle.pageStart &&

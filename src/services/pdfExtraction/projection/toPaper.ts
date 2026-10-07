@@ -603,6 +603,14 @@ export function projectCanonicalToPaper(input: {
     if (y >= firstBodyY || n.text.length > 320 || /[.!?。！？]$/.test(n.text.trim())) return false;
     return /\b(?:department|faculty|school|college|university|institute|laboratory|laboratories|hospital|center|centre|management)\b/i.test(n.text);
   });
+  type AffiliationCandidate = {
+    id: string;
+    name: string;
+    _x: number;
+    _marker?: string;
+    _page: number;
+    _y: number;
+  };
   const affiliated = canonical.relations.filter((r) => r.kind === "AFFILIATED_WITH");
   const projectionAuthorText = (node: (typeof canonical.nodes)[number]): string => {
     const box = node.boundingBoxes[0];
@@ -642,7 +650,7 @@ export function projectCanonicalToPaper(input: {
     predecessorId: predecessor?.id,
   };
   }).filter((author) => !mergedMastheadPredecessors.has(author.id));
-  const affiliationCandidates = affiliationNodes.flatMap((node) => {
+  const affiliationCandidates: AffiliationCandidate[] = affiliationNodes.flatMap((node): AffiliationCandidate[] => {
     const layout = layoutForNode(node, layoutBlocks);
     const lines = layout?.lines ?? [];
     const markerPositions = lines.flatMap((line) => line.items
@@ -791,7 +799,7 @@ export function projectCanonicalToPaper(input: {
     // affiliations after a native stream interleave. A person-shaped prefix
     // followed by an institution, or a lowercase sentence fragment, is not an
     // institution candidate.
-    !/^[A-Z][\p{Ll}'’-]+(?:\s+[A-Z][\p{Ll}'’-]+){1,3},\s+.*\b(?:university|institute|center|centre|laboratory|biomedical)\b/i.test(affiliation.name) &&
+    !/^[A-Z][a-zà-öø-ÿ'’-]+(?:\s+[A-Z][a-zà-öø-ÿ'’-]+){1,3},\s+.*\b(?:university|institute|center|centre|laboratory|biomedical)\b/i.test(affiliation.name) &&
     !/^[a-z]/.test(affiliation.name) &&
     !/^available from .*\bat:\s*$/i.test(affiliation.name) &&
     !/^(?:contents|article history|lists available at)\b/i.test(affiliation.name) &&
