@@ -1,5 +1,6 @@
 ## Current extraction status (2026-10-07)
 
+- 2026-10-07: Equation-heavy medical pages contained valid spaced tensor symbols (`D H W`, `C Q K`) that triggered garbled/OCR routing. Page classification now discounts dense single-letter mathematical notation while retaining true split-glyph signals. The 23-page medical PDF classifies fully as native-text; page-class tests **11/11** and extraction baseline **118/118** pass (`c89fa7f`).
 - 2026-10-07: After title-layer deduplication, reading-order regression was rerun: **114/114** passed (96.72s).
 - 2026-10-07: After repeated-title-layer fix, the full real-paper baseline was rerun: **118/118** passed (294.96s).
 - 2026-10-07: `hfe-healthcare-scoping-2024.pdf` contained an identical three-line title layer twice at the same coordinates, causing duplicated title text and metadata fallback. `joinLines` now removes only exact repeated line sequences with matching geometry; the canonical title is restored once. Focused regression and typecheck pass (`4deacf3`).
