@@ -1519,7 +1519,12 @@ export function projectCanonicalToPaper(input: {
         )?.replace(/[.!?]\s*$/, "");
       })()
     : undefined;
-  const titleForProjection = titleLooksCorrupt ? citationTitleFallback : extractedTitleText;
+  // If the citation line is not bilingual or cannot be parsed, retain the
+  // native title rather than dropping it and falling back to an unrelated
+  // document metadata string.
+  const titleForProjection = titleLooksCorrupt
+    ? (citationTitleFallback ?? extractedTitleText)
+    : extractedTitleText;
   const paper: Paper = {
     id: paperId,
     sourceFilePath: input.filePath,
