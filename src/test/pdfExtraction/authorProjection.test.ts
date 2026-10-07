@@ -16,6 +16,7 @@ const singleAuthorReportPdf = path.join(root, "test-data/real-papers/ergonomics-
 const brokenUnicodeTitlePdf = path.join(root, "test-data/real-papers/linguistics-the-role-of-applied-linguistics-and-language-discourse-analysis-in-eng.pdf");
 const journalMastheadPdf = path.join(root, "test-data/real-papers/hci-human-computer-interaction.pdf");
 const plosAffiliationPdf = path.join(root, "test-data/real-papers/hfe-healthcare-safety-review.pdf");
+const wrappedAffiliationPdf = path.join(root, "test-data/real-papers/wear-scale.pdf");
 
 describe("author masthead projection", () => {
   it("keeps same-baseline multi-column names separate and excludes locations", async () => {
@@ -150,5 +151,14 @@ describe("author masthead projection", () => {
       expect.objectContaining({ name: expect.stringMatching(/Chinese Evidence-based Medicine Centre.*Sichuan University/i) }),
       expect.objectContaining({ name: expect.stringMatching(/School of Foreign Languages.*Sichuan University/i) }),
     ]));
+  }, 60_000);
+
+  it("stitches wrapped same-column masthead affiliations without absorbing body text", async () => {
+    if (!fs.existsSync(wrappedAffiliationPdf)) return;
+    const pages = await extractPdfPages(wrappedAffiliationPdf);
+    const result = await extractFromPages({ pages, paperId: "wear-scale", filePath: wrappedAffiliationPdf, fileHash: "wrapped-affiliation-regression", metadata: { pageCount: pages.length } });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["Changhyun Nam", "Young‑A Lee"]));
+    expect(result.paper.affiliations.some((affiliation) => /Department.*Hospitality.*Management.*Iowa State University/i.test(affiliation.name))).toBe(true);
+    expect(result.paper.affiliations.every((affiliation) => !/Full list of author information|available online/i.test(affiliation.name))).toBe(true);
   }, 60_000);
 });
