@@ -1,5 +1,6 @@
 ## Current extraction status (2026-10-07)
 
+- 2026-10-07: After title-layer deduplication, reading-order regression was rerun: **114/114** passed (96.72s).
 - 2026-10-07: After repeated-title-layer fix, the full real-paper baseline was rerun: **118/118** passed (294.96s).
 - 2026-10-07: `hfe-healthcare-scoping-2024.pdf` contained an identical three-line title layer twice at the same coordinates, causing duplicated title text and metadata fallback. `joinLines` now removes only exact repeated line sequences with matching geometry; the canonical title is restored once. Focused regression and typecheck pass (`4deacf3`).
 - 2026-10-07: `hfe-healthcare-scoping-2024.pdf` exposed false `garbled`/OCR routing from ordinary phrases (`is a need`, `as a result`, initials such as `Marie E Ward`) matching the split-word heuristic. The classifier now ignores ordinary single-letter words/initials and requires a large geometric gap for interleaved short-token evidence. All 13 pages classify as native-text with no OCR routing; page-class tests and baseline **118/118** pass (`6d65913`).
