@@ -21,6 +21,7 @@ const ieeeWrappedMastheadPdf = path.join(root, "test-fixtures/real-papers/pendin
 const registerPdf = path.join(root, "test-data/real-papers/linguistics-register.pdf");
 const wearabilityPdf = path.join(root, "test-data/real-papers/design-for-wearability.pdf");
 const virtualRealityPdf = path.join(root, "test-data/real-papers/ergonomics-6-virtual-reality-and-ergonomics-human-factors.pdf");
+const medicalAffiliationStatementPdf = path.join(root, "test-data/real-papers/medical-image-segmentation-deep-learning.pdf");
 
 describe("author masthead projection", () => {
   it("keeps same-baseline multi-column names separate and excludes locations", async () => {
@@ -196,5 +197,20 @@ describe("author masthead projection", () => {
     const pages = await extractPdfPages(virtualRealityPdf);
     const result = await extractFromPages({ pages, paperId: "virtual-reality-ergonomics", filePath: virtualRealityPdf, fileHash: "quoted-affiliation", metadata: { pageCount: pages.length } });
     expect(result.paper.affiliations.every((affiliation) => !/^\s*["“].*?["”]\s+by\s+/i.test(affiliation.name))).toBe(true);
+  }, 60_000);
+
+  it("normalizes spaces inside Japanese author names", async () => {
+    if (!fs.existsSync(virtualRealityPdf)) return;
+    const pages = await extractPdfPages(virtualRealityPdf);
+    const result = await extractFromPages({ pages, paperId: "virtual-reality-japanese-author", filePath: virtualRealityPdf, fileHash: "japanese-author", metadata: { pageCount: pages.length } });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["河合隆史"]));
+    expect(result.paper.authors).not.toContain("河 合 隆 史");
+  }, 60_000);
+
+  it("recovers IEEE affiliation statements emitted as body paragraphs", async () => {
+    if (!fs.existsSync(medicalAffiliationStatementPdf)) return;
+    const pages = await extractPdfPages(medicalAffiliationStatementPdf);
+    const result = await extractFromPages({ pages, paperId: "medical-affiliation-statement", filePath: medicalAffiliationStatementPdf, fileHash: "affiliation-statement", metadata: { pageCount: pages.length } });
+    expect(result.paper.affiliations.some((affiliation) => /School of Electronic.*Shaanxi University/i.test(affiliation.name))).toBe(true);
   }, 60_000);
 });
