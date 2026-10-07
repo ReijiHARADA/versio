@@ -1060,3 +1060,13 @@ left-aligned title candidate) as evidence to prefer the article title without
 publisher-specific vocabulary. Regression coverage was added for
 `medical-deep-learning-meta-review`; the focused extraction tests and
 TypeScript check pass.
+
+# 2026-10-07: mixed-column author metadata
+
+Two real papers exposed author rows split across email, affiliation, and
+location columns. A standalone email-containing author row was being rejected
+as chrome, and a same-line `and Author` continuation was left as paragraph
+text. Projection now retains name-shaped email rows, promotes strict
+top-of-page author continuations, and normalizes `authorsStructured` through
+the same author expansion used for display names. Regression coverage was
+added for the landing-page and GPT-3 fixtures.
