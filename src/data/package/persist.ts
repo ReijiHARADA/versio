@@ -214,7 +214,11 @@ export async function persistPaperPackage(
   const recheck = validatePaperPackage(loaded);
   if (!recheck.ok) {
     await fs.remove(tmp);
-    throw new Error("Paper Package tmp validation failed");
+    const errors = recheck.diagnostics
+      .filter((item) => item.level === "error")
+      .map((item) => `${item.code}: ${item.message}`)
+      .join("; ");
+    throw new Error(`Paper Package tmp validation failed${errors ? ` (${errors})` : ""}`);
   }
 
   if (await fs.exists(dest)) {
