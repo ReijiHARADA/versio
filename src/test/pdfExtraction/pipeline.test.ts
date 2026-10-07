@@ -26,6 +26,15 @@ describe("canonical extraction pipeline", () => {
     expect(notice?.original).not.toMatch(/As computing systems have become increasingly important/i);
     expect(result.blocks.some((block) => block.type === "paragraph" && /As computing systems have become increasingly important/i.test(block.original ?? "") && /unedited author(?:’|')s copy/i.test(block.original ?? ""))).toBe(false);
   }, 60_000);
+  it("deduplicates a repeated native title layer", async () => {
+    const pdf = path.resolve("test-data/real-papers/hfe-healthcare-scoping-2024.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({ pages, paperId: "repeated-title-layer", filePath: pdf, fileHash: "repeated-title-layer", metadata: { pageCount: pages.length } });
+    const title = result.canonical.nodes.find((node) => node.role === "title");
+    expect(title?.text).toBe("Principles for the conduct of human factors/ergonomics in healthcare: a scoping study of the published evidence");
+  }, 60_000);
+
   it("keeps the wear-scale correlation matrix as skipped table blocks", async () => {
     const pdf = path.resolve("test-data/real-papers/wear-scale.pdf");
     if (!fs.existsSync(pdf)) return;

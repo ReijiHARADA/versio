@@ -1835,9 +1835,24 @@ export function joinHyphenated(prev: string, next: string): string {
 
 function joinLines(lines: LayoutLine[]): string {
   if (lines.length === 0) return "";
-  let text = lines[0].text.trim();
-  for (let i = 1; i < lines.length; i++) {
-    const next = lines[i].text.trim();
+  let effectiveLines = lines;
+  // Some publishers embed the same title line sequence twice at identical
+  // coordinates (visible text plus an accessibility/text layer). Remove only
+  // an exact repeated half with matching geometry; repeated prose/table rows
+  // with different positions remain untouched.
+  if (lines.length >= 2 && lines.length % 2 === 0) {
+    const half = lines.length / 2;
+    const repeated = lines.slice(0, half).every((line, index) => {
+      const other = lines[half + index];
+      return line.text.trim() === other.text.trim() &&
+        Math.abs(line.x - other.x) <= 1 && Math.abs(line.y - other.y) <= 1 &&
+        Math.abs(line.width - other.width) <= 1;
+    });
+    if (repeated) effectiveLines = lines.slice(0, half);
+  }
+  let text = effectiveLines[0].text.trim();
+  for (let i = 1; i < effectiveLines.length; i++) {
+    const next = effectiveLines[i].text.trim();
     if (!next) continue;
     text = joinHyphenated(text, next);
   }
