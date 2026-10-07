@@ -18,6 +18,9 @@ const journalMastheadPdf = path.join(root, "test-data/real-papers/hci-human-comp
 const plosAffiliationPdf = path.join(root, "test-data/real-papers/hfe-healthcare-safety-review.pdf");
 const wrappedAffiliationPdf = path.join(root, "test-data/real-papers/wear-scale.pdf");
 const ieeeWrappedMastheadPdf = path.join(root, "test-fixtures/real-papers/pending-pdfs/hci-user-experience-design-using-machine-learning-a-systematic-review.pdf");
+const registerPdf = path.join(root, "test-data/real-papers/linguistics-register.pdf");
+const wearabilityPdf = path.join(root, "test-data/real-papers/design-for-wearability.pdf");
+const virtualRealityPdf = path.join(root, "test-data/real-papers/ergonomics-6-virtual-reality-and-ergonomics-human-factors.pdf");
 
 describe("author masthead projection", () => {
   it("keeps same-baseline multi-column names separate and excludes locations", async () => {
@@ -172,5 +175,26 @@ describe("author masthead projection", () => {
     expect(result.paper.affiliations.some((affiliation) => /Faculty of Computing.*Multimedia University/i.test(affiliation.name))).toBe(true);
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /associate editor coordinating/i.test(node.text ?? ""))).toBe(false);
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /et al\.: User Experience Design Using Machine Learning/i.test(node.text ?? ""))).toBe(false);
+  }, 60_000);
+
+  it("does not expose publication-date bands as affiliations", async () => {
+    if (!fs.existsSync(registerPdf)) return;
+    const pages = await extractPdfPages(registerPdf);
+    const result = await extractFromPages({ pages, paperId: "linguistics-register", filePath: registerPdf, fileHash: "publication-band", metadata: { pageCount: pages.length } });
+    expect(result.paper.affiliations.every((affiliation) => !/Accepted:|Published online/i.test(affiliation.name))).toBe(true);
+  }, 60_000);
+
+  it("keeps location-only masthead fragments out of authors", async () => {
+    if (!fs.existsSync(wearabilityPdf)) return;
+    const pages = await extractPdfPages(wearabilityPdf);
+    const result = await extractFromPages({ pages, paperId: "design-for-wearability", filePath: wearabilityPdf, fileHash: "location-author", metadata: { pageCount: pages.length } });
+    expect(result.paper.authors).not.toContain("PA USA");
+  }, 60_000);
+
+  it("rejects quoted title descriptions from affiliation projection", async () => {
+    if (!fs.existsSync(virtualRealityPdf)) return;
+    const pages = await extractPdfPages(virtualRealityPdf);
+    const result = await extractFromPages({ pages, paperId: "virtual-reality-ergonomics", filePath: virtualRealityPdf, fileHash: "quoted-affiliation", metadata: { pageCount: pages.length } });
+    expect(result.paper.affiliations.every((affiliation) => !/^\s*["“].*?["”]\s+by\s+/i.test(affiliation.name))).toBe(true);
   }, 60_000);
 });

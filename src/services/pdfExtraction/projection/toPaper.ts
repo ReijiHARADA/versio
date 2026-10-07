@@ -848,7 +848,7 @@ export function projectCanonicalToPaper(input: {
     // Bibliographic bands often receive the affiliation role because they
     // share the same font/column as the masthead. They are never institutions
     // and must not be exposed as author affiliations.
-    !/\b(?:vol\.?|volume|issue|issn|e-?issn|open\s+access|research\s+article|journal)\b/i.test(affiliation.name) &&
+    !/\b(?:vol\.?|volume|issue|issn|e-?issn|open\s+access|research\s+article|journal|accepted|published(?:\s+online)?)\b/i.test(affiliation.name) &&
     // Reviewer rows and leaked body fragments can be classified as
     // affiliations after a native stream interleave. A person-shaped prefix
     // followed by an institution, or a lowercase sentence fragment, is not an
@@ -857,6 +857,7 @@ export function projectCanonicalToPaper(input: {
     !/^[a-z]/.test(affiliation.name) &&
     !/^available from .*\bat:\s*$/i.test(affiliation.name) &&
     !/^(?:contents|article history|lists available at)\b/i.test(affiliation.name) &&
+    !/^\s*["“].*?["”]\s+by\s+/i.test(affiliation.name) &&
     (affiliation.name.match(/\b[a-z]\b/g)?.length ?? 0) < 3 &&
     (affiliation.name.split(/\s+/).length > 2 ||
       /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research|design|computing)\b/i.test(affiliation.name) ||
@@ -921,7 +922,7 @@ export function projectCanonicalToPaper(input: {
         .map((part) => normalizeAffiliationName(part.replace(/^[\d☯*†‡\s]+/, "").trim())))
       .filter((name, index, all) => name.length >= 20 &&
         /\b(?:university|department|school|faculty|college|hospital|centre|center|institute|laboratory)\b/i.test(name) &&
-        !/\b(?:vol\.?|volume|issue|issn|open\s+access|research\s+article|journal)\b/i.test(name) &&
+        !/\b(?:vol\.?|volume|issue|issn|open\s+access|research\s+article|journal|accepted|published(?:\s+online)?)\b/i.test(name) &&
         all.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase()) === index)
       .map((name, index) => ({ id: `affiliation-fallback-${index}`, name }));
   }
@@ -964,6 +965,7 @@ export function projectCanonicalToPaper(input: {
       !/\b(?:movement|science|sport|psychology|department|university|institute|research|council|resistance|training|edited|published)\b/i.test(name) &&
       !(/\s[A-Z]{1,3}$/.test(name) && !/^[A-Z][A-Z'’-]*(?:\s+[A-Z][A-Z'’-]*)+$/.test(name)) &&
       !/(?:^|,\s*)(?:usa|u\.s\.a?\.?|israel|italy|china|japan|uk|united kingdom|ny|california|new york|tel aviv|albany|palo alto)(?:\s*,|$)/i.test(name) &&
+      !/\b[A-Z]{2}\s+USA\b/i.test(name) &&
       !/^(?:palo alto|tel aviv|albany|new york)$/i.test(name) &&
       !/\b(?:,\s*)?(?:ny|ca),\s*usa\b/i.test(name))
     .filter((name, index, all) => all.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase()) === index)
