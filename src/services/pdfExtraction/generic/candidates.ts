@@ -597,31 +597,6 @@ function nearbyTableRowEvidence(block: LayoutBlock, blocks: LayoutBlock[]): bool
   return gap >= -4 && gap <= 36 && overlap >= Math.min(block.bbox.width, precedingGrid.bbox.width) * 0.5;
 }
 
-function headeredTableRow(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
-  if (block.role === "table_caption" || block.pageStart !== block.pageEnd || block.text.trim().length > 460) return false;
-  // Figure pages contain many compact two-column label bands; without this
-  // guard they can look like a captionless table header.
-  if (blocks.some((candidate) => candidate.pageStart === block.pageStart && candidate.role === "figure_caption")) return false;
-  const header = blocks.find((candidate) => {
-    if (candidate === block || candidate.pageStart !== block.pageStart || candidate.pageEnd !== block.pageEnd) return false;
-    if (candidate.bbox.y >= block.bbox.y || block.bbox.y - candidate.bbox.y > 430) return false;
-    if (candidate.lines.length !== 1 || candidate.lines[0].items.length < 2) return false;
-    const text = candidate.text.trim();
-    if (text.length > 64 || /[.!?。！？]$/.test(text)) return false;
-    const xs = candidate.lines[0].items.map((item) => item.x).sort((a, b) => a - b);
-    return xs.length >= 2 && xs.at(-1)! - xs[0] >= 48;
-  });
-  if (!header) return false;
-  const headerXs = header.lines[0].items.map((item) => item.x);
-  const rows = blocks.filter((candidate) => {
-    if (candidate === header || candidate.pageStart !== block.pageStart || candidate.pageEnd !== block.pageEnd) return false;
-    if (candidate.bbox.y <= header.bbox.y || candidate.bbox.y - header.bbox.y > 430) return false;
-    if (candidate.text.trim().length > 460 || candidate.lines.length > 6) return false;
-    return headerXs.some((headerX) => Math.abs(candidate.bbox.x - headerX) <= 18);
-  });
-  return rows.length >= 3 && rows.includes(block);
-}
-
 /**
  * A captioned table can be split by the PDF producer at column boundaries,
  * leaving a compact run of one-span cell rows outside the caption block. Use
@@ -1041,7 +1016,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
           // evidence is present.
           : 0.68;
     }
-    if (block.role !== "table_caption" && (nearbyTableRowEvidence(block, blocks) || headeredTableRow(block, blocks) || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedRepeatedRow || captionedNeighborRows || captionedNativeCellRow)) scoreByRole.table = 0.96;
+    if (block.role !== "table_caption" && (nearbyTableRowEvidence(block, blocks) || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedRepeatedRow || captionedNeighborRows || captionedNativeCellRow)) scoreByRole.table = 0.96;
     if (fragmentedLabels > 0) {
       // Apply after all style/heading boosts so graphic fragments cannot be
       // promoted back to headings by a later generic style rule.
