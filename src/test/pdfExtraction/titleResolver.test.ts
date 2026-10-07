@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolveTitle } from "../../services/pdfExtraction/resolver/titleResolver";
 
-function candidate(text: string, y: number, role: "title" | "author" = "title") {
+function candidate(text: string, y: number, role: "title" | "author" = "title", lines?: string[]) {
   return {
     id: `${role}-${y}`,
     role,
@@ -18,7 +18,7 @@ function candidate(text: string, y: number, role: "title" | "author" = "title") 
       pageStart: 1,
       pageEnd: 1,
       bbox: { page: 1, x: 40, y, width: 320, height: 14 },
-      lines: [{ text, page: 1, x: 40, y, width: 320, height: 14, fontSize: 10 }],
+      lines: (lines ?? [text]).map((line, index) => ({ text: line, page: 1, x: 40, y: y + index * 14, width: 320, height: 14, fontSize: 10 })),
     },
   } as any;
 }
@@ -53,5 +53,32 @@ describe("title resolver masthead filtering", () => {
       ],
     });
     expect(result.text).toBe("Взаимосвязь прикладной лингвистики и практики преподавания");
+  });
+
+  it("does not join an event masthead into the article title", () => {
+    const result = resolveTitle({
+      candidates: [
+        candidate("Author / The 5th Seminar and Workshop in Public Health Action (ISWOPHA) September 16, 2025", 40),
+        candidate("International Seminar and Workshop on Public Health Action", 88),
+        candidate("Analysis of Burnout and Occupational Safety in Nurses: A Literature Review", 132),
+        candidate("Delistiani", 220, "author"),
+      ],
+    });
+    expect(result.text).toBe("Analysis of Burnout and Occupational Safety in Nurses: A Literature Review");
+  });
+
+  it("removes a numbered author row swallowed by a title block", () => {
+    const result = resolveTitle({
+      candidates: [candidate(
+        "Взаимосвязь прикладной лингвистики и практикой преподавания английского языка и Ненгах Лаба1, Путу К. Деви2, Тамара Н. Цинкерман3",
+        150,
+        "title",
+        [
+          "Взаимосвязь прикладной лингвистики и практикой преподавания английского языка",
+          "и Ненгах Лаба1, Путу К. Деви2, Тамара Н. Цинкерман3",
+        ],
+      )],
+    });
+    expect(result.text).toBe("Взаимосвязь прикладной лингвистики и практикой преподавания английского языка");
   });
 });
