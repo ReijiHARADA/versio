@@ -3302,9 +3302,11 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       candidate.bbox.y > block.bbox.y && candidate.bbox.y - block.bbox.y <= 280
     );
     if (!hasCaptionBelow) return [block];
+    const bodyFont = median(block.lines.map((line) => line.fontSize));
     const labelLines = block.lines.filter((line) =>
       line.x > pageWidth * 0.45 && line.text.trim().length <= 80 &&
       line.text.trim().split(/\s+/).filter(Boolean).length <= 12 &&
+      line.fontSize <= bodyFont * 0.9 &&
       !/[.!?。！？:;]/.test(line.text.trim())
     );
     if (labelLines.length === 0 || labelLines.length === block.lines.length) return [block];
@@ -3371,7 +3373,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
           maxFont <= pageMedian * 0.9 && candidate.text.length <= 180 && !/[.!?]$/.test(candidate.text.trim())) {
         figureBandBlocks.add(candidate);
       }
-      const graphicLabelBand = (candidate.lines[0]?.pageWidth ?? 612) > 0 &&
+      const graphicLabelBand = caption.role === "figure_caption" && (candidate.lines[0]?.pageWidth ?? 612) > 0 &&
         (candidate.lines[0]?.pageWidth ?? 612) === (caption.lines[0]?.pageWidth ?? 0) &&
         (candidate.bbox.x > (candidate.lines[0]?.pageWidth ?? 612) * 0.45) &&
         (candidate.lines.length <= 3) && candidate.text.length <= 80 &&
