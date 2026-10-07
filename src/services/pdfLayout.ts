@@ -2317,6 +2317,12 @@ function groupLinesIntoBlocks(
       !isReferencesHeading(line.text)
         ? "paragraph"
         : role;
+    if (currentRole === "chrome" && forcedRole === "paragraph" &&
+        current[0]?.page === line.page && current[0]?.column === line.column &&
+        line.y - current[current.length - 1].y < baseFont * 2.8 &&
+        /associate editor\b.*\b(?:coordinating|manuscript|review|approving)\b/i.test(joinLines(current))) {
+      forcedRole = "chrome";
+    }
     if (
       currentRole === "paragraph" &&
       forcedRole === "heading" &&
