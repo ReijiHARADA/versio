@@ -1156,3 +1156,14 @@ numbered procedure (`2. For each layer...`). Caption continuation now rejects
 multi-step numbered procedure blocks, preserving the caption and paragraph as
 separate canonical nodes. The regression is covered in the pipeline suite;
 PDF extraction pipeline tests pass 38/38.
+
+# 2026-10-07: captionless method/goal table detection
+
+The education-learning-analytics PDF contained a two-column `Method /
+Goal/description` table without a caption. Its rows were otherwise emitted as
+ordinary paragraphs and would be sent to translation. The generic candidate
+layer now requires explicit column-heading evidence plus repeated x-origins,
+and excludes pages with figure captions. The rows are projected as skipped
+table blocks; the pipeline suite passes 39/39. A first broader heuristic was
+reverted after the full corpus caught a Wear Scale author regression. The
+strict version preserves the full extraction corpus: **232/232 passed**.
