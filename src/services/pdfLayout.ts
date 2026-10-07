@@ -2019,6 +2019,13 @@ function roleForLine(
   if (isFigureCaption(text)) return "figure_caption";
   if (isTableCaption(text)) return "table_caption";
   if (isEquationLine(text)) return "equation";
+  // Figure panels are sometimes emitted at the top of the next page as a
+  // compact uppercase label (`A B`) with body-sized font. Keep this detached
+  // graphic label from being stitched onto the preceding paragraph.
+  if (line.page > 1 && line.y < (line.pageHeight ?? 792) * 0.12 &&
+      /^[A-Z](?:\s+[A-Z]){1,3}$/.test(text) && line.items.length <= 4) {
+    return "header";
+  }
   // Superscript affiliation markers and email-only rows are metadata
   // fragments, not standalone authors or affiliations. Keep them out of the
   // canonical author/affiliation lists; nearby name/institution rows retain
@@ -2028,6 +2035,7 @@ function roleForLine(
     line.y < (line.pageHeight ?? 792) * 0.12 &&
     line.fontSize <= baseFont * 0.82 &&
     (looksLikePersonName(text) ||
+      /^[A-Z](?:\s+[A-Z]){1,3}$/.test(text) ||
       /^[A-Z][A-Za-z'’-]+\s+et\s+al\.?$/i.test(text) ||
       /[A-Za-z]{3,}.*[•·]\s*\d+\s*:\s*\d+\s*$/.test(text))
   ) {

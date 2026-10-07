@@ -1019,3 +1019,15 @@ journal metadata, and the DOI. The linguistics fixture now recovers
 `The role of applied linguistics and language discourse analysis in English
 language teaching` without metadata. PDF extraction tests: 13 suites / 78
 tests passed.
+# 2026-10-07: detached figure panel labels at page boundaries
+
+The refreshed extraction sample found a paragraph ending in `... The model`
+followed by a compact `A B` figure-panel label at the top of the next page.
+These labels are now treated as header boundaries when they are short uppercase
+runs in the top margin, preventing them from being stitched into prose. The
+real GPT-3 multi-part figure regression passes; ordinary paragraph extraction
+is unchanged.
+
+Environment setup: rebuilt the native `canvas.node` binding after installing
+Homebrew `pkg-config`, Pixman/Cairo/Pango and image dependencies. The PDF.js
+DOMMatrix/Path2D warnings no longer occur in the extraction test process.
