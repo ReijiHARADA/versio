@@ -633,7 +633,9 @@ export function projectCanonicalToPaper(input: {
     // Contact email is common on author rows; retain a name-shaped prefix
     // even though generic masthead filtering rejects standalone email lines.
     (!isNonAuthorMastheadLine(n.text) ||
-      /^[A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’-]+){1,4}\s*[,*]?\s*[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/u.test(n.text.trim())) &&
+      /^[A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’-]+){1,4}\s*[,*]?\s*[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/u.test(n.text.trim()) ||
+      (/(?:\band|&)\s*$/i.test(n.text.trim()) &&
+        (n.text.match(/\b[A-Z][\p{L}'’-]+\s+[A-Z][\p{L}'’-]+/gu)?.length ?? 0) >= 2)) &&
     (!input.metadata.title || (n.text.trim().toLocaleLowerCase() !== input.metadata.title.trim().toLocaleLowerCase() &&
       !n.text.trim().toLocaleLowerCase().startsWith(input.metadata.title.trim().toLocaleLowerCase().slice(0, 28)))) &&
     !/^(?:original article|research article|conceptual\/theoretical paper|additional key words?|phrases?|keywords?|acm reference format|©|the author\(s\))/i.test(n.text.trim()));
@@ -645,7 +647,9 @@ export function projectCanonicalToPaper(input: {
     !isSidebarChromeNode(n) &&
     (n.boundingBoxes[0]?.y ?? 9999) < 520 &&
     !/^\s*(?:keywords?|key words?)\s*:/i.test(n.text.trim()) &&
-    !isNonAuthorMastheadLine(n.text) &&
+    (!isNonAuthorMastheadLine(n.text) ||
+      (/(?:\band|&)\s*$/i.test(n.text.trim()) &&
+        (n.text.match(/\b[A-Z][\p{L}'’-]+\s+[A-Z][\p{L}'’-]+/gu)?.length ?? 0) >= 2)) &&
       ((n.role === "heading" && n.text.trim().length <= 240 &&
       (n.text.match(/,/g)?.length ?? 0) >= 1 &&
       (n.text.match(/[A-Z][\p{L}'’-]+/gu)?.length ?? 0) >= 2 &&
