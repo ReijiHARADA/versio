@@ -1,5 +1,6 @@
 ## Current extraction status (2026-10-07)
 
+- 2026-10-07: 所属分割・表投影・Figure caption continuation修正後の広域回帰を再実行。real-paper baseline **118/118**、reading-order **114/114**、合計 **232/232** pass（389.71秒）。PDF.jsの既知TT/ColorSpace警告のみで、assertion failureなし。
 - 2026-10-07: IEEE形式の `X is/are with ...` 所属文を、同一native paragraph内の次の著者節で分割して複数affiliationへ投影する汎用補正を追加。医療画像PDFの所属を一つの巨大文字列に潰さず、各機関単位で保持できるようにした。authorProjection **18/18**、typecheck pass。
 - 2026-10-07: 著者所属の追加実PDF診断で、`wear-scale.pdf` の同一列折り返し（Events/Hospitality → Management/Iowa State University）を確認。既存所属が1件で、候補が2つの同列native nodeに限られる場合だけ隣接行を結合する高精度補正を追加。HCIの本文断片/Vol・Issue混入、PLOS番号付き所属と合わせ、authorProjection **12/12** pass。既存の段組・編集者欄・interleaved affiliation回帰も維持。全113本の再計測はprojection局所変更のため未実施。
 - 2026-10-07: 最新コミット `f3b6d32` で抽出回帰を再実行。`test:extraction-corpus` は **232/232**（real-paper baseline 118 + reading-order 114）pass。PDF.jsのDOMMatrix/Path2D/TT/ColorSpace警告のみで、抽出assertion failureはなし。これは既知fixtureの回帰保証であり、113本全件の目視品質を意味しない。
