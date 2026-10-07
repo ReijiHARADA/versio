@@ -154,7 +154,7 @@ function stripInlineAuthorTail(candidate: RoleCandidate): string {
   const cut = lines.findIndex((line, index) => index > 0 &&
     // Numbered author markers and comma-separated name lists are stable
     // geometry-independent signs that a title block swallowed its author row.
-    /\b\p{L}{2,}\s*[¹²³⁴⁵⁶⁷⁸⁹0-9]+\b/u.test(line) && /[,，]/.test(line));
+    /\p{L}{2,}\s*[¹²³⁴⁵⁶⁷⁸⁹0-9]+/u.test(line) && /[,，]/.test(line));
   if (cut <= 0) return candidate.text.trim();
   return lines.slice(0, cut).join(" ").replace(/\s+/g, " ").trim();
 }
