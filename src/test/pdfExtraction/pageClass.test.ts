@@ -52,6 +52,15 @@ describe("page classification", () => {
     expect(pagesNeedingOcr(pages)).toEqual(new Set());
   }, 60_000);
 
+  it("routes image-only thesis pages to Vision OCR without requiring document-wide scan classification", async () => {
+    const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "../../..");
+    const pdf = path.join(root, "test-fixtures/real-papers/pending-pdfs/ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    expect(classifyPage(pageClassSignals(pages[9]))).toBe("scanned");
+    expect(pagesNeedingOcr(pages)).toContain(10);
+  }, 60_000);
+
   it("keeps the scanned-by-item-average baseline", () => {
     const scanned = [page(["a", "b"], 1), page(["c"], 2)];
     expect(scannedByItemAverage(scanned)).toBe(true);
