@@ -181,10 +181,10 @@ function normalizeAffiliationName(text: string): string {
     return value;
   };
   return collapseExactRepeat(text
-    // Reviewer/editor metadata can share the native block with the final
-    // affiliation row in journal mastheads. It is a hard boundary, not part
-    // of an institution name.
-    .replace(/\s+(?:edited|reviewed)\s+by\s*:\s*[\s\S]*$/i, "")
+    // Keep the institution text that follows an inline editor/reviewer label;
+    // only the label itself is metadata. A later person-shaped-tail rule
+    // removes reviewer names when they precede an institution.
+    .replace(/\b(?:edited|reviewed)\s+by\s*:\s*/i, "")
     // Some publishers omit the label but leave `Reviewer Name, NIH ...`
     // inline after the final institution. Cut that person-shaped tail.
     .replace(/,\s+[A-Z][\p{Ll}'’-]+(?:\s+[A-Z][\p{Ll}'’-]+){1,2},\s+(?=(?:NIH|University|Hospital|Institute|Center|Centre)\b)[\s\S]*$/u, "")
@@ -865,7 +865,7 @@ export function projectCanonicalToPaper(input: {
   const recoveredMasthead = recoverColumnMasthead(layoutBlocks, firstBodyY);
   const contaminatedAuthor = authorNames.some((name) =>
     /@|\b(?:university|department|school|institute|design|engineering|seattle|washington),?\b/i.test(name));
-  if (recoveredMasthead && (authorNames.length === 0 ||
+  if (recoveredMasthead && recoveredMasthead.affiliations.length >= 2 && (authorNames.length === 0 ||
       (contaminatedAuthor && recoveredMasthead.authors.length >= authorNames.length) ||
       affiliations.length > recoveredMasthead.affiliations.length + 1)) {
     if (authorNames.length === 0 || contaminatedAuthor) authorNames = recoveredMasthead.authors;
