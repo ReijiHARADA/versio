@@ -250,6 +250,12 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
   // and y overlap without treating a title/author row as a column profile.
   const asymmetricRail = (() => {
     if (page.pageNumber !== 1) return null;
+    // A lone `Abstract` heading is common in ordinary two-column papers and
+    // is not enough to identify a metadata rail. Require the rail-specific
+    // labels that distinguish article-info/keyword sidebars from a normal
+    // abstract beside an author masthead.
+    const pageText = page.textItems.map((item) => item.text).join(" ");
+    if (!/article\s+history|keywords\s*:/i.test(pageText)) return null;
     const left = usable.filter((item) =>
       item.y >= page.height * 0.36 && item.x <= page.width * 0.18 && item.width <= page.width * 0.28 &&
       Math.abs(item.rotation ?? 0) < 5
