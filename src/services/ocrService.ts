@@ -74,15 +74,20 @@ export async function ocrPage(
 export async function ocrDocument(
   pdfDoc: unknown,
   languages: string[] = ["en-US"],
-  onProgress?: (page: number, total: number) => void
+  onProgress?: (page: number, total: number) => void,
+  pageNumbers?: ReadonlySet<number>,
 ): Promise<PageOcrResult[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const doc = pdfDoc as any;
   const total: number = doc.numPages;
+  const targetPages = pageNumbers
+    ? [...pageNumbers].filter((page) => Number.isInteger(page) && page >= 1 && page <= total).sort((a, b) => a - b)
+    : Array.from({ length: total }, (_, index) => index + 1);
   const results: PageOcrResult[] = [];
 
-  for (let i = 1; i <= total; i++) {
-    onProgress?.(i, total);
+  for (let index = 0; index < targetPages.length; index++) {
+    const i = targetPages[index];
+    onProgress?.(index + 1, targetPages.length);
     const page = await doc.getPage(i);
     const result = await ocrPage(page, i, languages);
     results.push(result);
