@@ -1269,6 +1269,20 @@ function splitInlineDoi(line: LayoutLine): LayoutLine[] {
   ];
 }
 
+function splitInlineAuthorCopyNotice(line: LayoutLine): LayoutLine[] {
+  const match = line.text.match(/(?:[*∗†‡§]\s*)?this is the unedited author(?:'|’)?s copy\b[\s\S]*?(?:https?:\/\/\S+|doi\.org\/\S+)/i);
+  if (!match || match.index === undefined || match.index > 24) return [line];
+  const end = match.index + match[0].length;
+  const head = line.text.slice(0, end).trim();
+  const tail = line.text.slice(end).trim();
+  if (head.length < 40 || tail.length < 20) return [line];
+  const ratio = Math.max(0.15, Math.min(0.85, head.length / line.text.length));
+  return [
+    { ...line, text: head, width: line.width * ratio },
+    { ...line, text: tail, x: line.x + line.width * ratio, width: line.width * (1 - ratio) },
+  ];
+}
+
 /**
  * Publisher license boilerplate is sometimes concatenated to a citation or
  * the last abstract line by native PDF text extraction. Split the metadata
@@ -2048,6 +2062,10 @@ function roleForLine(
   mastheadTitleTexts?: Set<string>
 ): LayoutRole {
   const text = line.text.trim();
+  // Repository copies sometimes place an unedited-author-copy notice in the
+  // top margin and interleave it with the first body column. It is publication
+  // metadata, not translatable prose.
+  if (/^(?:[*∗†‡§]\s*)?this is the unedited author(?:'|’)?s copy\b/i.test(text)) return "chrome";
   // Repeated proceedings URLs in the top margin are publisher chrome. Keep
   // URL-only lines out of page-boundary paragraph stitching; inline URLs in
   // ordinary prose remain unchanged.
@@ -2296,7 +2314,7 @@ function groupLinesIntoBlocks(
   };
 
   for (const sourceLine of lines) {
-    for (const doiLine of splitInlineDoi(sourceLine)) for (const licenseLine of splitInlineLicense(doiLine)) for (const line of splitInlineBibliographicBand(licenseLine)) {
+    for (const doiLine of splitInlineDoi(sourceLine)) for (const licenseLine of splitInlineLicense(doiLine)) for (const authorCopyLine of splitInlineAuthorCopyNotice(licenseLine)) for (const line of splitInlineBibliographicBand(authorCopyLine)) {
     if (!line.text.trim()) continue;
     if (line.page !== copyrightPage || line.column !== copyrightColumn) {
       copyrightStarted = false;
@@ -2320,7 +2338,8 @@ function groupLinesIntoBlocks(
     if (currentRole === "chrome" && forcedRole === "paragraph" &&
         current[0]?.page === line.page && current[0]?.column === line.column &&
         line.y - current[current.length - 1].y < baseFont * 2.8 &&
-        /associate editor\b.*\b(?:coordinating|manuscript|review|approving)\b/i.test(joinLines(current))) {
+        (/associate editor\b.*\b(?:coordinating|manuscript|review|approving)\b/i.test(joinLines(current)) ||
+          /unedited author(?:'|’)?s copy\b/i.test(joinLines(current)))) {
       forcedRole = "chrome";
     }
     if (

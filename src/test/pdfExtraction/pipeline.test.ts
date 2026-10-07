@@ -13,6 +13,19 @@ import fs from "node:fs";
 import path from "node:path";
 
 describe("canonical extraction pipeline", () => {
+  it("keeps an unedited author-copy notice out of body paragraphs", async () => {
+    const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/computational-linguistics-nlp-translation.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages, paperId: "author-copy-notice", filePath: pdf, fileHash: "author-copy-notice",
+      metadata: { pageCount: pages.length },
+    });
+    const notice = result.blocks.find((block) => /unedited author(?:’|')s copy/i.test(block.original ?? ""));
+    expect(notice).toBeDefined();
+    expect(notice?.original).not.toMatch(/As computing systems have become increasingly important/i);
+    expect(result.blocks.some((block) => block.type === "paragraph" && /As computing systems have become increasingly important/i.test(block.original ?? "") && /unedited author(?:’|')s copy/i.test(block.original ?? ""))).toBe(false);
+  }, 60_000);
   it("keeps the wear-scale correlation matrix as skipped table blocks", async () => {
     const pdf = path.resolve("test-data/real-papers/wear-scale.pdf");
     if (!fs.existsSync(pdf)) return;
