@@ -59,7 +59,7 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   // The sentence-like prose guard lives in the generic evidence generator, so
   // this does not demote ordinary multi-column prose.
   if (
-    candidate.role !== "title" && candidate.role !== "figure_caption" && candidate.role !== "table_caption" &&
+    candidate.role !== "title" &&
     vectorFigureLabels && vectorFigureLabels.confidence >= 0.82 &&
     (candidate.roleScores.table ?? 0) < 0.8
   ) {
@@ -287,8 +287,8 @@ function mergeFigureCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[
     const intervening = captionIndex >= 0 ? result.slice(captionIndex + 1) : [];
     const harmlessIntervening = intervening.every((candidate) =>
       candidate.role === "other" ||
-      (candidate.role === "paragraph" && candidate.text.trim().length <= 24 &&
-        (candidate.text.match(/[A-Za-z]/g) ?? []).length <= 8)
+      (candidate.role === "paragraph" && (candidate.text?.trim().length ?? 0) <= 24 &&
+        ((candidate.text?.match(/[A-Za-z]/g) ?? []).length <= 8))
     );
     const labeledFigureContinuation = /\b(?:[A-D]|Panel\s+[A-D])\s*:/i.test(continuation) &&
       /\b(?:human|model|probability|condition|error bars|data)\b/i.test(continuation);
