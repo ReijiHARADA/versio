@@ -464,7 +464,7 @@ function normalizeNativeSpacing(text: string): string {
   // uppercase-word joins; identifiers such as `3D` and `rLPFC` are untouched.
   return text
     .replace(/(\d{2,})(?=[a-z]{3,}\b)/g, "$1 ")
-    .replace(/([.!?\)])(?=[A-Z][a-z])/g, "$1 ")
+    .replace(/([.!?])(?=[A-Z][a-z])/g, "$1 ")
     .replace(/(\d),\s+(?=\d{3}\s*[a-z])/g, "$1")
     .replace(/\s+/g, " ")
     .trim();
@@ -3162,7 +3162,7 @@ export function isSentenceContinuation(left: string, right: string): boolean {
   if (
     a.length >= 140 &&
     /[a-z]\s+[A-Z][A-Za-z'’-]*$/.test(a) &&
-    /^[A-Z][A-Za-z'’(\-]/.test(b)
+    /^[A-Z][A-Za-z'’(-]/.test(b)
   ) {
     return true;
   }
@@ -3865,7 +3865,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       target.text.trim().length >= 140 && block.text.trim().length >= 24 &&
       !/[.!?:]$/.test(target.text.trim()) &&
       /[a-z]\s+[A-Z][A-Za-z'’-]*$/.test(target.text.trim()) &&
-      /^[A-Z][A-Za-z'’(\-]/.test(block.text.trim()) &&
+      /^[A-Z][A-Za-z'’(-]/.test(block.text.trim()) &&
       safeContinuationMetadataGap && targetLine && nextLine &&
       (targetLine.y ?? 0) > (targetLine.pageHeight ?? 792) * 0.52 &&
       (nextLine.y ?? Number.MAX_SAFE_INTEGER) < (nextLine.pageHeight ?? 792) * 0.35 &&

@@ -1108,7 +1108,7 @@ export function projectCanonicalToPaper(input: {
     .map((name) => name.replace(/^and\s+/i, "").replace(/[,;]+$/, "").trim())
     .filter((name) => !isNonAuthorMastheadLine(name) && name.split(/\s+/).length <= 6 && !/[!?]/.test(name) &&
       !/[@{}]/.test(name) &&
-      !/[\[\]]/.test(name) &&
+      !/(?:\[|\])/.test(name) &&
       !/^(?:general terms?|categories and subject descriptors?)\b/i.test(name) &&
       !/\b(?:movement|science|sport|psychology|department|university|institute|research|council|resistance|training|edited|published)\b/i.test(name) &&
       !(/\s[A-Z]{1,3}$/.test(name) && !/^[A-Z][A-Z'’-]*(?:\s+[A-Z][A-Z'’-]*)+$/.test(name)) &&
@@ -1166,7 +1166,7 @@ export function projectCanonicalToPaper(input: {
         text.length <= 180 && /\b(?:and|,)\b/.test(text) ? expandAuthorLine(text) : [];
       return [...recovered, ...nameOnly];
     })
-    .filter((name) => !/[{}@\[\]]/.test(name) &&
+    .filter((name) => !/(?:[{}@]|\[|\])/.test(name) &&
       !/^(?:general terms?|categories and subject descriptors?)\b/i.test(name) &&
       // A malformed affiliation node can otherwise be mistaken for an
       // author row (e.g. `Research Director ...` or `Industrial Design`).
