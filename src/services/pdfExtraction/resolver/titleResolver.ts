@@ -9,6 +9,10 @@ function looksLikeAuthorish(text: string): boolean {
   return false;
 }
 
+function stripExplicitTitleLabel(text: string): string {
+  return text.replace(/^\s*(?:research\s+)?(?:book\s+)?title\s*:\s*/i, "").trim();
+}
+
 function stripMastheadSuffix(text: string): string {
   const trimmed = text.trim();
   // ORCID/URL and email tokens are unambiguous masthead metadata when they
@@ -203,16 +207,27 @@ export function resolveTitle(input: {
   // A layout pass can conservatively label a large masthead line as author;
   // allow strong native title evidence to participate without discarding the
   // original candidate role used by other resolver decisions.
-  const titles = input.candidates.filter(
+  const nativeTitles = input.candidates.filter(
     (c) => (c.role === "title" || (c.roleScores?.title ?? 0) >= 0.85) &&
       !looksLikeRotatedMasthead(c) && !looksLikeDecoderGarbageTitle(c.text)
   );
+  // Report/book templates often expose an explicit `Research Book Title:`
+  // label but generic role scoring assigns that line to author/affiliation
+  // because it sits inside the masthead. Treat the label as stronger title
+  // evidence than the incidental role while preserving the original node
+  // roles for the rest of the resolver.
+  const labeledTitles = input.candidates.filter((c) =>
+    c.pageStart === 1 && /^\s*(?:research\s+)?(?:book\s+)?title\s*:/i.test(c.text) &&
+    !looksLikeRotatedMasthead(c) && !looksLikeDecoderGarbageTitle(c.text)
+  );
+  const titles = [...nativeTitles, ...labeledTitles.filter((candidate) => !nativeTitles.includes(candidate))]
+    .sort((a, b) => (a.pageStart - b.pageStart) || ((a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0)));
   const titleDebug = typeof process !== "undefined" && process.env.PDF_TITLE_DEBUG === "1";
   if (titleDebug) console.info("[title-debug] candidates", titles.map((c) => ({ role: c.role, text: c.text, y: c.boundingBoxes[0]?.y, x: c.boundingBoxes[0]?.x, font: c.layoutBlock.lines[0]?.fontSize })));
   let native: string[] = [];
 
   if (titles.length > 0) {
-    let combined = stripMastheadSuffix(stripInlineAuthorTail(titles[0]));
+    let combined = stripMastheadSuffix(stripExplicitTitleLabel(stripInlineAuthorTail(titles[0])));
     for (let i = 1; i < titles.length; i++) {
       const prev = titles[i - 1];
       const cur = titles[i];
@@ -227,7 +242,7 @@ export function resolveTitle(input: {
       // immediately below the real title.  Do not concatenate it into the
       // article title merely because its baseline is close.
       if (looksLikeObviousMastheadTitle(cur.text)) break;
-      combined = joinTitleParts(combined, stripMastheadSuffix(cur.text));
+      combined = joinTitleParts(combined, stripMastheadSuffix(stripExplicitTitleLabel(cur.text)));
     }
     native = [combined];
 
@@ -465,6 +480,15 @@ export function resolveTitle(input: {
         native = [joinTitleParts(lastText, next.text.trim())];
       }
     }
+  }
+
+  // Explicit title labels are a higher-confidence structural anchor than a
+  // nearby abstract line or venue banner. Re-assert them after the generic
+  // masthead heuristics above so later-title geometry cannot override a real
+  // `Research Book Title:` field.
+  if (labeledTitles.length > 0) {
+    const labeled = labeledTitles[0];
+    native = [stripMastheadSuffix(stripExplicitTitleLabel(stripInlineAuthorTail(labeled)))];
   }
 
   if (native.length === 0) {

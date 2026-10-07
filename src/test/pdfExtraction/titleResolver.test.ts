@@ -101,4 +101,10 @@ describe("title resolver masthead filtering", () => {
     });
     expect(result.text).toBe("A review of rural consumer behavior marketing strategies and consumer protection for FMCG");
   });
+
+  it("uses an explicit research-book title label despite a non-title role", () => {
+    const labeled = candidate("Research Book Title :Human Factors and Ergonomics", 120, "author");
+    const result = resolveTitle({ candidates: [labeled, candidate("Abstract: Human Factors and Ergonomics presents a comprehensive interdisciplinary", 260)] });
+    expect(result.text).toBe("Human Factors and Ergonomics");
+  });
 });
