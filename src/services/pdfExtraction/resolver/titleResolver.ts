@@ -195,7 +195,9 @@ export function resolveTitle(input: {
       if (titleDebug) console.info("[title-debug] masthead branch", looksLikeObviousMastheadTitle(titles[0].text), looksLikeMastheadGeometry(titles[0]));
       const firstY = titles[0].boundingBoxes[0]?.y ?? 0;
       const authorY = input.candidates
-        .filter((candidate) => candidate.pageStart === 1 && candidate.role === "author")
+        .filter((candidate) => candidate.pageStart === 1 && candidate.role === "author" &&
+          !/\b(?:issn|proceedings|volume|issue)\b/i.test(candidate.text) &&
+          !looksLikeObviousMastheadTitle(candidate.text))
         .map((candidate) => candidate.boundingBoxes[0]?.y ?? Number.POSITIVE_INFINITY)
         .sort((a, b) => a - b)[0] ?? Number.POSITIVE_INFINITY;
       if (titleDebug) console.info("[title-debug] authorY", authorY);
@@ -229,6 +231,12 @@ export function resolveTitle(input: {
         if (sameBaseline.length > 0) native = [sameBaseline.map((candidate) => stripMastheadSuffix(candidate.text)).join(" ").replace(/\s+/g, " ").trim()];
       }
       if (later[0]) {
+        if (later.length >= 2) {
+          // A journal masthead can be followed by a multi-line article title.
+          // Preserve the complete vertically ordered title cluster instead of
+          // selecting only its final line (which often looks like an author).
+          native = [later.map((candidate) => stripMastheadSuffix(candidate.text)).join(" ").replace(/\s+/g, " ").trim()];
+        } else {
         // The final title candidate before the author band is usually the
         // article title; earlier candidates are often the journal label and
         // issue line.  Selecting the last candidate also handles title text
@@ -242,6 +250,7 @@ export function resolveTitle(input: {
             !looksLikeAuthorish(candidate.text))
           .sort((a, b) => (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0));
         native = [cluster.map((candidate) => stripMastheadSuffix(candidate.text)).join(" ").replace(/\s+/g, " ").trim()];
+        }
       }
 
       // Some layouts classify the article title as a paragraph because the

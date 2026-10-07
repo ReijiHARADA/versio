@@ -2335,12 +2335,18 @@ function groupLinesIntoBlocks(
       // gap slightly larger than body leading. Keep those lines together,
       // while requiring a matching font size so nearby author metadata does
       // not get absorbed into the title.
-      Math.abs(line.fontSize - current[current.length - 1].fontSize) <= 1.2 &&
+      (Math.abs(line.fontSize - current[current.length - 1].fontSize) <= 1.2 ||
+        // A colon-terminated title is a strong continuation anchor even when
+        // the second line uses a slightly smaller publisher font and would
+        // otherwise be mistaken for an author row.
+        (/[:：]\s*$/.test(current[current.length - 1].text.trim()) &&
+          Math.abs(line.fontSize - current[current.length - 1].fontSize) <= 4)) &&
       // A title subtitle is often one short native line with a smaller font
       // and is therefore initially classified as affiliation/paragraph. Keep
       // it with the title when it is structurally close and cannot be an
       // author or institution line. Longer prose must still form a new block.
       (forcedRole === "title" ||
+        /[:：]\s*$/.test(current[current.length - 1].text.trim()) ||
         (line.text.trim().split(/\s+/).filter(Boolean).length <= 6 &&
           line.text.trim().length <= 48 &&
           !looksLikePersonName(line.text) &&
