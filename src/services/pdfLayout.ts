@@ -40,6 +40,8 @@ export type PageColumnLayout = {
   gutterX: number;
   leftX: number;
   rightX: number;
+  /** First-page asymmetric metadata rail beside a wide abstract column. */
+  isAsymmetricRail?: boolean;
 };
 
 export type LayoutLine = {
@@ -240,6 +242,38 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     };
   })();
 
+  // Some journal first pages use an asymmetric metadata rail: a narrow
+  // `Article history`/`Keywords` column sits beside a wide abstract column.
+  // The ordinary two-column detector intentionally ignores the short rail
+  // lines, which can make the abstract continue after the rail's keywords
+  // (`... pa` + `tient data ...`). Detect this layout from persistent x bands
+  // and y overlap without treating a title/author row as a column profile.
+  const asymmetricRail = (() => {
+    if (page.pageNumber !== 1) return null;
+    const left = usable.filter((item) =>
+      item.y >= page.height * 0.36 && item.x <= page.width * 0.18 && item.width <= page.width * 0.28 &&
+      Math.abs(item.rotation ?? 0) < 5
+    );
+    const right = usable.filter((item) =>
+      item.y >= page.height * 0.36 && item.x >= page.width * 0.28 && item.x <= page.width * 0.55 &&
+      item.width >= 8 && Math.abs(item.rotation ?? 0) < 5
+    );
+    if (left.length < 15 || right.length < 30) return null;
+    const leftY = { min: Math.min(...left.map((item) => item.y)), max: Math.max(...left.map((item) => item.y)) };
+    const rightY = { min: Math.min(...right.map((item) => item.y)), max: Math.max(...right.map((item) => item.y)) };
+    const overlap = Math.min(leftY.max, rightY.max) - Math.max(leftY.min, rightY.min);
+    if (overlap < 100 || leftY.max - leftY.min < 140 || rightY.max - rightY.min < 100) return null;
+    return {
+      leftX: median(left.map((item) => item.x)),
+      rightX: Math.min(...right.map((item) => item.x)),
+      leftCount: left.length,
+      rightCount: right.length,
+    };
+  })();
+  if (process.env.PDF_LAYOUT_DEBUG === "columns" && page.pageNumber === 1) {
+    console.warn(`[PDF_COLUMNS] asymmetric=${JSON.stringify(asymmetricRail)} sample=${sample.length}`);
+  }
+
   if (sample.length < MIN_COLUMN_ITEMS * 2) {
     if (!alignedColumnPairs) return fallback;
   }
@@ -247,6 +281,8 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
   const rowStartPeaks = findTwoRowStarts(usable, page.width);
   const peaks = alignedColumnPairs
     ? [alignedColumnPairs.leftX, alignedColumnPairs.rightX] as [number, number]
+    : asymmetricRail
+      ? [asymmetricRail.leftX, asymmetricRail.rightX] as [number, number]
     : rowStartPeaks ??
       findTwoXPeaks(sample.map((item) => item.x), page.width * 0.18);
   if (!peaks) {
@@ -279,6 +315,8 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     rightX - leftX >= page.width * 0.35;
   const isMultiColumn = alignedColumnPairs
     ? rightX - leftX >= page.width * 0.22 && leftShare >= 0.22 && rightShare >= 0.22
+    : asymmetricRail
+      ? rightX - leftX >= page.width * 0.15 && asymmetricRail.leftCount >= 15 && asymmetricRail.rightCount >= 30
     : leftItems.length >= MIN_COLUMN_ITEMS &&
       rightItems.length >= MIN_COLUMN_ITEMS &&
       (rowStartPeaks != null || (leftLong.length >= MIN_COLUMN_ITEMS &&
@@ -306,6 +344,7 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     gutterX,
     leftX,
     rightX,
+    isAsymmetricRail: Boolean(asymmetricRail),
   };
 }
 
@@ -1915,7 +1954,8 @@ function buildPageLines(
   if (layout.isMultiColumn && splitAt && page.pageNumber === 1) {
     const masthead = visible.filter((line) => line.y < splitAt.y);
     const body = visible.filter((line) => line.y >= splitAt.y);
-    return [...orderPageLines(masthead, layout), ...orderPageLines(body, layout)];
+    const mastheadLayout = layout.isAsymmetricRail ? { ...layout, isMultiColumn: false } : layout;
+    return [...orderPageLines(masthead, mastheadLayout), ...orderPageLines(body, layout)];
   }
 
   return orderPageLines(visible, layout);
