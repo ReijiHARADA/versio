@@ -13,6 +13,11 @@ function stripExplicitTitleLabel(text: string): string {
   return text.replace(/^\s*(?:research\s+)?(?:book\s+)?title\s*:\s*/i, "").trim();
 }
 
+function isUppercaseTitleLine(text: string): boolean {
+  const t = text.replace(/[^\p{L}]+/gu, "").trim();
+  return t.length >= 12 && (t.match(/[\p{Lu}]/gu)?.length ?? 0) / t.length >= 0.72;
+}
+
 function stripMastheadSuffix(text: string): string {
   const trimmed = text.trim();
   // A title line can be split around an inline journal/year marker when the
@@ -235,6 +240,12 @@ export function resolveTitle(input: {
   );
   const titles = [...nativeTitles, ...labeledTitles.filter((candidate) => !nativeTitles.includes(candidate))]
     .sort((a, b) => (a.pageStart - b.pageStart) || ((a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0)));
+  const uppercaseTitleCluster = titles.filter((candidate) =>
+    candidate.pageStart === 1 &&
+    isUppercaseTitleLine(candidate.text) &&
+    candidate.text.split(/\s+/).length >= 4 &&
+    !looksLikeObviousMastheadTitle(candidate.text)
+  );
   const titleDebug = typeof process !== "undefined" && process.env.PDF_TITLE_DEBUG === "1";
   if (titleDebug) console.info("[title-debug] candidates", titles.map((c) => ({ role: c.role, text: c.text, y: c.boundingBoxes[0]?.y, x: c.boundingBoxes[0]?.x, font: c.layoutBlock.lines[0]?.fontSize })));
   let native: string[] = [];
@@ -502,6 +513,16 @@ export function resolveTitle(input: {
   if (labeledTitles.length > 0) {
     const labeled = labeledTitles[0];
     native = [stripMastheadSuffix(stripExplicitTitleLabel(stripInlineAuthorTail(labeled)))];
+  }
+
+  if (labeledTitles.length === 0 && uppercaseTitleCluster.length >= 2) {
+    const cluster = uppercaseTitleCluster
+      .filter((candidate, index, all) => index === 0 ||
+        (candidate.boundingBoxes[0]?.y ?? 0) - (all[index - 1].boundingBoxes[0]?.y ?? 0) < 28)
+      .slice(-3);
+    if (cluster.length >= 2) {
+      native = [cluster.map((candidate) => stripMastheadSuffix(candidate.text)).join(" ").replace(/\s+/g, " ").trim()];
+    }
   }
 
   if (native.length === 0) {
