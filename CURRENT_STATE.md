@@ -1,5 +1,6 @@
 ## Current extraction status (2026-10-07)
 
+- 2026-10-07: After vector figure-label demotion, reading-order regression passed **114/114** (93.79s).
 - 2026-10-07: After vector figure-label role resolution, full real-paper baseline rerun passed **118/118** (294.51s); no extraction regression.
 - 2026-10-07: Visual review of `interpreting-neural-networks.pdf` found figure heatmap labels (`F1`–`F10`, `x1`–`x10`) being promoted to heading nodes despite vector-label evidence. Resolver/projection now demote strong vector figure label clusters to `other`, preventing translation and heading hierarchy pollution. Focused regression passes; PDF extraction suite **119/119** passes (`a9c9291`).
 - 2026-10-07: All PDF extraction unit/integration suites after math-aware page classification pass: **13 files / 118 tests** (37.33s). Existing PDF.js/fixture warnings remain non-failing.
