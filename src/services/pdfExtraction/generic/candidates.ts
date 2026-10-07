@@ -609,7 +609,7 @@ function headeredTableRow(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
     if (candidate.lines.length !== 1 || candidate.lines[0].items.length < 2) return false;
     const text = candidate.text.trim();
     if (text.length > 64 || /[.!?。！？]$/.test(text)) return false;
-    if (!/[\/|]/.test(text) && !/\b(?:method|goal|description|category|value|measure|variable|result)\b/i.test(text)) return false;
+    if (!/[/|]/.test(text) && !/\b(?:method|goal|description|category|value|measure|variable|result)\b/i.test(text)) return false;
     const xs = candidate.lines[0].items.map((item) => item.x).sort((a, b) => a - b);
     return xs.length >= 2 && xs.at(-1)! - xs[0] >= 48;
   });
