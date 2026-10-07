@@ -66,11 +66,16 @@ const underSampled = catalog.papers
   .filter((paper) => fs.existsSync(path.join(root, catalog.pdfDir, paper.filename)))
   .filter((paper) => (counts.get(paper.id) ?? 0) < 12)
   .map((paper) => `${paper.id}:${counts.get(paper.id) ?? 0}`);
-if (underSampled.length > 0) {
-  throw new Error(`extraction review sample requires at least 12 rows per cached paper: ${underSampled.join(", ")}`);
-}
-
 const output = path.join(root, "test-data/real-papers/reports/extraction-manual-sample-v1.json");
 fs.mkdirSync(path.dirname(output), { recursive: true });
-fs.writeFileSync(output, `${JSON.stringify({ version: "extraction-manual-sample-v1", generatedAt: new Date().toISOString(), rows }, null, 2)}\n`);
+fs.writeFileSync(output, `${JSON.stringify({
+  version: "extraction-manual-sample-v1",
+  generatedAt: new Date().toISOString(),
+  sampling: {
+    targetRowsPerPaper: 12,
+    underSampled,
+    note: "Short papers retain every available candidate; they are not treated as extraction failures.",
+  },
+  rows,
+}, null, 2)}\n`);
 console.log(`wrote ${rows.length} review rows to ${output}`);
