@@ -46,6 +46,20 @@ describe("canonical extraction pipeline", () => {
     expect(result.blocks.filter((block) => block.original?.startsWith("Human data taken from Zaller")).length).toBe(0);
   }, 60_000);
 
+  it("does not append a repeated top-margin proceedings URL to body paragraphs", async () => {
+    const pdf = path.resolve("test-data/real-papers/marketing-the-impact-of-online-advertising-on-consumer-choice-consumption-traps-.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "repeated-proceedings-url",
+      filePath: pdf,
+      fileHash: "repeated-proceedings-url",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /cpcig-conferences\.com/i.test(node.text ?? ""))).toBe(false);
+  }, 60_000);
+
   it("drops punctuation-only interleaved column fragments before a new sentence", () => {
     const textItems = [
       { text: ".-", x: 270, y: 120, width: 10, height: 8, fontSize: 9, fontName: "Times", page: 1 },
