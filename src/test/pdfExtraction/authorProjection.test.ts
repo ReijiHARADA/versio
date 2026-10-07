@@ -212,5 +212,7 @@ describe("author masthead projection", () => {
     const pages = await extractPdfPages(medicalAffiliationStatementPdf);
     const result = await extractFromPages({ pages, paperId: "medical-affiliation-statement", filePath: medicalAffiliationStatementPdf, fileHash: "affiliation-statement", metadata: { pageCount: pages.length } });
     expect(result.paper.affiliations.some((affiliation) => /School of Electronic.*Shaanxi University/i.test(affiliation.name))).toBe(true);
+    expect(result.paper.affiliations.filter((affiliation) => /Brunel University London/i.test(affiliation.name))).toHaveLength(1);
+    expect(result.paper.affiliations.filter((affiliation) => /University|Laboratory|Department|School/i.test(affiliation.name)).length).toBeGreaterThanOrEqual(3);
   }, 60_000);
 });
