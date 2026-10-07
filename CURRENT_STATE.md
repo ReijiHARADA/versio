@@ -1,5 +1,6 @@
 ## Current extraction status (2026-10-07)
 
+- 2026-10-07: Elsevier meta-review visual review exposed wrapped author nodes (`Jan Egger, Christina` / `Gsaxner, ...`) and a trailing consortium line misclassified as an author. Projection now merges contiguous author-row fragments and resolver demotes institution-shaped author candidates to affiliation. Canonical authors recover all 8 names without the consortium; extraction suite **120/120** and baseline **118/118** pass (`f0e004e`).
 - 2026-10-07: Visual review of the Russian/English bilingual title page confirmed the native title, numbered author row, affiliations, and abstract are visually distinct; the canonical extraction keeps these boundaries separate.
 - 2026-10-07: Full application test suite after vector-label fixes passed **72 files / 719 tests** (41.39s).
 - 2026-10-07: After vector figure-label demotion, reading-order regression passed **114/114** (93.79s).
