@@ -17,6 +17,7 @@ const brokenUnicodeTitlePdf = path.join(root, "test-data/real-papers/linguistics
 const journalMastheadPdf = path.join(root, "test-data/real-papers/hci-human-computer-interaction.pdf");
 const plosAffiliationPdf = path.join(root, "test-data/real-papers/hfe-healthcare-safety-review.pdf");
 const wrappedAffiliationPdf = path.join(root, "test-data/real-papers/wear-scale.pdf");
+const ieeeWrappedMastheadPdf = path.join(root, "test-fixtures/real-papers/pending-pdfs/hci-user-experience-design-using-machine-learning-a-systematic-review.pdf");
 
 describe("author masthead projection", () => {
   it("keeps same-baseline multi-column names separate and excludes locations", async () => {
@@ -160,5 +161,14 @@ describe("author masthead projection", () => {
     expect(result.paper.authors).toEqual(expect.arrayContaining(["Changhyun Nam", "Young‑A Lee"]));
     expect(result.paper.affiliations.some((affiliation) => /Department.*Hospitality.*Management.*Iowa State University/i.test(affiliation.name))).toBe(true);
     expect(result.paper.affiliations.every((affiliation) => !/Full list of author information|available online/i.test(affiliation.name))).toBe(true);
+  }, 60_000);
+
+  it("separates an IEEE author row that swallows its faculty line", async () => {
+    if (!fs.existsSync(ieeeWrappedMastheadPdf)) return;
+    const pages = await extractPdfPages(ieeeWrappedMastheadPdf);
+    const result = await extractFromPages({ pages, paperId: "ieee-wrapped-masthead", filePath: ieeeWrappedMastheadPdf, fileHash: "ieee-wrapped-masthead", metadata: { pageCount: pages.length } });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["ABDALLAH M. H. ABBAS", "KHAIRIL IMRAN GHAUTH", "CHOO-YEE TING"]));
+    expect(result.paper.authors.every((name) => !/Faculty|Multimedia|Malaysia|Corresponding/i.test(name))).toBe(true);
+    expect(result.paper.affiliations.some((affiliation) => /Faculty of Computing.*Multimedia University/i.test(affiliation.name))).toBe(true);
   }, 60_000);
 });
