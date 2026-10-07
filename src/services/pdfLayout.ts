@@ -3527,7 +3527,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       target.pageEnd === block.pageStart && targetLine && nextLine &&
       Math.abs(nextLine.y - (target.lines.find((line) => /\b(?:for|including|such\s+as)\s*$/i.test(line.text.trim()))?.y ?? nextLine.y)) <=
         Math.max(targetLine.fontSize, nextLine.fontSize) * 2.2 &&
-      /^\s*[{“"'(\[]/.test(block.text) &&
+      /^\s*(?:[{“"'(]|\[)/.test(block.text) &&
       target.lines.some((line) => /\b(?:for|including|such\s+as)\s*$/i.test(line.text.trim())) &&
       target.bbox.y <= block.bbox.y + block.bbox.height &&
       block.bbox.y <= target.bbox.y + target.bbox.height
