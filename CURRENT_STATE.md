@@ -2,6 +2,7 @@
 
 - 2026-10-07: `cognitive-dual-task.pdf` の所属回帰を実PDFで再診断。4機関が上付き番号と段組の同一 native block に交互配置され、編集者欄も同じ block に混在するため、現行 projection は最後の2機関しか安定復元できないことを確認した。番号の後処理だけでは著者/編集者の混入を解消できないため、次の修正対象は line/block grouping 段階での masthead boundary 分離とする。実験的な後処理は誤抽出を増やすため採用していない。
 - 2026-10-07: 上記PDFの実データで、所属候補が `sidebarMixed` と誤判定され左列を捨てていたこと、および `Reviewed by:` 以降の正当な所属まで正規化で削除していたことを修正。番号付き候補の低信頼上書きを抑制し、国名が列間混入した `University of ...` を構造的に修復した。`authorProjection` **9/9**、pipeline/pageClass **48/48**、typecheck pass。対象PDFの所属は **4/4** 復元。
+- 2026-10-07: 所属修正後の重点3PDF isolated benchmarkを再実行。3/3 process成功、title exact 3/3、interactive-jewelleryのheading/reading-order/caption/list/source integrity、medical meta-reviewのtable metrics、linguisticsのsource integrityを維持。副作用なし。生成レポートは `test-data/real-papers/reports/extraction-isolated-latest.json`。
 
 - 2026-10-07: 最新コードで重点3PDF（interactive-jewellery、linguistics-language-model-physics、medical-deep-learning-meta-review）のisolated extractionを再実行。3/3 process成功、title exact 3/3、heading/reading-order/caption/table指標は各fixtureの期待値を通過、source integrity 1.0。medical PDFは `pageKind=garbled` となりOCR routing対象。
 
