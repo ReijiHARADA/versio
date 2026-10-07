@@ -1475,6 +1475,14 @@ function isRepeatedHeadingLead(heading: LayoutLine, body: LayoutLine): boolean {
 function captionShouldContinue(currentText: string, next: LayoutLine, baseFont: number): boolean {
   const nextText = next.text.trim();
   if (!nextText) return false;
+  // Table captions are often followed immediately by a centered table
+  // section header. It can be emitted as one native item and otherwise looks
+  // like a short wrapped caption line. A substantial x shift from the
+  // caption's left edge is a reliable geometry boundary; keep the header and
+  // subsequent rows available for table-region detection.
+  if (/^(?:table|tables|表)\s+\d+[a-z]?\s*[:.：]/i.test(currentText.trim()) &&
+      next.items.length <= 2 && next.x - (next.pageWidth ? next.pageWidth * 0.18 : 0) > baseFont * 6 &&
+      !/[.!?]s*$/.test(nextText)) return false;
   // Native extraction may place a table's first row or an equation directly
   // after its caption. Such lines have many independently positioned spans or
   // dense symbolic/numeric content; continuing the caption would merge the

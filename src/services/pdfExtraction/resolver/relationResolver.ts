@@ -153,7 +153,7 @@ function overlapRatio(a: { x: number; width: number }, b: { x: number; width: nu
 
 export function captionOfRelations(nodes: CanonicalNode[]): CanonicalRelation[] {
   const tableCaptionShape = (text: string) =>
-    /^(?:table|tables)\s+\d+[a-z]?(?:\s*:\s*|\s+\((?:continued|cont\.)\)|\s+continues?\b)/i.test(text.trim());
+    /^(?:table|tables)\s+\d+(?:\.\d+)?[a-z]?(?:\s*:\s*|\s+\((?:continued|cont\.)\)|\s+continues?\b)/i.test(text.trim());
   const captions = nodes.filter((n) => n.role === "caption" &&
     // Do not let a body sentence beginning with `Table 4.4 summarises ...`
     // acquire a structural relation merely because its resolver role was
@@ -179,7 +179,9 @@ export function captionOfRelations(nodes: CanonicalNode[]): CanonicalRelation[] 
         score += 0.2;
       }
       const dy = captionBox.y - (figBox.y + figBox.height);
-      if (dy >= -8 && dy < 220) score += 0.2;
+      const tableAboveRegion = expectedRole === "table" &&
+        figBox.y >= captionBox.y && figBox.y - (captionBox.y + captionBox.height) < 280;
+      if ((dy >= -8 && dy < 220) || tableAboveRegion) score += 0.2;
       score += Math.min(0.15, overlapRatio(captionBox, figBox) * 0.15);
       if (!best || score > best.score) best = { node: figure, score };
     }
@@ -330,7 +332,7 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
   // marker immediately after the table number. Keep this check local to
   // relation/region construction so the original text is never discarded.
   const tableCaptionShape = (text: string) =>
-    /^(?:table|tables)\s+\d+[a-z]?(?:\s*:\s*|\s+\((?:continued|cont\.)\)|\s+continues?\b)/i.test(text.trim());
+    /^(?:table|tables)\s+\d+(?:\.\d+)?[a-z]?(?:\s*:\s*|\s+\((?:continued|cont\.)\)|\s+continues?\b)/i.test(text.trim());
   return candidates
     .filter(
       (c) =>
