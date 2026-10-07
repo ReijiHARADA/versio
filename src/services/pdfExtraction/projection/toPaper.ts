@@ -82,8 +82,19 @@ function extractSwallowedAffiliation(text: string): string | undefined {
   return tail.length >= 20 ? tail : undefined;
 }
 
+function extractAffiliationStatement(text: string): string | undefined {
+  if (!/(?:\bare|\bis)\s+with\s+/i.test(text) ||
+      !/\b(?:university|department|school|faculty|institute|hospital|laboratory|college)\b/i.test(text)) return undefined;
+  const start = text.search(/(?:\bare|\bis)\s+with\s+/i);
+  const tail = text.slice(start).replace(/^(?:are|is)\s+with\s+/i, "")
+    .replace(/\s*\((?:corresponding author|e-?mail)[\s\S]*$/i, "")
+    .replace(/\s+/g, " ").trim();
+  return tail.length >= 30 ? tail : undefined;
+}
+
 function expandAuthorLine(text: string): string[] {
-  const sourceWithoutAffiliation = separateSwallowedAffiliation(text);
+  const sourceWithoutAffiliation = separateSwallowedAffiliation(text)
+    .replace(/([\u3040-\u30ff\u4e00-\u9fff])\s+(?=[\u3040-\u30ff\u4e00-\u9fff])/g, "$1");
   const markedSource = sourceWithoutAffiliation.replace(/^\s*and\s+/i, "").replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, " ").replace(/\s+/g, " ").trim();
   const cleaned = sourceWithoutAffiliation
     .replace(/^\s*and\s+/i, "")
@@ -909,6 +920,12 @@ export function projectCanonicalToPaper(input: {
     const recovered = extractSwallowedAffiliation(node.text ?? "");
     if (recovered && !affiliations.some((item) => item.name.toLocaleLowerCase() === recovered.toLocaleLowerCase())) {
       affiliations.push({ id: `affiliation-swallowed-${node.id}`, name: normalizeAffiliationName(recovered) });
+    }
+  }
+  for (const node of canonical.nodes) {
+    const recovered = extractAffiliationStatement(node.text ?? "");
+    if (recovered && !affiliations.some((item) => item.name.toLocaleLowerCase() === recovered.toLocaleLowerCase())) {
+      affiliations.push({ id: `affiliation-statement-${node.id}`, name: normalizeAffiliationName(recovered) });
     }
   }
   // PLOS-like layouts sometimes assign the institution line a valid
