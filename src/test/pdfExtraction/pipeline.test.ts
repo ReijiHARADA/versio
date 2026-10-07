@@ -107,6 +107,20 @@ describe("canonical extraction pipeline", () => {
     expect(abstract?.text).not.toMatch(/^tient data/);
   }, 60_000);
 
+  it("prefers the article title over an Elsevier venue masthead", async () => {
+    const pdf = path.resolve("test-data/real-papers/medical-deep-learning-meta-review.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "elsevier-venue-masthead",
+      filePath: pdf,
+      fileHash: "elsevier-venue-masthead",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.titleOriginal).toBe("Medical deep learning—A systematic meta-review");
+  }, 60_000);
+
   it("drops punctuation-only interleaved column fragments before a new sentence", () => {
     const textItems = [
       { text: ".-", x: 270, y: 120, width: 10, height: 8, fontSize: 9, fontName: "Times", page: 1 },

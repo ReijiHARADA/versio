@@ -216,6 +216,21 @@ export function resolveTitle(input: {
     }
     native = [combined];
 
+    // A centered venue banner can be emitted as the strongest title before
+    // the real article title. When a second title candidate is substantially
+    // lower on page one and returns to the page margin, use that structural
+    // sequence as evidence even when the venue name has no `journal` keyword.
+    const firstTitleBox = titles[0].boundingBoxes[0];
+    const secondTitle = titles.find((candidate) =>
+      candidate !== titles[0] && candidate.pageStart === 1 &&
+      (candidate.boundingBoxes[0]?.y ?? 0) > (firstTitleBox?.y ?? 0) + 36 &&
+      (candidate.boundingBoxes[0]?.x ?? 0) < (candidate.layoutBlock.lines[0]?.pageWidth ?? 612) * 0.2 &&
+      !looksLikeObviousMastheadTitle(candidate.text) && !looksLikeAuthorish(candidate.text)
+    );
+    if (secondTitle && (firstTitleBox?.x ?? 0) > (secondTitle.layoutBlock.lines[0]?.pageWidth ?? 612) * 0.16) {
+      native = [stripMastheadSuffix(secondTitle.text)];
+    }
+
     // If the first title candidate is clearly publisher furniture, prefer a
     // later article-title candidate before falling back to external metadata.
     // This matters in production imports where `metadataTitle` is commonly
@@ -392,7 +407,11 @@ export function resolveTitle(input: {
               candidate.text.trim().length >= 3;
           })
           .sort((a, b) => (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0));
-        if (cluster.length >= 2) native = [cluster.map((candidate) => stripMastheadSuffix(candidate.text)).join(" ").replace(/\s+/g, " ").trim()];
+        // Elsevier-style mastheads may expose the article title as one native
+        // candidate rather than a same-baseline cluster. The journal chrome
+        // plus a later title-role candidate is sufficient structural evidence
+        // to prefer it over the centered venue banner.
+        if (cluster.length >= 1) native = [cluster.map((candidate) => stripMastheadSuffix(candidate.text)).join(" ").replace(/\s+/g, " ").trim()];
       }
     }
 
