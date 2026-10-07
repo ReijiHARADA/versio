@@ -1136,3 +1136,14 @@ the title sits inside the author masthead. When two nearby title-scored lines
 form a contiguous uppercase cluster, the resolver now joins them as the title
 before applying masthead fallback. The advertising-incentives PDF now resolves
 its full title; title-resolver tests pass 10/10.
+
+# 2026-10-07: title benchmark residual triage
+
+The remaining title mismatches were checked against page-one native text.
+Several fixtures contain only a Russian/Serbian original title while the
+catalog stores an English translation; one differs only by British/American
+spelling (`behaviour`/`behavior`), one catalog entry has a likely `TND`/`AND`
+typo, and the morphology fixture contains a different medical paper. These
+are acquisition/ground-truth issues, not evidence that the title resolver
+should invent an English title. Remaining implementation work focuses on
+author/affiliation, reading order, tables, and genuine native-text loss.
