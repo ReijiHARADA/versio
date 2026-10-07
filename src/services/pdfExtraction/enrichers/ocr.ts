@@ -54,7 +54,11 @@ export async function applyVisionOcr(
     return { pages, ocrPages: new Set() };
   }
 
-  const ocrResults = await ocrDocument(pdfDoc, ["en-US", "ja-JP", "ru-RU"], onProgress);
+  // Do not OCR healthy native pages in mixed documents. Apart from the cost,
+  // replacing a native page with OCR introduces avoidable reading-order and
+  // character errors. `needed` is computed from the same page classifier used
+  // by the extraction pipeline, so the replacement boundary stays explicit.
+  const ocrResults = await ocrDocument(pdfDoc, ["en-US", "ja-JP", "ru-RU"], onProgress, needed);
   const ocrPages = new Set<number>();
   for (const ocrPage of ocrResults) {
     if (!needed.has(ocrPage.pageNumber) || ocrPage.lines.length === 0) continue;
