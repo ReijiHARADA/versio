@@ -685,9 +685,36 @@ export function projectCanonicalToPaper(input: {
     n.pageStart === 1 && (n.boundingBoxes[0]?.y ?? Infinity) < 390 &&
     !/^(?:keywords?|key words?)\s*:/i.test(n.text.trim()) &&
     !isNonAuthorMastheadLine(n.text) &&
+    !/\b(?:university|department|institute|laboratory|laboratories|hospital|consortium|faculty|school|center|centre)\b/i.test(n.text) &&
     n.text.trim().length <= 400 && /\d[*†‡]?/.test(n.text) &&
     (n.text.match(/,/g)?.length ?? 0) >= 3 && !/[.!?]$/.test(n.text.trim()));
   const authorSourceNodes = [...authorNodes, ...authorContinuationNodes, ...markedAuthorParagraphs];
+  // Elsevier-like mastheads may split one wrapped author row into several
+  // adjacent author nodes (`Jan Egger, Christina` / `Gsaxner, ...`). Merge
+  // only contiguous page-1 author nodes in the masthead band; affiliation and
+  // body nodes are never crossed.
+  const mergedAuthorSources: typeof authorSourceNodes = [];
+  for (const node of [...authorSourceNodes].sort((a, b) =>
+    (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0))) {
+    const previous = mergedAuthorSources.at(-1);
+    const previousBox = previous?.boundingBoxes[0];
+    const box = node.boundingBoxes[0];
+    const canJoin = previous && previous.role === "author" && node.role === "author" &&
+      previous.pageStart === 1 && node.pageStart === 1 &&
+      (box?.y ?? Infinity) - (previousBox?.y ?? -Infinity) <= 28 &&
+      (box?.y ?? Infinity) < firstBodyY &&
+      Math.abs((box?.x ?? 0) - (previousBox?.x ?? 0)) <= 18;
+    if (!canJoin) {
+      mergedAuthorSources.push(node);
+      continue;
+    }
+    const lines = [previous.text, node.text].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+    mergedAuthorSources[mergedAuthorSources.length - 1] = {
+      ...previous,
+      text: lines,
+      boundingBoxes: [...previous.boundingBoxes, ...node.boundingBoxes],
+    };
+  }
   // Some journal templates emit wrapped institution lines as ordinary
   // paragraphs.  Recover only metadata-shaped lines on page 1, before the
   // body starts; ordinary prose must remain a paragraph.
@@ -725,7 +752,7 @@ export function projectCanonicalToPaper(input: {
     return node.text ?? "";
   };
   const mergedMastheadPredecessors = new Set<string>();
-  const authorsStructured = authorSourceNodes.map((node) => {
+  const authorsStructured = mergedAuthorSources.map((node) => {
     const box = node.boundingBoxes[0];
     const predecessor = node.role === "author"
       ? canonical.nodes

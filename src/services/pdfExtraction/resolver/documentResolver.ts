@@ -23,6 +23,12 @@ import {
 
 function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; confidence: number } {
   const scores = candidate.roleScores;
+  // Institution-shaped text can inherit author styling in flattened journal
+  // mastheads. Keep it as affiliation metadata instead of exposing it as an
+  // author (e.g. a trailing consortium line after a wrapped author row).
+  if (candidate.role === "author" && /\b(?:university|department|institute|laboratory|hospital|consortium|faculty|school|center|centre)\b/i.test(candidate.text)) {
+    return { role: "affiliation", confidence: Math.max(scores.affiliation ?? 0.82, 0.82) };
+  }
   const paragraph = scores.paragraph ?? 0.3;
   const ranked = Object.entries(scores)
     .filter((entry): entry is [CanonicalNode["role"], number] => typeof entry[1] === "number")
