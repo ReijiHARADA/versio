@@ -59,6 +59,16 @@ describe("page classification", () => {
     expect(scannedByItemAverage(dense)).toBe(false);
   });
 
+  it("keeps math-heavy native pages out of OCR routing", () => {
+    const signals = pageClassSignals(page([
+      ...Array.from({ length: 12 }, (_, i) => i === 0
+        ? "D H W C Q K V Q D H Q W D H " + "ordinary body text ".repeat(100)
+        : "body"),
+    ]));
+    expect(signals.mathTokenHits).toBeGreaterThanOrEqual(8);
+    expect(classifyPage(signals)).toBe("native-text");
+  });
+
   it("marks replacement-character pages as garbled", () => {
     const garbled = pageClassSignals(
       page(["Broken \uFFFD glyph \uFFFD \uFFFD text with enough items to avoid scan"])
