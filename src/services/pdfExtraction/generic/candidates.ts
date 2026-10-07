@@ -442,6 +442,30 @@ function captionedMultiColumnTableBand(
   return above && below;
 }
 
+/** Some two-column review PDFs flatten a wide table into many short blocks
+ * whose x origins alternate between cells. A caption plus a dense local band
+ * is strong region evidence even when no individual block has a complete row.
+ * Exclude tall, page-spanning blocks so surrounding prose is not swallowed. */
+function captionedDenseTableBand(block: LayoutBlock, blocks: LayoutBlock[], pageWidth: number): boolean {
+  if (block.role === "table_caption" || block.pageStart !== block.pageEnd || block.bbox.height > 115) return false;
+  const caption = blocks.find((candidate) => candidate.pageStart === block.pageStart &&
+    candidate.role === "table_caption" && candidate.bbox.y < block.bbox.y &&
+    block.bbox.y - (candidate.bbox.y + candidate.bbox.height) <= 80);
+  if (!caption) return false;
+  const band = blocks.filter((candidate) => candidate !== caption && candidate.pageStart === block.pageStart &&
+    candidate.bbox.y >= caption.bbox.y && candidate.bbox.y <= caption.bbox.y + 330 &&
+    candidate.bbox.height <= 115 && candidate.bbox.width <= pageWidth * 0.72);
+  if (band.length < 12) return false;
+  const origins = new Map<number, number>();
+  for (const candidate of band) {
+    const x = Math.round(candidate.bbox.x / 12) * 12;
+    origins.set(x, (origins.get(x) ?? 0) + 1);
+  }
+  const repeatedOrigins = [...origins.values()].filter((count) => count >= 3).length;
+  const spread = Math.max(...band.map((candidate) => candidate.bbox.x)) - Math.min(...band.map((candidate) => candidate.bbox.x));
+  return repeatedOrigins >= 3 && spread >= pageWidth * 0.35 && band.includes(block);
+}
+
 /** Long prose in a table's rightmost column can look like ordinary paragraph
  * text after line formation. Repeated same-baseline cells to its left, plus a
  * nearby native table caption, are strong region evidence even when this
@@ -860,6 +884,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const captionedColumnarGrid = captionedMultiColumnTableBand(block, blocks, layout?.pageWidth ?? 612);
     const captionedNeighborRows = captionedNeighborCellRows(block, blocks);
     const captionedNativeCellRow = captionedNativeMultiCellRow(block, blocks);
+    const captionedDenseBand = captionedDenseTableBand(block, blocks, layout?.pageWidth ?? 612);
     const pageGrid = pageGridEvidence(block, blocks);
     const chartLabels = chartLabelEvidence(block, blocks);
     const axisLabels = axisLabelEvidence(block, blocks);
@@ -1087,7 +1112,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
           // evidence is present.
           : 0.68;
     }
-    if (block.role !== "table_caption" && (nearbyTableRowEvidence(block, blocks) || headeredTableRow(block, blocks) || cjkComparisonTableRow(block, blocks) || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedRepeatedRow || captionedNeighborRows || captionedNativeCellRow)) scoreByRole.table = 0.96;
+    if (block.role !== "table_caption" && (nearbyTableRowEvidence(block, blocks) || headeredTableRow(block, blocks) || cjkComparisonTableRow(block, blocks) || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedRepeatedRow || captionedNeighborRows || captionedNativeCellRow || captionedDenseBand)) scoreByRole.table = 0.96;
     if (fragmentedLabels > 0) {
       // Apply after all style/heading boosts so graphic fragments cannot be
       // promoted back to headings by a later generic style rule.

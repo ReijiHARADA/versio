@@ -82,6 +82,23 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /^Fig\.2\s+Otto Künzli/.test(node.text ?? ""))).toBe(false);
   }, 60_000);
 
+  it("keeps a fragmented multi-column review table out of paragraph translation", async () => {
+    const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/covid-ml-review.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "fragmented-review-table-regression",
+      filePath: pdf,
+      fileHash: "fragmented-review-table-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const tableRows = result.blocks.filter((block) => block.pageStart === 5 && /^(?:\[18\]|\[19\]|ARIMA model of order \(1,1,0\) for con-)/.test(block.original ?? ""));
+    expect(tableRows.length).toBeGreaterThan(0);
+    expect(tableRows.every((block) => block.type === "table" || block.translationStatus === "skipped")).toBe(true);
+    expect(result.blocks.some((block) => block.pageStart === 5 && block.type === "paragraph" && block.original?.startsWith("In order to model"))).toBe(true);
+  }, 60_000);
+
   it("keeps a captionless method/goal table out of paragraph translation", async () => {
     const pdf = path.resolve("test-data/real-papers/education-learning-analytics.pdf");
     if (!fs.existsSync(pdf)) return;
