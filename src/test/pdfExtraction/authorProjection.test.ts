@@ -171,5 +171,6 @@ describe("author masthead projection", () => {
     expect(result.paper.authors.every((name) => !/Faculty|Multimedia|Malaysia|Corresponding/i.test(name))).toBe(true);
     expect(result.paper.affiliations.some((affiliation) => /Faculty of Computing.*Multimedia University/i.test(affiliation.name))).toBe(true);
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /associate editor coordinating/i.test(node.text ?? ""))).toBe(false);
+    expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /et al\.: User Experience Design Using Machine Learning/i.test(node.text ?? ""))).toBe(false);
   }, 60_000);
 });

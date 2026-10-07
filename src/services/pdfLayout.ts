@@ -3172,6 +3172,14 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       /^[A-Z][A-Za-z'’-]{1,24},\s*et\s+al\.\s*$/i.test(candidate.text.trim()) &&
       Math.max(...candidate.lines.map((line) => line.fontSize), 0) <= pageMedian * 0.84;
   };
+  const isArticleRunningHeader = (candidate: LayoutBlock): boolean => {
+    if (candidate.role !== "paragraph" || candidate.pageStart <= 1 || candidate.lines.length > 2) return false;
+    const line = candidate.lines[0];
+    const pageHeight = line.pageHeight ?? 792;
+    const text = candidate.text.trim();
+    return line.y < pageHeight * 0.18 && text.length >= 24 && text.length <= 180 &&
+      /\bet\s+al\.\s*:/i.test(text) && !/[.!?]$/.test(text);
+  };
   const isAbstractBodyTitleBlock = (candidate: LayoutBlock): boolean =>
     candidate.role === "title" && candidate.pageStart === candidate.pageEnd &&
     candidate.text.length >= 96 &&
@@ -3194,6 +3202,10 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
     if (isAbstractBodyTitleBlock(block)) block.role = "paragraph";
     if (isDetachedAuthorLabelBlock(block)) {
       result.push({ ...block, role: "chrome" });
+      continue;
+    }
+    if (isArticleRunningHeader(block)) {
+      result.push({ ...block, role: "header" });
       continue;
     }
     if (figureBandBlocks.has(block)) {
