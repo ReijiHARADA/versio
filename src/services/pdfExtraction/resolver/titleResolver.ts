@@ -6,6 +6,10 @@ import type { ExtractionEvidence } from "../types";
 function looksLikeAuthorish(text: string): boolean {
   if (/@/.test(text)) return true;
   if (/(university|department|institute|大学|大学院)/i.test(text)) return true;
+  // Some multilingual mastheads put superscript affiliation numbers directly
+  // after a name (`... лаба1, путу ...`). Treat that shape as an author row so
+  // it cannot be concatenated into the preceding article title.
+  if (/\p{L}{2,}\s*\d{1,3}(?:\s*[,，]|\s*$)/u.test(text) && /[,，]/.test(text)) return true;
   return false;
 }
 

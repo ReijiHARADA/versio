@@ -99,6 +99,22 @@ describe("canonical extraction pipeline", () => {
     expect(result.blocks.some((block) => block.pageStart === 5 && block.type === "paragraph" && block.original?.startsWith("In order to model"))).toBe(true);
   }, 60_000);
 
+  it("separates multilingual superscript author rows from the article title", async () => {
+    const pdf = path.resolve("test-data/real-papers/linguistics-the-role-of-applied-linguistics-and-language-discourse-analysis-in-eng.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "multilingual-title-author-boundary-regression",
+      filePath: pdf,
+      fileHash: "multilingual-title-author-boundary-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const title = result.canonical.nodes.find((node) => node.role === "title" && /взаимосвязь прикладной/u.test(node.text ?? ""));
+    expect(title?.text).toBe("взаимосвязь прикладной лингвистики и лингводискурсивного анализа с практикой преподавания английского языка");
+    expect(title?.text).not.toContain("ненгах");
+  }, 60_000);
+
   it("keeps a captionless method/goal table out of paragraph translation", async () => {
     const pdf = path.resolve("test-data/real-papers/education-learning-analytics.pdf");
     if (!fs.existsSync(pdf)) return;
