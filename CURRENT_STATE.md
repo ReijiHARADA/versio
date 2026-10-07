@@ -1,5 +1,7 @@
 ## Current extraction status (2026-10-07)
 
+- 2026-10-07: Visual/geometry review of the pending Macedonian journal PDF `marketing-impact-of-e-marketing-on-consumer-behavior.pdf` found a generic masthead failure: the second title-case author was flattened together with `Republic of Macedonia` / `Ohrid` location lines and exposed as a long author string. Author projection now keeps the unique short person-shaped line when a small masthead node contains surrounding location/affiliation lines. Focused author projection **22/22** and typecheck pass; the new regression asserts both authors and excludes location leakage. The fix is geometry- and vocabulary-gated and does not alter ordinary body extraction.
+
 - 2026-10-07: Full application suite after wrapped author recovery passed **72 files / 720 tests** (44.57s).
 - 2026-10-07: After wrapped Elsevier author recovery, reading-order regression passed **114/114** (93.06s).
 - 2026-10-07: Elsevier meta-review visual review exposed wrapped author nodes (`Jan Egger, Christina` / `Gsaxner, ...`) and a trailing consortium line misclassified as an author. Projection now merges contiguous author-row fragments and resolver demotes institution-shaped author candidates to affiliation. Canonical authors recover all 8 names without the consortium; extraction suite **120/120** and baseline **118/118** pass (`f0e004e`).

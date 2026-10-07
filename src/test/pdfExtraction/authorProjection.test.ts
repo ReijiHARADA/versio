@@ -25,8 +25,17 @@ const medicalAffiliationStatementPdf = path.join(root, "test-data/real-papers/me
 const landingPagePdf = path.join(root, "test-data/real-papers/how-content-volume-landing-pages.pdf");
 const gpt3AuthorsPdf = path.join(root, "test-data/real-papers/using-cognitive-psychology-gpt3.pdf");
 const frontiersAndContinuationPdf = path.join(root, "test-data/real-papers/marketing-neuroconsumer.pdf");
+const macedonianJournalPdf = path.join(root, "test-fixtures/real-papers/pending-pdfs/marketing-impact-of-e-marketing-on-consumer-behavior.pdf");
 
 describe("author masthead projection", () => {
+  it("separates a title-case author from location lines flattened into one masthead node", async () => {
+    if (!fs.existsSync(macedonianJournalPdf)) return;
+    const pages = await extractPdfPages(macedonianJournalPdf);
+    const result = await extractFromPages({ pages, paperId: "macedonian-journal-masthead", filePath: macedonianJournalPdf, fileHash: "macedonian-journal-masthead", metadata: { pageCount: pages.length } });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["Lidija Pulevska Ivanovska", "Elena Karadakoska"]));
+    expect(result.paper.authors.every((name) => !/Republic|Ohrid|Macedonia|Skopje/i.test(name))).toBe(true);
+  }, 60_000);
+
   it("keeps a central Frontiers author row ending in `and`", async () => {
     if (!fs.existsSync(frontiersAndContinuationPdf)) return;
     const pages = await extractPdfPages(frontiersAndContinuationPdf);

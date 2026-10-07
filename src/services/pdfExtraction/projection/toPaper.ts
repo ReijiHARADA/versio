@@ -749,6 +749,24 @@ export function projectCanonicalToPaper(input: {
         .sort((a, b) => b - a)[0] ?? -Infinity;
       if (y - nearestLabelY < 30) return (node.text ?? "").replace(/^[^,]+,\s*/, "");
     }
+    const layout = layoutForNode(node, layoutBlocks);
+    const lines = layout?.lines ?? [];
+    // Some single-column journal mastheads flatten an author and its
+    // location/affiliation continuation into one canonical author node. Keep
+    // the short person-shaped line as the author and leave the surrounding
+    // metadata available to affiliation projection. This is geometry-driven
+    // and deliberately excludes institution/location vocabulary so ordinary
+    // body paragraphs cannot be shortened by this path.
+    if (lines.length >= 2 && lines.length <= 5) {
+      const personLines = lines.filter((line) => {
+        const text = line.text.replace(/\s+/g, " ").trim();
+        const words = text.split(/\s+/).filter(Boolean);
+        return words.length >= 2 && words.length <= 5 &&
+          /^[A-ZÀ-ÖØ-Þ][\p{L}'’-]*(?:\s+[A-ZÀ-ÖØ-Þ][\p{L}'’-]*){1,4}$/u.test(text) &&
+          !/\b(?:republic|university|faculty|department|school|institute|college|hospital|city|street|road|usa|uk|canada|germany|france|italy|macedonia|ohrid|skopje)\b/i.test(text);
+      });
+      if (personLines.length === 1) return personLines[0].text.replace(/\s+/g, " ").trim();
+    }
     return node.text ?? "";
   };
   const mergedMastheadPredecessors = new Set<string>();
