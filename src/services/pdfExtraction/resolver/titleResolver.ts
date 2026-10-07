@@ -17,6 +17,17 @@ function stripMastheadSuffix(text: string): string {
   const boundary = trimmed.search(/\s+(?:<https?:\/\/|https?:\/\/|[\w.+-]+@[\w.-]+\.[A-Za-z]{2,})/i);
   if (boundary >= 32) return trimmed.slice(0, boundary).trim();
 
+  // Some repository/journal PDFs place the article title and the running
+  // publication line in one native text block, for example:
+  // "Article title www.example.org JOURNAL 2021; 3(1): 63-65".  The URL is
+  // not an article-title continuation when it is followed by a journal
+  // identifier and year/volume metadata.  Strip that generic masthead tail
+  // while keeping ordinary titles that merely contain a URL intact.
+  const publicationTail = trimmed.search(
+    /\s+(?:www\.)?[a-z0-9-]+\.[a-z]{2,}(?:\/[^\s]*)?\s+[A-Z][A-Z0-9.-]{1,}\s+20\d{2}\s*[;,|]/i,
+  );
+  if (publicationTail >= 32) return trimmed.slice(0, publicationTail).trim();
+
   return trimmed;
 }
 
@@ -212,6 +223,10 @@ export function resolveTitle(input: {
       const prevFont = prev.layoutBlock.lines[0]?.fontSize ?? 12;
       if (gap > prevFont * 2.8) break;
       if (looksLikeAuthorish(cur.text)) break;
+      // A publication line can be emitted as a second `title` candidate
+      // immediately below the real title.  Do not concatenate it into the
+      // article title merely because its baseline is close.
+      if (looksLikeObviousMastheadTitle(cur.text)) break;
       combined = joinTitleParts(combined, stripMastheadSuffix(cur.text));
     }
     native = [combined];
