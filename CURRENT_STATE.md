@@ -1,5 +1,7 @@
 ## Current extraction status (2026-10-07)
 
+- 2026-10-07: `significant-other.pdf` exposed a legacy caption form (`Fig.2 Otto Künzli ...`) with no punctuation after the figure number. It was being emitted as translatable paragraph text. `isFigureCaption` now recognizes unpunctuated, title-like continuations while excluding verb-led prose such as `Fig. 2 shows ...`; the following photographer line is retained as caption continuation. Targeted regression passes and typecheck passes (`f0b7d68`).
+
 - 2026-10-07: 所属分割・表投影・Figure caption continuation修正後の広域回帰を再実行。real-paper baseline **118/118**、reading-order **114/114**、合計 **232/232** pass（389.71秒）。PDF.jsの既知TT/ColorSpace警告のみで、assertion failureなし。
 - 2026-10-07: IEEE所属文の実PDF再診断で、同一機関の行分割（Brunel University London）が重複出力される問題を確認。機関名の正規化と包含関係による重複統合を追加し、医療PDFで所属4系統を重複なしに保持。authorProjection **18/18**、typecheck pass。
 - 2026-10-07: IEEE形式の `X is/are with ...` 所属文を、同一native paragraph内の次の著者節で分割して複数affiliationへ投影する汎用補正を追加。医療画像PDFの所属を一つの巨大文字列に潰さず、各機関単位で保持できるようにした。authorProjection **18/18**、typecheck pass。
