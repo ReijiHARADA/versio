@@ -1079,3 +1079,13 @@ markers from their institution lines. The projection now reconstructs the
 bounded masthead band at marker boundaries and retains only institution-shaped
 segments. The medical meta-review affiliation regression passes; the separate
 editor/reviewer chrome case remains under investigation.
+
+# 2026-10-07: reviewer metadata separated from author affiliations
+
+Frontiers-style first pages can place `Edited by`/`Reviewed by` metadata and
+its affiliations in the outer columns of the author masthead. The projection
+now detects the review-label boundary, keeps central author-affiliation rows,
+retains the post-label author institution column, and shares a wrapped
+university continuation across the relevant author rows. It also uses existing
+laboratory evidence to avoid losing the left-column institution. The complete
+author projection suite now passes **20/20**.
