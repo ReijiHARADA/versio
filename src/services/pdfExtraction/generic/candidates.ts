@@ -409,10 +409,6 @@ function captionedMultiColumnTableBand(
     candidate.bbox.y < block.bbox.y && block.bbox.y - candidate.bbox.y <= 520
   );
   if (!caption) return false;
-  // A nearby caption is not enough to relabel a long body paragraph. This is
-  // especially important for CJK PDFs, where a table and its surrounding
-  // discussion are often emitted in the same native text band.
-  if (block.text.length > 120 && (block.text.match(/[.!?。！？]/g) ?? []).length >= 2) return false;
 
   const originCounts = new Map<number, number>();
   for (const line of block.lines) {
@@ -452,7 +448,6 @@ function captionedMultiColumnTableBand(
  * column alone has no short numeric cells. */
 function captionedNeighborCellRows(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
   if (block.role === "table_caption" || block.lines.length < 4 || block.bbox.width > 280) return false;
-  if (block.text.length > 120 && (block.text.match(/[.!?。！？]/g) ?? []).length >= 2) return false;
   const caption = blocks.find((candidate) => candidate.pageStart === block.pageStart &&
     candidate.role === "table_caption" && candidate.bbox.y < block.bbox.y &&
     block.bbox.y - (candidate.bbox.y + candidate.bbox.height) <= 420);
@@ -510,7 +505,6 @@ function captionedNeighborCellRows(block: LayoutBlock, blocks: LayoutBlock[]): b
  * separated only by word-sized gaps. */
 function captionedNativeMultiCellRow(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
   if (block.role === "table_caption") return false;
-  if (block.text.length > 120 && (block.text.match(/[.!?。！？]/g) ?? []).length >= 2) return false;
   const caption = blocks.find((candidate) => candidate.pageStart === block.pageStart &&
     candidate.role === "table_caption" && candidate.bbox.y < block.bbox.y &&
     block.bbox.y - (candidate.bbox.y + candidate.bbox.height) <= 520);
