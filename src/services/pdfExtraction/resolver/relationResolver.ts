@@ -337,17 +337,6 @@ export function topologicalOrder(
 
 export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNode[] {
   const continuedTable = (text: string) => /^(?:table|tables)\s+\d+[a-z]?\s*\(continued\)/i.test(text.trim());
-  // A body paragraph can begin with `Table 4.4 summarises ...` and still be
-  // assigned the generic table-caption role by layout heuristics. A real
-  // caption has a structural delimiter (colon) or an explicit continuation
-  // marker immediately after the table number. Keep this check local to
-  // relation/region construction so the original text is never discarded.
-  const tableCaptionShape = (text: string) => {
-    const value = text.trim();
-    return /^(?:table|tables)\s+\d+(?:\.\d+)?[a-z]?(?:\s*[.:：]\s*|\s+\((?:continued|cont\.)\)|\s+continues?\b)/i.test(value) ||
-      (/^table\s+\d+(?:\.\d+)?[a-z]?(?:\s*[.:：])?\s+\S/i.test(value) && value.length <= 120 &&
-        value.split(/\s+/).length <= 12 && !/[.!?]\s*$/.test(value));
-  };
   return candidates
     .filter(
       (c) =>
