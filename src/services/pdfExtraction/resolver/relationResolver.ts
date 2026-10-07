@@ -152,8 +152,12 @@ function overlapRatio(a: { x: number; width: number }, b: { x: number; width: nu
 }
 
 export function captionOfRelations(nodes: CanonicalNode[]): CanonicalRelation[] {
-  const tableCaptionShape = (text: string) =>
-    /^(?:table|tables)\s+\d+(?:\.\d+)?[a-z]?(?:\s*:\s*|\s+\((?:continued|cont\.)\)|\s+continues?\b)/i.test(text.trim());
+  const tableCaptionShape = (text: string) => {
+    const value = text.trim();
+    return /^(?:table|tables)\s+\d+(?:\.\d+)?[a-z]?(?:\s*[.:：]\s*|\s+\((?:continued|cont\.)\)|\s+continues?\b)/i.test(value) ||
+      (/^table\s+\d+(?:\.\d+)?[a-z]?(?:\s*[.:：])?\s+\S/i.test(value) && value.length <= 120 &&
+        value.split(/\s+/).length <= 12 && !/[.!?]\s*$/.test(value));
+  };
   const captions = nodes.filter((n) => n.role === "caption" &&
     // Do not let a body sentence beginning with `Table 4.4 summarises ...`
     // acquire a structural relation merely because its resolver role was
@@ -166,9 +170,16 @@ export function captionOfRelations(nodes: CanonicalNode[]): CanonicalRelation[] 
   for (const caption of captions) {
     const captionBox = caption.boundingBoxes[0];
     let best: { node: CanonicalNode; score: number } | null = null;
-    const expectedRole = tableCaptionShape(caption.text ?? "") ? "table" :
+    const expectedRole = /^table\b/i.test(caption.text ?? "") ? "table" :
       /^(?:figure|fig\.)\s*\d/i.test(caption.text ?? "") ? "figure" : undefined;
-    for (const figure of figures) {
+    const figureCandidates = [...figures].sort((a, b) => {
+      if (expectedRole !== "table") return 0;
+      const label = caption.text?.match(/^table\s+\d+(?:\.\d+)?[a-z]?/i)?.[0]?.toLowerCase();
+      const aMatch = label && a.structuralLabel?.toLowerCase().startsWith(label) ? 1 : 0;
+      const bMatch = label && b.structuralLabel?.toLowerCase().startsWith(label) ? 1 : 0;
+      return bMatch - aMatch;
+    });
+    for (const figure of figureCandidates) {
       if (expectedRole && figure.role !== expectedRole) continue;
       if (used.has(figure.id)) continue;
       if (figure.pageStart !== caption.pageStart) continue;
@@ -331,16 +342,20 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
   // caption has a structural delimiter (colon) or an explicit continuation
   // marker immediately after the table number. Keep this check local to
   // relation/region construction so the original text is never discarded.
-  const tableCaptionShape = (text: string) =>
-    /^(?:table|tables)\s+\d+(?:\.\d+)?[a-z]?(?:\s*:\s*|\s+\((?:continued|cont\.)\)|\s+continues?\b)/i.test(text.trim());
+  const tableCaptionShape = (text: string) => {
+    const value = text.trim();
+    return /^(?:table|tables)\s+\d+(?:\.\d+)?[a-z]?(?:\s*[.:：]\s*|\s+\((?:continued|cont\.)\)|\s+continues?\b)/i.test(value) ||
+      (/^table\s+\d+(?:\.\d+)?[a-z]?(?:\s*[.:：])?\s+\S/i.test(value) && value.length <= 120 &&
+        value.split(/\s+/).length <= 12 && !/[.!?]\s*$/.test(value));
+  };
   return candidates
     .filter(
       (c) =>
         c.layoutBlock.role === "figure_caption" ||
-        (c.layoutBlock.role === "table_caption" && !continuedTable(c.layoutBlock.text) && tableCaptionShape(c.layoutBlock.text))
+        (c.layoutBlock.role === "table_caption" && !continuedTable(c.layoutBlock.text))
     )
     .map((caption, i) => {
-      const role = tableCaptionShape(caption.layoutBlock.text) ? "table" : "figure";
+      const role = caption.layoutBlock.role === "table_caption" ? "table" : "figure";
       const box = caption.boundingBoxes[0];
       const nextTableCaptionPage = role === "table"
         ? Math.min(
