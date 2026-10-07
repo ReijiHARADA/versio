@@ -1966,6 +1966,10 @@ function roleForLine(
   if (line.y < (line.pageHeight ?? 792) * 0.18 && /^https?:\/\/\S+$/i.test(text)) {
     return "header";
   }
+  if (line.y < (line.pageHeight ?? 792) * 0.18 &&
+      /\b(?:e-?issn|p-?issn|published\s+by|journal\s+\w+|vol\.\s*\d+)/i.test(text)) {
+    return "header";
+  }
   // Native superscript markers and email-only rows are not standalone
   // canonical metadata. Apply this before inherited role hints so a hint from
   // an adjacent masthead line cannot resurrect these fragments.
@@ -2427,9 +2431,11 @@ function groupLinesIntoBlocks(
   }
   flush();
   const nonEmptyBlocks = splitMixedColumnBlocks(
-    splitStyledHeadingPrefixes(
+    splitTopBibliographicLines(
+      splitStyledHeadingPrefixes(
       splitEmbeddedChromeBlocks(rejoinCaptionStatisticFragments(blocks.filter((b) => b.text.length > 0))),
       median(blocks.flatMap((block) => block.lines.map((line) => line.fontSize))) || 9,
+      )
     )
   );
   logLayoutBlockBoundaries(nonEmptyBlocks);
@@ -3139,6 +3145,34 @@ function isDetachedTableHeaderBlock(block: LayoutBlock, previous: LayoutBlock): 
   const previousLine = previous.lines.at(-1);
   const nextLine = block.lines[0];
   return Boolean(previousLine && nextLine && Math.abs(previousLine.x - nextLine.x) >= 80);
+}
+
+function isTopBibliographicLine(line: LayoutLine): boolean {
+  const text = line.text.trim();
+  if (line.y >= (line.pageHeight ?? 792) * 0.18) return false;
+  return /^https?:\/\/\S+$/i.test(text) ||
+    /\b(?:e-?issn|p-?issn|published\s+by|journal\s+\w+|vol\.\s*\d+)/i.test(text);
+}
+
+/** Separate top-margin bibliographic lines that a native stream has attached
+ * to an otherwise valid paragraph block before page-boundary stitching. */
+function splitTopBibliographicLines(blocks: LayoutBlock[]): LayoutBlock[] {
+  const result: LayoutBlock[] = [];
+  for (const block of blocks) {
+    if (block.role !== "paragraph" || !block.lines.some(isTopBibliographicLine)) {
+      result.push(block);
+      continue;
+    }
+    const body = block.lines.filter((line) => !isTopBibliographicLine(line));
+    const chrome = block.lines.filter(isTopBibliographicLine);
+    if (body.length > 0) {
+      result.push({ ...block, lines: body, text: joinLines(body), pageStart: body[0].page, pageEnd: body.at(-1)!.page, bbox: blockBbox(body) });
+    }
+    for (const line of chrome) {
+      result.push({ ...block, role: "header", lines: [line], text: line.text.trim(), pageStart: line.page, pageEnd: line.page, bbox: blockBbox([line]) });
+    }
+  }
+  return result;
 }
 
 function isTransparentMetadataBlock(block: LayoutBlock, repeatedTexts: Set<string>): boolean {

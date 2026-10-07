@@ -920,6 +920,17 @@ plus header-token boundary now prevents that merge while leaving ordinary
 sentences containing statistical terms unchanged. The marketing-platform real
 PDF regression passes.
 
+# 2026-10-07: repeated ISSN/header stream contamination
+
+An Indonesian journal PDF exposed the same failure with a richer masthead:
+`p-ISSN / e-ISSN / journal URL` lines at the top of each page were being
+reclassified as paragraph candidates after layout reconstruction. The generic
+candidate layer now preserves `header`, `footer`, `copyright`, and `chrome`
+layout roles instead of allowing paragraph heuristics to override them. A
+real-paper regression confirms the repeated journal URL no longer appears in
+body paragraphs; legitimate ISSN text inside a bibliography entry remains
+unchanged.
+
 # 2026-10-07: affiliation author contamination guard
 
 The production projection now rejects affiliation-derived author candidates
