@@ -1,5 +1,6 @@
 ## Current extraction status (2026-10-07)
 
+- 2026-10-07: All PDF extraction unit/integration suites after math-aware page classification pass: **13 files / 118 tests** (37.33s). Existing PDF.js/fixture warnings remain non-failing.
 - 2026-10-07: Visual review of the equation-heavy medical page 9 confirmed the native text layer is legible and structurally usable (figures, two-column prose, equations, and captions). This supports keeping those pages on native extraction instead of OCR after `c89fa7f`.
 - 2026-10-07: Equation-heavy medical pages contained valid spaced tensor symbols (`D H W`, `C Q K`) that triggered garbled/OCR routing. Page classification now discounts dense single-letter mathematical notation while retaining true split-glyph signals. The 23-page medical PDF classifies fully as native-text; page-class tests **11/11** and extraction baseline **118/118** pass (`c89fa7f`).
 - 2026-10-07: After title-layer deduplication, reading-order regression was rerun: **114/114** passed (96.72s).
