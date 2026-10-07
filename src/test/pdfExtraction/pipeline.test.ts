@@ -65,6 +65,23 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /^2\. For each layer\b/.test(node.text ?? ""))).toBe(true);
   }, 60_000);
 
+  it("recognizes unpunctuated legacy Fig. captions and keeps their continuation", async () => {
+    const pdf = path.resolve("test-data/real-papers/significant-other.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "legacy-fig-caption-regression",
+      filePath: pdf,
+      fileHash: "legacy-fig-caption-regression",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.canonical.nodes.some((node) => node.role === "caption" && /^Fig\.2\s+Otto Künzli/.test(node.text ?? ""))).toBe(true);
+    const fig3 = result.canonical.nodes.find((node) => node.role === "caption" && /^Fig\.3\s+Iris Eichenberg/.test(node.text ?? ""));
+    expect(fig3?.text).toContain("Photographer Ron Zijlstra");
+    expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /^Fig\.2\s+Otto Künzli/.test(node.text ?? ""))).toBe(false);
+  }, 60_000);
+
   it("keeps a captionless method/goal table out of paragraph translation", async () => {
     const pdf = path.resolve("test-data/real-papers/education-learning-analytics.pdf");
     if (!fs.existsSync(pdf)) return;
