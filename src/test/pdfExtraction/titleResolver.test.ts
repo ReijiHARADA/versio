@@ -81,4 +81,24 @@ describe("title resolver masthead filtering", () => {
     });
     expect(result.text).toBe("Взаимосвязь прикладной лингвистики и практикой преподавания английского языка");
   });
+
+  it("removes a URL and publication metadata swallowed into the title", () => {
+    const result = resolveTitle({
+      candidates: [candidate(
+        "A review of rural consumer behavior marketing strategies and consumer protection for FMCG www.marketingjournal.net IJRMMS 2021; 3(1): 63-65",
+        120,
+      )],
+    });
+    expect(result.text).toBe("A review of rural consumer behavior marketing strategies and consumer protection for FMCG");
+  });
+
+  it("does not join an adjacent publication line emitted as a title", () => {
+    const result = resolveTitle({
+      candidates: [
+        candidate("A review of rural consumer behavior marketing strategies and consumer protection for FMCG", 120),
+        candidate("www.marketingjournal.net IJRMMS 2021; 3(1): 63-65", 135),
+      ],
+    });
+    expect(result.text).toBe("A review of rural consumer behavior marketing strategies and consumer protection for FMCG");
+  });
 });
