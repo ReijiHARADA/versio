@@ -36,7 +36,15 @@ export function pageClassSignals(page: ExtractedPage): PageClassSignals {
     const first = ordered[0].text.trim();
     const punctuationFragment = /^(?:[.]{1,3}|[”’")]+[.]?)$/.test(first);
     const shortToken = /^[a-z]{1,4}[-.]?$/i.test(first);
-    return punctuationFragment || shortToken;
+    // A normal sentence starts the next word at ordinary word spacing. A
+    // transparent/interleaved column fragment leaves a conspicuous horizontal
+    // gap before the following run; use geometry so words like "An" or "data"
+    // in ordinary prose are not treated as corruption.
+    const gapAfterFirst = ordered.length > 1
+      ? ordered[1].x - (ordered[0].x + ordered[0].width)
+      : 0;
+    const geometricFragment = shortToken && gapAfterFirst > Math.max(12, ordered[0].height * 1.5);
+    return punctuationFragment || geometricFragment;
   }).length;
   return {
     itemCount: items.length,
@@ -44,7 +52,13 @@ export function pageClassSignals(page: ExtractedPage): PageClassSignals {
     replacementCount: (text.match(/\uFFFD/g) ?? []).length,
     spacedLetterHits: (text.match(/\b[A-Za-z]\s+[A-Za-z]\s+[A-Za-z]/g) ?? [])
       .length,
-    splitWordHits: (text.match(/\b[A-Za-z\u00C0-\u024F]{2,}\s+[A-Za-z\u00C0-\u024F]\s+[A-Za-z\u00C0-\u024F]{2,}\b/gu) ?? [])
+    splitWordHits: [...text.matchAll(/\b([A-Za-z\u00C0-\u024F]{2,})\s+([A-Za-z\u00C0-\u024F])\s+([A-Za-z\u00C0-\u024F]{2,})\b/gu)]
+      .filter((match) => {
+        const [, left, glyph, right] = match;
+        if (/^[aAiI]$/.test(glyph)) return false;
+        if (/^[A-Z]$/.test(glyph) && /^[A-Z]/.test(left) && /^[A-Z]/.test(right)) return false;
+        return true;
+      })
       .length,
     repeatedGlyphHits,
     brokenTokenHits,
