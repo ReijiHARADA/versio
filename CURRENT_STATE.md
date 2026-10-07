@@ -1050,3 +1050,13 @@ A figure-caption-anchored, geometry/style-gated split now isolates compact
 right-side labels before continuation merging. It is limited to figure
 captions and smaller-font label lines so floated tables and ordinary two-column
 prose are unchanged. Full extraction corpus regression: **232/232 passed**.
+
+# 2026-10-07: Elsevier venue masthead vs article title
+
+Some Elsevier first pages expose the centered venue banner as the strongest
+native title candidate, before the actual article title. The title resolver now
+uses the structural sequence (centered candidate, then a substantially lower
+left-aligned title candidate) as evidence to prefer the article title without
+publisher-specific vocabulary. Regression coverage was added for
+`medical-deep-learning-meta-review`; the focused extraction tests and
+TypeScript check pass.
