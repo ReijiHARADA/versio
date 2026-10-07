@@ -1147,3 +1147,12 @@ typo, and the morphology fixture contains a different medical paper. These
 are acquisition/ground-truth issues, not evidence that the title resolver
 should invent an English title. Remaining implementation work focuses on
 author/affiliation, reading order, tables, and genuine native-text loss.
+
+# 2026-10-07: numbered procedure steps absorbed into figure caption
+
+Manual layout review found a genuine paragraph-boundary error in the
+language-model/physics PDF: `Figure 3` caption text was joined with a following
+numbered procedure (`2. For each layer...`). Caption continuation now rejects
+multi-step numbered procedure blocks, preserving the caption and paragraph as
+separate canonical nodes. The regression is covered in the pipeline suite;
+PDF extraction pipeline tests pass 38/38.
