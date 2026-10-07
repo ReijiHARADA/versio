@@ -258,7 +258,29 @@ function normalizeAffiliationName(text: string): string {
     .replace(/\s+,/g, ",")
     .replace(/,\s*/g, ", ")
     .replace(/^[*†‡§☯\s]+/, "")
+    .replace(/^the\s+/i, "")
     .trim());
+}
+
+function affiliationKey(text: string): string {
+  return text.toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").replace(/\s+/g, " ").trim();
+}
+
+function appendAffiliation(affiliations: Array<{ id: string; name: string }>, candidate: { id: string; name: string }): void {
+  const candidateName = normalizeAffiliationName(candidate.name);
+  if (candidateName.length < 20) return;
+  const candidateKey = affiliationKey(candidateName);
+  const existingIndex = affiliations.findIndex((item) => {
+    const existingKey = affiliationKey(item.name);
+    return existingKey === candidateKey || existingKey.startsWith(candidateKey) || candidateKey.startsWith(existingKey);
+  });
+  if (existingIndex < 0) {
+    affiliations.push({ ...candidate, name: candidateName });
+    return;
+  }
+  if (candidateName.length > affiliations[existingIndex].name.length) {
+    affiliations[existingIndex] = { ...candidate, name: candidateName };
+  }
 }
 
 /**
@@ -931,9 +953,7 @@ export function projectCanonicalToPaper(input: {
   }
   for (const node of canonical.nodes) {
     for (const recovered of extractAffiliationStatements(node.text ?? "")) {
-      if (!affiliations.some((item) => item.name.toLocaleLowerCase() === recovered.toLocaleLowerCase())) {
-        affiliations.push({ id: `affiliation-statement-${node.id}-${affiliations.length}`, name: normalizeAffiliationName(recovered) });
-      }
+      appendAffiliation(affiliations, { id: `affiliation-statement-${node.id}-${affiliations.length}`, name: recovered });
     }
   }
   // PLOS-like layouts sometimes assign the institution line a valid
