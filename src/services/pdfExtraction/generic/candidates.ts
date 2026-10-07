@@ -650,6 +650,20 @@ function cjkComparisonTableRow(block: LayoutBlock, blocks: LayoutBlock[]): boole
   return [...xCounts.values()].filter((count) => count >= 3).length >= 2;
 }
 
+function cjkComparisonTableCaption(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
+  if (block.role !== "paragraph" || !/^表\s*\d+[a-z]?\s+/iu.test(block.text.trim())) return false;
+  const rows = blocks.filter((candidate) => candidate !== block && candidate.pageStart === block.pageStart &&
+    candidate.bbox.y > block.bbox.y && candidate.bbox.y - block.bbox.y <= 300 &&
+    /[\u3400-\u9fff]/u.test(candidate.text) && /[√✓☑☒]/u.test(candidate.text) &&
+    candidate.lines.length <= 3 && !/[。！？.!?]$/.test(candidate.text.trim()));
+  if (rows.length < 3) return false;
+  const origins = new Map<number, number>();
+  for (const row of rows) for (const x of new Set(row.lines.flatMap((line) => line.items).map((item) => Math.round(item.x / 12) * 12))) {
+    origins.set(x, (origins.get(x) ?? 0) + 1);
+  }
+  return [...origins.values()].filter((count) => count >= 3).length >= 2;
+}
+
 /**
  * A captioned table can be split by the PDF producer at column boundaries,
  * leaving a compact run of one-span cell rows outside the caption block. Use
@@ -915,6 +929,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       paragraph: role === "paragraph" ? confidence : 0.22,
       [role]: confidence,
     };
+    if (cjkComparisonTableCaption(block, blocks)) scoreByRole.caption = 0.96;
     if (pageGrid > 0 && block.role !== "table_caption") scoreByRole.table = pageGrid;
     if (chartLabels > 0) scoreByRole.other = chartLabels;
     if (axisLabels > 0) scoreByRole.other = Math.max(scoreByRole.other ?? 0, axisLabels);

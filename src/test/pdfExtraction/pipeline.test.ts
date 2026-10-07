@@ -177,6 +177,7 @@ describe("canonical extraction pipeline", () => {
     expect(rows.length).toBeGreaterThanOrEqual(3);
     expect(rows.every((block) => block.type === "table")).toBe(true);
     expect(result.blocks.some((block) => block.pageStart === 11 && block.type === "paragraph" && block.original.includes("其次"))).toBe(true);
+    expect(result.canonical.nodes.some((node) => node.role === "caption" && node.text?.startsWith("表 3"))).toBe(true);
   }, 30_000);
 
   it("splits repeated dash bullets without splitting a single inline dash", () => {
