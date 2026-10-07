@@ -7,6 +7,7 @@ export type PageClassSignals = {
   charCount: number;
   replacementCount: number;
   spacedLetterHits: number;
+  mathTokenHits: number;
   /** Words split by a single glyph token (e.g. `Transla T ion`). */
   splitWordHits: number;
   repeatedGlyphHits: number;
@@ -46,12 +47,14 @@ export function pageClassSignals(page: ExtractedPage): PageClassSignals {
     const geometricFragment = shortToken && gapAfterFirst > Math.max(12, ordered[0].height * 1.5);
     return punctuationFragment || geometricFragment;
   }).length;
+  const mathTokenHits = (text.match(/\b[A-Za-z]\b/g) ?? []).length;
   return {
     itemCount: items.length,
     charCount: text.replace(/\s+/g, "").length,
     replacementCount: (text.match(/\uFFFD/g) ?? []).length,
     spacedLetterHits: (text.match(/\b[A-Za-z]\s+[A-Za-z]\s+[A-Za-z]/g) ?? [])
       .length,
+    mathTokenHits,
     splitWordHits: [...text.matchAll(/\b([A-Za-z\u00C0-\u024F]{2,})\s+([A-Za-z\u00C0-\u024F])\s+([A-Za-z\u00C0-\u024F]{2,})\b/gu)]
       .filter((match) => {
         const [, left, glyph, right] = match;
@@ -71,7 +74,10 @@ export function classifyPage(signals: PageClassSignals): PageTextKind {
   if (signals.itemCount < 10 && signals.charCount < 40) return "scanned";
   const replacementRate =
     signals.charCount === 0 ? 1 : signals.replacementCount / signals.charCount;
-  if (replacementRate >= 0.04 || signals.spacedLetterHits >= 3 || signals.splitWordHits >= 2 ||
+  const mathHeavy = signals.charCount >= 1000 && signals.mathTokenHits >= 8 &&
+    signals.mathTokenHits / signals.charCount >= 0.001;
+  if (replacementRate >= 0.04 ||
+      ((!mathHeavy && signals.spacedLetterHits >= 3) || (!mathHeavy && signals.splitWordHits >= 2)) ||
       (signals.repeatedGlyphHits >= 2 && signals.charCount >= 80) ||
       (signals.brokenTokenHits >= 2 && signals.charCount >= 200) ||
       (signals.interleavedFragmentHits >= 3 && signals.charCount >= 500)) return "garbled";
