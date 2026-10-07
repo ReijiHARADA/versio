@@ -45,6 +45,18 @@ describe("canonical extraction pipeline", () => {
     expect(labels.every((node) => node.role === "other")).toBe(true);
   }, 60_000);
 
+  it("merges wrapped Elsevier author rows without swallowing affiliations", async () => {
+    const pdf = path.resolve("test-data/real-papers/medical-deep-learning-meta-review.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({ pages, paperId: "wrapped-elsevier-authors", filePath: pdf, fileHash: "wrapped-elsevier-authors", metadata: { pageCount: pages.length } });
+    const authors = result.canonical.nodes.filter((node) => node.role === "author").map((node) => node.text ?? "").join(" ");
+    expect(authors).toContain("Jan Egger");
+    expect(authors).toContain("Christina Gsaxner");
+    expect(authors).toContain("Jens Kleesiek");
+    expect(authors).not.toContain("German Cancer Consortium");
+  }, 60_000);
+
   it("keeps the wear-scale correlation matrix as skipped table blocks", async () => {
     const pdf = path.resolve("test-data/real-papers/wear-scale.pdf");
     if (!fs.existsSync(pdf)) return;
