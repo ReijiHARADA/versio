@@ -114,4 +114,19 @@ describe("title resolver masthead filtering", () => {
     });
     expect(result.text).toBe("Eco-Linguistics in English: Reviewing the role language in environmental discourse");
   });
+
+  it("joins an uppercase title split across author-scored lines", () => {
+    const firstTitleLine = candidate("INFLUENCE OF ADVERTISING INCENTIVES ON CONSUMERS", 120, "author");
+    const secondTitleLine = candidate("IN THE DIGITAL ENVIRONMENT (RUSSIAN EXPERIENCE)", 138, "author");
+    firstTitleLine.roleScores.title = 0.9;
+    secondTitleLine.roleScores.title = 0.9;
+    const result = resolveTitle({
+      candidates: [
+        candidate("Social and Behavioural Sciences", 70),
+        firstTitleLine,
+        secondTitleLine,
+      ],
+    });
+    expect(result.text).toBe("INFLUENCE OF ADVERTISING INCENTIVES ON CONSUMERS IN THE DIGITAL ENVIRONMENT (RUSSIAN EXPERIENCE)");
+  });
 });

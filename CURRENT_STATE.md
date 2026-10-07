@@ -1128,3 +1128,11 @@ for example `... role` followed by `IJLE 2026; 6(1): 05-09 language ...`.
 The title resolver now removes the bounded publication token while retaining
 the surrounding title text. The real eco-linguistics PDF now resolves exactly;
 title-resolver tests pass 9/9.
+
+# 2026-10-07: uppercase title split across author-scored lines
+
+Some conference PDFs score an all-uppercase article title as `author` because
+the title sits inside the author masthead. When two nearby title-scored lines
+form a contiguous uppercase cluster, the resolver now joins them as the title
+before applying masthead fallback. The advertising-incentives PDF now resolves
+its full title; title-resolver tests pass 10/10.
