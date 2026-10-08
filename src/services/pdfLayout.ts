@@ -2965,11 +2965,16 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
       // lines independently show multi-cell geometry and numeric density;
       // ordinary statistical prose usually has one item per line and does
       // not repeat the cell-like x pattern.
-      const tableLikeLines = block.lines.filter((line) => {
+      const wordCount = block.text.trim().split(/\s+/).filter(Boolean).length;
+      const sentenceBoundaryCount = (block.text.match(/[.!?]\s+[A-Z]/g) ?? []).length;
+      // Long prose with scattered statistics/citations is not a table. The
+      // mixed-stream fallback is intentionally limited to compact regions;
+      // larger blocks are resolved by the paragraph/region evidence paths.
+      const tableLikeLines = wordCount <= 120 && sentenceBoundaryCount <= 1 ? block.lines.filter((line) => {
         const text = line.text.trim();
         const numericDensity = (text.match(/\d/g) ?? []).length / Math.max(text.length, 1);
         return line.items.length >= 2 && numericDensity >= 0.08 && !/[.!?]\s*$/.test(text);
-      });
+      }) : [];
       const tableXBands = new Set(tableLikeLines.flatMap((line) =>
         line.items.map((item) => Math.round(item.x / 24) * 24)
       ));
