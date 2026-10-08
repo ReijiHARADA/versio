@@ -29,7 +29,8 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   // contains several person-shaped tokens without institution vocabulary.
   if (candidate.pageStart === 1 && candidate.role === "affiliation" && candidate.text.length <= 180 &&
       /\b(?:\d{1,2}|[*†‡])\s*(?:,|&|$)/.test(candidate.text) &&
-      (/[\*†‡]/.test(candidate.text) || /\band\b/i.test(candidate.text)) &&
+      (/[\*†‡]/.test(candidate.text) || /\band\b/i.test(candidate.text) ||
+       ((candidate.text.match(/\d{1,2}\s*[, ]\s*[A-ZÀ-ÖØ-Ý]/g)?.length ?? 0) >= 2 && /[À-ÖØ-öø-ÿ]/.test(candidate.text))) &&
       (candidate.text.match(/\b[A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ'’-]{1,}\b/g)?.length ?? 0) >= 3 &&
       !/\b(?:university|department|institute|laboratory|hospital|faculty|school|center|centre)\b/i.test(candidate.text)) {
     return { role: "author", confidence: Math.max(scores.author ?? 0.84, 0.84) };
