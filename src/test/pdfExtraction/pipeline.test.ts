@@ -150,6 +150,28 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /^Fig\.2\s+Otto Künzli/.test(node.text ?? ""))).toBe(false);
   }, 60_000);
 
+  it("does not absorb following body prose into interactive jewellery figure captions", async () => {
+    const pdf = path.resolve("test-data/real-papers/interactive-jewellery.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "interactive-jewellery-caption-boundary-regression",
+      filePath: pdf,
+      fileHash: "interactive-jewellery-caption-boundary-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const captions = result.canonical.nodes.filter((node) => node.role === "caption" && /^Figure\s+\d+/i.test(node.text ?? ""));
+    expect(captions.length).toBeGreaterThanOrEqual(10);
+    expect(captions.find((node) => /^Figure 1\./i.test(node.text ?? ""))?.text).toBe("Figure 1. Jewellery framework");
+    expect(captions.find((node) => /^Figure 2\./i.test(node.text ?? ""))?.text).not.toMatch(/Bernhard Schobinger’s Flaschenhalskette/);
+    expect(captions.find((node) => /^Figure 5\./i.test(node.text ?? ""))?.text).toBe("Figure 5. Framework Interactive Jewellery");
+    expect(result.paper.affiliations.some((affiliation) => /Department of Industrial Design.*Eindhoven University of Technology.*Netherlands/i.test(affiliation.name))).toBe(true);
+    expect(result.paper.affiliations.some((affiliation) => /Faculty of Design.*University of Technology Sydney.*Australia/i.test(affiliation.name))).toBe(true);
+    expect(result.paper.affiliations.some((affiliation) => /Duncan of Jordanstone.*University of Dundee/i.test(affiliation.name))).toBe(true);
+    expect(result.paper.affiliations.some((affiliation) => /Australian Research.*Macquarie University/i.test(affiliation.name))).toBe(true);
+  }, 60_000);
+
   it("keeps a fragmented multi-column review table out of paragraph translation", async () => {
     const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/covid-ml-review.pdf");
     if (!fs.existsSync(pdf)) return;
