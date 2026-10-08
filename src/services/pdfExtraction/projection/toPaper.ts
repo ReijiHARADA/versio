@@ -815,13 +815,40 @@ export function projectCanonicalToPaper(input: {
     const sidebarMixed = hasSidebarBody && startsWithSidebarLabel &&
       (node.boundingBoxes[0]?.x ?? Infinity) < sidebarRight &&
       (node.boundingBoxes[0]?.width ?? 0) > 180;
+    // Native PDF extraction can flatten two masthead columns into one line.
+    // Reconstruct those columns from span x positions before applying marker
+    // association; otherwise institutions from adjacent columns are woven
+    // together (e.g. `University ... Disorders Australia ...`). Only use
+    // this when a line has a clear, repeated inter-column gap so ordinary
+    // wrapped affiliations remain untouched.
+    const geometryColumnSource = (() => {
+      if (sidebarMixed || lines.length === 0) return undefined;
+      const rows = lines.map((line) => line.items.sort((a, b) => a.x - b.x));
+      const gaps = rows.flatMap((items) => items.slice(1).map((item, index) => item.x - (items[index]?.x ?? item.x)));
+      const splitGap = Math.max(48, ...gaps.filter((gap) => Number.isFinite(gap))) > 48
+        ? Math.max(48, ...gaps.filter((gap) => Number.isFinite(gap)))
+        : 0;
+      if (splitGap <= 48 || rows.filter((items) => items.length >= 2 && items.some((item, i) => i > 0 && item.x - items[i - 1].x >= 48)).length < 1) return undefined;
+      const splitRows = rows.map((items) => {
+        const pivot = items.findIndex((item, index) => index > 0 && item.x - items[index - 1].x >= 48);
+        return pivot > 0 ? [items.slice(0, pivot), items.slice(pivot)] : [items];
+      });
+      const columns = [0, 1].map((column) => splitRows
+        .map((parts) => parts[column]?.map((item) => item.text).join(" ") ?? "")
+        .filter(Boolean)
+        .join(" ")
+        .trim());
+      return columns.every(Boolean)
+        ? columns.join(" ").replace(/\b(\d{1,2})\s+(?=[A-Z])/g, "$1")
+        : undefined;
+    })();
     const markerSource = sidebarMixed
       ? lines.map((line) => line.items
           .filter((item) => item.x > sidebarRight + 8)
           .sort((a, b) => a.x - b.x)
           .map((item) => item.text)
           .join(" ")).join(" ")
-      : (node.text ?? "");
+      : (geometryColumnSource ?? node.text ?? "");
     // Some journal templates place all numbered affiliations in one native
     // line/block. Split only when each segment starts with a short superscript
     // marker immediately followed by an institution-shaped capitalized token.
@@ -920,7 +947,7 @@ export function projectCanonicalToPaper(input: {
     // Clustering every observed x independently incorrectly creates a third
     // column and mixes the two institutions.
     const anchorRow = candidateLines
-      .map((line) => line.items.filter((item) => item.fontSize >= line.fontSize * 0.7))
+      .map((line) => line.items.filter((item) => item.fontSize >= line.fontSize * 0.7 && !/^\d{1,2}$/.test(item.text.trim())))
       .find((items) => items.length >= 2);
     const clusterXs: number[] = anchorRow && anchorRow.length >= 2
       ? anchorRow.map((item) => item.x).slice(0, 2).sort((a, b) => a - b)

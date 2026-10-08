@@ -305,6 +305,15 @@ function mergeFigureCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[
     const labeledFigureContinuation = /\b(?:[A-D]|Panel\s+[A-D])\s*:/i.test(continuation) &&
       /\b(?:human|model|probability|condition|error bars|data)\b/i.test(continuation);
     const numberedProcedureContinuation = (continuation.match(/(?:^|\s)\d+\.\s+/g) ?? []).length >= 2;
+    // A caption continuation is normally a short label/panel line. A long,
+    // sentence-like paragraph immediately below an unpunctuated caption is
+    // body prose, even when the PDF geometry is close enough to look like a
+    // continuation. Keeping this boundary prevents the resolver from
+    // swallowing the article's next paragraph into a figure caption.
+    const continuationWords = continuation.split(/\s+/).filter(Boolean).length;
+    const sentenceLikeBodyContinuation = continuationWords > 24 &&
+      /^[A-Z][A-Za-z]/.test(continuation) &&
+      !labeledFigureContinuation;
     const canMerge = previous?.role === "caption" &&
       /^\s*(?:figure|fig\.?|図)\s*\d+/i.test(captionText) &&
       previous.pageStart === node.pageStart &&
@@ -314,6 +323,7 @@ function mergeFigureCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[
       (xAligned || (harmlessIntervening && verticalGap <= 180)) &&
       (!/[.!?]\s*$/.test(captionText) || labeledFigureContinuation) &&
       !numberedProcedureContinuation &&
+      !sentenceLikeBodyContinuation &&
       !/^(?:table|figure|fig\.?|図|references?|introduction|methods?|results?)\b/i.test(continuation);
     if (canMerge) {
       result[captionIndex] = {
