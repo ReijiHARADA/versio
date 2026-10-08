@@ -62,5 +62,12 @@ export async function extractPdfPages(pdfPath: string): Promise<ExtractedPage[]>
     });
   }
 
+  // Release PDF.js page/font/operator caches before the next paper in a
+  // corpus benchmark. Without this, long same-process runs retain native
+  // document state and can produce memory pressure that is invisible in
+  // single-paper extraction.
+  await pdf.cleanup();
+  await pdf.destroy();
+
   return pages;
 }
