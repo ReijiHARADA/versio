@@ -1024,7 +1024,8 @@ export function projectCanonicalToPaper(input: {
     // its next native line continues the institution (e.g. "Centre of
     // Excellence in"). Keep it for marker-based grouping; unmarked prose
     // fragments still use the stricter boundary.
-    (!/(?:\b(?:of|and|in|the|for|&))\s*[,;]?$/i.test(affiliation.name) || Boolean(affiliation._marker)) &&
+    (!/(?:\b(?:of|and|in|the|for|&))\s*[,;]?$/i.test(affiliation.name) || Boolean(affiliation._marker) ||
+      /\b(?:university|department|faculty|school|college|institute|laboratory|centre|center|research|design|cognition)\b/i.test(affiliation.name)) &&
     ((affiliation.name.match(/\b\S\b/g)?.length ?? 0) * 2 <= affiliation.name.split(/\s+/).length ||
       /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research|design|computing)\b/i.test(affiliation.name) ||
       /^[A-Z0-9& -]{2,12}$/.test(affiliation.name))));
