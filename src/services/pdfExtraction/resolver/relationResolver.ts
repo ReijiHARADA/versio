@@ -1,6 +1,7 @@
 import { displayHeadingText, isSentenceContinuation, type PageColumnLayout } from "../../pdfLayout";
 import type { CanonicalNode, CanonicalRelation } from "../canonical/types";
 import type { RoleCandidate } from "../generic/candidates";
+import type { StructuralRegionEvidence } from "../types";
 
 function headingLevel(node: CanonicalNode): number {
   const text = node.text ?? "";
@@ -335,7 +336,7 @@ export function topologicalOrder(
   return ordered;
 }
 
-export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNode[] {
+export function figureNodesForCaptions(candidates: RoleCandidate[], regionEvidence: StructuralRegionEvidence[] = []): CanonicalNode[] {
   const continuedTable = (text: string) => /^(?:table|tables)\s+\d+[a-z]?\s*\(continued\)/i.test(text.trim());
   return candidates
     .filter(
@@ -473,15 +474,20 @@ export function figureNodesForCaptions(candidates: RoleCandidate[]): CanonicalNo
             height: Math.min(180, Math.max(36, box.height * 8)),
           }
         : caption.layoutBlock.bbox;
+      const anchoredRegion = role === "table"
+        ? regionEvidence.find((region) => region.kind === "table" && region.pageStart === caption.pageStart &&
+          region.boundingBoxes.some((candidateBox) => Math.abs(candidateBox.y - caption.layoutBlock.bbox.y) <= 500))
+        : undefined;
+      const anchoredBox = anchoredRegion?.boundingBoxes[0];
       return {
         id: `fig-${i}`,
         role: role as "figure" | "table",
         text: null,
         pageStart: caption.pageStart,
         pageEnd: regionMembers.length > 0 ? Math.max(caption.pageEnd, ...regionMembers.map((member) => member.pageEnd)) : caption.pageEnd,
-        boundingBoxes: regionMembers.length > 0 ? memberBoxes : [figureBox],
+        boundingBoxes: regionMembers.length > 0 ? memberBoxes : anchoredBox ? [anchoredBox] : [figureBox],
         structuralLabel: role === "table" ? caption.layoutBlock.text : undefined,
-        confidence: regionBox ? 0.86 : role === "table" ? 0.48 : 0.7,
+        confidence: regionBox || anchoredRegion ? 0.86 : role === "table" ? 0.48 : 0.7,
         evidence: [
           {
             source: "generic-heuristic" as const,

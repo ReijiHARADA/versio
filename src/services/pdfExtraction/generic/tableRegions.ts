@@ -36,7 +36,11 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
         return box.y >= captionY - 420 && box.y <= captionY + 80;
       })
       : [];
-    if (!signature && captionFallback.length < 3) continue;
+    // Borderless tables can expose only a header and one compact data row as
+    // table-scored native candidates (the remaining cells may be merged into
+    // a single line).  Two aligned rows plus an explicit caption are enough
+    // to preserve the region without promoting surrounding prose.
+    if (!signature && captionFallback.length < 2) continue;
     const effectiveSignature = signature ?? {
       bbox: {
         page: page.pageNumber,
