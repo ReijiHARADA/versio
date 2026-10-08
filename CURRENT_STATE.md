@@ -10,6 +10,8 @@ The rerun completed the full extraction corpus: **232/232 tests passed** (118 re
 
 The GPT-3 cognitive psychology paper exposed a real line-formation defect: a short vector/diagram annotation at the right edge of a prose line (`A: Option 2.`) was concatenated into the paragraph. Geometry-based inline span separation now keeps the annotation as its own block and preserves the prose; no vocabulary blacklist is used. A regression was added; pipeline tests **50/50** and typecheck pass. The full 232-test corpus should be rerun before packaging this change.
 
+The post-change full extraction regression completed **232/232** again (118 baseline + 114 reading-order, 401s). The GPT-3 paper now keeps the annotation out of the prose paragraph; all existing corpus assertions remain green.
+
 # 2026-10-08: full 113-paper extraction baseline rerun
 
 After the mixed-masthead fix and PDF.js cleanup, a fresh full `--all` run completed over **113 papers** with title exact **106/113 (93.8053%)**. The repaired digital-marketing PDF is now stable in the serialized report: canonical title `DIGITAL MARKETING: CONSUMER BEHAVIOR`, source integrity 1.0. The remaining seven title mismatches are catalog/PDF disagreements (Russian/Serbian native titles versus English catalog titles, `behaviour`/`behavior`, a likely `TND`/`AND` catalog typo, and one morphology fixture whose PDF content is a different medical paper).
