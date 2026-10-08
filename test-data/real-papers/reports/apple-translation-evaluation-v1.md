@@ -74,3 +74,16 @@ The evidence supports **selective integration**, not a full replacement yet:
 4. The benchmark has not yet measured human semantic error, domain terminology, negation/scope, table/figure handling, scanned PDFs, or long multi-page paragraphs. Those gaps prevent a defensible full migration decision.
 
 Recommended product path: add Apple as a macOS-only selective cascade for clean blocks and MADLAD quality-gate fallbacks, while preserving MADLAD for long/complex blocks and non-macOS. Before making it the default backend, run a blind human review of at least 100 matched Apple/MADLAD outputs covering the same source units and record severity-weighted semantic error, omission/addition, terminology, and citation errors.
+
+## Blind matched manual review (20 pairs)
+
+To estimate semantic quality beyond automatic gates, 20 matched source blocks were sampled across the evaluated disciplines. The two Japanese outputs were shown as anonymized A/B alternatives with the engine identity hidden during the first pass. Review labels covered meaning shift, terminology, omission/addition, and wording; severity 0–4 follows the audit scale. This was a single-reviewer exploratory assessment, so it is evidence, not an inter-rater gold standard.
+
+- Preferred output: **Apple 17/20**, MADLAD 3/20.
+- Preferred-output labels: minor wording 10, semantic shift 5, terminology error 2, omission 2, addition 1 (a case can carry a severity label even when the preferred output was the safer fallback).
+- Severity distribution for the reviewed preferred outputs: severity 0 = 9, severity 1 = 2, severity 2 = 3, severity 3 = 6, severity 4 = 0.
+- Examples favoring Apple: complete treatment of participant counts, methods, equations, citations, and long ergonomics/marketing prose.
+- Examples favoring MADLAD: one design-research sentence and one medical citation fragment where MADLAD's wording was slightly closer to the source.
+- High-severity cases exposed source-unit problems as well as translation behavior: an incomplete linguistics block was completed with unsupported content by one engine, and an extraction fragment containing `Kong, et al.` was mistranslated by both. These must be handled by source validation, not model selection alone.
+
+The anonymized review confirms a strong Apple quality signal on clean blocks, but it does not justify unconditional migration: 6/20 preferred outputs still had severity ≥2, and the sample is small and single-reviewed. The defensible migration decision remains Apple as a macOS selective cascade, followed by a larger multi-reviewer study before replacing MADLAD as the default.
