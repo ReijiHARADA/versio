@@ -4276,7 +4276,24 @@ export function reconstructDocument(pages: ExtractedPage[]): {
       console.warn(`[PDF_LINE] index=${index} page=${line.page} column=${line.column} x=${line.x.toFixed(1)} y=${line.y.toFixed(1)} font=${line.fontSize.toFixed(1)} items=${line.items.length} text=${line.text.slice(0, 120)}`);
     });
   }
-  return { layouts, lines, blocks, baseFontSize: bodyFont };
+  const resolvedBlocks = blocks.flatMap((block) => {
+    if (block.pageStart !== 1 || block.pageEnd !== 1 || block.lines.length < 3) return [block];
+    const left = block.lines.filter((line) => line.column === "left");
+    const right = block.lines.filter((line) => line.column === "right");
+    if (left.length < 2 || right.length === 0) return [block];
+    const leftFont = median(left.map((line) => line.fontSize));
+    const rightFont = median(right.map((line) => line.fontSize));
+    const rightText = joinLines(right);
+    const letters = rightText.replace(/[^A-Za-zА-Яа-я]/g, "");
+    const uppercaseRatio = letters.length > 0 ? (rightText.match(/[A-ZА-Я]/g)?.length ?? 0) / letters.length : 0;
+    if (rightFont < leftFont * 1.12 || (uppercaseRatio < 0.55 && rightFont < leftFont * 1.2)) return [block];
+    const make = (run: LayoutLine[], role: LayoutRole): LayoutBlock => ({
+      ...block, role, text: joinLines(run), lines: run,
+      pageStart: 1, pageEnd: 1, column: run[0].column, bbox: blockBbox(run),
+    });
+    return [make(left.sort((a, b) => a.y - b.y), "affiliation"), make(right.sort((a, b) => a.y - b.y), "title")];
+  });
+  return { layouts, lines, blocks: resolvedBlocks, baseFontSize: bodyFont };
 }
 
 export function formatReadingOrderLog(
