@@ -46,7 +46,17 @@ Conclusion: GROBID is useful as a **secondary scholarly-structure signal**, espe
 
 ## Apple Translation framework
 
-The system contains `/System/Library/Frameworks/Translation.framework`. With the matching Xcode beta toolchain, a native Swift smoke test compiled and invoked `TranslationSession` successfully, but translation returned `TranslationError.Cause.notInstalled` for English→Japanese. The required language pack is not installed and the headless helper cannot complete the user-facing download flow. Apple documents `TranslationSession` as an on-device native API with an `installedSource` initializer and `prepareTranslation`/translation-task flows; it is not a drop-in HTTP/Python backend. Integration would require a native helper or Tauri-side Swift bridge plus language availability/download UI. No quality score was produced because no translation output was available.
+The system contains `/System/Library/Frameworks/Translation.framework`. After the English/Japanese language packs were installed in System Settings, a native Swift smoke test compiled and invoked `TranslationSession` successfully. Three fixed inputs produced Japanese output, including the known author-year citation sentence and an interactive-jewellery sentence. The outputs preserved the citation group and numeric facts in this probe:
+
+```text
+The study examined 20 participants and found no significant difference.
+→ この研究では、20人の参加者を調査しましたが、有意差はありませんでした。
+
+The closest related work ... (Sigure & Koseki, 1998; Marquardt et al., 2011; Benko et al, 2009) ...
+→ 指固有の相互作用に関する最も近い関連研究は（Sigure & Koseki, 1998; Marquardt et al., 2011; Benko et al, 2009）によって提示されていますが、モバイルドメインにはどれもありません。
+```
+
+Apple documents `TranslationSession` as an on-device native API with an `installedSource` initializer and `prepareTranslation`/translation-task flows; it is not a drop-in HTTP/Python backend. Integration would require a native helper or Tauri-side Swift bridge, language availability checks, and a download state in the app. This is a smoke test, not enough evidence to replace MADLAD; a held-out block benchmark is still required.
 
 ## Decision
 
