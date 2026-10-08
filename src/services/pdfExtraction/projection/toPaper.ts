@@ -728,9 +728,6 @@ export function projectCanonicalToPaper(input: {
   const affiliationNodes = canonical.nodes.filter((n) => {
     if (!n.text || isSidebarChromeNode(n) || n.pageStart !== 1) return false;
     if (n.role === "affiliation") return true;
-    if (n.role === "author" && n.boundingBoxes[0]?.y < firstBodyY &&
-      /\b(?:design|cognition|university|college|department|faculty|centre|center|institute)\b/i.test(n.text) &&
-      !/^[A-Z][a-z]+\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\d*$/u.test(n.text.trim())) return true;
     if (n.role !== "paragraph") return false;
     const y = n.boundingBoxes[0]?.y ?? Infinity;
     if (y >= firstBodyY || n.text.length > 320 || /[.!?。！？]$/.test(n.text.trim())) return false;
@@ -740,7 +737,6 @@ export function projectCanonicalToPaper(input: {
     id: string;
     name: string;
     _x: number;
-    _width: number;
     _marker?: string;
     _page: number;
     _y: number;
@@ -814,7 +810,7 @@ export function projectCanonicalToPaper(input: {
     const markerPositions = lines.flatMap((line) => line.items
       .filter((item) => item.fontSize < line.fontSize * 0.8 && /^\d{1,2}$/.test(item.text.trim()))
       .map((item) => ({ marker: item.text.trim(), x: item.x })));
-    const base = { _page: node.pageStart, _y: node.boundingBoxes[0]?.y ?? 0, _width: node.boundingBoxes[0]?.width ?? 0 };
+    const base = { _page: node.pageStart, _y: node.boundingBoxes[0]?.y ?? 0 };
     const startsWithSidebarLabel = /^(?:open access|edited by|reviewed by|correspondence|specialty section|citation|received|accepted|published)\s*:/i.test((node.text ?? "").trim());
     const sidebarMixed = hasSidebarBody && startsWithSidebarLabel &&
       (node.boundingBoxes[0]?.x ?? Infinity) < sidebarRight &&
@@ -1009,7 +1005,6 @@ export function projectCanonicalToPaper(input: {
     !/^\s*["“].*?["”]\s+by\s+/i.test(affiliation.name) &&
     (affiliation.name.match(/\b[a-z]\b/g)?.length ?? 0) < 3 &&
     (affiliation.name.split(/\s+/).length > 2 ||
-      /^[A-Z][\p{L}'’-]+,\s+(?:Australia|Austria|Belgium|Canada|China|France|Germany|India|Italy|Japan|Netherlands|Spain|Sweden|UK|USA|United Kingdom|United States)$/u.test(affiliation.name) ||
       /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research|design|computing)\b/i.test(affiliation.name) ||
       /^[A-Z0-9& -]{2,12}$/.test(affiliation.name)) &&
     // Do not expose fragments created by a column boundary as institutions.
@@ -1021,15 +1016,9 @@ export function projectCanonicalToPaper(input: {
     // carrying an explicit institution term.
     !(/^[A-Z](?:\s+[A-Z]){1,3}$/.test(affiliation.name) &&
       !/\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research|design|computing)\b/i.test(affiliation.name)) &&
-    // A marked column fragment may legitimately end with a connector because
-    // its next native line continues the institution (e.g. "Centre of
-    // Excellence in"). Keep it for marker-based grouping; unmarked prose
-    // fragments still use the stricter boundary.
-    (!/(?:\b(?:of|and|in|the|for|&))\s*[,;]?$/i.test(affiliation.name) || Boolean(affiliation._marker) ||
-      /\b(?:university|department|faculty|school|college|institute|laboratory|centre|center|research|design|cognition)\b/i.test(affiliation.name)) &&
+    !/(?:\b(?:of|and|in|the|for|&))\s*[,;]?$/i.test(affiliation.name) &&
     ((affiliation.name.match(/\b\S\b/g)?.length ?? 0) * 2 <= affiliation.name.split(/\s+/).length ||
       /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research|design|computing)\b/i.test(affiliation.name) ||
-      /^[A-Z][\p{L}'’-]+,\s+(?:Australia|Austria|Belgium|Canada|China|France|Germany|India|Italy|Japan|Netherlands|Spain|Sweden|UK|USA|United Kingdom|United States)$/u.test(affiliation.name) ||
       /^[A-Z0-9& -]{2,12}$/.test(affiliation.name))));
   const markedCandidates = affiliationCandidates.filter((candidate) => candidate._marker);
   // Wrapped rows usually carry the superscript only on the first row. Propagate
@@ -1038,9 +1027,7 @@ export function projectCanonicalToPaper(input: {
     if (candidate._marker) continue;
     const nearest = markedCandidates
       .filter((marked) => marked._page === candidate._page && marked._y <= candidate._y &&
-        candidate._y - marked._y <= 180 &&
-        (Math.abs(marked._x - candidate._x) <= 55 ||
-          (marked._x >= candidate._x && marked._x <= candidate._x + candidate._width)))
+        candidate._y - marked._y <= 180 && Math.abs(marked._x - candidate._x) <= 55)
       .sort((a, b) => (candidate._y - a._y) - (candidate._y - b._y))[0];
     if (nearest) candidate._marker = nearest._marker;
   }
