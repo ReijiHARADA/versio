@@ -13,6 +13,16 @@ import fs from "node:fs";
 import path from "node:path";
 
 describe("canonical extraction pipeline", () => {
+  it("keeps a short diagram annotation out of an adjacent prose paragraph", async () => {
+    const pdf = path.resolve("test-data/real-papers/cognitive-psychology-gpt3.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({ pages, paperId: "diagram-annotation-boundary", filePath: pdf, fileHash: "diagram-annotation-boundary", metadata: { pageCount: pages.length } });
+    const contaminated = result.blocks.filter((block) => /Linda is 31/.test(block.original ?? ""));
+    expect(contaminated.some((block) => /A:\s*Option 2/.test(block.original ?? ""))).toBe(false);
+    expect(result.blocks.some((block) => block.original?.trim() === "A: Option 2.")).toBe(true);
+  }, 60_000);
+
   it("does not link a table caption to a nearby figure in a mixed thesis page", async () => {
     const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport.pdf");
     if (!fs.existsSync(pdf)) return;
