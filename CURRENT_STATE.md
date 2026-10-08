@@ -1,3 +1,7 @@
+# 2026-10-08: packaged UI OCR E2E isolation and duplicate-data diagnosis
+
+The packaged UI harness now honors `PAPER_READER_UI_E2E_HOME` in the Rust app-data and source-PDF paths, and the script accepts the legacy `PAPER_READER_ACCEPTANCE_HOME` alias. `npm run tauri:build:fast` succeeds. A rerun with the malformed multilingual OCR fixture still does not reach the target import: the isolated app-data is populated with pre-existing Paper Packages and the Accessibility label lookup for the add-paper action fails, so this run is not evidence about OCR quality. Native extraction remains 124/124 and real-paper regression remains 118/118.
+
 ## Current extraction status (2026-10-07)
 
 - 2026-10-07: OCR enrichment now requests only pages selected by the page classifier instead of rendering every page in a mixed document and discarding most results. This reduces unnecessary Vision OCR exposure on healthy native pages while preserving the existing replacement boundary. Added page-selection regressions; OCR/page-class tests **15/15**, PDF extraction suite **124/124**, and typecheck pass.
