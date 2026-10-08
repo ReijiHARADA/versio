@@ -14,6 +14,8 @@ The post-change full extraction regression completed **232/232** again (118 base
 
 The COVID-ML review exposed a second real issue: a borderless table stream with repeated multi-cell x geometry was emitted as a pending paragraph. A conservative block-level rule now requires at least three numeric multi-item lines and at least three repeated x bands before promoting it to `table`; the block is preserved and skipped for translation. The focused regression now asserts this behavior; pipeline tests **50/50** and typecheck pass.
 
+The latest fast `.app` build includes this table-stream fix and the diagram annotation fix. The bundle completed successfully at 23:49 (unsigned development build).
+
 # 2026-10-08: full 113-paper extraction baseline rerun
 
 After the mixed-masthead fix and PDF.js cleanup, a fresh full `--all` run completed over **113 papers** with title exact **106/113 (93.8053%)**. The repaired digital-marketing PDF is now stable in the serialized report: canonical title `DIGITAL MARKETING: CONSUMER BEHAVIOR`, source integrity 1.0. The remaining seven title mismatches are catalog/PDF disagreements (Russian/Serbian native titles versus English catalog titles, `behaviour`/`behavior`, a likely `TND`/`AND` catalog typo, and one morphology fixture whose PDF content is a different medical paper).
