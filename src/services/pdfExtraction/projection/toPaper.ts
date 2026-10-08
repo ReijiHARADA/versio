@@ -386,6 +386,13 @@ function isReferenceText(text: string, currentKind: NormalizedSectionKind | null
     (/^\d+\.\s+[A-Z][a-z]+,?\s+[A-Z]/.test(text) && /\b(?:19|20)\d{2}\b/.test(text));
 }
 
+function isStandaloneContactMetadata(text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed || !/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/i.test(trimmed)) return false;
+  const withoutEmails = trimmed.replace(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/gi, " ");
+  return /^[\s\d,*†‡§∗·,;:()[\]{}]+$/u.test(withoutEmails);
+}
+
 /** Numbered prose items are lists even when an upstream role heuristic called
  * them references. Bibliography entries have author/year evidence; ordinary
  * list items do not. */
@@ -1692,6 +1699,7 @@ export function projectCanonicalToPaper(input: {
       node.role === "other"
     ) {
       const text = node.text ?? "";
+      if (isStandaloneContactMetadata(text)) continue;
       const listParts = splitFlattenedList(text);
       const standaloneListItem = /^(?:[•‣▪∙]|(?:[1-9]|1[0-9]|20)[.)]|\([A-Za-z]\)|[A-Za-z]\))\s+/.test(text.trim());
       const isRef = !isNumberedProseListItem(text) &&
