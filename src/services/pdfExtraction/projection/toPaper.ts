@@ -1045,7 +1045,23 @@ export function projectCanonicalToPaper(input: {
       return { ...first, name: normalizeAffiliationName(group.slice().sort((a, b) => a._y - b._y).map((item) => item.name).join(" ")) };
     })
     : affiliationCandidates;
-  let affiliations = groupedAffiliations.filter((affiliation, index, all) =>
+  const stitchedAffiliations: typeof groupedAffiliations = [];
+  for (const candidate of groupedAffiliations.slice().sort((a, b) => a._y - b._y || a._x - b._x)) {
+    const previous = stitchedAffiliations.at(-1);
+    const canStitch = previous && previous._page === candidate._page &&
+      candidate._y >= previous._y && candidate._y - previous._y <= 90 &&
+      Math.abs(candidate._x - previous._x) <= 32 &&
+      /[,;:]\s*$/.test(previous.name) &&
+      /^[A-Z]/.test(candidate.name.trim());
+    if (canStitch) {
+      stitchedAffiliations[stitchedAffiliations.length - 1] = {
+        ...previous,
+        name: normalizeAffiliationName(`${previous.name} ${candidate.name}`),
+        _y: candidate._y,
+      };
+    } else stitchedAffiliations.push(candidate);
+  }
+  let affiliations = stitchedAffiliations.filter((affiliation, index, all) =>
     all.findIndex((candidate) => candidate.name.toLocaleLowerCase() === affiliation.name.toLocaleLowerCase()) === index)
     .map(({ _page, _y, _x, _marker, ...affiliation }) => affiliation);
   // Reconstruct lettered affiliation records when two native columns are
