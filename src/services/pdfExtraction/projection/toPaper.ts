@@ -1016,7 +1016,8 @@ export function projectCanonicalToPaper(input: {
     // carrying an explicit institution term.
     !(/^[A-Z](?:\s+[A-Z]){1,3}$/.test(affiliation.name) &&
       !/\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research|design|computing)\b/i.test(affiliation.name)) &&
-    !/(?:\b(?:of|and|in|the|for|&))\s*[,;]?$/i.test(affiliation.name) &&
+    (!/(?:\b(?:of|and|in|the|for|&))\s*[,;]?$/i.test(affiliation.name) ||
+      /\b(?:college|centre|center|department|faculty|university|institute|research|design|cognition)\b/i.test(affiliation.name)) &&
     ((affiliation.name.match(/\b\S\b/g)?.length ?? 0) * 2 <= affiliation.name.split(/\s+/).length ||
       /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research|design|computing)\b/i.test(affiliation.name) ||
       /^[A-Z0-9& -]{2,12}$/.test(affiliation.name))));
