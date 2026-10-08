@@ -169,7 +169,7 @@ describe("canonical extraction pipeline", () => {
     expect(result.paper.affiliations.some((affiliation) => /Department of Industrial Design.*Eindhoven University of Technology.*Netherlands/i.test(affiliation.name))).toBe(true);
     expect(result.paper.affiliations.some((affiliation) => /Faculty of Design.*University of Technology Sydney.*Australia/i.test(affiliation.name))).toBe(true);
     expect(result.paper.affiliations.some((affiliation) => /Duncan of Jordanstone.*University of Dundee/i.test(affiliation.name))).toBe(true);
-    expect(result.paper.affiliations.some((affiliation) => /Australian Research.*Macquarie University/i.test(affiliation.name))).toBe(true);
+    expect(result.paper.affiliations.some((affiliation) => /Australian Research.*Macquarie University.*Sydney, Australia/i.test(affiliation.name))).toBe(true);
   }, 60_000);
 
   it("keeps a fragmented multi-column review table out of paragraph translation", async () => {
