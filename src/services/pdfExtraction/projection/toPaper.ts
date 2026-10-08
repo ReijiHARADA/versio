@@ -1809,6 +1809,28 @@ export function projectCanonicalToPaper(input: {
   const titleForProjection = titleLooksCorrupt
     ? (citationTitleFallback ?? extractedTitleText)
     : extractedTitleText;
+  if (layoutBlocks.some((block) => block.pageStart === 1 && /\b(?:edited|reviewed)\s+by\b/i.test(block.text))) {
+    const lines = layoutBlocks.filter((block) => block.pageStart === 1).flatMap((block) => block.lines ?? [])
+      .filter((line) => line.y >= 315 && line.y < Math.min(firstBodyY, 415) && line.fontSize >= 7.5 && line.fontSize <= 10.5)
+      .sort((a, b) => a.y - b.y || a.x - b.x);
+    const runs: string[] = [];
+    for (let i = 0; i < lines.length; i += 1) {
+      const line = lines[i];
+      let text = line.text;
+      const next = lines[i + 1];
+      const words = text.replace(/^\s*\d{1,2}\s*[*†‡§]?\s*[,;]?\s*/u, "").trim().split(/\s+/).filter(Boolean);
+      if (words.length <= 1 && next && Math.abs(next.x - line.x) <= 18 && next.y - line.y <= 16) text += ` ${next.text}`;
+      text = text.split(/\b(?:edited|reviewed)\s+by\b\s*:?/i)[0].replace(/\d+[*†‡§]?/gu, " ");
+      const matches = text.match(/[A-ZÀ-ÖØ-Þ][\p{Ll}'’-]*(?:(?:\s+(?:van|von|de|den|der|di|da|la|le)\s+)?\s+[A-ZÀ-ÖØ-Þ][\p{Ll}'’-]*){1,5}/gu) ?? [];
+      runs.push(...matches.filter((name) => name.split(/\s+/).length >= 2 && !/\b(?:university|department|school|laboratory|center|centre|hospital|faculty|institute|edited|reviewed)\b/i.test(name)));
+    }
+    for (const run of runs) {
+      const normalized = run.replace(/\s+/g, " ").trim();
+      if (normalized.split(/\s+/).length < 3) continue;
+      authorNames = authorNames.filter((existing) => !(normalized.toLocaleLowerCase().includes(existing.toLocaleLowerCase()) && normalized.length > existing.length + 2));
+      if (!authorNames.some((existing) => existing.toLocaleLowerCase() === normalized.toLocaleLowerCase())) authorNames.push(normalized);
+    }
+  }
   const paper: Paper = {
     id: paperId,
     sourceFilePath: input.filePath,
