@@ -628,10 +628,17 @@ export function projectCanonicalToPaper(input: {
     const closeToLabel = y - (previousHeadingNode?.boundingBoxes[0]?.y ?? y) < 25;
     return Math.abs(nodeX - headingX) < 120 && labelMatch && (closeToLabel || !hasRecentAuthor);
   };
+  // Publisher mastheads often put the editor/reviewer credit and the person's
+  // name on the same native line (for example `Edited by: ...`).  The label
+  // based proximity check above only sees a separate heading node, so keep a
+  // small, document-independent exclusion for same-line credits as well.
+  const sameLineEditorCredit = (text: string): boolean =>
+    /^\s*(?:edited|reviewed)\s+by\b/i.test(text.trim());
   const authorNodes = canonical.nodes.filter((n) => n.role === "author" && n.text &&
     n.pageStart === 1 && (n.boundingBoxes[0]?.y ?? 0) < firstBodyY &&
     !isSidebarChromeNode(n) &&
     !mastheadExcludedByLabel(n) &&
+    !sameLineEditorCredit(n.text) &&
     // Long mastheads can contain many marker-separated authors. Keep them
     // eligible for expansion; the marker/separator checks in expandAuthorLine
     // still prevent ordinary prose from becoming an author list.
@@ -1148,10 +1155,23 @@ export function projectCanonicalToPaper(input: {
       affiliations = unique.map((name, index) => ({ id: `review-masthead-affiliation-${index}`, name }));
     }
   }
+  const editorReviewCreditNames = new Set(
+    canonical.nodes
+      .map((node) => node.text ?? "")
+      .filter((text) => /^\s*(?:edited|reviewed)\s+by\b/i.test(text.trim()))
+      .flatMap((text) => {
+        const credit = text.replace(/^\s*(?:edited|reviewed)\s+by\b\s*:?[\s]*/i, "");
+        return expandAuthorLine(credit).map((name) => name.replace(/[\d,*†‡§]+/gu, " ").replace(/\s+/g, " ").trim());
+      })
+      .filter((name) => name.length >= 3),
+  );
   let authorNames = authorsStructured
     .flatMap((author) => expandAuthorLine(author.name))
     .map((name) => name.replace(/^and\s+/i, "").replace(/[,;]+$/, "").trim())
-    .filter((name) => !isNonAuthorMastheadLine(name) && name.split(/\s+/).length <= 6 && !/[!?]/.test(name) &&
+    .filter((name) => !isNonAuthorMastheadLine(name) &&
+      ![...editorReviewCreditNames].some((credit) => credit.toLocaleLowerCase() === name.toLocaleLowerCase() ||
+        credit.toLocaleLowerCase().includes(name.toLocaleLowerCase()) || name.toLocaleLowerCase().includes(credit.toLocaleLowerCase())) &&
+      name.split(/\s+/).length <= 6 && !/[!?]/.test(name) &&
       !/[@{}]/.test(name) &&
       !/(?:\[|\])/.test(name) &&
       !/^(?:general terms?|categories and subject descriptors?)\b/i.test(name) &&
