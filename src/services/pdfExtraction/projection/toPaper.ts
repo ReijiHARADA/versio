@@ -1819,7 +1819,11 @@ export function projectCanonicalToPaper(input: {
       let text = line.text;
       const next = lines[i + 1];
       const words = text.replace(/^\s*\d{1,2}\s*[*†‡§]?\s*[,;]?\s*/u, "").trim().split(/\s+/).filter(Boolean);
-      if (words.length <= 1 && next && Math.abs(next.x - line.x) <= 18 && next.y - line.y <= 16) text += ` ${next.text}`;
+      // A two-column native stream can place a trailing first name at the
+      // right edge and wrap its surname/continuation into the next visual row
+      // on the left. The editor/reviewer gate above keeps this cross-column
+      // join isolated from ordinary body text.
+      if (words.length <= 1 && next && next.y - line.y <= 16) text += ` ${next.text}`;
       text = text.split(/\b(?:edited|reviewed)\s+by\b\s*:?/i)[0].replace(/\d+[*†‡§]?/gu, " ");
       const matches = text.match(/[A-ZÀ-ÖØ-Þ][\p{Ll}'’-]*(?:(?:\s+(?:van|von|de|den|der|di|da|la|le)\s+)?\s+[A-ZÀ-ÖØ-Þ][\p{Ll}'’-]*){1,5}/gu) ?? [];
       runs.push(...matches.filter((name) => name.split(/\s+/).length >= 2 && !/\b(?:university|department|school|laboratory|center|centre|hospital|faculty|institute|edited|reviewed)\b/i.test(name)));
