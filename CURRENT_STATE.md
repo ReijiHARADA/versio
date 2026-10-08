@@ -1293,3 +1293,5 @@ The two 230/232 failures were then reproduced and fixed generically: long statis
 Final rerun after the masthead continuation tweak completed **232/232** (118 baseline real-paper checks + 114 reading-order checks, 395s). This validates the extraction changes across the cached corpus. The remaining PDF.js `TT`/ColorSpace warnings are parser warnings, not failed assertions. The `.app` bundle has not been rebuilt since these extraction commits.
 
 After adding the generic same-column affiliation stitch (comma-terminated row + nearby continuation), the full author projection suite passed **24/24**, and the final cached extraction corpus again passed **232/232**. The interactive-jewellery masthead now keeps the main institution continuations separate without affecting existing masthead cases. The packaged `.app` still needs a rebuild to include these commits.
+
+`npm run tauri:build:fast` was then completed successfully at **2026-10-09 00:47:42**. The generated app is `src-tauri/target/release/bundle/macos/Paper Reader.app`; this is an unsigned fast build with DMG/signing skipped.
