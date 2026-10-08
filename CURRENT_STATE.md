@@ -1,3 +1,7 @@
+# 2026-10-08: Frontiers masthead editor-credit boundary fix
+
+`cognitive-dual-task.pdf` had `Edited by:` / `Reviewed by:` labels mixed into the author-role stream. The projection now treats inline credit labels as masthead boundaries, excluding adjacent editor/reviewer names while preserving the nine paper authors. Targeted author F1 improved **0.7000 → 0.7778**; author projection **24/24**, typecheck pass. This is a generic label/geometry rule; the full 113-paper benchmark remains pending.
+
 # 2026-10-08: full 113-paper extraction baseline rerun
 
 After the mixed-masthead fix and PDF.js cleanup, a fresh full `--all` run completed over **113 papers** with title exact **106/113 (93.8053%)**. The repaired digital-marketing PDF is now stable in the serialized report: canonical title `DIGITAL MARKETING: CONSUMER BEHAVIOR`, source integrity 1.0. The remaining seven title mismatches are catalog/PDF disagreements (Russian/Serbian native titles versus English catalog titles, `behaviour`/`behavior`, a likely `TND`/`AND` catalog typo, and one morphology fixture whose PDF content is a different medical paper).
