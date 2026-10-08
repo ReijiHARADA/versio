@@ -15,7 +15,7 @@ FIXTURE_PDF="${PAPER_READER_E2E_FIXTURE:-$ROOT/test-fixtures/generated-pdfs/sing
 if [[ ! -f "$FIXTURE_PDF" ]]; then
   FIXTURE_PDF="$ROOT/scripts/packaged-e2e/fixture-tiny.pdf"
 fi
-ACCEPTANCE_HOME="${PAPER_READER_UI_E2E_HOME:-$ARTIFACT_DIR/app-data-$$}"
+ACCEPTANCE_HOME="${PAPER_READER_UI_E2E_HOME:-${PAPER_READER_ACCEPTANCE_HOME:-$ARTIFACT_DIR/app-data-$$}}"
 LOG_FILE="$ARTIFACT_DIR/app.log"
 STEP_FILE="$ARTIFACT_DIR/step.txt"
 AX_DUMP="$ARTIFACT_DIR/ax-tree.txt"
@@ -192,6 +192,7 @@ launch_app() {
   step "launch app (UI E2E)"
   HOME="$ACCEPTANCE_HOME" \
   PAPER_READER_UI_E2E=1 \
+  PAPER_READER_UI_E2E_HOME="$ACCEPTANCE_HOME" \
   PAPER_READER_UI_E2E_FIXTURE="$SHORT_FIXTURE" \
     "$BIN" >>"$LOG_FILE" 2>&1 &
   APP_PID=$!
