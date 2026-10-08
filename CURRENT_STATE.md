@@ -1,5 +1,7 @@
 # 2026-10-08: full 113-paper extraction baseline rerun
 
+After the mixed-masthead fix, the full cached benchmark was rerun with `--all`: **113 papers**, title exact **106/113 (93.8053%)**, up from 105/113 (92.92%). The repaired Russian digital-marketing masthead now resolves to the expected canonical title. The seven remaining title mismatches are still catalog/PDF disagreements (Russian/Serbian native titles versus English catalog titles, `behaviour`/`behavior`, a likely `TND`/`AND` catalog typo, and one morphology fixture whose PDF content is a different medical paper); no new generic extraction regression was observed. The full JSON report is generated locally and is not committed.
+
 The full cached corpus benchmark completed: **113 papers**, title exact rate **105/113 (92.92%)**. The eight title misses are now classified: several catalog entries expect an English translation while the PDF prints a Russian/Serbian title, one differs only by `behaviour`/`behavior`, one catalog has a likely `TND`/`AND` typo, and one morphology fixture is a different medical paper. The bilingual digital-marketing PDF contains both Russian and English title blocks; the resolver retains the first/native Russian title, which is conservative and avoids inventing a translated title. This run does not justify a generic title heuristic change.
 
 # 2026-10-08: targeted real-paper extraction benchmark
