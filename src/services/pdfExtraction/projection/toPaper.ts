@@ -1009,6 +1009,7 @@ export function projectCanonicalToPaper(input: {
     !/^\s*["“].*?["”]\s+by\s+/i.test(affiliation.name) &&
     (affiliation.name.match(/\b[a-z]\b/g)?.length ?? 0) < 3 &&
     (affiliation.name.split(/\s+/).length > 2 ||
+      /^[A-Z][\p{L}'’-]+,\s+(?:Australia|Austria|Belgium|Canada|China|France|Germany|India|Italy|Japan|Netherlands|Spain|Sweden|UK|USA|United Kingdom|United States)$/u.test(affiliation.name) ||
       /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research|design|computing)\b/i.test(affiliation.name) ||
       /^[A-Z0-9& -]{2,12}$/.test(affiliation.name)) &&
     // Do not expose fragments created by a column boundary as institutions.
@@ -1028,6 +1029,7 @@ export function projectCanonicalToPaper(input: {
       /\b(?:university|department|faculty|school|college|institute|laboratory|centre|center|research|design|cognition)\b/i.test(affiliation.name)) &&
     ((affiliation.name.match(/\b\S\b/g)?.length ?? 0) * 2 <= affiliation.name.split(/\s+/).length ||
       /\b(?:university|institute|department|school|faculty|college|hospital|laboratory|centre|center|research|design|computing)\b/i.test(affiliation.name) ||
+      /^[A-Z][\p{L}'’-]+,\s+(?:Australia|Austria|Belgium|Canada|China|France|Germany|India|Italy|Japan|Netherlands|Spain|Sweden|UK|USA|United Kingdom|United States)$/u.test(affiliation.name) ||
       /^[A-Z0-9& -]{2,12}$/.test(affiliation.name))));
   const markedCandidates = affiliationCandidates.filter((candidate) => candidate._marker);
   // Wrapped rows usually carry the superscript only on the first row. Propagate
