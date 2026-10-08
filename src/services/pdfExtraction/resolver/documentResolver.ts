@@ -23,6 +23,17 @@ import {
 
 function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; confidence: number } {
   const scores = candidate.roleScores;
+  // In Frontiers-style mastheads, a numbered author continuation can be
+  // emitted as an affiliation block when it sits in the adjacent column.
+  // Preserve it as an author when the line is short, marker-bearing, and
+  // contains several person-shaped tokens without institution vocabulary.
+  if (candidate.pageStart === 1 && candidate.role === "affiliation" && candidate.text.length <= 180 &&
+      /\b(?:\d{1,2}|[*†‡])\s*(?:,|&|$)/.test(candidate.text) &&
+      (/[\*†‡]/.test(candidate.text) || /\band\b/i.test(candidate.text)) &&
+      (candidate.text.match(/\b[A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ'’-]{1,}\b/g)?.length ?? 0) >= 3 &&
+      !/\b(?:university|department|institute|laboratory|hospital|faculty|school|center|centre)\b/i.test(candidate.text)) {
+    return { role: "author", confidence: Math.max(scores.author ?? 0.84, 0.84) };
+  }
   // Institution-shaped text can inherit author styling in flattened journal
   // mastheads. Keep it as affiliation metadata instead of exposing it as an
   // author (e.g. a trailing consortium line after a wrapped author row).
