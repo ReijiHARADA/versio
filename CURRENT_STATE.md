@@ -1295,3 +1295,5 @@ Final rerun after the masthead continuation tweak completed **232/232** (118 bas
 After adding the generic same-column affiliation stitch (comma-terminated row + nearby continuation), the full author projection suite passed **24/24**, and the final cached extraction corpus again passed **232/232**. The interactive-jewellery masthead now keeps the main institution continuations separate without affecting existing masthead cases. The packaged `.app` still needs a rebuild to include these commits.
 
 `npm run tauri:build:fast` was then completed successfully at **2026-10-09 00:47:42**. The generated app is `src-tauri/target/release/bundle/macos/Paper Reader.app`; this is an unsigned fast build with DMG/signing skipped.
+
+The Reader header now renders extracted `paper.affiliations` below the author list when available, with a compact secondary style and no output when the list is empty. Reader tests **12/12** and typecheck pass. The UI change was packaged in a new unsigned fast `.app` at **2026-10-09 00:59:09**.
