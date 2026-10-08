@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { extractPdfPages } from "../readingOrder/extractPdf";
 import { extractFromPages } from "../../services/pdfExtraction/pipeline/extractAcademicPdf";
+import { reconstructDocument } from "../../services/pdfLayout";
 
 const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 const pdf = path.join(root, "test-data/real-papers/power-over-skin.pdf");
@@ -26,8 +27,18 @@ const landingPagePdf = path.join(root, "test-data/real-papers/how-content-volume
 const gpt3AuthorsPdf = path.join(root, "test-data/real-papers/using-cognitive-psychology-gpt3.pdf");
 const frontiersAndContinuationPdf = path.join(root, "test-data/real-papers/marketing-neuroconsumer.pdf");
 const macedonianJournalPdf = path.join(root, "test-fixtures/real-papers/pending-pdfs/marketing-impact-of-e-marketing-on-consumer-behavior.pdf");
+const mixedMastheadPdf = path.join(root, "test-data/real-papers/marketing-digital-marketing-consumer-behavior.pdf");
 
 describe("author masthead projection", () => {
+  it("keeps a two-column Russian masthead title separate from affiliation text", async () => {
+    if (!fs.existsSync(mixedMastheadPdf)) return;
+    const pages = await extractPdfPages(mixedMastheadPdf);
+    const reconstructed = reconstructDocument(pages);
+    const titleBlocks = reconstructed.blocks.filter((block) => block.role === "title");
+    expect(titleBlocks.some((block) => /ЦИФРОВОЙ МАРКЕТИНГ/.test(block.text))).toBe(true);
+    expect(titleBlocks.some((block) => /ЦИФРОВОЙ МАРКЕТИНГ/.test(block.text) && /канд\. экон\. наук/.test(block.text))).toBe(false);
+  }, 60_000);
+
   it("separates a title-case author from location lines flattened into one masthead node", async () => {
     if (!fs.existsSync(macedonianJournalPdf)) return;
     const pages = await extractPdfPages(macedonianJournalPdf);
