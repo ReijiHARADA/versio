@@ -174,6 +174,8 @@ describe("canonical extraction pipeline", () => {
       /\d[\d,*†‡§∗·\s,;:()\[\]{}]*[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/i.test(node.text ?? "") &&
       ["paragraph", "abstract"].includes(node.role)
     )).toBe(false);
+    const jewelleryContinuation = result.canonical.nodes.find((node) => /jewellery:\s*some conscious, other/i.test(node.text ?? ""));
+    expect(jewelleryContinuation?.role).not.toBe("title");
   }, 60_000);
 
   it("keeps a fragmented multi-column review table out of paragraph translation", async () => {

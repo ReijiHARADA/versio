@@ -1843,6 +1843,10 @@ function looksLikeTitleLine(
   if (line.fontSize < baseFont * 1.12) return false;
   const text = line.text.trim();
   if (text.length < 8 || text.length > 180) return false;
+  // A lowercase sentence fragment can share the title font in publisher
+  // mastheads (especially when the native stream crosses the abstract/body
+  // boundary). It is continuation prose, not a standalone title anchor.
+  if (/^[a-z]/.test(text) && text.split(/\s+/).length >= 4) return false;
   if (isBodyStartHeading(text) || NAMED_HEADINGS.some((re) => re.test(text))) {
     return false;
   }
