@@ -1157,9 +1157,9 @@ export function projectCanonicalToPaper(input: {
       !/^(?:general terms?|categories and subject descriptors?)\b/i.test(name) &&
       !/\b(?:movement|science|sport|psychology|department|university|institute|research|council|resistance|training|edited|published)\b/i.test(name) &&
       !(/\s[A-Z]{1,3}$/.test(name) && !/^[A-Z][A-Z'’-]*(?:\s+[A-Z][A-Z'’-]*)+$/.test(name)) &&
-      !/(?:^|,\s*)(?:usa|u\.s\.a?\.?|israel|italy|china|japan|uk|united kingdom|ny|california|new york|tel aviv|albany|palo alto)(?:\s*,|$)/i.test(name) &&
+      !/(?:^|,\s*)(?:usa|u\.s\.a?\.?|israel|italy|china|japan|uk|united kingdom|ny|california|new york|tel aviv|albany|palo alto|campinas|brazil|united states)(?:\s*,|$)/i.test(name) &&
       !/\b[A-Z]{2}\s+USA\b/i.test(name) &&
-      !/^(?:palo alto|tel aviv|albany|new york)$/i.test(name) &&
+      !/^(?:palo alto|tel aviv|albany|new york|campinas|brazil|united states)$/i.test(name) &&
       !/\b(?:,\s*)?(?:ny|ca),\s*usa\b/i.test(name))
     .filter((name, index, all) => all.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase()) === index)
     .filter((name) => !/^(?:correspondence|corresponding author|teaching assistant professor|assistant professor|associate professor|professor|research fellow)\s*:?[,.]?$/i.test(name.trim()))

@@ -27,9 +27,18 @@ const landingPagePdf = path.join(root, "test-data/real-papers/how-content-volume
 const gpt3AuthorsPdf = path.join(root, "test-data/real-papers/using-cognitive-psychology-gpt3.pdf");
 const frontiersAndContinuationPdf = path.join(root, "test-data/real-papers/marketing-neuroconsumer.pdf");
 const macedonianJournalPdf = path.join(root, "test-fixtures/real-papers/pending-pdfs/marketing-impact-of-e-marketing-on-consumer-behavior.pdf");
+const frontiersNumberedMastheadPdf = path.join(root, "test-data/real-papers/cognitive-dual-task.pdf");
 const mixedMastheadPdf = path.join(root, "test-data/real-papers/marketing-digital-marketing-consumer-behavior.pdf");
 
 describe("author masthead projection", () => {
+  it("recovers numbered Frontiers author continuations without locations", async () => {
+    if (!fs.existsSync(frontiersNumberedMastheadPdf)) return;
+    const pages = await extractPdfPages(frontiersNumberedMastheadPdf);
+    const result = await extractFromPages({ pages, paperId: "frontiers-numbered-masthead", filePath: frontiersNumberedMastheadPdf, fileHash: "frontiers-numbered-masthead", metadata: { pageCount: pages.length } });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["Vivian Castillo de Lima", "João Francisco Barbieri", "Hélio José Coelho-Júnior"]));
+    expect(result.paper.authors).not.toEqual(expect.arrayContaining(["Campinas, Campinas, Brazil", "United States"]));
+  }, 60_000);
+
   it("keeps a two-column Russian masthead title separate from affiliation text", async () => {
     if (!fs.existsSync(mixedMastheadPdf)) return;
     const pages = await extractPdfPages(mixedMastheadPdf);
