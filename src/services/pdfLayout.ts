@@ -955,7 +955,7 @@ function splitInlineSubheading(line: LayoutLine): LayoutLine[] {
         /^[A-Z][^.!?]{0,32}[.!?]?$/u.test(annotation.text.trim())) {
       return [
         itemsToLine([body], line.column, line.page, line.pageHeight, line.pageWidth),
-        { ...itemsToLine([annotation], line.column, line.page, line.pageHeight, line.pageWidth), roleHint: "other" },
+        { ...itemsToLine([annotation], line.column, line.page, line.pageHeight, line.pageWidth), roleHint: "chrome" },
       ];
     }
   }
