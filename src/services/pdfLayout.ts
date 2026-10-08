@@ -944,6 +944,21 @@ function splitInlineSubheading(line: LayoutLine): LayoutLine[] {
       { ...item, text: match[2], x: item.x + labelWidth + Math.max(1.5, item.fontSize * 0.2), width: Math.max(0, item.width - labelWidth) },
     ];
   });
+  // Keep a short diagram annotation at the end of a prose span from being
+  // concatenated into the paragraph. This uses geometry and span shape only;
+  // it does not depend on annotation vocabulary.
+  if (ordered.length === 2) {
+    const [body, annotation] = ordered;
+    const gap = annotation.x - (body.x + body.width);
+    if (body.width >= (line.pageWidth ?? 612) * 0.45 && annotation.width <= 90 &&
+        gap >= Math.max(12, line.fontSize * 1.4) &&
+        /^[A-Z][^.!?]{0,32}[.!?]?$/u.test(annotation.text.trim())) {
+      return [
+        itemsToLine([body], line.column, line.page, line.pageHeight, line.pageWidth),
+        { ...itemsToLine([annotation], line.column, line.page, line.pageHeight, line.pageWidth), roleHint: "other" },
+      ];
+    }
+  }
   // A sidebar citation/author run can share a baseline with a body metadata
   // label (`... authors, Keywords: ...`). Split at the native label run when
   // the right-hand band is substantial and the left band is rail-sized.
