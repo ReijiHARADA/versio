@@ -6,6 +6,8 @@ The subsequent full corpus rerun completed **113/113** without extraction proces
 
 The same full structural suite initially exposed the OzCHI Table 2 borderless-region edge case: table-region recall was **0.4** because caption-only synthetic regions had low confidence even when strong caption-anchored region evidence existed. Region evidence is now carried into relation-node projection, so those regions retain their geometry/confidence; the targeted OzCHI benchmark is **tableRegionRecall 1.0**, with heading hierarchy 1.0, source integrity 1.0, and table-caption relation precision 1.0. Focused pipeline/author tests pass **73/73** and typecheck passes. The full 118-paper suite should be rerun after this change.
 
+The rerun completed the full extraction corpus: **232/232 tests passed** (118 real-paper baseline + 114 reading-order checks, 382s). The PDF.js `TT`, `ColorSpace`, and similar warnings remain non-failing parser warnings. No generated benchmark report is retained in the worktree.
+
 # 2026-10-08: full 113-paper extraction baseline rerun
 
 After the mixed-masthead fix and PDF.js cleanup, a fresh full `--all` run completed over **113 papers** with title exact **106/113 (93.8053%)**. The repaired digital-marketing PDF is now stable in the serialized report: canonical title `DIGITAL MARKETING: CONSUMER BEHAVIOR`, source integrity 1.0. The remaining seven title mismatches are catalog/PDF disagreements (Russian/Serbian native titles versus English catalog titles, `behaviour`/`behavior`, a likely `TND`/`AND` catalog typo, and one morphology fixture whose PDF content is a different medical paper).
