@@ -27,3 +27,23 @@ Seven clean ordinary-body blocks from the existing 114-paper audit were selected
 ## Decision
 
 Apple Translation is technically viable as a macOS-native selective fallback for short/medium clean blocks. The evidence is insufficient to replace MADLAD for full-paper translation: the test covers 7 blocks, 7 disciplines, no scanned PDFs, tables, extraction failures, or long multi-page units. The next evaluation should blind-review at least 50 matched blocks and measure semantic error, terminology error, omission/addition, and reader-visible fallback alongside latency and numeric/citation preservation.
+
+## Matched 50-block benchmark
+
+A second run selected 50 blocks from the existing 114-paper audit corpus, spanning 46 papers. Selection required `ordinary-body-prose`, no prior source fallback, and source length 40–500 characters. One selected row was actually an author-metadata line despite its audit category; it remained unchanged by Apple. Excluding that metadata contamination leaves 49 ordinary prose blocks.
+
+| metric | result |
+|---|---:|
+| Apple request completion | 50/50 (100%) |
+| Japanese-script output among selected rows | 49/50 (98%); 49/49 after metadata exclusion |
+| numeric token presence | 84/84 (100%) |
+| mean latency | 0.120 s/block |
+| median latency | 0.110 s/block |
+| total sequential time | 6.004 s |
+| API errors | 0 |
+
+The run was executed in one native process with installed English/Japanese language packs. It measured translation calls only; model/language-pack download, session startup, extraction, and UI rendering were excluded. Numeric presence is a preservation check, not a semantic accuracy score. The unchanged author line demonstrates why extraction-role validation must precede translation evaluation.
+
+### Quality interpretation
+
+Apple completed every clean prose request in this sample and was substantially faster than the local MADLAD calls measured in the earlier three-sentence probe. That comparison is operational rather than a normalized model benchmark: MADLAD runs through a local 3B model on MPS and Apple runs through the on-device system translation service. The 50-block run still needs human semantic review for terminology, negation, scope, omissions, and additions before a product decision. It supports testing Apple as a selective fallback/cascade for clean blocks, not unconditional replacement of MADLAD.
