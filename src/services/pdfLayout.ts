@@ -1710,6 +1710,19 @@ function looksLikeEmail(text: string): boolean {
   return /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(text);
 }
 
+/**
+ * A flattened masthead sometimes emits affiliation markers and a contact
+ * address as one native line (for example `1,2,3 c.c.m.hummels@...`).
+ * This is publication metadata, not author prose. Keep the rule structural:
+ * the non-email prefix may contain only marker digits and separators, so a
+ * genuine author row containing an email remains eligible for projection.
+ */
+function looksLikeContactMetadata(text: string): boolean {
+  if (!looksLikeEmail(text)) return false;
+  const withoutEmails = text.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, " ");
+  return /^[\s\d,*†‡§∗·,;:()[\]{}]+$/u.test(withoutEmails.trim());
+}
+
 function looksLikeAffiliation(text: string): boolean {
   return /(university|department|institute|college|faculty|laboratory|\blab\b|research (center|centre)|school of|architecture|industrial design|centre of excellence|faculty of|department of|\b(?:the )?(netherlands|australia|germany|france|japan|china|canada|sweden|denmark|finland|norway|italy|spain|switzerland|austria|belgium|ireland|scotland|england|wales)\b|\b(?:sydney|london|dundee|eindhoven|cambridge|oxford|toronto|melbourne|macquarie)\b|大学|大学院|研究所|学院|学部|学科|機構|高専)/i.test(
     text
@@ -2119,6 +2132,7 @@ function roleForLine(
   // canonical metadata. Apply this before inherited role hints so a hint from
   // an adjacent masthead line cannot resurrect these fragments.
   if (line.page === 1 && /^[\d,*†‡§∗\u2020\u2021\s]+$/u.test(text)) return "chrome";
+  if (line.page === 1 && looksLikeContactMetadata(text)) return "chrome";
   if (line.page === 1 && /^[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}(?:\s*[;,]\s*[\w.+-]+@[\w.-]+\.[A-Za-z]{2,})*$/i.test(text)) {
     return "chrome";
   }
