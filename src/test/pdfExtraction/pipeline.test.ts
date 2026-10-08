@@ -174,6 +174,7 @@ describe("canonical extraction pipeline", () => {
       /\d[\d,*†‡§∗·\s,;:()\[\]{}]*[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/i.test(node.text ?? "") &&
       ["paragraph", "abstract"].includes(node.role)
     )).toBe(false);
+    expect(result.blocks.some((block) => /@/.test(block.original ?? ""))).toBe(false);
     const jewelleryContinuation = result.canonical.nodes.find((node) => /jewellery:\s*some conscious, other/i.test(node.text ?? ""));
     expect(jewelleryContinuation?.role).not.toBe("title");
     expect(jewelleryContinuation?.text).toMatch(/^It is through the interaction with a piece of jewellery/);
