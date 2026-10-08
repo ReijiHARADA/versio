@@ -2323,6 +2323,10 @@ function groupLinesIntoBlocks(
 
   const flush = () => {
     if (current.length === 0 || !currentRole) return;
+    const traceText = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_TRACE_TEXT;
+    if (traceText && joinLines(current).includes(traceText)) {
+      console.warn(`[PDF_LAYOUT_TRACE_GROUP] role=${currentRole} page=${current[0].page} columns=${[...new Set(current.map((line) => line.column))].join(",")} lines=${current.length} text=${JSON.stringify(joinLines(current).slice(0, 320))}`);
+    }
     blocks.push({
       role: currentRole,
       text: joinLines(current),
