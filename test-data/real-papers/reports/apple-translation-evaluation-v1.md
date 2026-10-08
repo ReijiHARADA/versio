@@ -47,3 +47,30 @@ The run was executed in one native process with installed English/Japanese langu
 ### Quality interpretation
 
 Apple completed every clean prose request in this sample and was substantially faster than the local MADLAD calls measured in the earlier three-sentence probe. That comparison is operational rather than a normalized model benchmark: MADLAD runs through a local 3B model on MPS and Apple runs through the on-device system translation service. The 50-block run still needs human semantic review for terminology, negation, scope, omissions, and additions before a product decision. It supports testing Apple as a selective fallback/cascade for clean blocks, not unconditional replacement of MADLAD.
+
+## Large-scale 100-block evaluation
+
+A larger run selected 100 blocks from the 114-paper audit corpus, spanning 49 papers and nine discipline labels. The selection used the existing audit's `ordinary-body-prose` category, excluded prior source fallbacks, and limited source length to 30–700 characters. One row was still misclassified author metadata (`osworld-multimodal-agents`); it was retained as an extraction-contamination signal and excluded from clean translation quality rates.
+
+| metric | all selected | clean prose (metadata excluded) |
+|---|---:|---:|
+| blocks | 100 | 99 |
+| Japanese-script output | 99 (99%) | 99 (100%) |
+| API errors | 0 | 0 |
+| numeric tokens preserved | 128/128 (100%) | 128/128 (100%) |
+| mean latency | 0.147 s | 0.147 s |
+| median latency | 0.133 s | 0.133 s |
+| total sequential time | 14.713 s | — |
+
+Discipline counts (clean output / total): cognitive psychology 14/14, design research 1/1, education 2/2, ergonomics 13/13, HCI 36/37 (the one metadata line), linguistics 12/12, machine learning 3/3, marketing 17/17, medicine 1/1.
+
+### Migration decision
+
+The evidence supports **selective integration**, not a full replacement yet:
+
+1. Apple is operationally reliable for clean short/medium blocks: 99/99 clean blocks produced Japanese output, with no API errors and complete numeric-token presence in this corpus.
+2. Apple is much faster in this local probe than the MPS MADLAD calls, but the runtimes are not a normalized model-speed comparison because they use different hardware/services.
+3. The one non-Japanese result was an extraction-role error, not an Apple translation failure. This confirms that extraction validation remains a prerequisite for either backend.
+4. The benchmark has not yet measured human semantic error, domain terminology, negation/scope, table/figure handling, scanned PDFs, or long multi-page paragraphs. Those gaps prevent a defensible full migration decision.
+
+Recommended product path: add Apple as a macOS-only selective cascade for clean blocks and MADLAD quality-gate fallbacks, while preserving MADLAD for long/complex blocks and non-macOS. Before making it the default backend, run a blind human review of at least 100 matched Apple/MADLAD outputs covering the same source units and record severity-weighted semantic error, omission/addition, terminology, and citation errors.
