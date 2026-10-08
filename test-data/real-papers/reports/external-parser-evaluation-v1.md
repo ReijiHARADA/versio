@@ -30,13 +30,23 @@ Observed output:
 
 Conclusion: Docling is a promising **offline comparison extractor**, especially for scanned/complex PDFs, but this run does not justify replacing the existing resolver. It needs an adapter plus post-processing and a broader corpus benchmark.
 
-## GROBID
+## GROBID 0.9.1
 
-No local GROBID service is running (`127.0.0.1:8070/api/isalive` unavailable). Docker/Podman is not installed in this environment, so a reproducible local GROBID comparison could not be run without introducing a separate server/runtime installation. No production change was made.
+Docker/Podman is not installed, so a local Java distribution was built from the official 0.9.1 source with Homebrew OpenJDK 21. The service started on `127.0.0.1:8070`; `/api/isalive` returned `true` and `/api/version` returned `0.9.1`. `interactive-jewellery.pdf` was processed with `POST /api/processFulltextDocument` (HTTP 200) into `/tmp/grobid-v1/interactive.tei.xml`.
+
+Observed output:
+
+- title and abstract were recovered;
+- affiliations were identified;
+- figure 2's caption absorbed the following body paragraph, while Paper Reader's current resolver keeps that boundary separate;
+- the author structure was less reliable than the current projection (multiple authors/locations were collapsed into two large author records);
+- references were segmented into TEI `biblStruct`, which is useful, but requires a CanonicalDocument adapter.
+
+Conclusion: GROBID is useful as a **secondary scholarly-structure signal**, especially for references and TEI metadata, but this run does not justify replacing the current extraction pipeline.
 
 ## Apple Translation framework
 
-The system contains `/System/Library/Frameworks/Translation.framework`, but the installed Command Line Tools Swift compiler and macOS 26 SDK are from different Swift toolchain builds. A minimal `import Translation` program fails before execution with an SDK/toolchain mismatch. Therefore no translation quality result was produced. Apple Translation is also a native Swift framework, not a drop-in HTTP/Python backend for the existing translation-server process; integration would require a native helper or Tauri-side Swift bridge and availability/model-download handling.
+The system contains `/System/Library/Frameworks/Translation.framework`. With the matching Xcode beta toolchain, a native Swift smoke test compiled and invoked `TranslationSession` successfully, but translation returned `TranslationError.Cause.notInstalled` for English→Japanese. The required language pack is not installed and the headless helper cannot complete the user-facing download flow. Apple documents `TranslationSession` as an on-device native API with an `installedSource` initializer and `prepareTranslation`/translation-task flows; it is not a drop-in HTTP/Python backend. Integration would require a native helper or Tauri-side Swift bridge plus language availability/download UI. No quality score was produced because no translation output was available.
 
 ## Decision
 
