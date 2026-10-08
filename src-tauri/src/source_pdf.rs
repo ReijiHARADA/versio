@@ -34,11 +34,17 @@ fn paper_dir(app: &AppHandle, paper_id: &str) -> Result<PathBuf, String> {
     if !is_safe_paper_id(paper_id) {
         return Err("無効な論文IDです".into());
     }
-    let papers_root = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| e.to_string())?
-        .join("papers");
+    let root = if matches!(std::env::var("PAPER_READER_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
+        std::env::var("PAPER_READER_UI_E2E_HOME")
+            .ok()
+            .map(PathBuf::from)
+            .filter(|path| path.is_absolute())
+            .or_else(|| app.path().app_data_dir().ok())
+            .ok_or_else(|| "app data directory unavailable".to_string())?
+    } else {
+        app.path().app_data_dir().map_err(|e| e.to_string())?
+    };
+    let papers_root = root.join("papers");
     let root = papers_root.join(paper_id);
     if root.parent() != Some(papers_root.as_path()) {
         return Err("無効な論文IDです".into());

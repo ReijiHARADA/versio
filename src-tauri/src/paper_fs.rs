@@ -16,12 +16,24 @@ fn resolve(app: &AppHandle, relative: &str) -> Result<PathBuf, String> {
     if !is_safe_relative(relative) {
         return Err("無効なパスです".into());
     }
-    let root = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let root = e2e_app_data_root(app)?;
     let path = root.join(relative);
     if !path.starts_with(&root) {
         return Err("無効なパスです".into());
     }
     Ok(path)
+}
+
+fn e2e_app_data_root(app: &AppHandle) -> Result<PathBuf, String> {
+    if matches!(std::env::var("PAPER_READER_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
+        if let Ok(path) = std::env::var("PAPER_READER_UI_E2E_HOME") {
+            let root = PathBuf::from(path);
+            if root.is_absolute() {
+                return Ok(root);
+            }
+        }
+    }
+    app.path().app_data_dir().map_err(|e| e.to_string())
 }
 
 fn collect_files(root: &Path, dir: &Path, out: &mut Vec<String>) -> Result<(), String> {
