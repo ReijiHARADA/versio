@@ -1,3 +1,7 @@
+# 2026-10-08: full 113-paper extraction baseline rerun
+
+The full cached corpus benchmark completed: **113 papers**, title exact rate **105/113 (92.92%)**. The eight title misses are now classified: several catalog entries expect an English translation while the PDF prints a Russian/Serbian title, one differs only by `behaviour`/`behavior`, one catalog has a likely `TND`/`AND` typo, and one morphology fixture is a different medical paper. The bilingual digital-marketing PDF contains both Russian and English title blocks; the resolver retains the first/native Russian title, which is conservative and avoids inventing a translated title. This run does not justify a generic title heuristic change.
+
 # 2026-10-08: targeted real-paper extraction benchmark
 
 A targeted benchmark over `ppg-earring`, the multilingual applied-linguistics PDF, the HCI systematic review, and the fatigue/occupational-safety PDF produced **3/4 exact titles**. The only mismatch is a source/catalog language mismatch: the PDF's native title is Russian, while the catalog expects an English translated title; metadata fallback preserves the Russian canonical title rather than inventing English text. The other three papers retain exact titles, figure/table relations, and source integrity; the fatigue PDF reports 43 flattened numeric rows and 30 chart-label nodes as expected geometry diagnostics. No generic resolver change is justified by this run.
