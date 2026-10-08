@@ -164,6 +164,9 @@ describe("canonical extraction pipeline", () => {
     const tableRows = result.blocks.filter((block) => block.pageStart === 5 && /^(?:\[18\]|\[19\]|ARIMA model of order \(1,1,0\) for con-)/.test(block.original ?? ""));
     expect(tableRows.length).toBeGreaterThan(0);
     expect(tableRows.every((block) => block.type === "table" || block.translationStatus === "skipped")).toBe(true);
+    const numericTableMix = result.blocks.find((block) => block.pageStart === 5 && /R \(Confirmed Case- Italy\)/.test(block.original ?? ""));
+    expect(numericTableMix?.type).toBe("table");
+    expect(numericTableMix?.translationStatus).toBe("skipped");
     expect(result.blocks.some((block) => block.pageStart === 5 && block.type === "paragraph" && block.original?.startsWith("In order to model"))).toBe(true);
   }, 60_000);
 

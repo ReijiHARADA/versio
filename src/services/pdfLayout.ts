@@ -2959,6 +2959,25 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
   const result: LayoutBlock[] = [];
   for (const block of blocks) {
     if (block.role === "paragraph" && block.lines.length >= 4) {
+      // Some borderless review tables interleave cells with nearby prose in
+      // the native stream. Treat the block as a table only when several
+      // lines independently show multi-cell geometry and numeric density;
+      // ordinary statistical prose usually has one item per line and does
+      // not repeat the cell-like x pattern.
+      const tableLikeLines = block.lines.filter((line) => {
+        const text = line.text.trim();
+        const numericDensity = (text.match(/\d/g) ?? []).length / Math.max(text.length, 1);
+        return line.items.length >= 2 && numericDensity >= 0.08 && !/[.!?]\s*$/.test(text);
+      });
+      const tableXBands = new Set(tableLikeLines.flatMap((line) =>
+        line.items.map((item) => Math.round(item.x / 24) * 24)
+      ));
+      if (tableLikeLines.length >= 3 && tableXBands.size >= 3) {
+        result.push({ ...block, role: "table" });
+        continue;
+      }
+    }
+    if (block.role === "paragraph" && block.lines.length >= 4) {
       const tail = block.lines.at(-1)!;
       const bodyLines = block.lines.slice(0, -1);
       const bodyFont = median(bodyLines.map((line) => line.fontSize)) || tail.fontSize;
