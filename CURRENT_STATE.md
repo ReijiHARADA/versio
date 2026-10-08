@@ -1,3 +1,7 @@
+# 2026-10-08: targeted real-paper extraction benchmark
+
+A targeted benchmark over `ppg-earring`, the multilingual applied-linguistics PDF, the HCI systematic review, and the fatigue/occupational-safety PDF produced **3/4 exact titles**. The only mismatch is a source/catalog language mismatch: the PDF's native title is Russian, while the catalog expects an English translated title; metadata fallback preserves the Russian canonical title rather than inventing English text. The other three papers retain exact titles, figure/table relations, and source integrity; the fatigue PDF reports 43 flattened numeric rows and 30 chart-label nodes as expected geometry diagnostics. No generic resolver change is justified by this run.
+
 # 2026-10-08: extraction suite clean single-worker verification
 
 The full PDF extraction suite was rerun with a single Vitest worker to avoid the parallel worker notification timeout: **13 files, 124 tests passed, exit code 0**. The earlier parallel run also had 124/124 assertions passing but exited 1 because of one Vitest worker `onTaskUpdate` timeout.
