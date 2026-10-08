@@ -615,7 +615,7 @@ export function projectCanonicalToPaper(input: {
     const y = node.boundingBoxes[0]?.y ?? Infinity;
     const previousHeadingNode = pageOneNodesByY
       .filter((candidate) => (candidate.boundingBoxes[0]?.y ?? Infinity) < y &&
-        /^(?:edited by|reviewed by|specialty section|correspondence)\s*:?$/i.test(candidate.text?.trim() ?? ""))
+        /^(?:edited by|reviewed by)\b|^(?:specialty section|correspondence)\s*:?$/i.test(candidate.text?.trim() ?? ""))
       .at(-1);
     const previousHeading = previousHeadingNode?.text?.trim() ?? "";
     const nodeX = node.boundingBoxes[0]?.x ?? Infinity;
