@@ -102,7 +102,10 @@
 }
 
 .reference {
+  font-family: inherit;
   font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 400;
   color: var(--color-text-secondary);
   padding-left: var(--spacing-lg);
   text-indent: calc(-1 * var(--spacing-lg));
@@ -111,6 +114,7 @@
 }
 
 .referenceLink {
+  font: inherit;
   color: var(--color-accent);
   text-decoration: none;
   border-bottom: 1px dotted currentColor;
