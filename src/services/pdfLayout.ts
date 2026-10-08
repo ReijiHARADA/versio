@@ -28,6 +28,7 @@ export type LayoutRole =
   | "paragraph"
   | "figure_caption"
   | "table_caption"
+  | "table"
   | "equation"
   | "footnote"
   | "copyright";
