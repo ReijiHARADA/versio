@@ -552,6 +552,15 @@ export const PaperContent = memo(
           {paper.authors.length > 0 && (
             <p className={styles.authors}>{paper.authors.join(", ")}</p>
           )}
+          {paper.affiliations && paper.affiliations.length > 0 && (
+            <div className={styles.affiliations} aria-label="著者所属">
+              {paper.affiliations.map((affiliation) => (
+                <p className={styles.affiliation} key={affiliation.id}>
+                  {affiliation.name}
+                </p>
+              ))}
+            </div>
+          )}
           {paper.publication && (
             <p className={styles.publication}>
               {paper.publication}
