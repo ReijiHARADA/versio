@@ -64,3 +64,21 @@ Apple documents `TranslationSession` as an on-device native API with an `install
 - Keep the current CanonicalDocument extraction pipeline as production.
 - Add Docling/GROBID as optional benchmark adapters only after a normalized block-level comparator exists.
 - Revisit Apple Translation only with an Xcode/Swift toolchain matching the SDK and a native helper design.
+
+## Same-source Apple vs MADLAD comparison (2026-10-09)
+
+The three inputs below were sent to Apple Translation and to the running Paper Reader MADLAD server with the same source/target languages. This is a fixed diagnostic probe, not a corpus-scale benchmark.
+
+| fixture | Apple | MADLAD | fallback | observation |
+|---|---|---|---|---|
+| 20 participants / no significant difference | Japanese, 29 chars | `20名の参加者を対象に検討したが, 有意差は認められなかった。` | no | both preserve count and negated significance; Apple is more natural |
+| author-year citation sentence | Japanese, 95 chars | `指特異的相互作用に関する最も近い関連の研究は(Sigure & Koseki, 1998; Marquardt et al., 2011; Benko et al, 2009)によって提示されたが, 移動領域ではない。` | no | citation group stays intact in both; MADLAD's `mobile domain` rendering is less precise |
+| interactive-jewellery semicolon sentence | Japanese, 89 chars | original English fallback | `partial_unit_fallback`, degenerate output | Apple translates the complete sentence; MADLAD rejects the unit rather than displaying a hallucinated Japanese result |
+
+MADLAD request details are in `/tmp/madlad-three.json`: input tokens 17/32/0 (the last unit was protected/rejected before model accounting), output tokens 29/44/0, wall time approximately 44.9 s/34.9 s/17.6 s. The probe confirms that the current safety gate prevents a visibly fabricated translation for the jewellery sentence, but it also produces a reader-visible fallback where Apple succeeds. It does not establish that Apple is universally better; a larger blind review is required.
+
+## Interactive jewellery recheck
+
+The current source projection now drops standalone contact metadata lines that consist of an email address plus affiliation markers. The targeted extraction test passes and the visible projected blocks contain no `@` email line. Author affiliations remain available in the paper metadata/header instead of being injected above the abstract.
+
+The reference section has **not** been fully repaired by the earlier typography change. The current output still has split bibliography entries (for example entry 30/31 fragments projected as ordinary paragraphs around the reference block). The CSS normalization makes reference typography consistent when a block is correctly classified, but it cannot repair extraction/column grouping. This remains an extraction follow-up: reference continuation detection must use geometry and bibliography context, not paper-specific strings.
