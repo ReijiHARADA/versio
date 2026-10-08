@@ -437,7 +437,7 @@ export function resolveCanonicalDocument(input: {
     });
   }
 
-  const figureNodes = figureNodesForCaptions(candidates);
+  const figureNodes = figureNodesForCaptions(candidates, input.regionEvidence ?? []);
   nodes = [...nodes, ...figureNodes];
 
   const headingNodes = nodes.filter((n) => n.role === "heading");
