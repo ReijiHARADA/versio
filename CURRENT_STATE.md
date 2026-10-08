@@ -1,3 +1,7 @@
+# 2026-10-08: extraction suite clean single-worker verification
+
+The full PDF extraction suite was rerun with a single Vitest worker to avoid the parallel worker notification timeout: **13 files, 124 tests passed, exit code 0**. The earlier parallel run also had 124/124 assertions passing but exited 1 because of one Vitest worker `onTaskUpdate` timeout.
+
 # 2026-10-08: packaged UI OCR E2E isolation and duplicate-data diagnosis
 
 The packaged UI harness now honors `PAPER_READER_UI_E2E_HOME` in the Rust app-data and source-PDF paths, and the script accepts the legacy `PAPER_READER_ACCEPTANCE_HOME` alias. `npm run tauri:build:fast` succeeds. A rerun with the malformed multilingual OCR fixture still does not reach the target import: the isolated app-data is populated with pre-existing Paper Packages and the Accessibility label lookup for the add-paper action fails, so this run is not evidence about OCR quality. Native extraction remains 124/124 and real-paper regression remains 118/118.
