@@ -2160,6 +2160,10 @@ function roleForLine(
       looksLikeAffiliation(text) && text.length <= 220 && !/[.!?。！？]$/.test(text)) {
     return "affiliation";
   }
+  // A stale native role hint can label a lowercase body continuation as a
+  // heading. Structural sentence evidence must take precedence over that
+  // hint so the paragraph remains intact.
+  if (/^[a-z]/.test(text) && text.split(/\s+/).length >= 4) return "paragraph";
   // Publisher mastheads sometimes emit the associate-editor credit as a
   // paragraph-sized line between the two body columns. It is publication
   // metadata, never article prose, even though it ends in a full stop.

@@ -176,6 +176,7 @@ describe("canonical extraction pipeline", () => {
     )).toBe(false);
     const jewelleryContinuation = result.canonical.nodes.find((node) => /jewellery:\s*some conscious, other/i.test(node.text ?? ""));
     expect(jewelleryContinuation?.role).not.toBe("title");
+    expect(jewelleryContinuation?.text).toMatch(/^It is through the interaction with a piece of jewellery/);
   }, 60_000);
 
   it("keeps a fragmented multi-column review table out of paragraph translation", async () => {
