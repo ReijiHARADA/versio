@@ -55,12 +55,14 @@ export class SelectiveAppleTranslationEngine implements TranslationEngine {
   readonly name = "selective-apple";
   private readonly apple: AppleTranslationEngine;
   private readonly madlad: TranslationEngine;
+  private eligibleSources: ReadonlySet<string> | null = null;
   constructor(apple: AppleTranslationEngine, madlad: TranslationEngine) {
     this.apple = apple;
     this.madlad = madlad;
   }
+  setEligibleSources(sources: ReadonlySet<string>): void { this.eligibleSources = sources; }
   async translate(text: string, sourceLanguage: string, targetLanguage: string): Promise<TranslationResult> {
-    if (isAppleEligibleSource(text)) {
+    if (isAppleEligibleSource(text) && (this.eligibleSources === null || this.eligibleSources.has(text))) {
       try { return await this.apple.translate(text, sourceLanguage, targetLanguage); } catch { /* safe fallback */ }
     }
     return this.madlad.translate(text, sourceLanguage, targetLanguage);

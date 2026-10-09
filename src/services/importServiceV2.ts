@@ -100,9 +100,10 @@ export async function importPDFV2(
     .filter((model, index, models): model is string => Boolean(model) && models.indexOf(model) === index)
     .map((model) => new OllamaProvider(cfg.ollamaServerUrl, model));
   const madladEngine = new MADLADEngine(cfg.madladServerUrl);
-  const baseTranslationEngine = cfg.enableAppleTranslation
+  const appleRouter = cfg.enableAppleTranslation
     ? new SelectiveAppleTranslationEngine(new AppleTranslationEngine(), madladEngine)
-    : madladEngine;
+    : null;
+  const baseTranslationEngine = appleRouter ?? madladEngine;
   const translationEngine = cfg.enableSelectiveCascade
     ? new OllamaTranslationEngine(baseTranslationEngine, llmProviders)
     : baseTranslationEngine;
@@ -327,6 +328,13 @@ export async function importPDFV2(
     // Track translation progress
     let translatedCount = 0;
     const refSectionIds = referenceSectionIds(sections);
+    if (appleRouter) {
+      appleRouter.setEligibleSources(new Set(
+        blocks
+          .filter((block) => block.type === "paragraph" && block.original && block.extractionConfidence !== 0 && shouldTranslateBlock(block, refSectionIds))
+          .map((block) => block.original as string)
+      ));
+    }
     const totalTranslatable =
       blocks.filter((b) => shouldTranslateBlock(b, refSectionIds)).length +
       sections.filter(shouldTranslateSection).length +
