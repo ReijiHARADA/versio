@@ -21,6 +21,7 @@
   --color-shadow: rgba(0, 0, 0, 0.1);
   --color-danger: #c5221f;
   --color-success: #16803c;
+  --color-favorite: #f4b400;
 
   /* Semantic surfaces (design system v1) */
   --color-surface-page: var(--color-bg);
@@ -98,6 +99,7 @@
   --color-shadow: rgba(0, 0, 0, 0.3);
   --color-danger: #f28b82;
   --color-success: #6ee7b7;
+  --color-favorite: #fdd663;
 
   --color-surface-page: var(--color-bg);
   --color-surface-grouped: #323234;

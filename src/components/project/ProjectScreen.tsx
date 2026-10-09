@@ -15,6 +15,7 @@ import { PaperCard } from "../library/PaperCard";
 import { PaperMenu } from "../library/PaperMenu";
 import { ImportJobCard } from "../library/ImportJobCard";
 import { useImportJobRecovery } from "../library/useImportJobRecovery";
+import { useDeletePaper } from "../../hooks/useDeletePaper";
 import { WorkspaceFolderCard } from "./WorkspaceFolderCard";
 import { WorkspacePathTrail } from "../workspace/WorkspacePathTrail";
 import type { Paper } from "../../types/paper";
@@ -46,6 +47,7 @@ export function ProjectScreen() {
   const importJobs = useImportJobStore((state) => state.jobs);
   const dropTargetId = usePaperDragStore((state) => state.dropTargetId);
   const draggingPaperId = usePaperDragStore((state) => state.draggingPaperId);
+  const { requestDelete } = useDeletePaper();
   const jobs = useMemo(
     () => visibleImportJobs(importJobs, { workspaceNodeId: nodeId }),
     [importJobs, nodeId]
@@ -197,6 +199,7 @@ export function ProjectScreen() {
                         );
                       }
                     }}
+                    onDeleteRequest={requestDelete}
                   />
                 }
               />

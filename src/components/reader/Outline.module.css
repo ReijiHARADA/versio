@@ -35,12 +35,12 @@
   font-size: 0.875rem;
   line-height: 1.4;
   cursor: pointer;
-  transition: background-color var(--transition-fast),
-    color var(--transition-fast);
+  /* No bg/color transition: interpolating selection blue ↔ gray briefly
+     looks like the old soft accent-light highlight while scrolling. */
   border-left: 3px solid transparent;
 }
 
-.link:hover {
+.link:hover:not(.active) {
   background-color: var(--color-bg-tertiary);
   color: var(--color-text);
 }
@@ -50,6 +50,11 @@
   color: var(--color-selection-fg);
   border-left-color: var(--color-selection-bg);
   font-weight: 500;
+}
+
+.link.active:hover {
+  background-color: var(--color-selection-bg);
+  color: var(--color-selection-fg);
 }
 
 .title {

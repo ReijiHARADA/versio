@@ -85,8 +85,6 @@ function HoldToEmptyButton({
 
   useEffect(() => () => stopHold(false), [stopHold]);
 
-  const clipTop = `${((1 - progress) * 100).toFixed(2)}%`;
-
   return (
     <button
       type="button"
@@ -105,14 +103,7 @@ function HoldToEmptyButton({
       onClick={(event) => event.preventDefault()}
     >
       <span className={trashStyles.emptyHoldFill} aria-hidden="true" />
-      <span className={trashStyles.emptyHoldLabel}>{progress > 0.02 ? "長押し中…" : "ゴミ箱を空にする"}</span>
-      <span
-        className={trashStyles.emptyHoldLabelOnFill}
-        aria-hidden="true"
-        style={{ clipPath: `inset(${clipTop} 0 0 0)` }}
-      >
-        {progress > 0.02 ? "長押し中…" : "ゴミ箱を空にする"}
-      </span>
+      <span className={trashStyles.emptyHoldLabel}>ゴミ箱を空にする</span>
     </button>
   );
 }
@@ -264,7 +255,7 @@ export function TrashScreen() {
         </div>
       </header>
 
-      <main className={styles.main}>
+      <main className={`${styles.main} ${trashStyles.main}`}>
         {loading ? (
           <p className={styles.emptyDescription}>読み込み中…</p>
         ) : items.length === 0 ? (
@@ -315,7 +306,7 @@ export function TrashScreen() {
                     disabled={Boolean(busyId)}
                     onClick={() => handlePermanent(item)}
                   >
-                    今すぐ完全に削除
+                    削除
                   </button>
                 </div>
               </li>

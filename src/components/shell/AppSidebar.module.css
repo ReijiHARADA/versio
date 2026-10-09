@@ -210,6 +210,18 @@
   max-width: none;
 }
 
+/*
+ * Badge sits beside the label — don't let the label grow and shove the count
+ * to the far right edge of the rail.
+ */
+.sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .item:has(.badge) .itemLabel,
+.sidebarExpanded .item:has(.badge) .itemLabel,
+.sidebarResizing .item:has(.badge) .itemLabel,
+.sidebarDropReady .item:has(.badge) .itemLabel,
+.sidebar:has([data-workspace-editing]) .item:has(.badge) .itemLabel {
+  flex: 0 1 auto;
+}
+
 /* ────────────────────────────────────────────────
    Rows: always full sidebar width; icon column fixed
 ──────────────────────────────────────────────── */
@@ -466,6 +478,16 @@
   color: var(--color-text);
 }
 
+.treeRow:has(.item.active) .projectMenuButton {
+  color: var(--color-selection-fg);
+}
+
+.treeRow:has(.item.active) .projectMenuButton:hover,
+.treeRow:has(.item.active) .projectMenuButtonOpen {
+  background: color-mix(in srgb, var(--color-selection-fg) 22%, transparent);
+  color: var(--color-selection-fg);
+}
+
 .projectMenu {
   /* Portaled to document.body so nested tree overflow:hidden cannot clip it. */
   position: fixed;
@@ -522,6 +544,7 @@
 .sidebar:has([data-workspace-editing]) .badge {
   min-width: 1.25rem;
   flex: 0 0 auto;
+  margin-left: 2px;
   padding: 0 6px;
   max-width: none;
 }

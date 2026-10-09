@@ -38,7 +38,7 @@ export function FavoritesScreen() {
     <div className={styles.container}>
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          <Star size={20} style={{ color: "var(--color-accent)" }} />
+          <Star size={20} style={{ color: "var(--color-favorite)" }} fill="currentColor" />
           <h1 className={styles.title}>お気に入り</h1>
         </div>
       </header>

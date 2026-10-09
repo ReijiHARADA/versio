@@ -44,8 +44,9 @@
   align-items: center;
   height: 28px;
   padding: 0 10px;
-  background: linear-gradient(180deg, #f6f6f7 0%, #ececef 100%);
-  border-bottom: 1px solid color-mix(in srgb, #000 8%, transparent);
+  /* Match app sidebar surface */
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .traffic {
@@ -79,7 +80,7 @@
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  color: #5c5c62;
+  color: var(--color-text-secondary);
   line-height: 1;
   white-space: nowrap;
 }
@@ -101,10 +102,10 @@
 }
 
 [data-theme="dark"] .titlebar {
-  background: linear-gradient(180deg, #3a3a3c 0%, #2e2e30 100%);
-  border-bottom-color: color-mix(in srgb, #fff 8%, transparent);
+  background: var(--color-bg-secondary);
+  border-bottom-color: var(--color-border-light);
 }
 
 [data-theme="dark"] .windowTitle {
-  color: #c8c8cc;
+  color: var(--color-text-secondary);
 }

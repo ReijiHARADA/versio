@@ -123,7 +123,11 @@ export function PaperMenu({
       {open && (
         <div className={styles.menu} role="menu">
           <button type="button" role="menuitem" onClick={(event) => void toggleFavorite(event)}>
-            <Star size={14} fill={paper.favorite ? "currentColor" : "none"} />
+            <Star
+              size={14}
+              fill={paper.favorite ? "currentColor" : "none"}
+              style={paper.favorite ? { color: "var(--color-favorite)" } : undefined}
+            />
             {paper.favorite ? "お気に入りを外す" : "お気に入り"}
           </button>
           {variant === "library" && (
@@ -159,7 +163,7 @@ export function PaperMenu({
               ワークスペースから外す
             </button>
           )}
-          {variant === "library" && onDeleteRequest && (
+          {onDeleteRequest && (
             <>
               <div className={styles.menuSep} />
               <button
@@ -172,7 +176,7 @@ export function PaperMenu({
                 }}
               >
                 <Trash2 size={14} />
-                ライブラリから削除
+                {variant === "workspace" ? "論文の削除" : "ライブラリから削除"}
               </button>
             </>
           )}

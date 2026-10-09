@@ -1,17 +1,25 @@
+/* Match header horizontal inset (icon ←→ empty button). */
+.main {
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
 .list {
   list-style: none;
   margin: 0;
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: 0;
 }
 
 .row {
   display: flex;
   align-items: flex-start;
   gap: var(--spacing-md);
-  padding: var(--spacing-md);
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--spacing-md) 0;
   border-bottom: 1px solid var(--color-border-light);
 }
 
@@ -65,14 +73,16 @@
   color: var(--color-accent);
 }
 
+/* Row permanent-delete: outline only */
 .dangerButton {
-  color: #fff;
-  background: var(--color-danger, #b42318);
+  color: var(--color-danger, #b42318);
+  background: transparent;
   border-color: var(--color-danger, #b42318);
 }
 
 .dangerButton:hover:not(:disabled) {
-  filter: brightness(1.08);
+  background: color-mix(in srgb, var(--color-danger, #b42318) 8%, transparent);
+  filter: none;
 }
 
 .ghostButton {
@@ -86,7 +96,7 @@
   cursor: not-allowed;
 }
 
-/* Header: hold-to-empty — red outline, fill rises bottom → top */
+/* Header: solid red hold-to-empty; gauge fills left → right */
 .emptyHoldButton {
   --hold-t: 0;
   position: relative;
@@ -97,8 +107,8 @@
   gap: var(--spacing-sm);
   border: 1px solid var(--color-danger);
   border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-danger);
+  background: var(--color-danger);
+  color: #fff;
   padding: var(--spacing-sm) var(--spacing-md);
   font-size: 0.875rem;
   font-weight: 500;
@@ -116,36 +126,24 @@
 }
 
 .emptyHoldButton:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  filter: brightness(1.05);
 }
 
 .emptyHoldFill {
   position: absolute;
-  left: 0;
-  right: 0;
+  top: 0;
   bottom: 0;
-  height: calc(var(--hold-t) * 100%);
-  background: var(--color-danger);
+  left: 0;
+  width: calc(var(--hold-t) * 100%);
+  background: color-mix(in srgb, #000 22%, var(--color-danger));
   pointer-events: none;
   z-index: 0;
 }
 
-.emptyHoldLabel,
-.emptyHoldLabelOnFill {
+.emptyHoldLabel {
   position: relative;
   z-index: 1;
   line-height: 1.2;
-}
-
-.emptyHoldLabelOnFill {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  pointer-events: none;
-  z-index: 2;
 }
 
 @media (prefers-reduced-motion: reduce) {
