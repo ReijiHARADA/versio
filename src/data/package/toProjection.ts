@@ -130,7 +130,7 @@ export function packageToProjection(
     normalizedKind: section.normalizedKind as Section["normalizedKind"],
   }));
 
-  const blocks: PaperBlock[] = order.map((id, indexInPaper) => {
+  const blocks: PaperBlock[] = order.flatMap((id, indexInPaper) => {
     const meta: StructureBlock = structureBlocks[id];
     const type = blockType(meta.type);
     const isFigureLike = type === "figure" || type === "table";
@@ -153,7 +153,12 @@ export function packageToProjection(
     const translatedText = isFigureLike
       ? captionTranslated
       : (translated.get(id) ?? captionTranslated);
-    return {
+    // Older packages may retain footer numbers in structure.json even after
+    // their Markdown node was filtered. Keep them out of the Reader too.
+    if ((type === "paragraph" || type === "footnote") && /^\d{1,3}$/.test((originalText ?? "").trim())) {
+      return [];
+    }
+    return [{
       id,
       paperId: pkg.paper.paperId,
       sectionId: meta.sectionId ?? null,
@@ -170,7 +175,7 @@ export function packageToProjection(
       ),
       parentBlockId: meta.parentBlockId ?? null,
       metadata,
-    };
+    }];
   });
 
   const paper: Paper = {
