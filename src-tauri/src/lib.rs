@@ -146,6 +146,27 @@ fn get_translation_server_token(state: State<'_, ServerState>) -> String {
     ensure_server_token(&state.token)
 }
 
+#[tauri::command]
+fn translate_with_apple(
+    app: tauri::AppHandle,
+    text: String,
+    source_language: String,
+    target_language: String,
+) -> Result<String, String> {
+    let helper = app.path().resource_dir().map_err(|e| e.to_string())?.join("apple-translation");
+    if !helper.exists() { return Err("Apple Translation helper is not bundled".into()); }
+    let output = Command::new(helper)
+        .arg(source_language)
+        .arg(target_language)
+        .arg(text)
+        .output()
+        .map_err(|e| e.to_string())?;
+    if !output.status.success() {
+        return Err(String::from_utf8_lossy(&output.stderr).trim().to_string());
+    }
+    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let server_state = ServerState {
@@ -188,6 +209,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             restart_translation_server,
             get_translation_server_token,
+            translate_with_apple,
             ocr::ocr_image,
             source_pdf::save_source_pdf,
             source_pdf::copy_source_pdf,

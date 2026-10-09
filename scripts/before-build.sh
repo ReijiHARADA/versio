@@ -16,6 +16,10 @@ fi
 
 cd "$PROJECT_DIR"
 
+# Compile the macOS-native Apple Translation adapter when the matching Xcode
+# toolchain is available. The app remains MADLAD-capable if it is not.
+bash "$SCRIPT_DIR/compile-apple-translation.sh"
+
 MODE="${PAPER_READER_PYTHON_BUNDLE_MODE:-cache}"
 export PAPER_READER_PYTHON_BUNDLE_MODE="$MODE"
 

@@ -30,6 +30,8 @@ import type { Paper, Section, PaperBlock } from "../types/paper";
 import { rememberSourcePdf } from "../data/repositories/documentRepository";
 import {
   MADLADEngine,
+  AppleTranslationEngine,
+  SelectiveAppleTranslationEngine,
   OllamaTranslationEngine,
   TranslationQueue,
   TranslationPriority,
@@ -98,9 +100,12 @@ export async function importPDFV2(
     .filter((model, index, models): model is string => Boolean(model) && models.indexOf(model) === index)
     .map((model) => new OllamaProvider(cfg.ollamaServerUrl, model));
   const madladEngine = new MADLADEngine(cfg.madladServerUrl);
-  const translationEngine = cfg.enableSelectiveCascade
-    ? new OllamaTranslationEngine(madladEngine, llmProviders)
+  const baseTranslationEngine = cfg.enableAppleTranslation
+    ? new SelectiveAppleTranslationEngine(new AppleTranslationEngine(), madladEngine)
     : madladEngine;
+  const translationEngine = cfg.enableSelectiveCascade
+    ? new OllamaTranslationEngine(baseTranslationEngine, llmProviders)
+    : baseTranslationEngine;
 
   try {
     // Stage 1: Reading file
