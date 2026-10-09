@@ -242,6 +242,14 @@ describe("author masthead projection", () => {
     expect(result.paper.affiliations.every((affiliation) => !/Accepted:|Published online/i.test(affiliation.name))).toBe(true);
   }, 60_000);
 
+  it("keeps a numbered affiliation band separate from following article prose", async () => {
+    if (!fs.existsSync(registerPdf)) return;
+    const pages = await extractPdfPages(registerPdf);
+    const result = await extractFromPages({ pages, paperId: "linguistics-register-affiliation-band", filePath: registerPdf, fileHash: "numbered-affiliation-band", metadata: { pageCount: pages.length } });
+    expect(result.blocks.some((block) => /University of Turku/.test(block.original ?? "") && /discriminative importance/.test(block.original ?? ""))).toBe(false);
+    expect(result.canonical.nodes.some((node) => node.role === "affiliation" && /University of Turku/.test(node.text ?? ""))).toBe(true);
+  }, 60_000);
+
   it("keeps location-only masthead fragments out of authors", async () => {
     if (!fs.existsSync(wearabilityPdf)) return;
     const pages = await extractPdfPages(wearabilityPdf);
