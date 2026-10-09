@@ -104,8 +104,8 @@
 }
 
 .iconButton.active {
-  background-color: var(--color-accent-light);
-  color: var(--color-accent);
+  background-color: var(--color-selection-bg);
+  color: var(--color-selection-fg);
 }
 
 .iconButton:disabled {

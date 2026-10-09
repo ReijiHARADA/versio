@@ -402,8 +402,8 @@
 }
 
 .item.active {
-  background: var(--color-accent-light);
-  color: var(--color-accent);
+  background: var(--color-selection-bg);
+  color: var(--color-selection-fg);
   font-weight: 500;
 }
 
@@ -527,7 +527,8 @@
 }
 
 .item.active .badge {
-  background: var(--color-bg);
+  background: color-mix(in srgb, var(--color-selection-fg) 22%, transparent);
+  color: var(--color-selection-fg);
 }
 
 .scroll {

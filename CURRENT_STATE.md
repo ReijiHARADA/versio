@@ -1,3 +1,11 @@
+# 2026-10-09: trash CTA radius + hold-to-empty
+
+ゴミ箱行の「元に戻す」「今すぐ完全に削除」の角RをヘッダーCTAと同じ `radius-md` に揃えた。「ゴミ箱を空にする」は赤アウトラインの長押しボタンにし、塗りが下から上へ上がりきると実行（二段確認なし）。
+
+# 2026-10-09: selection highlight = solid blue / white text
+
+目次の現在位置、Reader 右上ツールの選択、設定ナビ／テーマ・セグメント選択、サイドバーの現在行、検索結果・メモカードの選択を、薄い青ではなく **青塗り＋白文字** に統一（`--color-selection-bg` / `--color-selection-fg`）。
+
 # 2026-10-08: Frontiers masthead editor-credit boundary fix
 
 `cognitive-dual-task.pdf` had `Edited by:` / `Reviewed by:` labels mixed into the author-role stream. The projection now treats inline credit labels as masthead boundaries, excluding adjacent editor/reviewer names while preserving the nine paper authors. Targeted author F1 improved **0.7000 → 0.7778**; author projection **24/24**, typecheck pass. This is a generic label/geometry rule; the full 113-paper benchmark remains pending.

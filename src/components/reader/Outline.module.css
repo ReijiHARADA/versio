@@ -46,9 +46,10 @@
 }
 
 .link.active {
-  background-color: var(--color-accent-light);
-  color: var(--color-accent);
-  border-left-color: var(--color-accent);
+  background-color: var(--color-selection-bg);
+  color: var(--color-selection-fg);
+  border-left-color: var(--color-selection-bg);
+  font-weight: 500;
 }
 
 .title {

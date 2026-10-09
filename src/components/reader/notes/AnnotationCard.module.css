@@ -6,10 +6,27 @@
   cursor: pointer;
 }
 
-.card:hover,
-.card.active {
+.card:hover {
   border-color: var(--color-accent);
   background: var(--color-accent-light);
+}
+
+.card.active {
+  border-color: var(--color-selection-bg);
+  background: var(--color-selection-bg);
+  color: var(--color-selection-fg);
+}
+
+.card.active .quote,
+.card.active .note,
+.card.active .emptyNote,
+.card.active .delete {
+  color: var(--color-selection-fg);
+}
+
+.card.active .delete:hover {
+  color: #fff;
+  opacity: 0.85;
 }
 
 .cardHeader {

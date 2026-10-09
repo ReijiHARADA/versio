@@ -53,9 +53,10 @@
   border: 1px solid var(--color-border);
   background: var(--color-bg);
   color: var(--color-text);
-  border-radius: var(--radius-sm);
-  padding: 6px 10px;
-  font-size: 0.8125rem;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
 }
 
@@ -78,18 +79,77 @@
   background: transparent;
 }
 
-.confirmInline {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--spacing-sm);
-  font-size: 0.8125rem;
-  color: var(--color-text-secondary);
-}
-
 .restoreButton:disabled,
 .dangerButton:disabled,
 .ghostButton:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+/* Header: hold-to-empty — red outline, fill rises bottom → top */
+.emptyHoldButton {
+  --hold-t: 0;
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-danger);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+  -webkit-user-select: none;
+}
+
+.emptyHoldButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.emptyHoldButton:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+}
+
+.emptyHoldFill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--hold-t) * 100%);
+  background: var(--color-danger);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.emptyHoldLabel,
+.emptyHoldLabelOnFill {
+  position: relative;
+  z-index: 1;
+  line-height: 1.2;
+}
+
+.emptyHoldLabelOnFill {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emptyHoldFill {
+    transition: none;
+  }
 }

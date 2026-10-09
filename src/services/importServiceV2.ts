@@ -535,9 +535,6 @@ export async function importPDFV2(
     }
 
     // Queue blocks by priority
-    const abstractSection = sections.find((s) => s.normalizedKind === "abstract");
-    const introSection = sections.find((s) => s.normalizedKind === "introduction");
-
     await persistUntranslatableAsSkipped(blocks, refSectionIds);
 
     for (const block of blocks) {
@@ -573,14 +570,10 @@ export async function importPDFV2(
         continue;
       }
 
-      let priority: TranslationPriorityValue = TranslationPriority.LOW;
-      if (block.sectionId === abstractSection?.id) {
-        priority = TranslationPriority.CRITICAL;
-      } else if (block.sectionId === introSection?.id) {
-        priority = TranslationPriority.HIGH;
-      }
-
-      enqueue(block.id, block.original, priority);
+      // Keep body blocks in document order.  The queue is stable within a
+      // priority level, so assigning one priority prevents a later abstract
+      // or introduction block from jumping ahead of blocks above it.
+      enqueue(block.id, block.original, TranslationPriority.MEDIUM);
     }
 
     if (outstanding === 0) {

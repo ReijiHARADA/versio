@@ -393,6 +393,24 @@ function isStandaloneContactMetadata(text: string): boolean {
   return /^[\s\d,*†‡§∗·,;:()[\]{}]+$/u.test(withoutEmails);
 }
 
+/**
+ * Superscript affiliation markers can survive PDF extraction as a standalone
+ * text run (for example `1,2,3,4`) between the masthead and ABSTRACT.  It is
+ * metadata belonging to the author/affiliation projection, never readable
+ * paper content, so it must not become a paragraph translation unit.
+ */
+function isStandaloneAffiliationMarkerRun(text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed || !/\d/.test(trimmed)) return false;
+  const markers = trimmed.replace(/[\d,*†‡§∗·,;:()[\]{}\s]+/gu, "");
+  return markers.length === 0 && (trimmed.match(/\d+/g)?.length ?? 0) >= 2;
+}
+
+/** A lone short number in an `other` node is a running page marker, not paper prose. */
+function isStandalonePageNumber(text: string, role: CanonicalNode["role"]): boolean {
+  return role === "other" && /^\d{1,3}$/.test(text.trim());
+}
+
 /** Numbered prose items are lists even when an upstream role heuristic called
  * them references. Bibliography entries have author/year evidence; ordinary
  * list items do not. */
@@ -1699,7 +1717,9 @@ export function projectCanonicalToPaper(input: {
       node.role === "other"
     ) {
       const text = node.text ?? "";
-      if (isStandaloneContactMetadata(text)) continue;
+      if (isStandaloneContactMetadata(text) ||
+        isStandaloneAffiliationMarkerRun(text) ||
+        isStandalonePageNumber(text, node.role)) continue;
       const listParts = splitFlattenedList(text);
       const standaloneListItem = /^(?:[•‣▪∙]|(?:[1-9]|1[0-9]|20)[.)]|\([A-Za-z]\)|[A-Za-z]\))\s+/.test(text.trim());
       const isRef = !isNumberedProseListItem(text) &&
