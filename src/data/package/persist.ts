@@ -250,11 +250,21 @@ export async function loadPaperPackage(
   const originalMarkdown = await fs.readText(`${root}/original.md`);
   const translatedMarkdown = await fs.readText(`${root}/ja.md`);
   const structureText = await fs.readText(`${root}/structure.json`);
-  if (!paperText || !originalMarkdown || !translatedMarkdown || !structureText) {
-    throw new Error(`Paper Package が不完全です: ${paperId}`);
+  const missing = [
+    !paperText && "paper.json",
+    !originalMarkdown && "original.md",
+    !translatedMarkdown && "ja.md",
+    !structureText && "structure.json",
+  ].filter((value): value is string => Boolean(value));
+  if (missing.length > 0) {
+    throw new Error(`Paper Package が不完全です: ${paperId}（不足: ${missing.join(", ")}）`);
   }
-  const paper = JSON.parse(paperText) as PaperJson;
-  const structure = JSON.parse(structureText) as StructureFile;
+  const paperJsonText = paperText as string;
+  const originalMarkdownText = originalMarkdown as string;
+  const translatedMarkdownText = translatedMarkdown as string;
+  const structureJsonText = structureText as string;
+  const paper = JSON.parse(paperJsonText) as PaperJson;
+  const structure = JSON.parse(structureJsonText) as StructureFile;
   const translationText = await fs.readText(`${root}/translation.json`);
   const translation = translationText ? (JSON.parse(translationText) as TranslationFile) : undefined;
 
@@ -292,8 +302,8 @@ export async function loadPaperPackage(
 
   return {
     paper,
-    originalMarkdown,
-    translatedMarkdown,
+    originalMarkdown: originalMarkdownText,
+    translatedMarkdown: translatedMarkdownText,
     structure,
     translation,
     layout,

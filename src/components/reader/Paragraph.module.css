@@ -1,5 +1,6 @@
 .container {
   position: relative;
+  overflow-anchor: none;
   margin-bottom: var(--spacing-md);
   padding-right: 1.75rem;
   border-left: 2px solid transparent;

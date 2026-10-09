@@ -97,6 +97,8 @@ export function Paragraph({
   } | null>(null);
   const [morph, setMorph] = useState<{ from: string; to: string } | null>(null);
   const wasWaitingRef = useRef(false);
+  const layoutRef = useRef<HTMLDivElement>(null);
+  const [reservedHeight, setReservedHeight] = useState<number | null>(null);
 
   const usableStoredTranslation = usableTranslatedText(block.translated, block.original);
   // The import policy understands projected list items and other structured
@@ -123,6 +125,22 @@ export function Paragraph({
     !hasTranslation && typeof block.metadata.translationInputWarning === "string"
       ? block.metadata.translationInputWarning
       : null;
+
+  // Translation changes line wrapping (and therefore block height). Reserve
+  // the height observed while waiting so completion cannot pull the viewport
+  // upward/downward while the user is scrolling near a section boundary.
+  useEffect(() => {
+    if (!isWaiting || reservedHeight != null) return;
+    const frame = requestAnimationFrame(() => {
+      const height = layoutRef.current?.getBoundingClientRect().height ?? 0;
+      if (height > 0) setReservedHeight(Math.ceil(height));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isWaiting, reservedHeight]);
+
+  useEffect(() => {
+    setReservedHeight(null);
+  }, [block.id]);
 
   const handleToggle = () => {
     toggleOriginalExpanded(block.id);
@@ -360,6 +378,8 @@ export function Paragraph({
 
   return (
     <div
+      ref={layoutRef}
+      style={reservedHeight ? { minHeight: `${reservedHeight}px` } : undefined}
       className={`${styles.container} ${isWaiting ? styles.pending : ""} ${isExpanded ? styles.expanded : ""} ${lowConfidence ? styles.lowConfidence : ""}`}
     >
       {showMorphWaiting || showMorphReveal ? (
