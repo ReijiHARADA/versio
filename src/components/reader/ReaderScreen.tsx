@@ -239,7 +239,13 @@ export function ReaderScreen() {
     void (async () => {
       await paperContentRef.current?.ensureSectionMounted(sectionId);
       const element = document.getElementById(`section-${sectionId}`);
-      element?.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Section virtualization mounts the target just before this jump. A
+      // long smooth scroll keeps the target and its neighbors crossing the
+      // IntersectionObserver threshold repeatedly, which causes mount/unmount
+      // churn and visible frame drops on large papers. TOC navigation is a
+      // deterministic jump; search/annotation navigation keeps its own smooth
+      // behavior.
+      element?.scrollIntoView({ behavior: "auto", block: "start" });
     })();
   };
 

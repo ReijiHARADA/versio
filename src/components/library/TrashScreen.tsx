@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Folder, FileText, Trash2 } from "lucide-react";
 import {
   emptyTrash,
@@ -22,8 +22,99 @@ import { showToast } from "../../stores/toastStore";
 import styles from "./LibraryScreen.module.css";
 import trashStyles from "./TrashScreen.module.css";
 
+const EMPTY_HOLD_MS = 1100;
+
 function itemKey(item: Pick<TrashItem, "kind" | "id">): string {
   return `${item.kind}:${item.id}`;
+}
+
+function HoldToEmptyButton({
+  disabled,
+  onComplete,
+}: {
+  disabled: boolean;
+  onComplete: () => void;
+}) {
+  const [progress, setProgress] = useState(0);
+  const holdingRef = useRef(false);
+  const startRef = useRef(0);
+  const rafRef = useRef(0);
+  const completedRef = useRef(false);
+
+  const stopHold = useCallback((commit: boolean) => {
+    holdingRef.current = false;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = 0;
+    if (!commit) {
+      setProgress(0);
+      completedRef.current = false;
+    }
+  }, []);
+
+  const tick = useCallback(
+    (now: number) => {
+      if (!holdingRef.current) return;
+      const t = Math.min(1, (now - startRef.current) / EMPTY_HOLD_MS);
+      setProgress(t);
+      if (t >= 1) {
+        holdingRef.current = false;
+        if (!completedRef.current) {
+          completedRef.current = true;
+          onComplete();
+        }
+        return;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    },
+    [onComplete]
+  );
+
+  const startHold = useCallback(
+    (event: React.PointerEvent<HTMLButtonElement>) => {
+      if (disabled || event.button !== 0) return;
+      event.preventDefault();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      holdingRef.current = true;
+      completedRef.current = false;
+      startRef.current = performance.now();
+      setProgress(0.02);
+      rafRef.current = requestAnimationFrame(tick);
+    },
+    [disabled, tick]
+  );
+
+  useEffect(() => () => stopHold(false), [stopHold]);
+
+  const clipTop = `${((1 - progress) * 100).toFixed(2)}%`;
+
+  return (
+    <button
+      type="button"
+      className={trashStyles.emptyHoldButton}
+      disabled={disabled}
+      aria-label="長押しでゴミ箱を空にする"
+      title="長押しでゴミ箱を空にする"
+      style={{ ["--hold-t" as string]: progress }}
+      onPointerDown={startHold}
+      onPointerUp={() => stopHold(false)}
+      onPointerCancel={() => stopHold(false)}
+      onPointerLeave={(event) => {
+        if (event.buttons === 0) stopHold(false);
+      }}
+      onContextMenu={(event) => event.preventDefault()}
+      onClick={(event) => event.preventDefault()}
+    >
+      <span className={trashStyles.emptyHoldFill} aria-hidden="true" />
+      <span className={trashStyles.emptyHoldLabel}>{progress > 0.02 ? "長押し中…" : "ゴミ箱を空にする"}</span>
+      <span
+        className={trashStyles.emptyHoldLabelOnFill}
+        aria-hidden="true"
+        style={{ clipPath: `inset(${clipTop} 0 0 0)` }}
+      >
+        {progress > 0.02 ? "長押し中…" : "ゴミ箱を空にする"}
+      </span>
+    </button>
+  );
 }
 
 export function TrashScreen() {
@@ -31,7 +122,6 @@ export function TrashScreen() {
   const [retentionDays, setRetentionDays] = useState(3);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [confirmEmpty, setConfirmEmpty] = useState(false);
   const addPaper = useLibraryCache((s) => s.addPaper);
   const removePaper = useLibraryCache((s) => s.removePaper);
   const removePaperData = useLibraryCache((s) => s.removePaperData);
@@ -137,14 +227,13 @@ export function TrashScreen() {
     });
   };
 
-  const handleEmpty = async () => {
+  const handleEmpty = useCallback(async () => {
     if (busyId) return;
     setBusyId("__empty__");
     try {
       const result = await emptyTrash();
       useLibraryCache.getState().setPapers(await getAllPapers());
       setMemberships(await getAllWorkspacePapers());
-      setConfirmEmpty(false);
       await refresh();
       showToast({
         kind: "info",
@@ -158,7 +247,7 @@ export function TrashScreen() {
     } finally {
       setBusyId(null);
     }
-  };
+  }, [busyId, refresh, setMemberships]);
 
   return (
     <div className={styles.container}>
@@ -168,36 +257,10 @@ export function TrashScreen() {
           <h1 className={styles.title}>ゴミ箱</h1>
         </div>
         <div className={styles.headerRight}>
-          {confirmEmpty ? (
-            <div className={trashStyles.confirmInline}>
-              <span>ゴミ箱をすべて完全削除しますか？</span>
-              <button
-                type="button"
-                className={trashStyles.dangerButton}
-                disabled={Boolean(busyId)}
-                onClick={() => void handleEmpty()}
-              >
-                空にする
-              </button>
-              <button
-                type="button"
-                className={trashStyles.ghostButton}
-                disabled={Boolean(busyId)}
-                onClick={() => setConfirmEmpty(false)}
-              >
-                キャンセル
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              className={styles.addButton}
-              disabled={items.length === 0 || Boolean(busyId)}
-              onClick={() => setConfirmEmpty(true)}
-            >
-              ゴミ箱を空にする
-            </button>
-          )}
+          <HoldToEmptyButton
+            disabled={items.length === 0 || Boolean(busyId)}
+            onComplete={() => void handleEmpty()}
+          />
         </div>
       </header>
 

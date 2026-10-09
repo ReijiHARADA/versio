@@ -126,9 +126,18 @@
   transition: background-color var(--transition-fast);
 }
 
-.resultItem:hover,
-.resultItem.selected {
+.resultItem:hover {
   background-color: var(--color-bg-secondary);
+}
+
+.resultItem.selected {
+  background-color: var(--color-selection-bg);
+  color: var(--color-selection-fg);
+}
+
+.resultItem.selected .sectionName,
+.resultItem.selected .snippet {
+  color: var(--color-selection-fg);
 }
 
 .sectionName {

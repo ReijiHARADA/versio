@@ -184,8 +184,8 @@
 }
 
 .segmented button.selected {
-  background: var(--color-surface-page);
-  color: var(--color-text);
+  background: var(--color-selection-bg);
+  color: var(--color-selection-fg);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -223,8 +223,8 @@
 }
 
 .themeButton.active {
-  background: var(--color-surface-page);
-  color: var(--color-text);
+  background: var(--color-selection-bg);
+  color: var(--color-selection-fg);
   font-weight: var(--font-weight-semibold);
 }
 

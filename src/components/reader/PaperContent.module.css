@@ -103,14 +103,14 @@
 
 .reference {
   font-family: inherit;
-  font-size: 0.875rem;
+  font-size: inherit;
   font-style: normal;
   font-weight: 400;
-  color: var(--color-text-secondary);
+  color: var(--color-text);
   padding-left: var(--spacing-lg);
   text-indent: calc(-1 * var(--spacing-lg));
   margin-bottom: var(--spacing-sm);
-  line-height: 1.6;
+  line-height: inherit;
 }
 
 .referenceLink {

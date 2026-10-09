@@ -52,7 +52,7 @@
 }
 
 .themeButton.active {
-  background-color: var(--color-accent-light);
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  background-color: var(--color-selection-bg);
+  border-color: var(--color-selection-bg);
+  color: var(--color-selection-fg);
 }

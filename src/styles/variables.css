@@ -11,6 +11,9 @@
   --color-accent: #1a73e8;
   --color-accent-hover: #1557b0;
   --color-accent-light: #e8f0fe;
+  /* Selected nav / outline / toolbar chip: solid accent, white label */
+  --color-selection-bg: var(--color-accent);
+  --color-selection-fg: #ffffff;
   --color-original-bg: #fef7e0;
   --color-original-border: #fbbc04;
   --color-figure-bg: #f5f5f5;
@@ -86,6 +89,8 @@
   --color-accent: #4dabf7;
   --color-accent-hover: #74c0fc;
   --color-accent-light: #1c3a5e;
+  --color-selection-bg: var(--color-accent);
+  --color-selection-fg: #ffffff;
   --color-original-bg: #3d3520;
   --color-original-border: #d4a72c;
   --color-figure-bg: #2d2d30;
