@@ -5,6 +5,7 @@ import {
   isSettingsScrollSection,
   settingsSectionElementId,
 } from "../utils/settingsToc";
+import { elasticOffset } from "../components/settings/useSettingsElasticPull";
 import {
   DEFAULT_TRANSLATION_SETTINGS_V2,
   mergeTranslationSettingsV2,
@@ -24,6 +25,15 @@ describe("settings TOC", () => {
     expect(isSettingsScrollSection("licenses")).toBe(false);
     expect(settingsSectionElementId("reading")).toBe("section-reading");
     expect(settingsSectionElementId("licenses")).toBe("section-licenses");
+  });
+});
+
+describe("settings elastic pull", () => {
+  it("maps pull distance with diminishing rubber-band offset", () => {
+    expect(elasticOffset(0)).toBe(0);
+    expect(elasticOffset(40)).toBeGreaterThan(0);
+    expect(elasticOffset(140)).toBeGreaterThan(elasticOffset(40));
+    expect(elasticOffset(140)).toBeLessThanOrEqual(140 * 0.62 + 0.01);
   });
 });
 

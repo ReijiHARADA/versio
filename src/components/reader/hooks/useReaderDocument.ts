@@ -41,13 +41,28 @@ export function useReaderDocument(paperId: string | undefined) {
             updatePaper(dbPaper.id, { lastOpenedAt: new Date().toISOString() });
           });
         }
-        if (dbSections.length > 0) {
+        // Package reads can briefly race SQLite/package startup (especially
+        // immediately after launching the Tauri app). Do not turn that
+        // transient empty result into a permanent "no content" screen.
+        let loadedSections = dbSections;
+        let loadedBlocks = dbBlocks;
+        if (loadedBlocks.length === 0 && dbPaper) {
+          for (let attempt = 0; attempt < 2 && loadedBlocks.length === 0; attempt += 1) {
+            await new Promise((resolve) => setTimeout(resolve, 200));
+            if (cancelled) return;
+            [loadedSections, loadedBlocks] = await Promise.all([
+              getSectionsByPaper(paperId),
+              getBlocksByPaper(paperId),
+            ]);
+          }
+        }
+        if (loadedSections.length > 0) {
           setSectionsInStore(paperId, (prev) =>
-            mergePreferTranslatedSections(prev, dbSections)
+            mergePreferTranslatedSections(prev, loadedSections)
           );
         }
-        if (dbBlocks.length > 0) {
-          setBlocksInStore(paperId, (prev) => mergePreferTranslated(prev, dbBlocks));
+        if (loadedBlocks.length > 0) {
+          setBlocksInStore(paperId, (prev) => mergePreferTranslated(prev, loadedBlocks));
         }
         const exists = await sourcePdfExists(paperId);
         if (!cancelled) setHasSourcePdf(exists || Boolean(dbPaper?.sourceStoredPath));
