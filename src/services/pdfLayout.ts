@@ -1729,6 +1729,12 @@ function looksLikeAffiliation(text: string): boolean {
   );
 }
 
+/** Numbered multi-institution masthead rows often arrive as one native line. */
+function looksLikeNumberedAffiliationBand(text: string): boolean {
+  return /^\s*\d+\s+.*\b(?:University|College|Institute|School|Department|Faculty)\b.*\b\d+\s+[A-Z]/i.test(text) &&
+    !/[.!?。！？]$/.test(text.trim());
+}
+
 function looksLikePaperCode(text: string): boolean {
   return /^[A-Z]{1,3}-\d{2,4}$/.test(layoutPlain(text));
 }
@@ -4329,6 +4335,10 @@ export function reconstructDocument(pages: ExtractedPage[]): {
         block.text.length <= 220 && block.bbox.y < mastheadBoundary + 80 &&
         looksLikeAffiliation(block.text) && !/[.!?。！？]$/.test(block.text.trim()) &&
         !looksLikeAuthorList(block.text)) {
+      block.role = "affiliation";
+    }
+    if (block.pageStart === 1 && block.role === "paragraph" && block.lines.length <= 3 &&
+        looksLikeNumberedAffiliationBand(block.text)) {
       block.role = "affiliation";
     }
   }
