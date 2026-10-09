@@ -25,6 +25,7 @@ import {
   maybeVerifyPackagedAcceptanceRelaunch,
 } from "./services/packagedAcceptance";
 import { maybeStartUiE2eWatcher } from "./services/uiE2eWatch";
+import { invoke } from "@tauri-apps/api/core";
 import styles from "./App.module.css";
 
 function formatBytes(n: number | null | undefined): string | null {
@@ -111,11 +112,15 @@ function App() {
 
   useEffect(() => {
     const applyTheme = () => {
-      if (displaySettings.theme === "system") {
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        document.documentElement.setAttribute("data-theme", prefersDark ? "dark" : "light");
-      } else {
-        document.documentElement.setAttribute("data-theme", displaySettings.theme);
+      const resolved =
+        displaySettings.theme === "system"
+          ? window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light"
+          : displaySettings.theme;
+      document.documentElement.setAttribute("data-theme", resolved);
+      if (isTauriApp()) {
+        void invoke("sync_window_chrome_theme", { theme: resolved }).catch(() => {});
       }
     };
 

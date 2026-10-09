@@ -28,7 +28,7 @@ fn set_window_background(window: &WebviewWindow, dark: bool) -> Result<(), Strin
         return Ok(());
     }
     // Safety: pointer from Tauri's ns_window() is a valid NSWindow for this process.
-    let ns_window = unsafe { &*(ptr as *const NSWindow) };
+    let ns_window: &NSWindow = unsafe { &*ptr.cast() };
     let (r, g, b) = if dark {
         (DARK_R, DARK_G, DARK_B)
     } else {

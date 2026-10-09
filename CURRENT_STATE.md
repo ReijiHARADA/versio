@@ -1,3 +1,7 @@
+# 2026-10-09: macOS タイトルバーをサイドバー色に
+
+実ウィンドウのタイトルバーを `TitleBarStyle::Transparent` にし、`NSWindow` 背景を `--color-bg-secondary`（light `#f8f9fa` / dark `#252526`）へ同期。テーマ変更時は `sync_window_chrome_theme` で追従。`.app`: `src-tauri/target/release/bundle/macos/Paper Reader.app`。
+
 # 2026-10-09: trash CTA radius + hold-to-empty
 
 ゴミ箱行の「元に戻す」「削除」の角RをヘッダーCTAと同じ `radius-md` に揃えた。「削除」は赤アウトライン、「ゴミ箱を空にする」は赤塗り長押し（文言・サイズ固定、ゲージは左→右）。上がりきると実行。

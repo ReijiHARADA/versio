@@ -3751,7 +3751,10 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       (!skippedInterveningMetadata || safeContinuationMetadataGap) && targetLine && nextLine &&
       targetLine.page === nextLine.page && targetLine.column === nextLine.column &&
       (targetLine.column === "single" || targetLine.column === "left" || targetLine.column === "right") &&
-      Math.abs(targetLine.x - nextLine.x) <= 18 && nextLine.y > targetLine.y &&
+      // The final native line can start in a different x-band when the PDF
+      // wraps words inside a mixed text stream. Compare the paragraph column
+      // anchors rather than that line's x position.
+      Math.abs(target.bbox.x - block.bbox.x) <= 18 && nextLine.y > targetLine.y &&
       nextLine.y - targetLine.y <= Math.max(targetLine.fontSize, nextLine.fontSize) * 3.2 &&
       Math.abs(targetLine.fontSize - nextLine.fontSize) <= 0.8 &&
       !/[.!?:]$/.test(target.text.trim()) && isSentenceContinuation(target.text, block.text)

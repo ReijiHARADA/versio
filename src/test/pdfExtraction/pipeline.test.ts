@@ -178,6 +178,8 @@ describe("canonical extraction pipeline", () => {
     const jewelleryContinuation = result.canonical.nodes.find((node) => /jewellery:\s*some conscious, other/i.test(node.text ?? ""));
     expect(jewelleryContinuation?.role).not.toBe("title");
     expect(jewelleryContinuation?.text).toMatch(/^It is through the interaction with a piece of jewellery/);
+    const consciousParagraph = result.blocks.find((block) => /some conscious, other/i.test(block.original ?? ""));
+    expect(consciousParagraph?.original).toMatch(/some conscious, other unaware, some private and other social/i);
     expect(result.blocks.some((block) => block.original?.trim() === "1,2,3,4")).toBe(false);
     expect(result.blocks.some((block) => block.pageStart === 1 && block.original?.trim() === "44")).toBe(false);
   }, 60_000);
