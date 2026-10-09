@@ -1,3 +1,7 @@
+# 2026-10-09: macOS タイトルバー下の区切り線
+
+実ウィンドウ（Tauri）ではタイトルバー直下に `1px` の `--color-border` を描画。
+
 # 2026-10-09: macOS タイトルバーをサイドバー色に
 
 実ウィンドウのタイトルバーを `TitleBarStyle::Transparent` にし、`NSWindow` 背景を `--color-bg-secondary`（light `#f8f9fa` / dark `#252526`）へ同期。テーマ変更時は `sync_window_chrome_theme` で追従。`.app`: `src-tauri/target/release/bundle/macos/Paper Reader.app`。
