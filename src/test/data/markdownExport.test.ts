@@ -159,6 +159,31 @@ describe("markdown export failed policy", () => {
     expect(on).not.toMatch(/status="skipped"[\s\S]*翻訳失敗/);
   });
 
+  it("does not export standalone numeric footer blocks as page content", () => {
+    const nodes: DocumentNode[] = [
+      { id: "b-body", type: "paragraph", text: "本文。" },
+      { id: "b-page", type: "paragraph", text: "45" },
+      { id: "b-ref", type: "reference", text: "[45] Author, Paper." },
+    ];
+    const structure: StructureFile = {
+      schemaVersion: 1,
+      blocks: {
+        "b-body": { type: "paragraph", pageStart: 1, pageEnd: 1, boundingBoxes: [], extractionConfidence: 1, translationStatus: "completed" },
+        "b-page": { type: "paragraph", pageStart: 1, pageEnd: 1, boundingBoxes: [], extractionConfidence: 1, translationStatus: "skipped" },
+        "b-ref": { type: "reference", pageStart: 1, pageEnd: 1, boundingBoxes: [], extractionConfidence: 1, translationStatus: "skipped" },
+      },
+      relations: [],
+      sections: [],
+    };
+    const markdown = applyFailedTranslationPolicy(nodes, new Map(), structure, {
+      includeFailed: false,
+      includeComments: true,
+    });
+    expect(markdown).toContain("本文。");
+    expect(markdown).toContain("[45] Author, Paper.");
+    expect(markdown).not.toMatch(/^45$/m);
+  });
+
   it("writes verification bundle files from the package", async () => {
     const fs = createMemoryFileSystem();
     const { paper, sections, blocks } = exportSample();

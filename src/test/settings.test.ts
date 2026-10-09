@@ -9,14 +9,16 @@ import {
 } from "../utils/translationSettings";
 
 describe("settings TOC", () => {
-  it("lists the four settings sections in navigation order", () => {
+  it("lists settings sections in navigation order with licenses last", () => {
     expect(SETTINGS_SECTIONS.map((section) => section.label)).toEqual([
       "読書",
       "翻訳",
       "ライブラリとデータ",
       "詳細",
+      "ライセンス",
     ]);
     expect(settingsSectionElementId("reading")).toBe("section-reading");
+    expect(settingsSectionElementId("licenses")).toBe("section-licenses");
   });
 });
 

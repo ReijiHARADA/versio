@@ -7,14 +7,16 @@ export const APPLE_TRANSLATION_VERSION = "apple-translation-macos-v1";
 /** Conservative eligibility: only complete, prose-like ordinary blocks reach Apple. */
 export function isAppleEligibleSource(text: string): boolean {
   const s = text.trim();
-  if (s.length < 20 || s.length > 700) return false;
+  if (s.length < 20 || s.length > 2000) return false;
   if (/[@]|https?:\/\/|\b(?:doi|references|bibliography)\b/i.test(s)) return false;
   // Numbered institution rows followed by prose indicate a flattened
   // masthead, not a complete translation unit.
   if (/^\s*\d+\s+.*\b(?:University|College|Institute|School|Department|Faculty)\b.*\b\d+\s+[A-Z]/i.test(s)) return false;
   if (/^[\d\s.:-]+$/.test(s) || /^(?:fig(?:ure)?|table)\s*\d+/i.test(s)) return false;
-  if (/^[•●▪◦\-*]\s/.test(s) || /\n\s*[•●▪◦\-*]\s/.test(s)) return false;
   const words = s.match(/[A-Za-z]{2,}/g) ?? [];
+  const singleListItem = /^[•●▪◦\-*]\s+[^\n]+$/u.test(s);
+  if (singleListItem) return words.length >= 3;
+  if (/\n\s*[•●▪◦\-*]\s/u.test(s)) return false;
   // Academic titles with a subtitle are short but semantically complete.
   // Let Apple see both halves so a fallback model cannot silently discard the
   // subtitle after the colon.

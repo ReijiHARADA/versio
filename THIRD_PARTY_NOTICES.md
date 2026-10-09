@@ -4,73 +4,32 @@ Paper Reader 本体のソースコードは [MIT License](./LICENSE) です。
 
 このライセンスは **Paper Reader のソースコードにだけ** 適用されます。翻訳に使う MADLAD-400 のモデル重み、PyTorch、pdf.js、その他の依存ライブラリ／同梱バイナリには、それぞれのライセンスが適用されます。
 
-以下は、配布物または実行時に直接使う主要な第三者コンポーネントです。記載は **package metadata / 同梱 LICENSE / モデルカード** から確認できた範囲です。確認できなかった項目は「要確認」と書いてあります。
+## アプリ内の一覧（正）
 
-## モデル
+配布物に含まれる依存の一覧・著作権表示・ライセンス全文は、設定画面の **ライセンス**、およびビルド時生成物 `src/generated/thirdPartyLicenses.json` を正とします。
 
+再生成:
 
-| コンポーネント                | 版 / 識別子                  | ライセンス（確認源）                                                                        |
-| ---------------------- | ------------------------ | --------------------------------------------------------------------------------- |
-| MADLAD-400 3B MT モデル重み | `google/madlad400-3b-mt` | Apache-2.0（Hugging Face モデルカード `license: apache-2.0` および本文 "License: Apache 2.0"） |
+```bash
+npm run generate:licenses
+```
 
+収集対象:
 
-モデル重みの利用条件は Paper Reader の MIT とは別です。再配布する場合は Apache-2.0 の表示義務に従ってください。
+| 区分 | ソース |
+| --- | --- |
+| 本体 | リポジトリ直下の `LICENSE` |
+| npm | `package-lock.json` の本番依存クロージャ（`optionalDependencies` は除外） |
+| Rust | `src-tauri` の `cargo metadata` resolve |
+| Python | 配布用 `translation-server/venv` の dist-info |
+| モデル / アセット | 検証済みの同梱物のみ（MADLAD-400 モデルカード、pdfjs CMaps など） |
 
-## 翻訳サーバー（Python、`.app` に venv 同梱）
+ライセンス種別はパッケージメタデータまたは同梱 LICENSE から確認できたものだけを記載します。確認できない項目はアプリ上で「要確認」または「一部未確認」と表示し、推測で SPDX を埋めません。
 
-確認場所: `translation-server/.venv` 内の dist-info / LICENSE ファイル。
+## 開発専用依存
 
-
-| コンポーネント          | 確認した版   | ライセンス（確認源）                                                         |
-| ---------------- | ------- | ------------------------------------------------------------------ |
-| PyTorch          | 2.14.0  | BSD-3-Clause 相当（`torch-2.14.0.dist-info/licenses/LICENSE` の再配布条項）  |
-| Transformers     | 5.16.1  | Apache 2.0（`METADATA` の `License: Apache 2.0 License`）             |
-| Hugging Face Hub | 1.29.0  | Apache-2.0（`METADATA`）                                             |
-| Safetensors      | 0.8.0   | Apache License 2.0（`safetensors-0.8.0.dist-info/licenses/LICENSE`） |
-| Accelerate       | 1.14.0  | Apache（`METADATA` の `License: Apache`）                             |
-| FastAPI          | 0.141.1 | MIT（`fastapi-0.141.1.dist-info/licenses/LICENSE`）                  |
-| Uvicorn          | 0.52.4  | BSD-3-Clause（`uvicorn-0.52.4.dist-info/licenses/LICENSE.md`）       |
-| NumPy            | 2.5.2   | BSD-3-Clause（`numpy-2.5.2.dist-info/licenses/LICENSE.txt`）         |
-| SentencePiece    | 0.2.2   | 要確認（インストール済み dist-info に LICENSE ファイルが無かった）                        |
-
-
-
-
-## フロントエンド（npm）
-
-確認場所: `node_modules/<pkg>/package.json` の `license` および同梱 LICENSE。
-
-
-| コンポーネント                    | ライセンス（確認源）                                    |
-| -------------------------- | --------------------------------------------- |
-| React / react-dom          | MIT（`package.json` および `LICENSE`）             |
-| react-router-dom           | MIT（`package.json`、`react-router/LICENSE.md`） |
-| pdf.js (`pdfjs-dist` 3.11) | Apache-2.0（`package.json` および `LICENSE`）      |
-| idb                        | ISC（`package.json` および `LICENSE`）             |
-| lucide-react               | ISC（`package.json` および `LICENSE`）             |
-| uuid                       | MIT（`package.json` および `LICENSE.md`）          |
-| zustand                    | MIT（`package.json` および `LICENSE`）             |
-| sql.js                     | MIT（`package.json`）                           |
-| fflate                     | MIT（`package.json`）                           |
-| Vite（開発・ビルド）               | MIT（`package.json`）                           |
-
-
-
-
-## デスクトップシェル
-
-
-| コンポーネント                     | ライセンス（確認源）                                                                |
-| --------------------------- | ------------------------------------------------------------------------- |
-| Tauri 2 (`@tauri-apps/api`) | Apache-2.0 OR MIT（`package.json`。同梱 `LICENSE_MIT` / `LICENSE_APACHE-2.0`） |
-
-
-
+Vite、Vitest、Playwright、oxlint、TypeScript などの **devDependencies** および未同梱の開発用 Python パッケージは、配布物のライセンス一覧には含めません。
 
 ## Ollama
 
 Paper Reader は用語集のために **任意** でローカルの Ollama HTTP API（既定 `http://localhost:11434`）へ接続します。Ollama 本体もそのモデル重みもこのリポジトリには同梱していません。Ollama を使う場合は、Ollama および読み込むモデルそれぞれのライセンスが別途適用されます。
-
-## その他
-
-翻訳サーバー venv には上記以外の推移的依存もあります。完全な一覧は `translation-server/.venv` と `package-lock.json` を参照してください。個々の LICENSE ファイルがここに無いパッケージは、再配布前に dist-info を確認してください。

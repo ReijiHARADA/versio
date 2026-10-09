@@ -10,10 +10,13 @@ type SettingsNavigationProps = {
 };
 
 export function SettingsNavigation({ activeId, onSelect }: SettingsNavigationProps) {
+  const mainSections = SETTINGS_SECTIONS.filter((section) => section.id !== "licenses");
+  const licenseSection = SETTINGS_SECTIONS.find((section) => section.id === "licenses");
+
   return (
     <nav className={styles.nav} aria-label="設定カテゴリ">
       <ul className={styles.list}>
-        {SETTINGS_SECTIONS.map((section) => {
+        {mainSections.map((section) => {
           const active = activeId === section.id;
           return (
             <li key={section.id}>
@@ -29,6 +32,18 @@ export function SettingsNavigation({ activeId, onSelect }: SettingsNavigationPro
           );
         })}
       </ul>
+      {licenseSection ? (
+        <div className={styles.footer}>
+          <button
+            type="button"
+            className={`${styles.item} ${activeId === licenseSection.id ? styles.active : ""}`}
+            onClick={() => onSelect(licenseSection.id)}
+            aria-current={activeId === licenseSection.id ? "page" : undefined}
+          >
+            {licenseSection.label}
+          </button>
+        </div>
+      ) : null}
     </nav>
   );
 }

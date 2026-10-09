@@ -329,11 +329,13 @@ export async function importPDFV2(
     let translatedCount = 0;
     const refSectionIds = referenceSectionIds(sections);
     if (appleRouter) {
-      appleRouter.setEligibleSources(new Set(
-        blocks
-          .filter((block) => block.type === "paragraph" && block.original && block.extractionConfidence !== 0 && shouldTranslateBlock(block, refSectionIds))
-          .map((block) => block.original as string)
-      ));
+      const eligibleAppleSources = blocks
+        .filter((block) => block.type === "paragraph" && block.original && block.extractionConfidence !== 0 && shouldTranslateBlock(block, refSectionIds))
+        .map((block) => block.original as string);
+      if (paper.titleOriginal && shouldTranslateTitle(paper.titleOriginal)) {
+        eligibleAppleSources.push(paper.titleOriginal);
+      }
+      appleRouter.setEligibleSources(new Set(eligibleAppleSources));
     }
     const totalTranslatable =
       blocks.filter((b) => shouldTranslateBlock(b, refSectionIds)).length +
@@ -552,7 +554,11 @@ export async function importPDFV2(
         continue;
       }
 
-      const blockHash = await computeTextHash(block.original);
+      const translationSource =
+        block.type === "figure" || block.type === "table"
+          ? String(block.metadata.captionOriginal ?? block.original)
+          : block.original;
+      const blockHash = await computeTextHash(translationSource);
       const cachedBlock = cfg.useCache
         ? usableCachedJa(
             await getCachedTranslation(
@@ -562,7 +568,7 @@ export async function importPDFV2(
               "en",
               "ja"
             ),
-            block.original
+            translationSource
           )
         : null;
 
@@ -570,7 +576,7 @@ export async function importPDFV2(
         assignBlockTranslation(
           block,
           normalizeSourceGroundedTerminology(
-            block.original,
+            translationSource,
             applyGlossary(cachedBlock, glossaryEntries)
           )
         );
@@ -583,7 +589,7 @@ export async function importPDFV2(
       // Keep body blocks in document order.  The queue is stable within a
       // priority level, so assigning one priority prevents a later abstract
       // or introduction block from jumping ahead of blocks above it.
-      enqueue(block.id, block.original, TranslationPriority.MEDIUM);
+      enqueue(block.id, translationSource, TranslationPriority.MEDIUM);
     }
 
     if (outstanding === 0) {

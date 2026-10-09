@@ -180,12 +180,19 @@ export function parsePaperMarkdown(source: string, fallbackPaperId = ""): Parsed
     nodes.push({ id: "", type: "paragraph", text: leftover });
   }
 
+  // Older packages could contain PDF footer page numbers as ordinary
+  // paragraphs. Filter only standalone numeric paragraph/footnote nodes;
+  // headings, references, tables, and numeric prose remain untouched.
+  const filteredNodes = nodes.filter(
+    (node) => !((node.type === "paragraph" || node.type === "footnote") && /^\d{1,3}$/.test(node.text.trim()))
+  );
+
   return {
     frontMatter: frontMatter ?? {
       paperId: fallbackPaperId,
       language: "en",
       schemaVersion: MARKDOWN_SCHEMA_VERSION,
     },
-    nodes,
+    nodes: filteredNodes,
   };
 }

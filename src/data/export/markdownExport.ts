@@ -72,6 +72,10 @@ function serializeNodeBody(node: DocumentNode): string {
     .trim();
 }
 
+function isStandalonePageNumberNode(node: DocumentNode): boolean {
+  return (node.type === "paragraph" || node.type === "footnote") && /^\d{1,3}$/.test(node.text.trim());
+}
+
 function blockTranslationStatus(
   id: string | undefined,
   structure: StructureFile,
@@ -89,6 +93,9 @@ export function applyFailedTranslationPolicy(
 ): string {
   const parts: string[] = [];
   for (const node of nodes) {
+    // Defense-in-depth for packages created by older extraction versions,
+    // where footer page numbers were serialized as ordinary paragraph blocks.
+    if (isStandalonePageNumberNode(node)) continue;
     const status = blockTranslationStatus(node.id, structure, options.translation);
     const page = node.id ? structure.blocks[node.id]?.pageStart : undefined;
     if (status === "failed") {

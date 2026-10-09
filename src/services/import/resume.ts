@@ -242,7 +242,11 @@ export async function resumeIncompleteTranslation(
       enqueue(`section-${section.id}`, section.originalTitle, TranslationPriority.HIGH);
     }
     for (const block of pendingBlocks) {
-      enqueue(block.id, block.original!, TranslationPriority.MEDIUM);
+      const translationSource =
+        block.type === "figure" || block.type === "table"
+          ? String(block.metadata.captionOriginal ?? block.original)
+          : block.original!;
+      enqueue(block.id, translationSource, TranslationPriority.MEDIUM);
     }
 
     if (outstanding === 0) settleAll();
