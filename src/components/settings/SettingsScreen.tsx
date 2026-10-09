@@ -24,7 +24,10 @@ import { ReadingSettingsSection } from "./ReadingSettingsSection";
 import { StorageSettingsSection } from "./StorageSettingsSection";
 import { DiagnosticsSettingsSection } from "./DiagnosticsSettingsSection";
 import { LicensesSettingsSection } from "./LicensesSettingsSection";
-import { useSettingsElasticPull } from "./useSettingsElasticPull";
+import {
+  useSettingsPanelTransition,
+  type SettingsPanelPage,
+} from "./useSettingsElasticPull";
 import type { ServiceStatus } from "./settingsTypes";
 import styles from "./SettingsScreen.module.css";
 
@@ -52,29 +55,25 @@ export function SettingsScreen() {
   const pendingScrollRef = useRef<SettingsScrollSectionId | null>(null);
   const settingsRef = useRef(settings);
 
-  const goToLicenses = useCallback(() => {
-    pendingScrollRef.current = null;
-    setActiveSection("licenses");
-  }, []);
+  const panelPage: SettingsPanelPage =
+    activeSection === "licenses" ? "licenses" : "settings";
 
-  const goToSettingsFromLicenses = useCallback(() => {
+  const handlePanelPageChange = useCallback((next: SettingsPanelPage) => {
+    if (next === "licenses") {
+      pendingScrollRef.current = null;
+      setActiveSection("licenses");
+      return;
+    }
     pendingScrollRef.current = LAST_SCROLL_SECTION;
     setActiveSection(LAST_SCROLL_SECTION);
   }, []);
 
-  const settingsPull = useSettingsElasticPull({
-    enabled: isSettingsScrollSection(activeSection),
-    direction: "to-licenses",
-    onCommit: goToLicenses,
+  const panel = useSettingsPanelTransition({
+    page: panelPage,
+    onPageChange: handlePanelPageChange,
   });
 
-  const licensesPull = useSettingsElasticPull({
-    enabled: activeSection === "licenses",
-    direction: "to-settings",
-    onCommit: goToSettingsFromLicenses,
-  });
-
-  const contentRef = settingsPull.rootRef;
+  const contentRef = panel.settingsRef;
 
   useEffect(() => {
     settingsRef.current = settings;
@@ -286,37 +285,19 @@ export function SettingsScreen() {
         <aside className={styles.sidebar}>
           <SettingsNavigation activeId={activeSection} onSelect={handleSelectSection} />
         </aside>
-        {activeSection === "licenses" ? (
-          <main ref={licensesPull.rootRef} className={styles.content}>
-            <div
-              className={`${styles.elasticPane} ${
-                licensesPull.releasing ? styles.elasticPaneRelease : ""
-              }`}
-              style={{ transform: `translateY(${licensesPull.offset}px)` }}
-            >
-              <div
-                className={`${styles.elasticHint} ${styles.elasticHintTop} ${
-                  licensesPull.pastThreshold ? styles.elasticHintActive : ""
-                }`}
-                style={{
-                  height: licensesPull.pull > 0 ? 48 : 0,
-                  marginBottom: licensesPull.pull > 0 ? undefined : 0,
-                  opacity: licensesPull.pull > 0 ? 0.4 + licensesPull.progress * 0.6 : 0,
-                }}
-                aria-hidden="true"
-              >
-                {licensesPull.pastThreshold ? "離すと設定へ" : "引っ張って設定へ"}
-              </div>
-              <LicensesSettingsSection />
-            </div>
-          </main>
-        ) : (
-          <main ref={contentRef} className={styles.content}>
-            <div
-              className={`${styles.elasticPane} ${
-                settingsPull.releasing ? styles.elasticPaneRelease : ""
-              }`}
-              style={{ transform: `translateY(${-settingsPull.offset}px)` }}
+        <div ref={panel.viewportRef} className={styles.viewport}>
+          <div
+            className={`${styles.stack} ${panel.snapping ? styles.stackSnap : ""}`}
+            style={{
+              height: panel.viewportH > 0 ? panel.viewportH * 2 : "200%",
+              transform: `translateY(${-panel.stackOffset}px)`,
+            }}
+          >
+            <main
+              ref={contentRef}
+              className={styles.page}
+              style={{ height: panel.viewportH > 0 ? panel.viewportH : "50%" }}
+              aria-hidden={panelPage === "licenses"}
             >
               <section id={settingsSectionElementId("reading")} className={styles.section}>
                 <ReadingSettingsSection />
@@ -350,22 +331,40 @@ export function SettingsScreen() {
                   onAddSample={() => void handleAddSample()}
                 />
               </section>
-              <div
-                className={`${styles.elasticHint} ${
-                  settingsPull.pastThreshold ? styles.elasticHintActive : ""
-                }`}
-                style={{
-                  height: settingsPull.pull > 0 ? 48 : 0,
-                  marginTop: settingsPull.pull > 0 ? undefined : 0,
-                  opacity: settingsPull.pull > 0 ? 0.4 + settingsPull.progress * 0.6 : 0,
-                }}
-                aria-hidden="true"
-              >
-                {settingsPull.pastThreshold ? "離すとライセンスへ" : "引っ張ってライセンスへ"}
-              </div>
+            </main>
+            <main
+              ref={panel.licensesRef}
+              className={styles.page}
+              style={{ height: panel.viewportH > 0 ? panel.viewportH : "50%" }}
+              aria-hidden={panelPage === "settings"}
+            >
+              <LicensesSettingsSection />
+            </main>
+          </div>
+          {panel.pulling ? (
+            <div
+              className={`${styles.elasticHint} ${
+                panelPage === "settings" ? styles.elasticHintBottom : styles.elasticHintTop
+              } ${panel.pastThreshold ? styles.elasticHintActive : ""}`}
+              style={{
+                opacity: Math.min(
+                  1,
+                  0.35 +
+                    (panel.viewportH > 0 ? panel.reveal / (panel.viewportH * 0.36) : 0) * 0.65
+                ),
+              }}
+              aria-hidden="true"
+            >
+              {panelPage === "settings"
+                ? panel.pastThreshold
+                  ? "離すとライセンスへ"
+                  : "続けてスクロールでライセンスへ"
+                : panel.pastThreshold
+                  ? "離すと設定へ"
+                  : "続けてスクロールで設定へ"}
             </div>
-          </main>
-        )}
+          ) : null}
+        </div>
       </div>
     </div>
   );

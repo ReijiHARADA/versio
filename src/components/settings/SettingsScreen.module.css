@@ -51,6 +51,32 @@
   border-right: 1px solid var(--color-separator-subtle);
 }
 
+.viewport {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.stack {
+  will-change: transform;
+}
+
+.stackSnap {
+  transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.page {
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-2xl);
+  background: var(--color-surface-page);
+}
+
+/* Legacy class name kept for any leftover references during transition. */
 .content {
   flex: 1;
   min-width: 0;
@@ -60,21 +86,15 @@
   padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-2xl);
 }
 
-.elasticPane {
-  will-change: transform;
-}
-
-.elasticPaneRelease {
-  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
 .elasticHint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 48px;
-  margin-top: var(--spacing-md);
+  height: 36px;
   color: var(--color-text-tertiary);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
@@ -83,13 +103,16 @@
   user-select: none;
 }
 
-.elasticHintActive {
-  color: var(--color-accent);
+.elasticHintBottom {
+  bottom: 10px;
 }
 
 .elasticHintTop {
-  margin-top: 0;
-  margin-bottom: var(--spacing-md);
+  top: 10px;
+}
+
+.elasticHintActive {
+  color: var(--color-accent);
 }
 
 .section {
