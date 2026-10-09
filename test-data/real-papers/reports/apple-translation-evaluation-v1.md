@@ -87,3 +87,9 @@ To estimate semantic quality beyond automatic gates, 20 matched source blocks we
 - High-severity cases exposed source-unit problems as well as translation behavior: an incomplete linguistics block was completed with unsupported content by one engine, and an extraction fragment containing `Kong, et al.` was mistranslated by both. These must be handled by source validation, not model selection alone.
 
 The anonymized review confirms a strong Apple quality signal on clean blocks, but it does not justify unconditional migration: 6/20 preferred outputs still had severity ≥2, and the sample is small and single-reviewed. The defensible migration decision remains Apple as a macOS selective cascade, followed by a larger multi-reviewer study before replacing MADLAD as the default.
+
+## Production routing gate / Go-No-Go
+
+The routing policy is implemented and tested, but a production reduction claim is **not yet proven**. The current machine returns `TranslationError.Cause.notInstalled` for the Apple language pack, so the packaged app exercised the MADLAD fallback path rather than Apple acceptance. On the existing audit data, the policy identifies 102 of 239 unique non-fallback ordinary-body rows as Apple-eligible; this is a static eligibility count, not an accepted-translation count.
+
+**Decision: conditional No-Go for default replacement; Go for guarded selective-cascade code.** Keep the routing behind the macOS/language-pack availability check, preserve MADLAD fallback, and do not count unavailable Apple attempts as reduced reader-visible fallback. Before enabling Apple as the default first choice for users, rerun the held-out cohort with the language pack installed and record attempted/accepted/rejected/fallback counts plus severity-reviewed accepted outputs. The existing 20-pair review includes severity ≥2 cases, so the unsafe-false-accept requirement is not yet demonstrated at zero.
