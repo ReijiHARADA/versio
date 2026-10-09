@@ -1,0 +1,17 @@
+{
+  "eligible": 102,
+  "completed": 102,
+  "japanese": 102,
+  "errors": 0,
+  "numericPreserved": 138,
+  "numericTotal": 138,
+  "meanMs": 364.12745098039215,
+  "by": {
+    "ordinary-body-prose": {
+      "n": 102,
+      "ok": 102,
+      "jp": 102,
+      "ms": 37141
+    }
+  }
+}

@@ -93,3 +93,18 @@ The anonymized review confirms a strong Apple quality signal on clean blocks, bu
 The routing policy is implemented and tested, but a production reduction claim is **not yet proven**. The current machine returns `TranslationError.Cause.notInstalled` for the Apple language pack, so the packaged app exercised the MADLAD fallback path rather than Apple acceptance. On the existing audit data, the policy identifies 102 of 239 unique non-fallback ordinary-body rows as Apple-eligible; this is a static eligibility count, not an accepted-translation count.
 
 **Decision: conditional No-Go for default replacement; Go for guarded selective-cascade code.** Keep the routing behind the macOS/language-pack availability check, preserve MADLAD fallback, and do not count unavailable Apple attempts as reduced reader-visible fallback. Before enabling Apple as the default first choice for users, rerun the held-out cohort with the language pack installed and record attempted/accepted/rejected/fallback counts plus severity-reviewed accepted outputs. The existing 20-pair review includes severity ≥2 cases, so the unsafe-false-accept requirement is not yet demonstrated at zero.
+
+## Native helper held-out routing run
+
+The Apple language pack became available during this run, so the packaged native helper was exercised directly against the 102 statically eligible ordinary-body rows from the existing audit corpus.
+
+- Apple eligible / attempted: **102 / 102**
+- Native Apple completed: **102 / 102**
+- Japanese-script output: **102 / 102**
+- Numeric tokens preserved: **138 / 138**
+- Mean native-helper latency: **364 ms/block** (process-launch overhead included)
+- Existing quality gate accepted: **96 / 102**
+- Existing quality gate rejected: **6 / 102**
+- Apple rejection reason: quality gate (all six); these must be sent to MADLAD rescue, so they are not automatically reader-visible fallbacks.
+
+The machine-level Apple capability blocker is therefore cleared. The six quality rejections demonstrate that Apple is subject to the same safety policy and that routing must not treat native completion as acceptance. A separate MADLAD-rescue replay is still required to measure the final reader-visible fallback rate for this cohort; the summary is stored in `apple-routing-quality-summary.json`.
