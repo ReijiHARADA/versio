@@ -7,5 +7,9 @@
     "quality_gate": 6
   },
   "madladFallback": 6,
-  "readerVisibleFallback": "requires MADLAD rescue run"
+  "readerVisibleFallback": 1,
+  "madladRescueAttempted": 6,
+  "madladRescueAccepted": 5,
+  "madladRescueRejected": 1,
+  "readerVisibleFallbackRate": 0.00980392156862745
 }
