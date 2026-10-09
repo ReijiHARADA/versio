@@ -5,7 +5,11 @@ import {
   isSettingsScrollSection,
   settingsSectionElementId,
 } from "../utils/settingsToc";
-import { elasticOffset } from "../components/settings/useSettingsElasticPull";
+import {
+  elasticOffset,
+  overflowToReveal,
+  rubberBand,
+} from "../components/settings/useSettingsElasticPull";
 import {
   DEFAULT_TRANSLATION_SETTINGS_V2,
   mergeTranslationSettingsV2,
@@ -30,10 +34,21 @@ describe("settings TOC", () => {
 
 describe("settings elastic pull", () => {
   it("maps pull distance with diminishing rubber-band offset", () => {
+    expect(rubberBand(0)).toBe(0);
     expect(elasticOffset(0)).toBe(0);
-    expect(elasticOffset(40)).toBeGreaterThan(0);
-    expect(elasticOffset(140)).toBeGreaterThan(elasticOffset(40));
-    expect(elasticOffset(140)).toBeLessThanOrEqual(140 * 0.62 + 0.01);
+    expect(rubberBand(40)).toBeGreaterThan(0);
+    expect(rubberBand(140)).toBeGreaterThan(rubberBand(40));
+    expect(rubberBand(140)).toBeLessThan(120);
+  });
+
+  it("eases overscroll into a full-page reveal after the soft zone", () => {
+    const h = 800;
+    expect(overflowToReveal(0, h)).toBe(0);
+    const soft = overflowToReveal(80, h);
+    const deep = overflowToReveal(500, h);
+    expect(soft).toBeGreaterThan(0);
+    expect(deep).toBeGreaterThan(soft);
+    expect(overflowToReveal(2000, h)).toBeLessThanOrEqual(h);
   });
 });
 
