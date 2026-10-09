@@ -57,7 +57,7 @@
 .favoriteMark {
   flex-shrink: 0;
   display: inline-flex;
-  color: var(--color-accent);
+  color: var(--color-favorite);
 }
 
 .trailing {
