@@ -12,8 +12,10 @@ import {
   type TranslationSettingsV2,
 } from "../../utils/translationSettings";
 import {
-  SETTINGS_SECTIONS,
+  SETTINGS_SCROLL_SECTIONS,
+  isSettingsScrollSection,
   settingsSectionElementId,
+  type SettingsScrollSectionId,
   type SettingsSectionId,
 } from "../../utils/settingsToc";
 import { SettingsNavigation } from "./SettingsNavigation";
@@ -45,6 +47,7 @@ export function SettingsScreen() {
   const [activeSection, setActiveSection] = useState<SettingsSectionId>("reading");
   const [clearingCache, setClearingCache] = useState(false);
   const contentRef = useRef<HTMLElement>(null);
+  const pendingScrollRef = useRef<SettingsScrollSectionId | null>(null);
   const settingsRef = useRef(settings);
 
   useEffect(() => {
@@ -169,15 +172,14 @@ export function SettingsScreen() {
     }
   };
 
-  const handleSelectSection = (id: SettingsSectionId) => {
-    setActiveSection(id);
+  const scrollToSection = (id: SettingsScrollSectionId) => {
     const element = document.getElementById(settingsSectionElementId(id));
     const root = contentRef.current;
     if (!element || !root) return;
 
     // First section: reset to the top so the page title isn't clipped under the
     // scrollport (offsetTop is unreliable vs. the padded scroll container).
-    if (id === SETTINGS_SECTIONS[0]?.id) {
+    if (id === SETTINGS_SCROLL_SECTIONS[0]?.id) {
       root.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -192,42 +194,58 @@ export function SettingsScreen() {
     });
   };
 
+  const handleSelectSection = (id: SettingsSectionId) => {
+    if (isSettingsScrollSection(id)) {
+      pendingScrollRef.current = id;
+    } else {
+      pendingScrollRef.current = null;
+    }
+    setActiveSection(id);
+  };
+
   useEffect(() => {
+    if (!isSettingsScrollSection(activeSection)) return;
     const root = contentRef.current;
     if (!root) return;
+
+    const pending = pendingScrollRef.current;
+    if (pending) {
+      pendingScrollRef.current = null;
+      scrollToSection(pending);
+    }
+
     let frame = 0;
     const update = () => {
       frame = 0;
       const atBottom = root.scrollTop + root.clientHeight >= root.scrollHeight - 8;
       if (atBottom) {
-        const last = SETTINGS_SECTIONS[SETTINGS_SECTIONS.length - 1].id;
+        const last = SETTINGS_SCROLL_SECTIONS[SETTINGS_SCROLL_SECTIONS.length - 1].id;
         setActiveSection((current) => (current === last ? current : last));
         return;
       }
       if (root.scrollTop <= 8) {
-        const first = SETTINGS_SECTIONS[0].id;
+        const first = SETTINGS_SCROLL_SECTIONS[0].id;
         setActiveSection((current) => (current === first ? current : first));
         return;
       }
       const rootTop = root.getBoundingClientRect().top;
       const next =
-        SETTINGS_SECTIONS.filter((section) => {
+        SETTINGS_SCROLL_SECTIONS.filter((section) => {
           const el = document.getElementById(settingsSectionElementId(section.id));
           if (!el) return false;
           return el.getBoundingClientRect().top - rootTop <= 80;
-        }).at(-1)?.id ?? SETTINGS_SECTIONS[0].id;
+        }).at(-1)?.id ?? SETTINGS_SCROLL_SECTIONS[0].id;
       setActiveSection((current) => (current === next ? current : next));
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update);
     };
     root.addEventListener("scroll", onScroll, { passive: true });
-    update();
     return () => {
       root.removeEventListener("scroll", onScroll);
       if (frame) cancelAnimationFrame(frame);
     };
-  }, []);
+  }, [activeSection]);
 
   return (
     <div className={styles.container}>
@@ -242,43 +260,46 @@ export function SettingsScreen() {
         <aside className={styles.sidebar}>
           <SettingsNavigation activeId={activeSection} onSelect={handleSelectSection} />
         </aside>
-        <main ref={contentRef} className={styles.content}>
-          <section id={settingsSectionElementId("reading")} className={styles.section}>
-            <ReadingSettingsSection />
-          </section>
-          <section id={settingsSectionElementId("translation")} className={styles.section}>
-            <TranslationSettingsSection
-              settings={settings}
-              onChange={updateSettings}
-              madladStatus={madladStatus}
-            />
-          </section>
-          <section id={settingsSectionElementId("data")} className={styles.section}>
-            <StorageSettingsSection
-              busy={clearingCache}
-              onClearCache={() => void handleClearCache()}
-            />
-          </section>
-          <section id={settingsSectionElementId("advanced")} className={styles.section}>
-            <DiagnosticsSettingsSection
-              madladStatus={madladStatus}
-              ollamaStatus={ollamaStatus}
-              settings={settings}
-              onChange={updateSettings}
-              onRecheck={() => {
-                void checkMadlad();
-                void checkOllama();
-              }}
-              sampleAlreadyAdded={sampleAlreadyAdded}
-              isAddingSample={isAddingSample}
-              sampleMessage={sampleMessage}
-              onAddSample={() => void handleAddSample()}
-            />
-          </section>
-          <section id={settingsSectionElementId("licenses")} className={styles.section}>
+        {activeSection === "licenses" ? (
+          <main className={styles.content}>
             <LicensesSettingsSection />
-          </section>
-        </main>
+          </main>
+        ) : (
+          <main ref={contentRef} className={styles.content}>
+            <section id={settingsSectionElementId("reading")} className={styles.section}>
+              <ReadingSettingsSection />
+            </section>
+            <section id={settingsSectionElementId("translation")} className={styles.section}>
+              <TranslationSettingsSection
+                settings={settings}
+                onChange={updateSettings}
+                madladStatus={madladStatus}
+              />
+            </section>
+            <section id={settingsSectionElementId("data")} className={styles.section}>
+              <StorageSettingsSection
+                busy={clearingCache}
+                onClearCache={() => void handleClearCache()}
+              />
+            </section>
+            <section id={settingsSectionElementId("advanced")} className={styles.section}>
+              <DiagnosticsSettingsSection
+                madladStatus={madladStatus}
+                ollamaStatus={ollamaStatus}
+                settings={settings}
+                onChange={updateSettings}
+                onRecheck={() => {
+                  void checkMadlad();
+                  void checkOllama();
+                }}
+                sampleAlreadyAdded={sampleAlreadyAdded}
+                isAddingSample={isAddingSample}
+                sampleMessage={sampleMessage}
+                onAddSample={() => void handleAddSample()}
+              />
+            </section>
+          </main>
+        )}
       </div>
     </div>
   );

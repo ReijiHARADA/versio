@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  SETTINGS_SCROLL_SECTIONS,
   SETTINGS_SECTIONS,
+  isSettingsScrollSection,
   settingsSectionElementId,
 } from "../utils/settingsToc";
 import {
@@ -17,6 +19,9 @@ describe("settings TOC", () => {
       "詳細",
       "ライセンス",
     ]);
+    expect(SETTINGS_SCROLL_SECTIONS.map((section) => section.id)).not.toContain("licenses");
+    expect(isSettingsScrollSection("advanced")).toBe(true);
+    expect(isSettingsScrollSection("licenses")).toBe(false);
     expect(settingsSectionElementId("reading")).toBe("section-reading");
     expect(settingsSectionElementId("licenses")).toBe("section-licenses");
   });
