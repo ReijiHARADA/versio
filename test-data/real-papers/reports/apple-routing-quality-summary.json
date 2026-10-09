@@ -1,0 +1,11 @@
+{
+  "eligible": 102,
+  "attempted": 102,
+  "accepted": 96,
+  "rejected": 6,
+  "reasons": {
+    "quality_gate": 6
+  },
+  "madladFallback": 6,
+  "readerVisibleFallback": "requires MADLAD rescue run"
+}
