@@ -24,10 +24,13 @@ import { ReadingSettingsSection } from "./ReadingSettingsSection";
 import { StorageSettingsSection } from "./StorageSettingsSection";
 import { DiagnosticsSettingsSection } from "./DiagnosticsSettingsSection";
 import { LicensesSettingsSection } from "./LicensesSettingsSection";
+import { useSettingsElasticPull } from "./useSettingsElasticPull";
 import type { ServiceStatus } from "./settingsTypes";
 import styles from "./SettingsScreen.module.css";
 
 const IDLE_STATUS: ServiceStatus = { checking: false, available: false };
+const LAST_SCROLL_SECTION =
+  SETTINGS_SCROLL_SECTIONS[SETTINGS_SCROLL_SECTIONS.length - 1].id;
 
 export function SettingsScreen() {
   const sampleAlreadyAdded = useLibraryCache((state) =>
@@ -46,9 +49,32 @@ export function SettingsScreen() {
   });
   const [activeSection, setActiveSection] = useState<SettingsSectionId>("reading");
   const [clearingCache, setClearingCache] = useState(false);
-  const contentRef = useRef<HTMLElement>(null);
   const pendingScrollRef = useRef<SettingsScrollSectionId | null>(null);
   const settingsRef = useRef(settings);
+
+  const goToLicenses = useCallback(() => {
+    pendingScrollRef.current = null;
+    setActiveSection("licenses");
+  }, []);
+
+  const goToSettingsFromLicenses = useCallback(() => {
+    pendingScrollRef.current = LAST_SCROLL_SECTION;
+    setActiveSection(LAST_SCROLL_SECTION);
+  }, []);
+
+  const settingsPull = useSettingsElasticPull({
+    enabled: isSettingsScrollSection(activeSection),
+    direction: "to-licenses",
+    onCommit: goToLicenses,
+  });
+
+  const licensesPull = useSettingsElasticPull({
+    enabled: activeSection === "licenses",
+    direction: "to-settings",
+    onCommit: goToSettingsFromLicenses,
+  });
+
+  const contentRef = settingsPull.rootRef;
 
   useEffect(() => {
     settingsRef.current = settings;
@@ -261,43 +287,83 @@ export function SettingsScreen() {
           <SettingsNavigation activeId={activeSection} onSelect={handleSelectSection} />
         </aside>
         {activeSection === "licenses" ? (
-          <main className={styles.content}>
-            <LicensesSettingsSection />
+          <main ref={licensesPull.rootRef} className={styles.content}>
+            <div
+              className={`${styles.elasticPane} ${
+                licensesPull.releasing ? styles.elasticPaneRelease : ""
+              }`}
+              style={{ transform: `translateY(${licensesPull.offset}px)` }}
+            >
+              <div
+                className={`${styles.elasticHint} ${styles.elasticHintTop} ${
+                  licensesPull.pastThreshold ? styles.elasticHintActive : ""
+                }`}
+                style={{
+                  height: licensesPull.pull > 0 ? 48 : 0,
+                  marginBottom: licensesPull.pull > 0 ? undefined : 0,
+                  opacity: licensesPull.pull > 0 ? 0.4 + licensesPull.progress * 0.6 : 0,
+                }}
+                aria-hidden="true"
+              >
+                {licensesPull.pastThreshold ? "離すと設定へ" : "引っ張って設定へ"}
+              </div>
+              <LicensesSettingsSection />
+            </div>
           </main>
         ) : (
           <main ref={contentRef} className={styles.content}>
-            <section id={settingsSectionElementId("reading")} className={styles.section}>
-              <ReadingSettingsSection />
-            </section>
-            <section id={settingsSectionElementId("translation")} className={styles.section}>
-              <TranslationSettingsSection
-                settings={settings}
-                onChange={updateSettings}
-                madladStatus={madladStatus}
-              />
-            </section>
-            <section id={settingsSectionElementId("data")} className={styles.section}>
-              <StorageSettingsSection
-                busy={clearingCache}
-                onClearCache={() => void handleClearCache()}
-              />
-            </section>
-            <section id={settingsSectionElementId("advanced")} className={styles.section}>
-              <DiagnosticsSettingsSection
-                madladStatus={madladStatus}
-                ollamaStatus={ollamaStatus}
-                settings={settings}
-                onChange={updateSettings}
-                onRecheck={() => {
-                  void checkMadlad();
-                  void checkOllama();
+            <div
+              className={`${styles.elasticPane} ${
+                settingsPull.releasing ? styles.elasticPaneRelease : ""
+              }`}
+              style={{ transform: `translateY(${-settingsPull.offset}px)` }}
+            >
+              <section id={settingsSectionElementId("reading")} className={styles.section}>
+                <ReadingSettingsSection />
+              </section>
+              <section id={settingsSectionElementId("translation")} className={styles.section}>
+                <TranslationSettingsSection
+                  settings={settings}
+                  onChange={updateSettings}
+                  madladStatus={madladStatus}
+                />
+              </section>
+              <section id={settingsSectionElementId("data")} className={styles.section}>
+                <StorageSettingsSection
+                  busy={clearingCache}
+                  onClearCache={() => void handleClearCache()}
+                />
+              </section>
+              <section id={settingsSectionElementId("advanced")} className={styles.section}>
+                <DiagnosticsSettingsSection
+                  madladStatus={madladStatus}
+                  ollamaStatus={ollamaStatus}
+                  settings={settings}
+                  onChange={updateSettings}
+                  onRecheck={() => {
+                    void checkMadlad();
+                    void checkOllama();
+                  }}
+                  sampleAlreadyAdded={sampleAlreadyAdded}
+                  isAddingSample={isAddingSample}
+                  sampleMessage={sampleMessage}
+                  onAddSample={() => void handleAddSample()}
+                />
+              </section>
+              <div
+                className={`${styles.elasticHint} ${
+                  settingsPull.pastThreshold ? styles.elasticHintActive : ""
+                }`}
+                style={{
+                  height: settingsPull.pull > 0 ? 48 : 0,
+                  marginTop: settingsPull.pull > 0 ? undefined : 0,
+                  opacity: settingsPull.pull > 0 ? 0.4 + settingsPull.progress * 0.6 : 0,
                 }}
-                sampleAlreadyAdded={sampleAlreadyAdded}
-                isAddingSample={isAddingSample}
-                sampleMessage={sampleMessage}
-                onAddSample={() => void handleAddSample()}
-              />
-            </section>
+                aria-hidden="true"
+              >
+                {settingsPull.pastThreshold ? "離すとライセンスへ" : "引っ張ってライセンスへ"}
+              </div>
+            </div>
           </main>
         )}
       </div>

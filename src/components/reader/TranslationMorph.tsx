@@ -33,7 +33,10 @@ type Particle = {
   peak: number;
 };
 
-const REVEAL_MS = 1550;
+// Keep the reveal perceptible without competing with document scrolling when
+// several paragraphs finish translation close together.
+const REVEAL_MS = 700;
+const MAX_PARTICLES = 480;
 /** English → dust only; travel/reform keep their own pace. */
 const DISSOLVE_SPEED = 1.6;
 const EN_FADE_END = 0.22 / DISSOLVE_SPEED;
@@ -282,7 +285,7 @@ export function TranslationMorph({
 
     const applyTextStyles = (t: number) => {
       const fromOpacity = Math.max(0, 1 - easeOutCubic(clamp01(t / EN_FADE_END)) * 1.05);
-      const fromBlur = Math.min(5.5, 0.25 + t * 6.5 * DISSOLVE_SPEED);
+      const fromBlur = Math.min(2.5, 0.25 + t * 3.2 * DISSOLVE_SPEED);
       fromEl.style.opacity = String(fromOpacity);
       fromEl.style.filter = `blur(${fromBlur.toFixed(2)}px)`;
 
@@ -290,7 +293,7 @@ export function TranslationMorph({
       if (toEl) {
         const toReveal = easeInOutQuint(clamp01((t - 0.4) / 0.52));
         toEl.style.opacity = String(toReveal);
-        toEl.style.filter = `blur(${(7.2 * (1 - toReveal)).toFixed(2)}px)`;
+        toEl.style.filter = `blur(${(3.5 * (1 - toReveal)).toFixed(2)}px)`;
       }
     };
 
@@ -299,6 +302,12 @@ export function TranslationMorph({
       if (!start) start = now;
       const t = clamp01((now - start) / REVEAL_MS);
       frame += 1;
+      // A 30fps canvas is enough for this decorative transition and halves
+      // raster work during concurrent translation updates.
+      if (frame % 2 === 1 && t < 1) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
       // Avoid React re-render every frame; sync a11y progress ~10fps.
       if (frame % 6 === 0 || t >= 1) setProgress(t);
       applyTextStyles(t);
@@ -337,7 +346,7 @@ export function TranslationMorph({
       const lineHeightPx =
         Number.parseFloat(cs.lineHeight) || Number.parseFloat(cs.fontSize) * 1.75 || 28;
       const area = w * h;
-      const count = Math.min(1400, Math.max(360, Math.round(area / 220)));
+      const count = Math.min(MAX_PARTICLES, Math.max(180, Math.round(area / 520)));
       const sources = sampleGlyphPoints(fromText, w, h, font, lineHeightPx, count);
       const targetPool = sampleGlyphPoints(toText || fromText, w, h, font, lineHeightPx, count);
       const destinations = pairByOrder(sources, targetPool);
@@ -392,7 +401,7 @@ export function TranslationMorph({
     ? { opacity: 1, filter: "blur(0px)" }
     : phase === "waiting"
       ? { opacity: 0, filter: "blur(8px)" }
-      : { opacity: 0, filter: "blur(7.2px)" };
+        : { opacity: 0, filter: "blur(3.5px)" };
 
   return (
     <div
