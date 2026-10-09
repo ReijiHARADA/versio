@@ -330,8 +330,11 @@ export function splitFlattenedList(text: string): string[] {
   const markers = [...text.matchAll(/(?:^|\s)([•‣▪∙–—])\s+/g)].map((m) =>
     m.index === undefined ? -1 : (m.index + (m[0].startsWith(" ") ? 1 : 0))
   ).filter((i) => i >= 0);
-  const numbered = [...text.matchAll(/(?:^|\s)((?:[1-9]|1[0-9]|20)[.)]|\([A-Za-z]\)|[A-Za-z]\))\s+/g)]
-    .map((m) => (m.index === undefined ? -1 : m.index + (m[0].startsWith(" ") ? 1 : 0)))
+  // Numbered markers inside a normal sentence (`... includes 1) and 2) ...`)
+  // are inline text, not list boundaries. Only split markers at a physical
+  // line start; this preserves prose and citation numbering.
+  const numbered = [...text.matchAll(/(?:^|\n)\s*((?:[1-9]|1[0-9]|20)[.)]|\([A-Za-z]\)|[A-Za-z]\))\s+/g)]
+    .map((m) => (m.index === undefined ? -1 : m.index + m[0].search(/(?:[1-9]|1[0-9]|20)[.)]|\([A-Za-z]\)|[A-Za-z]\)/)))
     .filter((i) => i >= 0);
   const starts = markers.length >= 2 ? markers : numbered;
   if (starts.length < 2) return [text];
@@ -389,6 +392,17 @@ function isReferenceText(text: string, currentKind: NormalizedSectionKind | null
   // References section, require citation-shaped evidence such as a year.
   return /^\[\d+\]/.test(text) ||
     (/^\d+\.\s+[A-Z][a-z]+,?\s+[A-Z]/.test(text) && /\b(?:19|20)\d{2}\b/.test(text));
+}
+
+/** Bibliography entries are rendered as one hanging-indent paragraph. Native
+ * PDF line wraps are physical layout, so normalize them before persistence;
+ * retain an intentional hyphen while joining a line-break hyphenation. */
+function normalizeReferenceText(text: string): string {
+  return text
+    .replace(/([A-Za-z])[-‐‑]\s*\n\s*([a-z])/g, "$1$2")
+    .replace(/\s*\n\s*/g, " ")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
 }
 
 function isStandaloneContactMetadata(text: string): boolean {
@@ -1760,7 +1774,7 @@ export function projectCanonicalToPaper(input: {
           pageStart: node.pageStart,
           pageEnd: node.pageEnd,
           boundingBoxes: boxes,
-          original: part,
+          original: isRef ? normalizeReferenceText(part) : part,
           translated: null,
           translationStatus:
             isChartLabel || isRef || (!meaningfulListUnit && !shouldTranslateParagraph(part))
