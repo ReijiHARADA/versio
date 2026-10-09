@@ -118,3 +118,18 @@ The six Apple quality-gate rejections were replayed through the running MADLAD s
 - final source/reader-visible fallback: **1/102 (0.98%)**
 
 This is below the 5% operational target for this cohort, but it is not a semantic safety proof: the 20-pair manual review remains the authority for semantic errors, and the 102-row set comes from the existing audit corpus rather than a newly source-hash-disjoint corpus. The remaining fallback is attributable to model/protected-token handling, not Apple availability.
+
+## Rejection-gate diagnosis
+
+The six Apple rejections were re-evaluated against the original source and output:
+
+| class | gate reason | safety assessment | action |
+|---|---|---|---|
+| quoted memoir with `[Marzee 2001 p.25]` | `orphaned source invariant sentence` | valid conservative reject: the author/year/page citation was transliterated and no longer exact | keep reject; improve citation protection separately |
+| SpeeChin sentence with `Figure 1(a)` | `scientific invariants missing: Figure 1(a)` | conservative false reject: Apple localized the figure label to `図1（a）`, but the relation was preserved | keep gate for now; add deterministic figure-label normalization only after invariant tests |
+| education sentence with `UNESCO6` / `Table 5` | missing `UNESCO6` | conservative false reject: `ユネスコ6` preserves the entity and number semantically but not exact Latin form | keep gate; do not weaken globally |
+| linguistics sentence beginning with numbered universities | missing `McMaster` | valid source-integrity reject: affiliation metadata is fused with body prose; Apple must not be credited with translating it | fixed eligibility rule now rejects numbered institution prefixes |
+| HCI history sentence with `1970s` | missing/unexpected year invariant | conservative false reject: `1970年代` is a normal Japanese rendering of `1970s` | keep gate pending a generic decade invariant improvement |
+| implicit-memory sentence with `without conscious recall` | `source negation missing` | detector false positive: `意識的な記憶なしに` expresses the negation, but the Japanese-pattern detector does not recognize it | keep safety behavior; add a tested Japanese negation pattern rather than relaxing acceptance |
+
+Five of the six were rescued by MADLAD. The one unrecovered item was the fused affiliation/body source; its MADLAD error was `protected_token_restore_failed` for `McMaster || ON || USA` plus a degenerate unit. This confirms the remaining failure is extraction/protection contamination, not a reason to loosen the Apple gate.

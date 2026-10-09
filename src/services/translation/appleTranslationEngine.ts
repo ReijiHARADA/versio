@@ -9,6 +9,9 @@ export function isAppleEligibleSource(text: string): boolean {
   const s = text.trim();
   if (s.length < 40 || s.length > 700) return false;
   if (/[@]|https?:\/\/|\b(?:doi|references|bibliography)\b/i.test(s)) return false;
+  // Numbered institution rows followed by prose indicate a flattened
+  // masthead, not a complete translation unit.
+  if (/^\s*\d+\s+.*\b(?:University|College|Institute|School|Department|Faculty)\b.*\b\d+\s+[A-Z]/i.test(s)) return false;
   if (/^[\d\s.:-]+$/.test(s) || /^(?:fig(?:ure)?|table)\s*\d+/i.test(s)) return false;
   if (/^[•●▪◦\-*]\s/.test(s) || /\n\s*[•●▪◦\-*]\s/.test(s)) return false;
   if ((s.match(/[.!?]/g) ?? []).length === 0 && !/[,:;]$/.test(s)) return false;

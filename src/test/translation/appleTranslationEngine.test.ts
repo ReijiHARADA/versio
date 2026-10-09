@@ -16,6 +16,7 @@ describe("Apple translation eligibility", () => {
     expect(isAppleEligibleSource("author@example.com 1,2")).toBe(false);
     expect(isAppleEligibleSource("Figure 2")).toBe(false);
     expect(isAppleEligibleSource("This sentence is truncated at the page boundary and")).toBe(false);
+    expect(isAppleEligibleSource("1 University of Turku, Turku, Finland 2 McMaster University, Hamilton, Canada placed in a continuum based on the discriminative importance of lexis and grammar.")).toBe(false);
   });
 
   it("routes eligible prose to Apple and keeps MADLAD as the safe fallback", async () => {
