@@ -1743,6 +1743,17 @@ export function projectCanonicalToPaper(input: {
           ? null
           : unsafeParagraphStructureReason(text);
       for (const [partIndex, part] of listParts.entries()) {
+        const listRole =
+          listParts.length > 1
+            ? partIndex === 0
+              ? "intro"
+              : "item"
+            : standaloneListItem
+              ? "item"
+              : undefined;
+        const meaningfulListUnit =
+          listRole === "intro" ||
+          (listRole === "item" && (part.match(/[A-Za-z]{3,}/g)?.length ?? 0) >= 3);
         pushBlock(node, layout, {
           sectionId: currentSectionId,
           type: isRef ? "reference" : "paragraph",
@@ -1752,21 +1763,16 @@ export function projectCanonicalToPaper(input: {
           original: part,
           translated: null,
           translationStatus:
-            isChartLabel || isRef || !shouldTranslateParagraph(part) ? "skipped" : "pending",
+            isChartLabel || isRef || (!meaningfulListUnit && !shouldTranslateParagraph(part))
+              ? "skipped"
+              : "pending",
           parentBlockId: null,
           metadata: {
             column,
             role: node.role,
             translationInputWarning: translationInputWarning ?? undefined,
             flattenedListPart: listParts.length > 1,
-            listRole:
-              listParts.length > 1
-                ? partIndex === 0
-                  ? "intro"
-                  : "item"
-                : standaloneListItem
-                  ? "item"
-                  : undefined,
+            listRole,
           },
         });
       }

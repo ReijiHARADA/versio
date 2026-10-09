@@ -403,6 +403,16 @@ export async function importPDFV2(
       }
 
       if (task.blockId === `title-${paperId}`) {
+        if (!titleTranslationComplete(task.text, translated)) {
+          console.warn("[translation] rejected incomplete title translation:", translated);
+          paper.titleTranslated = null;
+          await savePaper(paper);
+          callbacks.onPaperUpdated?.(paper);
+          translatedCount++;
+          updateProgress();
+          markDone();
+          return;
+        }
         paper.titleTranslated = translated;
         await savePaper(paper);
         callbacks.onPaperUpdated?.(paper);

@@ -10,6 +10,7 @@ const result = (text: string, model: string): TranslationResult => ({
 describe("Apple translation eligibility", () => {
   it("accepts complete ordinary prose", () => {
     expect(isAppleEligibleSource("The study examined 20 participants and found no significant difference between the conditions.")).toBe(true);
+    expect(isAppleEligibleSource("Interactive Jewellery: a design exploration")).toBe(true);
   });
   it("rejects structural and contaminated sources", () => {
     expect(isAppleEligibleSource("ABSTRACT")).toBe(false);

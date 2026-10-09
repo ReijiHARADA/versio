@@ -18,6 +18,7 @@
 
 ## Tauri macOS アプリ
 
+- Paper Reader の基本動作確認は **Tauri macOS 実機を基準**にする。ブラウザ／Playwright確認は補助であり、取り込み・PDF抽出・翻訳・永続化・書き出し・macOS固有UIは最新の `.app` または `tauri:dev` で最終確認する。
 - UI を変えたら `npm run dev` または preview を上げ、`npm run verify:browser` で Library / 設定 / Reader を実ブラウザ確認する。このセッションの Cursor に Browser MCP は無いので Playwright（`@playwright/test`）を使う。翻訳サーバーは `http://127.0.0.1:8765/health`。
 - 新しい UI は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md) に従う。局所操作は Popover、一時的な大きい作業は Sheet / Overlay、論文全体の一覧は Inspector。本文操作で Notes を自動で開かない。別 route は Library / Reader / Workspace / Settings だけ。同一対象の場所・サイズ変化（図の拡大など）は Shared Element Transition でビューを切らない。
 - `src-tauri/` が Tauri v2 のシェル。`npm run tauri:dev` で開発。日常の `.app` 確認は `npm run tauri:build:fast`（cached Python / `.app` のみ）。リリース確認は `npm run tauri:build:clean`（clean Python / `.app` + `.dmg`）。`npm run tauri:build` は clean のエイリアス。

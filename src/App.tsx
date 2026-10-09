@@ -242,7 +242,7 @@ function App() {
       )}
       <PdfFileDropLayer />
       <div
-        className={`${styles.root} ${!serverReady ? styles.rootWithBanner : ""}`}
+        className={`${styles.root} ${isTauriApp() ? styles.rootDesktop : ""} ${!serverReady ? styles.rootWithBanner : ""}`}
       >
         <div className={styles.routes}>
           <Routes>

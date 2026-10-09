@@ -179,6 +179,13 @@ export async function resumeIncompleteTranslation(
         return;
       }
       if (task.blockId === `title-${paperId}`) {
+        if (!titleTranslationComplete(task.text, translated)) {
+          paper.titleTranslated = null;
+          await savePaper(paper);
+          callbacks.onPaperUpdated?.(paper);
+          markDone();
+          return;
+        }
         paper.titleTranslated = translated;
         await savePaper(paper);
         callbacks.onPaperUpdated?.(paper);

@@ -180,6 +180,11 @@ describe("canonical extraction pipeline", () => {
     expect(jewelleryContinuation?.text).toMatch(/^It is through the interaction with a piece of jewellery/);
     const consciousParagraph = result.blocks.find((block) => /some conscious, other/i.test(block.original ?? ""));
     expect(consciousParagraph?.original).toMatch(/some conscious, other unaware, some private and other social/i);
+    const abstractDirections = result.blocks.filter((block) =>
+      /^(?:[1-4][.)])\s/.test((block.original ?? "").trim()) && block.pageStart === 1
+    );
+    expect(abstractDirections).toHaveLength(4);
+    expect(abstractDirections.every((block) => block.translationStatus === "pending")).toBe(true);
     expect(result.blocks.some((block) => block.original?.trim() === "1,2,3,4")).toBe(false);
     expect(result.blocks.some((block) => block.pageStart === 1 && block.original?.trim() === "44")).toBe(false);
   }, 60_000);

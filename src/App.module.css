@@ -6,6 +6,11 @@
   box-sizing: border-box;
 }
 
+/* Hairline under the native macOS title bar (Transparent chrome). */
+.rootDesktop {
+  border-top: 1px solid var(--color-border);
+}
+
 .rootWithBanner {
   /* Keep shell inside the viewport while the model banner is visible. */
   padding-top: 40px;
