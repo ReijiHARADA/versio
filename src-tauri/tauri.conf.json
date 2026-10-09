@@ -56,7 +56,8 @@
       "icons/icon.ico"
     ],
     "resources": {
-      "bundled-resources/translation-server": "translation-server"
+      "bundled-resources/translation-server": "translation-server",
+      "bundled-resources/apple-translation": "apple-translation"
     }
   }
 }

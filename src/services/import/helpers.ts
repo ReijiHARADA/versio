@@ -12,6 +12,7 @@ export const DEFAULT_IMPORT_CONFIG: Required<ImportConfig> = {
   ollamaModel: "gemma2:9b",
   ollamaModels: [],
   enableSelectiveCascade: false,
+  enableAppleTranslation: true,
   generateGlossary: true,
   translationConcurrency: 8,
   useCache: true,

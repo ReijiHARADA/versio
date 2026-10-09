@@ -46,6 +46,10 @@ export PATH="${HOME}/.cargo/bin:/opt/homebrew/bin:${PATH}"
 # shellcheck disable=SC1091
 source "${HOME}/.cargo/env" 2>/dev/null || true
 
+# The fast path skips Tauri's beforeBuildCommand, so compile native resources
+# explicitly here as well.
+bash "$SCRIPT_DIR/compile-apple-translation.sh"
+
 export PAPER_READER_BUILD_TIMINGS="$TIMING_FILE"
 if [[ "$MODE" == "clean" ]]; then
   export PAPER_READER_PYTHON_BUNDLE_MODE="clean"

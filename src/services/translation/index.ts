@@ -3,6 +3,7 @@
  */
 export * from "./types";
 export * from "./madladEngine";
+export * from "./appleTranslationEngine";
 export * from "./ollamaTranslationEngine";
 export * from "./translationQueue";
 export * from "./translationManager";

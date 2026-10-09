@@ -45,6 +45,8 @@ export type ImportConfig = {
   ollamaModels?: string[];
   /** Opt-in alternate translation after a primary failure or high-impact quality risk. */
   enableSelectiveCascade?: boolean;
+  /** Use macOS Apple Translation for eligible clean prose, with MADLAD fallback. */
+  enableAppleTranslation?: boolean;
   generateGlossary?: boolean;
   translationConcurrency?: number;
   useCache?: boolean;

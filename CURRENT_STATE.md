@@ -1297,3 +1297,7 @@ After adding the generic same-column affiliation stitch (comma-terminated row + 
 `npm run tauri:build:fast` was then completed successfully at **2026-10-09 00:47:42**. The generated app is `src-tauri/target/release/bundle/macos/Paper Reader.app`; this is an unsigned fast build with DMG/signing skipped.
 
 The Reader header now renders extracted `paper.affiliations` below the author list when available, with a compact secondary style and no output when the list is empty. Reader tests **12/12** and typecheck pass. The UI change was packaged in a new unsigned fast `.app` at **2026-10-09 00:59:09**.
+
+# 2026-10-09: Apple Translation selective backend
+
+Added a macOS-native `AppleTranslationEngine` and conservative `SelectiveAppleTranslationEngine`. Only complete prose-like blocks (40–700 chars, sufficient words, no contact/URL/reference/caption/list markers) are attempted; unavailable language packs, native errors, and existing quality-gate failures fall back to MADLAD. Apple and route identities are distinct for translation cache keys. The helper is compiled from `src-tauri/apple_translation.swift` during both fast and clean builds and bundled as `apple-translation`. Eligibility tests pass, typecheck passes, and the unsigned `.app` was rebuilt at 10:25:37. The current machine reports `TranslationError.Cause.notInstalled` for the Apple language pack, so runtime safely uses MADLAD until the pack is installed. Evaluation artifacts and the migration decision are in `test-data/real-papers/reports/apple-translation-evaluation-v1.md`.
