@@ -2523,7 +2523,12 @@ export function displayPaperTitle(paper: {
   titleTranslated: string | null;
   titleOriginal: string | null;
 }): string {
-  const ja = usableTranslatedText(paper.titleTranslated, paper.titleOriginal || "");
+  // Do not expose a cached/partial title translation.  In particular, titles
+  // with a subtitle after `:` must retain that subtitle; incomplete historical
+  // cache entries should fall back to the source until the title is retried.
+  const ja = titleTranslationComplete(paper.titleOriginal || "", paper.titleTranslated)
+    ? usableTranslatedText(paper.titleTranslated, paper.titleOriginal || "")
+    : null;
   if (ja) return ja;
   const original = paper.titleOriginal?.trim() || "";
   if (original && !isGarbageTitle(original)) return original;

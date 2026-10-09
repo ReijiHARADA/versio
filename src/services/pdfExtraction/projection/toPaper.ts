@@ -337,6 +337,11 @@ export function splitFlattenedList(text: string): string[] {
   if (starts.length < 2) return [text];
   const first = starts[0];
   const prefix = text.slice(0, first).trim();
+  // Paired en/em dashes inside a sentence (`... an – at first ... –
+  // physical piece`) are parenthetical punctuation, not list markers. Only
+  // treat dash runs as lists when they start after an explicit list lead-in.
+  if (markers.length >= 2 && markers.every((index) => /[–—]/u.test(text[index])) &&
+      first > 0 && !prefix.endsWith(":")) return [text];
   // Keep a sentence-shaped lead-in separate when the native stream clearly
   // marks the list introduction with a colon. Requiring the colon avoids
   // splitting ordinary prose that happens to contain two bullet glyphs.
@@ -408,7 +413,11 @@ function isStandaloneAffiliationMarkerRun(text: string): boolean {
 
 /** A lone short number in an `other` node is a running page marker, not paper prose. */
 function isStandalonePageNumber(text: string, role: CanonicalNode["role"]): boolean {
-  return role === "other" && /^\d{1,3}$/.test(text.trim());
+  // Native PDF resolvers disagree on whether a running footer is `other` or
+  // a low-confidence paragraph.  A bare short number has no readable prose
+  // value; preserve numeric tables/headings, but never expose this marker as
+  // a translation unit.
+  return role !== "table" && role !== "heading" && /^\d{1,3}$/.test(text.trim());
 }
 
 /** Numbered prose items are lists even when an upstream role heuristic called
@@ -1796,6 +1805,48 @@ export function projectCanonicalToPaper(input: {
   for (let index = 0; index + 1 < rowAggregatedBlocks.length; index++) {
     const current = rowAggregatedBlocks[index];
     const next = rowAggregatedBlocks[index + 1];
+
+    // Canonical continuation relations can be lost when a mixed native text
+    // stream is split into separate x-bands. Rejoin an unfinished paragraph
+    // with a same-column lowercase/dash continuation when geometry shows the
+    // next line is immediately below it. This is intentionally stricter than
+    // generic paragraph concatenation, so independent blocks remain separate.
+    const continuationTailBox = current.boundingBoxes.at(-1);
+    const continuationHeadBox = next.boundingBoxes[0];
+    const currentContinuationText = (current.original ?? "").trim();
+    const nextContinuationText = (next.original ?? "").trim();
+    const endsWithContinuationCue = /(?:\b(?:a|an|the|of|to|in|on|at|by|for|from|with|and|or|but|as|than|like|such|which|that))$/i.test(currentContinuationText);
+    const startsLikeContinuation = /^(?:[a-z(]|[–—-]\s*[a-z])/u.test(nextContinuationText);
+    const startsWithProperContinuation = endsWithContinuationCue && /^[A-Z][A-Za-z'’\-]*(?:\s|\(|\[)/u.test(nextContinuationText);
+    const samePageGeometry = current.pageStart === current.pageEnd &&
+      next.pageStart === next.pageEnd &&
+      current.pageStart === next.pageStart &&
+      current.metadata.column === next.metadata.column &&
+      continuationTailBox && continuationHeadBox &&
+      Math.abs(continuationTailBox.x - continuationHeadBox.x) <= 18 &&
+      continuationHeadBox.y >= continuationTailBox.y + continuationTailBox.height - 2 &&
+      continuationHeadBox.y - (continuationTailBox.y + continuationTailBox.height) <= 24;
+    const crossPageGeometry = continuationTailBox && continuationHeadBox &&
+      continuationHeadBox.page > continuationTailBox.page &&
+      continuationTailBox.y > 620 && continuationHeadBox.y < 140;
+    const sameColumnContinuation = current.type === "paragraph" &&
+      next.type === "paragraph" &&
+      (samePageGeometry || crossPageGeometry) &&
+      !/[.!?:;]\s*$/.test(currentContinuationText) &&
+      (startsLikeContinuation || startsWithProperContinuation);
+    if (sameColumnContinuation) {
+      rowAggregatedBlocks[index] = {
+        ...current,
+        original: `${current.original ?? ""} ${next.original ?? ""}`.replace(/\s+/g, " ").trim(),
+        pageEnd: next.pageEnd,
+        boundingBoxes: [...current.boundingBoxes, ...next.boundingBoxes],
+        extractionConfidence: Math.min(current.extractionConfidence ?? 0, next.extractionConfidence ?? 0),
+        metadata: { ...current.metadata, paragraphContinuationRepaired: true },
+      };
+      rowAggregatedBlocks.splice(index + 1, 1);
+      index -= 1;
+      continue;
+    }
 
     // A complete lead-in sentence can intentionally end in a colon immediately
     // before a separately projected numbered/bulleted list.  The generic

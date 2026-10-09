@@ -1,4 +1,6 @@
 mod ocr;
+#[cfg(target_os = "macos")]
+mod macos_chrome;
 mod paper_fs;
 mod source_pdf;
 
@@ -167,6 +169,22 @@ fn translate_with_apple(
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
 
+/// Sync macOS title-bar fill with sidebar (`--color-bg-secondary`).
+/// `theme` is `"light"` or `"dark"` (resolved; not `"system"`).
+#[tauri::command]
+fn sync_window_chrome_theme(app: tauri::AppHandle, theme: String) -> Result<(), String> {
+    let dark = theme == "dark";
+    #[cfg(target_os = "macos")]
+    {
+        macos_chrome::apply_to_main_window(&app, dark)?;
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = (app, dark);
+    }
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let server_state = ServerState {
@@ -194,6 +212,14 @@ pub fn run() {
                 spawn_server(&handle, &proxy);
             });
 
+            #[cfg(target_os = "macos")]
+            {
+                // Light default; frontend syncs after theme resolve.
+                if let Err(err) = macos_chrome::apply_to_main_window(app.handle(), false) {
+                    log::warn!("macOS chrome init failed: {err}");
+                }
+            }
+
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -210,6 +236,7 @@ pub fn run() {
             restart_translation_server,
             get_translation_server_token,
             translate_with_apple,
+            sync_window_chrome_theme,
             ocr::ocr_image,
             source_pdf::save_source_pdf,
             source_pdf::copy_source_pdf,

@@ -60,6 +60,12 @@ export function shouldTranslateBlock(
     // it explicitly after seeing the list successor, so the generic
     // single-block completeness heuristic must not reject it again.
     if (block.metadata?.listRole === "intro") return true;
+    if (block.metadata?.listRole === "item") {
+      // List items are independent translation units. They often omit a
+      // terminal period, so the paragraph completeness gate must not discard
+      // meaningful bullets or numbered procedure/design directions.
+      return (block.original.match(/[A-Za-z]{3,}/g)?.length ?? 0) >= 3;
+    }
     return shouldTranslateParagraph(block.original);
   }
   if (block.type === "figure" || block.type === "table") {
