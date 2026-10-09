@@ -108,3 +108,13 @@ The Apple language pack became available during this run, so the packaged native
 - Apple rejection reason: quality gate (all six); these must be sent to MADLAD rescue, so they are not automatically reader-visible fallbacks.
 
 The machine-level Apple capability blocker is therefore cleared. The six quality rejections demonstrate that Apple is subject to the same safety policy and that routing must not treat native completion as acceptance. A separate MADLAD-rescue replay is still required to measure the final reader-visible fallback rate for this cohort; the summary is stored in `apple-routing-quality-summary.json`.
+
+### MADLAD rescue result for Apple rejections
+
+The six Apple quality-gate rejections were replayed through the running MADLAD server under the normal production endpoint. MADLAD rescued **5/6**; one remained rejected because of protected citation restoration failure plus a degenerate unit. The measured final outcome for this 102-row eligible cohort was therefore:
+
+- Apple accepted: 96
+- MADLAD rescue accepted: 5
+- final source/reader-visible fallback: **1/102 (0.98%)**
+
+This is below the 5% operational target for this cohort, but it is not a semantic safety proof: the 20-pair manual review remains the authority for semantic errors, and the 102-row set comes from the existing audit corpus rather than a newly source-hash-disjoint corpus. The remaining fallback is attributable to model/protected-token handling, not Apple availability.
