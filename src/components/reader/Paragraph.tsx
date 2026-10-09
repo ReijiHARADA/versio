@@ -98,14 +98,20 @@ export function Paragraph({
   const [morph, setMorph] = useState<{ from: string; to: string } | null>(null);
   const wasWaitingRef = useRef(false);
 
-  const skipTranslation =
+  const usableStoredTranslation = usableTranslatedText(block.translated, block.original);
+  // The import policy understands projected list items and other structured
+  // units that the generic paragraph heuristic intentionally rejects. Once a
+  // translation has completed and passed the shared quality gate, the Reader
+  // must not hide it by re-running the narrower source-shape heuristic.
+  const hasAcceptedStoredTranslation =
+    block.translationStatus === "completed" && Boolean(usableStoredTranslation);
+  const skipTranslation = !hasAcceptedStoredTranslation && (
     block.translationStatus === "skipped" ||
     looksLikeBibliographyEntry(block.original || "") ||
     isReferencesHeading(block.original || "") ||
-    !shouldTranslateParagraph(block.original || "");
-  const translated = skipTranslation
-    ? null
-    : usableTranslatedText(block.translated, block.original);
+    !shouldTranslateParagraph(block.original || "")
+  );
+  const translated = skipTranslation ? null : usableStoredTranslation;
   const hasTranslation = Boolean(translated);
   const hasOriginal = Boolean(block.original && translated);
   const isPending = !skipTranslation && block.translationStatus === "pending";

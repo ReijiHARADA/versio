@@ -3,6 +3,7 @@ export const SETTINGS_SECTIONS = [
   { id: "translation", label: "翻訳" },
   { id: "data", label: "ライブラリとデータ" },
   { id: "advanced", label: "詳細" },
+  { id: "licenses", label: "ライセンス" },
 ] as const;
 
 export type SettingsSectionId = (typeof SETTINGS_SECTIONS)[number]["id"];

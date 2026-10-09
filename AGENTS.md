@@ -49,6 +49,10 @@
 - Speed measurements and rejected alternatives live in `translation-server/SPEED_BENCH.md`.
 - MLX bf16 (unquantized official 3B) was measured in `translation-server/MLX_BF16_BENCH_REPORT.md`. Do not switch production to it: quality matches MPS, but it is not 1.5–2× faster than the batched MPS path.
 
+## Licenses (Settings)
+
+- Settings → ライセンス lists Paper Reader MIT plus bundled third-party notices. Regenerate with `npm run generate:licenses` (also `prebuild`). Source of truth for the inventory is `src/generated/thirdPartyLicenses.json`. Do not invent SPDX identifiers; mark missing metadata as unknown/partial. Exclude dev-only / non-bundled dependencies from the in-app list.
+
 ## Local data
 
 - Paper body source of truth is the Paper Package at `<AppData>/papers/<paperId>/` (`source.pdf`, `paper.json`, `original.md`, `ja.md`, `translation.json`, `structure.json`, optional `layout.json.gz`, `assets/`). Do not store paper bodies only in IndexedDB or SQLite. Keep structured authors / affiliations / DOI in `paper.json`; do not mint `author-1` when ids already exist. Block APIs take `{ paperId, blockId }`. Re-extract must `reconcileBlockIds` then remap annotations / reading position.

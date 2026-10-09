@@ -21,6 +21,7 @@ import { TranslationSettingsSection } from "./TranslationSettingsSection";
 import { ReadingSettingsSection } from "./ReadingSettingsSection";
 import { StorageSettingsSection } from "./StorageSettingsSection";
 import { DiagnosticsSettingsSection } from "./DiagnosticsSettingsSection";
+import { LicensesSettingsSection } from "./LicensesSettingsSection";
 import type { ServiceStatus } from "./settingsTypes";
 import styles from "./SettingsScreen.module.css";
 
@@ -273,6 +274,9 @@ export function SettingsScreen() {
               sampleMessage={sampleMessage}
               onAddSample={() => void handleAddSample()}
             />
+          </section>
+          <section id={settingsSectionElementId("licenses")} className={styles.section}>
+            <LicensesSettingsSection />
           </section>
         </main>
       </div>

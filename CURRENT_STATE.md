@@ -1,3 +1,7 @@
+# 2026-10-09: 設定にライセンス一覧
+
+設定サイドバー最下部に「ライセンス」。本体 MIT と npm / Python / Rust / モデル・アセットの依存を検索・全文表示。一覧は `npm run generate:licenses`（`prebuild`）で `src/generated/thirdPartyLicenses.json` に自動生成。オフライン閲覧可。種別不明は推測せず「要確認」。
+
 # 2026-10-09: macOS タイトルバー下の区切り線
 
 実ウィンドウ（Tauri）ではタイトルバー直下に `1px` の `--color-border` を描画。

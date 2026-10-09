@@ -11,6 +11,7 @@ describe("Apple translation eligibility", () => {
   it("accepts complete ordinary prose", () => {
     expect(isAppleEligibleSource("The study examined 20 participants and found no significant difference between the conditions.")).toBe(true);
     expect(isAppleEligibleSource("Interactive Jewellery: a design exploration")).toBe(true);
+    expect(isAppleEligibleSource("• data uniquely stored on the jewel.")).toBe(true);
   });
   it("rejects structural and contaminated sources", () => {
     expect(isAppleEligibleSource("ABSTRACT")).toBe(false);

@@ -15,6 +15,19 @@ function isDataUrl(value: unknown): boolean {
   return typeof value === "string" && value.startsWith("data:");
 }
 
+// Page-number lines can still arrive here when an older extraction package is
+// re-projected or when a PDF's footer was classified as a generic paragraph.
+// They are layout chrome, not document content. Keep this narrowly scoped to
+// numeric paragraph/footnote blocks so numeric references, tables, and prose
+// are unaffected.
+function isStandalonePageNumberBlock(block: PaperBlock, text: string): boolean {
+  const role = String(block.metadata?.role ?? "");
+  if (role === "reference" || block.type === "reference" || block.type === "table" || block.type === "equation") {
+    return false;
+  }
+  return (block.type === "paragraph" || block.type === "footnote") && /^\d{1,3}$/.test(text.trim());
+}
+
 export function decodeDataUrl(dataUrl: string): { bytes: Uint8Array; mimeType: string } | null {
   const match = dataUrl.match(/^data:([^;,]+);base64,(.+)$/);
   if (!match) return null;
@@ -84,6 +97,7 @@ export function blocksToDocument(input: {
     if (role === "author" || role === "affiliation" || role === "copyright") {
       continue;
     }
+    if (isStandalonePageNumberBlock(block, text)) continue;
     if (block.type === "heading") continue;
 
     if (block.type === "figure" || block.type === "table") {
