@@ -42,6 +42,24 @@ export function referenceKeyFromText(text: string): string | null {
   return null;
 }
 
+/** PDF footer / running head: a lone page index, not bibliography content. */
+export function isStandalonePageNumberLine(text: string): boolean {
+  return /^\d{1,3}$/.test(text.trim());
+}
+
+/**
+ * Paragraph-shaped bibliography line (e.g. ACM `14. Author. 2007. …`).
+ * Used when re-projecting older packages where some entries stayed `paragraph`.
+ */
+export function looksLikeBibliographyEntry(text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed || isStandalonePageNumberLine(trimmed)) return false;
+  const key = referenceKeyFromText(trimmed);
+  if (!key) return false;
+  if (/\b(?:19|20)\d{2}[a-z]?\b/.test(trimmed)) return true;
+  return trimmed.length >= 48 && /[A-Za-z]{3,}/.test(trimmed);
+}
+
 export function indexReferenceBlocks(
   blocks: PaperBlock[]
 ): Map<string, string> {

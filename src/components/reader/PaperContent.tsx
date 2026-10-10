@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useCallback,
   useMemo,
@@ -8,6 +9,7 @@ import {
   useImperativeHandle,
   forwardRef,
   type ReactNode,
+  type RefObject,
 } from "react";
 import type { Paper, Section, PaperBlock, FigureMetadata, EquationMetadata, TableMetadata } from "../../types/paper";
 import type { Annotation } from "../../types/annotation";
@@ -20,7 +22,12 @@ import { Footnote } from "./Footnote";
 import { displayPaperTitle, usableTranslatedText, isGarbageTitle, sectionDisplayTitle, isReferencesHeading } from "../../services/translation/quality";
 import { shouldTranslateBlock, isRetryableTranslationFailure } from "../../services/importServiceV2";
 import { isBusyProcessingStatus } from "../../services/paperStatus";
-import { indexReferenceBlocks, parseReferenceLinks } from "../../services/citations";
+import {
+  indexReferenceBlocks,
+  isStandalonePageNumberLine,
+  looksLikeBibliographyEntry,
+  parseReferenceLinks,
+} from "../../services/citations";
 import {
   countLowConfidenceBlocks,
   isLowExtractionConfidence,
@@ -32,6 +39,13 @@ import {
   resolveTransientMountPins,
   shouldVirtualizeSections,
 } from "./virtualization/sectionVirtualization";
+import {
+  alignElementTopInScrollContainer,
+  isSectionBodyMounted,
+  readScrollMarginTop,
+  scrollTopToAlignElementTop,
+  waitForPaint,
+} from "./virtualization/sectionScroll";
 import styles from "./PaperContent.module.css";
 
 const EMPTY_ANNOTATIONS: Annotation[] = [];
@@ -67,12 +81,14 @@ export type ReaderContentHandle = {
   ensureBlockMounted: (blockId: string) => Promise<void>;
   ensureSectionMounted: (sectionId: string) => Promise<void>;
   ensureTargetMounted: (targetId: string) => Promise<void>;
+  scrollToSection: (sectionId: string) => Promise<void>;
 };
 
 type PaperContentProps = {
   paper: Paper;
   sections: Section[];
   blocks: PaperBlock[];
+  scrollContainerRef?: RefObject<HTMLElement | null>;
   onSectionVisible: (sectionId: string | null) => void;
   highlightText?: string;
   onBlockUpdated?: (block: PaperBlock) => void;
@@ -99,6 +115,7 @@ type PaperBlockViewProps = {
   glossaryEntries: GlossaryEntry[];
   onOpenGlossaryInspector?: () => void;
   onJumpToTarget: (targetId: string) => void;
+  inReferencesSection?: boolean;
 };
 
 const PaperBlockView = memo(function PaperBlockView({
@@ -115,10 +132,21 @@ const PaperBlockView = memo(function PaperBlockView({
   glossaryEntries,
   onOpenGlossaryInspector,
   onJumpToTarget,
+  inReferencesSection = false,
 }: PaperBlockViewProps) {
+  const original = block.original?.trim() ?? "";
+  if (inReferencesSection && isStandalonePageNumberLine(original)) {
+    return null;
+  }
+
+  const effectiveType =
+    inReferencesSection && block.type === "paragraph" && looksLikeBibliographyEntry(original)
+      ? "reference"
+      : block.type;
+
   let content: React.ReactNode = null;
 
-  switch (block.type) {
+  switch (effectiveType) {
     case "heading":
       return null;
     case "paragraph":
@@ -209,6 +237,7 @@ export const PaperContent = memo(
       onOpenSourcePdf,
       glossaryEntries = EMPTY_GLOSSARY,
       onOpenGlossaryInspector,
+      scrollContainerRef,
     },
     ref
   ) {
@@ -231,9 +260,11 @@ export const PaperContent = memo(
       [onSectionVisible]
     );
 
-    useEffect(() => {
+    useLayoutEffect(() => {
+      const scrollRoot = scrollContainerRef?.current ?? null;
       observerRef.current = new IntersectionObserver(handleIntersection, {
-        rootMargin: "-20% 0px -70% 0px",
+        root: scrollRoot,
+        rootMargin: scrollRoot ? "-15% 0px -55% 0px" : "-20% 0px -70% 0px",
         threshold: 0,
       });
 
@@ -244,9 +275,10 @@ export const PaperContent = memo(
       return () => {
         observerRef.current?.disconnect();
       };
-    }, [handleIntersection, sections]);
+    }, [handleIntersection, sections, scrollContainerRef]);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
+      const scrollRoot = scrollContainerRef?.current ?? null;
       mountObserverRef.current = new IntersectionObserver(
         (entries) => {
           setVisibleForMount((prev) => {
@@ -263,7 +295,11 @@ export const PaperContent = memo(
             return list;
           });
         },
-        { root: null, rootMargin: "900px 0px", threshold: 0 }
+        {
+          root: scrollRoot,
+          rootMargin: scrollRoot ? "600px 0px" : "900px 0px",
+          threshold: 0,
+        }
       );
 
       sectionRefs.current.forEach((element) => {
@@ -273,7 +309,7 @@ export const PaperContent = memo(
       return () => {
         mountObserverRef.current?.disconnect();
       };
-    }, [sections]);
+    }, [sections, scrollContainerRef]);
 
     const registerSectionRef = (sectionId: string, element: HTMLElement | null) => {
       if (element) {
@@ -362,19 +398,84 @@ export const PaperContent = memo(
       });
     }, [allSectionsOrdered, virtualize, visibleForMount, pinnedSectionIds]);
 
-    const waitForPaint = () =>
-      new Promise<void>((resolve) => {
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-      });
-
-    /** Transient pin: mount target, then release after paint so pins do not accumulate. */
-    const ensureSectionMounted = useCallback(async (sectionId: string) => {
+    const addSectionPin = useCallback((sectionId: string) => {
       setPinnedSectionIds((prev) =>
         prev.includes(sectionId) ? prev : [...prev, sectionId]
       );
-      await waitForPaint();
+    }, []);
+
+    const removeSectionPin = useCallback((sectionId: string) => {
       setPinnedSectionIds((prev) => prev.filter((id) => id !== sectionId));
     }, []);
+
+    /** Transient pin: keep target mounted until its body is in the DOM. */
+    const ensureSectionMounted = useCallback(
+      async (sectionId: string) => {
+        if (!virtualize) {
+          await waitForPaint();
+          return;
+        }
+        addSectionPin(sectionId);
+        try {
+          for (let attempt = 0; attempt < 40; attempt++) {
+            await waitForPaint();
+            if (isSectionBodyMounted(sectionId)) return;
+          }
+        } finally {
+          removeSectionPin(sectionId);
+        }
+      },
+      [virtualize, addSectionPin, removeSectionPin]
+    );
+
+    const scrollToSection = useCallback(
+      async (sectionId: string) => {
+        const container = scrollContainerRef?.current;
+        const sectionEl = () => document.getElementById(`section-${sectionId}`);
+
+        if (!virtualize) {
+          const el = sectionEl();
+          if (container && el) alignElementTopInScrollContainer(container, el);
+          else el?.scrollIntoView({ behavior: "auto", block: "start" });
+          return;
+        }
+
+        addSectionPin(sectionId);
+        try {
+          let alignedFrames = 0;
+          for (let attempt = 0; attempt < 48; attempt++) {
+            await waitForPaint();
+            const el = sectionEl();
+            if (!el || !container) continue;
+
+            if (attempt === 0) {
+              container.scrollTop = scrollTopToAlignElementTop(container, el);
+            } else {
+              alignElementTopInScrollContainer(container, el);
+            }
+
+            const mounted = isSectionBodyMounted(sectionId);
+            if (!mounted) {
+              alignedFrames = 0;
+              continue;
+            }
+
+            const margin = readScrollMarginTop(el);
+            const delta =
+              el.getBoundingClientRect().top -
+              container.getBoundingClientRect().top -
+              margin;
+            if (Math.abs(delta) <= 6) alignedFrames += 1;
+            else alignedFrames = 0;
+
+            if (alignedFrames >= 2) return;
+          }
+        } finally {
+          removeSectionPin(sectionId);
+        }
+      },
+      [virtualize, scrollContainerRef, addSectionPin, removeSectionPin]
+    );
 
     const ensureBlockMounted = useCallback(
       async (blockId: string) => {
@@ -424,8 +525,9 @@ export const PaperContent = memo(
         ensureBlockMounted,
         ensureSectionMounted,
         ensureTargetMounted,
+        scrollToSection,
       }),
-      [ensureBlockMounted, ensureSectionMounted, ensureTargetMounted]
+      [ensureBlockMounted, ensureSectionMounted, ensureTargetMounted, scrollToSection]
     );
 
     const banner = useMemo(() => {
@@ -465,6 +567,7 @@ export const PaperContent = memo(
     }, [blocks, paper.processingStatus, refSectionIds]);
 
     const renderSectionBody = (sectionId: string, contentBlocks: PaperBlock[], mounted: boolean) => {
+      const inReferencesSection = refSectionIds.has(sectionId);
       if (!mounted) {
         return <SectionBodySpacer key={`spacer-${sectionId}`} sectionId={sectionId} blocks={contentBlocks} />;
       }
@@ -488,6 +591,7 @@ export const PaperContent = memo(
           glossaryEntries={glossaryEntries}
           onOpenGlossaryInspector={onOpenGlossaryInspector}
           onJumpToTarget={onJumpToTarget}
+          inReferencesSection={inReferencesSection}
         />
       ));
     };
