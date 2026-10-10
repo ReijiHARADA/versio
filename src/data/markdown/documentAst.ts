@@ -2,6 +2,7 @@ import type { Paper, PaperBlock, Section } from "../../types/paper";
 import { MARKDOWN_SCHEMA_VERSION } from "../schemaVersion";
 import type { DocumentNode, ParsedMarkdown } from "../types/document";
 import type { StructureReference } from "../types/structure";
+import { isStandalonePageNumberLine } from "../../services/citations";
 import { slugReferenceId, uniqueId } from "../package/ids";
 import { parsePaperMarkdown } from "./parse";
 import { serializePaperMarkdown } from "./serialize";
@@ -21,11 +22,10 @@ function isDataUrl(value: unknown): boolean {
 // numeric paragraph/footnote blocks so numeric references, tables, and prose
 // are unaffected.
 function isStandalonePageNumberBlock(block: PaperBlock, text: string): boolean {
-  const role = String(block.metadata?.role ?? "");
-  if (role === "reference" || block.type === "reference" || block.type === "table" || block.type === "equation") {
+  if (block.type === "table" || block.type === "equation" || block.type === "heading") {
     return false;
   }
-  return (block.type === "paragraph" || block.type === "footnote") && /^\d{1,3}$/.test(text.trim());
+  return isStandalonePageNumberLine(text);
 }
 
 export function decodeDataUrl(dataUrl: string): { bytes: Uint8Array; mimeType: string } | null {

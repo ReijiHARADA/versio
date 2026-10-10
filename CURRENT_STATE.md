@@ -1,3 +1,7 @@
+# 2026-10-10: 目次ジャンプの信頼性（長文・仮想化）
+
+Reader 左の目次クリックは、本文スクロールコンテナ基準で対象セクションへジャンプする。セクション仮想化中は対象を pin して本文を実マウントし、`scroll-margin-top` を反映した位置合わせが安定するまで pin を維持する。マウント用 IntersectionObserver も本文スクロールルートを root にする。
+
 # 2026-10-09: 設定にライセンス一覧
 
 設定サイドバー最下部に「ライセンス」。本体 MIT と npm / Python / Rust / モデル・アセットの依存を検索・全文表示。一覧は `npm run generate:licenses`（`prebuild`）で `src/generated/thirdPartyLicenses.json` に自動生成。オフライン閲覧可。種別不明は推測せず「要確認」。

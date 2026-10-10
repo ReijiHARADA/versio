@@ -1,4 +1,9 @@
 import type { Paper, PaperBlock, Section, TranslationStatus } from "../../types/paper";
+import {
+  isStandalonePageNumberLine,
+  looksLikeBibliographyEntry,
+} from "../../services/citations";
+import { isReferencesHeading } from "../../services/translation/quality";
 import { parsePaperMarkdown } from "../markdown/parse";
 import type { PaperPackage } from "../types/package";
 import type { StructureBlock } from "../types/structure";
@@ -130,9 +135,19 @@ export function packageToProjection(
     normalizedKind: section.normalizedKind as Section["normalizedKind"],
   }));
 
+  const referenceSectionIds = new Set(
+    sections
+      .filter(
+        (section) =>
+          section.normalizedKind === "references" ||
+          isReferencesHeading(section.originalTitle)
+      )
+      .map((section) => section.id)
+  );
+
   const blocks: PaperBlock[] = order.flatMap((id, indexInPaper) => {
     const meta: StructureBlock = structureBlocks[id];
-    const type = blockType(meta.type);
+    let type = blockType(meta.type);
     const isFigureLike = type === "figure" || type === "table";
     const captionOriginal =
       metaString(meta.metadata, "captionOriginal") ?? original.get(`${id}-caption`) ?? null;
@@ -153,15 +168,26 @@ export function packageToProjection(
     const translatedText = isFigureLike
       ? captionTranslated
       : (translated.get(id) ?? captionTranslated);
+    const plainOriginal = (originalText ?? "").trim();
     // Older packages may retain footer numbers in structure.json even after
     // their Markdown node was filtered. Keep them out of the Reader too.
-    if ((type === "paragraph" || type === "footnote") && /^\d{1,3}$/.test((originalText ?? "").trim())) {
+    if (isStandalonePageNumberLine(plainOriginal)) {
       return [];
+    }
+    const sectionId = meta.sectionId ?? null;
+    if (
+      sectionId &&
+      referenceSectionIds.has(sectionId) &&
+      type === "paragraph" &&
+      looksLikeBibliographyEntry(plainOriginal)
+    ) {
+      type = "reference";
+      metadata.role = metadata.role ?? "reference";
     }
     return [{
       id,
       paperId: pkg.paper.paperId,
-      sectionId: meta.sectionId ?? null,
+      sectionId,
       type,
       order: indexInPaper,
       pageStart: meta.pageStart,

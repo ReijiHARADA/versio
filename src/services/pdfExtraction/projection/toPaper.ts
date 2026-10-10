@@ -382,6 +382,8 @@ function isReferenceText(text: string, currentKind: NormalizedSectionKind | null
     const hasYear = /\b(?:19|20)\d{2}[a-z]?\b/.test(trimmed);
     const hasBibliographicShape =
       /^(?:\[\d+\]|\d+[.)])\s+[^.!?]{2,140}\b(?:19|20)\d{2}[a-z]?\b/.test(trimmed) ||
+      (/^(?:\[\d+\]|\d+[.)])\s+\S/.test(trimmed) &&
+        /\b(?:19|20)\d{2}[a-z]?\b/.test(trimmed)) ||
       /\b(?:doi\s*:|https?:\/\/|journal|proceedings|conference|出版社|大学紀要)\b/i.test(trimmed);
     // A long sentence containing an inline year is usually body prose with a
     // citation, not a bibliography record.  Keep it visible for translation.
