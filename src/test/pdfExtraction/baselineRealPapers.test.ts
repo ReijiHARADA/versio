@@ -136,6 +136,57 @@ describe("baseline benchmark on cached real papers", () => {
         expect(marketingJourneyLastTableRow?.metadata.role).toBe("table");
         expect(marketingJourneyLastTableRow?.translationStatus).toBe("skipped");
         expect(marketingJourneyLastTableRow?.metadata.tableSourceFallback).toBe(true);
+        const referenceSectionIds = new Set(fullExtraction.sections
+          .filter((section) => section.normalizedKind === "references")
+          .map((section) => section.id));
+        const marketingReferences = fullExtraction.blocks.filter((block) =>
+          block.sectionId && referenceSectionIds.has(block.sectionId) && block.type !== "heading"
+        );
+        expect(marketingReferences.length).toBeGreaterThan(5);
+        expect(marketingReferences.every((block) => block.type === "reference")).toBe(true);
+        expect(marketingReferences.every((block) => block.translationStatus === "skipped")).toBe(true);
+      }
+      if ([
+        "interactive-jewellery",
+        "significant-other",
+        "design-for-wearability",
+        "step-to-charge",
+        "neuroscience-rule-following",
+      ].includes(paper.id)) {
+        const referenceExtraction = extractFromPages({
+          pages,
+          paperId: paper.id,
+          filePath: pdfPath,
+          fileHash: "cross-format-reference-regression",
+          metadata: { title: paper.title, pageCount: pages.length },
+        });
+        const referenceSectionIds = new Set(referenceExtraction.sections
+          .filter((section) => section.normalizedKind === "references")
+          .map((section) => section.id));
+        const referenceSectionBlocks = referenceExtraction.blocks.filter((block) =>
+          block.sectionId && referenceSectionIds.has(block.sectionId)
+        );
+        if (paper.id === "interactive-jewellery") {
+          expect(referenceSectionBlocks.find((block) => block.original.includes("Wear, wearing, worn"))?.type).toBe("reference");
+          expect(referenceSectionBlocks.find((block) => block.original.includes("The structure of autobiographical memory"))?.type).toBe("reference");
+        }
+        if (paper.id === "significant-other") {
+          expect(referenceSectionBlocks.find((block) => block.original.startsWith("Marzee Exhibition Catalogue"))?.type).toBe("reference");
+        }
+        if (paper.id === "design-for-wearability") {
+          expect(referenceSectionBlocks.find((block) => block.original.startsWith("1. Tilley"))?.type).toBe("reference");
+        }
+        if (paper.id === "step-to-charge") {
+          const gabriel = referenceSectionBlocks.find((block) => block.original.startsWith("[40] Gabriel"));
+          expect(gabriel?.type).toBe("reference");
+          expect(gabriel?.metadata.role).toBe("reference");
+        }
+        if (paper.id === "neuroscience-rule-following") {
+          expect(referenceSectionBlocks.find((block) => block.original.startsWith("27, 141–163"))?.type).toBe("reference");
+          expect(referenceSectionBlocks.some((block) => block.type === "reference" &&
+            /^License, which permits use/i.test(block.original ?? ""))).toBe(false);
+          expect(referenceSectionBlocks.some((block) => /^© The Author/i.test(block.original ?? ""))).toBe(false);
+        }
       }
       if (paper.id === "cognitive-psychology-gpt3") {
         const projected = extractFromPages({
@@ -248,6 +299,55 @@ describe("baseline benchmark on cached real papers", () => {
         expect(report.headingHierarchyAccuracy).toBeGreaterThanOrEqual(0.75);
         expect(report.tableCaptionRecall).toBe(1);
         expect(report.tableRegionRecall).toBeGreaterThanOrEqual(0.8);
+        expect(report.authorF1).toBe(1);
+        expect(report.affiliationF1).toBe(1);
+
+        const extracted = extractFromPages({
+          pages,
+          paperId: paper.id,
+          filePath: pdfPath,
+          fileHash: "ozchi-content-boundary-regression",
+          metadata: { title: paper.title, pageCount: pages.length },
+        });
+        expect(extracted.paper.authors).toEqual(expect.arrayContaining(["Ashley Colley", "Jonna Häkkilä"]));
+        expect(extracted.paper.authors.slice(0, 2)).toEqual(["Ashley Colley", "Jonna Häkkilä"]);
+        expect(extracted.paper.affiliations.slice(0, 2).map((affiliation) => affiliation.name)).toEqual([
+          "Center for Internet Excellence University Of Oulu Oulu, Finland",
+          "Faculty of Art and Design University of Lapland Rovaniemi, Finland",
+        ]);
+        expect(extracted.blocks.some((block) =>
+          /personal or classroom use is granted|permissions?@acm\.org/i.test(block.original)
+        )).toBe(false);
+        const introduction = extracted.blocks.find((block) =>
+          block.original.startsWith("During the past few years, touch screens have rapidly become")
+        );
+        expect(introduction?.original).toContain("recommended target size for thumb-based input");
+        const postTableProse = extracted.blocks.find((block) =>
+          block.original.startsWith("Similarly for the gallery application")
+        );
+        expect(postTableProse?.type).toBe("paragraph");
+        expect(postTableProse?.translationStatus).toBe("pending");
+
+        const referenceBlocks = extracted.blocks.filter((block) =>
+          block.sectionId && extracted.sections.some((section) =>
+            section.id === block.sectionId && section.normalizedKind === "references"
+          )
+        );
+        expect(referenceBlocks.length).toBeGreaterThan(10);
+        expect(referenceBlocks.every((block) => block.type === "reference" || block.type === "heading")).toBe(true);
+        expect(referenceBlocks.filter((block) => block.type === "reference").every((block) =>
+          block.translationStatus === "skipped"
+        )).toBe(true);
+        const tapSense = extracted.blocks.find((block) =>
+          block.original.includes("TapSense: enhancing finger interaction")
+        );
+        expect(tapSense?.type).toBe("reference");
+        expect(tapSense?.original).toContain("UIST '11. ACM, 627-636.");
+        const teleGlove = extracted.blocks.find((block) =>
+          block.original.includes("The Making of the TeleGlove")
+        );
+        expect(teleGlove?.type).toBe("reference");
+        expect(teleGlove?.translationStatus).toBe("skipped");
       }
       if (paper.id === "speechin") {
         const row = extractFromPages({ pages, paperId: "bench-speechin-row", filePath: paper.filename, fileHash: paper.id, metadata: { title: paper.title, pageCount: pages.length } }).blocks.find((block) => block.original?.startsWith("SpeeChin One camera"));

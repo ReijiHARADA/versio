@@ -11,6 +11,8 @@ import {
 } from "./database";
 import { getStorage } from "../data/runtime";
 import { exportPaperMarkdown } from "../data/export/markdownExport";
+import { createNotionImportZip } from "../data/export/saveExport";
+import { unzipSync } from "fflate";
 
 let ran = false;
 
@@ -21,6 +23,7 @@ type AcceptanceResult = {
   annotationId?: string;
   searchHits?: number;
   exportBytes?: number;
+  notionBytes?: number;
   error?: string;
   at: string;
 };
@@ -58,10 +61,23 @@ export async function maybeRunPackagedAcceptanceImport(): Promise<void> {
     });
 
     const bytes = await invoke<number[]>("read_dropped_pdf", { path });
+    await writeMarker({
+      ok: false,
+      step: "fixture_read",
+      at: new Date().toISOString(),
+    });
     const file = new File([new Uint8Array(bytes)], "acceptance-fixture.pdf", {
       type: "application/pdf",
     });
-    await startBackgroundImport(file);
+    const started = await startBackgroundImport(file);
+    if (!started) {
+      throw new Error("fixture import did not start");
+    }
+    await writeMarker({
+      ok: false,
+      step: "import_dispatched",
+      at: new Date().toISOString(),
+    });
 
     let paperId: string | undefined;
     for (let i = 0; i < 120; i += 1) {
@@ -160,6 +176,12 @@ export async function maybeRunPackagedAcceptanceImport(): Promise<void> {
       language: "en",
     });
     await fs.writeText("_acceptance/export.md", exported.markdown);
+    const notionArchive = createNotionImportZip(exported);
+    const notionEntries = Object.keys(unzipSync(notionArchive));
+    if (!notionEntries.some((entry) => entry.endsWith(".md")) || notionEntries.some((entry) => entry.includes("/"))) {
+      throw new Error("Notion ZIP has invalid page or asset paths");
+    }
+    await fs.writeBytes("_acceptance/notion.zip", notionArchive);
     await flushPersistence();
 
     await writeMarker({
@@ -169,6 +191,7 @@ export async function maybeRunPackagedAcceptanceImport(): Promise<void> {
       annotationId: annotation.id,
       searchHits: searchHits.length,
       exportBytes: new TextEncoder().encode(exported.markdown).length,
+      notionBytes: notionArchive.byteLength,
       at: new Date().toISOString(),
     });
   } catch (error) {
@@ -211,6 +234,7 @@ export async function maybeVerifyPackagedAcceptanceRelaunch(): Promise<void> {
       annotationId: prev.annotationId,
       searchHits: prev.searchHits,
       exportBytes: prev.exportBytes,
+      notionBytes: prev.notionBytes,
       error:
         paper && annotation
           ? undefined

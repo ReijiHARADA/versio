@@ -648,13 +648,22 @@
           "Table 4",
           "Table 5"
         ],
-        "forbidEquationContains": [
-          "n = 20",
-          "p < 0.001",
-          "F(4,33)",
-          "t(36)"
-        ],
-        "referencesHeading": true
+      "forbidEquationContains": [
+        "n = 20",
+        "p < 0.001",
+        "F(4,33)",
+        "t(36)"
+      ],
+      "requireSameParagraph": [
+        [
+          "During the past few years, touch screens have rapidly become",
+          "recommended target size for thumb-based input"
+        ]
+      ],
+      "forbidParagraphContains": [
+        "personal or classroom use is granted"
+      ],
+      "referencesHeading": true
       },
       "discipline": "hci",
       "selectionReason": "HCI layout and two-column conference variation",

@@ -180,11 +180,15 @@ describe("canonical extraction pipeline", () => {
     expect(jewelleryContinuation?.text).toMatch(/^It is through the interaction with a piece of jewellery/);
     const consciousParagraph = result.blocks.find((block) => /some conscious, other/i.test(block.original ?? ""));
     expect(consciousParagraph?.original).toMatch(/some conscious, other unaware, some private and other social/i);
+    // These markers are embedded in native prose lines, not physical list
+    // starts. Keep the abstract as one semantic paragraph so `1)` does not
+    // manufacture four fragments or leave a trailing source-only block.
     const abstractDirections = result.blocks.filter((block) =>
-      /^(?:[1-4][.)])\s/.test((block.original ?? "").trim()) && block.pageStart === 1
+      /(?:^|\s)[1-4][.)]\s/.test(block.original ?? "") && block.pageStart === 1
     );
-    expect(abstractDirections).toHaveLength(4);
+    expect(abstractDirections.length).toBeGreaterThanOrEqual(1);
     expect(abstractDirections.every((block) => block.translationStatus === "pending")).toBe(true);
+    expect(abstractDirections.filter((block) => /(?:^|\n)\s*[1-4][.)]\s/.test(block.original ?? "")).length).toBe(0);
     expect(result.blocks.some((block) => block.original?.trim() === "1,2,3,4")).toBe(false);
     expect(result.blocks.some((block) => block.pageStart === 1 && block.original?.trim() === "44")).toBe(false);
   }, 60_000);
@@ -375,6 +379,9 @@ describe("canonical extraction pipeline", () => {
       "Our contributions are:", "• First item", "• Second item",
     ]);
     expect(splitFlattenedList("The options are: (a) alpha (b) beta (c) gamma")).toEqual([
+      "The options are: (a) alpha (b) beta (c) gamma",
+    ]);
+    expect(splitFlattenedList("The options are:\n(a) alpha\n(b) beta\n(c) gamma")).toEqual([
       "The options are:", "(a) alpha", "(b) beta", "(c) gamma",
     ]);
   });

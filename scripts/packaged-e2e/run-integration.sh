@@ -171,6 +171,7 @@ import json, sys
 data = json.load(open(sys.argv[1]))
 assert data.get("annotationId"), "annotationId missing"
 assert (data.get("exportBytes") or 0) > 0, "export empty"
+assert (data.get("notionBytes") or 0) > 0, "Notion ZIP empty"
 assert int(data.get("searchHits") or 0) > 0, "searchHits must be > 0"
 print("marker ok", data.get("paperId"), "hits", data.get("searchHits"))
 PY

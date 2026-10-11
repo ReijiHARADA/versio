@@ -22,6 +22,20 @@ export const packageLoadMetrics = {
   layoutReads: 0,
 };
 
+// A package write is a multi-file transaction at the FileSystem boundary.
+// Tauri's commands are asynchronous, so a mutable checkpoint can otherwise
+// observe `paper.json` in `.tmp` after it has been written while the remaining
+// core files are still pending. Serialize full-package swaps and mutable
+// checkpoints through one process-local queue; the final rename remains the
+// atomic visibility boundary.
+let packageWriteTail: Promise<void> = Promise.resolve();
+
+function enqueuePackageWrite<T>(write: () => Promise<T>): Promise<T> {
+  const run = packageWriteTail.then(write, write);
+  packageWriteTail = run.then(() => undefined, () => undefined);
+  return run;
+}
+
 export function resetPersistMetrics(): void {
   persistMetrics.fullPackageWrites = 0;
   persistMetrics.mutableFileWrites = 0;
@@ -152,7 +166,7 @@ async function writeTree(fs: FileSystem, root: string, pkg: PaperPackage): Promi
   }
 }
 
-export async function persistMutablePaperFiles(
+async function persistMutablePaperFilesNow(
   fs: FileSystem,
   paperId: string,
   files: {
@@ -178,7 +192,20 @@ export async function persistMutablePaperFiles(
   }
 }
 
-export async function persistPaperPackage(
+export function persistMutablePaperFiles(
+  fs: FileSystem,
+  paperId: string,
+  files: {
+    jaMarkdown?: string;
+    paperJson?: PaperJson;
+    structure?: StructureFile;
+    translation?: TranslationFile;
+  }
+): Promise<void> {
+  return enqueuePackageWrite(() => persistMutablePaperFilesNow(fs, paperId, files));
+}
+
+async function persistPaperPackageNow(
   fs: FileSystem,
   pkg: PaperPackage
 ): Promise<{ revision: number; diagnostics: ReturnType<typeof validatePaperPackage> }> {
@@ -230,6 +257,13 @@ export async function persistPaperPackage(
   return { revision: next.paper.revision, diagnostics: recheck };
 }
 
+export function persistPaperPackage(
+  fs: FileSystem,
+  pkg: PaperPackage
+): Promise<{ revision: number; diagnostics: ReturnType<typeof validatePaperPackage> }> {
+  return enqueuePackageWrite(() => persistPaperPackageNow(fs, pkg));
+}
+
 export async function loadPaperPackage(
   fs: FileSystem,
   paperId: string,
@@ -237,6 +271,12 @@ export async function loadPaperPackage(
 ): Promise<PaperPackage> {
   const explicitRoot = options.root;
   if (!explicitRoot) {
+    // Readers (startup sync, export, and the Tauri import callback) can arrive
+    // while a mutable checkpoint is replacing the package core files. The
+    // writer queue serializes writers, but a reader that starts mid-checkpoint
+    // would otherwise observe a transient missing paper.json/original.md/etc.
+    // Wait for the current checkpoint before inspecting the live directory.
+    await packageWriteTail;
     await recoverPaperPackageIfNeeded(fs, paperId);
   }
 
@@ -246,10 +286,22 @@ export async function loadPaperPackage(
   const includeLayout = options.includeLayout === true;
 
   packageLoadMetrics.documentReads += 1;
-  const paperText = await fs.readText(`${root}/paper.json`);
-  const originalMarkdown = await fs.readText(`${root}/original.md`);
-  const translatedMarkdown = await fs.readText(`${root}/ja.md`);
-  const structureText = await fs.readText(`${root}/structure.json`);
+  let paperText = await fs.readText(`${root}/paper.json`);
+  let originalMarkdown = await fs.readText(`${root}/original.md`);
+  let translatedMarkdown = await fs.readText(`${root}/ja.md`);
+  let structureText = await fs.readText(`${root}/structure.json`);
+  // A Tauri filesystem command can begin between the queue drain above and
+  // the first individual read (for example a debounced mutable checkpoint).
+  // Retry a transient missing-core observation after that writer has drained;
+  // genuinely incomplete/corrupt packages still fail with the same diagnostic.
+  for (let attempt = 0; attempt < 4 && (!paperText || !originalMarkdown || !translatedMarkdown || !structureText); attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    if (!explicitRoot) await packageWriteTail;
+    paperText = await fs.readText(`${root}/paper.json`);
+    originalMarkdown = await fs.readText(`${root}/original.md`);
+    translatedMarkdown = await fs.readText(`${root}/ja.md`);
+    structureText = await fs.readText(`${root}/structure.json`);
+  }
   const missing = [
     !paperText && "paper.json",
     !originalMarkdown && "original.md",

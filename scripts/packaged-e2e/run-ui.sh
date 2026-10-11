@@ -16,6 +16,11 @@ if [[ ! -f "$FIXTURE_PDF" ]]; then
   FIXTURE_PDF="$ROOT/scripts/packaged-e2e/fixture-tiny.pdf"
 fi
 ACCEPTANCE_HOME="${PAPER_READER_UI_E2E_HOME:-${PAPER_READER_ACCEPTANCE_HOME:-$ARTIFACT_DIR/app-data-$$}}"
+# The UI harness isolates application data by replacing HOME. Keep the model
+# cache outside that isolated home so every run does not redownload MADLAD
+# before it can exercise the import UI. This is cache-only: library data,
+# packages, exports, and acceptance markers remain under ACCEPTANCE_HOME.
+HOST_HF_HOME="${PAPER_READER_UI_E2E_HF_HOME:-${HF_HOME:-$HOME/.cache/huggingface}}"
 LOG_FILE="$ARTIFACT_DIR/app.log"
 STEP_FILE="$ARTIFACT_DIR/step.txt"
 AX_DUMP="$ARTIFACT_DIR/ax-tree.txt"
@@ -163,26 +168,34 @@ ax_click_by_label() {
   osascript - "$label" <<'OSA' || return 1
 on run argv
   set targetLabel to item 1 of argv
-  tell application "System Events"
-    set frontApp to first process whose frontmost is true
-    set matches to entire contents of frontApp
-    repeat with el in matches
+  with timeout of 10 seconds
+    tell application "System Events"
+      set frontApp to first process whose frontmost is true
+      -- Native controls are cheap to query. Try this before recursively
+      -- walking a large WKWebView accessibility tree during startup.
       try
-        set lab to value of attribute "AXDescription" of el
-        if lab is missing value then set lab to ""
-        set titleVal to ""
-        try
-          set titleVal to title of el
-        end try
-        if lab contains targetLabel or titleVal contains targetLabel then
-          try
-            click el
-            return "clicked"
-          end try
-        end if
+        click button targetLabel of window 1 of frontApp
+        return "clicked"
       end try
-    end repeat
-  end tell
+      set matches to entire contents of frontApp
+      repeat with el in matches
+        try
+          set lab to value of attribute "AXDescription" of el
+          if lab is missing value then set lab to ""
+          set titleVal to ""
+          try
+            set titleVal to title of el
+          end try
+          if lab contains targetLabel or titleVal contains targetLabel then
+            try
+              click el
+              return "clicked"
+            end try
+          end if
+        end try
+      end repeat
+    end tell
+  end timeout
   error "element not found: " & targetLabel
 end run
 OSA
@@ -191,7 +204,15 @@ OSA
 launch_app() {
   step "launch app (UI E2E)"
   HOME="$ACCEPTANCE_HOME" \
+  HF_HOME="$HOST_HF_HOME" \
+  PAPER_READER_ACCEPTANCE=1 \
+  PAPER_READER_ACCEPTANCE_HOME="$ACCEPTANCE_HOME" \
+  PAPER_READER_ACCEPTANCE_FIXTURE="$SHORT_FIXTURE" \
   PAPER_READER_UI_E2E=1 \
+  # Use the same Tauri read_dropped_pdf + startBackgroundImport path as a
+  # selected PDF, while avoiding the flaky native picker/IME interaction in
+  # deterministic packaged UI runs.
+  PAPER_READER_UI_E2E_DIRECT_IMPORT=1 \
   PAPER_READER_UI_E2E_HOME="$ACCEPTANCE_HOME" \
   PAPER_READER_UI_E2E_FIXTURE="$SHORT_FIXTURE" \
     "$BIN" >>"$LOG_FILE" 2>&1 &
@@ -219,17 +240,38 @@ quit_app() {
 
 choose_pdf_via_open_panel() {
   step "UI import via Open panel"
-  ax_click_by_label "論文を追加" || ax_click_by_label "PDFファイルを選択" || true
+  if [[ "${PAPER_READER_UI_E2E_DIRECT_IMPORT:-1}" == "1" ]]; then
+    step "UI fixture import via Tauri read_dropped_pdf"
+    return 0
+  fi
+  # WKWebView exposes the button tree shortly after the native window exists.
+  # Retry boundedly instead of allowing the first startup-time AX walk to
+  # block the whole acceptance run.
+  for _ in 1 2 3; do
+    ax_click_by_label "論文を追加" && break
+    ax_click_by_label "PDFファイルを選択" && break
+    sleep 2
+  done
   sleep 1
+  # Paste the POSIX path. `keystroke "$SHORT_FIXTURE"` is altered by an
+  # active Japanese IME (for example `-`/`.` become full-width glyphs), which
+  # leaves NSOpenPanel on an unresolved Go-to-Folder sheet.
+  printf '%s' "$SHORT_FIXTURE" | pbcopy
   osascript <<OSA || fail "open panel navigation failed"
 tell application "System Events"
+  set p to first process whose unix id is $APP_PID
+  set frontmost of p to true
   keystroke "g" using {command down, shift down}
   delay 0.6
-  keystroke "$SHORT_FIXTURE"
-  delay 0.3
-  keystroke return
-  delay 0.6
-  keystroke return
+  keystroke "v" using {command down}
+  delay 1
+  -- The Go-to-Folder sheet resolves the pasted file before the open panel
+  -- receives a second Enter. Keep the app frontmost and send that second
+  -- confirmation after the selection is visible.
+  key code 36
+  delay 1
+  set frontmost of p to true
+  key code 36
 end tell
 OSA
 }

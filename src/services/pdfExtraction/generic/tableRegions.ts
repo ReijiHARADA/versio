@@ -6,6 +6,64 @@ import type { TableRegionEvidence } from "../types";
 const intersects = (a: { x: number; y: number; width: number; height: number }, b: { x: number; y: number; width: number; height: number }) =>
   a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 
+type Rect = { x: number; y: number; width: number; height: number };
+
+/** Locate a ruled grid near a caption. PDF drawing operators frequently emit
+ * table rules as very thin rectangles rather than `line` primitives, so use
+ * geometry instead of the primitive kind. Full-page/image rectangles are
+ * excluded by the aspect/size constraints. */
+function captionAnchoredGraphicsGrid(
+  page: ExtractedPage,
+  captionBox: Rect,
+): Rect | undefined {
+  const rules = (page.graphicsPrimitives ?? []).filter((item) => {
+    const horizontal = item.width >= 24 && item.height <= 2.5 && item.width / Math.max(item.height, 0.1) >= 8;
+    const vertical = item.height >= 8 && item.width <= 2.5 && item.height / Math.max(item.width, 0.1) >= 6;
+    return horizontal || vertical;
+  });
+  if (rules.length < 3) return undefined;
+  const touches = (a: Rect, b: Rect) =>
+    a.x <= b.x + b.width + 3 && b.x <= a.x + a.width + 3 &&
+    a.y <= b.y + b.height + 3 && b.y <= a.y + a.height + 3;
+  const remaining = new Set(rules.map((_, index) => index));
+  const components: typeof rules[] = [];
+  while (remaining.size > 0) {
+    const seed = remaining.values().next().value as number;
+    remaining.delete(seed);
+    const indexes = [seed];
+    for (let cursor = 0; cursor < indexes.length; cursor += 1) {
+      const current = rules[indexes[cursor]];
+      for (const index of [...remaining]) {
+        if (!touches(current, rules[index])) continue;
+        remaining.delete(index);
+        indexes.push(index);
+      }
+    }
+    components.push(indexes.map((index) => rules[index]));
+  }
+  const candidates = components.flatMap((component) => {
+    const horizontal = component.filter((item) => item.width >= 24 && item.height <= 2.5).length;
+    const vertical = component.filter((item) => item.height >= 8 && item.width <= 2.5).length;
+    const x = Math.min(...component.map((item) => item.x));
+    const y = Math.min(...component.map((item) => item.y));
+    const right = Math.max(...component.map((item) => item.x + item.width));
+    const bottom = Math.max(...component.map((item) => item.y + item.height));
+    const box = { x, y, width: right - x, height: bottom - y };
+    if (horizontal < 2 || vertical < 1 || box.width < 60 || box.height < 18) return [];
+    const captionBottom = captionBox.y + captionBox.height;
+    const gap = box.y > captionBottom
+      ? box.y - captionBottom
+      : captionBox.y > bottom
+        ? captionBox.y - bottom
+        : 0;
+    const overlap = Math.max(0, Math.min(right, captionBox.x + captionBox.width) - Math.max(x, captionBox.x));
+    const centerDistance = Math.abs((x + right) / 2 - (captionBox.x * 2 + captionBox.width) / 2);
+    if (gap > 180 || (overlap < Math.min(box.width, captionBox.width) * 0.12 && centerDistance > 100)) return [];
+    return [{ box, gap, strength: horizontal * 2 + vertical }];
+  });
+  return candidates.sort((a, b) => a.gap - b.gap || b.strength - a.strength)[0]?.box;
+}
+
 /** Build only strongly anchored table regions; ambiguous rows remain ordinary candidates. */
 export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: RoleCandidate[]): TableRegionEvidence[] {
   const regions: TableRegionEvidence[] = [];
@@ -16,6 +74,8 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
     // the input window per caption so multiple tables on one page each get
     // independent geometry evidence.
     const captionY = caption.boundingBoxes[0]?.y ?? 0;
+    const captionBox = caption.boundingBoxes[0];
+    const graphicsGrid = captionBox ? captionAnchoredGraphicsGrid(page, captionBox) : undefined;
     // Tables in academic PDFs may place the caption below the last row (the
     // common ACM layout) or above it. Keep a bounded window on both sides so
     // the signature helper can choose the stronger anchored grid without
@@ -40,8 +100,15 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
     // table-scored native candidates (the remaining cells may be merged into
     // a single line).  Two aligned rows plus an explicit caption are enough
     // to preserve the region without promoting surrounding prose.
-    if (!signature && captionFallback.length < 2) continue;
-    const effectiveSignature = signature ?? {
+    if (!signature && !graphicsGrid && captionFallback.length < 2) continue;
+    const effectiveSignature = graphicsGrid
+      ? {
+          bbox: graphicsGrid,
+          horizontalRules: 2,
+          verticalRules: 1,
+          columnX: [] as number[],
+        }
+      : signature ?? {
       bbox: {
         page: page.pageNumber,
         x: Math.min(...captionFallback.map((candidate) => candidate.boundingBoxes[0].x)),
@@ -54,9 +121,15 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
       columnX: [...new Set(captionFallback.map((candidate) => Math.round(candidate.boundingBoxes[0].x)))].sort((a, b) => a - b),
     };
     const group = candidates.filter((candidate) => {
-      if (candidate.pageStart !== page.pageNumber || (candidate.roleScores.table ?? 0) < 0.94) return false;
+      if (candidate === caption || candidate.pageStart !== page.pageNumber) return false;
+      if (!graphicsGrid && (candidate.roleScores.table ?? 0) < 0.94) return false;
       const box = candidate.boundingBoxes[0];
-      return Boolean(box && intersects(box, effectiveSignature.bbox));
+      if (!box || !intersects(box, effectiveSignature.bbox)) return false;
+      if (!graphicsGrid) return true;
+      const centerX = box.x + box.width / 2;
+      const centerY = box.y + box.height / 2;
+      return centerX >= graphicsGrid.x - 2 && centerX <= graphicsGrid.x + graphicsGrid.width + 2 &&
+        centerY >= graphicsGrid.y - 2 && centerY <= graphicsGrid.y + graphicsGrid.height + 2;
     });
     // Borderless tables (common in ACM/CHI papers) have no vector rules and
     // therefore cannot satisfy the ruled-grid threshold. A caption plus a
@@ -85,11 +158,13 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
         return xOverlap && yDistance <= 120;
       })
       : [];
-    const selectedGroup = borderlessGroup.length >= 2 ? borderlessGroup : group;
-    if (selectedGroup.length < 2) continue;
+    const selectedGroup = graphicsGrid ? group : borderlessGroup.length >= 2 ? borderlessGroup : group;
+    if (selectedGroup.length < (graphicsGrid ? 1 : 2)) continue;
     const prose = selectedGroup.filter((candidate) => /[.!?]\s*$/.test(candidate.text.trim())).length;
     if (prose > Math.floor(selectedGroup.length / 3)) continue;
-    const confidence = !signature
+    const confidence = graphicsGrid
+      ? 0.995
+      : !signature
       ? 0.982
       : borderlessGroup.length >= 2
       ? 0.985
@@ -106,7 +181,18 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
       graphicsEvidence: [],
       repeatedHeaderEvidence: [],
       confidence,
-      provenance: [{ source: "layout-model", label: signature ? "caption-anchored-grid-region" : "caption-anchored-text-region", confidence, page: page.pageNumber, bbox: { page: page.pageNumber, ...effectiveSignature.bbox }, reason: signature ? "multiple table-scored candidates intersect a caption-anchored ruled grid" : "multiple table-scored candidates form a compact caption-anchored text region without reliable vector rules" }],
+      provenance: [{
+        source: "layout-model",
+        label: graphicsGrid ? "caption-anchored-graphics-grid" : signature ? "caption-anchored-grid-region" : "caption-anchored-text-region",
+        confidence,
+        page: page.pageNumber,
+        bbox: { page: page.pageNumber, ...effectiveSignature.bbox },
+        reason: graphicsGrid
+          ? "text candidates are physically contained by a connected ruled grid near the table caption"
+          : signature
+            ? "multiple table-scored candidates intersect a caption-anchored ruled grid"
+            : "multiple table-scored candidates form a compact caption-anchored text region without reliable vector rules",
+      }],
     });
     }
   }

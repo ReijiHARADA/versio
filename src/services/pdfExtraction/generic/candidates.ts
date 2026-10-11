@@ -540,22 +540,36 @@ function captionedNativeMultiCellRow(block: LayoutBlock, blocks: LayoutBlock[]):
     // from same-column, same-baseline peers before checking the row geometry.
     // Items from the opposite reading column can share a y-coordinate with
     // ordinary prose and falsely manufacture four separated "cells".
-    const items = blocks
+    const targetFonts = new Set(line.items.map((item) => item.fontName).filter(Boolean));
+    const aligned = blocks
       .filter((peer) => peer.pageStart === block.pageStart && peer.column === block.column)
-      .flatMap((peer) => peer.lines
-        .filter((peerLine) => Math.abs(peerLine.y - line.y) <= Math.max(2, line.fontSize * 0.4))
-        .flatMap((peerLine) => peerLine.items))
-      .filter((item) => /[\p{L}\p{N}]/u.test(item.text))
-      .sort((a, b) => a.x - b.x);
+      .flatMap((peer, peerIndex) => peer.lines
+        .filter((peerLine) => {
+          if (Math.abs(peerLine.y - line.y) > Math.max(2, line.fontSize * 0.4)) return false;
+          if (Math.abs(peerLine.fontSize - line.fontSize) > 0.7) return false;
+          const peerFonts = peerLine.items.map((item) => item.fontName).filter(Boolean);
+          // Matching native font facts make a same-baseline neighbor much
+          // more likely to be another cell in the same visual row. Permit
+          // missing font names, but do not join a known, unrelated display
+          // face merely because it happens to share the y coordinate.
+          return targetFonts.size === 0 || peerFonts.length === 0 || peerFonts.some((font) => targetFonts.has(font));
+        })
+        .flatMap((peerLine) => peerLine.items.map((item) => ({ item, peerIndex }))));
+    const items = aligned
+      .filter(({ item }) => /[\p{L}\p{N}]/u.test(item.text))
+      .sort((a, b) => a.item.x - b.item.x);
     if (items.length < 4) return false;
     let separatedRuns = 1;
-    let previousEnd = items[0].x + items[0].width;
-    for (const item of items.slice(1)) {
+    let largeCellGaps = 0;
+    let previousEnd = items[0].item.x + items[0].item.width;
+    for (const { item } of items.slice(1)) {
       const gap = item.x - previousEnd;
       if (gap >= Math.max(10, item.fontSize * 0.9)) separatedRuns += 1;
+      if (gap >= Math.max(18, item.fontSize * 1.8)) largeCellGaps += 1;
       previousEnd = Math.max(previousEnd, item.x + item.width);
     }
-    return separatedRuns >= 4;
+    const contributingBlocks = new Set(items.map(({ peerIndex }) => peerIndex)).size;
+    return separatedRuns >= 4 && (contributingBlocks >= 2 || largeCellGaps >= 3);
   });
 }
 
@@ -933,6 +947,16 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       block.text.trim().split(/\s+/).filter(Boolean).length <= 12 &&
       !/[.!?]\s*$/.test(block.text.trim()) &&
       Boolean(blocks[index + 1]) && blocks[index + 1].role === "paragraph";
+    // Some IEEE/arXiv layouts put an inline label and the first sentence on
+    // the same native line (for example `Abstract—Since ...`). The label's
+    // display typography can look like a heading, but the text after the
+    // dash is prose and must stay with the following paragraph. Native
+    // punctuation/spacing is a publisher-independent boundary signal; the
+    // rule deliberately requires an unspaced dash and a multi-word suffix so
+    // ordinary titled sections such as `Study I – Design` remain headings.
+    const inlineLabelProse = (layoutRole === "heading" || layoutRole === "title") &&
+      /^[A-Za-z][A-Za-z ]{1,24}[—-]\s*[A-Za-z]/.test(block.text.trim()) &&
+      block.text.trim().split(/\s+/).filter(Boolean).length >= 6;
     // Some native PDF producers flatten a complete table into one LayoutBlock:
     // header rows may have a few items while data rows retain 4–6 cells.  The
     // regular `tableLike` score is intentionally conservative for this shape,
@@ -947,7 +971,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       block.lines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length >= 2;
     const role = block.role === "header" || block.role === "footer" || block.role === "copyright" || block.role === "chrome"
       ? layoutRole
-      : denseCjkBody || numericRow || mathRow || alignedTableRow || numericMultiItemRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || rotatedNumericGrid ? "paragraph" :
+      : denseCjkBody || numericRow || mathRow || alignedTableRow || numericMultiItemRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || rotatedNumericGrid || inlineLabelProse ? "paragraph" :
       numberedSubheading ? "heading" : layoutRole;
     const style = styleSignature(block, layouts, baseFontSize, blocks[index - 1], blocks[index + 1]);
     const scoreByRole: Partial<Record<CanonicalRole, number>> = {

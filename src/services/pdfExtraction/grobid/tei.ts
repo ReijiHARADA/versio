@@ -21,8 +21,17 @@ function personName(authorXml: string): string | null {
 }
 
 function affiliationText(authorXml: string): string | null {
-  const org = firstMatch(authorXml, /<orgName[^>]*>([\s\S]*?)<\/orgName>/i);
-  if (org) return org;
+  // GROBID commonly emits a department and an institution as sibling
+  // `orgName` elements. Keeping only the first one loses the university for
+  // an otherwise useful author-affiliation relation. Preserve their native
+  // TEI order; this remains optional evidence and never replaces healthy PDF
+  // text on its own.
+  const organizations = allMatches(authorXml, /<orgName[^>]*>([\s\S]*?)<\/orgName>/gi);
+  const country = firstMatch(authorXml, /<country[^>]*>([\s\S]*?)<\/country>/i);
+  const parts = [...organizations, country].filter(
+    (part, index, values) => Boolean(part) && values.indexOf(part) === index
+  );
+  if (parts.length > 0) return parts.join(" ");
   return firstMatch(authorXml, /<affiliation[^>]*>([\s\S]*?)<\/affiliation>/i);
 }
 

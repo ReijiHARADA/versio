@@ -152,6 +152,23 @@ function overlapRatio(a: { x: number; width: number }, b: { x: number; width: nu
   return w / Math.max(Math.min(a.width, b.width), 1);
 }
 
+function horizontallyCompatible(
+  a: { x: number; width: number },
+  b: { x: number; width: number },
+  aColumn?: RoleCandidate["column"],
+  bColumn?: RoleCandidate["column"],
+): boolean {
+  if ((aColumn === "left" || aColumn === "right") &&
+      (bColumn === "left" || bColumn === "right") &&
+      aColumn !== bColumn) {
+    return false;
+  }
+  if (overlapRatio(a, b) >= 0.12) return true;
+  const aCenter = a.x + a.width / 2;
+  const bCenter = b.x + b.width / 2;
+  return Math.abs(aCenter - bCenter) <= Math.max(54, Math.min(a.width, b.width) * 0.8);
+}
+
 export function captionOfRelations(nodes: CanonicalNode[]): CanonicalRelation[] {
   const tableCaptionShape = (text: string) => {
     const value = text.trim();
@@ -417,6 +434,7 @@ export function figureNodesForCaptions(candidates: RoleCandidate[], regionEviden
             if (!samePage && !nextPageContinuation && !laterPageContinuation) return false;
             if (candidate !== caption && candidate.layoutBlock.role === "table_caption") return false;
             if (["heading", "title", "footnote", "copyright", "author", "affiliation"].includes(candidate.layoutBlock.role)) return false;
+            if (samePage && !horizontallyCompatible(candidateBox, box, candidate.column, caption.column)) return false;
             if (samePage && previousSamePageCaptionY > -Infinity && candidateBox.y < box.y) return false;
             if (samePage && nextSamePageCaptionY < Infinity && candidateBox.y >= nextSamePageCaptionY) return false;
             const aboveCaption = samePage && candidateBox.y < box.y && box.y - (candidateBox.y + candidateBox.height) < 280;
@@ -500,9 +518,18 @@ export function figureNodesForCaptions(candidates: RoleCandidate[], regionEviden
             height: Math.min(180, Math.max(36, box.height * 8)),
           }
         : caption.layoutBlock.bbox;
-      const anchoredRegion = role === "table"
-        ? regionEvidence.find((region) => region.kind === "table" && region.pageStart === caption.pageStart &&
-          region.boundingBoxes.some((candidateBox) => Math.abs(candidateBox.y - caption.layoutBlock.bbox.y) <= 500))
+      const anchoredRegion = role === "table" && box
+        ? regionEvidence
+            .filter((region) => region.kind === "table" && region.pageStart === caption.pageStart &&
+              region.boundingBoxes.some((candidateBox) =>
+                Math.abs(candidateBox.y - caption.layoutBlock.bbox.y) <= 500 &&
+                horizontallyCompatible(candidateBox, box)
+              ))
+            .sort((a, b) => {
+              const aBox = a.boundingBoxes[0];
+              const bBox = b.boundingBoxes[0];
+              return Math.abs((aBox?.y ?? Infinity) - box.y) - Math.abs((bBox?.y ?? Infinity) - box.y);
+            })[0]
         : undefined;
       const anchoredBox = anchoredRegion?.boundingBoxes[0];
       return {

@@ -13,6 +13,7 @@ import { applyGlossary, normalizeSourceGroundedTerminology } from "./llm/glossar
 import { assignBlockTranslation, reapplyGlossary } from "./glossary/apply";
 import {
   savePaper,
+  flushPaperPersist,
   saveSections,
   saveBlocks,
   updateBlock,
@@ -193,8 +194,21 @@ export async function importPDFV2(
     await savePaper(paper);
     await saveSections(sections);
     await saveBlocks(blocks);
+    // savePaper/saveSections/saveBlocks update the in-memory document first and
+    // persist through a debounced package checkpoint. The next step reads the
+    // package to attach native layout/source provenance; without flushing here,
+    // that read can race the checkpoint and observe only paper.json (or a
+    // partially written core), producing "Paper Package が不完全です" during
+    // real Tauri imports. Make the extraction checkpoint durable before reading
+    // it back, while keeping later translation checkpoints asynchronous.
+    await flushPaperPersist(paperId);
     paper.sourceFileHash = finalSourceHash;
     await savePaper(paper);
+    // The final source hash update marks the cached document dirty again and
+    // schedules a mutable checkpoint. Flush that second checkpoint too before
+    // loading the package for layout provenance; otherwise its timer can
+    // replace the package core while persistPaperPackage is reading it.
+    await flushPaperPersist(paperId);
     try {
       const { getStorage } = await import("../data/runtime");
       const { loadPaperPackage, persistPaperPackage } = await import("../data/package/persist");

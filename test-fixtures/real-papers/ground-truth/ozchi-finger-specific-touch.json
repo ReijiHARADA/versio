@@ -1,6 +1,11 @@
 {
   "id": "ozchi-finger-specific-touch",
   "title": "Exploring Finger Specific Touch Screen Interaction for Mobile Phone User Interfaces",
+  "authors": ["Ashley Colley", "Jonna Häkkilä"],
+  "affiliations": [
+    "Center for Internet Excellence University Of Oulu Oulu, Finland",
+    "Faculty of Art and Design University of Lapland Rovaniemi, Finland"
+  ],
   "headings": [
     "INTRODUCTION",
     "RELATED WORK",

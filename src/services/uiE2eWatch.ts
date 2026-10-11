@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { isTauriApp } from "../utils/serverReady";
 import { getStorage } from "../data/runtime";
+import { startBackgroundImport } from "./import/startBackgroundImport";
 
 export type UiE2ePhase = "initial" | "relaunch";
 
@@ -27,6 +28,7 @@ let exportCompleted = false;
 let exportBytes = 0;
 let exportedPath: string | undefined;
 let paperTitleHint: string | undefined;
+let fixtureImportStarted = false;
 
 async function writeUiMarker(marker: UiE2eMarker): Promise<void> {
   lastMarker = marker;
@@ -114,6 +116,34 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
     phase,
     at: new Date().toISOString(),
   });
+
+  // The native NSOpenPanel is intentionally kept out of the deterministic
+  // packaged UI flow. Its Accessibility path is affected by the user's IME
+  // and by macOS picker focus, while the actual Tauri import path is the same
+  // one used after a dropped/selected PDF. The harness opts into this direct
+  // fixture path explicitly; normal launches and manual file selection never
+  // reach it.
+  if (phase === "initial" && !fixtureImportStarted) {
+    try {
+      const fixturePath = await invoke<string | null>("ui_e2e_fixture_path");
+      if (fixturePath) {
+        fixtureImportStarted = true;
+        const bytes = await invoke<number[]>("read_dropped_pdf", { path: fixturePath });
+        const fileName = fixturePath.split(/[\\/]/).pop() || "ui-e2e-fixture.pdf";
+        const file = new File([new Uint8Array(bytes)], fileName, { type: "application/pdf" });
+        const started = await startBackgroundImport(file);
+        if (!started) throw new Error("UI E2E fixture import did not start");
+      }
+    } catch (error) {
+      await writeUiMarker({
+        ok: false,
+        step: "ui_fixture_import_error",
+        phase,
+        detail: error instanceof Error ? error.message : String(error),
+        at: new Date().toISOString(),
+      });
+    }
+  }
 
   const tick = async () => {
     const paperCard = document.querySelector('[data-testid="paper-card"]');
