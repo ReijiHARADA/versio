@@ -350,6 +350,19 @@ function average(values: number[], fallback = 0.8): number {
 /** Apply only high-confidence, explicitly anchored region evidence. Generic
  * callers usually provide no regions; when present, member ids are the hard
  * boundary that prevents page-wide guesses from relabelling prose. */
+function looksLikeProseTableRegionMember(text: string | null | undefined): boolean {
+  const trimmed = (text ?? "").trim();
+  if (!trimmed) return true;
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  const digits = (trimmed.match(/\d/g) ?? []).length;
+  const letters = (trimmed.match(/[A-Za-z]/g) ?? []).length;
+  if (/[.!?;]\s*$/.test(trimmed) && words.length >= 4) return true;
+  if (words.length >= 12 && digits / Math.max(letters + digits, 1) < 0.08) return true;
+  // Lone words / short letter runs beside a chart are not table cells.
+  if (digits === 0 && words.length <= 3 && letters >= 3) return true;
+  return false;
+}
+
 export function resolveTableRegions(nodes: CanonicalNode[], regions: StructuralRegionEvidence[]): CanonicalNode[] {
   let resolvedNodes = nodes;
   for (const region of regions) {
@@ -358,7 +371,10 @@ export function resolveTableRegions(nodes: CanonicalNode[], regions: StructuralR
     const members = resolvedNodes.filter((node) => memberIds.has(node.id));
     if (members.length !== region.memberCandidateIds.length) continue;
     const memberIdsToPromote = new Set(members
-      .filter((node) => node.role === "paragraph" || node.role === "other")
+      .filter((node) =>
+        (node.role === "paragraph" || node.role === "other") &&
+        !looksLikeProseTableRegionMember(node.text)
+      )
       .map((node) => node.id));
     if (memberIdsToPromote.size === 0) continue;
     resolvedNodes = resolvedNodes.map((node) => {

@@ -2097,6 +2097,12 @@ export function isExpectedNonProseParagraph(text: string): boolean {
   if (/personal\s+or\s+classroom\s+use\b.{0,140}\b(?:copies|copyright|fee)\b/i.test(t)) return true;
   if (/\barXiv:\d{4}\.\d{4,5}v?\d*/i.test(t)) return true;
   if (/\b(?:CHI|UIST|DIS|CSCW|TEI|UbiComp|MobileHCI|IEEE|ACM)\b.{0,120}\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2}/i.test(t) && /\b[A-Z]\.\s*[A-Z][a-z]+\b/.test(t)) return true;
+  // Title + venue-year + calendar date running headers (no author initials).
+  if (
+    /\b(?:TEI|CHI|UIST|DIS|CSCW|ISWC|MobileHCI|UbiComp)\s+'?\d{2,4}\b/i.test(t) &&
+    /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}/i.test(t) &&
+    !/^(?:\[\d+\]|\d{1,3}[.)])\s+/.test(t)
+  ) return true;
   // Running headers commonly combine a paper title with a publisher page
   // marker such as `• 195:3`. They carry no sentence boundary and native PDF
   // order can otherwise present them as a paragraph on a later page.

@@ -3,10 +3,10 @@ import { resolveTableRegions } from "../../services/pdfExtraction/resolver/docum
 import type { CanonicalNode } from "../../services/pdfExtraction/canonical/types";
 import type { StructuralRegionEvidence } from "../../services/pdfExtraction/types";
 
-const node = (id: string): CanonicalNode => ({
+const node = (id: string, text = "Thumb 0.000 0.151"): CanonicalNode => ({
   id,
   role: "paragraph",
-  text: "cell text",
+  text,
   pageStart: 1,
   pageEnd: 1,
   boundingBoxes: [{ page: 1, x: 10, y: 10, width: 40, height: 10 }],
@@ -40,5 +40,13 @@ describe("resolveTableRegions", () => {
     const nodes = [node("a"), node("b")];
     const resolved = resolveTableRegions(nodes, [region(["a", "missing"], 1), region(["b"], 0.97)]);
     expect(resolved.map((item) => item.role)).toEqual(["paragraph", "paragraph"]);
+  });
+
+  it("does not promote chart-adjacent prose words into table members", () => {
+    const resolved = resolveTableRegions(
+      [node("a", "were"), node("b", "perceived"), node("c", "Thumb 0.000 0.151")],
+      [region(["a", "b", "c"], 0.99)]
+    );
+    expect(resolved.map((item) => item.role)).toEqual(["paragraph", "paragraph", "table"]);
   });
 });

@@ -17,6 +17,11 @@ import {
   type PageColumnLayout,
 } from "../../pdfLayout";
 import {
+  looksLikeAuthorsOnlyReferenceStub,
+  looksLikeConferenceRunningHeader,
+  looksLikeYearTitleReferenceContinuation,
+} from "../../citations";
+import {
   pickPaperTitle,
   pickPublication,
   isReferencesHeading,
@@ -434,6 +439,49 @@ function isStandalonePageNumber(text: string, role: CanonicalNode["role"]): bool
   // value; preserve numeric tables/headings, but never expose this marker as
   // a translation unit.
   return role !== "table" && role !== "heading" && /^\d{1,3}$/.test(text.trim());
+}
+
+/** Region membership can paint chart-adjacent prose with role=table. */
+function looksLikeProseMistakenForTable(text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed) return true;
+  if (/^(?:table|表)\s*\d+/i.test(trimmed)) return false;
+  if (/[√✓☑☒\u3400-\u9fff]/.test(trimmed)) return false;
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  const digits = (trimmed.match(/\d/g) ?? []).length;
+  const letters = (trimmed.match(/[A-Za-z]/g) ?? []).length;
+  const digitRatio = digits / Math.max(letters + digits, 1);
+  // Lowercase letter-only fragments ("were", "perceived", "between") are
+  // chart-adjacent prose, not cell headers like "Thumb" / "Finger 1".
+  if (digits === 0 && letters >= 3 && words.length <= 4 && /^[a-z]/.test(trimmed)) {
+    return true;
+  }
+  // Caption continuations glued after a mid-sentence period, without cells.
+  if (
+    digits === 0 &&
+    /[.!?;]\s+[A-Z]/.test(trimmed) &&
+    words.length >= 5 &&
+    words.length <= 20
+  ) {
+    return true;
+  }
+  // Sentence adverbs mistaken for a one-cell row ("Similarly").
+  if (digits === 0 && words.length === 1 && /ly$/i.test(trimmed) && letters >= 6) {
+    return true;
+  }
+  // Long narrative sentences that only sit near a matrix. Keep short
+  // goal/method cells (often "To find…") and dense numeric rows.
+  if (words.length >= 12 && digitRatio < 0.12) {
+    const narrativeOpener =
+      /^(?:When|Altogether|However|Therefore|In this|We |This |To investigate|To provide)\b/.test(
+        trimmed
+      );
+    const midSentenceGlue = /[.!?]\s+(?:[A-Z]|Thus|However|Therefore)\b/.test(trimmed);
+    if (narrativeOpener || (midSentenceGlue && words.length >= 12)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /** Numbered prose items are lists even when an upstream role heuristic called
@@ -1472,6 +1520,26 @@ export function projectCanonicalToPaper(input: {
           : [];
     const column = node.column ?? layout?.column ?? "single";
 
+    // Chart-adjacent prose can inherit a table role from region membership.
+    // Keep those units as ordinary paragraphs so the Reader does not render
+    // dozens of empty "Table" shells for words like "were" / "perceived".
+    if (node.role === "table" && node.text && looksLikeProseMistakenForTable(node.text)) {
+      const text = node.text;
+      pushBlock(node, layout, {
+        sectionId: currentSectionId,
+        type: "paragraph",
+        pageStart: node.pageStart,
+        pageEnd: node.pageEnd,
+        boundingBoxes: boxes,
+        original: text,
+        translated: null,
+        translationStatus: shouldTranslateParagraph(text) ? "pending" : "skipped",
+        parentBlockId: null,
+        metadata: { column, role: "paragraph", demotedFromTable: true },
+      });
+      continue;
+    }
+
     const nativeGrid = node.role === "table" && node.text &&
       !/[!?;]|[.]\s*(?:[A-Za-z]|$)/.test(node.text) &&
       !/^[\s]*(?:algorithm|require)\b/i.test(node.text) &&
@@ -1557,6 +1625,7 @@ export function projectCanonicalToPaper(input: {
 
     if (node.role === "heading") {
       const text = node.text ?? "";
+      if (looksLikeConferenceRunningHeader(text)) continue;
       if (currentKind === "references" && !isReferencesHeading(text)) {
         pushBlock(node, layout, {
           sectionId: currentSectionId,
@@ -1720,6 +1789,8 @@ export function projectCanonicalToPaper(input: {
 
     if (node.role === "footnote") {
       const text = node.text ?? "";
+      // Running page indices are often labeled footnote by layout heuristics.
+      if (isStandalonePageNumber(text, node.role)) continue;
       pushBlock(node, layout, {
         sectionId: currentSectionId,
         type: "footnote",
@@ -1744,7 +1815,8 @@ export function projectCanonicalToPaper(input: {
       const text = node.text ?? "";
       if (isStandaloneContactMetadata(text) ||
         isStandaloneAffiliationMarkerRun(text) ||
-        isStandalonePageNumber(text, node.role)) continue;
+        isStandalonePageNumber(text, node.role) ||
+        looksLikeConferenceRunningHeader(text)) continue;
       const listParts = splitFlattenedList(text);
       const standaloneListItem = /^(?:[•‣▪∙]|(?:[1-9]|1[0-9]|20)[.)]|\([A-Za-z]\)|[A-Za-z]\))\s+/.test(text.trim());
       const isRef = !isNumberedProseListItem(text) &&
@@ -1819,14 +1891,42 @@ export function projectCanonicalToPaper(input: {
     return acc;
   }, []);
 
+  // After a page-break header is dropped, rejoin "30. Authors." + "2007. Title…".
+  const referenceCoalescedBlocks = rowAggregatedBlocks.reduce<PaperBlock[]>((acc, block) => {
+    const last = acc.at(-1);
+    const text = (block.original ?? "").trim();
+    const lastText = (last?.original ?? "").trim();
+    const lastIsRef =
+      last?.type === "reference" || String(last?.metadata?.role ?? "") === "reference";
+    if (
+      last &&
+      lastIsRef &&
+      looksLikeAuthorsOnlyReferenceStub(lastText) &&
+      looksLikeYearTitleReferenceContinuation(text) &&
+      (block.type === "paragraph" || block.type === "reference")
+    ) {
+      acc[acc.length - 1] = {
+        ...last,
+        type: "reference",
+        original: normalizeReferenceText(`${lastText} ${text}`),
+        pageEnd: Math.max(last.pageEnd, block.pageEnd),
+        boundingBoxes: [...last.boundingBoxes, ...block.boundingBoxes],
+        metadata: { ...last.metadata, role: "reference" },
+      };
+      return acc;
+    }
+    acc.push(block);
+    return acc;
+  }, []);
+
   // Preserve uncertain cross-column continuations as source-review units.
   // Do not concatenate them without stronger geometry evidence: a preceding
   // prose block ending without terminal punctuation followed by a connective
   // (`which`, `that`, `and`, ...) on the same page is a high-precision signal
   // that the first block is physically incomplete.
-  for (let index = 0; index + 1 < rowAggregatedBlocks.length; index++) {
-    const current = rowAggregatedBlocks[index];
-    const next = rowAggregatedBlocks[index + 1];
+  for (let index = 0; index + 1 < referenceCoalescedBlocks.length; index++) {
+    const current = referenceCoalescedBlocks[index];
+    const next = referenceCoalescedBlocks[index + 1];
 
     // Canonical continuation relations can be lost when a mixed native text
     // stream is split into separate x-bands. Rejoin an unfinished paragraph
@@ -1857,7 +1957,7 @@ export function projectCanonicalToPaper(input: {
       !/[.!?:;]\s*$/.test(currentContinuationText) &&
       (startsLikeContinuation || startsWithProperContinuation);
     if (sameColumnContinuation) {
-      rowAggregatedBlocks[index] = {
+      referenceCoalescedBlocks[index] = {
         ...current,
         original: `${current.original ?? ""} ${next.original ?? ""}`.replace(/\s+/g, " ").trim(),
         pageEnd: next.pageEnd,
@@ -1865,7 +1965,7 @@ export function projectCanonicalToPaper(input: {
         extractionConfidence: Math.min(current.extractionConfidence ?? 0, next.extractionConfidence ?? 0),
         metadata: { ...current.metadata, paragraphContinuationRepaired: true },
       };
-      rowAggregatedBlocks.splice(index + 1, 1);
+      referenceCoalescedBlocks.splice(index + 1, 1);
       index -= 1;
       continue;
     }
@@ -1878,7 +1978,7 @@ export function projectCanonicalToPaper(input: {
     // translate as its own grammatical unit when geometry and list evidence
     // agree.  This is document-structure evidence, not a paper-specific rule.
     const currentText = (current.original ?? "").trim();
-    const listSuccessor = rowAggregatedBlocks.slice(index + 1, index + 6).find((candidate) =>
+    const listSuccessor = referenceCoalescedBlocks.slice(index + 1, index + 6).find((candidate) =>
       candidate.type === "paragraph" && candidate.metadata.listRole === "item"
     );
     const followsListIntro = current.type === "paragraph" &&
@@ -1890,7 +1990,7 @@ export function projectCanonicalToPaper(input: {
       (listSuccessor?.pageStart ?? next.pageStart) - current.pageEnd <= 1 &&
       !current.metadata.flattenedListPart;
     if (followsListIntro) {
-      rowAggregatedBlocks[index] = {
+      referenceCoalescedBlocks[index] = {
         ...current,
         translationStatus: "pending",
         metadata: { ...current.metadata, translationInputWarning: undefined, listRole: "intro" },
@@ -1915,7 +2015,7 @@ export function projectCanonicalToPaper(input: {
     const adjacentBand = currentBox && nextBox && nextBox.x > currentBox.x + currentBox.width + 12 &&
       currentTop <= nextBottom && nextTop <= currentBottom;
     if (!adjacentBand) continue;
-    rowAggregatedBlocks[index] = {
+    referenceCoalescedBlocks[index] = {
       ...current,
       metadata: {
         ...current.metadata,
@@ -2028,8 +2128,8 @@ export function projectCanonicalToPaper(input: {
   };
 
   const reconciled = input.previousBlocks?.length
-    ? reconcileBlockIds(input.previousBlocks, rowAggregatedBlocks).blocks
-    : rowAggregatedBlocks;
+    ? reconcileBlockIds(input.previousBlocks, referenceCoalescedBlocks).blocks
+    : referenceCoalescedBlocks;
   const annotatedBlocks = reconciled.map((block) =>
     block.translationStatus === "skipped"
       ? { ...block, metadata: { ...block.metadata, translationOutcome: "structural_skip" } }

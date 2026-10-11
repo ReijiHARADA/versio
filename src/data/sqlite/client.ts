@@ -17,7 +17,9 @@ export type SqliteClient = {
   hasFts5: boolean;
 };
 
-const SQLITE_PATH = "library.sqlite";
+export const SQLITE_PATH = "library.sqlite";
+const SQLITE_TMP_PATH = `${SQLITE_PATH}.tmp`;
+const SQLITE_BAK_PATH = `${SQLITE_PATH}.bak`;
 
 let SQL: SqlJsStatic | null = null;
 
@@ -52,10 +54,46 @@ function bind(db: Database, sql: string, params: unknown[] = []): void {
   db.run(sql, params as never[]);
 }
 
+function tryOpenDatabase(engine: SqlJsStatic, bytes: Uint8Array | null): Database | null {
+  if (!bytes || bytes.byteLength < 100) return null;
+  try {
+    const db = new engine.Database(bytes);
+    db.exec("SELECT count(*) FROM sqlite_master");
+    return db;
+  } catch {
+    return null;
+  }
+}
+
+async function loadDatabaseBytes(fs: FileSystem, engine: SqlJsStatic): Promise<Database> {
+  const candidates = [SQLITE_PATH, SQLITE_TMP_PATH, SQLITE_BAK_PATH];
+  for (const path of candidates) {
+    const bytes = await fs.readBytes(path);
+    const db = tryOpenDatabase(engine, bytes);
+    if (db) {
+      if (path !== SQLITE_PATH) {
+        console.warn(`Recovered library.sqlite from ${path}`);
+      }
+      return db;
+    }
+  }
+  return new engine.Database();
+}
+
+async function writeSqliteAtomic(fs: FileSystem, bytes: Uint8Array): Promise<void> {
+  await fs.writeBytes(SQLITE_TMP_PATH, bytes);
+  if (await fs.exists(SQLITE_PATH)) {
+    await fs.remove(SQLITE_BAK_PATH);
+    // Keep previous good file as .bak before replacing, so a future corrupt
+    // open can fall back. rename is atomic on the same volume.
+    await fs.rename(SQLITE_PATH, SQLITE_BAK_PATH);
+  }
+  await fs.rename(SQLITE_TMP_PATH, SQLITE_PATH);
+}
+
 export async function openSqlite(fs: FileSystem): Promise<SqliteClient> {
   const engine = await loadSql();
-  const existing = await fs.readBytes(SQLITE_PATH);
-  const db = existing ? new engine.Database(existing) : new engine.Database();
+  const db = await loadDatabaseBytes(fs, engine);
   db.run(SQLITE_SCHEMA_SQL);
   let hasFts5 = false;
   try {
@@ -68,19 +106,36 @@ export async function openSqlite(fs: FileSystem): Promise<SqliteClient> {
 
   let persistTimer: ReturnType<typeof setTimeout> | null = null;
   let closed = false;
+  let persistChain: Promise<void> = Promise.resolve();
+
   const persistNow = async () => {
     if (closed) return;
     persistMetrics.sqliteExports += 1;
-    await fs.writeBytes(SQLITE_PATH, db.export());
+    const bytes = db.export();
+    await writeSqliteAtomic(fs, bytes);
+  };
+
+  const enqueuePersist = (): Promise<void> => {
+    // Serialize exports so an older in-flight write cannot overwrite a newer one.
+    const next = persistChain.then(persistNow, persistNow);
+    persistChain = next.catch((error) => {
+      console.warn("library.sqlite persist failed:", error);
+    });
+    return next;
+  };
+
+  const schedulePersist = () => {
+    if (persistTimer) clearTimeout(persistTimer);
+    persistTimer = setTimeout(() => {
+      persistTimer = null;
+      void enqueuePersist();
+    }, 3000);
   };
 
   const client: SqliteClient = {
     exec(sql, params = []) {
       bind(db, sql, params);
-      if (persistTimer) clearTimeout(persistTimer);
-      persistTimer = setTimeout(() => {
-        void persistNow();
-      }, 3000);
+      schedulePersist();
     },
     query<T extends SqlRow = SqlRow>(sql: string, params: unknown[] = []) {
       const stmt = db.prepare(sql);
@@ -108,17 +163,14 @@ export async function openSqlite(fs: FileSystem): Promise<SqliteClient> {
         }
         throw error;
       }
-      if (persistTimer) clearTimeout(persistTimer);
-      persistTimer = setTimeout(() => {
-        void persistNow();
-      }, 3000);
+      schedulePersist();
     },
     async persist() {
       if (persistTimer) {
         clearTimeout(persistTimer);
         persistTimer = null;
       }
-      await persistNow();
+      await enqueuePersist();
     },
     exportBytes() {
       return db.export();
@@ -129,7 +181,7 @@ export async function openSqlite(fs: FileSystem): Promise<SqliteClient> {
         persistTimer = null;
       }
       if (!closed) {
-        await persistNow();
+        await enqueuePersist();
         closed = true;
         db.close();
       }

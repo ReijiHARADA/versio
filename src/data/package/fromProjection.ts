@@ -1,10 +1,20 @@
 import type { Paper, PaperBlock, Section } from "../../types/paper";
+import {
+  isPageNumberArtifactBlock,
+  looksLikeConferenceRunningHeader,
+} from "../../services/citations";
 import { PACKAGE_SCHEMA_VERSION, STRUCTURE_SCHEMA_VERSION, TRANSLATION_SCHEMA_VERSION } from "../schemaVersion";
 import type { TranslationFile } from "../types/translation";
 import { applyCitationLinks, blocksToDocument, documentToMarkdown } from "../markdown/documentAst";
 import type { LayoutFile } from "../types/layout";
 import type { PaperJson, PaperPackage } from "../types/package";
 import type { StructureFile, StructureRelation } from "../types/structure";
+
+function isPersistableContentBlock(block: PaperBlock): boolean {
+  if (isPageNumberArtifactBlock(block.original, block.translated)) return false;
+  if (looksLikeConferenceRunningHeader(block.original ?? "")) return false;
+  return true;
+}
 
 export function paperToPaperJson(paper: Paper, revision = 1): PaperJson {
   return {
@@ -111,19 +121,22 @@ export function projectionToPackage(input: {
   layout?: LayoutFile;
   sourcePdf?: Uint8Array;
 }): PaperPackage {
+  // Drop PDF chrome before serialize so structure and Markdown stay aligned
+  // for validatePaperPackage (page digits / conference running headers).
+  const blocks = input.blocks.filter(isPersistableContentBlock);
   const originalDoc = blocksToDocument({
     paper: input.paper,
     sections: input.sections,
-    blocks: input.blocks,
+    blocks,
     language: "en",
   });
   const translatedDoc = blocksToDocument({
     paper: input.paper,
     sections: input.sections,
-    blocks: input.blocks,
+    blocks,
     language: "ja",
   });
-  const structure = projectionToStructure(input.sections, input.blocks);
+  const structure = projectionToStructure(input.sections, blocks);
   structure.references = originalDoc.references;
   for (const ref of Object.values(originalDoc.references)) {
     const block = structure.blocks[ref.blockId];
@@ -148,7 +161,7 @@ export function projectionToPackage(input: {
     originalMarkdown: documentToMarkdown(input.paper.id, "en", originalDoc.nodes),
     translatedMarkdown: documentToMarkdown(input.paper.id, "ja", translatedDoc.nodes),
     structure,
-    translation: translationFileFromBlocks(input.blocks),
+    translation: translationFileFromBlocks(blocks),
     layout: input.layout,
     assets: originalDoc.assets,
     sourcePdf: input.sourcePdf,
