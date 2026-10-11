@@ -25,6 +25,14 @@ fn resolve(app: &AppHandle, relative: &str) -> Result<PathBuf, String> {
 }
 
 fn e2e_app_data_root(app: &AppHandle) -> Result<PathBuf, String> {
+    if matches!(std::env::var("PAPER_READER_ACCEPTANCE"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
+        if let Ok(path) = std::env::var("PAPER_READER_ACCEPTANCE_HOME") {
+            let root = PathBuf::from(path);
+            if root.is_absolute() {
+                return Ok(root);
+            }
+        }
+    }
     if matches!(std::env::var("PAPER_READER_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
         if let Ok(path) = std::env::var("PAPER_READER_UI_E2E_HOME") {
             let root = PathBuf::from(path);

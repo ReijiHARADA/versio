@@ -105,8 +105,15 @@ function extractAffiliationStatements(text: string): string[] {
 }
 
 function expandAuthorLine(text: string): string[] {
-  const sourceWithoutAffiliation = separateSwallowedAffiliation(text)
-    .replace(/([\u3040-\u30ff\u4e00-\u9fff])\s+(?=[\u3040-\u30ff\u4e00-\u9fff])/g, "$1");
+  const separatedSource = separateSwallowedAffiliation(text);
+  // Bilingual mastheads commonly encode `栗原 勇太 小竹 元基
+  // Kurihara Yuta Shino Motoki`. Preserve the CJK token boundaries while a
+  // Latin romanization is present; otherwise normalization turns four names
+  // into two opaque strings and drops the Japanese author identities.
+  // CJK-only rows keep the historical glyph-span normalization.
+  const sourceWithoutAffiliation = /[A-Za-z]/.test(separatedSource)
+    ? separatedSource
+    : separatedSource.replace(/([\u3040-\u30ff\u4e00-\u9fff])\s+(?=[\u3040-\u30ff\u4e00-\u9fff])/g, "$1");
   const markedSource = sourceWithoutAffiliation.replace(/^\s*and\s+/i, "").replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, " ").replace(/\s+/g, " ").trim();
   const cleaned = sourceWithoutAffiliation
     .replace(/^\s*and\s+/i, "")
@@ -384,21 +391,58 @@ function isReferenceText(text: string, currentKind: NormalizedSectionKind | null
     // role; this fallback only classifies paragraph-shaped nodes when they
     // contain bibliographic evidence.
     const trimmed = text.trim();
+    // A numbered checklist/principles paragraph can appear immediately before
+    // the bibliography on the same page. It is not a reference merely because
+    // the section state has already crossed a reordered heading.
+    if (isNumberedProseListItem(trimmed) &&
+        !/\b(?:19|20)\d{2}\b/.test(trimmed.slice(0, 180)) &&
+        !/\b(?:doi\s*:|https?:\/\/|journal|proceedings|conference|in\s+proc\.)\b/i.test(trimmed)) {
+      return false;
+    }
+    if (/^(?:acknowledg(?:e)?ments?|author contributions?|competing interests?|publisher(?:'|’)?s note|data availability|ethics statement|supplementary information|additional information|license(?:,|\s)|open access)(?:\b|\s|$)|^©/i.test(trimmed)) {
+      return false;
+    }
     const hasYear = /\b(?:19|20)\d{2}[a-z]?\b/.test(trimmed);
+    // Author-year bibliographies commonly have no numeric prefix, DOI, or
+    // literal "journal" token. Inside an explicit References section, the
+    // author list + parenthesized year is strong entry evidence. Requiring
+    // it at the start avoids hiding ordinary prose with an inline citation.
+    const authorYearEntry =
+      /^[A-ZÀ-ÖØ-Ý][^\n]{1,180}\((?:19|20)\d{2}[a-z]?\)[.,]?\s+\S/u.test(trimmed);
+    const numberedEntry = /^(?:\[\d+\]|\d+[.)])\s+\S/.test(trimmed) &&
+      trimmed.split(/\s+/).filter(Boolean).length >= 3;
+    // A page/volume tail may be detached at a physical page/column boundary,
+    // followed by one or more bibliography entries in the same native block.
+    // Preserve it as reference material so the later coalescer can reattach
+    // short tails without sending them to translation.
+    const referenceContinuation =
+      /^(?:\d+(?:\(\d+\))?,\s*)?\d+\s*[–—-]\s*\d+(?:\s*\((?:19|20)\d{2}[a-z]?\))?\.(?:\s|$)/.test(trimmed);
+    const embeddedAuthorYear =
+      /(?:^|[.!?]\s+)[A-ZÀ-ÖØ-Ý][^\n]{1,140}\((?:19|20)\d{2}[a-z]?\)[.,]?\s+\S/u.test(trimmed);
     const hasBibliographicShape =
-      /^(?:\[\d+\]|\d+[.)])\s+[^.!?]{2,140}\b(?:19|20)\d{2}[a-z]?\b/.test(trimmed) ||
-      (/^(?:\[\d+\]|\d+[.)])\s+\S/.test(trimmed) &&
-        /\b(?:19|20)\d{2}[a-z]?\b/.test(trimmed)) ||
-      /\b(?:doi\s*:|https?:\/\/|journal|proceedings|conference|出版社|大学紀要)\b/i.test(trimmed);
+      numberedEntry ||
+      referenceContinuation ||
+      authorYearEntry ||
+      embeddedAuthorYear ||
+      /\b(?:doi\s*:|https?:\/\/|journal|proceedings|conference|in\s+proc\.?|catalog(?:ue)?|university press|publisher|thesis|dissertation|出版社|大学紀要)\b/i.test(trimmed);
     // A long sentence containing an inline year is usually body prose with a
     // citation, not a bibliography record.  Keep it visible for translation.
-    if (trimmed.length > 180 && /[.!?]\s*$/.test(trimmed) && hasYear) return false;
+    if (!numberedEntry && !referenceContinuation && !authorYearEntry && !embeddedAuthorYear &&
+        trimmed.length > 180 && /[.!?]\s*$/.test(trimmed) && hasYear) return false;
     return hasBibliographicShape;
   }
   // A numbered list item is not a bibliography entry. Outside an explicit
   // References section, require citation-shaped evidence such as a year.
   return /^\[\d+\]/.test(text) ||
     (/^\d+\.\s+[A-Z][a-z]+,?\s+[A-Z]/.test(text) && /\b(?:19|20)\d{2}\b/.test(text));
+}
+
+function isPublicationLegalMetadata(text: string): boolean {
+  const trimmed = text.trim();
+  return /^©\s*(?:the\s+author|\d{4})/i.test(trimmed) ||
+    /^publisher(?:'|’)?s note:\s+.*\bjurisdictional claims\b/i.test(trimmed) ||
+    /^license,\s+which permits use,\s+sharing,\s+adaptation,\s+distribution\b/i.test(trimmed) ||
+    /^(?:copyright|permission to make digital or hard copies)\b/i.test(trimmed);
 }
 
 /** Bibliography entries are rendered as one hanging-indent paragraph. Native
@@ -897,8 +941,16 @@ export function projectCanonicalToPaper(input: {
   // only contiguous page-1 author nodes in the masthead band; affiliation and
   // body nodes are never crossed.
   const mergedAuthorSources: typeof authorSourceNodes = [];
-  for (const node of [...authorSourceNodes].sort((a, b) =>
-    (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0))) {
+  for (const node of [...authorSourceNodes].sort((a, b) => {
+    const ay = a.boundingBoxes[0]?.y ?? 0;
+    const by = b.boundingBoxes[0]?.y ?? 0;
+    // PDF floating-point coordinates often differ by tiny fractions despite
+    // sharing a baseline; treat those as one visual row and read left-to-right.
+    if (Math.abs(ay - by) <= 1) {
+      return (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0);
+    }
+    return ay - by;
+  })) {
     const previous = mergedAuthorSources.at(-1);
     const previousBox = previous?.boundingBoxes[0];
     const box = node.boundingBoxes[0];
@@ -964,8 +1016,10 @@ export function projectCanonicalToPaper(input: {
       const personLines = lines.filter((line) => {
         const text = line.text.replace(/\s+/g, " ").trim();
         const words = text.split(/\s+/).filter(Boolean);
+        const cjkPersonLine = /^[\u3040-\u30ff\u4e00-\u9fff\s·・]{2,80}$/u.test(text) &&
+          !/(?:大学|学部|研究科|研究所|病院|学校|学科|Department|University|Institute)/i.test(text);
         return words.length >= 2 && words.length <= 5 &&
-          /^[A-ZÀ-ÖØ-Þ][\p{L}'’-]*(?:\s+[A-ZÀ-ÖØ-Þ][\p{L}'’-]*){1,4}$/u.test(text) &&
+          (cjkPersonLine || /^[A-ZÀ-ÖØ-Þ][\p{L}'’-]*(?:\s+[A-ZÀ-ÖØ-Þ][\p{L}'’-]*){1,4}$/u.test(text)) &&
           !/\b(?:republic|university|faculty|department|school|institute|college|hospital|city|street|road|usa|uk|canada|germany|france|italy|macedonia|ohrid|skopje)\b/i.test(text);
       });
       if (personLines.length === 1) return personLines[0].text.replace(/\s+/g, " ").trim();
@@ -1238,11 +1292,15 @@ export function projectCanonicalToPaper(input: {
     }, [] as Array<typeof affiliationCandidates>).map((group) => {
       if (group.length === 1) return group[0];
       const first = group[0];
-      return { ...first, name: normalizeAffiliationName(group.slice().sort((a, b) => a._y - b._y).map((item) => item.name).join(" ")) };
+      return { ...first, name: normalizeAffiliationName(group.slice().sort((a, b) =>
+        Math.abs(a._y - b._y) <= 1 ? a._x - b._x : a._y - b._y
+      ).map((item) => item.name).join(" ")) };
     })
     : affiliationCandidates;
   const stitchedAffiliations: typeof groupedAffiliations = [];
-  for (const candidate of groupedAffiliations.slice().sort((a, b) => a._y - b._y || a._x - b._x)) {
+  for (const candidate of groupedAffiliations.slice().sort((a, b) =>
+    Math.abs(a._y - b._y) <= 1 ? a._x - b._x : a._y - b._y
+  )) {
     const previous = stitchedAffiliations.at(-1);
     const canStitch = previous && previous._page === candidate._page &&
       candidate._y >= previous._y && candidate._y - previous._y <= 90 &&
@@ -1626,6 +1684,32 @@ export function projectCanonicalToPaper(input: {
           ? layout.lines.map((line) => line.bbox)
           : [];
     const column = node.column ?? layout?.column ?? "single";
+    const nodeText = (node.text ?? "").trim();
+    if (isPublicationLegalMetadata(nodeText)) continue;
+
+    // Resolver role errors inside an explicit References section must not
+    // expose bibliography text as a translated paragraph or table. Use the
+    // section plus strong textual bibliography evidence before role-specific
+    // projection. This also recovers page-range tails that PDF producers emit
+    // as footnotes. Captions/equations/headings retain their own semantics.
+    const referenceSectionNode = currentKind === "references" &&
+      node.role !== "heading" && node.role !== "caption" && node.role !== "equation" &&
+      isReferenceText(nodeText, currentKind);
+    if (referenceSectionNode) {
+      pushBlock(node, layout, {
+        sectionId: currentSectionId,
+        type: "reference",
+        pageStart: node.pageStart,
+        pageEnd: node.pageEnd,
+        boundingBoxes: boxes,
+        original: normalizeReferenceText(nodeText),
+        translated: null,
+        translationStatus: "skipped",
+        parentBlockId: null,
+        metadata: { column, role: "reference", recoveredFromRole: node.role },
+      });
+      continue;
+    }
 
     // Chart-adjacent prose can inherit a table role from region membership.
     // Drop axis crumbs; keep longer narrative as ordinary paragraphs.
@@ -1655,7 +1739,13 @@ export function projectCanonicalToPaper(input: {
       node.text &&
       !tableAbsorption.keepIds.has(node.id) &&
       (tableAbsorption.pages.has(node.pageStart) || tableAbsorption.pages.has(node.pageEnd)) &&
-      looksLikeCaptionedTableCellFragment(node.text)
+      looksLikeCaptionedTableCellFragment(node.text) &&
+      // A resolver can attach the caption relation to a synthetic region
+      // while the text-bearing multi-row grid remains a separate node. Its
+      // repeated native lines are stronger evidence than the short-cell
+      // heuristic, so retain the grid as a source-only table block.
+      !(layout && layout.lines.length >= 3 &&
+        layout.lines.filter((line) => line.items.length >= 2).length >= 3)
     ) {
       continue;
     }
@@ -1940,8 +2030,16 @@ export function projectCanonicalToPaper(input: {
         isChartDebrisFragment(text)) continue;
       const listParts = splitFlattenedList(text);
       const standaloneListItem = /^(?:[•‣▪∙]|(?:[1-9]|1[0-9]|20)[.)]|\([A-Za-z]\)|[A-Za-z]\))\s+/.test(text.trim());
-      const isRef = !isNumberedProseListItem(text) &&
-        (node.role === "reference" || isReferenceText(text, currentKind));
+      // Being inside a References section is context, not proof that every
+      // numbered paragraph is a bibliography entry. Surveys often place a
+      // numbered principles/checklist list immediately before the actual
+      // REFERENCES heading. Let bibliographic evidence win while preserving
+      // numeric entries that contain author/year or publisher signals.
+      const refEvidence = node.role === "reference" || isReferenceText(text, currentKind);
+      const isRef = refEvidence &&
+        (!isNumberedProseListItem(text) ||
+          /\b(?:19|20)\d{2}\b/.test(text.slice(0, 180)) ||
+          /\b(?:doi\s*:|https?:\/\/|journal|proceedings|conference|in\s+proc\.)\b/i.test(text));
       const isChartLabel = node.evidence.some(
         (evidence) => evidence.label === "repeated-numeric-chart-label"
       );
@@ -1978,7 +2076,7 @@ export function projectCanonicalToPaper(input: {
           parentBlockId: null,
           metadata: {
             column,
-            role: node.role,
+            role: isRef ? "reference" : node.role,
             translationInputWarning: translationInputWarning ?? undefined,
             flattenedListPart: listParts.length > 1,
             listRole,
@@ -2019,6 +2117,19 @@ export function projectCanonicalToPaper(input: {
     const lastText = (last?.original ?? "").trim();
     const lastIsRef =
       last?.type === "reference" || String(last?.metadata?.role ?? "") === "reference";
+    const detachedPageRange =
+      /^(?:\d+(?:\(\d+\))?,\s*)?\d+\s*[–—-]\s*\d+(?:\s*\((?:19|20)\d{2}[a-z]?\))?\.?$/i.test(text);
+    if (last && lastIsRef && block.type === "reference" &&
+        block.sectionId === last.sectionId && detachedPageRange) {
+      acc[acc.length - 1] = {
+        ...last,
+        original: normalizeReferenceText(`${lastText} ${text}`),
+        pageEnd: Math.max(last.pageEnd, block.pageEnd),
+        boundingBoxes: [...last.boundingBoxes, ...block.boundingBoxes],
+        metadata: { ...last.metadata, role: "reference", referenceContinuationRepaired: true },
+      };
+      return acc;
+    }
     if (
       last &&
       lastIsRef &&
@@ -2060,7 +2171,7 @@ export function projectCanonicalToPaper(input: {
     const nextContinuationText = (next.original ?? "").trim();
     const endsWithContinuationCue = /(?:\b(?:a|an|the|of|to|in|on|at|by|for|from|with|and|or|but|as|than|like|such|which|that))$/i.test(currentContinuationText);
     const startsLikeContinuation = /^(?:[a-z(]|[–—-]\s*[a-z])/u.test(nextContinuationText);
-    const startsWithProperContinuation = endsWithContinuationCue && /^[A-Z][A-Za-z'’\-]*(?:\s|\(|\[)/u.test(nextContinuationText);
+    const startsWithProperContinuation = endsWithContinuationCue && /^[A-Z][A-Za-z'’-]*(?:\s|\(|\[)/u.test(nextContinuationText);
     const samePageGeometry = current.pageStart === current.pageEnd &&
       next.pageStart === next.pageEnd &&
       current.pageStart === next.pageStart &&

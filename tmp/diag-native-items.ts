@@ -1,0 +1,2 @@
+import fs from 'node:fs'; import path from 'node:path'; import {extractPdfPages} from '../src/test/readingOrder/extractPdf';
+const [id,needle]=process.argv.slice(2); const c=JSON.parse(fs.readFileSync('test-fixtures/real-papers/catalog.json','utf8')); const p=c.papers.find((x:any)=>x.id===id); const pages=await extractPdfPages(path.join(c.pdfDir,p.filename)); for(const page of pages)for(const item of page.textItems)if(item.text.includes(needle))console.log(page.pageNumber,JSON.stringify(item));

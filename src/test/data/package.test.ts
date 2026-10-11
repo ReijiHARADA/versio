@@ -135,6 +135,22 @@ describe("Paper Package", () => {
     expect(decodeDataUrl(String(figure?.metadata.imageUrl))).not.toBeNull();
   });
 
+  it("serializes overlapping full-package writes without exposing an incomplete core", async () => {
+    const fs = createMemoryFileSystem();
+    const first = sample();
+    const second = sample();
+    second.paper.titleTranslated = "研究（二回目）";
+    await Promise.all([
+      persistPaperPackage(fs, projectionToPackage(first)),
+      persistPaperPackage(fs, projectionToPackage(second)),
+    ]);
+    const loaded = await loadPaperPackage(fs, "paper-1");
+    expect(loaded.originalMarkdown).toContain("Recent advances");
+    expect(loaded.translatedMarkdown).toContain("ウェアラブル");
+    expect(await fs.exists("papers/paper-1/paper.json")).toBe(true);
+    expect(await fs.exists("papers/paper-1/structure.json")).toBe(true);
+  });
+
   it("loads Reader packages without source.pdf or assets by default", async () => {
     const fs = createMemoryFileSystem();
     const { paper, sections, blocks } = sample();

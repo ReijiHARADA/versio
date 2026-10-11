@@ -1,3 +1,68 @@
+# Active PDF extraction objective (2026-10-11)
+
+The active goal is **not limited to the OzCHI finger-touch PDF**. That PDF is
+one high-value Golden Regression Case because it combines a two-column ACM
+layout, a mixed author/affiliation masthead, publisher permission chrome,
+statistical prose, borderless and ruled tables, figures, and references. Every
+production change must be format-neutral and must also be checked against the
+diverse real-paper corpus: ACM/OzCHI, IEEE, Springer/LNCS, Elsevier, Nature,
+APA-like, J-STAGE and other journal/conference/preprint/report layouts,
+including single/two-column, table-heavy, equation-heavy, old/scanned, and
+multilingual PDFs.
+
+Completion requires both (1) targeted regressions for each diagnosed failure
+and (2) held-out, cross-format evidence that the fix does not trade one paper's
+success for regressions elsewhere. The end-to-end acceptance route remains
+real PDF import in the Tauri app through CanonicalDocument/PaperBlock, Reader
+rendering, and Markdown/Notion export. Docling and GROBID are comparison or
+optional-evidence sources; neither may replace the canonical resolver or
+become a mandatory runtime dependency without corpus-wide evidence.
+
+Native typography is retained as structural evidence throughout diagnosis and
+resolution: `fontName`, `fontSize`, bold/italic score, indentation, baseline,
+and spacing before/after are combined with geometry and neighboring blocks.
+A font change is a boundary clue, not a hard role assignment; matching fonts
+can support wrapped-line continuity, while a size/weight/family transition can
+support a heading, masthead, caption, table, or bibliography boundary.
+
+# 2026-10-11: font-aware masthead/grid and inline-marker regressions
+
+Font identity and size are now checked when collecting same-baseline native
+spans for caption-adjacent table rows, reducing accidental table promotion from
+aligned prose. A repeated multi-line grid remains visible as a skipped table
+block even when its caption relation points at a synthetic region. Bilingual
+Japanese/Latin author rows preserve CJK token boundaries instead of shortening
+the row to its romanization. Numbered `(a)`/`1)` markers embedded in a native
+prose line stay in that paragraph; only markers at physical line starts split a
+list. Full test suite: 757/757; typecheck passes; lint has only pre-existing
+warnings. OzCHI and selected cross-format real-paper regressions remain green.
+The fast Tauri bundle was rebuilt at 2026-10-11 22:42:58 JST. The staged
+translation-server source hashes match the working tree exactly. A process
+already running from before this build remains separate; quit/reopen the app
+before checking the new extraction behavior in the UI.
+
+# 2026-10-11: Paper Package write/read race found on Tauri path
+
+The isolated packaged Tauri import exposed a real persistence race: a reader
+could observe a package while only its first core file had been written, which
+produced `Paper Package が不完全です` and an empty Reader. Full package swaps
+and mutable checkpoints now share a process-local write queue, while the final
+directory rename remains the visibility boundary. A concurrent-write regression
+passes. The direct Canonical extraction and all 757 unit/regression tests pass.
+The packaged full OzCHI run still needs a clean end-to-end rerun after this
+build; the first attempt also encountered the app-side translation-server
+startup wait, so its marker is not evidence against extraction quality.
+
+# 2026-10-11: REFERENCES の欠落と表示不統一
+
+本文中段の `UIST '11. ACM, 627-636.` が、先頭の会議名だけで running
+header と誤判定され、block 化前に失われていた。会議名型 chrome 判定を
+ページ上端に限定し、同じ font family/size・hanging indent・通常行間を
+持つ前行へ残すよう修正。明示的 REFERENCES 節では番号のない author-year
+形式と `In Proc.` も bibliography evidence として扱い、長いエントリも
+一貫して `reference`（小さなグレー表示、翻訳対象外）へ投影する。OzCHI
+回帰と ACM/Springer/IEEE/arXiv/Nature/PMLR/Elsevier を含む選択15件は成功。
+
 # 2026-10-11: 指タッチ論文で抽出が図表破片だらけだった
 
 読み順 Kahn がページ無視で後半ページの表セルを ABSTRACT より先に出していた。ready キューを page/y/x で並べる。チャート軸の短語は破棄。番号付き Table N（CAPTION_OF あり）のセル破片はキャプション／実質グリッド以外を投影しない（captionless 行列は維持）。当該PDFは再インポートが必要。Desktop の旧エクスポートは古い抽出のまま。
@@ -1363,3 +1428,53 @@ The guarded selective backend is production-ready as code but remains **conditio
 - 2026-10-09: Moved numbered affiliation + body contamination into PDF extraction. A generic multi-institution masthead band is now classified as an `affiliation` block before projection, so it cannot enter the following paragraph translation unit. Regression on `linguistics-register.pdf` passes; the three institutions are projected as affiliations and no block contains both the affiliation band and article prose. Latest unsigned `.app` rebuilt at 10:45.
 
 - 2026-10-09: Full PDF extraction suite after the affiliation-band boundary fix passed **129/129 tests across 13 files** in a single worker. Parallel Vitest mode still has the known `onTaskUpdate` timeout despite all assertions passing; single-worker is the authoritative result.
+### 2026-10-11: latest packaged build and typography evidence
+
+- `npm run tauri:build:fast` completed successfully. The latest bundle is `src-tauri/target/release/bundle/macos/Paper Reader.app`, built at `2026-10-11 22:57:00 +0900`.
+- The bundled `translation-server/engines/segmenter.py` and `madlad_mps.py` hashes match the working tree. Native line provenance keeps `fontName`, `fontSize`, x/y, width/height, and rotation through layout diagnostics and package layout. Heading/table/masthead resolvers use font family/size and geometry as evidence, so typography is now an explicit block-boundary clue rather than a display-only field.
+- A packaged acceptance run with `/Users/harada/Desktop/2686612.2686699.pdf` started the bundled server successfully (`/health` ready), but remained at `import_started` for the 120-second harness window. The run was stopped and retained at `/tmp/paper-reader-ozchi-acceptance.Mrk2R0`; no extraction result was claimed from this incomplete run. Direct Canonical extraction and the full regression suite remain the valid evidence until the packaged import can complete in a longer/interactive run.
+- The old unrelated PID 54697 server on port 8765 was stopped before the acceptance run, so the bundle spawned its own sidecar; this avoids testing against a stale server.
+- The package checkpoint fix is now bundled at `2026-10-11 23:22:03 +0900`. The latest app was fully restarted from that bundle; its bundled translation server reached `/health` `phase=ready`, `model_loaded=true`. A fresh Tauri run reached `import_dispatched` without the earlier immediate package error during the first 20 seconds (`/tmp/paper-reader-ozchi-acceptance-final2.qk3PcZ`); the full translated import still requires a longer interactive run because this harness was intentionally stopped before completion.
+- After adding the post-source-hash flush and live-package read retry, the full JavaScript regression suite passes: **80 files, 758 tests**. Typecheck, focused package tests, and `git diff --check` also pass. The latest app remains running from the 23:16 build for manual Tauri verification.
+- The Golden PDF's same-baseline masthead authors were found to be reversed by sub-pixel y-coordinate noise (`Jonna Häkkilä, Ashley Colley` despite Ashley being left). The generic author-source sort now treats y differences ≤1pt as one visual row and orders by x, yielding `Ashley Colley, Jonna Häkkilä`; a baseline regression asserts this order. Author projection focused tests pass **25/25**. The latest `.app` containing this fix was rebuilt at `2026-10-11 23:27:43 +0900`, restarted, and its bundled translation server reached `phase=ready`.
+
+- The 113-paper reading-order rerun exposed one generic regression in `medical-imaging-deep-learning-review`: a short first line beginning `Abstract—Since ...` inherited title typography and was omitted from the paragraph stream. The layout classifier now treats inline abstract labels followed by multi-word prose as paragraph evidence; this is punctuation/typography based and applies to IEEE/arXiv-style layouts generally. The full reading-order corpus now passes **114/114**.
+- The final unsigned fast `.app` was rebuilt at `2026-10-11 23:51:15 +0900` from the working tree, restarted, and its bundled server reports `/health` `phase=ready`, `model_loaded=true`. Bundle hashes match the source for `segmenter.py` (`e6e2ad06…`) and `madlad_mps.py` (`c5c7dc12…`).
+
+- A clean isolated packaged integration acceptance run finally completed for the Golden OzCHI PDF (`/Users/harada/Desktop/2686612.2686699.pdf`): import, Paper Package persistence, Reader body lookup, annotation creation, library search, English Markdown export (`46,022` bytes), quit/relaunch, and persisted annotation verification all returned `ok=true`. The result is retained at `scripts/packaged-e2e/artifacts/integration/result.json`. The persisted package has the expected title, ordered authors Ashley Colley / Jonna Häkkilä with both affiliations, no ACM permission-text paragraph, 21 reference blocks, and captioned Table 1–5 blocks. This validates the real bundled Tauri path through CanonicalDocument/PaperBlock and Markdown export; interactive visual inspection and Notion ZIP inspection remain separate follow-up checks.
+
+- Docling was evaluated in an isolated `tmp/docling-eval-venv` (`docling==2.137.0`) on the same Golden PDF. It produced useful Markdown grids for some tables, but introduced title-to-abstract reading-order contamination, emitted the full ACM permission notice as article prose, flattened affiliation/email metadata, and corrupted diacritics/statistical glyphs (`Jonna HŠkkilŠ`, `usersÕ`, `�2`). The full evidence and decision are in `test-data/real-papers/reports/docling-ozchi-finger-specific-touch-v1.md`; Docling is not a native-parser replacement, only a possible future low-confidence table-evidence enricher.
+
+- Packaged acceptance now also creates and structurally validates the real Notion import archive, rather than only exercising plain Markdown export. The Golden PDF passed a second clean run with `notionBytes=1,137,805`; its ZIP has one Markdown file plus 15 figure/table image files at the archive root, so Notion will not create an empty `assets` page. The final result preserves the Notion byte count after relaunch. Typecheck and focused Markdown/package tests pass. Latest fast unsigned `.app` was rebuilt at `2026-10-12 00:04:52 +0900`, then started; bundled translation `/health` reports `phase=ready`, `model_loaded=true`.
+
+- GROBID `0.9.1` was then built and run locally with Java 21 for the same Golden PDF; no Docker, Podman, or cloud service was used. `processHeaderDocument` exactly recovered the title, both author names, emails, DOI, and useful affiliation structure. `processFulltextDocument` excluded the ACM permission chrome, but returned only 20 references versus native 21, 10 figures versus native 12, and logged seven incomplete/malformed tables whose cells are interleaved with prose. The comparison is recorded in `test-data/real-papers/reports/grobid-ozchi-finger-specific-touch-v1.md`. GROBID remains optional local **header evidence** only; it must not replace the native Canonical extraction path. The TEI parser now retains sibling department/institution/country tags within an affiliation link; its focused tests pass 3/3 and typecheck passes. Typography continues to be retained as resolver evidence (`fontName`, size, weight, baseline, indent and spacing) together with geometry, never as a standalone role rule.
+
+- The fast unsigned `.app` was rebuilt after the GROBID TEI parser and comparison-report changes at `2026-10-12 00:19:40 +0900`: `src-tauri/target/release/bundle/macos/Paper Reader.app`. The focused GROBID TEI test passes **3/3**, typecheck and `git diff --check` pass. This rebuild includes all current extraction/UI worktree changes; start this bundle afresh to use it.
+
+- A fresh packaged Tauri acceptance run against `/Users/harada/Desktop/2686612.2686699.pdf` passed again after that build: isolated import, Canonical/Paper Package persistence, Reader body lookup, annotation, library search, English Markdown export (`46,022` bytes), root-level Notion archive (`1,137,805` bytes), quit/relaunch, and persisted annotation verification all returned `ok=true`. Result: `scripts/packaged-e2e/artifacts/integration/result.json`. The full cached extraction corpus was then rerun against the current worktree: **232/232** pass (118 real-paper baseline + 114 reading-order checks, 417.62s). Parser font/ColorSpace warnings are non-failing PDF.js diagnostics only.
+
+- Latest-bundle visual verification: the normal `Paper Reader.app` process creates a real native window and its library surface was captured from the current bundle at `scripts/packaged-e2e/artifacts/integration/latest-app-window.png`. The dedicated Accessibility UI E2E was strengthened after two harness-only failures: its isolated HOME now reuses the host Hugging Face model cache, and Open-panel paths are pasted rather than typed so a Japanese IME cannot convert path punctuation. The panel now reaches and selects the Golden PDF. The remaining UI-driver issue is the final NSOpenPanel confirmation: the native panel closes but WKWebView does not deliver a file-input change event under System Events automation, so no package is materialized. This does not contradict the separately successful packaged acceptance import, which reads the same PDF through Tauri's `read_dropped_pdf` command. Reader visual interaction still needs either a stable macOS picker driver or a short manual import/open check; do not treat the failed UI harness as an extraction regression.
+
+- The fast unsigned `.app` was rebuilt again at **2026-10-12 00:58:24 +0900** after the packaged UI harness changes. The bundle path is `src-tauri/target/release/bundle/macos/Paper Reader.app`; the build completed successfully. The translation server was started separately for UI verification and stopped cleanly afterward.
+- The UI harness now explicitly uses the Tauri `read_dropped_pdf` + `startBackgroundImport` path when `PAPER_READER_UI_E2E=1` and `PAPER_READER_UI_E2E_DIRECT_IMPORT=1`, avoiding the flaky native picker/IME path. A subsequent run with the bundled app and a ready translation server still exited before producing a UI watcher marker, so no new visual UI pass is claimed. The earlier packaged integration acceptance remains the authoritative end-to-end pass; no production direct-import behavior is enabled.
+- Follow-up process audit found four orphaned `Paper Reader.app/Contents/MacOS/app` processes left by earlier UI/manual attempts (including isolated `PAPER_READER_UI_E2E` homes). They were not a current production instance and were terminated. This explains why screen captures showed unrelated/stale window content and why Accessibility enumeration was ambiguous; future UI checks must launch one fresh bundle instance and clean it in a `finally`/trap.
+- Re-inspected the retained latest-bundle screenshot `scripts/packaged-e2e/artifacts/integration/latest-app-window.png`: it is a real Paper Reader library window from the packaged app (Japanese library title and paper card), not a mock or browser capture. It verifies native window rendering and the imported paper card; the deeper Reader-pane visual remains covered by the successful Reader body lookup in packaged integration, but lacks a stable screenshot artifact.
+- After the display was turned back on, CGWindowList inspection identified the Paper Reader native window directly (owner `Paper Reader`, PID 36251, window ID 128250, bounds `1280×832` at `Y=-1018` on another Space/display). Capturing that window with `screencapture -l 128250` succeeded and produced `/tmp/paper-reader-window-direct.png`, confirming the app window was present; the earlier full-screen captures had shown Cursor because they captured the active Space rather than this off-screen window.
+- Keyboard navigation through that same off-screen native window reached the Reader pane. Direct capture `/tmp/paper-reader-keyclick.png` shows the actual Reader layout, TOC, title, abstract and translation-failure banner. This is a real visual verification of the packaged Reader surface. The displayed object is an older persisted user paper (it shows only `Jonna Häkkilä` and six failed blocks), so it is not used as a regression result; the clean packaged acceptance artifact remains authoritative for the Golden PDF's current extraction (Ashley + Jonna, 232/232 corpus).
+
+# 2026-10-12: borderless matrix row-label resolution
+
+The Golden OzCHI PDF exposed a generic role conflict in the borderless p-value
+matrix on page 5. Bold axis labels such as `Comfortable` received a perfect
+heading-style score even though the geometry evidence identified a repeated
+numeric neighbourhood and a high table score. The resolver now lets that
+specific geometry/table evidence win for short punctuation-free labels, so
+matrix headers and rows remain table members and are not emitted as translated
+headings. A fresh diagnostic reduced the report from 132 to 131 blocks and
+resolves `Comfortable` as `table`; the valid page-6 Table 3 grid remains a
+table (`Finger / Thumb / Finger1…` and its function rows), not body prose.
+The source-only table fallback is intentional: uncertain/borderless cells are
+shown verbatim and are not sent to MADLAD, which explains why these blocks do
+not receive a translation status. Typecheck and lint pass; the focused PDF
+test process was stopped after PDF.js fixture work exceeded the local timeout,
+so the full extraction corpus should be rerun before packaging this change.

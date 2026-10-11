@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { extractPdfPages } from '../src/test/readingOrder/extractPdf';
+import { reconstructDocument } from '../src/services/pdfLayout';
+const [id, needle] = process.argv.slice(2);
+const catalog=JSON.parse(fs.readFileSync('test-fixtures/real-papers/catalog.json','utf8'));
+const paper=catalog.papers.find((p:any)=>p.id===id);
+const pages=await extractPdfPages(path.join(catalog.pdfDir,paper.filename));
+const {blocks}=reconstructDocument(pages);
+for(const [index,b] of blocks.entries()) if(b.text.includes(needle)) console.log(JSON.stringify({index,role:b.role,text:b.text,bbox:b.bbox,lines:b.lines.map((l:any)=>({text:l.text,x:l.x,y:l.y,width:l.width,fontSize:l.fontSize,fonts:[...new Set(l.items.map((i:any)=>i.fontName))],items:l.items.map((i:any)=>({text:i.text,x:i.x,width:i.width,size:i.fontSize,font:i.fontName}))}))},null,2));

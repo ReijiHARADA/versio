@@ -34,7 +34,14 @@ fn paper_dir(app: &AppHandle, paper_id: &str) -> Result<PathBuf, String> {
     if !is_safe_paper_id(paper_id) {
         return Err("無効な論文IDです".into());
     }
-    let root = if matches!(std::env::var("PAPER_READER_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
+    let root = if matches!(std::env::var("PAPER_READER_ACCEPTANCE"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
+        std::env::var("PAPER_READER_ACCEPTANCE_HOME")
+            .ok()
+            .map(PathBuf::from)
+            .filter(|path| path.is_absolute())
+            .or_else(|| app.path().app_data_dir().ok())
+            .ok_or_else(|| "app data directory unavailable".to_string())?
+    } else if matches!(std::env::var("PAPER_READER_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
         std::env::var("PAPER_READER_UI_E2E_HOME")
             .ok()
             .map(PathBuf::from)
@@ -224,6 +231,12 @@ pub fn ui_e2e_enabled() -> bool {
 #[tauri::command]
 pub fn ui_e2e_fixture_path() -> Option<String> {
     if !ui_e2e_enabled() {
+        return None;
+    }
+    let direct = std::env::var("PAPER_READER_UI_E2E_DIRECT_IMPORT")
+        .map(|value| value == "1" || value.eq_ignore_ascii_case("true"))
+        .unwrap_or(false);
+    if !direct {
         return None;
     }
     std::env::var("PAPER_READER_UI_E2E_FIXTURE")

@@ -31,4 +31,19 @@ describe("GROBID TEI header parser", () => {
   it("does not default to a cloud GROBID host", () => {
     expect(grobidBaseUrl()).toBeNull();
   });
+
+  it("keeps department, institution, and country in one author affiliation", () => {
+    const header = parseGrobidHeaderTei(`
+      <TEI><teiHeader><fileDesc><titleStmt><title type="main">Paper</title></titleStmt>
+      <sourceDesc><biblStruct><analytic><author>
+        <persName><forename>Ada</forename><surname>Lovelace</surname></persName>
+        <affiliation><orgName type="department">School of Computing</orgName>
+        <orgName type="institution">Example University</orgName>
+        <address><country>Japan</country></address></affiliation>
+      </author></analytic></biblStruct></sourceDesc></fileDesc></teiHeader></TEI>
+    `);
+    expect(header.links).toEqual([
+      { author: "Ada Lovelace", affiliation: "School of Computing Example University Japan" },
+    ]);
+  });
 });

@@ -848,11 +848,31 @@ function clusterItemsIntoLines(
     [...bandRows].filter(([, rowCount]) => rowCount >= 6).map(([band]) => band),
   );
   const gridRows = new Set<number>();
-  baselineRows.forEach((row) => {
-    if ([...row.bands].filter((band) => recurringGridBands.has(band)).length >= 3) {
-      for (const index of row.groupIndexes) gridRows.add(index);
+  const gridCandidateRows = baselineRows
+    .filter((row) => [...row.bands].filter((band) => recurringGridBands.has(band)).length >= 3)
+    .sort((a, b) => a.y - b.y);
+  // Repeated x bands are page-level evidence, but a table is a local region.
+  // A justified prose line can accidentally align with table columns farther
+  // down the page; splitting that isolated line into cells corrupts paragraph
+  // reconstruction.  Keep only dense runs of at least three neighbouring
+  // grid-shaped rows.  Real tables repeat their columns on consecutive rows,
+  // while coincidental prose alignment is normally isolated.
+  const localGap = Math.max(24, fontBase * 2.4);
+  let cluster: typeof gridCandidateRows = [];
+  const flushGridCluster = () => {
+    if (cluster.length >= 3) {
+      for (const row of cluster) {
+        for (const index of row.groupIndexes) gridRows.add(index);
+      }
     }
-  });
+    cluster = [];
+  };
+  for (const row of gridCandidateRows) {
+    const previous = cluster.at(-1);
+    if (previous && row.y - previous.y > localGap) flushGridCluster();
+    cluster.push(row);
+  }
+  flushGridCluster();
   if (!sidebarBands) gridRows.clear();
   if (debugLayout === "1" && gridRows.size > 0) {
     console.info(`[REPEATED_GRID] page=${pageNumber} columns=${recurringGridBands.size} rows=${gridRows.size}`);
@@ -1198,6 +1218,7 @@ function isEdgeChrome(
   if (patterns.has(normalizeChromeKey(line.text))) return true;
   if (isRepeatedHeaderFooter(line.text, patterns)) return true;
   if (
+    line.y < topBand * 1.35 &&
     /^(proceedings of|conference on|extended abstracts|tei\s+[’']?\d{2,4}|chi\s+[’']?\d{2,4}|uist\s+[’']?\d{2,4}|iswc\s+[’']?\d{2,4}|dis\s+[’']?\d{2,4}|cscw|imwut|ubicomp)/i.test(
       line.text.trim()
     )
@@ -1263,7 +1284,22 @@ export function isTableCaption(text: string): boolean {
 function isCopyright(text: string, fontSize: number, baseFont: number): boolean {
   const explicitLicense = /^(?:©\s*\d{4}\b|open[-\s]access\b|license\s*\(\s*https?:\/\/creativecommons\.org|this\s+article\s+is\s+(?:licensed|distributed)\b)/i.test(text.trim());
   if (fontSize > baseFont * 0.92 && !explicitLicense) return false;
+  // PDF text streams can interleave adjacent permission lines and break the
+  // literal `Permission to make ...` prefix (for example `Ppersonal ...
+  // areermission ...`).  Classify the block from several independent legal
+  // boilerplate clauses instead of depending on that exact byte order.
+  const permissionSignals = [
+    /personal or classroom use is granted/i,
+    /hard copies of all or part of this work/i,
+    /commercial advantage/i,
+    /copies bear this notice/i,
+    /components of this work owned by others/i,
+    /abstracting with credit is permitted/i,
+    /prior specific permission/i,
+    /permissions?@[\w.-]+/i,
+  ].filter((pattern) => pattern.test(text)).length;
   return explicitLicense ||
+    permissionSignals >= 2 ||
     /permission to make digital or hard copies/i.test(text) ||
     /\b(?:this\s+work\s+is\s+)?licensed\s+under\s+a\s+creative\s+commons\b/i.test(text) ||
     /\b(?:terms\s+of\s+the\s+)?creative\s+commons\s+(?:attribution\s+)?(?:license|licence)\b/i.test(text) ||
@@ -1724,7 +1760,7 @@ function looksLikeContactMetadata(text: string): boolean {
 }
 
 function looksLikeAffiliation(text: string): boolean {
-  return /(university|department|institute|college|faculty|laboratory|\blab\b|research (center|centre)|school of|architecture|industrial design|centre of excellence|faculty of|department of|\b(?:the )?(netherlands|australia|germany|france|japan|china|canada|sweden|denmark|finland|norway|italy|spain|switzerland|austria|belgium|ireland|scotland|england|wales)\b|\b(?:sydney|london|dundee|eindhoven|cambridge|oxford|toronto|melbourne|macquarie)\b|大学|大学院|研究所|学院|学部|学科|機構|高専)/i.test(
+  return /(university|department|institute|college|faculty|laboratory|\blab\b|(?:research\s+)?(?:center|centre)\s+(?:for|of)\b|school of|architecture|industrial design|centre of excellence|faculty of|department of|\b(?:the )?(netherlands|australia|germany|france|japan|china|canada|sweden|denmark|finland|norway|italy|spain|switzerland|austria|belgium|ireland|scotland|england|wales)\b|\b(?:sydney|london|dundee|eindhoven|cambridge|oxford|toronto|melbourne|macquarie)\b|大学|大学院|研究所|学院|学部|学科|機構|高専)/i.test(
     text
   );
 }
@@ -2166,6 +2202,13 @@ function roleForLine(
       looksLikeAffiliation(text) && text.length <= 220 && !/[.!?。！？]$/.test(text)) {
     return "affiliation";
   }
+  // Legal boilerplate is frequently interleaved with a body column in the
+  // native text stream. Resolve the active permission run before lowercase
+  // sentence-continuation handling; otherwise every alternate small line can
+  // leak back into the article as a paragraph.
+  if (isCopyright(text, line.fontSize, baseFont) || (inCopyright && line.fontSize <= baseFont * 0.92)) {
+    return "copyright";
+  }
   // A stale native role hint can label a lowercase body continuation as a
   // heading. Structural sentence evidence must take precedence over that
   // hint so the paragraph remains intact.
@@ -2177,12 +2220,6 @@ function roleForLine(
     return "chrome";
   }
   if (line.roleHint) return line.roleHint;
-  // Carry a copyright run only through similarly small continuation lines.
-  // Body-sized text in the opposite physical column may follow a footer on
-  // the same native stream (common when an abstract spans a license footer).
-  if (isCopyright(text, line.fontSize, baseFont) || (inCopyright && line.fontSize <= baseFont * 0.92)) {
-    return "copyright";
-  }
   // Figure labels are frequently emitted on their own native line before the
   // caption body. Keeping the label as a caption lets the following nearby
   // title/caption lines use the same conservative continuation checks.
@@ -2223,8 +2260,8 @@ function roleForLine(
   // the masthead scorer can otherwise label the long multi-line block as a
   // title. Treat a sentence-like abstract marker as body prose so a lowercase
   // continuation can be reconstructed by the normal paragraph resolver.
-  if (/^abstract\s*[—–-]\s*/i.test(text) && text.length >= 96 &&
-      (/[.!?]$/.test(text) || text.split(/\s+/).length >= 16)) {
+  if (/^abstract\s*[—–-]\s*/i.test(text) &&
+      text.split(/\s+/).filter(Boolean).length >= 6) {
     return "paragraph";
   }
 
@@ -2639,10 +2676,14 @@ function groupLinesIntoBlocks(
   }
   flush();
   const nonEmptyBlocks = splitMixedColumnBlocks(
-    splitTopBibliographicLines(
-      splitStyledHeadingPrefixes(
-      splitEmbeddedChromeBlocks(rejoinCaptionStatisticFragments(blocks.filter((b) => b.text.length > 0))),
-      median(blocks.flatMap((block) => block.lines.map((line) => line.fontSize))) || 9,
+    splitMixedMastheadBlocks(
+      splitEmbeddedTableGridFromCaptions(
+        splitTopBibliographicLines(
+          splitStyledHeadingPrefixes(
+            splitEmbeddedChromeBlocks(rejoinCaptionStatisticFragments(blocks.filter((b) => b.text.length > 0))),
+            median(blocks.flatMap((block) => block.lines.map((line) => line.fontSize))) || 9,
+          )
+        )
       )
     )
   );
@@ -2978,6 +3019,136 @@ function splitEmbeddedChromeBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
     result.push({ ...block, role: "copyright", text: suffix });
   }
   return result;
+}
+
+/** Split a page-one author block when its physical lines change from a
+ * person-shaped name to institution-shaped metadata. Conference templates
+ * often use identical font size and leading for both, so role changes must be
+ * recovered from the preserved line geometry rather than the merged string. */
+function splitMixedMastheadBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
+  return blocks.flatMap((block) => {
+    if (block.role !== "author" || block.pageStart !== 1 || block.pageEnd !== 1 || block.lines.length < 2) {
+      return [block];
+    }
+    const affiliationIndex = block.lines.findIndex((line, index) =>
+      index > 0 && looksLikeAffiliation(line.text) && !looksLikePersonName(line.text)
+    );
+    if (affiliationIndex <= 0) return [block];
+    const authorLines = block.lines.slice(0, affiliationIndex);
+    const affiliationLines = block.lines.slice(affiliationIndex);
+    if (!authorLines.every((line) =>
+      looksLikePersonName(line.text) || looksLikeLatinAuthorLine(line.text) || looksLikeAuthorList(line.text)
+    )) {
+      return [block];
+    }
+    return [
+      {
+        ...block,
+        role: "author" as const,
+        text: joinLines(authorLines),
+        lines: authorLines,
+        bbox: blockBbox(authorLines),
+      },
+      {
+        ...block,
+        role: "affiliation" as const,
+        text: joinLines(affiliationLines),
+        lines: affiliationLines,
+        bbox: blockBbox(affiliationLines),
+      },
+    ];
+  });
+}
+
+/**
+ * A full-width table can begin beside the final wrapped lines of its caption.
+ * PDF text order then places caption prose and header cells on the same
+ * baseline, and ordinary role grouping absorbs the first table rows into the
+ * caption. Recover the boundary from native x gaps and repeated cell origins.
+ * Font name/size remain attached to the reconstructed lines so later evidence
+ * generators can compare table, caption, and body styles.
+ */
+function splitEmbeddedTableGridFromCaptions(blocks: LayoutBlock[]): LayoutBlock[] {
+  return blocks.flatMap((block) => {
+    if (block.role !== "table_caption" || block.lines.length < 3) return [block];
+    const captionX = block.lines[0]?.x ?? block.bbox.x;
+    const pageWidth = block.lines[0]?.pageWidth ?? 612;
+    const gridOffset = Math.max(72, pageWidth * 0.14);
+    const captionLines: LayoutLine[] = [];
+    const provisionalGrid: LayoutLine[] = [];
+    const unresolvedOffsetLines: LayoutLine[] = [];
+
+    for (const line of block.lines) {
+      const items = [...line.items].sort((a, b) => a.x - b.x);
+      if (items.length === 0) continue;
+      const startsAtCaption = Math.abs(items[0].x - captionX) <= Math.max(10, line.fontSize * 1.4);
+      if (!startsAtCaption) {
+        unresolvedOffsetLines.push(line);
+        continue;
+      }
+      let splitAt = -1;
+      for (let index = 1; index < items.length; index += 1) {
+        const previous = items[index - 1];
+        const gap = items[index].x - (previous.x + previous.width);
+        const farFromCaption = items[index].x - captionX >= gridOffset;
+        const fontBoundary = previous.fontName !== items[index].fontName ||
+          Math.abs(previous.fontSize - items[index].fontSize) >= 0.35;
+        if (farFromCaption && gap >= Math.max(14, line.fontSize * (fontBoundary ? 1.25 : 1.6))) {
+          splitAt = index;
+          break;
+        }
+      }
+      if (splitAt < 0) {
+        captionLines.push(line);
+        continue;
+      }
+      captionLines.push(itemsToLine(items.slice(0, splitAt), line.column, line.page, line.pageHeight, line.pageWidth));
+      provisionalGrid.push(itemsToLine(items.slice(splitAt), line.column, line.page, line.pageHeight, line.pageWidth));
+    }
+
+    if (provisionalGrid.length === 0) return [block];
+    const provisionalOrigins = provisionalGrid.flatMap((line) => line.items.map((item) => item.x));
+    for (const line of unresolvedOffsetLines) {
+      const items = [...line.items].sort((a, b) => a.x - b.x);
+      const alignedWithGrid = items.length >= 2 && items.some((item) =>
+        provisionalOrigins.some((origin) => Math.abs(item.x - origin) <= Math.max(6, item.fontSize * 0.8))
+      );
+      if (alignedWithGrid && items[0].x - captionX >= gridOffset) {
+        provisionalGrid.push(line);
+      } else {
+        captionLines.push(line);
+      }
+    }
+
+    const gridItems = provisionalGrid.flatMap((line) => line.items);
+    const xOrigins = new Map<number, number>();
+    for (const item of gridItems) {
+      const bucket = Math.round(item.x / 12) * 12;
+      xOrigins.set(bucket, (xOrigins.get(bucket) ?? 0) + 1);
+    }
+    const baselines = new Set(provisionalGrid.map((line) => Math.round(line.y / 3) * 3));
+    const repeatedOrigins = [...xOrigins.values()].filter((count) => count >= 2).length;
+    if (gridItems.length < 4 || baselines.size < 2 || repeatedOrigins < 1 || captionLines.length === 0) {
+      return [block];
+    }
+    captionLines.sort((a, b) => a.y - b.y || a.x - b.x);
+    provisionalGrid.sort((a, b) => a.y - b.y || a.x - b.x);
+    return [
+      {
+        ...block,
+        text: joinLines(captionLines),
+        lines: captionLines,
+        bbox: blockBbox(captionLines),
+      },
+      {
+        ...block,
+        role: "table" as const,
+        text: joinLines(provisionalGrid),
+        lines: provisionalGrid,
+        bbox: blockBbox(provisionalGrid),
+      },
+    ];
+  });
 }
 
 /** Keep a paragraph from spanning two native columns when the extractor has

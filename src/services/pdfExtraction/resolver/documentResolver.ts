@@ -52,6 +52,9 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   const mixedNativeBand = candidate.evidence.find((entry) => entry.label === "mixed-native-x-band");
   const vectorFigureLabels = candidate.evidence.find((entry) => entry.label === "vector-figure-label-cluster");
   const repeatedChartLabels = candidate.evidence.find((entry) => entry.label === "repeated-numeric-chart-label");
+  const axisLabelNeighborhood = candidate.evidence.find(
+    (entry) => entry.label === "axis-label-numeric-neighborhood"
+  );
   // Two independent geometry signals are required before excluding a block
   // from ordinary translation. A mixed x-band alone can be a legitimate
   // inline annotation; repeated numeric labels alone can occur in prose.
@@ -79,6 +82,22 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   }
   if (imageLabelEvidence && (scores.other ?? 0) >= paragraph + 0.06) {
     return { role: "other", confidence: scores.other ?? score };
+  }
+  // Borderless matrices are often emitted as one native block per row. Their
+  // short row labels (for example "Comfortable" or "Finger 1") can have a
+  // strong heading-style score because the PDF uses bold text for the axis.
+  // When the geometry classifier also sees a repeated numeric neighbourhood,
+  // that table evidence is more specific than typography alone. Keep the
+  // label in the table projection so it cannot become a translated heading.
+  if (
+    role === "heading" &&
+    axisLabelNeighborhood &&
+    axisLabelNeighborhood.confidence >= 0.8 &&
+    (scores.table ?? 0) >= 0.9 &&
+    !/[.!?;:]/.test(candidate.text) &&
+    candidate.text.trim().split(/\s+/).filter(Boolean).length <= 4
+  ) {
+    return { role: "table", confidence: Math.max(scores.table ?? 0, axisLabelNeighborhood.confidence) };
   }
   // Precision first: weak semantic evidence falls back to paragraph instead
   // of turning normal prose into an equation, heading, or table.
@@ -370,10 +389,13 @@ export function resolveTableRegions(nodes: CanonicalNode[], regions: StructuralR
     const memberIds = new Set(region.memberCandidateIds);
     const members = resolvedNodes.filter((node) => memberIds.has(node.id));
     if (members.length !== region.memberCandidateIds.length) continue;
+    const physicallyBoundedGrid = region.provenance.some((entry) =>
+      entry.label === "caption-anchored-graphics-grid" && entry.confidence >= 0.99
+    );
     const memberIdsToPromote = new Set(members
       .filter((node) =>
         (node.role === "paragraph" || node.role === "other") &&
-        !looksLikeProseTableRegionMember(node.text)
+        (physicallyBoundedGrid || !looksLikeProseTableRegionMember(node.text))
       )
       .map((node) => node.id));
     if (memberIdsToPromote.size === 0) continue;
