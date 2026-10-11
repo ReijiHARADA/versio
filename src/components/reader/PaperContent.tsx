@@ -1,5 +1,4 @@
 import {
-  useEffect,
   useLayoutEffect,
   useRef,
   useCallback,
@@ -23,9 +22,12 @@ import { displayPaperTitle, usableTranslatedText, isGarbageTitle, sectionDisplay
 import { shouldTranslateBlock, isRetryableTranslationFailure } from "../../services/importServiceV2";
 import { isBusyProcessingStatus } from "../../services/paperStatus";
 import {
+  coalesceSplitReferenceBlocks,
   indexReferenceBlocks,
-  isStandalonePageNumberLine,
+  isPageNumberArtifactBlock,
   looksLikeBibliographyEntry,
+  looksLikeConferenceRunningHeader,
+  looksLikeYearTitleReferenceContinuation,
   parseReferenceLinks,
 } from "../../services/citations";
 import {
@@ -135,12 +137,23 @@ const PaperBlockView = memo(function PaperBlockView({
   inReferencesSection = false,
 }: PaperBlockViewProps) {
   const original = block.original?.trim() ?? "";
-  if (inReferencesSection && isStandalonePageNumberLine(original)) {
+  // PDF page markers often land as body footnotes (border-top + muted digit).
+  // Hide in every section, including when only the translated digit remains.
+  if (isPageNumberArtifactBlock(block.original, block.translated)) {
+    return null;
+  }
+  // Conference running headers interrupting REFERENCES render as body paragraphs.
+  if (
+    looksLikeConferenceRunningHeader(original) ||
+    (inReferencesSection && looksLikeConferenceRunningHeader(block.translated ?? ""))
+  ) {
     return null;
   }
 
   const effectiveType =
-    inReferencesSection && block.type === "paragraph" && looksLikeBibliographyEntry(original)
+    inReferencesSection &&
+    block.type === "paragraph" &&
+    (looksLikeBibliographyEntry(original) || looksLikeYearTitleReferenceContinuation(original))
       ? "reference"
       : block.type;
 
@@ -217,6 +230,8 @@ function SectionBodySpacer({
 
 function isVisibleContentBlock(block: PaperBlock): boolean {
   if (block.type === "heading") return false;
+  if (isPageNumberArtifactBlock(block.original, block.translated)) return false;
+  if (looksLikeConferenceRunningHeader(block.original ?? "")) return false;
   const role = String(block.metadata?.role ?? "");
   return role !== "author" && role !== "affiliation" && role !== "copyright";
 }
@@ -682,7 +697,12 @@ export const PaperContent = memo(
                 </div>
               )}
               {allSectionsOrdered.map((section) => {
-                const contentBlocks = blocksBySection.get(section.id) ?? [];
+                const rawBlocks = blocksBySection.get(section.id) ?? [];
+                const contentBlocks =
+                  section.normalizedKind === "references" ||
+                  isReferencesHeading(section.originalTitle)
+                    ? coalesceSplitReferenceBlocks(rawBlocks)
+                    : rawBlocks;
                 const mounted = mountedSectionIds.has(section.id);
                 const HeadingTag =
                   `h${Math.min(section.level + 1, 6)}` as keyof React.JSX.IntrinsicElements;

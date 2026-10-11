@@ -66,7 +66,14 @@ pub fn write_app_file(app: AppHandle, relative_path: String, data: Vec<u8>) -> R
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
-    fs::write(&path, data).map_err(|e| e.to_string())
+    // Atomic replace: write sidecar then rename over the destination so a crash
+    // mid-write cannot leave a truncated library.sqlite / package file.
+    let tmp = PathBuf::from(format!("{}.tmp", path.display()));
+    fs::write(&tmp, &data).map_err(|e| e.to_string())?;
+    fs::rename(&tmp, &path).map_err(|e| {
+        let _ = fs::remove_file(&tmp);
+        e.to_string()
+    })
 }
 
 #[tauri::command]

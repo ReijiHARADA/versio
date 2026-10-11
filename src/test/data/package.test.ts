@@ -153,6 +153,36 @@ describe("Paper Package", () => {
     expect(String(figure?.metadata.imageUrl)).toMatch(/^assets\//);
   });
 
+  it("persists even when extraction still carries footer page-number blocks", async () => {
+    const fs = createMemoryFileSystem();
+    const { paper, sections, blocks } = sample();
+    const withFooter: PaperBlock[] = [
+      ...blocks,
+      {
+        id: "b-page",
+        paperId: paper.id,
+        sectionId: sections[0].id,
+        type: "footnote",
+        order: 99,
+        pageStart: 2,
+        pageEnd: 2,
+        boundingBoxes: [],
+        original: "49",
+        translated: "49",
+        extractionConfidence: 1,
+        translationStatus: "skipped",
+        parentBlockId: null,
+        metadata: { role: "footnote" },
+      },
+    ];
+    const pkg = projectionToPackage({ paper, sections, blocks: withFooter });
+    expect(pkg.structure.blocks["b-page"]).toBeUndefined();
+    expect(validatePaperPackage(pkg).ok).toBe(true);
+    const { revision } = await persistPaperPackage(fs, pkg);
+    expect(revision).toBeGreaterThanOrEqual(1);
+    expect(await fs.exists("papers/paper-1/paper.json")).toBe(true);
+  });
+
   it("recovers an incomplete package from .bak leftovers", async () => {
     const fs = createMemoryFileSystem();
     const { paper, sections, blocks } = sample();

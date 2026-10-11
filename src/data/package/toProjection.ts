@@ -1,7 +1,9 @@
 import type { Paper, PaperBlock, Section, TranslationStatus } from "../../types/paper";
 import {
-  isStandalonePageNumberLine,
+  isPageNumberArtifactBlock,
   looksLikeBibliographyEntry,
+  looksLikeConferenceRunningHeader,
+  looksLikeYearTitleReferenceContinuation,
 } from "../../services/citations";
 import { isReferencesHeading } from "../../services/translation/quality";
 import { parsePaperMarkdown } from "../markdown/parse";
@@ -168,10 +170,16 @@ export function packageToProjection(
     const translatedText = isFigureLike
       ? captionTranslated
       : (translated.get(id) ?? captionTranslated);
+    // Older packages may retain footer numbers in structure.json / ja.md even
+    // after original.md was filtered. Footnotes show up as a rule + muted digit.
+    if (isPageNumberArtifactBlock(originalText, translatedText)) {
+      return [];
+    }
     const plainOriginal = (originalText ?? "").trim();
-    // Older packages may retain footer numbers in structure.json even after
-    // their Markdown node was filtered. Keep them out of the Reader too.
-    if (isStandalonePageNumberLine(plainOriginal)) {
+    if (
+      looksLikeConferenceRunningHeader(plainOriginal) ||
+      looksLikeConferenceRunningHeader((translatedText ?? "").trim())
+    ) {
       return [];
     }
     const sectionId = meta.sectionId ?? null;
@@ -179,7 +187,8 @@ export function packageToProjection(
       sectionId &&
       referenceSectionIds.has(sectionId) &&
       type === "paragraph" &&
-      looksLikeBibliographyEntry(plainOriginal)
+      (looksLikeBibliographyEntry(plainOriginal) ||
+        looksLikeYearTitleReferenceContinuation(plainOriginal))
     ) {
       type = "reference";
       metadata.role = metadata.role ?? "reference";

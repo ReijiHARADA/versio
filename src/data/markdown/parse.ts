@@ -180,12 +180,10 @@ export function parsePaperMarkdown(source: string, fallbackPaperId = ""): Parsed
     nodes.push({ id: "", type: "paragraph", text: leftover });
   }
 
-  // Older packages could contain PDF footer page numbers as ordinary
-  // paragraphs. Filter only standalone numeric paragraph/footnote nodes;
-  // headings, references, tables, and numeric prose remain untouched.
-  const filteredNodes = nodes.filter(
-    (node) => !((node.type === "paragraph" || node.type === "footnote") && /^\d{1,3}$/.test(node.text.trim()))
-  );
+  // Do not drop page-number nodes here. validatePaperPackage compares parsed
+  // Markdown ids to structure.json; filtering in the parser makes legitimate
+  // (if unwanted) footer blocks look like orphan-structure and aborts persist.
+  // Reader / projectionToPackage / export strip those artifacts instead.
 
   return {
     frontMatter: frontMatter ?? {
@@ -193,6 +191,6 @@ export function parsePaperMarkdown(source: string, fallbackPaperId = ""): Parsed
       language: "en",
       schemaVersion: MARKDOWN_SCHEMA_VERSION,
     },
-    nodes: filteredNodes,
+    nodes,
   };
 }

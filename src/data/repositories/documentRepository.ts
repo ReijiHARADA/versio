@@ -143,7 +143,12 @@ async function persistCached(
     upsertPaperIndex(db, cached.paper);
     indexPaperText(db, cached.paper, pkg.originalMarkdown, pkg.translatedMarkdown);
   } catch (error) {
-    console.warn("Paper Package persist failed:", error);
+    console.error("Paper Package persist failed:", error);
+    // Surface to import/finalize callers — silent failure left SQLite rows
+    // with no on-disk package (empty Reader after relaunch).
+    throw error instanceof Error
+      ? error
+      : new Error(`Paper Package persist failed: ${String(error)}`);
   }
 }
 

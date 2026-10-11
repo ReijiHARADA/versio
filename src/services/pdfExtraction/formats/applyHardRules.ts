@@ -1,3 +1,4 @@
+import { looksLikeConferenceRunningHeader } from "../../citations";
 import type { RoleCandidate } from "../generic/candidates";
 import type { FormatDetection } from "../types";
 import type { ExtractionEvidence } from "../types";
@@ -36,9 +37,11 @@ export function applyFormatHardRules(
         return relabel(candidate, "copyright", 0.95, "ACM permission boilerplate");
       }
       if (
-        ACM_HEADER.test(text) &&
-        text.length < 90 &&
-        (candidate.role === "paragraph" || candidate.role === "heading")
+        (candidate.role === "paragraph" ||
+          candidate.role === "heading" ||
+          candidate.role === "other") &&
+        ((ACM_HEADER.test(text) && text.length < 120) ||
+          looksLikeConferenceRunningHeader(text))
       ) {
         evidence.push({
           source: "format-profile",

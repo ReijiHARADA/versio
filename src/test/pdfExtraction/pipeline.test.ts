@@ -6,7 +6,7 @@ import { grobidEnricher } from "../../services/pdfExtraction/enrichers/grobid";
 import { doclingEnricher } from "../../services/pdfExtraction/enrichers/docling";
 import { nativeDocumentFromExtracted } from "../../services/pdfExtraction/native/fromExtracted";
 import { generateGenericCandidates } from "../../services/pdfExtraction/generic/candidates";
-import { splitFlattenedList } from "../../services/pdfExtraction/projection/toPaper";
+import { projectCanonicalToPaper, splitFlattenedList } from "../../services/pdfExtraction/projection/toPaper";
 import { detectPageColumns, reconstructDocument } from "../../services/pdfLayout";
 import { extractPdfPages } from "../readingOrder/extractPdf";
 import fs from "node:fs";
@@ -713,6 +713,74 @@ describe("canonical extraction pipeline", () => {
     const region = result.canonical.nodes.find((node) => node.role === "table" && !node.text);
     expect(prose?.role).toBe("paragraph");
     expect(region?.boundingBoxes[0]?.y).toBeGreaterThan(130);
+  });
+
+  it("demotes narrative sentences that inherit a table role near a matrix", () => {
+    const bbox = { page: 1, x: 80, y: 200, width: 300, height: 12 };
+    const node = (id: string, role: "table" | "paragraph", text: string, y: number) => ({
+      id,
+      role,
+      text,
+      pageStart: 1,
+      pageEnd: 1,
+      boundingBoxes: [{ ...bbox, y }],
+      confidence: 0.99,
+      evidence: [] as const,
+      sourceAnchor: { page: 1, boundingBoxes: [{ ...bbox, y }] },
+    });
+    const projected = projectCanonicalToPaper({
+      canonical: {
+        nodes: [
+          node("t1", "table", "Thumb 0.000 0.151 0.028 0.000", 160),
+          node(
+            "p1",
+            "table",
+            "When considering the time taken for different fingers to tap targets (Figure 6) and examining the smallest size, comfort remains highest.",
+            200
+          ),
+          node(
+            "p2",
+            "table",
+            "thumb-finger 2 and thumb-finger 3. Thus, we can confirm H1 for most parts.",
+            220
+          ),
+        ],
+        relations: [],
+        source: { pageCount: 1 },
+        pageCount: 1,
+        diagnostics: {
+          layoutConfidence: 1,
+          readingOrderConfidence: 1,
+          textIntegrityConfidence: 1,
+          semanticConfidence: 1,
+          formatConfidence: 1,
+          relationConfidence: 1,
+          columnConfidence: 1,
+          unicodeConfidence: 1,
+          paragraphConfidence: 1,
+        },
+        format: {
+          applied: "generic",
+          scores: { generic: 1, acm: 0, ieee: 0, "springer-lncs": 0, jstage: 0 },
+          reason: "test",
+        },
+        formatId: "generic",
+        pageKind: "native-text",
+      },
+      paperId: "narrative-table-demote",
+      filePath: "/tmp/narrative-table.pdf",
+      fileHash: "narrative-table",
+      metadata: { pageCount: 1 },
+      layoutBlocks: [],
+      layouts: [],
+      baseFontSize: 10,
+    });
+    const matrix = projected.blocks.find((block) => block.original?.startsWith("Thumb 0.000"));
+    const when = projected.blocks.find((block) => block.original?.startsWith("When considering"));
+    const thus = projected.blocks.find((block) => block.original?.includes("Thus, we can confirm"));
+    expect(matrix?.type).toBe("table");
+    expect(when?.type).toBe("paragraph");
+    expect(thus?.type).toBe("paragraph");
   });
 
   it("preserves table identity without projecting synthetic region text", () => {

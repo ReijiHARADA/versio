@@ -64,11 +64,21 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
     // the candidate geometry, but never promote prose-shaped rows.
     const borderlessGroup = effectiveSignature.horizontalRules + effectiveSignature.verticalRules < 4
       ? candidates.filter((candidate) => {
+        // Require an explicit high table score. The previous
+        // `tableLikeWithoutRole` fallback pulled ordinary prose words near a
+        // caption (e.g. "were", "perceived") into the region and later
+        // promoted them to empty Table shells in the Reader.
         const tableScore = candidate.roleScores.table ?? 0;
-        const tableLikeWithoutRole = candidate.roleScores.table === undefined && candidate.text.trim().length <= 140;
-        if (candidate.pageStart !== page.pageNumber || (tableScore < 0.8 && !tableLikeWithoutRole)) return false;
+        if (candidate.pageStart !== page.pageNumber || tableScore < 0.94) return false;
         const box = candidate.boundingBoxes[0];
-        if (!box || /[.!?]\s*$/.test(candidate.text.trim())) return false;
+        const text = candidate.text.trim();
+        if (!box || /[.!?]\s*$/.test(text)) return false;
+        const words = text.split(/\s+/).filter(Boolean);
+        const digits = (text.match(/\d/g) ?? []).length;
+        const letters = (text.match(/[A-Za-z]/g) ?? []).length;
+        // Cell-like rows need digits or several short tokens; letter-only
+        // fragments next to charts are axis/prose labels, not table members.
+        if (digits === 0 && (words.length <= 3 || letters / Math.max(text.length, 1) > 0.7)) return false;
         const yDistance = Math.abs((box.y + box.height / 2) - captionY);
         const xOverlap = box.x < caption.boundingBoxes[0].x + caption.boundingBoxes[0].width &&
           caption.boundingBoxes[0].x < box.x + box.width;

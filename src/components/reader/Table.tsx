@@ -23,6 +23,8 @@ export function Table({ block, metadata }: TableProps) {
   const hasImage = Boolean(imageUrl);
   const caption = metadata.captionTranslated || metadata.captionOriginal;
   const displayedCaption = splitCaptionLabel(caption || "", metadata.tableNumber || "Table");
+  const textFallback = !hasImage && !metadata.imageUrl && Boolean(block.original?.trim());
+  const showCaption = Boolean(caption) || hasImage;
 
   return (
     <>
@@ -48,6 +50,10 @@ export function Table({ block, metadata }: TableProps) {
             />
           ) : metadata.imageUrl ? (
             <div className={styles.missingImage}>表を読み込み中…</div>
+          ) : textFallback ? (
+            // Source-only / borderless table rows: show the extracted cells as
+            // text instead of a blank "extraction failed" shell.
+            <pre className={styles.tableFallbackText}>{block.original}</pre>
           ) : (
             <div className={styles.missingImage}>表を抽出できませんでした</div>
           )}
@@ -65,27 +71,29 @@ export function Table({ block, metadata }: TableProps) {
             </button>
           )}
         </div>
-        <figcaption className={styles.caption}>
-          <span className={styles.figureNumber}>{displayedCaption.label}</span>
-          {displayedCaption.text && (
-            <span className={styles.captionText}>{displayedCaption.text}</span>
-          )}
-          {hasTranslatedCaption && (
-            <button
-              type="button"
-              className={styles.toggleOriginal}
-              onClick={() => setShowOriginalCaption(!showOriginalCaption)}
-              title={
-                showOriginalCaption ? "原文キャプションを隠す" : "原文キャプションを表示"
-              }
-            >
-              {showOriginalCaption ? <EyeOff size={12} /> : <Eye size={12} />}
-            </button>
-          )}
-          {showOriginalCaption && metadata.captionOriginal && (
-            <p className={styles.originalCaption}>{metadata.captionOriginal}</p>
-          )}
-        </figcaption>
+        {showCaption && (
+          <figcaption className={styles.caption}>
+            <span className={styles.figureNumber}>{displayedCaption.label}</span>
+            {displayedCaption.text && (
+              <span className={styles.captionText}>{displayedCaption.text}</span>
+            )}
+            {hasTranslatedCaption && (
+              <button
+                type="button"
+                className={styles.toggleOriginal}
+                onClick={() => setShowOriginalCaption(!showOriginalCaption)}
+                title={
+                  showOriginalCaption ? "原文キャプションを隠す" : "原文キャプションを表示"
+                }
+              >
+                {showOriginalCaption ? <EyeOff size={12} /> : <Eye size={12} />}
+              </button>
+            )}
+            {showOriginalCaption && metadata.captionOriginal && (
+              <p className={styles.originalCaption}>{metadata.captionOriginal}</p>
+            )}
+          </figcaption>
+        )}
       </figure>
 
       {hasImage && (
