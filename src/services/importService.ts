@@ -12,7 +12,6 @@ import {
   saveSections,
   saveBlocks,
   updateBlock,
-  getPaperByHash,
 } from "./database";
 import type { Paper, Section, PaperBlock } from "../types/paper";
 
@@ -62,14 +61,17 @@ export async function importPDF(
 
     const fileHash = await computeFileHash(file);
 
-    // Check for duplicate
-    const existingPaper = await getPaperByHash(fileHash);
+    // Check for duplicate (orphan index rows without a package are cleared)
+    const { findDuplicatePaper } = await import("./import/duplicate");
+    const existingPaper = await findDuplicatePaper(fileHash);
     if (existingPaper) {
       callbacks.onProgress({
         stage: "completed",
         stageProgress: 1,
         stageTotal: 1,
-        message: "このPDFは既にインポートされています",
+        message: existingPaper.trashedAt
+          ? "同じ論文がゴミ箱にあります"
+          : "このPDFは既にインポートされています",
         paper: existingPaper,
       });
       return null;

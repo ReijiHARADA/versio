@@ -1,3 +1,7 @@
+# 2026-10-11: パッケージ無し索引が「同じPDFがすでにあります」になる
+
+Paper Package が無いのに `library.sqlite` に hash 行だけ残ると再インポートが拒否される。`findDuplicatePaper` はパッケージ不在の索引を削除してから通す。起動時 sync も非ゴミ箱 orphan 索引を削除。終了済みの duplicate/failed ジョブは同じ fileKey の再ドロップを塞がない。ゴミ箱入りは従来どおり復元案内。
+
 # 2026-10-11: 表が無いのに「表を抽出できませんでした」が大量表示
 
 図表近傍の本文が borderless table region に巻き込まれ、空の Table シェルになっていた。region メンバー条件を厳格化し、本文誤分類は paragraph に戻す。画像の無い table は失敗メッセージではなく抽出テキストを表示。当該PDFには Table 1–5 の数値表もある（再インポートで反映）。
