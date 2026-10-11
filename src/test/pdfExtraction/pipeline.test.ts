@@ -796,6 +796,10 @@ describe("canonical extraction pipeline", () => {
     expect(region?.text ?? null).toBeNull();
     expect(region?.structuralLabel).toContain("Table 9");
     expect(region?.boundingBoxes.length).toBeGreaterThan(0);
+    // Cell crumbs under a numbered Table N caption must not become extra table blocks.
+    const tableBlocks = result.blocks.filter((block) => block.type === "table");
+    expect(tableBlocks).toHaveLength(1);
+    expect(tableBlocks[0]?.original).toMatch(/^Table 9\b/);
   });
 
   it("marks standalone bullet blocks as list items", () => {

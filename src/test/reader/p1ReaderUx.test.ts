@@ -57,6 +57,13 @@ describe("import failure classification", () => {
     expect(result.primaryAction).toBe("open_existing");
   });
 
+  it("does not treat package duplicate-block-id errors as PDF duplicates", () => {
+    const result = classifyImportFailure(
+      "Paper Package persist failed: duplicate-block-id: original.md で block ID が重複しています"
+    );
+    expect(result.kind).not.toBe("duplicate");
+  });
+
   it("classifies trashed duplicates with restore action", () => {
     const result = classifyImportFailure("同じ論文がゴミ箱にあります");
     expect(result.kind).toBe("duplicate");

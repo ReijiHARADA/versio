@@ -469,6 +469,14 @@ function looksLikeProseMistakenForTable(text: string): boolean {
   if (digits === 0 && words.length === 1 && /ly$/i.test(trimmed) && letters >= 6) {
     return true;
   }
+  // Broken caption crumbs next to a matrix ("bolded.", "of visual target…").
+  if (
+    words.length <= 10 &&
+    digitRatio < 0.08 &&
+    (/^(?:of|and|the|bolded)\b/i.test(trimmed) || /\bbolded\.?$/i.test(trimmed))
+  ) {
+    return true;
+  }
   // Long narrative sentences that only sit near a matrix. Keep short
   // goal/method cells (often "To find…") and dense numeric rows.
   if (words.length >= 12 && digitRatio < 0.12) {
@@ -481,6 +489,96 @@ function looksLikeProseMistakenForTable(text: string): boolean {
       return true;
     }
   }
+  return false;
+}
+
+/** Chart-axis crumbs should leave the document entirely — not become paragraphs. */
+function isChartDebrisFragment(text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed) return true;
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  const digits = (trimmed.match(/\d/g) ?? []).length;
+  const letters = (trimmed.match(/[A-Za-z]/g) ?? []).length;
+  if (digits === 0 && letters >= 2 && words.length <= 4 && /^[a-z]/.test(trimmed)) {
+    return true;
+  }
+  if (digits === 0 && words.length === 1 && /ly$/i.test(trimmed) && letters >= 6) {
+    return true;
+  }
+  if (
+    words.length <= 10 &&
+    digits / Math.max(letters + digits, 1) < 0.08 &&
+    (/^(?:of|and|the|bolded|pairs except)\b/i.test(trimmed) || /\bbolded\.?$/i.test(trimmed))
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function isNumberedTableCaption(text: string | null | undefined): boolean {
+  return /^(?:table|表)\s*\d+/i.test((text ?? "").trim());
+}
+
+/**
+ * Native PDFs often emit one LayoutBlock per matrix cell. When a numbered
+ * Table N caption already owns a CAPTION_OF region (image crop / grid target),
+ * those cell crumbs must not also become standalone table blocks. Captionless
+ * matrices (e.g. wear-scale) keep their row blocks — this only fires for
+ * numbered Table/表 captions with a CAPTION_OF relation.
+ */
+function captionedTableAbsorption(canonical: CanonicalDocument): {
+  keepIds: Set<string>;
+  pages: Set<number>;
+} {
+  const keepIds = new Set<string>();
+  const pages = new Set<number>();
+  const nodeById = new Map(canonical.nodes.map((node) => [node.id, node]));
+  for (const rel of canonical.relations) {
+    if (rel.kind !== "CAPTION_OF") continue;
+    const caption = nodeById.get(rel.from);
+    const target = nodeById.get(rel.to);
+    if (!caption || !target || target.role !== "table") continue;
+    if (!isNumberedTableCaption(caption.text)) continue;
+    // Keep only substantive CAPTION_OF targets (full rows / grids). A lone
+    // cell that won the caption link is still a crumb — the caption block
+    // (and image crop) already represent the table.
+    if (shouldKeepCaptionedTableTarget(target)) {
+      keepIds.add(target.id);
+    }
+    pages.add(caption.pageStart);
+    pages.add(caption.pageEnd);
+    pages.add(target.pageStart);
+    pages.add(target.pageEnd);
+  }
+  return { keepIds, pages };
+}
+
+function shouldKeepCaptionedTableTarget(target: CanonicalNode): boolean {
+  const text = (target.text ?? "").trim();
+  if (!text) return false;
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length >= 8) return true;
+  if ((text.match(/\d/g) ?? []).length >= 6) return true;
+  if (/\b(?:Phonebook|Gallery|Method|Goal|Mean|significance|functions?)\b/i.test(text)) {
+    return true;
+  }
+  return false;
+}
+
+/** Cell / header crumbs that belong under a numbered table caption. */
+function looksLikeCaptionedTableCellFragment(text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed || isNumberedTableCaption(trimmed)) return false;
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  const digits = (trimmed.match(/\d/g) ?? []).length;
+  const letters = (trimmed.match(/[A-Za-z]/g) ?? []).length;
+  if (/^[\d.<>=≤≥\s,.\-+eE]+$/.test(trimmed)) return true;
+  if (/^(?:Thumb|Finger\s*\d)\b/i.test(trimmed) && words.length <= 24) return true;
+  if (/^(?:Finger\s*\d\s*)+$/i.test(trimmed)) return true;
+  if (digits >= 3 && digits / Math.max(letters + digits, 1) >= 0.25 && words.length <= 36) {
+    return true;
+  }
+  if (words.length <= 4 && !/[.!?]\s*$/.test(trimmed) && letters <= 40) return true;
   return false;
 }
 
@@ -1460,13 +1558,22 @@ export function projectCanonicalToPaper(input: {
     return true;
   });
   const fallbackIds = readable.map((n) => n.id);
-  const orderedIds =
-    topologicalOrder(fallbackIds, canonical.relations) ?? fallbackIds;
   const nodeById = new Map(canonical.nodes.map((n) => [n.id, n]));
+  const orderedIds =
+    topologicalOrder(fallbackIds, canonical.relations, (id) => {
+      const node = nodeById.get(id);
+      const box = node?.boundingBoxes[0];
+      return {
+        page: node?.pageStart ?? Number.MAX_SAFE_INTEGER,
+        y: box?.y ?? Number.MAX_SAFE_INTEGER,
+        x: box?.x ?? Number.MAX_SAFE_INTEGER,
+      };
+    }) ?? fallbackIds;
   const orderedNodes = orderedIds
     .map((id) => nodeById.get(id))
     .filter((n): n is CanonicalNode => Boolean(n));
   const projectionNodes = projectionNodesWithContinuations(orderedNodes, canonical, layoutBlocks);
+  const tableAbsorption = captionedTableAbsorption(canonical);
 
   const pushBlock = (
     node: CanonicalNode,
@@ -1521,10 +1628,12 @@ export function projectCanonicalToPaper(input: {
     const column = node.column ?? layout?.column ?? "single";
 
     // Chart-adjacent prose can inherit a table role from region membership.
-    // Keep those units as ordinary paragraphs so the Reader does not render
-    // dozens of empty "Table" shells for words like "were" / "perceived".
+    // Drop axis crumbs; keep longer narrative as ordinary paragraphs.
     if (node.role === "table" && node.text && looksLikeProseMistakenForTable(node.text)) {
       const text = node.text;
+      if (isChartDebrisFragment(text)) {
+        continue;
+      }
       pushBlock(node, layout, {
         sectionId: currentSectionId,
         type: "paragraph",
@@ -1537,6 +1646,17 @@ export function projectCanonicalToPaper(input: {
         parentBlockId: null,
         metadata: { column, role: "paragraph", demotedFromTable: true },
       });
+      continue;
+    }
+
+    // Numbered Table N already owns a CAPTION_OF region — skip duplicate cell crumbs.
+    if (
+      node.role === "table" &&
+      node.text &&
+      !tableAbsorption.keepIds.has(node.id) &&
+      (tableAbsorption.pages.has(node.pageStart) || tableAbsorption.pages.has(node.pageEnd)) &&
+      looksLikeCaptionedTableCellFragment(node.text)
+    ) {
       continue;
     }
 
@@ -1816,7 +1936,8 @@ export function projectCanonicalToPaper(input: {
       if (isStandaloneContactMetadata(text) ||
         isStandaloneAffiliationMarkerRun(text) ||
         isStandalonePageNumber(text, node.role) ||
-        looksLikeConferenceRunningHeader(text)) continue;
+        looksLikeConferenceRunningHeader(text) ||
+        isChartDebrisFragment(text)) continue;
       const listParts = splitFlattenedList(text);
       const standaloneListItem = /^(?:[•‣▪∙]|(?:[1-9]|1[0-9]|20)[.)]|\([A-Za-z]\)|[A-Za-z]\))\s+/.test(text.trim());
       const isRef = !isNumberedProseListItem(text) &&

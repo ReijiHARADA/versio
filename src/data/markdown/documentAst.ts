@@ -101,11 +101,17 @@ export function blocksToDocument(input: {
     if (block.type === "heading") continue;
 
     if (block.type === "figure" || block.type === "table") {
-      const caption = useTranslated
-        ? String(block.metadata.captionTranslated ?? text)
-        : String(block.metadata.captionOriginal ?? text);
+      // Prefer caption metadata, but empty string must fall back to body text.
+      // `??` would keep "" and serialize a blank node whose block-comment then
+      // steals the previous node's id → orphan-structure on persist.
+      const captionMeta = useTranslated
+        ? block.metadata.captionTranslated
+        : block.metadata.captionOriginal;
+      const caption = String(captionMeta || text || "");
       const number = String(
-        block.metadata.figureNumber ?? block.metadata.tableNumber ?? (block.type === "figure" ? "Figure" : "Table")
+        block.metadata.figureNumber ||
+          block.metadata.tableNumber ||
+          (block.type === "figure" ? "Figure" : "Table")
       );
       const imageUrl = String(block.metadata.imageUrl ?? "");
       let src = imageUrl;
@@ -120,14 +126,17 @@ export function blocksToDocument(input: {
       } else if (imageUrl.startsWith("assets/")) {
         src = imageUrl;
       }
+      const bodyText = caption || number;
       nodes.push({
         id: block.id,
         type: block.type,
-        text: caption,
+        text: bodyText,
         alt: number,
         src: src || undefined,
       });
-      if (caption) {
+      // Text-only tables already serialize the cell/caption body; a second
+      // italic caption with the same string just duplicates noise in exports.
+      if (caption && (src || caption !== bodyText)) {
         nodes.push({
           id: `${block.id}-caption`,
           type: "caption",
