@@ -1,6 +1,7 @@
 import type { Paper } from "../../types/paper";
 import type { FileSystem } from "../fs/types";
 import {
+  deletePaperIndex,
   getAllPaperIndexes,
   getPaperIndex,
   getTrashedPaperIndexes,
@@ -94,13 +95,10 @@ export async function syncPaperIndexesFromPackages(
   const known = [...getAllPaperIndexes(db), ...getTrashedPaperIndexes(db)];
   for (const index of known) {
     if (!(await paperPackageExists(fs, index.id))) {
-      if (index.processingStatus !== "failed" && !index.trashedAt) {
-        upsertPaperIndex(db, {
-          ...index,
-          processingStatus: "failed",
-          needsTranslationResume: false,
-          updatedAt: new Date().toISOString(),
-        });
+      // Drop non-trash orphans so UNIQUE(source_file_hash) cannot block re-import
+      // after a wiped papers/ directory or a failed first persist.
+      if (!index.trashedAt) {
+        deletePaperIndex(db, index.id);
         rebuilt += 1;
       }
       continue;

@@ -151,6 +151,7 @@ export async function deletePaper(id: string): Promise<void> {
   await fs.remove(paperDir(id));
   await fs.remove(paperBackupDir(id));
   await fs.remove(paperTmpDir(id));
+  await db.persist();
 }
 
 export async function saveSections(sections: Section[]): Promise<void> {

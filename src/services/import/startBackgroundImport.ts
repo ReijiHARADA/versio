@@ -275,11 +275,19 @@ export async function startBackgroundImport(
   }
 
   const fileKey = fileKeyOf(file);
-  if (
-    startedImportKeys.has(fileKey) ||
-    useImportJobStore.getState().jobs.some((job) => job.fileKey === fileKey)
-  ) {
-    return false;
+  // A finished duplicate/failed card must not block dropping the same PDF again.
+  // Otherwise the UI keeps showing “同じPDFがすでにあります” and silently ignores
+  // the new drop (same fileKey).
+  const terminalStages = new Set(["duplicate", "failed", "cancelled", "completed"]);
+  for (const job of useImportJobStore.getState().jobs) {
+    if (job.fileKey !== fileKey) continue;
+    if (!terminalStages.has(job.stage)) {
+      return false;
+    }
+    dismissBackgroundImport(job.id);
+  }
+  if (startedImportKeys.has(fileKey)) {
+    startedImportKeys.delete(fileKey);
   }
   startedImportKeys.add(fileKey);
 
