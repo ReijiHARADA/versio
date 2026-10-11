@@ -56,9 +56,11 @@ export function classifyImportFailure(
     };
   }
 
+  // Do not match structural codes like "duplicate-block-id" — only PDF-level
+  // duplicate copy from the import pipeline / explicit duplicate stage.
   if (
-    includesAny(text, ["既にインポート", "already imported", "duplicate"]) ||
-    stage === "duplicate"
+    stage === "duplicate" ||
+    includesAny(text, ["既にインポート", "already imported", "同じPDFがすでに"])
   ) {
     return {
       kind: "duplicate",

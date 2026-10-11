@@ -10,7 +10,7 @@ import {
 } from "../repositories/paperRepository";
 import { rememberDocument } from "../repositories/documentRepository";
 import type { SqliteClient } from "../sqlite/client";
-import { loadPaperPackage, paperPackageExists } from "./persist";
+import { loadPaperPackage } from "./persist";
 import { packageToProjection } from "./toProjection";
 
 function stubIndexFromPackage(
@@ -94,11 +94,15 @@ export async function syncPaperIndexesFromPackages(
 
   const known = [...getAllPaperIndexes(db), ...getTrashedPaperIndexes(db)];
   for (const index of known) {
-    if (!(await paperPackageExists(fs, index.id))) {
-      // Drop non-trash orphans so UNIQUE(source_file_hash) cannot block re-import
-      // after a wiped papers/ directory or a failed first persist.
+    const hasPrimary = await fs.exists(`papers/${index.id}/paper.json`);
+    if (!hasPrimary) {
+      // Drop non-trash orphans (including stuck *.tmp writes) so UNIQUE hash
+      // cannot block re-import. Do not treat .bak/.tmp alone as a live package.
       if (!index.trashedAt) {
         deletePaperIndex(db, index.id);
+        await fs.remove(`papers/${index.id}`);
+        await fs.remove(`papers/${index.id}.bak`);
+        await fs.remove(`papers/${index.id}.tmp`);
         rebuilt += 1;
       }
       continue;

@@ -184,11 +184,17 @@ export async function importPDFV2(
       });
     console.info("[reading-order] page 3 preview\n" + preview.join("\n"));
 
-    // Save initial structure
+    // Save initial structure. Use a provisional hash until the primary Paper
+    // Package exists so a failed mid-import cannot block re-dropping the same
+    // PDF via UNIQUE(source_file_hash).
+    const finalSourceHash = paper.sourceFileHash;
+    paper.sourceFileHash = `importing-${paperId}`;
     paper.processingStatus = "glossary";
     await savePaper(paper);
     await saveSections(sections);
     await saveBlocks(blocks);
+    paper.sourceFileHash = finalSourceHash;
+    await savePaper(paper);
     try {
       const { getStorage } = await import("../data/runtime");
       const { loadPaperPackage, persistPaperPackage } = await import("../data/package/persist");
@@ -199,6 +205,7 @@ export async function importPDFV2(
         includeLayout: true,
       });
       pkg.layout = layoutFileFromNative(extracted.native, blocks);
+      pkg.paper.sourceFileHash = finalSourceHash;
       await persistPaperPackage(fs, pkg);
     } catch (error) {
       console.warn("Failed to persist layout provenance:", error);

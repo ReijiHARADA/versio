@@ -305,12 +305,25 @@ export function floatedTableContinuationRelations(
   return relations;
 }
 
+export type TopologicalOrderKey = {
+  page: number;
+  y: number;
+  x: number;
+};
+
+/**
+ * Kahn topological order over READS_BEFORE. When several nodes are ready,
+ * prefer earlier page / higher-on-page geometry so table-region members from
+ * later pages cannot float above ABSTRACT on page 1.
+ */
 export function topologicalOrder(
   ids: string[],
-  relations: CanonicalRelation[]
+  relations: CanonicalRelation[],
+  orderKey?: (id: string) => TopologicalOrderKey
 ): string[] | null {
   const incoming = new Map<string, number>();
   const outgoing = new Map<string, string[]>();
+  const index = new Map(ids.map((id, i) => [id, i]));
   for (const id of ids) {
     incoming.set(id, 0);
     outgoing.set(id, []);
@@ -321,7 +334,17 @@ export function topologicalOrder(
     outgoing.get(rel.from)?.push(rel.to);
     incoming.set(rel.to, (incoming.get(rel.to) ?? 0) + 1);
   }
-  const queue = ids.filter((id) => (incoming.get(id) ?? 0) === 0);
+  const compareReady = (a: string, b: string) => {
+    if (orderKey) {
+      const ka = orderKey(a);
+      const kb = orderKey(b);
+      if (ka.page !== kb.page) return ka.page - kb.page;
+      if (ka.y !== kb.y) return ka.y - kb.y;
+      if (ka.x !== kb.x) return ka.x - kb.x;
+    }
+    return (index.get(a) ?? 0) - (index.get(b) ?? 0);
+  };
+  const queue = ids.filter((id) => (incoming.get(id) ?? 0) === 0).sort(compareReady);
   const ordered: string[] = [];
   while (queue.length > 0) {
     const id = queue.shift()!;
@@ -329,7 +352,10 @@ export function topologicalOrder(
     for (const next of outgoing.get(id) ?? []) {
       const n = (incoming.get(next) ?? 1) - 1;
       incoming.set(next, n);
-      if (n === 0) queue.push(next);
+      if (n === 0) {
+        queue.push(next);
+        queue.sort(compareReady);
+      }
     }
   }
   if (ordered.length !== ids.length) return null;

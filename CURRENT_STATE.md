@@ -1,6 +1,10 @@
-# 2026-10-11: パッケージ無し索引が「同じPDFがすでにあります」になる
+# 2026-10-11: 指タッチ論文で抽出が図表破片だらけだった
 
-Paper Package が無いのに `library.sqlite` に hash 行だけ残ると再インポートが拒否される。`findDuplicatePaper` はパッケージ不在の索引を削除してから通す。起動時 sync も非ゴミ箱 orphan 索引を削除。終了済みの duplicate/failed ジョブは同じ fileKey の再ドロップを塞がない。ゴミ箱入りは従来どおり復元案内。
+読み順 Kahn がページ無視で後半ページの表セルを ABSTRACT より先に出していた。ready キューを page/y/x で並べる。チャート軸の短語は破棄。番号付き Table N（CAPTION_OF あり）のセル破片はキャプション／実質グリッド以外を投影しない（captionless 行列は維持）。当該PDFは再インポートが必要。Desktop の旧エクスポートは古い抽出のまま。
+
+# 2026-10-11: 保存失敗なのに「同じPDFがすでにあります」と出る
+
+`importPDFV2` が失敗時も `null` を返すため、`startBackgroundImport` がすべて duplicate 扱いにしていた。duplicatePaperId があるときだけ duplicate。分類も `duplicate-block-id` を PDF 重複にしない。画像無し table で空 caption（`"" ?? text`）が Markdown を空にし orphan-structure で保存失敗していたのを修正。
 
 # 2026-10-11: 表が無いのに「表を抽出できませんでした」が大量表示
 

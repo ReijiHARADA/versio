@@ -220,14 +220,31 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
     startedImportKeys.delete(fileKey);
     importFiles.delete(jobId);
     importAbortControllers.delete(jobId);
+    // importPDFV2 returns null for duplicates AND for handled failures.
+    // Only the duplicate path sets duplicatePaperId via onProgress.
+    if (duplicatePaperId) {
+      useImportJobStore.getState().patchJob(jobId, {
+        stage: "duplicate",
+        failureKind: "duplicate",
+        existingPaperId: duplicatePaperId,
+        message: "このPDFは既にインポートされています",
+        error: "このPDFは既にインポートされています",
+        stageProgress: 1,
+        stageTotal: 1,
+      });
+      return;
+    }
+
+    const job = useImportJobStore.getState().jobs.find((item) => item.id === jobId);
+    if (job?.stage === "failed" || job?.stage === "duplicate") {
+      return;
+    }
+    const classified = classifyImportFailure(job?.error ?? job?.message);
     useImportJobStore.getState().patchJob(jobId, {
-      stage: "duplicate",
-      failureKind: "duplicate",
-      existingPaperId: duplicatePaperId,
-      message: "このPDFは既にインポートされています",
-      error: "このPDFは既にインポートされています",
-      stageProgress: 1,
-      stageTotal: 1,
+      stage: "failed",
+      failureKind: classified.kind,
+      message: classified.title,
+      error: job?.error ?? classified.title,
     });
   } catch (error) {
     startedImportKeys.delete(fileKey);
