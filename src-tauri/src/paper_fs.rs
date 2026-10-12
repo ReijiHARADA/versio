@@ -426,7 +426,12 @@ pub fn save_verification_export(
 
 #[tauri::command]
 pub fn list_app_files(app: AppHandle, prefix: String) -> Result<Vec<String>, String> {
-    let root = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    // Keep listing on the same app-data root as read/write.  In particular,
+    // packaged acceptance uses PAPER_READER_ACCEPTANCE_HOME; resolving the
+    // requested directory through that root but collecting relative paths
+    // from the normal app-data directory made every freshly-written asset
+    // appear missing during package validation.
+    let root = e2e_app_data_root(&app)?;
     let path = resolve(&app, &prefix)?;
     if !path.exists() {
         return Ok(vec![]);

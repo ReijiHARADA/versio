@@ -46,6 +46,8 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
     .filter((entry): entry is [CanonicalNode["role"], number] => typeof entry[1] === "number")
     .sort((a, b) => b[1] - a[1]);
   const [role, score] = ranked[0] ?? [candidate.role, candidate.confidence];
+  const symbolicFormula = (candidate.text.match(/[=∈∉∪∩∑∏√∞≤≥≈≠→←↦{}|]/gu) ?? []).length >= 4 &&
+    (candidate.text.match(/[A-Za-z]{3,}/g) ?? []).length <= 6;
   const imageLabelEvidence = candidate.evidence.some((entry) =>
     entry.label === "image-overlap-label-cluster" || entry.label === "vector-figure-label-cluster"
   );
@@ -101,7 +103,7 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   }
   // Precision first: weak semantic evidence falls back to paragraph instead
   // of turning normal prose into an equation, heading, or table.
-  if (role === "equation" && score < Math.max(0.72, paragraph + 0.18)) {
+  if (role === "equation" && !symbolicFormula && score < Math.max(0.72, paragraph + 0.18)) {
     return { role: "paragraph", confidence: paragraph };
   }
   // Table evidence may override paragraph only when native geometry produced

@@ -108,7 +108,11 @@ export function getPaperIndex(db: SqliteClient, id: string): Paper | undefined {
 
 export function getAllPaperIndexes(db: SqliteClient): Paper[] {
   return db
-    .query("SELECT * FROM papers WHERE trashed_at IS NULL ORDER BY updated_at DESC")
+    // `importing-<uuid>` is a provisional duplicate-guard hash. The index is
+    // written before the atomic Paper Package so cancellation/retry can be
+    // recovered, but it must not become a Reader card yet: selecting it would
+    // race `paper.json` / markdown / structure creation.
+    .query("SELECT * FROM papers WHERE trashed_at IS NULL AND source_file_hash NOT LIKE 'importing-%' ORDER BY updated_at DESC")
     .map(rowToPaper);
 }
 

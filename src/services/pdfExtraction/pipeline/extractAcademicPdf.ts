@@ -57,6 +57,72 @@ const ENRICHERS: ExtractionEnricher[] = [
   doclingEnricher,
 ];
 
+function boxBounds(block: PaperBlock): { page: number; left: number; right: number; top: number; bottom: number } | null {
+  const boxes = block.boundingBoxes;
+  if (!boxes.length) return null;
+  const page = boxes[0].page;
+  const samePage = boxes.filter((box) => box.page === page);
+  return {
+    page,
+    left: Math.min(...samePage.map((box) => box.x)),
+    right: Math.max(...samePage.map((box) => box.x + box.width)),
+    top: Math.min(...samePage.map((box) => box.y)),
+    bottom: Math.max(...samePage.map((box) => box.y + box.height)),
+  };
+}
+
+/**
+ * A numbered table caption with a rendered crop is the reader-visible
+ * representation of a ruled table. Its individual native-text columns are
+ * useful extraction evidence, but displaying them again as separate fallback
+ * tables produces unreadable duplicate strings. Only remove fragments after
+ * a caption crop was actually created; source-only table fallback remains
+ * available whenever image extraction cannot produce a reliable crop.
+ */
+export function suppressImageBackedTableFragments(blocks: PaperBlock[]): PaperBlock[] {
+  const imageBackedCaptions = blocks.filter((block) => {
+    if (block.type !== "table") return false;
+    const metadata = block.metadata as { imageUrl?: string; captionOriginal?: string };
+    return Boolean(metadata.imageUrl) && /^\s*(?:table|表)\s*\d+/i.test(metadata.captionOriginal ?? "");
+  });
+  if (imageBackedCaptions.length === 0) return blocks;
+
+  return blocks.filter((block) => {
+    if (block.type !== "table") return true;
+    const metadata = block.metadata as {
+      imageUrl?: string;
+      captionOriginal?: string;
+      figureKey?: string;
+      column?: string;
+      tableSourceFallback?: boolean;
+      evidence?: Array<{ label?: string }>;
+    };
+    const isTableRegionFragment =
+      metadata.figureKey?.startsWith("table-region-") ||
+      metadata.tableSourceFallback === true ||
+      metadata.evidence?.some((entry) => entry.label === "table-region-member") === true;
+    if (metadata.imageUrl || metadata.captionOriginal || !isTableRegionFragment) {
+      return true;
+    }
+    const fragment = boxBounds(block);
+    if (!fragment) return true;
+    return !imageBackedCaptions.some((caption) => {
+      const captionMetadata = caption.metadata as { column?: string };
+      const captionBox = boxBounds(caption);
+      if (!captionBox || captionBox.page !== fragment.page) return false;
+      if (metadata.column && captionMetadata.column && metadata.column !== captionMetadata.column) return false;
+      const horizontallyOverlaps = fragment.left < captionBox.right && captionBox.left < fragment.right;
+      // Publishers place table captions above *or* below their grids. Both
+      // layouts are safe here because this is restricted to native blocks
+      // already classified as table-region fragments, on the same page and
+      // column as an image-backed numbered caption.
+      const closeAbove = fragment.bottom <= captionBox.top + 6 && captionBox.top - fragment.bottom <= 300;
+      const closeBelow = fragment.top >= captionBox.bottom - 6 && fragment.top - captionBox.bottom <= 300;
+      return horizontallyOverlaps && (closeAbove || closeBelow);
+    });
+  });
+}
+
 function overallConfidence(canonical: CanonicalDocument): number {
   const d = canonical.diagnostics;
   return (
@@ -167,6 +233,10 @@ export async function extractAcademicPdf(
         if (imageUrl) {
           block.metadata = { ...block.metadata, imageUrl };
         }
+      }
+      const visibleBlocks = suppressImageBackedTableFragments(result.blocks);
+      if (visibleBlocks.length !== result.blocks.length) {
+        result.blocks.splice(0, result.blocks.length, ...visibleBlocks);
       }
       console.info(`[figures] extracted ${figureImages.size} images`);
     } catch (error) {

@@ -24,6 +24,10 @@ export function Table({ block, metadata }: TableProps) {
   const caption = metadata.captionTranslated || metadata.captionOriginal;
   const displayedCaption = splitCaptionLabel(caption || "", metadata.tableNumber || "Table");
   const textFallback = !hasImage && !metadata.imageUrl && Boolean(block.original?.trim());
+  const tableRows = Array.isArray(metadata.tableRows)
+    ? metadata.tableRows.filter((row) => Array.isArray(row) && row.length > 0)
+    : [];
+  const structuredFallback = textFallback && tableRows.some((row) => row.length >= 2);
   const showCaption = Boolean(caption) || hasImage;
 
   return (
@@ -50,6 +54,18 @@ export function Table({ block, metadata }: TableProps) {
             />
           ) : metadata.imageUrl ? (
             <div className={styles.missingImage}>表を読み込み中…</div>
+          ) : structuredFallback ? (
+            <div className={styles.tableFallbackGrid} role="table" aria-label={caption || "抽出された表"}>
+              {tableRows.map((row, rowIndex) => (
+                <div className={styles.tableFallbackRow} role="row" key={`${block.id}-${rowIndex}`}>
+                  {row.map((cell, cellIndex) => (
+                    <div className={styles.tableFallbackCell} role="cell" key={`${block.id}-${rowIndex}-${cellIndex}`}>
+                      {cell.text}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           ) : textFallback ? (
             // Source-only / borderless table rows: show the extracted cells as
             // text instead of a blank "extraction failed" shell.

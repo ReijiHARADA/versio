@@ -1,18 +1,159 @@
 import { describe, expect, it } from "vitest";
 import { analyzeStructure } from "../../services/structureService";
-import { extractFromPages } from "../../services/pdfExtraction/pipeline/extractAcademicPdf";
+import { extractFromPages, suppressImageBackedTableFragments } from "../../services/pdfExtraction/pipeline/extractAcademicPdf";
+import type { PaperBlock } from "../../types/paper";
 import { FIXTURES } from "../readingOrder/builders";
 import { grobidEnricher } from "../../services/pdfExtraction/enrichers/grobid";
 import { doclingEnricher } from "../../services/pdfExtraction/enrichers/docling";
 import { nativeDocumentFromExtracted } from "../../services/pdfExtraction/native/fromExtracted";
 import { generateGenericCandidates } from "../../services/pdfExtraction/generic/candidates";
 import { projectCanonicalToPaper, splitFlattenedList } from "../../services/pdfExtraction/projection/toPaper";
-import { detectPageColumns, reconstructDocument } from "../../services/pdfLayout";
+import { detectPageColumns, figureImageRect, reconstructDocument, type LayoutBlock, type PageColumnLayout } from "../../services/pdfLayout";
 import { extractPdfPages } from "../readingOrder/extractPdf";
 import fs from "node:fs";
 import path from "node:path";
 
 describe("canonical extraction pipeline", () => {
+  it("crops compact ruled table rows together with their table caption", () => {
+    const layout: PageColumnLayout = {
+      page: 6, pageWidth: 612, pageHeight: 792, isMultiColumn: true,
+      gutterX: 300, leftX: 52, rightX: 310,
+    };
+    const rowBlock = (text: string, x: number, width: number): LayoutBlock => ({
+      role: "paragraph",
+      text,
+      pageStart: 6,
+      pageEnd: 6,
+      column: "right",
+      bbox: { page: 6, x, y: 132, width, height: 64 },
+      lines: Array.from({ length: 6 }, (_, index) => ({
+        text: `${text}-${index}`,
+        items: [], page: 6, column: "right", x, y: 132 + index * 11,
+        width, height: 8, fontSize: 8,
+        bbox: { page: 6, x, y: 132 + index * 11, width, height: 8 },
+      })),
+    });
+    const caption: LayoutBlock = {
+      role: "table_caption", text: "Table 3. Finger functions.", pageStart: 6, pageEnd: 6,
+      column: "right", bbox: { page: 6, x: 310, y: 206, width: 230, height: 18 }, lines: [],
+    };
+    const crop = figureImageRect(caption, [rowBlock("Finger Thumb Finger1", 341, 24), rowBlock("Function Call tapped contact", 389, 106), caption], layout);
+    expect(crop).toMatchObject({ page: 6, y: 129, height: 74 });
+  });
+
+  it("crops a compact table stream below an above-table caption", () => {
+    const layout: PageColumnLayout = {
+      page: 6, pageWidth: 612, pageHeight: 792, isMultiColumn: true,
+      gutterX: 300, leftX: 52, rightX: 310,
+    };
+    const row = (text: string, y: number): LayoutBlock => ({
+      role: "paragraph", text, pageStart: 6, pageEnd: 6, column: "left",
+      bbox: { page: 6, x: 55, y, width: 126, height: 8 },
+      lines: [{ text, items: [], page: 6, column: "left", x: 55, y, width: 126, height: 8, fontSize: 8, bbox: { page: 6, x: 55, y, width: 126, height: 8 } }],
+    });
+    const caption: LayoutBlock = {
+      role: "table_caption", text: "Table 2. Results.", pageStart: 6, pageEnd: 6,
+      column: "left", bbox: { page: 6, x: 50, y: 362, width: 236, height: 8 }, lines: [],
+    };
+    const crop = figureImageRect(caption, [caption, row("Gist cue 0.82 0.77", 396), row("Detailed cue 0.84 0.77", 411), row("Low interest 0.80 0.68", 426)], layout);
+    expect(crop).toMatchObject({ page: 6, y: 373, height: 64 });
+  });
+
+  it("crops full-column numeric cell rows below a compact table caption", () => {
+    const layout: PageColumnLayout = {
+      page: 6, pageWidth: 612, pageHeight: 792, isMultiColumn: true,
+      gutterX: 300, leftX: 52, rightX: 310,
+    };
+    const row = (text: string, y: number): LayoutBlock => ({
+      role: "paragraph", text, pageStart: 6, pageEnd: 6, column: "left",
+      bbox: { page: 6, x: 52, y, width: 238, height: 8 },
+      lines: [{ text, items: [
+        { text: "Age", x: 52, y, width: 24, height: 8, fontSize: 8, fontName: "body", page: 6 },
+        { text: "66.3", x: 145, y, width: 22, height: 8, fontSize: 8, fontName: "body", page: 6 },
+        { text: "70.0", x: 202, y, width: 22, height: 8, fontSize: 8, fontName: "body", page: 6 },
+        { text: "0.368", x: 252, y, width: 28, height: 8, fontSize: 8, fontName: "body", page: 6 },
+      ], page: 6, column: "left", x: 52, y, width: 238, height: 8, fontSize: 8, bbox: { page: 6, x: 52, y, width: 238, height: 8 } }],
+    });
+    const caption: LayoutBlock = {
+      role: "table_caption", text: "TABLE 2 | Baseline characteristics", pageStart: 6, pageEnd: 6,
+      column: "left", bbox: { page: 6, x: 52, y: 68, width: 210, height: 8 }, lines: [],
+    };
+    const crop = figureImageRect(caption, [caption, row("Age 66.3 70.0 0.368", 87), row("Height 162.0 162.0 0.986", 102), row("BMI 28.0 27.4 0.693", 117)], layout);
+    expect(crop).toMatchObject({ page: 6, y: 79, height: 49 });
+  });
+
+  it("hides caption-owned table fragments only after a rendered table crop is available", () => {
+    const caption = {
+      id: "table-caption",
+      paperId: "p",
+      order: 1,
+      type: "table",
+      original: "Table 3. Finger functions.",
+      translated: null,
+      translationStatus: "skipped",
+      pageStart: 6,
+      pageEnd: 6,
+      boundingBoxes: [{ page: 6, x: 310, y: 206, width: 230, height: 18 }],
+      parentBlockId: null,
+      extractionConfidence: 0.95,
+      metadata: { imageUrl: "data:image/jpeg;base64,crop", tableNumber: "Table 3", captionOriginal: "Table 3. Finger functions.", captionTranslated: null, column: "right" },
+    } as PaperBlock;
+    const column = {
+      id: "table-column",
+      paperId: "p",
+      order: 0,
+      type: "table",
+      original: "Finger Thumb Finger1 Finger2",
+      translated: null,
+      translationStatus: "skipped",
+      pageStart: 6,
+      pageEnd: 6,
+      boundingBoxes: [{ page: 6, x: 341, y: 132, width: 24, height: 64 }],
+      parentBlockId: null,
+      extractionConfidence: 0.995,
+      metadata: { tableNumber: "Table", captionOriginal: "", captionTranslated: null, figureKey: "table-region-g-121", column: "right" },
+    } as PaperBlock;
+    const retainedWithoutCrop = suppressImageBackedTableFragments([{ ...caption, metadata: { ...caption.metadata, imageUrl: "" } }, column]);
+    expect(retainedWithoutCrop).toHaveLength(2);
+    expect(suppressImageBackedTableFragments([column, caption])).toEqual([caption]);
+  });
+
+  it("hides a source-fallback table region after its numbered caption receives an image", () => {
+    const caption = {
+      id: "table-caption", paperId: "p", order: 1, type: "table", original: "Table 2. Values.",
+      translated: null, translationStatus: "skipped", pageStart: 5, pageEnd: 5,
+      boundingBoxes: [{ page: 5, x: 314, y: 405, width: 231, height: 16 }], parentBlockId: null,
+      extractionConfidence: 0.95,
+      metadata: { imageUrl: "data:image/jpeg;base64,crop", tableNumber: "Table 2", captionOriginal: "Table 2. Values.", captionTranslated: null, column: "right" },
+    } as PaperBlock;
+    const fallback = {
+      id: "table-region-fallback", paperId: "p", order: 0, type: "table", original: "Error dist. Finger 1 Finger 2",
+      translated: null, translationStatus: "skipped", pageStart: 5, pageEnd: 5,
+      boundingBoxes: [{ page: 5, x: 320, y: 333, width: 219, height: 10 }], parentBlockId: null,
+      extractionConfidence: 0.995,
+      metadata: { tableSourceFallback: true, column: "right", evidence: [{ label: "table-region-member" }] },
+    } as PaperBlock;
+    expect(suppressImageBackedTableFragments([fallback, caption])).toEqual([caption]);
+  });
+
+  it("hides caption-owned table fragments below an above-table caption", () => {
+    const caption = {
+      id: "table-caption", paperId: "p", order: 0, type: "table", original: "Table 2. Values.",
+      translated: null, translationStatus: "skipped", pageStart: 5, pageEnd: 5,
+      boundingBoxes: [{ page: 5, x: 314, y: 205, width: 231, height: 16 }], parentBlockId: null,
+      extractionConfidence: 0.95,
+      metadata: { imageUrl: "data:image/jpeg;base64,crop", tableNumber: "Table 2", captionOriginal: "Table 2. Values.", captionTranslated: null, column: "right" },
+    } as PaperBlock;
+    const fallback = {
+      id: "table-region-below", paperId: "p", order: 1, type: "table", original: "Group A 0.42 0.57",
+      translated: null, translationStatus: "skipped", pageStart: 5, pageEnd: 5,
+      boundingBoxes: [{ page: 5, x: 320, y: 240, width: 219, height: 10 }], parentBlockId: null,
+      extractionConfidence: 0.995,
+      metadata: { tableSourceFallback: true, column: "right", evidence: [{ label: "table-region-member" }] },
+    } as PaperBlock;
+    expect(suppressImageBackedTableFragments([caption, fallback])).toEqual([caption]);
+  });
+
   it("keeps a short diagram annotation out of an adjacent prose paragraph", async () => {
     const pdf = path.resolve("test-data/real-papers/cognitive-psychology-gpt3.pdf");
     if (!fs.existsSync(pdf)) return;
@@ -28,7 +169,13 @@ describe("canonical extraction pipeline", () => {
     if (!fs.existsSync(pdf)) return;
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({ pages, paperId: "thesis-table-figure-boundary", filePath: pdf, fileHash: "thesis-table-figure-boundary", metadata: { pageCount: pages.length } });
-    const tableCaption = result.canonical.nodes.find((node) => /^Table 4\.1:/i.test(node.text ?? ""));
+    // The thesis contents page also lists `Table 4.1` with a trailing page
+    // number. That navigation entry is correctly `other`; assert the actual
+    // table caption in the body rather than depending on document order.
+    const tableCaption = result.canonical.nodes.find((node) =>
+      /^Table 4\.1:/i.test(node.text ?? "") &&
+      !/\.{3,}\s*\d+\s*$/u.test(node.text ?? "")
+    );
     expect(tableCaption?.role).toBe("caption");
     expect(tableCaption?.text).not.toMatch(/Driver fatigue a problem/);
     expect(result.canonical.nodes.some((node) => node.role === "table" && /n\s+No\s+Minor\s+Substantial\s+Major/.test(node.text ?? ""))).toBe(true);
@@ -93,9 +240,124 @@ describe("canonical extraction pipeline", () => {
       metadata: { pageCount: pages.length },
     });
     const pageFourteen = result.blocks.filter((block) => block.pageStart === 14);
-    expect(pageFourteen.length).toBeGreaterThan(10);
+    // A numbered caption can now own a consolidated table region, so the
+    // source-only projection need not expose every native cell separately.
+    expect(pageFourteen.length).toBeGreaterThan(0);
     expect(pageFourteen.every((block) => block.type === "table")).toBe(true);
     expect(pageFourteen.every((block) => block.translationStatus === "skipped")).toBe(true);
+    expect(pageFourteen.some((block) => /D1|Cronbach/.test(block.original ?? ""))).toBe(true);
+  }, 60_000);
+
+  it("keeps a multi-sentence statistical paragraph beside OzCHI tables translatable", async () => {
+    const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "ozchi-statistical-prose-regression",
+      filePath: pdf,
+      fileHash: "ozchi-statistical-prose-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const prose = result.blocks.find((block) =>
+      /When considering the time taken for different fingers to tap targets/.test(block.original ?? "")
+    );
+    expect(prose?.type).toBe("paragraph");
+    expect(prose?.translationStatus).toBe("pending");
+    expect(prose?.original).toContain("p=0.007");
+  }, 60_000);
+
+  it("replaces OzCHI Table 3 cell streams once its reader image crop is available", async () => {
+    const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "ozchi-table-image-regression",
+      filePath: pdf,
+      fileHash: "ozchi-table-image-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const caption = result.blocks.find((block) =>
+      /^Table 3\. Finger specific functions/i.test(block.original ?? "")
+    );
+    const cells = result.blocks.filter((block) =>
+      /^(?:Finger Thumb Finger1|Function Call tapped contact)/.test(block.original ?? "")
+    );
+    expect(caption?.type).toBe("table");
+    expect(cells).toHaveLength(2);
+    expect(cells.every((block) => block.type === "table" && block.translationStatus === "skipped")).toBe(true);
+
+    const imageBackedCaption: PaperBlock = {
+      ...caption!,
+      metadata: { ...caption!.metadata, imageUrl: "data:image/jpeg;base64,table" },
+    };
+    const visible = suppressImageBackedTableFragments(
+      result.blocks.map((block) => (block.id === imageBackedCaption.id ? imageBackedCaption : block))
+    );
+    expect(visible.some((block) => /^(?:Finger Thumb Finger1|Function Call tapped contact)/.test(block.original ?? ""))).toBe(false);
+    expect(visible.some((block) => block.id === imageBackedCaption.id)).toBe(true);
+  }, 60_000);
+
+  it("keeps midpoint-spanning single-column thesis prose out of table fallback", async () => {
+    const pdf = path.resolve("test-data/real-papers/marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    expect(detectPageColumns(pages[59]).isMultiColumn).toBe(false);
+    const result = extractFromPages({
+      pages,
+      paperId: "single-column-marketing-prose-regression",
+      filePath: pdf,
+      fileHash: "single-column-marketing-prose-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const prose = result.blocks.find((block) =>
+      /Moreover, the establishment of brand salience/.test(block.original ?? "")
+    );
+    expect(prose?.type).toBe("paragraph");
+    expect(prose?.translationStatus).toBe("pending");
+    expect(prose?.original).toContain("advertising produces the effects.");
+  }, 60_000);
+
+  it("keeps table-of-contents leader entries out of table cards", async () => {
+    const pdf = path.resolve("test-data/real-papers/ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "contents-leader-regression",
+      filePath: pdf,
+      fileHash: "contents-leader-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const entry = result.blocks.find((block) => /2\.4 The current research \.{4,}52/.test(block.original ?? ""));
+    expect(entry?.type).not.toBe("table");
+    expect(entry?.translationStatus).toBe("skipped");
+  }, 60_000);
+
+  it("keeps symbolic assignment matrices out of table cards", async () => {
+    const pdf = path.resolve("test-data/real-papers/linguistics-language-model-physics.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "mathematical-assignment-regression",
+      filePath: pdf,
+      fileHash: "mathematical-assignment-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const display = result.blocks.find((block) =>
+      /𝑥 = 1 2 3 3 1 3/.test(block.original ?? "") && block.pageStart === 10
+    );
+    expect(display?.type).toBe("equation");
+    expect(display?.translationStatus).toBe("skipped");
+  }, 60_000);
+
+  it("retains an ordinary two-column proceedings page as two columns", async () => {
+    const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    expect(detectPageColumns(pages[4]).isMultiColumn).toBe(true);
   }, 60_000);
 
   it("keeps a multi-part vector figure caption in one figure block", async () => {
@@ -698,6 +960,38 @@ describe("canonical extraction pipeline", () => {
     const prose = candidates.find((candidate) => candidate.text.includes("curves shown"));
     expect(prose?.roleScores.table ?? 0).toBeLessThan(0.94);
   });
+
+  it("keeps math-rich prose with fragmented native spans out of the table role", async () => {
+    const pdf = path.resolve("test-data/real-papers/economics-regularized-deepiv.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "math-prose-not-table",
+      filePath: pdf,
+      fileHash: "math-prose-not-table",
+      metadata: { pageCount: pages.length },
+    });
+    const prose = result.canonical.nodes.find((node) => /Hellinger distance/.test(node.text ?? ""));
+    expect(prose?.role).toBe("paragraph");
+  }, 60_000);
+
+  it("keeps a figure-adjacent numeric label matrix out of the captionless table fallback", async () => {
+    const pdf = path.resolve("test-data/real-papers/linguistics-language-model-physics.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "figure-label-not-table",
+      filePath: pdf,
+      fileHash: "figure-label-not-table",
+      metadata: { pageCount: pages.length },
+    });
+    const labels = result.canonical.nodes.find((node) => /truth GPT GPT_rel GPT_rot GPT_pos GPT_uni/.test(node.text ?? ""));
+    expect(labels?.role).toBe("other");
+    const formula = result.canonical.nodes.find((node) => /\|S\| x∈S len\(x\)\+1/.test(node.text ?? ""));
+    expect(formula?.role).toBe("equation");
+  }, 60_000);
 
   it("keeps a prose line out of a caption-adjacent table region", () => {
     const rows = ["A 1.2 3.4", "B 2.3 4.5", "C 3.4 5.6"].flatMap((row, index) => {

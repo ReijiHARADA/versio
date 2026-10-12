@@ -559,6 +559,15 @@ function isChartDebrisFragment(text: string): boolean {
   return false;
 }
 
+function hasStrongTableMatrixEvidence(node: CanonicalNode): boolean {
+  return node.evidence.some((entry) =>
+    entry.label === "matrix-axis-label-neighbor" ||
+    entry.label === "captioned-neighbor-cell-rows" ||
+    entry.label === "captioned-native-multicell-row" ||
+    (entry.label === "role-scores" && /table=0\.(?:9[4-9]|[1-9]\d)/.test(entry.reason ?? ""))
+  );
+}
+
 function isNumberedTableCaption(text: string | null | undefined): boolean {
   return /^(?:table|表)\s*\d+/i.test((text ?? "").trim());
 }
@@ -572,10 +581,10 @@ function isNumberedTableCaption(text: string | null | undefined): boolean {
  */
 function captionedTableAbsorption(canonical: CanonicalDocument): {
   keepIds: Set<string>;
-  pages: Set<number>;
+  regions: Array<{ caption: CanonicalNode; target: CanonicalNode }>;
 } {
   const keepIds = new Set<string>();
-  const pages = new Set<number>();
+  const regions: Array<{ caption: CanonicalNode; target: CanonicalNode }> = [];
   const nodeById = new Map(canonical.nodes.map((node) => [node.id, node]));
   for (const rel of canonical.relations) {
     if (rel.kind !== "CAPTION_OF") continue;
@@ -589,17 +598,45 @@ function captionedTableAbsorption(canonical: CanonicalDocument): {
     if (shouldKeepCaptionedTableTarget(target)) {
       keepIds.add(target.id);
     }
-    pages.add(caption.pageStart);
-    pages.add(caption.pageEnd);
-    pages.add(target.pageStart);
-    pages.add(target.pageEnd);
+    regions.push({ caption, target });
   }
-  return { keepIds, pages };
+  return { keepIds, regions };
+}
+
+/** A numbered caption only absorbs the cells in its own local visual region.
+ * Several independent tables can coexist on a page (often one per column),
+ * so page-level suppression drops valid captionless table streams. */
+function belongsToCaptionedTableRegion(
+  node: CanonicalNode,
+  regions: Array<{ caption: CanonicalNode; target: CanonicalNode }>,
+): boolean {
+  const nodeBox = node.boundingBoxes[0];
+  if (!nodeBox) return false;
+  return regions.some(({ caption, target }) => {
+    if (node.pageEnd < Math.min(caption.pageStart, target.pageStart) ||
+        node.pageStart > Math.max(caption.pageEnd, target.pageEnd)) return false;
+    if (node.column && target.column && node.column !== target.column) return false;
+    const regionBoxes = [...caption.boundingBoxes, ...target.boundingBoxes]
+      .filter((box) => box.page === nodeBox.page);
+    if (regionBoxes.length === 0) return false;
+    const left = Math.min(...regionBoxes.map((box) => box.x));
+    const right = Math.max(...regionBoxes.map((box) => box.x + box.width));
+    const top = Math.min(...regionBoxes.map((box) => box.y));
+    const bottom = Math.max(...regionBoxes.map((box) => box.y + box.height));
+    const horizontalOverlap = Math.max(0, Math.min(nodeBox.x + nodeBox.width, right) - Math.max(nodeBox.x, left));
+    const verticalDistance = Math.max(top - (nodeBox.y + nodeBox.height), nodeBox.y - bottom, 0);
+    return horizontalOverlap >= Math.min(nodeBox.width, right - left) * 0.2 && verticalDistance <= 150;
+  });
 }
 
 function shouldKeepCaptionedTableTarget(target: CanonicalNode): boolean {
   const text = (target.text ?? "").trim();
   if (!text) return false;
+  // A caption relation can point at the first short header cell of a
+  // borderless matrix. Its explicit matrix evidence is stronger than text
+  // length: retain it for source-only projection, then let the actual image
+  // extraction path replace the complete region when a crop is available.
+  if (hasStrongTableMatrixEvidence(target)) return true;
   const words = text.split(/\s+/).filter(Boolean);
   if (words.length >= 8) return true;
   if ((text.match(/\d/g) ?? []).length >= 6) return true;
@@ -1713,7 +1750,7 @@ export function projectCanonicalToPaper(input: {
 
     // Chart-adjacent prose can inherit a table role from region membership.
     // Drop axis crumbs; keep longer narrative as ordinary paragraphs.
-    if (node.role === "table" && node.text && looksLikeProseMistakenForTable(node.text)) {
+    if (node.role === "table" && node.text && !hasStrongTableMatrixEvidence(node) && looksLikeProseMistakenForTable(node.text)) {
       const text = node.text;
       if (isChartDebrisFragment(text)) {
         continue;
@@ -1738,7 +1775,7 @@ export function projectCanonicalToPaper(input: {
       node.role === "table" &&
       node.text &&
       !tableAbsorption.keepIds.has(node.id) &&
-      (tableAbsorption.pages.has(node.pageStart) || tableAbsorption.pages.has(node.pageEnd)) &&
+      belongsToCaptionedTableRegion(node, tableAbsorption.regions) &&
       looksLikeCaptionedTableCellFragment(node.text) &&
       // A resolver can attach the caption relation to a synthetic region
       // while the text-bearing multi-row grid remains a separate node. Its

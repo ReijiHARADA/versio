@@ -53,6 +53,7 @@ describe("Japanese figure and table captions", () => {
     expect(isFigureCaption("図 3 の1行目に示す応答")).toBe(false);
     expect(isTableCaption("表 1: 被験者の内訳")).toBe(true);
     expect(isTableCaption("Table 1. Participant demographics")).toBe(true);
+    expect(isTableCaption("TABLE 2 | Baseline characteristics")).toBe(true);
     expect(isTableCaption("Table 5 Factor reliabilities for smart clothing")).toBe(true);
     expect(isTableCaption("Table 7 (continued)")).toBe(true);
   });
