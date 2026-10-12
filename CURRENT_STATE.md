@@ -1478,3 +1478,13 @@ shown verbatim and are not sent to MADLAD, which explains why these blocks do
 not receive a translation status. Typecheck and lint pass; the focused PDF
 test process was stopped after PDF.js fixture work exceeded the local timeout,
 so the full extraction corpus should be rerun before packaging this change.
+
+The cached extraction baseline was rerun in a single fork: **118/118 tests
+passed**. Vitest then reported its known `onTaskUpdate` worker timeout while
+the second reading-order file was still running; no extraction assertion
+failure was reported. The focused Golden diagnostic and new table assertions
+confirm the role change. `npm run tauri:build:fast` completed successfully at
+**2026-10-12 09:58:17 +0900** and produced the unsigned app at
+`src-tauri/target/release/bundle/macos/Paper Reader.app`; the bundle contains
+the updated extraction code and bundled translation server. A full packaged
+import/visual check of the new table rendering remains the next manual step.
