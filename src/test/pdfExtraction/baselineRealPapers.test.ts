@@ -327,6 +327,16 @@ describe("baseline benchmark on cached real papers", () => {
         );
         expect(postTableProse?.type).toBe("paragraph");
         expect(postTableProse?.translationStatus).toBe("pending");
+        // Borderless p-value matrices must keep their bold axis labels in the
+        // source-only table stream; they must not become translated headings.
+        const comfortableLabel = extracted.blocks.find((block) => block.original.trim() === "Comfortable");
+        expect(comfortableLabel?.type).toBe("table");
+        expect(comfortableLabel?.translationStatus).toBe("skipped");
+        const table3Grid = extracted.blocks.find((block) =>
+          block.original.includes("Finger Thumb Finger1 Finger2 Finger3 Finger4")
+        );
+        expect(table3Grid?.type).toBe("table");
+        expect(table3Grid?.translationStatus).toBe("skipped");
 
         const referenceBlocks = extracted.blocks.filter((block) =>
           block.sectionId && extracted.sections.some((section) =>
