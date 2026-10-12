@@ -1488,3 +1488,339 @@ confirm the role change. `npm run tauri:build:fast` completed successfully at
 `src-tauri/target/release/bundle/macos/Paper Reader.app`; the bundle contains
 the updated extraction code and bundled translation server. A full packaged
 import/visual check of the new table rendering remains the next manual step.
+
+# 2026-10-12: image-backed ruled-table projection
+
+The remaining Golden PDF Reader failure was not role classification: Table 3
+was correctly identified as a ruled table, but its two native-text columns
+were projected as separate source-only blocks because the table-caption crop
+used ordinary figure bounds and clipped the table rows themselves. `figureImageRect`
+now recognizes compact multi-line rows directly above a `table_caption` and
+uses their top edge as the raster crop bound. After a numbered caption receives
+a real crop, projection removes only its caption-owned `table-region-*`
+fragments; if crop extraction fails, those source cells remain visible rather
+than being discarded. Focused crop and fragment-suppression tests pass, as do
+typecheck, lint, and diff validation.
+
+The freshly rebuilt app was exercised through the actual packaged Tauri import
+path with the Golden OzCHI PDF in an isolated app-data directory. Import,
+annotation, search, Markdown/Notion export, quit, and relaunch all succeeded.
+The persisted structure contains image-backed Table 1–5, including Tables 3
+and 4, and no separate `Finger/Thumb` or `Function` table-column fragments.
+Artifact: `scripts/packaged-e2e/artifacts/integration/result.json`; isolated
+package: `app-data-68774`. The current app bundle was rebuilt at
+**2026-10-12 12:14:25 +0900**. Existing user imports retain their old stored
+extraction and need a fresh import to receive this structural repair.
+
+# 2026-10-12: extraction usability goal and corpus table baseline
+
+An active extraction-usability goal now treats the real-paper corpus and the
+Tauri Reader as the product regression surface, rather than treating role
+classification alone as success. The first table-region cohort pass completed
+with **0 extraction errors**, **41 PDFs containing 204 table regions**. This
+is an inventory, not a precision claim: the next phase samples/inspects these
+regions by publisher and format, verifies caption-to-crop attachment, and
+records whether the Reader shows one readable table rather than detached
+columns. Artifact: `test-data/real-papers/reports/table-region-cohort-v1.json`.
+
+# 2026-10-12: caption-above table projection follow-up
+
+The Golden OzCHI `Finger/Thumb…`, `Function…`, and `Error dist.…` Reader
+cards were a projection defect, not prose translation: the native table regions
+were detected, but a numbered table crop and its raw cell fallback could both
+be displayed. The import path now suppresses a fallback only after its
+numbered caption has a rendered image, and recognizes both new
+`table-region-*` fragments and legacy `tableSourceFallback` / table-region
+evidence. Source text remains visible if rasterization fails.
+
+`figureImageRect` now supports caption-below and caption-above tables. The
+caption-above path needs a contiguous sequence of compact cell rows, so one
+ordinary prose line cannot become a crop. Focused crop/projection tests pass
+**4/4**, plus typecheck and lint. A full **114-PDF** Reader-readiness pass
+completed with 0 extraction errors: among 47 PDFs with 366 numbered table
+captions, crop-ready captions increased from **178 to 232**. Golden OzCHI is
+now 5/5 crop-ready and all five raw table fragments are crop-owned. The report
+records 1,830 unowned table-like fragments for the next precision-focused
+iteration; they are not globally hidden because many are charts, appendices,
+or tables lacking a trustworthy caption/crop. Artifact:
+`test-data/real-papers/reports/table-reader-readiness-v1.json`.
+
+# 2026-10-12: image-backed package persistence verified on the actual OzCHI route
+
+The prior large-PDF packaged acceptance failure was not an extraction failure:
+`list_app_files` resolved the requested directory in the isolated acceptance
+home but built its returned relative paths from the normal macOS app-data
+directory. Consequently `loadPaperPackage(..., includeAssets: true)` saw no
+freshly written `assets/figure-*.png` or `assets/table-*.jpg` and rejected the
+temporary package as incomplete. The filesystem command now uses the same
+environment-aware root for both resolution and recursive listing.
+
+The actual bundled Tauri app imported
+`/Users/harada/Desktop/2686612.2686699.pdf` in an isolated acceptance home and
+reached `ready_for_relaunch`, including annotation, search, Markdown export,
+and Notion ZIP export. The persisted package contains **17 assets**. Its
+original document keeps the `p=0.007` statistical prose as text and represents
+Table 3 as `assets/table-003.jpg` plus its caption; the former `Finger Thumb …`
+and `Function Call …` raw table-cell streams are absent. The isolated test app
+and its translation server were stopped after verification.
+
+Typecheck and lint pass (existing warnings only). The Rust release bundle was
+rebuilt after clearing stale DMG files and debug cache when the development
+volume ran out of space. Current bundle:
+`src-tauri/target/release/bundle/macos/Paper Reader.app`, built at
+**2026-10-12 21:54:19 +0900**. The debug cache was intentionally removed; a
+future `cargo test` will rebuild it.
+
+# 2026-10-12: vertical-bar journal captions and full-column numeric table crops
+
+The real `cognitive-dual-task.pdf` Tauri import exposed a second generic table
+failure: `TABLE 2 | Baseline characteristics` was stored as a caption but was
+not eligible for an image crop, leaving the table rows in Markdown. The
+vertical bar is now recognized as a caption delimiter alongside colon, period,
+and dash. The crop detector now also accepts a near-full-column row only when
+it has repeated same-line cell geometry and numeric cell content; this recovers
+wide ruled result tables without admitting short prose.
+
+Direct native-PDF geometry diagnostics now produce crop rectangles for Tables
+1, 2, and 4 in that paper. Focused crop regressions, caption recognition, and
+typecheck pass. The complete `pipeline.test.ts` presently has four pre-existing
+failures (mixed thesis caption, captionless method table, Elsevier title, and
+synthetic column classification) plus Vitest's reporter timeout; these need
+separate attribution before claiming a green full suite. The new unsigned
+bundle was built at **2026-10-12 22:14:30 +0900**. An isolated reimport of this
+second PDF could not complete because that fresh bundle's translation server
+entered first-download state; it was stopped rather than leaving a background
+process. This does not affect the direct PDF extraction evidence or the earlier
+complete OzCHI packaged acceptance.
+
+# 2026-10-12: title-masthead and two-column regression repair
+
+Single-worker execution of the 66 pipeline regressions separated real failures
+from the PDF.js/Vitest reporter timeout: 65 assertions passed, with one real
+Elsevier title failure. The resolver had combined a journal masthead with its
+shorter repeated venue-name variant as if they were article-title lines. A
+normalized prefix check now removes that repeated publisher rail after the
+first candidate is established as masthead furniture; the real article title
+is retained. The targeted title regression passes.
+
+The earlier single-column safeguard also initially treated a genuine two-column
+row as a midpoint-crossing span. It now preserves two-column layout when the
+same baseline has independently long left and right spans. Both the genuine
+two-column and midpoint-spanning single-column regressions pass. The mixed
+thesis caption test was corrected to select the body caption rather than its
+correctly-suppressed table-of-contents entry. Latest unsigned bundle:
+`src-tauri/target/release/bundle/macos/Paper Reader.app`, built at
+**2026-10-12 22:26:32 +0900**.
+
+# 2026-10-12: non-table grid false-positive follow-up
+
+The next orphan-fragment review showed that raw-table counts also included
+table-of-contents dotted leaders and symbolic assignment displays. These are
+not data tables and should never be rendered as table cards. The generic layer
+now marks a dotted leader as non-body only when at least three matching
+leader-plus-page-number peers occur on the same page. It marks a dense
+mathematical display as an equation only when it has multiple assignment/math
+operators, dense numeric rows, and little prose, while preserving
+caption-anchored data tables. Real-PDF regressions cover the ergonomics thesis
+contents page and the language-model-physics display. Focused tests, typecheck,
+lint, and diff validation pass. The fast unsigned bundle was rebuilt at
+**2026-10-12 21:26:40 +0900**:
+`src-tauri/target/release/bundle/macos/Paper Reader.app`.
+
+# 2026-10-12: packaged import / persistence acceptance
+
+With the stale orphan sidecar stopped, an isolated launch of the current
+packaged app using `open -n` completed the real Tauri acceptance flow. It
+created all required package files (`paper.json`, `original.md`, `ja.md`,
+`structure.json`, `layout.json.gz`, `source.pdf`, and `translation.json`), then
+completed annotation, search, Markdown export, and Notion ZIP export. A second
+isolated launch recorded `relaunch_ok`, verifying that the imported paper and
+annotation persisted. This is the package-level proof that the provisional
+index visibility fix prevents the earlier incomplete-package Reader state for
+the exercised fixture. Test data lived only under
+`/tmp/paper-reader-package-open.TvjJ4P` and both test app and sidecar were
+stopped afterwards.
+
+The fast unsigned bundle was rebuilt after this change at **2026-10-12
+12:46:37 +0900**: `src-tauri/target/release/bundle/macos/Paper Reader.app`.
+
+# 2026-10-12: orphan table-candidate precision pass
+
+The Reader-readiness report showed that many unowned `tableSourceFallback`
+blocks were not tables at all. Real-PDF inspection identified two generic
+causes: math-rich prose was fragmented into many native spans and inherited a
+grid score, while numeric label matrices near a figure caption entered the
+captionless-table fallback. The resolver/generic evidence now keeps prose with
+ordinary lexical and punctuation structure as a paragraph, treats a strongly
+symbolic low-prose display as an equation, and gives figure-adjacent vector
+labels `other` priority over captionless table recovery. Caption-anchored
+tables retain their dedicated evidence.
+
+Focused real-PDF regressions pass for the economics `Regularized DeepIV`
+math-prose case and the language-model-physics figure-label/formula cases,
+along with the existing captionless-grid fixture; typecheck, lint, and diff
+validation pass. Before the formula follow-up, the 114-PDF report reduced raw
+table fragments from **1,951 to 1,643** and orphan fragments from **1,830 to
+1,524**, with all 232 crop-ready numbered captions retained. Current targeted
+diagnostics further reduce the language-model-physics source-only table count
+to 109 and project its `|S| …` display as an equation. A full corpus rerun is
+required after the final equation refinement before the next bundle build.
+
+# 2026-10-12: bidirectional caption ownership and borderless matrix follow-up
+
+The next full corpus pass found three complementary table layouts that had to
+be handled together rather than by a paper-specific exception: captions below
+their cells (common in ACM proceedings), captions whose left-aligned text
+introduces a table extending into the right column, and borderless p-value
+matrices where every cell is a separate native block. Generic candidate
+evidence now recognises a nearby numbered table caption in either vertical
+direction, multi-cell text bands adjacent to it, and a short axis label sharing
+a baseline with an already strongly evidenced matrix cell. Typography cannot
+revive those labels as headings after the matrix geometry has won.
+
+Projection also no longer suppresses every short table node on a page merely
+because that page has one caption relation. Suppression is confined to the
+caption target's local geometry; an independently located matrix remains a
+source-only table until the actual import path replaces it with a successful
+image crop. The Golden OzCHI `Comfortable`/`Finger` p-value matrix, the
+caption-below Table 3 `Finger/Thumb` and `Function` columns, and the Springer
+wide-table cells in `marketing-consumer-production-journey` all remain table
+blocks (`skipped` for translation), while figure labels and symbolic equations
+retain their non-table roles.
+
+Validation: focused Golden/marketing/captionless-grid checks pass **3/3**;
+focused prose/figure-label/equation checks pass **3/3**; typecheck, lint and
+`git diff --check` pass. The complete cached real-paper baseline now passes
+**118/118** in `test-data/real-papers/reports/extraction-baseline-v4.log`
+(304s). Vitest emits a non-failing `onTaskUpdate` reporter timeout after this
+single-fork long run, but reports no failed assertion.
+
+The refreshed 114-PDF table-reader inventory completed with **0 extraction
+errors**: 47 papers contain 366 numbered table captions; 232 captions have
+a usable image-crop geometry. It records 2,061 source-level table fragments,
+117 of which are crop-backed. The remaining 1,922 are deliberately retained
+for precision review: they include genuinely uncaptioned tables, charts, and
+appendices, so they must not be globally hidden. This inventory is geometry
+triage, not an assertion of visual correctness. Artifact:
+`test-data/real-papers/reports/table-reader-readiness-v1.json`.
+
+The unsigned Tauri bundle was rebuilt after this final geometry change at
+**2026-10-12 16:35:27 +0900**:
+`src-tauri/target/release/bundle/macos/Paper Reader.app`. The next action is
+an isolated packaged import/reload confirmation, then a clean re-import of the
+Golden PDF for Reader visual confirmation.
+
+# 2026-10-12: narrative prose beside a table follow-up
+
+Visual inspection of OzCHI page 5 established that the `p=0.007` / `H2`
+statistical result is a normal right-column paragraph beneath Table 2, not a
+table cell. A caption-adjacent matrix signal had incorrectly overridden its
+multiple complete sentences because it shared a page with the left-column
+table. Strong table promotion now yields to a substantial multi-sentence
+narrative block; short matrix cells remain table candidates. A Golden
+regression asserts this paragraph remains `pending` for translation and keeps
+`p=0.007`.
+
+The wear-scale correlation matrix regression now permits its numbered-caption
+region to be represented by a consolidated skipped table target rather than
+requiring every native cell to be projected separately. It still verifies that
+the table data is retained and never translated. Full pipeline assertions pass
+**59/59**, and the cached real-paper baseline passes **118/118** in
+`test-data/real-papers/reports/extraction-baseline-v5.log` (281s). As above,
+Vitest's long single-fork reporter emits a non-assertion `onTaskUpdate`
+timeout after successful tests. Typecheck, lint, and diff validation pass.
+
+The unsigned bundle was rebuilt at **2026-10-12 17:01:15 +0900**:
+`src-tauri/target/release/bundle/macos/Paper Reader.app`. The next action is
+to re-import the Golden PDF through the packaged app. Existing package/export
+folders are historical extraction outputs and must be deleted/re-imported to
+reflect this pipeline version.
+
+The refreshed 114-PDF table diagnostic has **0 extraction errors**. It finds
+366 numbered captions in 47 papers, with 232 crop-ready regions. Raw
+table-like fragments fell from 2,061 to **1,997** and unowned fragments from
+1,922 to **1,863** after restoring the OzCHI body paragraph. These counts are
+triage indicators, not quality scores: remaining unowned entries include real
+captionless tables, charts, and appendices that need separate high-precision
+region work.
+
+# 2026-10-12: single-column midpoint and generous-leading repair
+
+A long single-column marketing thesis was falsely classified as two columns:
+native spans crossing the page midpoint were excluded from both column bands,
+leaving artificial left/right starts. `detectPageColumns` now falls back to a
+single column when a majority of wide body rows have midpoint-crossing spans.
+Paragraph merging also accepts generous leading only when text continuity,
+alignment, and font style all agree. The affected source now reconstructs a
+seven-line paragraph, remains `pending` for translation, and no longer becomes
+a table fallback. Real-PDF regressions cover this case and retain a genuine
+two-column OzCHI page. The full cached corpus passes **118/118** in
+`test-data/real-papers/reports/extraction-baseline-v6.log` (324s); the known
+Vitest reporter timeout remains non-assertion-only. Rebuild the bundle before
+manual package reimport.
+
+# 2026-10-12: incomplete Paper Package publication race
+
+The packaged Tauri acceptance path reproduced a separate Reader failure behind
+the visible `コンテンツがありません` state and markdown-export error `Paper Package が
+不完全です`: the SQLite paper index was published with its final source hash
+before the atomically persisted `paper.json`, `original.md`, `ja.md`, and
+`structure.json` package existed. The Reader could select that card during this
+window.
+
+Imports now retain their `importing-<uuid>` provisional hash until the complete
+Paper Package has been written. The library query hides only those provisional
+records, then exposes the card after the final hash is saved. If package
+persistence fails, import reports a retryable error rather than creating an
+empty Reader card. `sqlitePersistSafety.test.ts` covers the visibility boundary;
+the focused test, typecheck, lint, and diff validation pass.
+
+The fast unsigned bundle was rebuilt at **2026-10-12 17:49:10 +0900**:
+`src-tauri/target/release/bundle/macos/Paper Reader.app`.
+
+An isolated packaged acceptance run with the large OzCHI PDF no longer reached
+the previous immediate incomplete-package error, but it did not complete before
+the three-minute test timeout. A follow-up isolated run using the small fixture
+was prevented by macOS application-instance behaviour while the normal bundled
+app is open. Do not kill the user’s app or its translation server automatically.
+After the user fully quits it, rerun `scripts/packaged-e2e/run-integration.sh`
+or an equivalent isolated acceptance launch to obtain the complete
+import/annotation/export/relaunch marker.
+
+# 2026-10-12: Golden Table 3 reader-visibility regression
+
+Direct native-PDF diagnosis of OzCHI page 6 confirms that the two strings that
+previously appeared as unreadable Reader cards — `Finger Thumb Finger1 …` and
+`Function Call tapped contact …` — resolve as `table` nodes with `skipped`
+translation status. The nearby `p=0.007` result remains a normal `paragraph`
+with `pending` translation status. A real-PDF regression now injects the
+reader's successful Table 3 image-crop artifact and asserts both raw cell
+streams are removed while the caption/image table remains. This proves the
+intended reader projection boundary rather than merely testing a synthetic
+grid. The new crop-visibility test, statistical-prose regression, SQLite
+visibility test, typecheck, lint, and diff validation pass.
+
+The table-fragment ownership rule now covers both publisher conventions:
+numbered captions above their table and below their table. It still requires a
+same-page, same-column raw table-region fragment with horizontal overlap and a
+bounded local vertical distance, so ordinary nearby prose cannot be hidden.
+The focused above-caption and real OzCHI Table 3 regressions pass. The fast
+unsigned bundle including this change was rebuilt at **2026-10-12 21:14:26
++0900**: `src-tauri/target/release/bundle/macos/Paper Reader.app`.
+
+The refreshed 114-PDF table-reader diagnostic completed with **0 extraction
+errors**. It now finds 372 numbered captions, 240 crop-ready captions, and
+588 raw table fragments that are locally owned by an image-backed caption and
+will therefore be suppressed in the actual import path. The prior inventory
+found 115 crop-backed fragments; the increase primarily comes from accepting
+caption-above layouts. Unowned raw fragments fell from 1,863 to **1,106**.
+These remain a review queue for genuinely uncaptioned tables, charts, and
+appendices rather than a signal to hide all table-like content. Artifact:
+`test-data/real-papers/reports/table-reader-readiness-v1.json`.
+
+The diagnostic was rerun against the current extraction code on 2026-10-12:
+**0 extraction errors / 114 PDFs**, 337 numbered captions, 233 crop-ready
+captions, 1,772 raw table-region fragments, 587 crop-backed fragments, and
+1,078 remaining unowned fragments. The remaining count is deliberately a
+triage queue, not an error count: it mixes captionless data tables with plots,
+equations, references, and other high-precision false-positive exclusions.

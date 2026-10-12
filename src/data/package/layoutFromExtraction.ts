@@ -57,9 +57,31 @@ export function attachLinesToBlocks(
     );
   }
   return blocks.map((block) => {
+    const layout = layoutBlocks.find((candidate) =>
+      candidate.pageStart === block.pageStart && candidate.text === (block.original ?? "")
+    );
     const lines = byText.get(`${block.pageStart}|${block.original ?? ""}`);
     if (!lines) return block;
-    return { ...block, metadata: { ...block.metadata, lines } };
+    // Table rasterization is deliberately conservative. When it cannot make
+    // a crop, retain the native same-baseline cells so the Reader can render
+    // rows instead of collapsing `Finger Thumb Finger1 ...` into prose.
+    const tableRows = block.type === "table" && layout
+      ? layout.lines
+        .map((line) => line.items
+          .map((item) => ({ text: item.text.trim(), x: item.x, width: item.width }))
+          .filter((cell) => cell.text.length > 0)
+        )
+        .filter((row) => row.length > 0)
+      : undefined;
+    const hasCellStructure = tableRows?.some((row) => row.length >= 2) ?? false;
+    return {
+      ...block,
+      metadata: {
+        ...block.metadata,
+        lines,
+        ...(hasCellStructure ? { tableRows } : {}),
+      },
+    };
   });
 }
 

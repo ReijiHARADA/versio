@@ -102,6 +102,22 @@ function looksLikeEventMasthead(text: string): boolean {
     !/[.!?]$/.test(t);
 }
 
+/** A publisher rail is often repeated below itself without the volume/date
+ * suffix. Once the first title candidate is already known to be masthead
+ * furniture, its shorter normalized prefix is another masthead variant, not
+ * a second line of the article title. */
+function isShortenedMastheadVariant(first: string, candidate: string): boolean {
+  const normalize = (value: string) => value
+    .toLocaleLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const firstWords = normalize(first).split(" ").filter(Boolean);
+  const candidateWords = normalize(candidate).split(" ").filter(Boolean);
+  if (candidateWords.length < 3 || firstWords.length < candidateWords.length + 1) return false;
+  return firstWords.slice(0, candidateWords.length).join(" ") === candidateWords.join(" ");
+}
+
 /**
  * A page-one title candidate can be promoted from a publisher's running
  * masthead (DOI, URL, volume/date, event name) before the actual article
@@ -309,7 +325,8 @@ export function resolveTitle(input: {
           (candidate.boundingBoxes[0]?.y ?? 0) < authorY - 3 &&
           !looksLikeObviousMastheadTitle(candidate.text) &&
           !looksLikeMastheadGeometry(candidate) &&
-          !looksLikeAuthorish(candidate.text))
+          !looksLikeAuthorish(candidate.text) &&
+          !isShortenedMastheadVariant(titles[0].text, candidate.text))
         .sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0));
       if (titleDebug) console.info("[title-debug] later", later.map((c) => c.text));
       const lastTitle = titles.at(-1);

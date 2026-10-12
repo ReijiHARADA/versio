@@ -13,6 +13,7 @@ import { getStorage } from "../data/runtime";
 import { exportPaperMarkdown } from "../data/export/markdownExport";
 import { createNotionImportZip } from "../data/export/saveExport";
 import { unzipSync } from "fflate";
+import { useImportJobStore } from "../stores/importJobStore";
 
 let ran = false;
 
@@ -80,7 +81,22 @@ export async function maybeRunPackagedAcceptanceImport(): Promise<void> {
     });
 
     let paperId: string | undefined;
-    for (let i = 0; i < 120; i += 1) {
+    // Large, figure-heavy research PDFs can legitimately take several minutes
+    // before the immutable package is ready. Keep the package acceptance
+    // timeout separate from the small-fixture CI budget.
+    for (let i = 0; i < 480; i += 1) {
+      const job = useImportJobStore
+        .getState()
+        .jobs.find((item) => item.fileName === "acceptance-fixture.pdf");
+      if (job?.stage === "failed" || job?.stage === "cancelled" || job?.stage === "duplicate") {
+        await writeMarker({
+          ok: false,
+          step: "import_failed",
+          error: `${job.stage}: ${job.error ?? job.message}`,
+          at: new Date().toISOString(),
+        });
+        return;
+      }
       const papers = await getAllPapers();
       const hit =
         papers.find((p) => p.sourceFileName === "acceptance-fixture.pdf") ?? papers[0];
@@ -91,10 +107,15 @@ export async function maybeRunPackagedAcceptanceImport(): Promise<void> {
       await new Promise((r) => setTimeout(r, 500));
     }
     if (!paperId) {
+      const job = useImportJobStore
+        .getState()
+        .jobs.find((item) => item.fileName === "acceptance-fixture.pdf");
       await writeMarker({
         ok: false,
         step: "import_timeout",
-        error: "no paper after fixture import",
+        error: job
+          ? `no paper after fixture import: ${job.stage}: ${job.error ?? job.message}`
+          : "no paper after fixture import: import job missing",
         at: new Date().toISOString(),
       });
       return;

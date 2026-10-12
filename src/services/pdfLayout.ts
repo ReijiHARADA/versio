@@ -185,6 +185,39 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     rightX: page.width / 2,
   };
 
+  // A single-column PDF can contain several native text spans per visual
+  // line. When most wide body rows include a span crossing the page midpoint,
+  // the apparent left/right starts are fragments of one sentence, not two
+  // columns. Make this decision before histogram/pair detection: both of
+  // those otherwise amplify the same false peaks. Genuine two-column pages
+  // may have a spanning title or caption, but not a persistent majority of
+  // midpoint-crossing body rows.
+  const midpointRows = (() => {
+    const rows: ExtractedTextItem[][] = [];
+    for (const item of [...usable].sort((a, b) => a.y - b.y || a.x - b.x)) {
+      const row = rows.find((candidate) =>
+        Math.abs(candidate[0].y - item.y) <= Math.max(2.5, item.fontSize * 0.3)
+      );
+      if (row) row.push(item);
+      else rows.push([item]);
+    }
+    return rows.filter((row) => {
+      const left = Math.min(...row.map((item) => item.x));
+      const right = Math.max(...row.map((item) => item.x + item.width));
+      return right - left > page.width * 0.55;
+    });
+  })();
+  const hasSeparateColumnSpans = (row: ExtractedTextItem[]) =>
+    row.some((item) => item.x < page.width * 0.5 && item.width >= page.width * 0.25) &&
+    row.some((item) => item.x >= page.width * 0.5 && item.width >= page.width * 0.25);
+  const midpointBridgedRows = midpointRows.filter((row) =>
+    !hasSeparateColumnSpans(row) &&
+    row.some((item) => item.x < page.width * 0.5 && item.x + item.width > page.width * 0.5)
+  ).length;
+  if (midpointBridgedRows >= 8 && midpointBridgedRows / Math.max(midpointRows.length, 1) >= 0.55) {
+    return fallback;
+  }
+
   const longLines = usable.filter(
     (item) =>
       item.width >= page.width * 0.25 && item.width <= page.width * 0.55
@@ -406,6 +439,17 @@ function findTwoRowStarts(
     // When both columns share a baseline, the row itself spans the gutter.
     // Count each side independently instead of discarding the row as a
     // full-width title or figure line.
+    // A native span that crosses the page midpoint is a strong single-column
+    // signal. Previously it was excluded from both side arrays, leaving only
+    // the words at either edge and manufacturing two false column starts in
+    // justified single-column PDFs.
+    const hasSeparateColumnSpans =
+      row.some((item) => item.x < pageWidth * 0.5 && item.width >= pageWidth * 0.25) &&
+      row.some((item) => item.x >= pageWidth * 0.5 && item.width >= pageWidth * 0.25);
+    if (!hasSeparateColumnSpans && row.some((item) => item.x < pageWidth * 0.5 && item.x + item.width > pageWidth * 0.5)) {
+      starts.push({ x: left, y: row[0].y });
+      continue;
+    }
     const leftItems = row.filter((item) => item.x + item.width <= pageWidth * 0.5);
     const rightItems = row.filter((item) => item.x >= pageWidth * 0.5);
     if (leftItems.length >= 2) starts.push({ x: Math.min(...leftItems.map((item) => item.x)), y: row[0].y });
@@ -1266,7 +1310,10 @@ export function isFigureCaption(text: string): boolean {
 export function isTableCaption(text: string): boolean {
   const caption = layoutPlain(text);
   if (/^(?:tables?|表)\s*\d+[a-z]?\s*\(continued\)$/i.test(caption)) return true;
-  if (/^(?:tables?|表)\s*(?:\d+[a-z]?|[ivxlcdm]+)(?:\s*[:.：–—-]|\s*$)/i.test(caption)) return true;
+  // Some journal templates separate the number and title with a vertical bar
+  // (`TABLE 2 | Baseline characteristics`). This is a structural delimiter,
+  // unlike an inline prose reference such as `Table 2 shows ...`.
+  if (/^(?:tables?|表)\s*(?:\d+[a-z]?|[ivxlcdm]+)(?:\s*[:.|：–—-]|\s*$)/i.test(caption)) return true;
   // Journal captions frequently omit punctuation: `Table 5 Factor ...`.
   // Require a title-like continuation so ordinary prose such as `Table 1 is`
   // remains a paragraph.
@@ -2333,7 +2380,19 @@ function canMerge(prev: LayoutLine, next: LayoutLine, baseFont: number): boolean
   if (separatedMarginAndBody) return false;
   if (prev.items.some((a) => next.items.some((b) => rotatedTextOverlaps(a, b)))) return false;
   const baselineGap = next.y - prev.y;
-  if (baselineGap > baseFont * 1.55) return false;
+  if (baselineGap > baseFont * 1.55) {
+    // Some theses and reports use generous leading (roughly 2--2.4 times the
+    // body font). Treat it as a wrapped paragraph only when the text itself
+    // proves continuity. This avoids globally widening the paragraph-gap
+    // threshold and swallowing a real section/paragraph break.
+    const previousText = prev.text.trim();
+    const nextText = next.text.trim();
+    const textContinues = !/[.!?。！？]\s*$/.test(previousText) &&
+      (/^[a-z]/.test(nextText) || /[,;:([\u2018\u201c]/.test(previousText.slice(-1)));
+    const aligned = Math.abs(prev.x - next.x) <= Math.max(18, baseFont * 1.8);
+    const sameStyle = Math.abs(prev.fontSize - next.fontSize) <= Math.max(1.25, baseFont * 0.14);
+    if (!(textContinues && aligned && sameStyle && baselineGap <= baseFont * 2.7)) return false;
+  }
   return true;
 }
 
@@ -4289,6 +4348,110 @@ export function figureImageRect(
 ): BoundingBox | null {
   const band = columnBand(caption.column, layout);
   const captionTop = caption.bbox.y;
+
+  // A ruled table is text, rather than an embedded raster image. The normal
+  // figure crop logic treats the closest preceding text as the boundary of a
+  // figure and therefore clips the table itself out of the crop. Detect a
+  // compact, multi-line table stream immediately above a table caption and
+  // use its top edge as the crop boundary instead. This is geometry based:
+  // body paragraphs remain excluded by their wide lines and body-sized text.
+  if (caption.role === "table_caption") {
+    const compactTableRows = (direction: "above" | "below") => blocks.filter((block) => {
+      if (block.pageStart !== caption.pageStart || block === caption) return false;
+      if (block.role === "header" || block.role === "footer" || block.role === "copyright") return false;
+      if (!overlapsBand(block.bbox, band)) return false;
+      if (block.role === "heading" || block.role === "title" || block.role === "figure_caption" || block.role === "table_caption") return false;
+      const bottom = block.bbox.y + block.bbox.height;
+      const distance = direction === "above" ? captionTop - bottom : block.bbox.y - (captionTop + caption.bbox.height);
+      if (distance < -2 || distance > 280) return false;
+      const lines = block.lines;
+      if (lines.length === 0) return false;
+      const maxLineWidth = Math.max(...lines.map((line) => line.bbox.width));
+      const shortLines = lines.filter((line) => line.bbox.width <= band.width * 0.78).length;
+      const compactText = block.text.trim().split(/\s+/).filter(Boolean).length <= 48;
+      const cellLikeLines = lines.filter((line) => line.items.length >= 3).length;
+      const numericCells = lines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length;
+      // A ruled table can use almost the full column width. Its native row is
+      // then wider than the ordinary compact-row threshold even though the
+      // repeated cells remain explicit. Permit that shape only with multiple
+      // same-row cells and numeric data; a short full-width prose sentence
+      // remains outside the crop.
+      const compactCellGrid =
+        cellLikeLines >= Math.max(1, Math.ceil(lines.length * 0.5)) && numericCells >= 1;
+      // A table row can be emitted as one native line or as separate cell
+      // lines. Body prose is deliberately excluded by its width; a sequence
+      // of these compact blocks is required below before it becomes a crop.
+      return compactText && (
+        (shortLines / lines.length >= 0.75 && maxLineWidth <= band.width * 0.9) ||
+        (compactCellGrid && maxLineWidth <= Math.max(band.width * 1.15, caption.bbox.width * 1.05))
+      );
+    });
+    const selectContiguousRows = (rows: LayoutBlock[], direction: "above" | "below") => {
+      const sorted = [...rows].sort((a, b) => direction === "above" ? b.bbox.y - a.bbox.y : a.bbox.y - b.bbox.y);
+      const selected: LayoutBlock[] = [];
+      let previousEdge = direction === "above" ? captionTop : captionTop + caption.bbox.height;
+      for (const row of sorted) {
+        const edge = direction === "above" ? row.bbox.y + row.bbox.height : row.bbox.y;
+        const gap = Math.abs(previousEdge - edge);
+        if (selected.length > 0 && gap > 34) break;
+        if (selected.length === 0 && gap > 58) continue;
+        selected.push(row);
+        previousEdge = direction === "above" ? row.bbox.y : row.bbox.y + row.bbox.height;
+      }
+      return selected;
+    };
+    const aboveRows = selectContiguousRows(compactTableRows("above"), "above");
+    if (aboveRows.length > 0) {
+      const tableTop = Math.min(...aboveRows.map((block) => block.bbox.y));
+      const y = Math.max(0, tableTop - 3);
+      const bottom = Math.max(y, captionTop - 3);
+      if (bottom - y >= 18) {
+        const x = Math.max(0, Math.min(band.x, ...aboveRows.map((block) => block.bbox.x), caption.bbox.x) - 6);
+        const right = Math.min(
+          layout.pageWidth,
+          Math.max(
+            band.x + band.width,
+            caption.bbox.x + caption.bbox.width,
+            ...aboveRows.map((block) => block.bbox.x + block.bbox.width)
+          ) + 6
+        );
+        return {
+          page: caption.pageStart,
+          x,
+          y,
+          width: Math.max(24, right - x),
+          height: bottom - y,
+        };
+      }
+    }
+    const belowRows = selectContiguousRows(compactTableRows("below"), "below");
+    const belowLineCount = belowRows.reduce((sum, block) => sum + block.lines.length, 0);
+    // One short label below a caption could be ordinary prose. Three compact
+    // rows (or four native lines) are enough to make this a table-only crop.
+    if (belowRows.length >= 3 || belowLineCount >= 4) {
+      const y = Math.max(0, captionTop + caption.bbox.height + 3);
+      const bottom = Math.min(layout.pageHeight, Math.max(...belowRows.map((block) => block.bbox.y + block.bbox.height)) + 3);
+      if (bottom - y >= 18) {
+        const x = Math.max(0, Math.min(band.x, ...belowRows.map((block) => block.bbox.x), caption.bbox.x) - 6);
+        const right = Math.min(
+          layout.pageWidth,
+          Math.max(
+            band.x + band.width,
+            caption.bbox.x + caption.bbox.width,
+            ...belowRows.map((block) => block.bbox.x + block.bbox.width)
+          ) + 6
+        );
+        return {
+          page: caption.pageStart,
+          x,
+          y,
+          width: Math.max(24, right - x),
+          height: bottom - y,
+        };
+      }
+    }
+  }
+
   let topBound = HEADER_Y;
 
   for (const block of blocks) {

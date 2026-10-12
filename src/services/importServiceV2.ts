@@ -202,13 +202,6 @@ export async function importPDFV2(
     // real Tauri imports. Make the extraction checkpoint durable before reading
     // it back, while keeping later translation checkpoints asynchronous.
     await flushPaperPersist(paperId);
-    paper.sourceFileHash = finalSourceHash;
-    await savePaper(paper);
-    // The final source hash update marks the cached document dirty again and
-    // schedules a mutable checkpoint. Flush that second checkpoint too before
-    // loading the package for layout provenance; otherwise its timer can
-    // replace the package core while persistPaperPackage is reading it.
-    await flushPaperPersist(paperId);
     try {
       const { getStorage } = await import("../data/runtime");
       const { loadPaperPackage, persistPaperPackage } = await import("../data/package/persist");
@@ -222,8 +215,15 @@ export async function importPDFV2(
       pkg.paper.sourceFileHash = finalSourceHash;
       await persistPaperPackage(fs, pkg);
     } catch (error) {
-      console.warn("Failed to persist layout provenance:", error);
+      // Do not expose the final hash/card if the immutable package was not
+      // completed. The provisional index stays hidden and the import reports
+      // a retryable failure instead of opening an empty Reader.
+      throw new Error(`Failed to persist extraction package: ${String(error)}`);
     }
+    // Make the paper discoverable only after the complete package swap above.
+    paper.sourceFileHash = finalSourceHash;
+    await savePaper(paper);
+    await flushPaperPersist(paperId);
 
     // Notify that partial data is ready (can start viewing)
     callbacks.onPartialReady(paper, sections, blocks);

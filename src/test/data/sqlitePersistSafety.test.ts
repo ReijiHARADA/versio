@@ -105,4 +105,17 @@ describe("sqlite persist safety", () => {
       ])
     ).toEqual(["a"]);
   });
+
+  it("does not publish a provisional import before its Paper Package exists", async () => {
+    const fs = createMemoryFileSystem();
+    const db = await openSqlite(fs);
+    upsertPaperIndex(db, samplePaper("ready"));
+    upsertPaperIndex(db, {
+      ...samplePaper("pending"),
+      sourceFileHash: "importing-pending",
+      processingStatus: "extracting",
+    });
+
+    expect(getAllPaperIndexes(db).map((paper) => paper.id)).toEqual(["ready"]);
+  });
 });

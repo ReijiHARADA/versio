@@ -137,8 +137,13 @@ PY
 
 launch_app() {
   step "launch app"
-  HOME="$ACCEPTANCE_HOME" \
+  # Keep the user's HOME so the translation sidecar can reuse its already
+  # downloaded model cache.  Paper Reader's Tauri storage is isolated by
+  # PAPER_READER_ACCEPTANCE_HOME itself; overriding HOME made every packaged
+  # extraction acceptance run download MADLAD again before the import could
+  # reach its partial-ready checkpoint.
   PAPER_READER_ACCEPTANCE=1 \
+  PAPER_READER_ACCEPTANCE_HOME="$ACCEPTANCE_HOME" \
   PAPER_READER_ACCEPTANCE_FIXTURE="$FIXTURE_PDF" \
     "$BIN" >>"$LOG_FILE" 2>&1 &
   APP_PID=$!

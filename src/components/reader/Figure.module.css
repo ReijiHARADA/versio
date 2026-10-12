@@ -59,6 +59,42 @@
   border-radius: var(--radius-sm);
 }
 
+.tableFallbackGrid {
+  width: 100%;
+  overflow-x: auto;
+  padding: var(--spacing-sm);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+}
+
+.tableFallbackRow {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(6rem, 1fr);
+  min-width: max-content;
+}
+
+.tableFallbackRow + .tableFallbackRow {
+  border-top: 1px solid var(--color-border-light);
+}
+
+.tableFallbackCell {
+  min-width: 6rem;
+  padding: 0.45rem 0.55rem;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  white-space: normal;
+  border-left: 1px solid var(--color-border-light);
+}
+
+.tableFallbackCell:first-child {
+  border-left: 0;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
 .zoomButton {
   position: absolute;
   top: var(--spacing-sm);
@@ -125,4 +161,3 @@
   font-size: 0.8125rem;
   color: var(--color-text-tertiary);
 }
-

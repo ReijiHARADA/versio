@@ -123,6 +123,12 @@ export type TableMetadata = {
   tableNumber: string;
   captionOriginal: string;
   captionTranslated: string | null;
+  /**
+   * Native PDF cell rows retained for a source-only table fallback.  This is
+   * intentionally small structural evidence, not a claim that every borderless
+   * table was fully reconstructed.
+   */
+  tableRows?: Array<Array<{ text: string; x: number; width: number }>>;
 };
 
 export type EquationMetadata = {

@@ -145,6 +145,11 @@ function vectorFigureLabelEvidence(block: LayoutBlock, blocks?: LayoutBlock[], p
   if (block.lines.length === 0) return 0;
   const items = block.lines.flatMap((line) => line.items);
   const words = block.text.trim().split(/\s+/).filter(Boolean);
+  const proseTerms = block.text.match(/[A-Za-z]{3,}/g) ?? [];
+  // Inline mathematics and citations can fragment an otherwise ordinary
+  // sentence into many native spans. Vector-label evidence must not hide that
+  // prose merely because its text matrix resembles a diagram.
+  if (paragraphLike(block.text) && words.length >= 12 && proseTerms.length >= 5 && /[.;:]/.test(block.text)) return 0;
   const sentenceLikeProse = paragraphLike(block.text) && words.length >= 40 &&
     block.text.trim().split(/(?<=[.!?])\s+/).filter((sentence) => sentence.trim().length >= 24).length >= 2;
   if (sentenceLikeProse) return 0;
@@ -398,16 +403,56 @@ function tableLike(block: LayoutBlock): boolean {
   return itemGrid || proseGrid || flattenedGrid;
 }
 
+/**
+ * A table of contents has table-like leader geometry, but it is navigation
+ * chrome rather than a data table. Require several peer entries on the same
+ * page so a dotted sentence, DOI, or ordinary numeric table cannot match.
+ */
+function tableOfContentsEntry(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
+  const hasLeaderAndPage = (text: string) =>
+    /(?:\.{4,}|…{2,}|·{4,}|_{4,})\s*(?:\d{1,4}|[ivxlcdm]{1,8})\s*$/i.test(text.trim());
+  if (!hasLeaderAndPage(block.text)) return false;
+  const peers = blocks.filter((candidate) =>
+    candidate.pageStart === block.pageStart && hasLeaderAndPage(candidate.text)
+  );
+  return peers.length >= 3;
+}
+
+/** Find a caption that bounds a compact table region in either reading
+ * direction. Most publishers put a table caption above its cells, but ACM
+ * and several proceedings templates place it below. The relationship is
+ * geometric: same page and no distant intervening region. A wide table's
+ * caption may begin in its left column while long cells occupy the right, so
+ * horizontal overlap is not a safe requirement. It deliberately does not
+ * depend on caption wording. */
+function nearbyTableCaptionForRegion(
+  block: LayoutBlock,
+  blocks: LayoutBlock[],
+  maxGap: number,
+): LayoutBlock | undefined {
+  return blocks
+    .filter((candidate) => {
+      if (candidate === block || candidate.pageStart !== block.pageStart || candidate.role !== "table_caption") return false;
+      const gap = candidate.bbox.y >= block.bbox.y
+        ? candidate.bbox.y - (block.bbox.y + block.bbox.height)
+        : block.bbox.y - (candidate.bbox.y + candidate.bbox.height);
+      return gap >= -8 && gap <= maxGap;
+    })
+    .sort((a, b) => {
+      const gap = (candidate: LayoutBlock) => candidate.bbox.y >= block.bbox.y
+        ? candidate.bbox.y - (block.bbox.y + block.bbox.height)
+        : block.bbox.y - (candidate.bbox.y + candidate.bbox.height);
+      return gap(a) - gap(b);
+    })[0];
+}
+
 function captionedMultiColumnTableBand(
   block: LayoutBlock,
   blocks: LayoutBlock[],
   pageWidth: number
 ): boolean {
   if (block.role === "table_caption" || block.lines.length < 5 || block.bbox.width < pageWidth * 0.3) return false;
-  const caption = blocks.find((candidate) =>
-    candidate.pageStart === block.pageStart && candidate.role === "table_caption" &&
-    candidate.bbox.y < block.bbox.y && block.bbox.y - candidate.bbox.y <= 520
-  );
+  const caption = nearbyTableCaptionForRegion(block, blocks, 520);
   if (!caption) return false;
 
   const originCounts = new Map<number, number>();
@@ -448,9 +493,7 @@ function captionedMultiColumnTableBand(
  * Exclude tall, page-spanning blocks so surrounding prose is not swallowed. */
 function captionedDenseTableBand(block: LayoutBlock, blocks: LayoutBlock[], pageWidth: number): boolean {
   if (block.role === "table_caption" || block.pageStart !== block.pageEnd || block.bbox.height > 115) return false;
-  const caption = blocks.find((candidate) => candidate.pageStart === block.pageStart &&
-    candidate.role === "table_caption" && candidate.bbox.y < block.bbox.y &&
-    block.bbox.y - (candidate.bbox.y + candidate.bbox.height) <= 80);
+  const caption = nearbyTableCaptionForRegion(block, blocks, 80);
   if (!caption) return false;
   const band = blocks.filter((candidate) => candidate !== caption && candidate.pageStart === block.pageStart &&
     candidate.bbox.y >= caption.bbox.y && candidate.bbox.y <= caption.bbox.y + 330 &&
@@ -472,9 +515,7 @@ function captionedDenseTableBand(block: LayoutBlock, blocks: LayoutBlock[], page
  * column alone has no short numeric cells. */
 function captionedNeighborCellRows(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
   if (block.role === "table_caption" || block.lines.length < 4 || block.bbox.width > 280) return false;
-  const caption = blocks.find((candidate) => candidate.pageStart === block.pageStart &&
-    candidate.role === "table_caption" && candidate.bbox.y < block.bbox.y &&
-    block.bbox.y - (candidate.bbox.y + candidate.bbox.height) <= 420);
+  const caption = nearbyTableCaptionForRegion(block, blocks, 420);
   if (!caption) return false;
   const repeatedCellOrigins = new Map<number, number>();
   const alignedRows = block.lines.filter((line) => {
@@ -529,9 +570,7 @@ function captionedNeighborCellRows(block: LayoutBlock, blocks: LayoutBlock[]): b
  * separated only by word-sized gaps. */
 function captionedNativeMultiCellRow(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
   if (block.role === "table_caption") return false;
-  const caption = blocks.find((candidate) => candidate.pageStart === block.pageStart &&
-    candidate.role === "table_caption" && candidate.bbox.y < block.bbox.y &&
-    block.bbox.y - (candidate.bbox.y + candidate.bbox.height) <= 520);
+  const caption = nearbyTableCaptionForRegion(block, blocks, 520);
   if (!caption) return false;
 
   return block.lines.some((line) => {
@@ -640,6 +679,7 @@ function nearbyTableRowEvidence(block: LayoutBlock, blocks: LayoutBlock[]): bool
  * diagram labels and author rows cannot become tables. */
 function headeredTableRow(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
   if (block.role === "table_caption" || block.pageStart !== block.pageEnd || block.text.trim().length > 460) return false;
+  if (lowerCaseProseContinuation(block.text)) return false;
   if (blocks.some((candidate) => candidate.pageStart === block.pageStart && candidate.role === "figure_caption")) return false;
   const header = blocks.find((candidate) => {
     if (candidate === block || candidate.pageStart !== block.pageStart || candidate.pageEnd !== block.pageEnd) return false;
@@ -702,6 +742,19 @@ function cjkComparisonTableCaption(block: LayoutBlock, blocks: LayoutBlock[]): b
   return [...origins.values()].filter((count) => count >= 3).length >= 2;
 }
 
+/** A broken reading-order stream can leave two wrapped lines of ordinary
+ * prose beside an unrelated table caption. They have several native spans,
+ * but the lexical shape is a continuation rather than cells. Do not use this
+ * as a universal paragraph detector: it only excludes a lower-case,
+ * non-numeric continuation from caption-specific table fallbacks. */
+function lowerCaseProseContinuation(text: string): boolean {
+  const trimmed = text.trim();
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  const lowerWords = words.filter((word) => /^[a-z]/.test(word)).length;
+  const digits = (trimmed.match(/\d/g) ?? []).length;
+  return words.length >= 7 && lowerWords >= 5 && digits <= 1 && /^[a-z]/.test(trimmed);
+}
+
 /**
  * A captioned table can be split by the PDF producer at column boundaries,
  * leaving a compact run of one-span cell rows outside the caption block. Use
@@ -710,6 +763,7 @@ function cjkComparisonTableCaption(block: LayoutBlock, blocks: LayoutBlock[]): b
  */
 function captionedCompactRowCluster(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
   if (block.role === "table_caption" || block.lines.length < 2 || block.lines.length > 8) return false;
+  if (lowerCaseProseContinuation(block.text)) return false;
   if (block.lines.length === 2) {
     const [first, second] = block.lines;
     if (first.items.length < 2 || second.items.length < 2 || Math.abs(first.x - second.x) > 8) return false;
@@ -720,11 +774,7 @@ function captionedCompactRowCluster(block: LayoutBlock, blocks: LayoutBlock[]): 
   if (lineTexts.some((text) => text.length > 100 || text.split(/\s+/).length > 14 || /[.!?。！？]\s*$/.test(text))) {
     return false;
   }
-  const caption = blocks.find((candidate) =>
-    candidate.pageStart === block.pageStart && candidate.role === "table_caption" &&
-    block.bbox.y >= candidate.bbox.y - 8 &&
-    block.bbox.y - (candidate.bbox.y + candidate.bbox.height) <= 120
-  );
+  const caption = nearbyTableCaptionForRegion(block, blocks, 120);
   if (!caption) return false;
 
   const sorted = [...block.lines].sort((a, b) => a.y - b.y);
@@ -739,6 +789,31 @@ function captionedCompactRowCluster(block: LayoutBlock, blocks: LayoutBlock[]): 
   return [...xCounts.values()].some((count) => count >= 2);
 }
 
+/** A table's descriptive right-hand column may contain only two to four
+ * long cell rows. Unlike prose, each row still has multiple well-separated
+ * native runs and sits in the immediate band of a table caption. */
+function captionedMultiCellTextBand(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
+  if (block.role === "table_caption" || block.lines.length < 2 || block.lines.length > 8) return false;
+  const text = block.text.trim();
+  if (lowerCaseProseContinuation(text)) return false;
+  if (text.split(/\s+/).filter(Boolean).length > 55 || /[.!?。！？]\s*$/.test(text)) return false;
+  // This band can extend across the visual width of a table even when the
+  // caption itself starts in another reading column, so use page-local
+  // distance rather than block-column ownership here.
+  if (!blocks.some((candidate) =>
+    candidate.pageStart === block.pageStart && candidate.role === "table_caption" &&
+    Math.abs(candidate.bbox.y - block.bbox.y) <= 160
+  )) return false;
+  const multiCellLines = block.lines.filter((line) => {
+    if (line.items.length < 2 || /[.!?。！？]\s*$/.test(line.text.trim())) return false;
+    const ordered = [...line.items].sort((a, b) => a.x - b.x);
+    return ordered.slice(1).some((item, index) =>
+      item.x - (ordered[index].x + ordered[index].width) >= Math.max(16, line.fontSize * 1.4)
+    );
+  });
+  return multiCellLines.length >= 2;
+}
+
 /**
  * Table rows are sometimes emitted as one text span per physical line. When a
  * captioned region contains repeated short rows with the same two x-columns,
@@ -748,11 +823,7 @@ function captionedRepeatedCellRow(block: LayoutBlock, blocks: LayoutBlock[]): bo
   if (block.role === "table_caption" || block.lines.length !== 1) return false;
   const text = block.text.trim();
   if (text.split(/\s+/).length > 14 || /[.!?。！？]\s*$/.test(text)) return false;
-  const caption = blocks.find((candidate) =>
-    candidate.pageStart === block.pageStart && candidate.role === "table_caption" &&
-    block.bbox.y >= candidate.bbox.y - 8 &&
-    block.bbox.y - (candidate.bbox.y + candidate.bbox.height) <= 120
-  );
+  const caption = nearbyTableCaptionForRegion(block, blocks, 120);
   if (!caption) return false;
 
   const top = caption.bbox.y - 8;
@@ -794,6 +865,29 @@ function captionedRepeatedCellRow(block: LayoutBlock, blocks: LayoutBlock[]): bo
  * satisfy this geometry pattern. */
 function pageGridEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
   if (block.role === "author" || block.role === "affiliation" || block.role === "title") return 0;
+  const mathGlyphs = (block.text.match(/[=∈∉∪∩∑∏√∞≤≥≈≠→←↦{}|]/gu) ?? []).length;
+  const proseWords = (block.text.match(/[A-Za-z]{3,}/g) ?? []).length;
+  // Equations can contain many separately positioned terms on one baseline;
+  // that is not a captionless data grid. Keep this guard local to the
+  // captionless fallback so caption-anchored statistical tables still retain
+  // their ordinary table evidence.
+  if (mathGlyphs >= 4 && proseWords <= 6) return 0;
+  // A numeric label matrix near a figure caption is usually chart/diagram
+  // content, not a captionless table. Captionless-table recovery is a
+  // precision fallback, so it must yield to this closer document-level
+  // figure anchor. Require horizontal overlap to avoid suppressing a genuine
+  // table in the other column.
+  const nearFigureCaption = blocks.some((candidate) => {
+    if (candidate.pageStart !== block.pageStart || candidate.role !== "figure_caption") return false;
+    const verticalDistance = Math.max(
+      candidate.bbox.y - (block.bbox.y + block.bbox.height),
+      block.bbox.y - (candidate.bbox.y + candidate.bbox.height),
+      0
+    );
+    const horizontalOverlap = Math.max(0, Math.min(candidate.bbox.x + candidate.bbox.width, block.bbox.x + block.bbox.width) - Math.max(candidate.bbox.x, block.bbox.x));
+    return verticalDistance <= 360 && horizontalOverlap >= Math.min(candidate.bbox.width, block.bbox.width) * 0.25;
+  });
+  if (nearFigureCaption) return 0;
   // A fully rotated statistical matrix is often emitted as one native item
   // per visual row, so the ordinary same-baseline grid test cannot see it.
   // Use page-level geometry only when the page has a substantial rotated,
@@ -810,6 +904,45 @@ function pageGridEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
       block.text.trim().split(/\s+/).filter(Boolean).length <= 24 &&
       !/[.!?;:]/.test(block.text.trim())) {
     return 0.97;
+  }
+  // Some proceedings PDFs emit every borderless matrix cell as its own one-
+  // span block. There is then no multi-item row for the ordinary grid test to
+  // see. Recover only a compact local matrix with repeated x columns and
+  // several numeric rows; chart labels have already yielded to the nearby
+  // figure-caption guard above.
+  const cellBlocks = blocks.filter((candidate) =>
+    candidate.pageStart === block.pageStart &&
+    candidate.column === block.column &&
+    candidate.role === "paragraph" &&
+    candidate.lines.length === 1 &&
+    candidate.lines[0]?.items.length === 1 &&
+    candidate.text.trim().split(/\s+/).filter(Boolean).length <= 5 &&
+    candidate.text.trim().length <= 48 &&
+    !/[.!?;:]\s*$/.test(candidate.text.trim()) &&
+    Math.abs(candidate.bbox.y - block.bbox.y) <= 132
+  );
+  if (cellBlocks.includes(block) && cellBlocks.length >= 12) {
+    const rows = new Map<number, LayoutBlock[]>();
+    for (const cell of cellBlocks) {
+      const y = Math.round(cell.bbox.y / 6) * 6;
+      rows.set(y, [...(rows.get(y) ?? []), cell]);
+    }
+    const denseRows = [...rows.values()].filter((row) => {
+      const xs = new Set(row.map((cell) => Math.round(cell.bbox.x / 12) * 12));
+      return xs.size >= 3;
+    });
+    const xRows = new Map<number, Set<number>>();
+    for (const [y, row] of rows) {
+      for (const cell of row) {
+        const x = Math.round(cell.bbox.x / 12) * 12;
+        xRows.set(x, new Set([...(xRows.get(x) ?? []), y]));
+      }
+    }
+    const repeatedColumns = [...xRows.values()].filter((ys) => ys.size >= 3).length;
+    const numericCells = cellBlocks.filter((cell) => /\d/.test(cell.text)).length;
+    if (denseRows.length >= 3 && repeatedColumns >= 3 && numericCells / cellBlocks.length >= 0.35) {
+      return 0.96;
+    }
   }
   const peers = blocks.filter((candidate) =>
     candidate.pageStart === block.pageStart &&
@@ -846,7 +979,7 @@ function pageGridEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
 function equationScore(block: LayoutBlock, layout: PageColumnLayout | undefined): number {
   const text = block.text.trim();
   const words = text.split(/\s+/).filter(Boolean);
-  const math = (text.match(/[=+×÷∑∫√∞≈≠≤≥±∂∇α-ωΑ-Ω]/g) ?? []).length;
+  const math = (text.match(/[=+×÷∑∫√∞≈≠≤≥±∂∇∈∉∪∩→←↦{}|α-ωΑ-Ω]/gu) ?? []).length;
   const prose = words.filter((word) => /[A-Za-z]{3,}/.test(word)).length;
   const statistics = /(?:\b[ntz]\s*=|[χΧxX²]\s*\(|\b[FPt]\s*\(|\bp\s*[<=>])/.test(text);
   const sentence = /[,.;:]/.test(text) || /[.!?]$/.test(text);
@@ -855,12 +988,18 @@ function equationScore(block: LayoutBlock, layout: PageColumnLayout | undefined)
   const centered = layout && Math.abs((block.bbox.x + block.bbox.width / 2) - layout.pageWidth / 2) < layout.pageWidth * 0.12;
   let score = block.role === "equation" ? 0.58 : 0.08;
   score += Math.min(0.26, math * 0.06);
+  const symbolicFormula = math >= 4 && prose <= 6 && words.length <= 40;
+  if (symbolicFormula) score += 0.34;
   if (compact) score += 0.12;
   if (centered) score += 0.08;
   if (/\(\s*\d{1,2}[a-z]?\s*\)\s*$/.test(text)) score += 0.14;
   if (prose >= 4) score -= 0.36;
   if (sentence) score -= 0.2;
   if (statistics && (prose >= 2 || sentence)) score -= 0.42;
+  // Commas and periods inside an index sequence (for example `x1, …, xi−1`)
+  // are not prose sentence boundaries. A strongly symbolic, low-prose block
+  // remains a display equation even when those separators are present.
+  if (symbolicFormula) score = Math.max(score, 0.9);
   return clamp(score);
 }
 
@@ -894,11 +1033,23 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const nearbyTableCaption = blocks.some((candidate) => candidate.role === "table_caption" &&
       candidate.pageStart === block.pageStart && Math.abs(candidate.bbox.y - block.bbox.y) < 300);
     const captionedCompactRows = captionedCompactRowCluster(block, blocks);
+    const captionedMultiCellText = captionedMultiCellTextBand(block, blocks);
     const captionedRepeatedRow = captionedRepeatedCellRow(block, blocks);
     const captionedColumnarGrid = captionedMultiColumnTableBand(block, blocks, layout?.pageWidth ?? 612);
     const captionedNeighborRows = captionedNeighborCellRows(block, blocks);
     const captionedNativeCellRow = captionedNativeMultiCellRow(block, blocks);
     const captionedDenseBand = captionedDenseTableBand(block, blocks, layout?.pageWidth ?? 612);
+    const contentsEntry = tableOfContentsEntry(block, blocks);
+    // Cell geometry can overlap a nearby prose column in a two-column page.
+    // Do not let a generic caption/table signal override an unmistakably
+    // narrative block: this is the higher-cost error because it makes body
+    // text disappear from translation.  A genuinely table-like descriptive
+    // cell without sentence structure remains eligible for table recovery.
+    const narrativeTableConflict = paragraphLike(block.text) &&
+      block.text.trim().split(/(?<=[.!?])\s+/).filter((sentence) =>
+        sentence.trim().split(/\s+/).filter(Boolean).length >= 8
+      ).length >= 2 &&
+      block.text.trim().split(/\s+/).filter(Boolean).length >= 32;
     const pageGrid = pageGridEvidence(block, blocks);
     const chartLabels = chartLabelEvidence(block, blocks);
     const axisLabels = axisLabelEvidence(block, blocks);
@@ -980,6 +1131,13 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     };
     if (cjkComparisonTableCaption(block, blocks)) scoreByRole.caption = 0.96;
     if (pageGrid > 0 && block.role !== "table_caption") scoreByRole.table = pageGrid;
+    if (contentsEntry) {
+      // Dotted leaders and page numbers resemble repeated table columns. The
+      // entry must stay out of the Reader body and never be rendered as a
+      // source-only table card.
+      scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.2);
+      scoreByRole.other = Math.max(scoreByRole.other ?? 0, 0.98);
+    }
     if (chartLabels > 0) scoreByRole.other = chartLabels;
     if (axisLabels > 0) scoreByRole.other = Math.max(scoreByRole.other ?? 0, axisLabels);
     if (imageLabels > 0) scoreByRole.other = Math.max(scoreByRole.other ?? 0, imageLabels);
@@ -1069,7 +1227,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       /^[-–—]$/.test(block.text.trim()) &&
       block.lines.length === 1 &&
       block.bbox.y - (previousBlock.bbox.y + previousBlock.bbox.height) < baseFontSize * 1.8;
-    if (equation > 0.12) {
+  if (equation > 0.12) {
       scoreByRole.equation = adjacentParagraphContinuation || hyphenContinuation
         ? Math.min(equation, 0.38)
         : equation;
@@ -1079,7 +1237,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // conservative paragraph fallback.
     // Keep table evidence available for caption-region membership, but below
     // the resolver's role override threshold so body prose stays paragraph.
-    if (tableLike(block)) {
+    if (tableLike(block) || block.role === "table") {
       // A large, numeric-rich rotated grid is materially stronger than the
       // ordinary aligned-row signal: it is the native representation of a
       // table whose cells are written on the orthogonal axis. Allow the
@@ -1091,6 +1249,16 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       const structuralGrid = block.lines.length >= 3 &&
         block.lines.filter((line) => line.items.length >= 2).length >= 3 &&
         block.lines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length >= 2;
+      // Mathematical prose is often fragmented into many PDF text items
+      // (`T : L2(X) → L2(Z)`, citations, inline formulae). That creates the
+      // same multi-item geometry as a grid, but it still reads as an ordinary
+      // sentence. Do not let this *generic* geometry alone turn a paragraph
+      // into a table; caption-anchored table evidence remains available below.
+      const proseTerms = block.text.match(/[A-Za-z]{3,}/g) ?? [];
+      const structuralProse = paragraphLike(block.text) &&
+        block.text.trim().split(/\s+/).filter(Boolean).length >= 12 &&
+        proseTerms.length >= 5 &&
+        /[.;:]/.test(block.text);
       const flatLines = block.lines.filter((line) => line.items.length === 1);
       const flatXs = new Map<number, number>();
       const flatYRows = new Map<number, Set<number>>();
@@ -1128,15 +1296,62 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       const captionBlock = block.role === "table_caption";
       scoreByRole.table = rotatedItems.length >= 30 && rotatedNumeric / Math.max(rotatedItems.length, 1) >= 0.3
         ? 0.97
-        : (structuralGrid || flattenedGrid) && !proseBlock && !sentenceLikeProse && !sameOriginLongProse && !listLikeBlock && !longCaption && !captionBlock
+        : (structuralGrid || flattenedGrid) && !structuralProse && !proseBlock && !sentenceLikeProse && !sameOriginLongProse && !listLikeBlock && !longCaption && !captionBlock
           ? 0.95
           // `tableLike` also catches ordinary multi-line prose with aligned
           // native items. Keep that signal for region membership, but below
           // the resolver's role-promotion threshold unless stronger grid
           // evidence is present.
           : 0.68;
+      // reconstructDocument has already identified a native grid. Preserve
+      // that geometry for compact captionless tables unless a later, more
+      // specific formula or figure-label guard overrides it.
+      if (block.role === "table") {
+        scoreByRole.table = Math.max(scoreByRole.table, 0.9);
+      }
     }
-    if (block.role !== "table_caption" && (nearbyTableRowEvidence(block, blocks) || headeredTableRow(block, blocks) || cjkComparisonTableRow(block, blocks) || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedRepeatedRow || captionedNeighborRows || captionedNativeCellRow || captionedDenseBand)) scoreByRole.table = 0.96;
+    if (block.role !== "table_caption" && !narrativeTableConflict && (nearbyTableRowEvidence(block, blocks) || headeredTableRow(block, blocks) || cjkComparisonTableRow(block, blocks) || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedMultiCellText || captionedRepeatedRow || captionedNeighborRows || captionedNativeCellRow || captionedDenseBand)) scoreByRole.table = 0.96;
+    const captionAnchoredTable = nearbyTableCaption || captionedCompactRows || captionedMultiCellText || captionedRepeatedRow ||
+      captionedColumnarGrid || captionedNeighborRows || captionedNativeCellRow || captionedDenseBand;
+    const symbolicFormulaText = (block.text.match(/[=∈∉∪∩∑∏√∞≤≥≈≠→←↦{}|]/gu) ?? []).length >= 4 &&
+      (block.text.match(/[A-Za-z]{3,}/g) ?? []).length <= 6;
+    // Some mathematical displays look like a dense numeric matrix to native
+    // PDF extraction: each equation row has many independently positioned
+    // glyphs, but repeated assignment operators and very little prose make it
+    // a formula rather than a reader-visible table. Captioned data tables are
+    // deliberately excluded, as are ordinary statistical sentences.
+    const assignmentCount = (block.text.match(/[=∈∉≈≠≤≥→←↦]/gu) ?? []).length;
+    const digitCount = (block.text.match(/\d/g) ?? []).length;
+    const proseWordCount = (block.text.match(/[A-Za-z]{3,}/g) ?? []).length;
+    const mathematicalMatrixDisplay = !captionAnchoredTable &&
+      block.lines.length >= 3 &&
+      assignmentCount >= 3 &&
+      digitCount >= 8 &&
+      proseWordCount <= 4;
+    // A symbolic display formula is more specific than an inferred
+    // captionless grid. Apply this after every table-evidence generator so
+    // PDF tokenization cannot turn the formula into a Reader table card.
+    if (symbolicFormulaText && equation >= 0.62 && !captionAnchoredTable) {
+      scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.68);
+      scoreByRole.equation = Math.max(scoreByRole.equation ?? 0, 0.9);
+    }
+    if (mathematicalMatrixDisplay) {
+      scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.68);
+      scoreByRole.equation = Math.max(scoreByRole.equation ?? 0, 0.9);
+    }
+    // A captionless table fallback must yield to strong vector-label evidence.
+    // Actual captioned tables retain their dedicated geometry evidence above;
+    // without that anchor, a chart/diagram label matrix is safer as `other`
+    // than as a reader-visible, source-only table card.
+    if (vectorLabels >= 0.82 && !captionAnchoredTable) {
+      scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.68);
+    }
+    // Apply this after typography scoring. A bold axis/table label must not
+    // be revived as a heading after its numeric neighbourhood identified it
+    // as part of a matrix.
+    if (axisLabels > 0) {
+      scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.2);
+    }
     if (fragmentedLabels > 0) {
       // Apply after all style/heading boosts so graphic fragments cannot be
       // promoted back to headings by a later generic style rule.
@@ -1165,6 +1380,26 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         page: block.pageStart,
         bbox: block.bbox,
         reason: "multiple baselines contain a wide body run and a narrow secondary native x-band; preserve for resolver review",
+      });
+    }
+    if (contentsEntry) {
+      evidence.push({
+        source: "generic-heuristic",
+        label: "table-of-contents-entry",
+        confidence: 0.98,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "repeated dotted leaders with terminal page numbers on the same page",
+      });
+    }
+    if (mathematicalMatrixDisplay) {
+      evidence.push({
+        source: "geometry" as EvidenceSource,
+        label: "mathematical-assignment-display",
+        confidence: 0.9,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "multiple assignment operators and dense numeric rows with little prose",
       });
     }
     if (chartLabels > 0) {
@@ -1256,15 +1491,47 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     };
   });
 
+  // A borderless matrix can split its row label and numeric cells into
+  // independent native blocks. Once one cell on that baseline has strong
+  // grid evidence, its adjacent axis label belongs to the same table region.
+  // This does not promote chart text: chart/figure labels are capped below
+  // the strong-table threshold before this propagation runs.
+  const matrixCandidates = candidates.map((candidate) => {
+    const box = candidate.boundingBoxes[0];
+    const isAxisLabel = candidate.evidence.some((entry) => entry.label === "axis-label-numeric-neighborhood");
+    if (!box || !isAxisLabel) return candidate;
+    const peer = candidates.find((other) => {
+      if (other === candidate || other.pageStart !== candidate.pageStart || other.column !== candidate.column) return false;
+      if ((other.roleScores.table ?? 0) < 0.94) return false;
+      const otherBox = other.boundingBoxes[0];
+      if (!otherBox || Math.abs(otherBox.y - box.y) > Math.max(3, box.height * 0.5)) return false;
+      const gap = Math.max(otherBox.x - (box.x + box.width), box.x - (otherBox.x + otherBox.width), 0);
+      return gap <= 240;
+    });
+    if (!peer) return candidate;
+    return {
+      ...candidate,
+      roleScores: { ...candidate.roleScores, table: 0.96, heading: Math.min(candidate.roleScores.heading ?? 0, 0.2) },
+      evidence: [...candidate.evidence, {
+        source: "geometry" as EvidenceSource,
+        label: "matrix-axis-label-neighbor",
+        confidence: 0.96,
+        page: candidate.pageStart,
+        bbox: box,
+        reason: "short axis label shares a baseline with a strongly evidenced table cell",
+      }],
+    };
+  });
+
   // Native PDF producers may split the first words of an article title into a
   // short metadata/affiliation block on the same baseline. Reattach only a
   // compact, institution-free prefix immediately to the left of a title
   // candidate; full affiliation rows and body text remain untouched.
-  const fusedCandidates = candidates.map((candidate) => {
+  const fusedCandidates = matrixCandidates.map((candidate) => {
     if (candidate.role !== "title" || candidate.pageStart !== 1) return candidate;
     const box = candidate.boundingBoxes[0];
     if (!box) return candidate;
-    const prefix = candidates
+    const prefix = matrixCandidates
       .filter((other) => {
         if (other === candidate || other.pageStart !== 1 || other.role !== "affiliation") return false;
         const otherBox = other.boundingBoxes[0];
