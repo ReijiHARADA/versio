@@ -2,7 +2,7 @@
 
 The latest packaged acceptance exposed a separate Tauri-path stall: the OzCHI fixture stayed at `structuring: 図を抽出しています... (5/17)` until the 600-second harness timeout, and even the tiny fixture could remain at `OCR処理中 (1/1ページ)`. `ocrDocument` previously started its timeout only after `doc.getPage()`; page acquisition is now inside the same per-page timeout. A regression test covers a stalled PDF.js `getPage`, and OCR tests pass **4/4**. The fix preserves native text on timeout and prevents a packaged OCR resource stall from holding import forever.
 
-The fast `.app` was rebuilt after this fix at the timestamp recorded below. The full real-paper baseline remains **118/118**; the large OzCHI packaged acceptance needs a follow-up after this timeout hardening because the prior run timed out in OCR before reaching package persistence.
+The fast `.app` was rebuilt after this fix at `2026-10-13 15:00:45 +0900`. The full real-paper baseline remains **118/118**. A fresh OzCHI packaged acceptance then completed successfully through import, annotation, search, Markdown/Notion export, quit, relaunch, and persistence (`result.json`: `ok=true`, searchHits=1, exportBytes=45,498, notionBytes=1,115,780). No app or bundled translation-server process remains running.
 
 # 2026-10-13: final table-candidate guard and full corpus verification
 
