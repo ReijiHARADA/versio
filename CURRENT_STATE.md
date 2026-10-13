@@ -43,6 +43,18 @@ Long-running extraction, corpus, and packaged-app commands must continue to
 use `caffeinate -dimsu`: the workstation may sleep or enter the screen saver
 while they run.
 
+# 2026-10-13: completed-prose guard beside table headers
+
+A real-paper diagnostic found a results sentence in the Frontiers cognitive
+psychology paper (`PVF (r=0.461; p=0.040, n=25). No other significant
+associations were observed.`) that was emitted as a skipped table because it
+sat below a nearby header-like table region. The source had no table-grid
+ownership evidence; the generic header-only row detector was too permissive.
+It now rejects complete sentences. Caption/grid/rotated-table paths remain
+available for actual tables. The regression confirms this block is a pending
+paragraph while the surrounding numeric table rows remain structured tables.
+Targeted real-paper regression, typecheck, lint, and diff check pass.
+
 # 2026-10-13: typography guard for heading/table competition
 
 Corpus diagnosis found a generic failure in which a separated all-caps
