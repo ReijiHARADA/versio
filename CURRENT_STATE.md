@@ -1,3 +1,9 @@
+# 2026-10-13: sequential native table-row reconstruction
+
+A remaining reader failure was caused by borderless native tables being projected as one `PaperBlock` per physical row. The Reader could render each block as a cell grid, but showed a stack of tiny independent table cards instead of one readable table. `projectCanonicalToPaper` now merges only consecutive table-row candidates that share a page and column, have small vertical gaps, contain at least two cells each, and repeat at least two quantized native x-origins across three or more rows. This is geometry-based and does not use paper-specific terms.
+
+The real ergonomics regression now confirms that the separate `Articulated trucks`, `Passenger vehicles`, and `Total motor vehicles` rows become one source-fallback grid with explicit `tableRows`; ordinary prose, captions, lists, and standalone label fragments remain excluded. Target regression and `npm run typecheck` pass. The full cached extraction plus reading-order corpus passes **232/232** in **445.66 seconds** under `caffeinate -dimsu`; `npm run lint` passes with only the repository's existing warnings. Long-running commands must continue to use `caffeinate -dimsu` because this workstation may sleep or activate its screen saver.
+
 # 2026-10-13: vector-diagram package and corpus verification
 
 The fast Tauri bundle containing the vector-diagram fix was rebuilt at **2026-10-13 20:59:27 JST**. A fresh isolated real-app acceptance imported OzCHI `2686612.2686699.pdf`, completed annotation/search, Markdown and Notion export, quit/relaunched, and retained data. The persisted package contained **161 blocks**, **5 table blocks**, and **5 image-backed tables** with **0** source-table fallbacks. No app or bundled translation-server process remained after acceptance.
