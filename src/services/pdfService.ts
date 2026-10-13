@@ -561,19 +561,38 @@ export async function extractFigureImages(
       const operatorList = await page.getOperatorList();
       const placements = collectImagePlacements(operatorList, viewport.height);
 
-      const renderScale = 2;
-      const renderViewport = page.getViewport({ scale: renderScale });
-      const pageCanvas = document.createElement("canvas");
-      pageCanvas.width = Math.ceil(renderViewport.width);
-      pageCanvas.height = Math.ceil(renderViewport.height);
-      const pageContext = pageCanvas.getContext("2d");
-      if (!pageContext) continue;
-
-      await page.render({
-        canvasContext: pageContext,
-        viewport: renderViewport,
-        annotationMode: pdfjsLib.AnnotationMode.DISABLE,
-      }).promise;
+      // Vector-only figures use this page-render fallback.  A 1.25x raster is
+      // sufficient for the Reader crop while avoiding the quadratic canvas
+      // cost of the former 2x render on diagram-heavy papers. Embedded image
+      // objects keep their native resolution and do not use this scale.
+      const renderScale = 1.25;
+      // Most publisher PDFs expose figure/table pixels as embedded image
+      // objects. Decode those directly first; rendering the entire page is a
+      // costly fallback for vector-only captions and was the dominant delay
+      // on image-heavy papers. Keep the canvas lazy so extraction semantics
+      // remain unchanged while the common path avoids full-page rendering.
+      let pageCanvas: HTMLCanvasElement | undefined;
+      let pageRenderPromise: Promise<HTMLCanvasElement | undefined> | undefined;
+      const ensurePageCanvas = async (): Promise<HTMLCanvasElement | undefined> => {
+        if (pageCanvas) return pageCanvas;
+        if (pageRenderPromise) return pageRenderPromise;
+        pageRenderPromise = (async () => {
+          const renderViewport = page.getViewport({ scale: renderScale });
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.ceil(renderViewport.width);
+          canvas.height = Math.ceil(renderViewport.height);
+          const context = canvas.getContext("2d");
+          if (!context) return undefined;
+          await page.render({
+            canvasContext: context,
+            viewport: renderViewport,
+            annotationMode: pdfjsLib.AnnotationMode.DISABLE,
+          }).promise;
+          pageCanvas = canvas;
+          return canvas;
+        })();
+        return pageRenderPromise;
+      };
 
       const captionRegions = pageCaptions.map((caption) => {
         const crop = figureImageRect(caption, layoutBlocks, layout);
@@ -611,10 +630,12 @@ export async function extractFigureImages(
         }
 
         if (!crop) continue;
+        const renderedPage = await ensurePageCanvas();
+        if (!renderedPage) continue;
         const sx = Math.max(0, Math.floor(crop.x * renderScale));
         const sy = Math.max(0, Math.floor(crop.y * renderScale));
-        const sw = Math.min(pageCanvas.width - sx, Math.ceil(crop.width * renderScale));
-        const sh = Math.min(pageCanvas.height - sy, Math.ceil(crop.height * renderScale));
+        const sw = Math.min(renderedPage.width - sx, Math.ceil(crop.width * renderScale));
+        const sh = Math.min(renderedPage.height - sy, Math.ceil(crop.height * renderScale));
         if (sw < 8 || sh < 8) continue;
 
         const slice = document.createElement("canvas");
@@ -622,7 +643,7 @@ export async function extractFigureImages(
         slice.height = sh;
         const sliceContext = slice.getContext("2d");
         if (!sliceContext) continue;
-        sliceContext.drawImage(pageCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
+        sliceContext.drawImage(renderedPage, sx, sy, sw, sh, 0, 0, sw, sh);
         images.set(key, slice.toDataURL("image/jpeg", 0.88));
       }
     }

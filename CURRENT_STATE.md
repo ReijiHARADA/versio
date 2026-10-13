@@ -1,5 +1,59 @@
 # Active PDF extraction objective (2026-10-11)
 
+# 2026-10-13: latest table-row projection and packaged acceptance
+
+After the same-baseline cell projection change, direct extraction of
+`2686612.2686699.pdf` produced 201 blocks, 14 table blocks, and 4 blocks with
+explicit grid rows. The former OzCHI strings now retain sorted x-positioned
+cells (for example `Error dist. | Finger 1 | Finger 2 | Finger 3 | Finger 4`)
+for the Reader fallback grid. `npm run typecheck`, focused pipeline/layout
+tests, lint, and `git diff --check` pass; lint still reports only the existing
+warnings. The fast `.app` was rebuilt at 2026-10-13 13:33:21 JST and the
+packaged Tauri acceptance route completed successfully with the real OzCHI PDF:
+import, annotation, search, Markdown/Notion export, quit, relaunch, and
+persistence all passed (`result.json` export 45,498 bytes; Notion package
+1,115,780 bytes). The `caffeinate`-wrapped acceptance left no app or bundled
+translation-server process running.
+
+# 2026-10-13: typography guard for heading/table competition
+
+Corpus diagnosis found a generic failure in which a separated all-caps
+section line could inherit a nearby table-caption score from its split native
+glyphs. The resolver now uses document-local font-size ratio, spacing-before,
+uppercase ratio, and punctuation-free short-line evidence to give a strong
+heading score; long single-item prose lines are simultaneously capped as table
+evidence. A regression using `detecting-statistical-interactions.pdf` now keeps
+`H COMPARISONS WITH LOGISTIC REGRESSION BASELINES` as a canonical heading and
+the focused pipeline tests pass. The fast `.app` was rebuilt after this change.
+
+# 2026-10-13: cross-column continuation projection regression
+
+The 118-paper extraction regression was rerun under `caffeinate`: 117/118
+passed. The only remaining red test is the existing
+`ergonomics-human-factors-and-ergonomics` fixture, whose per-test timeout is a
+hard-coded 180 seconds while its very large PDF extraction exceeds that
+budget; it is not an assertion failure. The floated table continuation
+assertion now passes after allowing explicitly evidenced table rows that
+resolve as `other` to remain transparent, and after deferring continuation
+targets that sort before their source by y-coordinate. Typecheck, lint,
+focused regression, and the latest fast `.app` build pass.
+
+The post-projection table audit was rerun across all 114 cached PDFs under
+`caffeinate`: extractionErrors=0, papersWithTableCaptions=48,
+tableCaptions=345, cropReadyCaptions=255, rawTableFragments=1736,
+cropBackedFragments=619, readerRawFragments=1119, readerCellFallbacks=904,
+orphanFragments=1069. Compared with the prior 649 structured fallbacks,
+preserving same-baseline rows raised structured-grid fragments to 904 and
+reduced audit-only ambiguous fragments from 113 to 38, prose-like from 50 to
+17, and numeric-grid from 106 to 2. These are reader readiness diagnostics,
+not a claim that every table's semantic row/column schema is fully recovered.
+
+The latest packaged Tauri acceptance after the continuation fix also passed:
+`result.json` at 2026-10-13T05:04:41Z reports `ok=true`, annotation/search
+success, Markdown export 45,498 bytes, Notion package 1,115,780 bytes, and
+successful quit/relaunch persistence. No app, bundled server, audit, or test
+process remains running.
+
 The active goal is **not limited to the OzCHI finger-touch PDF**. That PDF is
 one high-value Golden Regression Case because it combines a two-column ACM
 layout, a mixed author/affiliation masthead, publisher permission chrome,
@@ -9,6 +63,20 @@ diverse real-paper corpus: ACM/OzCHI, IEEE, Springer/LNCS, Elsevier, Nature,
 APA-like, J-STAGE and other journal/conference/preprint/report layouts,
 including single/two-column, table-heavy, equation-heavy, old/scanned, and
 multilingual PDFs.
+
+# 2026-10-13: same-baseline table cells are preserved as grid rows
+
+The projection reducer previously joined adjacent table blocks on the same
+baseline into one `original` string and dropped their x positions. That is the
+source of Reader cards such as `Finger Thumb Finger1 ...` even when the role
+was correctly `table`. It now carries a sorted `metadata.tableRows` row while
+performing the same aggregation, so the existing Reader grid fallback can
+render cells instead of a prose-like concatenation. This is a projection-only
+change; role resolution and crop suppression are unchanged. `npm run typecheck`
+and the focused pipeline/layout tests pass. High-ambiguity corpus inspection
+also confirmed that medical/education review papers contain genuine dense
+tables, so they are retained for grid/image handling rather than demoted to
+paragraphs.
 
 Completion requires both (1) targeted regressions for each diagnosed failure
 and (2) held-out, cross-format evidence that the fix does not trade one paper's
@@ -1545,6 +1613,57 @@ iteration; they are not globally hidden because many are charts, appendices,
 or tables lacking a trustworthy caption/crop. Artifact:
 `test-data/real-papers/reports/table-reader-readiness-v1.json`.
 
+The Resolver change was included in a further fast unsigned build at
+**2026-10-13 13:25:25 +0900**. The packaged OzCHI acceptance run against that
+bundle passed again; its persisted structure has 161 blocks, 5 tables, and 12
+figures, with no raw `Finger Thumb Finger1`, `Function Call tapped`, or
+`Phonebook Finger` streams.
+
+# 2026-10-13: real Tauri import completion and OCR fallback safety
+
+The isolated packaged-app acceptance test now completes with the current
+bundle: native PDF import, atomic Paper Package persistence, Reader block
+loading, annotation, library search, Markdown export, Notion ZIP export, quit,
+and relaunch persistence all passed. This run exposed that the initial import
+still assembled its package through mutable cache checkpoints before reading it
+back to attach layout/source data. A document with no projected body block
+could therefore reach that read before any package existed, yielding `Paper
+Package が不完全です` and an empty Reader. Initial import now creates the complete
+package directly from the extracted projection, native layout, and `source.pdf`
+in one atomic package swap; the visible library index receives its final source
+hash only afterwards.
+
+Vision OCR is now bounded to 15 seconds per selected page. Timeout or Vision
+failure produces an empty OCR result for that page and retains PDF.js native
+text, so an auxiliary macOS OCR request cannot indefinitely block an otherwise
+readable import. The OCR-stall regression, typecheck, lint (existing warnings
+only), and the packaged acceptance test pass. The latest fast unsigned bundle
+is `src-tauri/target/release/bundle/macos/Paper Reader.app`, rebuilt at
+**2026-10-13 03:05:27 JST**.
+For the OzCHI finger-specific-touch regression itself, all **5/5** numbered
+tables are crop-ready; all 9 raw table fragments are caption-owned and the
+Reader simulation leaves **0** raw table fragments. Existing user exports are
+still historical until **PDFを再抽出** is run from the paper menu.
+
+The next generic correction prevents later same-baseline matrix propagation
+from overwriting stronger graphic-label evidence. It affects chart/diagram
+labels only when their `other` evidence is already at least 0.82; captioned
+and ordinary native table rows keep their table evidence. The real
+`linguistics-language-model-physics` fixture now verifies that repeated plot
+labels (`lay9 … lay10`) are not emitted as a Reader table, while OzCHI Table
+3/4 checks still pass. A second 114-PDF audit retains **0 extraction errors**,
+345 numbered captions, and 255 crop-ready captions; raw table fragments fall
+from 1,811 to **1,808**, Reader-visible fragments from 1,151 to **1,148**.
+
+`reextractPaper` now has a real saved-package integration regression using the
+OzCHI PDF: it seeds a Paper Package with `source.pdf`, runs the stored-source
+re-extraction path, then confirms the same paper ID and source are retained
+and Table 4's native `Finger | Phonebook` cells persist in `structure.json`.
+The Node test deliberately observes zero raster crops because its PDF runtime
+has no Canvas backend; this validates the source-only fallback, not Tauri
+image rendering. The packaged Tauri import acceptance remains the authoritative
+check for actual raster table crops.
+
 # 2026-10-12: image-backed package persistence verified on the actual OzCHI route
 
 The prior large-PDF packaged acceptance failure was not an extraction failure:
@@ -1824,3 +1943,128 @@ captions, 1,772 raw table-region fragments, 587 crop-backed fragments, and
 1,078 remaining unowned fragments. The remaining count is deliberately a
 triage queue, not an error count: it mixes captionless data tables with plots,
 equations, references, and other high-precision false-positive exclusions.
+
+# 2026-10-13: source-only table reader fallback and package freshness finding
+
+The user-visible `exploring-finger-specific-touch-screen-interacti` export is
+an older immutable package: it contains only `table-001.jpg` through
+`table-003.jpg`. Current geometry diagnostics find valid crop rectangles for
+OzCHI Tables 3, 4, and 5, so it must be re-imported (or explicitly
+re-extracted) to receive the newer table image path. Paper Packages currently
+have no extraction-pipeline version, which explains why rebuilding the app
+alone never rewrites a prior import. The library and workspace three-dot menu
+now provides **PDFを再抽出**. It rebuilds the package from stored `source.pdf`
+while retaining the paper ID, memberships, annotations, reading position, and
+only translations whose normalized source is unchanged. Changed blocks remain
+pending rather than inheriting an unrelated translation, and stale table/figure
+assets are replaced atomically.
+
+For tables where a raster crop is unavailable, import now persists native PDF
+same-baseline cells as `TableMetadata.tableRows`; the Reader renders that data
+as rows/cells instead of one concatenated prose string. This is deliberately a
+fallback: an image-backed numbered caption still suppresses its local raw cell
+fragments, preserving a visual source of truth. The focused metadata test and
+re-extraction translation-carry-forward test, typecheck, lint, and real OzCHI
+baseline pass. OzCHI Table 4 confirms cells are retained; Table 3
+is represented by two independent vertical native columns and is therefore
+covered by the crop path rather than falsely claimed as a reconstructed grid.
+
+The packaged acceptance helper no longer overrides `HOME`: it isolates app
+data with `PAPER_READER_ACCEPTANCE_HOME` while reusing the local MADLAD cache.
+The prior override downloaded a second multi-GB model cache and exhausted the
+disk before extraction could be assessed. An isolated large-PDF acceptance
+run still did not reach its package marker within its 180-second timeout and
+left no package files, so it remains a separate real-Tauri import performance
+diagnostic; it is not evidence that the current extraction completed.
+
+The refreshed table-reader diagnostic completed over all **114 locally
+available real PDFs** with **0 extraction errors**. It found 345 numbered table
+captions; 255 have a geometry-valid crop. Of 1,811 raw table-region fragments,
+662 are hidden by the actual Reader rule once their caption crop is present.
+After that Reader simulation, 1,151 raw table regions remain; **663** retain
+same-baseline cells and will render as the structured source-only grid rather
+than a concatenated sentence. The rest is a focused triage queue containing
+equations, charts, captions, references, and genuinely ambiguous/one-column
+table material; it must not be blanket-classified as a table. Report:
+`test-data/real-papers/reports/table-reader-readiness-v1.json`.
+
+The real Tauri packaged import was then run against the Golden OzCHI PDF.
+It completed import, export, quit, and relaunch persistence successfully.
+The resulting package contains `table-001.jpg` through `table-005.jpg`; all
+five Table captions are image-backed and no raw `Finger Thumb Finger1 …`,
+`Function Call tapped …`, or `Phonebook / Finger` cell stream remains in its
+Reader structure. The `t(36)=-2.84, p=0.007` result remains a paragraph in
+`original.md`, rather than a display equation or table. This validates the
+current app route, not the old Desktop export.
+
+# 2026-10-13: vector figure-label triage and latest packaged build
+
+The 114-PDF table-reader audit was rerun after adding an image-proximity
+evidence rule for short, same-baseline native labels. Labels emitted just above
+or over an image (for example `truth GPT GPT_rel ...` and `cut0 cut50 ...` in
+the linguistics paper) no longer receive table evidence merely from repeated
+numeric columns. The rule is limited to paragraph-shaped blocks with multiple
+short native spans and an image geometry match; image-backed table blocks are
+not routed through it. The linguistics real-paper baseline passed with explicit
+regressions for those labels. Audit result: 0 extraction errors; numeric-grid
+triage fell from 123 to **112**, while structured-grid increased from 661 to
+**676** as the remaining native rows were classified more accurately. The
+audit-only report is `test-data/real-papers/reports/table-reader-readiness-v1.json`.
+
+Typecheck, lint (existing warnings only), diff check, and the focused
+linguistics extraction regression pass. A new fast unsigned `.app` was built at
+**2026-10-13 11:44:18 +0900**:
+`src-tauri/target/release/bundle/macos/Paper Reader.app`.
+The real Tauri OzCHI acceptance run passed import, annotation/search/export,
+quit, and relaunch persistence using that bundle. A separate linguistics
+packaged run reached OCR processing on page 7/8 but exceeded the fixed 180
+second acceptance window; this is an OCR/import-duration issue to measure
+separately, not a successful extraction result.
+
+# 2026-10-13: mixed-document OCR routing and figure extraction timing
+
+`pagesNeedingOcr` no longer treats a low document-wide text-item average as
+proof that every page is scanned. The document-wide fallback now applies only
+when every page is independently `scanned` or `garbled`; mixed papers use
+page-local classification. This preserves OCR for scanned pages while keeping
+native text on readable figure-heavy pages. A regression test covers a native
+page plus a scanned page whose average would otherwise trigger both. Page/OCR
+focused tests pass (17/17), typecheck and diff check pass.
+
+On the language-model-physics PDF this reduced the OCR set from the whole
+document to **8 of 46 pages**. The latest `.app` was rebuilt after this change
+and the Golden OzCHI Tauri acceptance still passed. The language-model-physics
+acceptance then advanced beyond OCR but remained in figure extraction at
+`6/32` captions within the fixed 180-second harness window. This identifies a
+separate performance bottleneck in image/vector figure extraction; it is not
+evidence that the PDF has no content. The lazy page-render optimization is in
+place, but the large vector-heavy case still needs profiling/optimization
+before claiming broad packaged-import completion.
+
+The packaged acceptance harness now accepts `PAPER_READER_E2E_TIMEOUT_S` for
+large real-paper runs while retaining the 180-second default. With
+`caffeinate` and a 600-second timeout, the latest `.app` completed the full
+language-model-physics import, annotation/search/export, quit, and relaunch
+checks. Marker: `/tmp/paper-reader-acceptance-ling-v4/_acceptance/result.json`
+(`ok: true`, export 130260 bytes, Notion ZIP 81127 bytes). Its persisted
+structure contains 842 blocks (628 paragraphs, 136 tables, 32 figures), so the
+earlier 180-second result was a harness timeout rather than an import failure.
+The latest bundle timestamp is **2026-10-13 13:07:00 +0900**.
+
+# 2026-10-13: cross-column caption promotion guard
+
+The 114-PDF audit exposed a reusable false positive in the COVID review: a
+right-column statistical explanation was promoted into the left-column Table 2
+region because page-wide caption evidence and numeric plot labels overlapped.
+The candidate now requires matching column context for nearby table captions,
+and the resolver refuses to promote nodes carrying explicit image/vector-label
+evidence into a table region. The real-paper regression confirms that
+`Prediction of epidemic results of` remains a paragraph.
+
+After the fix, the full audit still has **0 extraction errors** and improved:
+raw table fragments **1,736**, Reader raw fragments **1,119**, source-only
+cell fallbacks **649**, numeric-grid triage **106**, prose-like **50**, and
+ambiguous **113**. This is a reduction from 1,814 / 1,154 / 676 / 112 / 51 /
+115 in the previous run. The focused COVID baseline, typecheck, lint (existing
+warnings only), and diff check pass. The latest audit artifact remains
+`test-data/real-papers/reports/table-reader-readiness-v1.json`.

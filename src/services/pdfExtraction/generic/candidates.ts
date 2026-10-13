@@ -126,13 +126,27 @@ function axisLabelEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
 }
 
 function imageOverlapLabelEvidence(block: LayoutBlock, page?: ExtractedPage): number {
-  if (!page || block.role !== "paragraph" || block.lines.length < 3 || /[.!?。！？]$/.test(block.text.trim())) return 0;
+  if (!page || block.role !== "paragraph" || /[.!?。！？]$/.test(block.text.trim())) return 0;
   const items = block.lines.flatMap((line) => line.items);
   const shortRatio = items.filter((item) => item.text.trim().length <= 14).length / Math.max(1, items.length);
+  // Figure labels are commonly emitted as one baseline containing several
+  // short native spans (for example a chart legend).  The old multi-line-only
+  // condition missed those spans, allowing numeric grid heuristics to promote
+  // them to a table.  Require multiple separated items so a normal one-line
+  // paragraph or a table caption cannot take this path.
+  const oneLineLabel = block.lines.length === 1 && items.length >= 4 &&
+    block.text.trim().split(/\s+/).filter(Boolean).length <= 18;
+  if (block.lines.length < 3 && !oneLineLabel) return 0;
   if (shortRatio < 0.65) return 0;
   const overlap = Math.max(...(page.imagePlacements ?? []).map((image) => {
+    // Native PDF labels are often positioned immediately above the raster
+    // image (their bbox does not literally intersect the image).  Include a
+    // small vertical halo only for the already constrained short-label shape.
+    const halo = oneLineLabel ? Math.max(10, block.bbox.height * 2) : 0;
+    const imageTop = image.y - halo;
+    const imageBottom = image.y + image.height + halo;
     const x = Math.max(0, Math.min(block.bbox.x + block.bbox.width, image.x + image.width) - Math.max(block.bbox.x, image.x));
-    const y = Math.max(0, Math.min(block.bbox.y + block.bbox.height, image.y + image.height) - Math.max(block.bbox.y, image.y));
+    const y = Math.max(0, Math.min(block.bbox.y + block.bbox.height, imageBottom) - Math.max(block.bbox.y, imageTop));
     return (x * y) / Math.max(1, block.bbox.width * block.bbox.height);
   }).concat(0));
   return overlap >= 0.2 ? clamp(0.78 + Math.min(0.14, overlap * 0.14)) : 0;
@@ -570,6 +584,13 @@ function captionedNeighborCellRows(block: LayoutBlock, blocks: LayoutBlock[]): b
  * separated only by word-sized gaps. */
 function captionedNativeMultiCellRow(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
   if (block.role === "table_caption") return false;
+  const text = block.text.trim();
+  const wordCount = text.split(/\s+/).filter(Boolean).length;
+  // This evidence generator is for a visual row, not a paragraph that
+  // happens to share a page with a caption. Long/multi-sentence blocks are
+  // safer as prose even when their native spans have wide x gaps (formulae,
+  // citations, and a neighbouring table can create those gaps).
+  if (wordCount > 24 || /[.!?]\s*$/.test(text) || block.lines.length > 4) return false;
   const caption = nearbyTableCaptionForRegion(block, blocks, 520);
   if (!caption) return false;
 
@@ -1031,7 +1052,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const numericRow = layoutRole === "heading" && /^[\d\s.,+\-–—=()]+$/.test(block.text.trim());
     const mathRow = layoutRole === "heading" && /[∥∑∫√∞≈≠≤≥±∂∇×÷]/u.test(block.text);
     const nearbyTableCaption = blocks.some((candidate) => candidate.role === "table_caption" &&
-      candidate.pageStart === block.pageStart && Math.abs(candidate.bbox.y - block.bbox.y) < 300);
+      candidate.pageStart === block.pageStart &&
+      candidate.column === block.column &&
+      Math.abs(candidate.bbox.y - block.bbox.y) < 300);
     const captionedCompactRows = captionedCompactRowCluster(block, blocks);
     const captionedMultiCellText = captionedMultiCellTextBand(block, blocks);
     const captionedRepeatedRow = captionedRepeatedCellRow(block, blocks);
@@ -1130,7 +1153,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       [role]: confidence,
     };
     if (cjkComparisonTableCaption(block, blocks)) scoreByRole.caption = 0.96;
-    if (pageGrid > 0 && block.role !== "table_caption") scoreByRole.table = pageGrid;
+    if (pageGrid > 0 && block.role !== "table_caption" && !narrativeTableConflict) {
+      scoreByRole.table = pageGrid;
+    }
     if (contentsEntry) {
       // Dotted leaders and page numbers resemble repeated table columns. The
       // entry must stay out of the Reader body and never be rendered as a
@@ -1148,6 +1173,14 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       // keep the node as non-translatable `other` instead of a heading.
       scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.2);
       scoreByRole.other = Math.max(scoreByRole.other ?? 0, fragmentedLabels);
+    }
+    // A short native label that is geometrically attached to an image is
+    // figure content, even when the page-wide numeric grid detector also sees
+    // repeated columns.  Keep it out of the table role; real image-backed
+    // tables are already represented by a `table` layout block and do not
+    // enter this paragraph-only evidence path.
+    if (imageLabels > 0 || vectorLabels > 0 || fragmentedLabels > 0) {
+      scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.2);
     }
     if (axisLabels > 0) {
       scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.2);
@@ -1203,6 +1236,21 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         role === "heading" ? confidence : 0,
         clamp((nonBodyFont ? 0.54 : 0.38) + styleEvidence)
       );
+    }
+    // Some publishers emit all-caps section headings as ordinary paragraph
+    // blocks, especially when the first glyph is split from the rest of the
+    // line. A clear size/spacing/capitalization cluster is document-level
+    // heading evidence; require a short, punctuation-free line so table
+    // headers and statistical prose do not take this path.
+    const styleHeadingAnchor = role !== "title" && role !== "author" &&
+      block.lines.length === 1 &&
+      block.text.trim().split(/\s+/).filter(Boolean).length <= 12 &&
+      style.fontSizeRatio >= 1.05 && style.spacingBefore >= baseFontSize * 1.5 &&
+      style.uppercaseRatio >= 0.72 &&
+      !/[.!?:;=]/.test(block.text.trim()) &&
+      !/\d/.test(block.text.trim());
+    if (styleHeadingAnchor) {
+      scoreByRole.heading = Math.max(scoreByRole.heading ?? 0, 0.96);
     }
     const equation = equationScore(block, layout);
     // A numeric/statistical line can be emitted as its own native block when
@@ -1343,8 +1391,37 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // Actual captioned tables retain their dedicated geometry evidence above;
     // without that anchor, a chart/diagram label matrix is safer as `other`
     // than as a reader-visible, source-only table card.
-    if (vectorLabels >= 0.82 && !captionAnchoredTable) {
-      scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.68);
+    if (vectorLabels >= 0.82 && block.role === "paragraph") {
+      scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.2);
+    }
+    // Apply the narrative conflict guard after every table generator. Some
+    // captionless row heuristics run later than page-grid evidence and could
+    // otherwise restore a high table score for a paragraph that merely shares
+    // a numeric/plot band with it.
+    if (narrativeTableConflict) {
+      scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.3);
+    }
+    // A paragraph reconstructed from full-width native lines can sit inside
+    // the vertical radius of a nearby table caption. If every line is a
+    // single native span and the text is ordinary prose, the caption is not
+    // sufficient evidence to turn it into a source-only table card.
+    const singleItemNarrative = paragraphLike(block.text) &&
+      block.lines.length >= 2 &&
+      block.lines.every((line) => line.items.length <= 1) &&
+      block.text.trim().split(/\s+/).filter(Boolean).length >= 16 &&
+      (block.text.match(/\d/g) ?? []).length / Math.max(block.text.length, 1) < 0.2;
+    if (singleItemNarrative) {
+      scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.3);
+    }
+    // Heading-like typography is a stronger structural signal than a
+    // caption-adjacent multi-cell heuristic. Wide spacing before a bold/all
+    // caps line should remain a heading even when native glyphs are emitted
+    // as several separated spans.
+    const headingGeometryConflict = style.fontSizeRatio >= 1.05 &&
+      style.spacingBefore >= 16 && style.uppercaseRatio >= 0.7 &&
+      (scoreByRole.heading ?? 0) >= 0.7;
+    if (headingGeometryConflict) {
+      scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.3);
     }
     // Apply this after typography scoring. A bold axis/table label must not
     // be revived as a heading after its numeric neighbourhood identified it
@@ -1500,6 +1577,11 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const box = candidate.boundingBoxes[0];
     const isAxisLabel = candidate.evidence.some((entry) => entry.label === "axis-label-numeric-neighborhood");
     if (!box || !isAxisLabel) return candidate;
+    // Do not let the same-baseline table propagation revive a chart/diagram
+    // label which already has stronger non-document evidence. This is a
+    // resolver input, not a vocabulary rule: image/vector/fragment geometry
+    // must win over a nearby numeric grid unless a caption later anchors it.
+    if ((candidate.roleScores.other ?? 0) >= 0.82) return candidate;
     const peer = candidates.find((other) => {
       if (other === candidate || other.pageStart !== candidate.pageStart || other.column !== candidate.column) return false;
       if ((other.roleScores.table ?? 0) < 0.94) return false;

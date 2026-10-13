@@ -4,6 +4,8 @@ import { extractPdfPages } from "../src/test/readingOrder/extractPdf";
 import { figureImageRect } from "../src/services/pdfLayout";
 import { extractFromPages } from "../src/services/pdfExtraction/pipeline/extractAcademicPdf";
 import type { PaperBlock } from "../src/types/paper";
+import { attachLinesToBlocks } from "../src/data/package/layoutFromExtraction";
+import { suppressImageBackedTableFragments } from "../src/services/pdfExtraction/pipeline/extractAcademicPdf";
 
 const root = "test-data/real-papers";
 const reportDir = path.join(root, "reports");
@@ -54,6 +56,31 @@ function ownedByCaption(fragment: PaperBlock, caption: PaperBlock): boolean {
   return overlaps && (closeAbove || closeBelow);
 }
 
+/**
+ * Audit-only reader triage. These labels intentionally do not change the
+ * resolver: their purpose is to distinguish genuine unreadable table streams
+ * from prose/chart/equation false positives before changing production rules.
+ */
+function readerFragmentKind(block: PaperBlock): "structured-grid" | "numeric-grid" | "prose-like" | "short-label" | "ambiguous" {
+  const rows = (block.metadata as { tableRows?: unknown }).tableRows;
+  if (Array.isArray(rows) && rows.some((row) => Array.isArray(row) && row.length >= 2)) {
+    return "structured-grid";
+  }
+  const text = (block.original ?? "").trim();
+  const tokens = text.match(/\S+/g) ?? [];
+  const numericTokens = tokens.filter((token) => /\d/.test(token)).length;
+  const wordTokens = tokens.filter((token) => /[A-Za-z]{3,}/.test(token)).length;
+  const sentenceEnd = /[.!?](?:\s|$)/.test(text);
+  if (tokens.length >= 6 && numericTokens >= 3 && numericTokens / tokens.length >= 0.28) {
+    return "numeric-grid";
+  }
+  if (tokens.length >= 10 && wordTokens / tokens.length >= 0.55 && sentenceEnd) {
+    return "prose-like";
+  }
+  if (tokens.length <= 5) return "short-label";
+  return "ambiguous";
+}
+
 const papers: Array<Record<string, unknown>> = [];
 for (const file of files) {
   const filePath = path.join(root, file);
@@ -85,12 +112,38 @@ for (const file of files) {
     const cropBackedFragments = fragments.filter((fragment) => captions.some((caption) =>
       cropReadyCaptionIds.has(caption.id) && ownedByCaption(fragment, caption)
     ));
+    // Model the exact reader boundary after a successful image render: only
+    // crop-ready captions receive an image URL, then suppression runs. This
+    // keeps the audit honest about what readers can see without claiming that
+    // every detected table is a complete grid.
+    const withCropArtifacts = extracted.blocks.map((block) =>
+      cropReadyCaptionIds.has(block.id)
+        ? { ...block, metadata: { ...block.metadata, imageUrl: "assets/audit-crop.png" } }
+        : block
+    );
+    const readerBlocks = attachLinesToBlocks(
+      suppressImageBackedTableFragments(withCropArtifacts),
+      extracted.layoutBlocks
+    );
+    const readerRawFragments = readerBlocks.filter(isRawTableFragment);
+    const readerCellFallbacks = readerRawFragments.filter((block) => {
+      const rows = (block.metadata as { tableRows?: unknown }).tableRows;
+      return Array.isArray(rows) && rows.some((row) => Array.isArray(row) && row.length >= 2);
+    });
+    const readerFragmentKinds = readerRawFragments.reduce<Record<string, number>>((counts, block) => {
+      const kind = readerFragmentKind(block);
+      counts[kind] = (counts[kind] ?? 0) + 1;
+      return counts;
+    }, {});
     papers.push({
       file,
       tableCaptions: captions.length,
       cropReadyCaptions: cropReadyCaptionIds.size,
       rawTableFragments: fragments.length,
       cropBackedFragments: cropBackedFragments.length,
+      readerRawFragments: readerRawFragments.length,
+      readerCellFallbacks: readerCellFallbacks.length,
+      readerFragmentKinds,
       orphanFragments: orphanFragments.map((block) => ({ page: block.pageStart, text: block.original?.slice(0, 180) })),
     });
   } catch (error) {
@@ -102,6 +155,11 @@ for (const file of files) {
 
 const successful = papers.filter((paper) => !("error" in paper));
 const number = (key: string) => successful.reduce((sum, paper) => sum + Number(paper[key] ?? 0), 0);
+const readerFragmentKinds = successful.reduce<Record<string, number>>((counts, paper) => {
+  const kinds = paper.readerFragmentKinds as Record<string, number> | undefined;
+  for (const [kind, count] of Object.entries(kinds ?? {})) counts[kind] = (counts[kind] ?? 0) + count;
+  return counts;
+}, {});
 const report = {
   generatedAt: new Date().toISOString(),
   paperCount: files.length,
@@ -113,8 +171,11 @@ const report = {
     cropReadyCaptions: number("cropReadyCaptions"),
     rawTableFragments: number("rawTableFragments"),
     cropBackedFragments: number("cropBackedFragments"),
+    readerRawFragments: number("readerRawFragments"),
+    readerCellFallbacks: number("readerCellFallbacks"),
+    readerFragmentKinds,
     orphanFragments: successful.reduce((sum, paper) => sum + ((paper.orphanFragments as unknown[])?.length ?? 0), 0),
-    note: "Crop readiness is a geometry diagnostic. It does not claim visual accuracy; crop-backed fragments are suppressed only in the actual import path after image rendering succeeds.",
+    note: "Crop readiness is a geometry diagnostic. readerRawFragments simulates suppression only after a successful caption crop; readerCellFallbacks are native same-baseline rows retained for a readable source-only grid, not a claim of fully reconstructed table semantics. readerFragmentKinds is audit-only triage and does not change resolver behavior.",
   },
 };
 

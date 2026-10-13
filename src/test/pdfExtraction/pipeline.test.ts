@@ -613,6 +613,23 @@ describe("canonical extraction pipeline", () => {
     expect(blocks.map((block) => block.text).join(" ")).not.toContain(".-");
   });
 
+  it("uses typography evidence to keep a separated all-caps section heading out of table projection", async () => {
+    const pdf = path.resolve("test-data/real-papers/detecting-statistical-interactions.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "all-caps-heading-table-guard",
+      filePath: pdf,
+      fileHash: "all-caps-heading-table-guard",
+      metadata: { pageCount: pages.length },
+    });
+    const heading = result.canonical.nodes.find((node) =>
+      node.text === "H COMPARISONS WITH LOGISTIC REGRESSION BASELINES"
+    );
+    expect(heading?.role).toBe("heading");
+  }, 60_000);
+
   it("recognizes CJK checkmark comparison rows without promoting nearby prose", async () => {
     const pdf = path.resolve("test-data/real-papers/ergonomics-human-factors-ihci.pdf");
     if (!fs.existsSync(pdf)) return;

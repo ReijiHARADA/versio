@@ -20,6 +20,30 @@ export type PageOcrResult = {
   fullText: string;
 };
 
+export type OcrDocumentOptions = {
+  /**
+   * Vision is an optional fallback. A stalled native request must never hold
+   * the whole import hostage, especially when PDF.js already returned text.
+   */
+  pageTimeoutMs?: number;
+  /** Test seam; production always uses the Tauri Vision implementation. */
+  recognizePage?: typeof ocrPage;
+};
+
+const DEFAULT_OCR_PAGE_TIMEOUT_MS = 15_000;
+
+function timeoutAfter<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+    }),
+  ]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
+
 /** PDF ページを canvas に描画して PNG base64 を返す */
 async function pageToBase64(pdfPage: unknown, scale = 2.0): Promise<string> {
   const canvas = document.createElement("canvas");
@@ -76,6 +100,7 @@ export async function ocrDocument(
   languages: string[] = ["en-US"],
   onProgress?: (page: number, total: number) => void,
   pageNumbers?: ReadonlySet<number>,
+  options: OcrDocumentOptions = {},
 ): Promise<PageOcrResult[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const doc = pdfDoc as any;
@@ -84,13 +109,26 @@ export async function ocrDocument(
     ? [...pageNumbers].filter((page) => Number.isInteger(page) && page >= 1 && page <= total).sort((a, b) => a - b)
     : Array.from({ length: total }, (_, index) => index + 1);
   const results: PageOcrResult[] = [];
+  const recognizePage = options.recognizePage ?? ocrPage;
+  const timeoutMs = options.pageTimeoutMs ?? DEFAULT_OCR_PAGE_TIMEOUT_MS;
 
   for (let index = 0; index < targetPages.length; index++) {
     const i = targetPages[index];
     onProgress?.(index + 1, targetPages.length);
     const page = await doc.getPage(i);
-    const result = await ocrPage(page, i, languages);
-    results.push(result);
+    try {
+      const result = await timeoutAfter(
+        recognizePage(page, i, languages),
+        timeoutMs,
+        `Vision OCR timed out for page ${i}`,
+      );
+      results.push(result);
+    } catch (error) {
+      // The caller keeps its native PDF.js text for failed OCR pages. Return
+      // an empty result rather than aborting an otherwise readable import.
+      console.warn(`[ocr] page ${i} unavailable; retaining native text`, error);
+      results.push({ pageNumber: i, lines: [], fullText: "" });
+    }
   }
 
   return results;

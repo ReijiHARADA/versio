@@ -302,7 +302,19 @@ export function floatedTableContinuationRelations(
       if (!next.text || previous.column !== "left" || next.column !== "right") continue;
 
       const intervening = nodes.slice(i + 1, j);
-      if (intervening.length < 2 || !intervening.every((node) => node.role === "table" || node.role === "caption")) continue;
+      // A native table row can remain `other` when the resolver has only
+      // geometry evidence (for example a compact header/data row beside a
+      // floated caption). It is still transparent for paragraph stitching,
+      // but only when the evidence explicitly identifies a table row. Do not
+      // treat arbitrary figure labels or chrome as transparent.
+      const isTableIntervening = (node: CanonicalNode): boolean =>
+        node.role === "table" || node.role === "caption" ||
+        (node.role === "other" && node.evidence.some((entry) =>
+          entry.label === "captioned-native-multicell-row" ||
+          entry.label === "table-region-member" ||
+          entry.label === "captioned-native-grid"
+        ));
+      if (intervening.length < 2 || !intervening.every(isTableIntervening)) continue;
       if (!intervening.some((node) => node.role === "table") || !intervening.some((node) => node.role === "caption")) continue;
       const previousTail = previous.boundingBoxes.at(-1);
       const nextStart = next.boundingBoxes[0];

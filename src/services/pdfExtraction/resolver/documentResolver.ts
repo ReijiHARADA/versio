@@ -397,6 +397,14 @@ export function resolveTableRegions(nodes: CanonicalNode[], regions: StructuralR
     const memberIdsToPromote = new Set(members
       .filter((node) =>
         (node.role === "paragraph" || node.role === "other") &&
+        // A paragraph carrying explicit image/vector-label evidence may
+        // intersect a caption-anchored region from the other column. Keep
+        // that geometry-owned figure label out of table promotion; the
+        // candidate resolver will preserve it as `other` instead.
+        !node.evidence.some((entry) =>
+          entry.label === "image-overlap-label-cluster" ||
+          entry.label === "vector-figure-label-cluster"
+        ) &&
         (physicallyBoundedGrid || !looksLikeProseTableRegionMember(node.text))
       )
       .map((node) => node.id));

@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { reconstructDocument } from "../../services/pdfLayout";
+import { attachLinesToBlocks } from "../../data/package/layoutFromExtraction";
 import { extractPdfPages } from "../readingOrder/extractPdf";
 import { evaluateBaselinePaper } from "../../services/pdfExtraction/benchmark";
 import { extractFromPages } from "../../services/pdfExtraction/pipeline/extractAcademicPdf";
@@ -337,6 +338,16 @@ describe("baseline benchmark on cached real papers", () => {
         );
         expect(table3Grid?.type).toBe("table");
         expect(table3Grid?.translationStatus).toBe("skipped");
+        // A borderless native table may not have a raster crop. Preserve the
+        // actual same-baseline cells for the Reader fallback rather than
+        // rendering a flattened string. This uses Table 4 because its native
+        // stream carries multiple cells on each visual row.
+        const packageReadyBlocks = attachLinesToBlocks(extracted.blocks, extracted.layoutBlocks);
+        const table4Cells = packageReadyBlocks.find((block) =>
+          block.original.includes("Finger Phonebook Gallery Thumb")
+        )?.metadata.tableRows as Array<Array<{ text: string }>> | undefined;
+        expect(table4Cells?.[0]?.map((cell) => cell.text)).toEqual(["Finger", "Phonebook"]);
+        expect(table4Cells?.some((row) => row.length >= 2)).toBe(true);
 
         const referenceBlocks = extracted.blocks.filter((block) =>
           block.sectionId && extracted.sections.some((section) =>
@@ -363,6 +374,40 @@ describe("baseline benchmark on cached real papers", () => {
         const row = extractFromPages({ pages, paperId: "bench-speechin-row", filePath: paper.filename, fileHash: paper.id, metadata: { title: paper.title, pageCount: pages.length } }).blocks.find((block) => block.original?.startsWith("SpeeChin One camera"));
         expect(row?.type).toBe("table");
         expect(row?.translationStatus).toBe("skipped");
+      }
+      if (paper.id === "linguistics-language-model-physics") {
+        const extracted = extractFromPages({
+          pages,
+          paperId: paper.id,
+          filePath: paper.filename,
+          fileHash: "graphic-label-regression",
+          metadata: { title: paper.title, pageCount: pages.length },
+        });
+        // Dense plot labels can share a baseline with numeric cells. They have
+        // independent vector/axis evidence and must not be revived as a table
+        // by the later matrix-neighbour propagation.
+        expect(extracted.blocks.some((block) =>
+          block.type === "table" && /^lay9 lay9 lay10 lay10$/i.test(block.original?.trim() ?? "")
+        )).toBe(false);
+        expect(extracted.blocks.some((block) =>
+          block.type === "table" && /^truth GPT GPT_rel GPT_rot GPT_pos GPT_uni$/i.test(block.original?.trim() ?? "")
+        )).toBe(false);
+      }
+      if (paper.id === "covid-ml-review") {
+        const extracted = extractFromPages({
+          pages,
+          paperId: paper.id,
+          filePath: paper.filename,
+          fileHash: "captionless-grid-prose-regression",
+          metadata: { title: paper.title, pageCount: pages.length },
+        });
+        // A long statistical explanation can share a page with numeric plot
+        // labels. Without the narrative conflict guard, captionless page-grid
+        // evidence hides it as a table and it never reaches translation.
+        const prediction = extracted.blocks.find((block) =>
+          block.original?.includes("Prediction of epidemic results of")
+        );
+        expect(prediction?.type).toBe("paragraph");
       }
       if (gt?.listItems) {
         expect(report.listItemRecall).toBeGreaterThanOrEqual(0.9);

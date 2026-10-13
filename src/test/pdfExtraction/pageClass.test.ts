@@ -68,6 +68,16 @@ describe("page classification", () => {
     expect(scannedByItemAverage(dense)).toBe(false);
   });
 
+  it("does not OCR native pages only because a mixed document has a low average", () => {
+    const nativePage = page(Array.from({ length: 10 }, (_, i) =>
+      `A readable native paragraph line ${i} with enough characters`), 1);
+    const scannedPage = page(["x"], 2);
+    // The average is below the legacy threshold, but only page 2 is actually
+    // scanned. OCR must not replace the native page 1 text in this mixed case.
+    expect(scannedByItemAverage([nativePage, scannedPage])).toBe(true);
+    expect(pagesNeedingOcr([nativePage, scannedPage])).toEqual(new Set([2]));
+  });
+
   it("keeps math-heavy native pages out of OCR routing", () => {
     const signals = pageClassSignals(page([
       ...Array.from({ length: 12 }, (_, i) => i === 0
