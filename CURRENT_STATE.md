@@ -1,3 +1,9 @@
+# 2026-10-13: refreshed table-reader corpus audit
+
+After narrowing header-only table recovery to one physical native line, the full cached extraction baseline passes **118/118** in **363.04 seconds** under `caffeinate -dimsu`. The refreshed table-reader audit covers all cached PDFs with no extraction errors: **345** numbered table captions, **255** geometry-crop-ready captions, **1,681** raw table-region fragments, and **1,044** fragments left visible when a reliable crop is unavailable. Of those visible fallback fragments, **852** already contain `tableRows` and are rendered as native cell grids rather than concatenated prose; the audit-only residual taxonomy is `short-label=154`, `structured-grid=852`, `prose-like=11`, `ambiguous=26`, `numeric-grid=1`.
+
+The audit is deliberately diagnostic rather than a blanket suppression rule. The remaining high-volume cases include genuine borderless tables, thesis tables of contents, mathematical/diagram label matrices, and quiz/reference grids. Changes must distinguish these from body text through geometry, caption/figure relations, and typography before changing production roles. `npm run lint` passes with the repository's pre-existing warnings only. Long-running corpus and package commands must use `caffeinate -dimsu`.
+
 # 2026-10-13: packaged OCR timeout hardening
 
 The latest packaged acceptance exposed a separate Tauri-path stall: the OzCHI fixture stayed at `structuring: 図を抽出しています... (5/17)` until the 600-second harness timeout, and even the tiny fixture could remain at `OCR処理中 (1/1ページ)`. `ocrDocument` previously started its timeout only after `doc.getPage()`; page acquisition is now inside the same per-page timeout. A regression test covers a stalled PDF.js `getPage`, and OCR tests pass **4/4**. The fix preserves native text on timeout and prevents a packaged OCR resource stall from holding import forever.
