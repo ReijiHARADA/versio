@@ -39,4 +39,18 @@ describe("ocrDocument page selection", () => {
     expect(stalled).toHaveBeenCalledOnce();
     expect(result).toEqual([{ pageNumber: 1, lines: [], fullText: "" }]);
   });
+
+  it("keeps the import moving when PDF.js page acquisition stalls", async () => {
+    const stalledGetPage = vi.fn(() => new Promise<never>(() => undefined));
+    const result = await ocrDocument(
+      { numPages: 1, getPage: stalledGetPage },
+      ["en-US"],
+      undefined,
+      new Set([1]),
+      { pageTimeoutMs: 1 },
+    );
+
+    expect(stalledGetPage).toHaveBeenCalledOnce();
+    expect(result).toEqual([{ pageNumber: 1, lines: [], fullText: "" }]);
+  });
 });

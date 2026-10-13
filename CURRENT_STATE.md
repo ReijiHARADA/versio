@@ -1,3 +1,9 @@
+# 2026-10-13: packaged OCR timeout hardening
+
+The latest packaged acceptance exposed a separate Tauri-path stall: the OzCHI fixture stayed at `structuring: 図を抽出しています... (5/17)` until the 600-second harness timeout, and even the tiny fixture could remain at `OCR処理中 (1/1ページ)`. `ocrDocument` previously started its timeout only after `doc.getPage()`; page acquisition is now inside the same per-page timeout. A regression test covers a stalled PDF.js `getPage`, and OCR tests pass **4/4**. The fix preserves native text on timeout and prevents a packaged OCR resource stall from holding import forever.
+
+The fast `.app` was rebuilt after this fix at the timestamp recorded below. The full real-paper baseline remains **118/118**; the large OzCHI packaged acceptance needs a follow-up after this timeout hardening because the prior run timed out in OCR before reaching package persistence.
+
 # 2026-10-13: final table-candidate guard and full corpus verification
 
 The table candidate guard now rejects only long/multi-line caption-adjacent prose (`wordCount > 24` or more than four native lines). Short table cells that end in punctuation remain eligible, preserving marketing table rows without allowing ordinary long prose to become a table. The temporary single-item narrative cap was removed after it caused a false negative in the marketing-consumer-production-journey regression.
