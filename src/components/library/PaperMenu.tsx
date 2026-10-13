@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { FolderPlus, MoreHorizontal, RotateCcw, Star, Trash2, UserMinus } from "lucide-react";
+import { FolderPlus, MoreHorizontal, RefreshCw, RotateCcw, Star, Trash2, UserMinus } from "lucide-react";
 import type { Paper } from "../../types/paper";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
 import { showToast } from "../../stores/toastStore";
 import { setPaperFavorite } from "../../services/database";
 import { retryPaperTranslation } from "../../services/import/startBackgroundImport";
+import { reextractPaper } from "../../services/reextractPaper";
 import { derivePaperReadiness } from "../../domain/paperReadiness";
 import {
   addPaperToWorkspace,
@@ -31,6 +32,7 @@ export function PaperMenu({
   const updatePaper = useLibraryCache((state) => state.updatePaper);
   const blocks = useLibraryCache((state) => state.blocks[paper.id]);
   const [retrying, setRetrying] = useState(false);
+  const [reextracting, setReextracting] = useState(false);
   const workspaceNodes = useProjectStore((state) => state.workspaceNodes);
   const memberships = useProjectStore((state) => state.memberships);
   const upsertMembership = useProjectStore((state) => state.upsertMembership);
@@ -76,6 +78,27 @@ export function PaperMenu({
       await retryPaperTranslation(paper.id);
     } finally {
       setRetrying(false);
+      setOpen(false);
+    }
+  };
+
+  const reextract = async (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (reextracting) return;
+    setReextracting(true);
+    try {
+      const result = await reextractPaper(paper.id);
+      useLibraryCache.getState().updatePaper(paper.id, result.paper);
+      useLibraryCache.getState().setSections(paper.id, result.sections);
+      useLibraryCache.getState().setBlocks(paper.id, result.blocks);
+      showToast({ kind: "success", message: "PDFの抽出結果を更新しました。未翻訳の箇所は翻訳を再試行できます" });
+    } catch (error) {
+      showToast({
+        kind: "error",
+        message: error instanceof Error ? error.message : "PDFの抽出結果を更新できませんでした",
+      });
+    } finally {
+      setReextracting(false);
       setOpen(false);
     }
   };
@@ -143,6 +166,10 @@ export function PaperMenu({
               ワークスペースに追加…
             </button>
           )}
+          <button type="button" role="menuitem" disabled={reextracting} onClick={(event) => void reextract(event)}>
+            <RefreshCw size={14} />
+            {reextracting ? "抽出を更新中..." : "PDFを再抽出"}
+          </button>
           {derivePaperReadiness({ processingStatus: paper.processingStatus, blocks }).readiness === "needs_attention" && (
             <button type="button" role="menuitem" disabled={retrying} onClick={(event) => void retryTranslation(event)}>
               <RotateCcw size={14} />

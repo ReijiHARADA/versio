@@ -791,11 +791,27 @@ function projectionNodesWithContinuations(
       .filter((relation) => relation.kind === "CONTINUES")
       .map((relation) => [relation.from, relation.to])
   );
+  const continuationSourceByNode = new Map(
+    canonical.relations
+      .filter((relation) => relation.kind === "CONTINUES")
+      .map((relation) => [relation.to, relation.from])
+  );
+  const orderedNodeIds = new Set(orderedNodes.map((node) => node.id));
   const consumed = new Set<string>();
   const projected: Array<{ node: CanonicalNode; layout: LayoutBlock | undefined }> = [];
 
   for (const sourceNode of orderedNodes) {
     if (consumed.has(sourceNode.id)) continue;
+    // Reading-order topological sorting intentionally ignores CONTINUES
+    // edges, so a right-column continuation can appear before its unfinished
+    // left-column source by y-coordinate. Defer that target until the source
+    // is visited; otherwise we would emit the continuation once and then emit
+    // a second merged block later.
+    const continuationSource = continuationSourceByNode.get(sourceNode.id);
+    if (continuationSource && orderedNodeIds.has(continuationSource) && !consumed.has(sourceNode.id)) {
+      const sourceAlreadyProjected = projected.some((item) => item.node.id === continuationSource);
+      if (!sourceAlreadyProjected) continue;
+    }
     let node = sourceNode;
     let layout = layoutForNode(node, layoutBlocks);
     let nextId = continuationByNode.get(node.id);
@@ -2134,11 +2150,34 @@ export function projectCanonicalToPaper(input: {
     const sameRow = last?.type === "table" && block.type === "table" && lastBox && box &&
       lastBox.page === box.page && Math.abs(lastBox.y - box.y) <= Math.max(lastBox.height, box.height) * 0.55;
     if (sameRow) {
+      const previousCells = Array.isArray(last.metadata?.tableRows)
+        ? (last.metadata.tableRows as Array<Array<{ text: string; x: number; width: number }>>)
+          .flat()
+        : [{
+            text: last.original ?? "",
+            x: lastBox.x,
+            width: lastBox.width,
+          }];
+      const rowCells = [...previousCells, {
+        text: block.original ?? "",
+        x: box.x,
+        width: box.width,
+      }]
+        .filter((cell) => cell.text.trim().length > 0)
+        .sort((a, b) => a.x - b.x);
       const merged = {
         ...last,
         original: `${last.original} ${block.original}`.replace(/\s+/g, " ").trim(),
         boundingBoxes: [...last.boundingBoxes, ...block.boundingBoxes],
-        metadata: { ...last.metadata, role: "table", tableSourceFallback: true },
+        metadata: {
+          ...last.metadata,
+          role: "table",
+          tableSourceFallback: true,
+          // Preserve the visual row instead of collapsing same-baseline
+          // native cells into a source-only sentence.  The Reader can then
+          // render a deterministic grid even when a crop is unavailable.
+          tableRows: [rowCells],
+        },
       };
       acc[acc.length - 1] = merged;
     } else {

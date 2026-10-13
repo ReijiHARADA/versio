@@ -7,9 +7,18 @@ import type { ExtractionEvidence } from "../types";
 export function pagesNeedingOcr(pages: ExtractedPage[]): Set<number> {
   const needed = new Set<number>();
   const baselineAll = scannedByItemAverage(pages);
-  for (const page of pages) {
-    const kind = classifyPage(pageClassSignals(page));
-    if (baselineAll || kind === "scanned" || kind === "garbled") {
+  const pageKinds = pages.map((page) => classifyPage(pageClassSignals(page)));
+  // A low document-wide item average is useful for an entirely scanned PDF,
+  // but it is a poor signal for mixed papers: figure-heavy native pages can
+  // pull the average below the threshold while their text remains usable.
+  // Only apply the document-wide fallback when every page is independently
+  // classified as scanned or garbled; otherwise rely on page-local evidence.
+  const wholeDocumentNeedsOcr = baselineAll && pageKinds.every((kind) =>
+    kind === "scanned" || kind === "garbled"
+  );
+  for (const [index, page] of pages.entries()) {
+    const kind = pageKinds[index];
+    if (wholeDocumentNeedsOcr || kind === "scanned" || kind === "garbled") {
       needed.add(page.pageNumber);
     }
   }

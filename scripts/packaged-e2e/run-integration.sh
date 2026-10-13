@@ -11,6 +11,7 @@ if [[ ! -f "$FIXTURE_PDF" ]]; then
   FIXTURE_PDF="$ROOT/scripts/packaged-e2e/fixture-tiny.pdf"
 fi
 ACCEPTANCE_HOME="${PAPER_READER_ACCEPTANCE_HOME:-$ARTIFACT_DIR/app-data-$$}"
+WAIT_TIMEOUT_S="${PAPER_READER_E2E_TIMEOUT_S:-180}"
 LOG_FILE="$ARTIFACT_DIR/app.log"
 STEP_FILE="$ARTIFACT_DIR/step.txt"
 
@@ -124,7 +125,7 @@ PY
 import json, sys
 data = json.load(open(sys.argv[1]))
 step = data.get("step") or ""
-sys.exit(0 if step in {"error", "import_timeout", "reader_body_missing", "relaunch_data_missing", "search_empty"} else 1)
+sys.exit(0 if step in {"error", "import_failed", "import_timeout", "reader_body_missing", "relaunch_data_missing", "search_empty"} else 1)
 PY
       then
         fail "acceptance marker terminal failure ($(cat "$result"))"
@@ -166,7 +167,7 @@ quit_app() {
 
 launch_app
 step "wait import→annotation→search→export"
-wait_for_step "ready_for_relaunch" 180
+wait_for_step "ready_for_relaunch" "$WAIT_TIMEOUT_S"
 
 find "$ACCEPTANCE_HOME" -name 'library.sqlite' | grep -q . || fail "library.sqlite missing after import"
 find "$ACCEPTANCE_HOME" -path '*/papers/*/paper.json' | grep -q . || fail "paper package missing after import"
@@ -184,7 +185,7 @@ PY
 quit_app
 launch_app
 step "wait relaunch persistence"
-wait_for_step "relaunch_ok" 120
+wait_for_step "relaunch_ok" "$WAIT_TIMEOUT_S"
 quit_app
 
 step "done"

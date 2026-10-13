@@ -81,6 +81,7 @@ export async function maybeRunPackagedAcceptanceImport(): Promise<void> {
     });
 
     let paperId: string | undefined;
+    let lastObservedJob = "";
     // Large, figure-heavy research PDFs can legitimately take several minutes
     // before the immutable package is ready. Keep the package acceptance
     // timeout separate from the small-fixture CI budget.
@@ -88,6 +89,19 @@ export async function maybeRunPackagedAcceptanceImport(): Promise<void> {
       const job = useImportJobStore
         .getState()
         .jobs.find((item) => item.fileName === "acceptance-fixture.pdf");
+      // The shell harness can inspect this lightweight heartbeat when an
+      // integration import is slow. It deliberately contains no paper data
+      // and has no production effect outside PAPER_READER_ACCEPTANCE.
+      const observed = job ? `${job.stage}: ${job.error ?? job.message}` : "job missing";
+      if (observed !== lastObservedJob) {
+        lastObservedJob = observed;
+        await writeMarker({
+          ok: false,
+          step: "import_waiting",
+          error: observed,
+          at: new Date().toISOString(),
+        });
+      }
       if (job?.stage === "failed" || job?.stage === "cancelled" || job?.stage === "duplicate") {
         await writeMarker({
           ok: false,

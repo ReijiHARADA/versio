@@ -13,9 +13,7 @@ import { applyGlossary, normalizeSourceGroundedTerminology } from "./llm/glossar
 import { assignBlockTranslation, reapplyGlossary } from "./glossary/apply";
 import {
   savePaper,
-  flushPaperPersist,
   saveSections,
-  saveBlocks,
   updateBlock,
   getBlocksByPaper,
   saveGlossary,
@@ -28,7 +26,10 @@ import {
   type BenchmarkEntry,
 } from "./database";
 import type { Paper, Section, PaperBlock } from "../types/paper";
-import { rememberSourcePdf } from "../data/repositories/documentRepository";
+import { rememberDocument } from "../data/repositories/documentRepository";
+import { projectionToPackage } from "../data/package/fromProjection";
+import { persistPaperPackage } from "../data/package/persist";
+import { getStorage } from "../data/runtime";
 import {
   MADLADEngine,
   AppleTranslationEngine,
@@ -173,7 +174,6 @@ export async function importPDFV2(
     const blocks = attachLinesToBlocks(extractedBlocks, extracted.layoutBlocks);
     paper.sourceFileName = file.name;
     const sourcePdf = new Uint8Array(await file.arrayBuffer());
-    rememberSourcePdf(paperId, sourcePdf);
     paper.sourceStoredPath = `papers/${paperId}/source.pdf`;
 
     const preview = blocks
@@ -191,29 +191,26 @@ export async function importPDFV2(
     const finalSourceHash = paper.sourceFileHash;
     paper.sourceFileHash = `importing-${paperId}`;
     paper.processingStatus = "glossary";
+    // Keep the provisional index hidden while extraction is in progress, then
+    // write the complete immutable package in one transaction. Building the
+    // package through savePaper/saveSections/saveBlocks first used a mutable
+    // cache checkpoint and then read it back to attach the source PDF/layout.
+    // A document with no projected body block could therefore have no package
+    // at all when that read occurred. Initial import has every required datum
+    // now, so it must bypass that intermediate state.
     await savePaper(paper);
-    await saveSections(sections);
-    await saveBlocks(blocks);
-    // savePaper/saveSections/saveBlocks update the in-memory document first and
-    // persist through a debounced package checkpoint. The next step reads the
-    // package to attach native layout/source provenance; without flushing here,
-    // that read can race the checkpoint and observe only paper.json (or a
-    // partially written core), producing "Paper Package が不完全です" during
-    // real Tauri imports. Make the extraction checkpoint durable before reading
-    // it back, while keeping later translation checkpoints asynchronous.
-    await flushPaperPersist(paperId);
     try {
-      const { getStorage } = await import("../data/runtime");
-      const { loadPaperPackage, persistPaperPackage } = await import("../data/package/persist");
       const { fs } = await getStorage();
-      const pkg = await loadPaperPackage(fs, paperId, {
-        includeSourcePdf: true,
-        includeAssets: true,
-        includeLayout: true,
+      const packagePaper = { ...paper, sourceFileHash: finalSourceHash };
+      const pkg = projectionToPackage({
+        paper: packagePaper,
+        sections,
+        blocks,
+        layout: layoutFileFromNative(extracted.native, blocks),
+        sourcePdf,
       });
-      pkg.layout = layoutFileFromNative(extracted.native, blocks);
-      pkg.paper.sourceFileHash = finalSourceHash;
-      await persistPaperPackage(fs, pkg);
+      const persisted = await persistPaperPackage(fs, pkg);
+      paper.packageRevision = persisted.revision;
     } catch (error) {
       // Do not expose the final hash/card if the immutable package was not
       // completed. The provisional index stays hidden and the import reports
@@ -223,7 +220,10 @@ export async function importPDFV2(
     // Make the paper discoverable only after the complete package swap above.
     paper.sourceFileHash = finalSourceHash;
     await savePaper(paper);
-    await flushPaperPersist(paperId);
+    // Cache only after the index is final. Calling savePaper with a populated
+    // cache schedules another full write, which would defeat the atomic import
+    // transaction above and reintroduce a transient package state.
+    rememberDocument(paper, sections, blocks);
 
     // Notify that partial data is ready (can start viewing)
     callbacks.onPartialReady(paper, sections, blocks);
