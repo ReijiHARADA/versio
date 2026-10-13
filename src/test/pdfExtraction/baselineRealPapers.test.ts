@@ -152,6 +152,23 @@ describe("baseline benchmark on cached real papers", () => {
         expect(marketingReferences.every((block) => block.type === "reference")).toBe(true);
         expect(marketingReferences.every((block) => block.translationStatus === "skipped")).toBe(true);
       }
+      if (paper.id === "cognitive-dual-task-older-adults") {
+        const fullExtraction = extractFromPages({
+          pages,
+          paperId: paper.id,
+          filePath: paper.filename,
+          fileHash: "completed-prose-table-guard",
+          metadata: { title: paper.title, pageCount: pages.length },
+        });
+        // This is statistical result prose immediately below a figure/table
+        // area. It used to inherit a distant header signal and become a
+        // skipped source-only table even though it is a complete sentence.
+        const resultProse = fullExtraction.blocks.find((block) =>
+          block.original.startsWith("PVF (r=0.461; p=0.040, n=25).")
+        );
+        expect(resultProse?.type).toBe("paragraph");
+        expect(resultProse?.translationStatus).toBe("pending");
+      }
       if ([
         "interactive-jewellery",
         "significant-other",

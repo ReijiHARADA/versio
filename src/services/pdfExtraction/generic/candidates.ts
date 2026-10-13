@@ -757,6 +757,13 @@ function nearbyTableRowEvidence(block: LayoutBlock, blocks: LayoutBlock[]): bool
  * diagram labels and author rows cannot become tables. */
 function headeredTableRow(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
   if (block.role === "table_caption" || block.pageStart !== block.pageEnd || block.text.trim().length > 460) return false;
+  // A nearby header can be a figure axis or a preceding table rather than
+  // ownership evidence for every later block. A completed prose sentence is
+  // therefore never promoted by this header-only path. Real table rows may
+  // contain punctuation in a cell, but their final cell very rarely forms a
+  // sentence; preserving body text is the safer failure mode when the
+  // stronger caption/grid evidence is absent.
+  if (/[.!?。！？]\s*$/.test(block.text.trim())) return false;
   if (lowerCaseProseContinuation(block.text)) return false;
   if (blocks.some((candidate) => candidate.pageStart === block.pageStart && candidate.role === "figure_caption")) return false;
   const header = blocks.find((candidate) => {
