@@ -1,3 +1,9 @@
+# 2026-10-13: packaged sequential-row verification
+
+The fast bundle containing `49a37b8` was built at **2026-10-13 21:34:32 JST**. The isolated packaged OzCHI acceptance completed import, annotation, search, Markdown/Notion export, quit, relaunch, and persistence. Its saved package has **161 blocks**, **5 table blocks**, **5 image-backed tables**, and **0** source-table fallbacks; no bundled application or translation-server process remained afterwards.
+
+An additional packaged import using the long-haul-transport table regression PDF did not reach projection because it stalled in the unrelated OCR step at `OCR処理中... (1/9ページ)` until the 420-second harness limit. The harness and its bundled processes were explicitly stopped after recording the result. Treat this as a separate native/OCR import-stall regression, rather than evidence against sequential-row reconstruction.
+
 # 2026-10-13: sequential native table-row reconstruction
 
 A remaining reader failure was caused by borderless native tables being projected as one `PaperBlock` per physical row. The Reader could render each block as a cell grid, but showed a stack of tiny independent table cards instead of one readable table. `projectCanonicalToPaper` now merges only consecutive table-row candidates that share a page and column, have small vertical gaps, contain at least two cells each, and repeat at least two quantized native x-origins across three or more rows. This is geometry-based and does not use paper-specific terms.
