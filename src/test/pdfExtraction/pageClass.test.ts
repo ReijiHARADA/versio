@@ -61,6 +61,22 @@ describe("page classification", () => {
     expect(pagesNeedingOcr(pages)).toContain(10);
   }, 60_000);
 
+  it("keeps sparse-item pages with substantial native text out of OCR", () => {
+    const nativeTitlePage = page([
+      "Fatigue and occupational safety in short haul, light transport",
+      "Rena Friswell",
+      "A thesis in fulfilment of the requirements for the degree of Doctor of Philosophy",
+      "School of Public Health and Community Medicine",
+      "Faculty of Medicine",
+      "April 2013",
+      "University repository copy",
+    ]);
+    expect(nativeTitlePage.textItems).toHaveLength(7);
+    expect(pageClassSignals(nativeTitlePage).charCount).toBeGreaterThan(80);
+    expect(classifyPage(pageClassSignals(nativeTitlePage))).toBe("native-text");
+    expect(pagesNeedingOcr([nativeTitlePage])).toEqual(new Set());
+  });
+
   it("keeps the scanned-by-item-average baseline", () => {
     const scanned = [page(["a", "b"], 1), page(["c"], 2)];
     expect(scannedByItemAverage(scanned)).toBe(true);
