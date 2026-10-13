@@ -55,6 +55,21 @@ available for actual tables. The regression confirms this block is a pending
 paragraph while the surrounding numeric table rows remain structured tables.
 Targeted real-paper regression, typecheck, lint, and diff check pass.
 
+# 2026-10-13: bounded figure-image extraction
+
+The new packaged OzCHI run demonstrated that a single PDF.js figure page can
+remain inside `getOperatorList()` or page rendering long after text/table
+extraction is complete. Figure crops are optional presentation assets, so
+`extractFigureImages` now bounds page opening, operator-list retrieval, and
+page rendering to 15 seconds each. A render timeout cancels the PDF.js render
+task; the affected page/figure is skipped and the import continues with the
+canonical text, captions, and source-only table-cell fallback intact. Progress
+is now reported after each completed or skipped caption rather than before a
+potentially stalled operation. `pdfServiceTimeout.test.ts` covers timeout and
+cancellation; re-extraction, typecheck, lint, and diff check pass. The
+previous isolated package run was terminated after exceeding its 600-second
+acceptance window, leaving no app or bundled translation-server process.
+
 # 2026-10-13: typography guard for heading/table competition
 
 Corpus diagnosis found a generic failure in which a separated all-caps
