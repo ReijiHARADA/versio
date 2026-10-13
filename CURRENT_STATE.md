@@ -1,3 +1,9 @@
+# 2026-10-13: high-precision OCR routing and packaged import
+
+A packaged import of the 305-page long-haul transport thesis had previously stalled at `OCR処理中... (1/9ページ)`. Diagnostics showed the first selected page was a completely readable title page emitted as seven large native text items (200 characters), and another selected page held 315 readable native characters. The former `itemCount < 10` fallback incorrectly treated both as scans. A page is now classified as scanned only when it has fewer than ten native items **and** fewer than 80 non-whitespace characters; true image-only pages remain OCR candidates.
+
+The focused classification suite passes **15/15**, typecheck and diff check pass, and the real thesis now selects **7** rather than **9** OCR pages. The fast `.app` containing `f1eb178` was built at **2026-10-13 21:49:15 JST**. A fresh isolated packaged import of that same PDF completed import, annotation, search, Markdown/Notion export, quit, relaunch, and persistence (`result.json`: `ok=true`, `searchHits=1`, Markdown 520,689 bytes, Notion package 1,359,134 bytes). No application or bundled translation-server process remained. All long-running commands used `caffeinate -dimsu`.
+
 # 2026-10-13: packaged sequential-row verification
 
 The fast bundle containing `49a37b8` was built at **2026-10-13 21:34:32 JST**. The isolated packaged OzCHI acceptance completed import, annotation, search, Markdown/Notion export, quit, relaunch, and persistence. Its saved package has **161 blocks**, **5 table blocks**, **5 image-backed tables**, and **0** source-table fallbacks; no bundled application or translation-server process remained afterwards.
