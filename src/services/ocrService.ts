@@ -115,10 +115,16 @@ export async function ocrDocument(
   for (let index = 0; index < targetPages.length; index++) {
     const i = targetPages[index];
     onProgress?.(index + 1, targetPages.length);
-    const page = await doc.getPage(i);
     try {
       const result = await timeoutAfter(
-        recognizePage(page, i, languages),
+        (async () => {
+          // PDF.js can also stall while materializing a page in a packaged
+          // WebView (for example when a native canvas/font resource is
+          // unavailable). Keep page acquisition inside the same per-page
+          // budget as Vision so OCR can never hold the whole import hostage.
+          const page = await doc.getPage(i);
+          return recognizePage(page, i, languages);
+        })(),
         timeoutMs,
         `Vision OCR timed out for page ${i}`,
       );
