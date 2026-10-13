@@ -204,6 +204,28 @@ function vectorFigureLabelEvidence(block: LayoutBlock, blocks?: LayoutBlock[], p
  * substantially longer text. Keep this as `other` evidence so the resolver
  * can suppress translation without inventing a figure/table role.
  */
+/** Dense mathematical glyphs directly above an overlapping Figure caption
+ * belong to a vector diagram, not a captionless data grid. The geometry and
+ * graphics requirements keep ordinary uncaptained tables eligible. */
+function figureCaptionDiagramEvidence(block: LayoutBlock, blocks: LayoutBlock[], page?: ExtractedPage): number {
+  if ((page?.graphicsPrimitives?.length ?? 0) < 40 || block.lines.length < 2) return 0;
+  const caption = blocks.find((candidate) =>
+    candidate.pageStart === block.pageStart && candidate.role === "figure_caption" &&
+    candidate.bbox.y >= block.bbox.y + block.bbox.height - 2 &&
+    candidate.bbox.y - (block.bbox.y + block.bbox.height) <= 72
+  );
+  if (!caption) return 0;
+  const overlap = Math.max(0, Math.min(block.bbox.x + block.bbox.width, caption.bbox.x + caption.bbox.width) - Math.max(block.bbox.x, caption.bbox.x));
+  if (overlap < Math.min(block.bbox.width, caption.bbox.width) * 0.45) return 0;
+  if (blocks.some((candidate) => candidate.pageStart === block.pageStart && candidate.role === "table_caption" && Math.abs(candidate.bbox.y - block.bbox.y) <= 300)) return 0;
+  const items = block.lines.flatMap((line) => line.items);
+  const tokens = block.text.trim().split(/\s+/).filter(Boolean);
+  const mathVariantGlyphs = (block.text.match(/[\u{1D400}-\u{1D7FF}]/gu) ?? []).length;
+  const mathOperators = (block.text.match(/[=∈∉∪∩∑∏√∞≤≥≈≠→←↦{}|]/gu) ?? []).length;
+  if (items.length < 24 || tokens.length > 32 || /[.!?。！？;:]\s*$/.test(block.text.trim()) || mathVariantGlyphs + mathOperators < 5) return 0;
+  return 0.93;
+}
+
 function fragmentedGraphicLabelEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
   const text = block.text.trim();
   if (!text || text.length > 8 || /[.!?:;。！？]$/.test(text)) return 0;
@@ -1150,6 +1172,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const imageLabels = imageOverlapLabelEvidence(block, pages.find((page) => page.pageNumber === block.pageStart));
     const vectorLabels = vectorFigureLabelEvidence(block, blocks, pages.find((page) => page.pageNumber === block.pageStart));
     const fragmentedLabels = fragmentedGraphicLabelEvidence(block, blocks);
+    const figureCaptionDiagram = figureCaptionDiagramEvidence(block, blocks, pages.find((page) => page.pageNumber === block.pageStart));
     const mixedNativeBand = mixedNativeBandEvidence(block);
     const alignedTableRow = block.lines.length === 1 &&
       block.lines[0].items.length >= 2 && tableLike(block) && nearbyTableCaption;
@@ -1250,9 +1273,10 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // repeated columns.  Keep it out of the table role; real image-backed
     // tables are already represented by a `table` layout block and do not
     // enter this paragraph-only evidence path.
-    if (imageLabels > 0 || vectorLabels > 0 || fragmentedLabels > 0) {
+    if (imageLabels > 0 || vectorLabels > 0 || fragmentedLabels > 0 || figureCaptionDiagram > 0) {
       scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.2);
     }
+    if (figureCaptionDiagram > 0) scoreByRole.other = Math.max(scoreByRole.other ?? 0, figureCaptionDiagram);
     if (axisLabels > 0) {
       scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.2);
       scoreByRole.other = Math.max(scoreByRole.other ?? 0, axisLabels);
@@ -1462,8 +1486,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // Actual captioned tables retain their dedicated geometry evidence above;
     // without that anchor, a chart/diagram label matrix is safer as `other`
     // than as a reader-visible, source-only table card.
-    if (vectorLabels >= 0.82 && block.role === "paragraph" && !captionedRepeatedNativeGrid) {
+    if ((vectorLabels >= 0.82 || figureCaptionDiagram > 0) && !captionedRepeatedNativeGrid) {
       scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.2);
+      scoreByRole.other = Math.max(scoreByRole.other ?? 0, vectorLabels, figureCaptionDiagram);
     }
     // Apply the narrative conflict guard after every table generator. Some
     // captionless row heuristics run later than page-grid evidence and could
@@ -1566,6 +1591,16 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         page: block.pageStart,
         bbox: block.bbox,
         reason: "short multi-line native labels substantially overlap an image placement",
+      });
+    }
+    if (figureCaptionDiagram > 0) {
+      evidence.push({
+        source: "geometry" as EvidenceSource,
+        label: "figure-caption-vector-diagram",
+        confidence: figureCaptionDiagram,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "dense mathematical native glyphs immediately precede an overlapping figure caption",
       });
     }
     if (vectorLabels > 0) {

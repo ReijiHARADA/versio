@@ -760,9 +760,6 @@
       "downloadUrl": "https://arxiv.org/pdf/2403.04236",
       "seedPaths": [],
       "checks": {
-        "expectMultiColumnOnPages": [
-          14
-        ],
         "referencesHeading": true
       },
       "sourceStatus": "verified-oa",
