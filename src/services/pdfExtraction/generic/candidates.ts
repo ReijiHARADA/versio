@@ -590,7 +590,7 @@ function captionedNativeMultiCellRow(block: LayoutBlock, blocks: LayoutBlock[]):
   // happens to share a page with a caption. Long/multi-sentence blocks are
   // safer as prose even when their native spans have wide x gaps (formulae,
   // citations, and a neighbouring table can create those gaps).
-  if (wordCount > 24 || /[.!?]\s*$/.test(text) || block.lines.length > 4) return false;
+  if (wordCount > 24 || block.lines.length > 4) return false;
   const caption = nearbyTableCaptionForRegion(block, blocks, 520);
   if (!caption) return false;
 
@@ -1399,18 +1399,6 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // otherwise restore a high table score for a paragraph that merely shares
     // a numeric/plot band with it.
     if (narrativeTableConflict) {
-      scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.3);
-    }
-    // A paragraph reconstructed from full-width native lines can sit inside
-    // the vertical radius of a nearby table caption. If every line is a
-    // single native span and the text is ordinary prose, the caption is not
-    // sufficient evidence to turn it into a source-only table card.
-    const singleItemNarrative = paragraphLike(block.text) &&
-      block.lines.length >= 2 &&
-      block.lines.every((line) => line.items.length <= 1) &&
-      block.text.trim().split(/\s+/).filter(Boolean).length >= 16 &&
-      (block.text.match(/\d/g) ?? []).length / Math.max(block.text.length, 1) < 0.2;
-    if (singleItemNarrative) {
       scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.3);
     }
     // Heading-like typography is a stronger structural signal than a
