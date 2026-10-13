@@ -1,3 +1,9 @@
+# 2026-10-13: vector-diagram package and corpus verification
+
+The fast Tauri bundle containing the vector-diagram fix was rebuilt at **2026-10-13 20:59:27 JST**. A fresh isolated real-app acceptance imported OzCHI `2686612.2686699.pdf`, completed annotation/search, Markdown and Notion export, quit/relaunched, and retained data. The persisted package contained **161 blocks**, **5 table blocks**, and **5 image-backed tables** with **0** source-table fallbacks. No app or bundled translation-server process remained after acceptance.
+
+The full cached reading-order corpus then passed **114/114** in **114.19 seconds** under `caffeinate -dimsu`. Together with the preceding full extraction baseline (**118/118** in 363.04 seconds), this verifies the general vector-diagram guard across the cached corpus. PDF.js font/ColorSpace warnings remain non-fatal fixture warnings.
+
 # 2026-10-13: vector-diagram/table disambiguation
 
 Corpus triage found a remaining precision failure in a computational-linguistics paper: dense mathematical labels inside a vector Figure 10 diagram were being projected as a source-only `table` because native glyph positions formed a matrix. The resolver now uses a strict competing evidence path: a dense mathematical glyph stream must sit immediately above an overlapping Figure caption on a graphics-rich page, with no nearby table caption. It receives `other` evidence and caps the generic table score. A real-PDF regression fixes the exact Figure 10 shape without relying on a paper name or vocabulary.
