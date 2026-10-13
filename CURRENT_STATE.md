@@ -70,6 +70,18 @@ cancellation; re-extraction, typecheck, lint, and diff check pass. The
 previous isolated package run was terminated after exceeding its 600-second
 acceptance window, leaving no app or bundled translation-server process.
 
+## Table-crop priority follow-up (2026-10-13)
+
+The first 15-second bound made the app complete, but also skipped captioned
+OzCHI table crops on a vector-heavy page. Figure extraction now processes
+table captions before optional figure captions, and gives table-bearing pages
+one bounded 45-second operation budget. The current fast bundle was built at
+**2026-10-13 16:40:27 JST**. A fresh isolated packaged OzCHI acceptance then
+completed in **14.7 seconds**: import, annotation, search, Markdown/Notion
+export, quit, relaunch, and persistence all succeeded. Its persisted package
+has 161 blocks and exactly **5 tables with 5 image assets** (the five captioned
+OzCHI tables); no bundled app or translation-server process remained.
+
 # 2026-10-13: typography guard for heading/table competition
 
 Corpus diagnosis found a generic failure in which a separated all-caps
