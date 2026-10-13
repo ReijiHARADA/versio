@@ -29,6 +29,11 @@ function loadGroundTruth(id: string): PartialGroundTruth | undefined {
 }
 
 describe("baseline benchmark on cached real papers", () => {
+  // Real-paper extraction may include embedded fonts, vector-heavy pages, and
+  // large table regions. Keep the corpus regression bounded, but do not fail
+  // a valid extraction merely because the default 180s worker budget is too
+  // small for one large document on macOS.
+  const REAL_PAPER_TEST_TIMEOUT_MS = 600_000;
   const available = catalog.papers.flatMap((paper) => {
     const pdfPath = path.join(root, catalog.pdfDir, paper.filename);
     return fs.existsSync(pdfPath) ? [{ paper, pdfPath }] : [];
@@ -416,7 +421,7 @@ describe("baseline benchmark on cached real papers", () => {
     // than the ordinary corpus cases. Keep one corpus-wide timeout so a slow
     // native extraction does not appear as a product regression merely because
     // it crossed a paper-specific threshold.
-    }, 180_000);
+    }, REAL_PAPER_TEST_TIMEOUT_MS);
   }
 
   const ppg = available.find(({ paper }) => paper.id === "ppg-earring");

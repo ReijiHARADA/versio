@@ -1,3 +1,11 @@
+# 2026-10-13: final table-candidate guard and full corpus verification
+
+The table candidate guard now rejects only long/multi-line caption-adjacent prose (`wordCount > 24` or more than four native lines). Short table cells that end in punctuation remain eligible, preserving marketing table rows without allowing ordinary long prose to become a table. The temporary single-item narrative cap was removed after it caused a false negative in the marketing-consumer-production-journey regression.
+
+The real-paper extraction baseline now uses a 600-second corpus timeout (test infrastructure only; product behavior is unchanged). The full cached corpus passed **118/118** tests in 753.92s. The post-change table readiness audit over 114 PDFs completed with `extractionErrors=0`, `tableCaptions=345`, `cropReadyCaptions=255`, `rawTableFragments=1723`, `cropBackedFragments=610`, `readerRawFragments=1115`, `readerCellFallbacks=900`, and reader fragment kinds `structured-grid=900`, `short-label=158`, `prose-like=17`, `ambiguous=38`, `numeric-grid=2`; these are diagnostics, not claims that all tables have perfect semantic schemas.
+
+`npm run lint` and `git diff --check` pass (only existing lint warnings). The latest fast Tauri bundle was built successfully at `2026-10-13 14:26:36 +0900` at `src-tauri/target/release/bundle/macos/Paper Reader.app`. The previous isolated OzCHI packaged acceptance remains green; rerun it after any further source changes that affect package persistence or reader projection.
+
 # Active PDF extraction objective (2026-10-11)
 
 # 2026-10-13: latest table-row projection and packaged acceptance
@@ -25,6 +33,15 @@ heading score; long single-item prose lines are simultaneously capped as table
 evidence. A regression using `detecting-statistical-interactions.pdf` now keeps
 `H COMPARISONS WITH LOGISTIC REGRESSION BASELINES` as a canonical heading and
 the focused pipeline tests pass. The fast `.app` was rebuilt after this change.
+
+The follow-up table audit after the typography guard remains error-free across
+all 114 PDFs: rawTableFragments=1710, cropBackedFragments=605,
+readerRawFragments=1107, readerCellFallbacks=901, structured-grid=901,
+prose-like=8, ambiguous=36, numeric-grid=2, orphanFragments=1058. This is a
+small reduction in table candidates versus the previous run and a larger
+reduction in prose-like fragments (17→8); the remaining ambiguous items are
+mostly legitimate compact/quiz/reference grids and require region-level
+geometry or crop evidence before further role changes.
 
 # 2026-10-13: cross-column continuation projection regression
 
@@ -2068,3 +2085,28 @@ ambiguous **113**. This is a reduction from 1,814 / 1,154 / 676 / 112 / 51 /
 115 in the previous run. The focused COVID baseline, typecheck, lint (existing
 warnings only), and diff check pass. The latest audit artifact remains
 `test-data/real-papers/reports/table-reader-readiness-v1.json`.
+# 2026-10-13: final table-candidate guard and full corpus verification
+
+The table candidate guard now rejects only long/multi-line caption-adjacent
+prose (`wordCount > 24` or more than four native lines). Short table cells
+that end in punctuation remain eligible, which preserves marketing table rows
+without allowing ordinary long prose to become a table. The temporary
+single-item narrative cap was removed after it caused a false negative in the
+marketing-consumer-production-journey regression.
+
+The real-paper extraction baseline now uses a 600-second corpus timeout (test
+infrastructure only; product behavior is unchanged). The full cached corpus
+passed **118/118** tests in 753.92s. The post-change table readiness audit over
+114 PDFs completed with `extractionErrors=0`, `tableCaptions=345`,
+`cropReadyCaptions=255`, `rawTableFragments=1723`, `cropBackedFragments=610`,
+`readerRawFragments=1115`, `readerCellFallbacks=900`, and reader fragment
+kinds `structured-grid=900`, `short-label=158`, `prose-like=17`,
+`ambiguous=38`, `numeric-grid=2`; these are diagnostics, not claims that all
+tables have perfect semantic schemas.
+
+`npm run lint` and `git diff --check` pass (only existing lint warnings). The
+latest fast Tauri bundle was built successfully at
+`2026-10-13 14:26:36 +0900` at
+`src-tauri/target/release/bundle/macos/Paper Reader.app`. The previous isolated
+OzCHI packaged acceptance remains green; rerun it after any further source
+changes that affect package persistence or reader projection.
