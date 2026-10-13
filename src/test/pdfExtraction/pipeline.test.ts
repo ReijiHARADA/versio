@@ -267,7 +267,7 @@ describe("canonical extraction pipeline", () => {
     expect(prose?.original).toContain("p=0.007");
   }, 60_000);
 
-  it("replaces OzCHI Table 3 cell streams once its reader image crop is available", async () => {
+  it("reconstructs parallel OzCHI Table 3 columns before its reader image crop is available", async () => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
     if (!fs.existsSync(pdf)) return;
     const pages = await extractPdfPages(pdf);
@@ -282,11 +282,19 @@ describe("canonical extraction pipeline", () => {
       /^Table 3\. Finger specific functions/i.test(block.original ?? "")
     );
     const cells = result.blocks.filter((block) =>
-      /^(?:Finger Thumb Finger1|Function Call tapped contact)/.test(block.original ?? "")
+      /^(?:Finger Function Thumb Call tapped contact|Finger Thumb Finger1|Function Call tapped contact)/.test(block.original ?? "")
     );
     expect(caption?.type).toBe("table");
-    expect(cells).toHaveLength(2);
+    expect(cells).toHaveLength(1);
     expect(cells.every((block) => block.type === "table" && block.translationStatus === "skipped")).toBe(true);
+    expect(cells[0].metadata.tableRows).toEqual([
+      [{ text: "Finger", x: expect.any(Number), width: expect.any(Number) }, { text: "Function", x: expect.any(Number), width: expect.any(Number) }],
+      [{ text: "Thumb", x: expect.any(Number), width: expect.any(Number) }, { text: "Call tapped contact", x: expect.any(Number), width: expect.any(Number) }],
+      [{ text: "Finger1", x: expect.any(Number), width: expect.any(Number) }, { text: "Open tapped contacts contact card", x: expect.any(Number), width: expect.any(Number) }],
+      [{ text: "Finger2", x: expect.any(Number), width: expect.any(Number) }, { text: "Open “open apps” pop-up", x: expect.any(Number), width: expect.any(Number) }],
+      [{ text: "Finger3", x: expect.any(Number), width: expect.any(Number) }, { text: "Delete the tapped contact", x: expect.any(Number), width: expect.any(Number) }],
+      [{ text: "Finger4", x: expect.any(Number), width: expect.any(Number) }, { text: "Open global help view", x: expect.any(Number), width: expect.any(Number) }],
+    ]);
 
     const imageBackedCaption: PaperBlock = {
       ...caption!,
@@ -295,7 +303,7 @@ describe("canonical extraction pipeline", () => {
     const visible = suppressImageBackedTableFragments(
       result.blocks.map((block) => (block.id === imageBackedCaption.id ? imageBackedCaption : block))
     );
-    expect(visible.some((block) => /^(?:Finger Thumb Finger1|Function Call tapped contact)/.test(block.original ?? ""))).toBe(false);
+    expect(visible.some((block) => /^(?:Finger Function Thumb Call tapped contact|Finger Thumb Finger1|Function Call tapped contact)/.test(block.original ?? ""))).toBe(false);
     expect(visible.some((block) => block.id === imageBackedCaption.id)).toBe(true);
   }, 60_000);
 

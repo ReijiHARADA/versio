@@ -63,6 +63,105 @@ function normalizeSection(title: string): NormalizedSectionKind {
   return "other";
 }
 
+type ProjectedTableCell = { text: string; x: number; width: number };
+
+type TableColumnCandidate = {
+  block: PaperBlock;
+  layout: LayoutBlock;
+  top: number;
+  bottom: number;
+};
+
+/**
+ * Some PDFs emit a borderless table one visual column at a time: each column
+ * is a multi-line native block with the same vertical span.  Leaving those
+ * blocks independent makes the Reader show `Finger Thumb ...` and
+ * `Function Call ...` as unrelated source cards.  This joins only the narrow
+ * case where native geometry proves a shared row structure; ordinary
+ * paragraphs and conventional multi-cell rows are deliberately excluded.
+ */
+function mergeParallelTableColumns(
+  blocks: PaperBlock[],
+  layoutBlocks: LayoutBlock[]
+): PaperBlock[] {
+  const layoutFor = (block: PaperBlock) => layoutBlocks.find((layout) =>
+    layout.pageStart === block.pageStart && layout.text === (block.original ?? "")
+  );
+  const candidateFor = (block: PaperBlock): TableColumnCandidate | null => {
+    const caption = String(block.metadata.captionOriginal ?? "").trim();
+    // Caption-bearing blocks own a separate reader surface. Only merge
+    // captionless native-grid columns; these are the blocks that otherwise
+    // degrade into parallel flattened strings.
+    if (block.type !== "table" || caption) return null;
+    const layout = layoutFor(block);
+    if (!layout || layout.lines.length < 3 || !layout.lines.every((line) => line.items.length === 1)) {
+      return null;
+    }
+    const top = Math.min(...layout.lines.map((line) => line.bbox.y));
+    const bottom = Math.max(...layout.lines.map((line) => line.bbox.y + line.bbox.height));
+    return { block, layout, top, bottom };
+  };
+  const compatible = (left: TableColumnCandidate, right: TableColumnCandidate) => {
+    if (left.block.pageStart !== right.block.pageStart ||
+      left.block.pageEnd !== right.block.pageEnd ||
+      left.block.metadata.column !== right.block.metadata.column ||
+      left.layout.lines.length !== right.layout.lines.length) return false;
+    const overlap = Math.min(left.bottom, right.bottom) - Math.max(left.top, right.top);
+    const shorter = Math.min(left.bottom - left.top, right.bottom - right.top);
+    if (overlap < shorter * 0.82) return false;
+    const leftRight = left.layout.bbox.x + left.layout.bbox.width;
+    const gap = right.layout.bbox.x - leftRight;
+    if (gap < -2 || gap > 140) return false;
+    return left.layout.lines.every((line, index) => {
+      const peer = right.layout.lines[index];
+      return Math.abs(line.bbox.y - peer.bbox.y) <= Math.max(line.bbox.height, peer.bbox.height) * 0.8 + 2;
+    });
+  };
+
+  const merged: PaperBlock[] = [];
+  for (let index = 0; index < blocks.length;) {
+    const first = candidateFor(blocks[index]);
+    if (!first) {
+      merged.push(blocks[index++]);
+      continue;
+    }
+    const columns = [first];
+    let cursor = index + 1;
+    while (cursor < blocks.length) {
+      const next = candidateFor(blocks[cursor]);
+      if (!next || !compatible(columns.at(-1)!, next)) break;
+      columns.push(next);
+      cursor += 1;
+    }
+    if (columns.length === 1) {
+      merged.push(blocks[index++]);
+      continue;
+    }
+    const rows: ProjectedTableCell[][] = columns[0].layout.lines.map((_, rowIndex) =>
+      columns.flatMap((column) => column.layout.lines[rowIndex].items.map((item) => ({
+        text: item.text.trim(),
+        x: item.x,
+        width: item.width,
+      }))).filter((cell) => cell.text.length > 0).sort((a, b) => a.x - b.x)
+    );
+    const firstBlock = columns[0].block;
+    merged.push({
+      ...firstBlock,
+      original: rows.map((row) => row.map((cell) => cell.text).join(" ")).join(" "),
+      boundingBoxes: columns.flatMap((column) => column.block.boundingBoxes),
+      metadata: {
+        ...firstBlock.metadata,
+        role: "table",
+        tableSourceFallback: true,
+        tableRows: rows,
+        parallelColumnsMerged: columns.length,
+      },
+    });
+    index = cursor;
+  }
+  return merged;
+}
+
 function separateSwallowedAffiliation(text: string): string {
   // Some IEEE layouts emit the author row and the institution as one native
   // line. Preserve an all-caps author suffix after the institution while
@@ -2186,8 +2285,10 @@ export function projectCanonicalToPaper(input: {
     return acc;
   }, []);
 
+  const tableColumnMergedBlocks = mergeParallelTableColumns(rowAggregatedBlocks, layoutBlocks);
+
   // After a page-break header is dropped, rejoin "30. Authors." + "2007. Title…".
-  const referenceCoalescedBlocks = rowAggregatedBlocks.reduce<PaperBlock[]>((acc, block) => {
+  const referenceCoalescedBlocks = tableColumnMergedBlocks.reduce<PaperBlock[]>((acc, block) => {
     const last = acc.at(-1);
     const text = (block.original ?? "").trim();
     const lastText = (last?.original ?? "").trim();
