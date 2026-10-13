@@ -169,6 +169,23 @@ describe("baseline benchmark on cached real papers", () => {
         expect(resultProse?.type).toBe("paragraph");
         expect(resultProse?.translationStatus).toBe("pending");
       }
+      if (paper.id === "cognitive-psychology-cognitive-psychology-first-language-and-false-memories") {
+        const fullExtraction = extractFromPages({
+          pages,
+          paperId: paper.id,
+          filePath: paper.filename,
+          fileHash: "wrapped-prose-headered-table-guard",
+          metadata: { title: paper.title, pageCount: pages.length },
+        });
+        const abstractLead = fullExtraction.blocks.find((block) =>
+          block.original.startsWith("When bilinguals perform a memory task")
+        );
+        expect(fullExtraction.canonical.nodes.find((node) =>
+          node.role === "title" && node.text.startsWith("Cognitive Psychology: First language")
+        )).toBeTruthy();
+        expect(abstractLead?.type).toBe("paragraph");
+        expect(abstractLead?.translationStatus).toBe("pending");
+      }
       if ([
         "interactive-jewellery",
         "significant-other",
