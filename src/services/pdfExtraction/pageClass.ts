@@ -85,7 +85,11 @@ export function classifyPage(signals: PageClassSignals): PageTextKind {
       (signals.repeatedGlyphHits >= 2 && signals.charCount >= 80) ||
       (signals.brokenTokenHits >= 2 && signals.charCount >= 200) ||
       (signals.interleavedFragmentHits >= 3 && signals.charCount >= 500)) return "garbled";
-  if (signals.itemCount < 10) return "scanned";
+  // A PDF may encode an otherwise readable title page or executive summary
+  // as only a few large native text items. Low item count alone is not a
+  // scan signal: sending such a page through canvas/Vision OCR both loses
+  // reliable source text and can make an import wait on an unnecessary render.
+  if (signals.itemCount < 10 && signals.charCount < 80) return "scanned";
   return "native-text";
 }
 
