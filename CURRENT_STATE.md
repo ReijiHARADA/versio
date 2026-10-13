@@ -29,6 +29,20 @@ persistence all passed (`result.json` export 45,498 bytes; Notion package
 1,115,780 bytes). The `caffeinate`-wrapped acceptance left no app or bundled
 translation-server process running.
 
+## Verification update (2026-10-13 15:58 JST)
+
+The full cached real-paper extraction suite was rerun after the parallel
+native table-column reconstruction with `caffeinate -dimsu`. It passed
+**118/118** in **340.33 seconds**. This covers the generic OzCHI-style
+parallel-column fix together with the existing title, heading, author,
+affiliation, caption, table, reference, reading-order, and page-boundary
+regressions. The command output is retained at
+`/tmp/paper-reader-extraction-regression-final.log` for this session.
+
+Long-running extraction, corpus, and packaged-app commands must continue to
+use `caffeinate -dimsu`: the workstation may sleep or enter the screen saver
+while they run.
+
 # 2026-10-13: typography guard for heading/table competition
 
 Corpus diagnosis found a generic failure in which a separated all-caps
