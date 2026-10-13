@@ -2116,3 +2116,35 @@ latest fast Tauri bundle was built successfully at
 `src-tauri/target/release/bundle/macos/Paper Reader.app`. The previous isolated
 OzCHI packaged acceptance remains green; rerun it after any further source
 changes that affect package persistence or reader projection.
+# 2026-10-13: parallel table-column reconstruction and captioned-grid rescue
+
+Two generic table failures were repaired without paper-specific terms. First,
+some borderless PDFs emit each visual column as an independent multi-line
+block; projection now merges adjacent, same-page/same-column blocks only when
+their vertical spans, line count, baseline positions, and horizontal gap prove
+they are parallel columns. It preserves every cell as `metadata.tableRows`, so
+the Reader grid displays one table rather than separate flattened cards.
+OzCHI Table 3 now has six rows such as `Finger | Function` and
+`Thumb | Call tapped contact`.
+
+Second, a Table caption plus repeated multi-cell native rows was being
+overridden by the vector-label guard. The generic layer now produces strong
+table evidence only when three compact baselines repeat at least two x-bands
+next to an explicit table caption; ordinary nearby prose and uncaptioned figure
+labels still retain the safer paragraph/other fallback. This restores the
+mixed thesis Table 4.1 relation without linking it to Figure 4.1.
+
+Validation: focused OzCHI and thesis regressions pass; the extraction pipeline
+passes **67/67**; typecheck, lint (existing warnings only), and diff checks
+pass. The corpus run exercised all **118** tests; the sole initial red case was
+the OzCHI assertion for its intentionally changed row-major string and passes
+after updating that regression expectation. The fresh 114-PDF table audit has
+`extractionErrors=0`, `structured-grid=956`, `short-label=164`,
+`prose-like=18`, `ambiguous=38`, and `numeric-grid=2`. The growth in structured
+grid rows reflects retaining captioned native grids as source-only tables, not
+translation input. The fast `.app` was rebuilt at `2026-10-13 15:34:24 +0900`.
+The fresh OzCHI packaged acceptance passed import, annotation/search,
+Markdown/Notion export, quit, relaunch, and persistence (`ok=true`,
+`searchHits=1`, export 45,498 bytes, Notion package 1,115,780 bytes). The
+figure extraction stage took longer than the marker's first update but did
+complete; no bundled process remains.

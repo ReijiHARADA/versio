@@ -633,6 +633,63 @@ function captionedNativeMultiCellRow(block: LayoutBlock, blocks: LayoutBlock[]):
   });
 }
 
+/**
+ * Some producers split each visual table row into several LayoutBlocks, so no
+ * single block contains enough cells for `tableLike`.  An explicit table
+ * caption plus three nearby baselines that independently repeat wide cell
+ * bands is sufficient document-level evidence.  The candidate must itself
+ * intersect one of those compact row clusters; prose merely near the caption
+ * remains paragraph evidence.
+ */
+function captionedRepeatedNativeGridMember(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
+  if (block.role === "table_caption" || paragraphLike(block.text) && /[.!?]\s*$/.test(block.text.trim())) {
+    return false;
+  }
+  const caption = nearbyTableCaptionForRegion(block, blocks, 420);
+  if (!caption) return false;
+  const captionBottom = caption.bbox.y + caption.bbox.height;
+  const rows = new Map<number, Array<{ x: number; width: number; fontSize: number }>>();
+  for (const candidate of blocks) {
+    if (candidate.pageStart !== block.pageStart || candidate.column !== block.column || candidate.role === "table_caption") continue;
+    for (const line of candidate.lines) {
+      if (line.y < captionBottom - 8 || line.y > captionBottom + 360) continue;
+      const bucket = Math.round(line.y / 4) * 4;
+      const items = rows.get(bucket) ?? [];
+      items.push(...line.items
+        .filter((item) => /[\p{L}\p{N}]/u.test(item.text))
+        .map((item) => ({ x: item.x, width: item.width, fontSize: item.fontSize })));
+      rows.set(bucket, items);
+    }
+  }
+  const structuredRows = [...rows.entries()]
+    .map(([y, items]) => {
+      const sorted = items.sort((a, b) => a.x - b.x);
+      const separated = sorted.reduce((count, item, index) => {
+        if (index === 0) return 1;
+        const previous = sorted[index - 1];
+        return count + (item.x - (previous.x + previous.width) >= Math.max(12, item.fontSize) ? 1 : 0);
+      }, 0);
+      return { y, xs: sorted.map((item) => Math.round(item.x / 18) * 18), separated };
+    })
+    .filter((row) => row.separated >= 3);
+  if (structuredRows.length < 3) return false;
+  const clusters: typeof structuredRows[] = [];
+  for (const row of structuredRows.sort((a, b) => a.y - b.y)) {
+    const cluster = clusters.at(-1);
+    if (cluster && row.y - cluster.at(-1)!.y <= 40) cluster.push(row);
+    else clusters.push([row]);
+  }
+  return clusters.some((cluster) => {
+    if (cluster.length < 3) return false;
+    const origins = new Map<number, number>();
+    for (const row of cluster) for (const x of new Set(row.xs)) origins.set(x, (origins.get(x) ?? 0) + 1);
+    if ([...origins.values()].filter((count) => count >= 2).length < 2) return false;
+    const firstY = cluster[0].y;
+    const lastY = cluster.at(-1)!.y;
+    return block.bbox.y + block.bbox.height >= firstY - 6 && block.bbox.y <= lastY + 8;
+  });
+}
+
 function nearbyTableRowEvidence(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
   if (block.lines.length !== 1 || block.lines[0].items.length < 2) return false;
   // A caption can be close to the prose that introduces a table.  That prose
@@ -1061,6 +1118,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const captionedColumnarGrid = captionedMultiColumnTableBand(block, blocks, layout?.pageWidth ?? 612);
     const captionedNeighborRows = captionedNeighborCellRows(block, blocks);
     const captionedNativeCellRow = captionedNativeMultiCellRow(block, blocks);
+    const captionedRepeatedNativeGrid = captionedRepeatedNativeGridMember(block, blocks);
     const captionedDenseBand = captionedDenseTableBand(block, blocks, layout?.pageWidth ?? 612);
     const contentsEntry = tableOfContentsEntry(block, blocks);
     // Cell geometry can overlap a nearby prose column in a two-column page.
@@ -1358,9 +1416,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         scoreByRole.table = Math.max(scoreByRole.table, 0.9);
       }
     }
-    if (block.role !== "table_caption" && !narrativeTableConflict && (nearbyTableRowEvidence(block, blocks) || headeredTableRow(block, blocks) || cjkComparisonTableRow(block, blocks) || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedMultiCellText || captionedRepeatedRow || captionedNeighborRows || captionedNativeCellRow || captionedDenseBand)) scoreByRole.table = 0.96;
+    if (block.role !== "table_caption" && !narrativeTableConflict && (nearbyTableRowEvidence(block, blocks) || headeredTableRow(block, blocks) || cjkComparisonTableRow(block, blocks) || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedMultiCellText || captionedRepeatedRow || captionedNeighborRows || captionedNativeCellRow || captionedRepeatedNativeGrid || captionedDenseBand)) scoreByRole.table = 0.96;
     const captionAnchoredTable = nearbyTableCaption || captionedCompactRows || captionedMultiCellText || captionedRepeatedRow ||
-      captionedColumnarGrid || captionedNeighborRows || captionedNativeCellRow || captionedDenseBand;
+      captionedColumnarGrid || captionedNeighborRows || captionedNativeCellRow || captionedRepeatedNativeGrid || captionedDenseBand;
     const symbolicFormulaText = (block.text.match(/[=∈∉∪∩∑∏√∞≤≥≈≠→←↦{}|]/gu) ?? []).length >= 4 &&
       (block.text.match(/[A-Za-z]{3,}/g) ?? []).length <= 6;
     // Some mathematical displays look like a dense numeric matrix to native
@@ -1391,7 +1449,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // Actual captioned tables retain their dedicated geometry evidence above;
     // without that anchor, a chart/diagram label matrix is safer as `other`
     // than as a reader-visible, source-only table card.
-    if (vectorLabels >= 0.82 && block.role === "paragraph") {
+    if (vectorLabels >= 0.82 && block.role === "paragraph" && !captionedRepeatedNativeGrid) {
       scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.2);
     }
     // Apply the narrative conflict guard after every table generator. Some

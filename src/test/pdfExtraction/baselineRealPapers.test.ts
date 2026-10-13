@@ -339,10 +339,16 @@ describe("baseline benchmark on cached real papers", () => {
         expect(comfortableLabel?.type).toBe("table");
         expect(comfortableLabel?.translationStatus).toBe("skipped");
         const table3Grid = extracted.blocks.find((block) =>
-          block.original.includes("Finger Thumb Finger1 Finger2 Finger3 Finger4")
+          block.original.includes("Finger Function Thumb Call tapped contact")
         );
         expect(table3Grid?.type).toBe("table");
         expect(table3Grid?.translationStatus).toBe("skipped");
+        expect(table3Grid?.metadata.tableRows).toEqual(expect.arrayContaining([
+          expect.arrayContaining([
+            expect.objectContaining({ text: "Finger" }),
+            expect.objectContaining({ text: "Function" }),
+          ]),
+        ]));
         // A borderless native table may not have a raster crop. Preserve the
         // actual same-baseline cells for the Reader fallback rather than
         // rendering a flattened string. This uses Table 4 because its native
