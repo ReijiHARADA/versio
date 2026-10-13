@@ -10,6 +10,34 @@ import {
   type PageColumnLayout,
 } from "./pdfLayout";
 
+// Figure images are an enhancement: native text, captions, and reconstructed
+// table cells remain useful when a PDF.js graphics stream cannot be rendered.
+// Never let one pathological vector page hold the entire paper import open.
+const FIGURE_PAGE_OPERATION_TIMEOUT_MS = 15_000;
+
+export function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  message: string,
+  onTimeout?: () => void
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      timer = setTimeout(() => {
+        try {
+          onTimeout?.();
+        } finally {
+          reject(new Error(message));
+        }
+      }, timeoutMs);
+    }),
+  ]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
+
 export type ExtractedTextItem = {
   text: string;
   x: number;
@@ -556,10 +584,27 @@ export async function extractFigureImages(
       const layout = layouts[pageNumber - 1];
       if (!layout) continue;
 
-      const page = await pdf.getPage(pageNumber);
-      const viewport = page.getViewport({ scale: 1 });
-      const operatorList = await page.getOperatorList();
-      const placements = collectImagePlacements(operatorList, viewport.height);
+      let page: Awaited<ReturnType<typeof pdf.getPage>>;
+      let placements: PdfImagePlacement[];
+      try {
+        page = await withTimeout(
+          pdf.getPage(pageNumber),
+          FIGURE_PAGE_OPERATION_TIMEOUT_MS,
+          `timed out opening figure page ${pageNumber}`
+        );
+        const viewport = page.getViewport({ scale: 1 });
+        const operatorList = await withTimeout(
+          page.getOperatorList(),
+          FIGURE_PAGE_OPERATION_TIMEOUT_MS,
+          `timed out reading figure operators for page ${pageNumber}`
+        );
+        placements = collectImagePlacements(operatorList, viewport.height);
+      } catch (error) {
+        console.warn(`[figures] skipping page ${pageNumber}:`, error);
+        done += pageCaptions.length;
+        onProgress?.(done, total);
+        continue;
+      }
 
       // Vector-only figures use this page-render fallback.  A 1.25x raster is
       // sufficient for the Reader crop while avoiding the quadratic canvas
@@ -583,11 +628,17 @@ export async function extractFigureImages(
           canvas.height = Math.ceil(renderViewport.height);
           const context = canvas.getContext("2d");
           if (!context) return undefined;
-          await page.render({
+          const renderTask = page.render({
             canvasContext: context,
             viewport: renderViewport,
             annotationMode: pdfjsLib.AnnotationMode.DISABLE,
-          }).promise;
+          });
+          await withTimeout(
+            renderTask.promise,
+            FIGURE_PAGE_OPERATION_TIMEOUT_MS,
+            `timed out rendering figure page ${pageNumber}`,
+            () => renderTask.cancel()
+          );
           pageCanvas = canvas;
           return canvas;
         })();
@@ -608,9 +659,6 @@ export async function extractFigureImages(
       );
 
       for (const { crop, key } of captionRegions) {
-        done += 1;
-        onProgress?.(done, total);
-
         const matched = grouped.get(key) ?? [];
 
         const decoded = matched
@@ -626,25 +674,36 @@ export async function extractFigureImages(
         const embedded = compositePlacedImages(decoded);
         if (embedded) {
           images.set(key, embedded);
+          done += 1;
+          onProgress?.(done, total);
           continue;
         }
 
-        if (!crop) continue;
-        const renderedPage = await ensurePageCanvas();
-        if (!renderedPage) continue;
-        const sx = Math.max(0, Math.floor(crop.x * renderScale));
-        const sy = Math.max(0, Math.floor(crop.y * renderScale));
-        const sw = Math.min(renderedPage.width - sx, Math.ceil(crop.width * renderScale));
-        const sh = Math.min(renderedPage.height - sy, Math.ceil(crop.height * renderScale));
-        if (sw < 8 || sh < 8) continue;
-
-        const slice = document.createElement("canvas");
-        slice.width = sw;
-        slice.height = sh;
-        const sliceContext = slice.getContext("2d");
-        if (!sliceContext) continue;
-        sliceContext.drawImage(renderedPage, sx, sy, sw, sh, 0, 0, sw, sh);
-        images.set(key, slice.toDataURL("image/jpeg", 0.88));
+        if (crop) {
+          try {
+            const renderedPage = await ensurePageCanvas();
+            if (renderedPage) {
+              const sx = Math.max(0, Math.floor(crop.x * renderScale));
+              const sy = Math.max(0, Math.floor(crop.y * renderScale));
+              const sw = Math.min(renderedPage.width - sx, Math.ceil(crop.width * renderScale));
+              const sh = Math.min(renderedPage.height - sy, Math.ceil(crop.height * renderScale));
+              if (sw >= 8 && sh >= 8) {
+                const slice = document.createElement("canvas");
+                slice.width = sw;
+                slice.height = sh;
+                const sliceContext = slice.getContext("2d");
+                if (sliceContext) {
+                  sliceContext.drawImage(renderedPage, sx, sy, sw, sh, 0, 0, sw, sh);
+                  images.set(key, slice.toDataURL("image/jpeg", 0.88));
+                }
+              }
+            }
+          } catch (error) {
+            console.warn(`[figures] skipping ${key}:`, error);
+          }
+        }
+        done += 1;
+        onProgress?.(done, total);
       }
     }
   } finally {
