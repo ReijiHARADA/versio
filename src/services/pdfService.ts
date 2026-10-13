@@ -14,6 +14,10 @@ import {
 // table cells remain useful when a PDF.js graphics stream cannot be rendered.
 // Never let one pathological vector page hold the entire paper import open.
 const FIGURE_PAGE_OPERATION_TIMEOUT_MS = 15_000;
+// A table without a reliable native cell grid has no useful text fallback,
+// whereas a figure still has its caption. Give table-bearing pages one longer
+// bounded chance to rasterize, but retain a finite limit for import latency.
+const TABLE_PAGE_RENDER_TIMEOUT_MS = 45_000;
 
 export function withTimeout<T>(
   promise: Promise<T>,
@@ -580,22 +584,34 @@ export async function extractFigureImages(
   const total = captions.length;
 
   try {
-    for (const [pageNumber, pageCaptions] of byPage) {
+    for (const [pageNumber, unsortedPageCaptions] of byPage) {
       const layout = layouts[pageNumber - 1];
       if (!layout) continue;
+      // Table crops prevent flattened/narrative-looking cell strings from
+      // leaking into the Reader. Do them before optional figure art so a
+      // slow vector illustration cannot consume the page render budget.
+      const pageCaptions = [...unsortedPageCaptions].sort((a, b) => {
+        const aTable = a.role === "table_caption" ? 0 : 1;
+        const bTable = b.role === "table_caption" ? 0 : 1;
+        return aTable - bTable || a.bbox.y - b.bbox.y;
+      });
+      const tablePage = pageCaptions.some((caption) => caption.role === "table_caption");
+      const pageOperationTimeoutMs = tablePage
+        ? TABLE_PAGE_RENDER_TIMEOUT_MS
+        : FIGURE_PAGE_OPERATION_TIMEOUT_MS;
 
       let page: Awaited<ReturnType<typeof pdf.getPage>>;
       let placements: PdfImagePlacement[];
       try {
         page = await withTimeout(
           pdf.getPage(pageNumber),
-          FIGURE_PAGE_OPERATION_TIMEOUT_MS,
+          pageOperationTimeoutMs,
           `timed out opening figure page ${pageNumber}`
         );
         const viewport = page.getViewport({ scale: 1 });
         const operatorList = await withTimeout(
           page.getOperatorList(),
-          FIGURE_PAGE_OPERATION_TIMEOUT_MS,
+          pageOperationTimeoutMs,
           `timed out reading figure operators for page ${pageNumber}`
         );
         placements = collectImagePlacements(operatorList, viewport.height);
@@ -635,7 +651,7 @@ export async function extractFigureImages(
           });
           await withTimeout(
             renderTask.promise,
-            FIGURE_PAGE_OPERATION_TIMEOUT_MS,
+            pageOperationTimeoutMs,
             `timed out rendering figure page ${pageNumber}`,
             () => renderTask.cancel()
           );
