@@ -152,6 +152,28 @@ describe("baseline benchmark on cached real papers", () => {
         expect(marketingReferences.every((block) => block.type === "reference")).toBe(true);
         expect(marketingReferences.every((block) => block.translationStatus === "skipped")).toBe(true);
       }
+      if (paper.id === "ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport") {
+        const fullExtraction = extractFromPages({
+          pages,
+          paperId: paper.id,
+          filePath: pdfPath,
+          fileHash: "sequential-native-table-row-regression",
+          metadata: { title: paper.title, pageCount: pages.length },
+        });
+        const vehicleRows = fullExtraction.blocks.find((block) =>
+          block.type === "table" &&
+          block.original.includes("Articulated trucks") &&
+          block.original.includes("Passenger vehicles") &&
+          block.original.includes("Total motor vehicles")
+        );
+        const rows = vehicleRows?.metadata.tableRows as Array<Array<{ text: string }>> | undefined;
+        expect(vehicleRows?.metadata.sequentialRowsMerged).toBeGreaterThanOrEqual(3);
+        expect(rows?.map((row) => row.map((cell) => cell.text).join(" "))).toEqual(expect.arrayContaining([
+          expect.stringContaining("Articulated trucks"),
+          expect.stringContaining("Passenger vehicles"),
+          expect.stringContaining("Total motor vehicles"),
+        ]));
+      }
       if (paper.id === "cognitive-dual-task-older-adults") {
         const fullExtraction = extractFromPages({
           pages,

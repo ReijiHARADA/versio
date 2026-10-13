@@ -162,6 +162,100 @@ function mergeParallelTableColumns(
   return merged;
 }
 
+type TableRowCandidate = {
+  block: PaperBlock;
+  cells: ProjectedTableCell[];
+  top: number;
+  bottom: number;
+};
+
+/**
+ * Borderless tables are frequently emitted as one canonical node per physical
+ * row. Rendering each one independently creates a stack of tiny table cards,
+ * although the repeated native x positions already prove a single grid. Merge
+ * only consecutive same-page rows with at least two cells and repeated column
+ * origins; prose, lists, captions, and standalone label fragments stay out.
+ */
+function mergeSequentialTableRows(blocks: PaperBlock[], layoutBlocks: LayoutBlock[]): PaperBlock[] {
+  const layoutFor = (block: PaperBlock) => layoutBlocks.find((layout) =>
+    layout.pageStart === block.pageStart && layout.text === (block.original ?? "")
+  );
+  const candidateFor = (block: PaperBlock): TableRowCandidate | null => {
+    if (block.type !== "table" || String(block.metadata.captionOriginal ?? "").trim()) return null;
+    const metadataRows = Array.isArray(block.metadata.tableRows)
+      ? block.metadata.tableRows as ProjectedTableCell[][]
+      : null;
+    const layout = layoutFor(block);
+    const rows = metadataRows?.filter((row) => Array.isArray(row) && row.length > 0) ??
+      (layout?.lines.length === 1
+        ? [layout.lines[0].items.map((item) => ({ text: item.text.trim(), x: item.x, width: item.width })).filter((cell) => cell.text)]
+        : []);
+    if (rows.length !== 1 || rows[0].length < 2) return null;
+    const boxes = block.boundingBoxes;
+    if (!boxes.length) return null;
+    return {
+      block,
+      cells: [...rows[0]].sort((a, b) => a.x - b.x),
+      top: Math.min(...boxes.map((box) => box.y)),
+      bottom: Math.max(...boxes.map((box) => box.y + box.height)),
+    };
+  };
+  const sameGrid = (rows: TableRowCandidate[]) => {
+    if (rows.length < 3) return false;
+    const xCounts = new Map<number, number>();
+    for (const row of rows) {
+      for (const x of new Set(row.cells.map((cell) => Math.round(cell.x / 12) * 12))) {
+        xCounts.set(x, (xCounts.get(x) ?? 0) + 1);
+      }
+    }
+    return [...xCounts.values()].filter((count) => count >= 2).length >= 2;
+  };
+  const compatible = (previous: TableRowCandidate, next: TableRowCandidate) =>
+    previous.block.pageStart === next.block.pageStart &&
+    previous.block.pageEnd === next.block.pageEnd &&
+    previous.block.metadata.column === next.block.metadata.column &&
+    next.top - previous.bottom >= -3 && next.top - previous.bottom <= 30;
+
+  const merged: PaperBlock[] = [];
+  for (let index = 0; index < blocks.length;) {
+    const first = candidateFor(blocks[index]);
+    if (!first) {
+      merged.push(blocks[index++]);
+      continue;
+    }
+    const rows = [first];
+    let cursor = index + 1;
+    while (cursor < blocks.length) {
+      const next = candidateFor(blocks[cursor]);
+      if (!next || !compatible(rows.at(-1)!, next)) break;
+      rows.push(next);
+      cursor += 1;
+    }
+    if (!sameGrid(rows)) {
+      merged.push(...blocks.slice(index, cursor));
+      index = cursor;
+      continue;
+    }
+    const firstBlock = first.block;
+    const tableRows = rows.map((row) => row.cells);
+    merged.push({
+      ...firstBlock,
+      original: tableRows.map((row) => row.map((cell) => cell.text).join(" ")).join(" "),
+      pageEnd: Math.max(...rows.map((row) => row.block.pageEnd)),
+      boundingBoxes: rows.flatMap((row) => row.block.boundingBoxes),
+      metadata: {
+        ...firstBlock.metadata,
+        role: "table",
+        tableSourceFallback: true,
+        tableRows,
+        sequentialRowsMerged: rows.length,
+      },
+    });
+    index = cursor;
+  }
+  return merged;
+}
+
 function separateSwallowedAffiliation(text: string): string {
   // Some IEEE layouts emit the author row and the institution as one native
   // line. Preserve an all-caps author suffix after the institution while
@@ -2286,9 +2380,10 @@ export function projectCanonicalToPaper(input: {
   }, []);
 
   const tableColumnMergedBlocks = mergeParallelTableColumns(rowAggregatedBlocks, layoutBlocks);
+  const tableRowMergedBlocks = mergeSequentialTableRows(tableColumnMergedBlocks, layoutBlocks);
 
   // After a page-break header is dropped, rejoin "30. Authors." + "2007. Title…".
-  const referenceCoalescedBlocks = tableColumnMergedBlocks.reduce<PaperBlock[]>((acc, block) => {
+  const referenceCoalescedBlocks = tableRowMergedBlocks.reduce<PaperBlock[]>((acc, block) => {
     const last = acc.at(-1);
     const text = (block.original ?? "").trim();
     const lastText = (last?.original ?? "").trim();
