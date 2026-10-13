@@ -1016,6 +1016,11 @@ describe("canonical extraction pipeline", () => {
     expect(labels?.role).toBe("other");
     const formula = result.canonical.nodes.find((node) => /\|S\| x∈S len\(x\)\+1/.test(node.text ?? ""));
     expect(formula?.role).toBe("equation");
+    // Figure 10 is a vector dynamic-programming diagram. Its glyph matrix
+    // must not render as a source-only table.
+    const diagram = result.canonical.nodes.find((node) => /𝐷𝑃2 𝑡,15/.test(node.text ?? ""));
+    expect(diagram?.role).toBe("other");
+    expect(diagram?.evidence.some((evidence) => evidence.label === "figure-caption-vector-diagram")).toBe(true);
   }, 60_000);
 
   it("keeps a prose line out of a caption-adjacent table region", () => {

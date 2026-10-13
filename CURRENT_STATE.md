@@ -1,3 +1,9 @@
+# 2026-10-13: vector-diagram/table disambiguation
+
+Corpus triage found a remaining precision failure in a computational-linguistics paper: dense mathematical labels inside a vector Figure 10 diagram were being projected as a source-only `table` because native glyph positions formed a matrix. The resolver now uses a strict competing evidence path: a dense mathematical glyph stream must sit immediately above an overlapping Figure caption on a graphics-rich page, with no nearby table caption. It receives `other` evidence and caps the generic table score. A real-PDF regression fixes the exact Figure 10 shape without relying on a paper name or vocabulary.
+
+The extraction-corpus run after this change passed the full **118-paper baseline**; the subsequent reading-order corpus reported one metadata failure, not a product failure. Visual rendering of `economics-regularized-deepiv` page 14 showed that the page is single-column, so the catalog's incorrect `expectMultiColumnOnPages: [14]` assertion was removed. Its targeted reading-order test now passes. Typecheck, lint, diff check, and the Figure 10 regression pass.
+
 # 2026-10-13: refreshed table-reader corpus audit
 
 After narrowing header-only table recovery to one physical native line, the full cached extraction baseline passes **118/118** in **363.04 seconds** under `caffeinate -dimsu`. The refreshed table-reader audit covers all cached PDFs with no extraction errors: **345** numbered table captions, **255** geometry-crop-ready captions, **1,681** raw table-region fragments, and **1,044** fragments left visible when a reliable crop is unavailable. Of those visible fallback fragments, **852** already contain `tableRows` and are rendered as native cell grids rather than concatenated prose; the audit-only residual taxonomy is `short-label=154`, `structured-grid=852`, `prose-like=11`, `ambiguous=26`, `numeric-grid=1`.
