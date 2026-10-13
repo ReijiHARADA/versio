@@ -82,6 +82,19 @@ export, quit, relaunch, and persistence all succeeded. Its persisted package
 has 161 blocks and exactly **5 tables with 5 image assets** (the five captioned
 OzCHI tables); no bundled app or translation-server process remained.
 
+# 2026-10-13: header-only table rescue narrowed to physical rows
+
+The refreshed 114-PDF table audit found a Nature-style paper whose two-line
+title and first abstract sentence were being converted to source-only tables.
+They happened to lie within the broad vertical search range of a
+header-shaped layout block, but had no caption or repeated-grid ownership
+evidence. The header-only table rescue now accepts a single physical native
+line only; wrapped table descriptions remain covered by the stronger
+caption/grid evidence paths. Regression confirms the paper's canonical title
+and first abstract paragraph stay title/paragraph, while Frontiers numerical
+table rows retain their cell grids. Targeted real-paper regression and
+typecheck pass; rerun the full corpus before treating this as a baseline.
+
 # 2026-10-13: typography guard for heading/table competition
 
 Corpus diagnosis found a generic failure in which a separated all-caps

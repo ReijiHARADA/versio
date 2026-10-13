@@ -764,6 +764,12 @@ function headeredTableRow(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
   // sentence; preserving body text is the safer failure mode when the
   // stronger caption/grid evidence is absent.
   if (/[.!?。！？]\s*$/.test(block.text.trim())) return false;
+  // This is deliberately a rescue for a compact, physical table row. A
+  // wrapped title or paragraph can share a page with a header-shaped label,
+  // but does not become table-owned merely because its final line is
+  // unpunctuated. Multi-line descriptive table cells still have the stronger
+  // caption/grid paths above.
+  if (block.lines.length !== 1) return false;
   if (lowerCaseProseContinuation(block.text)) return false;
   if (blocks.some((candidate) => candidate.pageStart === block.pageStart && candidate.role === "figure_caption")) return false;
   const header = blocks.find((candidate) => {
