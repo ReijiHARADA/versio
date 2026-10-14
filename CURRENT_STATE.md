@@ -1,3 +1,35 @@
+# 2026-10-14: caption-owned native table grids and dense-page import bound
+
+Reader-visible table cells were still escaping their numbered caption when a
+native PDF table had no reliable raster crop. In OzCHI this produced standalone
+cards such as `Comfortable / Finger 1 / 0.000` and `Finger / Phonebook / …`,
+which neither read as a table nor belonged in translation. Package projection
+now folds a grid into an existing same-page, same-column numbered table caption
+only when repeated native x-bands occur across at least three short visual rows.
+It preserves the cell geometry for the Reader grid and removes the source cell
+blocks, without using paper-specific words. Raw layout is consulted only after
+Canonical projection has intentionally absorbed cell nodes, and projected
+block ids take precedence so no duplicate card remains.
+
+The optional full-page canvas fallback for figure/table crops can synchronously
+stall on vector-dense pages; a promise timeout cannot interrupt that work. Pages
+with more than three captions now retain embedded assets and native grids but
+skip this expensive whole-page raster fallback. A fresh packaged OzCHI import
+completed in **14.4 seconds**, including annotation, search, Markdown and
+Notion-package export, relaunch, and persistence (`ok=true`, search hit **1**,
+Markdown **45,395 bytes**, Notion **1,030,149 bytes**). Its saved package has
+Table 1 (**10 rows**), Table 2 (**5**), Table 4 (**8**), and Table 5 (**1**) as
+caption-owned native grids; Table 3 remains its extracted table image. No
+bundled translation-server process remains.
+
+The complete cached extraction and reading-order corpus passes **232/232** in
+**444.96 seconds** under `caffeinate -dimsu`; the focused package-layout and
+OzCHI regressions, typecheck, lint (existing warnings only), and diff check
+pass. The fast bundle was rebuilt at **2026-10-14 18:25:33 JST**:
+`src-tauri/target/release/bundle/macos/Paper Reader.app`. Continue using
+`caffeinate -dimsu` for all lengthy commands because the workstation can sleep
+or activate its screen saver.
+
 # 2026-10-14: wrapped table-of-contents precision
 
 Long entries in a table of contents can wrap before the dotted leader and page
