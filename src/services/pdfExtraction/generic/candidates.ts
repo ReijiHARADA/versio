@@ -525,11 +525,23 @@ function tableLike(block: LayoutBlock): boolean {
 function tableOfContentsEntry(block: LayoutBlock, blocks: LayoutBlock[]): boolean {
   const hasLeaderAndPage = (text: string) =>
     /(?:\.{4,}|…{2,}|·{4,}|_{4,})\s*(?:\d{1,4}|[ivxlcdm]{1,8})\s*$/i.test(text.trim());
-  if (!hasLeaderAndPage(block.text)) return false;
   const peers = blocks.filter((candidate) =>
     candidate.pageStart === block.pageStart && hasLeaderAndPage(candidate.text)
   );
-  return peers.length >= 3;
+  if (peers.length < 3) return false;
+  if (hasLeaderAndPage(block.text)) return true;
+  // Long chapter titles commonly wrap just before their dotted leader and
+  // page number. The first physical line has no leader itself and can look
+  // like a compact table row, so inherit the page-local TOC evidence only
+  // when its immediately following, indented line supplies that leader.
+  const nextLine = blocks.find((candidate) => {
+    if (candidate.pageStart !== block.pageStart || candidate === block || !hasLeaderAndPage(candidate.text)) return false;
+    const gap = candidate.bbox.y - (block.bbox.y + block.bbox.height);
+    return gap >= -2 && gap <= 34 && candidate.bbox.x >= block.bbox.x + 8;
+  });
+  return Boolean(nextLine) &&
+    /^\s*(?:\d+(?:\.\d+){0,3}|[A-Z])(?:[.)])?\s+\p{L}/u.test(block.text.trim()) &&
+    !/[.!?;:]\s*$/.test(block.text.trim());
 }
 
 /** Find a caption that bounds a compact table region in either reading

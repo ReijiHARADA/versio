@@ -341,6 +341,11 @@ describe("canonical extraction pipeline", () => {
     const entry = result.blocks.find((block) => /2\.4 The current research \.{4,}52/.test(block.original ?? ""));
     expect(entry?.type).not.toBe("table");
     expect(entry?.translationStatus).toBe("skipped");
+    const wrappedEntry = result.canonical.nodes.find((node) =>
+      node.pageStart === 5 && /3 Work characteristics associated with injury/.test(node.text ?? "")
+    );
+    expect(wrappedEntry?.role).toBe("other");
+    expect(wrappedEntry?.evidence.some((evidence) => evidence.label === "table-of-contents-entry")).toBe(true);
   }, 60_000);
 
   it("keeps symbolic assignment matrices out of table cards", async () => {
