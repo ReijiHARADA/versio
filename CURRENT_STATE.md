@@ -1,3 +1,7 @@
+# 2026-10-14: packaged micro-label verification
+
+The fast `.app` was rebuilt at **2026-10-14 12:55:40 JST** with `e32b9db`. Fresh isolated Tauri acceptance used the real `linguistics-language-model-physics.pdf` regression input and passed import, annotation, search, Markdown/Notion-package export, quit, relaunch, and persistence. `result.json` reports `ok=true`, `searchHits=1`, Markdown export **130,206 bytes**, and Notion package **81,148 bytes**. The bundled translation server that survived the harness quit was explicitly stopped; no Paper Reader process remains.
+
 # 2026-10-14: micro-label vector-panel follow-up
 
 A second diagnostic showed that the first dense-vector guard still left one- and two-line glyph labels inside a single image-rich multipanel figure eligible for page-grid table evidence. The evidence now also covers these micro-labels, but only on a graphics-dense, image-rich page with no nearby table caption, tiny typography, and a very short physical block. A real fixture asserts both the multi-line plot tick stream and a standalone `lay1 lay1` panel label resolve to `other` with the recorded geometry evidence.
