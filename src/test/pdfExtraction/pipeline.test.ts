@@ -1030,6 +1030,16 @@ describe("canonical extraction pipeline", () => {
     );
     expect(microPanelLabel?.role).toBe("other");
     expect(microPanelLabel?.evidence.some((evidence) => evidence.label === "dense-vector-panel")).toBe(true);
+    const captionBoundPanelLabel = result.canonical.nodes.find((node) =>
+      node.pageStart === 32 && (node.text ?? "").trim() === "lay1 lay1"
+    );
+    expect(captionBoundPanelLabel?.role).toBe("other");
+    expect(captionBoundPanelLabel?.evidence.some((evidence) => evidence.label === "figure-panel-label")).toBe(true);
+    const captionBoundVectorGrid = result.canonical.nodes.find((node) =>
+      node.pageStart === 39 && /^9 8 9 9 8 9 8 11/.test(node.text ?? "")
+    );
+    expect(captionBoundVectorGrid?.role).toBe("other");
+    expect(captionBoundVectorGrid?.evidence.some((evidence) => evidence.label === "figure-panel-label")).toBe(true);
     const formula = result.canonical.nodes.find((node) => /\|S\| x∈S len\(x\)\+1/.test(node.text ?? ""));
     expect(formula?.role).toBe("equation");
     // Figure 10 is a vector dynamic-programming diagram. Its glyph matrix
