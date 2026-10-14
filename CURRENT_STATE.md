@@ -1,3 +1,7 @@
+# 2026-10-14: packaged dense-vector verification
+
+The fast Tauri build containing `29ff6ce` completed at **2026-10-14 12:34:43 JST**: `src-tauri/target/release/bundle/macos/Paper Reader.app`. A fresh isolated packaged acceptance imported `linguistics-language-model-physics.pdf`, completed annotation, search, Markdown and Notion-package export, quit, relaunched, and retained the package. `result.json` records `ok=true`, `searchHits=1`, Markdown export **130,190 bytes**, and Notion package **81,167 bytes**. The app exited successfully; its orphaned bundled translation-server process was then explicitly stopped. No app or translation-server process remains.
+
 # 2026-10-14: dense vector-panel table suppression
 
 The 114-PDF table-reader audit exposed a precision failure that remained after prior vector-diagram work: ultra-small native glyph rows inside dense, multi-panel figures could be reconstructed as captionless `table` blocks and appear as reader-visible cell cards. The new generic evidence path assigns `other` only when all of the following hold: there is no nearby table caption, the candidate has tiny native type, the page is graphics-rich, and either repeated same-shaped panel peers exist or the candidate is a micro-grid on an image-rich vector page. Captioned tables remain excluded from this suppression.
