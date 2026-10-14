@@ -1,3 +1,7 @@
+# 2026-10-14: packaged figure-panel verification
+
+The fast `.app` containing `d449afb` was rebuilt at **2026-10-14 13:16:42 JST**. The isolated packaged Tauri acceptance again used `linguistics-language-model-physics.pdf` and passed import, annotation, search, Markdown/Notion-package export, quit, relaunch, and persistence. `result.json` records `ok=true`, `searchHits=1`, Markdown export **129,376 bytes**, and Notion package **80,965 bytes**. The harness again left a bundled translation-server process after application exit; it was explicitly stopped, so no Paper Reader process remains.
+
 # 2026-10-14: figure-caption panel-label disambiguation
 
 A further region diagnostic identified Figure 23 and Figure 29 as the source of many apparent table candidates: native axis/grid glyphs were positioned like cells, but lay within a dense vector Figure region whose caption occurred below. Generic evidence now uses figure-caption proximity, native type scale, graphics density, and the absence of a nearby table caption to mark those labels as `other`. This is independent of paper title or label vocabulary. Target checks show Figure 29 table nodes **4→0** and Figure 23 **29→17**; the remaining Figure 23 nodes are outside the deliberately bounded caption relation and remain a follow-up region-grouping task.
