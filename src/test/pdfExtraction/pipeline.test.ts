@@ -1045,6 +1045,11 @@ describe("canonical extraction pipeline", () => {
     );
     expect(microPanelLabel?.role).toBe("other");
     expect(microPanelLabel?.evidence.some((evidence) => evidence.label === "dense-vector-panel")).toBe(true);
+    const repeatedHorizontalPanelLabel = result.canonical.nodes.find((node) =>
+      node.pageStart === 34 && (node.text ?? "").trim() === "for GPTrel over cfg3b data for GPTrel over cfg3b data"
+    );
+    expect(repeatedHorizontalPanelLabel?.role).toBe("other");
+    expect(repeatedHorizontalPanelLabel?.evidence.some((evidence) => evidence.label === "dense-vector-panel")).toBe(true);
     const captionBoundPanelLabel = result.canonical.nodes.find((node) =>
       node.pageStart === 32 && (node.text ?? "").trim() === "lay1 lay1"
     );

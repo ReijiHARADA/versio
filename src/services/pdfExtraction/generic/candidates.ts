@@ -252,6 +252,30 @@ function denseVectorPanelEvidence(block: LayoutBlock, blocks: LayoutBlock[], pag
     block.bbox.height <= Math.max(14, fontSize * 5) &&
     block.bbox.width <= (page?.width ?? Infinity) * 0.55;
   if (microGridOnGraphicPage) return 0.94;
+
+  // A multi-panel vector figure can also emit one short annotation per panel
+  // (for example, the same panel subtitle on its left and right plots). It is
+  // only one physical line, so the grid rule below intentionally cannot see
+  // it. Requiring an exact, same-baseline peer on an exceptionally graphics-
+  // dense page distinguishes this from an ordinary small data-table cell.
+  const normalizedText = block.text.replace(/\s+/g, " ").trim().toLowerCase();
+  const repeatedHorizontalPanelLabel =
+    denseGraphics && imageCount >= 20 && fontSize <= 4.2 &&
+    block.lines.length <= 2 && block.bbox.height <= Math.max(16, fontSize * 4) &&
+    normalizedText.length >= 8 && normalizedText.length <= 140 &&
+    !/[.!?。！？:;]$/.test(normalizedText) &&
+    blocks.some((candidate) => {
+      if (candidate === block || candidate.pageStart !== block.pageStart ||
+          (candidate.role !== "table" && candidate.role !== "paragraph") ||
+          candidate.lines.length > 2) return false;
+      const candidateText = candidate.text.replace(/\s+/g, " ").trim().toLowerCase();
+      if (candidateText !== normalizedText) return false;
+      const candidateFont = median(candidate.lines.map((line) => line.fontSize).filter((size) => size > 0));
+      return candidateFont > 0 && candidateFont <= 4.2 &&
+        Math.abs(candidate.bbox.y - block.bbox.y) <= Math.max(8, fontSize * 2) &&
+        Math.abs(candidate.bbox.x - block.bbox.x) >= (page?.width ?? 0) * 0.18;
+    });
+  if (repeatedHorizontalPanelLabel) return 0.94;
   if (block.lines.length < 3) return 0;
   const requiredPeers = 2;
   // A page with an exceptionally dense vector stream and two repeated tiny

@@ -1,3 +1,28 @@
+# 2026-10-14: repeated vector-panel annotation suppression
+
+The table-reader audit still contained plot-panel subtitles from a vector-heavy
+computational-linguistics paper. The labels were only one native line each,
+so the prior multi-line grid guard could not distinguish them from a table
+cell. Generic extraction now recognizes a panel annotation only when an
+exceptionally graphics-dense, image-rich page has no nearby table caption and
+an exact same-baseline, horizontally separated peer using tiny native type.
+This is geometry and repetition evidence, not a vocabulary rule. It leaves
+ordinary short text and real captioned tables untouched.
+
+The real regression covers the paired `for GPTrel …` panel labels, which now
+resolve to `other` rather than `table`. Across the cached corpus, reader-visible
+raw table fragments improve **685→678**, cell-grid fallbacks **495→488**, and
+the diagnostic paper improves **55→48**; table captions (**345**), crop-ready
+captions (**255**), and extraction errors (**0**) are unchanged. The complete
+cached extraction and reading-order corpus passes **232/232** in **464.86
+seconds** under `caffeinate -dimsu`; targeted regression, typecheck, lint
+(existing warnings only), and diff check pass. The fast `.app` was rebuilt at
+**2026-10-14 19:12:23 JST**. Fresh isolated packaged acceptance imported the
+real vector-heavy PDF, completed annotation, search, Markdown and
+Notion-package export, quit, relaunched, and retained the package
+(`result.json`: `ok=true`, searchHits **1**, Markdown **129,271 bytes**,
+Notion **80,954 bytes**). No app or bundled translation-server process remains.
+
 # 2026-10-14: caption-owned native table grids and dense-page import bound
 
 Reader-visible table cells were still escaping their numbered caption when a
