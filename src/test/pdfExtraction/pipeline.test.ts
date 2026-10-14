@@ -1014,6 +1014,17 @@ describe("canonical extraction pipeline", () => {
     });
     const labels = result.canonical.nodes.find((node) => /truth GPT GPT_rel GPT_rot GPT_pos GPT_uni/.test(node.text ?? ""));
     expect(labels?.role).toBe("other");
+    const repeatedPanels = result.canonical.nodes.find((node) =>
+      /lay1 lay1 lay2 lay2 lay3 lay3 lay4 lay4 lay5 lay5/.test(node.text ?? "") &&
+      /position-based attention pattern/.test(node.text ?? "")
+    );
+    expect(repeatedPanels?.role).toBe("other");
+    expect(repeatedPanels?.evidence.some((evidence) => evidence.label === "dense-vector-panel")).toBe(true);
+    const multiPanelTicks = result.canonical.nodes.find((node) =>
+      /h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12.*-10 0\.025/.test(node.text ?? "")
+    );
+    expect(multiPanelTicks?.role).toBe("other");
+    expect(multiPanelTicks?.evidence.some((evidence) => evidence.label === "dense-vector-panel")).toBe(true);
     const formula = result.canonical.nodes.find((node) => /\|S\| x∈S len\(x\)\+1/.test(node.text ?? ""));
     expect(formula?.role).toBe("equation");
     // Figure 10 is a vector dynamic-programming diagram. Its glyph matrix
