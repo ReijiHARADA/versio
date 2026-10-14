@@ -77,6 +77,8 @@ export type LayoutBlock = {
   preserveColumnContinuation?: boolean;
   /** Set when a same-page adjacent text-band continuation was proven. */
   adjacentBandContinuation?: boolean;
+  /** A bare caption identifier was rejoined with a detached native title. */
+  detachedCaptionTitleRepaired?: boolean;
 };
 
 function lineUsesBoldFace(line: LayoutLine): boolean {
@@ -2739,12 +2741,14 @@ function groupLinesIntoBlocks(
   }
   flush();
   const nonEmptyBlocks = splitMixedColumnBlocks(
-    splitMixedMastheadBlocks(
-      splitEmbeddedTableGridFromCaptions(
-        splitTopBibliographicLines(
-          splitStyledHeadingPrefixes(
-            splitEmbeddedChromeBlocks(rejoinCaptionStatisticFragments(blocks.filter((b) => b.text.length > 0))),
-            median(blocks.flatMap((block) => block.lines.map((line) => line.fontSize))) || 9,
+    rejoinDetachedCaptionTitles(
+      splitMixedMastheadBlocks(
+        splitEmbeddedTableGridFromCaptions(
+          splitTopBibliographicLines(
+            splitStyledHeadingPrefixes(
+              splitEmbeddedChromeBlocks(rejoinCaptionStatisticFragments(blocks.filter((b) => b.text.length > 0))),
+              median(blocks.flatMap((block) => block.lines.map((line) => line.fontSize))) || 9,
+            )
           )
         )
       )
@@ -3013,6 +3017,77 @@ function trimOrphanTailBeforeChrome(blocks: LayoutBlock[]): LayoutBlock[] {
     block.pageEnd = block.lines.at(-1)?.page ?? block.pageEnd;
   }
   return blocks;
+}
+
+/**
+ * Some PDF producers emit the identifier and title of one visual caption as
+ * separate text objects with incompatible vertical coordinates. A normal
+ * line-gap merge must not bridge that distance: it would join unrelated body
+ * prose. Recover only a bare `Table 2.5:` / `Figure 3:` identifier when a
+ * unique, single-line title has the same page, left edge, and native typeface.
+ *
+ * This is intentionally a repair for malformed native geometry rather than a
+ * general caption-title heuristic. Ordinary adjacent captions are already
+ * joined by `captionContinue` while forming blocks.
+ */
+function rejoinDetachedCaptionTitles(blocks: LayoutBlock[]): LayoutBlock[] {
+  const removed = new Set<LayoutBlock>();
+  const bareCaption = /^(?:(?:table|figure|fig\.?)\s+(?:[a-z]+\.)?\d+(?:\.\d+)*[a-z]?|(?:table|figure|fig\.?)\s+[ivxlcdm]+)\s*[:：]$/i;
+  const titleLike = (block: LayoutBlock): boolean => {
+    const text = layoutPlain(block.text);
+    return block.role === "paragraph" &&
+      block.lines.length === 1 &&
+      text.length >= 8 && text.length <= 220 &&
+      text.trim().split(/\s+/).length >= 2 &&
+      /^[A-ZÀ-ÖØ-Þ0-9]/u.test(text) &&
+      !/[.!?;:]$/.test(text) &&
+      !looksLikeEmail(text) &&
+      !isFigureCaption(text) &&
+      !isTableCaption(text);
+  };
+  const nativeFace = (line: LayoutLine): string =>
+    [...new Set(line.items.map((item) => item.fontName).filter(Boolean))].sort().join("|");
+
+  for (const caption of blocks) {
+    if (caption.role !== "table_caption" && caption.role !== "figure_caption") continue;
+    if (!bareCaption.test(layoutPlain(caption.text))) continue;
+    const captionLine = caption.lines[0];
+    if (!captionLine) continue;
+    const candidates = blocks
+      .filter((candidate) => candidate !== caption && !removed.has(candidate) &&
+        candidate.pageStart === caption.pageStart && candidate.pageEnd === caption.pageEnd &&
+        titleLike(candidate))
+      .map((candidate) => {
+        const line = candidate.lines[0];
+        if (!line) return undefined;
+        const compatible =
+          Math.abs(line.x - captionLine.x) <= Math.max(2.5, captionLine.fontSize * 0.28) &&
+          Math.abs(line.fontSize - captionLine.fontSize) <= 0.25 &&
+          nativeFace(line) === nativeFace(captionLine) &&
+          // This repair is only for a title that the producer placed before
+          // its identifier in native coordinates. Close or following lines
+          // belong to the ordinary caption-continuation path.
+          line.y < captionLine.y - captionLine.fontSize * 3.5 &&
+          Math.abs(line.y - captionLine.y) <= Math.max(48, captionLine.fontSize * 8);
+        if (!compatible) return undefined;
+        return { candidate, line, distance: Math.abs(line.y - captionLine.y) };
+      })
+      .filter((candidate): candidate is { candidate: LayoutBlock; line: LayoutLine; distance: number } => Boolean(candidate))
+      .sort((a, b) => a.distance - b.distance);
+    const match = candidates[0];
+    // Multiple equally plausible title lines are ambiguous; preserve the
+    // source blocks instead of guessing which one belongs to the caption.
+    if (!match || (candidates[1] && candidates[1].distance - match.distance < captionLine.fontSize * 1.5)) continue;
+
+    caption.lines = [...caption.lines, match.line];
+    caption.text = `${caption.text.trim()} ${match.candidate.text.trim()}`;
+    caption.bbox = blockBbox(caption.lines);
+    caption.pageStart = Math.min(caption.pageStart, match.candidate.pageStart);
+    caption.pageEnd = Math.max(caption.pageEnd, match.candidate.pageEnd);
+    caption.detachedCaptionTitleRepaired = true;
+    removed.add(match.candidate);
+  }
+  return blocks.filter((block) => !removed.has(block));
 }
 
 /**

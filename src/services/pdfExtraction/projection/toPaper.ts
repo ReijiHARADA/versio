@@ -2175,6 +2175,7 @@ export function projectCanonicalToPaper(input: {
             captionOriginal: text,
             captionTranslated: null,
             column,
+            ...(layout?.detachedCaptionTitleRepaired ? { detachedCaptionTitleRepaired: true } : {}),
             figureKey: figureLookupKey(text, node.pageStart),
             captionOf: canonical.relations.find(
               (r) => r.kind === "CAPTION_OF" && r.from === node.id
@@ -2340,7 +2341,12 @@ export function projectCanonicalToPaper(input: {
     const last = acc.at(-1);
     const lastBox = last?.boundingBoxes.at(-1);
     const box = block.boundingBoxes[0];
-    const sameRow = last?.type === "table" && block.type === "table" && lastBox && box &&
+    // Only malformed detached-title captions need a projection boundary here.
+    // Normal same-baseline captions retain their established row aggregation
+    // path, including CJK and compact journal tables.
+    const captionBoundary = last?.metadata?.detachedCaptionTitleRepaired === true ||
+      block.metadata?.detachedCaptionTitleRepaired === true;
+    const sameRow = !captionBoundary && last?.type === "table" && block.type === "table" && lastBox && box &&
       lastBox.page === box.page && Math.abs(lastBox.y - box.y) <= Math.max(lastBox.height, box.height) * 0.55;
     if (sameRow) {
       const previousCells = Array.isArray(last.metadata?.tableRows)

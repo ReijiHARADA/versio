@@ -182,6 +182,18 @@ describe("canonical extraction pipeline", () => {
     const relation = result.canonical.relations.find((candidate) => candidate.kind === "CAPTION_OF" && candidate.from === tableCaption?.id);
     const target = relation ? result.canonical.nodes.find((node) => node.id === relation.to) : undefined;
     expect(target?.role).not.toBe("figure");
+    // This table's number and title are visually on one line but emitted as
+    // incompatible native y coordinates. Keep the repaired caption as its
+    // own table block instead of allowing same-baseline grid aggregation to
+    // swallow it into a flattened source-only row.
+    const hierarchicalCaption = result.canonical.nodes.find((node) =>
+      node.role === "caption" && node.text === "Table 2.5: Light truck crash rates in NSW in 2000 and 2011"
+    );
+    expect(hierarchicalCaption).toBeDefined();
+    expect(result.blocks.some((block) =>
+      block.type === "table" && block.metadata.captionOriginal === hierarchicalCaption?.text &&
+      block.metadata.detachedCaptionTitleRepaired === true
+    )).toBe(true);
   }, 60_000);
 
   it("keeps an unedited author-copy notice out of body paragraphs", async () => {

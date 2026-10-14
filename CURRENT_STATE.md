@@ -1,3 +1,25 @@
+# 2026-10-14: detached native caption-title recovery
+
+A 305-page transport-safety thesis exposed a malformed but common native-PDF
+case: `Table 2.5:` and `Light truck crash rates in NSW in 2000 and 2011` are
+one visual caption, yet their PDF text objects carry incompatible vertical
+coordinates. The title therefore became a paragraph while the identifier was
+absorbed into the flattened table-cell row. Layout reconstruction now rejoins
+only a bare numbered `Table`/`Figure` identifier with a **unique** one-line
+title sharing the page, left edge, font size, font face, and a bounded,
+pre-identifier coordinate displacement. Ordinary adjacent captions continue
+to use the normal line-gap merge.
+
+The repair is tagged through projection, so only this malformed caption class
+forms a boundary during same-baseline table-row aggregation. The Reader keeps
+`Table 2.5: Light truck crash rates in NSW in 2000 and 2011` as a separate
+table caption instead of folding it into source-cell text. Synthetic and real
+thesis regressions pass, as do typecheck, lint (existing warnings only), and
+diff validation. The broad `pipeline.test.ts` suite retains two known failures
+on the unmodified HEAD as well: the captionless education-method table and the
+CJK checkmark matrix currently project as paragraphs. Treat those as a
+separate baseline repair, not as evidence against this caption change.
+
 # 2026-10-14: hierarchical table-caption identifiers
 
 The table audit of a long technical thesis exposed an identifier gap: captions
@@ -12,8 +34,7 @@ Unit regressions cover both hierarchical forms. The real thesis regression
 continues to keep its contents entry out of table projection while recognizing
 the body caption and avoiding a nearby figure relation. Focused tests,
 typecheck, lint (existing warnings only), and diff check pass. This small source
-change is not yet included in the newest packaged `.app`; include it in the
-next package build after the next grouped extraction change.
+change was included in the next fast `.app` package build.
 
 # 2026-10-14: repeated vector-panel annotation suppression
 
