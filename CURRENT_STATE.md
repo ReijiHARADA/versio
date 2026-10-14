@@ -15,8 +15,12 @@ and native cell-grid fallbacks from **537 to 533**, while retaining all **345**
 table captions and **255** crop-ready regions. The full cached extraction plus
 reading-order corpus passes **232/232 in 460.24 seconds** under
 `caffeinate -dimsu`; typecheck and lint pass, with only existing repository
-lint warnings. This source change is not yet packaged; rebuild and isolated
-Tauri acceptance are next.
+lint warnings. The fast `.app` was rebuilt at **2026-10-14 14:02:40 JST**.
+Fresh isolated packaged acceptance then imported the 305-page long-haul
+transport thesis, completed annotation, search, Markdown and Notion-package
+export, quit, relaunched, and retained the package (`result.json`: `ok=true`,
+searchHits=1, Markdown **520,836 bytes**, Notion **1,359,222 bytes**). No
+bundled translation-server process remains.
 
 # 2026-10-14: bounded document-level figure extraction
 
