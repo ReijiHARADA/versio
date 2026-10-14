@@ -18,6 +18,10 @@ const FIGURE_PAGE_OPERATION_TIMEOUT_MS = 15_000;
 // whereas a figure still has its caption. Give table-bearing pages one longer
 // bounded chance to rasterize, but retain a finite limit for import latency.
 const TABLE_PAGE_RENDER_TIMEOUT_MS = 45_000;
+// Figure/table images are optional presentation assets. A document with many
+// pathological vector pages must still finish import promptly; this budget is
+// shared by every page/caption operation in one extraction pass.
+const FIGURE_DOCUMENT_OPERATION_TIMEOUT_MS = 45_000;
 
 export function withTimeout<T>(
   promise: Promise<T>,
@@ -582,11 +586,26 @@ export async function extractFigureImages(
 
   let done = 0;
   const total = captions.length;
+  const deadline = Date.now() + FIGURE_DOCUMENT_OPERATION_TIMEOUT_MS;
+
+  const skipCaptions = (remaining: LayoutBlock[]) => {
+    done += remaining.length;
+    onProgress?.(done, total);
+  };
 
   try {
     for (const [pageNumber, unsortedPageCaptions] of byPage) {
+      const remainingMs = deadline - Date.now();
+      if (remainingMs <= 0) {
+        console.warn(`[figures] document budget exhausted; skipping ${unsortedPageCaptions.length} caption(s) on page ${pageNumber}`);
+        skipCaptions(unsortedPageCaptions);
+        continue;
+      }
       const layout = layouts[pageNumber - 1];
-      if (!layout) continue;
+      if (!layout) {
+        skipCaptions(unsortedPageCaptions);
+        continue;
+      }
       // Table crops prevent flattened/narrative-looking cell strings from
       // leaking into the Reader. Do them before optional figure art so a
       // slow vector illustration cannot consume the page render budget.
@@ -596,9 +615,10 @@ export async function extractFigureImages(
         return aTable - bTable || a.bbox.y - b.bbox.y;
       });
       const tablePage = pageCaptions.some((caption) => caption.role === "table_caption");
-      const pageOperationTimeoutMs = tablePage
-        ? TABLE_PAGE_RENDER_TIMEOUT_MS
-        : FIGURE_PAGE_OPERATION_TIMEOUT_MS;
+      const pageOperationTimeoutMs = Math.max(1_000, Math.min(
+        tablePage ? TABLE_PAGE_RENDER_TIMEOUT_MS : FIGURE_PAGE_OPERATION_TIMEOUT_MS,
+        remainingMs
+      ));
 
       let page: Awaited<ReturnType<typeof pdf.getPage>>;
       let placements: PdfImagePlacement[];

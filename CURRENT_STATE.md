@@ -1,3 +1,9 @@
+# 2026-10-14: bounded document-level figure extraction
+
+A packaged import of `economics-regularized-deepiv.pdf` initially remained at `structuring: 図を抽出しています...`. Per-page PDF.js timeouts already existed, but a document with several expensive figure/table pages could consume those timeouts sequentially, leaving no import-level bound. `extractFigureImages` now shares a **45-second document budget** across all optional image extraction; each page is limited to both its existing page timeout and the remaining document budget. When exhausted, remaining captions are skipped with progress, while native text, canonical blocks, captions, and table-cell fallback continue to import.
+
+Focused timeout test and typecheck pass. The fast `.app` was rebuilt at **2026-10-14 13:41:42 JST**. A fresh isolated packaged E2E rerun for the same economics PDF completed in **16 seconds** with `exit_code=0`: import, annotation, search, Markdown/Notion-package export, quit, relaunch, and persistence passed (`result.json`: `ok=true`, searchHits=1, Markdown **97,912 bytes**, Notion **217,378 bytes**). No bundled app or translation-server process remains. This runtime-only change does not alter canonical extraction; continue using `caffeinate -dimsu` for long runs.
+
 # 2026-10-14: fragmented mathematical display disambiguation
 
 The table audit found a broad class of false tables in math/economics PDFs: independently positioned formula glyphs and a punctuation-led formula lead-in were receiving generic grid evidence without any table-caption relationship. The resolver now distinguishes (1) low-prose Greek/symbolic fragments as equation evidence and (2) incomplete punctuation-led mathematical clauses as paragraph evidence. It preserves captioned tables and ordinary statistical sentences. Real regressions cover both `, with probability at least … exp(…)` and the standalone `α2 α` fragment in the economics fixture.
