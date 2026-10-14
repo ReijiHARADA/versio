@@ -1,3 +1,20 @@
+# 2026-10-14: hierarchical table-caption identifiers
+
+The table audit of a long technical thesis exposed an identifier gap: captions
+such as `Table 2.5:` were not recognized by the shared layout caption predicate,
+because it accepted only one numeric component. `isTableCaption` now accepts
+numeric paths and appendix prefixes (`Table 2.5`, `Table A.3.1`) consistently
+for ordinary, delimited, continuation, and title-bearing caption forms. This
+does not promote a contents entry by itself; the existing dotted-leader and
+page-geometry rules still classify navigation entries independently.
+
+Unit regressions cover both hierarchical forms. The real thesis regression
+continues to keep its contents entry out of table projection while recognizing
+the body caption and avoiding a nearby figure relation. Focused tests,
+typecheck, lint (existing warnings only), and diff check pass. This small source
+change is not yet included in the newest packaged `.app`; include it in the
+next package build after the next grouped extraction change.
+
 # 2026-10-14: repeated vector-panel annotation suppression
 
 The table-reader audit still contained plot-panel subtitles from a vector-heavy
