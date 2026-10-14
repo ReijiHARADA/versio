@@ -216,7 +216,7 @@ function vectorFigureLabelEvidence(block: LayoutBlock, blocks?: LayoutBlock[], p
  */
 function denseVectorPanelEvidence(block: LayoutBlock, blocks: LayoutBlock[], page?: ExtractedPage): number {
   if ((block.role !== "table" && block.role !== "paragraph") ||
-      (page?.graphicsPrimitives?.length ?? 0) < 300 || block.lines.length < 3) return 0;
+      (page?.graphicsPrimitives?.length ?? 0) < 300 || block.lines.length === 0) return 0;
   if (blocks.some((candidate) => candidate.pageStart === block.pageStart && candidate.role === "table_caption" &&
     Math.abs(candidate.bbox.y - block.bbox.y) <= 320)) return 0;
   const fontSize = median(block.lines.map((line) => line.fontSize).filter((size) => size > 0));
@@ -250,8 +250,9 @@ function denseVectorPanelEvidence(block: LayoutBlock, blocks: LayoutBlock[], pag
   const microGridOnGraphicPage =
     denseGraphics && imageCount >= 6 && fontSize <= 3 &&
     block.bbox.height <= Math.max(14, fontSize * 5) &&
-    block.bbox.width >= 80 && block.bbox.width <= (page?.width ?? Infinity) * 0.55;
+    block.bbox.width <= (page?.width ?? Infinity) * 0.55;
   if (microGridOnGraphicPage) return 0.94;
+  if (block.lines.length < 3) return 0;
   const requiredPeers = 2;
   // A page with an exceptionally dense vector stream and two repeated tiny
   // panels already has strong plot evidence. On less dense pages retain the

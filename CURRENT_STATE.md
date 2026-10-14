@@ -1,3 +1,9 @@
+# 2026-10-14: micro-label vector-panel follow-up
+
+A second diagnostic showed that the first dense-vector guard still left one- and two-line glyph labels inside a single image-rich multipanel figure eligible for page-grid table evidence. The evidence now also covers these micro-labels, but only on a graphics-dense, image-rich page with no nearby table caption, tiny typography, and a very short physical block. A real fixture asserts both the multi-line plot tick stream and a standalone `lay1 lay1` panel label resolve to `other` with the recorded geometry evidence.
+
+The refreshed 114-PDF table-readiness audit remains error-free and changes reader-visible fallback counts from **835→806** and native cell-grid fallbacks from **643→614**; the diagnostic language-model-physics paper changes **109→80**. Captioned tables are excluded by construction, and the large ergonomics table fixture retains **91** cell-grid fallbacks. The complete cached extraction and reading-order suite passes **232/232 in 438.24 seconds** under `caffeinate -dimsu`; typecheck, lint (existing repository warnings only), and diff check pass. The follow-up source change is not yet packaged; future package verification must build a new `.app`.
+
 # 2026-10-14: packaged dense-vector verification
 
 The fast Tauri build containing `29ff6ce` completed at **2026-10-14 12:34:43 JST**: `src-tauri/target/release/bundle/macos/Paper Reader.app`. A fresh isolated packaged acceptance imported `linguistics-language-model-physics.pdf`, completed annotation, search, Markdown and Notion-package export, quit, relaunched, and retained the package. `result.json` records `ok=true`, `searchHits=1`, Markdown export **130,190 bytes**, and Notion package **81,167 bytes**. The app exited successfully; its orphaned bundled translation-server process was then explicitly stopped. No app or translation-server process remains.
