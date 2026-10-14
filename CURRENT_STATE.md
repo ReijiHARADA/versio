@@ -1,3 +1,9 @@
+# 2026-10-14: fragmented mathematical display disambiguation
+
+The table audit found a broad class of false tables in math/economics PDFs: independently positioned formula glyphs and a punctuation-led formula lead-in were receiving generic grid evidence without any table-caption relationship. The resolver now distinguishes (1) low-prose Greek/symbolic fragments as equation evidence and (2) incomplete punctuation-led mathematical clauses as paragraph evidence. It preserves captioned tables and ordinary statistical sentences. Real regressions cover both `, with probability at least … exp(…)` and the standalone `α2 α` fragment in the economics fixture.
+
+The error-free 114-PDF table-readiness audit improves from **807→728** reader-visible raw table fallbacks and **615→537** cell-grid fallbacks. `economics-regularized-deepiv.pdf` improves **55→14** reader fallbacks; `linguistics-language-model-physics.pdf` improves **81→55** through the same symbolic guard; the long ergonomics table fixture remains **133** reader fallbacks with **87** cell grids. The full extraction plus reading-order suite passes **232/232 in 448.07 seconds** under `caffeinate -dimsu`; typecheck, lint (existing warnings only), and diff check pass. The source change is not yet packaged.
+
 # 2026-10-14: packaged figure-panel verification
 
 The fast `.app` containing `d449afb` was rebuilt at **2026-10-14 13:16:42 JST**. The isolated packaged Tauri acceptance again used `linguistics-language-model-physics.pdf` and passed import, annotation, search, Markdown/Notion-package export, quit, relaunch, and persistence. `result.json` records `ok=true`, `searchHits=1`, Markdown export **129,376 bytes**, and Notion package **80,965 bytes**. The harness again left a bundled translation-server process after application exit; it was explicitly stopped, so no Paper Reader process remains.

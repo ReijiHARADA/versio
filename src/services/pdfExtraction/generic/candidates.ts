@@ -1551,6 +1551,31 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       assignmentCount >= 3 &&
       digitCount >= 8 &&
       proseWordCount <= 4;
+    // A display equation is frequently emitted as several tiny, independent
+    // glyph runs.  The resulting x/y grid resembles a table even when it is
+    // only a broken mathematical expression.  Unlike actual table cells,
+    // these fragments contain Greek/symbolic notation with almost no prose
+    // and lack a table-caption relationship.  Keep ordinary statistical
+    // sentences out of this path: they have prose, sentence punctuation, or
+    // explicit table ownership above.
+    const mathFragmentGlyphs = (block.text.match(/[=+×÷∑∫√∞≈≠≤≥±∂∇∈∉∪∩→←↦{}|α-ωΑ-Ω‖]/gu) ?? []).length;
+    const mathOnlyToken = /[α-ωΑ-Ω∑∫√∞≈≠≤≥±∂∇∈∉∪∩→←↦{}|]/u.test(block.text) &&
+      !/[A-Za-z]{3,}/.test(block.text) &&
+      block.text.trim().split(/\s+/).filter(Boolean).length <= 12;
+    const fragmentedMathDisplay = !captionAnchoredTable &&
+      (mathFragmentGlyphs >= 2 || mathOnlyToken) &&
+      proseWordCount <= 3 &&
+      !/[.!?]\s*$/.test(block.text.trim());
+    // The lead-in to a displayed formula is sometimes split into a narrow
+    // right-hand native run (`, with probability ... exp(...)`). Its compact
+    // x-position can resemble a table row, but leading clause punctuation,
+    // an unfinished ending, and mathematical notation identify it as prose
+    // that belongs beside the formula. This intentionally does not classify
+    // a complete statistical sentence as math-only content.
+    const mathematicalClauseContinuation = !captionAnchoredTable &&
+      /^[,;:]\s*/.test(block.text.trim()) &&
+      /[=+×÷−∑∫√∞≈≠≤≥±∂∇∈∉∪∩→←↦{}|α-ωΑ-Ω]|\b(?:exp|log|min|max)\s*\(/u.test(block.text) &&
+      !/[.!?]\s*$/.test(block.text.trim());
     // A symbolic display formula is more specific than an inferred
     // captionless grid. Apply this after every table-evidence generator so
     // PDF tokenization cannot turn the formula into a Reader table card.
@@ -1561,6 +1586,14 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     if (mathematicalMatrixDisplay) {
       scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.68);
       scoreByRole.equation = Math.max(scoreByRole.equation ?? 0, 0.9);
+    }
+    if (fragmentedMathDisplay) {
+      scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.2);
+      scoreByRole.equation = Math.max(scoreByRole.equation ?? 0, 0.78);
+    }
+    if (mathematicalClauseContinuation) {
+      scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.2);
+      scoreByRole.paragraph = Math.max(scoreByRole.paragraph ?? 0, 0.9);
     }
     // A captionless table fallback must yield to strong vector-label evidence.
     // Actual captioned tables retain their dedicated geometry evidence above;
@@ -1641,6 +1674,26 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         page: block.pageStart,
         bbox: block.bbox,
         reason: "multiple assignment operators and dense numeric rows with little prose",
+      });
+    }
+    if (fragmentedMathDisplay) {
+      evidence.push({
+        source: "generic-heuristic",
+        label: "fragmented-mathematical-display",
+        confidence: 0.78,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "symbolic or Greek native glyph fragment has little prose and no table-caption relationship",
+      });
+    }
+    if (mathematicalClauseContinuation) {
+      evidence.push({
+        source: "generic-heuristic",
+        label: "mathematical-clause-continuation",
+        confidence: 0.9,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "punctuation-led incomplete clause contains mathematical notation and has no table-caption relationship",
       });
     }
     if (chartLabels > 0) {
