@@ -405,16 +405,18 @@ describe("baseline benchmark on cached real papers", () => {
             expect.objectContaining({ text: "Function" }),
           ]),
         ]));
-        // A borderless native table may not have a raster crop. Preserve the
-        // actual same-baseline cells for the Reader fallback rather than
-        // rendering a flattened string. This uses Table 4 because its native
-        // stream carries multiple cells on each visual row.
+        // A borderless native table may not have a raster crop. Attach its
+        // same-baseline cells to the numbered caption, so the Reader renders
+        // one labelled grid instead of a separate flattened cell card.
         const packageReadyBlocks = attachLinesToBlocks(extracted.blocks, extracted.layoutBlocks);
         const table4Cells = packageReadyBlocks.find((block) =>
-          block.original.includes("Finger Phonebook Gallery Thumb")
+          block.original.startsWith("Table 4.")
         )?.metadata.tableRows as Array<Array<{ text: string }>> | undefined;
         expect(table4Cells?.[0]?.map((cell) => cell.text)).toEqual(["Finger", "Phonebook"]);
         expect(table4Cells?.some((row) => row.length >= 2)).toBe(true);
+        expect(packageReadyBlocks.some((block) =>
+          block.original.includes("Finger Phonebook Gallery Thumb")
+        )).toBe(false);
 
         const referenceBlocks = extracted.blocks.filter((block) =>
           block.sectionId && extracted.sections.some((section) =>

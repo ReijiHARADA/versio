@@ -56,4 +56,86 @@ describe("attachLinesToBlocks", () => {
     ]]);
     expect(paragraph.metadata.tableRows).toBeUndefined();
   });
+
+  it("folds a caption-owned native grid into its numbered table when no crop exists", () => {
+    const caption = {
+      ...block("table", "Table 4. Functions"),
+      id: "caption",
+      boundingBoxes: [{ page: 1, x: 50, y: 220, width: 220, height: 10 }],
+      metadata: { column: "left", captionOriginal: "Table 4. Functions", imageUrl: "" },
+    };
+    const grid = {
+      ...block("table", "Finger Phonebook Gallery"),
+      id: "grid",
+      boundingBoxes: [{ page: 1, x: 50, y: 150, width: 210, height: 10 }],
+      metadata: { column: "left", figureKey: "table-region-grid" },
+    };
+    const layout = {
+      pageStart: 1,
+      text: grid.original,
+      lines: [{
+        text: grid.original,
+        items: [
+          { text: "Finger", x: 50, width: 35 },
+          { text: "Phonebook", x: 110, width: 55 },
+          { text: "Gallery", x: 190, width: 45 },
+        ],
+        bbox: { page: 1, x: 50, y: 150, width: 185, height: 10 },
+        y: 150,
+        height: 10,
+        fontSize: 9,
+      }],
+    } as unknown as LayoutBlock;
+
+    const [table] = attachLinesToBlocks([grid, caption], [layout]);
+
+    expect(table.id).toBe("caption");
+    expect(table.metadata.captionOwnedNativeGrid).toBe(true);
+    expect(table.metadata.tableRows).toEqual([[
+      { text: "Finger", x: 50, width: 35 },
+      { text: "Phonebook", x: 110, width: 55 },
+      { text: "Gallery", x: 190, width: 45 },
+    ]]);
+  });
+
+  it("recovers repeated native cell rows near a numbered caption even when they projected as prose", () => {
+    const caption = {
+      ...block("table", "Table 8. Results"),
+      id: "caption",
+      boundingBoxes: [{ page: 1, x: 40, y: 230, width: 220, height: 10 }],
+      metadata: { column: "left", captionOriginal: "Table 8. Results", imageUrl: "" },
+    };
+    const cells = [
+      ["Method", "Score"],
+      ["A", "0.21"],
+      ["B", "0.42"],
+    ].flatMap((row, rowIndex) => row.map((text, cellIndex) => ({
+      ...block("paragraph", text),
+      id: `cell-${rowIndex}-${cellIndex}`,
+      boundingBoxes: [{ page: 1, x: 50 + cellIndex * 100, y: 170 + rowIndex * 16, width: 40, height: 10 }],
+      metadata: { column: "left" },
+    })));
+    const layouts = cells.map((cell) => ({
+      pageStart: 1,
+      text: cell.original,
+      lines: [{
+        text: cell.original,
+        items: [{ text: cell.original, x: cell.boundingBoxes[0].x, width: cell.boundingBoxes[0].width }],
+        bbox: cell.boundingBoxes[0],
+        y: cell.boundingBoxes[0].y,
+        height: cell.boundingBoxes[0].height,
+        fontSize: 9,
+      }],
+    } as unknown as LayoutBlock));
+
+    const [table] = attachLinesToBlocks([...cells, caption], layouts);
+
+    expect(table.id).toBe("caption");
+    expect(table.metadata.captionOwnedNativeGrid).toBe(true);
+    expect(table.metadata.tableRows).toEqual([
+      [{ text: "Method", x: 50, width: 40 }, { text: "Score", x: 150, width: 40 }],
+      [{ text: "A", x: 50, width: 40 }, { text: "0.21", x: 150, width: 40 }],
+      [{ text: "B", x: 50, width: 40 }, { text: "0.42", x: 150, width: 40 }],
+    ]);
+  });
 });

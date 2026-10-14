@@ -22,6 +22,13 @@ const TABLE_PAGE_RENDER_TIMEOUT_MS = 45_000;
 // pathological vector pages must still finish import promptly; this budget is
 // shared by every page/caption operation in one extraction pass.
 const FIGURE_DOCUMENT_OPERATION_TIMEOUT_MS = 45_000;
+// A page with several captions is typically a dense multi-panel/vector layout.
+// Rendering its whole page just to crop one missing asset can block the
+// renderer synchronously (Canvas work cannot be interrupted by a Promise
+// timeout). Embedded images are still collected on these pages; when a crop
+// is unavailable the Reader uses the already-extracted caption or native
+// table-cell fallback rather than holding the entire import open.
+const MAX_CAPTIONS_FOR_PAGE_RASTER_FALLBACK = 3;
 
 export function withTimeout<T>(
   promise: Promise<T>,
@@ -615,6 +622,7 @@ export async function extractFigureImages(
         return aTable - bTable || a.bbox.y - b.bbox.y;
       });
       const tablePage = pageCaptions.some((caption) => caption.role === "table_caption");
+      const allowWholePageRasterFallback = pageCaptions.length <= MAX_CAPTIONS_FOR_PAGE_RASTER_FALLBACK;
       const pageOperationTimeoutMs = Math.max(1_000, Math.min(
         tablePage ? TABLE_PAGE_RENDER_TIMEOUT_MS : FIGURE_PAGE_OPERATION_TIMEOUT_MS,
         remainingMs
@@ -715,7 +723,7 @@ export async function extractFigureImages(
           continue;
         }
 
-        if (crop) {
+        if (crop && allowWholePageRasterFallback) {
           try {
             const renderedPage = await ensurePageCanvas();
             if (renderedPage) {
