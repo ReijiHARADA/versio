@@ -1309,15 +1309,19 @@ export function isFigureCaption(text: string): boolean {
 
 export function isTableCaption(text: string): boolean {
   const caption = layoutPlain(text);
-  if (/^(?:tables?|表)\s*\d+[a-z]?\s*\(continued\)$/i.test(caption)) return true;
+  // Theses and technical reports commonly number tables hierarchically
+  // (`Table 2.5`, `Table A.3.1`). Treat that numeric path as one structural
+  // identifier instead of mistaking the first period for caption prose.
+  const tableNumber = "(?:[a-z]+\\.)?\\d+(?:\\.\\d+)*[a-z]?";
+  if (new RegExp(`^(?:tables?|表)\\s*${tableNumber}\\s*\\(continued\\)$`, "i").test(caption)) return true;
   // Some journal templates separate the number and title with a vertical bar
   // (`TABLE 2 | Baseline characteristics`). This is a structural delimiter,
   // unlike an inline prose reference such as `Table 2 shows ...`.
-  if (/^(?:tables?|表)\s*(?:\d+[a-z]?|[ivxlcdm]+)(?:\s*[:.|：–—-]|\s*$)/i.test(caption)) return true;
+  if (new RegExp(`^(?:tables?|表)\\s*(?:${tableNumber}|[ivxlcdm]+)(?:\\s*[:.|：–—-]|\\s*$)`, "i").test(caption)) return true;
   // Journal captions frequently omit punctuation: `Table 5 Factor ...`.
   // Require a title-like continuation so ordinary prose such as `Table 1 is`
   // remains a paragraph.
-  const continuation = caption.match(/^(?:tables?|表)\s*(?:\d+[a-z]?|[ivxlcdm]+)\s+(.+)$/i)?.[1] ?? "";
+  const continuation = caption.match(new RegExp(`^(?:tables?|表)\\s*(?:${tableNumber}|[ivxlcdm]+)\\s+(.+)$`, "i"))?.[1] ?? "";
   // A numbered table mentioned in running prose commonly starts with a
   // finite verb (`Table 4 shows ...`). It is a paragraph reference, not the
   // caption that labels the region. Keep the check lexical and format-neutral

@@ -56,6 +56,8 @@ describe("Japanese figure and table captions", () => {
     expect(isTableCaption("TABLE 2 | Baseline characteristics")).toBe(true);
     expect(isTableCaption("Table 5 Factor reliabilities for smart clothing")).toBe(true);
     expect(isTableCaption("Table 7 (continued)")).toBe(true);
+    expect(isTableCaption("Table 2.5: Light truck crash rates")).toBe(true);
+    expect(isTableCaption("Table A.3.1 Nested appendix result")).toBe(true);
   });
 });
 
