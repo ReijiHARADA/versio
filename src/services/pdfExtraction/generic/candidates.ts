@@ -260,6 +260,31 @@ function denseVectorPanelEvidence(block: LayoutBlock, blocks: LayoutBlock[], pag
   return peerPanels.length >= requiredPeers && (denseGraphics || nearbyTicks.length >= 2) ? 0.94 : 0;
 }
 
+/**
+ * A figure caption bounds an otherwise ambiguous field of tiny labels much
+ * more reliably than page-wide grid geometry.  Vector plots frequently emit
+ * their axes/cell labels as regular x-aligned text, which must not become
+ * Reader table cards.  Keep this independent from caption wording: it uses
+ * only native type scale, figure-caption proximity, and drawing density.
+ */
+function figurePanelLabelEvidence(block: LayoutBlock, blocks: LayoutBlock[], page?: ExtractedPage): number {
+  if ((block.role !== "table" && block.role !== "paragraph") || block.lines.length === 0) return 0;
+  const graphics = page?.graphicsPrimitives?.length ?? 0;
+  if (graphics < 250) return 0;
+  if (blocks.some((candidate) => candidate.pageStart === block.pageStart && candidate.role === "table_caption" &&
+    Math.abs(candidate.bbox.y - block.bbox.y) <= 360)) return 0;
+  const fontSize = median(block.lines.map((line) => line.fontSize).filter((size) => size > 0));
+  if (fontSize <= 0 || fontSize > 4 || block.bbox.height > Math.max(22, fontSize * 7)) return 0;
+  const figureCaption = blocks.find((candidate) => {
+    if (candidate.pageStart !== block.pageStart || candidate.role !== "figure_caption") return false;
+    const candidateBottom = candidate.bbox.y + candidate.bbox.height;
+    const blockBottom = block.bbox.y + block.bbox.height;
+    return (candidate.bbox.y >= blockBottom - 4 && candidate.bbox.y - blockBottom <= 500) ||
+      (block.bbox.y >= candidateBottom - 4 && block.bbox.y - candidateBottom <= 120);
+  });
+  return figureCaption ? 0.93 : 0;
+}
+
 function figureCaptionDiagramEvidence(block: LayoutBlock, blocks: LayoutBlock[], page?: ExtractedPage): number {
   if ((page?.graphicsPrimitives?.length ?? 0) < 40 || block.lines.length < 2) return 0;
   const caption = blocks.find((candidate) =>
@@ -1227,6 +1252,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const fragmentedLabels = fragmentedGraphicLabelEvidence(block, blocks);
     const figureCaptionDiagram = figureCaptionDiagramEvidence(block, blocks, pages.find((page) => page.pageNumber === block.pageStart));
     const denseVectorPanel = denseVectorPanelEvidence(block, blocks, pages.find((page) => page.pageNumber === block.pageStart));
+    const figurePanelLabels = figurePanelLabelEvidence(block, blocks, pages.find((page) => page.pageNumber === block.pageStart));
     const mixedNativeBand = mixedNativeBandEvidence(block);
     const alignedTableRow = block.lines.length === 1 &&
       block.lines[0].items.length >= 2 && tableLike(block) && nearbyTableCaption;
@@ -1327,10 +1353,10 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // repeated columns.  Keep it out of the table role; real image-backed
     // tables are already represented by a `table` layout block and do not
     // enter this paragraph-only evidence path.
-    if (imageLabels > 0 || vectorLabels > 0 || fragmentedLabels > 0 || figureCaptionDiagram > 0 || denseVectorPanel > 0) {
+    if (imageLabels > 0 || vectorLabels > 0 || fragmentedLabels > 0 || figureCaptionDiagram > 0 || denseVectorPanel > 0 || figurePanelLabels > 0) {
       scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.2);
     }
-    if (figureCaptionDiagram > 0 || denseVectorPanel > 0) scoreByRole.other = Math.max(scoreByRole.other ?? 0, figureCaptionDiagram, denseVectorPanel);
+    if (figureCaptionDiagram > 0 || denseVectorPanel > 0 || figurePanelLabels > 0) scoreByRole.other = Math.max(scoreByRole.other ?? 0, figureCaptionDiagram, denseVectorPanel, figurePanelLabels);
     if (axisLabels > 0) {
       scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.2);
       scoreByRole.other = Math.max(scoreByRole.other ?? 0, axisLabels);
@@ -1540,9 +1566,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // Actual captioned tables retain their dedicated geometry evidence above;
     // without that anchor, a chart/diagram label matrix is safer as `other`
     // than as a reader-visible, source-only table card.
-    if ((vectorLabels >= 0.82 || figureCaptionDiagram > 0 || denseVectorPanel > 0) && !captionedRepeatedNativeGrid) {
+    if ((vectorLabels >= 0.82 || figureCaptionDiagram > 0 || denseVectorPanel > 0 || figurePanelLabels > 0) && !captionedRepeatedNativeGrid) {
       scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.2);
-      scoreByRole.other = Math.max(scoreByRole.other ?? 0, vectorLabels, figureCaptionDiagram, denseVectorPanel);
+      scoreByRole.other = Math.max(scoreByRole.other ?? 0, vectorLabels, figureCaptionDiagram, denseVectorPanel, figurePanelLabels);
     }
     // Apply the narrative conflict guard after every table generator. Some
     // captionless row heuristics run later than page-grid evidence and could
@@ -1645,6 +1671,16 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         page: block.pageStart,
         bbox: block.bbox,
         reason: "tiny repeated grid panels on a graphics-rich page without a table caption",
+      });
+    }
+    if (figurePanelLabels > 0) {
+      evidence.push({
+        source: "geometry" as EvidenceSource,
+        label: "figure-panel-label",
+        confidence: figurePanelLabels,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "tiny native label lies in a graphics-rich region bounded by a figure caption, without a nearby table caption",
       });
     }
     if (imageLabels > 0) {

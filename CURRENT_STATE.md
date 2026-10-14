@@ -1,3 +1,9 @@
+# 2026-10-14: figure-caption panel-label disambiguation
+
+A further region diagnostic identified Figure 23 and Figure 29 as the source of many apparent table candidates: native axis/grid glyphs were positioned like cells, but lay within a dense vector Figure region whose caption occurred below. Generic evidence now uses figure-caption proximity, native type scale, graphics density, and the absence of a nearby table caption to mark those labels as `other`. This is independent of paper title or label vocabulary. Target checks show Figure 29 table nodes **4→0** and Figure 23 **29→17**; the remaining Figure 23 nodes are outside the deliberately bounded caption relation and remain a follow-up region-grouping task.
+
+The 114-PDF readiness audit is still error-free. Its aggregate raw reader fallback count is **807** (versus **806** immediately before this change), so this rule is retained for the verified on-page correction, not presented as a global-count improvement; the audit combines role assignment with row projection and is not a complete semantic ground truth. The full cached extraction plus reading-order corpus passes **232/232 in 437.59 seconds** under `caffeinate -dimsu`; typecheck, lint (existing warnings only), and diff check pass. This source change has not yet been packaged.
+
 # 2026-10-14: packaged micro-label verification
 
 The fast `.app` was rebuilt at **2026-10-14 12:55:40 JST** with `e32b9db`. Fresh isolated Tauri acceptance used the real `linguistics-language-model-physics.pdf` regression input and passed import, annotation, search, Markdown/Notion-package export, quit, relaunch, and persistence. `result.json` reports `ok=true`, `searchHits=1`, Markdown export **130,206 bytes**, and Notion package **81,148 bytes**. The bundled translation server that survived the harness quit was explicitly stopped; no Paper Reader process remains.
