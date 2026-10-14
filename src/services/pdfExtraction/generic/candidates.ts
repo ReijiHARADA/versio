@@ -207,6 +207,58 @@ function vectorFigureLabelEvidence(block: LayoutBlock, blocks?: LayoutBlock[], p
 /** Dense mathematical glyphs directly above an overlapping Figure caption
  * belong to a vector diagram, not a captionless data grid. The geometry and
  * graphics requirements keep ordinary uncaptained tables eligible. */
+/**
+ * A dense vector figure can contain many tiny label rows that form a genuine
+ * geometric grid, but are panels of a plot rather than a reader-visible data
+ * table. Keep this deliberately narrow: no nearby table caption, a graphics
+ * rich page, tiny typography, and either repeated peer panels or a tiny
+ * image-rich micro-grid are required.
+ */
+function denseVectorPanelEvidence(block: LayoutBlock, blocks: LayoutBlock[], page?: ExtractedPage): number {
+  if ((block.role !== "table" && block.role !== "paragraph") ||
+      (page?.graphicsPrimitives?.length ?? 0) < 300 || block.lines.length < 3) return 0;
+  if (blocks.some((candidate) => candidate.pageStart === block.pageStart && candidate.role === "table_caption" &&
+    Math.abs(candidate.bbox.y - block.bbox.y) <= 320)) return 0;
+  const fontSize = median(block.lines.map((line) => line.fontSize).filter((size) => size > 0));
+  if (fontSize <= 0 || fontSize > 6.5) return 0;
+  const peerPanels = blocks.filter((candidate) => {
+    if (candidate === block || candidate.pageStart !== block.pageStart ||
+        (candidate.role !== "table" && candidate.role !== "paragraph")) return false;
+    if (candidate.lines.length < 3 || Math.abs(candidate.bbox.x - block.bbox.x) > 42 ||
+        Math.abs(candidate.bbox.y - block.bbox.y) > 360) return false;
+    const candidateFont = median(candidate.lines.map((line) => line.fontSize).filter((size) => size > 0));
+    return candidateFont > 0 && candidateFont <= 6.5 &&
+      Math.abs(candidate.bbox.width - block.bbox.width) <= Math.max(45, block.bbox.width * 0.32);
+  });
+  const nearbyTicks = blocks.filter((candidate) => {
+    if (candidate.pageStart !== block.pageStart || candidate === block) return false;
+    const candidateFont = median(candidate.lines.map((line) => line.fontSize).filter((size) => size > 0));
+    const digits = (candidate.text.match(/\d/g) ?? []).length;
+    return candidateFont > 0 && candidateFont <= 6.5 && digits >= 2 &&
+      candidate.text.trim().length <= 360 && Math.abs(candidate.bbox.y - block.bbox.y) <= 120;
+  });
+  const graphicsCount = page?.graphicsPrimitives?.length ?? 0;
+  const denseGraphics = graphicsCount >= 900;
+  const imageCount = page?.imagePlacements?.length ?? 0;
+  // PDF renderers often flatten a multi-panel vector figure into a handful
+  // of four-line "tables": each glyph row is only a few points high, while
+  // the page also carries the figure's many image/vector placements.  A real
+  // data table at that scale is both inaccessible to the reader and normally
+  // has its caption nearby, so keep this deliberately narrow micro-grid case
+  // as non-document graphic content even when no same-x peer survived line
+  // grouping.
+  const microGridOnGraphicPage =
+    denseGraphics && imageCount >= 6 && fontSize <= 3 &&
+    block.bbox.height <= Math.max(14, fontSize * 5) &&
+    block.bbox.width >= 80 && block.bbox.width <= (page?.width ?? Infinity) * 0.55;
+  if (microGridOnGraphicPage) return 0.94;
+  const requiredPeers = 2;
+  // A page with an exceptionally dense vector stream and two repeated tiny
+  // panels already has strong plot evidence. On less dense pages retain the
+  // independent tick-label requirement before suppressing a captionless grid.
+  return peerPanels.length >= requiredPeers && (denseGraphics || nearbyTicks.length >= 2) ? 0.94 : 0;
+}
+
 function figureCaptionDiagramEvidence(block: LayoutBlock, blocks: LayoutBlock[], page?: ExtractedPage): number {
   if ((page?.graphicsPrimitives?.length ?? 0) < 40 || block.lines.length < 2) return 0;
   const caption = blocks.find((candidate) =>
@@ -1173,6 +1225,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const vectorLabels = vectorFigureLabelEvidence(block, blocks, pages.find((page) => page.pageNumber === block.pageStart));
     const fragmentedLabels = fragmentedGraphicLabelEvidence(block, blocks);
     const figureCaptionDiagram = figureCaptionDiagramEvidence(block, blocks, pages.find((page) => page.pageNumber === block.pageStart));
+    const denseVectorPanel = denseVectorPanelEvidence(block, blocks, pages.find((page) => page.pageNumber === block.pageStart));
     const mixedNativeBand = mixedNativeBandEvidence(block);
     const alignedTableRow = block.lines.length === 1 &&
       block.lines[0].items.length >= 2 && tableLike(block) && nearbyTableCaption;
@@ -1273,10 +1326,10 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // repeated columns.  Keep it out of the table role; real image-backed
     // tables are already represented by a `table` layout block and do not
     // enter this paragraph-only evidence path.
-    if (imageLabels > 0 || vectorLabels > 0 || fragmentedLabels > 0 || figureCaptionDiagram > 0) {
+    if (imageLabels > 0 || vectorLabels > 0 || fragmentedLabels > 0 || figureCaptionDiagram > 0 || denseVectorPanel > 0) {
       scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.2);
     }
-    if (figureCaptionDiagram > 0) scoreByRole.other = Math.max(scoreByRole.other ?? 0, figureCaptionDiagram);
+    if (figureCaptionDiagram > 0 || denseVectorPanel > 0) scoreByRole.other = Math.max(scoreByRole.other ?? 0, figureCaptionDiagram, denseVectorPanel);
     if (axisLabels > 0) {
       scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.2);
       scoreByRole.other = Math.max(scoreByRole.other ?? 0, axisLabels);
@@ -1486,9 +1539,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // Actual captioned tables retain their dedicated geometry evidence above;
     // without that anchor, a chart/diagram label matrix is safer as `other`
     // than as a reader-visible, source-only table card.
-    if ((vectorLabels >= 0.82 || figureCaptionDiagram > 0) && !captionedRepeatedNativeGrid) {
+    if ((vectorLabels >= 0.82 || figureCaptionDiagram > 0 || denseVectorPanel > 0) && !captionedRepeatedNativeGrid) {
       scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.2);
-      scoreByRole.other = Math.max(scoreByRole.other ?? 0, vectorLabels, figureCaptionDiagram);
+      scoreByRole.other = Math.max(scoreByRole.other ?? 0, vectorLabels, figureCaptionDiagram, denseVectorPanel);
     }
     // Apply the narrative conflict guard after every table generator. Some
     // captionless row heuristics run later than page-grid evidence and could
@@ -1581,6 +1634,16 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         page: block.pageStart,
         bbox: block.bbox,
         reason: "short text block is adjacent to repeated numeric tick-like blocks",
+      });
+    }
+    if (denseVectorPanel > 0) {
+      evidence.push({
+        source: "geometry" as EvidenceSource,
+        label: "dense-vector-panel",
+        confidence: denseVectorPanel,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "tiny repeated grid panels on a graphics-rich page without a table caption",
       });
     }
     if (imageLabels > 0) {
