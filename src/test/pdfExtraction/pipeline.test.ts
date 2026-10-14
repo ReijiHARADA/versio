@@ -999,6 +999,16 @@ describe("canonical extraction pipeline", () => {
     });
     const prose = result.canonical.nodes.find((node) => /Hellinger distance/.test(node.text ?? ""));
     expect(prose?.role).toBe("paragraph");
+    const theoremFragment = result.canonical.nodes.find((node) =>
+      node.pageStart === 23 && /with probability at least/.test(node.text ?? "")
+    );
+    expect(theoremFragment?.role).not.toBe("table");
+    expect(theoremFragment?.evidence.some((evidence) => evidence.label === "mathematical-clause-continuation")).toBe(true);
+    const greekFragment = result.canonical.nodes.find((node) =>
+      node.pageStart === 24 && (node.text ?? "").trim() === "α2 α"
+    );
+    expect(greekFragment?.role).not.toBe("table");
+    expect(greekFragment?.evidence.some((evidence) => evidence.label === "fragmented-mathematical-display")).toBe(true);
   }, 60_000);
 
   it("keeps a figure-adjacent numeric label matrix out of the captionless table fallback", async () => {
