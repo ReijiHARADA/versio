@@ -1,3 +1,23 @@
+# 2026-10-14: wrapped table-of-contents precision
+
+Long entries in a table of contents can wrap before the dotted leader and page
+number. The first physical line had no leader of its own, so generic geometry
+could classify it as a compact table row. The candidate layer now inherits
+table-of-contents evidence only when a same-page, immediately following,
+indented dotted-leader line exists and at least three such peers establish a
+real contents list. This is based on layout relation and does not use paper
+titles or heading vocabulary.
+
+The targeted thesis regression verifies that `3 Work characteristics associated
+with injury ...` resolves to `other`. The 114-PDF table-readiness audit remains
+error-free and improves reader-visible raw table fragments from **728 to 724**
+and native cell-grid fallbacks from **537 to 533**, while retaining all **345**
+table captions and **255** crop-ready regions. The full cached extraction plus
+reading-order corpus passes **232/232 in 460.24 seconds** under
+`caffeinate -dimsu`; typecheck and lint pass, with only existing repository
+lint warnings. This source change is not yet packaged; rebuild and isolated
+Tauri acceptance are next.
+
 # 2026-10-14: bounded document-level figure extraction
 
 A packaged import of `economics-regularized-deepiv.pdf` initially remained at `structuring: 図を抽出しています...`. Per-page PDF.js timeouts already existed, but a document with several expensive figure/table pages could consume those timeouts sequentially, leaving no import-level bound. `extractFigureImages` now shares a **45-second document budget** across all optional image extraction; each page is limited to both its existing page timeout and the remaining document budget. When exhausted, remaining captions are skipped with progress, while native text, canonical blocks, captions, and table-cell fallback continue to import.
