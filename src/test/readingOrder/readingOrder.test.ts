@@ -59,6 +59,28 @@ describe("Japanese figure and table captions", () => {
     expect(isTableCaption("Table 2.5: Light truck crash rates")).toBe(true);
     expect(isTableCaption("Table A.3.1 Nested appendix result")).toBe(true);
   });
+
+  it("rejoins a visually shared caption whose native title has a broken vertical coordinate", () => {
+    const { blocks } = reconstructDocument([{
+      pageNumber: 1,
+      width: 612,
+      height: 792,
+      textItems: [
+        { text: "Table 2.5:", x: 68, y: 539, width: 56, height: 12, fontSize: 12, fontName: "CaptionBold", page: 1 },
+        // The source PDF paints this beside the identifier but records it
+        // with an unrelated baseline. The repair must use native style and
+        // left alignment, not assume adjacent y coordinates.
+        { text: "Light truck crash rates in NSW in 2000 and 2011", x: 68, y: 468, width: 274, height: 12, fontSize: 12, fontName: "CaptionBold", page: 1 },
+        { text: "Crashes", x: 68, y: 516, width: 44, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+        { text: "93", x: 210, y: 516, width: 12, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      ],
+    }]);
+    expect(blocks.some((block) =>
+      block.role === "table_caption" &&
+      block.text === "Table 2.5: Light truck crash rates in NSW in 2000 and 2011"
+    )).toBe(true);
+    expect(blocks.some((block) => block.role === "paragraph" && /Light truck crash rates/.test(block.text))).toBe(false);
+  });
 });
 
 describe("font-transition inline labels", () => {
