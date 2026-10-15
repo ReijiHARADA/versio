@@ -1,3 +1,26 @@
+# 2026-10-15: initial import no longer waits for optional figure rasterization
+
+A packaged import of the real 30-page cognitive-memory PDF exposed that the
+Reader package was not saved while `extractFigureImages()` was still trying to
+rasterize vector-only caption crops. PDF.js canvas rendering can occupy the UI
+thread synchronously, so the promise timeout cannot reliably interrupt it. The
+failure left the import at `図を抽出しています...` for more than seven minutes and
+therefore made an otherwise valid document appear as an empty Reader.
+
+Initial import now persists the native extraction, captions, and reconstructed
+native table cells before any optional figure/table raster asset work: it calls
+the academic pipeline with `extractFigures: false`. Explicit re-extraction
+retains full figure-asset extraction. Thus Reader usability and source-only
+cell grids do not depend on a page-wide vector raster completing. A fresh fast
+`.app` was built at **2026-10-15 18:14 JST** and packaged integration E2E with
+`cognitive-memory-cues.pdf` passed import, annotation, search, Markdown and
+Notion export, quit, and relaunch. Its saved structure contains **59** tables,
+**34** native cell grids, **0** image-table assets, and does not put `In this
+study … gist memory` into a table. The focused interleaved table/body
+regression, typecheck, lint (known warnings only), and package verification
+pass. Future work may add background asset enrichment, but it must never block
+initial package persistence or Reader availability.
+
 # 2026-10-15: split interleaved table/body columns before role resolution
 
 A real cognitive-psychology PDF exposed a high-cost table error: a compact
