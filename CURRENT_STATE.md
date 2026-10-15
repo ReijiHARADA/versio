@@ -18,8 +18,13 @@ Notion export, quit, and relaunch. Its saved structure contains **59** tables,
 **34** native cell grids, **0** image-table assets, and does not put `In this
 study … gist memory` into a table. The focused interleaved table/body
 regression, typecheck, lint (known warnings only), and package verification
-pass. Future work may add background asset enrichment, but it must never block
-initial package persistence or Reader availability.
+pass. A fresh full 118-PDF table Reader audit also completed with **0**
+extraction errors, **347** table captions, **1,029** reader-visible raw table
+fragments, and **676** native cell-grid fallbacks. Its remaining
+`prose-like=18` entries describe long table cells and remain a review set, not
+a reason to weaken table confidence. Future work may add background asset
+enrichment, but it must never block initial package persistence or Reader
+availability.
 
 # 2026-10-15: split interleaved table/body columns before role resolution
 
