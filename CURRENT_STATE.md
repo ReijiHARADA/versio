@@ -3203,3 +3203,9 @@ verification from the later translation/export acceptance marker. Running the
 current `.app` with the real OzCHI PDF and `PAPER_READER_E2E_EXPECT_TABLES=5`
 and `PAPER_READER_E2E_REQUIRE_TABLE_ROWS=1` passed: **137 blocks, 5 structured
 tables with non-empty structured rows**, followed by a clean app shutdown.
+
+## 保守リファクタリングの運用
+
+抽出・翻訳の機能変更とは分離して、次のチェックポイントで定期的に保守リファクタリングを行う。大きなアルゴリズム変更、または同じ領域への3回目の修正を区切りとし、責務集中・重複判定・不要な診断コードを確認する。各回で typecheck、lint、対象回帰テストを実行し、機能変更の前後で挙動が変わっていないことを確認する。
+
+直近のチェックポイントは `519eebd` の合成テーブル領域インデックス化で、232/232抽出回帰、OzCHI実PDFのTauri import-only（137 blocks / 5 tables / 非空rows）、typecheck、lintを確認済み。次の候補は、残るベクター数値ラベルのsource-order診断と、`run-ui.sh` の実PDF Reader表示検証である。

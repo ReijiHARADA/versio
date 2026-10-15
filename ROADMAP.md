@@ -89,6 +89,19 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 
 参照: [ACADEMIC_PDF_EXTRACTION_ARCHITECTURE.md](./ACADEMIC_PDF_EXTRACTION_ARCHITECTURE.md)、[TRANSLATION_CORPUS_AUDIT.md](./TRANSLATION_CORPUS_AUDIT.md)
 
+### B0. 継続的な保守リファクタリング
+
+**Goal** — 抽出・翻訳の改善を積み重ねても、責務の集中や重複が増えず、変更の影響範囲を把握できる状態を保つ。
+
+**運用**
+
+- 大きな抽出アルゴリズム変更、または同じ領域への3回目の修正を区切りに、保守リファクタリングのチェックポイントを設ける。
+- 挙動変更とリファクタリングを同じコミットに混ぜず、既存テストを先に固定してから責務分離・重複削減を行う。
+- 各チェックポイントで typecheck、lint、変更対象の回帰テストを実行し、`CURRENT_STATE.md` に対象・結果・残課題を記録する。
+- 巨大ファイル、重複した判定、不要になった診断コード、古い実験ログを確認し、削除ではなく履歴文書への移動を優先する。
+
+**Done when** — 直近のリファクタリング対象、テスト結果、次の候補が記録され、機能変更と保守変更を追跡できる。
+
 ### B1. 読み順と構造の残差
 
 **Goal** — 代表的な 2 段組・図表多め論文で、左列→右列とキャプション分離が安定する。
