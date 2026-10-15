@@ -278,6 +278,32 @@ describe("baseline benchmark on cached real papers", () => {
           expect(referenceSectionBlocks.some((block) => /^© The Author/i.test(block.original ?? ""))).toBe(false);
         }
       }
+      if (paper.id === "cognitive-motor-incidental-memory") {
+        const referenceExtraction = extractFromPages({
+          pages,
+          paperId: paper.id,
+          filePath: pdfPath,
+          fileHash: "reference-column-split-regression",
+          metadata: { title: paper.title, pageCount: pages.length },
+        });
+        const referenceSectionIds = new Set(referenceExtraction.sections
+          .filter((section) => section.normalizedKind === "references")
+          .map((section) => section.id));
+        const referenceBlocks = referenceExtraction.blocks.filter((block) =>
+          block.type === "reference" && block.sectionId && referenceSectionIds.has(block.sectionId)
+        );
+        // Native text from two-column reference pages can concatenate several
+        // entries when a DOI has no terminal period. Each bibliographic entry
+        // must remain its own source-only block for stable rendering/export.
+        expect(referenceBlocks.some((block) =>
+          block.original.includes("Spataro, P.") && block.original.includes("Swallow, K. M., and Jiang, Y. V. (2010)")
+        )).toBe(false);
+        expect(referenceBlocks.some((block) =>
+          block.original.includes("Ushey, K.") && block.original.includes("van Ede, F.")
+        )).toBe(false);
+        expect(referenceBlocks.some((block) => block.original.startsWith("Spataro, P."))).toBe(true);
+        expect(referenceBlocks.some((block) => block.original.startsWith("Wickham, H."))).toBe(true);
+      }
       if (paper.id === "cognitive-psychology-gpt3") {
         const projected = extractFromPages({
           pages,

@@ -285,6 +285,36 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     };
   })();
 
+  // Some reference-heavy journal pages encode the left column as long text
+  // spans but the right column as one native span per word. The ordinary
+  // column detector intentionally ignores those short right spans, which can
+  // make both columns appear to be one line and later mix their reading order.
+  // Require persistent, separated geometry on both sides so a sidebar or a
+  // single figure label cannot trigger this profile.
+  const asymmetricWordColumns = (() => {
+    const leftLong = usable.filter((item) =>
+      item.x < page.width * 0.48 && item.width >= page.width * 0.25 &&
+      item.width <= page.width * 0.55 && Math.abs(item.rotation ?? 0) < 45
+    );
+    const rightWords = usable.filter((item) =>
+      item.x >= page.width * 0.5 && item.width <= page.width * 0.24 &&
+      Math.abs(item.rotation ?? 0) < 45
+    );
+    const rightRows: number[] = [];
+    for (const item of [...rightWords].sort((a, b) => a.y - b.y)) {
+      const previous = rightRows.at(-1);
+      if (previous === undefined || item.y - previous > Math.max(3, item.fontSize * 0.45)) rightRows.push(item.y);
+    }
+    if (leftLong.length < 8 || rightWords.length < 40 || rightRows.length < 8) return null;
+    const leftX = median(leftLong.map((item) => item.x));
+    // The right column is word-split, so its median x is deep inside the
+    // column. Use the leading edge to keep short spans attached to the right
+    // column during line clustering and reading-order reconstruction.
+    const rightX = Math.min(...rightWords.map((item) => item.x));
+    if (rightX - leftX < page.width * 0.35) return null;
+    return { leftX, rightX };
+  })();
+
   // Some journal first pages use an asymmetric metadata rail: a narrow
   // `Article history`/`Keywords` column sits beside a wide abstract column.
   // The ordinary two-column detector intentionally ignores the short rail
@@ -324,12 +354,14 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
   }
 
   if (sample.length < MIN_COLUMN_ITEMS * 2) {
-    if (!alignedColumnPairs) return fallback;
+    if (!alignedColumnPairs && !asymmetricWordColumns) return fallback;
   }
 
   const rowStartPeaks = findTwoRowStarts(usable, page.width);
   const peaks = alignedColumnPairs
     ? [alignedColumnPairs.leftX, alignedColumnPairs.rightX] as [number, number]
+    : asymmetricWordColumns
+      ? [asymmetricWordColumns.leftX, asymmetricWordColumns.rightX] as [number, number]
     : asymmetricRail
       ? [asymmetricRail.leftX, asymmetricRail.rightX] as [number, number]
     : rowStartPeaks ??
@@ -364,6 +396,9 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     rightX - leftX >= page.width * 0.35;
   const isMultiColumn = alignedColumnPairs
     ? rightX - leftX >= page.width * 0.22 && leftShare >= 0.22 && rightShare >= 0.22
+    : asymmetricWordColumns
+      ? rightX - leftX >= page.width * 0.35 && leftLong.length >= 8 &&
+        usable.filter((item) => item.x >= page.width * 0.5 && item.width <= page.width * 0.24).length >= 40
     : asymmetricRail
       ? rightX - leftX >= page.width * 0.15 && asymmetricRail.leftCount >= 15 && asymmetricRail.rightCount >= 30
     : leftItems.length >= MIN_COLUMN_ITEMS &&
@@ -629,14 +664,20 @@ function splitSpanningGutterLines(lines: LayoutLine[], pageLayouts?: Map<number,
       (Math.abs(leftFont - rightFont) >= 1 || leftFont <= rightFont * 0.86);
     const leftStart = left[0]?.x ?? Number.POSITIVE_INFINITY;
     const rightStart = right[0]?.x ?? Number.NEGATIVE_INFINITY;
-    const fullColumnPair = Boolean(layout?.isMultiColumn && line.column === "spanning" &&
+    const fullColumnPair = Boolean(layout?.isMultiColumn &&
       left.length >= 4 && right.length >= 4 &&
       leftStart <= layout.leftX + pageWidth * 0.08 &&
       rightStart >= layout.rightX - pageWidth * 0.08 &&
       left.reduce((max, item) => Math.max(max, item.x + item.width), 0) - leftStart >= pageWidth * 0.28 &&
       right.reduce((max, item) => Math.max(max, item.x + item.width), 0) - rightStart >= pageWidth * 0.28 &&
       Math.abs(leftFont - rightFont) <= 1.5);
-    const splitByGutter = (gutterGap && (shortRailPair || fullColumnPair)) || shortRailBodyPair;
+    const mixedColumnPair = Boolean(layout?.isMultiColumn &&
+      largestGap >= Math.max(18, pageWidth * 0.025) &&
+      leftStart <= layout.leftX + pageWidth * 0.08 &&
+      rightStart >= layout.rightX - pageWidth * 0.08 &&
+      left.reduce((max, item) => Math.max(max, item.x + item.width), 0) - leftStart >= pageWidth * 0.22 &&
+      right.reduce((max, item) => Math.max(max, item.x + item.width), 0) - rightStart >= pageWidth * 0.08);
+    const splitByGutter = (gutterGap && (shortRailPair || fullColumnPair || mixedColumnPair)) || shortRailBodyPair;
     if (!splitByGutter) {
       result.push(line);
       continue;
@@ -4321,6 +4362,16 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       Math.abs(targetLine.fontSize - nextLine.fontSize) <= 0.8 &&
       isSentenceContinuation(target.text, block.text)
     );
+    // Bibliography entries are independent records. In two-column reference
+    // pages the left column can end at the same vertical band where the right
+    // column begins; never treat that as a prose continuation.
+    const hardCrossColumnReferenceBoundary = Boolean(
+      target && block && target.column !== block.column &&
+      /\((?:19|20)\d{2}[a-z]?\)\./i.test(target.text) &&
+      /\((?:19|20)\d{2}[a-z]?\)\./i.test(block.text) &&
+      (/(?:doi\s*:|https?:\/\/|\bet\s+al\.?\b)/i.test(target.text) ||
+        /(?:doi\s*:|https?:\/\/|\bet\s+al\.?\b)/i.test(block.text))
+    );
     const geometrySameLineContinuation = Boolean(
       target && target.role === "paragraph" && block.role === "paragraph" &&
       skippedInterveningMetadata &&
@@ -4470,6 +4521,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       target && (target.role === "paragraph" || isAbstractBodyTitleBlock(target)) && block.role === "paragraph" &&
       !currentIsDetachedMargin &&
         !isDetachedTableHeaderBlock(block, target) &&
+        !hardCrossColumnReferenceBoundary &&
         (joinsCompleteLeadingContinuation || joinsSameColumnContinuation || joinsSpanningBodyContinuation || joinsHyphenatedContinuation || geometrySameLineContinuation || rejoinAfterDetachedMargin || wrapsAcrossColumnsAtPageBottom || wrapsAcrossColumnsAtModerateTop || wrapsAcrossPhysicalColumns || wrapsAcrossAdjacentColumnTails ||
         (canContinueAcrossColumns && isSentenceContinuation(target.text, block.text)) ||
         crossesPageBoundaryAfterFigureBand || crossesPageBoundaryProperName ||

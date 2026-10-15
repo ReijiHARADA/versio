@@ -2617,14 +2617,66 @@ export function projectCanonicalToPaper(input: {
     return acc;
   }, []);
 
+  // A two-column reference page can still yield one long native block after
+  // column ordering. Split only at author/year anchors, keeping each entry as
+  // its own source-only Reader block. This is deliberately conservative: a
+  // candidate must begin at a sentence boundary, have a surname-like comma
+  // anchor, and terminate at a bibliographic year marker.
+  const splitConcatenatedReferences = (block: PaperBlock): PaperBlock[] => {
+    const original = block.original ?? "";
+    if (block.type !== "reference" || original.length < 240) return [block];
+    const text = original.replace(/\s+/g, " ").trim();
+    const starts: number[] = [0];
+    let previousYearEnd = 0;
+    for (const year of text.matchAll(/\((?:19|20)\d{2}[a-z]?\)\./gi)) {
+      const yearIndex = year.index ?? 0;
+      const yearEnd = yearIndex + year[0].length;
+      // Bound the search by the previous bibliographic year. This handles
+      // references whose DOI/page range has no terminal period in the native
+      // text (a common two-column PDF extraction shape).
+      const windowStart = Math.max(previousYearEnd, yearIndex - 220);
+      const window = text.slice(windowStart, yearIndex);
+      const candidates = [...window.matchAll(/(?:^|\s)((?:[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’-]{1,40}|(?:van|de|der|den|von|ten)\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’-]{1,40}),)/g)]
+        .map((match) => windowStart + (match.index ?? 0) + (match[0].startsWith(" ") ? 1 : 0))
+        .filter((candidate) => candidate <= yearIndex && yearIndex - candidate <= 180);
+      const candidate = candidates[0];
+      if (candidate !== undefined && candidate > 0 && !starts.includes(candidate)) starts.push(candidate);
+      previousYearEnd = yearEnd;
+    }
+    // Some publishers omit a final period after the DOI/page range, so the
+    // next author starts immediately after a space (`...doi: X Swallow, K.`).
+    // Accept that boundary only when the preceding window contains a DOI,
+    // URL, or a page-range terminator; this avoids splitting ordinary author
+    // lists inside one entry.
+    for (const author of text.matchAll(/\b[A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’-]{2,40},\s*(?:[A-Z][A-Za-z.'’-]{0,12}|and\b)/g)) {
+      const index = author.index ?? 0;
+      if (index <= 0 || starts.includes(index)) continue;
+      const previous = text.slice(Math.max(0, index - 90), index);
+      if (/(?:doi\s*:|https?:\/\/|\d+\s*[–—-]\s*\d+\.?\s*)$/i.test(previous.trim())) starts.push(index);
+    }
+    starts.sort((a, b) => a - b);
+    if (starts.length < 2) return [block];
+    return starts.map((start, index) => {
+      const part = text.slice(start, starts[index + 1]).trim();
+      return {
+        ...block,
+        id: stableBlockId({ type: "reference", page: block.pageStart, text: part, bbox: block.boundingBoxes[0], order: index }),
+        original: part,
+        pageEnd: block.pageEnd,
+        metadata: { ...block.metadata, role: "reference", referenceEntrySplit: true },
+      };
+    }).filter((part) => part.original.length > 20);
+  };
+  const splitReferenceEntries = referenceCoalescedBlocks.flatMap(splitConcatenatedReferences);
+
   // Preserve uncertain cross-column continuations as source-review units.
   // Do not concatenate them without stronger geometry evidence: a preceding
   // prose block ending without terminal punctuation followed by a connective
   // (`which`, `that`, `and`, ...) on the same page is a high-precision signal
   // that the first block is physically incomplete.
-  for (let index = 0; index + 1 < referenceCoalescedBlocks.length; index++) {
-    const current = referenceCoalescedBlocks[index];
-    const next = referenceCoalescedBlocks[index + 1];
+  for (let index = 0; index + 1 < splitReferenceEntries.length; index++) {
+    const current = splitReferenceEntries[index];
+    const next = splitReferenceEntries[index + 1];
 
     // Canonical continuation relations can be lost when a mixed native text
     // stream is split into separate x-bands. Rejoin an unfinished paragraph
@@ -2655,7 +2707,7 @@ export function projectCanonicalToPaper(input: {
       !/[.!?:;]\s*$/.test(currentContinuationText) &&
       (startsLikeContinuation || startsWithProperContinuation);
     if (sameColumnContinuation) {
-      referenceCoalescedBlocks[index] = {
+      splitReferenceEntries[index] = {
         ...current,
         original: `${current.original ?? ""} ${next.original ?? ""}`.replace(/\s+/g, " ").trim(),
         pageEnd: next.pageEnd,
@@ -2663,7 +2715,7 @@ export function projectCanonicalToPaper(input: {
         extractionConfidence: Math.min(current.extractionConfidence ?? 0, next.extractionConfidence ?? 0),
         metadata: { ...current.metadata, paragraphContinuationRepaired: true },
       };
-      referenceCoalescedBlocks.splice(index + 1, 1);
+      splitReferenceEntries.splice(index + 1, 1);
       index -= 1;
       continue;
     }
@@ -2676,7 +2728,7 @@ export function projectCanonicalToPaper(input: {
     // translate as its own grammatical unit when geometry and list evidence
     // agree.  This is document-structure evidence, not a paper-specific rule.
     const currentText = (current.original ?? "").trim();
-    const listSuccessor = referenceCoalescedBlocks.slice(index + 1, index + 6).find((candidate) =>
+    const listSuccessor = splitReferenceEntries.slice(index + 1, index + 6).find((candidate) =>
       candidate.type === "paragraph" && candidate.metadata.listRole === "item"
     );
     const followsListIntro = current.type === "paragraph" &&
@@ -2688,7 +2740,7 @@ export function projectCanonicalToPaper(input: {
       (listSuccessor?.pageStart ?? next.pageStart) - current.pageEnd <= 1 &&
       !current.metadata.flattenedListPart;
     if (followsListIntro) {
-      referenceCoalescedBlocks[index] = {
+      splitReferenceEntries[index] = {
         ...current,
         translationStatus: "pending",
         metadata: { ...current.metadata, translationInputWarning: undefined, listRole: "intro" },
@@ -2713,7 +2765,7 @@ export function projectCanonicalToPaper(input: {
     const adjacentBand = currentBox && nextBox && nextBox.x > currentBox.x + currentBox.width + 12 &&
       currentTop <= nextBottom && nextTop <= currentBottom;
     if (!adjacentBand) continue;
-    referenceCoalescedBlocks[index] = {
+    splitReferenceEntries[index] = {
       ...current,
       metadata: {
         ...current.metadata,
@@ -2851,8 +2903,8 @@ export function projectCanonicalToPaper(input: {
   };
 
   const reconciled = input.previousBlocks?.length
-    ? reconcileBlockIds(input.previousBlocks, referenceCoalescedBlocks).blocks
-    : referenceCoalescedBlocks;
+    ? reconcileBlockIds(input.previousBlocks, splitReferenceEntries).blocks
+    : splitReferenceEntries;
   const annotatedBlocks = reconciled.map((block) =>
     block.translationStatus === "skipped"
       ? { ...block, metadata: { ...block.metadata, translationOutcome: "structural_skip" } }
