@@ -1,6 +1,6 @@
 {
   "version": "extraction-baseline-v2",
-  "generatedAt": "2026-10-15T10:41:46.066Z",
+  "generatedAt": "2026-10-15T10:51:09.437Z",
   "papers": 113,
   "summary": {
     "readerTitleExact": {
@@ -16,8 +16,8 @@
     "metadataTitleFallbacks": 39,
     "authorF1": {
       "evaluated": 28,
-      "mean": 0.9642857142857143,
-      "min": 0
+      "mean": 1,
+      "min": 1
     },
     "affiliationF1": {
       "evaluated": 1,
@@ -1076,7 +1076,7 @@
       "nativeTitleExact": true,
       "titleExpected": "Conversation Analysis and the User Experience",
       "titleExact": true,
-      "authorF1": 0,
+      "authorF1": 1,
       "sourceIntegrityRate": 1,
       "canonicalProvenanceRate": 1,
       "fusedTitle": "Conversation Analysis and the User Experience",

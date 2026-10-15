@@ -23,6 +23,7 @@ const registerPdf = path.join(root, "test-data/real-papers/linguistics-register.
 const wearabilityPdf = path.join(root, "test-data/real-papers/design-for-wearability.pdf");
 const virtualRealityPdf = path.join(root, "test-data/real-papers/ergonomics-6-virtual-reality-and-ergonomics-human-factors.pdf");
 const medicalAffiliationStatementPdf = path.join(root, "test-data/real-papers/medical-image-segmentation-deep-learning.pdf");
+const legacyConversationPdf = path.join(root, "test-data/real-papers/conversation-analysis-user-experience.pdf");
 const landingPagePdf = path.join(root, "test-data/real-papers/how-content-volume-landing-pages.pdf");
 const gpt3AuthorsPdf = path.join(root, "test-data/real-papers/using-cognitive-psychology-gpt3.pdf");
 const frontiersAndContinuationPdf = path.join(root, "test-data/real-papers/marketing-neuroconsumer.pdf");
@@ -279,5 +280,14 @@ describe("author masthead projection", () => {
     expect(result.paper.affiliations.some((affiliation) => /School of Electronic.*Shaanxi University/i.test(affiliation.name))).toBe(true);
     expect(result.paper.affiliations.filter((affiliation) => /Brunel University London/i.test(affiliation.name))).toHaveLength(1);
     expect(result.paper.affiliations.filter((affiliation) => /University|Laboratory|Department|School/i.test(affiliation.name)).length).toBeGreaterThanOrEqual(3);
+  }, 60_000);
+
+  it("splits title-case authors flattened into a research-center affiliation", async () => {
+    if (!fs.existsSync(legacyConversationPdf)) return;
+    const pages = await extractPdfPages(legacyConversationPdf);
+    const result = await extractFromPages({ pages, paperId: "legacy-conversation-authors", filePath: legacyConversationPdf, fileHash: "title-case-affiliation-prefix", metadata: { pageCount: pages.length } });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["Allison Woodruff", "Paul M. Aoki"]));
+    expect(result.paper.authors.some((name) => /Palo Alto|Research Center|USA/i.test(name))).toBe(false);
+    expect(result.paper.affiliations.some((affiliation) => /Palo Alto Research Center/i.test(affiliation.name))).toBe(true);
   }, 60_000);
 });

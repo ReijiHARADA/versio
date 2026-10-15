@@ -2627,3 +2627,18 @@ Markdown/Notion export, quit, relaunch, and persistence (`ok=true`,
 `searchHits=1`, export 45,498 bytes, Notion package 1,115,780 bytes). The
 figure extraction stage took longer than the marker's first update but did
 complete; no bundled process remains.
+# 2026-10-15: recover title-case authors flattened into affiliations
+
+The 118-paper extraction benchmark exposed a generic masthead case where a
+title-case author line had been flattened into an affiliation, for example
+`Allison Woodruff and Paul M. Aoki Palo Alto Research Center`. The projection
+now separates person-shaped title-case prefixes from institution-shaped tails
+when recovering masthead pairs. The real-paper regression recovers both
+authors and keeps the research-center affiliation; no paper-specific string
+rule was added. After this change the cached corpus benchmark reports
+author F1 **1.0 mean/minimum across 28 evaluated papers**, while title,
+heading, table, reading-order, source-integrity, and provenance metrics remain
+unchanged (reader title exactness **106/113**, table-region recall **1.0**,
+source integrity **0.99996049**, provenance **1.0**). The focused projection
+test, typecheck, and lint pass. A full extraction/reading-order regression is
+the next verification step before rebuilding the packaged app.
