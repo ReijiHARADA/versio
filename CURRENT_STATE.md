@@ -2917,3 +2917,30 @@ The fast Tauri bundle now includes this table-cell normalization; the `.app`
 updated at `2026-10-16 01:29:13 +0900`. Packaged integration E2E passed with
 the real `ozchi-finger-specific-touch.pdf` fixture (import, search, export,
 quit, relaunch, persistence).
+
+# 2026-10-16: demote prose falsely recovered as table geometry
+
+The table audit found a general false-positive path in which a long ordinary
+prose block next to a caption inherited `table-row-geometry` and was revived as
+a native grid, even though its role evidence scored `paragraph` strongly and
+`table=0.00`. Caption absorption then made the block visible as a table. This
+was observed in the COVID ML review fixture and was not a paper-specific rule.
+
+Projection now requires an independent high-confidence table role score before
+row-geometry recovery or caption-neighbor evidence can override prose. Long
+narrative blocks with weak geometry evidence remain paragraphs, while genuine
+multi-row native grids and axis-labelled table regions retain their structured
+fallback. A conservative graphics-caption geometry guard also prevents a short
+one-column caption from anchoring a whole-page ruled component across the gutter.
+
+The COVID review regression asserts that the affected block is a paragraph and
+keeps its source text visible when it begins mid-sentence; the focused
+regressions pass. The complete real-paper extraction regression passes
+**118/118** in **330.91 seconds**. Typecheck and `git diff --check` pass.
+The refreshed table-readiness audit reports extraction errors **0**,
+`readerRawFragments` **659**, `readerCellFallbacks` **504**, with 504
+structured-grid, 5 prose-like, 131 short-label, 18 ambiguous, and 1
+numeric-grid fragments; `orphanFragments` is **740**. These counts remain
+diagnostic and are not treated as proof that all table semantics are solved.
+The source change is not yet included in the packaged `.app`; rebuild and
+packaged smoke verification are the next steps.

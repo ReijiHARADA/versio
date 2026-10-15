@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T16:28:02.228Z",
+  "generatedAt": "2026-10-15T16:44:44.431Z",
   "paperCount": 114,
   "papers": [
     {
@@ -56,15 +56,15 @@
       "file": "cognitive-memory-cues.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 50,
+      "rawTableFragments": 39,
       "cropBackedFragments": 16,
-      "readerRawFragments": 34,
-      "readerCellFallbacks": 23,
+      "readerRawFragments": 23,
+      "readerCellFallbacks": 17,
       "readerFragmentKinds": {
-        "structured-grid": 23,
+        "structured-grid": 17,
         "prose-like": 1,
-        "short-label": 5,
-        "ambiguous": 5
+        "short-label": 4,
+        "ambiguous": 1
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -78,15 +78,7 @@
           },
           {
             "page": 4,
-            "text": "What are the couple doing? B. Arguing B. Straight black shawl"
-          },
-          {
-            "page": 4,
-            "text": "C. Cooking C. Black ponytail"
-          },
-          {
-            "page": 4,
-            "text": "A. Doing homework A. Wide open"
+            "text": "B. Arguing B. Straight black shawl C. Cooking C. Black ponytail A. Doing homework A. Wide open"
           },
           {
             "page": 4,
@@ -106,15 +98,23 @@
           },
           {
             "page": 4,
-            "text": "Who grabs the girl? B. Mother B. Left hand"
+            "text": "B. Mother B. Left hand C. Nobody C. Right hand A. Dad and son A. Wooden round table"
           },
           {
             "page": 4,
-            "text": "C. Nobody C. Right hand"
+            "text": "B. Mom and son B. White long table"
           },
           {
             "page": 4,
-            "text": "A. Dad and son A. Wooden round table"
+            "text": "B. Ice cream B. Red wearing? C. Biscuit C. Blue"
+          },
+          {
+            "page": 4,
+            "text": "A. Fruit A. 1"
+          },
+          {
+            "page": 4,
+            "text": "Eating dessert White ice-cream scoop What does the boy not eat?"
           }
         ],
         "prose-like": [
@@ -134,10 +134,6 @@
           },
           {
             "page": 4,
-            "text": "Finally, who scolds the boy?"
-          },
-          {
-            "page": 4,
             "text": "C. Left, right, and middle"
           },
           {
@@ -146,22 +142,6 @@
           }
         ],
         "ambiguous": [
-          {
-            "page": 4,
-            "text": "How does the girl play the piano?"
-          },
-          {
-            "page": 4,
-            "text": "Which body part of the girl"
-          },
-          {
-            "page": 4,
-            "text": "Who is sitting at the dining table?"
-          },
-          {
-            "page": 4,
-            "text": "What is the style of the"
-          },
           {
             "page": 4,
             "text": "A. Fruit A. White What color sweater is mom"
@@ -187,15 +167,7 @@
         },
         {
           "page": 4,
-          "text": "What are the couple doing? B. Arguing B. Straight black shawl"
-        },
-        {
-          "page": 4,
-          "text": "C. Cooking C. Black ponytail"
-        },
-        {
-          "page": 4,
-          "text": "A. Doing homework A. Wide open"
+          "text": "B. Arguing B. Straight black shawl C. Cooking C. Black ponytail A. Doing homework A. Wide open"
         },
         {
           "page": 4,
@@ -204,10 +176,6 @@
         {
           "page": 4,
           "text": "A. Very irritable A. Short black curls"
-        },
-        {
-          "page": 4,
-          "text": "How does the girl play the piano?"
         },
         {
           "page": 4,
@@ -223,27 +191,7 @@
         },
         {
           "page": 4,
-          "text": "Which body part of the girl"
-        },
-        {
-          "page": 4,
-          "text": "Who grabs the girl? B. Mother B. Left hand"
-        },
-        {
-          "page": 4,
-          "text": "C. Nobody C. Right hand"
-        },
-        {
-          "page": 4,
-          "text": "A. Dad and son A. Wooden round table"
-        },
-        {
-          "page": 4,
-          "text": "Who is sitting at the dining table?"
-        },
-        {
-          "page": 4,
-          "text": "What is the style of the"
+          "text": "B. Mother B. Left hand C. Nobody C. Right hand A. Dad and son A. Wooden round table"
         },
         {
           "page": 4,
@@ -255,7 +203,7 @@
         },
         {
           "page": 4,
-          "text": "What does the boy eat? B. Ice cream B. Red wearing? C. Biscuit C. Blue"
+          "text": "B. Ice cream B. Red wearing? C. Biscuit C. Blue"
         },
         {
           "page": 4,
@@ -271,15 +219,7 @@
         },
         {
           "page": 4,
-          "text": "A. Surprised A. Spoon What does the boy use to B. Relieved B. Fork eat the fruit? C. Calm C. Hands"
-        },
-        {
-          "page": 4,
           "text": "A. Dad A. Right, middle, and left What are the positions of"
-        },
-        {
-          "page": 4,
-          "text": "Finally, who scolds the boy?"
         },
         {
           "page": 4,
@@ -288,10 +228,6 @@
         {
           "page": 4,
           "text": "C. Left, right, and middle"
-        },
-        {
-          "page": 7,
-          "text": "In this study, there was a significant difference between gist memory and detailed memory at 10 min (0.82±0.08 vs. 0.62±0.07, t28=14.38, p<0.001, Cohen’s d=2.67). So, it is better "
         },
         {
           "page": 7,
@@ -389,8 +325,8 @@
       "file": "cognitive-psychology-chronometric-constructive-cognitive-learning-evaluation-model-measurin.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 1,
-      "rawTableFragments": 10,
-      "cropBackedFragments": 2,
+      "rawTableFragments": 11,
+      "cropBackedFragments": 3,
       "readerRawFragments": 3,
       "readerCellFallbacks": 3,
       "readerFragmentKinds": {
@@ -455,8 +391,8 @@
       "file": "cognitive-psychology-gpt3.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 5,
-      "rawTableFragments": 15,
-      "cropBackedFragments": 9,
+      "rawTableFragments": 14,
+      "cropBackedFragments": 8,
       "readerRawFragments": 5,
       "readerCellFallbacks": 4,
       "readerFragmentKinds": {
@@ -597,8 +533,8 @@
       "file": "cognitive-psychology-role-of-educational-psychology-in-the-study-of-memory-conceptual-proce.pdf",
       "tableCaptions": 1,
       "cropReadyCaptions": 1,
-      "rawTableFragments": 2,
-      "cropBackedFragments": 0,
+      "rawTableFragments": 3,
+      "cropBackedFragments": 1,
       "readerRawFragments": 2,
       "readerCellFallbacks": 1,
       "readerFragmentKinds": {
@@ -732,13 +668,13 @@
       "file": "covid-ml-review.pdf",
       "tableCaptions": 10,
       "cropReadyCaptions": 8,
-      "rawTableFragments": 73,
-      "cropBackedFragments": 17,
-      "readerRawFragments": 55,
-      "readerCellFallbacks": 34,
+      "rawTableFragments": 64,
+      "cropBackedFragments": 22,
+      "readerRawFragments": 38,
+      "readerCellFallbacks": 21,
       "readerFragmentKinds": {
-        "short-label": 16,
-        "structured-grid": 34,
+        "short-label": 12,
+        "structured-grid": 21,
         "numeric-grid": 1,
         "ambiguous": 4
       },
@@ -754,7 +690,7 @@
           },
           {
             "page": 5,
-            "text": "[21] firmed cases and deaths."
+            "text": "[16]"
           },
           {
             "page": 5,
@@ -777,42 +713,42 @@
             "text": "for COVID-19 detection"
           },
           {
-            "page": 9,
-            "text": "Remarks Refs."
+            "page": 12,
+            "text": "BConvLSTM U-Net and"
           },
           {
-            "page": 9,
-            "text": "U-Net bels"
-          },
-          {
-            "page": 9,
-            "text": "- [55]"
+            "page": 12,
+            "text": "GAN"
           },
           {
             "page": 12,
             "text": "BConvLSTM U-Net and"
+          },
+          {
+            "page": 12,
+            "text": "MobileNetV2"
           }
         ],
         "structured-grid": [
-          {
-            "page": 2,
-            "text": "transmission dynamics, pathogenesis, clinical characteristics of the virus. The study also reviewed the possible ways to overcome the disease in terms of prevention mechanisms as well as treatment options [9]. Another study reviewed the app"
-          },
           {
             "page": 5,
             "text": "- 2(N): 0.813. COVID-19."
           },
           {
             "page": 5,
-            "text": "(DC): 0.9997; In Wuhan, R2(DC): 0.9996 toll. (DC): 0.9991; In Wuhan, R2(DC): 0.9995 RMSE for confirmed cases: 27456.47, RMSE for death cases: Prediction of future reachability [16] 1360.47, RMSE for recovered cases: 16762.15 (next 10 days) "
+            "text": "(DC): 0.9997; In Wuhan, R2(DC): 0.9996 toll."
           },
           {
             "page": 5,
-            "text": "RMSE for recovered cases: 809.71 Evaluate the incidence of new Forecast value of COVID-19 incidence: at 11 February, 2020: [18] ARIMA model of order (1,0,3) confirmed cases of COVID-2019 [16] 2070.66, at 12 February, 2020: 2418.47. in the n"
+            "text": "Forecast value of COVID-19 incidence: at 11 February, 2020: [18] ARIMA model of order (1,0,3)"
           },
           {
             "page": 5,
             "text": "RMSE (Prediction) for USA: 3963.44, RMSE (Prediction) for Italy: [19] ARIMA model of order (0,1,0) - [16] 1258.69, RMSE (Prediction) for China: 59.65"
+          },
+          {
+            "page": 5,
+            "text": "2(Death Case- Italy): 0.927 R (Confirmed Case- Italy): 0.761, R firmed and death cases ARIMA model of order (2,1,0) for confirmed cases and (0,1,0) for death R2(Confirmed Case- Turkey): 0.817, R [20] cases ARIMA model of order (2,1,1) for c"
           },
           {
             "page": 5,
@@ -824,15 +760,7 @@
           },
           {
             "page": 5,
-            "text": "Forecast for 17 days (from 5 March until 21th of March) with 95% Forecast of confirmed cases of [16] confidence interval. COVID-19 for 17 days."
-          },
-          {
-            "page": 5,
             "text": "ARIMA(1,2,0) for confirmed cases, [23] and ARIMA(3,2,0) for recovered cases - [28] For recovered cases, ME=80.80, RMSE=186.85, MAE=112.27,"
-          },
-          {
-            "page": 5,
-            "text": "Error degrees of freedom: 52 Estimated logistic model parameRoot Mean Squared Error: 1.9e+03 ters for China (data up to 11. Mar [29] R-Squared: 0.997, Adjusted R-Squared 0.997 2020). ): 0.464 (Italy), 0.136 (Spain), 1.341 (USA). ): 0.630 (I"
           },
           {
             "page": 5,
@@ -841,6 +769,14 @@
           {
             "page": 5,
             "text": "MAE(×103"
+          },
+          {
+            "page": 5,
+            "text": "next one-month one-month be- [30]"
+          },
+          {
+            "page": 5,
+            "text": "): 1.243 (Italy), 0.693 (Spain), 2.822 (USA). yond the data sample end date. ): 1.601 (Italy), 0.884 (Spain), 4.103 (USA). R-Squared: 0.9944 (Italy), 0.9089 (Spain), 0.9806 (USA)."
           }
         ],
         "numeric-grid": [
@@ -878,20 +814,16 @@
           "text": "25-35 0.2 2.78"
         },
         {
-          "page": 2,
-          "text": "transmission dynamics, pathogenesis, clinical characteristics of the virus. The study also reviewed the possible ways to overcome the disease in terms of prevention mechanisms as w"
-        },
-        {
           "page": 5,
           "text": "- 2(N): 0.813. COVID-19."
         },
         {
           "page": 5,
-          "text": "(DC): 0.9997; In Wuhan, R2(DC): 0.9996 toll. (DC): 0.9991; In Wuhan, R2(DC): 0.9995 RMSE for confirmed cases: 27456.47, RMSE for death cases: Prediction of future reachability [16]"
+          "text": "(DC): 0.9997; In Wuhan, R2(DC): 0.9996 toll."
         },
         {
           "page": 5,
-          "text": "RMSE for recovered cases: 809.71 Evaluate the incidence of new Forecast value of COVID-19 incidence: at 11 February, 2020: [18] ARIMA model of order (1,0,3) confirmed cases of COVI"
+          "text": "Forecast value of COVID-19 incidence: at 11 February, 2020: [18] ARIMA model of order (1,0,3)"
         },
         {
           "page": 5,
@@ -899,11 +831,11 @@
         },
         {
           "page": 5,
-          "text": "2(Death Case- Turkey): 0.714 Forecasting number of daily con-"
+          "text": "2(Death Case- Italy): 0.927 R (Confirmed Case- Italy): 0.761, R firmed and death cases ARIMA model of order (2,1,0) for confirmed cases and (0,1,0) for death R2(Confirmed Case- Tur"
         },
         {
           "page": 5,
-          "text": "[21] firmed cases and deaths."
+          "text": "2(Death Case- Turkey): 0.714 Forecasting number of daily con-"
         },
         {
           "page": 5,
@@ -911,7 +843,7 @@
         },
         {
           "page": 5,
-          "text": "Forecast for 17 days (from 5 March until 21th of March) with 95% Forecast of confirmed cases of [16] confidence interval. COVID-19 for 17 days."
+          "text": "[16]"
         },
         {
           "page": 5,
@@ -924,10 +856,6 @@
         {
           "page": 5,
           "text": "MPE=10.57, MAPE=15.60."
-        },
-        {
-          "page": 5,
-          "text": "Error degrees of freedom: 52 Estimated logistic model parameRoot Mean Squared Error: 1.9e+03 ters for China (data up to 11. Mar [29] R-Squared: 0.997, Adjusted R-Squared 0.997 2020"
         },
         {
           "page": 5,
@@ -952,14 +880,6 @@
         {
           "page": 6,
           "text": "tients 5644 samples with 111 attributes. Accuracy: 93.13%, Re-The processed dataset has 1091 re- 5644 call: 93%, Precision: cords and 61 attributes. 93%"
-        },
-        {
-          "page": 6,
-          "text": "Total 253 samples from 169 pa- 253, 169, 49, Accuracy: 95.95% tients. Clinical blood test of 49 paSpecificity: 96.95% tients where 24 Covid-19 patients."
-        },
-        {
-          "page": 6,
-          "text": "critical 336, 220 Accuracy: 77.5%, AUC:99%, Specificity: 78.4% cases."
         },
         {
           "page": 7,
@@ -994,36 +914,20 @@
           "text": "Feasible only for limited datasets. [73]"
         },
         {
-          "page": 9,
-          "text": "Remarks Refs."
-        },
-        {
-          "page": 9,
-          "text": "U-Net bels"
-        },
-        {
-          "page": 9,
-          "text": "- [55]"
-        },
-        {
-          "page": 9,
-          "text": "931 people having bacterial pneumonia, and 1203 healthy people. Zhang et al. [42] applied ResNet based model to Xray images. The ResNet model was applied for two purposes [42]. The"
+          "page": 10,
+          "text": "[38] [105, 106]"
         },
         {
           "page": 10,
-          "text": "[42] Collected from 6 institutions"
+          "text": "[39] [103, 107, 108] [40] [103]"
         },
         {
           "page": 10,
-          "text": "[35] [103, 110]"
+          "text": "[41] [103, 105]"
         },
         {
           "page": 10,
-          "text": "[48] [105, 107, 112]"
-        },
-        {
-          "page": 10,
-          "text": "[49] [102, 105, 109, 113-115]"
+          "text": "[43] [103, 109]"
         },
         {
           "page": 11,
@@ -1032,18 +936,6 @@
         {
           "page": 11,
           "text": "- 97.4% - 90% 86% Training: 82.60% Training: 93.38%, Validation: 89.21% Validation: 78.92% Training: 98.28% Training: 96.56% Validation: 94.12% Validation: 90.20% 99.20% 99.30% 98."
-        },
-        {
-          "page": 11,
-          "text": "[65] From hospitals in Shandong Province AD3D-MIL [36] Custom MADE-DBM (For multilevel classification)"
-        },
-        {
-          "page": 11,
-          "text": "94.3±0.7% 90.5±0.5%"
-        },
-        {
-          "page": 11,
-          "text": "96.19% 96.23%"
         },
         {
           "page": 11,
@@ -1067,23 +959,11 @@
         },
         {
           "page": 12,
-          "text": "- DenseNet 201 99.70 99.70 99.70 99.70%"
-        },
-        {
-          "page": 12,
           "text": "BConvLSTM U-Net and"
         },
         {
           "page": 12,
-          "text": "Inception ResNet V2 99.60 99.70 99.65 99.65% Inception V3 99.60 99.60 99.60 99.60% Xception 99.40 99.80 99.60 99.60%"
-        },
-        {
-          "page": 12,
-          "text": "GAN SqueezeNet"
-        },
-        {
-          "page": 12,
-          "text": "Fuzzy Color and Stacking & 98.89 98.33 98.58 99.27%"
+          "text": "Inception ResNet V2 99.60 99.70 99.65 99.65%"
         },
         {
           "page": 12,
@@ -1107,15 +987,20 @@
       "file": "detecting-statistical-interactions.pdf",
       "tableCaptions": 6,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 12,
-      "cropBackedFragments": 8,
-      "readerRawFragments": 3,
-      "readerCellFallbacks": 3,
+      "rawTableFragments": 18,
+      "cropBackedFragments": 12,
+      "readerRawFragments": 5,
+      "readerCellFallbacks": 4,
       "readerFragmentKinds": {
-        "structured-grid": 3
+        "structured-grid": 4,
+        "short-label": 1
       },
       "readerFragmentSamples": {
         "structured-grid": [
+          {
+            "page": 7,
+            "text": "1 + x10"
+          },
           {
             "page": 7,
             "text": "4.4 PAIRWISE INTERACTION DETECTION"
@@ -1128,9 +1013,23 @@
             "page": 7,
             "text": "5.1 EXPERIMENTAL SETUP"
           }
+        ],
+        "short-label": [
+          {
+            "page": 7,
+            "text": "K"
+          }
         ]
       },
       "orphanFragments": [
+        {
+          "page": 7,
+          "text": "1 + x10"
+        },
+        {
+          "page": 7,
+          "text": "K"
+        },
         {
           "page": 7,
           "text": "4.4 PAIRWISE INTERACTION DETECTION"
@@ -1302,29 +1201,17 @@
       "file": "education-learning-analytics.pdf",
       "tableCaptions": 11,
       "cropReadyCaptions": 11,
-      "rawTableFragments": 101,
-      "cropBackedFragments": 55,
-      "readerRawFragments": 46,
-      "readerCellFallbacks": 27,
+      "rawTableFragments": 95,
+      "cropBackedFragments": 56,
+      "readerRawFragments": 39,
+      "readerCellFallbacks": 20,
       "readerFragmentKinds": {
-        "structured-grid": 27,
-        "short-label": 15,
-        "ambiguous": 4
+        "structured-grid": 20,
+        "short-label": 17,
+        "ambiguous": 2
       },
       "readerFragmentSamples": {
         "structured-grid": [
-          {
-            "page": 4,
-            "text": "Title Acronym Type 1º Year"
-          },
-          {
-            "page": 7,
-            "text": "Learning Analytics in D. Niemi, R. 2018 Information Age 268 Education D. Pea, B. Publishing"
-          },
-          {
-            "page": 7,
-            "text": "Learning Analytics in J. Lester, C. 2018 Routledge 216 Higher Education: Klein, A. Current Innovations, Johri, H. Future Potential, and Rangwala Practical Applications"
-          },
           {
             "page": 15,
             "text": "Meerkat-"
@@ -1360,13 +1247,21 @@
           {
             "page": 16,
             "text": "KDD Cup 2010 https://pslcdatashop.web.cmu.edu/"
+          },
+          {
+            "page": 16,
+            "text": "Dataset KDDCup/"
+          },
+          {
+            "page": 17,
+            "text": "MOOC-Ed https://dataverse.harvard.edu/datas et.xhtml?persistentId=doi:10.7910/D"
+          },
+          {
+            "page": 18,
+            "text": "Method Goal/description Key applications"
           }
         ],
         "short-label": [
-          {
-            "page": 7,
-            "text": "Saxberg, R. E. Clark"
-          },
           {
             "page": 16,
             "text": "Descripction"
@@ -1389,10 +1284,6 @@
           },
           {
             "page": 17,
-            "text": "2016” course from learn.moodle.net."
-          },
-          {
-            "page": 17,
             "text": "Dataset"
           },
           {
@@ -1410,6 +1301,14 @@
           {
             "page": 21,
             "text": "Discovery causal"
+          },
+          {
+            "page": 21,
+            "text": "(de Carvalho et al.,"
+          },
+          {
+            "page": 21,
+            "text": "Early Warning"
           }
         ],
         "ambiguous": [
@@ -1420,34 +1319,10 @@
           {
             "page": 19,
             "text": "To predict the rating or preference a user"
-          },
-          {
-            "page": 21,
-            "text": "To develop “white box” interpretable, explanatory,"
-          },
-          {
-            "page": 22,
-            "text": "insights that happen across multiple contexts."
           }
         ]
       },
       "orphanFragments": [
-        {
-          "page": 4,
-          "text": "Title Acronym Type 1º Year"
-        },
-        {
-          "page": 7,
-          "text": "Learning Analytics in D. Niemi, R. 2018 Information Age 268 Education D. Pea, B. Publishing"
-        },
-        {
-          "page": 7,
-          "text": "Saxberg, R. E. Clark"
-        },
-        {
-          "page": 7,
-          "text": "Learning Analytics in J. Lester, C. 2018 Routledge 216 Higher Education: Klein, A. Current Innovations, Johri, H. Future Potential, and Rangwala Practical Applications"
-        },
         {
           "page": 15,
           "text": "Meerkat-"
@@ -1510,31 +1385,7 @@
         },
         {
           "page": 17,
-          "text": "problems from logs of student interaction with ITS."
-        },
-        {
-          "page": 17,
-          "text": "Learn Moodle https://research.moodle.net/158/ dataset"
-        },
-        {
-          "page": 17,
-          "text": "Anonymized data from the"
-        },
-        {
-          "page": 17,
-          "text": "“Teaching with Moodle August"
-        },
-        {
-          "page": 17,
-          "text": "2016” course from learn.moodle.net."
-        },
-        {
-          "page": 17,
           "text": "MOOC-Ed https://dataverse.harvard.edu/datas et.xhtml?persistentId=doi:10.7910/D"
-        },
-        {
-          "page": 17,
-          "text": "Communications taking place between learners in two offerings of the Massively Open Online Course for Educators (MOOC-Eds)."
         },
         {
           "page": 17,
@@ -1543,14 +1394,6 @@
         {
           "page": 17,
           "text": "VN/ZZH3UB"
-        },
-        {
-          "page": 17,
-          "text": "Moodle for seven selected courses."
-        },
-        {
-          "page": 17,
-          "text": "Dataset collected from e-learning system called Kalboard 360."
         },
         {
           "page": 18,
@@ -1606,15 +1449,35 @@
         },
         {
           "page": 21,
-          "text": "To develop “white box” interpretable, explanatory,"
+          "text": "interventions"
         },
         {
           "page": 21,
-          "text": "To apply EDM/LA techniques to measure self-regulated"
+          "text": "Methods"
+        },
+        {
+          "page": 21,
+          "text": "Interpretable and To develop “white box” interpretable, explanatory, (Rose et al. 2019)"
+        },
+        {
+          "page": 21,
+          "text": "explanatory"
+        },
+        {
+          "page": 21,
+          "text": "learner models"
+        },
+        {
+          "page": 21,
+          "text": "Learning foreign"
+        },
+        {
+          "page": 21,
+          "text": "(Bravo - Agapito et language al. 2019) Measuring Self- To apply EDM/LA techniques to measure self-regulated (ElSayed et al.,"
         },
         {
           "page": 22,
-          "text": "insights that happen across multiple contexts."
+          "text": "Analytics insights that happen across multiple contexts."
         }
       ]
     },
@@ -1746,15 +1609,22 @@
       "file": "ergonomics-analysis-of-burnout-and-occupational-safety-in-nurses-a-literature-rev.pdf",
       "tableCaptions": 2,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 9,
-      "cropBackedFragments": 7,
-      "readerRawFragments": 2,
+      "rawTableFragments": 15,
+      "cropBackedFragments": 12,
+      "readerRawFragments": 3,
       "readerCellFallbacks": 1,
       "readerFragmentKinds": {
+        "short-label": 1,
         "prose-like": 1,
         "structured-grid": 1
       },
       "readerFragmentSamples": {
+        "short-label": [
+          {
+            "page": 2,
+            "text": "shortages"
+          }
+        ],
         "prose-like": [
           {
             "page": 2,
@@ -1771,6 +1641,10 @@
       "orphanFragments": [
         {
           "page": 2,
+          "text": "shortages"
+        },
+        {
+          "page": 2,
           "text": "environment was unsafe and posed a high risk for incidents."
         },
         {
@@ -1783,12 +1657,12 @@
       "file": "ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport.pdf",
       "tableCaptions": 37,
       "cropReadyCaptions": 29,
-      "rawTableFragments": 122,
-      "cropBackedFragments": 66,
-      "readerRawFragments": 43,
-      "readerCellFallbacks": 36,
+      "rawTableFragments": 113,
+      "cropBackedFragments": 60,
+      "readerRawFragments": 42,
+      "readerCellFallbacks": 35,
       "readerFragmentKinds": {
-        "structured-grid": 36,
+        "structured-grid": 35,
         "short-label": 2,
         "ambiguous": 5
       },
@@ -1819,10 +1693,6 @@
             "text": "Vehicle-related issues 10"
           },
           {
-            "page": 90,
-            "text": "Hip/buttock 6.6 Internal organ damage 1.7 Leg 9.9 Environmental exposures 0.8 Knee 8.3 Ankle 10.7"
-          },
-          {
             "page": 92,
             "text": "Nagelkerke's R2 estimate .16"
           },
@@ -1841,6 +1711,10 @@
           {
             "page": 111,
             "text": "Adjust ventilation 256 88.7 38.7 28.6 Listen to music/radio 263 88.6 57.8 36.1 Stop to eat 256 88.3 24.6 38.1 Eat while driving 251 82.5 38.2 16.9 Caffeine drinks 259 79.9 29.7 23.2 Stop to rest 251 76.5 17.9 44.3 Non-caffeine drinks 243 73"
+          },
+          {
+            "page": 134,
+            "text": "1-4 vehicles % 99.2 98.0 Χ 2 tav Payment type N d 267 1002 Flat hourly rate % 58.1 5.5 Χ 2 (5) =524.2 p<.001 Flat day rate % 3.0 3.1 Flat weekly rate % 14.2 4.9 Flat item/delivery/load rate % 6.4 12.9 Kilometre or tonnage rate % 7.1 65.6"
           }
         ],
         "short-label": [
@@ -1899,7 +1773,7 @@
         },
         {
           "page": 90,
-          "text": "% of % of injured injured drivers a drivers a (Nd=121) (Nd=119)"
+          "text": "(N drivers injured % of d =121) a Type of injury b (N drivers injured % of d =119) a Head/face 11.6 Bruises/contusions/crushing injury Neck 5.8 Minor/superficial 29.4 Back 46.3 Mor"
         },
         {
           "page": 92,
@@ -2364,8 +2238,8 @@
       "file": "hci-development-of-user-interface-user-experience-using-design-thinking-ap.pdf",
       "tableCaptions": 3,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 9,
-      "cropBackedFragments": 9,
+      "rawTableFragments": 10,
+      "cropBackedFragments": 10,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -2469,13 +2343,13 @@
       "file": "hci-intelligent-human-computer-interaction.pdf",
       "tableCaptions": 44,
       "cropReadyCaptions": 22,
-      "rawTableFragments": 73,
-      "cropBackedFragments": 46,
-      "readerRawFragments": 17,
-      "readerCellFallbacks": 16,
+      "rawTableFragments": 75,
+      "cropBackedFragments": 47,
+      "readerRawFragments": 21,
+      "readerCellFallbacks": 19,
       "readerFragmentKinds": {
-        "structured-grid": 16,
-        "short-label": 1
+        "structured-grid": 19,
+        "short-label": 2
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -2493,15 +2367,27 @@
           },
           {
             "page": 139,
-            "text": "1.590(1.05) 3.188(2.01) − 0.24(0.70) 1.308(2.38) 87.49(15.0) 95.00(9.63) 41.24(24.3) 70.75(43.1) 0.225(0.93) 1.066(1.18) 0.714(1.15) 1.582(1.35) − 4.07(1.79) − 3.81(1.40) − 3.52(0.86) − 3.90(0.53)"
+            "text": "1.590(1.05) 3.188(2.01) −0.24(0.70) 1.308(2.38)"
           },
           {
             "page": 139,
-            "text": "1.392(3.45) 1.062(2.25) 0.169(0.24) 0.014(0.02) 3Temporality 0.443(0.55) 1.039(0.88) −0.05(1.30) 0.787(0.90) 3Noun overlap, 0.555(0.14) 0.509(0.33) 0.535(0.18) 0.557(0.24)"
+            "text": "87.49(15.0) 95.00(9.63) 41.24(24.3) 70.75(43.1)"
+          },
+          {
+            "page": 139,
+            "text": "0.225(0.93) 1.066(1.18) 0.714(1.15) 1.582(1.35)"
+          },
+          {
+            "page": 139,
+            "text": "3Connectivity −4.07(1.79) −3.81(1.40) −3.52(0.86) −3.90(0.53)"
+          },
+          {
+            "page": 139,
+            "text": "1Connectivity 1.392(3.45) 1.062(2.25) 0.169(0.24) 0.014(0.02) 3Temporality 0.443(0.55) 1.039(0.88) −0.05(1.30) 0.787(0.90) 3Noun overlap, 0.555(0.14) 0.509(0.33) 0.535(0.18) 0.557(0.24)"
           },
           {
             "page": 141,
-            "text": "0.110(0.03) 0.083(0.02) 0.086(0.02) 0.079(0.03) 318.3(17.5) 354.0(20.9) 377.0(22.0) 366.7(30.7) 258.4(18.9) 249.6(20.3) 194.2(25.0) 204.7(46.8) 52.71(19.3) 41.99(15.4) 28.08(11.9) 19.79(13.4) 3Preposition PD 92.28(20.2) 87.94(24.3) 115.4(21"
+            "text": "0.110(0.03) 0.083(0.02) 0.086(0.02) 0.079(0.03) 318.3(17.5) 354.0(20.9) 377.0(22.0) 366.7(30.7) 3Verb PD incidence 258.4(18.9) 249.6(20.3) 194.2(25.0) 204.7(46.8) 3Adverbial PD 52.71(19.3) 41.99(15.4) 28.08(11.9) 19.79(13.4) 3Preposition PD"
           },
           {
             "page": 144,
@@ -2514,24 +2400,16 @@
           {
             "page": 180,
             "text": "P (emo |emo )P (emo ) all−emo l m n p n"
-          },
-          {
-            "page": 194,
-            "text": "Standard Co-training in Multiword Expression Detection 183 f wð 1w2Þ 1"
-          },
-          {
-            "page": 194,
-            "text": "f wð 1w2Þ þ2ðf wð 1w\u0016 2Þ þfðw\u0016 1w2ÞÞ Word forward variety vfðw2Þ"
-          },
-          {
-            "page": 196,
-            "text": "The shaded regions in Table 4 show the settings in which Fi \u0015 Fc, meaning that when training set is enlarged with co-training, F1 value increases. It is observed that standard co-training succeeds for all settings in statistical classifier."
           }
         ],
         "short-label": [
           {
             "page": 180,
             "text": "a"
+          },
+          {
+            "page": 216,
+            "text": "Vigilance Task:"
           }
         ]
       },
@@ -2562,15 +2440,15 @@
         },
         {
           "page": 139,
-          "text": "−4.07(1.79) −3.81(1.40) −3.52(0.86) −3.90(0.53)"
+          "text": "3Connectivity −4.07(1.79) −3.81(1.40) −3.52(0.86) −3.90(0.53)"
         },
         {
           "page": 139,
-          "text": "1.392(3.45) 1.062(2.25) 0.169(0.24) 0.014(0.02) 3Temporality 0.443(0.55) 1.039(0.88) −0.05(1.30) 0.787(0.90) 3Noun overlap, 0.555(0.14) 0.509(0.33) 0.535(0.18) 0.557(0.24)"
+          "text": "1Connectivity 1.392(3.45) 1.062(2.25) 0.169(0.24) 0.014(0.02) 3Temporality 0.443(0.55) 1.039(0.88) −0.05(1.30) 0.787(0.90) 3Noun overlap, 0.555(0.14) 0.509(0.33) 0.535(0.18) 0.557("
         },
         {
           "page": 141,
-          "text": "0.110(0.03) 0.083(0.02) 0.086(0.02) 0.079(0.03) 318.3(17.5) 354.0(20.9) 377.0(22.0) 366.7(30.7) 258.4(18.9) 249.6(20.3) 194.2(25.0) 204.7(46.8) 52.71(19.3) 41.99(15.4) 28.08(11.9) "
+          "text": "0.110(0.03) 0.083(0.02) 0.086(0.02) 0.079(0.03) 318.3(17.5) 354.0(20.9) 377.0(22.0) 366.7(30.7) 3Verb PD incidence 258.4(18.9) 249.6(20.3) 194.2(25.0) 204.7(46.8) 3Adverbial PD 52."
         },
         {
           "page": 144,
@@ -2597,8 +2475,8 @@
           "text": "f wð 1w2Þ þ2ðf wð 1w\u0016 2Þ þfðw\u0016 1w2ÞÞ Word forward variety vfðw2Þ"
         },
         {
-          "page": 196,
-          "text": "The shaded regions in Table 4 show the settings in which Fi \u0015 Fc, meaning that when training set is enlarged with co-training, F1 value increases. It is observed that standard co-t"
+          "page": 194,
+          "text": "f wð 2Þ"
         },
         {
           "page": 226,
@@ -2680,12 +2558,33 @@
       "file": "hci-user-experience-analysis-on-mobile-application-design-using-user-exper.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 3,
-      "cropBackedFragments": 3,
-      "readerRawFragments": 0,
-      "readerCellFallbacks": 0,
-      "readerFragmentKinds": {},
-      "readerFragmentSamples": {},
+      "rawTableFragments": 9,
+      "cropBackedFragments": 5,
+      "readerRawFragments": 4,
+      "readerCellFallbacks": 4,
+      "readerFragmentKinds": {
+        "structured-grid": 4
+      },
+      "readerFragmentSamples": {
+        "structured-grid": [
+          {
+            "page": 7,
+            "text": "4. Result and discussion"
+          },
+          {
+            "page": 7,
+            "text": "4.1. The Cronbach's Alpha"
+          },
+          {
+            "page": 7,
+            "text": "Above average"
+          },
+          {
+            "page": 7,
+            "text": "Below average"
+          }
+        ]
+      },
       "orphanFragments": []
     },
     {
@@ -2704,19 +2603,27 @@
       "file": "hfe-healthcare-patient-safety-review.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 6,
-      "rawTableFragments": 37,
-      "cropBackedFragments": 25,
-      "readerRawFragments": 11,
-      "readerCellFallbacks": 8,
+      "rawTableFragments": 47,
+      "cropBackedFragments": 26,
+      "readerRawFragments": 21,
+      "readerCellFallbacks": 16,
       "readerFragmentKinds": {
-        "short-label": 3,
-        "structured-grid": 8
+        "short-label": 5,
+        "structured-grid": 16
       },
       "readerFragmentSamples": {
         "short-label": [
           {
             "page": 7,
             "text": "validity"
+          },
+          {
+            "page": 8,
+            "text": "articulating laparoscopic"
+          },
+          {
+            "page": 8,
+            "text": "(NR)"
           },
           {
             "page": 10,
@@ -2742,11 +2649,31 @@
           },
           {
             "page": 8,
-            "text": "home HFE workers equipment (1028)"
+            "text": "1 2 3 4 5"
           },
           {
             "page": 8,
-            "text": "6. USA 40 months Before/after 86 healthcare Health care Yes M Purchase Fujishiro2005 uncontrolled facilities workers HFE devices 7. England 33.5 months Before/after 2 hospitals Nurses Yes M Purchase Smedley2003 controlled (1,239) HFE equipm"
+            "text": "6. USA 40 months Before/after 86 healthcare Health care Yes M Purchase"
+          },
+          {
+            "page": 8,
+            "text": "Fujishiro2005 uncontrolled facilities workers HFE devices"
+          },
+          {
+            "page": 8,
+            "text": "7. England 33.5 months Before/after 2 hospitals Nurses Yes M Purchase"
+          },
+          {
+            "page": 8,
+            "text": "Smedley2003 controlled (1,239) HFE equipment"
+          },
+          {
+            "page": 8,
+            "text": "8. Smith 2002 USA NR Controlled Department of Novice Yes M HFE method"
+          },
+          {
+            "page": 8,
+            "text": "dentistry participants of viewing"
           },
           {
             "page": 8,
@@ -2755,10 +2682,6 @@
           {
             "page": 8,
             "text": "9. Xiao 2012 Netherlands NR Controlled Surgical Surgeons Yes M HFE training \" \" \" department (20) posture"
-          },
-          {
-            "page": 10,
-            "text": "1 2 3 4 5"
           }
         ]
       },
@@ -2781,11 +2704,39 @@
         },
         {
           "page": 8,
-          "text": "home HFE workers equipment (1028)"
+          "text": "1 2 3 4 5"
         },
         {
           "page": 8,
-          "text": "6. USA 40 months Before/after 86 healthcare Health care Yes M Purchase Fujishiro2005 uncontrolled facilities workers HFE devices 7. England 33.5 months Before/after 2 hospitals Nur"
+          "text": "articulating laparoscopic"
+        },
+        {
+          "page": 8,
+          "text": "6. USA 40 months Before/after 86 healthcare Health care Yes M Purchase"
+        },
+        {
+          "page": 8,
+          "text": "Fujishiro2005 uncontrolled facilities workers HFE devices"
+        },
+        {
+          "page": 8,
+          "text": "(NR)"
+        },
+        {
+          "page": 8,
+          "text": "7. England 33.5 months Before/after 2 hospitals Nurses Yes M Purchase"
+        },
+        {
+          "page": 8,
+          "text": "Smedley2003 controlled (1,239) HFE equipment"
+        },
+        {
+          "page": 8,
+          "text": "8. Smith 2002 USA NR Controlled Department of Novice Yes M HFE method"
+        },
+        {
+          "page": 8,
+          "text": "dentistry participants of viewing"
         },
         {
           "page": 8,
@@ -2794,6 +2745,10 @@
         {
           "page": 8,
           "text": "9. Xiao 2012 Netherlands NR Controlled Surgical Surgeons Yes M HFE training \" \" \" department (20) posture"
+        },
+        {
+          "page": 9,
+          "text": "1 2 3 4 5"
         },
         {
           "page": 10,
@@ -2806,6 +2761,14 @@
         {
           "page": 10,
           "text": "educational course"
+        },
+        {
+          "page": 11,
+          "text": "1 2 3 4 5"
+        },
+        {
+          "page": 11,
+          "text": "(148) skills"
         }
       ]
     },
@@ -2813,19 +2776,27 @@
       "file": "hfe-healthcare-safety-review.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 6,
-      "rawTableFragments": 37,
-      "cropBackedFragments": 25,
-      "readerRawFragments": 11,
-      "readerCellFallbacks": 8,
+      "rawTableFragments": 47,
+      "cropBackedFragments": 26,
+      "readerRawFragments": 21,
+      "readerCellFallbacks": 16,
       "readerFragmentKinds": {
-        "short-label": 3,
-        "structured-grid": 8
+        "short-label": 5,
+        "structured-grid": 16
       },
       "readerFragmentSamples": {
         "short-label": [
           {
             "page": 7,
             "text": "validity"
+          },
+          {
+            "page": 8,
+            "text": "articulating laparoscopic"
+          },
+          {
+            "page": 8,
+            "text": "(NR)"
           },
           {
             "page": 10,
@@ -2851,11 +2822,31 @@
           },
           {
             "page": 8,
-            "text": "home HFE workers equipment (1028)"
+            "text": "1 2 3 4 5"
           },
           {
             "page": 8,
-            "text": "6. USA 40 months Before/after 86 healthcare Health care Yes M Purchase Fujishiro2005 uncontrolled facilities workers HFE devices 7. England 33.5 months Before/after 2 hospitals Nurses Yes M Purchase Smedley2003 controlled (1,239) HFE equipm"
+            "text": "6. USA 40 months Before/after 86 healthcare Health care Yes M Purchase"
+          },
+          {
+            "page": 8,
+            "text": "Fujishiro2005 uncontrolled facilities workers HFE devices"
+          },
+          {
+            "page": 8,
+            "text": "7. England 33.5 months Before/after 2 hospitals Nurses Yes M Purchase"
+          },
+          {
+            "page": 8,
+            "text": "Smedley2003 controlled (1,239) HFE equipment"
+          },
+          {
+            "page": 8,
+            "text": "8. Smith 2002 USA NR Controlled Department of Novice Yes M HFE method"
+          },
+          {
+            "page": 8,
+            "text": "dentistry participants of viewing"
           },
           {
             "page": 8,
@@ -2864,10 +2855,6 @@
           {
             "page": 8,
             "text": "9. Xiao 2012 Netherlands NR Controlled Surgical Surgeons Yes M HFE training \" \" \" department (20) posture"
-          },
-          {
-            "page": 10,
-            "text": "1 2 3 4 5"
           }
         ]
       },
@@ -2890,11 +2877,39 @@
         },
         {
           "page": 8,
-          "text": "home HFE workers equipment (1028)"
+          "text": "1 2 3 4 5"
         },
         {
           "page": 8,
-          "text": "6. USA 40 months Before/after 86 healthcare Health care Yes M Purchase Fujishiro2005 uncontrolled facilities workers HFE devices 7. England 33.5 months Before/after 2 hospitals Nur"
+          "text": "articulating laparoscopic"
+        },
+        {
+          "page": 8,
+          "text": "6. USA 40 months Before/after 86 healthcare Health care Yes M Purchase"
+        },
+        {
+          "page": 8,
+          "text": "Fujishiro2005 uncontrolled facilities workers HFE devices"
+        },
+        {
+          "page": 8,
+          "text": "(NR)"
+        },
+        {
+          "page": 8,
+          "text": "7. England 33.5 months Before/after 2 hospitals Nurses Yes M Purchase"
+        },
+        {
+          "page": 8,
+          "text": "Smedley2003 controlled (1,239) HFE equipment"
+        },
+        {
+          "page": 8,
+          "text": "8. Smith 2002 USA NR Controlled Department of Novice Yes M HFE method"
+        },
+        {
+          "page": 8,
+          "text": "dentistry participants of viewing"
         },
         {
           "page": 8,
@@ -2903,6 +2918,10 @@
         {
           "page": 8,
           "text": "9. Xiao 2012 Netherlands NR Controlled Surgical Surgeons Yes M HFE training \" \" \" department (20) posture"
+        },
+        {
+          "page": 9,
+          "text": "1 2 3 4 5"
         },
         {
           "page": 10,
@@ -2915,6 +2934,14 @@
         {
           "page": 10,
           "text": "educational course"
+        },
+        {
+          "page": 11,
+          "text": "1 2 3 4 5"
+        },
+        {
+          "page": 11,
+          "text": "(148) skills"
         }
       ]
     },
@@ -2922,14 +2949,14 @@
       "file": "hfe-healthcare-scoping-2024.pdf",
       "tableCaptions": 3,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 47,
-      "cropBackedFragments": 11,
-      "readerRawFragments": 36,
-      "readerCellFallbacks": 19,
+      "rawTableFragments": 39,
+      "cropBackedFragments": 14,
+      "readerRawFragments": 25,
+      "readerCellFallbacks": 12,
       "readerFragmentKinds": {
-        "short-label": 16,
+        "short-label": 12,
         "ambiguous": 1,
-        "structured-grid": 19
+        "structured-grid": 12
       },
       "readerFragmentSamples": {
         "short-label": [
@@ -2944,14 +2971,6 @@
           {
             "page": 1,
             "text": "WHAT THIS STUDY ADDS"
-          },
-          {
-            "page": 5,
-            "text": ")"
-          },
-          {
-            "page": 5,
-            "text": ")"
           },
           {
             "page": 6,
@@ -2980,6 +2999,14 @@
           {
             "page": 8,
             "text": ")"
+          },
+          {
+            "page": 8,
+            "text": ")"
+          },
+          {
+            "page": 9,
+            "text": "))"
           }
         ],
         "ambiguous": [
@@ -2995,35 +3022,7 @@
           },
           {
             "page": 5,
-            "text": "evaluated (principle 3).(measures they took Organisational outcomes:Patient outcomes: Treatment Organisational outcomes:Patient outcomes: 30-complicationsTraining uptake, measures ofComponents of turnoverPerformance of all stages inprotocol"
-          },
-          {
-            "page": 5,
-            "text": "The intervention has(principle 3) To redesign the trauma To assess the effect ofsurgical safety checklistculture and outcomessurgery turnover time.events in blood ("
-          },
-          {
-            "page": 5,
-            "text": "Prospective observation ofcollection tool Conduct baseline hospitalculture.available checklist audit data.assess attitudes towardsConduct a context assessmentTrained Human Factors (HF)convenience sample of 20Surgical team members werewere c"
-          },
-          {
-            "page": 5,
-            "text": "phase is undertaken to design In the Exploration phase:description of needs assessment A context- ► ►► ► phase ► ► ► ► ► assessment or systems analysisthe intervention (principle 2) ("
-          },
-          {
-            "page": 5,
-            "text": "than one element of the systemPeople: Teamwork training. Tool: Trauma medication transportTechnology: Headsets, whiteboard.standardisation. People: Virtual non-Tools: Redesigned and streamlinedtool. Inclusion of conversationTask: Making the"
-          },
-          {
-            "page": 5,
-            "text": "Title A Human Factors Subsystems Transforming Team Performanceof the Surgical Safety Checklist. The Application of Human FactorsRoom Turnover in RoboticHuman Factors and QualityDepartment: Reducing Potential Approach to Trauma Care. Through"
-          },
-          {
-            "page": 5,
             "text": "(2024)(2014)"
-          },
-          {
-            "page": 5,
-            "text": "25 35 (2022) 24 Studies charted to the inclusion criteria et alet al 26"
           },
           {
             "page": 5,
@@ -3036,6 +3035,34 @@
           {
             "page": 6,
             "text": "phase is undertaken to designdescription of needs assessment A context- ►► ► ► ► ► ► ► assessment or systems analysisthe intervention (principle 2)phase ► ("
+          },
+          {
+            "page": 7,
+            "text": "phase Define: ► ► ► Analyse:"
+          },
+          {
+            "page": 7,
+            "text": "Title Viewing Prevention of Catheter-as a System: Using SystemsEngineering in a QualityAcademic Medical Center. Improving Sepsis Compliancein a Community Hospital"
+          },
+          {
+            "page": 8,
+            "text": "The intervention is Organisational outcomes:prescribing and change.prescription rates. Organisational outcomes:in each unit. Organisational outcomes:identification incidents.miss (or good catches) perinterruptions.outcomes measured evaluate"
+          },
+          {
+            "page": 8,
+            "text": "an active element intervention approachprescribing and patientpotential adverse identification adverse (principle 3) ( radiology. reporting."
+          },
+          {
+            "page": 8,
+            "text": "phase is undertaken to designIn the preimplementation phase:description of needs assessment A context- ► ► ► assessment or systems analysisthe intervention (principle 2) In the preimplementation phase: ("
+          },
+          {
+            "page": 9,
+            "text": "Pre–post analysis of outcomes 11 An interrupted time series design using 1 historical data and postintervention assessment Work system elements targeted in intervention People 10 Tools 10"
+          },
+          {
+            "page": 9,
+            "text": "Organisation 8 Technology 8 Task 7 Process 6 Environment 5 Outcomes measured Organisation level outcomes 12 Patient level outcomes 7 Intervention maintenance measures 3 Balancing measures 1"
           }
         ]
       },
@@ -3062,43 +3089,7 @@
         },
         {
           "page": 5,
-          "text": "evaluated (principle 3).(measures they took Organisational outcomes:Patient outcomes: Treatment Organisational outcomes:Patient outcomes: 30-complicationsTraining uptake, measures "
-        },
-        {
-          "page": 5,
-          "text": "The intervention has(principle 3) To redesign the trauma To assess the effect ofsurgical safety checklistculture and outcomessurgery turnover time.events in blood ("
-        },
-        {
-          "page": 5,
-          "text": ")"
-        },
-        {
-          "page": 5,
-          "text": "Prospective observation ofcollection tool Conduct baseline hospitalculture.available checklist audit data.assess attitudes towardsConduct a context assessmentTrained Human Factors "
-        },
-        {
-          "page": 5,
-          "text": "phase is undertaken to design In the Exploration phase:description of needs assessment A context- ► ►► ► phase ► ► ► ► ► assessment or systems analysisthe intervention (principle 2"
-        },
-        {
-          "page": 5,
-          "text": ")"
-        },
-        {
-          "page": 5,
-          "text": "than one element of the systemPeople: Teamwork training. Tool: Trauma medication transportTechnology: Headsets, whiteboard.standardisation. People: Virtual non-Tools: Redesigned an"
-        },
-        {
-          "page": 5,
-          "text": "Title A Human Factors Subsystems Transforming Team Performanceof the Surgical Safety Checklist. The Application of Human FactorsRoom Turnover in RoboticHuman Factors and QualityDep"
-        },
-        {
-          "page": 5,
           "text": "(2024)(2014)"
-        },
-        {
-          "page": 5,
-          "text": "25 35 (2022) 24 Studies charted to the inclusion criteria et alet al 26"
         },
         {
           "page": 5,
@@ -3170,14 +3161,6 @@
         },
         {
           "page": 9,
-          "text": "part Improvement"
-        },
-        {
-          "page": 9,
-          "text": ")"
-        },
-        {
-          "page": 9,
           "text": "Pre–post analysis of outcomes 11 An interrupted time series design using 1 historical data and postintervention assessment Work system elements targeted in intervention People 10 T"
         },
         {
@@ -3190,8 +3173,8 @@
       "file": "how-content-volume-landing-pages.pdf",
       "tableCaptions": 5,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 7,
-      "cropBackedFragments": 2,
+      "rawTableFragments": 8,
+      "cropBackedFragments": 3,
       "readerRawFragments": 5,
       "readerCellFallbacks": 5,
       "readerFragmentKinds": {
@@ -3793,15 +3776,20 @@
       "file": "interpreting-neural-networks.pdf",
       "tableCaptions": 6,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 12,
-      "cropBackedFragments": 8,
-      "readerRawFragments": 3,
-      "readerCellFallbacks": 3,
+      "rawTableFragments": 18,
+      "cropBackedFragments": 12,
+      "readerRawFragments": 5,
+      "readerCellFallbacks": 4,
       "readerFragmentKinds": {
-        "structured-grid": 3
+        "structured-grid": 4,
+        "short-label": 1
       },
       "readerFragmentSamples": {
         "structured-grid": [
+          {
+            "page": 7,
+            "text": "1 + x10"
+          },
           {
             "page": 7,
             "text": "4.4 PAIRWISE INTERACTION DETECTION"
@@ -3814,9 +3802,23 @@
             "page": 7,
             "text": "5.1 EXPERIMENTAL SETUP"
           }
+        ],
+        "short-label": [
+          {
+            "page": 7,
+            "text": "K"
+          }
         ]
       },
       "orphanFragments": [
+        {
+          "page": 7,
+          "text": "1 + x10"
+        },
+        {
+          "page": 7,
+          "text": "K"
+        },
         {
           "page": 7,
           "text": "4.4 PAIRWISE INTERACTION DETECTION"
@@ -3835,13 +3837,13 @@
       "file": "job-rotation-ergonomics.pdf",
       "tableCaptions": 5,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 25,
-      "cropBackedFragments": 4,
+      "rawTableFragments": 26,
+      "cropBackedFragments": 5,
       "readerRawFragments": 16,
-      "readerCellFallbacks": 8,
+      "readerCellFallbacks": 9,
       "readerFragmentKinds": {
-        "short-label": 8,
-        "structured-grid": 8
+        "short-label": 7,
+        "structured-grid": 9
       },
       "readerFragmentSamples": {
         "short-label": [
@@ -3864,10 +3866,6 @@
           {
             "page": 10,
             "text": "1.78"
-          },
-          {
-            "page": 10,
-            "text": "1.72"
           },
           {
             "page": 10,
@@ -3902,6 +3900,10 @@
           {
             "page": 10,
             "text": "1.80 Fig. 6 reports a well-balanced workload for operators, which"
+          },
+          {
+            "page": 12,
+            "text": "1 2 Theoretical Lawnmower"
           },
           {
             "page": 12,
@@ -3956,15 +3958,15 @@
         },
         {
           "page": 10,
-          "text": "1.72"
-        },
-        {
-          "page": 10,
           "text": "1.74"
         },
         {
           "page": 10,
           "text": "1.65"
+        },
+        {
+          "page": 12,
+          "text": "1 2 Theoretical Lawnmower"
         },
         {
           "page": 12,
@@ -4064,7 +4066,7 @@
       "file": "linguistics-internet-linguistics-a-linguistic-analysis-of-electronic-discourse-as-.pdf",
       "tableCaptions": 8,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 8,
+      "rawTableFragments": 11,
       "cropBackedFragments": 4,
       "readerRawFragments": 1,
       "readerCellFallbacks": 1,
@@ -4656,7 +4658,7 @@
         },
         {
           "page": 30,
-          "text": "81.0169.4957.3670.9234.0558.8761.2788.7794.2179.479.4688.9173.5246.21Feature setM 49.78"
+          "text": "81.0169.4957.3670.9234.0558.8761.2788.7794.2179.479.4688.9173.5246.21Feature setM 49.78 Independent lexico-grammatical"
         },
         {
           "page": 30,
@@ -4754,8 +4756,8 @@
       "file": "marketing-a-study-on-the-relationship-between-advertising-value-choice-of-media-.pdf",
       "tableCaptions": 15,
       "cropReadyCaptions": 12,
-      "rawTableFragments": 41,
-      "cropBackedFragments": 41,
+      "rawTableFragments": 43,
+      "cropBackedFragments": 43,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -5190,12 +5192,12 @@
       "file": "marketing-healthy-choice.pdf",
       "tableCaptions": 3,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 18,
+      "rawTableFragments": 17,
       "cropBackedFragments": 13,
-      "readerRawFragments": 5,
-      "readerCellFallbacks": 5,
+      "readerRawFragments": 4,
+      "readerCellFallbacks": 4,
       "readerFragmentKinds": {
-        "structured-grid": 5
+        "structured-grid": 4
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -5214,10 +5216,6 @@
           {
             "page": 6,
             "text": "b (SE) β 95% CI b t p Constant 2.46 (0.22) [2.03, 2.90] 11.26 < 0.001 Condition 0.06 (0.31) 0.02 [−0.56, 0.68] 0.20 0.844 Implicit attention −0.32 (0.19) −0.60 [−0.69, 0.53] −1.71 0.092 Healthy eating goal −0.16 (0.17) −0.12 [−0.50, 0.18] −"
-          },
-          {
-            "page": 6,
-            "text": "The present study examined the role of attention and healthy eating goals in nudging healthy food choice. To date, discrepant findings have been reported in the literature with respect to the role of attention to nudges in nudges’ effective"
           }
         ]
       },
@@ -5237,10 +5235,6 @@
         {
           "page": 6,
           "text": "b (SE) β 95% CI b t p Constant 2.46 (0.22) [2.03, 2.90] 11.26 < 0.001 Condition 0.06 (0.31) 0.02 [−0.56, 0.68] 0.20 0.844 Implicit attention −0.32 (0.19) −0.60 [−0.69, 0.53] −1.71 "
-        },
-        {
-          "page": 6,
-          "text": "The present study examined the role of attention and healthy eating goals in nudging healthy food choice. To date, discrepant findings have been reported in the literature with res"
         }
       ]
     },
@@ -5260,8 +5254,8 @@
       "file": "marketing-impact-of-green-marketing-on-consumer-behavior.pdf",
       "tableCaptions": 2,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 8,
-      "cropBackedFragments": 8,
+      "rawTableFragments": 10,
+      "cropBackedFragments": 10,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -5306,25 +5300,21 @@
     },
     {
       "file": "marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the.pdf",
-      "tableCaptions": 51,
+      "tableCaptions": 54,
       "cropReadyCaptions": 34,
-      "rawTableFragments": 120,
-      "cropBackedFragments": 74,
-      "readerRawFragments": 30,
-      "readerCellFallbacks": 26,
+      "rawTableFragments": 130,
+      "cropBackedFragments": 85,
+      "readerRawFragments": 27,
+      "readerCellFallbacks": 24,
       "readerFragmentKinds": {
-        "structured-grid": 26,
-        "short-label": 4
+        "structured-grid": 24,
+        "short-label": 3
       },
       "readerFragmentSamples": {
         "structured-grid": [
           {
             "page": 15,
-            "text": "Table 2.1 Methods, measures, and key components of advertising processing................................... 62 Table 4.1 Summary of key findings of digital adevertising research from 2008 to 2018 .................... 106 Table 5.1 Summary "
-          },
-          {
-            "page": 15,
-            "text": "Table 7.1 ST UDY 2 - Research questions and hypotheses ................................ ................................ .... 166 Table 7.2 STUDY 2 - Sample ................................ ................................ ................."
+            "text": "Table 7.1 STUDY 2 - Research questions and hypotheses.................................................................... 166"
           },
           {
             "page": 148,
@@ -5365,16 +5355,16 @@
           {
             "page": 204,
             "text": "Constant -.709** .229 .492 -2.408** .313 .090 Attention (Wald χ2 = 15.424, p = .001)** (Wald χ2 = 21.303, p = .000)** Focused .972** .303 2.643 1.485** .347 4.414 Divided .646** .296 1.907 .795** .358 2.215 Incidental 1.071** .306 2.919 1.3"
+          },
+          {
+            "page": 216,
+            "text": "8.1. Introduction"
           }
         ],
         "short-label": [
           {
             "page": 148,
             "text": "H4c"
-          },
-          {
-            "page": 256,
-            "text": "hedonic than utilitarian products."
           },
           {
             "page": 305,
@@ -5446,10 +5436,6 @@
         {
           "page": 236,
           "text": "= .980) (Wald χ2 = 2.333, p = .506) 1.059 .273 .360 1.314 1.109 .512 .373 1.668 1.086 .097 .359 1.102"
-        },
-        {
-          "page": 256,
-          "text": "significant for FA) attention. 2, 3 People more likely make intuitive H5b judgements if processing occurs at lower Supported (consistent and attention. significant for IA)"
         },
         {
           "page": 284,
@@ -5529,8 +5515,8 @@
       "file": "marketing-platform.pdf",
       "tableCaptions": 3,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 6,
-      "cropBackedFragments": 4,
+      "rawTableFragments": 5,
+      "cropBackedFragments": 3,
       "readerRawFragments": 2,
       "readerCellFallbacks": 2,
       "readerFragmentKinds": {
@@ -5704,13 +5690,13 @@
       "file": "medical-deep-learning-meta-review.pdf",
       "tableCaptions": 9,
       "cropReadyCaptions": 6,
-      "rawTableFragments": 98,
-      "cropBackedFragments": 27,
-      "readerRawFragments": 65,
-      "readerCellFallbacks": 52,
+      "rawTableFragments": 99,
+      "cropBackedFragments": 29,
+      "readerRawFragments": 64,
+      "readerCellFallbacks": 51,
       "readerFragmentKinds": {
         "short-label": 13,
-        "structured-grid": 52
+        "structured-grid": 51
       },
       "readerFragmentSamples": {
         "short-label": [
@@ -5806,11 +5792,11 @@
           },
           {
             "page": 7,
-            "text": "-Can be used experts to understand and"
+            "text": "outside of the medical interpret domain"
           },
           {
             "page": 7,
-            "text": "outside of the medical interpret domain"
+            "text": "-Abstract high-level features"
           }
         ]
       },
@@ -5854,10 +5840,6 @@
         {
           "page": 7,
           "text": "and Programs in Biomedicine 221 (2022) 106874"
-        },
-        {
-          "page": 7,
-          "text": "-Can be used experts to understand and"
         },
         {
           "page": 7,
@@ -6287,8 +6269,8 @@
       "file": "neuroscience-rule-following.pdf",
       "tableCaptions": 2,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 2,
-      "cropBackedFragments": 2,
+      "rawTableFragments": 3,
+      "cropBackedFragments": 3,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -6299,12 +6281,12 @@
       "file": "osworld-multimodal-agents.pdf",
       "tableCaptions": 17,
       "cropReadyCaptions": 12,
-      "rawTableFragments": 35,
-      "cropBackedFragments": 19,
-      "readerRawFragments": 15,
+      "rawTableFragments": 40,
+      "cropBackedFragments": 25,
+      "readerRawFragments": 14,
       "readerCellFallbacks": 6,
       "readerFragmentKinds": {
-        "short-label": 7,
+        "short-label": 6,
         "structured-grid": 6,
         "ambiguous": 2
       },
@@ -6328,10 +6310,6 @@
           },
           {
             "page": 8,
-            "text": "Info query 4.1%"
-          },
-          {
-            "page": 8,
             "text": "Data analysis 8.9%"
           },
           {
@@ -6346,7 +6324,7 @@
           },
           {
             "page": 8,
-            "text": "Settings 5.7% Misc. 5.7%"
+            "text": "Settings 2.4% Professional13.3% OS 6.5% Files 2.2%"
           },
           {
             "page": 14,
@@ -6399,11 +6377,7 @@
         },
         {
           "page": 8,
-          "text": "Info query 4.1%"
-        },
-        {
-          "page": 8,
-          "text": "Settings 5.7% Misc. 5.7%"
+          "text": "Settings 2.4% Professional13.3% OS 6.5% Files 2.2%"
         },
         {
           "page": 8,
@@ -6513,8 +6487,8 @@
       "file": "speechin.pdf",
       "tableCaptions": 3,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 9,
-      "cropBackedFragments": 6,
+      "rawTableFragments": 13,
+      "cropBackedFragments": 8,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -6607,8 +6581,8 @@
       "file": "using-cognitive-psychology-gpt3.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 5,
-      "rawTableFragments": 15,
-      "cropBackedFragments": 9,
+      "rawTableFragments": 14,
+      "cropBackedFragments": 8,
       "readerRawFragments": 5,
       "readerCellFallbacks": 4,
       "readerFragmentKinds": {
@@ -6706,20 +6680,20 @@
   "summary": {
     "extractionErrors": 0,
     "papersWithTableCaptions": 48,
-    "tableCaptions": 364,
+    "tableCaptions": 367,
     "cropReadyCaptions": 251,
-    "rawTableFragments": 1458,
-    "cropBackedFragments": 613,
-    "readerRawFragments": 679,
-    "readerCellFallbacks": 516,
+    "rawTableFragments": 1490,
+    "cropBackedFragments": 662,
+    "readerRawFragments": 659,
+    "readerCellFallbacks": 504,
     "readerFragmentKinds": {
-      "structured-grid": 516,
+      "structured-grid": 504,
       "prose-like": 5,
-      "short-label": 133,
-      "ambiguous": 24,
+      "short-label": 131,
+      "ambiguous": 18,
       "numeric-grid": 1
     },
-    "orphanFragments": 762,
+    "orphanFragments": 740,
     "note": "Crop readiness is a geometry diagnostic. readerRawFragments simulates suppression only after a successful caption crop; readerCellFallbacks are native same-baseline rows retained for a readable source-only grid, not a claim of fully reconstructed table semantics. readerFragmentKinds is audit-only triage and does not change resolver behavior."
   }
 }

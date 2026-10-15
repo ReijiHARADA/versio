@@ -59,6 +59,12 @@ function captionAnchoredGraphicsGrid(
     const overlap = Math.max(0, Math.min(right, captionBox.x + captionBox.width) - Math.max(x, captionBox.x));
     const centerDistance = Math.abs((x + right) / 2 - (captionBox.x * 2 + captionBox.width) / 2);
     if (gap > 180 || (overlap < Math.min(box.width, captionBox.width) * 0.12 && centerDistance > 100)) return [];
+    // A short caption in one column must not anchor a ruled component that
+    // spans the whole two-column page. Such components commonly combine the
+    // table's horizontal rule with an unrelated neighbouring column and would
+    // otherwise relabel ordinary prose as a table member.
+    if (box.width > page.width * 0.7 && captionBox.width < page.width * 0.6 &&
+      centerDistance > page.width * 0.15) return [];
     return [{ box, gap, strength: horizontal * 2 + vertical }];
   });
   return candidates.sort((a, b) => a.gap - b.gap || b.strength - a.strength)[0]?.box;

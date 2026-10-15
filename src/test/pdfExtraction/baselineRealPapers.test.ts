@@ -577,6 +577,13 @@ describe("baseline benchmark on cached real papers", () => {
           block.original?.includes("Prediction of epidemic results of")
         );
         expect(prediction?.type).toBe("paragraph");
+        const reviewNarrative = extracted.blocks.find((block) =>
+          block.original?.startsWith("transmission dynamics, pathogenesis, clinical characteristics")
+        );
+        expect(reviewNarrative?.type).toBe("paragraph");
+        // This block begins mid-sentence, so the safety gate keeps the source
+        // visible until page/column stitching repairs its boundary.
+        expect(reviewNarrative?.original).toContain("comprehensive survey paper");
       }
       if (gt?.listItems) {
         expect(report.listItemRecall).toBeGreaterThanOrEqual(0.9);

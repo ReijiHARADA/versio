@@ -815,11 +815,16 @@ function isChartDebrisFragment(text: string): boolean {
 }
 
 function hasStrongTableMatrixEvidence(node: CanonicalNode): boolean {
-  return node.evidence.some((entry) =>
+  const scoredTable = node.evidence.some((entry) =>
+    entry.label === "role-scores" && /table=0\.(?:9[4-9]|[1-9]\d)/.test(entry.reason ?? "")
+  );
+  // `captioned-neighbor-cell-rows` is emitted from nearby geometry and can
+  // also land on a long prose column next to a table. Require an independent
+  // high table role score before letting that signal override prose demotion.
+  return scoredTable || node.evidence.some((entry) =>
     entry.label === "matrix-axis-label-neighbor" ||
-    entry.label === "captioned-neighbor-cell-rows" ||
-    entry.label === "captioned-native-multicell-row" ||
-    (entry.label === "role-scores" && /table=0\.(?:9[4-9]|[1-9]\d)/.test(entry.reason ?? ""))
+    (entry.label === "captioned-neighbor-cell-rows" && scoredTable) ||
+    (entry.label === "captioned-native-multicell-row" && scoredTable)
   );
 }
 
@@ -876,6 +881,13 @@ function captionedTableAbsorption(canonical: CanonicalDocument): {
     const target = nodeById.get(rel.to);
     if (!caption || !target || target.role !== "table") continue;
     if (!isNumberedTableCaption(caption.text)) continue;
+    const targetHasHighTableScore = target.evidence.some((entry) =>
+      entry.label === "role-scores" && /table=0\.(?:9[4-9]|[1-9]\d)/.test(entry.reason ?? "")
+    );
+    // Resolver region membership can paint an entire neighbouring prose
+    // column as a table target. Do not let that weak target absorb the column
+    // into a caption-owned table unless its own role evidence is strong.
+    if (!targetHasHighTableScore && looksLikeProseMistakenForTable(target.text ?? "")) continue;
     // Keep only substantive CAPTION_OF targets (full rows / grids). A lone
     // cell that won the caption link is still a crumb — the caption block
     // (and image crop) already represent the table.
@@ -2115,14 +2127,21 @@ export function projectCanonicalToPaper(input: {
     // Chart-adjacent prose can inherit a table role from region membership.
     // Drop axis crumbs; keep longer narrative as ordinary paragraphs.
     const tableLayout = layout ?? layoutBlocks.find((candidate) => candidate.pageStart === node.pageStart && candidate.text === node.text);
+    const explicitHighTableScore = node.evidence.some((entry) =>
+      entry.label === "role-scores" && /table=0\.(?:9[4-9]|[1-9]\d)/.test(entry.reason ?? "")
+    );
     const strongNativeRowGrid = hasStrongNativeTableRows(node, tableLayout) ||
-      (node.evidence.some((entry) =>
+      (explicitHighTableScore && node.evidence.some((entry) =>
         entry.label === "table-row-geometry" && entry.confidence >= 0.9
       ) && (tableLayout?.lines.filter((line) => line.items.length >= 2).length ?? 0) >= 3);
+    const weakTableGeometryOnNarrative = !explicitHighTableScore &&
+      node.evidence.some((entry) => entry.label === "table-row-geometry") &&
+      ((node.text ?? "").split(/\s+/).filter(Boolean).length >= 36 ||
+        ((node.text ?? "").match(/[.!?]/g) ?? []).length >= 3);
     if (node.role === "table" && node.text && !hasStrongTableMatrixEvidence(node) &&
         !strongNativeRowGrid &&
         !belongsToCaptionedTableRegion(node, tableAbsorption.regions) &&
-        looksLikeProseMistakenForTable(node.text)) {
+        (looksLikeProseMistakenForTable(node.text) || weakTableGeometryOnNarrative)) {
       const text = node.text;
       if (isChartDebrisFragment(text)) {
         continue;
@@ -2163,7 +2182,8 @@ export function projectCanonicalToPaper(input: {
       continue;
     }
 
-    const recoveredNativeGrid = node.role !== "table" && hasStrongNativeTableRows(node, tableLayout);
+    const recoveredNativeGrid = node.role !== "table" && !weakTableGeometryOnNarrative &&
+      hasStrongNativeTableRows(node, tableLayout);
     const tableRole = node.role === "table" || recoveredNativeGrid;
     const nativeGrid = tableRole && node.text &&
       !/[!?;]|[.]\s*(?:[A-Za-z]|$)/.test(node.text) &&
