@@ -2832,3 +2832,5 @@ The interactive-jewellery regression exposed a general masthead case where a wra
 The complete extraction corpus remains **232/232** after this change, and the dedicated interactive-jewellery test passes. The table-readiness audit now stores representative samples per fragment category so ambiguous/prose-like entries can be manually classified rather than treated as failures by count alone. Latest audit: 0 extraction errors, 363 captions, 253 crop-ready captions, 1,495 raw fragments, 796 reader fragments, 618 structured-grid fallbacks, 5 prose-like, 25 ambiguous, 147 short-label, and 1 numeric-grid.
 
 The staged `.app` must be rebuilt after this source change before Tauri UI verification.
+
+Packaged verification with the real `test-data/real-papers/interactive-jewellery.pdf` also passed using the rebuilt `.app`: import, annotation/search/export, Notion ZIP generation, quit, relaunch, and persistence all completed (`exportBytes=38582`, `notionBytes=15157`, `searchHits=1`).
