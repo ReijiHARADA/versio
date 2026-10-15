@@ -22,6 +22,8 @@ export type CachedDocument = {
   sourcePdf?: Uint8Array;
   /** True when in-memory state has mutations that must be written back. */
   dirty: boolean;
+  /** Monotonic mutation marker used to avoid clearing a newer edit after a checkpoint. */
+  dirtyRevision: number;
 };
 
 type PendingFlush = {
@@ -32,6 +34,7 @@ type PendingFlush = {
 
 const cache = new Map<string, CachedDocument>();
 const pendingFlushes = new Map<string, PendingFlush>();
+const activeMutableFlushes = new Map<string, Promise<void>>();
 
 export const documentPersistMetrics = {
   fullPackageWrites: 0,
@@ -47,7 +50,10 @@ export function resetDocumentPersistMetrics(): void {
 
 function markDirty(paperId: string): void {
   const current = cache.get(paperId);
-  if (current) current.dirty = true;
+  if (current) {
+    current.dirty = true;
+    current.dirtyRevision += 1;
+  }
 }
 
 export function rememberDocument(paper: Paper, sections?: Section[], blocks?: PaperBlock[]): void {
@@ -58,6 +64,7 @@ export function rememberDocument(paper: Paper, sections?: Section[], blocks?: Pa
     blocks: blocks ?? current?.blocks ?? [],
     sourcePdf: current?.sourcePdf,
     dirty: current?.dirty ?? false,
+    dirtyRevision: current?.dirtyRevision ?? 0,
   });
 }
 
@@ -74,6 +81,7 @@ export function rememberSourcePdf(paperId: string, sourcePdf: Uint8Array): void 
     blocks: [],
     sourcePdf,
     dirty: true,
+    dirtyRevision: 1,
   });
 }
 
@@ -91,6 +99,7 @@ export function resetDocumentCache(): void {
     cancelMutableFlush(paperId);
   }
   cache.clear();
+  activeMutableFlushes.clear();
 }
 
 function isHotPersistStatus(status: ProcessingStatus): boolean {
@@ -167,6 +176,7 @@ async function persistMutableFromCache(
     await persistCached(fs, db, paperId);
     return;
   }
+  const revisionAtStart = cached.dirtyRevision;
   const paperJsonText = await fs.readText(`papers/${paperId}/paper.json`);
   const currentRevision = paperJsonText
     ? (JSON.parse(paperJsonText) as { revision?: number }).revision ?? 1
@@ -185,19 +195,25 @@ async function persistMutableFromCache(
       translation: pkg.translation,
     });
     documentPersistMetrics.mutableWrites += 1;
-    cached.dirty = false;
+    if (cached.dirtyRevision === revisionAtStart) cached.dirty = false;
     upsertPaperIndex(db, cached.paper);
     indexPaperText(db, cached.paper, pkg.originalMarkdown, pkg.translatedMarkdown);
+    if (cached.dirty) scheduleMutablePersist(fs, db, paperId);
   } catch (error) {
     console.warn("Translation checkpoint persist failed:", error);
   }
 }
 
 function scheduleMutablePersist(fs: FileSystem, db: SqliteClient, paperId: string): void {
-  if (pendingFlushes.has(paperId)) return;
+  if (pendingFlushes.has(paperId) || activeMutableFlushes.has(paperId)) return;
   const timer = setTimeout(() => {
     pendingFlushes.delete(paperId);
-    void persistMutableFromCache(fs, db, paperId);
+    const run = persistMutableFromCache(fs, db, paperId).finally(() => {
+      activeMutableFlushes.delete(paperId);
+      const cached = cache.get(paperId);
+      if (cached?.dirty && !pendingFlushes.has(paperId)) scheduleMutablePersist(fs, db, paperId);
+    });
+    activeMutableFlushes.set(paperId, run);
   }, MUTABLE_FLUSH_MS);
   pendingFlushes.set(paperId, { fs, db, timer });
 }
@@ -226,6 +242,12 @@ export async function flushDocumentPersist(
   const unique = [...new Set(ids)];
   for (const id of unique) {
     cancelMutableFlush(id);
+    const active = activeMutableFlushes.get(id);
+    if (active) await active;
+    // The active checkpoint may have observed a newer mutation and scheduled
+    // a follow-up timer in its finally handler. A caller explicitly flushing
+    // now should own that follow-up instead of allowing a duplicate write.
+    cancelMutableFlush(id);
     const cached = cache.get(id);
     if (!cached?.dirty) {
       if (cached) documentPersistMetrics.skippedCleanFlushes += 1;
@@ -244,7 +266,7 @@ export async function saveDocumentSections(
   const paperId = sections[0].paperId;
   const current = cache.get(paperId);
   if (current) current.sections = sections;
-  else cache.set(paperId, { paper: placeholderPaper(paperId), sections, blocks: [], dirty: true });
+  else cache.set(paperId, { paper: placeholderPaper(paperId), sections, blocks: [], dirty: true, dirtyRevision: 1 });
   await persistAfterMutation(fs, db, paperId);
 }
 
@@ -257,7 +279,7 @@ export async function saveDocumentBlocks(
   const paperId = blocks[0].paperId;
   const current = cache.get(paperId);
   if (current) current.blocks = blocks;
-  else cache.set(paperId, { paper: placeholderPaper(paperId), sections: [], blocks, dirty: true });
+  else cache.set(paperId, { paper: placeholderPaper(paperId), sections: [], blocks, dirty: true, dirtyRevision: 1 });
   await persistAfterMutation(fs, db, paperId);
 }
 
@@ -278,6 +300,7 @@ export async function updateDocumentBlock(
       sections: [],
       blocks: next,
       dirty: true,
+      dirtyRevision: 1,
     });
   await persistAfterMutation(fs, db, block.paperId);
 }
@@ -327,15 +350,16 @@ export async function loadDocument(
       const entry: CachedDocument = {
         ...projected,
         dirty: false,
+        dirtyRevision: 0,
       };
       cache.set(paper.id, entry);
       return entry;
     } catch (error) {
       console.warn("Failed to load paper package:", paper.id, error);
-      return cached ?? { paper, sections: [], blocks: [], dirty: false };
+      return cached ?? { paper, sections: [], blocks: [], dirty: false, dirtyRevision: 0 };
     }
   }
-  return cached ?? { paper, sections: [], blocks: [], dirty: false };
+  return cached ?? { paper, sections: [], blocks: [], dirty: false, dirtyRevision: 0 };
 }
 
 export async function getDocumentSections(

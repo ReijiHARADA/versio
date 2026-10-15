@@ -3086,3 +3086,18 @@ The fast Tauri bundle includes this package-stage change; `Paper Reader.app`
 was rebuilt at `2026-10-16 02:29:51 +0900`. Packaged integration E2E passed for
 both `human-ai-interaction-guidelines.pdf` and the OzCHI fixture, covering
 import, search, export, quit, relaunch, and persistence.
+# 2026-10-16: coalesce hot translation checkpoints and detect persisted FTS fallback
+
+Two generic runtime issues found during packaged real-PDF verification are now
+fixed. Reopened databases could contain the ordinary `papers_fts` LIKE fallback,
+but `CREATE VIRTUAL TABLE IF NOT EXISTS` was treated as proof that FTS5 existed;
+schema inspection now selects the correct query path and has a regression test.
+Translation checkpointing also now tracks a mutation revision and one active
+mutable flush per paper. A checkpoint no longer clears a newer in-memory edit,
+and repeated translation updates cannot queue an unbounded series of duplicate
+checkpoint writes ahead of Reader/export operations. Relevant database and hot
+path tests pass, typecheck and lint pass with only existing warnings. The real
+cognitive-memory packaged run previously reached `export_started` after import,
+annotation, and search; this checkpoint change is the next fix to verify in the
+same packaged flow. The production acceptance-only marker instrumentation used
+for diagnosis was removed.
