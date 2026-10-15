@@ -27,7 +27,11 @@ export function Table({ block, metadata }: TableProps) {
   const tableRows = Array.isArray(metadata.tableRows)
     ? metadata.tableRows.filter((row) => Array.isArray(row) && row.length > 0)
     : [];
-  const structuredFallback = textFallback && tableRows.length >= 2;
+  // Captionless/native grids may intentionally have no block.original after
+  // package projection: their source text lives entirely in tableRows. Keep
+  // the cell structure as the primary fallback instead of showing an empty
+  // extraction shell.
+  const structuredFallback = !hasImage && !metadata.imageUrl && tableRows.length >= 2;
   const showCaption = Boolean(caption) || hasImage;
 
   return (
