@@ -148,7 +148,14 @@ export async function importPDFV2(
       filePath: file.name,
       fileHash,
       file,
-      extractFigures: true,
+      // Figure/table raster assets are optional presentation data.  The native
+      // caption and reconstructed cell grid are already part of the immutable
+      // package, whereas a pathological vector page can synchronously block
+      // PDF.js canvas rendering for minutes.  Persist the usable document
+      // first; explicit re-extraction can later enrich it with image assets.
+      // This prevents a slow crop from leaving an otherwise valid paper with
+      // no package and therefore an empty Reader.
+      extractFigures: false,
       previousBlocks: previousBlocks.length ? previousBlocks : undefined,
       onProgress: (progress) => {
         throwIfImportAborted(callbacks.signal, { paperId, partialReady: false });
