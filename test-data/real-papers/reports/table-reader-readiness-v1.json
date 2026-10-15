@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T12:57:56.126Z",
+  "generatedAt": "2026-10-15T13:25:12.201Z",
   "paperCount": 114,
   "papers": [
     {
@@ -89,8 +89,8 @@
       "file": "cognitive-memory-cues.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 61,
-      "cropBackedFragments": 25,
+      "rawTableFragments": 62,
+      "cropBackedFragments": 26,
       "readerRawFragments": 36,
       "readerCellFallbacks": 24,
       "readerFragmentKinds": {
@@ -373,7 +373,7 @@
       "file": "cognitive-psychology-chronometric-constructive-cognitive-learning-evaluation-model-measurin.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 1,
-      "rawTableFragments": 8,
+      "rawTableFragments": 9,
       "cropBackedFragments": 2,
       "readerRawFragments": 3,
       "readerCellFallbacks": 3,
@@ -594,8 +594,8 @@
       "file": "computational-linguistics-nlp-translation.pdf",
       "tableCaptions": 1,
       "cropReadyCaptions": 1,
-      "rawTableFragments": 3,
-      "cropBackedFragments": 2,
+      "rawTableFragments": 4,
+      "cropBackedFragments": 3,
       "readerRawFragments": 1,
       "readerCellFallbacks": 1,
       "readerFragmentKinds": {
@@ -623,13 +623,13 @@
       "file": "covid-ml-review.pdf",
       "tableCaptions": 10,
       "cropReadyCaptions": 8,
-      "rawTableFragments": 71,
+      "rawTableFragments": 72,
       "cropBackedFragments": 13,
-      "readerRawFragments": 57,
-      "readerCellFallbacks": 37,
+      "readerRawFragments": 58,
+      "readerCellFallbacks": 38,
       "readerFragmentKinds": {
         "short-label": 15,
-        "structured-grid": 37,
+        "structured-grid": 38,
         "numeric-grid": 1,
         "ambiguous": 4
       },
@@ -777,6 +777,10 @@
         {
           "page": 9,
           "text": "- [55]"
+        },
+        {
+          "page": 9,
+          "text": "931 people having bacterial pneumonia, and 1203 healthy people. Zhang et al. [42] applied ResNet based model to Xray images. The ResNet model was applied for two purposes [42]. The"
         },
         {
           "page": 10,
@@ -2015,12 +2019,12 @@
       "file": "hci-a-comparative-research-on-usability-and-user-experience-of-user-interf.pdf",
       "tableCaptions": 0,
       "cropReadyCaptions": 0,
-      "rawTableFragments": 13,
+      "rawTableFragments": 14,
       "cropBackedFragments": 0,
-      "readerRawFragments": 13,
-      "readerCellFallbacks": 12,
+      "readerRawFragments": 14,
+      "readerCellFallbacks": 13,
       "readerFragmentKinds": {
-        "structured-grid": 12,
+        "structured-grid": 13,
         "short-label": 1
       },
       "orphanFragments": [
@@ -2067,6 +2071,10 @@
         {
           "page": 6,
           "text": "Time to complete each task (s) Degreeof Variables Sketch freedom Significance AdobeXD Figma Task 1 119.88 71.46 61.26 2 0.001 Task 2 77.52 54.64 61.80 2 0.327 Task 3 120.74 56.00 6"
+        },
+        {
+          "page": 6,
+          "text": "3) Information quality evaluation. The subjects considered Figma to have the best information quality, followed by Adobe XD and finally Sketch. Although there is no significant dif"
         },
         {
           "page": 7,
@@ -2150,12 +2158,12 @@
       "file": "hci-intelligent-human-computer-interaction.pdf",
       "tableCaptions": 44,
       "cropReadyCaptions": 22,
-      "rawTableFragments": 61,
-      "cropBackedFragments": 30,
-      "readerRawFragments": 24,
-      "readerCellFallbacks": 16,
+      "rawTableFragments": 63,
+      "cropBackedFragments": 31,
+      "readerRawFragments": 25,
+      "readerCellFallbacks": 17,
       "readerFragmentKinds": {
-        "structured-grid": 16,
+        "structured-grid": 17,
         "short-label": 8
       },
       "orphanFragments": [
@@ -2238,6 +2246,10 @@
         {
           "page": 194,
           "text": "f wð 1w2Þ þ2ðf wð 1w\u0016 2Þ þfðw\u0016 1w2ÞÞ Word forward variety vfðw2Þ"
+        },
+        {
+          "page": 196,
+          "text": "The shaded regions in Table 4 show the settings in which Fi \u0015 Fc, meaning that when training set is enlarged with co-training, F1 value increases. It is observed that standard co-t"
         },
         {
           "page": 226,
@@ -2649,8 +2661,8 @@
       "file": "how-content-volume-landing-pages.pdf",
       "tableCaptions": 5,
       "cropReadyCaptions": 5,
-      "rawTableFragments": 5,
-      "cropBackedFragments": 4,
+      "rawTableFragments": 6,
+      "cropBackedFragments": 5,
       "readerRawFragments": 1,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {
@@ -4492,14 +4504,18 @@
       "file": "marketing-healthy-choice.pdf",
       "tableCaptions": 3,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 16,
+      "rawTableFragments": 17,
       "cropBackedFragments": 13,
-      "readerRawFragments": 3,
-      "readerCellFallbacks": 3,
+      "readerRawFragments": 4,
+      "readerCellFallbacks": 4,
       "readerFragmentKinds": {
-        "structured-grid": 3
+        "structured-grid": 4
       },
       "orphanFragments": [
+        {
+          "page": 5,
+          "text": "attention, and healthy eating goal on snack choice To examine the role of explicit attention in nudge effectiveness, we conducted a multiple hierarchical regression analysis with c"
+        },
         {
           "page": 6,
           "text": "95% CI b t p"
@@ -4573,12 +4589,12 @@
       "file": "marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the.pdf",
       "tableCaptions": 51,
       "cropReadyCaptions": 34,
-      "rawTableFragments": 94,
-      "cropBackedFragments": 55,
-      "readerRawFragments": 27,
-      "readerCellFallbacks": 24,
+      "rawTableFragments": 101,
+      "cropBackedFragments": 58,
+      "readerRawFragments": 28,
+      "readerCellFallbacks": 25,
       "readerFragmentKinds": {
-        "structured-grid": 24,
+        "structured-grid": 25,
         "short-label": 3
       },
       "orphanFragments": [
@@ -4717,8 +4733,8 @@
       "file": "marketing-platform.pdf",
       "tableCaptions": 3,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 5,
-      "cropBackedFragments": 3,
+      "rawTableFragments": 6,
+      "cropBackedFragments": 4,
       "readerRawFragments": 2,
       "readerCellFallbacks": 1,
       "readerFragmentKinds": {
@@ -4861,7 +4877,7 @@
       "file": "medical-deep-learning-meta-review.pdf",
       "tableCaptions": 9,
       "cropReadyCaptions": 6,
-      "rawTableFragments": 97,
+      "rawTableFragments": 98,
       "cropBackedFragments": 21,
       "readerRawFragments": 71,
       "readerCellFallbacks": 58,
@@ -5430,7 +5446,7 @@
       "file": "speechin.pdf",
       "tableCaptions": 3,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 8,
+      "rawTableFragments": 9,
       "cropBackedFragments": 6,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
@@ -5572,8 +5588,8 @@
       "file": "wear-scale.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 9,
-      "cropBackedFragments": 6,
+      "rawTableFragments": 10,
+      "cropBackedFragments": 7,
       "readerRawFragments": 2,
       "readerCellFallbacks": 2,
       "readerFragmentKinds": {
@@ -5600,18 +5616,18 @@
     "papersWithTableCaptions": 48,
     "tableCaptions": 353,
     "cropReadyCaptions": 241,
-    "rawTableFragments": 1585,
-    "cropBackedFragments": 482,
-    "readerRawFragments": 1044,
-    "readerCellFallbacks": 718,
+    "rawTableFragments": 1605,
+    "cropBackedFragments": 491,
+    "readerRawFragments": 1049,
+    "readerCellFallbacks": 723,
     "readerFragmentKinds": {
       "short-label": 283,
-      "structured-grid": 718,
+      "structured-grid": 723,
       "prose-like": 7,
       "ambiguous": 35,
       "numeric-grid": 1
     },
-    "orphanFragments": 1033,
+    "orphanFragments": 1037,
     "note": "Crop readiness is a geometry diagnostic. readerRawFragments simulates suppression only after a successful caption crop; readerCellFallbacks are native same-baseline rows retained for a readable source-only grid, not a claim of fully reconstructed table semantics. readerFragmentKinds is audit-only triage and does not change resolver behavior."
   }
 }

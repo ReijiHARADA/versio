@@ -817,6 +817,31 @@ function hasStrongTableMatrixEvidence(node: CanonicalNode): boolean {
   );
 }
 
+/**
+ * The resolver can conservatively settle a native grid as `paragraph` even
+ * though the layout still proves a multi-row, multi-column table. Keep this
+ * recovery narrow: require the geometry evidence emitted by the table
+ * candidate scorer and several actual native rows with multiple cells. This
+ * avoids reviving chart labels or ordinary prose that merely sits near a
+ * table caption.
+ */
+function hasStrongNativeTableRows(node: CanonicalNode, layout: LayoutBlock | undefined): boolean {
+  if (!layout || layout.lines.length < 3) return false;
+  // Dense figure/plot labels can receive the same row geometry signal as a
+  // table. Their explicit vector-label evidence takes precedence; keeping
+  // them out prevents numeric chart annotations from becoming source-only
+  // table cards.
+  if (node.evidence.some((entry) => entry.label === "vector-figure-label-cluster" || entry.label === "repeated-numeric-chart-label")) {
+    return false;
+  }
+  const geometry = node.evidence.find((entry) =>
+    entry.label === "table-row-geometry" && entry.confidence >= 0.9
+  );
+  if (!geometry) return false;
+  const multiCellRows = layout.lines.filter((line) => line.items.length >= 2).length;
+  return multiCellRows >= 3 && !looksLikeProseMistakenForTable(node.text ?? "");
+}
+
 function isNumberedTableCaption(text: string | null | undefined): boolean {
   return /^(?:table|表)\s*\d+/i.test((text ?? "").trim());
 }
@@ -2068,7 +2093,10 @@ export function projectCanonicalToPaper(input: {
       continue;
     }
 
-    const nativeGrid = node.role === "table" && node.text &&
+    const tableLayout = layout ?? layoutBlocks.find((candidate) => candidate.pageStart === node.pageStart && candidate.text === node.text);
+    const recoveredNativeGrid = node.role !== "table" && hasStrongNativeTableRows(node, tableLayout);
+    const tableRole = node.role === "table" || recoveredNativeGrid;
+    const nativeGrid = tableRole && node.text &&
       !/[!?;]|[.]\s*(?:[A-Za-z]|$)/.test(node.text) &&
       !/^[\s]*(?:algorithm|require)\b/i.test(node.text) &&
       !/[∑∫√≤≥≈‖αβγδθλμσΩˆ]/u.test(node.text) &&
@@ -2098,7 +2126,6 @@ export function projectCanonicalToPaper(input: {
         (node.confidence >= 0.94 && node.boundingBoxes.length === 1 &&
           node.text.trim().split(/\s+/).filter(Boolean).length <= 10 &&
           !/[.!?]\s*$/.test(node.text.trim())));
-    const tableLayout = layout ?? layoutBlocks.find((candidate) => candidate.pageStart === node.pageStart && candidate.text === node.text);
     const candidateRows = tableLayout?.lines.reduce<Array<Array<{ text: string; x: number; width: number; y: number }>>>((rows, line) => {
       const cells = line.items
         .filter((item) => item.text.trim().length > 0)
@@ -2149,7 +2176,7 @@ export function projectCanonicalToPaper(input: {
     // construct a grid or crop an image. Keep its extracted text visible as
     // source-only prose instead of silently dropping the node or translating
     // unrelated cells as a fabricated paragraph.
-    if (node.role === "table" && node.text) {
+    if (tableRole && node.text) {
       pushBlock(node, tableLayout, {
         sectionId: currentSectionId,
         type: "table",

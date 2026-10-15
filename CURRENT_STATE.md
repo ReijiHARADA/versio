@@ -2730,3 +2730,23 @@ normalize the Conversation Analysis research center to one affiliation and
 keep the Cognitive Motor Memory affiliations free of email/contact markers.
 Focused author tests pass; full benchmark and packaged verification are the
 next gates.
+# 2026-10-15: recover flattened multi-row table nodes without reviving chart labels
+
+`speechin.pdf` exposed a generic projection gap: a 9-row, 6-column native
+wearable-technique grid carried strong `table-row-geometry` evidence and real
+cell boxes, but the resolver role was conservatively `paragraph`. That caused
+the whole grid to appear as a translatable paragraph. Projection now recovers
+`table` only when the matched native layout has at least three multi-cell rows,
+high-confidence table-row geometry, and no explicit vector-figure/chart-label
+evidence. The grid is emitted as a skipped table with nine `tableRows` and is
+not sent to translation. A separate regression prevents dense COVID plot
+labels with the same geometry signal from being promoted to tables.
+
+The focused `speechin` and `covid-ml-review` regressions pass, typecheck and
+lint pass with the existing warnings, and the full **232/232** extraction and
+reading-order corpus passes in **469.28 seconds**. The refreshed table audit
+has **0** extraction errors, **353** captions, **241** crop-ready captions,
+**1,605** raw table fragments, **723** native cell-grid fallbacks, and only
+**7** prose-like / **35** ambiguous fragments. These audit counts are
+diagnostic; the remaining fragment review set is not suppressed by lowering
+table precision.
