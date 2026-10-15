@@ -14,7 +14,11 @@ body run stays eligible as the predecessor even if it lies near a caption. The
 same sentence is now reconstructed as one paragraph while the left statistics
 table remains a table. The targeted real-PDF regression, typecheck, and lint
 pass; the complete **118 extraction + 114 reading-order** corpus passes
-**232/232** in **458.99 seconds** under `caffeinate -dimsu`.
+**232/232** in **458.99 seconds** under `caffeinate -dimsu`. A fresh fast
+`.app` built at **2026-10-15 18:37:19 JST** passed the isolated packaged
+import, annotation, search, Markdown/Notion export, quit, and relaunch flow
+with this PDF. Its saved package has one paragraph containing both `gist
+memory` and `and detailed memory at 10 min`; no standalone tail remains.
 
 # 2026-10-15: initial import no longer waits for optional figure rasterization
 
