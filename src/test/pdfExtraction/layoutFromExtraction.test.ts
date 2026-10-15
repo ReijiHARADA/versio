@@ -99,32 +99,4 @@ describe("package layout reconstruction", () => {
     expect(result.translationStatus).toBe("pending");
     expect(result.metadata.packageRoleRepair).toBe("narrative-table-fallback-demoted");
   });
-
-  it("demotes short statistical prose that lacks a terminal period", () => {
-    const block = {
-      id: "statistical-fallback",
-      paperId: "paper",
-      order: 0,
-      type: "table",
-      original: "For confirmed cases, ME=17.84, RMSE=514.74, MAE=324.46,",
-      translated: null,
-      translationStatus: "skipped",
-      pageStart: 5,
-      pageEnd: 5,
-      boundingBoxes: [{ page: 5, x: 80, y: 160, width: 180, height: 12 }],
-      parentBlockId: null,
-      extractionConfidence: 0.9,
-      metadata: {
-        tableSourceFallback: true,
-        role: "table",
-        evidence: [
-          { label: "paragraph", confidence: 0.9 },
-          { label: "table-row-geometry", confidence: 0.95 },
-        ],
-      },
-    } as PaperBlock;
-    const [result] = attachLinesToBlocks([block], []);
-    expect(result.type).toBe("paragraph");
-    expect(result.translationStatus).toBe("pending");
-  });
 });

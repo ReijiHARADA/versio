@@ -3127,15 +3127,3 @@ extraction quality.
 After removing the diagnostic markers, typecheck and the checkpoint/FTS tests
 pass again. The clean fast `.app` was rebuilt at **2026-10-16 04:32:20 JST**;
 it contains the checkpoint coalescing fix and no acceptance-only instrumentation.
-
-# 2026-10-16: demote statistical prose falsely classified as a table
-
-The 114-paper table audit still had one numeric-grid fragment that was ordinary
-results prose: `For confirmed cases, ME=17.84, RMSE=514.74, MAE=324.46,`.
-Because it had no terminal period and fewer than ten words, the package-stage
-demotion did not recognize it as a paragraph. A generic statistical-narrative
-guard now demotes short, sentence-leading metric summaries when strong
-paragraph evidence is present, while preserving actual table rows. A focused
-regression covers the case; layout tests (8/8) and typecheck pass. The next
-table audit should confirm `numeric-grid` falls to zero without increasing
-false table demotions.
