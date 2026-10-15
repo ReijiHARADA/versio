@@ -440,9 +440,16 @@ describe("baseline benchmark on cached real papers", () => {
         expect(teleGlove?.translationStatus).toBe("skipped");
       }
       if (paper.id === "speechin") {
-        const row = extractFromPages({ pages, paperId: "bench-speechin-row", filePath: paper.filename, fileHash: paper.id, metadata: { title: paper.title, pageCount: pages.length } }).blocks.find((block) => block.original?.startsWith("SpeeChin One camera"));
+        const speechinExtraction = extractFromPages({ pages, paperId: "bench-speechin-row", filePath: paper.filename, fileHash: paper.id, metadata: { title: paper.title, pageCount: pages.length } });
+        const row = speechinExtraction.blocks.find((block) => block.original?.startsWith("SpeeChin One camera"));
         expect(row?.type).toBe("table");
         expect(row?.translationStatus).toBe("skipped");
+        const wearableTechniqueTable = speechinExtraction.blocks.find((block) =>
+          block.original?.startsWith("method location size accuracy dependency")
+        );
+        expect(wearableTechniqueTable?.type).toBe("table");
+        expect(wearableTechniqueTable?.translationStatus).toBe("skipped");
+        expect(wearableTechniqueTable?.metadata.tableRows).toHaveLength(9);
       }
       if (paper.id === "linguistics-language-model-physics") {
         const extracted = extractFromPages({
