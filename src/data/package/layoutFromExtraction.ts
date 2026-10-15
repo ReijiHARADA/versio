@@ -101,13 +101,14 @@ export function attachLinesToBlocks(
         )
         .filter((row) => row.length > 0)
       : undefined;
-    const hasCellStructure = tableRows?.some((row) => row.length >= 2) ?? false;
+    const normalizedTableRows = tableRows ? normalizeTableRows(tableRows) : undefined;
+    const hasCellStructure = normalizedTableRows?.some((row) => row.length >= 2) ?? false;
     return {
       ...block,
       metadata: {
         ...block.metadata,
         lines,
-        ...(hasCellStructure ? { tableRows } : {}),
+        ...(hasCellStructure ? { tableRows: normalizedTableRows } : {}),
       },
     };
   });
@@ -115,6 +116,76 @@ export function attachLinesToBlocks(
 }
 
 type TableCell = { text: string; x: number; width: number };
+
+/** Merge wrapped native table-cell rows and word fragments by geometry. */
+function normalizeTableRows(rows: TableCell[][]): TableCell[][] {
+  if (rows.length < 2) return rows;
+  const allBands: number[] = [];
+  for (const row of rows) for (const cell of row) {
+    const index = allBands.findIndex((band) => Math.abs(band - cell.x) <= 12);
+    if (index >= 0) allBands[index] = (allBands[index] + cell.x) / 2;
+    else allBands.push(cell.x);
+  }
+  allBands.sort((a, b) => a - b);
+  const rowCount = (band: number) => rows.filter((row) => row.some((cell) => Math.abs(cell.x - band) <= 12)).length;
+  const stableBands = allBands.filter((band) => rowCount(band) >= Math.max(2, Math.ceil(rows.length * 0.4)));
+  if (stableBands.length < 2) return rows;
+  const ranges = stableBands.map((band) => ({
+    band,
+    right: Math.max(...rows.flatMap((row) => row
+      .filter((cell) => Math.abs(cell.x - band) <= 12)
+      .map((cell) => cell.x + cell.width)), band),
+  }));
+  const mapToStableBand = (cell: TableCell): number => {
+    const candidates = ranges.filter((range) => cell.x >= range.band - 12 && cell.x <= range.right + 8);
+    if (candidates.length > 0) {
+      return candidates.sort((a, b) => Math.abs(a.band - cell.x) - Math.abs(b.band - cell.x))[0].band;
+    }
+    // Wrapped words are frequently indented within a cell. If they fall
+    // between two established columns, keep them in the preceding column
+    // rather than creating a spurious fourth cell.
+    const interval = ranges.find((range, index) => {
+      const nextBand = stableBands[index + 1];
+      return cell.x >= range.band - 12 && (nextBand === undefined || cell.x < nextBand - 12);
+    });
+    return interval?.band ?? cell.x;
+  };
+  const leftBand = stableBands[0];
+  const joinCellText = (left: string, right: string) =>
+    `${left} ${right}`.replace(/-\s+/g, "-").replace(/\s+/g, " ").trim();
+  const mergeSameBand = (row: TableCell[]): TableCell[] => {
+    const merged: TableCell[] = [];
+    // Keep native reading order. Wrapped words can return to the same x-band
+    // after an indented line; sorting by x would turn `Delete the tapped
+    // contact` into `contact Delete the tapped`.
+    for (const source of row) {
+      const cell = { ...source, x: mapToStableBand(source) };
+      const previous = merged.at(-1);
+      if (previous && Math.abs(previous.x - cell.x) <= 12) {
+        previous.text = joinCellText(previous.text, cell.text);
+        previous.width = Math.max(previous.x + previous.width, cell.x + cell.width) - previous.x;
+      } else merged.push({ ...cell });
+    }
+    return merged;
+  };
+  const normalized: TableCell[][] = [];
+  for (const rawRow of rows) {
+    const row = mergeSameBand(rawRow);
+    const hasLeadingCell = row.some((cell) => Math.abs(cell.x - leftBand) <= 12);
+    if (!hasLeadingCell && normalized.length > 0) {
+      const previous = normalized[normalized.length - 1];
+      for (const cell of row) {
+        const target = previous.find((candidate) => Math.abs(candidate.x - cell.x) <= 12);
+        if (target) {
+          target.text = joinCellText(target.text, cell.text);
+          target.width = Math.max(target.x + target.width, cell.x + cell.width) - target.x;
+        } else previous.push({ ...cell });
+      }
+      previous.sort((a, b) => a.x - b.x);
+    } else normalized.push(row);
+  }
+  return normalized;
+}
 
 /**
  * Reassemble borderless tables whose native stream contains one block per
@@ -393,7 +464,7 @@ function foldCaptionOwnedTableFallbacks(blocks: PaperBlock[], layoutBlocks: Layo
   const rowsByCaption = new Map<string, TableCell[][]>();
   for (const { caption, rows } of ownerByFragmentId.values()) {
     const owned = rowsByCaption.get(caption.id) ?? [];
-    owned.push(...rows);
+    owned.push(...normalizeTableRows(rows));
     rowsByCaption.set(caption.id, owned);
   }
   const inferredOwnerIds = new Set<string>();
@@ -401,7 +472,7 @@ function foldCaptionOwnedTableFallbacks(blocks: PaperBlock[], layoutBlocks: Layo
     if (rowsByCaption.has(caption.id)) continue;
     const inferred = inferCaptionGrid(caption, blocks, layoutBlocks);
     if (!inferred) continue;
-    rowsByCaption.set(caption.id, inferred.rows);
+    rowsByCaption.set(caption.id, normalizeTableRows(inferred.rows));
     for (const id of inferred.ids) inferredOwnerIds.add(id);
   }
   if (ownerByFragmentId.size === 0 && inferredOwnerIds.size === 0) return blocks;
@@ -414,7 +485,7 @@ function foldCaptionOwnedTableFallbacks(blocks: PaperBlock[], layoutBlocks: Layo
       metadata: {
         ...block.metadata,
         tableSourceFallback: true,
-        tableRows: rows,
+        tableRows: normalizeTableRows(rows),
         captionOwnedNativeGrid: true,
       },
     }];

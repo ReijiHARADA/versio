@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T15:51:23.448Z",
+  "generatedAt": "2026-10-15T16:28:02.228Z",
   "paperCount": 114,
   "papers": [
     {
@@ -311,142 +311,13 @@
       "file": "cognitive-motor-memory.pdf",
       "tableCaptions": 0,
       "cropReadyCaptions": 0,
-      "rawTableFragments": 15,
+      "rawTableFragments": 0,
       "cropBackedFragments": 0,
-      "readerRawFragments": 15,
-      "readerCellFallbacks": 8,
-      "readerFragmentKinds": {
-        "structured-grid": 8,
-        "short-label": 7
-      },
-      "readerFragmentSamples": {
-        "structured-grid": [
-          {
-            "page": 9,
-            "text": "Concurrent visual and motor selection during visual working memory"
-          },
-          {
-            "page": 9,
-            "text": "van Ede, F., van Doren, T. I., Damhuis, J., de Lange, F. P., and"
-          },
-          {
-            "page": 9,
-            "text": "Movement preparation improves perception"
-          },
-          {
-            "page": 9,
-            "text": "without Cognition"
-          },
-          {
-            "page": 9,
-            "text": "Yebra, M., Galarza-Vallejo, A., Soto-Leon, V., Gonzalez-Rosa,"
-          },
-          {
-            "page": 9,
-            "text": "doi: 10.3758/s13414-011-0227-2 J., Berker, A. O., de, Bestmann,"
-          },
-          {
-            "page": 9,
-            "text": "episodic encoding in humans via engagement"
-          },
-          {
-            "page": 9,
-            "text": "Yon, D., Gilbert, S. J., de Lange, Action"
-          }
-        ],
-        "short-label": [
-          {
-            "page": 9,
-            "text": "guided"
-          },
-          {
-            "page": 9,
-            "text": "doi: 10.1038/s41593-018-"
-          },
-          {
-            "page": 9,
-            "text": "Maris,"
-          },
-          {
-            "page": 9,
-            "text": "01.009"
-          },
-          {
-            "page": 9,
-            "text": "boosts"
-          },
-          {
-            "page": 9,
-            "text": "noradrenergic"
-          },
-          {
-            "page": 9,
-            "text": "10, 3534. doi: 10.1038/s41467-019-"
-          }
-        ]
-      },
-      "orphanFragments": [
-        {
-          "page": 9,
-          "text": "Concurrent visual and motor selection during visual working memory"
-        },
-        {
-          "page": 9,
-          "text": "guided"
-        },
-        {
-          "page": 9,
-          "text": "doi: 10.1038/s41593-018-"
-        },
-        {
-          "page": 9,
-          "text": "van Ede, F., van Doren, T. I., Damhuis, J., de Lange, F. P., and"
-        },
-        {
-          "page": 9,
-          "text": "Maris,"
-        },
-        {
-          "page": 9,
-          "text": "Movement preparation improves perception"
-        },
-        {
-          "page": 9,
-          "text": "without Cognition"
-        },
-        {
-          "page": 9,
-          "text": "01.009"
-        },
-        {
-          "page": 9,
-          "text": "Yebra, M., Galarza-Vallejo, A., Soto-Leon, V., Gonzalez-Rosa,"
-        },
-        {
-          "page": 9,
-          "text": "doi: 10.3758/s13414-011-0227-2 J., Berker, A. O., de, Bestmann,"
-        },
-        {
-          "page": 9,
-          "text": "boosts"
-        },
-        {
-          "page": 9,
-          "text": "episodic encoding in humans via engagement"
-        },
-        {
-          "page": 9,
-          "text": "noradrenergic"
-        },
-        {
-          "page": 9,
-          "text": "10, 3534. doi: 10.1038/s41467-019-"
-        },
-        {
-          "page": 9,
-          "text": "Yon, D., Gilbert, S. J., de Lange, Action"
-        }
-      ]
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "readerFragmentSamples": {},
+      "orphanFragments": []
     },
     {
       "file": "cognitive-psychology-a-study-on-the-teaching-of-chinese-characters-memorization-for-foreign.pdf",
@@ -1910,16 +1781,16 @@
     },
     {
       "file": "ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport.pdf",
-      "tableCaptions": 36,
+      "tableCaptions": 37,
       "cropReadyCaptions": 29,
-      "rawTableFragments": 132,
-      "cropBackedFragments": 74,
-      "readerRawFragments": 45,
+      "rawTableFragments": 122,
+      "cropBackedFragments": 66,
+      "readerRawFragments": 43,
       "readerCellFallbacks": 36,
       "readerFragmentKinds": {
         "structured-grid": 36,
-        "short-label": 3,
-        "ambiguous": 6
+        "short-label": 2,
+        "ambiguous": 5
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -1980,10 +1851,6 @@
           {
             "page": 111,
             "text": "most helpful"
-          },
-          {
-            "page": 272,
-            "text": "Foreign object impaled in"
           }
         ],
         "ambiguous": [
@@ -2006,10 +1873,6 @@
           {
             "page": 253,
             "text": "I do NOT work night shifts"
-          },
-          {
-            "page": 272,
-            "text": "Contact with chemicals or other hazardous substances Contact with electricity Violent attack by another person Other (please describe):"
           }
         ]
       },
@@ -2176,15 +2039,7 @@
         },
         {
           "page": 272,
-          "text": "Foreign object impaled in"
-        },
-        {
-          "page": 272,
-          "text": "Other injuries due to vehicle or equipment (e.g., Lower leg body fingers shut in vehicle door, cut on sharp metal) Ankle Poisoning Foot Toes"
-        },
-        {
-          "page": 272,
-          "text": "Contact with chemicals or other hazardous substances Contact with electricity Violent attack by another person Other (please describe):"
+          "text": "Upper leg Knee Lower leg body Ankle Poisoning Foot Toes"
         }
       ]
     },
@@ -2533,13 +2388,13 @@
       "file": "hci-human-computer-interaction-as-science.pdf",
       "tableCaptions": 0,
       "cropReadyCaptions": 0,
-      "rawTableFragments": 5,
+      "rawTableFragments": 6,
       "cropBackedFragments": 0,
-      "readerRawFragments": 5,
-      "readerCellFallbacks": 3,
+      "readerRawFragments": 6,
+      "readerCellFallbacks": 4,
       "readerFragmentKinds": {
         "short-label": 2,
-        "structured-grid": 3
+        "structured-grid": 4
       },
       "readerFragmentSamples": {
         "short-label": [
@@ -2564,6 +2419,10 @@
           {
             "page": 1,
             "text": "contribute in some way to what"
+          },
+          {
+            "page": 11,
+            "text": "REFERENCES 17. Fallman, D. 2003. Design-oriented human-computer interaction. In Proc. CHI ‘03. ACM, New York, NY,"
           }
         ]
       },
@@ -2583,6 +2442,10 @@
         {
           "page": 1,
           "text": "contribute in some way to what"
+        },
+        {
+          "page": 11,
+          "text": "REFERENCES 17. Fallman, D. 2003. Design-oriented human-computer interaction. In Proc. CHI ‘03. ACM, New York, NY,"
         },
         {
           "page": 11,
@@ -3326,26 +3189,58 @@
     {
       "file": "how-content-volume-landing-pages.pdf",
       "tableCaptions": 5,
-      "cropReadyCaptions": 5,
-      "rawTableFragments": 8,
-      "cropBackedFragments": 7,
-      "readerRawFragments": 1,
-      "readerCellFallbacks": 0,
+      "cropReadyCaptions": 3,
+      "rawTableFragments": 7,
+      "cropBackedFragments": 2,
+      "readerRawFragments": 5,
+      "readerCellFallbacks": 5,
       "readerFragmentKinds": {
-        "short-label": 1
+        "structured-grid": 5
       },
       "readerFragmentSamples": {
-        "short-label": [
+        "structured-grid": [
           {
             "page": 10,
-            "text": "2.470**"
+            "text": "Page Variant Total unique Conversions Users who Conversion rate didn’t convert “A” (Long) 273 106 167 38.83% “B” (Short) 262 140 122 53.44% Total 535 As can be seen, the percentage of users who provided their e -mail was calculated as a per"
+          },
+          {
+            "page": 10,
+            "text": "-mail address). In comparison, in the is a significant 37.62% increase in"
+          },
+          {
+            "page": 10,
+            "text": "-3.6569, sig 0.00643, p <0.05), and chi-from 27,083 unique visits to the In the extended experiments, the overall data was collected page variants that resulted in 9,593 conversions."
+          },
+          {
+            "page": 10,
+            "text": "Experiment / Page variant Total unique Campaign visitors"
+          },
+          {
+            "page": 10,
+            "text": "National “ A ” (Long) 5497 “ B ” (Short) 5494 Atlanta “A” (Long) 3690 “ B ” (Short) 3688 Miami “A” (Long) 1235 “B” (Short) 1237 444 36% 2.470** 639 52% Los Angeles “A” (Long) 1945 529 27% -13.817** “B” (Short) 1948 937 48% New York “A” (Lon"
           }
         ]
       },
       "orphanFragments": [
         {
           "page": 10,
-          "text": "2.470**"
+          "text": "Page Variant Total unique Conversions Users who Conversion rate didn’t convert “A” (Long) 273 106 167 38.83% “B” (Short) 262 140 122 53.44% Total 535 As can be seen, the percentage"
+        },
+        {
+          "page": 10,
+          "text": "-mail address). In comparison, in the is a significant 37.62% increase in"
+        },
+        {
+          "page": 10,
+          "text": "-3.6569, sig 0.00643, p <0.05), and chi-from 27,083 unique visits to the In the extended experiments, the overall data was collected page variants that resulted in 9,593 conversion"
+        },
+        {
+          "page": 10,
+          "text": "Experiment / Page variant Total unique Campaign visitors"
+        },
+        {
+          "page": 10,
+          "text": "National “ A ” (Long) 5497 “ B ” (Short) 5494 Atlanta “A” (Long) 3690 “ B ” (Short) 3688 Miami “A” (Long) 1235 “B” (Short) 1237 444 36% 2.470** 639 52% Los Angeles “A” (Long) 1945 "
         }
       ]
     },
@@ -5413,12 +5308,12 @@
       "file": "marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the.pdf",
       "tableCaptions": 51,
       "cropReadyCaptions": 34,
-      "rawTableFragments": 121,
-      "cropBackedFragments": 76,
-      "readerRawFragments": 28,
-      "readerCellFallbacks": 24,
+      "rawTableFragments": 120,
+      "cropBackedFragments": 74,
+      "readerRawFragments": 30,
+      "readerCellFallbacks": 26,
       "readerFragmentKinds": {
-        "structured-grid": 24,
+        "structured-grid": 26,
         "short-label": 4
       },
       "readerFragmentSamples": {
@@ -5452,6 +5347,14 @@
             "text": "7.1. Introduction"
           },
           {
+            "page": 183,
+            "text": "Digital advertisements increase the likelihood of the advertised brand being included in the consideration set and being selected as brand choice under conditions of low attention."
+          },
+          {
+            "page": 183,
+            "text": "The effect of low attention processing of digital advertisements is greater for ads with emotional appeal than rational appeal. People are more likely to make rational judgements if processing occurs at higher/focused attention. People are "
+          },
+          {
             "page": 184,
             "text": "F 48 36 20 104"
           },
@@ -5462,14 +5365,6 @@
           {
             "page": 204,
             "text": "Constant -.709** .229 .492 -2.408** .313 .090 Attention (Wald χ2 = 15.424, p = .001)** (Wald χ2 = 21.303, p = .000)** Focused .972** .303 2.643 1.485** .347 4.414 Divided .646** .296 1.907 .795** .358 2.215 Incidental 1.071** .306 2.919 1.3"
-          },
-          {
-            "page": 216,
-            "text": "8.1. Introduction"
-          },
-          {
-            "page": 218,
-            "text": "digital advertisements is greater for matching ads with rational-utilitarian appeal than hedonic-emotional appeal H4c The effect of low attention processing of digital advertisements is greater for mismatching ads with emotionalutilitarian "
           }
         ],
         "short-label": [
@@ -5515,6 +5410,14 @@
         {
           "page": 182,
           "text": "7.1. Introduction"
+        },
+        {
+          "page": 183,
+          "text": "Digital advertisements increase the likelihood of the advertised brand being included in the consideration set and being selected as brand choice under conditions of low attention."
+        },
+        {
+          "page": 183,
+          "text": "The effect of low attention processing of digital advertisements is greater for ads with emotional appeal than rational appeal. People are more likely to make rational judgements i"
         },
         {
           "page": 203,
@@ -5660,14 +5563,13 @@
       "file": "marketing-the-blind-box-economy-exploring-consumer-behavior-marketing-strategies.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 1,
-      "rawTableFragments": 20,
+      "rawTableFragments": 12,
       "cropBackedFragments": 2,
-      "readerRawFragments": 19,
-      "readerCellFallbacks": 15,
+      "readerRawFragments": 11,
+      "readerCellFallbacks": 9,
       "readerFragmentKinds": {
-        "structured-grid": 15,
-        "ambiguous": 2,
-        "short-label": 2
+        "structured-grid": 9,
+        "ambiguous": 2
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -5706,18 +5608,6 @@
           {
             "page": 8,
             "text": "Number of valid entries for this question 250"
-          },
-          {
-            "page": 10,
-            "text": "Second-hand trading platforms (Xianyu, etc.) 114 45.6%"
-          },
-          {
-            "page": 10,
-            "text": "Social platforms (WeChat group, Xiaohongshu, etc.) 96 38.4%"
-          },
-          {
-            "page": 10,
-            "text": "Number of valid entries for this question 250"
           }
         ],
         "ambiguous": [
@@ -5728,16 +5618,6 @@
           {
             "page": 8,
             "text": "Question 4. Your monthly disposable income [single choice]"
-          }
-        ],
-        "short-label": [
-          {
-            "page": 10,
-            "text": "68%"
-          },
-          {
-            "page": 10,
-            "text": "5.6%"
           }
         ]
       },
@@ -5781,38 +5661,6 @@
         {
           "page": 8,
           "text": "Number of valid entries for this question 250"
-        },
-        {
-          "page": 10,
-          "text": "Second-hand trading platforms (Xianyu, etc.) 114 45.6%"
-        },
-        {
-          "page": 10,
-          "text": "Social platforms (WeChat group, Xiaohongshu, etc.) 96 38.4%"
-        },
-        {
-          "page": 10,
-          "text": "Number of valid entries for this question 250"
-        },
-        {
-          "page": 10,
-          "text": "68%"
-        },
-        {
-          "page": 10,
-          "text": "Pursue hidden/limited edition items 150 60% Social sharing (circle of friends/social discussion) 99 39.6% Relieve stress/entertainment □ Follow the trend 133 53.2% Make a profit on"
-        },
-        {
-          "page": 10,
-          "text": "Number of valid entries for this question 250"
-        },
-        {
-          "page": 10,
-          "text": "Very disappointed and think its a waste of money 102 40.8% Some disappointment but acceptable 64 25.6% Never mind, keep buying 52 20.8% Active resale/exchange 18 7.2%"
-        },
-        {
-          "page": 10,
-          "text": "5.6%"
         }
       ]
     },
@@ -6225,13 +6073,13 @@
       "file": "medical-image-segmentation-deep-learning.pdf",
       "tableCaptions": 0,
       "cropReadyCaptions": 0,
-      "rawTableFragments": 21,
+      "rawTableFragments": 18,
       "cropBackedFragments": 0,
-      "readerRawFragments": 21,
+      "readerRawFragments": 18,
       "readerCellFallbacks": 9,
       "readerFragmentKinds": {
         "structured-grid": 9,
-        "short-label": 12
+        "short-label": 9
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -6273,18 +6121,6 @@
           }
         ],
         "short-label": [
-          {
-            "page": 9,
-            "text": "C"
-          },
-          {
-            "page": 9,
-            "text": "Dropout"
-          },
-          {
-            "page": 9,
-            "text": "Transpose 2. C C"
-          },
           {
             "page": 18,
             "text": "https://competitions.codalab.org/competitions/17094"
@@ -6331,18 +6167,6 @@
         {
           "page": 7,
           "text": "1×1 Conv 1×1 Conv Rate = 1 Rate = 1 Channel = 512 Channel = 512 1×1 Conv Rate = 1 3×3 Conv Channel = 512 Rate = 5 Channel = 512 3×3 Conv 3×3 Conv Rate = 1 Rate = 3 Channel = 512 Ch"
-        },
-        {
-          "page": 9,
-          "text": "C"
-        },
-        {
-          "page": 9,
-          "text": "Dropout"
-        },
-        {
-          "page": 9,
-          "text": "Transpose 2. C C"
         },
         {
           "page": 10,
@@ -6882,20 +6706,20 @@
   "summary": {
     "extractionErrors": 0,
     "papersWithTableCaptions": 48,
-    "tableCaptions": 363,
-    "cropReadyCaptions": 253,
-    "rawTableFragments": 1495,
-    "cropBackedFragments": 628,
-    "readerRawFragments": 700,
-    "readerCellFallbacks": 522,
+    "tableCaptions": 364,
+    "cropReadyCaptions": 251,
+    "rawTableFragments": 1458,
+    "cropBackedFragments": 613,
+    "readerRawFragments": 679,
+    "readerCellFallbacks": 516,
     "readerFragmentKinds": {
-      "structured-grid": 522,
+      "structured-grid": 516,
       "prose-like": 5,
-      "short-label": 147,
-      "ambiguous": 25,
+      "short-label": 133,
+      "ambiguous": 24,
       "numeric-grid": 1
     },
-    "orphanFragments": 783,
+    "orphanFragments": 762,
     "note": "Crop readiness is a geometry diagnostic. readerRawFragments simulates suppression only after a successful caption crop; readerCellFallbacks are native same-baseline rows retained for a readable source-only grid, not a claim of fully reconstructed table semantics. readerFragmentKinds is audit-only triage and does not change resolver behavior."
   }
 }

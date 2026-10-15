@@ -466,7 +466,11 @@ describe("baseline benchmark on cached real papers", () => {
         const table4Cells = packageReadyBlocks.find((block) =>
           block.original.startsWith("Table 4.")
         )?.metadata.tableRows as Array<Array<{ text: string }>> | undefined;
-        expect(table4Cells?.[0]?.map((cell) => cell.text)).toEqual(["Finger", "Phonebook"]);
+        expect(table4Cells?.[0]?.map((cell) => cell.text)).toEqual(["Finger", "Phonebook", "Gallery"]);
+        expect(table4Cells?.some((row) => row.some((cell) =>
+          cell.text.includes("Show sharing context menu (email, sms, etc.)")
+        ))).toBe(true);
+        expect(table4Cells?.some((row) => row.some((cell) => cell.text.includes("contact card")))).toBe(true);
         expect(table4Cells?.some((row) => row.length >= 2)).toBe(true);
         expect(packageReadyBlocks.some((block) =>
           block.original.includes("Finger Phonebook Gallery Thumb")
