@@ -464,7 +464,16 @@ function inferCaptionGrid(
     // A neighbouring body line can be split into short native spans while
     // retaining the full column width. It is not a table cell, even when
     // several such spans happen to share the table's vertical range.
-    return words.length >= 4 && width >= captionBox.width * 0.8;
+    if (words.length < 4 || width < captionBox.width * 0.8) return false;
+    const normalized = words.map((word) => word.toLowerCase().replace(/[^a-z0-9]+/g, "")).filter(Boolean);
+    const maxRepeated = Math.max(0, ...normalized.map((word) => normalized.filter((candidate) => candidate === word).length));
+    const numericRatio = words.filter((word) => /\d/.test(word)).length / words.length;
+    // Repeated headers (e.g. a Finger 1/2/3/4 matrix) and numeric rows are
+    // wide by design. Only reject a line when it also has prose signals.
+    if (maxRepeated >= 3 || numericRatio >= 0.35) return false;
+    const hasSentencePunctuation = /[,;:]|['’]/.test(text);
+    const hasProseConnector = /\b(?:the|and|of|for|with|to|from|is|are|was|were|has|have|between|indicated|revealed|using|when|that|this)\b/i.test(text);
+    return hasSentencePunctuation || hasProseConnector || words.length >= 8;
   };
   const lines: GridLine[] = [];
   for (const block of blocks) {
