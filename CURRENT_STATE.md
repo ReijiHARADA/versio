@@ -19,9 +19,15 @@ paragraph. The CJK checkmark matrix regression still passes.
 Targeted regressions, typecheck, lint (pre-existing warnings only), and diff
 validation pass. The complete cached 118-PDF extraction baseline and 114-PDF
 reading-order suite pass **232/232 in 445.34 seconds** under `caffeinate
--dimsu`. The prior fast `.app` and packaged E2E predate this final precision
-pass; rebuild and repeat isolated package import before claiming packaged
-acceptance for it.
+-dimsu`. A new fast Tauri bundle was built at **2026-10-15 12:11:53 JST**:
+`src-tauri/target/release/bundle/macos/Paper Reader.app`. Its isolated import
+of the 30-page education PDF completed annotation, search, Markdown and Notion
+export, quit, relaunched, and retained the package (`ok=true`, search hit
+**1**, Markdown **61,695 bytes**, Notion **1,107,751 bytes**). The saved
+structure keeps the preceding `There is a wide range …` text as a paragraph,
+while `Method / Goal-description / Key applications` and the long
+`Distillation of data …` cell are source-only tables with native cell x
+coordinates. No Paper Reader or bundled translation-server process remains.
 
 # 2026-10-15: borderless prose tables and CJK checkmark matrices
 
