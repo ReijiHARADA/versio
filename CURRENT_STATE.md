@@ -1,3 +1,16 @@
+# 2026-10-15: separate reviewer/editor affiliations from flattened author mastheads
+
+The `cognitive-dual-task` Frontiers PDF exposed a generic masthead failure:
+the native stream flattened the editor/reviewer institutions, reviewer names,
+and numbered author affiliations into one affiliation row. The projection now
+uses the review-label geometry to exclude short reviewer-location rows,
+removes a reviewer institution prefix only when the following text has clear
+organization evidence, and splits long numbered affiliation streams at stable
+institution starts. Aggregate rows are discarded only when they contain two or
+more recovered institution names. The existing reviewer-chrome and author
+projection suite passes **27/27**; this changes metadata projection only and
+does not alter canonical source nodes.
+
 # 2026-10-15: recover compact caption-anchored table regions
 
 The medical deep-learning review exposed a generic table relation gap: bare
