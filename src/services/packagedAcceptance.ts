@@ -3,6 +3,7 @@ import { startBackgroundImport } from "./import/startBackgroundImport";
 import { isTauriApp } from "../utils/serverReady";
 import { createAnnotation } from "./annotationService";
 import {
+  flushPersistence,
   getAllPapers,
   getAnnotationsByPaper,
   getBlocksByPaper,
