@@ -1,72 +1,19 @@
 {
-  "generatedAt": "2026-10-15T13:50:34.042Z",
+  "generatedAt": "2026-10-15T14:44:02.935Z",
   "paperCount": 114,
   "papers": [
     {
       "file": "cognitive-dual-task.pdf",
-      "tableCaptions": 4,
-      "cropReadyCaptions": 3,
-      "rawTableFragments": 30,
-      "cropBackedFragments": 13,
-      "readerRawFragments": 17,
+      "tableCaptions": 5,
+      "cropReadyCaptions": 4,
+      "rawTableFragments": 23,
+      "cropBackedFragments": 19,
+      "readerRawFragments": 4,
       "readerCellFallbacks": 4,
       "readerFragmentKinds": {
-        "short-label": 13,
         "structured-grid": 4
       },
       "orphanFragments": [
-        {
-          "page": 7,
-          "text": "(%)"
-        },
-        {
-          "page": 7,
-          "text": "12)"
-        },
-        {
-          "page": 7,
-          "text": "= n"
-        },
-        {
-          "page": 7,
-          "text": "TRT ("
-        },
-        {
-          "page": 7,
-          "text": "Post"
-        },
-        {
-          "page": 7,
-          "text": "Pre"
-        },
-        {
-          "page": 7,
-          "text": "13)"
-        },
-        {
-          "page": 7,
-          "text": "= n CT ("
-        },
-        {
-          "page": 7,
-          "text": "+ RT Post"
-        },
-        {
-          "page": 7,
-          "text": "+"
-        },
-        {
-          "page": 7,
-          "text": "<"
-        },
-        {
-          "page": 7,
-          "text": "Pre"
-        },
-        {
-          "page": 7,
-          "text": "×"
-        },
         {
           "page": 8,
           "text": "TRT (n=12) Time Group×Time Pre Post ES Δ%"
@@ -89,8 +36,8 @@
       "file": "cognitive-memory-cues.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 53,
-      "cropBackedFragments": 18,
+      "rawTableFragments": 52,
+      "cropBackedFragments": 17,
       "readerRawFragments": 35,
       "readerCellFallbacks": 23,
       "readerFragmentKinds": {
@@ -369,7 +316,7 @@
       "file": "cognitive-psychology-chronometric-constructive-cognitive-learning-evaluation-model-measurin.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 1,
-      "rawTableFragments": 9,
+      "rawTableFragments": 10,
       "cropBackedFragments": 2,
       "readerRawFragments": 3,
       "readerCellFallbacks": 3,
@@ -417,8 +364,8 @@
       "file": "cognitive-psychology-gpt3.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 5,
-      "rawTableFragments": 10,
-      "cropBackedFragments": 5,
+      "rawTableFragments": 15,
+      "cropBackedFragments": 9,
       "readerRawFragments": 5,
       "readerCellFallbacks": 4,
       "readerFragmentKinds": {
@@ -490,8 +437,8 @@
       "file": "cognitive-psychology-research-on-the-effects-of-different-listening-process-models-in-liste.pdf",
       "tableCaptions": 3,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 2,
-      "cropBackedFragments": 2,
+      "rawTableFragments": 4,
+      "cropBackedFragments": 4,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -590,8 +537,8 @@
       "file": "computational-linguistics-nlp-translation.pdf",
       "tableCaptions": 1,
       "cropReadyCaptions": 1,
-      "rawTableFragments": 4,
-      "cropBackedFragments": 3,
+      "rawTableFragments": 5,
+      "cropBackedFragments": 4,
       "readerRawFragments": 1,
       "readerCellFallbacks": 1,
       "readerFragmentKinds": {
@@ -619,13 +566,13 @@
       "file": "covid-ml-review.pdf",
       "tableCaptions": 10,
       "cropReadyCaptions": 8,
-      "rawTableFragments": 72,
-      "cropBackedFragments": 13,
-      "readerRawFragments": 58,
-      "readerCellFallbacks": 38,
+      "rawTableFragments": 73,
+      "cropBackedFragments": 16,
+      "readerRawFragments": 56,
+      "readerCellFallbacks": 36,
       "readerFragmentKinds": {
         "short-label": 15,
-        "structured-grid": 38,
+        "structured-grid": 36,
         "numeric-grid": 1,
         "ambiguous": 4
       },
@@ -641,10 +588,6 @@
         {
           "page": 5,
           "text": "- 2(N): 0.813. COVID-19."
-        },
-        {
-          "page": 5,
-          "text": "2(N): 0.895; In Wuhan, R2(C): -2(N): 0.8105. (DC): 0.9995; In Wuhan, R2(DC): 0.9993 Predicting the COVID-19 death"
         },
         {
           "page": 5,
@@ -832,10 +775,6 @@
         },
         {
           "page": 12,
-          "text": "DenseNet 169 99.80 99.80 99.80 99.80%"
-        },
-        {
-          "page": 12,
           "text": "GAN"
         },
         {
@@ -879,14 +818,18 @@
       "file": "detecting-statistical-interactions.pdf",
       "tableCaptions": 6,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 6,
-      "cropBackedFragments": 3,
-      "readerRawFragments": 2,
-      "readerCellFallbacks": 2,
+      "rawTableFragments": 12,
+      "cropBackedFragments": 8,
+      "readerRawFragments": 3,
+      "readerCellFallbacks": 3,
       "readerFragmentKinds": {
-        "structured-grid": 2
+        "structured-grid": 3
       },
       "orphanFragments": [
+        {
+          "page": 7,
+          "text": "4.4 PAIRWISE INTERACTION DETECTION"
+        },
         {
           "page": 7,
           "text": "We rank all pairs of features {i, j} according to their interaction strengths ω({i, j})∑calculated on the p1"
@@ -1280,14 +1223,12 @@
       "file": "ergonomics-analysis-of-burnout-and-occupational-safety-in-nurses-a-literature-rev.pdf",
       "tableCaptions": 2,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 14,
-      "cropBackedFragments": 9,
-      "readerRawFragments": 5,
+      "rawTableFragments": 9,
+      "cropBackedFragments": 7,
+      "readerRawFragments": 2,
       "readerCellFallbacks": 1,
       "readerFragmentKinds": {
-        "prose-like": 2,
-        "ambiguous": 1,
-        "short-label": 1,
+        "prose-like": 1,
         "structured-grid": 1
       },
       "orphanFragments": [
@@ -1297,119 +1238,31 @@
         },
         {
           "page": 2,
-          "text": "high burnout was associated with increased incidents of nursing errors."
-        },
-        {
-          "page": 2,
-          "text": "with a high workload were 2.8 times more likely to experience burnout"
-        },
-        {
-          "page": 2,
-          "text": "The study revealed that high"
-        },
-        {
-          "page": 2,
           "text": "10 Yuliani et al. Mindfulness Program Pretest-posttest The study showed that the"
         }
       ]
     },
     {
       "file": "ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport.pdf",
-      "tableCaptions": 27,
-      "cropReadyCaptions": 18,
-      "rawTableFragments": 187,
-      "cropBackedFragments": 41,
-      "readerRawFragments": 136,
-      "readerCellFallbacks": 90,
+      "tableCaptions": 36,
+      "cropReadyCaptions": 29,
+      "rawTableFragments": 132,
+      "cropBackedFragments": 74,
+      "readerRawFragments": 47,
+      "readerCellFallbacks": 38,
       "readerFragmentKinds": {
-        "structured-grid": 90,
-        "short-label": 34,
-        "ambiguous": 12
+        "structured-grid": 38,
+        "short-label": 3,
+        "ambiguous": 6
       },
       "orphanFragments": [
         {
           "page": 25,
-          "text": "51.6 56.1 15.013.117.5 13.018.0 13.0406445 9.4 9.7"
-        },
-        {
-          "page": 25,
-          "text": "Light commercial vehicles ("
-        },
-        {
-          "page": 25,
-          "text": "a,b"
-        },
-        {
-          "page": 25,
-          "text": "% of km = ‘all business use’"
-        },
-        {
-          "page": 25,
-          "text": "% of freight tonnes = ‘tools of trade’"
-        },
-        {
-          "page": 25,
-          "text": "a Table 11 Business kilometres travelled by freight vehicles, state/territory of registration (p.19); Table 16 Freight vehicle use, state/territory of registration –type of vehicle"
+          "text": "Measure of use a,b Light commercial vehicles (≤3.5t GMV) Rigid trucks (>3.5t GVM) Articulated trucks"
         },
         {
           "page": 41,
           "text": "N=186,SEV=11.2, HARM=2083"
-        },
-        {
-          "page": 44,
-          "text": "d"
-        },
-        {
-          "page": 44,
-          "text": "registered light trucks"
-        },
-        {
-          "page": 44,
-          "text": "c"
-        },
-        {
-          "page": 44,
-          "text": "2011 54.1 17.017.440.5 56.257.20.9 1.0 0.4 population Rate per 100,000"
-        },
-        {
-          "page": 44,
-          "text": "2000 64.6 16.917.442.1 57.559.01.4 1.5 0.5"
-        },
-        {
-          "page": 44,
-          "text": "-38.1 -9.0 -20.9 -39.7 -7.6 -8.4 -27.7 -4.7 -5.4 b % change holders 2011 1.4 59.8 79.7 1.4 82.9 84.3 0.6 25.1 25.6"
-        },
-        {
-          "page": 44,
-          "text": "-26.9 -28.9 -14.7 11.712.5-6.6 8.29.17.4"
-        },
-        {
-          "page": 44,
-          "text": "% change"
-        },
-        {
-          "page": 44,
-          "text": "Number 68 69 29 4125 12554056 12262011 39012924"
-        },
-        {
-          "page": 44,
-          "text": "97 3493 3814 11243717 10902000 41762723"
-        },
-        {
-          "page": 44,
-          "text": "a"
-        },
-        {
-          "page": 44,
-          "text": "NSW population in 2000 was 6,463,455 and in 2011 was 7,211,468Data derived from Roads and Maritime Services (RMS) (2013): Table 1.1.1 Quarterly trend in registered vehicles by vehi"
-        },
-        {
-          "page": 44,
-          "text": "a b c d user class, degree of casualty (p.73); Table 32: New South Wales residents, age, sex (p.85); Table 33: Licence holders as at 30 June 2011 (p.86)degree of casualty (p.63); T"
-        },
-        {
-          "page": 81,
-          "text": "Transport specialists 2250 8.0 Removals 297 9.1 Grocery & store supplies 125 11.2 Construction & landscape 446 12.1 Total 3954 8.1"
         },
         {
           "page": 84,
@@ -1424,56 +1277,12 @@
           "text": "Vehicle-related issues 10"
         },
         {
-          "page": 87,
-          "text": "d=262)"
-        },
-        {
-          "page": 87,
-          "text": "Rotated factor loadings (N"
-        },
-        {
-          "page": 87,
-          "text": "a once"
-        },
-        {
-          "page": 87,
-          "text": "Extent of frequent exposure to OHS hazards at work and principal components factor structure of hazardexposures"
-        },
-        {
-          "page": 87,
-          "text": "Not enough staff to move goods safelyUncomfortable cab temperaturesExcessive working hoursUnreasonably tight deadlinesVery heavy trafficRoad in poor conditionRepetitive movementsEx"
-        },
-        {
-          "page": 88,
-          "text": "Rotated factor loadings (N"
-        },
-        {
-          "page": 88,
-          "text": "a once"
-        },
-        {
-          "page": 88,
-          "text": "% a week"
-        },
-        {
-          "page": 88,
-          "text": "dExposure"
-        },
-        {
-          "page": 88,
-          "text": "299298305 299 297300299296 298N"
-        },
-        {
-          "page": 88,
-          "text": "% of variance explained"
-        },
-        {
-          "page": 88,
-          "text": "ViolenceHazards a"
-        },
-        {
           "page": 90,
           "text": "% of % of injured injured drivers a drivers a (Nd=121) (Nd=119)"
+        },
+        {
+          "page": 92,
+          "text": "Nagelkerke's R2 estimate .16"
         },
         {
           "page": 111,
@@ -1496,50 +1305,6 @@
           "text": "Adjust ventilation 256 88.7 38.7 28.6 Listen to music/radio 263 88.6 57.8 36.1 Stop to eat 256 88.3 24.6 38.1 Eat while driving 251 82.5 38.2 16.9 Caffeine drinks 259 79.9 29.7 23."
         },
         {
-          "page": 114,
-          "text": "Test resulta,d,f,gb,c a,e,f,g,hb,c a,c,g b,ca,d,f,g a,e,f,g,ha,c,g b,c"
-        },
-        {
-          "page": 114,
-          "text": "once a week"
-        },
-        {
-          "page": 114,
-          "text": "Frequency of fatigue while driving for work Never/very rarely"
-        },
-        {
-          "page": 114,
-          "text": "% Time-based (n=239) % Piece/other rate (n=67)"
-        },
-        {
-          "page": 114,
-          "text": "Job tenure (years) Door to depot workTable 4.3:Work CharacteristicPayment systemGross annual pay ($Aus)Driving/day (hours)Kilometres/weekCommuting/day (min)Work/day (hours)Work/wee"
-        },
-        {
-          "page": 115,
-          "text": "Test result a,e,f,g,h b,eb,d a,e,g,hb,ca,e,g b,db,ca,c,g"
-        },
-        {
-          "page": 115,
-          "text": "once a week"
-        },
-        {
-          "page": 115,
-          "text": "38.7 53.112.860.052.827.234.523.9 21.8 19.515.0 41.836.8"
-        },
-        {
-          "page": 115,
-          "text": "Frequency of fatigue while driving for work Never/very rarely"
-        },
-        {
-          "page": 115,
-          "text": "once a week (n=148)half the time (n=184)"
-        },
-        {
-          "page": 115,
-          "text": "% < once a week (n=145)%% < half the time (n=122)%"
-        },
-        {
           "page": 134,
           "text": "1-4 vehicles % 99.2 98.0 Χ 2 tav Payment type N d 267 1002 Flat hourly rate % 58.1 5.5 Χ 2 (5) =524.2 p<.001 Flat day rate % 3.0 3.1 Flat weekly rate % 14.2 4.9 Flat item/delivery/"
         },
@@ -1549,155 +1314,15 @@
         },
         {
           "page": 143,
+          "text": "70.6 47.3 28.26, p<.001"
+        },
+        {
+          "page": 143,
+          "text": "27.1 13.0 9.00, p<.001"
+        },
+        {
+          "page": 143,
           "text": "21.1 35.4 11.65, p=.001"
-        },
-        {
-          "page": 145,
-          "text": "165157 163 169 156695 649 676 707 677 679168N"
-        },
-        {
-          "page": 145,
-          "text": "LightHeavy Heavy Heavy Heavy Heavy HeavyLight LightLightLight LightDrivergroup"
-        },
-        {
-          "page": 145,
-          "text": "Eat while drivingAdjust ventilationCaffeine drinksStop to eatSmokingTable 5.4: StrategyMusic or radio ab"
-        },
-        {
-          "page": 146,
-          "text": "test result (1)"
-        },
-        {
-          "page": 146,
-          "text": "users% of 18.8 44.418.948.028.033.324.34.5"
-        },
-        {
-          "page": 146,
-          "text": "abc"
-        },
-        {
-          "page": 146,
-          "text": "test result (3)"
-        },
-        {
-          "page": 146,
-          "text": "Often 16.5 12.315.940.6 50.220.8 9.8 1.9"
-        },
-        {
-          "page": 146,
-          "text": "37.4 1281.3 17.230.1 14.136.041.026.6"
-        },
-        {
-          "page": 146,
-          "text": "Use strategy (%) Sometimes"
-        },
-        {
-          "page": 146,
-          "text": "25.0 19.022.0 10.813.5 10.221.5 0.6"
-        },
-        {
-          "page": 146,
-          "text": "Rarely"
-        },
-        {
-          "page": 146,
-          "text": "2 test of ‘Use strategy’ by Driver group was significant. Bolding indicates that selection of the particular"
-        },
-        {
-          "page": 146,
-          "text": "23.2 54.0 96.231.5 63.929.1 4.9 2.2 Never"
-        },
-        {
-          "page": 146,
-          "text": "d"
-        },
-        {
-          "page": 146,
-          "text": "164 163 158642 680 693 651158N"
-        },
-        {
-          "page": 146,
-          "text": "LightHeavy Heavy Heavy HeavyLightLightLightDrivergroup"
-        },
-        {
-          "page": 147,
-          "text": "a"
-        },
-        {
-          "page": 147,
-          "text": "StrategyImproved roadsEducate public about trucksEase unreasonable/tight schedulesInformation/training on fatigueShorter driving hours"
-        },
-        {
-          "page": 148,
-          "text": "bc"
-        },
-        {
-          "page": 148,
-          "text": "a"
-        },
-        {
-          "page": 148,
-          "text": "Views strategy positively (%)"
-        },
-        {
-          "page": 148,
-          "text": "715 715 715 151 732 732160 161 156 155Nd"
-        },
-        {
-          "page": 148,
-          "text": "Heavy Heavy Heavy Heavy HeavyLight Light LightLightLight"
-        },
-        {
-          "page": 148,
-          "text": "StrategyMore efficient loading/unloadingIncreased pay rates for driversNot having to load/unloadPolicing stay-awake drugsPermitting stay--awake drugs Table 5.5 continued was not sp"
-        },
-        {
-          "page": 174,
-          "text": "d d d d d=63 =62 =28 =38 =63"
-        },
-        {
-          "page": 174,
-          "text": "N NN N N"
-        },
-        {
-          "page": 174,
-          "text": "All companies9.0 (1.3) 5-12 1.8 (.9) .5-4.07.9 (4.8) 1-21 a45.3 (7.0) 28-72"
-        },
-        {
-          "page": 174,
-          "text": "Usual driver work and rest hours reported by companies, broken down by geographic location, transport role andcompany size"
-        },
-        {
-          "page": 174,
-          "text": "Mean (SD) RangeMean (SD) RangeMean (SD) RangeMean (SD) RangeMean (SD) Range"
-        },
-        {
-          "page": 174,
-          "text": "Per week Per weekPer day Per day c c e"
-        },
-        {
-          "page": 175,
-          "text": "p"
-        },
-        {
-          "page": 175,
-          "text": "c c e"
-        },
-        {
-          "page": 175,
-          "text": "p"
-        },
-        {
-          "page": 175,
-          "text": "N N 63.310.026.7d d Nd=29 49.0 (20.0)848 (585)Ancillary"
-        },
-        {
-          "page": 175,
-          "text": "Role of transport task"
-        },
-        {
-          "page": 175,
-          "text": "N NMain 37.924.137.9 Nd=29 48.6 (24.0)809 (541)"
         },
         {
           "page": 222,
@@ -1789,59 +1414,7 @@
         },
         {
           "page": 267,
-          "text": "of work, sleep and"
-        },
-        {
-          "page": 267,
-          "text": "record when you were"
-        },
-        {
-          "page": 267,
-          "text": "memory is accurate rate how confident you are in your memory"
-        },
-        {
-          "page": 267,
-          "text": "memory is accurate"
-        },
-        {
-          "page": 267,
-          "text": "memory is accurate memory is accurate"
-        },
-        {
-          "page": 267,
-          "text": "I can’t remember at allModerately confidentVery confident"
-        },
-        {
-          "page": 267,
-          "text": "FRIDAY"
-        },
-        {
-          "page": 267,
-          "text": "2 40 1 3"
-        },
-        {
-          "page": 268,
-          "text": "RATINGS ______ ______ ______ RATINGS ______ ______ ______ RATINGS ______ ______ ______ midnight midnight midnight 11:00 pm 11:00 pm 11:00 pm 10:00 pm 10:00 pm 10:00 pm 9:00 pm 9:00"
-        },
-        {
-          "page": 268,
-          "text": "5:00 pm 5:00 pm 5:00 pm 4:30 4:30 4:30 4:00 pm 4:00 pm 4:00 pm 3:30 3:30 3:30 3:00 pm 3:00 pm 3:00 pm 2:30 2:30 2:30 2:00 pm 2:00 pm 2:00 pm 1:30 1:30 1:30 1:00 pm 1:00 pm 1:00 pm "
-        },
-        {
-          "page": 268,
-          "text": "3:30 3:30 3:30 What day of the week was this? _______________What day of the week is this? _______________What day of the week was this? _______________"
-        },
-        {
-          "page": 268,
-          "text": "3:00 am 3:00 am 3:00 am 2:30 2:30 2:30 2:00 am 2:00 am 2:00 am 1:30 1:30 1:30 1:00 am 1:00 am 1:00 am 0:30 0:30 0:30"
-        },
-        {
-          "page": 268,
-          "text": "midnight midnight midnight"
-        },
-        {
-          "page": 268,
-          "text": "Please record and rate your own work and non-work, fatigue and sleep times for the last 3 days (including today) on the following timelines. Startbackwards. Yesterday Today2 days a"
+          "text": "12:00 noon 10:00 am 11:00 am 10:00 pm 11:00 pm 4:00am 8:00am1:00 am 2:00 am 3:00 am 5:00 am 6:00 am 7:00 am 9:00 am 1:00 pm 2:00 pm 3:00 pm 4:00 pm 5:00 pm 6:00 pm 7:00 pm 8:00 pm "
         },
         {
           "page": 272,
@@ -2053,8 +1626,8 @@
       "file": "hci-development-of-user-interface-user-experience-using-design-thinking-ap.pdf",
       "tableCaptions": 3,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 5,
-      "cropBackedFragments": 5,
+      "rawTableFragments": 9,
+      "cropBackedFragments": 9,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -2121,13 +1694,13 @@
       "file": "hci-intelligent-human-computer-interaction.pdf",
       "tableCaptions": 44,
       "cropReadyCaptions": 22,
-      "rawTableFragments": 63,
-      "cropBackedFragments": 31,
-      "readerRawFragments": 25,
-      "readerCellFallbacks": 17,
+      "rawTableFragments": 73,
+      "cropBackedFragments": 46,
+      "readerRawFragments": 20,
+      "readerCellFallbacks": 19,
       "readerFragmentKinds": {
-        "structured-grid": 17,
-        "short-label": 8
+        "structured-grid": 19,
+        "short-label": 1
       },
       "orphanFragments": [
         {
@@ -2144,19 +1717,27 @@
         },
         {
           "page": 139,
-          "text": "3Temporality 0.443(0.55) 1.039(0.88) −0.05(1.30) 0.787(0.90)"
+          "text": "1.590(1.05) 3.188(2.01) −0.24(0.70) 1.308(2.38)"
         },
         {
           "page": 139,
-          "text": "3Noun overlap, 0.555(0.14) 0.509(0.33) 0.535(0.18) 0.557(0.24)"
+          "text": "87.49(15.0) 95.00(9.63) 41.24(24.3) 70.75(43.1)"
+        },
+        {
+          "page": 139,
+          "text": "0.225(0.93) 1.066(1.18) 0.714(1.15) 1.582(1.35)"
+        },
+        {
+          "page": 139,
+          "text": "−4.07(1.79) −3.81(1.40) −3.52(0.86) −3.90(0.53)"
+        },
+        {
+          "page": 139,
+          "text": "1.392(3.45) 1.062(2.25) 0.169(0.24) 0.014(0.02) 3Temporality 0.443(0.55) 1.039(0.88) −0.05(1.30) 0.787(0.90) 3Noun overlap, 0.555(0.14) 0.509(0.33) 0.535(0.18) 0.557(0.24)"
         },
         {
           "page": 141,
-          "text": "particle to IV 3LSA verb overlap"
-        },
-        {
-          "page": 141,
-          "text": "3Preposition PD 92.28(20.2) 87.94(24.3) 115.4(21.1) 122.6(34.3) 3 Agentless passive 2.972(3.35) 1.96(4.76) 10.06(8.84) 12.08(13.5) 3Negation density 19.62(7.96) 26.21(13.6) 11.60(6"
+          "text": "0.110(0.03) 0.083(0.02) 0.086(0.02) 0.079(0.03) 318.3(17.5) 354.0(20.9) 377.0(22.0) 366.7(30.7) 258.4(18.9) 249.6(20.3) 194.2(25.0) 204.7(46.8) 52.71(19.3) 41.99(15.4) 28.08(11.9) "
         },
         {
           "page": 144,
@@ -2165,34 +1746,6 @@
         {
           "page": 145,
           "text": "6.2(2.09) 0.00 7.7(2.90) 0.001 133.3(52.1) 0.00 17.45(5.10) 0.041"
-        },
-        {
-          "page": 168,
-          "text": ".045*"
-        },
-        {
-          "page": 168,
-          "text": ".574"
-        },
-        {
-          "page": 168,
-          "text": ".000**"
-        },
-        {
-          "page": 168,
-          "text": ".021*"
-        },
-        {
-          "page": 168,
-          "text": ".143"
-        },
-        {
-          "page": 168,
-          "text": ".001*"
-        },
-        {
-          "page": 168,
-          "text": ".039*"
         },
         {
           "page": 180,
@@ -2280,8 +1833,8 @@
       "file": "hci-user-experience-analysis-on-mobile-application-design-using-user-exper.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 1,
-      "cropBackedFragments": 1,
+      "rawTableFragments": 3,
+      "cropBackedFragments": 3,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -2302,13 +1855,13 @@
       "file": "hfe-healthcare-patient-safety-review.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 6,
-      "rawTableFragments": 36,
-      "cropBackedFragments": 19,
-      "readerRawFragments": 16,
-      "readerCellFallbacks": 11,
+      "rawTableFragments": 37,
+      "cropBackedFragments": 25,
+      "readerRawFragments": 11,
+      "readerCellFallbacks": 8,
       "readerFragmentKinds": {
-        "short-label": 5,
-        "structured-grid": 11
+        "short-label": 3,
+        "structured-grid": 8
       },
       "orphanFragments": [
         {
@@ -2333,6 +1886,10 @@
         },
         {
           "page": 8,
+          "text": "6. USA 40 months Before/after 86 healthcare Health care Yes M Purchase Fujishiro2005 uncontrolled facilities workers HFE devices 7. England 33.5 months Before/after 2 hospitals Nur"
+        },
+        {
+          "page": 8,
           "text": "(12)dental teeth while hygienists performing (5) simulated dental procedures"
         },
         {
@@ -2349,31 +1906,7 @@
         },
         {
           "page": 10,
-          "text": "Nurses (24) NR M HFE \""
-        },
-        {
-          "page": 10,
           "text": "educational course"
-        },
-        {
-          "page": 10,
-          "text": "Female nurses(56) NR M Educational"
-        },
-        {
-          "page": 10,
-          "text": "HFE"
-        },
-        {
-          "page": 10,
-          "text": "Surgeons, Yes M HFE team"
-        },
-        {
-          "page": 10,
-          "text": "technologists, training program anesthesiologists, anesthetists (688)"
-        },
-        {
-          "page": 12,
-          "text": "\" \" \" \" \""
         }
       ]
     },
@@ -2381,13 +1914,13 @@
       "file": "hfe-healthcare-safety-review.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 6,
-      "rawTableFragments": 36,
-      "cropBackedFragments": 19,
-      "readerRawFragments": 16,
-      "readerCellFallbacks": 11,
+      "rawTableFragments": 37,
+      "cropBackedFragments": 25,
+      "readerRawFragments": 11,
+      "readerCellFallbacks": 8,
       "readerFragmentKinds": {
-        "short-label": 5,
-        "structured-grid": 11
+        "short-label": 3,
+        "structured-grid": 8
       },
       "orphanFragments": [
         {
@@ -2412,6 +1945,10 @@
         },
         {
           "page": 8,
+          "text": "6. USA 40 months Before/after 86 healthcare Health care Yes M Purchase Fujishiro2005 uncontrolled facilities workers HFE devices 7. England 33.5 months Before/after 2 hospitals Nur"
+        },
+        {
+          "page": 8,
           "text": "(12)dental teeth while hygienists performing (5) simulated dental procedures"
         },
         {
@@ -2428,31 +1965,7 @@
         },
         {
           "page": 10,
-          "text": "Nurses (24) NR M HFE \""
-        },
-        {
-          "page": 10,
           "text": "educational course"
-        },
-        {
-          "page": 10,
-          "text": "Female nurses(56) NR M Educational"
-        },
-        {
-          "page": 10,
-          "text": "HFE"
-        },
-        {
-          "page": 10,
-          "text": "Surgeons, Yes M HFE team"
-        },
-        {
-          "page": 10,
-          "text": "technologists, training program anesthesiologists, anesthetists (688)"
-        },
-        {
-          "page": 12,
-          "text": "\" \" \" \" \""
         }
       ]
     },
@@ -2460,8 +1973,8 @@
       "file": "hfe-healthcare-scoping-2024.pdf",
       "tableCaptions": 3,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 46,
-      "cropBackedFragments": 9,
+      "rawTableFragments": 48,
+      "cropBackedFragments": 11,
       "readerRawFragments": 37,
       "readerCellFallbacks": 22,
       "readerFragmentKinds": {
@@ -2624,8 +2137,8 @@
       "file": "how-content-volume-landing-pages.pdf",
       "tableCaptions": 5,
       "cropReadyCaptions": 5,
-      "rawTableFragments": 6,
-      "cropBackedFragments": 5,
+      "rawTableFragments": 8,
+      "cropBackedFragments": 7,
       "readerRawFragments": 1,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {
@@ -2642,8 +2155,8 @@
       "file": "human-ai-interaction-guidelines.pdf",
       "tableCaptions": 1,
       "cropReadyCaptions": 1,
-      "rawTableFragments": 115,
-      "cropBackedFragments": 0,
+      "rawTableFragments": 116,
+      "cropBackedFragments": 1,
       "readerRawFragments": 115,
       "readerCellFallbacks": 114,
       "readerFragmentKinds": {
@@ -3128,14 +2641,18 @@
       "file": "interpreting-neural-networks.pdf",
       "tableCaptions": 6,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 6,
-      "cropBackedFragments": 3,
-      "readerRawFragments": 2,
-      "readerCellFallbacks": 2,
+      "rawTableFragments": 12,
+      "cropBackedFragments": 8,
+      "readerRawFragments": 3,
+      "readerCellFallbacks": 3,
       "readerFragmentKinds": {
-        "structured-grid": 2
+        "structured-grid": 3
       },
       "orphanFragments": [
+        {
+          "page": 7,
+          "text": "4.4 PAIRWISE INTERACTION DETECTION"
+        },
         {
           "page": 7,
           "text": "We rank all pairs of features {i, j} according to their interaction strengths ω({i, j})∑calculated on the p1"
@@ -3602,13 +3119,13 @@
       "file": "linguistics-register.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 0,
-      "rawTableFragments": 14,
+      "rawTableFragments": 22,
       "cropBackedFragments": 0,
-      "readerRawFragments": 13,
-      "readerCellFallbacks": 8,
+      "readerRawFragments": 21,
+      "readerCellFallbacks": 16,
       "readerFragmentKinds": {
         "short-label": 4,
-        "structured-grid": 8,
+        "structured-grid": 16,
         "ambiguous": 1
       },
       "orphanFragments": [
@@ -3659,6 +3176,38 @@
         {
           "page": 9,
           "text": "Advice Formal speechHow-toInterviewTable 1Register Description of a personDescription of a thingDescription with intent to sellDiscussion forumEncyclopedia articleFAQ about informa"
+        },
+        {
+          "page": 30,
+          "text": "value 0.0010.0010.0010.0010.0010.0010.0010.0010.0010.0010.0010.0010.0010.0010.001"
+        },
+        {
+          "page": 30,
+          "text": "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\p"
+        },
+        {
+          "page": 30,
+          "text": "197193196198165198182178171198197185196194188df"
+        },
+        {
+          "page": 30,
+          "text": "8.414.534.559.654.555.21 value 33.3331.3225.2218.4416.4822.9632.820.415.54t"
+        },
+        {
+          "page": 30,
+          "text": "4.073.442.082.856.581.994.261.874.643.472.862.184.184.26 23.32SD"
+        },
+        {
+          "page": 30,
+          "text": "62.5855.3348.4357.3628.3451.854.3275.7790.0868.7368.577.1167.5540.7946.21LexicalM"
+        },
+        {
+          "page": 30,
+          "text": "3.752.932.852.441.985.81.234.513.282.181.954.265.37 10.6716.45SD"
+        },
+        {
+          "page": 30,
+          "text": "81.0169.4957.3670.9234.0558.8761.2788.7794.2179.479.4688.9173.5246.21Feature setM 49.78"
         },
         {
           "page": 30,
@@ -3743,8 +3292,8 @@
       "file": "marketing-a-study-on-the-relationship-between-advertising-value-choice-of-media-.pdf",
       "tableCaptions": 15,
       "cropReadyCaptions": 12,
-      "rawTableFragments": 20,
-      "cropBackedFragments": 20,
+      "rawTableFragments": 41,
+      "cropBackedFragments": 41,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -4046,8 +3595,8 @@
       "file": "marketing-impact-of-green-marketing-on-consumer-behavior.pdf",
       "tableCaptions": 2,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 11,
-      "cropBackedFragments": 11,
+      "rawTableFragments": 8,
+      "cropBackedFragments": 8,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -4090,15 +3639,19 @@
       "file": "marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the.pdf",
       "tableCaptions": 51,
       "cropReadyCaptions": 34,
-      "rawTableFragments": 101,
-      "cropBackedFragments": 58,
-      "readerRawFragments": 28,
-      "readerCellFallbacks": 25,
+      "rawTableFragments": 119,
+      "cropBackedFragments": 75,
+      "readerRawFragments": 27,
+      "readerCellFallbacks": 24,
       "readerFragmentKinds": {
-        "structured-grid": 25,
+        "structured-grid": 24,
         "short-label": 3
       },
       "orphanFragments": [
+        {
+          "page": 123,
+          "text": "• Direct effects of"
+        },
         {
           "page": 148,
           "text": "Digital advertisements increase the likelihood of the advertised brand being included in the consideration 1,2,3 set and being selected as brand choice under conditions of low atte"
@@ -4141,15 +3694,7 @@
         },
         {
           "page": 236,
-          "text": ".752 -1.902** .187 .149 = .009)** (Wald χ2 = 9.773, p = .021)** 1.487 -.063 .268 .939 1.351 -.156 .272 .856 1.814 .515** .243 1.674"
-        },
-        {
-          "page": 236,
           "text": "1.509 1.302** .228 3.675 p = .357) (Wald χ2 = 8.921, p = .030)** .931 .569* .323 1.766 .437 .441 .327 1.554 .488 -.230 .303 .794"
-        },
-        {
-          "page": 236,
-          "text": ".631 -2.524** .238 .080 = .001)** (Wald χ2 = 4.771, p = .189) 2.029 .555* .306 1.742 1.676 .268 .321 1.307 1.549 .582* .304 1.790"
         },
         {
           "page": 236,
@@ -4237,15 +3782,14 @@
       "rawTableFragments": 6,
       "cropBackedFragments": 4,
       "readerRawFragments": 2,
-      "readerCellFallbacks": 1,
+      "readerCellFallbacks": 2,
       "readerFragmentKinds": {
-        "short-label": 1,
-        "structured-grid": 1
+        "structured-grid": 2
       },
       "orphanFragments": [
         {
           "page": 6,
-          "text": "Model 1"
+          "text": "Model 1 Model 2 Model 3 Model 4"
         },
         {
           "page": 6,
@@ -4379,12 +3923,12 @@
       "tableCaptions": 9,
       "cropReadyCaptions": 6,
       "rawTableFragments": 98,
-      "cropBackedFragments": 21,
-      "readerRawFragments": 71,
-      "readerCellFallbacks": 58,
+      "cropBackedFragments": 27,
+      "readerRawFragments": 65,
+      "readerCellFallbacks": 52,
       "readerFragmentKinds": {
         "short-label": 13,
-        "structured-grid": 58
+        "structured-grid": 52
       },
       "orphanFragments": [
         {
@@ -4401,7 +3945,7 @@
         },
         {
           "page": 3,
-          "text": "Number of Citations (until Date (epub) \u0002 references August 2020)"
+          "text": "Number of Citations (until Date (epub) \u0002 references August 2020) Medical field/subject Publications"
         },
         {
           "page": 3,
@@ -4409,7 +3953,7 @@
         },
         {
           "page": 3,
-          "text": "Number of Citations (until Date (epub) \u0002 references August 2020)"
+          "text": "Number of Citations (until Date (epub) \u0002 references August 2020) Medical field/subject Publications"
         },
         {
           "page": 3,
@@ -4417,7 +3961,7 @@
         },
         {
           "page": 3,
-          "text": "Number of Citations (until Date (epub) \u0002 references August 2020)"
+          "text": "Number of Citations (until Date (epub) \u0002 references August 2020) Medical field/subject Publications"
         },
         {
           "page": 3,
@@ -4429,10 +3973,6 @@
         },
         {
           "page": 7,
-          "text": "DBN, SAE through labeled data itself training samples deep learning are"
-        },
-        {
-          "page": 7,
           "text": "-Can be used experts to understand and"
         },
         {
@@ -4441,27 +3981,15 @@
         },
         {
           "page": 7,
-          "text": "AE, CNN, -DL can model, represent -Neural networks need -Low data volume RBM, RNN and learn from improvement in -Data heterogeneity heterogenous EHR interpretability, data -Low int"
-        },
-        {
-          "page": 7,
-          "text": "AE, CNN, -End to end training (CNN) -Hyper-parameter tuning -Medical image DBN, GAN, -Freely available is empirical is time consuming RBM, SAE, pre-trained deep learning -Subjectiv"
-        },
-        {
-          "page": 7,
-          "text": "CNN, DNN -Can apply automated -Neural networks need -DL requires substantial featurization, image improvement programming skills segmentation, multi-model -Data scarcity prognostic"
-        },
-        {
-          "page": 7,
           "text": "-Abstract high-level features"
         },
         {
           "page": 7,
-          "text": "AE, CNN. -LSTM, RNNs, and variant -Lack of transparency and -Heterogenous data MLP, RBM, can process sequential interpretability -Lack of reproducibility RNN data and universal"
+          "text": "Health Record AE, CNN. -LSTM, RNNs, and variant -Lack of transparency and -Heterogenous data Analysis MLP, RBM, can process sequential interpretability -Lack of reproducibility Shi"
         },
         {
           "page": 7,
-          "text": "CNN, FCN, -Unsupervised training -Obtaining large number -Low interpretability RNN, SAE (SAE) of annotated microscopy -Processing high -easily parallelized -Unfixed input size (FCN"
+          "text": "Microscopy image CNN, FCN, -Unsupervised training -Obtaining large number -Low interpretability analysis RNN, SAE (SAE) of annotated microscopy -Processing high Xing et al. [34] -e"
         },
         {
           "page": 7,
@@ -4502,14 +4030,6 @@
         {
           "page": 10,
           "text": "and chemical-target interaction times and large prediction computational resources"
-        },
-        {
-          "page": 10,
-          "text": "AE, CNN, -Inclusion of CAD, feature -Large amounts of data are -To facilitate DL, large DBN, extraction and benign-malignant required for successful datasets must be set MTANN, cla"
-        },
-        {
-          "page": 10,
-          "text": "AE, CNN, -Eliminates tedious and -Time consuming -Long training times DBN, DNN, error-prone manual feature -Model architecture and -Need for large training KNN, LSTM, selection hyp"
         },
         {
           "page": 10,
@@ -4885,8 +4405,8 @@
       "file": "ozchi-finger-specific-touch.pdf",
       "tableCaptions": 5,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 4,
-      "cropBackedFragments": 3,
+      "rawTableFragments": 6,
+      "cropBackedFragments": 5,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -5014,8 +4534,8 @@
       "file": "using-cognitive-psychology-gpt3.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 5,
-      "rawTableFragments": 10,
-      "cropBackedFragments": 5,
+      "rawTableFragments": 15,
+      "cropBackedFragments": 9,
       "readerRawFragments": 5,
       "readerCellFallbacks": 4,
       "readerFragmentKinds": {
@@ -5075,20 +4595,20 @@
   "summary": {
     "extractionErrors": 0,
     "papersWithTableCaptions": 48,
-    "tableCaptions": 353,
-    "cropReadyCaptions": 241,
-    "rawTableFragments": 1464,
-    "cropBackedFragments": 483,
-    "readerRawFragments": 916,
-    "readerCellFallbacks": 676,
+    "tableCaptions": 363,
+    "cropReadyCaptions": 253,
+    "rawTableFragments": 1492,
+    "cropBackedFragments": 624,
+    "readerRawFragments": 797,
+    "readerCellFallbacks": 622,
     "readerFragmentKinds": {
-      "short-label": 200,
-      "structured-grid": 676,
-      "prose-like": 7,
-      "ambiguous": 32,
+      "structured-grid": 622,
+      "prose-like": 6,
+      "short-label": 143,
+      "ambiguous": 25,
       "numeric-grid": 1
     },
-    "orphanFragments": 904,
+    "orphanFragments": 785,
     "note": "Crop readiness is a geometry diagnostic. readerRawFragments simulates suppression only after a successful caption crop; readerCellFallbacks are native same-baseline rows retained for a readable source-only grid, not a claim of fully reconstructed table semantics. readerFragmentKinds is audit-only triage and does not change resolver behavior."
   }
 }
