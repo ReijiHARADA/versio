@@ -70,3 +70,11 @@
 - Academic PDF extraction: CanonicalDocument is the extraction source of truth. Persist as Paper Package (Markdown + structure). Import calls `extractAcademicPdf` then writes the package. Reader consumes Document AST / projection, not pdfLayout or GROBID internals. `pdfLayout.ts` remains the generic heuristic engine (do not rewrite column left→right). Format Profile apply thresholds stay APPLY_MIN=0.75 / APPLY_MARGIN=0.12. Do not use catalog.json formatFamily for production detection. Do not upgrade pdfjs-dist to 6.x. GROBID/Docling are optional enrichers, not required dependencies. Reuse block IDs on re-extract; do not mint a fresh UUID for every block.
 - Workspace: WorkspaceNode is one type. Every node can have children, papers, and metadata; nesting is unrestricted except cycles. Papers are never copied and belong through WorkspacePaper many-to-many relations.
 - Dotted grant identifiers (`016.128.303`) are not section headings or paper titles. Wrap them into the preceding `grant number` paragraph. Latin-ratio quality checks ignore source proper nouns and numeric ids.
+
+## Maintenance and refactoring
+
+- Refactor periodically at stable feature milestones, especially after extraction, translation, or package-format changes.
+- Keep refactoring separate from behavior/quality changes whenever practical. Preserve public APIs and add characterization tests before moving logic.
+- Prefer small responsibility splits, duplicate removal, and clearer names over new abstraction layers or rule engines.
+- Run targeted tests, typecheck, and relevant extraction/packaged checks after each refactor. Record the scope and verification in `CURRENT_STATE.md`.
+- Do not start a broad refactor while a production-quality regression is still being diagnosed; first capture the failing case and stabilize the behavior.
