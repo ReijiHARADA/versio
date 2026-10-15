@@ -56,8 +56,6 @@ export function Table({ block, metadata }: TableProps) {
                 }
               }}
             />
-          ) : metadata.imageUrl ? (
-            <div className={styles.missingImage}>表を読み込み中…</div>
           ) : structuredFallback ? (
             <div className={styles.tableFallbackGrid} role="table" aria-label={caption || "抽出された表"}>
               {tableRows.map((row, rowIndex) => (
@@ -70,6 +68,8 @@ export function Table({ block, metadata }: TableProps) {
                 </div>
               ))}
             </div>
+          ) : metadata.imageUrl ? (
+            <div className={styles.missingImage}>表を読み込み中…</div>
           ) : textFallback ? (
             // Source-only / borderless table rows: show the extracted cells as
             // text instead of a blank "extraction failed" shell.
