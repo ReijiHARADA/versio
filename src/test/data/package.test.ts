@@ -169,6 +169,40 @@ describe("Paper Package", () => {
     expect(String(figure?.metadata.imageUrl)).toMatch(/^assets\//);
   });
 
+  it("preserves captionless native table rows through package projection", async () => {
+    const fs = createMemoryFileSystem();
+    const { paper, sections, blocks } = sample();
+    const table: PaperBlock = {
+      id: "b-native-grid",
+      paperId: paper.id,
+      sectionId: sections[0].id,
+      type: "table",
+      order: 3,
+      pageStart: 1,
+      pageEnd: 1,
+      boundingBoxes: [{ page: 1, x: 72, y: 320, width: 220, height: 36 }],
+      original: null,
+      translated: null,
+      extractionConfidence: 0.9,
+      translationStatus: "skipped",
+      parentBlockId: null,
+      metadata: {
+        tableSourceFallback: true,
+        tableRows: [
+          [{ text: "Method", x: 72, width: 40 }, { text: "Result", x: 140, width: 40 }],
+          [{ text: "Pilot", x: 72, width: 30 }, { text: "0.95", x: 140, width: 25 }],
+        ],
+      },
+    };
+    await persistPaperPackage(fs, projectionToPackage({ paper, sections, blocks: [...blocks, table] }));
+    const loaded = await loadPaperPackage(fs, paper.id);
+    const projected = packageToProjection(loaded, paper);
+    const native = projected.blocks.find((block) => block.id === table.id);
+    expect(native?.type).toBe("table");
+    expect(native?.original).toBeNull();
+    expect(native?.metadata.tableRows).toEqual(table.metadata.tableRows);
+  });
+
   it("persists even when extraction still carries footer page-number blocks", async () => {
     const fs = createMemoryFileSystem();
     const { paper, sections, blocks } = sample();
