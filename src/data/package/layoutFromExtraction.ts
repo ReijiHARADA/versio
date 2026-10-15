@@ -104,13 +104,19 @@ export function attachLinesToBlocks(
         .filter((row) => row.length > 0)
       : undefined;
     const normalizedTableRows = tableRows ? normalizeTableRows(tableRows) : undefined;
-    const hasCellStructure = normalizedTableRows?.some((row) => row.length >= 2) ?? false;
+    // A table can be a single-column list or a flattened vertical stream.
+    // Keeping multiple one-cell rows still gives the Reader a readable row
+    // structure; dropping them turns every cell into one opaque space-joined
+    // string. This is limited to blocks already classified as tables.
+    const hasReadableRows = normalizedTableRows?.some((row) => row.length >= 2) === true ||
+      ((normalizedTableRows?.length ?? 0) >= 2 &&
+        normalizedTableRows?.some((row) => row.length > 0) === true);
     return {
       ...block,
       metadata: {
         ...block.metadata,
         lines,
-        ...(hasCellStructure ? { tableRows: normalizedTableRows } : {}),
+        ...(hasReadableRows ? { tableRows: normalizedTableRows } : {}),
       },
     };
   });

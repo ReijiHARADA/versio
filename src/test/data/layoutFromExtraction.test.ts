@@ -98,6 +98,34 @@ describe("attachLinesToBlocks", () => {
     ]]);
   });
 
+  it("keeps multiple single-cell table rows readable instead of flattening them", () => {
+    const tableText = "Method\nPilot interviews\nHuman factors research";
+    const layout = {
+      pageStart: 1,
+      text: tableText,
+      lines: [
+        "Method",
+        "Pilot interviews",
+        "Human factors research",
+      ].map((text, index) => ({
+        text,
+        items: [{ text, x: 50, width: text.length * 5 }],
+        bbox: { page: 1, x: 50, y: 100 + index * 14, width: text.length * 5, height: 10 },
+        y: 100 + index * 14,
+        height: 10,
+        fontSize: 9,
+      })),
+    } as unknown as LayoutBlock;
+
+    const [table] = attachLinesToBlocks([block("table", tableText)], [layout]);
+
+    expect(table.metadata.tableRows).toEqual([
+      [{ text: "Method", x: 50, width: 30 }],
+      [{ text: "Pilot interviews", x: 50, width: 80 }],
+      [{ text: "Human factors research", x: 50, width: 110 }],
+    ]);
+  });
+
   it("recovers repeated native cell rows near a numbered caption even when they projected as prose", () => {
     const caption = {
       ...block("table", "Table 8. Results"),
