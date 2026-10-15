@@ -96,11 +96,40 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
         return box.y >= captionY - 420 && box.y <= captionY + 80;
       })
       : [];
+    // Some native streams expose a small table as short, aligned rows without
+    // assigning table evidence to each cell. Recover only when the caption is
+    // followed by multiple compact rows that contain numeric data or very
+    // short labels and repeat an x-band. A nearby prose paragraph therefore
+    // cannot become a region merely because it is close to a caption.
+    const alignedCompactRows = candidates.filter((candidate) => {
+        if (candidate === caption || candidate.pageStart !== page.pageNumber) return false;
+        const box = candidate.boundingBoxes[0];
+        const text = candidate.text.trim();
+        if (!box || box.y < captionY - 18 || box.y > captionY + 150) return false;
+        if (candidate.role === "header" || candidate.role === "footer" || candidate.role === "copyright" || candidate.role === "footnote") return false;
+        if (/[.!?]\s*$/.test(text) || text.length > 180) return false;
+        const words = text.split(/\s+/).filter(Boolean);
+        const digits = (text.match(/\d/g) ?? []).length;
+        const numericRow = digits >= 2 || digits / Math.max(text.length, 1) >= 0.16;
+        const compactLabel = words.length <= 8 && text.length <= 90;
+        return numericRow || compactLabel;
+      });
+    const compactRowXs = new Map<number, number>();
+    const compactRowYs = new Map<number, number>();
+    for (const candidate of alignedCompactRows) {
+      const x = Math.round(candidate.boundingBoxes[0].x / 8) * 8;
+      compactRowXs.set(x, (compactRowXs.get(x) ?? 0) + 1);
+      const y = Math.round(candidate.boundingBoxes[0].y / 4) * 4;
+      compactRowYs.set(y, (compactRowYs.get(y) ?? 0) + 1);
+    }
+    const repeatedCompactX = [...compactRowXs.values()].some((count) => count >= 2);
+    const repeatedCompactY = [...compactRowYs.values()].filter((count) => count >= 2).length >= 1;
+    const alignedFallback = alignedCompactRows.length >= 2 && (repeatedCompactX || repeatedCompactY) ? alignedCompactRows : [];
     // Borderless tables can expose only a header and one compact data row as
     // table-scored native candidates (the remaining cells may be merged into
     // a single line).  Two aligned rows plus an explicit caption are enough
     // to preserve the region without promoting surrounding prose.
-    if (!signature && !graphicsGrid && captionFallback.length < 2) continue;
+    if (!signature && !graphicsGrid && captionFallback.length < 2 && alignedFallback.length < 2) continue;
     const effectiveSignature = graphicsGrid
       ? {
           bbox: graphicsGrid,
@@ -111,14 +140,14 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
       : signature ?? {
       bbox: {
         page: page.pageNumber,
-        x: Math.min(...captionFallback.map((candidate) => candidate.boundingBoxes[0].x)),
-        y: Math.min(...captionFallback.map((candidate) => candidate.boundingBoxes[0].y)),
-        width: Math.max(...captionFallback.map((candidate) => candidate.boundingBoxes[0].x + candidate.boundingBoxes[0].width)) - Math.min(...captionFallback.map((candidate) => candidate.boundingBoxes[0].x)),
-        height: Math.max(...captionFallback.map((candidate) => candidate.boundingBoxes[0].y + candidate.boundingBoxes[0].height)) - Math.min(...captionFallback.map((candidate) => candidate.boundingBoxes[0].y)),
+        x: Math.min(...[...captionFallback, ...alignedFallback].map((candidate) => candidate.boundingBoxes[0].x)),
+        y: Math.min(...[...captionFallback, ...alignedFallback].map((candidate) => candidate.boundingBoxes[0].y)),
+        width: Math.max(...[...captionFallback, ...alignedFallback].map((candidate) => candidate.boundingBoxes[0].x + candidate.boundingBoxes[0].width)) - Math.min(...[...captionFallback, ...alignedFallback].map((candidate) => candidate.boundingBoxes[0].x)),
+        height: Math.max(...[...captionFallback, ...alignedFallback].map((candidate) => candidate.boundingBoxes[0].y + candidate.boundingBoxes[0].height)) - Math.min(...[...captionFallback, ...alignedFallback].map((candidate) => candidate.boundingBoxes[0].y)),
       },
       horizontalRules: 0,
       verticalRules: 0,
-      columnX: [...new Set(captionFallback.map((candidate) => Math.round(candidate.boundingBoxes[0].x)))].sort((a, b) => a - b),
+      columnX: [...new Set([...captionFallback, ...alignedFallback].map((candidate) => Math.round(candidate.boundingBoxes[0].x)))].sort((a, b) => a - b),
     };
     const group = candidates.filter((candidate) => {
       if (candidate === caption || candidate.pageStart !== page.pageNumber) return false;
@@ -158,12 +187,16 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
         return xOverlap && yDistance <= 120;
       })
       : [];
-    const selectedGroup = graphicsGrid ? group : borderlessGroup.length >= 2 ? borderlessGroup : group;
+    const selectedGroup = graphicsGrid ? group : borderlessGroup.length >= 2 ? borderlessGroup :
+      (alignedFallback.length >= 2 && group.length < 2) ? alignedFallback : group;
+    const usesAlignedFallback = selectedGroup === alignedFallback && alignedFallback.length >= 2;
     if (selectedGroup.length < (graphicsGrid ? 1 : 2)) continue;
     const prose = selectedGroup.filter((candidate) => /[.!?]\s*$/.test(candidate.text.trim())).length;
     if (prose > Math.floor(selectedGroup.length / 3)) continue;
     const confidence = graphicsGrid
       ? 0.995
+      : usesAlignedFallback
+      ? 0.982
       : !signature
       ? 0.982
       : borderlessGroup.length >= 2

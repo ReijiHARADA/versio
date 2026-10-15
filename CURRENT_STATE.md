@@ -1,3 +1,16 @@
+# 2026-10-15: recover compact caption-anchored table regions
+
+The medical deep-learning review exposed a generic table relation gap: bare
+captions such as `Table 1` were excluded from caption-to-table matching, and
+small native cell rows had no individual table score after the PDF stream
+flattened them. The resolver now accepts a bare numbered table caption, while
+region evidence uses a conservative caption-local x/y repetition fallback
+only for short, numeric or compact rows. It does not promote sentence-shaped
+prose. On the four corpus papers with table-region ground truth, region recall
+improved from **0.8214 mean (minimum 0.2857)** to **1.0 mean/minimum**; table
+caption recall, source integrity, and the full **232/232** extraction/reading
+order regression remained green.
+
 # 2026-10-15: recover interrupted native titles without absorbing issue rails
 
 The full cached corpus benchmark now records both the title shown to the
