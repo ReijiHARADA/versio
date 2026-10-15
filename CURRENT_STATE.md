@@ -2769,3 +2769,20 @@ raw fragments, and **676** native cell-grid fallbacks. Fragment triage improved
 to `short-label=200`, `structured-grid=676`, `prose-like=7`, `ambiguous=32`,
 `numeric-grid=1` (previously 283/723/7/35/1). This is a precision safeguard,
 not a blanket table suppression rule.
+# 2026-10-15: prevent cross-column table headers from joining body prose
+
+`cognitive-memory-cues.pdf` exposed a reading-order boundary failure: a left
+column paragraph ending near a page bottom was joined to a right-column
+questionnaire header (`Option (Correct)`, `Detailed question`, etc.) because
+the header was emitted as ordinary paragraph text. The continuation resolver
+now treats a short multi-line block with several native cells and a large
+column displacement as a detached table header, even when its words are not
+statistical header vocabulary. This blocks the cross-column prose merge while
+leaving the header as a table block.
+
+Focused regressions for cognitive-memory, Human-AI infographic labels, COVID
+figure labels, and speechin tables pass. The complete **232/232** extraction
+and reading-order corpus passes in **464.53 seconds**. The existing table audit
+values remain the latest verified values: extraction errors 0, 353 captions,
+241 crop-ready captions, 1,464 raw fragments, 916 reader raw fragments, and
+676 native cell-grid fallbacks.

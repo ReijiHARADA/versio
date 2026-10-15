@@ -3812,6 +3812,15 @@ function isDetachedTableHeaderBlock(block: LayoutBlock, previous: LayoutBlock): 
   if (block.role !== "paragraph" || block.text.length < 12 || block.text.length > 120 || block.lines.length > 2) return false;
   const text = block.text.trim();
   if (/[.!?:;]$/.test(text)) return false;
+  // A native stream can put a two-line, multi-cell header at the top of the
+  // next physical column. It is not a continuation of the unfinished prose
+  // in the previous column even when its words are not conventional
+  // statistical headers (for example, questionnaire option labels).
+  if (block.lines.some((line) => line.items.length >= 3)) {
+    const previousLine = previous.lines.at(-1);
+    const nextLine = block.lines[0];
+    if (previousLine && nextLine && Math.abs(previousLine.x - nextLine.x) >= 80) return true;
+  }
   const words = text.match(/[A-Za-z][A-Za-z.]*/g) ?? [];
   if (words.length < 3) return false;
   const headerWords = new Set(["variable", "factor", "measure", "item", "group", "condition", "n", "mean", "median", "std", "sd", "se", "min", "max", "range", "p", "t", "f"]);
