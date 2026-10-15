@@ -1,3 +1,16 @@
+# 2026-10-15: recover rows from flattened native table nodes
+
+Some questionnaire and compact multi-column tables had reliable native cell
+boxes but were projected as one concatenated source-only string because the
+resolver node and layout block were not joined at projection time. The table
+projection now reattaches a matching layout block by page/text when needed,
+groups repeated x-position cells on the same baseline, and stores the result
+as `tableRows` only when at least two rows share multiple columns. The fallback
+remains source-only and skipped for translation. On the 114-PDF table audit,
+`prose-like` fragments fell **18 → 7**, `ambiguous` fell **64 → 35**, and
+readable native-grid fallbacks rose **676 → 718**, with zero extraction errors.
+The cognitive-memory questionnaire is covered by a regression test.
+
 # 2026-10-15: corpus provenance mismatch recorded
 
 The full extraction benchmark found one catalog/source mismatch independent of

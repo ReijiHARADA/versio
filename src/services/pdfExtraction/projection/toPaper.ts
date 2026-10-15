@@ -2098,13 +2098,31 @@ export function projectCanonicalToPaper(input: {
         (node.confidence >= 0.94 && node.boundingBoxes.length === 1 &&
           node.text.trim().split(/\s+/).filter(Boolean).length <= 10 &&
           !/[.!?]\s*$/.test(node.text.trim())));
+    const tableLayout = layout ?? layoutBlocks.find((candidate) => candidate.pageStart === node.pageStart && candidate.text === node.text);
+    const candidateRows = tableLayout?.lines.reduce<Array<Array<{ text: string; x: number; width: number; y: number }>>>((rows, line) => {
+      const cells = line.items
+        .filter((item) => item.text.trim().length > 0)
+        .map((item) => ({ text: item.text.trim(), x: item.x, width: item.width, y: item.y }))
+        .sort((a, b) => a.x - b.x);
+      if (cells.length === 0) return rows;
+      const previous = rows.at(-1);
+      const previousY = previous?.[0]?.y;
+      if (previous && previousY !== undefined && Math.abs(line.y - previousY) <= 1.5) previous.push(...cells);
+      else rows.push(cells);
+      return rows;
+    }, []);
+    const hasRepeatedColumns = (candidateRows?.filter((row) => row.length >= 2).length ?? 0) >= 2 &&
+      new Set((candidateRows ?? []).flat().map((cell) => Math.round(cell.x))).size >= 2;
+    const tableRows = hasRepeatedColumns
+      ? candidateRows?.map((row) => row.map(({ text, x, width }) => ({ text, x, width })))
+      : undefined;
     if (nativeGrid) {
       const tableText = node.text ?? "";
       const match = tableText.match(/^(?:table|表)\s*(\S+)/i);
       const tableNumber = match
         ? /表/i.test(match[0]) ? `表 ${match[1]}` : `Table ${match[1]}`
         : "Table";
-      pushBlock(node, layout, {
+      pushBlock(node, tableLayout, {
         sectionId: currentSectionId,
         type: "table",
         pageStart: node.pageStart,
@@ -2121,6 +2139,7 @@ export function projectCanonicalToPaper(input: {
           captionTranslated: null,
           column,
           figureKey: `table-region-${node.id}`,
+          ...(tableRows ? { tableRows } : {}),
         } satisfies TableMetadata & { column: string; figureKey: string },
       });
       continue;
@@ -2131,7 +2150,7 @@ export function projectCanonicalToPaper(input: {
     // source-only prose instead of silently dropping the node or translating
     // unrelated cells as a fabricated paragraph.
     if (node.role === "table" && node.text) {
-      pushBlock(node, layout, {
+      pushBlock(node, tableLayout, {
         sectionId: currentSectionId,
         type: "table",
         pageStart: node.pageStart,
@@ -2145,6 +2164,7 @@ export function projectCanonicalToPaper(input: {
           column,
           role: "table",
           tableSourceFallback: true,
+          ...(tableRows ? { tableRows } : {}),
           translationInputWarning: "table-like text preserved in source because a reliable grid was unavailable",
         },
       });
