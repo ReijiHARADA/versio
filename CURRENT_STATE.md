@@ -2859,3 +2859,12 @@ The captionless-grid change is included in the rebuilt `.app` at
 normal fixture and `test-data/real-papers/human-ai-interaction-guidelines.pdf`,
 covering import, Reader marker/search/export, quit, relaunch, and persistence.
 The Human-AI package path is therefore verified in the actual Tauri bundle.
+
+Post-build table readiness audit after the captionless-grid package fix: extraction
+errors **0**, `readerRawFragments` **700** (previously 796), `readerCellFallbacks`
+**522** (previously 618), with 522 structured-grid, 5 prose-like, 147 short-label,
+25 ambiguous, and 1 numeric-grid fragments. The remaining prose-like/ambiguous
+samples include legitimate questionnaire cells, checklist rows, references, and
+code examples; they require evidence-based triage rather than blanket suppression.
+The refreshed diagnostic is saved in
+`test-data/real-papers/reports/table-reader-readiness-v1.json`.
