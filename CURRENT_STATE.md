@@ -1,3 +1,14 @@
+# 2026-10-15: corpus provenance mismatch recorded
+
+The full extraction benchmark found one catalog/source mismatch independent of
+the parser: `linguistics-the-role-of-morphology-in-computational-linguistics-its-significance-i.pdf`
+contains an adolescent mental-health article and DOI `10.5281/zenodo.18409657`,
+while its catalog entry claims a morphology paper and DOI
+`10.5281/zenodo.18456227`. The linked publisher page currently serves the same
+adolescent-health PDF. This item is recorded in
+`test-data/real-papers/reports/source-provenance-mismatches-v1.json` and must
+be replaced or corrected before using its title metric as extraction evidence.
+
 # 2026-10-15: separate reviewer/editor affiliations from flattened author mastheads
 
 The `cognitive-dual-task` Frontiers PDF exposed a generic masthead failure:
