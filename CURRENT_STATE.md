@@ -1,3 +1,21 @@
+# 2026-10-15: preserve prose continuations beside a table or figure band
+
+A real cognitive-psychology page contains a compact left statistics table and
+right results prose at the same y positions. The right-side lead,
+`In this study, there was a significant difference between gist memory`, was
+correctly kept as a paragraph but had also been recorded as a possible
+figure-band label merely because of a nearby caption. Continuation searching
+then skipped it unconditionally, leaving `and detailed memory at 10 min …` as
+a separate paragraph and translation unit.
+
+The continuation pass now distinguishes a genuine short graphic label from a
+body run using its role, word count, native width, and document body font. A
+body run stays eligible as the predecessor even if it lies near a caption. The
+same sentence is now reconstructed as one paragraph while the left statistics
+table remains a table. The targeted real-PDF regression, typecheck, and lint
+pass; the complete **118 extraction + 114 reading-order** corpus passes
+**232/232** in **458.99 seconds** under `caffeinate -dimsu`.
+
 # 2026-10-15: initial import no longer waits for optional figure rasterization
 
 A packaged import of the real 30-page cognitive-memory PDF exposed that the

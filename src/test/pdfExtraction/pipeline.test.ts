@@ -576,13 +576,20 @@ describe("canonical extraction pipeline", () => {
       node.pageStart === 7 && node.text?.startsWith("In this study, there was a significant difference between gist memory")
     );
     const bodyContinuation = result.canonical.nodes.find((node) =>
-      node.pageStart === 7 && node.text?.startsWith("and detailed memory at 10 min")
+      node.pageStart === 7 && node.text?.startsWith("In this study, there was a significant difference between gist memory") &&
+      node.text?.includes("and detailed memory at 10 min")
     );
     const inlineBodyContinuation = result.canonical.nodes.find((node) =>
       node.pageStart === 7 && node.text?.startsWith("forgetting rate of gist and detailed memories. The results showed that they were")
     );
     expect(bodyLead?.role).toBe("paragraph");
+    // The left-side statistics table sits physically between these two right
+    // column lines. It must remain a table while the unfinished prose sentence
+    // becomes one translation unit.
     expect(bodyContinuation?.role).toBe("paragraph");
+    expect(result.canonical.nodes.some((node) =>
+      node.pageStart === 7 && node.text?.startsWith("and detailed memory at 10 min")
+    )).toBe(false);
     expect(inlineBodyContinuation?.role).toBe("paragraph");
     expect(result.canonical.nodes.some((node) =>
       node.pageStart === 7 && node.role === "table" && /and detailed memory at 10 min|interest and memory type \[F|they were not significantly correlated/i.test(node.text ?? "")
