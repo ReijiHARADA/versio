@@ -1,3 +1,17 @@
+# 2026-10-15: separate native-title extraction from metadata fallback
+
+The full cached corpus benchmark now records both the title shown to the
+Reader and the title recovered from native PDF evidence. Across 113 cached
+papers, Reader-title exactness is **105/113 (92.92%)**, while native-title
+exactness is **68/113 (60.18%)**; **39** papers used verified catalog metadata
+as a fallback. This prevents the earlier aggregate from presenting metadata
+recovery as PDF extraction success. The eight Reader mismatches are currently
+split between one genuine multi-line native-title reconstruction defect,
+catalog/PDF language or spelling mismatches, and one catalog/PDF provenance
+mismatch. The next extraction change must target the generic geometry/style
+signals for interrupted title continuation; catalog mismatches should be
+corrected in corpus metadata rather than hidden in the resolver.
+
 # 2026-10-15: packaged OzCHI masthead and table verification
 
 The actual packaged import path was also exercised with the OzCHI 2014
