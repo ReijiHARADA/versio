@@ -3133,3 +3133,10 @@ regressions showed it interfered with existing table/figure boundaries. No
 production extraction rule was retained from that experiment. The clean source
 was rebuilt into `Paper Reader.app` at **2026-10-16 04:39:02 JST**, with the
 checkpoint-coalescing and FTS-schema fixes included.
+
+The focused `pipeline.test.ts` rerun at 04:37 also exposed four existing
+table/figure boundary failures (mixed thesis caption relation, captionless
+method/goal table, figure-adjacent numeric label matrix, and synthetic Table 9
+identity). The statistical-prose experiment was not the cause—the same four
+failures remained after reverting it—but they must be triaged before claiming
+the focused extraction suite is green again.
