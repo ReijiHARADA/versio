@@ -1,6 +1,6 @@
 {
   "version": "extraction-baseline-v2",
-  "generatedAt": "2026-10-15T10:04:40.852Z",
+  "generatedAt": "2026-10-15T10:41:46.066Z",
   "papers": 113,
   "summary": {
     "readerTitleExact": {
@@ -56,8 +56,8 @@
     },
     "tableRegionRecall": {
       "evaluated": 4,
-      "mean": 0.8214285714285714,
-      "min": 0.2857142857142857
+      "mean": 1,
+      "min": 1
     },
     "tableRegionPrecision": {
       "evaluated": 1,
@@ -777,9 +777,9 @@
       "titleExpected": "Medical deep learning—A systematic meta-review",
       "titleExact": true,
       "tableCaptionRecall": 1,
-      "tableRegionRecall": 0.2857142857142857,
+      "tableRegionRecall": 1,
       "tableContinuationPageRecall": 1,
-      "tableCaptionRelationRecall": 0,
+      "tableCaptionRelationRecall": 1,
       "tableCaptionRelationPrecision": 1,
       "figureCaptionRelation": 1,
       "sourceIntegrityRate": 1,
@@ -787,7 +787,7 @@
       "fusedTitle": "Computer Methods and Programs in Biomedicine 221 (2022) 106874",
       "fusedTitleConfidence": 0.8,
       "canonicalTitle": "Medical deep learning—A systematic meta-review",
-      "flattenedNumericRowCount": 2,
+      "flattenedNumericRowCount": 0,
       "chartLabelNodeCount": 0,
       "rotatedNativeItemCount": 0,
       "rotatedLineCount": 0
@@ -3626,7 +3626,7 @@
       "fusedTitle": "Fatigue and occupational safety in short haul, light transport",
       "fusedTitleConfidence": 0.8,
       "canonicalTitle": "Fatigue and occupational safety in short haul, light transport",
-      "flattenedNumericRowCount": 17,
+      "flattenedNumericRowCount": 16,
       "chartLabelNodeCount": 30,
       "rotatedNativeItemCount": 1752,
       "rotatedLineCount": 356

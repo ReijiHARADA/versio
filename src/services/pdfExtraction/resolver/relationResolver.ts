@@ -172,7 +172,7 @@ function horizontallyCompatible(
 export function captionOfRelations(nodes: CanonicalNode[]): CanonicalRelation[] {
   const tableCaptionShape = (text: string) => {
     const value = text.trim();
-    return /^(?:table|tables)\s+\d+(?:\.\d+)?[a-z]?(?:\s*[.:：]\s*|\s+\((?:continued|cont\.)\)|\s+continues?\b)/i.test(value) ||
+    return /^(?:table|tables)\s+\d+(?:\.\d+)?[a-z]?(?:$|\s*[.:：]\s*|\s+\((?:continued|cont\.)\)|\s+continues?\b)/i.test(value) ||
       (/^table\s+\d+(?:\.\d+)?[a-z]?(?:\s*[.:：])?\s+\S/i.test(value) && value.length <= 120 &&
         value.split(/\s+/).length <= 12 && !/[.!?]\s*$/.test(value));
   };
