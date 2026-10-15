@@ -1318,6 +1318,30 @@ export function projectCanonicalToPaper(input: {
     if (y >= firstBodyY || n.text.length > 320 || /[.!?。！？]$/.test(n.text.trim())) return false;
     return /\b(?:department|faculty|school|college|university|institute|laboratory|laboratories|hospital|center|centre|management)\b/i.test(n.text);
   });
+  // A narrow masthead column can classify a wrapped institution line as an
+  // author because it starts with a capitalized word (for example
+  // `Design Cognition and its`). Recover only continuation-shaped author
+  // nodes that sit directly beside an already detected affiliation node. This
+  // keeps genuine author rows and emails out while preserving the native
+  // column geometry for affiliation reconstruction.
+  const affiliationContinuationNodes = canonical.nodes.filter((n) => {
+    if (n.role !== "author" || !n.text || n.pageStart !== 1 || n.text.length > 120) return false;
+    const box = n.boundingBoxes[0];
+    const y = box?.y ?? Infinity;
+    const x = box?.x ?? Infinity;
+    if (y >= firstBodyY || /@|\d/.test(n.text)) return false;
+    const words = n.text.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+    if (words.length < 2 || words.length > 8 || !/[a-z]/.test(n.text)) return false;
+    // A normal title-case person row has every token in name form; a wrapped
+    // institution continuation usually contains a connector/lowercase tail.
+    if (words.every((word) => /^[A-Z][\p{Ll}'’-]+$/u.test(word))) return false;
+    return affiliationNodes.some((candidate) => {
+      const candidateBox = candidate.boundingBoxes[0];
+      return Math.abs((candidateBox?.y ?? Infinity) - y) <= 26 &&
+        Math.abs((candidateBox?.x ?? Infinity) - x) <= 55;
+    });
+  });
+  const affiliationSourceNodes = [...affiliationNodes, ...affiliationContinuationNodes];
   type AffiliationCandidate = {
     id: string;
     name: string;
@@ -1391,7 +1415,7 @@ export function projectCanonicalToPaper(input: {
     predecessorId: predecessor?.id,
   };
   }).filter((author) => !mergedMastheadPredecessors.has(author.id));
-  const affiliationCandidates: AffiliationCandidate[] = affiliationNodes.flatMap((node): AffiliationCandidate[] => {
+  const affiliationCandidates: AffiliationCandidate[] = affiliationSourceNodes.flatMap((node): AffiliationCandidate[] => {
     const layout = layoutForNode(node, layoutBlocks);
     const lines = layout?.lines ?? [];
     const markerPositions = lines.flatMap((line) => line.items

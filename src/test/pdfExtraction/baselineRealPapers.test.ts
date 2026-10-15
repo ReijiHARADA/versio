@@ -245,6 +245,18 @@ describe("baseline benchmark on cached real papers", () => {
           block.sectionId && referenceSectionIds.has(block.sectionId)
         );
         if (paper.id === "interactive-jewellery") {
+          expect(referenceExtraction.paper.authors).toEqual([
+            "Maarten Versteeg",
+            "Elise van den Hoven",
+            "Caroline Hummels",
+          ]);
+          expect(referenceExtraction.paper.affiliations.map((affiliation) => affiliation.name)).toEqual(expect.arrayContaining([
+            "Department of Industrial Design Eindhoven University of Technology The Netherlands",
+            "Faculty of Design, Architecture & Building University of Technology Sydney Australia",
+            "Duncan of Jordanstone College of Art and Design University of Dundee",
+            "Australian Research Centre of Excellence in Cognition and its Disorders Australia Macquarie University",
+          ]));
+          expect(referenceExtraction.paper.authors.some((author) => /Design Cognition|Cognition and its/i.test(author))).toBe(false);
           expect(referenceSectionBlocks.find((block) => block.original.includes("Wear, wearing, worn"))?.type).toBe("reference");
           expect(referenceSectionBlocks.find((block) => block.original.includes("The structure of autobiographical memory"))?.type).toBe("reference");
         }

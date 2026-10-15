@@ -2824,3 +2824,11 @@ The table-role guard now distinguishes a complete sentence adjacent to a figure/
 Verification: extraction/reading-order regression **232/232** passes in 361.54 seconds; typecheck passes; lint passes with the existing warnings. The table-readiness audit reports 0 extraction errors, 48 papers with captions, 363 captions, 253 crop-ready captions, 1,492 raw fragments, 797 reader fragments, 622 native cell-grid fallbacks, 6 prose-like fragments, 25 ambiguous fragments, and 785 orphan fragments. These remaining audit categories are diagnostic follow-up work, not silently discarded content.
 
 The staged `.app` was built before this latest guard change, so it must be rebuilt before Tauri UI verification.
+
+# 2026-10-16: recover wrapped masthead affiliation continuations
+
+The interactive-jewellery regression exposed a general masthead case where a wrapped affiliation line was classified as an author (`Design Cognition and its`) because it began with a capitalized word. Projection now admits only author-role nodes that are continuation-shaped, lie before the first body block, and are spatially adjacent to a detected affiliation node in the same masthead band. Genuine person rows, emails, and body paragraphs remain excluded. The current route recovers all three authors and four affiliations, with no affiliation text in the author list.
+
+The complete extraction corpus remains **232/232** after this change, and the dedicated interactive-jewellery test passes. The table-readiness audit now stores representative samples per fragment category so ambiguous/prose-like entries can be manually classified rather than treated as failures by count alone. Latest audit: 0 extraction errors, 363 captions, 253 crop-ready captions, 1,495 raw fragments, 796 reader fragments, 618 structured-grid fallbacks, 5 prose-like, 25 ambiguous, 147 short-label, and 1 numeric-grid.
+
+The staged `.app` must be rebuilt after this source change before Tauri UI verification.
