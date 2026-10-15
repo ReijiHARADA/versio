@@ -1,3 +1,32 @@
+# 2026-10-15: split interleaved table/body columns before role resolution
+
+A real cognitive-psychology PDF exposed a high-cost table error: a compact
+left-column statistical table and right-column results prose share y positions.
+The native PDF stream grouped their alternating lines into one block, so the
+table grid evidence classified the whole block as `table`; right-column prose
+then became a source-only table fallback and was never sent for translation.
+
+Layout reconstruction now separates this narrow shape before canonical role
+resolution. It requires three compact numeric rows with a repeated left-side
+grid, an actual horizontal gutter, independently body-sized type to the right,
+and sufficient prose words. Mixed lines are divided by their native item x
+coordinates. Table evidence now also keeps the exact predicate that promoted
+it, and repeated-caption grids require a compact three-column anchor band that
+the candidate itself intersects. Therefore a prose line merely aligned with a
+table cannot inherit its role. The regression keeps `Memory cue / F / Sig.` as
+a table while `In this study … gist memory` and `and detailed memory …` remain
+paragraphs; neither may appear inside a table node.
+
+The full cached corpus passes **232/232**: **118** extraction baselines and
+**114** reading-order checks in **538.29 seconds** under `caffeinate -dimsu`.
+The refreshed 118-PDF table Reader diagnostic has **0** extraction errors,
+**347** table captions, **257** crop-ready captions, **1,028** reader-visible
+source-only fragments, and **675** readable native-grid fallbacks. Triage is
+`short-label=268`, `structured-grid=675`, `prose-like=18`, `ambiguous=64`,
+`numeric-grid=3`. These are diagnostics, not a claim that all tables have
+semantic cell reconstruction. The next review set remains the 18 prose-like
+fragments; do not suppress tables or relax confidence merely to lower it.
+
 # 2026-10-15: refreshed full-corpus table-reader audit
 
 After the precision change, the table-reader readiness audit completed across
