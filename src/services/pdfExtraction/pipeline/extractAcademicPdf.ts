@@ -85,7 +85,12 @@ export function suppressImageBackedTableFragments(blocks: PaperBlock[]): PaperBl
     const metadata = block.metadata as { imageUrl?: string; captionOriginal?: string };
     return Boolean(metadata.imageUrl) && /^\s*(?:table|表)\s*\d+/i.test(metadata.captionOriginal ?? "");
   });
-  if (imageBackedCaptions.length === 0) return blocks;
+  const imageBackedFigures = blocks.filter((block) => {
+    if (block.type !== "figure") return false;
+    const metadata = block.metadata as { imageUrl?: string; regionBoundingBoxes?: PaperBlock["boundingBoxes"] };
+    return Boolean(metadata.imageUrl) && Boolean(metadata.regionBoundingBoxes?.length);
+  });
+  if (imageBackedCaptions.length === 0 && imageBackedFigures.length === 0) return blocks;
 
   return blocks.filter((block) => {
     if (block.type !== "table") return true;
@@ -107,6 +112,20 @@ export function suppressImageBackedTableFragments(blocks: PaperBlock[]): PaperBl
     }
     const fragment = boxBounds(block);
     if (!fragment) return true;
+    const insideFigure = imageBackedFigures.some((figure) => {
+      const region = (figure.metadata as { regionBoundingBoxes?: PaperBlock["boundingBoxes"] }).regionBoundingBoxes ?? [];
+      const regionBoxes = region.filter((box) => box.page === fragment.page);
+      if (regionBoxes.length === 0) return false;
+      const regionLeft = Math.min(...regionBoxes.map((box) => box.x));
+      const regionRight = Math.max(...regionBoxes.map((box) => box.x + box.width));
+      const regionTop = Math.min(...regionBoxes.map((box) => box.y));
+      const regionBottom = Math.max(...regionBoxes.map((box) => box.y + box.height));
+      const fragmentArea = Math.max(1, (fragment.right - fragment.left) * (fragment.bottom - fragment.top));
+      const overlapArea = Math.max(0, Math.min(fragment.right, regionRight) - Math.max(fragment.left, regionLeft)) *
+        Math.max(0, Math.min(fragment.bottom, regionBottom) - Math.max(fragment.top, regionTop));
+      return overlapArea / fragmentArea >= 0.8;
+    });
+    if (insideFigure) return false;
     return !imageBackedCaptions.some((caption) => {
       const captionMetadata = caption.metadata as { column?: string; captionOf?: string };
       const captionBox = boxBounds(caption);

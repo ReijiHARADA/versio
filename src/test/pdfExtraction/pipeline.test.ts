@@ -172,6 +172,27 @@ describe("canonical extraction pipeline", () => {
     expect(suppressImageBackedTableFragments([caption, rightColumnFragment])).toEqual([caption]);
   });
 
+  it("hides table-like text extracted inside an image-backed figure region", () => {
+    const figure = {
+      id: "figure-caption", paperId: "p", order: 1, type: "figure", original: "Figure 1. Vignette tasks.",
+      translated: null, translationStatus: "pending", pageStart: 2, pageEnd: 2,
+      boundingBoxes: [{ page: 2, x: 56, y: 300, width: 480, height: 34 }], parentBlockId: null,
+      extractionConfidence: 0.95,
+      metadata: {
+        imageUrl: "data:image/jpeg;base64,crop", captionOriginal: "Figure 1. Vignette tasks.",
+        figureNumber: "Figure 1", column: "single", regionBoundingBoxes: [{ page: 2, x: 56, y: 70, width: 480, height: 230 }],
+      },
+    } as PaperBlock;
+    const fragment = {
+      id: "figure-text-fragment", paperId: "p", order: 0, type: "table", original: "Linda is 31 years old...",
+      translated: null, translationStatus: "skipped", pageStart: 2, pageEnd: 2,
+      boundingBoxes: [{ page: 2, x: 70, y: 92, width: 186, height: 70 }], parentBlockId: null,
+      extractionConfidence: 0.96,
+      metadata: { tableSourceFallback: true, column: "single" },
+    } as PaperBlock;
+    expect(suppressImageBackedTableFragments([fragment, figure])).toEqual([figure]);
+  });
+
   it("keeps a short diagram annotation out of an adjacent prose paragraph", async () => {
     const pdf = path.resolve("test-data/real-papers/cognitive-psychology-gpt3.pdf");
     if (!fs.existsSync(pdf)) return;

@@ -2,6 +2,7 @@ import type {
   Paper,
   Section,
   PaperBlock,
+  BoundingBox,
   NormalizedSectionKind,
   FigureMetadata,
   TableMetadata,
@@ -2417,6 +2418,10 @@ export function projectCanonicalToPaper(input: {
             ? `表 ${match[2]}`
             : `Table ${match[2]}`
           : "Table";
+        const captionOf = canonical.relations.find(
+          (r) => r.kind === "CAPTION_OF" && r.from === node.id
+        )?.to;
+        const regionNode = captionOf ? canonical.nodes.find((candidate) => candidate.id === captionOf) : undefined;
         pushBlock(node, layout, {
           sectionId: currentSectionId,
           type: "table",
@@ -2435,13 +2440,13 @@ export function projectCanonicalToPaper(input: {
             column,
             ...(layout?.detachedCaptionTitleRepaired ? { detachedCaptionTitleRepaired: true } : {}),
             figureKey: figureLookupKey(text, node.pageStart),
-            captionOf: canonical.relations.find(
-              (r) => r.kind === "CAPTION_OF" && r.from === node.id
-            )?.to,
+            captionOf,
+            ...(regionNode?.boundingBoxes?.length ? { regionBoundingBoxes: regionNode.boundingBoxes } : {}),
           } satisfies TableMetadata & {
             column: string;
             figureKey: string;
             captionOf?: string;
+            regionBoundingBoxes?: BoundingBox[];
           },
         });
         continue;
@@ -2451,7 +2456,11 @@ export function projectCanonicalToPaper(input: {
         ? /図/.test(match[1])
           ? `図 ${match[2]}`
           : `Figure ${match[2]}`
-        : "Figure";
+          : "Figure";
+      const captionOf = canonical.relations.find(
+        (r) => r.kind === "CAPTION_OF" && r.from === node.id
+      )?.to;
+      const regionNode = captionOf ? canonical.nodes.find((candidate) => candidate.id === captionOf) : undefined;
       pushBlock(node, layout, {
         sectionId: currentSectionId,
         type: "figure",
@@ -2469,13 +2478,13 @@ export function projectCanonicalToPaper(input: {
           figureNumber,
           column,
           figureKey: figureLookupKey(text, node.pageStart),
-          captionOf: canonical.relations.find(
-            (r) => r.kind === "CAPTION_OF" && r.from === node.id
-          )?.to,
+          captionOf,
+          ...(regionNode?.boundingBoxes?.length ? { regionBoundingBoxes: regionNode.boundingBoxes } : {}),
         } satisfies FigureMetadata & {
           column: string;
           figureKey: string;
           captionOf?: string;
+          regionBoundingBoxes?: BoundingBox[];
         },
       });
       continue;
