@@ -1,3 +1,22 @@
+# 2026-10-16: retain single-column table rows in the Reader
+
+The table package boundary previously kept native rows only when at least one
+row had two or more cells. Single-column tables and vertically flattened table
+streams therefore fell through to the space-joined source fallback, even
+though their native line geometry was available. `attachLinesToBlocks` now
+retains any multi-row table as `metadata.tableRows`, including one-cell rows,
+and the Reader renders that fallback as row surfaces. Ordinary paragraphs are
+not affected because the change applies only after a block has already been
+classified as a table. The existing multi-column grid path is unchanged.
+
+The focused layout tests pass **6/6** (including the new single-cell-row
+regression), `npm run typecheck` and lint pass with only the existing warnings,
+and the full real-paper extraction/reading-order suite passes **232/232**
+(118 extraction + 114 reading-order, 436.50s). The refreshed 118-PDF table
+audit still has **0 extraction errors**; readable native row fallbacks increased
+from **491 to 517**. A packaged `.app` rebuild is still required before Tauri
+visual confirmation.
+
 # 2026-10-16: serialize database startup migration/index sync
 
 The packaged OzCHI run showed that extraction and Reader package loading were

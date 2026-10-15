@@ -27,7 +27,7 @@ export function Table({ block, metadata }: TableProps) {
   const tableRows = Array.isArray(metadata.tableRows)
     ? metadata.tableRows.filter((row) => Array.isArray(row) && row.length > 0)
     : [];
-  const structuredFallback = textFallback && tableRows.some((row) => row.length >= 2);
+  const structuredFallback = textFallback && tableRows.length >= 2;
   const showCaption = Boolean(caption) || hasImage;
 
   return (

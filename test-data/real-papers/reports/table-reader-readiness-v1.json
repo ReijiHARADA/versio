@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T17:42:46.452Z",
+  "generatedAt": "2026-10-15T18:34:48.922Z",
   "paperCount": 114,
   "papers": [
     {
@@ -58,19 +58,15 @@
       "cropReadyCaptions": 4,
       "rawTableFragments": 39,
       "cropBackedFragments": 16,
-      "readerRawFragments": 22,
+      "readerRawFragments": 21,
       "readerCellFallbacks": 17,
       "readerFragmentKinds": {
-        "structured-grid": 17,
+        "structured-grid": 16,
         "short-label": 4,
         "ambiguous": 1
       },
       "readerFragmentSamples": {
         "structured-grid": [
-          {
-            "page": 4,
-            "text": "A. A little boy A. White What color sweater is the B. A nanny B. Yellow little girl wearing? C. A little girl C. Pink"
-          },
           {
             "page": 4,
             "text": "A. Doing housework A. Short black hair"
@@ -114,6 +110,10 @@
           {
             "page": 4,
             "text": "Eating dessert White ice-cream scoop What does the boy not eat?"
+          },
+          {
+            "page": 4,
+            "text": "C. Ice-cream C. 3"
           }
         ],
         "short-label": [
@@ -657,7 +657,7 @@
       "rawTableFragments": 64,
       "cropBackedFragments": 22,
       "readerRawFragments": 38,
-      "readerCellFallbacks": 21,
+      "readerCellFallbacks": 27,
       "readerFragmentKinds": {
         "short-label": 12,
         "structured-grid": 21,
@@ -1190,7 +1190,7 @@
       "rawTableFragments": 95,
       "cropBackedFragments": 56,
       "readerRawFragments": 39,
-      "readerCellFallbacks": 20,
+      "readerCellFallbacks": 23,
       "readerFragmentKinds": {
         "structured-grid": 20,
         "short-label": 17,
@@ -1639,7 +1639,7 @@
       "rawTableFragments": 113,
       "cropBackedFragments": 60,
       "readerRawFragments": 41,
-      "readerCellFallbacks": 35,
+      "readerCellFallbacks": 36,
       "readerFragmentKinds": {
         "structured-grid": 35,
         "short-label": 2,
@@ -2240,7 +2240,7 @@
       "rawTableFragments": 6,
       "cropBackedFragments": 0,
       "readerRawFragments": 4,
-      "readerCellFallbacks": 2,
+      "readerCellFallbacks": 3,
       "readerFragmentKinds": {
         "short-label": 2,
         "structured-grid": 2
@@ -2573,7 +2573,7 @@
       "rawTableFragments": 47,
       "cropBackedFragments": 26,
       "readerRawFragments": 19,
-      "readerCellFallbacks": 14,
+      "readerCellFallbacks": 17,
       "readerFragmentKinds": {
         "short-label": 5,
         "structured-grid": 14
@@ -2746,7 +2746,7 @@
       "rawTableFragments": 47,
       "cropBackedFragments": 26,
       "readerRawFragments": 19,
-      "readerCellFallbacks": 14,
+      "readerCellFallbacks": 17,
       "readerFragmentKinds": {
         "short-label": 5,
         "structured-grid": 14
@@ -2919,7 +2919,7 @@
       "rawTableFragments": 39,
       "cropBackedFragments": 14,
       "readerRawFragments": 25,
-      "readerCellFallbacks": 12,
+      "readerCellFallbacks": 13,
       "readerFragmentKinds": {
         "short-label": 12,
         "ambiguous": 1,
@@ -4464,7 +4464,7 @@
       "rawTableFragments": 22,
       "cropBackedFragments": 0,
       "readerRawFragments": 13,
-      "readerCellFallbacks": 8,
+      "readerCellFallbacks": 12,
       "readerFragmentKinds": {
         "short-label": 4,
         "structured-grid": 8,
@@ -5633,7 +5633,7 @@
       "rawTableFragments": 99,
       "cropBackedFragments": 29,
       "readerRawFragments": 64,
-      "readerCellFallbacks": 51,
+      "readerCellFallbacks": 55,
       "readerFragmentKinds": {
         "short-label": 13,
         "structured-grid": 51
@@ -6602,15 +6602,15 @@
     "cropReadyCaptions": 251,
     "rawTableFragments": 1490,
     "cropBackedFragments": 663,
-    "readerRawFragments": 637,
-    "readerCellFallbacks": 491,
+    "readerRawFragments": 636,
+    "readerCellFallbacks": 517,
     "readerFragmentKinds": {
-      "structured-grid": 491,
+      "structured-grid": 490,
       "short-label": 130,
       "ambiguous": 15,
       "numeric-grid": 1
     },
     "orphanFragments": 739,
-    "note": "Crop readiness is a geometry diagnostic. readerRawFragments simulates suppression only after a successful caption crop; readerCellFallbacks are native same-baseline rows retained for a readable source-only grid, not a claim of fully reconstructed table semantics. readerFragmentKinds is audit-only triage and does not change resolver behavior."
+    "note": "Crop readiness is a geometry diagnostic. readerRawFragments simulates suppression only after a successful caption crop; readerCellFallbacks are native rows retained for a readable source-only grid (including single-column multi-row tables), not a claim of fully reconstructed table semantics. readerFragmentKinds is audit-only triage and does not change resolver behavior."
   }
 }

@@ -131,7 +131,12 @@ for (const file of files) {
     const readerRawFragments = readerBlocks.filter(isRawTableFragment);
     const readerCellFallbacks = readerRawFragments.filter((block) => {
       const rows = (block.metadata as { tableRows?: unknown }).tableRows;
-      return Array.isArray(rows) && rows.some((row) => Array.isArray(row) && row.length >= 2);
+      // A readable table surface may be a single-column list. Count multiple
+      // one-cell rows as a successful native fallback too; the Reader renders
+      // them as separate rows rather than flattening them into one string.
+      return Array.isArray(rows) &&
+        (rows.some((row) => Array.isArray(row) && row.length >= 2) ||
+          (rows.length >= 2 && rows.some((row) => Array.isArray(row) && row.length > 0)));
     });
     const readerFragmentKinds = readerRawFragments.reduce<Record<string, number>>((counts, block) => {
       const kind = readerFragmentKind(block);
@@ -185,7 +190,7 @@ const report = {
     readerCellFallbacks: number("readerCellFallbacks"),
     readerFragmentKinds,
     orphanFragments: successful.reduce((sum, paper) => sum + ((paper.orphanFragments as unknown[])?.length ?? 0), 0),
-    note: "Crop readiness is a geometry diagnostic. readerRawFragments simulates suppression only after a successful caption crop; readerCellFallbacks are native same-baseline rows retained for a readable source-only grid, not a claim of fully reconstructed table semantics. readerFragmentKinds is audit-only triage and does not change resolver behavior.",
+    note: "Crop readiness is a geometry diagnostic. readerRawFragments simulates suppression only after a successful caption crop; readerCellFallbacks are native rows retained for a readable source-only grid (including single-column multi-row tables), not a claim of fully reconstructed table semantics. readerFragmentKinds is audit-only triage and does not change resolver behavior.",
   },
 };
 
