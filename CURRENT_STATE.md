@@ -23,6 +23,14 @@ cognitive-memory packaged import also persisted **192 blocks**, including
 timed out after `import_ok` while starting search; this remains the known
 search-concurrency verification item rather than an extraction failure.
 
+The same package path exposed a second generic table issue: wrapped PDF cell
+fragments whose bboxes physically overlapped were being treated as separate
+columns (for example `Option (` / `Correct` / `Answer`). Row normalization now
+joins overlapping fragments within the preceding cell while preserving truly
+separate columns. A regression covers this geometry case. The complete
+real-paper suite remains **232/232** after the change (118 extraction + 114
+reading-order, 434.57s).
+
 # 2026-10-16: serialize database startup migration/index sync
 
 The packaged OzCHI run showed that extraction and Reader package loading were

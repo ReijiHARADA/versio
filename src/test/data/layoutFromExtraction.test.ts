@@ -126,6 +126,49 @@ describe("attachLinesToBlocks", () => {
     ]);
   });
 
+  it("joins physically overlapping fragments from one wrapped table cell", () => {
+    const tableText = "Option ( Correct Answer )\nA  Yes";
+    const layout = {
+      pageStart: 1,
+      text: tableText,
+      lines: [
+        {
+          text: "Option ( Correct Answer )",
+          items: [
+            { text: "Option (", x: 299, width: 35 },
+            { text: "Correct", x: 332, width: 44 },
+            { text: "Answer", x: 299, width: 31 },
+            { text: ")", x: 332, width: 3 },
+          ],
+          bbox: { page: 1, x: 299, y: 100, width: 77, height: 10 },
+          y: 100,
+          height: 10,
+          fontSize: 9,
+        },
+        {
+          text: "A Yes",
+          items: [
+            { text: "A", x: 299, width: 8 },
+            { text: "Yes", x: 332, width: 15 },
+          ],
+          bbox: { page: 1, x: 299, y: 114, width: 48, height: 10 },
+          y: 114,
+          height: 10,
+          fontSize: 9,
+        },
+      ],
+    } as unknown as LayoutBlock;
+
+    const [table] = attachLinesToBlocks([block("table", tableText)], [layout]);
+    expect(table.metadata.tableRows).toEqual([
+      [{ text: "Option ( Correct Answer )", x: 299, width: 77 }],
+      [
+        { text: "A", x: 299, width: 8 },
+        { text: "Yes", x: 332, width: 15 },
+      ],
+    ]);
+  });
+
   it("recovers repeated native cell rows near a numbered caption even when they projected as prose", () => {
     const caption = {
       ...block("table", "Table 8. Results"),
