@@ -400,6 +400,24 @@ describe("canonical extraction pipeline", () => {
     expect(display?.translationStatus).toBe("skipped");
   }, 60_000);
 
+  it("does not promote math-paper prose fragments to tables without a caption", async () => {
+    const pdf = path.resolve("test-data/real-papers/linguistics-language-model-physics.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "math-prose-grid-regression",
+      filePath: pdf,
+      fileHash: "math-prose-grid-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const prose = result.canonical.nodes.filter((node) =>
+      node.pageStart === 10 && /In Result 4, we used|by only reading/.test(node.text ?? "")
+    );
+    expect(prose.length).toBe(2);
+    expect(prose.every((node) => node.role === "paragraph")).toBe(true);
+  }, 60_000);
+
   it("retains an ordinary two-column proceedings page as two columns", async () => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
     if (!fs.existsSync(pdf)) return;

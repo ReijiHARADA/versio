@@ -1127,6 +1127,25 @@ function captionedRepeatedCellRow(block: LayoutBlock, blocks: LayoutBlock[]): bo
 function proseCellGridEvidence(block: LayoutBlock, blocks: LayoutBlock[], pageWidth: number): number {
   if ((block.role !== "paragraph" && block.role !== "heading") || block.pageStart !== block.pageEnd) return 0;
   if (block.lines.length > 7 || block.bbox.width > pageWidth * 0.52) return 0;
+  // Repeated native x origins also occur when a one-column math paper breaks
+  // prose around inline formula glyphs. Without a nearby table caption there
+  // is no structural anchor for promoting a prose sentence to a table; keep
+  // the high-precision fallback conservative and leave it translatable.
+  const nearbyTableCaption = blocks.some((candidate) => {
+    if (candidate.pageStart !== block.pageStart || candidate.role !== "table_caption") return false;
+    const verticalDistance = Math.max(
+      candidate.bbox.y - (block.bbox.y + block.bbox.height),
+      block.bbox.y - (candidate.bbox.y + candidate.bbox.height),
+      0,
+    );
+    const horizontalOverlap = Math.max(
+      0,
+      Math.min(candidate.bbox.x + candidate.bbox.width, block.bbox.x + block.bbox.width) -
+        Math.max(candidate.bbox.x, block.bbox.x),
+    );
+    return verticalDistance <= 420 && horizontalOverlap >= Math.min(candidate.bbox.width, block.bbox.width) * 0.2;
+  });
+  if (paragraphLike(block.text) && !nearbyTableCaption) return 0;
   const pageBlocks = blocks.filter((candidate) =>
     candidate.pageStart === block.pageStart &&
     candidate.pageEnd === block.pageEnd &&

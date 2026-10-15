@@ -2656,3 +2656,17 @@ author F1 **1.0**, table-caption recall **1.0**, table-region recall **1.0**,
 source integrity **0.99996049**, and provenance **1.0**. Full 232-case
 extraction/reading-order regression is the next gate before rebuilding the
 packaged app.
+# 2026-10-15: avoid captionless math-prose table promotion
+
+The arXiv `Physics of Language Models` fixture exposed another generic false
+positive: a one-column mathematical paper's repeated inline-formula x origins
+were treated as a borderless prose-cell grid. Blocks such as `In Result 4, we
+used the full hidden layer, Ei(x)` and `by only reading Ei(x)...` became table
+nodes even though no table caption anchored them. The prose-cell detector now
+requires a nearby table caption for sentence-like blocks; captioned prose
+tables retain the existing path. A regression test covers both blocks. The
+118-paper benchmark remains unchanged (reader title **106/113**, author F1
+**1.0**, table-region recall **1.0**, source integrity **0.99996049**), and
+the targeted math/OzCHI tests, typecheck, and lint pass. Full 232-case
+regression and packaged-app verification remain before this change is
+released.
