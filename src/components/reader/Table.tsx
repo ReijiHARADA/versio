@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Maximize2, Eye, EyeOff } from "lucide-react";
 import type { PaperBlock, TableMetadata } from "../../types/paper";
 import { usePaperAssetUrl } from "../../hooks/usePaperAssetUrl";
@@ -15,12 +15,20 @@ export function Table({ block, metadata }: TableProps) {
   const [isZoomed, setIsZoomed] = useState(false);
   const [surfaceActive, setSurfaceActive] = useState(false);
   const [showOriginalCaption, setShowOriginalCaption] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
   const imageUrl = usePaperAssetUrl(block.paperId, metadata.imageUrl);
 
+  useEffect(() => {
+    setImageFailed(false);
+  }, [imageUrl]);
+
   const hasTranslatedCaption =
     metadata.captionTranslated && metadata.captionOriginal;
-  const hasImage = Boolean(imageUrl);
+  // A persisted imageUrl may outlive its asset file (for example after an
+  // app-data migration or a partial package restore). Treat a failed image
+  // load as unavailable so native tableRows can remain readable.
+  const hasImage = Boolean(imageUrl) && !imageFailed;
   const caption = metadata.captionTranslated || metadata.captionOriginal;
   const displayedCaption = splitCaptionLabel(caption || "", metadata.tableNumber || "Table");
   const textFallback = !hasImage && !metadata.imageUrl && Boolean(block.original?.trim());
@@ -55,6 +63,7 @@ export function Table({ block, metadata }: TableProps) {
                   setIsZoomed(true);
                 }
               }}
+              onError={() => setImageFailed(true)}
             />
           ) : structuredFallback ? (
             <div className={styles.tableFallbackGrid} role="table" aria-label={caption || "抽出された表"}>
