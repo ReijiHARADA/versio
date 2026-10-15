@@ -62,7 +62,9 @@ export function attachLinesToBlocks(
       };
       return distance(a) - distance(b);
     })[0];
-    const lines = layout?.lines.map((line) => ({
+    const recoveredLines = !layout ? recoveredTableLines(block, layoutBlocks) : undefined;
+    const sourceLines = layout?.lines ?? recoveredLines;
+    const lines = sourceLines?.map((line) => ({
       text: line.text,
       bbox: line.bbox,
       baseline: line.y + line.height,
@@ -93,8 +95,8 @@ export function attachLinesToBlocks(
     // Table rasterization is deliberately conservative. When it cannot make
     // a crop, retain the native same-baseline cells so the Reader can render
     // rows instead of collapsing `Finger Thumb Finger1 ...` into prose.
-    const tableRows = block.type === "table" && layout
-      ? layout.lines
+    const tableRows = block.type === "table" && sourceLines
+      ? sourceLines
         .map((line) => line.items
           .map((item) => ({ text: item.text.trim(), x: item.x, width: item.width }))
           .filter((cell) => cell.text.length > 0)
@@ -116,6 +118,49 @@ export function attachLinesToBlocks(
 }
 
 type TableCell = { text: string; x: number; width: number };
+
+function recoveredTableLines(block: PaperBlock, layoutBlocks: LayoutBlock[]): LayoutBlock["lines"] | undefined {
+  if (block.type !== "table" || block.boundingBoxes.length === 0) return undefined;
+  const metadata = block.metadata as { figureKey?: unknown; tableSourceFallback?: unknown };
+  if (!String(metadata.figureKey ?? "").startsWith("table-region-") && metadata.tableSourceFallback !== true) return undefined;
+  const boxes = block.boundingBoxes;
+  const rawLines = layoutBlocks
+    .filter((candidate) => candidate.pageStart === block.pageStart)
+    .flatMap((candidate) => candidate.lines)
+    .filter((line, index, all) => {
+      const matchesBox = line.items.some((item) => boxes.some((box) => {
+        const overlap = Math.max(0, Math.min(item.x + item.width, box.x + box.width) - Math.max(item.x, box.x)) *
+          Math.max(0, Math.min(line.y + line.height, box.y + box.height) - Math.max(line.y, box.y));
+        return overlap / Math.max(1, item.width * line.height) >= 0.35;
+      }));
+      if (!matchesBox) return false;
+      return all.findIndex((other) =>
+        other.text === line.text && Math.abs(other.y - line.y) <= 0.5 &&
+        Math.abs(other.bbox.x - line.bbox.x) <= 0.5
+      ) === index;
+    })
+    .sort((a, b) => a.y - b.y || a.bbox.x - b.bbox.x);
+  if (rawLines.length === 0) return undefined;
+  const lines: LayoutBlock["lines"] = [];
+  for (const line of rawLines) {
+    const previous = lines.at(-1);
+    if (previous && Math.abs(previous.y - line.y) <= Math.max(previous.height, line.height) * 0.6 + 1.5) {
+      previous.items.push(...line.items);
+      previous.items.sort((a, b) => a.x - b.x);
+      previous.text = previous.items.map((item) => item.text).join(" ");
+      previous.bbox = {
+        page: previous.bbox.page,
+        x: Math.min(previous.bbox.x, line.bbox.x),
+        y: Math.min(previous.bbox.y, line.bbox.y),
+        width: Math.max(previous.bbox.x + previous.bbox.width, line.bbox.x + line.bbox.width) - Math.min(previous.bbox.x, line.bbox.x),
+        height: Math.max(previous.bbox.y + previous.bbox.height, line.bbox.y + line.bbox.height) - Math.min(previous.bbox.y, line.bbox.y),
+      };
+    } else {
+      lines.push({ ...line, items: [...line.items] });
+    }
+  }
+  return lines;
+}
 
 /** Merge wrapped native table-cell rows and word fragments by geometry. */
 function normalizeTableRows(rows: TableCell[][]): TableCell[][] {
