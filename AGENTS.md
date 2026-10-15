@@ -74,6 +74,7 @@
 ## Maintenance and refactoring
 
 - Refactor periodically at stable feature milestones, especially after extraction, translation, or package-format changes.
+- Use [docs/REFACTORING_CADENCE.md](./docs/REFACTORING_CADENCE.md) for the cadence, scope, verification, and `CURRENT_STATE.md` record format.
 - Keep refactoring separate from behavior/quality changes whenever practical. Preserve public APIs and add characterization tests before moving logic.
 - Prefer small responsibility splits, duplicate removal, and clearer names over new abstraction layers or rule engines.
 - Run targeted tests, typecheck, and relevant extraction/packaged checks after each refactor. Record the scope and verification in `CURRENT_STATE.md`.
