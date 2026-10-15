@@ -65,6 +65,18 @@ function tryOpenDatabase(engine: SqlJsStatic, bytes: Uint8Array | null): Databas
   }
 }
 
+function hasFts5Table(db: Database): boolean {
+  try {
+    const result = db.exec(
+      "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'papers_fts' LIMIT 1"
+    );
+    const sql = result[0]?.values[0]?.[0];
+    return typeof sql === "string" && /using\s+fts5/i.test(sql);
+  } catch {
+    return false;
+  }
+}
+
 async function loadDatabaseBytes(fs: FileSystem, engine: SqlJsStatic): Promise<Database> {
   const candidates = [SQLITE_PATH, SQLITE_TMP_PATH, SQLITE_BAK_PATH];
   for (const path of candidates) {
@@ -98,7 +110,12 @@ export async function openSqlite(fs: FileSystem): Promise<SqliteClient> {
   let hasFts5 = false;
   try {
     db.run(SQLITE_FTS5_SQL);
-    hasFts5 = true;
+    // `IF NOT EXISTS` succeeds for an older ordinary fallback table too.
+    // Inspect the actual schema instead of treating that no-op as proof that
+    // MATCH is supported; otherwise every reopened fallback database takes a
+    // failing FTS path before falling back to LIKE.
+    hasFts5 = hasFts5Table(db);
+    if (!hasFts5) db.run(SQLITE_FTS_FALLBACK_SQL);
   } catch {
     db.run(SQLITE_FTS_FALLBACK_SQL);
   }

@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { resetStorageForTests } from "../../data/runtime";
+import { createMemoryFileSystem } from "../../data/fs/memoryFs";
+import { openSqlite } from "../../data/sqlite/client";
 import { projectionToPackage } from "../../data/package/fromProjection";
 import { persistPaperPackage } from "../../data/package/persist";
 import { indexPaperText } from "../../data/repositories/paperRepository";
@@ -111,5 +113,30 @@ describe("FTS via database service", () => {
     await deleteAnnotation(annotation.id);
     expect(await searchLibraryPaperIds("MemoFoxtrot")).toEqual([]);
     expect(await searchLibraryPaperIds("OriginalCharlie")).toContain("fts-db-1");
+  });
+
+  it("does not misclassify a persisted LIKE fallback as FTS5 after reopen", async () => {
+    const fs = createMemoryFileSystem();
+    const first = await openSqlite(fs);
+    expect(first.hasFts5).toBe(false);
+    first.exec(
+      "INSERT INTO papers (id, source_file_hash, processing_status, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+      ["fallback-paper", "fallback-hash", "ready", now, now]
+    );
+    first.exec(
+      "INSERT INTO papers_fts (paper_id, title, authors, original, translation, annotation) VALUES (?, ?, ?, ?, ?, ?)",
+      ["fallback-paper", "Fallback title", "", "fallback body", "", ""]
+    );
+    await first.persist();
+    await first.close();
+
+    const reopened = await openSqlite(fs);
+    expect(reopened.hasFts5).toBe(false);
+    const rows = reopened.query<{ paper_id: string }>(
+      "SELECT paper_id FROM papers_fts WHERE title LIKE ?",
+      ["%Fallback%"]
+    );
+    expect(rows.map((row) => row.paper_id)).toEqual(["fallback-paper"]);
+    await reopened.close();
   });
 });
