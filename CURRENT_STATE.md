@@ -3104,3 +3104,13 @@ for diagnosis was removed. The fast Tauri bundle was rebuilt successfully at
 **2026-10-16 04:13:58 JST**. After clearing the previous acceptance artifact, the
 fresh `.app` passed packaged integration end to end: import, annotation, search,
 Markdown export, Notion ZIP export, quit, relaunch, and persistence.
+
+The same bundle was then run with the larger `cognitive-memory-cues.pdf` fixture
+and a 300-second timeout. Import completed and the package persisted; Markdown
+and Notion export files plus `library.sqlite` were written. The final acceptance
+marker did not advance past `import_ok`, so this run remains an unresolved
+shutdown/flush-notification issue. It is distinct from extraction: the package
+contains `original.md`, `ja.md`, `structure.json`, `translation.json`,
+`layout.json.gz`, and `source.pdf`. Do not count this large-fixture run as a
+complete packaged E2E until the post-export `flushPersistence`/marker boundary
+is isolated.
