@@ -1,3 +1,21 @@
+# 2026-10-15: refreshed full-corpus table-reader audit
+
+After the precision change, the table-reader readiness audit completed across
+all available real PDFs without extraction errors. It records **347** numbered
+table captions, **257** crop-ready captions, and **1,041** reader-visible
+source-only table fragments. Of those, **686** have native cell rows suitable
+for the Reader fallback grid; fragment triage is `short-label=269`,
+`structured-grid=686`, `prose-like=19`, `ambiguous=64`, `numeric-grid=3`.
+Compared with the previous 114-PDF diagnostic (**1,115** reader fragments,
+**900** cell-grid fallbacks), both counts decrease. These metrics describe
+fallback geometry, not semantic table completeness.
+
+The remaining `prose-like=19` cases are the next high-value review set. A
+sample contains a statistical table geometrically interleaved with a narrative
+results paragraph: this must be attributed at the native line/grouping layer
+before changing table evidence. Do not relax the table score or hide all
+source-only tables to improve this count.
+
 # 2026-10-15: prose-grid precision and table-cell evidence precedence
 
 The first `repeated-prose-cell-grid` implementation correctly recovered the
