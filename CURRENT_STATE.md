@@ -3100,4 +3100,7 @@ path tests pass, typecheck and lint pass with only existing warnings. The real
 cognitive-memory packaged run previously reached `export_started` after import,
 annotation, and search; this checkpoint change is the next fix to verify in the
 same packaged flow. The production acceptance-only marker instrumentation used
-for diagnosis was removed.
+for diagnosis was removed. The fast Tauri bundle was rebuilt successfully at
+**2026-10-16 04:13:58 JST**. After clearing the previous acceptance artifact, the
+fresh `.app` passed packaged integration end to end: import, annotation, search,
+Markdown export, Notion ZIP export, quit, relaunch, and persistence.
