@@ -20,6 +20,14 @@ on the unmodified HEAD as well: the captionless education-method table and the
 CJK checkmark matrix currently project as paragraphs. Treat those as a
 separate baseline repair, not as evidence against this caption change.
 
+The fast Tauri bundle was rebuilt at **2026-10-14 19:44:08 JST**:
+`src-tauri/target/release/bundle/macos/Paper Reader.app`. Its isolated import
+of the 305-page thesis wrote a package whose `Table 2.5` block has the repaired
+caption metadata and a readable raster table asset. The general packaged E2E
+runner timed out while background Vision OCR reported page 1/7, after package
+creation; treat full OCR completion as a separate import-progress issue rather
+than claiming that acceptance flow passed.
+
 # 2026-10-14: hierarchical table-caption identifiers
 
 The table audit of a long technical thesis exposed an identifier gap: captions
