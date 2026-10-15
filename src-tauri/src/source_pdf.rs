@@ -227,6 +227,16 @@ pub fn ui_e2e_enabled() -> bool {
     matches!(std::env::var("PAPER_READER_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true"))
 }
 
+/// Opt-in UI E2E smoke mode: stop after the imported paper is visible in Reader.
+#[tauri::command]
+pub fn ui_e2e_smoke_only() -> bool {
+    ui_e2e_enabled()
+        && matches!(
+            std::env::var("PAPER_READER_UI_E2E_SMOKE_ONLY"),
+            Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")
+        )
+}
+
 /// Fixture PDF path for UI E2E import (separate from service-call acceptance).
 #[tauri::command]
 pub fn ui_e2e_fixture_path() -> Option<String> {

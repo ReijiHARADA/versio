@@ -83,6 +83,12 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
     return;
   }
   if (!enabled) return;
+  let smokeOnly = false;
+  try {
+    smokeOnly = await invoke<boolean>("ui_e2e_smoke_only");
+  } catch {
+    smokeOnly = false;
+  }
   started = true;
 
   // Relaunch detection: prior successful initial marker means we are in phase relaunch.
@@ -223,14 +229,20 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
 
     let ok = false;
     if (phase === "initial") {
+      if (smokeOnly && reader && readerBody) {
+        ok = Boolean(paperCard) && Boolean(reader) && Boolean(readerBody);
+        step = "ui_reader_smoke_ready";
+      }
       ok =
-        Boolean(paperCard) &&
-        Boolean(reader) &&
-        annotationVisible &&
-        searchVisible &&
-        exportCompleted &&
-        exportBytes > 0;
-      if (ok) step = "ui_core_flow_ready";
+        smokeOnly
+          ? ok
+          : Boolean(paperCard) &&
+            Boolean(reader) &&
+            annotationVisible &&
+            searchVisible &&
+            exportCompleted &&
+            exportBytes > 0;
+      if (ok && !smokeOnly) step = "ui_core_flow_ready";
     } else {
       ok = Boolean(paperCard) && Boolean(reader) && annotationVisible;
       if (ok) step = "ui_relaunch_annotation_visible";
