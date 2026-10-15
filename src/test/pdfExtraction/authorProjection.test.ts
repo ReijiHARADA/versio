@@ -24,6 +24,7 @@ const wearabilityPdf = path.join(root, "test-data/real-papers/design-for-wearabi
 const virtualRealityPdf = path.join(root, "test-data/real-papers/ergonomics-6-virtual-reality-and-ergonomics-human-factors.pdf");
 const medicalAffiliationStatementPdf = path.join(root, "test-data/real-papers/medical-image-segmentation-deep-learning.pdf");
 const legacyConversationPdf = path.join(root, "test-data/real-papers/conversation-analysis-user-experience.pdf");
+const cognitiveMotorMemoryPdf = path.join(root, "test-data/real-papers/cognitive-motor-memory.pdf");
 const landingPagePdf = path.join(root, "test-data/real-papers/how-content-volume-landing-pages.pdf");
 const gpt3AuthorsPdf = path.join(root, "test-data/real-papers/using-cognitive-psychology-gpt3.pdf");
 const frontiersAndContinuationPdf = path.join(root, "test-data/real-papers/marketing-neuroconsumer.pdf");
@@ -289,5 +290,15 @@ describe("author masthead projection", () => {
     expect(result.paper.authors).toEqual(expect.arrayContaining(["Allison Woodruff", "Paul M. Aoki"]));
     expect(result.paper.authors.some((name) => /Palo Alto|Research Center|USA/i.test(name))).toBe(false);
     expect(result.paper.affiliations.some((affiliation) => /Palo Alto Research Center/i.test(affiliation.name))).toBe(true);
+    expect(result.paper.affiliations.filter((affiliation) => /Palo Alto Research Center/i.test(affiliation.name))).toHaveLength(1);
+  }, 60_000);
+
+  it("splits numbered multi-institution masthead streams without exposing contact text", async () => {
+    if (!fs.existsSync(cognitiveMotorMemoryPdf)) return;
+    const pages = await extractPdfPages(cognitiveMotorMemoryPdf);
+    const result = await extractFromPages({ pages, paperId: "cognitive-motor-affiliations", filePath: cognitiveMotorMemoryPdf, fileHash: "cognitive-motor-affiliations", metadata: { pageCount: pages.length } });
+    expect(result.paper.affiliations.length).toBeGreaterThanOrEqual(3);
+    expect(result.paper.affiliations.every((affiliation) => !/@|kino31513|\b[234]\s+and\s+Science/i.test(affiliation.name))).toBe(true);
+    expect(result.paper.affiliations.some((affiliation) => /Research Center for Brain Communication/i.test(affiliation.name))).toBe(true);
   }, 60_000);
 });
