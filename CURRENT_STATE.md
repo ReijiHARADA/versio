@@ -2805,9 +2805,13 @@ with explicit `captioned-native-multicell-row` evidence while still suppressing
 short duplicate crumbs. A regression covers the rotated table and verifies
 that its values never appear in a paragraph. The focused five previously
 affected corpus cases pass after narrowing the promotion rule; the complete
-232-case corpus rerun is the next verification gate.
+232-case corpus rerun is complete. The focused five previously affected
+corpus cases pass after narrowing the promotion rule.
 
 Final verification for this change: the complete extraction and reading-order
 corpus passes **232/232** in **454.19 seconds** after the narrowed rule. This
-change is ready for the next packaged Tauri build; the prior packaged bundle
-does not contain the new rotated-page geometry path yet.
+change is included in the latest packaged Tauri build at
+`src-tauri/target/release/bundle/macos/Paper Reader.app`, built at
+`2026-10-15 23:38:27 +0900`. Packaged import/search/export/relaunch E2E also
+passes. The staged app is the first bundle containing the rotated-page
+geometry path.
