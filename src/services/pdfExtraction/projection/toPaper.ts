@@ -527,6 +527,21 @@ function splitAffiliationNamePrefix(text: string): MastheadPair[] {
   return names.map((author) => ({ author, affiliation }));
 }
 
+/** Recover title-case author names flattened into an affiliation row.
+ * Legacy proceedings commonly emit `First Last and First M. Last
+ * Institution/Research Center` as one native line. Require a complete
+ * person-shaped prefix and an institution-shaped tail so ordinary prose or
+ * a location-only masthead cannot become an author. */
+function splitTitleCaseAffiliationPrefix(text: string): MastheadPair[] {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  const person = `[A-Z][\\p{Ll}'’-]+(?:\\s+[A-Z]\\.)?\\s+[A-Z][\\p{Ll}'’-]+`;
+  const match = normalized.match(new RegExp(`^((?:${person})(?:\\s+and\\s+(?:${person}))?)\\s+(.+\\b(?:research\\s+center|university|department|faculty|school|institute|college|hospital|laboratory|centre|center)\\b.*)$`, "iu"));
+  if (!match) return [];
+  const affiliation = match[2].trim();
+  if (affiliation.length < 12) return [];
+  return match[1].split(/\s+and\s+/i).map((author) => ({ author: author.trim(), affiliation }));
+}
+
 /** Split flattened bullet lists into independent canonical blocks. */
 export function splitFlattenedList(text: string): string[] {
   // Academic PDFs often encode bullet lists as en/em dashes rather than a
@@ -1813,6 +1828,7 @@ export function projectCanonicalToPaper(input: {
     const recovered = affiliationNodes.flatMap((node) => [
       ...splitFlattenedMasthead(node.text ?? ""),
       ...splitAffiliationNamePrefix(node.text ?? ""),
+      ...splitTitleCaseAffiliationPrefix(node.text ?? ""),
     ]);
     if (authorNames.length === 0 && recovered.length >= 2) {
       authorNames.push(...recovered.map((pair) => pair.author));
