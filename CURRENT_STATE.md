@@ -17,6 +17,14 @@ table cannot inherit its role. The regression keeps `Memory cue / F / Sig.` as
 a table while `In this study … gist memory` and `and detailed memory …` remain
 paragraphs; neither may appear inside a table node.
 
+The same paper also has individual baselines composed of three small numeric
+cells followed by a right-column sentence. A second, local repair now splits
+this form only when two nearby rows repeat those numeric x origins and the
+right run has body-sized typography and prose. Thus `0.397 / 0.674 / 0.014`
+remains table data while `they were not significantly correlated …` remains a
+paragraph. The full 118+114 corpus was rerun after this refinement and again
+passes **232/232** in **475.65 seconds**.
+
 The full cached corpus passes **232/232**: **118** extraction baselines and
 **114** reading-order checks in **538.29 seconds** under `caffeinate -dimsu`.
 The refreshed 118-PDF table Reader diagnostic has **0** extraction errors,
