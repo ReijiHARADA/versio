@@ -3,6 +3,7 @@ import { createMemoryFileSystem } from "../../data/fs/memoryFs";
 import { projectionToPackage } from "../../data/package/fromProjection";
 import {
   persistMetrics,
+  persistMutablePaperFiles,
   persistPaperPackage,
   resetPersistMetrics,
 } from "../../data/package/persist";
@@ -130,5 +131,17 @@ describe("translation persist hot path", () => {
     expect(await fs.readText("papers/hot-1/ja.md")).toContain("訳 2");
     expect(await fs.readBytes("papers/hot-1/source.pdf")).toEqual(new Uint8Array([9, 8, 7]));
     await db.close();
+  });
+
+  it("coalesces concurrent mutable checkpoints to the newest snapshot", async () => {
+    const fs = createMemoryFileSystem();
+    resetPersistMetrics();
+    await Promise.all([
+      persistMutablePaperFiles(fs, "coalesce-1", { jaMarkdown: "old-1" }),
+      persistMutablePaperFiles(fs, "coalesce-1", { jaMarkdown: "old-2" }),
+      persistMutablePaperFiles(fs, "coalesce-1", { jaMarkdown: "newest" }),
+    ]);
+    expect(persistMetrics.mutableFileWrites).toBe(1);
+    expect(await fs.readText("papers/coalesce-1/ja.md")).toBe("newest");
   });
 });

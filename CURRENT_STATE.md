@@ -3114,3 +3114,12 @@ contains `original.md`, `ja.md`, `structure.json`, `translation.json`,
 `layout.json.gz`, and `source.pdf`. Do not count this large-fixture run as a
 complete packaged E2E until the post-export `flushPersistence`/marker boundary
 is isolated.
+
+The boundary was instrumented once in an acceptance-only build: the document
+flush completed, while the next `runtime.db.persist()` await did not return
+within the test timeout. `library.sqlite` was nevertheless updated on disk.
+Mutable package checkpoint writes now coalesce concurrent snapshots to the
+newest per-paper state, and a regression confirms three simultaneous requests
+produce one write. The acceptance instrumentation was removed after diagnosis;
+the remaining SQLite completion notification is tracked separately from PDF
+extraction quality.
