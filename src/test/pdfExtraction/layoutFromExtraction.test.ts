@@ -60,4 +60,43 @@ describe("package layout reconstruction", () => {
       text: "Google", x: 210, width: 21,
     }]]);
   });
+
+  it("returns a complete narrative sentence from a geometry-only table fallback", () => {
+    const block = {
+      id: "narrative-fallback",
+      paperId: "paper",
+      order: 0,
+      type: "table",
+      original: "Besides the couple, who else is the main character in the clip?",
+      translated: null,
+      translationStatus: "skipped",
+      pageStart: 4,
+      pageEnd: 4,
+      boundingBoxes: [{ page: 4, x: 212, y: 129, width: 71, height: 31 }],
+      parentBlockId: null,
+      extractionConfidence: 0.9,
+      metadata: {
+        tableSourceFallback: true,
+        role: "table",
+        evidence: [
+          { label: "paragraph", confidence: 0.86 },
+          { label: "table-row-geometry", confidence: 0.96 },
+        ],
+      },
+    } as PaperBlock;
+    const layoutBlocks: LayoutBlock[] = [{
+      role: "table" as const,
+      text: block.original!,
+      pageStart: 4,
+      pageEnd: 4,
+      column: "left" as const,
+      bbox: { page: 4, x: 212, y: 129, width: 71, height: 31 },
+      lines: [],
+    }];
+
+    const [result] = attachLinesToBlocks([block], layoutBlocks);
+    expect(result.type).toBe("paragraph");
+    expect(result.translationStatus).toBe("pending");
+    expect(result.metadata.packageRoleRepair).toBe("narrative-table-fallback-demoted");
+  });
 });
