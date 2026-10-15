@@ -162,8 +162,15 @@ function demoteNarrativeTableFallbacks(blocks: PaperBlock[]): PaperBlock[] {
       // keep the threshold below a strict content-word ratio so a wrapped
       // continuation such as “Potential application” is recovered too.
       (wordCount >= 12 && proseWords / Math.max(1, wordCount) >= 0.6);
+    const statisticalNarrative =
+      wordCount >= 5 &&
+      /^[A-Z]/.test(text) &&
+      /,\s*(?:ME|RMSE|MAE|MSE|SD|SE|CI|p)\s*[=<]/i.test(text) &&
+      /[,;]\s*/.test(text);
     if (!tableGeometryEvidence || !paragraphEvidence ||
-        (paragraphEvidence.confidence ?? 0) < 0.8 || wordCount < 10 || !sentenceLike) {
+        (paragraphEvidence.confidence ?? 0) < 0.8 ||
+        (wordCount < 10 && !statisticalNarrative) ||
+        (!sentenceLike && !statisticalNarrative)) {
       return block;
     }
     const nextMetadata = { ...block.metadata } as Record<string, unknown>;
