@@ -30,6 +30,25 @@ export const packageLoadMetrics = {
 // atomic visibility boundary.
 let packageWriteTail: Promise<void> = Promise.resolve();
 
+type MutableWriteRequest = {
+  fs: FileSystem;
+  paperId: string;
+  files: {
+    jaMarkdown?: string;
+    paperJson?: PaperJson;
+    structure?: StructureFile;
+    translation?: TranslationFile;
+  };
+  waiters: Array<{ resolve: () => void; reject: (error: unknown) => void }>;
+};
+
+// Translation checkpoints can arrive faster than the filesystem can write a
+// large structure/translation pair. Keep only the newest snapshot per paper
+// while a write is queued or in flight; every caller still resolves after the
+// newest snapshot has been written.
+const pendingMutableWrites = new Map<string, MutableWriteRequest>();
+const activeMutableWriters = new Set<string>();
+
 function enqueuePackageWrite<T>(write: () => Promise<T>): Promise<T> {
   const run = packageWriteTail.then(write, write);
   packageWriteTail = run.then(() => undefined, () => undefined);
@@ -202,7 +221,42 @@ export function persistMutablePaperFiles(
     translation?: TranslationFile;
   }
 ): Promise<void> {
-  return enqueuePackageWrite(() => persistMutablePaperFilesNow(fs, paperId, files));
+  return new Promise<void>((resolve, reject) => {
+    const pending = pendingMutableWrites.get(paperId);
+    if (pending) {
+      pending.files = files;
+      pending.waiters.push({ resolve, reject });
+      return;
+    }
+
+    const request: MutableWriteRequest = {
+      fs,
+      paperId,
+      files,
+      waiters: [{ resolve, reject }],
+    };
+    pendingMutableWrites.set(paperId, request);
+    if (activeMutableWriters.has(paperId)) return;
+    activeMutableWriters.add(paperId);
+
+    void enqueuePackageWrite(async () => {
+      try {
+        for (;;) {
+          const current = pendingMutableWrites.get(paperId);
+          if (!current) break;
+          pendingMutableWrites.delete(paperId);
+          try {
+            await persistMutablePaperFilesNow(current.fs, current.paperId, current.files);
+            for (const waiter of current.waiters) waiter.resolve();
+          } catch (error) {
+            for (const waiter of current.waiters) waiter.reject(error);
+          }
+        }
+      } finally {
+        activeMutableWriters.delete(paperId);
+      }
+    });
+  });
 }
 
 async function persistPaperPackageNow(

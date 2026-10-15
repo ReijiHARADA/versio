@@ -3,7 +3,6 @@ import { startBackgroundImport } from "./import/startBackgroundImport";
 import { isTauriApp } from "../utils/serverReady";
 import { createAnnotation } from "./annotationService";
 import {
-  flushPersistence,
   getAllPapers,
   getAnnotationsByPaper,
   getBlocksByPaper,
@@ -218,6 +217,14 @@ export async function maybeRunPackagedAcceptanceImport(): Promise<void> {
     }
     await fs.writeBytes("_acceptance/notion.zip", notionArchive);
     await flushPersistence();
+    await writeMarker({
+      ok: false,
+      step: "flush_finished",
+      paperId,
+      annotationId: annotation.id,
+      searchHits: searchHits.length,
+      at: new Date().toISOString(),
+    });
 
     await writeMarker({
       ok: true,
