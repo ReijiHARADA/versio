@@ -771,6 +771,17 @@ function looksLikeProseMistakenForTable(text: string): boolean {
   ) {
     return true;
   }
+  // Question/option lines from a vignette or survey are often emitted as
+  // one native span beside a figure. They are readable prose, not table
+  // cells, even when the region scorer sees repeated x anchors.
+  if (
+    words.length >= 6 &&
+    /[.!?](?:\s|$)/.test(trimmed) &&
+    digitRatio < 0.25 &&
+    /^(?:Q\s*:|[-•]\s*Option\b|what\b|which\b|how\b|who\b)/i.test(trimmed)
+  ) {
+    return true;
+  }
   // A complete sentence outside a caption-owned table region is body prose
   // even when a neighbouring numeric band supplied table-row geometry.
   // Caption-owned narrative cells are protected by the caller's region check.
@@ -2159,8 +2170,15 @@ export function projectCanonicalToPaper(input: {
       node.evidence.some((entry) => entry.label === "table-row-geometry") &&
       ((node.text ?? "").split(/\s+/).filter(Boolean).length >= 36 ||
         ((node.text ?? "").match(/[.!?]/g) ?? []).length >= 3);
+    const wrappedSingleSpanNarrative = node.evidence.some((entry) => entry.label === "repeated-prose-cell-grid") &&
+      Boolean(tableLayout) &&
+      (tableLayout?.lines.length ?? 0) >= 1 &&
+      tableLayout?.lines.every((line) => line.items.length <= 1) === true &&
+      new Set(tableLayout?.lines.map((line) => Math.round(line.x / 4))).size <= 2 &&
+      (node.text ?? "").split(/\s+/).filter(Boolean).length >= 6 &&
+      looksLikeProseMistakenForTable(node.text ?? "");
     const exactSyntheticCaptionRegion = hasExactSyntheticCaptionRegion(node, tableAbsorption.syntheticTargets);
-    if (node.role === "table" && node.text && !hasStrongTableMatrixEvidence(node) &&
+    if (node.role === "table" && node.text && (!hasStrongTableMatrixEvidence(node) || wrappedSingleSpanNarrative) &&
         !strongNativeRowGrid &&
         !belongsToCaptionedTableRegion(node, tableAbsorption.regions) &&
         (looksLikeProseMistakenForTable(node.text) || weakTableGeometryOnNarrative)) {
