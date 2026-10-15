@@ -2258,6 +2258,16 @@ export function projectCanonicalToPaper(input: {
     const candidateRows = tableLayout?.lines.reduce<Array<Array<{ text: string; x: number; width: number; y: number }>>>((rows, line) => {
       const cells = line.items
         .filter((item) => item.text.trim().length > 0)
+        // Caption-owned native grids can overlap the first body line after a
+        // table. A full-width sentence from the neighbouring paragraph must
+        // never become a synthetic table cell while the actual short cells
+        // on the same baseline remain useful.
+        .filter((item) => {
+          const text = item.text.trim();
+          const words = text.split(/\s+/).filter(Boolean).length;
+          const pageWidth = line.pageWidth ?? 612;
+          return !(words >= 10 && item.width >= pageWidth * 0.28 && looksLikeProseMistakenForTable(text));
+        })
         .map((item) => ({ text: item.text.trim(), x: item.x, width: item.width, y: item.y }))
         .sort((a, b) => a.x - b.x);
       if (cells.length === 0) return rows;
