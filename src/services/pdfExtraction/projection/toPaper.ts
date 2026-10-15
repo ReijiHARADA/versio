@@ -490,6 +490,28 @@ function splitNumberedAffiliationParts(name: string): string[] {
   return parts;
 }
 
+function splitReviewAffiliationStream(name: string): string[] {
+  if (name.length < 180) return [name];
+  const parts = name.split(/(?=\b(?:NIH|Applied|National)\b|\d+\s*Laboratory\b|\bLaboratory\s+of\b)/i)
+    .map((part) => part.replace(/^\s*[,;]\s*/, "").trim())
+    .filter(Boolean);
+  return parts.length > 1 ? parts : [name];
+}
+
+/**
+ * Some journal mastheads flatten a reviewer/editor's institution in front of
+ * the authors' numbered affiliations. When the next segment clearly starts
+ * an organisational unit, the leading university/college segment is the
+ * reviewer prefix rather than part of the author affiliation stream.
+ */
+function removeReviewerInstitutionPrefix(name: string): string {
+  if (/^(?:University|College|Hospital|Institute)\s+[^,]{3,},\s*(?:United\s+States|United\s+Kingdom|Canada|Australia|Brazil|Japan|China|Germany|France|Italy|Spain|Netherlands)\s+[A-Z][\p{Ll}'’-]+(?:\s+[A-Z][\p{Ll}'’-]+){1,2},?$/u.test(name.trim())) return "";
+  const reviewerTail = name.match(/^(?:University|College|Hospital|Institute)\s+[^,]{3,},\s*(?:United\s+States|United\s+Kingdom|Canada|Australia|Brazil|Japan|China|Germany|France|Italy|Spain|Netherlands)\s+[A-Z][\p{Ll}'’-]+(?:\s+[A-Z][\p{Ll}'’-]+){1,2},\s+(?=(?:NIH|Applied|Laboratory|Department|School|Faculty|National|Research|Center|Centre|Institute|University|College|Hospital)\b)(.+)$/u);
+  if (reviewerTail?.[1]) return reviewerTail[1].trim();
+  const match = name.match(/^(?:University|College|Hospital|Institute)\s+[^,]{3,},\s+(?=(?:applied|department|school|faculty|laboratory|lab|research|national|center|centre|institute|hospital|college|university)\b)(.+)$/i);
+  return match?.[1]?.trim() || name;
+}
+
 function appendAffiliation(affiliations: Array<{ id: string; name: string }>, candidate: { id: string; name: string }): void {
   const candidateName = normalizeAffiliationName(candidate.name);
   if (candidateName.length < 20) return;
@@ -1692,7 +1714,11 @@ export function projectCanonicalToPaper(input: {
         const box = node.boundingBoxes[0];
         const x = box?.x ?? Infinity;
         const y = box?.y ?? Infinity;
+        const text = node.text ?? "";
+        const likelyReviewerAffiliation = x < 100 && y > reviewY + 35 && text.length < 100 &&
+          /,\s*(?:United States|United Kingdom|Canada|Australia|Brazil|Japan|China|Germany|France|Italy|Spain|Netherlands)\s*$/i.test(text.trim());
         return node.pageStart === 1 && node.role === "affiliation" && y < 430 &&
+          !likelyReviewerAffiliation &&
           ((x >= 140 && x <= 310) || (x < 100 && y > reviewY)) &&
           /\b(?:university|department|school|faculty|college|hospital|centre|center|institute|laboratory|research)\b/i.test(node.text ?? "");
       })
@@ -1700,8 +1726,12 @@ export function projectCanonicalToPaper(input: {
         (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0));
     const existingLaboratoryCandidates = affiliations
       .filter((item) => /\blaboratory\b/i.test(item.name))
-      .map((item) => item.name);
-    const normalizedCandidates = [...existingLaboratoryCandidates, ...reviewCandidates.map((node) => {
+      .map((item) => removeReviewerInstitutionPrefix(item.name));
+    const reviewerInstitutionFragments = [...existingLaboratoryCandidates, ...reviewCandidates.map((node) => node.text ?? "")].flatMap((name) => {
+      const fragment = name.match(/\bNIH\b[\s\S]*?(?=\s+(?:Applied|Laboratory|National|Department|School|Faculty)\b|$)/i)?.[0]?.trim();
+      return fragment ? [fragment] : [];
+    });
+    const normalizedCandidates = [...existingLaboratoryCandidates, ...reviewerInstitutionFragments, ...reviewCandidates.map((node) => {
       const raw = node.text ?? "";
       const start = raw.search(/\b(?:department|school|faculty|college|hospital|centre|center|institute|laboratory|research|university)\b/i);
       if (start <= 0) return normalizeAffiliationName(raw);
@@ -1712,7 +1742,8 @@ export function projectCanonicalToPaper(input: {
       // title-case words (for example `NIH Biomedical Research Center`).
       const prefix = afterComma >= 0 ? "" : before;
       const prefixWords = prefix.trim().split(/\s+/).filter(Boolean).slice(-2).join(" ");
-      return normalizeAffiliationName(`${prefixWords} ${raw.slice(start)}`.trim());
+      const normalized = normalizeAffiliationName(`${prefixWords} ${raw.slice(start)}`.trim());
+      return removeReviewerInstitutionPrefix(normalized);
     })].filter((name) => name.length >= 20);
     const continuation = normalizedCandidates.find((name) => /^University\s+of\s+/i.test(name) && name.length < 100);
     const rebuilt = normalizedCandidates.filter((name) => name !== continuation);
@@ -1726,7 +1757,13 @@ export function projectCanonicalToPaper(input: {
         }
       }
     }
-    const unique = rebuilt.filter((name, index, all) =>
+    const withoutAggregates = rebuilt.filter((name, _index, all) => {
+      if (name.length <= 180) return true;
+      const key = affiliationKey(name);
+      return all.filter((candidate) => candidate !== name && candidate.length >= 24 &&
+        key.includes(affiliationKey(candidate))).length < 2;
+    });
+    const unique = withoutAggregates.filter((name, index, all) =>
       all.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase() ||
         candidate.toLocaleLowerCase().includes(name.toLocaleLowerCase()) && candidate.length >= name.length) === index);
     if (unique.length >= 3 && unique.length <= 6) {
@@ -2650,11 +2687,22 @@ export function projectCanonicalToPaper(input: {
   // exact/contained repeats (for example one research center emitted once per
   // author). Canonical source nodes remain unchanged.
   const normalizedAffiliations = affiliations.flatMap((affiliation) =>
-    splitNumberedAffiliationParts(affiliation.name).map((name) => ({ ...affiliation, name }))
+    (canonical.nodes.some((node) => node.pageStart === 1 && /^(?:edited|reviewed)\s+by\s*:/i.test(node.text?.trim() ?? ""))
+      ? splitReviewAffiliationStream(affiliation.name).flatMap((part) => splitNumberedAffiliationParts(part))
+      : splitNumberedAffiliationParts(affiliation.name)).map((name) => ({
+      ...affiliation,
+      name: canonical.nodes.some((node) => node.pageStart === 1 && /^(?:edited|reviewed)\s+by\s*:/i.test(node.text?.trim() ?? ""))
+        ? removeReviewerInstitutionPrefix(name)
+        : name,
+    })).filter((candidate) => candidate.name.length > 0)
   );
   affiliations = normalizedAffiliations.filter((affiliation, index, all) => {
     const key = affiliationKey(affiliation.name);
-    return key.length > 0 && all.findIndex((candidate) => {
+    const aggregate = canonical.nodes.some((node) => node.pageStart === 1 && /^(?:edited|reviewed)\s+by\s*:/i.test(node.text?.trim() ?? "")) &&
+      affiliation.name.length > 180 &&
+      all.filter((candidate) => candidate !== affiliation && candidate.name.length >= 24 &&
+        key.includes(affiliationKey(candidate.name))).length >= 2;
+    return key.length > 0 && !aggregate && all.findIndex((candidate) => {
       const candidateKey = affiliationKey(candidate.name);
       return candidateKey === key || candidateKey.startsWith(key) || key.startsWith(candidateKey);
     }) === index;
