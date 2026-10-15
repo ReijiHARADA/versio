@@ -1,3 +1,13 @@
+# 2026-10-15: packaged cognitive-memory table verification
+
+The latest `.app` was exercised with the real
+`cognitive-memory-cues.pdf` fixture, rather than the tiny acceptance PDF. The
+package imported and persisted **125** blocks, including **52** table blocks
+and **32** blocks with native `tableRows`; search, annotation, Markdown/Notion
+export, quit, and relaunch all passed. This confirms the flattened-cell row
+projection is present in the actual Tauri package, not only in the TypeScript
+benchmark.
+
 # 2026-10-15: recover rows from flattened native table nodes
 
 Some questionnaire and compact multi-column tables had reliable native cell
