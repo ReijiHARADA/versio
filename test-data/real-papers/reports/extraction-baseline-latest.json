@@ -1,12 +1,12 @@
 {
   "version": "extraction-baseline-v2",
-  "generatedAt": "2026-10-15T09:52:15.465Z",
+  "generatedAt": "2026-10-15T10:04:40.852Z",
   "papers": 113,
   "summary": {
     "readerTitleExact": {
       "evaluated": 113,
-      "passed": 105,
-      "rate": 0.9292035398230089
+      "passed": 106,
+      "rate": 0.9380530973451328
     },
     "nativeTitleExact": {
       "evaluated": 113,
@@ -2500,17 +2500,17 @@
       "catalogFormatFamily": "oa-repository",
       "pageKind": "native-text",
       "scannedByItemAverage": false,
-      "titlePredicted": "language in environmental discourse",
+      "titlePredicted": "Eco-Linguistics in English: Reviewing the role of language in environmental discourse",
       "nativeTitleCandidate": "Eco-Linguistics in English: Reviewing the role of",
       "titleUsedMetadataFallback": true,
       "nativeTitleExact": false,
       "titleExpected": "Eco-Linguistics in English: Reviewing the role of language in environmental discourse",
-      "titleExact": false,
+      "titleExact": true,
       "sourceIntegrityRate": 1,
       "canonicalProvenanceRate": 1,
       "fusedTitle": "Eco-Linguistics in English: Reviewing the role of",
       "fusedTitleConfidence": 0.8,
-      "canonicalTitle": "language in environmental discourse",
+      "canonicalTitle": "Eco-Linguistics in English: Reviewing the role of language in environmental discourse",
       "flattenedNumericRowCount": 0,
       "chartLabelNodeCount": 0,
       "rotatedNativeItemCount": 0,
