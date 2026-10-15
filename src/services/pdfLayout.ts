@@ -3979,6 +3979,11 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       if (graphicLabelBand && (candidate.lines[0]?.pageWidth ?? 0) > 0) figureBandBlocks.add(candidate);
     }
   }
+  const isBodyRunInsideFigureBand = (block: LayoutBlock): boolean =>
+    block.role === "paragraph" &&
+    block.text.trim().split(/\s+/).filter(Boolean).length >= 8 &&
+    median(block.lines.map((line) => line.width)) >= (block.lines[0]?.pageWidth ?? 612) * 0.3 &&
+    median(block.lines.map((line) => line.fontSize)) >= (pageFontMedians.get(block.pageStart) ?? 9) * 0.85;
   const result: LayoutBlock[] = [];
   for (const block of blocks) {
     if (isAbstractBodyTitleBlock(block)) block.role = "paragraph";
@@ -3990,11 +3995,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       result.push({ ...block, role: "header" });
       continue;
     }
-    const bodyRunInsideFigureBand = block.role === "paragraph" &&
-      block.text.trim().split(/\s+/).filter(Boolean).length >= 8 &&
-      median(block.lines.map((line) => line.width)) >= (block.lines[0]?.pageWidth ?? 612) * 0.3 &&
-      median(block.lines.map((line) => line.fontSize)) >= (pageFontMedians.get(block.pageStart) ?? 9) * 0.85;
-    if (figureBandBlocks.has(block) && !bodyRunInsideFigureBand) {
+    if (figureBandBlocks.has(block) && !isBodyRunInsideFigureBand(block)) {
       result.push(block);
       continue;
     }
@@ -4013,7 +4014,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         isArxivOverlayBlock(result[targetIdx]) ||
         result[targetIdx].role === "figure_caption" ||
         result[targetIdx].role === "table_caption" ||
-        figureBandBlocks.has(result[targetIdx]) ||
+        (figureBandBlocks.has(result[targetIdx]) && !isBodyRunInsideFigureBand(result[targetIdx])) ||
         isRepeatedRunningHeader(result[targetIdx], repeatedTexts) ||
         isPageHeaderMarker(result[targetIdx]) ||
         isInlineFootnoteBlock(result[targetIdx]) ||
