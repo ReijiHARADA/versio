@@ -209,4 +209,40 @@ describe("attachLinesToBlocks", () => {
       [{ text: "B", x: 50, width: 40 }, { text: "0.42", x: 150, width: 40 }],
     ]);
   });
+
+  it("keeps wide numeric grid lines when a neighbouring prose line spans the same column", () => {
+    const caption = {
+      ...block("table", "Table 2. Significance"),
+      id: "caption",
+      boundingBoxes: [{ page: 1, x: 300, y: 200, width: 220, height: 10 }],
+      metadata: { column: "right", captionOriginal: "Table 2. Significance", imageUrl: "" },
+    };
+    const grid = {
+      ...block("table", "Error dist. Finger 1 Finger 2 Finger 3 Finger 4"),
+      id: "grid",
+      boundingBoxes: [{ page: 1, x: 320, y: 140, width: 210, height: 48 }],
+      metadata: { column: "right", figureKey: "table-region-grid" },
+    };
+    const layout = {
+      pageStart: 1,
+      text: grid.original,
+      lines: [
+        ["Error dist.", "Finger 1", "Finger 2", "Finger 3", "Finger 4"],
+        ["Thumb", "0.081", "0.054", "0.444", "0.101"],
+        ["Finger 1", "0.852", "0.046", "0.005"],
+      ].map((cells, rowIndex) => ({
+        text: cells.join(" "),
+        items: cells.map((text, cellIndex) => ({ text, x: 320 + cellIndex * 42, width: 36 })),
+        bbox: { page: 1, x: 320, y: 140 + rowIndex * 14, width: 210, height: 10 },
+        y: 140 + rowIndex * 14,
+        height: 10,
+        fontSize: 9,
+      })),
+    } as unknown as LayoutBlock;
+
+    const [table] = attachLinesToBlocks([grid, caption], [layout]);
+    expect(table.id).toBe("caption");
+    expect(table.metadata.captionOwnedNativeGrid).toBe(true);
+    expect(table.metadata.tableRows).toHaveLength(3);
+  });
 });
