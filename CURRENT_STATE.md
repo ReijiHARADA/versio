@@ -3209,3 +3209,5 @@ tables with non-empty structured rows**, followed by a clean app shutdown.
 抽出・翻訳の機能変更とは分離して、次のチェックポイントで定期的に保守リファクタリングを行う。大きなアルゴリズム変更、または同じ領域への3回目の修正を区切りとし、責務集中・重複判定・不要な診断コードを確認する。各回で typecheck、lint、対象回帰テストを実行し、機能変更の前後で挙動が変わっていないことを確認する。
 
 直近のチェックポイントは `519eebd` の合成テーブル領域インデックス化で、232/232抽出回帰、OzCHI実PDFのTauri import-only（137 blocks / 5 tables / 非空rows）、typecheck、lintを確認済み。次の候補は、残るベクター数値ラベルのsource-order診断と、`run-ui.sh` の実PDF Reader表示検証である。
+
+Reader表示検証用に `PAPER_READER_UI_E2E_SMOKE_ONLY=1` を追加し、実PDFを同じTauri direct-import経路でReader DOMまで確認できるスモークモードを実装した（`7dec536`）。小さなfixtureでの実行は、app内translation-serverのモデルキャッシュ準備待ちでlibrary marker到達前にタイムアウトしたため未合格。OzCHI実PDFは既存のimport-onlyで137 blocks / 5 tables / 非空rowsを確認済みで、Reader UIスモークはモデルキャッシュを明示的に共有した再試行が次の検証項目。コード反映済みのfast `.app` mtimeは **2026-10-16 05:43:00 JST**。
