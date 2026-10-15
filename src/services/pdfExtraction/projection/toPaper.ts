@@ -925,6 +925,28 @@ function belongsToCaptionedTableRegion(
   });
 }
 
+function hasExactSyntheticCaptionRegion(
+  node: CanonicalNode,
+  canonical: CanonicalDocument,
+): boolean {
+  if (node.role !== "table" || node.text == null || node.boundingBoxes.length === 0) return false;
+  const nodeById = new Map(canonical.nodes.map((candidate) => [candidate.id, candidate]));
+  return canonical.relations.some((rel) => {
+    if (rel.kind !== "CAPTION_OF") return false;
+    const caption = nodeById.get(rel.from);
+    const target = nodeById.get(rel.to);
+    if (!caption || !target || target.text || !isNumberedTableCaption(caption.text)) return false;
+    if (target.boundingBoxes.length !== node.boundingBoxes.length) return false;
+    return target.boundingBoxes.every((targetBox) => node.boundingBoxes.some((nodeBox) =>
+      nodeBox.page === targetBox.page &&
+      Math.abs(nodeBox.x - targetBox.x) <= 1 &&
+      Math.abs(nodeBox.y - targetBox.y) <= 1 &&
+      Math.abs(nodeBox.width - targetBox.width) <= 1 &&
+      Math.abs(nodeBox.height - targetBox.height) <= 1
+    ));
+  });
+}
+
 function shouldKeepCaptionedTableTarget(target: CanonicalNode): boolean {
   const text = (target.text ?? "").trim();
   if (!text) return false;
@@ -2138,6 +2160,7 @@ export function projectCanonicalToPaper(input: {
       node.evidence.some((entry) => entry.label === "table-row-geometry") &&
       ((node.text ?? "").split(/\s+/).filter(Boolean).length >= 36 ||
         ((node.text ?? "").match(/[.!?]/g) ?? []).length >= 3);
+    const exactSyntheticCaptionRegion = hasExactSyntheticCaptionRegion(node, canonical);
     if (node.role === "table" && node.text && !hasStrongTableMatrixEvidence(node) &&
         !strongNativeRowGrid &&
         !belongsToCaptionedTableRegion(node, tableAbsorption.regions) &&
@@ -2161,13 +2184,32 @@ export function projectCanonicalToPaper(input: {
       continue;
     }
 
+    // Numbered Table N already owns a synthetic CAPTION_OF region — skip
+    // duplicate cell crumbs when that region has no native text of its own.
+    // A native multicell row remains visible because it is the usable table
+    // representation when no crop is available.
     // Numbered Table N already owns a CAPTION_OF region — skip duplicate cell crumbs.
     if (
       node.role === "table" &&
       node.text &&
       !tableAbsorption.keepIds.has(node.id) &&
-      belongsToCaptionedTableRegion(node, tableAbsorption.regions) &&
+      (exactSyntheticCaptionRegion || belongsToCaptionedTableRegion(node, tableAbsorption.regions)) &&
       looksLikeCaptionedTableCellFragment(node.text) &&
+      // A synthetic region whose boxes exactly cover the native row already
+      // owns the table identity. When the row has no independent captioned
+      // multicell evidence, projecting it as a second source-only table
+      // duplicates the same table (common with generated/test regions and
+      // borderless grids). Keep genuinely captioned native grids below.
+      (exactSyntheticCaptionRegion || !tableAbsorption.regions.some(({ target }) =>
+        !target.text && target.boundingBoxes.length === node.boundingBoxes.length &&
+        target.boundingBoxes.every((targetBox) => node.boundingBoxes.some((nodeBox) =>
+          nodeBox.page === targetBox.page &&
+          Math.abs(nodeBox.x - targetBox.x) <= 1 &&
+          Math.abs(nodeBox.y - targetBox.y) <= 1 &&
+          Math.abs(nodeBox.width - targetBox.width) <= 1 &&
+          Math.abs(nodeBox.height - targetBox.height) <= 1
+        ))
+      ) || node.evidence.some((entry) => entry.label === "captioned-native-multicell-row")) &&
       // A resolver can attach the caption relation to a synthetic region
       // while the text-bearing multi-row grid remains a separate node. Its
       // repeated native lines are stronger evidence than the short-cell

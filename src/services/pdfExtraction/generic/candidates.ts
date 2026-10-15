@@ -1128,9 +1128,11 @@ function proseCellGridEvidence(block: LayoutBlock, blocks: LayoutBlock[], pageWi
   if ((block.role !== "paragraph" && block.role !== "heading") || block.pageStart !== block.pageEnd) return 0;
   if (block.lines.length > 7 || block.bbox.width > pageWidth * 0.52) return 0;
   // Repeated native x origins also occur when a one-column math paper breaks
-  // prose around inline formula glyphs. Without a nearby table caption there
-  // is no structural anchor for promoting a prose sentence to a table; keep
-  // the high-precision fallback conservative and leave it translatable.
+  // prose around inline formula glyphs. A caption is the strongest anchor,
+  // but borderless qualitative tables often have no caption at all. Keep
+  // those eligible until the geometry pass below can require a compact,
+  // header-led grid; ordinary prose is still rejected when that proof is
+  // absent.
   const nearbyTableCaption = blocks.some((candidate) => {
     if (candidate.pageStart !== block.pageStart || candidate.role !== "table_caption") return false;
     const verticalDistance = Math.max(
@@ -1145,7 +1147,6 @@ function proseCellGridEvidence(block: LayoutBlock, blocks: LayoutBlock[], pageWi
     );
     return verticalDistance <= 420 && horizontalOverlap >= Math.min(candidate.bbox.width, block.bbox.width) * 0.2;
   });
-  if (paragraphLike(block.text) && !nearbyTableCaption) return 0;
   const pageBlocks = blocks.filter((candidate) =>
     candidate.pageStart === block.pageStart &&
     candidate.pageEnd === block.pageEnd &&
@@ -1217,6 +1218,24 @@ function proseCellGridEvidence(block: LayoutBlock, blocks: LayoutBlock[], pageWi
   if (denseRows.length < 3) return 0;
   const coreTop = denseRows[0];
   const coreBottom = denseRows.at(-1)!;
+  const captionlessHeader = !nearbyTableCaption && pageBlocks.some((candidate) => {
+    const text = candidate.text.trim();
+    const words = text.split(/\s+/).filter(Boolean);
+    const candidateY = candidate.bbox.y;
+    const candidateAnchors = blockAnchors.get(candidate) ?? new Set<number>();
+    const aligned = [...candidateAnchors].some((x) => bands.some((band) => Math.abs(x - band) < 18));
+    const headerFonts = new Set(candidate.lines.flatMap((line) => line.items.map((item) => item.fontName)).filter(Boolean));
+    return candidateY >= coreTop - 22 && candidateY <= coreTop + 26 &&
+      words.length >= 1 && words.length <= 8 && text.length <= 80 &&
+      /[A-Za-z]{3}/.test(text) &&
+      !/^(?:\d+\.){1,3}\d*\s/.test(text) &&
+      !/[.!?;:]\s*$/.test(text) && aligned && headerFonts.size <= 1;
+  });
+  // Without a caption, require a visible header at the top of the repeated
+  // grid. This prevents two-column body prose, which can share three x bands
+  // by coincidence, from being converted into source-only table cards.
+  const contiguousGrid = denseRows.every((y, index) => index === 0 || y - denseRows[index - 1] <= 96);
+  if (!nearbyTableCaption && (!captionlessHeader || !contiguousGrid)) return 0;
   const candidateAnchors = blockAnchors.get(block) ?? new Set<number>();
   const usesGridColumn = bands.some((band) => [...candidateAnchors].some((x) => Math.abs(x - band) < 18));
   const touchesCore = block.lines.some((line) =>

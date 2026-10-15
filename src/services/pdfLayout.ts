@@ -2790,13 +2790,15 @@ function groupLinesIntoBlocks(
   flush();
   const nonEmptyBlocks = splitMixedColumnBlocks(
     rejoinDetachedCaptionTitles(
-      splitMixedMastheadBlocks(
-        splitEmbeddedTableGridFromCaptions(
+          splitMixedMastheadBlocks(
+        splitCaptionHeaderLines(
+          splitEmbeddedTableGridFromCaptions(
           splitTopBibliographicLines(
             splitStyledHeadingPrefixes(
               splitEmbeddedChromeBlocks(rejoinCaptionStatisticFragments(blocks.filter((b) => b.text.length > 0))),
               median(blocks.flatMap((block) => block.lines.map((line) => line.fontSize))) || 9,
             )
+          )
           )
         )
       )
@@ -2812,6 +2814,51 @@ function groupLinesIntoBlocks(
   const postSplitMerged = mergeColumnContinuations(split);
   const ordered = repairInterleavedContinuationOrder(repairPageBoundaryContinuations(repairDetachedMarginContinuations(postSplitMerged)));
   return trimInterleavedHyphenFragments(trimOrphanTailBeforeChrome(ordered));
+}
+
+/** Separate a table caption from a native line that is actually the first
+ * wide table header. Some PDF producers put the caption and the header in one
+ * LayoutBlock despite incompatible x geometry; keeping them together causes
+ * caption text to absorb column labels and prevents the table region from
+ * being identified. This uses only line geometry/font facts, never header
+ * vocabulary. */
+function splitCaptionHeaderLines(blocks: LayoutBlock[]): LayoutBlock[] {
+  return blocks.flatMap((block) => {
+    if (block.role !== "table_caption" || block.lines.length < 2 ||
+        !/^(?:table|表)\s*\d+/i.test(block.lines[0]?.text.trim() ?? "")) return [block];
+    const title = block.lines[0];
+    const rest = block.lines.slice(1);
+    const header = rest.find((line) => {
+      const items = line.items.filter((item) => item.text.trim().length > 0);
+      if (items.length < 2 || /[.!?:;]\s*$/.test(line.text.trim())) return false;
+      const span = Math.max(...items.map((item) => item.x + item.width)) - Math.min(...items.map((item) => item.x));
+      const pageWidth = line.pageWidth ?? 612;
+      return span >= pageWidth * 0.28 &&
+        Math.abs(line.fontSize - title.fontSize) <= 1.5 &&
+        line.y - (title.y + title.height) <= Math.max(36, title.fontSize * 3.5);
+    });
+    if (!header) return [block];
+    const caption: LayoutBlock = {
+      ...block,
+      text: title.text.trim(),
+      lines: [title],
+      bbox: blockBbox([title]),
+      pageStart: title.page,
+      pageEnd: title.page,
+      detachedCaptionTitleRepaired: true,
+    };
+    const headerLines = rest;
+    const table: LayoutBlock = {
+      ...block,
+      role: "table",
+      text: joinLines(headerLines),
+      lines: headerLines,
+      bbox: blockBbox(headerLines),
+      pageStart: headerLines[0].page,
+      pageEnd: headerLines.at(-1)!.page,
+    };
+    return [caption, table];
+  });
 }
 
 /**

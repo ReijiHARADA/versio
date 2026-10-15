@@ -53,6 +53,9 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   );
   const mixedNativeBand = candidate.evidence.find((entry) => entry.label === "mixed-native-x-band");
   const vectorFigureLabels = candidate.evidence.find((entry) => entry.label === "vector-figure-label-cluster");
+  const captionedNativeMulticell = candidate.evidence.find(
+    (entry) => entry.label === "captioned-native-multicell-row"
+  );
   const repeatedChartLabels = candidate.evidence.find((entry) => entry.label === "repeated-numeric-chart-label");
   const axisLabelNeighborhood = candidate.evidence.find(
     (entry) => entry.label === "axis-label-numeric-neighborhood"
@@ -81,9 +84,18 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   if (
     candidate.role !== "title" &&
     vectorFigureLabels && vectorFigureLabels.confidence >= 0.82 &&
-    (candidate.roleScores.table ?? 0) < 0.8
+    (candidate.roleScores.table ?? 0) < 0.8 &&
+    !(captionedNativeMulticell && captionedNativeMulticell.confidence >= 0.9)
   ) {
     return { role: "other", confidence: vectorFigureLabels.confidence };
+  }
+  // A native row with four or more separated cells and an explicit nearby
+  // table caption can also trigger the vector-label detector because the PDF
+  // exposes each cell as a short text span. Caption ownership plus the
+  // multicell geometry is stronger than that generic figure signal; retain a
+  // table role so the row is rendered as structured/source-only table data.
+  if (captionedNativeMulticell && captionedNativeMulticell.confidence >= 0.9) {
+    return { role: "table", confidence: Math.max(candidate.roleScores.table ?? 0, captionedNativeMulticell.confidence) };
   }
   if (imageLabelEvidence && (scores.other ?? 0) >= paragraph + 0.06) {
     return { role: "other", confidence: scores.other ?? score };
