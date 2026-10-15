@@ -3123,3 +3123,7 @@ newest per-paper state, and a regression confirms three simultaneous requests
 produce one write. The acceptance instrumentation was removed after diagnosis;
 the remaining SQLite completion notification is tracked separately from PDF
 extraction quality.
+
+After removing the diagnostic markers, typecheck and the checkpoint/FTS tests
+pass again. The clean fast `.app` was rebuilt at **2026-10-16 04:32:20 JST**;
+it contains the checkpoint coalescing fix and no acceptance-only instrumentation.
