@@ -2786,3 +2786,28 @@ and reading-order corpus passes in **464.53 seconds**. The existing table audit
 values remain the latest verified values: extraction errors 0, 353 captions,
 241 crop-ready captions, 1,464 raw fragments, 916 reader raw fragments, and
 676 native cell-grid fallbacks.
+
+# 2026-10-15: normalize rotated-page coordinates before table reconstruction
+
+`ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport.pdf`
+contains a genuine landscape table on page 25. Its PDF page rotation was 90°,
+but extraction used the unrotated text-matrix coordinates, so visible rows and
+columns were treated as unrelated baselines. Native geometry is now converted
+through PDF.js's displayed viewport for non-zero page rotations (including
+text bbox and effective text direction); unrotated pages retain the historical
+path. Rotated pages are treated as one reading surface during column detection,
+so table columns are not mistaken for document columns.
+
+The page-25 table now projects as a skipped table with the caption, header, and
+10+ native `tableRows`, including the freight values, rather than a translated
+paragraph or dropped cell fragments. Captioned table absorption retains rows
+with explicit `captioned-native-multicell-row` evidence while still suppressing
+short duplicate crumbs. A regression covers the rotated table and verifies
+that its values never appear in a paragraph. The focused five previously
+affected corpus cases pass after narrowing the promotion rule; the complete
+232-case corpus rerun is the next verification gate.
+
+Final verification for this change: the complete extraction and reading-order
+corpus passes **232/232** in **454.19 seconds** after the narrowed rule. This
+change is ready for the next packaged Tauri build; the prior packaged bundle
+does not contain the new rotated-page geometry path yet.
