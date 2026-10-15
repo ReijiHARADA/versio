@@ -14,8 +14,14 @@ regression), `npm run typecheck` and lint pass with only the existing warnings,
 and the full real-paper extraction/reading-order suite passes **232/232**
 (118 extraction + 114 reading-order, 436.50s). The refreshed 118-PDF table
 audit still has **0 extraction errors**; readable native row fallbacks increased
-from **491 to 517**. A packaged `.app` rebuild is still required before Tauri
-visual confirmation.
+from **491 to 517**. `npm run tauri:build:fast` completed successfully and
+updated `src-tauri/target/release/bundle/macos/Paper Reader.app` at 03:43:29
+JST. The fresh bundle passed the complete tiny-fixture packaged integration
+flow (import, annotation, search, both exports, quit, relaunch). A real
+cognitive-memory packaged import also persisted **192 blocks**, including
+**32** table blocks and **25** with row metadata, but its acceptance flow still
+timed out after `import_ok` while starting search; this remains the known
+search-concurrency verification item rather than an extraction failure.
 
 # 2026-10-16: serialize database startup migration/index sync
 
