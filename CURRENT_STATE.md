@@ -1,3 +1,28 @@
+# 2026-10-15: prose-grid precision and table-cell evidence precedence
+
+The first `repeated-prose-cell-grid` implementation correctly recovered the
+captionless education-method table but was too page-wide: a nearby ordinary
+paragraph could share two of its x origins and be marked as a table. The
+geometry evidence now learns **physical baselines** from native item gaps and
+requires at least three repeated, separated anchors on three same-baseline
+rows. A candidate must also intersect that proved vertical core, so preceding
+body prose stays a paragraph. It supports table headers and long prose cells;
+headers are promoted only after the full three-band proof exists.
+
+A second resolver path was lowering an already-proved table score to the broad
+`tableLike` fallback score of 0.68. Native-grid evidence now combines by
+maximum, preserving stronger document-level evidence. The education regression
+therefore verifies all of: header is a table, representative long cells are
+tables skipped by translation, and the immediately preceding narrative stays a
+paragraph. The CJK checkmark matrix regression still passes.
+
+Targeted regressions, typecheck, lint (pre-existing warnings only), and diff
+validation pass. The complete cached 118-PDF extraction baseline and 114-PDF
+reading-order suite pass **232/232 in 445.34 seconds** under `caffeinate
+-dimsu`. The prior fast `.app` and packaged E2E predate this final precision
+pass; rebuild and repeat isolated package import before claiming packaged
+acceptance for it.
+
 # 2026-10-15: borderless prose tables and CJK checkmark matrices
 
 Two real-paper regressions remained after the caption-owned native-grid work. An

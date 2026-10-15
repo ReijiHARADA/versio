@@ -1099,31 +1099,45 @@ function captionedRepeatedCellRow(block: LayoutBlock, blocks: LayoutBlock[]): bo
  * and the candidate itself must be one of those compact cells.
  */
 function proseCellGridEvidence(block: LayoutBlock, blocks: LayoutBlock[], pageWidth: number): number {
-  if (block.role !== "paragraph" || block.pageStart !== block.pageEnd) return 0;
+  if ((block.role !== "paragraph" && block.role !== "heading") || block.pageStart !== block.pageEnd) return 0;
   if (block.lines.length > 7 || block.bbox.width > pageWidth * 0.52) return 0;
   const pageBlocks = blocks.filter((candidate) =>
     candidate.pageStart === block.pageStart &&
     candidate.pageEnd === block.pageEnd &&
-    candidate.role === "paragraph" &&
+    (candidate.role === "paragraph" || candidate.role === "heading") &&
     candidate.lines.length >= 1 &&
     candidate.lines.length <= 7 &&
-    candidate.bbox.width <= pageWidth * 0.52 &&
-    Math.abs(candidate.bbox.y - block.bbox.y) <= 420
+    candidate.bbox.width <= pageWidth * 0.52
   );
-  if (pageBlocks.length < 9 || !pageBlocks.includes(block)) return 0;
+  if (pageBlocks.length < 9) return 0;
 
   const blockAnchors = new Map<LayoutBlock, Set<number>>();
   const anchorBlocks = new Map<number, Set<LayoutBlock>>();
+  const lineAnchors: Array<{ y: number; anchors: number[] }> = [];
   for (const candidate of pageBlocks) {
     const anchors = new Set<number>();
     for (const line of candidate.lines) {
       const words = line.text.trim().split(/\s+/).filter(Boolean);
       if (words.length === 0 || words.length > 30) continue;
-      const x = Math.round(line.x / 12) * 12;
-      anchors.add(x);
-      const owners = anchorBlocks.get(x) ?? new Set<LayoutBlock>();
-      owners.add(candidate);
-      anchorBlocks.set(x, owners);
+      const origins: number[] = [];
+      let previousEnd = Number.NEGATIVE_INFINITY;
+      for (const item of [...line.items].sort((a, b) => a.x - b.x)) {
+        if (!item.text.trim()) continue;
+        if (item.x - previousEnd >= Math.max(18, line.fontSize * 1.5)) {
+          origins.push(Math.round(item.x / 12) * 12);
+        }
+        previousEnd = Math.max(previousEnd, item.x + item.width);
+      }
+      // A producer may flatten the entire line into one text span; retain its
+      // line origin so this does not discard an otherwise valid table cell.
+      if (origins.length === 0) origins.push(Math.round(line.x / 12) * 12);
+      for (const x of origins) {
+        anchors.add(x);
+        const owners = anchorBlocks.get(x) ?? new Set<LayoutBlock>();
+        owners.add(candidate);
+        anchorBlocks.set(x, owners);
+      }
+      lineAnchors.push({ y: line.y, anchors: origins });
     }
     if (anchors.size > 0) blockAnchors.set(candidate, anchors);
   }
@@ -1133,16 +1147,37 @@ function proseCellGridEvidence(block: LayoutBlock, blocks: LayoutBlock[], pageWi
     .sort((a, b) => a - b);
   if (repeated.length < 3) return 0;
 
-  // Require three visibly separate bands.  Indented prose can create a third
-  // near-duplicate origin, but does not form the wide, stable column pattern
-  // found in a real table.
+  // Coalesce near-duplicate x origins, then prove a genuine visual row has
+  // three such bands at the same baseline. This keeps a table's local region
+  // separate from surrounding prose that merely shares one of its indents.
   const bands: number[] = [];
   for (const x of repeated) {
     if (!bands.some((band) => Math.abs(band - x) < 42)) bands.push(x);
   }
   if (bands.length < 3 || bands.at(-1)! - bands[0] < 120) return 0;
+  const rows = new Map<number, Set<number>>();
+  for (const { y, anchors } of lineAnchors) {
+    const row = Math.round(y / 12) * 12;
+    const present = rows.get(row) ?? new Set<number>();
+    for (const x of anchors) {
+      const band = bands.find((candidate) => Math.abs(candidate - x) < 18);
+      if (band !== undefined) present.add(band);
+    }
+    rows.set(row, present);
+  }
+  const denseRows = [...rows.entries()]
+    .filter(([, present]) => present.size >= 3)
+    .map(([y]) => y)
+    .sort((a, b) => a - b);
+  if (denseRows.length < 3) return 0;
+  const coreTop = denseRows[0];
+  const coreBottom = denseRows.at(-1)!;
   const candidateAnchors = blockAnchors.get(block) ?? new Set<number>();
-  return bands.some((band) => [...candidateAnchors].some((x) => Math.abs(x - band) < 18)) ? 0.96 : 0;
+  const usesGridColumn = bands.some((band) => [...candidateAnchors].some((x) => Math.abs(x - band) < 18));
+  const touchesCore = block.lines.some((line) =>
+    line.y + line.height >= coreTop - 20 && line.y <= coreBottom + 28
+  );
+  return usesGridColumn && touchesCore ? 0.96 : 0;
 }
 
 function pageGridEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
@@ -1423,7 +1458,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     if (pageGrid > 0 && block.role !== "table_caption" && !narrativeTableConflict) {
       scoreByRole.table = pageGrid;
     }
-    if (proseCellGrid > 0 && !narrativeTableConflict) {
+    if (proseCellGrid > 0) {
       scoreByRole.table = Math.max(scoreByRole.table ?? 0, proseCellGrid);
     }
     if (contentsEntry) {
@@ -1613,7 +1648,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       const listLikeBlock = block.lines.length >= 4 && /[•‣▪∙]/.test(block.text);
       const longCaption = block.role === "table_caption" && paragraphLike(block.text);
       const captionBlock = block.role === "table_caption";
-      scoreByRole.table = rotatedItems.length >= 30 && rotatedNumeric / Math.max(rotatedItems.length, 1) >= 0.3
+      const nativeGridScore = rotatedItems.length >= 30 && rotatedNumeric / Math.max(rotatedItems.length, 1) >= 0.3
         ? 0.97
         : (structuralGrid || flattenedGrid) && !structuralProse && !proseBlock && !sentenceLikeProse && !sameOriginLongProse && !listLikeBlock && !longCaption && !captionBlock
           ? 0.95
@@ -1622,6 +1657,10 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
           // the resolver's role-promotion threshold unless stronger grid
           // evidence is present.
           : 0.68;
+      // This broad native-grid pass is weaker than an earlier document-level
+      // region proof (for example a repeated prose-cell grid), so it must not
+      // overwrite that high-confidence evidence with its conservative score.
+      scoreByRole.table = Math.max(scoreByRole.table ?? 0, nativeGridScore);
       // reconstructDocument has already identified a native grid. Preserve
       // that geometry for compact captionless tables unless a later, more
       // specific formula or figure-label guard overrides it.
@@ -1703,7 +1742,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // captionless row heuristics run later than page-grid evidence and could
     // otherwise restore a high table score for a paragraph that merely shares
     // a numeric/plot band with it.
-    if (narrativeTableConflict) {
+    if (narrativeTableConflict && proseCellGrid === 0) {
       scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.3);
     }
     // Heading-like typography is a stronger structural signal than a
@@ -1713,7 +1752,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const headingGeometryConflict = style.fontSizeRatio >= 1.05 &&
       style.spacingBefore >= 16 && style.uppercaseRatio >= 0.7 &&
       (scoreByRole.heading ?? 0) >= 0.7;
-    if (headingGeometryConflict) {
+    if (headingGeometryConflict && proseCellGrid === 0) {
       scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.3);
     }
     // Apply this after typography scoring. A bold axis/table label must not
