@@ -3211,3 +3211,5 @@ tables with non-empty structured rows**, followed by a clean app shutdown.
 直近のチェックポイントは `519eebd` の合成テーブル領域インデックス化で、232/232抽出回帰、OzCHI実PDFのTauri import-only（137 blocks / 5 tables / 非空rows）、typecheck、lintを確認済み。次の候補は、残るベクター数値ラベルのsource-order診断と、`run-ui.sh` の実PDF Reader表示検証である。
 
 Reader表示検証用に `PAPER_READER_UI_E2E_SMOKE_ONLY=1` を追加し、実PDFを同じTauri direct-import経路でReader DOMまで確認できるスモークモードを実装した（`7dec536`）。小さなfixtureでの実行は、app内translation-serverのモデルキャッシュ準備待ちでlibrary marker到達前にタイムアウトしたため未合格。OzCHI実PDFは既存のimport-onlyで137 blocks / 5 tables / 非空rowsを確認済みで、Reader UIスモークはモデルキャッシュを明示的に共有した再試行が次の検証項目。コード反映済みのfast `.app` mtimeは **2026-10-16 05:43:00 JST**。
+
+Reader smokeの再検証で、起動スクリプトの環境変数継続行にコメントを挟んでいたためdirect-import設定が欠落する問題を修正し、smoke時の通常acceptance二重importも無効化した（`71b1b7b`）。生成済みsingle-column fixtureでは、packaged `.app`で `ui_reader_smoke_ready`（Reader DOMとreader-body存在）まで成功。OzCHI実PDFではpackage生成とtitle marker（Exploring Finger Specific Touch Screen Interaction...）まで確認したが、実Reader route markerは待機中に停止したため、構造検証はimport-only（137 blocks / 5 tables / 非空rows）を正式結果とする。実PDF Reader UIの未解決点は、長い翻訳・Reader route遷移待ちの切り分けである。
