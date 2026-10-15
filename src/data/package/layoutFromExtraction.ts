@@ -270,7 +270,14 @@ function normalizeTableRows(rows: TableCell[][]): TableCell[][] {
     for (const source of row) {
       const cell = { ...source, x: mapToStableBand(source) };
       const previous = merged.at(-1);
-      if (previous && Math.abs(previous.x - cell.x) <= 12) {
+      // Native PDF streams often expose a wrapped cell as adjacent fragments:
+      // `Option (` at x=299 followed by `Correct` at x=332 while the first
+      // fragment's bbox still reaches x=334. Treat that physical overlap as
+      // continuation text even when the heuristic column bands are distinct.
+      const overlapsPrevious = previous &&
+        source.x <= previous.x + previous.width + 2 &&
+        source.x >= previous.x - 2;
+      if (previous && (Math.abs(previous.x - cell.x) <= 12 || overlapsPrevious)) {
         previous.text = joinCellText(previous.text, cell.text);
         previous.width = Math.max(previous.x + previous.width, cell.x + cell.width) - previous.x;
       } else merged.push({ ...cell });
