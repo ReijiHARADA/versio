@@ -2750,3 +2750,22 @@ has **0** extraction errors, **353** captions, **241** crop-ready captions,
 **7** prose-like / **35** ambiguous fragments. These audit counts are
 diagnostic; the remaining fragment review set is not suppressed by lowering
 table precision.
+# 2026-10-15: suppress dense infographic labels mistaken for tables
+
+`human-ai-interaction-guidelines.pdf` revealed that Figure 2's radial
+infographic labels were being emitted as dozens of captionless table cards
+because their tiny native text received `repeated-prose-cell-grid` evidence.
+Projection now suppresses only dense compact-grid candidates on a page that
+also has a numbered figure caption (12 or more candidates, native box height
+at most 9pt); the figure caption remains the readable representation. The
+condition is page-level and geometry/evidence based, so ordinary tables such
+as the OzCHI grids are retained. Regression coverage includes Human-AI Figure
+2 and OzCHI table cells.
+
+The full **232/232** extraction and reading-order corpus passes in **447.00
+seconds**. The refreshed table audit has **0** extraction errors, **353** table
+captions, **241** crop-ready captions, **1,464** raw fragments, **916** reader
+raw fragments, and **676** native cell-grid fallbacks. Fragment triage improved
+to `short-label=200`, `structured-grid=676`, `prose-like=7`, `ambiguous=32`,
+`numeric-grid=1` (previously 283/723/7/35/1). This is a precision safeguard,
+not a blanket table suppression rule.

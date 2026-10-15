@@ -1944,8 +1944,32 @@ export function projectCanonicalToPaper(input: {
   // native aligned grids (including captionless tables) and must remain
   // visible as table blocks instead of being sent through paragraph logic.
   const skip = new Set(["header", "footer", "title", "copyright", "author", "affiliation", "figure", "table"]);
+  const figureCaptionPages = new Set(
+    canonical.nodes
+      .filter((node) => node.role === "caption" && /^(?:figure|fig\.)\s*\d+/i.test((node.text ?? "").trim()))
+      .map((node) => node.pageStart)
+  );
+  const compactGraphicLabelCountByPage = new Map<number, number>();
+  for (const node of canonical.nodes) {
+    const compact = node.evidence.some((entry) => entry.label === "repeated-prose-cell-grid") &&
+      node.boundingBoxes.length > 0 &&
+      Math.max(...node.boundingBoxes.map((box) => box.height)) <= 9;
+    if (compact) compactGraphicLabelCountByPage.set(node.pageStart, (compactGraphicLabelCountByPage.get(node.pageStart) ?? 0) + 1);
+  }
+  const isDenseGraphicLabel = (node: CanonicalNode) =>
+    node.role === "table" &&
+    figureCaptionPages.has(node.pageStart) &&
+    (compactGraphicLabelCountByPage.get(node.pageStart) ?? 0) >= 12 &&
+    node.evidence.some((entry) => entry.label === "repeated-prose-cell-grid") &&
+    node.boundingBoxes.length > 0 &&
+    Math.max(...node.boundingBoxes.map((box) => box.height)) <= 9;
 
   const readable = canonical.nodes.filter((n) => {
+    // Radial diagrams and other dense infographics can be mistaken for a
+    // captionless prose-cell grid. The figure caption is retained as the
+    // readable representation; suppress only when page-level density and a
+    // numbered figure caption corroborate the graphic interpretation.
+    if (isDenseGraphicLabel(n)) return false;
     if (skip.has(n.role)) return n.role === "table" && Boolean(n.text);
     // `other` is normally retained because it may contain useful native text,
     // but a resolver-selected vector/chart label cluster is text painted inside
