@@ -148,13 +148,11 @@ export async function importPDFV2(
       filePath: file.name,
       fileHash,
       file,
-      // Figure/table raster assets are optional presentation data.  The native
-      // caption and reconstructed cell grid are already part of the immutable
-      // package, whereas a pathological vector page can synchronously block
-      // PDF.js canvas rendering for minutes.  Persist the usable document
-      // first; explicit re-extraction can later enrich it with image assets.
-      // This prevents a slow crop from leaving an otherwise valid paper with
-      // no package and therefore an empty Reader.
+      // Keep the import path bounded: native captions and reconstructed cell
+      // grids are persisted synchronously. Figure/table crops are an optional
+      // enrichment step because browser canvas rendering can block on
+      // pathological vector pages even when the Promise timeout is finite.
+      // Explicit re-extraction can enrich packages with image assets later.
       extractFigures: false,
       previousBlocks: previousBlocks.length ? previousBlocks : undefined,
       onProgress: (progress) => {
