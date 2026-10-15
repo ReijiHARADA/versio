@@ -348,7 +348,7 @@ function mergeFigureCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[
     const canMerge = previous?.role === "caption" &&
       /^\s*(?:figure|fig\.?|図)\s*\d+/i.test(captionText) &&
       previous.pageStart === node.pageStart &&
-      node.role === "paragraph" &&
+      (node.role === "paragraph" || node.role === "table") &&
       continuation.length >= 12 &&
       verticalGap >= -18 && verticalGap <= 42 &&
       (xAligned || (harmlessIntervening && verticalGap <= 180)) &&
@@ -366,6 +366,53 @@ function mergeFigureCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[
         evidence: [...previous.evidence, ...node.evidence.filter((evidence) => evidence.label === "page-boundary-continuation")],
       };
       if (captionIndex < result.length - 1) result.splice(captionIndex + 1);
+      continue;
+    }
+    result.push(node);
+  }
+  return result;
+}
+
+/** Join wrapped table-caption text before table-region promotion. Some native
+ * streams label the first line as `table_caption` and emit the remaining
+ * lowercase lines as ordinary paragraphs. If those lines are allowed into
+ * the resolver first, numeric-neighborhood evidence can incorrectly promote
+ * them to table cells. Require same-page caption typography geometry and a
+ * lowercase continuation so body prose remains a paragraph. */
+function mergeTableCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[] {
+  const result: CanonicalNode[] = [];
+  for (const node of nodes) {
+    const captionIndex = result.findLastIndex((candidate) => candidate.role === "caption" && /^(?:table|表)\s*\d+/i.test(candidate.text?.trim() ?? ""));
+    const previous = captionIndex >= 0 ? result[captionIndex] : undefined;
+    const captionText = previous?.text?.trim() ?? "";
+    const continuation = node.text?.trim() ?? "";
+    const previousBox = previous?.boundingBoxes.at(-1);
+    const nodeBox = node.boundingBoxes[0];
+    const verticalGap = previousBox && nodeBox ? nodeBox.y - (previousBox.y + previousBox.height) : Infinity;
+    const horizontallyInside = previousBox && nodeBox
+      ? nodeBox.x >= previousBox.x - 8 && nodeBox.x + nodeBox.width <= previousBox.x + previousBox.width + 8
+      : false;
+    const sameLineHeight = previousBox && nodeBox ? Math.abs(nodeBox.height - previousBox.height) <= 0.8 : false;
+    const canMerge = previous?.role === "caption" &&
+      /^\s*(?:table|表)\s*\d+/i.test(captionText) &&
+      previous.pageStart === node.pageStart &&
+      (node.role === "paragraph" || node.role === "table") &&
+      continuation.length >= 2 &&
+      /^[a-zà-öø-ÿ]/u.test(continuation) &&
+      !/[.!?]\s*$/.test(captionText) &&
+      verticalGap >= -4 && verticalGap <= 42 &&
+      horizontallyInside &&
+      sameLineHeight &&
+      continuation.split(/\s+/).filter(Boolean).length <= 24;
+    if (canMerge) {
+      result[captionIndex] = {
+        ...previous,
+        text: `${captionText} ${continuation}`.replace(/\s+/g, " ").trim(),
+        pageEnd: node.pageEnd,
+        boundingBoxes: [...previous.boundingBoxes, ...node.boundingBoxes],
+        confidence: Math.min(previous.confidence, node.confidence),
+        evidence: [...previous.evidence, ...node.evidence.filter((evidence) => evidence.label === "page-boundary-continuation")],
+      };
       continue;
     }
     result.push(node);
@@ -466,6 +513,7 @@ export function resolveCanonicalDocument(input: {
   });
 
   let nodes = candidates.map(nodeFromCandidate);
+  nodes = mergeTableCaptionContinuations(nodes);
   nodes = resolveTableRegions(nodes, input.regionEvidence ?? []);
   nodes = promoteRotatedTableCaptions(nodes, candidates);
   nodes = markAbstracts(nodes);
