@@ -209,6 +209,7 @@ launch_app() {
   PAPER_READER_ACCEPTANCE_HOME="$ACCEPTANCE_HOME" \
   PAPER_READER_ACCEPTANCE_FIXTURE="$SHORT_FIXTURE" \
   PAPER_READER_UI_E2E=1 \
+  PAPER_READER_UI_E2E_SMOKE_ONLY="${PAPER_READER_UI_E2E_SMOKE_ONLY:-0}" \
   # Use the same Tauri read_dropped_pdf + startBackgroundImport path as a
   # selected PDF, while avoiding the flaky native picker/IME interaction in
   # deterministic packaged UI runs.
@@ -310,6 +311,21 @@ step "open paper card"
 ax_click_by_label "論文" || ax_click_by_label "Acceptance" || true
 sleep 2
 wait_ui_step "ui_reader_visible" 120
+
+if [[ "${PAPER_READER_UI_E2E_SMOKE_ONLY:-0}" == "1" ]]; then
+  step "reader smoke verified"
+  python3 - "$ARTIFACT_DIR/ui-result.json" <<'PY' || fail "reader smoke marker failed"
+import json, sys
+data = json.load(open(sys.argv[1]))
+assert data.get("ok") is True, data
+assert data.get("step") == "ui_reader_smoke_ready", data
+print("reader smoke ok", data.get("paperTitleHint"))
+PY
+  quit_app
+  step "done"
+  echo "OK packaged UI E2E reader smoke. Artifacts: $ARTIFACT_DIR" | tee -a "$LOG_FILE"
+  exit 0
+fi
 
 step "save memo via UI"
 sleep 2
