@@ -359,6 +359,23 @@ describe("canonical extraction pipeline", () => {
     expect(visible.some((block) => block.id === imageBackedCaption.id)).toBe(true);
   }, 60_000);
 
+  it("does not absorb a neighbouring prose line into OzCHI Table 5 rows", async () => {
+    const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "ozchi-table-prose-contamination-regression",
+      filePath: pdf,
+      fileHash: "ozchi-table-prose-contamination-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const table = result.blocks.find((block) => /^Table 5\./.test(block.original ?? ""));
+    expect(table?.type).toBe("table");
+    const rows = (table?.metadata.tableRows ?? []) as Array<Array<{ text: string }>>;
+    expect(rows.flat().some((cell) => /Friedman.{0,20}test indicated|significant differences were perceived/i.test(cell.text))).toBe(false);
+  }, 60_000);
+
   it("keeps midpoint-spanning single-column thesis prose out of table fallback", async () => {
     const pdf = path.resolve("test-data/real-papers/marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the.pdf");
     if (!fs.existsSync(pdf)) return;
