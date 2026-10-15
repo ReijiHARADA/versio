@@ -135,6 +135,12 @@ for (const file of files) {
       counts[kind] = (counts[kind] ?? 0) + 1;
       return counts;
     }, {});
+    const readerFragmentSamples = readerRawFragments.reduce<Record<string, Array<{ page: number; text: string }>>>((samples, block) => {
+      const kind = readerFragmentKind(block);
+      const bucket = samples[kind] ?? (samples[kind] = []);
+      if (bucket.length < 12) bucket.push({ page: block.pageStart, text: (block.original ?? "").slice(0, 240) });
+      return samples;
+    }, {});
     papers.push({
       file,
       tableCaptions: captions.length,
@@ -144,6 +150,7 @@ for (const file of files) {
       readerRawFragments: readerRawFragments.length,
       readerCellFallbacks: readerCellFallbacks.length,
       readerFragmentKinds,
+      readerFragmentSamples,
       orphanFragments: orphanFragments.map((block) => ({ page: block.pageStart, text: block.original?.slice(0, 180) })),
     });
   } catch (error) {
