@@ -3140,3 +3140,23 @@ method/goal table, figure-adjacent numeric label matrix, and synthetic Table 9
 identity). The statistical-prose experiment was not the cause—the same four
 failures remained after reverting it—but they must be triaged before claiming
 the focused extraction suite is green again.
+
+# 2026-10-16: table boundary triage resumed
+
+The extraction goal remains **active**, not blocked. No benchmark, translation
+server, or Tauri process is currently running; work was paused at a deliberate
+test checkpoint rather than because the goal was blocked. Generic table-boundary
+fixes are in the working tree: captionless qualitative grids now require a
+compact aligned header and contiguous repeated rows, native captioned
+multicell evidence takes precedence over vector-label evidence, and a caption
+line is separated from a following native table header when their geometry and
+typography support that boundary. A narrow exact-box check also prevents a
+synthetic `CAPTION_OF` table region from projecting the same short cell crumbs
+twice without affecting native OzCHI rows.
+
+Focused regressions currently passing include the captionless method/goal table,
+math-paper prose demotion, mixed thesis table/figure boundary, synthetic Table 9
+identity, and OzCHI Table 3 reconstruction. One focused vector numeric-label
+matrix case remains unresolved and is intentionally not paper-specific patched.
+The source changes are checkpointed in commit `bfc9df1`; the remaining vector
+case and broader 118-paper corpus rerun still require review.
