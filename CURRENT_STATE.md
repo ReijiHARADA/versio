@@ -1,3 +1,19 @@
+# 2026-10-16: serialize database startup migration/index sync
+
+The packaged OzCHI run showed that extraction and Reader package loading were
+complete (168 blocks), but the acceptance flow stalled when search was started
+while the paper still had `processingStatus=translating`. `database.ready()`
+could previously run the IndexedDB migration and package-index synchronization
+concurrently from multiple import, translation, Reader, annotation, and search
+callers. It now shares one in-flight promise, preventing interleaved sql.js
+transactions and duplicate package-index rebuilds. The lock is reset by the
+existing test reset helper.
+
+FTS integration, migration, annotation tests (**6/6**), typecheck, and lint
+pass (lint reports only pre-existing warnings). The real-PDF extraction suite
+remains **232/232**; the next packaged run must verify the search step with a
+still-translating real paper.
+
 # 2026-10-16: demote prose falsely retained as table fallback
 
 The table-reader audit found five reader-visible `prose-like` fragments that
