@@ -871,9 +871,11 @@ function isNumberedTableCaption(text: string | null | undefined): boolean {
 function captionedTableAbsorption(canonical: CanonicalDocument): {
   keepIds: Set<string>;
   regions: Array<{ caption: CanonicalNode; target: CanonicalNode }>;
+  syntheticTargets: CanonicalNode[];
 } {
   const keepIds = new Set<string>();
   const regions: Array<{ caption: CanonicalNode; target: CanonicalNode }> = [];
+  const syntheticTargets: CanonicalNode[] = [];
   const nodeById = new Map(canonical.nodes.map((node) => [node.id, node]));
   for (const rel of canonical.relations) {
     if (rel.kind !== "CAPTION_OF") continue;
@@ -881,6 +883,7 @@ function captionedTableAbsorption(canonical: CanonicalDocument): {
     const target = nodeById.get(rel.to);
     if (!caption || !target || target.role !== "table") continue;
     if (!isNumberedTableCaption(caption.text)) continue;
+    if (target.text == null) syntheticTargets.push(target);
     const targetHasHighTableScore = target.evidence.some((entry) =>
       entry.label === "role-scores" && /table=0\.(?:9[4-9]|[1-9]\d)/.test(entry.reason ?? "")
     );
@@ -896,7 +899,7 @@ function captionedTableAbsorption(canonical: CanonicalDocument): {
     }
     regions.push({ caption, target });
   }
-  return { keepIds, regions };
+  return { keepIds, regions, syntheticTargets };
 }
 
 /** A numbered caption only absorbs the cells in its own local visual region.
@@ -927,15 +930,10 @@ function belongsToCaptionedTableRegion(
 
 function hasExactSyntheticCaptionRegion(
   node: CanonicalNode,
-  canonical: CanonicalDocument,
+  syntheticTargets: CanonicalNode[],
 ): boolean {
   if (node.role !== "table" || node.text == null || node.boundingBoxes.length === 0) return false;
-  const nodeById = new Map(canonical.nodes.map((candidate) => [candidate.id, candidate]));
-  return canonical.relations.some((rel) => {
-    if (rel.kind !== "CAPTION_OF") return false;
-    const caption = nodeById.get(rel.from);
-    const target = nodeById.get(rel.to);
-    if (!caption || !target || target.text || !isNumberedTableCaption(caption.text)) return false;
+  return syntheticTargets.some((target) => {
     if (target.boundingBoxes.length !== node.boundingBoxes.length) return false;
     return target.boundingBoxes.every((targetBox) => node.boundingBoxes.some((nodeBox) =>
       nodeBox.page === targetBox.page &&
@@ -2160,7 +2158,7 @@ export function projectCanonicalToPaper(input: {
       node.evidence.some((entry) => entry.label === "table-row-geometry") &&
       ((node.text ?? "").split(/\s+/).filter(Boolean).length >= 36 ||
         ((node.text ?? "").match(/[.!?]/g) ?? []).length >= 3);
-    const exactSyntheticCaptionRegion = hasExactSyntheticCaptionRegion(node, canonical);
+    const exactSyntheticCaptionRegion = hasExactSyntheticCaptionRegion(node, tableAbsorption.syntheticTargets);
     if (node.role === "table" && node.text && !hasStrongTableMatrixEvidence(node) &&
         !strongNativeRowGrid &&
         !belongsToCaptionedTableRegion(node, tableAbsorption.regions) &&

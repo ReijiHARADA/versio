@@ -3157,9 +3157,9 @@ twice without affecting native OzCHI rows.
 Focused regressions currently passing include the captionless method/goal table,
 math-paper prose demotion, mixed thesis table/figure boundary, synthetic Table 9
 identity, and OzCHI Table 3 reconstruction. One focused vector numeric-label
-matrix case remains unresolved and is intentionally not paper-specific patched.
-The source changes are checkpointed in commit `bfc9df1`; the remaining vector
-case and broader 118-paper corpus rerun still require review.
+matrix case remains source-order imperfect, but its Canonical role is `other` and
+it is excluded from paragraph translation and table projection. The current
+checkpoint is `b8ec17e`; the complete cached corpus is green at 232/232.
 
 The first corpus rerun after that checkpoint found one regression in the
 Springer marketing paper `marketing-consumer-production-journey`: a table that
@@ -3185,3 +3185,21 @@ OzCHI fragments (`Comfortable`/`Finger 1` matrices and `Function` rows) were
 stored as table cells rather than translated paragraphs. This timeout is an
 acceptance-flow duration issue, not an extraction failure, and is kept separate
 from the 232/232 extraction result.
+
+The synthetic table-region relation lookup was then refactored to build its
+document-level target index once per projection instead of rebuilding the
+Canonical node map for every block. Focused synthetic-table, OzCHI Table 3,
+and Springer marketing regressions still pass; typecheck and lint remain clean
+apart from the repository's pre-existing warnings. Checkpoint commit:
+`b8ec17e`.
+
+The `.app` was rebuilt again after that refactor at **2026-10-16 05:37:43
+JST** using `npm run tauri:build:fast`; generated licenses were restored after
+the build and the worktree is clean.
+
+The packaged integration script now supports `PAPER_READER_E2E_IMPORT_ONLY=1`
+with optional `PAPER_READER_E2E_EXPECT_TABLES`. This separates extraction/package
+verification from the later translation/export acceptance marker. Running the
+current `.app` with the real OzCHI PDF and `PAPER_READER_E2E_EXPECT_TABLES=5`
+and `PAPER_READER_E2E_REQUIRE_TABLE_ROWS=1` passed: **137 blocks, 5 structured
+tables with non-empty structured rows**, followed by a clean app shutdown.
