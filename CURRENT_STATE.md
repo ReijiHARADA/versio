@@ -3261,3 +3261,5 @@ Reader smokeの再検証で、起動スクリプトの環境変数継続行に�
 表の誤判定・セル復元に使う純粋な判定群を `src/services/pdfExtraction/projection/tablePredicates.ts` に分離し、`toPaper.ts` は canonical-to-paper の投影処理と caption region の関係解決に集中するよう整理した。判定式、呼び出し順、公開されている投影API、保存形式は変更していない。これは品質改善ではなく、直近の表境界修正が安定した節目で行った保守リファクタリングである。
 
 `npm run typecheck`、`npm run lint`（既存warningのみ）、対象3ファイルの81テスト、`caffeinate -dimsu npm run test:extraction-corpus -- --reporter=dot`（118 extraction + 114 reading-order = **232/232**, 462.46s）が通過した。次の品質変更では、同じ判定群を再び `toPaper.ts` に戻さず、この責務単位を入口に characterization test を追加する。未解決の figure/table crop enrichment と、実PDF Reader UIでの structured-cell DOM確認は継続課題である。
+
+同じコミットを含む fast `.app` を **2026-10-16 08:27:02 JST** に再ビルドした。OzCHI実PDFのパッケージimport-only E2Eは **138 blocks / 5 tables / 全表に非空tableRows** で通過し、実行後にPaper Readerおよびtranslation serverの残留プロセスがないことも確認した。
