@@ -136,6 +136,36 @@ PY
   fail "timeout waiting for step=$want"
 }
 
+wait_for_import_only() {
+  local timeout_s="${1:-180}"
+  local i
+  for i in $(seq 1 "$timeout_s"); do
+    local result
+    result="$(find_result)"
+    if [[ -n "$result" && -f "$result" ]]; then
+      cp "$result" "$ARTIFACT_DIR/result.json" 2>/dev/null || true
+      if python3 - "$result" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1]))
+sys.exit(0 if data.get("step") == "import_ok" and data.get("paperId") else 1)
+PY
+      then
+        return 0
+      fi
+      if python3 - "$result" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1]))
+sys.exit(0 if data.get("step") in {"error", "import_failed", "import_timeout"} else 1)
+PY
+      then
+        fail "import marker terminal failure ($(cat "$result"))"
+      fi
+    fi
+    sleep 1
+  done
+  fail "timeout waiting for import_ok"
+}
+
 launch_app() {
   step "launch app"
   # Keep the user's HOME so the translation sidecar can reuse its already
@@ -166,6 +196,39 @@ quit_app() {
 }
 
 launch_app
+if [[ "${PAPER_READER_E2E_IMPORT_ONLY:-0}" == "1" ]]; then
+  step "wait import"
+  wait_for_import_only "$WAIT_TIMEOUT_S"
+  PACKAGE_DIR=""
+  for i in $(seq 1 "$WAIT_TIMEOUT_S"); do
+    PACKAGE_DIR="$(find "$ACCEPTANCE_HOME" -path '*/papers/*/structure.json' -print -quit | xargs -r dirname)"
+    if [[ -n "$PACKAGE_DIR" ]] && find "$ACCEPTANCE_HOME" -name 'library.sqlite' | grep -q .; then break; fi
+    sleep 1
+  done
+  find "$ACCEPTANCE_HOME" -name 'library.sqlite' | grep -q . || fail "library.sqlite missing after import"
+  [[ -n "$PACKAGE_DIR" && -f "$PACKAGE_DIR/structure.json" ]] || fail "paper structure package missing"
+  EXPECTED_TABLES="${PAPER_READER_E2E_EXPECT_TABLES:-}"
+  REQUIRE_TABLE_ROWS="${PAPER_READER_E2E_REQUIRE_TABLE_ROWS:-0}"
+  python3 - "$PACKAGE_DIR/structure.json" "$EXPECTED_TABLES" "$REQUIRE_TABLE_ROWS" <<'PY' || fail "extraction package validation failed"
+import json, sys
+path, expected, require_rows = sys.argv[1], sys.argv[2], sys.argv[3]
+data = json.load(open(path))
+blocks = data.get("blocks") or {}
+tables = [block for block in blocks.values() if block.get("type") == "table"]
+if expected:
+    assert len(tables) == int(expected), f"expected {expected} tables, got {len(tables)}"
+if require_rows == "1":
+    for index, table in enumerate(tables):
+        rows = table.get("tableRows") or (table.get("metadata") or {}).get("tableRows")
+        assert isinstance(rows, list) and rows and any(row for row in rows), f"table {index} has no structured rows"
+assert blocks, "empty structure"
+print("import-only package ok", len(blocks), "blocks", len(tables), "tables")
+PY
+  quit_app
+  step "done"
+  echo "OK packaged import-only E2E. Artifacts: $ARTIFACT_DIR" | tee -a "$LOG_FILE"
+  exit 0
+fi
 step "wait import→annotation→search→export"
 wait_for_step "ready_for_relaunch" "$WAIT_TIMEOUT_S"
 
