@@ -136,6 +136,7 @@ if want == "ui_library_card_visible":
         "ui_library_card_visible",
         "ui_relaunch_library_card_visible",
         "ui_reader_visible",
+        "ui_reader_smoke_ready",
         "ui_relaunch_reader_visible",
         "ui_core_flow_ready",
         "ui_relaunch_annotation_visible",
@@ -203,16 +204,20 @@ OSA
 
 launch_app() {
   step "launch app (UI E2E)"
+  # Use the same Tauri read_dropped_pdf + startBackgroundImport path as a
+  # selected PDF, while avoiding the flaky native picker/IME interaction in
+  # deterministic packaged UI runs.
+  local acceptance_enabled=1
+  if [[ "${PAPER_READER_UI_E2E_SMOKE_ONLY:-0}" == "1" ]]; then
+    acceptance_enabled=0
+  fi
   HOME="$ACCEPTANCE_HOME" \
   HF_HOME="$HOST_HF_HOME" \
-  PAPER_READER_ACCEPTANCE=1 \
+  PAPER_READER_ACCEPTANCE="$acceptance_enabled" \
   PAPER_READER_ACCEPTANCE_HOME="$ACCEPTANCE_HOME" \
   PAPER_READER_ACCEPTANCE_FIXTURE="$SHORT_FIXTURE" \
   PAPER_READER_UI_E2E=1 \
   PAPER_READER_UI_E2E_SMOKE_ONLY="${PAPER_READER_UI_E2E_SMOKE_ONLY:-0}" \
-  # Use the same Tauri read_dropped_pdf + startBackgroundImport path as a
-  # selected PDF, while avoiding the flaky native picker/IME interaction in
-  # deterministic packaged UI runs.
   PAPER_READER_UI_E2E_DIRECT_IMPORT=1 \
   PAPER_READER_UI_E2E_HOME="$ACCEPTANCE_HOME" \
   PAPER_READER_UI_E2E_FIXTURE="$SHORT_FIXTURE" \
@@ -305,12 +310,12 @@ launch_app
 choose_pdf_via_open_panel
 
 step "wait library card"
-wait_ui_step "ui_library_card_visible" 180
+wait_ui_step "ui_library_card_visible" "${PAPER_READER_UI_E2E_LIBRARY_TIMEOUT_S:-180}"
 
 step "open paper card"
 ax_click_by_label "論文" || ax_click_by_label "Acceptance" || true
 sleep 2
-wait_ui_step "ui_reader_visible" 120
+wait_ui_step "ui_reader_visible" "${PAPER_READER_UI_E2E_READER_TIMEOUT_S:-120}"
 
 if [[ "${PAPER_READER_UI_E2E_SMOKE_ONLY:-0}" == "1" ]]; then
   step "reader smoke verified"
