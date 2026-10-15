@@ -17,6 +17,8 @@ export type UiE2eMarker = {
   exportBytes?: number;
   exportedPath?: string;
   paperTitleHint?: string;
+  /** A table grid or table image was mounted in the Reader DOM. */
+  tableSurfaceVisible?: boolean;
   at: string;
 };
 
@@ -30,6 +32,7 @@ let exportedPath: string | undefined;
 let paperTitleHint: string | undefined;
 let fixtureImportStarted = false;
 let smokeReaderOpenTried = false;
+let smokeScrollTried = false;
 
 async function writeUiMarker(marker: UiE2eMarker): Promise<void> {
   lastMarker = marker;
@@ -162,6 +165,10 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
     const exportDialog = document.querySelector('[data-testid="export-dialog"]');
     const annotationMark = document.querySelector('[data-testid="annotation-mark"]');
     const exportStatus = document.querySelector('[data-testid="export-status"]');
+    const tableSurfaceVisible = Boolean(
+      readerBody?.querySelector('[role="table"]') ||
+      readerBody?.querySelector('figure img[alt*="Table"], figure img[alt*="表"]')
+    );
 
     if (paperCard && !paperTitleHint) {
       paperTitleHint = paperCard.getAttribute("aria-label") || paperCard.textContent?.trim() || "";
@@ -170,9 +177,16 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
     // Smoke mode is intended to validate the real Reader route without
     // depending on flaky macOS Accessibility clicks against a large WKWebView.
     // The click is opt-in and never runs during normal launches.
-      if (smokeOnly && paperCard && !reader && !smokeReaderOpenTried) {
+    if (smokeOnly && paperCard && !reader && !smokeReaderOpenTried) {
       smokeReaderOpenTried = true;
       (paperCard as HTMLElement).click();
+    }
+    // Force the real Reader scroll container through the document once in
+    // smoke mode. This lets lazy/viewport-bound table surfaces mount before
+    // the marker is sampled, without changing normal Reader behavior.
+    if (smokeOnly && readerBody && !smokeScrollTried) {
+      smokeScrollTried = true;
+      readerBody.scrollTop = readerBody.scrollHeight;
     }
 
     // Detect export success from visible status if reportUiE2eExportSuccess already ran.
@@ -278,7 +292,8 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
       exportBytes,
       exportedPath,
       paperTitleHint,
-      detail: `cards=${document.querySelectorAll('[data-testid="paper-card"]').length} hits=${searchHits.length} exportBytes=${exportBytes}`,
+      tableSurfaceVisible,
+      detail: `cards=${document.querySelectorAll('[data-testid="paper-card"]').length} hits=${searchHits.length} tables=${tableSurfaceVisible ? 1 : 0} exportBytes=${exportBytes}`,
       at: new Date().toISOString(),
     });
   };
