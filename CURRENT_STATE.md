@@ -2868,3 +2868,28 @@ samples include legitimate questionnaire cells, checklist rows, references, and
 code examples; they require evidence-based triage rather than blanket suppression.
 The refreshed diagnostic is saved in
 `test-data/real-papers/reports/table-reader-readiness-v1.json`.
+
+# 2026-10-16: separate concatenated two-column bibliography entries
+
+Reference-heavy pages in some journal PDFs were detected as a single column
+when the left side contained long native spans and the right side contained
+word-sized spans. This caused unrelated bibliography entries to be merged or
+to cross the gutter. The column detector now uses a conservative asymmetric
+word-column profile, gutter splitting accepts mixed-width column evidence, and
+cross-column bibliography blocks are not treated as prose continuations.
+
+At the canonical projection boundary, long reference blocks are split at
+author/year anchors, including entries whose DOI/page range has no terminal
+period. This keeps each reference as a source-only, skipped translation block
+without relying on paper-specific names. The cognitive-motor-memory regression
+now asserts that Spataro/Swallow and Ushey/van Ede entries are not merged.
+
+Verification: focused reference regression passes; typecheck passes; complete
+real-paper extraction regression passes **118/118** in **350.50 seconds**.
+The change is source-only and the staged `.app` must be rebuilt before Tauri
+UI verification.
+
+The fast Tauri bundle was rebuilt successfully after the nullability fix;
+`Paper Reader.app` updated at `2026-10-16 01:13:43 +0900`. Packaged integration
+E2E (import, annotation/search marker, export, quit, relaunch, persistence)
+also passed.
