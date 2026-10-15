@@ -2812,9 +2812,10 @@ Final verification for this change: the complete extraction and reading-order
 corpus passes **232/232** in **454.19 seconds** after the narrowed rule. This
 change is included in the latest packaged Tauri build at
 `src-tauri/target/release/bundle/macos/Paper Reader.app`, built at
-`2026-10-15 23:38:27 +0900`. Packaged import/search/export/relaunch E2E also
-passes. The staged app is the first bundle containing the rotated-page
-geometry path.
+`2026-10-16 00:09:41 +0900`. Packaged import/search/export/relaunch E2E also
+passes. The staged app contains the rotated-page geometry path and the latest
+prose-cell/native-grid table guard. Packaged import/search/export/relaunch E2E
+passes after the rebuild.
 
 # 2026-10-16: preserve real tables with prose cells while demoting false table roles
 
