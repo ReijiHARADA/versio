@@ -553,6 +553,12 @@ describe("canonical extraction pipeline", () => {
     expect(rows.length).toBeGreaterThanOrEqual(3);
     expect(rows.every((block) => block.type === "table")).toBe(true);
     expect(rows.every((block) => block.translationStatus === "skipped")).toBe(true);
+    const header = result.blocks.find((block) => block.pageStart === 18 && /^Method Goal\/description/.test(block.original ?? ""));
+    const proseCell = result.blocks.find((block) => block.pageStart === 18 && /^Distillation of data/.test(block.original ?? ""));
+    const precedingNarrative = result.blocks.find((block) => block.pageStart === 18 && /^There is a wide range of popular methods/.test(block.original ?? ""));
+    expect(header?.type).toBe("table");
+    expect(proseCell?.type).toBe("table");
+    expect(precedingNarrative?.type).toBe("paragraph");
   }, 60_000);
 
   it("does not append a repeated top-margin proceedings URL to body paragraphs", async () => {

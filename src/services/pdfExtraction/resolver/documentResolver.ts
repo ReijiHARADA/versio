@@ -57,6 +57,9 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   const axisLabelNeighborhood = candidate.evidence.find(
     (entry) => entry.label === "axis-label-numeric-neighborhood"
   );
+  const proseCellGrid = candidate.evidence.find(
+    (entry) => entry.label === "repeated-prose-cell-grid"
+  );
   // Two independent geometry signals are required before excluding a block
   // from ordinary translation. A mixed x-band alone can be a legitimate
   // inline annotation; repeated numeric labels alone can occur in prose.
@@ -84,6 +87,13 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   }
   if (imageLabelEvidence && (scores.other ?? 0) >= paragraph + 0.06) {
     return { role: "other", confidence: scores.other ?? score };
+  }
+  // A repeated prose-cell grid is a document-level geometry proof, not a
+  // lexical guess. It may include bold headers and sentence-shaped cells, so
+  // let it outrank heading/paragraph typography once all three column bands
+  // have been established.
+  if (proseCellGrid && proseCellGrid.confidence >= 0.95 && (scores.table ?? 0) >= 0.94) {
+    return { role: "table", confidence: scores.table ?? proseCellGrid.confidence };
   }
   // Borderless matrices are often emitted as one native block per row. Their
   // short row labels (for example "Comfortable" or "Finger 1") can have a
