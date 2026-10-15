@@ -147,7 +147,10 @@ wait_for_import_only() {
       if python3 - "$result" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1]))
-sys.exit(0 if data.get("step") == "import_ok" and data.get("paperId") else 1)
+# The packaged acceptance flow may continue through export before the shell
+# observes the marker. `ready_for_relaunch` still proves that import produced a
+# persisted Paper Package, so import-only validation must accept it too.
+sys.exit(0 if data.get("step") in {"import_ok", "ready_for_relaunch", "relaunch_ok"} and data.get("paperId") else 1)
 PY
       then
         return 0
