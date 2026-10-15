@@ -33,6 +33,16 @@ import {
 import { scoreLayoutBlock } from "../../extractionConfidence";
 import type { CanonicalDocument, CanonicalNode } from "../canonical/types";
 import { topologicalOrder } from "../resolver/relationResolver";
+import {
+  hasStrongNativeTableRows,
+  hasStrongTableMatrixEvidence,
+  isChartDebrisFragment,
+  isLikelyNarrativeText,
+  isNumberedProseListItem,
+  isNumberedTableCaption,
+  looksLikeCaptionedTableCellFragment,
+  looksLikeProseMistakenForTable,
+} from "./tablePredicates";
 
 function normalizeSection(title: string): NormalizedSectionKind {
   const lower = title.toLowerCase();
@@ -735,151 +745,6 @@ function isStandalonePageNumber(text: string, role: CanonicalNode["role"]): bool
   return role !== "table" && role !== "heading" && /^\d{1,3}$/.test(text.trim());
 }
 
-/** Region membership can paint chart-adjacent prose with role=table. */
-function looksLikeProseMistakenForTable(text: string): boolean {
-  const trimmed = text.trim();
-  if (!trimmed) return true;
-  if (/^(?:table|表)\s*\d+/i.test(trimmed)) return false;
-  if (/[√✓☑☒\u3400-\u9fff]/.test(trimmed)) return false;
-  const words = trimmed.split(/\s+/).filter(Boolean);
-  const digits = (trimmed.match(/\d/g) ?? []).length;
-  const letters = (trimmed.match(/[A-Za-z]/g) ?? []).length;
-  const digitRatio = digits / Math.max(letters + digits, 1);
-  // Lowercase letter-only fragments ("were", "perceived", "between") are
-  // chart-adjacent prose, not cell headers like "Thumb" / "Finger 1".
-  if (digits === 0 && letters >= 3 && words.length <= 4 && /^[a-z]/.test(trimmed)) {
-    return true;
-  }
-  // Caption continuations glued after a mid-sentence period, without cells.
-  if (
-    digits === 0 &&
-    /[.!?;]\s+[A-Z]/.test(trimmed) &&
-    words.length >= 5 &&
-    words.length <= 20
-  ) {
-    return true;
-  }
-  // Sentence adverbs mistaken for a one-cell row ("Similarly").
-  if (digits === 0 && words.length === 1 && /ly$/i.test(trimmed) && letters >= 6) {
-    return true;
-  }
-  // Broken caption crumbs next to a matrix ("bolded.", "of visual target…").
-  if (
-    words.length <= 10 &&
-    digitRatio < 0.08 &&
-    (/^(?:of|and|the|bolded)\b/i.test(trimmed) || /\bbolded\.?$/i.test(trimmed))
-  ) {
-    return true;
-  }
-  // Question/option lines from a vignette or survey are often emitted as
-  // one native span beside a figure. They are readable prose, not table
-  // cells, even when the region scorer sees repeated x anchors.
-  if (
-    words.length >= 6 &&
-    /[.!?](?:\s|$)/.test(trimmed) &&
-    digitRatio < 0.25 &&
-    /^(?:Q\s*:|[-•]\s*Option\b|what\b|which\b|how\b|who\b)/i.test(trimmed)
-  ) {
-    return true;
-  }
-  // A complete sentence outside a caption-owned table region is body prose
-  // even when a neighbouring numeric band supplied table-row geometry.
-  // Caption-owned narrative cells are protected by the caller's region check.
-  if (words.length >= 10 && /[.!?](?:\s|$)/.test(trimmed) && digitRatio < 0.2) {
-    return true;
-  }
-  // Long narrative sentences that only sit near a matrix. Keep short
-  // goal/method cells (often "To find…") and dense numeric rows.
-  if (words.length >= 12 && digitRatio < 0.12) {
-    const narrativeOpener =
-      /^(?:When|Altogether|However|Therefore|In this|We |This |To investigate|To provide)\b/.test(
-        trimmed
-      );
-    const midSentenceGlue = /[.!?]\s+(?:[A-Z]|Thus|However|Therefore)\b/.test(trimmed);
-    if (narrativeOpener || (midSentenceGlue && words.length >= 12)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/** Chart-axis crumbs should leave the document entirely — not become paragraphs. */
-function isChartDebrisFragment(text: string): boolean {
-  const trimmed = text.trim();
-  if (!trimmed) return true;
-  const words = trimmed.split(/\s+/).filter(Boolean);
-  const digits = (trimmed.match(/\d/g) ?? []).length;
-  const letters = (trimmed.match(/[A-Za-z]/g) ?? []).length;
-  if (digits === 0 && letters >= 2 && words.length <= 4 && /^[a-z]/.test(trimmed)) {
-    return true;
-  }
-  if (digits === 0 && words.length === 1 && /ly$/i.test(trimmed) && letters >= 6) {
-    return true;
-  }
-  if (
-    words.length <= 10 &&
-    digits / Math.max(letters + digits, 1) < 0.08 &&
-    (/^(?:of|and|the|bolded|pairs except)\b/i.test(trimmed) || /\bbolded\.?$/i.test(trimmed))
-  ) {
-    return true;
-  }
-  return false;
-}
-
-function hasStrongTableMatrixEvidence(node: CanonicalNode): boolean {
-  const scoredTable = node.evidence.some((entry) =>
-    entry.label === "role-scores" && /table=0\.(?:9[4-9]|[1-9]\d)/.test(entry.reason ?? "")
-  );
-  // `captioned-neighbor-cell-rows` is emitted from nearby geometry and can
-  // also land on a long prose column next to a table. Require an independent
-  // high table role score before letting that signal override prose demotion.
-  return scoredTable || node.evidence.some((entry) =>
-    entry.label === "matrix-axis-label-neighbor" ||
-    (entry.label === "captioned-neighbor-cell-rows" && scoredTable) ||
-    (entry.label === "captioned-native-multicell-row" && scoredTable)
-  );
-}
-
-/**
- * The resolver can conservatively settle a native grid as `paragraph` even
- * though the layout still proves a multi-row, multi-column table. Keep this
- * recovery narrow: require the geometry evidence emitted by the table
- * candidate scorer and several actual native rows with multiple cells. This
- * avoids reviving chart labels or ordinary prose that merely sits near a
- * table caption.
- */
-function hasStrongNativeTableRows(node: CanonicalNode, layout: LayoutBlock | undefined): boolean {
-  if (!layout || layout.lines.length < 3) return false;
-  // Dense figure/plot labels can receive the same row geometry signal as a
-  // table. Their explicit vector-label evidence takes precedence; keeping
-  // them out prevents numeric chart annotations from becoming source-only
-  // table cards.
-  if (node.evidence.some((entry) => entry.label === "vector-figure-label-cluster" || entry.label === "repeated-numeric-chart-label")) {
-    return false;
-  }
-  const geometry = node.evidence.find((entry) =>
-    entry.label === "table-row-geometry" && entry.confidence >= 0.9
-  );
-  if (!geometry) return false;
-  const multiCellRows = layout.lines.filter((line) => line.items.length >= 2).length;
-  // A real table cell can contain complete prose (and citation periods), so
-  // sentence-like punctuation must not override the native repeated-row
-  // geometry.  Chart/axis fragments are excluded above by their explicit
-  // vector evidence instead.
-  return multiCellRows >= 3;
-}
-
-function isNumberedTableCaption(text: string | null | undefined): boolean {
-  return /^(?:table|表)\s*\d+/i.test((text ?? "").trim());
-}
-
-/**
- * Native PDFs often emit one LayoutBlock per matrix cell. When a numbered
- * Table N caption already owns a CAPTION_OF region (image crop / grid target),
- * those cell crumbs must not also become standalone table blocks. Captionless
- * matrices (e.g. wear-scale) keep their row blocks — this only fires for
- * numbered Table/表 captions with a CAPTION_OF relation.
- */
 function captionedTableAbsorption(canonical: CanonicalDocument): {
   keepIds: Set<string>;
   regions: Array<{ caption: CanonicalNode; target: CanonicalNode }>;
@@ -972,38 +837,6 @@ function shouldKeepCaptionedTableTarget(target: CanonicalNode): boolean {
     return true;
   }
   return false;
-}
-
-/** Cell / header crumbs that belong under a numbered table caption. */
-function looksLikeCaptionedTableCellFragment(text: string): boolean {
-  const trimmed = text.trim();
-  if (!trimmed || isNumberedTableCaption(trimmed)) return false;
-  const words = trimmed.split(/\s+/).filter(Boolean);
-  const digits = (trimmed.match(/\d/g) ?? []).length;
-  const letters = (trimmed.match(/[A-Za-z]/g) ?? []).length;
-  if (/^[\d.<>=≤≥\s,.\-+eE]+$/.test(trimmed)) return true;
-  if (/^(?:Thumb|Finger\s*\d)\b/i.test(trimmed) && words.length <= 24) return true;
-  if (/^(?:Finger\s*\d\s*)+$/i.test(trimmed)) return true;
-  if (digits >= 3 && digits / Math.max(letters + digits, 1) >= 0.25 && words.length <= 36) {
-    return true;
-  }
-  if (words.length <= 4 && !/[.!?]\s*$/.test(trimmed) && letters <= 40) return true;
-  return false;
-}
-
-/** Numbered prose items are lists even when an upstream role heuristic called
- * them references. Bibliography entries have author/year evidence; ordinary
- * list items do not. */
-function isNumberedProseListItem(text: string): boolean {
-  return /^(?:[1-9]|1[0-9]|20)[.)]\s+/.test(text) &&
-    !/\b(?:19|20)\d{2}\b/.test(text.slice(0, 180));
-}
-
-function isLikelyNarrativeText(text: string): boolean {
-  const trimmed = text.trim();
-  if (trimmed.length < 80) return false;
-  const words = trimmed.split(/\s+/).filter(Boolean);
-  return words.length >= 12 && /[.!?](?:\s|$)/.test(trimmed);
 }
 
 function layoutForNode(

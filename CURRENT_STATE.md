@@ -3256,3 +3256,8 @@ Reader smokeの再検証で、起動スクリプトの環境変数継続行に�
 2026-10-16: Vector-label boundary checkpoint. Tiny (~1pt) native text bands on dense vector figures are now prevented from merging into following normal-size captions, using a font-scale transition rather than paper-specific text. The linguistics figure regression now accepts source-order-preserving containment while asserting `other`/figure-panel evidence. Full 118-paper extraction + reading-order regression passed **232/232** in 437.40s. Fast `.app` rebuilt at 08:05 JST; packaged OzCHI import-only passed **138 blocks / 5 tables / all tables with non-empty rows**.
 
 2026-10-16: Bundle timestamp correction. The vector-label boundary code from `f3de152` was included in the latest fast bundle; filesystem mtime verified as **2026-10-16 08:12:25 JST** after the successful 232/232 regression and OzCHI packaged import-only run. The earlier 08:05 entry refers to the preceding verification checkpoint.
+# 2026-10-16: table projection predicate refactor checkpoint
+
+表の誤判定・セル復元に使う純粋な判定群を `src/services/pdfExtraction/projection/tablePredicates.ts` に分離し、`toPaper.ts` は canonical-to-paper の投影処理と caption region の関係解決に集中するよう整理した。判定式、呼び出し順、公開されている投影API、保存形式は変更していない。これは品質改善ではなく、直近の表境界修正が安定した節目で行った保守リファクタリングである。
+
+`npm run typecheck`、`npm run lint`（既存warningのみ）、対象3ファイルの81テスト、`caffeinate -dimsu npm run test:extraction-corpus -- --reporter=dot`（118 extraction + 114 reading-order = **232/232**, 462.46s）が通過した。次の品質変更では、同じ判定群を再び `toPaper.ts` に戻さず、この責務単位を入口に characterization test を追加する。未解決の figure/table crop enrichment と、実PDF Reader UIでの structured-cell DOM確認は継続課題である。
