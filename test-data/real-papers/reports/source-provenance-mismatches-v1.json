@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-10-15",
+  "status": "review-required",
+  "mismatches": [
+    {
+      "paperId": "linguistics-the-role-of-morphology-in-computational-linguistics-its-significance-i",
+      "filename": "linguistics-the-role-of-morphology-in-computational-linguistics-its-significance-i.pdf",
+      "catalogTitle": "THE ROLE OF MORPHOLOGY IN COMPUTATIONAL LINGUISTICS: ITS SIGNIFICANCE IN NATURAL LANGUAGE PROCESSING",
+      "catalogDoi": "10.5281/zenodo.18456227",
+      "sourceUrl": "https://internationalbulletins.com/intjour/index.php/jah/article/view/2386",
+      "observedTitle": "A MEDICAL PERSPECTIVE ON ADOLESCENT MENTAL HEALTH: STRESS, DEPRESSION, AND RELATED HEALTH RISKS",
+      "observedDoi": "10.5281/zenodo.18409657",
+      "classification": "wrong-pdf-or-publisher-metadata",
+      "impact": "Exclude this item from title/extraction accuracy conclusions until the source is replaced or catalog metadata is corrected."
+    }
+  ]
+}
