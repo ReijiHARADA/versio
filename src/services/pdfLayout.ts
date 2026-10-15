@@ -3368,12 +3368,66 @@ function splitInterleavedSmallGridAndBody(block: LayoutBlock): LayoutBlock[] | n
   return [make(bodyLines, "paragraph"), make(tableLines, "table")];
 }
 
+/** Split one native baseline that contains a small-font numeric table tail on
+ * the left and a normal body sentence on the right. The grid must be proved by
+ * matching columns on at least two neighbouring native lines; this prevents a
+ * statistical expression inside ordinary prose from being cut apart. */
+function splitInlineGridCellsFromProse(block: LayoutBlock, pageBlocks: LayoutBlock[]): LayoutBlock[] | null {
+  if ((block.role !== "paragraph" && block.role !== "table") || block.lines.length !== 1) return null;
+  const line = block.lines[0];
+  const items = [...line.items].sort((a, b) => a.x - b.x);
+  if (items.length < 5) return null;
+  const smallestFont = Math.min(...items.map((item) => item.fontSize));
+  const numericPrefix = items.filter((item) =>
+    item.fontSize <= smallestFont + 0.55 &&
+    /^[+−-]?\d+(?:\.\d+)?%?$/.test(item.text.trim())
+  );
+  if (numericPrefix.length < 3) return null;
+  const prefixRight = Math.max(...numericPrefix.map((item) => item.x + item.width));
+  const bodyItems = items.filter((item) => item.x >= prefixRight + 16);
+  const bodyWords = bodyItems.reduce((count, item) =>
+    count + (item.text.match(/[A-Za-z]{3,}/g) ?? []).length, 0);
+  if (bodyItems.length < 1 || bodyWords < 4 ||
+      median(bodyItems.map((item) => item.fontSize)) - smallestFont < 0.8) return null;
+  const prefixOrigins = numericPrefix.map((item) => item.x);
+  const supportingRows = pageBlocks
+    .filter((candidate) => candidate.pageStart === block.pageStart && candidate !== block)
+    .flatMap((candidate) => candidate.lines)
+    .filter((candidate) => Math.abs(candidate.y - line.y) <= 280)
+    .filter((candidate) => candidate.items.filter((item) =>
+      item.fontSize <= smallestFont + 0.55 &&
+      prefixOrigins.some((origin) => Math.abs(item.x - origin) <= 8)
+    ).length >= 2);
+  if (supportingRows.length < 2) return null;
+  const splitX = (prefixRight + Math.min(...bodyItems.map((item) => item.x))) / 2;
+  const tableItems = items.filter((item) => item.x + item.width <= splitX);
+  const proseItems = items.filter((item) => item.x >= splitX);
+  if (tableItems.length < 3 || proseItems.length === 0) return null;
+  const tableLine = itemsToLine(tableItems, line.column, line.page, line.pageHeight, line.pageWidth);
+  const proseLine = itemsToLine(proseItems, line.column, line.page, line.pageHeight, line.pageWidth);
+  const make = (nextLine: LayoutLine, role: LayoutRole): LayoutBlock => ({
+    ...block,
+    role,
+    text: nextLine.text,
+    lines: [nextLine],
+    pageStart: nextLine.page,
+    pageEnd: nextLine.page,
+    bbox: blockBbox([nextLine]),
+  });
+  return [make(proseLine, "paragraph"), make(tableLine, "table")];
+}
+
 function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
   const result: LayoutBlock[] = [];
   for (const block of blocks) {
     const interleavedTableAndBody = splitInterleavedSmallGridAndBody(block);
     if (interleavedTableAndBody) {
       result.push(...interleavedTableAndBody);
+      continue;
+    }
+    const inlineGridAndBody = splitInlineGridCellsFromProse(block, blocks);
+    if (inlineGridAndBody) {
+      result.push(...inlineGridAndBody);
       continue;
     }
     if (block.role === "paragraph" && block.lines.length >= 4) {
