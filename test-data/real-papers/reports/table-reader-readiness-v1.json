@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-10-15T18:34:48.922Z",
+  "generatedAt": "2026-10-15T21:46:29.734Z",
   "paperCount": 114,
   "papers": [
     {
       "file": "cognitive-dual-task.pdf",
       "tableCaptions": 5,
-      "cropReadyCaptions": 4,
-      "rawTableFragments": 24,
-      "cropBackedFragments": 20,
-      "readerRawFragments": 4,
-      "readerCellFallbacks": 4,
+      "cropReadyCaptions": 5,
+      "rawTableFragments": 26,
+      "cropBackedFragments": 21,
+      "readerRawFragments": 5,
+      "readerCellFallbacks": 5,
       "readerFragmentKinds": {
-        "structured-grid": 4
+        "structured-grid": 5
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -26,6 +26,10 @@
           {
             "page": 8,
             "text": "15.4 ± 3.7 16.4 ± 4.1 0.3 0.6 0.03 0.67 780 ± 320 0.6 22 0.41 0.001"
+          },
+          {
+            "page": 8,
+            "text": "BDNF, brain-derived neurotrophic factor; RT+CT, resistance training combined with cognitive training; ES, effect size; SPMT, Scenery Picture Memory Test; TMT-A, Trail Making Test A; TMT-B, Trail Making Test B; TRT, traditional resistance tr"
           },
           {
             "page": 8,
@@ -48,6 +52,10 @@
         },
         {
           "page": 8,
+          "text": "BDNF, brain-derived neurotrophic factor; RT+CT, resistance training combined with cognitive training; ES, effect size; SPMT, Scenery Picture Memory Test; TMT-A, Trail Making Test A"
+        },
+        {
+          "page": 8,
           "text": "Pearson correlation between brain-derived neurotrophic factor (BDNF) and semantic verbal fluency (SVF) scores and phonological verbal fluency"
         }
       ]
@@ -56,14 +64,15 @@
       "file": "cognitive-memory-cues.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 39,
+      "rawTableFragments": 58,
       "cropBackedFragments": 16,
-      "readerRawFragments": 21,
-      "readerCellFallbacks": 17,
+      "readerRawFragments": 40,
+      "readerCellFallbacks": 31,
       "readerFragmentKinds": {
-        "structured-grid": 16,
-        "short-label": 4,
-        "ambiguous": 1
+        "structured-grid": 25,
+        "short-label": 7,
+        "prose-like": 3,
+        "ambiguous": 5
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -73,7 +82,15 @@
           },
           {
             "page": 4,
-            "text": "B. Arguing B. Straight black shawl C. Cooking C. Black ponytail A. Doing homework A. Wide open"
+            "text": "What are the couple doing? B. Arguing B. Straight black shawl"
+          },
+          {
+            "page": 4,
+            "text": "C. Cooking C. Black ponytail"
+          },
+          {
+            "page": 4,
+            "text": "A. Doing homework A. Wide open"
           },
           {
             "page": 4,
@@ -85,6 +102,10 @@
           },
           {
             "page": 4,
+            "text": "B. Very gentle What does mom’s hair look B. Black updo"
+          },
+          {
+            "page": 4,
             "text": "C. Very smooth like? C. Black shoulder-length"
           },
           {
@@ -93,27 +114,15 @@
           },
           {
             "page": 4,
-            "text": "B. Mother B. Left hand C. Nobody C. Right hand A. Dad and son A. Wooden round table"
+            "text": "Who grabs the girl? B. Mother B. Left hand"
           },
           {
             "page": 4,
-            "text": "B. Mom and son B. White long table"
+            "text": "C. Nobody C. Right hand"
           },
           {
             "page": 4,
-            "text": "B. Ice cream B. Red wearing? C. Biscuit C. Blue"
-          },
-          {
-            "page": 4,
-            "text": "A. Fruit A. 1"
-          },
-          {
-            "page": 4,
-            "text": "Eating dessert White ice-cream scoop What does the boy not eat?"
-          },
-          {
-            "page": 4,
-            "text": "C. Ice-cream C. 3"
+            "text": "A. Dad and son A. Wooden round table"
           }
         ],
         "short-label": [
@@ -123,18 +132,60 @@
           },
           {
             "page": 4,
+            "text": "hair look like?"
+          },
+          {
+            "page": 4,
             "text": "hair"
           },
           {
             "page": 4,
-            "text": "C. Left, right, and middle"
+            "text": "is grabbed?"
+          },
+          {
+            "page": 4,
+            "text": "table?"
+          },
+          {
+            "page": 4,
+            "text": "Finally, who scolds the boy?"
           },
           {
             "page": 8,
             "text": "details"
           }
         ],
+        "prose-like": [
+          {
+            "page": 4,
+            "text": "What is the status of the B. Watching TV B. Closed room door?"
+          },
+          {
+            "page": 4,
+            "text": "How do the parents react after they see the boy’s behavior?"
+          },
+          {
+            "page": 4,
+            "text": "All materials were presented in Chinese and are translated into English for illustration purpose."
+          }
+        ],
         "ambiguous": [
+          {
+            "page": 4,
+            "text": "How does the girl play the piano?"
+          },
+          {
+            "page": 4,
+            "text": "Which body part of the girl"
+          },
+          {
+            "page": 4,
+            "text": "Who is sitting at the dining table?"
+          },
+          {
+            "page": 4,
+            "text": "What is the style of the"
+          },
           {
             "page": 4,
             "text": "A. Fruit A. White What color sweater is mom"
@@ -160,7 +211,23 @@
         },
         {
           "page": 4,
-          "text": "B. Arguing B. Straight black shawl C. Cooking C. Black ponytail A. Doing homework A. Wide open"
+          "text": "What are the couple doing? B. Arguing B. Straight black shawl"
+        },
+        {
+          "page": 4,
+          "text": "hair look like?"
+        },
+        {
+          "page": 4,
+          "text": "C. Cooking C. Black ponytail"
+        },
+        {
+          "page": 4,
+          "text": "A. Doing homework A. Wide open"
+        },
+        {
+          "page": 4,
+          "text": "What is the status of the B. Watching TV B. Closed room door?"
         },
         {
           "page": 4,
@@ -169,6 +236,14 @@
         {
           "page": 4,
           "text": "A. Very irritable A. Short black curls"
+        },
+        {
+          "page": 4,
+          "text": "How does the girl play the piano?"
+        },
+        {
+          "page": 4,
+          "text": "B. Very gentle What does mom’s hair look B. Black updo"
         },
         {
           "page": 4,
@@ -184,7 +259,31 @@
         },
         {
           "page": 4,
-          "text": "B. Mother B. Left hand C. Nobody C. Right hand A. Dad and son A. Wooden round table"
+          "text": "Which body part of the girl"
+        },
+        {
+          "page": 4,
+          "text": "Who grabs the girl? B. Mother B. Left hand"
+        },
+        {
+          "page": 4,
+          "text": "is grabbed?"
+        },
+        {
+          "page": 4,
+          "text": "C. Nobody C. Right hand"
+        },
+        {
+          "page": 4,
+          "text": "A. Dad and son A. Wooden round table"
+        },
+        {
+          "page": 4,
+          "text": "Who is sitting at the dining table?"
+        },
+        {
+          "page": 4,
+          "text": "What is the style of the"
         },
         {
           "page": 4,
@@ -192,15 +291,27 @@
         },
         {
           "page": 4,
+          "text": "table?"
+        },
+        {
+          "page": 4,
+          "text": "C. Dad, mom, and son C. Black long table"
+        },
+        {
+          "page": 4,
           "text": "A. Fruit A. White What color sweater is mom"
         },
         {
           "page": 4,
-          "text": "B. Ice cream B. Red wearing? C. Biscuit C. Blue"
+          "text": "What does the boy eat? B. Ice cream B. Red wearing? C. Biscuit C. Blue"
         },
         {
           "page": 4,
           "text": "A. Fruit A. 1"
+        },
+        {
+          "page": 4,
+          "text": "How many scoops of ice B. Fruit and ice-cream B. 2 cream are there?"
         },
         {
           "page": 4,
@@ -212,7 +323,15 @@
         },
         {
           "page": 4,
+          "text": "How do the parents react after they see the boy’s behavior?"
+        },
+        {
+          "page": 4,
           "text": "A. Dad A. Right, middle, and left What are the positions of"
+        },
+        {
+          "page": 4,
+          "text": "Finally, who scolds the boy?"
         },
         {
           "page": 4,
@@ -220,7 +339,11 @@
         },
         {
           "page": 4,
-          "text": "C. Left, right, and middle"
+          "text": "C. Nobody dad, mom, and son at the dining table? C. Left, right, and middle"
+        },
+        {
+          "page": 4,
+          "text": "All materials were presented in Chinese and are translated into English for illustration purpose."
         },
         {
           "page": 7,
@@ -229,6 +352,10 @@
         {
           "page": 7,
           "text": "0.397 0.674 0.014"
+        },
+        {
+          "page": 8,
+          "text": "Memory cue and forgetting of gist and Memory cue * Memory type 8.709 0.006 0.237"
         },
         {
           "page": 8,
@@ -384,16 +511,38 @@
       "file": "cognitive-psychology-gpt3.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 5,
-      "rawTableFragments": 14,
+      "rawTableFragments": 18,
       "cropBackedFragments": 8,
-      "readerRawFragments": 5,
-      "readerCellFallbacks": 4,
+      "readerRawFragments": 9,
+      "readerCellFallbacks": 6,
       "readerFragmentKinds": {
-        "structured-grid": 4,
+        "prose-like": 1,
+        "ambiguous": 2,
+        "structured-grid": 5,
         "short-label": 1
       },
       "readerFragmentSamples": {
+        "prose-like": [
+          {
+            "page": 2,
+            "text": "Linda is 31 years old, single, outspoken, and very bright. She majored in philosophy. As a student, she was deeply concerned with issues of discrimination and social justice, and also participated in anti-nuclear demonstrations."
+          }
+        ],
+        "ambiguous": [
+          {
+            "page": 2,
+            "text": "Q: Which option is the most probable?"
+          },
+          {
+            "page": 2,
+            "text": "- Option 1: Linda is a bank teller."
+          }
+        ],
         "structured-grid": [
+          {
+            "page": 2,
+            "text": "- Option 2: Linda is a bank teller and is ac- Adversarial"
+          },
           {
             "page": 6,
             "text": "0.0 0.0 30 20 10 0 10 20 30 30 20 10 0 10 20 30 Mean reward difference Mean reward difference"
@@ -419,6 +568,22 @@
         ]
       },
       "orphanFragments": [
+        {
+          "page": 2,
+          "text": "Linda is 31 years old, single, outspoken, and very bright. She majored in philosophy. As a student, she was deeply concerned with issues of discrimination and social justice, and a"
+        },
+        {
+          "page": 2,
+          "text": "Q: Which option is the most probable?"
+        },
+        {
+          "page": 2,
+          "text": "- Option 1: Linda is a bank teller."
+        },
+        {
+          "page": 2,
+          "text": "- Option 2: Linda is a bank teller and is ac- Adversarial"
+        },
         {
           "page": 6,
           "text": "0.0 0.0 30 20 10 0 10 20 30 30 20 10 0 10 20 30 Mean reward difference Mean reward difference"
@@ -495,8 +660,8 @@
       "file": "cognitive-psychology-research-on-the-effects-of-different-listening-process-models-in-liste.pdf",
       "tableCaptions": 3,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 4,
-      "cropBackedFragments": 4,
+      "rawTableFragments": 6,
+      "cropBackedFragments": 6,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -519,29 +684,37 @@
       "file": "cognitive-psychology-role-of-educational-psychology-in-the-study-of-memory-conceptual-proce.pdf",
       "tableCaptions": 1,
       "cropReadyCaptions": 1,
-      "rawTableFragments": 3,
+      "rawTableFragments": 4,
       "cropBackedFragments": 1,
-      "readerRawFragments": 2,
-      "readerCellFallbacks": 1,
+      "readerRawFragments": 3,
+      "readerCellFallbacks": 2,
       "readerFragmentKinds": {
-        "short-label": 1,
-        "structured-grid": 1
+        "structured-grid": 2,
+        "short-label": 1
       },
       "readerFragmentSamples": {
+        "structured-grid": [
+          {
+            "page": 4,
+            "text": "e-ISSN: 2583-3154"
+          },
+          {
+            "page": 4,
+            "text": "Cyprus Estonia Greece North England 1:9050 1:690 1:2578 1:5000 55% 14% 37% 66% 0 66 14 44"
+          }
+        ],
         "short-label": [
           {
             "page": 4,
             "text": "Distribution of school psychologist"
           }
-        ],
-        "structured-grid": [
-          {
-            "page": 4,
-            "text": "Cyprus Estonia Greece North England 1:9050 1:690 1:2578 1:5000 55% 14% 37% 66% 0 66 14 44"
-          }
         ]
       },
       "orphanFragments": [
+        {
+          "page": 4,
+          "text": "e-ISSN: 2583-3154"
+        },
         {
           "page": 4,
           "text": "Distribution of school psychologist"
@@ -654,13 +827,13 @@
       "file": "covid-ml-review.pdf",
       "tableCaptions": 10,
       "cropReadyCaptions": 8,
-      "rawTableFragments": 64,
-      "cropBackedFragments": 22,
-      "readerRawFragments": 38,
-      "readerCellFallbacks": 27,
+      "rawTableFragments": 65,
+      "cropBackedFragments": 27,
+      "readerRawFragments": 34,
+      "readerCellFallbacks": 24,
       "readerFragmentKinds": {
-        "short-label": 12,
-        "structured-grid": 21,
+        "short-label": 11,
+        "structured-grid": 18,
         "numeric-grid": 1,
         "ambiguous": 4
       },
@@ -673,10 +846,6 @@
           {
             "page": 2,
             "text": "25-35 0.2 2.78"
-          },
-          {
-            "page": 5,
-            "text": "[16]"
           },
           {
             "page": 5,
@@ -722,15 +891,7 @@
           },
           {
             "page": 5,
-            "text": "(DC): 0.9997; In Wuhan, R2(DC): 0.9996 toll."
-          },
-          {
-            "page": 5,
-            "text": "Forecast value of COVID-19 incidence: at 11 February, 2020: [18] ARIMA model of order (1,0,3)"
-          },
-          {
-            "page": 5,
-            "text": "RMSE (Prediction) for USA: 3963.44, RMSE (Prediction) for Italy: [19] ARIMA model of order (0,1,0) - [16] 1258.69, RMSE (Prediction) for China: 59.65"
+            "text": "RMSE for confirmed cases: 455.92, RMSE for death cases: 117.94, COVID-2019 across the nations. [16] (DC): 0.9991; In Wuhan, R2(DC): 0.9995 RMSE for confirmed cases: 27456.47, RMSE for death cases: Prediction of future reachability [16] 1360"
           },
           {
             "page": 5,
@@ -738,11 +899,11 @@
           },
           {
             "page": 5,
-            "text": "2(Death Case- Turkey): 0.714 Forecasting number of daily con-"
+            "text": "2(Death Case- Spain): 0.958"
           },
           {
             "page": 5,
-            "text": "2(Death Case- Spain): 0.958"
+            "text": "Forecast for 17 days (from 5 March until 21th of March) with 95% Forecast of confirmed cases of [16]"
           },
           {
             "page": 5,
@@ -758,11 +919,19 @@
           },
           {
             "page": 5,
-            "text": "next one-month one-month be- [30]"
+            "text": "): 1.243 (Italy), 0.693 (Spain), 2.822 (USA). yond the data sample end date. ): 1.601 (Italy), 0.884 (Spain), 4.103 (USA). R-Squared: 0.9944 (Italy), 0.9089 (Spain), 0.9806 (USA)."
           },
           {
             "page": 5,
-            "text": "): 1.243 (Italy), 0.693 (Spain), 2.822 (USA). yond the data sample end date. ): 1.601 (Italy), 0.884 (Spain), 4.103 (USA). R-Squared: 0.9944 (Italy), 0.9089 (Spain), 0.9806 (USA)."
+            "text": "ARIMA Model RMSE(×103"
+          },
+          {
+            "page": 6,
+            "text": "tients 5644 samples with 111 attributes. Accuracy: 93.13%, Re-The processed dataset has 1091 re- 5644 call: 93%, Precision: cords and 61 attributes. 93%"
+          },
+          {
+            "page": 7,
+            "text": "[72] time practical applications. Images Multimodalities Combination of ML, DL and data augmentation"
           }
         ],
         "numeric-grid": [
@@ -805,15 +974,7 @@
         },
         {
           "page": 5,
-          "text": "(DC): 0.9997; In Wuhan, R2(DC): 0.9996 toll."
-        },
-        {
-          "page": 5,
-          "text": "Forecast value of COVID-19 incidence: at 11 February, 2020: [18] ARIMA model of order (1,0,3)"
-        },
-        {
-          "page": 5,
-          "text": "RMSE (Prediction) for USA: 3963.44, RMSE (Prediction) for Italy: [19] ARIMA model of order (0,1,0) - [16] 1258.69, RMSE (Prediction) for China: 59.65"
+          "text": "RMSE for confirmed cases: 455.92, RMSE for death cases: 117.94, COVID-2019 across the nations. [16] (DC): 0.9991; In Wuhan, R2(DC): 0.9995 RMSE for confirmed cases: 27456.47, RMSE "
         },
         {
           "page": 5,
@@ -821,15 +982,11 @@
         },
         {
           "page": 5,
-          "text": "2(Death Case- Turkey): 0.714 Forecasting number of daily con-"
-        },
-        {
-          "page": 5,
           "text": "2(Death Case- Spain): 0.958"
         },
         {
           "page": 5,
-          "text": "[16]"
+          "text": "Forecast for 17 days (from 5 March until 21th of March) with 95% Forecast of confirmed cases of [16]"
         },
         {
           "page": 5,
@@ -850,10 +1007,6 @@
         {
           "page": 5,
           "text": "MAE(×103"
-        },
-        {
-          "page": 5,
-          "text": "next one-month one-month be- [30]"
         },
         {
           "page": 5,
@@ -900,6 +1053,10 @@
           "text": "Feasible only for limited datasets. [73]"
         },
         {
+          "page": 9,
+          "text": "6. COMPARATIVE ANALYSIS OF DL"
+        },
+        {
           "page": 10,
           "text": "[38] [105, 106]"
         },
@@ -922,10 +1079,6 @@
         {
           "page": 11,
           "text": "- 97.4% - 90% 86% Training: 82.60% Training: 93.38%, Validation: 89.21% Validation: 78.92% Training: 98.28% Training: 96.56% Validation: 94.12% Validation: 90.20% 99.20% 99.30% 98."
-        },
-        {
-          "page": 11,
-          "text": "From the above discussion, it can be seen that the highest accuracy was obtained by DenseNet169 being 99.80% followed by Inception ResNet v2 being 99.65%. In order to Accuracy Reca"
         },
         {
           "page": 12,
@@ -973,7 +1126,7 @@
       "file": "detecting-statistical-interactions.pdf",
       "tableCaptions": 6,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 18,
+      "rawTableFragments": 19,
       "cropBackedFragments": 12,
       "readerRawFragments": 5,
       "readerCellFallbacks": 4,
@@ -1187,14 +1340,15 @@
       "file": "education-learning-analytics.pdf",
       "tableCaptions": 11,
       "cropReadyCaptions": 11,
-      "rawTableFragments": 95,
-      "cropBackedFragments": 56,
+      "rawTableFragments": 88,
+      "cropBackedFragments": 49,
       "readerRawFragments": 39,
-      "readerCellFallbacks": 23,
+      "readerCellFallbacks": 30,
       "readerFragmentKinds": {
-        "structured-grid": 20,
-        "short-label": 17,
-        "ambiguous": 2
+        "structured-grid": 24,
+        "short-label": 9,
+        "prose-like": 2,
+        "ambiguous": 4
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -1216,6 +1370,10 @@
           },
           {
             "page": 16,
+            "text": "8."
+          },
+          {
+            "page": 16,
             "text": "Competition where data miners can try to predict an important longitudinal outcome using realworld educational data."
           },
           {
@@ -1228,23 +1386,19 @@
           },
           {
             "page": 16,
+            "text": "LearnSphere's DataShop provides a central repository to secure and store research ITS data and set of analysis and reporting tools."
+          },
+          {
+            "page": 16,
             "text": "Process Mining ets/Educational+Process+Mining+(EP"
           },
           {
             "page": 16,
-            "text": "KDD Cup 2010 https://pslcdatashop.web.cmu.edu/"
+            "text": "De-identified data from the first year of MITx and HarvardX MOOC courses on the edX platform along with related documentation."
           },
           {
             "page": 16,
-            "text": "Dataset KDDCup/"
-          },
-          {
-            "page": 17,
-            "text": "MOOC-Ed https://dataverse.harvard.edu/datas et.xhtml?persistentId=doi:10.7910/D"
-          },
-          {
-            "page": 18,
-            "text": "Method Goal/description Key applications"
+            "text": "KDD Cup 2010 https://pslcdatashop.web.cmu.edu/ Challenge to predict student performance on mathematical Dataset KDDCup/"
           }
         ],
         "short-label": [
@@ -1270,6 +1424,10 @@
           },
           {
             "page": 17,
+            "text": "2016” course from learn.moodle.net."
+          },
+          {
+            "page": 17,
             "text": "Dataset"
           },
           {
@@ -1279,25 +1437,27 @@
           {
             "page": 18,
             "text": "Discovery with models"
+          }
+        ],
+        "prose-like": [
+          {
+            "page": 18,
+            "text": "Grouping similar materials or students based on their learning and interaction patterns."
           },
           {
-            "page": 19,
-            "text": "Social network analysis"
-          },
-          {
-            "page": 21,
-            "text": "Discovery causal"
-          },
-          {
-            "page": 21,
-            "text": "(de Carvalho et al.,"
-          },
-          {
-            "page": 21,
-            "text": "Early Warning"
+            "page": 18,
+            "text": "Helping instructors to visualize and analyze the ongoing activities of the students and the use of information."
           }
         ],
         "ambiguous": [
+          {
+            "page": 18,
+            "text": "To identify groups of similar Clustering observations."
+          },
+          {
+            "page": 18,
+            "text": "To employ a previously validated model of a phenomenon as a component in another analysis."
+          },
           {
             "page": 19,
             "text": "To obtain knowledge of the process from"
@@ -1327,6 +1487,10 @@
         },
         {
           "page": 16,
+          "text": "8."
+        },
+        {
+          "page": 16,
           "text": "Descripction"
         },
         {
@@ -1340,6 +1504,10 @@
         {
           "page": 16,
           "text": "Network open courses (running"
+        },
+        {
+          "page": 16,
+          "text": "LearnSphere's DataShop provides a central repository to secure and store research ITS data and set of analysis and reporting tools."
         },
         {
           "page": 16,
@@ -1359,19 +1527,27 @@
         },
         {
           "page": 16,
+          "text": "De-identified data from the first year of MITx and HarvardX MOOC courses on the edX platform along with related documentation."
+        },
+        {
+          "page": 16,
           "text": "VN/26147"
         },
         {
           "page": 16,
-          "text": "KDD Cup 2010 https://pslcdatashop.web.cmu.edu/"
+          "text": "KDD Cup 2010 https://pslcdatashop.web.cmu.edu/ Challenge to predict student performance on mathematical Dataset KDDCup/"
         },
         {
-          "page": 16,
-          "text": "Dataset KDDCup/"
+          "page": 17,
+          "text": "2016” course from learn.moodle.net."
         },
         {
           "page": 17,
           "text": "MOOC-Ed https://dataverse.harvard.edu/datas et.xhtml?persistentId=doi:10.7910/D"
+        },
+        {
+          "page": 17,
+          "text": "Communications taking place between learners in two offerings of the Massively Open Online Course for Educators (MOOC-Eds)."
         },
         {
           "page": 17,
@@ -1387,11 +1563,47 @@
         },
         {
           "page": 18,
+          "text": "Finding what features of students’ behavior cause learning, academic failure, drop out, etc."
+        },
+        {
+          "page": 18,
+          "text": "To find causal relationship or to identify Causal Mining causal effect in data."
+        },
+        {
+          "page": 18,
+          "text": "Grouping similar materials or students based on their learning and interaction patterns."
+        },
+        {
+          "page": 18,
+          "text": "To identify groups of similar Clustering observations."
+        },
+        {
+          "page": 18,
+          "text": "Identification of relationships among student behaviours and characteristics or contextual variables. Integration of psychometric modelling frameworks into machine-learning models."
+        },
+        {
+          "page": 18,
+          "text": "To employ a previously validated model of a phenomenon as a component in another analysis."
+        },
+        {
+          "page": 18,
           "text": "Discovery with models"
         },
         {
-          "page": 19,
-          "text": "Method Goal/description Key applications"
+          "page": 18,
+          "text": "Distillation of data To represent data in intelligible ways for human using summarization, visualization and judgment interactive interfaces."
+        },
+        {
+          "page": 18,
+          "text": "Helping instructors to visualize and analyze the ongoing activities of the students and the use of information."
+        },
+        {
+          "page": 18,
+          "text": "To estimate student mastery of skills, employing both a cognitive model that maps a problem-solving item to the skills Monitoring student knowledge over time."
+        },
+        {
+          "page": 18,
+          "text": "Knowledge tracing required, and logs of students’ correct and incorrect answers as evidence of their knowledge on a particular skill."
         },
         {
           "page": 19,
@@ -1406,60 +1618,8 @@
           "text": "To predict the rating or preference a user"
         },
         {
-          "page": 19,
-          "text": "Social network analysis"
-        },
-        {
-          "page": 19,
-          "text": "To extract high-quality information from"
-        },
-        {
           "page": 21,
-          "text": "Discovery causal"
-        },
-        {
-          "page": 21,
-          "text": "(de Carvalho et al.,"
-        },
-        {
-          "page": 21,
-          "text": "relationships 2019)"
-        },
-        {
-          "page": 21,
-          "text": "Early Warning"
-        },
-        {
-          "page": 21,
-          "text": "Systems"
-        },
-        {
-          "page": 21,
-          "text": "interventions"
-        },
-        {
-          "page": 21,
-          "text": "Methods"
-        },
-        {
-          "page": 21,
-          "text": "Interpretable and To develop “white box” interpretable, explanatory, (Rose et al. 2019)"
-        },
-        {
-          "page": 21,
-          "text": "explanatory"
-        },
-        {
-          "page": 21,
-          "text": "learner models"
-        },
-        {
-          "page": 21,
-          "text": "Learning foreign"
-        },
-        {
-          "page": 21,
-          "text": "(Bravo - Agapito et language al. 2019) Measuring Self- To apply EDM/LA techniques to measure self-regulated (ElSayed et al.,"
+          "text": "To apply EDM/LA techniques to measure self-regulated"
         },
         {
           "page": 22,
@@ -1595,22 +1755,30 @@
       "file": "ergonomics-analysis-of-burnout-and-occupational-safety-in-nurses-a-literature-rev.pdf",
       "tableCaptions": 2,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 15,
-      "cropBackedFragments": 12,
-      "readerRawFragments": 2,
-      "readerCellFallbacks": 1,
+      "rawTableFragments": 13,
+      "cropBackedFragments": 8,
+      "readerRawFragments": 4,
+      "readerCellFallbacks": 2,
       "readerFragmentKinds": {
-        "short-label": 1,
-        "structured-grid": 1
+        "short-label": 2,
+        "structured-grid": 2
       },
       "readerFragmentSamples": {
         "short-label": [
           {
             "page": 2,
             "text": "shortages"
+          },
+          {
+            "page": 2,
+            "text": "compared to low burnout."
           }
         ],
         "structured-grid": [
+          {
+            "page": 2,
+            "text": "(2020) Perception and Nurse perceived unfair treatment were Burnout more prone to emotional"
+          },
           {
             "page": 2,
             "text": "10 Yuliani et al. Mindfulness Program Pretest-posttest The study showed that the"
@@ -1628,32 +1796,36 @@
         },
         {
           "page": 2,
+          "text": "compared to low burnout."
+        },
+        {
+          "page": 2,
+          "text": "(2020) Perception and Nurse perceived unfair treatment were Burnout more prone to emotional"
+        },
+        {
+          "page": 2,
           "text": "10 Yuliani et al. Mindfulness Program Pretest-posttest The study showed that the"
         }
       ]
     },
     {
       "file": "ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport.pdf",
-      "tableCaptions": 37,
-      "cropReadyCaptions": 29,
-      "rawTableFragments": 113,
-      "cropBackedFragments": 60,
-      "readerRawFragments": 41,
-      "readerCellFallbacks": 36,
+      "tableCaptions": 41,
+      "cropReadyCaptions": 33,
+      "rawTableFragments": 126,
+      "cropBackedFragments": 71,
+      "readerRawFragments": 43,
+      "readerCellFallbacks": 37,
       "readerFragmentKinds": {
-        "structured-grid": 35,
+        "structured-grid": 36,
         "short-label": 2,
-        "ambiguous": 4
+        "ambiguous": 5
       },
       "readerFragmentSamples": {
         "structured-grid": [
           {
             "page": 25,
             "text": "Measure of use a,b Light commercial vehicles (≤3.5t GMV) Rigid trucks (>3.5t GVM) Articulated trucks"
-          },
-          {
-            "page": 44,
-            "text": "holders b population c registered light trucks d 2000 2011 % change 2000 2011 % change 2000 2011 % change 2000 2011 % change"
           },
           {
             "page": 81,
@@ -1693,7 +1865,11 @@
           },
           {
             "page": 134,
-            "text": "1-4 vehicles % 99.2 98.0 Χ 2 tav Payment type N d 267 1002 Flat hourly rate % 58.1 5.5 Χ 2 (5) =524.2 p<.001 Flat day rate % 3.0 3.1 Flat weekly rate % 14.2 4.9 Flat item/delivery/load rate % 6.4 12.9 Kilometre or tonnage rate % 7.1 65.6"
+            "text": "Own (if owner) N d 149 686 1-4 vehicles % 99.2 98.0 Χ 2 tav Payment type N d 267 1002 Flat hourly rate % 58.1 5.5 Χ 2 (5) =524.2 p<.001 Flat day rate % 3.0 3.1 Flat weekly rate % 14.2 4.9 Flat item/delivery/load rate % 6.4 12.9 Kilometre or"
+          },
+          {
+            "page": 134,
+            "text": "Other (inc multiple types) % 11.2 8.1 a Χ2 = Chi square test, tav = test assumptions violated by small n; ns = not significant (p>0.05)"
           }
         ],
         "short-label": [
@@ -1714,6 +1890,10 @@
           {
             "page": 242,
             "text": "Smallgoods wholesale Meat wholesale Store supplies (Food &/or general Grocers wholesale Soft drink manufacturers Fruit juice merchants Water cartage Drinking water supplies Water coolers Spring water supplies Building supplies Steel Merchan"
+          },
+          {
+            "page": 253,
+            "text": "I do NOT work morning or day shifts"
           },
           {
             "page": 253,
@@ -1776,7 +1956,7 @@
         },
         {
           "page": 134,
-          "text": "1-4 vehicles % 99.2 98.0 Χ 2 tav Payment type N d 267 1002 Flat hourly rate % 58.1 5.5 Χ 2 (5) =524.2 p<.001 Flat day rate % 3.0 3.1 Flat weekly rate % 14.2 4.9 Flat item/delivery/"
+          "text": "Own (if owner) N d 149 686 1-4 vehicles % 99.2 98.0 Χ 2 tav Payment type N d 267 1002 Flat hourly rate % 58.1 5.5 Χ 2 (5) =524.2 p<.001 Flat day rate % 3.0 3.1 Flat weekly rate % 1"
         },
         {
           "page": 134,
@@ -1793,6 +1973,14 @@
         {
           "page": 143,
           "text": "21.1 35.4 11.65, p=.001"
+        },
+        {
+          "page": 175,
+          "text": "Nd=61 Nd=21 Nd=40 Nd=30 Nd=31 Nd=27 Nd=34"
+        },
+        {
+          "page": 175,
+          "text": "% % % % % % %"
         },
         {
           "page": 222,
@@ -1845,6 +2033,10 @@
         {
           "page": 253,
           "text": "FINISH work? _________ am pm"
+        },
+        {
+          "page": 253,
+          "text": "I do NOT work morning or day shifts"
         },
         {
           "page": 253,
@@ -1934,38 +2126,18 @@
       "file": "ergonomics-human-factors-ihci.pdf",
       "tableCaptions": 1,
       "cropReadyCaptions": 0,
-      "rawTableFragments": 17,
+      "rawTableFragments": 11,
       "cropBackedFragments": 0,
-      "readerRawFragments": 16,
-      "readerCellFallbacks": 16,
+      "readerRawFragments": 11,
+      "readerCellFallbacks": 11,
       "readerFragmentKinds": {
-        "structured-grid": 16
+        "structured-grid": 11
       },
       "readerFragmentSamples": {
         "structured-grid": [
           {
             "page": 2,
             "text": "基于人工智能(AI)技术的各类智能系统正在改变传统人机交互(human-computer interaction，HCI) 领域的人机关系模式和研究范式(许为，2005)。智能系统中的智能体（intelligent agent，或称为智能代 理）在特定操作场景中具备情境感知、用户意图识别、自主学习、自主决策、自主执行等能力，由此带来 了一个新的研究领域：智能人机交互（intelligent HCI, 以下简称 iHCI），同时也给人因工程（human factors engi"
-          },
-          {
-            "page": 3,
-            "text": "能系统不拥有智能自主化等 类的认知特征"
-          },
-          {
-            "page": 3,
-            "text": "从“简单属性”到 机器输入的感知目标主要是人、 “情境化”交互 机、物等简单属性，例如"
-          },
-          {
-            "page": 3,
-            "text": "标位置、颜色、移动轨迹等"
-          },
-          {
-            "page": 3,
-            "text": "意图等状态，但是限制 的应用"
-          },
-          {
-            "page": 3,
-            "text": "智能体还可以替换用户的认知工作负荷，其中包括主动 地接管或被委派认知作业（知觉、推理、决策等)"
           },
           {
             "page": 5,
@@ -1990,6 +2162,22 @@
           {
             "page": 12,
             "text": "iHCI 中的人机双向交互需要机器智能体能够感知用户意图、操作环境和上下文，并对用户意图做出自 适应的交互操作。基于用户意图识别的设计策略体现了“以用户为中心”的理念，可以降低人机冲突概率, 也是实现 iHCI 中模糊和自然人机交互的关键。 用户生理、认知、情感等状态识别和计算建模为面向用户的意图识别提供了基础。用户意图识别可以通 过多模态信息实现，其中包括用户生理计算（运动、视觉、听觉、脑电等），用户运动意图（表面肌电信 号、脑电信号、眼电信号等），用户肢体动作（手指、手部"
+          },
+          {
+            "page": 13,
+            "text": "首先，目前的许多研究主要针对用户意图的识别技术,但是理论层面上有许多问题迫切需要解决，需要 结合用户需求，开展人因工程研究，引导技术的发展方向。例如，用户不同通道（如动作、生理、语言 等）所产生的意图需要不同的技术，从理论上如何把各类意图进行系统化地表征、建模和解释，找到多通 道用户意图之间的可解释性、互补性等特征，这是人因工程的一个重要课题。另外，如何建立理解用户意 图表达的认知模型和计算框架，如何有效地使用知识图谱（言语表征等)等方法来表征和理解用户交互意图 (Amine"
+          },
+          {
+            "page": 13,
+            "text": "够从用户模糊输入信号中推测出用户的真实交互意图(Aminer,2020)。 第四，随着情感计算理论研究和技术的突破，iHCI 将向着多模态情感识别、情感意图理解、智能体多 模态情感表达以及人机情感交互系统的方面深化，最终使智能系统具有主动情感认知能力(韩晶等，2015； 黄宏程等，2019)。因此，加速对用户情感状态测量和建模的研究将有助于进一步开发针对用户意图识别和 预测的解决方案(Wendemuth et al., 2018)。 最后，利用多模态信息的有效融合和人机交互技"
+          },
+          {
+            "page": 13,
+            "text": "如前所述，不同于传统人机交互，iHCI 可以被视为两个认知体之间的协同合作，在一定的操作和任务 环境中，人与智能体之间是基于一种团队队友之间的合作来实现两者之间的“交互”，这种交互是由两者 之间双向主动的、分享的、互补的、可替换的、自适应的、目标驱动的以及可预测等人因工程特征所决定 的。随着机器智能自主化程度的提高，这些特征表现更加明显（许为, 葛列众, 2020）。 针对人机协同合作的研究刚刚起步，许多研究从多学科角度出发，初步提出了一些解决方案。例如，人 -AI 合作研究"
+          },
+          {
+            "page": 14,
+            "text": "中智能体是否真正可以成为与人类协同合作的队友（同伴、受指导者或团队领导），还是仅仅作为一个智 能超级工具（Shneiderman，2020；Klien & Woods, et al., 2004）。今后工作应该侧重于研究人类与智 能体如何交互、协商以及作为队友进行协作合作；研究如何在 iHCI 设计中界定各自的角色和责任以及协作 的规则；研究人机协作合作的层次结构以及各层次之间的关系（例如，协调/coordination, 协作共事 /cooperation, 合作/coll"
           }
         ]
       },
@@ -1999,32 +2187,8 @@
           "text": "基于人工智能(AI)技术的各类智能系统正在改变传统人机交互(human-computer interaction，HCI) 领域的人机关系模式和研究范式(许为，2005)。智能系统中的智能体（intelligent agent，或称为智能代 理）在特定操作场景中具备情境感知、用户意图识别、自主学习、自主决策、自主执行等能力，由此带来 了一个新的研究领域：智能"
         },
         {
-          "page": 3,
-          "text": "能系统不拥有智能自主化等 类的认知特征"
-        },
-        {
-          "page": 3,
-          "text": "从“简单属性”到 机器输入的感知目标主要是人、 “情境化”交互 机、物等简单属性，例如"
-        },
-        {
-          "page": 3,
-          "text": "标位置、颜色、移动轨迹等"
-        },
-        {
-          "page": 3,
-          "text": "意图等状态，但是限制 的应用"
-        },
-        {
-          "page": 3,
-          "text": "智能体还可以替换用户的认知工作负荷，其中包括主动 地接管或被委派认知作业（知觉、推理、决策等)"
-        },
-        {
           "page": 5,
           "text": "杂场景中的智能人机交互任务，也没有考虑 iHCI 中人与智能系统之间的协同合作新型人机关系，并且机器 仅仅是作为一个工具来考虑（许为, 葛列众，2020）。刘烨等人（2018）后来提出的人机合作心理模型已 经开始考虑到人与智能系统之间潜在的人机协同合作。 如上一篇系列文章所讨论（“五论以用户为中心的设计：从自动化到智能时代的自主化以及自动驾驶 车”）（许为，"
-        },
-        {
-          "page": 7,
-          "text": "人类智能与机 作为一个协同认知系统，iHCI 系统的绩效不 开展 iHCI 中人机混合增强智能的研究和应 器智能的互补 仅仅取决于系统单个部分的绩效，而且是取 用，为人机混合增强智能开发有效的认知计 性 决于人机协同合作、人类智能与机器智能之 算体系架构；开发基于认知计算方法与“人"
         },
         {
           "page": 9,
@@ -2212,9 +2376,9 @@
     {
       "file": "hci-development-of-user-interface-user-experience-using-design-thinking-ap.pdf",
       "tableCaptions": 3,
-      "cropReadyCaptions": 2,
-      "rawTableFragments": 10,
-      "cropBackedFragments": 10,
+      "cropReadyCaptions": 3,
+      "rawTableFragments": 11,
+      "cropBackedFragments": 11,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -2237,60 +2401,33 @@
       "file": "hci-human-computer-interaction-as-science.pdf",
       "tableCaptions": 0,
       "cropReadyCaptions": 0,
-      "rawTableFragments": 6,
+      "rawTableFragments": 2,
       "cropBackedFragments": 0,
-      "readerRawFragments": 4,
-      "readerCellFallbacks": 3,
+      "readerRawFragments": 2,
+      "readerCellFallbacks": 2,
       "readerFragmentKinds": {
-        "short-label": 2,
         "structured-grid": 2
       },
       "readerFragmentSamples": {
-        "short-label": [
-          {
-            "page": 1,
-            "text": "of science’"
-          },
-          {
-            "page": 11,
-            "text": "-"
-          }
-        ],
         "structured-grid": [
           {
             "page": 1,
-            "text": "construct ing a disciplinary order for the increasingly fide examples (such as those of the natural sciences or diverse and overlapping research communities disciplines with ‘science’ in their title). In this analysis HCI contribute in some"
+            "text": "of science’ poor scientific discipline when measured against other bone constructing a disciplinary order for the increasingly fide examples (such as those of the natural sciences or diverse and overlapping research communities disciplines "
           },
           {
-            "page": 11,
-            "text": "REFERENCES 17. Fallman, D. 2003. Design-oriented human-computer interaction. In Proc. CHI ‘03. ACM, New York, NY,"
+            "page": 1,
+            "text": "is found devoid of central motor themes that are taken as a"
           }
         ]
       },
       "orphanFragments": [
         {
           "page": 1,
-          "text": "of science’"
+          "text": "of science’ poor scientific discipline when measured against other bone constructing a disciplinary order for the increasingly fide examples (such as those of the natural sciences "
         },
         {
           "page": 1,
-          "text": "constructing a disciplinary order for the increasingly"
-        },
-        {
-          "page": 1,
-          "text": "diverse and overlapping research communities"
-        },
-        {
-          "page": 1,
-          "text": "contribute in some way to what"
-        },
-        {
-          "page": 11,
-          "text": "REFERENCES 17. Fallman, D. 2003. Design-oriented human-computer interaction. In Proc. CHI ‘03. ACM, New York, NY,"
-        },
-        {
-          "page": 11,
-          "text": "-"
+          "text": "is found devoid of central motor themes that are taken as a"
         }
       ]
     },
@@ -2309,13 +2446,13 @@
     {
       "file": "hci-intelligent-human-computer-interaction.pdf",
       "tableCaptions": 44,
-      "cropReadyCaptions": 22,
-      "rawTableFragments": 75,
-      "cropBackedFragments": 47,
-      "readerRawFragments": 18,
-      "readerCellFallbacks": 16,
+      "cropReadyCaptions": 27,
+      "rawTableFragments": 87,
+      "cropBackedFragments": 58,
+      "readerRawFragments": 17,
+      "readerCellFallbacks": 15,
       "readerFragmentKinds": {
-        "structured-grid": 16,
+        "structured-grid": 15,
         "short-label": 2
       },
       "readerFragmentSamples": {
@@ -2341,10 +2478,6 @@
             "text": "1Connectivity 1.392(3.45) 1.062(2.25) 0.169(0.24) 0.014(0.02) 3Temporality 0.443(0.55) 1.039(0.88) −0.05(1.30) 0.787(0.90) 3Noun overlap, 0.555(0.14) 0.509(0.33) 0.535(0.18) 0.557(0.24)"
           },
           {
-            "page": 141,
-            "text": "0.110(0.03) 0.083(0.02) 0.086(0.02) 0.079(0.03) 318.3(17.5) 354.0(20.9) 377.0(22.0) 366.7(30.7) 3Verb PD incidence 258.4(18.9) 249.6(20.3) 194.2(25.0) 204.7(46.8) 3Adverbial PD 52.71(19.3) 41.99(15.4) 28.08(11.9) 19.79(13.4) 3Preposition PD"
-          },
-          {
             "page": 144,
             "text": "10.5(4.03) 0.001 11.7(5.37) 0.00 197.8(86.4) 0.00 0.203(0.19) 0.041"
           },
@@ -2357,8 +2490,8 @@
             "text": "P (emo |emo )P (emo ) all−emo l m n p n"
           },
           {
-            "page": 194,
-            "text": "Standard Co-training in Multiword Expression Detection 183 f wð 1w2Þ 1"
+            "page": 183,
+            "text": "Experienced emotion Probabilities Sad .486 Troubled .19 Angry .322"
           },
           {
             "page": 194,
@@ -2367,6 +2500,10 @@
           {
             "page": 194,
             "text": "f wð 2Þ"
+          },
+          {
+            "page": 226,
+            "text": "Barnwal, Santosh Kumar 122 Bazzano, Federica 32, 60 Bellik, Yacine 8 Bhattacharya, Paritosh 109 Böck, Ronald 189"
           }
         ],
         "short-label": [
@@ -2414,10 +2551,6 @@
           "text": "1Connectivity 1.392(3.45) 1.062(2.25) 0.169(0.24) 0.014(0.02) 3Temporality 0.443(0.55) 1.039(0.88) −0.05(1.30) 0.787(0.90) 3Noun overlap, 0.555(0.14) 0.509(0.33) 0.535(0.18) 0.557("
         },
         {
-          "page": 141,
-          "text": "0.110(0.03) 0.083(0.02) 0.086(0.02) 0.079(0.03) 318.3(17.5) 354.0(20.9) 377.0(22.0) 366.7(30.7) 3Verb PD incidence 258.4(18.9) 249.6(20.3) 194.2(25.0) 204.7(46.8) 3Adverbial PD 52."
-        },
-        {
           "page": 144,
           "text": "10.5(4.03) 0.001 11.7(5.37) 0.00 197.8(86.4) 0.00 0.203(0.19) 0.041"
         },
@@ -2434,8 +2567,8 @@
           "text": "a"
         },
         {
-          "page": 194,
-          "text": "Standard Co-training in Multiword Expression Detection 183 f wð 1w2Þ 1"
+          "page": 183,
+          "text": "Experienced emotion Probabilities Sad .486 Troubled .19 Angry .322"
         },
         {
           "page": 194,
@@ -2524,9 +2657,9 @@
     {
       "file": "hci-user-experience-analysis-on-mobile-application-design-using-user-exper.pdf",
       "tableCaptions": 4,
-      "cropReadyCaptions": 3,
-      "rawTableFragments": 9,
-      "cropBackedFragments": 5,
+      "cropReadyCaptions": 4,
+      "rawTableFragments": 11,
+      "cropBackedFragments": 7,
       "readerRawFragments": 4,
       "readerCellFallbacks": 4,
       "readerFragmentKinds": {
@@ -2552,7 +2685,24 @@
           }
         ]
       },
-      "orphanFragments": []
+      "orphanFragments": [
+        {
+          "page": 7,
+          "text": "4. Result and discussion"
+        },
+        {
+          "page": 7,
+          "text": "4.1. The Cronbach's Alpha"
+        },
+        {
+          "page": 7,
+          "text": "Above average"
+        },
+        {
+          "page": 7,
+          "text": "Below average"
+        }
+      ]
     },
     {
       "file": "hci-user-experience-design-using-machine-learning-a-systematic-review.pdf",
@@ -2916,14 +3066,13 @@
       "file": "hfe-healthcare-scoping-2024.pdf",
       "tableCaptions": 3,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 39,
-      "cropBackedFragments": 14,
-      "readerRawFragments": 25,
-      "readerCellFallbacks": 13,
+      "rawTableFragments": 46,
+      "cropBackedFragments": 16,
+      "readerRawFragments": 30,
+      "readerCellFallbacks": 18,
       "readerFragmentKinds": {
-        "short-label": 12,
-        "ambiguous": 1,
-        "structured-grid": 12
+        "short-label": 13,
+        "structured-grid": 17
       },
       "readerFragmentSamples": {
         "short-label": [
@@ -2938,6 +3087,10 @@
           {
             "page": 1,
             "text": "WHAT THIS STUDY ADDS"
+          },
+          {
+            "page": 1,
+            "text": "material is published online only."
           },
           {
             "page": 6,
@@ -2970,22 +3123,28 @@
           {
             "page": 8,
             "text": ")"
-          },
-          {
-            "page": 9,
-            "text": "))"
-          }
-        ],
-        "ambiguous": [
-          {
-            "page": 1,
-            "text": "WHAT IS ALREADY KNOWN ON THIS TOPIC"
           }
         ],
         "structured-grid": [
           {
             "page": 1,
-            "text": "► Additional supplemental"
+            "text": "WHAT IS ALREADY KNOWN ON THIS TOPIC Sharafkhani M, Codd M, et al. Background There is a need for guidance to support"
+          },
+          {
+            "page": 1,
+            "text": "Principles for the conduct of human factors/ergonomics (HFE) practitioners to human factors/ergonomics conceive and design HFE interventions that live in healthcare: a scoping"
+          },
+          {
+            "page": 1,
+            "text": "⇒ While the WHO has advocated for the adoption of human factors/ergonomics (HFE) in healthcare, there is still confusion in the healthcare system as to what constitutes a HFE intervention and what a high-quality HFE intervention involves."
+          },
+          {
+            "page": 1,
+            "text": "up to the fundamental principles underpinning the study of the published evidence. BMJ Open Quality discipline of HFE. The principles are that HFE has a 2025;14:e003222. doi:10.1136/ systems focus, is design driven and focuses on both bmjoq"
+          },
+          {
+            "page": 1,
+            "text": "► Additional supplemental are to: identify studies that meet these principles in"
           },
           {
             "page": 5,
@@ -3014,22 +3173,6 @@
           {
             "page": 8,
             "text": "The intervention is Organisational outcomes:prescribing and change.prescription rates. Organisational outcomes:in each unit. Organisational outcomes:identification incidents.miss (or good catches) perinterruptions.outcomes measured evaluate"
-          },
-          {
-            "page": 8,
-            "text": "an active element intervention approachprescribing and patientpotential adverse identification adverse (principle 3) ( radiology. reporting."
-          },
-          {
-            "page": 8,
-            "text": "phase is undertaken to designIn the preimplementation phase:description of needs assessment A context- ► ► ► assessment or systems analysisthe intervention (principle 2) In the preimplementation phase: ("
-          },
-          {
-            "page": 9,
-            "text": "Pre–post analysis of outcomes 11 An interrupted time series design using 1 historical data and postintervention assessment Work system elements targeted in intervention People 10 Tools 10"
-          },
-          {
-            "page": 9,
-            "text": "Organisation 8 Technology 8 Task 7 Process 6 Environment 5 Outcomes measured Organisation level outcomes 12 Patient level outcomes 7 Intervention maintenance measures 3 Balancing measures 1"
           }
         ]
       },
@@ -3044,7 +3187,19 @@
         },
         {
           "page": 1,
-          "text": "WHAT IS ALREADY KNOWN ON THIS TOPIC"
+          "text": "WHAT IS ALREADY KNOWN ON THIS TOPIC Sharafkhani M, Codd M, et al. Background There is a need for guidance to support"
+        },
+        {
+          "page": 1,
+          "text": "Principles for the conduct of human factors/ergonomics (HFE) practitioners to human factors/ergonomics conceive and design HFE interventions that live in healthcare: a scoping"
+        },
+        {
+          "page": 1,
+          "text": "⇒ While the WHO has advocated for the adoption of human factors/ergonomics (HFE) in healthcare, there is still confusion in the healthcare system as to what constitutes a HFE inter"
+        },
+        {
+          "page": 1,
+          "text": "up to the fundamental principles underpinning the study of the published evidence. BMJ Open Quality discipline of HFE. The principles are that HFE has a 2025;14:e003222. doi:10.113"
         },
         {
           "page": 1,
@@ -3052,7 +3207,11 @@
         },
         {
           "page": 1,
-          "text": "► Additional supplemental"
+          "text": "► Additional supplemental are to: identify studies that meet these principles in"
+        },
+        {
+          "page": 1,
+          "text": "material is published online only."
         },
         {
           "page": 5,
@@ -3128,6 +3287,10 @@
         },
         {
           "page": 9,
+          "text": "Patient safety researchers 1 Study design"
+        },
+        {
+          "page": 9,
           "text": "Pre–post analysis of outcomes 11 An interrupted time series design using 1 historical data and postintervention assessment Work system elements targeted in intervention People 10 T"
         },
         {
@@ -3140,8 +3303,8 @@
       "file": "how-content-volume-landing-pages.pdf",
       "tableCaptions": 5,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 8,
-      "cropBackedFragments": 3,
+      "rawTableFragments": 13,
+      "cropBackedFragments": 6,
       "readerRawFragments": 5,
       "readerCellFallbacks": 5,
       "readerFragmentKinds": {
@@ -3198,16 +3361,20 @@
       "file": "human-ai-interaction-guidelines.pdf",
       "tableCaptions": 1,
       "cropReadyCaptions": 1,
-      "rawTableFragments": 116,
-      "cropBackedFragments": 1,
-      "readerRawFragments": 28,
-      "readerCellFallbacks": 27,
+      "rawTableFragments": 21,
+      "cropBackedFragments": 2,
+      "readerRawFragments": 7,
+      "readerCellFallbacks": 6,
       "readerFragmentKinds": {
-        "structured-grid": 27,
+        "structured-grid": 6,
         "short-label": 1
       },
       "readerFragmentSamples": {
         "structured-grid": [
+          {
+            "page": 3,
+            "text": "HAI Beware of confirmation bias during data collection"
+          },
           {
             "page": 6,
             "text": "Fairness Google Consider bias in the data collection and evaluation process Fairness Google Assess inclusivity Fairness Google Use data that applies to different groups of users Fairness Google Commit to fairness Fairness Microsoft Match re"
@@ -3218,43 +3385,15 @@
           },
           {
             "page": 7,
-            "text": "Company Guideline"
+            "text": "Company Guideline Interface Explainability Google Explain the benefit, not the technology Interface Explainability Google Use simple, direct language to describe each explicit feedback option and its consequences Interface Explainability Go"
           },
           {
             "page": 7,
-            "text": "Interface Explainability Google"
+            "text": "Interface Apple Interface Apple List the most likely option first. Interface Apple In situations where attributions aren’t helpful, consider ranking or ordering the results in a way that implies confidence levels Interface Apple Consider of"
           },
           {
-            "page": 7,
-            "text": "Interface Explainability Google"
-          },
-          {
-            "page": 7,
-            "text": "Interface Explainability Google Optimize for understanding Interface Explainability Google Interface Explainability Google"
-          },
-          {
-            "page": 7,
-            "text": "Interface Explainability Google Explanation via interaction Interface Explainability Google Example-based explanations Interface Explainability Google Explain what’s important Interface Explainability Google Tie explanations to user actions"
-          },
-          {
-            "page": 7,
-            "text": "Interface Explainability Apple"
-          },
-          {
-            "page": 7,
-            "text": "Interface Explainability Microsoft Show contextually relevant information Interface Confidence Google Model confidence displays Interface Confidence Google"
-          },
-          {
-            "page": 7,
-            "text": "Interface Confidence Google Categorical Interface Confidence Google N-best alternatives Interface Confidence Google Numeric Interface Confidence Google"
-          },
-          {
-            "page": 7,
-            "text": "Interface Confidence Apple Interface Confidence Apple Consider changing how you present results based on different confidence thresholds Interface Confidence Apple In general, translate confidence values into concepts that people already un"
-          },
-          {
-            "page": 7,
-            "text": "Interface Google Introduce and set expectations for AI Interface Google Set expectations for AI improvements Interface Google"
+            "page": 8,
+            "text": "Company Guideline Deployment Google Account for negative impact Deployment Google Auto-detect and display errors Deployment Google Disambiguate systems hierarchy errors Deployment Google Diagnose errors that users don’t perceive Deployment "
           }
         ],
         "short-label": [
@@ -3265,6 +3404,10 @@
         ]
       },
       "orphanFragments": [
+        {
+          "page": 3,
+          "text": "HAI Beware of confirmation bias during data collection"
+        },
         {
           "page": 6,
           "text": "Company"
@@ -3327,403 +3470,15 @@
         },
         {
           "page": 7,
-          "text": "Company Guideline"
+          "text": "Company Guideline Interface Explainability Google Explain the benefit, not the technology Interface Explainability Google Use simple, direct language to describe each explicit feed"
         },
         {
           "page": 7,
-          "text": "Interface Explainability Google"
-        },
-        {
-          "page": 7,
-          "text": "Interface Explainability Google"
-        },
-        {
-          "page": 7,
-          "text": "Interface Explainability Google Optimize for understanding Interface Explainability Google Interface Explainability Google"
-        },
-        {
-          "page": 7,
-          "text": "Interface Explainability Google Explanation via interaction Interface Explainability Google Example-based explanations Interface Explainability Google Explain what’s important Inte"
-        },
-        {
-          "page": 7,
-          "text": "Interface Explainability Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Explainability Microsoft Show contextually relevant information Interface Confidence Google Model confidence displays Interface Confidence Google"
-        },
-        {
-          "page": 7,
-          "text": "Interface Confidence Google Categorical Interface Confidence Google N-best alternatives Interface Confidence Google Numeric Interface Confidence Google"
-        },
-        {
-          "page": 7,
-          "text": "Interface Confidence Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Confidence Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Confidence Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Confidence Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Confidence Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Confidence Apple Confirm success"
-        },
-        {
-          "page": 7,
-          "text": "Interface Google"
-        },
-        {
-          "page": 7,
-          "text": "Interface Google"
-        },
-        {
-          "page": 7,
-          "text": "Interface Google Introduce and set expectations for AI Interface Google Set expectations for AI improvements Interface Google"
-        },
-        {
-          "page": 7,
-          "text": "Interface Google Keep track of user needs Interface Google Identify existing mental models Interface Google Clearly communicate AI limits and capabilities Interface Google"
-        },
-        {
-          "page": 7,
-          "text": "Interface Google"
-        },
-        {
-          "page": 7,
-          "text": "Interface Google"
-        },
-        {
-          "page": 7,
-          "text": "Interface Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Microsoft"
-        },
-        {
-          "page": 7,
-          "text": "Interface Microsoft"
-        },
-        {
-          "page": 7,
-          "text": "Interface Microsoft"
-        },
-        {
-          "page": 7,
-          "text": "Interface Microsoft"
-        },
-        {
-          "page": 7,
-          "text": "Interface Microsoft"
-        },
-        {
-          "page": 7,
-          "text": "Interface Microsoft"
-        },
-        {
-          "page": 7,
-          "text": "Interface Microsoft"
-        },
-        {
-          "page": 7,
-          "text": "Interface Calibration Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Calibration Apple Make calibration quick and easy"
-        },
-        {
-          "page": 7,
-          "text": "Interface Calibration Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Calibration Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Calibration Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Calibration Apple Always secure people’s calibration information Interface Google Categorical / N-Best Alternatives Interface Google Interface Google"
-        },
-        {
-          "page": 7,
-          "text": "Interface Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Apple Prefer diverse options"
-        },
-        {
-          "page": 7,
-          "text": "Interface Apple"
-        },
-        {
-          "page": 7,
-          "text": "Interface Apple"
+          "text": "Interface Apple Interface Apple List the most likely option first. Interface Apple In situations where attributions aren’t helpful, consider ranking or ordering the results in a wa"
         },
         {
           "page": 8,
           "text": "Company Guideline Deployment Google Account for negative impact Deployment Google Auto-detect and display errors Deployment Google Disambiguate systems hierarchy errors Deployment "
-        },
-        {
-          "page": 8,
-          "text": "Deployment Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Google Fail gracefully"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Google Cue the correct interactions Deployment Google Categorize user-perceived errors Deployment Google Provide paths forward from failure Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple Let people correct their corrections"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Error Prevention Microsoft Support efficient dismissal"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Error types Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Error types Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Error types Google Context errors Deployment Error types Google Mislabeled or misclassified results Deployment Error types Google Poor inference or incorrect model Deplo"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Google Define “errors” and “failure”"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Addressing / using Feedback Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Addressing / using Feedback Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Addressing / using Feedback Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Addressing / using Feedback Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Addressing / using Feedback Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Addressing / using Feedback Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Addressing / using Feedback Google"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Addressing / using Feedback Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Addressing / using Feedback Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Addressing / using Feedback Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Addressing / using Feedback Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Addressing / using Feedback Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Addressing / using Feedback Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Addressing / using Feedback Apple"
-        },
-        {
-          "page": 8,
-          "text": "Deployment Addressing / using Feedback Microsoft"
         }
       ]
     },
@@ -3743,7 +3498,7 @@
       "file": "interpreting-neural-networks.pdf",
       "tableCaptions": 6,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 18,
+      "rawTableFragments": 19,
       "cropBackedFragments": 12,
       "readerRawFragments": 5,
       "readerCellFallbacks": 4,
@@ -3804,13 +3559,15 @@
       "file": "job-rotation-ergonomics.pdf",
       "tableCaptions": 5,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 26,
-      "cropBackedFragments": 5,
-      "readerRawFragments": 16,
-      "readerCellFallbacks": 9,
+      "rawTableFragments": 46,
+      "cropBackedFragments": 15,
+      "readerRawFragments": 26,
+      "readerCellFallbacks": 19,
       "readerFragmentKinds": {
-        "short-label": 7,
-        "structured-grid": 9
+        "short-label": 8,
+        "prose-like": 1,
+        "ambiguous": 7,
+        "structured-grid": 10
       },
       "readerFragmentSamples": {
         "short-label": [
@@ -3821,6 +3578,10 @@
           {
             "page": 3,
             "text": "Scheduling"
+          },
+          {
+            "page": 3,
+            "text": "ALB workers during job rotation."
           },
           {
             "page": 10,
@@ -3841,6 +3602,42 @@
           {
             "page": 10,
             "text": "1.65"
+          }
+        ],
+        "prose-like": [
+          {
+            "page": 3,
+            "text": "from a low to an intermediate until a high skill level. WorkALB"
+          }
+        ],
+        "ambiguous": [
+          {
+            "page": 3,
+            "text": "physical effort by employing collaborative robots for burALB"
+          },
+          {
+            "page": 3,
+            "text": "ALB possibility to be performed manually and/or automatically"
+          },
+          {
+            "page": 3,
+            "text": "ALB and/or jointly by the human worker and the collaborative"
+          },
+          {
+            "page": 3,
+            "text": "ALB collaborative, if tasks require workers and robots, working"
+          },
+          {
+            "page": 3,
+            "text": "ALB jointly or independently. Once assigned, robots are fixed"
+          },
+          {
+            "page": 3,
+            "text": "ALB entirely executed by robots, are not considered for assigning"
+          },
+          {
+            "page": 10,
+            "text": "Z taining the remaining conditions and re-executing the GA: in"
           }
         ],
         "structured-grid": [
@@ -3866,6 +3663,10 @@
           },
           {
             "page": 10,
+            "text": "Worker z strong presence of robots is reflected in data related to workers’ energy expenditure. As shown in Fig. 6, the physical limit, given by the maximum energy expenditure value (ΔE = 1), is"
+          },
+          {
+            "page": 10,
             "text": "1.80 Fig. 6 reports a well-balanced workload for operators, which"
           },
           {
@@ -3888,6 +3689,22 @@
           "text": "References ALB Ergonomics Job rotation HRC Design ✓ Analysis ✓ Analysis ✓ To contrast the repetitiveness of movements, at each rotation, every worker is placed on a different works"
         },
         {
+          "page": 3,
+          "text": "ALB collaborative, if tasks require workers and robots, working"
+        },
+        {
+          "page": 3,
+          "text": "ALB jointly or independently. Once assigned, robots are fixed"
+        },
+        {
+          "page": 3,
+          "text": "ALB entirely executed by robots, are not considered for assigning"
+        },
+        {
+          "page": 3,
+          "text": "ALB workers during job rotation."
+        },
+        {
           "page": 9,
           "text": "Automatic HRC Ti (min) Manual SLi HRC SLi Equipment q Ti (min)"
         },
@@ -3906,6 +3723,10 @@
         {
           "page": 9,
           "text": "0 1 1 0 0.244 0.211 1.45 1 0 0 0.076 0.076"
+        },
+        {
+          "page": 10,
+          "text": "Worker z strong presence of robots is reflected in data related to workers’ energy expenditure. As shown in Fig. 6, the physical limit, given by the maximum energy expenditure valu"
         },
         {
           "page": 10,
@@ -3930,6 +3751,10 @@
         {
           "page": 10,
           "text": "1.65"
+        },
+        {
+          "page": 10,
+          "text": "Z taining the remaining conditions and re-executing the GA: in"
         },
         {
           "page": 12,
@@ -4063,24 +3888,16 @@
       "file": "linguistics-language-model-physics.pdf",
       "tableCaptions": 0,
       "cropReadyCaptions": 0,
-      "rawTableFragments": 59,
+      "rawTableFragments": 55,
       "cropBackedFragments": 0,
-      "readerRawFragments": 60,
-      "readerCellFallbacks": 48,
+      "readerRawFragments": 56,
+      "readerCellFallbacks": 54,
       "readerFragmentKinds": {
-        "structured-grid": 48,
-        "short-label": 12
+        "structured-grid": 54,
+        "short-label": 2
       },
       "readerFragmentSamples": {
         "structured-grid": [
-          {
-            "page": 10,
-            "text": "\u0000 \u0001 \u0000 \u0001"
-          },
-          {
-            "page": 10,
-            "text": "Gi(x) ="
-          },
           {
             "page": 12,
             "text": "NT3NT2NT5NT4NT3NT2 0.04"
@@ -4118,51 +3935,19 @@
             "text": "22|->21 20 22|->19 19 20 22|->20 20 21 22|->19 20 22|->20 21 22|->20 19 22|->21 20 19 22|->19 21 22|->20 20 19 22|->20 19 21 19|->16 17 18 19|->18 16 18 19|->16 17 22|->20 19 21 22|->21 19 19 19|->17 18 16 19|->16 16 19|->18 17 19|->17 17 1"
           },
           {
-            "page": 18,
-            "text": "cfg3b cfg3i"
+            "page": 23,
+            "text": "(a) cfg3b dataset"
+          },
+          {
+            "page": 26,
+            "text": "0.5 0.05 100 100 0.4 0.00 150 0.3 150 0.05"
+          },
+          {
+            "page": 26,
+            "text": "0.2 0.10 200 200 0.1 0.15 250 0.0 250 0.20 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 (a) cfg3b dataset; marginal distribution (b) cfg3b dataset; marginal distribution - gro"
           }
         ],
         "short-label": [
-          {
-            "page": 18,
-            "text": "a sample from cfg3b:"
-          },
-          {
-            "page": 18,
-            "text": "a sample from cfg3h:"
-          },
-          {
-            "page": 18,
-            "text": "cfg3h"
-          },
-          {
-            "page": 18,
-            "text": "cfg3g"
-          },
-          {
-            "page": 18,
-            "text": "cfg3f"
-          },
-          {
-            "page": 23,
-            "text": "diversity pattern for cfg3b"
-          },
-          {
-            "page": 23,
-            "text": "diversity pattern for cfg3i"
-          },
-          {
-            "page": 23,
-            "text": "diversity pattern for cfg3h"
-          },
-          {
-            "page": 28,
-            "text": "GPT"
-          },
-          {
-            "page": 28,
-            "text": "predict NT-end boundary (%)"
-          },
           {
             "page": 34,
             "text": "NTend"
@@ -4174,14 +3959,6 @@
         ]
       },
       "orphanFragments": [
-        {
-          "page": 10,
-          "text": "\u0000 \u0001 \u0000 \u0001"
-        },
-        {
-          "page": 10,
-          "text": "Gi(x) ="
-        },
         {
           "page": 12,
           "text": "NT3NT2NT5NT4NT3NT2 0.04"
@@ -4215,52 +3992,8 @@
           "text": "1.00 1.00 0.750.50 0.750.50 0.250.00 0.250.00 010011 010011 0.250.50 0.250.50"
         },
         {
-          "page": 18,
-          "text": "a sample from cfg3b:"
-        },
-        {
-          "page": 18,
-          "text": "a sample from cfg3h:"
-        },
-        {
-          "page": 18,
-          "text": "cfg3b cfg3i"
-        },
-        {
-          "page": 18,
-          "text": "cfg3h"
-        },
-        {
-          "page": 18,
-          "text": "cfg3g"
-        },
-        {
-          "page": 18,
-          "text": "cfg3f"
-        },
-        {
-          "page": 23,
-          "text": "diversity pattern for cfg3b"
-        },
-        {
           "page": 23,
           "text": "(a) cfg3b dataset"
-        },
-        {
-          "page": 23,
-          "text": "diversity pattern for cfg3i"
-        },
-        {
-          "page": 23,
-          "text": "(b) cfg3i dataset"
-        },
-        {
-          "page": 23,
-          "text": "diversity pattern for cfg3h"
-        },
-        {
-          "page": 23,
-          "text": "(c) cfg3h dataset"
         },
         {
           "page": 26,
@@ -4283,14 +4016,6 @@
           "text": "200 200 0.1 0.15 0.0 0.20 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 (g) cfg3g dataset; marginal distribution"
         },
         {
-          "page": 28,
-          "text": "GPT"
-        },
-        {
-          "page": 28,
-          "text": "predict NT-end boundary (%)"
-        },
-        {
           "page": 29,
           "text": "GPT on cfg3i GPT_rel on cfg3i GPT_rand on cfg3i"
         },
@@ -4300,7 +4025,47 @@
         },
         {
           "page": 32,
-          "text": "any any for GPTrel over cfg3b data for GPTrel over cfg3i data"
+          "text": "NT5NT4 NT5NT4"
+        },
+        {
+          "page": 32,
+          "text": "NT3NT2 NT3NT2"
+        },
+        {
+          "page": 32,
+          "text": "NT5NT4 0.06 NT5NT4"
+        },
+        {
+          "page": 32,
+          "text": "NT2NT5 NT2NT5"
+        },
+        {
+          "page": 32,
+          "text": "attention attention NT4NT3 NT4NT3"
+        },
+        {
+          "page": 32,
+          "text": "NT2NT5 NT2NT5"
+        },
+        {
+          "page": 32,
+          "text": "NT3NT2 NT3NT2"
+        },
+        {
+          "page": 32,
+          "text": "NT5NT4NT3 0.02 NT5NT4NT3"
+        },
+        {
+          "page": 32,
+          "text": "NT2NT5 NT2NT5 NTend NTend NT4NT3 NT4NT3"
+        },
+        {
+          "page": 32,
+          "text": "( ( NT2NT5NT4 0.01 NT2NT5NT4"
+        },
+        {
+          "page": 32,
+          "text": "NT3NT2 0.00 NT3NT2 any any for GPTrel over cfg3b data for GPTrel over cfg3i data"
         },
         {
           "page": 34,
@@ -4368,7 +4133,11 @@
         },
         {
           "page": 34,
-          "text": "(i) cfg3h at level ℓ = 2 (j) cfg3h at level ℓ = 3 (k) cfg3h at level ℓ = 4 (l) cfg3h at level ℓ = 5"
+          "text": "(i) cfg3h at level ℓ = 2 (j) cfg3h at level ℓ = 3"
+        },
+        {
+          "page": 34,
+          "text": "cfg3h at level ℓ = 4 (l) cfg3h at level ℓ = 5"
         },
         {
           "page": 34,
@@ -4706,9 +4475,9 @@
     {
       "file": "marketing-a-study-on-the-relationship-between-advertising-value-choice-of-media-.pdf",
       "tableCaptions": 15,
-      "cropReadyCaptions": 12,
-      "rawTableFragments": 43,
-      "cropBackedFragments": 43,
+      "cropReadyCaptions": 14,
+      "rawTableFragments": 50,
+      "cropBackedFragments": 50,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -4719,23 +4488,27 @@
       "file": "marketing-co-production.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 17,
-      "cropBackedFragments": 8,
-      "readerRawFragments": 9,
-      "readerCellFallbacks": 8,
+      "rawTableFragments": 25,
+      "cropBackedFragments": 12,
+      "readerRawFragments": 13,
+      "readerCellFallbacks": 12,
       "readerFragmentKinds": {
-        "structured-grid": 8,
+        "structured-grid": 12,
         "short-label": 1
       },
       "readerFragmentSamples": {
         "structured-grid": [
           {
             "page": 5,
+            "text": "Tucker (2014) Share data Field experiment"
+          },
+          {
+            "page": 5,
             "text": "Consumer co-production network Brodie et al. (2013) Develop, Promote Netnography Engaged consumers exhibit enhanced consumer loyalty, products satisfaction, empowerment, connection, emotional bonding, trust"
           },
           {
             "page": 5,
-            "text": "Chu and Manchanda Sell products Field study The installed base of buyers vs. sellers of a platform drives growth (2016) of the other side. This effect is asymmetric and the installed base of sellers has a larger effect on buyers than vice v"
+            "text": "Chu and Manchanda Sell products Field study The installed base of buyers vs. sellers of a platform drives growth (2016)"
           },
           {
             "page": 5,
@@ -4743,7 +4516,19 @@
           },
           {
             "page": 5,
+            "text": "Franke et al. (2006) Innovate products Survey Consumers’ own expected-benefits and the degree to which they are ahead of trends predict both their innovation likelihood and the commercial attractiveness of their user-developed innovations."
+          },
+          {
+            "page": 5,
             "text": "Mathwick and Mosteller Review products Survey Consumers who review products all have altruistic motives. They (2017)"
+          },
+          {
+            "page": 5,
+            "text": "Develop, Reflect Etnography; Multiple modes and logics of exchange may successfully coexist in on products Netnography a collaborative network. Consumer-producer engagements in"
+          },
+          {
+            "page": 5,
+            "text": "Stephen and Toubia Sell products Field study Allowing sellers to connect in a network generates value."
           },
           {
             "page": 7,
@@ -4772,6 +4557,10 @@
       "orphanFragments": [
         {
           "page": 5,
+          "text": "Tucker (2014) Share data Field experiment"
+        },
+        {
+          "page": 5,
           "text": "Consumer co-production network Brodie et al. (2013) Develop, Promote Netnography Engaged consumers exhibit enhanced consumer loyalty, products satisfaction, empowerment, connection"
         },
         {
@@ -4780,7 +4569,7 @@
         },
         {
           "page": 5,
-          "text": "Chu and Manchanda Sell products Field study The installed base of buyers vs. sellers of a platform drives growth (2016) of the other side. This effect is asymmetric and the install"
+          "text": "Chu and Manchanda Sell products Field study The installed base of buyers vs. sellers of a platform drives growth (2016)"
         },
         {
           "page": 5,
@@ -4788,7 +4577,19 @@
         },
         {
           "page": 5,
+          "text": "Franke et al. (2006) Innovate products Survey Consumers’ own expected-benefits and the degree to which they are ahead of trends predict both their innovation likelihood and the com"
+        },
+        {
+          "page": 5,
           "text": "Mathwick and Mosteller Review products Survey Consumers who review products all have altruistic motives. They (2017)"
+        },
+        {
+          "page": 5,
+          "text": "Develop, Reflect Etnography; Multiple modes and logics of exchange may successfully coexist in on products Netnography a collaborative network. Consumer-producer engagements in"
+        },
+        {
+          "page": 5,
+          "text": "Stephen and Toubia Sell products Field study Allowing sellers to connect in a network generates value."
         },
         {
           "page": 7,
@@ -5058,12 +4859,13 @@
       "file": "marketing-framing.pdf",
       "tableCaptions": 6,
       "cropReadyCaptions": 5,
-      "rawTableFragments": 22,
-      "cropBackedFragments": 14,
-      "readerRawFragments": 7,
-      "readerCellFallbacks": 7,
+      "rawTableFragments": 28,
+      "cropBackedFragments": 19,
+      "readerRawFragments": 8,
+      "readerCellFallbacks": 8,
       "readerFragmentKinds": {
-        "structured-grid": 7
+        "structured-grid": 7,
+        "short-label": 1
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -5095,6 +4897,12 @@
             "page": 6,
             "text": "loading / standardized loading + εj (1)"
           }
+        ],
+        "short-label": [
+          {
+            "page": 4,
+            "text": "0.778 0.845 0.823"
+          }
         ]
       },
       "orphanFragments": [
@@ -5121,6 +4929,10 @@
         {
           "page": 4,
           "text": "PK3: Do you think you can purchase organic food satisfactorily based on only your own knowledge?"
+        },
+        {
+          "page": 4,
+          "text": "0.778 0.845 0.823"
         },
         {
           "page": 6,
@@ -5198,13 +5010,43 @@
       "file": "marketing-impact-of-green-marketing-on-consumer-behavior.pdf",
       "tableCaptions": 2,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 10,
-      "cropBackedFragments": 10,
-      "readerRawFragments": 0,
-      "readerCellFallbacks": 0,
-      "readerFragmentKinds": {},
-      "readerFragmentSamples": {},
-      "orphanFragments": []
+      "rawTableFragments": 11,
+      "cropBackedFragments": 8,
+      "readerRawFragments": 3,
+      "readerCellFallbacks": 3,
+      "readerFragmentKinds": {
+        "structured-grid": 3
+      },
+      "readerFragmentSamples": {
+        "structured-grid": [
+          {
+            "page": 4,
+            "text": "16 10.4"
+          },
+          {
+            "page": 4,
+            "text": "and 120,000 Above 120,000 41 26.6 • Ecolabeling (B = 0.077, p = 0.154): While ecolabeling shows a positive coefficient, its p-value indicates that the effect is not statistically significant in this model."
+          },
+          {
+            "page": 4,
+            "text": "Source: Field survey 2024 and Author's calculation"
+          }
+        ]
+      },
+      "orphanFragments": [
+        {
+          "page": 4,
+          "text": "16 10.4"
+        },
+        {
+          "page": 4,
+          "text": "and 120,000 Above 120,000 41 26.6 • Ecolabeling (B = 0.077, p = 0.154): While ecolabeling shows a positive coefficient, its p-value indicates that the effect is not statistically s"
+        },
+        {
+          "page": 4,
+          "text": "Source: Field survey 2024 and Author's calculation"
+        }
+      ]
     },
     {
       "file": "marketing-impact-of-sensory-marketing-on-consumer-behavior.pdf",
@@ -5222,8 +5064,8 @@
       "file": "marketing-influence-of-advertising-incentives-on-consumers-in-the-digital-enviro.pdf",
       "tableCaptions": 2,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 0,
-      "cropBackedFragments": 0,
+      "rawTableFragments": 1,
+      "cropBackedFragments": 1,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -5244,14 +5086,14 @@
     },
     {
       "file": "marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the.pdf",
-      "tableCaptions": 54,
-      "cropReadyCaptions": 34,
-      "rawTableFragments": 130,
-      "cropBackedFragments": 86,
-      "readerRawFragments": 26,
-      "readerCellFallbacks": 23,
+      "tableCaptions": 53,
+      "cropReadyCaptions": 39,
+      "rawTableFragments": 141,
+      "cropBackedFragments": 100,
+      "readerRawFragments": 31,
+      "readerCellFallbacks": 28,
       "readerFragmentKinds": {
-        "structured-grid": 23,
+        "structured-grid": 28,
         "short-label": 3
       },
       "readerFragmentSamples": {
@@ -5259,6 +5101,14 @@
           {
             "page": 15,
             "text": "Table 7.1 STUDY 2 - Research questions and hypotheses.................................................................... 166"
+          },
+          {
+            "page": 15,
+            "text": "Table 8.3 STUDY 3 - Sample ................................ ................................ ................................ ................. 203 Table 8.4 STUDY 3 - Hits, Misses, False alarms, Correct rejections, and Recognition rates .."
+          },
+          {
+            "page": 16,
+            "text": "Table 8.14 STUDY 3 - Response latency across attention ................................ ................................ .... 225 Table 8.15 STUDY 3 - ANOVA - Response latency ................................ ..............................."
           },
           {
             "page": 148,
@@ -5293,16 +5143,8 @@
             "text": "F 48 36 20 104"
           },
           {
-            "page": 204,
-            "text": "Constant -.709** .229 .492 -2.408** .313 .090 Attention (Wald χ2 = 15.424, p = .001)** (Wald χ2 = 21.303, p = .000)** Focused .972** .303 2.643 1.485** .347 4.414 Divided .646** .296 1.907 .795** .358 2.215 Incidental 1.071** .306 2.919 1.3"
-          },
-          {
-            "page": 216,
-            "text": "8.1. Introduction"
-          },
-          {
-            "page": 218,
-            "text": "digital advertisements is greater for matching ads with rational-utilitarian appeal than hedonic-emotional appeal H4c The effect of low attention processing of digital advertisements is greater for mismatching ads with emotionalutilitarian "
+            "page": 201,
+            "text": "𝑓𝑎𝑙𝑠𝑒 𝑎𝑙𝑎𝑟𝑚𝑠 (b) False alarm rate = 𝑓𝑎𝑙𝑠𝑒 𝑎𝑙𝑎𝑟𝑚𝑠+𝑐𝑜𝑟𝑟𝑒𝑐𝑡 𝑟𝑒𝑗𝑒𝑐𝑡𝑖𝑜𝑛𝑠"
           }
         ],
         "short-label": [
@@ -5322,8 +5164,8 @@
       },
       "orphanFragments": [
         {
-          "page": 123,
-          "text": "• Direct effects of"
+          "page": 16,
+          "text": "Table 8.14 STUDY 3 - Response latency across attention ................................ ................................ .... 225 Table 8.15 STUDY 3 - ANOVA - Response latency ...."
         },
         {
           "page": 148,
@@ -5332,6 +5174,10 @@
         {
           "page": 148,
           "text": "H4c"
+        },
+        {
+          "page": 151,
+          "text": "Main method of analysis Logistic regression Logistic regression Logistic regression Post-hoc examinations Intuitive vs rational Intuitive vs rational judgements; response judgement"
         },
         {
           "page": 151,
@@ -5354,6 +5200,10 @@
           "text": "The effect of low attention processing of digital advertisements is greater for ads with emotional appeal than rational appeal. People are more likely to make rational judgements i"
         },
         {
+          "page": 203,
+          "text": "appeal appeal appeal appeal Focused attention .51 (.50) .69 (.46) .26 (.44) .42 (.49) Divided attention .58 (.49) .62 (.49) .40 (.49) .28 (.45) Incidental attention .62 (.49) .72 ("
+        },
+        {
           "page": 204,
           "text": "Constant -.709** .229 .492 -2.408** .313 .090 Attention (Wald χ2 = 15.424, p = .001)** (Wald χ2 = 21.303, p = .000)** Focused .972** .303 2.643 1.485** .347 4.414 Divided .646** .2"
         },
@@ -5372,6 +5222,10 @@
         {
           "page": 236,
           "text": "1.509 1.302** .228 3.675 p = .357) (Wald χ2 = 8.921, p = .030)** .931 .569* .323 1.766 .437 .441 .327 1.554 .488 -.230 .303 .794"
+        },
+        {
+          "page": 236,
+          "text": "1.637 1.528** .277 4.610"
         },
         {
           "page": 236,
@@ -5489,13 +5343,13 @@
       "file": "marketing-the-blind-box-economy-exploring-consumer-behavior-marketing-strategies.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 1,
-      "rawTableFragments": 12,
+      "rawTableFragments": 7,
       "cropBackedFragments": 2,
-      "readerRawFragments": 11,
-      "readerCellFallbacks": 9,
+      "readerRawFragments": 6,
+      "readerCellFallbacks": 3,
       "readerFragmentKinds": {
-        "structured-grid": 9,
-        "ambiguous": 2
+        "structured-grid": 3,
+        "short-label": 3
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -5505,64 +5359,32 @@
           },
           {
             "page": 8,
-            "text": "option subtotal scale"
-          },
-          {
-            "page": 8,
-            "text": "option subtotal scale"
-          },
-          {
-            "page": 8,
-            "text": "undergraduate college 99 39.6%"
-          },
-          {
-            "page": 8,
             "text": "Number of valid entries for this question 250"
-          },
-          {
-            "page": 8,
-            "text": "option subtotal scale"
-          },
-          {
-            "page": 8,
-            "text": "2000-5000 yuan 122 48.8%"
-          },
-          {
-            "page": 8,
-            "text": "5001-8000 yuan 44 17.6%"
           },
           {
             "page": 8,
             "text": "Number of valid entries for this question 250"
           }
         ],
-        "ambiguous": [
+        "short-label": [
           {
             "page": 8,
-            "text": "Question 3. What is your education? [single choice]"
+            "text": "39.6%"
           },
           {
             "page": 8,
-            "text": "Question 4. Your monthly disposable income [single choice]"
+            "text": "48.8%"
+          },
+          {
+            "page": 8,
+            "text": "17.6%"
           }
         ]
       },
       "orphanFragments": [
         {
           "page": 8,
-          "text": "option subtotal scale"
-        },
-        {
-          "page": 8,
-          "text": "Question 3. What is your education? [single choice]"
-        },
-        {
-          "page": 8,
-          "text": "option subtotal scale"
-        },
-        {
-          "page": 8,
-          "text": "undergraduate college 99 39.6%"
+          "text": "39.6%"
         },
         {
           "page": 8,
@@ -5570,19 +5392,11 @@
         },
         {
           "page": 8,
-          "text": "Question 4. Your monthly disposable income [single choice]"
+          "text": "48.8%"
         },
         {
           "page": 8,
-          "text": "option subtotal scale"
-        },
-        {
-          "page": 8,
-          "text": "2000-5000 yuan 122 48.8%"
-        },
-        {
-          "page": 8,
-          "text": "5001-8000 yuan 44 17.6%"
+          "text": "17.6%"
         },
         {
           "page": 8,
@@ -5630,13 +5444,13 @@
       "file": "medical-deep-learning-meta-review.pdf",
       "tableCaptions": 9,
       "cropReadyCaptions": 6,
-      "rawTableFragments": 99,
+      "rawTableFragments": 104,
       "cropBackedFragments": 29,
-      "readerRawFragments": 64,
-      "readerCellFallbacks": 55,
+      "readerRawFragments": 69,
+      "readerCellFallbacks": 58,
       "readerFragmentKinds": {
-        "short-label": 13,
-        "structured-grid": 51
+        "short-label": 14,
+        "structured-grid": 55
       },
       "readerFragmentSamples": {
         "short-label": [
@@ -5650,19 +5464,27 @@
           },
           {
             "page": 7,
-            "text": "categories"
-          },
-          {
-            "page": 7,
-            "text": "et al. [40]"
-          },
-          {
-            "page": 7,
-            "text": "for ophthalmology"
+            "text": "izing"
           },
           {
             "page": 7,
             "text": "review,"
+          },
+          {
+            "page": 7,
+            "text": "deep"
+          },
+          {
+            "page": 7,
+            "text": "machine"
+          },
+          {
+            "page": 7,
+            "text": "architectures,"
+          },
+          {
+            "page": 7,
+            "text": "works."
           },
           {
             "page": 10,
@@ -5678,15 +5500,7 @@
           },
           {
             "page": 11,
-            "text": "data"
-          },
-          {
-            "page": 11,
-            "text": "focus"
-          },
-          {
-            "page": 11,
-            "text": "They"
+            "text": "et al."
           }
         ],
         "structured-grid": [
@@ -5736,7 +5550,7 @@
           },
           {
             "page": 7,
-            "text": "-Abstract high-level features"
+            "text": "Health Record AE, CNN. -LSTM, RNNs, and variant -Lack of transparency and -Heterogenous data Analysis MLP, RBM, can process sequential interpretability -Lack of reproducibility Shickel et al. [33] RNN data and universal"
           }
         ]
       },
@@ -5787,39 +5601,31 @@
         },
         {
           "page": 7,
-          "text": "-Abstract high-level features"
-        },
-        {
-          "page": 7,
           "text": "Health Record AE, CNN. -LSTM, RNNs, and variant -Lack of transparency and -Heterogenous data Analysis MLP, RBM, can process sequential interpretability -Lack of reproducibility Shi"
         },
         {
           "page": 7,
-          "text": "Microscopy image CNN, FCN, -Unsupervised training -Obtaining large number -Low interpretability analysis RNN, SAE (SAE) of annotated microscopy -Processing high Xing et al. [34] -e"
+          "text": "Microscopy image CNN, FCN, -Unsupervised training -Obtaining large number -Low interpretability analysis RNN, SAE (SAE) of annotated microscopy -Processing high Xing et al. [34] -U"
         },
         {
           "page": 7,
-          "text": "training (CNN) size"
+          "text": "Abbreviations: AE: auto-encoder, CAD: computer-assisted diagnosis, CNN: convolutional neural network, DBM: deep Boltzmann learning, DNN: deep neural network, EHR: electronic health"
         },
         {
           "page": 7,
-          "text": "categories"
+          "text": "remaining research questions with a special focus on cloud comseven"
         },
         {
           "page": 7,
-          "text": "izing to control or kill malignant cancer"
+          "text": "izing"
         },
         {
           "page": 7,
-          "text": "orders in medicine"
+          "text": "fore, treatment planning and delivery is complex and may be faGrewal"
         },
         {
           "page": 7,
-          "text": "et al. [40]"
-        },
-        {
-          "page": 7,
-          "text": "for ophthalmology"
+          "text": "cilitated and partially automated by artificial intelligence. In their"
         },
         {
           "page": 7,
@@ -5827,11 +5633,23 @@
         },
         {
           "page": 7,
-          "text": "et al. [39] start the fundamentals plore learning-based deep them to the wider various diagnostic modalities, machine They give an overview of main fields, and optical architecture"
+          "text": "deep"
         },
         {
           "page": 7,
-          "text": "analyze deep age-related macular"
+          "text": "machine"
+        },
+        {
+          "page": 7,
+          "text": "architectures,"
+        },
+        {
+          "page": 7,
+          "text": "works."
+        },
+        {
+          "page": 7,
+          "text": "based works for radiotherapy applications by classifying them into retinopathy."
         },
         {
           "page": 10,
@@ -5868,6 +5686,10 @@
         {
           "page": 10,
           "text": "-Overfitting on uncorrelated features,"
+        },
+        {
+          "page": 10,
+          "text": "degeneration, diabetic retinopathy, noise, or dataset-inherent glaucoma biases"
         },
         {
           "page": 10,
@@ -5923,11 +5745,19 @@
         },
         {
           "page": 11,
-          "text": "data"
+          "text": "Abbreviations: AE: auto-encoder, ANN: artificial neural network, CAD: computer-assisted diagnosis, CNN: convolutional neural network, DBN: deep belief network, DL: deep learning, D"
         },
         {
           "page": 11,
-          "text": "for glioma detection"
+          "text": "They conclude that machine learning and deep learning methods discuss pros and cons of published deep learning-based methods can be used for the detection of lung nodules, even wit"
+        },
+        {
+          "page": 11,
+          "text": "et al."
+        },
+        {
+          "page": 11,
+          "text": "of the recent deep learning-based approaches and applications uti- a review of recent advancements on cardiac arrhythmia detection lized for glioma detection"
         },
         {
           "page": 11,
@@ -5935,7 +5765,7 @@
         },
         {
           "page": 11,
-          "text": "They"
+          "text": "on the pre-operative and post-operative segmentation of tumors, different aspects, namely the used dataset, the input data type, the genetic They"
         },
         {
           "page": 13,
@@ -5968,6 +5798,10 @@
         {
           "page": 13,
           "text": "-Lack of interpretability -Dataset quality and -Clinical workflow and Akkus et al. [61] CNN, RBM, generalizability -Successfully and explainability performance vary in cost can be "
+        },
+        {
+          "page": 13,
+          "text": "public datasets are limited AI models (continued on next page)"
         },
         {
           "page": 14,
@@ -6210,15 +6044,41 @@
       "file": "osworld-multimodal-agents.pdf",
       "tableCaptions": 17,
       "cropReadyCaptions": 12,
-      "rawTableFragments": 40,
-      "cropBackedFragments": 25,
+      "rawTableFragments": 46,
+      "cropBackedFragments": 29,
       "readerRawFragments": 12,
       "readerCellFallbacks": 6,
       "readerFragmentKinds": {
-        "short-label": 6,
-        "structured-grid": 6
+        "structured-grid": 6,
+        "short-label": 6
       },
       "readerFragmentSamples": {
+        "structured-grid": [
+          {
+            "page": 6,
+            "text": "Action space A in OSWORLD encompasses all mouse and keyboard actions, tions A in OSWORLD. See App. A.3 for the complete including movement, clicks (left-key, list. right-key, multiple clicks), dragging, Function"
+          },
+          {
+            "page": 8,
+            "text": "Image ops 7.0% Tab. formatting 3.8%"
+          },
+          {
+            "page": 8,
+            "text": "Settings 2.4% Professional13.3% OS 6.5% Files 2.2%"
+          },
+          {
+            "page": 14,
+            "text": "We enhance the functionality of the OSWORLD envi-0.7"
+          },
+          {
+            "page": 39,
+            "text": "pyautogui.click(1100, 350) # Clicking inside the Terminal window to focus it pyautogui.write(`ffmpeg -i video.mp4 -c copy -sn no_subtitles_video.mp4')"
+          },
+          {
+            "page": 39,
+            "text": "Failure Task: Help me center align the heading in LibreOffice."
+          }
+        ],
         "short-label": [
           {
             "page": 8,
@@ -6244,35 +6104,13 @@
             "page": 39,
             "text": "Done!"
           }
-        ],
-        "structured-grid": [
-          {
-            "page": 8,
-            "text": "Image ops 7.0% Tab. formatting 3.8%"
-          },
-          {
-            "page": 8,
-            "text": "Settings 2.4% Professional13.3% OS 6.5% Files 2.2%"
-          },
-          {
-            "page": 14,
-            "text": "We enhance the functionality of the OSWORLD envi-0.7"
-          },
-          {
-            "page": 34,
-            "text": "load these png files to the fig- docx file;"
-          },
-          {
-            "page": 39,
-            "text": "pyautogui.click(1100, 350) # Clicking inside the Terminal window to focus it pyautogui.write(`ffmpeg -i video.mp4 -c copy -sn no_subtitles_video.mp4')"
-          },
-          {
-            "page": 39,
-            "text": "Failure Task: Help me center align the heading in LibreOffice."
-          }
         ]
       },
       "orphanFragments": [
+        {
+          "page": 6,
+          "text": "Action space A in OSWORLD encompasses all mouse and keyboard actions, tions A in OSWORLD. See App. A.3 for the complete including movement, clicks (left-key, list. right-key, multi"
+        },
         {
           "page": 8,
           "text": "Slide editing 8.7%"
@@ -6429,12 +6267,12 @@
       "file": "syntax-prosody-correlation.pdf",
       "tableCaptions": 0,
       "cropReadyCaptions": 0,
-      "rawTableFragments": 5,
+      "rawTableFragments": 8,
       "cropBackedFragments": 0,
-      "readerRawFragments": 5,
-      "readerCellFallbacks": 5,
+      "readerRawFragments": 8,
+      "readerCellFallbacks": 8,
       "readerFragmentKinds": {
-        "structured-grid": 5
+        "structured-grid": 8
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -6456,7 +6294,19 @@
           },
           {
             "page": 4,
+            "text": "duration p-value *** *** effect in ms 35.42 -14.62 —"
+          },
+          {
+            "page": 4,
             "text": "*** *** *** 0.12 *** * -17.8 -23.03 -29.32 15.88 19.03 30.04"
+          },
+          {
+            "page": 4,
+            "text": "NS pause p-value * ** effect in ms 3.81 6.14 — Significance levels: ***: < .001, **: < .01, *: < .05; clearly non-significant results: ‘"
+          },
+          {
+            "page": 4,
+            "text": "NS NS * *** NS *** — -5.52 -10.17 — 10.73 — NS’. Effect is positive iff first > last, e. g. pitch higher for subj than obj."
           }
         ]
       },
@@ -6479,7 +6329,19 @@
         },
         {
           "page": 4,
+          "text": "duration p-value *** *** effect in ms 35.42 -14.62 —"
+        },
+        {
+          "page": 4,
           "text": "*** *** *** 0.12 *** * -17.8 -23.03 -29.32 15.88 19.03 30.04"
+        },
+        {
+          "page": 4,
+          "text": "NS pause p-value * ** effect in ms 3.81 6.14 — Significance levels: ***: < .001, **: < .01, *: < .05; clearly non-significant results: ‘"
+        },
+        {
+          "page": 4,
+          "text": "NS NS * *** NS *** — -5.52 -10.17 — 10.73 — NS’. Effect is positive iff first > last, e. g. pitch higher for subj than obj."
         }
       ]
     },
@@ -6499,16 +6361,38 @@
       "file": "using-cognitive-psychology-gpt3.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 5,
-      "rawTableFragments": 14,
+      "rawTableFragments": 18,
       "cropBackedFragments": 8,
-      "readerRawFragments": 5,
-      "readerCellFallbacks": 4,
+      "readerRawFragments": 9,
+      "readerCellFallbacks": 6,
       "readerFragmentKinds": {
-        "structured-grid": 4,
+        "prose-like": 1,
+        "ambiguous": 2,
+        "structured-grid": 5,
         "short-label": 1
       },
       "readerFragmentSamples": {
+        "prose-like": [
+          {
+            "page": 2,
+            "text": "Linda is 31 years old, single, outspoken, and very bright. She majored in philosophy. As a student, she was deeply concerned with issues of discrimination and social justice, and also participated in anti-nuclear demonstrations."
+          }
+        ],
+        "ambiguous": [
+          {
+            "page": 2,
+            "text": "Q: Which option is the most probable?"
+          },
+          {
+            "page": 2,
+            "text": "- Option 1: Linda is a bank teller."
+          }
+        ],
         "structured-grid": [
+          {
+            "page": 2,
+            "text": "- Option 2: Linda is a bank teller and is ac- Adversarial"
+          },
           {
             "page": 6,
             "text": "0.0 0.0 30 20 10 0 10 20 30 30 20 10 0 10 20 30 Mean reward difference Mean reward difference"
@@ -6535,6 +6419,22 @@
       },
       "orphanFragments": [
         {
+          "page": 2,
+          "text": "Linda is 31 years old, single, outspoken, and very bright. She majored in philosophy. As a student, she was deeply concerned with issues of discrimination and social justice, and a"
+        },
+        {
+          "page": 2,
+          "text": "Q: Which option is the most probable?"
+        },
+        {
+          "page": 2,
+          "text": "- Option 1: Linda is a bank teller."
+        },
+        {
+          "page": 2,
+          "text": "- Option 2: Linda is a bank teller and is ac- Adversarial"
+        },
+        {
           "page": 6,
           "text": "0.0 0.0 30 20 10 0 10 20 30 30 20 10 0 10 20 30 Mean reward difference Mean reward difference"
         },
@@ -6558,17 +6458,25 @@
     },
     {
       "file": "wear-scale.pdf",
-      "tableCaptions": 4,
-      "cropReadyCaptions": 3,
-      "rawTableFragments": 10,
-      "cropBackedFragments": 7,
-      "readerRawFragments": 2,
-      "readerCellFallbacks": 2,
+      "tableCaptions": 3,
+      "cropReadyCaptions": 2,
+      "rawTableFragments": 11,
+      "cropBackedFragments": 6,
+      "readerRawFragments": 4,
+      "readerCellFallbacks": 4,
       "readerFragmentKinds": {
-        "structured-grid": 2
+        "structured-grid": 4
       },
       "readerFragmentSamples": {
         "structured-grid": [
+          {
+            "page": 7,
+            "text": "Smart clothing Smart footwear Entire smart apparel NC (%) NF (%) N (%) 332 (50.1) 331 (49.9) 663 (100.0) Gender"
+          },
+          {
+            "page": 7,
+            "text": "Female 199 (59.9) 209 (63.1) 408 (61.5) Male 133 (40.1) 122 (36.9) 225 (38.5) Age 20–29 93 (28.0) 79 (23.9) 172 (25.9) 30–39 120 (36.1) 126 (38.1) 246 (37.1) 40–49 63 (19.0) 65 (19.6) 128 (19.3) 50–59 37 (11.1) 29 (8.8) 66 (10.0) 60–69 11 ("
+          },
           {
             "page": 14,
             "text": "1.00 3.51 1.11 0.64 0.27 R4 − − 1.00 0.61 3.70 0.95 0.68 0.12 R3 − 1.00 0.64 0.64 3.41 0.95 0.31 0.22 R2 − − 1.00 0.67 0.66 0.65 3.43 1.04 0.49 0.35 R1 − − 1.00 0.35 0.26 0.37 0.37 3.88 1.05 0.83 0.08 C3 − −−C2 + 1.153.620.450.440.380.430.5"
@@ -6580,6 +6488,14 @@
         ]
       },
       "orphanFragments": [
+        {
+          "page": 7,
+          "text": "Smart clothing Smart footwear Entire smart apparel NC (%) NF (%) N (%) 332 (50.1) 331 (49.9) 663 (100.0) Gender"
+        },
+        {
+          "page": 7,
+          "text": "Female 199 (59.9) 209 (63.1) 408 (61.5) Male 133 (40.1) 122 (36.9) 225 (38.5) Age 20–29 93 (28.0) 79 (23.9) 172 (25.9) 30–39 120 (36.1) 126 (38.1) 246 (37.1) 40–49 63 (19.0) 65 (19"
+        },
         {
           "page": 9,
           "text": "Related words Frequency % Apple watches, i‑watch 671 21 Smartwatch, i‑watch"
@@ -6598,19 +6514,20 @@
   "summary": {
     "extractionErrors": 0,
     "papersWithTableCaptions": 48,
-    "tableCaptions": 367,
-    "cropReadyCaptions": 251,
-    "rawTableFragments": 1490,
-    "cropBackedFragments": 663,
-    "readerRawFragments": 636,
-    "readerCellFallbacks": 517,
+    "tableCaptions": 369,
+    "cropReadyCaptions": 269,
+    "rawTableFragments": 1511,
+    "cropBackedFragments": 733,
+    "readerRawFragments": 665,
+    "readerCellFallbacks": 551,
     "readerFragmentKinds": {
-      "structured-grid": 490,
-      "short-label": 130,
-      "ambiguous": 15,
+      "structured-grid": 506,
+      "short-label": 120,
+      "prose-like": 8,
+      "ambiguous": 30,
       "numeric-grid": 1
     },
-    "orphanFragments": 739,
+    "orphanFragments": 690,
     "note": "Crop readiness is a geometry diagnostic. readerRawFragments simulates suppression only after a successful caption crop; readerCellFallbacks are native rows retained for a readable source-only grid (including single-column multi-row tables), not a claim of fully reconstructed table semantics. readerFragmentKinds is audit-only triage and does not change resolver behavior."
   }
 }
