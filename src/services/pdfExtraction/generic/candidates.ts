@@ -805,7 +805,11 @@ function captionedRepeatedNativeGridMember(block: LayoutBlock, blocks: LayoutBlo
         const previous = sorted[index - 1];
         return count + (item.x - (previous.x + previous.width) >= Math.max(12, item.fontSize) ? 1 : 0);
       }, 0);
-      return { y, xs: sorted.map((item) => Math.round(item.x / 18) * 18), separated };
+      // Retain enough x precision to distinguish the neighbouring prose
+      // column from a tight numeric table grid.  The earlier 18pt buckets
+      // collapsed a 35pt table rhythm and the next column's 40pt gutter into
+      // one apparent band.
+      return { y, xs: sorted.map((item) => Math.round(item.x / 4) * 4), separated };
     })
     .filter((row) => row.separated >= 3);
   if (structuredRows.length < 3) return false;
@@ -819,10 +823,32 @@ function captionedRepeatedNativeGridMember(block: LayoutBlock, blocks: LayoutBlo
     if (cluster.length < 3) return false;
     const origins = new Map<number, number>();
     for (const row of cluster) for (const x of new Set(row.xs)) origins.set(x, (origins.get(x) ?? 0) + 1);
-    if ([...origins.values()].filter((count) => count >= 2).length < 2) return false;
+    // A two-column page can have a table on the left and ordinary body prose
+    // on the right at the same y coordinates.  Repeated y positions alone do
+    // not establish ownership: derive a compact band of *three or more*
+    // repeated table columns, then require this candidate to expose an item
+    // in that band.  This preserves a row label at the far left when the row
+    // also contains numeric cells in the band, while excluding a right-column
+    // prose line that happens to sit beside the table.
+    const repeatedOrigins = [...origins.entries()]
+      .filter(([, count]) => count >= 2)
+      .map(([x]) => x)
+      .sort((a, b) => a - b);
+    const originBands: number[][] = [];
+    for (const x of repeatedOrigins) {
+      const band = originBands.at(-1);
+      if (band && x - band.at(-1)! <= 38) band.push(x);
+      else originBands.push([x]);
+    }
+    const columnBand = originBands
+      .filter((band) => band.length >= 3)
+      .sort((a, b) => b.length - a.length || a[0] - b[0])[0];
+    if (!columnBand) return false;
     const firstY = cluster[0].y;
     const lastY = cluster.at(-1)!.y;
-    return block.bbox.y + block.bbox.height >= firstY - 6 && block.bbox.y <= lastY + 8;
+    if (!(block.bbox.y + block.bbox.height >= firstY - 6 && block.bbox.y <= lastY + 8)) return false;
+    return block.lines.flatMap((line) => line.items)
+      .some((item) => columnBand.some((origin) => Math.abs(item.x - origin) <= 16));
   });
 }
 
@@ -1359,6 +1385,12 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const captionedNativeCellRow = captionedNativeMultiCellRow(block, blocks);
     const captionedRepeatedNativeGrid = captionedRepeatedNativeGridMember(block, blocks);
     const captionedDenseBand = captionedDenseTableBand(block, blocks, layout?.pageWidth ?? 612);
+    // Keep the individual high-confidence table predicates available as
+    // evidence.  Besides making resolver decisions explainable, this lets us
+    // diagnose whether a physical table signal is leaking into prose in a
+    // neighbouring column without changing the scoring policy itself.
+    const nearbyTableRow = nearbyTableRowEvidence(block, blocks);
+    const headeredTable = headeredTableRow(block, blocks);
     const contentsEntry = tableOfContentsEntry(block, blocks);
     // Cell geometry can overlap a nearby prose column in a two-column page.
     // Do not let a generic caption/table signal override an unmistakably
@@ -1668,7 +1700,22 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         scoreByRole.table = Math.max(scoreByRole.table, 0.9);
       }
     }
-    if (block.role !== "table_caption" && !narrativeTableConflict && (nearbyTableRowEvidence(block, blocks) || headeredTableRow(block, blocks) || cjkComparisonRow || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedMultiCellText || captionedRepeatedRow || captionedNeighborRows || captionedNativeCellRow || captionedRepeatedNativeGrid || captionedDenseBand)) scoreByRole.table = 0.96;
+    const highConfidenceTableEvidence = [
+      nearbyTableRow && "nearby-caption-row",
+      headeredTable && "headered-row",
+      cjkComparisonRow && "cjk-comparison-row",
+      compactTableDataRow && "compact-caption-row",
+      captionedNativeGrid && "captioned-native-grid",
+      captionedColumnarGrid && "captioned-columnar-grid",
+      captionedCompactRows && "captioned-compact-rows",
+      captionedMultiCellText && "captioned-multi-cell-text",
+      captionedRepeatedRow && "captioned-repeated-row",
+      captionedNeighborRows && "captioned-neighbour-rows",
+      captionedNativeCellRow && "captioned-native-cell-row",
+      captionedRepeatedNativeGrid && "captioned-repeated-native-grid",
+      captionedDenseBand && "captioned-dense-band",
+    ].filter((reason): reason is string => Boolean(reason));
+    if (block.role !== "table_caption" && !narrativeTableConflict && highConfidenceTableEvidence.length > 0) scoreByRole.table = 0.96;
     const captionAnchoredTable = nearbyTableCaption || captionedCompactRows || captionedMultiCellText || captionedRepeatedRow ||
       captionedColumnarGrid || captionedNeighborRows || captionedNativeCellRow || captionedRepeatedNativeGrid || captionedDenseBand;
     const symbolicFormulaText = (block.text.match(/[=∈∉∪∩∑∏√∞≤≥≈≠→←↦{}|]/gu) ?? []).length >= 4 &&
@@ -1789,6 +1836,26 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         page: block.pageStart,
         bbox: block.bbox,
         reason: "three or more repeated native column anchors across compact prose cells",
+      });
+    }
+    if (pageGrid > 0) {
+      evidence.push({
+        source: "geometry" as EvidenceSource,
+        label: "page-native-grid",
+        confidence: pageGrid,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "repeated native column anchors across a page-level numeric grid",
+      });
+    }
+    if (highConfidenceTableEvidence.length > 0) {
+      evidence.push({
+        source: "geometry" as EvidenceSource,
+        label: "table-row-geometry",
+        confidence: 0.96,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: highConfidenceTableEvidence.join(", "),
       });
     }
     if (cjkComparisonRow) {

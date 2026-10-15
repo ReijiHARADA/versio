@@ -2757,7 +2757,12 @@ function groupLinesIntoBlocks(
   logLayoutBlockBoundaries(nonEmptyBlocks);
   const merged = mergeColumnContinuations(nonEmptyBlocks);
   const split = splitMixedColumnBlocks(merged);
-  const ordered = repairInterleavedContinuationOrder(repairPageBoundaryContinuations(repairDetachedMarginContinuations(split)));
+  // The second split can expose a right-column paragraph that was formerly
+  // hidden inside a mixed table/body block. Run continuation repair once more
+  // so the newly exposed lines can rejoin their actual paragraph across the
+  // parallel table band.
+  const postSplitMerged = mergeColumnContinuations(split);
+  const ordered = repairInterleavedContinuationOrder(repairPageBoundaryContinuations(repairDetachedMarginContinuations(postSplitMerged)));
   return trimInterleavedHyphenFragments(trimOrphanTailBeforeChrome(ordered));
 }
 
@@ -3293,9 +3298,84 @@ function splitEmbeddedTableGridFromCaptions(blocks: LayoutBlock[]): LayoutBlock[
  * already assigned its lines to distinct columns. A true spanning block has
  * `column=spanning` on every line; mixed left/right runs are a reading-order
  * boundary and must remain separate for the resolver to reason about. */
+/**
+ * A table in one physical column can share y positions with ordinary prose in
+ * the adjacent column. Some PDF producers then emit alternating small-font
+ * numeric table lines and body lines as one paragraph block.  Split that
+ * mixed stream before role classification: otherwise a valid table grid can
+ * turn all of the neighbouring prose into a table, which removes it from
+ * translation.  This is intentionally based on native geometry and style,
+ * rather than a publisher or paper-specific vocabulary.
+ */
+function splitInterleavedSmallGridAndBody(block: LayoutBlock): LayoutBlock[] | null {
+  if (block.role !== "paragraph" || block.pageStart !== block.pageEnd || block.lines.length < 5) return null;
+  const numericDensity = (text: string) => (text.match(/\d/g) ?? []).length / Math.max(text.length, 1);
+  const gridCandidates = block.lines.filter((line) =>
+    line.items.length >= 3 && numericDensity(line.text) >= 0.08 &&
+    !/[.!?。！？]\s*$/.test(line.text.trim())
+  );
+  if (gridCandidates.length < 3) return null;
+  const gridFontFloor = [...gridCandidates.map((line) => line.fontSize)].sort((a, b) => a - b)[
+    Math.floor((gridCandidates.length - 1) * 0.25)
+  ];
+  const compactGridLines = gridCandidates.filter((line) => line.fontSize <= gridFontFloor + 0.55);
+  if (compactGridLines.length < 3) return null;
+  const tableRight = median(compactGridLines.map((line) =>
+    Math.max(...line.items.map((item) => item.x + item.width))
+  ));
+  const tableLeft = median(compactGridLines.map((line) => Math.min(...line.items.map((item) => item.x))));
+  const rightItems = block.lines.flatMap((line) => line.items)
+    .filter((item) => item.x >= tableRight + 16);
+  if (rightItems.length < 2) return null;
+  // Use the start of each right-side run rather than all of its glyph spans.
+  // A normal prose line has many later spans, whose median would move the
+  // split through its first words and silently drop them into the table.
+  const bodyStarts = block.lines.map((line) => Math.min(...line.items
+    .filter((item) => item.x >= tableRight + 16)
+    .map((item) => item.x))).filter(Number.isFinite);
+  const bodyStart = median(bodyStarts);
+  const bodyFont = median(rightItems.map((item) => item.fontSize));
+  const bodyWords = rightItems.reduce((count, item) =>
+    count + (item.text.match(/[A-Za-z]{3,}/g) ?? []).length, 0);
+  // The horizontal gutter, type scale, and prose content are independent
+  // evidence. Requiring all three avoids splitting a normal wide table whose
+  // cells merely use different weights or decimal precision.
+  if (bodyStart - tableRight < 18 || bodyFont - gridFontFloor < 0.8 || bodyWords < 8 || tableRight - tableLeft < 96) {
+    return null;
+  }
+  const splitX = (tableRight + bodyStart) / 2;
+  const tableLines: LayoutLine[] = [];
+  const bodyLines: LayoutLine[] = [];
+  for (const line of block.lines) {
+    const left = line.items.filter((item) => item.x + item.width <= splitX);
+    const right = line.items.filter((item) => item.x >= splitX);
+    if (left.length > 0) tableLines.push(itemsToLine(left, line.column, line.page, line.pageHeight, line.pageWidth));
+    if (right.length > 0) bodyLines.push(itemsToLine(right, line.column, line.page, line.pageHeight, line.pageWidth));
+  }
+  if (tableLines.length < 3 || bodyLines.length < 2) return null;
+  const make = (lines: LayoutLine[], role: LayoutRole): LayoutBlock => ({
+    ...block,
+    role,
+    text: joinLines(lines),
+    lines,
+    pageStart: lines[0].page,
+    pageEnd: lines.at(-1)!.page,
+    bbox: blockBbox(lines),
+  });
+  // Emit the body stream before the local table stream. This permits the
+  // normal same-column continuation repair to rejoin body lines that the PDF
+  // interleaved around the table.
+  return [make(bodyLines, "paragraph"), make(tableLines, "table")];
+}
+
 function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
   const result: LayoutBlock[] = [];
   for (const block of blocks) {
+    const interleavedTableAndBody = splitInterleavedSmallGridAndBody(block);
+    if (interleavedTableAndBody) {
+      result.push(...interleavedTableAndBody);
+      continue;
+    }
     if (block.role === "paragraph" && block.lines.length >= 4) {
       // Some borderless review tables interleave cells with nearby prose in
       // the native stream. Treat the block as a table only when several
@@ -3814,8 +3894,17 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
   const isAbstractBodyTitleBlock = (candidate: LayoutBlock): boolean =>
     candidate.role === "title" && candidate.pageStart === candidate.pageEnd &&
     candidate.text.length >= 96 &&
-    /^abstract\s*[—–-]\s*/i.test(candidate.text.trim()) &&
-    candidate.lines.length >= 2;
+      /^abstract\s*[—–-]\s*/i.test(candidate.text.trim()) &&
+      candidate.lines.length >= 2;
+  // A compact table in the left physical band can be interleaved between two
+  // consecutive body fragments from the right band. It is not source text for
+  // that paragraph. Keep the table as its own node, but permit the normal
+  // continuation logic to look past it only when its complete horizontal
+  // extent is outside the body column.
+  const isParallelTableBand = (candidate: LayoutBlock, body: LayoutBlock): boolean =>
+    candidate.role === "table" && body.role === "paragraph" &&
+    candidate.pageStart === body.pageStart && candidate.pageEnd === body.pageEnd &&
+    candidate.bbox.x + candidate.bbox.width + 16 <= body.bbox.x;
   const figureBandBlocks = new Set<LayoutBlock>();
   for (const caption of blocks.filter((block) => block.role === "figure_caption" || block.role === "table_caption")) {
     const pageMedian = pageFontMedians.get(caption.pageStart) ?? 9;
@@ -3847,7 +3936,11 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       result.push({ ...block, role: "header" });
       continue;
     }
-    if (figureBandBlocks.has(block)) {
+    const bodyRunInsideFigureBand = block.role === "paragraph" &&
+      block.text.trim().split(/\s+/).filter(Boolean).length >= 8 &&
+      median(block.lines.map((line) => line.width)) >= (block.lines[0]?.pageWidth ?? 612) * 0.3 &&
+      median(block.lines.map((line) => line.fontSize)) >= (pageFontMedians.get(block.pageStart) ?? 9) * 0.85;
+    if (figureBandBlocks.has(block) && !bodyRunInsideFigureBand) {
       result.push(block);
       continue;
     }
@@ -3878,7 +3971,8 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         // of one paragraph. It must remain its own canonical block, but must
         // not hide an unambiguously incomplete paragraph from its continuation.
         result[targetIdx].role === "figure_caption" ||
-        result[targetIdx].role === "table_caption")
+        result[targetIdx].role === "table_caption" ||
+        isParallelTableBand(result[targetIdx], block))
     ) {
       targetIdx--;
     }
@@ -4006,6 +4100,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
     const safeContinuationMetadataGap = skippedBlocks.length > 0 && skippedBlocks.every((skipped) => {
       if (safeDetachedMarginGap) return true;
       if (isTransparentMetadataBlock(skipped, repeatedTexts)) return true;
+      if (isParallelTableBand(skipped, block)) return true;
       if (skipped.role !== "figure_caption" && skipped.role !== "table_caption") return false;
       const captionBottom = skipped.bbox.y + skipped.bbox.height;
       const captionOnEarlierPage = skipped.pageEnd < (targetLine?.page ?? Number.NEGATIVE_INFINITY);

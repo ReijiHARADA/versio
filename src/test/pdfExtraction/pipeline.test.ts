@@ -561,6 +561,33 @@ describe("canonical extraction pipeline", () => {
     expect(precedingNarrative?.type).toBe("paragraph");
   }, 60_000);
 
+  it("separates a compact left-column table from adjacent right-column prose", async () => {
+    const pdf = path.resolve("test-data/real-papers/cognitive-memory-cues.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "parallel-table-body-regression",
+      filePath: pdf,
+      fileHash: "parallel-table-body-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const bodyLead = result.canonical.nodes.find((node) =>
+      node.pageStart === 7 && node.text?.startsWith("In this study, there was a significant difference between gist memory")
+    );
+    const bodyContinuation = result.canonical.nodes.find((node) =>
+      node.pageStart === 7 && node.text?.startsWith("and detailed memory at 10 min")
+    );
+    expect(bodyLead?.role).toBe("paragraph");
+    expect(bodyContinuation?.role).toBe("paragraph");
+    expect(result.canonical.nodes.some((node) =>
+      node.pageStart === 7 && node.role === "table" && /and detailed memory at 10 min|interest and memory type \[F/i.test(node.text ?? "")
+    )).toBe(false);
+    expect(result.blocks.some((block) =>
+      block.pageStart === 7 && block.type === "table" && /^Memory cue 4\.670 0\.039 0\.143/.test(block.original ?? "")
+    )).toBe(true);
+  }, 60_000);
+
   it("does not append a repeated top-margin proceedings URL to body paragraphs", async () => {
     const pdf = path.resolve("test-data/real-papers/marketing-the-impact-of-online-advertising-on-consumer-choice-consumption-traps-.pdf");
     if (!fs.existsSync(pdf)) return;
