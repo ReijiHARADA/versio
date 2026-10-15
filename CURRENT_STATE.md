@@ -1,3 +1,16 @@
+# 2026-10-15: packaged OzCHI masthead and table verification
+
+The actual packaged import path was also exercised with the OzCHI 2014
+finger-specific-touch PDF that previously exposed permission-text, masthead,
+and flattened-table failures. It completed import, annotation, search, both
+exports, quit, and relaunch. The saved package has the two extracted authors
+(Ashley Colley and Jonna Häkkilä), two institutional affiliations, and no ACM
+permission, copyright, DOI, or venue text in readable blocks. It contains
+seven table nodes, five with native cell grids; the former flattened `Finger
+Thumb …` and `Function Call …` strings do not occur as reader blocks. This is
+package-level evidence, not a claim that every table in the corpus is fully
+semantic.
+
 # 2026-10-15: preserve prose continuations beside a table or figure band
 
 A real cognitive-psychology page contains a compact left statistics table and
