@@ -459,6 +459,13 @@ function inferCaptionGrid(
 ): { ids: Set<string>; rows: TableCell[][] } | undefined {
   const captionBox = caption.boundingBoxes[0];
   if (!captionBox) return undefined;
+  const isWideNarrativeLine = (text: string, width: number) => {
+    const words = text.split(/\s+/).filter(Boolean);
+    // A neighbouring body line can be split into short native spans while
+    // retaining the full column width. It is not a table cell, even when
+    // several such spans happen to share the table's vertical range.
+    return words.length >= 4 && width >= captionBox.width * 0.8;
+  };
   const lines: GridLine[] = [];
   for (const block of blocks) {
     if (block.id === caption.id || block.pageStart !== caption.pageStart) continue;
@@ -467,7 +474,7 @@ function inferCaptionGrid(
     for (const line of metadata.lines ?? []) {
       const text = line.text.trim();
       const words = text.split(/\s+/).filter(Boolean);
-      if (!text || words.length > 7 || /[.!?;:]\s*$/.test(text)) continue;
+      if (!text || words.length > 7 || /[.!?;:]\s*$/.test(text) || isWideNarrativeLine(text, line.bbox.width)) continue;
       const overlap = Math.max(0, Math.min(line.bbox.x + line.bbox.width, captionBox.x + captionBox.width) - Math.max(line.bbox.x, captionBox.x));
       if (overlap < Math.min(line.bbox.width, captionBox.width) * 0.2) continue;
       const distance = Math.max(captionBox.y - (line.bbox.y + line.bbox.height), line.bbox.y - (captionBox.y + captionBox.height), 0);
@@ -484,14 +491,14 @@ function inferCaptionGrid(
     for (const line of layout.lines) {
       const text = line.text.trim();
       const words = text.split(/\s+/).filter(Boolean);
-      if (!text || words.length > 7 || /[.!?;:]\s*$/.test(text)) continue;
+      if (!text || words.length > 7 || /[.!?;:]\s*$/.test(text) || isWideNarrativeLine(text, line.bbox.width)) continue;
       const overlap = Math.max(0, Math.min(line.bbox.x + line.bbox.width, captionBox.x + captionBox.width) - Math.max(line.bbox.x, captionBox.x));
       if (overlap < Math.min(line.bbox.width, captionBox.width) * 0.2) continue;
       const distance = Math.max(captionBox.y - (line.bbox.y + line.bbox.height), line.bbox.y - (captionBox.y + captionBox.height), 0);
       if (distance > 250) continue;
       for (const item of line.items) {
         const itemText = item.text.trim();
-        if (!itemText || itemText.split(/\s+/).filter(Boolean).length > 7) continue;
+        if (!itemText || itemText.split(/\s+/).filter(Boolean).length > 7 || isWideNarrativeLine(itemText, item.width)) continue;
         lines.push({ blockId: "", text: itemText, x: item.x, width: item.width, y: line.y, height: line.height });
       }
     }
