@@ -2966,6 +2966,9 @@ The fast Tauri bundle includes this cross-column ownership fix; `Paper Reader.ap
 was rebuilt at `2026-10-16 02:06:37 +0900`. Packaged integration E2E with the
 OzCHI fixture passed import, search, export, quit, relaunch, and persistence.
 
+The same package attachment check reports all five OzCHI table captions with
+structured rows (`Table 1`–`Table 5`), including the Phonebook/Gallery cells.
+
 The same packaged integration path was also run against
 `human-ai-interaction-guidelines.pdf`; import, search, export, quit, relaunch,
 and persistence passed. A direct experiment that rebuilt captionless tables
@@ -2973,3 +2976,25 @@ from every Native layout item was rejected because existing figure-adjacent and
 synthetic-region regressions failed; it was reverted without changing the
 production path. Further table-cell reconstruction must preserve those
 boundaries before adoption.
+
+# 2026-10-16: recover table cells during package attachment
+
+Some resolver table nodes contain multiple native cell bounding boxes, but no
+single `LayoutBlock` has exactly the concatenated projected text. The package
+attachment step now geometrically matches table-region/fallback block boxes to
+Native layout items, groups same-baseline items, and supplies `tableRows` only
+after projection. This leaves Resolver role decisions unchanged while allowing
+the Reader's structured grid to render cells instead of a concatenated text
+fallback. A unit regression covers a three-cell row whose projected text does
+not match any one layout block.
+
+On `human-ai-interaction-guidelines.pdf` page 7, all 16 table blocks now expose
+structured rows. The full table audit reports extraction errors **0**,
+`readerRawFragments` **646** (previously 658), `readerCellFallbacks` **491**
+(previously 503), and `orphanFragments` **739**. The complete extraction
+regression remains **118/118** in **331.94 seconds**.
+
+The fast Tauri bundle includes this package-stage change; `Paper Reader.app`
+was rebuilt at `2026-10-16 02:29:51 +0900`. Packaged integration E2E passed for
+both `human-ai-interaction-guidelines.pdf` and the OzCHI fixture, covering
+import, search, export, quit, relaunch, and persistence.
