@@ -451,6 +451,9 @@ function normalizeAffiliationName(text: string): string {
     // A superscript marker can be flattened at the end of a wrapped
     // affiliation line. It is metadata, not part of the institution name.
     .replace(/[,;\s]+\d{1,2}\s*$/, "")
+    // A marker can be emitted immediately before the second half of a
+    // wrapped `Faculty of Arts and Science` line. Drop only that marker.
+    .replace(/\b\d{1,2}\s+(?=and\s+Science\b)/gi, "")
     // Column interleaving can insert a country-only token between an
     // institution's `University of` and its city. Remove only this
     // country-shaped artifact; ordinary institution names remain untouched.
@@ -469,6 +472,22 @@ function normalizeAffiliationName(text: string): string {
 
 function affiliationKey(text: string): string {
   return text.toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").replace(/\s+/g, " ").trim();
+}
+
+/** Split numbered institutions that a native stream flattened into one
+ * affiliation string. Restrict the boundary to an explicit superscript-like
+ * number immediately before an institution phrase; ordinary street numbers
+ * and years therefore remain part of the affiliation. */
+function splitNumberedAffiliationParts(name: string): string[] {
+  const normalized = normalizeAffiliationName(name);
+  const parts = normalized
+    .split(/(?=\b\d{1,2}\s*(?=(?:research|graduate|faculty|department|university|school|center|centre|institute|laboratory|national|college|hospital)\b))/giu)
+    .map((part) => normalizeAffiliationName(part.replace(/^\d{1,2}\s*/, "")))
+    .filter(Boolean);
+  if (parts.length < 2 || parts.some((part) => !/\b(?:research|graduate|faculty|department|university|school|center|centre|institute|laboratory|national|college|hospital)\b/i.test(part))) {
+    return [normalized];
+  }
+  return parts;
 }
 
 function appendAffiliation(affiliations: Array<{ id: string; name: string }>, candidate: { id: string; name: string }): void {
@@ -2626,6 +2645,20 @@ export function projectCanonicalToPaper(input: {
       if (!authorNames.some((existing) => existing.toLocaleLowerCase() === normalized.toLocaleLowerCase())) authorNames.push(normalized);
     }
   }
+  // A numbered affiliation stream can still survive geometry grouping as one
+  // long value. Split only at explicit institution markers and deduplicate
+  // exact/contained repeats (for example one research center emitted once per
+  // author). Canonical source nodes remain unchanged.
+  const normalizedAffiliations = affiliations.flatMap((affiliation) =>
+    splitNumberedAffiliationParts(affiliation.name).map((name) => ({ ...affiliation, name }))
+  );
+  affiliations = normalizedAffiliations.filter((affiliation, index, all) => {
+    const key = affiliationKey(affiliation.name);
+    return key.length > 0 && all.findIndex((candidate) => {
+      const candidateKey = affiliationKey(candidate.name);
+      return candidateKey === key || candidateKey.startsWith(key) || key.startsWith(candidateKey);
+    }) === index;
+  });
   const paper: Paper = {
     id: paperId,
     sourceFilePath: input.filePath,

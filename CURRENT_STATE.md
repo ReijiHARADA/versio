@@ -2670,3 +2670,16 @@ tables retain the existing path. A regression test covers both blocks. The
 the targeted math/OzCHI tests, typecheck, and lint pass. Full 232-case
 regression and packaged-app verification remain before this change is
 released.
+# 2026-10-15: normalize numbered affiliation streams and duplicates
+
+The corpus boundary scan found masthead metadata issues that the author F1
+metric alone did not expose: numbered institution lines could remain joined,
+contact text could leak into affiliation names, and a shared research center
+could be repeated once per recovered author. Projection now splits only at
+explicit superscript-like numbers followed by institution phrases, removes a
+known wrapped marker before `and Science`, and deduplicates exact/contained
+affiliation values at the public metadata boundary. Real-paper checks now
+normalize the Conversation Analysis research center to one affiliation and
+keep the Cognitive Motor Memory affiliations free of email/contact markers.
+Focused author tests pass; full benchmark and packaged verification are the
+next gates.
