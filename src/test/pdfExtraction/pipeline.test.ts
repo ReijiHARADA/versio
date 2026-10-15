@@ -1246,7 +1246,7 @@ describe("canonical extraction pipeline", () => {
     expect(captionBoundPanelLabel?.role).toBe("other");
     expect(captionBoundPanelLabel?.evidence.some((evidence) => evidence.label === "figure-panel-label")).toBe(true);
     const captionBoundVectorGrid = result.canonical.nodes.find((node) =>
-      node.pageStart === 39 && /^9 8 9 9 8 9 8 11/.test(node.text ?? "")
+      node.pageStart === 39 && /(?:^|\s)9 8 9 9 8 9 8 11(?:\s|$)/.test(node.text ?? "")
     );
     expect(captionBoundVectorGrid?.role).toBe("other");
     expect(captionBoundVectorGrid?.evidence.some((evidence) => evidence.label === "figure-panel-label")).toBe(true);

@@ -2651,6 +2651,17 @@ function groupLinesIntoBlocks(
         line.x + line.width + 12 <= previous.x && Math.abs(line.y - previous.y) <= Math.max(18, previous.fontSize * 1.8);
       return body && rail;
     })();
+    // Vector diagrams sometimes emit numeric glyph bands at ~1pt followed by
+    // a normal-size caption line. Their shared column and small baseline gap
+    // otherwise make them one paragraph, leaking figure labels into caption
+    // text. Treat a sharp tiny-font transition as a structural boundary;
+    // superscripts/footnotes remain above this conservative threshold.
+    const tinyVectorBandBoundary = currentRole === "paragraph" && forcedRole === "paragraph" && (() => {
+      const previous = current[current.length - 1];
+      const tiny = Math.min(previous.fontSize, line.fontSize) <= baseFont * 0.35;
+      const normal = Math.max(previous.fontSize, line.fontSize) >= baseFont * 0.55;
+      return tiny && normal;
+    })();
     const mergeable =
       sameRole &&
       !atomic &&
@@ -2664,6 +2675,7 @@ function groupLinesIntoBlocks(
       rotationCompatible &&
       rotationContentCompatible &&
       !detachedRailLineBoundary &&
+      !tinyVectorBandBoundary &&
       !authorColumnBoundary &&
       canMerge(current[current.length - 1], line, baseFont);
 
