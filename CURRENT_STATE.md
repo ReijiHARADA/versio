@@ -2893,3 +2893,27 @@ The fast Tauri bundle was rebuilt successfully after the nullability fix;
 `Paper Reader.app` updated at `2026-10-16 01:13:43 +0900`. Packaged integration
 E2E (import, annotation/search marker, export, quit, relaunch, persistence)
 also passed.
+
+# 2026-10-16: join wrapped cells in native table fallback rows
+
+The Reader package could preserve a native table but still expose wrapped cell
+lines as separate cells/rows. This was visible in the Phonebook/Gallery table:
+`Show sharing context menu (email, sms, etc.)`, `Open tapped contacts contact
+card`, and `Delete the tapped contact` were split across geometry fragments.
+`normalizeTableRows` now learns repeated x-bands, maps indented wrapped words
+back to the established band, joins continuation rows lacking the leading
+column, and removes whitespace introduced by hyphenated line wraps. It runs
+only after table geometry has already classified the block as a table.
+
+The real OzCHI package regression now verifies the reconstructed cells. Full
+real-paper extraction regression passes **118/118** in **334.76 seconds**.
+The refreshed 114-PDF table readiness audit reports extraction errors **0**,
+`readerRawFragments` **679** (previously 700), `readerCellFallbacks` **516**
+(previously 522), and `orphanFragments` **762** (previously 783). The updated
+report is `test-data/real-papers/reports/table-reader-readiness-v1.json`.
+The Tauri bundle must be rebuilt after this source change.
+
+The fast Tauri bundle now includes this table-cell normalization; the `.app`
+updated at `2026-10-16 01:29:13 +0900`. Packaged integration E2E passed with
+the real `ozchi-finger-specific-touch.pdf` fixture (import, search, export,
+quit, relaunch, persistence).
