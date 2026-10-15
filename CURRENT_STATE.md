@@ -2965,3 +2965,11 @@ legitimate numeric/label cells; they remain visible for safety.
 The fast Tauri bundle includes this cross-column ownership fix; `Paper Reader.app`
 was rebuilt at `2026-10-16 02:06:37 +0900`. Packaged integration E2E with the
 OzCHI fixture passed import, search, export, quit, relaunch, and persistence.
+
+The same packaged integration path was also run against
+`human-ai-interaction-guidelines.pdf`; import, search, export, quit, relaunch,
+and persistence passed. A direct experiment that rebuilt captionless tables
+from every Native layout item was rejected because existing figure-adjacent and
+synthetic-region regressions failed; it was reverted without changing the
+production path. Further table-cell reconstruction must preserve those
+boundaries before adoption.
