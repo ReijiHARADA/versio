@@ -2944,3 +2944,24 @@ numeric-grid fragments; `orphanFragments` is **740**. These counts remain
 diagnostic and are not treated as proof that all table semantics are solved.
 The source change is not yet included in the packaged `.app`; rebuild and
 packaged smoke verification are the next steps.
+
+# 2026-10-16: preserve caption ownership across PDF columns
+
+Wide ruled tables can place a caption in the left column while native cell
+fragments are assigned to the right column. The reader's crop suppression and
+the table audit previously treated those fragments as unrelated because their
+physical `column` labels differed. Caption-to-canonical-node ownership now
+takes precedence when available, so cross-column fragments belonging to the
+same table target are suppressed once a table crop exists. This is a generic
+relationship fix and does not depend on a paper name.
+
+A pipeline regression covers a left-caption/right-cell case. The full
+real-paper extraction regression remains **118/118** (348.19 seconds). The
+refreshed audit reports extraction errors **0**, `readerRawFragments` **658**,
+`readerCellFallbacks` **503**, and `orphanFragments` **739**. Remaining raw
+fragments are primarily source-only tables whose crop was unavailable or
+legitimate numeric/label cells; they remain visible for safety.
+
+The fast Tauri bundle includes this cross-column ownership fix; `Paper Reader.app`
+was rebuilt at `2026-10-16 02:06:37 +0900`. Packaged integration E2E with the
+OzCHI fixture passed import, search, export, quit, relaunch, and persistence.

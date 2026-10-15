@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T16:44:44.431Z",
+  "generatedAt": "2026-10-15T16:58:38.872Z",
   "paperCount": 114,
   "papers": [
     {
@@ -5303,11 +5303,11 @@
       "tableCaptions": 54,
       "cropReadyCaptions": 34,
       "rawTableFragments": 130,
-      "cropBackedFragments": 85,
-      "readerRawFragments": 27,
-      "readerCellFallbacks": 24,
+      "cropBackedFragments": 86,
+      "readerRawFragments": 26,
+      "readerCellFallbacks": 23,
       "readerFragmentKinds": {
-        "structured-grid": 24,
+        "structured-grid": 23,
         "short-label": 3
       },
       "readerFragmentSamples": {
@@ -5349,16 +5349,16 @@
             "text": "F 48 36 20 104"
           },
           {
-            "page": 203,
-            "text": "appeal appeal appeal appeal Focused attention .51 (.50) .69 (.46) .26 (.44) .42 (.49) Divided attention .58 (.49) .62 (.49) .40 (.49) .28 (.45) Incidental attention .62 (.49) .72 (.46) .51 (.50) .38 (.48) Control .49 (.50) .48 (.50) .27 (.4"
-          },
-          {
             "page": 204,
             "text": "Constant -.709** .229 .492 -2.408** .313 .090 Attention (Wald χ2 = 15.424, p = .001)** (Wald χ2 = 21.303, p = .000)** Focused .972** .303 2.643 1.485** .347 4.414 Divided .646** .296 1.907 .795** .358 2.215 Incidental 1.071** .306 2.919 1.3"
           },
           {
             "page": 216,
             "text": "8.1. Introduction"
+          },
+          {
+            "page": 218,
+            "text": "digital advertisements is greater for matching ads with rational-utilitarian appeal than hedonic-emotional appeal H4c The effect of low attention processing of digital advertisements is greater for mismatching ads with emotionalutilitarian "
           }
         ],
         "short-label": [
@@ -5408,10 +5408,6 @@
         {
           "page": 183,
           "text": "The effect of low attention processing of digital advertisements is greater for ads with emotional appeal than rational appeal. People are more likely to make rational judgements i"
-        },
-        {
-          "page": 203,
-          "text": "appeal appeal appeal appeal Focused attention .51 (.50) .69 (.46) .26 (.44) .42 (.49) Divided attention .58 (.49) .62 (.49) .40 (.49) .28 (.45) Incidental attention .62 (.49) .72 ("
         },
         {
           "page": 204,
@@ -6683,17 +6679,17 @@
     "tableCaptions": 367,
     "cropReadyCaptions": 251,
     "rawTableFragments": 1490,
-    "cropBackedFragments": 662,
-    "readerRawFragments": 659,
-    "readerCellFallbacks": 504,
+    "cropBackedFragments": 663,
+    "readerRawFragments": 658,
+    "readerCellFallbacks": 503,
     "readerFragmentKinds": {
-      "structured-grid": 504,
+      "structured-grid": 503,
       "prose-like": 5,
       "short-label": 131,
       "ambiguous": 18,
       "numeric-grid": 1
     },
-    "orphanFragments": 740,
+    "orphanFragments": 739,
     "note": "Crop readiness is a geometry diagnostic. readerRawFragments simulates suppression only after a successful caption crop; readerCellFallbacks are native same-baseline rows retained for a readable source-only grid, not a claim of fully reconstructed table semantics. readerFragmentKinds is audit-only triage and does not change resolver behavior."
   }
 }

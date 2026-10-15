@@ -154,6 +154,24 @@ describe("canonical extraction pipeline", () => {
     expect(suppressImageBackedTableFragments([caption, fallback])).toEqual([caption]);
   });
 
+  it("suppresses a cross-column table fragment through its canonical caption relation", () => {
+    const caption = {
+      id: "table-caption", paperId: "p", order: 0, type: "table", original: "Table 2. Values.",
+      translated: null, translationStatus: "skipped", pageStart: 5, pageEnd: 5,
+      boundingBoxes: [{ page: 5, x: 52, y: 76, width: 233, height: 18 }], parentBlockId: null,
+      extractionConfidence: 0.95,
+      metadata: { imageUrl: "data:image/jpeg;base64,crop", tableNumber: "Table 2", captionOriginal: "Table 2. Values.", captionTranslated: null, column: "left", captionOf: "g-42" },
+    } as PaperBlock;
+    const rightColumnFragment = {
+      id: "table-region-right", paperId: "p", order: 1, type: "table", original: "R² 0.9996",
+      translated: null, translationStatus: "skipped", pageStart: 5, pageEnd: 5,
+      boundingBoxes: [{ page: 5, x: 545, y: 134, width: 70, height: 10 }], parentBlockId: null,
+      extractionConfidence: 0.995,
+      metadata: { figureKey: "table-region-g-42", canonicalNodeId: "g-42", column: "right" },
+    } as PaperBlock;
+    expect(suppressImageBackedTableFragments([caption, rightColumnFragment])).toEqual([caption]);
+  });
+
   it("keeps a short diagram annotation out of an adjacent prose paragraph", async () => {
     const pdf = path.resolve("test-data/real-papers/cognitive-psychology-gpt3.pdf");
     if (!fs.existsSync(pdf)) return;

@@ -93,6 +93,7 @@ export function suppressImageBackedTableFragments(blocks: PaperBlock[]): PaperBl
       imageUrl?: string;
       captionOriginal?: string;
       figureKey?: string;
+      canonicalNodeId?: string;
       column?: string;
       tableSourceFallback?: boolean;
       evidence?: Array<{ label?: string }>;
@@ -107,9 +108,14 @@ export function suppressImageBackedTableFragments(blocks: PaperBlock[]): PaperBl
     const fragment = boxBounds(block);
     if (!fragment) return true;
     return !imageBackedCaptions.some((caption) => {
-      const captionMetadata = caption.metadata as { column?: string };
+      const captionMetadata = caption.metadata as { column?: string; captionOf?: string };
       const captionBox = boxBounds(caption);
       if (!captionBox || captionBox.page !== fragment.page) return false;
+      // Canonical caption relations are stronger than the physical column
+      // label. A table can span both columns while its caption is placed in
+      // the first column, so a right-column native fragment must still be
+      // suppressed when it belongs to the caption's canonical target.
+      if (captionMetadata.captionOf && metadata.canonicalNodeId === captionMetadata.captionOf) return true;
       if (metadata.column && captionMetadata.column && metadata.column !== captionMetadata.column) return false;
       const horizontallyOverlaps = fragment.left < captionBox.right && captionBox.left < fragment.right;
       // Publishers place table captions above *or* below their grids. Both

@@ -47,6 +47,9 @@ function ownedByCaption(fragment: PaperBlock, caption: PaperBlock): boolean {
   const fragmentBox = bounds(fragment);
   const captionBox = bounds(caption);
   if (!fragmentBox || !captionBox || fragmentBox.page !== captionBox.page) return false;
+  const fragmentMetadata = fragment.metadata as { canonicalNodeId?: string };
+  const captionMetadata = caption.metadata as { captionOf?: string };
+  if (captionMetadata.captionOf && fragmentMetadata.canonicalNodeId === captionMetadata.captionOf) return true;
   const fragmentColumn = String(fragment.metadata.column ?? "");
   const captionColumn = String(caption.metadata.column ?? "");
   if (fragmentColumn && captionColumn && fragmentColumn !== captionColumn) return false;
