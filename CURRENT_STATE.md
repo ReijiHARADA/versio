@@ -2834,3 +2834,28 @@ The complete extraction corpus remains **232/232** after this change, and the de
 The staged `.app` must be rebuilt after this source change before Tauri UI verification.
 
 Packaged verification with the real `test-data/real-papers/interactive-jewellery.pdf` also passed using the rebuilt `.app`: import, annotation/search/export, Notion ZIP generation, quit, relaunch, and persistence all completed (`exportBytes=38582`, `notionBytes=15157`, `searchHits=1`).
+
+# 2026-10-16: reconstruct captionless native guideline grids in Reader package
+
+The Human-AI Interaction Guidelines paper contains a genuine borderless, captionless
+multi-column table on page 6. Native extraction had already grouped same-baseline
+cells, but the Reader package layer could split or drop cells, especially repeated
+values such as `Model`/`Google`; the old text-only layout lookup also selected the
+wrong duplicate column. `attachLinesToBlocks` now matches duplicate layout text by
+nearest native bbox and reconstructs captionless grids from repeated row geometry,
+stable x bands, and in-row optional cells. This keeps cells such as `How to train
+your model` in the same table row, marks the result as a skipped table, and prevents
+it from being sent to translation as prose. The rule is caption-independent and
+uses geometry/row evidence rather than paper-specific text.
+
+Focused Human-AI package regression and typecheck pass. The complete real-paper
+extraction regression passes **118/118** tests in **345.50 seconds**. The source
+change is not yet included in the packaged `.app`; rebuild and packaged smoke test
+are the next verification steps.
+
+The captionless-grid change is included in the rebuilt `.app` at
+`src-tauri/target/release/bundle/macos/Paper Reader.app` (updated
+`2026-10-16 00:45:57 +0900`). Packaged integration E2E passed for both the
+normal fixture and `test-data/real-papers/human-ai-interaction-guidelines.pdf`,
+covering import, Reader marker/search/export, quit, relaunch, and persistence.
+The Human-AI package path is therefore verified in the actual Tauri bundle.

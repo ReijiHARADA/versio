@@ -612,6 +612,24 @@ describe("baseline benchmark on cached real papers", () => {
         result.canonical.nodes.find((node) => node.id === relation.to)?.text?.startsWith("as a standalone document")
       );
       expect(continuation?.score).toBe(0.9);
+
+      const packaged = attachLinesToBlocks(result.blocks, result.layoutBlocks);
+      const captionlessGrid = packaged.find((block) =>
+        block.pageStart === 6 && block.metadata.captionlessNativeGrid === true &&
+        block.original.startsWith("Model How to train your model Google")
+      );
+      expect(captionlessGrid?.type).toBe("table");
+      expect(captionlessGrid?.translationStatus).toBe("skipped");
+      expect(captionlessGrid?.metadata.tableRows).toEqual(expect.arrayContaining([
+        expect.arrayContaining([
+          expect.objectContaining({ text: "Model" }),
+          expect.objectContaining({ text: "How to train your model" }),
+          expect.objectContaining({ text: "Google" }),
+          expect.objectContaining({ text: "Design for experimentation" }),
+        ]),
+      ]));
+      expect((captionlessGrid?.metadata.tableRows as unknown[] | undefined)?.length ?? 0).toBeGreaterThanOrEqual(20);
+      expect(packaged.filter((block) => block.pageStart === 6 && block.original === "How to train your model")).toHaveLength(0);
     }, 60_000);
   }
 

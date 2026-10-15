@@ -44,24 +44,52 @@ export function attachLinesToBlocks(
   blocks: PaperBlock[],
   layoutBlocks: LayoutBlock[]
 ): PaperBlock[] {
-  const byText = new Map<string, StructureLine[]>();
-  for (const layout of layoutBlocks) {
-    byText.set(
-      `${layout.pageStart}|${layout.text}`,
-      layout.lines.map((line) => ({
-        text: line.text,
-        bbox: line.bbox,
-        baseline: line.y + line.height,
-        fontSize: line.fontSize,
-      }))
-    );
-  }
   const withLines = blocks.map((block) => {
-    const layout = layoutBlocks.find((candidate) =>
+    const blockBox = block.boundingBoxes[0];
+    const candidates = layoutBlocks.filter((candidate) =>
       candidate.pageStart === block.pageStart && candidate.text === (block.original ?? "")
     );
-    const lines = byText.get(`${block.pageStart}|${block.original ?? ""}`);
-    if (!lines) return block;
+    // Text is not a stable key: table columns frequently repeat values such
+    // as `Model` and `Google`. Match duplicate text by nearest native bbox so
+    // each cell retains its own x-band and can be reconstructed into rows.
+    const layout = candidates.slice().sort((a, b) => {
+      if (!blockBox) return 0;
+      const distance = (candidate: LayoutBlock) => {
+        const box = candidate.bbox;
+        const dx = (box.x + box.width / 2) - (blockBox.x + blockBox.width / 2);
+        const dy = (box.y + box.height / 2) - (blockBox.y + blockBox.height / 2);
+        return dx * dx + dy * dy;
+      };
+      return distance(a) - distance(b);
+    })[0];
+    const lines = layout?.lines.map((line) => ({
+      text: line.text,
+      bbox: line.bbox,
+      baseline: line.y + line.height,
+      fontSize: line.fontSize,
+    }));
+    if (!lines) {
+      const existingRows = (block.metadata as { tableRows?: unknown }).tableRows;
+      const box = block.boundingBoxes[0];
+      // A row already aggregated by projection may not have an exact
+      // LayoutBlock text match. Keep a synthetic line so the captionless-grid
+      // pass can still use its per-cell x coordinates.
+      if (block.type === "table" && box && Array.isArray(existingRows) && existingRows.length === 1) {
+        return {
+          ...block,
+          metadata: {
+            ...block.metadata,
+            lines: [{
+              text: block.original ?? "",
+              bbox: box,
+              baseline: box.y + box.height,
+              fontSize: box.height,
+            }],
+          },
+        };
+      }
+      return block;
+    }
     // Table rasterization is deliberately conservative. When it cannot make
     // a crop, retain the native same-baseline cells so the Reader can render
     // rows instead of collapsing `Finger Thumb Finger1 ...` into prose.
@@ -83,10 +111,141 @@ export function attachLinesToBlocks(
       },
     };
   });
-  return foldCaptionOwnedTableFallbacks(withLines, layoutBlocks);
+  return foldCaptionlessNativeGrids(withLines, layoutBlocks);
 }
 
 type TableCell = { text: string; x: number; width: number };
+
+/**
+ * Reassemble borderless tables whose native stream contains one block per
+ * cell.  This is intentionally a package/projection repair rather than a
+ * text heuristic: it requires repeated y rows, at least three stable x bands,
+ * and single-line cells. Ordinary two-column prose and multi-line paragraphs
+ * therefore remain untouched. Captioned tables continue through the existing
+ * crop/fallback path below.
+ */
+function foldCaptionlessNativeGrids(blocks: PaperBlock[], layoutBlocks: LayoutBlock[]): PaperBlock[] {
+  type Record = { block: PaperBlock; line: StructureLine; y: number };
+  const recordsByPage = new Map<number, Record[]>();
+  for (const block of blocks) {
+    const existingRows = (block.metadata as { tableRows?: unknown }).tableRows;
+    const existingStructuredGrid = Array.isArray(existingRows) && existingRows.length >= 3 &&
+      existingRows.some((row) => Array.isArray(row) && row.length >= 2);
+    if (block.type === "figure" || block.type === "reference" ||
+        (block.type === "table" && (Boolean(block.metadata.captionOriginal) || existingStructuredGrid)) ||
+        block.metadata.captionOriginal || block.metadata.imageUrl) continue;
+    const lines = block.metadata.lines;
+    if (!Array.isArray(lines) || lines.length !== 1) continue;
+    const line = lines[0] as StructureLine;
+    const text = (block.original ?? "").trim();
+    if (!text || /[\n]/.test(text) || text.length > 280) continue;
+    const page = block.pageStart;
+    // Projection may already have combined a same-baseline native row into a
+    // one-row table block. Split that row back into geometry records so a
+    // neighbouring fourth/fifth column can join the same captionless grid.
+    if (Array.isArray(existingRows) && existingRows.length === 1 && Array.isArray(existingRows[0]) && existingRows[0].length >= 2) {
+      for (const cell of existingRows[0] as Array<{ text?: unknown; x?: unknown; width?: unknown }>) {
+        if (typeof cell.text !== "string" || !cell.text.trim() || typeof cell.x !== "number") continue;
+        const cellLine = {
+          ...line,
+          text: cell.text.trim(),
+          bbox: { ...line.bbox, x: cell.x, width: typeof cell.width === "number" ? cell.width : line.bbox.width },
+          x: cell.x,
+          width: typeof cell.width === "number" ? cell.width : line.bbox.width,
+        } as StructureLine;
+        const list = recordsByPage.get(page) ?? [];
+        list.push({ block, line: cellLine, y: line.bbox.y });
+        recordsByPage.set(page, list);
+      }
+      continue;
+    }
+    const list = recordsByPage.get(page) ?? [];
+    list.push({ block, line, y: line.bbox.y });
+    recordsByPage.set(page, list);
+  }
+
+  const consumed = new Set<string>();
+  const mergedById = new Map<string, PaperBlock>();
+  for (const records of recordsByPage.values()) {
+    records.sort((a, b) => a.y - b.y || a.line.bbox.x - b.line.bbox.x);
+    const rows: Record[][] = [];
+    for (const record of records) {
+      const previous = rows.at(-1);
+      const previousY = previous?.[0]?.y;
+      const tolerance = previous?.[0] ? Math.max(previous[0].line.bbox.height * 0.65, 2) : 0;
+      if (previous && previousY !== undefined && Math.abs(record.y - previousY) <= tolerance) previous.push(record);
+      else rows.push([record]);
+    }
+    const gaps = rows.slice(1).map((row, index) => row[0].y - rows[index][0].y).filter((gap) => gap > 0);
+    const sortedGaps = [...gaps].sort((a, b) => a - b);
+    const medianGap = sortedGaps[Math.floor(sortedGaps.length / 2)] ?? 0;
+    const splitGap = Math.max(18, medianGap * 2.5);
+    const segments: Record[][][] = [];
+    for (const row of rows) {
+      const previousSegment = segments.at(-1);
+      const previousRow = previousSegment?.at(-1);
+      if (previousSegment && previousRow && row[0].y - previousRow[0].y <= splitGap) previousSegment.push(row);
+      else segments.push([row]);
+    }
+    for (const segment of segments) {
+      if (segment.length < 3) continue;
+      const bands: number[] = [];
+      for (const row of segment) {
+        for (const record of row) {
+          const x = record.line.bbox.x;
+          const existing = bands.findIndex((band) => Math.abs(band - x) <= 10);
+          if (existing >= 0) bands[existing] = (bands[existing] + x) / 2;
+          else bands.push(x);
+        }
+      }
+      bands.sort((a, b) => a - b);
+      const stableBands = bands.filter((band) => segment.filter((row) => row.some((record) => Math.abs(record.line.bbox.x - band) <= 12)).length >= Math.max(3, Math.ceil(segment.length * 0.65)));
+      const coreRows = segment.map((row) => row.filter((record) => stableBands.some((band) => Math.abs(record.line.bbox.x - band) <= 12))).filter((row) => row.length >= 3);
+      if (stableBands.length < 3 || coreRows.length < Math.max(3, Math.ceil(segment.length * 0.75))) continue;
+      // Some borderless tables have a sparse header/descriptor column (for
+      // example a long column label that appears only once). Keep those cells
+      // when they sit inside the established table span and share a usable
+      // row, while still requiring the repeated core bands above.
+      const minBand = Math.min(...stableBands);
+      const maxBand = Math.max(...stableBands);
+      const rowsWithOptionalCells = segment
+        .filter((row) => row.filter((record) => stableBands.some((band) => Math.abs(record.line.bbox.x - band) <= 12)).length >= 3)
+        .map((row) => row.filter((record) => record.line.bbox.x >= minBand - 12 && record.line.bbox.x <= maxBand + 12));
+      const members = rowsWithOptionalCells.flat();
+      const memberIds = new Set(members.map((record) => record.block.id));
+      if ([...memberIds].some((id) => consumed.has(id))) continue;
+      const first = members[0].block;
+      const tableRows = rowsWithOptionalCells.map((row) => row
+        .sort((a, b) => a.line.bbox.x - b.line.bbox.x)
+        .map((record) => ({ text: record.line.text.trim(), x: record.line.bbox.x, width: record.line.bbox.width })));
+      const merged: PaperBlock = {
+        ...first,
+        type: "table",
+        original: tableRows.map((row) => row.map((cell) => cell.text).join(" ")).join(" "),
+        pageStart: first.pageStart,
+        pageEnd: Math.max(...members.map((record) => record.block.pageEnd)),
+        boundingBoxes: members.flatMap((record) => record.block.boundingBoxes),
+        translationStatus: "skipped",
+        metadata: {
+          ...first.metadata,
+          role: "table",
+          tableSourceFallback: true,
+          tableRows,
+          captionlessNativeGrid: true,
+        },
+      };
+      mergedById.set(first.id, merged);
+      for (const id of memberIds) consumed.add(id);
+    }
+  }
+  if (consumed.size === 0) return foldCaptionOwnedTableFallbacks(blocks, layoutBlocks);
+  const result = blocks.flatMap((block) => {
+    if (mergedById.has(block.id)) return [mergedById.get(block.id)!];
+    if (consumed.has(block.id)) return [];
+    return [block];
+  });
+  return foldCaptionOwnedTableFallbacks(result, layoutBlocks);
+}
 
 function tableRowsFrom(block: PaperBlock): TableCell[][] | undefined {
   const rows = (block.metadata as { tableRows?: unknown }).tableRows;
