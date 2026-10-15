@@ -2074,6 +2074,13 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     };
   });
 
+  const looksLikePublicationRail = (text: string): boolean => {
+    const normalized = text.trim();
+    return /\b(?:e[- ]?issn|p[- ]?issn|issn|doi|impact\s+factor)\b/i.test(normalized) ||
+      /^(?:[A-Z]{2,12}\s+)?\d{4}\s*[;,:]\s*\d+\s*\(\s*\d+\s*\)/.test(normalized) ||
+      /\b\d{4}\s*;\s*\d+\s*\(\s*\d+\s*\)\s*:\s*\d/.test(normalized);
+  };
+
   // Native PDF producers may split the first words of an article title into a
   // short metadata/affiliation block on the same baseline. Reattach only a
   // compact, institution-free prefix immediately to the left of a title
@@ -2091,10 +2098,63 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
           (otherBox?.x ?? 0) < box.x && text.length >= 2 && text.length <= 80 &&
           /^[a-z\u00e0-\u024f]/.test(candidate.text.trim()) &&
           !/[.!?]$/.test(text) &&
+          !looksLikePublicationRail(text) &&
           !/\b(?:university|department|institute|laboratory|college|school|hospital|faculty)\b/i.test(text);
       })
       .sort((a, b) => (b.boundingBoxes[0]?.x ?? 0) - (a.boundingBoxes[0]?.x ?? 0))[0];
-    if (!prefix) return candidate;
+    if (!prefix) {
+      // A title continuation can be misclassified as a paragraph when the
+      // first line sits in a different horizontal band. Recover it only when
+      // typography and sentence shape agree: same page/font, tight spacing,
+      // lowercase continuation, and an unfinished first line.
+      const titleFont = candidate.layoutBlock.lines[0]?.fontSize ?? 0;
+      const continuation = matrixCandidates
+        .filter((other) => {
+          if (other === candidate || other.pageStart !== 1 || other.role !== "paragraph") return false;
+          const otherBox = other.boundingBoxes[0];
+          const candidateBox = candidate.boundingBoxes[0];
+          if (!otherBox || !candidateBox) return false;
+          const otherFont = other.layoutBlock.lines[0]?.fontSize ?? 0;
+          const gap = candidateBox.y - (otherBox.y + otherBox.height);
+          const words = other.text.trim().split(/\s+/).filter(Boolean);
+          const unfinishedTitleWord = /\b(?:of|and|the|in|for|to|a|an|on|with|from|by|as|at|via)$/i.test(other.text.trim());
+          return /^[a-z\u00e0-\u024f]/.test(candidate.text.trim()) &&
+            !/[.!?;:]$/.test(other.text.trim()) && words.length >= 3 && words.length <= 16 &&
+            other.text.trim().length <= 140 && gap >= -2 && gap <= Math.max(24, titleFont * 2.2) &&
+            Math.abs(otherFont - titleFont) <= 1.2 &&
+            unfinishedTitleWord &&
+            !looksLikePublicationRail(other.text) &&
+            !/^(?:abstract|keywords?|introduction|received|accepted)\b/i.test(other.text.trim());
+        })
+        .sort((a, b) => (b.boundingBoxes[0]?.y ?? 0) - (a.boundingBoxes[0]?.y ?? 0))[0];
+      if (!continuation) return candidate;
+      const previousBox = continuation.boundingBoxes[0];
+      const minX = Math.min(previousBox.x, box.x);
+      const minY = Math.min(previousBox.y, box.y);
+      return {
+        ...candidate,
+        text: `${continuation.text.trim()} ${candidate.text.trim()}`.replace(/\s+/g, " "),
+        boundingBoxes: [{
+          ...box,
+          x: minX,
+          y: minY,
+          width: Math.max(previousBox.x + previousBox.width, box.x + box.width) - minX,
+          height: Math.max(previousBox.y + previousBox.height, box.y + box.height) - minY,
+        }],
+        layoutBlock: {
+          ...candidate.layoutBlock,
+          text: `${continuation.text.trim()} ${candidate.text.trim()}`.replace(/\s+/g, " "),
+        },
+        evidence: [...candidate.evidence, {
+          source: "geometry" as EvidenceSource,
+          label: "cross-band-title-continuation",
+          confidence: 0.9,
+          page: candidate.pageStart,
+          bbox: box,
+          reason: "same-font lowercase continuation follows an unfinished title line",
+        }],
+      };
+    }
     const prefixBox = prefix.boundingBoxes[0];
     return {
       ...candidate,

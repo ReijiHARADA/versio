@@ -1,16 +1,17 @@
-# 2026-10-15: separate native-title extraction from metadata fallback
+# 2026-10-15: recover interrupted native titles without absorbing issue rails
 
 The full cached corpus benchmark now records both the title shown to the
 Reader and the title recovered from native PDF evidence. Across 113 cached
-papers, Reader-title exactness is **105/113 (92.92%)**, while native-title
-exactness is **68/113 (60.18%)**; **39** papers used verified catalog metadata
-as a fallback. This prevents the earlier aggregate from presenting metadata
-recovery as PDF extraction success. The eight Reader mismatches are currently
-split between one genuine multi-line native-title reconstruction defect,
-catalog/PDF language or spelling mismatches, and one catalog/PDF provenance
-mismatch. The next extraction change must target the generic geometry/style
-signals for interrupted title continuation; catalog mismatches should be
-corrected in corpus metadata rather than hidden in the resolver.
+papers, Reader-title exactness was **105/113 (92.92%)** before the latest
+change, while native-title exactness was **68/113 (60.18%)**; **39** papers
+used verified catalog metadata as a fallback. A generic title continuation
+rule now joins same-font, lowercase continuation lines whose preceding line
+ends in an unfinished function word, while rejecting issue/date/ISSN/DOI rails
+as title prefixes. On the affected Eco-Linguistics PDF the canonical title is
+now complete, and the full benchmark's Reader-title exactness improved to
+**106/113 (93.81%)**. The regression is covered in `pipeline.test.ts`;
+catalog mismatches should still be corrected in corpus metadata rather than
+hidden in the resolver.
 
 # 2026-10-15: packaged OzCHI masthead and table verification
 

@@ -1297,3 +1297,18 @@ describe("canonical extraction pipeline", () => {
     const result = reconstructDocument(pages);
     expect(result.blocks[0]?.role).toBe("title");
   });
+
+  it("rejoins an interrupted native title around publication metadata", async () => {
+    const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/linguistics-eco-linguistics-in-english-reviewing-the-role-of-language-in-environme.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "title-continuation-publication-rail",
+      filePath: pdf,
+      fileHash: "title-continuation-publication-rail",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.canonical.nodes.find((node) => node.role === "title")?.text)
+      .toBe("Eco-Linguistics in English: Reviewing the role of language in environmental discourse");
+  }, 60_000);
