@@ -3127,3 +3127,9 @@ extraction quality.
 After removing the diagnostic markers, typecheck and the checkpoint/FTS tests
 pass again. The clean fast `.app` was rebuilt at **2026-10-16 04:32:20 JST**;
 it contains the checkpoint coalescing fix and no acceptance-only instrumentation.
+
+The attempted statistical-prose demotion was reverted after focused pipeline
+regressions showed it interfered with existing table/figure boundaries. No
+production extraction rule was retained from that experiment. The clean source
+was rebuilt into `Paper Reader.app` at **2026-10-16 04:39:02 JST**, with the
+checkpoint-coalescing and FTS-schema fixes included.
