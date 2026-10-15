@@ -1,3 +1,37 @@
+# 2026-10-16: demote prose falsely retained as table fallback
+
+The table-reader audit found five reader-visible `prose-like` fragments that
+had no recovered cell rows but were marked `tableSourceFallback` by the
+geometry resolver. They were ordinary narrative/question text (including the
+wrapped continuation `To this end, it is fundamental ... Potential
+application`), so the Reader skipped translation and showed them as opaque
+table cards. Package attachment now applies a narrow, generic repair: an
+explicit table fallback is returned to `paragraph` only when it has strong
+paragraph evidence, table-row geometry evidence, at least ten prose words, and
+no structured cell row. Captioned tables, image-backed tables, and any block
+with two or more recovered cells are untouched. The repaired block is marked
+`packageRoleRepair=narrative-table-fallback-demoted` and returned to the
+translation queue.
+
+The focused package-layout regression is **2/2**, typecheck and lint pass with
+only existing warnings, and the full cached extraction/reading-order corpus is
+**232/232** (118 extraction + 114 reading-order) in **456.54s**. The refreshed
+118-PDF table audit has **0 extraction errors**, **367** table captions, **251**
+crop-ready captions, **637** reader-visible source-only fragments, and **491**
+native structured-grid fallbacks. Fragment triage is now
+`structured-grid=491`, `short-label=130`, `ambiguous=15`, `numeric-grid=1`,
+`prose-like=0`; the remaining source-only fragments are not sentence-shaped
+false table fallbacks and remain a diagnostic review set.
+
+The fast Tauri bundle was rebuilt at **2026-10-16 03:05 JST** and its compiled
+frontend contains `narrative-table-fallback-demoted`. A packaged run with the
+OzCHI fixture reached Reader package loading with **168 blocks**; the
+acceptance-only trace then stopped at the search call while the imported paper
+was still `translating`. The same bundle passed the complete integration flow
+with the tiny fixture. This is an acceptance/search-concurrency verification
+item, not an extraction failure; the prior real-PDF packaged runs and the
+232/232 extraction suite remain green.
+
 # 2026-10-15: packaged cognitive-memory table verification
 
 The latest `.app` was exercised with the real

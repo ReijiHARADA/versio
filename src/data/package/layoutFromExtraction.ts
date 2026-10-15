@@ -114,7 +114,65 @@ export function attachLinesToBlocks(
       },
     };
   });
-  return foldCaptionlessNativeGrids(withLines, layoutBlocks);
+  return demoteNarrativeTableFallbacks(foldCaptionlessNativeGrids(withLines, layoutBlocks));
+}
+
+/**
+ * A table-region fallback is useful when native geometry proves a grid, but
+ * the same geometry can occasionally be produced by a narrow paragraph that
+ * happens to sit beside a caption or graphic.  Do not leave a complete prose
+ * sentence as a skipped table: it would disappear from translation and appear
+ * as an opaque source-only card.  This package-stage repair only applies to
+ * explicit fallback regions without recovered cells; real grids and captioned
+ * tables remain untouched.
+ */
+function demoteNarrativeTableFallbacks(blocks: PaperBlock[]): PaperBlock[] {
+  return blocks.map((block) => {
+    if (block.type !== "table") return block;
+    const metadata = block.metadata as {
+      captionOriginal?: unknown;
+      imageUrl?: unknown;
+      figureKey?: unknown;
+      tableSourceFallback?: unknown;
+      tableRows?: unknown;
+      evidence?: Array<{ label?: string; confidence?: number }>;
+    };
+    if (metadata.captionOriginal || metadata.imageUrl ||
+        (!metadata.tableSourceFallback && !String(metadata.figureKey ?? "").startsWith("table-region-"))) {
+      return block;
+    }
+    const rows = metadata.tableRows;
+    if (Array.isArray(rows) && rows.some((row) => Array.isArray(row) && row.length >= 2)) return block;
+    const paragraphEvidence = (metadata.evidence ?? []).find((entry) => entry.label === "paragraph");
+    const tableGeometryEvidence = (metadata.evidence ?? []).some((entry) =>
+      entry.label === "table-row-geometry" || entry.label === "table-region-member"
+    );
+    const text = (block.original ?? "").replace(/\s+/g, " ").trim();
+    const words = text.match(/\b[A-Za-z][A-Za-z'-]*\b/g) ?? [];
+    const wordCount = words.length;
+    const proseWords = words.filter((word) => word.length >= 3).length;
+    const sentenceLike = /[.!?]["')\]]?$/.test(text) ||
+      // Short function words are common in otherwise valid academic prose;
+      // keep the threshold below a strict content-word ratio so a wrapped
+      // continuation such as “Potential application” is recovered too.
+      (wordCount >= 12 && proseWords / Math.max(1, wordCount) >= 0.6);
+    if (!tableGeometryEvidence || !paragraphEvidence ||
+        (paragraphEvidence.confidence ?? 0) < 0.8 || wordCount < 10 || !sentenceLike) {
+      return block;
+    }
+    const nextMetadata = { ...block.metadata } as Record<string, unknown>;
+    delete nextMetadata.tableSourceFallback;
+    delete nextMetadata.figureKey;
+    delete nextMetadata.translationInputWarning;
+    nextMetadata.role = "paragraph";
+    nextMetadata.packageRoleRepair = "narrative-table-fallback-demoted";
+    return {
+      ...block,
+      type: "paragraph",
+      translationStatus: block.translationStatus === "skipped" ? "pending" : block.translationStatus,
+      metadata: nextMetadata,
+    };
+  });
 }
 
 type TableCell = { text: string; x: number; width: number };

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T17:23:02.248Z",
+  "generatedAt": "2026-10-15T17:42:46.452Z",
   "paperCount": 114,
   "papers": [
     {
@@ -58,11 +58,10 @@
       "cropReadyCaptions": 4,
       "rawTableFragments": 39,
       "cropBackedFragments": 16,
-      "readerRawFragments": 23,
+      "readerRawFragments": 22,
       "readerCellFallbacks": 17,
       "readerFragmentKinds": {
         "structured-grid": 17,
-        "prose-like": 1,
         "short-label": 4,
         "ambiguous": 1
       },
@@ -115,12 +114,6 @@
           {
             "page": 4,
             "text": "Eating dessert White ice-cream scoop What does the boy not eat?"
-          }
-        ],
-        "prose-like": [
-          {
-            "page": 4,
-            "text": "Besides the couple, who else is the main character in the clip?"
           }
         ],
         "short-label": [
@@ -466,11 +459,10 @@
       "cropReadyCaptions": 1,
       "rawTableFragments": 3,
       "cropBackedFragments": 0,
-      "readerRawFragments": 3,
+      "readerRawFragments": 2,
       "readerCellFallbacks": 2,
       "readerFragmentKinds": {
-        "structured-grid": 2,
-        "prose-like": 1
+        "structured-grid": 2
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -481,12 +473,6 @@
           {
             "page": 2,
             "text": "faster when a visual target (a red square is presented on the left of the screen) Simon (1970)"
-          }
-        ],
-        "prose-like": [
-          {
-            "page": 2,
-            "text": "is spatially compatible with the response (pressing the left button) than when the target is spatially incompatible with the response (presented on the right of the screen)."
           }
         ]
       },
@@ -1611,11 +1597,10 @@
       "cropReadyCaptions": 2,
       "rawTableFragments": 15,
       "cropBackedFragments": 12,
-      "readerRawFragments": 3,
+      "readerRawFragments": 2,
       "readerCellFallbacks": 1,
       "readerFragmentKinds": {
         "short-label": 1,
-        "prose-like": 1,
         "structured-grid": 1
       },
       "readerFragmentSamples": {
@@ -1623,12 +1608,6 @@
           {
             "page": 2,
             "text": "shortages"
-          }
-        ],
-        "prose-like": [
-          {
-            "page": 2,
-            "text": "environment was unsafe and posed a high risk for incidents."
           }
         ],
         "structured-grid": [
@@ -1659,12 +1638,12 @@
       "cropReadyCaptions": 29,
       "rawTableFragments": 113,
       "cropBackedFragments": 60,
-      "readerRawFragments": 42,
+      "readerRawFragments": 41,
       "readerCellFallbacks": 35,
       "readerFragmentKinds": {
         "structured-grid": 35,
         "short-label": 2,
-        "ambiguous": 5
+        "ambiguous": 4
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -1735,10 +1714,6 @@
           {
             "page": 242,
             "text": "Smallgoods wholesale Meat wholesale Store supplies (Food &/or general Grocers wholesale Soft drink manufacturers Fruit juice merchants Water cartage Drinking water supplies Water coolers Spring water supplies Building supplies Steel Merchan"
-          },
-          {
-            "page": 250,
-            "text": "If you do long distance heavy vehicle work as well as light truck/short haul"
           },
           {
             "page": 253,
@@ -5085,11 +5060,10 @@
       "cropReadyCaptions": 5,
       "rawTableFragments": 22,
       "cropBackedFragments": 14,
-      "readerRawFragments": 8,
+      "readerRawFragments": 7,
       "readerCellFallbacks": 7,
       "readerFragmentKinds": {
-        "structured-grid": 7,
-        "prose-like": 1
+        "structured-grid": 7
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -5120,12 +5094,6 @@
           {
             "page": 6,
             "text": "loading / standardized loading + εj (1)"
-          }
-        ],
-        "prose-like": [
-          {
-            "page": 4,
-            "text": "PK3: Do you think you can purchase organic food satisfactorily based on only your own knowledge?"
           }
         ]
       },
@@ -6029,11 +5997,11 @@
       "cropReadyCaptions": 0,
       "rawTableFragments": 18,
       "cropBackedFragments": 0,
-      "readerRawFragments": 18,
+      "readerRawFragments": 17,
       "readerCellFallbacks": 9,
       "readerFragmentKinds": {
         "structured-grid": 9,
-        "short-label": 9
+        "short-label": 8
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -6106,10 +6074,6 @@
           {
             "page": 18,
             "text": "Kidney"
-          },
-          {
-            "page": 18,
-            "text": "http://medicaldecathlon.com/index.html https://challenge.isic-archive.com/data https://cecas.clemson.edu/ ahoover/stare/ https://tn-scui2020.grand-challenge.org/"
           }
         ]
       },
@@ -6206,19 +6170,12 @@
       "cropReadyCaptions": 0,
       "rawTableFragments": 2,
       "cropBackedFragments": 0,
-      "readerRawFragments": 2,
+      "readerRawFragments": 1,
       "readerCellFallbacks": 1,
       "readerFragmentKinds": {
-        "prose-like": 1,
         "structured-grid": 1
       },
       "readerFragmentSamples": {
-        "prose-like": [
-          {
-            "page": 1,
-            "text": "To this end, it is fundamental to equip AI agents with practical models of the human behavior. Potential application"
-          }
-        ],
         "structured-grid": [
           {
             "page": 1,
@@ -6255,12 +6212,11 @@
       "cropReadyCaptions": 12,
       "rawTableFragments": 40,
       "cropBackedFragments": 25,
-      "readerRawFragments": 14,
+      "readerRawFragments": 12,
       "readerCellFallbacks": 6,
       "readerFragmentKinds": {
         "short-label": 6,
-        "structured-grid": 6,
-        "ambiguous": 2
+        "structured-grid": 6
       },
       "readerFragmentSamples": {
         "short-label": [
@@ -6313,16 +6269,6 @@
           {
             "page": 39,
             "text": "Failure Task: Help me center align the heading in LibreOffice."
-          }
-        ],
-        "ambiguous": [
-          {
-            "page": 39,
-            "text": "# Action 1 import pyautogui import time # Move the mouse to the LibreOffice Writer document icon and double-click pyautogui.moveTo(1100, 720, duration=1) pyautogui.doubleClick()"
-          },
-          {
-            "page": 39,
-            "text": "# Action 2 # Move the mouse to the beginning of the heading text and click and drag to select the heading pyautogui.moveTo(200, 230, duration=1) pyautogui.mouseDown() pyautogui.moveTo(800, 230, duration=1) pyautogui.mouseUp() # Move the mou"
           }
         ]
       },
@@ -6656,13 +6602,12 @@
     "cropReadyCaptions": 251,
     "rawTableFragments": 1490,
     "cropBackedFragments": 663,
-    "readerRawFragments": 646,
+    "readerRawFragments": 637,
     "readerCellFallbacks": 491,
     "readerFragmentKinds": {
       "structured-grid": 491,
-      "prose-like": 5,
-      "short-label": 131,
-      "ambiguous": 18,
+      "short-label": 130,
+      "ambiguous": 15,
       "numeric-grid": 1
     },
     "orphanFragments": 739,
