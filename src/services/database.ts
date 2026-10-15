@@ -64,19 +64,32 @@ import { syncPaperIndexesFromPackages } from "../data/package/syncIndex";
 export type { BenchmarkEntry };
 
 let migrated = false;
+let migrationInFlight: Promise<void> | null = null;
 
 async function ready() {
   const storage = await getStorage();
   if (!migrated) {
-    await migrateIndexedDbV4IfNeeded(storage.fs, storage.db);
-    await syncPaperIndexesFromPackages(storage.fs, storage.db);
-    migrated = true;
+    // Import, translation checkpointing, Reader loading, and search can all
+    // touch the database during startup. Share one migration/index rebuild
+    // promise so concurrent callers cannot interleave sql.js transactions or
+    // rebuild the same package index twice.
+    if (!migrationInFlight) {
+      migrationInFlight = (async () => {
+        await migrateIndexedDbV4IfNeeded(storage.fs, storage.db);
+        await syncPaperIndexesFromPackages(storage.fs, storage.db);
+        migrated = true;
+      })().finally(() => {
+        migrationInFlight = null;
+      });
+    }
+    await migrationInFlight;
   }
   return storage;
 }
 
 export function resetDatabaseMigrationFlagForTests(): void {
   migrated = false;
+  migrationInFlight = null;
 }
 
 export async function computeTextHash(text: string): Promise<string> {
