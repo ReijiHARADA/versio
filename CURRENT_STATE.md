@@ -1,3 +1,32 @@
+# 2026-10-15: borderless prose tables and CJK checkmark matrices
+
+Two real-paper regressions remained after the caption-owned native-grid work. An
+education paper contains a captionless three-column method table whose cells are
+ordinary prose, so its numeric density was insufficient for the existing
+captionless-grid evidence and each cell was sent to translation as a paragraph.
+Separately, a CJK comparison matrix uses checkmarks (`√`) as column values; its
+repeated comparison-row geometry was detected, but a later mathematical-fragment
+guard treated the same marks as equation symbols and erased that table evidence.
+
+Generic extraction now adds a high-confidence `repeated-prose-cell-grid`
+evidence only for compact page-local bands with **three or more visibly separate
+native x anchors**, each repeated across at least three logical blocks. This
+recovers qualitative, borderless tables without treating ordinary two-column or
+indented prose as a table. CJK checkmark comparison rows retain their existing
+repeated-row evidence through the mathematical-fragment guard, while genuine
+formula detection remains unchanged. No vocabulary, title, or paper-specific
+condition was added.
+
+The education table's method, goal, and application cells and the first three
+CJK comparison rows now resolve as `table`, are omitted from paragraph
+translation, and carry inspectable geometry evidence. Their real-PDF regressions
+pass. Typecheck and lint pass (lint has only pre-existing warnings). The complete
+118-PDF extraction baseline plus 114-PDF reading-order corpus passes **232/232**
+in **470.41 seconds** under `caffeinate -dimsu`. The broad pipeline suite has
+**67/67 assertions passing**; Vitest still exits nonzero only because of an
+existing `onTaskUpdate` worker-RPC timeout after completion. A fresh fast Tauri
+bundle is still required before the change is called packaged acceptance.
+
 # 2026-10-14: detached native caption-title recovery
 
 A 305-page transport-safety thesis exposed a malformed but common native-PDF
