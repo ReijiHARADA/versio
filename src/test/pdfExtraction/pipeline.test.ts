@@ -203,6 +203,26 @@ describe("canonical extraction pipeline", () => {
     expect(result.blocks.some((block) => block.original?.trim() === "A: Option 2.")).toBe(true);
   }, 60_000);
 
+  it("does not promote a wrapped single-span vignette paragraph to a table", async () => {
+    const pdf = path.resolve("test-data/real-papers/cognitive-psychology-gpt3.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "single-span-vignette-boundary",
+      filePath: pdf,
+      fileHash: "single-span-vignette-boundary",
+      metadata: { pageCount: pages.length },
+    });
+    const vignette = result.blocks.find((block) => block.original.startsWith("Linda is 31 years old"));
+    expect(vignette?.type).toBe("paragraph");
+    expect(vignette?.translationStatus).toBe("pending");
+    for (const prefix of ["Q: Which option is the most probable?", "- Option 1: Linda is a bank teller."]) {
+      const block = result.blocks.find((candidate) => candidate.original.startsWith(prefix));
+      expect(block?.type).toBe("paragraph");
+    }
+  }, 60_000);
+
   it("does not link a table caption to a nearby figure in a mixed thesis page", async () => {
     const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport.pdf");
     if (!fs.existsSync(pdf)) return;
