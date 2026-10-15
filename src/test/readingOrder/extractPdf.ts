@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import fs from "node:fs";
 import path from "node:path";
-import { collectGraphicsPrimitives, collectImagePlacements, type ExtractedPage, type ExtractedTextItem } from "../../services/pdfService";
+import { collectGraphicsPrimitives, collectImagePlacements, textItemGeometry, type ExtractedPage, type ExtractedTextItem } from "../../services/pdfService";
 
 const require = createRequire(import.meta.url);
 const pdfjsLib = require("pdfjs-dist/legacy/build/pdf.js") as typeof import("pdfjs-dist");
@@ -38,16 +38,17 @@ export async function extractPdfPages(pdfPath: string): Promise<ExtractedPage[]>
       if (!("str" in item) || !item.str.trim()) continue;
       const tx = item.transform;
       const fontSize = Math.sqrt(tx[0] * tx[0] + tx[1] * tx[1]);
+      const geometry = textItemGeometry(item, viewport, typeof page.rotate === "number" ? page.rotate : 0);
       textItems.push({
         text: item.str,
-        x: tx[4],
-        y: viewport.height - tx[5],
-        width: item.width,
-        height: item.height,
+        x: geometry.x,
+        y: geometry.y,
+        width: geometry.width,
+        height: geometry.height,
         fontSize,
         fontName: item.fontName,
         page: pageNum,
-        rotation: Math.round((Math.atan2(tx[1], tx[0]) * 180) / Math.PI * 100) / 100,
+        rotation: geometry.rotation,
       });
     }
 

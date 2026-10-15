@@ -187,6 +187,13 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     rightX: page.width / 2,
   };
 
+  // Page-level rotation is already normalized into displayed coordinates at
+  // extraction time. Treat the rotated page as one reading surface here: the
+  // apparent x bands on landscape tables are cell columns, not document
+  // columns. Synthetic rotated text items without page rotation retain the
+  // existing column heuristics.
+  if (Math.abs((page.rotation ?? 0) % 180) >= 45) return fallback;
+
   // A single-column PDF can contain several native text spans per visual
   // line. When most wide body rows include a span crossing the page midpoint,
   // the apparent left/right starts are fragments of one sentence, not two

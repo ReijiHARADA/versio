@@ -2100,6 +2100,8 @@ export function projectCanonicalToPaper(input: {
       continue;
     }
 
+    const tableLayout = layout ?? layoutBlocks.find((candidate) => candidate.pageStart === node.pageStart && candidate.text === node.text);
+
     // Numbered Table N already owns a CAPTION_OF region — skip duplicate cell crumbs.
     if (
       node.role === "table" &&
@@ -2111,13 +2113,16 @@ export function projectCanonicalToPaper(input: {
       // while the text-bearing multi-row grid remains a separate node. Its
       // repeated native lines are stronger evidence than the short-cell
       // heuristic, so retain the grid as a source-only table block.
-      !(layout && layout.lines.length >= 3 &&
-        layout.lines.filter((line) => line.items.length >= 2).length >= 3)
+      !(node.evidence.some((entry) => entry.label === "captioned-native-multicell-row") || (tableLayout && tableLayout.lines.some((line) => {
+        const cells = line.items.filter((item) => item.text.trim().length > 0);
+        if (cells.length < 3) return false;
+        const span = Math.max(...cells.map((item) => item.x + item.width)) - Math.min(...cells.map((item) => item.x));
+        return span >= (line.pageWidth ?? 612) * 0.28;
+      })))
     ) {
       continue;
     }
 
-    const tableLayout = layout ?? layoutBlocks.find((candidate) => candidate.pageStart === node.pageStart && candidate.text === node.text);
     const recoveredNativeGrid = node.role !== "table" && hasStrongNativeTableRows(node, tableLayout);
     const tableRole = node.role === "table" || recoveredNativeGrid;
     const nativeGrid = tableRole && node.text &&

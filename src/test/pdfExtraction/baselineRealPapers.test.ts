@@ -173,6 +173,22 @@ describe("baseline benchmark on cached real papers", () => {
           expect.stringContaining("Passenger vehicles"),
           expect.stringContaining("Total motor vehicles"),
         ]));
+        const commercialTable = fullExtraction.blocks.find((block) =>
+          block.pageStart === 25 && block.type === "table" &&
+          block.original.includes("Total freight, million t") &&
+          block.original.includes("161 (7.7)")
+        );
+        const commercialRows = commercialTable?.metadata.tableRows as Array<Array<{ text: string }>> | undefined;
+        expect(commercialTable?.translationStatus).toBe("skipped");
+        expect(commercialRows?.length).toBeGreaterThanOrEqual(8);
+        expect(fullExtraction.blocks.some((block) =>
+          block.pageStart === 25 && block.type === "table" &&
+          block.original.includes("Articulated trucks")
+        )).toBe(true);
+        expect(fullExtraction.blocks.some((block) =>
+          block.pageStart === 25 && block.type === "paragraph" &&
+          block.original.includes("161 (7.7)")
+        )).toBe(false);
       }
       if (paper.id === "cognitive-dual-task-older-adults") {
         const fullExtraction = extractFromPages({

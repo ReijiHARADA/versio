@@ -66,6 +66,42 @@ export type ExtractedTextItem = {
   rotation?: number;
 };
 
+/** Convert a PDF.js text item into the page's displayed coordinate system. */
+export function textItemGeometry(
+  item: { transform: number[]; width: number; height: number },
+  viewport: { height: number; convertToViewportPoint: (x: number, y: number) => number[] },
+  pageRotation = 0,
+): { x: number; y: number; width: number; height: number; rotation: number } {
+  const tx = item.transform;
+  const nativeRotation = (Math.atan2(tx[1], tx[0]) * 180) / Math.PI;
+  if (!pageRotation) {
+    return {
+      x: tx[4], y: viewport.height - tx[5], width: item.width, height: item.height,
+      rotation: Math.round(nativeRotation * 100) / 100,
+    };
+  }
+  const fontScale = Math.max(0.001, Math.hypot(tx[0], tx[1]));
+  const xVector: [number, number] = [tx[0] / fontScale * item.width, tx[1] / fontScale * item.width];
+  const yVector: [number, number] = [tx[2] / fontScale * item.height, tx[3] / fontScale * item.height];
+  const origin: [number, number] = [tx[4], tx[5]];
+  const points = [
+    origin,
+    [origin[0] + xVector[0], origin[1] + xVector[1]],
+    [origin[0] + yVector[0], origin[1] + yVector[1]],
+    [origin[0] + xVector[0] + yVector[0], origin[1] + xVector[1] + yVector[1]],
+  ] as [number, number][];
+  const viewportPoints = points.map(([x, y]) => viewport.convertToViewportPoint(x, y));
+  const xs = viewportPoints.map(([x]) => x);
+  const ys = viewportPoints.map(([, y]) => y);
+  const normalizedRotation = ((nativeRotation - pageRotation + 540) % 360) - 180;
+  return {
+    x: Math.min(...xs), y: Math.min(...ys),
+    width: Math.max(0.1, Math.max(...xs) - Math.min(...xs)),
+    height: Math.max(0.1, Math.max(...ys) - Math.min(...ys)),
+    rotation: Math.round(normalizedRotation * 100) / 100,
+  };
+}
+
 export type PdfGraphicsPrimitive = {
   kind: "rectangle" | "line";
   orientation?: "horizontal" | "vertical" | "other";
@@ -280,17 +316,18 @@ export async function extractPDFContent(
 
       const tx = item.transform;
       const fontSize = Math.sqrt(tx[0] * tx[0] + tx[1] * tx[1]);
+      const geometry = textItemGeometry(item, viewport, typeof page.rotate === "number" ? page.rotate : 0);
 
       textItems.push({
         text: item.str,
-        x: tx[4],
-        y: viewport.height - tx[5],
-        width: item.width,
-        height: item.height,
+        x: geometry.x,
+        y: geometry.y,
+        width: geometry.width,
+        height: geometry.height,
         fontSize,
         fontName: item.fontName,
         page: pageNum,
-        rotation: Math.round((Math.atan2(tx[1], tx[0]) * 180) / Math.PI * 100) / 100,
+        rotation: geometry.rotation,
       });
     }
 
