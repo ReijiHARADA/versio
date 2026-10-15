@@ -469,6 +469,23 @@ describe("baseline benchmark on cached real papers", () => {
           block.type === "figure" && block.original?.startsWith("Figure 2: Unified Guideline Structure")
         )).toBe(true);
       }
+      if (paper.id === "cognitive-memory-cue-interest") {
+        const memoryExtraction = extractFromPages({
+          pages,
+          paperId: paper.id,
+          filePath: paper.filename,
+          fileHash: "column-table-header-regression",
+          metadata: { title: paper.title, pageCount: pages.length },
+        });
+        const procedure = memoryExtraction.blocks.find((block) =>
+          block.original?.startsWith("The procedure included one encoding phase")
+        );
+        expect(procedure?.type).toBe("paragraph");
+        expect(procedure?.original).not.toContain("Option (Correct");
+        expect(memoryExtraction.blocks.some((block) =>
+          block.type === "table" && block.original?.includes("Option (Correct")
+        )).toBe(true);
+      }
       if (paper.id === "linguistics-language-model-physics") {
         const extracted = extractFromPages({
           pages,
