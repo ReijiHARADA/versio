@@ -2815,3 +2815,11 @@ change is included in the latest packaged Tauri build at
 `2026-10-15 23:38:27 +0900`. Packaged import/search/export/relaunch E2E also
 passes. The staged app is the first bundle containing the rotated-page
 geometry path.
+
+# 2026-10-16: preserve real tables with prose cells while demoting false table roles
+
+The table-role guard now distinguishes a complete sentence adjacent to a figure/table from a native repeated-row grid. A high-confidence `table-row-geometry` signal with at least three multi-cell native rows is retained even when cells contain citation periods or prose; explicit vector/chart-label evidence still blocks promotion. This fixed the SpeechIn wearable-technique table, which is now emitted as a skipped structured table with 9 rows instead of a paragraph. The guard is generic and does not name the paper.
+
+Verification: extraction/reading-order regression **232/232** passes in 361.54 seconds; typecheck passes; lint passes with the existing warnings. The table-readiness audit reports 0 extraction errors, 48 papers with captions, 363 captions, 253 crop-ready captions, 1,492 raw fragments, 797 reader fragments, 622 native cell-grid fallbacks, 6 prose-like fragments, 25 ambiguous fragments, and 785 orphan fragments. These remaining audit categories are diagnostic follow-up work, not silently discarded content.
+
+The staged `.app` was built before this latest guard change, so it must be rebuilt before Tauri UI verification.

@@ -770,6 +770,12 @@ function looksLikeProseMistakenForTable(text: string): boolean {
   ) {
     return true;
   }
+  // A complete sentence outside a caption-owned table region is body prose
+  // even when a neighbouring numeric band supplied table-row geometry.
+  // Caption-owned narrative cells are protected by the caller's region check.
+  if (words.length >= 10 && /[.!?](?:\s|$)/.test(trimmed) && digitRatio < 0.2) {
+    return true;
+  }
   // Long narrative sentences that only sit near a matrix. Keep short
   // goal/method cells (often "To find…") and dense numeric rows.
   if (words.length >= 12 && digitRatio < 0.12) {
@@ -839,7 +845,11 @@ function hasStrongNativeTableRows(node: CanonicalNode, layout: LayoutBlock | und
   );
   if (!geometry) return false;
   const multiCellRows = layout.lines.filter((line) => line.items.length >= 2).length;
-  return multiCellRows >= 3 && !looksLikeProseMistakenForTable(node.text ?? "");
+  // A real table cell can contain complete prose (and citation periods), so
+  // sentence-like punctuation must not override the native repeated-row
+  // geometry.  Chart/axis fragments are excluded above by their explicit
+  // vector evidence instead.
+  return multiCellRows >= 3;
 }
 
 function isNumberedTableCaption(text: string | null | undefined): boolean {
@@ -2080,7 +2090,15 @@ export function projectCanonicalToPaper(input: {
 
     // Chart-adjacent prose can inherit a table role from region membership.
     // Drop axis crumbs; keep longer narrative as ordinary paragraphs.
-    if (node.role === "table" && node.text && !hasStrongTableMatrixEvidence(node) && looksLikeProseMistakenForTable(node.text)) {
+    const tableLayout = layout ?? layoutBlocks.find((candidate) => candidate.pageStart === node.pageStart && candidate.text === node.text);
+    const strongNativeRowGrid = hasStrongNativeTableRows(node, tableLayout) ||
+      (node.evidence.some((entry) =>
+        entry.label === "table-row-geometry" && entry.confidence >= 0.9
+      ) && (tableLayout?.lines.filter((line) => line.items.length >= 2).length ?? 0) >= 3);
+    if (node.role === "table" && node.text && !hasStrongTableMatrixEvidence(node) &&
+        !strongNativeRowGrid &&
+        !belongsToCaptionedTableRegion(node, tableAbsorption.regions) &&
+        looksLikeProseMistakenForTable(node.text)) {
       const text = node.text;
       if (isChartDebrisFragment(text)) {
         continue;
@@ -2099,8 +2117,6 @@ export function projectCanonicalToPaper(input: {
       });
       continue;
     }
-
-    const tableLayout = layout ?? layoutBlocks.find((candidate) => candidate.pageStart === node.pageStart && candidate.text === node.text);
 
     // Numbered Table N already owns a CAPTION_OF region — skip duplicate cell crumbs.
     if (
