@@ -279,6 +279,28 @@ describe("canonical extraction pipeline", () => {
     expect(prose?.original).toContain("p=0.007");
   }, 60_000);
 
+  it("keeps wrapped table-caption prose out of table cells", async () => {
+    const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "ozchi-caption-continuation-regression",
+      filePath: pdf,
+      fileHash: "ozchi-caption-continuation-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const caption = result.canonical.nodes.find((node) =>
+      /^Table 2\. Significance/.test(node.text ?? "")
+    );
+    expect(caption?.role).toBe("caption");
+    expect(caption?.text).toContain("of visual target between different fingers");
+    expect(caption?.text).toContain("Significant vaues bolded.");
+    expect(result.canonical.nodes.some((node) =>
+      node.role === "table" && /of visual target between different fingers|^bolded\.$/.test(node.text ?? "")
+    )).toBe(false);
+  }, 60_000);
+
   it("reconstructs parallel OzCHI Table 3 columns before its reader image crop is available", async () => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
     if (!fs.existsSync(pdf)) return;

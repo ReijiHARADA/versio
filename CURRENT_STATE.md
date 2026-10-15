@@ -2642,3 +2642,17 @@ unchanged (reader title exactness **106/113**, table-region recall **1.0**,
 source integrity **0.99996049**, provenance **1.0**). The focused projection
 test, typecheck, and lint pass. A full extraction/reading-order regression is
 the next verification step before rebuilding the packaged app.
+# 2026-10-15: keep wrapped table captions out of table regions
+
+The OzCHI regression exposed a generic caption-boundary bug: a table caption
+continuation such as `of visual target between different fingers. Significant
+values bolded.` was emitted as short paragraph blocks in the same font and
+then promoted to table cells by numeric-neighborhood evidence. Canonical
+resolution now joins lowercase, same-page continuation lines inside the
+caption geometry before table-region promotion. It leaves sentence-like
+uppercase body prose unchanged. The focused OzCHI caption/table tests pass;
+the 118-paper benchmark remains unchanged at reader-title **106/113**,
+author F1 **1.0**, table-caption recall **1.0**, table-region recall **1.0**,
+source integrity **0.99996049**, and provenance **1.0**. Full 232-case
+extraction/reading-order regression is the next gate before rebuilding the
+packaged app.
