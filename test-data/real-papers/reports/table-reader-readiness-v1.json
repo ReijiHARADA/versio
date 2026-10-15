@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T13:25:12.201Z",
+  "generatedAt": "2026-10-15T13:50:34.042Z",
   "paperCount": 114,
   "papers": [
     {
@@ -89,12 +89,12 @@
       "file": "cognitive-memory-cues.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 62,
-      "cropBackedFragments": 26,
-      "readerRawFragments": 36,
-      "readerCellFallbacks": 24,
+      "rawTableFragments": 53,
+      "cropBackedFragments": 18,
+      "readerRawFragments": 35,
+      "readerCellFallbacks": 23,
       "readerFragmentKinds": {
-        "structured-grid": 24,
+        "structured-grid": 23,
         "prose-like": 2,
         "short-label": 5,
         "ambiguous": 5
@@ -227,10 +227,6 @@
         {
           "page": 4,
           "text": "C. Left, right, and middle"
-        },
-        {
-          "page": 6,
-          "text": "10 min 1 day 1 week"
         },
         {
           "page": 7,
@@ -883,13 +879,12 @@
       "file": "detecting-statistical-interactions.pdf",
       "tableCaptions": 6,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 14,
+      "rawTableFragments": 6,
       "cropBackedFragments": 3,
-      "readerRawFragments": 10,
-      "readerCellFallbacks": 3,
+      "readerRawFragments": 2,
+      "readerCellFallbacks": 2,
       "readerFragmentKinds": {
-        "structured-grid": 3,
-        "short-label": 7
+        "structured-grid": 2
       },
       "orphanFragments": [
         {
@@ -899,38 +894,6 @@
         {
           "page": 7,
           "text": "5.1 EXPERIMENTAL SETUP"
-        },
-        {
-          "page": 18,
-          "text": "0.2 0.2 0.2 0.2 0.2"
-        },
-        {
-          "page": 18,
-          "text": "0.0 0.0 0.0"
-        },
-        {
-          "page": 18,
-          "text": "0.2 0.2 0.2 0.2 0.2"
-        },
-        {
-          "page": 18,
-          "text": "0.0 0.0 0.0 0.0"
-        },
-        {
-          "page": 18,
-          "text": "1.0"
-        },
-        {
-          "page": 18,
-          "text": "0.2"
-        },
-        {
-          "page": 18,
-          "text": "0.0 p"
-        },
-        {
-          "page": 18,
-          "text": "0.0 0.2 0.4 0.6 0.8 1.0"
         }
       ]
     },
@@ -2679,248 +2642,15 @@
       "file": "human-ai-interaction-guidelines.pdf",
       "tableCaptions": 1,
       "cropReadyCaptions": 1,
-      "rawTableFragments": 173,
+      "rawTableFragments": 115,
       "cropBackedFragments": 0,
-      "readerRawFragments": 173,
-      "readerCellFallbacks": 131,
+      "readerRawFragments": 115,
+      "readerCellFallbacks": 114,
       "readerFragmentKinds": {
-        "ambiguous": 3,
-        "short-label": 39,
-        "structured-grid": 131
+        "short-label": 1,
+        "structured-grid": 114
       },
       "orphanFragments": [
-        {
-          "page": 3,
-          "text": "Clearly communicate AI limits and capabilities"
-        },
-        {
-          "page": 3,
-          "text": "Time services based on context"
-        },
-        {
-          "page": 3,
-          "text": "Scope services when in doubt"
-        },
-        {
-          "page": 3,
-          "text": "Notify users about changes"
-        },
-        {
-          "page": 3,
-          "text": "Introduce and set expectations for AI Set expectations for AI improvements"
-        },
-        {
-          "page": 3,
-          "text": "Help users calibrate their trust Set expectations for adaptation"
-        },
-        {
-          "page": 3,
-          "text": "Identify existing mental models Show contextually relevant information"
-        },
-        {
-          "page": 3,
-          "text": "Keep track of user needs"
-        },
-        {
-          "page": 3,
-          "text": "Avoid technical or statistical jargon Balance control & automation Account for situational stakes Assess automation vs. augmentation"
-        },
-        {
-          "page": 3,
-          "text": "Assess inclusivity"
-        },
-        {
-          "page": 3,
-          "text": "Mitigate social biases Onboard in stages Match relevant social norms"
-        },
-        {
-          "page": 3,
-          "text": "Return control to the user Manage privacy and security"
-        },
-        {
-          "page": 3,
-          "text": "Protect personally identifiable information"
-        },
-        {
-          "page": 3,
-          "text": "Tie explanations to user actions"
-        },
-        {
-          "page": 3,
-          "text": "Always secure peopleʼs information Mental"
-        },
-        {
-          "page": 3,
-          "text": "Example-based explanationsExplanation via interaction Model"
-        },
-        {
-          "page": 3,
-          "text": "Optimize for understanding Split your dataUnexpected input"
-        },
-        {
-          "page": 3,
-          "text": "Explain whatʼs important Use existing dataset"
-        },
-        {
-          "page": 3,
-          "text": "Evaluate rater tools Value of AI"
-        },
-        {
-          "page": 3,
-          "text": "Build your own dataset"
-        },
-        {
-          "page": 3,
-          "text": "Articulate data sources"
-        },
-        {
-          "page": 3,
-          "text": "Identify your data sources Explainability"
-        },
-        {
-          "page": 3,
-          "text": "Provide easy access to labels"
-        },
-        {
-          "page": 3,
-          "text": "Let raters change their minds"
-        },
-        {
-          "page": 3,
-          "text": "Design for raters and labeling"
-        },
-        {
-          "page": 3,
-          "text": "Multi-option"
-        },
-        {
-          "page": 3,
-          "text": "Investigate rater context and incentives"
-        },
-        {
-          "page": 3,
-          "text": "Consider using categorical / n-best alternative"
-        },
-        {
-          "page": 3,
-          "text": "Beware of confirmation bias"
-        },
-        {
-          "page": 3,
-          "text": "Map existing workflows"
-        },
-        {
-          "page": 3,
-          "text": "Design for model tuning Training Model"
-        },
-        {
-          "page": 3,
-          "text": "Confidence Design for experimentation"
-        },
-        {
-          "page": 3,
-          "text": "Weigh false positive & negative"
-        },
-        {
-          "page": 3,
-          "text": "User needs and defining success"
-        },
-        {
-          "page": 3,
-          "text": "Balance underfitting and overfitting Confirm success"
-        },
-        {
-          "page": 3,
-          "text": "Evaluate the reward function outcomes"
-        },
-        {
-          "page": 3,
-          "text": "Consider precision and recall tradeoffs"
-        },
-        {
-          "page": 3,
-          "text": "Calibration"
-        },
-        {
-          "page": 3,
-          "text": "Collect"
-        },
-        {
-          "page": 3,
-          "text": "Error"
-        },
-        {
-          "page": 3,
-          "text": "Make calibration quick and easy"
-        },
-        {
-          "page": 3,
-          "text": "Fail gracefully"
-        },
-        {
-          "page": 3,
-          "text": "Before"
-        },
-        {
-          "page": 3,
-          "text": "Learn from user behavior"
-        },
-        {
-          "page": 3,
-          "text": "Use Encourage granular feedback"
-        },
-        {
-          "page": 3,
-          "text": "Remember recent interactions"
-        },
-        {
-          "page": 3,
-          "text": "Support efficient correction"
-        },
-        {
-          "page": 3,
-          "text": "Review implicit feedback"
-        },
-        {
-          "page": 3,
-          "text": "Manage influence on user decisions"
-        },
-        {
-          "page": 3,
-          "text": "After"
-        },
-        {
-          "page": 3,
-          "text": "Type"
-        },
-        {
-          "page": 3,
-          "text": "Align feedback with model improvement Prioritize recent feedback Update and adapt cautiously"
-        },
-        {
-          "page": 3,
-          "text": "Support efficient dismissal"
-        },
-        {
-          "page": 3,
-          "text": "Let people correct their corrections"
-        },
-        {
-          "page": 3,
-          "text": "Context errors"
-        },
-        {
-          "page": 3,
-          "text": "Background errors"
-        },
-        {
-          "page": 3,
-          "text": "Identify error sources"
-        },
-        {
-          "page": 3,
-          "text": "Address mistakes without complicating the UI"
-        },
         {
           "page": 6,
           "text": "Company"
@@ -3398,13 +3128,12 @@
       "file": "interpreting-neural-networks.pdf",
       "tableCaptions": 6,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 14,
+      "rawTableFragments": 6,
       "cropBackedFragments": 3,
-      "readerRawFragments": 10,
-      "readerCellFallbacks": 3,
+      "readerRawFragments": 2,
+      "readerCellFallbacks": 2,
       "readerFragmentKinds": {
-        "structured-grid": 3,
-        "short-label": 7
+        "structured-grid": 2
       },
       "orphanFragments": [
         {
@@ -3414,38 +3143,6 @@
         {
           "page": 7,
           "text": "5.1 EXPERIMENTAL SETUP"
-        },
-        {
-          "page": 18,
-          "text": "0.2 0.2 0.2 0.2 0.2"
-        },
-        {
-          "page": 18,
-          "text": "0.0 0.0 0.0"
-        },
-        {
-          "page": 18,
-          "text": "0.2 0.2 0.2 0.2 0.2"
-        },
-        {
-          "page": 18,
-          "text": "0.0 0.0 0.0 0.0"
-        },
-        {
-          "page": 18,
-          "text": "1.0"
-        },
-        {
-          "page": 18,
-          "text": "0.2"
-        },
-        {
-          "page": 18,
-          "text": "0.0 p"
-        },
-        {
-          "page": 18,
-          "text": "0.0 0.2 0.4 0.6 0.8 1.0"
         }
       ]
     },
@@ -3627,13 +3324,13 @@
       "file": "linguistics-language-model-physics.pdf",
       "tableCaptions": 0,
       "cropReadyCaptions": 0,
-      "rawTableFragments": 108,
+      "rawTableFragments": 59,
       "cropBackedFragments": 0,
-      "readerRawFragments": 108,
-      "readerCellFallbacks": 71,
+      "readerRawFragments": 59,
+      "readerCellFallbacks": 47,
       "readerFragmentKinds": {
-        "structured-grid": 71,
-        "short-label": 37
+        "structured-grid": 47,
+        "short-label": 12
       },
       "orphanFragments": [
         {
@@ -3654,39 +3351,23 @@
         },
         {
           "page": 12,
-          "text": "attention -10+1-1 0.06 xx xx xx xx r=4 NT3NT2NT5NT4NT3NT2 0.03 attention"
+          "text": "-10+1-1 0.06 xx xx xx xx NT3NT2NT5NT4NT3NT2 0.03"
         },
         {
           "page": 12,
-          "text": "NT5NT4NT3NT2NT5NT4 r=8"
+          "text": "NT5NT4NT3NT2NT5NT4"
         },
         {
           "page": 12,
-          "text": "NT3NT2NT5NT4NT3NT2 0.02 lay8 ( lay8 NT5NT4NT3NT2NT5NT4 0.01"
+          "text": "NT3NT2NT5NT4NT3NT2 0.02"
         },
         {
           "page": 12,
-          "text": "lay10 lay10 ( ′NTend NT3NT2NT5NT4NT3NT2"
+          "text": "NT5NT4NT3NT2NT5NT4 0.01"
         },
         {
           "page": 12,
-          "text": "lay11 r=16 lay11"
-        },
-        {
-          "page": 12,
-          "text": "-10 NT5NT4NT3 lay12"
-        },
-        {
-          "page": 12,
-          "text": "lay12"
-        },
-        {
-          "page": 12,
-          "text": "("
-        },
-        {
-          "page": 12,
-          "text": "NTend"
+          "text": "NT3NT2NT5NT4NT3NT2"
         },
         {
           "page": 14,
@@ -3698,115 +3379,19 @@
         },
         {
           "page": 18,
-          "text": "312312132132123323213132112332321233213123213132"
-        },
-        {
-          "page": 18,
-          "text": "313211232131221123312321232121123312313221213212"
-        },
-        {
-          "page": 18,
-          "text": "331312321213212332321123323121313213123221123323"
-        },
-        {
-          "page": 18,
-          "text": "132121313122112332312123213213231312123213232131"
-        },
-        {
-          "page": 18,
-          "text": "123213123132321321313221313232313212112331231322"
-        },
-        {
-          "page": 18,
-          "text": "112321312321313123132213121321233122132131231321"
-        },
-        {
-          "page": 18,
-          "text": "313123132213213132"
-        },
-        {
-          "page": 18,
-          "text": "113113121222312312113113121222312231112313121212"
-        },
-        {
-          "page": 18,
-          "text": "222312311131212113113123123123123123122313121212"
-        },
-        {
-          "page": 18,
-          "text": "312312312231312231112312311131211231231112312312"
-        },
-        {
-          "page": 18,
-          "text": "231231211231312112313121212231231231231231111212"
-        },
-        {
-          "page": 18,
-          "text": "312231231231312111131131131222312231223123123123"
-        },
-        {
-          "page": 18,
-          "text": "123122313121111231312312113122313121111312231231"
-        },
-        {
-          "page": 18,
-          "text": "221131231212122312313123123121112113"
-        },
-        {
-          "page": 18,
           "text": "a sample from cfg3h:"
         },
         {
           "page": 18,
-          "text": "131231331311332131323223212232123121313121321313"
+          "text": "cfg3b cfg3i"
         },
         {
           "page": 18,
-          "text": "113313333113123232131323213113131232121231332132"
+          "text": "cfg3h"
         },
         {
           "page": 18,
-          "text": "322321333311231331231332321312131133131231231311"
-        },
-        {
-          "page": 18,
-          "text": "312133311312321331232131313312131231311212312312 cfg3b cfg3i 232213131131331133313312322132131312133312131212"
-        },
-        {
-          "page": 18,
-          "text": "1231311232131331313133123232213"
-        },
-        {
-          "page": 18,
-          "text": "231221122132232312311233223313313313313312122221"
-        },
-        {
-          "page": 18,
-          "text": "123322331331132132233222123113233113233123231132 cfg3h 331123112311111222312312233121111123122112332321"
-        },
-        {
-          "page": 18,
-          "text": "231221111231331132212223321232133133133133113132"
-        },
-        {
-          "page": 18,
-          "text": "311122211322322113311323312313223323133133113231"
-        },
-        {
-          "page": 18,
-          "text": "222332123132132211313231123331132331112223311232"
-        },
-        {
-          "page": 18,
-          "text": "21123123111132"
-        },
-        {
-          "page": 18,
-          "text": "332213123312113123211322312312111213211322311311 cfg3g 322333123121112131133112132121333331232212131232"
-        },
-        {
-          "page": 18,
-          "text": "221111213322131131131131111113231233133133311331"
+          "text": "cfg3g"
         },
         {
           "page": 18,
@@ -3874,91 +3459,7 @@
         },
         {
           "page": 32,
-          "text": "NT5NT4 NT5NT4"
-        },
-        {
-          "page": 32,
-          "text": "NT3NT2 NT3NT2"
-        },
-        {
-          "page": 32,
-          "text": "NT5NT4 0.06 NT5NT4"
-        },
-        {
-          "page": 32,
-          "text": "NT3NT2 NT3NT2 NT5NT4 NT5NT4"
-        },
-        {
-          "page": 32,
-          "text": "NT3NT2NT5 0.05 NT3NT2NT5 NT4NT3 NT4NT3"
-        },
-        {
-          "page": 32,
-          "text": "NT2NT5 NT2NT5"
-        },
-        {
-          "page": 32,
-          "text": "attention attention NT4NT3 NT4NT3"
-        },
-        {
-          "page": 32,
-          "text": "NT2NT5 0.04 NT2NT5 NT4NT3 NT4NT3"
-        },
-        {
-          "page": 32,
-          "text": "NT2NT5 NT2NT5"
-        },
-        {
-          "page": 32,
-          "text": "NT4NT3NT2 0.03 NT4NT3NT2 NT5NT4 NT5NT4"
-        },
-        {
-          "page": 32,
-          "text": "NT3NT2 NT3NT2"
-        },
-        {
-          "page": 32,
-          "text": "NT5NT4NT3 0.02 NT5NT4NT3"
-        },
-        {
-          "page": 32,
-          "text": "NT2NT5 NT2NT5 NTend NTend NT4NT3 NT4NT3"
-        },
-        {
-          "page": 32,
-          "text": "( ( NT2NT5NT4 0.01 NT2NT5NT4"
-        },
-        {
-          "page": 32,
-          "text": "NT3NT2 NT3NT2 NT5NT4 NT5NT4"
-        },
-        {
-          "page": 32,
-          "text": "NT3NT2 0.00 NT3NT2 any any for GPTrel over cfg3b data for GPTrel over cfg3i data"
-        },
-        {
-          "page": 32,
-          "text": "NT5NT4 NT5NT4"
-        },
-        {
-          "page": 32,
-          "text": "NT3NT2 NT3NT2 NT5NT4 NT5NT4"
-        },
-        {
-          "page": 32,
-          "text": "NT3NT2 0.04 NT3NT2 NT5NT4 NT5NT4"
-        },
-        {
-          "page": 32,
-          "text": "NT3NT2 NT3NT2 NT5NT4 NT5NT4"
-        },
-        {
-          "page": 32,
-          "text": "NT3NT2 NT3NT2"
-        },
-        {
-          "page": 32,
-          "text": "NT5NT4NT3 0.03 NT5NT4NT3 attention attention"
+          "text": "any any for GPTrel over cfg3b data for GPTrel over cfg3i data"
         },
         {
           "page": 34,
@@ -5457,52 +4958,12 @@
       "file": "step-to-charge.pdf",
       "tableCaptions": 0,
       "cropReadyCaptions": 0,
-      "rawTableFragments": 9,
+      "rawTableFragments": 0,
       "cropBackedFragments": 0,
-      "readerRawFragments": 9,
-      "readerCellFallbacks": 3,
-      "readerFragmentKinds": {
-        "short-label": 6,
-        "structured-grid": 3
-      },
-      "orphanFragments": [
-        {
-          "page": 13,
-          "text": "W)"
-        },
-        {
-          "page": 13,
-          "text": "W)W)"
-        },
-        {
-          "page": 13,
-          "text": "ret"
-        },
-        {
-          "page": 13,
-          "text": "Rx1"
-        },
-        {
-          "page": 13,
-          "text": "W)"
-        },
-        {
-          "page": 13,
-          "text": "POUT"
-        },
-        {
-          "page": 13,
-          "text": "Rx2"
-        },
-        {
-          "page": 13,
-          "text": "Vin(V)"
-        },
-        {
-          "page": 13,
-          "text": "Rx3"
-        }
-      ]
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
     },
     {
       "file": "syntax-prosody-correlation.pdf",
@@ -5616,18 +5077,18 @@
     "papersWithTableCaptions": 48,
     "tableCaptions": 353,
     "cropReadyCaptions": 241,
-    "rawTableFragments": 1605,
-    "cropBackedFragments": 491,
-    "readerRawFragments": 1049,
-    "readerCellFallbacks": 723,
+    "rawTableFragments": 1464,
+    "cropBackedFragments": 483,
+    "readerRawFragments": 916,
+    "readerCellFallbacks": 676,
     "readerFragmentKinds": {
-      "short-label": 283,
-      "structured-grid": 723,
+      "short-label": 200,
+      "structured-grid": 676,
       "prose-like": 7,
-      "ambiguous": 35,
+      "ambiguous": 32,
       "numeric-grid": 1
     },
-    "orphanFragments": 1037,
+    "orphanFragments": 904,
     "note": "Crop readiness is a geometry diagnostic. readerRawFragments simulates suppression only after a successful caption crop; readerCellFallbacks are native same-baseline rows retained for a readable source-only grid, not a claim of fully reconstructed table semantics. readerFragmentKinds is audit-only triage and does not change resolver behavior."
   }
 }

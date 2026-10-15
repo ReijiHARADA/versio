@@ -451,6 +451,24 @@ describe("baseline benchmark on cached real papers", () => {
         expect(wearableTechniqueTable?.translationStatus).toBe("skipped");
         expect(wearableTechniqueTable?.metadata.tableRows).toHaveLength(9);
       }
+      if (paper.id === "human-ai-interaction-guidelines") {
+        const humanExtraction = extractFromPages({
+          pages,
+          paperId: paper.id,
+          filePath: paper.filename,
+          fileHash: "graphic-label-regression",
+          metadata: { title: paper.title, pageCount: pages.length },
+        });
+        const figureLabels = humanExtraction.blocks.filter((block) =>
+          block.pageStart === 3 &&
+          block.original?.startsWith("Clearly communicate AI limits and capabilities") ||
+          block.pageStart === 3 && block.original?.startsWith("Time services based on context")
+        );
+        expect(figureLabels).toHaveLength(0);
+        expect(humanExtraction.blocks.some((block) =>
+          block.type === "figure" && block.original?.startsWith("Figure 2: Unified Guideline Structure")
+        )).toBe(true);
+      }
       if (paper.id === "linguistics-language-model-physics") {
         const extracted = extractFromPages({
           pages,
