@@ -1,0 +1,5617 @@
+{
+  "generatedAt": "2026-10-15T12:57:56.126Z",
+  "paperCount": 114,
+  "papers": [
+    {
+      "file": "cognitive-dual-task.pdf",
+      "tableCaptions": 4,
+      "cropReadyCaptions": 3,
+      "rawTableFragments": 30,
+      "cropBackedFragments": 13,
+      "readerRawFragments": 17,
+      "readerCellFallbacks": 4,
+      "readerFragmentKinds": {
+        "short-label": 13,
+        "structured-grid": 4
+      },
+      "orphanFragments": [
+        {
+          "page": 7,
+          "text": "(%)"
+        },
+        {
+          "page": 7,
+          "text": "12)"
+        },
+        {
+          "page": 7,
+          "text": "= n"
+        },
+        {
+          "page": 7,
+          "text": "TRT ("
+        },
+        {
+          "page": 7,
+          "text": "Post"
+        },
+        {
+          "page": 7,
+          "text": "Pre"
+        },
+        {
+          "page": 7,
+          "text": "13)"
+        },
+        {
+          "page": 7,
+          "text": "= n CT ("
+        },
+        {
+          "page": 7,
+          "text": "+ RT Post"
+        },
+        {
+          "page": 7,
+          "text": "+"
+        },
+        {
+          "page": 7,
+          "text": "<"
+        },
+        {
+          "page": 7,
+          "text": "Pre"
+        },
+        {
+          "page": 7,
+          "text": "×"
+        },
+        {
+          "page": 8,
+          "text": "TRT (n=12) Time Group×Time Pre Post ES Δ%"
+        },
+        {
+          "page": 8,
+          "text": "7.9 ± 1.6 6.7 ± 0.9* 0.9 15.1 <0.001 0.56 39.1 ± 8.6 39.0 ± 17.2 0.0 0.3 0.06 0.67 103.9 ± 50.4 124.9 ± 71.3 0.3 20.2 0.52 0.52"
+        },
+        {
+          "page": 8,
+          "text": "15.4 ± 3.7 16.4 ± 4.1 0.3 0.6 0.03 0.67 780 ± 320 0.6 22 0.41 0.001"
+        },
+        {
+          "page": 8,
+          "text": "Pearson correlation between brain-derived neurotrophic factor (BDNF) and semantic verbal fluency (SVF) scores and phonological verbal fluency"
+        }
+      ]
+    },
+    {
+      "file": "cognitive-memory-cues.pdf",
+      "tableCaptions": 4,
+      "cropReadyCaptions": 4,
+      "rawTableFragments": 61,
+      "cropBackedFragments": 25,
+      "readerRawFragments": 36,
+      "readerCellFallbacks": 24,
+      "readerFragmentKinds": {
+        "structured-grid": 24,
+        "prose-like": 2,
+        "short-label": 5,
+        "ambiguous": 5
+      },
+      "orphanFragments": [
+        {
+          "page": 4,
+          "text": "A. A little boy A. White What color sweater is the B. A nanny B. Yellow little girl wearing? C. A little girl C. Pink"
+        },
+        {
+          "page": 4,
+          "text": "Besides the couple, who else is the main character in the clip?"
+        },
+        {
+          "page": 4,
+          "text": "A. Doing housework A. Short black hair"
+        },
+        {
+          "page": 4,
+          "text": "What does the little girl’s"
+        },
+        {
+          "page": 4,
+          "text": "What are the couple doing? B. Arguing B. Straight black shawl"
+        },
+        {
+          "page": 4,
+          "text": "C. Cooking C. Black ponytail"
+        },
+        {
+          "page": 4,
+          "text": "A. Doing homework A. Wide open"
+        },
+        {
+          "page": 4,
+          "text": "C. Playing the piano C. Half open"
+        },
+        {
+          "page": 4,
+          "text": "A. Very irritable A. Short black curls"
+        },
+        {
+          "page": 4,
+          "text": "How does the girl play the piano?"
+        },
+        {
+          "page": 4,
+          "text": "C. Very smooth like? C. Black shoulder-length"
+        },
+        {
+          "page": 4,
+          "text": "hair"
+        },
+        {
+          "page": 4,
+          "text": "A. Father A. Left shoulder"
+        },
+        {
+          "page": 4,
+          "text": "Which body part of the girl"
+        },
+        {
+          "page": 4,
+          "text": "Who grabs the girl? B. Mother B. Left hand"
+        },
+        {
+          "page": 4,
+          "text": "C. Nobody C. Right hand"
+        },
+        {
+          "page": 4,
+          "text": "A. Dad and son A. Wooden round table"
+        },
+        {
+          "page": 4,
+          "text": "Who is sitting at the dining table?"
+        },
+        {
+          "page": 4,
+          "text": "What is the style of the"
+        },
+        {
+          "page": 4,
+          "text": "B. Mom and son B. White long table"
+        },
+        {
+          "page": 4,
+          "text": "A. Fruit A. White What color sweater is mom"
+        },
+        {
+          "page": 4,
+          "text": "What does the boy eat? B. Ice cream B. Red wearing? C. Biscuit C. Blue"
+        },
+        {
+          "page": 4,
+          "text": "A. Fruit A. 1"
+        },
+        {
+          "page": 4,
+          "text": "How many scoops of ice B. Fruit and ice-cream B. 2 cream are there?"
+        },
+        {
+          "page": 4,
+          "text": "Eating dessert White ice-cream scoop What does the boy not eat?"
+        },
+        {
+          "page": 4,
+          "text": "C. Ice-cream C. 3"
+        },
+        {
+          "page": 4,
+          "text": "A. Surprised A. Spoon What does the boy use to B. Relieved B. Fork eat the fruit? C. Calm C. Hands"
+        },
+        {
+          "page": 4,
+          "text": "How do the parents react after they see the boy’s behavior?"
+        },
+        {
+          "page": 4,
+          "text": "A. Dad A. Right, middle, and left What are the positions of"
+        },
+        {
+          "page": 4,
+          "text": "Finally, who scolds the boy?"
+        },
+        {
+          "page": 4,
+          "text": "B. Mom B. Right, left, and middle"
+        },
+        {
+          "page": 4,
+          "text": "C. Left, right, and middle"
+        },
+        {
+          "page": 6,
+          "text": "10 min 1 day 1 week"
+        },
+        {
+          "page": 7,
+          "text": "0.171 0.843 0.006"
+        },
+        {
+          "page": 7,
+          "text": "0.397 0.674 0.014"
+        },
+        {
+          "page": 8,
+          "text": "details"
+        }
+      ]
+    },
+    {
+      "file": "cognitive-motor-memory.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 15,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 15,
+      "readerCellFallbacks": 8,
+      "readerFragmentKinds": {
+        "structured-grid": 8,
+        "short-label": 7
+      },
+      "orphanFragments": [
+        {
+          "page": 9,
+          "text": "Concurrent visual and motor selection during visual working memory"
+        },
+        {
+          "page": 9,
+          "text": "guided"
+        },
+        {
+          "page": 9,
+          "text": "doi: 10.1038/s41593-018-"
+        },
+        {
+          "page": 9,
+          "text": "van Ede, F., van Doren, T. I., Damhuis, J., de Lange, F. P., and"
+        },
+        {
+          "page": 9,
+          "text": "Maris,"
+        },
+        {
+          "page": 9,
+          "text": "Movement preparation improves perception"
+        },
+        {
+          "page": 9,
+          "text": "without Cognition"
+        },
+        {
+          "page": 9,
+          "text": "01.009"
+        },
+        {
+          "page": 9,
+          "text": "Yebra, M., Galarza-Vallejo, A., Soto-Leon, V., Gonzalez-Rosa,"
+        },
+        {
+          "page": 9,
+          "text": "doi: 10.3758/s13414-011-0227-2 J., Berker, A. O., de, Bestmann,"
+        },
+        {
+          "page": 9,
+          "text": "boosts"
+        },
+        {
+          "page": 9,
+          "text": "episodic encoding in humans via engagement"
+        },
+        {
+          "page": 9,
+          "text": "noradrenergic"
+        },
+        {
+          "page": 9,
+          "text": "10, 3534. doi: 10.1038/s41467-019-"
+        },
+        {
+          "page": 9,
+          "text": "Yon, D., Gilbert, S. J., de Lange, Action"
+        }
+      ]
+    },
+    {
+      "file": "cognitive-psychology-a-study-on-the-teaching-of-chinese-characters-memorization-for-foreign.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "cognitive-psychology-a-tribute-to-the-memory-of-professor-neisser-the-godfather-of-cognitiv.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 3,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 3,
+      "readerCellFallbacks": 3,
+      "readerFragmentKinds": {
+        "structured-grid": 3
+      },
+      "orphanFragments": [
+        {
+          "page": 1,
+          "text": "Neisserの業績の中で最も広く知られているのは の著書“Cognitive Psychology”（1967: 邦訳“ 学”）であろう．この本は，出版された当時，一大 セーションを巻き起こし，日本語のほか，ドイツ タリア語，スペイン語にも翻訳された． Neisserを追悼するネット・フォーラムに寄 ルの中で，Daniel Kahnemanは，次のように回"
+        },
+        {
+          "page": 2,
+          "text": "） 若い助教授だったHenry Gleitmanとは個人的にも親 自 しくなり，Clark Hullの行動主義理論の欠陥を指摘した 共著論文も出版した（Gleitman, Nachmias, & Neisser, ” 1954）．この時期，Kenneth Spenceの行動主義理論に反 ． 駁するために，ラットを使った実験も行っている． M.I.T.（マサチ"
+        },
+        {
+          "page": 4,
+          "text": "1983年，Emory大 学か ら招 聘さ れ たNeisserは，16 年間在籍したCornell大学を離れ，ジョージア州アトラ ンタにあるEmory大学に移った．当時，Cornell大学で こ は，“Neisserはアトランタに本拠を置くコカコーラ社か ら巨額の研究資金を提示されたらしい”という噂が飛び 交っていた．その真偽のほどはともかく，大学運営の義"
+        }
+      ]
+    },
+    {
+      "file": "cognitive-psychology-attention-and-entrepreneurial-cognition.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "cognitive-psychology-chronometric-constructive-cognitive-learning-evaluation-model-measurin.pdf",
+      "tableCaptions": 4,
+      "cropReadyCaptions": 1,
+      "rawTableFragments": 8,
+      "cropBackedFragments": 2,
+      "readerRawFragments": 3,
+      "readerCellFallbacks": 3,
+      "readerFragmentKinds": {
+        "structured-grid": 3
+      },
+      "orphanFragments": [
+        {
+          "page": 1,
+          "text": "https://orcid.org/0000-0003-1138-9835"
+        },
+        {
+          "page": 1,
+          "text": "https://orcid.org/0 000 - 0002 - 7701 - 6938 Yanko Norberto Mezquita - Hoyos https://orcid.org/0000 - 0001 - 6305 - 7440"
+        },
+        {
+          "page": 1,
+          "text": "https://orcid.org/0000-0001-5263-1216"
+        }
+      ]
+    },
+    {
+      "file": "cognitive-psychology-cognitive-psychology-first-language-and-false-memories.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "cognitive-psychology-editorial-the-role-of-the-distinctions-between-identification-producti.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "cognitive-psychology-gpt3.pdf",
+      "tableCaptions": 7,
+      "cropReadyCaptions": 5,
+      "rawTableFragments": 10,
+      "cropBackedFragments": 5,
+      "readerRawFragments": 5,
+      "readerCellFallbacks": 4,
+      "readerFragmentKinds": {
+        "structured-grid": 4,
+        "short-label": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 6,
+          "text": "0.0 0.0 30 20 10 0 10 20 30 30 20 10 0 10 20 30 Mean reward difference Mean reward difference"
+        },
+        {
+          "page": 11,
+          "text": "6. Drori, I. et al. A neural network solves, explains, and generates university math problems by program synthesis and few-shot learning at human level. arXiv preprint arXiv:2112.1"
+        },
+        {
+          "page": 11,
+          "text": "19. Baron, J., Beattie, J. & Hershey, J. C. Heuristics and biases in diagnostic reasoning: Ii. congruence, information, and certainty. Organ. Behav. Hum. Decis. Process. 42, 88–110"
+        },
+        {
+          "page": 15,
+          "text": "CRT2"
+        },
+        {
+          "page": 18,
+          "text": "12 Imagine we gave you 1,000 dollars right now to play a game. 0.51510189"
+        }
+      ]
+    },
+    {
+      "file": "cognitive-psychology-grand-challenges-in-environmental-psychology.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "cognitive-psychology-participant-nonnaivet-and-the-reproducibility-of-cognitive-psychology.pdf",
+      "tableCaptions": 1,
+      "cropReadyCaptions": 1,
+      "rawTableFragments": 3,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 3,
+      "readerCellFallbacks": 2,
+      "readerFragmentKinds": {
+        "structured-grid": 2,
+        "prose-like": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 2,
+          "text": "Choice-reaction time task that measures spatial compatibility. Responses are Craft and"
+        },
+        {
+          "page": 2,
+          "text": "faster when a visual target (a red square is presented on the left of the screen) Simon (1970)"
+        },
+        {
+          "page": 2,
+          "text": "is spatially compatible with the response (pressing the left button) than when the target is spatially incompatible with the response (presented on the right of the screen)."
+        }
+      ]
+    },
+    {
+      "file": "cognitive-psychology-research-on-the-effects-of-different-listening-process-models-in-liste.pdf",
+      "tableCaptions": 3,
+      "cropReadyCaptions": 3,
+      "rawTableFragments": 2,
+      "cropBackedFragments": 2,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "cognitive-psychology-research-progress-of-memory-mechanism-in-cognitive-psychology.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "cognitive-psychology-role-of-educational-psychology-in-the-study-of-memory-conceptual-proce.pdf",
+      "tableCaptions": 1,
+      "cropReadyCaptions": 1,
+      "rawTableFragments": 2,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 2,
+      "readerCellFallbacks": 1,
+      "readerFragmentKinds": {
+        "short-label": 1,
+        "structured-grid": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 4,
+          "text": "Distribution of school psychologist"
+        },
+        {
+          "page": 4,
+          "text": "Cyprus Estonia Greece North England 1:9050 1:690 1:2578 1:5000 55% 14% 37% 66% 0 66 14 44"
+        }
+      ]
+    },
+    {
+      "file": "cognitive-psychology-study-on-the-optimization-effect-of-memory-on-vocabulary-teaching-in-c.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "cognitive-psychology-the-role-of-attention-memory-and-cognition-in-the-decision-making-proc.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "cognitive-psychology-the-underlying-reasons-for-making-reminders-an-investigation-on-memory.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "cognitive-psychology-the-validity-of-the-specific-coding-principle-the-explanations-from-co.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "cognitive-vr-memory.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "computational-linguistics-nlp-translation.pdf",
+      "tableCaptions": 1,
+      "cropReadyCaptions": 1,
+      "rawTableFragments": 3,
+      "cropBackedFragments": 2,
+      "readerRawFragments": 1,
+      "readerCellFallbacks": 1,
+      "readerFragmentKinds": {
+        "structured-grid": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 11,
+          "text": "16 islands 8 18 comply consent stakedome rospatch 2028 4"
+        }
+      ]
+    },
+    {
+      "file": "conversation-analysis-user-experience.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "covid-ml-review.pdf",
+      "tableCaptions": 10,
+      "cropReadyCaptions": 8,
+      "rawTableFragments": 71,
+      "cropBackedFragments": 13,
+      "readerRawFragments": 57,
+      "readerCellFallbacks": 37,
+      "readerFragmentKinds": {
+        "short-label": 15,
+        "structured-grid": 37,
+        "numeric-grid": 1,
+        "ambiguous": 4
+      },
+      "orphanFragments": [
+        {
+          "page": 2,
+          "text": "40-50 1.1"
+        },
+        {
+          "page": 2,
+          "text": "25-35 0.2 2.78"
+        },
+        {
+          "page": 5,
+          "text": "- 2(N): 0.813. COVID-19."
+        },
+        {
+          "page": 5,
+          "text": "2(N): 0.895; In Wuhan, R2(C): -2(N): 0.8105. (DC): 0.9995; In Wuhan, R2(DC): 0.9993 Predicting the COVID-19 death"
+        },
+        {
+          "page": 5,
+          "text": "(DC): 0.9997; In Wuhan, R2(DC): 0.9996 toll. (DC): 0.9991; In Wuhan, R2(DC): 0.9995 RMSE for confirmed cases: 27456.47, RMSE for death cases: Prediction of future reachability [16]"
+        },
+        {
+          "page": 5,
+          "text": "RMSE for recovered cases: 809.71 Evaluate the incidence of new Forecast value of COVID-19 incidence: at 11 February, 2020: [18] ARIMA model of order (1,0,3) confirmed cases of COVI"
+        },
+        {
+          "page": 5,
+          "text": "RMSE (Prediction) for USA: 3963.44, RMSE (Prediction) for Italy: [19] ARIMA model of order (0,1,0) - [16] 1258.69, RMSE (Prediction) for China: 59.65"
+        },
+        {
+          "page": 5,
+          "text": "2(Death Case- Turkey): 0.714 Forecasting number of daily con-"
+        },
+        {
+          "page": 5,
+          "text": "[21] firmed cases and deaths."
+        },
+        {
+          "page": 5,
+          "text": "2(Death Case- Spain): 0.958"
+        },
+        {
+          "page": 5,
+          "text": "Forecast for 17 days (from 5 March until 21th of March) with 95% Forecast of confirmed cases of [16] confidence interval. COVID-19 for 17 days."
+        },
+        {
+          "page": 5,
+          "text": "For confirmed cases, ME=17.84, RMSE=514.74, MAE=324.46,"
+        },
+        {
+          "page": 5,
+          "text": "ARIMA(1,2,0) for confirmed cases, [23] and ARIMA(3,2,0) for recovered cases - [28] For recovered cases, ME=80.80, RMSE=186.85, MAE=112.27,"
+        },
+        {
+          "page": 5,
+          "text": "MPE=10.57, MAPE=15.60."
+        },
+        {
+          "page": 5,
+          "text": "Error degrees of freedom: 52 Estimated logistic model parameRoot Mean Squared Error: 1.9e+03 ters for China (data up to 11. Mar [29] R-Squared: 0.997, Adjusted R-Squared 0.997 2020"
+        },
+        {
+          "page": 5,
+          "text": "[24] Logistic Model F-statistic vs"
+        },
+        {
+          "page": 5,
+          "text": "MAE(×103"
+        },
+        {
+          "page": 5,
+          "text": "next one-month one-month be- [30]"
+        },
+        {
+          "page": 5,
+          "text": "): 1.243 (Italy), 0.693 (Spain), 2.822 (USA). yond the data sample end date. ): 1.601 (Italy), 0.884 (Spain), 4.103 (USA). R-Squared: 0.9944 (Italy), 0.9089 (Spain), 0.9806 (USA)."
+        },
+        {
+          "page": 5,
+          "text": "ARIMA Model RMSE(×103"
+        },
+        {
+          "page": 6,
+          "text": "tients 5644 samples with 111 attributes. Accuracy: 93.13%, Re-The processed dataset has 1091 re- 5644 call: 93%, Precision: cords and 61 attributes. 93%"
+        },
+        {
+          "page": 6,
+          "text": "Total 253 samples from 169 pa- 253, 169, 49, Accuracy: 95.95% tients. Clinical blood test of 49 paSpecificity: 96.95% tients where 24 Covid-19 patients."
+        },
+        {
+          "page": 6,
+          "text": "critical 336, 220 Accuracy: 77.5%, AUC:99%, Specificity: 78.4% cases."
+        },
+        {
+          "page": 7,
+          "text": "Limitations Refs."
+        },
+        {
+          "page": 7,
+          "text": "Not appropriate for multiclass problems. [50]"
+        },
+        {
+          "page": 7,
+          "text": "Only a limited number of X-ray images are taken into consideration. [43, 45] Not validated for images except for X-ray images. [35]"
+        },
+        {
+          "page": 7,
+          "text": "1. Small datasets are considered, and image quality is not good. [48]"
+        },
+        {
+          "page": 7,
+          "text": "[59]"
+        },
+        {
+          "page": 7,
+          "text": "MADE-DBM is validated on chest CT datasets. [36]"
+        },
+        {
+          "page": 7,
+          "text": "Not appropriate for detecting patients with early COVID-19 infection. [62]"
+        },
+        {
+          "page": 7,
+          "text": "ed regions is used to improve the overall accuracy."
+        },
+        {
+          "page": 7,
+          "text": "[72] time practical applications. Images Multimodalities Combination of ML, DL and data augmentation"
+        },
+        {
+          "page": 7,
+          "text": "Feasible only for limited datasets. [73]"
+        },
+        {
+          "page": 9,
+          "text": "Remarks Refs."
+        },
+        {
+          "page": 9,
+          "text": "U-Net bels"
+        },
+        {
+          "page": 9,
+          "text": "- [55]"
+        },
+        {
+          "page": 10,
+          "text": "[42] Collected from 6 institutions"
+        },
+        {
+          "page": 10,
+          "text": "[35] [103, 110]"
+        },
+        {
+          "page": 10,
+          "text": "[48] [105, 107, 112]"
+        },
+        {
+          "page": 10,
+          "text": "[49] [102, 105, 109, 113-115]"
+        },
+        {
+          "page": 11,
+          "text": "95.2% 100%"
+        },
+        {
+          "page": 11,
+          "text": "- 97.4% - 90% 86% Training: 82.60% Training: 93.38%, Validation: 89.21% Validation: 78.92% Training: 98.28% Training: 96.56% Validation: 94.12% Validation: 90.20% 99.20% 99.30% 98."
+        },
+        {
+          "page": 11,
+          "text": "[65] From hospitals in Shandong Province AD3D-MIL [36] Custom MADE-DBM (For multilevel classification)"
+        },
+        {
+          "page": 11,
+          "text": "94.3±0.7% 90.5±0.5%"
+        },
+        {
+          "page": 11,
+          "text": "96.19% 96.23%"
+        },
+        {
+          "page": 11,
+          "text": "From the above discussion, it can be seen that the highest accuracy was obtained by DenseNet169 being 99.80% followed by Inception ResNet v2 being 99.65%. In order to Accuracy Reca"
+        },
+        {
+          "page": 12,
+          "text": "Segmentation Adopted Model Precision Recall F1 Score Accuracy"
+        },
+        {
+          "page": 12,
+          "text": "GAN ResNet 18 100 100 100 100%"
+        },
+        {
+          "page": 12,
+          "text": "BConvLSTM U-Net and"
+        },
+        {
+          "page": 12,
+          "text": "DenseNet 169 99.80 99.80 99.80 99.80%"
+        },
+        {
+          "page": 12,
+          "text": "GAN"
+        },
+        {
+          "page": 12,
+          "text": "- DenseNet 201 99.70 99.70 99.70 99.70%"
+        },
+        {
+          "page": 12,
+          "text": "BConvLSTM U-Net and"
+        },
+        {
+          "page": 12,
+          "text": "Inception ResNet V2 99.60 99.70 99.65 99.65% Inception V3 99.60 99.60 99.60 99.60% Xception 99.40 99.80 99.60 99.60%"
+        },
+        {
+          "page": 12,
+          "text": "GAN SqueezeNet"
+        },
+        {
+          "page": 12,
+          "text": "Fuzzy Color and Stacking & 98.89 98.33 98.58 99.27%"
+        },
+        {
+          "page": 12,
+          "text": "MobileNetV2"
+        }
+      ]
+    },
+    {
+      "file": "design-for-wearability.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "detecting-statistical-interactions.pdf",
+      "tableCaptions": 6,
+      "cropReadyCaptions": 4,
+      "rawTableFragments": 14,
+      "cropBackedFragments": 3,
+      "readerRawFragments": 10,
+      "readerCellFallbacks": 3,
+      "readerFragmentKinds": {
+        "structured-grid": 3,
+        "short-label": 7
+      },
+      "orphanFragments": [
+        {
+          "page": 7,
+          "text": "We rank all pairs of features {i, j} according to their interaction strengths ω({i, j})∑calculated on the p1"
+        },
+        {
+          "page": 7,
+          "text": "5.1 EXPERIMENTAL SETUP"
+        },
+        {
+          "page": 18,
+          "text": "0.2 0.2 0.2 0.2 0.2"
+        },
+        {
+          "page": 18,
+          "text": "0.0 0.0 0.0"
+        },
+        {
+          "page": 18,
+          "text": "0.2 0.2 0.2 0.2 0.2"
+        },
+        {
+          "page": 18,
+          "text": "0.0 0.0 0.0 0.0"
+        },
+        {
+          "page": 18,
+          "text": "1.0"
+        },
+        {
+          "page": 18,
+          "text": "0.2"
+        },
+        {
+          "page": 18,
+          "text": "0.0 p"
+        },
+        {
+          "page": 18,
+          "text": "0.0 0.2 0.4 0.6 0.8 1.0"
+        }
+      ]
+    },
+    {
+      "file": "dont-mind-me.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "economics-regularized-deepiv.pdf",
+      "tableCaptions": 6,
+      "cropReadyCaptions": 6,
+      "rawTableFragments": 27,
+      "cropBackedFragments": 12,
+      "readerRawFragments": 15,
+      "readerCellFallbacks": 12,
+      "readerFragmentKinds": {
+        "structured-grid": 12,
+        "short-label": 3
+      },
+      "orphanFragments": [
+        {
+          "page": 10,
+          "text": "holds with probability at least 1 − c1 exp(c2nδn2)"
+        },
+        {
+          "page": 24,
+          "text": ""
+        },
+        {
+          "page": 31,
+          "text": ""
+        },
+        {
+          "page": 33,
+          "text": "For I2, we divide it into two terms I3 and I4, defined by"
+        },
+        {
+          "page": 33,
+          "text": "ˆ ˆ ˆ ˆ"
+        },
+        {
+          "page": 33,
+          "text": "Therefore, we have"
+        },
+        {
+          "page": 33,
+          "text": "By applying AM-GM inequality and utilizing α ≤ 1, we have"
+        },
+        {
+          "page": 33,
+          "text": "2 ( 2 2 2 )"
+        },
+        {
+          "page": 35,
+          "text": "[ ( )]"
+        },
+        {
+          "page": 36,
+          "text": "ity, and recall that ‖f − h0‖2 z∼g0(z)"
+        },
+        {
+          "page": 38,
+          "text": "i=1"
+        },
+        {
+          "page": 40,
+          "text": "p(S′) = ⊤ ,"
+        },
+        {
+          "page": 40,
+          "text": "1 + exp(0.125 − 0.1251d S′)"
+        },
+        {
+          "page": 40,
+          "text": "( )"
+        },
+        {
+          "page": 41,
+          "text": "where [ ]"
+        }
+      ]
+    },
+    {
+      "file": "education-learning-analytics.pdf",
+      "tableCaptions": 11,
+      "cropReadyCaptions": 11,
+      "rawTableFragments": 100,
+      "cropBackedFragments": 53,
+      "readerRawFragments": 47,
+      "readerCellFallbacks": 28,
+      "readerFragmentKinds": {
+        "structured-grid": 28,
+        "short-label": 15,
+        "ambiguous": 4
+      },
+      "orphanFragments": [
+        {
+          "page": 4,
+          "text": "Title Acronym Type 1º Year"
+        },
+        {
+          "page": 7,
+          "text": "Learning Analytics in D. Niemi, R. 2018 Information Age 268 Education D. Pea, B. Publishing"
+        },
+        {
+          "page": 7,
+          "text": "Saxberg, R. E. Clark"
+        },
+        {
+          "page": 7,
+          "text": "Learning Analytics in J. Lester, C. 2018 Routledge 216 Higher Education: Klein, A. Current Innovations, Johri, H. Future Potential, and Rangwala Practical Applications"
+        },
+        {
+          "page": 15,
+          "text": "Meerkat-"
+        },
+        {
+          "page": 15,
+          "text": "course offered on computer-supported"
+        },
+        {
+          "page": 15,
+          "text": "MDM Tool http://www.uco.es/kdis/research/software/ Framework for apply some data mining"
+        },
+        {
+          "page": 15,
+          "text": "Performance https://www.d2l.com/higher- Package for delivering powerful analytics"
+        },
+        {
+          "page": 16,
+          "text": "Tool that allows users to visualize the network interactions resulting from discussion forum posts and replies."
+        },
+        {
+          "page": 16,
+          "text": "Descripction"
+        },
+        {
+          "page": 16,
+          "text": "Competition where data miners can try to predict an important longitudinal outcome using realworld educational data."
+        },
+        {
+          "page": 16,
+          "text": "De-identified data from Canvas"
+        },
+        {
+          "page": 16,
+          "text": "Network open courses (running"
+        },
+        {
+          "page": 16,
+          "text": "Educational https://archive.ics.uci.edu/ml/datas"
+        },
+        {
+          "page": 16,
+          "text": "Process Mining ets/Educational+Process+Mining+(EP"
+        },
+        {
+          "page": 16,
+          "text": "Dataset"
+        },
+        {
+          "page": 16,
+          "text": "Set"
+        },
+        {
+          "page": 16,
+          "text": "VN/26147"
+        },
+        {
+          "page": 16,
+          "text": "KDD Cup 2010 https://pslcdatashop.web.cmu.edu/"
+        },
+        {
+          "page": 16,
+          "text": "Dataset KDDCup/"
+        },
+        {
+          "page": 17,
+          "text": "problems from logs of student interaction with ITS."
+        },
+        {
+          "page": 17,
+          "text": "Learn Moodle https://research.moodle.net/158/ dataset"
+        },
+        {
+          "page": 17,
+          "text": "Anonymized data from the"
+        },
+        {
+          "page": 17,
+          "text": "“Teaching with Moodle August"
+        },
+        {
+          "page": 17,
+          "text": "2016” course from learn.moodle.net."
+        },
+        {
+          "page": 17,
+          "text": "MOOC-Ed https://dataverse.harvard.edu/datas et.xhtml?persistentId=doi:10.7910/D"
+        },
+        {
+          "page": 17,
+          "text": "Communications taking place between learners in two offerings of the Massively Open Online Course for Educators (MOOC-Eds)."
+        },
+        {
+          "page": 17,
+          "text": "Dataset"
+        },
+        {
+          "page": 17,
+          "text": "VN/ZZH3UB"
+        },
+        {
+          "page": 17,
+          "text": "Moodle for seven selected courses."
+        },
+        {
+          "page": 17,
+          "text": "Dataset collected from e-learning system called Kalboard 360."
+        },
+        {
+          "page": 18,
+          "text": "Method Goal/description Key applications"
+        },
+        {
+          "page": 18,
+          "text": "Discovery with models"
+        },
+        {
+          "page": 19,
+          "text": "Method Goal/description Key applications"
+        },
+        {
+          "page": 19,
+          "text": "Prediction"
+        },
+        {
+          "page": 19,
+          "text": "To obtain knowledge of the process from"
+        },
+        {
+          "page": 19,
+          "text": "To predict the rating or preference a user"
+        },
+        {
+          "page": 19,
+          "text": "Social network analysis"
+        },
+        {
+          "page": 19,
+          "text": "To extract high-quality information from"
+        },
+        {
+          "page": 21,
+          "text": "Discovery causal"
+        },
+        {
+          "page": 21,
+          "text": "(de Carvalho et al.,"
+        },
+        {
+          "page": 21,
+          "text": "relationships 2019)"
+        },
+        {
+          "page": 21,
+          "text": "Early Warning"
+        },
+        {
+          "page": 21,
+          "text": "Systems"
+        },
+        {
+          "page": 21,
+          "text": "To develop “white box” interpretable, explanatory,"
+        },
+        {
+          "page": 21,
+          "text": "To apply EDM/LA techniques to measure self-regulated"
+        },
+        {
+          "page": 22,
+          "text": "insights that happen across multiple contexts."
+        }
+      ]
+    },
+    {
+      "file": "ergo-flightdeck.pdf",
+      "tableCaptions": 3,
+      "cropReadyCaptions": 1,
+      "rawTableFragments": 12,
+      "cropBackedFragments": 7,
+      "readerRawFragments": 4,
+      "readerCellFallbacks": 4,
+      "readerFragmentKinds": {
+        "structured-grid": 4
+      },
+      "orphanFragments": [
+        {
+          "page": 4,
+          "text": "Perceptual lens Colour associations Contrast Implied sequences Nakedness Perceived affordances Prominence Proximity and grouping Similarity Machiavellion lens Anchoring Forced dich"
+        },
+        {
+          "page": 5,
+          "text": "Method Input SHERPA Pilot interviews"
+        },
+        {
+          "page": 5,
+          "text": "Equipment Users Outputs"
+        },
+        {
+          "page": 5,
+          "text": "research- Remedial measers ures to overcome"
+        },
+        {
+          "page": 5,
+          "text": "1× Pilot current system SME predicted errors DwI cards 2× Human Novel design conPen/paper for drawing Factors cepts research- Discussion on each ers DwI card relating 5x Pilot to d"
+        }
+      ]
+    },
+    {
+      "file": "ergo-worker.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "ergonomics-2s2-1-ergonomics-human-factors-in-around-1964.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "ergonomics-6-virtual-reality-and-ergonomics-human-factors.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "ergonomics-analisis-pemetaan-bibliometrik-komputational-publikasi-pada-ergonomics.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 2,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 2,
+      "readerCellFallbacks": 2,
+      "readerFragmentKinds": {
+        "structured-grid": 2
+      },
+      "orphanFragments": [
+        {
+          "page": 3,
+          "text": "Tahun Kutipan Ref 2015 729 [10] 2021 716 [11] 2016 368 [12] 2015 342 [13] 2016 340 [14] 2021 311 [15] 2019 305 [16] 2015 289 [17] 2016 256 [18] 2019 253 [19] 2021 78009 [20] 2018 6"
+        },
+        {
+          "page": 5,
+          "text": "Ergonomics Human Factor Occupational Health 2014 22 36 30 2015 16 25 27 2016 24 23 20 2017 30 25 17 2018 30 26 23 2019 25 15 18 2020 27 18 13 2021 15 7 7 2022 7 3 4 2023 0 0 2 2024"
+        }
+      ]
+    },
+    {
+      "file": "ergonomics-analysis-of-burnout-and-occupational-safety-in-nurses-a-literature-rev.pdf",
+      "tableCaptions": 2,
+      "cropReadyCaptions": 2,
+      "rawTableFragments": 14,
+      "cropBackedFragments": 9,
+      "readerRawFragments": 5,
+      "readerCellFallbacks": 1,
+      "readerFragmentKinds": {
+        "prose-like": 2,
+        "ambiguous": 1,
+        "short-label": 1,
+        "structured-grid": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 2,
+          "text": "environment was unsafe and posed a high risk for incidents."
+        },
+        {
+          "page": 2,
+          "text": "high burnout was associated with increased incidents of nursing errors."
+        },
+        {
+          "page": 2,
+          "text": "with a high workload were 2.8 times more likely to experience burnout"
+        },
+        {
+          "page": 2,
+          "text": "The study revealed that high"
+        },
+        {
+          "page": 2,
+          "text": "10 Yuliani et al. Mindfulness Program Pretest-posttest The study showed that the"
+        }
+      ]
+    },
+    {
+      "file": "ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport.pdf",
+      "tableCaptions": 27,
+      "cropReadyCaptions": 18,
+      "rawTableFragments": 187,
+      "cropBackedFragments": 41,
+      "readerRawFragments": 136,
+      "readerCellFallbacks": 90,
+      "readerFragmentKinds": {
+        "structured-grid": 90,
+        "short-label": 34,
+        "ambiguous": 12
+      },
+      "orphanFragments": [
+        {
+          "page": 25,
+          "text": "51.6 56.1 15.013.117.5 13.018.0 13.0406445 9.4 9.7"
+        },
+        {
+          "page": 25,
+          "text": "Light commercial vehicles ("
+        },
+        {
+          "page": 25,
+          "text": "a,b"
+        },
+        {
+          "page": 25,
+          "text": "% of km = ‘all business use’"
+        },
+        {
+          "page": 25,
+          "text": "% of freight tonnes = ‘tools of trade’"
+        },
+        {
+          "page": 25,
+          "text": "a Table 11 Business kilometres travelled by freight vehicles, state/territory of registration (p.19); Table 16 Freight vehicle use, state/territory of registration –type of vehicle"
+        },
+        {
+          "page": 41,
+          "text": "N=186,SEV=11.2, HARM=2083"
+        },
+        {
+          "page": 44,
+          "text": "d"
+        },
+        {
+          "page": 44,
+          "text": "registered light trucks"
+        },
+        {
+          "page": 44,
+          "text": "c"
+        },
+        {
+          "page": 44,
+          "text": "2011 54.1 17.017.440.5 56.257.20.9 1.0 0.4 population Rate per 100,000"
+        },
+        {
+          "page": 44,
+          "text": "2000 64.6 16.917.442.1 57.559.01.4 1.5 0.5"
+        },
+        {
+          "page": 44,
+          "text": "-38.1 -9.0 -20.9 -39.7 -7.6 -8.4 -27.7 -4.7 -5.4 b % change holders 2011 1.4 59.8 79.7 1.4 82.9 84.3 0.6 25.1 25.6"
+        },
+        {
+          "page": 44,
+          "text": "-26.9 -28.9 -14.7 11.712.5-6.6 8.29.17.4"
+        },
+        {
+          "page": 44,
+          "text": "% change"
+        },
+        {
+          "page": 44,
+          "text": "Number 68 69 29 4125 12554056 12262011 39012924"
+        },
+        {
+          "page": 44,
+          "text": "97 3493 3814 11243717 10902000 41762723"
+        },
+        {
+          "page": 44,
+          "text": "a"
+        },
+        {
+          "page": 44,
+          "text": "NSW population in 2000 was 6,463,455 and in 2011 was 7,211,468Data derived from Roads and Maritime Services (RMS) (2013): Table 1.1.1 Quarterly trend in registered vehicles by vehi"
+        },
+        {
+          "page": 44,
+          "text": "a b c d user class, degree of casualty (p.73); Table 32: New South Wales residents, age, sex (p.85); Table 33: Licence holders as at 30 June 2011 (p.86)degree of casualty (p.63); T"
+        },
+        {
+          "page": 81,
+          "text": "Transport specialists 2250 8.0 Removals 297 9.1 Grocery & store supplies 125 11.2 Construction & landscape 446 12.1 Total 3954 8.1"
+        },
+        {
+          "page": 84,
+          "text": "Work organisation issues, including: 13"
+        },
+        {
+          "page": 84,
+          "text": "Freight/load issues 10"
+        },
+        {
+          "page": 84,
+          "text": "Vehicle-related issues 10"
+        },
+        {
+          "page": 87,
+          "text": "d=262)"
+        },
+        {
+          "page": 87,
+          "text": "Rotated factor loadings (N"
+        },
+        {
+          "page": 87,
+          "text": "a once"
+        },
+        {
+          "page": 87,
+          "text": "Extent of frequent exposure to OHS hazards at work and principal components factor structure of hazardexposures"
+        },
+        {
+          "page": 87,
+          "text": "Not enough staff to move goods safelyUncomfortable cab temperaturesExcessive working hoursUnreasonably tight deadlinesVery heavy trafficRoad in poor conditionRepetitive movementsEx"
+        },
+        {
+          "page": 88,
+          "text": "Rotated factor loadings (N"
+        },
+        {
+          "page": 88,
+          "text": "a once"
+        },
+        {
+          "page": 88,
+          "text": "% a week"
+        },
+        {
+          "page": 88,
+          "text": "dExposure"
+        },
+        {
+          "page": 88,
+          "text": "299298305 299 297300299296 298N"
+        },
+        {
+          "page": 88,
+          "text": "% of variance explained"
+        },
+        {
+          "page": 88,
+          "text": "ViolenceHazards a"
+        },
+        {
+          "page": 90,
+          "text": "% of % of injured injured drivers a drivers a (Nd=121) (Nd=119)"
+        },
+        {
+          "page": 111,
+          "text": "Use at all Use often Among the"
+        },
+        {
+          "page": 111,
+          "text": "Driver strategies for dealing with fatigue n (%)"
+        },
+        {
+          "page": 111,
+          "text": "most helpful"
+        },
+        {
+          "page": 111,
+          "text": "(%) (% of users)"
+        },
+        {
+          "page": 111,
+          "text": "Adjust ventilation 256 88.7 38.7 28.6 Listen to music/radio 263 88.6 57.8 36.1 Stop to eat 256 88.3 24.6 38.1 Eat while driving 251 82.5 38.2 16.9 Caffeine drinks 259 79.9 29.7 23."
+        },
+        {
+          "page": 114,
+          "text": "Test resulta,d,f,gb,c a,e,f,g,hb,c a,c,g b,ca,d,f,g a,e,f,g,ha,c,g b,c"
+        },
+        {
+          "page": 114,
+          "text": "once a week"
+        },
+        {
+          "page": 114,
+          "text": "Frequency of fatigue while driving for work Never/very rarely"
+        },
+        {
+          "page": 114,
+          "text": "% Time-based (n=239) % Piece/other rate (n=67)"
+        },
+        {
+          "page": 114,
+          "text": "Job tenure (years) Door to depot workTable 4.3:Work CharacteristicPayment systemGross annual pay ($Aus)Driving/day (hours)Kilometres/weekCommuting/day (min)Work/day (hours)Work/wee"
+        },
+        {
+          "page": 115,
+          "text": "Test result a,e,f,g,h b,eb,d a,e,g,hb,ca,e,g b,db,ca,c,g"
+        },
+        {
+          "page": 115,
+          "text": "once a week"
+        },
+        {
+          "page": 115,
+          "text": "38.7 53.112.860.052.827.234.523.9 21.8 19.515.0 41.836.8"
+        },
+        {
+          "page": 115,
+          "text": "Frequency of fatigue while driving for work Never/very rarely"
+        },
+        {
+          "page": 115,
+          "text": "once a week (n=148)half the time (n=184)"
+        },
+        {
+          "page": 115,
+          "text": "% < once a week (n=145)%% < half the time (n=122)%"
+        },
+        {
+          "page": 134,
+          "text": "1-4 vehicles % 99.2 98.0 Χ 2 tav Payment type N d 267 1002 Flat hourly rate % 58.1 5.5 Χ 2 (5) =524.2 p<.001 Flat day rate % 3.0 3.1 Flat weekly rate % 14.2 4.9 Flat item/delivery/"
+        },
+        {
+          "page": 134,
+          "text": "Other (inc multiple types) % 11.2 8.1 a Χ2 = Chi square test, tav = test assumptions violated by small n; ns = not significant (p>0.05)"
+        },
+        {
+          "page": 143,
+          "text": "21.1 35.4 11.65, p=.001"
+        },
+        {
+          "page": 145,
+          "text": "165157 163 169 156695 649 676 707 677 679168N"
+        },
+        {
+          "page": 145,
+          "text": "LightHeavy Heavy Heavy Heavy Heavy HeavyLight LightLightLight LightDrivergroup"
+        },
+        {
+          "page": 145,
+          "text": "Eat while drivingAdjust ventilationCaffeine drinksStop to eatSmokingTable 5.4: StrategyMusic or radio ab"
+        },
+        {
+          "page": 146,
+          "text": "test result (1)"
+        },
+        {
+          "page": 146,
+          "text": "users% of 18.8 44.418.948.028.033.324.34.5"
+        },
+        {
+          "page": 146,
+          "text": "abc"
+        },
+        {
+          "page": 146,
+          "text": "test result (3)"
+        },
+        {
+          "page": 146,
+          "text": "Often 16.5 12.315.940.6 50.220.8 9.8 1.9"
+        },
+        {
+          "page": 146,
+          "text": "37.4 1281.3 17.230.1 14.136.041.026.6"
+        },
+        {
+          "page": 146,
+          "text": "Use strategy (%) Sometimes"
+        },
+        {
+          "page": 146,
+          "text": "25.0 19.022.0 10.813.5 10.221.5 0.6"
+        },
+        {
+          "page": 146,
+          "text": "Rarely"
+        },
+        {
+          "page": 146,
+          "text": "2 test of ‘Use strategy’ by Driver group was significant. Bolding indicates that selection of the particular"
+        },
+        {
+          "page": 146,
+          "text": "23.2 54.0 96.231.5 63.929.1 4.9 2.2 Never"
+        },
+        {
+          "page": 146,
+          "text": "d"
+        },
+        {
+          "page": 146,
+          "text": "164 163 158642 680 693 651158N"
+        },
+        {
+          "page": 146,
+          "text": "LightHeavy Heavy Heavy HeavyLightLightLightDrivergroup"
+        },
+        {
+          "page": 147,
+          "text": "a"
+        },
+        {
+          "page": 147,
+          "text": "StrategyImproved roadsEducate public about trucksEase unreasonable/tight schedulesInformation/training on fatigueShorter driving hours"
+        },
+        {
+          "page": 148,
+          "text": "bc"
+        },
+        {
+          "page": 148,
+          "text": "a"
+        },
+        {
+          "page": 148,
+          "text": "Views strategy positively (%)"
+        },
+        {
+          "page": 148,
+          "text": "715 715 715 151 732 732160 161 156 155Nd"
+        },
+        {
+          "page": 148,
+          "text": "Heavy Heavy Heavy Heavy HeavyLight Light LightLightLight"
+        },
+        {
+          "page": 148,
+          "text": "StrategyMore efficient loading/unloadingIncreased pay rates for driversNot having to load/unloadPolicing stay-awake drugsPermitting stay--awake drugs Table 5.5 continued was not sp"
+        },
+        {
+          "page": 174,
+          "text": "d d d d d=63 =62 =28 =38 =63"
+        },
+        {
+          "page": 174,
+          "text": "N NN N N"
+        },
+        {
+          "page": 174,
+          "text": "All companies9.0 (1.3) 5-12 1.8 (.9) .5-4.07.9 (4.8) 1-21 a45.3 (7.0) 28-72"
+        },
+        {
+          "page": 174,
+          "text": "Usual driver work and rest hours reported by companies, broken down by geographic location, transport role andcompany size"
+        },
+        {
+          "page": 174,
+          "text": "Mean (SD) RangeMean (SD) RangeMean (SD) RangeMean (SD) RangeMean (SD) Range"
+        },
+        {
+          "page": 174,
+          "text": "Per week Per weekPer day Per day c c e"
+        },
+        {
+          "page": 175,
+          "text": "p"
+        },
+        {
+          "page": 175,
+          "text": "c c e"
+        },
+        {
+          "page": 175,
+          "text": "p"
+        },
+        {
+          "page": 175,
+          "text": "N N 63.310.026.7d d Nd=29 49.0 (20.0)848 (585)Ancillary"
+        },
+        {
+          "page": 175,
+          "text": "Role of transport task"
+        },
+        {
+          "page": 175,
+          "text": "N NMain 37.924.137.9 Nd=29 48.6 (24.0)809 (541)"
+        },
+        {
+          "page": 222,
+          "text": "(2003). Investigation of work-related disorders in truck drivers using"
+        },
+        {
+          "page": 227,
+          "text": "vehicles in the UK. Paper presented at the 19th International Technical"
+        },
+        {
+          "page": 227,
+          "text": "& Prevention, 43(2), 533-548. doi: 10.1016/j.aap.2009.12.004"
+        },
+        {
+          "page": 242,
+          "text": "Smallgoods wholesale Meat wholesale Store supplies (Food &/or general Grocers wholesale Soft drink manufacturers Fruit juice merchants Water cartage Drinking water supplies Water c"
+        },
+        {
+          "page": 246,
+          "text": "1. What is your age? ________________ years 2. What is your sex? (please tick one) Male Female 3. Which of the following best describes you? (please tick one)"
+        },
+        {
+          "page": 246,
+          "text": "4. Do you have children? (please tick one) Yes No (go to question 6)"
+        },
+        {
+          "page": 246,
+          "text": "5. For each of your children, please record the following information"
+        },
+        {
+          "page": 250,
+          "text": "For long distance heavy vehicle work (if relevant) __________ tonnes GVM"
+        },
+        {
+          "page": 250,
+          "text": "For light truck/short haul work __________ km"
+        },
+        {
+          "page": 250,
+          "text": "For long distance heavy vehicle work (if relevant) __________ km"
+        },
+        {
+          "page": 250,
+          "text": "If you do long distance heavy vehicle work as well as light truck/short haul"
+        },
+        {
+          "page": 253,
+          "text": "START work? _________ am pm"
+        },
+        {
+          "page": 253,
+          "text": "FINISH work? _________ am pm"
+        },
+        {
+          "page": 253,
+          "text": "START work? _________ am pm"
+        },
+        {
+          "page": 253,
+          "text": "FINISH work? _________ am pm"
+        },
+        {
+          "page": 253,
+          "text": "I do NOT work afternoon shifts"
+        },
+        {
+          "page": 253,
+          "text": "START work? _________ am pm"
+        },
+        {
+          "page": 253,
+          "text": "FINISH work? _________ am pm"
+        },
+        {
+          "page": 253,
+          "text": "I do NOT work night shifts"
+        },
+        {
+          "page": 261,
+          "text": "Long driving hours Yes No Too much non-driving work Yes No Insufficient rest breaks Yes No Loading/unloading Yes No Waiting to load/unload Yes No Inadequate amount of sleep before "
+        },
+        {
+          "page": 265,
+          "text": "0 1 2 3 (e.g., in a movie theatre or at a meeting)"
+        },
+        {
+          "page": 265,
+          "text": "0 1 2 3 when circumstances permit Sitting and talking to someone 0 1 2 3 Sitting quietly after a lunch without 0 1 2 3 alcohol In a car, while stopped for a few minutes 0 1 2 3 in "
+        },
+        {
+          "page": 267,
+          "text": "of work, sleep and"
+        },
+        {
+          "page": 267,
+          "text": "record when you were"
+        },
+        {
+          "page": 267,
+          "text": "memory is accurate rate how confident you are in your memory"
+        },
+        {
+          "page": 267,
+          "text": "memory is accurate"
+        },
+        {
+          "page": 267,
+          "text": "memory is accurate memory is accurate"
+        },
+        {
+          "page": 267,
+          "text": "I can’t remember at allModerately confidentVery confident"
+        },
+        {
+          "page": 267,
+          "text": "FRIDAY"
+        },
+        {
+          "page": 267,
+          "text": "2 40 1 3"
+        },
+        {
+          "page": 268,
+          "text": "RATINGS ______ ______ ______ RATINGS ______ ______ ______ RATINGS ______ ______ ______ midnight midnight midnight 11:00 pm 11:00 pm 11:00 pm 10:00 pm 10:00 pm 10:00 pm 9:00 pm 9:00"
+        },
+        {
+          "page": 268,
+          "text": "5:00 pm 5:00 pm 5:00 pm 4:30 4:30 4:30 4:00 pm 4:00 pm 4:00 pm 3:30 3:30 3:30 3:00 pm 3:00 pm 3:00 pm 2:30 2:30 2:30 2:00 pm 2:00 pm 2:00 pm 1:30 1:30 1:30 1:00 pm 1:00 pm 1:00 pm "
+        },
+        {
+          "page": 268,
+          "text": "3:30 3:30 3:30 What day of the week was this? _______________What day of the week is this? _______________What day of the week was this? _______________"
+        },
+        {
+          "page": 268,
+          "text": "3:00 am 3:00 am 3:00 am 2:30 2:30 2:30 2:00 am 2:00 am 2:00 am 1:30 1:30 1:30 1:00 am 1:00 am 1:00 am 0:30 0:30 0:30"
+        },
+        {
+          "page": 268,
+          "text": "midnight midnight midnight"
+        },
+        {
+          "page": 268,
+          "text": "Please record and rate your own work and non-work, fatigue and sleep times for the last 3 days (including today) on the following timelines. Startbackwards. Yesterday Today2 days a"
+        },
+        {
+          "page": 272,
+          "text": "Foreign object impaled in"
+        },
+        {
+          "page": 272,
+          "text": "Other injuries due to vehicle or equipment (e.g., Lower leg body fingers shut in vehicle door, cut on sharp metal) Ankle Poisoning Foot Toes"
+        },
+        {
+          "page": 272,
+          "text": "Contact with chemicals or other hazardous substances Contact with electricity Violent attack by another person Other (please describe):"
+        }
+      ]
+    },
+    {
+      "file": "ergonomics-human-factors-and-ergonomics.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 1,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 1,
+      "readerCellFallbacks": 1,
+      "readerFragmentKinds": {
+        "structured-grid": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 13,
+          "text": "Hancock, P., 2021. How human factors and ergonomics save lives. Applied"
+        }
+      ]
+    },
+    {
+      "file": "ergonomics-human-factors-ergonomics-in-hydrocarbon-facilities.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "ergonomics-human-factors-ihci.pdf",
+      "tableCaptions": 1,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 17,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 16,
+      "readerCellFallbacks": 16,
+      "readerFragmentKinds": {
+        "structured-grid": 16
+      },
+      "orphanFragments": [
+        {
+          "page": 2,
+          "text": "基于人工智能(AI)技术的各类智能系统正在改变传统人机交互(human-computer interaction，HCI) 领域的人机关系模式和研究范式(许为，2005)。智能系统中的智能体（intelligent agent，或称为智能代 理）在特定操作场景中具备情境感知、用户意图识别、自主学习、自主决策、自主执行等能力，由此带来 了一个新的研究领域：智能"
+        },
+        {
+          "page": 3,
+          "text": "能系统不拥有智能自主化等 类的认知特征"
+        },
+        {
+          "page": 3,
+          "text": "从“简单属性”到 机器输入的感知目标主要是人、 “情境化”交互 机、物等简单属性，例如"
+        },
+        {
+          "page": 3,
+          "text": "标位置、颜色、移动轨迹等"
+        },
+        {
+          "page": 3,
+          "text": "意图等状态，但是限制 的应用"
+        },
+        {
+          "page": 3,
+          "text": "智能体还可以替换用户的认知工作负荷，其中包括主动 地接管或被委派认知作业（知觉、推理、决策等)"
+        },
+        {
+          "page": 5,
+          "text": "杂场景中的智能人机交互任务，也没有考虑 iHCI 中人与智能系统之间的协同合作新型人机关系，并且机器 仅仅是作为一个工具来考虑（许为, 葛列众，2020）。刘烨等人（2018）后来提出的人机合作心理模型已 经开始考虑到人与智能系统之间潜在的人机协同合作。 如上一篇系列文章所讨论（“五论以用户为中心的设计：从自动化到智能时代的自主化以及自动驾驶 车”）（许为，"
+        },
+        {
+          "page": 7,
+          "text": "人类智能与机 作为一个协同认知系统，iHCI 系统的绩效不 开展 iHCI 中人机混合增强智能的研究和应 器智能的互补 仅仅取决于系统单个部分的绩效，而且是取 用，为人机混合增强智能开发有效的认知计 性 决于人机协同合作、人类智能与机器智能之 算体系架构；开发基于认知计算方法与“人"
+        },
+        {
+          "page": 9,
+          "text": "采用 iHCI 人因工程框架的新范式有助于开拓设计思路，探索有效的人因工程解决方案。人因工程解决 方案主要包括以下几方面。 • 人机协同合作的设计新范式：智能自动驾驶车是由两个认知体（人类驾驶员，机器认知体/“机器 智能驾驶员”）组成的一个协同认知系统，两者是团队合作的队友，因此人机共驾的 iHCI 研究和 应用可以从人机协同合作的新角度考虑。例如，研究要充"
+        },
+        {
+          "page": 12,
+          "text": "iHCI 中的人机双向交互需要机器智能体能够感知用户意图、操作环境和上下文，并对用户意图做出自 适应的交互操作。基于用户意图识别的设计策略体现了“以用户为中心”的理念，可以降低人机冲突概率, 也是实现 iHCI 中模糊和自然人机交互的关键。 用户生理、认知、情感等状态识别和计算建模为面向用户的意图识别提供了基础。用户意图识别可以通 过多模态信息实现，其中包括"
+        },
+        {
+          "page": 13,
+          "text": "首先，目前的许多研究主要针对用户意图的识别技术,但是理论层面上有许多问题迫切需要解决，需要 结合用户需求，开展人因工程研究，引导技术的发展方向。例如，用户不同通道（如动作、生理、语言 等）所产生的意图需要不同的技术，从理论上如何把各类意图进行系统化地表征、建模和解释，找到多通 道用户意图之间的可解释性、互补性等特征，这是人因工程的一个重要课题。另外，如何建立"
+        },
+        {
+          "page": 13,
+          "text": "够从用户模糊输入信号中推测出用户的真实交互意图(Aminer,2020)。 第四，随着情感计算理论研究和技术的突破，iHCI 将向着多模态情感识别、情感意图理解、智能体多 模态情感表达以及人机情感交互系统的方面深化，最终使智能系统具有主动情感认知能力(韩晶等，2015； 黄宏程等，2019)。因此，加速对用户情感状态测量和建模的研究将有助于进一步开发针对用户"
+        },
+        {
+          "page": 13,
+          "text": "如前所述，不同于传统人机交互，iHCI 可以被视为两个认知体之间的协同合作，在一定的操作和任务 环境中，人与智能体之间是基于一种团队队友之间的合作来实现两者之间的“交互”，这种交互是由两者 之间双向主动的、分享的、互补的、可替换的、自适应的、目标驱动的以及可预测等人因工程特征所决定 的。随着机器智能自主化程度的提高，这些特征表现更加明显（许为, 葛列众, 2"
+        },
+        {
+          "page": 14,
+          "text": "中智能体是否真正可以成为与人类协同合作的队友（同伴、受指导者或团队领导），还是仅仅作为一个智 能超级工具（Shneiderman，2020；Klien & Woods, et al., 2004）。今后工作应该侧重于研究人类与智 能体如何交互、协商以及作为队友进行协作合作；研究如何在 iHCI 设计中界定各自的角色和责任以及协作 的规则；研究人机协作合作的层"
+        }
+      ]
+    },
+    {
+      "file": "ergonomics-risk-factors-for-occupational-fatigue-in-construction-workers-a-system.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "fashion-hybrid-cmf.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "hci-a-comparative-research-on-usability-and-user-experience-of-user-interf.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 13,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 13,
+      "readerCellFallbacks": 12,
+      "readerFragmentKinds": {
+        "structured-grid": 12,
+        "short-label": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 3,
+          "text": "Tasksequence Task"
+        },
+        {
+          "page": 3,
+          "text": "Task 1 Import [01.jpg] [02.jpg] [03.jpg] into the canvas, and resize themto 200px* 150px"
+        },
+        {
+          "page": 3,
+          "text": "Task 2 Make [Figure1.jpg] [Figure2.jpg] [Figure3.jpg] verticallycentered and aligned, keeping their spacing at 30px"
+        },
+        {
+          "page": 5,
+          "text": "AOI"
+        },
+        {
+          "page": 5,
+          "text": "Duration of fixation in AOI (s) Degree Variables of Significance Adobe Sketch Figma freedom XD"
+        },
+        {
+          "page": 5,
+          "text": "Task 1 111.76 68.08 56.50 2 0.002 Task 2 81.04 56.60 87.52 2 0.425 Task 3 136.48 60.16 64.16 2 0.000 Task 4 53.92 85.81 76.89 2 0.398 Task 5 97.95 66.15 82.00 2 0.036 Task 6 65.31 "
+        },
+        {
+          "page": 5,
+          "text": "FAILURES"
+        },
+        {
+          "page": 5,
+          "text": "Variables Adobe of Significance"
+        },
+        {
+          "page": 5,
+          "text": "Sketch Figma freedom XD Times of task 1.21 0.21 0.79 2 0.038 failures"
+        },
+        {
+          "page": 6,
+          "text": "(p1=p2=0.000<0.05). Fig. 10 depicts the specific eye-"
+        },
+        {
+          "page": 6,
+          "text": "Time to complete each task (s) Degreeof Variables Sketch freedom Significance AdobeXD Figma Task 1 119.88 71.46 61.26 2 0.001 Task 2 77.52 54.64 61.80 2 0.327 Task 3 120.74 56.00 6"
+        },
+        {
+          "page": 7,
+          "text": "Variables Sketch A1 Ease of use 5.07 A2 Ease of operation 4.64 A3 Efficiency support degree 4.71 SystemUsefulness A4 System comfort degree 4.50 A5 Ease of Learning 4.71 A6 Performa"
+        },
+        {
+          "page": 7,
+          "text": "Significance freedom Adobe XD Figma 5.07 5.57 2 0.591 5.43 5.64 2 0.164 5.64 5.57 2 0.151 5.29 5.50 2 0.185 5.21 5.43 2 0.420 5.14 5.64 2 0.645 31.79 33.36 2 0.330 4.36 4.86 2 0.32"
+        }
+      ]
+    },
+    {
+      "file": "hci-development-of-user-interface-user-experience-using-design-thinking-ap.pdf",
+      "tableCaptions": 3,
+      "cropReadyCaptions": 2,
+      "rawTableFragments": 5,
+      "cropBackedFragments": 5,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "hci-empirical-methods.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "hci-human-computer-interaction-as-science.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 5,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 5,
+      "readerCellFallbacks": 3,
+      "readerFragmentKinds": {
+        "short-label": 2,
+        "structured-grid": 3
+      },
+      "orphanFragments": [
+        {
+          "page": 1,
+          "text": "of science’"
+        },
+        {
+          "page": 1,
+          "text": "constructing a disciplinary order for the increasingly"
+        },
+        {
+          "page": 1,
+          "text": "diverse and overlapping research communities"
+        },
+        {
+          "page": 1,
+          "text": "contribute in some way to what"
+        },
+        {
+          "page": 11,
+          "text": "-"
+        }
+      ]
+    },
+    {
+      "file": "hci-human-computer-interaction.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "hci-intelligent-human-computer-interaction.pdf",
+      "tableCaptions": 44,
+      "cropReadyCaptions": 22,
+      "rawTableFragments": 61,
+      "cropBackedFragments": 30,
+      "readerRawFragments": 24,
+      "readerCellFallbacks": 16,
+      "readerFragmentKinds": {
+        "structured-grid": 16,
+        "short-label": 8
+      },
+      "orphanFragments": [
+        {
+          "page": 64,
+          "text": "( ) wT C1w max (2) w wT C2w"
+        },
+        {
+          "page": 69,
+          "text": "folds k-fold cross-validation Accuracy (%) Proposed SFS SVM LR k = 1 98.80 94.22 93.74 k = 2 97.02 93.10 92.88 k = 3 98.21 93.46 91.79 k = 4 94.04 92.78 91.86 k = 5 98.80 94.60 94."
+        },
+        {
+          "page": 69,
+          "text": "CPU execution time (Seconds) Proposed SFS SVM LR 24.02 30.62 31.00 25.42 29.99 29.34 23.00 28.23 29.21 24.50 29.29 30.19 24.32 30.83 28.00 23.36 29.00 29.75 24.17 29.35 28.86 24.56"
+        },
+        {
+          "page": 139,
+          "text": "3Temporality 0.443(0.55) 1.039(0.88) −0.05(1.30) 0.787(0.90)"
+        },
+        {
+          "page": 139,
+          "text": "3Noun overlap, 0.555(0.14) 0.509(0.33) 0.535(0.18) 0.557(0.24)"
+        },
+        {
+          "page": 141,
+          "text": "particle to IV 3LSA verb overlap"
+        },
+        {
+          "page": 141,
+          "text": "3Preposition PD 92.28(20.2) 87.94(24.3) 115.4(21.1) 122.6(34.3) 3 Agentless passive 2.972(3.35) 1.96(4.76) 10.06(8.84) 12.08(13.5) 3Negation density 19.62(7.96) 26.21(13.6) 11.60(6"
+        },
+        {
+          "page": 144,
+          "text": "10.5(4.03) 0.001 11.7(5.37) 0.00 197.8(86.4) 0.00 0.203(0.19) 0.041"
+        },
+        {
+          "page": 145,
+          "text": "6.2(2.09) 0.00 7.7(2.90) 0.001 133.3(52.1) 0.00 17.45(5.10) 0.041"
+        },
+        {
+          "page": 168,
+          "text": ".045*"
+        },
+        {
+          "page": 168,
+          "text": ".574"
+        },
+        {
+          "page": 168,
+          "text": ".000**"
+        },
+        {
+          "page": 168,
+          "text": ".021*"
+        },
+        {
+          "page": 168,
+          "text": ".143"
+        },
+        {
+          "page": 168,
+          "text": ".001*"
+        },
+        {
+          "page": 168,
+          "text": ".039*"
+        },
+        {
+          "page": 180,
+          "text": "P (emo |emo )P (emo ) all−emo l m n p n"
+        },
+        {
+          "page": 180,
+          "text": "a"
+        },
+        {
+          "page": 194,
+          "text": "Standard Co-training in Multiword Expression Detection 183 f wð 1w2Þ 1"
+        },
+        {
+          "page": 194,
+          "text": "f wð 1w2Þ þ2ðf wð 1w\u0016 2Þ þfðw\u0016 1w2ÞÞ Word forward variety vfðw2Þ"
+        },
+        {
+          "page": 226,
+          "text": "Barnwal, Santosh Kumar 122 Bazzano, Federica 32, 60 Bellik, Yacine 8 Bhattacharya, Paritosh 109 Böck, Ronald 189"
+        },
+        {
+          "page": 226,
+          "text": "Casola, Silvia 60 Ceròn, Gabriel 60 Chander, Ajay 165 Clavel, Celine 8"
+        },
+        {
+          "page": 226,
+          "text": "Samanta, Debasis 47, 202 Samima, Shabnam 202 Sarkar, Ayanava 19 Sarma, Monalisa 47, 202 Siegert, Ingo 189 Sreeja, S. R. 47 Srinivasan, Ramya 165 Stephanidis, Constantine 137"
+        },
+        {
+          "page": 226,
+          "text": "Tanese, Flavio 60 Thekkan Devassy, Sunny 73 Tiwary, Uma Shanker 122 Tran, Cong Chi 150"
+        }
+      ]
+    },
+    {
+      "file": "hci-introduction-to-human-computer-interaction.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "hci-redesign-of-user-experience-in-inaportnet-using-the-user-experience-qu.pdf",
+      "tableCaptions": 1,
+      "cropReadyCaptions": 1,
+      "rawTableFragments": 3,
+      "cropBackedFragments": 1,
+      "readerRawFragments": 2,
+      "readerCellFallbacks": 2,
+      "readerFragmentKinds": {
+        "structured-grid": 2
+      },
+      "orphanFragments": [
+        {
+          "page": 5,
+          "text": "𝑛 = (1+120×(0,1)2)"
+        },
+        {
+          "page": 5,
+          "text": "𝑛 = 1+(120120×0,01)"
+        }
+      ]
+    },
+    {
+      "file": "hci-social-touch-in-human-computer-interaction.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "hci-user-experience-analysis-on-mobile-application-design-using-user-exper.pdf",
+      "tableCaptions": 4,
+      "cropReadyCaptions": 3,
+      "rawTableFragments": 1,
+      "cropBackedFragments": 1,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "hci-user-experience-design-using-machine-learning-a-systematic-review.pdf",
+      "tableCaptions": 11,
+      "cropReadyCaptions": 4,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "hfe-healthcare-patient-safety-review.pdf",
+      "tableCaptions": 7,
+      "cropReadyCaptions": 6,
+      "rawTableFragments": 36,
+      "cropBackedFragments": 19,
+      "readerRawFragments": 16,
+      "readerCellFallbacks": 11,
+      "readerFragmentKinds": {
+        "short-label": 5,
+        "structured-grid": 11
+      },
+      "orphanFragments": [
+        {
+          "page": 7,
+          "text": "validity"
+        },
+        {
+          "page": 7,
+          "text": "7 8 9 10 11 12 13 14 N Y N N Y Y Y Y 9 moderate Y Y Y N N Y Y Y 8 moderate N N Y N Y Y Y Y 9 moderate Y N N N N Y Y Y 8 moderate N Y Y Y N Y N Y 9 moderate N N Y N Y Y Y N 8 modera"
+        },
+        {
+          "page": 7,
+          "text": "N N Y N N Y Y N 5 low"
+        },
+        {
+          "page": 7,
+          "text": "Y Y Y Y N Y Y Y 11 high Y Y Y N N Y N Y 9 moderate Y Y Y N N Y N Y 8 moderate - - - - - - - - - exclude - - - - - - - - - exclude - - - - - - - - - exclude - - - - - - - - - exclud"
+        },
+        {
+          "page": 8,
+          "text": "home HFE workers equipment (1028)"
+        },
+        {
+          "page": 8,
+          "text": "(12)dental teeth while hygienists performing (5) simulated dental procedures"
+        },
+        {
+          "page": 8,
+          "text": "9. Xiao 2012 Netherlands NR Controlled Surgical Surgeons Yes M HFE training \" \" \" department (20) posture"
+        },
+        {
+          "page": 10,
+          "text": "1 2 3 4 5"
+        },
+        {
+          "page": 10,
+          "text": "educational course"
+        },
+        {
+          "page": 10,
+          "text": "Nurses (24) NR M HFE \""
+        },
+        {
+          "page": 10,
+          "text": "educational course"
+        },
+        {
+          "page": 10,
+          "text": "Female nurses(56) NR M Educational"
+        },
+        {
+          "page": 10,
+          "text": "HFE"
+        },
+        {
+          "page": 10,
+          "text": "Surgeons, Yes M HFE team"
+        },
+        {
+          "page": 10,
+          "text": "technologists, training program anesthesiologists, anesthetists (688)"
+        },
+        {
+          "page": 12,
+          "text": "\" \" \" \" \""
+        }
+      ]
+    },
+    {
+      "file": "hfe-healthcare-safety-review.pdf",
+      "tableCaptions": 7,
+      "cropReadyCaptions": 6,
+      "rawTableFragments": 36,
+      "cropBackedFragments": 19,
+      "readerRawFragments": 16,
+      "readerCellFallbacks": 11,
+      "readerFragmentKinds": {
+        "short-label": 5,
+        "structured-grid": 11
+      },
+      "orphanFragments": [
+        {
+          "page": 7,
+          "text": "validity"
+        },
+        {
+          "page": 7,
+          "text": "7 8 9 10 11 12 13 14 N Y N N Y Y Y Y 9 moderate Y Y Y N N Y Y Y 8 moderate N N Y N Y Y Y Y 9 moderate Y N N N N Y Y Y 8 moderate N Y Y Y N Y N Y 9 moderate N N Y N Y Y Y N 8 modera"
+        },
+        {
+          "page": 7,
+          "text": "N N Y N N Y Y N 5 low"
+        },
+        {
+          "page": 7,
+          "text": "Y Y Y Y N Y Y Y 11 high Y Y Y N N Y N Y 9 moderate Y Y Y N N Y N Y 8 moderate - - - - - - - - - exclude - - - - - - - - - exclude - - - - - - - - - exclude - - - - - - - - - exclud"
+        },
+        {
+          "page": 8,
+          "text": "home HFE workers equipment (1028)"
+        },
+        {
+          "page": 8,
+          "text": "(12)dental teeth while hygienists performing (5) simulated dental procedures"
+        },
+        {
+          "page": 8,
+          "text": "9. Xiao 2012 Netherlands NR Controlled Surgical Surgeons Yes M HFE training \" \" \" department (20) posture"
+        },
+        {
+          "page": 10,
+          "text": "1 2 3 4 5"
+        },
+        {
+          "page": 10,
+          "text": "educational course"
+        },
+        {
+          "page": 10,
+          "text": "Nurses (24) NR M HFE \""
+        },
+        {
+          "page": 10,
+          "text": "educational course"
+        },
+        {
+          "page": 10,
+          "text": "Female nurses(56) NR M Educational"
+        },
+        {
+          "page": 10,
+          "text": "HFE"
+        },
+        {
+          "page": 10,
+          "text": "Surgeons, Yes M HFE team"
+        },
+        {
+          "page": 10,
+          "text": "technologists, training program anesthesiologists, anesthetists (688)"
+        },
+        {
+          "page": 12,
+          "text": "\" \" \" \" \""
+        }
+      ]
+    },
+    {
+      "file": "hfe-healthcare-scoping-2024.pdf",
+      "tableCaptions": 3,
+      "cropReadyCaptions": 3,
+      "rawTableFragments": 46,
+      "cropBackedFragments": 9,
+      "readerRawFragments": 37,
+      "readerCellFallbacks": 22,
+      "readerFragmentKinds": {
+        "short-label": 14,
+        "ambiguous": 1,
+        "structured-grid": 22
+      },
+      "orphanFragments": [
+        {
+          "page": 1,
+          "text": "To cite:"
+        },
+        {
+          "page": 1,
+          "text": "ABSTRACT"
+        },
+        {
+          "page": 1,
+          "text": "WHAT IS ALREADY KNOWN ON THIS TOPIC"
+        },
+        {
+          "page": 1,
+          "text": "WHAT THIS STUDY ADDS"
+        },
+        {
+          "page": 1,
+          "text": "► Additional supplemental"
+        },
+        {
+          "page": 5,
+          "text": "The intervention is Flow disruptions.time and length of stay. Checklist usage rates.rates. Patient safety eventssafety culture.day mortality and seriousImplementation outcomes:SSC "
+        },
+        {
+          "page": 5,
+          "text": "The intervention has(principle 3) To redesign the trauma To assess the effect ofsurgical safety checklistculture and outcomessurgery turnover time.events in blood ("
+        },
+        {
+          "page": 5,
+          "text": ")"
+        },
+        {
+          "page": 5,
+          "text": "Prospective observation ofcollection tool Conduct baseline hospitalculture.available checklist audit data.assess attitudes towardsConduct a context assessmentTrained Human Factors "
+        },
+        {
+          "page": 5,
+          "text": "phase is undertaken to design In the Exploration phase:description of needs assessment A context- ► ►► ► phase ► ► ► ► ► assessment or systems analysisthe intervention (principle 2"
+        },
+        {
+          "page": 5,
+          "text": ")"
+        },
+        {
+          "page": 5,
+          "text": "than one element of the systemPeople: Teamwork training. Tool: Trauma medication transportTechnology: Headsets, whiteboard.standardisation. People: Virtual non-Tools: Redesigned an"
+        },
+        {
+          "page": 5,
+          "text": "Title A Human Factors Subsystems Transforming Team Performanceof the Surgical Safety Checklist. The Application of Human FactorsRoom Turnover in RoboticHuman Factors and QualityDep"
+        },
+        {
+          "page": 5,
+          "text": "(2024)(2014)"
+        },
+        {
+          "page": 5,
+          "text": "25 35 (2022) 24 Studies charted to the inclusion criteria et alet al 26"
+        },
+        {
+          "page": 5,
+          "text": "Cohen EtheridgeCatchpole Table 1 Author and yearBashkin"
+        },
+        {
+          "page": 6,
+          "text": "The intervention is Organisational outcomes:teamwork metrics of theMaintenance measures:sustainability, acceptability,feasibility. Organisational outcomes:situation awareness of PI"
+        },
+        {
+          "page": 6,
+          "text": "an active element cardiovascularTo improve situationclinical space for the Testing a supervisionon the quality of ward-intervention aims (principle 3) To improvehandoffs. The inter"
+        },
+        {
+          "page": 6,
+          "text": ")"
+        },
+        {
+          "page": 6,
+          "text": "A modified Delphi techniqueregarding the site-Quality (CTQ) elements forhandoffs. Workflow mapping to identifyand potential safety threats.teams participated in real andscenarios.i"
+        },
+        {
+          "page": 6,
+          "text": "phase is undertaken to designdescription of needs assessment A context- ►► ► ► ► ► ► ► assessment or systems analysisthe intervention (principle 2)phase ► ("
+        },
+        {
+          "page": 6,
+          "text": ")"
+        },
+        {
+          "page": 7,
+          "text": "phase Define: ► ► ► Analyse:"
+        },
+        {
+          "page": 7,
+          "text": ")"
+        },
+        {
+          "page": 7,
+          "text": "Title Viewing Prevention of Catheter-as a System: Using SystemsEngineering in a QualityAcademic Medical Center. Improving Sepsis Compliancein a Community Hospital"
+        },
+        {
+          "page": 7,
+          "text": "Continued"
+        },
+        {
+          "page": 8,
+          "text": "The intervention is Organisational outcomes:prescribing and change.prescription rates. Organisational outcomes:in each unit. Organisational outcomes:identification incidents.miss ("
+        },
+        {
+          "page": 8,
+          "text": "The intervention has Using a combinatoryto improve oxygensafety. To identify and reduceevents (PAEs) in To reduce patient (mis)events and improveintervention aims an active element"
+        },
+        {
+          "page": 8,
+          "text": ")"
+        },
+        {
+          "page": 8,
+          "text": "Functional Resonanceanalysis using qualitative dataand describe each functionprescribing process includingadministration and monitoring;both within and betweenof oxygen prescribing"
+        },
+        {
+          "page": 8,
+          "text": "phase is undertaken to designIn the preimplementation phase:description of needs assessment A context- ► ► ► assessment or systems analysisthe intervention (principle 2) In the pre"
+        },
+        {
+          "page": 8,
+          "text": ")"
+        },
+        {
+          "page": 9,
+          "text": "))"
+        },
+        {
+          "page": 9,
+          "text": "part Improvement"
+        },
+        {
+          "page": 9,
+          "text": ")"
+        },
+        {
+          "page": 9,
+          "text": "Pre–post analysis of outcomes 11 An interrupted time series design using 1 historical data and postintervention assessment Work system elements targeted in intervention People 10 T"
+        },
+        {
+          "page": 9,
+          "text": "Organisation 8 Technology 8 Task 7 Process 6 Environment 5 Outcomes measured Organisation level outcomes 12 Patient level outcomes 7 Intervention maintenance measures 3 Balancing m"
+        }
+      ]
+    },
+    {
+      "file": "how-content-volume-landing-pages.pdf",
+      "tableCaptions": 5,
+      "cropReadyCaptions": 5,
+      "rawTableFragments": 5,
+      "cropBackedFragments": 4,
+      "readerRawFragments": 1,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {
+        "short-label": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 10,
+          "text": "2.470**"
+        }
+      ]
+    },
+    {
+      "file": "human-ai-interaction-guidelines.pdf",
+      "tableCaptions": 1,
+      "cropReadyCaptions": 1,
+      "rawTableFragments": 173,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 173,
+      "readerCellFallbacks": 131,
+      "readerFragmentKinds": {
+        "ambiguous": 3,
+        "short-label": 39,
+        "structured-grid": 131
+      },
+      "orphanFragments": [
+        {
+          "page": 3,
+          "text": "Clearly communicate AI limits and capabilities"
+        },
+        {
+          "page": 3,
+          "text": "Time services based on context"
+        },
+        {
+          "page": 3,
+          "text": "Scope services when in doubt"
+        },
+        {
+          "page": 3,
+          "text": "Notify users about changes"
+        },
+        {
+          "page": 3,
+          "text": "Introduce and set expectations for AI Set expectations for AI improvements"
+        },
+        {
+          "page": 3,
+          "text": "Help users calibrate their trust Set expectations for adaptation"
+        },
+        {
+          "page": 3,
+          "text": "Identify existing mental models Show contextually relevant information"
+        },
+        {
+          "page": 3,
+          "text": "Keep track of user needs"
+        },
+        {
+          "page": 3,
+          "text": "Avoid technical or statistical jargon Balance control & automation Account for situational stakes Assess automation vs. augmentation"
+        },
+        {
+          "page": 3,
+          "text": "Assess inclusivity"
+        },
+        {
+          "page": 3,
+          "text": "Mitigate social biases Onboard in stages Match relevant social norms"
+        },
+        {
+          "page": 3,
+          "text": "Return control to the user Manage privacy and security"
+        },
+        {
+          "page": 3,
+          "text": "Protect personally identifiable information"
+        },
+        {
+          "page": 3,
+          "text": "Tie explanations to user actions"
+        },
+        {
+          "page": 3,
+          "text": "Always secure peopleʼs information Mental"
+        },
+        {
+          "page": 3,
+          "text": "Example-based explanationsExplanation via interaction Model"
+        },
+        {
+          "page": 3,
+          "text": "Optimize for understanding Split your dataUnexpected input"
+        },
+        {
+          "page": 3,
+          "text": "Explain whatʼs important Use existing dataset"
+        },
+        {
+          "page": 3,
+          "text": "Evaluate rater tools Value of AI"
+        },
+        {
+          "page": 3,
+          "text": "Build your own dataset"
+        },
+        {
+          "page": 3,
+          "text": "Articulate data sources"
+        },
+        {
+          "page": 3,
+          "text": "Identify your data sources Explainability"
+        },
+        {
+          "page": 3,
+          "text": "Provide easy access to labels"
+        },
+        {
+          "page": 3,
+          "text": "Let raters change their minds"
+        },
+        {
+          "page": 3,
+          "text": "Design for raters and labeling"
+        },
+        {
+          "page": 3,
+          "text": "Multi-option"
+        },
+        {
+          "page": 3,
+          "text": "Investigate rater context and incentives"
+        },
+        {
+          "page": 3,
+          "text": "Consider using categorical / n-best alternative"
+        },
+        {
+          "page": 3,
+          "text": "Beware of confirmation bias"
+        },
+        {
+          "page": 3,
+          "text": "Map existing workflows"
+        },
+        {
+          "page": 3,
+          "text": "Design for model tuning Training Model"
+        },
+        {
+          "page": 3,
+          "text": "Confidence Design for experimentation"
+        },
+        {
+          "page": 3,
+          "text": "Weigh false positive & negative"
+        },
+        {
+          "page": 3,
+          "text": "User needs and defining success"
+        },
+        {
+          "page": 3,
+          "text": "Balance underfitting and overfitting Confirm success"
+        },
+        {
+          "page": 3,
+          "text": "Evaluate the reward function outcomes"
+        },
+        {
+          "page": 3,
+          "text": "Consider precision and recall tradeoffs"
+        },
+        {
+          "page": 3,
+          "text": "Calibration"
+        },
+        {
+          "page": 3,
+          "text": "Collect"
+        },
+        {
+          "page": 3,
+          "text": "Error"
+        },
+        {
+          "page": 3,
+          "text": "Make calibration quick and easy"
+        },
+        {
+          "page": 3,
+          "text": "Fail gracefully"
+        },
+        {
+          "page": 3,
+          "text": "Before"
+        },
+        {
+          "page": 3,
+          "text": "Learn from user behavior"
+        },
+        {
+          "page": 3,
+          "text": "Use Encourage granular feedback"
+        },
+        {
+          "page": 3,
+          "text": "Remember recent interactions"
+        },
+        {
+          "page": 3,
+          "text": "Support efficient correction"
+        },
+        {
+          "page": 3,
+          "text": "Review implicit feedback"
+        },
+        {
+          "page": 3,
+          "text": "Manage influence on user decisions"
+        },
+        {
+          "page": 3,
+          "text": "After"
+        },
+        {
+          "page": 3,
+          "text": "Type"
+        },
+        {
+          "page": 3,
+          "text": "Align feedback with model improvement Prioritize recent feedback Update and adapt cautiously"
+        },
+        {
+          "page": 3,
+          "text": "Support efficient dismissal"
+        },
+        {
+          "page": 3,
+          "text": "Let people correct their corrections"
+        },
+        {
+          "page": 3,
+          "text": "Context errors"
+        },
+        {
+          "page": 3,
+          "text": "Background errors"
+        },
+        {
+          "page": 3,
+          "text": "Identify error sources"
+        },
+        {
+          "page": 3,
+          "text": "Address mistakes without complicating the UI"
+        },
+        {
+          "page": 6,
+          "text": "Company"
+        },
+        {
+          "page": 6,
+          "text": "Model How to train your model Google"
+        },
+        {
+          "page": 6,
+          "text": "Model How to train your model Google"
+        },
+        {
+          "page": 6,
+          "text": "Model How to train your model Google"
+        },
+        {
+          "page": 6,
+          "text": "Model How to train your model Google"
+        },
+        {
+          "page": 6,
+          "text": "Model How to train your model Google"
+        },
+        {
+          "page": 6,
+          "text": "Model How to train your model Google"
+        },
+        {
+          "page": 6,
+          "text": "Model How to train your model Google"
+        },
+        {
+          "page": 6,
+          "text": "Model How to train your model Google"
+        },
+        {
+          "page": 6,
+          "text": "Model How to train your model Google"
+        },
+        {
+          "page": 6,
+          "text": "Model How to train your model Google"
+        },
+        {
+          "page": 6,
+          "text": "Model How to train your model Google"
+        },
+        {
+          "page": 6,
+          "text": "Model Google"
+        },
+        {
+          "page": 6,
+          "text": "Model Google"
+        },
+        {
+          "page": 6,
+          "text": "Model Google"
+        },
+        {
+          "page": 7,
+          "text": "Company Guideline"
+        },
+        {
+          "page": 7,
+          "text": "Interface Explainability Google"
+        },
+        {
+          "page": 7,
+          "text": "Interface Explainability Google"
+        },
+        {
+          "page": 7,
+          "text": "Interface Explainability Google Optimize for understanding Interface Explainability Google Interface Explainability Google"
+        },
+        {
+          "page": 7,
+          "text": "Interface Explainability Google Explanation via interaction Interface Explainability Google Example-based explanations Interface Explainability Google Explain what’s important Inte"
+        },
+        {
+          "page": 7,
+          "text": "Interface Explainability Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Explainability Microsoft Show contextually relevant information Interface Confidence Google Model confidence displays Interface Confidence Google"
+        },
+        {
+          "page": 7,
+          "text": "Interface Confidence Google Categorical Interface Confidence Google N-best alternatives Interface Confidence Google Numeric Interface Confidence Google"
+        },
+        {
+          "page": 7,
+          "text": "Interface Confidence Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Confidence Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Confidence Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Confidence Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Confidence Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Confidence Apple Confirm success"
+        },
+        {
+          "page": 7,
+          "text": "Interface Google"
+        },
+        {
+          "page": 7,
+          "text": "Interface Google"
+        },
+        {
+          "page": 7,
+          "text": "Interface Google Introduce and set expectations for AI Interface Google Set expectations for AI improvements Interface Google"
+        },
+        {
+          "page": 7,
+          "text": "Interface Google Keep track of user needs Interface Google Identify existing mental models Interface Google Clearly communicate AI limits and capabilities Interface Google"
+        },
+        {
+          "page": 7,
+          "text": "Interface Google"
+        },
+        {
+          "page": 7,
+          "text": "Interface Google"
+        },
+        {
+          "page": 7,
+          "text": "Interface Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Microsoft"
+        },
+        {
+          "page": 7,
+          "text": "Interface Microsoft"
+        },
+        {
+          "page": 7,
+          "text": "Interface Microsoft"
+        },
+        {
+          "page": 7,
+          "text": "Interface Microsoft"
+        },
+        {
+          "page": 7,
+          "text": "Interface Microsoft"
+        },
+        {
+          "page": 7,
+          "text": "Interface Microsoft"
+        },
+        {
+          "page": 7,
+          "text": "Interface Microsoft"
+        },
+        {
+          "page": 7,
+          "text": "Interface Calibration Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Calibration Apple Make calibration quick and easy"
+        },
+        {
+          "page": 7,
+          "text": "Interface Calibration Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Calibration Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Calibration Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Calibration Apple Always secure people’s calibration information Interface Google Categorical / N-Best Alternatives Interface Google Interface Google"
+        },
+        {
+          "page": 7,
+          "text": "Interface Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Apple Prefer diverse options"
+        },
+        {
+          "page": 7,
+          "text": "Interface Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Apple"
+        },
+        {
+          "page": 8,
+          "text": "Company Guideline Deployment Google Account for negative impact Deployment Google Auto-detect and display errors Deployment Google Disambiguate systems hierarchy errors Deployment "
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google Fail gracefully"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google Cue the correct interactions Deployment Google Categorize user-perceived errors Deployment Google Provide paths forward from failure Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple Let people correct their corrections"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Error Prevention Microsoft Support efficient dismissal"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Error types Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Error types Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Error types Google Context errors Deployment Error types Google Mislabeled or misclassified results Deployment Error types Google Poor inference or incorrect model Deplo"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google Define “errors” and “failure”"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Google"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Microsoft"
+        }
+      ]
+    },
+    {
+      "file": "interactive-jewellery.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "interpreting-neural-networks.pdf",
+      "tableCaptions": 6,
+      "cropReadyCaptions": 4,
+      "rawTableFragments": 14,
+      "cropBackedFragments": 3,
+      "readerRawFragments": 10,
+      "readerCellFallbacks": 3,
+      "readerFragmentKinds": {
+        "structured-grid": 3,
+        "short-label": 7
+      },
+      "orphanFragments": [
+        {
+          "page": 7,
+          "text": "We rank all pairs of features {i, j} according to their interaction strengths ω({i, j})∑calculated on the p1"
+        },
+        {
+          "page": 7,
+          "text": "5.1 EXPERIMENTAL SETUP"
+        },
+        {
+          "page": 18,
+          "text": "0.2 0.2 0.2 0.2 0.2"
+        },
+        {
+          "page": 18,
+          "text": "0.0 0.0 0.0"
+        },
+        {
+          "page": 18,
+          "text": "0.2 0.2 0.2 0.2 0.2"
+        },
+        {
+          "page": 18,
+          "text": "0.0 0.0 0.0 0.0"
+        },
+        {
+          "page": 18,
+          "text": "1.0"
+        },
+        {
+          "page": 18,
+          "text": "0.2"
+        },
+        {
+          "page": 18,
+          "text": "0.0 p"
+        },
+        {
+          "page": 18,
+          "text": "0.0 0.2 0.4 0.6 0.8 1.0"
+        }
+      ]
+    },
+    {
+      "file": "job-rotation-ergonomics.pdf",
+      "tableCaptions": 5,
+      "cropReadyCaptions": 2,
+      "rawTableFragments": 25,
+      "cropBackedFragments": 4,
+      "readerRawFragments": 16,
+      "readerCellFallbacks": 8,
+      "readerFragmentKinds": {
+        "short-label": 8,
+        "structured-grid": 8
+      },
+      "orphanFragments": [
+        {
+          "page": 3,
+          "text": "References ALB Ergonomics Job rotation HRC Design ✓ Analysis ✓ Analysis ✓ To contrast the repetitiveness of movements, at each rotation, every worker is placed on a different works"
+        },
+        {
+          "page": 9,
+          "text": "Automatic HRC Ti (min) Manual SLi HRC SLi Equipment q Ti (min)"
+        },
+        {
+          "page": 9,
+          "text": "1 – 0.58 2 – 0.58 3 1 0.44 4 2 0.44 5 – 0.58 6 – 0.58 7 5 0.54 8 6 0.54 9 7, 8 2.22 10 – 0.69 11 – 0.65 12 11 0.38 13 11 0.98 14 11 0.98 15 11 0.64 16 11 0.54 17 14 0.64 18 13 0.64"
+        },
+        {
+          "page": 9,
+          "text": "d2k (m) g (%) swk (m/s) hk (m) ek,10,I (kcal) ek,10,R (kcal) 0 1 1 0 0.209 0.177 0 1 0 0.4 0.025 0.025 1.45 1 0 0 0.115 0.096"
+        },
+        {
+          "page": 9,
+          "text": "1 Walk to shelf 0.07 0 0 2 Forward movements of arms 0.05 0 0 3 Lift component n.19 0.06 5.7 1.0 4 Carry component n.19 to workbench 0.07 5.7 0 5 Place component n.19 with press 0."
+        },
+        {
+          "page": 9,
+          "text": "0 1 1 0 0.244 0.211 1.45 1 0 0 0.076 0.076"
+        },
+        {
+          "page": 10,
+          "text": "1.71"
+        },
+        {
+          "page": 10,
+          "text": "1.59"
+        },
+        {
+          "page": 10,
+          "text": "1.78"
+        },
+        {
+          "page": 10,
+          "text": "1.80 Fig. 6 reports a well-balanced workload for operators, which"
+        },
+        {
+          "page": 10,
+          "text": "1.72"
+        },
+        {
+          "page": 10,
+          "text": "1.74"
+        },
+        {
+          "page": 10,
+          "text": "1.65"
+        },
+        {
+          "page": 12,
+          "text": "3 4 5 6 Scooter chassis Cylinder head Fuel filter Ignition"
+        },
+        {
+          "page": 12,
+          "text": "46 26 21 26 45 26 24 32 225 133 127 144 3.80 1.10 1.30 0.75 200 150 250 100 200 150 250 100 0.90 0.90 0.95 0.90 0.05 0.01 0.10 0.10 0.40 0.30 0.70 0.50 0.81 0.90 0.89 0.82"
+        }
+      ]
+    },
+    {
+      "file": "linguistics-an-empirical-analysis-of-the-use-of-discourse-markers-by-second-langua.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "linguistics-appraisal.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "linguistics-computational-linguistics.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "linguistics-constructing-or-disrupting-peace-through-language-a-peace-linguistics-.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "linguistics-discussion-on-second-language-acquisition-in-cognitive-linguistics-in-.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "linguistics-eco-linguistics-in-english-reviewing-the-role-of-language-in-environme.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "linguistics-gender-linguistics-in-the-linguo-limological-aspect-by-the-material-of.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "linguistics-internet-linguistics-a-linguistic-analysis-of-electronic-discourse-as-.pdf",
+      "tableCaptions": 8,
+      "cropReadyCaptions": 3,
+      "rawTableFragments": 8,
+      "cropBackedFragments": 4,
+      "readerRawFragments": 1,
+      "readerCellFallbacks": 1,
+      "readerFragmentKinds": {
+        "structured-grid": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 6,
+          "text": "E-Discourse Form Standard Form Bro Brother"
+        },
+        {
+          "page": 6,
+          "text": "E-Discourse Form Standard Form Gud Good"
+        }
+      ]
+    },
+    {
+      "file": "linguistics-language-model-physics.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 108,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 108,
+      "readerCellFallbacks": 71,
+      "readerFragmentKinds": {
+        "structured-grid": 71,
+        "short-label": 37
+      },
+      "orphanFragments": [
+        {
+          "page": 10,
+          "text": "\u0000 \u0001 \u0000 \u0001"
+        },
+        {
+          "page": 10,
+          "text": "Gi(x) ="
+        },
+        {
+          "page": 12,
+          "text": "NT3NT2NT5NT4NT3NT2 0.04"
+        },
+        {
+          "page": 12,
+          "text": "NT5NT4NT3NT2NT5NT4"
+        },
+        {
+          "page": 12,
+          "text": "attention -10+1-1 0.06 xx xx xx xx r=4 NT3NT2NT5NT4NT3NT2 0.03 attention"
+        },
+        {
+          "page": 12,
+          "text": "NT5NT4NT3NT2NT5NT4 r=8"
+        },
+        {
+          "page": 12,
+          "text": "NT3NT2NT5NT4NT3NT2 0.02 lay8 ( lay8 NT5NT4NT3NT2NT5NT4 0.01"
+        },
+        {
+          "page": 12,
+          "text": "lay10 lay10 ( ′NTend NT3NT2NT5NT4NT3NT2"
+        },
+        {
+          "page": 12,
+          "text": "lay11 r=16 lay11"
+        },
+        {
+          "page": 12,
+          "text": "-10 NT5NT4NT3 lay12"
+        },
+        {
+          "page": 12,
+          "text": "lay12"
+        },
+        {
+          "page": 12,
+          "text": "("
+        },
+        {
+          "page": 12,
+          "text": "NTend"
+        },
+        {
+          "page": 14,
+          "text": "1.00 1.00 0.750.50 0.750.50 0.250.00 0.250.00 010011 010011 0.250.50 0.250.50"
+        },
+        {
+          "page": 18,
+          "text": "a sample from cfg3b:"
+        },
+        {
+          "page": 18,
+          "text": "312312132132123323213132112332321233213123213132"
+        },
+        {
+          "page": 18,
+          "text": "313211232131221123312321232121123312313221213212"
+        },
+        {
+          "page": 18,
+          "text": "331312321213212332321123323121313213123221123323"
+        },
+        {
+          "page": 18,
+          "text": "132121313122112332312123213213231312123213232131"
+        },
+        {
+          "page": 18,
+          "text": "123213123132321321313221313232313212112331231322"
+        },
+        {
+          "page": 18,
+          "text": "112321312321313123132213121321233122132131231321"
+        },
+        {
+          "page": 18,
+          "text": "313123132213213132"
+        },
+        {
+          "page": 18,
+          "text": "113113121222312312113113121222312231112313121212"
+        },
+        {
+          "page": 18,
+          "text": "222312311131212113113123123123123123122313121212"
+        },
+        {
+          "page": 18,
+          "text": "312312312231312231112312311131211231231112312312"
+        },
+        {
+          "page": 18,
+          "text": "231231211231312112313121212231231231231231111212"
+        },
+        {
+          "page": 18,
+          "text": "312231231231312111131131131222312231223123123123"
+        },
+        {
+          "page": 18,
+          "text": "123122313121111231312312113122313121111312231231"
+        },
+        {
+          "page": 18,
+          "text": "221131231212122312313123123121112113"
+        },
+        {
+          "page": 18,
+          "text": "a sample from cfg3h:"
+        },
+        {
+          "page": 18,
+          "text": "131231331311332131323223212232123121313121321313"
+        },
+        {
+          "page": 18,
+          "text": "113313333113123232131323213113131232121231332132"
+        },
+        {
+          "page": 18,
+          "text": "322321333311231331231332321312131133131231231311"
+        },
+        {
+          "page": 18,
+          "text": "312133311312321331232131313312131231311212312312 cfg3b cfg3i 232213131131331133313312322132131312133312131212"
+        },
+        {
+          "page": 18,
+          "text": "1231311232131331313133123232213"
+        },
+        {
+          "page": 18,
+          "text": "231221122132232312311233223313313313313312122221"
+        },
+        {
+          "page": 18,
+          "text": "123322331331132132233222123113233113233123231132 cfg3h 331123112311111222312312233121111123122112332321"
+        },
+        {
+          "page": 18,
+          "text": "231221111231331132212223321232133133133133113132"
+        },
+        {
+          "page": 18,
+          "text": "311122211322322113311323312313223323133133113231"
+        },
+        {
+          "page": 18,
+          "text": "222332123132132211313231123331132331112223311232"
+        },
+        {
+          "page": 18,
+          "text": "21123123111132"
+        },
+        {
+          "page": 18,
+          "text": "332213123312113123211322312312111213211322311311 cfg3g 322333123121112131133112132121333331232212131232"
+        },
+        {
+          "page": 18,
+          "text": "221111213322131131131131111113231233133133311331"
+        },
+        {
+          "page": 18,
+          "text": "cfg3f"
+        },
+        {
+          "page": 23,
+          "text": "diversity pattern for cfg3b"
+        },
+        {
+          "page": 23,
+          "text": "(a) cfg3b dataset"
+        },
+        {
+          "page": 23,
+          "text": "diversity pattern for cfg3i"
+        },
+        {
+          "page": 23,
+          "text": "(b) cfg3i dataset"
+        },
+        {
+          "page": 23,
+          "text": "diversity pattern for cfg3h"
+        },
+        {
+          "page": 23,
+          "text": "(c) cfg3h dataset"
+        },
+        {
+          "page": 26,
+          "text": "0.5 0.05 100 100 0.4 0.00 150 0.3 150 0.05"
+        },
+        {
+          "page": 26,
+          "text": "0.2 0.10 200 200 0.1 0.15 250 0.0 250 0.20 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 (a) cfg3b dataset; marginal"
+        },
+        {
+          "page": 26,
+          "text": "0.6 0.05 100 0.5 100 0.4 0.00 150 150 0.05"
+        },
+        {
+          "page": 26,
+          "text": "200 0.2 200 0.10 0.1 0.15 250 0.0 250 0.20 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 (c) cfg3i dataset; marginal"
+        },
+        {
+          "page": 26,
+          "text": "200 200 0.1 0.15 0.0 0.20 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 (g) cfg3g dataset; marginal distribution"
+        },
+        {
+          "page": 28,
+          "text": "GPT"
+        },
+        {
+          "page": 28,
+          "text": "predict NT-end boundary (%)"
+        },
+        {
+          "page": 29,
+          "text": "GPT on cfg3i GPT_rel on cfg3i GPT_rand on cfg3i"
+        },
+        {
+          "page": 32,
+          "text": "Al,h,j−i, the attention weights have a very strong bias towards tokens i that are at NT ends Figure 23 we complement this experiment with more datasets."
+        },
+        {
+          "page": 32,
+          "text": "NT5NT4 NT5NT4"
+        },
+        {
+          "page": 32,
+          "text": "NT3NT2 NT3NT2"
+        },
+        {
+          "page": 32,
+          "text": "NT5NT4 0.06 NT5NT4"
+        },
+        {
+          "page": 32,
+          "text": "NT3NT2 NT3NT2 NT5NT4 NT5NT4"
+        },
+        {
+          "page": 32,
+          "text": "NT3NT2NT5 0.05 NT3NT2NT5 NT4NT3 NT4NT3"
+        },
+        {
+          "page": 32,
+          "text": "NT2NT5 NT2NT5"
+        },
+        {
+          "page": 32,
+          "text": "attention attention NT4NT3 NT4NT3"
+        },
+        {
+          "page": 32,
+          "text": "NT2NT5 0.04 NT2NT5 NT4NT3 NT4NT3"
+        },
+        {
+          "page": 32,
+          "text": "NT2NT5 NT2NT5"
+        },
+        {
+          "page": 32,
+          "text": "NT4NT3NT2 0.03 NT4NT3NT2 NT5NT4 NT5NT4"
+        },
+        {
+          "page": 32,
+          "text": "NT3NT2 NT3NT2"
+        },
+        {
+          "page": 32,
+          "text": "NT5NT4NT3 0.02 NT5NT4NT3"
+        },
+        {
+          "page": 32,
+          "text": "NT2NT5 NT2NT5 NTend NTend NT4NT3 NT4NT3"
+        },
+        {
+          "page": 32,
+          "text": "( ( NT2NT5NT4 0.01 NT2NT5NT4"
+        },
+        {
+          "page": 32,
+          "text": "NT3NT2 NT3NT2 NT5NT4 NT5NT4"
+        },
+        {
+          "page": 32,
+          "text": "NT3NT2 0.00 NT3NT2 any any for GPTrel over cfg3b data for GPTrel over cfg3i data"
+        },
+        {
+          "page": 32,
+          "text": "NT5NT4 NT5NT4"
+        },
+        {
+          "page": 32,
+          "text": "NT3NT2 NT3NT2 NT5NT4 NT5NT4"
+        },
+        {
+          "page": 32,
+          "text": "NT3NT2 0.04 NT3NT2 NT5NT4 NT5NT4"
+        },
+        {
+          "page": 32,
+          "text": "NT3NT2 NT3NT2 NT5NT4 NT5NT4"
+        },
+        {
+          "page": 32,
+          "text": "NT3NT2 NT3NT2"
+        },
+        {
+          "page": 32,
+          "text": "NT5NT4NT3 0.03 NT5NT4NT3 attention attention"
+        },
+        {
+          "page": 34,
+          "text": "NTend NTend NTend NTend"
+        },
+        {
+          "page": 34,
+          "text": "( ( ( ("
+        },
+        {
+          "page": 34,
+          "text": "NTend NTend NTend"
+        },
+        {
+          "page": 34,
+          "text": "( ( ("
+        },
+        {
+          "page": 34,
+          "text": "(a) cfg3b at level ℓ = 2 (b) cfg3b at level ℓ = 3 (c) cfg3b at level ℓ = 4 (d) cfg3b at level ℓ = 5"
+        },
+        {
+          "page": 34,
+          "text": "attention attention attention attention"
+        },
+        {
+          "page": 34,
+          "text": "NTend NTend NTend"
+        },
+        {
+          "page": 34,
+          "text": "( ( ("
+        },
+        {
+          "page": 34,
+          "text": "NTend NTend NTend"
+        },
+        {
+          "page": 34,
+          "text": "( ( ("
+        },
+        {
+          "page": 34,
+          "text": "(e) cfg3i at level ℓ = 2 (f) cfg3i at level ℓ = 3 (g)"
+        },
+        {
+          "page": 34,
+          "text": "attention attention attention attention"
+        },
+        {
+          "page": 34,
+          "text": "NTend NTend NTend"
+        },
+        {
+          "page": 34,
+          "text": "( ( ("
+        },
+        {
+          "page": 34,
+          "text": "NTend NTend"
+        },
+        {
+          "page": 34,
+          "text": "( ("
+        },
+        {
+          "page": 34,
+          "text": "(i) cfg3h at level ℓ = 2 (j) cfg3h at level ℓ = 3 (k) cfg3h at level ℓ = 4 (l) cfg3h at level ℓ = 5"
+        },
+        {
+          "page": 34,
+          "text": "(m) cfg3g at level ℓ = 2 (n) cfg3g at level ℓ = 3 (o) cfg3g at level ℓ = 4 (p) cfg3g at level ℓ = 5"
+        },
+        {
+          "page": 34,
+          "text": "for GPTrel over cfg3f data for GPTrel over cfg3f data"
+        },
+        {
+          "page": 34,
+          "text": "NTend"
+        },
+        {
+          "page": 34,
+          "text": "("
+        },
+        {
+          "page": 34,
+          "text": "(s) cfg3f at level ℓ = 4 (t) cfg3f at level ℓ = 5"
+        },
+        {
+          "page": 37,
+          "text": "disjoint |vocab|=90 disjoint |vocab|=300 overlap |vocab|=90 overlap |vocab|=300 GPT 98.7 99.4 99.0 99.2 100.0 100.0 100.0 98.1 72.7 70.4 75.2 75.4 100.0 100.0 100.0 100.0 GPT_rel 9"
+        },
+        {
+          "page": 38,
+          "text": "NT-level 0.1 random perturbation T-level 0.15 random perturbation NT-level 0.05 deterministic permutation cut0 =0.1 cut0 =0.2 cut0 =1 corrupted cut50 =0.1 corrupted cut50 =0.2 corr"
+        },
+        {
+          "page": 38,
+          "text": "NT-level 0.1 random perturbation T-level 0.15 random perturbation NT-level 0.05 deterministic permutation cut0 =0.1 cut0 =0.2 cut0 =1 corrupted cut50 =0.1 corrupted cut50 =0.2 corr"
+        },
+        {
+          "page": 38,
+          "text": "NT-level 0.1 random perturbation T-level 0.15 random perturbation NT-level 0.05 deterministic permutation cut0 =0.1 cut0 =0.2 cut0 =1 corrupted cut50 =0.1 corrupted cut50 =0.2 corr"
+        },
+        {
+          "page": 44,
+          "text": "cfg3f cfg3g cfg3h cfg8e cfg9e cfg3f cfg3g cfg3h cfg8e cfg9e GPT (8head,1024 dim) GPT (8head,1024 dim) GPT_uni (8head,1024 dim) GPT_uni (8head,1024 dim) GPT (8head,936 dim) GPT (8he"
+        }
+      ]
+    },
+    {
+      "file": "linguistics-linguistics-and-politics-russianisms-in-the-western-english-language-p.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 3,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 3,
+      "readerCellFallbacks": 2,
+      "readerFragmentKinds": {
+        "structured-grid": 2,
+        "short-label": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 1,
+          "text": "Получена 10 апреля 2021; прошла"
+        },
+        {
+          "page": 1,
+          "text": "рецензирование 25 апреля 2021;"
+        },
+        {
+          "page": 1,
+          "text": "Открытый доступ на условиях"
+        }
+      ]
+    },
+    {
+      "file": "linguistics-register.pdf",
+      "tableCaptions": 7,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 14,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 13,
+      "readerCellFallbacks": 8,
+      "readerFragmentKinds": {
+        "short-label": 4,
+        "structured-grid": 8,
+        "ambiguous": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 9,
+          "text": ") SD"
+        },
+        {
+          "page": 9,
+          "text": "1506 59786252 6777Token count ( 3260 3952 2630127416693213 3749 2682"
+        },
+        {
+          "page": 9,
+          "text": ") M"
+        },
+        {
+          "page": 9,
+          "text": "844 488803820 31782373 24822346 1334 1395Token count ( 10651247 3649"
+        },
+        {
+          "page": 9,
+          "text": "54 12 183419461 527 128911126 2064 1145Documents 24441718"
+        },
+        {
+          "page": 9,
+          "text": "Question/answerPoemOpinion blog ReviewSong lyricsReligious blog/sermonResearch articleShort storySports reportTravel blogRegister Personal blog TV scriptsRecipe"
+        },
+        {
+          "page": 9,
+          "text": ") SD"
+        },
+        {
+          "page": 9,
+          "text": "229228332251 7347 161638011693 8022 26921646Token count (2066 25182157"
+        },
+        {
+          "page": 9,
+          "text": ") M"
+        },
+        {
+          "page": 9,
+          "text": "10771245 4578 120135831719 2390 17881928Token count (1329 10741186"
+        },
+        {
+          "page": 9,
+          "text": "Distributional information of the CORE sub-registers used in this study"
+        },
+        {
+          "page": 9,
+          "text": "Advice Formal speechHow-toInterviewTable 1Register Description of a personDescription of a thingDescription with intent to sellDiscussion forumEncyclopedia articleFAQ about informa"
+        },
+        {
+          "page": 30,
+          "text": "Description with intent to sellFAQ about informationDescription of a thingHistorical articleResearch articleEncyclopedia articleDescription of a person InterviewOpinion blogHow-toT"
+        }
+      ]
+    },
+    {
+      "file": "linguistics-study-of-animal-discourse-in-language-textbooks-from-the-perspective-o.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "linguistics-text-discourse-dicteme-language-personality-as-basic-concepts-of-text-.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "linguistics-the-importance-of-discourse-studies-in-linguistics-language-teaching-a.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "linguistics-the-role-of-applied-linguistics-and-language-discourse-analysis-in-eng.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "linguistics-the-role-of-morphology-in-computational-linguistics-its-significance-i.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 1,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 1,
+      "readerCellFallbacks": 1,
+      "readerFragmentKinds": {
+        "structured-grid": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 3,
+          "text": " Stress and depression: r = 0.62, p < 0.001  Stress and sleep disturbances: r = 0.54, p < 0.001  Depression and somatic complaints: r = 0.48, p < 0.001  Combined stress and dep"
+        }
+      ]
+    },
+    {
+      "file": "marketing-a-review-of-rural-consumer-behavior-marketing-strategies-and-consumer-.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "marketing-a-study-on-the-relationship-between-advertising-value-choice-of-media-.pdf",
+      "tableCaptions": 15,
+      "cropReadyCaptions": 12,
+      "rawTableFragments": 20,
+      "cropBackedFragments": 20,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "marketing-co-production.pdf",
+      "tableCaptions": 4,
+      "cropReadyCaptions": 3,
+      "rawTableFragments": 17,
+      "cropBackedFragments": 8,
+      "readerRawFragments": 9,
+      "readerCellFallbacks": 8,
+      "readerFragmentKinds": {
+        "structured-grid": 8,
+        "short-label": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 5,
+          "text": "Consumer co-production network Brodie et al. (2013) Develop, Promote Netnography Engaged consumers exhibit enhanced consumer loyalty, products satisfaction, empowerment, connection"
+        },
+        {
+          "page": 5,
+          "text": "and commitment."
+        },
+        {
+          "page": 5,
+          "text": "Chu and Manchanda Sell products Field study The installed base of buyers vs. sellers of a platform drives growth (2016) of the other side. This effect is asymmetric and the install"
+        },
+        {
+          "page": 5,
+          "text": "Fraiberger and Rent out products Field study and Sundararajan (2017) survey"
+        },
+        {
+          "page": 5,
+          "text": "Mathwick and Mosteller Review products Survey Consumers who review products all have altruistic motives. They (2017)"
+        },
+        {
+          "page": 7,
+          "text": "Consumer role Journey step Traditional production 1. Search Explore the market and one ’s own needs Co-design and recommend products Participate in distribution and sales of produc"
+        },
+        {
+          "page": 7,
+          "text": "2. Purchase Buy products 3. Experience Consumption experience 4. Reflect Reflect on and care for products"
+        },
+        {
+          "page": 8,
+          "text": "Traditional consumption Consumer co-production network"
+        },
+        {
+          "page": 8,
+          "text": "Greater consumption skills Greater co-production skills Lower price Commercial gains from co-production"
+        }
+      ]
+    },
+    {
+      "file": "marketing-consumer-behavior-marketing-and-supply-chains-of-fermented-foods-and-h.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "marketing-consumer-response.pdf",
+      "tableCaptions": 12,
+      "cropReadyCaptions": 11,
+      "rawTableFragments": 31,
+      "cropBackedFragments": 7,
+      "readerRawFragments": 22,
+      "readerCellFallbacks": 20,
+      "readerFragmentKinds": {
+        "structured-grid": 20,
+        "short-label": 2
+      },
+      "orphanFragments": [
+        {
+          "page": 17,
+          "text": "Behavioral Consumer Channel Sensitivity, Response RoAS influence γ Baseline, C (%)"
+        },
+        {
+          "page": 17,
+          "text": "0.075 5078.6 9.65 10.43 0.000 5122.7 8.97 8.08 0.223 13836.5 62.69 1.55 0.009 13883.8 2.37 20.22 0.145 35052.3 86.49 4.63 0.068 6245.7 29.40 29.93"
+        },
+        {
+          "page": 17,
+          "text": "Behavioral Consumer Channel Sensitivity, γ Response RoAS influence"
+        },
+        {
+          "page": 17,
+          "text": "Baseline, C (%)"
+        },
+        {
+          "page": 17,
+          "text": "0.140 1.63 0.23 0.38 0.835 1.78 0.83 0.97 0.028 1.478 0.35 2.14 0.298 2.87 1.17 2.4 0.000 3.75 1.72 1.04 0.935 11.67 6.64 0.95 0.299 41.07 11.57 5.76 0.325 1.47 0.35 1.39 0.004 3.6"
+        },
+        {
+          "page": 23,
+          "text": "Proposed equation"
+        },
+        {
+          "page": 23,
+          "text": "With intercept: Ch1 0.000 0.955 0.955 0.001 0.680 Ch2 0.087 0.000 0.000 0.102 0.000 Ch3 0.042 0.003 0.003 0.043 0.003 Ch4 0.346 0.000 0.000 0.356 0.000 Ch5 0.004 0.363 0.363 0.004 "
+        },
+        {
+          "page": 23,
+          "text": "0.680 0.001 0.728 0.728 0.000 0.002 0.546 0.546 0.003 0.041 0.003 0.003 0.000 0.258 0.000 0.000 0.373 0.009 0.174 0.174 0.211 0.062 0.290 0.290"
+        },
+        {
+          "page": 23,
+          "text": "RTO model: Ch1 0.329 0.000 0.000 0.311 0.000 Ch2 0.336 0.000 0.000 0.315 0.000 Ch3 0.359 0.000 0.000 0.337 0.000 Ch4 0.785 0.000 0.000 0.787 0.000 Ch5 0.471 0.000 0.000 0.470 0.000"
+        },
+        {
+          "page": 23,
+          "text": "0.000 0.382 0.000 0.000 0.000 0.501 0.000 0.000 0.000 0.495 0.000 0.000 0.000 0.741 0.000 0.000 0.000 0.554 0.000 0.000 0.000 0.535 0.000 0.000"
+        },
+        {
+          "page": 23,
+          "text": "Hill’s equation Michaelis-Menten Proposed equation"
+        },
+        {
+          "page": 23,
+          "text": "With intercept: Ch1 0.000 0.842 0.842 0.000 0.922 Ch2 0.209 0.000 0.000 0.182 0.000 Ch3 0.006 0.446 0.446 0.000 0.943 Ch4 0.037 0.049 0.049 0.042 0.037 Ch5 0.093 0.002 0.002 0.075 "
+        },
+        {
+          "page": 23,
+          "text": "0.922 0.000 0.874 0.874 0.000 0.147 0.000 0.000 0.943 0.000 0.958 0.958 0.037 0.047 0.026 0.026 0.005 0.063 0.010 0.010 0.590 0.003 0.575 0.575 0.000 0.153 0.000 0.000 0.028 0.042 "
+        },
+        {
+          "page": 24,
+          "text": "Proposed equation"
+        },
+        {
+          "page": 24,
+          "text": "With intercept: Ch1 -inf 0.000 1.000 0.033 0.396 Ch2 0.064 0.234 0.234 0.140 0.071 Ch3 0.016 0.558 0.558 0.338 0.003 Ch4 0.551 0.000 0.000 0.548 0.000 Ch5 0.138 0.074 0.074 0.057 0"
+        },
+        {
+          "page": 24,
+          "text": "0.396 0.096 0.140 0.140 0.071 0.101 0.131 0.131 0.003 0.002 0.846 0.846 0.000 0.555 0.000 0.000 0.260 0.016 0.559 0.559 0.004 0.319 0.004 0.004"
+        },
+        {
+          "page": 24,
+          "text": "RTO model: Ch1 0.926 0.000 0.000 0.851 0.000 Ch2 0.388 0.001 0.001 0.447 0.000 Ch3 0.306 0.004 0.004 0.089 0.147 Ch4 0.975 0.000 0.000 0.976 0.000 Ch5 0.089 0.147 0.147 0.216 0.019"
+        },
+        {
+          "page": 24,
+          "text": "0.000 0.893 0.000 0.000 0.000 0.419 0.000 0.000 0.147 0.278 0.007 0.007 0.000 0.972 0.000 0.000 0.019 0.355 0.002 0.002 0.000 0.903 0.000 0.000"
+        },
+        {
+          "page": 25,
+          "text": "r2 Intercept Coef Int. std error"
+        },
+        {
+          "page": 25,
+          "text": "Coef. std Int. p- Coef. F-pval Res. Std error val p-val error"
+        },
+        {
+          "page": 25,
+          "text": "Ch1 0.000 4.12 -0.02 0.11 Ch2 0.147 12.51 -1.54 0.53 Ch3 0.000 41.12 -0.03 2.63 Ch4 0.047 13.91 1.320 1.93 Ch5 0.063 14.54 -1.0 0.72 Ch6 0.003 49.77 -0.14 0.80 Ch7 0.153 1,258.0 8."
+        },
+        {
+          "page": 25,
+          "text": "0.125 0.000 0.874 0.874 0.947 0.401 0.000 0.000 0.000 4.147 0.645 0.000 0.958 0.958 19.408 0.558 0.000 0.026 0.026 7.210 0.469 0.000 0.010 0.010 5.447 0.129 0.000 0.575 0.575 6.655"
+        }
+      ]
+    },
+    {
+      "file": "marketing-digital-marketing-consumer-behavior.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 6,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 6,
+      "readerCellFallbacks": 5,
+      "readerFragmentKinds": {
+        "structured-grid": 5,
+        "short-label": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 1,
+          "text": "Бутковская Галина Вальдеровна ЦИФРОВОЙ МАРКЕТИНГ: ПОВЕДЕНИЕ"
+        },
+        {
+          "page": 1,
+          "text": "e-mail: gvb@mail.ru"
+        },
+        {
+          "page": 1,
+          "text": "Статкус Александр Владимирович"
+        },
+        {
+          "page": 1,
+          "text": "Candidate of Economic Sciences, State"
+        },
+        {
+          "page": 1,
+          "text": "Candidate of Economic Sciences, State"
+        },
+        {
+          "page": 1,
+          "text": "e-mail: avstatkus@yandex.ru"
+        }
+      ]
+    },
+    {
+      "file": "marketing-framing.pdf",
+      "tableCaptions": 6,
+      "cropReadyCaptions": 5,
+      "rawTableFragments": 22,
+      "cropBackedFragments": 14,
+      "readerRawFragments": 8,
+      "readerCellFallbacks": 7,
+      "readerFragmentKinds": {
+        "structured-grid": 7,
+        "prose-like": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 4,
+          "text": "Group 3 Group 4 Total (%) P-value"
+        },
+        {
+          "page": 4,
+          "text": "28 35 37.2 0.371 65 56 62.8"
+        },
+        {
+          "page": 4,
+          "text": "33 36 38.9 0.271 33 28 34.8 13 21 16.8 8 5 6.0 6 1 2.2"
+        },
+        {
+          "page": 4,
+          "text": "41 50 50.0 0.433 52 41 50.0"
+        },
+        {
+          "page": 4,
+          "text": "Product Knowledge Cronbach’s alpha = 0.73 PK1: Compared to others, how knowledgeable do you think you are with organic food?"
+        },
+        {
+          "page": 4,
+          "text": "PK3: Do you think you can purchase organic food satisfactorily based on only your own knowledge?"
+        },
+        {
+          "page": 6,
+          "text": "022 −0.166 −0.055 −0.064 055 −0.145 −0.088 −0.088 169 0.309 0.28** 0.254* 132** −0.210* −0.177*** −0.172*** 131* −0.192* −0.147* −0.132 040 −0.023 −0.034 −0.046 557*** −0.622*** −0"
+        },
+        {
+          "page": 6,
+          "text": "loading / standardized loading + εj (1)"
+        }
+      ]
+    },
+    {
+      "file": "marketing-healthy-choice.pdf",
+      "tableCaptions": 3,
+      "cropReadyCaptions": 3,
+      "rawTableFragments": 16,
+      "cropBackedFragments": 13,
+      "readerRawFragments": 3,
+      "readerCellFallbacks": 3,
+      "readerFragmentKinds": {
+        "structured-grid": 3
+      },
+      "orphanFragments": [
+        {
+          "page": 6,
+          "text": "95% CI b t p"
+        },
+        {
+          "page": 6,
+          "text": "Constant 2.48 (0.21) [2.07, 2.90] 11.80 < 0.001 Condition 0.05 (0.31) 0.02 [−0.56, 0.67] 0.17 0.867 Attention −0.04 (0.16) −0.04 [−0.36, 0.28] −0.23 0.819 Healthy eating goal −0.22"
+        },
+        {
+          "page": 6,
+          "text": "b (SE) β 95% CI b t p Constant 2.46 (0.22) [2.03, 2.90] 11.26 < 0.001 Condition 0.06 (0.31) 0.02 [−0.56, 0.68] 0.20 0.844 Implicit attention −0.32 (0.19) −0.60 [−0.69, 0.53] −1.71 "
+        }
+      ]
+    },
+    {
+      "file": "marketing-impact-of-e-marketing-on-consumer-behavior.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "marketing-impact-of-green-marketing-on-consumer-behavior.pdf",
+      "tableCaptions": 2,
+      "cropReadyCaptions": 2,
+      "rawTableFragments": 11,
+      "cropBackedFragments": 11,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "marketing-impact-of-sensory-marketing-on-consumer-behavior.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "marketing-influence-of-advertising-incentives-on-consumers-in-the-digital-enviro.pdf",
+      "tableCaptions": 2,
+      "cropReadyCaptions": 2,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "marketing-integrating-value-at-risk-var-model-into-behavior-economics-for-consum.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the.pdf",
+      "tableCaptions": 51,
+      "cropReadyCaptions": 34,
+      "rawTableFragments": 94,
+      "cropBackedFragments": 55,
+      "readerRawFragments": 27,
+      "readerCellFallbacks": 24,
+      "readerFragmentKinds": {
+        "structured-grid": 24,
+        "short-label": 3
+      },
+      "orphanFragments": [
+        {
+          "page": 148,
+          "text": "Digital advertisements increase the likelihood of the advertised brand being included in the consideration 1,2,3 set and being selected as brand choice under conditions of low atte"
+        },
+        {
+          "page": 148,
+          "text": "H4c"
+        },
+        {
+          "page": 151,
+          "text": "Survey design Paper survey Online survey Online survey"
+        },
+        {
+          "page": 162,
+          "text": "6.1. Introduction"
+        },
+        {
+          "page": 182,
+          "text": "7.1. Introduction"
+        },
+        {
+          "page": 203,
+          "text": "appeal appeal appeal appeal Focused attention .51 (.50) .69 (.46) .26 (.44) .42 (.49) Divided attention .58 (.49) .62 (.49) .40 (.49) .28 (.45) Incidental attention .62 (.49) .72 ("
+        },
+        {
+          "page": 204,
+          "text": "Constant -.709** .229 .492 -2.408** .313 .090 Attention (Wald χ2 = 15.424, p = .001)** (Wald χ2 = 21.303, p = .000)** Focused .972** .303 2.643 1.485** .347 4.414 Divided .646** .2"
+        },
+        {
+          "page": 216,
+          "text": "8.1. Introduction"
+        },
+        {
+          "page": 231,
+          "text": "Mean difference Std. Error Sig. Divided attention -.021 .045 .965"
+        },
+        {
+          "page": 236,
+          "text": "Brand consideration β SE"
+        },
+        {
+          "page": 236,
+          "text": ".752 -1.902** .187 .149 = .009)** (Wald χ2 = 9.773, p = .021)** 1.487 -.063 .268 .939 1.351 -.156 .272 .856 1.814 .515** .243 1.674"
+        },
+        {
+          "page": 236,
+          "text": "1.509 1.302** .228 3.675 p = .357) (Wald χ2 = 8.921, p = .030)** .931 .569* .323 1.766 .437 .441 .327 1.554 .488 -.230 .303 .794"
+        },
+        {
+          "page": 236,
+          "text": ".631 -2.524** .238 .080 = .001)** (Wald χ2 = 4.771, p = .189) 2.029 .555* .306 1.742 1.676 .268 .321 1.307 1.549 .582* .304 1.790"
+        },
+        {
+          "page": 236,
+          "text": "= .980) (Wald χ2 = 2.333, p = .506) 1.059 .273 .360 1.314 1.109 .512 .373 1.668 1.086 .097 .359 1.102"
+        },
+        {
+          "page": 256,
+          "text": "significant for FA) attention. 2, 3 People more likely make intuitive H5b judgements if processing occurs at lower Supported (consistent and attention. significant for IA)"
+        },
+        {
+          "page": 284,
+          "text": "10.1037/0022-3514.63.4.545"
+        },
+        {
+          "page": 292,
+          "text": "Context on Advertising Memory: A Meta-Analysis of Advertising"
+        },
+        {
+          "page": 305,
+          "text": "10.1086/376804"
+        },
+        {
+          "page": 308,
+          "text": "Style and Situation: New Measures of Situation-Specific Experiential and"
+        },
+        {
+          "page": 308,
+          "text": "10.1086/596026"
+        },
+        {
+          "page": 318,
+          "text": "R. Pieters (Eds.), Visual Marketing: From Attention to Action (pp. 73-89). New"
+        },
+        {
+          "page": 319,
+          "text": "(Eds.), The SAGE Handbook of Advertising (pp. 3-16). London, UK: SAGE"
+        },
+        {
+          "page": 320,
+          "text": "Comparing the impact of self-enhancement, positivity bias and vengeance on"
+        },
+        {
+          "page": 323,
+          "text": "psychologist, 35(2), 151-175. 10.1037/0003-066X.35.2.151"
+        }
+      ]
+    },
+    {
+      "file": "marketing-marketing-communication-and-consumer-behavior-in-digital-era.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "marketing-neuroconsumer.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "marketing-online-context-web-evolution.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "marketing-platform.pdf",
+      "tableCaptions": 3,
+      "cropReadyCaptions": 3,
+      "rawTableFragments": 5,
+      "cropBackedFragments": 3,
+      "readerRawFragments": 2,
+      "readerCellFallbacks": 1,
+      "readerFragmentKinds": {
+        "short-label": 1,
+        "structured-grid": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 6,
+          "text": "Model 1"
+        },
+        {
+          "page": 6,
+          "text": "0.280 (0.025)*** 0.310 (0.023)*** 0.355 (0.022)*** −0.068 (0.014)*** −0.011 (0.016) −0.078 (0.014)*** 0.048 (0.007)*** 0.002 (0.003) 0.006 (0.003) −0.203 (0.019)*** −0.219 (0.019)*"
+        }
+      ]
+    },
+    {
+      "file": "marketing-the-blind-box-economy-exploring-consumer-behavior-marketing-strategies.pdf",
+      "tableCaptions": 4,
+      "cropReadyCaptions": 1,
+      "rawTableFragments": 20,
+      "cropBackedFragments": 2,
+      "readerRawFragments": 19,
+      "readerCellFallbacks": 15,
+      "readerFragmentKinds": {
+        "structured-grid": 15,
+        "ambiguous": 2,
+        "short-label": 2
+      },
+      "orphanFragments": [
+        {
+          "page": 8,
+          "text": "option subtotal scale"
+        },
+        {
+          "page": 8,
+          "text": "Question 3. What is your education? [single choice]"
+        },
+        {
+          "page": 8,
+          "text": "option subtotal scale"
+        },
+        {
+          "page": 8,
+          "text": "undergraduate college 99 39.6%"
+        },
+        {
+          "page": 8,
+          "text": "Number of valid entries for this question 250"
+        },
+        {
+          "page": 8,
+          "text": "Question 4. Your monthly disposable income [single choice]"
+        },
+        {
+          "page": 8,
+          "text": "option subtotal scale"
+        },
+        {
+          "page": 8,
+          "text": "2000-5000 yuan 122 48.8%"
+        },
+        {
+          "page": 8,
+          "text": "5001-8000 yuan 44 17.6%"
+        },
+        {
+          "page": 8,
+          "text": "Number of valid entries for this question 250"
+        },
+        {
+          "page": 10,
+          "text": "Second-hand trading platforms (Xianyu, etc.) 114 45.6%"
+        },
+        {
+          "page": 10,
+          "text": "Social platforms (WeChat group, Xiaohongshu, etc.) 96 38.4%"
+        },
+        {
+          "page": 10,
+          "text": "Number of valid entries for this question 250"
+        },
+        {
+          "page": 10,
+          "text": "68%"
+        },
+        {
+          "page": 10,
+          "text": "Pursue hidden/limited edition items 150 60% Social sharing (circle of friends/social discussion) 99 39.6% Relieve stress/entertainment □ Follow the trend 133 53.2% Make a profit on"
+        },
+        {
+          "page": 10,
+          "text": "Number of valid entries for this question 250"
+        },
+        {
+          "page": 10,
+          "text": "Very disappointed and think its a waste of money 102 40.8% Some disappointment but acceptable 64 25.6% Never mind, keep buying 52 20.8% Active resale/exchange 18 7.2%"
+        },
+        {
+          "page": 10,
+          "text": "5.6%"
+        }
+      ]
+    },
+    {
+      "file": "marketing-the-impact-of-online-advertising-on-consumer-choice-consumption-traps-.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "marketing-the-influence-of-social-media-marketing-on-consumers-behavior.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "marketing-unavailable.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "medical-deep-learning-meta-review.pdf",
+      "tableCaptions": 9,
+      "cropReadyCaptions": 6,
+      "rawTableFragments": 97,
+      "cropBackedFragments": 21,
+      "readerRawFragments": 71,
+      "readerCellFallbacks": 58,
+      "readerFragmentKinds": {
+        "short-label": 13,
+        "structured-grid": 58
+      },
+      "orphanFragments": [
+        {
+          "page": 2,
+          "text": "1060 1684 2279 5023"
+        },
+        {
+          "page": 2,
+          "text": "6089 7444"
+        },
+        {
+          "page": 3,
+          "text": "Computer Methods and Programs in Biomedicine 221 (2022) 106874"
+        },
+        {
+          "page": 3,
+          "text": "Number of Citations (until Date (epub) \u0002 references August 2020)"
+        },
+        {
+          "page": 3,
+          "text": "March 09, 2017 117 1232 May 06, 2017 119 624 Jul. 26, 2017 439 3696 Sep. 27, 2017 55 40 Oct. 15, 2017 60 23 Oct. 26, 2017 63 377 Nov. 22, 2017 207 97 1060 6089"
+        },
+        {
+          "page": 3,
+          "text": "Number of Citations (until Date (epub) \u0002 references August 2020)"
+        },
+        {
+          "page": 3,
+          "text": "Mar. 01, 2018 103 13 Apr. 2018 42 14 Apr. 11, 2018 166 301 Apr. 12, 2018 52 14 May 17, 2018 234 86 May 30, 2018 33 29 Jun. 08, 2018 123 146 Jun. 28, 2018 127 85 Aug. 07, 2018 142 8"
+        },
+        {
+          "page": 3,
+          "text": "Number of Citations (until Date (epub) \u0002 references August 2020)"
+        },
+        {
+          "page": 3,
+          "text": "Jan. 01, 2019 94 28 Jan. 18, 2019 123 33 Feb. 26, 2019 123 91 Mar. 07, 2019 48 21 Jun. 14, 2019 81 9 Aug. 07, 2019 138 21 Aug. 08, 2019 20 4 Aug. 12, 2019 72 7 Aug. 14, 2019 249 10"
+        },
+        {
+          "page": 7,
+          "text": "and Programs in Biomedicine 221 (2022) 106874"
+        },
+        {
+          "page": 7,
+          "text": "DBN, SAE through labeled data itself training samples deep learning are"
+        },
+        {
+          "page": 7,
+          "text": "-Can be used experts to understand and"
+        },
+        {
+          "page": 7,
+          "text": "outside of the medical interpret domain"
+        },
+        {
+          "page": 7,
+          "text": "AE, CNN, -DL can model, represent -Neural networks need -Low data volume RBM, RNN and learn from improvement in -Data heterogeneity heterogenous EHR interpretability, data -Low int"
+        },
+        {
+          "page": 7,
+          "text": "AE, CNN, -End to end training (CNN) -Hyper-parameter tuning -Medical image DBN, GAN, -Freely available is empirical is time consuming RBM, SAE, pre-trained deep learning -Subjectiv"
+        },
+        {
+          "page": 7,
+          "text": "CNN, DNN -Can apply automated -Neural networks need -DL requires substantial featurization, image improvement programming skills segmentation, multi-model -Data scarcity prognostic"
+        },
+        {
+          "page": 7,
+          "text": "-Abstract high-level features"
+        },
+        {
+          "page": 7,
+          "text": "AE, CNN. -LSTM, RNNs, and variant -Lack of transparency and -Heterogenous data MLP, RBM, can process sequential interpretability -Lack of reproducibility RNN data and universal"
+        },
+        {
+          "page": 7,
+          "text": "CNN, FCN, -Unsupervised training -Obtaining large number -Low interpretability RNN, SAE (SAE) of annotated microscopy -Processing high -easily parallelized -Unfixed input size (FCN"
+        },
+        {
+          "page": 7,
+          "text": "training (CNN) size"
+        },
+        {
+          "page": 7,
+          "text": "categories"
+        },
+        {
+          "page": 7,
+          "text": "izing to control or kill malignant cancer"
+        },
+        {
+          "page": 7,
+          "text": "orders in medicine"
+        },
+        {
+          "page": 7,
+          "text": "et al. [40]"
+        },
+        {
+          "page": 7,
+          "text": "for ophthalmology"
+        },
+        {
+          "page": 7,
+          "text": "review,"
+        },
+        {
+          "page": 7,
+          "text": "et al. [39] start the fundamentals plore learning-based deep them to the wider various diagnostic modalities, machine They give an overview of main fields, and optical architecture"
+        },
+        {
+          "page": 7,
+          "text": "analyze deep age-related macular"
+        },
+        {
+          "page": 10,
+          "text": "and chemical-target interaction times and large prediction computational resources"
+        },
+        {
+          "page": 10,
+          "text": "AE, CNN, -Inclusion of CAD, feature -Large amounts of data are -To facilitate DL, large DBN, extraction and benign-malignant required for successful datasets must be set MTANN, cla"
+        },
+        {
+          "page": 10,
+          "text": "AE, CNN, -Eliminates tedious and -Time consuming -Long training times DBN, DNN, error-prone manual feature -Model architecture and -Need for large training KNN, LSTM, selection hyp"
+        },
+        {
+          "page": 10,
+          "text": "and signal decoding. -Failure to capture information in a generalizable way for chaotic signals"
+        },
+        {
+          "page": 10,
+          "text": "-Computational efficiency and best not been designed to performance/generalization in a clinical networked"
+        },
+        {
+          "page": 10,
+          "text": "Radiotherapy∗ environment"
+        },
+        {
+          "page": 10,
+          "text": "AE, CNN, -Availability of large amount of -DL theories are -Building coherent,"
+        },
+        {
+          "page": 10,
+          "text": "Meyer et al. [39] DNN, RNN training data empirically and and balanced medical datasets that represent -Increasing power of GPUs experimentally obtained"
+        },
+        {
+          "page": 10,
+          "text": "-Small noise, real-world scenarios imperceptible to humans, -Difficulty of interpretation could alter the output completely"
+        },
+        {
+          "page": 10,
+          "text": "Ophthalmology CNN, -DL has superior performance -Difficulty conveying -Overinterpreting results Grewal et al. [40] others compared to older automated quantitative results (such fro"
+        },
+        {
+          "page": 10,
+          "text": "-Overfitting on uncorrelated features,"
+        },
+        {
+          "page": 10,
+          "text": "Electronic health AE, CNN, -DL: better performance and less -Lack of interpretability -Temporality and records irregularity of EHR data GAN, GRU, manual feature engineering Xiao et"
+        },
+        {
+          "page": 10,
+          "text": "UE"
+        },
+        {
+          "page": 10,
+          "text": "multi-modality"
+        },
+        {
+          "page": 10,
+          "text": "Bioinformatics∗ CNN, DBN, -DL can learn knowledge from -DL requires large datasets -Data imbalance is Lan et al. [42] decision for training prevalent in the medical tree, DNN -Depe"
+        },
+        {
+          "page": 10,
+          "text": "clustering, hardware NB, KNN, -Lack of interpretability"
+        },
+        {
+          "page": 10,
+          "text": "RNN, SAE,"
+        },
+        {
+          "page": 10,
+          "text": "SVM"
+        },
+        {
+          "page": 10,
+          "text": "Personalized ANN,"
+        },
+        {
+          "page": 10,
+          "text": "-Have not been applied to -Dataset limited medicine Bayesian large scale datasets availability, uncertainty, Zhang et al. [43] networks,"
+        },
+        {
+          "page": 10,
+          "text": "-Human intervention is idiosyncrasy, size CNN, DBN, required to extract new -Lack of reproducibility DNN, linear"
+        },
+        {
+          "page": 10,
+          "text": "knowledge and for safe overfitting, computational regression, action complexity MLP, RF,"
+        },
+        {
+          "page": 10,
+          "text": "-Data privacy, lack of"
+        },
+        {
+          "page": 10,
+          "text": "SDAE, SVM clinical approval,"
+        },
+        {
+          "page": 11,
+          "text": "data"
+        },
+        {
+          "page": 11,
+          "text": "for glioma detection"
+        },
+        {
+          "page": 11,
+          "text": "focus"
+        },
+        {
+          "page": 11,
+          "text": "They"
+        },
+        {
+          "page": 13,
+          "text": "-Overfitting"
+        },
+        {
+          "page": 13,
+          "text": "-Successfully applied to vessel and guaranteed optic disk segmentation, lesion -Lack of interpretability detection and classification, -Class imbalance of diabetic retinopathy diag"
+        },
+        {
+          "page": 13,
+          "text": "Cardiac arrhythmia AE, CNN, -Unsupervised information -Highest scoring ML -Lack of interpretability -Research interpretability Parvaneh et al. DBN, LSTM, capture and feature genera"
+        },
+        {
+          "page": 13,
+          "text": "-Lack of comparability closer to the theoretical (approx. 88%) AE, CNN, -Avoids time-consuming -Lack of reproducibility -Lack of labeled data -Efforts in reproducibility Electrocep"
+        },
+        {
+          "page": 13,
+          "text": "Neurology AE, CNN, -No manual feature crafting -Require large amounts of -Medical data suffers from -Research into Valliani et al. [59] DNN, GAN, -Performance gains with larger dat"
+        },
+        {
+          "page": 13,
+          "text": "Cancer diagnosis AE, AFINN, -Learn features from raw images -Require large datasets, -Lack of available datasets -Not discussed Munir et al. [60] (fully) generally with labels, a -"
+        },
+        {
+          "page": 13,
+          "text": "investment positive and negative RBM, RNN samples Ultrasound AE, (fully)"
+        },
+        {
+          "page": 13,
+          "text": "-Lack of interpretability -Dataset quality and -Clinical workflow and Akkus et al. [61] CNN, RBM, generalizability -Successfully and explainability performance vary in cost can be "
+        },
+        {
+          "page": 14,
+          "text": "Liver masses (fully) -Successfully applied to detection, -Details not discussed -Heterogeneity of results -Standardize reporting, Azer [69] CNN, GAN classification, and segmentatio"
+        },
+        {
+          "page": 14,
+          "text": "Pulmonary medical ANN, -Self-learning and generalization -High computational and -Class imbalances in -Make use of unlabeled imaging (fully) -Can extract information both dataset s"
+        },
+        {
+          "page": 15,
+          "text": "Object detection [75–77] Image segmentation [78,79] Face recognition [80–82] the Action/motion recognition [83,84] cite Biometric recognition [85,86] Image super-resolution [87] ne"
+        },
+        {
+          "page": 16,
+          "text": "Named entity recognition [96,97] Sentiment analysis [98,99] Text summarization [100] Answer selection [101] Word embedding [102,103] Financial forecasting [104]"
+        },
+        {
+          "page": 16,
+          "text": "Big data [105–107] Reinforcement learning [108–110] Mobile and wireless networking [111] Mobile multimedia [112] Multimodal learning [113] Remote sensing [114] Graphs [115] Anomaly"
+        }
+      ]
+    },
+    {
+      "file": "medical-image-segmentation-deep-learning.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 21,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 21,
+      "readerCellFallbacks": 9,
+      "readerFragmentKinds": {
+        "structured-grid": 9,
+        "short-label": 12
+      },
+      "orphanFragments": [
+        {
+          "page": 4,
+          "text": "Conv 3×3，ReLU copy and crop 512 512 1024 512 max pool 2×2 up-conv 2×2 1024 Conv 1×1"
+        },
+        {
+          "page": 7,
+          "text": "1×1 Conv 1×1 Conv Rate = 1 Rate = 1 Channel = 512 Channel = 512 1×1 Conv Rate = 1 3×3 Conv Channel = 512 Rate = 5 Channel = 512 3×3 Conv 3×3 Conv Rate = 1 Rate = 3 Channel = 512 Ch"
+        },
+        {
+          "page": 9,
+          "text": "C"
+        },
+        {
+          "page": 9,
+          "text": "Dropout"
+        },
+        {
+          "page": 9,
+          "text": "Transpose 2. C C"
+        },
+        {
+          "page": 10,
+          "text": "LEXP = ωdice × Ldice + ωcross × Lcross, (13)"
+        },
+        {
+          "page": 18,
+          "text": "Dataset URL"
+        },
+        {
+          "page": 18,
+          "text": "https://competitions.codalab.org/competitions/17094"
+        },
+        {
+          "page": 18,
+          "text": "[162] http://www.sliver07.org/"
+        },
+        {
+          "page": 18,
+          "text": "Liver"
+        },
+        {
+          "page": 18,
+          "text": "3Dircadb [163] https://www.ircad.fr/research/3dircadb/ Medical Segmentation Decathlon (MSD) [164] http://medicaldecathlon.com/index.html CHAOS [165] https://chaos.grand-challenge.o"
+        },
+        {
+          "page": 18,
+          "text": "Medical Segmentation Decathlon (MSD)"
+        },
+        {
+          "page": 18,
+          "text": "http://academictorrents.com/details/80ecfefcabede760cdbdf63e38986501f7becd49"
+        },
+        {
+          "page": 18,
+          "text": "Colon"
+        },
+        {
+          "page": 18,
+          "text": "Medical Segmentation Decathlon (MSD)"
+        },
+        {
+          "page": 18,
+          "text": "Lung"
+        },
+        {
+          "page": 18,
+          "text": "[169] https://vessel12.grand-challenge.org/"
+        },
+        {
+          "page": 18,
+          "text": "Kidney"
+        },
+        {
+          "page": 18,
+          "text": "CHAOS [165]"
+        },
+        {
+          "page": 18,
+          "text": "CHAOS [165] https://chaos.grand-challenge.org"
+        },
+        {
+          "page": 18,
+          "text": "http://medicaldecathlon.com/index.html https://challenge.isic-archive.com/data https://cecas.clemson.edu/ ahoover/stare/ https://tn-scui2020.grand-challenge.org/"
+        }
+      ]
+    },
+    {
+      "file": "medical-imaging-deep-learning-review.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "modeling-human-behavior-cognitive-uncertainty.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 2,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 2,
+      "readerCellFallbacks": 1,
+      "readerFragmentKinds": {
+        "prose-like": 1,
+        "structured-grid": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 1,
+          "text": "To this end, it is fundamental to equip AI agents with practical models of the human behavior. Potential application"
+        },
+        {
+          "page": 1,
+          "text": "Manuscript submitted to ACM 1"
+        }
+      ]
+    },
+    {
+      "file": "neuroscience-rule-following.pdf",
+      "tableCaptions": 2,
+      "cropReadyCaptions": 2,
+      "rawTableFragments": 2,
+      "cropBackedFragments": 2,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "osworld-multimodal-agents.pdf",
+      "tableCaptions": 17,
+      "cropReadyCaptions": 12,
+      "rawTableFragments": 35,
+      "cropBackedFragments": 19,
+      "readerRawFragments": 15,
+      "readerCellFallbacks": 6,
+      "readerFragmentKinds": {
+        "short-label": 7,
+        "structured-grid": 6,
+        "ambiguous": 2
+      },
+      "orphanFragments": [
+        {
+          "page": 8,
+          "text": "Slide editing 8.7%"
+        },
+        {
+          "page": 8,
+          "text": "Doc. settings 1.6%"
+        },
+        {
+          "page": 8,
+          "text": "Doc. editing 4.6%"
+        },
+        {
+          "page": 8,
+          "text": "Image ops 7.0% Tab. formatting 3.8%"
+        },
+        {
+          "page": 8,
+          "text": "Processing 7.0%"
+        },
+        {
+          "page": 8,
+          "text": "Info query 4.1%"
+        },
+        {
+          "page": 8,
+          "text": "Settings 5.7% Misc. 5.7%"
+        },
+        {
+          "page": 8,
+          "text": "Data analysis 8.9%"
+        },
+        {
+          "page": 14,
+          "text": "We enhance the functionality of the OSWORLD envi-0.7"
+        },
+        {
+          "page": 39,
+          "text": "pyautogui.click(1100, 350) # Clicking inside the Terminal window to focus it pyautogui.write(`ffmpeg -i video.mp4 -c copy -sn no_subtitles_video.mp4')"
+        },
+        {
+          "page": 39,
+          "text": "Done!"
+        },
+        {
+          "page": 39,
+          "text": "Failure Task: Help me center align the heading in LibreOffice."
+        },
+        {
+          "page": 39,
+          "text": "# Action 1 import pyautogui import time # Move the mouse to the LibreOffice Writer document icon and double-click pyautogui.moveTo(1100, 720, duration=1) pyautogui.doubleClick()"
+        },
+        {
+          "page": 39,
+          "text": "# Action 2 # Move the mouse to the beginning of the heading text and click and drag to select the heading pyautogui.moveTo(200, 230, duration=1) pyautogui.mouseDown() pyautogui.mov"
+        }
+      ]
+    },
+    {
+      "file": "ozchi-finger-specific-touch.pdf",
+      "tableCaptions": 5,
+      "cropReadyCaptions": 3,
+      "rawTableFragments": 4,
+      "cropBackedFragments": 3,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "power-over-skin.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "ppg-earring.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 1,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 1,
+      "readerCellFallbacks": 1,
+      "readerFragmentKinds": {
+        "structured-grid": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 7,
+          "text": "Component Weight Earring PCB and electronics 0.3 g Silicone layer 0.3 g Battery 1.4 g Total 2.0 g"
+        }
+      ]
+    },
+    {
+      "file": "significant-other.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "social-influence-social-advertising.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 0,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "speechin.pdf",
+      "tableCaptions": 3,
+      "cropReadyCaptions": 2,
+      "rawTableFragments": 8,
+      "cropBackedFragments": 6,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "step-to-charge.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 9,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 9,
+      "readerCellFallbacks": 3,
+      "readerFragmentKinds": {
+        "short-label": 6,
+        "structured-grid": 3
+      },
+      "orphanFragments": [
+        {
+          "page": 13,
+          "text": "W)"
+        },
+        {
+          "page": 13,
+          "text": "W)W)"
+        },
+        {
+          "page": 13,
+          "text": "ret"
+        },
+        {
+          "page": 13,
+          "text": "Rx1"
+        },
+        {
+          "page": 13,
+          "text": "W)"
+        },
+        {
+          "page": 13,
+          "text": "POUT"
+        },
+        {
+          "page": 13,
+          "text": "Rx2"
+        },
+        {
+          "page": 13,
+          "text": "Vin(V)"
+        },
+        {
+          "page": 13,
+          "text": "Rx3"
+        }
+      ]
+    },
+    {
+      "file": "syntax-prosody-correlation.pdf",
+      "tableCaptions": 0,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 5,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 5,
+      "readerCellFallbacks": 5,
+      "readerFragmentKinds": {
+        "structured-grid": 5
+      },
+      "orphanFragments": [
+        {
+          "page": 4,
+          "text": "det attr \u0001 \u0001 \u0001"
+        },
+        {
+          "page": 4,
+          "text": "subj~obja . . . (subj~obja) s~neb s~rel s~aux (s~neb) (s~rel) (s~aux) \u0001"
+        },
+        {
+          "page": 4,
+          "text": "pitch p-value *** NS ** effect in Cent 19.38 — 25.14 power p-value *** 0.06 * effect in dB -0.01 0.005 0.01"
+        },
+        {
+          "page": 4,
+          "text": "NS *** NS NS *** *** — 39.38 — — 22.81 53.77"
+        },
+        {
+          "page": 4,
+          "text": "*** *** *** 0.12 *** * -17.8 -23.03 -29.32 15.88 19.03 30.04"
+        }
+      ]
+    },
+    {
+      "file": "thermal-earring.pdf",
+      "tableCaptions": 1,
+      "cropReadyCaptions": 1,
+      "rawTableFragments": 1,
+      "cropBackedFragments": 1,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "orphanFragments": []
+    },
+    {
+      "file": "using-cognitive-psychology-gpt3.pdf",
+      "tableCaptions": 7,
+      "cropReadyCaptions": 5,
+      "rawTableFragments": 10,
+      "cropBackedFragments": 5,
+      "readerRawFragments": 5,
+      "readerCellFallbacks": 4,
+      "readerFragmentKinds": {
+        "structured-grid": 4,
+        "short-label": 1
+      },
+      "orphanFragments": [
+        {
+          "page": 6,
+          "text": "0.0 0.0 30 20 10 0 10 20 30 30 20 10 0 10 20 30 Mean reward difference Mean reward difference"
+        },
+        {
+          "page": 11,
+          "text": "6. Drori, I. et al. A neural network solves, explains, and generates university math problems by program synthesis and few-shot learning at human level. arXiv preprint arXiv:2112.1"
+        },
+        {
+          "page": 11,
+          "text": "19. Baron, J., Beattie, J. & Hershey, J. C. Heuristics and biases in diagnostic reasoning: Ii. congruence, information, and certainty. Organ. Behav. Hum. Decis. Process. 42, 88–110"
+        },
+        {
+          "page": 15,
+          "text": "CRT2"
+        },
+        {
+          "page": 18,
+          "text": "12 Imagine we gave you 1,000 dollars right now to play a game. 0.51510189"
+        }
+      ]
+    },
+    {
+      "file": "wear-scale.pdf",
+      "tableCaptions": 4,
+      "cropReadyCaptions": 3,
+      "rawTableFragments": 9,
+      "cropBackedFragments": 6,
+      "readerRawFragments": 2,
+      "readerCellFallbacks": 2,
+      "readerFragmentKinds": {
+        "structured-grid": 2
+      },
+      "orphanFragments": [
+        {
+          "page": 9,
+          "text": "Related words Frequency % Apple watches, i‑watch 671 21 Smartwatch, i‑watch"
+        },
+        {
+          "page": 14,
+          "text": "1.00 3.51 1.11 0.64 0.27 R4 − − 1.00 0.61 3.70 0.95 0.68 0.12 R3 − 1.00 0.64 0.64 3.41 0.95 0.31 0.22 R2 − − 1.00 0.67 0.66 0.65 3.43 1.04 0.49 0.35 R1 − − 1.00 0.35 0.26 0.37 0.37"
+        },
+        {
+          "page": 14,
+          "text": "KurtosisSkewnessSDMeanR4R3R2R1C3C2C1S4S3S2D1 D2 S1D4D3FactorTable Cronbach’s alpha (α), 0.93. As evidenced by this Table; the values of univariate skewness and kurtosis are within "
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "extractionErrors": 0,
+    "papersWithTableCaptions": 48,
+    "tableCaptions": 353,
+    "cropReadyCaptions": 241,
+    "rawTableFragments": 1585,
+    "cropBackedFragments": 482,
+    "readerRawFragments": 1044,
+    "readerCellFallbacks": 718,
+    "readerFragmentKinds": {
+      "short-label": 283,
+      "structured-grid": 718,
+      "prose-like": 7,
+      "ambiguous": 35,
+      "numeric-grid": 1
+    },
+    "orphanFragments": 1033,
+    "note": "Crop readiness is a geometry diagnostic. readerRawFragments simulates suppression only after a successful caption crop; readerCellFallbacks are native same-baseline rows retained for a readable source-only grid, not a claim of fully reconstructed table semantics. readerFragmentKinds is audit-only triage and does not change resolver behavior."
+  }
+}

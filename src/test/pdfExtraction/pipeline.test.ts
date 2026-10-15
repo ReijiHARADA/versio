@@ -639,6 +639,24 @@ describe("canonical extraction pipeline", () => {
     )).toBe(true);
   }, 60_000);
 
+  it("preserves multi-column questionnaire cells when a table node was flattened", async () => {
+    const pdf = path.resolve("test-data/real-papers/cognitive-memory-cues.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "flattened-questionnaire-table-regression",
+      filePath: pdf,
+      fileHash: "flattened-questionnaire-table-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const block = result.blocks.find((candidate) => candidate.pageStart === 4 && /A\. A little boy.*A\. White/.test(candidate.original ?? ""));
+    const rows = block?.metadata.tableRows as Array<Array<{ text: string }>> | undefined;
+    expect(block?.type).toBe("table");
+    expect(rows?.some((row) => row.some((cell) => cell.text === "A. A little boy") && row.some((cell) => cell.text === "A. White"))).toBe(true);
+    expect(rows?.some((row) => row.some((cell) => cell.text === "B. A nanny") && row.some((cell) => cell.text === "B. Yellow"))).toBe(true);
+  }, 60_000);
+
   it("does not append a repeated top-margin proceedings URL to body paragraphs", async () => {
     const pdf = path.resolve("test-data/real-papers/marketing-the-impact-of-online-advertising-on-consumer-choice-consumption-traps-.pdf");
     if (!fs.existsSync(pdf)) return;
