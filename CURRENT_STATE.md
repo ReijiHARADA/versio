@@ -31,6 +31,11 @@ separate columns. A regression covers this geometry case. The complete
 real-paper suite remains **232/232** after the change (118 extraction + 114
 reading-order, 434.57s).
 
+The `.app` was rebuilt again after this geometry change at **03:59:04 JST**;
+the latest bundle passed the complete tiny-fixture packaged integration flow
+with an isolated acceptance home. The earlier real cognitive-memory run still
+has the separate search-concurrency timeout described above.
+
 # 2026-10-16: serialize database startup migration/index sync
 
 The packaged OzCHI run showed that extraction and Reader package loading were
