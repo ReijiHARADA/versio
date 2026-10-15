@@ -3160,3 +3160,28 @@ identity, and OzCHI Table 3 reconstruction. One focused vector numeric-label
 matrix case remains unresolved and is intentionally not paper-specific patched.
 The source changes are checkpointed in commit `bfc9df1`; the remaining vector
 case and broader 118-paper corpus rerun still require review.
+
+The first corpus rerun after that checkpoint found one regression in the
+Springer marketing paper `marketing-consumer-production-journey`: a table that
+continued across most of a page had a later flattened row projected as a
+paragraph because the captionless grid width guard was too narrow. The generic
+grid proof now permits wide blocks only when they inherit a same-page table
+caption and still satisfy repeated x-band/contiguous-row evidence. The focused
+fixture passes, and the complete cached corpus now passes **232/232** (118
+baseline extraction cases plus 114 reading-order cases). The vector numeric
+label matrix remains source-order imperfect but is resolved as `other`, so it
+does not enter paragraph translation or table projection.
+
+The fast Tauri bundle was rebuilt after the corpus pass at **2026-10-16
+05:29:17 JST**. Packaged integration E2E then passed using the generated
+`Paper Reader.app`, including import, annotation, search, export, quit, relaunch,
+and persistence. No DMG or signing step was run in fast mode.
+
+An additional packaged run used the real `ozchi-finger-specific-touch.pdf`
+fixture. Import and package generation completed before the acceptance marker
+timed out while waiting for the later annotation/search/export phase. The
+generated `structure.json` contained five structured table blocks; the former
+OzCHI fragments (`Comfortable`/`Finger 1` matrices and `Function` rows) were
+stored as table cells rather than translated paragraphs. This timeout is an
+acceptance-flow duration issue, not an extraction failure, and is kept separate
+from the 232/232 extraction result.
