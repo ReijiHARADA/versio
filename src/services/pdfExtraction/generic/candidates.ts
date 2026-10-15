@@ -1090,6 +1090,61 @@ function captionedRepeatedCellRow(block: LayoutBlock, blocks: LayoutBlock[]): bo
  * native x positions across several neighbouring blocks are required, along
  * with numeric cell density; ordinary prose and bibliography lines do not
  * satisfy this geometry pattern. */
+/**
+ * A borderless qualitative table may use prose in every cell, so its numeric
+ * density never reaches `pageGridEvidence`.  Treat it as a table only when a
+ * compact page-local band establishes three or more independently repeated
+ * native left edges.  This is deliberately stricter than a two-column reading
+ * layout: each anchor must recur in at least three separate logical blocks,
+ * and the candidate itself must be one of those compact cells.
+ */
+function proseCellGridEvidence(block: LayoutBlock, blocks: LayoutBlock[], pageWidth: number): number {
+  if (block.role !== "paragraph" || block.pageStart !== block.pageEnd) return 0;
+  if (block.lines.length > 7 || block.bbox.width > pageWidth * 0.52) return 0;
+  const pageBlocks = blocks.filter((candidate) =>
+    candidate.pageStart === block.pageStart &&
+    candidate.pageEnd === block.pageEnd &&
+    candidate.role === "paragraph" &&
+    candidate.lines.length >= 1 &&
+    candidate.lines.length <= 7 &&
+    candidate.bbox.width <= pageWidth * 0.52 &&
+    Math.abs(candidate.bbox.y - block.bbox.y) <= 420
+  );
+  if (pageBlocks.length < 9 || !pageBlocks.includes(block)) return 0;
+
+  const blockAnchors = new Map<LayoutBlock, Set<number>>();
+  const anchorBlocks = new Map<number, Set<LayoutBlock>>();
+  for (const candidate of pageBlocks) {
+    const anchors = new Set<number>();
+    for (const line of candidate.lines) {
+      const words = line.text.trim().split(/\s+/).filter(Boolean);
+      if (words.length === 0 || words.length > 30) continue;
+      const x = Math.round(line.x / 12) * 12;
+      anchors.add(x);
+      const owners = anchorBlocks.get(x) ?? new Set<LayoutBlock>();
+      owners.add(candidate);
+      anchorBlocks.set(x, owners);
+    }
+    if (anchors.size > 0) blockAnchors.set(candidate, anchors);
+  }
+  const repeated = [...anchorBlocks.entries()]
+    .filter(([, owners]) => owners.size >= 3)
+    .map(([x]) => x)
+    .sort((a, b) => a - b);
+  if (repeated.length < 3) return 0;
+
+  // Require three visibly separate bands.  Indented prose can create a third
+  // near-duplicate origin, but does not form the wide, stable column pattern
+  // found in a real table.
+  const bands: number[] = [];
+  for (const x of repeated) {
+    if (!bands.some((band) => Math.abs(band - x) < 42)) bands.push(x);
+  }
+  if (bands.length < 3 || bands.at(-1)! - bands[0] < 120) return 0;
+  const candidateAnchors = blockAnchors.get(block) ?? new Set<number>();
+  return bands.some((band) => [...candidateAnchors].some((x) => Math.abs(x - band) < 18)) ? 0.96 : 0;
+}
+
 function pageGridEvidence(block: LayoutBlock, blocks: LayoutBlock[]): number {
   if (block.role === "author" || block.role === "affiliation" || block.role === "title") return 0;
   const mathGlyphs = (block.text.match(/[=∈∉∪∩∑∏√∞≤≥≈≠→←↦{}|]/gu) ?? []).length;
@@ -1281,6 +1336,8 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       ).length >= 2 &&
       block.text.trim().split(/\s+/).filter(Boolean).length >= 32;
     const pageGrid = pageGridEvidence(block, blocks);
+    const proseCellGrid = proseCellGridEvidence(block, blocks, layout?.pageWidth ?? 612);
+    const cjkComparisonRow = cjkComparisonTableRow(block, blocks);
     const chartLabels = chartLabelEvidence(block, blocks);
     const axisLabels = axisLabelEvidence(block, blocks);
     const imageLabels = imageOverlapLabelEvidence(block, pages.find((page) => page.pageNumber === block.pageStart));
@@ -1365,6 +1422,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     if (cjkComparisonTableCaption(block, blocks)) scoreByRole.caption = 0.96;
     if (pageGrid > 0 && block.role !== "table_caption" && !narrativeTableConflict) {
       scoreByRole.table = pageGrid;
+    }
+    if (proseCellGrid > 0 && !narrativeTableConflict) {
+      scoreByRole.table = Math.max(scoreByRole.table ?? 0, proseCellGrid);
     }
     if (contentsEntry) {
       // Dotted leaders and page numbers resemble repeated table columns. The
@@ -1569,7 +1629,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         scoreByRole.table = Math.max(scoreByRole.table, 0.9);
       }
     }
-    if (block.role !== "table_caption" && !narrativeTableConflict && (nearbyTableRowEvidence(block, blocks) || headeredTableRow(block, blocks) || cjkComparisonTableRow(block, blocks) || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedMultiCellText || captionedRepeatedRow || captionedNeighborRows || captionedNativeCellRow || captionedRepeatedNativeGrid || captionedDenseBand)) scoreByRole.table = 0.96;
+    if (block.role !== "table_caption" && !narrativeTableConflict && (nearbyTableRowEvidence(block, blocks) || headeredTableRow(block, blocks) || cjkComparisonRow || compactTableDataRow || captionedNativeGrid || captionedColumnarGrid || captionedCompactRows || captionedMultiCellText || captionedRepeatedRow || captionedNeighborRows || captionedNativeCellRow || captionedRepeatedNativeGrid || captionedDenseBand)) scoreByRole.table = 0.96;
     const captionAnchoredTable = nearbyTableCaption || captionedCompactRows || captionedMultiCellText || captionedRepeatedRow ||
       captionedColumnarGrid || captionedNeighborRows || captionedNativeCellRow || captionedRepeatedNativeGrid || captionedDenseBand;
     const symbolicFormulaText = (block.text.match(/[=∈∉∪∩∑∏√∞≤≥≈≠→←↦{}|]/gu) ?? []).length >= 4 &&
@@ -1598,7 +1658,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     const mathOnlyToken = /[α-ωΑ-Ω∑∫√∞≈≠≤≥±∂∇∈∉∪∩→←↦{}|]/u.test(block.text) &&
       !/[A-Za-z]{3,}/.test(block.text) &&
       block.text.trim().split(/\s+/).filter(Boolean).length <= 12;
-    const fragmentedMathDisplay = !captionAnchoredTable &&
+    const fragmentedMathDisplay = !captionAnchoredTable && !cjkComparisonRow &&
       (mathFragmentGlyphs >= 2 || mathOnlyToken) &&
       proseWordCount <= 3 &&
       !/[.!?]\s*$/.test(block.text.trim());
@@ -1682,6 +1742,26 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
         reason,
       },
     ];
+    if (proseCellGrid > 0) {
+      evidence.push({
+        source: "geometry" as EvidenceSource,
+        label: "repeated-prose-cell-grid",
+        confidence: proseCellGrid,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "three or more repeated native column anchors across compact prose cells",
+      });
+    }
+    if (cjkComparisonRow) {
+      evidence.push({
+        source: "geometry" as EvidenceSource,
+        label: "cjk-checkmark-comparison-grid",
+        confidence: 0.96,
+        page: block.pageStart,
+        bbox: block.bbox,
+        reason: "repeated CJK comparison rows and checkmark columns",
+      });
+    }
     if (mixedNativeBand > 0) {
       evidence.push({
         source: "geometry" as EvidenceSource,
