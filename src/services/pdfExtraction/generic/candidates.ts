@@ -1126,7 +1126,7 @@ function captionedRepeatedCellRow(block: LayoutBlock, blocks: LayoutBlock[]): bo
  */
 function proseCellGridEvidence(block: LayoutBlock, blocks: LayoutBlock[], pageWidth: number): number {
   if ((block.role !== "paragraph" && block.role !== "heading") || block.pageStart !== block.pageEnd) return 0;
-  if (block.lines.length > 7 || block.bbox.width > pageWidth * 0.52) return 0;
+  if (block.lines.length > 7) return 0;
   // Repeated native x origins also occur when a one-column math paper breaks
   // prose around inline formula glyphs. A caption is the strongest anchor,
   // but borderless qualitative tables often have no caption at all. Keep
@@ -1145,7 +1145,11 @@ function proseCellGridEvidence(block: LayoutBlock, blocks: LayoutBlock[], pageWi
       Math.min(candidate.bbox.x + candidate.bbox.width, block.bbox.x + block.bbox.width) -
         Math.max(candidate.bbox.x, block.bbox.x),
     );
-    return verticalDistance <= 420 && horizontalOverlap >= Math.min(candidate.bbox.width, block.bbox.width) * 0.2;
+    // A journal table can continue for most of a page after a compact
+    // caption, especially when its rightmost cell wraps into several lines.
+    // The repeated x-band and contiguous-row checks below remain mandatory;
+    // this wider window only lets those checks inherit the page-local caption.
+    return verticalDistance <= 720 && horizontalOverlap >= Math.min(candidate.bbox.width, block.bbox.width) * 0.2;
   });
   const pageBlocks = blocks.filter((candidate) =>
     candidate.pageStart === block.pageStart &&
@@ -1153,7 +1157,7 @@ function proseCellGridEvidence(block: LayoutBlock, blocks: LayoutBlock[], pageWi
     (candidate.role === "paragraph" || candidate.role === "heading") &&
     candidate.lines.length >= 1 &&
     candidate.lines.length <= 7 &&
-    candidate.bbox.width <= pageWidth * 0.52
+    (candidate === block || candidate.bbox.width <= pageWidth * 0.52)
   );
   if (pageBlocks.length < 9) return 0;
 
@@ -1235,6 +1239,7 @@ function proseCellGridEvidence(block: LayoutBlock, blocks: LayoutBlock[], pageWi
   // grid. This prevents two-column body prose, which can share three x bands
   // by coincidence, from being converted into source-only table cards.
   const contiguousGrid = denseRows.every((y, index) => index === 0 || y - denseRows[index - 1] <= 96);
+  if (block.bbox.width > pageWidth * 0.52 && !nearbyTableCaption) return 0;
   if (!nearbyTableCaption && (!captionlessHeader || !contiguousGrid)) return 0;
   const candidateAnchors = blockAnchors.get(block) ?? new Set<number>();
   const usesGridColumn = bands.some((band) => [...candidateAnchors].some((x) => Math.abs(x - band) < 18));
