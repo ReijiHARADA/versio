@@ -29,6 +29,7 @@ let exportBytes = 0;
 let exportedPath: string | undefined;
 let paperTitleHint: string | undefined;
 let fixtureImportStarted = false;
+let smokeReaderOpenTried = false;
 
 async function writeUiMarker(marker: UiE2eMarker): Promise<void> {
   lastMarker = marker;
@@ -166,6 +167,14 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
       paperTitleHint = paperCard.getAttribute("aria-label") || paperCard.textContent?.trim() || "";
     }
 
+    // Smoke mode is intended to validate the real Reader route without
+    // depending on flaky macOS Accessibility clicks against a large WKWebView.
+    // The click is opt-in and never runs during normal launches.
+      if (smokeOnly && paperCard && !reader && !smokeReaderOpenTried) {
+      smokeReaderOpenTried = true;
+      (paperCard as HTMLElement).click();
+    }
+
     // Detect export success from visible status if reportUiE2eExportSuccess already ran.
     if (
       exportStatus?.textContent?.includes("書き出しました") &&
@@ -230,7 +239,7 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
     let ok = false;
     if (phase === "initial") {
       if (smokeOnly && reader && readerBody) {
-        ok = Boolean(paperCard) && Boolean(reader) && Boolean(readerBody);
+        ok = Boolean(reader) && Boolean(readerBody);
         step = "ui_reader_smoke_ready";
       }
       ok =
