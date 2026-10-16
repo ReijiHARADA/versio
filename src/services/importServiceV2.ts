@@ -148,12 +148,12 @@ export async function importPDFV2(
       filePath: file.name,
       fileHash,
       file,
-      // Keep the import path bounded: native captions and reconstructed cell
-      // grids are persisted synchronously. Figure/table crops are an optional
-      // enrichment step because browser canvas rendering can block on
-      // pathological vector pages even when the Promise timeout is finite.
-      // Explicit re-extraction can enrich packages with image assets later.
-      extractFigures: false,
+      // Include bounded figure/table extraction in the initial package so the
+      // Reader never opens with empty media and fills it in several seconds
+      // later. `extractFigureImages` has per-page and document deadlines; the
+      // background enrichment path remains a retry for captions that could
+      // not be rendered during this pass.
+      extractFigures: true,
       previousBlocks: previousBlocks.length ? previousBlocks : undefined,
       onProgress: (progress) => {
         throwIfImportAborted(callbacks.signal, { paperId, partialReady: false });
