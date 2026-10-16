@@ -112,7 +112,13 @@ export function suppressImageBackedTableFragments(blocks: PaperBlock[]): PaperBl
           const distance = box.top - captionBox.bottom;
           return distance >= -6 && distance <= 520;
         });
-        const xBands = new Set(candidates.map((block) => Math.round((boxBounds(block)?.left ?? 0) / 12)));
+        const xBands = new Set(candidates.flatMap((block) => {
+          const metadata = block.metadata as { tableRows?: Array<Array<{ x?: number }>>; lines?: Array<{ bbox?: { x: number } }> };
+          const cellXs = (metadata.tableRows ?? []).flatMap((row) => row.map((cell) => cell.x).filter((x): x is number => typeof x === "number"));
+          const lineXs = (metadata.lines ?? []).map((line) => line.bbox?.x).filter((x): x is number => typeof x === "number");
+          const xs = [...cellXs, ...lineXs];
+          return (xs.length > 0 ? xs : [boxBounds(block)?.left ?? 0]).map((x) => Math.round(x / 12));
+        }));
         return candidates.length >= 4 && xBands.size >= 2;
       })
       .map((caption) => caption.id)
