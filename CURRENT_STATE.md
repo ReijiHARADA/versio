@@ -3367,3 +3367,9 @@ audit reports **0 extraction errors**, `readerRawFragments=456`,
 classified in `test-data/real-papers/reports/table-reader-ambiguous-review-v1.json`
 as visual questionnaire cells, table continuations, references, or captions;
 none is a confirmed ordinary-prose table false positive.
+
+The updated extraction path was packaged into the fast macOS `.app` at
+**2026-10-16 12:29:47 JST**. Packaged OzCHI import-only verification passed
+with **138 blocks / 5 tables**, every table retaining non-empty `tableRows`.
+The app and bundled sidecar exited cleanly; no Paper Reader or translation
+server process remains running.
