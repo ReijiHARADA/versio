@@ -116,7 +116,8 @@ type PaperBlockViewProps = {
   onHighlightClick?: (annotationIds: string[], rect: DOMRect) => void;
   onOpenSourcePdf?: (block: PaperBlock) => void;
   referenceIndex: Map<string, string>;
-  blocks: PaperBlock[];
+  /** Stable reference-only list so memo survives body translation patches. */
+  referenceBlocks: PaperBlock[];
   glossaryEntries: GlossaryEntry[];
   onOpenGlossaryInspector?: () => void;
   onJumpToTarget: (targetId: string) => void;
@@ -134,7 +135,7 @@ const PaperBlockView = memo(function PaperBlockView({
   onHighlightClick,
   onOpenSourcePdf,
   referenceIndex,
-  blocks,
+  referenceBlocks,
   glossaryEntries,
   onOpenGlossaryInspector,
   onJumpToTarget,
@@ -179,7 +180,7 @@ const PaperBlockView = memo(function PaperBlockView({
           onHighlightClick={onHighlightClick}
           onOpenSourcePdf={onOpenSourcePdf}
           referenceIndex={referenceIndex}
-          referenceBlocks={blocks}
+          referenceBlocks={referenceBlocks}
           glossaryEntries={glossaryEntries}
           onOpenGlossaryInspector={onOpenGlossaryInspector}
           onJumpToTarget={onJumpToTarget}
@@ -246,6 +247,35 @@ function isVisibleContentBlock(block: PaperBlock): boolean {
   if (looksLikeConferenceRunningHeader(block.original ?? "")) return false;
   const role = String(block.metadata?.role ?? "");
   return role !== "author" && role !== "affiliation" && role !== "copyright";
+}
+
+function isCitationReferenceBlock(block: PaperBlock): boolean {
+  return (
+    block.type === "reference" ||
+    typeof block.metadata?.referenceId === "string"
+  );
+}
+
+/** Keep a stable array identity while only body paragraphs are translating. */
+function useStableReferenceBlocks(blocks: PaperBlock[]): PaperBlock[] {
+  const stableRef = useRef<PaperBlock[]>([]);
+  return useMemo(() => {
+    const next = blocks.filter(isCitationReferenceBlock);
+    const prev = stableRef.current;
+    if (
+      prev.length === next.length &&
+      prev.every(
+        (block, index) =>
+          block.id === next[index].id &&
+          block.original === next[index].original &&
+          block.metadata?.referenceId === next[index].metadata?.referenceId
+      )
+    ) {
+      return prev;
+    }
+    stableRef.current = next;
+    return next;
+  }, [blocks]);
 }
 
 export const PaperContent = memo(
@@ -370,7 +400,24 @@ export const PaperContent = memo(
       }
     };
 
-    const referenceIndex = useMemo(() => indexReferenceBlocks(blocks), [blocks]);
+    const referenceBlocks = useStableReferenceBlocks(blocks);
+    const referenceIndexRef = useRef<Map<string, string>>(new Map());
+    const referenceIndex = useMemo(() => {
+      const next = indexReferenceBlocks(blocks);
+      const prev = referenceIndexRef.current;
+      if (prev.size === next.size) {
+        let same = true;
+        for (const [key, value] of next) {
+          if (prev.get(key) !== value) {
+            same = false;
+            break;
+          }
+        }
+        if (same) return prev;
+      }
+      referenceIndexRef.current = next;
+      return next;
+    }, [blocks]);
 
     const annotationsByBlock = useMemo(() => {
       const map = new Map<string, Annotation[]>();
@@ -452,9 +499,14 @@ export const PaperContent = memo(
       });
     }, [allSectionsOrdered, virtualize, visibleForMount, pinnedSectionIds]);
 
+    const blocksBySectionRef = useRef(blocksBySection);
+    blocksBySectionRef.current = blocksBySection;
+
     // Remember real body heights so spacers match after a section unmounts,
     // and compensate scrollTop when a newly mounted body above the viewport
     // differs from its previous spacer estimate (avoids content jump).
+    // Do not depend on blocksBySection identity — translation patches would
+    // otherwise re-run layout work on every completed paragraph.
     useLayoutEffect(() => {
       const container = scrollContainerRef?.current;
       const prev = prevMountedSectionIdsRef.current;
@@ -469,7 +521,7 @@ export const PaperContent = memo(
           if (!sectionEl || !bodyEl) continue;
           const estimated =
             measuredBodyHeightsRef.current.get(sectionId) ??
-            estimateSectionBodyHeight(blocksBySection.get(sectionId) ?? []);
+            estimateSectionBodyHeight(blocksBySectionRef.current.get(sectionId) ?? []);
           const actual = bodyEl.getBoundingClientRect().height;
           const delta = actual - estimated;
           if (Math.abs(delta) <= 2) continue;
@@ -479,7 +531,7 @@ export const PaperContent = memo(
         }
       }
       prevMountedSectionIdsRef.current = new Set(mountedSectionIds);
-    }, [mountedSectionIds, virtualize, scrollContainerRef, blocksBySection]);
+    }, [mountedSectionIds, virtualize, scrollContainerRef]);
 
     useEffect(() => {
       if (typeof ResizeObserver === "undefined") return;
@@ -716,7 +768,7 @@ export const PaperContent = memo(
               onHighlightClick={onHighlightClick}
               onOpenSourcePdf={onOpenSourcePdf}
               referenceIndex={referenceIndex}
-              blocks={blocks}
+              referenceBlocks={referenceBlocks}
               glossaryEntries={glossaryEntries}
               onOpenGlossaryInspector={onOpenGlossaryInspector}
               onJumpToTarget={onJumpToTarget}

@@ -1,3 +1,7 @@
+# 2026-10-16: 翻訳中の本文スクロールが重い
+
+翻訳完了のたびに全ブロックへ `blocks` 配列を渡して memo が無効化され、かつ毎フレーム近く store 更新していた。引用用リスト／index を安定化し、ブロック更新を 120ms 結合＋スクロール中は適用 defer。セクションに `content-visibility: auto`。翻訳パッチでの不要な layout effect も外した。batch/reader テスト 33/33・typecheck pass。
+
 # 2026-10-16: 本文がエラーなしで未翻訳のまま残る
 
 Reader の Paragraph が import の `shouldTranslateBlock` より狭い `shouldTranslateParagraph` だけで表示を決めていた。リスト項目など import 対象の pending/failed が「対象外」扱いになり、待ち表示も失敗 UI もなく原文だけ出ていた。表示判定を `resolveParagraphTranslationUi` に寄せ、pending/processing/failed は必ず待ち／再試行面を出す。reader テスト 31/31・typecheck pass。

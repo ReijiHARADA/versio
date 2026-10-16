@@ -12,7 +12,10 @@ import {
 } from "lucide-react";
 import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
-import { createBlockUpdateBatcher } from "../../utils/batchBlockUpdates";
+import {
+  createBlockUpdateBatcher,
+  setTranslationUiScrollPaused,
+} from "../../utils/batchBlockUpdates";
 import type { PaperBlock, Section } from "../../types/paper";
 import { upsertBlock } from "../../utils/mergePaperData";
 import { displayPaperTitle } from "../../services/translation/quality";
@@ -77,6 +80,27 @@ export function ReaderScreen() {
       setBlocksInStore(id, (prev) => batch.reduce((acc, block) => upsertBlock(acc, block), prev));
     })
   );
+
+  // Defer streaming translation patches while the user is scrolling the body.
+  useEffect(() => {
+    if (isLoading) return;
+    const root = contentRef.current;
+    if (!root) return;
+    let idleTimer = 0;
+    const onScroll = () => {
+      setTranslationUiScrollPaused(true);
+      window.clearTimeout(idleTimer);
+      idleTimer = window.setTimeout(() => {
+        setTranslationUiScrollPaused(false);
+      }, 140);
+    };
+    root.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      root.removeEventListener("scroll", onScroll);
+      window.clearTimeout(idleTimer);
+      setTranslationUiScrollPaused(false);
+    };
+  }, [isLoading]);
 
   const paper = papers.find((p) => p.id === paperId);
 
