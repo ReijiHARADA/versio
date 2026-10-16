@@ -189,13 +189,19 @@ describe("package layout reconstruction", () => {
     const result = attachLinesToBlocks([
       caption,
       fragment("1", 300, 110),
-      fragment("2", 468, 125),
       fragment("3", 300, 140),
+      // Simulate projection/column order rather than visual order.
+      fragment("2", 468, 125),
       fragment("4", 468, 155),
     ], []);
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("caption");
     expect(result[0].metadata.captionOwnedNativeGrid).toBe(true);
-    expect((result[0].metadata.tableRows as Array<Array<{ text: string }>>).flat().map((cell) => cell.text)).toContain("A. Option 1");
+    expect((result[0].metadata.tableRows as Array<Array<{ text: string }>>).flat().map((cell) => cell.text)).toEqual([
+      "A. Option 1",
+      "A. Option 2",
+      "A. Option 3",
+      "A. Option 4",
+    ]);
   });
 });
