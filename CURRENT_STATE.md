@@ -3379,3 +3379,10 @@ server process remains running.
 - Root cause: image-backed table suppression counted only each fragment's outer `bbox.left`. A single native fragment can contain cells from multiple x-bands (questionnaire/table layouts), so a full-width table caption was not recognized as cross-column-owned and duplicate native table cards remained.
 - Fix: cross-column evidence now uses `tableRows[].x` and native line item x positions, falling back to block geometry when cell evidence is unavailable. This remains geometry-based and paper-independent.
 - Verification: questionnaire crop suppression regression passes; `npm run typecheck` passes; `npm run lint` passes with existing warnings. The full pipeline run also exposed one pre-existing intermittent/fixture failure in the captionless education table regression; it reproduces without this change and is recorded for follow-up.
+
+# 2026-10-16: table-reader audit after cell-geometry suppression
+
+- Full table-reader audit completed with `extractionErrors: 0` across the cached corpus.
+- Metrics changed from `readerRawFragments=456`, `readerCellFallbacks=383`, `structured-grid=368`, `ambiguous=6` to `447`, `374`, `361`, `ambiguous=5`; `prose-like` remains `0`, `short-label=81`, and `orphanFragments=534`.
+- The reduction is from generic cross-column ownership using cell/line x positions instead of only fragment outer boxes. Remaining ambiguous samples are visual questionnaire/table cells, table-cell continuations, references, or captions; no confirmed ordinary-prose-to-table false positive was found in the audit artifact.
+- Focused tests for boxed abstract prose and multi-column questionnaire suppression pass. Full pipeline currently has one existing education captionless-table assertion failure that reproduces with the pre-change source; it is not caused by the cell-geometry patch and remains a follow-up item before claiming a clean full regression.
