@@ -3306,3 +3306,7 @@ warnings. The refreshed 114-PDF table audit reports **0 extraction errors**,
 `structured-grid=499`, `prose-like=1`, and `ambiguous=19`. The remaining
 ambiguous/native fragments are still a visual-review queue; figure crop
 enrichment remains outside the synchronous import path.
+
+# 2026-10-16: latest fast bundle after cross-column table folding
+
+`caffeinate -dimsu npm run tauri:build:fast` completed successfully at **2026-10-16 10:23:24 JST**. The bundle contains the current `translation-server/engines/segmenter.py` and the current extraction/projection code. Generated license metadata was restored after the build; worktree is clean. This build is ready for the next packaged import-only verification; no translation server or Paper Reader process remains running.
