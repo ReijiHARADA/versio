@@ -40,6 +40,7 @@ export function DraggablePaperArticle({
       tabIndex={0}
       onKeyDown={handleKeyDown}
       data-testid="paper-card"
+      data-paper-id={paperId}
       aria-label={`論文 ${label}`}
     >
       {children}
