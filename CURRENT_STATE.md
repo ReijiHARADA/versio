@@ -3515,3 +3515,16 @@ server process remains running.
   integration passes after the fix.
 - The `.app` containing this dense-page raster change was rebuilt at
   **14:13:55 JST**; no Paper Reader or translation-server process remains.
+
+# 2026-10-16: final full extraction corpus rerun
+
+- `caffeinate -dimsu npm run test:extraction-corpus` passed **232/232**:
+  **118/118** cached real-paper extraction baselines plus **114/114**
+  reading-order checks, in 434.32s.
+- The run includes OzCHI, interactive-jewellery, the ergonomics thesis, and
+  the broader HCI/psychology/marketing/linguistics corpus. Only existing
+  PDF.js font/ColorSpace warnings were emitted; no extraction assertion failed.
+- Combined with the rebuilt-app OzCHI package check and packaged persistence
+  E2E, the current extraction implementation has a clean corpus and package
+  acceptance gate. The remaining known limitation is host-level UI smoke
+  foreground control on macOS, not package extraction or Reader data.
