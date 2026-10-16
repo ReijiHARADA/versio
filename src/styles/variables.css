@@ -59,6 +59,15 @@
   --control-radius: var(--radius-md);
   --control-padding-x: 12px;
 
+  /* Icons (chrome / toolbar). Default matches AppSidebar 16px so Reader
+     header tools sit in the same scale as library chrome, not a larger island. */
+  --icon-size-sm: 14px;
+  --icon-size: 16px;
+  --icon-size-md: 18px;
+  --icon-size-lg: 20px;
+  --icon-button-size: var(--control-height);
+  --icon-button-gap: var(--spacing-xs);
+
   /* Layout */
   --nav-sidebar-width: 220px;
   --sidebar-width: 280px;

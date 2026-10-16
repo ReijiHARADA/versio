@@ -64,8 +64,13 @@ export function SettingsScreen() {
       setActiveSection("licenses");
       return;
     }
-    pendingScrollRef.current = LAST_SCROLL_SECTION;
-    setActiveSection(LAST_SCROLL_SECTION);
+    // Sidebar may already have queued a target section; keep it. Overscroll
+    // back from licenses falls through to the last settings section.
+    const target = pendingScrollRef.current ?? LAST_SCROLL_SECTION;
+    if (!pendingScrollRef.current) {
+      pendingScrollRef.current = target;
+    }
+    setActiveSection(target);
   }, []);
 
   const panel = useSettingsPanelTransition({
@@ -220,10 +225,16 @@ export function SettingsScreen() {
   };
 
   const handleSelectSection = (id: SettingsSectionId) => {
-    if (isSettingsScrollSection(id)) {
-      pendingScrollRef.current = id;
-    } else {
+    if (id === "licenses") {
       pendingScrollRef.current = null;
+      // Animate like overscroll — do not hard-cut activeSection / stackOffset.
+      panel.goToPage("licenses");
+      return;
+    }
+    pendingScrollRef.current = id;
+    if (panelPage === "licenses") {
+      panel.goToPage("settings");
+      return;
     }
     setActiveSection(id);
   };
