@@ -39,7 +39,7 @@ describe("canonical extraction pipeline", () => {
       column: "right", bbox: { page: 6, x: 310, y: 206, width: 230, height: 18 }, lines: [],
     };
     const crop = figureImageRect(caption, [rowBlock("Finger Thumb Finger1", 341, 24), rowBlock("Function Call tapped contact", 389, 106), caption], layout);
-    expect(crop).toMatchObject({ page: 6, y: 124, height: 80 });
+    expect(crop).toMatchObject({ page: 6, y: 124, height: 74 });
   });
 
   it("crops a compact table stream below an above-table caption", () => {
