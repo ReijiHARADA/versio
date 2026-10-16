@@ -99,4 +99,51 @@ describe("package layout reconstruction", () => {
     expect(result.translationStatus).toBe("pending");
     expect(result.metadata.packageRoleRepair).toBe("narrative-table-fallback-demoted");
   });
+
+  it("joins a wrapped native cell even when another column occupies the intervening row", () => {
+    const block = {
+      id: "wrapped-cell",
+      paperId: "paper",
+      order: 0,
+      type: "table",
+      original: "To identify groups of similar Clustering observations.",
+      translated: null,
+      translationStatus: "skipped",
+      pageStart: 18,
+      pageEnd: 18,
+      boundingBoxes: [{ page: 18, x: 72, y: 417, width: 220, height: 27 }],
+      parentBlockId: null,
+      extractionConfidence: 0.9,
+      metadata: {},
+    } as PaperBlock;
+    const line = (text: string, x: number, y: number, width: number) => ({
+        text,
+        items: [{ text, x, y, width, height: 7, fontSize: 8, fontName: "body", page: 18 }],
+        page: 18,
+        column: "single" as const,
+        x,
+        y,
+        width,
+        height: 7,
+        fontSize: 8,
+        bbox: { page: 18, x, y, width, height: 7 },
+    });
+    const [result] = attachLinesToBlocks([block], [{
+      role: "table" as const,
+      text: block.original!,
+      pageStart: 18,
+      pageEnd: 18,
+      column: "single" as const,
+      bbox: { page: 18, x: 72, y: 417, width: 220, height: 27 },
+      lines: [
+        line("To identify groups of similar", 166, 417, 125),
+        line("Clustering", 72, 425, 45),
+        line("observations.", 166, 433, 60),
+      ],
+    }]);
+    expect(result.metadata.tableRows).toEqual([
+      [{ text: "To identify groups of similar observations.", x: 166, width: 125 }],
+      [{ text: "Clustering", x: 72, width: 45 }],
+    ]);
+  });
 });

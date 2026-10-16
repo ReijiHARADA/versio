@@ -3263,3 +3263,20 @@ Reader smokeの再検証で、起動スクリプトの環境変数継続行に�
 `npm run typecheck`、`npm run lint`（既存warningのみ）、対象3ファイルの81テスト、`caffeinate -dimsu npm run test:extraction-corpus -- --reporter=dot`（118 extraction + 114 reading-order = **232/232**, 462.46s）が通過した。次の品質変更では、同じ判定群を再び `toPaper.ts` に戻さず、この責務単位を入口に characterization test を追加する。未解決の figure/table crop enrichment と、実PDF Reader UIでの structured-cell DOM確認は継続課題である。
 
 同じコミットを含む fast `.app` を **2026-10-16 08:27:02 JST** に再ビルドした。OzCHI実PDFのパッケージimport-only E2Eは **138 blocks / 5 tables / 全表に非空tableRows** で通過し、実行後にPaper Readerおよびtranslation serverの残留プロセスがないことも確認した。
+
+# 2026-10-16: merge wrapped table-cell continuations across interleaved rows
+
+table package reconstruction now joins a same-x cell continuation when the
+preceding text is an unfinished three-word-or-longer phrase (or explicit
+hyphenation) and the next fragment starts lowercase/punctuation, even when a
+different column occupies the intervening native row. This repairs generic
+borderless tables whose cell line wraps were emitted as separate rows, while
+keeping short labels such as `Gallery` and capitalized row values separate.
+The layout regression suite covers the interleaved-row case; the OzCHI Table 4
+baseline remains green. The full cached extraction/reading-order corpus passed
+**232/232** in **473.05s**, typecheck and lint passed with only pre-existing
+warnings, and the refreshed table audit has **0 extraction errors**,
+`readerRawFragments=664`, `readerCellFallbacks=553`, and
+`structured-grid=518` (audit-only diagnostics). The audit still contains
+one prose-like and 23 ambiguous native fragments; these are retained as a
+visual-review queue rather than being hidden by a broad demotion rule.
