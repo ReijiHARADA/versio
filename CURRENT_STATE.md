@@ -3438,3 +3438,27 @@ server process remains running.
 - The harness now explicitly activates the packaged process (`Paper Reader` and the bundle's `app` process) before Accessibility actions (`95fb6f0`, `2d31166`).
 - A fresh smoke run still captured Notion Calendar as the frontmost window and timed out at `ui_reader_visible`; the packaged app process itself was alive and its isolated paper package was complete.
 - This is a host Accessibility/frontmost-control limitation in the smoke harness. It does not invalidate the passing packaged integration flow or the 232/232 extraction corpus gate. No Paper Reader or bundled translation-server process remains after the run.
+
+# 2026-10-16: caption-adjacent native table reconstruction
+
+- Root cause confirmed on the external OzCHI PDF and the ergonomics fatigue
+  thesis: borderless native tables can arrive as one canonical table node per
+  cell/row. The old projection left those fragments as independent reader
+  blocks, so matrix values were translated as prose and table rows were lost.
+- `captionedNativeTableRows()` now uses numbered-caption ownership, page/column
+  geometry, and repeated table-cell evidence to group the local native cells
+  into `tableRows`. Caption-owned native grids are marked skipped for
+  translation and retain their source text plus cell geometry. Wide existing
+  synthetic grids are preserved rather than replaced by opaque cells.
+- External `2686612.2686699.pdf`: Table 1 and Table 5 now form structured
+  10-row grids; Table 3/4 existing grids remain intact; authors and
+  affiliations remain correctly separated; ACM permission chrome remains
+  excluded. Table 2 is an embedded/vector image with no native cell text and
+  still requires the existing image/crop path for full reconstruction.
+- Regression: OzCHI table-cell and neighbouring-prose tests pass; the
+  ergonomics commercial-vehicle table baseline passes with 16 structured rows;
+  the cached extraction corpus completed with 231/232 before refreshing the
+  stale OzCHI status expectation, with the only failure being that intentional
+  new native-table behavior (`pending` → `skipped`). After updating that
+  expectation, the targeted baseline passes. A fresh full corpus rerun is
+  still recommended before the next packaged build.
