@@ -3416,3 +3416,8 @@ server process remains running.
 
 - Re-reviewed the five remaining audit-only ambiguous samples after the aligned fallback UI. They are two education table-cell continuations, one reference continuation, one multi-column business-category table, and one legitimate numbered-table caption.
 - The review artifact is `test-data/real-papers/reports/table-reader-ambiguous-review-v1.json`; no ordinary prose → table false positive remains in the audit sample.
+
+# 2026-10-16: masthead/caption focused extraction checks
+
+- Focused tests for interactive jewellery caption boundaries, wrapped Elsevier author rows/affiliations, multilingual author boundaries, and flattened IEEE masthead all pass (4/4).
+- Combined with the 232/232 corpus gate, current extraction changes preserve the author/affiliation and figure-caption regressions already covered by the project.
