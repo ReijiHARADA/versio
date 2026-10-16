@@ -132,6 +132,13 @@ for (let index = 0; index < selected.length; index += 1) {
       const t = p.text ?? "";
       // Bibliography / review-title lines often contain "… review, J." etc.
       if (/^\s*\[\d+\]/.test(t) || /\(\d{4}[a-z]?\)\s*\.?$/.test(t.trim())) return false;
+      // Numbered reference rows: "49. De Mesa … et al." / "34. Liu, Z.; Yu, H.;"
+      if (
+        /^\d{1,3}\.\s+\p{L}/u.test(t.trim()) &&
+        (/\bet al\b/i.test(t) || /\(\d{4}\)/.test(t) || /^[^.]+,\s*[A-Z]\./.test(t.trim().replace(/^\d+\.\s+/, "")))
+      ) {
+        return false;
+      }
       // Multi-citation blobs: "Hayes (2013). Introduction to…" / "Res. Methods Instrum."
       if ((t.match(/\(\d{4}[a-z]?\)/g) ?? []).length >= 2) return false;
       if (/\(\d{4}[a-z]?\)\.\s+Introduction to\b/i.test(t)) return false;

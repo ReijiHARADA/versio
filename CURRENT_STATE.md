@@ -1,3 +1,7 @@
+# 2026-10-17: 拡張OAコーパスのタイトル誤検出を修正
+
+pending 136 本の wide 診断で flagged 5（Cureus の `Using Google Cloud…` ツール行タイトル、倫理文タイトル、参考文献の embedded-section 誤検知）。ツール行・倫理 boilerplate を title 候補から除外し、番号付き参考文献を診断から除外。pending 再走査で clean 目標。回帰: Cureus tool-line title pass。
+
 # 2026-10-17: pending PDFはgitに入れない + OA大量追加
 
 実PDF本体は評価用ローカル資産。`test-fixtures/real-papers/pending-pdfs/**/*.pdf` を gitignore し、追跡済みPDFを index から外した（ディスク上のファイルは残す）。再取得は `node scripts/fetch-oa-europepmc.mjs`（Europe PMC の OA+CC のみ）。今回さらに CC BY/BY-NC を **40本** 追加取得し、pending 合計はローカル約 **136** PDF。コミット対象は候補JSON・取得スクリプト・gitignore。

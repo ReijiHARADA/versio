@@ -175,6 +175,32 @@ function looksLikeBodyLeadInTitle(text: string): boolean {
   return looksLikeBodyTitleCandidate(t);
 }
 
+/** Cureus-style tool/workflow lines steal the title role from the article title. */
+function looksLikeShortToolOrFragmentTitle(text: string): boolean {
+  const t = text.trim();
+  const words = t.split(/\s+/).filter(Boolean);
+  if (words.length === 0 || words.length > 8 || t.length > 55) return false;
+  if (/:/.test(t)) return false;
+  if (/^(?:using|via|with|through|based on)\s+[A-Z(]/i.test(t)) return true;
+  // Product / platform stubs without review/study vocabulary.
+  if (
+    words.length <= 6 &&
+    !/\b(?:review|survey|analysis|study|effect|impact|perspectives?|classification|detection)\b/i.test(t) &&
+    /\b(?:google|cloud|vertex|azure|aws|chatgpt|openai|matlab|python)\b/i.test(t)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/** Conference abstract ethics crumbs are not titles. */
+function looksLikeEthicsBoilerplateTitle(text: string): boolean {
+  const t = text.trim();
+  return /^(?:ethical permission|ethics?\s+(?:approval|permission|committee)|informed consent|this study was approved|institutional (?:review board|human ethical)|all procedures were|permission was granted)\b/i.test(
+    t
+  );
+}
+
 /** Keyword index lines are never article titles. */
 function looksLikeKeywordsChrome(text: string): boolean {
   const t = text.trim();
@@ -236,6 +262,8 @@ function recoverAlternateCoverTitle(candidates: RoleCandidate[]): string | null 
         looksLikeBodyLeadInTitle(t) ||
         looksLikeProtocolTableChrome(t) ||
         looksLikeKeywordsChrome(t) ||
+        looksLikeShortToolOrFragmentTitle(t) ||
+        looksLikeEthicsBoilerplateTitle(t) ||
         looksLikeAuthorish(t) ||
         /@/.test(t) ||
         /\bPh\.?\s*D\b/i.test(t) ||
@@ -883,6 +911,8 @@ export function resolveTitle(input: {
     looksLikeJournalChromeTitle(native[0]) ||
     looksLikeProtocolTableChrome(native[0]) ||
     looksLikeKeywordsChrome(native[0]) ||
+    looksLikeShortToolOrFragmentTitle(native[0]) ||
+    looksLikeEthicsBoilerplateTitle(native[0]) ||
     isFragmentTitle(native[0]) ||
     (titles[0] && (
       looksLikeCopyrightBoilerplate(titles[0].text) ||
@@ -893,6 +923,8 @@ export function resolveTitle(input: {
       looksLikeJournalChromeTitle(titles[0].text) ||
       looksLikeProtocolTableChrome(titles[0].text) ||
       looksLikeKeywordsChrome(titles[0].text) ||
+      looksLikeShortToolOrFragmentTitle(titles[0].text) ||
+      looksLikeEthicsBoilerplateTitle(titles[0].text) ||
       isFragmentTitle(titles[0].text)
     ));
   if (needsAlternateTitle) {
@@ -910,7 +942,9 @@ export function resolveTitle(input: {
       looksLikeCopyrightBoilerplate(fused.text) ||
       looksLikeJournalChromeTitle(fused.text) ||
       looksLikeProtocolTableChrome(fused.text) ||
-      looksLikeKeywordsChrome(fused.text))
+      looksLikeKeywordsChrome(fused.text) ||
+      looksLikeShortToolOrFragmentTitle(fused.text) ||
+      looksLikeEthicsBoilerplateTitle(fused.text))
   ) {
     const recovered = recoverAlternateCoverTitle(input.candidates);
     if (recovered && recovered !== fused.text) {
