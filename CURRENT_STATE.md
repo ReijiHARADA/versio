@@ -3597,3 +3597,12 @@ server process remains running.
   persisted as sharp PNG assets with complete grids; packaged integration E2E
   passed. The focused extraction suite still has the two pre-existing
   captionless/CJK table assertion failures unrelated to image rasterization.
+
+# 2026-10-16: hierarchical reader outline
+
+- The reader outline now builds a display-only tree from persisted
+  `parentSectionId` relations and reconstructs missing parents from section
+  levels/order for older packages. Nested sections have clear indentation and
+  a guide line, while section navigation and active tracking remain unchanged.
+- Typecheck passed and the latest Tauri `.app` was rebuilt at **17:35:48 JST**:
+  `src-tauri/target/release/bundle/macos/Paper Reader.app`.
