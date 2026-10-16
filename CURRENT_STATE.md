@@ -3462,3 +3462,20 @@ server process remains running.
   new native-table behavior (`pending` → `skipped`). After updating that
   expectation, the targeted baseline passes. A fresh full corpus rerun is
   still recommended before the next packaged build.
+
+# 2026-10-16: packaged verification after native-table fix
+
+- `npm run tauri:build:fast` completed successfully; the current
+  `src-tauri/target/release/bundle/macos/Paper Reader.app` was updated at
+  14:03:37 JST and contains the current frontend plus bundled
+  `translation-server/engines/segmenter.py` and `madlad_mps.py`.
+- `scripts/packaged-e2e/run-integration.sh` passed on the rebuilt app:
+  import → annotation/search/export → quit → relaunch persistence → quit,
+  with marker `ok` and search hits `1`. A first run missed the annotation
+  marker transiently; the clean rerun passed and left no app/sidecar process.
+- The full extraction corpus result after the source change was 231/232 only
+  because one stale OzCHI expectation still required a table to be `pending`.
+  The new behavior intentionally marks native structured tables `skipped` so
+  they are never sent as prose to translation; the expectation is now updated
+  and the focused OzCHI/ergonomics baselines pass. Run the full corpus again
+  when a fresh aggregate count is needed.
