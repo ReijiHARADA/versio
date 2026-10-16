@@ -1483,6 +1483,13 @@ function isFootnoteLine(
 ): boolean {
   const t = layoutPlain(line.text);
   if (!t) return false;
+  // Web references are often split by PDF producers into a marker/URL line
+  // followed by a full-size `accessed …` continuation. Treat that continuation
+  // as the same footnote even when its font matches body text; otherwise it is
+  // projected as an ordinary paragraph and appears in the article body.
+  if (/^(?:accessed|lasts+visited|retrieved).*\d{1,4}[./-]\d{1,2}[./-]\d{2,4}/i.test(t)) {
+    return true;
+  }
   if (line.fontSize > baseFont * 0.9 && line.fontSize > 9.2) return false;
   if (line.y < pageHeight * 0.7) return false;
   // Measurement/statistical lines can begin with a number but are body prose,
@@ -2319,6 +2326,12 @@ function roleForLine(
   // metadata, never article prose, even though it ends in a full stop.
   if (/^(?:the\s+)?(?:associate|handling|guest)\s+editor\b.*\b(?:coordinating|manuscript|review|approving)\b/i.test(text)) {
     return "chrome";
+  }
+  // A detached access-date continuation can inherit a stale paragraph hint
+  // from the native stream. Resolve its semantic footnote role first so it is
+  // merged with the preceding URL/marker line.
+  if (/^(?:accessed|last\s+visited|retrieved)\b.*\d{1,4}[./-]\d{1,2}[./-]\d{2,4}/i.test(layoutPlain(text))) {
+    return "footnote";
   }
   if (line.roleHint) return line.roleHint;
   // Figure labels are frequently emitted on their own native line before the
