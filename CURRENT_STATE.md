@@ -3393,3 +3393,9 @@ server process remains running.
 - Bundle: `src-tauri/target/release/bundle/macos/Paper Reader.app` (updated 13:02:11 JST).
 - Translation-server resources were staged from the current source; bundle contains `engines/segmenter.py` and timestamp `2026-10-16T04:01:23Z`.
 - Generated third-party license output was restored after the build as required by the project workflow.
+
+# 2026-10-16: full extraction corpus regression after table fix
+
+- `npm run test:extraction-corpus` passed **232/232** (118 cached extraction baselines + 114 reading-order checks) in 429.32s.
+- PDF.js emitted existing font/ColorSpace warnings only; no test failures.
+- This is the authoritative corpus gate for the current table geometry change. The smaller `src/test/pdfExtraction/pipeline.test.ts` suite still contains a separate education fixture assertion that reproduces without this patch, but the 118-paper corpus and all reading-order regressions are green.
