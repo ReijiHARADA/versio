@@ -25,6 +25,7 @@ import { WorkspacePathTrail } from "../workspace/WorkspacePathTrail";
 import { openSourcePdf } from "../../services/sourcePdf";
 import { PaperContent, type ReaderContentHandle } from "./PaperContent";
 import { ExportDialog } from "./ExportDialog";
+import { iconSize } from "../../styles/iconTokens";
 import { Outline } from "./Outline";
 import { DisplaySettingsPanel } from "./DisplaySettingsPanel";
 import { SearchPanel } from "./SearchPanel";
@@ -280,7 +281,7 @@ export function ReaderScreen() {
             title={activeWorkspace ? "フォルダに戻る" : "ライブラリに戻る"}
             aria-label={activeWorkspace ? "フォルダに戻る" : "ライブラリに戻る"}
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={iconSize.md} />
           </button>
           <div className={styles.titleArea}>
             <h1 className={styles.title}>
@@ -303,7 +304,7 @@ export function ReaderScreen() {
             aria-pressed={showOutline}
             data-tooltip={showOutline ? "目次を隠す" : "目次を表示"}
           >
-            <PanelLeft size={20} />
+            <PanelLeft size={iconSize.md} />
           </button>
           <button
             className={`${styles.iconButton} ${rightPanel === "glossary" ? styles.active : ""}`}
@@ -313,7 +314,7 @@ export function ReaderScreen() {
             aria-label="用語集"
             data-tooltip="用語集"
           >
-            <BookMarked size={20} />
+            <BookMarked size={iconSize.md} />
           </button>
           <button
             className={`${styles.iconButton} ${rightPanel === "notes" ? styles.active : ""}`}
@@ -321,7 +322,7 @@ export function ReaderScreen() {
             aria-label="メモ一覧"
             data-tooltip="メモ一覧"
           >
-            <StickyNote size={20} />
+            <StickyNote size={iconSize.md} />
           </button>
           <button
             className={`${styles.iconButton} ${showSearch ? styles.active : ""}`}
@@ -330,7 +331,7 @@ export function ReaderScreen() {
             data-tooltip="検索 (⌘F)"
             data-testid="reader-search-open"
           >
-            <Search size={20} />
+            <Search size={iconSize.md} />
           </button>
           <button
             className={`${styles.iconButton} ${showSettings ? styles.active : ""}`}
@@ -338,7 +339,7 @@ export function ReaderScreen() {
             aria-label="表示設定"
             data-tooltip="表示設定"
           >
-            <Settings2 size={20} />
+            <Settings2 size={iconSize.md} />
           </button>
           <button
             className={`${styles.iconButton} ${showExport ? styles.active : ""}`}
@@ -351,7 +352,7 @@ export function ReaderScreen() {
               setExportError(null);
             }}
           >
-            <FileDown size={20} />
+            <FileDown size={iconSize.md} />
           </button>
           <button
             className={styles.iconButton}
@@ -360,7 +361,7 @@ export function ReaderScreen() {
             disabled={!hasSourcePdf}
             onClick={() => void handleOpenSourcePdf()}
           >
-            <ExternalLink size={20} />
+            <ExternalLink size={iconSize.md} />
           </button>
         </div>
       </header>

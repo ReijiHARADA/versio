@@ -159,6 +159,30 @@ export function useSettingsPanelTransition({ page, onPageChange }: Options) {
     [finishSnap, viewportH]
   );
 
+  /**
+   * Animated page change for sidebar taps. Matches the overscroll snap so
+   * "ライセンス" does not hard-cut the dual-panel stack.
+   */
+  const goToPage = useCallback(
+    (next: SettingsPanelPage) => {
+      if (snappingRef.current) return;
+      if (next === pageRef.current) {
+        if (next === "licenses") licensesRef.current?.scrollTo({ top: 0 });
+        return;
+      }
+      // Seed a small reveal so stackSnap has distance to travel even when the
+      // user never rubber-banded first (sidebar tap with reveal === 0).
+      if (revealRef.current < 1 && viewportH > 0) {
+        const seed = Math.min(viewportH * 0.08, 48);
+        overflowRef.current = seed;
+        revealRef.current = seed;
+        setReveal(seed);
+      }
+      snapTo(next);
+    },
+    [snapTo, viewportH]
+  );
+
   const settleGesture = useCallback(() => {
     if (!gestureRef.current || snappingRef.current) return;
     gestureRef.current = false;
@@ -251,5 +275,6 @@ export function useSettingsPanelTransition({ page, onPageChange }: Options) {
     pulling: reveal > 0.5 || snapping,
     pastThreshold: pastThreshold || snapping,
     snapping,
+    goToPage,
   };
 }

@@ -31,22 +31,22 @@
 .headerRight {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  gap: var(--icon-button-gap);
   flex-shrink: 0;
 }
 
 .titleArea {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--spacing-sm);
   min-width: 0;
   overflow: hidden;
   margin-left: var(--spacing-sm);
 }
 
 .title {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
   margin: 0;
   min-width: 0;
@@ -57,16 +57,25 @@
 
 .iconButton {
   position: relative;
-  padding: var(--spacing-sm);
+  box-sizing: border-box;
+  width: var(--icon-button-size);
+  height: var(--icon-button-size);
+  padding: 0;
   border: none;
   background: transparent;
   color: var(--color-text-secondary);
-  border-radius: var(--radius-md);
+  border-radius: var(--control-radius);
   transition: background-color var(--transition-fast),
     color var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.iconButton svg {
+  width: var(--icon-size);
+  height: var(--icon-size);
+  flex-shrink: 0;
 }
 
 .iconButton[data-tooltip]::after {
@@ -81,8 +90,8 @@
   border-radius: var(--radius-sm);
   background: var(--color-text);
   color: var(--color-bg);
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
   line-height: 1.35;
   box-shadow: 0 3px 10px var(--color-shadow);
   opacity: 0;
@@ -129,25 +138,13 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   background-color: var(--color-bg);
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--color-text) 28%, transparent) transparent;
+  scrollbar-width: none;
 }
 
 .sidebar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-  background-color: color-mix(in srgb, var(--color-text) 28%, transparent);
-  border-radius: 3px;
-}
-
-.sidebar::-webkit-scrollbar-thumb:hover {
-  background-color: color-mix(in srgb, var(--color-text) 42%, transparent);
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .content {
