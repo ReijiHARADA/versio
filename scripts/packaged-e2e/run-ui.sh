@@ -234,6 +234,7 @@ launch_app() {
   # timeout.  Activate by bundle/application name unconditionally, then use
   # the PID as a best-effort fallback for dev builds with a different name.
   osascript -e 'tell application "Paper Reader" to activate' 2>/dev/null || true
+  osascript -e 'tell application "System Events" to set frontmost of first process whose name is "app" to true' 2>/dev/null || true
   osascript -e 'tell application "System Events" to set frontmost of first process whose unix id is '"$APP_PID"' to true' 2>/dev/null || true
   osascript -e 'tell application "Paper Reader" to activate' 2>/dev/null || true
   sleep 1
