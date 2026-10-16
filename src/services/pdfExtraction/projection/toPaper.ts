@@ -2010,8 +2010,14 @@ export function projectCanonicalToPaper(input: {
       new Set(tableLayout?.lines.map((line) => Math.round(line.x / 4))).size <= 2 &&
       (node.text ?? "").split(/\s+/).filter(Boolean).length >= 6 &&
       looksLikeProseMistakenForTable(node.text ?? "");
+    const multiBoxNativeGrid = node.boundingBoxes.length >= 3 &&
+      new Set(node.boundingBoxes.map((box) => Math.round(box.x / 12))).size >= 2 &&
+      node.boundingBoxes.some((box, index) => node.boundingBoxes.some((peer, peerIndex) =>
+        peerIndex > index && Math.abs(peer.y - box.y) <= 1.5 && Math.abs(peer.x - box.x) >= 12
+      ));
     const exactSyntheticCaptionRegion = hasExactSyntheticCaptionRegion(node, tableAbsorption.syntheticTargets);
     if (node.role === "table" && node.text && (!hasStrongTableMatrixEvidence(node) || wrappedSingleSpanNarrative) &&
+        !multiBoxNativeGrid &&
         !strongNativeRowGrid &&
         !belongsToCaptionedTableRegion(node, tableAbsorption.regions) &&
         (looksLikeProseMistakenForTable(node.text) || weakTableGeometryOnNarrative)) {
@@ -2076,6 +2082,43 @@ export function projectCanonicalToPaper(input: {
 
     const recoveredNativeGrid = node.role !== "table" && !weakTableGeometryOnNarrative &&
       hasStrongNativeTableRows(node, tableLayout);
+    // Repeated prose anchors are intentionally weak table evidence. Front
+    // pages often place abstract callouts, author metadata, and body prose on
+    // the same baselines, which can produce a high aggregate table score
+    // without any independent row/axis geometry. Preserve the text as a
+    // normal heading/paragraph instead of creating a skipped table card whose
+    // package-stage row recovery can absorb neighbouring columns.
+    const weakRepeatedProseTable = node.role === "table" &&
+      node.evidence.some((entry) => entry.label === "repeated-prose-cell-grid") &&
+      !hasStrongTableMatrixEvidence(node) &&
+      // A borderless table may be represented by several native boxes across
+      // stable x-bands even when the resolver omitted explicit row evidence.
+      // Keep that multi-box geometry; a single boxed prose/callout fragment is
+      // the ambiguous case this guard is intended to repair.
+      !(node.boundingBoxes.length >= 3 &&
+        new Set(node.boundingBoxes.map((box) => Math.round(box.x / 12))).size >= 2 &&
+        node.boundingBoxes.some((box, index) => node.boundingBoxes.some((peer, peerIndex) =>
+          peerIndex > index && Math.abs(peer.y - box.y) <= 1.5 && Math.abs(peer.x - box.x) >= 12
+        )));
+    const belongsToNumberedCaptionRegion = weakRepeatedProseTable &&
+      belongsToCaptionedTableRegion(node, tableAbsorption.regions);
+    if (weakRepeatedProseTable && !belongsToNumberedCaptionRegion && node.text) {
+      const headingEvidence = node.evidence.find((entry) => entry.label === "heading");
+      const type = headingEvidence && headingEvidence.confidence >= 0.8 ? "heading" : "paragraph";
+      pushBlock(node, tableLayout, {
+        sectionId: currentSectionId,
+        type,
+        pageStart: node.pageStart,
+        pageEnd: node.pageEnd,
+        boundingBoxes: boxes,
+        original: node.text,
+        translated: null,
+        translationStatus: type === "paragraph" && shouldTranslateParagraph(node.text) ? "pending" : "skipped",
+        parentBlockId: null,
+        metadata: { column, role: type, demotedFromTable: true, demotionReason: "weak-repeated-prose-grid" },
+      });
+      continue;
+    }
     const tableRole = node.role === "table" || recoveredNativeGrid;
     const nativeGrid = tableRole && node.text &&
       !/[!?;]|[.]\s*(?:[A-Za-z]|$)/.test(node.text) &&

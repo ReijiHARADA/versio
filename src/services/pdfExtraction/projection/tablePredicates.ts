@@ -24,6 +24,16 @@ export function looksLikeProseMistakenForTable(text: string): boolean {
     const midSentenceGlue = /[.!?]\s+(?:[A-Z]|Thus|However|Therefore)\b/.test(trimmed);
     if (narrativeOpener || (midSentenceGlue && words.length >= 12)) return true;
   }
+  // Some journal front pages use boxed callouts beside the abstract. PDF.js
+  // emits each wrapped line as a one-item row, which can look like a
+  // repeated prose-cell grid even though it is ordinary readable prose. A
+  // long, mostly alphabetic fragment with normal function words is safer as
+  // a paragraph; genuine tables retain independent multi-cell geometry or
+  // strong numeric evidence and are handled by the table resolver.
+  if (words.length >= 14 && digitRatio < 0.12 &&
+      /\b(?:the|of|to|in|a|an|and|for|with|from|that|is|are|there|this|as)\b/i.test(trimmed)) {
+    return true;
+  }
   return false;
 }
 
@@ -42,14 +52,22 @@ export function isChartDebrisFragment(text: string): boolean {
 }
 
 export function hasStrongTableMatrixEvidence(node: CanonicalNode): boolean {
+  const hasRepeatedProseGrid = node.evidence.some((entry) => entry.label === "repeated-prose-cell-grid");
   const scoredTable = node.evidence.some((entry) =>
     entry.label === "role-scores" && /table=0\.(?:9[4-9]|[1-9]\d)/.test(entry.reason ?? "")
   );
-  return scoredTable || node.evidence.some((entry) =>
+  const hasIndependentGridEvidence = node.evidence.some((entry) =>
     entry.label === "matrix-axis-label-neighbor" ||
+    entry.label === "table-row-geometry" ||
     (entry.label === "captioned-neighbor-cell-rows" && scoredTable) ||
     (entry.label === "captioned-native-multicell-row" && scoredTable)
   );
+  // `repeated-prose-cell-grid` is deliberately weak evidence: boxed abstract
+  // callouts and multi-column prose can produce the same repeated anchors.
+  // A high aggregate role score cannot make that signal a strong matrix on
+  // its own; require independent row/axis evidence before preserving it as
+  // a table.
+  return hasIndependentGridEvidence || (scoredTable && !hasRepeatedProseGrid);
 }
 
 /** Recover a native grid only when repeated multi-cell row geometry is strong. */

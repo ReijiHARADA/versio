@@ -278,6 +278,19 @@ describe("canonical extraction pipeline", () => {
     expect(title?.text).toBe("Principles for the conduct of human factors/ergonomics in healthcare: a scoping study of the published evidence");
   }, 60_000);
 
+  it("keeps boxed abstract prose out of table fallback blocks", async () => {
+    const pdf = path.resolve("test-data/real-papers/hfe-healthcare-scoping-2024.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({ pages, paperId: "boxed-abstract-prose", filePath: pdf, fileHash: "boxed-abstract-prose", metadata: { pageCount: pages.length } });
+    const packaged = attachLinesToBlocks(result.blocks, result.layoutBlocks);
+    const pageOne = packaged.filter((block) => block.pageStart === 1);
+    expect(pageOne.some((block) => block.type === "paragraph" && /Principles for the conduct of human factors\/ergonomics/.test(block.original ?? ""))).toBe(true);
+    expect(pageOne.some((block) => block.type === "paragraph" && /up to the fundamental principles/.test(block.original ?? ""))).toBe(true);
+    expect(pageOne.some((block) => block.type === "table" && /Sharafkhani.*Background|WHAT IS ALREADY KNOWN.*Background/i.test(block.original ?? ""))).toBe(false);
+    expect(pageOne.filter((block) => block.type === "table").some((block) => block.metadata.demotionReason === "weak-repeated-prose-grid")).toBe(false);
+  }, 60_000);
+
   it("does not project vector figure labels as headings", async () => {
     const pdf = path.resolve("test-data/real-papers/interpreting-neural-networks.pdf");
     if (!fs.existsSync(pdf)) return;
