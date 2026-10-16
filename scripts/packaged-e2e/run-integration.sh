@@ -262,8 +262,9 @@ fi
 
 find "$ACCEPTANCE_HOME" -name 'library.sqlite' | grep -q . || fail "library.sqlite missing after import"
 find "$ACCEPTANCE_HOME" -path '*/papers/*/paper.json' | grep -q . || fail "paper package missing after import"
-[[ -f "$ARTIFACT_DIR/result.json" ]] || fail "result marker missing"
-python3 - "$ARTIFACT_DIR/result.json" <<'PY' || fail "export/search marker incomplete"
+RESULT_PATH="$(find_result)"
+[[ -n "$RESULT_PATH" && -f "$RESULT_PATH" ]] || fail "result marker missing"
+python3 - "$RESULT_PATH" <<'PY' || fail "export/search marker incomplete"
 import json, sys
 data = json.load(open(sys.argv[1]))
 assert data.get("annotationId"), "annotationId missing"
