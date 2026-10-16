@@ -1502,6 +1502,73 @@ describe("canonical extraction pipeline", () => {
     expect(result.blocks[0]?.role).toBe("title");
   });
 
+  it("splits IEEE Abstract— body into heading + abstract", () => {
+    const item = (text: string, x: number, y: number, fontSize = 10) => ({
+      text, x, y, width: text.length * fontSize * 0.5, height: fontSize, fontSize, fontName: "Body", page: 1,
+    });
+    for (const abstractLine of [
+      "Abstract—Deep learning has been widely used for medical image segmentation and many papers report success.",
+      "Abstract-Vocabulary acquisition is an important task in second language acquisition field which has been studied.",
+    ]) {
+      const pages = [{
+        pageNumber: 1,
+        width: 540,
+        height: 700,
+        textItems: [
+          item(abstractLine, 50, 120, 10),
+          item("1. Introduction", 50, 200, 12),
+          item("We survey the field across modalities.", 50, 230, 10),
+        ],
+      }];
+      const extracted = extractFromPages({
+        pages,
+        paperId: "ieee-abstract-emdash",
+        filePath: "/tmp/ieee-abstract.pdf",
+        fileHash: "ieee-abstract",
+        metadata: { pageCount: 1 },
+      });
+      expect(extracted.canonical.nodes.some((n) => n.role === "heading" && /^Abstract$/i.test(n.text ?? ""))).toBe(true);
+      expect(extracted.canonical.nodes.some((n) => n.role === "abstract")).toBe(true);
+      expect(extracted.canonical.nodes.some((n) => n.role === "paragraph" && /^Abstract[—–-]/i.test(n.text ?? ""))).toBe(false);
+    }
+  });
+
+  it("demotes diagram micro-labels that look like headings", () => {
+    // Figure annotation crumbs (Q, VM, PA:) share display size with captions but
+    // are not section structure. Numbered subheads stay eligible.
+    const item = (text: string, x: number, y: number, fontSize: number, fontName = "FigureFont") => ({
+      text, x, y, width: Math.max(8, text.length * fontSize * 0.55), height: fontSize, fontSize, fontName, page: 1,
+    });
+    const pages = [{
+      pageNumber: 1,
+      width: 540,
+      height: 700,
+      textItems: [
+        item("Methods", 50, 80, 14, "BoldFont"),
+        item("We evaluate three aggregation pathways.", 50, 110, 10, "BodyFont"),
+        item("Q", 80, 200, 12),
+        item("W", 120, 200, 12),
+        item("VM", 160, 200, 12),
+        item("PA:", 80, 240, 11),
+        item("pixel accuracy under the protocol.", 120, 240, 10, "BodyFont"),
+        item("3.1 Aggregation", 50, 300, 12, "BoldFont"),
+        item("The block combines query and value streams.", 50, 330, 10, "BodyFont"),
+      ],
+    }];
+    const extracted = extractFromPages({
+      pages,
+      paperId: "diagram-micro-heading",
+      filePath: "/tmp/diagram-micro.pdf",
+      fileHash: "diagram-micro",
+      metadata: { pageCount: 1 },
+    });
+    const headings = extracted.blocks
+      .filter((block) => block.type === "heading")
+      .map((block) => (block.original ?? "").trim());
+    expect(headings).toContain("3.1 Aggregation");
+    expect(headings.some((text) => /^(Q|W|VM|PA:)$/.test(text))).toBe(false);
+  });
+
   it("keeps lowercase colon lead-ins with italic quotes as body, not headings", () => {
     // ACM-style stream: body font lead-in + italic quote on one baseline.
     // Title-Case metadata labels (Background:) must still split as headings.
@@ -1537,6 +1604,44 @@ describe("canonical extraction pipeline", () => {
     expect(extracted.blocks.some((block) => block.type === "heading" && /^(follows|triggered|following comment):$/i.test((block.original ?? "").trim()))).toBe(false);
     expect(extracted.blocks.some((block) => /follows:/i.test(block.original ?? "") && block.type === "paragraph")).toBe(true);
   });
+
+  it("recovers a thesis cover title instead of the copyright sheet", async () => {
+    const pdf = path.resolve(
+      "test-fixtures/real-papers/pending-pdfs/marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the.pdf"
+    );
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "thesis-copyright-title",
+      filePath: pdf,
+      fileHash: "thesis-copyright-title",
+      metadata: { pageCount: pages.length },
+    });
+    const title = result.canonical.nodes.find((node) => node.role === "title")?.text ?? "";
+    expect(title).not.toMatch(/copyright/i);
+    expect(title).toMatch(/digital advertising/i);
+    expect(title).toMatch(/low attention/i);
+  }, 90_000);
+
+  it("demotes figure micro-labels on a real survey PDF", async () => {
+    const pdf = path.resolve(
+      "test-fixtures/real-papers/pending-pdfs/medical-image-segmentation-deep-learning.pdf"
+    );
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "medical-micro-heading",
+      filePath: pdf,
+      fileHash: "medical-micro-heading",
+      metadata: { pageCount: pages.length },
+    });
+    const micro = result.canonical.nodes.filter((node) =>
+      node.role === "heading" && /^(?:Q|W|VM|ASPP|GAP|DQ|HQ|WQ|V|Fold|MSD|Non|N|Nte|Task)$/.test((node.text ?? "").trim())
+    );
+    expect(micro).toEqual([]);
+  }, 60_000);
 
   it("rejoins an interrupted native title around publication metadata", async () => {
     const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/linguistics-eco-linguistics-in-english-reviewing-the-role-of-language-in-environme.pdf");

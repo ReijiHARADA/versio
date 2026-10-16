@@ -1477,6 +1477,20 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // not section labels. Title-Case metadata labels remain eligible headings.
     const lowercaseColonLeadIn = layoutRole === "heading" &&
       /^[a-z][\w'’ -]{0,40}:$/.test(block.text.trim());
+    // Diagram / formula crumbs (Q, VM, ASPP, PA:, Task) often use a rare figure
+    // font. Layout may call them paragraphs, but headingTextShape + nonBodyFont
+    // later promotes them unless the heading score is clamped.
+    const trimmedHeading = block.text.trim();
+    const headingHasWeight = block.lines.flatMap((line) => line.items).some((item) =>
+      /(?:bold|black|heavy|semi[- ]?bold|demi)/i.test(item.fontName)
+    );
+    const diagramMicroLabel = !/^\d+(?:\.\d+)*\.?\s+\S/.test(trimmedHeading) && (
+      /^[A-Za-z]{1,3}$/.test(trimmedHeading) ||
+      /^[A-Z]{1,6}\s*:$/.test(trimmedHeading) ||
+      (/^[A-Z][a-z]{0,3}$/.test(trimmedHeading) && trimmedHeading.length <= 4) ||
+      (/^[A-Z][A-Za-z0-9/+-]{0,5}$/.test(trimmedHeading) && trimmedHeading.length <= 6 && !headingHasWeight)
+    );
+    const diagramMicroHeading = layoutRole === "heading" && diagramMicroLabel;
     const numericDensity = (block.text.match(/\d/g) ?? []).length / Math.max(block.text.length, 1);
     const rotatedItems = block.lines.flatMap((line) => line.items)
       .filter((item) => Math.abs(item.rotation ?? 0) >= 45);
@@ -1526,7 +1540,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       block.lines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length >= 2;
     const role = block.role === "header" || block.role === "footer" || block.role === "copyright" || block.role === "chrome"
       ? layoutRole
-      : denseCjkBody || numericRow || mathRow || alignedTableRow || numericMultiItemRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || lowercaseColonLeadIn || rotatedNumericGrid || inlineLabelProse ? "paragraph" :
+      : denseCjkBody || numericRow || mathRow || alignedTableRow || numericMultiItemRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || lowercaseColonLeadIn || diagramMicroHeading || rotatedNumericGrid || inlineLabelProse ? "paragraph" :
       numberedSubheading ? "heading" : layoutRole;
     const style = styleSignature(block, layouts, baseFontSize, blocks[index - 1], blocks[index + 1]);
     const scoreByRole: Partial<Record<CanonicalRole, number>> = {
@@ -1534,6 +1548,13 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       [role]: confidence,
     };
     if (cjkComparisonTableCaption(block, blocks)) scoreByRole.caption = 0.96;
+    // Table/figure DOI stamps (doi:10.…t002) are publisher chrome, not body.
+    if (/^doi:\s*10\.\d+/i.test(block.text.trim())) {
+      scoreByRole.other = Math.max(scoreByRole.other ?? 0, 0.96);
+      scoreByRole.paragraph = Math.min(scoreByRole.paragraph ?? 0, 0.2);
+      scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.2);
+      scoreByRole.title = Math.min(scoreByRole.title ?? 0, 0.2);
+    }
     if (pageGrid > 0 && block.role !== "table_caption" && !narrativeTableConflict) {
       scoreByRole.table = pageGrid;
     }
@@ -1860,6 +1881,11 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       // promoted back to headings by a later generic style rule.
       scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.2);
       scoreByRole.other = Math.max(scoreByRole.other ?? 0, fragmentedLabels);
+    }
+    if (diagramMicroLabel) {
+      // Clamp heading only — raising `other` here can outrank captionless
+      // table evidence on short neighboring labels.
+      scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.2);
     }
     const reason =
       block.role === "title"
