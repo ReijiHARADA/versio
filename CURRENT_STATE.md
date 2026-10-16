@@ -3314,3 +3314,7 @@ enrichment remains outside the synchronous import path.
 # 2026-10-16: deterministic ordering for caption-owned cross-column grids
 
 Caption-owned table fragments are now collected and sorted by native visual `y` then `x` before their rows are joined. This fixes a generic two-column PDF failure where the table remained a valid grid but cells appeared in projection/column order. Focused table/layout tests passed (4/4 plus 3 OzCHI cases); full cached extraction + reading-order regression passed **232/232** in **439.40s**. `npm run typecheck` passed. The change preserves cell text and does not alter translation behavior.
+
+# 2026-10-16: packaged verification after visual table row ordering fix
+
+Fast `.app` rebuilt successfully at **2026-10-16 10:35:13 JST** after the geometry-ordered cross-column table fix. The real OzCHI packaged import-only check passed with **143 blocks / 5 tables**, all required tables retaining non-empty native rows. Generated license metadata was restored and the app exited cleanly.
