@@ -38,8 +38,12 @@ translation-server/models/
 *.safetensors
 .cache/
 
-# Real paper PDFs used for reading-order tests (not committed)
+# Real paper PDFs used for reading-order / extraction eval (not committed).
+# Re-fetch OA pending set with: node scripts/fetch-oa-europepmc.mjs
+# Catalog baseline: npm run fetch:real-papers
 test-data/real-papers/
+test-fixtures/real-papers/pending-pdfs/**/*.pdf
+!test-fixtures/real-papers/pending-pdfs/_quarantine/README.md
 
 # Local browser verification
 test-results/

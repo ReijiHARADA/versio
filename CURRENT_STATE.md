@@ -1,3 +1,7 @@
+# 2026-10-17: pending PDFはgitに入れない + OA大量追加
+
+実PDF本体は評価用ローカル資産。`test-fixtures/real-papers/pending-pdfs/**/*.pdf` を gitignore し、追跡済みPDFを index から外した（ディスク上のファイルは残す）。再取得は `node scripts/fetch-oa-europepmc.mjs`（Europe PMC の OA+CC のみ）。今回さらに CC BY/BY-NC を **40本** 追加取得し、pending 合計はローカル約 **136** PDF。コミット対象は候補JSON・取得スクリプト・gitignore。
+
 # 2026-10-17: 図パネル/凡例の見出し誤昇格を抑止
 
 目視監査で GPT-3 論文の `A B` / `Mean regret` / `HumansDavinci` などが outline に混入。Title-Case を「3文字以上の語」必須にし、図キャプション帯の短軸ラベル・camelCase 凡例・`Input:` を demote。Cyrillic ALL-CAPS 見出し・arXiv スタンプ・`X∞` 抑止とあわせ、wide **207/207 clean**。ゴール「完璧」と Reader 網羅目視は未達。

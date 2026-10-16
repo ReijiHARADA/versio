@@ -2,7 +2,9 @@
  * Download CC-licensed OA PDFs via Europe PMC (explicit license + isOpenAccess).
  * Only stores files when Europe PMC reports isOpenAccess=Y and a CC license.
  *
- *   node scripts/fetch-oa-europepmc.mjs [--limit=12]
+ *   node scripts/fetch-oa-europepmc.mjs [--limit=40]
+ *
+ * PDFs stay local (gitignored). Only pending-oa-candidates.json is committed.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -11,15 +13,19 @@ const root = join(import.meta.dirname, "..");
 const outDir = join(root, "test-fixtures/real-papers/pending-pdfs");
 const catalogPath = join(root, "test-fixtures/real-papers/pending-oa-candidates.json");
 const limitArg = process.argv.find((a) => a.startsWith("--limit="));
-const limit = limitArg ? Number(limitArg.slice("--limit=".length)) : 12;
+const limit = limitArg ? Number(limitArg.slice("--limit=".length)) : 40;
 
 mkdirSync(outDir, { recursive: true });
 
 const queries = [
   'LICENSE:"cc by" AND HAS_PDF:y AND ("human-computer interaction" OR HCI OR ergonomics OR "user experience")',
-  'LICENSE:"cc by" AND HAS_PDF:y AND (linguistics OR "discourse analysis" OR morphology)',
+  'LICENSE:"cc by" AND HAS_PDF:y AND (linguistics OR "discourse analysis" OR morphology OR pragmatics)',
   'LICENSE:"cc by" AND HAS_PDF:y AND ("machine learning" OR "deep learning") AND (review OR survey)',
-  'LICENSE:"cc by-nc" AND HAS_PDF:y AND (ergonomics OR "occupational health")',
+  'LICENSE:"cc by-nc" AND HAS_PDF:y AND (ergonomics OR "occupational health" OR "human factors")',
+  'LICENSE:"cc by" AND HAS_PDF:y AND ("cognitive psychology" OR "eye tracking" OR "eye-tracking" OR gaze)',
+  'LICENSE:"cc by" AND HAS_PDF:y AND ("natural language processing" OR NLP OR "computational linguistics")',
+  'LICENSE:"cc by" AND HAS_PDF:y AND (usability OR "user interface" OR "human-robot interaction")',
+  'LICENSE:"cc by" AND HAS_PDF:y AND ("systematic review" OR "scoping review") AND (psychology OR neuroscience)',
 ];
 
 function slugify(title) {
@@ -42,7 +48,7 @@ async function search(query) {
       query,
       resultType: "core",
       format: "json",
-      pageSize: "25",
+      pageSize: "50",
     });
   const json = await (await fetch(url, { headers: { Accept: "application/json" } })).json();
   return json.resultList?.result ?? [];
