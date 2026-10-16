@@ -1547,7 +1547,8 @@
       "downloadUrl": "https://www.gramota.net/articles/issn_1997-2911_2019_11_57.pdf",
       "oaStatus": "open",
       "reasonSelected": "OpenAlex OA candidate for linguistics format variation; PDF URL exposed by an OA location",
-      "retrievalStatus": "pending",
+      "retrievalStatus": "quarantined-multi-article-pdf",
+      "retrievalNote": "Downloaded PDF is a multi-article journal page; expected gender-linguistics article is not the lead. Moved to _quarantine/",
       "publicationYear": 2019
     },
     {

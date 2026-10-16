@@ -174,6 +174,18 @@ function looksLikeBodyLeadInTitle(text: string): boolean {
   return looksLikeBodyTitleCandidate(t);
 }
 
+/** Keyword index lines are never article titles. */
+function looksLikeKeywordsChrome(text: string): boolean {
+  const t = text.trim();
+  if (/^(?:key\s*words?(?:\s+and\s+phrases)?|keywords?|index terms|ccs concepts)\s*:/i.test(t)) {
+    return true;
+  }
+  if (/^(?:ключевые\s+слова(?:\s+и\s+фразы)?)\s*:/i.test(t)) return true;
+  // Publisher rule-line residue glued to keyword blocks.
+  if (/_{8,}/.test(t) && /\b(?:key\s*words?|keywords?)\b/i.test(t)) return true;
+  return false;
+}
+
 /** PRISMA / methods-table crumbs sometimes outrank the article title. */
 function looksLikeProtocolTableChrome(text: string): boolean {
   const t = text.trim();
@@ -222,6 +234,7 @@ function recoverAlternateCoverTitle(candidates: RoleCandidate[]): string | null 
         looksLikeContaminatedMastheadTitle(t) ||
         looksLikeBodyLeadInTitle(t) ||
         looksLikeProtocolTableChrome(t) ||
+        looksLikeKeywordsChrome(t) ||
         looksLikeAuthorish(t) ||
         /@/.test(t) ||
         /\bPh\.?\s*D\b/i.test(t) ||
@@ -265,6 +278,28 @@ function recoverAlternateCoverTitle(candidates: RoleCandidate[]): string | null 
     .filter((entry): entry is { text: string; score: number } => Boolean(entry))
     .sort((a, b) => b.score - a.score);
   if (latin[0]) return latin[0].text;
+
+  // Cyrillic / mixed-script journal issues often keep the article title as an
+  // ALL-CAPS paragraph while keyword lines still win the Latin font race.
+  const cyrillic = candidates
+    .filter((c) => c.pageStart === 1 || c.pageStart === 2)
+    .map((c) => {
+      const t = c.text.trim();
+      const cyr = (t.match(/[А-Яа-яЁё]/g) ?? []).length;
+      const upper = (t.match(/[А-ЯЁ]/g) ?? []).length;
+      const words = t.split(/\s+/).filter(Boolean).length;
+      if (cyr < 18 || words < 4 || words > 28) return null;
+      if (looksLikeKeywordsChrome(t) || looksLikeAuthorish(t) || looksLikeCopyrightBoilerplate(t)) return null;
+      if (upper / cyr < 0.55) return null;
+      if (!/^[«"“]?[А-ЯЁ]/.test(t)) return null;
+      const font = c.layoutBlock.lines[0]?.fontSize ?? 10;
+      const y = c.boundingBoxes[0]?.y ?? c.layoutBlock.bbox?.y ?? 999;
+      const roleBonus = c.role === "heading" || c.role === "title" ? 20 : 8;
+      return { text: t, score: font * 2 + Math.min(cyr, 60) + roleBonus + (y < 200 ? 12 : 0) + (c.pageStart === 1 ? 6 : 0) };
+    })
+    .filter((entry): entry is { text: string; score: number } => Boolean(entry))
+    .sort((a, b) => b.score - a.score);
+  if (cyrillic[0]) return cyrillic[0].text;
 
   // Journal TOC pages sometimes emit the article title as consecutive ALL-CAPS
   // headings before the author line.
@@ -804,7 +839,9 @@ export function resolveTitle(input: {
         c.text.trim().length <= 180 &&
         !looksLikeAuthorish(c.text) &&
         !looksLikeJournalChromeTitle(c.text) &&
-        !looksLikeObviousMastheadTitle(c.text)
+        !looksLikeObviousMastheadTitle(c.text) &&
+        !looksLikeKeywordsChrome(c.text) &&
+        !looksLikeProtocolTableChrome(c.text)
     );
     const fallback = earlyPages
       .filter((c) => c.layoutBlock.lines[0]?.fontSize)
@@ -844,6 +881,7 @@ export function resolveTitle(input: {
     looksLikeBodyLeadInTitle(native[0]) ||
     looksLikeJournalChromeTitle(native[0]) ||
     looksLikeProtocolTableChrome(native[0]) ||
+    looksLikeKeywordsChrome(native[0]) ||
     isFragmentTitle(native[0]) ||
     (titles[0] && (
       looksLikeCopyrightBoilerplate(titles[0].text) ||
@@ -853,6 +891,7 @@ export function resolveTitle(input: {
       looksLikeBodyLeadInTitle(titles[0].text) ||
       looksLikeJournalChromeTitle(titles[0].text) ||
       looksLikeProtocolTableChrome(titles[0].text) ||
+      looksLikeKeywordsChrome(titles[0].text) ||
       isFragmentTitle(titles[0].text)
     ));
   if (needsAlternateTitle) {
@@ -869,7 +908,8 @@ export function resolveTitle(input: {
       looksLikeBodyLeadInTitle(fused.text) ||
       looksLikeCopyrightBoilerplate(fused.text) ||
       looksLikeJournalChromeTitle(fused.text) ||
-      looksLikeProtocolTableChrome(fused.text))
+      looksLikeProtocolTableChrome(fused.text) ||
+      looksLikeKeywordsChrome(fused.text))
   ) {
     const recovered = recoverAlternateCoverTitle(input.candidates);
     if (recovered && recovered !== fused.text) {
