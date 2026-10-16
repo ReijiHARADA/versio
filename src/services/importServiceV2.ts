@@ -10,7 +10,7 @@ import { computeFileHash } from "./pdfService";
 import { classifyPdfOpenError } from "./pdfOpenError";
 import { extractAcademicPdf } from "./pdfExtraction/pipeline/extractAcademicPdf";
 import { applyGlossary, normalizeSourceGroundedTerminology } from "./llm/glossaryService";
-import { assignBlockTranslation, reapplyGlossary } from "./glossary/apply";
+import { assignBlockTranslation, preserveSourceTranslation, reapplyGlossary } from "./glossary/apply";
 import {
   savePaper,
   saveSections,
@@ -339,9 +339,12 @@ export async function importPDFV2(
 
     const translationQueue = new TranslationQueue(translationEngine, {
       concurrency: cfg.translationConcurrency,
-      retryFailed: false,
-      maxRetries: 0,
-      retryDelayMs: 1000,
+      // Transient sidecar timeouts used to become permanent Reader failures
+      // because retries were disabled here. Queue-level retries release the
+      // concurrency slot between attempts; quality rejects stay non-retryable.
+      retryFailed: true,
+      maxRetries: 2,
+      retryDelayMs: 1200,
     });
     translationQueue.start();
     translationManager.attach(paperId, translationQueue);
@@ -419,8 +422,7 @@ export async function importPDFV2(
         );
         const block = blocks.find((b) => b.id === task.blockId);
         if (block) {
-          block.translationStatus = "failed";
-          block.metadata = { ...block.metadata, translationOutcome: "source_fallback" };
+          preserveSourceTranslation(block, "source_fallback");
           await updateBlock(block);
           callbacks.onBlockTranslated?.(block);
         }
@@ -503,8 +505,18 @@ export async function importPDFV2(
       console.error(`Translation failed for block ${task.blockId}:`, task.error);
       const block = blocks.find((b) => b.id === task.blockId);
       if (block) {
-        block.translationStatus = "failed";
-        block.metadata = { ...block.metadata, translationOutcome: "source_fallback" };
+        const qualityRejected = /looked degenerate|quality gate|empty text/i.test(task.error ?? "");
+        if (qualityRejected) {
+          const localized = localizeNamedFigureCaption(task.text);
+          if (localized) {
+            assignBlockTranslation(block, localized);
+          } else {
+            preserveSourceTranslation(block, "source_fallback");
+          }
+        } else {
+          block.translationStatus = "failed";
+          block.metadata = { ...block.metadata, translationOutcome: "request_failed" };
+        }
         void updateBlock(block);
         callbacks.onBlockTranslated?.(block);
       }

@@ -7,7 +7,7 @@ import {
   saveSections,
   updateBlock,
 } from "../database";
-import { assignBlockTranslation } from "../glossary/apply";
+import { assignBlockTranslation, preserveSourceTranslation } from "../glossary/apply";
 import { applyGlossary, normalizeSourceGroundedTerminology } from "../llm/glossaryService";
 import { finalizedTranslationStatus } from "../paperStatus";
 import {
@@ -64,11 +64,18 @@ export async function resumeIncompleteTranslation(
     for (const block of skipped) {
       callbacks.onBlockTranslated?.(block);
     }
-    const pendingBlocks = blocks.filter(
-      (block) =>
-        shouldTranslateBlock(block, refSectionIds) &&
-        (!block.translated || !isPlausibleJaTranslation(block.translated, block.original || ""))
-    );
+    const pendingBlocks = blocks.filter((block) => {
+      if (!shouldTranslateBlock(block, refSectionIds)) return false;
+      // Quality-gate source preservation is intentional: do not loop forever.
+      if (
+        block.translationStatus === "completed" &&
+        block.metadata?.translationOutcome === "source_fallback" &&
+        !block.translated
+      ) {
+        return false;
+      }
+      return !block.translated || !isPlausibleJaTranslation(block.translated, block.original || "");
+    });
     const pendingTitle = Boolean(
       paper.titleOriginal &&
         shouldTranslateTitle(paper.titleOriginal) &&
@@ -115,7 +122,9 @@ export async function resumeIncompleteTranslation(
       : madladEngine;
     const queue = new TranslationQueue(translationEngine, {
       concurrency: cfg.translationConcurrency,
-      retryFailed: false,
+      retryFailed: true,
+      maxRetries: 2,
+      retryDelayMs: 1200,
     });
     queue.start();
     translationManager.attach(paperId, queue);
@@ -170,8 +179,7 @@ export async function resumeIncompleteTranslation(
       if (!acceptedTranslation) {
         const block = blocks.find((item) => item.id === task.blockId);
         if (block) {
-          block.translationStatus = "failed";
-          block.metadata = { ...block.metadata, translationOutcome: "source_fallback" };
+          preserveSourceTranslation(block, "source_fallback");
           void updateBlock(block);
           callbacks.onBlockTranslated?.(block);
         }
@@ -218,8 +226,18 @@ export async function resumeIncompleteTranslation(
     queue.setOnTaskFailed((task) => {
       const block = blocks.find((item) => item.id === task.blockId);
       if (block) {
-        block.translationStatus = "failed";
-        block.metadata = { ...block.metadata, translationOutcome: "source_fallback" };
+        const qualityRejected = /looked degenerate|quality gate|empty text/i.test(task.error ?? "");
+        if (qualityRejected) {
+          const localized = localizeNamedFigureCaption(task.text);
+          if (localized) {
+            assignBlockTranslation(block, localized);
+          } else {
+            preserveSourceTranslation(block, "source_fallback");
+          }
+        } else {
+          block.translationStatus = "failed";
+          block.metadata = { ...block.metadata, translationOutcome: "request_failed" };
+        }
         void updateBlock(block);
         callbacks.onBlockTranslated?.(block);
       }

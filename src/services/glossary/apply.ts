@@ -20,6 +20,23 @@ export function assignBlockTranslation(block: PaperBlock, translated: string): v
   }
 }
 
+/**
+ * Keep the exact source visible without the Reader failure surface. Used when
+ * the model output is discarded by the quality gate: English original is safer
+ * than painting every block as "翻訳に失敗しました".
+ */
+export function preserveSourceTranslation(block: PaperBlock, reason = "source_fallback"): void {
+  block.translated = null;
+  block.translationStatus = "completed";
+  block.metadata = { ...block.metadata, translationOutcome: reason };
+  if (block.type === "figure" || block.type === "table") {
+    block.metadata = {
+      ...block.metadata,
+      captionTranslated: String(block.metadata.captionOriginal ?? block.original ?? ""),
+    };
+  }
+}
+
 export async function reapplyGlossary(paperId: string): Promise<{
   paper?: Paper;
   sections: Section[];

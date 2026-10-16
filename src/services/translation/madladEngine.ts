@@ -6,6 +6,7 @@
 
 import { isPlausibleJaTranslation, restoreUtf8ByteEscapes } from "./quality";
 import { projectSafeUnitTranslation } from "./partialProjection";
+import { TranslationQualityError } from "./retryPolicy";
 import type { TranslationEngine, TranslationResult, EngineStatus } from "./types";
 
 // Bump whenever the server-side protection or semantic-unit pipeline changes.
@@ -18,10 +19,11 @@ const DEFAULT_SERVER_URL = "http://127.0.0.1:8765";
 
 let cachedServerToken: string | null | undefined;
 
-const TRANSLATION_REQUEST_ATTEMPTS = 3;
+const TRANSLATION_REQUEST_ATTEMPTS = 2;
 // Prevent a single MPS graph compilation or dead request from blocking an
 // entire import queue indefinitely. The timeout is deliberately generous for
-// long academic paragraphs and applies per attempt.
+// long academic paragraphs and applies per attempt. Timeouts are not retried
+// inside this helper — the queue releases the concurrency slot and retries.
 const TRANSLATION_REQUEST_TIMEOUT_MS = 180_000;
 
 async function fetchTranslation(url: string, init: RequestInit): Promise<Response> {
@@ -36,6 +38,16 @@ async function fetchTranslation(url: string, init: RequestInit): Promise<Respons
       } finally {
         clearTimeout(timeout);
       }
+      // Stale sidecar token after a server restart: drop the cache and rebuild
+      // auth headers once before treating the request as a hard failure.
+      if (response.status === 401 && attempt === 0) {
+        cachedServerToken = undefined;
+        const refreshed = await translationAuthHeaders();
+        init = { ...init, headers: { ...Object.fromEntries(new Headers(init.headers)), ...refreshed } };
+        lastError = new Error("Translation server temporary error: 401");
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        continue;
+      }
       // A sidecar can be briefly unavailable while the model is loading or
       // restarting. Retry only transient gateway/service responses; preserve
       // deterministic client errors for the caller's failure classification.
@@ -44,10 +56,13 @@ async function fetchTranslation(url: string, init: RequestInit): Promise<Respons
       }
       lastError = new Error(`Translation server temporary error: ${response.status}`);
     } catch (error) {
-      lastError = error instanceof DOMException && error.name === "AbortError"
+      const timedOut = error instanceof DOMException && error.name === "AbortError";
+      lastError = timedOut
         ? new Error(`Translation server request timed out after ${TRANSLATION_REQUEST_TIMEOUT_MS}ms`)
         : error;
-      if (attempt === TRANSLATION_REQUEST_ATTEMPTS - 1) throw lastError;
+      // Do not burn the concurrency slot on multi-minute timeout loops. The
+      // queue retries transient timeouts after releasing activeCount.
+      if (timedOut || attempt === TRANSLATION_REQUEST_ATTEMPTS - 1) throw lastError;
     }
     await new Promise((resolve) => setTimeout(resolve, 150 * (attempt + 1)));
   }
@@ -73,6 +88,11 @@ async function translationAuthHeaders(): Promise<Record<string, string>> {
     headers["X-Paper-Reader-Token"] = cachedServerToken;
   }
   return headers;
+}
+
+/** Test helper: clear the cached sidecar token between cases. */
+export function resetTranslationAuthTokenCacheForTests(): void {
+  cachedServerToken = undefined;
 }
 
 export function resolveMadladServerUrl(url?: string): string {
@@ -138,10 +158,10 @@ export class MADLADEngine implements TranslationEngine {
         ? safePartial.text
         : translatedText;
     if (!effectiveText) {
-      throw new Error("Translation server returned empty text");
+      throw new TranslationQualityError("Translation server returned empty text");
     }
     if (targetLanguage === "ja" && !isPlausibleJaTranslation(effectiveText, text) && !safePartial) {
-      throw new Error("Translation output looked degenerate and was discarded");
+      throw new TranslationQualityError("Translation output looked degenerate and was discarded");
     }
 
     return {
@@ -214,7 +234,7 @@ export class MADLADEngine implements TranslationEngine {
       // return its source as a safe per-unit fallback; it must never be
       // treated as a completed Japanese translation by a future batch caller.
       if (targetLanguage === "ja" && !isPlausibleJaTranslation(effectiveText, texts[index] ?? "") && !safePartial) {
-        throw new Error("Translation output looked degenerate and was discarded");
+        throw new TranslationQualityError("Translation output looked degenerate and was discarded");
       }
       return {
         text: effectiveText,

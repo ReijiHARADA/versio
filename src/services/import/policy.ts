@@ -79,7 +79,16 @@ export function isRetryableTranslationFailure(
   block: PaperBlock,
   refSectionIds: Set<string> = new Set()
 ): boolean {
-  if (block.type !== "paragraph") return false;
   if (block.translationStatus !== "failed") return false;
+  // Transport failures keep the retry surface for paragraphs, captions, and
+  // list items alike. Quality-preserved source blocks are completed, not failed.
+  if (
+    block.type !== "paragraph" &&
+    block.type !== "footnote" &&
+    block.type !== "figure" &&
+    block.type !== "table"
+  ) {
+    return false;
+  }
   return shouldTranslateBlock(block, asSectionIdSet(refSectionIds));
 }
