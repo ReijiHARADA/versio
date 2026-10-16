@@ -40,6 +40,28 @@ export function Table({ block, metadata }: TableProps) {
   // the cell structure as the primary fallback instead of showing an empty
   // extraction shell.
   const structuredFallback = !hasImage && !metadata.imageUrl && tableRows.length >= 2;
+  // Native table rows retain PDF x coordinates. Use those coordinates to keep
+  // sparse/wrapped rows in the same visual columns instead of letting each
+  // row's own cell count reflow the grid independently.
+  const rawColumnPositions = tableRows
+    .flatMap((row) => row.map((cell) => cell.x).filter((x) => Number.isFinite(x)))
+    .sort((a, b) => a - b);
+  const columnPositions: number[] = [];
+  for (const x of rawColumnPositions) {
+    const previous = columnPositions.at(-1);
+    if (previous === undefined || Math.abs(previous - x) > 18) columnPositions.push(x);
+    else columnPositions[columnPositions.length - 1] = (previous + x) / 2;
+  }
+  const columnCount = Math.max(columnPositions.length, ...tableRows.map((row) => row.length), 1);
+  const fallbackGridStyle = { gridTemplateColumns: `repeat(${columnCount}, minmax(6rem, 1fr))` };
+  const cellColumn = (x: number, used: Set<number>) => {
+    if (columnPositions.length === 0 || !Number.isFinite(x)) return undefined;
+    const nearest = columnPositions.reduce((best, position, index) =>
+      Math.abs(position - x) < Math.abs(columnPositions[best] - x) ? index : best, 0);
+    if (!used.has(nearest)) return nearest;
+    const next = columnPositions.findIndex((_, index) => !used.has(index));
+    return next >= 0 ? next : nearest;
+  };
   const showCaption = Boolean(caption) || hasImage;
 
   return (
@@ -67,15 +89,27 @@ export function Table({ block, metadata }: TableProps) {
             />
           ) : structuredFallback ? (
             <div className={styles.tableFallbackGrid} role="table" aria-label={caption || "抽出された表"}>
-              {tableRows.map((row, rowIndex) => (
-                <div className={styles.tableFallbackRow} role="row" key={`${block.id}-${rowIndex}`}>
-                  {row.map((cell, cellIndex) => (
-                    <div className={styles.tableFallbackCell} role="cell" key={`${block.id}-${rowIndex}-${cellIndex}`}>
-                      {cell.text}
-                    </div>
-                  ))}
-                </div>
-              ))}
+              {tableRows.map((row, rowIndex) => {
+                const usedColumns = new Set<number>();
+                return (
+                  <div className={styles.tableFallbackRow} role="row" style={fallbackGridStyle} key={`${block.id}-${rowIndex}`}>
+                    {row.map((cell, cellIndex) => {
+                      const column = cellColumn(cell.x, usedColumns);
+                      if (column !== undefined) usedColumns.add(column);
+                      return (
+                        <div
+                          className={styles.tableFallbackCell}
+                          role="cell"
+                          style={column === undefined ? undefined : { gridColumnStart: column + 1 }}
+                          key={`${block.id}-${rowIndex}-${cellIndex}`}
+                        >
+                          {cell.text}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
             </div>
           ) : metadata.imageUrl ? (
             <div className={styles.missingImage}>表を読み込み中…</div>
