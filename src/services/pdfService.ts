@@ -659,7 +659,15 @@ export async function extractFigureImages(
         return aTable - bTable || a.bbox.y - b.bbox.y;
       });
       const tablePage = pageCaptions.some((caption) => caption.role === "table_caption");
-      const allowWholePageRasterFallback = pageCaptions.length <= MAX_CAPTIONS_FOR_PAGE_RASTER_FALLBACK;
+      // Dense pages often contain several figures plus an image-backed table.
+      // Table crops are explicitly bounded by `figureImageRect`, so allow the
+      // shared page raster in that case even when the page has more captions
+      // than the ordinary figure fallback budget. This keeps image-only tables
+      // readable without re-enabling expensive whole-page rendering for a
+      // figure-only page.
+      const allowWholePageRasterFallback =
+        pageCaptions.length <= MAX_CAPTIONS_FOR_PAGE_RASTER_FALLBACK ||
+        pageCaptions.some((caption) => caption.role === "table_caption");
       const pageOperationTimeoutMs = Math.max(1_000, Math.min(
         tablePage ? TABLE_PAGE_RENDER_TIMEOUT_MS : FIGURE_PAGE_OPERATION_TIMEOUT_MS,
         remainingMs

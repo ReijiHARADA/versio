@@ -3497,3 +3497,19 @@ server process remains running.
   → relaunch persistence → quit. The test harness now supports an optional
   `PAPER_READER_E2E_POST_READY_SLEEP_S` grace period for background enrichment;
   default acceptance timing is unchanged.
+
+# 2026-10-16: dense table pages and acceptance marker robustness
+
+- Table-bearing pages are now allowed a bounded shared page-raster fallback
+  even when they contain more than three captions. Figure-only dense pages keep
+  the old budget. The crop still requires the geometry-derived table region,
+  so unrelated body text is not rasterized as a table.
+- Packaged OzCHI verification after this change still produced structured
+  Table 2 rows (4 numeric rows) and Table 1/3/4/5 grids without flattened table
+  prose. This PDF's Table 2 has no reliable embedded image asset in the WebView
+  extraction path, so the structured-cell fallback is the authoritative
+  display; a readable image is used when PDF.js exposes one.
+- Fixed a test-harness race where the shell validated a stale copied
+  `_acceptance/result.json` after a background grace period. Validation now
+  reads the current acceptance-home marker directly. Standard packaged
+  integration passes after the fix.
