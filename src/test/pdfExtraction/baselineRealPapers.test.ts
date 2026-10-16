@@ -447,7 +447,7 @@ describe("baseline benchmark on cached real papers", () => {
         // source-only table stream; they must not become translated headings.
         const table1Grid = extracted.blocks.find((block) => /^Table 1\./.test(block.original ?? ""));
         expect(table1Grid?.type).toBe("table");
-        expect(table1Grid?.translationStatus).toBe("pending");
+        expect(table1Grid?.translationStatus).toBe("skipped");
         expect(table1Grid?.metadata.tableRows?.flat().some((cell) => cell.text === "Comfortable")).toBe(true);
         expect(extracted.blocks.some((block) => block.original.trim() === "Comfortable")).toBe(false);
         const table3Grid = extracted.blocks.find((block) =>
