@@ -146,4 +146,56 @@ describe("package layout reconstruction", () => {
       [{ text: "Clustering", x: 72, width: 45 }],
     ]);
   });
+
+  it("folds a full-width captioned grid across PDF column labels", () => {
+    const caption = {
+      id: "caption",
+      paperId: "paper",
+      order: 0,
+      type: "table",
+      original: "TABLE 1 Examples",
+      translated: null,
+      translationStatus: "skipped",
+      pageStart: 4,
+      pageEnd: 4,
+      boundingBoxes: [{ page: 4, x: 50, y: 80, width: 70, height: 8 }],
+      parentBlockId: null,
+      extractionConfidence: 0.9,
+      metadata: {
+        captionOriginal: "TABLE 1 Examples",
+        column: "left",
+        tableRows: [[{ text: "TABLE 1", x: 50, width: 30 }]],
+      },
+    } as PaperBlock;
+    const fragment = (id: string, x: number, y: number): PaperBlock => ({
+      id,
+      paperId: "paper",
+      order: Number(id.slice(-1)) + 1,
+      type: "table",
+      original: `A. Option ${id}`,
+      translated: null,
+      translationStatus: "skipped",
+      pageStart: 4,
+      pageEnd: 4,
+      boundingBoxes: [{ page: 4, x, y, width: 32, height: 8 }],
+      parentBlockId: null,
+      extractionConfidence: 0.9,
+      metadata: {
+        column: "right",
+        tableSourceFallback: true,
+        tableRows: [[{ text: `A. Option ${id}`, x, width: 32 }]],
+      },
+    });
+    const result = attachLinesToBlocks([
+      caption,
+      fragment("1", 300, 110),
+      fragment("2", 468, 125),
+      fragment("3", 300, 140),
+      fragment("4", 468, 155),
+    ], []);
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe("caption");
+    expect(result[0].metadata.captionOwnedNativeGrid).toBe(true);
+    expect((result[0].metadata.tableRows as Array<Array<{ text: string }>>).flat().map((cell) => cell.text)).toContain("A. Option 1");
+  });
 });

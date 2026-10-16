@@ -3285,3 +3285,24 @@ The updated extraction path was packaged into the fast macOS `.app` at
 **2026-10-16 10:03:10 JST**. The fresh bundle passed OzCHI import-only with
 **138 blocks / 5 tables / all tables with non-empty `tableRows`**, and the app
 and translation server exited cleanly afterward.
+
+# 2026-10-16: fold dense cross-column captioned tables into one native grid
+
+Some two-column PDFs place a full-width table's caption in the left PDF column
+while its native cells are classified as right-column table fragments. The
+package stage now identifies a same-page, dense cross-column cluster only when
+at least four table-source fragments and two or more x-bands support it, then
+folds those fragments into the nearest numbered caption. Single-line
+caption-owned cells are recovered from their native bbox when needed, and the
+caption row itself is not duplicated in the grid. This avoids paper-specific
+column rules and leaves lone neighbouring blocks untouched.
+
+The cognitive-memory Table 1 fixture now persists as one caption-owned native
+grid (35 rows) instead of multiple reader cards. Added a focused regression for
+cross-column folding. Full cached extraction/reading-order regression passed
+**232/232** in **433.98s**; typecheck and lint passed with only existing
+warnings. The refreshed 114-PDF table audit reports **0 extraction errors**,
+`readerRawFragments=632`, `readerCellFallbacks=528`,
+`structured-grid=499`, `prose-like=1`, and `ambiguous=19`. The remaining
+ambiguous/native fragments are still a visual-review queue; figure crop
+enrichment remains outside the synchronous import path.

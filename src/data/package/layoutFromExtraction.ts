@@ -467,14 +467,31 @@ function foldCaptionlessNativeGrids(blocks: PaperBlock[], layoutBlocks: LayoutBl
 }
 
 function tableRowsFrom(block: PaperBlock): TableCell[][] | undefined {
-  const rows = (block.metadata as { tableRows?: unknown }).tableRows;
-  if (!Array.isArray(rows)) return undefined;
-  const valid = rows.filter((row): row is TableCell[] =>
+  const metadata = block.metadata as { tableRows?: unknown; lines?: StructureLine[] };
+  const rows = metadata.tableRows;
+  const valid = Array.isArray(rows) ? rows.filter((row): row is TableCell[] =>
     Array.isArray(row) && row.every((cell) =>
       Boolean(cell) && typeof cell === "object" && typeof (cell as TableCell).text === "string"
     )
-  );
-  return valid.some((row) => row.length >= 2) ? valid : undefined;
+  ) : [];
+  if (valid.some((row) => row.length >= 2)) return valid;
+  // A caption-owned borderless table can emit a legitimate one-cell question
+  // or label as a standalone block. It has no `tableRows` metadata because a
+  // single native line is not useful as a generic fallback, but the caption
+  // fold still needs that cell to assemble the complete grid. Recover only
+  // short, non-sentence-shaped table fragments here; ordinary prose was
+  // already demoted before this package-stage path.
+  const line = metadata.lines?.length === 1 ? metadata.lines[0] : undefined;
+  const box = !line && block.boundingBoxes.length > 0 ? block.boundingBoxes[0] : undefined;
+  const text = (block.original ?? "").trim();
+  const words = text.split(/\s+/).filter(Boolean);
+  const optionMarkers = text.match(/\b[A-C]\.[\s]/gi)?.length ?? 0;
+  if ((!line && !box) || !text ||
+      (words.length > 9 && optionMarkers < 2) ||
+      (words.length >= 8 && /[.!?]$/.test(text) && optionMarkers < 2)) {
+    return undefined;
+  }
+  return [[{ text, x: line?.bbox.x ?? box!.x, width: line?.bbox.width ?? box!.width }]];
 }
 
 type GridLine = { blockId: string; text: string; x: number; width: number; y: number; height: number };
@@ -610,6 +627,33 @@ function foldCaptionOwnedTableFallbacks(blocks: PaperBlock[], layoutBlocks: Layo
   });
   if (captions.length === 0) return blocks;
 
+  const tableFragments = blocks.filter((block) => {
+    if (block.type !== "table") return false;
+    const metadata = block.metadata as { captionOriginal?: unknown; figureKey?: unknown; tableSourceFallback?: unknown };
+    return !metadata.captionOriginal &&
+      (metadata.tableSourceFallback === true || String(metadata.figureKey ?? "").startsWith("table-region-"));
+  });
+  const firstBox = (block: PaperBlock) => block.boundingBoxes[0];
+  // A full-width table on a two-column page often has its caption in the
+  // left PDF column while the native cells are classified as `right`. Once
+  // several short table fragments form a dense cross-column cluster, treat
+  // that cluster as the caption's region. This is deliberately evidence
+  // based; a lone neighbouring block is never absorbed.
+  const crossColumnCaptions = new Set<string>();
+  for (const caption of captions) {
+    const captionBox = firstBox(caption);
+    if (!captionBox) continue;
+    const candidates = tableFragments.filter((fragment) => {
+      const box = firstBox(fragment);
+      if (!box || box.page !== captionBox.page) return false;
+      if (fragment.metadata.column === caption.metadata.column) return false;
+      const distance = box.y - (captionBox.y + captionBox.height);
+      return distance >= -6 && distance <= 520;
+    });
+    const xPositions = new Set(candidates.map((fragment) => Math.round((firstBox(fragment)?.x ?? 0) / 12)));
+    if (candidates.length >= 4 && xPositions.size >= 2) crossColumnCaptions.add(caption.id);
+  }
+
   const ownerByFragmentId = new Map<string, { caption: PaperBlock; rows: TableCell[][] }>();
   for (const fragment of blocks) {
     if (fragment.type !== "table") continue;
@@ -622,18 +666,48 @@ function foldCaptionOwnedTableFallbacks(blocks: PaperBlock[], layoutBlocks: Layo
       if (metadata.column && captionColumn && metadata.column !== captionColumn) return [];
       const distance = boxDistance(caption, fragment);
       return distance === undefined || distance > 250 ? [] : [{ caption, distance }];
-    }).sort((a, b) => a.distance - b.distance);
+    });
+    if (owners.length === 0) {
+      const fragmentBox = firstBox(fragment);
+      const crossOwners = captions
+        .filter((caption) => crossColumnCaptions.has(caption.id))
+        .flatMap((caption) => {
+          const captionBox = firstBox(caption);
+          if (!captionBox || !fragmentBox || captionBox.page !== fragmentBox.page) return [];
+          const distance = fragmentBox.y - (captionBox.y + captionBox.height);
+          if (distance < -6 || distance > 520) return [];
+          // A later caption starts a new table region. Do not carry an
+          // earlier full-width grid through it.
+          const interveningCaption = captions.some((other) => {
+            if (other.id === caption.id) return false;
+            const otherBox = firstBox(other);
+            return otherBox?.page === captionBox.page &&
+              otherBox.y > captionBox.y && otherBox.y < fragmentBox.y;
+          });
+          return interveningCaption ? [] : [{ caption, distance }];
+        });
+      owners.push(...crossOwners);
+    }
+    owners.sort((a, b) => a.distance - b.distance);
     if (owners.length > 0) ownerByFragmentId.set(fragment.id, { caption: owners[0].caption, rows });
   }
   const rowsByCaption = new Map<string, TableCell[][]>();
+  const ownedCaptionIds = new Set<string>();
+  for (const caption of captions) {
+    const rows = tableRowsFrom(caption)?.filter((row) =>
+      !/^(?:table|表)\s*\d+/i.test(row.map((cell) => cell.text).join(" ").trim())
+    );
+    if (rows?.length) rowsByCaption.set(caption.id, normalizeTableRows(rows));
+  }
   for (const { caption, rows } of ownerByFragmentId.values()) {
     const owned = rowsByCaption.get(caption.id) ?? [];
     owned.push(...normalizeTableRows(rows));
     rowsByCaption.set(caption.id, owned);
+    ownedCaptionIds.add(caption.id);
   }
   const inferredOwnerIds = new Set<string>();
   for (const caption of captions) {
-    if (rowsByCaption.has(caption.id)) continue;
+    if (ownedCaptionIds.has(caption.id)) continue;
     const inferred = inferCaptionGrid(caption, blocks, layoutBlocks);
     if (!inferred) continue;
     rowsByCaption.set(caption.id, normalizeTableRows(inferred.rows));
