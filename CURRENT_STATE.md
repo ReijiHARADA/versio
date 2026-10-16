@@ -3310,3 +3310,7 @@ enrichment remains outside the synchronous import path.
 # 2026-10-16: latest fast bundle after cross-column table folding
 
 `caffeinate -dimsu npm run tauri:build:fast` completed successfully at **2026-10-16 10:23:24 JST**. The bundle contains the current `translation-server/engines/segmenter.py` and the current extraction/projection code. Generated license metadata was restored after the build; worktree is clean. This build is ready for the next packaged import-only verification; no translation server or Paper Reader process remains running.
+
+# 2026-10-16: deterministic ordering for caption-owned cross-column grids
+
+Caption-owned table fragments are now collected and sorted by native visual `y` then `x` before their rows are joined. This fixes a generic two-column PDF failure where the table remained a valid grid but cells appeared in projection/column order. Focused table/layout tests passed (4/4 plus 3 OzCHI cases); full cached extraction + reading-order regression passed **232/232** in **439.40s**. `npm run typecheck` passed. The change preserves cell text and does not alter translation behavior.

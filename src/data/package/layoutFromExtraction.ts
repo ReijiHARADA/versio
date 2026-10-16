@@ -699,11 +699,29 @@ function foldCaptionOwnedTableFallbacks(blocks: PaperBlock[], layoutBlocks: Layo
     );
     if (rows?.length) rowsByCaption.set(caption.id, normalizeTableRows(rows));
   }
-  for (const { caption, rows } of ownerByFragmentId.values()) {
-    const owned = rowsByCaption.get(caption.id) ?? [];
-    owned.push(...normalizeTableRows(rows));
-    rowsByCaption.set(caption.id, owned);
-    ownedCaptionIds.add(caption.id);
+  // Projection order is usually reading order, but a full-width table whose
+  // caption and cells came from different PDF columns can interleave blocks
+  // by column. Reassemble owned fragments in visual y/x order before joining
+  // their rows so the Reader does not show a structurally valid but scrambled
+  // table. This is geometry-only and leaves the cell text untouched.
+  const ownedFragments = new Map<string, Array<{ fragment: PaperBlock; rows: TableCell[][] }>>();
+  for (const [fragmentId, owner] of ownerByFragmentId.entries()) {
+    const fragment = blocks.find((block) => block.id === fragmentId);
+    if (!fragment) continue;
+    const list = ownedFragments.get(owner.caption.id) ?? [];
+    list.push({ fragment, rows: owner.rows });
+    ownedFragments.set(owner.caption.id, list);
+  }
+  for (const [captionId, entries] of ownedFragments.entries()) {
+    entries.sort((a, b) => {
+      const aBox = firstBox(a.fragment);
+      const bBox = firstBox(b.fragment);
+      return (aBox?.y ?? 0) - (bBox?.y ?? 0) || (aBox?.x ?? 0) - (bBox?.x ?? 0);
+    });
+    const owned = rowsByCaption.get(captionId) ?? [];
+    for (const entry of entries) owned.push(...normalizeTableRows(entry.rows));
+    rowsByCaption.set(captionId, owned);
+    ownedCaptionIds.add(captionId);
   }
   const inferredOwnerIds = new Set<string>();
   for (const caption of captions) {
