@@ -3318,3 +3318,5 @@ Caption-owned table fragments are now collected and sorted by native visual `y` 
 # 2026-10-16: packaged verification after visual table row ordering fix
 
 Fast `.app` rebuilt successfully at **2026-10-16 10:35:13 JST** after the geometry-ordered cross-column table fix. The real OzCHI packaged import-only check passed with **143 blocks / 5 tables**, all required tables retaining non-empty native rows. Generated license metadata was restored and the app exited cleanly.
+
+The cross-column table regression now deliberately feeds fragments in projection order and asserts visual `A. Option 1` → `A. Option 4` row order. This prevents the ordering fix from regressing while keeping production behavior unchanged.
