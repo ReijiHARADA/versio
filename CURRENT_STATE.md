@@ -3427,3 +3427,8 @@ server process remains running.
 - The UI-only smoke harness was hardened to activate the draggable paper card through its keyboard path before falling back to click. Typecheck/lint pass and the `.app` was rebuilt at 13:17:23 JST.
 - OzCHI UI smoke still stops at the macOS card-to-Reader activation boundary (`ui_library_card_visible` → `ui_reader_visible` timeout), while the same build passes the full packaged acceptance flow (import, Reader acceptance, search/export, relaunch persistence). This remains an Accessibility/WebView harness limitation, not an extraction or package persistence failure; no production behavior is changed by the smoke-only activation path.
 - After the failed smoke run, no Paper Reader or bundled translation-server processes remain.
+
+# 2026-10-16: current bundle acceptance after UI smoke harness update
+
+- The current 13:17:23 `.app` passed the full packaged integration flow again: import → Reader acceptance marker → search/export → quit → relaunch persistence → quit. Search hits `1`; no bundled sidecar remained.
+- The UI-only smoke remains blocked at macOS accessibility activation despite the test-only keyboard fallback; production packaged acceptance is green.
