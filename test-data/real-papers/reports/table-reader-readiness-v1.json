@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-16T04:00:11.963Z",
+  "generatedAt": "2026-10-16T05:40:49.935Z",
   "paperCount": 114,
   "papers": [
     {
@@ -249,8 +249,8 @@
       "file": "cognitive-psychology-gpt3.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 5,
-      "rawTableFragments": 14,
-      "cropBackedFragments": 8,
+      "rawTableFragments": 13,
+      "cropBackedFragments": 7,
       "readerRawFragments": 5,
       "readerCellFallbacks": 4,
       "readerFragmentKinds": {
@@ -527,8 +527,8 @@
       "file": "covid-ml-review.pdf",
       "tableCaptions": 10,
       "cropReadyCaptions": 8,
-      "rawTableFragments": 57,
-      "cropBackedFragments": 21,
+      "rawTableFragments": 41,
+      "cropBackedFragments": 6,
       "readerRawFragments": 6,
       "readerCellFallbacks": 6,
       "readerFragmentKinds": {
@@ -580,7 +580,7 @@
         },
         {
           "page": 5,
-          "text": "(DC): 0.9997; In Wuhan, R2(DC): 0.9996 toll."
+          "text": "2(N): 0.895; In Wuhan, R2(C): -2(N): 0.8105. (DC): 0.9995; In Wuhan, R2(DC): 0.9993 Predicting the COVID-19 death (DC): 0.9997; In Wuhan, R2(DC): 0.9996 toll."
         },
         {
           "page": 5,
@@ -625,10 +625,6 @@
         {
           "page": 7,
           "text": "MADE-DBM is validated on chest CT datasets. [36]"
-        },
-        {
-          "page": 7,
-          "text": "ed regions is used to improve the overall accuracy."
         },
         {
           "page": 7,
@@ -724,8 +720,8 @@
       "file": "detecting-statistical-interactions.pdf",
       "tableCaptions": 6,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 23,
-      "cropBackedFragments": 12,
+      "rawTableFragments": 22,
+      "cropBackedFragments": 11,
       "readerRawFragments": 5,
       "readerCellFallbacks": 4,
       "readerFragmentKinds": {
@@ -938,17 +934,21 @@
       "file": "education-learning-analytics.pdf",
       "tableCaptions": 11,
       "cropReadyCaptions": 11,
-      "rawTableFragments": 72,
-      "cropBackedFragments": 53,
-      "readerRawFragments": 19,
-      "readerCellFallbacks": 13,
+      "rawTableFragments": 65,
+      "cropBackedFragments": 45,
+      "readerRawFragments": 20,
+      "readerCellFallbacks": 14,
       "readerFragmentKinds": {
-        "structured-grid": 13,
+        "structured-grid": 14,
         "short-label": 4,
         "ambiguous": 2
       },
       "readerFragmentSamples": {
         "structured-grid": [
+          {
+            "page": 8,
+            "text": "papers Factor 2018 Open Access"
+          },
           {
             "page": 15,
             "text": "Meerkat-"
@@ -992,10 +992,6 @@
           {
             "page": 19,
             "text": "Prediction"
-          },
-          {
-            "page": 21,
-            "text": "To apply EDM/LA techniques to measure self-regulated"
           }
         ],
         "short-label": [
@@ -1028,6 +1024,10 @@
         ]
       },
       "orphanFragments": [
+        {
+          "page": 8,
+          "text": "papers Factor 2018 Open Access"
+        },
         {
           "page": 15,
           "text": "Meerkat-"
@@ -1287,24 +1287,38 @@
       "file": "ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport.pdf",
       "tableCaptions": 41,
       "cropReadyCaptions": 33,
-      "rawTableFragments": 121,
-      "cropBackedFragments": 71,
-      "readerRawFragments": 36,
-      "readerCellFallbacks": 31,
+      "rawTableFragments": 81,
+      "cropBackedFragments": 33,
+      "readerRawFragments": 35,
+      "readerCellFallbacks": 30,
       "readerFragmentKinds": {
-        "structured-grid": 30,
         "short-label": 4,
+        "structured-grid": 29,
         "ambiguous": 2
       },
       "readerFragmentSamples": {
-        "structured-grid": [
+        "short-label": [
           {
-            "page": 25,
-            "text": "Measure of use a,b Light commercial vehicles (≤3.5t GMV) Rigid trucks (>3.5t GVM) Articulated trucks"
+            "page": 41,
+            "text": "N=186,SEV=11.2, HARM=2083"
           },
           {
+            "page": 90,
+            "text": "Hand/fingers"
+          },
+          {
+            "page": 90,
+            "text": "19.0"
+          },
+          {
+            "page": 111,
+            "text": "most helpful"
+          }
+        ],
+        "structured-grid": [
+          {
             "page": 81,
-            "text": "Waste 408 3.9 Food/drink 373 7.0 Transport specialists 2250 8.0 Removals 297 9.1 Grocery & store supplies 125 11.2 Construction & landscape 446 12.1 Total 3954 8.1"
+            "text": "Total 3954 8.1"
           },
           {
             "page": 84,
@@ -1344,25 +1358,11 @@
           },
           {
             "page": 134,
-            "text": "Own (if owner) N d 149 686 1-4 vehicles % 99.2 98.0 Χ 2 tav Payment type N d 267 1002 Flat hourly rate % 58.1 5.5 Χ 2 (5) =524.2 p<.001 Flat day rate % 3.0 3.1 Flat weekly rate % 14.2 4.9 Flat item/delivery/load rate % 6.4 12.9 Kilometre or"
-          }
-        ],
-        "short-label": [
-          {
-            "page": 41,
-            "text": "N=186,SEV=11.2, HARM=2083"
+            "text": "Flat hourly rate % 58.1 5.5 Χ 2 (5) =524.2 p<.001 Flat day rate % 3.0 3.1 Flat weekly rate % 14.2 4.9 Flat item/delivery/load rate % 6.4 12.9 Kilometre or tonnage rate % 7.1 65.6"
           },
           {
-            "page": 90,
-            "text": "Hand/fingers"
-          },
-          {
-            "page": 90,
-            "text": "19.0"
-          },
-          {
-            "page": 111,
-            "text": "most helpful"
+            "page": 143,
+            "text": "70.6 47.3 28.26, p<.001"
           }
         ],
         "ambiguous": [
@@ -1378,12 +1378,12 @@
       },
       "orphanFragments": [
         {
-          "page": 25,
-          "text": "Measure of use a,b Light commercial vehicles (≤3.5t GMV) Rigid trucks (>3.5t GVM) Articulated trucks"
-        },
-        {
           "page": 41,
           "text": "N=186,SEV=11.2, HARM=2083"
+        },
+        {
+          "page": 81,
+          "text": "Total 3954 8.1"
         },
         {
           "page": 84,
@@ -1419,7 +1419,7 @@
         },
         {
           "page": 134,
-          "text": "Own (if owner) N d 149 686 1-4 vehicles % 99.2 98.0 Χ 2 tav Payment type N d 267 1002 Flat hourly rate % 58.1 5.5 Χ 2 (5) =524.2 p<.001 Flat day rate % 3.0 3.1 Flat weekly rate % 1"
+          "text": "Flat hourly rate % 58.1 5.5 Χ 2 (5) =524.2 p<.001 Flat day rate % 3.0 3.1 Flat weekly rate % 14.2 4.9 Flat item/delivery/load rate % 6.4 12.9 Kilometre or tonnage rate % 7.1 65.6"
         },
         {
           "page": 143,
@@ -1434,12 +1434,36 @@
           "text": "21.1 35.4 11.65, p=.001"
         },
         {
+          "page": 146,
+          "text": "Heavy 642 31.5 22.0 30.1 16.5 4.5"
+        },
+        {
+          "page": 146,
+          "text": "Heavy 680 4.9 13.5 41.0 40.6 18.9"
+        },
+        {
+          "page": 146,
+          "text": "Heavy 693 2.2 10.2 37.4 50.2 28.0"
+        },
+        {
+          "page": 146,
+          "text": "Heavy 651 63.9 10.8 14.1 12.3 24.3"
+        },
+        {
           "page": 175,
           "text": "Nd=61 Nd=21 Nd=40 Nd=30 Nd=31 Nd=27 Nd=34"
         },
         {
           "page": 175,
           "text": "% % % % % % %"
+        },
+        {
+          "page": 175,
+          "text": "50 51.3 37.9 63.3 61.5 42.4"
+        },
+        {
+          "page": 175,
+          "text": "10 20.5 24.1 10.0 15.4 18.2"
         },
         {
           "page": 222,
@@ -1549,12 +1573,12 @@
       "file": "ergonomics-human-factors-ihci.pdf",
       "tableCaptions": 1,
       "cropReadyCaptions": 0,
-      "rawTableFragments": 11,
+      "rawTableFragments": 8,
       "cropBackedFragments": 0,
-      "readerRawFragments": 11,
-      "readerCellFallbacks": 11,
+      "readerRawFragments": 9,
+      "readerCellFallbacks": 9,
       "readerFragmentKinds": {
-        "structured-grid": 11
+        "structured-grid": 9
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -1573,14 +1597,6 @@
           {
             "page": 9,
             "text": "采用 iHCI 人因工程框架的新范式有助于开拓设计思路，探索有效的人因工程解决方案。人因工程解决 方案主要包括以下几方面。 • 人机协同合作的设计新范式：智能自动驾驶车是由两个认知体（人类驾驶员，机器认知体/“机器 智能驾驶员”）组成的一个协同认知系统，两者是团队合作的队友，因此人机共驾的 iHCI 研究和 应用可以从人机协同合作的新角度考虑。例如，研究要充分理解人类驾驶员与智能自主化系统在人 机共驾中应该分别扮演什么角色，如何根据智能化等级和驾驶环境来确定人机共驾中人机协同"
-          },
-          {
-            "page": 11,
-            "text": "人类驾驶员 + 智能自动驾驶车 + 智能道路系统 √ √"
-          },
-          {
-            "page": 11,
-            "text": "人类驾驶员 + 智能自动驾驶车 + 智能道路系统 + 智能交通系统 √ √ √"
           },
           {
             "page": 12,
@@ -1873,13 +1889,13 @@
       "file": "hci-intelligent-human-computer-interaction.pdf",
       "tableCaptions": 44,
       "cropReadyCaptions": 27,
-      "rawTableFragments": 86,
-      "cropBackedFragments": 54,
+      "rawTableFragments": 68,
+      "cropBackedFragments": 38,
       "readerRawFragments": 20,
-      "readerCellFallbacks": 18,
+      "readerCellFallbacks": 17,
       "readerFragmentKinds": {
-        "structured-grid": 18,
-        "short-label": 2
+        "structured-grid": 17,
+        "short-label": 3
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -1928,11 +1944,15 @@
             "text": "P (emo |emo )P (emo ) all−emo l m n p n"
           },
           {
-            "page": 183,
-            "text": "Experienced emotion Probabilities Sad .486 Troubled .19 Angry .322"
+            "page": 194,
+            "text": "f wð 1w2Þ þ2ðf wð 1w\u0016 2Þ þfðw\u0016 1w2ÞÞ Word forward variety vfðw2Þ"
           }
         ],
         "short-label": [
+          {
+            "page": 168,
+            "text": ".045*"
+          },
           {
             "page": 180,
             "text": "a"
@@ -1997,16 +2017,16 @@
           "text": "6.2(2.09) 0.00 7.7(2.90) 0.001 133.3(52.1) 0.00 17.45(5.10) 0.041"
         },
         {
+          "page": 168,
+          "text": ".045*"
+        },
+        {
           "page": 180,
           "text": "P (emo |emo )P (emo ) all−emo l m n p n"
         },
         {
           "page": 180,
           "text": "a"
-        },
-        {
-          "page": 183,
-          "text": "Experienced emotion Probabilities Sad .486 Troubled .19 Angry .322"
         },
         {
           "page": 194,
@@ -2096,12 +2116,12 @@
       "file": "hci-user-experience-analysis-on-mobile-application-design-using-user-exper.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 11,
-      "cropBackedFragments": 7,
-      "readerRawFragments": 4,
-      "readerCellFallbacks": 4,
+      "rawTableFragments": 2,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 2,
+      "readerCellFallbacks": 2,
       "readerFragmentKinds": {
-        "structured-grid": 4
+        "structured-grid": 2
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -2112,14 +2132,6 @@
           {
             "page": 7,
             "text": "4.1. The Cronbach's Alpha"
-          },
-          {
-            "page": 7,
-            "text": "Above average"
-          },
-          {
-            "page": 7,
-            "text": "Below average"
           }
         ]
       },
@@ -2131,14 +2143,6 @@
         {
           "page": 7,
           "text": "4.1. The Cronbach's Alpha"
-        },
-        {
-          "page": 7,
-          "text": "Above average"
-        },
-        {
-          "page": 7,
-          "text": "Below average"
         }
       ]
     },
@@ -2158,13 +2162,13 @@
       "file": "hfe-healthcare-patient-safety-review.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 6,
-      "rawTableFragments": 41,
-      "cropBackedFragments": 24,
-      "readerRawFragments": 11,
-      "readerCellFallbacks": 10,
+      "rawTableFragments": 40,
+      "cropBackedFragments": 17,
+      "readerRawFragments": 17,
+      "readerCellFallbacks": 15,
       "readerFragmentKinds": {
-        "structured-grid": 9,
-        "short-label": 2
+        "structured-grid": 14,
+        "short-label": 3
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -2197,12 +2201,24 @@
             "text": "1 2 3 4 5"
           },
           {
-            "page": 11,
-            "text": "1 2 3 4 5"
+            "page": 10,
+            "text": "NR H HFE \" !"
           },
           {
-            "page": 11,
-            "text": "(148) skills"
+            "page": 10,
+            "text": "Nurses (24) NR M HFE \""
+          },
+          {
+            "page": 10,
+            "text": "Female nurses(56) NR M Educational"
+          },
+          {
+            "page": 10,
+            "text": "Surgeons, Yes M HFE team"
+          },
+          {
+            "page": 10,
+            "text": "technologists, training program"
           }
         ],
         "short-label": [
@@ -2213,6 +2229,10 @@
           {
             "page": 10,
             "text": "educational course"
+          },
+          {
+            "page": 10,
+            "text": "HFE"
           }
         ]
       },
@@ -2275,7 +2295,31 @@
         },
         {
           "page": 10,
+          "text": "NR H HFE \" !"
+        },
+        {
+          "page": 10,
           "text": "educational course"
+        },
+        {
+          "page": 10,
+          "text": "Nurses (24) NR M HFE \""
+        },
+        {
+          "page": 10,
+          "text": "Female nurses(56) NR M Educational"
+        },
+        {
+          "page": 10,
+          "text": "HFE"
+        },
+        {
+          "page": 10,
+          "text": "Surgeons, Yes M HFE team"
+        },
+        {
+          "page": 10,
+          "text": "technologists, training program"
         },
         {
           "page": 11,
@@ -2291,13 +2335,13 @@
       "file": "hfe-healthcare-safety-review.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 6,
-      "rawTableFragments": 41,
-      "cropBackedFragments": 24,
-      "readerRawFragments": 11,
-      "readerCellFallbacks": 10,
+      "rawTableFragments": 40,
+      "cropBackedFragments": 17,
+      "readerRawFragments": 17,
+      "readerCellFallbacks": 15,
       "readerFragmentKinds": {
-        "structured-grid": 9,
-        "short-label": 2
+        "structured-grid": 14,
+        "short-label": 3
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -2330,12 +2374,24 @@
             "text": "1 2 3 4 5"
           },
           {
-            "page": 11,
-            "text": "1 2 3 4 5"
+            "page": 10,
+            "text": "NR H HFE \" !"
           },
           {
-            "page": 11,
-            "text": "(148) skills"
+            "page": 10,
+            "text": "Nurses (24) NR M HFE \""
+          },
+          {
+            "page": 10,
+            "text": "Female nurses(56) NR M Educational"
+          },
+          {
+            "page": 10,
+            "text": "Surgeons, Yes M HFE team"
+          },
+          {
+            "page": 10,
+            "text": "technologists, training program"
           }
         ],
         "short-label": [
@@ -2346,6 +2402,10 @@
           {
             "page": 10,
             "text": "educational course"
+          },
+          {
+            "page": 10,
+            "text": "HFE"
           }
         ]
       },
@@ -2408,7 +2468,31 @@
         },
         {
           "page": 10,
+          "text": "NR H HFE \" !"
+        },
+        {
+          "page": 10,
           "text": "educational course"
+        },
+        {
+          "page": 10,
+          "text": "Nurses (24) NR M HFE \""
+        },
+        {
+          "page": 10,
+          "text": "Female nurses(56) NR M Educational"
+        },
+        {
+          "page": 10,
+          "text": "HFE"
+        },
+        {
+          "page": 10,
+          "text": "Surgeons, Yes M HFE team"
+        },
+        {
+          "page": 10,
+          "text": "technologists, training program"
         },
         {
           "page": 11,
@@ -2605,41 +2689,25 @@
       "file": "how-content-volume-landing-pages.pdf",
       "tableCaptions": 5,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 11,
+      "rawTableFragments": 7,
       "cropBackedFragments": 6,
-      "readerRawFragments": 3,
-      "readerCellFallbacks": 3,
+      "readerRawFragments": 1,
+      "readerCellFallbacks": 1,
       "readerFragmentKinds": {
-        "structured-grid": 3
+        "structured-grid": 1
       },
       "readerFragmentSamples": {
         "structured-grid": [
           {
             "page": 10,
-            "text": "Page Variant Total unique Conversions Users who Conversion rate didn’t convert “A” (Long) 273 106 167 38.83% “B” (Short) 262 140 122 53.44% Total 535"
-          },
-          {
-            "page": 10,
-            "text": "Experiment / Page variant Total unique Campaign visitors"
-          },
-          {
-            "page": 10,
-            "text": "National “ A ” (Long) 5497 “ B ” (Short) 5494 Atlanta “A” (Long) 3690 “ B ” (Short) 3688 Miami “A” (Long) 1235 “B” (Short) 1237 444 36% 2.470** 639 52% Los Angeles “A” (Long) 1945 529 27% -13.817** “B” (Short) 1948 937 48% New York “A” (Lon"
+            "text": "“B” (Short) 1948 937 48% New York “A” (Long) 1176 “ B ” (Short) 1173 Total “A” (Long) 13543 “ B ” (Short) 13540 Both 27,083"
           }
         ]
       },
       "orphanFragments": [
         {
           "page": 10,
-          "text": "Page Variant Total unique Conversions Users who Conversion rate didn’t convert “A” (Long) 273 106 167 38.83% “B” (Short) 262 140 122 53.44% Total 535"
-        },
-        {
-          "page": 10,
-          "text": "Experiment / Page variant Total unique Campaign visitors"
-        },
-        {
-          "page": 10,
-          "text": "National “ A ” (Long) 5497 “ B ” (Short) 5494 Atlanta “A” (Long) 3690 “ B ” (Short) 3688 Miami “A” (Long) 1235 “B” (Short) 1237 444 36% 2.470** 639 52% Los Angeles “A” (Long) 1945 "
+          "text": "“B” (Short) 1948 937 48% New York “A” (Long) 1176 “ B ” (Short) 1173 Total “A” (Long) 13543 “ B ” (Short) 13540 Both 27,083"
         }
       ]
     },
@@ -2692,8 +2760,8 @@
       "file": "interpreting-neural-networks.pdf",
       "tableCaptions": 6,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 23,
-      "cropBackedFragments": 12,
+      "rawTableFragments": 22,
+      "cropBackedFragments": 11,
       "readerRawFragments": 5,
       "readerCellFallbacks": 4,
       "readerFragmentKinds": {
@@ -2974,31 +3042,13 @@
       "file": "linguistics-internet-linguistics-a-linguistic-analysis-of-electronic-discourse-as-.pdf",
       "tableCaptions": 8,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 11,
-      "cropBackedFragments": 4,
-      "readerRawFragments": 1,
-      "readerCellFallbacks": 1,
-      "readerFragmentKinds": {
-        "structured-grid": 1
-      },
-      "readerFragmentSamples": {
-        "structured-grid": [
-          {
-            "page": 6,
-            "text": "E-Discourse Form Standard Form Gud Good"
-          }
-        ]
-      },
-      "orphanFragments": [
-        {
-          "page": 6,
-          "text": "E-Discourse Form Standard Form Bro Brother"
-        },
-        {
-          "page": 6,
-          "text": "E-Discourse Form Standard Form Gud Good"
-        }
-      ]
+      "rawTableFragments": 3,
+      "cropBackedFragments": 0,
+      "readerRawFragments": 0,
+      "readerCellFallbacks": 0,
+      "readerFragmentKinds": {},
+      "readerFragmentSamples": {},
+      "orphanFragments": []
     },
     {
       "file": "linguistics-language-model-physics.pdf",
@@ -3568,8 +3618,8 @@
       "file": "marketing-a-study-on-the-relationship-between-advertising-value-choice-of-media-.pdf",
       "tableCaptions": 15,
       "cropReadyCaptions": 14,
-      "rawTableFragments": 49,
-      "cropBackedFragments": 49,
+      "rawTableFragments": 15,
+      "cropBackedFragments": 15,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -3580,8 +3630,8 @@
       "file": "marketing-co-production.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 21,
-      "cropBackedFragments": 11,
+      "rawTableFragments": 18,
+      "cropBackedFragments": 8,
       "readerRawFragments": 10,
       "readerCellFallbacks": 10,
       "readerFragmentKinds": {
@@ -3690,33 +3740,13 @@
       "file": "marketing-consumer-response.pdf",
       "tableCaptions": 12,
       "cropReadyCaptions": 11,
-      "rawTableFragments": 31,
-      "cropBackedFragments": 7,
+      "rawTableFragments": 24,
+      "cropBackedFragments": 5,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
       "readerFragmentSamples": {},
       "orphanFragments": [
-        {
-          "page": 17,
-          "text": "Behavioral Consumer Channel Sensitivity, Response RoAS influence γ Baseline, C (%)"
-        },
-        {
-          "page": 17,
-          "text": "0.075 5078.6 9.65 10.43 0.000 5122.7 8.97 8.08 0.223 13836.5 62.69 1.55 0.009 13883.8 2.37 20.22 0.145 35052.3 86.49 4.63 0.068 6245.7 29.40 29.93"
-        },
-        {
-          "page": 17,
-          "text": "Behavioral Consumer Channel Sensitivity, γ Response RoAS influence"
-        },
-        {
-          "page": 17,
-          "text": "Baseline, C (%)"
-        },
-        {
-          "page": 17,
-          "text": "0.140 1.63 0.23 0.38 0.835 1.78 0.83 0.97 0.028 1.478 0.35 2.14 0.298 2.87 1.17 2.4 0.000 3.75 1.72 1.04 0.935 11.67 6.64 0.95 0.299 41.07 11.57 5.76 0.325 1.47 0.35 1.39 0.004 3.6"
-        },
         {
           "page": 23,
           "text": "Proposed equation"
@@ -3984,18 +4014,13 @@
       "file": "marketing-impact-of-green-marketing-on-consumer-behavior.pdf",
       "tableCaptions": 2,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 8,
-      "cropBackedFragments": 7,
+      "rawTableFragments": 6,
+      "cropBackedFragments": 6,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
       "readerFragmentSamples": {},
-      "orphanFragments": [
-        {
-          "page": 4,
-          "text": "16 10.4"
-        }
-      ]
+      "orphanFragments": []
     },
     {
       "file": "marketing-impact-of-sensory-marketing-on-consumer-behavior.pdf",
@@ -4037,12 +4062,12 @@
       "file": "marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the.pdf",
       "tableCaptions": 48,
       "cropReadyCaptions": 37,
-      "rawTableFragments": 146,
-      "cropBackedFragments": 98,
-      "readerRawFragments": 36,
-      "readerCellFallbacks": 30,
+      "rawTableFragments": 95,
+      "cropBackedFragments": 51,
+      "readerRawFragments": 29,
+      "readerCellFallbacks": 23,
       "readerFragmentKinds": {
-        "structured-grid": 30,
+        "structured-grid": 23,
         "short-label": 6
       },
       "readerFragmentSamples": {
@@ -4054,10 +4079,6 @@
           {
             "page": 148,
             "text": "Digital advertisements increase the likelihood of the advertised brand being included in the consideration 1,2,3 set and being selected as brand choice under conditions of low attention. The effect of low attention processing of digital adv"
-          },
-          {
-            "page": 151,
-            "text": "Main method of analysis Logistic regression Logistic regression Logistic regression Post-hoc examinations Intuitive vs rational Intuitive vs rational judgements; response judgements; response latency latency"
           },
           {
             "page": 151,
@@ -4094,6 +4115,10 @@
           {
             "page": 183,
             "text": "The effect of low attention processing of digital advertisements is greater for ads with emotional appeal than rational appeal. People are more likely to make rational judgements if processing occurs at higher/focused attention. People are "
+          },
+          {
+            "page": 184,
+            "text": "F 48 36 20 104"
           }
         ],
         "short-label": [
@@ -4135,10 +4160,6 @@
         {
           "page": 148,
           "text": "H4c"
-        },
-        {
-          "page": 151,
-          "text": "Main method of analysis Logistic regression Logistic regression Logistic regression Post-hoc examinations Intuitive vs rational Intuitive vs rational judgements; response judgement"
         },
         {
           "page": 151,
@@ -4201,16 +4222,16 @@
           "text": "8.1. Introduction"
         },
         {
-          "page": 231,
-          "text": "Mean difference Std. Error Sig. Divided attention -.021 .045 .965"
-        },
-        {
           "page": 236,
-          "text": "Brand consideration β SE"
+          "text": ".752 -1.902** .187 .149 = .009)** (Wald χ2 = 9.773, p = .021)** 1.487 -.063 .268 .939 1.351 -.156 .272 .856 1.814 .515** .243 1.674"
         },
         {
           "page": 236,
           "text": "1.509 1.302** .228 3.675 p = .357) (Wald χ2 = 8.921, p = .030)** .931 .569* .323 1.766 .437 .441 .327 1.554 .488 -.230 .303 .794"
+        },
+        {
+          "page": 236,
+          "text": ".631 -2.524** .238 .080 = .001)** (Wald χ2 = 4.771, p = .189) 2.029 .555* .306 1.742 1.676 .268 .321 1.307 1.549 .582* .304 1.790"
         },
         {
           "page": 236,
@@ -4330,10 +4351,10 @@
     },
     {
       "file": "marketing-the-blind-box-economy-exploring-consumer-behavior-marketing-strategies.pdf",
-      "tableCaptions": 4,
-      "cropReadyCaptions": 1,
-      "rawTableFragments": 7,
-      "cropBackedFragments": 2,
+      "tableCaptions": 3,
+      "cropReadyCaptions": 0,
+      "rawTableFragments": 6,
+      "cropBackedFragments": 0,
       "readerRawFragments": 6,
       "readerCellFallbacks": 3,
       "readerFragmentKinds": {
@@ -4371,6 +4392,10 @@
         ]
       },
       "orphanFragments": [
+        {
+          "page": 6,
+          "text": "The findings of this study offer several strategic implications for businesses seeking to optimize their blind box marketing approaches. The significant positive correlation betwee"
+        },
         {
           "page": 8,
           "text": "39.6%"
@@ -4433,13 +4458,13 @@
       "file": "medical-deep-learning-meta-review.pdf",
       "tableCaptions": 9,
       "cropReadyCaptions": 6,
-      "rawTableFragments": 72,
-      "cropBackedFragments": 29,
-      "readerRawFragments": 33,
-      "readerCellFallbacks": 32,
+      "rawTableFragments": 68,
+      "cropBackedFragments": 26,
+      "readerRawFragments": 32,
+      "readerCellFallbacks": 31,
       "readerFragmentKinds": {
         "short-label": 3,
-        "structured-grid": 30
+        "structured-grid": 29
       },
       "readerFragmentSamples": {
         "short-label": [
@@ -4605,10 +4630,6 @@
           "text": "CNN, DBN, -DL can learn knowledge from -DL requires large datasets -Data imbalance is"
         },
         {
-          "page": 11,
-          "text": "Abbreviations: AE: auto-encoder, ANN: artificial neural network, CAD: computer-assisted diagnosis, CNN: convolutional neural network, DBN: deep belief network, DL: deep learning, D"
-        },
-        {
           "page": 13,
           "text": "-Overfitting"
         },
@@ -4630,7 +4651,7 @@
         },
         {
           "page": 14,
-          "text": "Liver masses (fully) -Successfully applied to detection, -Details not discussed -Heterogeneity of results -Standardize reporting, Azer [69] CNN, GAN classification, and segmentatio"
+          "text": "CNN, GAN classification, and segmentation of report multiple liver masses performance metrics,"
         },
         {
           "page": 14,
@@ -4869,13 +4890,13 @@
       "file": "osworld-multimodal-agents.pdf",
       "tableCaptions": 17,
       "cropReadyCaptions": 12,
-      "rawTableFragments": 51,
-      "cropBackedFragments": 32,
-      "readerRawFragments": 16,
+      "rawTableFragments": 33,
+      "cropBackedFragments": 19,
+      "readerRawFragments": 11,
       "readerCellFallbacks": 5,
       "readerFragmentKinds": {
         "structured-grid": 5,
-        "short-label": 11
+        "short-label": 6
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -4923,26 +4944,6 @@
           },
           {
             "page": 39,
-            "text": "61.70"
-          },
-          {
-            "page": 39,
-            "text": "73.91"
-          },
-          {
-            "page": 39,
-            "text": "46.67"
-          },
-          {
-            "page": 39,
-            "text": "73.91"
-          },
-          {
-            "page": 39,
-            "text": "73.27"
-          },
-          {
-            "page": 39,
             "text": "Done!"
           }
         ]
@@ -4986,26 +4987,6 @@
         },
         {
           "page": 39,
-          "text": "61.70"
-        },
-        {
-          "page": 39,
-          "text": "73.91"
-        },
-        {
-          "page": 39,
-          "text": "46.67"
-        },
-        {
-          "page": 39,
-          "text": "73.91"
-        },
-        {
-          "page": 39,
-          "text": "73.27"
-        },
-        {
-          "page": 39,
           "text": "Done!"
         },
         {
@@ -5018,8 +4999,8 @@
       "file": "ozchi-finger-specific-touch.pdf",
       "tableCaptions": 5,
       "cropReadyCaptions": 3,
-      "rawTableFragments": 6,
-      "cropBackedFragments": 5,
+      "rawTableFragments": 4,
+      "cropBackedFragments": 4,
       "readerRawFragments": 0,
       "readerCellFallbacks": 0,
       "readerFragmentKinds": {},
@@ -5170,8 +5151,8 @@
       "file": "using-cognitive-psychology-gpt3.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 5,
-      "rawTableFragments": 14,
-      "cropBackedFragments": 8,
+      "rawTableFragments": 13,
+      "cropBackedFragments": 7,
       "readerRawFragments": 5,
       "readerCellFallbacks": 4,
       "readerFragmentKinds": {
@@ -5231,8 +5212,8 @@
       "file": "wear-scale.pdf",
       "tableCaptions": 3,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 11,
-      "cropBackedFragments": 6,
+      "rawTableFragments": 9,
+      "cropBackedFragments": 4,
       "readerRawFragments": 4,
       "readerCellFallbacks": 4,
       "readerFragmentKinds": {
@@ -5285,15 +5266,15 @@
   "summary": {
     "extractionErrors": 0,
     "papersWithTableCaptions": 48,
-    "tableCaptions": 364,
-    "cropReadyCaptions": 267,
-    "rawTableFragments": 1332,
-    "cropBackedFragments": 701,
-    "readerRawFragments": 447,
-    "readerCellFallbacks": 374,
+    "tableCaptions": 363,
+    "cropReadyCaptions": 266,
+    "rawTableFragments": 1097,
+    "cropBackedFragments": 487,
+    "readerRawFragments": 439,
+    "readerCellFallbacks": 368,
     "readerFragmentKinds": {
-      "structured-grid": 361,
-      "short-label": 81,
+      "structured-grid": 355,
+      "short-label": 79,
       "ambiguous": 5
     },
     "orphanFragments": 534,
