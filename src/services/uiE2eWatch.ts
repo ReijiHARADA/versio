@@ -179,7 +179,14 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
     // The click is opt-in and never runs during normal launches.
     if (smokeOnly && paperCard && !reader && !smokeReaderOpenTried) {
       smokeReaderOpenTried = true;
-      (paperCard as HTMLElement).click();
+      const card = paperCard as HTMLElement;
+      // Drag-enabled paper cards can consume a synthetic pointer click on
+      // macOS. The component also exposes the keyboard activation path, so
+      // exercise that deterministic route first, then retain click as a
+      // fallback for older builds.
+      card.focus();
+      card.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", bubbles: true }));
+      card.click();
     }
     // Force the real Reader scroll container through the document once in
     // smoke mode. This lets lazy/viewport-bound table surfaces mount before
