@@ -3557,3 +3557,18 @@ server process remains running.
 - The crop regression cases pass, and the rebuilt `.app` was verified by the
   packaged OzCHI PDF flow (import, background enrichment grace period,
   export, quit, relaunch persistence) with marker `ok` at **15:19:59 JST**.
+
+# 2026-10-16: include media in the initial import package
+
+- The initial import path now runs the bounded figure/table extraction pass
+  (`extractFigures: true`) before `onPartialReady`. Previously it deliberately
+  persisted native text first and only started `reextractPaper()` after the
+  entire translation job, so Reader opened with empty figure/table surfaces
+  and filled them in later.
+- The existing per-page/document deadlines remain active, and background
+  enrichment is retained as a retry for media that cannot be rendered in the
+  first pass.
+- Rebuilt `.app` at **16:49:19 JST** and imported
+  `/Users/harada/Desktop/2686612.2686699.pdf` through the packaged Tauri flow.
+  The initial persisted package contained **12 figure assets and 5 table
+  assets** before the acceptance/relaunch checks; packaged E2E passed.
