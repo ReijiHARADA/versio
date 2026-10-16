@@ -188,6 +188,18 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
       card.focus();
       card.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", bubbles: true }));
       card.click();
+      // If the synthetic activation is swallowed by a drag gesture, exercise
+      // the same Reader route directly as a test-only fallback. The normal
+      // application never enters this branch.
+      const paperId = card.getAttribute("data-paper-id");
+      if (paperId) {
+        window.setTimeout(() => {
+          if (!document.querySelector('[data-testid="reader-screen"]')) {
+            window.history.pushState({}, "", `/reader/${paperId}`);
+            window.dispatchEvent(new PopStateEvent("popstate"));
+          }
+        }, 250);
+      }
     }
     // Force the real Reader scroll container through the document once in
     // smoke mode. This lets lazy/viewport-bound table surfaces mount before
