@@ -3280,3 +3280,8 @@ warnings, and the refreshed table audit has **0 extraction errors**,
 `structured-grid=518` (audit-only diagnostics). The audit still contains
 one prose-like and 23 ambiguous native fragments; these are retained as a
 visual-review queue rather than being hidden by a broad demotion rule.
+
+The updated extraction path was packaged into the fast macOS `.app` at
+**2026-10-16 10:03:10 JST**. The fresh bundle passed OzCHI import-only with
+**138 blocks / 5 tables / all tables with non-empty `tableRows`**, and the app
+and translation server exited cleanly afterward.
