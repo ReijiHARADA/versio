@@ -38,6 +38,21 @@ fail() {
   exit 1
 }
 
+# Sending SIGTERM to the macOS app from a shell does not run the Tauri window
+# close callback. The bundled Python sidecar can therefore become orphaned
+# even though the app process has exited. Restrict cleanup to this exact app
+# bundle so a user's development server on 127.0.0.1:8765 is never touched.
+stop_bundled_sidecars() {
+  local prefix="$APP_PATH/Contents/Resources/translation-server/"
+  local pid
+  while read -r pid; do
+    [[ -n "$pid" ]] || continue
+    kill "$pid" 2>/dev/null || true
+  done < <(ps -axo pid=,command= | awk -v prefix="$prefix" 'index($0, prefix) { print $1 }')
+}
+
+trap stop_bundled_sidecars EXIT
+
 step() {
   echo "$1" | tee "$STEP_FILE"
   echo "==> $1" | tee -a "$LOG_FILE"
@@ -196,6 +211,7 @@ quit_app() {
   fi
   osascript -e 'tell application "Paper Reader" to quit' 2>/dev/null || true
   sleep 2
+  stop_bundled_sidecars
 }
 
 launch_app
