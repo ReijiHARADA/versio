@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-16T03:28:05.513Z",
+  "generatedAt": "2026-10-16T04:00:11.963Z",
   "paperCount": 114,
   "papers": [
     {
@@ -37,43 +37,13 @@
       "cropReadyCaptions": 4,
       "rawTableFragments": 24,
       "cropBackedFragments": 13,
-      "readerRawFragments": 11,
-      "readerCellFallbacks": 11,
+      "readerRawFragments": 2,
+      "readerCellFallbacks": 2,
       "readerFragmentKinds": {
-        "structured-grid": 9,
-        "prose-like": 1,
-        "ambiguous": 1
+        "structured-grid": 2
       },
       "readerFragmentSamples": {
         "structured-grid": [
-          {
-            "page": 4,
-            "text": "A. A little boy A. White What color sweater is the B. A nanny B. Yellow little girl wearing? C. A little girl C. Pink"
-          },
-          {
-            "page": 4,
-            "text": "A. Doing housework A. Short black hair"
-          },
-          {
-            "page": 4,
-            "text": "B. Arguing B. Straight black shawl C. Cooking C. Black ponytail A. Doing homework A. Wide open"
-          },
-          {
-            "page": 4,
-            "text": "A. Father A. Left shoulder"
-          },
-          {
-            "page": 4,
-            "text": "B. Mother B. Left hand"
-          },
-          {
-            "page": 4,
-            "text": "C. Nobody C. Right hand"
-          },
-          {
-            "page": 4,
-            "text": "B. Ice cream B. Red wearing? C. Biscuit C. Blue"
-          },
           {
             "page": 7,
             "text": "0.171 0.843 0.006"
@@ -81,18 +51,6 @@
           {
             "page": 7,
             "text": "0.397 0.674 0.014"
-          }
-        ],
-        "prose-like": [
-          {
-            "page": 4,
-            "text": "What is the status of the B. Watching TV B. Closed room door?"
-          }
-        ],
-        "ambiguous": [
-          {
-            "page": 4,
-            "text": "A. Fruit A. White What color sweater is mom"
           }
         ]
       },
@@ -5331,13 +5289,12 @@
     "cropReadyCaptions": 267,
     "rawTableFragments": 1332,
     "cropBackedFragments": 701,
-    "readerRawFragments": 456,
-    "readerCellFallbacks": 383,
+    "readerRawFragments": 447,
+    "readerCellFallbacks": 374,
     "readerFragmentKinds": {
-      "structured-grid": 368,
-      "prose-like": 1,
-      "ambiguous": 6,
-      "short-label": 81
+      "structured-grid": 361,
+      "short-label": 81,
+      "ambiguous": 5
     },
     "orphanFragments": 534,
     "note": "Crop readiness is a geometry diagnostic. readerRawFragments simulates suppression only after a successful caption crop; readerCellFallbacks are native rows retained for a readable source-only grid (including single-column multi-row tables), not a claim of fully reconstructed table semantics. readerFragmentKinds is audit-only triage and does not change resolver behavior."
