@@ -3328,3 +3328,9 @@ The behavior-preserving table continuation regex cleanup was included in a fresh
 # 2026-10-16: packaged E2E sidecar cleanup
 
 The packaged import-only harness now cleans up the exact bundled translation-server sidecar on shell exit. Tauri app termination from the shell does not reliably execute the window-close callback, so the prior harness could leave an orphaned `server.py`; cleanup is restricted to the current `.app` resource path and never touches a development server on port 8765. Repeated OzCHI packaged import-only verification passed (**143 blocks / 5 tables**) and no Paper Reader/sidecar process remained after exit.
+
+# 2026-10-16: dense table question-cell and cross-column crop cleanup
+
+The package projection now absorbs sentence-shaped native paragraphs into an already caption-owned dense table region only when their bbox is inside the region and aligned with a nearby native row. This repairs questionnaire cells that the resolver initially scored as paragraph, without demoting ordinary prose outside a caption-owned grid. Image-backed table suppression now also handles a generic full-width table whose caption and native fragments fall in different PDF columns, preventing duplicate source-cell cards when the table crop is available. No paper name, title, or literal paper text is used.
+
+Focused questionnaire/crop regression passed (1 test), typecheck passed, and the full cached 118-paper extraction + reading-order corpus passed **232/232** in **436.09s**. The refreshed table audit reports **0 extraction errors**, `readerRawFragments=544`, `readerCellFallbacks=459`, `structured-grid=432`, `short-label=97`, `ambiguous=15`, and no `prose-like` fragments. The remaining ambiguous fragments are retained for visual review; figure crop enrichment and semantic row/column reconstruction remain open.

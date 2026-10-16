@@ -92,6 +92,32 @@ export function suppressImageBackedTableFragments(blocks: PaperBlock[]): PaperBl
   });
   if (imageBackedCaptions.length === 0 && imageBackedFigures.length === 0) return blocks;
 
+  // A full-width table may put its caption in the left PDF column while its
+  // native cells are classified in the right column. Establish a dense
+  // cross-column ownership signal before applying the normal same-column
+  // geometry rule, so a successful table crop hides all of its source cells
+  // instead of leaving duplicate table cards beside the image.
+  const crossColumnCaptionIds = new Set(
+    imageBackedCaptions
+      .filter((caption) => {
+        const captionBox = boxBounds(caption);
+        if (!captionBox) return false;
+        const candidates = blocks.filter((block) => {
+          if (block.type !== "table") return false;
+          const metadata = block.metadata as { captionOriginal?: string; figureKey?: string; tableSourceFallback?: boolean; column?: string };
+          if (metadata.captionOriginal || (!metadata.tableSourceFallback && !metadata.figureKey?.startsWith("table-region-"))) return false;
+          const box = boxBounds(block);
+          if (!box || box.page !== captionBox.page) return false;
+          if (metadata.column === caption.metadata.column) return false;
+          const distance = box.top - captionBox.bottom;
+          return distance >= -6 && distance <= 520;
+        });
+        const xBands = new Set(candidates.map((block) => Math.round((boxBounds(block)?.left ?? 0) / 12)));
+        return candidates.length >= 4 && xBands.size >= 2;
+      })
+      .map((caption) => caption.id)
+  );
+
   return blocks.filter((block) => {
     if (block.type !== "table") return true;
     const metadata = block.metadata as {
@@ -135,15 +161,18 @@ export function suppressImageBackedTableFragments(blocks: PaperBlock[]): PaperBl
       // the first column, so a right-column native fragment must still be
       // suppressed when it belongs to the caption's canonical target.
       if (captionMetadata.captionOf && metadata.canonicalNodeId === captionMetadata.captionOf) return true;
-      if (metadata.column && captionMetadata.column && metadata.column !== captionMetadata.column) return false;
+      if (metadata.column && captionMetadata.column && metadata.column !== captionMetadata.column &&
+          !crossColumnCaptionIds.has(caption.id)) return false;
+      const crossColumnOwner = crossColumnCaptionIds.has(caption.id);
       const horizontallyOverlaps = fragment.left < captionBox.right && captionBox.left < fragment.right;
       // Publishers place table captions above *or* below their grids. Both
       // layouts are safe here because this is restricted to native blocks
       // already classified as table-region fragments, on the same page and
       // column as an image-backed numbered caption.
-      const closeAbove = fragment.bottom <= captionBox.top + 6 && captionBox.top - fragment.bottom <= 300;
-      const closeBelow = fragment.top >= captionBox.bottom - 6 && fragment.top - captionBox.bottom <= 300;
-      return horizontallyOverlaps && (closeAbove || closeBelow);
+      const maxDistance = crossColumnOwner ? 520 : 300;
+      const closeAbove = fragment.bottom <= captionBox.top + 6 && captionBox.top - fragment.bottom <= maxDistance;
+      const closeBelow = fragment.top >= captionBox.bottom - 6 && fragment.top - captionBox.bottom <= maxDistance;
+      return (horizontallyOverlaps || crossColumnOwner) && (closeAbove || closeBelow);
     });
   });
 }
