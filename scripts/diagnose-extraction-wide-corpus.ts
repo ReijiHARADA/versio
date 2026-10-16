@@ -158,6 +158,68 @@ for (let index = 0; index < selected.length; index += 1) {
       samples.push(`micro:${microHeadings.slice(0, 4).map((h) => h.text).join("|")}`);
     }
 
+    // Title looks like a keyword list or degree boilerplate.
+    const titleText = (titleNode?.text ?? "").trim();
+    if (titleText && ((titleText.match(/,/g) ?? []).length >= 4 ||
+      /^(?:doctor of philosophy|phd thesis|keywords?\b)/i.test(titleText))) {
+      flags.push("keywords-or-degree-title");
+      score += 6;
+      samples.push(`badTitle:${titleText.slice(0, 100)}`);
+    }
+
+    // Filename/id tokens should overlap a real article title (weak signal).
+    if (titleText.length >= 16) {
+      const stop = new Set([
+        "a", "an", "the", "of", "and", "or", "in", "on", "for", "to", "with", "from", "by",
+        "using", "based", "study", "review", "paper", "pdf", "hci", "hfe", "covid", "ml",
+      ]);
+      const tokens = (value: string) =>
+        value.toLowerCase().replace(/[^a-z0-9\u00c0-\u024f]+/g, " ").split(/\s+/).filter((w) => w.length >= 4 && !stop.has(w));
+      const idTokens = tokens(job.id);
+      const titleTokens = new Set(tokens(titleText));
+      const overlap = idTokens.filter((t) => titleTokens.has(t)).length;
+      if (idTokens.length >= 3 && overlap === 0 && /[A-Za-z]{4,}/.test(titleText)) {
+        flags.push("title-id-mismatch");
+        score += 3;
+        samples.push(`mismatch:${titleText.slice(0, 80)}`);
+      }
+    }
+
+    // Long papers with almost no section headings are usually under-structured.
+    if (pages.length >= 8 && headings.length < 3) {
+      flags.push(`sparse-headings:${headings.length}`);
+      score += 4;
+    }
+
+    // Person-shaped page-1 headings (author rows mislabeled as sections).
+    const authorHeadings = headings.filter((h) => {
+      const t = (h.text ?? "").trim();
+      return h.pageStart === 1 &&
+        /^[A-Z][a-z]+(?:\s+[A-Z][a-z.'-]+){1,3}$/.test(t) &&
+        t.length <= 40 &&
+        !/\b(?:Abstract|Introduction|Related|Methods|Results|Discussion|Conclusion|Keywords?|Acceptability|Concepts)\b/i.test(t);
+    });
+    if (authorHeadings.length >= 2) {
+      flags.push(`author-as-heading:${authorHeadings.length}`);
+      score += Math.min(6, authorHeadings.length * 2);
+      samples.push(`authorH:${authorHeadings.slice(0, 2).map((h) => h.text).join("|")}`);
+    }
+
+    // Captions without any figure/table neighbour on the same page.
+    const captions = nodes.filter((n) => n.role === "caption");
+    const orphanCaptions = captions.filter((c) => {
+      const page = c.pageStart;
+      return !nodes.some((n) =>
+        n.pageStart === page &&
+        (n.role === "figure" || n.role === "table" || (n.role === "other" && /fig|table|図|表/i.test(n.text ?? "")))
+      );
+    });
+    if (orphanCaptions.length >= 3) {
+      flags.push(`orphan-caption:${orphanCaptions.length}`);
+      score += Math.min(6, orphanCaptions.length);
+      samples.push(`orphanCap:${(orphanCaptions[0]?.text ?? "").slice(0, 80)}`);
+    }
+
     findings.push({
       id: job.id,
       source: job.source,

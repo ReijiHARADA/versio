@@ -325,6 +325,35 @@ function splitInlineSectionLabels(nodes: CanonicalNode[]): CanonicalNode[] {
   return out;
 }
 
+function demotePageOneAuthorHeadings(nodes: CanonicalNode[]): CanonicalNode[] {
+  return nodes.map((node) => {
+    if (node.role !== "heading" || node.pageStart !== 1 || !node.text) return node;
+    const t = node.text.trim();
+    // Bilingual mastheads often emit transliterated author names as large
+    // "headings" beside the real article title. Keep genuine section labels.
+    const personShaped = /^[A-ZА-ЯЁ][a-zа-яё]+(?:\s+[A-ZА-ЯЁ][a-zа-яё.'-]+){1,3}$/u.test(t) &&
+      t.length <= 42 &&
+      !/\b(?:Abstract|Introduction|Related|Methods|Results|Discussion|Conclusion|Keywords?)\b/i.test(t);
+    if (!personShaped) return node;
+    return {
+      ...node,
+      role: "author" as const,
+      confidence: Math.min(node.confidence, 0.82),
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic",
+          label: "page-one-author-heading-demotion",
+          confidence: 0.8,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: "person-shaped page-one heading demoted to author",
+        },
+      ],
+    };
+  });
+}
+
 function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
   let inAbstract = false;
   return nodes.map((node) => {
@@ -631,6 +660,7 @@ export function resolveCanonicalDocument(input: {
   nodes = resolveTableRegions(nodes, input.regionEvidence ?? []);
   nodes = promoteRotatedTableCaptions(nodes, candidates);
   nodes = splitInlineSectionLabels(nodes);
+  nodes = demotePageOneAuthorHeadings(nodes);
   nodes = markAbstracts(nodes);
   nodes = suppressVectorLabelClusters(nodes);
   nodes = dedupeExactCaptions(nodes);

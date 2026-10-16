@@ -1,3 +1,9 @@
+# 2026-10-16: OA論文の権利確認付き追加取得
+
+Europe PMC API で `isOpenAccess=Y` かつ `license` が `cc by` / `cc by-nc` の論文だけを取り込む `scripts/fetch-oa-europepmc.mjs` を追加。12本を pending にダウンロードし、候補メタに `license` / `licenseVerifiedVia` / `pmcid` を記録。ScienceDirect / Wiley 直リンクの 403 は迂回せず失敗扱い。既存の arXiv・著者ホスト・PMC 方針は維持。
+
+あわせてタイトル復旧を強化: 汚染露語マストヘッド、章本文のタイトル化、`npj | …` / `Journal 50 (2026)` ジャーナル帯、スキャン本の空タイトル。pending 診断は新規を含め再走査。
+
 # 2026-10-16: PDF抽出の広範囲診断と改善（catalog+pending）
 
 118本カタログを超える評価のため `scripts/diagnose-extraction-wide-corpus.ts` を追加。pending 76 の初回は flagged **72** / clean **4**（`embedded-section-marker` 過検知が支配）。最新フル走査 **189** 本（catalog 113 + pending 76）は構造診断で **flagged 0 / clean 189**（`test-data/real-papers/reports/extraction-wide-corpus-latest.json`）。pending 初回 72 flagged からの改善。あわせて投影側で captionless method/goal 表の段落化と CJK ✓比較表の caption 吸収を直し、当該 pipeline 回帰も pass。Reader 実機の網羅目視はまだゴール未達。

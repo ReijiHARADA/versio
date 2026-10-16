@@ -1605,6 +1605,42 @@ describe("canonical extraction pipeline", () => {
     expect(extracted.blocks.some((block) => /follows:/i.test(block.original ?? "") && block.type === "paragraph")).toBe(true);
   });
 
+  it("prefers a clean Latin title over a contaminated Cyrillic masthead", async () => {
+    const pdf = path.resolve(
+      "test-fixtures/real-papers/pending-pdfs/marketing-digital-marketing-consumer-behavior.pdf"
+    );
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "ru-digital-marketing-title",
+      filePath: pdf,
+      fileHash: "ru-digital-marketing-title",
+      metadata: { pageCount: pages.length },
+    });
+    const title = result.canonical.nodes.find((node) => node.role === "title")?.text ?? "";
+    expect(title).toMatch(/digital marketing/i);
+    expect(title).not.toMatch(/канд\.|Аннотация|Бутковская/i);
+  }, 60_000);
+
+  it("rejects chapter body prose as the title when a section heading exists", async () => {
+    const pdf = path.resolve(
+      "test-fixtures/real-papers/pending-pdfs/cognitive-psychology-attention-and-entrepreneurial-cognition.pdf"
+    );
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "chapter-body-title",
+      filePath: pdf,
+      fileHash: "chapter-body-title",
+      metadata: { pageCount: pages.length },
+    });
+    const title = result.canonical.nodes.find((node) => node.role === "title")?.text ?? "";
+    expect(title).not.toMatch(/^While there are/i);
+    expect(title.toLowerCase()).toMatch(/attention/);
+  }, 60_000);
+
   it("recovers a thesis cover title instead of the copyright sheet", async () => {
     const pdf = path.resolve(
       "test-fixtures/real-papers/pending-pdfs/marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the.pdf"

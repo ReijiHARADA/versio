@@ -148,6 +148,30 @@ function looksLikeDecoderCorruptedTitle(text: string): boolean {
   return letters > 0 && letters < 10 && /[\u0000-\u001f]/.test(t);
 }
 
+/** Author + affiliation + abstract mashed into one native title span. */
+function looksLikeContaminatedMastheadTitle(text: string): boolean {
+  const t = text.trim();
+  if (t.length < 40) return false;
+  if (/\b(?:канд\.|докт\.|аннотация\.|фгбоу|университет|e-mail:)\b/i.test(t)) return true;
+  // Cyrillic person-name lead followed by an ALL-CAPS title fragment and more prose.
+  if (/^[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+/.test(t) && /[А-ЯЁ]{5,}/.test(t) && t.length > 90) return true;
+  return false;
+}
+
+/** Chapter body / abstract prose promoted because it used a large font. */
+function looksLikeBodyLeadInTitle(text: string): boolean {
+  const t = text.trim();
+  if (/^(?:while|although|because|however|since|whereas|this\s+(?:paper|chapter|study)|in\s+this\s+(?:paper|chapter))\b/i.test(t)) {
+    return true;
+  }
+  // Citation-heavy prose is not an article title.
+  if (t.length >= 70 && (/\(\d{4}\)/.test(t) || (t.match(/,/g) ?? []).length >= 4) &&
+    /\b(?:and\/or|managers|scholars|firms|because|routines)\b/i.test(t)) {
+    return true;
+  }
+  return looksLikeBodyTitleCandidate(t);
+}
+
 /**
  * When the strongest title candidate is an abstract label, copyright sheet,
  * or decoder garbage, recover a Latin cover/article title from nearby page-one
@@ -163,29 +187,39 @@ function recoverAlternateCoverTitle(candidates: RoleCandidate[]): string | null 
       const t = c.text.trim();
       const latinChars = (t.match(/[A-Za-z]/g) ?? []).length;
       const words = t.split(/\s+/).filter(Boolean).length;
-      if (latinChars < 18 || words < 4 || words > 22) return null;
+      const minLatin = c.role === "heading" || c.role === "title" ? 12 : 18;
+      const maxWords = c.role === "heading" ? 16 : 22;
+      if (latinChars < minLatin || words < 3 || words > maxWords) return null;
       if (
         looksLikeAbstractLabelTitle(t) ||
         looksLikeCopyrightBoilerplate(t) ||
         looksLikeObviousMastheadTitle(t) ||
         looksLikeDecoderCorruptedTitle(t) ||
+        looksLikeContaminatedMastheadTitle(t) ||
+        looksLikeBodyLeadInTitle(t) ||
         looksLikeAuthorish(t) ||
         /@/.test(t) ||
         /\bPh\.?\s*D\b/i.test(t) ||
         /\([A-Z][^)]*(?:university|college|institute|lab)\b/i.test(t) ||
-        /^(?:source|источник|keywords?|ccs concepts|index terms)\b/i.test(t) ||
+        /^(?:source|источник|keywords?|ccs concepts|index terms|chapter\s+\d+)\b/i.test(t) ||
         // Keyword / index lines are comma-dense; real titles rarely are.
         ((t.match(/,/g) ?? []).length >= 3)
       ) {
         return null;
       }
       // Prefer title-case / all-caps article lines over affiliation prose.
-      const titleShape = /^[A-Z(]/.test(t) && !/[.!?]$/.test(t);
+      // CamelCase product titles (`sEMGCareHCI: …`) are also eligible.
+      const titleShape = !/[.!?]$/.test(t) && (
+        /^[A-Z(]/.test(t) ||
+        (/:/.test(t) && t.length >= 24) ||
+        /^[a-z]{1,8}[A-Z]/.test(t)
+      );
       if (!titleShape) return null;
       const font = c.layoutBlock.lines[0]?.fontSize ?? 10;
       const roleBonus = c.role === "title" ? 24 : c.role === "heading" ? 28 : c.role === "author" ? 12 : c.role === "affiliation" ? 8 : 0;
       const colonBonus = /:/.test(t) ? 10 : 0;
-      return { text: t, score: font * 2 + Math.min(latinChars, 60) + roleBonus + colonBonus + (c.pageStart === 1 ? 6 : 0) };
+      const allCapsBonus = /^[A-Z0-9][A-Z0-9\s,:;-]+$/.test(t) && words >= 3 ? 14 : 0;
+      return { text: t, score: font * 2 + Math.min(latinChars, 60) + roleBonus + colonBonus + allCapsBonus + (c.pageStart === 1 ? 6 : 0) };
     })
     .filter((entry): entry is { text: string; score: number } => Boolean(entry))
     .sort((a, b) => b.score - a.score);
@@ -209,13 +243,59 @@ function recoverAlternateCoverTitle(candidates: RoleCandidate[]): string | null 
     if (caps.join(" ").length > 200) break;
   }
   const joined = caps.join(" ").replace(/\s+/g, " ").trim();
-  return joined.length >= 28 ? joined : null;
+  if (joined.length >= 28) return joined;
+
+  // Scanned books often have no extractable text on pages 1–2. Recover the
+  // first substantial short line pair from the earliest text-bearing page.
+  // Do not require candidate.role === heading: layout may still call these
+  // paragraphs before the resolver promotes them.
+  const earlyHeadings = candidates
+    .filter((c) => {
+      const t = c.text.trim();
+      return c.pageStart <= 5 &&
+        t.length >= 8 &&
+        t.length <= 80 &&
+        t.split(/\s+/).length <= 10 &&
+        !/[.!?]$/.test(t) &&
+        !looksLikeAuthorish(t) &&
+        !looksLikeJournalChromeTitle(t) &&
+        !looksLikeBodyLeadInTitle(t) &&
+        !/^(?:university|college|institute|department)\b/i.test(t) &&
+        !/@/.test(t);
+    })
+    .sort((a, b) => a.pageStart - b.pageStart || ((a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0)));
+  if (earlyHeadings[0]) {
+    const first = earlyHeadings[0].text.trim();
+    const second = earlyHeadings[1];
+    if (
+      second &&
+      second.pageStart === earlyHeadings[0].pageStart &&
+      second.text.trim().length <= 40 &&
+      /^(?:a|an|the)\s+/i.test(second.text.trim())
+    ) {
+      return `${first}: ${second.text.trim()}`;
+    }
+    return first;
+  }
+  return null;
+}
+
+/** Publisher/journal banners that win the largest-font title race. */
+function looksLikeJournalChromeTitle(text: string): boolean {
+  const t = text.trim();
+  if (!t || t.length > 90) return false;
+  if (/^npj\s*[|·•]/i.test(t)) return true;
+  if (/^[A-Za-z][A-Za-z &:-]{2,40}\s+\d{1,4}\s*\(\d{4}\)/.test(t)) return true; // Journal 50 (2026)
+  if (/\be\d{4,}\b/.test(t) && t.split(/\s+/).length <= 8) return true;
+  if (/^[A-Za-z]{2,6}\s*[|·•]/i.test(t) && /\barticle\b/i.test(t)) return true;
+  if (/^(?:article|research article|original article|open access)\b/i.test(t) && t.length <= 40) return true;
+  return false;
 }
 
 function looksLikeObviousMastheadTitle(text: string): boolean {
   const t = text.trim();
   return looksLikeDocumentMasthead(t) || looksLikeJournalNameMasthead(t) || looksLikeEventMasthead(t) ||
-    looksLikeCopyrightBoilerplate(t) ||
+    looksLikeCopyrightBoilerplate(t) || looksLikeJournalChromeTitle(t) ||
     /^(?:doi\s*:\s*|https?:\/\/|www\.)/i.test(t) ||
     /\b(?:issn|e-?issn|volume|vol\.?|issue|no\.?|pages?|pp\.?|received|accepted|published)\b/i.test(t) &&
       (t.match(/\d/g)?.length ?? 0) >= 2;
@@ -671,25 +751,43 @@ export function resolveTitle(input: {
   }
 
   if (native.length === 0) {
-    const pageOne = input.candidates.filter(
+    // Scanned front matter can leave pages 1–2 empty; take the first large
+    // native line from the opening pages instead of leaving the title blank.
+    const earlyPages = input.candidates.filter(
       (c) =>
-        c.pageStart === 1 &&
+        c.pageStart <= 3 &&
         c.role !== "header" &&
         c.role !== "footer" &&
         c.role !== "copyright" &&
         c.text.trim().length >= 8 &&
         c.text.trim().length <= 180 &&
-        !looksLikeAuthorish(c.text)
+        !looksLikeAuthorish(c.text) &&
+        !looksLikeJournalChromeTitle(c.text) &&
+        !looksLikeObviousMastheadTitle(c.text)
     );
-    const fallback = pageOne
+    const fallback = earlyPages
       .filter((c) => c.layoutBlock.lines[0]?.fontSize)
       .sort(
         (a, b) =>
+          (a.pageStart - b.pageStart) ||
           (b.layoutBlock.lines[0]?.fontSize ?? 0) -
-          (a.layoutBlock.lines[0]?.fontSize ?? 0)
+            (a.layoutBlock.lines[0]?.fontSize ?? 0)
       )[0];
     if (fallback && !isGarbageTitle(fallback.text)) {
       native = [fallback.text.trim()];
+      // Join a short subtitle on the next line (e.g. textbook "A Textbook").
+      const idx = input.candidates.findIndex((c) => c.id === fallback.id);
+      const next = input.candidates[idx + 1];
+      if (
+        next &&
+        next.pageStart === fallback.pageStart &&
+        next.text.trim().length >= 4 &&
+        next.text.trim().length <= 40 &&
+        /^(?:a|an|the)\s+/i.test(next.text.trim()) &&
+        !looksLikeAuthorish(next.text)
+      ) {
+        native = [`${fallback.text.trim()}: ${next.text.trim()}`];
+      }
     }
   }
 
@@ -701,11 +799,17 @@ export function resolveTitle(input: {
     looksLikeCopyrightBoilerplate(native[0]) ||
     looksLikeAbstractLabelTitle(native[0]) ||
     looksLikeDecoderCorruptedTitle(native[0]) ||
+    looksLikeContaminatedMastheadTitle(native[0]) ||
+    looksLikeBodyLeadInTitle(native[0]) ||
+    looksLikeJournalChromeTitle(native[0]) ||
     isFragmentTitle(native[0]) ||
     (titles[0] && (
       looksLikeCopyrightBoilerplate(titles[0].text) ||
       looksLikeAbstractLabelTitle(titles[0].text) ||
       looksLikeDecoderCorruptedTitle(titles[0].text) ||
+      looksLikeContaminatedMastheadTitle(titles[0].text) ||
+      looksLikeBodyLeadInTitle(titles[0].text) ||
+      looksLikeJournalChromeTitle(titles[0].text) ||
       isFragmentTitle(titles[0].text)
     ));
   if (needsAlternateTitle) {
@@ -713,7 +817,33 @@ export function resolveTitle(input: {
     if (recovered && recovered !== native[0]) native = [recovered];
   }
 
-  const fused = fuseTitle(native.map(collapseRepeatedTitle), input.extra ?? [], input.grobidTitle);
+  let fused = fuseTitle(native.map(collapseRepeatedTitle), input.extra ?? [], input.grobidTitle);
+  // Post-fusion repair: joining title fragments can recreate contaminated or
+  // body-lead titles even when an earlier candidate looked plausible.
+  if (
+    fused.text &&
+    (looksLikeContaminatedMastheadTitle(fused.text) ||
+      looksLikeBodyLeadInTitle(fused.text) ||
+      looksLikeCopyrightBoilerplate(fused.text) ||
+      looksLikeJournalChromeTitle(fused.text))
+  ) {
+    const recovered = recoverAlternateCoverTitle(input.candidates);
+    if (recovered && recovered !== fused.text) {
+      fused = {
+        text: recovered,
+        confidence: Math.max(0.62, fused.confidence * 0.9),
+        evidence: [
+          ...fused.evidence,
+          {
+            source: "pdf-native",
+            label: "title",
+            confidence: 0.66,
+            reason: "replaced contaminated or body-lead fused title with alternate cover title",
+          },
+        ],
+      };
+    }
+  }
   const meta = input.metadataTitle?.trim() || "";
   // Native extraction occasionally promotes a DOI, journal masthead, or
   // volume line as the title. When a non-garbage metadata title exists, it is
