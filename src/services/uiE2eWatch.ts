@@ -177,7 +177,8 @@ export async function maybeStartUiE2eWatcher(): Promise<void> {
     // Smoke mode is intended to validate the real Reader route without
     // depending on flaky macOS Accessibility clicks against a large WKWebView.
     // The click is opt-in and never runs during normal launches.
-    if (smokeOnly && paperCard && !reader && !smokeReaderOpenTried) {
+    const paperReadiness = paperCard?.querySelector('[data-testid="paper-readiness"]')?.textContent?.trim() || "";
+    if (smokeOnly && paperCard && !reader && !smokeReaderOpenTried && paperReadiness !== "準備中") {
       smokeReaderOpenTried = true;
       const card = paperCard as HTMLElement;
       // Drag-enabled paper cards can consume a synthetic pointer click on

@@ -77,7 +77,7 @@ export function PaperCard({ paper, enabled = true, onOpen, actions }: PaperCardP
         {progress && <span className={styles.date}>{progress}</span>}
         <span className={styles.status}>
           {getStatusIcon(view.readiness)}
-          <span className={styles.statusLabel}>{statusLabel}</span>
+          <span className={styles.statusLabel} data-testid="paper-readiness">{statusLabel}</span>
         </span>
         {actions}
       </div>
