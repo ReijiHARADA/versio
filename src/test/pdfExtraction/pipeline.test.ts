@@ -437,6 +437,26 @@ describe("canonical extraction pipeline", () => {
     expect(rows.flat().some((cell) => /Delete the tapped|Open global help/i.test(cell.text))).toBe(false);
   }, 60_000);
 
+  it("groups borderless OzCHI matrix cells under their caption in source-only mode", async () => {
+    const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "ozchi-borderless-matrix-regression",
+      filePath: pdf,
+      fileHash: "ozchi-borderless-matrix-regression",
+      metadata: { pageCount: pages.length },
+    });
+    for (const number of ["1", "5"]) {
+      const table = result.blocks.find((block) => new RegExp(`^Table ${number}\\.`).test(block.original ?? ""));
+      expect(table?.type).toBe("table");
+      expect(table?.metadata.tableRows?.length).toBeGreaterThanOrEqual(8);
+      expect(table?.metadata.tableRows?.flat().some((cell) => /Finger|Thumb|0\\.000|0\\.594/.test(cell.text))).toBe(true);
+      expect(result.blocks.some((block) => block.original === "Finger 1" && block.pageStart === table?.pageStart)).toBe(false);
+    }
+  }, 60_000);
+
   it("keeps midpoint-spanning single-column thesis prose out of table fallback", async () => {
     const pdf = path.resolve("test-data/real-papers/marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the.pdf");
     if (!fs.existsSync(pdf)) return;

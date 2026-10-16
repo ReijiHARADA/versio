@@ -779,6 +779,96 @@ function captionedTableAbsorption(canonical: CanonicalDocument): {
   return { keepIds, regions, syntheticTargets };
 }
 
+type NativeTableCell = { text: string; x: number; width: number };
+
+/**
+ * Build a source-only grid for a caption-owned native table region.  A number
+ * of ACM PDFs emit every cell as an independent one-line candidate; leaving
+ * those candidates in the reader produces a vertical stream such as
+ * `Finger 1 0.000 ...` instead of a table.  The canonical synthetic target
+ * already supplies the geometry, so grouping those cells here is generic and
+ * does not depend on caption wording or a particular paper.
+ */
+function captionedNativeTableRows(canonical: CanonicalDocument): {
+  cellIds: Set<string>;
+  rowsByCaption: Map<string, Array<NativeTableCell[]>>;
+} {
+  const nodeById = new Map(canonical.nodes.map((node) => [node.id, node]));
+  const cellIds = new Set<string>();
+  const rowsByCaption = new Map<string, Array<NativeTableCell[]>>();
+  for (const relation of canonical.relations) {
+    if (relation.kind !== "CAPTION_OF") continue;
+    const caption = nodeById.get(relation.from);
+    const target = nodeById.get(relation.to);
+    if (!caption || !target || target.role !== "table") continue;
+    if (!isNumberedTableCaption(caption.text)) continue;
+    let regionBoxes = target.boundingBoxes.filter((box) => box.page >= caption.pageStart && box.page <= target.pageEnd);
+    if (regionBoxes.length === 0) continue;
+    const targetBox = target.boundingBoxes[0];
+    // Borderless tables sometimes attach the caption directly to the first
+    // cell instead of creating a synthetic region node. Infer the local
+    // region from same-column table candidates between that cell and the
+    // caption; the bounded vertical window prevents unrelated tables on the
+    // page from being absorbed.
+    const localCandidates = target.text != null && targetBox
+      ? canonical.nodes.filter((node) => {
+          if (node.id === target.id || node.role !== "table" || node.text == null) return false;
+          if (node.pageStart !== target.pageStart || (target.column && node.column && node.column !== target.column)) return false;
+          const box = node.boundingBoxes[0];
+          if (!box) return false;
+          const upper = Math.min(targetBox.y, caption.boundingBoxes[0]?.y ?? targetBox.y) - 6;
+          const lower = Math.max(targetBox.y + targetBox.height, caption.boundingBoxes[0]?.y ?? targetBox.y) + 2;
+          return box.y >= upper && box.y <= lower &&
+            Math.abs(box.x - targetBox.x) <= 280;
+        })
+      : [];
+    if (localCandidates.length >= 2) {
+      const all = [target, ...localCandidates].flatMap((node) => node.boundingBoxes.filter((box) => box.page === targetBox?.page));
+      if (all.length > 0) {
+        regionBoxes = [{
+          page: all[0].page,
+          x: Math.min(...all.map((box) => box.x)),
+          y: Math.min(...all.map((box) => box.y)),
+          width: Math.max(...all.map((box) => box.x + box.width)) - Math.min(...all.map((box) => box.x)),
+          height: Math.max(...all.map((box) => box.y + box.height)) - Math.min(...all.map((box) => box.y)),
+        }];
+      }
+    }
+    const overlap = (node: CanonicalNode) => {
+      const box = node.boundingBoxes[0];
+      if (!box || !regionBoxes.some((region) => region.page === box.page)) return 0;
+      const region = regionBoxes.find((candidate) => candidate.page === box.page)!;
+      const area = Math.max(1, box.width * box.height);
+      const shared = Math.max(0, Math.min(box.x + box.width, region.x + region.width) - Math.max(box.x, region.x)) *
+        Math.max(0, Math.min(box.y + box.height, region.y + region.height) - Math.max(box.y, region.y));
+      return shared / area;
+    };
+    const members = canonical.nodes.filter((node) =>
+      node.id !== target.id && node.role === "table" && typeof node.text === "string" && overlap(node) >= 0.45
+    );
+    const allMembers = target.text != null ? [target, ...members] : members;
+    if (allMembers.length < 2) continue;
+    const lines = allMembers.map((node) => {
+      const box = node.boundingBoxes[0]!;
+      return { node, box };
+    }).sort((a, b) => a.box.y - b.box.y || a.box.x - b.box.x);
+    const rows: Array<Array<{ node: CanonicalNode; box: BoundingBox }>> = [];
+    for (const line of lines) {
+      const previous = rows.at(-1);
+      const previousY = previous?.[0]?.box.y;
+      if (previous && previousY !== undefined && Math.abs(line.box.y - previousY) <= 2.5) previous.push(line);
+      else rows.push([line]);
+    }
+    const projectedRows = rows.map((row) => row.sort((a, b) => a.box.x - b.box.x).map(({ node, box }) => ({
+      text: node.text!.trim(), x: box.x, width: box.width,
+    }))).filter((row) => row.length > 0);
+    if (projectedRows.length < 2) continue;
+    for (const member of allMembers) cellIds.add(member.id);
+    rowsByCaption.set(caption.id, projectedRows);
+  }
+  return { cellIds, rowsByCaption };
+}
+
 /** A numbered caption only absorbs the cells in its own local visual region.
  * Several independent tables can coexist on a page (often one per column),
  * so page-level suppression drops valid captionless table streams. */
@@ -1910,6 +2000,7 @@ export function projectCanonicalToPaper(input: {
     .filter((n): n is CanonicalNode => Boolean(n));
   const projectionNodes = projectionNodesWithContinuations(orderedNodes, canonical, layoutBlocks);
   const tableAbsorption = captionedTableAbsorption(canonical);
+  const nativeCaptionTables = captionedNativeTableRows(canonical);
 
   const pushBlock = (
     node: CanonicalNode,
@@ -1955,6 +2046,9 @@ export function projectCanonicalToPaper(input: {
   };
 
   for (const { node, layout } of projectionNodes) {
+    // The caption block owns the grouped source-only grid. Do not project its
+    // individual native cell candidates as separate reader blocks.
+    if (nativeCaptionTables.cellIds.has(node.id)) continue;
     const boxes =
       node.boundingBoxes.length > 0
         ? node.boundingBoxes
@@ -2336,6 +2430,9 @@ export function projectCanonicalToPaper(input: {
             figureKey: figureLookupKey(text, node.pageStart),
             captionOf,
             ...(regionNode?.boundingBoxes?.length ? { regionBoundingBoxes: regionNode.boundingBoxes } : {}),
+            ...(nativeCaptionTables.rowsByCaption.get(node.id)?.length
+              ? { tableRows: nativeCaptionTables.rowsByCaption.get(node.id) }
+              : {}),
           } satisfies TableMetadata & {
             column: string;
             figureKey: string;
