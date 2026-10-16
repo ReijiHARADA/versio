@@ -8,6 +8,7 @@ import { doclingEnricher } from "../../services/pdfExtraction/enrichers/docling"
 import { nativeDocumentFromExtracted } from "../../services/pdfExtraction/native/fromExtracted";
 import { generateGenericCandidates } from "../../services/pdfExtraction/generic/candidates";
 import { projectCanonicalToPaper, splitFlattenedList } from "../../services/pdfExtraction/projection/toPaper";
+import { attachLinesToBlocks } from "../../data/package/layoutFromExtraction";
 import { detectPageColumns, figureImageRect, reconstructDocument, type LayoutBlock, type PageColumnLayout } from "../../services/pdfLayout";
 import { extractPdfPages } from "../readingOrder/extractPdf";
 import fs from "node:fs";
@@ -726,11 +727,24 @@ describe("canonical extraction pipeline", () => {
       fileHash: "flattened-questionnaire-table-regression",
       metadata: { pageCount: pages.length },
     });
-    const block = result.blocks.find((candidate) => candidate.pageStart === 4 && /A\. A little boy.*A\. White/.test(candidate.original ?? ""));
+    const packagedBlocks = attachLinesToBlocks(result.blocks, result.layoutBlocks);
+    const block = packagedBlocks.find((candidate) => candidate.pageStart === 4 && candidate.metadata.captionOriginal === "TABLE 1 Examples of the stimuli.");
     const rows = block?.metadata.tableRows as Array<Array<{ text: string }>> | undefined;
     expect(block?.type).toBe("table");
     expect(rows?.some((row) => row.some((cell) => cell.text === "A. A little boy") && row.some((cell) => cell.text === "A. White"))).toBe(true);
     expect(rows?.some((row) => row.some((cell) => cell.text === "B. A nanny") && row.some((cell) => cell.text === "B. Yellow"))).toBe(true);
+    // Question cells can outrank the table role because they are sentence
+    // shaped. They still belong to the caption-owned grid when their native
+    // bbox is inside the dense table region.
+    expect(rows?.flat().some((cell) => cell.text === "Besides the couple, who else is the main character in the clip?")).toBe(true);
+    expect(packagedBlocks.some((candidate) => candidate.pageStart === 4 && candidate.type === "paragraph" &&
+      /Besides the couple, who else is the main character/.test(candidate.original ?? ""))).toBe(false);
+    const imageBacked = result.blocks.map((candidate) => candidate.metadata.captionOriginal === "TABLE 1 Examples of the stimuli."
+      ? { ...candidate, metadata: { ...candidate.metadata, imageUrl: "data:image/png;base64,table" } }
+      : candidate);
+    const visibleWithCrop = suppressImageBackedTableFragments(imageBacked)
+      .filter((candidate) => candidate.pageStart === 4 && candidate.type === "table");
+    expect(visibleWithCrop).toHaveLength(1);
   }, 60_000);
 
   it("does not append a repeated top-margin proceedings URL to body paragraphs", async () => {

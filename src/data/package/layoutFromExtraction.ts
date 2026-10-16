@@ -691,13 +691,18 @@ function foldCaptionOwnedTableFallbacks(blocks: PaperBlock[], layoutBlocks: Layo
     owners.sort((a, b) => a.distance - b.distance);
     if (owners.length > 0) ownerByFragmentId.set(fragment.id, { caption: owners[0].caption, rows });
   }
-  const rowsByCaption = new Map<string, TableCell[][]>();
+  const rowEntriesByCaption = new Map<string, Array<{ rows: TableCell[][]; y: number }>>();
   const ownedCaptionIds = new Set<string>();
   for (const caption of captions) {
     const rows = tableRowsFrom(caption)?.filter((row) =>
       !/^(?:table|表)\s*\d+/i.test(row.map((cell) => cell.text).join(" ").trim())
     );
-    if (rows?.length) rowsByCaption.set(caption.id, normalizeTableRows(rows));
+    if (rows?.length) {
+      rowEntriesByCaption.set(caption.id, [{
+        rows: normalizeTableRows(rows),
+        y: firstBox(caption)?.y ?? 0,
+      }]);
+    }
   }
   // Projection order is usually reading order, but a full-width table whose
   // caption and cells came from different PDF columns can interleave blocks
@@ -718,10 +723,58 @@ function foldCaptionOwnedTableFallbacks(blocks: PaperBlock[], layoutBlocks: Layo
       const bBox = firstBox(b.fragment);
       return (aBox?.y ?? 0) - (bBox?.y ?? 0) || (aBox?.x ?? 0) - (bBox?.x ?? 0);
     });
-    const owned = rowsByCaption.get(captionId) ?? [];
-    for (const entry of entries) owned.push(...normalizeTableRows(entry.rows));
-    rowsByCaption.set(captionId, owned);
+    const owned = rowEntriesByCaption.get(captionId) ?? [];
+    for (const entry of entries) {
+      owned.push({ rows: normalizeTableRows(entry.rows), y: firstBox(entry.fragment)?.y ?? 0 });
+    }
+    rowEntriesByCaption.set(captionId, owned);
     ownedCaptionIds.add(captionId);
+  }
+  const absorbedParagraphIds = new Set<string>();
+  // A table's question cell can be promoted to `paragraph` when its sentence
+  // shape is stronger than its table score. Absorb it only inside a dense,
+  // already-owned caption region, with a nearby native table fragment on the
+  // same baseline. This keeps ordinary prose beside a table untouched.
+  for (const caption of captions) {
+    const owned = [...ownerByFragmentId.entries()]
+      .filter(([, owner]) => owner.caption.id === caption.id)
+      .map(([id]) => blocks.find((block) => block.id === id))
+      .filter((block): block is PaperBlock => Boolean(block));
+    if (owned.length < 4) continue;
+    const boxes = owned.map(firstBox).filter((box): box is NonNullable<ReturnType<typeof firstBox>> => Boolean(box));
+    if (boxes.length < 4) continue;
+    const minX = Math.min(...boxes.map((box) => box.x));
+    const maxX = Math.max(...boxes.map((box) => box.x + box.width));
+    const minY = Math.min(...boxes.map((box) => box.y));
+    const maxY = Math.max(...boxes.map((box) => box.y + box.height));
+    const nearRows = owned.map(firstBox).filter((box): box is NonNullable<ReturnType<typeof firstBox>> => Boolean(box));
+    const candidates = blocks.filter((block) => {
+      if (block.type !== "paragraph" || block.pageStart !== caption.pageStart || absorbedParagraphIds.has(block.id)) return false;
+      const box = firstBox(block);
+      const text = (block.original ?? "").trim();
+      if (!box || !text || box.x < minX - 18 || box.x + box.width > maxX + 18 ||
+          box.y < minY - 14 || box.y + box.height > maxY + 14) return false;
+      if (!/[?？]$/.test(text) && !/^(?:[A-C][.)]|What\b|Which\b|Who\b|How\b|Besides\b|Finally\b)/i.test(text)) return false;
+      return nearRows.some((row) => Math.abs(row.y - box.y) <= 14 ||
+        (box.y >= row.y && box.y <= row.y + row.height + 14));
+    });
+    if (candidates.length === 0) continue;
+    const entries = rowEntriesByCaption.get(caption.id) ?? [];
+    for (const block of candidates) {
+      const box = firstBox(block)!;
+      entries.push({
+        rows: [[{ text: (block.original ?? "").trim(), x: box.x, width: box.width }]],
+        y: box.y,
+      });
+      absorbedParagraphIds.add(block.id);
+    }
+    rowEntriesByCaption.set(caption.id, entries);
+  }
+  const rowsByCaption = new Map<string, TableCell[][]>();
+  for (const [captionId, entries] of rowEntriesByCaption.entries()) {
+    rowsByCaption.set(captionId, entries
+      .sort((a, b) => a.y - b.y)
+      .flatMap((entry) => entry.rows));
   }
   const inferredOwnerIds = new Set<string>();
   for (const caption of captions) {
@@ -733,7 +786,7 @@ function foldCaptionOwnedTableFallbacks(blocks: PaperBlock[], layoutBlocks: Layo
   }
   if (ownerByFragmentId.size === 0 && inferredOwnerIds.size === 0) return blocks;
   return blocks.flatMap((block) => {
-    if (ownerByFragmentId.has(block.id) || inferredOwnerIds.has(block.id)) return [];
+    if (ownerByFragmentId.has(block.id) || inferredOwnerIds.has(block.id) || absorbedParagraphIds.has(block.id)) return [];
     const rows = rowsByCaption.get(block.id);
     if (!rows) return [block];
     return [{
