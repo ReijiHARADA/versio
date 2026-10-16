@@ -3547,3 +3547,13 @@ server process remains running.
   and no `Finger ...` or `Function Call ...` stream is emitted as a translated
   paragraph. Table 2 remains image/native-data limited and is represented by a
   four-row source grid when a crop is unavailable.
+
+# 2026-10-16: add vertical safety margin to table crops
+
+- Table image crops now use the selected table-row geometry plus an 8pt
+  vertical margin, capped before the caption or page edge. This keeps ruled
+  borders and glyph ascenders/descenders at the first and last row from being
+  clipped while avoiding neighbouring prose.
+- The crop regression cases pass, and the rebuilt `.app` was verified by the
+  packaged OzCHI PDF flow (import, background enrichment grace period,
+  export, quit, relaunch persistence) with marker `ok` at **15:19:59 JST**.

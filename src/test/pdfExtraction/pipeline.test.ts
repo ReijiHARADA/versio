@@ -39,7 +39,7 @@ describe("canonical extraction pipeline", () => {
       column: "right", bbox: { page: 6, x: 310, y: 206, width: 230, height: 18 }, lines: [],
     };
     const crop = figureImageRect(caption, [rowBlock("Finger Thumb Finger1", 341, 24), rowBlock("Function Call tapped contact", 389, 106), caption], layout);
-    expect(crop).toMatchObject({ page: 6, y: 129, height: 74 });
+    expect(crop).toMatchObject({ page: 6, y: 124, height: 80 });
   });
 
   it("crops a compact table stream below an above-table caption", () => {
@@ -57,7 +57,7 @@ describe("canonical extraction pipeline", () => {
       column: "left", bbox: { page: 6, x: 50, y: 362, width: 236, height: 8 }, lines: [],
     };
     const crop = figureImageRect(caption, [caption, row("Gist cue 0.82 0.77", 396), row("Detailed cue 0.84 0.77", 411), row("Low interest 0.80 0.68", 426)], layout);
-    expect(crop).toMatchObject({ page: 6, y: 373, height: 64 });
+    expect(crop).toMatchObject({ page: 6, y: 372, height: 70 });
   });
 
   it("crops full-column numeric cell rows below a compact table caption", () => {
@@ -80,7 +80,7 @@ describe("canonical extraction pipeline", () => {
       column: "left", bbox: { page: 6, x: 52, y: 68, width: 210, height: 8 }, lines: [],
     };
     const crop = figureImageRect(caption, [caption, row("Age 66.3 70.0 0.368", 87), row("Height 162.0 162.0 0.986", 102), row("BMI 28.0 27.4 0.693", 117)], layout);
-    expect(crop).toMatchObject({ page: 6, y: 79, height: 49 });
+    expect(crop).toMatchObject({ page: 6, y: 78, height: 55 });
   });
 
   it("hides caption-owned table fragments only after a rendered table crop is available", () => {
