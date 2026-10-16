@@ -4704,6 +4704,10 @@ export function figureImageRect(
 ): BoundingBox | null {
   const band = columnBand(caption.column, layout);
   const captionTop = caption.bbox.y;
+  // Text bboxes stop at the glyph bounds, while ruled tables and embedded
+  // table artwork usually extend beyond them. Keep a small geometry-derived
+  // margin so the first/last row and its border are not clipped in the Reader.
+  const tableCropPadding = 8;
 
   // A ruled table is text, rather than an embedded raster image. The normal
   // figure crop logic treats the closest preceding text as the boundary of a
@@ -4759,8 +4763,9 @@ export function figureImageRect(
     const aboveRows = selectContiguousRows(compactTableRows("above"), "above");
     if (aboveRows.length > 0) {
       const tableTop = Math.min(...aboveRows.map((block) => block.bbox.y));
-      const y = Math.max(0, tableTop - 3);
-      const bottom = Math.max(y, captionTop - 3);
+      const y = Math.max(0, tableTop - tableCropPadding);
+      const tableBottom = Math.max(...aboveRows.map((block) => block.bbox.y + block.bbox.height));
+      const bottom = Math.max(y, Math.min(captionTop - 2, tableBottom + tableCropPadding));
       if (bottom - y >= 18) {
         const x = Math.max(0, Math.min(band.x, ...aboveRows.map((block) => block.bbox.x), caption.bbox.x) - 6);
         const right = Math.min(
@@ -4785,8 +4790,8 @@ export function figureImageRect(
     // One short label below a caption could be ordinary prose. Three compact
     // rows (or four native lines) are enough to make this a table-only crop.
     if (belowRows.length >= 3 || belowLineCount >= 4) {
-      const y = Math.max(0, captionTop + caption.bbox.height + 3);
-      const bottom = Math.min(layout.pageHeight, Math.max(...belowRows.map((block) => block.bbox.y + block.bbox.height)) + 3);
+      const y = Math.max(0, captionTop + caption.bbox.height + 2);
+      const bottom = Math.min(layout.pageHeight, Math.max(...belowRows.map((block) => block.bbox.y + block.bbox.height)) + tableCropPadding);
       if (bottom - y >= 18) {
         const x = Math.max(0, Math.min(band.x, ...belowRows.map((block) => block.bbox.x), caption.bbox.x) - 6);
         const right = Math.min(
