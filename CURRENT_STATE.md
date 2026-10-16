@@ -3344,3 +3344,5 @@ The OzCHI Table 5 regression now yields structured rows for both Phonebook and G
 # 2026-10-16: packaged app after stacked-grid recovery
 
 Fast Tauri build completed at **2026-10-16 11:45:38 JST** from commit `413ab98`. The bundle includes the current native table-region and package-grid recovery code. Real OzCHI import-only packaged E2E passed with **138 blocks / 5 tables / all required tables retaining non-empty `tableRows`**. Generated license metadata was restored after the build, and no Paper Reader or translation-server process remained after the harness exited.
+
+The same **11:45:38 JST** bundle also passed the full packaged integration flow against the OzCHI PDF: import → Reader acceptance marker → search (`hits=1`) → Markdown export → Notion ZIP export (`bytes>0`) → app relaunch and persistence. The harness exited with no Paper Reader or bundled translation-server process remaining.
