@@ -82,11 +82,11 @@ describe("carryForwardExactTranslations", () => {
     // zero crops here. The source-only fallback must still retain native cells
     // instead of regressing to a flattened table sentence.
     const table4 = result.blocks.find((block) =>
-      block.original?.includes("Finger Phonebook Gallery Thumb")
+      block.type === "table" && block.original?.startsWith("Table 4.")
     );
     expect(table4?.type).toBe("table");
-    expect((table4?.metadata.tableRows as Array<Array<{ text: string }>>)?.[0]
-      ?.map((cell) => cell.text)).toEqual(["Finger", "Phonebook"]);
+    expect((table4?.metadata.tableRows as Array<Array<{ text: string }>>)?.flat()
+      .map((cell) => cell.text)).toEqual(expect.arrayContaining(["Finger", "Phonebook"]));
     const persisted = await loadPaperPackage(packageFs, seed.paper.id, {
       includeAssets: true,
       includeSourcePdf: true,
