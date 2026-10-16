@@ -1,0 +1,143 @@
+/**
+ * Download CC-licensed OA PDFs via Europe PMC (explicit license + isOpenAccess).
+ * Only stores files when Europe PMC reports isOpenAccess=Y and a CC license.
+ *
+ *   node scripts/fetch-oa-europepmc.mjs [--limit=12]
+ */
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+const root = join(import.meta.dirname, "..");
+const outDir = join(root, "test-fixtures/real-papers/pending-pdfs");
+const catalogPath = join(root, "test-fixtures/real-papers/pending-oa-candidates.json");
+const limitArg = process.argv.find((a) => a.startsWith("--limit="));
+const limit = limitArg ? Number(limitArg.slice("--limit=".length)) : 12;
+
+mkdirSync(outDir, { recursive: true });
+
+const queries = [
+  'LICENSE:"cc by" AND HAS_PDF:y AND ("human-computer interaction" OR HCI OR ergonomics OR "user experience")',
+  'LICENSE:"cc by" AND HAS_PDF:y AND (linguistics OR "discourse analysis" OR morphology)',
+  'LICENSE:"cc by" AND HAS_PDF:y AND ("machine learning" OR "deep learning") AND (review OR survey)',
+  'LICENSE:"cc by-nc" AND HAS_PDF:y AND (ergonomics OR "occupational health")',
+];
+
+function slugify(title) {
+  return String(title || "paper")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 72);
+}
+
+function licenseOk(license) {
+  const t = String(license || "").toLowerCase();
+  return /^cc by/.test(t) || t.includes("creative commons attribution");
+}
+
+async function search(query) {
+  const url =
+    "https://www.ebi.ac.uk/europepmc/webservices/rest/search?" +
+    new URLSearchParams({
+      query,
+      resultType: "core",
+      format: "json",
+      pageSize: "25",
+    });
+  const json = await (await fetch(url, { headers: { Accept: "application/json" } })).json();
+  return json.resultList?.result ?? [];
+}
+
+async function downloadPdf(pmcid, dest) {
+  const url = `https://europepmc.org/articles/${pmcid}?pdf=render`;
+  const response = await fetch(url, {
+    redirect: "follow",
+    headers: {
+      "User-Agent": "PaperReaderCorpusFetcher/1.0 (OA CC-licensed evaluation corpus)",
+      Accept: "application/pdf",
+    },
+  });
+  if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (bytes.length < 8000 || !bytes.subarray(0, 5).toString("latin1").startsWith("%PDF")) {
+    throw new Error(`not a PDF (${bytes.length} bytes)`);
+  }
+  writeFileSync(dest, bytes);
+  return bytes.length;
+}
+
+const pending = JSON.parse(readFileSync(catalogPath, "utf8"));
+const existingIds = new Set(pending.candidates.map((c) => c.id));
+const existingPmc = new Set(
+  pending.candidates
+    .map((c) => (c.sourceUrl || "").match(/PMC\d+/i)?.[0]?.toUpperCase())
+    .filter(Boolean)
+);
+
+const results = [];
+const added = [];
+
+for (const query of queries) {
+  if (added.length >= limit) break;
+  const rows = await search(query);
+  for (const row of rows) {
+    if (added.length >= limit) break;
+    const pmcid = String(row.pmcid || "").toUpperCase();
+    if (!pmcid.startsWith("PMC")) continue;
+    if (row.isOpenAccess !== "Y") continue;
+    if (!licenseOk(row.license)) continue;
+    if (existingPmc.has(pmcid)) continue;
+
+    const idBase = slugify(row.title);
+    let id = `epmc-${idBase}`;
+    let n = 2;
+    while (existingIds.has(id)) {
+      id = `epmc-${idBase}-${n++}`;
+    }
+
+    const dest = join(outDir, `${id}.pdf`);
+    if (existsSync(dest)) {
+      results.push({ id, status: "exists", pmcid });
+      continue;
+    }
+
+    try {
+      const bytes = await downloadPdf(pmcid, dest);
+      const candidate = {
+        id,
+        title: String(row.title || "").replace(/\s+/g, " ").trim(),
+        discipline: "mixed-oa",
+        venue: row.journalTitle || "EuropePMC",
+        doi: row.doi || null,
+        sourceUrl: `https://pmc.ncbi.nlm.nih.gov/articles/${pmcid}/`,
+        downloadUrl: `https://europepmc.org/articles/${pmcid}?pdf=render`,
+        oaStatus: "open",
+        license: String(row.license || "").toLowerCase(),
+        licenseVerifiedVia: "europepmc-api",
+        reasonSelected: "EuropePMC CC-licensed OA PDF for extraction evaluation beyond catalog baseline",
+        retrievalStatus: "downloaded",
+        retrievalDate: new Date().toISOString().slice(0, 10),
+        pmcid,
+      };
+      pending.candidates.push(candidate);
+      existingIds.add(id);
+      existingPmc.add(pmcid);
+      added.push(candidate);
+      results.push({ id, status: "downloaded", pmcid, bytes, license: candidate.license });
+      console.log(JSON.stringify(results.at(-1)));
+    } catch (error) {
+      results.push({
+        id,
+        status: "failed",
+        pmcid,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      console.log(JSON.stringify(results.at(-1)));
+    }
+  }
+}
+
+pending.version = pending.version || "extraction-corpus-pending-v1";
+pending.lastEuropePmcExpansion = new Date().toISOString();
+writeFileSync(catalogPath, `${JSON.stringify(pending, null, 2)}\n`);
+console.log(JSON.stringify({ added: added.length, results }, null, 2));
