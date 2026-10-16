@@ -1,3 +1,7 @@
+# 2026-10-16: 本文がエラーなしで未翻訳のまま残る
+
+Reader の Paragraph が import の `shouldTranslateBlock` より狭い `shouldTranslateParagraph` だけで表示を決めていた。リスト項目など import 対象の pending/failed が「対象外」扱いになり、待ち表示も失敗 UI もなく原文だけ出ていた。表示判定を `resolveParagraphTranslationUi` に寄せ、pending/processing/failed は必ず待ち／再試行面を出す。reader テスト 31/31・typecheck pass。
+
 # 2026-10-16: 目次ハイライトと本文スクロールのガタつき
 
 IntersectionObserver は変化したエントリだけを返すのに、交差中の先頭だけを目次の現在位置にしていたため、スクロール中にハイライトが跳ねていた。交差集合を保持し文書順で選ぶ。目次クリック中は対象セクションをロック。仮想化スペーサは実測高さがあればそれを使い、ビューポートより上でマウントしたときの高さ差分だけ `scrollTop` を補正する。reader テスト 27/27・typecheck pass。

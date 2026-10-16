@@ -7,12 +7,6 @@ import { useAppStore } from "../../stores/appStore";
 import { updateBlock, getGlossary, getSetting } from "../../services/database";
 import { MADLADEngine } from "../../services/translation/madladEngine";
 import type { ImportConfig } from "../../services/importServiceV2";
-import {
-  usableTranslatedText,
-  looksLikeBibliographyEntry,
-  isReferencesHeading,
-  shouldTranslateParagraph,
-} from "../../services/translation/quality";
 import { isLowExtractionConfidence } from "../../services/extractionConfidence";
 import { splitHighlightedText } from "../../services/highlightRanges";
 import { parseCitationGroups, uniqueCitationTarget } from "../../services/citations";
@@ -26,6 +20,7 @@ import { anchorFromEventTarget } from "./popoverAnchor";
 import { segmentTextWithGlossary } from "./glossary/glossaryTerms";
 import { GlossaryTermPopover } from "./glossary/GlossaryTermPopover";
 import type { AnchorBox } from "./memo/popoverPosition";
+import { resolveParagraphTranslationUi } from "./paragraphTranslationUi";
 import styles from "./Paragraph.module.css";
 
 type ParagraphProps = {
@@ -43,6 +38,8 @@ type ParagraphProps = {
   glossaryEntries?: GlossaryEntry[];
   onOpenGlossaryInspector?: () => void;
   onJumpToTarget?: (targetId: string) => void;
+  /** Reference section ids — same set import uses for translation eligibility. */
+  refSectionIds?: Set<string>;
 };
 
 const COMPOSE_DRAFT_ID = "__compose-draft__";
@@ -79,6 +76,7 @@ export function Paragraph({
   glossaryEntries = [],
   onOpenGlossaryInspector,
   onJumpToTarget,
+  refSectionIds,
 }: ParagraphProps) {
   const isExpanded = useAppStore((state) => state.expandedOriginalBlocks.has(block.id));
   const toggleOriginalExpanded = useAppStore((state) => state.toggleOriginalExpanded);
@@ -97,26 +95,13 @@ export function Paragraph({
   const layoutRef = useRef<HTMLDivElement>(null);
   const [reservedHeight, setReservedHeight] = useState<number | null>(null);
 
-  const usableStoredTranslation = usableTranslatedText(block.translated, block.original);
-  // The import policy understands projected list items and other structured
-  // units that the generic paragraph heuristic intentionally rejects. Once a
-  // translation has completed and passed the shared quality gate, the Reader
-  // must not hide it by re-running the narrower source-shape heuristic.
-  const hasAcceptedStoredTranslation =
-    block.translationStatus === "completed" && Boolean(usableStoredTranslation);
-  const skipTranslation = !hasAcceptedStoredTranslation && (
-    block.translationStatus === "skipped" ||
-    looksLikeBibliographyEntry(block.original || "") ||
-    isReferencesHeading(block.original || "") ||
-    !shouldTranslateParagraph(block.original || "")
-  );
-  const translated = skipTranslation ? null : usableStoredTranslation;
-  const hasTranslation = Boolean(translated);
+  const {
+    translated,
+    hasTranslation,
+    isFailed,
+    isWaiting,
+  } = resolveParagraphTranslationUi(block, refSectionIds ?? new Set());
   const hasOriginal = Boolean(block.original && translated);
-  const isPending = !skipTranslation && block.translationStatus === "pending";
-  const isProcessing = !skipTranslation && block.translationStatus === "processing";
-  const isFailed = !skipTranslation && block.translationStatus === "failed" && !hasTranslation;
-  const isWaiting = !hasTranslation && (isPending || isProcessing);
   const lowConfidence = isLowExtractionConfidence(block.extractionConfidence);
   const translationInputWarning =
     !hasTranslation && typeof block.metadata.translationInputWarning === "string"
