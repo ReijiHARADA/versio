@@ -1626,7 +1626,45 @@ describe("canonical extraction pipeline", () => {
       .filter((block) => block.type === "heading")
       .map((block) => (block.original ?? "").trim());
     expect(headings).toContain("3.1 Aggregation");
-    expect(headings.some((text) => /^(Q|W|VM|PA:|X∞)$/.test(text))).toBe(false);
+    expect(headings.some((text) => /^(Q|W|VM|PA:|X∞|A B)$/.test(text))).toBe(false);
+  });
+
+  it("does not promote figure panel tags or camelCase legend mash as headings", () => {
+    const item = (text: string, x: number, y: number, fontSize: number, fontName = "BodyFont") => ({
+      text, x, y, width: Math.max(8, text.length * fontSize * 0.5), height: fontSize, fontSize, fontName, page: 1,
+    });
+    const pages = [{
+      pageNumber: 1,
+      width: 540,
+      height: 700,
+      textItems: [
+        item("Using Cognitive Psychology to Understand Models", 50, 40, 15, "TitleFont"),
+        item("Ada Researcher", 50, 70, 10),
+        item("Abstract", 50, 110, 12, "BoldFont"),
+        item("We compare human and model decisions across vignettes in a controlled setting.", 50, 140, 10),
+        item("Results", 50, 200, 13, "BoldFont"),
+        item("Model accuracy tracks human patterns on framing tasks.", 50, 230, 10),
+        item("Figure 1. Panel overview of decision tasks.", 50, 320, 9, "CaptionFont"),
+        item("A B", 80, 360, 10),
+        item("HumansDavinci", 80, 390, 10),
+        item("Mean regret", 80, 420, 10),
+        item("Discussion", 50, 500, 13, "BoldFont"),
+        item("These patterns suggest the model mirrors several human biases in aggregate.", 50, 530, 10),
+      ],
+    }];
+    const extracted = extractFromPages({
+      pages,
+      paperId: "figure-panel-heading",
+      filePath: "/tmp/figure-panel.pdf",
+      fileHash: "figure-panel",
+      metadata: { pageCount: 1 },
+    });
+    const headings = extracted.canonical.nodes
+      .filter((node) => node.role === "heading")
+      .map((node) => (node.text ?? "").trim());
+    expect(headings).toContain("Results");
+    expect(headings).toContain("Discussion");
+    expect(headings.some((text) => /^(A B|HumansDavinci|Mean regret)$/.test(text))).toBe(false);
   });
 
   it("keeps lowercase colon lead-ins with italic quotes as body, not headings", () => {

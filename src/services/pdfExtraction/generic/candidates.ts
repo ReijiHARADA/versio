@@ -434,8 +434,14 @@ function headingTextShape(text: string): boolean {
   if (/[.!?。．]$/.test(compact) || /^\d+[.)]\s+[A-Z][a-z]+,?\s+[A-Z]/.test(compact)) return false;
   const letters = (compact.match(/\p{L}/gu) ?? []).length;
   const upper = (compact.match(/\p{Lu}/gu) ?? []).length;
+  const words = compact.split(/\s+/).filter(Boolean);
   const uppercase = letters >= 4 && upper / Math.max(letters, 1) > 0.72;
-  const titleCase = /^\p{Lu}[\p{L}]*(?:[\s:–—-]+[\p{L}]+)*$/u.test(compact);
+  // Require a real word (≥3 letters). Panel crumbs like "A B" match a naive
+  // Title-Case pattern but are figure furniture, not section structure.
+  const titleCase =
+    letters >= 6 &&
+    words.some((word) => (word.match(/\p{L}/gu) ?? []).length >= 3) &&
+    /^\p{Lu}[\p{L}]*(?:[\s:–—-]+[\p{L}]+)*$/u.test(compact);
   return uppercase || titleCase || /^\d+(?:\.\d+)*\s+/.test(compact);
 }
 
@@ -1493,7 +1499,10 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       (/^[A-Z][A-Za-z0-9/+-]{0,5}$/.test(trimmedHeading) && trimmedHeading.length <= 6 && !headingHasWeight) ||
       // Axis / summation crumbs ("X∞", "Σi") from figures or equations.
       /^[A-Za-zΑ-Ωα-ω]\s*[∞∑∫√±≤≥≠≈∂∇]$/u.test(trimmedHeading) ||
-      /^[∞∑∫√±≤≥≠≈∂∇]$/u.test(trimmedHeading)
+      /^[∞∑∫√±≤≥≠≈∂∇]$/u.test(trimmedHeading) ||
+      // Multi-panel figure tags ("A B", "A B C") and camelCase legend mash.
+      /^[A-Z](?:\s+[A-Z]){1,4}$/.test(trimmedHeading) ||
+      (/^[A-Z][a-z]+(?:[A-Z][a-zA-Z0-9]*)+$/.test(trimmedHeading) && trimmedHeading.length <= 24 && !headingHasWeight)
     );
     const diagramMicroHeading = layoutRole === "heading" && diagramMicroLabel;
     const numericDensity = (block.text.match(/\d/g) ?? []).length / Math.max(block.text.length, 1);
@@ -1681,6 +1690,43 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     if (allCapsSectionLabel) {
       // Must clear documentResolver's heading demotion: score < paragraph + 0.08.
       scoreByRole.heading = Math.max(scoreByRole.heading ?? 0, 0.96);
+    }
+    // Chart axis / legend crumbs near a figure caption share body size and
+    // Title Case with real section heads; keep them out of outline structure.
+    const nearFigureCaption = blocks.some((candidate) => {
+      if (candidate.pageStart !== block.pageStart || candidate.role !== "figure_caption") return false;
+      // Axis/legend text sits in the figure band above the caption, not in
+      // earlier section headings that merely share the page.
+      const gap = candidate.bbox.y - (block.bbox.y + block.bbox.height);
+      return gap >= -8 && gap <= 360;
+    });
+    const figureAxisOrLegend =
+      nearFigureCaption &&
+      block.lines.length <= 2 &&
+      block.text.trim().split(/\s+/).filter(Boolean).length <= 8 &&
+      block.text.trim().length <= 64 &&
+      style.fontSizeRatio <= 1.06 &&
+      style.boldScore < 0.35 &&
+      !/^\d+(?:\.\d+)*\.?\s+\S/.test(block.text.trim()) &&
+      !/^(?:abstract|introduction|methods?|results?|discussion|conclusion|references|related work|acknowledgements?)\b/i.test(
+        block.text.trim()
+      );
+    if (figureAxisOrLegend) {
+      scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.18);
+      scoreByRole.other = Math.max(scoreByRole.other ?? 0, 0.72);
+      scoreByRole.paragraph = Math.max(scoreByRole.paragraph ?? 0, 0.55);
+    }
+    const mashedChartLegend =
+      ((block.text.match(/\beffects?\b/gi) ?? []).length >= 2 && !/^\d+(?:\.\d+)*\.?\s+/.test(block.text.trim())) ||
+      (/^[A-Za-z][A-Za-z ]{0,20}:$/.test(block.text.trim()) &&
+        style.fontSizeRatio <= 1.08 &&
+        style.boldScore < 0.4 &&
+        !/^(?:abstract|introduction|methods?|results?|discussion|conclusion|references|background|keywords?)\s*:$/i.test(
+          block.text.trim()
+        ));
+    if (mashedChartLegend) {
+      scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.18);
+      scoreByRole.other = Math.max(scoreByRole.other ?? 0, 0.7);
     }
     const equation = equationScore(block, layout);
     // A numeric/statistical line can be emitted as its own native block when

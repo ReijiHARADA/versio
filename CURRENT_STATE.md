@@ -1,3 +1,7 @@
+# 2026-10-17: 図パネル/凡例の見出し誤昇格を抑止
+
+目視監査で GPT-3 論文の `A B` / `Mean regret` / `HumansDavinci` などが outline に混入。Title-Case を「3文字以上の語」必須にし、図キャプション帯の短軸ラベル・camelCase 凡例・`Input:` を demote。Cyrillic ALL-CAPS 見出し・arXiv スタンプ・`X∞` 抑止とあわせ、wide **207/207 clean**。ゴール「完璧」と Reader 網羅目視は未達。
+
 # 2026-10-17: Cyrillic見出し・arXivスタンプ・数式マイクロ見出し
 
 残 sparse-headings（sensory marketing）は `headingTextShape` / `uppercaseRatio` がラテン専用だったのが原因。Unicode 大文字比 + 同一サイズ ALL-CAPS セクション昇格で Cyrillic 見出しを復旧。あわせて `arXiv:` スタンプのタイトル誤採用と `X∞` 系図中ラベルの見出し化を抑止。wide 診断（catalog+pending）**207 / 207 clean**（flagged 0）。目視サンプル 16 本の自動スキャンでも arXiv/空タイトル/無見出しは無し。ゴール「完璧」と Reader 網羅目視は未達。
