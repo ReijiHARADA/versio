@@ -3373,3 +3373,9 @@ The updated extraction path was packaged into the fast macOS `.app` at
 with **138 blocks / 5 tables**, every table retaining non-empty `tableRows`.
 The app and bundled sidecar exited cleanly; no Paper Reader or translation
 server process remains running.
+
+# 2026-10-16: cross-column table suppression uses cell geometry
+
+- Root cause: image-backed table suppression counted only each fragment's outer `bbox.left`. A single native fragment can contain cells from multiple x-bands (questionnaire/table layouts), so a full-width table caption was not recognized as cross-column-owned and duplicate native table cards remained.
+- Fix: cross-column evidence now uses `tableRows[].x` and native line item x positions, falling back to block geometry when cell evidence is unavailable. This remains geometry-based and paper-independent.
+- Verification: questionnaire crop suppression regression passes; `npm run typecheck` passes; `npm run lint` passes with existing warnings. The full pipeline run also exposed one pre-existing intermittent/fixture failure in the captionless education table regression; it reproduces without this change and is recorded for follow-up.
