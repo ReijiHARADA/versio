@@ -229,19 +229,53 @@ function recoveredTableLines(block: PaperBlock, layoutBlocks: LayoutBlock[]): La
 /** Merge wrapped native table-cell rows and word fragments by geometry. */
 function normalizeTableRows(rows: TableCell[][]): TableCell[][] {
   if (rows.length < 2) return rows;
+  const joinCellText = (left: string, right: string) =>
+    `${left} ${right}`.replace(/-\s+/g, "-").replace(/\s+/g, " ").trim();
+  const looksLikeWrappedContinuation = (left: string, right: string) => {
+    const leftText = left.trim();
+    const leftWords = leftText.split(/\s+/).filter(Boolean).length;
+    return (leftWords >= 3 || /[-‐‑]$/.test(leftText)) &&
+      !/[.!?;:)\]]$/.test(leftText) && /^(?:[a-z(\[]|[,.])/.test(right.trim());
+  };
+  // A borderless table may emit a wrapped cell on separate native baselines
+  // while another column supplies a row between them. Merge only when the
+  // text itself proves continuation; this keeps real rows (which usually
+  // begin with a label or capitalized value) separate.
+  const mergedWrappedRows = rows.map((row) => row.map((cell) => ({ ...cell })));
+  for (let index = 0; index < mergedWrappedRows.length; index += 1) {
+    const row = mergedWrappedRows[index];
+    for (const cell of [...row]) {
+      const nextIndex = mergedWrappedRows.findIndex((candidate, candidateIndex) =>
+        candidateIndex > index && candidateIndex <= index + 3 &&
+        candidate.some((next) => Math.abs(next.x - cell.x) <= 12 &&
+          looksLikeWrappedContinuation(cell.text, next.text))
+      );
+      if (nextIndex < 0) continue;
+      const nextRow = mergedWrappedRows[nextIndex];
+      const nextCellIndex = nextRow.findIndex((next) =>
+        Math.abs(next.x - cell.x) <= 12 && looksLikeWrappedContinuation(cell.text, next.text)
+      );
+      if (nextCellIndex < 0) continue;
+      const next = nextRow[nextCellIndex];
+      cell.text = joinCellText(cell.text, next.text);
+      cell.width = Math.max(cell.x + cell.width, next.x + next.width) - cell.x;
+      nextRow.splice(nextCellIndex, 1);
+    }
+  }
+  const compactRows = mergedWrappedRows.filter((row) => row.length > 0);
   const allBands: number[] = [];
-  for (const row of rows) for (const cell of row) {
+  for (const row of compactRows) for (const cell of row) {
     const index = allBands.findIndex((band) => Math.abs(band - cell.x) <= 12);
     if (index >= 0) allBands[index] = (allBands[index] + cell.x) / 2;
     else allBands.push(cell.x);
   }
   allBands.sort((a, b) => a - b);
-  const rowCount = (band: number) => rows.filter((row) => row.some((cell) => Math.abs(cell.x - band) <= 12)).length;
-  const stableBands = allBands.filter((band) => rowCount(band) >= Math.max(2, Math.ceil(rows.length * 0.4)));
-  if (stableBands.length < 2) return rows;
+  const rowCount = (band: number) => compactRows.filter((row) => row.some((cell) => Math.abs(cell.x - band) <= 12)).length;
+  const stableBands = allBands.filter((band) => rowCount(band) >= Math.max(2, Math.ceil(compactRows.length * 0.4)));
+  if (stableBands.length < 2) return compactRows;
   const ranges = stableBands.map((band) => ({
     band,
-    right: Math.max(...rows.flatMap((row) => row
+    right: Math.max(...compactRows.flatMap((row) => row
       .filter((cell) => Math.abs(cell.x - band) <= 12)
       .map((cell) => cell.x + cell.width)), band),
   }));
@@ -260,8 +294,6 @@ function normalizeTableRows(rows: TableCell[][]): TableCell[][] {
     return interval?.band ?? cell.x;
   };
   const leftBand = stableBands[0];
-  const joinCellText = (left: string, right: string) =>
-    `${left} ${right}`.replace(/-\s+/g, "-").replace(/\s+/g, " ").trim();
   const mergeSameBand = (row: TableCell[]): TableCell[] => {
     const merged: TableCell[] = [];
     // Keep native reading order. Wrapped words can return to the same x-band
@@ -285,7 +317,7 @@ function normalizeTableRows(rows: TableCell[][]): TableCell[][] {
     return merged;
   };
   const normalized: TableCell[][] = [];
-  for (const rawRow of rows) {
+  for (const rawRow of compactRows) {
     const row = mergeSameBand(rawRow);
     const hasLeadingCell = row.some((cell) => Math.abs(cell.x - leftBand) <= 12);
     if (!hasLeadingCell && normalized.length > 0) {

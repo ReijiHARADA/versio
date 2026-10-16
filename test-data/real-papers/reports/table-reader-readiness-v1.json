@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T21:46:29.734Z",
+  "generatedAt": "2026-10-16T01:01:45.170Z",
   "paperCount": 114,
   "papers": [
     {
@@ -64,18 +64,22 @@
       "file": "cognitive-memory-cues.pdf",
       "tableCaptions": 4,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 58,
+      "rawTableFragments": 53,
       "cropBackedFragments": 16,
-      "readerRawFragments": 40,
-      "readerCellFallbacks": 31,
+      "readerRawFragments": 37,
+      "readerCellFallbacks": 27,
       "readerFragmentKinds": {
         "structured-grid": 25,
-        "short-label": 7,
-        "prose-like": 3,
-        "ambiguous": 5
+        "short-label": 8,
+        "prose-like": 1,
+        "ambiguous": 3
       },
       "readerFragmentSamples": {
         "structured-grid": [
+          {
+            "page": 4,
+            "text": "A. A little boy A. White What color sweater is the B. A nanny B. Yellow little girl wearing? C. A little girl C. Pink"
+          },
           {
             "page": 4,
             "text": "A. Doing housework A. Short black hair"
@@ -119,10 +123,6 @@
           {
             "page": 4,
             "text": "C. Nobody C. Right hand"
-          },
-          {
-            "page": 4,
-            "text": "A. Dad and son A. Wooden round table"
           }
         ],
         "short-label": [
@@ -151,6 +151,10 @@
             "text": "Finally, who scolds the boy?"
           },
           {
+            "page": 4,
+            "text": "C. Left, right, and middle"
+          },
+          {
             "page": 8,
             "text": "details"
           }
@@ -159,28 +163,12 @@
           {
             "page": 4,
             "text": "What is the status of the B. Watching TV B. Closed room door?"
-          },
-          {
-            "page": 4,
-            "text": "How do the parents react after they see the boy’s behavior?"
-          },
-          {
-            "page": 4,
-            "text": "All materials were presented in Chinese and are translated into English for illustration purpose."
           }
         ],
         "ambiguous": [
           {
             "page": 4,
-            "text": "How does the girl play the piano?"
-          },
-          {
-            "page": 4,
             "text": "Which body part of the girl"
-          },
-          {
-            "page": 4,
-            "text": "Who is sitting at the dining table?"
           },
           {
             "page": 4,
@@ -196,10 +184,6 @@
         {
           "page": 4,
           "text": "A. A little boy A. White What color sweater is the B. A nanny B. Yellow little girl wearing? C. A little girl C. Pink"
-        },
-        {
-          "page": 4,
-          "text": "Besides the couple, who else is the main character in the clip?"
         },
         {
           "page": 4,
@@ -239,10 +223,6 @@
         },
         {
           "page": 4,
-          "text": "How does the girl play the piano?"
-        },
-        {
-          "page": 4,
           "text": "B. Very gentle What does mom’s hair look B. Black updo"
         },
         {
@@ -276,10 +256,6 @@
         {
           "page": 4,
           "text": "A. Dad and son A. Wooden round table"
-        },
-        {
-          "page": 4,
-          "text": "Who is sitting at the dining table?"
         },
         {
           "page": 4,
@@ -323,10 +299,6 @@
         },
         {
           "page": 4,
-          "text": "How do the parents react after they see the boy’s behavior?"
-        },
-        {
-          "page": 4,
           "text": "A. Dad A. Right, middle, and left What are the positions of"
         },
         {
@@ -339,11 +311,7 @@
         },
         {
           "page": 4,
-          "text": "C. Nobody dad, mom, and son at the dining table? C. Left, right, and middle"
-        },
-        {
-          "page": 4,
-          "text": "All materials were presented in Chinese and are translated into English for illustration purpose."
+          "text": "C. Left, right, and middle"
         },
         {
           "page": 7,
@@ -511,33 +479,15 @@
       "file": "cognitive-psychology-gpt3.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 5,
-      "rawTableFragments": 18,
+      "rawTableFragments": 15,
       "cropBackedFragments": 8,
-      "readerRawFragments": 9,
-      "readerCellFallbacks": 6,
+      "readerRawFragments": 6,
+      "readerCellFallbacks": 5,
       "readerFragmentKinds": {
-        "prose-like": 1,
-        "ambiguous": 2,
         "structured-grid": 5,
         "short-label": 1
       },
       "readerFragmentSamples": {
-        "prose-like": [
-          {
-            "page": 2,
-            "text": "Linda is 31 years old, single, outspoken, and very bright. She majored in philosophy. As a student, she was deeply concerned with issues of discrimination and social justice, and also participated in anti-nuclear demonstrations."
-          }
-        ],
-        "ambiguous": [
-          {
-            "page": 2,
-            "text": "Q: Which option is the most probable?"
-          },
-          {
-            "page": 2,
-            "text": "- Option 1: Linda is a bank teller."
-          }
-        ],
         "structured-grid": [
           {
             "page": 2,
@@ -568,18 +518,6 @@
         ]
       },
       "orphanFragments": [
-        {
-          "page": 2,
-          "text": "Linda is 31 years old, single, outspoken, and very bright. She majored in philosophy. As a student, she was deeply concerned with issues of discrimination and social justice, and a"
-        },
-        {
-          "page": 2,
-          "text": "Q: Which option is the most probable?"
-        },
-        {
-          "page": 2,
-          "text": "- Option 1: Linda is a bank teller."
-        },
         {
           "page": 2,
           "text": "- Option 2: Linda is a bank teller and is ac- Adversarial"
@@ -1340,15 +1278,14 @@
       "file": "education-learning-analytics.pdf",
       "tableCaptions": 11,
       "cropReadyCaptions": 11,
-      "rawTableFragments": 88,
+      "rawTableFragments": 85,
       "cropBackedFragments": 49,
-      "readerRawFragments": 39,
-      "readerCellFallbacks": 30,
+      "readerRawFragments": 36,
+      "readerCellFallbacks": 27,
       "readerFragmentKinds": {
         "structured-grid": 24,
         "short-label": 9,
-        "prose-like": 2,
-        "ambiguous": 4
+        "ambiguous": 3
       },
       "readerFragmentSamples": {
         "structured-grid": [
@@ -1439,24 +1376,10 @@
             "text": "Discovery with models"
           }
         ],
-        "prose-like": [
-          {
-            "page": 18,
-            "text": "Grouping similar materials or students based on their learning and interaction patterns."
-          },
-          {
-            "page": 18,
-            "text": "Helping instructors to visualize and analyze the ongoing activities of the students and the use of information."
-          }
-        ],
         "ambiguous": [
           {
             "page": 18,
             "text": "To identify groups of similar Clustering observations."
-          },
-          {
-            "page": 18,
-            "text": "To employ a previously validated model of a phenomenon as a component in another analysis."
           },
           {
             "page": 19,
@@ -1571,10 +1494,6 @@
         },
         {
           "page": 18,
-          "text": "Grouping similar materials or students based on their learning and interaction patterns."
-        },
-        {
-          "page": 18,
           "text": "To identify groups of similar Clustering observations."
         },
         {
@@ -1583,19 +1502,11 @@
         },
         {
           "page": 18,
-          "text": "To employ a previously validated model of a phenomenon as a component in another analysis."
-        },
-        {
-          "page": 18,
           "text": "Discovery with models"
         },
         {
           "page": 18,
           "text": "Distillation of data To represent data in intelligible ways for human using summarization, visualization and judgment interactive interfaces."
-        },
-        {
-          "page": 18,
-          "text": "Helping instructors to visualize and analyze the ongoing activities of the students and the use of information."
         },
         {
           "page": 18,
@@ -1757,11 +1668,11 @@
       "cropReadyCaptions": 2,
       "rawTableFragments": 13,
       "cropBackedFragments": 8,
-      "readerRawFragments": 4,
-      "readerCellFallbacks": 2,
+      "readerRawFragments": 5,
+      "readerCellFallbacks": 3,
       "readerFragmentKinds": {
         "short-label": 2,
-        "structured-grid": 2
+        "structured-grid": 3
       },
       "readerFragmentSamples": {
         "short-label": [
@@ -1775,6 +1686,10 @@
           }
         ],
         "structured-grid": [
+          {
+            "page": 2,
+            "text": "9 Marlina et al. Organizational Justice Cross-sectional"
+          },
           {
             "page": 2,
             "text": "(2020) Perception and Nurse perceived unfair treatment were Burnout more prone to emotional"
@@ -1792,11 +1707,11 @@
         },
         {
           "page": 2,
-          "text": "environment was unsafe and posed a high risk for incidents."
+          "text": "compared to low burnout."
         },
         {
           "page": 2,
-          "text": "compared to low burnout."
+          "text": "9 Marlina et al. Organizational Justice Cross-sectional"
         },
         {
           "page": 2,
@@ -3072,7 +2987,8 @@
       "readerCellFallbacks": 18,
       "readerFragmentKinds": {
         "short-label": 13,
-        "structured-grid": 17
+        "structured-grid": 16,
+        "ambiguous": 1
       },
       "readerFragmentSamples": {
         "short-label": [
@@ -3132,10 +3048,6 @@
           },
           {
             "page": 1,
-            "text": "Principles for the conduct of human factors/ergonomics (HFE) practitioners to human factors/ergonomics conceive and design HFE interventions that live in healthcare: a scoping"
-          },
-          {
-            "page": 1,
             "text": "⇒ While the WHO has advocated for the adoption of human factors/ergonomics (HFE) in healthcare, there is still confusion in the healthcare system as to what constitutes a HFE intervention and what a high-quality HFE intervention involves."
           },
           {
@@ -3173,6 +3085,16 @@
           {
             "page": 8,
             "text": "The intervention is Organisational outcomes:prescribing and change.prescription rates. Organisational outcomes:in each unit. Organisational outcomes:identification incidents.miss (or good catches) perinterruptions.outcomes measured evaluate"
+          },
+          {
+            "page": 8,
+            "text": "an active element intervention approachprescribing and patientpotential adverse identification adverse (principle 3) ( radiology. reporting."
+          }
+        ],
+        "ambiguous": [
+          {
+            "page": 1,
+            "text": "Principles for the conduct of human factors/ergonomics (HFE) practitioners to human factors/ergonomics conceive and design HFE interventions that live in healthcare: a scoping"
           }
         ]
       },
@@ -3361,12 +3283,12 @@
       "file": "human-ai-interaction-guidelines.pdf",
       "tableCaptions": 1,
       "cropReadyCaptions": 1,
-      "rawTableFragments": 21,
+      "rawTableFragments": 37,
       "cropBackedFragments": 2,
-      "readerRawFragments": 7,
-      "readerCellFallbacks": 6,
+      "readerRawFragments": 18,
+      "readerCellFallbacks": 17,
       "readerFragmentKinds": {
-        "structured-grid": 6,
+        "structured-grid": 17,
         "short-label": 1
       },
       "readerFragmentSamples": {
@@ -3389,11 +3311,35 @@
           },
           {
             "page": 7,
+            "text": "Interface Confidence Apple Consider changing how you present results based on different confidence thresholds Interface Confidence Apple In general, translate confidence values into concepts that people already understand. Interface Confide"
+          },
+          {
+            "page": 7,
+            "text": "Interface Confidence Apple Confirm success Interface Google Onboard in stages. Interface Google Help users calibrate their trust. Interface Google Introduce and set expectations for AI Interface Google Set expectations for AI improvements I"
+          },
+          {
+            "page": 7,
+            "text": "Interface Calibration Apple Make calibration quick and easy Interface Calibration Apple Make sure people know how to perform calibration successfully. Interface Calibration Apple Let people cancel calibration at any time. Interface Calibrat"
+          },
+          {
+            "page": 7,
+            "text": "Interface Calibration Apple Always secure people’s calibration information Interface Google Categorical / N-Best Alternatives Interface Google Interface Google"
+          },
+          {
+            "page": 7,
             "text": "Interface Apple Interface Apple List the most likely option first. Interface Apple In situations where attributions aren’t helpful, consider ranking or ordering the results in a way that implies confidence levels Interface Apple Consider of"
           },
           {
             "page": 8,
             "text": "Company Guideline Deployment Google Account for negative impact Deployment Google Auto-detect and display errors Deployment Google Disambiguate systems hierarchy errors Deployment Google Diagnose errors that users don’t perceive Deployment "
+          },
+          {
+            "page": 8,
+            "text": "Deployment Google Deployment Google Monitor over time. Deployment Google Allow for opting out. Deployment Google Plan for co-learning. Deployment Google Connect feedback with personalization. Deployment Google Create opportunities for feedb"
+          },
+          {
+            "page": 8,
+            "text": "Deployment Apple Don’t ask for both positive and negative feedback."
           }
         ],
         "short-label": [
@@ -3474,11 +3420,75 @@
         },
         {
           "page": 7,
+          "text": "Interface Confidence Apple Consider changing how you present results based on different confidence thresholds"
+        },
+        {
+          "page": 7,
+          "text": "Interface Confidence Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Confidence Apple Know what your confidence values mean before you decide how to present them"
+        },
+        {
+          "page": 7,
+          "text": "Interface Confidence Apple"
+        },
+        {
+          "page": 7,
+          "text": "Interface Confidence Apple Confirm success Interface Google Onboard in stages. Interface Google Help users calibrate their trust. Interface Google Introduce and set expectations fo"
+        },
+        {
+          "page": 7,
+          "text": "Interface Calibration Apple Make calibration quick and easy Interface Calibration Apple Make sure people know how to perform calibration successfully. Interface Calibration Apple L"
+        },
+        {
+          "page": 7,
+          "text": "Interface Calibration Apple Always secure people’s calibration information Interface Google Categorical / N-Best Alternatives Interface Google Interface Google"
+        },
+        {
+          "page": 7,
           "text": "Interface Apple Interface Apple List the most likely option first. Interface Apple In situations where attributions aren’t helpful, consider ranking or ordering the results in a wa"
         },
         {
           "page": 8,
           "text": "Company Guideline Deployment Google Account for negative impact Deployment Google Auto-detect and display errors Deployment Google Disambiguate systems hierarchy errors Deployment "
+        },
+        {
+          "page": 8,
+          "text": "Deployment Google Deployment Google Monitor over time. Deployment Google Allow for opting out. Deployment Google Plan for co-learning. Deployment Google Connect feedback with perso"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple Don’t ask for both positive and negative feedback."
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Apple Always make providing explicit feedback a voluntary task. Deployment Apple Request explicit feedback only when necessary. Deployment Apple"
+        },
+        {
+          "page": 8,
+          "text": "Microsoft Remember recent interactions. Microsoft Encourage granular feedback. Microsoft Support efficient correction. Microsoft Learn from user behavior. Deployment Addressing / u"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Apple Prioritize recent feedback. Deployment Addressing / using Feedback Apple Learn from selections when it makes sense. Deployment Addressi"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Apple"
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Apple Don’t let implicit feedback decrease people’s opportunities to explore."
+        },
+        {
+          "page": 8,
+          "text": "Deployment Addressing / using Feedback Microsoft"
         }
       ]
     },
@@ -3559,14 +3569,13 @@
       "file": "job-rotation-ergonomics.pdf",
       "tableCaptions": 5,
       "cropReadyCaptions": 2,
-      "rawTableFragments": 46,
-      "cropBackedFragments": 15,
-      "readerRawFragments": 26,
-      "readerCellFallbacks": 19,
+      "rawTableFragments": 38,
+      "cropBackedFragments": 9,
+      "readerRawFragments": 24,
+      "readerCellFallbacks": 17,
       "readerFragmentKinds": {
         "short-label": 8,
-        "prose-like": 1,
-        "ambiguous": 7,
+        "ambiguous": 6,
         "structured-grid": 10
       },
       "readerFragmentSamples": {
@@ -3604,12 +3613,6 @@
             "text": "1.65"
           }
         ],
-        "prose-like": [
-          {
-            "page": 3,
-            "text": "from a low to an intermediate until a high skill level. WorkALB"
-          }
-        ],
         "ambiguous": [
           {
             "page": 3,
@@ -3626,10 +3629,6 @@
           {
             "page": 3,
             "text": "ALB collaborative, if tasks require workers and robots, working"
-          },
-          {
-            "page": 3,
-            "text": "ALB jointly or independently. Once assigned, robots are fixed"
           },
           {
             "page": 3,
@@ -3691,10 +3690,6 @@
         {
           "page": 3,
           "text": "ALB collaborative, if tasks require workers and robots, working"
-        },
-        {
-          "page": 3,
-          "text": "ALB jointly or independently. Once assigned, robots are fixed"
         },
         {
           "page": 3,
@@ -3888,12 +3883,12 @@
       "file": "linguistics-language-model-physics.pdf",
       "tableCaptions": 0,
       "cropReadyCaptions": 0,
-      "rawTableFragments": 55,
+      "rawTableFragments": 56,
       "cropBackedFragments": 0,
-      "readerRawFragments": 56,
-      "readerCellFallbacks": 54,
+      "readerRawFragments": 57,
+      "readerCellFallbacks": 55,
       "readerFragmentKinds": {
-        "structured-grid": 54,
+        "structured-grid": 55,
         "short-label": 2
       },
       "readerFragmentSamples": {
@@ -3944,7 +3939,7 @@
           },
           {
             "page": 26,
-            "text": "0.2 0.10 200 200 0.1 0.15 250 0.0 250 0.20 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 (a) cfg3b dataset; marginal distribution (b) cfg3b dataset; marginal distribution - gro"
+            "text": "0.2 0.10 200 200 0.1 0.15 250 0.0 250 0.20 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50"
           }
         ],
         "short-label": [
@@ -4001,7 +3996,11 @@
         },
         {
           "page": 26,
-          "text": "0.2 0.10 200 200 0.1 0.15 250 0.0 250 0.20 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 (a) cfg3b dataset; marginal"
+          "text": "0.2 0.10 200 200 0.1 0.15 250 0.0 250 0.20 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50"
+        },
+        {
+          "page": 26,
+          "text": "GPT_rel GPT_rot GPT_pos GPT_uni GPT_rel GPT_rot GPT_pos GPT_uni truth GPT GPT 0 0 0.20 0.8 0.15 50 0.7 50"
         },
         {
           "page": 26,
@@ -4009,11 +4008,11 @@
         },
         {
           "page": 26,
-          "text": "200 0.2 200 0.10 0.1 0.15 250 0.0 250 0.20 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 (c) cfg3i dataset; marginal"
+          "text": "200 0.2 200 0.10 0.1 0.15 250 0.0 250 0.20 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50"
         },
         {
           "page": 26,
-          "text": "200 200 0.1 0.15 0.0 0.20 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 (g) cfg3g dataset; marginal distribution"
+          "text": "200 200 0.1 0.15 0.0 0.20 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50 cut0 cut50"
         },
         {
           "page": 29,
@@ -4859,8 +4858,8 @@
       "file": "marketing-framing.pdf",
       "tableCaptions": 6,
       "cropReadyCaptions": 5,
-      "rawTableFragments": 28,
-      "cropBackedFragments": 19,
+      "rawTableFragments": 27,
+      "cropBackedFragments": 18,
       "readerRawFragments": 8,
       "readerCellFallbacks": 8,
       "readerFragmentKinds": {
@@ -6361,33 +6360,15 @@
       "file": "using-cognitive-psychology-gpt3.pdf",
       "tableCaptions": 7,
       "cropReadyCaptions": 5,
-      "rawTableFragments": 18,
+      "rawTableFragments": 15,
       "cropBackedFragments": 8,
-      "readerRawFragments": 9,
-      "readerCellFallbacks": 6,
+      "readerRawFragments": 6,
+      "readerCellFallbacks": 5,
       "readerFragmentKinds": {
-        "prose-like": 1,
-        "ambiguous": 2,
         "structured-grid": 5,
         "short-label": 1
       },
       "readerFragmentSamples": {
-        "prose-like": [
-          {
-            "page": 2,
-            "text": "Linda is 31 years old, single, outspoken, and very bright. She majored in philosophy. As a student, she was deeply concerned with issues of discrimination and social justice, and also participated in anti-nuclear demonstrations."
-          }
-        ],
-        "ambiguous": [
-          {
-            "page": 2,
-            "text": "Q: Which option is the most probable?"
-          },
-          {
-            "page": 2,
-            "text": "- Option 1: Linda is a bank teller."
-          }
-        ],
         "structured-grid": [
           {
             "page": 2,
@@ -6418,18 +6399,6 @@
         ]
       },
       "orphanFragments": [
-        {
-          "page": 2,
-          "text": "Linda is 31 years old, single, outspoken, and very bright. She majored in philosophy. As a student, she was deeply concerned with issues of discrimination and social justice, and a"
-        },
-        {
-          "page": 2,
-          "text": "Q: Which option is the most probable?"
-        },
-        {
-          "page": 2,
-          "text": "- Option 1: Linda is a bank teller."
-        },
         {
           "page": 2,
           "text": "- Option 2: Linda is a bank teller and is ac- Adversarial"
@@ -6516,18 +6485,18 @@
     "papersWithTableCaptions": 48,
     "tableCaptions": 369,
     "cropReadyCaptions": 269,
-    "rawTableFragments": 1511,
-    "cropBackedFragments": 733,
-    "readerRawFragments": 665,
-    "readerCellFallbacks": 551,
+    "rawTableFragments": 1505,
+    "cropBackedFragments": 726,
+    "readerRawFragments": 664,
+    "readerCellFallbacks": 553,
     "readerFragmentKinds": {
-      "structured-grid": 506,
-      "short-label": 120,
-      "prose-like": 8,
-      "ambiguous": 30,
+      "structured-grid": 518,
+      "short-label": 121,
+      "prose-like": 1,
+      "ambiguous": 23,
       "numeric-grid": 1
     },
-    "orphanFragments": 690,
+    "orphanFragments": 692,
     "note": "Crop readiness is a geometry diagnostic. readerRawFragments simulates suppression only after a successful caption crop; readerCellFallbacks are native rows retained for a readable source-only grid (including single-column multi-row tables), not a claim of fully reconstructed table semantics. readerFragmentKinds is audit-only triage and does not change resolver behavior."
   }
 }
