@@ -3386,3 +3386,10 @@ server process remains running.
 - Metrics changed from `readerRawFragments=456`, `readerCellFallbacks=383`, `structured-grid=368`, `ambiguous=6` to `447`, `374`, `361`, `ambiguous=5`; `prose-like` remains `0`, `short-label=81`, and `orphanFragments=534`.
 - The reduction is from generic cross-column ownership using cell/line x positions instead of only fragment outer boxes. Remaining ambiguous samples are visual questionnaire/table cells, table-cell continuations, references, or captions; no confirmed ordinary-prose-to-table false positive was found in the audit artifact.
 - Focused tests for boxed abstract prose and multi-column questionnaire suppression pass. Full pipeline currently has one existing education captionless-table assertion failure that reproduces with the pre-change source; it is not caused by the cell-geometry patch and remains a follow-up item before claiming a clean full regression.
+
+# 2026-10-16: packaged app rebuilt after table geometry fix
+
+- `npm run tauri:build:fast` completed successfully at 13:02 JST.
+- Bundle: `src-tauri/target/release/bundle/macos/Paper Reader.app` (updated 13:02:11 JST).
+- Translation-server resources were staged from the current source; bundle contains `engines/segmenter.py` and timestamp `2026-10-16T04:01:23Z`.
+- Generated third-party license output was restored after the build as required by the project workflow.
