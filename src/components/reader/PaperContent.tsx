@@ -1,5 +1,6 @@
 import {
   useLayoutEffect,
+  useEffect,
   useRef,
   useCallback,
   useMemo,
@@ -43,7 +44,9 @@ import {
 } from "./virtualization/sectionVirtualization";
 import {
   alignElementTopInScrollContainer,
+  applyIntersectionDelta,
   isSectionBodyMounted,
+  pickActiveSectionId,
   readScrollMarginTop,
   scrollTopToAlignElementTop,
   waitForPaint,
@@ -118,6 +121,7 @@ type PaperBlockViewProps = {
   onOpenGlossaryInspector?: () => void;
   onJumpToTarget: (targetId: string) => void;
   inReferencesSection?: boolean;
+  refSectionIds?: Set<string>;
 };
 
 const PaperBlockView = memo(function PaperBlockView({
@@ -135,6 +139,7 @@ const PaperBlockView = memo(function PaperBlockView({
   onOpenGlossaryInspector,
   onJumpToTarget,
   inReferencesSection = false,
+  refSectionIds,
 }: PaperBlockViewProps) {
   const original = block.original?.trim() ?? "";
   // PDF page markers often land as body footnotes (border-top + muted digit).
@@ -178,6 +183,7 @@ const PaperBlockView = memo(function PaperBlockView({
           glossaryEntries={glossaryEntries}
           onOpenGlossaryInspector={onOpenGlossaryInspector}
           onJumpToTarget={onJumpToTarget}
+          refSectionIds={refSectionIds}
         />
       );
       break;
@@ -213,17 +219,23 @@ const PaperBlockView = memo(function PaperBlockView({
 function SectionBodySpacer({
   sectionId,
   blocks,
+  measuredHeight,
 }: {
   sectionId: string;
   blocks: PaperBlock[];
+  measuredHeight?: number;
 }) {
-  const height = estimateSectionBodyHeight(blocks);
+  const height =
+    typeof measuredHeight === "number" && measuredHeight > 0
+      ? measuredHeight
+      : estimateSectionBodyHeight(blocks);
   return (
     <div
       className={styles.sectionBodySpacer}
       style={{ minHeight: height }}
       aria-hidden="true"
       data-virtualized-section={sectionId}
+      data-section-body={sectionId}
     />
   );
 }
@@ -259,20 +271,36 @@ export const PaperContent = memo(
     const observerRef = useRef<IntersectionObserver | null>(null);
     const mountObserverRef = useRef<IntersectionObserver | null>(null);
     const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
+    const intersectingSectionIdsRef = useRef<Set<string>>(new Set());
+    const orderedSectionIdsRef = useRef<string[]>([]);
+    const programmaticActiveLockRef = useRef<string | null>(null);
+    const lastPublishedActiveRef = useRef<string | null>(null);
+    const measuredBodyHeightsRef = useRef<Map<string, number>>(new Map());
+    const prevMountedSectionIdsRef = useRef<Set<string>>(new Set());
     const [visibleForMount, setVisibleForMount] = useState<string[]>([]);
     const [pinnedSectionIds, setPinnedSectionIds] = useState<string[]>([]);
 
-    const handleIntersection = useCallback(
-      (entries: IntersectionObserverEntry[]) => {
-        const visibleSections = entries
-          .filter((entry) => entry.isIntersecting)
-          .map((entry) => entry.target.id.replace("section-", ""));
-
-        if (visibleSections.length > 0) {
-          onSectionVisible(visibleSections[0]);
-        }
+    const publishActiveSection = useCallback(
+      (sectionId: string | null) => {
+        const locked = programmaticActiveLockRef.current;
+        const next = locked ?? sectionId;
+        if (next === lastPublishedActiveRef.current) return;
+        lastPublishedActiveRef.current = next;
+        onSectionVisible(next);
       },
       [onSectionVisible]
+    );
+
+    const handleIntersection = useCallback(
+      (entries: IntersectionObserverEntry[]) => {
+        applyIntersectionDelta(intersectingSectionIdsRef.current, entries);
+        const next = pickActiveSectionId(
+          orderedSectionIdsRef.current,
+          intersectingSectionIdsRef.current
+        );
+        if (next) publishActiveSection(next);
+      },
+      [publishActiveSection]
     );
 
     useLayoutEffect(() => {
@@ -338,6 +366,7 @@ export const PaperContent = memo(
           mountObserverRef.current?.unobserve(existing);
           sectionRefs.current.delete(sectionId);
         }
+        intersectingSectionIdsRef.current.delete(sectionId);
       }
     };
 
@@ -357,6 +386,16 @@ export const PaperContent = memo(
       () => [...sections].sort((a, b) => a.order - b.order),
       [sections]
     );
+
+    orderedSectionIdsRef.current = allSectionsOrdered.map((section) => section.id);
+
+    useLayoutEffect(() => {
+      intersectingSectionIdsRef.current.clear();
+      measuredBodyHeightsRef.current.clear();
+      prevMountedSectionIdsRef.current = new Set();
+      lastPublishedActiveRef.current = null;
+      programmaticActiveLockRef.current = null;
+    }, [paper.id]);
 
     const sectionIds = useMemo(
       () => new Set(allSectionsOrdered.map((section) => section.id)),
@@ -413,6 +452,55 @@ export const PaperContent = memo(
       });
     }, [allSectionsOrdered, virtualize, visibleForMount, pinnedSectionIds]);
 
+    // Remember real body heights so spacers match after a section unmounts,
+    // and compensate scrollTop when a newly mounted body above the viewport
+    // differs from its previous spacer estimate (avoids content jump).
+    useLayoutEffect(() => {
+      const container = scrollContainerRef?.current;
+      const prev = prevMountedSectionIdsRef.current;
+      if (virtualize && container) {
+        const containerTop = container.getBoundingClientRect().top;
+        for (const sectionId of mountedSectionIds) {
+          if (prev.has(sectionId)) continue;
+          const sectionEl = sectionRefs.current.get(sectionId);
+          const bodyEl = sectionEl?.querySelector<HTMLElement>(
+            `[data-section-body="${sectionId}"]`
+          );
+          if (!sectionEl || !bodyEl) continue;
+          const estimated =
+            measuredBodyHeightsRef.current.get(sectionId) ??
+            estimateSectionBodyHeight(blocksBySection.get(sectionId) ?? []);
+          const actual = bodyEl.getBoundingClientRect().height;
+          const delta = actual - estimated;
+          if (Math.abs(delta) <= 2) continue;
+          if (sectionEl.getBoundingClientRect().top < containerTop - 1) {
+            container.scrollTop += delta;
+          }
+        }
+      }
+      prevMountedSectionIdsRef.current = new Set(mountedSectionIds);
+    }, [mountedSectionIds, virtualize, scrollContainerRef, blocksBySection]);
+
+    useEffect(() => {
+      if (typeof ResizeObserver === "undefined") return;
+      const observer = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const target = entry.target;
+          if (!(target instanceof HTMLElement)) continue;
+          const sectionId = target.getAttribute("data-section-body");
+          if (!sectionId) continue;
+          const height = entry.contentRect.height;
+          if (height <= 0) continue;
+          measuredBodyHeightsRef.current.set(sectionId, height);
+        }
+      });
+      for (const sectionId of mountedSectionIds) {
+        const body = document.querySelector(`[data-section-body="${sectionId}"]`);
+        if (body instanceof HTMLElement) observer.observe(body);
+      }
+      return () => observer.disconnect();
+    }, [mountedSectionIds]);
+
     const addSectionPin = useCallback((sectionId: string) => {
       setPinnedSectionIds((prev) =>
         prev.includes(sectionId) ? prev : [...prev, sectionId]
@@ -447,49 +535,66 @@ export const PaperContent = memo(
       async (sectionId: string) => {
         const container = scrollContainerRef?.current;
         const sectionEl = () => document.getElementById(`section-${sectionId}`);
+        programmaticActiveLockRef.current = sectionId;
+        publishActiveSection(sectionId);
 
-        if (!virtualize) {
-          const el = sectionEl();
-          if (container && el) alignElementTopInScrollContainer(container, el);
-          else el?.scrollIntoView({ behavior: "auto", block: "start" });
-          return;
-        }
-
-        addSectionPin(sectionId);
         try {
-          let alignedFrames = 0;
-          for (let attempt = 0; attempt < 48; attempt++) {
-            await waitForPaint();
+          if (!virtualize) {
             const el = sectionEl();
-            if (!el || !container) continue;
+            if (container && el) alignElementTopInScrollContainer(container, el);
+            else el?.scrollIntoView({ behavior: "auto", block: "start" });
+            return;
+          }
 
-            if (attempt === 0) {
-              container.scrollTop = scrollTopToAlignElementTop(container, el);
-            } else {
-              alignElementTopInScrollContainer(container, el);
+          addSectionPin(sectionId);
+          try {
+            let alignedFrames = 0;
+            for (let attempt = 0; attempt < 48; attempt++) {
+              await waitForPaint();
+              const el = sectionEl();
+              if (!el || !container) continue;
+
+              if (attempt === 0) {
+                container.scrollTop = scrollTopToAlignElementTop(container, el);
+              } else {
+                alignElementTopInScrollContainer(container, el);
+              }
+
+              const mounted = isSectionBodyMounted(sectionId);
+              if (!mounted) {
+                alignedFrames = 0;
+                continue;
+              }
+
+              const margin = readScrollMarginTop(el);
+              const delta =
+                el.getBoundingClientRect().top -
+                container.getBoundingClientRect().top -
+                margin;
+              if (Math.abs(delta) <= 6) alignedFrames += 1;
+              else alignedFrames = 0;
+
+              if (alignedFrames >= 2) return;
             }
-
-            const mounted = isSectionBodyMounted(sectionId);
-            if (!mounted) {
-              alignedFrames = 0;
-              continue;
-            }
-
-            const margin = readScrollMarginTop(el);
-            const delta =
-              el.getBoundingClientRect().top -
-              container.getBoundingClientRect().top -
-              margin;
-            if (Math.abs(delta) <= 6) alignedFrames += 1;
-            else alignedFrames = 0;
-
-            if (alignedFrames >= 2) return;
+          } finally {
+            removeSectionPin(sectionId);
           }
         } finally {
-          removeSectionPin(sectionId);
+          programmaticActiveLockRef.current = null;
+          const settled = pickActiveSectionId(
+            orderedSectionIdsRef.current,
+            intersectingSectionIdsRef.current
+          );
+          publishActiveSection(settled ?? sectionId);
         }
       },
-      [virtualize, scrollContainerRef, addSectionPin, removeSectionPin]
+      [
+        virtualize,
+        scrollContainerRef,
+        addSectionPin,
+        removeSectionPin,
+        publishActiveSection,
+      ]
     );
 
     const ensureBlockMounted = useCallback(
@@ -584,31 +689,43 @@ export const PaperContent = memo(
     const renderSectionBody = (sectionId: string, contentBlocks: PaperBlock[], mounted: boolean) => {
       const inReferencesSection = refSectionIds.has(sectionId);
       if (!mounted) {
-        return <SectionBodySpacer key={`spacer-${sectionId}`} sectionId={sectionId} blocks={contentBlocks} />;
+        return (
+          <SectionBodySpacer
+            key={`spacer-${sectionId}`}
+            sectionId={sectionId}
+            blocks={contentBlocks}
+            measuredHeight={measuredBodyHeightsRef.current.get(sectionId)}
+          />
+        );
       }
-      return contentBlocks.map((block) => (
-        <PaperBlockView
-          key={block.id}
-          block={block}
-          highlightText={highlightText}
-          onBlockUpdated={onBlockUpdated}
-          annotations={annotationsByBlock.get(block.id) ?? EMPTY_ANNOTATIONS}
-          draftHighlight={
-            draftHighlight && draftHighlight.blockId === block.id
-              ? { start: draftHighlight.start, end: draftHighlight.end }
-              : null
-          }
-          flashAnnotationIds={flashAnnotationIds}
-          onHighlightClick={onHighlightClick}
-          onOpenSourcePdf={onOpenSourcePdf}
-          referenceIndex={referenceIndex}
-          blocks={blocks}
-          glossaryEntries={glossaryEntries}
-          onOpenGlossaryInspector={onOpenGlossaryInspector}
-          onJumpToTarget={onJumpToTarget}
-          inReferencesSection={inReferencesSection}
-        />
-      ));
+      return (
+        <div data-section-body={sectionId}>
+          {contentBlocks.map((block) => (
+            <PaperBlockView
+              key={block.id}
+              block={block}
+              highlightText={highlightText}
+              onBlockUpdated={onBlockUpdated}
+              annotations={annotationsByBlock.get(block.id) ?? EMPTY_ANNOTATIONS}
+              draftHighlight={
+                draftHighlight && draftHighlight.blockId === block.id
+                  ? { start: draftHighlight.start, end: draftHighlight.end }
+                  : null
+              }
+              flashAnnotationIds={flashAnnotationIds}
+              onHighlightClick={onHighlightClick}
+              onOpenSourcePdf={onOpenSourcePdf}
+              referenceIndex={referenceIndex}
+              blocks={blocks}
+              glossaryEntries={glossaryEntries}
+              onOpenGlossaryInspector={onOpenGlossaryInspector}
+              onJumpToTarget={onJumpToTarget}
+              inReferencesSection={inReferencesSection}
+              refSectionIds={refSectionIds}
+            />
+          ))}
+        </div>
+      );
     };
 
     const hasContent =
