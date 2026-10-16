@@ -251,6 +251,15 @@ fi
 step "wait import→annotation→search→export"
 wait_for_step "ready_for_relaunch" "$WAIT_TIMEOUT_S"
 
+# Some extraction improvements finish as a background enrichment after the
+# acceptance marker is written. Keep the app alive for an optional grace period
+# so fixture-based checks can inspect the final package without changing the
+# default acceptance timing.
+if [[ -n "${PAPER_READER_E2E_POST_READY_SLEEP_S:-}" ]]; then
+  step "wait background enrichment"
+  sleep "$PAPER_READER_E2E_POST_READY_SLEEP_S"
+fi
+
 find "$ACCEPTANCE_HOME" -name 'library.sqlite' | grep -q . || fail "library.sqlite missing after import"
 find "$ACCEPTANCE_HOME" -path '*/papers/*/paper.json' | grep -q . || fail "paper package missing after import"
 [[ -f "$ARTIFACT_DIR/result.json" ]] || fail "result marker missing"
