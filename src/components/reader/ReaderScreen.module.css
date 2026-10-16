@@ -129,6 +129,25 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   background-color: var(--color-bg);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-text) 28%, transparent) transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--color-text) 28%, transparent);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--color-text) 42%, transparent);
 }
 
 .content {
