@@ -69,6 +69,7 @@ function looksLikeRotatedMasthead(candidate: RoleCandidate): boolean {
 function looksLikeDocumentMasthead(text: string): boolean {
   const t = text.trim();
   return /^(?:doi\s*:\s*|https?:\/\/|www\.)/i.test(t)
+    || /^arxiv\s*:/i.test(t)
     || /\b(?:original\s+paper|research\s+article|journal\s+of|volume\s+\d+|\d{4}\s*\)\s*\d{1,4}\s*[:–-])\b/i.test(t)
     || /^(?:www\.)?nature\.com\b/i.test(t)
     || /^(?:contents\s+lists|journal\s+homepage|available\s+at\s+sciencedirect)\b/i.test(t)

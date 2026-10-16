@@ -1,3 +1,7 @@
+# 2026-10-17: Cyrillic見出し・arXivスタンプ・数式マイクロ見出し
+
+残 sparse-headings（sensory marketing）は `headingTextShape` / `uppercaseRatio` がラテン専用だったのが原因。Unicode 大文字比 + 同一サイズ ALL-CAPS セクション昇格で Cyrillic 見出しを復旧。あわせて `arXiv:` スタンプのタイトル誤採用と `X∞` 系図中ラベルの見出し化を抑止。wide 診断は隔離後 **207** 本で **flagged 1→0 狙い**（直前は spurious-heading `X∞` のみ）。目視サンプルで step-to-charge タイトル復旧を確認。ゴール「完璧」と Reader 網羅目視は未達。
+
 # 2026-10-17: タイトル誤検出とセクション分割の硬化 + OA追加
 
 Europe PMC から CC BY のみ再取得（成功 10 / 403 多数は迂回せず）。権利未確認の CRC 教科書・誤本体・複数論文合体 PDF は `_quarantine/` へ隔離（コミット対象外）。gaze は日付レンジのマストヘッド誤爆と PRISMA 表セルタイトルを修正。fatigue は plain Materials/Methods 見出し分割。Keywords 行のタイトル化と Cyrillic ALL-CAPS 復旧を追加。フル診断 **210**（catalog 113 + pending 97）は **flagged 5 / clean 205**（重複 id・誤PDF・sparse が主因；隔離後は再走査予定）。回帰: date-range title / Materials-Methods split pass。ゴール「完璧」と Reader 目視は未達。
