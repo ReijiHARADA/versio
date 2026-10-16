@@ -3540,3 +3540,10 @@ server process remains running.
   change. The table-reader audit remains at 0 extraction errors, 355
   structured-grid fragments, 79 short-label fragments, and 5 ambiguous
   fragments across 114 papers.
+- The packaged Tauri path was rebuilt at **14:42:52 JST** and passed both the
+  standard persistence E2E and the external `2686612.2686699.pdf` import path.
+  The packaged structure contains 138 blocks and five table blocks; Table 1/5
+  have 10 structured rows, Table 2/3/4 retain readable structured fallbacks,
+  and no `Finger ...` or `Function Call ...` stream is emitted as a translated
+  paragraph. Table 2 remains image/native-data limited and is represented by a
+  four-row source grid when a crop is unavailable.
