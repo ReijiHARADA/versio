@@ -1,3 +1,7 @@
+# 2026-10-16: 目次ハイライトと本文スクロールのガタつき
+
+IntersectionObserver は変化したエントリだけを返すのに、交差中の先頭だけを目次の現在位置にしていたため、スクロール中にハイライトが跳ねていた。交差集合を保持し文書順で選ぶ。目次クリック中は対象セクションをロック。仮想化スペーサは実測高さがあればそれを使い、ビューポートより上でマウントしたときの高さ差分だけ `scrollTop` を補正する。reader テスト 27/27・typecheck pass。
+
 # 2026-10-16: retain single-column table rows in the Reader
 
 The table package boundary previously kept native rows only when at least one
@@ -173,6 +177,10 @@ seven table nodes, five with native cell grids; the former flattened `Finger
 Thumb …` and `Function Call …` strings do not occur as reader blocks. This is
 package-level evidence, not a claim that every table in the corpus is fully
 semantic.
+
+# 2026-10-16: 目次ハイライトと本文スクロールのガタつき
+
+IntersectionObserver は変化したエントリだけを返すのに、交差中の先頭だけを目次の現在位置にしていたため、スクロール中にハイライトが跳ねていた。交差集合を保持し文書順で選ぶ。目次クリック中は対象セクションをロック。仮想化スペーサは実測高さがあればそれを使い、ビューポートより上でマウントしたときの高さ差分だけ `scrollTop` を補正する。reader テスト 27/27・typecheck pass。
 
 # 2026-10-15: preserve prose continuations beside a table or figure band
 
@@ -3606,3 +3614,15 @@ server process remains running.
   a guide line, while section navigation and active tracking remain unchanged.
 - Typecheck passed and the latest Tauri `.app` was rebuilt at **17:35:48 JST**:
   `src-tauri/target/release/bundle/macos/Paper Reader.app`.
+
+# 2026-10-16: keep split web access dates out of body paragraphs
+
+- Some PDFs split a URL footnote into a marker/URL line followed by a
+  full-size `accessed DD.MM.YYYY)` line. The continuation inherited a stale
+  paragraph hint and was projected as article text. Access-date continuations
+  are now classified as footnotes before inherited hints are applied and are
+  merged with the preceding URL line.
+- Added an OzCHI regression test. It now produces one skipped footnote block:
+  `1 http://www.gartner.com/newsroom/id/2665715 (Last accessed 29.9.2014)`.
+- Typecheck and the focused regression passed. Latest `.app` rebuilt at
+  **18:02:03 JST**.

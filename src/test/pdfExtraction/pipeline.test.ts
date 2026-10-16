@@ -352,6 +352,23 @@ describe("canonical extraction pipeline", () => {
     expect(prose?.original).toContain("p=0.007");
   }, 60_000);
 
+  it("keeps split web access dates attached to their footnote URL", async () => {
+    const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "ozchi-access-date-footnote-regression",
+      filePath: pdf,
+      fileHash: "ozchi-access-date-footnote-regression",
+      metadata: { pageCount: pages.length },
+    });
+    const matching = result.blocks.filter((block) => /gartner|accessed 29\.9\.2014/i.test(block.original ?? ""));
+    expect(matching).toHaveLength(1);
+    expect(matching[0].type).toBe("footnote");
+    expect(matching[0].original).toContain("accessed 29.9.2014)");
+  }, 60_000);
+
   it("keeps wrapped table-caption prose out of table cells", async () => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
     if (!fs.existsSync(pdf)) return;
