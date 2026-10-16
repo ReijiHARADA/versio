@@ -3479,3 +3479,21 @@ server process remains running.
   they are never sent as prose to translation; the expectation is now updated
   and the focused OzCHI/ergonomics baselines pass. Run the full corpus again
   when a fresh aggregate count is needed.
+
+# 2026-10-16: Tauri background media enrichment verified
+
+- Added a post-import background `reextractPaper()` pass when a paper has
+  figure/table captions without assets. It does not delay the initial native
+  package or translation; if Canvas/PDF image extraction is unavailable, the
+  native `tableRows` fallback remains visible and the existing manual “PDFを再
+  抽出” action remains available.
+- Rebuilt `.app` at **14:07:42 JST** and ran the real bundled app against the
+  OzCHI PDF with a 45-second post-acceptance grace period. The packaged
+  structure contained **138 blocks / 5 tables**; Table 2, which has no useful
+  native text in the initial pass, retained a structured 4-row numeric grid
+  after background enrichment. Table 1/3/4/5 retained structured rows, and no
+  table was flattened into a translated paragraph.
+- The bundled integration flow passed again: import → annotation/search/export
+  → relaunch persistence → quit. The test harness now supports an optional
+  `PAPER_READER_E2E_POST_READY_SLEEP_S` grace period for background enrichment;
+  default acceptance timing is unchanged.
