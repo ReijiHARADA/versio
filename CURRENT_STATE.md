@@ -3421,3 +3421,9 @@ server process remains running.
 
 - Focused tests for interactive jewellery caption boundaries, wrapped Elsevier author rows/affiliations, multilingual author boundaries, and flattened IEEE masthead all pass (4/4).
 - Combined with the 232/232 corpus gate, current extraction changes preserve the author/affiliation and figure-caption regressions already covered by the project.
+
+# 2026-10-16: packaged UI smoke status after deterministic activation change
+
+- The UI-only smoke harness was hardened to activate the draggable paper card through its keyboard path before falling back to click. Typecheck/lint pass and the `.app` was rebuilt at 13:17:23 JST.
+- OzCHI UI smoke still stops at the macOS card-to-Reader activation boundary (`ui_library_card_visible` → `ui_reader_visible` timeout), while the same build passes the full packaged acceptance flow (import, Reader acceptance, search/export, relaunch persistence). This remains an Accessibility/WebView harness limitation, not an extraction or package persistence failure; no production behavior is changed by the smoke-only activation path.
+- After the failed smoke run, no Paper Reader or bundled translation-server processes remain.
