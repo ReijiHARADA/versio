@@ -82,6 +82,11 @@ export function ReaderScreen() {
   );
 
   // Defer streaming translation patches while the user is scrolling the body.
+  const paper = papers.find((p) => p.id === paperId);
+
+  const { isLoading, hasSourcePdf } = useReaderDocument(paperId);
+  const { glossary, setGlossary } = useReaderGlossary(paperId);
+
   useEffect(() => {
     if (isLoading) return;
     const root = contentRef.current;
@@ -101,11 +106,6 @@ export function ReaderScreen() {
       setTranslationUiScrollPaused(false);
     };
   }, [isLoading]);
-
-  const paper = papers.find((p) => p.id === paperId);
-
-  const { isLoading, hasSourcePdf } = useReaderDocument(paperId);
-  const { glossary, setGlossary } = useReaderGlossary(paperId);
 
   const { result: selectionResult, dismiss: dismissSelection } = useTextSelection(
     contentRef,

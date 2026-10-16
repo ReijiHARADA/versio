@@ -49,10 +49,28 @@
 
 .actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: var(--spacing-sm);
   flex-shrink: 0;
+  width: max-content;
+  box-sizing: border-box;
+}
+
+/* Off-screen twin of row actions so the header empty button can match
+   元に戻す + 削除 even when the trash list is empty. */
+.actionsMeasure {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: max-content;
+  box-sizing: border-box;
 }
 
 .restoreButton,
@@ -66,6 +84,8 @@
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .restoreButton:hover:not(:disabled) {
@@ -96,7 +116,8 @@
   cursor: not-allowed;
 }
 
-/* Header: solid red hold-to-empty; gauge fills left → right */
+/* Header: solid red hold-to-empty; gauge fills left → right.
+   Width is set in TS to match `.actions` (元に戻す + 削除). */
 .emptyHoldButton {
   --hold-t: 0;
   position: relative;
@@ -114,6 +135,7 @@
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
+  box-sizing: border-box;
   cursor: pointer;
   user-select: none;
   touch-action: none;
