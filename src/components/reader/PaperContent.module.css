@@ -57,6 +57,9 @@
 .section {
   margin-bottom: var(--spacing-xl);
   scroll-margin-top: calc(var(--header-height) + var(--spacing-lg));
+  /* Skip layout/paint for off-screen sections while translations stream in. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 480px;
 }
 
 .sectionBodySpacer {
