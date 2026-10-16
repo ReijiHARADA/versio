@@ -3406,3 +3406,8 @@ server process remains running.
 - CSS fallback rows now use the computed explicit grid template while preserving horizontal scrolling for wide tables.
 - `npm run typecheck` and `npm run lint` pass (existing warnings only).
 - Rebuilt `.app` at 13:xx JST with this Reader change; packaged OzCHI import-only E2E remains green at 138 blocks / 5 tables.
+
+# 2026-10-16: full packaged Reader acceptance after table fallback UI fix
+
+- Full `scripts/packaged-e2e/run-integration.sh` passed with the OzCHI fixture: import → annotation/search/export → quit → relaunch persistence → quit. Marker `ok`, search hits `1`.
+- This verifies the current `.app` can persist and reopen imported paper data after the native table fallback column-alignment change.
