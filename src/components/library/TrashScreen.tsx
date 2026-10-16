@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Folder, FileText, Trash2 } from "lucide-react";
 import {
   emptyTrash,
@@ -31,9 +31,12 @@ function itemKey(item: Pick<TrashItem, "kind" | "id">): string {
 function HoldToEmptyButton({
   disabled,
   onComplete,
+  widthPx,
 }: {
   disabled: boolean;
   onComplete: () => void;
+  /** Match the measured 元に戻す + 削除 action pair. */
+  widthPx: number | null;
 }) {
   const [progress, setProgress] = useState(0);
   const holdingRef = useRef(false);
@@ -92,7 +95,10 @@ function HoldToEmptyButton({
       disabled={disabled}
       aria-label="長押しでゴミ箱を空にする"
       title="長押しでゴミ箱を空にする"
-      style={{ ["--hold-t" as string]: progress }}
+      style={{
+        ["--hold-t" as string]: progress,
+        ...(widthPx != null ? { width: `${widthPx}px` } : null),
+      }}
       onPointerDown={startHold}
       onPointerUp={() => stopHold(false)}
       onPointerCancel={() => stopHold(false)}
@@ -113,6 +119,8 @@ export function TrashScreen() {
   const [retentionDays, setRetentionDays] = useState(3);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [actionsWidthPx, setActionsWidthPx] = useState<number | null>(null);
+  const actionsMeasureRef = useRef<HTMLDivElement | null>(null);
   const addPaper = useLibraryCache((s) => s.addPaper);
   const removePaper = useLibraryCache((s) => s.removePaper);
   const removePaperData = useLibraryCache((s) => s.removePaperData);
@@ -146,6 +154,19 @@ export function TrashScreen() {
       cancelled = true;
     };
   }, [refresh]);
+
+  useLayoutEffect(() => {
+    const node = actionsMeasureRef.current;
+    if (!node) return;
+    const apply = () => {
+      const width = Math.ceil(node.getBoundingClientRect().width);
+      if (width > 0) setActionsWidthPx(width);
+    };
+    apply();
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(apply) : null;
+    observer?.observe(node);
+    return () => observer?.disconnect();
+  }, []);
 
   const handleRestore = async (item: TrashItem) => {
     if (busyId) return;
@@ -248,8 +269,21 @@ export function TrashScreen() {
           <h1 className={styles.title}>ゴミ箱</h1>
         </div>
         <div className={styles.headerRight}>
+          <div
+            ref={actionsMeasureRef}
+            className={trashStyles.actionsMeasure}
+            aria-hidden="true"
+          >
+            <button type="button" className={trashStyles.restoreButton} tabIndex={-1}>
+              元に戻す
+            </button>
+            <button type="button" className={trashStyles.dangerButton} tabIndex={-1}>
+              削除
+            </button>
+          </div>
           <HoldToEmptyButton
             disabled={items.length === 0 || Boolean(busyId)}
+            widthPx={actionsWidthPx}
             onComplete={() => void handleEmpty()}
           />
         </div>
