@@ -10,6 +10,7 @@ import { createBlockUpdateBatcher } from "../../utils/batchBlockUpdates";
 import { waitForTranslationServer } from "../../utils/serverReady";
 import { getAllPapers, getSetting } from "../database";
 import { addPaperToWorkspace } from "../projectService";
+import { reextractPaper } from "../reextractPaper";
 import {
   checkMADLADAvailability,
   importPDFV2,
@@ -29,6 +30,34 @@ const blockBatcher = createBlockUpdateBatcher((id, batch) => {
     .getState()
     .setBlocks(id, (prev) => batch.reduce((acc, block) => upsertBlock(acc, block), prev));
 });
+
+/**
+ * Initial import deliberately persists native text first so a large/vector
+ * PDF cannot block the Reader on synchronous canvas work. Once translation
+ * and the durable package are complete, enrich papers that contain figure or
+ * table captions in the background. This makes image-only tables (whose PDF
+ * has no native cell text) readable without delaying the initial import.
+ */
+function scheduleMediaEnrichment(result: { paper: Paper; blocks: PaperBlock[] }): void {
+  const needsEnrichment = result.blocks.some((block) => {
+    if (block.type !== "figure" && block.type !== "table") return false;
+    const metadata = block.metadata as { imageUrl?: unknown; captionOriginal?: unknown };
+    return !metadata.imageUrl && (block.type === "figure" || Boolean(metadata.captionOriginal));
+  });
+  if (!needsEnrichment) return;
+  void reextractPaper(result.paper.id)
+    .then((enriched) => {
+      useLibraryCache.getState().updatePaper(enriched.paper.id, enriched.paper);
+      useLibraryCache.getState().setSections(enriched.paper.id, enriched.sections);
+      useLibraryCache.getState().setBlocks(enriched.paper.id, enriched.blocks);
+      console.info(`[figures] background enrichment completed for ${enriched.paper.id}`);
+    })
+    .catch((error) => {
+      // Native tableRows remain available when canvas/PDF image extraction is
+      // unavailable. The explicit “PDFを再抽出” action can retry later.
+      console.warn(`[figures] background enrichment skipped for ${result.paper.id}:`, error);
+    });
+}
 
 function fileKeyOf(file: File): string {
   return `${file.name}:${file.size}:${file.lastModified}`;
@@ -209,6 +238,7 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
       useLibraryCache.getState().addPaper(result.paper);
       useLibraryCache.getState().setSections(result.paper.id, result.sections);
       useLibraryCache.getState().setBlocks(result.paper.id, result.blocks);
+      scheduleMediaEnrichment(result);
       patch(jobId, { paperId: result.paper.id, stage: "completed" });
       if (workspaceNodeId && !attached) {
         attached = true;
