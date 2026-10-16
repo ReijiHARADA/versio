@@ -1473,6 +1473,10 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       !block.lines.flatMap((line) => line.items).some((item) =>
         /(?:bold|black|heavy|semi[- ]?bold|demi)/i.test(item.fontName)
       );
+    // Lowercase colon lead-ins are body discourse (`follows:`, `triggered:`),
+    // not section labels. Title-Case metadata labels remain eligible headings.
+    const lowercaseColonLeadIn = layoutRole === "heading" &&
+      /^[a-z][\w'’ -]{0,40}:$/.test(block.text.trim());
     const numericDensity = (block.text.match(/\d/g) ?? []).length / Math.max(block.text.length, 1);
     const rotatedItems = block.lines.flatMap((line) => line.items)
       .filter((item) => Math.abs(item.rotation ?? 0) >= 45);
@@ -1522,7 +1526,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       block.lines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length >= 2;
     const role = block.role === "header" || block.role === "footer" || block.role === "copyright" || block.role === "chrome"
       ? layoutRole
-      : denseCjkBody || numericRow || mathRow || alignedTableRow || numericMultiItemRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || rotatedNumericGrid || inlineLabelProse ? "paragraph" :
+      : denseCjkBody || numericRow || mathRow || alignedTableRow || numericMultiItemRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || lowercaseColonLeadIn || rotatedNumericGrid || inlineLabelProse ? "paragraph" :
       numberedSubheading ? "heading" : layoutRole;
     const style = styleSignature(block, layouts, baseFontSize, blocks[index - 1], blocks[index + 1]);
     const scoreByRole: Partial<Record<CanonicalRole, number>> = {

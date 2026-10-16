@@ -1121,20 +1121,27 @@ function splitInlineSubheading(line: LayoutLine): LayoutLine[] {
   // boundary when a compact colon-terminated prefix has a distinct font and
   // the suffix is substantial prose or a keyword list.  This is deliberately
   // geometry/style based; it does not depend on a paper or publisher name.
+  // Lowercase discourse lead-ins (`follows:`, `triggered:`, `following
+  // comment:`) share the same geometry with an italic quote but are body
+  // text — require Title Case / ALL CAPS before promoting the prefix.
   for (let splitIndex = 1; splitIndex < ordered.length; splitIndex++) {
     const prefixItems = ordered.slice(0, splitIndex);
     const suffixItems = ordered.slice(splitIndex);
     const prefix = joinItemTexts(prefixItems).trim();
     const suffix = joinItemTexts(suffixItems).trim();
-    const prefixWords = prefix.replace(/:$/, "").trim().split(/\s+/).filter(Boolean);
+    const labelBody = prefix.replace(/:$/, "").trim();
+    const prefixWords = labelBody.split(/\s+/).filter(Boolean);
     const suffixWords = suffix.split(/\s+/).filter(Boolean);
     const prefixFontNames = new Set(prefixItems.map((item) => item.fontName));
     const suffixFontNames = new Set(suffixItems.map((item) => item.fontName));
     const prefixFont = median(prefixItems.map((item) => item.fontSize));
     const suffixFont = median(suffixItems.map((item) => item.fontSize));
     const gap = suffixItems[0].x - (prefixItems.at(-1)!.x + prefixItems.at(-1)!.width);
+    const structuralColonLabel =
+      /^[A-Z][A-Za-z]*(?:[\s-][A-Z][A-Za-z]*)*$/.test(labelBody) ||
+      /^[A-Z]{2,}(?:\s+[A-Z]+)*$/.test(labelBody);
     const compactLabel = prefix.length <= 32 && prefixWords.length <= 4 && /:$/.test(prefix) &&
-      /^[A-Za-z][A-Za-z -]*:$/.test(prefix);
+      /^[A-Za-z][A-Za-z -]*:$/.test(prefix) && structuralColonLabel;
     const distinctStyle = [...prefixFontNames].some((font) => !suffixFontNames.has(font));
     const substantialSuffix = suffixWords.length >= 5 || /,/.test(suffix);
     if (!compactLabel || !distinctStyle || !substantialSuffix ||
@@ -2321,6 +2328,10 @@ function roleForLine(
   // heading. Structural sentence evidence must take precedence over that
   // hint so the paragraph remains intact.
   if (/^[a-z]/.test(text) && text.split(/\s+/).length >= 4) return "paragraph";
+  // Lowercase colon lead-ins (`follows:`, `triggered:`) are discourse glue in
+  // body prose. A style split may attach a heading hint meant for Title-Case
+  // metadata labels (`Background:`); do not let that hint win here.
+  if (/^[a-z][\w'’ -]{0,40}:$/.test(text.trim())) return "paragraph";
   // Publisher mastheads sometimes emit the associate-editor credit as a
   // paragraph-sized line between the two body columns. It is publication
   // metadata, never article prose, even though it ends in a full stop.

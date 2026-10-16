@@ -1,3 +1,11 @@
+# 2026-10-16: 目次スクロールバーを細く
+
+Reader 左の目次サイドバーのスクロールバーを 6px の細い thumb に変更。常時表示の太い OS 既定バーが目次幅を食うのを抑える。
+
+# 2026-10-16: lowercase colon lead-in の見出し昇格を抑止
+
+本文の discourse lead-in（`follows:` / `triggered:` / `following comment:`）が、同一ベースライン上の italic 引用と font 差で colon-prefix 分割され、見出し扱いになる問題を直した。colon-prefix 分割は Title Case / ALL CAPS の構造ラベル（`Background:` 等）に限定し、`classifyLineRole` と candidate demotion でも小文字 colon 行を paragraph に戻す。`2686612.2686699.pdf` では該当語は本文段落に留まり、ABSTRACT 等の正規見出しは維持。focused pipeline 回帰（lowercase colon + CJK title）2/2 pass。
+
 # 2026-10-16: 翻訳中の本文スクロールが重い
 
 翻訳完了のたびに全ブロックへ `blocks` 配列を渡して memo が無効化され、かつ毎フレーム近く store 更新していた。引用用リスト／index を安定化し、ブロック更新を 120ms 結合＋スクロール中は適用 defer。セクションに `content-visibility: auto`。翻訳パッチでの不要な layout effect も外した。batch/reader テスト 33/33・typecheck pass。

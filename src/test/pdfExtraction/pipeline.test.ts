@@ -1502,6 +1502,42 @@ describe("canonical extraction pipeline", () => {
     expect(result.blocks[0]?.role).toBe("title");
   });
 
+  it("keeps lowercase colon lead-ins with italic quotes as body, not headings", () => {
+    // ACM-style stream: body font lead-in + italic quote on one baseline.
+    // Title-Case metadata labels (Background:) must still split as headings.
+    const body = (text: string, x: number, y: number, width: number, fontName: string) => ({
+      text, x, y, width, height: 9, fontSize: 9.5, fontName, page: 1,
+    });
+    const pages = [{
+      pageNumber: 1,
+      width: 540,
+      height: 700,
+      textItems: [
+        body("Background:", 50, 120, 70, "LabelFont"),
+        body("Touch input is studied across several devices and ages.", 125, 120, 280, "BodyFont"),
+        body("follows:", 50, 200, 40, "BodyFont"),
+        body("“I think it could be quite confusing to remember which finger.”", 95, 200, 300, "ItalicFont"),
+        body("triggered:", 50, 240, 50, "BodyFont"),
+        body("“I want to be more careful in sharing images.”", 105, 240, 280, "ItalicFont"),
+        body("following comment:", 50, 280, 90, "BodyFont"),
+        body("“There is too high risk of accidentally deleting something.”", 145, 280, 260, "ItalicFont"),
+      ],
+    }];
+    const layout = reconstructDocument(pages);
+    expect(layout.blocks.some((block) => block.role === "heading" && /^Background:$/i.test(block.text))).toBe(true);
+    expect(layout.blocks.some((block) => block.role === "heading" && /^(follows|triggered|following comment):$/i.test(block.text.trim()))).toBe(false);
+
+    const extracted = extractFromPages({
+      pages,
+      paperId: "lowercase-colon-lead-in",
+      filePath: "/tmp/lowercase-colon.pdf",
+      fileHash: "lowercase-colon",
+      metadata: { pageCount: 1 },
+    });
+    expect(extracted.blocks.some((block) => block.type === "heading" && /^(follows|triggered|following comment):$/i.test((block.original ?? "").trim()))).toBe(false);
+    expect(extracted.blocks.some((block) => /follows:/i.test(block.original ?? "") && block.type === "paragraph")).toBe(true);
+  });
+
   it("rejoins an interrupted native title around publication metadata", async () => {
     const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/linguistics-eco-linguistics-in-english-reviewing-the-role-of-language-in-environme.pdf");
     if (!fs.existsSync(pdf)) return;
