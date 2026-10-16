@@ -412,10 +412,16 @@ describe("canonical extraction pipeline", () => {
       fileHash: "ozchi-table-prose-contamination-regression",
       metadata: { pageCount: pages.length },
     });
-    const table = result.blocks.find((block) => /^Table 5\./.test(block.original ?? ""));
+    const packagedBlocks = attachLinesToBlocks(result.blocks, result.layoutBlocks);
+    const table = packagedBlocks.find((block) => /^Table 5\./.test(block.original ?? ""));
     expect(table?.type).toBe("table");
     const rows = (table?.metadata.tableRows ?? []) as Array<Array<{ text: string }>>;
     expect(rows.flat().some((cell) => /Friedman.{0,20}test indicated|significant differences were perceived/i.test(cell.text))).toBe(false);
+    expect(rows.flat().some((cell) => cell.text === "0.594")).toBe(true);
+    expect(rows.flat().some((cell) => cell.text === "0.760")).toBe(true);
+    expect(rows.flat().some((cell) => cell.text === "Gallery")).toBe(true);
+    expect(rows.some((row) => row.length >= 5 && row[0]?.text === "Phonebook")).toBe(true);
+    expect(rows.flat().some((cell) => /Delete the tapped|Open global help/i.test(cell.text))).toBe(false);
   }, 60_000);
 
   it("keeps midpoint-spanning single-column thesis prose out of table fallback", async () => {
