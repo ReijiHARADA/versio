@@ -789,7 +789,7 @@ type NativeTableCell = { text: string; x: number; width: number };
  * already supplies the geometry, so grouping those cells here is generic and
  * does not depend on caption wording or a particular paper.
  */
-function captionedNativeTableRows(canonical: CanonicalDocument): {
+function captionedNativeTableRows(canonical: CanonicalDocument, layoutBlocks: LayoutBlock[]): {
   cellIds: Set<string>;
   rowsByCaption: Map<string, Array<NativeTableCell[]>>;
 } {
@@ -875,7 +875,10 @@ function captionedNativeTableRows(canonical: CanonicalDocument): {
     const allMembers = target.text != null ? [target, ...combinedMembers] : combinedMembers;
     if (allMembers.length < 2) continue;
     const lines = allMembers.flatMap((node) => {
-      const nativeItems = (node.layoutBlock?.lines ?? []).flatMap((line) =>
+      const layout = layoutBlocks.find((candidate) =>
+        candidate.pageStart === node.pageStart && candidate.text === node.text
+      );
+      const nativeItems = (layout?.lines ?? []).flatMap((line) =>
         line.items
           .filter((item) => item.text.trim().length > 0)
           .map((item) => ({
@@ -2046,7 +2049,7 @@ export function projectCanonicalToPaper(input: {
     .filter((n): n is CanonicalNode => Boolean(n));
   const projectionNodes = projectionNodesWithContinuations(orderedNodes, canonical, layoutBlocks);
   const tableAbsorption = captionedTableAbsorption(canonical);
-  const nativeCaptionTables = captionedNativeTableRows(canonical);
+  const nativeCaptionTables = captionedNativeTableRows(canonical, layoutBlocks);
 
   const pushBlock = (
     node: CanonicalNode,
