@@ -1660,6 +1660,44 @@ describe("canonical extraction pipeline", () => {
     expect(title).toMatch(/low attention/i);
   }, 90_000);
 
+  it("keeps a date-range narrative title instead of PRISMA table chrome", async () => {
+    const pdf = path.resolve(
+      "test-fixtures/real-papers/pending-pdfs/epmc-gaze-and-eye-tracking-perspectives-for-psychological-research-a-narrativ.pdf"
+    );
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "gaze-date-range-title",
+      filePath: pdf,
+      fileHash: "gaze-date-range-title",
+      metadata: { pageCount: pages.length },
+    });
+    const title = result.canonical.nodes.find((node) => node.role === "title")?.text ?? "";
+    expect(title).toMatch(/Gaze and Eye-Tracking Perspectives/i);
+    expect(title).not.toMatch(/inclusion criteria|gray literature|Employment of eye-tracking/i);
+  }, 60_000);
+
+  it("splits plain Materials and Methods / Results section labels", async () => {
+    const pdf = path.resolve(
+      "test-fixtures/real-papers/pending-pdfs/ergonomics-risk-factors-for-occupational-fatigue-in-construction-workers-a-system.pdf"
+    );
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "fatigue-section-split",
+      filePath: pdf,
+      fileHash: "fatigue-section-split",
+      metadata: { pageCount: pages.length },
+    });
+    const headings = result.canonical.nodes
+      .filter((node) => node.role === "heading")
+      .map((node) => (node.text ?? "").trim());
+    expect(headings.some((h) => /^Materials And Methods$/i.test(h))).toBe(true);
+    expect(headings.some((h) => /^Results And Discussions$/i.test(h))).toBe(true);
+  }, 60_000);
+
   it("demotes figure micro-labels on a real survey PDF", async () => {
     const pdf = path.resolve(
       "test-fixtures/real-papers/pending-pdfs/medical-image-segmentation-deep-learning.pdf"

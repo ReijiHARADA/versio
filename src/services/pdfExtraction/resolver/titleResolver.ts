@@ -79,7 +79,9 @@ function looksLikeDocumentMasthead(text: string): boolean {
     || /\b(?:seminar|conference|proceedings|journal)\b[\s\S]{0,100}\b20\d{2}\b/i.test(t)
     || /\b20\d{2}\b[\s,|:-]*(?:volume|vol\.?|issue|no\.?)\b/i.test(t)
     || /\b(?:volume|vol\.?|issue|no\.?)\s*\d+[\s,|:-]*\b20\d{2}\b/i.test(t)
-    || /\b\d{4}\b[\s\S]*\b\d{3,6}\s*$/.test(t);
+    // Year + compact article/page id (e.g. "2024 104753"). Do not treat
+    // narrative titles that merely span a date range ("… From 2012 to 2025").
+    || (/\b20\d{2}\b[\s,;|:-]+\d{3,6}\s*$/.test(t) && !/:/.test(t) && t.split(/\s+/).filter(Boolean).length <= 12);
 }
 
 function looksLikeDecoderGarbageTitle(text: string): boolean {
@@ -161,15 +163,36 @@ function looksLikeContaminatedMastheadTitle(text: string): boolean {
 /** Chapter body / abstract prose promoted because it used a large font. */
 function looksLikeBodyLeadInTitle(text: string): boolean {
   const t = text.trim();
-  if (/^(?:while|although|because|however|since|whereas|this\s+(?:paper|chapter|study)|in\s+this\s+(?:paper|chapter))\b/i.test(t)) {
+  if (/^(?:while|although|because|however|since|whereas|this\s+(?:paper|chapter|study)|in\s+this\s+(?:paper|chapter)|building upon|based on (?:our|the)|following (?:our|the)|extending)\b/i.test(t)) {
     return true;
   }
   // Citation-heavy prose is not an article title.
-  if (t.length >= 70 && (/\(\d{4}\)/.test(t) || (t.match(/,/g) ?? []).length >= 4) &&
-    /\b(?:and\/or|managers|scholars|firms|because|routines)\b/i.test(t)) {
+  if (t.length >= 70 && (/\(\d{4}\)/.test(t) || /\[\d+\]/.test(t) || (t.match(/,/g) ?? []).length >= 4) &&
+    /\b(?:and\/or|managers|scholars|firms|because|routines|review|previous work)\b/i.test(t)) {
     return true;
   }
   return looksLikeBodyTitleCandidate(t);
+}
+
+/** PRISMA / methods-table crumbs sometimes outrank the article title. */
+function looksLikeProtocolTableChrome(text: string): boolean {
+  const t = text.trim();
+  if (/^(?:research conducted|inclusion criteria|exclusion criteria|gray literature|non-?peer-?reviewed|studies in the domains)\b/i.test(t)) {
+    return true;
+  }
+  if (/\b(?:inclusion|exclusion)\s+criteria\b/i.test(t)) return true;
+  if (/\bresearch focused exclusively\b/i.test(t)) return true;
+  if (/\bpharmacological treatments\b/i.test(t)) return true;
+  if (/\bgray literature\b/i.test(t)) return true;
+  if (/\bstudies in the domains of\b/i.test(t)) return true;
+  if (/\bscience without a\b/i.test(t)) return true;
+  if (/\bclinical case reports?\b/i.test(t)) return true;
+  if (/\b(?:desktop-mounted|head-mounted|webcam-based)\b/i.test(t)) return true;
+  // Multi-clause eligibility prose mashed into one "title" cell.
+  if ((t.match(/\b(?:or|and)\b/gi) ?? []).length >= 4 && /\b(?:psychology|neuroscience|computer)\b/i.test(t)) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -187,8 +210,9 @@ function recoverAlternateCoverTitle(candidates: RoleCandidate[]): string | null 
       const t = c.text.trim();
       const latinChars = (t.match(/[A-Za-z]/g) ?? []).length;
       const words = t.split(/\s+/).filter(Boolean).length;
-      const minLatin = c.role === "heading" || c.role === "title" ? 12 : 18;
-      const maxWords = c.role === "heading" ? 16 : 22;
+      const minLatin = c.role === "heading" || c.role === "title" || c.role === "paragraph" ? 12 : 18;
+      // Narrative-review titles can be long; allow more words for paragraph-shaped mastheads.
+      const maxWords = c.role === "heading" ? 16 : 28;
       if (latinChars < minLatin || words < 3 || words > maxWords) return null;
       if (
         looksLikeAbstractLabelTitle(t) ||
@@ -197,6 +221,7 @@ function recoverAlternateCoverTitle(candidates: RoleCandidate[]): string | null 
         looksLikeDecoderCorruptedTitle(t) ||
         looksLikeContaminatedMastheadTitle(t) ||
         looksLikeBodyLeadInTitle(t) ||
+        looksLikeProtocolTableChrome(t) ||
         looksLikeAuthorish(t) ||
         /@/.test(t) ||
         /\bPh\.?\s*D\b/i.test(t) ||
@@ -216,10 +241,26 @@ function recoverAlternateCoverTitle(candidates: RoleCandidate[]): string | null 
       );
       if (!titleShape) return null;
       const font = c.layoutBlock.lines[0]?.fontSize ?? 10;
-      const roleBonus = c.role === "title" ? 24 : c.role === "heading" ? 28 : c.role === "author" ? 12 : c.role === "affiliation" ? 8 : 0;
-      const colonBonus = /:/.test(t) ? 10 : 0;
+      const y = c.boundingBoxes[0]?.y ?? c.layoutBlock.bbox?.y ?? 999;
+      const roleBonus = c.role === "title" ? 24 : c.role === "heading" ? 28 : c.role === "paragraph" ? 16 : c.role === "author" ? 12 : c.role === "affiliation" ? 8 : 0;
+      const colonBonus = /:/.test(t) ? 18 : 0;
       const allCapsBonus = /^[A-Z0-9][A-Z0-9\s,:;-]+$/.test(t) && words >= 3 ? 14 : 0;
-      return { text: t, score: font * 2 + Math.min(latinChars, 60) + roleBonus + colonBonus + allCapsBonus + (c.pageStart === 1 ? 6 : 0) };
+      const narrativeBonus = /\b(?:perspectives?|review|survey|analysis)\b/i.test(t) ? 8 : 0;
+      const topBonus = c.pageStart === 1 && y < 160 ? 22 : c.pageStart === 1 && y < 280 ? 10 : 0;
+      const fontFloorPenalty = font < 9 ? -40 : 0;
+      return {
+        text: t,
+        score:
+          font * 2 +
+          Math.min(latinChars, 60) +
+          roleBonus +
+          colonBonus +
+          allCapsBonus +
+          narrativeBonus +
+          topBonus +
+          fontFloorPenalty +
+          (c.pageStart === 1 ? 6 : 0),
+      };
     })
     .filter((entry): entry is { text: string; score: number } => Boolean(entry))
     .sort((a, b) => b.score - a.score);
@@ -802,6 +843,7 @@ export function resolveTitle(input: {
     looksLikeContaminatedMastheadTitle(native[0]) ||
     looksLikeBodyLeadInTitle(native[0]) ||
     looksLikeJournalChromeTitle(native[0]) ||
+    looksLikeProtocolTableChrome(native[0]) ||
     isFragmentTitle(native[0]) ||
     (titles[0] && (
       looksLikeCopyrightBoilerplate(titles[0].text) ||
@@ -810,6 +852,7 @@ export function resolveTitle(input: {
       looksLikeContaminatedMastheadTitle(titles[0].text) ||
       looksLikeBodyLeadInTitle(titles[0].text) ||
       looksLikeJournalChromeTitle(titles[0].text) ||
+      looksLikeProtocolTableChrome(titles[0].text) ||
       isFragmentTitle(titles[0].text)
     ));
   if (needsAlternateTitle) {
@@ -825,7 +868,8 @@ export function resolveTitle(input: {
     (looksLikeContaminatedMastheadTitle(fused.text) ||
       looksLikeBodyLeadInTitle(fused.text) ||
       looksLikeCopyrightBoilerplate(fused.text) ||
-      looksLikeJournalChromeTitle(fused.text))
+      looksLikeJournalChromeTitle(fused.text) ||
+      looksLikeProtocolTableChrome(fused.text))
   ) {
     const recovered = recoverAlternateCoverTitle(input.candidates);
     if (recovered && recovered !== fused.text) {

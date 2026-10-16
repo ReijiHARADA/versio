@@ -276,6 +276,40 @@ function splitInlineSectionLabels(nodes: CanonicalNode[]): CanonicalNode[] {
       continue;
     }
 
+    // Unnumbered section labels glued into the first sentence of the section:
+    // `Materials and Methods In this study…` / `Results and Discussions Based on…`
+    const plainSection = text.match(
+      /^(Materials and Methods|Results and Discussions?|Methodology|Methods|Results|Discussion|Conclusions?)\s+([A-Z(].+)$/i
+    );
+    if (
+      plainSection &&
+      plainSection[2].trim().split(/\s+/).filter(Boolean).length >= 5 &&
+      !/^(?:Materials and Methods|Results and Discussions?|Methodology|Methods|Results|Discussion|Conclusions?)$/i.test(text)
+    ) {
+      const label = plainSection[1].replace(/\b\w/g, (ch) => ch.toUpperCase());
+      const body = plainSection[2].trim();
+      out.push({
+        ...node,
+        id: `${node.id}::plain-section-label`,
+        role: "heading",
+        text: label,
+        confidence: Math.max(node.confidence, 0.9),
+        evidence: [
+          ...node.evidence,
+          {
+            source: "generic-heuristic",
+            label: "plain-section-label-split",
+            confidence: 0.9,
+            page: node.pageStart,
+            bbox: node.boundingBoxes[0],
+            reason: "split unnumbered section label from following prose",
+          },
+        ],
+      });
+      out.push({ ...node, id: `${node.id}::plain-section-body`, role: "paragraph", text: body });
+      continue;
+    }
+
     // Keywords / chrome lines sometimes swallow the next numbered section:
     // `… strategies 1. Introduction Rural India is…`
     const numbered = text.match(

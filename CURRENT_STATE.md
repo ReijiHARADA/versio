@@ -1,3 +1,7 @@
+# 2026-10-17: タイトル誤検出とセクション分割の硬化 + OA追加
+
+Europe PMC から CC BY のみ再取得（成功 10 / 403 多数は迂回せず）。誤本体2本を `pending-pdfs/_quarantine/` へ隔離。gaze 論文は「2012…2025」日付レンジをマストヘッド年号規則が誤爆していたのを修正し、PRISMA 表セルをタイトル候補から除外。fatigue 論文は plain `Materials and Methods` / `Results and Discussions` を見出し分割。pending 診断 **99** 本で **flagged 2 / clean 97**（sparse-headings 1、Cyrillic 正当タイトルの title-id-mismatch 1）。回帰: date-range title / Materials-Methods split pass。ゴール「完璧」と Reader 目視は未達。
+
 # 2026-10-16: OA論文の権利確認付き追加取得
 
 Europe PMC API で `isOpenAccess=Y` かつ `license` が `cc by` / `cc by-nc` の論文だけを取り込む `scripts/fetch-oa-europepmc.mjs` を追加。12本を pending にダウンロードし、候補メタに `license` / `licenseVerifiedVia` / `pmcid` を記録。ScienceDirect / Wiley 直リンクの 403 は迂回せず失敗扱い。既存の arXiv・著者ホスト・PMC 方針は維持。

@@ -37,6 +37,7 @@ if (!onlyPending) {
   }
 }
 if (!onlyCatalog && fs.existsSync(pendingDir)) {
+  // `_quarantine/` is a subdirectory, so only top-level PDFs are scored.
   for (const name of fs.readdirSync(pendingDir).filter((n) => n.endsWith(".pdf"))) {
     jobs.push({
       id: name.replace(/\.pdf$/i, ""),
@@ -136,6 +137,9 @@ for (let index = 0; index < selected.length; index += 1) {
       if (/\(\d{4}[a-z]?\)\.\s+Introduction to\b/i.test(t)) return false;
       if (/\b(?:Res\.|Instrum\.|Comput\.)\s+Methods\b/i.test(t)) return false;
       if (/^(?:Abstract|Introduction)\.\s/.test(t)) return false;
+      // TOC crumbs such as `Introduction J5` / `Methods 12`.
+      if (/\b(?:Abstract|Introduction|Methods|Results|Discussion|Conclusions)\s+[A-Z]?\d{1,3}\b/.test(t) &&
+        t.split(/\s+/).length <= 6) return false;
       if (/\bResults?\s+(?:are|show|showed|indicate|suggest|presented)\b/i.test(t) &&
         !/\.\s+(?:Results|Discussion|Methods)\s+[A-Z]/.test(t)) return false;
       return sectionMarker.test(t);
