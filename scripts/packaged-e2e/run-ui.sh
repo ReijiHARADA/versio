@@ -228,9 +228,14 @@ launch_app() {
   if ! kill -0 "$APP_PID" 2>/dev/null; then
     fail "app exited immediately after launch"
   fi
-  osascript -e 'tell application "System Events" to set frontmost of first process whose unix id is '"$APP_PID"' to true' 2>/dev/null \
-    || osascript -e 'tell application "Paper Reader" to activate' 2>/dev/null \
-    || true
+  # The Tauri launcher can leave another app (for example Notion Calendar)
+  # frontmost even though the Paper Reader process is alive.  Accessibility
+  # actions are then delivered to that app and the smoke run reports a false
+  # timeout.  Activate by bundle/application name unconditionally, then use
+  # the PID as a best-effort fallback for dev builds with a different name.
+  osascript -e 'tell application "Paper Reader" to activate' 2>/dev/null || true
+  osascript -e 'tell application "System Events" to set frontmost of first process whose unix id is '"$APP_PID"' to true' 2>/dev/null || true
+  osascript -e 'tell application "Paper Reader" to activate' 2>/dev/null || true
   sleep 1
 }
 
