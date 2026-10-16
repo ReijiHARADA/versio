@@ -3585,3 +3585,15 @@ server process remains running.
   `/Users/harada/Desktop/2686612.2686699.pdf`. Table 2 and Table 4 assets now
   contain the complete grids without clipped bottom rows or caption text;
   packaged integration E2E passed (import, export, quit, relaunch).
+
+# 2026-10-16: improve table image raster quality
+
+- Bounded table crops now render at **2x** page scale (figures retain the
+  1.25x path). Table assets prefer lossless PNG output up to 2.5 MB and use
+  JPEG quality 0.96 only for unusually large crops. This keeps small cell text
+  and thin borders legible without changing table-region detection.
+- Rebuilt `.app` and reran the packaged Tauri import flow for
+  `/Users/harada/Desktop/2686612.2686699.pdf`. Table 2 and Table 4 are now
+  persisted as sharp PNG assets with complete grids; packaged integration E2E
+  passed. The focused extraction suite still has the two pre-existing
+  captionless/CJK table assertion failures unrelated to image rasterization.

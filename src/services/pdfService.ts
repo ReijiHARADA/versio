@@ -695,11 +695,11 @@ export async function extractFigureImages(
         continue;
       }
 
-      // Vector-only figures use this page-render fallback.  A 1.25x raster is
-      // sufficient for the Reader crop while avoiding the quadratic canvas
-      // cost of the former 2x render on diagram-heavy papers. Embedded image
-      // objects keep their native resolution and do not use this scale.
-      const renderScale = 1.25;
+      // Vector-only figures use this page-render fallback. Tables need more
+      // resolution than illustrations because their small glyphs and ruled
+      // cells are read at native size in the Reader. Keep the cheaper figure
+      // path at 1.25x, but rasterize bounded table crops at 2x.
+      const renderScale = tablePage ? 2 : 1.25;
       // Most publisher PDFs expose figure/table pixels as embedded image
       // objects. Decode those directly first; rendering the entire page is a
       // costly fallback for vector-only captions and was the dominant delay
@@ -790,7 +790,17 @@ export async function extractFigureImages(
                 const sliceContext = slice.getContext("2d");
                 if (sliceContext) {
                   sliceContext.drawImage(renderedPage, sx, sy, sw, sh, 0, 0, sw, sh);
-                  images.set(key, slice.toDataURL("image/jpeg", 0.88));
+                  // JPEG compression makes small table text and thin rules
+                  // visibly fuzzy. Prefer a lossless table image; fall back
+                  // to high-quality JPEG only when the data URL is unusually
+                  // large for persistence.
+                  const lossless = slice.toDataURL("image/png");
+                  images.set(
+                    key,
+                    lossless.length <= 2_500_000
+                      ? lossless
+                      : slice.toDataURL("image/jpeg", 0.96)
+                  );
                 }
               }
             }
