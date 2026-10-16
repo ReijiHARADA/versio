@@ -3320,3 +3320,7 @@ Caption-owned table fragments are now collected and sorted by native visual `y` 
 Fast `.app` rebuilt successfully at **2026-10-16 10:35:13 JST** after the geometry-ordered cross-column table fix. The real OzCHI packaged import-only check passed with **143 blocks / 5 tables**, all required tables retaining non-empty native rows. Generated license metadata was restored and the app exited cleanly.
 
 The cross-column table regression now deliberately feeds fragments in projection order and asserts visual `A. Option 1` → `A. Option 4` row order. This prevents the ordering fix from regressing while keeping production behavior unchanged.
+
+# 2026-10-16: final fast bundle after table continuation lint cleanup
+
+The behavior-preserving table continuation regex cleanup was included in a fresh fast `.app` build at **2026-10-16 10:39:49 JST**. The focused table regression and typecheck passed before bundling; generated license metadata was restored afterward. No app or translation-server process remains running.
