@@ -3324,3 +3324,7 @@ The cross-column table regression now deliberately feeds fragments in projection
 # 2026-10-16: final fast bundle after table continuation lint cleanup
 
 The behavior-preserving table continuation regex cleanup was included in a fresh fast `.app` build at **2026-10-16 10:39:49 JST**. The focused table regression and typecheck passed before bundling; generated license metadata was restored afterward. No app or translation-server process remains running.
+
+# 2026-10-16: packaged E2E sidecar cleanup
+
+The packaged import-only harness now cleans up the exact bundled translation-server sidecar on shell exit. Tauri app termination from the shell does not reliably execute the window-close callback, so the prior harness could leave an orphaned `server.py`; cleanup is restricted to the current `.app` resource path and never touches a development server on port 8765. Repeated OzCHI packaged import-only verification passed (**143 blocks / 5 tables**) and no Paper Reader/sidecar process remained after exit.
