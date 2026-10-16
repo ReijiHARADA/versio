@@ -9,15 +9,47 @@ type OutlineProps = {
   onSectionClick: (sectionId: string) => void;
 };
 
-function flattenSectionIds(sections: Section[], roots: Section[]): string[] {
+type OutlineTree = {
+  roots: Section[];
+  children: Map<string, Section[]>;
+};
+
+function buildOutlineTree(sections: Section[]): OutlineTree {
+  const ordered = [...sections].sort((a, b) => a.order - b.order);
+  const ids = new Set(ordered.map((section) => section.id));
+  const children = new Map<string, Section[]>();
+  const roots: Section[] = [];
+  const stack: Section[] = [];
+
+  for (const section of ordered) {
+    // Older packages may contain the level but no parent relation. Reconstruct
+    // that relation for navigation only, without mutating persisted sections.
+    while (stack.length > 0 && stack[stack.length - 1].level >= section.level) {
+      stack.pop();
+    }
+    const inferredParent = stack[stack.length - 1]?.id ?? null;
+    const parentId = section.parentSectionId && ids.has(section.parentSectionId)
+      ? section.parentSectionId
+      : inferredParent;
+    if (parentId) {
+      const siblings = children.get(parentId) ?? [];
+      siblings.push(section);
+      children.set(parentId, siblings);
+    } else {
+      roots.push(section);
+    }
+    stack.push(section);
+  }
+  return { roots, children };
+}
+
+function flattenSectionIds(tree: OutlineTree): string[] {
   const out: string[] = [];
   const walk = (section: Section) => {
     out.push(section.id);
-    sections
-      .filter((s) => s.parentSectionId === section.id)
-      .forEach((child) => walk(child));
+    tree.children.get(section.id)?.forEach(walk);
   };
-  roots.forEach((section) => walk(section));
+  tree.roots.forEach((section) => walk(section));
   return out;
 }
 
@@ -26,13 +58,10 @@ export function Outline({
   activeSection,
   onSectionClick,
 }: OutlineProps) {
-  const rootSections = useMemo(
-    () => sections.filter((s) => s.parentSectionId === null),
-    [sections]
-  );
+  const tree = useMemo(() => buildOutlineTree(sections), [sections]);
   const flatIds = useMemo(
-    () => flattenSectionIds(sections, rootSections),
-    [sections, rootSections]
+    () => flattenSectionIds(tree),
+    [tree]
   );
 
   const focusSectionButton = (sectionId: string) => {
@@ -66,7 +95,7 @@ export function Outline({
   );
 
   const renderSection = (section: Section) => {
-    const children = sections.filter((s) => s.parentSectionId === section.id);
+    const children = tree.children.get(section.id) ?? [];
     const isActive = activeSection === section.id;
 
     return (
@@ -74,7 +103,7 @@ export function Outline({
         <button
           type="button"
           className={`${styles.link} ${isActive ? styles.active : ""}`}
-          style={{ paddingLeft: `${(section.level - 1) * 16 + 12}px` }}
+          style={{ paddingLeft: `${Math.max(0, section.level - 1) * 16 + 12}px` }}
           data-outline-section={section.id}
           aria-current={isActive ? "location" : undefined}
           onClick={() => onSectionClick(section.id)}
@@ -83,7 +112,7 @@ export function Outline({
           <span className={styles.title}>{sectionDisplayTitle(section)}</span>
         </button>
         {children.length > 0 && (
-          <ul className={styles.sublist}>
+          <ul className={styles.sublist} aria-label={`${sectionDisplayTitle(section)}の下位項目`}>
             {children.map((child) => renderSection(child))}
           </ul>
         )}
@@ -95,7 +124,7 @@ export function Outline({
     <nav className={styles.container} aria-label="目次">
       <h2 className={styles.heading}>目次</h2>
       <ul className={styles.list} role="list">
-        {rootSections.map((section) => renderSection(section))}
+        {tree.roots.map((section) => renderSection(section))}
       </ul>
     </nav>
   );
