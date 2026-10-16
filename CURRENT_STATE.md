@@ -3528,3 +3528,15 @@ server process remains running.
   E2E, the current extraction implementation has a clean corpus and package
   acceptance gate. The remaining known limitation is host-level UI smoke
   foreground control on macOS, not package extraction or Reader data.
+
+# 2026-10-16: preserve concatenated native table cells
+
+- Caption-owned native table blocks now project each native PDF text item as
+  its own cell when a canonical block contains multiple same-line items. This
+  prevents labels such as `Finger 1`, `Finger 2`, and numeric values from being
+  merged into one reader fragment while retaining the canonical block fallback
+  when native item geometry is unavailable.
+- The full cached extraction corpus remains green at **232/232** after this
+  change. The table-reader audit remains at 0 extraction errors, 355
+  structured-grid fragments, 79 short-label fragments, and 5 ambiguous
+  fragments across 114 papers.

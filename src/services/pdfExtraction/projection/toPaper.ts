@@ -874,19 +874,39 @@ function captionedNativeTableRows(canonical: CanonicalDocument): {
     )) continue;
     const allMembers = target.text != null ? [target, ...combinedMembers] : combinedMembers;
     if (allMembers.length < 2) continue;
-    const lines = allMembers.map((node) => {
-      const box = node.boundingBoxes[0]!;
-      return { node, box };
+    const lines = allMembers.flatMap((node) => {
+      const nativeItems = (node.layoutBlock?.lines ?? []).flatMap((line) =>
+        line.items
+          .filter((item) => item.text.trim().length > 0)
+          .map((item) => ({
+            node,
+            text: item.text.trim(),
+            box: {
+              page: item.page,
+              x: item.x,
+              y: item.y,
+              width: item.width,
+              height: item.height,
+            } satisfies BoundingBox,
+          }))
+      );
+      // A native block can contain several same-baseline cell spans even when
+      // its canonical text was concatenated. Preserve those spans as cells;
+      // otherwise keep the canonical block as one cell for formats whose
+      // native item stream is unavailable.
+      return nativeItems.length >= 2
+        ? nativeItems
+        : [{ node, text: node.text!.trim(), box: node.boundingBoxes[0]! }];
     }).sort((a, b) => a.box.y - b.box.y || a.box.x - b.box.x);
-    const rows: Array<Array<{ node: CanonicalNode; box: BoundingBox }>> = [];
+    const rows: Array<Array<{ node: CanonicalNode; text: string; box: BoundingBox }>> = [];
     for (const line of lines) {
       const previous = rows.at(-1);
       const previousY = previous?.[0]?.box.y;
       if (previous && previousY !== undefined && Math.abs(line.box.y - previousY) <= 2.5) previous.push(line);
       else rows.push([line]);
     }
-    const projectedRows = rows.map((row) => row.sort((a, b) => a.box.x - b.box.x).map(({ node, box }) => ({
-      text: node.text!.trim(), x: box.x, width: box.width,
+    const projectedRows = rows.map((row) => row.sort((a, b) => a.box.x - b.box.x).map(({ text, box }) => ({
+      text, x: box.x, width: box.width,
     }))).filter((row) => row.length > 0);
     if (projectedRows.length < 2) continue;
     for (const member of allMembers) cellIds.add(member.id);
