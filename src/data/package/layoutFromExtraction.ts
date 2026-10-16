@@ -191,18 +191,37 @@ function recoveredTableLines(block: PaperBlock, layoutBlocks: LayoutBlock[]): La
   const rawLines = layoutBlocks
     .filter((candidate) => candidate.pageStart === block.pageStart)
     .flatMap((candidate) => candidate.lines)
-    .filter((line, index, all) => {
-      const matchesBox = line.items.some((item) => boxes.some((box) => {
+    .flatMap((line) => {
+      // A recovered table block may not have an exact LayoutBlock text match.
+      // In that case the native line can contain several PDF columns on the
+      // same baseline. Keep only items that actually overlap this block's
+      // source bbox; carrying the whole line would merge authors, callouts,
+      // or body prose into a table row.
+      const items = line.items.filter((item) => boxes.some((box) => {
         const overlap = Math.max(0, Math.min(item.x + item.width, box.x + box.width) - Math.max(item.x, box.x)) *
           Math.max(0, Math.min(line.y + line.height, box.y + box.height) - Math.max(line.y, box.y));
         return overlap / Math.max(1, item.width * line.height) >= 0.35;
       }));
-      if (!matchesBox) return false;
-      return all.findIndex((other) =>
+      if (items.length === 0) return [];
+      const left = Math.min(...items.map((item) => item.x));
+      const right = Math.max(...items.map((item) => item.x + item.width));
+      return [{
+        ...line,
+        items,
+        text: items.map((item) => item.text).join(" "),
+        bbox: {
+          ...line.bbox,
+          x: left,
+          width: right - left,
+        },
+      }];
+    })
+    .filter((line, index, all) =>
+      all.findIndex((other) =>
         other.text === line.text && Math.abs(other.y - line.y) <= 0.5 &&
         Math.abs(other.bbox.x - line.bbox.x) <= 0.5
-      ) === index;
-    })
+      ) === index
+    )
     .sort((a, b) => a.y - b.y || a.bbox.x - b.bbox.x);
   if (rawLines.length === 0) return undefined;
   const lines: LayoutBlock["lines"] = [];

@@ -3346,3 +3346,24 @@ The OzCHI Table 5 regression now yields structured rows for both Phonebook and G
 Fast Tauri build completed at **2026-10-16 11:45:38 JST** from commit `413ab98`. The bundle includes the current native table-region and package-grid recovery code. Real OzCHI import-only packaged E2E passed with **138 blocks / 5 tables / all required tables retaining non-empty `tableRows`**. Generated license metadata was restored after the build, and no Paper Reader or translation-server process remained after the harness exited.
 
 The same **11:45:38 JST** bundle also passed the full packaged integration flow against the OzCHI PDF: import → Reader acceptance marker → search (`hits=1`) → Markdown export → Notion ZIP export (`bytes>0`) → app relaunch and persistence. The harness exited with no Paper Reader or bundled translation-server process remaining.
+# 2026-10-16: boxed abstract prose no longer becomes table fallback
+
+The extraction path had a generic false positive on journal front pages that
+place boxed abstract callouts beside the body. `repeated-prose-cell-grid` was
+being treated as sufficient table evidence, and package row recovery could
+combine same-baseline author/background/body items from different columns.
+Projection now requires independent matrix/row geometry (or a same-baseline
+multi-box grid) before retaining that weak signal as a table; recovered native
+lines are clipped to the target block bbox instead of carrying an entire PDF
+line. HFE healthcare scoping page 1 is covered by a regression and no longer
+projects the abstract callouts as table cards. The marketing co-production
+borderless table remains covered and is preserved.
+
+Verification: focused HFE/marketing tests passed; the full cached extraction +
+reading-order corpus passed **232/232** in **431.70s**. The refreshed table
+audit reports **0 extraction errors**, `readerRawFragments=456`,
+`readerCellFallbacks=383`, `structured-grid=368`, `short-label=81`,
+`prose-like=1`, and `ambiguous=6`. The remaining seven audit samples are
+classified in `test-data/real-papers/reports/table-reader-ambiguous-review-v1.json`
+as visual questionnaire cells, table continuations, references, or captions;
+none is a confirmed ordinary-prose table false positive.
