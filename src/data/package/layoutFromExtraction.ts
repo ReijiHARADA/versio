@@ -235,7 +235,7 @@ function normalizeTableRows(rows: TableCell[][]): TableCell[][] {
     const leftText = left.trim();
     const leftWords = leftText.split(/\s+/).filter(Boolean).length;
     return (leftWords >= 3 || /[-‐‑]$/.test(leftText)) &&
-      !/[.!?;:)\]]$/.test(leftText) && /^(?:[a-z(\[]|[,.])/.test(right.trim());
+      !/[.!?;:)]$/.test(leftText) && /^(?:[a-z(]|\[|[,.])/.test(right.trim());
   };
   // A borderless table may emit a wrapped cell on separate native baselines
   // while another column supplies a row between them. Merge only when the
