@@ -126,12 +126,135 @@ function isShortenedMastheadVariant(first: string, candidate: string): boolean {
  * publisher-specific so PDFs without embedded metadata still resolve a real
  * article title.
  */
+function looksLikeCopyrightBoilerplate(text: string): boolean {
+  const t = text.trim();
+  return /^(?:©|\(c\)|copyright\b|permission is given\b)/i.test(t) ||
+    /\bcopyright is owned\b/i.test(t) ||
+    /\bpermission is given for\b/i.test(t) ||
+    /\ball rights reserved\b/i.test(t);
+}
+
+function looksLikeAbstractLabelTitle(text: string): boolean {
+  return /^(?:abstract|要旨|摘要|概要|บทคัดย่อ|resumo|résumé|resumen)$/i.test(text.trim());
+}
+
+function looksLikeDecoderCorruptedTitle(text: string): boolean {
+  const t = text.trim();
+  if (!t) return true;
+  // CID / legacy encoding leftovers appear as C0 controls inside what layout
+  // still promotes as the largest masthead line.
+  if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(t)) return true;
+  const letters = (t.match(/\p{L}/gu) ?? []).length;
+  return letters > 0 && letters < 10 && /[\u0000-\u001f]/.test(t);
+}
+
+/**
+ * When the strongest title candidate is an abstract label, copyright sheet,
+ * or decoder garbage, recover a Latin cover/article title from nearby page-one
+ * blocks (including lines mislabeled as author).
+ */
+function recoverAlternateCoverTitle(candidates: RoleCandidate[]): string | null {
+  const thesis = recoverThesisCoverTitle(candidates);
+  if (thesis) return thesis;
+
+  const latin = candidates
+    .filter((c) => c.pageStart === 1 || c.pageStart === 2)
+    .map((c) => {
+      const t = c.text.trim();
+      const latinChars = (t.match(/[A-Za-z]/g) ?? []).length;
+      const words = t.split(/\s+/).filter(Boolean).length;
+      if (latinChars < 18 || words < 4 || words > 22) return null;
+      if (
+        looksLikeAbstractLabelTitle(t) ||
+        looksLikeCopyrightBoilerplate(t) ||
+        looksLikeObviousMastheadTitle(t) ||
+        looksLikeDecoderCorruptedTitle(t) ||
+        looksLikeAuthorish(t) ||
+        /@/.test(t) ||
+        /\bPh\.?\s*D\b/i.test(t) ||
+        /\([A-Z][^)]*(?:university|college|institute|lab)\b/i.test(t) ||
+        /^(?:source|источник|keywords?|ccs concepts|index terms)\b/i.test(t) ||
+        // Keyword / index lines are comma-dense; real titles rarely are.
+        ((t.match(/,/g) ?? []).length >= 3)
+      ) {
+        return null;
+      }
+      // Prefer title-case / all-caps article lines over affiliation prose.
+      const titleShape = /^[A-Z(]/.test(t) && !/[.!?]$/.test(t);
+      if (!titleShape) return null;
+      const font = c.layoutBlock.lines[0]?.fontSize ?? 10;
+      const roleBonus = c.role === "title" ? 24 : c.role === "heading" ? 28 : c.role === "author" ? 12 : c.role === "affiliation" ? 8 : 0;
+      const colonBonus = /:/.test(t) ? 10 : 0;
+      return { text: t, score: font * 2 + Math.min(latinChars, 60) + roleBonus + colonBonus + (c.pageStart === 1 ? 6 : 0) };
+    })
+    .filter((entry): entry is { text: string; score: number } => Boolean(entry))
+    .sort((a, b) => b.score - a.score);
+  if (latin[0]) return latin[0].text;
+
+  // Journal TOC pages sometimes emit the article title as consecutive ALL-CAPS
+  // headings before the author line.
+  const caps: string[] = [];
+  for (const c of candidates) {
+    if (c.pageStart > 2) break;
+    const t = c.text.trim();
+    if (!t || t.length < 12) continue;
+    const letters = (t.match(/[A-Za-z]/g) ?? []).length;
+    const upper = (t.match(/[A-Z]/g) ?? []).length;
+    if (letters < 12 || upper / letters < 0.72) {
+      if (caps.length > 0) break;
+      continue;
+    }
+    if (looksLikeAuthorish(t) || /\b(?:university|ph\.?\s*d)\b/i.test(t)) break;
+    caps.push(t);
+    if (caps.join(" ").length > 200) break;
+  }
+  const joined = caps.join(" ").replace(/\s+/g, " ").trim();
+  return joined.length >= 28 ? joined : null;
+}
+
 function looksLikeObviousMastheadTitle(text: string): boolean {
   const t = text.trim();
   return looksLikeDocumentMasthead(t) || looksLikeJournalNameMasthead(t) || looksLikeEventMasthead(t) ||
+    looksLikeCopyrightBoilerplate(t) ||
     /^(?:doi\s*:\s*|https?:\/\/|www\.)/i.test(t) ||
     /\b(?:issn|e-?issn|volume|vol\.?|issue|no\.?|pages?|pp\.?|received|accepted|published)\b/i.test(t) &&
       (t.match(/\d/g)?.length ?? 0) >= 2;
+}
+
+/**
+ * Thesis PDFs often put a copyright sheet on page 1 (largest font → title)
+ * and the real title on the following cover page, split across heading +
+ * continuation paragraphs. Recover that cover block before Abstract / degree
+ * lines without depending on a publisher name.
+ */
+function recoverThesisCoverTitle(candidates: RoleCandidate[]): string | null {
+  const abstractIdx = candidates.findIndex((c) =>
+    /^(?:abstract|要旨)$/i.test(c.text.trim()) && c.pageStart <= 6
+  );
+  if (abstractIdx < 0) return null;
+  const stop = /^(?:a\s+thesis\s+presented|thesis\s+submitted|submitted\s+in\s+partial|in\s+partial\s+fulfil|doctor of philosophy|phd|master of|requirements for the degree|acknowledgements?|contents)\b/i;
+  const parts: string[] = [];
+  for (let i = 0; i < abstractIdx; i++) {
+    const c = candidates[i];
+    if (c.pageStart < 2 || c.pageStart > 4) continue;
+    const text = c.text.trim();
+    if (!text || text.length < 8) continue;
+    if (stop.test(text) || looksLikeCopyrightBoilerplate(text) || looksLikeAuthorish(text)) {
+      if (parts.length > 0) break;
+      continue;
+    }
+    if (!["heading", "title", "paragraph"].includes(c.role)) continue;
+    if (/^\d{4}$/.test(text) || /^[ivxlcdm]+$/i.test(text)) continue;
+    // Author-only lines after a completed title question should stop collection.
+    if (parts.length > 0 && /^[A-Z][a-z]+(?:\s+[A-Z][a-z.'-]+){1,4}$/.test(text) && text.length <= 48) break;
+    parts.push(text);
+    if (parts.join(" ").length > 220) break;
+  }
+  const joined = parts.join(" ").replace(/\s+/g, " ").trim();
+  if (joined.length < 28 || looksLikeCopyrightBoilerplate(joined)) return null;
+  // Prefer a question / subtitle-shaped cover title over a lone short fragment.
+  if (!/[?]/.test(joined) && parts.length < 2 && joined.split(/\s+/).length < 8) return null;
+  return joined;
 }
 
 function looksLikeMastheadGeometry(candidate: RoleCandidate): boolean {
@@ -182,9 +305,10 @@ function looksLikeTruncatedTitle(text: string): boolean {
  */
 function looksLikeBodyTitleCandidate(text: string): boolean {
   const t = text.trim();
+  if (looksLikeCopyrightBoilerplate(t)) return true;
   if (t.length < 240) return false;
   const sentenceBoundaries = t.match(/[.!?](?:\s|$)/g)?.length ?? 0;
-  return sentenceBoundaries >= 2 || /^(?:copyright|permission is given|this (?:paper|thesis)\b)/i.test(t) ||
+  return sentenceBoundaries >= 2 || /^(?:this (?:paper|thesis)\b)/i.test(t) ||
     // A native block can be truncated before the second sentence. Citation
     // parentheses plus prose length still distinguish it from a real title.
     (t.length >= 140 && /\([A-Z][A-Za-z-]+(?:\s+\d{4})?$/.test(t) && /\b(?:while|because|managers|research|study)\b/i.test(t));
@@ -567,6 +691,26 @@ export function resolveTitle(input: {
     if (fallback && !isGarbageTitle(fallback.text)) {
       native = [fallback.text.trim()];
     }
+  }
+
+  const isFragmentTitle = (text: string) => {
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    return words.length > 0 && words.length <= 3 && text.trim().length <= 28;
+  };
+  const needsAlternateTitle = !native[0] ||
+    looksLikeCopyrightBoilerplate(native[0]) ||
+    looksLikeAbstractLabelTitle(native[0]) ||
+    looksLikeDecoderCorruptedTitle(native[0]) ||
+    isFragmentTitle(native[0]) ||
+    (titles[0] && (
+      looksLikeCopyrightBoilerplate(titles[0].text) ||
+      looksLikeAbstractLabelTitle(titles[0].text) ||
+      looksLikeDecoderCorruptedTitle(titles[0].text) ||
+      isFragmentTitle(titles[0].text)
+    ));
+  if (needsAlternateTitle) {
+    const recovered = recoverAlternateCoverTitle(input.candidates);
+    if (recovered && recovered !== native[0]) native = [recovered];
   }
 
   const fused = fuseTitle(native.map(collapseRepeatedTitle), input.extra ?? [], input.grobidTitle);

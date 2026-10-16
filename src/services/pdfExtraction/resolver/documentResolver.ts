@@ -223,6 +223,108 @@ function promoteRotatedTableCaptions(
   });
 }
 
+/**
+ * IEEE/ACM often emit `Abstract—Body sentence…` as one native paragraph.
+ * Layout keeps that shape as prose so it is not promoted to the title; split
+ * the structural label here so markAbstracts can attach the body.
+ */
+function splitInlineSectionLabels(nodes: CanonicalNode[]): CanonicalNode[] {
+  const out: CanonicalNode[] = [];
+  for (const node of nodes) {
+    if (node.role !== "paragraph" && node.role !== "heading") {
+      out.push(node);
+      continue;
+    }
+    const text = (node.text ?? "").trim();
+    // `Abstract—Body` / `Abstract-Body` (IEEE) or `Abstract Body…`.
+    const emDash = text.match(
+      /^(Abstract|Introduction|Related Work|Methods|Results|Discussion|Conclusions)(?:\s*[—–-]\s*|\s+)(.+)$/i
+    );
+    if (
+      emDash &&
+      emDash[2].trim().split(/\s+/).filter(Boolean).length >= 5 &&
+      // Require the body to start like prose, not another heading number.
+      /^[A-Z(]/.test(emDash[2].trim()) &&
+      !/^\d+\.\s/.test(emDash[2].trim())
+    ) {
+      const label = emDash[1].replace(/\b\w/g, (ch) => ch.toUpperCase());
+      const body = emDash[2].trim();
+      out.push({
+        ...node,
+        id: `${node.id}::section-label`,
+        role: "heading",
+        text: label,
+        confidence: Math.max(node.confidence, 0.9),
+        evidence: [
+          ...node.evidence,
+          {
+            source: "generic-heuristic",
+            label: "inline-section-label-split",
+            confidence: 0.9,
+            page: node.pageStart,
+            bbox: node.boundingBoxes[0],
+            reason: "split unspaced section label from following prose",
+          },
+        ],
+      });
+      out.push({
+        ...node,
+        id: `${node.id}::section-body`,
+        role: "paragraph",
+        text: body,
+      });
+      continue;
+    }
+
+    // Keywords / chrome lines sometimes swallow the next numbered section:
+    // `… strategies 1. Introduction Rural India is…`
+    const numbered = text.match(
+      /^(.*?\S)\s+(\d{1,2}\.\s+(?:Introduction|Related Work|Methods|Results|Discussion|Conclusions)\b.*)$/i
+    );
+    if (
+      numbered &&
+      numbered[1].trim().length >= 12 &&
+      numbered[2].trim().split(/\s+/).filter(Boolean).length >= 4 &&
+      !/^\d{1,2}\.\s/.test(numbered[1].trim())
+    ) {
+      const prefix = numbered[1].trim();
+      const rest = numbered[2].trim();
+      const headingMatch = rest.match(
+        /^(\d{1,2}\.\s+(?:Introduction|Related Work|Methods|Results|Discussion|Conclusions))\b(?:\s+|$)(.*)$/i
+      );
+      if (headingMatch) {
+        out.push({ ...node, id: `${node.id}::pre-section`, role: "paragraph", text: prefix });
+        out.push({
+          ...node,
+          id: `${node.id}::numbered-section-label`,
+          role: "heading",
+          text: headingMatch[1].replace(/\s+/g, " ").trim(),
+          confidence: Math.max(node.confidence, 0.9),
+          evidence: [
+            ...node.evidence,
+            {
+              source: "generic-heuristic",
+              label: "inline-numbered-section-split",
+              confidence: 0.9,
+              page: node.pageStart,
+              bbox: node.boundingBoxes[0],
+              reason: "split numbered section heading glued into preceding prose",
+            },
+          ],
+        });
+        const body = headingMatch[2].trim();
+        if (body.split(/\s+/).filter(Boolean).length >= 3) {
+          out.push({ ...node, id: `${node.id}::numbered-section-body`, role: "paragraph", text: body });
+        }
+        continue;
+      }
+    }
+
+    out.push(node);
+  }
+  return out;
+}
+
 function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
   let inAbstract = false;
   return nodes.map((node) => {
@@ -528,6 +630,7 @@ export function resolveCanonicalDocument(input: {
   nodes = mergeTableCaptionContinuations(nodes);
   nodes = resolveTableRegions(nodes, input.regionEvidence ?? []);
   nodes = promoteRotatedTableCaptions(nodes, candidates);
+  nodes = splitInlineSectionLabels(nodes);
   nodes = markAbstracts(nodes);
   nodes = suppressVectorLabelClusters(nodes);
   nodes = dedupeExactCaptions(nodes);

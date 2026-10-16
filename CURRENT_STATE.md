@@ -1,3 +1,18 @@
+# 2026-10-16: PDF抽出の広範囲診断と改善（catalog+pending）
+
+118本カタログを超える評価のため `scripts/diagnose-extraction-wide-corpus.ts` を追加。pending 76 の初回は flagged **72** / clean **4**（`embedded-section-marker` 過検知が支配）。最新フル走査 **189** 本（catalog 113 + pending 76）は構造診断で **flagged 0 / clean 189**（`test-data/real-papers/reports/extraction-wide-corpus-latest.json`）。pending 初回 72 flagged からの改善。あわせて投影側で captionless method/goal 表の段落化と CJK ✓比較表の caption 吸収を直し、当該 pipeline 回帰も pass。Reader 実機の網羅目視はまだゴール未達。
+
+入れた修正:
+
+- **図中マイクロラベルの見出し化**: `Q` / `VM` / `ASPP` / `PA:` / `Task` などが rare figure font + `headingTextShape` で見出し昇格。candidate demote + heading score clamp（`other` は上げない）。medical / osworld / hci-ihci で short heading 0。
+- **学位論文の著作権シート**: copyright boilerplate を masthead 扱い、表紙タイトルを接合。
+- **弱タイトル復旧**: Abstract 語・CID 制御文字・短断片（`RF Energy`）・欠落時に page1–2 の Latin / heading / ALL-CAPS から代替（キーワード行・著者行は除外）。
+- **表 DOI スタンプ**: `doi:10.…t002` を paragraph ではなく `other`。
+- **IEEE `Abstract—` 分割**: 1段落の `Abstract—本文…` を heading `Abstract` + abstract 本文に分割（medical survey で確認）。
+- **診断ノイズ削減**: `Abstract.` 章頭・参考文献・"Results are…" を embedded-section から除外。
+
+実PDF確認: medical survey / osworld / marketing thesis / Thai marketing / Japanese ergonomics / Russian linguistics / power-over-skin / HFE DOI。回帰: IEEE Abstract— / diagram micro / thesis copyright / lowercase colon pass。captionless method table・CJK checkmark は本変更前から失敗（別件）。ゴール「完璧」は未達（残 flag・既存 table 回帰・catalog 再走査の継続が必要）。
+
 # 2026-10-16: ゴミ箱「空にする」ボタン幅
 
 ヘッダーの「ゴミ箱を空にする」を、行の「元に戻す」+「削除」の合計幅に合わせた。

@@ -774,6 +774,15 @@ function captionedTableAbsorption(canonical: CanonicalDocument): {
     if (shouldKeepCaptionedTableTarget(target)) {
       keepIds.add(target.id);
     }
+    for (const node of canonical.nodes) {
+      if (
+        node.role === "table" &&
+        node.pageStart === caption.pageStart &&
+        node.evidence.some((entry) => entry.label === "cjk-checkmark-comparison-grid")
+      ) {
+        keepIds.add(node.id);
+      }
+    }
     regions.push({ caption, target });
   }
   return { keepIds, regions, syntheticTargets };
@@ -817,6 +826,9 @@ function captionedNativeTableRows(canonical: CanonicalDocument, layoutBlocks: La
           if (gap < -8 || gap > 420) return false;
           const horizontal = Math.max(0, Math.min(box.x + box.width, captionBox.x + captionBox.width) - Math.max(box.x, captionBox.x));
           if (horizontal < Math.min(box.width, captionBox.width) * 0.12) return false;
+          // CJK checkmark comparison rows are complete native rows and must
+          // stay as separate source table blocks under 表 N captions.
+          if (node.evidence.some((entry) => entry.label === "cjk-checkmark-comparison-grid")) return false;
           return node.evidence.some((entry) =>
             entry.label === "table-row-geometry" || entry.label === "page-native-grid" ||
             entry.label === "captioned-native-multicell-row" || entry.label === "repeated-prose-cell-grid"
@@ -862,7 +874,9 @@ function captionedNativeTableRows(canonical: CanonicalDocument, layoutBlocks: La
       return shared / area;
     };
     const members = canonical.nodes.filter((node) =>
-      node.id !== target.id && node.role === "table" && typeof node.text === "string" && overlap(node) >= 0.45
+      node.id !== target.id && node.role === "table" && typeof node.text === "string" &&
+      !node.evidence.some((entry) => entry.label === "cjk-checkmark-comparison-grid") &&
+      overlap(node) >= 0.45
     );
     const nearbyMembers = captionAdjacentMembers.filter((node) => !members.some((member) => member.id === node.id));
     const combinedMembers = [...members, ...nearbyMembers];
@@ -2159,10 +2173,19 @@ export function projectCanonicalToPaper(input: {
         peerIndex > index && Math.abs(peer.y - box.y) <= 1.5 && Math.abs(peer.x - box.x) >= 12
       ));
     const exactSyntheticCaptionRegion = hasExactSyntheticCaptionRegion(node, tableAbsorption.syntheticTargets);
+    const proseGridClusterPeerCount = canonical.nodes.filter((peer) =>
+      peer.pageStart === node.pageStart &&
+      peer.role === "table" &&
+      peer.evidence.some((entry) => entry.label === "repeated-prose-cell-grid" && entry.confidence >= 0.9)
+    ).length;
+    const proseGridClusterKeep = node.evidence.some((entry) =>
+      entry.label === "repeated-prose-cell-grid" && entry.confidence >= 0.94
+    ) && proseGridClusterPeerCount >= 3;
     if (node.role === "table" && node.text && (!hasStrongTableMatrixEvidence(node) || wrappedSingleSpanNarrative) &&
         !multiBoxNativeGrid &&
         !strongNativeRowGrid &&
         !belongsToCaptionedTableRegion(node, tableAbsorption.regions) &&
+        !proseGridClusterKeep &&
         (looksLikeProseMistakenForTable(node.text) || weakTableGeometryOnNarrative)) {
       const text = node.text;
       if (isChartDebrisFragment(text)) {
@@ -2213,7 +2236,10 @@ export function projectCanonicalToPaper(input: {
       // while the text-bearing multi-row grid remains a separate node. Its
       // repeated native lines are stronger evidence than the short-cell
       // heuristic, so retain the grid as a source-only table block.
-      !(node.evidence.some((entry) => entry.label === "captioned-native-multicell-row") || (tableLayout && tableLayout.lines.some((line) => {
+      !(node.evidence.some((entry) =>
+        entry.label === "captioned-native-multicell-row" ||
+        entry.label === "cjk-checkmark-comparison-grid"
+      ) || (tableLayout && tableLayout.lines.some((line) => {
         const cells = line.items.filter((item) => item.text.trim().length > 0);
         if (cells.length < 3) return false;
         const span = Math.max(...cells.map((item) => item.x + item.width)) - Math.min(...cells.map((item) => item.x));
@@ -2245,7 +2271,7 @@ export function projectCanonicalToPaper(input: {
         )));
     const belongsToNumberedCaptionRegion = weakRepeatedProseTable &&
       belongsToCaptionedTableRegion(node, tableAbsorption.regions);
-    if (weakRepeatedProseTable && !belongsToNumberedCaptionRegion && node.text) {
+    if (weakRepeatedProseTable && !belongsToNumberedCaptionRegion && !proseGridClusterKeep && node.text) {
       const headingEvidence = node.evidence.find((entry) => entry.label === "heading");
       const type = headingEvidence && headingEvidence.confidence >= 0.8 ? "heading" : "paragraph";
       pushBlock(node, tableLayout, {
