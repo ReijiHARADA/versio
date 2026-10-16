@@ -1,6 +1,6 @@
 # 2026-10-17: Cyrillic見出し・arXivスタンプ・数式マイクロ見出し
 
-残 sparse-headings（sensory marketing）は `headingTextShape` / `uppercaseRatio` がラテン専用だったのが原因。Unicode 大文字比 + 同一サイズ ALL-CAPS セクション昇格で Cyrillic 見出しを復旧。あわせて `arXiv:` スタンプのタイトル誤採用と `X∞` 系図中ラベルの見出し化を抑止。wide 診断は隔離後 **207** 本で **flagged 1→0 狙い**（直前は spurious-heading `X∞` のみ）。目視サンプルで step-to-charge タイトル復旧を確認。ゴール「完璧」と Reader 網羅目視は未達。
+残 sparse-headings（sensory marketing）は `headingTextShape` / `uppercaseRatio` がラテン専用だったのが原因。Unicode 大文字比 + 同一サイズ ALL-CAPS セクション昇格で Cyrillic 見出しを復旧。あわせて `arXiv:` スタンプのタイトル誤採用と `X∞` 系図中ラベルの見出し化を抑止。wide 診断（catalog+pending）**207 / 207 clean**（flagged 0）。目視サンプル 16 本の自動スキャンでも arXiv/空タイトル/無見出しは無し。ゴール「完璧」と Reader 網羅目視は未達。
 
 # 2026-10-17: タイトル誤検出とセクション分割の硬化 + OA追加
 
