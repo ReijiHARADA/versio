@@ -3432,3 +3432,9 @@ server process remains running.
 
 - The current 13:17:23 `.app` passed the full packaged integration flow again: import → Reader acceptance marker → search/export → quit → relaunch persistence → quit. Search hits `1`; no bundled sidecar remained.
 - The UI-only smoke remains blocked at macOS accessibility activation despite the test-only keyboard fallback; production packaged acceptance is green.
+
+# 2026-10-16: UI smoke foregrounding follow-up
+
+- The harness now explicitly activates the packaged process (`Paper Reader` and the bundle's `app` process) before Accessibility actions (`95fb6f0`, `2d31166`).
+- A fresh smoke run still captured Notion Calendar as the frontmost window and timed out at `ui_reader_visible`; the packaged app process itself was alive and its isolated paper package was complete.
+- This is a host Accessibility/frontmost-control limitation in the smoke harness. It does not invalidate the passing packaged integration flow or the 232/232 extraction corpus gate. No Paper Reader or bundled translation-server process remains after the run.
