@@ -761,7 +761,14 @@ export async function extractFigureImages(
           );
 
         const embedded = compositePlacedImages(decoded);
-        if (embedded) {
+        const caption = pageCaptions.find(
+          (candidate) => figureLookupKey(candidate.text, candidate.pageStart) === key
+        );
+        const isTable = caption?.role === "table_caption";
+        // Some publisher PDFs place the table and its caption in one embedded
+        // image object. Prefer the geometry-bounded page crop for tables so
+        // that caption text cannot be mixed into or clip the table image.
+        if (embedded && (!isTable || !crop)) {
           images.set(key, embedded);
           done += 1;
           onProgress?.(done, total);
@@ -790,6 +797,11 @@ export async function extractFigureImages(
           } catch (error) {
             console.warn(`[figures] skipping ${key}:`, error);
           }
+        }
+        // If bounded rasterization was unavailable, retain the embedded image
+        // as a usable fallback rather than dropping the media asset entirely.
+        if (embedded && !images.has(key)) {
+          images.set(key, embedded);
         }
         done += 1;
         onProgress?.(done, total);

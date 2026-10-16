@@ -4765,7 +4765,10 @@ export function figureImageRect(
       const tableTop = Math.min(...aboveRows.map((block) => block.bbox.y));
       const y = Math.max(0, tableTop - tableCropPadding);
       const tableBottom = Math.max(...aboveRows.map((block) => block.bbox.y + block.bbox.height));
-      const bottom = Math.max(y, Math.min(captionTop - 2, tableBottom + tableCropPadding));
+      // Keep the caption's glyph box out of the raster crop. PDF text bboxes
+      // are often slightly above the visible glyphs, so a two-point boundary
+      // still leaks the first caption line into the table image.
+      const bottom = Math.max(y, Math.min(captionTop - tableCropPadding, tableBottom + tableCropPadding));
       if (bottom - y >= 18) {
         const x = Math.max(0, Math.min(band.x, ...aboveRows.map((block) => block.bbox.x), caption.bbox.x) - 6);
         const right = Math.min(

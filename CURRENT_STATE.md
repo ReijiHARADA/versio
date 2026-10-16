@@ -3572,3 +3572,16 @@ server process remains running.
   `/Users/harada/Desktop/2686612.2686699.pdf` through the packaged Tauri flow.
   The initial persisted package contained **12 figure assets and 5 table
   assets** before the acceptance/relaunch checks; packaged E2E passed.
+
+# 2026-10-16: bound embedded table images to the table geometry
+
+- Table captions whose PDF image placement also contains surrounding caption
+  pixels now prefer the existing geometry-bounded page raster crop. The
+  embedded-image path remains a fallback when bounded rendering times out.
+- The crop boundary now leaves an 8pt gap before a table caption; this avoids
+  leaking the first caption line into the table image while retaining the
+  complete final row and border.
+- Rebuilt `.app` at **17:27:42 JST** and verified the packaged import path with
+  `/Users/harada/Desktop/2686612.2686699.pdf`. Table 2 and Table 4 assets now
+  contain the complete grids without clipped bottom rows or caption text;
+  packaged integration E2E passed (import, export, quit, relaunch).
