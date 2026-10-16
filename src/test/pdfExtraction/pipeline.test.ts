@@ -1533,6 +1533,65 @@ describe("canonical extraction pipeline", () => {
     }
   });
 
+  it("recovers article title when the native title is an arXiv stamp", () => {
+    const item = (text: string, x: number, y: number, fontSize: number, fontName = "Body") => ({
+      text, x, y, width: Math.max(20, text.length * fontSize * 0.45), height: fontSize, fontSize, fontName, page: 1,
+    });
+    const pages = [{
+      pageNumber: 1,
+      width: 612,
+      height: 792,
+      textItems: [
+        item("arXiv:2408.01927v1 [eess.SP] 4 Aug 2024", 40, 40, 16, "StampFont"),
+        item("Step-to-Charge: Resonant Human Body Powering for Wearables", 80, 90, 14, "TitleFont"),
+        item("Arunashish Datta and Shreyas Sen", 80, 130, 11),
+        item("Abstract", 80, 180, 12, "BoldFont"),
+        item("Current limits of harvested energy in wearables are governed by physical limits of available energy.", 80, 210, 10),
+      ],
+    }];
+    const extracted = extractFromPages({
+      pages,
+      paperId: "arxiv-stamp-title",
+      filePath: "/tmp/arxiv-stamp.pdf",
+      fileHash: "arxiv-stamp",
+      metadata: { pageCount: 1 },
+    });
+    const title = extracted.canonical.nodes.find((node) => node.role === "title")?.text ?? "";
+    expect(title).not.toMatch(/^arXiv:/i);
+    expect(title).toMatch(/Step-to-Charge/i);
+  });
+
+  it("promotes Cyrillic ALL-CAPS section labels that share body font size", () => {
+    const item = (text: string, x: number, y: number, fontSize = 11, fontName = "BodyFont") => ({
+      text, x, y, width: Math.max(12, text.length * fontSize * 0.45), height: fontSize, fontSize, fontName, page: 1,
+    });
+    const pages = [{
+      pageNumber: 1,
+      width: 540,
+      height: 700,
+      textItems: [
+        item("СЕНЗОРНИ МАРКЕТИНГ – ИНТЕГРИСАЊЕ ЧУЛА", 80, 60, 14, "TitleFont"),
+        item("Ivana Author", 80, 100, 10),
+        item("УВОДНЕ НАПОМЕНЕ", 80, 160, 11),
+        item("Сензорни маркетинг је савремени приступ брендирању који користи чула потрошача у комуникацији.", 80, 200, 11),
+        item("ЗАКЉУЧАК", 80, 320, 11),
+        item("Резултати показују да интегрисање чула побољшава препознатљивост бренда у дужем периоду.", 80, 360, 11),
+      ],
+    }];
+    const extracted = extractFromPages({
+      pages,
+      paperId: "cyrillic-allcaps-heading",
+      filePath: "/tmp/cyrillic-heading.pdf",
+      fileHash: "cyrillic-heading",
+      metadata: { pageCount: 1 },
+    });
+    const headings = extracted.canonical.nodes
+      .filter((node) => node.role === "heading")
+      .map((node) => (node.text ?? "").trim());
+    expect(headings).toContain("УВОДНЕ НАПОМЕНЕ");
+    expect(headings).toContain("ЗАКЉУЧАК");
+  });
+
   it("demotes diagram micro-labels that look like headings", () => {
     // Figure annotation crumbs (Q, VM, PA:) share display size with captions but
     // are not section structure. Numbered subheads stay eligible.
@@ -1549,6 +1608,7 @@ describe("canonical extraction pipeline", () => {
         item("Q", 80, 200, 12),
         item("W", 120, 200, 12),
         item("VM", 160, 200, 12),
+        item("X∞", 200, 200, 12),
         item("PA:", 80, 240, 11),
         item("pixel accuracy under the protocol.", 120, 240, 10, "BodyFont"),
         item("3.1 Aggregation", 50, 300, 12, "BoldFont"),
@@ -1566,7 +1626,7 @@ describe("canonical extraction pipeline", () => {
       .filter((block) => block.type === "heading")
       .map((block) => (block.original ?? "").trim());
     expect(headings).toContain("3.1 Aggregation");
-    expect(headings.some((text) => /^(Q|W|VM|PA:)$/.test(text))).toBe(false);
+    expect(headings.some((text) => /^(Q|W|VM|PA:|X∞)$/.test(text))).toBe(false);
   });
 
   it("keeps lowercase colon lead-ins with italic quotes as body, not headings", () => {

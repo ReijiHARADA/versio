@@ -399,8 +399,10 @@ function styleSignature(
   const names = [...new Set(items.map((item) => item.fontName).filter(Boolean))];
   const bold = items.filter((item) => /(?:bold|black|heavy|semi[- ]?bold|demi)/i.test(item.fontName));
   const italic = items.filter((item) => /(?:italic|oblique)/i.test(item.fontName));
-  const letters = (block.text.match(/[A-Za-z]/g) ?? []).length;
-  const upper = (block.text.match(/[A-Z]/g) ?? []).length;
+  // Count any script (Latin, Cyrillic, Greek, …). Latin-only ratios made
+  // Serbian/Russian ALL-CAPS section labels look uncapitalized.
+  const letters = (block.text.match(/\p{L}/gu) ?? []).length;
+  const upper = (block.text.match(/\p{Lu}/gu) ?? []).length;
   const layout = layouts.find((candidate) => candidate.page === block.pageStart);
   const columnLeft = block.column === "right" ? layout?.rightX ?? 0 : layout?.leftX ?? 0;
   const previousBottom = before?.pageEnd === block.pageStart
@@ -430,10 +432,10 @@ function headingTextShape(text: string): boolean {
   if (/^[\d\s.,+\-–—=()]+$/.test(compact)) return false;
   if (/[∥∑∫√∞≈≠≤≥±∂∇×÷]/u.test(compact)) return false;
   if (/[.!?。．]$/.test(compact) || /^\d+[.)]\s+[A-Z][a-z]+,?\s+[A-Z]/.test(compact)) return false;
-  const letters = (compact.match(/[A-Za-z]/g) ?? []).length;
-  const upper = (compact.match(/[A-Z]/g) ?? []).length;
+  const letters = (compact.match(/\p{L}/gu) ?? []).length;
+  const upper = (compact.match(/\p{Lu}/gu) ?? []).length;
   const uppercase = letters >= 4 && upper / Math.max(letters, 1) > 0.72;
-  const titleCase = /^[A-Z][A-Za-z]*(?:[\s:–—-]+[A-Za-z]+)*$/.test(compact);
+  const titleCase = /^\p{Lu}[\p{L}]*(?:[\s:–—-]+[\p{L}]+)*$/u.test(compact);
   return uppercase || titleCase || /^\d+(?:\.\d+)*\s+/.test(compact);
 }
 
@@ -1488,7 +1490,10 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       /^[A-Za-z]{1,3}$/.test(trimmedHeading) ||
       /^[A-Z]{1,6}\s*:$/.test(trimmedHeading) ||
       (/^[A-Z][a-z]{0,3}$/.test(trimmedHeading) && trimmedHeading.length <= 4) ||
-      (/^[A-Z][A-Za-z0-9/+-]{0,5}$/.test(trimmedHeading) && trimmedHeading.length <= 6 && !headingHasWeight)
+      (/^[A-Z][A-Za-z0-9/+-]{0,5}$/.test(trimmedHeading) && trimmedHeading.length <= 6 && !headingHasWeight) ||
+      // Axis / summation crumbs ("X∞", "Σi") from figures or equations.
+      /^[A-Za-zΑ-Ωα-ω]\s*[∞∑∫√±≤≥≠≈∂∇]$/u.test(trimmedHeading) ||
+      /^[∞∑∫√±≤≥≠≈∂∇]$/u.test(trimmedHeading)
     );
     const diagramMicroHeading = layoutRole === "heading" && diagramMicroLabel;
     const numericDensity = (block.text.match(/\d/g) ?? []).length / Math.max(block.text.length, 1);
@@ -1647,15 +1652,34 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // blocks, especially when the first glyph is split from the rest of the
     // line. A clear size/spacing/capitalization cluster is document-level
     // heading evidence; require a short, punctuation-free line so table
-    // headers and statistical prose do not take this path.
+    // headers and statistical prose do not take this path. Same-size ALL-CAPS
+    // Cyrillic/Latin labels still count when spacing separates them from body.
     const styleHeadingAnchor = role !== "title" && role !== "author" &&
       block.lines.length === 1 &&
       block.text.trim().split(/\s+/).filter(Boolean).length <= 12 &&
-      style.fontSizeRatio >= 1.05 && style.spacingBefore >= baseFontSize * 1.5 &&
       style.uppercaseRatio >= 0.72 &&
+      style.spacingBefore >= baseFontSize * 0.9 &&
+      (style.fontSizeRatio >= 1.05 || style.spacingBefore >= baseFontSize * 1.2) &&
       !/[.!?:;=]/.test(block.text.trim()) &&
       !/\d/.test(block.text.trim());
     if (styleHeadingAnchor) {
+      scoreByRole.heading = Math.max(scoreByRole.heading ?? 0, 0.96);
+    }
+    // Same-size ALL-CAPS labels (common in Cyrillic journals) may sit close to
+    // the preceding paragraph, or wrap across two short lines. Prefer them as
+    // headings when a long body block follows and the label itself is short
+    // and punctuation-free.
+    const allCapsSectionLabel = role !== "title" && role !== "author" &&
+      block.lines.length <= 2 &&
+      style.uppercaseRatio >= 0.85 &&
+      (block.text.match(/\p{L}/gu) ?? []).length >= 8 &&
+      block.text.trim().split(/\s+/).filter(Boolean).length <= 12 &&
+      !/[.!?:;=]/.test(block.text.trim()) &&
+      !/\d/.test(block.text.trim()) &&
+      Boolean(blocks[index + 1]) &&
+      blocks[index + 1].text.trim().length >= 40;
+    if (allCapsSectionLabel) {
+      // Must clear documentResolver's heading demotion: score < paragraph + 0.08.
       scoreByRole.heading = Math.max(scoreByRole.heading ?? 0, 0.96);
     }
     const equation = equationScore(block, layout);
