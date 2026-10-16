@@ -805,6 +805,24 @@ function captionedNativeTableRows(canonical: CanonicalDocument): {
     let regionBoxes = target.boundingBoxes.filter((box) => box.page >= caption.pageStart && box.page <= target.pageEnd);
     if (regionBoxes.length === 0) continue;
     const targetBox = target.boundingBoxes[0];
+    const captionBox = caption.boundingBoxes[0];
+    const captionAdjacentMembers = captionBox
+      ? canonical.nodes.filter((node) => {
+          if (node.id === target.id || node.role !== "table" || node.text == null || node.pageStart !== caption.pageStart) return false;
+          const box = node.boundingBoxes[0];
+          if (!box) return false;
+          const gap = box.y >= captionBox.y
+            ? box.y - (captionBox.y + captionBox.height)
+            : captionBox.y - (box.y + box.height);
+          if (gap < -8 || gap > 420) return false;
+          const horizontal = Math.max(0, Math.min(box.x + box.width, captionBox.x + captionBox.width) - Math.max(box.x, captionBox.x));
+          if (horizontal < Math.min(box.width, captionBox.width) * 0.12) return false;
+          return node.evidence.some((entry) =>
+            entry.label === "table-row-geometry" || entry.label === "page-native-grid" ||
+            entry.label === "captioned-native-multicell-row" || entry.label === "repeated-prose-cell-grid"
+          );
+        })
+      : [];
     // Borderless tables sometimes attach the caption directly to the first
     // cell instead of creating a synthetic region node. Infer the local
     // region from same-column table candidates between that cell and the
@@ -846,7 +864,15 @@ function captionedNativeTableRows(canonical: CanonicalDocument): {
     const members = canonical.nodes.filter((node) =>
       node.id !== target.id && node.role === "table" && typeof node.text === "string" && overlap(node) >= 0.45
     );
-    const allMembers = target.text != null ? [target, ...members] : members;
+    const nearbyMembers = captionAdjacentMembers.filter((node) => !members.some((member) => member.id === node.id));
+    const combinedMembers = [...members, ...nearbyMembers];
+    // A synthetic target can already have a multi-cell native row block. Let
+    // the normal projection derive its per-cell rows in that case; replacing
+    // a wide row with one opaque cell would lose the table's columns.
+    if (target.text == null && [target, ...combinedMembers].some((node) =>
+      (node.text?.length ?? 0) > 90 || (node.boundingBoxes[0]?.width ?? 0) > 160
+    )) continue;
+    const allMembers = target.text != null ? [target, ...combinedMembers] : combinedMembers;
     if (allMembers.length < 2) continue;
     const lines = allMembers.map((node) => {
       const box = node.boundingBoxes[0]!;
@@ -2400,6 +2426,7 @@ export function projectCanonicalToPaper(input: {
         evidence.label === "rotation-aware-table-caption"
       );
       if (layoutRole === "table_caption" || rotationTableCaption || /^(?:table|表)\s/i.test(text)) {
+        const nativeRows = nativeCaptionTables.rowsByCaption.get(node.id);
         const match = text.match(/^(table|表)\s*(\S+)/i);
         const tableNumber = match
           ? /表/.test(match[1])
@@ -2416,9 +2443,11 @@ export function projectCanonicalToPaper(input: {
           pageStart: node.pageStart,
           pageEnd: node.pageEnd,
           boundingBoxes: boxes,
-          original: text,
+          original: nativeRows?.length
+            ? [text, ...nativeRows.map((row) => row.map((cell) => cell.text).join(" "))].join(" ")
+            : text,
           translated: null,
-          translationStatus: rotationTableCaption ? "skipped" : "pending",
+          translationStatus: rotationTableCaption || nativeRows?.length ? "skipped" : "pending",
           parentBlockId: null,
           metadata: {
             imageUrl: "",
@@ -2430,8 +2459,11 @@ export function projectCanonicalToPaper(input: {
             figureKey: figureLookupKey(text, node.pageStart),
             captionOf,
             ...(regionNode?.boundingBoxes?.length ? { regionBoundingBoxes: regionNode.boundingBoxes } : {}),
-            ...(nativeCaptionTables.rowsByCaption.get(node.id)?.length
-              ? { tableRows: nativeCaptionTables.rowsByCaption.get(node.id) }
+            ...(nativeRows?.length
+              ? { tableRows: nativeRows }
+              : {}),
+            ...(nativeRows?.length
+              ? { sequentialRowsMerged: nativeRows.length }
               : {}),
           } satisfies TableMetadata & {
             column: string;
