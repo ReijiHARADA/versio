@@ -12,16 +12,16 @@ type Rect = { x: number; y: number; width: number; height: number };
  * table rules as very thin rectangles rather than `line` primitives, so use
  * geometry instead of the primitive kind. Full-page/image rectangles are
  * excluded by the aspect/size constraints. */
-function captionAnchoredGraphicsGrid(
+function captionAnchoredGraphicsGrids(
   page: ExtractedPage,
   captionBox: Rect,
-): Rect | undefined {
+): Rect[] {
   const rules = (page.graphicsPrimitives ?? []).filter((item) => {
     const horizontal = item.width >= 24 && item.height <= 2.5 && item.width / Math.max(item.height, 0.1) >= 8;
     const vertical = item.height >= 8 && item.width <= 2.5 && item.height / Math.max(item.width, 0.1) >= 6;
     return horizontal || vertical;
   });
-  if (rules.length < 3) return undefined;
+  if (rules.length < 3) return [];
   const touches = (a: Rect, b: Rect) =>
     a.x <= b.x + b.width + 3 && b.x <= a.x + a.width + 3 &&
     a.y <= b.y + b.height + 3 && b.y <= a.y + a.height + 3;
@@ -67,7 +67,17 @@ function captionAnchoredGraphicsGrid(
       centerDistance > page.width * 0.15) return [];
     return [{ box, gap, strength: horizontal * 2 + vertical }];
   });
-  return candidates.sort((a, b) => a.gap - b.gap || b.strength - a.strength)[0]?.box;
+  return candidates
+    .sort((a, b) => a.gap - b.gap || b.strength - a.strength)
+    .map((candidate) => candidate.box);
+}
+
+function unionRects(rects: Rect[]): Rect {
+  const x = Math.min(...rects.map((rect) => rect.x));
+  const y = Math.min(...rects.map((rect) => rect.y));
+  const right = Math.max(...rects.map((rect) => rect.x + rect.width));
+  const bottom = Math.max(...rects.map((rect) => rect.y + rect.height));
+  return { x, y, width: right - x, height: bottom - y };
 }
 
 /** Build only strongly anchored table regions; ambiguous rows remain ordinary candidates. */
@@ -81,7 +91,23 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
     // independent geometry evidence.
     const captionY = caption.boundingBoxes[0]?.y ?? 0;
     const captionBox = caption.boundingBoxes[0];
-    const graphicsGrid = captionBox ? captionAnchoredGraphicsGrid(page, captionBox) : undefined;
+    const graphicsGrids = captionBox ? captionAnchoredGraphicsGrids(page, captionBox) : [];
+    const firstGraphicsGrid = graphicsGrids[0];
+    // A single caption can describe multiple adjacent ruled sub-grids (for
+    // example two conditions or applications rendered one after another).
+    // Keep only components that share the caption's horizontal band; this
+    // prevents an unrelated chart elsewhere on the page from being folded in.
+    const graphicsGridParts = firstGraphicsGrid
+      ? graphicsGrids.filter((grid) => {
+          const xOverlap = Math.max(0, Math.min(grid.x + grid.width, firstGraphicsGrid.x + firstGraphicsGrid.width) - Math.max(grid.x, firstGraphicsGrid.x));
+          const centerDistance = Math.abs((grid.x + grid.width / 2) - (firstGraphicsGrid.x + firstGraphicsGrid.width / 2));
+          const verticalGap = grid.y > firstGraphicsGrid.y
+            ? grid.y - (firstGraphicsGrid.y + firstGraphicsGrid.height)
+            : firstGraphicsGrid.y - (grid.y + grid.height);
+          return verticalGap <= 180 && (xOverlap >= Math.min(grid.width, firstGraphicsGrid.width) * 0.25 || centerDistance <= 100);
+        })
+      : [];
+    const graphicsGrid = graphicsGridParts.length > 0 ? unionRects(graphicsGridParts) : undefined;
     // Tables in academic PDFs may place the caption below the last row (the
     // common ACM layout) or above it. Keep a bounded window on both sides so
     // the signature helper can choose the stronger anchored grid without
@@ -163,8 +189,10 @@ export function buildTableRegionEvidence(pages: ExtractedPage[], candidates: Rol
       if (!graphicsGrid) return true;
       const centerX = box.x + box.width / 2;
       const centerY = box.y + box.height / 2;
-      return centerX >= graphicsGrid.x - 2 && centerX <= graphicsGrid.x + graphicsGrid.width + 2 &&
-        centerY >= graphicsGrid.y - 2 && centerY <= graphicsGrid.y + graphicsGrid.height + 2;
+      return graphicsGridParts.some((part) =>
+        centerX >= part.x - 2 && centerX <= part.x + part.width + 2 &&
+        centerY >= part.y - 2 && centerY <= part.y + part.height + 2
+      );
     });
     // Borderless tables (common in ACM/CHI papers) have no vector rules and
     // therefore cannot satisfy the ruled-grid threshold. A caption plus a

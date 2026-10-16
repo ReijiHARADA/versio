@@ -525,7 +525,8 @@ function inferCaptionGrid(
     return hasSentencePunctuation || hasProseConnector || words.length >= 8;
   };
   const lines: GridLine[] = [];
-  for (const block of blocks) {
+  const hasNativeLayout = layoutBlocks.some((layout) => layout.pageStart === caption.pageStart);
+  if (!hasNativeLayout) for (const block of blocks) {
     if (block.id === caption.id || block.pageStart !== caption.pageStart) continue;
     const metadata = block.metadata as { captionOriginal?: unknown; column?: unknown; lines?: StructureLine[] };
     if (metadata.captionOriginal || (metadata.column && caption.metadata.column && metadata.column !== caption.metadata.column)) continue;
@@ -593,8 +594,22 @@ function inferCaptionGrid(
     }
   }
   if ([...xBands.values()].filter((count) => count >= 2).length < 2) return undefined;
+  const inferredBounds = {
+    left: Math.min(...rows.flatMap((row) => row.map((line) => line.x))),
+    top: Math.min(...rows.flatMap((row) => row.map((line) => line.y))),
+    right: Math.max(...rows.flatMap((row) => row.map((line) => line.x + line.width))),
+    bottom: Math.max(...rows.flatMap((row) => row.map((line) => line.y + line.height))),
+  };
+  const inferredIds = blocks
+    .filter((block) => block.id !== caption.id && block.pageStart === caption.pageStart && block.type === "table")
+    .filter((block) => {
+      const box = block.boundingBoxes[0];
+      return Boolean(box) && box.x < inferredBounds.right + 3 && box.x + box.width > inferredBounds.left - 3 &&
+        box.y < inferredBounds.bottom + 3 && box.y + box.height > inferredBounds.top - 3;
+    })
+    .map((block) => block.id);
   return {
-    ids: new Set(rows.flatMap((row) => row.map((line) => line.blockId)).filter(Boolean)),
+    ids: new Set([...inferredIds, ...rows.flatMap((row) => row.map((line) => line.blockId)).filter(Boolean)]),
     rows: rows.map((row) => row.map((line) => ({ text: line.text, x: line.x, width: line.width }))),
   };
 }
@@ -778,7 +793,8 @@ function foldCaptionOwnedTableFallbacks(blocks: PaperBlock[], layoutBlocks: Layo
   }
   const inferredOwnerIds = new Set<string>();
   for (const caption of captions) {
-    if (ownedCaptionIds.has(caption.id)) continue;
+    const existingRows = rowsByCaption.get(caption.id);
+    if (existingRows?.some((row) => row.length >= 2)) continue;
     const inferred = inferCaptionGrid(caption, blocks, layoutBlocks);
     if (!inferred) continue;
     rowsByCaption.set(caption.id, normalizeTableRows(inferred.rows));

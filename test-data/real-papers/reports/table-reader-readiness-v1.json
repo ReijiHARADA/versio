@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-16T02:14:38.906Z",
+  "generatedAt": "2026-10-16T02:44:24.989Z",
   "paperCount": 114,
   "papers": [
     {
@@ -654,8 +654,8 @@
       "file": "covid-ml-review.pdf",
       "tableCaptions": 10,
       "cropReadyCaptions": 8,
-      "rawTableFragments": 65,
-      "cropBackedFragments": 27,
+      "rawTableFragments": 66,
+      "cropBackedFragments": 28,
       "readerRawFragments": 6,
       "readerCellFallbacks": 6,
       "readerFragmentKinds": {
@@ -859,7 +859,7 @@
       "file": "detecting-statistical-interactions.pdf",
       "tableCaptions": 6,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 19,
+      "rawTableFragments": 23,
       "cropBackedFragments": 12,
       "readerRawFragments": 5,
       "readerCellFallbacks": 4,
@@ -2153,12 +2153,12 @@
       "file": "hci-intelligent-human-computer-interaction.pdf",
       "tableCaptions": 44,
       "cropReadyCaptions": 27,
-      "rawTableFragments": 87,
-      "cropBackedFragments": 58,
-      "readerRawFragments": 17,
-      "readerCellFallbacks": 15,
+      "rawTableFragments": 84,
+      "cropBackedFragments": 54,
+      "readerRawFragments": 18,
+      "readerCellFallbacks": 16,
       "readerFragmentKinds": {
-        "structured-grid": 15,
+        "structured-grid": 16,
         "short-label": 2
       },
       "readerFragmentSamples": {
@@ -2184,6 +2184,10 @@
             "text": "1Connectivity 1.392(3.45) 1.062(2.25) 0.169(0.24) 0.014(0.02) 3Temporality 0.443(0.55) 1.039(0.88) −0.05(1.30) 0.787(0.90) 3Noun overlap, 0.555(0.14) 0.509(0.33) 0.535(0.18) 0.557(0.24)"
           },
           {
+            "page": 142,
+            "text": "1 Meaningfulness 413.2(7.03) 399.4(14.3) 422.7(13.7) 414.2(17.9) 3 Polysemy for words 4.563(0.44) 4.610(0.28) 3.887(0.39) 3.980(0.46) 3 Hypernymy for 6.562(0.36) 6.842(0.98) 6.003(0.34) 5.350(0.77) 3 Hypernymy for verbs 1.927(0.14) 1.837(0."
+          },
+          {
             "page": 144,
             "text": "10.5(4.03) 0.001 11.7(5.37) 0.00 197.8(86.4) 0.00 0.203(0.19) 0.041"
           },
@@ -2206,10 +2210,6 @@
           {
             "page": 194,
             "text": "f wð 2Þ"
-          },
-          {
-            "page": 226,
-            "text": "Barnwal, Santosh Kumar 122 Bazzano, Federica 32, 60 Bellik, Yacine 8 Bhattacharya, Paritosh 109 Böck, Ronald 189"
           }
         ],
         "short-label": [
@@ -2255,6 +2255,10 @@
         {
           "page": 139,
           "text": "1Connectivity 1.392(3.45) 1.062(2.25) 0.169(0.24) 0.014(0.02) 3Temporality 0.443(0.55) 1.039(0.88) −0.05(1.30) 0.787(0.90) 3Noun overlap, 0.555(0.14) 0.509(0.33) 0.535(0.18) 0.557("
+        },
+        {
+          "page": 142,
+          "text": "1 Meaningfulness 413.2(7.03) 399.4(14.3) 422.7(13.7) 414.2(17.9) 3 Polysemy for words 4.563(0.44) 4.610(0.28) 3.887(0.39) 3.980(0.46) 3 Hypernymy for 6.562(0.36) 6.842(0.98) 6.003("
         },
         {
           "page": 144,
@@ -3271,7 +3275,7 @@
       "file": "interpreting-neural-networks.pdf",
       "tableCaptions": 6,
       "cropReadyCaptions": 4,
-      "rawTableFragments": 19,
+      "rawTableFragments": 23,
       "cropBackedFragments": 12,
       "readerRawFragments": 5,
       "readerCellFallbacks": 4,
@@ -6128,16 +6132,16 @@
     "papersWithTableCaptions": 48,
     "tableCaptions": 369,
     "cropReadyCaptions": 269,
-    "rawTableFragments": 1505,
-    "cropBackedFragments": 726,
-    "readerRawFragments": 544,
-    "readerCellFallbacks": 459,
+    "rawTableFragments": 1511,
+    "cropBackedFragments": 723,
+    "readerRawFragments": 545,
+    "readerCellFallbacks": 460,
     "readerFragmentKinds": {
-      "structured-grid": 432,
+      "structured-grid": 433,
       "short-label": 97,
       "ambiguous": 15
     },
-    "orphanFragments": 692,
+    "orphanFragments": 693,
     "note": "Crop readiness is a geometry diagnostic. readerRawFragments simulates suppression only after a successful caption crop; readerCellFallbacks are native rows retained for a readable source-only grid (including single-column multi-row tables), not a claim of fully reconstructed table semantics. readerFragmentKinds is audit-only triage and does not change resolver behavior."
   }
 }
