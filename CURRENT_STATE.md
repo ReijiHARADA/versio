@@ -3513,3 +3513,5 @@ server process remains running.
   `_acceptance/result.json` after a background grace period. Validation now
   reads the current acceptance-home marker directly. Standard packaged
   integration passes after the fix.
+- The `.app` containing this dense-page raster change was rebuilt at
+  **14:13:55 JST**; no Paper Reader or translation-server process remains.
