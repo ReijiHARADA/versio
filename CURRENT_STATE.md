@@ -3399,3 +3399,10 @@ server process remains running.
 - `npm run test:extraction-corpus` passed **232/232** (118 cached extraction baselines + 114 reading-order checks) in 429.32s.
 - PDF.js emitted existing font/ColorSpace warnings only; no test failures.
 - This is the authoritative corpus gate for the current table geometry change. The smaller `src/test/pdfExtraction/pipeline.test.ts` suite still contains a separate education fixture assertion that reproduces without this patch, but the 118-paper corpus and all reading-order regressions are green.
+
+# 2026-10-16: Reader native-table fallback keeps PDF columns aligned
+
+- `Table.tsx` now derives fallback grid columns from native cell `x` positions and places each cell in its nearest column. Sparse/wrapped rows no longer reflow independently based on their own cell count.
+- CSS fallback rows now use the computed explicit grid template while preserving horizontal scrolling for wide tables.
+- `npm run typecheck` and `npm run lint` pass (existing warnings only).
+- Rebuilt `.app` at 13:xx JST with this Reader change; packaged OzCHI import-only E2E remains green at 138 blocks / 5 tables.
