@@ -3411,3 +3411,8 @@ server process remains running.
 
 - Full `scripts/packaged-e2e/run-integration.sh` passed with the OzCHI fixture: import → annotation/search/export → quit → relaunch persistence → quit. Marker `ok`, search hits `1`.
 - This verifies the current `.app` can persist and reopen imported paper data after the native table fallback column-alignment change.
+
+# 2026-10-16: remaining table ambiguity review refreshed
+
+- Re-reviewed the five remaining audit-only ambiguous samples after the aligned fallback UI. They are two education table-cell continuations, one reference continuation, one multi-column business-category table, and one legitimate numbered-table caption.
+- The review artifact is `test-data/real-papers/reports/table-reader-ambiguous-review-v1.json`; no ordinary prose → table false positive remains in the audit sample.
