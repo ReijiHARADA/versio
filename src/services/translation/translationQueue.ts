@@ -11,6 +11,7 @@ import type {
   TranslationQueueConfig,
   TranslationPriorityValue,
 } from "./types";
+import { isRetryableTranslationError } from "./retryPolicy";
 
 export { TranslationPriority } from "./types";
 
@@ -211,24 +212,26 @@ export class TranslationQueue {
 
       await this.onTaskCompleted?.(task);
     } catch (error) {
-      task.status = "failed";
       task.error = error instanceof Error ? error.message : "Unknown error";
-      task.completedAt = Date.now();
+      const retryCount = (task as TranslationTask & { _retryCount?: number })._retryCount ?? 0;
+      const canRetry =
+        this.config.retryFailed &&
+        retryCount < this.config.maxRetries &&
+        isRetryableTranslationError(error);
 
-      await this.onTaskFailed?.(task);
-
-      // Retry if configured
-      if (this.config.retryFailed) {
-        const retryCount = (task as TranslationTask & { _retryCount?: number })._retryCount ?? 0;
-        if (retryCount < this.config.maxRetries) {
-          (task as TranslationTask & { _retryCount?: number })._retryCount = retryCount + 1;
-          task.status = "queued";
-          
-          // Move to end of same priority level after delay
-          setTimeout(() => {
-            this.processNext();
-          }, this.config.retryDelayMs);
-        }
+      if (canRetry) {
+        // Keep the block out of the Reader failure surface until retries are
+        // exhausted. Calling onTaskFailed first painted "翻訳に失敗しました"
+        // even when the next attempt would succeed.
+        (task as TranslationTask & { _retryCount?: number })._retryCount = retryCount + 1;
+        task.status = "queued";
+        setTimeout(() => {
+          this.processNext();
+        }, this.config.retryDelayMs);
+      } else {
+        task.status = "failed";
+        task.completedAt = Date.now();
+        await this.onTaskFailed?.(task);
       }
     } finally {
       this.activeCount--;

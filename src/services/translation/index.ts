@@ -8,3 +8,4 @@ export * from "./ollamaTranslationEngine";
 export * from "./translationQueue";
 export * from "./translationManager";
 export * from "./readingPriority";
+export * from "./retryPolicy";

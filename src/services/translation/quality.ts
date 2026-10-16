@@ -2044,13 +2044,21 @@ export function getCascadeQualityReasons(output: string, source: string): string
  * no Japanese script and would otherwise be recorded as a failed translation.
  */
 export function localizeNamedFigureCaption(source: string): string | null {
-  const match = source
+  const named = source
     .trim()
     .match(/^(?:figure|fig\.?)[\s]+(\d+)\.\s*(.+?)\s+by\s+(.+?)[.]?$/i);
-  if (!match) return null;
-  const [, number, title, creator] = match;
-  if (!title.trim() || !creator.trim()) return null;
-  return `図${number}. ${title.trim()}（${creator.trim()}）`;
+  if (named) {
+    const [, number, title, creator] = named;
+    if (!title.trim() || !creator.trim()) return null;
+    return `図${number}. ${title.trim()}（${creator.trim()}）`;
+  }
+  // Ordinary "Figure N. …" captions still benefit from a localized label even
+  // when the descriptive clause stays English after a quality reject.
+  const plain = source.trim().match(/^(?:figure|fig\.?)\s*(\d+[a-z]?)\.\s*(.+)$/i);
+  if (!plain) return null;
+  const [, number, rest] = plain;
+  if (!rest.trim()) return null;
+  return `図${number}. ${rest.trim()}`;
 }
 
 function latinRatioBeyondSource(output: string, source: string): number {
