@@ -1533,6 +1533,24 @@ describe("canonical extraction pipeline", () => {
     }
   });
 
+  it("prefers the article title over a Cureus tool-line title", async () => {
+    const pdf = path.resolve(
+      "test-fixtures/real-papers/pending-pdfs/epmc-code-free-automated-machine-learning-for-referable-glaucoma-classificati.pdf"
+    );
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "cureus-tool-title",
+      filePath: pdf,
+      fileHash: "cureus-tool-title",
+      metadata: { pageCount: pages.length },
+    });
+    const title = result.canonical.nodes.find((node) => node.role === "title")?.text ?? "";
+    expect(title).not.toMatch(/^Using Google Cloud/i);
+    expect(title).toMatch(/Code-Free Automated Machine Learning/i);
+  }, 60_000);
+
   it("recovers article title when the native title is an arXiv stamp", () => {
     const item = (text: string, x: number, y: number, fontSize: number, fontName = "Body") => ({
       text, x, y, width: Math.max(20, text.length * fontSize * 0.45), height: fontSize, fontSize, fontName, page: 1,
