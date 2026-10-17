@@ -31,7 +31,7 @@ exercised on a device.
 
 # 2026-10-18: Using-to 学術タイトルの誤除外を修正
 
-catalog+pending フル診断 **247** 本で flagged 2（同一 GPT-3 PDF の二重登録）。`Using Google Cloud…` 抑止が `Using cognitive psychology to understand GPT-3` までツール行扱いしていた。学術 Using-to/for パターンと vignette `Option N:` を分離。GPT-3 / Cureus 両方 pass。ゴール「完璧」と Reader 目視は未達。
+catalog+pending フル診断 **247** 本で flagged 2（同一 GPT-3 PDF の二重登録）。`Using Google Cloud…` 抑止が `Using cognitive psychology to understand GPT-3` までツール行扱いしていた。学術 Using-to/for パターンと vignette `Option N:` を分離。修正後の再走査は **247/247 clean**。ゴール「完璧」と Reader 目視は未達（構造診断以外の表境界・読み順の目視継続）。
 
 # 2026-10-17: 拡張OAコーパスのタイトル誤検出を修正
 
