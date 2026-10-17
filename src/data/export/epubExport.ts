@@ -83,12 +83,22 @@ export async function exportPaperEpub(
   const parsed = parsePaperMarkdown(markdownResult.markdown, paperId);
   const assetNames = new Map<string, string>();
   const assetMimeTypes = new Map<string, string>();
+  const usedAssetNames = new Set<string>();
   const files: Zippable = {
     // EPUB requires mimetype to be the first, uncompressed ZIP entry.
     "mimetype": [strToU8("application/epub+zip"), { level: 0 }],
   };
   for (const [index, asset] of pkg.assets.entries()) {
-    const name = `images/${asset.path.split("/").pop() || `asset-${index + 1}.bin`}`;
+    const base = asset.path.split("/").pop() || `asset-${index + 1}.bin`;
+    let fileName = base;
+    let suffix = 2;
+    while (usedAssetNames.has(fileName)) {
+      const dot = base.lastIndexOf(".");
+      fileName = dot > 0 ? `${base.slice(0, dot)}-${suffix}${base.slice(dot)}` : `${base}-${suffix}`;
+      suffix += 1;
+    }
+    usedAssetNames.add(fileName);
+    const name = `images/${fileName}`;
     assetNames.set(normalizedAssetPath(asset.path), name);
     assetMimeTypes.set(name, asset.mimeType || mimeTypeFromName(name));
     files[`OEBPS/${name}`] = asset.bytes;
