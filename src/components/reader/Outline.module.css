@@ -38,7 +38,6 @@
   cursor: pointer;
   /* No bg/color transition: interpolating selection blue ↔ gray briefly
      looks like the old soft accent-light highlight while scrolling. */
-  border-left: 3px solid transparent;
 }
 
 .link:hover:not(.active) {
@@ -49,7 +48,6 @@
 .link.active {
   background-color: var(--color-selection-bg);
   color: var(--color-selection-fg);
-  border-left-color: var(--color-selection-bg);
   font-weight: 500;
 }
 
