@@ -428,6 +428,20 @@ function looksLikeJournalChromeTitle(text: string): boolean {
   if (/\be\d{4,}\b/.test(t) && t.split(/\s+/).length <= 8) return true;
   if (/^[A-Za-z]{2,6}\s*[|·•]/i.test(t) && /\barticle\b/i.test(t)) return true;
   if (/^(?:article|research article|original article|open access)\b/i.test(t) && t.length <= 40) return true;
+  // Frontiers / MDPI editorial chrome labels sometimes win the title race.
+  if (/^(?:\*?correspondence|edited by|reviewed by|citation|copyright|keywords?|published|received|accepted)$/i.test(t)) {
+    return true;
+  }
+  // Affiliation lines that swallowed a truncated "… and review" fragment.
+  const words = t.split(/\s+/).filter(Boolean);
+  if (
+    words.length <= 12 &&
+    /\b(?:university|college|institute|education|faculty|school|hospital)\b/i.test(t) &&
+    /\b(?:and\s+)?(?:review|article|research)\b/i.test(t) &&
+    !/\b(?:applications?|methods?|effects?|role|impact|analysis|systematic|scoping)\b/i.test(t)
+  ) {
+    return true;
+  }
   return false;
 }
 
@@ -936,6 +950,9 @@ export function resolveTitle(input: {
     const words = text.trim().split(/\s+/).filter(Boolean);
     return words.length > 0 && words.length <= 3 && text.trim().length <= 28;
   };
+  // Judge the resolved native title only. Re-checking titles[0] after a
+  // successful masthead recovery would throw away a joined article title and
+  // fall back to a later fragment via recoverAlternateCoverTitle.
   const needsAlternateTitle = !native[0] ||
     looksLikeCopyrightBoilerplate(native[0]) ||
     looksLikeAbstractLabelTitle(native[0]) ||
@@ -948,21 +965,7 @@ export function resolveTitle(input: {
     looksLikeShortToolOrFragmentTitle(native[0]) ||
     looksLikeEthicsBoilerplateTitle(native[0]) ||
     looksLikePromptOptionTitle(native[0]) ||
-    isFragmentTitle(native[0]) ||
-    (titles[0] && (
-      looksLikeCopyrightBoilerplate(titles[0].text) ||
-      looksLikeAbstractLabelTitle(titles[0].text) ||
-      looksLikeDecoderCorruptedTitle(titles[0].text) ||
-      looksLikeContaminatedMastheadTitle(titles[0].text) ||
-      looksLikeBodyLeadInTitle(titles[0].text) ||
-      looksLikeJournalChromeTitle(titles[0].text) ||
-      looksLikeProtocolTableChrome(titles[0].text) ||
-      looksLikeKeywordsChrome(titles[0].text) ||
-      looksLikeShortToolOrFragmentTitle(titles[0].text) ||
-      looksLikeEthicsBoilerplateTitle(titles[0].text) ||
-      looksLikePromptOptionTitle(titles[0].text) ||
-      isFragmentTitle(titles[0].text)
-    ));
+    isFragmentTitle(native[0]);
   if (needsAlternateTitle) {
     const recovered = recoverAlternateCoverTitle(input.candidates);
     if (recovered && recovered !== native[0]) native = [recovered];

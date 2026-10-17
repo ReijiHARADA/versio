@@ -1,6 +1,6 @@
 # 2026-10-18: Frontiers FIGURE| キャプション + OA大量追加（git外）
 
-`FIGURE 1 | …` / `FIGURE 1PRISMA…` を figure_caption、`Table N (Continued).` を table_caption に昇格。タイトル先頭の `O R I G I N A L R E S E A R C H` 帯を除去。Europe PMC の `?pdf=render` は CF/403 が多いため、権利確認は Europe PMC（OA+CC）のまま PDF 本体は Unpaywall の出版社 URL から取得するよう `fetch-oa-europepmc.mjs` を更新。pending PDF は引き続き gitignore（コミットしない）。ローカル pending 約 **236** PDF / 候補メタ **297**。回帰: caption / title banner unit pass。ゴール「完璧」と Reader 目視は未達。
+`FIGURE 1 | …` / `FIGURE 1PRISMA…` を figure_caption、`Table N (Continued).` を table_caption に昇格。タイトル先頭の `O R I G I N A L R E S E A R C H` 帯を除去。Europe PMC の `?pdf=render` は CF/403 が多いため、権利確認は Europe PMC（OA+CC）のまま PDF 本体は Unpaywall の出版社 URL から取得するよう `fetch-oa-europepmc.mjs` を更新。pending PDF は引き続き gitignore（コミットしない）。ローカル pending 約 **236** PDF / 候補メタ **297**。Frontiers の `EDITED BY` / `OPEN ACCESS` / 抄録リードイン見出し化と所属マッシュタイトルも抑止。pending 80本サンプルは **78/80 clean**。回帰: caption / title banner / affiliation-mash unit pass。ゴール「完璧」と Reader 目視は未達。
 
 # 2026-10-18: EPUB 3 export and explicit cloud-folder sync
 

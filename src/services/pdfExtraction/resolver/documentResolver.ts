@@ -365,7 +365,7 @@ function demotePageOneAuthorHeadings(nodes: CanonicalNode[]): CanonicalNode[] {
     const t = node.text.trim();
     // Bilingual mastheads often emit transliterated author names as large
     // "headings" beside the real article title. Keep genuine section labels.
-    const personShaped = /^[A-ZА-ЯЁ][a-zа-яё]+(?:\s+[A-ZА-ЯЁ][a-zа-яё.'-]+){1,3}$/u.test(t) &&
+    const personShaped = /^[A-ZА-ЯЁ][a-zа-яё'-]+(?:\s+[A-ZА-ЯЁ][a-zа-яё.'-]+){1,3}$/u.test(t) &&
       t.length <= 42 &&
       !/\b(?:Abstract|Introduction|Related|Methods|Results|Discussion|Conclusion|Keywords?)\b/i.test(t);
     if (!personShaped) return node;
@@ -382,6 +382,43 @@ function demotePageOneAuthorHeadings(nodes: CanonicalNode[]): CanonicalNode[] {
           page: node.pageStart,
           bbox: node.boundingBoxes[0],
           reason: "person-shaped page-one heading demoted to author",
+        },
+      ],
+    };
+  });
+}
+
+/** Frontiers-style editorial chrome and abstract lead-ins that layout promotes to heading. */
+function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): CanonicalNode[] {
+  const titleText = nodes.find((n) => n.role === "title")?.text?.trim().toLowerCase() ?? "";
+  return nodes.map((node) => {
+    if (node.role !== "heading" || !node.text) return node;
+    const t = node.text.trim();
+    const editorialLabel =
+      /^(?:\*?correspondence|edited by|reviewed by|open access|citation|copyright|keywords?|published|received|accepted)$/i.test(t);
+    const abstractLeadIn =
+      /^(?:this study|this paper|this article|this review|we (?:present|propose|report|investigate))\b/i.test(t) &&
+      t.split(/\s+/).filter(Boolean).length >= 8;
+    const duplicateTitle =
+      titleText.length >= 24 && t.toLowerCase() === titleText;
+    if (!editorialLabel && !abstractLeadIn && !duplicateTitle) return node;
+    return {
+      ...node,
+      role: editorialLabel ? ("other" as const) : ("paragraph" as const),
+      confidence: Math.min(node.confidence, 0.55),
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic",
+          label: "editorial-chrome-heading-demotion",
+          confidence: 0.85,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: editorialLabel
+            ? "editorial chrome label demoted from heading"
+            : duplicateTitle
+              ? "duplicate title heading demoted to paragraph"
+              : "abstract lead-in prose demoted from heading",
         },
       ],
     };
@@ -731,6 +768,8 @@ export function resolveCanonicalDocument(input: {
         : { page: 1, boundingBoxes: [] },
     });
   }
+
+  nodes = demoteEditorialChromeHeadings(nodes);
 
   const figureNodes = figureNodesForCaptions(candidates, input.regionEvidence ?? []);
   nodes = [...nodes, ...figureNodes];

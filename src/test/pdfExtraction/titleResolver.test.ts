@@ -118,6 +118,18 @@ describe("title resolver masthead filtering", () => {
     expect(result.text).toBe("Patterns and Gaps in Adolescent Belonging");
   });
 
+  it("skips an affiliation mash that stole the title role", () => {
+    const result = resolveTitle({
+      candidates: [
+        candidate("Fatih Sultan Mehmet Education and review", 70),
+        candidate("Applications of natural language processing and large language models in sports injury", 110),
+        candidate("assessment and rehabilitation decision-making: a scoping review", 128),
+      ],
+    });
+    expect(result.text).toMatch(/^Applications of natural language processing/i);
+    expect(result.text).not.toMatch(/Fatih Sultan Mehmet/i);
+  });
+
   it("removes an inline journal rail between wrapped title fragments", () => {
     const result = resolveTitle({
       candidates: [candidate("Eco-Linguistics in English: Reviewing the role", 120), candidate("IJLE 2026; 6(1): 05-09 language in environmental discourse", 136)],
