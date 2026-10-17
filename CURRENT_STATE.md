@@ -17,10 +17,13 @@ renames it atomically, validates the selected absolute folder and filename,
 and never deletes or touches unrelated files.
 
 Validation: `npm run typecheck`, `npm run lint`, focused EPUB test, Vite
-production build, and `PATH="$HOME/.cargo/bin:$PATH" cargo check --manifest-path
-src-tauri/Cargo.toml` pass. Full Vitest still has the repository's existing
-unrelated PDF/quality regression failures; none are in the new EPUB or sync
-paths. Apple Books / Kindle visual import has not been exercised on a device.
+production build, `PATH="$HOME/.cargo/bin:$PATH" cargo check --manifest-path
+src-tauri/Cargo.toml`, and the fresh packaged Tauri integration pass. The
+packaged acceptance marker now records a non-empty `epubBytes` value and the
+archive contains the required EPUB entries. Full Vitest still has the
+repository's existing unrelated PDF/quality regression failures; none are in
+the new EPUB or sync paths. Apple Books / Kindle visual import has not been
+exercised on a device.
 
 # 2026-10-18: 設定→ライセンスを掲載必須のみに再調査
 
