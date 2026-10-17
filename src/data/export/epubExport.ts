@@ -39,6 +39,85 @@ function mimeTypeFromName(name: string): string {
   return "application/octet-stream";
 }
 
+type EpubAsset = {
+  bytes: Uint8Array;
+  mimeType: string;
+  extension: string;
+};
+
+const MOBILE_IMAGE_MAX_DIMENSION = 1600;
+const MOBILE_JPEG_QUALITY = 0.92;
+
+function extensionForMimeType(mimeType: string, fallbackName: string): string {
+  if (mimeType === "image/jpeg") return "jpg";
+  if (mimeType === "image/png") return "png";
+  if (mimeType === "image/gif") return "gif";
+  if (mimeType === "image/svg+xml") return "svg";
+  return fallbackName.split(".").pop() || "bin";
+}
+
+/**
+ * EPUB has no need to retain the source PDF's lossless, oversized PNG crops.
+ * Convert ordinary figures to a high-quality JPEG only for the exported book;
+ * tables remain PNG so small text and ruling lines stay crisp. This deliberately
+ * leaves the Paper Package assets untouched.
+ */
+async function optimizeFigureForMobileEpub(
+  bytes: Uint8Array,
+  mimeType: string,
+  fileName: string,
+  enabled: boolean
+): Promise<EpubAsset> {
+  const original: EpubAsset = {
+    bytes,
+    mimeType,
+    extension: extensionForMimeType(mimeType, fileName),
+  };
+  if (!enabled || mimeType !== "image/png" || typeof document === "undefined" || typeof Image === "undefined") {
+    return original;
+  }
+
+  try {
+    const image = new Image();
+    image.decoding = "async";
+    const objectUrl = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
+    try {
+      const decoded = new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve();
+        image.onerror = () => reject(new Error("could not decode EPUB image"));
+      });
+      image.src = objectUrl;
+      await decoded;
+      const longestEdge = Math.max(image.naturalWidth, image.naturalHeight);
+      if (longestEdge === 0) return original;
+      const scale = Math.min(1, MOBILE_IMAGE_MAX_DIMENSION / longestEdge);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      const context = canvas.getContext("2d");
+      if (!context) return original;
+      // JPEG has no alpha. Academic figures conventionally render on the reader's
+      // white page, so make that background explicit rather than turning it black.
+      context.fillStyle = "#fff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const encoded = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/jpeg", MOBILE_JPEG_QUALITY)
+      );
+      if (!encoded) return original;
+      const compressed = new Uint8Array(await encoded.arrayBuffer());
+      // Do not replace an unusually efficient source PNG with a larger JPEG.
+      if (compressed.byteLength >= bytes.byteLength) return original;
+      return { bytes: compressed, mimeType: "image/jpeg", extension: "jpg" };
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  } catch {
+    // Export must remain available in browsers that cannot decode a source crop.
+    return original;
+  }
+}
+
 function nodeHtml(node: DocumentNode, assetNames: Map<string, string>, headingId?: string): string {
   const text = inlineHtml(node.text);
   if (node.type === "title" || node.type === "heading") {
@@ -64,6 +143,8 @@ function packageName(title: string, paperId: string): string {
 
 export type EpubExportOptions = {
   includeFailedTranslations?: boolean;
+  /** Keep original image assets for archival rather than mobile reading. */
+  optimizeImagesForMobile?: boolean;
 };
 
 export async function exportPaperEpub(
@@ -81,6 +162,11 @@ export async function exportPaperEpub(
   });
   const pkg = await loadPaperPackage(fs, paperId, { includeAssets: true, includeSourcePdf: false, includeLayout: false });
   const parsed = parsePaperMarkdown(markdownResult.markdown, paperId);
+  const tableAssetPaths = new Set(
+    parsed.nodes
+      .filter((node) => node.type === "table" && node.src)
+      .map((node) => normalizedAssetPath(node.src!))
+  );
   const assetNames = new Map<string, string>();
   const assetMimeTypes = new Map<string, string>();
   const usedAssetNames = new Set<string>();
@@ -90,18 +176,25 @@ export async function exportPaperEpub(
   };
   for (const [index, asset] of pkg.assets.entries()) {
     const base = asset.path.split("/").pop() || `asset-${index + 1}.bin`;
-    let fileName = base;
+    const sourcePath = normalizedAssetPath(asset.path);
+    const optimized = await optimizeFigureForMobileEpub(
+      asset.bytes,
+      asset.mimeType || mimeTypeFromName(base),
+      base,
+      options.optimizeImagesForMobile !== false && !tableAssetPaths.has(sourcePath)
+    );
+    const stem = base.replace(/\.[^.]+$/, "");
+    let fileName = `${stem}.${optimized.extension}`;
     let suffix = 2;
     while (usedAssetNames.has(fileName)) {
-      const dot = base.lastIndexOf(".");
-      fileName = dot > 0 ? `${base.slice(0, dot)}-${suffix}${base.slice(dot)}` : `${base}-${suffix}`;
+      fileName = `${stem}-${suffix}.${optimized.extension}`;
       suffix += 1;
     }
     usedAssetNames.add(fileName);
     const name = `images/${fileName}`;
-    assetNames.set(normalizedAssetPath(asset.path), name);
-    assetMimeTypes.set(name, asset.mimeType || mimeTypeFromName(name));
-    files[`OEBPS/${name}`] = asset.bytes;
+    assetNames.set(sourcePath, name);
+    assetMimeTypes.set(name, optimized.mimeType);
+    files[`OEBPS/${name}`] = optimized.bytes;
   }
   const headingIds = new Map<DocumentNode, string>();
   const usedHeadingIds = new Set<string>();
