@@ -10,6 +10,9 @@ Paper Reader は翻訳済み論文を EPUB 3 として保存できます。自�
 4. iPhone / iPad では AirDrop または iCloud Drive 経由で Apple Books に開く。
    Kindle では EPUB を Send to Kindle の通常の受け渡し方法で送る。
 
+Apple の Books は Mac から EPUB を読み込めます（[Apple Support](https://support.apple.com/en-ie/guide/books/ibkseed72068/mac)）。
+Kindle は Send to Kindle で EPUB を受け付けます（[Amazon Help](https://digprjsurvey.amazon.co.uk/csad/help/node/G5WYD9SAF7PGXRNA)）。
+
 同期先を固定する場合は「設定 → ライブラリとデータ → スマートフォン用 EPUB
 同期」で iCloud Drive または Google Drive の既存フォルダを選びます。EPUB 書き出し
 ダイアログの「保存後に同期先フォルダへコピー」を明示的に選んだ論文だけが対象です。
