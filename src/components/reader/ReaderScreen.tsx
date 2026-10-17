@@ -178,6 +178,7 @@ export function ReaderScreen() {
     exportBusy,
     exportStatus,
     exportError,
+    epubSyncFolder,
     setExportStatus,
     setExportError,
     handleExport,
@@ -502,6 +503,7 @@ export function ReaderScreen() {
         busy={exportBusy}
         status={exportStatus}
         error={exportError}
+        epubSyncFolder={epubSyncFolder}
         onClose={() => {
           if (!exportBusy) setShowExport(false);
         }}

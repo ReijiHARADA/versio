@@ -289,6 +289,59 @@ fn is_safe_asset_rel(path: &str) -> bool {
         .all(|c| matches!(c, Component::Normal(_)))
 }
 
+fn is_safe_export_file_name(name: &str) -> bool {
+    !name.is_empty()
+        && name != "."
+        && name != ".."
+        && !name.contains('/')
+        && !name.contains('\\')
+        && !name.contains("..")
+        && Path::new(name)
+            .components()
+            .all(|component| matches!(component, Component::Normal(_)))
+}
+
+/// Let the user choose a filesystem folder for EPUB synchronization.
+/// The selected path is returned to the renderer and is used only for the
+/// explicit sync action; no background cloud API or account access is needed.
+#[tauri::command]
+pub fn choose_epub_sync_folder() -> Result<Option<String>, String> {
+    Ok(choose_directory_with_prompt("EPUB同期先フォルダを選択")?
+        .map(|path| path.to_string_lossy().to_string()))
+}
+
+/// Atomically write one EPUB into a user-selected iCloud Drive / Google Drive
+/// folder. Repeating the same export updates the same deterministic filename;
+/// unrelated files in the folder are never touched.
+#[tauri::command]
+pub fn sync_epub_file(
+    folder_path: String,
+    file_name: String,
+    data: Vec<u8>,
+) -> Result<String, String> {
+    if !is_safe_export_file_name(&file_name) || !file_name.to_lowercase().ends_with(".epub") {
+        return Err("無効なEPUBファイル名です".into());
+    }
+    let folder = PathBuf::from(&folder_path);
+    if !folder.is_absolute() {
+        return Err("同期先フォルダは絶対パスで指定してください".into());
+    }
+    if !folder.is_dir() {
+        return Err("同期先フォルダが見つかりません".into());
+    }
+    let dest = folder.join(&file_name);
+    if !dest.starts_with(&folder) {
+        return Err("無効な同期先パスです".into());
+    }
+    let tmp = folder.join(format!(".{file_name}.tmp-{}", std::process::id()));
+    fs::write(&tmp, &data).map_err(|e| e.to_string())?;
+    if let Err(error) = fs::rename(&tmp, &dest) {
+        let _ = fs::remove_file(&tmp);
+        return Err(error.to_string());
+    }
+    Ok(dest.to_string_lossy().to_string())
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExportAssetInput {

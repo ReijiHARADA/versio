@@ -1,11 +1,17 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { ExportDialogValues } from "../ExportDialog";
+import { getEpubSyncFolder, syncEpubFile } from "../../../services/epubSync";
 
 export function useReaderExport(paperId: string | undefined) {
   const [showExport, setShowExport] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
   const [exportStatus, setExportStatus] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [epubSyncFolder, setEpubSyncFolder] = useState<string | null>(null);
+
+  useEffect(() => {
+    void getEpubSyncFolder().then(setEpubSyncFolder);
+  }, []);
 
   const handleExport = useCallback(
     async (values: ExportDialogValues) => {
@@ -15,13 +21,34 @@ export function useReaderExport(paperId: string | undefined) {
       setExportStatus("保存先を選んでいます...");
       try {
         const { getStorage } = await import("../../../data/runtime");
+        const { exportPaperEpub } = await import("../../../data/export/epubExport");
         const { exportPaperMarkdown, exportVerificationBundle } = await import(
           "../../../data/export/markdownExport"
         );
-        const { saveMarkdownExport, saveNotionImportExport, saveVerificationExport } = await import(
+        const { saveEpubExport, saveMarkdownExport, saveNotionImportExport, saveVerificationExport } = await import(
           "../../../data/export/saveExport"
         );
         const { fs } = await getStorage();
+        if (values.mode === "epub") {
+          setExportStatus("EPUBを作成しています...");
+          const result = await exportPaperEpub(fs, paperId, {
+            includeFailedTranslations: values.includeFailedTranslations,
+          });
+          const saved = await saveEpubExport(result);
+          if (!saved) {
+            setExportStatus("キャンセルしました");
+            return;
+          }
+          const selectedSyncFolder = values.syncToFolder
+            ? await getEpubSyncFolder()
+            : epubSyncFolder;
+          if (values.syncToFolder && selectedSyncFolder) {
+            setExportStatus("同期先フォルダへコピーしています...");
+            await syncEpubFile(selectedSyncFolder, `${result.fileName}.epub`, result.epub);
+          }
+          setExportStatus(`EPUBを書き出しました: ${saved.path}`);
+          return;
+        }
         if (values.mode === "verification") {
           const result = await exportVerificationBundle(fs, paperId, {
             includeFailedTranslations: values.includeFailedTranslations,
@@ -73,7 +100,7 @@ export function useReaderExport(paperId: string | undefined) {
         setExportBusy(false);
       }
     },
-    [paperId]
+    [epubSyncFolder, paperId]
   );
 
   return {
@@ -82,6 +109,7 @@ export function useReaderExport(paperId: string | undefined) {
     exportBusy,
     exportStatus,
     exportError,
+    epubSyncFolder,
     setExportStatus,
     setExportError,
     handleExport,
