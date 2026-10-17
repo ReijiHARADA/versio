@@ -1533,6 +1533,24 @@ describe("canonical extraction pipeline", () => {
     }
   });
 
+  it("does not classify multi-column Japanese memorial prose as tables", async () => {
+    const pdf = path.resolve(
+      "test-fixtures/real-papers/pending-pdfs/cognitive-psychology-a-tribute-to-the-memory-of-professor-neisser-the-godfather-of-cognitiv.pdf"
+    );
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "neisser-tribute-prose",
+      filePath: pdf,
+      fileHash: "neisser-tribute-prose",
+      metadata: { pageCount: pages.length },
+    });
+    const tables = result.canonical.nodes.filter((node) => node.role === "table");
+    expect(tables).toEqual([]);
+    expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /Neisser/.test(node.text ?? ""))).toBe(true);
+  }, 60_000);
+
   it("keeps academic Using-to titles instead of vignette option lines", async () => {
     const pdf = path.resolve("test-data/real-papers/cognitive-psychology-gpt3.pdf");
     if (!fs.existsSync(pdf)) return;
