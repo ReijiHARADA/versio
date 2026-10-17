@@ -1834,8 +1834,14 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       // reconstructDocument has already identified a native grid. Preserve
       // that geometry for compact captionless tables unless a later, more
       // specific formula or figure-label guard overrides it.
-      if (block.role === "table") {
+      if (block.role === "table" && !cjkSentenceLikeProse && !sentenceLikeProse) {
         scoreByRole.table = Math.max(scoreByRole.table, 0.9);
+      }
+      // Multi-column Japanese/Chinese memorial prose is often emitted as many
+      // short native items per line and wrongly labeled table by layout.
+      if (cjkSentenceLikeProse) {
+        scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.4);
+        scoreByRole.paragraph = Math.max(scoreByRole.paragraph ?? 0, 0.9);
       }
     }
     const highConfidenceTableEvidence = [
