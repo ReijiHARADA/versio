@@ -1347,15 +1347,17 @@ function cjkCount(text: string): number {
 
 export function isFigureCaption(text: string): boolean {
   const caption = layoutPlain(text);
-  if (/^(?:figure|fig\.?|図)\s*\d+[a-z]?(?:\s*,\s*[a-z]\b)*(?:\s*[:.：–—-]|\s*$)/i.test(caption)) {
+  // Include `|` for Frontiers-style `FIGURE 1 | Experimental design…`.
+  if (/^(?:figure|fig\.?|図)\s*\d+[a-z]?(?:\s*,\s*[a-z]\b)*(?:\s*[:.|：–—-]|\s*$)/i.test(caption)) {
     return true;
   }
   // Some older journals omit punctuation after the figure number
-  // (`Fig.2 Otto Künzli ...`). Keep this format structural while excluding
-  // ordinary prose that starts with a finite verb (`Fig. 2 shows ...`).
-  const unpunctuated = caption.match(/^(?:figure|fig\.?|図)\s*\d+[a-z]?\s+(.+)$/i)?.[1] ?? "";
+  // (`Fig.2 Otto Künzli ...`, `FIGURE 1PRISMA…`). Keep this format structural
+  // while excluding ordinary prose that starts with a finite verb
+  // (`Fig. 2 shows ...`).
+  const unpunctuated = caption.match(/^(?:figure|fig\.?|図)\s*\d+[a-z]?\s*(.+)$/i)?.[1] ?? "";
   if (unpunctuated && /^[A-ZÀ-ÖØ-Þ]/u.test(unpunctuated) &&
-      !/^(?:shows?|illustrates?|depicts?|presents?|displays?|demonstrates?|summarizes?|reports?)\b/i.test(unpunctuated)) {
+      !/^(?:shows?|illustrates?|depicts?|presents?|displays?|demonstrates?|summarizes?|reports?|represents?)\b/i.test(unpunctuated)) {
     return true;
   }
   // Older proceedings often use `Fig. 1, Caption title…` rather than a
@@ -1370,7 +1372,7 @@ export function isTableCaption(text: string): boolean {
   // (`Table 2.5`, `Table A.3.1`). Treat that numeric path as one structural
   // identifier instead of mistaking the first period for caption prose.
   const tableNumber = "(?:[a-z]+\\.)?\\d+(?:\\.\\d+)*[a-z]?";
-  if (new RegExp(`^(?:tables?|表)\\s*${tableNumber}\\s*\\(continued\\)$`, "i").test(caption)) return true;
+  if (new RegExp(`^(?:tables?|表)\\s*${tableNumber}\\s*\\(continued\\)\\.?$`, "i").test(caption)) return true;
   // Some journal templates separate the number and title with a vertical bar
   // (`TABLE 2 | Baseline characteristics`). This is a structural delimiter,
   // unlike an inline prose reference such as `Table 2 shows ...`.

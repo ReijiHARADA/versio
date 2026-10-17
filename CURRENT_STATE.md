@@ -1,3 +1,7 @@
+# 2026-10-18: Frontiers FIGURE| キャプション + OA大量追加（git外）
+
+`FIGURE 1 | …` / `FIGURE 1PRISMA…` を figure_caption、`Table N (Continued).` を table_caption に昇格。タイトル先頭の `O R I G I N A L R E S E A R C H` 帯を除去。Europe PMC の `?pdf=render` は CF/403 が多いため、権利確認は Europe PMC（OA+CC）のまま PDF 本体は Unpaywall の出版社 URL から取得するよう `fetch-oa-europepmc.mjs` を更新。pending PDF は引き続き gitignore（コミットしない）。ローカル pending 約 **236** PDF / 候補メタ **297**。回帰: caption / title banner unit pass。ゴール「完璧」と Reader 目視は未達。
+
 # 2026-10-18: EPUB 3 export and explicit cloud-folder sync
 
 Reader export now includes an EPUB 3 option for Apple Books / Kindle. The
@@ -43,7 +47,7 @@ pending 136 本の wide 診断で flagged 5（Cureus の `Using Google Cloud…`
 
 # 2026-10-17: pending PDFはgitに入れない + OA大量追加
 
-実PDF本体は評価用ローカル資産。`test-fixtures/real-papers/pending-pdfs/**/*.pdf` を gitignore し、追跡済みPDFを index から外した（ディスク上のファイルは残す）。再取得は `node scripts/fetch-oa-europepmc.mjs`（Europe PMC の OA+CC のみ）。今回さらに CC BY/BY-NC を **40本** 追加取得し、pending 合計はローカル約 **136** PDF。コミット対象は候補JSON・取得スクリプト・gitignore。
+実PDF本体は評価用ローカル資産。`test-fixtures/real-papers/pending-pdfs/**/*.pdf` を gitignore し、追跡済みPDFを index から外した（ディスク上のファイルは残す）。再取得は `node scripts/fetch-oa-europepmc.mjs`（Europe PMC で OA+CC 確認 → Unpaywall/出版社 PDF）。コミット対象は候補JSON・取得スクリプト・gitignore。最新件数は冒頭の 2026-10-18 エントリを参照。
 
 # 2026-10-17: 図パネル/凡例の見出し誤昇格を抑止
 

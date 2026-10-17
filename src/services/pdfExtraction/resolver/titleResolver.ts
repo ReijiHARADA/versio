@@ -22,8 +22,22 @@ function isUppercaseTitleLine(text: string): boolean {
   return t.length >= 12 && (t.match(/[\p{Lu}]/gu)?.length ?? 0) / t.length >= 0.72;
 }
 
-function stripMastheadSuffix(text: string): string {
+/** Journal banners like `O R I G I N A L   R E S E A R C H` prefixed to titles. */
+function stripSpacedArticleTypeBanner(text: string): string {
   const trimmed = text.trim();
+  const match = trimmed.match(
+    /^(?:(?:[A-Z]\s+){3,}[A-Z])(?:\s+(?:[A-Z]\s+){2,}[A-Z])*\s+([A-ZÀ-ÖØ-Þ].+)$/u
+  );
+  if (!match?.[1]) return trimmed;
+  const banner = trimmed.slice(0, trimmed.length - match[1].length).replace(/\s+/g, "");
+  if (!/^(?:ORIGINAL|RESEARCH|ARTICLE|REVIEW|BRIEF|REPORT|LETTER|EDITORIAL|CLINICAL)+$/i.test(banner)) {
+    return trimmed;
+  }
+  return match[1].trim();
+}
+
+function stripMastheadSuffix(text: string): string {
+  const trimmed = stripSpacedArticleTypeBanner(text.trim());
   // A title line can be split around an inline journal/year marker when the
   // PDF places the publication rail between two title fragments. Remove only
   // the bounded metadata token and retain both title sides.
