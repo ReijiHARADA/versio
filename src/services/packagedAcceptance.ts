@@ -11,6 +11,7 @@ import {
 } from "./database";
 import { getStorage } from "../data/runtime";
 import { exportPaperMarkdown } from "../data/export/markdownExport";
+import { exportPaperEpub } from "../data/export/epubExport";
 import { createNotionImportZip } from "../data/export/saveExport";
 import { unzipSync } from "fflate";
 import { useImportJobStore } from "../stores/importJobStore";
@@ -25,6 +26,7 @@ type AcceptanceResult = {
   searchHits?: number;
   exportBytes?: number;
   notionBytes?: number;
+  epubBytes?: number;
   error?: string;
   at: string;
 };
@@ -217,6 +219,20 @@ export async function maybeRunPackagedAcceptanceImport(): Promise<void> {
       throw new Error("Notion ZIP has invalid page or asset paths");
     }
     await fs.writeBytes("_acceptance/notion.zip", notionArchive);
+    const epubExport = await exportPaperEpub(fs, paperId, {
+      includeFailedTranslations: false,
+    });
+    const epubEntries = Object.keys(unzipSync(epubExport.epub));
+    if (
+      epubEntries[0] !== "mimetype" ||
+      !epubEntries.includes("META-INF/container.xml") ||
+      !epubEntries.includes("OEBPS/package.opf") ||
+      !epubEntries.includes("OEBPS/nav.xhtml") ||
+      !epubEntries.includes("OEBPS/content.xhtml")
+    ) {
+      throw new Error("EPUB package is structurally invalid");
+    }
+    await fs.writeBytes("_acceptance/epub.epub", epubExport.epub);
     await flushPersistence();
     await writeMarker({
       ok: false,
@@ -235,6 +251,7 @@ export async function maybeRunPackagedAcceptanceImport(): Promise<void> {
       searchHits: searchHits.length,
       exportBytes: new TextEncoder().encode(exported.markdown).length,
       notionBytes: notionArchive.byteLength,
+      epubBytes: epubExport.epub.byteLength,
       at: new Date().toISOString(),
     });
   } catch (error) {
