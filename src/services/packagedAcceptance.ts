@@ -295,6 +295,7 @@ export async function maybeVerifyPackagedAcceptanceRelaunch(): Promise<void> {
       searchHits: prev.searchHits,
       exportBytes: prev.exportBytes,
       notionBytes: prev.notionBytes,
+      epubBytes: prev.epubBytes,
       error:
         paper && annotation
           ? undefined
