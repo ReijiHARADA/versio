@@ -1,3 +1,11 @@
+# 2026-10-18: 設定→ライセンスを掲載必須のみに再調査
+
+サードパーティ一覧を「macOS 配布物かつ帰属表示が必要なもの」に絞った。Rust は全 resolve（約 466）ではなく `cargo tree --target {aarch64,x86_64}-apple-darwin -e no-dev,no-build`（237）のみ。`Unlicense OR MIT` / `0BSD OR …` / `CC0-1.0 OR …` など帰属不要を選択できる二重ライセンスは除外。結果 **529 → 293** 件（非配布 229 + 帰属不要選択可 7 をフィルタ）。`generatorVersion` 2。方針は `THIRD_PARTY_NOTICES.md` / `scripts/generate-licenses.mjs`。`npm run generate:licenses` と `src/test/licenses.test.ts` pass。
+
+# 2026-10-18: Using-to 学術タイトルの誤除外を修正
+
+catalog+pending フル診断 **247** 本で flagged 2（同一 GPT-3 PDF の二重登録）。`Using Google Cloud…` 抑止が `Using cognitive psychology to understand GPT-3` までツール行扱いしていた。学術 Using-to/for パターンと vignette `Option N:` を分離。GPT-3 / Cureus 両方 pass。ゴール「完璧」と Reader 目視は未達。
+
 # 2026-10-17: 拡張OAコーパスのタイトル誤検出を修正
 
 pending 136 本の wide 診断で flagged 5（Cureus の `Using Google Cloud…` ツール行タイトル、倫理文タイトル、参考文献の embedded-section 誤検知）。ツール行・倫理 boilerplate を title 候補から除外し、番号付き参考文献を診断から除外。pending 再走査で clean 目標。回帰: Cureus tool-line title pass。

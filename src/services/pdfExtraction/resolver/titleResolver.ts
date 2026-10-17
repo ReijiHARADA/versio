@@ -181,11 +181,22 @@ function looksLikeShortToolOrFragmentTitle(text: string): boolean {
   const words = t.split(/\s+/).filter(Boolean);
   if (words.length === 0 || words.length > 8 || t.length > 55) return false;
   if (/:/.test(t)) return false;
-  if (/^(?:using|via|with|through|based on)\s+[A-Z(]/i.test(t)) return true;
+  // Real article titles often start with "Using … to …" / "Using … for …".
+  // Only treat short platform stubs as chrome (e.g. "Using Google Cloud Vertex AI").
+  const academicUsing =
+    /^(?:using|via|with|through)\b.+\b(?:to|for|in|on)\b.+/i.test(t) &&
+    /\b(?:psychology|learning|network|model|detection|classification|analysis|study|review|survey)\b/i.test(t);
+  if (academicUsing) return false;
+  if (
+    /^(?:using|via|with|through|based on)\s+[A-Z(]/i.test(t) &&
+    /\b(?:google|cloud|vertex|azure|aws|chatgpt|openai|matlab|python|android|ios)\b/i.test(t)
+  ) {
+    return true;
+  }
   // Product / platform stubs without review/study vocabulary.
   if (
     words.length <= 6 &&
-    !/\b(?:review|survey|analysis|study|effect|impact|perspectives?|classification|detection)\b/i.test(t) &&
+    !/\b(?:review|survey|analysis|study|effect|impact|perspectives?|classification|detection|psychology)\b/i.test(t) &&
     /\b(?:google|cloud|vertex|azure|aws|chatgpt|openai|matlab|python)\b/i.test(t)
   ) {
     return true;
@@ -199,6 +210,14 @@ function looksLikeEthicsBoilerplateTitle(text: string): boolean {
   return /^(?:ethical permission|ethics?\s+(?:approval|permission|committee)|informed consent|this study was approved|institutional (?:review board|human ethical)|all procedures were|permission was granted)\b/i.test(
     t
   );
+}
+
+/** Vignette / survey prompt options sometimes outrank the cover title. */
+function looksLikePromptOptionTitle(text: string): boolean {
+  const t = text.trim();
+  if (/^[-•*]?\s*option\s*\d+\s*:/i.test(t)) return true;
+  if (/^[-•*]\s+.+\b(?:bank teller|most probable|which option)\b/i.test(t)) return true;
+  return false;
 }
 
 /** Keyword index lines are never article titles. */
@@ -264,6 +283,7 @@ function recoverAlternateCoverTitle(candidates: RoleCandidate[]): string | null 
         looksLikeKeywordsChrome(t) ||
         looksLikeShortToolOrFragmentTitle(t) ||
         looksLikeEthicsBoilerplateTitle(t) ||
+        looksLikePromptOptionTitle(t) ||
         looksLikeAuthorish(t) ||
         /@/.test(t) ||
         /\bPh\.?\s*D\b/i.test(t) ||
@@ -913,6 +933,7 @@ export function resolveTitle(input: {
     looksLikeKeywordsChrome(native[0]) ||
     looksLikeShortToolOrFragmentTitle(native[0]) ||
     looksLikeEthicsBoilerplateTitle(native[0]) ||
+    looksLikePromptOptionTitle(native[0]) ||
     isFragmentTitle(native[0]) ||
     (titles[0] && (
       looksLikeCopyrightBoilerplate(titles[0].text) ||
@@ -925,6 +946,7 @@ export function resolveTitle(input: {
       looksLikeKeywordsChrome(titles[0].text) ||
       looksLikeShortToolOrFragmentTitle(titles[0].text) ||
       looksLikeEthicsBoilerplateTitle(titles[0].text) ||
+      looksLikePromptOptionTitle(titles[0].text) ||
       isFragmentTitle(titles[0].text)
     ));
   if (needsAlternateTitle) {
@@ -944,7 +966,8 @@ export function resolveTitle(input: {
       looksLikeProtocolTableChrome(fused.text) ||
       looksLikeKeywordsChrome(fused.text) ||
       looksLikeShortToolOrFragmentTitle(fused.text) ||
-      looksLikeEthicsBoilerplateTitle(fused.text))
+      looksLikeEthicsBoilerplateTitle(fused.text) ||
+      looksLikePromptOptionTitle(fused.text))
   ) {
     const recovered = recoverAlternateCoverTitle(input.candidates);
     if (recovered && recovered !== fused.text) {
