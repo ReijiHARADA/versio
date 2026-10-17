@@ -3,7 +3,7 @@ import { isTauriApp } from "../../utils/serverReady";
 import type { MarkdownExportResult, VerificationExportResult } from "./markdownExport";
 
 export type SavedExport = {
-  kind: "markdown" | "notion" | "verification";
+  kind: "markdown" | "notion" | "verification" | "epub";
   path: string;
 };
 
@@ -111,6 +111,22 @@ export async function saveNotionImportExport(
   }
   downloadBlob(fileName, archive, "application/zip");
   return { kind: "notion", path: fileName };
+}
+
+export async function saveEpubExport(
+  result: { fileName: string; epub: Uint8Array }
+): Promise<SavedExport | null> {
+  const fileName = `${result.fileName}.epub`;
+  if (isTauriApp()) {
+    const path = await invoke<string | null>("save_export_file", {
+      defaultName: fileName,
+      data: Array.from(result.epub),
+    });
+    if (!path) return null;
+    return { kind: "epub", path };
+  }
+  downloadBlob(fileName, result.epub, "application/epub+zip");
+  return { kind: "epub", path: fileName };
 }
 
 export async function saveMarkdownExport(result: MarkdownExportResult): Promise<SavedExport | null> {

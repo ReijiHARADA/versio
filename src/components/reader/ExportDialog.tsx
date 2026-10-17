@@ -4,9 +4,10 @@ import { X } from "lucide-react";
 import styles from "./ExportDialog.module.css";
 
 export type ExportDialogValues = {
-  mode: "markdown" | "notion" | "verification";
+  mode: "markdown" | "notion" | "verification" | "epub";
   variant: "clean" | "verification";
   includeFailedTranslations: boolean;
+  syncToFolder: boolean;
 };
 
 type ExportDialogProps = {
@@ -14,6 +15,7 @@ type ExportDialogProps = {
   busy: boolean;
   status: string | null;
   error: string | null;
+  epubSyncFolder?: string | null;
   onClose: () => void;
   onExport: (values: ExportDialogValues) => void;
 };
@@ -23,12 +25,14 @@ export function ExportDialog({
   busy,
   status,
   error,
+  epubSyncFolder,
   onClose,
   onExport,
 }: ExportDialogProps) {
   const [mode, setMode] = useState<ExportDialogValues["mode"]>("markdown");
   const [variant, setVariant] = useState<ExportDialogValues["variant"]>("clean");
   const [includeFailedTranslations, setIncludeFailedTranslations] = useState(false);
+  const [syncToFolder, setSyncToFolder] = useState(false);
   const titleId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -109,6 +113,15 @@ export function ExportDialog({
               />
               Notion インポート用 ZIP（Markdown + 画像）
             </label>
+            <label className={styles.option}>
+              <input
+                type="radio"
+                name="export-mode"
+                checked={mode === "epub"}
+                onChange={() => setMode("epub")}
+              />
+              EPUB（Apple Books / Kindle）
+            </label>
           </fieldset>
 
           {mode === "markdown" && (
@@ -144,9 +157,22 @@ export function ExportDialog({
             />
             翻訳失敗箇所を含める
           </label>
+          {mode === "epub" && epubSyncFolder ? (
+            <label className={styles.option}>
+              <input
+                type="checkbox"
+                checked={syncToFolder}
+                disabled={busy}
+                onChange={(event) => setSyncToFolder(event.target.checked)}
+              />
+              保存後に同期先フォルダへコピー
+            </label>
+          ) : null}
           <p className={styles.hint}>
             {mode === "notion"
               ? "Notion では「設定 → インポート → ZIP」を選び、この ZIP を読み込んでください。画像も一緒に追加されます。"
+              : mode === "epub"
+                ? "EPUB 3形式で、Apple BooksやKindleなどの電子書籍リーダーに読み込めます。"
               : "OFF のときは失敗した段落を書き出しません。ON のときは訳を作らず、原文と失敗マークを残します。"}
           </p>
 
@@ -176,10 +202,11 @@ export function ExportDialog({
                 variant:
                   mode === "verification"
                     ? "verification"
-                    : mode === "notion"
+                    : mode === "notion" || mode === "epub"
                       ? "clean"
                       : variant,
                 includeFailedTranslations,
+                syncToFolder,
               })
             }
           >

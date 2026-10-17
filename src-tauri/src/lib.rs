@@ -258,6 +258,8 @@ pub fn run() {
             paper_fs::save_export_file,
             paper_fs::save_markdown_export,
             paper_fs::save_verification_export,
+            paper_fs::choose_epub_sync_folder,
+            paper_fs::sync_epub_file,
             paper_fs::export_app_directory,
             paper_fs::import_directory_to_app,
         ])

@@ -17,6 +17,11 @@ import {
   type TrashRetentionDays,
 } from "../../services/trashRetention";
 import { renewTrashItemsPastCutoff } from "../../services/trashService";
+import {
+  chooseEpubSyncFolder,
+  clearEpubSyncFolder,
+  getEpubSyncFolder,
+} from "../../services/epubSync";
 import { SettingsCard, SettingsRow } from "./SettingsPrimitives";
 import { SettingsSelect } from "./SettingsSelect";
 import styles from "./SettingsScreen.module.css";
@@ -38,10 +43,13 @@ export function StorageSettingsSection({
   const [confirmRestore, setConfirmRestore] = useState(false);
   const [backupMessage, setBackupMessage] = useState<string | null>(null);
   const [retentionDays, setRetentionDays] = useState<TrashRetentionDays>(3);
+  const [epubSyncFolder, setEpubSyncFolder] = useState<string | null>(null);
+  const [epubSyncBusy, setEpubSyncBusy] = useState(false);
 
   useEffect(() => {
     void getLibraryBackupMeta().then(setMeta);
     void getTrashRetentionDays().then(setRetentionDays);
+    void getEpubSyncFolder().then(setEpubSyncFolder);
   }, []);
 
   const refreshLibraryCaches = async () => {
@@ -116,6 +124,35 @@ export function StorageSettingsSection({
   const lastBackupLabel = meta?.lastBackupAt
     ? new Date(meta.lastBackupAt).toLocaleString()
     : "まだありません";
+  const syncFolderLabel = epubSyncFolder
+    ? epubSyncFolder.split(/[\\/]/).filter(Boolean).at(-1) || epubSyncFolder
+    : "未設定";
+
+  const handleChooseEpubSyncFolder = async () => {
+    if (epubSyncBusy) return;
+    setEpubSyncBusy(true);
+    try {
+      const folder = await chooseEpubSyncFolder();
+      if (folder) setEpubSyncFolder(folder);
+    } catch (error) {
+      setBackupMessage(
+        `EPUB同期先の設定に失敗しました: ${error instanceof Error ? error.message : String(error)}`
+      );
+    } finally {
+      setEpubSyncBusy(false);
+    }
+  };
+
+  const handleClearEpubSyncFolder = async () => {
+    if (epubSyncBusy) return;
+    setEpubSyncBusy(true);
+    try {
+      await clearEpubSyncFolder();
+      setEpubSyncFolder(null);
+    } finally {
+      setEpubSyncBusy(false);
+    }
+  };
 
   return (
     <div className={styles.page}>
@@ -210,6 +247,36 @@ export function StorageSettingsSection({
             >
               {busy ? "削除中..." : "翻訳キャッシュを削除"}
             </button>
+          </SettingsRow>
+        </SettingsCard>
+
+        <SettingsCard title="スマートフォン用EPUB同期">
+          <SettingsRow
+            label="同期先フォルダ"
+            description="iCloud DriveやGoogle Driveのフォルダを選ぶと、論文のEPUB書き出し時に同じ場所へコピーできます。自動同期は行いません。"
+            align="start"
+          >
+            <div className={styles.actionRow}>
+              <span className={styles.statusText}>{syncFolderLabel}</span>
+              <button
+                type="button"
+                className={styles.button}
+                disabled={epubSyncBusy || busy}
+                onClick={() => void handleChooseEpubSyncFolder()}
+              >
+                {epubSyncBusy ? "設定中..." : "フォルダを選択"}
+              </button>
+              {epubSyncFolder ? (
+                <button
+                  type="button"
+                  className={styles.ghostButton}
+                  disabled={epubSyncBusy || busy}
+                  onClick={() => void handleClearEpubSyncFolder()}
+                >
+                  解除
+                </button>
+              ) : null}
+            </div>
           </SettingsRow>
         </SettingsCard>
       </div>

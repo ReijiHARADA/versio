@@ -1,3 +1,27 @@
+# 2026-10-18: EPUB 3 export and explicit cloud-folder sync
+
+Reader export now includes an EPUB 3 option for Apple Books / Kindle. The
+export is built from the existing translated Paper Package and reuses the
+Markdown failed-translation policy, so failed blocks are omitted by default
+or retained as the existing warning/original callout when explicitly enabled.
+The archive contains an uncompressed first `mimetype` entry, `container.xml`,
+OPF metadata (title/author/language), a navigation document, XHTML content,
+CSS, and package assets under `OEBPS/images/`. A focused EPUB test verifies the
+container, navigation, content image links, and asset placement.
+
+Settings now allow the user to choose an existing iCloud Drive or Google Drive
+folder. EPUB export can explicitly copy the same deterministic `.epub` into
+that folder; there is no background sync, cloud API, OAuth, or automatic
+library-wide export. The macOS command writes through a temporary sidecar and
+renames it atomically, validates the selected absolute folder and filename,
+and never deletes or touches unrelated files.
+
+Validation: `npm run typecheck`, `npm run lint`, focused EPUB test, Vite
+production build, and `PATH="$HOME/.cargo/bin:$PATH" cargo check --manifest-path
+src-tauri/Cargo.toml` pass. Full Vitest still has the repository's existing
+unrelated PDF/quality regression failures; none are in the new EPUB or sync
+paths. Apple Books / Kindle visual import has not been exercised on a device.
+
 # 2026-10-18: 設定→ライセンスを掲載必須のみに再調査
 
 サードパーティ一覧を「macOS 配布物かつ帰属表示が必要なもの」に絞った。Rust は全 resolve（約 466）ではなく `cargo tree --target {aarch64,x86_64}-apple-darwin -e no-dev,no-build`（237）のみ。`Unlicense OR MIT` / `0BSD OR …` / `CC0-1.0 OR …` など帰属不要を選択できる二重ライセンスは除外。結果 **529 → 293** 件（非配布 229 + 帰属不要選択可 7 をフィルタ）。`generatorVersion` 2。方針は `THIRD_PARTY_NOTICES.md` / `scripts/generate-licenses.mjs`。`npm run generate:licenses` と `src/test/licenses.test.ts` pass。
