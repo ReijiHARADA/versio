@@ -1533,6 +1533,22 @@ describe("canonical extraction pipeline", () => {
     }
   });
 
+  it("keeps academic Using-to titles instead of vignette option lines", async () => {
+    const pdf = path.resolve("test-data/real-papers/cognitive-psychology-gpt3.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "gpt3-using-title",
+      filePath: pdf,
+      fileHash: "gpt3-using-title",
+      metadata: { pageCount: pages.length },
+    });
+    const title = result.canonical.nodes.find((node) => node.role === "title")?.text ?? "";
+    expect(title).toMatch(/Using cognitive psychology to understand GPT-3/i);
+    expect(title).not.toMatch(/Option\s*\d+/i);
+  }, 60_000);
+
   it("prefers the article title over a Cureus tool-line title", async () => {
     const pdf = path.resolve(
       "test-fixtures/real-papers/pending-pdfs/epmc-code-free-automated-machine-learning-for-referable-glaucoma-classificati.pdf"
