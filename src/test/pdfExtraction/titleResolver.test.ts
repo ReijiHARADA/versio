@@ -108,6 +108,16 @@ describe("title resolver masthead filtering", () => {
     expect(result.text).toBe("Human Factors and Ergonomics");
   });
 
+  it("strips a spaced ORIGINAL RESEARCH banner from the title", () => {
+    const result = resolveTitle({
+      candidates: [
+        candidate("O R I G I N A L R E S E A R C H Patterns and Gaps in Adolescent Belonging", 90),
+        candidate("A. Researcher", 160, "author"),
+      ],
+    });
+    expect(result.text).toBe("Patterns and Gaps in Adolescent Belonging");
+  });
+
   it("removes an inline journal rail between wrapped title fragments", () => {
     const result = resolveTitle({
       candidates: [candidate("Eco-Linguistics in English: Reviewing the role", 120), candidate("IJLE 2026; 6(1): 05-09 language in environmental discourse", 136)],

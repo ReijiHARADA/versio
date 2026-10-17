@@ -50,12 +50,16 @@ describe("Japanese figure and table captions", () => {
     expect(isFigureCaption("Figure 2. A workshop layout.")).toBe(true);
     expect(isFigureCaption("Fig. 1, The general areas for wearable objects")).toBe(true);
     expect(isFigureCaption("Figure 3, Even simple motions change body shape")).toBe(true);
+    expect(isFigureCaption("FIGURE 1 | Experimental design of the dual-task study.")).toBe(true);
+    expect(isFigureCaption("FIGURE 1PRISMA flow diagram of study selection.")).toBe(true);
+    expect(isFigureCaption("Figure 2 shows the distribution of scores.")).toBe(false);
     expect(isFigureCaption("図 3 の1行目に示す応答")).toBe(false);
     expect(isTableCaption("表 1: 被験者の内訳")).toBe(true);
     expect(isTableCaption("Table 1. Participant demographics")).toBe(true);
     expect(isTableCaption("TABLE 2 | Baseline characteristics")).toBe(true);
     expect(isTableCaption("Table 5 Factor reliabilities for smart clothing")).toBe(true);
     expect(isTableCaption("Table 7 (continued)")).toBe(true);
+    expect(isTableCaption("Table 1 (Continued).")).toBe(true);
     expect(isTableCaption("Table 2.5: Light truck crash rates")).toBe(true);
     expect(isTableCaption("Table A.3.1 Nested appendix result")).toBe(true);
   });
