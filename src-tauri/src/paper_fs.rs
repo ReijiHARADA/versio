@@ -133,11 +133,15 @@ fn run_osascript(script: &str) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
 
-fn choose_save_path(default_name: &str) -> Result<Option<PathBuf>, String> {
+fn choose_save_path_with_prompt(
+    default_name: &str,
+    prompt: &str,
+) -> Result<Option<PathBuf>, String> {
     let name = escape_applescript(default_name);
+    let prompt = escape_applescript(prompt);
     let path = run_osascript(&format!(
         r#"try
-set thePath to POSIX path of (choose file name with prompt "書き出し先を選択" default name "{name}")
+set thePath to POSIX path of (choose file name with prompt "{prompt}" default name "{name}")
 return thePath
 on error number -128
 return ""
@@ -149,6 +153,19 @@ end try"#
     Ok(Some(PathBuf::from(path)))
 }
 
+fn choose_save_path(default_name: &str) -> Result<Option<PathBuf>, String> {
+    choose_save_path_with_prompt(default_name, "書き出し先を選択")
+}
+
+fn e2e_export_path(app: &AppHandle, default_name: &str) -> Result<PathBuf, String> {
+    let root = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let safe = default_name.replace(['/', '\\'], "_").replace("..", "_");
+    if safe.is_empty() {
+        return Err("無効な書き出し名です".into());
+    }
+    Ok(root.join("_acceptance").join("exports").join(safe))
+}
+
 /// When PAPER_READER_UI_E2E=1, skip the save dialog and write under app-data
 /// `_acceptance/exports/` so CI can assert a real export without flaky dialogs.
 fn resolve_export_destination(
@@ -156,14 +173,22 @@ fn resolve_export_destination(
     default_name: &str,
 ) -> Result<Option<PathBuf>, String> {
     if crate::source_pdf::ui_e2e_enabled() {
-        let root = app.path().app_data_dir().map_err(|e| e.to_string())?;
-        let safe = default_name.replace(['/', '\\'], "_").replace("..", "_");
-        if safe.is_empty() {
-            return Err("無効なファイル名です".into());
-        }
-        Ok(Some(root.join("_acceptance").join("exports").join(safe)))
+        Ok(Some(e2e_export_path(app, default_name)?))
     } else {
         choose_save_path(default_name)
+    }
+}
+
+/// One save dialog that names the export folder itself (no parent-folder pick
+/// followed by an automatic nested directory).
+fn resolve_export_folder(
+    app: &AppHandle,
+    default_name: &str,
+) -> Result<Option<PathBuf>, String> {
+    if crate::source_pdf::ui_e2e_enabled() {
+        Ok(Some(e2e_export_path(app, default_name)?))
+    } else {
+        choose_save_path_with_prompt(default_name, "書き出しフォルダの名前と場所を選択")
     }
 }
 
@@ -181,10 +206,6 @@ end try"#
         return Ok(None);
     }
     Ok(Some(PathBuf::from(path)))
-}
-
-fn choose_directory() -> Result<Option<PathBuf>, String> {
-    choose_directory_with_prompt("保存先フォルダを選択")
 }
 
 fn copy_dir_recursive(from: &Path, to: &Path) -> Result<(), String> {
@@ -224,11 +245,10 @@ pub fn export_app_directory(
     if !source.is_dir() {
         return Err("エクスポートするバックアップがありません".into());
     }
-    let base = match choose_directory_with_prompt(&dialog_title)? {
+    let dest = match choose_save_path_with_prompt(&default_name, &dialog_title)? {
         Some(p) => p,
         None => return Ok(None),
     };
-    let dest = base.join(&default_name);
     if dest.exists() {
         return Err("同じ名前のフォルダが既に存在します".into());
     }
@@ -404,7 +424,7 @@ pub fn save_markdown_export(
     Ok(Some(dest.to_string_lossy().to_string()))
 }
 
-/// Dialog for a folder, then write a verification package under `folder_name`.
+/// One save dialog names the package folder, then writes the verification bundle into it.
 #[tauri::command]
 pub fn save_verification_export(
     app: AppHandle,
@@ -425,11 +445,13 @@ pub fn save_verification_export(
     if !crate::source_pdf::is_safe_paper_id(&paper_id) {
         return Err("無効な論文IDです".into());
     }
-    let base = match choose_directory()? {
+    let dest_root = match resolve_export_folder(&app, &folder_name)? {
         Some(p) => p,
         None => return Ok(None),
     };
-    let dest_root = base.join(&folder_name);
+    if dest_root.is_file() {
+        return Err("同じ名前のファイルが既に存在します".into());
+    }
     fs::create_dir_all(&dest_root).map_err(|e| e.to_string())?;
     write_bytes_at(&dest_root.join("translated.md"), &markdown)?;
 

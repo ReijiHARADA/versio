@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { FolderPlus, MoreHorizontal, RefreshCw, RotateCcw, Star, Trash2, UserMinus } from "lucide-react";
+import { FolderPlus, MoreHorizontal, Pause, RefreshCw, RotateCcw, Star, Trash2, UserMinus } from "lucide-react";
 import type { Paper } from "../../types/paper";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
 import { showToast } from "../../stores/toastStore";
 import { setPaperFavorite } from "../../services/database";
-import { retryPaperTranslation } from "../../services/import/startBackgroundImport";
+import {
+  cancelPaperWork,
+  retryPaperTranslation,
+} from "../../services/import/startBackgroundImport";
 import { reextractPaper } from "../../services/reextractPaper";
 import { derivePaperReadiness } from "../../domain/paperReadiness";
 import {
@@ -32,10 +35,15 @@ export function PaperMenu({
   const updatePaper = useLibraryCache((state) => state.updatePaper);
   const blocks = useLibraryCache((state) => state.blocks[paper.id]);
   const [retrying, setRetrying] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [reextracting, setReextracting] = useState(false);
   const workspaceNodes = useProjectStore((state) => state.workspaceNodes);
   const memberships = useProjectStore((state) => state.memberships);
   const upsertMembership = useProjectStore((state) => state.upsertMembership);
+  const readiness = derivePaperReadiness({
+    processingStatus: paper.processingStatus,
+    blocks,
+  }).readiness;
 
   useEffect(() => {
     if (!open && !pickingWorkspace) return;
@@ -78,6 +86,21 @@ export function PaperMenu({
       await retryPaperTranslation(paper.id);
     } finally {
       setRetrying(false);
+      setOpen(false);
+    }
+  };
+
+  const pauseTranslation = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (cancelling) return;
+    setCancelling(true);
+    try {
+      const ok = cancelPaperWork(paper.id);
+      if (!ok) {
+        showToast({ kind: "info", message: "中断できる翻訳処理がありません" });
+      }
+    } finally {
+      setCancelling(false);
       setOpen(false);
     }
   };
@@ -170,10 +193,27 @@ export function PaperMenu({
             <RefreshCw size={14} />
             {reextracting ? "抽出を更新中..." : "PDFを再抽出"}
           </button>
-          {derivePaperReadiness({ processingStatus: paper.processingStatus, blocks }).readiness === "needs_attention" && (
+          {readiness === "translating" && (
+            <button
+              type="button"
+              role="menuitem"
+              disabled={cancelling}
+              onClick={(event) => pauseTranslation(event)}
+            >
+              <Pause size={14} />
+              {cancelling ? "中断しています..." : "翻訳を中断"}
+            </button>
+          )}
+          {readiness === "needs_attention" && (
             <button type="button" role="menuitem" disabled={retrying} onClick={(event) => void retryTranslation(event)}>
               <RotateCcw size={14} />
-              {retrying ? "再試行中..." : "翻訳を再試行"}
+              {retrying
+                ? paper.processingStatus === "partial"
+                  ? "再開中..."
+                  : "再試行中..."
+                : paper.processingStatus === "partial"
+                  ? "続きから再開"
+                  : "翻訳を再試行"}
             </button>
           )}
           {variant === "workspace" && onRemoveFromWorkspace && (

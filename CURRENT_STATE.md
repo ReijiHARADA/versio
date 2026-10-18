@@ -1,3 +1,37 @@
+# 2026-10-19: Import の中断・再開（A2）
+
+- **中断**: 取り込みカードのキャンセルに加え、`paperId` 付き（日本語化中で ImportJobCard 非表示）でも `cancelPaperWork` → 論文メニュー「翻訳を中断」
+- **保持**: 抽出済みパッケージと完了ユニットは残す。キュー未着手は `onTaskCancelled` で outstanding を解放（ハング防止）。飛行中タスクは完了させ進捗を捨てない
+- **再開**: `partial` →「続きから再開」、`failed` →「翻訳を再試行」。ユーザー中断時は `needsTranslationResume=false`（サーバー復帰での auto-resume なし）
+- resume 経路にも AbortController。回帰: `importCancel` + `translation/cancelPaper`
+
+# 2026-10-19: IEEE 無ラベル abstract + OSWORLD 図チャート見出し除去
+
+- IEEE ACCESS: `Abstract` 見出し無しの front narrative を abstract 化；`I. INTRODUCTION` を author→heading に復帰
+- OSWORLD: Percentile/Tokens/flowchart `Task Initial State Setup Config…` を outline から demote
+- Cureus `Methods:` / `Results:` は section stop にしない（structured abstract 維持）
+
+# 2026-10-19: UX イニシャル著者 / Cureus chrome / structured abstract
+
+- `I D Sabukunze*1, A Arakaza2` を affiliation から著者へ回収。タイトル字間空きの誤著者は `recoverColumnMasthead` で拒否
+- Cureus: Creative Commons / MeSH レールを著者から除外。Background/Methods/Results/Conclusions を1 abstract に結合
+- DOI は page-1 のみ（参考文献 `doi:` を拾わない）。UX は DOI null、Cureus は `10.7759/cureus.108550`
+- lettered affiliation が `recoverColumnMasthead` 上書きで壊れるのを防止。空 synthetic table を absorption 対象に戻し table identity 回帰を復旧
+
+# 2026-10-19: 書き出し保存ダイアログを1ステップに
+
+- 検証パッケージ／ライブラリバックアップが「親フォルダ選択 → 自動でサブフォルダ作成」の2段になっていたのを廃止
+- `choose file name` でパッケージ／バックアップフォルダの名前と場所を一度に指定
+- 成功時は ExportDialog を閉じてトースト表示（閉じるクリックを省略）
+
+# 2026-10-19: フォルダ単位の一括書き出し（A6）
+
+- 入口: フォルダ画面ヘッダー「書き出す」、サイドバー `WorkspaceTree` 三点メニュー「このフォルダを書き出す…」
+- 範囲: 選択フォルダ＋子孫。論文は所属ノードの階層パスへ配置（同一論文の複数所属はその分だけ複製）
+- 形式: 既存と同じ Markdown / Notion / 検証パッケージ / EPUB。成果物は 1 つの階層つき ZIP（`save_export_file`）
+- 失敗: 論文単位でスキップし続行。失敗または 0 件時は ZIP 内 `export-report.txt` に記録
+- 回帰: `src/test/data/folderExport.test.ts`（plan + markdown/notion ZIP）
+
 # 2026-10-19: wide 1039 + キーワード誤著者除去
 
 - wide diagnose：**scanned 1039 / flagged 1 / clean 1038**（`title-id-mismatch` 1件＝ファイル名と本文タイトル不一致）

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FileText, FolderX, Loader2, Plus } from "lucide-react";
+import { Download, FileText, FolderX, Loader2, Plus } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
@@ -8,6 +8,7 @@ import { useImportJobStore, visibleImportJobs } from "../../stores/importJobStor
 import { usePaperDragStore } from "../../stores/paperDragStore";
 import { derivePaperReadiness } from "../../domain/paperReadiness";
 import { useLibraryPaperSearch } from "../../hooks/useLibraryPaperSearch";
+import { useFolderExport } from "../../hooks/useFolderExport";
 import { collectDescendantIds, listChildWorkspaceNodes, workspaceAncestorPath } from "../../data/workspace/tree";
 import { listPapersForWorkspace, removePaperFromWorkspace } from "../../services/projectService";
 import { tryStartPdfImport } from "../../services/pdfImport";
@@ -16,6 +17,7 @@ import { PaperMenu } from "../library/PaperMenu";
 import { ImportJobCard } from "../library/ImportJobCard";
 import { useImportJobRecovery } from "../library/useImportJobRecovery";
 import { useDeletePaper } from "../../hooks/useDeletePaper";
+import { ExportDialog } from "../reader/ExportDialog";
 import { WorkspaceFolderCard } from "./WorkspaceFolderCard";
 import { WorkspacePathTrail } from "../workspace/WorkspacePathTrail";
 import type { Paper } from "../../types/paper";
@@ -48,11 +50,16 @@ export function ProjectScreen() {
   const dropTargetId = usePaperDragStore((state) => state.dropTargetId);
   const draggingPaperId = usePaperDragStore((state) => state.draggingPaperId);
   const { requestDelete } = useDeletePaper();
+  const folderExport = useFolderExport();
   const jobs = useMemo(
     () => visibleImportJobs(importJobs, { workspaceNodeId: nodeId }),
     [importJobs, nodeId]
   );
   const node = workspaceNodes.find((item) => item.id === nodeId);
+  const subtreeCount = useMemo(
+    () => (nodeId ? subtreePaperCount(nodeId, workspaceNodes, memberships) : 0),
+    [memberships, nodeId, workspaceNodes]
+  );
   const [nodePapers, setNodePapers] = useState<Paper[]>([]);
   const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -126,7 +133,18 @@ export function ProjectScreen() {
           {node?.description && <p className={styles.description}>{node.description}</p>}
         </div>
         <div className={styles.headerActions}>
-          {/* TODO(folder-export): フォルダ単位の一括書き出し（配下論文）。ROADMAP A6 */}
+          <button
+            type="button"
+            className={styles.exportButton}
+            disabled={!node || subtreeCount === 0}
+            onClick={() => {
+              if (node) folderExport.openExport(node);
+            }}
+            aria-label="このフォルダを書き出す"
+          >
+            <Download size={18} />
+            書き出す
+          </button>
           <button
             type="button"
             className={styles.addButton}
@@ -207,6 +225,23 @@ export function ProjectScreen() {
           </div>
         </div>
       )}
+      <ExportDialog
+        open={folderExport.showExport}
+        busy={folderExport.exportBusy}
+        status={folderExport.exportStatus}
+        error={folderExport.exportError}
+        title="フォルダを書き出す"
+        scopeNote={
+          folderExport.target
+            ? `「${folderExport.target.name}」とその子フォルダの論文 ${subtreePaperCount(folderExport.target.id, workspaceNodes, memberships)} 件を、フォルダ階層つき ZIP にまとめます。失敗した論文はスキップし report に残します。`
+            : null
+        }
+        allowEpubSync={false}
+        onClose={folderExport.closeExport}
+        onExport={(values) => {
+          void folderExport.handleExport(values);
+        }}
+      />
     </div>
   );
 }

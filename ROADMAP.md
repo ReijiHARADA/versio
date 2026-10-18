@@ -34,15 +34,6 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 - インラインメモ、元 PDF オープン、参考文献 DOI/URL、Notion ZIP の実インポートを配布 `.app` で確認済み
 - 本番 CSP 下で白画面・翻訳サーバー接続の退行がない
 
-### A2. Import の制御
-
-**Goal** — 失敗や待ち時間のときに、次に何をすればよいか迷わない。実行中処理を安全に止められる。
-
-**Done when**
-
-- 実行中ジョブをユーザーが中断でき、成功済みの抽出／訳は無駄に捨てない
-- 一時停止→再開が、再試行と区別して使える（必要な場合）
-
 ### A3. 設定・識別・配布チャネル
 
 **Goal** — 設定が探しやすく、製品として渡せる形になる。
@@ -151,3 +142,4 @@ UI の置き方は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md
 - section 遅延描画、Import 失敗分類・重複導線、citation / 用語 Popover、主要 a11y
 - インラインメモ、Shared Element 図表拡大、Rust 完結の書き出し、パス trail / サイドバーリサイズ
 - フォルダ単位の一括書き出し（Markdown / Notion / 検証 / EPUB を階層つき ZIP。入口はフォルダ画面とサイドバーメニュー）
+- Import の中断・再開（実行中ジョブ／日本語化中の論文カードから中断。成功済み抽出・訳は保持。partial は「続きから再開」、failed は「翻訳を再試行」。ユーザー中断後は auto-resume しない）

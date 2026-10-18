@@ -3,7 +3,7 @@ import { isTauriApp } from "../../utils/serverReady";
 import type { MarkdownExportResult, VerificationExportResult } from "./markdownExport";
 
 export type SavedExport = {
-  kind: "markdown" | "notion" | "verification" | "epub";
+  kind: "markdown" | "notion" | "verification" | "epub" | "folder";
   path: string;
 };
 
@@ -153,6 +153,23 @@ export async function saveMarkdownExport(result: MarkdownExportResult): Promise<
   }
   downloadBlob(`${result.fileName}.zip`, zipSync(files), "application/zip");
   return { kind: "markdown", path: `${result.fileName}.zip` };
+}
+
+export async function saveFolderExport(result: {
+  fileName: string;
+  zip: Uint8Array;
+}): Promise<SavedExport | null> {
+  const fileName = `${result.fileName}.zip`;
+  if (isTauriApp()) {
+    const path = await invoke<string | null>("save_export_file", {
+      defaultName: fileName,
+      data: Array.from(result.zip),
+    });
+    if (!path) return null;
+    return { kind: "folder", path };
+  }
+  downloadBlob(fileName, result.zip, "application/zip");
+  return { kind: "folder", path: fileName };
 }
 
 export async function saveVerificationExport(

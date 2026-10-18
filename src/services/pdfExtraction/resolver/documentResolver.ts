@@ -500,6 +500,46 @@ function demotePageOneAuthorHeadings(nodes: CanonicalNode[]): CanonicalNode[] {
   });
 }
 
+const ABSTRACT_STOP_RAIL =
+  /^(?:keywords?|key words?|index terms?|kata kunci|how to cite|citation)\s*:/i;
+// Body section starts — not Cureus-style `Methods:` / `Results:` abstract bands
+// (those keep a trailing colon and must stay inside the abstract).
+const SECTION_INTRO =
+  /^(?:[IVXLCDM]+\.\s+)?(?:\d+\.\s*)?(?:introduction|methods?|materials|results?|discussion|background|related\s+work)\b(?!\s*:)/i;
+
+/** IEEE ACCESS often paints `I. INTRODUCTION` as an author-role glyph. */
+function promoteMislabelledSectionAuthors(nodes: CanonicalNode[]): CanonicalNode[] {
+  return nodes.map((node) => {
+    if (node.role !== "author" || !node.text) return node;
+    const text = node.text.trim();
+    if (
+      !(
+        /^(?:[IVXLCDM]+\.)\s+[A-Z][A-Z\s\-:]{2,40}$/.test(text) ||
+        SECTION_INTRO.test(text)
+      ) ||
+      text.length > 48
+    ) {
+      return node;
+    }
+    return {
+      ...node,
+      role: "heading" as const,
+      confidence: Math.max(node.confidence, 0.88),
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic" as const,
+          label: "section-author-role-promotion",
+          confidence: 0.88,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: "roman-numeral section label recovered from author role",
+        },
+      ],
+    };
+  });
+}
+
 /** Frontiers-style editorial chrome and abstract lead-ins that layout promotes to heading. */
 export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): CanonicalNode[] {
   const titleText = nodes.find((n) => n.role === "title")?.text?.trim().toLowerCase() ?? "";
@@ -670,16 +710,13 @@ function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
       return node;
     }
     // Keywords / how-to-cite rails often arrive as paragraphs, not headings.
-    if (
-      inAbstract &&
-      /^(?:keywords?|key words?|index terms?|kata kunci|how to cite|citation)\s*:/i.test(text)
-    ) {
+    if (inAbstract && ABSTRACT_STOP_RAIL.test(text)) {
       inAbstract = false;
       return node;
     }
     // Two-column covers can leak the next section lead into the abstract band
     // (`… English Language 1. Introduction`). Stop before promoting that prose.
-    if (inAbstract && /\b1\.\s*introduction\b/i.test(text)) {
+    if (inAbstract && (/\b1\.\s*introduction\b/i.test(text) || SECTION_INTRO.test(text))) {
       inAbstract = false;
       return node;
     }
@@ -687,6 +724,76 @@ function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
       return { ...node, role: "abstract" };
     }
     return node;
+  });
+}
+
+/**
+ * IEEE ACCESS and similar templates omit an `Abstract` heading: the body sits
+ * between the grant/affiliation band and INDEX TERMS / I. INTRODUCTION.
+ * Promote only when page 1 still has no abstract node.
+ */
+function markUnlabeledFrontAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
+  if (nodes.some((node) => node.role === "abstract" && node.pageStart === 1)) {
+    return nodes;
+  }
+  const titleY =
+    nodes.find((node) => node.role === "title" && node.pageStart === 1)?.boundingBoxes[0]?.y ?? 0;
+  const stopY = nodes
+    .filter((node) => node.pageStart === 1 && node.text)
+    .filter((node) => {
+      const text = node.text!.trim();
+      return (
+        ABSTRACT_STOP_RAIL.test(text) ||
+        SECTION_INTRO.test(text) ||
+        /^(?:keywords?|key words?|index terms?)\b/i.test(text) && text.split(/,/).length >= 3
+      );
+    })
+    .map((node) => node.boundingBoxes[0]?.y ?? Infinity)
+    .sort((a, b) => a - b)[0] ?? Infinity;
+  if (!Number.isFinite(stopY) || stopY <= titleY + 40) return nodes;
+
+  const looksLikeKeywordRail = (text: string): boolean => {
+    const trimmed = text.trim();
+    if (ABSTRACT_STOP_RAIL.test(trimmed)) return true;
+    const commas = (trimmed.match(/,/g) ?? []).length;
+    return commas >= 3 && trimmed.length <= 280 && !/[.!?]\s+[A-Z]/.test(trimmed);
+  };
+  const looksLikeNarrativeAbstract = (text: string): boolean => {
+    const trimmed = text.trim();
+    if (trimmed.length < 180) return false;
+    if (/^(?:received|digital object|this work was supported|corresponding author)\b/i.test(trimmed)) {
+      return false;
+    }
+    if (looksLikeKeywordRail(trimmed) || SECTION_INTRO.test(trimmed)) return false;
+    const words = trimmed.split(/\s+/).filter(Boolean);
+    return words.length >= 35 && /[.!?]\s/.test(trimmed);
+  };
+
+  let promoted = false;
+  return nodes.map((node) => {
+    if (promoted || node.pageStart !== 1 || node.role !== "paragraph" || !node.text) {
+      return node;
+    }
+    const y = node.boundingBoxes[0]?.y ?? Infinity;
+    if (y <= titleY + 36 || y >= stopY) return node;
+    if (!looksLikeNarrativeAbstract(node.text)) return node;
+    promoted = true;
+    return {
+      ...node,
+      role: "abstract" as const,
+      confidence: Math.max(node.confidence, 0.86),
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic" as const,
+          label: "unlabeled-front-abstract",
+          confidence: 0.86,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: "page-1 narrative band before keywords / introduction without Abstract heading",
+        },
+      ],
+    };
   });
 }
 
@@ -792,6 +899,35 @@ function mergeAbstractContinuations(nodes: CanonicalNode[]): CanonicalNode[] {
   return result;
 }
 
+/** Figure/flowchart chrome concatenated into a fake outline heading. */
+function looksLikeChartOrFlowChromeHeading(text: string): boolean {
+  const value = text.replace(/\s+/g, " ").trim();
+  if (!value || value.length < 18) return false;
+  // Real outline items are `1 Introduction` / `2.1 Task Definition`, not
+  // axis ticks that happen to start with `0.06`.
+  if (/^(?:[1-9]\d?)(?:\.\d+){0,3}\s+[A-ZÀ-ÖØ-Ý]/.test(value)) return false;
+  if (/[.!?。！？]/.test(value) && value.split(/\s+/).length >= 10) return false;
+  // Axis tick concatenations (`0.00 0 2000 … Tokens8000`).
+  if (
+    (/\b(?:percentile|tokens?)\b/i.test(value) || /(?:^|\s)\d+(?:\.\d+)?(?:\s+\d+){3,}/.test(value)) &&
+    (value.match(/\d/g) ?? []).length >= 4
+  ) {
+    return true;
+  }
+  // Flowchart node soup without a numbered section prefix.
+  if (
+    /(?:setup|config|get env|env state|initial state|task initial)/i.test(value) &&
+    !/^\d/.test(value) &&
+    value.split(/\s+/).length >= 8 &&
+    !/[.!?。！？]/.test(value)
+  ) {
+    return true;
+  }
+  // Example task prompts painted as headings.
+  if (/^task instruction\s*:/i.test(value)) return true;
+  return false;
+}
+
 function suppressVectorLabelClusters(nodes: CanonicalNode[]): CanonicalNode[] {
   const captions = nodes.filter((node) => node.role === "caption");
   return nodes.map((node) => {
@@ -809,6 +945,24 @@ function suppressVectorLabelClusters(nodes: CanonicalNode[]): CanonicalNode[] {
         ...node,
         role: "other" as const,
         confidence: Math.max(node.confidence, 0.84),
+      };
+    }
+    if (node.role === "heading" && node.text && looksLikeChartOrFlowChromeHeading(node.text)) {
+      return {
+        ...node,
+        role: "other" as const,
+        confidence: Math.max(node.confidence, 0.84),
+        evidence: [
+          ...node.evidence,
+          {
+            source: "generic-heuristic" as const,
+            label: "chart-flow-chrome-heading",
+            confidence: 0.84,
+            page: node.pageStart,
+            bbox: node.boundingBoxes[0],
+            reason: "figure/flowchart chrome demoted out of the outline",
+          },
+        ],
       };
     }
     if (!node.text || !["heading", "paragraph"].includes(node.role) || node.text.length > 40) return node;
@@ -1523,7 +1677,9 @@ export function resolveCanonicalDocument(input: {
   nodes = promoteRotatedTableCaptions(nodes, candidates);
   nodes = splitInlineSectionLabels(nodes);
   nodes = demotePageOneAuthorHeadings(nodes);
+  nodes = promoteMislabelledSectionAuthors(nodes);
   nodes = markAbstracts(nodes);
+  nodes = markUnlabeledFrontAbstracts(nodes);
   nodes = mergeAbstractContinuations(nodes);
   nodes = suppressVectorLabelClusters(nodes);
   nodes = dedupeExactCaptions(nodes);

@@ -28,8 +28,9 @@ import {
   persistUntranslatableAsSkipped,
   resolveImportConfig,
 } from "./helpers";
+import { ImportCancelledError, throwIfImportAborted } from "./cancellation";
 import { isRetryableTranslationFailure, referenceSectionIds, shouldTranslateBlock, shouldTranslateSection } from "./policy";
-import { activeImportPaperIds, resumingPapers } from "./session";
+import { activeImportPaperIds, resumeAbortControllers, resumingPapers } from "./session";
 import type { ImportCallbacks, ImportConfig } from "./types";
 
 export async function resumeIncompleteTranslation(
@@ -42,6 +43,8 @@ export async function resumeIncompleteTranslation(
 ): Promise<void> {
   if (activeImportPaperIds.has(paperId) || resumingPapers.has(paperId)) return;
   resumingPapers.add(paperId);
+  const abortController = new AbortController();
+  resumeAbortControllers.set(paperId, abortController);
 
   try {
     const paper = await getPaper(paperId);
@@ -145,6 +148,15 @@ export async function resumeIncompleteTranslation(
       outstanding = Math.max(0, outstanding - 1);
       if (outstanding === 0) settleAll();
     };
+
+    queue.setOnTaskCancelled(() => {
+      markDone();
+    });
+
+    const onAbortTranslation = () => {
+      translationManager.cancel(paperId);
+    };
+    abortController.signal.addEventListener("abort", onAbortTranslation);
 
     queue.setOnTaskCompleted(async (task) => {
       if (!task.result) {
@@ -268,7 +280,12 @@ export async function resumeIncompleteTranslation(
     }
 
     if (outstanding === 0) settleAll();
-    await allDone;
+    try {
+      await allDone;
+    } finally {
+      abortController.signal.removeEventListener("abort", onAbortTranslation);
+    }
+    throwIfImportAborted(abortController.signal, { paperId, partialReady: true });
 
     paper.processingStatus = finalizedTranslationStatus(blocks, (block) =>
       isRetryableTranslationFailure(block, refSectionIds)
@@ -277,8 +294,26 @@ export async function resumeIncompleteTranslation(
     paper.updatedAt = new Date().toISOString();
     await savePaper(paper);
     callbacks.onPaperUpdated?.(paper);
+  } catch (error) {
+    if (error instanceof ImportCancelledError) {
+      // User pause: keep package + finished units; do not auto-resume on server ready.
+      try {
+        const paper = await getPaper(paperId);
+        if (paper) {
+          paper.processingStatus = "partial";
+          paper.needsTranslationResume = false;
+          paper.updatedAt = new Date().toISOString();
+          await savePaper(paper);
+          callbacks.onPaperUpdated?.(paper);
+        }
+      } catch (persistError) {
+        console.warn("Failed to mark cancelled resume as partial:", persistError);
+      }
+    }
+    throw error;
   } finally {
     translationManager.detach(paperId);
+    resumeAbortControllers.delete(paperId);
     resumingPapers.delete(paperId);
   }
 }

@@ -65,7 +65,7 @@ export async function runLibraryBackup(appVersion: string): Promise<{
   if (isTauriApp()) {
     const dest = await invoke<string | null>("export_app_directory", {
       relativePath: finalRoot,
-      dialogTitle: "バックアップの保存先を選択",
+      dialogTitle: "バックアップフォルダの名前と場所を選択",
       defaultName: `Paper-Reader-Backup-${stamp}`,
     });
     if (!dest) {

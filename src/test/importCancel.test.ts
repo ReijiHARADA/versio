@@ -14,14 +14,18 @@ vi.mock("../services/importServiceV2", () => ({
 vi.mock("../services/database", () => ({
   getAllPapers: vi.fn(async () => []),
   getSetting: vi.fn(async () => ({})),
+  getPaper: vi.fn(async () => null),
+  savePaper: vi.fn(async () => {}),
 }));
+
+const updatePaper = vi.fn();
 
 vi.mock("../stores/libraryCache", () => ({
   useLibraryCache: {
     getState: () => ({
       papers: [],
       addPaper: vi.fn(),
-      updatePaper: vi.fn(),
+      updatePaper,
       setBlocks: vi.fn(),
       setSections: vi.fn(),
     }),
@@ -40,11 +44,14 @@ vi.mock("../utils/batchBlockUpdates", () => ({
   createBlockUpdateBatcher: () => ({ push: vi.fn(), flush: vi.fn() }),
 }));
 
+const translationHasQueue = vi.fn(() => false);
+
 vi.mock("../services/translation", () => ({
   translationManager: {
     cancel: (...args: unknown[]) => translationCancel(...args),
     attach: vi.fn(),
     detach: vi.fn(),
+    hasQueue: (...args: unknown[]) => translationHasQueue(...args),
   },
 }));
 
@@ -52,8 +59,10 @@ vi.mock("uuid", () => ({ v4: () => "job-cancel-1" }));
 
 import {
   cancelBackgroundImport,
+  cancelPaperWork,
   startBackgroundImport,
 } from "../services/import/startBackgroundImport";
+import { resumeAbortControllers, resumingPapers } from "../services/import/session";
 import { useImportJobStore } from "../stores/importJobStore";
 
 function paper(
@@ -181,5 +190,65 @@ describe("cancel clears resume eligibility", () => {
     expect(shouldResumeFromIndex(paper("cancelled-partial", "partial", false))).toBe(false);
     expect(shouldResumeFromIndex(paper("cancelled-ready", "ready", false))).toBe(false);
     expect(shouldResumeFromIndex(paper("still-needs", "partial", true))).toBe(true);
+  });
+});
+
+describe("cancelPaperWork", () => {
+  beforeEach(() => {
+    useImportJobStore.setState({ jobs: [] });
+    translationCancel.mockReset();
+    translationHasQueue.mockReset();
+    translationHasQueue.mockReturnValue(false);
+    updatePaper.mockReset();
+    resumeAbortControllers.clear();
+    resumingPapers.clear();
+  });
+
+  it("cancels a hidden import job by paperId and flips the paper card to partial", () => {
+    useImportJobStore.getState().upsertJob({
+      id: "job-hidden",
+      fileName: "a.pdf",
+      fileKey: "a.pdf:1:1",
+      stage: "translating",
+      stageProgress: 3,
+      stageTotal: 10,
+      message: "翻訳中...",
+      paperId: "paper-visible",
+    });
+    // After partial-ready the ImportJobCard is hidden, but the job remains in
+    // the store so PaperMenu can cancel via paperId.
+    expect(cancelPaperWork("paper-visible")).toBe(true);
+    expect(useImportJobStore.getState().jobs[0]?.stage).toBe("cancel_requested");
+    expect(translationCancel).toHaveBeenCalledWith("paper-visible");
+    expect(updatePaper).toHaveBeenCalledWith(
+      "paper-visible",
+      expect.objectContaining({
+        processingStatus: "partial",
+        needsTranslationResume: false,
+      })
+    );
+  });
+
+  it("aborts an active resume run when no import job exists", () => {
+    const controller = new AbortController();
+    resumeAbortControllers.set("paper-resume", controller);
+    resumingPapers.add("paper-resume");
+    translationHasQueue.mockReturnValue(true);
+
+    expect(cancelPaperWork("paper-resume")).toBe(true);
+    expect(controller.signal.aborted).toBe(true);
+    expect(translationCancel).toHaveBeenCalledWith("paper-resume");
+    expect(updatePaper).toHaveBeenCalledWith(
+      "paper-resume",
+      expect.objectContaining({
+        processingStatus: "partial",
+        needsTranslationResume: false,
+      })
+    );
+  });
+
+  it("returns false when nothing is running", () => {
+    expect(cancelPaperWork("idle-paper")).toBe(false);
+    expect(translationCancel).not.toHaveBeenCalled();
   });
 });
