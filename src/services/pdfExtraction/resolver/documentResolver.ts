@@ -227,29 +227,45 @@ function promoteRotatedTableCaptions(
  * IEEE/ACM often emit `Abstract—Body sentence…` as one native paragraph.
  * Layout keeps that shape as prose so it is not promoted to the title; split
  * the structural label here so markAbstracts can attach the body.
+ * Bodies are re-scanned so `Background … Methods …` chains keep splitting.
  */
 function splitInlineSectionLabels(nodes: CanonicalNode[]): CanonicalNode[] {
   const out: CanonicalNode[] = [];
   for (const node of nodes) {
-    if (node.role !== "paragraph" && node.role !== "heading") {
-      out.push(node);
-      continue;
+    out.push(...splitInlineSectionLabelChain(node, 0));
+  }
+  return out;
+}
+
+function splitInlineSectionLabelChain(node: CanonicalNode, depth: number): CanonicalNode[] {
+  if (depth > 6) return [node];
+  if (node.role !== "paragraph" && node.role !== "heading") return [node];
+  const text = (node.text ?? "").trim();
+  if (!text) return [node];
+
+  const pushSplit = (parts: CanonicalNode[]): CanonicalNode[] => {
+    const expanded: CanonicalNode[] = [];
+    for (const part of parts) {
+      if (part.role === "paragraph") expanded.push(...splitInlineSectionLabelChain(part, depth + 1));
+      else expanded.push(part);
     }
-    const text = (node.text ?? "").trim();
-    // `Abstract—Body` / `Abstract-Body` (IEEE) or `Abstract Body…`.
-    const emDash = text.match(
-      /^(Abstract|Introduction|Related Work|Methods|Results|Discussion|Conclusions)(?:\s*[—–-]\s*|\s+)(.+)$/i
-    );
-    if (
-      emDash &&
-      emDash[2].trim().split(/\s+/).filter(Boolean).length >= 5 &&
-      // Require the body to start like prose, not another heading number.
-      /^[A-Z(]/.test(emDash[2].trim()) &&
-      !/^\d+\.\s/.test(emDash[2].trim())
-    ) {
-      const label = emDash[1].replace(/\b\w/g, (ch) => ch.toUpperCase());
-      const body = emDash[2].trim();
-      out.push({
+    return expanded;
+  };
+
+  // `Abstract—Body` / `Abstract-Body` (IEEE) or `Abstract Body…`.
+  const emDash = text.match(
+    /^(Abstract|Background|Objective|Objectives|Purpose|Aims?|Introduction|Related Work|Methods|Results|Discussion|Conclusion|Conclusions)(?:\s*[—–-]\s*|\s+)(.+)$/i
+  );
+  if (
+    emDash &&
+    emDash[2].trim().split(/\s+/).filter(Boolean).length >= 5 &&
+    /^[A-Z(]/.test(emDash[2].trim()) &&
+    !/^\d+\.\s/.test(emDash[2].trim())
+  ) {
+    const label = emDash[1].replace(/\b\w/g, (ch) => ch.toUpperCase());
+    const body = emDash[2].trim();
+    return pushSplit([
+      {
         ...node,
         id: `${node.id}::section-label`,
         role: "heading",
@@ -266,29 +282,24 @@ function splitInlineSectionLabels(nodes: CanonicalNode[]): CanonicalNode[] {
             reason: "split unspaced section label from following prose",
           },
         ],
-      });
-      out.push({
-        ...node,
-        id: `${node.id}::section-body`,
-        role: "paragraph",
-        text: body,
-      });
-      continue;
-    }
+      },
+      { ...node, id: `${node.id}::section-body`, role: "paragraph", text: body },
+    ]);
+  }
 
-    // Unnumbered section labels glued into the first sentence of the section:
-    // `Materials and Methods In this study…` / `Results and Discussions Based on…`
-    const plainSection = text.match(
-      /^(Materials and Methods|Results and Discussions?|Methodology|Methods|Results|Discussion|Conclusions?)\s+([A-Z(].+)$/i
-    );
-    if (
-      plainSection &&
-      plainSection[2].trim().split(/\s+/).filter(Boolean).length >= 5 &&
-      !/^(?:Materials and Methods|Results and Discussions?|Methodology|Methods|Results|Discussion|Conclusions?)$/i.test(text)
-    ) {
-      const label = plainSection[1].replace(/\b\w/g, (ch) => ch.toUpperCase());
-      const body = plainSection[2].trim();
-      out.push({
+  // Unnumbered section labels glued into the first sentence of the section.
+  const plainSection = text.match(
+    /^(Materials and Methods|Results and Discussions?|Methodology|Background|Objective|Objectives|Methods|Results|Discussion|Conclusions?)\s+([A-Z(].+)$/i
+  );
+  if (
+    plainSection &&
+    plainSection[2].trim().split(/\s+/).filter(Boolean).length >= 5 &&
+    !/^(?:Materials and Methods|Results and Discussions?|Methodology|Background|Objective|Objectives|Methods|Results|Discussion|Conclusions?)$/i.test(text)
+  ) {
+    const label = plainSection[1].replace(/\b\w/g, (ch) => ch.toUpperCase());
+    const body = plainSection[2].trim();
+    return pushSplit([
+      {
         ...node,
         id: `${node.id}::plain-section-label`,
         role: "heading",
@@ -305,30 +316,68 @@ function splitInlineSectionLabels(nodes: CanonicalNode[]): CanonicalNode[] {
             reason: "split unnumbered section label from following prose",
           },
         ],
-      });
-      out.push({ ...node, id: `${node.id}::plain-section-body`, role: "paragraph", text: body });
-      continue;
-    }
+      },
+      { ...node, id: `${node.id}::plain-section-body`, role: "paragraph", text: body },
+    ]);
+  }
 
-    // Keywords / chrome lines sometimes swallow the next numbered section:
-    // `… strategies 1. Introduction Rural India is…`
-    const numbered = text.match(
-      /^(.*?\S)\s+(\d{1,2}\.\s+(?:Introduction|Related Work|Methods|Results|Discussion|Conclusions)\b.*)$/i
+  // Mid-paragraph unnumbered section labels after a sentence end.
+  // Greedy `.*[.!?]` so we split on the sentence end immediately before the
+  // section label, not the first period in a long abstract paragraph.
+  const midSection = text.match(
+    /^(.*[.!?])\s+(Background|Methods|Results|Discussion|Conclusions?|Introduction)\s+([A-Z][\s\S]{20,})$/i
+  );
+  if (
+    midSection &&
+    midSection[1].trim().length >= 20 &&
+    midSection[3].trim().split(/\s+/).filter(Boolean).length >= 5 &&
+    !/\b(?:the|our|these|those|its|their)\s+$/i.test(midSection[1])
+  ) {
+    const label = midSection[2].replace(/\b\w/g, (ch) => ch.toUpperCase());
+    const body = midSection[3].trim();
+    return pushSplit([
+      { ...node, id: `${node.id}::pre-mid-section`, role: "paragraph", text: midSection[1].trim() },
+      {
+        ...node,
+        id: `${node.id}::mid-section-label`,
+        role: "heading",
+        text: label,
+        confidence: Math.max(node.confidence, 0.88),
+        evidence: [
+          ...node.evidence,
+          {
+            source: "generic-heuristic",
+            label: "mid-paragraph-section-split",
+            confidence: 0.88,
+            page: node.pageStart,
+            bbox: node.boundingBoxes[0],
+            reason: "split section label glued after sentence end",
+          },
+        ],
+      },
+      { ...node, id: `${node.id}::mid-section-body`, role: "paragraph", text: body },
+    ]);
+  }
+
+  // Keywords / chrome lines sometimes swallow the next numbered section.
+  const numbered = text.match(
+    /^(.*?\S)\s+(\d{1,2}\.\s+(?:Introduction|Related Work|Methods|Results|Discussion|Conclusions)\b.*)$/i
+  );
+  if (
+    numbered &&
+    numbered[1].trim().length >= 12 &&
+    numbered[2].trim().split(/\s+/).filter(Boolean).length >= 4 &&
+    !/^\d{1,2}\.\s/.test(numbered[1].trim())
+  ) {
+    const prefix = numbered[1].trim();
+    const rest = numbered[2].trim();
+    const headingMatch = rest.match(
+      /^(\d{1,2}\.\s+(?:Introduction|Related Work|Methods|Results|Discussion|Conclusions))\b(?:\s+|$)(.*)$/i
     );
-    if (
-      numbered &&
-      numbered[1].trim().length >= 12 &&
-      numbered[2].trim().split(/\s+/).filter(Boolean).length >= 4 &&
-      !/^\d{1,2}\.\s/.test(numbered[1].trim())
-    ) {
-      const prefix = numbered[1].trim();
-      const rest = numbered[2].trim();
-      const headingMatch = rest.match(
-        /^(\d{1,2}\.\s+(?:Introduction|Related Work|Methods|Results|Discussion|Conclusions))\b(?:\s+|$)(.*)$/i
-      );
-      if (headingMatch) {
-        out.push({ ...node, id: `${node.id}::pre-section`, role: "paragraph", text: prefix });
-        out.push({
+    if (headingMatch) {
+      const parts: CanonicalNode[] = [
+        { ...node, id: `${node.id}::pre-section`, role: "paragraph", text: prefix },
+        {
           ...node,
           id: `${node.id}::numbered-section-label`,
           role: "heading",
@@ -345,18 +394,17 @@ function splitInlineSectionLabels(nodes: CanonicalNode[]): CanonicalNode[] {
               reason: "split numbered section heading glued into preceding prose",
             },
           ],
-        });
-        const body = headingMatch[2].trim();
-        if (body.split(/\s+/).filter(Boolean).length >= 3) {
-          out.push({ ...node, id: `${node.id}::numbered-section-body`, role: "paragraph", text: body });
-        }
-        continue;
+        },
+      ];
+      const body = headingMatch[2].trim();
+      if (body.split(/\s+/).filter(Boolean).length >= 3) {
+        parts.push({ ...node, id: `${node.id}::numbered-section-body`, role: "paragraph", text: body });
       }
+      return pushSplit(parts);
     }
-
-    out.push(node);
   }
-  return out;
+
+  return [node];
 }
 
 function demotePageOneAuthorHeadings(nodes: CanonicalNode[]): CanonicalNode[] {
@@ -365,7 +413,8 @@ function demotePageOneAuthorHeadings(nodes: CanonicalNode[]): CanonicalNode[] {
     const t = node.text.trim();
     // Bilingual mastheads often emit transliterated author names as large
     // "headings" beside the real article title. Keep genuine section labels.
-    const personShaped = /^[A-ZА-ЯЁ][a-zа-яё'-]+(?:\s+[A-ZА-ЯЁ][a-zа-яё.'-]+){1,3}$/u.test(t) &&
+    // Allow hyphenated given names (`Yong-Seok Jang`) and initials.
+    const personShaped = /^[A-ZА-ЯЁ][a-zа-яё]*(?:-[A-ZА-ЯЁ][a-zа-яё]+)*(?:\s+[A-ZА-ЯЁ](?:\.|[a-zа-яё]*(?:-[A-ZА-ЯЁ][a-zа-яё]+)*)){1,3}$/u.test(t) &&
       t.length <= 42 &&
       !/\b(?:Abstract|Introduction|Related|Methods|Results|Discussion|Conclusion|Keywords?)\b/i.test(t);
     if (!personShaped) return node;
@@ -395,16 +444,28 @@ function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): CanonicalNode[] 
     if (node.role !== "heading" || !node.text) return node;
     const t = node.text.trim();
     const editorialLabel =
-      /^(?:\*?correspondence|edited by|reviewed by|open access|citation|copyright|keywords?|published|received|accepted)$/i.test(t);
+      /^(?:\*?correspondence|edited by|reviewed by|open access|citation|copyright|keywords?|published|received|accepted)$/i.test(t) ||
+      /^(?:competing interests|research ethics|ethics approval|acknowledgements?)\b/i.test(t) ||
+      /@/.test(t);
     const abstractLeadIn =
       /^(?:this study|this paper|this article|this review|we (?:present|propose|report|investigate))\b/i.test(t) &&
       t.split(/\s+/).filter(Boolean).length >= 8;
     const duplicateTitle =
       titleText.length >= 24 && t.toLowerCase() === titleText;
-    if (!editorialLabel && !abstractLeadIn && !duplicateTitle) return node;
+    // Long sentence-like headings and math/table crumbs are body, not outline.
+    const proseHeading =
+      t.length > 90 && /[.!?]$/.test(t) && !/^\d+(?:\.\d+)*\s/.test(t);
+    const mathOrTableCrumb =
+      /[∑∫≤≥≠≈]/.test(t) ||
+      /^\(?SOTA\)/i.test(t) ||
+      /^number of true/i.test(t);
+    if (!editorialLabel && !abstractLeadIn && !duplicateTitle && !proseHeading && !mathOrTableCrumb) {
+      return node;
+    }
+    const asOther = editorialLabel || mathOrTableCrumb;
     return {
       ...node,
-      role: editorialLabel ? ("other" as const) : ("paragraph" as const),
+      role: asOther ? ("other" as const) : ("paragraph" as const),
       confidence: Math.min(node.confidence, 0.55),
       evidence: [
         ...node.evidence,
@@ -418,7 +479,11 @@ function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): CanonicalNode[] 
             ? "editorial chrome label demoted from heading"
             : duplicateTitle
               ? "duplicate title heading demoted to paragraph"
-              : "abstract lead-in prose demoted from heading",
+              : proseHeading
+                ? "sentence-like heading demoted to paragraph"
+                : mathOrTableCrumb
+                  ? "math/table crumb demoted from heading"
+                  : "abstract lead-in prose demoted from heading",
         },
       ],
     };
