@@ -170,9 +170,15 @@ for (let index = 0; index < selected.length; index += 1) {
     }
 
     // Title looks like a keyword list or degree boilerplate.
+    // Topic-list academic titles and parenthetical expansions
+    // (`CMF(Color, Material, Finishing)`) are legitimate.
     const titleText = (titleNode?.text ?? "").trim();
-    if (titleText && ((titleText.match(/,/g) ?? []).length >= 4 ||
-      /^(?:doctor of philosophy|phd thesis|keywords?\b)/i.test(titleText))) {
+    const commasOutsideParens = (titleText.replace(/\([^)]*\)/g, "").match(/,/g) ?? []).length;
+    if (titleText && (
+      (commasOutsideParens >= 4 && !/:/.test(titleText) &&
+        !/\b(?:protocol|scoping review|systematic review|review of|focusing on|study in)\b/i.test(titleText)) ||
+      /^(?:doctor of philosophy|phd thesis|keywords?\b)/i.test(titleText)
+    )) {
       flags.push("keywords-or-degree-title");
       score += 6;
       samples.push(`badTitle:${titleText.slice(0, 100)}`);
@@ -217,7 +223,7 @@ for (let index = 0; index < selected.length; index += 1) {
     }
 
     // Captions without any figure/table neighbour on the same page.
-    const captions = nodes.filter((n) => n.role === "caption");
+    const captions = nodes.filter((n) => n.role === "caption" || /caption/i.test(n.role ?? ""));
     const orphanCaptions = captions.filter((c) => {
       const page = c.pageStart;
       return !nodes.some((n) =>
@@ -229,6 +235,19 @@ for (let index = 0; index < selected.length; index += 1) {
       flags.push(`orphan-caption:${orphanCaptions.length}`);
       score += Math.min(6, orphanCaptions.length);
       samples.push(`orphanCap:${(orphanCaptions[0]?.text ?? "").slice(0, 80)}`);
+    }
+
+    // Comparison matrices often explode into one table node per row. Flag when
+    // short table fragments dominate relative to numbered table captions.
+    const tables = nodes.filter((n) => n.role === "table");
+    const shortTables = tables.filter((t) => ((t.text ?? "").trim().length) < 40).length;
+    const numberedTableCaptions = nodes.filter((n) =>
+      /^(?:table|表)\s*\d+/i.test((n.text ?? "").trim())
+    ).length;
+    if (shortTables >= 12 && shortTables > Math.max(4, numberedTableCaptions * 6)) {
+      flags.push(`fragmented-tables:${shortTables}`);
+      score += Math.min(8, Math.floor(shortTables / 8));
+      samples.push(`fragTable:${(tables.find((t) => ((t.text ?? "").trim().length) < 40)?.text ?? "").slice(0, 60)}`);
     }
 
     findings.push({

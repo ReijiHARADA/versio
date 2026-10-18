@@ -1417,7 +1417,8 @@ function isHangingTitleEnd(text: string): boolean {
 }
 
 function isCopyright(text: string, fontSize: number, baseFont: number): boolean {
-  const explicitLicense = /^(?:©\s*\d{4}\b|open[-\s]access\b|license\s*\(\s*https?:\/\/creativecommons\.org|this\s+article\s+is\s+(?:licensed|distributed)\b)/i.test(text.trim());
+  // Publisher marks may be `© 2026 …` or `©Biomedical Informatics (2026)`.
+  const explicitLicense = /^(?:©\s*(?:\d{4}\b|[A-Za-z])|open[-\s]access\b|license\s*\(\s*https?:\/\/creativecommons\.org|this\s+article\s+is\s+(?:licensed|distributed)\b)/i.test(text.trim());
   if (fontSize > baseFont * 0.92 && !explicitLicense) return false;
   // PDF text streams can interleave adjacent permission lines and break the
   // literal `Permission to make ...` prefix (for example `Ppersonal ...

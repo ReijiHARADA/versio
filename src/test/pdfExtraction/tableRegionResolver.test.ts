@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { resolveTableRegions } from "../../services/pdfExtraction/resolver/documentResolver";
+import {
+  mergeAdjacentTableRows,
+  mergeTableRowsByPageGeometry,
+  resolveTableRegions,
+} from "../../services/pdfExtraction/resolver/documentResolver";
 import type { CanonicalNode } from "../../services/pdfExtraction/canonical/types";
 import type { StructuralRegionEvidence } from "../../services/pdfExtraction/types";
 
@@ -12,6 +16,23 @@ const node = (id: string, text = "Thumb 0.000 0.151"): CanonicalNode => ({
   boundingBoxes: [{ page: 1, x: 10, y: 10, width: 40, height: 10 }],
   confidence: 0.7,
   evidence: [],
+  sourceAnchor: { page: 1, boundingBoxes: [] },
+});
+
+const tableRow = (id: string, text: string, y: number): CanonicalNode => ({
+  id,
+  role: "table",
+  text,
+  pageStart: 1,
+  pageEnd: 1,
+  boundingBoxes: [{ page: 1, x: 40, y, width: 280, height: 12 }],
+  confidence: 0.96,
+  evidence: [{
+    source: "generic-heuristic",
+    label: "table-row-geometry",
+    confidence: 0.96,
+    page: 1,
+  }],
   sourceAnchor: { page: 1, boundingBoxes: [] },
 });
 
@@ -48,5 +69,76 @@ describe("resolveTableRegions", () => {
       [region(["a", "b", "c"], 0.99)]
     );
     expect(resolved.map((item) => item.role)).toEqual(["paragraph", "paragraph", "table"]);
+  });
+});
+
+describe("mergeAdjacentTableRows", () => {
+  it("collapses consecutive checkmark comparison rows and demotes panel labels", () => {
+    const merged = mergeAdjacentTableRows([
+      tableRow("cap", "TABLE 1 Comparison of reviews", 80),
+      { ...tableRow("panel", "(a)", 100), evidence: [{ source: "generic-heuristic", label: "repeated-prose-cell-grid", confidence: 0.96, page: 1 }] },
+      tableRow("r1", "• Machine learning ✓ ✓", 120),
+      tableRow("r2", "• Deep learning ✓ ✓", 136),
+      tableRow("r3", "• Jumping ✓ X", 152),
+    ]);
+    expect(merged.map((item) => item.role)).toEqual(["table", "table"]);
+    expect(merged.some((item) => item.text === "(a)")).toBe(false);
+    expect(merged[0]?.text).toMatch(/^TABLE 1/);
+    expect(merged[1]?.text).toContain("• Machine learning");
+    expect(merged[1]?.text).toContain("• Deep learning");
+    expect(merged[1]?.text).toContain("• Jumping");
+  });
+
+  it("merges same-page table rows by geometry despite intervening prose", () => {
+    const prose = (id: string, text: string, y: number): CanonicalNode => ({
+      id,
+      role: "paragraph",
+      text,
+      pageStart: 1,
+      pageEnd: 1,
+      boundingBoxes: [{ page: 1, x: 300, y, width: 120, height: 12 }],
+      confidence: 0.7,
+      evidence: [],
+      sourceAnchor: { page: 1, boundingBoxes: [] },
+    });
+    const merged = mergeTableRowsByPageGeometry([
+      tableRow("r1", "[79] FER2013 Adults Public 7 emotions", 120),
+      prose("p1", "A long prose paragraph about affective computing methods that should not block geometry merge.", 130),
+      tableRow("r2", "[33] AffectNet Adults Face Public", 150),
+      tableRow("r3", "[12] CK+ Adults Face Public 7 emotions", 170),
+    ]);
+    const tables = merged.filter((item) => item.role === "table");
+    expect(tables).toHaveLength(1);
+    expect(tables[0]?.text).toContain("FER2013");
+    expect(tables[0]?.text).toContain("AffectNet");
+    expect(tables[0]?.text).toContain("CK+");
+    expect(merged.some((item) => item.role === "paragraph")).toBe(true);
+  });
+
+  it("joins table rows across weak two-column intervening crumbs", () => {
+    const crumb = (id: string, text: string, y: number): CanonicalNode => ({
+      id,
+      role: "paragraph",
+      text,
+      pageStart: 1,
+      pageEnd: 1,
+      boundingBoxes: [{ page: 1, x: 320, y, width: 80, height: 10 }],
+      confidence: 0.6,
+      evidence: [],
+      sourceAnchor: { page: 1, boundingBoxes: [] },
+    });
+    const merged = mergeAdjacentTableRows([
+      tableRow("r1", "18 Tinku Anthropomorphic", 120),
+      crumb("c1", "partial", 128),
+      tableRow("r2", "19 Shybo Anthropomorphic", 140),
+      crumb("c2", "partial", 148),
+      tableRow("r3", "20 Roboldo Anthropomorphic", 160),
+    ]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0]?.role).toBe("table");
+    expect(merged[0]?.text).toContain("18 Tinku");
+    expect(merged[0]?.text).toContain("19 Shybo");
+    expect(merged[0]?.text).toContain("20 Roboldo");
+    expect(merged[0]?.text).toContain("partial");
   });
 });
