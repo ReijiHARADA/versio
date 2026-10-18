@@ -92,9 +92,10 @@
   right: 0;
   z-index: 2;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 36px;
+  gap: 6px;
   color: var(--color-text-tertiary);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
@@ -104,14 +105,44 @@
 }
 
 .elasticHintBottom {
-  bottom: 10px;
+  bottom: 16px;
 }
 
 .elasticHintTop {
-  top: 10px;
+  top: 16px;
 }
 
 .elasticHintActive {
+  color: var(--color-accent);
+}
+
+.elasticHintLabel {
+  line-height: 1.2;
+}
+
+.pullGauge {
+  display: block;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.06));
+}
+
+.pullGaugeTrack {
+  stroke: var(--color-separator-subtle);
+  stroke-width: 2.5;
+}
+
+.pullGaugeFill {
+  stroke: var(--color-text-tertiary);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  transition: stroke 160ms ease;
+}
+
+.pullGaugeReady .pullGaugeFill {
+  stroke: var(--color-accent);
+}
+
+.elasticHintActive .elasticHintLabel {
   color: var(--color-accent);
 }
 

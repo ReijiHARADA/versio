@@ -1537,8 +1537,11 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // punctuation/spacing is a publisher-independent boundary signal; the
     // rule deliberately requires an unspaced dash and a multi-word suffix so
     // ordinary titled sections such as `Study I – Design` remain headings.
+    // Only em/en dashes mark inline labels (`Abstract—Since…`). An ASCII
+    // hyphen inside a compound title word (`root-associated`) must not demote
+    // the whole title block to paragraph.
     const inlineLabelProse = (layoutRole === "heading" || layoutRole === "title") &&
-      /^[A-Za-z][A-Za-z ]{1,24}[—-]\s*[A-Za-z]/.test(block.text.trim()) &&
+      /^[A-Za-z][A-Za-z ]{1,24}[—–]\s*[A-Za-z]/.test(block.text.trim()) &&
       block.text.trim().split(/\s+/).filter(Boolean).length >= 6;
     // Some native PDF producers flatten a complete table into one LayoutBlock:
     // header rows may have a few items while data rows retain 4–6 cells.  The

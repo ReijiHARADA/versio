@@ -2,12 +2,19 @@
 /**
  * Build-time license inventory for Settings → ライセンス.
  *
+ * Inclusion policy (掲載が必須のものだけ):
+ * 1. Distributed with the macOS app — not build-only / not other-platform crates,
+ *    not npm optionalDependencies, not unbundled Python.
+ * 2. License requires notice / attribution in redistributed copies — or metadata is
+ *    missing (kept as unknown/partial for review). Packages where a no-attribution
+ *    alternative can be elected (0BSD, Unlicense, CC0-1.0, MIT-0, WTFPL) are omitted.
+ *
  * Collects declared licenses + LICENSE/NOTICE texts from:
  * - Paper Reader (LICENSE)
  * - npm production dependency closure (non-optional)
- * - Rust crates linked via src-tauri (cargo metadata resolve)
+ * - Rust crates reachable for macOS targets via cargo tree (no-dev, no-build)
  * - Python packages in the bundled translation-server/venv
- * - Curated distributed assets / model weights (with verified sources only)
+ * - Curated distributed assets / model weights (verified sources only)
  *
  * Does not invent license types. Missing metadata → status "unknown".
  */
@@ -24,11 +31,27 @@ import {
 } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { homedir } from "node:os";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(SCRIPT_DIR, "..");
 const OUT_DIR = path.join(ROOT, "src", "generated");
 const OUT_JSON = path.join(OUT_DIR, "thirdPartyLicenses.json");
+
+/** Distribution targets for Paper Reader (Tauri macOS). */
+const MACOS_TARGETS = ["aarch64-apple-darwin", "x86_64-apple-darwin"];
+
+/**
+ * SPDX / common ids that do not require copyright notice republication
+ * when that license is the elected alternative.
+ */
+const NO_ATTRIBUTION_LICENSES = new Set([
+  "0BSD",
+  "Unlicense",
+  "CC0-1.0",
+  "MIT-0",
+  "WTFPL",
+]);
 
 const LICENSE_FILE_NAMES = [
   "LICENSE",
@@ -60,6 +83,8 @@ const texts = new Map();
 const warnings = [];
 /** @type {Map<string, object>} */
 const packagesById = new Map();
+/** @type {{ skippedNoAttribution: number, skippedNonDistributed: number }} */
+const filterStats = { skippedNoAttribution: 0, skippedNonDistributed: 0 };
 
 function sha256(text) {
   return createHash("sha256").update(text, "utf8").digest("hex");
@@ -117,7 +142,47 @@ function extractCopyright(text) {
   return hits.slice(0, 3).join("\n");
 }
 
-function addPackage(entry) {
+/**
+ * True when the redistributed work must carry a copyright / permission / NOTICE.
+ * Missing metadata → true (keep for review). Dual-license expressions where a
+ * no-attribution alternative can be elected → false.
+ */
+function requiresAttributionListing(license) {
+  if (!license || !String(license).trim()) return true;
+
+  let normalized = String(license)
+    .replace(/\s*\/\s*/g, " OR ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Compound AND: keep — cannot drop the whole package by electing one branch.
+  if (/\bAND\b/i.test(normalized)) return true;
+
+  const alts = normalized
+    .split(/\s+OR\s+/i)
+    .map((part) =>
+      part
+        .replace(/^\(+/, "")
+        .replace(/\)+$/, "")
+        .replace(/\s+WITH\s+.*/i, "")
+        .trim()
+    )
+    .filter(Boolean);
+
+  if (alts.length === 0) return true;
+
+  const electableNoAttr = alts.some(
+    (alt) => NO_ATTRIBUTION_LICENSES.has(alt) || /^public domain$/i.test(alt)
+  );
+  return !electableNoAttr;
+}
+
+function addPackage(entry, { force = false } = {}) {
+  if (!force && entry.ecosystem !== "app" && !requiresAttributionListing(entry.license)) {
+    filterStats.skippedNoAttribution += 1;
+    return;
+  }
+
   const existing = packagesById.get(entry.id);
   if (existing) {
     // Prefer entries that already have license text.
@@ -189,6 +254,15 @@ function statusNotes(status, license, textKey) {
   return parts.join("。") + "。";
 }
 
+function cargoEnv() {
+  const cargoHome = path.join(homedir(), ".cargo", "bin");
+  const pathEnv = process.env.PATH ?? "";
+  return {
+    ...process.env,
+    PATH: pathEnv.includes(cargoHome) ? pathEnv : `${cargoHome}${path.delimiter}${pathEnv}`,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Paper Reader
 // ---------------------------------------------------------------------------
@@ -198,20 +272,23 @@ function collectApp() {
   const licenseText = readText(licensePath);
   const textKey = storeText(licenseText);
   const copyright = extractCopyright(licenseText);
-  addPackage({
-    id: "app:paper-reader",
-    name: "Paper Reader",
-    version: readPackageJsonVersion(),
-    ecosystem: "app",
-    license: "MIT",
-    copyright,
-    textKey,
-    noticeKey: null,
-    status: packageStatus("MIT", textKey),
-    notes: textKey
-      ? undefined
-      : "リポジトリ直下の LICENSE を読めませんでした。",
-  });
+  addPackage(
+    {
+      id: "app:paper-reader",
+      name: "Paper Reader",
+      version: readPackageJsonVersion(),
+      ecosystem: "app",
+      license: "MIT",
+      copyright,
+      textKey,
+      noticeKey: null,
+      status: packageStatus("MIT", textKey),
+      notes: textKey
+        ? undefined
+        : "リポジトリ直下の LICENSE を読めませんでした。",
+    },
+    { force: true }
+  );
 }
 
 function readPackageJsonVersion() {
@@ -297,7 +374,6 @@ function resolveNodeModulesDir(name, lockEntry) {
   const candidates = [
     path.join(ROOT, "node_modules", ...name.split("/")),
   ];
-  // Resolved path hint from lock (npm v2+ may include "resolved" only)
   for (const c of candidates) {
     if (existsSync(path.join(c, "package.json"))) return c;
   }
@@ -323,7 +399,7 @@ function normalizeLicenseField(license) {
 }
 
 // ---------------------------------------------------------------------------
-// Rust
+// Rust (macOS distribution graph only)
 // ---------------------------------------------------------------------------
 
 function collectRust() {
@@ -332,12 +408,13 @@ function collectRust() {
     warnings.push("src-tauri/Cargo.toml が無いため Rust 依存を収集できませんでした");
     return;
   }
+
   let meta;
   try {
     const raw = execFileSync(
       "cargo",
       ["metadata", "--format-version", "1", "--manifest-path", manifest],
-      { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 }
+      { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, env: cargoEnv() }
     );
     meta = JSON.parse(raw);
   } catch (error) {
@@ -345,7 +422,17 @@ function collectRust() {
     return;
   }
 
+  const distributedKeys = collectMacosDistributedCrateKeys(manifest);
+  if (distributedKeys.size === 0) {
+    warnings.push(
+      "macOS 向け cargo tree が空のため Rust 依存を収集できませんでした"
+    );
+    return;
+  }
+
   const resolvedIds = new Set((meta.resolve?.nodes ?? []).map((n) => n.id));
+  let considered = 0;
+
   for (const pkg of meta.packages ?? []) {
     if (!resolvedIds.has(pkg.id)) continue;
     if (pkg.name === "app" && pkg.manifest_path?.includes(`${path.sep}src-tauri${path.sep}`)) {
@@ -353,6 +440,13 @@ function collectRust() {
     }
 
     const version = pkg.version ?? "?";
+    const key = `${pkg.name}@${version}`;
+    if (!distributedKeys.has(key)) {
+      filterStats.skippedNonDistributed += 1;
+      continue;
+    }
+    considered += 1;
+
     const license = typeof pkg.license === "string" && pkg.license.trim()
       ? pkg.license.trim()
       : null;
@@ -389,6 +483,53 @@ function collectRust() {
       notes: statusNotes(status, license, textKey),
     });
   }
+
+  console.log(
+    `  rust: macOS distributed crates=${distributedKeys.size}, considered=${considered}`
+  );
+}
+
+/**
+ * Union of crates linked into the macOS app binary (normal deps, excluding
+ * build-dependencies and other-platform targets such as Windows / GTK).
+ * @param {string} manifest
+ * @returns {Set<string>} name@version keys
+ */
+function collectMacosDistributedCrateKeys(manifest) {
+  /** @type {Set<string>} */
+  const keys = new Set();
+  for (const target of MACOS_TARGETS) {
+    try {
+      const raw = execFileSync(
+        "cargo",
+        [
+          "tree",
+          "--manifest-path",
+          manifest,
+          "--target",
+          target,
+          "-e",
+          "no-dev,no-build",
+          "--prefix",
+          "none",
+        ],
+        { encoding: "utf8", maxBuffer: 32 * 1024 * 1024, env: cargoEnv() }
+      );
+      for (const line of raw.split("\n")) {
+        const match = line.match(/^(\S+)\s+v(\S+)/);
+        if (!match) continue;
+        const name = match[1];
+        const version = match[2].replace(/\(.*/, "").replace(/\*$/, "").trim();
+        if (!name || !version || name === "app") continue;
+        keys.add(`${name}@${version}`);
+      }
+    } catch (error) {
+      warnings.push(
+        `cargo tree (${target}) 失敗: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+  return keys;
 }
 
 // ---------------------------------------------------------------------------
@@ -536,12 +677,8 @@ function collectCurated() {
   }
 
   // MADLAD-400 weights are downloaded for the translation server (not MIT).
-  // License type confirmed from Hugging Face model card (see THIRD_PARTY_NOTICES.md).
-  // Full text: use the Apache-2.0 text already present in a dependency if available,
-  // otherwise mark partial with expression only (do not fabricate alternate terms).
-  const apacheText =
-    findApache20TextFromTree() ??
-    null;
+  // License type confirmed from Hugging Face model card.
+  const apacheText = findApache20TextFromTree() ?? null;
   const madladTextKey = storeText(apacheText);
   addPackage({
     id: "model:google/madlad400-3b-mt",
@@ -565,7 +702,6 @@ function readInstalledVersion(name) {
 }
 
 function findApache20TextFromTree() {
-  // Prefer a clearly named Apache license file from known packages.
   const candidates = [
     path.join(ROOT, "node_modules", "pdfjs-dist", "LICENSE"),
     path.join(ROOT, "node_modules", "@tauri-apps", "api", "LICENSE_APACHE-2.0"),
@@ -576,7 +712,6 @@ function findApache20TextFromTree() {
       return text;
     }
   }
-  // Fall back to any stored text already collected that looks like Apache-2.0
   for (const text of texts.values()) {
     if (/Apache License/i.test(text) && /Version 2\.0/i.test(text) && text.length > 500) {
       return text;
@@ -589,6 +724,17 @@ function findApache20TextFromTree() {
 // Write
 // ---------------------------------------------------------------------------
 
+function pruneUnusedTexts(packages) {
+  const used = new Set();
+  for (const pkg of packages) {
+    if (pkg.textKey) used.add(pkg.textKey);
+    if (pkg.noticeKey) used.add(pkg.noticeKey);
+  }
+  for (const key of [...texts.keys()]) {
+    if (!used.has(key)) texts.delete(key);
+  }
+}
+
 function writeOutput() {
   mkdirSync(OUT_DIR, { recursive: true });
 
@@ -598,11 +744,19 @@ function writeOutput() {
     return String(a.name).localeCompare(String(b.name)) || String(a.version).localeCompare(String(b.version));
   });
 
+  pruneUnusedTexts(packages);
+
   const textObj = Object.fromEntries([...texts.entries()].sort((a, b) => a[0].localeCompare(b[0])));
 
   const inventory = {
     generatedAt: new Date().toISOString(),
-    generatorVersion: 1,
+    generatorVersion: 2,
+    inclusionPolicy: {
+      distributedOnly: true,
+      platforms: ["macos"],
+      rust: "cargo tree --target {aarch64,x86_64}-apple-darwin -e no-dev,no-build",
+      skipElectableNoAttribution: [...NO_ATTRIBUTION_LICENSES],
+    },
     packages,
     texts: textObj,
     warnings,
@@ -611,6 +765,8 @@ function writeOutput() {
       byEcosystem: countBy(packages, "ecosystem"),
       byStatus: countBy(packages, "status"),
       uniqueTexts: texts.size,
+      skippedNoAttribution: filterStats.skippedNoAttribution,
+      skippedNonDistributed: filterStats.skippedNonDistributed,
     },
   };
 
@@ -620,6 +776,9 @@ function writeOutput() {
   const partial = packages.filter((p) => p.status === "partial").length;
   console.log(
     `generate-licenses: ${packages.length} packages, ${texts.size} unique texts, unknown=${unknown}, partial=${partial}, warnings=${warnings.length}`
+  );
+  console.log(
+    `  filtered: non-distributed=${filterStats.skippedNonDistributed}, no-attribution-electable=${filterStats.skippedNoAttribution}`
   );
   console.log(`  → ${path.relative(ROOT, OUT_JSON)}`);
   for (const w of warnings) console.warn(`  warn: ${w}`);
@@ -648,7 +807,8 @@ function main() {
     if (apache) {
       madlad.textKey = storeText(apache);
       madlad.status = packageStatus(madlad.license, madlad.textKey);
-      madlad.notes = statusNotes(madlad.status, madlad.license, madlad.textKey);
+      madlad.notes =
+        "ライセンス種別は Hugging Face モデルカード（license: apache-2.0）で確認。全文は依存ツリー内の Apache-2.0 テキストを再利用。";
     }
   }
   writeOutput();

@@ -1,3 +1,7 @@
+# 2026-10-18: 設定→ライセンスの引っ張りUI（ゲージ＋端で一旦停止）
+
+勢いよく設定を下までスクロールしたとき、端に当たった最初のオーバースクロールはゴム戻りだけにしてページ遷移しない（一旦停止）。端に止まったあとの引っ張りで遷移可能。引っ張り中は円形ゲージがコミット閾値まで溜まり、閾値超過でアクセント色＋「離すと…」。`useSettingsElasticPull` + Settings ヒント UI。単体: pullCommitProgress / latchOverflowCap。
+
 # 2026-10-18: wideコーパス7件のタイトル/見出し/セクション接合を修正
 
 catalog+pending **346/346 clean**（PRISMA付録PDFはquarantine）。DOI後の偽author帯でタイトル後半が落ちる問題、spaced SYSTEMATIC REVIEW / citation byline / checklist タイトル誤検出、Frontiers散文・数式見出し、BMC `Background/Methods` 連鎖の再帰分割を修正。Unpaywallがappendixのみ返すJMIR本は隔離。

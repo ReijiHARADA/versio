@@ -1347,23 +1347,42 @@ function cjkCount(text: string): number {
 
 export function isFigureCaption(text: string): boolean {
   const caption = layoutPlain(text);
+  // Panel suffix `2a` only when not the start of a glued word (`2lexico…`).
+  const figNumber = String.raw`(?:figure|fig\.?|図)\s*\d+(?:[a-z](?![a-z]))?`;
   // Include `|` for Frontiers-style `FIGURE 1 | Experimental design…`.
-  if (/^(?:figure|fig\.?|図)\s*\d+[a-z]?(?:\s*,\s*[a-z]\b)*(?:\s*[:.|：–—-]|\s*$)/i.test(caption)) {
+  if (new RegExp(`^${figNumber}(?:\\s*,\\s*[a-z]\\b)*(?:\\s*[:.|：–—-]|\\s*$)`, "i").test(caption)) {
     return true;
   }
   // Some older journals omit punctuation after the figure number
-  // (`Fig.2 Otto Künzli ...`, `FIGURE 1PRISMA…`). Keep this format structural
-  // while excluding ordinary prose that starts with a finite verb
-  // (`Fig. 2 shows ...`).
-  const unpunctuated = caption.match(/^(?:figure|fig\.?|図)\s*\d+[a-z]?\s*(.+)$/i)?.[1] ?? "";
-  if (unpunctuated && /^[A-ZÀ-ÖØ-Þ]/u.test(unpunctuated) &&
-      !/^(?:shows?|illustrates?|depicts?|presents?|displays?|demonstrates?|summarizes?|reports?|represents?)\b/i.test(unpunctuated)) {
+  // (`Fig.2 Otto Künzli ...`, `FIGURE 1PRISMA…`, `Fig. 2lexico-…`). Keep this
+  // format structural while excluding ordinary prose that starts with a finite
+  // verb (`Fig. 2 shows ...`).
+  const unpunctuatedMatch = caption.match(new RegExp(`^(${figNumber})\\s*(.+)$`, "i"));
+  const unpunctuated = unpunctuatedMatch?.[2] ?? "";
+  const gluedNumber = Boolean(
+    unpunctuatedMatch?.[1] &&
+      /\d(?:[a-z](?![a-z]))?$/i.test(unpunctuatedMatch[1]) &&
+      !/\s$/.test(unpunctuatedMatch[1]) &&
+      /^[A-Za-z]/.test(unpunctuated)
+  );
+  const titleLikeStart =
+    (/^[\p{Lu}"“‘'«「]/u.test(unpunctuated) ||
+      (/^[\u4e00-\u9fff]/u.test(unpunctuated) && !/^[のにとへをがはもで]/u.test(unpunctuated)));
+  if (
+    unpunctuated &&
+    (titleLikeStart || gluedNumber) &&
+    !/^(?:shows?|illustrates?|depicts?|presents?|displays?|demonstrates?|summarizes?|summarises?|reports?|represents?)\b/i.test(
+      unpunctuated
+    )
+  ) {
     return true;
   }
   // Older proceedings often use `Fig. 1, Caption title…` rather than a
   // colon or full stop. Treat only an uppercase title-like continuation as a
   // caption; a normal sentence such as `Figure 2, the body…` stays prose.
-  return /^(?:[Ff]igure|[Ff]ig\.?)\s*\d+[a-z]?\s*,\s*(?!(?:the|a|an|this|that|these|those|we|our|it|they|in|on|for)\b)[A-Z]/.test(caption);
+  return /^(?:[Ff]igure|[Ff]ig\.?)\s*\d+(?:[a-z](?![a-z]))?\s*,\s*(?!(?:the|a|an|this|that|these|those|we|our|it|they|in|on|for)\b)[A-Z]/.test(
+    caption
+  );
 }
 
 export function isTableCaption(text: string): boolean {
@@ -1385,10 +1404,16 @@ export function isTableCaption(text: string): boolean {
   // finite verb (`Table 4 shows ...`). It is a paragraph reference, not the
   // caption that labels the region. Keep the check lexical and format-neutral
   // so it applies across publishers without paper-specific strings.
-  if (/^(?:shows?|presents?|indicates?|reports?|lists?|summarizes?|gives?|contains?|illustrates?)\b/i.test(continuation)) {
+  if (/^(?:shows?|presents?|indicates?|reports?|lists?|summarizes?|summarises?|gives?|contains?|illustrates?)\b/i.test(continuation)) {
     return false;
   }
   return /^[A-Z][A-Za-z]/.test(continuation);
+}
+
+function isHangingTitleEnd(text: string): boolean {
+  const t = text.trim();
+  if (/[‐‑‒–—―-]$/.test(t)) return true;
+  return /\b(?:using|in|of|the|a|an|and|for|with|to|from|on|by|via|this|these|those)$/i.test(t);
 }
 
 function isCopyright(text: string, fontSize: number, baseFont: number): boolean {
@@ -2012,6 +2037,9 @@ function looksLikeTitleLine(
   if (looksLikeEmail(text) || looksLikeAffiliation(text) || looksLikeUrl(text)) {
     return false;
   }
+  // Large-font bylines share the display title size on some proceedings
+  // templates. Person-name rows are authors, never title anchors.
+  if (looksLikePersonName(text)) return false;
   // Funding acknowledgements can use a larger masthead-like style and wrap
   // numeric grant identifiers across lines. They are metadata, never titles.
   if (/\b(?:grant|award|project|contract)\b/i.test(text) || /\b\d{2,}(?:\.\d+)+\b/.test(text)) {
@@ -2022,12 +2050,16 @@ function looksLikeTitleLine(
 }
 
 export function joinHyphenated(prev: string, next: string): string {
-  if (/[-\u00ad\u2010\u2011]$/u.test(prev) && /^[a-z0-9]/i.test(next)) {
+  if (/[-\u00ad\u2010\u2011\u2012\u2013]$/u.test(prev) && /^[a-z0-9]/i.test(next)) {
     if (/^\d/.test(next)) return `${prev}${next}`;
     // "jewellery-, memory- and interaction-" + "perspectives"
-    if (/(?:,|and)\s+[A-Za-z]+[-\u00ad\u2010\u2011]$/iu.test(prev)) {
+    if (/(?:,|and)\s+[A-Za-z]+[-\u00ad\u2010\u2011\u2012\u2013]$/iu.test(prev)) {
       return prev + next;
     }
+    // Soft hyphen / mid-word line break: drop the hyphen.
+    if (/\u00ad$/.test(prev)) return prev.slice(0, -1) + next;
+    // Compound title/word breaks keep the hyphen (`decision-` + `support`).
+    if (/[A-Za-z]{3,}[-]$/.test(prev) && /^[a-z]/.test(next)) return `${prev}${next}`;
     return prev.slice(0, -1) + next;
   }
   return `${prev} ${next}`;
@@ -2338,6 +2370,10 @@ function roleForLine(
   // paragraph-sized line between the two body columns. It is publication
   // metadata, never article prose, even though it ends in a full stop.
   if (/^(?:the\s+)?(?:associate|handling|guest)\s+editor\b.*\b(?:coordinating|manuscript|review|approving)\b/i.test(text)) {
+    return "chrome";
+  }
+  // Frontiers / MDPI sidebars paint these labels at author-like size.
+  if (/^(?:edited by|reviewed by|open access|correspondence|citation|specialty section)\s*:?$/i.test(text.trim())) {
     return "chrome";
   }
   // A detached access-date continuation can inherit a stale paragraph hint
@@ -2755,10 +2791,20 @@ function groupLinesIntoBlocks(
       // author or institution line. Longer prose must still form a new block.
       (forcedRole === "title" ||
         /[:：]\s*$/.test(current[current.length - 1].text.trim()) ||
+        // A hanging preposition (`… Models in`) almost always continues on the
+        // next same-font line even when that line is long Title Case prose
+        // that the masthead scorer briefly labels as author.
+        isHangingTitleEnd(current[current.length - 1].text) ||
         (line.text.trim().split(/\s+/).filter(Boolean).length <= 6 &&
-          line.text.trim().length <= 48 &&
-          !looksLikePersonName(line.text) &&
-          !looksLikeEmail(line.text))) &&
+          line.text.trim().length <= 48)) &&
+      // Never absorb a person-name / institution row into a title, even when
+      // layout scored that row as `title` (common for large-font bylines).
+      // Title-Case prose can look like `looksLikeLatinAuthorLine` /
+      // `looksLikeAuthorList` after a hanging preposition; those heuristics
+      // must not block a genuine title continuation.
+      !looksLikePersonName(line.text) &&
+      !looksLikeEmail(line.text) &&
+      !looksLikeAffiliation(line.text) &&
       // A title can be followed immediately by an author row carrying
       // superscript affiliation markers. Do not absorb that metadata into a
       // title block even when the producer uses the same font and leading.
@@ -2821,6 +2867,40 @@ function groupLinesIntoBlocks(
     }
 
     flush();
+    // Frontiers sidebars can flush a multi-line title before its final short
+    // fragment (`‘CoPE-DEC’` / `support systems for…`). Reattach same-font
+    // hanging continuations even when chrome/author rows were emitted after
+    // the title; the sidebar often steals the forced role of the next line.
+    const priorTitle = [...blocks].reverse().find((block) => block.role === "title");
+    const priorTitleFont = priorTitle?.lines.at(-1)?.fontSize ?? 0;
+    const priorTitleX = priorTitle?.lines.at(-1)?.x ?? priorTitle?.bbox.x ?? 0;
+    if (
+      priorTitle &&
+      isHangingTitleEnd(priorTitle.text) &&
+      line.page === priorTitle.pageEnd &&
+      Math.abs(line.fontSize - priorTitleFont) <= 1.2 &&
+      // Stay in the body column; do not absorb left-rail sidebar names.
+      Math.abs(line.x - priorTitleX) <= Math.max(36, priorTitleFont * 2) &&
+      line.y - (priorTitle.lines.at(-1)?.y ?? priorTitle.bbox.y) <
+        Math.max(baseFont * 6, priorTitleFont * 4) &&
+      line.text.trim().split(/\s+/).filter(Boolean).length <= 10 &&
+      line.text.trim().length <= 80 &&
+      !looksLikePersonName(line.text) &&
+      !looksLikeEmail(line.text) &&
+      !/^(?:edited by|reviewed by|open access|correspondence|citation)\b/i.test(line.text.trim()) &&
+      (forcedRole === "title" || forcedRole === "paragraph" || forcedRole === "heading" ||
+        forcedRole === "author" || forcedRole === "affiliation" || forcedRole === "chrome")
+    ) {
+      // Avoid gluing a citation restatement that repeats the hanging prefix.
+      const prefix = priorTitle.text.trim().replace(/[‐‑‒–—―-]+$/, "").split(/\s+/).slice(-3).join(" ").toLocaleLowerCase();
+      if (!(prefix && line.text.toLocaleLowerCase().includes(prefix) && line.text.trim().split(/\s+/).length >= 4)) {
+        priorTitle.lines = [...priorTitle.lines, line];
+        priorTitle.text = joinLines(priorTitle.lines);
+        priorTitle.pageEnd = line.page;
+        priorTitle.bbox = blockBbox(priorTitle.lines);
+        continue;
+      }
+    }
     current = [line];
     currentRole = forcedRole;
     }
@@ -2833,7 +2913,11 @@ function groupLinesIntoBlocks(
           splitEmbeddedTableGridFromCaptions(
           splitTopBibliographicLines(
             splitStyledHeadingPrefixes(
-              splitEmbeddedChromeBlocks(rejoinCaptionStatisticFragments(blocks.filter((b) => b.text.length > 0))),
+              splitEmbeddedChromeBlocks(
+                rejoinCaptionStatisticFragments(
+                  rejoinHangingTitleFragments(blocks.filter((b) => b.text.length > 0))
+                )
+              ),
               median(blocks.flatMap((block) => block.lines.map((line) => line.fontSize))) || 9,
             )
           )
@@ -3168,6 +3252,63 @@ function trimOrphanTailBeforeChrome(blocks: LayoutBlock[]): LayoutBlock[] {
  * general caption-title heuristic. Ordinary adjacent captions are already
  * joined by `captionContinue` while forming blocks.
  */
+function rejoinHangingTitleFragments(blocks: LayoutBlock[]): LayoutBlock[] {
+  const out: LayoutBlock[] = [];
+  const canRejoinTitleFragment = (block: LayoutBlock): boolean =>
+    block.lines.length <= 2 &&
+    block.text.trim().split(/\s+/).filter(Boolean).length <= 8 &&
+    block.text.trim().length <= 64 &&
+    !looksLikePersonName(block.text) &&
+    !looksLikeEmail(block.text) &&
+    !looksLikeAffiliation(block.text);
+  for (const block of blocks) {
+    const prev = out.at(-1);
+    if (
+      prev?.role === "title" &&
+      block.role === "title" &&
+      isHangingTitleEnd(prev.text) &&
+      block.pageStart === prev.pageEnd &&
+      canRejoinTitleFragment(block) &&
+      Math.abs((block.lines[0]?.fontSize ?? 0) - (prev.lines.at(-1)?.fontSize ?? 0)) <= 1.5 &&
+      block.bbox.y - (prev.lines.at(-1)?.y ?? prev.bbox.y) <
+        Math.max(48, (prev.lines.at(-1)?.fontSize ?? 12) * 3.5)
+    ) {
+      prev.lines = [...prev.lines, ...block.lines];
+      prev.text = joinLines(prev.lines);
+      prev.pageEnd = block.pageEnd;
+      prev.bbox = blockBbox(prev.lines);
+      continue;
+    }
+    // Chrome may sit between the hanging title and its fragment in block order.
+    if (
+      prev &&
+      ["copyright", "affiliation", "author", "header", "chrome"].includes(prev.role) &&
+      block.role === "title" &&
+      canRejoinTitleFragment(block)
+    ) {
+      const hangingIdx = [...out].map((b, i) => ({ b, i })).reverse().find(({ b }) =>
+        b.role === "title" && isHangingTitleEnd(b.text) && b.pageEnd === block.pageStart
+      )?.i;
+      if (hangingIdx != null) {
+        const hanging = out[hangingIdx]!;
+        const font = hanging.lines.at(-1)?.fontSize ?? 0;
+        if (
+          Math.abs((block.lines[0]?.fontSize ?? 0) - font) <= 1.5 &&
+          block.bbox.y - (hanging.lines.at(-1)?.y ?? hanging.bbox.y) < Math.max(48, font * 3.5)
+        ) {
+          hanging.lines = [...hanging.lines, ...block.lines];
+          hanging.text = joinLines(hanging.lines);
+          hanging.pageEnd = block.pageEnd;
+          hanging.bbox = blockBbox(hanging.lines);
+          continue;
+        }
+      }
+    }
+    out.push(block);
+  }
+  return out;
+}
+
 function rejoinDetachedCaptionTitles(blocks: LayoutBlock[]): LayoutBlock[] {
   const removed = new Set<LayoutBlock>();
   const bareCaption = /^(?:(?:table|figure|fig\.?)\s+(?:[a-z]+\.)?\d+(?:\.\d+)*[a-z]?|(?:table|figure|fig\.?)\s+[ivxlcdm]+)\s*[:：]$/i;
@@ -4990,7 +5131,7 @@ export function reconstructDocument(pages: ExtractedPage[]): {
     if (horizontal) {
       const ordered = [title, horizontal].sort((a, b) => a.bbox.x - b.bbox.x);
       title.lines = ordered.flatMap((block) => block.lines).sort((a, b) => a.x - b.x);
-      title.text = ordered.map((block) => block.text.trim()).join(" ").replace(/\s+/g, " ").trim();
+      title.text = joinLines(title.lines);
       title.bbox = blockBbox(title.lines);
       const index = blocks.indexOf(horizontal);
       if (index >= 0) blocks.splice(index, 1);
@@ -5006,7 +5147,7 @@ export function reconstructDocument(pages: ExtractedPage[]): {
         titleY - previous.bbox.y <= Math.max(28, bodyFont * 2.8) &&
         /[a-z\p{Ll}]/u.test(previous.text)) {
       title.lines = [...previous.lines, ...title.lines].sort((a, b) => a.y - b.y || a.x - b.x);
-      title.text = `${previous.text.trim()} ${title.text.trim()}`.replace(/\s+/g, " ").trim();
+      title.text = joinLines(title.lines);
       title.bbox = blockBbox(title.lines);
       title.role = "title";
       const index = blocks.indexOf(previous);
@@ -5019,24 +5160,28 @@ export function reconstructDocument(pages: ExtractedPage[]): {
   for (const title of blocks.filter((block) => block.role === "title" && block.pageStart === 1)) {
     const lastTitleLine = title.lines.at(-1);
     if (!lastTitleLine) continue;
+    const requireHang = isHangingTitleEnd(title.text);
     for (let blockIndex = blocks.indexOf(title) + 1; blockIndex < blocks.length; blockIndex++) {
       const candidateBlock = blocks[blockIndex];
       if (candidateBlock.pageStart !== 1) break;
       const matchingLines = candidateBlock.lines.filter((line) =>
         line.y > (title.lines.at(-1)?.y ?? lastTitleLine.y) &&
-        line.y - (title.lines.at(-1)?.y ?? lastTitleLine.y) <= Math.max(bodyFont * 2.8, line.fontSize * 1.35) &&
+        line.y - (title.lines.at(-1)?.y ?? lastTitleLine.y) <=
+          Math.max(bodyFont * 2.8, line.fontSize * (requireHang ? 1.6 : 1.35)) &&
         Math.abs(line.x - lastTitleLine.x) <= 6 &&
         Math.abs(line.fontSize - lastTitleLine.fontSize) <= 1.2 &&
         line.text.trim().length <= 48 &&
         line.text.trim().split(/\s+/).filter(Boolean).length <= 6 &&
-        !looksLikePersonName(line.text) && !looksLikeEmail(line.text)
+        !looksLikePersonName(line.text) && !looksLikeEmail(line.text) &&
+        // Quoted model names / short fragments after hanging prepositions only.
+        (!requireHang || /^['‘“"«]?[\w]/.test(line.text.trim()) || /[:：]\s*$/.test(lastTitleLine.text.trim()))
       );
       if (matchingLines.length === 0) continue;
       const matchingSet = new Set(matchingLines);
       const remainingLines = candidateBlock.lines.filter((line) => !matchingSet.has(line));
       title.lines.push(...matchingLines);
       title.lines.sort((a, b) => a.y - b.y || a.x - b.x);
-      title.text = title.lines.map((line) => line.text.trim()).join(" ").replace(/\s+/g, " ").trim();
+      title.text = joinLines(title.lines);
       title.pageEnd = 1;
       title.bbox = blockBbox(title.lines);
       if (remainingLines.length === 0) {
@@ -5044,11 +5189,40 @@ export function reconstructDocument(pages: ExtractedPage[]): {
         blockIndex--;
       } else {
         candidateBlock.lines = remainingLines;
-        candidateBlock.text = remainingLines.map((line) => line.text.trim()).join(" ").replace(/\s+/g, " ").trim();
+        candidateBlock.text = joinLines(remainingLines);
         candidateBlock.bbox = blockBbox(remainingLines);
       }
       break;
     }
+  }
+  // Sidebar chrome can leave a hanging title and its final short fragment as
+  // two separate title blocks (`… approach using` + `‘CoPE-DEC’`).
+  for (const title of blocks.filter((block) =>
+    block.role === "title" && block.pageStart === 1 && isHangingTitleEnd(block.text)
+  )) {
+    const last = title.lines.at(-1);
+    if (!last) continue;
+    const fragIndex = blocks.findIndex((candidate) =>
+      candidate !== title &&
+      candidate.role === "title" &&
+      candidate.pageStart === 1 &&
+      candidate.lines.length <= 2 &&
+      candidate.text.trim().length <= 64 &&
+      candidate.text.trim().split(/\s+/).filter(Boolean).length <= 8 &&
+      !looksLikePersonName(candidate.text) &&
+      !looksLikeEmail(candidate.text) &&
+      Math.abs((candidate.lines[0]?.fontSize ?? 0) - last.fontSize) <= 1.5 &&
+      (candidate.lines[0]?.y ?? 0) > last.y &&
+      (candidate.lines[0]?.y ?? 0) - last.y <= Math.max(bodyFont * 4, last.fontSize * 2) &&
+      Math.abs((candidate.lines[0]?.x ?? 0) - last.x) <= 24
+    );
+    if (fragIndex < 0) continue;
+    const frag = blocks[fragIndex]!;
+    title.lines = [...title.lines, ...frag.lines].sort((a, b) => a.y - b.y || a.x - b.x);
+    title.text = joinLines(title.lines);
+    title.pageEnd = Math.max(title.pageEnd, frag.pageEnd);
+    title.bbox = blockBbox(title.lines);
+    blocks.splice(fragIndex, 1);
   }
   // A few journal templates attach a stale paragraph hint to a complete
   // author row. Re-evaluate the finished block once, after line grouping, so

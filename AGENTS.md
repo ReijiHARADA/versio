@@ -51,7 +51,7 @@
 
 ## Licenses (Settings)
 
-- Settings → ライセンス lists Paper Reader MIT plus bundled third-party notices. Regenerate with `npm run generate:licenses` (also `prebuild`). Source of truth for the inventory is `src/generated/thirdPartyLicenses.json`. Do not invent SPDX identifiers; mark missing metadata as unknown/partial. Exclude dev-only / non-bundled dependencies from the in-app list.
+- Settings → ライセンス lists Paper Reader MIT plus **required** third-party notices (distributed on macOS and attribution-required). Regenerate with `npm run generate:licenses` (also `prebuild`). Source of truth is `src/generated/thirdPartyLicenses.json`. Do not invent SPDX identifiers; mark missing metadata as unknown/partial. Exclude: dev-only / non-bundled deps, other-platform Rust crates, and packages where a no-attribution license can be elected (`0BSD` / `Unlicense` / `CC0-1.0` / `MIT-0` / `WTFPL`). Policy details: `THIRD_PARTY_NOTICES.md`.
 
 ## Local data
 

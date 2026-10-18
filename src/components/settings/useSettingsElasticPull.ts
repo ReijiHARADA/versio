@@ -35,10 +35,26 @@ export function overflowToReveal(overflow: number, viewportH: number): number {
 }
 
 const WHEEL_SCALE = 1;
-const COMMIT_RATIO = 0.36;
+/** Reveal fraction of viewport height that commits to the other page. */
+export const COMMIT_RATIO = 0.36;
 const NEW_FLICK_RATIO = 1.4;
 const DECAY_STREAK = 5;
 const SNAP_MS = 400;
+
+/**
+ * Progress 0→1 toward the commit threshold (circular gauge fill).
+ * Full ring ≈ ready to release onto the other page.
+ */
+export function pullCommitProgress(reveal: number, viewportH: number): number {
+  if (viewportH <= 0 || reveal <= 0) return 0;
+  return Math.min(1, reveal / (viewportH * COMMIT_RATIO));
+}
+
+/** Soft overflow cap for the first “stop at the edge” latch pull. */
+export function latchOverflowCap(viewportH: number): number {
+  const soft = Math.min(viewportH * 0.28, 120);
+  return soft * 1.35;
+}
 
 function atBottom(el: HTMLElement): boolean {
   return el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
@@ -73,6 +89,8 @@ export function useSettingsPanelTransition({ page, onPageChange }: Options) {
   /** Translation from the settled page toward the other (px, always ≥ 0). */
   const [reveal, setReveal] = useState(0);
   const [snapping, setSnapping] = useState(false);
+  /** True while the current pull is the edge-latch bounce (cannot commit). */
+  const [latching, setLatching] = useState(false);
 
   const overflowRef = useRef(0);
   const revealRef = useRef(0);
@@ -83,6 +101,13 @@ export function useSettingsPanelTransition({ page, onPageChange }: Options) {
   const lastAbsRef = useRef(0);
   const decayStreakRef = useRef(0);
   const snapTimerRef = useRef<number | null>(null);
+  /** Already resting at the inner edge before this wheel series. */
+  const wasAtEdgeRef = useRef(false);
+  /**
+   * First contact after scrolling into the edge (e.g. fling from top).
+   * That pull only rubber-bands and always snaps back — “一旦止まる”.
+   */
+  const latchThisGestureRef = useRef(false);
 
   pageRef.current = page;
   onPageChangeRef.current = onPageChange;
@@ -112,6 +137,9 @@ export function useSettingsPanelTransition({ page, onPageChange }: Options) {
     gestureRef.current = false;
     decayStreakRef.current = 0;
     lastAbsRef.current = 0;
+    wasAtEdgeRef.current = false;
+    latchThisGestureRef.current = false;
+    setLatching(false);
   }, [page]);
 
   const applyOverflow = useCallback(
@@ -135,6 +163,10 @@ export function useSettingsPanelTransition({ page, onPageChange }: Options) {
     gestureRef.current = false;
     decayStreakRef.current = 0;
     lastAbsRef.current = 0;
+    latchThisGestureRef.current = false;
+    setLatching(false);
+    // After a bounce-back latch, treat the edge as resting so the next pull can commit.
+    wasAtEdgeRef.current = true;
     if (pageRef.current !== next) onPageChangeRef.current(next);
     if (next === "licenses") {
       licensesRef.current?.scrollTo({ top: 0 });
@@ -186,6 +218,13 @@ export function useSettingsPanelTransition({ page, onPageChange }: Options) {
   const settleGesture = useCallback(() => {
     if (!gestureRef.current || snappingRef.current) return;
     gestureRef.current = false;
+    // Momentum that first hit the edge: always stop once (bounce back).
+    if (latchThisGestureRef.current) {
+      latchThisGestureRef.current = false;
+      setLatching(false);
+      snapTo(pageRef.current);
+      return;
+    }
     const ratio = viewportH > 0 ? revealRef.current / viewportH : 0;
     if (pageRef.current === "settings") {
       snapTo(ratio >= COMMIT_RATIO ? "licenses" : "settings");
@@ -213,16 +252,46 @@ export function useSettingsPanelTransition({ page, onPageChange }: Options) {
       const currentPage = pageRef.current;
       const active = gestureRef.current || revealRef.current > 0.5;
 
+      const atSettingsEdge = atBottom(settings);
+      const atLicensesEdge = atTop(licenses);
+      const atInnerEdge =
+        currentPage === "settings" ? atSettingsEdge : atLicensesEdge;
+
+      // Track edge arrival so a fling from mid-page stops once before page change.
+      // Skip latch when the panel is not scrollable (already glued to the edge).
+      const edgeIsScrollable =
+        currentPage === "settings"
+          ? settings.scrollHeight > settings.clientHeight + 4
+          : licenses.scrollHeight > licenses.clientHeight + 4;
+
+      if (!active) {
+        if (!atInnerEdge) {
+          wasAtEdgeRef.current = false;
+          latchThisGestureRef.current = false;
+        } else if (!wasAtEdgeRef.current) {
+          const arrivingTowardEdge =
+            (currentPage === "settings" && dy > 0) ||
+            (currentPage === "licenses" && dy < 0);
+          wasAtEdgeRef.current = true;
+          if (arrivingTowardEdge && edgeIsScrollable) {
+            latchThisGestureRef.current = true;
+          }
+        }
+      }
+
       const startLicenses =
-        currentPage === "settings" && (active || (atBottom(settings) && dy > 0));
+        currentPage === "settings" && (active || (atSettingsEdge && dy > 0));
       const startSettings =
-        currentPage === "licenses" && (active || (atTop(licenses) && dy < 0));
+        currentPage === "licenses" && (active || (atLicensesEdge && dy < 0));
 
       if (!startLicenses && !startSettings) return;
-      if (currentPage === "settings" && !active && !atBottom(settings)) return;
-      if (currentPage === "licenses" && !active && !atTop(licenses)) return;
+      if (currentPage === "settings" && !active && !atSettingsEdge) return;
+      if (currentPage === "licenses" && !active && !atLicensesEdge) return;
 
       event.preventDefault();
+      if (!gestureRef.current && latchThisGestureRef.current) {
+        setLatching(true);
+      }
       gestureRef.current = true;
 
       if (lastAbsRef.current > 0 && abs > lastAbsRef.current * NEW_FLICK_RATIO) {
@@ -238,10 +307,20 @@ export function useSettingsPanelTransition({ page, onPageChange }: Options) {
         (currentPage === "settings" && dy > 0) ||
         (currentPage === "licenses" && dy < 0);
       const delta = (towardNext ? abs : -abs) * WHEEL_SCALE;
-      const visual = applyOverflow(overflowRef.current + delta);
+      let nextOverflow = overflowRef.current + delta;
+      // Latch pull: soft rubber only — never reach commit depth on first stop.
+      if (latchThisGestureRef.current) {
+        nextOverflow = Math.min(nextOverflow, latchOverflowCap(viewportH));
+      }
+      const visual = applyOverflow(nextOverflow);
 
-      // Deep pull: commit without waiting for decay.
-      if (towardNext && viewportH > 0 && visual / viewportH >= 0.92) {
+      // Deep pull: commit without waiting for decay (skipped while latched).
+      if (
+        !latchThisGestureRef.current &&
+        towardNext &&
+        viewportH > 0 &&
+        visual / viewportH >= 0.92
+      ) {
         settleGesture();
         return;
       }
@@ -264,6 +343,7 @@ export function useSettingsPanelTransition({ page, onPageChange }: Options) {
   const settledBase = page === "licenses" ? viewportH : 0;
   const signedReveal = page === "settings" ? reveal : -reveal;
   const pastThreshold = viewportH > 0 && reveal / viewportH >= COMMIT_RATIO;
+  const progress = pullCommitProgress(reveal, viewportH);
 
   return {
     viewportRef,
@@ -272,8 +352,10 @@ export function useSettingsPanelTransition({ page, onPageChange }: Options) {
     viewportH,
     stackOffset: settledBase + signedReveal,
     reveal,
+    progress,
     pulling: reveal > 0.5 || snapping,
     pastThreshold: pastThreshold || snapping,
+    latching,
     snapping,
     goToPage,
   };

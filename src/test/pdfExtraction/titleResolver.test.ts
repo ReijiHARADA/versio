@@ -173,6 +173,104 @@ describe("title resolver masthead filtering", () => {
     expect(result.text).toMatch(/^Optimizing clinical decision support/i);
   });
 
+  it("joins a hanging preposition title with the next title-like line", () => {
+    const lead = candidate("Research on the Effects of Different Listening Process Models in", 84);
+    const rest = candidate("Listening Comprehension and Memory Based on Cognitive Psychology", 100, "author");
+    rest.roleScores.title = 0.2;
+    const result = resolveTitle({
+      candidates: [
+        candidate("4th International Conference on Education, Management and Computing Technology (ICEMCT 2017)", 40),
+        lead,
+        rest,
+        candidate("Qiuxia Guo", 122, "author"),
+      ],
+    });
+    expect(result.text).toMatch(/^Research on the Effects of Different Listening Process Models in Listening Comprehension/i);
+  });
+
+  it("joins Frontiers title fragments across author-scored and affiliation-scored lines", () => {
+    const mid = candidate("Visualization - A Study of Information Visualization Aids and the Role of", 172);
+    const lead = candidate("Towards Adaptive Information", 149, "author");
+    lead.roleScores.title = 0.9;
+    const result = resolveTitle({
+      candidates: [
+        candidate("doi: 10.3389/frai.2019.00022", 57),
+        lead,
+        mid,
+        candidate("User Cognitive Style", 218, "author"),
+        candidate("Ben Steichen1* and Bo Fu2", 242, "author"),
+      ],
+    });
+    expect(result.text).toMatch(/^Towards Adaptive Information Visualization - A Study of Information Visualization Aids and the Role of User Cognitive Style$/i);
+  });
+
+  it("appends a short final title word mislabeled as affiliation", () => {
+    const first = candidate("Virtual Reality for Information", 153);
+    const mid = candidate("Visualization Might Just Work This", 176, "author");
+    mid.roleScores.title = 0.9;
+    const result = resolveTitle({
+      candidates: [
+        first,
+        mid,
+        { ...candidate("Time", 199, "author"), role: "affiliation", roleScores: { title: 0.1 } } as any,
+        candidate("Bruce H. Thomas*", 225, "author"),
+      ],
+    });
+    expect(result.text).toMatch(/Might Just Work This Time$/i);
+  });
+
+  it("rejects comma-separated keyword rails posing as titles", () => {
+    const keywords = candidate("Agrobacterium, Visual Analytics, Latent Dirichlet Allocation", 432, "author");
+    keywords.roleScores.title = 0.9;
+    const result = resolveTitle({
+      candidates: [
+        {
+          ...candidate("Unveiling tomato root-associated bacterial interactions responding to hairy root disease", 107),
+          role: "paragraph",
+          roleScores: { title: 0.1 },
+        } as any,
+        candidate("Peiyang Huo", 168, "author"),
+        keywords,
+      ],
+    });
+    expect(result.text).toMatch(/^Unveiling tomato root-associated bacterial interactions/i);
+  });
+
+  it("rejoins a lowercase Frontiers title fragment with same-font leads above it", () => {
+    const withFont = (c: ReturnType<typeof candidate>, fontSize: number) => {
+      c.layoutBlock.lines = c.layoutBlock.lines.map((line: any) => ({ ...line, fontSize }));
+      return c;
+    };
+    const result = resolveTitle({
+      candidates: [
+        withFont(candidate("DOI 10.3389/frai.2026.1819994", 76), 6),
+        withFont({ ...candidate("Transformer-based NLP", 154, "author"), roleScores: { title: 0.1 } } as any, 21),
+        withFont({
+          ...candidate("approaches for credit risk", 178, "author"),
+          role: "paragraph",
+          roleScores: { title: 0.1 },
+        } as any, 21),
+        withFont(candidate("prediction: a systematic review", 202), 21),
+      ],
+    });
+    expect(result.text).toMatch(/^Transformer-based NLP approaches for credit risk prediction: a systematic review$/i);
+  });
+
+  it("keeps a narrative title that mentions a press conference", () => {
+    const withFont = (c: ReturnType<typeof candidate>, fontSize: number) => {
+      c.layoutBlock.lines = c.layoutBlock.lines.map((line: any) => ({ ...line, fontSize }));
+      c.boundingBoxes[0].height = fontSize;
+      return c;
+    };
+    const result = resolveTitle({
+      candidates: [
+        withFont(candidate("Constructing the national image of “China” in press conference", 153), 21),
+        withFont(candidate("interpreting: a corpus-based critical metaphor analysis", 201), 21),
+      ],
+    });
+    expect(result.text).toMatch(/^Constructing the national image of “China” in press conference interpreting/i);
+  });
+
   it("removes an inline journal rail between wrapped title fragments", () => {
     const result = resolveTitle({
       candidates: [candidate("Eco-Linguistics in English: Reviewing the role", 120), candidate("IJLE 2026; 6(1): 05-09 language in environmental discourse", 136)],

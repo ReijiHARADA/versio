@@ -446,6 +446,7 @@ function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): CanonicalNode[] 
     const editorialLabel =
       /^(?:\*?correspondence|edited by|reviewed by|open access|citation|copyright|keywords?|published|received|accepted)$/i.test(t) ||
       /^(?:competing interests|research ethics|ethics approval|acknowledgements?)\b/i.test(t) ||
+      /^open access\b/i.test(t) && /\blicensed under\b/i.test(t) ||
       /@/.test(t);
     const abstractLeadIn =
       /^(?:this study|this paper|this article|this review|we (?:present|propose|report|investigate))\b/i.test(t) &&

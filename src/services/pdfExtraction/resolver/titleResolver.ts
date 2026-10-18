@@ -61,6 +61,11 @@ function looksLikeSpacedArticleTypeOnly(text: string): boolean {
 
 function looksLikeCitationBylineTitle(text: string): boolean {
   const t = text.trim();
+  // Frontiers "Author A and Author B (2019) Title…" citation rails.
+  if (/^[A-Z][a-z]+(?:\s+[A-Z]\.?)?(?:\s+and\s+[A-Z][a-z]+(?:\s+[A-Z]\.?)?)+\s*\(\s*20\d{2}\s*\)/.test(t)) {
+    return true;
+  }
+  if (/^[A-ZÀ-ÖØ-Þ][\p{L}'’-]*\s+[A-Z]\.?\s*\(\s*20\d{2}\s*\)/u.test(t)) return true;
   if (!/\bet\s+al\./i.test(t)) return false;
   if (!/\b(?:19|20)\d{2}\b/.test(t) && !/\bsuppl/i.test(t)) return false;
   return (
@@ -79,7 +84,14 @@ function looksLikeSectionBannerAuthor(text: string): boolean {
 }
 
 function stripMastheadSuffix(text: string): string {
-  const trimmed = stripSpacedArticleTypeBanner(text.trim());
+  let trimmed = stripSpacedArticleTypeBanner(text.trim());
+  // Drop a leading citation byline when it was fused onto the article title.
+  const citationLead = trimmed.match(
+    /^[A-Z][a-z]+(?:\s+[A-Z]\.?)?(?:\s+and\s+[A-Z][a-z]+(?:\s+[A-Z]\.?)?)+\s*\(\s*20\d{2}\s*\)\s+(.*)$/
+  );
+  if (citationLead?.[1] && citationLead[1].trim().length >= 24) {
+    trimmed = citationLead[1].trim();
+  }
   // A title line can be split around an inline journal/year marker when the
   // PDF places the publication rail between two title fragments. Remove only
   // the bounded metadata token and retain both title sides.
@@ -124,7 +136,7 @@ function looksLikeRotatedMasthead(candidate: RoleCandidate): boolean {
 
 function looksLikeDocumentMasthead(text: string): boolean {
   const t = text.trim();
-  return /^(?:doi\s*:\s*|https?:\/\/|www\.)/i.test(t)
+  return /^(?:doi\s*:\s*|doi\s+\d|https?:\/\/|www\.)/i.test(t)
     || /^arxiv\s*:/i.test(t)
     || /\b(?:original\s+paper|research\s+article|journal\s+of|volume\s+\d+|\d{4}\s*\)\s*\d{1,4}\s*[:–-])\b/i.test(t)
     || /^(?:www\.)?nature\.com\b/i.test(t)
@@ -157,8 +169,17 @@ function looksLikeEventMasthead(text: string): boolean {
   // Conference/event names commonly sit between a small running header and
   // the article title. Keep this bounded so an article whose title mentions
   // a workshop or seminar is not discarded.
-  return words.length <= 14 && /\b(?:seminar|workshop|conference|symposium|public\s+health\s+action)\b/i.test(t) &&
-    !/[.!?]$/.test(t);
+  if (words.length > 14 || /[.!?]$/.test(t)) return false;
+  if (!/\b(?:seminar|workshop|conference|symposium|public\s+health\s+action)\b/i.test(t)) return false;
+  // Narrative titles that merely mention a conference (`… in press conference
+  // interpreting`) are article titles, not event mastheads.
+  if (/\b(?:constructing|building|towards?|toward|analysis|study|review|survey|image|role|effects?|based)\b/i.test(t)) {
+    return false;
+  }
+  if (/\b(?:in|of|for|on|with|from)\s+(?:press\s+)?conference\b/i.test(t) && words.length >= 6) {
+    return false;
+  }
+  return true;
 }
 
 /** A publisher rail is often repeated below itself without the volume/date
@@ -285,6 +306,74 @@ function looksLikeKeywordsChrome(text: string): boolean {
   if (/^(?:ключевые\s+слова(?:\s+и\s+фразы)?)\s*:/i.test(t)) return true;
   // Publisher rule-line residue glued to keyword blocks.
   if (/_{8,}/.test(t) && /\b(?:key\s*words?|keywords?)\b/i.test(t)) return true;
+  // Preprint/cover keyword rails without a `Keywords:` label
+  // (`Agrobacterium, Visual Analytics, Latent Dirichlet Allocation`).
+  const commas = (t.match(/,/g) ?? []).length;
+  if (
+    commas >= 2 &&
+    t.length <= 140 &&
+    t.split(/\s+/).filter(Boolean).length <= 16 &&
+    !/[.!?]$/.test(t) &&
+    !/\b(?:a|an|the|for|with|from|using|towards?|based|study|review|survey|analysis)\b/i.test(t)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/** True when a title still expects another native fragment. */
+function isIncompleteTitleEnd(text: string): boolean {
+  const t = text.trim();
+  if (!t) return false;
+  if (/[‐‑‒–—―-]$/.test(t)) return true;
+  if (/\b(?:using|in|of|the|a|an|and|for|with|to|from|on|by|via|this|these|those|its|their|our|or)$/i.test(t)) {
+    return true;
+  }
+  // Frontiers wraps often stop on a short common noun that continues below
+  // (`… in table` + `tennis`, `… Role of` + `User Cognitive Style`).
+  if (/\b(?:in|for|on|of|and|with)\s+(?:table|role|part|case|type|system|model|data|user|image|china)\s*$/i.test(t)) {
+    return true;
+  }
+  return false;
+}
+
+/** Person-name rows that must not be glued onto a hanging title. */
+function looksLikePersonNameTitleTrap(text: string): boolean {
+  const t = text.trim();
+  const words = t.split(/\s+/).filter(Boolean);
+  // Keep First Last / First M. Last with optional markers; do not trap
+  // Title-Case topic phrases (`User Cognitive Style`, `Time`).
+  if (words.length === 1 && /^[A-Z][a-zA-Z'’-]+$/.test(t) && t.length <= 18) {
+    // Lone capitalized tokens can be title fragments (`Time`) — allow them.
+    return false;
+  }
+  if (
+    /^[A-Z][a-z]+(?:\s+[A-Z]\.?)?(?:\s+[A-Z][a-z.'’-]+){1}$/.test(t) &&
+    words.length <= 3 &&
+    !/\b(?:and|based|from|with|style|system|model|study|role|using|for|of|on|in|to)\b/i.test(t)
+  ) {
+    return /[0-9*†‡§]/.test(t) || words.length === 2;
+  }
+  return false;
+}
+
+/** Citation / abstract leads that must not prepend or continue a title. */
+function looksLikeTitleContamination(text: string): boolean {
+  const t = text.trim();
+  if (/^[A-Z][a-z]+(?:\s+[A-Z]\.?)?(?:\s+[A-Z][a-z]+)+\s+and\s+[A-Z]/i.test(t) && /\(\s*20\d{2}\s*\)/.test(t)) {
+    return true;
+  }
+  if (/^[A-Z][a-z]*(?:\s+[A-Z]\.?)?\s+[A-Z][a-z]+\s+\(\s*20\d{2}\s*\)/.test(t)) return true;
+  // Frontiers citation rails: `Görg C (2025) Current state…`
+  if (/^[A-ZÀ-ÖØ-Þ][\p{L}'’-]*\s+[A-Z]\.?\s*\(\s*20\d{2}\s*\)/u.test(t)) return true;
+  if (/^[A-ZÀ-ÖØ-Þ][\p{L}'’-]*\s+[A-ZÀ-ÖØ-Þ][\p{L}'’-]*\s*\(\s*20\d{2}\s*\)/u.test(t) && t.length >= 40) {
+    return true;
+  }
+  // Body prose glued after a hyphen-truncated title.
+  if (/^(?:In|The|This|We|Our|These|Those|However|Moreover)\b/.test(t) && t.split(/\s+/).length >= 10) {
+    return true;
+  }
+  if (t.length >= 140 && /[,;]\s+[a-z]/.test(t)) return true;
   return false;
 }
 
@@ -652,7 +741,8 @@ export function resolveTitle(input: {
   // original candidate role used by other resolver decisions.
   const nativeTitles = input.candidates.filter(
     (c) => (c.role === "title" || (c.roleScores?.title ?? 0) >= 0.85) &&
-      !looksLikeRotatedMasthead(c) && !looksLikeDecoderGarbageTitle(c.text)
+      !looksLikeRotatedMasthead(c) && !looksLikeDecoderGarbageTitle(c.text) &&
+      !looksLikeKeywordsChrome(c.text)
   );
   // Report/book templates often expose an explicit `Research Book Title:`
   // label but generic role scoring assigns that line to author/affiliation
@@ -685,7 +775,11 @@ export function resolveTitle(input: {
         (prev.boundingBoxes[0]?.y ?? 0) + (prev.boundingBoxes[0]?.height ?? 0);
       const gap = (cur.boundingBoxes[0]?.y ?? 0) - prevBottom;
       const prevFont = prev.layoutBlock.lines[0]?.fontSize ?? 12;
-      if (gap > prevFont * 2.8) break;
+      const curFont = cur.layoutBlock.lines[0]?.fontSize ?? 12;
+      const lowercaseContinuation = /^[a-z\u00e0-\u024f]/.test(cur.text.trim()) &&
+        Math.abs(curFont - prevFont) <= 1.5 &&
+        gap <= Math.max(prevFont * 3.2, 56);
+      if (gap > Math.max(prevFont * 2.8, 40) && !lowercaseContinuation) break;
       if (looksLikeAuthorish(cur.text)) break;
       // A publication line can be emitted as a second `title` candidate
       // immediately below the real title.  Do not concatenate it into the
@@ -722,9 +816,10 @@ export function resolveTitle(input: {
           !/\b(?:issn|proceedings|volume|issue)\b/i.test(candidate.text) &&
           !looksLikeObviousMastheadTitle(candidate.text) &&
           !looksLikeSectionBannerAuthor(candidate.text) &&
-          // Ignore author-scored title continuations (high title score, no commas).
+          // Ignore author-scored title leads/continuations (high title score,
+          // no commas, or a hanging preposition lead such as `Towards…`).
           !((candidate.roleScores?.title ?? 0) >= 0.85 && !/,/.test(candidate.text) &&
-            candidate.text.trim().split(/\s+/).length >= 4))
+            (candidate.text.trim().split(/\s+/).length >= 3 || isIncompleteTitleEnd(candidate.text))))
         .map((candidate) => candidate.boundingBoxes[0]?.y ?? Number.POSITIVE_INFINITY)
         .sort((a, b) => a - b)[0] ?? Number.POSITIVE_INFINITY;
       if (titleDebug) console.info("[title-debug] authorY", authorY);
@@ -1037,6 +1132,148 @@ export function resolveTitle(input: {
   if (needsAlternateTitle) {
     const recovered = recoverAlternateCoverTitle(input.candidates);
     if (recovered && recovered !== native[0]) native = [recovered];
+  }
+
+  // Titles that end mid-preposition / mid-hyphen often continue on the next
+  // native line, even when that line was scored as author, affiliation, or
+  // paragraph (Frontiers sidebars and proceedings bylines).
+  const titleFragmentAnchor = (current: string): { y: number; font: number } => {
+    const normalized = current.replace(/\s+/g, " ").trim().toLocaleLowerCase();
+    const fragments = input.candidates
+      .filter((candidate) => {
+        if (candidate.pageStart !== 1) return false;
+        const y = candidate.boundingBoxes[0]?.y ?? 0;
+        // Keep the anchor inside the masthead band; body/keyword lines that
+        // merely share a short phrase must not pull the cursor downward.
+        if (y > 420) return false;
+        const text = stripMastheadSuffix(candidate.text).replace(/\s+/g, " ").trim().toLocaleLowerCase();
+        if (!text || text.length < 8) return false;
+        const substantial =
+          normalized === text ||
+          (text.length >= 16 && normalized.includes(text)) ||
+          (text.length <= normalized.length + 24 &&
+            text.includes(normalized.slice(0, Math.min(48, normalized.length))));
+        if (!substantial) return false;
+        return candidate.role === "title" || candidate.role === "author" ||
+          candidate.role === "paragraph" || candidate.role === "affiliation" ||
+          (candidate.roleScores?.title ?? 0) >= 0.5;
+      })
+      .sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0));
+    const last = fragments.at(-1);
+    return {
+      y: last?.boundingBoxes[0]?.y ?? titles[0]?.boundingBoxes[0]?.y ?? 0,
+      font: last?.layoutBlock.lines[0]?.fontSize ?? titles[0]?.layoutBlock.lines[0]?.fontSize ?? 12,
+    };
+  };
+
+  const joinIncompleteTitleFragments = () => {
+    if (!native[0] || !isIncompleteTitleEnd(native[0])) return;
+    let guard = 0;
+    while (guard++ < 4 && native[0] && isIncompleteTitleEnd(native[0])) {
+      const current = native[0];
+      const { y: anchorY, font: anchorFont } = titleFragmentAnchor(current);
+      const currentTail = current.trim().split(/\s+/).slice(-4).join(" ").toLocaleLowerCase();
+      const continuation = input.candidates
+        .filter((candidate) => {
+          const text = candidate.text.trim();
+          const y = candidate.boundingBoxes[0]?.y ?? 0;
+          const font = candidate.layoutBlock.lines[0]?.fontSize ?? 0;
+          const words = text.split(/\s+/).filter(Boolean);
+          if (candidate.pageStart !== 1 || y <= anchorY + 2 || y > anchorY + Math.max(72, anchorFont * 4)) return false;
+          if (looksLikeObviousMastheadTitle(text) || looksLikeSectionBannerAuthor(text)) return false;
+          if (/^(?:abstract|keywords?|introduction|open access|edited by|reviewed by|correspondence|citation)\b/i.test(text)) return false;
+          if (/@/.test(text) || (looksLikeAuthorish(text) && /,/.test(text))) return false;
+          if (looksLikePersonNameTitleTrap(text) || looksLikeTitleContamination(text)) return false;
+          if (looksLikeKeywordsChrome(text)) return false;
+          // Hyphen-truncated titles continue with a short Title-Case fragment,
+          // not a full abstract sentence or a citation-rail restatement.
+          if (/[‐‑‒–—―-]$/.test(current.trim())) {
+            if (words.length > 10 || /[,;]\s+[a-z]/.test(text)) return false;
+            // Reject citation leftovers that restate the title prefix
+            // (`AI in clinical decision-support…`) instead of the missing tail
+            // (`support systems for patients with`).
+            const prefix = current.trim().replace(/[‐‑‒–—―-]+$/, "").split(/\s+/).slice(-4).join(" ").toLocaleLowerCase();
+            if (prefix && text.toLocaleLowerCase().includes(prefix) && words.length >= 4) return false;
+          }
+          // Already absorbed into the current title.
+          if (current.toLocaleLowerCase().includes(text.toLocaleLowerCase()) && text.length >= 8) return false;
+          if (text.toLocaleLowerCase() === currentTail) return false;
+          // Short quoted fragments (`‘CoPE-DEC’`) or Title-Case continuations.
+          if (/^['‘“"«]?[\w][\w’'-]{0,40}['’”"»]?$/u.test(text) && words.length <= 4) {
+            return font >= anchorFont * 0.45 || (candidate.roleScores?.title ?? 0) >= 0.5 ||
+              candidate.role === "author" || candidate.role === "affiliation" || candidate.role === "paragraph";
+          }
+          if (words.length >= 2 && words.length <= 16 && /^[\p{Lu}\p{Lo}]/u.test(text) && !/[.!?]$/.test(text)) {
+            return font >= anchorFont * 0.45 || (candidate.roleScores?.title ?? 0) >= 0.5 ||
+              candidate.role === "author" || candidate.role === "paragraph";
+          }
+          return false;
+        })
+        .sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0))[0];
+      if (!continuation) break;
+      const joined = /[‐‑‒–—―-]$/.test(current.trim())
+        ? `${current.trim().replace(/[‐‑‒–—―-]+$/, "")}${stripMastheadSuffix(continuation.text).replace(/^\s+/, "")}`
+        : `${current.trim()} ${stripMastheadSuffix(continuation.text)}`;
+      native = [joined.replace(/\s+/g, " ").trim()];
+    }
+  };
+  joinIncompleteTitleFragments();
+
+  // Frontiers / proceedings often emit the title lead as an author-scored
+  // display line above the fragment that won the title race.
+  if (native[0]) {
+    const { y: leadY, font: leadFont } = titleFragmentAnchor(native[0]);
+    const lead = input.candidates
+      .filter((candidate) => {
+        const text = candidate.text.trim();
+        const y = candidate.boundingBoxes[0]?.y ?? 0;
+        const font = candidate.layoutBlock.lines[0]?.fontSize ?? 0;
+        const words = text.split(/\s+/).filter(Boolean);
+        if (candidate.pageStart !== 1 || y >= leadY - 2 || y < leadY - Math.max(96, leadFont * 5)) return false;
+        if (looksLikeObviousMastheadTitle(text) || looksLikeKeywordsChrome(text)) return false;
+        // Venue / section banners above the article title (e.g. "Social and
+        // Behavioural Sciences") must stay out of the recovered lead.
+        if (looksLikeJournalChromeTitle(text) || looksLikeSectionBannerAuthor(text)) return false;
+        if (/^(?:doi:|https?:|open access|edited by|reviewed by|original research|type|published)\b/i.test(text)) return false;
+        if (looksLikePersonNameTitleTrap(text) || looksLikeTitleContamination(text) || (looksLikeAuthorish(text) && /,/.test(text))) return false;
+        if (native[0]!.toLocaleLowerCase().includes(text.toLocaleLowerCase())) return false;
+        if (!(font >= leadFont * 0.85 || (candidate.roleScores?.title ?? 0) >= 0.85)) return false;
+        // Prefer incomplete / hanging leads over complete venue phrases.
+        // Also allow a same-font lead when the chosen title starts with a
+        // lowercase fragment (`prediction: a systematic review`).
+        const hangingLead = isIncompleteTitleEnd(text) ||
+          /^(?:towards?|toward|research on|a study of|transformer[- ]based)\b/i.test(text) ||
+          (/^[a-z]/.test(native[0]!) &&
+            (candidate.role === "title" || candidate.role === "author" || candidate.role === "paragraph" || words.length <= 10) &&
+            (font >= leadFont * 0.85 || (candidate.roleScores?.title ?? 0) >= 0.5));
+        if (!hangingLead && words.length <= 5 && !/[‐‑‒–—―:-]$/.test(text)) return false;
+        return words.length >= 2 && words.length <= 16 && /^[\p{Lu}\p{Lo}"“«]/u.test(text) && !/[.!?]$/.test(text);
+      })
+      .sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0));
+    if (lead.length) {
+      const leadBottom = Math.max(...lead.map((c) => c.boundingBoxes[0]?.y ?? 0));
+      const between = input.candidates
+        .filter((candidate) => {
+          const text = candidate.text.trim();
+          const y = candidate.boundingBoxes[0]?.y ?? 0;
+          const font = candidate.layoutBlock.lines[0]?.fontSize ?? 0;
+          const words = text.split(/\s+/).filter(Boolean);
+          if (candidate.pageStart !== 1 || y <= leadBottom + 2 || y >= leadY - 2) return false;
+          if (looksLikeObviousMastheadTitle(text) || looksLikeKeywordsChrome(text) || looksLikeTitleContamination(text)) return false;
+          if (/^(?:open access|edited by|reviewed by|doi\b)/i.test(text)) return false;
+          if (native[0]!.toLocaleLowerCase().includes(text.toLocaleLowerCase())) return false;
+          if (lead.some((c) => c.text.trim() === text)) return false;
+          if (!(font >= leadFont * 0.85)) return false;
+          return words.length >= 2 && words.length <= 12 && /^[\p{Ll}\p{Lu}\p{Lo}]/u.test(text) && !/[.!?]$/.test(text);
+        })
+        .sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0));
+      native = [[
+        ...lead.map((c) => stripMastheadSuffix(c.text)),
+        ...between.map((c) => stripMastheadSuffix(c.text)),
+        native[0],
+      ].join(" ").replace(/\s+/g, " ").trim()];
+      joinIncompleteTitleFragments();
+    }
   }
 
   let fused = fuseTitle(native.map(collapseRepeatedTitle), input.extra ?? [], input.grobidTitle);

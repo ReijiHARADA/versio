@@ -35,6 +35,46 @@ const IDLE_STATUS: ServiceStatus = { checking: false, available: false };
 const LAST_SCROLL_SECTION =
   SETTINGS_SCROLL_SECTIONS[SETTINGS_SCROLL_SECTIONS.length - 1].id;
 
+const GAUGE_RADIUS = 13;
+const GAUGE_CIRCUMFERENCE = 2 * Math.PI * GAUGE_RADIUS;
+
+function PullCommitGauge({
+  progress,
+  ready,
+}: {
+  progress: number;
+  ready: boolean;
+}) {
+  const p = Math.min(1, Math.max(0, progress));
+  return (
+    <svg
+      className={`${styles.pullGauge} ${ready ? styles.pullGaugeReady : ""}`}
+      width="36"
+      height="36"
+      viewBox="0 0 36 36"
+      aria-hidden="true"
+    >
+      <circle
+        className={styles.pullGaugeTrack}
+        cx="18"
+        cy="18"
+        r={GAUGE_RADIUS}
+        fill="none"
+      />
+      <circle
+        className={styles.pullGaugeFill}
+        cx="18"
+        cy="18"
+        r={GAUGE_RADIUS}
+        fill="none"
+        strokeDasharray={GAUGE_CIRCUMFERENCE}
+        strokeDashoffset={GAUGE_CIRCUMFERENCE * (1 - p)}
+        transform="rotate(-90 18 18)"
+      />
+    </svg>
+  );
+}
+
 export function SettingsScreen() {
   const sampleAlreadyAdded = useLibraryCache((state) =>
     state.papers.some((paper) => paper.id === samplePaper.id)
@@ -356,23 +396,27 @@ export function SettingsScreen() {
             <div
               className={`${styles.elasticHint} ${
                 panelPage === "settings" ? styles.elasticHintBottom : styles.elasticHintTop
-              } ${panel.pastThreshold ? styles.elasticHintActive : ""}`}
+              } ${panel.pastThreshold && !panel.latching ? styles.elasticHintActive : ""}`}
               style={{
-                opacity: Math.min(
-                  1,
-                  0.35 +
-                    (panel.viewportH > 0 ? panel.reveal / (panel.viewportH * 0.36) : 0) * 0.65
-                ),
+                opacity: Math.min(1, 0.4 + panel.progress * 0.6),
               }}
               aria-hidden="true"
             >
-              {panelPage === "settings"
-                ? panel.pastThreshold
-                  ? "離すとライセンスへ"
-                  : "続けてスクロールでライセンスへ"
-                : panel.pastThreshold
-                  ? "離すと設定へ"
-                  : "続けてスクロールで設定へ"}
+              <PullCommitGauge
+                progress={panel.latching ? Math.min(panel.progress, 0.45) : panel.progress}
+                ready={panel.pastThreshold && !panel.latching}
+              />
+              <span className={styles.elasticHintLabel}>
+                {panel.latching
+                  ? "いったん停止"
+                  : panelPage === "settings"
+                    ? panel.pastThreshold
+                      ? "離すとライセンスへ"
+                      : "続けて引っ張るとライセンスへ"
+                    : panel.pastThreshold
+                      ? "離すと設定へ"
+                      : "続けて引っ張ると設定へ"}
+              </span>
             </div>
           ) : null}
         </div>
