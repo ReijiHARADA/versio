@@ -353,7 +353,7 @@ Reader export (Tauri save dialog; browser `npm run dev` keeps a download fallbac
 
 - Clean Markdown, or verification Markdown that keeps `<!-- pr:block id page status -->`
 - Optional **翻訳失敗箇所を含める**. OFF omits `translationStatus === "failed"` body. ON keeps the slot with a warning callout and the original; it does not invent a translation. `skipped` / `pending` / `processing` are not treated as failed.
-- Verification package: `source.pdf` + `translated.md` + `assets/` from the existing Paper Package (folder on macOS, zip in the browser)
+- Verification package: `source.pdf` + `translated.md` + `assets/` from the existing Paper Package (folder on macOS via one save-name dialog, zip in the browser)
 
 ```text
 paper-title/

@@ -240,6 +240,20 @@ describe("author masthead projection", () => {
     expect(result.paper.affiliations.some((affiliation) => /Faculty of Computing.*Multimedia University/i.test(affiliation.name))).toBe(true);
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /associate editor coordinating/i.test(node.text ?? ""))).toBe(false);
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /et al\.: User Experience Design Using Machine Learning/i.test(node.text ?? ""))).toBe(false);
+    // IEEE ACCESS omits an Abstract heading; the front narrative must still
+    // become an abstract before INDEX TERMS / I. INTRODUCTION.
+    expect(result.canonical.nodes.some((node) => node.role === "abstract" && /User experience \(UX\) is the key/i.test(node.text ?? ""))).toBe(true);
+    expect(result.canonical.nodes.some((node) => node.role === "heading" && /^I\.\s*INTRODUCTION$/i.test((node.text ?? "").trim()))).toBe(true);
+  }, 60_000);
+
+  it("demotes OSWORLD chart/flow chrome out of the outline", async () => {
+    const osworldPdf = path.join(root, "test-data/real-papers/osworld-multimodal-agents.pdf");
+    if (!fs.existsSync(osworldPdf)) return;
+    const pages = await extractPdfPages(osworldPdf);
+    const result = extractFromPages({ pages, paperId: "osworld-chrome", filePath: osworldPdf, fileHash: "osworld-chrome", metadata: { pageCount: pages.length } });
+    const headings = result.canonical.nodes.filter((node) => node.role === "heading").map((node) => node.text ?? "");
+    expect(headings.every((text) => !/Percentile|Tokens\d|Task Initial State Setup Config|Task Instruction\s*:/i.test(text))).toBe(true);
+    expect(headings.some((text) => /^1\s+Introduction$/i.test(text.trim()))).toBe(true);
   }, 60_000);
 
   it("recovers initialed bylines labelled as affiliations without title crumbs", async () => {

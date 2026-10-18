@@ -4,6 +4,7 @@ import { NavLink } from "react-router-dom";
 import {
   ChevronDown,
   ChevronRight,
+  Download,
   FilePlus2,
   FileText,
   Folder,
@@ -13,13 +14,15 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import type { WorkspaceNode } from "../../types/project";
+import type { WorkspaceNode, WorkspacePaper } from "../../types/project";
 import type { Paper } from "../../types/paper";
-import { buildWorkspaceTree } from "../../data/workspace/tree";
+import { buildWorkspaceTree, collectDescendantIds } from "../../data/workspace/tree";
 import { useProjectStore } from "../../stores/projectStore";
 import { showToast } from "../../stores/toastStore";
 import { useLibraryCache } from "../../stores/libraryCache";
+import { useFolderExport } from "../../hooks/useFolderExport";
 import { useDraggablePaper } from "../library/useDraggablePaper";
+import { ExportDialog } from "../reader/ExportDialog";
 import { useWorkspaceDrag } from "./useWorkspaceDrag";
 import { hoverExpandId, WORKSPACE_HOVER_EXPAND_MS } from "./workspaceHoverExpand";
 import { renameWorkspaceItem } from "../../services/projectService";
@@ -30,8 +33,19 @@ const MENU_GAP = 4;
 
 type MenuAnchor = { top: number; left: number };
 
+function subtreePaperCount(
+  nodeId: string,
+  nodes: WorkspaceNode[],
+  memberships: WorkspacePaper[]
+): number {
+  const ids = new Set([nodeId, ...collectDescendantIds(nodes, nodeId)]);
+  return new Set(
+    memberships.filter((link) => ids.has(link.nodeId)).map((link) => link.paperId)
+  ).size;
+}
+
 function clampMenuPosition(button: DOMRect): MenuAnchor {
-  const estimatedHeight = 180;
+  const estimatedHeight = 220;
   const left = Math.min(
     Math.max(8, button.right - MENU_WIDTH),
     window.innerWidth - MENU_WIDTH - 8
@@ -66,6 +80,7 @@ export function WorkspaceTree({
   const tree = useMemo(() => buildWorkspaceTree(nodes), [nodes]);
   const memberships = useProjectStore((state) => state.memberships);
   const papers = useLibraryCache((state) => state.papers);
+  const folderExport = useFolderExport();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     for (const id of initialCollapsedIds ?? []) initial[id] = true;
@@ -188,7 +203,18 @@ export function WorkspaceTree({
               <FilePlus2 size={14} />
               論文ファイルを追加
             </button>
-            {/* TODO(folder-export): 「このフォルダを書き出す…」等。ROADMAP A6 */}
+            <button
+              type="button"
+              role="menuitem"
+              disabled={subtreePaperCount(node.id, nodes, memberships) === 0}
+              onClick={() => {
+                setOpenMenuId(null);
+                folderExport.openExport(node);
+              }}
+            >
+              <Download size={14} />
+              このフォルダを書き出す…
+            </button>
             <div className={styles.projectMenuSeparator} />
             <button
               type="button"
@@ -331,6 +357,23 @@ export function WorkspaceTree({
         ルートへ移動
       </div>
       {openNode ? renderMenu(openNode) : null}
+      <ExportDialog
+        open={folderExport.showExport}
+        busy={folderExport.exportBusy}
+        status={folderExport.exportStatus}
+        error={folderExport.exportError}
+        title="フォルダを書き出す"
+        scopeNote={
+          folderExport.target
+            ? `「${folderExport.target.name}」とその子フォルダの論文 ${subtreePaperCount(folderExport.target.id, nodes, memberships)} 件を、フォルダ階層つき ZIP にまとめます。失敗した論文はスキップし report に残します。`
+            : null
+        }
+        allowEpubSync={false}
+        onClose={folderExport.closeExport}
+        onExport={(values) => {
+          void folderExport.handleExport(values);
+        }}
+      />
     </nav>
   );
 }

@@ -886,7 +886,15 @@ function captionedTableAbsorption(canonical: CanonicalDocument): {
     // Resolver region membership can paint an entire neighbouring prose
     // column as a table target. Do not let that weak target absorb the column
     // into a caption-owned table unless its own role evidence is strong.
-    if (!targetHasHighTableScore && looksLikeProseMistakenForTable(target.text ?? "")) continue;
+    // Empty synthetic shells (`text: null`) are not prose — they are the
+    // caption-owned geometry that should absorb cell crumbs below.
+    if (
+      target.text != null &&
+      !targetHasHighTableScore &&
+      looksLikeProseMistakenForTable(target.text)
+    ) {
+      continue;
+    }
     // Keep only substantive CAPTION_OF targets (full rows / grids). A lone
     // cell that won the caption link is still a crumb — the caption block
     // (and image crop) already represent the table.

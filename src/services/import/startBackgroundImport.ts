@@ -8,7 +8,7 @@ import type { Paper, PaperBlock, Section } from "../../types/paper";
 import { upsertBlock, upsertSection } from "../../utils/mergePaperData";
 import { createBlockUpdateBatcher } from "../../utils/batchBlockUpdates";
 import { waitForTranslationServer } from "../../utils/serverReady";
-import { getAllPapers, getSetting } from "../database";
+import { getAllPapers, getPaper, getSetting, savePaper } from "../database";
 import { addPaperToWorkspace } from "../projectService";
 import { reextractPaper } from "../reextractPaper";
 import {
@@ -17,12 +17,20 @@ import {
   type ImportConfig,
 } from "../importServiceV2";
 import { ImportCancelledError } from "./cancellation";
+import { resumeAbortControllers, resumingPapers } from "./session";
 import { v4 as uuidv4 } from "uuid";
 import { translationManager } from "../translation";
 
 const startedImportKeys = new Set<string>();
 const importFiles = new Map<string, File>();
 const importAbortControllers = new Map<string, AbortController>();
+const TERMINAL_IMPORT_STAGES = new Set([
+  "completed",
+  "failed",
+  "duplicate",
+  "cancelled",
+  "cancel_requested",
+]);
 export const SERVER_UNAVAILABLE_MESSAGE = "翻訳サーバーに接続できません";
 
 const blockBatcher = createBlockUpdateBatcher((id, batch) => {
@@ -292,11 +300,15 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
           useImportJobStore.getState().removeJob(jobId);
           importFiles.delete(jobId);
         }
+        showToast({
+          kind: "info",
+          message: "翻訳を中断しました。続きから再開できます",
+        });
       } else {
         importFiles.delete(jobId);
         useImportJobStore.getState().removeJob(jobId);
+        showToast({ kind: "info", message: "インポートをキャンセルしました" });
       }
-      showToast({ kind: "info", message: "インポートをキャンセルしました" });
       return;
     }
     const message = error instanceof Error ? error.message : "読み込みに失敗しました";
@@ -386,13 +398,7 @@ export async function retryBackgroundImport(jobId: string): Promise<boolean> {
 export function cancelBackgroundImport(jobId: string): boolean {
   const job = useImportJobStore.getState().jobs.find((item) => item.id === jobId);
   if (!job) return false;
-  if (
-    job.stage === "completed" ||
-    job.stage === "failed" ||
-    job.stage === "duplicate" ||
-    job.stage === "cancelled" ||
-    job.stage === "cancel_requested"
-  ) {
+  if (TERMINAL_IMPORT_STAGES.has(job.stage)) {
     return false;
   }
   useImportJobStore.getState().patchJob(jobId, {
@@ -409,6 +415,68 @@ export function cancelBackgroundImport(jobId: string): boolean {
   return true;
 }
 
+/**
+ * Pause in-progress translation for a readable paper.
+ * Finds the hidden import job (after partial-ready) or an active resume run.
+ * Successful extracts / finished units are kept; auto-resume is cleared.
+ */
+export function cancelPaperWork(paperId: string): boolean {
+  const job = useImportJobStore.getState().jobs.find(
+    (item) => item.paperId === paperId && !TERMINAL_IMPORT_STAGES.has(item.stage)
+  );
+  if (job) {
+    const ok = cancelBackgroundImport(job.id);
+    if (ok) {
+      // Optimistic UI: ImportJobCard is hidden once paperId is set, so flip the
+      // paper card off "日本語化中" immediately while the abort settles.
+      useLibraryCache.getState().updatePaper(paperId, {
+        processingStatus: "partial",
+        needsTranslationResume: false,
+      });
+    }
+    return ok;
+  }
+
+  const resumeController = resumeAbortControllers.get(paperId);
+  const hasResume =
+    Boolean(resumeController) ||
+    resumingPapers.has(paperId) ||
+    translationManager.hasQueue(paperId);
+  if (!hasResume) return false;
+
+  if (resumeController && !resumeController.signal.aborted) {
+    resumeController.abort();
+  }
+  translationManager.cancel(paperId);
+  useLibraryCache.getState().updatePaper(paperId, {
+    processingStatus: "partial",
+    needsTranslationResume: false,
+  });
+  // Resume path persists partial itself; if only a detached queue remains, mark here.
+  if (!resumingPapers.has(paperId)) {
+    void markPaperTranslationPaused(paperId);
+  }
+  showToast({
+    kind: "info",
+    message: "翻訳を中断しました。続きから再開できます",
+  });
+  return true;
+}
+
+async function markPaperTranslationPaused(paperId: string): Promise<void> {
+  try {
+    const paper = await getPaper(paperId);
+    if (!paper) return;
+    paper.processingStatus = "partial";
+    paper.needsTranslationResume = false;
+    paper.updatedAt = new Date().toISOString();
+    await savePaper(paper);
+    useLibraryCache.getState().updatePaper(paperId, paper);
+  } catch (error) {
+    console.warn("Failed to mark paused translation:", error);
+  }
+}
+
 /** Dismiss a pre-persistence import failure without touching saved papers. */
 export function dismissBackgroundImport(jobId: string): void {
   importFiles.delete(jobId);
@@ -423,13 +491,25 @@ export async function retryPaperTranslation(paperId: string): Promise<boolean> {
     showToast({ kind: "error", message: SERVER_UNAVAILABLE_MESSAGE });
     return false;
   }
+  const before = useLibraryCache.getState().papers.find((p) => p.id === paperId);
+  const resuming = before?.processingStatus === "partial";
   try {
     await resumeIncompleteTranslation(paperId, libraryTranslationCallbacks());
-    showToast({ kind: "success", message: "翻訳を再試行しました" });
+    showToast({
+      kind: "success",
+      message: resuming ? "翻訳を再開しました" : "翻訳を再試行しました",
+    });
     return true;
   } catch (error) {
+    if (error instanceof ImportCancelledError) {
+      // cancelPaperWork already notified the user.
+      return false;
+    }
     console.error("Failed to resume translation:", error);
-    showToast({ kind: "error", message: "翻訳の再試行に失敗しました" });
+    showToast({
+      kind: "error",
+      message: resuming ? "翻訳の再開に失敗しました" : "翻訳の再試行に失敗しました",
+    });
     return false;
   }
 }
@@ -461,7 +541,10 @@ export function resumeAfterTranslationServerReady(): void {
     // Metadata-only filter: completed papers with needsTranslationResume=false never open packages.
     for (const paper of byId.values()) {
       if (!(await shouldResumePaperAfterServerReady(paper))) continue;
-      void resumeIncompleteTranslation(paper.id, callbacks, settings);
+      void resumeIncompleteTranslation(paper.id, callbacks, settings).catch((error) => {
+        if (error instanceof ImportCancelledError) return;
+        console.error(`Failed to resume translation for ${paper.id}:`, error);
+      });
     }
   })().catch((error) => {
     console.error("Failed to resume translations after server ready:", error);

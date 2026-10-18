@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ExportDialogValues } from "../ExportDialog";
 import { getEpubSyncFolder, syncEpubFile } from "../../../services/epubSync";
+import { showToast } from "../../../stores/toastStore";
 
 export function useReaderExport(paperId: string | undefined) {
   const [showExport, setShowExport] = useState(false);
@@ -13,12 +14,19 @@ export function useReaderExport(paperId: string | undefined) {
     void getEpubSyncFolder().then(setEpubSyncFolder);
   }, []);
 
+  const finishSuccess = useCallback((message: string) => {
+    showToast({ kind: "success", message });
+    setShowExport(false);
+    setExportStatus(null);
+    setExportError(null);
+  }, []);
+
   const handleExport = useCallback(
     async (values: ExportDialogValues) => {
       if (!paperId) return;
       setExportBusy(true);
       setExportError(null);
-      setExportStatus("保存先を選んでいます...");
+      setExportStatus("準備しています...");
       try {
         const { getStorage } = await import("../../../data/runtime");
         const { exportPaperEpub } = await import("../../../data/export/epubExport");
@@ -34,6 +42,7 @@ export function useReaderExport(paperId: string | undefined) {
           const result = await exportPaperEpub(fs, paperId, {
             includeFailedTranslations: values.includeFailedTranslations,
           });
+          setExportStatus("保存先を選んでいます...");
           const saved = await saveEpubExport(result);
           if (!saved) {
             setExportStatus("キャンセルしました");
@@ -46,22 +55,24 @@ export function useReaderExport(paperId: string | undefined) {
             setExportStatus("同期先フォルダへコピーしています...");
             await syncEpubFile(selectedSyncFolder, `${result.fileName}.epub`, result.epub);
           }
-          setExportStatus(`EPUBを書き出しました: ${saved.path}`);
+          finishSuccess(`EPUBを書き出しました`);
           return;
         }
         if (values.mode === "verification") {
+          setExportStatus("検証用パッケージを作成しています...");
           const result = await exportVerificationBundle(fs, paperId, {
             includeFailedTranslations: values.includeFailedTranslations,
           });
-          setExportStatus("検証用パッケージを書き出しています...");
+          setExportStatus("保存先を選んでいます...");
           const saved = await saveVerificationExport(paperId, result);
           if (!saved) {
             setExportStatus("キャンセルしました");
             return;
           }
-          setExportStatus(`書き出しました: ${saved.path}`);
+          finishSuccess("検証用パッケージを書き出しました");
           return;
         }
+        setExportStatus("Markdown を作成しています...");
         const result = await exportPaperMarkdown(fs, paperId, {
           language: "ja",
           variant: values.variant,
@@ -69,22 +80,21 @@ export function useReaderExport(paperId: string | undefined) {
           includeFailedTranslations: values.includeFailedTranslations,
         });
         if (values.mode === "notion") {
-          setExportStatus("Notion インポート用 ZIP を作成しています...");
+          setExportStatus("保存先を選んでいます...");
           const saved = await saveNotionImportExport(result);
           if (!saved) {
             setExportStatus("キャンセルしました");
             return;
           }
-          setExportStatus(`Notion 用 ZIP を書き出しました: ${saved.path}`);
+          finishSuccess("Notion 用 ZIP を書き出しました");
           return;
         }
-        setExportStatus("Markdown を書き出しています...");
+        setExportStatus("保存先を選んでいます...");
         const saved = await saveMarkdownExport(result);
         if (!saved) {
           setExportStatus("キャンセルしました");
           return;
         }
-        setExportStatus(`書き出しました: ${saved.path}`);
         try {
           const { reportUiE2eExportSuccess } = await import("../../../services/uiE2eWatch");
           const bytes = new TextEncoder().encode(result.markdown).length;
@@ -92,6 +102,7 @@ export function useReaderExport(paperId: string | undefined) {
         } catch {
           // UI E2E reporter is optional outside acceptance launches.
         }
+        finishSuccess("Markdown を書き出しました");
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         setExportError(message || "書き出しに失敗しました");
@@ -100,7 +111,7 @@ export function useReaderExport(paperId: string | undefined) {
         setExportBusy(false);
       }
     },
-    [epubSyncFolder, paperId]
+    [epubSyncFolder, finishSuccess, paperId]
   );
 
   return {

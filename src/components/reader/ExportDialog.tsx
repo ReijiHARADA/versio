@@ -16,6 +16,12 @@ type ExportDialogProps = {
   status: string | null;
   error: string | null;
   epubSyncFolder?: string | null;
+  /** 既定は「書き出す」。フォルダ一括時は上書きする */
+  title?: string;
+  /** 件数や範囲など、種類選択の上に出す短い説明 */
+  scopeNote?: string | null;
+  /** false のとき EPUB 同期チェックを出さない（フォルダ一括など） */
+  allowEpubSync?: boolean;
   onClose: () => void;
   onExport: (values: ExportDialogValues) => void;
 };
@@ -26,6 +32,9 @@ export function ExportDialog({
   status,
   error,
   epubSyncFolder,
+  title = "書き出す",
+  scopeNote = null,
+  allowEpubSync = true,
   onClose,
   onExport,
 }: ExportDialogProps) {
@@ -70,7 +79,7 @@ export function ExportDialog({
       >
         <div className={styles.header}>
           <h2 id={titleId} className={styles.title}>
-            書き出す
+            {title}
           </h2>
           <button
             ref={closeButtonRef}
@@ -84,6 +93,7 @@ export function ExportDialog({
           </button>
         </div>
         <div className={styles.body}>
+          {scopeNote ? <p className={styles.hint}>{scopeNote}</p> : null}
           <fieldset className={styles.fieldset} disabled={busy}>
             <legend>種類</legend>
             <label className={styles.option}>
@@ -157,7 +167,7 @@ export function ExportDialog({
             />
             翻訳失敗箇所を含める
           </label>
-          {mode === "epub" && epubSyncFolder ? (
+          {mode === "epub" && allowEpubSync && epubSyncFolder ? (
             <label className={styles.option}>
               <input
                 type="checkbox"
@@ -173,6 +183,8 @@ export function ExportDialog({
               ? "Notion では「設定 → インポート → ZIP」を選び、この ZIP を読み込んでください。画像も一緒に追加されます。"
               : mode === "epub"
                 ? "EPUB 3形式で、Apple BooksやKindleなどの電子書籍リーダーに読み込めます。"
+                : mode === "verification"
+                  ? "保存ダイアログでパッケージフォルダの名前と場所を一度に選びます。OFF のときは失敗した段落を書き出しません。"
               : "OFF のときは失敗した段落を書き出しません。ON のときは訳を作らず、原文と失敗マークを残します。"}
           </p>
 

@@ -39,6 +39,9 @@ export class TranslationQueue {
   private onTaskStarted?: TaskCallback;
   private onTaskCompleted?: TaskCallback;
   private onTaskFailed?: TaskCallback;
+  private onTaskCancelled?: TaskCallback;
+  /** Papers whose queued work should drain without starting or retrying. */
+  private cancelledPaperIds = new Set<string>();
 
   constructor(
     engine: TranslationEngine,
@@ -67,6 +70,14 @@ export class TranslationQueue {
    */
   setOnTaskFailed(callback: TaskCallback): void {
     this.onTaskFailed = callback;
+  }
+
+  /**
+   * Set callback for cooperative cancel of queued (not in-flight) tasks.
+   * Callers use this to settle outstanding counters without marking blocks failed.
+   */
+  setOnTaskCancelled(callback: TaskCallback): void {
+    this.onTaskCancelled = callback;
   }
 
   /**
@@ -126,10 +137,22 @@ export class TranslationQueue {
   }
 
   /**
-   * Cancel all tasks for a paper.
+   * Cancel queued tasks for a paper and settle them via onTaskCancelled.
+   * In-flight tasks finish (progress is kept) but are not retried.
    */
   cancelPaper(paperId: string): void {
-    this.queue = this.queue.filter((t) => t.paperId !== paperId);
+    this.cancelledPaperIds.add(paperId);
+    const removed = this.queue.filter(
+      (t) => t.paperId === paperId && t.status === "queued"
+    );
+    this.queue = this.queue.filter(
+      (t) => !(t.paperId === paperId && t.status === "queued")
+    );
+    for (const task of removed) {
+      task.status = "failed";
+      task.error = "cancelled";
+      void this.onTaskCancelled?.(task);
+    }
   }
 
   /**
@@ -188,6 +211,21 @@ export class TranslationQueue {
     if (!this.isRunning) return;
     if (this.activeCount >= this.config.concurrency) return;
 
+    // Drop queued work for cancelled papers before picking the next task.
+    const stale = this.queue.filter(
+      (t) => t.status === "queued" && this.cancelledPaperIds.has(t.paperId)
+    );
+    if (stale.length > 0) {
+      this.queue = this.queue.filter(
+        (t) => !(t.status === "queued" && this.cancelledPaperIds.has(t.paperId))
+      );
+      for (const task of stale) {
+        task.status = "failed";
+        task.error = "cancelled";
+        void this.onTaskCancelled?.(task);
+      }
+    }
+
     // Find next queued task
     const task = this.queue.find((t) => t.status === "queued");
     if (!task) return;
@@ -210,11 +248,14 @@ export class TranslationQueue {
       task.result = result;
       task.completedAt = Date.now();
 
+      // Keep successful in-flight work after cancel so pause does not discard it.
       await this.onTaskCompleted?.(task);
     } catch (error) {
       task.error = error instanceof Error ? error.message : "Unknown error";
       const retryCount = (task as TranslationTask & { _retryCount?: number })._retryCount ?? 0;
+      const cancelled = this.cancelledPaperIds.has(task.paperId);
       const canRetry =
+        !cancelled &&
         this.config.retryFailed &&
         retryCount < this.config.maxRetries &&
         isRetryableTranslationError(error);
@@ -228,6 +269,11 @@ export class TranslationQueue {
         setTimeout(() => {
           this.processNext();
         }, this.config.retryDelayMs);
+      } else if (cancelled) {
+        task.status = "failed";
+        task.error = "cancelled";
+        task.completedAt = Date.now();
+        await this.onTaskCancelled?.(task);
       } else {
         task.status = "failed";
         task.completedAt = Date.now();

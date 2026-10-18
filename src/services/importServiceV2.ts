@@ -525,6 +525,11 @@ export async function importPDFV2(
       markDone();
     });
 
+    // Pause/cancel: settle outstanding without marking pending blocks failed.
+    translationQueue.setOnTaskCancelled(() => {
+      markDone();
+    });
+
     const enqueue = (
       blockId: string,
       text: string,
