@@ -52,7 +52,11 @@ describe("Japanese figure and table captions", () => {
     expect(isFigureCaption("Figure 3, Even simple motions change body shape")).toBe(true);
     expect(isFigureCaption("FIGURE 1 | Experimental design of the dual-task study.")).toBe(true);
     expect(isFigureCaption("FIGURE 1PRISMA flow diagram of study selection.")).toBe(true);
+    expect(isFigureCaption("Fig. 2lexico-grammatical features of register")).toBe(true);
+    expect(isFigureCaption("Figure 3 “日” family ECM.")).toBe(true);
     expect(isFigureCaption("Figure 2 shows the distribution of scores.")).toBe(false);
+    expect(isFigureCaption("Table 6 summarises different segmentation methods")).toBe(false);
+    expect(isTableCaption("Table 6 summarises different segmentation methods")).toBe(false);
     expect(isFigureCaption("図 3 の1行目に示す応答")).toBe(false);
     expect(isTableCaption("表 1: 被験者の内訳")).toBe(true);
     expect(isTableCaption("Table 1. Participant demographics")).toBe(true);
@@ -1286,6 +1290,30 @@ describe("PDF reading order regression", () => {
     expect(
       blocks.some((b) => b.role === "affiliation" && /University of Example/.test(b.text))
     ).toBe(true);
+  });
+
+  it("rejoins a hanging title across a Title-Case line without absorbing the author", () => {
+    const { blocks } = reconstructDocument([{
+      pageNumber: 1,
+      width: 612,
+      height: 792,
+      textItems: [
+        { text: "4th International Conference on Education, Management and Computing Technology (ICEMCT 2017)", x: 72, y: 48, width: 460, height: 11, fontSize: 11, fontName: "Meta", page: 1 },
+        { text: "Research on the Effects of Different Listening Process Models in", x: 72, y: 84, width: 420, height: 14, fontSize: 14, fontName: "Title", page: 1 },
+        { text: "Listening Comprehension and Memory Based on Cognitive Psychology", x: 72, y: 100, width: 420, height: 14, fontSize: 14, fontName: "Title", page: 1 },
+        { text: "Qiuxia Guo", x: 72, y: 122, width: 90, height: 14, fontSize: 14, fontName: "Title", page: 1 },
+        { text: "Nanchang Institute of Science &Technology, Nanchang 330108, China", x: 72, y: 141, width: 380, height: 11, fontSize: 11, fontName: "Body", page: 1 },
+        { text: "Abstract. In order to explore the effects of listening process models.", x: 72, y: 200, width: 460, height: 10, fontSize: 10, fontName: "Body", page: 1 },
+      ],
+    }]);
+    const title = blocks.find((block) =>
+      block.role === "title" && /Listening Process Models/.test(block.text)
+    );
+    expect(title?.text).toBe(
+      "Research on the Effects of Different Listening Process Models in Listening Comprehension and Memory Based on Cognitive Psychology"
+    );
+    expect(blocks.some((block) => block.role === "title" && /Qiuxia Guo/.test(block.text))).toBe(false);
+    expect(blocks.some((block) => block.role === "author" && block.text === "Qiuxia Guo")).toBe(true);
   });
 
   it("separates a small caps publisher badge from a large title continuation", () => {

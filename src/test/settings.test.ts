@@ -7,7 +7,9 @@ import {
 } from "../utils/settingsToc";
 import {
   elasticOffset,
+  latchOverflowCap,
   overflowToReveal,
+  pullCommitProgress,
   rubberBand,
 } from "../components/settings/useSettingsElasticPull";
 import {
@@ -49,6 +51,23 @@ describe("settings elastic pull", () => {
     expect(soft).toBeGreaterThan(0);
     expect(deep).toBeGreaterThan(soft);
     expect(overflowToReveal(2000, h)).toBeLessThanOrEqual(h);
+  });
+
+  it("fills commit progress to 1 at the commit threshold", () => {
+    const h = 800;
+    expect(pullCommitProgress(0, h)).toBe(0);
+    expect(pullCommitProgress(h * 0.18, h)).toBeCloseTo(0.5, 5);
+    expect(pullCommitProgress(h * 0.36, h)).toBe(1);
+    expect(pullCommitProgress(h, h)).toBe(1);
+  });
+
+  it("keeps latch overflow in the soft rubber zone", () => {
+    const h = 800;
+    const cap = latchOverflowCap(h);
+    const reveal = overflowToReveal(cap, h);
+    expect(reveal).toBeGreaterThan(0);
+    // Must stay well below commit depth so the first stop cannot page-change.
+    expect(reveal / h).toBeLessThan(0.36);
   });
 });
 

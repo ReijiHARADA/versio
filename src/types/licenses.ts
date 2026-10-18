@@ -24,6 +24,12 @@ export type LicensePackage = {
 export type LicenseInventory = {
   generatedAt: string;
   generatorVersion: number;
+  inclusionPolicy?: {
+    distributedOnly: boolean;
+    platforms: string[];
+    rust: string;
+    skipElectableNoAttribution: string[];
+  };
   packages: LicensePackage[];
   texts: Record<string, string>;
   warnings: string[];
@@ -32,5 +38,7 @@ export type LicenseInventory = {
     byEcosystem: Record<string, number>;
     byStatus: Record<string, number>;
     uniqueTexts: number;
+    skippedNoAttribution?: number;
+    skippedNonDistributed?: number;
   };
 };

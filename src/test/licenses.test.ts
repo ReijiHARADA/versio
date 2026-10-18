@@ -8,7 +8,7 @@ import {
 describe("license inventory", () => {
   it("includes Paper Reader MIT and production ecosystems", async () => {
     const inventory = await loadLicenseInventory();
-    expect(inventory.generatorVersion).toBe(1);
+    expect(inventory.generatorVersion).toBe(2);
     expect(inventory.packages.length).toBeGreaterThan(10);
 
     const app = inventory.packages.find((pkg) => pkg.id === "app:paper-reader");
@@ -19,6 +19,23 @@ describe("license inventory", () => {
     expect(ecosystems.has("npm")).toBe(true);
     expect(ecosystems.has("rust")).toBe(true);
     expect(ecosystems.has("python")).toBe(true);
+  });
+
+  it("omits non-distributed and no-attribution-electable packages", async () => {
+    const inventory = await loadLicenseInventory();
+    expect(inventory.summary.skippedNonDistributed).toBeGreaterThan(0);
+
+    // Windows / GTK-only crates must not appear in the macOS inventory.
+    const names = new Set(inventory.packages.map((pkg) => pkg.name));
+    expect(names.has("windows-sys")).toBe(false);
+    expect(names.has("webview2-com")).toBe(false);
+    expect(names.has("webkit2gtk")).toBe(false);
+
+    // Unlicense OR MIT (and similar) — Unlicense can be elected, so omit.
+    const electable = inventory.packages.filter((pkg) =>
+      /^(Unlicense\s+OR\s+MIT|0BSD\s+OR\s+MIT|CC0-1\.0\s+OR)/i.test(pkg.license ?? "")
+    );
+    expect(electable).toEqual([]);
   });
 
   it("does not invent SPDX for packages without declared license metadata", async () => {

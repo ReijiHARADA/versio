@@ -80,7 +80,9 @@ async function optimizeFigureForMobileEpub(
   try {
     const image = new Image();
     image.decoding = "async";
-    const objectUrl = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
+    // Copy into a fresh ArrayBuffer-backed view — BlobPart rejects SharedArrayBuffer-backed UA.
+    const blobPart = Uint8Array.from(bytes);
+    const objectUrl = URL.createObjectURL(new Blob([blobPart], { type: mimeType }));
     try {
       const decoded = new Promise<void>((resolve, reject) => {
         image.onload = () => resolve();

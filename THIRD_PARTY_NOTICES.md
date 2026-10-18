@@ -6,7 +6,7 @@ Paper Reader 本体のソースコードは [MIT License](./LICENSE) です。
 
 ## アプリ内の一覧（正）
 
-配布物に含まれる依存の一覧・著作権表示・ライセンス全文は、設定画面の **ライセンス**、およびビルド時生成物 `src/generated/thirdPartyLicenses.json` を正とします。
+配布物に含まれ、かつ **著作権表示・NOTICE の再掲がライセンス上必要な** 依存の一覧・著作権表示・ライセンス全文は、設定画面の **ライセンス**、およびビルド時生成物 `src/generated/thirdPartyLicenses.json` を正とします。
 
 再生成:
 
@@ -14,13 +14,21 @@ Paper Reader 本体のソースコードは [MIT License](./LICENSE) です。
 npm run generate:licenses
 ```
 
-収集対象:
+### 掲載基準
+
+| 含める | 含めない |
+| --- | --- |
+| macOS アプリに同梱・リンクされる依存 | ビルド専用（`cargo` build-deps / npm optional / 未同梱 Python） |
+| 帰属表示が必要なライセンス（MIT、BSD、Apache-2.0、ISC、MPL、Zlib、Unicode など） | 帰属不要を選択できる二重ライセンス（例: `Unlicense OR MIT`、`0BSD OR …`、`CC0-1.0 OR …`） |
+| ライセンス種別が不明なもの（要確認として残す） | Windows / GTK など他プラットフォーム専用クレート |
+
+収集ソース:
 
 | 区分 | ソース |
 | --- | --- |
 | 本体 | リポジトリ直下の `LICENSE` |
 | npm | `package-lock.json` の本番依存クロージャ（`optionalDependencies` は除外） |
-| Rust | `src-tauri` の `cargo metadata` resolve |
+| Rust | `cargo tree --target {aarch64,x86_64}-apple-darwin -e no-dev,no-build` |
 | Python | 配布用 `translation-server/venv` の dist-info |
 | モデル / アセット | 検証済みの同梱物のみ（MADLAD-400 モデルカード、pdfjs CMaps など） |
 

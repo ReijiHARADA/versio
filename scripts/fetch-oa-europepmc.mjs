@@ -19,20 +19,23 @@ const UNPAYWALL_EMAIL = "for.mail.adless@gmail.com";
 
 mkdirSync(outDir, { recursive: true });
 
+// Prefer DOI-backed CC papers so Unpaywall can resolve publisher PDFs.
+// PMC/EuropePMC viewer URLs are often Cloudflare-blocked.
 const queries = [
-  'LICENSE:"cc by" AND HAS_PDF:y AND ("human-computer interaction" OR HCI OR ergonomics OR "user experience")',
-  'LICENSE:"cc by" AND HAS_PDF:y AND (linguistics OR "discourse analysis" OR morphology OR pragmatics)',
-  'LICENSE:"cc by" AND HAS_PDF:y AND ("machine learning" OR "deep learning") AND (review OR survey)',
-  'LICENSE:"cc by-nc" AND HAS_PDF:y AND (ergonomics OR "occupational health" OR "human factors")',
-  'LICENSE:"cc by" AND HAS_PDF:y AND ("cognitive psychology" OR "eye tracking" OR "eye-tracking" OR gaze)',
-  'LICENSE:"cc by" AND HAS_PDF:y AND ("natural language processing" OR NLP OR "computational linguistics")',
-  'LICENSE:"cc by" AND HAS_PDF:y AND (usability OR "user interface" OR "human-robot interaction")',
-  'LICENSE:"cc by" AND HAS_PDF:y AND ("systematic review" OR "scoping review") AND (psychology OR neuroscience)',
-  'LICENSE:"cc by" AND HAS_PDF:y AND (frontiers OR "scientific reports" OR plos) AND (attention OR memory OR perception)',
-  'LICENSE:"cc by" AND HAS_PDF:y AND ("information retrieval" OR "recommender systems" OR "knowledge graph")',
-  'LICENSE:"cc by" AND HAS_PDF:y AND ("computer vision" OR "image segmentation" OR "object detection") AND (review OR survey)',
-  'LICENSE:"cc by" AND HAS_PDF:y AND (education OR "learning sciences" OR "instructional design") AND (digital OR online OR technology)',
-  'LICENSE:"cc by-nc" AND HAS_PDF:y AND ("public health" OR epidemiology) AND (intervention OR trial)',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("augmented reality" OR "virtual reality") AND (HCI OR usability OR interaction)',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("large language model" OR LLM OR transformer) AND (survey OR review OR HCI)',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("information visualization" OR "visual analytics")',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("human-robot interaction" OR HRI OR "social robot")',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("speech recognition" OR "spoken language" OR ASR)',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND PUBYEAR:2025 AND (attention OR memory) AND (psychology OR neuroscience)',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("wearable computing" OR smartwatch OR "smart clothing")',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"Frontiers in Virtual Reality"',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("recommender system" OR "knowledge graph") AND (survey OR review)',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("computer vision" OR "object detection") AND (survey OR review) AND PUBYEAR:2024',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("human-computer interaction" OR HCI OR ergonomics OR "user experience")',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND (linguistics OR "discourse analysis" OR "computational linguistics" OR NLP)',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("eye tracking" OR gaze) AND (HCI OR psychology OR reading)',
+  'LICENSE:"cc by-nc" AND HAS_PDF:y AND HAS_DOI:y AND (ergonomics OR "human factors" OR "occupational health")',
 ];
 
 function slugify(title) {
@@ -81,6 +84,25 @@ function isPmcViewerUrl(url) {
   return /(?:^|\.)ncbi\.nlm\.nih\.gov\/pmc\b|pmc\.ncbi\.nlm\.nih\.gov|europepmc\.org\/articles\//i.test(url);
 }
 
+function candidatePdfUrl(loc) {
+  if (!loc) return null;
+  if (loc.url_for_pdf) return loc.url_for_pdf;
+  const url = loc.url || "";
+  if (/\.pdf(\?|$)/i.test(url)) return url;
+  // MDPI / Frontiers / BMC article landing pages often expose a stable /pdf path.
+  if (/mdpi\.com\/\d+\/\d+\/\d+/i.test(url) && !/\/pdf/i.test(url)) return `${url.replace(/\/$/, "")}/pdf`;
+  if (/frontiersin\.org\/articles\//i.test(url) && !/\/pdf/i.test(url)) {
+    return `${url.replace(/\/$/, "")}/pdf`;
+  }
+  if (/biomedcentral\.com\/articles\//i.test(url) && !/\.pdf/i.test(url)) {
+    return `${url.replace(/\/$/, "")}.pdf`;
+  }
+  if (/journals\.plos\.org\/.+\/article\?id=/i.test(url)) {
+    return url.replace(/article\?id=/, "article/file?id=") + (url.includes("type=") ? "" : "&type=printable");
+  }
+  return null;
+}
+
 async function resolveUnpaywallPdfUrl(doi) {
   const url = `https://api.unpaywall.org/v2/${encodeURIComponent(doi)}?email=${encodeURIComponent(UNPAYWALL_EMAIL)}`;
   const json = await (await fetch(url, { headers: { Accept: "application/json" } })).json();
@@ -92,7 +114,7 @@ async function resolveUnpaywallPdfUrl(doi) {
   // Prefer publisher PDFs; PMC/EuropePMC viewer URLs often return a POW HTML interstitial.
   const ranked = [...locations].sort((a, b) => {
     const score = (loc) => {
-      const pdfUrl = loc.url_for_pdf || loc.url || "";
+      const pdfUrl = candidatePdfUrl(loc) || loc.url || "";
       if (loc.host_type === "publisher" && !isPmcViewerUrl(pdfUrl)) return 0;
       if (!isPmcViewerUrl(pdfUrl)) return 1;
       return 2;
@@ -101,7 +123,7 @@ async function resolveUnpaywallPdfUrl(doi) {
   });
   const errors = [];
   for (const loc of ranked) {
-    const pdfUrl = loc.url_for_pdf || (/\.pdf(\?|$)/i.test(loc.url || "") ? loc.url : null);
+    const pdfUrl = candidatePdfUrl(loc);
     if (!pdfUrl) continue;
     if (isPmcViewerUrl(pdfUrl)) {
       errors.push("pmc-viewer");
@@ -155,6 +177,7 @@ for (const query of queries) {
     if (!pmcid.startsWith("PMC")) continue;
     if (row.isOpenAccess !== "Y") continue;
     if (!licenseOk(row.license)) continue;
+    if (!row.doi) continue; // publisher PDF via Unpaywall requires DOI
     if (existingPmc.has(pmcid)) continue;
 
     const idBase = slugify(row.title);
