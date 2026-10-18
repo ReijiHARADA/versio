@@ -1,4 +1,10 @@
-import { displayHeadingText, isSentenceContinuation, type PageColumnLayout } from "../../pdfLayout";
+import {
+  displayHeadingText,
+  isSentenceContinuation,
+  tableCaptionEmptyGapBelow,
+  type LayoutBlock,
+  type PageColumnLayout,
+} from "../../pdfLayout";
 import type { CanonicalNode, CanonicalRelation } from "../canonical/types";
 import type { RoleCandidate } from "../generic/candidates";
 import type { StructuralRegionEvidence } from "../types";
@@ -172,9 +178,28 @@ function horizontallyCompatible(
 export function captionOfRelations(nodes: CanonicalNode[]): CanonicalRelation[] {
   const tableCaptionShape = (text: string) => {
     const value = text.trim();
+    // Trailing periods are common on short caption titles
+    // (`TABLE 1 Examples of the stimuli.`). Only reject sentence-like
+    // references such as `Table 4 summarises different methods.`
+    const sentenceLikeTail =
+      /[.!?]\s*$/.test(value) &&
+      /\b(?:shows?|presents?|summarises?|summarizes?|reports?|indicates?|lists?|contains?|illustrates?|is|are|was|were)\b/i.test(
+        value
+      );
+    const numberedTitle = /^table\s+\d+(?:\.\d+)?[a-z]?(?:\s*[.:：])?\s+\S/i.test(value);
+    const wordCount = value.split(/\s+/).filter(Boolean).length;
+    // Descriptive titles can wrap past a single line (`Table 3 Results of the
+    // best-fitting SVMs averaged across …`). Keep them as captions when they
+    // lack a finite-verb body reference; reject `Table 4 shows …` prose.
+    const longDescriptiveTitle =
+      numberedTitle &&
+      !sentenceLikeTail &&
+      !/\b(?:shows?|presents?|summarises?|summarizes?|reports?|indicates?|illustrates?)\b/i.test(value) &&
+      value.length <= 360 &&
+      wordCount <= 55;
     return /^(?:table|tables)\s+\d+(?:\.\d+)?[a-z]?(?:$|\s*[.:：]\s*|\s+\((?:continued|cont\.)\)|\s+continues?\b)/i.test(value) ||
-      (/^table\s+\d+(?:\.\d+)?[a-z]?(?:\s*[.:：])?\s+\S/i.test(value) && value.length <= 120 &&
-        value.split(/\s+/).length <= 12 && !/[.!?]\s*$/.test(value));
+      (numberedTitle && value.length <= 120 && wordCount <= 14 && !sentenceLikeTail) ||
+      longDescriptiveTitle;
   };
   const captions = nodes.filter((n) => n.role === "caption" &&
     // Do not let a body sentence beginning with `Table 4.4 summarises ...`
@@ -391,8 +416,13 @@ export function topologicalOrder(
   return ordered;
 }
 
-export function figureNodesForCaptions(candidates: RoleCandidate[], regionEvidence: StructuralRegionEvidence[] = []): CanonicalNode[] {
+export function figureNodesForCaptions(
+  candidates: RoleCandidate[],
+  regionEvidence: StructuralRegionEvidence[] = [],
+  layouts: PageColumnLayout[] = []
+): CanonicalNode[] {
   const continuedTable = (text: string) => /^(?:table|tables)\s+\d+[a-z]?\s*\(continued\)/i.test(text.trim());
+  const layoutBlocks = candidates.map((candidate) => candidate.layoutBlock);
   return candidates
     .filter(
       (c) =>
@@ -402,6 +432,7 @@ export function figureNodesForCaptions(candidates: RoleCandidate[], regionEviden
     .map((caption, i) => {
       const role = caption.layoutBlock.role === "table_caption" ? "table" : "figure";
       const box = caption.boundingBoxes[0];
+      const pageLayout = layouts.find((layout) => layout.page === caption.pageStart);
       const nextTableCaptionPage = role === "table"
         ? Math.min(
             ...candidates
@@ -487,9 +518,25 @@ export function figureNodesForCaptions(candidates: RoleCandidate[], regionEviden
             // A caption-adjacent paragraph can be split into several native
             // lines and otherwise look like a row. Keep long prose and list
             // streams out unless strong multi-cell evidence is present.
-            if (bulletStream && !flattenedGridRow) return false;
-            if (row && multiItemRatio < 0.4 && !flattenedGridRow && numericDensity < 0.12) return false;
-            if (longProseRow && (candidate.roleScores.table ?? 0) < 0.9 && !flattenedGridRow) return false;
+            // Example tables (OSWORLD-style) put Task / Script columns in one
+            // paragraph without numeric cells. Two distinct x-bands plus a
+            // multi-item line are enough inside a caption-adjacent window.
+            const dualColumnXs = new Set(
+              candidate.layoutBlock.lines.flatMap((line) =>
+                line.items.map((item) => Math.round(item.x / 20) * 20)
+              )
+            );
+            const dualColumnAligned =
+              dualColumnXs.size >= 2 &&
+              candidate.layoutBlock.lines.some((line) => line.items.length >= 2) &&
+              candidate.layoutBlock.bbox.y - (box.y + box.height) < 280;
+            if (bulletStream && !flattenedGridRow && !dualColumnAligned) return false;
+            if (row && multiItemRatio < 0.4 && !flattenedGridRow && !dualColumnAligned && numericDensity < 0.12) {
+              return false;
+            }
+            if (longProseRow && (candidate.roleScores.table ?? 0) < 0.9 && !flattenedGridRow && !dualColumnAligned) {
+              return false;
+            }
             const compactCellRow = candidate.layoutBlock.lines.length === 1 &&
               !/[.!?]\s*$/.test(text) && (numericDensity >= 0.12 ||
                 // Multi-column review tables often encode a bullet cell as one
@@ -501,12 +548,14 @@ export function figureNodesForCaptions(candidates: RoleCandidate[], regionEviden
             // caption. Without numeric/aligned-cell evidence, do not promote
             // it into a structured region.
             if (candidate.layoutBlock.role === "paragraph" &&
-              !compactCellRow && !flattenedGridRow && numericDensity < 0.12) return false;
+              !compactCellRow && !flattenedGridRow && !dualColumnAligned && numericDensity < 0.12) {
+              return false;
+            }
             const highConfidenceContinuationRow = laterPageContinuation &&
               (candidate.roleScores.table ?? 0) >= 0.78 &&
               candidate.layoutBlock.lines.length <= 3;
-            return (row || highConfidenceContinuationRow) &&
-              ((candidate.roleScores.table ?? 0) >= 0.78 || compactCellRow || flattenedGridRow);
+            return (row || highConfidenceContinuationRow || dualColumnAligned) &&
+              ((candidate.roleScores.table ?? 0) >= 0.78 || compactCellRow || flattenedGridRow || dualColumnAligned);
           })
         : [];
       const memberBoxes = regionMembers.flatMap((member) => member.boundingBoxes);
@@ -544,33 +593,49 @@ export function figureNodesForCaptions(candidates: RoleCandidate[], regionEviden
             })[0]
         : undefined;
       const anchoredBox = anchoredRegion?.boundingBoxes[0];
+      const emptyGapBox =
+        role === "table" && !regionBox && !anchoredRegion && pageLayout
+          ? tableCaptionEmptyGapBelow(caption.layoutBlock as LayoutBlock, layoutBlocks, pageLayout)
+          : null;
+      // Caption-only table shells (no region members / anchored geometry /
+      // image-backed empty gap) are empty noise in the Reader. Keep the
+      // caption node; skip the shell.
+      if (role === "table" && !regionBox && !anchoredRegion && !emptyGapBox) return null;
+      const regionBoxes = regionMembers.length > 0
+        ? memberBoxes
+        : anchoredBox
+          ? [anchoredBox]
+          : emptyGapBox
+            ? [emptyGapBox]
+            : [figureBox];
       return {
         id: `fig-${i}`,
         role: role as "figure" | "table",
         text: null,
         pageStart: caption.pageStart,
         pageEnd: regionMembers.length > 0 ? Math.max(caption.pageEnd, ...regionMembers.map((member) => member.pageEnd)) : caption.pageEnd,
-        boundingBoxes: regionMembers.length > 0 ? memberBoxes : anchoredBox ? [anchoredBox] : [figureBox],
+        boundingBoxes: regionBoxes,
         structuralLabel: role === "table" ? caption.layoutBlock.text : undefined,
-        confidence: regionBox || anchoredRegion ? 0.86 : role === "table" ? 0.48 : 0.7,
+        confidence: regionBox || anchoredRegion || emptyGapBox ? 0.86 : 0.7,
         evidence: [
           {
             source: "generic-heuristic" as const,
             label: role,
-            confidence: regionBox ? 0.86 : role === "table" ? 0.48 : 0.7,
+            confidence: regionBox || emptyGapBox ? 0.86 : 0.7,
             page: caption.pageStart,
             reason: regionBox
               ? `aligned native-text table region (${regionMembers.length} member blocks)`
-              : role === "table"
-                ? "caption-only table fallback; no structured region was inferred"
+              : emptyGapBox
+                ? "image-backed empty gap below table caption"
                 : "region above caption (pdffigures2-style adjacent proposal)",
           },
         ],
         sourceAnchor: {
           page: caption.pageStart,
-          boundingBoxes: [figureBox],
+          boundingBoxes: [emptyGapBox ?? figureBox],
         },
         column: caption.column,
       };
-    });
+    })
+    .filter((node): node is NonNullable<typeof node> => node !== null);
 }

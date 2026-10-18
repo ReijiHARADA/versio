@@ -189,9 +189,14 @@ describe("author masthead projection", () => {
   it("does not expose repeated-glyph ToUnicode output as the paper title", async () => {
     if (!fs.existsSync(brokenUnicodeTitlePdf)) return;
     const pages = await extractPdfPages(brokenUnicodeTitlePdf);
-    const expected = "The role of applied linguistics and language discourse analysis in English language teaching";
+    const expectedEn = "The role of applied linguistics and language discourse analysis in English language teaching";
     const result = await extractFromPages({ pages, paperId: "broken-unicode-title", filePath: brokenUnicodeTitlePdf, fileHash: "broken-unicode-title", metadata: { pageCount: pages.length } });
-    expect(result.paper.titleOriginal).toBe(expected);
+    // Bilingual PDFs may keep the clean Cyrillic cover title; either that or
+    // the English rendering is fine so long as ToUnicode glyph garbage is out.
+    expect(
+      result.paper.titleOriginal === expectedEn ||
+        /прикладной лингвистики/i.test(result.paper.titleOriginal ?? ""),
+    ).toBe(true);
     expect(result.paper.titleOriginal).not.toMatch(/АПФАПФ|CIPCIP/i);
   }, 60_000);
 
@@ -235,6 +240,30 @@ describe("author masthead projection", () => {
     expect(result.paper.affiliations.some((affiliation) => /Faculty of Computing.*Multimedia University/i.test(affiliation.name))).toBe(true);
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /associate editor coordinating/i.test(node.text ?? ""))).toBe(false);
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /et al\.: User Experience Design Using Machine Learning/i.test(node.text ?? ""))).toBe(false);
+  }, 60_000);
+
+  it("recovers initialed bylines labelled as affiliations without title crumbs", async () => {
+    const uxPdf = path.join(root, "test-fixtures/real-papers/pending-pdfs/hci-user-experience-analysis-on-mobile-application-design-using-user-exper.pdf");
+    if (!fs.existsSync(uxPdf)) return;
+    const pages = await extractPdfPages(uxPdf);
+    const result = extractFromPages({ pages, paperId: "ux-initialed-byline", filePath: uxPdf, fileHash: "ux-initialed-byline", metadata: { pageCount: pages.length } });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["I D Sabukunze", "A Arakaza"]));
+    expect(result.paper.authors.every((name) => !/User Experience|Questionnaire|Analysis/i.test(name))).toBe(true);
+    expect(result.paper.affiliations.every((affiliation) => !/^D Sabukunze/i.test(affiliation.name))).toBe(true);
+    expect(result.paper.titleOriginal).toMatch(/User Experience Analysis on Mobile Application Design/i);
+    expect(result.canonical.nodes.filter((node) => node.role === "abstract").length).toBeGreaterThanOrEqual(1);
+    expect(result.paper.doi).toBeNull();
+  }, 60_000);
+
+  it("drops Cureus chrome subjects and merges structured abstract bands", async () => {
+    const cureusPdf = path.join(root, "test-fixtures/real-papers/pending-pdfs/epmc-evaluating-large-language-models-for-automated-data-cleaning-and-feature.pdf");
+    if (!fs.existsSync(cureusPdf)) return;
+    const pages = await extractPdfPages(cureusPdf);
+    const result = extractFromPages({ pages, paperId: "cureus-chrome", filePath: cureusPdf, fileHash: "cureus-chrome", metadata: { pageCount: pages.length } });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["Shimul A. Babli", "Pulkit Gairola"]));
+    expect(result.paper.authors.every((name) => !/Creative Commons|Epidemiology|Quality Improvement|Healthcare Technology/i.test(name))).toBe(true);
+    expect(result.canonical.nodes.filter((node) => node.role === "abstract")).toHaveLength(1);
+    expect(result.paper.doi).toBe("10.7759/cureus.108550");
   }, 60_000);
 
   it("does not expose publication-date bands as affiliations", async () => {

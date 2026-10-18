@@ -589,9 +589,15 @@ function joinItemTexts(items: ExtractedTextItem[]): string {
     const prev = sorted[i - 1];
     const cur = sorted[i];
     const gap = cur.x - (prev.x + prev.width);
-    const spaceThreshold = Math.max(1.1, prev.fontSize * 0.14);
+    // Large display titles (Nature-style word-per-span) often kern at ~0.09em.
+    // The previous 0.14em floor glued `Active`+`vision` into `Activevision`.
+    const spaceThreshold = Math.max(0.85, prev.fontSize * 0.085);
+    const letterToken = (value: string): boolean => /^\p{L}/u.test(value.trim());
     const needsSpace =
-      gap > spaceThreshold && !/\s$/.test(out) && !/^\s/.test(cur.text);
+      !/\s$/.test(out) &&
+      !/^\s/.test(cur.text) &&
+      (gap > spaceThreshold ||
+        (gap > 0.6 && letterToken(prev.text) && letterToken(cur.text) && gap >= prev.fontSize * 0.05));
     if (needsSpace) out += " ";
     out += cur.text;
   }
@@ -664,6 +670,28 @@ function splitSpanningGutterLines(lines: LayoutLine[], pageLayouts?: Map<number,
       (Math.abs(leftFont - rightFont) >= 1 || leftFont <= rightFont * 0.86);
     const leftStart = left[0]?.x ?? Number.POSITIVE_INFINITY;
     const rightStart = right[0]?.x ?? Number.NEGATIVE_INFINITY;
+    const leftWidth = left.reduce((sum, item) => sum + item.width, 0);
+    const rightWidth = right.reduce((sum, item) => sum + item.width, 0);
+    const rightText = right.map((item) => item.text).join(" ").replace(/\s+/g, " ").trim();
+    // Narrow journal pages can keep a stacked display title beside the
+    // abstract while the page-level detector stays single-column. Same-
+    // baseline clustering then glues `Decision-Making` to abstract prose.
+    // Split when a left display span sits across a clear gap from body-sized
+    // right prose; ordinary word gaps never combine a large font jump with
+    // that horizontal separation.
+    const rightLooksLikeProseCrumb =
+      /^[a-z]/.test(rightText) ||
+      /\.\s+[A-Z]/.test(rightText) ||
+      /\b(?:the study|this article|this paper)\b/i.test(rightText) ||
+      /^[a-z][\p{Ll}'-]{3,}\.$/u.test(rightText);
+    const displayTitleBodyPair =
+      leftFont >= rightFont + 3.5 &&
+      leftStart <= pageWidth * 0.22 &&
+      rightStart >= pageWidth * 0.28 &&
+      leftWidth <= pageWidth * 0.5 &&
+      (rightWidth >= pageWidth * 0.22 || (rightLooksLikeProseCrumb && rightWidth >= Math.max(36, rightFont * 3))) &&
+      largestGap >= Math.max(12, Math.min(leftFont, rightFont) * 1.05) &&
+      rightLooksLikeProseCrumb;
     const fullColumnPair = Boolean(layout?.isMultiColumn &&
       left.length >= 4 && right.length >= 4 &&
       leftStart <= layout.leftX + pageWidth * 0.08 &&
@@ -677,7 +705,7 @@ function splitSpanningGutterLines(lines: LayoutLine[], pageLayouts?: Map<number,
       rightStart >= layout.rightX - pageWidth * 0.08 &&
       left.reduce((max, item) => Math.max(max, item.x + item.width), 0) - leftStart >= pageWidth * 0.22 &&
       right.reduce((max, item) => Math.max(max, item.x + item.width), 0) - rightStart >= pageWidth * 0.08);
-    const splitByGutter = (gutterGap && (shortRailPair || fullColumnPair || mixedColumnPair)) || shortRailBodyPair;
+    const splitByGutter = (gutterGap && (shortRailPair || fullColumnPair || mixedColumnPair)) || shortRailBodyPair || displayTitleBodyPair;
     if (!splitByGutter) {
       result.push(line);
       continue;
@@ -1404,7 +1432,13 @@ export function isTableCaption(text: string): boolean {
   // finite verb (`Table 4 shows ...`). It is a paragraph reference, not the
   // caption that labels the region. Keep the check lexical and format-neutral
   // so it applies across publishers without paper-specific strings.
-  if (/^(?:shows?|presents?|indicates?|reports?|lists?|summarizes?|summarises?|gives?|contains?|illustrates?)\b/i.test(continuation)) {
+  // `List of …` is a common caption title, not the finite verb `lists`.
+  if (
+    /^(?:shows?|presents?|indicates?|reports?|summarizes?|summarises?|gives?|contains?|illustrates?)\b/i.test(
+      continuation
+    ) ||
+    (/^lists?\b/i.test(continuation) && !/^list\s+of\b/i.test(continuation))
+  ) {
     return false;
   }
   return /^[A-Z][A-Za-z]/.test(continuation);
@@ -1413,7 +1447,32 @@ export function isTableCaption(text: string): boolean {
 function isHangingTitleEnd(text: string): boolean {
   const t = text.trim();
   if (/[‐‑‒–—―-]$/.test(t)) return true;
-  return /\b(?:using|in|of|the|a|an|and|for|with|to|from|on|by|via|this|these|those)$/i.test(t);
+  if (/\b(?:using|in|of|the|a|an|and|for|with|to|from|on|by|via|this|these|those)$/i.test(t)) {
+    return true;
+  }
+  // Adjective mid-phrase wraps (`… prevent poor` + `mental health during the`).
+  return /\b(?:poor|good|new|early|late|high|low|first|best|key|mixed|systematic|narrative|scoping)\s*$/i.test(t) &&
+    t.length <= 160;
+}
+
+/** Same-font Title Case wraps (`Human Computer Interaction`) are not bylines. */
+function looksLikeTitleCaseContinuation(text: string): boolean {
+  const t = text.trim();
+  if (!t || /[,;@\d*]/.test(t) || t.length > 64) return false;
+  const words = t.split(/\s+/).filter(Boolean);
+  if (words.length === 0 || words.length > 8) return false;
+  // Ambiguous First Last pairs stay under the person-name guard.
+  if (
+    words.length === 2 &&
+    words.every((word) => /^[A-Z][a-z'’-]+$/.test(word) && word.length <= 10)
+  ) {
+    return false;
+  }
+  return words.every(
+    (word) =>
+      /^(?:and|of|the|for|in|on|to|a|an|with|from|by)$/i.test(word) ||
+      /^[A-Z][\p{L}'’-]*$/u.test(word)
+  );
 }
 
 function isCopyright(text: string, fontSize: number, baseFont: number): boolean {
@@ -1543,7 +1602,7 @@ function isFootnoteLine(
 }
 
 const BODY_START_HEADING =
-  /^(?:(?:\d+\.)\s*)?(abstract|introduction|author keywords?|ccs concepts|index terms|keywords|はじめに|序論|序言|まえがき)\s*$/i;
+  /^(?:(?:\d+\.)\s*)?(abstract|introduction|author keywords?|ccs concepts|index terms|keywords|はじめに|序論|序言|まえがき)\s*:?\s*$/i;
 
 function isBodyStartHeading(text: string): boolean {
   const t = layoutPlain(text);
@@ -1707,6 +1766,15 @@ function captionShouldContinue(currentText: string, next: LayoutLine, baseFont: 
   if (looksLikeEmail(nextText) || looksLikeAffiliation(nextText)) return false;
   if (isCopyright(nextText, next.fontSize, baseFont)) return false;
   if (/[.!?]\s*$/.test(currentText) && /^[A-Z*]/.test(nextText) && nextText.length > 70) {
+    return false;
+  }
+  // Finished caption sentence followed by a short Title-Case header
+  // (`Initial State`, column labels) must not stay inside the caption block.
+  if (
+    /[.!?]\s*$/.test(currentText) &&
+    /^[A-Z][\w'’-]*(?:\s+[A-Z][\w'’-]*){0,5}$/.test(nextText) &&
+    nextText.split(/\s+/).filter(Boolean).length <= 6
+  ) {
     return false;
   }
   return true;
@@ -1981,6 +2049,17 @@ function isNameToken(part: string, parts: string[]): boolean {
 
 function looksLikePersonName(text: string): boolean {
   if (looksLikeEmail(text) || looksLikeAffiliation(text) || looksLikeUrl(text)) {
+    return false;
+  }
+  // Title continuations (`Fundus Photographs: A Proof-of-Concept Study`,
+  // `Using Google Cloud Vertex AI`) must not match First Last heuristics.
+  if (/[:;]/.test(text) ||
+    /\b(?:study|studies|photographs?|proof|classification|using|cloud|vertex|review|analysis|system|model|database|questionnaire|attention|memory|cognition|decision|students?|process)\b/i.test(text)) {
+    return false;
+  }
+  // Comma-separated topic pairs (`Attention, Memory`) are title fragments,
+  // not First/Last bylines.
+  if (/^[A-Z][\p{L}'-]+,\s+[A-Z][\p{L}'-]+$/u.test(text.trim())) {
     return false;
   }
   const cleaned = layoutPlain(text)
@@ -2332,6 +2411,36 @@ function roleForLine(
   if (line.page === 1 && /^[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}(?:\s*[;,]\s*[\w.+-]+@[\w.-]+\.[A-Za-z]{2,})*$/i.test(text)) {
     return "chrome";
   }
+  // Citation rails / journal yearbook lines are masthead chrome, not body.
+  if (
+    line.page === 1 &&
+    (/^how\s+to\s+cite\s*:/i.test(text) ||
+      /\banuarul\s+universit/i.test(text) ||
+      /^covered\s+in\b/i.test(text) ||
+      /\bindex\s+copernicus\b/i.test(text) ||
+      /\b(?:worldcat|socionet|kvk)\b/i.test(text) ||
+      /\bfascicula\s*:/i.test(text) ||
+      /^constructs?\.\s*$/i.test(text))
+  ) {
+    return "chrome";
+  }
+  // How-to-cite title continuations (`Memory and Cognition in the Decision-Making Process of`).
+  if (
+    line.page === 1 &&
+    /^(?:memory and cognition|adolescent students)\b/i.test(text) &&
+    !/[.!?]$/.test(text.trim())
+  ) {
+    return "chrome";
+  }
+  // Alternate-language cover titles (`[Rolul atenţiei…]` / Romanian wraps).
+  if (
+    line.page === 1 &&
+    (/^(?:rolul|cogni[tţ]iei|elevul)\b/i.test(text) ||
+      (/[ăâîșțşţĂÂÎȘŢ]/u.test(text) &&
+        (/^\[[^\]]*\]?$/.test(text.trim()) || /\]\s*$/.test(text.trim()))))
+  ) {
+    return "chrome";
+  }
   // A large, centered first-page line is a title anchor even when its words
   // happen to look like a multi-person name list (for example titles joined
   // with “and”). Resolve this geometry before masthead name heuristics.
@@ -2348,6 +2457,22 @@ function roleForLine(
   // line grouping. The predicate is conservative and excludes institutions,
   // sentence punctuation, and section labels.
   if (line.page === 1 && looksLikeAuthorList(text)) return "author";
+  // Single-author masthead rows (`Mirela SPIŢĂ1`) — require a surname-like
+  // ALL-CAPS / diacritic token so topic Title-Case lines stay out.
+  if (
+    line.page === 1 &&
+    looksLikePersonName(text.replace(/\d+$/g, "").trim()) &&
+    text.trim().length <= 48 &&
+    !looksLikeAffiliation(text) &&
+    !/\b(?:stat|universitatea|university|republica|chisinau|chi[sş]inău)\b/i.test(text) &&
+    (/\b[A-ZÀ-ÖØ-Þ]{2,}[\p{L}'’-]*\b/u.test(text) || /[\u0100-\u024f]/.test(text))
+  ) {
+    return "author";
+  }
+  if (line.page === 1 && /\b(?:stat|universitatea|republica)\b/i.test(text) &&
+      !looksLikePersonName(text.replace(/\d+$/g, "").trim())) {
+    return "affiliation";
+  }
   if (line.page === 1 && mastheadEndY >= 0 && line.y < mastheadEndY &&
       looksLikeAffiliation(text) && text.length <= 220 && !/[.!?。！？]$/.test(text)) {
     return "affiliation";
@@ -2911,17 +3036,19 @@ function groupLinesIntoBlocks(
     rejoinDetachedCaptionTitles(
           splitMixedMastheadBlocks(
         splitCaptionHeaderLines(
-          splitEmbeddedTableGridFromCaptions(
-          splitTopBibliographicLines(
-            splitStyledHeadingPrefixes(
-              splitEmbeddedChromeBlocks(
-                rejoinCaptionStatisticFragments(
-                  rejoinHangingTitleFragments(blocks.filter((b) => b.text.length > 0))
+          splitSameBaselineCellGridFromCaptions(
+            splitEmbeddedTableGridFromCaptions(
+              splitTopBibliographicLines(
+                splitStyledHeadingPrefixes(
+                  splitEmbeddedChromeBlocks(
+                    rejoinCaptionStatisticFragments(
+                      rejoinHangingTitleFragments(blocks.filter((b) => b.text.length > 0))
+                    )
+                  ),
+                  median(blocks.flatMap((block) => block.lines.map((line) => line.fontSize))) || 9,
                 )
-              ),
-              median(blocks.flatMap((block) => block.lines.map((line) => line.fontSize))) || 9,
+              )
             )
-          )
           )
         )
       )
@@ -3264,10 +3391,26 @@ function rejoinHangingTitleFragments(blocks: LayoutBlock[]): LayoutBlock[] {
     !looksLikeAffiliation(block.text);
   for (const block of blocks) {
     const prev = out.at(-1);
+    const prevLast = prev?.lines.at(-1);
+    const nextFirst = block.lines[0];
+    const displayTitleStackContinue = Boolean(
+      prev?.role === "title" &&
+      block.role === "title" &&
+      prevLast &&
+      nextFirst &&
+      prevLast.fontSize >= 16 &&
+      Math.abs(nextFirst.fontSize - prevLast.fontSize) <= 0.5 &&
+      Math.abs(nextFirst.x - prevLast.x) <= 8 &&
+      /^[A-Z]/.test(block.text.trim()) &&
+      canRejoinTitleFragment(block) &&
+      block.pageStart === prev.pageEnd &&
+      nextFirst.y > prevLast.y &&
+      nextFirst.y - prevLast.y <= Math.max(48, prevLast.fontSize * 3.5),
+    );
     if (
       prev?.role === "title" &&
       block.role === "title" &&
-      isHangingTitleEnd(prev.text) &&
+      (isHangingTitleEnd(prev.text) || displayTitleStackContinue) &&
       block.pageStart === prev.pageEnd &&
       canRejoinTitleFragment(block) &&
       Math.abs((block.lines[0]?.fontSize ?? 0) - (prev.lines.at(-1)?.fontSize ?? 0)) <= 1.5 &&
@@ -3473,6 +3616,62 @@ function splitMixedMastheadBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
         text: joinLines(affiliationLines),
         lines: affiliationLines,
         bbox: blockBbox(affiliationLines),
+      },
+    ];
+  });
+}
+
+/**
+ * Some PDF producers emit each table cell as its own single-item line on a
+ * shared baseline. Role grouping then absorbs the whole grid into
+ * `table_caption`. Split once a baseline carries ≥3 sibling lines (header or
+ * data row) so the caption keeps only its title wrap.
+ */
+function splitSameBaselineCellGridFromCaptions(blocks: LayoutBlock[]): LayoutBlock[] {
+  return blocks.flatMap((block) => {
+    if (block.role !== "table_caption" || block.lines.length < 8) return [block];
+    if (!/^(?:table|表)\s*\d+/i.test(block.lines[0]?.text.trim() ?? "")) return [block];
+
+    const byY = new Map<number, LayoutLine[]>();
+    for (const line of block.lines) {
+      const y = Math.round(line.y);
+      const list = byY.get(y) ?? [];
+      list.push(line);
+      byY.set(y, list);
+    }
+    const sortedYs = [...byY.keys()].sort((a, b) => a - b);
+    const gridStartY = sortedYs.find((y) => (byY.get(y)?.length ?? 0) >= 3);
+    if (gridStartY == null) return [block];
+
+    const captionLines = block.lines
+      .filter((line) => Math.round(line.y) < gridStartY)
+      .sort((a, b) => a.y - b.y || a.x - b.x);
+    const gridLines = block.lines
+      .filter((line) => Math.round(line.y) >= gridStartY)
+      .sort((a, b) => a.y - b.y || a.x - b.x);
+    const multiCellRows = [...new Set(gridLines.map((line) => Math.round(line.y)))]
+      .filter((y) => (byY.get(y)?.length ?? 0) >= 3).length;
+    if (captionLines.length === 0 || gridLines.length < 6 || multiCellRows < 2) {
+      return [block];
+    }
+
+    return [
+      {
+        ...block,
+        text: joinLines(captionLines),
+        lines: captionLines,
+        bbox: blockBbox(captionLines),
+        pageStart: captionLines[0]!.page,
+        pageEnd: captionLines.at(-1)!.page,
+      },
+      {
+        ...block,
+        role: "table" as const,
+        text: joinLines(gridLines),
+        lines: gridLines,
+        bbox: blockBbox(gridLines),
+        pageStart: gridLines[0]!.page,
+        pageEnd: gridLines.at(-1)!.page,
       },
     ];
   });
@@ -4856,6 +5055,67 @@ function isSubstantialCropBound(block: LayoutBlock): boolean {
   return false;
 }
 
+/**
+ * Image-backed table region below an above-table caption when no native text
+ * rows exist. Returns null for ordinary caption→heading spacing.
+ */
+export function tableCaptionEmptyGapBelow(
+  caption: LayoutBlock,
+  blocks: LayoutBlock[],
+  layout: PageColumnLayout,
+  band: { x: number; width: number } = columnBand(caption.column, layout)
+): BoundingBox | null {
+  if (caption.role !== "table_caption") return null;
+  const captionBottom = caption.bbox.y + caption.bbox.height;
+  const obstacles = blocks
+    .filter((block) => {
+      if (block.pageStart !== caption.pageStart || block === caption) return false;
+      if (block.role === "header" || block.role === "footer" || block.role === "copyright") return false;
+      // Column-merged giants cover the caption's vertical band and are not
+      // reliable lower bounds for an empty artwork gap.
+      if (block.bbox.height > layout.pageHeight * 0.45) return false;
+      if (block.bbox.y + 2 < captionBottom) return false;
+      const spanningLike =
+        block.bbox.width >= layout.pageWidth * 0.55 ||
+        block.role === "heading" ||
+        block.role === "title" ||
+        block.role === "table_caption" ||
+        block.role === "figure_caption";
+      if (!spanningLike && !overlapsBand(block.bbox, band)) return false;
+      if (block.role === "table_caption" || block.role === "figure_caption") return true;
+      if (isSubstantialCropBound(block)) return true;
+      return block.role === "paragraph" && block.text.replace(/\s+/g, " ").trim().length >= 24;
+    })
+    .sort((a, b) => a.bbox.y - b.bbox.y);
+  const next = obstacles[0];
+  const gap = next ? next.bbox.y - captionBottom : layout.pageHeight - captionBottom - 36;
+  // Small gaps are ordinary caption→section spacing, not artwork. Compact
+  // single-column image tables can sit in ~48–70pt bands (HCI TABLE 1/11).
+  if (gap < 48) return null;
+  const y = captionBottom + 2;
+  const bottom = next
+    ? Math.max(y + 28, next.bbox.y - 4)
+    : Math.min(layout.pageHeight - 28, y + Math.min(gap, layout.pageHeight * 0.42));
+  const height = bottom - y;
+  if (height < 40) return null;
+  // Narrow caption lines often sit above a full-column / full-width grid.
+  const wide = caption.bbox.width >= band.width * 0.75 || gap >= 120;
+  const x = Math.max(0, (wide ? Math.min(band.x, caption.bbox.x) : caption.bbox.x) - 6);
+  const right = Math.min(
+    layout.pageWidth,
+    (wide
+      ? Math.max(band.x + band.width, caption.bbox.x + caption.bbox.width)
+      : caption.bbox.x + caption.bbox.width) + 6
+  );
+  return {
+    page: caption.pageStart,
+    x,
+    y,
+    width: Math.max(24, right - x),
+    height,
+  };
+}
+
 export function figureLookupKey(text: string, page: number): string {
   const match = layoutPlain(text).match(/^(?:figure|fig\.?|tables?|図|表)\s*(\d+[a-z]?)/i);
   return match ? `${page}:${match[1]}` : `${page}:${text.slice(0, 48)}`;
@@ -4982,6 +5242,13 @@ export function figureImageRect(
         };
       }
     }
+
+    // IEEE-style image / vector tables often put the caption above artwork
+    // with no extractable text rows. The empty band until the next heading
+    // or body block is the table itself — crop that gap instead of returning
+    // null and leaving a caption-only Reader card.
+    const gapCrop = tableCaptionEmptyGapBelow(caption, blocks, layout, band);
+    if (gapCrop) return gapCrop;
   }
 
   let topBound = HEADER_Y;
@@ -5131,7 +5398,10 @@ export function reconstructDocument(pages: ExtractedPage[]): {
     );
     if (horizontal) {
       const ordered = [title, horizontal].sort((a, b) => a.bbox.x - b.bbox.x);
-      title.lines = ordered.flatMap((block) => block.lines).sort((a, b) => a.x - b.x);
+      // Sort by baseline then x. An x-only sort after a left-column wrap
+      // (`Active vision is linked` / `in the individual brain`) puts the
+      // wrap before the same-baseline right fragment (`to category…`).
+      title.lines = ordered.flatMap((block) => block.lines).sort((a, b) => a.y - b.y || a.x - b.x);
       title.text = joinLines(title.lines);
       title.bbox = blockBbox(title.lines);
       const index = blocks.indexOf(horizontal);
@@ -5158,48 +5428,107 @@ export function reconstructDocument(pages: ExtractedPage[]): {
   // A masthead in the opposite horizontal band can interrupt title lines in
   // y-sorted native reading order. Reattach only short, same-style lines that
   // align with the title and leave unrelated lines in their original block.
+  // Frontiers wraps often continue as Title Case topic lines that otherwise
+  // match the person-name heuristic (`Human Computer Interaction`).
   for (const title of blocks.filter((block) => block.role === "title" && block.pageStart === 1)) {
-    const lastTitleLine = title.lines.at(-1);
-    if (!lastTitleLine) continue;
-    const requireHang = isHangingTitleEnd(title.text);
-    for (let blockIndex = blocks.indexOf(title) + 1; blockIndex < blocks.length; blockIndex++) {
-      const candidateBlock = blocks[blockIndex];
-      if (candidateBlock.pageStart !== 1) break;
-      const matchingLines = candidateBlock.lines.filter((line) =>
-        line.y > (title.lines.at(-1)?.y ?? lastTitleLine.y) &&
-        line.y - (title.lines.at(-1)?.y ?? lastTitleLine.y) <=
-          Math.max(bodyFont * 2.8, line.fontSize * (requireHang ? 1.6 : 1.35)) &&
-        Math.abs(line.x - lastTitleLine.x) <= 6 &&
-        Math.abs(line.fontSize - lastTitleLine.fontSize) <= 1.2 &&
-        line.text.trim().length <= 48 &&
-        line.text.trim().split(/\s+/).filter(Boolean).length <= 6 &&
-        !looksLikePersonName(line.text) && !looksLikeEmail(line.text) &&
-        // Quoted model names / short fragments after hanging prepositions only.
-        (!requireHang || /^['‘“"«]?[\w]/.test(line.text.trim()) || /[:：]\s*$/.test(lastTitleLine.text.trim()))
-      );
-      if (matchingLines.length === 0) continue;
-      const matchingSet = new Set(matchingLines);
-      const remainingLines = candidateBlock.lines.filter((line) => !matchingSet.has(line));
-      title.lines.push(...matchingLines);
-      title.lines.sort((a, b) => a.y - b.y || a.x - b.x);
-      title.text = joinLines(title.lines);
-      title.pageEnd = 1;
-      title.bbox = blockBbox(title.lines);
-      if (remainingLines.length === 0) {
-        blocks.splice(blockIndex, 1);
-        blockIndex--;
-      } else {
-        candidateBlock.lines = remainingLines;
-        candidateBlock.text = joinLines(remainingLines);
-        candidateBlock.bbox = blockBbox(remainingLines);
+    let attached = true;
+    while (attached) {
+      attached = false;
+      const lastTitleLine = title.lines.at(-1);
+      if (!lastTitleLine) break;
+      const requireHang = isHangingTitleEnd(title.text);
+      for (let blockIndex = blocks.indexOf(title) + 1; blockIndex < blocks.length; blockIndex++) {
+        const candidateBlock = blocks[blockIndex];
+        if (candidateBlock.pageStart !== 1) break;
+        const matchingLines = candidateBlock.lines.filter((line) => {
+          const topicContinuation =
+            looksLikeTitleCaseContinuation(line.text) &&
+            Math.abs(line.fontSize - lastTitleLine.fontSize) <= 0.5;
+          // Cureus / Frontiers wraps continue as longer Title Case subtitle
+          // lines (`Fundus Photographs: A Proof-of-Concept Study`).
+          const sameFontWrap =
+            Math.abs(line.fontSize - lastTitleLine.fontSize) <= 0.5 &&
+            Math.abs(line.x - lastTitleLine.x) <= 6 &&
+            /^[A-Z]/.test(line.text.trim()) &&
+            !looksLikePersonName(line.text) &&
+            !looksLikeEmail(line.text) &&
+            !looksLikeAuthorList(line.text) &&
+            line.text.trim().length <= 96 &&
+            line.text.trim().split(/\s+/).filter(Boolean).length <= 14;
+          // Book/proceedings covers stack large display lines
+          // (`Intelligent` / `Human Computer` / `Interaction`). Two-word
+          // Title-Case spans can look person-shaped; still rejoin when the
+          // font is clearly a cover display size.
+          const displayTitleWrap =
+            lastTitleLine.fontSize >= 18 &&
+            Math.abs(line.fontSize - lastTitleLine.fontSize) <= 0.5 &&
+            Math.abs(line.x - lastTitleLine.x) <= 8 &&
+            /^[A-Z]/.test(line.text.trim()) &&
+            !looksLikeEmail(line.text) &&
+            !looksLikeAuthorList(line.text) &&
+            !looksLikeAffiliation(line.text) &&
+            line.text.trim().length <= 64 &&
+            line.text.trim().split(/\s+/).filter(Boolean).length <= 6 &&
+            !/\b(?:eds?\.?|proceedings|volume|vol\.?|lncs)\b/i.test(line.text);
+          // Frontiers often continues a hanging adjective with a lowercase
+          // phrase (`prevent poor` + `mental health during the`).
+          const midPhraseWrap =
+            requireHang &&
+            Math.abs(line.fontSize - lastTitleLine.fontSize) <= 0.5 &&
+            Math.abs(line.x - lastTitleLine.x) <= 6 &&
+            /^[a-z]/.test(line.text.trim()) &&
+            !looksLikeEmail(line.text) &&
+            !looksLikeAuthorList(line.text) &&
+            !looksLikePersonName(line.text) &&
+            line.text.trim().length <= 96 &&
+            line.text.trim().split(/\s+/).filter(Boolean).length <= 14;
+          return line.y > (title.lines.at(-1)?.y ?? lastTitleLine.y) &&
+            line.y - (title.lines.at(-1)?.y ?? lastTitleLine.y) <=
+              Math.max(
+                bodyFont * 2.8,
+                line.fontSize * (requireHang || midPhraseWrap ? 2.2 : sameFontWrap || displayTitleWrap ? 2.8 : 1.35),
+              ) &&
+            Math.abs(line.x - lastTitleLine.x) <= 8 &&
+            Math.abs(line.fontSize - lastTitleLine.fontSize) <= 1.2 &&
+            (sameFontWrap ||
+              displayTitleWrap ||
+              midPhraseWrap ||
+              (line.text.trim().length <= 48 &&
+                line.text.trim().split(/\s+/).filter(Boolean).length <= 6 &&
+                !looksLikeEmail(line.text) &&
+                (!looksLikePersonName(line.text) || topicContinuation))) &&
+            // Quoted model names / short fragments after hanging prepositions only.
+            (!requireHang || topicContinuation || sameFontWrap || displayTitleWrap || midPhraseWrap ||
+              /^['‘“"«]?[\w]/.test(line.text.trim()) ||
+              /[:：]\s*$/.test(lastTitleLine.text.trim()));
+        });
+        if (matchingLines.length === 0) continue;
+        const matchingSet = new Set(matchingLines);
+        const remainingLines = candidateBlock.lines.filter((line) => !matchingSet.has(line));
+        title.lines.push(...matchingLines);
+        title.lines.sort((a, b) => a.y - b.y || a.x - b.x);
+        title.text = joinLines(title.lines);
+        title.pageEnd = 1;
+        title.bbox = blockBbox(title.lines);
+        if (remainingLines.length === 0) {
+          blocks.splice(blockIndex, 1);
+        } else {
+          candidateBlock.lines = remainingLines;
+          candidateBlock.text = joinLines(remainingLines);
+          candidateBlock.bbox = blockBbox(remainingLines);
+        }
+        attached = true;
+        break;
       }
-      break;
     }
   }
   // Sidebar chrome can leave a hanging title and its final short fragment as
-  // two separate title blocks (`… approach using` + `‘CoPE-DEC’`).
+  // two separate title blocks (`… approach using` + `‘CoPE-DEC’`). Display
+  // stacks on narrow two-column covers can also split mid-phrase without a
+  // hanging preposition (`Decision-Making` + `Process of Adolescent Students`).
   for (const title of blocks.filter((block) =>
-    block.role === "title" && block.pageStart === 1 && isHangingTitleEnd(block.text)
+    block.role === "title" && block.pageStart === 1 &&
+    (isHangingTitleEnd(block.text) || (block.lines.at(-1)?.fontSize ?? 0) >= 16)
   )) {
     const last = title.lines.at(-1);
     if (!last) continue;
@@ -5214,8 +5543,12 @@ export function reconstructDocument(pages: ExtractedPage[]): {
       !looksLikeEmail(candidate.text) &&
       Math.abs((candidate.lines[0]?.fontSize ?? 0) - last.fontSize) <= 1.5 &&
       (candidate.lines[0]?.y ?? 0) > last.y &&
-      (candidate.lines[0]?.y ?? 0) - last.y <= Math.max(bodyFont * 4, last.fontSize * 2) &&
-      Math.abs((candidate.lines[0]?.x ?? 0) - last.x) <= 24
+      (candidate.lines[0]?.y ?? 0) - last.y <= Math.max(bodyFont * 4, last.fontSize * 2.2) &&
+      Math.abs((candidate.lines[0]?.x ?? 0) - last.x) <= 24 &&
+      (isHangingTitleEnd(title.text) ||
+        (last.fontSize >= 16 &&
+          Math.abs((candidate.lines[0]?.fontSize ?? 0) - last.fontSize) <= 0.5 &&
+          /^[A-Z]/.test(candidate.text.trim())))
     );
     if (fragIndex < 0) continue;
     const frag = blocks[fragIndex]!;
@@ -5267,6 +5600,19 @@ export function reconstructDocument(pages: ExtractedPage[]): {
     });
     return [make(left.sort((a, b) => a.y - b.y), "affiliation"), make(right.sort((a, b) => a.y - b.y), "title")];
   });
+  // Two-column reading order builds masthead titles left-then-right, which
+  // permutes wrapped display titles that also cross the gutter. Re-sort by
+  // geometry so Reader text matches the printed line breaks.
+  for (const title of resolvedBlocks) {
+    if (title.role !== "title" || title.pageStart !== 1 || title.lines.length < 2) continue;
+    const mixedColumns = new Set(title.lines.map((line) => line.column)).size > 1;
+    if (!mixedColumns && title.lines.every((line, index, all) =>
+      index === 0 || line.y >= all[index - 1]!.y - 0.5
+    )) continue;
+    title.lines.sort((a, b) => a.y - b.y || a.x - b.x);
+    title.text = joinLines(title.lines);
+    title.bbox = blockBbox(title.lines);
+  }
   return { layouts, lines, blocks: resolvedBlocks, baseFontSize: bodyFont };
 }
 

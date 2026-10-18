@@ -57,6 +57,8 @@ describe("Japanese figure and table captions", () => {
     expect(isFigureCaption("Figure 2 shows the distribution of scores.")).toBe(false);
     expect(isFigureCaption("Table 6 summarises different segmentation methods")).toBe(false);
     expect(isTableCaption("Table 6 summarises different segmentation methods")).toBe(false);
+    expect(isTableCaption("Table 1 lists the results of the experiment.")).toBe(false);
+    expect(isTableCaption("TABLE 1 List of corpus data used in the research.")).toBe(true);
     expect(isFigureCaption("図 3 の1行目に示す応答")).toBe(false);
     expect(isTableCaption("表 1: 被験者の内訳")).toBe(true);
     expect(isTableCaption("Table 1. Participant demographics")).toBe(true);
@@ -1418,5 +1420,223 @@ describe("PDF reading order regression", () => {
       const { blocks } = reconstructDocument(build());
       expect(blocks.length, name).toBeGreaterThan(0);
     }
+  });
+
+  it("reattaches Title Case wraps that look like person-name heuristics", () => {
+    // Frontiers mastheads continue a large title as Title Case topic lines
+    // (`…Work-Related` / `Human Computer Interaction` / `Questionnaire`).
+    const line = (text: string, y: number, fontSize = 21) => ({
+      text,
+      x: 220,
+      y,
+      width: Math.min(300, text.length * fontSize * 0.52),
+      height: fontSize,
+      fontSize,
+      fontName: "Title",
+      page: 1,
+    });
+    const { blocks } = reconstructDocument([
+      {
+        pageNumber: 1,
+        width: 595,
+        height: 842,
+        textItems: [
+          line("Digital wellbeing experience in", 150),
+          line("the workplace: development and", 174),
+          line("validation of the Work-Related", 198),
+          line("Human Computer Interaction", 222),
+          line("Questionnaire", 246),
+          {
+            text: "A. Author",
+            x: 220,
+            y: 290,
+            width: 70,
+            height: 11,
+            fontSize: 11,
+            fontName: "Author",
+            page: 1,
+          },
+          {
+            text: "Abstract body text that is long enough to anchor body font detection for the page layout heuristics.",
+            x: 220,
+            y: 340,
+            width: 320,
+            height: 10,
+            fontSize: 10,
+            fontName: "Body",
+            page: 1,
+          },
+        ],
+      },
+    ]);
+    const title = blocks.find((b) => b.role === "title");
+    expect(title?.text).toContain("Work-Related Human Computer Interaction Questionnaire");
+    expect(blocks.filter((b) => b.role === "title")).toHaveLength(1);
+  });
+
+  it("does not treat title-continuation Study/Photographs lines as person names", () => {
+    // Regression for Cureus wraps: `Fundus Photographs: A Proof-of-Concept Study`
+    // used to match looksLikePersonName and block same-font title reattachment.
+    const line = (text: string, y: number, fontSize = 21) => ({
+      text,
+      x: 183,
+      y,
+      width: Math.min(360, text.length * fontSize * 0.48),
+      height: fontSize,
+      fontSize,
+      fontName: "Title",
+      page: 1,
+    });
+    const { blocks } = reconstructDocument([
+      {
+        pageNumber: 1,
+        width: 612,
+        height: 792,
+        textItems: [
+          line("Automated Screening From Retinal", 80),
+          line("Fundus Photographs: A Proof-of-Concept Study", 108),
+          line("Using Google Cloud Vertex AI", 136),
+          {
+            text: "A. Author",
+            x: 183,
+            y: 180,
+            width: 70,
+            height: 11,
+            fontSize: 11,
+            fontName: "Author",
+            page: 1,
+          },
+          {
+            text: "Abstract body text that is long enough to anchor body font detection for the page layout heuristics used here.",
+            x: 183,
+            y: 240,
+            width: 360,
+            height: 10,
+            fontSize: 10,
+            fontName: "Body",
+            page: 1,
+          },
+        ],
+      },
+    ]);
+    const joined = blocks.map((b) => b.text).join("\n");
+    expect(joined).toMatch(/Automated Screening From Retinal/);
+    expect(joined).toMatch(/Fundus Photographs: A Proof-of-Concept Study/);
+    expect(joined).toMatch(/Using Google Cloud Vertex AI/);
+    // Prefer one contiguous masthead block rather than three orphan author lines.
+    const masthead = blocks.filter(
+      (b) =>
+        /Fundus Photographs|Using Google Cloud|Automated Screening From Retinal/i.test(b.text),
+    );
+    expect(masthead.some((b) => /Fundus Photographs/i.test(b.text) && /Using Google Cloud/i.test(b.text))).toBe(
+      true,
+    );
+  });
+
+  it("keeps spaced word-per-span display titles that wrap across a gutter", () => {
+    // Nature-style mastheads emit one item per word with ~0.09em gaps. A
+    // wrap line in the left column plus a same-baseline right fragment must
+    // not become `Activevision…` or permute to `…linked in the…to category`.
+    const words = [
+      { text: "Active", x: 40, w: 74 },
+      { text: "vision", x: 117, w: 71 },
+      { text: "is", x: 190, w: 19 },
+      { text: "linked", x: 212, w: 74 },
+      { text: "to", x: 289, w: 26 },
+      { text: "category", x: 318, w: 105 },
+      { text: "selectivity", x: 426, w: 121 },
+    ];
+    const wrap = [
+      { text: "in", x: 40, w: 23 },
+      { text: "the", x: 66, w: 40 },
+      { text: "individual", x: 108, w: 120 },
+      { text: "brain", x: 230, w: 63 },
+    ];
+    const item = (
+      text: string,
+      x: number,
+      y: number,
+      width: number,
+      fontSize = 26,
+    ) => ({
+      text,
+      x,
+      y,
+      width,
+      height: fontSize,
+      fontSize,
+      fontName: "Title",
+      page: 1,
+    });
+    const { blocks } = reconstructDocument([
+      {
+        pageNumber: 1,
+        width: 595,
+        height: 842,
+        textItems: [
+          ...words.map((w) => item(w.text, w.x, 134, w.w)),
+          ...wrap.map((w) => item(w.text, w.x, 162, w.w)),
+          item("A. Author", 40, 210, 80, 11),
+          item(
+            "Abstract body text that is long enough to anchor body font detection for the page.",
+            40,
+            280,
+            400,
+            10,
+          ),
+        ],
+      },
+    ]);
+    const title = blocks.find((b) => b.role === "title");
+    expect(title?.text).toBe(
+      "Active vision is linked to category selectivity in the individual brain",
+    );
+  });
+
+  it("rejoins large stacked cover-title lines even when a middle span looks person-shaped", () => {
+    const item = (text: string, y: number, fontSize = 32) => ({
+      text,
+      x: 78,
+      y,
+      width: text.length * fontSize * 0.5,
+      height: fontSize,
+      fontSize,
+      fontName: "Title",
+      page: 1,
+    });
+    const { blocks } = reconstructDocument([
+      {
+        pageNumber: 1,
+        width: 612,
+        height: 792,
+        textItems: [
+          item("Intelligent", 185),
+          item("Human Computer", 223),
+          item("Interaction", 261),
+          {
+            text: "LNCS 10688",
+            x: 52,
+            y: 262,
+            width: 80,
+            height: 12,
+            fontSize: 12,
+            fontName: "Body",
+            page: 1,
+          },
+          {
+            text: "Abstract body text that is long enough to anchor body font detection for the page.",
+            x: 40,
+            y: 340,
+            width: 400,
+            height: 10,
+            fontSize: 10,
+            fontName: "Body",
+            page: 1,
+          },
+        ],
+      },
+    ]);
+    const title = blocks.find((b) => b.role === "title");
+    expect(title?.text).toBe("Intelligent Human Computer Interaction");
   });
 });

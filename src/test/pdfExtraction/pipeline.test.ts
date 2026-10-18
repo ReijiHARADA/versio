@@ -60,6 +60,49 @@ describe("canonical extraction pipeline", () => {
     expect(crop).toMatchObject({ page: 6, y: 372, height: 70 });
   });
 
+  it("splits a same-baseline cell grid absorbed into a table caption", async () => {
+    const pdf = path.resolve("test-data/real-papers/linguistics-register.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const { blocks } = reconstructDocument(pages);
+    const caption = blocks.find((block) => block.pageStart === 15 && block.role === "table_caption" && /^Table 3\b/i.test(block.text));
+    const table = blocks.find((block) => block.pageStart === 15 && block.role === "table" && /Feature type/i.test(block.text));
+    expect(caption?.text).toMatch(/^Table 3\b/i);
+    expect(caption?.text).not.toMatch(/74\.48/);
+    expect(table?.text).toMatch(/Feature type/);
+    expect(table?.text).toMatch(/74\.48/);
+    const result = extractFromPages({
+      pages,
+      paperId: "linguistics-table3-grid-split",
+      filePath: pdf,
+      fileHash: "linguistics-table3-grid-split",
+      metadata: { pageCount: pages.length },
+    });
+    const capNode = result.canonical.nodes.find((node) => node.role === "caption" && /^Table 3\b/i.test(node.text ?? ""));
+    const rel = result.canonical.relations.find((candidate) => candidate.kind === "CAPTION_OF" && candidate.from === capNode?.id);
+    expect(rel).toBeTruthy();
+    expect(result.canonical.nodes.some((node) => node.id === rel?.to && node.role === "table")).toBe(true);
+  }, 60_000);
+
+  it("crops an empty image-backed gap below an above-table caption", () => {
+    const layout: PageColumnLayout = {
+      page: 4, pageWidth: 576, pageHeight: 783, isMultiColumn: true,
+      gutterX: 300, leftX: 36, rightX: 310,
+    };
+    const caption: LayoutBlock = {
+      role: "table_caption", text: "TABLE 2. Summary of reviewed papers.", pageStart: 4, pageEnd: 4,
+      column: "left", bbox: { page: 4, x: 36, y: 289, width: 241, height: 7 }, lines: [],
+    };
+    const heading: LayoutBlock = {
+      role: "heading", text: "III. RESULTS", pageStart: 4, pageEnd: 4,
+      column: "spanning", bbox: { page: 4, x: 36, y: 526, width: 500, height: 9 }, lines: [],
+    };
+    const crop = figureImageRect(caption, [caption, heading], layout);
+    expect(crop).toMatchObject({ page: 4, y: 298 });
+    expect(crop!.height).toBeGreaterThan(180);
+    expect(crop!.width).toBeGreaterThan(200);
+  });
+
   it("crops full-column numeric cell rows below a compact table caption", () => {
     const layout: PageColumnLayout = {
       page: 6, pageWidth: 612, pageHeight: 792, isMultiColumn: true,
@@ -465,12 +508,15 @@ describe("canonical extraction pipeline", () => {
       fileHash: "ozchi-borderless-matrix-regression",
       metadata: { pageCount: pages.length },
     });
+    // Reader packages caption-owned matrices through layout line attachment
+    // (same path as the Table 5 prose-contamination regression above).
+    const packaged = attachLinesToBlocks(result.blocks, result.layoutBlocks);
     for (const number of ["1", "5"]) {
-      const table = result.blocks.find((block) => new RegExp(`^Table ${number}\\.`).test(block.original ?? ""));
+      const table = packaged.find((block) => new RegExp(`^Table ${number}\\.`).test(block.original ?? ""));
       expect(table?.type).toBe("table");
       expect(table?.metadata.tableRows?.length).toBeGreaterThanOrEqual(8);
-      expect(table?.metadata.tableRows?.flat().some((cell) => /Finger|Thumb|0\\.000|0\\.594/.test(cell.text))).toBe(true);
-      expect(result.blocks.some((block) => block.original === "Finger 1" && block.pageStart === table?.pageStart)).toBe(false);
+      expect(table?.metadata.tableRows?.flat().some((cell) => /Finger|Thumb|0\.000|0\.594/.test(cell.text))).toBe(true);
+      expect(packaged.some((block) => block.original === "Finger 1" && block.pageStart === table?.pageStart)).toBe(false);
     }
   }, 60_000);
 
@@ -722,16 +768,29 @@ describe("canonical extraction pipeline", () => {
       fileHash: "captionless-method-table-regression",
       metadata: { pageCount: pages.length },
     });
-    const rows = result.blocks.filter((block) => block.pageStart === 18 && /^(?:To find causal relationship|To identify groups of similar|Knowledge tracing required)/i.test(block.original ?? ""));
-    expect(rows.length).toBeGreaterThanOrEqual(3);
-    expect(rows.every((block) => block.type === "table")).toBe(true);
-    expect(rows.every((block) => block.translationStatus === "skipped")).toBe(true);
-    const header = result.blocks.find((block) => block.pageStart === 18 && /^Method Goal\/description/.test(block.original ?? ""));
-    const proseCell = result.blocks.find((block) => block.pageStart === 18 && /^Distillation of data/.test(block.original ?? ""));
+    // Native cells arrive as a repeated prose-cell grid and may be joined into
+    // one table card; they must stay out of paragraph translation either way.
+    const methodGoal = result.blocks.find((block) =>
+      block.pageStart === 18 &&
+      /Method Goal\/description/i.test(block.original ?? "") &&
+      /To find causal relationship/i.test(block.original ?? "") &&
+      /To identify groups of similar/i.test(block.original ?? "")
+    );
+    expect(methodGoal?.type).toBe("table");
+    expect(methodGoal?.translationStatus).toBe("skipped");
+    expect(result.blocks.some((block) =>
+      block.pageStart === 18 &&
+      block.type === "table" &&
+      block.translationStatus === "skipped" &&
+      /Distillation of data|Monitoring student knowledge/i.test(block.original ?? "")
+    )).toBe(true);
     const precedingNarrative = result.blocks.find((block) => block.pageStart === 18 && /^There is a wide range of popular methods/.test(block.original ?? ""));
-    expect(header?.type).toBe("table");
-    expect(proseCell?.type).toBe("table");
     expect(precedingNarrative?.type).toBe("paragraph");
+    expect(result.blocks.some((block) =>
+      block.pageStart === 18 &&
+      block.type === "paragraph" &&
+      /^To find causal relationship/i.test(block.original ?? "")
+    )).toBe(false);
   }, 60_000);
 
   it("separates a compact left-column table from adjacent right-column prose", async () => {
@@ -767,8 +826,14 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) =>
       node.pageStart === 7 && node.role === "table" && /and detailed memory at 10 min|interest and memory type \[F|they were not significantly correlated/i.test(node.text ?? "")
     )).toBe(false);
+    // Left-column statistics live under TABLE 3 in the current fixture; keep
+    // that matrix as a skipped table while the right-column prose stays a
+    // single translation unit above.
     expect(result.blocks.some((block) =>
-      block.pageStart === 7 && block.type === "table" && /^Memory cue 4\.670 0\.039 0\.143/.test(block.original ?? "")
+      block.pageStart === 7 &&
+      block.type === "table" &&
+      block.translationStatus === "skipped" &&
+      /TABLE 3 SPSS results of the accuracy/i.test(block.original ?? "")
     )).toBe(true);
   }, 60_000);
 
@@ -1793,6 +1858,32 @@ describe("canonical extraction pipeline", () => {
     const title = result.canonical.nodes.find((node) => node.role === "title")?.text ?? "";
     expect(title).not.toMatch(/^While there are/i);
     expect(title.toLowerCase()).toMatch(/attention/);
+    expect(title).not.toMatch(/[a-z][A-Z].*[a-z][A-Z]/);
+  }, 60_000);
+
+  it("recovers a bilingual two-column cover title and author without chrome", async () => {
+    const pdf = path.resolve(
+      "test-fixtures/real-papers/pending-pdfs/cognitive-psychology-the-role-of-attention-memory-and-cognition-in-the-decision-making-proc.pdf"
+    );
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "role-of-attention-bilingual",
+      filePath: pdf,
+      fileHash: "role-of-attention-bilingual",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.titleOriginal).toMatch(/Role of Attention/i);
+    expect(result.paper.titleOriginal).toMatch(/Adolescent Students/i);
+    expect(result.paper.titleOriginal).not.toMatch(/The study offers|INDEX COPERNICUS/i);
+    expect(result.paper.authors?.join(" ")).toMatch(/SPIŢĂ|Spită|Spiţă/i);
+    expect(result.paper.authors?.join(" ")).not.toMatch(/INDEX COPERNICUS|Anuarul|constructs|Creangă/i);
+    expect(result.canonical.nodes.some((n) => n.role === "heading" && /Doctorand/i.test(n.text ?? ""))).toBe(false);
+    expect(result.canonical.nodes.some((n) => n.role === "abstract" && /adolescent goes through/i.test(n.text ?? ""))).toBe(true);
+    const abstracts = result.canonical.nodes.filter((n) => n.role === "abstract");
+    expect(abstracts.length).toBeLessThanOrEqual(2);
+    expect(abstracts.some((n) => /adolescent goes through/i.test(n.text ?? "") && /decision-making/i.test(n.text ?? ""))).toBe(true);
   }, 60_000);
 
   it("recovers a thesis cover title instead of the copyright sheet", async () => {

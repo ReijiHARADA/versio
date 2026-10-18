@@ -399,11 +399,12 @@ function expandAuthorLine(text: string): string[] {
   if (markerParts.length >= 2) {
     return markerParts;
   }
+  // Wiley / Hindawi mastheads often separate authors with `|`.
   const commaParts = cleaned
-    .split(/\s*(?:,|;|·|\band\b|&)\s*/i)
+    .split(/\s*(?:,|;|·|\||\band\b|&)\s*/i)
     .map((part) => part.trim())
     .filter((part) => part.split(/\s+/).length >= 2 && !/@/.test(part));
-  if (commaParts.length >= 2 && commaParts.every((part) => part.split(/\s+/).length <= 5) &&
+  if (commaParts.length >= 2 && commaParts.every((part) => part.split(/\s+/).length <= 6) &&
       commaParts.every((part) => !/(?:university|department|institute|school|faculty|hospital|laboratory)/i.test(part))) {
     return commaParts;
   }
@@ -422,10 +423,84 @@ function expandAuthorLine(text: string): string[] {
 function isNonAuthorMastheadLine(text: string): boolean {
   const value = text.replace(/\s+/g, " ").trim();
   if (!value) return true;
+  if (/^(?:original article|research article|review article|systematic review|brief report|case report|editorial|correspondence)\b/i.test(value)) return true;
+  // Body / methods crumbs painted as author (`Performance was measured using…`).
+  if (/^(?:performance was|the (?:study|paper|results?|findings?)|we (?:measured|used|found|present)|results? (?:were|are)|methods?(?:\s+and)?)\b/i.test(value)) {
+    return true;
+  }
+  // Bare topic phrases without a person-name shape.
+  if (
+    /^(?:natural language processing|machine learning|artificial intelligence|deep learning|computer vision|human[- ]computer interaction)$/i.test(
+      value,
+    )
+  ) {
+    return true;
+  }
+  // Indexing / journal masthead rails sometimes land in the author role.
+  if (
+    /\b(?:index\s+copernicus|crossref|crosscheck|worldcat|socionet|econpapers|repec|ceeol|google\s+scholar)\b/i.test(value) ||
+    /^covered\s+in\b/i.test(value) ||
+    /\banuarul\s+universit/i.test(value) ||
+    /\bfascicula\s*:/i.test(value)
+  ) {
+    return true;
+  }
+  // Title fragment + abstract crumb (`Adolescent Students constructs.`).
+  if (/\bconstructs?\.\s*$/i.test(value) && !/\b[A-Z][a-z]+\s+[A-Z][a-z]+\s+[A-Z]/.test(value)) {
+    return true;
+  }
+  // Degree / institution crumbs painted as authors (`Doctorand, Universitatea…`).
+  if (/^(?:doctorand|phd\s+candidate|doctoral\s+student)\b/i.test(value)) {
+    return true;
+  }
+  // Publisher chrome / how-to-cite rails.
+  if (/^open\s+access\b/i.test(value)) return true;
+  if (/\b(?:creative\s+commons|attribution\s+license|cc-?by(?:-nc|-nd|-sa)?(?:\s*4\.0)?)\b/i.test(value)) {
+    return true;
+  }
+  // Subject / MeSH rails painted as authors (`Epidemiology/Public Health`).
+  if (/^[A-Z][\w'’-]+(?:\s+[A-Z][\w'’-]+)?\s*\/\s*[A-Z]/.test(value)) return true;
+  if (/^(?:quality improvement|healthcare technology|public health|health equity)\b/i.test(value)) {
+    return true;
+  }
+  // How-to-cite rails (`Tasneem N, van der Pol CB, Zahoor`).
+  if (
+    /,\s*(?:van|von|de|der|den|di|da|la|le)\s+/i.test(value) &&
+    /\b[A-Z][\p{L}'’-]+\s+[A-Z]{1,3}\b/.test(value) &&
+    value.length <= 120 &&
+    !/\b(?:university|department|institute)\b/i.test(value)
+  ) {
+    return true;
+  }
+  if (/\(\d{4}\)\s+\S/.test(value) && value.length >= 36 &&
+      /\b(?:enhancing|towards|toward|review|study|analysis|effect|effects|role)\b/i.test(value)) {
+    return true;
+  }
+  // Numbered section titles mis-labelled as authors (`I. INTRODUCTION`).
+  if (/^(?:[IVXLCDM]+\.?\s+)?(?:introduction|methods?|materials|results?|discussion|conclusions?|background|related\s+work|references|acknowledgements?)\b/i.test(value)) {
+    return true;
+  }
+  // Institution / city lines without a person-name shape.
+  if (
+    /\b(?:universitatea|university|pedagogică|chisinau|chi[sş]inău|republica)\b/i.test(value) &&
+    !/^[A-ZÀ-ÖØ-Ý][\p{L}'’-]+\s+[A-ZÀ-ÖØ-Ý][\p{L}'’-]+/u.test(value.split(",")[0] ?? "")
+  ) {
+    return true;
+  }
+  // Pure email / correspondence crumbs — but keep bylines that only trail an
+  // email after a comma/and-separated name list (Frontiers often glues them).
+  if (/^[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}(?:\s*\([^)]*\))?$/i.test(value)) return true;
+  if (/@[\w.-]+\.[A-Za-z]{2,}/.test(value)) {
+    const withoutEmail = value.replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, " ").replace(/\s+/g, " ").trim();
+    const nameLike = withoutEmail
+      .split(/\s*(?:,|;|·|\||\band\b|&)\s*/i)
+      .map((part) => part.replace(/[*†‡§\d]/g, " ").replace(/\s+/g, " ").trim())
+      .filter((part) => /^[A-ZÀ-ÖØ-Ý][\p{L}'’-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’.%-]+){1,4}$/u.test(part));
+    if (nameLike.length < 2) return true;
+  }
   const locationPart = /^[A-Z][\p{L}'’-]*(?:\s+[A-Z][\p{L}'’-]*){0,3},\s*(?:[A-Z]{2,}|(?:Australia|Austria|Belgium|Canada|China|France|Germany|India|Israel|Italy|Japan|Netherlands|Russia|Spain|Sweden|Taiwan|UK|USA|United Kingdom|United States|The Netherlands))(?:,\s*(?:[A-Z]{2,}|(?:Australia|Canada|China|France|Germany|India|Israel|Italy|Japan|Netherlands|Russia|Spain|Sweden|Taiwan|UK|USA|United Kingdom|United States)))?$/u;
   if (locationPart.test(value) || value.split(/\s{2,}/).filter(Boolean).every((part) => locationPart.test(part)) || /\b([A-Z][\p{L}'’-]+),\s*(USA|Australia|Canada|China|Japan|UK)\s+\1,\s*\2\b/iu.test(value)) return true;
   if (/https?:\/\/|\b(?:19|20)\d{2}\b|\b(?:article|journal|proceedings|volume|issue)\b/i.test(value)) return true;
-  if (/@[\w.-]+\.[A-Za-z]{2,}/.test(value)) return true;
   if (/\b(?:and|or|the|its|of|at|in|from|to)\s*$/i.test(value) && value.split(/\s+/).length >= 3) return true;
   return false;
 }
@@ -473,6 +548,10 @@ function normalizeAffiliationName(text: string): string {
     // (e.g. `IowaStateUniversity` or `ofEvents`). Restore only a lower-to-
     // upper transition; this cannot split ordinary all-caps institution names.
     .replace(/([\p{Ll}])([\p{Lu}])/gu, "$1 $2")
+    // Soft hyphen / end-of-line wrap only (`Engineer-\ning`), not real
+    // compounds such as `Evidence-based`.
+    .replace(/([\p{L}])\u00ad([\p{L}])/gu, "$1$2")
+    .replace(/([\p{L}])-\s+([\p{Ll}])/gu, "$1$2")
     .replace(/\s+/g, " ")
     .replace(/\s+,/g, ",")
     .replace(/,\s*/g, ", ")
@@ -482,7 +561,13 @@ function normalizeAffiliationName(text: string): string {
 }
 
 function affiliationKey(text: string): string {
-  return text.toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").replace(/\s+/g, " ").trim();
+  return text
+    .toLocaleLowerCase()
+    // Soft / line-break hyphens (`Engineer-ing`) must not create duplicates.
+    .replace(/[\u00ad‐‑‒–—―-]+/g, "")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /** Split numbered institutions that a native stream flattened into one
@@ -569,14 +654,48 @@ function splitAffiliationNamePrefix(text: string): MastheadPair[] {
   // A native stream can omit the separator before the institution
   // (`ABBASFaculty of Computing ...`). Insert a boundary only before a
   // known institution lead, then apply the same strict all-caps name rule.
+  // Initials such as `M.` / `H.` are common on IEEE ACCESS mastheads.
   const normalized = text.replace(/([A-Z])(?=(?:Faculty|Department|School|University|Institute|College|Hospital|Laboratory)\b)/g, "$1, ");
-  const match = normalized.match(/^\s*((?:[A-Z][A-Z'’-]+(?:\s+[A-Z][A-Z'’-]+){1,4})(?:\s+and\s+(?:[A-Z][A-Z'’-]+(?:\s+[A-Z][A-Z'’-]+){1,4}))?)\s*,\s*(.+)$/);
-  if (!match || !/(?:university|institute|department|school|college|hospital|laboratory|research council|pisa|italy|usa)/i.test(match[2])) return [];
+  const capsName = "[A-Z][A-Z'’-]+(?:\\s+[A-Z](?:\\.|[A-Z'’-]+)){1,5}";
+  const match = normalized.match(new RegExp(`^\\s*((?:${capsName})(?:\\s+and\\s+(?:${capsName}))?)\\s*,\\s*(.+)$`));
+  if (!match || !/(?:university|institute|department|school|college|hospital|laboratory|faculty|research council|pisa|italy|usa|malaysia)/i.test(match[2])) return [];
   const affiliation = match[2].replace(/,\s*((?:[A-Z][A-Z'’-]+\s+){1,6}[A-Z][A-Z'’-]+)\s*$/u, "").trim();
   const tailAuthor = match[2].match(/,\s*((?:[A-Z][A-Z'’-]+\s+){1,6}[A-Z][A-Z'’-]+)\s*$/u)?.[1];
   const names = [...match[1].split(/\s+and\s+/i).map((name) => name.trim()), ...(tailAuthor ? [tailAuthor.trim()] : [])].filter(Boolean);
   if (!names.length) return [];
   return names.map((author) => ({ author, affiliation }));
+}
+
+/**
+ * Journal templates sometimes label `I D Sabukunze*1, A Arakaza2` as an
+ * affiliation row. Recover person-shaped, comma-separated initialed names.
+ */
+function recoverInitialedAuthorRow(text: string): string[] {
+  const cleaned = text
+    .replace(/[*†‡§]/g, " ")
+    .replace(/\d+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned || cleaned.length > 120) return [];
+  const parts = cleaned.split(/\s*,\s*/).map((part) => part.trim()).filter(Boolean);
+  if (parts.length < 2 || parts.length > 8) return [];
+  const personShaped = parts.every((part) => {
+    const words = part.split(/\s+/).filter(Boolean);
+    if (words.length < 2 || words.length > 5) return false;
+    return words.every((word) => /^[A-Z](?:[a-z'’-]+)?\.?$/.test(word));
+  });
+  return personShaped ? parts : [];
+}
+
+/** Recover ALL-CAPS IEEE author crumbs emitted as `, NAME` / `, AND NAME` headings. */
+function recoverAllCapsAuthorFragment(text: string): string | null {
+  const trimmed = text.trim();
+  const match = trimmed.match(/^,\s*(?:AND\s+)?([A-Z][A-Z'’.-]*(?:\s+[A-Z](?:\.|[A-Z'’-]+)){1,5})\s*$/);
+  if (!match) return null;
+  const name = match[1].replace(/\s+/g, " ").trim();
+  if (name.split(/\s+/).length < 2 || name.length > 80) return null;
+  if (/\b(?:UNIVERSITY|FACULTY|DEPARTMENT|ABSTRACT|INDEX|INTRODUCTION)\b/.test(name)) return null;
+  return name;
 }
 
 /** Recover title-case author names flattened into an affiliation row.
@@ -880,32 +999,83 @@ function captionedNativeTableRows(canonical: CanonicalDocument, layoutBlocks: La
     );
     const nearbyMembers = captionAdjacentMembers.filter((node) => !members.some((member) => member.id === node.id));
     const combinedMembers = [...members, ...nearbyMembers];
-    // A synthetic target can already have a multi-cell native row block. Let
-    // the normal projection derive its per-cell rows in that case; replacing
-    // a wide row with one opaque cell would lose the table's columns.
-    if (target.text == null && [target, ...combinedMembers].some((node) =>
-      (node.text?.length ?? 0) > 90 || (node.boundingBoxes[0]?.width ?? 0) > 160
-    )) continue;
     const allMembers = target.text != null ? [target, ...combinedMembers] : combinedMembers;
     if (allMembers.length < 2) continue;
-    const lines = allMembers.flatMap((node) => {
-      const layout = layoutBlocks.find((candidate) =>
-        candidate.pageStart === node.pageStart && candidate.text === node.text
+    const layoutBlocksForNode = (node: CanonicalNode) => {
+      const exact = layoutBlocks.filter(
+        (candidate) => candidate.pageStart === node.pageStart && candidate.text === node.text
       );
-      const nativeItems = (layout?.lines ?? []).flatMap((line) =>
-        line.items
-          .filter((item) => item.text.trim().length > 0)
-          .map((item) => ({
-            node,
-            text: item.text.trim(),
-            box: {
-              page: item.page,
-              x: item.x,
-              y: item.y,
-              width: item.width,
-              height: item.height,
-            } satisfies BoundingBox,
-          }))
+      if (exact.length > 0) return exact;
+      // Merged table rows lose an exact native text key and often keep only the
+      // first line's bbox. Recover cell streams by text containment + overlap
+      // with the caption region (or the member box when no region exists).
+      if (!node.text) return [];
+      const nodeBox = node.boundingBoxes[0];
+      const region = regionBoxes.find((box) => box.page === node.pageStart);
+      const host = region && (!nodeBox || region.height >= Math.max(nodeBox.height, 24) * 1.2)
+        ? region
+        : nodeBox;
+      if (!host) return [];
+      return layoutBlocks.filter((candidate) => {
+        if (candidate.pageStart !== node.pageStart) return false;
+        const snippet = candidate.text.trim();
+        if (snippet.length < 6 || !node.text!.includes(snippet.slice(0, Math.min(64, snippet.length)))) {
+          return false;
+        }
+        const box = candidate.bbox;
+        if (!box) return false;
+        const shared =
+          Math.max(0, Math.min(box.x + box.width, host.x + host.width) - Math.max(box.x, host.x)) *
+          Math.max(0, Math.min(box.y + box.height, host.y + host.height) - Math.max(box.y, host.y));
+        const area = Math.max(1, box.width * box.height);
+        return shared / area >= 0.45;
+      });
+    };
+    // Synthetic regions often cover wide multi-cell questionnaire / matrix
+    // rows. Prefer layout item spans so we do not skip the whole caption and
+    // leave those rows as orphan captionless tables. Only bail when layout
+    // cannot recover multiple cells and collapsing would yield opaque prose.
+    const layoutBackedMultiCell = allMembers.some((node) =>
+      layoutBlocksForNode(node).some((layout) =>
+        (layout.lines ?? []).some(
+          (line) => line.items.filter((item) => item.text.trim().length > 0).length >= 2
+        )
+      )
+    );
+    if (
+      target.text == null &&
+      !layoutBackedMultiCell &&
+      allMembers.some(
+        (node) => (node.text?.length ?? 0) > 90 || (node.boundingBoxes[0]?.width ?? 0) > 160
+      )
+    ) {
+      continue;
+    }
+    const lines = allMembers.flatMap((node) => {
+      const layouts = layoutBlocksForNode(node);
+      const seen = new Set<string>();
+      const nativeItems = layouts.flatMap((layout) =>
+        (layout.lines ?? []).flatMap((line) =>
+          line.items
+            .filter((item) => item.text.trim().length > 0)
+            .map((item) => ({
+              node,
+              text: item.text.trim(),
+              box: {
+                page: item.page,
+                x: item.x,
+                y: item.y,
+                width: item.width,
+                height: item.height,
+              } satisfies BoundingBox,
+            }))
+            .filter((entry) => {
+              const key = `${entry.text}|${entry.box.x.toFixed(1)}|${entry.box.y.toFixed(1)}`;
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            })
+        )
       );
       // A native block can contain several same-baseline cell spans even when
       // its canonical text was concatenated. Preserve those spans as cells;
@@ -919,7 +1089,8 @@ function captionedNativeTableRows(canonical: CanonicalDocument, layoutBlocks: La
     for (const line of lines) {
       const previous = rows.at(-1);
       const previousY = previous?.[0]?.box.y;
-      if (previous && previousY !== undefined && Math.abs(line.box.y - previousY) <= 2.5) previous.push(line);
+      const rowTol = Math.max(2.5, (previous?.[0]?.box.height ?? line.box.height ?? 10) * 0.55);
+      if (previous && previousY !== undefined && Math.abs(line.box.y - previousY) <= rowTol) previous.push(line);
       else rows.push([line]);
     }
     const projectedRows = rows.map((row) => row.sort((a, b) => a.box.x - b.box.x).map(({ text, box }) => ({
@@ -1061,11 +1232,22 @@ function recoverColumnMasthead(
     .map((group) => group.fontSize)
     .sort((a, b) => a - b)[Math.floor(groups.length / 2)] ?? 10;
   const institution = /\b(?:university|department|school|faculty|college|institute|laboratory|hospital|center|centre|exchange|engineering|computer|design)\b|@[\w.-]+\.[A-Za-z]{2,}|,\s*(?:USA|UK|Canada|Australia)\b/i;
+  // Title/topic crumbs that wide letter-spacing or per-glyph items can fake
+  // into author columns (`U ser E xperience`, `Analysis`, `Questionnaire`).
+  const titleTopic = /\b(?:analysis|questionnaire|usability|experience|mobile|application|design|using|user|review|study|method|system|model|based|toward|towards)\b/i;
   const nameLike = (text: string, fontSize: number) => {
     const value = text.replace(/[\d,*†‡§]/g, " ").replace(/\s+/g, " ").trim();
     const words = value.split(/\s+/).filter(Boolean);
     const capitalizedWords = words.filter((word) => /^[A-Z(]/.test(word)).length;
-    return words.length >= 1 && words.length <= 5 && !institution.test(value) &&
+    const hasSingleLetter = words.some((word) => word.length === 1);
+    const hasLowercaseFragment = words.some((word) => /^[a-z]/.test(word));
+    // Initials (`I D Sabukunze`) are fine; letter-spaced title crumbs mix
+    // single capitals with lowercase tails (`U ser`, `o n M obile`).
+    if (hasSingleLetter && hasLowercaseFragment) return false;
+    // A lone Title-Case token is almost always a title/section word, not a person.
+    if (words.length < 2) return false;
+    if (titleTopic.test(value) && !/\b[A-Z]\.\s*[A-Z]/.test(value) && !/,/.test(value)) return false;
+    return words.length <= 5 && !institution.test(value) &&
       fontSize >= bodyFont + 0.6 && capitalizedWords >= Math.min(2, words.length);
   };
   const authorGroups = groups.filter((group) => nameLike(group.text, group.fontSize));
@@ -1192,10 +1374,21 @@ export function projectCanonicalToPaper(input: {
   const titleNode = canonical.nodes.find((n) => n.role === "title");
   const firstBodyY = canonical.nodes
     .filter((n) => n.pageStart === 1 && n.text &&
-      ((n.role === "heading" && /^abstract$/i.test(n.text.trim())) ||
+      ((n.role === "heading" && /^abstract\s*:?\s*$/i.test(n.text.trim())) ||
        (n.role === "abstract") || (n.role === "paragraph" && n.text.length > 260)))
     .map((n) => n.boundingBoxes[0]?.y ?? Infinity)
     .sort((a, b) => a - b)[0] ?? Infinity;
+  // Same-page section headings can cut the author band. Abstract alone must
+  // not: two-column covers place Abstract beside the title while the byline
+  // sits lower on the left column.
+  const pageOneSectionY = canonical.nodes
+    .filter((n) => n.pageStart === 1 && n.role === "heading" && n.text &&
+      /^(?:\d+\.?\s*)?(?:introduction|introducere|methods?|materials|results?|discussion|background|related work)\b/i.test(
+        n.text.trim(),
+      ))
+    .map((n) => n.boundingBoxes[0]?.y ?? Infinity)
+    .sort((a, b) => a - b)[0] ?? Infinity;
+  const authorBandY = Number.isFinite(pageOneSectionY) ? pageOneSectionY : Math.max(firstBodyY, 420);
   const pageOneNodesByY = canonical.nodes
     .filter((n) => n.pageStart === 1 && n.boundingBoxes[0]?.y != null)
     .slice()
@@ -1242,7 +1435,7 @@ export function projectCanonicalToPaper(input: {
   const sameLineEditorCredit = (text: string): boolean =>
     /^\s*(?:edited|reviewed)\s+by\b/i.test(text.trim());
   const authorNodes = canonical.nodes.filter((n) => n.role === "author" && n.text &&
-    n.pageStart === 1 && (n.boundingBoxes[0]?.y ?? 0) < firstBodyY &&
+    n.pageStart === 1 && (n.boundingBoxes[0]?.y ?? 0) < authorBandY &&
     !isSidebarChromeNode(n) &&
     !mastheadExcludedByLabel(n) &&
     !sameLineEditorCredit(n.text) &&
@@ -1252,7 +1445,10 @@ export function projectCanonicalToPaper(input: {
     n.text.trim().length <= 500 && !/:\s/.test(n.text) &&
     // Contact email is common on author rows; retain a name-shaped prefix
     // even though generic masthead filtering rejects standalone email lines.
+    // IEEE ACCESS also glues `NAME`+`Faculty of…` onto one author node; keep
+    // those rows so splitAffiliationNamePrefix can recover the names.
     (!isNonAuthorMastheadLine(n.text) ||
+      splitAffiliationNamePrefix(n.text).length > 0 ||
       /^[A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’-]+){1,4}\s*[,*]?\s*[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/u.test(n.text.trim()) ||
       (/(?:\band|&)\s*$/i.test(n.text.trim()) &&
         (n.text.match(/\b[A-Z][\p{L}'’-]+\s+[A-Z][\p{L}'’-]+/gu)?.length ?? 0) >= 2)) &&
@@ -1302,7 +1498,19 @@ export function projectCanonicalToPaper(input: {
     !/\b(?:university|department|institute|laboratory|laboratories|hospital|consortium|faculty|school|center|centre)\b/i.test(n.text) &&
     n.text.trim().length <= 400 && /\d[*†‡]?/.test(n.text) &&
     (n.text.match(/,/g)?.length ?? 0) >= 3 && !/[.!?]$/.test(n.text.trim()));
-  const authorSourceNodes = [...authorNodes, ...authorContinuationNodes, ...markedAuthorParagraphs];
+  // Wiley-style mastheads emit `Name1 | Name2 | Name3` as a single paragraph.
+  // Keyword rails use the same `|` separator but stay lowercase / topic-shaped.
+  const looksLikePersonName = (name: string): boolean =>
+    /^[A-ZÀ-ÖØ-Ý][\p{L}'’-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’.%-]+){1,4}$/u.test(name.trim());
+  const pipeAuthorParagraphs = canonical.nodes.filter((n) => {
+    if (!(n.role === "paragraph" || n.role === "author") || !n.text) return false;
+    if (n.pageStart !== 1 || (n.boundingBoxes[0]?.y ?? Infinity) >= firstBodyY) return false;
+    if (isNonAuthorMastheadLine(n.text) || /^(?:keywords?|key words?|index terms?)\s*:/i.test(n.text.trim())) return false;
+    if ((n.text.match(/\|/g)?.length ?? 0) < 1 || n.text.trim().length > 500 || /[.!?]$/.test(n.text.trim())) return false;
+    const names = expandAuthorLine(n.text).filter(looksLikePersonName);
+    return names.length >= 2;
+  });
+  const authorSourceNodes = [...authorNodes, ...authorContinuationNodes, ...markedAuthorParagraphs, ...pipeAuthorParagraphs];
   // Elsevier-like mastheads may split one wrapped author row into several
   // adjacent author nodes (`Jan Egger, Christina` / `Gsaxner, ...`). Merge
   // only contiguous page-1 author nodes in the masthead band; affiliation and
@@ -1418,6 +1626,7 @@ export function projectCanonicalToPaper(input: {
     return node.text ?? "";
   };
   const mergedMastheadPredecessors = new Set<string>();
+  const gluedAuthorAffiliations: string[] = [];
   const authorsStructured = mergedAuthorSources.map((node) => {
     const box = node.boundingBoxes[0];
     const predecessor = node.role === "author"
@@ -1433,7 +1642,13 @@ export function projectCanonicalToPaper(input: {
       : undefined;
     if (predecessor) mergedMastheadPredecessors.add(predecessor.id);
     const rawName = `${predecessor ? `${predecessor.text} ` : ""}${projectionAuthorText(node)}`.trim();
-    const expandedName = expandAuthorLine(rawName)
+    const gluedPairs = splitAffiliationNamePrefix(rawName);
+    for (const pair of gluedPairs) {
+      if (pair.affiliation.length >= 12) gluedAuthorAffiliations.push(pair.affiliation);
+    }
+    const expandedName = (gluedPairs.length > 0
+      ? gluedPairs.map((pair) => pair.author)
+      : expandAuthorLine(rawName))
       .map((name) => name.replace(/^and\s+/i, "").replace(/[,;]+$/, "").trim())
       .filter(Boolean);
     return {
@@ -1709,6 +1924,16 @@ export function projectCanonicalToPaper(input: {
   let affiliations = stitchedAffiliations.filter((affiliation, index, all) =>
     all.findIndex((candidate) => candidate.name.toLocaleLowerCase() === affiliation.name.toLocaleLowerCase()) === index)
     .map(({ _page, _y, _x, _marker, ...affiliation }) => affiliation);
+  // Glued IEEE `NAMEFaculty of…` author rows carry the institution in the
+  // same native node; fold those recovered tails into the affiliation list.
+  for (const name of gluedAuthorAffiliations) {
+    const normalized = normalizeAffiliationName(name);
+    if (normalized.length < 12) continue;
+    if (affiliations.some((affiliation) => affiliation.name.toLocaleLowerCase() === normalized.toLocaleLowerCase())) {
+      continue;
+    }
+    affiliations.push({ id: `glued-author-affiliation-${affiliations.length}`, name: normalized });
+  }
   // Reconstruct lettered affiliation records when two native columns are
   // interleaved. The source stream retains the marker at each institution
   // boundary, which is stronger evidence than the flattened column order.
@@ -1753,16 +1978,26 @@ export function projectCanonicalToPaper(input: {
   // PLOS-like layouts sometimes assign the institution line a valid
   // affiliation role but its leading footnote glyphs prevent the strict
   // candidate filter from retaining it. Recover the complete native line as
-  // a conservative fallback when no affiliation survived at all.
+  // a conservative fallback when no affiliation survived at all. Springer
+  // often emits the numbered band as `copyright` instead of `affiliation`.
   if (affiliations.length === 0) {
-    affiliations = affiliationNodes
+    const fallbackSources = [
+      ...affiliationNodes,
+      ...canonical.nodes.filter((node) =>
+        node.pageStart === 1 &&
+        (node.role === "copyright" || node.role === "other" || node.role === "paragraph") &&
+        /^\s*\d{1,2}\s+\S/.test(node.text ?? "") &&
+        /\b(?:university|department|school|faculty|college|hospital|centre|center|institute|laboratory)\b/i.test(node.text ?? "")
+      ),
+    ];
+    affiliations = fallbackSources
       .flatMap((node) => (node.text ?? "")
         .split(/(?=\b\d{1,2}\s+(?=[A-Z]))/)
         .map((part) => normalizeAffiliationName(part.replace(/^[\d☯*†‡\s]+/, "").trim())))
       .filter((name, index, all) => name.length >= 20 &&
         /\b(?:university|department|school|faculty|college|hospital|centre|center|institute|laboratory)\b/i.test(name) &&
         !/\b(?:vol\.?|volume|issue|issn|open\s+access|research\s+article|journal|accepted|published(?:\s+online)?)\b/i.test(name) &&
-        all.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase()) === index)
+        all.findIndex((candidate) => affiliationKey(candidate) === affiliationKey(name)) === index)
       .map((name, index) => ({ id: `affiliation-fallback-${index}`, name }));
   }
   // When the native stream emits a wrapped institution as separate short
@@ -1870,7 +2105,12 @@ export function projectCanonicalToPaper(input: {
       .filter((name) => name.length >= 3),
   );
   let authorNames = authorsStructured
-    .flatMap((author) => expandAuthorLine(author.name))
+    .flatMap((author) => {
+      // IEEE ACCESS often glues `NAME` + `Faculty of…` with no separator.
+      const splitPairs = splitAffiliationNamePrefix(author.name);
+      if (splitPairs.length > 0) return splitPairs.map((pair) => pair.author);
+      return expandAuthorLine(author.name);
+    })
     .map((name) => name.replace(/^and\s+/i, "").replace(/[,;]+$/, "").trim())
     .filter((name) => !isNonAuthorMastheadLine(name) &&
       ![...editorReviewCreditNames].some((credit) => credit.toLocaleLowerCase() === name.toLocaleLowerCase() ||
@@ -1879,21 +2119,51 @@ export function projectCanonicalToPaper(input: {
       !/[@{}]/.test(name) &&
       !/(?:\[|\])/.test(name) &&
       !/^(?:general terms?|categories and subject descriptors?)\b/i.test(name) &&
-      !/\b(?:movement|science|sport|psychology|department|university|institute|research|council|resistance|training|edited|published)\b/i.test(name) &&
-      !(/\s[A-Z]{1,3}$/.test(name) && !/^[A-Z][A-Z'’-]*(?:\s+[A-Z][A-Z'’-]*)+$/.test(name)) &&
+      !/^(?:[IVXLCDM]+\.?\s+)?(?:introduction|methods?|results?|discussion|conclusions?)\b/i.test(name) &&
+      // Keyword rails without a `Keywords:` label (`medical students`,
+      // `confirmatory factor analysis`) must not become authors.
+      !/^[a-z]/.test(name) &&
+      !/\b(?:students?|analysis|theory|network|depression|anxiety|questionnaire|scale|inventory|phq-?\d|dass-?\d+)\b/i.test(name) &&
+      !/\b(?:movement|science|sport|psychology|department|university|institute|research|council|resistance|training|edited|published|faculty)\b/i.test(name) &&
+      // Trailing 2–3 letter ALL-CAPS crumbs (`NY`, `USA`) are locations, but a
+      // single capital (`D`, `J`) is a normal middle/last initial.
+      !(/\s[A-Z]{2,3}$/.test(name) && !/^[A-Z][A-Z'’-]*(?:\s+[A-Z][A-Z'’-]*)+$/.test(name)) &&
       !/(?:^|,\s*)(?:usa|u\.s\.a?\.?|israel|italy|china|japan|uk|united kingdom|ny|california|new york|tel aviv|albany|palo alto|campinas|brazil|united states)(?:\s*,|$)/i.test(name) &&
       !/\b[A-Z]{2}\s+USA\b/i.test(name) &&
       !/^(?:palo alto|tel aviv|albany|new york|campinas|brazil|united states)$/i.test(name) &&
       !/\b(?:,\s*)?(?:ny|ca),\s*usa\b/i.test(name))
     .filter((name, index, all) => all.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase()) === index)
     .filter((name) => !/^(?:correspondence|corresponding author|teaching assistant professor|assistant professor|associate professor|professor|research fellow)\s*:?[,.]?$/i.test(name.trim()))
+    .filter((name) => !isNonAuthorMastheadLine(name))
     .filter(Boolean);
+  // Chapter books sometimes put the byline below the first body band
+  // (`D. A. Shepherd, H. Patzelt, Entrepreneurial Cognition,`). Recover it
+  // only when the masthead projection found no authors.
+  if (authorNames.length === 0) {
+    const footerBylines = canonical.nodes
+      .filter((n) => n.role === "author" && n.pageStart === 1 && n.text &&
+        /^[A-Z]\.(?:\s*[A-Z]\.)*\s+[A-Z][\p{L}'’-]+/u.test(n.text.trim()) &&
+        (n.text.match(/,/g) ?? []).length >= 1)
+      .flatMap((n) => expandAuthorLine(n.text!))
+      .map((name) => name.replace(/^and\s+/i, "").replace(/[,;]+$/, "").trim())
+      .filter((name) => name.split(/\s+/).length >= 2 && name.split(/\s+/).length <= 5 &&
+        !isNonAuthorMastheadLine(name) &&
+        !/\b(?:cognition|entrepreneurial|chapter|volume)\b/i.test(name));
+    if (footerBylines.length) authorNames = [...new Set(footerBylines)];
+  }
   const recoveredMasthead = recoverColumnMasthead(layoutBlocks, firstBodyY);
   const contaminatedAuthor = authorNames.some((name) =>
     /@|\b(?:university|department|school|institute|design|engineering|seattle|washington),?\b/i.test(name));
-  if (recoveredMasthead && recoveredMasthead.affiliations.length >= 2 && (authorNames.length === 0 ||
-      (contaminatedAuthor && recoveredMasthead.authors.length >= authorNames.length) ||
-      affiliations.length > recoveredMasthead.affiliations.length + 1)) {
+  // Replace only when the author projection is empty or contaminated.
+  // Do not overwrite a successful lettered/numbered affiliation split merely
+  // because it has more rows than the geometric recovery (`a`/`b`/`c` bands
+  // often yield 5–6 clean institutions).
+  if (
+    recoveredMasthead &&
+    recoveredMasthead.affiliations.length >= 2 &&
+    (authorNames.length === 0 ||
+      (contaminatedAuthor && recoveredMasthead.authors.length >= authorNames.length))
+  ) {
     if (authorNames.length === 0 || contaminatedAuthor) authorNames = recoveredMasthead.authors;
     affiliations.splice(0, affiliations.length, ...recoveredMasthead.affiliations.map((name, index) => ({
       id: `recovered-column-affiliation-${index}`,
@@ -1930,19 +2200,34 @@ export function projectCanonicalToPaper(input: {
       const text = node.text ?? "";
       if (/^(?:keywords?|key words?)\s*:/i.test(text.trim())) return [];
       const recovered = splitAffiliationNamePrefix(text).map((pair) => pair.author);
+      const initialed = recoverInitialedAuthorRow(text);
       const nameOnly = !/^[a-z]/.test(text.trim()) &&
         !/(?:university|department|institute|school|college|hospital|laboratory|center|centre|japan|china|israel|sweden)/i.test(text) &&
         text.length <= 180 && /\b(?:and|,)\b/.test(text) ? expandAuthorLine(text) : [];
-      return [...recovered, ...nameOnly];
+      return [...recovered, ...initialed, ...nameOnly];
     })
     .filter((name) => !/(?:[{}@]|\[|\])/.test(name) &&
+      !isNonAuthorMastheadLine(name) &&
       !/^(?:general terms?|categories and subject descriptors?)\b/i.test(name) &&
       // A malformed affiliation node can otherwise be mistaken for an
       // author row (e.g. `Research Director ...` or `Industrial Design`).
       !/\b(?:research director|education services|human factors|ergonomics|industrial design|interactive computing|comprehensive interdisciplinary)\b/i.test(name));
-  for (const name of affiliationAuthorNames) {
+  // IEEE ACCESS sometimes emits trailing authors as `, AND NAME` headings
+  // after the first author was glued onto the institution line.
+  const allCapsAuthorFragments = canonical.nodes
+    .filter((node) =>
+      node.pageStart === 1 &&
+      (node.role === "heading" || node.role === "paragraph" || node.role === "other") &&
+      (node.boundingBoxes[0]?.y ?? 9999) < firstBodyY)
+    .map((node) => recoverAllCapsAuthorFragment(node.text ?? ""))
+    .filter((name): name is string => Boolean(name));
+  for (const name of [...affiliationAuthorNames, ...allCapsAuthorFragments]) {
     const normalizedName = name.replace(/^and\s+/i, "").trim();
-    if (!authorNames.some((existing) => existing.toLocaleLowerCase() === normalizedName.toLocaleLowerCase())) {
+    if (
+      !isNonAuthorMastheadLine(normalizedName) &&
+      normalizedName.split(/\s+/).length <= 6 &&
+      !authorNames.some((existing) => existing.toLocaleLowerCase() === normalizedName.toLocaleLowerCase())
+    ) {
       authorNames.push(normalizedName);
     }
   }
@@ -1983,10 +2268,35 @@ export function projectCanonicalToPaper(input: {
       })));
     }
   }
-  const doiMatch = canonical.nodes
-    .map((node) => node.text ?? "")
-    .join("\n")
-    .match(/10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i)?.[0];
+  // Prefer a labelled page-1 DOI, then any page-1 article DOI, and only then
+  // a later-page match. Drop figure/table suffixes (`.g001`) and trailing
+  // punctuation so citation chrome does not win over the article id.
+  const doiPattern = /(?:doi\s*:?\s*)?(?:https?:\/\/(?:dx\.)?doi\.org\/)?(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)/gi;
+  const normalizeDoi = (raw: string): string =>
+    raw.replace(/[.,;:]+$/g, "").replace(/\.(?:g|t|fig|table)\d+$/i, "");
+  const pageOneTexts = canonical.nodes
+    .filter((node) => node.pageStart === 1)
+    .map((node) => node.text ?? "");
+  const collectDois = (texts: string[]): string[] => {
+    const found: string[] = [];
+    for (const text of texts) {
+      for (const match of text.matchAll(doiPattern)) {
+        const normalized = normalizeDoi(match[1] ?? "");
+        if (normalized && !found.includes(normalized)) found.push(normalized);
+      }
+    }
+    return found;
+  };
+  const labelledDois = (texts: string[]): string[] =>
+    texts
+      .flatMap((text) => [...text.matchAll(/(?:doi|https?:\/\/(?:dx\.)?doi\.org)\s*:?\s*(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)/gi)])
+      .map((match) => normalizeDoi(match[1] ?? ""))
+      .filter(Boolean);
+  const labelledPageOne = labelledDois(pageOneTexts);
+  const pageOneDois = collectDois(pageOneTexts);
+  // Page-1 only. Later-page `doi:` hits are almost always bibliography
+  // entries, including labelled ones (`doi: 10.1016/j.ijmedinf…`).
+  const doiMatch = labelledPageOne[0] ?? pageOneDois[0] ?? null;
 
   const childOf = canonical.relations.filter((r) => r.kind === "CHILD_OF");
   const parentByHeading = new Map<string, string>();
@@ -2992,11 +3302,13 @@ export function projectCanonicalToPaper(input: {
       if (words.length <= 1 && next && next.y - line.y <= 16) text += ` ${next.text}`;
       text = text.split(/\b(?:edited|reviewed)\s+by\b\s*:?/i)[0].replace(/\d+[*†‡§]?/gu, " ");
       const matches = text.match(/[A-ZÀ-ÖØ-Þ][\p{Ll}'’-]*(?:(?:\s+(?:van|von|de|den|der|di|da|la|le)\s+)?\s+[A-ZÀ-ÖØ-Þ][\p{Ll}'’-]*){1,5}/gu) ?? [];
-      runs.push(...matches.filter((name) => name.split(/\s+/).length >= 2 && !/\b(?:university|department|school|laboratory|center|centre|hospital|faculty|institute|edited|reviewed)\b/i.test(name)));
+      runs.push(...matches.filter((name) => name.split(/\s+/).length >= 2 &&
+        !isNonAuthorMastheadLine(name) &&
+        !/\b(?:university|department|school|laboratory|center|centre|hospital|faculty|institute|edited|reviewed|language|processing|learning)\b/i.test(name)));
     }
     for (const run of runs) {
       const normalized = run.replace(/\s+/g, " ").trim();
-      if (normalized.split(/\s+/).length < 3) continue;
+      if (normalized.split(/\s+/).length < 3 || isNonAuthorMastheadLine(normalized)) continue;
       authorNames = authorNames.filter((existing) => !(normalized.toLocaleLowerCase().includes(existing.toLocaleLowerCase()) && normalized.length > existing.length + 2));
       if (!authorNames.some((existing) => existing.toLocaleLowerCase() === normalized.toLocaleLowerCase())) authorNames.push(normalized);
     }
@@ -3017,6 +3329,16 @@ export function projectCanonicalToPaper(input: {
   );
   affiliations = normalizedAffiliations.filter((affiliation, index, all) => {
     const key = affiliationKey(affiliation.name);
+    const name = affiliation.name.trim();
+    // Author-only bylines recovered into authors must not linger as
+    // affiliation rows (`I D Sabukunze*1, A Arakaza2`).
+    if (recoverInitialedAuthorRow(name).length > 0) return false;
+    if (
+      /^(?:keywords?|key words?|index terms?|kata kunci)\s*:/i.test(name) ||
+      /^:\s*[a-z]/i.test(name)
+    ) {
+      return false;
+    }
     const aggregate = canonical.nodes.some((node) => node.pageStart === 1 && /^(?:edited|reviewed)\s+by\s*:/i.test(node.text?.trim() ?? "")) &&
       affiliation.name.length > 180 &&
       all.filter((candidate) => candidate !== affiliation && candidate.name.length >= 24 &&
@@ -3025,6 +3347,21 @@ export function projectCanonicalToPaper(input: {
       const candidateKey = affiliationKey(candidate.name);
       return candidateKey === key || candidateKey.startsWith(key) || key.startsWith(candidateKey);
     }) === index;
+  });
+  // Drop abbreviated how-to-cite crumbs once the full masthead names exist
+  // (`Tasneem N` beside `Nanziba Tasneem`).
+  authorNames = authorNames.filter((name) => {
+    const cleaned = name.replace(/[☯*†‡§]/gu, " ").replace(/\s+/g, " ").trim();
+    const parts = cleaned.split(/\s+/);
+    if (parts.length !== 2) return true;
+    const [left, right] = parts;
+    if (!/^[A-Z][\p{L}'’-]+$/u.test(left) || !/^[A-Z]\.?$/u.test(right)) return true;
+    return !authorNames.some((other) => {
+      if (other === name) return false;
+      const otherParts = other.replace(/[☯*†‡§]/gu, " ").replace(/\s+/g, " ").trim().split(/\s+/);
+      return otherParts.length >= 2 &&
+        otherParts.some((part) => part.toLocaleLowerCase() === left.toLocaleLowerCase());
+    });
   });
   const paper: Paper = {
     id: paperId,
