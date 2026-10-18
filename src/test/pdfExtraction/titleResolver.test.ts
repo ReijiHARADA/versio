@@ -130,6 +130,49 @@ describe("title resolver masthead filtering", () => {
     expect(result.text).not.toMatch(/Fatih Sultan Mehmet/i);
   });
 
+  it("skips spaced SYSTEMATIC REVIEW banners and citation bylines", () => {
+    expect(
+      resolveTitle({
+        candidates: [
+          candidate("S YS T E M AT I C R E V I E W Open Access", 40),
+          candidate("Machine learning-assisted mRNA vaccine pharmacovigilance: a systematic review", 120),
+        ],
+      }).text
+    ).toMatch(/^Machine learning-assisted mRNA/i);
+
+    expect(
+      resolveTitle({
+        candidates: [
+          candidate("Peng et al. BMC Med Inform Decis Mak 2020, 20(Suppl 11):322 https://doi.org/10.1186/example", 40),
+          candidate("Natural language processing (NLP) tools in extracting biomedical concepts from radiology reports", 110),
+        ],
+      }).text
+    ).toMatch(/^Natural language processing \(NLP\) tools/i);
+  });
+
+  it("joins a title split after a DOI masthead and false author band", () => {
+    const doi = candidate("doi:10.1017/jme.2025.10224", 50);
+    doi.layoutBlock.lines[0].fontSize = 7;
+    const lead = candidate("Leveraging Artificial Intelligence and Natural Language Processing in", 120);
+    const rest = candidate("Legal Epidemiology Studies: Opportunities and Challenges", 140, "author");
+    rest.roleScores.title = 0.9;
+    const falseAuthor = candidate("Independent Articles", 90, "author");
+    falseAuthor.roleScores.title = 0.1;
+    const result = resolveTitle({ candidates: [doi, falseAuthor, lead, rest] });
+    expect(result.text).toMatch(/^Leveraging Artificial Intelligence/i);
+    expect(result.text).toMatch(/Legal Epidemiology Studies/i);
+  });
+
+  it("skips PRISMA checklist header rows as titles", () => {
+    const result = resolveTitle({
+      candidates: [
+        candidate("Section and Item Location where item is Checklist item Topic # reported TITLE Title Page 1 ABSTRACT", 80),
+        candidate("Optimizing clinical decision support system functionality by leveraging AI", 160),
+      ],
+    });
+    expect(result.text).toMatch(/^Optimizing clinical decision support/i);
+  });
+
   it("removes an inline journal rail between wrapped title fragments", () => {
     const result = resolveTitle({
       candidates: [candidate("Eco-Linguistics in English: Reviewing the role", 120), candidate("IJLE 2026; 6(1): 05-09 language in environmental discourse", 136)],

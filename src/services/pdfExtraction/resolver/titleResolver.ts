@@ -26,14 +26,56 @@ function isUppercaseTitleLine(text: string): boolean {
 function stripSpacedArticleTypeBanner(text: string): string {
   const trimmed = text.trim();
   const match = trimmed.match(
-    /^(?:(?:[A-Z]\s+){3,}[A-Z])(?:\s+(?:[A-Z]\s+){2,}[A-Z])*\s+([A-ZÀ-ÖØ-Þ].+)$/u
+    /^(?:(?:[A-Z]\s+){3,}[A-Z])(?:\s+(?:[A-Z]\s+){2,}[A-Z])*(?:\s+Open\s+Access)?\s+([A-ZÀ-ÖØ-Þ].+)$/u
   );
   if (!match?.[1]) return trimmed;
   const banner = trimmed.slice(0, trimmed.length - match[1].length).replace(/\s+/g, "");
-  if (!/^(?:ORIGINAL|RESEARCH|ARTICLE|REVIEW|BRIEF|REPORT|LETTER|EDITORIAL|CLINICAL)+$/i.test(banner)) {
+  if (
+    !/^(?:ORIGINAL|RESEARCH|ARTICLE|REVIEW|BRIEF|REPORT|LETTER|EDITORIAL|CLINICAL|SYSTEMATIC)+(?:OPENACCESS)?$/i.test(
+      banner
+    )
+  ) {
     return trimmed;
   }
   return match[1].trim();
+}
+
+/** Entire title slot is only a spaced article-type banner (+ optional Open Access). */
+function looksLikeSpacedArticleTypeOnly(text: string): boolean {
+  const trimmed = text.trim().replace(/\s+/g, " ");
+  const withoutOpenAccess = trimmed.replace(/\s+Open\s+Access$/i, "").trim();
+  const letters = withoutOpenAccess.replace(/[^A-Za-z]/g, "");
+  if (
+    !/^(?:ORIGINAL|RESEARCH|ARTICLE|REVIEW|BRIEF|REPORT|LETTER|EDITORIAL|CLINICAL|SYSTEMATIC)+$/i.test(
+      letters
+    )
+  ) {
+    return false;
+  }
+  // Real titles are dense words. Banner glyphs are emitted with many gaps, or
+  // as near-single-letter tokens (`S YS T E M AT I C R E V I E W`).
+  const tokens = withoutOpenAccess.split(" ").filter(Boolean);
+  const shortTokens = tokens.filter((token) => token.length <= 2).length;
+  return tokens.length >= 4 && shortTokens / tokens.length >= 0.5;
+}
+
+function looksLikeCitationBylineTitle(text: string): boolean {
+  const t = text.trim();
+  if (!/\bet\s+al\./i.test(t)) return false;
+  if (!/\b(?:19|20)\d{2}\b/.test(t) && !/\bsuppl/i.test(t)) return false;
+  return (
+    /\b(?:bmc|ieee|acm|plos|frontiers|nature|science|lancet|jama|bmj|nucleic|med\s+inform|decis\s+mak)\b/i.test(t) ||
+    /https?:\/\//i.test(t) ||
+    /\d+\s*\(\s*suppl/i.test(t) ||
+    /,\s*\d+(?:\s*\(\s*suppl[^)]*\))?\s*:\s*\d+/i.test(t)
+  );
+}
+
+/** Journal section labels mis-scored as author (e.g. "Independent Articles"). */
+function looksLikeSectionBannerAuthor(text: string): boolean {
+  const t = text.trim();
+  return /^(?:independent|original|research|brief|review|special|invited)\s+articles?\b/i.test(t) ||
+    /^(?:articles?|editorial|commentary|perspective)\b/i.test(t) && t.split(/\s+/).length <= 4;
 }
 
 function stripMastheadSuffix(text: string): string {
@@ -260,6 +302,10 @@ function looksLikeProtocolTableChrome(text: string): boolean {
   if (/\bscience without a\b/i.test(t)) return true;
   if (/\bclinical case reports?\b/i.test(t)) return true;
   if (/\b(?:desktop-mounted|head-mounted|webcam-based)\b/i.test(t)) return true;
+  // PRISMA / checklist header rows painted as the largest page-one block.
+  if (/\bchecklist item\b/i.test(t) && /\b(?:section and item|title page|reported)\b/i.test(t)) return true;
+  if (/\btopic\s*#\s*reported\b/i.test(t)) return true;
+  if (/^section and item\b/i.test(t) && /\blocation where item\b/i.test(t)) return true;
   // Multi-clause eligibility prose mashed into one "title" cell.
   if ((t.match(/\b(?:or|and)\b/gi) ?? []).length >= 4 && /\b(?:psychology|neuroscience|computer)\b/i.test(t)) {
     return true;
@@ -422,7 +468,9 @@ function recoverAlternateCoverTitle(candidates: RoleCandidate[]): string | null 
 /** Publisher/journal banners that win the largest-font title race. */
 function looksLikeJournalChromeTitle(text: string): boolean {
   const t = text.trim();
-  if (!t || t.length > 90) return false;
+  if (!t || t.length > 120) return false;
+  if (looksLikeSpacedArticleTypeOnly(t)) return true;
+  if (looksLikeCitationBylineTitle(t)) return true;
   if (/^npj\s*[|·•]/i.test(t)) return true;
   if (/^[A-Za-z][A-Za-z &:-]{2,40}\s+\d{1,4}\s*\(\d{4}\)/.test(t)) return true; // Journal 50 (2026)
   if (/\be\d{4,}\b/.test(t) && t.split(/\s+/).length <= 8) return true;
@@ -672,7 +720,11 @@ export function resolveTitle(input: {
       const authorY = input.candidates
         .filter((candidate) => candidate.pageStart === 1 && candidate.role === "author" &&
           !/\b(?:issn|proceedings|volume|issue)\b/i.test(candidate.text) &&
-          !looksLikeObviousMastheadTitle(candidate.text))
+          !looksLikeObviousMastheadTitle(candidate.text) &&
+          !looksLikeSectionBannerAuthor(candidate.text) &&
+          // Ignore author-scored title continuations (high title score, no commas).
+          !((candidate.roleScores?.title ?? 0) >= 0.85 && !/,/.test(candidate.text) &&
+            candidate.text.trim().split(/\s+/).length >= 4))
         .map((candidate) => candidate.boundingBoxes[0]?.y ?? Number.POSITIVE_INFINITY)
         .sort((a, b) => a - b)[0] ?? Number.POSITIVE_INFINITY;
       if (titleDebug) console.info("[title-debug] authorY", authorY);
@@ -690,21 +742,37 @@ export function resolveTitle(input: {
       if (titleDebug) console.info("[title-debug] last", lastTitle?.text, lastTitle?.boundingBoxes[0]?.y);
       if (lastTitle && lastTitle !== titles[0] && (lastTitle.boundingBoxes[0]?.y ?? 0) > firstY + 24) {
         const y = lastTitle.boundingBoxes[0]?.y ?? 0;
-        // Keep the final title-role span as a safe fallback even if a nearby
-        // prefix was conservatively classified as affiliation.
-        native = [stripInlineAuthorTail(lastTitle)];
-        const sameBaseline = input.candidates
-          .filter((candidate) => {
-            const box = candidate.boundingBoxes[0];
-            const text = candidate.text.trim();
-            return candidate.pageStart === 1 &&
-              Math.abs((box?.y ?? 0) - y) <= 12 &&
-              candidate.role !== "author" && candidate.role !== "header" && candidate.role !== "footer" &&
-              !looksLikeObviousMastheadTitle(text) && !looksLikeAuthorish(text) && text.length <= 100;
-          })
-          .sort((a, b) => (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0));
-        if (titleDebug) console.info("[title-debug] baseline", sameBaseline.map((c) => ({ role: c.role, text: c.text, y: c.boundingBoxes[0]?.y })));
-        if (sameBaseline.length > 0) native = [sameBaseline.map((candidate) => stripMastheadSuffix(candidate.text)).join(" ").replace(/\s+/g, " ").trim()];
+        // Prefer the full vertical title cluster between the masthead and the
+        // final title span. A false early author band can empty `later`, and
+        // keeping only the last line drops the real article-title lead.
+        const clusterBeforeAuthor = titles
+          .filter((candidate) => candidate.pageStart === titles[0].pageStart &&
+            (candidate.boundingBoxes[0]?.y ?? 0) > firstY + 18 &&
+            (candidate.boundingBoxes[0]?.y ?? 0) <= y + 2 &&
+            !looksLikeObviousMastheadTitle(candidate.text) &&
+            !looksLikeMastheadGeometry(candidate) &&
+            !looksLikeAuthorish(candidate.text) &&
+            !isShortenedMastheadVariant(titles[0].text, candidate.text))
+          .sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0));
+        if (clusterBeforeAuthor.length >= 2) {
+          native = [clusterBeforeAuthor.map((candidate) => stripMastheadSuffix(candidate.text)).join(" ").replace(/\s+/g, " ").trim()];
+        } else {
+          // Keep the final title-role span as a safe fallback even if a nearby
+          // prefix was conservatively classified as affiliation.
+          native = [stripInlineAuthorTail(lastTitle)];
+          const sameBaseline = input.candidates
+            .filter((candidate) => {
+              const box = candidate.boundingBoxes[0];
+              const text = candidate.text.trim();
+              return candidate.pageStart === 1 &&
+                Math.abs((box?.y ?? 0) - y) <= 12 &&
+                candidate.role !== "author" && candidate.role !== "header" && candidate.role !== "footer" &&
+                !looksLikeObviousMastheadTitle(text) && !looksLikeAuthorish(text) && text.length <= 100;
+            })
+            .sort((a, b) => (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0));
+          if (titleDebug) console.info("[title-debug] baseline", sameBaseline.map((c) => ({ role: c.role, text: c.text, y: c.boundingBoxes[0]?.y })));
+          if (sameBaseline.length > 0) native = [sameBaseline.map((candidate) => stripMastheadSuffix(candidate.text)).join(" ").replace(/\s+/g, " ").trim()];
+        }
       }
       if (later[0]) {
         if (later.length >= 2) {
