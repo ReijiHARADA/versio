@@ -911,9 +911,13 @@ describe("canonical extraction pipeline", () => {
       pages, paperId: "cjk-checkmark-table", filePath: pdf, fileHash: "cjk-checkmark-table",
       metadata: { pageCount: pages.length },
     });
+    // Adjacent checkmark rows may be merged into one table node; require the
+    // comparison matrix to stay table-typed with multiple √ cells preserved.
     const rows = result.blocks.filter((block) => block.pageStart === 11 && /√/.test(block.original));
-    expect(rows.length).toBeGreaterThanOrEqual(3);
+    expect(rows.length).toBeGreaterThanOrEqual(1);
     expect(rows.every((block) => block.type === "table")).toBe(true);
+    const checkmarks = rows.reduce((count, block) => count + (block.original.match(/√/g) ?? []).length, 0);
+    expect(checkmarks).toBeGreaterThanOrEqual(3);
     expect(result.blocks.some((block) => block.pageStart === 11 && block.type === "paragraph" && block.original.includes("其次"))).toBe(true);
     expect(result.canonical.nodes.some((node) => node.role === "caption" && node.text?.startsWith("表 3"))).toBe(true);
   }, 30_000);

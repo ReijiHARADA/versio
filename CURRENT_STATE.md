@@ -1,3 +1,27 @@
+# 2026-10-18: ライセンス遷移ゲージをスクロール増減に追従
+
+円形ゲージが下スクロールで徐々に溜まり、上スクロールで減るよう調整（COMMIT 140px / wheel scale 0.65、逆方向は settle しない）。最大で離すと遷移、0まで戻すと通常スクロール復帰。dashoffset に短い transition。
+
+# 2026-10-18: 表行断片マージ + OA拡張後の wide 再走査
+
+pending PDF **358**（git外）。wide は表断片対策の反復で **458 clean / 11 flagged**（直前 443/26）。追加: Frontiers `RECEIVEDREVISED` を title-tail restatement 経由で前置きしない、page-native-grid ゴミ除去、page 幾何クラスタで表行マージ、散文誤 table の demote。affective short tables **51→27**。回帰 titleResolver 28 / tableRegion 6 pass。残 fragmented-tables 約11件。ゴール「完璧」と Reader/.app 目視は未達。
+
+# 2026-10-18: wide 7 flagged タイトル/©chrome 修正
+
+catalog+pending 当時 **427 / 427 clean**。protocol/scoping カンマ列、Data Availability / LNCS、ALL-CAPS lead、header ギャップ、Editorial keywords 誤認、キリル vs ISSN、`©Biomedical` copyright。
+
+# 2026-10-18: Frontiers 分割タイトル接合 + OAコーパス拡張
+
+catalog+pending 当時 **427 / 420 clean / 7 flagged**。タイトル断片の主な修正: hyphen 分割の `joinLines`、`root-associated` inline-label 誤認、Frontiers 小文字続き、citation rail、`press conference` event 誤検出。目視スポット 7/7 OK。
+
+# 2026-10-18: ライセンス遷移ゲージをスクロール増減に追従
+
+円形ゲージが下スクロールで徐々に溜まり、上スクロールで減るよう調整（COMMIT 140px / wheel scale 0.65、逆方向は settle しない）。最大で離すと遷移、0まで戻すと通常スクロール復帰。dashoffset に短い transition。
+
+# 2026-10-18: 設定↔ライセンスを Pull-to-Refresh 型に再設計
+
+不自然さの主因は、引っ張り量を `overflowToReveal` で次ページ全体のスライド露出にしていたこと。PTR / Marvin / Flutter two-level に合わせ、引っ張り中は現ページのゴム微変位＋ゲージのみ（行き先は隠す）。閾値超えで「離して…」、離すとスタック遷移。未満は弾性戻り。慣性の端ヒットは従来どおり一旦ラッチ。`prefers-reduced-motion` で変位ほぼゼロ・遷移短縮。単体: pullVisualOffset / commit progress / latch cap。
+
 # 2026-10-18: 設定→ライセンスの引っ張りUI（ゲージ＋端で一旦停止）
 
 勢いよく設定を下までスクロールしたとき、端に当たった最初のオーバースクロールはゴム戻りだけにしてページ遷移しない（一旦停止）。端に止まったあとの引っ張りで遷移可能。引っ張り中は円形ゲージがコミット閾値まで溜まり、閾値超過でアクセント色＋「離すと…」。`useSettingsElasticPull` + Settings ヒント UI。単体: pullCommitProgress / latchOverflowCap。

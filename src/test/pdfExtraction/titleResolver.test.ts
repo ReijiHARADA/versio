@@ -292,4 +292,125 @@ describe("title resolver masthead filtering", () => {
     });
     expect(result.text).toBe("INFLUENCE OF ADVERTISING INCENTIVES ON CONSUMERS IN THE DIGITAL ENVIRONMENT (RUSSIAN EXPERIENCE)");
   });
+
+  it("keeps a long protocol/scoping-review title with topic commas", () => {
+    const dataAvailability = {
+      ...candidate(
+        "Data Availability policy is not applicable to this article. The protocol is registered with OSF",
+        681
+      ),
+      role: "copyright",
+      roleScores: { title: 0.1 },
+    } as any;
+    const result = resolveTitle({
+      candidates: [
+        candidate(
+          "Digital behavioral addictions in adolescents and young adults: Protocol for a scoping review of definitions, measurement, epidemiology, determinants, harms, interventions, and equity",
+          145
+        ),
+        candidate("Sasha R. Sioni 1,2*", 219, "author"),
+        dataAvailability,
+      ],
+    });
+    expect(result.text).toMatch(/^Digital behavioral addictions in adolescents and young adults: Protocol for a scoping review/i);
+  });
+
+  it("rejoins a short ALL-CAPS title fragment with its uppercase lead", () => {
+    const withFont = (c: ReturnType<typeof candidate>, fontSize: number) => {
+      c.layoutBlock.lines = c.layoutBlock.lines.map((line: any) => ({ ...line, fontSize }));
+      c.boundingBoxes[0].height = fontSize;
+      return c;
+    };
+    const lead = withFont(candidate("IMPACT OF E-MARKETING ON CONSUMER", 141, "author"), 14);
+    lead.roleScores.title = 0.1;
+    const result = resolveTitle({
+      candidates: [
+        lead,
+        withFont(candidate("BEHAVIOR", 157), 14),
+        withFont(candidate("Lidija Pulevska Ivanovska1", 179, "author"), 10),
+        withFont(candidate("Republic of Macedonia Elena Karadakoska Ohrid, Republic of Macedonia", 212, "author"), 12),
+      ],
+    });
+    expect(result.text).toBe("IMPACT OF E-MARKETING ON CONSUMER BEHAVIOR");
+  });
+
+  it("does not prepend Frontiers RECEIVED/REVISED rails via a title-tail restatement", () => {
+    const withFont = (c: ReturnType<typeof candidate>, fontSize: number, role?: string) => {
+      const next = role ? { ...c, role, roleScores: { title: role === "title" ? 0.9 : 0.1 } } as any : c;
+      next.layoutBlock.lines = next.layoutBlock.lines.map((line: any) => ({ ...line, fontSize }));
+      next.layoutBlock.role = next.role;
+      next.boundingBoxes[0].height = fontSize;
+      return next;
+    };
+    const result = resolveTitle({
+      candidates: [
+        withFont(candidate("Using deep learning to monitor children’s nutritional status for child stunting identification", 148), 21),
+        withFont(candidate("RECEIVEDREVISED 03 June 202615 October 2025", 342, "author"), 6, "paragraph"),
+        withFont({
+          ...candidate("Monitoring Model (INMM) learns discriminative latent representations and", 403, "author"),
+          role: "affiliation",
+          roleScores: { title: 0.1 },
+        } as any, 9),
+        withFont({
+          ...candidate("status for child stunting identification.", 416, "author"),
+          role: "paragraph",
+          roleScores: { title: 0.1 },
+        } as any, 7),
+      ],
+    });
+    expect(result.text).toMatch(/^Using deep learning to monitor/i);
+    expect(result.text).not.toMatch(/RECEIVED|Monitoring Model/i);
+  });
+
+  it("keeps an education review title instead of a trailing author byline", () => {
+    const result = resolveTitle({
+      candidates: [
+        candidate("Low-cost social robot designs for education: a review", 153),
+        candidate("Edger P. Rutatola *, Frank C. Msonge , Remko Proesmans ,", 210, "author"),
+        candidate("Koen Stroeken and Tony Belpaeme", 225, "author"),
+      ],
+    });
+    expect(result.text).toBe("Low-cost social robot designs for education: a review");
+  });
+
+  it("keeps an Editorial colon title that lists topics with commas", () => {
+    const result = resolveTitle({
+      candidates: [
+        candidate("Editorial: AI and neuroscience: integrating knowledge, reasoning, and theory of mind", 154),
+        candidate("Darren J. Edwards *", 233, "author"),
+        candidate("A summary of the article contributions", 670),
+      ],
+    });
+    expect(result.text).toMatch(/^Editorial: AI and neuroscience: integrating knowledge/i);
+  });
+
+  it("prefers a Cyrillic article title over an ISSN journal rail", () => {
+    const result = resolveTitle({
+      candidates: [
+        candidate("2313-2299 (print), ISSN 2411-1236 (online) 2023 Vol. 15 No. 1 138–151", 79),
+        candidate("EDN: DQMSRU", 145, "author"),
+        candidate("Текст, дискурс, диктема, языковая личность как базовые понятия лингвистики текста", 191),
+      ],
+    });
+    expect(result.text).toMatch(/^Текст, дискурс, диктема/i);
+  });
+
+  it("fills a same-font header gap between stacked title lines", () => {
+    const withFont = (c: ReturnType<typeof candidate>, fontSize: number, role?: string) => {
+      const next = role ? { ...c, role, roleScores: { title: role === "title" ? 0.9 : 0.1 } } as any : c;
+      next.layoutBlock.lines = next.layoutBlock.lines.map((line: any) => ({ ...line, fontSize }));
+      next.layoutBlock.role = next.role;
+      next.boundingBoxes[0].height = fontSize;
+      return next;
+    };
+    const result = resolveTitle({
+      candidates: [
+        withFont(candidate("Intelligent", 185), 32),
+        withFont(candidate("Human Computer", 223, "author"), 32, "header"),
+        withFont(candidate("Interaction", 261), 32),
+        withFont(candidate("Commenced Publication in 1973 Founding and Former Series Editors: Gerhard Goos, Juris Hartmanis, and Jan van Leeuwen", 400), 10),
+      ],
+    });
+    expect(result.text).toBe("Intelligent Human Computer Interaction");
+  });
 });

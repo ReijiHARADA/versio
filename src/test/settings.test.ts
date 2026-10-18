@@ -6,10 +6,12 @@ import {
   settingsSectionElementId,
 } from "../utils/settingsToc";
 import {
+  COMMIT_PULL_PX,
+  PULL_RUBBER_DIM,
   elasticOffset,
   latchOverflowCap,
-  overflowToReveal,
   pullCommitProgress,
+  pullVisualOffset,
   rubberBand,
 } from "../components/settings/useSettingsElasticPull";
 import {
@@ -34,40 +36,45 @@ describe("settings TOC", () => {
   });
 });
 
-describe("settings elastic pull", () => {
+describe("settings pull-to-navigate", () => {
   it("maps pull distance with diminishing rubber-band offset", () => {
     expect(rubberBand(0)).toBe(0);
     expect(elasticOffset(0)).toBe(0);
     expect(rubberBand(40)).toBeGreaterThan(0);
     expect(rubberBand(140)).toBeGreaterThan(rubberBand(40));
-    expect(rubberBand(140)).toBeLessThan(120);
+    expect(rubberBand(140)).toBeLessThan(PULL_RUBBER_DIM);
   });
 
-  it("eases overscroll into a full-page reveal after the soft zone", () => {
-    const h = 800;
-    expect(overflowToReveal(0, h)).toBe(0);
-    const soft = overflowToReveal(80, h);
-    const deep = overflowToReveal(500, h);
-    expect(soft).toBeGreaterThan(0);
-    expect(deep).toBeGreaterThan(soft);
-    expect(overflowToReveal(2000, h)).toBeLessThanOrEqual(h);
+  it("keeps visual pull well below a full page (PTR-style, not page peek)", () => {
+    const deep = pullVisualOffset(COMMIT_PULL_PX * 3, false);
+    expect(deep).toBeGreaterThan(0);
+    expect(deep).toBeLessThanOrEqual(PULL_RUBBER_DIM);
+    // Must not approach viewport-scale motion during the gesture.
+    expect(deep).toBeLessThan(120);
   });
 
-  it("fills commit progress to 1 at the commit threshold", () => {
-    const h = 800;
-    expect(pullCommitProgress(0, h)).toBe(0);
-    expect(pullCommitProgress(h * 0.18, h)).toBeCloseTo(0.5, 5);
-    expect(pullCommitProgress(h * 0.36, h)).toBe(1);
-    expect(pullCommitProgress(h, h)).toBe(1);
+  it("fills commit progress from raw overflow, independent of rubber visual", () => {
+    expect(pullCommitProgress(0)).toBe(0);
+    expect(pullCommitProgress(COMMIT_PULL_PX / 2)).toBeCloseTo(0.5, 5);
+    expect(pullCommitProgress(COMMIT_PULL_PX)).toBe(1);
+    expect(pullCommitProgress(COMMIT_PULL_PX * 2)).toBe(1);
+
+    const visualAtCommit = pullVisualOffset(COMMIT_PULL_PX, false);
+    expect(visualAtCommit).toBeLessThan(COMMIT_PULL_PX);
   });
 
-  it("keeps latch overflow in the soft rubber zone", () => {
-    const h = 800;
-    const cap = latchOverflowCap(h);
-    const reveal = overflowToReveal(cap, h);
-    expect(reveal).toBeGreaterThan(0);
-    // Must stay well below commit depth so the first stop cannot page-change.
-    expect(reveal / h).toBeLessThan(0.36);
+  it("caps latch overflow just below a full commit", () => {
+    const cap = latchOverflowCap();
+    expect(cap).toBeLessThan(COMMIT_PULL_PX);
+    expect(pullCommitProgress(cap)).toBeGreaterThan(0.8);
+    expect(pullCommitProgress(cap)).toBeLessThan(1);
+  });
+
+  it("nearly freezes pull visual when reduced motion is preferred", () => {
+    const normal = pullVisualOffset(COMMIT_PULL_PX, false);
+    const reduced = pullVisualOffset(COMMIT_PULL_PX, true);
+    expect(reduced).toBeLessThan(normal);
+    expect(reduced).toBeLessThanOrEqual(10);
   });
 });
 

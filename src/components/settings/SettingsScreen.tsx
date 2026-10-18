@@ -338,16 +338,29 @@ export function SettingsScreen() {
         </aside>
         <div ref={panel.viewportRef} className={styles.viewport}>
           <div
-            className={`${styles.stack} ${panel.snapping ? styles.stackSnap : ""}`}
+            className={`${styles.stack} ${panel.transitioning ? styles.stackSnap : ""}`}
             style={{
               height: panel.viewportH > 0 ? panel.viewportH * 2 : "200%",
               transform: `translateY(${-panel.stackOffset}px)`,
+              transitionDuration: panel.transitioning ? `${panel.transitionMs}ms` : undefined,
             }}
           >
             <main
               ref={contentRef}
-              className={styles.page}
-              style={{ height: panel.viewportH > 0 ? panel.viewportH : "50%" }}
+              className={`${styles.page} ${
+                panelPage === "settings" && panel.snapping && !panel.transitioning
+                  ? styles.pagePullSettle
+                  : ""
+              }`}
+              style={{
+                height: panel.viewportH > 0 ? panel.viewportH : "50%",
+                transform:
+                  panelPage === "settings" ? `translateY(${-panel.pullOffset}px)` : undefined,
+                transitionDuration:
+                  panelPage === "settings" && panel.snapping && !panel.transitioning
+                    ? `${panel.settleMs}ms`
+                    : undefined,
+              }}
               aria-hidden={panelPage === "licenses"}
             >
               <section id={settingsSectionElementId("reading")} className={styles.section}>
@@ -385,25 +398,39 @@ export function SettingsScreen() {
             </main>
             <main
               ref={panel.licensesRef}
-              className={styles.page}
-              style={{ height: panel.viewportH > 0 ? panel.viewportH : "50%" }}
+              className={`${styles.page} ${
+                panelPage === "licenses" && panel.snapping && !panel.transitioning
+                  ? styles.pagePullSettle
+                  : ""
+              }`}
+              style={{
+                height: panel.viewportH > 0 ? panel.viewportH : "50%",
+                transform:
+                  panelPage === "licenses" ? `translateY(${panel.pullOffset}px)` : undefined,
+                transitionDuration:
+                  panelPage === "licenses" && panel.snapping && !panel.transitioning
+                    ? `${panel.settleMs}ms`
+                    : undefined,
+              }}
               aria-hidden={panelPage === "settings"}
             >
               <LicensesSettingsSection />
             </main>
           </div>
-          {panel.pulling ? (
+          {panel.pulling || panel.transitioning ? (
             <div
               className={`${styles.elasticHint} ${
                 panelPage === "settings" ? styles.elasticHintBottom : styles.elasticHintTop
               } ${panel.pastThreshold && !panel.latching ? styles.elasticHintActive : ""}`}
               style={{
-                opacity: Math.min(1, 0.4 + panel.progress * 0.6),
+                opacity: panel.transitioning
+                  ? 0
+                  : Math.min(1, 0.35 + panel.progress * 0.65),
               }}
               aria-hidden="true"
             >
               <PullCommitGauge
-                progress={panel.latching ? Math.min(panel.progress, 0.45) : panel.progress}
+                progress={panel.progress}
                 ready={panel.pastThreshold && !panel.latching}
               />
               <span className={styles.elasticHintLabel}>
@@ -411,11 +438,11 @@ export function SettingsScreen() {
                   ? "いったん停止"
                   : panelPage === "settings"
                     ? panel.pastThreshold
-                      ? "離すとライセンスへ"
-                      : "続けて引っ張るとライセンスへ"
+                      ? "離してライセンスへ"
+                      : "スクロールでゲージをためる"
                     : panel.pastThreshold
-                      ? "離すと設定へ"
-                      : "続けて引っ張ると設定へ"}
+                      ? "離して設定へ"
+                      : "スクロールでゲージをためる"}
               </span>
             </div>
           ) : null}

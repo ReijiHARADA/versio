@@ -721,6 +721,400 @@ function looksLikeProseTableRegionMember(text: string | null | undefined): boole
   return false;
 }
 
+function isNumberedTableCaptionText(text: string | null | undefined): boolean {
+  return /^(?:table|表)\s*\d+/i.test((text ?? "").trim());
+}
+
+function isTablePanelLabel(text: string | null | undefined): boolean {
+  const trimmed = (text ?? "").trim();
+  return /^\([a-z0-9]{1,2}\)$/i.test(trimmed) || /^[a-z0-9]{1,2}\)$/i.test(trimmed);
+}
+
+function hasRowLikeTableEvidence(node: CanonicalNode): boolean {
+  return node.evidence.some((entry) =>
+    entry.label === "table-row-geometry" ||
+    entry.label === "repeated-prose-cell-grid" ||
+    entry.label === "captioned-native-multicell-row" ||
+    entry.label === "cjk-checkmark-comparison-grid" ||
+    entry.label === "merged-adjacent-table-rows" ||
+    entry.label === "merged-page-geometry-table-rows" ||
+    entry.label === "caption-anchored-graphics-grid" ||
+    entry.label === "table-region-member" ||
+    entry.label === "page-native-grid"
+  );
+}
+
+/** Font-decode / chart-axis debris promoted via page-native-grid. */
+function isGarbageTableFragment(node: CanonicalNode): boolean {
+  if (node.role !== "table") return false;
+  const text = (node.text ?? "").trim();
+  if (!text) return true;
+  const letters = (text.match(/\p{L}/gu) ?? []).length;
+  const digits = (text.match(/\d/g) ?? []).length;
+  const symbols = (text.match(/[^\p{L}\p{N}\s]/gu) ?? []).length;
+  if (letters <= 2 && text.length <= 12) return true;
+  if (letters > 0 && symbols >= letters && letters < 12) return true;
+  if (/[*;=><]{2,}/.test(text) && letters < 10) return true;
+  if (/^(?:ab|=+|y{2,}|o\*\*;)/i.test(text) && text.length <= 24) return true;
+  // Decode noise rows such as `Y YY Y Y` / `>Y YY` / `O**; H O**; H`.
+  if (digits === 0 && letters <= 10 && /^(?:[A-Z<>*=;\s]|[YyHhOoMm])+$/.test(text) && text.length <= 40) {
+    return true;
+  }
+  if (digits === 0 && letters > 0 && letters <= 6 && /[Yy]{2,}/.test(text)) return true;
+  return false;
+}
+
+/**
+ * Frontiers / review comparison tables often emit one native block per row
+ * (`• Machine learning ✓ ✓`). Keep them as table content so they skip MADLAD,
+ * but collapse consecutive same-page row fragments into one node so Reader
+ * does not open dozens of table cards for a single visual matrix.
+ */
+function isWeakProseGridTableFragment(node: CanonicalNode): boolean {
+  if (node.role !== "table") return false;
+  const labels = new Set(node.evidence.map((entry) => entry.label));
+  if (!labels.has("repeated-prose-cell-grid")) return false;
+  if (
+    labels.has("table-row-geometry") ||
+    labels.has("captioned-native-multicell-row") ||
+    labels.has("cjk-checkmark-comparison-grid") ||
+    labels.has("merged-adjacent-table-rows") ||
+    labels.has("captioned-neighbor-cell-rows")
+  ) {
+    return false;
+  }
+  const text = (node.text ?? "").trim();
+  if (!text || isNumberedTableCaptionText(text)) return false;
+  const words = text.split(/\s+/).filter(Boolean);
+  // Multi-column prose crumbs (`enthusiasm`, `for purely`, `approaches.`) win
+  // the prose-cell-grid race without independent row geometry.
+  if (/^[a-z]/.test(text)) return true;
+  if (/[."”']$/.test(text) && words.length <= 8 && !/\d/.test(text)) return true;
+  if (words.length <= 4 && !/\d/.test(text) && !/[√✓☑☒•]/.test(text)) return true;
+  return false;
+}
+
+function isWeakTableIntervening(node: CanonicalNode): boolean {
+  if (node.role !== "paragraph" && node.role !== "other" && node.role !== "heading") return false;
+  const text = (node.text ?? "").trim();
+  if (!text) return true;
+  if (/^(?:partial|continued|continued\.)$/i.test(text)) return true;
+  const words = text.split(/\s+/).filter(Boolean);
+  return text.length <= 36 && words.length <= 5 && !/[.!?]$/.test(text) &&
+    !/^(?:table|figure|fig\.?|図|表)\s*\d+/i.test(text);
+}
+
+function findMergeableTableAnchor(result: CanonicalNode[]): number {
+  for (let index = result.length - 1; index >= 0; index -= 1) {
+    const candidate = result[index];
+    if (
+      candidate.role === "table" &&
+      (candidate.text ?? "").trim() &&
+      hasRowLikeTableEvidence(candidate) &&
+      !isNumberedTableCaptionText(candidate.text)
+    ) {
+      return index;
+    }
+    if (isWeakTableIntervening(candidate)) continue;
+    break;
+  }
+  return -1;
+}
+
+export function mergeAdjacentTableRows(nodes: CanonicalNode[]): CanonicalNode[] {
+  const result: CanonicalNode[] = [];
+  for (const node of nodes) {
+    if (node.role === "table" && !(node.text ?? "").trim()) {
+      continue;
+    }
+
+    if (isGarbageTableFragment(node)) {
+      continue;
+    }
+
+    if (node.role === "table" && isTablePanelLabel(node.text)) {
+      result.push({
+        ...node,
+        role: "other",
+        confidence: Math.min(node.confidence, 0.55),
+        evidence: [
+          ...node.evidence,
+          {
+            source: "generic-heuristic",
+            label: "demoted-table-panel-label",
+            confidence: 0.7,
+            page: node.pageStart,
+            bbox: node.boundingBoxes[0],
+            reason: "panel marker is not an independent table",
+          },
+        ],
+      });
+      continue;
+    }
+
+    if (isWeakProseGridTableFragment(node)) {
+      result.push({
+        ...node,
+        role: "paragraph",
+        confidence: Math.min(node.confidence, 0.62),
+        evidence: [
+          ...node.evidence,
+          {
+            source: "generic-heuristic",
+            label: "demoted-weak-prose-cell-grid",
+            confidence: 0.72,
+            page: node.pageStart,
+            bbox: node.boundingBoxes[0],
+            reason: "prose-cell-grid without row geometry is not a table",
+          },
+        ],
+      });
+      continue;
+    }
+
+    const anchorIndex = node.role === "table" &&
+      hasRowLikeTableEvidence(node) &&
+      !isNumberedTableCaptionText(node.text)
+      ? findMergeableTableAnchor(result)
+      : -1;
+    const prev = anchorIndex >= 0 ? result[anchorIndex] : undefined;
+    if (prev && prev.pageStart === node.pageStart) {
+      const prevBox = prev.boundingBoxes.at(-1);
+      const nodeBox = node.boundingBoxes[0];
+      const gap = prevBox && nodeBox
+        ? nodeBox.y - (prevBox.y + prevBox.height)
+        : Number.POSITIVE_INFINITY;
+      const line = Math.max(prevBox?.height ?? 12, nodeBox?.height ?? 12, 10);
+      // Allow overlap (two-column PDF boxes) and a short run of weak crumbs
+      // between native table rows (`partial`, citation tails).
+      if (gap >= -line * 3.5 && gap <= line * 4.2) {
+        const intervening = result.slice(anchorIndex + 1);
+        const interveningText = intervening
+          .map((entry) => (entry.text ?? "").trim())
+          .filter(Boolean)
+          .join(" ");
+        result.splice(anchorIndex + 1);
+        result[anchorIndex] = {
+          ...prev,
+          text: [prev.text, interveningText, node.text]
+            .map((part) => (part ?? "").trim())
+            .filter(Boolean)
+            .join("\n"),
+          pageEnd: Math.max(prev.pageEnd, node.pageEnd),
+          boundingBoxes: [...prev.boundingBoxes, ...intervening.flatMap((entry) => entry.boundingBoxes), ...node.boundingBoxes],
+          confidence: Math.min(prev.confidence, node.confidence),
+          evidence: [
+            ...prev.evidence,
+            ...node.evidence.filter((entry) =>
+              entry.label === "table-row-geometry" ||
+              entry.label === "repeated-prose-cell-grid" ||
+              entry.label === "captioned-native-multicell-row" ||
+              entry.label === "cjk-checkmark-comparison-grid"
+            ),
+            {
+              source: "generic-heuristic",
+              label: "merged-adjacent-table-rows",
+              confidence: 0.9,
+              page: node.pageStart,
+              bbox: nodeBox,
+              reason: intervening.length
+                ? "joined table-row fragments across weak intervening crumbs"
+                : "joined consecutive native table-row fragments",
+            },
+          ],
+        };
+        continue;
+      }
+    }
+    result.push(node);
+  }
+  return result;
+}
+
+function isProseMistakenTableRow(node: CanonicalNode): boolean {
+  if (node.role !== "table") return false;
+  const text = (node.text ?? "").trim();
+  if (!text || isNumberedTableCaptionText(text)) return false;
+  if (/[√✓☑☒]/.test(text) || /\t/.test(text)) return false;
+  const words = text.split(/\s+/).filter(Boolean);
+  if (/^(?:rather than|however|therefore|in this|we |this |because|although)\b/i.test(text)) return true;
+  if (/^[a-z]/.test(text) && !/\d/.test(text) && words.length >= 3 && words.length <= 12) return true;
+  return false;
+}
+
+function demoteProseMistakenTableRows(nodes: CanonicalNode[]): CanonicalNode[] {
+  return nodes.map((node) => {
+    if (!isProseMistakenTableRow(node)) return node;
+    return {
+      ...node,
+      role: "paragraph",
+      confidence: Math.min(node.confidence, 0.6),
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic",
+          label: "demoted-prose-table-row",
+          confidence: 0.7,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: "sentence-like fragment lacked table structure",
+        },
+      ],
+    };
+  });
+}
+
+/**
+ * Merge table-row fragments that share a page even when reading order inserts
+ * body prose between them (two-column Frontiers layouts). Cluster by vertical
+ * proximity and overlapping x-bands rather than document adjacency.
+ */
+export function mergeTableRowsByPageGeometry(nodes: CanonicalNode[]): CanonicalNode[] {
+  type Entry = { index: number; node: CanonicalNode };
+  const byPage = new Map<number, Entry[]>();
+  nodes.forEach((node, index) => {
+    if (
+      node.role !== "table" ||
+      !(node.text ?? "").trim() ||
+      isNumberedTableCaptionText(node.text) ||
+      !hasRowLikeTableEvidence(node)
+    ) {
+      return;
+    }
+    const list = byPage.get(node.pageStart) ?? [];
+    list.push({ index, node });
+    byPage.set(node.pageStart, list);
+  });
+
+  const absorbed = new Set<string>();
+  const replacement = new Map<number, CanonicalNode>();
+
+  for (const entries of byPage.values()) {
+    entries.sort((a, b) =>
+      (a.node.boundingBoxes[0]?.y ?? 0) - (b.node.boundingBoxes[0]?.y ?? 0) ||
+      (a.node.boundingBoxes[0]?.x ?? 0) - (b.node.boundingBoxes[0]?.x ?? 0)
+    );
+    let cluster: Entry[] = [];
+    const flush = () => {
+      if (cluster.length <= 1) {
+        cluster = [];
+        return;
+      }
+      const first = cluster[0]!;
+      const merged: CanonicalNode = {
+        ...first.node,
+        text: cluster.map((entry) => (entry.node.text ?? "").trim()).filter(Boolean).join("\n"),
+        pageEnd: Math.max(...cluster.map((entry) => entry.node.pageEnd)),
+        boundingBoxes: cluster.flatMap((entry) => entry.node.boundingBoxes),
+        confidence: Math.min(...cluster.map((entry) => entry.node.confidence)),
+        evidence: [
+          ...first.node.evidence,
+          {
+            source: "generic-heuristic",
+            label: "merged-page-geometry-table-rows",
+            confidence: 0.88,
+            page: first.node.pageStart,
+            bbox: first.node.boundingBoxes[0],
+            reason: `joined ${cluster.length} same-page table-row fragments by geometry`,
+          },
+        ],
+      };
+      replacement.set(first.index, merged);
+      for (const entry of cluster.slice(1)) absorbed.add(entry.node.id);
+      cluster = [];
+    };
+
+    for (const entry of entries) {
+      if (cluster.length === 0) {
+        cluster = [entry];
+        continue;
+      }
+      const prev = cluster.at(-1)!.node;
+      const prevBox = prev.boundingBoxes.at(-1);
+      const nodeBox = entry.node.boundingBoxes[0];
+      const gap = prevBox && nodeBox
+        ? nodeBox.y - (prevBox.y + prevBox.height)
+        : Number.POSITIVE_INFINITY;
+      const line = Math.max(prevBox?.height ?? 12, nodeBox?.height ?? 12, 10);
+      const prevRight = (prevBox?.x ?? 0) + (prevBox?.width ?? 0);
+      const nodeRight = (nodeBox?.x ?? 0) + (nodeBox?.width ?? 0);
+      const xOverlap = prevBox && nodeBox
+        ? Math.min(prevRight, nodeRight) - Math.max(prevBox.x, nodeBox.x)
+        : 0;
+      const xCompatible = xOverlap >= -36 || Math.abs((prevBox?.x ?? 0) - (nodeBox?.x ?? 0)) <= 72;
+      // Review comparison matrices often leave large vertical gaps between
+      // extracted cell crumbs on the same page; keep clustering loosely.
+      if (gap >= -line * 4 && gap <= Math.max(line * 7.5, 96) && xCompatible) {
+        cluster.push(entry);
+      } else {
+        flush();
+        cluster = [entry];
+      }
+    }
+    flush();
+  }
+
+  return nodes
+    .map((node, index) => replacement.get(index) ?? node)
+    .filter((node) => !absorbed.has(node.id));
+}
+
+/**
+ * When a page still has many short prose-cell-grid table crumbs after geometry
+ * clustering (typical of wide review comparison matrices), collapse them into
+ * one table node per page so Reader does not open a card per cell.
+ */
+function collapseDenseShortProseGridTables(nodes: CanonicalNode[]): CanonicalNode[] {
+  type Entry = { index: number; node: CanonicalNode };
+  const byPage = new Map<number, Entry[]>();
+  nodes.forEach((node, index) => {
+    const text = (node.text ?? "").trim();
+    if (
+      node.role !== "table" ||
+      text.length === 0 ||
+      text.length >= 40 ||
+      isNumberedTableCaptionText(text) ||
+      !node.evidence.some((entry) => entry.label === "repeated-prose-cell-grid" || entry.label === "page-native-grid")
+    ) {
+      return;
+    }
+    const list = byPage.get(node.pageStart) ?? [];
+    list.push({ index, node });
+    byPage.set(node.pageStart, list);
+  });
+
+  const absorbed = new Set<string>();
+  const replacement = new Map<number, CanonicalNode>();
+  for (const entries of byPage.values()) {
+    if (entries.length < 4) continue;
+    entries.sort((a, b) => (a.node.boundingBoxes[0]?.y ?? 0) - (b.node.boundingBoxes[0]?.y ?? 0));
+    const first = entries[0]!;
+    replacement.set(first.index, {
+      ...first.node,
+      text: entries.map((entry) => (entry.node.text ?? "").trim()).filter(Boolean).join("\n"),
+      pageEnd: Math.max(...entries.map((entry) => entry.node.pageEnd)),
+      boundingBoxes: entries.flatMap((entry) => entry.node.boundingBoxes),
+      confidence: Math.min(...entries.map((entry) => entry.node.confidence)),
+      evidence: [
+        ...first.node.evidence,
+        {
+          source: "generic-heuristic",
+          label: "collapsed-dense-prose-grid-tables",
+          confidence: 0.84,
+          page: first.node.pageStart,
+          bbox: first.node.boundingBoxes[0],
+          reason: `collapsed ${entries.length} short prose-grid table crumbs on one page`,
+        },
+      ],
+    });
+    for (const entry of entries.slice(1)) absorbed.add(entry.node.id);
+  }
+
+  return nodes
+    .map((node, index) => replacement.get(index) ?? node)
+    .filter((node) => !absorbed.has(node.id));
+}
+
 export function resolveTableRegions(nodes: CanonicalNode[], regions: StructuralRegionEvidence[]): CanonicalNode[] {
   let resolvedNodes = nodes;
   for (const region of regions) {
@@ -795,6 +1189,13 @@ export function resolveCanonicalDocument(input: {
   let nodes = candidates.map(nodeFromCandidate);
   nodes = mergeTableCaptionContinuations(nodes);
   nodes = resolveTableRegions(nodes, input.regionEvidence ?? []);
+  nodes = mergeAdjacentTableRows(nodes);
+  // Drop empty table shells left after region promotion / row merges.
+  nodes = nodes.filter((node) => node.role !== "table" || Boolean((node.text ?? "").trim()));
+  nodes = mergeTableRowsByPageGeometry(nodes);
+  nodes = collapseDenseShortProseGridTables(nodes);
+  nodes = demoteProseMistakenTableRows(nodes);
+  nodes = nodes.filter((node) => node.role !== "table" || Boolean((node.text ?? "").trim()));
   nodes = promoteRotatedTableCaptions(nodes, candidates);
   nodes = splitInlineSectionLabels(nodes);
   nodes = demotePageOneAuthorHeadings(nodes);
