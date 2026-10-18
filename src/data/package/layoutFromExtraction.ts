@@ -108,15 +108,38 @@ export function attachLinesToBlocks(
     // Keeping multiple one-cell rows still gives the Reader a readable row
     // structure; dropping them turns every cell into one opaque space-joined
     // string. This is limited to blocks already classified as tables.
-    const hasReadableRows = normalizedTableRows?.some((row) => row.length >= 2) === true ||
-      ((normalizedTableRows?.length ?? 0) >= 2 &&
-        normalizedTableRows?.some((row) => row.length > 0) === true);
+    const existingRows = Array.isArray((block.metadata as { tableRows?: unknown }).tableRows)
+      ? normalizeTableRows(
+          (block.metadata as { tableRows: Array<Array<{ text: string; x?: number; width?: number }>> }).tableRows
+            .map((row) =>
+              row.map((cell) => ({
+                text: cell.text,
+                x: cell.x ?? 0,
+                width: cell.width ?? 0,
+              }))
+            )
+        )
+      : undefined;
+    const projectedCellCount = existingRows?.reduce((sum, row) => sum + row.length, 0) ?? 0;
+    const rebuiltCellCount = normalizedTableRows?.reduce((sum, row) => sum + row.length, 0) ?? 0;
+    const multiCellProjected = existingRows?.some((row) => row.length >= 2) === true;
+    const multiCellRebuilt = normalizedTableRows?.some((row) => row.length >= 2) === true;
+    // Caption-owned projection may already expose per-cell rows from recovered
+    // native streams. Do not replace that grid with a coarser rebuild.
+    const preferExisting =
+      multiCellProjected &&
+      projectedCellCount >= 6 &&
+      (!multiCellRebuilt || projectedCellCount >= rebuiltCellCount * 1.25 || (normalizedTableRows?.length ?? 0) <= 3);
+    const chosenRows = preferExisting ? existingRows : normalizedTableRows;
+    const hasReadableRows = chosenRows?.some((row) => row.length >= 2) === true ||
+      ((chosenRows?.length ?? 0) >= 2 &&
+        chosenRows?.some((row) => row.length > 0) === true);
     return {
       ...block,
       metadata: {
         ...block.metadata,
         lines,
-        ...(hasReadableRows ? { tableRows: normalizedTableRows } : {}),
+        ...(hasReadableRows ? { tableRows: chosenRows } : {}),
       },
     };
   });

@@ -93,6 +93,10 @@ export function SettingsScreen() {
   const [activeSection, setActiveSection] = useState<SettingsSectionId>("reading");
   const [clearingCache, setClearingCache] = useState(false);
   const pendingScrollRef = useRef<SettingsScrollSectionId | null>(null);
+  /** Remember settings scroll while on that page; restore after pull-back from licenses. */
+  const settingsScrollTopRef = useRef(0);
+  /** When set, return from licenses restores this scrollTop instead of jumping to a section top. */
+  const restoreScrollTopRef = useRef<number | null>(null);
   const settingsRef = useRef(settings);
 
   const panelPage: SettingsPanelPage =
@@ -104,13 +108,15 @@ export function SettingsScreen() {
       setActiveSection("licenses");
       return;
     }
-    // Sidebar may already have queued a target section; keep it. Overscroll
-    // back from licenses falls through to the last settings section.
-    const target = pendingScrollRef.current ?? LAST_SCROLL_SECTION;
-    if (!pendingScrollRef.current) {
-      pendingScrollRef.current = target;
+    // Sidebar may already have queued a target section; keep it.
+    if (pendingScrollRef.current) {
+      setActiveSection(pendingScrollRef.current);
+      return;
     }
-    setActiveSection(target);
+    // Pull-back from licenses: stay where the user left settings (usually the
+    // bottom / 詳細), instead of scrolling to the top of that section.
+    restoreScrollTopRef.current = settingsScrollTopRef.current;
+    setActiveSection(LAST_SCROLL_SECTION);
   }, []);
 
   const panel = useSettingsPanelTransition({
@@ -119,6 +125,18 @@ export function SettingsScreen() {
   });
 
   const contentRef = panel.settingsRef;
+
+  useEffect(() => {
+    if (panelPage !== "settings") return;
+    const root = contentRef.current;
+    if (!root) return;
+    const remember = () => {
+      settingsScrollTopRef.current = root.scrollTop;
+    };
+    remember();
+    root.addEventListener("scroll", remember, { passive: true });
+    return () => root.removeEventListener("scroll", remember);
+  }, [panelPage, contentRef]);
 
   useEffect(() => {
     settingsRef.current = settings;
@@ -285,8 +303,13 @@ export function SettingsScreen() {
     if (!root) return;
 
     const pending = pendingScrollRef.current;
-    if (pending) {
+    const restoreTop = restoreScrollTopRef.current;
+    if (restoreTop != null && !pending) {
+      restoreScrollTopRef.current = null;
+      root.scrollTo({ top: restoreTop });
+    } else if (pending) {
       pendingScrollRef.current = null;
+      restoreScrollTopRef.current = null;
       scrollToSection(pending);
     }
 
@@ -434,15 +457,15 @@ export function SettingsScreen() {
                 ready={panel.pastThreshold && !panel.latching}
               />
               <span className={styles.elasticHintLabel}>
-                {panel.latching
-                  ? "いったん停止"
+                {panel.arming || panel.latching
+                  ? "端でいったん停止"
                   : panelPage === "settings"
                     ? panel.pastThreshold
                       ? "離してライセンスへ"
-                      : "スクロールでゲージをためる"
+                      : "ゆっくり引っ張ってゲージをためる"
                     : panel.pastThreshold
                       ? "離して設定へ"
-                      : "スクロールでゲージをためる"}
+                      : "ゆっくり引っ張ってゲージをためる"}
               </span>
             </div>
           ) : null}

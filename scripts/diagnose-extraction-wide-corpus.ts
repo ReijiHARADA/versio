@@ -144,6 +144,8 @@ for (let index = 0; index < selected.length; index += 1) {
       if (/\(\d{4}[a-z]?\)\.\s+Introduction to\b/i.test(t)) return false;
       if (/\b(?:Res\.|Instrum\.|Comput\.)\s+Methods\b/i.test(t)) return false;
       if (/^(?:Abstract|Introduction)\.\s/.test(t)) return false;
+      // Screening labels: `Stage 1: Title–Abstract Screening`.
+      if (/\bTitle\s*[—–-]\s*Abstract\b/i.test(t)) return false;
       // TOC crumbs such as `Introduction J5` / `Methods 12`.
       if (/\b(?:Abstract|Introduction|Methods|Results|Discussion|Conclusions)\s+[A-Z]?\d{1,3}\b/.test(t) &&
         t.split(/\s+/).length <= 6) return false;
@@ -240,7 +242,10 @@ for (let index = 0; index < selected.length; index += 1) {
     // Comparison matrices often explode into one table node per row. Flag when
     // short table fragments dominate relative to numbered table captions.
     const tables = nodes.filter((n) => n.role === "table");
-    const shortTables = tables.filter((t) => ((t.text ?? "").trim().length) < 40).length;
+    const shortTables = tables.filter((t) => {
+      const len = ((t.text ?? "").trim().length);
+      return len > 0 && len < 40;
+    }).length;
     const numberedTableCaptions = nodes.filter((n) =>
       /^(?:table|表)\s*\d+/i.test((n.text ?? "").trim())
     ).length;

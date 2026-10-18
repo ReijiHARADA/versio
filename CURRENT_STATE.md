@@ -1,10 +1,140 @@
+# 2026-10-19: wide 1039 + キーワード誤著者除去
+
+- wide diagnose：**scanned 1039 / flagged 1 / clean 1038**（`title-id-mismatch` 1件＝ファイル名と本文タイトル不一致）
+- ラベル無しキーワード列（`medical students`, `confirmatory factor analysis`）を著者から除外
+- Playwright 目視: `networkidle`+IDB wipe だと import が空振り。`data-testid=library-add-pdf-input` + `domcontentloaded` で成功
+- role-of-attention Reader: タイトル全文 + 著者 `Mirela SPIŢĂ` を確認（翻訳サーバ 401 は別件）
+
+# 2026-10-19: abstract 断片の結合（二段組表紙）
+
+- `markAbstracts` を Keywords / `1. Introduction` で打ち切り
+- `mergeAbstractContinuations`: タイトル挟みの同一ページ abstract を幾何で結合
+- role-of-attention: abs **4→1**（`of psychological` スペース維持）
+
+# 2026-10-19: IEEE 著者膠着（NAME+Faculty）+ セクション誤著者
+
+- `ABBASFaculty of…` を author ノードとして保持し `splitAffiliationNamePrefix` で名前／所属分離
+- `I. INTRODUCTION` / OPEN ACCESS / how-to-cite を著者から除外
+- HCI 著者: ABBAS / GHAUTH / TING。`authorProjection` **27/27** 通過
+
+# 2026-10-19: same-baseline 表グリッド分離 + 長caption CAPTION_OF
+
+- linguistics Table 3: セルが同一baselineの単一item行として caption に吸収 → `splitSameBaselineCellGridFromCaptions`
+- 長文 `Table N …` タイトルが `tableCaptionShape` で落ち CAPTION_OF 不能 → 記述タイトルを許容
+- OSWORLD: 文末後の短Title-Caseを caption 継続しない；二段組段落を表領域メンバーに
+- HCI / linguistics / OSWORLD の table caption orphan **0**、CAPTION_OF 全リンク
+
+# 2026-10-18: OA 追加取得 + 画像表ギャップcrop
+
+- Europe PMC CC OA を追加取得：**+120 本**（失敗3）。pending PDF はローカル約 **928** 本（`pending-pdfs/**/*.pdf` は gitignore；候補 JSON のみコミット）
+- wide diagnose 919本: flagged 5（すべて `orphan-caption`、実質 HCI / linguistics / OSWORLD）
+- 原因: キャプション下にテキスト行のない画像・ベクタ表で table シェルを落としていた
+- `tableCaptionEmptyGapBelow` で空ギャップを crop / `CAPTION_OF` シェル化。HCI orphan **10→0**
+
+# 2026-10-18: Reader 目視（role-of-attention）
+
+- `tauri:dev` + Playwright で bilingual 表紙 PDF を取り込み、Reader 見出しが
+  `The Role of Attention, Memory and Cognition in the Decision-Making Process of Adolescent Students`
+  / 著者 `Mirela SPIŢĂ`（INDEX COPERNICUS なし）を確認
+- スクリーンショット: `test-results/browser-verify/import-role-attn-reader.png`
+
+# 2026-10-18: ライセンス遷移を距離ベースに（加速度っぽさを除去）
+
+大きい deltaY を「強フリック」扱いしていたのが違和感の主因。端で一度静止して武装 → 以後は1イベント寄与をキャップした距離加算のみ。idle で離し判定。速度／加速度は使わない。
+
+# 2026-10-18: bilingual cover title / small-caps / author chrome
+
+- 二段組未検出の表紙で display title と abstract が同一行に混ざるのを gutter+font 差で分割
+- `Attention, Memory` などトピック句の person-name 誤判定を抑制
+- 途中切れタイトルを How to cite レールから延長；small-caps 表示タイトルを Title Case に正規化
+- INDEX COPERNICUS / Anuarul / Doctorand / constructs を著者から除外
+
+# 2026-10-18: 厳格監査フォロー（著者汚染・frontiers footer・空table）
+
+- 厳格監査 55件中17件に匂い → 実害は著者汚染 / `frontiersin.org` 見出し / 章末byline欠落
+- 本文・トピック句の著者投影を拒否；章末 `D. A. Shepherd…` を復旧
+- caption-only 空 table シェルを作らない；`11 frontiersin.org` を見出し demote
+
+# 2026-10-18: wide diagnose 879/879 clean
+
+- `diagnose-extraction-wide-corpus`：**scanned 879 / flagged 0 / clean 879**
+- 直前のタイトル・見出しchrome・表紙スタック結合修正がコーパス全体の自動フラグを潰した
+- 残りは Reader/.app 目視と、ヒューリスティック外の深掘り欠陥
+
+# 2026-10-18: 表紙タイトル積み上げ結合 + Keywordsレール + OA拡充
+
+- `Intelligent` / `Human Computer` / `Interaction` のような大フォント表紙スタックを再結合（人名誤爆を回避）
+- `Keywords: …` ペイロード付きレールを見出しから demote
+- OA pending PDF 約808本（本体は gitignore）
+
+# 2026-10-18: Frontiersタイトル折り返し（小文字続き）+ 表ヘッダー見出しdemote
+
+- `… prevent poor` + `mental health during the…` を pdfLayout で再結合（isHangingTitleEnd / midPhraseWrap）
+- 膠着した表カラム見出し（Risk Category… / What It Reflects）を heading から demote
+- University Teaching / Citation / Community drop-cap 誤爆は前エントリで対応済み
+
+# 2026-10-18: 見出しchrome + タイトル誤爆修正（University / Community / Citation）
+
+- 走行ヘッダー・`Article`・国名・p値レールを見出しから demote
+- `University Teaching` を affiliation 誤爆しないよう looksLikeAuthorish を限定
+- `Community-…` タイトルの drop-cap 誤検知を除去；Citation/Editor/節バナーをタイトル拒否
+- PDF本体は gitignore（`pending-pdfs/`）。候補JSONだけコミット
+
+# 2026-10-18: タイトル誤検知続報（From/DOI/section）+ 回帰
+
+- drop-cap 判定が `From`/`These` を誤検知 → 実英単語 opener を除外
+- `DOI 10.…`（コロン無し）を masthead 扱い、`2.1.2 …` 節見出しをタイトル候補から除外
+- Cureus 折り返し（Study/Photographs）の person-name 誤検知を除外
+- titleResolver / readingOrder 回帰を追加。canopy / glaucoma / HRI / electrophysiology 実PDFでタイトル確認済み。wide 再実行中（872本規模）。
+
+# 2026-10-18: wide 811本 flagged 3→タイトル修正 + Frontiers取得強化
+
+wide **811 scanned / 808 clean / flagged 3**（いずれも title-id-mismatch）。対応: (1) 長い英単語2つを decoder 誤検知しない (2) `*`-付き著者行 / scale database タイトル拒否の緩和 (3) Cureus 折り返しタイトルを person-name 誤検知から除外して結合。OA 取得は Frontiers/PLOS/BMC 寄りに変更（+60 成功）。pending PDF は gitignore のまま。再 wide 実行中。
+
+# 2026-10-18: wide 794本（flagged 5→対応中）+ 著者/タイトル補正
+
+拡充コーパス wide **794 scanned / 789 clean / flagged 5**（title-id-mismatch 3, embedded-section 1, fragmented-tables 1）。PRISMA checklist のみの OA PDF を quarantine。Questionnaire / PRISMA chrome タイトル拒否、Frontiers/Wiley 著者・Springer 所属バンドを修正。
+
+# 2026-10-18: Frontiers/Wiley著者・所属バンド補正
+
+- 末尾1文字イニシャル（`Sandhiya … D`）を著者から落とさない
+- Frontiers byline末尾メールを許可しつつ純粋メール著者は demote
+- Springer番号付き所属帯を copyright→affiliation に戻す
+- ソフトハイフン付き所属の重複を潰す（Brunel）
+
+# 2026-10-18: Wiley著者パイプ区切り / Keywords: chrome / 重複title断片
+
+深掘り50本中の典型欠陥を修正。`Keywords:` 見出し demote、`Name | Name` 著者投影、解決済みタイトルの接尾辞 title ノードを除去。
+
+# 2026-10-18: vignette/IEEE/OzCHI/math/thesis 抽出修正 + OA PDF拡充
+
+- vignette `Q:`/`Option` を prose-cell-grid の table 昇格から除外（questionnaire / method-goal は維持）
+- IEEE ACCESS の `ABBASFaculty` 膠着と `, AND NAME` 著者断片を投影で回復
+- OzCHI 行列の純数値セル（`0.594`）を garbage 扱いしない。axis-label 付き短ラベルも維持
+- thesis `n No Minor…` 行列と math 論文の文状 prose を `other`/誤 demote から保護
+- ローカル pending PDF 約 680（git には上げない。`pending-oa-candidates.json` のみ）
+- wide 診断（修正前コーパス）739/739 clean
+- pipeline 回帰（OzCHI/IEEE/math/thesis/vignette ほか）再緑化
+
+# 2026-10-18: ライセンス遷移を距離ベースに（加速度っぽさを除去）
+
+大きい deltaY を「強フリック」扱いしていたのが違和感の主因。端で一度静止して武装 → 以後は1イベント寄与をキャップした距離加算のみ。idle で離し判定。速度／加速度は使わない。
+
+# 2026-10-18: ライセンス遷移のゲージ速度と戻り位置
+
+ゲージ溜めを遅く。ライセンスからプルバックしたときは詳細セクション先頭へ飛ばず、設定側の直前スクロール位置を復元。
+
+# 2026-10-18: トラックパッド離しでゲージ確定／リセット
+
+wheel 停止後 110ms の idle で「手を離した」とみなす。満タンなら遷移、未満ならゲージを弾性リセット。端への強フリックだけラッチ（穏やかな引っ張りは初回からコミット可）。
+
 # 2026-10-18: ライセンス遷移ゲージをスクロール増減に追従
 
-円形ゲージが下スクロールで徐々に溜まり、上スクロールで減るよう調整（COMMIT 140px / wheel scale 0.65、逆方向は settle しない）。最大で離すと遷移、0まで戻すと通常スクロール復帰。dashoffset に短い transition。
+円形ゲージが下スクロールで徐々に溜まり、上スクロールで減るよう調整。最大で離すと遷移、0まで戻すと通常スクロール復帰。dashoffset に短い transition。
 
 # 2026-10-18: 表行断片マージ + OA拡張後の wide 再走査
 
-pending PDF **358**（git外）。wide は表断片対策の反復で **458 clean / 11 flagged**（直前 443/26）。追加: Frontiers `RECEIVEDREVISED` を title-tail restatement 経由で前置きしない、page-native-grid ゴミ除去、page 幾何クラスタで表行マージ、散文誤 table の demote。affective short tables **51→27**。回帰 titleResolver 28 / tableRegion 6 pass。残 fragmented-tables 約11件。ゴール「完璧」と Reader/.app 目視は未達。
+pending PDF **628**（git外）。wide 再走査中。新規30本深掘り issues 0。Elsevier 雑誌バナーがタイトル先頭に付く問題を修正（lead は hanging 必須／journal masthead 判定）。titleResolver + Elsevier pipeline pass。`TABLE 1 List of…` caption 化、図キャプションの vector-label `other` 抑止、questionnaire 表の `CAPTION_OF`（末尾ピリオド）＋セル再構築で pipeline 回帰 pass。数式/Funding chrome 見出し demote 継続。他の pipeline 失敗数件は本変更前から再現。ゴール「完璧」と Reader/.app 目視は未達。
 
 # 2026-10-18: wide 7 flagged タイトル/©chrome 修正
 

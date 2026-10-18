@@ -21,21 +21,31 @@ mkdirSync(outDir, { recursive: true });
 
 // Prefer DOI-backed CC papers so Unpaywall can resolve publisher PDFs.
 // PMC/EuropePMC viewer URLs are often Cloudflare-blocked.
+// Prefer publishers whose PDF URLs download reliably (Frontiers / PLOS / BMC).
+// MDPI and PMC viewer URLs often 403 / Cloudflare interstitial.
+// Prefer Frontiers / PLOS / BMC publisher PDF URLs. Broad SRC:MED and
+// EuropePMC-render fallbacks mostly 403 under Cloudflare.
 const queries = [
-  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("augmented reality" OR "virtual reality") AND (HCI OR usability OR interaction)',
-  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("large language model" OR LLM OR transformer) AND (survey OR review OR HCI)',
-  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("information visualization" OR "visual analytics")',
-  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("human-robot interaction" OR HRI OR "social robot")',
-  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("speech recognition" OR "spoken language" OR ASR)',
-  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND PUBYEAR:2025 AND (attention OR memory) AND (psychology OR neuroscience)',
-  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("wearable computing" OR smartwatch OR "smart clothing")',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"Frontiers in Psychology" AND PUBYEAR:2025',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"Frontiers in Psychology" AND PUBYEAR:2024',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"Frontiers in Psychology" AND PUBYEAR:2023',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"Frontiers in Human Neuroscience"',
   'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"Frontiers in Virtual Reality"',
-  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("recommender system" OR "knowledge graph") AND (survey OR review)',
-  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("computer vision" OR "object detection") AND (survey OR review) AND PUBYEAR:2024',
-  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("human-computer interaction" OR HCI OR ergonomics OR "user experience")',
-  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND (linguistics OR "discourse analysis" OR "computational linguistics" OR NLP)',
-  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("eye tracking" OR gaze) AND (HCI OR psychology OR reading)',
-  'LICENSE:"cc by-nc" AND HAS_PDF:y AND HAS_DOI:y AND (ergonomics OR "human factors" OR "occupational health")',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"Frontiers in Robotics and AI"',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"Frontiers in Computer Science"',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"Frontiers in Public Health" AND (HCI OR cognition OR digital OR wellbeing)',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"Frontiers in Digital Health"',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"Frontiers in Neuroscience" AND (vision OR attention OR gaze)',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"Frontiers in Education" AND (technology OR digital OR AI)',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"PLoS ONE" AND (HCI OR visualization OR "machine learning" OR cognition OR "eye tracking")',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"PLoS Computational Biology"',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"PLoS Digital Health"',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"BMC Psychology"',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"BMC Digital Health"',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND JOURNAL:"Journal of Medical Internet Research" AND (HCI OR usability OR VR)',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("information visualization" OR "visual analytics") AND (JOURNAL:"Frontiers*" OR JOURNAL:"PLoS*")',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("eye tracking" OR gaze) AND (JOURNAL:"Frontiers*" OR JOURNAL:"PLoS*")',
+  'LICENSE:"cc by" AND HAS_PDF:y AND HAS_DOI:y AND ("large language model" OR LLM) AND (JOURNAL:"Frontiers*" OR JOURNAL:"PLoS*")',
 ];
 
 function slugify(title) {
@@ -84,14 +94,46 @@ function isPmcViewerUrl(url) {
   return /(?:^|\.)ncbi\.nlm\.nih\.gov\/pmc\b|pmc\.ncbi\.nlm\.nih\.gov|europepmc\.org\/articles\//i.test(url);
 }
 
+function plosPrintableFromDoi(doiOrUrl) {
+  const m = String(doiOrUrl || "").match(/10\.1371\/journal\.([\w-]+)\.(\d+)/i);
+  if (!m) return null;
+  const journal = m[1].toLowerCase(); // e.g. pone, pcbi, pdig
+  const journalPath =
+    journal === "pone" ? "plosone"
+    : journal === "pcbi" ? "ploscompbiol"
+    : journal === "pdig" ? "digitalhealth"
+    : journal === "pbio" ? "plosbiology"
+    : journal === "pgen" ? "plosgenetics"
+    : journal === "ppat" ? "plospathogens"
+    : journal === "pmed" ? "plosmedicine"
+    : journal === "pntd" ? "plosntds"
+    : null;
+  if (!journalPath) return null;
+  return `https://journals.plos.org/${journalPath}/article/file?id=10.1371/journal.${m[1]}.${m[2]}&type=printable`;
+}
+
+function frontiersPdfFromDoi(doiOrUrl) {
+  const m = String(doiOrUrl || "").match(/(10\.3389\/[\w.-]+)/i);
+  if (!m) return null;
+  return `https://www.frontiersin.org/articles/${m[1]}/pdf`;
+}
+
+function bmcPdfFromDoi(doiOrUrl) {
+  const m = String(doiOrUrl || "").match(/(10\.1186\/[\w.-]+)/i);
+  if (!m) return null;
+  return `https://link.springer.com/content/pdf/${m[1]}.pdf`;
+}
+
 function candidatePdfUrl(loc) {
   if (!loc) return null;
-  if (loc.url_for_pdf) return loc.url_for_pdf;
+  if (loc.url_for_pdf && !isPmcViewerUrl(loc.url_for_pdf)) return loc.url_for_pdf;
   const url = loc.url || "";
-  if (/\.pdf(\?|$)/i.test(url)) return url;
+  const fromDoi = plosPrintableFromDoi(url) || plosPrintableFromDoi(loc.doi);
+  if (fromDoi) return fromDoi;
+  if (/\.pdf(\?|$)/i.test(url) && !isPmcViewerUrl(url)) return url;
   // MDPI / Frontiers / BMC article landing pages often expose a stable /pdf path.
   if (/mdpi\.com\/\d+\/\d+\/\d+/i.test(url) && !/\/pdf/i.test(url)) return `${url.replace(/\/$/, "")}/pdf`;
-  if (/frontiersin\.org\/articles\//i.test(url) && !/\/pdf/i.test(url)) {
+  if (/frontiersin\.org\/(?:journals\/[^/]+\/)?articles\//i.test(url) && !/\/pdf\/?$/i.test(url)) {
     return `${url.replace(/\/$/, "")}/pdf`;
   }
   if (/biomedcentral\.com\/articles\//i.test(url) && !/\.pdf/i.test(url)) {
@@ -100,7 +142,7 @@ function candidatePdfUrl(loc) {
   if (/journals\.plos\.org\/.+\/article\?id=/i.test(url)) {
     return url.replace(/article\?id=/, "article/file?id=") + (url.includes("type=") ? "" : "&type=printable");
   }
-  return null;
+  return loc.url_for_pdf && !isPmcViewerUrl(loc.url_for_pdf) ? loc.url_for_pdf : null;
 }
 
 async function resolveUnpaywallPdfUrl(doi) {
@@ -123,13 +165,18 @@ async function resolveUnpaywallPdfUrl(doi) {
   });
   const errors = [];
   for (const loc of ranked) {
-    const pdfUrl = candidatePdfUrl(loc);
+    const pdfUrl = candidatePdfUrl({ ...loc, doi: loc.doi || doi });
     if (!pdfUrl) continue;
     if (isPmcViewerUrl(pdfUrl)) {
       errors.push("pmc-viewer");
       continue;
     }
     return { pdfUrl, license: loc.license || json.best_oa_location?.license || null };
+  }
+  const publisherFallback =
+    plosPrintableFromDoi(doi) || frontiersPdfFromDoi(doi) || bmcPdfFromDoi(doi);
+  if (publisherFallback) {
+    return { pdfUrl: publisherFallback, license: json.best_oa_location?.license || null };
   }
   throw new Error(errors.length ? "unpaywall only pmc viewer urls" : "unpaywall has no pdf url");
 }

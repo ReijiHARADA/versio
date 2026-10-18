@@ -413,4 +413,138 @@ describe("title resolver masthead filtering", () => {
     });
     expect(result.text).toBe("Intelligent Human Computer Interaction");
   });
+
+  it("rejects DOI mastheads without a colon as titles", () => {
+    const withFont = (c: ReturnType<typeof candidate>, fontSize: number, page = 1) => {
+      const next = { ...c } as any;
+      next.pageStart = page;
+      next.pageEnd = page;
+      next.layoutBlock.pageStart = page;
+      next.layoutBlock.pageEnd = page;
+      next.layoutBlock.lines = next.layoutBlock.lines.map((line: any) => ({ ...line, fontSize, page }));
+      next.boundingBoxes[0] = { ...next.boundingBoxes[0], height: fontSize, page };
+      return next;
+    };
+    const result = resolveTitle({
+      candidates: [
+        withFont(candidate("DOI 10.3389/frobt.2026.1859773", 76), 6),
+        withFont(
+          candidate(
+            "From one tree to the canopy: an evolutionary design trajectory for tethered robotics in forest environments",
+            153,
+          ),
+          21,
+        ),
+        withFont(candidate("2.1.2 Ground and climbing robots: early arboreal", 400, "title"), 12, 2),
+      ],
+    });
+    expect(result.text).toMatch(/^From one tree to the canopy/i);
+    expect(result.text).not.toMatch(/^2\.1\.2/);
+    expect(result.text).not.toMatch(/^DOI /i);
+  });
+
+  it("keeps a scale-database article title instead of treating scale as instrument chrome", () => {
+    const withFont = (c: ReturnType<typeof candidate>, fontSize: number) => {
+      const next = { ...c } as any;
+      next.layoutBlock.lines = next.layoutBlock.lines.map((line: any) => ({ ...line, fontSize }));
+      next.boundingBoxes[0].height = fontSize;
+      return next;
+    };
+    const result = resolveTitle({
+      candidates: [
+        withFont(candidate("DOI 10.3389/frobt.2026.1846413", 76), 6),
+        withFont(candidate("The human-robot interaction scale database", 153), 21),
+        withFont(
+          candidate("Laura Saad *, Eileen Roesler , Elizabeth Phillips and", 210, "author"),
+          11,
+        ),
+      ],
+    });
+    expect(result.text).toBe("The human-robot interaction scale database");
+  });
+
+  it("keeps University Teaching topic titles and rejects section / citation chrome", () => {
+    const withFont = (c: ReturnType<typeof candidate>, fontSize: number, role?: "title" | "heading") => {
+      const next = { ...c, role: role ?? c.role } as any;
+      next.layoutBlock.lines = next.layoutBlock.lines.map((line: any) => ({ ...line, fontSize }));
+      next.boundingBoxes[0].height = fontSize;
+      return next;
+    };
+    const article = resolveTitle({
+      candidates: [
+        withFont(
+          candidate(
+            "Exploring the Challenges and Opportunities of ChatGPT in University Teaching for Health Sciences: A Narrative Review",
+            71,
+          ),
+          14,
+        ),
+        withFont(candidate("Introduction And Background", 320, "title"), 12, "heading"),
+      ],
+    });
+    expect(article.text).toMatch(/^Exploring the Challenges and Opportunities of ChatGPT/i);
+    expect(article.text).not.toMatch(/Introduction And Background/i);
+
+    const citation = resolveTitle({
+      candidates: [
+        withFont(candidate("Citation: Shuchami A, Lazebnik T, Ashkenazi", 80), 11),
+        withFont(
+          candidate(
+            "Shall we repeat? Predicting the necessity to repeat blood testing in pediatric emergency departments",
+            140,
+          ),
+          16,
+        ),
+      ],
+    });
+    expect(citation.text).toMatch(/^Shall we repeat/i);
+    expect(citation.text).not.toMatch(/^Citation:/i);
+  });
+
+  it("joins adjective-hanging Frontiers title wraps", () => {
+    const withFont = (c: ReturnType<typeof candidate>, fontSize: number, y?: number) => {
+      const next = { ...c } as any;
+      if (y != null) {
+        next.boundingBoxes[0].y = y;
+        next.layoutBlock.lines = next.layoutBlock.lines.map((line: any, i: number) => ({ ...line, y: y + i * 14, fontSize }));
+      } else {
+        next.layoutBlock.lines = next.layoutBlock.lines.map((line: any) => ({ ...line, fontSize }));
+      }
+      next.boundingBoxes[0].height = fontSize;
+      return next;
+    };
+    const result = resolveTitle({
+      candidates: [
+        withFont(candidate("Community-based interventions to promote paternal mental wellbeing and prevent poor", 154), 21, 154),
+        withFont(candidate("mental health during the", 226), 21, 226),
+        withFont(candidate("perinatal period: a mixed", 250), 21, 250),
+        withFont(candidate("methods systematic review", 274), 21, 274),
+      ],
+    });
+    expect(result.text).toMatch(/Community-based interventions/i);
+    expect(result.text).toMatch(/perinatal period/i);
+    expect(result.text).toMatch(/systematic review/i);
+  });
+
+  it("extends a truncated cover title from a How to cite rail", () => {
+    const result = resolveTitle({
+      candidates: [
+        candidate("The Role of Attention, Memory and Cognition in the Decision-Making", 134),
+        candidate("How to cite: Spiţă, M. (2020). The Role of Attention,", 282, "author"),
+        candidate("elevul adolescent]", 290, "author"),
+        candidate("Memory and Cognition in the Decision-Making Process of", 294, "author"),
+        candidate("Adolescent Students. Anuarul Universitatii “Petre Andrei” din", 306, "author"),
+      ],
+    });
+    expect(result.text).toBe(
+      "The Role of Attention, Memory and Cognition in the Decision-Making Process of Adolescent Students",
+    );
+  });
+
+  it("normalizes small-caps display titles", () => {
+    const result = resolveTitle({
+      candidates: [candidate("TransienT aTTenTion and opporTuniTy idenTificaTion", 120)],
+    });
+    expect(result.text).toBe("Transient Attention and Opportunity Identification");
+  });
 });

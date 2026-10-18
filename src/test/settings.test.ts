@@ -7,12 +7,15 @@ import {
 } from "../utils/settingsToc";
 import {
   COMMIT_PULL_PX,
+  EDGE_ARM_IDLE_MS,
+  MAX_WHEEL_STEP,
   PULL_RUBBER_DIM,
+  RELEASE_IDLE_MS,
   elasticOffset,
-  latchOverflowCap,
   pullCommitProgress,
   pullVisualOffset,
   rubberBand,
+  wheelStep,
 } from "../components/settings/useSettingsElasticPull";
 import {
   DEFAULT_TRANSLATION_SETTINGS_V2,
@@ -49,7 +52,6 @@ describe("settings pull-to-navigate", () => {
     const deep = pullVisualOffset(COMMIT_PULL_PX * 3, false);
     expect(deep).toBeGreaterThan(0);
     expect(deep).toBeLessThanOrEqual(PULL_RUBBER_DIM);
-    // Must not approach viewport-scale motion during the gesture.
     expect(deep).toBeLessThan(120);
   });
 
@@ -63,11 +65,21 @@ describe("settings pull-to-navigate", () => {
     expect(visualAtCommit).toBeLessThan(COMMIT_PULL_PX);
   });
 
-  it("caps latch overflow just below a full commit", () => {
-    const cap = latchOverflowCap();
-    expect(cap).toBeLessThan(COMMIT_PULL_PX);
-    expect(pullCommitProgress(cap)).toBeGreaterThan(0.8);
-    expect(pullCommitProgress(cap)).toBeLessThan(1);
+  it("scales wheel steps with a soft ceiling on extreme flicks", () => {
+    const gentle = wheelStep(4);
+    const flick = wheelStep(80);
+    expect(gentle).toBeCloseTo(4 * 0.65, 5);
+    expect(flick).toBe(wheelStep(MAX_WHEEL_STEP));
+    expect(flick).toBeGreaterThan(gentle);
+    // Soft ceiling only — original sensitivity still reaches commit in a short drag.
+    expect(COMMIT_PULL_PX / flick).toBeLessThan(12);
+  });
+
+  it("uses idle gaps for edge-arm and finger-up (not acceleration)", () => {
+    expect(EDGE_ARM_IDLE_MS).toBeGreaterThanOrEqual(80);
+    expect(EDGE_ARM_IDLE_MS).toBeLessThanOrEqual(200);
+    expect(RELEASE_IDLE_MS).toBeGreaterThanOrEqual(80);
+    expect(RELEASE_IDLE_MS).toBeLessThanOrEqual(220);
   });
 
   it("nearly freezes pull visual when reduced motion is preferred", () => {
