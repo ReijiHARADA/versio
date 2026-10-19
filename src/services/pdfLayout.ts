@@ -15,6 +15,11 @@ import {
   toHalfwidthAscii,
 } from "./translation/quality";
 
+/** Browser-safe env read — bare `process` is undefined in WKWebView / Vite. */
+function layoutEnv(name: string): string | undefined {
+  return (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[name];
+}
+
 export type LayoutColumn = "left" | "right" | "spanning" | "single";
 
 export type LayoutRole =
@@ -349,7 +354,7 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
       rightCount: right.length,
     };
   })();
-  if (process.env.PDF_LAYOUT_DEBUG === "columns" && page.pageNumber === 1) {
+  if (layoutEnv("PDF_LAYOUT_DEBUG") === "columns" && page.pageNumber === 1) {
     console.warn(`[PDF_COLUMNS] asymmetric=${JSON.stringify(asymmetricRail)} sample=${sample.length}`);
   }
 
@@ -1241,9 +1246,9 @@ function splitInlineSubheading(line: LayoutLine): LayoutLine[] {
  */
 function splitVectorFigureOverlayLines(lines: LayoutLine[], page: ExtractedPage): LayoutLine[] {
   if ((page.graphicsPrimitives?.length ?? 0) < 100) return lines;
-  if (process.env.PDF_LAYOUT_DEBUG === "vector-split") console.warn(`[VECTOR_PAGE] page=${page.pageNumber} graphics=${page.graphicsPrimitives?.length ?? 0} lines=${lines.length}`);
+  if (layoutEnv("PDF_LAYOUT_DEBUG") === "vector-split") console.warn(`[VECTOR_PAGE] page=${page.pageNumber} graphics=${page.graphicsPrimitives?.length ?? 0} lines=${lines.length}`);
   const captions = lines.filter((line) => /^(?:figure|fig\.?|図)\s*\d+[a-z]?\b/i.test(line.text.trim()) && line.y > 0);
-  if (process.env.PDF_LAYOUT_DEBUG === "vector-split") console.warn(`[VECTOR_CAPTIONS] page=${page.pageNumber} ${captions.map((c) => `${c.y}:${c.text.slice(0,30)}`).join("|")}`);
+  if (layoutEnv("PDF_LAYOUT_DEBUG") === "vector-split") console.warn(`[VECTOR_CAPTIONS] page=${page.pageNumber} ${captions.map((c) => `${c.y}:${c.text.slice(0,30)}`).join("|")}`);
   if (captions.length === 0) return lines;
   return lines.flatMap((line) => {
     if (line.items.length < 3 || captions.every((caption) => caption.y <= line.y || caption.y - line.y > 280)) return [line];
@@ -1259,9 +1264,9 @@ function splitVectorFigureOverlayLines(lines: LayoutLine[], page: ExtractedPage)
     const distant = groups.slice(1).flat();
     const distantText = joinItemTexts(distant).trim();
     const distantWords = distantText.split(/\s+/).filter(Boolean);
-    if (process.env.PDF_LAYOUT_DEBUG === "vector-split" && page.pageNumber === 2 && line.y < 300) console.warn(`[VECTOR_CANDIDATE] y=${line.y} groups=${groups.length} text=${JSON.stringify(distantText)}`);
+    if (layoutEnv("PDF_LAYOUT_DEBUG") === "vector-split" && page.pageNumber === 2 && line.y < 300) console.warn(`[VECTOR_CANDIDATE] y=${line.y} groups=${groups.length} text=${JSON.stringify(distantText)}`);
     if (distantText.length > 90 || distantWords.length > 16 || /[.!?]$/.test(distantText)) return [line];
-    if (process.env.PDF_LAYOUT_DEBUG === "vector-split") console.warn(`[VECTOR_SPLIT] ${line.page}:${line.y} groups=${groups.length} distant=${JSON.stringify(distantText)}`);
+    if (layoutEnv("PDF_LAYOUT_DEBUG") === "vector-split") console.warn(`[VECTOR_SPLIT] ${line.page}:${line.y} groups=${groups.length} distant=${JSON.stringify(distantText)}`);
     return groups.map((group) => itemsToLine(group, line.column, line.page, line.pageHeight, line.pageWidth));
   });
 }
@@ -3979,10 +3984,10 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
       return left.length >= 1 && right.length >= 2 && leftMedian > 0 && rightMedian > 0 &&
         leftMedian <= rightMedian * 0.35 && rightMedian >= typicalLineWidth * 0.85;
     })();
-    if (process.env.PDF_LAYOUT_DEBUG === "all" && block.pageStart === 1 && block.bbox.y < 500 && xBands.length > 1) {
+    if (layoutEnv("PDF_LAYOUT_DEBUG") === "all" && block.pageStart === 1 && block.bbox.y < 500 && xBands.length > 1) {
       console.error(`[PDF_LAYOUT_MIXED_DEBUG] role=${block.role} lines=${block.lines.length} columns=${[...columns].join(",")} xBands=${xBands.join(",")} labelSidebar=${labelSidebar} text=${JSON.stringify(block.text.slice(0, 140))}`);
     }
-    if (process.env.PDF_LAYOUT_TRACE_TEXT && block.text.includes(process.env.PDF_LAYOUT_TRACE_TEXT)) {
+    if (layoutEnv("PDF_LAYOUT_TRACE_TEXT") && block.text.includes(layoutEnv("PDF_LAYOUT_TRACE_TEXT"))) {
       console.error(`[PDF_LAYOUT_TRACE_BLOCK] stage=splitMixed role=${block.role} lines=${block.lines.length} columns=${[...columns].join(",")} xBands=${xBands.join(",")} preserve=${Boolean(block.preserveColumnContinuation)} text=${JSON.stringify(block.text.slice(0, 260))}`);
     }
     const orderedColumns = [...new Set(block.lines.map((line) => line.column))];
@@ -4718,7 +4723,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       target.text.trim().length >= 80 && !/[.!?:]$/.test(target.text.trim()) &&
       /^[a-z(]/.test(block.text.trim()) && isSentenceContinuation(target.text, block.text)
     );
-    if (process.env.PDF_LAYOUT_CONTINUATION_DEBUG === "1" && target && target.pageStart === block.pageStart &&
+    if (layoutEnv("PDF_LAYOUT_CONTINUATION_DEBUG") === "1" && target && target.pageStart === block.pageStart &&
         target.column === block.column && target.role !== "heading" && block.role !== "heading") {
       console.warn(`[PDF_LAYOUT_CONTINUATION] targetRole=${target.role} blockRole=${block.role} ` +
         `targetEnd=${JSON.stringify(target.text.slice(-90))} blockStart=${JSON.stringify(block.text.slice(0, 90))} ` +
