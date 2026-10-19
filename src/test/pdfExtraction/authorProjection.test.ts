@@ -253,7 +253,39 @@ describe("author masthead projection", () => {
     const result = extractFromPages({ pages, paperId: "osworld-chrome", filePath: osworldPdf, fileHash: "osworld-chrome", metadata: { pageCount: pages.length } });
     const headings = result.canonical.nodes.filter((node) => node.role === "heading").map((node) => node.text ?? "");
     expect(headings.every((text) => !/Percentile|Tokens\d|Task Initial State Setup Config|Task Instruction\s*:/i.test(text))).toBe(true);
+    expect(headings.every((text) => !/^(?:Results|Discussion)$/i.test(text.trim()))).toBe(true);
+    expect(headings.every((text) => !/^Statistics$/i.test(text.trim()))).toBe(true);
     expect(headings.some((text) => /^1\s+Introduction$/i.test(text.trim()))).toBe(true);
+    expect(headings.some((text) => /2\.2\.1\s+Overview/i.test(text))).toBe(true);
+  }, 60_000);
+
+  it("does not promote mid-sentence Discussion into an IEEE outline heading", async () => {
+    if (!fs.existsSync(ieeeWrappedMastheadPdf)) return;
+    const pages = await extractPdfPages(ieeeWrappedMastheadPdf);
+    const result = extractFromPages({ pages, paperId: "ieee-mid-discussion", filePath: ieeeWrappedMastheadPdf, fileHash: "ieee-mid-discussion", metadata: { pageCount: pages.length } });
+    const headings = result.canonical.nodes.filter((node) => node.role === "heading").map((node) => (node.text ?? "").trim());
+    expect(headings.filter((text) => /^Discussion$/i.test(text))).toHaveLength(0);
+    expect(headings.some((text) => /^I\.\s*INTRODUCTION$/i.test(text))).toBe(true);
+  }, 60_000);
+
+  it("splits structured-abstract Results Of… without leaving an embedded marker", async () => {
+    const handednessPdf = path.join(root, "test-fixtures/real-papers/pending-pdfs/epmc-association-between-handedness-and-occupational-accidents-a-prospective-.pdf");
+    if (!fs.existsSync(handednessPdf)) return;
+    const pages = await extractPdfPages(handednessPdf);
+    const result = extractFromPages({ pages, paperId: "handedness-results-of", filePath: handednessPdf, fileHash: "handedness-results-of", metadata: { pageCount: pages.length } });
+    expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /^Results\s+Of\b/i.test(node.text ?? ""))).toBe(false);
+    // Structured-abstract `Results` stays an abstract band label (not a body heading).
+    expect(
+      result.canonical.nodes.some(
+        (node) =>
+          (node.role === "heading" || node.role === "abstract") &&
+          /^Results$/i.test((node.text ?? "").trim()),
+      ),
+    ).toBe(true);
+    expect(result.paper.authors).toEqual(expect.arrayContaining([
+      "Aki Tomizawa", "Tomohisa Nagata", "Kiminori Odagami", "Takahiro Mori", "Koji Mori",
+    ]));
+    expect(result.paper.authors.every((name) => !/for the|Study II/i.test(name))).toBe(true);
   }, 60_000);
 
   it("recovers initialed bylines labelled as affiliations without title crumbs", async () => {
@@ -343,5 +375,75 @@ describe("author masthead projection", () => {
     expect(result.paper.affiliations.length).toBeGreaterThanOrEqual(3);
     expect(result.paper.affiliations.every((affiliation) => !/@|kino31513|\b[234]\s+and\s+Science/i.test(affiliation.name))).toBe(true);
     expect(result.paper.affiliations.some((affiliation) => /Research Center for Brain Communication/i.test(affiliation.name))).toBe(true);
+  }, 60_000);
+
+  it("splits wrapped Frontiers bylines and drops topic / school author crumbs", async () => {
+    const stridesPdf = path.join(
+      root,
+      "test-fixtures/real-papers/pending-pdfs/epmc-making-strides-in-doctoral-level-career-outcomes-reporting-a-review-of-c.pdf",
+    );
+    const editorialPdf = path.join(
+      root,
+      "test-fixtures/real-papers/pending-pdfs/epmc-editorial-alzheimer-s-dementia-recognition-through-spontaneous-speech.pdf",
+    );
+    if (fs.existsSync(stridesPdf)) {
+      const pages = await extractPdfPages(stridesPdf);
+      const result = extractFromPages({
+        pages,
+        paperId: "strides-byline-wrap",
+        filePath: stridesPdf,
+        fileHash: "strides-byline-wrap",
+        metadata: { pageCount: pages.length },
+      });
+      expect(result.paper.authors).toEqual(
+        expect.arrayContaining(["Tammy R. L. Collins", "Rebekah L. Layton", "Deepti Ramadoss"]),
+      );
+      expect(result.paper.authors.every((name) => !/Layton Deepti|Harvard Medical School/i.test(name))).toBe(true);
+    }
+    if (fs.existsSync(editorialPdf)) {
+      const pages = await extractPdfPages(editorialPdf);
+      const result = extractFromPages({
+        pages,
+        paperId: "editorial-topic-author",
+        filePath: editorialPdf,
+        fileHash: "editorial-topic-author",
+        metadata: { pageCount: pages.length },
+      });
+      expect(result.paper.authors).toEqual(
+        expect.arrayContaining(["Saturnino Luz", "Fasih Haider", "Brian Mac Whinney"]),
+      );
+      expect(result.paper.authors.every((name) => !/Dementia Recognition|Spontaneous Speech/i.test(name))).toBe(true);
+    }
+  }, 60_000);
+
+  it("keeps Frontiers sidebar bylines ending in `and` without country crumbs", async () => {
+    const frontiersSidebarPdf = path.join(
+      root,
+      "test-fixtures/real-papers/pending-pdfs/epmc-a-retrospective-analysis-of-the-perceived-impact-of-the-covid-19-pandemi.pdf",
+    );
+    if (!fs.existsSync(frontiersSidebarPdf)) return;
+    const pages = await extractPdfPages(frontiersSidebarPdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "frontiers-sidebar-and-byline",
+      filePath: frontiersSidebarPdf,
+      fileHash: "frontiers-sidebar-and-byline",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual([
+      "Khadeejah T. Franklin",
+      "Alexa J. Saval",
+      "Anne M. Cafer",
+      "Dana N. Reinemann",
+    ]);
+    expect(result.paper.authors.every((name) => !/United (?:Kingdom|States)|OPEN ACCESS|EDITED BY/i.test(name))).toBe(true);
+    expect(result.paper.affiliations.every((affiliation) => !/University of Minho|These authors share|Dana N\. Reinemann/i.test(affiliation.name))).toBe(true);
+    expect(result.paper.affiliations.some((affiliation) => /University of Mississippi/i.test(affiliation.name))).toBe(true);
+    const abstractText = result.canonical.nodes
+      .filter((node) => node.role === "abstract")
+      .map((node) => node.text ?? "")
+      .join(" ");
+    expect(abstractText).toMatch(/Student parents/i);
+    expect(abstractText).not.toMatch(/Front\. Educ|Reinemann DN \(2024\)|doi:\s*10\./i);
   }, 60_000);
 });

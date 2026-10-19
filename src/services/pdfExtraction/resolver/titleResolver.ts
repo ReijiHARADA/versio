@@ -976,6 +976,38 @@ function looksLikeBodyTitleCandidate(text: string): boolean {
     (t.length >= 140 && /\([A-Z][A-Za-z-]+(?:\s+\d{4})?$/.test(t) && /\b(?:while|because|managers|research|study)\b/i.test(t));
 }
 
+
+/**
+ * BMJ / two-column wraps sometimes emit a mid-compound fragment
+ * (`experimental pre-`) separately from `quasi-post`. Splice it back into the
+ * hyphenated compound instead of appending it after the full title.
+ */
+function spliceHyphenTitleFragment(combined: string, fragment: string): string | null {
+  const frag = fragment.trim();
+  if (!/[‐‑‒–—―-]$/.test(frag)) return null;
+  const words = frag.replace(/[‐‑‒–—―-]+$/g, "").trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0 || words.length > 3 || frag.length > 40) return null;
+  // Prefer the last simple compound near the protocol/study phrasing.
+  const re = /\b(quasi|pre|post|meta|multi|non)-([A-Za-z]+)\b/gi;
+  let match: RegExpExecArray | null = null;
+  let last: RegExpExecArray | null = null;
+  while ((match = re.exec(combined)) !== null) last = match;
+  if (!last || last.index == null) return null;
+  const left = last[1]!;
+  const right = last[2]!;
+  let spliced: string;
+  if (words.length === 2 && /^(pre|post)$/i.test(words[1]!) && /^(pre|post)$/i.test(right)) {
+    spliced = `${left}-${words[0]} ${words[1]}-${right}`;
+  } else if (words.length === 1) {
+    spliced = `${left}-${words[0]}-${right}`;
+  } else if (words.length === 2) {
+    spliced = `${left}-${words[0]}-${words[1]}-${right}`;
+  } else {
+    return null;
+  }
+  return `${combined.slice(0, last.index)}${spliced}${combined.slice(last.index + last[0].length)}`;
+}
+
 function joinTitleParts(left: string, right: string): string {
   if (/[-\u2010-\u2014]$/.test(left)) {
     // Preserve an intentional compound such as "On-" + "Body". A lowercase
@@ -1093,11 +1125,15 @@ export function resolveTitle(input: {
       // immediately below the real title.  Do not concatenate it into the
       // article title merely because its baseline is close.
       if (looksLikeObviousMastheadTitle(cur.text)) break;
-      combined = joinTitleParts(combined, stripMastheadSuffix(stripExplicitTitleLabel(cur.text)));
+      {
+        const piece = stripMastheadSuffix(stripExplicitTitleLabel(cur.text));
+        const spliced = spliceHyphenTitleFragment(combined, piece);
+        combined = spliced ?? joinTitleParts(combined, piece);
+      }
       joinedUntil = i;
     }
     native = [combined];
-
+  
     // A centered venue banner can be emitted as the strongest title before
     // the real article title. When a second title candidate is substantially
     // lower on page one and returns to the page margin, use that structural
@@ -1267,14 +1303,20 @@ export function resolveTitle(input: {
     const first = titles[0];
     const firstBox = first.boundingBoxes[0];
     if (firstBox && first.pageStart === 1 && first.text.trim().split(/\s+/).length <= 6) {
+      // Use line font size for Y tolerance. Multi-line title blocks inflate
+      // `height` and would otherwise absorb a later wrap fragment on the
+      // right (`experimental pre-` next to a stacked BMJ title).
+      const baselineFont = first.layoutBlock.lines[0]?.fontSize ?? 12;
+      const yTol = Math.max(3, Math.min(firstBox.height * 0.35, baselineFont * 0.55));
+      const xTol = Math.max(24, baselineFont * 2.5);
       const baselineCluster = titles
         .filter((candidate) => {
           if (candidate === first || candidate.pageStart !== first.pageStart) return false;
           const box = candidate.boundingBoxes[0];
-          if (!box || Math.abs(box.y - firstBox.y) > Math.max(3, firstBox.height * 0.35)) return false;
+          if (!box || Math.abs(box.y - firstBox.y) > yTol) return false;
           if (looksLikeAuthorish(candidate.text)) return false;
           const gap = box.x - (firstBox.x + firstBox.width);
-          return gap >= -3 && gap <= Math.max(24, firstBox.height * 2.5);
+          return gap >= -3 && gap <= xTol;
         })
         .sort((a, b) => (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0));
       if (baselineCluster.length > 0) {
@@ -1401,7 +1443,14 @@ export function resolveTitle(input: {
         parts.push(text);
       }
       if (parts.length >= 2) {
-        native = [parts.join(" ").replace(/\s+/g, " ").trim()];
+        const rebuilt = parts.join(" ").replace(/\s+/g, " ").trim();
+        // The stack filter caps each span at 8 words so LNCS-style covers
+        // (`Intelligent` / `Interaction`) rebuild cleanly. Do not let that
+        // short stack replace an already-joined multi-line article title
+        // whose middle wrap exceeded the word cap (BMJ Open protocols).
+        if (!native[0] || native[0].length <= rebuilt.length + 16) {
+          native = [rebuilt];
+        }
       }
     }
   }

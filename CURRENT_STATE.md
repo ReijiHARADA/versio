@@ -1,4 +1,45 @@
+# 2026-10-19: Frontiers sidebar 著者 + 構造化 abstract + OA 拡充
+
+- PDF 本体は **git に上げない**（`pending-pdfs/**/*.pdf` は gitignore。候補 JSON のみコミット）。再取得は `node scripts/fetch-oa-europepmc.mjs`
+- Europe PMC 追加取得（再）: クエリ拡充 → **+167**（失敗244=主に 403）；pending PDF **1380** / candidates **1432**（PDF 本体は gitignore のまま）
+- BMJ Open タイトル切れ: same-baseline 結合が多行 `height` で右隣フラグメント（`experimental pre-`）を誤吸収 → fontSize 基準の Y 許容に変更；`quasi-post` へ `experimental pre-` を splice（`quasi-experimental pre-post`）；短い LNCS スタック再構築が長い結合タイトルを上書きしないようガード。wide pending 100 **clean 100/100**
+- Nature Sci Rep: 番号付き byline が abstract に膠着（`… Amygdalos5 Primary…` / `Florian W. R. Vondran`）→ PUA 除去・複数イニシャル対応で著者12名＋本文 abstract を復旧；`authorProjection` **34/34**
+- PLOS Digit Health 長 byline（`Philippe J. Guérin` のミドル初期ピリオドを文境界と誤認）→ 長い pure numbered byline を abstract 誤ラベル判定で回収（著者20名）。chrome-only 著者投影時も byline 復旧を実行
+- Reader 目視: `reader-nature-oct-authors.png`（著者12）/ `reader-plos-mqm-authors.png`（長 byline）/ `reader-bmj-sim-title.png`（BMJ 列スクランブル残差・THIS STUDY 混入は継続）
+- Malay 名粒子: `expandAuthorLine` の 4-token pair-split が `Mansor Bin` / `Abu Talib` に割らないよう `bin|binti|ibn|van|…` を除外 → `Mansor Bin Abu Talib` + `Luoting Lin`；Frontiers CORRESPONDENCE 膠着も維持；`authorProjection` **34/34**
+- Europe PMC 追加取得: クエリ拡充 + publisher DOI 直リンク（Frontiers/PLOS/BMC/Nature/PeerJ）優先 → 本セッション **+100**（失敗143=主に JMIR/PeerJ 403）；pending PDF **1215** / candidates **1265**（PDF 本体は gitignore のまま）
+- residual spot limit=80（再）: **noAuthors 0** / caption空 0 / **noAbs 2**（Editorial + tip記事／human-factors 訓練論文など）；odd 0
+- SurvMarker preprint: 番号付き所属行 `Name1, Name2* 1Inst…` から著者回収；Wiley `Name MD | Name MD, MPH` + letterspaced 誌名バナー除去（5R's）；Frontiers 単一段落 unlabeled abstract（`stopY=10000`）
+- BMJ Open chrome: `THIS STUDY` / `To cite:… ABSTRACT` を著者から除外；BMJ 断片 abstract（列スクランブル）は残差
+- spot limit=80 / offset=40: **noAuthors 0** / emptyCaption 0 / noAbs≤2（editorial・PLOS tip）
+- authorProjection 回帰修復: Murali 単著者レポート（sidebar 除外回避）／Woodruff `Palo Alto` 郵便剥離＋title-case 段落回収／IEEE `NAMEFaculty`・email byline を誤除外しない；**34/34**
+- wide pending 200: **clean 199 / flagged 1**（当時 `micro-heading:Aim`；現行では Aim は `other`）
+- residual spot limit=80: **noAuthors 0** / caption空 0 / **noAbs 3**（editorial のみ）；offset=40 でも noAuthors 0 / noAbs 1（Correction 1頁）
+- Abstract 中央ラベル列ずれ・BMC 構造化帯・Nature 無ラベル abstract・Frontiers how-to-cite scrub・`Received:`+early-access 膠着・`& Shane` / `July London` / `Io T` 偽著者を修正
+- wide pending **limit=200: clean 200/200**（flagged 0）；サンプル40本で caption空 0 / 短見出し嫌疑 0；`authorProjection` **34/34**
+- Reader 目視: Nature PEV（`reader-nature-pev.png`）著者4名・本文リード；BMC CPS（`reader-bmc-cps2.png`）Abstract→Background＋親子見出し分割；Nature `Check for updates` を affiliation から demote
+- 住所行 `Palo Alto, CA ZIP` を著者から除外 → Woodruff/Aoki の title-case 所属分離を復旧（APA `author` 役割は citation 形のみ）
+- Nature/BMC early-access: `Received: DATE Name1, Name2…`（colon ゲート緩和）と abstract に膠着した番号付き byline（`Klein 1,5, … Krausewitz3,5 Preoperative…`）を著者回収
+- 数式 crumb 見出し `V ar(QM B − QM F )` を demote；表ヘッダ行（`Brain Region` 隣の `Framework Component`）を outline から demote
+- `authorProjection` **34/34**
+- Reader: DovePress implanter / Springer shoulder VR（`:5180`, `reader-dove-implanter.png` / `reader-springer-shoulder.png`）— タイトル・Abstract・著者行を確認
+- Springer `Name1 · Name2 ·` 段落 byline と Nature `✉ Name` を著者回収（長い middot 行が firstBodyY を自己除外しないよう修正）
+- Frontiers abstract 先頭に膠着した byline（`Name…* While…`）を分離して著者・本文を復元
+- Frontiers `Medical Sciences, New Delhi` を著者から除外
+- 無ラベル abstract: `SECTION_INTRO` の `result, …` 誤マッチ修正；最早 narrative 帯；短い所属 crumb で run 非切断
+- residual spot / epmc 層別診断: caption空 0；epmc 層別60本 **clean 59 / flagged 1**（repository cover）
+- PLOS 二段組: 左レール `Citation:` で Abstract 帯を切らない；本文列のみ abstract 化；Author summary / funding 見出しを demote
+- Frontiers `other`/`copyright`/APA citation byline（`Cook, D., …` 含む）・★付き所属末尾人名を著者回収
+- Reader: PLOS endometrial（`reader-plos-endometrial.png`）でタイトル・Abstract・正規見出しを確認
+
+# 2026-10-19: Apple Translate 短い文のパック翻訳
+
+- 単独だと落ちやすい短い英文（〜80字）を `<<n>>` マーカーでまとめ、Apple に一度渡し、訳を分割して戻す
+- 同時に走っている短いブロックを 30ms 窓で合流（最大 8 件 / 1600 字）。マーカー欠落や品質不合格はユニット単位で MADLAD へフォールバック
+- 版: `apple-translation-macos-v2`。回帰: `appleShortPack` / `appleTranslationEngine`
+
 # 2026-10-19: Import の中断・再開（A2）
+
 
 - **中断**: 取り込みカードのキャンセルに加え、`paperId` 付き（日本語化中で ImportJobCard 非表示）でも `cancelPaperWork` → 論文メニュー「翻訳を中断」
 - **保持**: 抽出済みパッケージと完了ユニットは残す。キュー未着手は `onTaskCancelled` で outstanding を解放（ハング防止）。飛行中タスクは完了させ進捗を捨てない
@@ -10,6 +51,14 @@
 - IEEE ACCESS: `Abstract` 見出し無しの front narrative を abstract 化；`I. INTRODUCTION` を author→heading に復帰
 - OSWORLD: Percentile/Tokens/flowchart `Task Initial State Setup Config…` を outline から demote
 - Cureus `Methods:` / `Results:` は section stop にしない（structured abstract 維持）
+- chrome 著者追加除去: `PERSPECTIVE OPEN` / `LAY SUMMARY` / `Eye Tracking` / `Ph D` / `Toyota Research Institute`；`Name of Colorado Boulder` は人名のみ残す
+- Browser 取り込みが `process is not defined` で落ちる不具合: `pdfLayout.ts` の裸 `process.env` を `layoutEnv()` に置換
+- Reader 目視スクショ: `test-results/browser-verify/reader-role-attn.png` / `reader-hci-ieee.png` / `reader-osworld.png`
+- mid-paragraph section split の `/i`+`[A-Z]` 誤マッチを修正 → OSWORLD 裸 `Results` / IEEE 早期 `Discussion` を outline から除去
+- pending wide diagnose **limit=40: scanned 40 / flagged 0 / clean 40**；図パネル見出し `Statistics` を caption 近傍で demote（`2.2.1 Overview` は維持）
+- wide **limit=200: scanned 200 / flagged 1 / clean 199**（`embedded-section-marker`）→ `Results Of the participants…` を heading 分離；小文字 glue のみ拒否に修正
+- `, for the` が byline 全体を isNonAuthor で落としていたのを修正 → handedness 5名（Tomizawa…Mori）を回収
+- 再診断 **limit=200: scanned 200 / flagged 0 / clean 200**
 
 # 2026-10-19: UX イニシャル著者 / Cureus chrome / structured abstract
 

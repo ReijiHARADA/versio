@@ -20,6 +20,14 @@ describe("Apple translation eligibility", () => {
     expect(isAppleEligibleSource("This sentence is truncated at the page boundary and")).toBe(false);
     expect(isAppleEligibleSource("1 University of Turku, Turku, Finland 2 McMaster University, Hamilton, Canada placed in a continuum based on the discriminative importance of lexis and grammar.")).toBe(false);
   });
+  it("keeps very short prose out of solo Apple but allows packing", async () => {
+    const { isApplePackableShort, shouldCoalesceForApple } = await import(
+      "../../services/translation/appleShortPack"
+    );
+    expect(isAppleEligibleSource("Results were mixed.")).toBe(false);
+    expect(isApplePackableShort("Results were mixed.")).toBe(true);
+    expect(shouldCoalesceForApple("Results were mixed.", false)).toBe(true);
+  });
 
   it("routes eligible prose to Apple and keeps MADLAD as the safe fallback", async () => {
     const source = "The study examined 20 participants and found no significant difference between the conditions.";
