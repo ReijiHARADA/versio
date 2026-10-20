@@ -253,7 +253,7 @@ export function StorageSettingsSection({
         <SettingsCard title="スマートフォン用EPUB同期">
           <SettingsRow
             label="同期先フォルダ"
-            description="iCloud DriveやGoogle Driveのフォルダを選ぶと、論文のEPUB書き出し時に同じ場所へコピーできます。自動同期は行いません。"
+            description="iCloud DriveやGoogle Driveのフォルダを選ぶと、ライブラリの「スマホで読む」から EPUB をそのフォルダへコピーできます。お気に入り（スター）とは別操作です。書き出しダイアログからも送れます。クラウド API 連携やバックグラウンド自動同期は行いません。"
             align="start"
           >
             <div className={styles.actionRow}>

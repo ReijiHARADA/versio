@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Download, FileText, FolderX, Loader2, Plus } from "lucide-react";
+import { FileText, FolderX, Loader2, Plus, Upload } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppStore } from "../../stores/appStore";
 import { useLibraryCache } from "../../stores/libraryCache";
@@ -142,7 +142,7 @@ export function ProjectScreen() {
             }}
             aria-label="このフォルダを書き出す"
           >
-            <Download size={18} />
+            <Upload size={18} />
             書き出す
           </button>
           <button

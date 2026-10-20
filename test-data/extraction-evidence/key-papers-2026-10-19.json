@@ -1,0 +1,368 @@
+[
+  {
+    "file": "epmc-advanced-security-framework-for-5g-sdn-attack-detection-and-mitigation-u.pdf",
+    "title": "Advanced security framework for 5G-SDN attack detection and mitigation using Affinity Cohesive Clustering and Improved Chaotic Walrus-Optimized Convolutional LSTM with Deep Dual Info-Varcoder",
+    "authors": [
+      "Shameli R.",
+      "Sujatha Rajkumar"
+    ],
+    "abstractHead": "Introduction:",
+    "headings": [
+      {
+        "p": 1,
+        "t": "Convolutional LSTM with Deep Dual"
+      },
+      {
+        "p": 2,
+        "t": "1 Introduction"
+      },
+      {
+        "p": 2,
+        "t": "1.1 Motivation and core contribution"
+      },
+      {
+        "p": 3,
+        "t": "1.2 Key objectives"
+      },
+      {
+        "p": 4,
+        "t": "2 Literature review"
+      },
+      {
+        "p": 5,
+        "t": "2.1 Challenges and research gap"
+      },
+      {
+        "p": 5,
+        "t": "3 Proposed framework of Affinity"
+      },
+      {
+        "p": 5,
+        "t": "Cohesive Clustering and Dual"
+      },
+      {
+        "p": 5,
+        "t": "Info-Varcoder with ICWO-CLSTM for"
+      },
+      {
+        "p": 6,
+        "t": "CICIDS2017"
+      },
+      {
+        "p": 7,
+        "t": "3.1 Advanced clustering for secure network"
+      },
+      {
+        "p": 9,
+        "t": "3.2 Deep dual-stream spatial–temporal"
+      }
+    ],
+    "captions": [
+      {
+        "role": "caption",
+        "p": 3,
+        "t": "FIGURE 1 General system architecture of a 5G SDN network."
+      },
+      {
+        "role": "caption",
+        "p": 6,
+        "t": "TABLE 1 Systematic comparison of related work methods."
+      },
+      {
+        "role": "caption",
+        "p": 7,
+        "t": "TABLE 1 (Continued)"
+      },
+      {
+        "role": "caption",
+        "p": 8,
+        "t": "FIGURE 2 Workflow of APCHC and Dual Info-Varcoder with ICWO-dense CLSTM approach."
+      },
+      {
+        "role": "caption",
+        "p": 8,
+        "t": "Figure 4. This technique begins with Affinity Propagation, which dynami-cally identifies clusters of"
+      },
+      {
+        "role": "caption",
+        "p": 9,
+        "t": "FIGURE 3 Framework of the proposed methodology."
+      },
+      {
+        "role": "caption",
+        "p": 10,
+        "t": "FIGURE 4 Mechanism of APCHC for resource management and clustering."
+      },
+      {
+        "role": "caption",
+        "p": 10,
+        "t": "FIGURE 5 Layered architecture of DDST-IV for attack detection."
+      }
+    ],
+    "earlyParas": [
+      "DOI 10.3389/frai.2026.1832131",
+      "Arvind Kumar Chaudhary, LSTM with Deep Dual",
+      "REVISED 07 June 2026",
+      "R S and Rajkumar S (2026) Advanced",
+      "Info-Varcoder. Front. Artif. Intell. 9:1832131. intrusion detection techniques.",
+      "Attribution License (CC BY). The use, distribution or reproduction in other"
+    ],
+    "scrambleFlags": 0
+  },
+  {
+    "file": "epmc-effect-of-simulation-based-human-factors-training-among-emergency-medici.pdf",
+    "title": "Effect of simulation-based human factors training among emergency medicine healthcare providers on paediatric airway management: a study protocol for a quasi-experimental pre-post study at a tertiary healthcare centre in Karachi, Pakistan",
+    "authors": [
+      "Abid Ali Jamali",
+      "Shahan Waheed",
+      "Ahmed Raheem",
+      "Faisal W Ismail",
+      "Shiyam S Tikmani"
+    ],
+    "abstractHead": "Ismail FW, et al. Effect of",
+    "headings": [
+      {
+        "p": 1,
+        "t": "ABSTRACT"
+      },
+      {
+        "p": 1,
+        "t": "Introduction"
+      },
+      {
+        "p": 1,
+        "t": "For numbered affiliations see"
+      },
+      {
+        "p": 1,
+        "t": "Correspondence to"
+      },
+      {
+        "p": 1,
+        "t": "INTRODUCTION"
+      },
+      {
+        "p": 2,
+        "t": "Objectives"
+      },
+      {
+        "p": 3,
+        "t": "METHODOLOGY"
+      },
+      {
+        "p": 4,
+        "t": "Eligibility criteria Inclusion criteria"
+      },
+      {
+        "p": 4,
+        "t": "Exclusion criteria"
+      },
+      {
+        "p": 6,
+        "t": "Subgroup analysis"
+      },
+      {
+        "p": 7,
+        "t": "Interviewer bias"
+      },
+      {
+        "p": 7,
+        "t": "ETHICS AND DISSEMINATION"
+      }
+    ],
+    "captions": [
+      {
+        "role": "caption",
+        "p": 5,
+        "t": "Figure 2 Participant recruitment and enrolment process."
+      }
+    ],
+    "earlyParas": [
+      "factors training among emergency medicine healthcare providers on paediatric airway management: a study protocol for a quasi-post study at a",
+      "Up to 40% of major complications during airway management result from human factors. Through human factors such as planning, effective commu",
+      "strong leadership and clear role allocation within the team, smooth airway securement can be facilitated and the risk of complications reduc",
+      "Methods and analysis This will be a quasi- experimental study with a pre- post design to infer the impact of simulation-based human factors ",
+      "with SD or medians with IQRs for continuous variables",
+      "as appropriate. Changes in first-pass intubation success"
+    ],
+    "scrambleFlags": 0
+  },
+  {
+    "file": "epmc-ai-assisted-clinical-documentation-in-routine-danish-general-practice-qu.pdf",
+    "title": "AI-Assisted Clinical Documentation in Routine Danish General Practice: A Pragmatic Pre–Post Study of Documentation Time, Note Quality, and Clinician Acceptance",
+    "authors": [
+      "Louise Nørgaard Olsen",
+      "Philipp Harbig",
+      "Anna Bay Laurberg",
+      "Jacob Laurberg",
+      "Morten Haaning Charles"
+    ],
+    "abstractHead": "Disclaimer: © The authors. All rights reserved. This is a privileged document currently under peer-review/community review. Authors have provided JMIR Publications with an exclusive license to publish this preprint on it",
+    "headings": [
+      {
+        "p": 2,
+        "t": "Table of Contents"
+      },
+      {
+        "p": 3,
+        "t": "AI-Assisted Clinical Documentation in Routine Danish General Practice: A"
+      },
+      {
+        "p": 3,
+        "t": "Clinician Acceptance"
+      },
+      {
+        "p": 3,
+        "t": "34 General Practice Aarhus DK"
+      },
+      {
+        "p": 3,
+        "t": "Abstract"
+      },
+      {
+        "p": 3,
+        "t": "AI-assisted documentation was associated with reduced documentation time and mai"
+      },
+      {
+        "p": 3,
+        "t": "Preprint Settings"
+      },
+      {
+        "p": 5,
+        "t": "Original Manuscript"
+      },
+      {
+        "p": 6,
+        "t": "AI-Assisted Clinical Documentation in Routine Danish General"
+      },
+      {
+        "p": 6,
+        "t": "Practice: A Pragmatic Pre–Post Study of Documentation Time,"
+      },
+      {
+        "p": 6,
+        "t": "Abstract"
+      },
+      {
+        "p": 7,
+        "t": "Introduction"
+      }
+    ],
+    "captions": [],
+    "earlyParas": [
+      "Submitted to: JMIR Human Factors on: March 01, 2026",
+      "Original Manuscript........................................................................................................................."
+    ],
+    "scrambleFlags": 0
+  },
+  {
+    "file": "epmc-multi-way-radial-consistency-pre-training-for-event-based-optical-flow.pdf",
+    "title": "Multi-way radial consistency pre-training for event based optical flow",
+    "authors": [
+      "An Feng",
+      "Tao Wenyin"
+    ],
+    "abstractHead": "Optical flow estimation is a low-level module in computer vision, widely used in tasks such as visual odometry, autonomous driving, high dynamic range (HDR) imaging, and action recognition. Existing event-based optical f",
+    "headings": [
+      {
+        "p": 1,
+        "t": "18 May 2026 RECEIVEDREVISED 24 June 2026"
+      },
+      {
+        "p": 1,
+        "t": "25 June 2026 ACCEPTEDPUBLISHED"
+      },
+      {
+        "p": 1,
+        "t": "1 Introduction"
+      },
+      {
+        "p": 2,
+        "t": "2 Related work"
+      },
+      {
+        "p": 2,
+        "t": "2.1 Frame-based optical flow"
+      },
+      {
+        "p": 2,
+        "t": "2.2 Event-based optical flow"
+      },
+      {
+        "p": 2,
+        "t": "2.3 Bidirectional loss: from symmetry to"
+      },
+      {
+        "p": 3,
+        "t": "2.4 Polar-cycle constraints: from"
+      },
+      {
+        "p": 3,
+        "t": "3 Method"
+      },
+      {
+        "p": 3,
+        "t": "3.1 Event generation & polar cycle prior &"
+      },
+      {
+        "p": 3,
+        "t": "Representation"
+      },
+      {
+        "p": 3,
+        "t": "3.1.1 Event generation"
+      }
+    ],
+    "captions": [
+      {
+        "role": "caption",
+        "p": 3,
+        "t": "Figure 1a."
+      },
+      {
+        "role": "caption",
+        "p": 4,
+        "t": "FIGURE 1 Raw event stream (Cartesian, polar) and representation (count, timestamp). timestamp repres"
+      },
+      {
+        "role": "caption",
+        "p": 5,
+        "t": "FIGURE 2"
+      },
+      {
+        "role": "caption",
+        "p": 5,
+        "t": "Figure 2."
+      },
+      {
+        "role": "caption",
+        "p": 8,
+        "t": "Figure 3 visualizes optical flow results on five representative frames from the MVSEC outdoor_day1 s"
+      },
+      {
+        "role": "caption",
+        "p": 9,
+        "t": "TABLE 1 Quantitative results on MVSEC."
+      },
+      {
+        "role": "caption",
+        "p": 9,
+        "t": "TABLE 2 Per-sequence results on DSEC-Flow test set. TABLE 3 Average results across three benchmarks."
+      },
+      {
+        "role": "caption",
+        "p": 10,
+        "t": "FIGURE 3 Qualitative results. Each column is a sample from outdoor_day1 sequence. From top to bottom"
+      }
+    ],
+    "earlyParas": [
+      "DOI 10.3389/fnbot.2026.1884626",
+      "Mohammed Jeryo, University of Kufa, Iraq",
+      "Feng A and Wenyin T (2026) Multi-way radial consistency pre-training for event",
+      "original publication in this journal is cited, in accordance with accepted",
+      "Optical flow estimation aims to capture the pixel-level motion between consecutive frames. It is a fundamental module in many computer visio",
+      "However, frame-based sensors are intrinsically constrained by millisecond exposure times and limited dynamic range, inevitably introducing m"
+    ],
+    "scrambleFlags": 0
+  }
+]

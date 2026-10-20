@@ -14,6 +14,7 @@ import { showToast, useToastStore } from "../../stores/toastStore";
 import { restoreWorkspaceFolderFromTrash, purgeExpiredTrash } from "../../services/trashService";
 import { resumeAfterTranslationServerReady } from "../../services/import/startBackgroundImport";
 import { isTranslationServerReady, subscribeTranslationServerReady } from "../../utils/serverReady";
+import { setTranslationUiDeferReason } from "../../utils/batchBlockUpdates";
 import styles from "./AppShell.module.css";
 
 export function AppShell() {
@@ -114,6 +115,13 @@ export function AppShell() {
   };
   const handleDropPaper = useCallback(async (targetId: string, droppedPaperId: string, sourceNodeId: string | null) => { if (targetId === INBOX_DROP_ID) { const removed = await removePaperFromAllWorkspaces(droppedPaperId); removeMembershipsForPaper(droppedPaperId); showDragToast({ kind: removed ? "added" : "duplicate", message: removed ? "インボックスに戻しました" : "すでにインボックスにあります" }); return; } try { const link = sourceNodeId ? await movePaperInWorkspace(droppedPaperId, sourceNodeId, targetId) : await addPaperToWorkspace(targetId, droppedPaperId); if (sourceNodeId) useProjectStore.getState().removeMembershipLocal(sourceNodeId, droppedPaperId); upsertMembership(link); showDragToast({ kind: "added", message: "論文の配置を更新しました" }); } catch (error) { showDragToast({ kind: error instanceof Error && error.message.includes("すでに") ? "duplicate" : "error", message: error instanceof Error ? error.message : "論文の配置に失敗しました" }); } }, [removeMembershipsForPaper, showDragToast, upsertMembership]);
   useEffect(() => { setPaperDropHandler(handleDropPaper); return () => setPaperDropHandler(null); }, [handleDropPaper]);
+
+  useEffect(() => {
+    const open = createParentId !== undefined;
+    setTranslationUiDeferReason("workspace-modal", open);
+    return () => setTranslationUiDeferReason("workspace-modal", false);
+  }, [createParentId]);
+
   return <div className={styles.shell}>
     <input ref={fileInputRef} type="file" accept=".pdf,application/pdf" className={styles.hiddenInput} onChange={(event) => { const file = event.target.files?.[0]; if (file && fileNodeId) void tryStartPdfImport(file, { workspaceNodeId: fileNodeId }); event.target.value = ""; setFileNodeId(null); }} />
     <AppSidebar workspaceNodes={workspaceNodes} searchQuery={searchQuery} onSearchChange={setSearchQuery} onNewWorkspace={() => setCreateParentId(null)} onNewChild={(node) => setCreateParentId(node.id)} onDeleteNode={deleteNode} onAddPaperToWorkspace={addPaperFile} activeNodeId={routeNodeId} inboxCount={inboxCount} />

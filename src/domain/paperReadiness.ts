@@ -79,13 +79,8 @@ export function derivePaperReadiness(input: {
   return { readiness: "readable", label: "読めます", canOpen: true };
 }
 
-export function formatTranslationProgressLabel(
-  readiness: PaperReadiness,
-  percent: number | null
-): string {
-  if (readiness === "translating" && percent != null) {
-    return `日本語化中 ${percent}%`;
-  }
+/** Text label only — progress is shown as a bar in the library row. */
+export function formatTranslationProgressLabel(readiness: PaperReadiness): string {
   if (readiness === "translating") return "日本語化中";
   if (readiness === "preparing") return "準備中";
   if (readiness === "needs_attention") return "要確認";

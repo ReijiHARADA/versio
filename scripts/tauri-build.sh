@@ -107,20 +107,21 @@ echo "frontend_s=$frontend_s" >>"$TIMING_FILE"
 echo "⏱  Frontend build: ${frontend_s}s"
 
 export PAPER_READER_SKIP_BEFORE_BUILD=1
+# Warm fast rebuilds: keep incremental artifacts even for --release.
+if [[ "$MODE" == "fast" ]]; then
+  export CARGO_INCREMENTAL="${CARGO_INCREMENTAL:-1}"
+fi
 
-t0="$(now_ms)"
-npx tauri build --no-bundle --ci
-rust_s="$(elapsed_s "$t0")"
-echo "rust_s=$rust_s" >>"$TIMING_FILE"
-echo "⏱  Rust compile: ${rust_s}s"
-
-# Always produce .app first. DMG is built later from the finalized .app so a
-# signed release never packages a pre-sign snapshot into the disk image.
+# Single tauri invocation (compile + .app). Previously we ran --no-bundle then
+# --bundles app separately for phase timing; that paid for two release links.
+# DMG is still built later from the finalized .app so signed releases never
+# package a pre-sign snapshot.
 t0="$(now_ms)"
 npx tauri build --bundles app --ci
-app_bundle_s="$(elapsed_s "$t0")"
-echo "app_bundle_s=$app_bundle_s" >>"$TIMING_FILE"
-echo "⏱  Tauri .app bundle: ${app_bundle_s}s"
+rust_bundle_s="$(elapsed_s "$t0")"
+echo "rust_s=$rust_bundle_s" >>"$TIMING_FILE"
+echo "app_bundle_s=included_in_rust_s" >>"$TIMING_FILE"
+echo "⏱  Rust compile + .app bundle: ${rust_bundle_s}s"
 
 APP_PATH="src-tauri/target/release/bundle/macos/Paper Reader.app"
 DMG_PATH="src-tauri/target/release/bundle/dmg/Paper Reader_0.1.0_aarch64.dmg"
@@ -133,6 +134,20 @@ fi
 
 if [[ "$MODE" == "clean" && "$STAGED_MODE" != "clean" ]]; then
   echo "エラー: clean build なのに staged mode=$STAGED_MODE"
+  exit 1
+fi
+
+t0="$(now_ms)"
+bash "$SCRIPT_DIR/inject-translation-venv.sh" "$APP_PATH"
+inject_s="$(elapsed_s "$t0")"
+# inject script may also append venv_inject_s; keep a stable key for summary.
+if ! grep -q '^venv_inject_s=' "$TIMING_FILE" 2>/dev/null; then
+  echo "venv_inject_s=$inject_s" >>"$TIMING_FILE"
+fi
+echo "⏱  Venv inject: $(read_timing venv_inject_s)s"
+
+if [[ ! -x "$APP_PATH/Contents/Resources/translation-server/venv/bin/python3" ]]; then
+  echo "エラー: .app に translation-server/venv がありません（inject 失敗）"
   exit 1
 fi
 
@@ -172,8 +187,8 @@ echo "========== Build timings ($MODE) =========="
 printf "  Python runtime prep : %ss\n" "$(read_timing python_prep_s)"
 printf "  Stage resources     : %ss\n" "$(read_timing stage_s)"
 printf "  Frontend build      : %ss\n" "$(read_timing frontend_s)"
-printf "  Rust compile        : %ss\n" "$(read_timing rust_s)"
-printf "  Tauri .app bundle   : %ss\n" "$(read_timing app_bundle_s)"
+printf "  Rust + .app bundle  : %ss\n" "$(read_timing rust_s)"
+printf "  Venv inject         : %ss\n" "$(read_timing venv_inject_s)"
 printf "  DMG / sign phase    : %s\n" "$(read_timing dmg_s)"
 printf "  Wall clock          : %ss\n" "$wall_s"
 echo "==========================================="

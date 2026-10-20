@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   BLOCK_UPDATE_COALESCE_MS,
   createBlockUpdateBatcher,
+  setTranslationUiDeferReason,
   setTranslationUiScrollPaused,
 } from "../utils/batchBlockUpdates";
 import type { PaperBlock } from "../types/paper";
@@ -56,6 +57,21 @@ describe("createBlockUpdateBatcher", () => {
     vi.advanceTimersByTime(BLOCK_UPDATE_COALESCE_MS * 3);
     expect(apply).not.toHaveBeenCalled();
     setTranslationUiScrollPaused(false);
+    expect(apply).toHaveBeenCalledTimes(1);
+    batcher.dispose();
+  });
+
+  it("keeps defer active while any named reason remains", () => {
+    vi.useFakeTimers();
+    const apply = vi.fn();
+    const batcher = createBlockUpdateBatcher(apply);
+    setTranslationUiDeferReason("shell", true);
+    setTranslationUiDeferReason("workspace-modal", true);
+    batcher.push(block("a"));
+    setTranslationUiDeferReason("shell", false);
+    vi.advanceTimersByTime(BLOCK_UPDATE_COALESCE_MS * 2);
+    expect(apply).not.toHaveBeenCalled();
+    setTranslationUiDeferReason("workspace-modal", false);
     expect(apply).toHaveBeenCalledTimes(1);
     batcher.dispose();
   });

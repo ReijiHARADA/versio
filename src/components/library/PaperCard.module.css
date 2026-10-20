@@ -54,10 +54,45 @@
   flex: 1;
 }
 
-.favoriteMark {
+.favoriteButton {
   flex-shrink: 0;
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  opacity: 0.55;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.row:hover .favoriteButton,
+.favoriteButton:focus-visible,
+.favoriteButton.favoriteOn {
+  opacity: 1;
+}
+
+.favoriteButton:hover:not(:disabled) {
+  background: var(--color-bg-tertiary, var(--color-bg));
   color: var(--color-favorite);
+}
+
+.favoriteButton.favoriteOn {
+  color: var(--color-favorite);
+}
+
+.favoriteButton:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .trailing {
@@ -65,7 +100,68 @@
   align-items: center;
   gap: var(--spacing-sm);
   flex-shrink: 0;
-  max-width: 55%;
+  max-width: 58%;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.epubSyncButton {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  margin: 0;
+  padding: 0 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  opacity: 0.72;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.row:hover .epubSyncButton,
+.epubSyncButton:focus-visible {
+  opacity: 1;
+}
+
+.epubSyncButton:hover:not(:disabled) {
+  background: var(--color-bg-tertiary, var(--color-bg));
+  color: var(--color-text);
+}
+
+.epubSyncButton:disabled {
+  cursor: default;
+}
+
+.epubSyncButton.epubSyncDone {
+  color: #34a853;
+  opacity: 1;
+}
+
+.epubSyncButton.epubSyncError {
+  color: #ea4335;
+  opacity: 1;
+}
+
+.epubSyncLabel {
+  max-width: 6.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .meta {
@@ -89,6 +185,25 @@
   max-width: 9.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.translateProgress {
+  flex-shrink: 0;
+  display: block;
+  width: 72px;
+  height: 4px;
+  margin-left: 2px;
+  border-radius: 999px;
+  background: var(--color-bg-tertiary);
+  overflow: hidden;
+}
+
+.translateProgressFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-accent);
+  transition: width var(--transition-fast);
 }
 
 .statusReady {
@@ -190,7 +305,12 @@
   background: var(--color-border-light);
 }
 
-.menuDanger {
+.menu button.menuDanger {
+  color: #c5221f;
+}
+
+.menu button.menuDanger:hover:not(:disabled) {
+  background: #fce8e6;
   color: #c5221f;
 }
 
@@ -284,5 +404,19 @@
 
   .date {
     display: none;
+  }
+
+  .translateProgress {
+    width: 48px;
+  }
+
+  .epubSyncLabel {
+    display: none;
+  }
+
+  .epubSyncButton {
+    width: 28px;
+    padding: 0;
+    justify-content: center;
   }
 }

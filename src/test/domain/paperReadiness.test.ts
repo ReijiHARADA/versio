@@ -54,7 +54,7 @@ describe("paper readiness", () => {
       block({ id: "b", translationStatus: "pending" }),
     ];
     expect(translationPercent(blocks, () => true)).toBe(50);
-    expect(formatTranslationProgressLabel("translating", 50)).toBe("日本語化中 50%");
+    expect(formatTranslationProgressLabel("translating")).toBe("日本語化中");
   });
 
   it("ignores reference-only bodies", () => {

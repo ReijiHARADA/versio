@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 import {
   ChevronDown,
   ChevronRight,
-  Download,
+  Upload,
   FilePlus2,
   FileText,
   Folder,
@@ -212,7 +212,7 @@ export function WorkspaceTree({
                 folderExport.openExport(node);
               }}
             >
-              <Download size={14} />
+              <Upload size={14} />
               このフォルダを書き出す…
             </button>
             <div className={styles.projectMenuSeparator} />

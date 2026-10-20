@@ -11,6 +11,7 @@ import type { StructuralRegionEvidence } from "../types";
 import { formatTitleEvidence } from "../formats/applyHardRules";
 import { normalizedTextHash } from "../sourceAnchor";
 import { resolveTitle } from "./titleResolver";
+import { mergeMathematicalDisplayFragments } from "./mathFragmentMerge";
 
 /** Vignette / forced-choice prompts mistaken for prose-cell grids. */
 function looksLikeVignetteOrOptionProse(text: string): boolean {
@@ -69,6 +70,17 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   if (candidate.role === "author" && /\b(?:university|department|institute|laboratory|hospital|consortium|faculty|school|center|centre)\b/i.test(candidate.text)) {
     return { role: "affiliation", confidence: Math.max(scores.affiliation ?? 0.82, 0.82) };
   }
+  // Layout-owned captions must not lose to heading typography races
+  // (`TABLE 2` with ALL-CAPS + spacing still scores as a section head).
+  if (
+    candidate.layoutBlock.role === "table_caption" ||
+    candidate.layoutBlock.role === "figure_caption"
+  ) {
+    return {
+      role: "caption",
+      confidence: Math.max(scores.caption ?? candidate.confidence, 0.9),
+    };
+  }
   const paragraph = scores.paragraph ?? 0.3;
   const ranked = Object.entries(scores)
     .filter((entry): entry is [CanonicalNode["role"], number] => typeof entry[1] === "number")
@@ -115,11 +127,11 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   // this does not demote ordinary multi-column prose.
   // Real figure/table captions often sit inside the same vector band; keep
   // them as captions so Reader can still show `図 1 …` / `Figure 1 …`.
+  // Layout-owned figure/table captions already returned above, so role !==
+  // "caption" is enough here without re-checking layoutBlock.role.
   if (
     candidate.role !== "title" &&
     candidate.role !== "caption" &&
-    candidate.layoutBlock.role !== "figure_caption" &&
-    candidate.layoutBlock.role !== "table_caption" &&
     (candidate.roleScores.caption ?? 0) < 0.85 &&
     vectorFigureLabels && vectorFigureLabels.confidence >= 0.82 &&
     (candidate.roleScores.table ?? 0) < 0.8 &&
@@ -139,8 +151,6 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   if (
     imageLabelEvidence &&
     candidate.role !== "caption" &&
-    candidate.layoutBlock.role !== "figure_caption" &&
-    candidate.layoutBlock.role !== "table_caption" &&
     (scores.caption ?? 0) < 0.85 &&
     (scores.other ?? 0) >= paragraph + 0.06 &&
     !looksLikeSentenceProse(candidate.text)
@@ -652,30 +662,94 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
     const fundingChromeHeading =
       /^(?:this study was (?:partly )?supported by|funding:|supported by|acknowledgements?)\b/i.test(t) ||
       (/\b(?:hmrf|nsfc|nih grant|grant no\.?)\b/i.test(t) && t.length <= 120 && !/^\d+(?:\.\d+)+\s/.test(t));
+    // Bare labels and notice leads (`Copyright © 2022 …` / `Copyright (1998) …`).
+    const copyrightChrome =
+      /^copyright\s*:?\s*$/i.test(t) ||
+      /^copyright\s*(?:©|\(\s*\d{4}\s*\)|\d{4}\b)/i.test(t) ||
+      /^protected by copyright\b/i.test(t) ||
+      /^downloaded from\b/i.test(t) ||
+      /^to cite\s*:/i.test(t);
     const editorialLabel =
       microPanelHeading ||
       fundingChromeHeading ||
       tableHeaderRow ||
+      copyrightChrome ||
       /^(?:\*?correspondence|edited by|reviewed by|open access|citation|copyright|keywords?|index terms?|published|received|revised|accepted)\s*:?\s*$/i.test(t) ||
+      /^(?:for numbered affiliations see|correspondence to)\b/i.test(t) ||
       // Keyword / index rails with payload (`Keywords: information visualization, …`).
       /^(?:keywords?|index terms?|ccs concepts)\s*:\s*\S/i.test(t) ||
       /^(?:received|revised|accepted|published)\b/i.test(t) && (t.length <= 48 || /\bpeer review\b/i.test(t)) ||
       /^(?:published:\s*)?peer review history\b/i.test(t) ||
-      /^(?:\d{1,2}\s+)?(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{4}$/i.test(t) ||
-      /^(?:competing interests|research ethics|ethics approval|acknowledgements?|funding|data availability(?:\s+statement)?|declaration of generative ai)\b/i.test(t) ||
+      // BMJ Open / publisher footers often keep a trailing period (`24 September 2026.`).
+      /^(?:\d{1,2}\s+)?(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{4}\.?$/i.test(t) ||
+      // Figure captions promoted as outline headings
+      // (`Conceptual framework illustrating the impact of …`).
+      /^(?:fig(?:ure)?\.?\s*\d+|conceptual framework|schematic (?:overview|diagram|illustration))\b/i.test(t) ||
+      // Bare / short table captions (`TABLE 2`, `Table 1. …`).
+      /^(?:tables?|表)\s*\d+\b/i.test(t) ||
+      /^(?:competing interests|research ethics|ethics approval|acknowledgements?|funding|data availability(?:\s+statement)?|declaration of generative ai|author contributions|conflict of interest|generative ai statement)\b/i.test(t) ||
+      // Glued / bare table column headers without separators.
+      /^(?:screening dimension|implication of differences|project content|dimension interview item)\b/i.test(t) ||
+      /^(?:dimension|interview\s+item|framework\s+component|brain\s+region)\b/i.test(t) &&
+        t.split(/\s+/).filter(Boolean).length <= 5 ||
+      /^(?:inclusion|exclusion)\s+criteria\s*:?\s*$/i.test(t) ||
       /^open access\b/i.test(t) && /\blicensed under\b/i.test(t) ||
       // License / CC rails painted as outline headings on Frontiers covers.
       /\b(?:creative\s+commons|attribution\s+license|cc-?by(?:-nc|-nd|-sa)?)\b/i.test(t) ||
       /^(?:this is an open-access article|licensed under the)\b/i.test(t) ||
       /@/.test(t);
     const abstractLeadIn =
-      /^(?:this study|this paper|this article|this review|we (?:present|propose|report|investigate))\b/i.test(t) &&
-      t.split(/\s+/).filter(Boolean).length >= 8;
+      (/^(?:this study|this paper|this article|this review|we (?:present|propose|report|investigate))\b/i.test(t) ||
+        // BMJ structured-abstract label glued onto the following sentence
+        // (`Methods and analysis This will be a quasi-experimental…`).
+        /^(?:methods?\s+and\s+analysis|strengths?\s+and\s+limitations)\b/i.test(t)) &&
+      t.split(/\s+/).filter(Boolean).length >= 6;
     const duplicateTitle =
       titleText.length >= 24 && t.toLowerCase() === titleText;
     // Long sentence-like headings and math/table crumbs are body, not outline.
     const proseHeading =
       t.length > 90 && /[.!?]$/.test(t) && !/^\d+(?:\.\d+)*\s/.test(t);
+    // Frontiers / abstract bands often paint the first wrap of a paragraph as a
+    // heading (`Fishermen primarily refer…`, `Guided by the PRISMA-ScR…`).
+    const bodyLeadHeading =
+      !/^\d+(?:\.\d+)*\s/.test(t) &&
+      t.split(/\s+/).filter(Boolean).length >= 5 &&
+      (/^(?:the|this|these|those|a|an|all|to|since|however|guided|fishermen|fisheries|moreover|furthermore|additionally|therefore|among|literature|disagreements|prisma|screening|seafarers|based on|short-term|long-term|in this|from our|\(|[“"‘'])/i.test(
+        t,
+      ) ||
+        // Incomplete wraps ending mid-phrase.
+        /\b(?:yet|the|of|and|a|an|for|with|from|to|in|on|both|are|is|map|intervention|forms|information|conducted|arbitration|three|two|one)$/i.test(
+          t,
+        ) ||
+        // Results/findings prose wraps (`Results of EFA indicated that … consists of three`).
+        (/^(?:results?\s+of|findings?\s+(?:of|from)|analysis\s+of)\b/i.test(t) &&
+          t.split(/\s+/).filter(Boolean).length >= 8 &&
+          !/^\d+(?:\.\d+)*\s/.test(t) &&
+          !/[.!?]$/.test(t)) ||
+        /\b(?:indicated|showed|revealed|suggested)\s+that\b/i.test(t) &&
+          t.split(/\s+/).filter(Boolean).length >= 8 ||
+        // Past-tense method/results prose painted as a heading.
+        /\b(?:were|was|was used|is illustrated|are illustrated)\b/i.test(t) &&
+          t.split(/\s+/).filter(Boolean).length >= 6);
+    // Numbered section label glued onto following body prose
+    // (`4.2 Recommendations …. Community-Embedded Suppor`).
+    const numberedProseHeading =
+      /^\d+(?:\.\d+)*\s+\S/.test(t) &&
+      /[.!?]\s+[A-ZÀ-ÖØ-Þ]/.test(t) &&
+      t.split(/\s+/).filter(Boolean).length >= 8;
+    // Structured-abstract label glued onto the lead sentence, or bare
+    // `Methods:` / `Background and objective: …` abstract bands.
+    const structuredAbstractLeadHeading =
+      /^(?:background(?:\s+and\s+objectives?)?|objectives?|aims?|methods?|materials(?:\s+and\s+methods)?|results?|findings?|conclusions?)\s*:/i.test(
+        t,
+      ) &&
+      (t.split(/\s+/).filter(Boolean).length >= 4 ||
+        /^(?:background(?:\s+and\s+objectives?)?|objectives?|aims?|methods?|results?|conclusions?)\s*:?\s*$/i.test(
+          t,
+        ));
+    // Database query crumbs mistaken for outline headings.
+    const searchQueryHeading =
+      /[()]{2,}/.test(t) && /\b(?:limit-to|pubyear|wos|scopus)\b/i.test(t);
     const words = t.split(/\s+/).filter(Boolean).length;
     // Running headers: `106 D. A. SHEPHERD AND H. PATZELT`.
     const runningAuthorHeader =
@@ -727,7 +801,13 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
         (/^\d/.test(t) || (t.match(/<\s*0?\.\d+/g) ?? []).length >= 2) &&
         words <= 14 &&
         !/^\d+(?:\.\d+)+\s+[A-Za-z]/.test(t));
+    // Lone math / OCR glyphs (`Þ`, `ð`, `σ`) painted as outline headings.
+    const singleGlyphHeading =
+      t.length <= 3 &&
+      !/[A-Za-z0-9]{2}/.test(t) &&
+      /[ÞþðÐσΣΩωμπα-ωΑ-Ω∫∑∏√∞]/.test(t);
     const mathOrTableCrumb =
+      singleGlyphHeading ||
       /[∑∫≤≥≠≈]/.test(t) ||
       /^\(?SOTA\)/i.test(t) ||
       /^number of true/i.test(t) ||
@@ -754,6 +834,10 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
       !abstractLeadIn &&
       !duplicateTitle &&
       !proseHeading &&
+      !bodyLeadHeading &&
+      !numberedProseHeading &&
+      !structuredAbstractLeadHeading &&
+      !searchQueryHeading &&
       !mathOrTableCrumb &&
       !runningAuthorHeader &&
       !journalTypeRail &&
@@ -772,10 +856,16 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
       degreeAffiliationHeading ||
       geoChromeHeading ||
       titleCaseDense ||
-      statCrumbHeading;
+      statCrumbHeading ||
+      searchQueryHeading;
+    const asCopyright = copyrightChrome;
     return {
       ...node,
-      role: asOther ? ("other" as const) : ("paragraph" as const),
+      role: asCopyright
+        ? ("copyright" as const)
+        : asOther
+          ? ("other" as const)
+          : ("paragraph" as const),
       confidence: Math.min(node.confidence, 0.55),
       evidence: [
         ...node.evidence,
@@ -785,7 +875,9 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
           confidence: 0.85,
           page: node.pageStart,
           bbox: node.boundingBoxes[0],
-          reason: editorialLabel
+          reason: asCopyright
+            ? "publisher running chrome demoted to copyright"
+            : editorialLabel
             ? "editorial chrome label demoted from heading"
             : duplicateTitle
               ? "duplicate title heading demoted to paragraph"
@@ -819,12 +911,17 @@ function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
   let abstractColumnX: number | null = null;
   return nodes.map((node) => {
     const text = (node.text ?? "").trim();
-    if (node.role === "heading" && /^(?:abstract|abstrak|要旨)\s*:?\s*$/i.test(text)) {
+    // PLOS sometimes paints the bare `Abstract` label as `other` instead of
+    // heading; still open the structured-abstract band.
+    if (
+      (node.role === "heading" || node.role === "other") &&
+      /^(?:abstract|abstrak|要旨)\s*:?\s*$/i.test(text)
+    ) {
       inAbstract = true;
       sawStructuredConclusion = false;
       sawAbstractBody = false;
       abstractColumnX = node.boundingBoxes[0]?.x ?? null;
-      return node;
+      return node.role === "other" ? { ...node, role: "heading" as const } : node;
     }
     // Inline labels (`Abstract. Nowadays…` / `Abstrak. Saat ini…`) are often
     // paragraphs, not bare headings. DovePress also paints them as copyright.
@@ -1210,6 +1307,15 @@ function demotePageOneProseCopyrights(nodes: CanonicalNode[]): CanonicalNode[] {
     if (node.role !== "copyright" || node.pageStart !== 1 || !node.text) return node;
     const t = node.text.trim();
     if (PUBLISHER_COPYRIGHT_CHROME.test(t) || PUBLISHER_DOWNLOAD_CHROME.test(t) || /^©/.test(t)) {
+      return node;
+    }
+    // IEEE / publisher editorial chrome must stay hidden — do not promote it
+    // back into the Reader body as a paragraph.
+    if (
+      /^(?:the\s+)?(?:associate|handling|guest)\s+editor\b/i.test(t) ||
+      /\bcoordinating the review of this manuscript\b/i.test(t) ||
+      /^(?:protected by copyright|downloaded from|to cite\s*:)/i.test(t)
+    ) {
       return node;
     }
     if (/^(?:abstract|abstrak|要旨|purpose|methods?|results?|conclusions?)\s*[.:：]/i.test(t)) {
@@ -1729,6 +1835,19 @@ function promoteLateFrontAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
  * abstract is unfinished and the crumb is short, same-page, and nearby.
  */
 /** Sidebar DOI / citation crumbs sometimes glue onto abstract prose mid-sentence. */
+/** BMJ / HighWire cite crumbs mistaken for the whole abstract. */
+function looksLikeCiteOnlyAbstract(text: string): boolean {
+  const t = text.replace(/\s+/g, " ").trim();
+  if (t.length > 120) return false;
+  return (
+    /^[A-Z][\p{L}'’-]+(?:\s+[A-Z]{1,4})?,?\s+et al\.\s+/u.test(t) ||
+    /^[A-Z][\p{L}'’-]+(?:\s+[A-Z]{1,4})?(?:\s*,\s*[A-Z][\p{L}'’-]+(?:\s+[A-Z]{1,4})?){0,4}\s+et al\.\s+/u.test(
+      t,
+    ) ||
+    (/^[A-Z][\p{L}'’-]+(?:\s+[A-Z]{1,4})?,?\s+et al\.\s+Effect of\b/u.test(t) && t.split(/\s+/).length <= 12)
+  );
+}
+
 function scrubAbstractCiteCrumbs(text: string): string {
   let cleaned = text
     .replace(/,?\s*doi:\s*10\.\d{4,9}\/[^\s,;]+/gi, "")
@@ -2747,6 +2866,63 @@ export function resolveCanonicalDocument(input: {
       ? { ...node, text: scrubAbstractCiteCrumbs(node.text) }
       : node,
   );
+  // BMJ / HighWire: a how-to-cite crumb (`Ismail FW, et al. Effect of`) can
+  // become the only abstract node. Demote it and promote the following
+  // structured-abstract body so Reader is not left with a citation stub.
+  nodes = (() => {
+    const next = [...nodes];
+    for (let i = 0; i < next.length; i += 1) {
+      const node = next[i];
+      if (node.role !== "abstract" || !node.text || !looksLikeCiteOnlyAbstract(node.text)) {
+        continue;
+      }
+      next[i] = {
+        ...node,
+        role: "copyright" as const,
+        confidence: Math.min(node.confidence, 0.45),
+        evidence: [
+          ...node.evidence,
+          {
+            source: "generic-heuristic" as const,
+            label: "cite-only-abstract-demotion",
+            confidence: 0.9,
+            page: node.pageStart,
+            bbox: node.boundingBoxes[0],
+            reason: "how-to-cite crumb demoted from abstract",
+          },
+        ],
+      };
+      for (let j = i + 1; j < Math.min(i + 8, next.length); j += 1) {
+        const cand = next[j];
+        if (cand.pageStart !== node.pageStart) break;
+        if (cand.role === "heading" && /^(?:introduction|background|objectives?|methods?(?:\s+and\s+analysis)?)\b/i.test((cand.text ?? "").trim())) {
+          continue;
+        }
+        if (cand.role !== "paragraph" && cand.role !== "other") continue;
+        const text = (cand.text ?? "").trim();
+        if (text.length < 40) continue;
+        if (/^(?:protected by copyright|downloaded from|to cite\s*:)/i.test(text)) continue;
+        next[j] = {
+          ...cand,
+          role: "abstract" as const,
+          confidence: Math.max(cand.confidence, 0.72),
+          evidence: [
+            ...cand.evidence,
+            {
+              source: "generic-heuristic" as const,
+              label: "abstract-body-after-cite-crumb",
+              confidence: 0.78,
+              page: cand.pageStart,
+              bbox: cand.boundingBoxes[0],
+              reason: "structured abstract body recovered after cite crumb",
+            },
+          ],
+        };
+        break;
+      }
+    }
+    return next;
+  })();
   nodes = suppressVectorLabelClusters(nodes);
   nodes = dedupeExactCaptions(nodes);
   nodes = mergeFigureCaptionContinuations(nodes);
@@ -2761,34 +2937,69 @@ export function resolveCanonicalDocument(input: {
     // (`Care—Children's Experiences`). Demote proper suffixes of the joined
     // title so only one title identity remains.
     const normalizedResolved = resolvedTitleText.replace(/\s+/g, " ").trim().toLowerCase();
-    nodes = nodes.map((node) => {
-      if (node === titleNode || node.role !== "title" || !node.text) return node;
+    nodes = nodes.flatMap((node) => {
+      if (node === titleNode || node.role !== "title" || !node.text) return [node];
       const fragment = node.text.replace(/\s+/g, " ").trim().toLowerCase();
-      if (!fragment) return node;
+      if (!fragment) return [node];
       const isSuffixOrCopy =
         fragment === normalizedResolved ||
         normalizedResolved.endsWith(fragment) ||
         normalizedResolved.startsWith(fragment);
-      // Exact duplicates / wrap fragments, and rival drop-cap body lines that
-      // lost the title race (`Tcase incidence reports…`), must not stay titles.
-      return {
-        ...node,
-        role: (isSuffixOrCopy ? "other" : "paragraph") as "other" | "paragraph",
-        confidence: Math.min(node.confidence, 0.5),
-        evidence: [
-          ...node.evidence,
-          {
-            source: "generic-heuristic" as const,
-            label: isSuffixOrCopy ? "duplicate-title-fragment-demotion" : "rival-title-demotion",
-            confidence: 0.85,
-            page: node.pageStart,
-            bbox: node.boundingBoxes[0],
-            reason: isSuffixOrCopy
-              ? "title fragment is a suffix or copy of the resolved title"
-              : "second title node lost the resolver race",
-          },
-        ],
-      };
+      // Wrap fragments that are already inside the joined title must leave the
+      // reading stream entirely (`Mobile Phone User Interfaces` after
+      // `Exploring … for`). Rival body lines that lost the title race stay as
+      // paragraphs so real prose is not deleted. Bylines that over-scored as
+      // title (`Wenhao Lin , Yu Fang and Haidong Song *`) must return to author.
+      if (isSuffixOrCopy) return [];
+      const raw = node.text.replace(/\s+/g, " ").trim();
+      const byline =
+        /\b(?:and|&)\b/i.test(raw) &&
+        (raw.match(/,/g) ?? []).length >= 1 &&
+        /^[A-ZÀ-ÖØ-Þ][\p{L}'’-]+(?:\s+[A-ZÀ-ÖØ-Þ][\p{L}'’.-]*)+/u.test(raw) &&
+        !/:/.test(raw) &&
+        raw.split(/\s+/).length <= 18 &&
+        !/\b(?:study|review|analysis|survey|effect|role|model|attention|through|toward)\b/i.test(raw);
+      const layoutAuthor = node.evidence.some(
+        (e) => /role author/i.test(e.reason ?? "") || /layoutRole=author/i.test(e.reason ?? ""),
+      );
+      return [
+        {
+          ...node,
+          role: byline || layoutAuthor ? ("author" as const) : ("paragraph" as const),
+          confidence: Math.min(node.confidence, 0.5),
+          evidence: [
+            ...node.evidence,
+            {
+              source: "generic-heuristic" as const,
+              label: "rival-title-demotion",
+              confidence: 0.85,
+              page: node.pageStart,
+              bbox: node.boundingBoxes[0],
+              reason:
+                byline || layoutAuthor
+                  ? "title-overscored byline restored to author"
+                  : "second title node lost the resolver race",
+            },
+          ],
+        },
+      ];
+    });
+    // Title-wrap lines sometimes keep a non-title role (author / other) after
+    // scoring. Drop those page-1 fragments when they are clearly only a piece
+    // of the already-resolved title, not standalone body prose.
+    nodes = nodes.filter((node) => {
+      if (node === titleNode || node.pageStart !== 1 || !node.text) return true;
+      if (node.role !== "author" && node.role !== "other" && node.role !== "paragraph") {
+        return true;
+      }
+      const fragment = node.text.replace(/\s+/g, " ").trim().toLowerCase();
+      const words = fragment.split(/\s+/).filter(Boolean);
+      if (fragment.length < 12 || words.length < 2) return true;
+      const covered =
+        fragment === normalizedResolved ||
+        normalizedResolved.endsWith(fragment) ||
+        normalizedResolved.startsWith(fragment);
+      return !covered;
     });
   } else if (!titleNode && resolvedTitleText) {
     // Metadata/GROBID can supply a title even when the native candidate was
@@ -2817,6 +3028,126 @@ export function resolveCanonicalDocument(input: {
   }
 
   nodes = demoteEditorialChromeHeadings(nodes);
+  // Hyphen-wrapped title crumbs (`experimental pre-`) and BMJ cite-rail
+  // wraps can remain as paragraphs after the resolver stitches the full
+  // title. Demote leftovers that are already covered by the resolved title.
+  if ((resolvedTitleText?.length ?? 0) >= 40) {
+    const titleNorm = resolvedTitleText!.toLowerCase().replace(/[\s-]+/g, "");
+    nodes = nodes.map((node) => {
+      if (
+        (node.role !== "paragraph" && node.role !== "title" && node.role !== "other") ||
+        !node.text
+      ) {
+        return node;
+      }
+      if (node.id === "title-resolved") return node;
+      const t = node.text.replace(/\s+/g, " ").trim();
+      if (t.length < 8 || t.length > 220) return node;
+      if (!/[A-Za-z]/.test(t) || /[.!?]$/.test(t)) return node;
+      // Keep journal DOI / volume tails out of this demotion path.
+      if (/\b(?:bmj\s*open|doi:|10\.\d{4,}\/)/i.test(t)) return node;
+      const fragNorm = t.toLowerCase().replace(/[\s-]+/g, "");
+      if (fragNorm.length < 8) return node;
+      const coveredExact = titleNorm.includes(fragNorm);
+      // Cite rails sometimes compress hyphen compounds
+      // (`quasi-experimental pre-post` → `quasi-post`).
+      const fragWords = t
+        .toLowerCase()
+        .split(/[^a-z0-9]+/i)
+        .map((w) => w.replace(/-/g, ""))
+        .filter((w) => w.length >= 5);
+      const coveredFuzzy =
+        !coveredExact &&
+        fragNorm.length >= 40 &&
+        fragNorm.length <= titleNorm.length + 8 &&
+        fragWords.filter((w) => titleNorm.includes(w)).length >=
+          Math.max(4, Math.ceil(fragWords.length * 0.7));
+      if (!coveredExact && !coveredFuzzy) return node;
+      if (t.toLowerCase() === resolvedTitleText!.toLowerCase()) return node;
+      return {
+        ...node,
+        // Hide in Reader the same way as publisher chrome (not body `other`).
+        role: "copyright" as const,
+        confidence: Math.min(node.confidence, 0.45),
+        evidence: [
+          ...node.evidence,
+          {
+            source: "generic-heuristic" as const,
+            label: "title-fragment-demotion",
+            confidence: 0.9,
+            page: node.pageStart,
+            bbox: node.boundingBoxes[0],
+            reason: "title crumb already covered by resolved title",
+          },
+        ],
+      };
+    });
+  }
+  // BMJ Open box chrome often lands in the author role (`STRENGTHS AND
+  // LIMITATIONS OF THIS STUDY`, `To cite: … ABSTRACT`) even after name
+  // projection filters it from `paper.authors`.
+  nodes = nodes.map((node) => {
+    if (node.role !== "author" || !node.text) return node;
+    const t = node.text.replace(/\s+/g, " ").trim();
+    const chrome =
+      /^(?:this study|strengths and limitations(?:\s+of\s+this\s+study)?)\b/i.test(t) ||
+      /^to cite\s*:/i.test(t) ||
+      (/^to cite\b/i.test(t) && /\babstract\b/i.test(t)) ||
+      /^open access$/i.test(t) ||
+      /^(?:edited by|reviewed by)$/i.test(t) ||
+      /^(?:for numbered affiliations see|correspondence to)\b/i.test(t);
+    if (!chrome) return node;
+    return {
+      ...node,
+      role: "copyright" as const,
+      confidence: Math.min(node.confidence, 0.5),
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic" as const,
+          label: "bmj-author-chrome-demotion",
+          confidence: 0.88,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: "publisher box chrome demoted from author role",
+        },
+      ],
+    };
+  });
+  // Running publisher rails that survived layout as paragraph/other must not
+  // reach Reader translation (chrome→other used to leave them visible).
+  // Also catch bare `COPYRIGHT` / `Copyright:` labels that layout left as other.
+  nodes = nodes.map((node) => {
+    if (!node.text) return node;
+    if (node.role === "copyright" || node.role === "header" || node.role === "footer") {
+      return node;
+    }
+    const t = node.text.replace(/\s+/g, " ").trim();
+    if (
+      !/^copyright\s*:?\s*$/i.test(t) &&
+      !/^copyright\s*(?:©|\(\s*\d{4}\s*\)|\d{4}\b)/i.test(t) &&
+      !/^(?:©|protected by copyright|downloaded from|to cite\s*:)/i.test(t) &&
+      !/\bprotected by copyright, including for uses related to text and data mining\b/i.test(t)
+    ) {
+      return node;
+    }
+    return {
+      ...node,
+      role: "copyright" as const,
+      confidence: Math.min(node.confidence, 0.5),
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic" as const,
+          label: "publisher-running-chrome",
+          confidence: 0.92,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: "publisher running chrome forced to copyright role",
+        },
+      ],
+    };
+  });
   // Springer mastheads often emit `1 University of …` as copyright. Promote
   // numbered institution bands back to affiliation so projection and tests
   // can find them.
@@ -2868,6 +3199,9 @@ export function resolveCanonicalDocument(input: {
       ],
     };
   });
+  // Stacked d/dγ crumbs, lone √ glyphs, and superscript `[ 2]` fragments are
+  // common native-PDF math failures; repair them before Reader projection.
+  nodes = mergeMathematicalDisplayFragments(nodes);
 
   const figureNodes = figureNodesForCaptions(candidates, input.regionEvidence ?? [], input.layouts);
   nodes = [...nodes, ...figureNodes];

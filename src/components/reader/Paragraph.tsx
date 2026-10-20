@@ -4,13 +4,10 @@ import type { PaperBlock } from "../../types/paper";
 import type { Annotation } from "../../types/annotation";
 import type { GlossaryEntry } from "../../services/llm/types";
 import { useAppStore } from "../../stores/appStore";
-import { updateBlock, getGlossary, getSetting } from "../../services/database";
-import { MADLADEngine } from "../../services/translation/madladEngine";
-import type { ImportConfig } from "../../services/importServiceV2";
+import { retryBlockTranslation } from "../../services/import/retryBlockTranslation";
 import { isLowExtractionConfidence } from "../../services/extractionConfidence";
 import { splitHighlightedText } from "../../services/highlightRanges";
 import { parseCitationGroups, uniqueCitationTarget } from "../../services/citations";
-import { applyGlossary } from "../../services/llm/glossaryService";
 import {
   citationPreviewFromIndex,
   type CitationPreviewModel,
@@ -19,7 +16,9 @@ import { CitationPreviewPopover } from "./citations/CitationPreviewPopover";
 import { anchorFromEventTarget } from "./popoverAnchor";
 import { segmentTextWithGlossary } from "./glossary/glossaryTerms";
 import { GlossaryTermPopover } from "./glossary/GlossaryTermPopover";
-import type { AnchorBox } from "./memo/popoverPosition";
+import { InfoPopover } from "./InfoPopover";
+import infoStyles from "./InfoPopover.module.css";
+import { rectToAnchor, type AnchorBox } from "./memo/popoverPosition";
 import { resolveParagraphTranslationUi } from "./paragraphTranslationUi";
 import styles from "./Paragraph.module.css";
 
@@ -82,8 +81,9 @@ export function Paragraph({
   const toggleOriginalExpanded = useAppStore((state) => state.toggleOriginalExpanded);
   const setOriginalExpanded = useAppStore((state) => state.setOriginalExpanded);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [showConfidenceMenu, setShowConfidenceMenu] = useState(false);
-  const confidenceRef = useRef<HTMLDivElement>(null);
+  const [confidenceMenu, setConfidenceMenu] = useState<{
+    anchor: AnchorBox;
+  } | null>(null);
   const [citationPreview, setCitationPreview] = useState<{
     model: CitationPreviewModel;
     anchor: AnchorBox;
@@ -128,46 +128,12 @@ export function Paragraph({
     toggleOriginalExpanded(block.id);
   };
 
-  useEffect(() => {
-    if (!showConfidenceMenu) return;
-    const onPointer = (event: PointerEvent) => {
-      if (confidenceRef.current?.contains(event.target as Node)) return;
-      setShowConfidenceMenu(false);
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setShowConfidenceMenu(false);
-    };
-    window.addEventListener("pointerdown", onPointer);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("pointerdown", onPointer);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [showConfidenceMenu]);
-
   const handleRetry = useCallback(async () => {
     if (!block.original || isRetrying) return;
 
     setIsRetrying(true);
     try {
-      const v2 = await getSetting<ImportConfig>("translationSettingsV2");
-      const engine = new MADLADEngine(v2?.madladServerUrl);
-      const result = await engine.translate(block.original, "en", "ja");
-      const glossary = await getGlossary(block.paperId);
-      const text = applyGlossary(result.text, glossary);
-
-      const updatedBlock: PaperBlock = {
-        ...block,
-        translated: text,
-        translationStatus: "completed",
-        metadata:
-          block.type === "figure" || block.type === "table"
-            ? { ...block.metadata, captionTranslated: text }
-            : block.metadata,
-      };
-
-      await updateBlock(updatedBlock);
-      onBlockUpdated?.(updatedBlock);
+      await retryBlockTranslation(block, { onBlockUpdated });
     } catch (e) {
       console.error("Retry failed:", e);
     } finally {
@@ -396,42 +362,26 @@ export function Paragraph({
           </p>
 
           {lowConfidence && (
-            <div className={styles.confidenceGutter} ref={confidenceRef}>
+            <div className={styles.confidenceGutter}>
               <button
                 type="button"
                 className={styles.confidenceButton}
-                aria-expanded={showConfidenceMenu}
+                data-confidence-trigger=""
+                aria-expanded={confidenceMenu != null}
                 aria-label="読み順の信頼度が低い箇所"
                 title="要確認"
-                onClick={() => setShowConfidenceMenu((value) => !value)}
+                onClick={(event) => {
+                  if (confidenceMenu) {
+                    setConfidenceMenu(null);
+                    return;
+                  }
+                  setConfidenceMenu({
+                    anchor: rectToAnchor(event.currentTarget.getBoundingClientRect()),
+                  });
+                }}
               >
                 <AlertTriangle size={14} />
               </button>
-              {showConfidenceMenu && (
-                <div className={styles.confidenceMenu} role="dialog" aria-label="要確認メニュー">
-                  <p>この箇所は読み順の信頼度が低い可能性があります</p>
-                  {hasOriginal && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOriginalExpanded(block.id, true);
-                        setShowConfidenceMenu(false);
-                      }}
-                    >
-                      原文を見る
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onOpenSourcePdf?.(block);
-                      setShowConfidenceMenu(false);
-                    }}
-                  >
-                    元PDFで確認
-                  </button>
-                </div>
-              )}
             </div>
           )}
 
@@ -460,6 +410,43 @@ export function Paragraph({
         </>
       )}
 
+      {confidenceMenu && (
+        <InfoPopover
+          anchor={confidenceMenu.anchor}
+          title="要確認"
+          onClose={() => setConfidenceMenu(null)}
+          footer={
+            <>
+              {hasOriginal ? (
+                <button
+                  type="button"
+                  className={infoStyles.action}
+                  onClick={() => {
+                    setOriginalExpanded(block.id, true);
+                    setConfidenceMenu(null);
+                  }}
+                >
+                  原文を見る
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className={infoStyles.action}
+                onClick={() => {
+                  onOpenSourcePdf?.(block);
+                  setConfidenceMenu(null);
+                }}
+              >
+                元PDFで確認
+              </button>
+            </>
+          }
+        >
+          <p className={infoStyles.raw}>
+            この箇所は読み順の信頼度が低い可能性があります
+          </p>
+        </InfoPopover>
+      )}
       {citationPreview && (
         <CitationPreviewPopover
           model={citationPreview.model}

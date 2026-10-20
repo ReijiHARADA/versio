@@ -130,4 +130,103 @@ describe("demoteEditorialChromeHeadings", () => {
     expect(nodes.find((n) => n.text.startsWith("High Levels"))?.role).toBe("heading");
     expect(nodes.find((n) => n.text === "Results")?.role).toBe("heading");
   });
+
+  it("demotes BMJ Open running footer chrome and dated stamps", () => {
+    const nodes = demoteEditorialChromeHeadings([
+      heading("Downloaded from"),
+      heading("24 September 2026."),
+      heading("Protected by copyright, including for uses related to text and data mining"),
+      heading("Methods and analysis This will be a quasi- experimental study with a pre-post design"),
+      heading("INTRODUCTION"),
+      heading("Objectives"),
+    ]);
+    expect(nodes.find((n) => n.text === "Downloaded from")?.role).toBe("copyright");
+    expect(nodes.find((n) => n.text === "24 September 2026.")?.role).toBe("other");
+    expect(nodes.find((n) => n.text.startsWith("Protected by copyright"))?.role).toBe("copyright");
+    expect(nodes.find((n) => n.text.startsWith("Methods and analysis"))?.role).toBe("paragraph");
+    expect(nodes.find((n) => n.text === "INTRODUCTION")?.role).toBe("heading");
+    expect(nodes.find((n) => n.text === "Objectives")?.role).toBe("heading");
+  });
+
+  it("demotes bare TABLE captions and glued column headers from the outline", () => {
+    const nodes = demoteEditorialChromeHeadings([
+      heading("TABLE 2"),
+      heading("Dimension Interview item"),
+      heading("4.2 Data analysis"),
+    ]);
+    expect(nodes.find((n) => n.text === "TABLE 2")?.role).toBe("other");
+    expect(nodes.find((n) => n.text === "Dimension Interview item")?.role).toBe("other");
+    expect(nodes.find((n) => n.text === "4.2 Data analysis")?.role).toBe("heading");
+  });
+
+  it("demotes Results-of prose wraps from the outline", () => {
+    const nodes = demoteEditorialChromeHeadings([
+      heading("Results of EFA indicated that AI Emotional Engagement consists of three"),
+      heading("1 Introduction"),
+      heading("Results"),
+    ]);
+    expect(nodes.find((n) => n.text.startsWith("Results of EFA"))?.role).toBe("paragraph");
+    expect(nodes.find((n) => n.text === "1 Introduction")?.role).toBe("heading");
+    expect(nodes.find((n) => n.text === "Results")?.role).toBe("heading");
+  });
+
+  it("maps bare COPYRIGHT labels to copyright role", () => {
+    const nodes = demoteEditorialChromeHeadings([
+      heading("COPYRIGHT"),
+      heading("Copyright:"),
+      heading("Copyright (1998) Society for Neuroscience."),
+      heading("Copyright © 2022 Bueckle, Buehling, Shih and Börner."),
+      heading("Results"),
+    ]);
+    expect(nodes.find((n) => n.text === "COPYRIGHT")?.role).toBe("copyright");
+    expect(nodes.find((n) => n.text === "Copyright:")?.role).toBe("copyright");
+    expect(nodes.find((n) => n.text.startsWith("Copyright (1998)"))?.role).toBe("copyright");
+    expect(nodes.find((n) => n.text.startsWith("Copyright © 2022"))?.role).toBe("copyright");
+    expect(nodes.find((n) => n.text === "Results")?.role).toBe("heading");
+  });
+
+  it("demotes conceptual-framework figure captions from the outline", () => {
+    const nodes = demoteEditorialChromeHeadings([
+      heading(
+        "Conceptual framework illustrating the impact of human factors training on paediatric airway management",
+      ),
+      heading("METHODOLOGY"),
+    ]);
+    expect(nodes.find((n) => n.text.startsWith("Conceptual framework"))?.role).toBe("other");
+    expect(nodes.find((n) => n.text === "METHODOLOGY")?.role).toBe("heading");
+  });
+
+  it("demotes lone math/OCR glyph headings", () => {
+    const nodes = demoteEditorialChromeHeadings([
+      heading("Results"),
+      heading("Þ"),
+      heading("Methods"),
+    ]);
+    expect(nodes.find((n) => n.text === "Results")?.role).toBe("heading");
+    expect(nodes.find((n) => n.text === "Methods")?.role).toBe("heading");
+    expect(nodes.find((n) => n.text === "Þ")?.role).not.toBe("heading");
+  });
+
+  it("demotes Frontiers body-lead and structured-abstract wraps from the outline", () => {
+    const nodes = demoteEditorialChromeHeadings([
+      heading("Background and objective: This scoping review systematically mapped current"),
+      heading("Methods:"),
+      heading("Guided by the PRISMA-ScR framework, a systematic search of Chinese"),
+      heading("Fishermen primarily refer to laborers who live and work"),
+      heading("Exclusion criteria"),
+      heading("Project Content"),
+      heading("1 Introduction"),
+      heading("2.1 Methodology introduction"),
+      heading("3.3 Influencing factors: shared"),
+    ]);
+    expect(nodes.find((n) => n.text.startsWith("Background and objective"))?.role).toBe("paragraph");
+    expect(nodes.find((n) => n.text === "Methods:")?.role).toBe("paragraph");
+    expect(nodes.find((n) => n.text.startsWith("Guided by the PRISMA"))?.role).toBe("paragraph");
+    expect(nodes.find((n) => n.text.startsWith("Fishermen primarily"))?.role).toBe("paragraph");
+    expect(nodes.find((n) => n.text === "Exclusion criteria")?.role).toBe("other");
+    expect(nodes.find((n) => n.text === "Project Content")?.role).toBe("other");
+    expect(nodes.find((n) => n.text === "1 Introduction")?.role).toBe("heading");
+    expect(nodes.find((n) => n.text === "2.1 Methodology introduction")?.role).toBe("heading");
+    expect(nodes.find((n) => n.text.startsWith("3.3 Influencing"))?.role).toBe("heading");
+  });
 });

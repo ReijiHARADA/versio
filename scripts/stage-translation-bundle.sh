@@ -3,7 +3,10 @@
 # Excludes developer venvs, local model weights, tests, and bench artifacts so
 # they cannot contaminate the packaged .app.
 #
-# Output: src-tauri/bundled-resources/translation-server/
+# Layout:
+#   src-tauri/bundled-resources/translation-server/  — lite (no venv); Tauri copies this
+#   src-tauri/bundled-resources/translation-venv/    — Python venv; injected after bundle
+#     via scripts/inject-translation-venv.sh (APFS clonefile when possible)
 
 set -euo pipefail
 
@@ -12,6 +15,7 @@ PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SERVER_DIR="$PROJECT_DIR/translation-server"
 VENV_DIR="$SERVER_DIR/venv"
 STAGE_ROOT="$PROJECT_DIR/src-tauri/bundled-resources/translation-server"
+VENV_STAGE="$PROJECT_DIR/src-tauri/bundled-resources/translation-venv"
 MODE="${PAPER_READER_PYTHON_BUNDLE_MODE:-cache}"
 
 if [[ ! -x "$VENV_DIR/bin/python3" ]]; then
@@ -40,18 +44,20 @@ copy_tree() {
 echo "=== Stage translation-server for Tauri bundle ==="
 echo "Source: $SERVER_DIR"
 echo "Stage:  $STAGE_ROOT"
+echo "Venv:   $VENV_STAGE"
 echo "Mode:   $MODE"
 
-STAGE_HASH_FILE="$STAGE_ROOT/.paper-reader-bundle-hash"
+VENV_HASH_FILE="$VENV_STAGE/.paper-reader-bundle-hash"
 REUSE_VENV=0
-if [[ -x "$STAGE_ROOT/venv/bin/python3" && -f "$STAGE_HASH_FILE" ]]; then
-  staged_hash="$(tr -d '[:space:]' < "$STAGE_HASH_FILE")"
+if [[ -x "$VENV_STAGE/bin/python3" && -f "$VENV_HASH_FILE" ]]; then
+  staged_hash="$(tr -d '[:space:]' < "$VENV_HASH_FILE")"
   if [[ "$staged_hash" == "$CONTENT_HASH" ]]; then
     REUSE_VENV=1
   fi
 fi
 
-# Refresh non-venv payload every time (server/engines change often).
+# Refresh lite payload every time (server/engines change often). No venv here —
+# Tauri would otherwise re-copy ~700MB into .app on every bundle.
 TMP_STAGE="${STAGE_ROOT}.tmp.$$"
 rm -rf "$TMP_STAGE"
 mkdir -p "$TMP_STAGE/engines"
@@ -61,30 +67,37 @@ cp "$SERVER_DIR/.python-version" "$TMP_STAGE/.python-version"
 cp "$SERVER_DIR/requirements.lock" "$TMP_STAGE/requirements.lock"
 cp "$SERVER_DIR/requirements.txt" "$TMP_STAGE/requirements.txt"
 
-# engines package; no __pycache__
 rsync -a --delete \
   --exclude '__pycache__/' \
   --exclude '*.pyc' \
   --exclude '*.pyo' \
   "$SERVER_DIR/engines/" "$TMP_STAGE/engines/"
 
-if [[ "$REUSE_VENV" == "1" ]]; then
-  echo "Reusing staged venv (hash unchanged)"
-  mv "$STAGE_ROOT/venv" "$TMP_STAGE/venv"
-else
-  copy_tree "$VENV_DIR" "$TMP_STAGE/venv"
-fi
-
-# Provenance markers (release acceptance can inspect these)
 printf '%s\n' "$CONTENT_HASH" >"$TMP_STAGE/.paper-reader-bundle-hash"
 printf '%s\n' "$MODE" >"$TMP_STAGE/.paper-reader-bundle-mode"
 printf '%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >"$TMP_STAGE/.paper-reader-bundled-at"
+# Marker so finalize/verify know the venv is injected after Tauri bundle.
+printf 'external\n' >"$TMP_STAGE/.paper-reader-venv-external"
 
 rm -rf "$STAGE_ROOT"
 mv "$TMP_STAGE" "$STAGE_ROOT"
 
-# Belt-and-suspenders: never ship accidental nested junk
+if [[ "$REUSE_VENV" == "1" ]]; then
+  echo "Reusing staged venv (hash unchanged)"
+else
+  echo "Refreshing staged venv…"
+  TMP_VENV="${VENV_STAGE}.tmp.$$"
+  rm -rf "$TMP_VENV"
+  mkdir -p "$TMP_VENV"
+  copy_tree "$VENV_DIR" "$TMP_VENV"
+  printf '%s\n' "$CONTENT_HASH" >"$TMP_VENV/.paper-reader-bundle-hash"
+  rm -rf "$VENV_STAGE"
+  mv "$TMP_VENV" "$VENV_STAGE"
+fi
+
+# Belt-and-suspenders: never ship accidental nested junk in the lite stage
 rm -rf \
+  "$STAGE_ROOT/venv" \
   "$STAGE_ROOT/models" \
   "$STAGE_ROOT/.venv" \
   "$STAGE_ROOT/.venv-mlx" \
@@ -96,19 +109,23 @@ rm -rf \
   "$STAGE_ROOT/__pycache__" \
   2>/dev/null || true
 
-if [[ ! -x "$STAGE_ROOT/venv/bin/python3" ]]; then
+if [[ ! -f "$STAGE_ROOT/server.py" ]]; then
+  echo "エラー: staged lite bundle が不完全です"
+  exit 1
+fi
+if [[ ! -x "$VENV_STAGE/bin/python3" ]]; then
   echo "エラー: staged venv が不完全です"
   exit 1
 fi
 
-# Fail closed if a developer venv leaked into the stage root
-for bad in .venv .venv-mlx .venv-mlx-bf16 .venv.backup.py39 models; do
+for bad in .venv .venv-mlx .venv-mlx-bf16 .venv.backup.py39 models venv; do
   if [[ -e "$STAGE_ROOT/$bad" ]]; then
-    echo "エラー: staged bundle に禁止パスが残っています: $bad"
+    echo "エラー: staged lite bundle に禁止パスが残っています: $bad"
     exit 1
   fi
 done
 
-SIZE="$(du -sh "$STAGE_ROOT" | cut -f1)"
-echo "✓ Staged translation-server ($SIZE)"
+LITE_SIZE="$(du -sh "$STAGE_ROOT" | cut -f1)"
+VENV_SIZE="$(du -sh "$VENV_STAGE" | cut -f1)"
+echo "✓ Staged translation-server lite ($LITE_SIZE) + venv ($VENV_SIZE)"
 echo "  hash=$CONTENT_HASH mode=$MODE reuse_venv=$REUSE_VENV"

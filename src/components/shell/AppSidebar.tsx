@@ -20,6 +20,7 @@ import {
   INBOX_DROP_ID,
   usePaperDragStore,
 } from "../../stores/paperDragStore";
+import { setTranslationUiDeferReason } from "../../utils/batchBlockUpdates";
 import { WorkspaceTree } from "./WorkspaceTree";
 import styles from "./AppSidebar.module.css";
 
@@ -84,6 +85,29 @@ export function AppSidebar({
         pointerY <= rect.bottom
     );
   }, [draggingPaperId, pointerX, pointerY]);
+
+  // Defer streaming translation React patches while the user works in the shell
+  // so sidebar open / folder create stay responsive during MADLAD translation.
+  useEffect(() => {
+    const el = sidebarRef.current;
+    if (!el) return;
+    let idleTimer = 0;
+    const deferUi = () => {
+      setTranslationUiDeferReason("shell", true);
+      window.clearTimeout(idleTimer);
+      idleTimer = window.setTimeout(() => {
+        setTranslationUiDeferReason("shell", false);
+      }, 220);
+    };
+    el.addEventListener("pointerdown", deferUi);
+    el.addEventListener("keydown", deferUi);
+    return () => {
+      el.removeEventListener("pointerdown", deferUi);
+      el.removeEventListener("keydown", deferUi);
+      window.clearTimeout(idleTimer);
+      setTranslationUiDeferReason("shell", false);
+    };
+  }, []);
 
   useEffect(() => {
     if (!resizing) return;

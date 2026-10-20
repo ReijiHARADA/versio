@@ -1,10 +1,31 @@
 import type { Paper, PaperBlock, Section } from "../../types/paper";
 import { saveBlocks, savePaper, saveSections } from "../database";
 import { isJapaneseSourcePaper } from "../sourceLanguage";
-import { isPlausibleJaTranslation } from "../translation/quality";
+import { isPlausibleJaTranslation, shouldTranslateTitle } from "../translation/quality";
 import { resolveMadladServerUrl } from "../translation/madladEngine";
 import { shouldTranslateBlock } from "./policy";
 import type { ImportConfig } from "./types";
+
+/** Paragraph (+ title) sources registered for Apple on import/resume. */
+export function collectAppleEligibleSources(
+  blocks: PaperBlock[],
+  refSectionIds: Set<string>,
+  titleOriginal?: string | null
+): string[] {
+  const sources = blocks
+    .filter(
+      (block) =>
+        block.type === "paragraph" &&
+        block.original &&
+        block.extractionConfidence !== 0 &&
+        shouldTranslateBlock(block, refSectionIds)
+    )
+    .map((block) => block.original as string);
+  if (titleOriginal && shouldTranslateTitle(titleOriginal)) {
+    sources.push(titleOriginal);
+  }
+  return sources;
+}
 
 export const DEFAULT_IMPORT_CONFIG: Required<ImportConfig> = {
   madladServerUrl: "http://127.0.0.1:8765",

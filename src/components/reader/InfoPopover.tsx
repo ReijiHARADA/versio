@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
   clampPopoverPosition,
   type AnchorBox,
@@ -13,7 +14,7 @@ type InfoPopoverProps = {
   footer?: ReactNode;
 };
 
-/** Lightweight fixed popover shared by citation / glossary previews. */
+/** Lightweight fixed popover shared by citation / glossary / confidence previews. */
 export function InfoPopover({
   anchor,
   title,
@@ -53,6 +54,7 @@ export function InfoPopover({
       if (target?.closest("[data-info-popover]")) return;
       if (target?.closest("[data-citation-trigger]")) return;
       if (target?.closest("[data-glossary-term]")) return;
+      if (target?.closest("[data-confidence-trigger]")) return;
       onClose();
     };
     window.addEventListener("keydown", onKey);
@@ -65,7 +67,7 @@ export function InfoPopover({
 
   const placement = clampPopoverPosition(anchor, size);
 
-  return (
+  return createPortal(
     <div
       ref={panelRef}
       role="dialog"
@@ -89,7 +91,8 @@ export function InfoPopover({
       </div>
       <div className={styles.body}>{children}</div>
       {footer ? <div className={styles.footer}>{footer}</div> : null}
-    </div>
+    </div>,
+    document.body
   );
 }
 

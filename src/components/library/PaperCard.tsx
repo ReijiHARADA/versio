@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   AlertCircle,
   CheckCircle,
@@ -9,17 +9,15 @@ import {
 import type { Paper } from "../../types/paper";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { shouldTranslateBlock } from "../../services/importServiceV2";
+import { applyPaperFavorite } from "../../services/paperFavorite";
 import {
   derivePaperReadiness,
   formatTranslationProgressLabel,
   translationPercent,
 } from "../../domain/paperReadiness";
-import {
-  formatReadingProgress,
-  readingProgressPercent,
-} from "../../domain/readingProgress";
 import { displayPaperTitle } from "../../services/translation/quality";
 import { DraggablePaperArticle } from "./DraggablePaperArticle";
+import { PaperEpubSyncControl } from "./PaperEpubSyncControl";
 import styles from "./PaperCard.module.css";
 
 type PaperCardProps = {
@@ -44,16 +42,27 @@ function getStatusIcon(readiness: ReturnType<typeof derivePaperReadiness>["readi
 
 export function PaperCard({ paper, enabled = true, onOpen, actions }: PaperCardProps) {
   const blocks = useLibraryCache((state) => state.blocks[paper.id]);
+  const [favoriting, setFavoriting] = useState(false);
   const view = derivePaperReadiness({
     processingStatus: paper.processingStatus,
     blocks,
   });
-  const percent = translationPercent(blocks, (block) => shouldTranslateBlock(block));
-  const progress = formatReadingProgress(readingProgressPercent(paper.lastReadBlockId, blocks));
-  const statusLabel = formatTranslationProgressLabel(
-    view.readiness,
-    view.readiness === "translating" ? percent : null
-  );
+  const percent =
+    view.readiness === "translating"
+      ? translationPercent(blocks, (block) => shouldTranslateBlock(block))
+      : null;
+  const statusLabel = formatTranslationProgressLabel(view.readiness);
+
+  const toggleFavorite = async (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (favoriting) return;
+    setFavoriting(true);
+    try {
+      await applyPaperFavorite(paper.id, !paper.favorite);
+    } finally {
+      setFavoriting(false);
+    }
+  };
 
   return (
     <DraggablePaperArticle
@@ -65,21 +74,53 @@ export function PaperCard({ paper, enabled = true, onOpen, actions }: PaperCardP
     >
       <div className={styles.info}>
         <div className={styles.titleRow}>
-          {paper.favorite && (
-            <span className={styles.favoriteMark} title="お気に入り" aria-label="お気に入り">
-              <Star size={14} fill="currentColor" aria-hidden="true" />
-            </span>
-          )}
+          <button
+            type="button"
+            className={`${styles.favoriteButton} ${paper.favorite ? styles.favoriteOn : ""}`}
+            title={paper.favorite ? "お気に入りを外す" : "お気に入りに追加"}
+            aria-label={paper.favorite ? "お気に入りを外す" : "お気に入りに追加"}
+            aria-pressed={paper.favorite}
+            disabled={favoriting}
+            data-testid="paper-favorite-toggle"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => void toggleFavorite(event)}
+          >
+            <Star
+              size={14}
+              fill={paper.favorite ? "currentColor" : "none"}
+              aria-hidden="true"
+            />
+          </button>
           <h3 className={styles.title}>{displayPaperTitle(paper)}</h3>
         </div>
       </div>
       <div className={styles.trailing}>
-        {progress && <span className={styles.date}>{progress}</span>}
         <span className={styles.status}>
           {getStatusIcon(view.readiness)}
-          <span className={styles.statusLabel} data-testid="paper-readiness">{statusLabel}</span>
+          <span className={styles.statusLabel} data-testid="paper-readiness">
+            {statusLabel}
+          </span>
+          {view.readiness === "translating" && percent != null ? (
+            <span
+              className={styles.translateProgress}
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={percent}
+              aria-label={`日本語化 ${percent}%`}
+              data-testid="paper-translation-progress"
+            >
+              <span
+                className={styles.translateProgressFill}
+                style={{ width: `${percent}%` }}
+              />
+            </span>
+          ) : null}
         </span>
-        {actions}
+        <div className={styles.actions}>
+          <PaperEpubSyncControl paperId={paper.id} disabled={!enabled} />
+          {actions}
+        </div>
       </div>
     </DraggablePaperArticle>
   );

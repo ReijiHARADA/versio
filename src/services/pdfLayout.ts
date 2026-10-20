@@ -730,12 +730,19 @@ function clusterItemsIntoLines(
   pageNumber: number,
   pageHeight?: number,
   pageWidth?: number,
+  /** Multi-column body origin: items left of this stay in a margin rail. */
+  bodyLeftX?: number,
 ): LayoutLine[] {
   if (items.length === 0) return [];
 
   const fontBase = median(items.map((i) => i.fontSize)) || 10;
   const yThreshold = Math.max(3.2, fontBase * 0.42);
   const sidebarBaselineTolerance = Math.max(yThreshold, median(items.map((item) => item.height)) * 0.7);
+  // BMJ Open keeps a "To cite" rail whose wrapped lines nearly touch the
+  // abstract column (gap ~4pt). Band matching alone cannot split those rows;
+  // the detected body leftX is the reliable cut.
+  const marginRailCutoff =
+    typeof bodyLeftX === "number" && bodyLeftX > 80 ? bodyLeftX - 16 : null;
   const sidebarBands = (() => {
     // A publisher rail can sit beside a main text column even when the page
     // detector conservatively labels the page single-column (for example an
@@ -813,9 +820,15 @@ function clusterItemsIntoLines(
         const matchedRuns: Array<{ left: (typeof leftRuns)[number]; right: (typeof rightRuns)[number] }> = [];
         for (const leftRun of leftRuns) {
           if (leftRun.width <= 0 || leftRun.width > 140) continue;
+          // BMJ Open "To cite" rails are ~70–90pt wide beside an ~170–200pt
+          // abstract column. Requiring 2.5× left width drops those co-baseline
+          // rows, so the rail later merges into body lines. Keep a modest
+          // absolute gain plus ~1.7× so short labels still match while
+          // same-width dual columns do not.
           const rightRun = rightRuns.find((candidateRun) =>
             Math.abs(candidateRun.y - leftRun.y) <= sidebarBaselineTolerance &&
-            candidateRun.width >= Math.max(fontBase * 10, leftRun.width * 2.5) &&
+            candidateRun.width >= Math.max(fontBase * 8, leftRun.width * 1.7) &&
+            candidateRun.width >= leftRun.width + Math.max(28, fontBase * 3) &&
             Math.abs(candidateRun.fontSize - leftRun.fontSize) <= Math.max(1.2, fontBase * 0.2)
           );
           if (rightRun) matchedRuns.push({ left: leftRun, right: rightRun });
@@ -836,6 +849,10 @@ function clusterItemsIntoLines(
     console.info(`[SIDEBAR_BANDS] page=${pageNumber} left=${sidebarBands.leftX} right=${sidebarBands.rightX} matchedRows=${sidebarBands.matchedRuns.length}`);
   }
   const sidebarSide = (item: ExtractedTextItem): "left" | "right" | null => {
+    if (marginRailCutoff != null) {
+      if (item.x < marginRailCutoff) return "left";
+      if (item.x >= marginRailCutoff) return "right";
+    }
     if (!sidebarBands) return null;
     const itemBand = Math.round(item.x / 32) * 32;
     const leftMatch = sidebarBands.matchedRuns.find(({ left }) =>
@@ -883,11 +900,19 @@ function clusterItemsIntoLines(
       // font jump are enough to keep it separate even when PDF.js emits body
       // words as individual narrow spans. This is symmetric with
       // detachedMarginAnnotation above and uses geometry/style rather than
-      // publisher wording.
+      // publisher wording. Also cover near-equal fonts (BMJ cite rail at 8pt
+      // beside 9pt abstract) when the rail is narrow and the gutter is wide.
       const detachedLeadingMarginAnnotation =
         existingGroupWidth < 150 &&
         item.x - maxX > Math.max(36, fontBase * 4) &&
-        groupFont <= item.fontSize * 0.84;
+        (
+          groupFont <= item.fontSize * 0.84 ||
+          (
+            existingGroupWidth <= 120 &&
+            item.x - maxX >= Math.max(48, fontBase * 5) &&
+            item.width >= Math.max(existingGroupWidth * 1.4, fontBase * 10)
+          )
+        );
       const dist = Math.abs(item.y - groupY[i]);
       const overlappingRotatedLabel = groups[i].some((groupItem) => rotatedTextOverlaps(groupItem, item));
       // A narrow publication/date annotation can share a baseline with a
@@ -1481,8 +1506,25 @@ function looksLikeTitleCaseContinuation(text: string): boolean {
 }
 
 function isCopyright(text: string, fontSize: number, baseFont: number): boolean {
+  const trimmed = text.trim();
   // Publisher marks may be `© 2026 …` or `©Biomedical Informatics (2026)`.
-  const explicitLicense = /^(?:©\s*(?:\d{4}\b|[A-Za-z])|open[-\s]access\b|license\s*\(\s*https?:\/\/creativecommons\.org|this\s+article\s+is\s+(?:licensed|distributed)\b)/i.test(text.trim());
+  // BMJ / HighWire running rails are often body-sized; treat them as chrome
+  // regardless of font so they never leak into Reader paragraphs.
+  // Bare section labels (`COPYRIGHT` / `Copyright:`) and notice leads
+  // (`Copyright © 2022 …` / `Copyright (1998) Society…`) are chrome even when
+  // their font matches body size (common on Frontiers / MDPI / SfN footers).
+  const copyrightLead =
+    /^copyright\s*:?\s*$/i.test(trimmed) ||
+    /^copyright\s*(?:©|\(\s*\d{4}\s*\)|\d{4}\b)/i.test(trimmed);
+  const bmjRunningChrome =
+    copyrightLead ||
+    /^(?:protected by copyright|downloaded from)\b/i.test(trimmed) ||
+    /\bprotected by copyright, including for uses related to text and data mining\b/i.test(text);
+  const explicitLicense =
+    bmjRunningChrome ||
+    /^(?:©\s*(?:\d{4}\b|[A-Za-z])|open[-\s]access\b|license\s*\(\s*https?:\/\/creativecommons\.org|this\s+article\s+is\s+(?:licensed|distributed)\b)/i.test(
+      trimmed,
+    );
   if (fontSize > baseFont * 0.92 && !explicitLicense) return false;
   // PDF text streams can interleave adjacent permission lines and break the
   // literal `Permission to make ...` prefix (for example `Ppersonal ...
@@ -2002,6 +2044,15 @@ function looksLikeLatinAuthorLine(text: string): boolean {
     .trim();
   if (cjkCount(t) > 0 || t.length > 80 || t.length < 6) return false;
   if (/^\d/.test(t) || /[@/]/.test(t)) return false;
+  // Title-topic commas (`Documentation Time, Note Quality, and Clinician`)
+  // are Title Case nouns, not Latin author rows.
+  if (
+    /\b(?:documentation|quality|acceptance|clinician|photographs?|questionnaire|attention|memory|cognition|decision|students?|process)\b/i.test(
+      t,
+    )
+  ) {
+    return false;
+  }
   const caps = t.split(/\s+/).filter((w) => {
     const fold = foldNameToken(w);
     return /^[A-Z][A-Za-z.'’-]*$/.test(fold) && fold.length >= 2;
@@ -2014,6 +2065,15 @@ function looksLikeAuthorList(text: string): boolean {
   if (looksLikeEmail(text) || looksLikeAffiliation(text) || looksLikeUrl(text)) return false;
   const t = layoutPlain(text).replace(/[*†‡§♠♣♡♢∗]/g, " ").replace(/\s+/g, " ").trim();
   if (t.length < 10 || t.length > 320 || /[.!?。！？:]$/.test(t)) return false;
+  // Title-topic stacks (`Documentation Time, Note Quality, and Clinician`)
+  // share commas with bylines but are abstract nouns, not people.
+  if (
+    /\b(?:documentation|quality|acceptance|clinician|photographs?|questionnaire|attention|memory|cognition|decision|students?|process|note quality)\b/i.test(
+      t,
+    )
+  ) {
+    return false;
+  }
   const words = t.split(/\s+/).filter(Boolean);
   if (words.length < 4) return false;
   const capitalized = words.filter((word) => /^[A-ZÀ-ÖØ-Ý][A-Za-zÀ-ÿ'’.-]{1,}$/.test(word.replace(/[,;]+$/g, "")));
@@ -2292,11 +2352,18 @@ function buildPageLines(
     });
   };
   const embeddedFigureText = (item: ExtractedTextItem): boolean => {
+    // JMIR / preprint covers paint a large decorative image behind the
+    // masthead. Title and byline text overlap that image but are not figure
+    // labels — only small in-figure annotations should be dropped here.
+    if (item.fontSize >= 11) return false;
     const itemArea = Math.max(1, item.width * item.height);
     return (page.imagePlacements ?? []).some((image) => {
       if (image.width < 100 || image.height < 50) return false;
       const imageAreaRatio = (image.width * image.height) / Math.max(1, page.width * page.height);
       if (imageAreaRatio > 0.75 || (image.width > page.width * 0.88 && image.height > page.height * 0.88)) return false;
+      // Large centered cover art (≈½ page) behind body-sized prose should not
+      // erase the masthead either when font is only slightly under 11pt.
+      if (imageAreaRatio >= 0.35 && image.width >= page.width * 0.7 && item.fontSize >= 9.5) return false;
       const overlap = Math.max(0, Math.min(item.x + item.width, image.x + image.width) - Math.max(item.x, image.x)) *
         Math.max(0, Math.min(item.y + item.height, image.y + image.height) - Math.max(item.y, image.y));
       return overlap / itemArea >= 0.8;
@@ -2313,7 +2380,14 @@ function buildPageLines(
   const lines: LayoutLine[] = [];
   (["spanning", "left", "right", "single"] as LayoutColumn[]).forEach((column) => {
     lines.push(
-      ...clusterItemsIntoLines(buckets[column], column, page.pageNumber, layout.pageHeight, layout.pageWidth)
+      ...clusterItemsIntoLines(
+        buckets[column],
+        column,
+        page.pageNumber,
+        layout.pageHeight,
+        layout.pageWidth,
+        column === "left" && layout.isMultiColumn ? layout.leftX : undefined,
+      )
     );
   });
 
@@ -2420,12 +2494,37 @@ function roleForLine(
   if (
     line.page === 1 &&
     (/^how\s+to\s+cite\s*:/i.test(text) ||
+      /^to\s+cite\s*:/i.test(text) ||
       /\banuarul\s+universit/i.test(text) ||
       /^covered\s+in\b/i.test(text) ||
       /\bindex\s+copernicus\b/i.test(text) ||
       /\b(?:worldcat|socionet|kvk)\b/i.test(text) ||
       /\bfascicula\s*:/i.test(text) ||
       /^constructs?\.\s*$/i.test(text))
+  ) {
+    return "chrome";
+  }
+  // HighWire / BMJ running margin stamps on every page.
+  if (
+    /^protected by copyright\b/i.test(text) ||
+    /^downloaded from\b/i.test(text) ||
+    /^by guest\.?$/i.test(text)
+  ) {
+    return "chrome";
+  }
+  // BMJ Open left "To cite" continuations sit in a narrow margin beside the
+  // abstract. Keep known cite-rail shapes out of body paragraphs without
+  // blanketing every left-edge affiliation (Japanese conference mastheads).
+  if (
+    line.page === 1 &&
+    line.x <= (line.pageWidth ?? 612) * 0.12 &&
+    line.width <= 140 &&
+    line.fontSize <= baseFont * 0.95 &&
+    (/^(?:prepublication history|and additional supplemental|material for this paper|available online|files, please visit|for numbered affiliations|correspondence to|online\s*\()/i.test(text) ||
+      /\bbmj\s*open\b/i.test(text) && text.length <= 80 ||
+      /^bmjopen-\d{4}-\d+/i.test(text) ||
+      /^\d{4};\s*\d+\s*:\s*e\d+/i.test(text) ||
+      /doi:\s*10\.\d+/i.test(text) && text.length <= 64)
   ) {
     return "chrome";
   }
@@ -2452,6 +2551,27 @@ function roleForLine(
   if (line.page === 1 && line.y < 230 && line.fontSize >= baseFont * 1.22 &&
       line.width >= (line.pageWidth ?? 612) * 0.42 &&
       !looksLikePersonName(text) && !looksLikeAffiliation(text)) {
+    return "title";
+  }
+  // JMIR / preprint covers continue a display title below y=230 at the same
+  // large font (`… Study of` + `Documentation Time, Note Quality, and Clinician`
+  // + `Acceptance`). Prefer title over author heuristics for that band.
+  // Use a modest threshold: document baseFont can sit near 12pt while cover
+  // display type is only ~16pt (below 1.35×).
+  if (
+    line.page === 1 &&
+    line.y < 360 &&
+    line.fontSize >= Math.max(14, baseFont * 1.12) &&
+    /^[A-Z]/.test(text) &&
+    !looksLikeEmail(text) &&
+    !looksLikeAffiliation(text) &&
+    !/\b(?:submitted to|corresponding author|disclaimer)\b/i.test(text) &&
+    (
+      isHangingTitleEnd(text) ||
+      /\b(?:documentation|quality|acceptance|clinician|photographs?|questionnaire|study of)\b/i.test(text) ||
+      (text.trim().split(/\s+/).length <= 4 && line.width <= (line.pageWidth ?? 612) * 0.35)
+    )
+  ) {
     return "title";
   }
   // arXiv's identifier/date header is not the article title. Keep it as
@@ -2844,6 +2964,20 @@ function groupLinesIntoBlocks(
         line.x + line.width + 12 <= previous.x && Math.abs(line.y - previous.y) <= Math.max(18, previous.fontSize * 1.8);
       return body && rail;
     })();
+    // BMJ Open "To cite" rail and abstract share the left column bucket and
+    // alternate by Y after separation. Do not stitch a narrow left-margin
+    // rail into body prose (or the reverse) across a large x jump.
+    const marginRailXBoundary = currentRole === "paragraph" && forcedRole === "paragraph" && (() => {
+      const previous = current[current.length - 1];
+      if (previous.page !== line.page || previous.column !== line.column) return false;
+      const pageWidth = previous.pageWidth ?? 612;
+      if (Math.abs(line.x - previous.x) < Math.max(48, pageWidth * 0.08)) return false;
+      const prevRail = previous.width <= Math.min(160, pageWidth * 0.28) && previous.x <= pageWidth * 0.14;
+      const nextRail = line.width <= Math.min(160, pageWidth * 0.28) && line.x <= pageWidth * 0.14;
+      const prevBody = previous.x >= pageWidth * 0.2 || previous.width >= pageWidth * 0.28;
+      const nextBody = line.x >= pageWidth * 0.2 || line.width >= pageWidth * 0.28;
+      return (prevRail && nextBody) || (prevBody && nextRail);
+    })();
     // Vector diagrams sometimes emit numeric glyph bands at ~1pt followed by
     // a normal-size caption line. Their shared column and small baseline gap
     // otherwise make them one paragraph, leaking figure labels into caption
@@ -2868,6 +3002,7 @@ function groupLinesIntoBlocks(
       rotationCompatible &&
       rotationContentCompatible &&
       !detachedRailLineBoundary &&
+      !marginRailXBoundary &&
       !tinyVectorBandBoundary &&
       !authorColumnBoundary &&
       canMerge(current[current.length - 1], line, baseFont);
@@ -3987,7 +4122,8 @@ function splitMixedColumnBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
     if (layoutEnv("PDF_LAYOUT_DEBUG") === "all" && block.pageStart === 1 && block.bbox.y < 500 && xBands.length > 1) {
       console.error(`[PDF_LAYOUT_MIXED_DEBUG] role=${block.role} lines=${block.lines.length} columns=${[...columns].join(",")} xBands=${xBands.join(",")} labelSidebar=${labelSidebar} text=${JSON.stringify(block.text.slice(0, 140))}`);
     }
-    if (layoutEnv("PDF_LAYOUT_TRACE_TEXT") && block.text.includes(layoutEnv("PDF_LAYOUT_TRACE_TEXT"))) {
+    const traceText = layoutEnv("PDF_LAYOUT_TRACE_TEXT");
+    if (traceText && block.text.includes(traceText)) {
       console.error(`[PDF_LAYOUT_TRACE_BLOCK] stage=splitMixed role=${block.role} lines=${block.lines.length} columns=${[...columns].join(",")} xBands=${xBands.join(",")} preserve=${Boolean(block.preserveColumnContinuation)} text=${JSON.stringify(block.text.slice(0, 260))}`);
     }
     const orderedColumns = [...new Set(block.lines.map((line) => line.column))];
@@ -4948,11 +5084,22 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       result.push(block);
       continue;
     }
+    // Displayed formulas and their stacked crumbs (`d` / `dγ` / `[ 2]` / `√`)
+    // must stay out of unfinished prose tails; later mathFragmentMerge repairs
+    // the formula itself.
+    const isMathDisplayBoundary =
+      block.role === "equation" ||
+      isEquationLine(block.text) ||
+      /^\[\s*[*∗]?\s*\d{1,2}\s*\]$/.test(block.text.trim()) ||
+      /^[d∂]\s*$/u.test(block.text.trim()) ||
+      /^d[a-zα-ωγθϕψ]\s*$/iu.test(block.text.trim()) ||
+      /^[√∫∑∏]$/u.test(block.text.trim());
     if (
       target && (target.role === "paragraph" || isAbstractBodyTitleBlock(target)) && block.role === "paragraph" &&
       !currentIsDetachedMargin &&
         !isDetachedTableHeaderBlock(block, target) &&
         !hardCrossColumnReferenceBoundary &&
+        !isMathDisplayBoundary &&
         (joinsCompleteLeadingContinuation || joinsSameColumnContinuation || joinsSpanningBodyContinuation || joinsHyphenatedContinuation || geometrySameLineContinuation || rejoinAfterDetachedMargin || wrapsAcrossColumnsAtPageBottom || wrapsAcrossColumnsAtModerateTop || wrapsAcrossPhysicalColumns || wrapsAcrossAdjacentColumnTails ||
         (canContinueAcrossColumns && isSentenceContinuation(target.text, block.text)) ||
         crossesPageBoundaryAfterFigureBand || crossesPageBoundaryProperName ||

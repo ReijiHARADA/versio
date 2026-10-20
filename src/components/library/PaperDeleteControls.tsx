@@ -17,8 +17,8 @@ export function PaperDeleteControls({
     <button
       type="button"
       className={styles.actionButton}
-      title="ライブラリから削除"
-      aria-label="ライブラリから削除"
+      title="ゴミ箱へ移動"
+      aria-label="ゴミ箱へ移動"
       disabled={busy}
       onClick={(event) => onRequest(event, paperId)}
     >

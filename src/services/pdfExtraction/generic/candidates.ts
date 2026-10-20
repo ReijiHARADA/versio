@@ -54,7 +54,9 @@ const ROLE_CONFIDENCE: Partial<Record<LayoutRole, number>> = {
 
 function layoutRoleToCanonical(role: LayoutRole): CanonicalRole {
   if (role === "figure_caption" || role === "table_caption") return "caption";
-  if (role === "chrome") return "other";
+  // Publisher running rails (`Protected by copyright`, HighWire download
+  // stamps) must stay hidden in Reader / translation — same as copyright.
+  if (role === "chrome") return "copyright";
   return role;
 }
 
@@ -1556,7 +1558,8 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       block.text.trim().split(/\s+/).filter(Boolean).length <= 140 &&
       block.lines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length >= 2;
     const role = block.role === "header" || block.role === "footer" || block.role === "copyright" || block.role === "chrome"
-      ? layoutRole
+      // `chrome` is layout-only; keep it out of Reader via copyright.
+      ? (block.role === "chrome" ? "copyright" : layoutRole)
       : denseCjkBody || numericRow || mathRow || alignedTableRow || numericMultiItemRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || lowercaseColonLeadIn || diagramMicroHeading || rotatedNumericGrid || inlineLabelProse ? "paragraph" :
       numberedSubheading ? "heading" : layoutRole;
     const style = styleSignature(block, layouts, baseFontSize, blocks[index - 1], blocks[index + 1]);
@@ -1574,6 +1577,12 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     }
     if (pageGrid > 0 && block.role !== "table_caption" && !narrativeTableConflict) {
       scoreByRole.table = pageGrid;
+    }
+    // Norm/power superscripts (`[ 2]`, `[ ∗ 2]`) are not table cells.
+    if (/^\[\s*[*∗]?\s*\d{1,2}\s*\]$/.test(block.text.trim())) {
+      scoreByRole.table = Math.min(scoreByRole.table ?? 0, 0.15);
+      scoreByRole.other = Math.max(scoreByRole.other ?? 0, 0.7);
+      scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.2);
     }
     if (proseCellGrid > 0) {
       scoreByRole.table = Math.max(scoreByRole.table ?? 0, proseCellGrid);
@@ -1642,6 +1651,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       role !== "title" &&
       role !== "author" &&
       role !== "affiliation" &&
+      role !== "caption" &&
+      block.role !== "table_caption" &&
+      block.role !== "figure_caption" &&
       !tableAdjacentNumericRow &&
       !numericMultiItemRow &&
       !alignedTableRow &&
@@ -1667,6 +1679,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // headers and statistical prose do not take this path. Same-size ALL-CAPS
     // Cyrillic/Latin labels still count when spacing separates them from body.
     const styleHeadingAnchor = role !== "title" && role !== "author" &&
+      role !== "caption" &&
+      block.role !== "table_caption" &&
+      block.role !== "figure_caption" &&
       block.lines.length === 1 &&
       block.text.trim().split(/\s+/).filter(Boolean).length <= 12 &&
       style.uppercaseRatio >= 0.72 &&
@@ -1682,6 +1697,9 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     // headings when a long body block follows and the label itself is short
     // and punctuation-free.
     const allCapsSectionLabel = role !== "title" && role !== "author" &&
+      role !== "caption" &&
+      block.role !== "table_caption" &&
+      block.role !== "figure_caption" &&
       block.lines.length <= 2 &&
       style.uppercaseRatio >= 0.85 &&
       (block.text.match(/\p{L}/gu) ?? []).length >= 8 &&
@@ -1693,6 +1711,12 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     if (allCapsSectionLabel) {
       // Must clear documentResolver's heading demotion: score < paragraph + 0.08.
       scoreByRole.heading = Math.max(scoreByRole.heading ?? 0, 0.96);
+    }
+    // Native table/figure captions must stay captions even when ALL-CAPS / bold
+    // typography otherwise wins a heading race (`TABLE 2`).
+    if (block.role === "table_caption" || block.role === "figure_caption" || role === "caption") {
+      scoreByRole.caption = Math.max(scoreByRole.caption ?? 0, confidence, 0.92);
+      scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.35);
     }
     // Chart axis / legend crumbs near a figure caption share body size and
     // Title Case with real section heads; keep them out of outline structure.
