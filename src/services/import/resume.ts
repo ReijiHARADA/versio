@@ -11,18 +11,18 @@ import { assignBlockTranslation, preserveSourceTranslation } from "../glossary/a
 import { applyGlossary, normalizeSourceGroundedTerminology } from "../llm/glossaryService";
 import { finalizedTranslationStatus } from "../paperStatus";
 import {
-  MADLADEngine,
-  OllamaTranslationEngine,
   TranslationPriority,
   translationManager,
   TranslationQueue,
+  createTranslationEngine,
+  setAppleEligibleSources,
   type TranslationPriorityValue,
 } from "../translation";
-import { OllamaProvider } from "../llm";
 import { isPlausibleJaTranslation, localizeNamedFigureCaption, shouldTranslateTitle, titleTranslationComplete } from "../translation/quality";
 import { checkMADLADServer } from "../translation/madladEngine";
 import { projectSafeUnitTranslation } from "../translation/partialProjection";
 import {
+  collectAppleEligibleSources,
   finalizeJapaneseLayoutOnly,
   isJapaneseLayoutOnlyPaper,
   persistUntranslatableAsSkipped,
@@ -113,16 +113,15 @@ export async function resumeIncompleteTranslation(
       await savePaper(paper);
       return;
     }
-    const madladEngine = new MADLADEngine(cfg.madladServerUrl);
-    const llmProviders = [cfg.ollamaModel, ...(cfg.ollamaModels ?? [])]
-      .filter((model, index, models): model is string => Boolean(model) && models.indexOf(model) === index)
-      .map((model) => new OllamaProvider(cfg.ollamaServerUrl, model));
-    const translationEngine = cfg.enableSelectiveCascade
-      ? new OllamaTranslationEngine(
-          madladEngine,
-          llmProviders,
-        )
-      : madladEngine;
+    const { engine: translationEngine, appleRouter } = createTranslationEngine(cfg);
+    setAppleEligibleSources(
+      appleRouter,
+      collectAppleEligibleSources(
+        pendingBlocks,
+        refSectionIds,
+        pendingTitle ? paper.titleOriginal : null
+      )
+    );
     const queue = new TranslationQueue(translationEngine, {
       concurrency: cfg.translationConcurrency,
       retryFailed: true,

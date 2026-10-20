@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:extraction-eval": "vite --open /eval.html",
     "generate:licenses": "node scripts/generate-licenses.mjs",
     "prebuild": "npm run generate:licenses",
     "build": "tsc -b && vite build",
@@ -18,6 +19,7 @@
     "audit:pending-corpus": "node scripts/check-pending-corpus.mjs",
     "fetch:pending-corpus": "node scripts/fetch-pending-corpus.mjs",
     "bench:pdf-extraction": "npx tsx scripts/benchmark-pdf-extraction.ts",
+    "eval:pdf-extraction": "npx tsx scripts/evaluate-extraction-review.ts",
     "bench:pdf-extraction:isolated": "npx tsx scripts/benchmark-pdf-extraction-isolated.ts",
     "diagnose:column-occupancy": "npx tsx scripts/diagnose-column-occupancy.ts",
     "scan:pdf-boundaries": "npx vite-node scripts/scan-extraction-boundaries.ts",

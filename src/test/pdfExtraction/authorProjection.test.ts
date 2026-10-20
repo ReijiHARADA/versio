@@ -416,6 +416,145 @@ describe("author masthead projection", () => {
     }
   }, 60_000);
 
+  it("recovers JMIR preprint cover title stack and authors behind decorative cover art", async () => {
+    const pdf = path.join(
+      root,
+      "test-fixtures/real-papers/pending-pdfs/epmc-ai-assisted-clinical-documentation-in-routine-danish-general-practice-qu.pdf",
+    );
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "jmir-preprint-cover",
+      filePath: pdf,
+      fileHash: "jmir-preprint-cover",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.titleOriginal).toMatch(/Documentation Time, Note Quality, and Clinician Acceptance/i);
+    expect(result.paper.authors).toEqual([
+      "Louise Nørgaard Olsen",
+      "Philipp Harbig",
+      "Anna Bay Laurberg",
+      "Jacob Laurberg",
+      "Morten Haaning Charles",
+    ]);
+    expect(result.paper.authors.every((name) => !/Documentation Time|Note Quality/i.test(name))).toBe(true);
+  }, 60_000);
+
+  it("recovers JMIR preprint cover title and authors behind decorative cover art", async () => {
+    const pdf = path.join(
+      root,
+      "test-fixtures/real-papers/pending-pdfs/epmc-ai-assisted-clinical-documentation-in-routine-danish-general-practice-qu.pdf",
+    );
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "jmir-preprint-cover",
+      filePath: pdf,
+      fileHash: "jmir-preprint-cover",
+      // PDF Info often stores the preprint DOI chrome; native title must win.
+      metadata: {
+        pageCount: pages.length,
+        title: "Preprint - 10.2196/preprints.94431",
+      },
+    });
+    expect(result.paper.titleOriginal).toMatch(
+      /AI-Assisted Clinical Documentation in Routine Danish General Practice: A Pragmatic Pre–Post Study of Documentation Time, Note Quality, and Clinician Acceptance/i,
+    );
+    expect(result.paper.titleOriginal).not.toMatch(/preprint\s*[-–—]/i);
+    expect(result.paper.authors).toEqual([
+      "Louise Nørgaard Olsen",
+      "Philipp Harbig",
+      "Anna Bay Laurberg",
+      "Jacob Laurberg",
+      "Morten Haaning Charles",
+    ]);
+    expect(result.paper.authors.every((name) => !/Documentation Time|Note Quality/i.test(name))).toBe(true);
+  }, 60_000);
+
+  it("restores Frontiers bylines that over-scored as rival titles", async () => {
+    const fishermenPdf = path.join(
+      root,
+      "test-fixtures/real-papers/pending-pdfs/epmc-mental-health-of-fishermen-current-research-status-and-future-directions.pdf",
+    );
+    if (!fs.existsSync(fishermenPdf)) return;
+    const pages = await extractPdfPages(fishermenPdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "frontiers-fishermen-byline",
+      filePath: fishermenPdf,
+      fileHash: "frontiers-fishermen-byline",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.titleOriginal).toMatch(/Mental health of fishermen/i);
+    expect(result.paper.authors).toEqual(["Wenhao Lin", "Yu Fang", "Haidong Song"]);
+  }, 60_000);
+
+  it("rejects Nature Communications journal rails as authors and keeps the article title", async () => {
+    const naturePdf = path.join(
+      root,
+      "test-fixtures/real-papers/pending-pdfs/epmc-large-scale-integrated-optoelectronic-chaos-for-machine-learning-acceler.pdf",
+    );
+    if (!fs.existsSync(naturePdf)) return;
+    const pages = await extractPdfPages(naturePdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "nature-comms-journal-rail",
+      filePath: naturePdf,
+      fileHash: "nature-comms-journal-rail",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.titleOriginal).toMatch(/optoelectronic chaos/i);
+    expect(result.paper.authors.every((name) => !/^Nature Communications$/i.test(name))).toBe(true);
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["Zhouyang Pan", "Zhekai Zheng"]));
+  }, 60_000);
+
+  it("keeps a PLOS protocol title instead of left-rail OSF registry chrome", async () => {
+    const plosProtocolPdf = path.join(
+      root,
+      "test-fixtures/real-papers/pending-pdfs/epmc-digital-behavioral-addictions-in-adolescents-and-young-adults-protocol-f.pdf",
+    );
+    if (!fs.existsSync(plosProtocolPdf)) return;
+    const pages = await extractPdfPages(plosProtocolPdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "plos-protocol-osf-rail",
+      filePath: plosProtocolPdf,
+      fileHash: "plos-protocol-osf-rail",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.titleOriginal).toMatch(/^Digital behavioral addictions in adolescents and young adults: Protocol for a scoping review/i);
+    expect(result.paper.titleOriginal).not.toMatch(/Registries at|OSF\.IO|will independently screen/i);
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining(["Sasha R. Sioni", "Jenna L. Butner", "Sten H. Vermund"]),
+    );
+  }, 60_000);
+
+  it("recovers Frontiers two-author bylines glued onto abstract prose without commas", async () => {
+    const pdf = path.join(
+      root,
+      "test-fixtures/real-papers/pending-pdfs/epmc-multi-way-radial-consistency-pre-training-for-event-based-optical-flow.pdf",
+    );
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "frontiers-two-author-glued-abs",
+      filePath: pdf,
+      fileHash: "frontiers-two-author-glued-abs",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["An Feng", "Tao Wenyin"]));
+    expect(result.paper.authors).toHaveLength(2);
+    const abstractText = [
+      result.paper.abstract ?? "",
+      ...result.canonical.nodes.filter((node) => node.role === "abstract").map((node) => node.text ?? ""),
+    ].join(" ");
+    expect(abstractText).toMatch(/Optical flow estimation/i);
+    expect(abstractText).not.toMatch(/^An Feng/i);
+  }, 60_000);
+
   it("keeps Frontiers sidebar bylines ending in `and` without country crumbs", async () => {
     const frontiersSidebarPdf = path.join(
       root,

@@ -702,6 +702,65 @@ export function equationPages(): ExtractedPage[] {
   return [page(1, [...left, ...right])];
 }
 
+/**
+ * Minimal reproduction of arXiv 2302.03792 page-2 math failures:
+ * lone √, stacked d/dγ beside a numbered display, superscript `[ 2]`,
+ * and an orphan `γ,γ)` tail. Real PDF is not committed.
+ */
+export function stackedDerivativeEquationPages(): ExtractedPage[] {
+  const items: ExtractedTextItem[] = [
+    item("2 FUNDAMENTAL POINTWISE DENOISING RELATION", 108, 142, {
+      width: 420,
+      fontSize: 12,
+    }),
+    item("√", 318, 160, { width: 8, fontSize: 10 }),
+    item(
+      "Let p(zγ |x) be a Gaussian noise channel with zγ = γx + ε and ε ∼ N (0, I), where γ represents the SNR.",
+      108,
+      166,
+      { width: 400, fontSize: 10 },
+    ),
+    item(
+      "The seminal result of Guo et al. (2005) connects mutual information with MMSE estimators,",
+      108,
+      227,
+      { width: 400, fontSize: 10 },
+    ),
+    item("d", 252, 242, { width: 8, fontSize: 10 }),
+    item("I(x; zγ ) = 1/2 mmse(γ). (1)", 262, 247, { width: 240, fontSize: 10 }),
+    item("dγ", 250, 256, { width: 16, fontSize: 10 }),
+    item(
+      "Here, the MMSE refers to the Minimum Mean Square Error for recovering x in this noisy channel,",
+      108,
+      272,
+      { width: 400, fontSize: 10 },
+    ),
+    item("[ 2]", 200, 300, { width: 18, fontSize: 8 }),
+    item("mmse(γ) ≡ Ep(zγ,x) ‖x − xˆ(zγ , γ)‖ . (2)", 108, 312, {
+      width: 400,
+      fontSize: 10,
+    }),
+    item(
+      "We refer to xˆ as the denoising function. The optimal denoising function corresponds to the conditional expectation,",
+      108,
+      340,
+      { width: 400, fontSize: 10 },
+    ),
+    item("xˆ∗(zγ , γ) ≡ arg min mse(γ) = Ex∼p(x|zγ)[x] (3)", 108, 380, {
+      width: 400,
+      fontSize: 10,
+    }),
+    item("γ,γ)", 120, 396, { width: 40, fontSize: 9 }),
+    item(
+      "The analytic solution is typically intractable because it requires sampling from the posterior distribution.",
+      108,
+      420,
+      { width: 400, fontSize: 10 },
+    ),
+  ];
+  return [page(1, items)];
+}
+
 export function falseCaptionSentencePages(): ExtractedPage[] {
   const left = [
     colLine("Related Work", LEFT_X, 80, 1, 12),
@@ -811,6 +870,7 @@ export const FIXTURES: Record<string, () => ExtractedPage[]> = {
   "acknowledgment-grant": acknowledgmentGrantPages,
   "table-caption": tableCaptionPages,
   equation: equationPages,
+  "stacked-derivative-equation": stackedDerivativeEquationPages,
   "false-caption-sentence": falseCaptionSentencePages,
   "hyphenated-prose": hyphenatedProsePages,
   "classification-index": classificationIndexPages,

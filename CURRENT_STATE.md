@@ -1,4 +1,72 @@
+# 2026-10-20: PDF Extraction Evaluation Studio（開発専用）
+
+- `/eval.html` の独立 Vite entry。PDF.js 原本表示と CanonicalDocument / Reader projection の読書順表示、双方向ハイライト、回転対応の領域指定、ページ完了状態、ブロック・欠落・CAPTION_OF 関係レビューを提供
+- Studio は window 内に固定し、PDF・ブロック・レビューの各ペインだけを縦スクロールする。PDF は初期表示と「全高」操作で利用可能な window 高へ合わせる。ブロック判定・誤りタグ・role・深刻度は操作時に対象 ID へ即時保存され、native text bbox は描画時に baseline→top-left 補正して PDF canvas に重ねる（保存座標は不変）
+- 左 PDF の選択済み判定枠は直角矩形。枠本体のドラッグで移動、四隅ハンドルでリサイズし、レビューの `targetRegion` に保存する（抽出 snapshot は変更しない）
+- 新規レビューの深刻度は `critical` が既定。保存済み状態や自動保存など実装上の文言は UI に表示しない
+- 抽出 snapshot と人手 Ground Truth review を分離。SHA-256 による browser local 保存・JSON bundle 書出し／再読込を提供し、Paper Package / SQLite / 翻訳サーバーには触れない
+- `npm run eval:pdf-extraction -- --input <bundle>` で role / paragraph boundary / reading order / relation の P/R/F1 と対象数を JSON 出力。完全性未確認は `null` (N/A) で、100% 扱いしない
+- 使用手順・現時点の boundary / reading-order annotation 制約は `docs/PDF_EXTRACTION_EVALUATION.md`
+
+# 2026-10-20: 日本語化中はプログレスバー表示
+
+- ライブラリ行の「日本語化中 N%」をやめ、ラベル＋インライン進捗バーに変更
+
+# 2026-10-20: ライブラリから読了率表示を削除
+
+- 論文行の「N%まで読了」を出さない（読書位置の保存自体は維持）
+
+# 2026-10-20: EPUB「スマホで読む」UI
+
+- スターはタイトル左。EPUB 同期は右側操作領域の「スマホで読む」（アイコン＋ラベル）
+- 未設定時はトースト「設定を開く」→ `/settings`。設定済みはワンクリック同期
+- 同期成功は `epubSyncByPaper` に永続化し、以降「保存済み」表示（再送で更新可）
+- 送信中／失敗を行上とトーストで表示。処理は既存 `pushPaperEpubToSyncFolder` を再利用
+- 回帰: `paperFavoriteEpubSync`
+
+# 2026-10-20: 書き出しアイコンを上向き矢印に
+
+- Reader `FileDown`→`FileUp`、フォルダ書き出し `Download`→`Upload`（矢印を下→上）
+
+# 2026-10-20: 論文メニュー「ゴミ箱へ移動」
+
+- 「ライブラリから削除」「論文の削除」を「ゴミ箱へ移動」に統一（完全削除ではないことが分かる文言）
+- メニュー危険操作は赤文字（`.menu button` の色上書きを修正）
+
+# 2026-10-19: 翻訳再試行経路を import と同じエンジンに揃える
+
+- `createTranslationEngine` で Apple→MADLAD（＋任意 cascade）を一箇所に集約
+- **resume** と **Reader 段落再試行** も同じ組み立てを使う（以前は MADLAD のみ）
+- 段落再試行は品質拒否時に `source_fallback`（原文保持）、輸送失敗は `failed` のまま
+- 回帰: `createTranslationEngine` / `retryBlockTranslation` / `resumeTranslation`
+
 # 2026-10-19: Frontiers sidebar 著者 + 構造化 abstract + OA 拡充
+
+- BMJ Open 列スクランブル（effect-of-simulation）: To cite 左レール（x≈40）が abstract 列（leftX≈147）と Y 交錯して本文に混線 → (1) sidebar 幅比 2.5→1.7 (2) multi-column 時 `bodyLeftX-16` でレール切断 (3) marginRailXBoundary でブロック結合拒否 (4) Protected by copyright / Downloaded from を全ページ chrome (5) 解決済み title 内の短い hyphen crumb を demote。実PDF: scramble 0 / intro・methods 正常 / 著作権 paragraph 0；reading-order cite-rail 回帰追加
+- Frontiers 5G（frai.2025.1644415）: 左サイド citation crumb（`Arvind…, LSTM…` / 機関名）が title・authors を汚染 → venue-banner 左crumb拒否、EDITED BY/機関偽著者除外、Stolen mid-title fragment（`LSTM with Deep Dual`）を `Convolutional`↔`Info-Varcoder` のみ再挿入。タイトル全文＋著者2名復旧
+- 回帰: authorProjection+editorialChrome **44/44**；reading-order cite-rail 含む関連 **pass**；spot limit=60: **noAuthors 1**（Correction 記事のみ）/ emptyCaption 0 / noAbs 0；wide pending **limit=80: clean 80/80** → **limit=200: clean 200/200**
+- Frontiers 2著者 byline（`An Feng1* and Tao Wenyin2 Optical…`）が abstract に膠着し paper.authors=[] → comma 無し `and` 膠着を mislabelled byline として回収＋abstract から byline 剥離。multi-way-radial **著者2名**復旧
+- JMIR preprint 表紙: 大画像の裏にある title/byline が embeddedFigureText で消失 → 11pt+ と大カバー画像を除外；Title-Case 話題行を author 誤認しない；display title 帯で全タイトル結合。Danish GP: タイトル全文＋著者5名
+- spot offset=60: noAbs≤2（dataset / VR perspective）；wide pending **200/200 clean**
+- spot offset=120 limit=80: **n=75 / noAuthors 0 / emptyCaption 0 / noTitle 0 / noAbs 1**（Twelve quick tips 教育記事）；odd []
+- 証拠ダンプ: `test-data/extraction-evidence/key-papers-2026-10-19.json`（5G / BMJ / JMIR / Frontiers radial）
+- Reader 目視: `reader-bmj-sim-scramble-fix.png`（タイトル全文・著者5・列混線なし）/ `reader-frontiers-5g-title-fix.png`（LSTM 込みタイトル・著者2）/ `reader-jmir-danish-cover-fix.png`（再撮影）
+- JMIR metadata `Preprint - 10.2196/…` が native タイトルを上書き → preprint chrome を metadata 拒否；BMJ TOC の `For numbered affiliations see` / `Correspondence to` を demote。再撮影で JMIR タイトル全文を確認
+- wide pending **300: clean 299 / flagged 1**（MDPI `Academic Editors:` 誤タイトル）→ Academic Editors 拒否＋カンマ連題（`, and` / Review）を contamination から除外。AR/MR スコープレビューはタイトル全文復旧
+- PLOS protocol: カンマ連題が contamination 誤判定で OSF レールが title 化 → `: Protocol for a scoping review` 例外＋OSF/Registries 拒否。Nature Communications ジャーナルレールを著者除外。Þ 単一グリフ見出し demote。`TraNSlaTiON` スタンプを chrome 化
+- wide pending **500/500** → **700/700** → **900/900** → **1100: clean 1100 / flagged 0** → フル pending **1379: clean 1379 / flagged 0**
+- bare `COPYRIGHT` / `Copyright:` / `Copyright © 2022…` / `Copyright (1998)…` を copyright ロールへ。spot offset=400/900: **issues 0**
+- MQM Globe: `The …` 長タイトルを contamination 誤拒否 → 本文リード形のみ拒否＋ Abstract 膠着 wrap 拒否。正式タイトル復旧後にフル再計測 clean
+- BMJ: layout `chrome`→copyright。cite-only abstract demote。再撮影 `reader-bmj-sim-chrome-hidden.png` / `reader-bmj-abs-fix.png`
+- Frontiers fishermen: title 過スコア byline→author（3名）。本文リード／構造化 abstract 偽見出し demote。再撮影 `reader-frontiers-fishermen-outline.png`
+- 回帰: editorialChromeHeadings **13/13**；titleResolver **34/34**
+- Reader 再撮影: `reader-plos-mqm-title-fix.png`（正式タイトル全文）/ `reader-frontiers-copyright-hidden.png`（COPYRIGHT 非表示・タイトル正常）
+- `Results of EFA indicated…` 系の結果散文 wrap を目次から demote；`TABLE 2` は caption 維持（heading スコア上書き抑止）、膠着列ヘッダ demote（editorialChrome **15/15**）
+- 残: Correction / tip / Editorial 無 abstract 許容残差、要確認バッジの精査、.app 目視
+
+- BMJ Open chrome 見出し: `Downloaded from` / `24 September 2026.` / `Protected by copyright…` を demote；`Methods and analysis This will be…` 膠着を paragraph 化；`To cite:… ABSTRACT` / `STRENGTHS AND LIMITATIONS…` を author 役割から demote；図キャプション `Conceptual framework…` を outline から demote。editorialChromeHeadings 回帰 **10/10**
+- PLOS ORCID `PaivaID` 接尾辞を `expandAuthorLine` で剥離 → mobile-apps elderly 著者9名復旧；TOC 誤本体 PDF を `_quarantine/` へ隔離＋ TOC タイトル拒否；`Abstract` が `other` でも構造化 abstract 帯を開く
+- spot limit=80: **noAuthors 0** / emptyCaption 0 / noAbs≤1（Frontiers perspective 無 abstract）；wide pending 200: **clean 199 / flagged 1**（title-id-mismatch）；`authorProjection` **34/34**
 
 - PDF 本体は **git に上げない**（`pending-pdfs/**/*.pdf` は gitignore。候補 JSON のみコミット）。再取得は `node scripts/fetch-oa-europepmc.mjs`
 - Europe PMC 追加取得（再）: クエリ拡充 → **+167**（失敗244=主に 403）；pending PDF **1380** / candidates **1432**（PDF 本体は gitignore のまま）
@@ -31,6 +99,13 @@
 - PLOS 二段組: 左レール `Citation:` で Abstract 帯を切らない；本文列のみ abstract 化；Author summary / funding 見出しを demote
 - Frontiers `other`/`copyright`/APA citation byline（`Cook, D., …` 含む）・★付き所属末尾人名を著者回収
 - Reader: PLOS endometrial（`reader-plos-endometrial.png`）でタイトル・Abstract・正規見出しを確認
+
+# 2026-10-19: tauri:build:fast 高速化
+
+- `tauri build` を1回化（以前は `--no-bundle` → `--bundles app` の二重リンク）
+- Tauri 同梱は lite（~300K）のみ。venv（~730M）は `inject-translation-venv.sh` で APFS clone
+- fast パスで `CARGO_INCREMENTAL=1`
+- warm 再計測: **61.6s → 24.5s**（docs/BUILD_TIMINGS.md）
 
 # 2026-10-19: Apple Translate 短い文のパック翻訳
 
@@ -66,6 +141,27 @@
 - Cureus: Creative Commons / MeSH レールを著者から除外。Background/Methods/Results/Conclusions を1 abstract に結合
 - DOI は page-1 のみ（参考文献 `doi:` を拾わない）。UX は DOI null、Cureus は `10.7759/cureus.108550`
 - lettered affiliation が `recoverColumnMasthead` 上書きで壊れるのを防止。空 synthetic table を absorption 対象に戻し table identity 回帰を復旧
+
+# 2026-10-19: 翻訳中のシェル操作を軽くする
+
+- 症状: MADLAD 翻訳中にサイドバー開閉・フォルダ作成が重い
+- 対策: ブロック UI 更新を 200ms 結合 + `startTransition`；論文カード化後の translating 進捗 tick は importJobStore を更新しない；benchmark 保存は await しない；サイドバー／新規フォルダ modal 操作中は翻訳 UI パッチを defer
+- MADLAD 設定（3B / MPS / bf16 / batch 24 / concurrency 8）は変更なし
+- 回帰: `batchBlockUpdates`（defer 理由の重ね合わせ）
+
+# 2026-10-19: OzCHI タイトル折り返し断片の本文残留
+
+- `Mobile Phone User Interfaces` は本文見出しではなく、タイトル
+  `Exploring Finger Specific Touch Screen Interaction for Mobile Phone User Interfaces`
+  の視覚的2行目
+- 結合後も duplicate title fragment が `other`/低信頼度段落として残っていた → 読み順から除去
+- 回帰: `drops OzCHI title-wrap fragments from the reading stream`
+- 既存取り込みは再インポート（または再抽出）が必要
+
+# 2026-10-19: 要確認ポップオーバーが切れるのを修正
+
+- 読み順信頼度の警告メニューが Reader の `overflow` で下端クリップされていた
+- `InfoPopover` を `document.body` へ portal。要確認も同コンポーネントに統一（上下クランプ）
 
 # 2026-10-19: 書き出し保存ダイアログを1ステップに
 

@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ExportDialogValues } from "../ExportDialog";
-import { getEpubSyncFolder, syncEpubFile } from "../../../services/epubSync";
+import {
+  getEpubSyncFolder,
+  markPaperEpubSynced,
+  syncEpubFile,
+} from "../../../services/epubSync";
 import { showToast } from "../../../stores/toastStore";
 
 export function useReaderExport(paperId: string | undefined) {
@@ -53,7 +57,12 @@ export function useReaderExport(paperId: string | undefined) {
             : epubSyncFolder;
           if (values.syncToFolder && selectedSyncFolder) {
             setExportStatus("同期先フォルダへコピーしています...");
-            await syncEpubFile(selectedSyncFolder, `${result.fileName}.epub`, result.epub);
+            const fileName = `${result.fileName}.epub`;
+            await syncEpubFile(selectedSyncFolder, fileName, result.epub);
+            await markPaperEpubSynced(paperId, {
+              fileName,
+              folderPath: selectedSyncFolder,
+            });
           }
           finishSuccess(`EPUBを書き出しました`);
           return;

@@ -133,17 +133,35 @@ for (let index = 0; index < selected.length; index += 1) {
       // Bibliography / review-title lines often contain "… review, J." etc.
       if (/^\s*\[\d+\]/.test(t) || /\(\d{4}[a-z]?\)\s*\.?$/.test(t.trim())) return false;
       // Numbered reference rows: "49. De Mesa … et al." / "34. Liu, Z.; Yu, H.;"
+      // Also Vancouver journal cites: "20. Barbosa AM. fuzzySim: … Methods Ecol Evol. 2015;6:853–8."
       if (
         /^\d{1,3}\.\s+\p{L}/u.test(t.trim()) &&
-        (/\bet al\b/i.test(t) || /\(\d{4}\)/.test(t) || /^[^.]+,\s*[A-Z]\./.test(t.trim().replace(/^\d+\.\s+/, "")))
+        (
+          /\bet al\b/i.test(t) ||
+          /\(\d{4}\)/.test(t) ||
+          /(?:^|\.\s)\d{4};\d/.test(t) ||
+          /^[^.]+,\s*[A-Z]\./.test(t.trim().replace(/^\d+\.\s+/, "")) ||
+          /^\d{1,3}\.\s+[A-Z][\p{L}'’-]+(?:\s+[A-Z]{1,3}\.)+/u.test(t.trim())
+        )
       ) {
         return false;
       }
+      // Journal abbreviations that contain Methods (`Tutor. Quant. Methods Psychol.`).
+      if (/\bMethods\s+(?:Psychol|Ecol|Evol|Mol|Biochem|Enzymol)\b/i.test(t)) return false;
+      if (/\bTutor\.\s*Quant\.\s*Methods\b/i.test(t)) return false;
       // Multi-citation blobs: "Hayes (2013). Introduction to…" / "Res. Methods Instrum."
       if ((t.match(/\(\d{4}[a-z]?\)/g) ?? []).length >= 2) return false;
       if (/\(\d{4}[a-z]?\)\.\s+Introduction to\b/i.test(t)) return false;
       if (/\b(?:Res\.|Instrum\.|Comput\.)\s+Methods\b/i.test(t)) return false;
       if (/^(?:Abstract|Introduction)\.\s/.test(t)) return false;
+      // Structured-abstract leads without a colon (`Conclusions The presence…`).
+      // Keep mid-paragraph glue (`. Conclusions The…`) as a real flag.
+      if (
+        /^(?:Abstract|Introduction|Methods|Results|Discussion|Conclusions)\s+[A-Z]/.test(t) &&
+        !/[.!?]\s+(?:Abstract|Introduction|Methods|Results|Discussion|Conclusions)\s+[A-Z]/.test(t)
+      ) {
+        return false;
+      }
       // Screening labels: `Stage 1: Title–Abstract Screening`.
       if (/\bTitle\s*[—–-]\s*Abstract\b/i.test(t)) return false;
       // TOC crumbs such as `Introduction J5` / `Methods 12`.
@@ -197,7 +215,21 @@ for (let index = 0; index < selected.length; index += 1) {
       const idTokens = tokens(job.id);
       const titleTokens = new Set(tokens(titleText));
       const overlap = idTokens.filter((t) => titleTokens.has(t)).length;
-      if (idTokens.length >= 3 && overlap === 0 && /[A-Za-z]{4,}/.test(titleText)) {
+      // Europe PMC filenames often emphasize instruments/methods while the
+      // cover title uses a different topic phrase (`Stress in Study…` vs PHQ-9).
+      // Only flag when the native title itself looks like chrome/garbage.
+      const titleLooksAcademic =
+        titleText.length >= 36 &&
+        (/:\s*\S/.test(titleText) ||
+          /\b(?:review|study|analysis|survey|protocol|effect|role|impact|reply|modeling|assessment)\b/i.test(
+            titleText,
+          ));
+      if (
+        idTokens.length >= 3 &&
+        overlap === 0 &&
+        /[A-Za-z]{4,}/.test(titleText) &&
+        !titleLooksAcademic
+      ) {
         flags.push("title-id-mismatch");
         score += 3;
         samples.push(`mismatch:${titleText.slice(0, 80)}`);

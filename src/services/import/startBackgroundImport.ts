@@ -192,6 +192,17 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
             });
             return;
           }
+          const current = useImportJobStore.getState().jobs.find((job) => job.id === jobId);
+          // Once the real paper card owns the row, per-block translating ticks only
+          // thrash Library/Project re-renders. Skip those; keep terminal / errors.
+          if (
+            current?.paperId &&
+            next.stage === "translating" &&
+            !next.error &&
+            (current.stage === "translating" || current.stage === "glossary")
+          ) {
+            return;
+          }
           const progressPatch = {
             stage: next.stage,
             stageProgress: next.stageProgress,

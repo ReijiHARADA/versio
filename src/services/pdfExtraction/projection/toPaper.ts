@@ -343,6 +343,9 @@ function expandAuthorLine(text: string): string[] {
   const cleaned = sourceWithoutAffiliation
     .replace(/^\s*and\s+/i, "")
     .replace(/[*†‡§]/g, " ")
+    // PLOS ORCID glyphs often decode as a glued `ID` suffix (`PaivaID`,
+    // `TheophiloID`, `BarretoID`).
+    .replace(/(\p{L})ID\b/gu, "$1")
     .replace(/\d+/g, "")
     .replace(/(\p{L})\d+/gu, "$1")
     .replace(/\d+[*†‡§]/g, "")
@@ -486,6 +489,21 @@ function isNonAuthorMastheadLine(text: string): boolean {
     return true;
   }
   if (/^(?:original article|research article|review article|systematic review|brief report|case report|editorial|correspondence)\b/i.test(value)) return true;
+  // Nature / Springer cover journal rails painted as the first author.
+  if (
+    /^(?:nature communications|scientific reports|nature medicine|nature neuroscience|communications (?:biology|chemistry|engineering|medicine|physics)|article(?:\s*[|·/]\s*article)?\s+in\s+press)$/i.test(
+      value,
+    )
+  ) {
+    return true;
+  }
+  // Bare university / institution lines without a person-name lead.
+  if (
+    /^(?:universidad|university|universidade|università|universiteit|college of|institute of|faculty of)\b/i.test(value) &&
+    !/\b[A-Z][\p{L}'’-]+\s+[A-Z][\p{L}'’-]+/u.test(value.split(",")[0] ?? "")
+  ) {
+    return true;
+  }
   // Body / methods crumbs painted as author (`Performance was measured using…`).
   if (/^(?:performance was|the (?:study|paper|results?|findings?)|we (?:measured|used|found|present)|results? (?:were|are)|methods?(?:\s+and)?)\b/i.test(value)) {
     return true;
@@ -525,6 +543,14 @@ function isNonAuthorMastheadLine(text: string): boolean {
   // Publisher chrome / how-to-cite rails.
   if (/^open\s+access\b/i.test(value)) return true;
   if (/^(?:approved by|edited by|reviewed by|specialty section)\b/i.test(value)) return true;
+  // Frontiers sidebar editor/institution crumbs painted as authors.
+  if (/^(?:edited by|reviewed by|escola|instituto|polytechnic|politecnico)\b/i.test(value)) return true;
+  if (
+    /\b(?:portugal|united states|united kingdom)\b/i.test(value) &&
+    /\b(?:escola|instituto|technology|superior|university|college|faculty)\b/i.test(value)
+  ) {
+    return true;
+  }
   if (/^(?:perspective|editorial|commentary|opinion)\b/i.test(value) && value.split(/\s+/).length <= 4) {
     return true;
   }
@@ -556,7 +582,7 @@ function isNonAuthorMastheadLine(text: string): boolean {
   if (
     /^(?:medical sciences|health sciences|life sciences|computer science|engineering)\b/i.test(value) ||
     (/,\s*(?:new delhi|london|dublin|tokyo|beijing|seoul)\s*$/i.test(value) &&
-      !/\b[A-Z][\p{L}'’-]+\s+[A-Z][\p{L}'’-]+/.test(value.split(",")[0] ?? ""))
+      !/\b[A-Z][\p{L}'’-]+\s+[A-Z][\p{L}'’-]+/u.test(value.split(",")[0] ?? ""))
   ) {
     return true;
   }
@@ -623,7 +649,7 @@ function isNonAuthorMastheadLine(text: string): boolean {
   // How-to-cite rails (`Tasneem N, van der Pol CB, Zahoor`).
   if (
     /,\s*(?:van|von|de|der|den|di|da|la|le)\s+/i.test(value) &&
-    /\b[A-Z][\p{L}'’-]+\s+[A-Z]{1,3}\b/.test(value) &&
+    /\b[A-Z][\p{L}'’-]+\s+[A-Z]{1,3}\b/u.test(value) &&
     value.length <= 120 &&
     !/\b(?:university|department|institute)\b/i.test(value)
   ) {
@@ -2653,11 +2679,18 @@ export function projectCanonicalToPaper(input: {
       // middle initials (`Clark C. Freifeld 1,2*` / `Florian W. R. Vondran5`).
       const numberedLead =
         /^[A-Z][\p{L}.''’-]+(?:\s+[A-Z][\p{L}.''’-]*){1,5}\s*\d/u.test(trimmed);
+      // Frontiers two-author rows often use `Name1* and Name2 Abstract…`
+      // with no commas. Treat that as a mislabelled byline when the abstract
+      // prose starts immediately after the second affiliation marker.
+      const twoAuthorAndLead =
+        /^[A-Z][\p{L}.''’-]+(?:\s+[A-Z][\p{L}.''’-]*){1,4}\s*\d+[*†‡§✉]*\s+and\s+[A-Z][\p{L}.''’-]+(?:\s+[A-Z][\p{L}.''’-]*){1,4}\s*\d+[*†‡§✉]*\s+[A-Z]/u.test(
+          trimmed,
+        );
       if (
         y < 420 &&
-        (trimmed.match(/,/g) ?? []).length >= 2 &&
         /\d/.test(trimmed) &&
-        numberedLead
+        numberedLead &&
+        (((trimmed.match(/,/g) ?? []).length >= 2) || twoAuthorAndLead)
       ) {
         // Avoid treating abstract prose as a byline. Do not use a bare `we|the`
         // word list on long author rows — names like `Thi Do` are fine, but
@@ -2722,11 +2755,17 @@ export function projectCanonicalToPaper(input: {
           .trim();
         // Numbered byline glued onto abstract prose — keep only the author run.
         // Allow several middle initials (`Florian W. R. Vondran5`) and `&`
-        // before the final name (Nature Scientific Reports).
+        // before the final name (Nature Scientific Reports). Also accept the
+        // Frontiers two-author form without commas (`An Feng1* and Tao Wenyin2 Optical…`).
         const gluedByline = text.match(
-          /^((?:[A-Z][\p{L}'’.-]+(?:\s+[A-Z]\.){0,3}(?:\s+[A-Z][\p{L}'’-]+)?\s*\d+(?:,\d+)*(?:\s*[,&]|\s+and\s+|\s*&\s+)\s*)*[A-Z][\p{L}'’.-]+(?:\s+[A-Z]\.){0,3}(?:\s+[A-Z][\p{L}'’-]+)?\s*\d+(?:,\d+)*)[*†‡§✉]*\s+([A-Z][a-z]{3,}[\s\S]+)$/u,
+          /^((?:[A-Z][\p{L}'’.-]+(?:\s+[A-Z]\.){0,3}(?:\s+[A-Z][\p{L}'’-]+)?\s*\d+(?:,\d+)*[*†‡§✉]*(?:\s*[,&]|\s+and\s+|\s*&\s+)\s*)*[A-Z][\p{L}'’.-]+(?:\s+[A-Z]\.){0,3}(?:\s+[A-Z][\p{L}'’-]+)?\s*\d+(?:,\d+)*)[*†‡§✉]*\s+([A-Z][a-z]{3,}[\s\S]+)$/u,
         );
-        if (gluedByline && (gluedByline[1]!.match(/,/g) ?? []).length >= 2) {
+        const gluedCommaCount = (gluedByline?.[1]?.match(/,/g) ?? []).length;
+        const gluedTwoAuthorAnd =
+          Boolean(gluedByline?.[1]) &&
+          /\band\b/i.test(gluedByline![1]!) &&
+          (gluedByline![1]!.match(/\d+/g) ?? []).length >= 2;
+        if (gluedByline && (gluedCommaCount >= 2 || gluedTwoAuthorAnd)) {
           if (node.role === "abstract" && gluedByline[2]) {
             node.text = gluedByline[2].trim();
           }

@@ -50,6 +50,29 @@ function looksLikeAuthorish(text: string): boolean {
   // after a name (`... лаба1, путу ...`). Treat that shape as an author row so
   // it cannot be concatenated into the preceding article title.
   if (/\p{L}{2,}\s*\d{1,3}(?:\s*[,，]|\s*$)/u.test(text) && /[,，]/.test(text)) return true;
+  // Comma-separated First Last bylines
+  // (`Saeed Salehi , Jordan Lei , Ari S. Benjamin , … and Konrad P.`).
+  // Require person-shaped segments and reject topic lists
+  // (`Documentation Time, Note Quality, and Clinician Acceptance`).
+  if ((cleaned.match(/,/g) ?? []).length >= 2 && /\b(?:and|&)\b/i.test(cleaned) && !/:/.test(cleaned)) {
+    if (
+      /\b(?:time|quality|acceptance|study|review|analysis|effects?|role|system|model|attention|data|learning|training|management|practice|documentation|clinician|note)\b/i.test(
+        cleaned,
+      )
+    ) {
+      return false;
+    }
+    const segments = cleaned
+      .split(/\s*,\s*/)
+      .map((part) => part.replace(/\s+and\s+/i, " ").replace(/\s+&\s+/g, " ").trim())
+      .filter(Boolean);
+    const personSegments = segments.filter((part) =>
+      /^(?:[A-ZÀ-ÖØ-Þ][\p{L}'’-]+(?:\s+[A-ZÀ-ÖØ-Þ]\.?)?(?:\s+[A-ZÀ-ÖØ-Þ][\p{L}'’-]+){1,2})$/u.test(
+        part,
+      ),
+    );
+    if (personSegments.length >= 2 && cleaned.split(/\s+/).length <= 22) return true;
+  }
   return false;
 }
 
@@ -134,6 +157,8 @@ function looksLikeSectionBannerAuthor(text: string): boolean {
 
 function stripMastheadSuffix(text: string): string {
   let trimmed = stripSpacedArticleTypeBanner(text.trim());
+  // bioRxiv / preprint line-number gutters (`1 Modeling Attention…`).
+  trimmed = trimmed.replace(/^\d{1,2}\s+(?=[A-ZÀ-ÖØ-Þ«"“])/u, "");
   // Drop a leading citation byline when it was fused onto the article title.
   const citationLead = trimmed.match(
     /^[A-Z][a-z]+(?:\s+[A-Z]\.?)?(?:\s+and\s+[A-Z][a-z]+(?:\s+[A-Z]\.?)?)+\s*\(\s*20\d{2}\s*\)\s+(.*)$/
@@ -205,6 +230,17 @@ function looksLikeDocumentMasthead(text: string): boolean {
 function looksLikeDecoderGarbageTitle(text: string): boolean {
   const t = text.trim();
   return /[&∧]/u.test(t) && /([\p{Lu}]{2,8})\1/u.test(t);
+}
+
+/** Repository cover / bound volume TOCs mistaken for the article title. */
+function looksLikeTableOfContentsTitle(text: string): boolean {
+  const t = text.replace(/\s+/g, " ").trim();
+  if (/^(?:table of contents|contents)\b/i.test(t)) return true;
+  // Dot leaders: `Original Manuscript........ 5 Supplementary Files..... 57`
+  if (/\.{5,}/.test(t) && /\b(?:manuscript|supplementary|figures?|tables?|appendix)\b/i.test(t)) {
+    return true;
+  }
+  return false;
 }
 
 function looksLikeJournalNameMasthead(text: string): boolean {
@@ -287,7 +323,16 @@ function looksLikeCopyrightBoilerplate(text: string): boolean {
     /\ball rights reserved\b/i.test(t) ||
     /\bcreative commons attribution\b/i.test(t) ||
     /\blicense\s*\(\s*cc\s*by\b/i.test(t) ||
+    // bioRxiv / medRxiv running license stamped as a title candidate.
+    /\bwhich was not certified by peer review\b/i.test(t) ||
+    /\bgranted (?:biorxiv|medrxiv) a license to display the preprint\b/i.test(t) ||
+    /\bit is made available under a CC-BY\b/i.test(t) ||
     /^cc\s*by\b/i.test(t);
+}
+
+/** MDPI sidebar chrome promoted as a title candidate. */
+function looksLikeAcademicEditorsTitle(text: string): boolean {
+  return /^(?:academic\s+editors?|academic\s+editor|guest\s+editors?)\s*:/i.test(text.trim());
 }
 
 function looksLikeAbstractLabelTitle(text: string): boolean {
@@ -412,6 +457,12 @@ function looksLikePublisherStatementTitle(text: string): boolean {
   return /^(?:data\s+availability(?:\s+(?:policy|statement))?|author contributions?|funding(?:\s+statement)?|competing interests?|conflicts? of interest|acknowledg(?:e)?ments?)\b/i.test(t) ||
     /\bdata availability (?:policy|statement)\b/i.test(t) ||
     /\bprotocol is registered with\b/i.test(t) ||
+    // PLOS left-rail OSF / registry chrome glued onto methods prose.
+    /^(?:registries?\s+at)\b/i.test(t) ||
+    /\bosf\.io\b/i.test(t) ||
+    /\b10\.17605\/osf\b/i.test(t) ||
+    /\bwill independently screen\b/i.test(t) ||
+    (/https?:\/\//i.test(t) && /\b(?:eligibility|appraisal|screen and chart)\b/i.test(t)) ||
     // Frontiers date rails can glue into one token (`RECEIVEDREVISED 03 June…`).
     /^(?:received|revised|accepted|published|receivedrevised|received\s*revised)\b/i.test(t) ||
     /\breceivedrevised\b/i.test(t);
@@ -579,6 +630,17 @@ function looksLikePersonNameTitleTrap(text: string): boolean {
 /** Citation / abstract leads that must not prepend or continue a title. */
 function looksLikeTitleContamination(text: string): boolean {
   const t = text.trim();
+  // Frontiers sidebar citation crumbs: `Arvind Kumar Chaudhary, LSTM with Deep Dual`
+  // (person name, comma, title fragment). Do not let these outrank the stacked
+  // display title in the main column.
+  if (
+    /^[A-ZÀ-ÖØ-Þ][\p{L}'’-]+(?:\s+[A-Z]\.?)?(?:\s+[A-ZÀ-ÖØ-Þ][\p{L}'’-]+){1,3},\s+[A-ZÀ-ÖØ-Þ]/u.test(t) &&
+    (t.match(/,/g) ?? []).length === 1 &&
+    t.length <= 140 &&
+    !/\b(?:review|study|analysis|survey|framework|detection|classification)\b.*,/i.test(t)
+  ) {
+    return true;
+  }
   if (/^[A-Z][a-z]+(?:\s+[A-Z]\.?)?(?:\s+[A-Z][a-z]+)+\s+and\s+[A-Z]/i.test(t) && /\(\s*20\d{2}\s*\)/.test(t)) {
     return true;
   }
@@ -588,11 +650,35 @@ function looksLikeTitleContamination(text: string): boolean {
   if (/^[A-ZÀ-ÖØ-Þ][\p{L}'’-]*\s+[A-ZÀ-ÖØ-Þ][\p{L}'’-]*\s*\(\s*20\d{2}\s*\)/u.test(t) && t.length >= 40) {
     return true;
   }
-  // Body prose glued after a hyphen-truncated title.
-  if (/^(?:In|The|This|We|Our|These|Those|However|Moreover)\b/.test(t) && t.split(/\s+/).length >= 10) {
+  // Body prose mistaken for a title (`The study offers…`, `We present…`).
+  // Do not blanket-reject every long title that starts with `The` — that is a
+  // common academic lead (`The Medicine Quality Monitoring Globe: …`).
+  if (
+    /^(?:In\s+this|The\s+(?:study|review|paper|article|results|findings|aim)|This\s+(?:study|paper|article|review|chapter)|We\s+(?:present|propose|report|investigate|describe|show)|Our\s+(?:results|findings|analysis)|These\s+(?:results|findings)|Those\s+(?:results|findings)|However,|Moreover,)\b/i.test(
+      t,
+    ) &&
+    t.split(/\s+/).length >= 10
+  ) {
     return true;
   }
-  if (t.length >= 140 && /[,;]\s+[a-z]/.test(t)) return true;
+  // Two-column PLOS covers sometimes glue a title wrap onto the Abstract label
+  // (`…reports of substandard Abstract`).
+  if (/\bAbstract\s*$/i.test(t) && !/^Abstract\s*:?\s*$/i.test(t) && t.split(/\s+/).length >= 4) {
+    return true;
+  }
+  // Long titles with Oxford commas (`Vision, and Three-Dimensional…`) are not
+  // body contamination; require a lowercase prose continuation after the comma.
+  // Protocol / scoping-review titles often list lowercase topics after the
+  // subtitle (`…: Protocol for a scoping review of definitions, measurement…`).
+  if (
+    t.length >= 140 &&
+    /[,;]\s+[a-z]/.test(t) &&
+    !/,\s+and\s+[A-Z]/.test(t) &&
+    !/:\s*(?:a\s+)?(?:protocol\s+for\s+(?:a\s+)?)?(?:scoping|systematic|narrative)?\s*review\b/i.test(t) &&
+    !/\b(?:protocol for (?:a\s+)?(?:scoping|systematic)|scoping review of|systematic review of|narrative review)\b/i.test(t)
+  ) {
+    return true;
+  }
   return false;
 }
 
@@ -702,7 +788,15 @@ function recoverAlternateCoverTitle(candidates: RoleCandidate[]): string | null 
         /\([A-Z][^)]*(?:university|college|institute|lab)\b/i.test(t) ||
         /^(?:source|источник|keywords?|ccs concepts|index terms|chapter\s+\d+)\b/i.test(t) ||
         // Keyword / index lines are comma-dense; real titles rarely are.
-        ((t.match(/,/g) ?? []).length >= 3)
+        // Exception: topic-series titles (`AR, MR, Computer Vision, and 3D…:
+        // A Scoping Review`) keep commas before a subtitle or review cue.
+        ((t.match(/,/g) ?? []).length >= 3 &&
+          !/:\s*(?:a\s+)?(?:protocol\s+for\s+(?:a\s+)?)?(?:scoping|systematic|narrative)?\s*review\b/i.test(t) &&
+          !/\b(?:protocol for (?:a\s+)?(?:scoping|systematic)|scoping review of|systematic review of)\b/i.test(t) &&
+          !/\b(?:and|,)\s+[A-Z][\p{L}-]*(?:\s+[A-Z][\p{L}-]*){0,3}\s*:\s*/u.test(t) &&
+          !/\b(?:review|survey|meta-?analysis)\s+with\b/i.test(t)) ||
+        // URL-bearing methods chrome that slipped past statement heuristics.
+        (/https?:\/\//i.test(t) && t.split(/\s+/).length >= 8)
       ) {
         return null;
       }
@@ -832,6 +926,11 @@ function looksLikeJournalChromeTitle(text: string): boolean {
   if (/\be\d{4,}\b/.test(t) && t.split(/\s+/).length <= 8) return true;
   if (/^[A-Za-z]{2,6}\s*[|·•]/i.test(t) && /\barticle\b/i.test(t)) return true;
   if (/^(?:article|research article|original article|open access|study protocol)\b/i.test(t) && t.length <= 40) return true;
+  // Bilingual covers emit a decorative `TraNSlaTiON` / `Translation` stamp
+  // above the real article title.
+  if (/^(?:translation|перевод|tra\s*n\s*s\s*la\s*ti\s*on)$/i.test(t.replace(/\s+/g, " ").trim())) {
+    return true;
+  }
   // Frontiers / MDPI editorial chrome labels sometimes win the title race.
   if (/^(?:\*?correspondence|edited by|reviewed by|citation|copyright|keywords?|published|received|accepted)$/i.test(t)) {
     return true;
@@ -862,6 +961,7 @@ function looksLikeObviousMastheadTitle(text: string): boolean {
   const t = text.trim();
   return looksLikeDocumentMasthead(t) || looksLikeJournalNameMasthead(t) || looksLikeEventMasthead(t) ||
     looksLikeCopyrightBoilerplate(t) || looksLikeJournalChromeTitle(t) ||
+    looksLikeTableOfContentsTitle(t) || looksLikeAcademicEditorsTitle(t) ||
     // Frontiers paints `DOI 10.3389/…` without a colon.
     /^(?:doi\s*[:.]?\s*|doi\s+\d|https?:\/\/|www\.)/i.test(t) ||
     /\b(?:issn|e-?issn|volume|vol\.?|issue|no\.?|pages?|pp\.?|received|accepted|published)\b/i.test(t) &&
@@ -930,12 +1030,24 @@ function looksLikeMastheadGeometry(candidate: RoleCandidate): boolean {
     (line?.fontSize ?? Infinity) <= 8 && words <= 10;
 }
 
+function looksLikePreprintChromeMetadataTitle(text: string): boolean {
+  const t = text.trim();
+  // JMIR / server covers store `Preprint - 10.2196/preprints.94431` in PDF
+  // metadata. That must not outrank a recovered native article title.
+  return (
+    /^(?:preprint|medrxiv|biorxiv|chemrxiv|ssrn)\b/i.test(t) ||
+    /\bpreprints?\.\d+/i.test(t) ||
+    /^(?:preprint|unpublished)\s*[-–—:]\s*10\.\d+/i.test(t)
+  );
+}
+
 function isPlausibleMetadataTitle(text: string): boolean {
   const t = text.trim();
   // Repository and thesis records legitimately include a subtitle and degree
   // context, so metadata titles can be longer than a journal title. Keep a
   // bounded ceiling to avoid accepting an accidentally stored full document.
   if (t.length < 12 || t.length > 500 || looksLikeDocumentMasthead(t)) return false;
+  if (looksLikePreprintChromeMetadataTitle(t)) return false;
   if (/\.(?:pdf|docx?)$/i.test(t) || /^(?:[/\\]|https?:\/\/)/i.test(t)) return false;
   const words = t.match(/\S+/g) ?? [];
   // Short legitimate article titles (for example “Computational Linguistics”)
@@ -1063,16 +1175,21 @@ export function resolveTitle(input: {
   // A layout pass can conservatively label a large masthead line as author;
   // allow strong native title evidence to participate without discarding the
   // original candidate role used by other resolver decisions.
-  const nativeTitles = input.candidates.filter(
-    (c) => (c.role === "title" || (c.roleScores?.title ?? 0) >= 0.85) &&
-      !looksLikeRotatedMasthead(c) && !looksLikeDecoderGarbageTitle(c.text) &&
-      !looksLikeKeywordsChrome(c.text, c) &&
-      !looksLikeNumberedSectionHeadingTitle(c.text) &&
-      !looksLikeSectionHeadingTitleTrap(c.text) &&
-      // Reject pure bylines (`Zhiyuan Liu1 and Mohsen Taheri5`), but keep long
-      // title blocks that still need `stripInlineAuthorTail`.
-      !(looksLikeAuthorish(c.text) && c.text.trim().split(/\s+/).length <= 10)
-  );
+  const nativeTitles = input.candidates.filter((c) => {
+    if (!(c.role === "title" || (c.roleScores?.title ?? 0) >= 0.85)) return false;
+    if (looksLikeRotatedMasthead(c) || looksLikeDecoderGarbageTitle(c.text)) return false;
+    if (looksLikeKeywordsChrome(c.text, c)) return false;
+    if (looksLikeNumberedSectionHeadingTitle(c.text)) return false;
+    if (looksLikeSectionHeadingTitleTrap(c.text)) return false;
+    if (looksLikeTitleContamination(c.text)) return false;
+    if (looksLikeCopyrightBoilerplate(c.text)) return false;
+    // Peel numbered author rows first so bilingual title+byline blocks stay.
+    const peeled = stripMastheadSuffix(stripExplicitTitleLabel(stripInlineAuthorTail(c)));
+    // Reject pure bylines (`Zhiyuan Liu1…` / gutter `3 Saeed Salehi , …`).
+    if (looksLikeAuthorish(peeled) && peeled.split(/\s+/).length <= 16) return false;
+    if (looksLikeAuthorish(c.text) && c.text.trim().split(/\s+/).length <= 10) return false;
+    return true;
+  });
   // Report/book templates often expose an explicit `Research Book Title:`
   // label but generic role scoring assigns that line to author/affiliation
   // because it sits inside the masthead. Treat the label as stronger title
@@ -1120,13 +1237,18 @@ export function resolveTitle(input: {
         !/[.!?]$/.test(prev.text.trim()) &&
         gap <= Math.max(prevFont * 6.5, 130);
       if (gap > Math.max(prevFont * 2.8, 40) && !lowercaseContinuation && !sameFontTitleContinuation) break;
-      if (looksLikeAuthorish(cur.text)) break;
-      // A publication line can be emitted as a second `title` candidate
-      // immediately below the real title.  Do not concatenate it into the
-      // article title merely because its baseline is close.
-      if (looksLikeObviousMastheadTitle(cur.text)) break;
       {
         const piece = stripMastheadSuffix(stripExplicitTitleLabel(cur.text));
+        // Incomplete title leads (`… Study of`) must keep a following topic
+        // list even when those tokens look person-shaped (`Documentation Time`).
+        const authorishContinuation =
+          (looksLikeAuthorish(cur.text) || looksLikeAuthorish(piece)) &&
+          !isIncompleteTitleEnd(combined);
+        if (authorishContinuation) break;
+        // A publication line can be emitted as a second `title` candidate
+        // immediately below the real title.  Do not concatenate it into the
+        // article title merely because its baseline is close.
+        if (looksLikeObviousMastheadTitle(cur.text) || looksLikeObviousMastheadTitle(piece)) break;
         const spliced = spliceHyphenTitleFragment(combined, piece);
         combined = spliced ?? joinTitleParts(combined, piece);
       }
@@ -1146,12 +1268,18 @@ export function resolveTitle(input: {
       candidate !== titles[0] && candidate.pageStart === 1 &&
       (candidate.boundingBoxes[0]?.y ?? 0) > (firstTitleBox?.y ?? 0) + 36 &&
       (candidate.boundingBoxes[0]?.x ?? 0) < (candidate.layoutBlock.lines[0]?.pageWidth ?? 612) * 0.2 &&
-      !looksLikeObviousMastheadTitle(candidate.text) && !looksLikeAuthorish(candidate.text)
+      !looksLikeObviousMastheadTitle(candidate.text) && !looksLikeAuthorish(candidate.text) &&
+      !looksLikeTitleContamination(candidate.text) && !looksLikePersonNameTitleTrap(candidate.text)
     );
     const secondTitleBox = secondTitle?.boundingBoxes[0];
+    // Only treat a left-column span as the article title when the first span
+    // looks like venue chrome. Otherwise Frontiers main-column titles (x≈220)
+    // lose to a left citation crumb (`Name, TitleFragment`).
     if (
       secondTitle && secondTitleBox &&
-      (firstTitleBox?.x ?? 0) > (secondTitleBox.x ?? 0) + Math.max(18, (secondTitle.layoutBlock.lines[0]?.pageWidth ?? 612) * 0.08)
+      (firstTitleBox?.x ?? 0) > (secondTitleBox.x ?? 0) + Math.max(18, (secondTitle.layoutBlock.lines[0]?.pageWidth ?? 612) * 0.08) &&
+      (looksLikeObviousMastheadTitle(titles[0].text) || looksLikeJournalNameMasthead(titles[0].text) ||
+        looksLikeMastheadGeometry(titles[0]))
     ) {
       native = [stripMastheadSuffix(secondTitle.text)];
     }
@@ -1856,15 +1984,33 @@ export function resolveTitle(input: {
     return { text: null, confidence: 0, evidence: fused.evidence };
   }
 
-  const normalizedDisplay = normalizeSmallCapsDisplayTitle(fused.text);
+  const withStolenFragment = recoverStolenTitleFragment(fused.text, input.candidates);
+  const recovered =
+    withStolenFragment && withStolenFragment !== fused.text
+      ? {
+          text: withStolenFragment,
+          confidence: fused.confidence,
+          evidence: [
+            ...fused.evidence,
+            {
+              source: "pdf-native" as const,
+              label: "title" as const,
+              confidence: 0.72,
+              reason: "recovered title fragment stolen by author/citation crumb",
+            },
+          ],
+        }
+      : fused;
+
+  const normalizedDisplay = normalizeSmallCapsDisplayTitle(recovered.text);
   return {
     text: normalizedDisplay,
-    confidence: fused.confidence,
+    confidence: recovered.confidence,
     evidence:
-      normalizedDisplay === fused.text
-        ? fused.evidence
+      normalizedDisplay === recovered.text
+        ? recovered.evidence
         : [
-            ...fused.evidence,
+            ...recovered.evidence,
             {
               source: "pdf-native",
               label: "title",
@@ -1873,6 +2019,65 @@ export function resolveTitle(input: {
             },
           ],
   };
+}
+
+/**
+ * Left citation crumbs sometimes absorb a mid-title line
+ * (`Author Name, LSTM with Deep Dual`). Reinsert the after-comma fragment
+ * only at a tight technical join (`Convolutional` + `Info-Varcoder`), never
+ * after generic adjectives like `Improved` (that swallows affiliation crumbs).
+ */
+function recoverStolenTitleFragment(
+  title: string,
+  candidates: Array<{ text: string }>,
+): string {
+  const t = title.trim();
+  if (t.length < 40) return t;
+  const fragments: string[] = [];
+  for (const candidate of candidates) {
+    if (!looksLikeTitleContamination(candidate.text)) continue;
+    const match = candidate.text.trim().match(/^[^,]{2,48},\s+(.+)$/);
+    if (!match) continue;
+    const fragment = match[1].trim().replace(/\s+/g, " ");
+    if (fragment.length < 8 || fragment.length > 72) continue;
+    if (/\b(?:et\s+al|doi|http|www\.|vol\.|pp\.)\b/i.test(fragment)) continue;
+    if (
+      /\b(?:instituto|escola|university|universidade|politecnico|polytechnic|department|faculty|college|laboratory|lab\.?)\b/i.test(
+        fragment,
+      )
+    ) {
+      continue;
+    }
+    if (/\b(?:portugal|spain|brazil|india|china|germany|france|italy|japan)\b/i.test(fragment)) {
+      continue;
+    }
+    if (t.includes(fragment)) continue;
+    const fragWords = fragment.split(/\s+/);
+    if (fragWords.length < 2 || fragWords.length > 8) continue;
+    if (!/^[A-Z]/.test(fragWords[0] ?? "")) continue;
+    // Prefer technical mid-title crumbs over residual person/place text.
+    if (!/\b(?:LSTM|CNN|DNN|BERT|Transformer|Attention|Dual|Deep|Network|Encoder|Decoder|Varcoder|Clustering)\b/i.test(fragment)) {
+      continue;
+    }
+    fragments.push(fragment);
+  }
+  if (fragments.length === 0) return t;
+  const titleWords = t.split(/\s+/);
+  for (const fragment of fragments) {
+    const fragWords = fragment.split(/\s+/);
+    for (let i = 1; i < titleWords.length; i += 1) {
+      const prev = titleWords[i - 1] ?? "";
+      const next = titleWords[i] ?? "";
+      if (
+        /^(?:Convolutional|Neural|Attention|Recurrent|Residual)\b/i.test(prev) &&
+        /^(?:Info-?Varcoder|Encoder|Decoder|Network|Model|Transformer|BERT)\b/i.test(next) &&
+        !fragWords.includes(next)
+      ) {
+        return [...titleWords.slice(0, i), ...fragWords, ...titleWords.slice(i)].join(" ");
+      }
+    }
+  }
+  return t;
 }
 
 /**

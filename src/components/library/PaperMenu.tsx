@@ -4,7 +4,7 @@ import type { Paper } from "../../types/paper";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
 import { showToast } from "../../stores/toastStore";
-import { setPaperFavorite } from "../../services/database";
+import { applyPaperFavorite } from "../../services/paperFavorite";
 import {
   cancelPaperWork,
   retryPaperTranslation,
@@ -14,6 +14,7 @@ import { derivePaperReadiness } from "../../domain/paperReadiness";
 import {
   addPaperToWorkspace,
 } from "../../services/projectService";
+import { PaperEpubSyncControl } from "./PaperEpubSyncControl";
 import styles from "./PaperCard.module.css";
 
 type PaperMenuProps = {
@@ -32,11 +33,11 @@ export function PaperMenu({
   const [open, setOpen] = useState(false);
   const [pickingWorkspace, setPickingWorkspace] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const updatePaper = useLibraryCache((state) => state.updatePaper);
   const blocks = useLibraryCache((state) => state.blocks[paper.id]);
   const [retrying, setRetrying] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [reextracting, setReextracting] = useState(false);
+  const [favoriting, setFavoriting] = useState(false);
   const workspaceNodes = useProjectStore((state) => state.workspaceNodes);
   const memberships = useProjectStore((state) => state.memberships);
   const upsertMembership = useProjectStore((state) => state.upsertMembership);
@@ -68,14 +69,14 @@ export function PaperMenu({
 
   const toggleFavorite = async (event: React.MouseEvent) => {
     event.stopPropagation();
-    const next = !paper.favorite;
-    await setPaperFavorite(paper.id, next);
-    updatePaper(paper.id, { favorite: next });
-    setOpen(false);
-    showToast({
-      kind: "success",
-      message: next ? "お気に入りに追加しました" : "お気に入りを外しました",
-    });
+    if (favoriting) return;
+    setFavoriting(true);
+    try {
+      await applyPaperFavorite(paper.id, !paper.favorite);
+    } finally {
+      setFavoriting(false);
+      setOpen(false);
+    }
   };
 
   const retryTranslation = async (event: React.MouseEvent) => {
@@ -168,7 +169,12 @@ export function PaperMenu({
       </button>
       {open && (
         <div className={styles.menu} role="menu">
-          <button type="button" role="menuitem" onClick={(event) => void toggleFavorite(event)}>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={favoriting}
+            onClick={(event) => void toggleFavorite(event)}
+          >
             <Star
               size={14}
               fill={paper.favorite ? "currentColor" : "none"}
@@ -176,6 +182,11 @@ export function PaperMenu({
             />
             {paper.favorite ? "お気に入りを外す" : "お気に入り"}
           </button>
+          <PaperEpubSyncControl
+            paperId={paper.id}
+            variant="menu"
+            onFinished={() => setOpen(false)}
+          />
           {variant === "library" && (
             <button
               type="button"
@@ -243,7 +254,7 @@ export function PaperMenu({
                 }}
               >
                 <Trash2 size={14} />
-                {variant === "workspace" ? "論文の削除" : "ライブラリから削除"}
+                ゴミ箱へ移動
               </button>
             </>
           )}

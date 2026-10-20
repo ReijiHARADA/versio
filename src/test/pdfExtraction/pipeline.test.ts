@@ -376,6 +376,32 @@ describe("canonical extraction pipeline", () => {
     expect(pageFourteen.some((block) => /D1|Cronbach/.test(block.original ?? ""))).toBe(true);
   }, 60_000);
 
+  it("drops OzCHI title-wrap fragments from the reading stream", async () => {
+    const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "ozchi-title-wrap-fragment",
+      filePath: pdf,
+      fileHash: "ozchi-title-wrap-fragment",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.titleOriginal).toBe(
+      "Exploring Finger Specific Touch Screen Interaction for Mobile Phone User Interfaces"
+    );
+    // Second visual title line must not reappear as a low-confidence body block.
+    expect(
+      result.blocks.some((block) => (block.original ?? "").trim() === "Mobile Phone User Interfaces")
+    ).toBe(false);
+    // Real body bullets that happen to mention the phrase must remain.
+    expect(
+      result.blocks.some((block) =>
+        /Focusing on mobile phone user interfaces/i.test(block.original ?? "")
+      )
+    ).toBe(true);
+  }, 60_000);
+
   it("keeps a multi-sentence statistical paragraph beside OzCHI tables translatable", async () => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
     if (!fs.existsSync(pdf)) return;

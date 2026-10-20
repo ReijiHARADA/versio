@@ -25,7 +25,7 @@
 - 生成物: `src-tauri/target/release/bundle/macos/Paper Reader.app`
 - Xcode は `/Applications/Xcode-beta.app` を使用。ビルド時は `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer` を設定すること。
 - 翻訳サーバーはアプリが spawn し、終了時に停止する。
-- Python runtime は `scripts/bundle-python.sh` が `uv` + `requirements.lock` + `.python-version`（patch 固定）から `translation-server/venv/` を作る（開発者 `.venv` のコピーはしない）。content-hash が一致し validation が通れば reuse。`clean` のみゼロから再構築。Tauri には `src-tauri/bundled-resources/translation-server`（stage）だけを同梱し、`models/` や開発用 `.venv*` を入れない。phase 時間は `scripts/tauri-build.sh` と `.build-timings` / [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md)。
+- Python runtime は `scripts/bundle-python.sh` が `uv` + `requirements.lock` + `.python-version`（patch 固定）から `translation-server/venv/` を作る（開発者 `.venv` のコピーはしない）。content-hash が一致し validation が通れば reuse。`clean` のみゼロから再構築。Tauri 同梱は lite の `src-tauri/bundled-resources/translation-server`（server / engines、venv なし）＋別 stage の `translation-venv`。`.app` への venv 注入は `scripts/inject-translation-venv.sh`（APFS clone）。`npm run tauri:build:fast` / `clean` が注入まで行う。`models/` や開発用 `.venv*` は入れない。phase 時間は `scripts/tauri-build.sh` と `.build-timings` / [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md)。
 - 本番 CSP は有効。WKWebView 向けに `script-src` は nonce のみにしない（`'self' 'unsafe-inline' 'wasm-unsafe-eval'`）。変更時は `.app` で白画面にならないか確認する。
 - PDF 解析は **pdfjs-dist 3.11（legacy build）**。6.x は WKWebView で Iterator Helpers が無く即クラッシュするので上げない。日本語 CID フォントは `pdfjs-dist/cmaps`（Adobe-Japan1 など）をアプリに同梱してデコードする。
 - ユーザー領域への書き出しは Rust の save dialog コマンドで完結させる。フロントから任意 absolute path への write API を復活させない。

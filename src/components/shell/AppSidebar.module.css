@@ -577,10 +577,7 @@
   flex-shrink: 0;
   margin-top: auto;
   padding-top: 0;
-  border-top: 1px solid transparent;
-  transition:
-    padding-top var(--sidebar-motion),
-    border-color var(--sidebar-motion);
+  transition: padding-top var(--sidebar-motion);
 }
 
 .sidebarAuto:is(:has(.sidebar:hover), :has(.fullBridge:hover), :has([data-workspace-editing])) .footer,
@@ -589,7 +586,6 @@
 .sidebarDropReady .footer,
 .sidebar:has([data-workspace-editing]) .footer {
   padding-top: var(--spacing-sm);
-  border-top-color: var(--color-border-light);
 }
 
 .footerButton {

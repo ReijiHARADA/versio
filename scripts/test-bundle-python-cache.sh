@@ -52,14 +52,19 @@ bash scripts/bundle-python.sh --check-only
 
 bash scripts/stage-translation-bundle.sh
 stage="src-tauri/bundled-resources/translation-server"
-for bad in models .venv .venv-mlx tests benchmarks; do
+venv_stage="src-tauri/bundled-resources/translation-venv"
+for bad in models .venv .venv-mlx tests benchmarks venv; do
   if [[ -e "$stage/$bad" ]]; then
-    echo "FAIL: staged bundle contains $bad"
+    echo "FAIL: staged lite bundle contains $bad"
     exit 1
   fi
 done
-if [[ ! -x "$stage/venv/bin/python3" || ! -f "$stage/server.py" ]]; then
-  echo "FAIL: staged bundle incomplete"
+if [[ ! -f "$stage/server.py" || ! -f "$stage/.paper-reader-venv-external" ]]; then
+  echo "FAIL: staged lite bundle incomplete"
+  exit 1
+fi
+if [[ ! -x "$venv_stage/bin/python3" ]]; then
+  echo "FAIL: staged translation-venv incomplete"
   exit 1
 fi
 

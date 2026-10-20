@@ -302,6 +302,14 @@ describe("title resolver masthead filtering", () => {
       role: "copyright",
       roleScores: { title: 0.1 },
     } as any;
+    const osfRail = {
+      ...candidate(
+        "Registries at https://doi.org/10.17605/OSF.IO/ will independently screen and chart. Automation will not make eligibility, appraisal,",
+        704,
+        "paragraph",
+      ),
+      roleScores: { title: 0.2 },
+    } as any;
     const result = resolveTitle({
       candidates: [
         candidate(
@@ -310,9 +318,11 @@ describe("title resolver masthead filtering", () => {
         ),
         candidate("Sasha R. Sioni 1,2*", 219, "author"),
         dataAvailability,
+        osfRail,
       ],
     });
     expect(result.text).toMatch(/^Digital behavioral addictions in adolescents and young adults: Protocol for a scoping review/i);
+    expect(result.text).not.toMatch(/Registries at|OSF\.IO/i);
   });
 
   it("rejoins a short ALL-CAPS title fragment with its uppercase lead", () => {
@@ -546,5 +556,18 @@ describe("title resolver masthead filtering", () => {
       candidates: [candidate("TransienT aTTenTion and opporTuniTy idenTificaTion", 120)],
     });
     expect(result.text).toBe("Transient Attention and Opportunity Identification");
+  });
+
+  it("keeps long The-lead academic titles and rejects Abstract-glued wraps", () => {
+    const full =
+      "The Medicine Quality Monitoring Globe: A public health intelligence system for collecting and curating reports of substandard and falsified medical products from publicly available Internet news media";
+    const result = resolveTitle({
+      candidates: [
+        candidate(full, 145),
+        candidate("collecting and curating reports of substandard Abstract", 454, "author"),
+      ],
+    });
+    expect(result.text).toBe(full);
+    expect(result.text).not.toMatch(/Abstract$/i);
   });
 });

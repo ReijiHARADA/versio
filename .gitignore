@@ -42,6 +42,8 @@ translation-server/models/
 # Re-fetch OA pending set with: node scripts/fetch-oa-europepmc.mjs
 # Catalog baseline: npm run fetch:real-papers
 test-data/real-papers/
+# Source PDFs, browser exports, and reports from the development-only visual evaluator.
+test-data/extraction-evaluation/
 test-fixtures/real-papers/pending-pdfs/**/*.pdf
 !test-fixtures/real-papers/pending-pdfs/_quarantine/README.md
 

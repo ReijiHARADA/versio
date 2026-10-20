@@ -5,6 +5,7 @@ import { getBlocksByPaper, getPaper, saveBlocks, savePaper } from "../services/d
 import { resumeIncompleteTranslation } from "../services/import/resume";
 import { resetStorageForTests } from "../data/runtime";
 import * as madladEngine from "../services/translation/madladEngine";
+import * as createEngine from "../services/translation/createTranslationEngine";
 import {
   markTranslationServerReady,
   resetTranslationServerReadyForTests,
@@ -63,6 +64,7 @@ describe("resumeIncompleteTranslation", () => {
     const block = baseBlock(paper.id, "retry-failed-block");
     await savePaper(paper);
     await saveBlocks([block]);
+    const createSpy = vi.spyOn(createEngine, "createTranslationEngine");
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: RequestInfo | URL) => {
@@ -91,6 +93,9 @@ describe("resumeIncompleteTranslation", () => {
     );
 
     await resumeIncompleteTranslation(paper.id, {}, { useCache: false });
+
+    expect(createSpy).toHaveBeenCalled();
+    expect(createSpy.mock.results[0]?.value.appleRouter).not.toBeNull();
 
     const [result] = await getBlocksByPaper(paper.id);
     expect(result.translationStatus).toBe("completed");

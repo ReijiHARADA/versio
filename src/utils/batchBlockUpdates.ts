@@ -1,25 +1,41 @@
+import { startTransition } from "react";
 import type { PaperBlock } from "../types/paper";
 
-/** Coalesce rapid translation completions so Reader scroll is not fighting React every frame. */
-export const BLOCK_UPDATE_COALESCE_MS = 120;
+/** Coalesce rapid translation completions so shell UI is not fighting React every frame. */
+export const BLOCK_UPDATE_COALESCE_MS = 200;
 
-let scrollPaused = false;
+const deferReasons = new Set<string>();
 const batchers = new Set<{ flush: () => void }>();
 
+function isDeferred(): boolean {
+  return deferReasons.size > 0;
+}
+
 /**
- * While the Reader body is scrolling, keep translation block patches queued.
- * Call with false on scroll idle to flush.
+ * Mark a UI surface that should defer streaming translation React patches.
+ * Reasons are ref-counted by name (reader-scroll, shell, workspace-modal, …).
  */
-export function setTranslationUiScrollPaused(paused: boolean): void {
-  if (scrollPaused === paused) return;
-  scrollPaused = paused;
-  if (!paused) {
+export function setTranslationUiDeferReason(reason: string, active: boolean): void {
+  const before = isDeferred();
+  if (active) deferReasons.add(reason);
+  else deferReasons.delete(reason);
+  const after = isDeferred();
+  if (before === after) return;
+  if (!after) {
     for (const batcher of batchers) batcher.flush();
   }
 }
 
+/**
+ * While the Reader body is scrolling (or another defer reason is active),
+ * keep translation block patches queued.
+ */
+export function setTranslationUiScrollPaused(paused: boolean): void {
+  setTranslationUiDeferReason("reader-scroll", paused);
+}
+
 export function isTranslationUiScrollPaused(): boolean {
-  return scrollPaused;
+  return isDeferred();
 }
 
 export function createBlockUpdateBatcher(
@@ -27,6 +43,7 @@ export function createBlockUpdateBatcher(
 ): {
   push: (block: PaperBlock) => void;
   flush: () => void;
+  dispose: () => void;
 } {
   const pending = new Map<string, Map<string, PaperBlock>>();
   let timer: ReturnType<typeof setTimeout> | 0 = 0;
@@ -40,17 +57,20 @@ export function createBlockUpdateBatcher(
 
   const flush = () => {
     clearTimer();
-    if (scrollPaused) {
-      // Stay coalesced until scroll idle; do not drop pending work.
+    if (isDeferred()) {
+      // Stay coalesced until interaction idle; do not drop pending work.
       timer = setTimeout(flush, BLOCK_UPDATE_COALESCE_MS);
       return;
     }
     if (pending.size === 0) return;
     const snapshot = [...pending.entries()];
     pending.clear();
-    for (const [paperId, blocks] of snapshot) {
-      apply(paperId, [...blocks.values()]);
-    }
+    // Low-priority updates so sidebar / folder actions stay responsive.
+    startTransition(() => {
+      for (const [paperId, blocks] of snapshot) {
+        apply(paperId, [...blocks.values()]);
+      }
+    });
   };
 
   const batcher = {

@@ -49,6 +49,7 @@ bash "$SCRIPT_DIR/stage-translation-bundle.sh"
 stage_s="$(elapsed_s "$t0")"
 echo "stage_s=$stage_s" >>"$TIMING_FILE"
 echo "⏱  Stage resources: ${stage_s}s"
+echo "note: translation venv is staged separately; run scripts/inject-translation-venv.sh after the .app bundle (npm run tauri:build:fast does this)."
 
 t0="$(now_ms)"
 npm run build

@@ -5,7 +5,7 @@ import {
   Search,
   Settings2,
   ExternalLink,
-  FileDown,
+  FileUp,
   StickyNote,
   BookMarked,
   PanelLeft,
@@ -353,7 +353,7 @@ export function ReaderScreen() {
               setExportError(null);
             }}
           >
-            <FileDown size={iconSize.md} />
+            <FileUp size={iconSize.md} />
           </button>
           <button
             className={styles.iconButton}

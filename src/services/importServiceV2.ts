@@ -31,13 +31,11 @@ import { projectionToPackage } from "../data/package/fromProjection";
 import { persistPaperPackage } from "../data/package/persist";
 import { getStorage } from "../data/runtime";
 import {
-  MADLADEngine,
-  AppleTranslationEngine,
-  SelectiveAppleTranslationEngine,
-  OllamaTranslationEngine,
   TranslationQueue,
   TranslationPriority,
   translationManager,
+  createTranslationEngine,
+  setAppleEligibleSources,
   type TranslationPriorityValue,
 } from "./translation";
 import {
@@ -47,7 +45,7 @@ import {
   localizeNamedFigureCaption,
 } from "./translation/quality";
 import { projectSafeUnitTranslation } from "./translation/partialProjection";
-import { OllamaProvider, generateGlossary } from "./llm";
+import { generateGlossary } from "./llm";
 import type { GlossaryEntry } from "./llm/types";
 import { resolveMadladServerUrl, MADLAD_MODEL_VERSION } from "./translation/madladEngine";
 import { finalizedTranslationStatus } from "./paperStatus";
@@ -59,6 +57,7 @@ import {
 } from "./import/policy";
 import {
   DEFAULT_IMPORT_CONFIG,
+  collectAppleEligibleSources,
   finalizeJapaneseLayoutOnly,
   isJapaneseLayoutOnlyPaper,
   persistUntranslatableAsSkipped,
@@ -81,6 +80,7 @@ export type {
   ImportStage,
 } from "./import/types";
 export { resumeIncompleteTranslation } from "./import/resume";
+export { retryBlockTranslation } from "./import/retryBlockTranslation";
 
 // ============================================================
 // Import Service
@@ -98,17 +98,11 @@ export async function importPDFV2(
   const paperId = uuidv4();
   activeImportPaperIds.add(paperId);
 
-  const llmProviders = [cfg.ollamaModel, ...(cfg.ollamaModels ?? [])]
-    .filter((model, index, models): model is string => Boolean(model) && models.indexOf(model) === index)
-    .map((model) => new OllamaProvider(cfg.ollamaServerUrl, model));
-  const madladEngine = new MADLADEngine(cfg.madladServerUrl);
-  const appleRouter = cfg.enableAppleTranslation
-    ? new SelectiveAppleTranslationEngine(new AppleTranslationEngine(), madladEngine)
-    : null;
-  const baseTranslationEngine = appleRouter ?? madladEngine;
-  const translationEngine = cfg.enableSelectiveCascade
-    ? new OllamaTranslationEngine(baseTranslationEngine, llmProviders)
-    : baseTranslationEngine;
+  const {
+    engine: translationEngine,
+    appleRouter,
+    llmProviders,
+  } = createTranslationEngine(cfg);
 
   try {
     // Stage 1: Reading file
@@ -357,29 +351,27 @@ export async function importPDFV2(
     // Track translation progress
     let translatedCount = 0;
     const refSectionIds = referenceSectionIds(sections);
-    if (appleRouter) {
-      const eligibleAppleSources = blocks
-        .filter((block) => block.type === "paragraph" && block.original && block.extractionConfidence !== 0 && shouldTranslateBlock(block, refSectionIds))
-        .map((block) => block.original as string);
-      if (paper.titleOriginal && shouldTranslateTitle(paper.titleOriginal)) {
-        eligibleAppleSources.push(paper.titleOriginal);
-      }
-      appleRouter.setEligibleSources(new Set(eligibleAppleSources));
-    }
+    setAppleEligibleSources(
+      appleRouter,
+      collectAppleEligibleSources(blocks, refSectionIds, paper.titleOriginal)
+    );
     const totalTranslatable =
       blocks.filter((b) => shouldTranslateBlock(b, refSectionIds)).length +
       sections.filter(shouldTranslateSection).length +
       (paper.titleOriginal && shouldTranslateTitle(paper.titleOriginal) ? 1 : 0);
 
-    const updateProgress = () => {
+    let lastProgressAt = 0;
+    const PROGRESS_THROTTLE_MS = 500;
+    const updateProgress = (force = false) => {
+      const now = Date.now();
+      if (!force && now - lastProgressAt < PROGRESS_THROTTLE_MS) return;
+      lastProgressAt = now;
       callbacks.onProgress({
         stage: "translating",
         stageProgress: translatedCount,
         stageTotal: totalTranslatable,
         message: `翻訳中... (${translatedCount}/${totalTranslatable})`,
         paper,
-        sections,
-        blocks,
       });
     };
 
@@ -494,7 +486,10 @@ export async function importPDFV2(
         tokensPerSec: task.result.tokensPerSec ?? null,
         timestamp: new Date().toISOString(),
       };
-      await saveBenchmark(benchmarkEntry);
+      // Do not await: SQLite benchmark writes must not stall the UI / queue slot.
+      void saveBenchmark(benchmarkEntry).catch((error) => {
+        console.warn("[translation] benchmark save failed:", error);
+      });
 
       translatedCount++;
       updateProgress();

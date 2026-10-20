@@ -22,6 +22,15 @@ export default defineConfig({
   base: "./",
   build: {
     target: ["es2020", "safari15"],
+    // Keep the evaluator outside the product router and translation bootstrap.
+    // Vite only treats index.html as an entry by default, so declare its
+    // development-only HTML entry explicitly for production verification too.
+    rollupOptions: {
+      input: {
+        app: path.join(projectRoot, "index.html"),
+        evaluation: path.join(projectRoot, "eval.html"),
+      },
+    },
   },
   server: {
     watch: {
