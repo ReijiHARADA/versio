@@ -1718,6 +1718,28 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       scoreByRole.caption = Math.max(scoreByRole.caption ?? 0, confidence, 0.92);
       scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.35);
     }
+    // Journal running headers (`Frontiers in Psychology`, `IEEE XPLORE`) often
+    // pick up the ALL-CAPS heading boost; keep layout header/copyright roles.
+    const journalRunningHeader =
+      /^(?:\d{1,3}\s+)?frontiersin\.org$/i.test(block.text.trim()) ||
+      /^ieee\s+xplore$/i.test(block.text.trim()) ||
+      /^frontiers(?:\s+in)?(?:\s+[A-Za-z][A-Za-z'’-]*){1,6}(?:\s+\d{1,3}\s+frontiersin\.org)?$/i.test(
+        block.text.trim(),
+      ) ||
+      /^journal of the association of chartered\b/i.test(block.text.trim());
+    if (
+      journalRunningHeader ||
+      block.role === "header" ||
+      block.role === "footer" ||
+      (block.role === "copyright" && journalRunningHeader)
+    ) {
+      scoreByRole.heading = Math.min(scoreByRole.heading ?? 0, 0.35);
+      if (block.role === "header" || block.role === "footer") {
+        scoreByRole[block.role] = Math.max(scoreByRole[block.role] ?? 0, confidence, 0.9);
+      } else {
+        scoreByRole.copyright = Math.max(scoreByRole.copyright ?? 0, confidence, 0.9);
+      }
+    }
     // Chart axis / legend crumbs near a figure caption share body size and
     // Title Case with real section heads; keep them out of outline structure.
     const nearFigureCaption = blocks.some((candidate) => {

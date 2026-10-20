@@ -40,6 +40,30 @@ function looksLikeSentenceProse(text: string): boolean {
     (/[,:;]/.test(trimmed) || /^(?:In |By |We |The |This |For |As |To )/i.test(trimmed));
 }
 
+/** Publisher running headers painted as outline headings. */
+export function looksLikeJournalRunningHeader(text: string): boolean {
+  const t = text.replace(/\s+/g, " ").trim();
+  if (!t || t.length > 72) return false;
+  if (/^(?:\d{1,3}\s+)?frontiersin\.org$/i.test(t)) return true;
+  if (/^ieee\s+xplore$/i.test(t)) return true;
+  if (/^journal of the association of chartered\b/i.test(t)) return true;
+  // `Frontiers in Psychology` / `Frontiers in Psychology 01 frontiersin.org`
+  if (
+    /^frontiers(?:\s+in)?(?:\s+[A-Za-z][A-Za-z'’-]*){1,6}(?:\s+\d{1,3}\s+frontiersin\.org)?$/i.test(t) &&
+    !/\b(?:introduction|methods?|results?|discussion|conclusion|abstract|references)\b/i.test(t)
+  ) {
+    return true;
+  }
+  // Truncated author-rail crumbs (`Frontiers Bae`, `Frontiers in Li and Cui`).
+  if (
+    /^frontiers(?:\s+in)?(?:\s+[A-Z][a-zA-Z'’-]*){1,4}$/i.test(t) &&
+    t.split(/\s+/).length <= 6
+  ) {
+    return true;
+  }
+  return false;
+}
+
 import {
   affiliatedWithRelations,
   captionOfRelations,
@@ -79,6 +103,26 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
     return {
       role: "caption",
       confidence: Math.max(scores.caption ?? candidate.confidence, 0.9),
+    };
+  }
+  // Page headers/footers and journal running rails (`Frontiers in Psychology`,
+  // `IEEE XPLORE`) must not become outline headings via ALL-CAPS boosts.
+  if (candidate.layoutBlock.role === "header" || candidate.layoutBlock.role === "footer") {
+    return {
+      role: candidate.layoutBlock.role,
+      confidence: Math.max(
+        scores[candidate.layoutBlock.role] ?? candidate.confidence,
+        0.88,
+      ),
+    };
+  }
+  if (
+    (candidate.layoutBlock.role === "copyright" || candidate.role === "copyright") &&
+    looksLikeJournalRunningHeader(candidate.text)
+  ) {
+    return {
+      role: "copyright",
+      confidence: Math.max(scores.copyright ?? candidate.confidence, 0.9),
     };
   }
   const paragraph = scores.paragraph ?? 0.3;
@@ -760,6 +804,7 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
         t === t.toUpperCase());
     // Journal chrome rails: lone `Article` / `Research Article` / OCR `Article ll`.
     const journalTypeRail =
+      looksLikeJournalRunningHeader(t) ||
       /^(?:research\s+)?article(?:\s+[a-z]{1,3})?$/i.test(t) ||
       /^(?:brief\s+)?(?:communication|report)$/i.test(t) ||
       /^(?:review\s+article|original\s+article|research\s+paper)$/i.test(t) ||

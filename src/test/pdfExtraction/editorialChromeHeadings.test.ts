@@ -148,6 +148,23 @@ describe("demoteEditorialChromeHeadings", () => {
     expect(nodes.find((n) => n.text === "Objectives")?.role).toBe("heading");
   });
 
+  it("demotes Frontiers / IEEE journal running headers from the outline", () => {
+    const nodes = demoteEditorialChromeHeadings([
+      heading("Frontiers in Psychology"),
+      heading("Frontiers Bae"),
+      heading("Frontiers in Li and Cui"),
+      heading("IEEE XPLORE"),
+      heading("11 frontiersin.org"),
+      heading("1 Introduction"),
+    ]);
+    expect(nodes.find((n) => n.text === "Frontiers in Psychology")?.role).toBe("other");
+    expect(nodes.find((n) => n.text === "Frontiers Bae")?.role).toBe("other");
+    expect(nodes.find((n) => n.text === "Frontiers in Li and Cui")?.role).toBe("other");
+    expect(nodes.find((n) => n.text === "IEEE XPLORE")?.role).toBe("other");
+    expect(nodes.find((n) => n.text === "11 frontiersin.org")?.role).toBe("other");
+    expect(nodes.find((n) => n.text === "1 Introduction")?.role).toBe("heading");
+  });
+
   it("demotes bare TABLE captions and glued column headers from the outline", () => {
     const nodes = demoteEditorialChromeHeadings([
       heading("TABLE 2"),

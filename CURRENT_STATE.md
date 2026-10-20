@@ -1,3 +1,10 @@
+# 2026-10-20: 未使用の取り込み・論文モデルを削除
+
+- 呼び出しゼロの旧入口を削除: `importService.ts`（`importPDF`）、`translationService.ts`（OpenAI / Ollama / mock）、`import/importPaper.ts`（`importPDFV2` の別名）、`domain/paper.ts` と `paperModel.test.ts`
+- 本番の取り込みは `tryStartPdfImport` → `startBackgroundImport` → `importPDFV2` のまま。翻訳は `TranslationEngine`（MADLAD / Apple / 任意 Ollama）。ライブラリ表示は `domain/paperReadiness.ts` のまま
+- 検証: `npm run typecheck`
+- 残: PDF 抽出の整理は対象外
+
 # 2026-10-20: PDF Extraction Evaluation Studio（開発専用）
 
 - `/eval.html` の独立 Vite entry。PDF.js 原本表示と CanonicalDocument / Reader projection の読書順表示、双方向ハイライト、回転対応の領域指定、ページ完了状態、ブロック・欠落・CAPTION_OF 関係レビューを提供
@@ -32,6 +39,20 @@
 
 - 「ライブラリから削除」「論文の削除」を「ゴミ箱へ移動」に統一（完全削除ではないことが分かる文言）
 - メニュー危険操作は赤文字（`.menu button` の色上書きを修正）
+
+# 2026-10-20: Frontiers / IEEE ランニングヘッダを目次から除去
+
+- `Frontiers in Psychology` / `Frontiers Bae` / `IEEE XPLORE` 等が ALL-CAPS heading スコアで outline 化 → layout header/copyright を維持し、`looksLikeJournalRunningHeader` で demote
+- spot 120本: 当該ジャーナル chrome 見出し **0**；editorialChrome **16/16**
+
+# 2026-10-20: 数式フラグメント統合（arXiv 2302.03792 p.2 レビュー根拠）
+
+- Evaluation Studio レビュー（`2302.03792v1.pdf.evaluation.json` page2）を根拠に、native PDF の数式崩れを修復
+- `mergeMathematicalDisplayFragments`: stacked `d`/`dγ` → `d/dγ` 付き equation、孤立 `√` の段落再結合、`[ 2]` 上付きの吸収、`(n)` display の equation 昇格、C0→`ε` sanitize
+- layout: 未完了段落が数式境界（equation / `d` / `dγ` / `[ 2]` / `√`）を飲み込まないガード
+- 回帰: synthetic `stacked-derivative-equation` fixture + `mathFragmentMerge` / `stackedDerivativeEquation` tests
+- 対象PDF p.2: (1) d/dγ 統合・√再結合・ε・‖²・table化解消は改善。(3)(4) の 2D/underbrace 崩れは未対応（推測結合しない）
+- 残: 複数行ディスプレイの 2D 再構成、arg min 下付きの完全復元、Evaluation Studio 目視の継続
 
 # 2026-10-19: 翻訳再試行経路を import と同じエンジンに揃える
 
