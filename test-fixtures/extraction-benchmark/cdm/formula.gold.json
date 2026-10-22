@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "kind": "paper-reader-extraction-benchmark-gold",
+  "id": "cdm-fixture",
+  "source": { "fileHash": "cdm-hash" },
+  "split": "development",
+  "leakageGroup": "cdm-fixture",
+  "attributes": {},
+  "annotatedPages": [1],
+  "coverage": { "text": "none", "blocks": "complete", "readingOrder": "none", "paragraphBoundaries": "none", "tables": "none", "formulas": "complete" },
+  "blocks": [{ "id": "formula", "role": "equation", "region": { "page": 1, "x": 1, "y": 1, "width": 10, "height": 5 } }],
+  "formulas": [{ "id": "formula", "region": { "page": 1, "x": 1, "y": 1, "width": 10, "height": 5 }, "latex": "x=1" }]
+}

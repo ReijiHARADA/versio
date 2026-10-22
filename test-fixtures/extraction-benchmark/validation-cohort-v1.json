@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "kind": "paper-reader-extraction-validation-cohort",
+  "purpose": "Frozen validation candidates, disjoint from development and held-out publisher families.",
+  "split": "validation",
+  "documents": [
+    { "id": "validation-dovepress-optometry", "pdfPath": "test-fixtures/real-papers/pending-pdfs/epmc-patterns-and-predictors-of-upper-limb-and-neck-work-related-musculoskele.pdf", "fileHash": "b4aa5cb913a8ff0838227af078cdf0470015daca4c9fb27631656b9337297902", "leakageGroup": "dovepress-opto-template", "attributes": { "publisher": "Dove Medical Press", "discipline": "medicine", "layout": "journal", "language": "en" } },
+    { "id": "validation-sage-ergonomics", "pdfPath": "test-fixtures/real-papers/pending-pdfs/epmc-preventive-implication-of-ergonomic-hazard-exposures-and-associated-fact.pdf", "fileHash": "d2d5c3008f68c72c53b9ff7af0208b285844e995ef318cf7fef0e501a0e67c79", "leakageGroup": "sage-health-services-insights-template", "attributes": { "publisher": "SAGE", "discipline": "ergonomics", "layout": "journal", "language": "en" } },
+    { "id": "validation-oup-occupational-health", "pdfPath": "test-fixtures/real-papers/pending-pdfs/epmc-computer-vision-syndrome-and-ergonomic-risk-factors-among-administrative.pdf", "fileHash": "e6d11778ecf0fa74096eb7c820b57827e987b7dd25098d6b80fa5c4b46020c4f", "leakageGroup": "oup-joccuh-template", "attributes": { "publisher": "Oxford University Press", "discipline": "medicine", "layout": "journal", "language": "en" } },
+    { "id": "validation-pnas-human-ai-synergy", "pdfPath": "test-fixtures/real-papers/pending-pdfs/epmc-human-learning-is-an-understudied-but-promising-lever-for-boosting-human.pdf", "fileHash": "56eab3c7bee2a91dcf01fc5441dc84832cd3f7c74bfab50b4aeaed286dec83ea", "leakageGroup": "pnas-template", "attributes": { "publisher": "National Academy of Sciences", "discipline": "HCI", "layout": "journal", "language": "en" } }
+  ]
+}

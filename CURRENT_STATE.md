@@ -1,3 +1,21 @@
+# 2026-10-22: Frontiers dated and-wrap + Agarwal Group
+
+- `… and` + `14 June 2026 Raúl Sampieri-Cabrera *` を byline continuation（year gate 例外）
+- `Services, Dr Agarwal’s Group of Eye Hospitals…` を author から除外
+- 回帰: authorProjection editorial-dated-and-wrap / xr-commentary-agarwal-group
+
+# 2026-10-22: BMJ table 構造化 abstract + PRACTICE OR POLICY
+
+- BMJ Open Quality の `table`/`other` `Introduction Given…` / `Methods…` を structured abstract として回収
+- `PRACTICE OR POLICY` を author chrome 拒否
+- 回帰: authorProjection bmj-human-factors-structured-abs
+
+# 2026-10-22: CORRESPONDENCE glue / Protti 重複 / Md. pair
+
+- `*CORRESPONDENCEMd. Shabiul…` を peelし `Md. Name` + 次人物を分割（brain-tumor）
+- `Dario A. Protti Dario A. Protti` 重複除去；`Mechanical Engineering` author 拒否
+- 回帰: authorProjection correspondence-peel / protti-duplicate
+
 # 2026-10-22: Frontiers other-role and-wrap byline
 
 - カンマ終わり author 行の直下 `other` `Name and Name` を continuation として回収（dual-pathway）
@@ -4658,3 +4676,42 @@ server process remains running.
   `1 http://www.gartner.com/newsroom/id/2665715 (Last accessed 29.9.2014)`.
 - Typecheck and the focused regression passed. Latest `.app` rebuilt at
   **18:02:03 JST**.
+# 2026-10-22: PDF Extraction benchmark foundation
+
+- 開発専用の parser-neutral benchmark schema / runner を追加。CER/NED、role-aware Block F1、reading-order edit distance、段落境界 F1、table TEDS、formula NED を個別に報告し、annotation coverage が complete でない指標は N/A（100%にしない）。CDM は公式ローカル renderer の値だけを `formula_cdm` として受理し、未計測時は N/A。
+- `npm run eval:extraction-benchmark -- --gold-dir … --prediction-dir …` は bounded run、`--all`、進捗、timeout/SIGINT partial report、構造別の対象件数・critical failure を提供。Paper Reader / Docling / GROBID の同一 gold 比較用 artifact format を分離した。
+- 既存113本は development 扱い。既存 `heldout-catalog-v1` は6件中5件が development catalog と同一 filename のため、独立 extraction score の根拠には使わない。独立 held-out は source hash・template/publisher family を分離し、reviewed gold を揃えるまで N/A のままとする。
+- 検証: benchmark / Studio metrics **10/10**、`npm run typecheck`、`npx vite build` pass。
+- `independent-cohort-v1` と cohort audit を追加。JMIR/MDPI/Cureus/Wiley/BMC の5本は local source hash と publisher family が development corpus（取得済み109本）と非重複であることを確認済み。ただし reviewed gold annotation 前なので、held-out score は引き続き N/A。
+- `snapshot:extraction-benchmark-cohort` は既存PDF extractionだけを明示実行し、共通 prediction artifact に書き出す（翻訳起動なし）。JMIR held-out 1本で実行確認済み（230 blocks、timeout/failureなし）。
+- benchmark report は publisher / discipline / layout / language 別の対象件数付き集計、document-level critical failure、同一 source hash 限定の前回比較・回帰方向判定を出す。synthetic fixture で同一報告の比較（3 comparable metrics、回帰0）を確認済み。
+- Studio bundle の complete page を block/role/text gold へ変換する guarded converter を追加。unreviewed snapshot を正解化せず、current UI が完全な gold sequence/tree/LaTeX を書けない reading-order・paragraph-boundary・TEDS・CDM は N/A のままにする。converter testsを含む benchmark / Studio metrics **12/12** pass。
+- 外部パーサー比較では parser node ID を使わず、block/table/formula を page-region IoU 0.5 で一対一対応させるよう更新。同一goldをDocling/GROBID等に再利用できる。
+- `prepare:extraction-benchmark-review -- --id …` は frozen held-out PDFから Studio用 bundle をローカル生成する。JMIR candidate で23 pages / 216 canonical nodes のbundle生成を確認済み。人間レビュー前のため score は生成しない。
+- gold validator を追加。complete を宣言した text/order/boundary/table/formula に必須正解データが無ければ評価を拒否し、暗黙の100%を防ぐ。benchmark / Studio metrics **14/14** と artifact runner の N/A 出力を確認済み。
+- Studio に人間が並べる `正しい読み順` editor を追加。全canonical blockを一度ずつ並べ、reading-order completenessを付けた場合だけ converter がRO goldを生成する。予測順序の自動採用はしない。
+- Studio browser smoke: `basic-two-column.pdf` 抽出後、読み順editorに4個の追加候補が表示されることを確認。
+- Studio に数式LaTeXとTEDS table treeの入力を追加。該当blockを全件入力して完全性を明示した場合だけ converter がformula/table goldを生成する。review gold testsを含む targeted metrics **16/16**、typecheck、Vite build pass。
+- Studio に `正しい段落境界` editor を追加。明示したgold pairとcomplete flagが両方ある時だけ paragraph-boundary F1 を有効化する。targeted metrics **17/17** pass。
+- CDM の公式ローカル評価連携を追加。IoU一致したformula pairのCDM inputを書出し、戻りscoreだけをprediction artifactへ取込む。fixtureで1 pair export / score 93.2 のapplyを確認済み。NEDをCDMとして代用しない。
+- `snapshot:extraction-benchmark-cohort -- --all` を実行し、independent held-out 5/5（JMIR 230 / MDPI 193 / Cureus 291 / Wiley 316 / BMC 121 blocks）のprediction artifact生成に成功。failure / timeoutなし。PDF.jsのCureus font warningのみで、翻訳は未起動。
+- validation cohortを4本（Dove Medical Press / SAGE / OUP / PNAS）で追加し、development 109 hashes・validation 4・held-out 5のhash/publisher/leakage-group分離をsplit auditで確認。通常の重点評価は4〜12本、held-outは別管理。
+- validation cohortも明示 `--all` で4/4 prediction artifact生成を確認（Dove 102 / SAGE 169 / OUP 118 / PNAS 58 blocks、failure / timeoutなし）。
+- benchmark compareに`--fail-on-regression` gateを追加。N/A/hash不一致は対象外、同一sourceのCER/NED等の方向別悪化だけをnon-zero exitにする。意図的text corruption fixtureでCER/NED +1.0、2 regression、exit 1を確認。
+- `prepare:extraction-benchmark-review -- --all` を追加し、Studio review bundleをvalidation 4/4・held-out 5/5でローカル生成完了（failure / timeoutなし）。人間レビュー未実施のため正解ラベル/スコアはまだ生成していない。
+- `audit:extraction-benchmark-review-progress` を追加。review bundleの重複論文を明示して二重集計から除外し、現在はvalidation/held-out計9本・116ページで全指標のレビュー対象数0件と確認済み。従って benchmark scoreはすべて N/A のまま。
+- CER/NED用のtext goldは抽出文字列を再利用しないよう修正。Studioで各blockの`正しいテキスト`を明示入力し、ページの`テキスト`完全性も有効にした場合だけCER/NEDを算出する。正誤判定だけではtext scoreはN/A。review-to-gold回帰テストを追加し、evaluation targeted tests **19/19** とtypecheck pass。
+- local review bundleを監査し、複数ページにまたがるCanonical nodeが58件あることを確認。reading-order gold converterは開始ページへ誤って畳み込まず、レビューした各ページのregion IDを保持するよう修正。複数ページnode回帰を含むevaluation targeted tests **20/20**、typecheck、diff check pass。
+- external parserの読み順artifactが対象ページのblockを省略しても短い順序として採点されないよう修正。対象blockを一度ずつ列挙しない予測順序はN/A。省略order回帰を含むtargeted benchmark tests **21/21** とtypecheck pass。
+- TEDS table treeをtag-only比較から拡張。人間が入力するcell `text`を正規化してnode置換コストに含め、セル内容が壊れても同一表構造として満点にならない。complete goldのtree JSONは再帰的に検証し、不正treeは採点拒否。targeted tests **21/21** とtypecheck pass。
+- goldに加えて外部parser prediction artifactのID・座標・tree・relation参照を検証し、壊れたJSONを採点前に拒否するよう追加。部分的なprediction読み順はartifactとしては受理するが、全対象blockを列挙するまでscoreはN/A。targeted tests **22/22**、typecheck、diff check pass。
+- validator導入後のCLI smokeとしてsynthetic development gold/predictionを再採点し、Block F1 1.0、CER/NED 0.0（10文字）、未注釈のreading order・段落・table・formulaはすべてN/Aになることを確認。
+- reading-order edit distanceをID文字列連結ではなくblock ID列のtoken-level Levenshteinへ修正。似たID名によって順序誤りが小さく見えることを防ぐ回帰を追加し、targeted tests **22/22**、typecheck、diff check pass。
+- role-aware Block F1と、role非依存のtext/reading-order/paragraph対応を分離。role誤分類が同一regionの文字・順序・段落評価を無評価扱いにして隠すことを防ぐ回帰を追加。targeted tests **23/23**、typecheck、diff check pass。
+- 図表/tableとcaptionの対応をparser-neutral artifactへ追加。Studioで正しいcaption→図表pairを人間入力し、`relationsComplete`の全ページgoldだけをrelation F1として集計する。Canonical `CAPTION_OF` adapterと明示gold converter双方を回帰で確認。未注釈はN/Aのまま。
+- reviewed selectionに表または数式が0件の場合、table/formula coverageをcompleteと誤記せずN/Aへ正規化。empty-setの満点やvalidator失敗を防ぐreview-to-gold回帰を追加し、targeted tests **26/26**、typecheck、diff check pass。
+- full-document predictionをページ限定goldに採点する際、未注釈ページのreading order・段落境界・caption relationをFPとして混入させないようscope filterを追加。注釈ページ内の相対順序回帰を含むtargeted tests **27/27**、typecheck、diff check pass。
+- 評価CLIはreviewed goldが0件のsplitをデフォルトで失敗させ、CIが無評価のまま成功することを防止。意図的な空split監査だけ`--allow-empty`でN/A reportを出せる。空split拒否・明示N/A・synthetic 1件採点をCLI smokeで確認。
+- 全指標（Block/Text/Reading Order/段落境界/Caption relation/TEDS/Formula NED/CDM）を明示human goldとして持つsynthetic fixtureを追加。CLIでdevelopment 2件を採点し、各指標の対象件数・N/Aの別を含むreport生成を確認。
+- CLIに`--require-metrics`を追加。回帰gateで必要指標の`evaluatedDocuments=0`を成功扱いにせず、reportを保存してnon-zero終了する。all-dimensions syntheticでrequired全metric成功、空held-outでrequired Block F1がnon-zeroとなることを確認。
+- Studioで空白をドラッグして追加した認識漏れを、保存後もPDF上の破線枠と右ペイン一覧に残し削除できるよう改善。抽出漏れのroleと分かる範囲の正しいtextを記録し、gold converterでは既存のmissing-region ground truthとしてBlock Recall等に反映される。typecheck・Vite build・diff check pass。
