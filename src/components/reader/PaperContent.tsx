@@ -384,7 +384,7 @@ export const PaperContent = memo(
       };
     }, [sections, scrollContainerRef]);
 
-    const registerSectionRef = (sectionId: string, element: HTMLElement | null) => {
+    const registerSectionRef = useCallback((sectionId: string, element: HTMLElement | null) => {
       if (element) {
         sectionRefs.current.set(sectionId, element);
         observerRef.current?.observe(element);
@@ -398,7 +398,19 @@ export const PaperContent = memo(
         }
         intersectingSectionIdsRef.current.delete(sectionId);
       }
-    };
+    }, []);
+    const sectionRefCallbacks = useRef(new Map<string, (element: HTMLElement | null) => void>());
+    const sectionRef = useCallback(
+      (sectionId: string) => {
+        let callback = sectionRefCallbacks.current.get(sectionId);
+        if (!callback) {
+          callback = (element) => registerSectionRef(sectionId, element);
+          sectionRefCallbacks.current.set(sectionId, callback);
+        }
+        return callback;
+      },
+      [registerSectionRef]
+    );
 
     const referenceBlocks = useStableReferenceBlocks(blocks);
     const referenceIndexRef = useRef<Map<string, string>>(new Map());
@@ -649,19 +661,23 @@ export const PaperContent = memo(
       ]
     );
 
+    const blocksRef = useRef(blocks);
+    blocksRef.current = blocks;
+
     const ensureBlockMounted = useCallback(
       async (blockId: string) => {
-        const block = blocks.find((item) => item.id === blockId);
+        const block = blocksRef.current.find((item) => item.id === blockId);
         if (block?.sectionId) await ensureSectionMounted(block.sectionId);
         else await waitForPaint();
       },
-      [blocks, ensureSectionMounted]
+      [ensureSectionMounted]
     );
 
     const ensureTargetMounted = useCallback(
       async (targetId: string) => {
+        const currentBlocks = blocksRef.current;
         if (targetId.startsWith("ref-")) {
-          const block = blocks.find(
+          const block = currentBlocks.find(
             (item) =>
               typeof item.metadata?.referenceId === "string" &&
               item.metadata.referenceId === targetId
@@ -675,7 +691,7 @@ export const PaperContent = memo(
         }
         await ensureBlockMounted(targetId);
       },
-      [blocks, ensureBlockMounted, ensureSectionMounted, refSectionIds]
+      [ensureBlockMounted, ensureSectionMounted, refSectionIds]
     );
 
     const onJumpToTarget = useCallback(
@@ -881,7 +897,7 @@ export const PaperContent = memo(
                     id={`section-${section.id}`}
                     className={styles.section}
                     data-section-mounted={mounted ? "true" : "false"}
-                    ref={(el) => registerSectionRef(section.id, el)}
+                    ref={sectionRef(section.id)}
                   >
                     <HeadingTag className={styles[`heading${section.level}`]}>
                       {sectionDisplayTitle(section)}

@@ -15,11 +15,12 @@ describe("stacked derivative equation extraction", () => {
     const nodes = result.canonical.nodes;
     const texts = nodes.map((n) => `${n.role}:${n.text ?? ""}`);
 
-    // Lone √ is not a standalone paragraph.
+    // Lone √ is not a standalone paragraph, and is stripped before English prose.
     expect(nodes.some((n) => n.role === "paragraph" && (n.text ?? "").trim() === "√")).toBe(false);
-    expect(nodes.some((n) => (n.text ?? "").includes("√") && /Gaussian noise channel/.test(n.text ?? ""))).toBe(
-      true,
-    );
+    const gaussian = nodes.find((n) => /Gaussian noise channel/.test(n.text ?? ""));
+    expect(gaussian?.role).toBe("paragraph");
+    expect(gaussian?.text).toMatch(/^Let p\(/);
+    expect(gaussian?.text).not.toMatch(/^√/);
 
     // Stacked derivative becomes one numbered equation.
     const eq1 = nodes.find((n) => /\(1\)\s*$/.test((n.text ?? "").trim()));
@@ -35,14 +36,29 @@ describe("stacked derivative equation extraction", () => {
     expect(eq2?.role).toBe("equation");
     expect(eq2?.text).toMatch(/²|\(2\)/);
 
-    // Orphan tail joins the preceding numbered display.
+    // Orphan underbrace tail is consumed and stripped after the equation number.
     expect(nodes.some((n) => (n.text ?? "").trim() === "γ,γ)")).toBe(false);
     const eq3 = nodes.find((n) => /\(3\)/.test(n.text ?? ""));
     expect(eq3?.role).toBe("equation");
-    expect(eq3?.text).toContain("γ,γ)");
+    expect(eq3?.text).toMatch(/\(3\)\s*$/);
+    expect(eq3?.text).not.toMatch(/γ\s*,\s*γ\)\s*$/);
+
+    // Linearized eq.(4) becomes d/dγ … (4); ∫ moves into the marginal integrand.
+    const eq4Index = nodes.findIndex((n) => /\(4\)\s*$/.test((n.text ?? "").trim()));
+    const eq4 = eq4Index >= 0 ? nodes[eq4Index] : undefined;
+    expect(eq4?.role).toBe("equation");
+    expect(eq4?.text).toMatch(/^d\/dγ\s+DKL/);
+    expect(eq4?.text).not.toMatch(/∫/);
+    const marginalIndex = nodes.findIndex((n) => /The marginal is/i.test(n.text ?? ""));
+    const marginal = marginalIndex >= 0 ? nodes[marginalIndex] : undefined;
+    expect(marginal?.text).toMatch(/=\s*∫\s*p\s*\(/);
+    expect(marginal?.text).not.toMatch(/^∫/);
+    // Centered lowercase-leading display must stay before left-aligned prose.
+    expect(eq4Index).toBeGreaterThanOrEqual(0);
+    expect(marginalIndex).toBeGreaterThan(eq4Index);
 
     // Do not invent extra equation numbers.
-    const numbers = (texts.join("\n").match(/\(\s*[1-3]\s*\)/g) ?? []).length;
-    expect(numbers).toBeGreaterThanOrEqual(3);
+    const numbers = (texts.join("\n").match(/\(\s*[1-4]\s*\)/g) ?? []).length;
+    expect(numbers).toBeGreaterThanOrEqual(4);
   });
 });

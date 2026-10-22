@@ -1,4 +1,5 @@
 import type { LayoutBlock, PageColumnLayout } from "../../pdfLayout";
+import { looksLikeAuthorList } from "../../pdfLayout";
 import { scoreLayoutBlock } from "../../extractionConfidence";
 import type {
   CanonicalDiagnostics,
@@ -11,7 +12,10 @@ import type { StructuralRegionEvidence } from "../types";
 import { formatTitleEvidence } from "../formats/applyHardRules";
 import { normalizedTextHash } from "../sourceAnchor";
 import { resolveTitle } from "./titleResolver";
-import { mergeMathematicalDisplayFragments } from "./mathFragmentMerge";
+import {
+  mergeMathematicalDisplayFragments,
+  sanitizeMathControls,
+} from "./mathFragmentMerge";
 
 /** Vignette / forced-choice prompts mistaken for prose-cell grids. */
 function looksLikeVignetteOrOptionProse(text: string): boolean {
@@ -173,6 +177,9 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   // them as captions so Reader can still show `図 1 …` / `Figure 1 …`.
   // Layout-owned figure/table captions already returned above, so role !==
   // "caption" is enough here without re-checking layoutBlock.role.
+  const cjkCheckmarkGrid = candidate.evidence.find(
+    (entry) => entry.label === "cjk-checkmark-comparison-grid",
+  );
   if (
     candidate.role !== "title" &&
     candidate.role !== "caption" &&
@@ -180,9 +187,16 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
     vectorFigureLabels && vectorFigureLabels.confidence >= 0.82 &&
     (candidate.roleScores.table ?? 0) < 0.8 &&
     !(captionedNativeMulticell && captionedNativeMulticell.confidence >= 0.9) &&
+    !(cjkCheckmarkGrid && cjkCheckmarkGrid.confidence >= 0.8) &&
     !looksLikeSentenceProse(candidate.text)
   ) {
     return { role: "other", confidence: vectorFigureLabels.confidence };
+  }
+  if (cjkCheckmarkGrid && cjkCheckmarkGrid.confidence >= 0.8) {
+    return {
+      role: "table",
+      confidence: Math.max(candidate.roleScores.table ?? 0, cjkCheckmarkGrid.confidence),
+    };
   }
   // A native row with four or more separated cells and an explicit nearby
   // table caption can also trigger the vector-label detector because the PDF
@@ -609,6 +623,44 @@ function demotePageOneAuthorHeadings(nodes: CanonicalNode[]): CanonicalNode[] {
   });
 }
 
+/**
+ * Page-1 bylines with superscript affiliation markers are sometimes scored as
+ * tables (`Name1, Name2 & Name3`). Recover them before author projection.
+ */
+function recoverPageOneAuthorTables(nodes: CanonicalNode[]): CanonicalNode[] {
+  return nodes.map((node) => {
+    if (node.role !== "table" || node.pageStart !== 1 || !node.text) return node;
+    const t = node.text.trim();
+    // Bylines often carry affiliation superscripts (`Geddam1`, `Ghayvat4,5`)
+    // that make the shared author-list heuristic fail — accept that shape here.
+    const bylineWithMarkers =
+      /^[A-Z][\p{L}'’.-]+(?:\s+[A-Z][\p{L}'’.-]+){0,3}\d{0,2}(?:\s*[,;&]\s*|\s+(?:and|&)\s+)/u.test(t) &&
+      (t.match(/[A-Z][\p{L}'’.-]+/gu) ?? []).length >= 4 &&
+      (t.match(/\d/g) ?? []).length >= 2 &&
+      (t.match(/\d/g) ?? []).length <= 10;
+    if (!looksLikeAuthorList(t) && !bylineWithMarkers) return node;
+    // Keep real tables: multi-line grids and digit-heavy score rows.
+    if (t.includes("\n") || (t.match(/\d/g) ?? []).length > 12) return node;
+    if (/university|department|institute|faculty|hospital|laboratory/i.test(t)) return node;
+    return {
+      ...node,
+      role: "author" as const,
+      confidence: Math.min(node.confidence, 0.86),
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic",
+          label: "page-one-author-table-recovery",
+          confidence: 0.86,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: "page-one byline mistaken for a table row",
+        },
+      ],
+    };
+  });
+}
+
 const ABSTRACT_STOP_RAIL =
   /^(?:keywords?|key words?|index terms?|kata kunci|how to cite|citation|categories|subjects?|mesh)\s*:?/i;
 // Body section starts — not Cureus-style `Methods:` / `Results:` abstract bands
@@ -709,20 +761,34 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
     // Bare labels and notice leads (`Copyright © 2022 …` / `Copyright (1998) …`).
     const copyrightChrome =
       /^copyright\s*:?\s*$/i.test(t) ||
+      /^copyright\s+and\b/i.test(t) ||
+      /^reuse:\s*copyright\b/i.test(t) ||
       /^copyright\s*(?:©|\(\s*\d{4}\s*\)|\d{4}\b)/i.test(t) ||
       /^protected by copyright\b/i.test(t) ||
+      // Thesis front-matter declaration banners (UNSW / similar).
+      /^(?:copyright|authenticity|originality)\s+statement\s*$/i.test(t) ||
       /^downloaded from\b/i.test(t) ||
-      /^to cite\s*:/i.test(t);
+      /^to cite\s*:/i.test(t) ||
+      /\bmoral rights remain with the author/i.test(t);
     const editorialLabel =
       microPanelHeading ||
       fundingChromeHeading ||
       tableHeaderRow ||
       copyrightChrome ||
       /^(?:\*?correspondence|edited by|reviewed by|open access|citation|copyright|keywords?|index terms?|published|received|revised|accepted)\s*:?\s*$/i.test(t) ||
+      // Frontiers glued sidebar labels (`KEYWORDS COPYRIGHT` / `KEYWORDS CITATION`).
+      /^(?:keywords?\s+(?:copyright|citation)|copyright\s+keywords?)\s*$/i.test(t) ||
       /^(?:for numbered affiliations see|correspondence to)\b/i.test(t) ||
       // Keyword / index rails with payload (`Keywords: information visualization, …`).
       /^(?:keywords?|index terms?|ccs concepts)\s*:\s*\S/i.test(t) ||
-      /^(?:received|revised|accepted|published)\b/i.test(t) && (t.length <= 48 || /\bpeer review\b/i.test(t)) ||
+      /^(?:received|revised|accepted|published)\b/i.test(t) &&
+        (t.length <= 48 ||
+          /\bpeer review\b/i.test(t) ||
+          // Frontiers glues several date rails into one heading
+          // (`RECEIVED 03 March 2026 ACCEPTED 06 March 2026 KEYWORDS PUBLISHED…`).
+          (t.length <= 220 &&
+            /\b(?:received|revised|accepted|published|keywords?)\b/i.test(t.slice(10)) &&
+            (t.match(/\b20\d{2}\b/g) ?? []).length >= 1)) ||
       /^(?:published:\s*)?peer review history\b/i.test(t) ||
       // BMJ Open / publisher footers often keep a trailing period (`24 September 2026.`).
       /^(?:\d{1,2}\s+)?(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{4}\.?$/i.test(t) ||
@@ -732,6 +798,13 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
       // Bare / short table captions (`TABLE 2`, `Table 1. …`).
       /^(?:tables?|表)\s*\d+\b/i.test(t) ||
       /^(?:competing interests|research ethics|ethics approval|acknowledgements?|funding|data availability(?:\s+statement)?|declaration of generative ai|author contributions|conflict of interest|generative ai statement)\b/i.test(t) ||
+      // Nature / Springer UI crumbs and graphical-abstract labels in the outline.
+      /^check for updates$/i.test(t) ||
+      /^graphical abstracts?$/i.test(t) ||
+      /^abbreviations?$/i.test(t) ||
+      /^study\s+protocol$/i.test(t) ||
+      // Table column rails painted as outline headings (`Parameter Value`).
+      /^(?:parameter\s+value|variable\s+name|feature\s+name|column\s+name)$/i.test(t) ||
       // Glued / bare table column headers without separators.
       /^(?:screening dimension|implication of differences|project content|dimension interview item)\b/i.test(t) ||
       /^(?:dimension|interview\s+item|framework\s+component|brain\s+region)\b/i.test(t) &&
@@ -827,7 +900,12 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
     const lowerConnectors = titleCaseWords.filter((w) => /^[a-z]/.test(w)).length;
     const gluedHeaderLead =
       /^(?:level of|risk category|concept definition|what it reflects)\b/i.test(t);
+    // ALL-CAPS section banners (`H COMPARISONS WITH LOGISTIC…`) are real
+    // outline headings; title-case dense demotion is for glued Title-Case
+    // table header stacks only.
+    const allCapsBanner = t === t.toUpperCase() && /[A-Z]/.test(t);
     const titleCaseDense =
+      !allCapsBanner &&
       titleCaseWords.length <= 12 &&
       !/[:.?]$/.test(t) &&
       !/^\d+(?:\.\d+)*\s/.test(t) &&
@@ -838,7 +916,30 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
       );
     // Nature-style figure/stat crumbs painted as headings (`5.83 F`).
     // Also table p-value rails: `0.004 <0.001 Reasoning−oriented LLMs`.
+    // Frontiers SEM f² / R² spills: `0.444 (large) 0.112 (medium)`.
+    const effectSizeCellHeading =
+      (/^\d\.\d{2,}\s*\((?:large|medium|small|none|negligible|small[–—-]medium)\)/i.test(t) &&
+        words <= 8) ||
+      (/^\d\.\d{2,}(?:\s*\([^)]+\))?(?:\s+\d\.\d{2,}(?:\s*\([^)]+\))?)+$/.test(t) &&
+        words <= 8) ||
+      /^[—–\-]\s*\d\.\d{2,}(?:\s*\([^)]+\))?/.test(t);
+    const dualConstructCellHeading =
+      !/^\d+(?:\.\d+)*\s/.test(t) &&
+      words >= 3 &&
+      words <= 6 &&
+      // Two Title-Case construct names stacked without a section number
+      // (`Psychological resilience Employee wellbeing`).
+      /^[A-Z][a-z]+(?:\s+[a-z]+)?(?:\s+[A-Z][a-z]+(?:\s+[a-z]+)?)+$/.test(t) &&
+      (t.match(/\b[A-Z][a-z]+/g) ?? []).length >= 2 &&
+      nodes.some(
+        (peer) =>
+          peer.pageStart === node.pageStart &&
+          /^(?:table|表)\s*\d+/i.test(peer.text?.trim() ?? "") &&
+          (peer.role === "caption" || peer.role === "paragraph" || peer.role === "heading"),
+      );
     const statCrumbHeading =
+      effectSizeCellHeading ||
+      dualConstructCellHeading ||
       /^\d+(?:\.\d+)?\s*[A-Za-z]{1,3}$/.test(t) ||
       /^\d+\.\d{2}\s+[A-Z]$/.test(t) ||
       (/<\s*0?\.\d+/.test(t) &&
@@ -846,6 +947,13 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
         (/^\d/.test(t) || (t.match(/<\s*0?\.\d+/g) ?? []).length >= 2) &&
         words <= 14 &&
         !/^\d+(?:\.\d+)+\s+[A-Za-z]/.test(t));
+    // Table body cells painted as outline headings
+    // (`2019 118.80 GPixels/sec`, `10.26 GPixel/sec`).
+    // Unit tokens already exclude real section titles (`2.1 Introduction`).
+    const tableMetricCellHeading =
+      /^(?:\d{4}\s+)?[\d.]+\s*(?:G?Pixels?(?:\/(?:s(?:ec)?)?)?|MPixels?(?:\/(?:s(?:ec)?)?)?|FPS|Hz|T?FLOPS?|GFLOPS|MFLOPS)\b/i.test(
+        t,
+      ) && words <= 6;
     // Lone math / OCR glyphs (`Þ`, `ð`, `σ`) painted as outline headings.
     const singleGlyphHeading =
       t.length <= 3 &&
@@ -889,7 +997,8 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
       !degreeAffiliationHeading &&
       !geoChromeHeading &&
       !titleCaseDense &&
-      !statCrumbHeading
+      !statCrumbHeading &&
+      !tableMetricCellHeading
     ) {
       return node;
     }
@@ -902,6 +1011,7 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
       geoChromeHeading ||
       titleCaseDense ||
       statCrumbHeading ||
+      tableMetricCellHeading ||
       searchQueryHeading;
     const asCopyright = copyrightChrome;
     return {
@@ -949,24 +1059,74 @@ const PUBLISHER_COPYRIGHT_CHROME =
   /^(?:©|copyright|for personal use only|creative commons|email\b)/i;
 const PUBLISHER_DOWNLOAD_CHROME = /downloaded from\s+https?:/i;
 
-function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
+export function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
   let inAbstract = false;
   let sawStructuredConclusion = false;
   let sawAbstractBody = false;
+  let sawStructuredSubhead = false;
   let abstractColumnX: number | null = null;
+  const clearAbstractBand = () => {
+    inAbstract = false;
+    sawStructuredConclusion = false;
+    sawAbstractBody = false;
+    sawStructuredSubhead = false;
+    abstractColumnX = null;
+  };
   return nodes.map((node) => {
     const text = (node.text ?? "").trim();
-    // PLOS sometimes paints the bare `Abstract` label as `other` instead of
-    // heading; still open the structured-abstract band.
+    // PLOS sometimes paints the bare `Abstract` label as `other` / `paragraph`
+    // / rival `title` instead of heading; still open the structured-abstract
+    // band before title-resolution demotes the label to a body paragraph.
     if (
-      (node.role === "heading" || node.role === "other") &&
-      /^(?:abstract|abstrak|要旨)\s*:?\s*$/i.test(text)
+      (node.role === "heading" ||
+        node.role === "other" ||
+        node.role === "paragraph" ||
+        node.role === "title" ||
+        node.role === "author") &&
+      /^(?:abstract|abstrak|要旨|lay summary|plain language summary)\s*:?\s*$/i.test(text)
     ) {
       inAbstract = true;
       sawStructuredConclusion = false;
       sawAbstractBody = false;
+      sawStructuredSubhead = false;
       abstractColumnX = node.boundingBoxes[0]?.x ?? null;
-      return node.role === "other" ? { ...node, role: "heading" as const } : node;
+      return node.role === "heading"
+        ? node
+        : { ...node, role: "heading" as const };
+    }
+    // PLOS editor crumbs glue the country onto a trailing Abstract label
+    // (`… Affiliated First Hospital, CHINA Abstract`). Open the band; keep the
+    // chrome text demoted so the following narrative body is collected.
+    if (
+      (node.role === "paragraph" || node.role === "other" || node.role === "author") &&
+      text.length <= 140 &&
+      /\b(?:china|usa|u\.s\.a\.?|uk|united kingdom|india|japan|germany|france|brazil|australia|canada|italy|spain|korea|netherlands|turkey|türkiye)\s+Abstract\s*$/i.test(
+        text,
+      )
+    ) {
+      inAbstract = true;
+      sawStructuredConclusion = false;
+      sawAbstractBody = false;
+      sawStructuredSubhead = false;
+      // Label often sits on the left editor rail (x≈36) while the body is the
+      // main column (x≈198) — do not pin the band to the rail x.
+      const labelX = node.boundingBoxes[0]?.x ?? 0;
+      abstractColumnX = labelX < 80 ? null : labelX;
+      return {
+        ...node,
+        role: "heading" as const,
+        text: "Abstract",
+        confidence: Math.max(node.confidence, 0.84),
+        evidence: [
+          ...node.evidence,
+          {
+            source: "generic-heuristic" as const,
+            label: "plos-trailing-abstract-label",
+            confidence: 0.84,
+            reason: "country + trailing Abstract label opens abstract band",
+          },
+        ],
+      };
     }
     // Inline labels (`Abstract. Nowadays…` / `Abstrak. Saat ini…`) are often
     // paragraphs, not bare headings. DovePress also paints them as copyright.
@@ -980,6 +1140,7 @@ function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
       inAbstract = true;
       sawStructuredConclusion = false;
       sawAbstractBody = true;
+      sawStructuredSubhead = false;
       abstractColumnX = node.boundingBoxes[0]?.x ?? null;
       return { ...node, role: "abstract" as const };
     }
@@ -999,17 +1160,27 @@ function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
         (STRUCTURED_ABSTRACT_SUBHEAD.test(text) || bmcStructuredLead) &&
         !/^\d+(?:\.\d+)*\s/.test(text)
       ) {
+        // Plain abstracts (`Abstract` + prose) then a bare body `Results` /
+        // `Discussion` must not stay in the structured-abstract band. Only
+        // keep those labels when a structured subhead already opened the band
+        // (Cureus / BMC) or the label still carries a colon.
+        if (
+          sawAbstractBody &&
+          !sawStructuredSubhead &&
+          /^(?:introduction|background|methods?|results?|discussion|conclusions?)\s*$/i.test(text)
+        ) {
+          clearAbstractBand();
+          return node;
+        }
         if (
           sawStructuredConclusion &&
           /^(?:introduction|background|methods?|results?|discussion)\s*:?\s*$/i.test(text)
         ) {
-          inAbstract = false;
-          sawStructuredConclusion = false;
-          sawAbstractBody = false;
-          abstractColumnX = null;
+          clearAbstractBand();
           return node;
         }
         if (/^conclusions?\s*:?\s*$/i.test(text)) sawStructuredConclusion = true;
+        sawStructuredSubhead = true;
         return {
           ...node,
           role: "abstract" as const,
@@ -1040,10 +1211,7 @@ function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
       ) {
         return node;
       }
-      inAbstract = false;
-      sawStructuredConclusion = false;
-      sawAbstractBody = false;
-      abstractColumnX = null;
+      clearAbstractBand();
       return node;
     }
     // Author summary / significance boxes follow the abstract on PLOS covers.
@@ -1051,10 +1219,7 @@ function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
       inAbstract &&
       /^(?:author summary|significance|importance|plain language summary|key points?)\b/i.test(text)
     ) {
-      inAbstract = false;
-      sawStructuredConclusion = false;
-      sawAbstractBody = false;
-      abstractColumnX = null;
+      clearAbstractBand();
       return node;
     }
     // Keywords / how-to-cite rails often arrive as paragraphs, not headings.
@@ -1069,10 +1234,7 @@ function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
       ) {
         return node;
       }
-      inAbstract = false;
-      sawStructuredConclusion = false;
-      sawAbstractBody = false;
-      abstractColumnX = null;
+      clearAbstractBand();
       return node;
     }
     // Springer footers after the abstract (`& Name 1 University of …`) must not
@@ -1083,25 +1245,66 @@ function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
         /^\d{1,2}\s+(?:University|Department|Faculty|Institute|School)\b/.test(text) ||
         /^corresponding author\b/i.test(text))
     ) {
-      inAbstract = false;
-      sawStructuredConclusion = false;
-      sawAbstractBody = false;
-      abstractColumnX = null;
+      clearAbstractBand();
       return node;
     }
     // Two-column covers can leak the next section lead into the abstract band
-    // (`… English Language 1. Introduction`). Stop before promoting that prose.
+    // (`… English Language 1. Introduction` / PLOS chrome `… the 1 Introduction
+    // original author…`). Stop before promoting that prose.
+    // Use isSectionIntroHeading — not bare SECTION_INTRO — because the latter's
+    // `i` flag makes `[A-Z0-9]` match lowercase and kills BMC abstract bodies
+    // that begin `Methods for analyzing…` / `Results of…`.
     // Do not treat structured-abstract leads (`Background. …` / `Aims. …`) as
-    // body section stops — SECTION_INTRO alone would kill Cambridge/Wiley bands.
+    // body section stops either.
+    // PLOS paints bare `Background` / `Methods` as `other` inside the Abstract
+    // band — keep those as structured subheads instead of body-section stops.
+    if (
+      inAbstract &&
+      (node.role === "paragraph" || node.role === "other" || node.role === "copyright") &&
+      STRUCTURED_ABSTRACT_SUBHEAD.test(text) &&
+      !/^\d+(?:\.\d+)*\s/.test(text)
+    ) {
+      if (
+        sawAbstractBody &&
+        !sawStructuredSubhead &&
+        /^(?:introduction|background|methods?|results?|discussion|conclusions?)\s*$/i.test(text)
+      ) {
+        clearAbstractBand();
+        return node;
+      }
+      if (
+        sawStructuredConclusion &&
+        /^(?:introduction|background|methods?|results?|discussion)\s*:?\s*$/i.test(text)
+      ) {
+        clearAbstractBand();
+        return node;
+      }
+      if (/^conclusions?\s*:?\s*$/i.test(text)) sawStructuredConclusion = true;
+      sawStructuredSubhead = true;
+      return {
+        ...node,
+        role: "abstract" as const,
+        confidence: Math.max(node.confidence, 0.86),
+        evidence: [
+          ...node.evidence,
+          {
+            source: "generic-heuristic" as const,
+            label: "structured-abstract-subhead",
+            confidence: 0.86,
+            page: node.pageStart,
+            bbox: node.boundingBoxes[0],
+            reason: "structured-abstract subheading kept inside Abstract band",
+          },
+        ],
+      };
+    }
     if (
       inAbstract &&
       !STRUCTURED_ABSTRACT_LEAD.test(text) &&
-      (/\b1\.\s*introduction\b/i.test(text) || SECTION_INTRO.test(text))
+      !STRUCTURED_ABSTRACT_SUBHEAD.test(text) &&
+      (/\b1\.?\s+introduction\b/i.test(text) || isSectionIntroHeading(text))
     ) {
-      inAbstract = false;
-      sawStructuredConclusion = false;
-      sawAbstractBody = false;
-      abstractColumnX = null;
+      clearAbstractBand();
       return node;
     }
     if (
@@ -1109,6 +1312,30 @@ function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
       (node.role === "paragraph" || node.role === "copyright" || node.role === "other")
     ) {
       if (PUBLISHER_COPYRIGHT_CHROME.test(text) || PUBLISHER_DOWNLOAD_CHROME.test(text)) {
+        return node;
+      }
+      // BMJ sidebar cite crumbs (`Robin B, et al. Inequitably` /
+      // `harmed: a scoping review… BMJ Open … doi:10.…`) must not count as
+      // abstract body — otherwise bare `Introduction` clears the band.
+      if (
+        (text.length <= 96 &&
+          (/\bet al\b/i.test(text) ||
+            /^(?:to cite|cite this article)\b/i.test(text) ||
+            (/^[A-Z][\p{L}'’-]+(?:\s+[A-Z]\.?){0,2}(?:\s*,\s*[A-Z][\p{L}'’-]+){1,3}/u.test(
+              text,
+            ) &&
+              !/[.!?]\s+[A-Z]/.test(text) &&
+              text.split(/\s+/).length <= 10 &&
+              !/\b(?:we|our|this|these|patient|study|methods?|results?|research)\b/i.test(
+                text,
+              )))) ||
+        (text.length <= 260 &&
+          /\bbmj\s*open\b/i.test(text) &&
+          (/\bdoi:\s*10\./i.test(text) || /^[a-z]/.test(text))) ||
+        (text.length <= 220 &&
+          /^[►▶]/.test(text) &&
+          /\b(?:prepublication|supplemental|available online)\b/i.test(text))
+      ) {
         return node;
       }
       // After a structured-abstract Conclusions band, license / CC rails and
@@ -1120,26 +1347,33 @@ function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
         ) ||
           /^[*†‡]?\s*correspondence\b/i.test(text))
       ) {
-        inAbstract = false;
-        sawStructuredConclusion = false;
-        sawAbstractBody = false;
-        abstractColumnX = null;
+        clearAbstractBand();
         return node;
       }
       const x = node.boundingBoxes[0]?.x ?? 0;
       // Skip the entire opposite column (PLOS citation / editor rails) while
-      // collecting the Abstract body in the main column. Centered `Abstract`
-      // labels (Research Square / Springer) sit right of the body column — do
-      // not treat a left-body `Background:…` lead as an opposite-column rail.
+      // collecting the Abstract body in the main column — including long cite
+      // paragraphs that previously slipped past a short-text-only guard.
+      // Centered `Abstract` labels (Research Square / Springer) sit right of
+      // the body column — do not treat a left-body `Background:…` lead as an
+      // opposite-column rail.
       if (
         abstractColumnX != null &&
         Math.abs(x - abstractColumnX) > 110 &&
-        !STRUCTURED_ABSTRACT_LEAD.test(text) &&
-        text.length < 120
+        !STRUCTURED_ABSTRACT_LEAD.test(text)
       ) {
         return node;
       }
-      if (/^(?:AFFILIATION|Received:|E-?mail:|Citation:|Editor:)/i.test(text) || (/@/.test(text) && text.length < 90)) {
+      if (
+        /^(?:AFFILIATION|Received:|Accepted:|Published:|Peer Review|E-?mail:|Citation:|Editor:)/i.test(
+          text,
+        ) ||
+        (/@/.test(text) && text.length < 90)
+      ) {
+        return node;
+      }
+      // PLOS left-rail article id crumbs (`pdig.0001661`) are not abstract body.
+      if (/^[a-z]{2,8}\.\d{5,}$/i.test(text) && text.length <= 24) {
         return node;
       }
       // Drop citation crumbs glued onto abstract lead-ins
@@ -1184,14 +1418,15 @@ function markColonStructuredFrontAbstracts(nodes: CanonicalNode[]): CanonicalNod
   const isStructuredAbstractLabel = (text: string, role: CanonicalNode["role"]): boolean =>
     structuredLabel.test(text) || (role === "heading" && bareStructuredHeading.test(text));
   // Cover pages are often title-only; Research Square puts the structured
-  // abstract on page 2. Also stop on a repeated Background after Conclusion.
+  // abstract on page 2–3 after a long author/affiliation masthead. Also stop
+  // on a repeated Background after Conclusion.
   const isBodySectionStart = (text: string, sawConclusion: boolean): boolean =>
     /^(?:[IVXLCDM]+\.\s+)?(?:\d+\.\s*)?(?:introduction|related\s+work)\b(?!\s*:)/i.test(text) ||
     /^(?:METHODS|RESULTS|DISCUSSION|BACKGROUND|CONCLUSIONS?)\s*$/.test(text) ||
     (sawConclusion && /^(?:background|methods?|results?|discussion|conclusions?)\s*$/i.test(text));
   const frontMatter = nodes
     .map((node, index) => ({ node, index }))
-    .filter(({ node }) => node.pageStart <= 2 && node.text)
+    .filter(({ node }) => node.pageStart <= 3 && node.text)
     .sort(
       (a, b) =>
         a.node.pageStart - b.node.pageStart ||
@@ -1261,9 +1496,17 @@ function markColonStructuredFrontAbstracts(nodes: CanonicalNode[]): CanonicalNod
       bandEndY = Math.min(bandEndY, y);
       break;
     }
+    const abstractProseHeading =
+      node.role === "heading" &&
+      !isStructuredAbstractLabel(text, node.role) &&
+      !/^\d+(?:\.\d+)*\s/.test(text) &&
+      !/^(?:introduction|related\s+work|references?)\b/i.test(text) &&
+      text.split(/\s+/).filter(Boolean).length >= 6 &&
+      /^[A-Z(]/.test(text);
     if (
       node.role === "heading" &&
       !isStructuredAbstractLabel(text, node.role) &&
+      !abstractProseHeading &&
       text.length <= 80 &&
       !/:\s+\S/.test(text)
     ) {
@@ -1275,6 +1518,7 @@ function markColonStructuredFrontAbstracts(nodes: CanonicalNode[]): CanonicalNod
       node.role === "paragraph" ||
       node.role === "copyright" ||
       isStructuredAbstractLabel(text, node.role) ||
+      abstractProseHeading ||
       /:\s+\S/.test(text)
     ) {
       bandEndPage = page;
@@ -1293,7 +1537,8 @@ function markColonStructuredFrontAbstracts(nodes: CanonicalNode[]): CanonicalNod
     page > bandEndPage || (page === bandEndPage && y >= bandEndY);
 
   return nodes.map((node) => {
-    if (node.pageStart > 2 || !node.text) return node;
+    // Research Square mastheads can push the structured band to page 3.
+    if (node.pageStart > 3 || !node.text) return node;
     const box = node.boundingBoxes[0];
     const y = box?.y ?? Infinity;
     const x = box?.x ?? 0;
@@ -1311,13 +1556,21 @@ function markColonStructuredFrontAbstracts(nodes: CanonicalNode[]): CanonicalNod
     if (!structuredBandRole(node.role)) {
       return node;
     }
+    const abstractProseHeading =
+      node.role === "heading" &&
+      !isStructuredAbstractLabel(text, node.role) &&
+      !/^\d+(?:\.\d+)*\s/.test(text) &&
+      !/^(?:introduction|related\s+work|references?)\b/i.test(text) &&
+      text.split(/\s+/).filter(Boolean).length >= 6 &&
+      /^[A-Z(]/.test(text);
     if (
       !(
         isStructuredAbstractLabel(text, node.role) ||
         node.role === "paragraph" ||
         (node.role === "other" && text.length >= 40) ||
         (node.role === "copyright" && text.length >= 40) ||
-        (node.role === "heading" && (/:\s+\S/.test(text) || structuredLabel.test(text)))
+        (node.role === "heading" &&
+          (/:\s+\S/.test(text) || structuredLabel.test(text) || abstractProseHeading))
       )
     ) {
       return node;
@@ -1334,7 +1587,7 @@ function markColonStructuredFrontAbstracts(nodes: CanonicalNode[]): CanonicalNod
           confidence: 0.87,
           page: node.pageStart,
           bbox: node.boundingBoxes[0],
-          reason: "page-1 colon-labelled structured abstract band before body introduction",
+          reason: "front colon/bare-label structured abstract band before body introduction",
         },
       ],
     };
@@ -1481,6 +1734,18 @@ function markUnlabeledFrontAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
   if (nodes.some((node) => node.role === "abstract" && node.pageStart === 1)) {
     return nodes;
   }
+  // Nature Scientific Reports early-access covers are chrome-only on page 1;
+  // the real unlabeled abstract sits on page 2+. Skip page-1 promotion so
+  // promoteLateFrontAbstracts can recover the body lead.
+  const natureEarlyAccessCover = nodes.some(
+    (node) =>
+      node.pageStart === 1 &&
+      node.text &&
+      /^we are providing an unedited version of this manuscript/i.test(node.text.trim()),
+  );
+  if (natureEarlyAccessCover) {
+    return nodes;
+  }
   const titleNode = nodes.find((node) => node.role === "title" && node.pageStart === 1);
   const titleY = titleNode?.boundingBoxes[0]?.y ?? 0;
   const titleX = titleNode?.boundingBoxes[0]?.x ?? 220;
@@ -1516,6 +1781,13 @@ function markUnlabeledFrontAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
     return (
       /^(?:citation|editorial on the research topic)\b/i.test(t) ||
       /^(?:and\s+\w+\.\s+)?this is an open-access article\b/i.test(t) ||
+      /^open access\b/i.test(t) ||
+      // Nature early-access cover blurb / peer-review chrome must not steal the
+      // unlabeled abstract slot (otherwise promoteLateFrontAbstracts never sees
+      // the real page-2 lead).
+      /^we are providing an unedited version of this manuscript/i.test(t) ||
+      /^if this paper is publishing under a transparent peer review\b/i.test(t) ||
+      /^(?:adaptation|distribution and reproduction)\b/i.test(t) ||
       (/\bcreative commons attribution\b/i.test(t) && t.length <= 420) ||
       /^(?:permitted, provided the original author)/i.test(t) ||
       // Frontiers how-to-cite rails (`Reinemann DN (2024) A retrospective… Front. Educ.`).
@@ -1800,6 +2072,50 @@ function markUnlabeledFrontAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
 }
 
 /**
+ * Opinion / commentary Frontiers pieces sometimes paint mid-body prose as
+ * `abstract` after `1. INTRODUCTION` already opened (`The HMD and tracking…`).
+ * Demote those so the body reading order stays intact; do not invent a new
+ * abstract when none exists before the intro.
+ */
+function demoteAbstractsAfterIntroduction(nodes: CanonicalNode[]): CanonicalNode[] {
+  // Match Introduction by text as well as role — some covers still have the
+  // section label as paragraph/other when heading promotion missed.
+  const introIndex = nodes.findIndex(
+    (node) =>
+      node.pageStart <= 2 &&
+      (node.role === "heading" || node.role === "paragraph" || node.role === "other") &&
+      isSectionIntroHeading(node.text ?? ""),
+  );
+  if (introIndex < 0) return nodes;
+  const intro = nodes[introIndex]!;
+  const introY = intro.boundingBoxes[0]?.y ?? 0;
+  return nodes.map((node, index) => {
+    if (node.role !== "abstract") return node;
+    if (index <= introIndex) return node;
+    // Geometry guard: abstract above the Introduction heading on an earlier
+    // column can sort after it in the array — keep those.
+    const nodeY = node.boundingBoxes[0]?.y ?? 0;
+    if (node.pageStart < intro.pageStart) return node;
+    if (node.pageStart === intro.pageStart && nodeY + 2 < introY) return node;
+    return {
+      ...node,
+      role: "paragraph" as const,
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic" as const,
+          label: "abstract-after-introduction-demotion",
+          confidence: 0.9,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: "body prose after Introduction demoted from abstract",
+        },
+      ],
+    };
+  });
+}
+
+/**
  * Mega-author Frontiers covers push the lead narrative onto page 2–3 after a
  * long affiliation dump. When page 1 still has no abstract, promote the first
  * long prose band before the body Introduction on pages 1–3.
@@ -1808,6 +2124,12 @@ function promoteLateFrontAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
   if (nodes.some((node) => node.role === "abstract" && node.pageStart <= 3)) {
     return nodes;
   }
+  const natureEarlyAccessCover = nodes.some(
+    (node) =>
+      node.pageStart === 1 &&
+      node.text &&
+      /^we are providing an unedited version of this manuscript/i.test(node.text.trim()),
+  );
   const intro = nodes.find(
     (node) =>
       node.pageStart <= 4 &&
@@ -1816,15 +2138,32 @@ function promoteLateFrontAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
   );
   const introPage = intro?.pageStart ?? 4;
   const introY = intro?.boundingBoxes[0]?.y ?? Infinity;
+  const looksLikeLicenseContinuation = (text: string): boolean =>
+    /^(?:adaptation|distribution and reproduction|open access)\b/i.test(text) ||
+    /\bcreative commons attribution\b/i.test(text) ||
+    /^if this paper is publishing under a transparent peer review\b/i.test(text);
   const candidate = nodes
     .filter((node) => {
       if (node.role !== "paragraph" || !node.text || node.pageStart > introPage) return false;
+      // Nature early-access page 1 is cover chrome; the lead abstract is later.
+      if (natureEarlyAccessCover && node.pageStart < 2) return false;
       if (node.pageStart === introPage && (node.boundingBoxes[0]?.y ?? 0) >= introY - 4) {
         return false;
       }
       const text = node.text.trim();
       if (text.length < 220) return false;
       if (/^(?:citation|keywords?|doi:|©|copyright)\b/i.test(text)) return false;
+      if (looksLikeLicenseContinuation(text)) return false;
+      // Citation crumbs glued onto the abstract lead
+      // (`Zhao L, Yang X, Luo R, Xu J and Gu X brain-signal…`).
+      if (
+        /^(?:[A-Z][\p{L}'’-]+(?:\s+[A-Z]\.?){0,3}\s*,\s*){2,}[A-Z][\p{L}'’-]+(?:\s+[A-Z]\.?){0,3}\s+and\s+[A-Z]/u.test(
+          text,
+        ) &&
+        !/^(?:The|This|We|Our|Building|Background|Objective)\b/i.test(text)
+      ) {
+        return false;
+      }
       // Numbered affiliation dumps (`55Department of…, 78Department…`).
       const numberedInst = text.match(/\d{1,3}(?:Department|University|College|School|Institute)\b/gi) ?? [];
       if (numberedInst.length >= 2) return false;
@@ -1834,7 +2173,9 @@ function promoteLateFrontAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
       // Prefer pedagogy / methods narrative over leftover affiliation prose.
       const instHits = text.match(/\b(?:Department|University|College)\b/gi) ?? [];
       if (
-        !/\b(?:the|this|we|students?|research|study|learning|assessment|course)\b/i.test(text) ||
+        !/\b(?:the|this|we|students?|research|study|learning|assessment|course|building on|theoretical|framework)\b/i.test(
+          text,
+        ) ||
         (instHits.length >= 3 && !/\b(?:students?|pedagogy|assessment|curriculum)\b/i.test(text))
       ) {
         return false;
@@ -1889,7 +2230,14 @@ function looksLikeCiteOnlyAbstract(text: string): boolean {
     /^[A-Z][\p{L}'’-]+(?:\s+[A-Z]{1,4})?(?:\s*,\s*[A-Z][\p{L}'’-]+(?:\s+[A-Z]{1,4})?){0,4}\s+et al\.\s+/u.test(
       t,
     ) ||
-    (/^[A-Z][\p{L}'’-]+(?:\s+[A-Z]{1,4})?,?\s+et al\.\s+Effect of\b/u.test(t) && t.split(/\s+/).length <= 12)
+    (/^[A-Z][\p{L}'’-]+(?:\s+[A-Z]{1,4})?,?\s+et al\.\s+Effect of\b/u.test(t) && t.split(/\s+/).length <= 12) ||
+    // Truncated MDPI cite crumbs (`Christou, A.I.; Kalfadeli,`).
+    (/^[A-Z][\p{L}'’-]+,\s*[A-Z](?:\.[A-Z])*\.?(?:\s*;\s*[A-Z][\p{L}'’-]+(?:,\s*[A-Z](?:\.[A-Z])*\.?)?)+,?\s*$/u.test(
+      t,
+    ) &&
+      t.split(/\s+/).length <= 8) ||
+    // JMIR journal citation tails painted as abstract.
+    /^\((?:JMIR|J\s*Med\s*Internet\s*Res)[^)]*\d{4}[^)]*\)\s*$/i.test(t)
   );
 }
 
@@ -1912,6 +2260,24 @@ function scrubAbstractCiteCrumbs(text: string): string {
       cleaned = afterYear.slice(narrative).replace(/\s+/g, " ").trim();
     }
   }
+  // Frontiers date rails glued onto / into the abstract
+  // (`RECEIVEDREVISED 21 May 202610 February 2026 Many primarily…` /
+  // `… plant ACCEPTEDPUBLISHED31 May 202619 June 2026 …`).
+  if (/^(?:RECEIVED|REVISED|ACCEPTED|PUBLISHED)/i.test(cleaned)) {
+    const narrative = cleaned.search(/\b(?:Many|The|This|We|Our|In)\b/);
+    if (narrative > 0) {
+      cleaned = cleaned.slice(narrative).replace(/\s+/g, " ").trim();
+    }
+  }
+  cleaned = cleaned
+    .replace(
+      /\s*(?:RECEIVEDREVISED|ACCEPTEDPUBLISHED|RECEIVED\s*REVISED|ACCEPTED\s*PUBLISHED)(?:\s*\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}){0,4}/gi,
+      " ",
+    )
+    .replace(
+      /\s*(?:RECEIVED|REVISED|ACCEPTED|PUBLISHED)\s*\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}(?:\s+\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}){0,3}/gi,
+      " ",
+    );
   // Journal crumbs can sit mid-abstract after a glued how-to-cite rail.
   cleaned = cleaned
     .replace(/\bFront\.\s*\w+\.?\s*\d+:\d+\.?/gi, " ")
@@ -1975,7 +2341,7 @@ function attachAbstractTerminalCrumbs(nodes: CanonicalNode[]): CanonicalNode[] {
   return result;
 }
 
-function mergeAbstractContinuations(nodes: CanonicalNode[]): CanonicalNode[] {
+export function mergeAbstractContinuations(nodes: CanonicalNode[]): CanonicalNode[] {
   const result: CanonicalNode[] = [];
   for (const node of nodes) {
     // Two-column covers can interleave a title node between abstract slices
@@ -1983,26 +2349,80 @@ function mergeAbstractContinuations(nodes: CanonicalNode[]): CanonicalNode[] {
     // than requiring strict adjacency in the node list.
     const previousIndex =
       node.role === "abstract"
-        ? result.findLastIndex(
-            (candidate) => candidate.role === "abstract" && candidate.pageStart === node.pageStart,
-          )
+        ? result.findLastIndex((candidate) => {
+            if (candidate.role !== "abstract") return false;
+            // Same-page first; also allow page N→N+1 when the previous band is
+            // unfinished (`Discussion: These` | `findings characterize…`).
+            if (candidate.pageStart === node.pageStart) return true;
+            if (node.pageStart === candidate.pageEnd + 1) {
+              const prev = (candidate.text ?? "").trim();
+              return Boolean(prev) && !/[.!?。！？]\s*$/.test(prev);
+            }
+            return false;
+          })
         : -1;
     const previous = previousIndex >= 0 ? result[previousIndex] : null;
     const intervening = previousIndex >= 0 ? result.slice(previousIndex + 1) : [];
-    const blocked = intervening.some(
-      (candidate) =>
-        (candidate.role === "heading" &&
-          /^(?:keywords?|key words?|introduction|methods?|results?|discussion)\b/i.test(
-            (candidate.text ?? "").trim(),
-          )) ||
-        candidate.role === "author" ||
-        candidate.role === "affiliation",
-    );
+    const previousAbs = previousIndex >= 0 ? result[previousIndex] : null;
+    const previousAbsX = previousAbs?.boundingBoxes[0]?.x;
+    const blocked = intervening.some((candidate) => {
+      if (
+        candidate.role === "heading" &&
+        /^(?:keywords?|key words?|introduction|methods?|results?|discussion)\b/i.test(
+          (candidate.text ?? "").trim(),
+        )
+      ) {
+        return true;
+      }
+      // Sidebar author/affiliation crumbs often interleave abstract lines in
+      // reading order; only block when they share the abstract column and look
+      // like real byline/affiliation text (not mislabelled abstract prose).
+      if (candidate.role === "author" || candidate.role === "affiliation") {
+        const text = (candidate.text ?? "").trim();
+        if (text.split(/\s+/).filter(Boolean).length >= 6) return false;
+        const cx = candidate.boundingBoxes[0]?.x;
+        if (previousAbsX == null || cx == null) return true;
+        return Math.abs(cx - previousAbsX) <= 90;
+      }
+      return false;
+    });
     if (previous && node.role === "abstract" && !blocked && previous.text && node.text) {
-      const prevBox = previous.boundingBoxes[previous.boundingBoxes.length - 1];
-      const nodeBox = node.boundingBoxes[0];
       const prevText = previous.text.trim();
       const nextText = node.text.trim();
+      // Do not glue BMJ sidebar cite/title crumbs into the abstract band;
+      // demote them out of abstract so they are not counted as body.
+      if (
+        nextText.length <= 260 &&
+        (/\bbmj\s*open\b/i.test(nextText) ||
+          (/\bdoi:\s*10\./i.test(nextText) && nextText.length <= 180) ||
+          (/^[a-z]/.test(nextText) && /\b(?:protocol|review|bmj|doi:)\b/i.test(nextText)))
+      ) {
+        result.push({
+          ...node,
+          role: "other",
+          confidence: Math.min(node.confidence, 0.45),
+          evidence: [
+            ...node.evidence,
+            {
+              source: "generic-heuristic" as const,
+              label: "demoted-abstract-cite-crumb",
+              confidence: 0.88,
+              page: node.pageStart,
+              bbox: node.boundingBoxes[0],
+              reason: "sidebar cite/title crumb is not abstract body",
+            },
+          ],
+        });
+        continue;
+      }
+      const bareStructuredLabelProbe =
+        /^(?:background|introduction|methods?|materials(?:\s+and\s+methods)?|results?|discussion|conclusions?|objectives?|purpose|aims?|findings?)\s*:?\s*$/i;
+      // Bare labels sometimes inherit the whole band's boundingBoxes; use the
+      // first box so same-line prose is not measured against the band footer.
+      const prevBox = bareStructuredLabelProbe.test(prevText)
+        ? previous.boundingBoxes[0]
+        : previous.boundingBoxes[previous.boundingBoxes.length - 1];
+      const nodeBox = node.boundingBoxes[0];
       const unfinished =
         !/[.!?。！？]\s*$/.test(prevText) ||
         /^[a-zà-öø-ÿ]/.test(nextText) ||
@@ -2042,13 +2462,54 @@ function mergeAbstractContinuations(nodes: CanonicalNode[]): CanonicalNode[] {
         Math.abs(prevBox.x - nodeBox.x) <= 64 ||
         overlap >= Math.min(prevBox.width, nodeBox.width) * 0.35;
       const mergeGapLimit = structuredContinuation ? 56 : 36;
-      const bareLabelEdge =
-        bareStructuredLabel.test(prevText) || bareStructuredLabel.test(nextText);
+      // Colon labels (`Background:`) merge into following prose. Bare band
+      // labels (`Results` / `Methods`) must stay separate so outline/abstract
+      // markers survive — `unfinished` alone would otherwise glue
+      // `Results` + `Of the participants…` into one node.
+      const colonStructuredLabel =
+        /^(?:background|introduction|methods?|materials(?:\s+and\s+methods)?|results?|discussion|conclusions?|objectives?|purpose|aims?|findings?)\s*:\s*$/i;
+      const bareWordStructuredLabel =
+        bareStructuredLabel.test(prevText) && !colonStructuredLabel.test(prevText);
+      const labelThenProse =
+        colonStructuredLabel.test(prevText) &&
+        !bareStructuredLabel.test(nextText) &&
+        nextText.split(/\s+/).filter(Boolean).length >= 5;
+      // Soft wraps mid-label (`Discussion: These` + `findings…` /
+      // `Overall, Fed-XLM-R` + `demonstrates…`) share a baseline.
+      const softWrapContinuation =
+        unfinished &&
+        Boolean(prevBox && nodeBox) &&
+        Math.abs(nodeBox!.y - prevBox!.y) <= Math.max(prevBox!.height ?? 12, 16) &&
+        (/:\s+\S/.test(prevText) ||
+          /^(?:the|these|this|those|a|an|of|and|to|with|for)\b/i.test(nextText) ||
+          (/^[a-zà-öø-ÿ]/.test(nextText) && nextText.split(/\s+/).filter(Boolean).length >= 4) ||
+          (prevText.split(/\s+/).filter(Boolean).length <= 6 &&
+            nextText.split(/\s+/).filter(Boolean).length >= 6 &&
+            !/^[A-Z][A-Z\s]{3,}$/.test(nextText)));
+      // Same-baseline `Background:` + prose often shares Y (gap ≈ −height).
+      // Some Frontiers bands report identical Y for every abstract row.
+      const sameBaselineLabelProse =
+        (labelThenProse || softWrapContinuation) &&
+        Boolean(prevBox && nodeBox) &&
+        Math.abs(nodeBox!.y - prevBox!.y) <= Math.max(prevBox!.height ?? 12, 16);
+      const gapFloor = labelThenProse || softWrapContinuation
+        ? -Math.max((prevBox?.height ?? 12) * 2, 28)
+        : -4;
+      // Soft wraps / same-baseline label prose may indent the continuation.
+      const alignOk = xAligned || sameBaselineLabelProse || softWrapContinuation;
+      const nextLooksLikeTable =
+        /^[\d.%*\s<>≤≥-]+$/.test(nextText) ||
+        /^\*+\s*\*+/.test(nextText) ||
+        /^(?:variable|category\s+vs\.?\s+reference|standardized prevalence|note:\s*bars)\b/i.test(
+          nextText,
+        ) ||
+        (/\*{2,}/.test(nextText) && nextText.split(/\s+/).filter(Boolean).length <= 12);
       if (
-        ((unfinished && !bareLabelEdge) || structuredContinuation) &&
-        gap >= -4 &&
-        gap <= mergeGapLimit &&
-        xAligned &&
+        !nextLooksLikeTable &&
+        !bareWordStructuredLabel &&
+        (unfinished || structuredContinuation || labelThenProse || softWrapContinuation) &&
+        (sameBaselineLabelProse || (gap >= gapFloor && gap <= mergeGapLimit)) &&
+        alignOk &&
         nextText.length >= 8
       ) {
         // Prefer a word boundary. Only glue without a space for hyphenated
@@ -2081,7 +2542,36 @@ function mergeAbstractContinuations(nodes: CanonicalNode[]): CanonicalNode[] {
     }
     result.push(node);
   }
-  return result;
+  return result.map((node) => {
+    if (node.role !== "abstract" || !node.text) return node;
+    const text = node.text.replace(/\s+/g, " ").trim();
+    const citeChrome =
+      (text.length <= 280 &&
+        (/\bbmjopen-\d/i.test(text) ||
+          (/\bbmj\s*open\b/i.test(text) && /\b(?:doi:|e\d{5,})\b/i.test(text)) ||
+          /\badditional supplemental material\b/i.test(text) ||
+          (/^[a-z]/.test(text) &&
+            /\b(?:bmj|doi:|protocol on|diverse population)\b/i.test(text) &&
+            text.split(/\s+/).length <= 24))) ||
+      (/^introduction\b/i.test(text) && /\bbmjopen-/i.test(text));
+    if (!citeChrome) return node;
+    return {
+      ...node,
+      role: "other" as const,
+      confidence: Math.min(node.confidence, 0.4),
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic" as const,
+          label: "demoted-abstract-cite-chrome",
+          confidence: 0.9,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: "cite/title sidebar chrome demoted out of abstract band",
+        },
+      ],
+    };
+  });
 }
 
 /** Figure/flowchart chrome concatenated into a fake outline heading. */
@@ -2119,12 +2609,35 @@ function suppressVectorLabelClusters(nodes: CanonicalNode[]): CanonicalNode[] {
     const strongVectorLabel = node.evidence.some((entry) =>
       entry.label === "vector-figure-label-cluster" && entry.confidence >= 0.82
     );
+    const denseVectorPanel = node.evidence.some((entry) =>
+      (entry.label === "dense-vector-panel" || entry.label === "figure-panel-label") &&
+      entry.confidence >= 0.75
+    );
     // Compact axis/label glyphs lose to `other`. Sentence-shaped body lines
     // that merely sit near a figure keep their paragraph role for translation.
     if (
       strongVectorLabel &&
       (node.role === "heading" || node.role === "paragraph") &&
       !looksLikeSentenceProse(node.text ?? "")
+    ) {
+      return {
+        ...node,
+        role: "other" as const,
+        confidence: Math.max(node.confidence, 0.84),
+      };
+    }
+    // Dense plot panels often duplicate a short lead-in (`for GPTrel … for
+    // GPTrel …`). That shape trips looksLikeSentenceProse via a leading `For`,
+    // but dense-vector-panel geometry is stronger than translation eligibility.
+    const trimmedPanel = (node.text ?? "").trim();
+    const repeatedPanelLead =
+      trimmedPanel.length >= 12 &&
+      trimmedPanel.length <= 120 &&
+      /^(.*?)\s+\1$/s.test(trimmedPanel);
+    if (
+      denseVectorPanel &&
+      (node.role === "heading" || node.role === "paragraph") &&
+      (!looksLikeSentenceProse(trimmedPanel) || repeatedPanelLead)
     ) {
       return {
         ...node,
@@ -2253,18 +2766,51 @@ function dedupeExactCaptions(nodes: CanonicalNode[]): CanonicalNode[] {
  * intentionally narrower than paragraph stitching: it requires an explicit
  * Figure caption, the caption to end like an unfinished label/description,
  * and a nearby same-page paragraph whose geometry is aligned with it. */
-function mergeFigureCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[] {
+export function mergeFigureCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[] {
   const result: CanonicalNode[] = [];
   for (const node of nodes) {
     const directPrevious = result[result.length - 1];
-    const captionIndex = directPrevious?.role === "caption"
+    const nodeBox = node.boundingBoxes[0];
+    const continuation = node.text?.trim() ?? "";
+    // Scrambled two-column reading order can emit bare `FIGURE 4` before a
+    // higher `FIGURE 5` caption, then the FIGURE 4 legend. Prefer a nearby
+    // bare numbered figure caption in the same column over the array-last one.
+    let captionIndex = directPrevious?.role === "caption"
       ? result.length - 1
       : result.findLastIndex((candidate) => candidate.role === "caption");
+    if (
+      (node.role === "paragraph" || node.role === "heading") &&
+      continuation.length >= 12 &&
+      nodeBox
+    ) {
+      let bestBare = -1;
+      let bestBareGap = Infinity;
+      for (let i = result.length - 1; i >= Math.max(0, result.length - 8); i -= 1) {
+        const candidate = result[i]!;
+        if (candidate.role !== "caption" || candidate.pageStart !== node.pageStart) continue;
+        const ct = (candidate.text ?? "").trim();
+        if (
+          !/^(?:figure|fig\.?|図)\s*\d+[a-z]?(?:\s*\((?:continued|cont\.?)\))?\s*:?\s*$/i.test(
+            ct,
+          )
+        ) {
+          continue;
+        }
+        const cBox = candidate.boundingBoxes[candidate.boundingBoxes.length - 1];
+        if (!cBox) continue;
+        const gap = nodeBox.y - (cBox.y + cBox.height);
+        const aligned = Math.abs(nodeBox.x - cBox.x) <= Math.max(24, cBox.width * 0.35);
+        if (!aligned || gap < -18 || gap > 56) continue;
+        if (gap < bestBareGap) {
+          bestBareGap = gap;
+          bestBare = i;
+        }
+      }
+      if (bestBare >= 0) captionIndex = bestBare;
+    }
     const previous = captionIndex >= 0 ? result[captionIndex] : directPrevious;
     const previousBox = previous?.boundingBoxes[previous.boundingBoxes.length - 1];
-    const nodeBox = node.boundingBoxes[0];
     const captionText = previous?.text?.trim() ?? "";
-    const continuation = node.text?.trim() ?? "";
     const verticalGap = previousBox && nodeBox ? nodeBox.y - (previousBox.y + previousBox.height) : Infinity;
     const xAligned = previousBox && nodeBox
       ? Math.abs(nodeBox.x - previousBox.x) <= Math.max(24, previousBox.width * 0.35)
@@ -2277,27 +2823,96 @@ function mergeFigureCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[
     );
     const labeledFigureContinuation = /\b(?:[A-D]|Panel\s+[A-D])\s*:/i.test(continuation) &&
       /\b(?:human|model|probability|condition|error bars|data)\b/i.test(continuation);
-    const numberedProcedureContinuation = (continuation.match(/(?:^|\s)\d+\.\s+/g) ?? []).length >= 2;
-    // A caption continuation is normally a short label/panel line. A long,
-    // sentence-like paragraph immediately below an unpunctuated caption is
-    // body prose, even when the PDF geometry is close enough to look like a
-    // continuation. Keeping this boundary prevents the resolver from
-    // swallowing the article's next paragraph into a figure caption.
+    // Exception: a bare `FIGURE N` / `Fig. N:` label has no description yet,
+    // so the next aligned prose line is the caption body even when long.
     const continuationWords = continuation.split(/\s+/).filter(Boolean).length;
-    const sentenceLikeBodyContinuation = continuationWords > 24 &&
+    const bareNumberedCaption =
+      /^(?:figure|fig\.?|図)\s*\d+[a-z]?(?:\s*\((?:continued|cont\.?)\))?\s*:?\s*$/i.test(
+        captionText,
+      );
+    // Numbered procedure lists (`1. … 2. …`) must not glue onto a caption that
+    // already has a legend. Bare `FIGURE N` labels still accept panel legends
+    // that mention decimals (`XLSR-53: …`) or sparse `N.` tokens.
+    const numberedProcedureContinuation =
+      !bareNumberedCaption &&
+      (continuation.match(/(?:^|\s)\d+\.\s+/g) ?? []).length >= 2;
+    const sentenceLikeBodyContinuation =
+      !bareNumberedCaption &&
+      continuationWords > 24 &&
       /^[A-Z][A-Za-z]/.test(continuation) &&
       !labeledFigureContinuation;
+    const shortHeadingLegend =
+      bareNumberedCaption &&
+      node.role === "heading" &&
+      continuationWords >= 2 &&
+      continuationWords <= 16 &&
+      /^[A-ZÀ-ÖØ-Ý(]/u.test(continuation) &&
+      // Bare section titles stay headings; legends like `Results of FC…` merge.
+      !/^(?:introduction|methods?|results?|discussion|conclusions?|references?)\s*$/i.test(
+        continuation,
+      );
+    // Supplement / end-matter often emits bare `Figure 1:` then a later
+    // `Figure 1) Legend body…` (same number) as paragraph or caption.
+    const captionFigureNum = captionText.match(/^(?:figure|fig\.?|図)\s*(\d+)/i)?.[1];
+    const continuationFigureNum = continuation.match(
+      /^(?:figure|fig\.?|図)\s*(\d+)\s*[):.\-–—]/i,
+    )?.[1];
+    const sameNumberedFigureLegend =
+      bareNumberedCaption &&
+      Boolean(captionFigureNum && continuationFigureNum) &&
+      captionFigureNum === continuationFigureNum &&
+      continuation.length >= captionText.length + 12 &&
+      !/^(?:figure|fig\.?|図)\s*\d+[a-z]?\s*:?\s*$/i.test(continuation);
+    // Bare `Figure 3` at the page foot with the Title-Case legend as the first
+    // block on the next page (nap pipeline β-diversity legend).
+    const pageBoundaryBareLegend =
+      bareNumberedCaption &&
+      previous != null &&
+      previous.pageEnd + 1 === node.pageStart &&
+      (node.role === "paragraph" || node.role === "heading") &&
+      continuationWords >= 6 &&
+      continuationWords <= 100 &&
+      (previousBox?.y ?? 0) > 560 &&
+      (nodeBox?.y ?? 999) < 140 &&
+      /^[A-ZΑ-ΩÀ-ÖØ-Þßẞβ][\p{L}0-9(\-–—]/u.test(continuation) &&
+      !/^(?:introduction|methods?|results?|discussion|conclusions?|references?)\b/i.test(
+        continuation,
+      );
     const canMerge = previous?.role === "caption" &&
       /^\s*(?:figure|fig\.?|図)\s*\d+/i.test(captionText) &&
-      previous.pageStart === node.pageStart &&
-      (node.role === "paragraph" || node.role === "table") &&
-      continuation.length >= 12 &&
-      verticalGap >= -18 && verticalGap <= 42 &&
-      (xAligned || (harmlessIntervening && verticalGap <= 180)) &&
+      (previous.pageStart === node.pageStart || pageBoundaryBareLegend) &&
+      (node.role === "paragraph" ||
+        node.role === "table" ||
+        shortHeadingLegend ||
+        (node.role === "caption" && sameNumberedFigureLegend)) &&
+      (continuation.length >= 12 || shortHeadingLegend) &&
+      (pageBoundaryBareLegend ||
+        (verticalGap >= -18 &&
+          verticalGap <= (sameNumberedFigureLegend ? 600 : bareNumberedCaption ? 56 : 42))) &&
+      (pageBoundaryBareLegend ||
+        xAligned ||
+        bareNumberedCaption ||
+        sameNumberedFigureLegend ||
+        (harmlessIntervening && verticalGap <= 180)) &&
       (!/[.!?]\s*$/.test(captionText) || labeledFigureContinuation) &&
       !numberedProcedureContinuation &&
       !sentenceLikeBodyContinuation &&
-      !/^(?:table|figure|fig\.?|図|references?|introduction|methods?|results?)\b/i.test(continuation);
+      // Block a *different* numbered figure/table lead. Same-number
+      // `Figure 1)` legends of a bare `Figure 1:` are allowed.
+      (!(
+        /^(?:table|figure|fig\.?|図)\s*\d+/i.test(continuation) && !sameNumberedFigureLegend
+      )) &&
+      !/^(?:references?|introduction|methods?|results?|discussion|conclusions?)\s*$/i.test(
+        continuation,
+      ) &&
+      // Long multi-sentence figure legends are still captions when the lead is
+      // a bare `FIGURE N`. Cap body-length dumps; allow longer panel legends
+      // that explicitly mark (A)/(B)/… sections (Frontiers-style).
+      !(
+        bareNumberedCaption &&
+        continuationWords >
+          ((continuation.match(/\([A-Da-d]\)/g) ?? []).length >= 1 ? 420 : 220)
+      );
     if (canMerge) {
       result[captionIndex] = {
         ...previous,
@@ -2305,14 +2920,114 @@ function mergeFigureCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[
         pageEnd: node.pageEnd,
         boundingBoxes: [...previous.boundingBoxes, ...node.boundingBoxes],
         confidence: Math.min(previous.confidence, node.confidence),
-        evidence: [...previous.evidence, ...node.evidence.filter((evidence) => evidence.label === "page-boundary-continuation")],
+        evidence: [
+          ...previous.evidence,
+          ...node.evidence.filter((evidence) => evidence.label === "page-boundary-continuation"),
+          {
+            source: "generic-heuristic" as const,
+            label: "figure-caption-continuation",
+            confidence: 0.9,
+            page: node.pageStart,
+            bbox: node.boundingBoxes[0],
+            reason: "legend merged onto figure caption",
+          },
+        ],
       };
-      if (captionIndex < result.length - 1) result.splice(captionIndex + 1);
+      // Only drop short chrome crumbs between caption and continuation — never
+      // other figure captions emitted out of y-order in two-column pages.
+      if (captionIndex < result.length - 1 && harmlessIntervening) {
+        result.splice(captionIndex + 1);
+      }
       continue;
     }
+
+    // Reading order may emit the legend above a bare `Fig. N` / `FIGURE N`
+    // (same column, a few lines higher) — e.g. `: This figure illustrates…`
+    // then `Fig. 2`.
+    const bareIncomingFigure =
+      node.role === "caption" &&
+      /^(?:figure|fig\.?|図)\s*\d+[a-z]?(?:\s*\((?:continued|cont\.?)\))?\s*:?\s*$/i.test(
+        (node.text ?? "").trim(),
+      );
+    if (bareIncomingFigure && result.length > 0) {
+      const capBox = node.boundingBoxes[0];
+      let leadIndex = -1;
+      for (let i = result.length - 1; i >= Math.max(0, result.length - 4); i -= 1) {
+        const lead = result[i]!;
+        const leadText = (lead.text ?? "").trim();
+        const leadBox = lead.boundingBoxes[0];
+        const leadGap =
+          leadBox && capBox ? capBox.y - (leadBox.y + leadBox.height) : Infinity;
+        const leadAligned =
+          Boolean(leadBox && capBox) &&
+          lead.pageStart === node.pageStart &&
+          Math.abs(capBox!.x - leadBox!.x) <= 64 &&
+          leadGap >= -4 &&
+          leadGap <= 48;
+        if (
+          leadAligned &&
+          (lead.role === "paragraph" || lead.role === "other") &&
+          looksLikePrecedingFigureLegend(leadText)
+        ) {
+          leadIndex = i;
+          break;
+        }
+        if (
+          lead.role === "heading" &&
+          /^(?:\d+(?:\.\d+)*\.?\s+)?(?:introduction|methods?|results?|discussion)\b/i.test(
+            leadText,
+          )
+        ) {
+          break;
+        }
+      }
+      if (leadIndex >= 0) {
+        const lead = result[leadIndex]!;
+        const leadText = (lead.text ?? "").trim().replace(/^:\s*/, "");
+        result[leadIndex] = {
+          ...node,
+          text: `${(node.text ?? "").trim()} ${leadText}`.replace(/\s+/g, " ").trim(),
+          pageEnd: Math.max(node.pageEnd, lead.pageEnd),
+          boundingBoxes: [...node.boundingBoxes, ...lead.boundingBoxes],
+          confidence: Math.min(node.confidence, lead.confidence),
+          evidence: [
+            ...node.evidence,
+            {
+              source: "generic-heuristic" as const,
+              label: "preceding-figure-caption-legend",
+              confidence: 0.9,
+              page: node.pageStart,
+              bbox: node.boundingBoxes[0],
+              reason: "legend paragraph before bare Fig/FIGURE N",
+            },
+          ],
+        };
+        continue;
+      }
+    }
+
     result.push(node);
   }
   return result;
+}
+
+/** Strong preceding-legend cues for bare Fig/FIGURE labels (not body prose). */
+function looksLikePrecedingFigureLegend(text: string): boolean {
+  const trimmed = text.trim().replace(/^:\s*/, "");
+  if (trimmed.length < 24 || trimmed.length > 420) return false;
+  const words = trimmed.split(/\s+/).filter(Boolean).length;
+  if (words < 6 || words > 80) return false;
+  if (/^(?:table|figure|fig\.?|図)\s*\d+/i.test(trimmed)) return false;
+  if (/^(?:references?|introduction|methods?|results?|discussion|conclusions?)\b/i.test(trimmed)) {
+    return false;
+  }
+  // `: This figure illustrates…` / `The figure shows…`
+  if (/^(?:this|the)\s+figure\b/i.test(trimmed)) return true;
+  // Panel-legend style with explicit (A)/(a) markers and short description.
+  if (/\([A-Da-d]\)/.test(trimmed) && words <= 60 && /\b(?:show|shows|depict|panel)\b/i.test(trimmed)) {
+    return true;
+  }
+  return false;
 }
 
 /** Join wrapped table-caption text before table-region promotion. Some native
@@ -2321,7 +3036,21 @@ function mergeFigureCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[
  * the resolver first, numeric-neighborhood evidence can incorrectly promote
  * them to table cells. Require same-page caption typography geometry and a
  * lowercase continuation so body prose remains a paragraph. */
-function mergeTableCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[] {
+function isTitleCaseTableCaptionBody(captionText: string, continuation: string): boolean {
+  if (!/^(?:table|表)\s*\d+[a-z]?(?:\s*\((?:continued|cont\.?)\))?\s*:?\s*$/i.test(captionText)) {
+    return false;
+  }
+  const words = continuation.split(/\s+/).filter(Boolean);
+  return (
+    /^[A-ZÀ-ÖØ-Ý(]/u.test(continuation) &&
+    words.length >= 3 &&
+    words.length <= 80 &&
+    !/^(?:table|figure|fig\.?|図|references?|introduction|methods?)\b/i.test(continuation) &&
+    ((continuation.match(/\d/g) ?? []).length / Math.max(continuation.length, 1) < 0.12)
+  );
+}
+
+export function mergeTableCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[] {
   const result: CanonicalNode[] = [];
   for (const node of nodes) {
     const captionIndex = result.findLastIndex((candidate) => candidate.role === "caption" && /^(?:table|表)\s*\d+/i.test(candidate.text?.trim() ?? ""));
@@ -2335,17 +3064,66 @@ function mergeTableCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[]
       ? nodeBox.x >= previousBox.x - 8 && nodeBox.x + nodeBox.width <= previousBox.x + previousBox.width + 8
       : false;
     const sameLineHeight = previousBox && nodeBox ? Math.abs(nodeBox.height - previousBox.height) <= 0.8 : false;
+    const bareNumberedTableCaption =
+      /^(?:table|表)\s*\d+[a-z]?(?:\s*\((?:continued|cont\.?)\))?\s*:?\s*$/i.test(captionText);
+    const titleCaseTableCaptionBody = isTitleCaseTableCaptionBody(captionText, continuation);
+    // `Table 2 shows the codes…` — lowercase legend verb on the same baseline.
+    const legendVerbContinuation =
+      bareNumberedTableCaption &&
+      /^(?:shows?|presents?|summarizes?|lists?|reports?|describes?|compares?|contains?|displays?)\b/i.test(
+        continuation,
+      );
+    const captionBody = titleCaseTableCaptionBody || legendVerbContinuation;
+    // Frontiers often paints `TABLE 5` and its title on one baseline.
+    // Require x proximity so a right-column body line at the same Y is not
+    // glued onto a left-edge bare `TABLE N` footer (`…logue, and participation`).
+    const sameBaseline =
+      Boolean(previousBox && nodeBox) &&
+      Math.abs(nodeBox!.y - previousBox!.y) <= Math.max(previousBox!.height ?? 12, 14) &&
+      Math.abs(nodeBox!.x - previousBox!.x) <= 64;
+    // Bare `Table N` labels must not absorb same-baseline table-cell crumbs
+    // (`investigated terms.`) before the real Title-Case legend (`Results of…`).
+    const lowercaseWrap =
+      !bareNumberedTableCaption && /^[a-zà-öø-ÿ]/u.test(continuation);
     const canMerge = previous?.role === "caption" &&
       /^\s*(?:table|表)\s*\d+/i.test(captionText) &&
       previous.pageStart === node.pageStart &&
-      (node.role === "paragraph" || node.role === "table") &&
+      (node.role === "paragraph" || node.role === "table" ||
+        (bareNumberedTableCaption && captionBody && node.role === "other")) &&
       continuation.length >= 2 &&
-      /^[a-zà-öø-ÿ]/u.test(continuation) &&
+      (lowercaseWrap || captionBody) &&
       !/[.!?]\s*$/.test(captionText) &&
-      verticalGap >= -4 && verticalGap <= 42 &&
-      horizontallyInside &&
-      sameLineHeight &&
-      continuation.split(/\s+/).filter(Boolean).length <= 24;
+      (sameBaseline ||
+        (verticalGap >= -4 && verticalGap <= (bareNumberedTableCaption ? 56 : 42))) &&
+      (horizontallyInside ||
+        (sameBaseline && captionBody) ||
+        (bareNumberedTableCaption &&
+          previousBox &&
+          nodeBox &&
+          Math.abs(nodeBox.x - previousBox.x) <= 48 &&
+          captionBody) ||
+        // Bare `Table 5` on the right rail with a full-width Title-Case legend
+        // immediately below (psychological-distress Table 5).
+        (bareNumberedTableCaption &&
+          captionBody &&
+          previousBox &&
+          nodeBox &&
+          verticalGap >= -4 &&
+          verticalGap <= 28 &&
+          nodeBox.x <= previousBox.x + 24 &&
+          nodeBox.width >= Math.max(160, previousBox.width * 2))) &&
+      (sameLineHeight ||
+        captionBody ||
+        (sameBaseline && captionBody) ||
+        (bareNumberedTableCaption && captionBody && verticalGap <= 28)) &&
+      // Same-baseline bare `Table N` + Title-Case legend can be long (Eyettention
+      // `Table 7 New sentence split…`); allow more words than stacked wraps.
+      continuation.split(/\s+/).filter(Boolean).length <=
+        (sameBaseline && captionBody
+          ? 80
+          : captionBody
+            ? 40
+            : 24);
     if (canMerge) {
       result[captionIndex] = {
         ...previous,
@@ -2357,6 +3135,72 @@ function mergeTableCaptionContinuations(nodes: CanonicalNode[]): CanonicalNode[]
       };
       continue;
     }
+
+    // Reading order may emit the Title-Case legend before the bare `Table N`
+    // label — on the same baseline or a few lines above.
+    const bareIncoming =
+      node.role === "caption" &&
+      /^(?:table|表)\s*\d+[a-z]?(?:\s*\((?:continued|cont\.?)\))?\s*:?\s*$/i.test(
+        (node.text ?? "").trim(),
+      );
+    if (bareIncoming && result.length > 0) {
+      const capBox = node.boundingBoxes[0];
+      let leadIndex = -1;
+      for (let i = result.length - 1; i >= Math.max(0, result.length - 6); i -= 1) {
+        const lead = result[i]!;
+        const leadText = (lead.text ?? "").trim();
+        const leadBox = lead.boundingBoxes[0];
+        const leadGap =
+          leadBox && capBox ? capBox.y - (leadBox.y + leadBox.height) : Infinity;
+        const leadAligned =
+          Boolean(leadBox && capBox) &&
+          lead.pageStart === node.pageStart &&
+          Math.abs(capBox!.x - leadBox!.x) <= 64 &&
+          (Math.abs(capBox!.y - leadBox!.y) <= Math.max(capBox!.height ?? 12, 14) ||
+            (leadGap >= -4 && leadGap <= 48));
+        if (
+          leadAligned &&
+          (lead.role === "paragraph" || lead.role === "other" || lead.role === "heading") &&
+          isTitleCaseTableCaptionBody((node.text ?? "").trim(), leadText)
+        ) {
+          leadIndex = i;
+          break;
+        }
+        // Stop when we cross a hard section boundary.
+        if (
+          lead.role === "heading" &&
+          /^(?:\d+(?:\.\d+)*\.?\s+)?(?:introduction|methods?|results?|discussion)\b/i.test(
+            leadText,
+          )
+        ) {
+          break;
+        }
+      }
+      if (leadIndex >= 0) {
+        const lead = result[leadIndex]!;
+        const leadText = (lead.text ?? "").trim();
+        result[leadIndex] = {
+          ...node,
+          text: `${(node.text ?? "").trim()} ${leadText}`.replace(/\s+/g, " ").trim(),
+          pageEnd: Math.max(node.pageEnd, lead.pageEnd),
+          boundingBoxes: [...node.boundingBoxes, ...lead.boundingBoxes],
+          confidence: Math.min(node.confidence, lead.confidence),
+          evidence: [
+            ...node.evidence,
+            {
+              source: "generic-heuristic" as const,
+              label: "preceding-table-caption-legend",
+              confidence: 0.9,
+              page: node.pageStart,
+              bbox: node.boundingBoxes[0],
+              reason: "Title-Case legend before bare Table N",
+            },
+          ],
+        };
+        continue;
+      }
+    }
+
     result.push(node);
   }
   return result;
@@ -2387,6 +3231,203 @@ function isNumberedTableCaptionText(text: string | null | undefined): boolean {
   return /^(?:table|表)\s*\d+/i.test((text ?? "").trim());
 }
 
+function isBareNumberedCaptionText(text: string | null | undefined): boolean {
+  return /^(?:(?:figure|fig\.?|table|表|図)\s*\d+[a-z]?(?:\s*\((?:continued|cont\.?)\))?\s*:?\s*)$/i.test(
+    (text ?? "").trim(),
+  );
+}
+
+/**
+ * Running headers/footers often reprint a bare `Table 5` on every page of a
+ * multi-page table. Keep the first occurrence; demote later exact repeats at
+ * a similar Y so empty-caption diagnostics stay clean.
+ */
+export function demoteRepeatedBareCaptions(nodes: CanonicalNode[]): CanonicalNode[] {
+  const firstByKey = new Map<string, { page: number; y: number }>();
+  const demoteIds = new Set<string>();
+  for (const node of nodes) {
+    if (node.role !== "caption" || !isBareNumberedCaptionText(node.text)) continue;
+    const key = (node.text ?? "").replace(/\s+/g, " ").trim().toLowerCase();
+    const y = node.boundingBoxes[0]?.y ?? 0;
+    const prev = firstByKey.get(key);
+    if (!prev) {
+      firstByKey.set(key, { page: node.pageStart, y });
+      continue;
+    }
+    if (node.pageStart > prev.page && Math.abs(y - prev.y) <= 36) {
+      demoteIds.add(node.id);
+    }
+  }
+  // `Figure 2.` with only a trailing period is chrome, not a legend.
+  for (const node of nodes) {
+    if (node.role !== "caption" || !node.text) continue;
+    if (/^(?:figure|fig\.?|図)\s*\d+[a-z]?\s*\.\s*$/i.test(node.text.replace(/\s+/g, " ").trim())) {
+      demoteIds.add(node.id);
+    }
+  }
+  // Bare `FIGURE N` + same-page `Figure N.` period twin with no real legend
+  // (radial-consistency FIGURE 2 / Figure 2.) — demote both as chrome.
+  for (const node of nodes) {
+    if (node.role !== "caption" || !isBareNumberedCaptionText(node.text)) continue;
+    if (demoteIds.has(node.id)) continue;
+    const num = (node.text ?? "").match(/^(?:figure|fig\.?|図)\s*(\d+)/i)?.[1];
+    if (!num) continue;
+    const periodTwin = nodes.some((candidate) => {
+      if (candidate.pageStart !== node.pageStart || candidate.role !== "caption") return false;
+      const ct = (candidate.text ?? "").replace(/\s+/g, " ").trim();
+      return new RegExp(`^(?:figure|fig\\.?|図)\\s*${num}[a-z]?\\s*\\.\\s*$`, "i").test(ct);
+    });
+    const hasRealLegend = nodes.some((candidate) => {
+      if (candidate.pageStart !== node.pageStart || candidate.role !== "caption") return false;
+      const ct = (candidate.text ?? "").replace(/\s+/g, " ").trim();
+      const n = ct.match(/^(?:figure|fig\.?|図)\s*(\d+)/i)?.[1];
+      return (
+        n === num &&
+        !isBareNumberedCaptionText(ct) &&
+        !/^(?:figure|fig\.?|図)\s*\d+[a-z]?\s*\.\s*$/i.test(ct) &&
+        ct.length >= 28
+      );
+    });
+    if (periodTwin && !hasRealLegend) demoteIds.add(node.id);
+  }
+  // Multi-page table footers often reprint a bare `TABLE 1` under a
+  // `(Continued)` marker with no legend on that page.
+  for (const node of nodes) {
+    if (node.role !== "caption" || !isBareNumberedCaptionText(node.text)) continue;
+    if (demoteIds.has(node.id)) continue;
+    const box = node.boundingBoxes[0];
+    const y = box?.y ?? 0;
+    const x = box?.x ?? 0;
+    const continuedAbove = nodes.some((candidate) => {
+      if (candidate.pageStart !== node.pageStart || candidate.id === node.id) return false;
+      const cy = candidate.boundingBoxes[0]?.y ?? 0;
+      return cy < y && cy >= y - 80 && /\(\s*continued\s*\)/i.test(candidate.text ?? "");
+    });
+    // Bare label beside a right-column mid-word body fragment on the same
+    // baseline is continued-table footer chrome, not a real caption.
+    const besideBodyFragment = nodes.some((candidate) => {
+      if (candidate.pageStart !== node.pageStart || candidate.id === node.id) return false;
+      if (candidate.role !== "paragraph" && candidate.role !== "other") return false;
+      const cb = candidate.boundingBoxes[0];
+      if (!cb) return false;
+      const text = (candidate.text ?? "").trim();
+      const words = text.split(/\s+/).filter(Boolean).length;
+      const midSentence =
+        /^[a-zà-öø-ÿ]/.test(text) ||
+        /^\d+\)/.test(text) ||
+        /^=\s*\d/.test(text) ||
+        /^[^A-Z\d\u00C0-\u00DE(]/.test(text);
+      return (
+        midSentence &&
+        words >= 4 &&
+        words <= 40 &&
+        Math.abs(cb.y - y) <= 20 &&
+        // Classic right-rail fragment, or overlapping column with the bare label
+        // (split `…(n = 2)` / `Table 4` / `2). Their…` lines).
+        (cb.x - x >= 80 || Math.abs(cb.x - x) <= 40)
+      );
+    });
+    // Page-top bare `Table N` above a data grid with no legend is continued-
+    // table chrome (legend lived on the previous page).
+    const nearPageTop = y > 0 && y < 90;
+    const tableBelow = nodes.some((candidate) => {
+      if (candidate.pageStart !== node.pageStart || candidate.role !== "table") return false;
+      const cy = candidate.boundingBoxes[0]?.y ?? 0;
+      return cy >= y && cy - y <= 40;
+    });
+    // Bare label sharing a baseline with a table-row dump (`Tool NO NAME…`)
+    // and no Title-Case legend is a grid header, not a caption.
+    const sameBaselineTableDump = nodes.some((candidate) => {
+      if (candidate.pageStart !== node.pageStart || candidate.role !== "table") return false;
+      const cb = candidate.boundingBoxes[0];
+      if (!cb) return false;
+      const cellWords = (candidate.text ?? "").split(/\s+/).filter(Boolean).length;
+      // Right-rail bare `Table 9` beside a wide Scenario/Results grid
+      // (hybrid-real-synthetic) — same baseline, label to the right of cells.
+      const rightRailBesideGrid =
+        /^(?:table|表)\s*\d+/i.test((node.text ?? "").trim()) &&
+        Math.abs(cb.y - y) <= 8 &&
+        cb.x + 24 < x &&
+        // Some grids keep a skinny lead-cell bbox; trust word count instead.
+        cellWords >= 6 &&
+        ((candidate.text ?? "").trim().length >= 40);
+      return (
+        (Math.abs(cb.y - y) <= 8 && Math.abs((cb.x ?? 0) - x) <= 8) || rightRailBesideGrid
+      );
+    });
+    // Journal callout: large bare `Figure 2` immediately above a full
+    // `Figure 1 A‒C | …` (or same-number) legend. Keep the legend caption;
+    // demote the bare label so emptyCap does not fire on chrome.
+    const bareFigure = /^(?:figure|fig\.?|図)\s*\d+/i.test((node.text ?? "").trim());
+    const bareTable = /^(?:table|表)\s*\d+/i.test((node.text ?? "").trim());
+    const fullCaptionBelow =
+      bareFigure &&
+      nodes.some((candidate) => {
+        if (candidate.pageStart !== node.pageStart || candidate.id === node.id) return false;
+        if (candidate.role !== "caption") return false;
+        const ct = (candidate.text ?? "").replace(/\s+/g, " ").trim();
+        if (isBareNumberedCaptionText(ct)) return false;
+        if (!/^(?:figure|fig\.?|図)\s*\d+/i.test(ct)) return false;
+        if (ct.length < 28) return false;
+        const cb = candidate.boundingBoxes[0];
+        if (!cb) return false;
+        const gap = cb.y - (y + (box?.height ?? 0));
+        const aligned = Math.abs(cb.x - x) <= Math.max(24, (box?.width ?? 40) * 0.5);
+        return aligned && gap >= -6 && gap <= 48;
+      });
+    // Page-foot bare `TABLE 3` with cell crumbs on the next page and no legend.
+    const continuedTableAtPageFoot =
+      bareTable &&
+      y > 720 &&
+      nodes.some((candidate) => {
+        if (candidate.pageStart !== node.pageStart + 1) return false;
+        if (candidate.role !== "table" && candidate.role !== "other" && candidate.role !== "paragraph") {
+          return false;
+        }
+        const ct = (candidate.text ?? "").replace(/\s+/g, " ").trim();
+        const cy = candidate.boundingBoxes[0]?.y ?? 999;
+        return (
+          cy < 200 &&
+          ct.length > 0 &&
+          ct.length <= 80 &&
+          !/^(?:table|figure|fig\.?|表|図)\s*\d+/i.test(ct) &&
+          (/^(?:[A-Z]{2,}(?:\s+[A-Z]{2,}){0,4})$/.test(ct) ||
+            /(?:POMDP|VLM|Path\s*Planning)/i.test(ct))
+        );
+      });
+    if (
+      continuedAbove ||
+      besideBodyFragment ||
+      (nearPageTop && tableBelow) ||
+      sameBaselineTableDump ||
+      fullCaptionBelow ||
+      continuedTableAtPageFoot
+    ) {
+      demoteIds.add(node.id);
+    }
+  }
+  if (demoteIds.size === 0) return nodes;
+  return nodes.map((node) => {
+    if (!demoteIds.has(node.id)) return node;
+    return {
+      ...node,
+      role: "other" as const,
+      confidence: Math.min(node.confidence, 0.4),
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic" as const,
+          label: "repeated-bare-caption-chrome",
+          confidence: 0.9,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: "bare Table/Figure N repeated as running chrome or continued-table footer",
+        },
+      ],
+    };
+  });
+}
+
 function isTablePanelLabel(text: string | null | undefined): boolean {
   const trimmed = (text ?? "").trim();
   return /^\([a-z0-9]{1,2}\)$/i.test(trimmed) || /^[a-z0-9]{1,2}\)$/i.test(trimmed);
@@ -2402,7 +3443,8 @@ function hasRowLikeTableEvidence(node: CanonicalNode): boolean {
     entry.label === "merged-page-geometry-table-rows" ||
     entry.label === "caption-anchored-graphics-grid" ||
     entry.label === "table-region-member" ||
-    entry.label === "page-native-grid"
+    entry.label === "page-native-grid" ||
+    entry.label === "caption-bounded-table-cell"
   );
 }
 
@@ -2619,7 +3661,8 @@ function isProseMistakenTableRow(node: CanonicalNode): boolean {
     entry.label === "table-row-geometry" ||
     entry.label === "captioned-native-multicell-row" ||
     entry.label === "captioned-neighbor-cell-rows" ||
-    entry.label === "matrix-axis-label-neighbor"
+    entry.label === "matrix-axis-label-neighbor" ||
+    entry.label === "caption-bounded-table-cell"
   )) {
     return false;
   }
@@ -2756,6 +3799,132 @@ export function mergeTableRowsByPageGeometry(nodes: CanonicalNode[]): CanonicalN
  * clustering (typical of wide review comparison matrices), collapse them into
  * one table node per page so Reader does not open a card per cell.
  */
+/** Short cell-like fragments that sit between numbered table captions but never
+ * received table geometry (Frontiers SEM score tables, etc.). Promote them so
+ * captions are not left orphaned and effect-size crumbs do not become headings. */
+function looksLikeCaptionBoundedTableCell(text: string): boolean {
+  const trimmed = text.replace(/\s+/g, " ").trim();
+  if (!trimmed || trimmed.length > 96) return false;
+  if (/^(?:table|figure|fig\.?|図|表)\s*\d+/i.test(trimmed)) return false;
+  if (/^(?:introduction|methods?|results?|discussion|conclusion|references?)\b/i.test(trimmed)) {
+    return false;
+  }
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  if (/^source\s*:/i.test(trimmed) && words.length <= 8) return true;
+  if (trimmed === "—" || trimmed === "-" || trimmed === "–") return true;
+  if (/\d/.test(trimmed) && words.length <= 10 && !/[.!?]\s+[A-Z]/.test(trimmed)) return true;
+  if (words.length <= 6 && !/[.!?]$/.test(trimmed) && !/^(?:however|therefore|moreover|furthermore|in this|we |this study)\b/i.test(trimmed)) {
+    return true;
+  }
+  return false;
+}
+
+function isNumberedTableCaptionNode(node: CanonicalNode): boolean {
+  if (!isNumberedTableCaptionText(node.text)) return false;
+  // Layout may leave `TABLE 6 F-squared.` as a paragraph until the late
+  // standalone-caption pass; treat those leads as caption anchors too.
+  return node.role === "caption" || node.role === "paragraph" || node.role === "heading";
+}
+
+/** Copy a nearby numbered table caption onto merged table regions that lost
+ * `structuralLabel` when caption shells were empty-filtered. */
+export function annotateTablesFromCaptions(nodes: CanonicalNode[]): CanonicalNode[] {
+  return nodes.map((node, index) => {
+    if (node.role !== "table" || node.structuralLabel) return node;
+    if (isNumberedTableCaptionText(node.text)) return node;
+    for (let i = index - 1; i >= 0; i -= 1) {
+      const prev = nodes[i]!;
+      if (prev.pageStart !== node.pageStart) break;
+      const prevText = (prev.text ?? "").trim();
+      if (isNumberedTableCaptionText(prevText) &&
+        (prev.role === "caption" || prev.role === "paragraph" || prev.role === "heading")) {
+        return { ...node, structuralLabel: prevText };
+      }
+      if (prev.role === "table" && prev.structuralLabel) {
+        return { ...node, structuralLabel: prev.structuralLabel };
+      }
+      if (prev.role === "heading" && /^(?:\d+(?:\.\d+)*\.?\s+)?(?:introduction|methods?|results?|discussion)\b/i.test(prevText)) {
+        break;
+      }
+    }
+    return node;
+  });
+}
+
+export function promoteCaptionBoundedTableCells(nodes: CanonicalNode[]): CanonicalNode[] {
+  const captionIndexes: number[] = [];
+  nodes.forEach((node, index) => {
+    if (isNumberedTableCaptionNode(node)) {
+      captionIndexes.push(index);
+    }
+  });
+  if (captionIndexes.length === 0) return nodes;
+
+  const promoteIds = new Set<string>();
+  for (let c = 0; c < captionIndexes.length; c += 1) {
+    const start = captionIndexes[c]!;
+    const end = captionIndexes[c + 1] ?? nodes.length;
+    const caption = nodes[start]!;
+    const window: CanonicalNode[] = [];
+    for (let i = start + 1; i < end; i += 1) {
+      const node = nodes[i]!;
+      if (node.pageStart !== caption.pageStart) break;
+      if (node.role === "caption" || isNumberedTableCaptionText(node.text)) break;
+      if (node.role === "heading" && /^(?:\d+(?:\.\d+)*\.?\s+)?(?:introduction|methods?|results?|discussion|conclusion|references?)\b/i.test((node.text ?? "").trim())) {
+        break;
+      }
+      const text = (node.text ?? "").trim();
+      // Long body prose ends the table window.
+      if (
+        (node.role === "paragraph" || node.role === "abstract") &&
+        text.split(/\s+/).filter(Boolean).length >= 18 &&
+        /[.!?]$/.test(text) &&
+        !looksLikeCaptionBoundedTableCell(text)
+      ) {
+        break;
+      }
+      if (
+        (node.role === "paragraph" || node.role === "heading" || node.role === "other" || node.role === "copyright") &&
+        looksLikeCaptionBoundedTableCell(text)
+      ) {
+        window.push(node);
+      } else if (node.role === "table") {
+        // Already owned; no need to promote siblings for orphan clearance,
+        // but keep scanning short crumbs after a partial table row.
+        continue;
+      } else if (text) {
+        // Non-cell content interrupts the band.
+        if (window.length > 0 && window.length < 3) window.length = 0;
+        else break;
+      }
+    }
+    if (window.length >= 3) {
+      for (const node of window) promoteIds.add(node.id);
+    }
+  }
+
+  if (promoteIds.size === 0) return nodes;
+  return nodes.map((node) => {
+    if (!promoteIds.has(node.id)) return node;
+    return {
+      ...node,
+      role: "table" as const,
+      confidence: Math.max(node.confidence, 0.82),
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic" as const,
+          label: "caption-bounded-table-cell",
+          confidence: 0.84,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: "short cell-like fragment between numbered table captions",
+        },
+      ],
+    };
+  });
+}
+
 function collapseDenseShortProseGridTables(nodes: CanonicalNode[]): CanonicalNode[] {
   type Entry = { index: number; node: CanonicalNode };
   const byPage = new Map<number, Entry[]>();
@@ -2893,17 +4062,285 @@ export function resolveCanonicalDocument(input: {
   nodes = collapseDenseShortProseGridTables(nodes);
   nodes = demoteProseMistakenTableRows(nodes);
   nodes = nodes.filter((node) => node.role !== "table" || Boolean((node.text ?? "").trim()));
+  nodes = annotateTablesFromCaptions(nodes);
   nodes = promoteRotatedTableCaptions(nodes, candidates);
   nodes = splitInlineSectionLabels(nodes);
   nodes = demotePageOneAuthorHeadings(nodes);
+  nodes = recoverPageOneAuthorTables(nodes);
   nodes = promoteMislabelledSectionAuthors(nodes);
   nodes = demotePageOneProseAffiliations(nodes);
   nodes = demotePageOneProseCopyrights(nodes);
+  // Affiliation superscripts glued onto abstract prose without a newline:
+  // `A. Name1, B. Name2 Distributed Acoustic Sensing…`
+  // Require digit/marker superscripts on the byline and abstract-shaped
+  // body so Indonesian title+byline cover glue is not peeled into authors.
+  nodes = nodes.flatMap((node) => {
+    if (node.role !== "author" || node.pageStart > 1 || !node.text) return [node];
+    const raw = node.text.replace(/\s+/g, " ").trim();
+    if (raw.length < 100) return [node];
+    const m = raw.match(
+      /^((?:[A-Z](?:\.[A-Z])*\.?[A-Za-z'’.-]*(?:\s+[A-Z][A-Za-z'’.-]+){0,3}\d+(?:[*†‡§¶])?(?:\s*(?:,|&|and)\s*)?){2,})\s+([A-Z][\s\S]{80,})$/,
+    );
+    if (!m?.[1] || !m[2]) return [node];
+    const byline = m[1].replace(/[,\s]+$/, "").trim();
+    const abstractBody = m[2].trim();
+    const bylineWords = byline.split(/\s+/).filter(Boolean);
+    if (bylineWords.length < 3 || bylineWords.length > 16) return [node];
+    // Every author token in the byline should carry a digit marker.
+    if ((byline.match(/\d+/g) ?? []).length < 2) return [node];
+    if (!/[.!?]\s+[A-Z]/.test(abstractBody)) return [node];
+    if (abstractBody.split(/\s+/).length < 24) return [node];
+    // Reject when the "byline" is really a title fragment (no initials, long TC).
+    if (!/\b[A-Z]\.(?:\s*[A-Z]\.)*/.test(byline) && bylineWords.length >= 6) return [node];
+    const authorNode: CanonicalNode = {
+      ...node,
+      text: byline,
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic" as const,
+          label: "peeled-author-abstract-glue",
+          confidence: 0.9,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: "split affiliation byline from glued abstract prose",
+        },
+      ],
+    };
+    const abstractNode: CanonicalNode = {
+      ...node,
+      id: `${node.id}-abstract-peel`,
+      role: "abstract",
+      text: abstractBody,
+      confidence: Math.max(node.confidence, 0.82),
+      evidence: [
+        {
+          source: "generic-heuristic" as const,
+          label: "peeled-author-abstract-body",
+          confidence: 0.88,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: "abstract body recovered from author+prose glue",
+        },
+      ],
+    };
+    return [authorNode, abstractNode];
+  });
   nodes = markAbstracts(nodes);
   nodes = markColonStructuredFrontAbstracts(nodes);
   nodes = markUnlabeledFrontAbstracts(nodes);
+  // Numbered affiliation dumps painted as abstract
+  // (`Academy of Medical Sciences… 4School of Artificial Intelligence…`).
+  // Run before late-front promotion so a false abstract does not block it.
+  nodes = nodes.map((node) => {
+    if (node.role !== "abstract" || !node.text) return node;
+    const text = node.text.replace(/\s+/g, " ").trim();
+    const numberedInst =
+      text.match(/\d{1,2}\s*(?:Faculty|School|Department|Institute|University|Academy|College)\b/gi) ??
+      [];
+    const narrative =
+      /\b(?:this (?:study|paper|review|work)|we (?:present|propose|investigate)|background|objective|methods?:|results?:)\b/i.test(
+        text,
+      );
+    const affiliationLead =
+      /^(?:Academy|School|Faculty|Department|Institute|University)\b/i.test(text) &&
+      /\b(?:university|china|sciences|academy|faculty)\b/i.test(text);
+    if ((numberedInst.length >= 1 || affiliationLead) && !narrative && text.length < 900) {
+      return {
+        ...node,
+        role: "affiliation" as const,
+        confidence: Math.min(node.confidence, 0.55),
+        evidence: [
+          ...node.evidence,
+          {
+            source: "generic-heuristic" as const,
+            label: "affiliation-dump-demoted-from-abstract",
+            confidence: 0.88,
+            page: node.pageStart,
+            bbox: node.boundingBoxes[0],
+            reason: "numbered affiliation rail demoted from abstract role",
+          },
+        ],
+      };
+    }
+    return node;
+  });
   nodes = promoteLateFrontAbstracts(nodes);
+  // Mislabelled affiliation prose in the abstract column (`Persons who have
+  // experienced homelessness…`) should join the band before continuation merge.
+  nodes = (() => {
+    const next = [...nodes];
+    for (let i = 0; i < next.length; i += 1) {
+      const node = next[i];
+      if (node.role !== "affiliation" || !node.text) continue;
+      const text = node.text.replace(/\s+/g, " ").trim();
+      if (text.split(/\s+/).filter(Boolean).length < 6) continue;
+      // Real Elsevier / Springer affiliation rails (`a Institute of…`, long
+      // multi-site addresses) must stay affiliations even when they are long
+      // and sit near an abstract column.
+      if (
+        /^[a-z]\s+(?:Institute|University|Department|Faculty|School|Hospital|Center|Centre)\b/i.test(text) ||
+        /(?:university|department|institute|hospital|faculty|school of|article history)\b/i.test(text)
+      ) {
+        continue;
+      }
+      if (/@|university|department|institute|hospital|faculty|school of\b/i.test(text) && text.length < 80) {
+        continue;
+      }
+      const prev = next[i - 1];
+      const following = next[i + 1];
+      const nearAbstract =
+        (prev?.role === "abstract" && prev.pageStart === node.pageStart) ||
+        (following?.role === "abstract" && following.pageStart === node.pageStart);
+      if (!nearAbstract) continue;
+      const absX = (prev?.role === "abstract" ? prev : following)?.boundingBoxes[0]?.x;
+      const x = node.boundingBoxes[0]?.x;
+      if (absX != null && x != null && Math.abs(x - absX) > 100) continue;
+      next[i] = {
+        ...node,
+        role: "abstract" as const,
+        confidence: Math.max(node.confidence, 0.8),
+        evidence: [
+          ...node.evidence,
+          {
+            source: "generic-heuristic" as const,
+            label: "affiliation-prose-in-abstract-band",
+            confidence: 0.84,
+            page: node.pageStart,
+            bbox: node.boundingBoxes[0],
+            reason: "long affiliation-labelled prose adjacent to abstract band",
+          },
+        ],
+      };
+    }
+    return next;
+  })();
   nodes = mergeAbstractContinuations(nodes);
+  // Elsevier asymmetric rails can still glue `a Institute… article info
+  // a b s t r a c t Deep learning…` into one abstract node. Peel the body.
+  nodes = nodes.map((node) => {
+    if (node.role !== "abstract" || !node.text) return node;
+    const raw = node.text.replace(/\s+/g, " ").trim();
+    const letterspaced = raw.match(
+      /\ba\s+b\s+s\s+t\s+r\s+a\s+c\s+t\s+(.+)$/i,
+    );
+    if (letterspaced && (letterspaced[1]?.length ?? 0) >= 80) {
+      return {
+        ...node,
+        text: letterspaced[1]!.trim(),
+        evidence: [
+          ...node.evidence,
+          {
+            source: "generic-heuristic" as const,
+            label: "peeled-letterspaced-abstract-label",
+            confidence: 0.88,
+            page: node.pageStart,
+            bbox: node.boundingBoxes[0],
+            reason: "dropped article-info rail before letterspaced abstract label",
+          },
+        ],
+      };
+    }
+    if (/^[a-z]\s+(?:Institute|University|Department|Faculty)\b/i.test(raw)) {
+      const cut = raw.search(
+        /\b(?:Deep learning|This (?:paper|study|review|work)|We (?:present|propose|report)|In this|Recent(?:ly)?)\b/,
+      );
+      if (cut >= 40 && raw.length - cut >= 80) {
+        return {
+          ...node,
+          text: raw.slice(cut).trim(),
+          evidence: [
+            ...node.evidence,
+            {
+              source: "generic-heuristic" as const,
+              label: "peeled-affiliation-lead-abstract",
+              confidence: 0.86,
+              page: node.pageStart,
+              bbox: node.boundingBoxes[0],
+              reason: "dropped leading affiliation rail from abstract body",
+            },
+          ],
+        };
+      }
+    }
+    return node;
+  });
+  // Letterspaced correspondence / registry rails sometimes trail the abstract.
+  nodes = nodes.map((node) => {
+    if (node.role !== "abstract" || !node.text) return node;
+    const t = node.text.replace(/\s+/g, " ").trim();
+    const compact = t.replace(/\s+/g, "");
+    const correspondence =
+      /^\*?\s*correspondence\b/i.test(t) || /^\*?correspondence:/i.test(compact);
+    const registryRail =
+      /^(?:systematic review registration|trial registration|clinical trial registration)\s*:?\s*$/i.test(
+        t,
+      );
+    if (!correspondence && !registryRail) return node;
+    return {
+      ...node,
+      role: "copyright" as const,
+      confidence: Math.min(node.confidence, 0.5),
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic" as const,
+          label: correspondence
+            ? "demoted-abstract-correspondence-rail"
+            : "demoted-abstract-registry-rail",
+          confidence: 0.88,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: correspondence
+            ? "correspondence rail is not abstract body"
+            : "registry label without payload is not abstract body",
+        },
+      ],
+    };
+  });
+  nodes = demoteAbstractsAfterIntroduction(nodes);
+  // Table/figure body that leaked into a multi-page abstract band.
+  const firstAbstractPage = Math.min(
+    ...nodes.filter((n) => n.role === "abstract").map((n) => n.pageStart),
+    Infinity,
+  );
+  nodes = nodes.map((node) => {
+    if (node.role !== "abstract" || !node.text) return node;
+    const t = node.text.replace(/\s+/g, " ").trim();
+    const tableLike =
+      /^[\d.%*\s<>≤≥-]+$/.test(t) ||
+      /^\*+\s*\*+/.test(t) ||
+      /^(?:variable|category\s+vs\.?\s+reference|standardized prevalence|note:\s*bars)\b/i.test(t) ||
+      (/\*{2,}/.test(t) && t.split(/\s+/).filter(Boolean).length <= 12) ||
+      (/^(?:sex|men|women)\b/i.test(t) && /\d{2,}\s*\(/.test(t) && t.length < 200) ||
+      (/^(?:neck|lower back|upper back|shoulders|elbows|knees|wrists)\b/i.test(t) &&
+        /\b(?:flight attendants|prevalence)\b/i.test(t));
+    // Structured abstracts rarely span more than two pages; later pages are
+    // almost always body tables/figures that inherited the open band.
+    const lateBand =
+      Number.isFinite(firstAbstractPage) &&
+      node.pageStart >= firstAbstractPage + 2 &&
+      !/^(?:background|introduction|methods?|results?|conclusions?|discussion|objective)\s*:/i.test(t);
+    if (!tableLike && !lateBand) return node;
+    return {
+      ...node,
+      role: tableLike ? ("table" as const) : ("paragraph" as const),
+      confidence: Math.min(node.confidence, 0.7),
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic" as const,
+          label: tableLike ? "demoted-tablelike-abstract" : "demoted-late-abstract-band",
+          confidence: 0.86,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: tableLike
+            ? "table/stat crumb demoted from abstract band"
+            : "abstract band leaked past page+1 into body",
+        },
+      ],
+    };
+  });
   nodes = attachAbstractTerminalCrumbs(nodes);
   nodes = demoteNatureEarlyAccessBoilerplate(nodes);
   nodes = nodes.map((node) =>
@@ -2968,6 +4405,9 @@ export function resolveCanonicalDocument(input: {
     }
     return next;
   })();
+  // Cite-body recovery above can re-label mid-body prose as abstract after
+  // Introduction — run demotion once more as the final abstract gate.
+  nodes = demoteAbstractsAfterIntroduction(nodes);
   nodes = suppressVectorLabelClusters(nodes);
   nodes = dedupeExactCaptions(nodes);
   nodes = mergeFigureCaptionContinuations(nodes);
@@ -2997,20 +4437,30 @@ export function resolveCanonicalDocument(input: {
       // title (`Wenhao Lin , Yu Fang and Haidong Song *`) must return to author.
       if (isSuffixOrCopy) return [];
       const raw = node.text.replace(/\s+/g, " ").trim();
+      const words = raw.split(/\s+/).filter(Boolean);
       const byline =
         /\b(?:and|&)\b/i.test(raw) &&
         (raw.match(/,/g) ?? []).length >= 1 &&
         /^[A-ZÀ-ÖØ-Þ][\p{L}'’-]+(?:\s+[A-ZÀ-ÖØ-Þ][\p{L}'’.-]*)+/u.test(raw) &&
         !/:/.test(raw) &&
-        raw.split(/\s+/).length <= 18 &&
+        words.length <= 18 &&
         !/\b(?:study|review|analysis|survey|effect|role|model|attention|through|toward)\b/i.test(raw);
+      // Lone First Last painted in the title font (`Qiuxia Guo`) after the
+      // resolved title won — restore as author, not a leftover title/paragraph.
+      const personName =
+        words.length >= 2 &&
+        words.length <= 4 &&
+        /^[A-ZÀ-ÖØ-Þ][\p{L}'’-]+(?:\s+[A-ZÀ-ÖØ-Þ]\.?)?(?:\s+[A-ZÀ-ÖØ-Þ][\p{L}'’-]+){1,2}$/u.test(raw) &&
+        !/\b(?:study|review|analysis|survey|effect|role|model|attention|system|style|based|from|with|using|for|of|on|in|to|and)\b/i.test(
+          raw,
+        );
       const layoutAuthor = node.evidence.some(
         (e) => /role author/i.test(e.reason ?? "") || /layoutRole=author/i.test(e.reason ?? ""),
       );
       return [
         {
           ...node,
-          role: byline || layoutAuthor ? ("author" as const) : ("paragraph" as const),
+          role: byline || personName || layoutAuthor ? ("author" as const) : ("paragraph" as const),
           confidence: Math.min(node.confidence, 0.5),
           evidence: [
             ...node.evidence,
@@ -3073,11 +4523,59 @@ export function resolveCanonicalDocument(input: {
   }
 
   nodes = demoteEditorialChromeHeadings(nodes);
+  // Inline section splits can mint a parent `5. Results` after `5.3 …` when
+  // two-column glue injects the label into later prose. Demote only those
+  // split-derived parents (layout-owned section titles keep their role).
+  nodes = (() => {
+    const majorsWithSub = new Map<number, Set<number>>();
+    return nodes.map((node) => {
+      if (node.role !== "heading" || !node.text) return node;
+      const t = node.text.trim();
+      const sub = t.match(/^(\d+)\.(\d+)\b/);
+      if (sub) {
+        const set = majorsWithSub.get(node.pageStart) ?? new Set<number>();
+        set.add(Number(sub[1]));
+        majorsWithSub.set(node.pageStart, set);
+        return node;
+      }
+      const parent = t.match(/^(\d+)\.\s+[A-Z].{0,48}$/);
+      if (!parent) return node;
+      if (!(majorsWithSub.get(node.pageStart)?.has(Number(parent[1])))) return node;
+      if (!node.evidence.some((entry) => entry.label === "inline-numbered-section-split")) {
+        return node;
+      }
+      return {
+        ...node,
+        role: "paragraph" as const,
+        confidence: Math.min(node.confidence, 0.55),
+        evidence: [
+          ...node.evidence,
+          {
+            source: "generic-heuristic" as const,
+            label: "late-parent-section-split-demotion",
+            confidence: 0.86,
+            page: node.pageStart,
+            bbox: node.boundingBoxes[0],
+            reason: "inline-split parent section after same-page subsection",
+          },
+        ],
+      };
+    });
+  })();
   // Hyphen-wrapped title crumbs (`experimental pre-`) and BMJ cite-rail
   // wraps can remain as paragraphs after the resolver stitches the full
   // title. Demote leftovers that are already covered by the resolved title.
+  // Restrict to early pages: later body/table cells often reuse title nouns
+  // (`Employee wellbeing`, `Visual impairment`) and must not become chrome.
   if ((resolvedTitleText?.length ?? 0) >= 40) {
     const titleNorm = resolvedTitleText!.toLowerCase().replace(/[\s-]+/g, "");
+    const titlePageEnd = Math.max(
+      1,
+      ...nodes
+        .filter((node) => node.id === "title-resolved" || node.role === "title")
+        .map((node) => node.pageEnd),
+    );
+    const demotionPageLimit = Math.max(2, titlePageEnd);
     nodes = nodes.map((node) => {
       if (
         (node.role !== "paragraph" && node.role !== "title" && node.role !== "other") ||
@@ -3086,6 +4584,16 @@ export function resolveCanonicalDocument(input: {
         return node;
       }
       if (node.id === "title-resolved") return node;
+      if (node.pageStart > demotionPageLimit) return node;
+      // Axis / matrix labels share vocabulary with titles but belong to tables.
+      if (node.evidence.some((entry) =>
+        entry.label === "axis-label-numeric-neighborhood" ||
+        entry.label === "captioned-neighbor-cell-rows" ||
+        entry.label === "captioned-native-multicell-row" ||
+        entry.label === "table-row-geometry"
+      )) {
+        return node;
+      }
       const t = node.text.replace(/\s+/g, " ").trim();
       if (t.length < 8 || t.length > 220) return node;
       if (!/[A-Za-z]/.test(t) || /[.!?]$/.test(t)) return node;
@@ -3093,6 +4601,11 @@ export function resolveCanonicalDocument(input: {
       if (/\b(?:bmj\s*open|doi:|10\.\d{4,}\/)/i.test(t)) return node;
       const fragNorm = t.toLowerCase().replace(/[\s-]+/g, "");
       if (fragNorm.length < 8) return node;
+      // Single dictionary words that happen to appear in the title are body
+      // terms on page 1 as often as crumbs; require a multi-token or hyphen
+      // fragment before demoting.
+      const fragTokens = t.split(/\s+/).filter(Boolean);
+      if (fragTokens.length === 1 && !/-/.test(t) && fragNorm.length < 18) return node;
       const coveredExact = titleNorm.includes(fragNorm);
       // Cite rails sometimes compress hyphen compounds
       // (`quasi-experimental pre-post` → `quasi-post`).
@@ -3128,19 +4641,34 @@ export function resolveCanonicalDocument(input: {
       };
     });
   }
-  // BMJ Open box chrome often lands in the author role (`STRENGTHS AND
-  // LIMITATIONS OF THIS STUDY`, `To cite: … ABSTRACT`) even after name
-  // projection filters it from `paper.authors`.
+  // BMJ Open / Frontiers box chrome often lands in the author role
+  // (`STRENGTHS AND LIMITATIONS…`, `SPECIALTY SECTION`, letterspaced
+  // `R E S E A R C H`) even after name projection filters it from
+  // `paper.authors`.
   nodes = nodes.map((node) => {
     if (node.role !== "author" || !node.text) return node;
     const t = node.text.replace(/\s+/g, " ").trim();
+    const letterspacedCompact = t.replace(/\s+/g, "");
+    const letterspacedBanner =
+      /^(?:[A-Z]\s+){3,}[A-Z](?:\s+(?:[A-Z]\s+){2,}[A-Z])*$/.test(t) &&
+      letterspacedCompact.length >= 4 &&
+      letterspacedCompact.length <= 24 &&
+      /^(?:ORIGINAL|RESEARCH|ARTICLE|REVIEW|BRIEF|REPORT|LETTER|EDITORIAL|CLINICAL|SYSTEMATIC|INFO|ABSTRACT|KEYWORDS?|INTRODUCTION|METHODS?|RESULTS?|DISCUSSION|CONCLUSION|ACKNOWLEDGEMENTS?)+(?:OPENACCESS)?$/i.test(
+        letterspacedCompact,
+      );
     const chrome =
       /^(?:this study|strengths and limitations(?:\s+of\s+this\s+study)?)\b/i.test(t) ||
       /^to cite\s*:/i.test(t) ||
       (/^to cite\b/i.test(t) && /\babstract\b/i.test(t)) ||
       /^open access$/i.test(t) ||
-      /^(?:edited by|reviewed by)$/i.test(t) ||
-      /^(?:for numbered affiliations see|correspondence to)\b/i.test(t);
+      /^(?:edited by|reviewed by|approved by|specialty section)$/i.test(t) ||
+      /^(?:for numbered affiliations see|correspondence to)\b/i.test(t) ||
+      /^(?:abstract\s+)?corresponding\s+authors?\s*:?\s*$/i.test(t) ||
+      /\b(?:creative\s+commons|attribution\s+license|cc-?by)\b/i.test(t) ||
+      /^of\s+(?:the\s+)?(?:university|college|department|faculty|institute|nebraska|hospital|school)\b/i.test(t) ||
+      (/^jurnal\s+\S+/i.test(t) && t.split(/\s+/).length <= 5) ||
+      /^(?:informasi\s+artikel(?:\s+abstract)?|email\s+abstrak|kata\s+kunci)\b/i.test(t) ||
+      letterspacedBanner;
     if (!chrome) return node;
     return {
       ...node,
@@ -3223,7 +4751,7 @@ export function resolveCanonicalDocument(input: {
   nodes = nodes.map((node) => {
     if (node.role !== "author" || !node.text) return node;
     const t = node.text.trim();
-    const articleType = /^(?:original article|research article|review article|systematic review|brief report|case report|editorial)\b/i.test(t);
+    const articleType = /^(?:original article|research article|review article|systematic review|brief report|case report|editorial|research highlight)\b/i.test(t);
     const bareEmail = /^[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}(?:\s*\([^)]*\))?$/i.test(t) ||
       (/@/.test(t) && t.split(/\s+/).length <= 6 && !/^[A-ZÀ-ÖØ-Ý][\p{L}'’-]+(?:\s+[A-ZÀ-ÖØ-Ý])/u.test(t.replace(/[*†‡§\d,]/g, " ").trim()));
     if (!articleType && !bareEmail) return node;
@@ -3244,12 +4772,197 @@ export function resolveCanonicalDocument(input: {
       ],
     };
   });
+  // Standalone figure/table captions that scored as body paragraphs
+  // (`TABLE 3 A summary of…`, `Fig. 2 Flow diagram of…`). Keep narrative
+  // references (`Table 3 summarizes…`, `Figure 3 illustrates…`) as paragraphs.
+  nodes = nodes.map((node) => {
+    if (node.role !== "paragraph" || !node.text) return node;
+    const t = node.text.replace(/\s+/g, " ").trim();
+    if (t.length < 12 || t.length > 220) return node;
+    if (!/^(?:(?:figure|fig\.?|table|表)\s*\d+[a-z]?(?:\s*\((?:continued|cont\.?)\))?)/i.test(t)) {
+      return node;
+    }
+    if (
+      /\b(?:illustrates?|summarizes?|maps?|shows?|presents?|depicts?|further\s+ranks?|reports?)\b/i.test(t)
+    ) {
+      return node;
+    }
+    return {
+      ...node,
+      role: "caption" as const,
+      confidence: Math.max(node.confidence, 0.86),
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic" as const,
+          label: "standalone-caption-promotion",
+          confidence: 0.86,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: "figure/table caption recovered from paragraph role",
+        },
+      ],
+    };
+  });
+  // Layout sometimes paints body cross-refs as figure_caption
+  // (`Figure 5 maps the distribution…`). Demote those back to paragraphs.
+  nodes = nodes.map((node) => {
+    if (node.role !== "caption" || !node.text) return node;
+    const t = node.text.replace(/\s+/g, " ").trim();
+    const narrative =
+      /^(?:figure|fig\.?|table|表)\s*\d+[a-z]?\s+(?:maps?|shows?|illustrates?|presents?|summarizes?|depicts?|reports?|describes?|highlights?|provides?|compares?)\b/i.test(
+        t,
+      ) &&
+      t.split(/\s+/).filter(Boolean).length >= 10;
+    if (!narrative) return node;
+    return {
+      ...node,
+      role: "paragraph" as const,
+      confidence: Math.min(node.confidence, 0.62),
+      evidence: [
+        ...node.evidence,
+        {
+          source: "generic-heuristic" as const,
+          label: "demoted-narrative-caption",
+          confidence: 0.88,
+          page: node.pageStart,
+          bbox: node.boundingBoxes[0],
+          reason: "in-text figure/table reference, not a caption",
+        },
+      ],
+    };
+  });
+  // Caption promotion above can create bare `FIGURE N` / `Table N` labels after
+  // the early continuation passes — merge their legends once more.
+  nodes = mergeTableCaptionContinuations(nodes);
+  nodes = mergeFigureCaptionContinuations(nodes);
+
+  // Glued `Table 5Author 99…` crumbs: peel when the table number butts into a
+  // Title-Case word (`5Author`), not panel letters (`Table 5a` / `Table 5A`).
+  nodes = nodes.flatMap((node) => {
+    if (
+      (node.role !== "caption" && node.role !== "table" && node.role !== "paragraph") ||
+      !node.text
+    ) {
+      return [node];
+    }
+    const t = node.text.replace(/\s+/g, " ").trim();
+    // Require the title/cell tail to butt into the digits with no space
+    // (`Table 5Author…`). A spaced legend (`Table 5 Results of…`) must stay
+    // intact — `/i` alone would also treat `Results` as `[A-Z][a-z]`.
+    const tight = t.match(/^(table|表)\s*(\d+)(\S[\s\S]+)$/i);
+    if (!tight) return [node];
+    const tailRaw = tight[3] ?? "";
+    if (!/^[A-Z][a-z]/.test(tailRaw)) return [node];
+    const captionText = `Table ${tight[2]}`;
+    const tail = tailRaw.trim();
+    if (tail.split(/\s+/).filter(Boolean).length < 2) return [node];
+    return [
+      {
+        ...node,
+        role: "caption" as const,
+        text: captionText,
+        evidence: [
+          ...node.evidence,
+          {
+            source: "generic-heuristic" as const,
+            label: "peeled-glued-table-caption",
+            confidence: 0.86,
+            page: node.pageStart,
+            bbox: node.boundingBoxes[0],
+            reason: "split Table N glued onto following cell text",
+          },
+        ],
+      },
+      {
+        ...node,
+        id: `${node.id}::glued-table-tail`,
+        role: "table" as const,
+        text: tail,
+        confidence: Math.min(node.confidence, 0.7),
+        evidence: [
+          {
+            source: "generic-heuristic" as const,
+            label: "caption-bounded-table-cell",
+            confidence: 0.8,
+            page: node.pageStart,
+            bbox: node.boundingBoxes[0],
+            reason: "tail peeled from glued table caption",
+          },
+        ],
+      },
+    ];
+  });
+  // After captions exist, promote short SEM/score-table crumbs that never got
+  // native table geometry so orphan-caption diagnostics clear.
+  nodes = promoteCaptionBoundedTableCells(nodes);
+  nodes = mergeAdjacentTableRows(nodes);
+  nodes = collapseDenseShortProseGridTables(nodes);
+  nodes = nodes.filter((node) => node.role !== "table" || Boolean((node.text ?? "").trim()));
+  nodes = demoteRepeatedBareCaptions(nodes);
+  nodes = annotateTablesFromCaptions(nodes);
   // Stacked d/dγ crumbs, lone √ glyphs, and superscript `[ 2]` fragments are
   // common native-PDF math failures; repair them before Reader projection.
+  // mergeMathematicalDisplayFragments sanitizes eth/C0 first so numbered
+  // displays like `… ð3Þ` promote; re-sanitize after merges for combined text.
   nodes = mergeMathematicalDisplayFragments(nodes);
+  nodes = nodes.map((node) => sanitizeMathControls(node));
+  // Math / table passes can reshuffle neighbors; re-merge bare `FIGURE N` +
+  // legend paragraphs that were not adjacent during earlier caption passes.
+  nodes = mergeFigureCaptionContinuations(nodes);
+  nodes = mergeTableCaptionContinuations(nodes);
 
   const figureNodes = figureNodesForCaptions(candidates, input.regionEvidence ?? [], input.layouts);
   nodes = [...nodes, ...figureNodes];
+  // Standalone-promoted figure captions (`FIGURE 3(a)…`) never pass through
+  // layout `figure_caption` shells. Add a same-page figure shell so captions
+  // are not left orphaned when the page has only image/vector content.
+  nodes = (() => {
+    const extras: CanonicalNode[] = [];
+    let shellIndex = 0;
+    for (const caption of nodes) {
+      if (caption.role !== "caption" || !caption.text) continue;
+      if (!/^(?:figure|fig\.?|図)\s*\d+/i.test(caption.text.trim())) continue;
+      const hasOwner = nodes.some(
+        (node) =>
+          node.pageStart === caption.pageStart &&
+          (node.role === "figure" || node.role === "table"),
+      );
+      if (hasOwner) continue;
+      const box = caption.boundingBoxes[0];
+      const shellBox = box
+        ? {
+            ...box,
+            y: Math.max(0, box.y - Math.min(160, Math.max(40, box.height * 6))),
+            height: Math.min(160, Math.max(40, box.height * 6)),
+          }
+        : undefined;
+      extras.push({
+        id: `fig-shell-${shellIndex++}`,
+        role: "figure",
+        text: null,
+        pageStart: caption.pageStart,
+        pageEnd: caption.pageEnd,
+        boundingBoxes: shellBox ? [shellBox] : [...caption.boundingBoxes],
+        confidence: 0.66,
+        evidence: [
+          {
+            source: "generic-heuristic" as const,
+            label: "caption-anchored-figure-shell",
+            confidence: 0.66,
+            page: caption.pageStart,
+            bbox: shellBox ?? caption.boundingBoxes[0],
+            reason: "figure shell for promoted caption without layout figure_caption",
+          },
+        ],
+        sourceAnchor: {
+          page: caption.pageStart,
+          boundingBoxes: shellBox ? [shellBox] : [...caption.boundingBoxes],
+        },
+      });
+    }
+    return extras.length > 0 ? [...nodes, ...extras] : nodes;
+  })();
 
   const headingNodes = nodes.filter((n) => n.role === "heading");
   const readable = nodes.filter((n) =>

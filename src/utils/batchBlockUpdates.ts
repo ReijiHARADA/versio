@@ -38,6 +38,10 @@ export function isTranslationUiScrollPaused(): boolean {
   return isDeferred();
 }
 
+export function activeBlockUpdateBatcherCount(): number {
+  return batchers.size;
+}
+
 export function createBlockUpdateBatcher(
   apply: (paperId: string, blocks: PaperBlock[]) => void
 ): {

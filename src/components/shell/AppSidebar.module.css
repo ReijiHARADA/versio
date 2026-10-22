@@ -54,7 +54,8 @@
   flex-direction: column;
   gap: calc(2px + 2px * var(--sidebar-expand-t));
   /* Grow left pad with expand so depth-0 chevrons sit on the parent row (not clipped). */
-  padding: var(--spacing-md) var(--sidebar-pad-x);
+  /* Top pad is 0 so the search can occupy the same vertical band as the page header. */
+  padding: 0 var(--sidebar-pad-x) var(--spacing-md);
   padding-left: calc(
     var(--sidebar-pad-x) +
       (var(--sidebar-chevron) - var(--sidebar-pad-x)) * var(--sidebar-expand-t)
@@ -261,6 +262,9 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text-tertiary);
+  /* Center within the same --header-height band as the main pane header. */
+  margin-top: calc((var(--header-height) - var(--sidebar-icon-box)) / 2);
+  margin-bottom: calc((var(--header-height) - var(--sidebar-icon-box)) / 2);
 }
 
 .searchIcon {

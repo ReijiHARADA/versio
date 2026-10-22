@@ -15,7 +15,6 @@ export function RecentScreen() {
   const navigate = useNavigate();
   const papers = useLibraryCache((s) => s.papers);
   const setCurrentPaper = useAppStore((s) => s.setCurrentPaper);
-  const blocks = useLibraryCache((state) => state.blocks);
   const searchQuery = useProjectStore((s) => s.searchQuery);
   const { busyId, requestDelete } = useDeletePaper();
 
@@ -37,7 +36,7 @@ export function RecentScreen() {
     if (!paper) return;
     const view = derivePaperReadiness({
       processingStatus: paper.processingStatus,
-      blocks: blocks[paperId],
+      blocks: useLibraryCache.getState().blocks[paperId],
     });
     if (!view.canOpen) return;
     setCurrentPaper(paperId);

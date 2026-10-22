@@ -21,7 +21,6 @@ export function InboxScreen() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const papers = useLibraryCache((s) => s.papers);
   const setCurrentPaper = useAppStore((s) => s.setCurrentPaper);
-  const blocks = useLibraryCache((state) => state.blocks);
   const memberships = useProjectStore((s) => s.memberships);
   const searchQuery = useProjectStore((s) => s.searchQuery);
   const importJobs = useImportJobStore((state) => state.jobs);
@@ -53,7 +52,7 @@ export function InboxScreen() {
     if (busyId === paper.id) return;
     const view = derivePaperReadiness({
       processingStatus: paper.processingStatus,
-      blocks: blocks[paper.id],
+      blocks: useLibraryCache.getState().blocks[paper.id],
     });
     if (!view.canOpen) return;
     setCurrentPaper(paper.id);

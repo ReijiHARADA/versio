@@ -20,7 +20,6 @@ export function LibraryScreen() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const papers = useLibraryCache((state) => state.papers);
   const setCurrentPaper = useAppStore((state) => state.setCurrentPaper);
-  const blocks = useLibraryCache((state) => state.blocks);
   const searchQuery = useProjectStore((state) => state.searchQuery);
   const importJobs = useImportJobStore((state) => state.jobs);
   const jobs = useMemo(() => visibleImportJobs(importJobs), [importJobs]);
@@ -39,7 +38,7 @@ export function LibraryScreen() {
     if (!paper) return;
     const view = derivePaperReadiness({
       processingStatus: paper.processingStatus,
-      blocks: blocks[paperId],
+      blocks: useLibraryCache.getState().blocks[paperId],
     });
     if (!view.canOpen) return;
     setCurrentPaper(paperId);

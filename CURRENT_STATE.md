@@ -1,3 +1,492 @@
+# 2026-10-22: Frontiers other-role and-wrap byline
+
+- カンマ終わり author 行の直下 `other` `Name and Name` を continuation として回収（dual-pathway）
+- emptyCap FIGURE は画像のみ（凡例テキスト無し）を維持
+- 回帰: authorProjection dual-pathway-other-and-wrap
+
+# 2026-10-22: PLOS trailing Abstract + biobank consortium
+
+- `… CHINA Abstract` で Abstract band を開き、左レール x に固定しない（atrial oculomics noAbs 解消）
+- `UK Biobank Eye` / `Vision Consortium` を author 拒否
+- 回帰: markAbstracts plos-trailing；authorProjection atrial
+
+# 2026-10-22: Frontiers star-lead / OUP Corresponding / comma-wrap
+
+- `*, Jennifer S. Stevenson Xia Wang and Jiayi Wang` を undelimited triple として回収（RECEIVED/KEYWORDS chrome 拒否）
+- star-lead は先頭 `*` 必須（`Name and Name` 誤上書きで長い byline を潰さない）
+- Frontiers `Carlos…2,` paragraph + 次行 `Micael… and Rachid…` を predecessor 結合（comma≥2）
+- OUP `*Corresponding authors: … (email)` を byline continuation から除外
+- soft0: noAuthors は教科書のみ；bareEq/FIGURE9 は画像式・凡例無しを維持
+- 回帰: authorProjection star-lead / OUP corresponding-rail / multimodal comma-wrap
+
+# 2026-10-22: 引用リスト裸 (n) 列対応 glue
+
+- 二段組で右列 wrap に遮られても左列 `• …` へ bare `(49)` を膠着（covid CVI）
+- 回帰: mathFragmentMerge cite-list；式本体への弱推測はしない
+
+# 2026-10-22: residual 検証（spot/soft/diagnose）
+
+- spot150: noAuthors 0 / emptyCaption 0 / noAbs 1（Editorial のみ）
+- soft700 emptyCap 0；diagnose 0–400 帯 clean；2302 p2 式 (1)–(5) 維持
+- 意図的残差: 教科書 noAuthors、画像式 bareEq、凡例無し FIGURE、Early-access/Editorial noAbs
+
+# 2026-10-22: PLOS Abstract + other Background/Methods
+
+- `other` の裸 `Background`/`Methods` を structured-abstract subhead として維持（health-professionals noAbs 解消）
+- `STUDY PROTOCOL` を author chrome 拒否
+- 回帰: markAbstracts PLOS-other-subhead；authorProjection
+
+# 2026-10-22: 右レール裸 Table N + 結果グリッド demote
+
+- 同一 baseline の広い table セル左＋右レール `Table 9` を chrome demote（hybrid-real-synthetic）
+- 回帰: bareCaptionMerge right-rail Table
+
+# 2026-10-22: Figure N. ピリオドのみ + bare 双子 demote
+
+- `Figure 2.` と裸 `FIGURE 2`（同ページ・凡例無し）を chrome demote（radial-consistency）
+- 画像のみ裸 FIGURE（凡例テキスト無し）は caption 維持
+- 回帰: bareCaptionMerge period-twin
+
+# 2026-10-22: Keywords トピック列を author 拒否
+
+- `Psychological Distress, … Well-Being, Dropout intention…` を author から除外
+- spot120: noAuthors 0 / emptyCaption 0；soft700/900 emptyCap 解消維持
+- 回帰: authorProjection keywords-not-authors
+
+# 2026-10-22: 続き表ページ末 TABLE N chrome demote
+
+- ページ末の裸 `TABLE N` + 次ページ先頭のセル断片を continued-table chrome として demote
+- soft700 emptyCap 4→0（nap Figure 3 / multimodal TABLE 3 / influence Table 2）
+- soft900 emptyCap 解消；diagnose40 clean；残 bareEq は画像式（optotagging/(17)）
+- 回帰: bareCaptionMerge；typecheck；vite build
+
+# 2026-10-22: ページ境界 bare Figure N 凡例結合
+
+- ページ末の裸 `Figure N` + 次ページ先頭の Title-Case/β-… 凡例を結合（nap Figure 3）
+- 回帰: bareCaptionMerge page-boundary
+
+# 2026-10-22: Frontiers 単一 Name* abstract byline + Table 5 左凡例
+
+- `Gopal Singh Jamnal* Forecasting…` を abstract から剥離（true-xai noAuthors 解消）
+- 裸 `Table 5` + 直下フル幅 Title-Case 凡例を結合（psychological-distress）
+- 回帰: authorProjection single-star；bareCaptionMerge Table 5
+
+# 2026-10-22: Table N shows-the… 凡例結合
+
+- 裸 `Table N` + 同一 baseline の `shows/presents/…` 凡例を結合（influence motivation）
+- 回帰: bareCaptionMerge legend-verb
+
+# 2026-10-22: bare Table 文中挟み込み demote
+
+- 裸 `Table N` が `2). Their…` / `= 2), and…` など文中断片と近接するとき chrome demote（hope Table 4）
+- 回帰: bareCaptionMerge mid-sentence Table
+
+# 2026-10-22: bare-(n) 幾何 lookback + dim≤ / ENQ
+
+- 二段組で prose に遮られないよう bare `(n)` 結合を幾何スコア化（BCI `(8)`→`dim(S)≤dim(A)`）
+- ENQ/`dim (` を ≤ 文脈として sanitize；`dim (AI) ≤ dim (At) (10)` も equation
+- 回帰: mathFragmentMerge dim-baseline；画像のみ式番号は未結合のまま
+
+# 2026-10-22: bare Figure callout demote（直下フル凡例）
+
+- 裸 `Figure N` が同列直下の全文 `Figure … | …` 凡例の上にあるとき chrome として demote
+- clinicians Figure 2–5 emptyCap 解消；レジェンド無し裸 FIGURE（ssvep FIGURE 3）は維持
+- 回帰: bareCaptionMerge callout-demote
+
+# 2026-10-22: scrambled FIGURE N 幾何近傍レジェンド結合
+
+- 二段組で読み順が崩れたとき、配列末尾ではなく同列・近接 gap の裸 `FIGURE N` に凡例を結合
+- 介在する別 FIGURE caption は splice しない（anthropomorphic-hand FIGURE 4）
+- 回帰: bareCaptionMerge scrambled-order；emptyCap FIGURE 4 解消
+
+# 2026-10-22: correspondence scrub / Institute demote / glued star name
+
+- *CORRESPONDENCE 下の `Filip Stefanovic,` を reviewer scrub から除外
+- Institute 行を spaced byline にしない；`PlamenkaNanova*` 単独 affiliation 回収
+- REVIEWED BY+星付き本文著者（Bhagat Smith / Adams）；Furhat Tsvetkova
+- 回帰: authorProjection；tableware / mind-gap / tourism 維持
+
+# 2026-10-22: Yong-SeokJang* / LAY SUMMARY / affiliation-dump abstract
+
+- 膠着 `Yong-SeokJang*`；LAY SUMMARY→abstract；所属ダンプ abstract を demote→late promote
+- cite 膠着 lead を late-front abstract 候補から除外
+- soft0: ai-driven noAuthors 解消；noAbs 3→2（textbook noAuthors・画像式 bareEq は意図的）
+- 回帰: authorProjection 69；markAbstracts 関連
+
+# 2026-10-22: correspondence scrub / Institute byline / PlamenkaNanova*
+
+- *CORRESPONDENCE 下の `Filip Stefanovic,` を reviewer scrub から除外
+- Institute 行を spacedBodyByline から除外；`PlamenkaNanova*` affiliation 回収
+- compact-rail / survey Bhagat Smith / Furhat / Nanova
+- soft900: noAuthors 0；残 bareEqPara は optotagging 画像式（意図的未対応）
+- 回帰: authorProjection 69
+
+# 2026-10-21: one-comma byline / PLOS ID / REVIEWED-BY peel
+
+- `Name *, Name and Name`（カンマ1）本文 byline；`Paiva ID` 除去
+- 末尾 `Name2 and` 単独 continuation；REVIEWED BY+番号著者を sidebar 例外で回収
+- tourism López-Naranjo…；mind-the-gap / mobile PLOS
+- 回帰: authorProjection 69+；mathFragmentMerge enumeration
+
+# 2026-10-21: Frontiers body byline / abstract-star / reviewer final scrub
+
+- 本文カンマ byline（`Liandi He *, Rilei He , …`）を reviewer 混入時に優先
+- abstract 先頭 `Name* Department…` 回収；REVIEWED BY 接頭辞 peel
+- reviewer 最終 scrub；glued CamelCase；Jilin；enum `(3)`；Ministério
+- 回帰: authorProjection 68；mathFragmentMerge enumeration
+
+# 2026-10-21: Frontiers reviewer demote + glued CamelCase body byline
+
+- `Name, University, Country` / `, Affiliated` / Ministério·Vigilância を author 拒否
+- 本文膠着 byline（`SiddharthaSinghal and KakelliAnilKumar*` / `RevathyP. and AkilaVictor*`）を優先回収
+- 所属尾 `Jilin Changchun`；同一 baseline 列挙 `(3)`→paragraph；tableware CamelCase+NSTDA
+- 回帰: authorProjection 67；mathFragmentMerge enumeration
+
+# 2026-10-21: location-tail author demote + same-baseline enum `(n)`
+
+- 所属尾 `Jilin Changchun 130024` を author から除去（affiliation ノードも参照）
+- 同一 baseline の列挙 `(3)` は paragraph に膠着（偽 equation にしない）
+- glued CamelCase byline + NSTDA demote を維持
+- 回帰: authorProjection city-tails / tableware；mathFragmentMerge enumeration
+
+# 2026-10-21: glued CamelCase byline + NSTDA agency demote
+
+- `MingZhang*, ShanDing… and` → CamelCase 境界挿入＋末尾 `and` 除去で 5 名回収
+- trailing-`and` の personPairs 判定も CamelCase 分割後にカウント
+- `Development Agency (NSTDA)` を author chrome として拒否
+- 回帰: authorProjection multimodal-tableware（65）
+
+# 2026-10-21: Frontiers カンマ終わり byline 行 + Figure N) / SENOPATI / Spanish Ma
+
+- paragraph `Carlos…1*, Phani…2,` を authorContinuation（カンマ終わり番号付き）
+- bare `Figure N:` ↔ 同番号 `Figure N)`；SENOPATI title|byline；Spanish `Ma Lam`
+- 回帰: authorProjection 64；bareCaptionMerge same-number Figure
+
+# 2026-10-21: FIGURE Methods-of… / This-figure / 長パネル / Figure depicting
+
+- bare `FIGURE N` の continuation 拒否を `methods?\b` から exact section のみへ
+- 番号付き `Figure N…` のみ拒否し、`Figure depicting…` 凡例は結合（transformer-nlp FIGURE 1）
+- `Methods of analysis…`；先行 `: This figure illustrates…`；パネル長凡例 420 語
+- 裸 `Methods` / `Results` heading・通常本文は結合しない
+- 回帰: bareCaptionMerge Methods-of / preceding / long panel / Figure depicting
+
+# 2026-10-21: bare FIGURE/Table キャプション凡例結合
+
+- bare `FIGURE N` で numberedProcedure 拒否を外す（wav2vec FIGURE 2/3）
+- same-baseline `Table N` + 長い Title-Case 凡例（Eyettention Table 7、単語上限 80）
+- math 後に caption continuation 再実行
+- 回帰: bareCaptionMerge；soft550 emptyCap 0
+
+# 2026-10-21: 学位論文 / キリル / 括弧 affiliation 著者回収 + STATEMENT demote
+
+- `Author: Friswell, Rena`；PhD cover Irene；キリル `Ивана Ж. БАЛТЕЗАРЕВИЋ`；`Yoshinori HORIE (College…)`
+- COPYRIGHT/AUTHENTICITY/ORIGINALITY STATEMENT → copyright
+- 回帰: authorProjection thesis / Cyrillic / paren affiliation；editorialChromeHeadings
+
+# 2026-10-21: Scientific Reports 抽象先頭 byline（El / El-Din 粒子姓）
+
+- gluedByline の姓トークンを最大 2（`Moataz M. El Sherbiny1` / `Hossam El-Din Mostafa1`）
+- 抽象本文から byline を剥がし著者回収（xgboost diabetes multi-classification）
+- 回帰: authorProjection particle surnames
+
+# 2026-10-21: ∏/∣/⊙ display 判定 + 孤児 ∫→dt 再結合
+
+- math 文字に `∏` / `∣` / `⊙`；積公式 `(4)`、Hadamard `Tcross…⊙… (12)`（geoepred）
+- `∫ T`（脚注挟み可）→ `η = ∫ dt … (n)`（MPPT `(42)`）
+- 回帰: mathFragmentMerge；soft1200 math soft フラグ解消
+
+# 2026-10-21: Frontiers 著者から Universidad / cite 略記を除去
+
+- `Universidad…` / `Facultad…` / `Escuela…` 先頭行は常に非著者
+- cite 略記 `Fres´an-Orellana A`（acute 含む）をフルネーム横で drop
+- 回帰: authorProjection editorial-public-health
+- 既知残: Spanish 複合姓の分割（Ma Lam）は main でも失敗していた既存課題
+
+# 2026-10-21: 数式 fragment merge 拡張（分数 / heading / ∥ / 前方番号 / ルール demote）
+
+- stacked function fraction + heading display の bare `(n)`（disentangling `(12)`、physiology `(16)`/`(17)`）
+- bare `(n)` が本体より先に来る場合の forward merge（robust sex-diff Model `(4)`）
+- `(0)` 層添字除外；`∥`(U+2225) + 空バー opener（coropinn `(5)`）；CN2 `≥=…` demote
+- 意図的未結合: 2D/画像のみ番号、BCI `(8)`、列挙/文献、`{i,j∑} (11)`、PPO 画像 `(25)`
+- 2302 p.2 `(1)`–`(5)` + marginal ∫ 維持
+
+# 2026-10-21: 章フッタ copyright からの著者回収 + Jan 名誤認修正
+
+- copyright 帯の `© The Author(s) 2018 … D. A. Shepherd, H. Patzelt` を著者へ（Shepherd 章）
+- `isNonAuthorMastheadLine` 月名をフル表記のみに（`Jan Berghold` 保持）；BMC `and Decision Making` 除外
+- 回帰: authorProjection Shepherd / Jan Berghold
+
+# 2026-10-21: spaced ORIGINAL MANUSCRIPT バナーがタイトル `T` になる不具合
+
+- `stripLetterspacedTitleBanner` が `… C R I P T` の末尾 `T` を本文タイトルと誤認 → 単一英字 remainder は strip しない
+- `looksLikeSpacedArticleTypeOnly` に `MANUSCRIPT` を追加しバナーを chrome 扱い（Eyettention II 全文タイトル回収）
+- 回帰: titleResolver ORIGINAL MANUSCRIPT；実 PDF eyettention-ii
+
+# 2026-10-21: 数式 display 昇格の追加（eth / ¼ / ∼ / table誤認 / ∫ strip）
+
+- eth 式番号は merge 前 sanitize；eth 内側長を 48 に拡張；残り `þ` → `+`；`¼` → `=`
+- 番号付き関係式（`→` / `≥` / `∼` / `× exp` / SmoothL1）と無番号 `∑/∫/∏`
+- 単行 table/footnote/heading 誤認の numbered display を equation へ（Fed-XLM-R SNRA (15)、bionic (38)）
+- 繰り返し `√ √ √` demote；`∫` 再前置バグ修正；display-as-para ハント 0–900 で実質残 0
+- 意図的未結合: 画像のみ裸番号、2D 分裂式、引用番号、凡例無し FIGURE、`{i,j∑} (11)` 断片
+- 回帰: mathFragmentMerge；2302 p.2 維持；diagnose 広範囲 clean
+
+# 2026-10-21: eth 式番号の sanitize-before-merge（番号付き display 昇格）
+
+- `mergeMathematicalDisplayFragments` 先頭で eth/C0 sanitize → `… ð3Þ` / `… ð3` が numbered-display 昇格に乗る（ionic MSD/(1)(3)、optotagging (4)）
+- 画像のみ裸 `(1)`–`(3)`（optotagging where 節）は未結合のまま
+- 回帰: mathFragmentMerge eth-wrapped numbers；2302 p.2 維持
+
+# 2026-10-21: page-1 byline が table 誤認されるケースの回収
+
+- 所属上付き数字付き byline（`Geddam1, … & Ghayvat4,5`）を page-1 table から author へ回収（sEMGCareHCI）
+- 共有 `looksLikeAuthorList` は変更せず、table 回収側だけ数字マーカーを許容（Spanish byline 回帰なし）
+- spot offset200 noAuthors 0；dual-pathway Frontiers は ABSTRACT 帯なし（意図的 noAbs）
+
+# 2026-10-21: 2302 / math 回帰の再確認
+
+- 2302 p.2: (1)–(5) equation、読み順 (4)→marginal∫→(5) 維持
+- pipeline **98/98**；diagnose 400/750/1000/1300 clean；eth 残 0（atomistic）
+
+# 2026-10-21: BMJ cite crumb + Research Square p.3 構造化 abstract
+
+- ABSTRACT 帯で `et al.` cite crumb を本文扱いしない（Introduction 誤クローズ防止）
+- colon/bare 構造化 abstract の適用を page≤3 に拡張（GalaxyR Background–Conclusions）
+- 回帰: markAbstracts BMJ cite crumb；GalaxyR / BMJ protocol で abs 回収
+- abstract-continuation 後に BMJ cite/title chrome（bmjopen / supplemental）を demote
+- bilingual cover abstract は複数ノードでも本文が揃えば可（pipeline 期待を結合テキストに緩和）
+
+# 2026-10-21: 数式 C0 / eth-thorn 括弧の正規化
+
+- 行列省略 `\u0004…` → `⋯`、overline `\u0016` → ̄、`EGB \u0001 Ebulk` → `/`、DC2/DC3 → `(Ea)`
+- eth/thorn 括弧を繰り返し置換＋閉じ欠落の式番号 `ð19` → `(19)`。merge 後に再 sanitize
+- microstructural / atomistic で eth 残 0
+- 意図的未結合: physiology 2段組分裂分数+(16)/(17)、画像のみ裸番号、引用 `(55)`
+
+# 2026-10-21: min/max 下の `i i` index crumb 消費
+
+- display 直下の孤立 `i` / `i i` を式へ吸収（テキスト追記なし・下付き推測なし）
+- IVN MARCOS (13)(14) で独立 paragraph が消えることを確認。画像のみ式の裸 `(9)` は未結合のまま
+
+# 2026-10-21: 2302 p.2 読み順 + ∫ 定義文への再配置
+
+- `repairInterleavedContinuationOrder` が小文字始まりの中央 display（`d DKL…(4)`）と左寄せ本文を入れ替えていた → 同一 baseline かつ非 display のみ swap
+- 孤立 `∫` は定義文の `=` 直後へ（`p(z)=∫ p…`）。先頭 orphan としては落とさない／付けない
+- 2302.03792 p.2: (4)→marginal→(5) の順と integrand ∫ を確認。画像のみ式への遠方番号は未結合のまま
+- 検証: typecheck / math+stacked+pipeline+readingOrder **197** / vite build；diagnose 1150/1250 clean
+
+# 2026-10-21: piecewise cases + 式番号 lookback
+
+- cases / 複数 `if` 行を display とみなし、中央寄りの裸 `(6)` を再結合（foveal vision）
+- 画像のみの式に対する遠方 `(1)`/`(25)` は弱関連として未結合（意図的）
+- 裸 `(n)` lookback + `∑_i … (1)`；pipeline **98/98**；diagnose 200/850/950/1050 clean
+
+# 2026-10-21: 式番号 lookback + 総和 index `i (1)` 結合
+
+- 裸 `(n)` は短 crumb/heading を飛び越して直前 display へ再結合（influenza μθ… (3)）
+- `i (1)` を `∑_i … (1)` に結合（memory episodic model）
+
+# 2026-10-21: thesis cover `partial fulfilment` 著者回収
+
+- `A thesis presented in partial fulfilment…` + heading `Irene Irawaty Santoso`（p.1–2）を著者へ
+- spot の noAuthors（marketing digital advertising thesis）を解消
+
+# 2026-10-21: QStrain 均等貢献 crumb / SOFTWARE banner
+
+- `Lee, and Sumin Jeong have Abstract` と letterspaced `SOFTWARE` を著者投影から除外
+- 回帰: authorProjection QStrain + Lotte peel + Santoso thesis
+
+# 2026-10-21: 単著番号 byline の abstract 膠着 peel
+
+- `Fabien Lotte1,2 Deep learning…` を abstract から剥離（abstract-lead 語彙がある単一 person のみ）
+- 回収名の末尾カンマを除去；soft math scan 50本 hits **0**；wide offset800/1000/1100 **clean**；pipeline **98/98**；reading-order **83**；spot offset200/600 clean
+- 残 soft: テキスト層にレジェンドが無い裸 `FIGURE 3`（本文へ誤結合しない）
+
+# 2026-10-21: ∫ グリフ結合後の display 昇格 + 加重和の裸番号再結合
+
+- 先頭 `∫` crumb を numbered display に結合したら `equation` へ昇格（BFMGHC (9)(10)(16)–(19) が paragraph 固定だった）
+- display 判定に `+ − ⊕` を加算 → `L(x)=w·f…` + 右カラム `(13)` を再結合
+- 単一ノードでも promote/sanitize が走るように early-return を緩和
+
+# 2026-10-21: Correction 著者回収確認 + FIGURE Results-of レジェンド + √ orphan
+
+- Frontiers Correction: `Frontiers Production Office` + `Author First Last` を空 masthead から回収（実 PDF 確認）
+- 裸 `FIGURE N` + heading `Results of FC…` を caption 結合（裸 section `Results` は結合しない）
+- display merge 後の本文先頭 orphan `√` を除去（意図的な先頭 `∫ The marginal…` は維持）
+- author↔abstract 膠着 peel は数字上付き byline 必須に厳格化（Indonesian cover 誤 peel 防止）
+- 2302.03792 p.2 再抽出: eq (1)–(5) が `equation` + 番号付き；`√ Let…` 解消；`∫ The marginal…` は意図維持
+- 検証: typecheck / mathFragmentMerge+stackedDerivative+bareCaption / authorProjection 関連 / pipeline+readingOrder **181** / vite build；wide pending offset600 **clean 60/60**；spot offset300–500 clean；spot offset100 `noAbs 1`（Frontiers 意見記事・Introduction 始まり・偽 abstract 補充しない）
+
+# 2026-10-21: 図キャプション本文のページ跨ぎ吸い込み防止 + Table レジェンド
+
+- `FFA U-Net architecture.` が前ページ本文へ結合されないよう short caption-title を page-boundary merge から除外
+- 同一基線で先に来る `Results of…` を裸 `Table N` へ前方結合；`Table 5 Results…` を peel で割らない（数字直後の膠着 `5Author` のみ peel）
+- 続き表フッタの裸 `TABLE N`（右カラム小文字断片と同一基線）を demote
+- 裸 `Fig. N`＋短い heading レジェンド結合；ページ上部／表グリッド同一基線の裸 `Table N` を chrome demote
+
+# 2026-10-20: 裸キャプション結合 + 誌名偽著者 + 連続 Table N chrome
+
+- 裸 `FIGURE N` / `Table N:` は直後の説明段落・タイトル行を caption に結合（24語制限の例外、長文レジェンドは220語まで）
+- 複数ページ同Yの裸 `Table N` は running chrome として demote（初出のみ caption）
+- BMC 誌名折り返し `and Decision Making` を著者から除外
+
+# 2026-10-20: 数式 display 線形化・underbrace 残骸（2302.03792 p.2）
+
+
+- `d BODY (n) dγ [∫]` → `d/dγ BODY (n)`；末尾 `∫` は近傍の `The marginal is…` へ移す（弱関連の番号付与はしない）
+- 式番号直後の `γ,γ)` と `≡ xˆ(min…) E` / `arg minxˆ(z mse` などの underbrace 混入を scrub
+- 回帰: `mathFragmentMerge` + `stackedDerivativeEquation`；実 PDF は git 外（Desktop）で p.2 目視
+
+# 2026-10-20: 構造化 abstract 裸ラベル再マージ防止
+
+- `Results` / `Methods` 等のコロン無しバンドラベルは abstract-continuation-merge しない（`Results Of the…` 化を防止）。`Background:` 形式のみ label+prose 結合
+- handedness BMJ: bare `Results` abstract ラベル復旧
+
+# 2026-10-20: Frontiers Correction 著者回収
+
+- `Correction:` 記事で Production Office / `Author First Last` を footer から回収（APPROVED BY chrome で空になりがち）
+- `ABSTRACT CORRESPONDING AUTHOR:` を author chrome として demote
+
+# 2026-10-20: spot residual 80本（stride）
+
+- noTitle / shortTitle / author affil / emptyCaption / titleIsChrome **0**
+- noAbs **1**: VR InfoViz 意見記事（本文 Introduction 始まり・抽象なし）— 偽 abstract 補充は意図的に停止済み
+- odd **[]**
+
+# 2026-10-20: pipeline 回帰スイート 98/98
+
+- thesis `… under` 結合、abstract Results 誤吸収、Elsevier article-info peel、CJK √、Option chrome、ALL-CAPS 見出しなど一連の修正後
+- `npx vitest run src/test/pdfExtraction/pipeline.test.ts` → **98/98**；typecheck / vite build 通過
+- pending diagnose offset700 limit50 / offset0 limit100: clean
+
+# 2026-10-20: vignette `A: Option 2.` chrome 救済
+
+- 図帯の回答コールアウトが layout chrome→copyright で欠落 → Option N を other として保持
+- author-copy / IEEE editor credit の回帰期待を copyright 許容に更新
+
+# 2026-10-20: CJK √比較行の vector-label 誤発火
+
+- `人类驾驶员 + … √ √` 行が vector-figure-label-cluster で other 化 → CJK+checkmark は vector 除外、role を table に固定
+- 回帰: CJK checkmark comparison rows
+
+# 2026-10-20: ALL-CAPS 節見出しの誤 demote 防止
+
+- `titleCaseDense` が `H COMPARISONS WITH LOGISTIC…` を表ヘッダ膠着と誤認 → ALL-CAPS バナーは除外
+- 回帰: all-caps section heading + editorialChromeHeadings
+
+# 2026-10-20: Elsevier 非対称 article-info と abstract 剥離
+
+- 所属レール（`a Institute…`）を abstract 帯へ昇格しない；`a b s t r a c t` / 所属先頭の膠着本文を peel
+- 回帰: asymmetric article-info rail
+
+# 2026-10-20: abstract/表/図ラベル回帰修復
+
+- 平文 Abstract 後の裸 `Results`/`Discussion` が structured-abstract 帯に飲み込まれないよう `sawStructuredSubhead` ゲート
+- caption 近傍テーブルに `structuralLabel` を再付与；2行ベクトル凡例で `vector-figure-label-cluster`
+- 重複パネルリード（`for GPTrel… for GPTrel…`）を dense-vector-panel で `other` へ
+- 図近傍の短文 prose（`by only reading`）を vector-label から除外；重ね打ちタイトルを phrase collapse
+- 回帰: markAbstracts / pipeline synthetic＋linguistics figure-label / HFE title / method-goal
+
+# 2026-10-20: thesis カバータイトル `… under` 結合
+
+- 著作権シートの page-1 タイトルが前置詞 `under` で途切れ、page-2 カバー（`conditions of low attention?` + 副題）へ進まない
+- `isIncompleteTitleEnd` / `looksLikeTruncatedTitle` に `under` ほかを追加；不完全 native で `recoverThesisCoverTitle` を起動
+- カバー再掲の同一 stub を dedupe；回帰: titleResolver ユニット + pipeline thesis cover
+
+# 2026-10-20: caption/heading residual 再スキャン clean
+
+- 同一120本を修正後再走査: truncatedTitle / chromeHead / orphanCaps **0**
+
+# 2026-10-20: タイトル継続 `What Doesn't` + TABLE caption 昇格
+
+- Frontiers: `… Transfers and` + `What Doesn't` が looksLikePersonName で落ち、タイトル欠落 → 疑問詞先頭を人名から除外
+- `KEYWORDS COPYRIGHT` 見出し demote；`TABLE 3 A summary…` など standalone キャプションを paragraph→caption
+- caption/heading residual 120本の truncatedTitle / chromeHead / orphanCaps を解消
+- 回帰: readingOrder + editorialChromeHeadings
+
+# 2026-10-20: dense residual offset1 clean + typecheck
+
+- pending 1/7 標本 offset1（197本）: noAuthors / chromeAuthor / badTitle / receivedHead **0**
+- `npm run typecheck` 通過
+
+# 2026-10-20: Frontiers タイトル末尾 Abstract + title-stack 著者誤認
+
+- `Optic Flow Transfers From Abstract` が `… Abstract` 汚染ルールで title 候補から除外され、著者に混入
+- トピック語としての Abstract を許可；title-stack フレーズを author chrome として拒否
+- Research Highlight バナーを author から demote（byline 無しは空著者のまま）
+- dense residual offset5（197本）の2件を解消
+
+# 2026-10-20: Frontiers 膠着 RECEIVED レール見出し demote
+
+- `RECEIVED … ACCEPTED … KEYWORDS PUBLISHED …` が outline heading（長さ>48で旧ゲート漏れ）→ 複数日付レールを copyright/other へ
+- 回帰: editorialChromeHeadings ユニット；heading residual 80本標本の chromeHead 2件を解消対象
+
+# 2026-10-20: 章フッター著者 + インドネシア表紙の title/byline 膠着
+
+- Shepherd 章: `© The Author(s) 2018 … D. A. Shepherd, H. Patzelt` を copyright から回収；後続ページの ALL-CAPS ランニングヘッダは除外
+- SENOPATI: 抽象本文リード／Diagram／日付レールを title から除外；`Analisis… VOSviewer Ario1, Indri2…` 膠着を剥離してタイトル＋3著者を回収
+- `Jurnal SENOPATI` / `INFORMASI ARTIKEL` / キーワード列を author chrome として demote
+- dense residual offset3（197本）: noAuthors / chromeAuthor の2件を上記で解消
+
+# 2026-10-20: letterspaced INFO/ABSTRACT + APPROVED BY chrome
+
+- ASHA 系サイドバー `I N F O` / `A B S T R A C T` が paper.authors に混入 → letterspaced バナー語彙を拡張して demote
+- Frontiers Correction の `APPROVED BY` を author から除外（Production Office は訂正記事の正しい著者として維持）
+- dense residual（pending 1/7 標本 197本）: 実害は letterspaced INFO のみ；absByline 2件は `COVID-19` / `Enhancing 3D` の偽陽性
+
+# 2026-10-20: Frontiers `and` 共著者 + letterspaced RESEARCH chrome
+
+- `and Sarah Maggioli` が y≈290 で `y < 220` ゲートに落ち、共著者欠落 → `firstBodyY`（≤360）まで引き上げ
+- letterspaced `R E S E A R C H` / `SPECIALTY SECTION` / `of Nebraska Kearney…` を author role から demote
+- 回帰: authorProjection 実PDF 2件；pending diagnose **offset=1200 limit=200: clean 179/179**（末尾スライス）
+
+# 2026-10-20: Introduction 後の偽 abstract 補充を停止
+
+- Frontiers 意見記事（VR InfoViz）: abstract 欠落時の toPaper 補充が `The HMD…` 本文を abstract 化
+- Introduction 見出しより後（index / Y）の段落は補充しない；resolver 側でも同条件 demote を最終ゲートに残置
+- pending diagnose **offset=1000 limit=200: clean 200/200**
+
+# 2026-10-20: スペイン語複合名 / Ma 粒子 / Mar≠March
+
+- 4語名の無条件ペア分割を抑制；単独 `Adriana Monserrath Monge Moreno` を維持
+- `stripAuthorCredentials` の `/MA/i` が `Ma` を学位と誤認 → ALL-CAPS 学位は case-sensitive に
+- 月名ゲート `mar(?:ch)?\b` が ASCII `\b` で `María` を拒否 → Unicode `(?!\p{L})`
+- 本文列の番号付き byline を digit-anchored 回収（5名全員）
+- 回帰: authorProjection **47/47**＋スペイン語実PDF
+- pending diagnose **offset=900 limit=100: clean 100/100**；caption/heading strict spot ~126本で chromeHead/emptyCap **0**
+
+# 2026-10-20: 論文リポジトリ表紙 / Frontiers RECEIVED 膠着 abstract / 機関偽著者
+
+- 学位論文カバー: タイトル末尾 `Author: Friswell, Rena Publication Date: 2013 DOI:` を剥離；`Author: Last, First` / 氏名フォームから著者回収；`(PLEASE TYPE)` 抽象フォーム文言を除去
+- Frontiers: `RECEIVEDREVISED… Many primarily… ACCEPTEDPUBLISHED…` を abstract へ昇格し日付レールをインライン除去；`Front. Educ. :.` / `Frontiers Media` を著者から除外
+- `1Universidad…` / `Facultad…` など機関先頭行を著者にしない（Title-Case 2語でも拒否）
+- pending diagnose **offset=400 limit=150: clean 150/150**；`--offset` を diagnose に実装
+- 残: Correction 記事の共著者欠落
+
+# 2026-10-20: 括弧付き Latin byline / セルビア語 Cyrillic 著者回収
+
+- 日本人間工学会ノート: `Yoshinori HORIE (College of Industrial Tech., Nihon University)` が affiliation のまま → `recoverParentheticalLatinAuthor`
+- Баштина 系: `Прегледни рад Ивана Ж. БАЛТЕЗАРЕВИЋ* Факултет…` → `recoverCyrillicGivenInitialSurname`（`\b` は Cyrillic で無効なので使わない）
+- 回帰: authorProjection 実PDF 2件；pending diagnose limit=400 **400/400 clean**；`--offset` を diagnose に追加
+
+# 2026-10-20: BMC Methods-for… abstract 帯 + PLOS mega-author overflow
+
+- BMC（CB-Search）: `Methods for analyzing…` が `SECTION_INTRO` 誤判定で abstract 帯から脱落 → `isSectionIntroHeading` を Methods/Results 見出し専用にし、本文先頭の Methods for… を維持
+- PLOS（PREFER-IT）: masthead 回収後も `Jetse Goris5…` 名列が abstract に残る → `authorNames` 非空でも byline overflow を demote して著者へ合流
+- 著者回収済みでも abstract 先頭の膠着 byline を剥離: Frontiers `Hamza Boukeffa1… Early warning…`、Nature `Leonie Koban 22,23 1234567890():,; Human…`、PLOS 所属ダンプ `Ke Zhao 20* 1 Department…`（→ `To address…` を abstract 昇格）
+- 表ヘッダ風 `Parameter Value` を outline から demote
+- 実PDF: CB-Search abstract に Methods/Results/Conclusion；PREFER-IT authors≥20・abstract は AI prose のみ
+- 回帰: markAbstracts + editorialChrome + authorProjection（PREFER-IT / CB-Search 実PDF）**62/62**
+- wide pending diagnose **limit=400: clean 400/400**；strict residual spot 154本 **issue 0**
+
+# 2026-10-20: 翻訳中の画面更新を間引く
+
+- `ReaderScreen` は翻訳ブロックの更新バッチをマウント中に1つだけ作り、閉じるときに破棄する。再レンダーのたびに作ってグローバル集合へ残していた
+- 本文セクションの監視コールバックと、段落へ渡す関数の同一性を固定し、訳文の反映で全セクションの付け外しと全段落の再描画が起きないようにした
+- ライブラリ／受信箱／お気に入り／最近／フォルダ画面は、ブロック全体の購読をやめ、開く操作のときだけ本文の有無を見る。翻訳中の行だけが進捗を更新する
+- 並列数の既定は 8 のまま。ウォームアップ後の MADLAD 8 文では、メインスレッド遅延は並列 1/2/4/8 とも約 1.2ms。所要時間は並列 4 が 23.7s、並列 8 が 27.8s、並列 2 が 26.2s で、UI 遅延は動かなかった
+- 検証: 360 ブロックの更新中、IntersectionObserver の付け外しは 132 回から 0 回。同じ条件のスクロール反映は 55ms から 11ms。Long Task は修正前後とも 0。チェックポイント保存は 400 ブロックで約 6ms。`batchBlockUpdates` と `npm run typecheck`
+
 # 2026-10-20: 未使用の取り込み・論文モデルを削除
 
 - 呼び出しゼロの旧入口を削除: `importService.ts`（`importPDF`）、`translationService.ts`（OpenAI / Ollama / mock）、`import/importPaper.ts`（`importPDFV2` の別名）、`domain/paper.ts` と `paperModel.test.ts`
@@ -14,6 +503,10 @@
 - 抽出 snapshot と人手 Ground Truth review を分離。SHA-256 による browser local 保存・JSON bundle 書出し／再読込を提供し、Paper Package / SQLite / 翻訳サーバーには触れない
 - `npm run eval:pdf-extraction -- --input <bundle>` で role / paragraph boundary / reading order / relation の P/R/F1 と対象数を JSON 出力。完全性未確認は `null` (N/A) で、100% 扱いしない
 - 使用手順・現時点の boundary / reading-order annotation 制約は `docs/PDF_EXTRACTION_EVALUATION.md`
+
+# 2026-10-20: サイドバー検索をヘッダー縦中央に揃える
+
+- ライブラリ検索窓をメイン側ヘッダー（`--header-height`）の縦中央に合わせる
 
 # 2026-10-20: 日本語化中はプログレスバー表示
 
@@ -40,6 +533,46 @@
 - 「ライブラリから削除」「論文の削除」を「ゴミ箱へ移動」に統一（完全削除ではないことが分かる文言）
 - メニュー危険操作は赤文字（`.menu button` の色上書きを修正）
 
+# 2026-10-20: 出版社 chrome（Check for updates / GRAPHICAL ABSTRACT / STUDY PROTOCOL / Open Access 偽著者）
+
+- Nature `Check for updates` / `GRAPHICAL ABSTRACT` / `Abbreviations` / 裸 `STUDY PROTOCOL` を outline から demote
+- Springer `SOFTWARE Open Access` 等を著者から除外；タイトル最終 scrub で `STUDY PROTOCOL` / `OPEN` レールを剥離（City Research Online 表紙 PDF で確認）
+- XGBoost diabetes: 粒子付き byline（`El Sherbiny` / `El-Din`）が abstract に膠着 → gluedByline を粒子・複合名対応＋散文境界フォールバックで著者5名＋abstract 本文復旧
+- 回帰: editorialChrome + titleResolver **55/55**；authorProjection **40/40**
+- wide pending diagnose **limit=200: clean 200/200**
+
+# 2026-10-20: hanging title に膠着していた著者名を分離
+
+- ICEMCT 系: タイトル同フォントの `Qiuxia Guo` が JMIR 短行 title ヒューリスティックに誤分類 → person-name を title 帯から除外
+- 単独 First Last の一律 author 化は Frontiers `An Feng` 断片を誤 author 化し膠着 byline 回収を壊すため撤回。長い title 直下の 2 語だけ post-pass で author 化
+- JMIR 継続語（`Clinician Acceptance` 等）を person-name 判定から除外
+- 回帰: readingOrder hanging-title **pass**；authorProjection+titleResolver+markAbstracts+editorialChrome **176/176**
+- wide pending diagnose **limit=200: clean 200/200**
+
+# 2026-10-20: Springer Nature `OPEN` バッジのタイトル混入を除去
+
+- `OPEN A diffusion model…` のように ALL-CAPS `OPEN` / `OPEN ACCESS` が display title 先頭に膠着 → `stripMastheadSuffix` で剥離（Title-Case の Open Access 話題題は維持）
+- 回帰: titleResolver **36/36**；実PDFタイトルから OPEN 除去を確認
+
+# 2026-10-20: Nature early-access 表紙の unlabeled abstract 誤認を修正
+
+- Sci Rep early-access（mask-use COVID）: page1 の unedited/license クロムが unlabeled abstract になり、page2 の本文リードが取れない。cite レール `et al.` が著者に混入
+- 修正: early-access 表紙では page1 unlabeled をスキップ；`promoteLateFrontAbstracts` は page≥2 を優先し license 継続を除外；著者から `et al.` cite を除外
+- 実PDF: abstract=page2 政策ナラティブ／著者6名；spot 120: **noAbs 0 / noAuthors 0**
+
+# 2026-10-20: PLOS 構造化 abstract（rival title の Abstract）復旧
+
+- PLOS One（lombard-gain）: 裸の `Abstract` が rival title→paragraph 化され `markAbstracts` が帯を開けず abs=0。同時に左レール長 cite が abstract 化し Introduction 本文まで吸収
+- 修正: bare Abstract を title/paragraph/other からも heading 化して帯開始；対向列は長さ問わずスキップ；`1 Introduction`（ピリオド無し）でも帯終了
+- 著者: `Universität` / Medical Physics 機関行と how-to-cite イニシャルを著者投影から除外 → 著者5名
+- 実PDF: abstract 5ノード（Background〜Conclusions 本文）/ page2 本文は paragraph；回帰 `markAbstracts` + authorProjection/editorialChrome **58/58**；typecheck pass
+
+# 2026-10-20: 表セル throughput の偽見出しを除去
+
+- VR InfoViz（Frontiers）: `2019 118.80 GPixels/sec` が table 断片から outline heading 化 → `tableMetricCellHeading` で `other` へ demote（GPixels/FPS/FLOPS 等の単位付き数値のみ）
+- 実PDF: 目次から GPixels 行が消え `2. WHY DOES…` 等の正規見出しのみ；spot 100本で metric/図番号偽見出し **0**
+- 回帰: editorialChromeHeadings（metric cell）＋ authorProjection **57/57**
+
 # 2026-10-20: Frontiers / IEEE ランニングヘッダを目次から除去
 
 - `Frontiers in Psychology` / `Frontiers Bae` / `IEEE XPLORE` 等が ALL-CAPS heading スコアで outline 化 → layout header/copyright を維持し、`looksLikeJournalRunningHeader` で demote
@@ -50,9 +583,30 @@
 - Evaluation Studio レビュー（`2302.03792v1.pdf.evaluation.json` page2）を根拠に、native PDF の数式崩れを修復
 - `mergeMathematicalDisplayFragments`: stacked `d`/`dγ` → `d/dγ` 付き equation、孤立 `√` の段落再結合、`[ 2]` 上付きの吸収、`(n)` display の equation 昇格、C0→`ε` sanitize
 - layout: 未完了段落が数式境界（equation / `d` / `dγ` / `[ 2]` / `√`）を飲み込まないガード
-- 回帰: synthetic `stacked-derivative-equation` fixture + `mathFragmentMerge` / `stackedDerivativeEquation` tests
+- bare `(n)` 段落（例 genesis-shield `(21)`/`(37)`、mixed-updating `(6)`）を、番号未付与の直前 display 式へ幾何根拠付きで再結合（既に `(k)` 付きの式には推測で付けない）
+- 単一 `=` の番号付き代入式（`yˆ = g(…) (2)`）も display equation へ昇格
+- 回帰: synthetic `stacked-derivative-equation` fixture + `mathFragmentMerge`（bare-number / single-equals 含む）/ `stackedDerivativeEquation` tests
 - 対象PDF p.2: (1) d/dγ 統合・√再結合・ε・‖²・table化解消は改善。(3)(4) の 2D/underbrace 崩れは未対応（推測結合しない）
 - 残: 複数行ディスプレイの 2D 再構成、arg min 下付きの完全復元、Evaluation Studio 目視の継続
+
+# 2026-10-20: title断片誤demote＋caption囲い込み表セル
+
+- `title-fragment-demotion` を title 近傍ページに限定し、軸ラベル証拠付きセルと単一語断片を除外（`Employee wellbeing` 等が本文・表で copyright 化しない）
+- `promoteCaptionBoundedTableCells`: geometry 無しの Frontiers SEM 表（TABLE 6–8）を caption 間の短セルから table 昇格→行マージ
+- SEM 効果量セル（`0.444 (large)…`）と二重 construct 見出しを outline から demote
+- inline-split 由来の親見出し（`5. Results` after `5.3`）を同ページ subsection 後のみ demote
+- standalone 昇格 FIGURE caption に同ページ figure shell を付与（compact-rail orphan-caption 解消）
+- `Copyright and` / Moral Rights / `KEYWORDS CITATION` を outline から demote
+- 本文クロスリフ `Figure 5 maps…` を caption から paragraph へ demote；`Table 5Author…` 膠着を caption+cell に剥離
+- 構造化 abstract: 散文見出しを band に含め、bare `Background:`/`Methods` と本文を同一行でも merge（label の汚染 bbox は先頭箱で測る）
+- soft-wrap abstract（`Discussion: These` / `Overall, Fed-XLM-R`）と correspondence / registry rail demote
+- abstract merge が sidebar author/誤 affiliation 散文で止まらないよう緩和；cite crumb demote 拡充
+- abstract 帯の誤 affiliation 長散文を abstract へ回収してから merge
+- 表セル／`***`／page+2 以降への abstract 帯漏れを demote；JMIR 引用尾を abstract から除外
+- competing-strain / compact-rail orphan-caption 解消
+- wide pending-only フル診断 **1379/1379 clean**（flagged 0）
+- 残: 2 列 OCR で単語が散らばった abstract（`Background: women` 等）は推測再構成しない
+- 回帰: `tableRegionResolver`（caption-bounded）/ `editorialChromeHeadings` / `mathFragmentMerge`
 
 # 2026-10-19: 翻訳再試行経路を import と同じエンジンに揃える
 

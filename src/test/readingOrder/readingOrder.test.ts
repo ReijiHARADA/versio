@@ -1603,6 +1603,57 @@ describe("PDF reading order regression", () => {
     );
   });
 
+  it("rejoins a hanging `… and` title with an interrogative continuation line", () => {
+    // Frontiers wraps: `… What Transfers and` + `What Doesn't` used to match
+    // looksLikePersonName and drop the continuation from every block.
+    const line = (text: string, y: number, fontSize = 21) => ({
+      text,
+      x: 178,
+      y,
+      width: Math.min(380, text.length * fontSize * 0.45),
+      height: fontSize,
+      fontSize,
+      fontName: "Title",
+      page: 1,
+    });
+    const { blocks } = reconstructDocument([
+      {
+        pageNumber: 1,
+        width: 612,
+        height: 792,
+        textItems: [
+          line("Exploring the Spatial Relationships", 148),
+          line("Between Real and Virtual", 171),
+          line("Experiences: What Transfers and", 194),
+          line("What Doesn’t", 217),
+          {
+            text: "Gregory D. Clemenson, Lulian Wang, Zeqian Mao",
+            x: 178,
+            y: 243,
+            width: 320,
+            height: 9,
+            fontSize: 9,
+            fontName: "Author",
+            page: 1,
+          },
+          {
+            text: "Abstract body text that is long enough to anchor body font detection for the page layout heuristics used here.",
+            x: 178,
+            y: 290,
+            width: 360,
+            height: 10,
+            fontSize: 10,
+            fontName: "Body",
+            page: 1,
+          },
+        ],
+      },
+    ]);
+    const title = blocks.find((b) => b.role === "title");
+    expect(title?.text).toMatch(/What Transfers and What Doesn/i);
+    expect(blocks.some((b) => b.role === "author" && /^What Doesn/i.test(b.text.trim()))).toBe(false);
+  });
+
   it("keeps spaced word-per-span display titles that wrap across a gutter", () => {
     // Nature-style mastheads emit one item per word with ~0.09em gaps. A
     // wrap line in the left column plus a same-baseline right fragment must

@@ -531,6 +531,487 @@ describe("author masthead projection", () => {
     );
   }, 60_000);
 
+  it("does not promote post-Introduction body prose into a synthetic abstract", async () => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const hit = fs.existsSync(pending)
+      ? fs.readdirSync(pending).find((name) =>
+          name.includes("virtual-reality-for-information-visualization-migh"),
+        )
+      : undefined;
+    if (!hit) return;
+    const pdf = path.join(pending, hit);
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "vr-infoviz-no-synthetic-abstract",
+      filePath: pdf,
+      fileHash: "vr-infoviz-no-synthetic-abstract",
+      metadata: { pageCount: pages.length },
+    });
+    const hmd = result.canonical.nodes.find((node) =>
+      /HMD and tracking system were independent/i.test(node.text ?? ""),
+    );
+    expect(hmd?.role).toBe("paragraph");
+    expect(result.canonical.nodes.every((node) => node.role !== "abstract" || !/HMD and tracking/i.test(node.text ?? ""))).toBe(true);
+  }, 60_000);
+
+  it("recovers a same-baseline `and` coauthor above the abstract band", async () => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const hit = fs.existsSync(pending)
+      ? fs.readdirSync(pending).find((name) =>
+          name.includes("exploring-the-status-of-the-human-operator-in-indu"),
+        )
+      : undefined;
+    if (!hit) return;
+    const pdf = path.join(pending, hit);
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "frontiers-and-sarah-maggioli",
+      filePath: pdf,
+      fileHash: "frontiers-and-sarah-maggioli",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining(["Liliana Cunha", "Daniel Silva", "Sarah Maggioli"]),
+    );
+    expect(
+      result.canonical.nodes.every(
+        (node) =>
+          node.role !== "author" ||
+          !/^(?:specialty section|R E S E A R C H)$/i.test((node.text ?? "").replace(/\s+/g, " ").trim()),
+      ),
+    ).toBe(true);
+  }, 60_000);
+
+  it("demotes letterspaced RESEARCH banners and affiliation dump tails from author", async () => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const hit = fs.existsSync(pending)
+      ? fs.readdirSync(pending).find((name) =>
+          name.includes("can-mhealth-improve-migrant-wellness-during-public"),
+        )
+      : undefined;
+    if (!hit) return;
+    const pdf = path.join(pending, hit);
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "mhealth-letterspaced-banner",
+      filePath: pdf,
+      fileHash: "mhealth-letterspaced-banner",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining(["Chad Abresch", "Michelle Warren", "Russell J. Mc Culloh"]),
+    );
+    expect(result.paper.authors.every((name) => !/RESEARCH|Nebraska Kearney/i.test(name))).toBe(true);
+    expect(
+      result.canonical.nodes.every(
+        (node) =>
+          node.role !== "author" ||
+          !/^(?:R E S E A R C H|of Nebraska Kearney)/i.test((node.text ?? "").replace(/\s+/g, " ").trim()),
+      ),
+    ).toBe(true);
+  }, 60_000);
+
+  it("recovers chapter-footer authors from copyright bylines", async () => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const hit = fs.existsSync(pending)
+      ? fs.readdirSync(pending).find((name) =>
+          name.includes("cognitive-psychology-attention-and-entrepreneurial-cognition"),
+        )
+      : undefined;
+    const pdf = hit
+      ? path.join(pending, hit)
+      : path.join(root, "test-data/real-papers/cognitive-psychology-attention-and-entrepreneurial-cognition.pdf");
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "shepherd-chapter-footer",
+      filePath: pdf,
+      fileHash: "shepherd-chapter-footer",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["D. A. Shepherd", "H. Patzelt"]));
+    expect(result.paper.authors.every((name) => !/SHEPHERD AND|^AND$/i.test(name))).toBe(true);
+  }, 60_000);
+
+  it("peels Indonesian cover title+byline glue and recovers numbered authors", async () => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const hit = fs.existsSync(pending)
+      ? fs.readdirSync(pending).find((name) =>
+          name.includes("ergonomics-analisis-pemetaan-bibliometrik"),
+        )
+      : undefined;
+    if (!hit) return;
+    const pdf = path.join(pending, hit);
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "senopati-glued-cover",
+      filePath: pdf,
+      fileHash: "senopati-glued-cover",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.titleOriginal).toMatch(/^Analisis Pemetaan Bibliometrik/i);
+    expect(result.paper.titleOriginal).not.toMatch(/^(?:Halaman|Diagram|Juli|Oktober)/i);
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining(["Ario Wicaksono", "Indri Hapsari Susilowati", "Afifah Mu’minah"]),
+    );
+    expect(result.paper.authors.every((name) => !/Jurnal SENOPATI|INFORMASI|ABSTRACT|Diagram/i.test(name))).toBe(true);
+  }, 60_000);
+
+  it("joins a Frontiers title stack ending in Abstract and drops topic crumbs from authors", async () => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const hit = fs.existsSync(pending)
+      ? fs.readdirSync(pending).find((name) =>
+          name.includes("vr-sickness-adaptation-with-ramped-optic-flow"),
+        )
+      : undefined;
+    if (!hit) return;
+    const pdf = path.join(pending, hit);
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "vr-sickness-title-stack",
+      filePath: pdf,
+      fileHash: "vr-sickness-title-stack",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.titleOriginal).toMatch(
+      /VR Sickness Adaptation With Ramped Optic Flow Transfers From Abstract To Realistic Environments/i,
+    );
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining(["Isayas Adhanom", "Savannah Halow", "Eelke Folmer"]),
+    );
+    expect(result.paper.authors.every((name) => !/Optic Flow|Transfers From Abstract/i.test(name))).toBe(true);
+  }, 60_000);
+
+  it("demotes letterspaced INFO / ABSTRACT sidebar banners from authors", async () => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const hit = fs.existsSync(pending)
+      ? fs.readdirSync(pending).find((name) =>
+          name.includes("a-speech-segregation-algorithm-for-spatial-hearing-aids"),
+        )
+      : undefined;
+    if (!hit) return;
+    const pdf = path.join(pending, hit);
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "speech-segregation-info-banner",
+      filePath: pdf,
+      fileHash: "speech-segregation-info-banner",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining(["Jakeh E. Orr", "Atra Z. Eslami Boudreaux", "Irmak Gokcen", "Yan Gai"]),
+    );
+    expect(result.paper.authors.every((name) => !/\bINFO\b|ABSTRACT|I N F O|A B S T R A C T/i.test(name))).toBe(true);
+    expect(
+      result.canonical.nodes.every(
+        (node) =>
+          node.role !== "author" ||
+          !/^(?:I N F O|A B S T R A C T)$/i.test((node.text ?? "").replace(/\s+/g, " ").trim()),
+      ),
+    ).toBe(true);
+  }, 60_000);
+
+  it("keeps Spanish compound names and Ma particles without month-name false rejects", async () => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const hit = fs.existsSync(pending)
+      ? fs.readdirSync(pending).find((name) =>
+          name.includes("use-of-artificial-intelligence-in-education-and-tr"),
+        )
+      : undefined;
+    if (!hit) return;
+    const pdf = path.join(pending, hit);
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "spanish-compound-bylines",
+      filePath: pdf,
+      fileHash: "spanish-compound-bylines",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual([
+      "María Belén Morales-Cevallos",
+      "Canva Byron Ma Lam",
+      "María José López Pino",
+      "Adriana Monserrath Monge Moreno",
+      "Diego Fabián Vique López",
+    ]);
+    expect(result.paper.authors.every((name) => !/universidad|facultad/i.test(name))).toBe(true);
+  }, 60_000);
+
+  it("recovers Title-Case + ALL-CAPS authors from parenthetical affiliations", async () => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const hit = fs.existsSync(pending)
+      ? fs.readdirSync(pending).find((name) => name.includes("ergonomics-human-factors-in-around"))
+      : undefined;
+    if (!hit) return;
+    const pages = await extractPdfPages(path.join(pending, hit));
+    const result = extractFromPages({
+      pages,
+      paperId: "horie-paren-affiliation",
+      filePath: hit,
+      fileHash: "horie-paren-affiliation",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(["Yoshinori HORIE"]);
+  }, 60_000);
+
+  it("recovers a Cyrillic title-case author from an affiliation genre rail", async () => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const hit = fs.existsSync(pending)
+      ? fs.readdirSync(pending).find((name) => name.startsWith("marketing-impact-of-sensory"))
+      : undefined;
+    if (!hit) return;
+    const pages = await extractPdfPages(path.join(pending, hit));
+    const result = extractFromPages({
+      pages,
+      paperId: "cyrillic-sensory-author",
+      filePath: hit,
+      fileHash: "cyrillic-sensory-author",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(["Ивана Ж. БАЛТЕЗАРЕВИЋ"]);
+  }, 60_000);
+
+  it("recovers a thesis repository Author: Last, First byline and clean title", async () => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const hit = fs.existsSync(pending)
+      ? fs.readdirSync(pending).find((name) =>
+          name.includes("fatigue-and-occupational-safety-in-short-haul"),
+        )
+      : undefined;
+    if (!hit) return;
+    const pdf = path.join(pending, hit);
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "thesis-author-publication-date",
+      filePath: pdf,
+      fileHash: "thesis-author-publication-date",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.titleOriginal).toBe(
+      "Fatigue and occupational safety in short haul, light transport",
+    );
+    expect(result.paper.authors).toEqual(["Rena Friswell"]);
+    const abstractLead = result.canonical.nodes.find((node) => node.role === "abstract")?.text ?? "";
+    expect(abstractLead).toMatch(/Light goods vehicles/i);
+  }, 60_000);
+
+  it("peels a Frontiers RECEIVED date rail off a hydroponic abstract lead", async () => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const hit = fs.existsSync(pending)
+      ? fs.readdirSync(pending).find((name) => name.includes("implementation-of-hydroponic-teaching"))
+      : undefined;
+    if (!hit) return;
+    const pdf = path.join(pending, hit);
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "hydroponic-received-abstract",
+      filePath: pdf,
+      fileHash: "hydroponic-received-abstract",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining(["Annie Wang", "Kevin Wang", "Byron Meade"]),
+    );
+    expect(result.paper.authors.every((name) => !/^Front\./i.test(name))).toBe(true);
+    const abstractText = result.canonical.nodes
+      .filter((node) => node.role === "abstract")
+      .map((node) => node.text ?? "")
+      .join(" ");
+    expect(abstractText).toMatch(/Many primarily undergraduate institutions/i);
+    expect(abstractText).not.toMatch(/RECEIVEDREVISED|ACCEPTEDPUBLISHED/i);
+  }, 60_000);
+
+  it("recovers a parenthetical Latin byline from a Japanese society note", async () => {
+    const pdf = path.join(
+      root,
+      "test-fixtures/real-papers/pending-pdfs/ergonomics-2s2-1-ergonomics-human-factors-in-around-1964.pdf",
+    );
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "japanese-parenthetical-byline",
+      filePath: pdf,
+      fileHash: "japanese-parenthetical-byline",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(["Yoshinori HORIE"]);
+  }, 60_000);
+
+  it("recovers a Serbian given-initial-surname from a review-article affiliation row", async () => {
+    const pdf = path.join(
+      root,
+      "test-fixtures/real-papers/pending-pdfs/marketing-impact-of-sensory-marketing-on-consumer-behavior.pdf",
+    );
+    if (!fs.existsSync(pdf)) return;
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "serbian-cyrillic-byline",
+      filePath: pdf,
+      fileHash: "serbian-cyrillic-byline",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(["Ивана Ж. БАЛТЕЗАРЕВИЋ"]);
+  }, 60_000);
+
+  it("demotes mega-author PLOS abstract overflow bylines into authors", async () => {
+    const preferItPdf = path.join(
+      root,
+      "test-fixtures/real-papers/pending-pdfs/epmc-prefer-it-a-transdisciplinary-co-created-framework-to-realise-inclusive-.pdf",
+    );
+    if (!fs.existsSync(preferItPdf)) return;
+    const pages = await extractPdfPages(preferItPdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "prefer-it-byline-overflow",
+      filePath: preferItPdf,
+      fileHash: "prefer-it-byline-overflow",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors.length).toBeGreaterThanOrEqual(20);
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining(["Jetse Goris", "Anne H. Hoekman"]),
+    );
+    const abstractText = result.canonical.nodes
+      .filter((node) => node.role === "abstract")
+      .map((node) => node.text ?? "")
+      .join(" ");
+    expect(abstractText).toMatch(/Artificial intelligence \(AI\) in healthcare/i);
+    expect(abstractText).not.toMatch(/Jetse Goris/i);
+  }, 60_000);
+
+  it("keeps BMC Methods-for… bodies inside a structured abstract band", async () => {
+    const cbSearchPdf = path.join(
+      root,
+      "test-fixtures/real-papers/pending-pdfs/epmc-cb-search-a-method-for-searching-for-similar-protein-motifs-with-biased-.pdf",
+    );
+    if (!fs.existsSync(cbSearchPdf)) return;
+    const pages = await extractPdfPages(cbSearchPdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "cb-search-methods-for-abstract",
+      filePath: cbSearchPdf,
+      fileHash: "cb-search-methods-for-abstract",
+      metadata: { pageCount: pages.length },
+    });
+    const abstractText = result.canonical.nodes
+      .filter((node) => node.role === "abstract")
+      .map((node) => node.text ?? "")
+      .join(" ");
+    expect(abstractText).toMatch(/Methods for analyzing protein sequence similarity/i);
+    expect(abstractText).toMatch(/Background/i);
+    expect(abstractText.length).toBeGreaterThan(800);
+  }, 60_000);
+
+  it("recovers a Research Square page-3 Background–Conclusions abstract band", async () => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const hit = fs.existsSync(pending)
+      ? fs.readdirSync(pending).find((name) =>
+          name.includes("introducing-galaxyr-an-easy-to-use-r-implementation"),
+        )
+      : undefined;
+    if (!hit) return;
+    const pdf = path.join(pending, hit);
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "galaxyr-structured-abs",
+      filePath: pdf,
+      fileHash: "galaxyr-structured-abs",
+      metadata: { pageCount: pages.length },
+    });
+    const abs = result.canonical.nodes.filter((n) => n.role === "abstract");
+    expect(abs.length).toBeGreaterThanOrEqual(6);
+    expect(abs.some((n) => /^Background$/i.test((n.text ?? "").trim()))).toBe(true);
+    expect(abs.some((n) => /GalaxyR/i.test(n.text ?? ""))).toBe(true);
+  }, 60_000);
+
+  it("recovers a thesis cover author heading beside partial-fulfil wording", async () => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const hit = fs.existsSync(pending)
+      ? fs.readdirSync(pending).find((name) =>
+          name.includes("marketing-is-digital-advertising-effective"),
+        )
+      : undefined;
+    if (!hit) return;
+    const pdf = path.join(pending, hit);
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "santoso-thesis-cover",
+      filePath: pdf,
+      fileHash: "santoso-thesis-cover",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["Irene Irawaty Santoso"]));
+    expect(result.paper.authors).toHaveLength(1);
+  }, 60_000);
+
+  it("drops equal-contribution crumbs and SOFTWARE banners from QStrain authors", async () => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const hit = fs.existsSync(pending)
+      ? fs.readdirSync(pending).find((name) => name.includes("qstrain-an-interactive-platform"))
+      : undefined;
+    if (!hit) return;
+    const pdf = path.join(pending, hit);
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "qstrain-eq-contrib",
+      filePath: pdf,
+      fileHash: "qstrain-eq-contrib",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining(["Euna Jeong", "Seungyean Lee", "Sumin Jeong", "Sukjoon Yoon"]),
+    );
+    expect(
+      result.paper.authors.every(
+        (name) => !/have Abstract|SOFTWARE|S O F T/i.test(name) && !/contributed equally/i.test(name),
+      ),
+    ).toBe(true);
+  }, 60_000);
+
+  it("peels a single numbered author glued onto Deep-learning abstract prose", async () => {
+    const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    const hit = fs.existsSync(pending)
+      ? fs.readdirSync(pending).find((name) =>
+          name.includes("visual-cues-in-mi-bci-induce-biases"),
+        )
+      : undefined;
+    if (!hit) return;
+    const pdf = path.join(pending, hit);
+    const pages = await extractPdfPages(pdf);
+    const result = extractFromPages({
+      pages,
+      paperId: "visual-cues-lotte-glued-abs",
+      filePath: pdf,
+      fileHash: "visual-cues-lotte-glued-abs",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(expect.arrayContaining(["Fabien Lotte"]));
+    const abstractText = [
+      result.paper.abstract ?? "",
+      ...result.canonical.nodes.filter((node) => node.role === "abstract").map((node) => node.text ?? ""),
+    ]
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+    expect(abstractText).toMatch(/^Deep learning classification/i);
+    expect(abstractText).not.toMatch(/Fabien Lotte/i);
+  }, 60_000);
+
   it("recovers Frontiers two-author bylines glued onto abstract prose without commas", async () => {
     const pdf = path.join(
       root,
@@ -584,5 +1065,497 @@ describe("author masthead projection", () => {
       .join(" ");
     expect(abstractText).toMatch(/Student parents/i);
     expect(abstractText).not.toMatch(/Front\. Educ|Reinemann DN \(2024\)|doi:\s*10\./i);
+  }, 60_000);
+
+  it("recovers chapter-footer D. A. Shepherd bylines from copyright nodes", async () => {
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.startsWith("cognitive-psychology-attention-and-entrepreneurial"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "shepherd-chapter-footer",
+      filePath: match,
+      fileHash: "shepherd-chapter-footer",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(["D. A. Shepherd", "H. Patzelt"]);
+  }, 60_000);
+
+  it("recovers particle surnames from a Scientific Reports abstract byline", async () => {
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.includes("xgboost-based-predictive"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "xgboost-abstract-byline",
+      filePath: match,
+      fileHash: "xgboost-abstract-byline",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining([
+        "Moataz M. El Sherbiny",
+        "Mohamed G. Abdelfattah",
+        "Ali E. Takieldeen",
+        "Hossam El-Din Mostafa",
+        "Hala B. Nafea",
+      ]),
+    );
+    const abstractText = [
+      result.paper.abstract ?? "",
+      ...result.canonical.nodes.filter((n) => n.role === "abstract").map((n) => n.text ?? ""),
+    ].join(" ");
+    expect(abstractText).toMatch(/Diabetes mellitus is a persistent/i);
+    expect(abstractText).not.toMatch(/^Moataz M\. El Sherbiny/i);
+  }, 60_000);
+
+  it("peels a single Name* author glued onto a Frontiers abstract lead", async () => {
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.includes("true-xai-causal"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "true-xai-single-star-byline",
+      filePath: match,
+      fileHash: "true-xai-single-star-byline",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toContain("Gopal Singh Jamnal");
+    const abstractText = result.canonical.nodes
+      .filter((n) => n.role === "abstract")
+      .map((n) => n.text ?? "")
+      .join(" ");
+    expect(abstractText).toMatch(/^Forecasting corporate earnings/i);
+    expect(abstractText).not.toMatch(/^Gopal Singh Jamnal/i);
+  }, 60_000);
+
+  it("recovers Frontiers star-lead byline instead of RECEIVED/KEYWORDS chrome", async () => {
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.includes("regulating-short-form-video-addiction"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "short-form-video-star-lead-byline",
+      filePath: match,
+      fileHash: "short-form-video-star-lead-byline",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining(["Jennifer S. Stevenson", "Xia Wang", "Jiayi Wang"]),
+    );
+    expect(
+      result.paper.authors.every(
+        (a) => !/^(?:RECEIVED|REVISED|ACCEPTED|PUBLISHED|KEYWORDS)\b/i.test(a),
+      ),
+    ).toBe(true);
+  }, 60_000);
+
+  it("marks PLOS trailing Abstract and drops biobank consortium crumbs", async () => {
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.includes("atrial-fibrillation-and-retinal"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "atrial-plos-trailing-abstract",
+      filePath: match,
+      fileHash: "atrial-plos-trailing-abstract",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.canonical.nodes.some((n) => n.role === "abstract")).toBe(true);
+    expect(
+      result.canonical.nodes.some(
+        (n) =>
+          n.role === "abstract" &&
+          /investigate the association between multimodal retinal/i.test(n.text ?? ""),
+      ),
+    ).toBe(true);
+    expect(result.paper.authors.some((a) => /Huemer/i.test(a))).toBe(true);
+    expect(
+      result.paper.authors.every(
+        (a) => !/\b(?:consortium|biobank)\b/i.test(a),
+      ),
+    ).toBe(true);
+  }, 60_000);
+
+  it("joins Frontiers other-role and-wrap under a comma-ending author row", async () => {
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.includes("toward-a-dual-pathway-model-of-neuroplastic"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "dual-pathway-other-and-wrap",
+      filePath: match,
+      fileHash: "dual-pathway-other-and-wrap",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining([
+        "Murad Sultanov",
+        "Tukezban Rustamova",
+        "Aytan Huseynova",
+        "Gulchin Mammadova",
+        "Khadidja Ismailova",
+      ]),
+    );
+    expect(result.paper.authors.every((a) => !/Chayut|Bunterngchit/i.test(a))).toBe(true);
+  }, 60_000);
+
+  it("joins Frontiers comma-wrap paragraph with following and-author row", async () => {
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.includes("multimodal-dataset-for-socially-aware"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "multimodal-frontiers-comma-wrap",
+      filePath: match,
+      fileHash: "multimodal-frontiers-comma-wrap",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining([
+        "Carlos A. P. Pizzino",
+        "Phani-Teja Singamaneni",
+        "Micael S. Couceiro",
+        "Rachid Alami",
+      ]),
+    );
+  }, 60_000);
+
+  it("keeps numbered OUP byline and ignores Corresponding authors contact rail", async () => {
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.includes("computer-vision-syndrome-and-ergonomic"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "cvs-oup-byline",
+      filePath: match,
+      fileHash: "cvs-oup-byline",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining([
+        "Muhamad Faez Faisal Sezali",
+        "Mohd Nazri Shafei",
+        "Afiq Izzudin A. Rahim",
+      ]),
+    );
+    expect(
+      result.paper.authors.every(
+        (a) => !/corresponding|^\(\s*\)$/i.test(a),
+      ),
+    ).toBe(true);
+  }, 60_000);
+
+  it("does not promote Keywords: topic lists into authors", async () => {
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.includes("psychological-distress-subjective-well-bein"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "psych-keywords-not-authors",
+      filePath: match,
+      fileHash: "psych-keywords-not-authors",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors.some((a) => /Henao/i.test(a))).toBe(true);
+    expect(
+      result.paper.authors.every(
+        (a) => !/\b(?:well-being|intention|equation|distress)\b/i.test(a),
+      ),
+    ).toBe(true);
+  }, 60_000);
+
+  it("drops Frontiers citation crumbs and bare Universidad lines from authors", async () => {
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.includes("editorial-public-health-strategies"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "frontiers-editorial-authors",
+      filePath: match,
+      fileHash: "frontiers-editorial-authors",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual([
+      "Diana Patricia Guizar-S´anchez",
+      "Ana Fres´an-Orellana",
+    ]);
+    expect(
+      result.paper.authors.every(
+        (name) => !/Universidad|Fres´an-Orellana A\b|Guizar-S´anchez DP\b/i.test(name),
+      ),
+    ).toBe(true);
+  }, 60_000);
+
+  it("keeps Jan given-name bylines that look like January date crumbs", async () => {
+    const pdf = path.join(
+      root,
+      "test-fixtures/real-papers/pending-pdfs/epmc-a-systematic-review-of-patient-decision-aids-fo.pdf",
+    );
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.startsWith("epmc-a-systematic-review-of-patient-decision"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "bmc-jan-berghold-byline",
+      filePath: match,
+      fileHash: "bmc-jan-berghold-byline",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual([
+      "Jan Berghold",
+      "Lena Fischer",
+      "Alexander Pachanov",
+      "Leon Vincent Schewe",
+      "Dawid Pieper",
+    ]);
+  }, 60_000);
+
+  it("recovers hyphenated glued starred affiliation authors", async () => {
+    const pendingDir = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    if (!fs.existsSync(pendingDir)) return;
+    const match = fs
+      .readdirSync(pendingDir)
+      .find((f) => f.startsWith("epmc-ai-driven-audience-clustering"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(pendingDir, match));
+    const result = extractFromPages({
+      pages,
+      paperId: "ai-driven-yong-seok-jang",
+      filePath: match,
+      fileHash: "ai-driven-yong-seok-jang",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(["Yong-Seok Jang"]);
+    expect(
+      result.canonical.nodes.some(
+        (n) =>
+          n.role === "abstract" &&
+          /sports media audiences/i.test(n.text ?? ""),
+      ),
+    ).toBe(true);
+  }, 60_000);
+
+  it("recovers one-comma Frontiers bylines and PLOS ORCID ID rows", async () => {
+    const pendingDir = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    if (!fs.existsSync(pendingDir)) return;
+    const mind = fs
+      .readdirSync(pendingDir)
+      .find((f) => f.startsWith("epmc-mind-the-gap-an-evidence-gap"));
+    const mobile = fs
+      .readdirSync(pendingDir)
+      .find((f) => f.startsWith("epmc-mobile-applications-for-elderly"));
+    const tourism = fs
+      .readdirSync(pendingDir)
+      .find((f) => f.startsWith("epmc-artificial-intelligence-in-the-tourism"));
+    if (mind) {
+      const pages = await extractPdfPages(path.join(pendingDir, mind));
+      const result = extractFromPages({
+        pages,
+        paperId: "mind-the-gap-byline",
+        filePath: mind,
+        fileHash: "mind-the-gap-byline",
+        metadata: { pageCount: pages.length },
+      });
+      expect(result.paper.authors).toEqual([
+        "Malin Siv Roppel",
+        "Marlene Lakemann",
+        "Dagmar Starke",
+      ]);
+    }
+    if (mobile) {
+      const pages = await extractPdfPages(path.join(pendingDir, mobile));
+      const result = extractFromPages({
+        pages,
+        paperId: "plos-orcid-id-authors",
+        filePath: mobile,
+        fileHash: "plos-orcid-id-authors",
+        metadata: { pageCount: pages.length },
+      });
+      expect(result.paper.authors).toEqual(
+        expect.arrayContaining([
+          "Joseane O. V. Paiva",
+          "Rossana M. C. Andrade",
+          "Ivana Cristina de H. C. Barreto",
+        ]),
+      );
+      expect(result.paper.authors.every((name) => !/\bID\b/.test(name))).toBe(
+        true,
+      );
+      expect(result.paper.authors.length).toBeGreaterThanOrEqual(8);
+    }
+    if (tourism) {
+      const pages = await extractPdfPages(path.join(pendingDir, tourism));
+      const result = extractFromPages({
+        pages,
+        paperId: "tourism-reviewed-by-peel",
+        filePath: tourism,
+        fileHash: "tourism-reviewed-by-peel",
+        metadata: { pageCount: pages.length },
+      });
+      expect(result.paper.authors).toEqual(
+        expect.arrayContaining([
+          "Alexandra Lorena López-Naranjo",
+          "Mariana Isabel Puente-Riofrio",
+          "Verónica Adriana Carrasco-Salazar",
+          "Juan Diego Erazo-Rodríguez",
+        ]),
+      );
+    }
+  }, 180_000);
+
+  it("recovers Frontiers body bylines and demotes sidebar reviewer crumbs", async () => {
+    const pendingDir = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    if (!fs.existsSync(pendingDir)) return;
+    const art = fs
+      .readdirSync(pendingDir)
+      .find((f) => f.startsWith("epmc-art-based-interventions"));
+    const argue = fs
+      .readdirSync(pendingDir)
+      .find((f) => f.startsWith("epmc-argue-tira"));
+    if (art) {
+      const pages = await extractPdfPages(path.join(pendingDir, art));
+      const result = extractFromPages({
+        pages,
+        paperId: "art-based-body-byline",
+        filePath: art,
+        fileHash: "art-based-body-byline",
+        metadata: { pageCount: pages.length },
+      });
+      expect(result.paper.authors).toEqual([
+        "Liandi He",
+        "Rilei He",
+        "Guomeng Liu",
+        "Siying Liu",
+        "Xin He",
+      ]);
+      expect(
+        result.paper.authors.every((name) => !/Carotenuto|Campania/i.test(name)),
+      ).toBe(true);
+    }
+    if (argue) {
+      const pages = await extractPdfPages(path.join(pendingDir, argue));
+      const result = extractFromPages({
+        pages,
+        paperId: "argue-tira-abstract-star",
+        filePath: argue,
+        fileHash: "argue-tira-abstract-star",
+        metadata: { pageCount: pages.length },
+      });
+      expect(result.paper.authors).toEqual(["Areej Alhothali"]);
+      expect(
+        result.paper.authors.every((name) => !/Soumia|Ikiss/i.test(name)),
+      ).toBe(true);
+    }
+  }, 120_000);
+
+  it("recovers glued CamelCase body bylines over Frontiers reviewer crumbs", async () => {
+    const pendingDir = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    if (!fs.existsSync(pendingDir)) return;
+    const postpartum = fs
+      .readdirSync(pendingDir)
+      .find((f) => f.startsWith("epmc-analysis-of-postpartum"));
+    const mqtt = fs
+      .readdirSync(pendingDir)
+      .find((f) => f.startsWith("epmc-attention-enhanced-deep-learning"));
+    if (postpartum) {
+      const pages = await extractPdfPages(path.join(pendingDir, postpartum));
+      const result = extractFromPages({
+        pages,
+        paperId: "postpartum-glued-byline",
+        filePath: postpartum,
+        fileHash: "postpartum-glued-byline",
+        metadata: { pageCount: pages.length },
+      });
+      expect(result.paper.authors).toEqual([
+        expect.stringMatching(/^Revathy P\.?$/),
+        "Akila Victor",
+      ]);
+      expect(
+        result.paper.authors.every(
+          (name) => !/Lepach|Yeboah|Affiliated|Jiangnan/i.test(name),
+        ),
+      ).toBe(true);
+    }
+    if (mqtt) {
+      const pages = await extractPdfPages(path.join(pendingDir, mqtt));
+      const result = extractFromPages({
+        pages,
+        paperId: "mqtt-glued-byline",
+        filePath: mqtt,
+        fileHash: "mqtt-glued-byline",
+        metadata: { pageCount: pages.length },
+      });
+      expect(result.paper.authors).toEqual([
+        "Siddhartha Singhal",
+        "Kakelli Anil Kumar",
+      ]);
+      expect(
+        result.paper.authors.every(
+          (name) => !/Milad|Warsaw|Ahvanooey/i.test(name),
+        ),
+      ).toBe(true);
+    }
+  }, 120_000);
+
+  it("drops affiliation city tails painted as authors", async () => {
+    const pendingDir = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    if (!fs.existsSync(pendingDir)) return;
+    const match = fs
+      .readdirSync(pendingDir)
+      .find((f) => f.startsWith("cognitive-psychology-a-study-on-the-teaching"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(pendingDir, match));
+    const result = extractFromPages({
+      pages,
+      paperId: "jilin-changchun-location-author",
+      filePath: match,
+      fileHash: "jilin-changchun-location-author",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(["Yu Cheng"]);
+    expect(
+      result.paper.authors.every((name) => !/Jilin|Changchun/i.test(name)),
+    ).toBe(true);
+  }, 60_000);
+
+  it("splits glued CamelCase Frontiers bylines and drops agency crumbs", async () => {
+    const pendingDir = path.join(root, "test-fixtures/real-papers/pending-pdfs");
+    if (!fs.existsSync(pendingDir)) return;
+    const match = fs
+      .readdirSync(pendingDir)
+      .find((f) => f.startsWith("epmc-a-multimodal-tableware"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(pendingDir, match));
+    const result = extractFromPages({
+      pages,
+      paperId: "multimodal-tableware-glued-authors",
+      filePath: match,
+      fileHash: "multimodal-tableware-glued-authors",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual([
+      "Ming Zhang",
+      "Shan Ding",
+      "Zhihui Zhang",
+      "Qinglong Kong",
+      "Xun Li",
+    ]);
+    expect(
+      result.paper.authors.every(
+        (name) => !/NSTDA|Development Agency|Thailand/i.test(name),
+      ),
+    ).toBe(true);
   }, 60_000);
 });
