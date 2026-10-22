@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "kind": "paper-reader-extraction-benchmark-gold",
+  "id": "synthetic-all-dimensions",
+  "source": { "fileHash": "synthetic-all-dimensions" },
+  "split": "development",
+  "leakageGroup": "synthetic-all-dimensions",
+  "attributes": { "layout": "synthetic", "language": "en", "discipline": "test" },
+  "annotatedPages": [1],
+  "coverage": { "text": "complete", "blocks": "complete", "readingOrder": "complete", "paragraphBoundaries": "complete", "captionRelations": "complete", "tables": "complete", "formulas": "complete" },
+  "blocks": [
+    { "id": "paragraph-a", "role": "paragraph", "region": { "page": 1, "x": 0, "y": 0, "width": 40, "height": 10 }, "text": "first paragraph" },
+    { "id": "paragraph-b", "role": "paragraph", "region": { "page": 1, "x": 0, "y": 12, "width": 40, "height": 10 }, "text": "second paragraph" },
+    { "id": "caption", "role": "caption", "region": { "page": 1, "x": 0, "y": 24, "width": 40, "height": 8 }, "text": "Figure 1" },
+    { "id": "figure", "role": "figure", "region": { "page": 1, "x": 0, "y": 34, "width": 40, "height": 20 }, "text": "figure" },
+    { "id": "table", "role": "table", "region": { "page": 1, "x": 45, "y": 0, "width": 40, "height": 24 }, "text": "A B" },
+    { "id": "equation", "role": "equation", "region": { "page": 1, "x": 45, "y": 30, "width": 40, "height": 10 }, "text": "x = 1" }
+  ],
+  "readingOrder": ["paragraph-a", "paragraph-b", "caption", "figure", "table", "equation"],
+  "paragraphBoundaries": [["paragraph-a", "paragraph-b"]],
+  "captionRelations": [["caption", "figure"]],
+  "tables": [{ "id": "table", "region": { "page": 1, "x": 45, "y": 0, "width": 40, "height": 24 }, "tree": { "tag": "table", "children": [{ "tag": "tr", "children": [{ "tag": "td", "text": "A" }, { "tag": "td", "text": "B" }] }] } }],
+  "formulas": [{ "id": "equation", "region": { "page": 1, "x": 45, "y": 30, "width": 40, "height": 10 }, "latex": "x=1" }]
+}

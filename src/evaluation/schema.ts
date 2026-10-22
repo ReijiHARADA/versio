@@ -33,10 +33,17 @@ export type Severity = "minor" | "major" | "critical";
 export type PageCoverage = {
   predictedComplete: boolean;
   goldComplete: boolean;
+  /** Every evaluated block has an explicitly human-authored gold text. */
+  textComplete: boolean;
   paragraphBoundariesComplete: boolean;
   readingOrderComplete: boolean;
   relationsComplete: boolean;
+  tablesComplete: boolean;
+  formulasComplete: boolean;
 };
+
+export type GoldFormulaReview = { nodeId: string; latex: string };
+export type GoldTableReview = { nodeId: string; tree: { tag: string; text?: string; children?: unknown[] } };
 
 export type BlockReview = {
   id: string;
@@ -45,6 +52,8 @@ export type BlockReview = {
   predictedNodeId?: string;
   predictedBlockId?: string;
   targetRegion?: BoundingBox;
+  /** Human-authored reference text. Never fall back to the parser output. */
+  goldText?: string;
   textAnchor?: { text: string; prefix?: string; suffix?: string };
   correctRole?: CanonicalRole;
   verdict: ReviewVerdict;
@@ -94,6 +103,14 @@ export type PageReview = {
   missingRegions: MissingRegionReview[];
   relationReviews: RelationReview[];
   paragraphBoundaryReviews: ParagraphBoundaryReview[];
+  /** Human-authored canonical node IDs in correct reading order. */
+  goldReadingOrder?: string[];
+  /** Human-authored pairs of canonical node IDs separated by a paragraph boundary. */
+  goldParagraphBoundaries?: Array<[string, string]>;
+  /** Human-authored [caption node, figure/table node] pairs on this page. */
+  goldCaptionRelations?: Array<[string, string]>;
+  goldFormulas?: GoldFormulaReview[];
+  goldTables?: GoldTableReview[];
   updatedAt: string;
 };
 
@@ -132,9 +149,12 @@ export function emptyPageReview(page: number): PageReview {
     coverage: {
       predictedComplete: false,
       goldComplete: false,
+      textComplete: false,
       paragraphBoundariesComplete: false,
       readingOrderComplete: false,
       relationsComplete: false,
+      tablesComplete: false,
+      formulasComplete: false,
     },
     blockReviews: [],
     missingRegions: [],

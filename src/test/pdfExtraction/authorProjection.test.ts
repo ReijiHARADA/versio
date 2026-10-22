@@ -1182,6 +1182,124 @@ describe("author masthead projection", () => {
     ).toBe(true);
   }, 60_000);
 
+  it("recovers dated Frontiers editorial wrap after trailing and", async () => {
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.includes("editorial-public-health-strategies-to-improve-m"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "editorial-dated-and-wrap",
+      filePath: match,
+      fileHash: "editorial-dated-and-wrap",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors.some((a) => /Sampieri-Cabrera/i.test(a))).toBe(true);
+    expect(result.paper.authors.some((a) => /Guizar/i.test(a))).toBe(true);
+    expect(result.paper.authors.some((a) => /Fres/i.test(a))).toBe(true);
+  }, 60_000);
+
+  it("drops Dr Agarwal Group affiliation crumbs from commentary authors", async () => {
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.includes("commentary-impact-of-extended-reality"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "xr-commentary-agarwal-group",
+      filePath: match,
+      fileHash: "xr-commentary-agarwal-group",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining([
+        "Van Charles Lansingh",
+        "Stephen Chai",
+        "Nicoletta Fynn-Thompson",
+        "Akshay G. Nair",
+        "Jared Tuttle",
+      ]),
+    );
+    expect(
+      result.paper.authors.every(
+        (a) => !/Agarwal|Services|Hospital/i.test(a),
+      ),
+    ).toBe(true);
+  }, 60_000);
+
+  it("recovers BMJ Open Quality structured abstract and drops PRACTICE OR POLICY", async () => {
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.includes("applications-of-human-factors-approaches"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "bmj-human-factors-structured-abs",
+      filePath: match,
+      fileHash: "bmj-human-factors-structured-abs",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.canonical.nodes.some((n) => n.role === "abstract")).toBe(true);
+    expect(
+      result.canonical.nodes.some(
+        (n) =>
+          n.role === "abstract" &&
+          /Given the level of encouragement seen in recent policy/i.test(n.text ?? ""),
+      ),
+    ).toBe(true);
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining(["Aimee Ferguson", "Marion Bennie"]),
+    );
+    expect(result.paper.authors.every((a) => !/PRACTICE OR POLICY/i.test(a))).toBe(true);
+  }, 60_000);
+
+  it("peels glued *CORRESPONDENCE and splits Md. Name pairs", async () => {
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.includes("toward-reliable-computer-aided-brain"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "brain-tumor-correspondence-peel",
+      filePath: match,
+      fileHash: "brain-tumor-correspondence-peel",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining([
+        "Md. Shabiul Islam",
+        "Jonnla Naga Surekha",
+        "Krishna Prakash",
+        "Mohammad Tariqul Islam",
+      ]),
+    );
+    expect(
+      result.paper.authors.every(
+        (a) => !/CORRESPONDENCE|Mechanical Engineering/i.test(a),
+      ),
+    ).toBe(true);
+    expect(result.paper.authors.filter((a) => /Shabiul Islam/i.test(a))).toHaveLength(1);
+  }, 60_000);
+
+  it("dedupes repeated person tokens in a Frontiers byline", async () => {
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.includes("unraveling-the-role-of-asymmetric"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "protti-duplicate-peel",
+      filePath: match,
+      fileHash: "protti-duplicate-peel",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual([
+      "Jin Y. Huang",
+      "W. Rowland Taylor",
+      "Dario A. Protti",
+    ]);
+  }, 60_000);
+
   it("joins Frontiers other-role and-wrap under a comma-ending author row", async () => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("toward-a-dual-pathway-model-of-neuroplastic"));

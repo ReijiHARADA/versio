@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "kind": "paper-reader-extraction-benchmark-prediction",
+  "id": "synthetic-metric-example",
+  "parser": { "id": "fixture", "version": "1" },
+  "source": { "fileHash": "synthetic-metric-example" },
+  "blocks": [
+    { "id": "p1", "role": "paragraph", "region": { "page": 1, "x": 0, "y": 0, "width": 100, "height": 20 }, "text": "alpha beta" }
+  ],
+  "readingOrder": ["p1"],
+  "paragraphBoundaries": []
+}

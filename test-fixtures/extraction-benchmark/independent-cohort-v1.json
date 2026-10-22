@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "kind": "paper-reader-extraction-independent-cohort",
+  "purpose": "Frozen held-out candidates, publisher-family disjoint from the development catalog. They are unscored until reviewed gold is added.",
+  "split": "heldout",
+  "documents": [
+    { "id": "heldout-jmir-shopautiplan", "pdfPath": "test-fixtures/real-papers/pending-pdfs/epmc-serious-game-aimed-at-assessing-executive-planning-skills-in-children-wi.pdf", "fileHash": "b791e3a0c2b738e08f1a8e33a6cdfaff4e862664e9c732632b45756a17aa86b1", "leakageGroup": "jmir-jmir-serious-games-template", "attributes": { "publisher": "JMIR", "discipline": "HCI", "layout": "journal", "language": "en" } },
+    { "id": "heldout-mdpi-eye-tracking-hci", "pdfPath": "test-fixtures/real-papers/pending-pdfs/epmc-mapping-eye-tracking-research-in-human-computer-interaction-a-science-ma.pdf", "fileHash": "b3398d0345e5bedce2604bdb8741e31affca1dcf9eb8bd65e1622513c26c34e6", "leakageGroup": "mdpi-jemr-template", "attributes": { "publisher": "MDPI", "discipline": "HCI", "layout": "journal", "language": "en" } },
+    { "id": "heldout-cureus-eye-tracking-review", "pdfPath": "test-fixtures/real-papers/pending-pdfs/epmc-gaze-and-eye-tracking-perspectives-for-psychological-research-a-narrativ.pdf", "fileHash": "84967cab3efce36663585e5dc193fdd17492dd2e641b49e37320691d07702c64", "leakageGroup": "cureus-template", "attributes": { "publisher": "Cureus", "discipline": "psychology", "layout": "journal", "language": "en" } },
+    { "id": "heldout-wiley-connected-speech", "pdfPath": "test-fixtures/real-papers/pending-pdfs/epmc-establishing-norms-of-connected-speech-measures-for-story-telling-in-can.pdf", "fileHash": "c20cc62fb43d1d507b67eff2b1bce0dd4176d1ea8b9e4b307e546ceff26113f7", "leakageGroup": "wiley-ijlcd-template", "attributes": { "publisher": "Wiley", "discipline": "linguistics", "layout": "journal", "language": "en" } },
+    { "id": "heldout-bmc-biomedical-nlp", "pdfPath": "test-fixtures/real-papers/pending-pdfs/epmc-natural-language-processing-nlp-tools-in-extracting-biomedical-concepts-.pdf", "fileHash": "aa12f01083cc6322af88a4b408a6611177c7f9948a55664796e84e855d13948c", "leakageGroup": "bmc-medical-informatics-template", "attributes": { "publisher": "BMC", "discipline": "biomedical informatics", "layout": "journal", "language": "en" } }
+  ]
+}

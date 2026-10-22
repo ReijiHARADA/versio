@@ -353,16 +353,32 @@ function expandAuthorLine(text: string): string[] {
       text.trim(),
     );
   if (camelJunctions >= 2 || (camelJunctions === 1 && loneGluedPerson)) {
-    const withCamelSpaces = text.replace(/([a-zà-öø-ÿ])([A-ZÀ-Ö])/gu, "$1 $2");
+    // Keep Scottish/Irish `McGuire` / `MacDonald` intact.
+    const withCamelSpaces = text.replace(
+      /(?<!Mc|Mac|O')([a-zà-öø-ÿ])([A-ZÀ-Ö])/gu,
+      "$1 $2",
+    );
     if (withCamelSpaces !== text) {
       return expandAuthorLine(withCamelSpaces);
     }
   }
   // Frontiers glues `*CORRESPONDENCE` (sometimes without a following space)
-  // onto the corresponding-author row.
-  const withoutCorrespondence = text.replace(/^\*?correspondence\s*/i, "").trim();
+  // onto the corresponding-author row (`*CORRESPONDENCEMd. Shabiul Islam…`).
+  const withoutCorrespondence = text
+    .replace(/^\*?correspondence(?:\s+|(?=[A-ZÀ-Ö]))/i, "")
+    .trim();
   if (withoutCorrespondence !== text.trim() && withoutCorrespondence.length >= 8) {
     return expandAuthorLine(withoutCorrespondence);
+  }
+  // After peeling correspondence, two people can still be undelimited
+  // (`Md. Shabiul Islam Jonnla Naga Surekha , Pratiksha…`).
+  const mdGluedPair = text.match(
+    /^(Md\.\s+[A-ZÀ-Ö][\p{L}'’-]+\s+[A-ZÀ-Ö][\p{L}'’-]+)\s+([A-ZÀ-Ö][\p{L}'’-]+(?:\s+[A-ZÀ-Ö][\p{L}'’-]+){1,2})(?=\s*,|\s+and\s+|\s*$)/u,
+  );
+  if (mdGluedPair) {
+    return expandAuthorLine(
+      `${mdGluedPair[1]}, ${mdGluedPair[2]}${text.slice(mdGluedPair[0].length)}`,
+    );
   }
   // Springer mastheads glue the received date onto the author row
   // (`Received: 19 August 2025 Yu Cao, Xiaogang Yang…`).
@@ -374,6 +390,20 @@ function expandAuthorLine(text: string): string[] {
     .trim();
   if (withoutReceivedDate !== text.trim() && withoutReceivedDate.length >= 8) {
     return expandAuthorLine(withoutReceivedDate);
+  }
+  // Frontiers editorial dated wrap (`14 June 2026 Raúl Sampieri-Cabrera *`).
+  const withoutLeadingDate = text
+    .replace(/^\d{1,2}\s+[A-Za-z]+\s+\d{4}\s+/, "")
+    .replace(/\s*\*+\s*$/, "")
+    .trim();
+  if (
+    withoutLeadingDate !== text.trim() &&
+    withoutLeadingDate.length >= 8 &&
+    /^[A-ZÀ-ÖØ-Ý][\p{L}'’´\-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´\-]+){1,4}$/u.test(
+      withoutLeadingDate,
+    )
+  ) {
+    return expandAuthorLine(withoutLeadingDate);
   }
   const separatedSource = separateSwallowedAffiliation(text);
   // Bilingual mastheads commonly encode `栗原 勇太 小竹 元基
@@ -396,6 +426,10 @@ function expandAuthorLine(text: string): string[] {
     .replace(/(\p{L})\d+/gu, "$1")
     .replace(/\d+[*†‡§]/g, "")
     .replace(/(\p{Ll})(\p{Lu})/gu, "$1 $2")
+    // Re-glue Scottish/Irish particles split by the CamelCase pass above.
+    .replace(/\bMc\s+([A-ZÀ-Ö])/gu, "Mc$1")
+    .replace(/\bMac\s+([A-ZÀ-Ö])/gu, "Mac$1")
+    .replace(/\bO'\s+([A-ZÀ-Ö])/gu, "O'$1")
     .replace(/(?:^|[\s,])\d{1,2}(?=$|[\s,])/gu, " ")
     .replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, " ")
     .replace(/^[,;·\s]+/, "")
@@ -652,6 +686,40 @@ function isNonAuthorMastheadLine(text: string): boolean {
   ) {
     return true;
   }
+  // Department crumbs painted as sole authors (`Mechanical Engineering`).
+  if (
+    /^(?:mechanical|electrical|civil|chemical|computer|biomedical|software)\s+engineering$/i.test(
+      value,
+    )
+  ) {
+    return true;
+  }
+  // BMJ box chrome painted as authors (`PRACTICE OR POLICY` / `WHAT THIS STUDY ADDS`).
+  if (
+    /^(?:practice or policy|what this study adds|what is already known|strengths and limitations)\b/i.test(
+      value,
+    )
+  ) {
+    return true;
+  }
+  // Symptom / topic enumerations painted as authors
+  // (`Hopelessness; Helplessness; Worthlessness; Tearfulness`).
+  if (
+    (value.match(/;/g) ?? []).length >= 2 &&
+    !/\d/.test(value) &&
+    !/\b(?:university|department|institute|hospital)\b/i.test(value)
+  ) {
+    return true;
+  }
+  // Numbered affiliation crumbs painted as authors
+  // (`Services, Dr Agarwal’s Group of Eye Hospitals…`).
+  if (
+    /^(?:services|department|center|centre|unit|institute)\b/i.test(value) ||
+    /\bdr\.?\s+[\p{L}'’-]+['’]s\s+group\b/iu.test(value) ||
+    /\bgroup of (?:eye )?hospitals?\b/i.test(value)
+  ) {
+    return true;
+  }
   // Foundation / society crumbs painted as authors (`Bonobo Foundation`).
   if (/\b(?:foundation|society|association|consortium)\s*$/i.test(value) && !/,/.test(value)) {
     return true;
@@ -877,7 +945,15 @@ function isNonAuthorMastheadLine(text: string): boolean {
       withoutLeadingPubDate,
     )
   ) {
-    return true;
+    // Keep dated person wraps used as byline continuations
+    // (`14 June 2026 Raúl Sampieri-Cabrera *`).
+    if (
+      !/^\d{1,2}\s+[A-Za-z]+\s+(?:19|20)\d{2}\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´\-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´\-]+){1,4}\s*\*?$/u.test(
+        value,
+      )
+    ) {
+      return true;
+    }
   }
   // Trailing conjunction crumbs (`of the`, `to`) are non-authors. A byline that
   // ends with `and` / `&` is a normal Frontiers / multi-author wrap — keep it
@@ -2043,6 +2119,30 @@ export function projectCanonicalToPaper(input: {
         !/[.!?]$/.test(n.text.trim())) ||
       (/\d[*†‡]?/.test(n.text) && n.text.trim().length <= 400 &&
         (n.text.match(/,/g)?.length ?? 0) >= 3 && !/[.!?]$/.test(n.text.trim())) ||
+      // BMJ sidebar bylines painted as `other` (`Rashmi Patel , Jessica Irving ,`
+      // / lone `Megan Pritchard,` beside the right-rail byline).
+      (n.role === "other" &&
+        (n.boundingBoxes[0]?.y ?? 9999) < 320 &&
+        n.text.trim().length <= 80 &&
+        !/\b(?:university|department|edited|reviewed|keywords?|objective|setting|received|published)\b/i.test(
+          n.text,
+        ) &&
+        (/,\s*$/.test(n.text.trim()) &&
+          (n.text.match(/[A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’-]+)+/gu) ?? []).length >= 2
+          ? true
+          : /^[A-ZÀ-ÖØ-Ý][\p{L}'’-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’-]+){1,3},?\s*$/u.test(
+              n.text.trim(),
+            ) &&
+            authorNodes.some((author) => {
+              const authorBox = author.boundingBoxes[0];
+              const box = n.boundingBoxes[0];
+              return (
+                Boolean(authorBox && box) &&
+                author.pageStart === n.pageStart &&
+                Math.abs((authorBox!.x ?? 0) - (box!.x ?? 0)) <= 220 &&
+                Math.abs((authorBox!.y ?? 0) - (box!.y ?? 0)) <= 50
+              );
+            }))) ||
       // A two-column masthead can emit the next author as a same-baseline
       // paragraph beginning with `and` (`and Sarah Maggioli`). Promote only a
       // short name-shaped continuation beside an existing author row; ordinary
@@ -2089,6 +2189,24 @@ export function projectCanonicalToPaper(input: {
             Math.abs((authorBox!.x ?? 0) - (box!.x ?? 0)) <= 4 &&
             (box!.y ?? 0) - (authorBox!.y ?? 0) > 0 &&
             (box!.y ?? 0) - (authorBox!.y ?? 0) <= 28
+          );
+        })) ||
+      // Frontiers editorial wraps the last author onto a dated heading
+      // (`… Fresán-Orellana and` / `14 June 2026 Raúl Sampieri-Cabrera *`).
+      // The dated line often sits in the left PUBLISHED rail (wide Δx).
+      ((n.role === "heading" || n.role === "copyright" || n.role === "other") &&
+        n.text.trim().length <= 72 &&
+        /^\d{1,2}\s+[A-Za-z]+\s+\d{4}\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´\-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´\-]+){1,4}\s*\*?$/u.test(
+          n.text.trim(),
+        ) &&
+        authorNodes.some((author) => {
+          const authorBox = author.boundingBoxes[0];
+          const box = n.boundingBoxes[0];
+          return (
+            Boolean(authorBox && box) &&
+            author.pageStart === n.pageStart &&
+            /(?:\band|&)\s*$/i.test((author.text ?? "").trim()) &&
+            Math.abs((box!.y ?? 0) - (authorBox!.y ?? 0)) <= 40
           );
         }))));
   // Some two-column journals classify the first half of an italic author row
@@ -4925,6 +5043,11 @@ export function projectCanonicalToPaper(input: {
       name
         .replace(/,?\s+for the\b.*$/i, "")
         .replace(/\s+of\s+(?:the\s+)?(?:university|college|institute|[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\b.*$/u, "")
+        // PDF wrap can paint the same person twice (`Dario A. Protti Dario A. Protti`).
+        .replace(
+          /^([A-ZÀ-Ö][\p{L}'’.-]+(?:\s+[A-ZÀ-Ö][\p{L}'’.-]+){1,4})\s+\1\b/u,
+          "$1",
+        )
         .replace(/\s+/g, " ")
         .trim(),
     )

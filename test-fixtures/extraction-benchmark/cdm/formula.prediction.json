@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "kind": "paper-reader-extraction-benchmark-prediction",
+  "id": "cdm-fixture",
+  "parser": { "id": "fixture", "version": "1" },
+  "source": { "fileHash": "cdm-hash" },
+  "blocks": [{ "id": "p", "role": "equation", "region": { "page": 1, "x": 1, "y": 1, "width": 10, "height": 5 } }],
+  "formulas": [{ "id": "p-formula", "region": { "page": 1, "x": 1, "y": 1, "width": 10, "height": 5 }, "latex": "x=1" }]
+}

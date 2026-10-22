@@ -1409,14 +1409,30 @@ function markColonStructuredFrontAbstracts(nodes: CanonicalNode[]): CanonicalNod
   const stopChrome =
     /^(?:citation|keywords?|key words?|index terms?|copyright|received|accepted|published|correspondence|edited by|reviewed by)\b/i;
   // DovePress / similar often paint Purpose:/Methods: bands as `copyright`.
+  // BMJ Open Quality also parks Introduction/Methods leads inside `table` cells.
   const structuredBandRole = (role: CanonicalNode["role"]): boolean =>
-    role === "heading" || role === "paragraph" || role === "other" || role === "copyright";
+    role === "heading" ||
+    role === "paragraph" ||
+    role === "other" ||
+    role === "copyright" ||
+    role === "table";
   const looksLikePublisherCopyrightChrome = (text: string): boolean =>
     /^(?:©|copyright|for personal use only|creative commons|email\b)/i.test(text) ||
     /downloaded from\s+https?:/i.test(text) ||
     /^risk management and healthcare policy\b/i.test(text);
+  // Glued label+body (`Introduction Given the level…` / `Methods Medline…`)
+  // is common when BMJ paints the abstract box as a table/other cell.
+  // Also accept cite-prefix + Objective (`Brinn A, et al. … Objective To…`).
+  const gluedStructuredLead =
+    /^(?:background|introduction|methods?|materials(?:\s+and\s+methods)?|results?|discussion|conclusions?|objectives?|purpose|aims?|setting|participants|exposure|main outcomes?)\b(?!\s*:?\s*$)(?=\s+[A-Za-z(])/i;
+  const citeGluedObjective =
+    /\bet al\b.+\bObjective\s+To\b/i;
   const isStructuredAbstractLabel = (text: string, role: CanonicalNode["role"]): boolean =>
-    structuredLabel.test(text) || (role === "heading" && bareStructuredHeading.test(text));
+    structuredLabel.test(text) ||
+    (role === "heading" && bareStructuredHeading.test(text)) ||
+    ((role === "table" || role === "other" || role === "paragraph") &&
+      text.length >= 40 &&
+      (gluedStructuredLead.test(text) || citeGluedObjective.test(text)));
   // Cover pages are often title-only; Research Square puts the structured
   // abstract on page 2–3 after a long author/affiliation masthead. Also stop
   // on a repeated Background after Conclusion.

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "kind": "paper-reader-extraction-benchmark-manifest",
+  "defaultRegressionIds": ["synthetic-metric-example"],
+  "documents": [
+    {
+      "id": "synthetic-metric-example",
+      "split": "development",
+      "leakageGroup": "synthetic-metric-example",
+      "attributes": { "layout": "synthetic", "language": "en" },
+      "goldPath": "test-fixtures/extraction-benchmark/gold/synthetic-metric-example.gold.json",
+      "snapshotPath": "test-fixtures/extraction-benchmark/predictions/synthetic-metric-example.prediction.json"
+    },
+    {
+      "id": "dev-existing-real-paper-corpus",
+      "split": "development",
+      "leakageGroup": "existing-113-paper-corpus",
+      "attributes": { "layout": "mixed", "language": "en" }
+    },
+    {
+      "id": "heldout-interpreting-neural-networks",
+      "split": "heldout",
+      "leakageGroup": "arxiv-1705-04977",
+      "attributes": { "publisher": "arXiv", "discipline": "machine learning", "layout": "two-column", "language": "en" }
+    }
+  ]
+}
