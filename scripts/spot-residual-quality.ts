@@ -66,6 +66,7 @@ async function main() {
       const title =
         String(
           r.paper?.title ||
+            (r.paper as { titleOriginal?: string } | undefined)?.titleOriginal ||
             r.canonical.nodes.find((n) => n.role === "title")?.text ||
             ""
         ).trim();

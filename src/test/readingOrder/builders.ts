@@ -757,6 +757,17 @@ export function stackedDerivativeEquationPages(): ExtractedPage[] {
       420,
       { width: 400, fontSize: 10 },
     ),
+    // Real-PDF-like geometry for eq.(4): centered lowercase-leading display,
+    // trailing ∫ crumb, then left-aligned marginal prose (must not swap order).
+    item("d DKL[p(zγ |x) ‖ p(zγ )] = 1/2 mmse(x, γ) (4) dγ", 218, 460, {
+      width: 280,
+      fontSize: 10,
+    }),
+    item("∫", 209, 482, { width: 8, fontSize: 10 }),
+    item("The marginal is p(zγ ) = p(zγ |x)p(x)dx, and the pointwise MMSE is defined as follows,", 108, 490, {
+      width: 400,
+      fontSize: 10,
+    }),
   ];
   return [page(1, items)];
 }

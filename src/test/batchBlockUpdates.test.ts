@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  activeBlockUpdateBatcherCount,
   BLOCK_UPDATE_COALESCE_MS,
   createBlockUpdateBatcher,
   setTranslationUiDeferReason,
@@ -74,5 +75,12 @@ describe("createBlockUpdateBatcher", () => {
     setTranslationUiDeferReason("workspace-modal", false);
     expect(apply).toHaveBeenCalledTimes(1);
     batcher.dispose();
+  });
+
+  it("drops a disposed batcher from the shared flush set", () => {
+    const batcher = createBlockUpdateBatcher(vi.fn());
+    expect(activeBlockUpdateBatcherCount()).toBe(1);
+    batcher.dispose();
+    expect(activeBlockUpdateBatcherCount()).toBe(0);
   });
 });

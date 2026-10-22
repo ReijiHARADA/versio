@@ -8,14 +8,10 @@ import { subscribeTranslationServerReady } from "../../../utils/serverReady";
 import { upsertSection } from "../../../utils/mergePaperData";
 import type { Paper, PaperBlock, Section } from "../../../types/paper";
 
-type BlockBatcher = {
-  push: (block: PaperBlock) => void;
-};
-
 export function useReaderTranslationResume(opts: {
   paperId: string | undefined;
   isLoading: boolean;
-  blockBatcherRef: MutableRefObject<BlockBatcher>;
+  blockBatcherRef: MutableRefObject<{ push: (block: PaperBlock) => void } | null>;
   updatePaper: (id: string, patch: Partial<Paper>) => void;
   setSectionsInStore: (
     paperId: string,
@@ -36,7 +32,7 @@ export function useReaderTranslationResume(opts: {
         paperId,
         {
           onBlockTranslated: (block) => {
-            blockBatcherRef.current.push(block);
+            blockBatcherRef.current?.push(block);
           },
           onPaperUpdated: (updated) => {
             updatePaper(updated.id, updated);

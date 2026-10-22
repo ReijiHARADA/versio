@@ -570,4 +570,131 @@ describe("title resolver masthead filtering", () => {
     expect(result.text).toBe(full);
     expect(result.text).not.toMatch(/Abstract$/i);
   });
+
+  it("strips repository Author / Publication Date metadata from the title", () => {
+    const result = resolveTitle({
+      candidates: [
+        candidate(
+          "Fatigue and occupational safety in short haul, light transport Author: Friswell, Rena Publication Date: 2013 DOI:",
+          80,
+        ),
+      ],
+    });
+    expect(result.text).toBe("Fatigue and occupational safety in short haul, light transport");
+  });
+
+  it("strips a leading Springer Nature OPEN badge from the title", () => {
+    const result = resolveTitle({
+      candidates: [
+        candidate(
+          "OPEN A diffusion model conditioned on compound bioactivity profiles for generating high-content images",
+          120,
+        ),
+      ],
+    });
+    expect(result.text).toBe(
+      "A diffusion model conditioned on compound bioactivity profiles for generating high-content images",
+    );
+  });
+
+  it("strips a STUDY PROTOCOL rail joined onto the article title", () => {
+    const result = resolveTitle({
+      candidates: [
+        candidate("STUDY PROTOCOL", 100),
+        candidate(
+          "A collaborative approach to applying Natural Language Processing (NLP) to Domestic Homicide Reviews (DHRs): A study protocol",
+          120,
+        ),
+      ],
+    });
+    expect(result.text).toBe(
+      "A collaborative approach to applying Natural Language Processing (NLP) to Domestic Homicide Reviews (DHRs): A study protocol",
+    );
+    expect(result.text).not.toMatch(/^STUDY PROTOCOL/i);
+  });
+
+  it("joins a hanging page-1 thesis stub with the page-2 cover stack", () => {
+    const pageCand = (
+      text: string,
+      page: number,
+      y: number,
+      role: "title" | "paragraph" | "heading" | "author" = "paragraph",
+    ) =>
+      ({
+        id: `${role}-p${page}-${y}`,
+        role,
+        text,
+        pageStart: page,
+        pageEnd: page,
+        confidence: 0.9,
+        roleScores: { title: role === "title" ? 0.95 : 0.2 },
+        boundingBoxes: [{ page, x: 80, y, width: 400, height: 16 }],
+        layoutBlock: {
+          id: `block-${role}-p${page}-${y}`,
+          role,
+          text,
+          pageStart: page,
+          pageEnd: page,
+          bbox: { page, x: 80, y, width: 400, height: 16 },
+          lines: [{ text, page, x: 80, y, width: 400, height: 16, fontSize: page === 1 ? 14 : 18 }],
+        },
+      }) as any;
+
+    const result = resolveTitle({
+      candidates: [
+        pageCand("Is digital advertising effective under", 1, 200, "title"),
+        pageCand("Is digital advertising effective under", 2, 120, "paragraph"),
+        pageCand("conditions of low attention?", 2, 140, "paragraph"),
+        pageCand("The impact of low attention processing on consumer", 2, 170, "paragraph"),
+        pageCand("brand consideration and choice", 2, 190, "paragraph"),
+        pageCand("A thesis presented in partial fulfilment of the", 2, 230, "paragraph"),
+        pageCand("Doctor of Philosophy", 2, 280, "heading"),
+        pageCand("Abstract", 3, 80, "heading"),
+        pageCand("A crucial task for digital advertising is …", 3, 110, "paragraph"),
+      ],
+    });
+    expect(result.text).toMatch(/digital advertising/i);
+    expect(result.text).toMatch(/low attention/i);
+    expect(result.text).toMatch(/\?/);
+    expect(result.text).not.toMatch(/thesis presented|Doctor of Philosophy|Abstract/i);
+  });
+
+  it("rejects spaced ORIGINAL MANUSCRIPT banners so the real title can win", () => {
+    const pageCand = (
+      text: string,
+      page: number,
+      y: number,
+      role: "title" | "paragraph" | "heading" = "paragraph",
+    ) =>
+      ({
+        id: `${role}-p${page}-${y}`,
+        role,
+        text,
+        pageStart: page,
+        pageEnd: page,
+        confidence: 0.9,
+        roleScores: { title: role === "title" ? 0.98 : 0.55 },
+        boundingBoxes: [{ page, x: 80, y, width: 400, height: 16 }],
+        layoutBlock: {
+          id: `block-${role}-p${page}-${y}`,
+          role,
+          text,
+          pageStart: page,
+          pageEnd: page,
+          bbox: { page, x: 80, y, width: 400, height: 16 },
+          lines: [{ text, page, x: 80, y, width: 400, height: 16, fontSize: role === "title" ? 18 : 14 }],
+        },
+      }) as any;
+
+    const result = resolveTitle({
+      candidates: [
+        pageCand("O R I G I N A L M A N U S C R I P T", 1, 80, "title"),
+        pageCand("Eyettention II: A dual-sequence architecture for modeling fixation", 1, 120, "paragraph"),
+        pageCand("location, within-word landing position, and fixation duration in reading", 1, 140, "paragraph"),
+        pageCand("Abstract", 1, 220, "heading"),
+      ],
+    });
+    expect(result.text).toMatch(/Eyettention II/i);
+    expect(result.text).not.toMatch(/ORIGINAL|MANUSCRIPT|^T$/i);
+  });
 });

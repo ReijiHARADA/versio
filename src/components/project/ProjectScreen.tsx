@@ -41,7 +41,6 @@ export function ProjectScreen() {
   const navigate = useNavigate();
   const setCurrentPaper = useAppStore((state) => state.setCurrentPaper);
   const storePapers = useLibraryCache((state) => state.papers);
-  const blocks = useLibraryCache((state) => state.blocks);
   const searchQuery = useProjectStore((state) => state.searchQuery);
   const workspaceNodes = useProjectStore((state) => state.workspaceNodes);
   const memberships = useProjectStore((state) => state.memberships);
@@ -199,7 +198,7 @@ export function ProjectScreen() {
                 onOpen={() => {
                   const state = derivePaperReadiness({
                     processingStatus: paper.processingStatus,
-                    blocks: blocks[paper.id],
+                    blocks: useLibraryCache.getState().blocks[paper.id],
                   });
                   if (state.canOpen) {
                     setCurrentPaper(paper.id);

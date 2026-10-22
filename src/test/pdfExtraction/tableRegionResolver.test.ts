@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   mergeAdjacentTableRows,
   mergeTableRowsByPageGeometry,
+  promoteCaptionBoundedTableCells,
   resolveTableRegions,
 } from "../../services/pdfExtraction/resolver/documentResolver";
 import type { CanonicalNode } from "../../services/pdfExtraction/canonical/types";
@@ -140,5 +141,52 @@ describe("mergeAdjacentTableRows", () => {
     expect(merged[0]?.text).toContain("19 Shybo");
     expect(merged[0]?.text).toContain("20 Roboldo");
     expect(merged[0]?.text).toContain("partial");
+  });
+});
+
+describe("promoteCaptionBoundedTableCells", () => {
+  it("promotes short cell crumbs between numbered table captions", () => {
+    const caption = (id: string, text: string, y: number): CanonicalNode => ({
+      id,
+      role: "caption",
+      text,
+      pageStart: 1,
+      pageEnd: 1,
+      boundingBoxes: [{ page: 1, x: 40, y, width: 200, height: 12 }],
+      confidence: 0.9,
+      evidence: [],
+      sourceAnchor: { page: 1, boundingBoxes: [] },
+    });
+    const cell = (id: string, text: string, y: number, role: CanonicalNode["role"] = "paragraph"): CanonicalNode => ({
+      id,
+      role,
+      text,
+      pageStart: 1,
+      pageEnd: 1,
+      boundingBoxes: [{ page: 1, x: 40, y, width: 120, height: 11 }],
+      confidence: 0.7,
+      evidence: [],
+      sourceAnchor: { page: 1, boundingBoxes: [] },
+    });
+    const promoted = promoteCaptionBoundedTableCells([
+      caption("c6", "TABLE 6 F-squared.", 100),
+      cell("a", "AI adoption", 120),
+      cell("b", "0.944 (large)", 135, "heading"),
+      cell("c", "—", 150),
+      cell("d", "Source: author’s calculation.", 165),
+      caption("c7", "TABLE 7 R-squared.", 200),
+      cell("e", "Employee wellbeing", 220),
+      cell("f", "0.542 0.536", 235),
+      cell("g", "Technostress", 250),
+      {
+        ...cell("body", "However, the interaction effect between POS and Technostress was not significant.", 280),
+        role: "paragraph",
+      },
+    ]);
+    expect(promoted.filter((n) => n.role === "table").map((n) => n.id)).toEqual([
+      "a", "b", "c", "d", "e", "f", "g",
+    ]);
+    expect(promoted.find((n) => n.id === "body")?.role).toBe("paragraph");
+    expect(promoted.find((n) => n.id === "b")?.evidence.some((e) => e.label === "caption-bounded-table-cell")).toBe(true);
   });
 });

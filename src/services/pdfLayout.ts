@@ -2018,7 +2018,7 @@ function looksLikeContactMetadata(text: string): boolean {
 }
 
 function looksLikeAffiliation(text: string): boolean {
-  return /(university|department|institute|college|faculty|laboratory|\blab\b|(?:research\s+)?(?:center|centre)\s+(?:for|of)\b|school of|architecture|industrial design|centre of excellence|faculty of|department of|\b(?:the )?(netherlands|australia|germany|france|japan|china|canada|sweden|denmark|finland|norway|italy|spain|switzerland|austria|belgium|ireland|scotland|england|wales)\b|\b(?:sydney|london|dundee|eindhoven|cambridge|oxford|toronto|melbourne|macquarie)\b|大学|大学院|研究所|学院|学部|学科|機構|高専)/i.test(
+  return /(universitas|universidade|università|universiteit|university|department|institute|college|faculty|laboratory|\blab\b|(?:research\s+)?(?:center|centre)\s+(?:for|of)\b|school of|architecture|industrial design|centre of excellence|faculty of|department of|program studi|jurusan|\b(?:the )?(netherlands|australia|germany|france|japan|china|canada|sweden|denmark|finland|norway|italy|spain|switzerland|austria|belgium|ireland|scotland|england|wales|indonesia)\b|\b(?:sydney|london|dundee|eindhoven|cambridge|oxford|toronto|melbourne|macquarie|depok)\b|大学|大学院|研究所|学院|学部|学科|機構|高専)/i.test(
     text
   );
 }
@@ -2061,7 +2061,7 @@ function looksLikeLatinAuthorLine(text: string): boolean {
   return caps.length >= 2 && caps.length <= 8 && caps.length >= words.length - 2;
 }
 
-function looksLikeAuthorList(text: string): boolean {
+export function looksLikeAuthorList(text: string): boolean {
   if (looksLikeEmail(text) || looksLikeAffiliation(text) || looksLikeUrl(text)) return false;
   const t = layoutPlain(text).replace(/[*†‡§♠♣♡♢∗]/g, " ").replace(/\s+/g, " ").trim();
   if (t.length < 10 || t.length > 320 || /[.!?。！？:]$/.test(t)) return false;
@@ -2116,10 +2116,20 @@ function looksLikePersonName(text: string): boolean {
   if (looksLikeEmail(text) || looksLikeAffiliation(text) || looksLikeUrl(text)) {
     return false;
   }
+  // Title continuations that open with interrogatives / auxiliaries are never
+  // bylines (`What Doesn't`, `How Managers Allocate Attention`).
+  if (
+    /^(?:What|When|Where|Why|How|Which|Who|Whose|This|These|Those|Does|Do|Did|Is|Are|Can|Will|Should|Towards?|Toward)\b/i.test(
+      text.trim(),
+    )
+  ) {
+    return false;
+  }
   // Title continuations (`Fundus Photographs: A Proof-of-Concept Study`,
-  // `Using Google Cloud Vertex AI`) must not match First Last heuristics.
+  // `Using Google Cloud Vertex AI`, JMIR `Clinician Acceptance`) must not
+  // match First Last heuristics.
   if (/[:;]/.test(text) ||
-    /\b(?:study|studies|photographs?|proof|classification|using|cloud|vertex|review|analysis|system|model|database|questionnaire|attention|memory|cognition|decision|students?|process)\b/i.test(text)) {
+    /\b(?:study|studies|photographs?|proof|classification|using|cloud|vertex|review|analysis|system|model|database|questionnaire|attention|memory|cognition|decision|students?|process|clinician|acceptance|documentation|quality|note|time)\b/i.test(text)) {
     return false;
   }
   // Comma-separated topic pairs (`Attention, Memory`) are title fragments,
@@ -2356,6 +2366,18 @@ function buildPageLines(
     // masthead. Title and byline text overlap that image but are not figure
     // labels — only small in-figure annotations should be dropped here.
     if (item.fontSize >= 11) return false;
+    const trimmed = item.text.replace(/\s+/g, " ").trim();
+    // Caption titles under `FIGURE N` are often painted on/near the artwork
+    // (`FFA U-Net architecture.`) at 6–9pt. Keep short Title-Case legends.
+    const looksLikeCaptionTitle =
+      item.fontSize >= 5.5 &&
+      item.fontSize < 11 &&
+      trimmed.length >= 8 &&
+      trimmed.length <= 100 &&
+      trimmed.split(/\s+/).filter(Boolean).length <= 14 &&
+      /^[A-ZÀ-ÖØ-Ý(][\p{L}0-9].*[.!?]$/u.test(trimmed) &&
+      !/^(?:figure|fig\.?|table|表|図)\s*\d+/i.test(trimmed);
+    if (looksLikeCaptionTitle) return false;
     const itemArea = Math.max(1, item.width * item.height);
     return (page.imagePlacements ?? []).some((image) => {
       if (image.width < 100 || image.height < 50) return false;
@@ -2557,7 +2579,8 @@ function roleForLine(
   // large font (`… Study of` + `Documentation Time, Note Quality, and Clinician`
   // + `Acceptance`). Prefer title over author heuristics for that band.
   // Use a modest threshold: document baseFont can sit near 12pt while cover
-  // display type is only ~16pt (below 1.35×).
+  // display type is only ~16pt (below 1.35×). Do not trap bare First Last
+  // bylines (`Qiuxia Guo`) that share the title font but are narrow name rows.
   if (
     line.page === 1 &&
     line.y < 360 &&
@@ -2565,6 +2588,7 @@ function roleForLine(
     /^[A-Z]/.test(text) &&
     !looksLikeEmail(text) &&
     !looksLikeAffiliation(text) &&
+    !looksLikePersonName(text) &&
     !/\b(?:submitted to|corresponding author|disclaimer)\b/i.test(text) &&
     (
       isHangingTitleEnd(text) ||
@@ -2584,6 +2608,9 @@ function roleForLine(
   if (line.page === 1 && looksLikeAuthorList(text)) return "author";
   // Single-author masthead rows (`Mirela SPIŢĂ1`) — require a surname-like
   // ALL-CAPS / diacritic token so topic Title-Case lines stay out.
+  // Bare two-token First Last (`Qiuxia Guo`) is handled below only when the
+  // previous line is a hanging/display title; promoting every First Last
+  // would steal Frontiers fragments (`An Feng`) from glued byline recovery.
   if (
     line.page === 1 &&
     looksLikePersonName(text.replace(/\d+$/g, "").trim()) &&
@@ -3437,10 +3464,26 @@ function repairInterleavedContinuationOrder(blocks: LayoutBlock[]): LayoutBlock[
       i -= 1;
       continue;
     }
+    // Same-baseline column interleave only. A centered display equation that
+    // starts with a lowercase math token (`d DKL… (4)`) must not swap past the
+    // following left-aligned prose just because their bboxes overlap via a
+    // trailing ∫ crumb on the equation block.
+    const currentTop = current.lines[0]?.y ?? current.bbox.y;
+    const nextTop = next.lines[0]?.y ?? next.bbox.y;
+    const coplanar =
+      Math.abs(currentTop - nextTop) <=
+      Math.max(14, (current.lines[0]?.fontSize ?? 9) * 1.5);
+    const displayMathBlock = (block: LayoutBlock): boolean =>
+      block.role === "equation" ||
+      isEquationLine(block.text) ||
+      (/\(\s*\d{1,2}[a-z]?\s*\)/.test(block.text) &&
+        /[=≡∑∫√‖]|d\s*\/\s*d|\bDKL\b|\bmmse\b/i.test(block.text));
     if (current.role !== "paragraph" || next.role !== "paragraph" ||
         current.pageStart !== current.pageEnd || next.pageStart !== next.pageEnd ||
         current.pageStart !== next.pageStart || !/^[a-z]/.test(current.text.trim()) ||
         !/^[A-Z]/.test(next.text.trim()) || current.bbox.x <= next.bbox.x ||
+        !coplanar ||
+        displayMathBlock(current) || displayMathBlock(next) ||
         current.bbox.y > next.bbox.y + next.bbox.height ||
         next.bbox.y > current.bbox.y + current.bbox.height ||
         isDetachedSingleColumnMarginBlock(current, next.bbox.x) ||
@@ -3731,31 +3774,97 @@ function splitMixedMastheadBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
     if (block.role !== "author" || block.pageStart !== 1 || block.pageEnd !== 1 || block.lines.length < 2) {
       return [block];
     }
-    const affiliationIndex = block.lines.findIndex((line, index) =>
+    // Indonesian / SENOPATI-style covers glue the title stack, numbered byline,
+    // and affiliation band into one author-role block. Peel the title first.
+    // Prefer a numbered person byline over topic-comma title wraps that also
+    // match looksLikeAuthorList (`… “Ergonomics”,`).
+    const isNumberedPersonByline = (text: string): boolean => {
+      const trimmed = text.trim();
+      return (
+        /^\s*[A-ZÀ-Ö][\p{L}'’-]+(?:\s+[A-ZÀ-Ö][\p{L}'’-]+){1,4}\d/u.test(trimmed) &&
+        (trimmed.match(/,/g) ?? []).length >= 1 &&
+        !/[“"「]/.test(trimmed) &&
+        !/\b(?:ergonomics|vosviewer|bibliometrik|occupational health)\b/i.test(trimmed)
+      );
+    };
+    const bylineIndex = (() => {
+      const numbered = block.lines.findIndex((line) => isNumberedPersonByline(line.text));
+      if (numbered > 0) return numbered;
+      return block.lines.findIndex(
+        (line) =>
+          (looksLikeAuthorList(line.text) || looksLikeLatinAuthorLine(line.text)) &&
+          !/[“"「]/.test(line.text) &&
+          line.text.trim().length <= 200,
+      );
+    })();
+    let working = block;
+    const out: LayoutBlock[] = [];
+    if (bylineIndex > 0) {
+      const titleLines = block.lines.slice(0, bylineIndex);
+      const restLines = block.lines.slice(bylineIndex);
+      // When a numbered person byline is present, treat preceding lines as the
+      // title stack. Do not re-run personName/affiliation gates — topic-comma
+      // wraps and Indonesian titles can false-positive those helpers.
+      const titleOk = titleLines.every((line) => {
+        const text = line.text.trim();
+        return text.length >= 8 && !isNumberedPersonByline(text);
+      });
+      if (titleOk && restLines.length > 0) {
+        out.push({
+          ...block,
+          role: "title" as const,
+          text: joinLines(titleLines),
+          lines: titleLines,
+          bbox: blockBbox(titleLines),
+          pageStart: titleLines[0]!.page,
+          pageEnd: titleLines.at(-1)!.page,
+        });
+        working = {
+          ...block,
+          role: "author" as const,
+          text: joinLines(restLines),
+          lines: restLines,
+          bbox: blockBbox(restLines),
+          pageStart: restLines[0]!.page,
+          pageEnd: restLines.at(-1)!.page,
+        };
+      }
+    }
+    const affiliationIndex = working.lines.findIndex((line, index) =>
       index > 0 && looksLikeAffiliation(line.text) && !looksLikePersonName(line.text)
     );
-    if (affiliationIndex <= 0) return [block];
-    const authorLines = block.lines.slice(0, affiliationIndex);
-    const affiliationLines = block.lines.slice(affiliationIndex);
+    if (affiliationIndex <= 0) {
+      return out.length ? [...out, working] : [working];
+    }
+    const authorLines = working.lines.slice(0, affiliationIndex);
+    const affiliationLines = working.lines.slice(affiliationIndex);
     if (!authorLines.every((line) =>
-      looksLikePersonName(line.text) || looksLikeLatinAuthorLine(line.text) || looksLikeAuthorList(line.text)
+      looksLikePersonName(line.text) ||
+      looksLikeLatinAuthorLine(line.text) ||
+      looksLikeAuthorList(line.text) ||
+      isNumberedPersonByline(line.text)
     )) {
-      return [block];
+      return out.length ? [...out, working] : [working];
     }
     return [
+      ...out,
       {
-        ...block,
+        ...working,
         role: "author" as const,
         text: joinLines(authorLines),
         lines: authorLines,
         bbox: blockBbox(authorLines),
+        pageStart: authorLines[0]!.page,
+        pageEnd: authorLines.at(-1)!.page,
       },
       {
-        ...block,
+        ...working,
         role: "affiliation" as const,
         text: joinLines(affiliationLines),
         lines: affiliationLines,
         bbox: blockBbox(affiliationLines),
+        pageStart: affiliationLines[0]!.page,
+        pageEnd: affiliationLines.at(-1)!.page,
       },
     ];
   });
@@ -5094,12 +5203,26 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
       /^[d∂]\s*$/u.test(block.text.trim()) ||
       /^d[a-zα-ωγθϕψ]\s*$/iu.test(block.text.trim()) ||
       /^[√∫∑∏]$/u.test(block.text.trim());
+    // Short Title-Case legends under `FIGURE N` (`FFA U-Net architecture.`)
+    // must not continue unfinished prose from the previous page, even when a
+    // figure-caption band was skipped in reading order.
+    const isShortCaptionTitleBlock = (() => {
+      const t = block.text.replace(/\s+/g, " ").trim();
+      if (!t || t.length > 100) return false;
+      const words = t.split(/\s+/).filter(Boolean);
+      if (words.length < 2 || words.length > 14) return false;
+      if (!/^[A-ZÀ-ÖØ-Ý(][\p{L}0-9].*[.!?]$/u.test(t)) return false;
+      if (/^(?:figure|fig\.?|table|表|図)\s*\d+/i.test(t)) return false;
+      const fs = block.lines[0]?.fontSize ?? 9;
+      return fs > 0 && fs < 10;
+    })();
     if (
       target && (target.role === "paragraph" || isAbstractBodyTitleBlock(target)) && block.role === "paragraph" &&
       !currentIsDetachedMargin &&
         !isDetachedTableHeaderBlock(block, target) &&
         !hardCrossColumnReferenceBoundary &&
         !isMathDisplayBoundary &&
+        !isShortCaptionTitleBlock &&
         (joinsCompleteLeadingContinuation || joinsSameColumnContinuation || joinsSpanningBodyContinuation || joinsHyphenatedContinuation || geometrySameLineContinuation || rejoinAfterDetachedMargin || wrapsAcrossColumnsAtPageBottom || wrapsAcrossColumnsAtModerateTop || wrapsAcrossPhysicalColumns || wrapsAcrossAdjacentColumnTails ||
         (canContinueAcrossColumns && isSentenceContinuation(target.text, block.text)) ||
         crossesPageBoundaryAfterFigureBand || crossesPageBoundaryProperName ||
@@ -5728,6 +5851,33 @@ export function reconstructDocument(pages: ExtractedPage[]): {
         looksLikeNumberedAffiliationBand(block.text)) {
       block.role = "affiliation";
     }
+  }
+  // Conference covers often paint a lone First Last (`Qiuxia Guo`) in the
+  // title font. Demote only when a longer title sits directly above — do not
+  // promote every First Last fragment (`An Feng`) that belongs to a glued
+  // byline paragraph.
+  for (let index = 0; index < blocks.length; index += 1) {
+    const block = blocks[index]!;
+    if (block.pageStart !== 1 || block.role !== "title" || !block.text) continue;
+    const words = block.text.trim().split(/\s+/).filter(Boolean);
+    if (words.length !== 2 || block.text.trim().length > 48) continue;
+    if (!looksLikePersonName(block.text) || looksLikeAffiliation(block.text)) continue;
+    const priorTitle = blocks
+      .slice(0, index)
+      .reverse()
+      .find(
+        (candidate) =>
+          candidate.role === "title" &&
+          candidate.pageStart === 1 &&
+          (candidate.text?.trim().split(/\s+/).filter(Boolean).length ?? 0) >= 6,
+      );
+    if (!priorTitle) continue;
+    const gap =
+      (block.bbox.y ?? 0) -
+      ((priorTitle.lines.at(-1)?.y ?? priorTitle.bbox.y) +
+        (priorTitle.lines.at(-1)?.height ?? priorTitle.bbox.height ?? 0));
+    if (gap < 0 || gap > 36) continue;
+    block.role = "author";
   }
   if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.PDF_LAYOUT_DEBUG === "1") {
     console.warn(`[PDF_GROUPED_LINES] lines=${lines.length} blocks=${blocks.length} bodyFont=${bodyFont.toFixed(2)}`);

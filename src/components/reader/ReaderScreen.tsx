@@ -76,11 +76,27 @@ export function ReaderScreen() {
   const contentRef = useRef<HTMLDivElement>(null);
   const paperContentRef = useRef<ReaderContentHandle>(null);
   const storeBlocksRef = useRef(storeBlocks);
-  const blockBatcherRef = useRef(
-    createBlockUpdateBatcher((id, batch) => {
-      setBlocksInStore(id, (prev) => batch.reduce((acc, block) => upsertBlock(acc, block), prev));
-    })
-  );
+  const setBlocksRef = useRef(setBlocksInStore);
+  setBlocksRef.current = setBlocksInStore;
+  const blockBatcherRef = useRef<ReturnType<typeof createBlockUpdateBatcher> | null>(null);
+  if (blockBatcherRef.current == null) {
+    blockBatcherRef.current = createBlockUpdateBatcher((id, batch) => {
+      setBlocksRef.current(id, (prev) => batch.reduce((acc, block) => upsertBlock(acc, block), prev));
+    });
+  }
+
+  useEffect(() => {
+    if (blockBatcherRef.current == null) {
+      blockBatcherRef.current = createBlockUpdateBatcher((id, batch) => {
+        setBlocksRef.current(id, (prev) => batch.reduce((acc, block) => upsertBlock(acc, block), prev));
+      });
+    }
+    const batcher = blockBatcherRef.current;
+    return () => {
+      batcher.dispose();
+      if (blockBatcherRef.current === batcher) blockBatcherRef.current = null;
+    };
+  }, []);
 
   // Defer streaming translation patches while the user is scrolling the body.
   const paper = papers.find((p) => p.id === paperId);
@@ -228,6 +244,15 @@ export function ReaderScreen() {
     },
     [paperId]
   );
+  const openBlockSourcePdf = useCallback(
+    (block: PaperBlock) => {
+      void handleOpenSourcePdf(block.pageStart);
+    },
+    [handleOpenSourcePdf]
+  );
+  const openGlossaryInspector = useCallback(() => {
+    setRightPanel("glossary");
+  }, []);
 
   const showNotesList = useCallback(() => {
     setRightPanel((current) => toggleReaderRightPanel(current, "notes"));
@@ -398,9 +423,9 @@ export function ReaderScreen() {
             draftHighlight={draftHighlight}
             flashAnnotationIds={flashAnnotationIds}
             onHighlightClick={handleHighlightClick}
-            onOpenSourcePdf={(block) => void handleOpenSourcePdf(block.pageStart)}
+            onOpenSourcePdf={openBlockSourcePdf}
             glossaryEntries={glossary}
-            onOpenGlossaryInspector={() => setRightPanel("glossary")}
+            onOpenGlossaryInspector={openGlossaryInspector}
           />
         </main>
 

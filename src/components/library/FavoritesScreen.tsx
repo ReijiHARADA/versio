@@ -15,7 +15,6 @@ export function FavoritesScreen() {
   const navigate = useNavigate();
   const papers = useLibraryCache((s) => s.papers);
   const setCurrentPaper = useAppStore((s) => s.setCurrentPaper);
-  const blocks = useLibraryCache((state) => state.blocks);
   const searchQuery = useProjectStore((s) => s.searchQuery);
   const favoriteBase = useMemo(() => papers.filter((p) => p.favorite), [papers]);
   const favorites = useLibraryPaperSearch(favoriteBase, searchQuery);
@@ -27,7 +26,7 @@ export function FavoritesScreen() {
     if (!paper) return;
     const view = derivePaperReadiness({
       processingStatus: paper.processingStatus,
-      blocks: blocks[paperId],
+      blocks: useLibraryCache.getState().blocks[paperId],
     });
     if (!view.canOpen) return;
     setCurrentPaper(paperId);

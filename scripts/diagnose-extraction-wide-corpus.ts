@@ -26,6 +26,8 @@ const catalog = JSON.parse(
 const pendingDir = path.join(root, "test-fixtures/real-papers/pending-pdfs");
 const limitArg = process.argv.find((a) => a.startsWith("--limit="));
 const limit = limitArg ? Number(limitArg.slice("--limit=".length)) : Infinity;
+const offsetArg = process.argv.find((a) => a.startsWith("--offset="));
+const offset = offsetArg ? Math.max(0, Number(offsetArg.slice("--offset=".length)) || 0) : 0;
 const onlyPending = process.argv.includes("--pending-only");
 const onlyCatalog = process.argv.includes("--catalog-only");
 
@@ -47,7 +49,10 @@ if (!onlyCatalog && fs.existsSync(pendingDir)) {
   }
 }
 
-const selected = jobs.slice(0, Number.isFinite(limit) ? limit : jobs.length);
+const selected = jobs.slice(
+  offset,
+  offset + (Number.isFinite(limit) ? limit : jobs.length),
+);
 const findings: Finding[] = [];
 
 const lowercaseColonHeading = /^[a-z][\w'’ -]{0,40}:$/;

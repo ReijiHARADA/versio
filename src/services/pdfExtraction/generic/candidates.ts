@@ -162,6 +162,8 @@ function vectorFigureLabelEvidence(block: LayoutBlock, blocks?: LayoutBlock[], p
   const items = block.lines.flatMap((line) => line.items);
   const words = block.text.trim().split(/\s+/).filter(Boolean);
   const proseTerms = block.text.match(/[A-Za-z]{3,}/g) ?? [];
+  // CJK comparison matrices with √/✓ cells are real tables, not vector legends.
+  if (/[√✓☑☒]/.test(block.text) && /[\u3040-\u30ff\u3400-\u9fff]/.test(block.text)) return 0;
   // Inline mathematics and citations can fragment an otherwise ordinary
   // sentence into many native spans. Vector-label evidence must not hide that
   // prose merely because its text matrix resembles a diagram.
@@ -180,16 +182,32 @@ function vectorFigureLabelEvidence(block: LayoutBlock, blocks?: LayoutBlock[], p
   );
   if (figureCaption && (page?.graphicsPrimitives?.length ?? 0) >= 100 &&
       block.bbox.y < figureCaption.bbox.y && words.length >= 2 && words.length <= 10 &&
-      block.text.trim().length <= 90 && !/[.!?。！？:;]/.test(block.text.trim())) {
+      block.text.trim().length <= 90 && !/[.!?。！？,:;]/.test(block.text.trim()) &&
+      // Body crumbs that wrap beside a figure (`by only reading`, `In Result 4`)
+      // must stay eligible for translation; keep this path for label-like tokens.
+      !/^(?:in|by|the|we|this|for|as|to|and|or|with|from)\b/i.test(block.text.trim())) {
     return 0.86;
   }
   const multiItemContinuation = block.lines.length === 1 &&
     ((items.length >= 4 && block.text.trim().startsWith("'")) ||
       (items.length === 1 && block.text.trim().startsWith("'") && block.text.trim().length <= 100)) &&
     !/[.!?。！？]$/.test(block.text.trim());
-  if ((!multiItemContinuation && (block.role !== "paragraph" || block.lines.length < 3)) ||
+  // Compact 2-line legend grids (`Linda Cab Hospital` / `Toma Test Wason`) are
+  // common vector labels; require ≥2 lines rather than ≥3 when item/x-band
+  // density already looks like a diagram cluster. Reject short prose crumbs
+  // (`by only reading`, `In Result 4, we used the`) that share 2-line geometry.
+  if ((!multiItemContinuation && (block.role !== "paragraph" || block.lines.length < 2)) ||
       items.length < 6 && !multiItemContinuation ||
       items.filter((item) => item.text.trim().length <= 80).length / items.length < 0.85) return 0;
+  if (
+    block.lines.length === 2 &&
+    !multiItemContinuation &&
+    (words.length <= 4 ||
+      /^(?:in|by|the|we|this|for|as|to|and|or)\b/i.test(block.text.trim()) ||
+      /[,:;]/.test(block.text))
+  ) {
+    return 0;
+  }
   // A single native span beginning with an apostrophe is a common chart-title
   // continuation (the preceding labels were emitted as separate spans), and
   // has no meaningful x-band information left after PDF text grouping.
@@ -1557,9 +1575,17 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
       !/[.!?]\s*$/.test(block.text.trim()) &&
       block.text.trim().split(/\s+/).filter(Boolean).length <= 140 &&
       block.lines.flatMap((line) => line.items).filter((item) => /\d/.test(item.text)).length >= 2;
+    // Diagram answer callouts (`A: Option 2.`) often sit in a figure band and
+    // inherit layout `chrome`, but they are vignette content — not publisher
+    // chrome — and must remain visible / separable from adjacent prose.
+    const diagramAnswerCallout =
+      block.role === "chrome" &&
+      /^(?:[A-D]:\s*)?Option\s+\d+[.)]?$/i.test(block.text.trim());
     const role = block.role === "header" || block.role === "footer" || block.role === "copyright" || block.role === "chrome"
       // `chrome` is layout-only; keep it out of Reader via copyright.
-      ? (block.role === "chrome" ? "copyright" : layoutRole)
+      ? (block.role === "chrome"
+          ? (diagramAnswerCallout ? "other" : "copyright")
+          : layoutRole)
       : denseCjkBody || numericRow || mathRow || alignedTableRow || numericMultiItemRow || tableAdjacentNumericRow || tableHeaderRow || singleWordAbbreviation || lowercaseColonLeadIn || diagramMicroHeading || rotatedNumericGrid || inlineLabelProse ? "paragraph" :
       numberedSubheading ? "heading" : layoutRole;
     const style = styleSignature(block, layouts, baseFontSize, blocks[index - 1], blocks[index + 1]);

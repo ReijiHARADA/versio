@@ -35,6 +35,19 @@ describe("demoteEditorialChromeHeadings", () => {
     expect(roles["[AT1R – AngII]γAT1R,RANKL"]).not.toBe("heading");
   });
 
+  it("demotes Copyright and / KEYWORDS CITATION sidebar crumbs", () => {
+    const nodes = demoteEditorialChromeHeadings([
+      heading("Copyright and"),
+      heading("Reuse: Copyright and Moral Rights remain with the author(s) and/or"),
+      heading("KEYWORDS CITATION"),
+      heading("1 Introduction"),
+    ]);
+    expect(nodes.find((n) => n.text === "Copyright and")?.role).toBe("copyright");
+    expect(nodes.find((n) => n.text?.startsWith("Reuse:"))?.role).toBe("copyright");
+    expect(nodes.find((n) => n.text === "KEYWORDS CITATION")?.role).toBe("other");
+    expect(nodes.find((n) => n.text === "1 Introduction")?.role).toBe("heading");
+  });
+
   it("demotes funding / peer-review chrome rails", () => {
     const nodes = demoteEditorialChromeHeadings([
       heading("Funding: This research was funded with"),
@@ -46,6 +59,26 @@ describe("demoteEditorialChromeHeadings", () => {
     expect(nodes.find((n) => n.text.startsWith("Published"))?.role).not.toBe("heading");
     expect(nodes.find((n) => n.text.startsWith("Declaration"))?.role).not.toBe("heading");
     expect(nodes.find((n) => n.text === "Materials and methods")?.role).toBe("heading");
+  });
+
+  it("demotes glued Frontiers RECEIVED/ACCEPTED/PUBLISHED date rails", () => {
+    const nodes = demoteEditorialChromeHeadings([
+      heading("RECEIVED 03 March 2026 ACCEPTED 06 March 2026 KEYWORDS PUBLISHED 23 March 2026"),
+      heading("RECEIVED 23 March 2026 REVISED 01 May 2026 ACCEPTED 11 May 2026 PUBLISHED 05 June 2026"),
+      heading("1 Introduction"),
+    ]);
+    expect(nodes.find((n) => n.text.startsWith("RECEIVED 03"))?.role).not.toBe("heading");
+    expect(nodes.find((n) => n.text.startsWith("RECEIVED 23"))?.role).not.toBe("heading");
+    expect(nodes.find((n) => n.text === "1 Introduction")?.role).toBe("heading");
+  });
+
+  it("demotes glued KEYWORDS COPYRIGHT sidebar labels", () => {
+    const nodes = demoteEditorialChromeHeadings([
+      heading("KEYWORDS COPYRIGHT"),
+      heading("Introduction"),
+    ]);
+    expect(nodes.find((n) => n.text === "KEYWORDS COPYRIGHT")?.role).not.toBe("heading");
+    expect(nodes.find((n) => n.text === "Introduction")?.role).toBe("heading");
   });
 
   it("demotes Keywords: / Index Terms chrome labels with a trailing colon", () => {
@@ -190,12 +223,18 @@ describe("demoteEditorialChromeHeadings", () => {
   it("maps bare COPYRIGHT labels to copyright role", () => {
     const nodes = demoteEditorialChromeHeadings([
       heading("COPYRIGHT"),
+      heading("COPYRIGHT STATEMENT"),
+      heading("AUTHENTICITY STATEMENT"),
+      heading("ORIGINALITY STATEMENT"),
       heading("Copyright:"),
       heading("Copyright (1998) Society for Neuroscience."),
       heading("Copyright © 2022 Bueckle, Buehling, Shih and Börner."),
       heading("Results"),
     ]);
     expect(nodes.find((n) => n.text === "COPYRIGHT")?.role).toBe("copyright");
+    expect(nodes.find((n) => n.text === "COPYRIGHT STATEMENT")?.role).toBe("copyright");
+    expect(nodes.find((n) => n.text === "AUTHENTICITY STATEMENT")?.role).toBe("copyright");
+    expect(nodes.find((n) => n.text === "ORIGINALITY STATEMENT")?.role).toBe("copyright");
     expect(nodes.find((n) => n.text === "Copyright:")?.role).toBe("copyright");
     expect(nodes.find((n) => n.text.startsWith("Copyright (1998)"))?.role).toBe("copyright");
     expect(nodes.find((n) => n.text.startsWith("Copyright © 2022"))?.role).toBe("copyright");
@@ -224,6 +263,40 @@ describe("demoteEditorialChromeHeadings", () => {
     expect(nodes.find((n) => n.text === "Þ")?.role).not.toBe("heading");
   });
 
+  it("demotes Nature Check for updates and Graphical Abstract chrome", () => {
+    const nodes = demoteEditorialChromeHeadings([
+      heading("Check for updates"),
+      heading("GRAPHICAL ABSTRACT"),
+      heading("Abbreviations"),
+      heading("STUDY PROTOCOL"),
+      heading("Parameter Value"),
+      heading("1 Introduction"),
+      heading("Results"),
+    ]);
+    expect(nodes.find((n) => n.text === "Check for updates")?.role).toBe("other");
+    expect(nodes.find((n) => n.text === "GRAPHICAL ABSTRACT")?.role).toBe("other");
+    expect(nodes.find((n) => n.text === "Abbreviations")?.role).toBe("other");
+    expect(nodes.find((n) => n.text === "STUDY PROTOCOL")?.role).toBe("other");
+    expect(nodes.find((n) => n.text === "Parameter Value")?.role).toBe("other");
+    expect(nodes.find((n) => n.text === "1 Introduction")?.role).toBe("heading");
+    expect(nodes.find((n) => n.text === "Results")?.role).toBe("heading");
+  });
+
+  it("demotes table throughput metric cells from the outline", () => {
+    const nodes = demoteEditorialChromeHeadings([
+      heading("2019 118.80 GPixels/sec"),
+      heading("10.26 GPixel/sec"),
+      heading("1996 0.80 GPixels/sec"),
+      heading("2. WHY DOES VIRTUAL REALITY HELP?"),
+      heading("Results"),
+    ]);
+    expect(nodes.find((n) => n.text.startsWith("2019"))?.role).toBe("other");
+    expect(nodes.find((n) => n.text.startsWith("10.26"))?.role).toBe("other");
+    expect(nodes.find((n) => n.text.startsWith("1996"))?.role).toBe("other");
+    expect(nodes.find((n) => n.text.startsWith("2. WHY"))?.role).toBe("heading");
+    expect(nodes.find((n) => n.text === "Results")?.role).toBe("heading");
+  });
+
   it("demotes Frontiers body-lead and structured-abstract wraps from the outline", () => {
     const nodes = demoteEditorialChromeHeadings([
       heading("Background and objective: This scoping review systematically mapped current"),
@@ -245,5 +318,40 @@ describe("demoteEditorialChromeHeadings", () => {
     expect(nodes.find((n) => n.text === "1 Introduction")?.role).toBe("heading");
     expect(nodes.find((n) => n.text === "2.1 Methodology introduction")?.role).toBe("heading");
     expect(nodes.find((n) => n.text.startsWith("3.3 Influencing"))?.role).toBe("heading");
+  });
+
+  it("keeps layout-owned parent sections even after same-page subsections", () => {
+    const nodes = demoteEditorialChromeHeadings([
+      heading("5.3 IPMA analysis", 14),
+      heading("5. Results", 14),
+      heading("6 Discussion", 14),
+    ]);
+    // Without inline-split evidence the parent stays (geometry/order is separate).
+    expect(nodes.find((n) => n.text === "5. Results")?.role).toBe("heading");
+  });
+
+  it("demotes Frontiers SEM effect-size cells spilled into the outline", () => {
+    const caption: CanonicalNode = {
+      id: "cap-t6",
+      role: "caption",
+      text: "TABLE 6 F-squared.",
+      pageStart: 14,
+      pageEnd: 14,
+      confidence: 0.9,
+      evidence: [],
+      boundingBoxes: [{ page: 14, x: 40, y: 80, width: 160, height: 12 }],
+      sourceAnchor: { page: 14, boundingBoxes: [] },
+    } as CanonicalNode;
+    const nodes = demoteEditorialChromeHeadings([
+      caption,
+      heading("Psychological resilience Employee wellbeing", 14),
+      heading("0.107 (small–medium) 0.000 (none)", 14),
+      heading("0.444 (large) 0.112 (medium)", 14),
+      heading("6 Discussion", 14),
+    ]);
+    expect(nodes.find((n) => n.text?.startsWith("Psychological resilience"))?.role).not.toBe("heading");
+    expect(nodes.find((n) => n.text?.startsWith("0.107"))?.role).not.toBe("heading");
+    expect(nodes.find((n) => n.text?.startsWith("0.444"))?.role).not.toBe("heading");
+    expect(nodes.find((n) => n.text === "6 Discussion")?.role).toBe("heading");
   });
 });
