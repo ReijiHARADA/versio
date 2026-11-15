@@ -1,4 +1,4 @@
-"""Audit-only local seq2seq comparison using Paper Reader's production units.
+"""Audit-only local seq2seq comparison using Versio's production units.
 
 The candidate sees exactly the semantic unit model_input produced by the
 production segmenter. Scientific/citation spans are protected and restored

@@ -129,13 +129,13 @@ Next: terminology-resource/general term-preservation evaluation on held-out pape
 
 Verified the 3B checkpoint tensors against raw weights and loaded embeddings. Unpatched Transformers 5.17.0 changes the checkpoint's `tie_word_embeddings=false` to true and maps encoder input embeddings to the distinct `lm_head.weight`; strict chunked `torch.equal` checks over all 256,000 x 1,024 values confirm the mismatch. Transformers 4.57.6 loads encoder/decoder from the checkpoint input embedding while preserving the separate lm_head. Before the change, the app's custom reassignment masked this upstream bug in its active 5.16.1 environment; it is now replaced by fail-closed integrity checks and a 4.57.6 pin (including protobuf for the slow T5 tokenizer). Full reproducible method and fixture outputs: [TRANSFORMERS_MADLAD_AB.md](TRANSFORMERS_MADLAD_AB.md).
 
-Correctly loaded 4.57.6 still reproduces MADLAD semantic drift: it narrows “none of the groups” to two groups and mis-scopes the 88 participant total; the existing client scope gate rejects those fixtures. Dense statistics were preserved. The same ten-paper / 40-unit extraction and reader-path cohort was rerun under 4.57.6: 18 pre-model plus 5 post-model fallbacks, 17 accepted translations; clean ordinary-body fallback remains 4/17 (23.5%), unchanged from patched 5.x. Twelve generated outputs differed; manual review found material false accepts on factory-worker study focus, interactive jewellery overview, consumer-production terminology, and WEAR construct claims. Runtime repair is confirmed, product quality goals remain unmet. Verification: full Vitest 418/418 (65 files), Python 133 tests + 11 subtests, `npm run typecheck`, `npm run lint`, `npm run build`, and `git diff --check` passed. `npm run tauri:build:fast` built `src-tauri/target/release/bundle/macos/Paper Reader.app` at 2026-09-21 02:48:22 JST. The bundle includes Python 3.12.14 with Transformers 4.57.6 and `madlad_mps.py` carrying the v6 cache identity plus fail-closed embedding verification. Build logs include existing PDF.js eval / large-chunk warnings; no test failures. No app launch was performed. Priority decision: retain corrected 3B as baseline and compare 7B before 10B; neither is cached, and the available 37 GiB is too tight for the 33.2 GB full 7B checkpoint (10B is 42.9 GB). No model was downloaded; local Gemma/Qwen are available for held-out comparison meanwhile.
+Correctly loaded 4.57.6 still reproduces MADLAD semantic drift: it narrows “none of the groups” to two groups and mis-scopes the 88 participant total; the existing client scope gate rejects those fixtures. Dense statistics were preserved. The same ten-paper / 40-unit extraction and reader-path cohort was rerun under 4.57.6: 18 pre-model plus 5 post-model fallbacks, 17 accepted translations; clean ordinary-body fallback remains 4/17 (23.5%), unchanged from patched 5.x. Twelve generated outputs differed; manual review found material false accepts on factory-worker study focus, interactive jewellery overview, consumer-production terminology, and WEAR construct claims. Runtime repair is confirmed, product quality goals remain unmet. Verification: full Vitest 418/418 (65 files), Python 133 tests + 11 subtests, `npm run typecheck`, `npm run lint`, `npm run build`, and `git diff --check` passed. `npm run tauri:build:fast` built `src-tauri/target/release/bundle/macos/Versio.app` at 2026-09-21 02:48:22 JST. The bundle includes Python 3.12.14 with Transformers 4.57.6 and `madlad_mps.py` carrying the v6 cache identity plus fail-closed embedding verification. Build logs include existing PDF.js eval / large-chunk warnings; no test failures. No app launch was performed. Priority decision: retain corrected 3B as baseline and compare 7B before 10B; neither is cached, and the available 37 GiB is too tight for the 33.2 GB full 7B checkpoint (10B is 42.9 GB). No model was downloaded; local Gemma/Qwen are available for held-out comparison meanwhile.
 
 Next: finish full test/build checks, then resume the held-out cross-disciplinary terminology/false-accept and fallback study using the verified 4.57.6 model. Do not treat clean embedding integrity as evidence of semantic translation quality.
 
 ## v55: generic technical-term prompt probe
 
-Tested one generic Gemma instruction for academic methods, constructs, theory names, and specialist/statistical terminology on three known term-drift paragraphs plus two ordinary controls. No phrase from the target paper was included in the prompt. It corrected homophily from “same-sex bias” to `同質性` and controls remained natural, but it did not correct `linear probing`→`線形探索法` or peer(s)→coworkers. The shared gate accepted 4/5 and falsely rejected the semantically sound `WOM`→`口コミ` because it insists on the acronym. Mean response latency was 19.2s. This is a development probe only; no source, prompt, model route, or quality gate changed. Details/raw rows: [TRANSLATION_MODEL_EVAL_V52.md](TRANSLATION_MODEL_EVAL_V52.md), `/tmp/paper-reader-v55-generic-term-prompt.json`.
+Tested one generic Gemma instruction for academic methods, constructs, theory names, and specialist/statistical terminology on three known term-drift paragraphs plus two ordinary controls. No phrase from the target paper was included in the prompt. It corrected homophily from “same-sex bias” to `同質性` and controls remained natural, but it did not correct `linear probing`→`線形探索法` or peer(s)→coworkers. The shared gate accepted 4/5 and falsely rejected the semantically sound `WOM`→`口コミ` because it insists on the acronym. Mean response latency was 19.2s. This is a development probe only; no source, prompt, model route, or quality gate changed. Details/raw rows: [TRANSLATION_MODEL_EVAL_V52.md](TRANSLATION_MODEL_EVAL_V52.md), `/tmp/versio-v55-generic-term-prompt.json`.
 
 Next: test terminology lookup grounded in source/document context plus concept-preserving acronym equivalence; use held-out OA papers before any integration. Maintain both semantic precision and false-reject measurement. No benchmark is running, server ready; no `.app` build. Main goals remain unmet.
 
@@ -151,7 +151,7 @@ The first fast Tauri build exposed four TypeScript project-reference errors in e
 
 Ran Gemma 2 9B on all 18 source-category ordinary-body rows from the new 10-paper extraction report, matching the current MADLAD inputs exactly. One row is a standalone figure caption misclassified as prose, leaving 17 manually screened ordinary paragraphs. Gemma generated all 18; the shared TypeScript quality gate accepted 17 and rejected one added `[1]` reference. Manual ordinary-body fallback would be 1/17 (5.9%) versus MADLAD 4/17 (23.5%). Mean latency 13.3s Gemma (median 8.3) vs 7.3s MADLAD (median 5.7) on same rows, about 1.8x slower; no route changed.
 
-Gemma corrects several substantial MADLAD errors (jewellery “manufacture” addition; undergraduate→graduate; changed investigator/participant relation; omitted field-study user experience), but it has at least three severity>=2 false accepts among 16 accepted clean-prose outputs: `linear probing`→linear search, `peers`→coworkers, and `homophily`→same-sex bias. It also omits prosodic features from the caption misclassified as body. The gate gives score 1.0 to the three term errors. This is promising evidence for Gemma as a better base, but the false-accept rate remains unacceptable; neither a direct switch nor a gate-only fallback cascade is justified. Matched outputs: `/tmp/paper-reader-v54-fresh-gemma.json`; full evaluation notes in [TRANSLATION_MODEL_EVAL_V52.md](TRANSLATION_MODEL_EVAL_V52.md).
+Gemma corrects several substantial MADLAD errors (jewellery “manufacture” addition; undergraduate→graduate; changed investigator/participant relation; omitted field-study user experience), but it has at least three severity>=2 false accepts among 16 accepted clean-prose outputs: `linear probing`→linear search, `peers`→coworkers, and `homophily`→same-sex bias. It also omits prosodic features from the caption misclassified as body. The gate gives score 1.0 to the three term errors. This is promising evidence for Gemma as a better base, but the false-accept rate remains unacceptable; neither a direct switch nor a gate-only fallback cascade is justified. Matched outputs: `/tmp/versio-v54-fresh-gemma.json`; full evaluation notes in [TRANSLATION_MODEL_EVAL_V52.md](TRANSLATION_MODEL_EVAL_V52.md).
 
 Next: test a generic terminology/preservation intervention without adding case-specific rules, then evaluate it on new papers; broaden current-source manual review and source-role auditing. Track fallback and semantic error jointly. Corpus 50+ OA and goal <=5% fallback / near-zero unsafe remain unmet. No `.app` build.
 
@@ -159,13 +159,13 @@ Next: test a generic terminology/preservation intervention without adding case-s
 
 Ran `npm run bench:real-paper-translation -- --papers ... --limit 4 --cached-only --serial --report-name translation-audit-fresh-v52-current-extraction` through current source and the ready server. It completed 10 cached OA papers / 40 units. Across all roles, 23/40 were source-only or original fallbacks (57.5%), including 9/9 table-contamination rows safely held out and 18 pre-model structural fallbacks; five were post-model. Among source-category ordinary-body, 4/18 fell back (22.2%). Manual screening found one figure caption mislabeled ordinary body, yielding 4/17 (23.5%) on clean prose. All 17 auto-accepted rows were manually compared: 14 ordinary prose, two list items, one structurally warned linguistics paragraph. At least eight accepted rows have severity>=2 mismatches, seven in ordinary prose (wrong paragraph overview, undergraduate→graduate, changed investigator/participant claim, prosody→phonology, consumer journey→travel, omitted self-tracking/work context, omitted user experience); one more appears to swap citations [13]/[16]. One ordinary fallback participant-count scope shift was correctly rejected by the current guard.
 
-Then replayed the four post-model ordinary-body fallbacks through Gemma/Qwen. Gemma outputs passed the shared gate 4/4, but two contain material terminology shifts (`peers`→coworkers; `linear probing`→linear search). Qwen passed 1/4; an MLM→“masked label matching” error was rejected along with three invariant issues. Mean rescue latencies were 35.1s Gemma and 61.2s Qwen. This does not support a gate-only rescue cascade. Details: [TRANSLATION_MODEL_EVAL_V52.md](TRANSLATION_MODEL_EVAL_V52.md); raw extraction report is ignored at `test-data/real-papers/reports/translation-audit-fresh-v52-current-extraction.{json,md}`, raw rescue at `/tmp/paper-reader-v53-cascade-rescue.json`.
+Then replayed the four post-model ordinary-body fallbacks through Gemma/Qwen. Gemma outputs passed the shared gate 4/4, but two contain material terminology shifts (`peers`→coworkers; `linear probing`→linear search). Qwen passed 1/4; an MLM→“masked label matching” error was rejected along with three invariant issues. Mean rescue latencies were 35.1s Gemma and 61.2s Qwen. This does not support a gate-only rescue cascade. Details: [TRANSLATION_MODEL_EVAL_V52.md](TRANSLATION_MODEL_EVAL_V52.md); raw extraction report is ignored at `test-data/real-papers/reports/translation-audit-fresh-v52-current-extraction.{json,md}`, raw rescue at `/tmp/versio-v53-cascade-rescue.json`.
 
 No source/prompt/model/routing code changed. No benchmark is running; normal local server PID 83146 was verified ready after evaluation. `.app` not built. Targets remain unmet: clean ordinary prose fallback is 23.5% in this small section-stratified sample; unsafe accepted translations are frequent; corpus has not reached 50+ provenance-verified OA papers. Next: characterize false rejects separately, improve the generic false-accept and source-category diagnostics using more fresh papers, and hold the candidate cascade until its semantic safety is measured on new papers. Do not report auto-gate acceptance as correctness.
 
 ## v52: label-independent matched replay exposes translation false accepts and citation false rejects
 
-Freshly replayed 20 stable-key source blocks from 10 papers in five disciplines through current MADLAD v73, Gemma 2 9B, and Qwen 2.5 14B. Selection was source-only and independent of existing translation/review labels, but source rows came from prior audit generations; this is a fresh model comparison, not a fresh PDF extraction run. Two of 20 `ordinary-body-prose` rows were not clean body prose on inspection: one begins as a lowercase continuation, and one is actually a C/D figure caption. Detailed observations and metrics are in [TRANSLATION_MODEL_EVAL_V52.md](TRANSLATION_MODEL_EVAL_V52.md); full outputs and selection remain under `/tmp/paper-reader-v52-*.json`.
+Freshly replayed 20 stable-key source blocks from 10 papers in five disciplines through current MADLAD v73, Gemma 2 9B, and Qwen 2.5 14B. Selection was source-only and independent of existing translation/review labels, but source rows came from prior audit generations; this is a fresh model comparison, not a fresh PDF extraction run. Two of 20 `ordinary-body-prose` rows were not clean body prose on inspection: one begins as a lowercase continuation, and one is actually a C/D figure caption. Detailed observations and metrics are in [TRANSLATION_MODEL_EVAL_V52.md](TRANSLATION_MODEL_EVAL_V52.md); full outputs and selection remain under `/tmp/versio-v52-*.json`.
 
 MADLAD server fallback was 4/20 (20%); the existing TS plausibility check rejected a fifth row for citation-year loss, making the end-to-end visible fallback/reject rate 5/20 (25%). Among 15 rows passing server/client checks, manual comparison found at least nine severity>=2 translation errors. The exact number is an initial small-sample count, not a population estimate. Gemma had zero server errors but its output triggered the current plausibility gate on 4/20; two appear to be citation-rendering false rejects (`[33]`, `[24]`) and two are real citation integrity problems. Gate-accepted Gemma still mistranslated “hallmark” and confused prosody with phonology. Qwen had zero server errors and 3/20 gate rejects; two are likely citation-format false rejects, one is a real invented/renumbered citation, while gate-accepted outputs mistranslated “social cues” and narrowed prosody to phonological features. Mean latency was MADLAD 16.3s, Gemma 19.4s, Qwen 37.4s. No model routing changed.
 
@@ -175,7 +175,7 @@ Implication: Gemma is still a candidate for later selective-cascade testing, but
 
 Replayed the same extracted English from five manually reviewed severity 2–4 accepted rows across HCI, neuroscience, linguistics, ergonomics, and marketing through the current v73 MADLAD server, Qwen 2.5 14B, and Gemma 2 9B. The five are purposively selected known failures, not held-out/random sample evidence. Current MADLAD reproduced all five historical serious shifts (HCAI “steering”→“domination”; mangled rule-adherence; omitted central linguistic role-pair premise; wearable→webinar/website hallucination; sharing economy→共有経営). Server reported no fallback and the current client plausibility gate scored every primary output 1.0 with no reasons.
 
-Blind review of new alternatives found 0/5 severity>=2 for each alternative on these cases, with minor wording/terminology caveats (Gemma's `句法` for syntax; minor HCI compression). Both retained the failed claims enough to improve researcher comprehension; no alternative is declared perfect. Mean latency was MADLAD 16.1s, Qwen14 24.5s, Gemma9 14.8s per block. Raw generations: `/tmp/paper-reader-v51-madlad-current.json` and `/tmp/paper-reader-v51-independent-model-eval.json`; comparison and notes: `test-data/real-papers/reports/semantic-model-matched-v51.md`.
+Blind review of new alternatives found 0/5 severity>=2 for each alternative on these cases, with minor wording/terminology caveats (Gemma's `句法` for syntax; minor HCI compression). Both retained the failed claims enough to improve researcher comprehension; no alternative is declared perfect. Mean latency was MADLAD 16.1s, Qwen14 24.5s, Gemma9 14.8s per block. Raw generations: `/tmp/versio-v51-madlad-current.json` and `/tmp/versio-v51-independent-model-eval.json`; comparison and notes: `test-data/real-papers/reports/semantic-model-matched-v51.md`.
 
 The set supports evaluating Gemma 9B as a selective rescue candidate but cannot estimate ordinary-body fallback/unsafe rates because the five were selected for known failures. No production routing changed. Next: compare >=20 matched ordinary-body sources sampled independently of labels from multiple papers/sections, manually review all candidate outputs for semantic error and false rejection, then simulate selective routing on held-out papers. No `.app` build.
 
@@ -189,7 +189,7 @@ Validation after scope checks: quality suite 86/86; full Vitest 418/418 (65 file
 
 ## v49: Qwen 14B targeted replay; representation false rejects repaired
 
-Qwen 2.5 14B translated the same two full severity-2 v46 paragraphs and the two v48 controls with the same Ollama prompt/options. On this development set it preserved the 88-person total across fields and the collective “none of the groups” comparison; both the true negation and explicit per-group-count controls were also preserved. Manual review found a terminology defect (`知情同意` for informed consent). Full paragraphs took 40.6s and 53.8s; controls took 3.2–3.8s. This is promising but too narrow for cascade routing or a blanket model change. Raw output: `/tmp/paper-reader-v49-qwen14.json`.
+Qwen 2.5 14B translated the same two full severity-2 v46 paragraphs and the two v48 controls with the same Ollama prompt/options. On this development set it preserved the 88-person total across fields and the collective “none of the groups” comparison; both the true negation and explicit per-group-count controls were also preserved. Manual review found a terminology defect (`知情同意` for informed consent). Full paragraphs took 40.6s and 53.8s; controls took 3.2–3.8s. This is promising but too narrow for cascade routing or a blanket model change. Raw output: `/tmp/versio-v49-qwen14.json`.
 
 The existing plausibility gate initially rejected this Qwen output for two representation-only reasons: source `82`/`64` were output as full-width Japanese digits, and `Figure 5` was localized as `図5`. `normalizeInvariant` now maps full-width digits to ASCII; figure checking accepts `Fig./Figure N` or `図N` while keeping the numeric label and optional panel suffix exact. Regression tests verify correct aliases pass and wrong figure numbers / missing panels fail. Re-running the unchanged Qwen outputs now passes all four through the automatic gate; the gate still does not detect the `知情同意` term or earlier MADLAD/Qwen7 semantic false accepts.
 
@@ -197,7 +197,7 @@ Validation after v49: focused quality 80/80; full Vitest 412/412 across 65 files
 
 ## v48: local model comparison and SD expansion false-reject fix
 
-Compared full source paragraphs from both v46 severity-2 cases through local Qwen 2.5 7B and Gemma 2 9B using Paper Reader's current Ollama academic translation prompt. Also tested one negative-quantifier control and one explicit per-group-count control. Results and manual notes are in `test-data/real-papers/reports/semantic-model-comparison-v48.md`; raw generations are in `/tmp/paper-reader-v48-alternative-models.json`. Qwen avoided the wrong “two groups” reading but mistranslated the participant count as “88 research fields”; Gemma preserved the varied-field participant scope and all-group comparison on these two cases. Both alternatives preserved both controls, but the set is very small. Gemma took 18–31 seconds for the two full paragraphs and its compensation phrase remained ambiguous, so no production cascade or model replacement is justified yet.
+Compared full source paragraphs from both v46 severity-2 cases through local Qwen 2.5 7B and Gemma 2 9B using Versio's current Ollama academic translation prompt. Also tested one negative-quantifier control and one explicit per-group-count control. Results and manual notes are in `test-data/real-papers/reports/semantic-model-comparison-v48.md`; raw generations are in `/tmp/versio-v48-alternative-models.json`. Qwen avoided the wrong “two groups” reading but mistranslated the participant count as “88 research fields”; Gemma preserved the varied-field participant scope and all-group comparison on these two cases. Both alternatives preserved both controls, but the set is very small. Gemma took 18–31 seconds for the two full paragraphs and its compensation phrase remained ambiguous, so no production cascade or model replacement is justified yet.
 
 Applying the current plausibility gate to the eight outputs accepted all MADLAD/Qwen candidates, including known semantic errors; therefore output quality scoring is not a safe model selector. Gemma's participant output was previously rejected only because it rendered `SD=value` as `標準偏差 value`. Added a narrow statistical abbreviation equivalence that accepts each `SD=value` only if its exact number is adjacent to `標準偏差`; missing/mismatched values or labels remain rejected. This changed that candidate to accepted and improves one confirmed false-reject mode without changing generated translation or relaxing other invariant checks. It is not a semantic correctness fix.
 
@@ -205,11 +205,11 @@ Validation: focused quality tests 78/78; full Vitest 410/410 across 65 files; ty
 
 ## v47 decode-path isolation (diagnostic only)
 
-Replayed the two v46 severity-2 false accepts through production `/translate` on one loaded MADLAD process with `TRANSLATION_UNIT_DEBUG=1`; exact inputs/outputs and chunk/decode trace are in `/tmp/paper-reader-semantic-v47.log`, with replay JSON in `/tmp/paper-reader-semantic-v47-replay.json`. Both errors reproduced without fallback. The 827-character participant paragraph sent the intact 161-character sentence “Eighty-eight participants from various fields of study ...”; greedy decode itself produced `各学科から88名...`, incorrectly suggesting 88 per field. All numeric facts survived, so the current numeric invariant scored it as acceptable.
+Replayed the two v46 severity-2 false accepts through production `/translate` on one loaded MADLAD process with `TRANSLATION_UNIT_DEBUG=1`; exact inputs/outputs and chunk/decode trace are in `/tmp/versio-semantic-v47.log`, with replay JSON in `/tmp/versio-semantic-v47-replay.json`. Both errors reproduced without fallback. The 827-character participant paragraph sent the intact 161-character sentence “Eighty-eight participants from various fields of study ...”; greedy decode itself produced `各学科から88名...`, incorrectly suggesting 88 per field. All numeric facts survived, so the current numeric invariant scored it as acceptable.
 
 The statistical block's first sentence was a 340-character chunk. Citation/statistic protection replaced `(H(2)=4.17, p=0.124)` and another stats group with opaque placeholders; greedy and beam outputs both translated “None of the groups...” as `両群間...`. The complete response later correctly stated that there were three study groups, but no block-level consistency guard caught the contradiction. Replaying that sentence alone and with “The study compared three groups...” in the same request reproduced `両群間`; therefore segmentation, batching, and postprocessing are not the first point of corruption. The model decode emits the semantic shift, while the quality gate false-accepts it because it checks number/negation preservation but not collective cardinality.
 
-Eight same-process variants are saved at `/tmp/paper-reader-semantic-v47-variants.json` (token counts included). Rephrasing to “No significant differences were found among the three groups...” yielded a correct `3群間...` output (31 input / 17 output tokens); explicitly adding “three” to the original “None of the ...” construction also fixed that isolated case, but adding a later three-group context did not fix the first sentence. Participant-count variants remained unstable: one reordered variant omitted 88 and 5€ despite no fallback, while “88 participants overall ... across multiple fields” preserved 88 but phrased field scope ambiguously. These are diagnostic examples, not evidence that source rewriting is safe.
+Eight same-process variants are saved at `/tmp/versio-semantic-v47-variants.json` (token counts included). Rephrasing to “No significant differences were found among the three groups...” yielded a correct `3群間...` output (31 input / 17 output tokens); explicitly adding “three” to the original “None of the ...” construction also fixed that isolated case, but adding a later three-group context did not fix the first sentence. Participant-count variants remained unstable: one reordered variant omitted 88 and 5€ despite no fallback, while “88 participants overall ... across multiple fields” preserved 88 but phrased field scope ambiguously. These are diagnostic examples, not evidence that source rewriting is safe.
 
 No production algorithm was changed in v47. Root attribution: primary MADLAD decode; secondary quality gate (false accept). Citation protection may contribute by hiding context, but it is not sufficient to explain the wrong “both groups” reading because the original sentence alone reproduces it. Next: build held-out cross-domain tests for collective quantifier/cardinality and participant-count scope, evaluate a general semantic verification/cascade signal with false-reject accounting, and do not deploy a brittle phrase rewrite or blacklist. Then expand manual review beyond the three-paper cohort. Debug artifacts are temporary under `/tmp`; no benchmark is running. The debug process has been stopped and normal PID 83146 is ready: `/health` reports `model_loaded=true`, `phase=ready`, and `/status` confirms the same model version. Startup logs show warmup `OK` rejected for lacking Japanese script, but model startup completes and health is ready; this is an existing warmup-validation quirk, not a server readiness failure.
 
@@ -720,7 +720,7 @@ supported as its direct cause.
 | PR CI | `.github/workflows/ci.yml`（TS lint/test/build + browser smoke、Rust fmt/clippy/test + Tauri Linux deps、軽量 Python）。MADLAD なし |
 | Packaged acceptance | `npm run packaged:e2e`（Layer A+B）+ `release-acceptance.yml` + [docs/RELEASE_ACCEPTANCE.md](./docs/RELEASE_ACCEPTANCE.md) |
 | MADLAD 大容量 download | 通常 CI 外（nightly / human acceptance） |
-| Developer ID / 公証 | [docs/MACOS_RELEASE.md](./docs/MACOS_RELEASE.md)。`.app` 署名後に DMG。`PAPER_READER_SIGN=1`（clean のみ） |
+| Developer ID / 公証 | [docs/MACOS_RELEASE.md](./docs/MACOS_RELEASE.md)。`.app` 署名後に DMG。`VERSIO_SIGN=1`（clean のみ） |
 | Windows | 対象外 |
 
 ---
@@ -743,7 +743,7 @@ supported as its direct cause.
 | `npm run macos:dmg` | Build DMG from existing `.app`（no Tauri rebuild） |
 | `npm run test:bundle-python` | Python runtime content-hash cache + stage smoke |
 | `npm run tauri:build:fast` | 日常 `.app`（cached Python、未署名） |
-| `npm run tauri:build:clean` | リリース `.app` + `.dmg`（clean Python）。`PAPER_READER_SIGN=1` で公証まで |
+| `npm run tauri:build:clean` | リリース `.app` + `.dmg`（clean Python）。`VERSIO_SIGN=1` で公証まで |
 
 基盤回帰の例: `importResumeServerReady.test.ts`（100 completed → body read 0）、`dirtyTracking.test.ts`（100 read-only → write 0）、`sectionVirtualization.test.ts`（50+ jump mount bound）、`ftsFreshness.test.ts`。
 
@@ -1434,7 +1434,7 @@ Runtime v9 activation verified after user relaunch: new PID 60582 started at 16:
 
 ### 2026-09-15 v9 regression checkpoint
 
-After the user's relaunch, the bundled translation server is running as PID 60582 from `src-tauri/target/release/bundle/macos/Paper Reader.app`; `/health` reports `ready` with `model_loaded=true`. The bundle contains `strict-restore-v9` and `MAX_NEW_TOKENS = 384`. No older translation-server process remains. This verifies activation of the v9 generation-capacity change in the real app, although the HTTP health endpoint does not expose the model-version string directly.
+After the user's relaunch, the bundled translation server is running as PID 60582 from `src-tauri/target/release/bundle/macos/Versio.app`; `/health` reports `ready` with `model_loaded=true`. The bundle contains `strict-restore-v9` and `MAX_NEW_TOKENS = 384`. No older translation-server process remains. This verifies activation of the v9 generation-capacity change in the real app, although the HTTP health endpoint does not expose the model-version string directly.
 
 Post-relaunch validation passed: frontend 60 files / 307 tests, translation-server unittest discovery 97 tests, and TypeScript/lint/build checks remain green from the preceding checkpoint. The active product metric remains 17/82 ordinary-body reader-visible fallbacks (20.7%); the <=5% target is not met. Gemma remains audit-only pending a larger held-out semantic evaluation.
 
@@ -1534,7 +1534,7 @@ The Python suite passes 106 tests; production routing remains unchanged.
 
 A pending `significant-other` audit initially returned HTTP 401 because the
 benchmark client did not send the app server's token. The client now accepts
-`MADLAD_SERVER_TOKEN` transiently and sends `X-Paper-Reader-Token`; no token is
+`MADLAD_SERVER_TOKEN` transiently and sends `X-Versio-Token`; no token is
 persisted. A retry against the live packaged server did not complete within the
 observation window and was interrupted; its partial report is retained. The
 server health endpoint remains ready, and no app-managed process was stopped.
@@ -1814,7 +1814,7 @@ Gemma held-out 3 rowsを再集計し、`gemma-heldout-completeness-v1.json` に�
 
 ## 2026-09-15 checkpoint: runtime resync
 
-read-only health checkで `127.0.0.1:8765` は現在接続不可、translation-server/paper-readerプロセスも存在しないことを確認。監査runnerは cached=19 / pending=0 / skipped-no-pdf=2。アプリ管理プロセスをこちらから起動・停止せず、次回はユーザーが.appを起動した後にruntime確認を再開する。
+read-only health checkで `127.0.0.1:8765` は現在接続不可、translation-server/versioプロセスも存在しないことを確認。監査runnerは cached=19 / pending=0 / skipped-no-pdf=2。アプリ管理プロセスをこちらから起動・停止せず、次回はユーザーが.appを起動した後にruntime確認を再開する。
 
 ## 2026-09-15 checkpoint: aggregate audit report reconstructed
 
@@ -5101,11 +5101,11 @@ Filled only derivable catalog fields: `sourceUrl` from existing download URLs an
 - 現在33 papers / 32 PDF。重点分野の不足は cognitive-psychology 8、marketing 7、ergonomics 7、linguistics 7（HCIは目標達成）。
 
 ## Post-restart bundle check (2026-09-17)
-- 再起動後の `.app` 同梱物を確認する段階。`Paper Reader.app` が存在する場合は translation-server の `segmenter.py` と model version を照合し、8765接続失敗が古いbundleか実行時終了かを切り分ける。
+- 再起動後の `.app` 同梱物を確認する段階。`Versio.app` が存在する場合は translation-server の `segmenter.py` と model version を照合し、8765接続失敗が古いbundleか実行時終了かを切り分ける。
 
 ## Runtime launch-path diagnosis (2026-09-17)
 - Tauriは同梱venvの `translation-server/server.py` を127.0.0.1:8765で起動し、通常stderrを破棄する。
-- `MADLAD_SERVER_DEBUG_LOG` は `/tmp/paper-reader-translation-server.log` に設定されるため、8765接続失敗時はこのログを確認する。`.app` の同梱コードは確認済みで、次の切り分け対象はserver.py終了理由。
+- `MADLAD_SERVER_DEBUG_LOG` は `/tmp/versio-translation-server.log` に設定されるため、8765接続失敗時はこのログを確認する。`.app` の同梱コードは確認済みで、次の切り分け対象はserver.py終了理由。
 
 ### Resume health check (2026-09-17)
 
@@ -6951,7 +6951,7 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 
 ## Historical checkpoint (timestamp unrecoverable): app-local evidence inspection
 
-- 実機の `~/Library/Application Support/com.harada.paper-reader` を読み取り専用で確認。
+- 実機の `~/Library/Application Support/com.harada.versio` を読み取り専用で確認。
 - 現在保存されている4論文のうち、`translation.json` は completed/skipped/failed の状態のみを保持し、blockごとの訳文は `ja.md` に投影される。
 - 既知のhallucination語（100mm、患者、テレビ東京、チョコレート等）は現保存データには存在しなかった。一方、`ja.md` に英語のまま残る本文・chrome混在があり、これはモデルhallucinationではなく翻訳未完了または原文fallbackの証拠。
 - 翻訳精度の実問題を再現するには、アプリで新しい失敗blockを `TRANSLATION_UNIT_DEBUG=1` サーバーへ送る必要がある。DB／保存データだけから過去のdecode入力は復元できない。
@@ -7297,7 +7297,7 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 ## 2026-09-18 15:13 JST: arXiv license evidence
 
 - 照合済み4本について、arXivのnon-exclusive distribution licenseを確認し、OA候補として台帳へ記録。
-- これはarXiv上の配布許諾であり、Paper Reader repositoryへの再配布や商用利用を包括的に許可するものではないため、authoritative corpus昇格条件は別途維持。
+- これはarXiv上の配布許諾であり、Versio repositoryへの再配布や商用利用を包括的に許可するものではないため、authoritative corpus昇格条件は別途維持。
 
 
 ## 2026-09-18 15:15 JST: healthcare provenance matching
@@ -7826,7 +7826,7 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 
 ### v16 manual-review continuation and server status (2026-09-20)
 
-- User-shared terminal output shows the temporary translation server received requests, then shut down with SIGTERM (15); the following `curl` failed because port 8765 was no longer listening. Current process/port inspection also finds no translation server or benchmark process. The resource-tracker semaphore warning is shutdown cleanup noise; it does not indicate an active server failure. The zsh `.zprofile` `eval` errors are separate from Paper Reader and appear to come from pasted `brew shellenv` output being evaluated as a command.
+- User-shared terminal output shows the temporary translation server received requests, then shut down with SIGTERM (15); the following `curl` failed because port 8765 was no longer listening. Current process/port inspection also finds no translation server or benchmark process. The resource-tracker semaphore warning is shutdown cleanup noise; it does not indicate an active server failure. The zsh `.zprofile` `eval` errors are separate from Versio and appear to come from pasted `brew shellenv` output being evaluated as a command.
 - Continued source-to-translation manual review of the v16 accepted cohort: 164/194 rows reviewed, 68 severity >=2. This is purposive risk-stratified sampling and must not be reported as an unbiased production error rate. Three newly reviewed computational-linguistics rows included one material omission; review artifact: `test-data/real-papers/reports/semantic-review-fresh-20260920-v16.json`.
 - Updated `audit-progress.json` with 30 accepted rows pending. No translation server restart was needed for this offline review, and no production algorithm changes were made.
 
@@ -7860,7 +7860,7 @@ The full extraction corpus recheck completed with 66/68 checks passing: all base
 - Completed a fresh isolated-server reader-path benchmark on port 18798 for four varied papers (ACM/HCI, Springer/ergonomics, Nature/neuroscience, arXiv/linguistics), 12 section-stratified rows each. Report: `test-data/real-papers/reports/translation-audit-v19-focused.{json,md}`. Model version in applicable rows: `3b-mt-v5-semantic-v71-strict-restore-v19`; pre-model-only rows naturally have no model version.
 - Reader-visible fallback: 32/48 (66.7%); 21 pre-model and 11 post-model. Non-fallback: 16/48. By source category: ordinary-body prose 5/17 fallback (29.4%); damaged extraction 17/19; lists 2/4; reference chrome 3/3; statistical prose 5/5. This is a purposive, risk-stratified four-paper sample, not a population estimate. It confirms the 5% target is unmet and ordinary-body fallback remains near the v16 30.3% baseline; no rate improvement is claimed.
 - Dominant cause was damaged/incomplete extraction rejected before model submission (16 pre-model); post-model fallback reasons include protected-token restoration and translation-quality rejections. The relation gate and terminal-infinitive guard did not establish broad cohort improvement. Continue manual review before changing thresholds.
-- The dedicated server exited after report completion. Port 18798 has no listener. Run log: `/tmp/paper-reader-translation-v19-focused-bench.log`.
+- The dedicated server exited after report completion. Port 18798 has no listener. Run log: `/tmp/versio-translation-v19-focused-bench.log`.
 - Next: manually inspect v19 accepted rows, especially numeric/statistical examples; assess which damaged-extraction fallbacks can be repaired by generic paragraph reconstruction; compare false rejects before relaxing gates. Do not treat focused rates as representative.
 
 ### 2026-09-20 v19 accepted-output manual review and v20 compression gate
@@ -8014,7 +8014,7 @@ Validation at this checkpoint: Vitest 441/441 (65 files), Python 144 tests, type
 
 - A read-only current-code diagnostic ran `shouldTranslateParagraph()` against the historical development labels in `audit-manual-review-v8.json`: all 23 manually identified `source_fragment` cases are now blocked (23/23). Of 63 manually accepted `correct` or `minor_wording` controls, 7 were skipped, but inspection shows all seven are publication metadata, references, or ACM classification blocks; none is ordinary-body prose. Thus the old ordinary-body clean controls had 0 false rejects. This retrospective set is not a prevalence estimate and does not contradict unseen incomplete-source misses in held-out v103/v104.
 - Tested the cached CyberAgent CAT-Translate-1.4B on two old development linguistics examples. The one still-fallback input was not rescued; the other was already accepted by current MADLAD v9. Its model was not routed.
-- Downloaded public `cyberagent/CAT-Translate-3.3b` at pinned revision `47e382331d005acd54a42cdf088a76aa88788e0c` (BF16, Llama CausalLM, ~6.7 GB). An audit-only runner uses the official chat format, Paper Reader's production segmenter/protector, and MPS greedy generation; it changes no app or routing behavior. With the current `ZZCIT` placeholders and default prompt, gate accepts were 0/6; without protection, the model changed citation years and `U=528` to `U=529`; explicit instructions and a normalized, source-indexed marker wrapper fixed most marker loss.
+- Downloaded public `cyberagent/CAT-Translate-3.3b` at pinned revision `47e382331d005acd54a42cdf088a76aa88788e0c` (BF16, Llama CausalLM, ~6.7 GB). An audit-only runner uses the official chat format, Versio's production segmenter/protector, and MPS greedy generation; it changes no app or routing behavior. With the current `ZZCIT` placeholders and default prompt, gate accepts were 0/6; without protection, the model changed citation years and `U=528` to `U=529`; explicit instructions and a normalized, source-indexed marker wrapper fixed most marker loss.
 - Final matched development diagnostic uses six old regression sources (linguistics, HCI, and cognitive attention), excluding held-out v102–v104. On the same current source blocks and quality-v6 client gate, CAT-Translate-3.3B with explicit `[[PRn]]` copy instruction accepts 4/6; current MADLAD 3B v9 accepts 3/6. All four CAT accepts were manually source-compared and had severity 0–1; the three MADLAD accepts include one severity-2 omission of which participant group scored lower. CAT safely recovers one MADLAD client fallback by preserving the EU context that MADLAD dropped; both systems correctly reject a HAI example with a negation error, while CAT also changes the year 2019→2018 and therefore remains safely rejected. This is promising development evidence, not production or population-rate evidence. Review: `semantic-review-v111-cat-translate-3.3b-matched-dev.json`.
 - Matched artifacts: CAT candidate `model-compare-v111-cat-translate-3.3b-instructed-markers-dev-scored.json`; current MADLAD v9 `model-compare-v110-madlad-v9-matched-dev-scored.json`; source set `translation-audit-v106-cat-dev-input.json`. Runner is `translation-server/scripts/compare_chat_candidate.py`; source-integrity diagnostic is `test-data/real-papers/reports/source-completeness-diagnostic-v1.json`.
 - Runtime cost on these six selected blocks was about 18.8 s/block for CAT versus 13.8 s/block for MADLAD (MPS; small, uneven sample). No production model, prompt, protector, or route changed. Isolated MADLAD server 8877 has been shut down; user server 8765 was left untouched. No `.app` build.
@@ -9030,7 +9030,7 @@ Refined the mixed-script decoder guard to compare suspicious Latin fragments aga
 
 ## Isolated A/B environment preparation (2026-09-22)
 
-- Downloaded `transformers==5.17.0` into a temporary location and created `/tmp/paper-reader-tf517-venv312` using the existing Python 3.12 toolchain.
+- Downloaded `transformers==5.17.0` into a temporary location and created `/tmp/versio-tf517-venv312` using the existing Python 3.12 toolchain.
 - Verified isolated imports: Transformers 5.17.0, PyTorch 2.14.0.
 - The production server remains on 4.57.6 and was not modified. Full 3B model loading in the 5.17.0 process is intentionally deferred while the production server is running, to avoid simultaneous MPS/model memory pressure.
 - Next safe step: stop the active server for the duration of the isolated 5.17.0 load, run the existing checkpoint tensor-mapping and fixture diagnostic, then restore the 4.57.6 server.
@@ -9542,7 +9542,7 @@ Refined the mixed-script decoder guard to compare suspicious Latin fragments aga
 - 複数の技術identifierを個別placeholderにせず、隣接列をatomic spanとして保護する一般ルールを追加。
 - `(e.g., BERT, DeBERTa)` の例示括弧内はplaceholder化せず、通常文字列として渡す。後段のscientific invariant検査は維持する。
 - citation protection tests **67 passed**。直接診断で言語学失敗unitのplaceholder数は減少し、`BERT/DeBERTa/GPT` 列はsource文字列としてモデル入力に残った。最終的な全paper fallback率は未再測定。
-- debug artifact: `/tmp/paper-reader-debug-v259.log`（一時ファイル）。次はcognitiveの `17 / SI Appendix` unitを同じ方法で検証する。
+- debug artifact: `/tmp/versio-debug-v259.log`（一時ファイル）。次はcognitiveの `17 / SI Appendix` unitを同じ方法で検証する。
 ## 2026-09-22 — 作業一時停止
 
 - ユーザー指示により、追加のベンチマーク・サーバー起動はここで停止。
@@ -11471,7 +11471,7 @@ Started/stopped Ollama only for an audit run and evaluated Qwen2.5 14B and Gemma
 
 ## v349 Qwen14 held-out six-row evaluation (2026-09-25)
 
-Re-ran the broader audit-only Qwen2.5 14B comparison in a temporary Ollama process, using the same Paper Reader segmenter and citation protection. The six-row set covered the four reproduced MADLAD semantic false-accept cases plus two additional accepted/fallback-risk rows (`interactive-jewellery`, `power-over-skin`, `thermal-earring`, `design-for-wearability`, `speechin`, `wear-scale`). Qwen passed the existing automatic gate on 5/6 rows; `speechin` was rejected because the model dropped the protected `CRNN` placeholder and left English source prose. The other five outputs are not proof of semantic correctness: several retain awkward terminology or incomplete source context, so manual blind review is still required. Artifact: `test-data/real-papers/reports/alternate-model-v349-heldout6.json`. Production routing remains unchanged/disabled; no model switch or gate relaxation was made.
+Re-ran the broader audit-only Qwen2.5 14B comparison in a temporary Ollama process, using the same Versio segmenter and citation protection. The six-row set covered the four reproduced MADLAD semantic false-accept cases plus two additional accepted/fallback-risk rows (`interactive-jewellery`, `power-over-skin`, `thermal-earring`, `design-for-wearability`, `speechin`, `wear-scale`). Qwen passed the existing automatic gate on 5/6 rows; `speechin` was rejected because the model dropped the protected `CRNN` placeholder and left English source prose. The other five outputs are not proof of semantic correctness: several retain awkward terminology or incomplete source context, so manual blind review is still required. Artifact: `test-data/real-papers/reports/alternate-model-v349-heldout6.json`. Production routing remains unchanged/disabled; no model switch or gate relaxation was made.
 
 ## v350 Qwen14 held-out cognitive sample (2026-09-25)
 
@@ -15047,7 +15047,7 @@ Re-ran the focused TypeScript checks after the alternate prompt probe: `src/test
 
 ### v1052 qwen3 direct short-fixture probe (2026-09-28)
 - Ollama and MADLAD were both ready. A direct qwen3:14b request for a 55-character academic sentence with `num_predict=128` completed in about **12.5 s**, consumed all 128 output tokens, and returned an empty visible message. A second identical request with `num_predict=512` did not complete within the bounded 30-second observation window.
-- This reproduces the selective-cascade timeout outside Paper Reader's segmentation and quality code. The current qwen3 configuration spends its response budget in internal reasoning before producing a translation, so it is not a viable bounded cascade candidate under the present Ollama API settings. No production model change was made.
+- This reproduces the selective-cascade timeout outside Versio's segmentation and quality code. The current qwen3 configuration spends its response budget in internal reasoning before producing a translation, so it is not a viable bounded cascade candidate under the present Ollama API settings. No production model change was made.
 
 ### v1053 provider deadline regression (2026-09-28)
 - Added `src/test/ollamaProvider.test.ts` covering both abort-on-timeout and the unchanged no-timeout path.
@@ -15156,7 +15156,7 @@ Re-ran the focused TypeScript checks after the alternate prompt probe: `src/test
 - Targeted Python tests: **128 passed, 8 subtests passed**; microbatch tests: **9 passed**. The live response completed in about **4.7 s** with `fallback_reason: null`.
 
 ### v1077 fresh real-paper replay after v1076 (2026-09-28)
-- Fresh benchmark on `marketing-framing-organic-food` completed with the normal Paper Reader path.
+- Fresh benchmark on `marketing-framing-organic-food` completed with the normal Versio path.
 - The ordinary-body row now reports `sourceFallback: false`, `readerVisibleFallback: false`, `partialSourceFallback: false`, and `fallbackStage: none`.
 - Artifact: `test-data/real-papers/reports/translation-audit-v1077-quoted-boundary.{json,md}`. This confirms the quoted-boundary split and repeated-label repair work through the actual client/server integration, not only direct unit probes.
 
@@ -15165,7 +15165,7 @@ Re-ran the focused TypeScript checks after the alternate prompt probe: `src/test
 - `npm run typecheck`, `git diff --check`, and server health (`model_loaded: true`, `phase: ready`) all passed.
 
 ### v1079 three-unit-per-paper real-paper regression (2026-09-28)
-- Fresh benchmark completed across **52 papers / 153 ordinary paragraph blocks** using the normal Paper Reader client/server path. Artifact: `test-data/real-papers/reports/translation-audit-v1079-three-paper-regression.{json,md}`.
+- Fresh benchmark completed across **52 papers / 153 ordinary paragraph blocks** using the normal Versio client/server path. Artifact: `test-data/real-papers/reports/translation-audit-v1079-three-paper-regression.{json,md}`.
 - **88** rows produced translated output; **74** were reader-visible fallback. Of those fallbacks, **65** were source/extraction safeguards (incomplete paragraph, structural skip, delimiter issue, hyphenation, or relation/invariant preservation), while **9** were model/quality-gate or other runtime outcomes. This is a diagnostic result, not evidence that the <=5% ordinary-body target is met.
 - Main remaining bottleneck is extraction/source completeness: 22 rows had possible missing paragraph tails, 10 possible continuation heads, and 17 structural skips. The report should be used to prioritize general paragraph reconstruction before relaxing translation gates.
 
@@ -15519,7 +15519,7 @@ Re-ran the focused TypeScript checks after the alternate prompt probe: `src/test
 
 ## 2026-09-29 v1152: alternate-model check for unsupported predicate
 
-- Replayed the job-rotation source without Paper Reader placeholders through local Ollama models. Both `qwen3:14b` and `qwen2.5:14b` preserved the source meaning (“studies investigate ... objective to reduce risk”) and citation `[13]`; neither introduced an assembly-simulation claim.
+- Replayed the job-rotation source without Versio placeholders through local Ollama models. Both `qwen3:14b` and `qwen2.5:14b` preserved the source meaning (“studies investigate ... objective to reduce risk”) and citation `[13]`; neither introduced an assembly-simulation claim.
 - Artifact: `test-data/real-papers/reports/unsupported-predicate-alt-model-v1152.json`.
 - This strengthens attribution to the MADLAD Current-protection decode path rather than an inherently ambiguous source. It also supports selective alternate-model review for high-risk divergent outputs, but does not justify enabling Qwen globally without broader held-out precision/fallback measurement.
 
@@ -16665,7 +16665,7 @@ Recomputed the latest five-row Qwen 2.5 14B selective-cascade report with the cu
 
 ## v1389 (2026-10-04) — native-vs-layout attribution confirmed
 
-- Compared page 8 of the held-out computational-linguistics PDF with `pdftotext -layout`. The PDF's native text stream contains the complete phrase `which intuitively appear...`, while Paper Reader's layout grouping emits `itively` after a cross-column x-band and loses `which intu-` from the canonical block.
+- Compared page 8 of the held-out computational-linguistics PDF with `pdftotext -layout`. The PDF's native text stream contains the complete phrase `which intuitively appear...`, while Versio's layout grouping emits `itively` after a cross-column x-band and loses `which intu-` from the canonical block.
 - This narrows the defect to line/column grouping (not MADLAD and not the quality gate). A first geometry-only exception was prototyped but did not affect this block because the split occurs earlier than the targeted spanning-line stage; it was removed rather than retaining an unverified heuristic.
 - The extraction artifact and full regression suite remain authoritative; no production behavior was changed in this pass. Next work should instrument the earlier line-to-column assignment around cross-gutter baselines and add a synthetic regression before modifying grouping.
 
@@ -16855,7 +16855,7 @@ Recomputed the latest five-row Qwen 2.5 14B selective-cascade report with the cu
 
 ## v1423 (2026-10-04) — CAT-Translate 3.3B audit
 
-- Evaluated CyberAgent's MIT-licensed `cyberagent/CAT-Translate-3.3b` locally with Transformers 4.57.6 and MPS bfloat16 on the same five ordinary-body sources used in the Qwen raw/current comparison. The model card documents the instruction prompt and reports an En→Ja benchmark score of 34.80 for the 3.3B model; this run is an independent Paper Reader audit, not a reproduction of that benchmark.
+- Evaluated CyberAgent's MIT-licensed `cyberagent/CAT-Translate-3.3b` locally with Transformers 4.57.6 and MPS bfloat16 on the same five ordinary-body sources used in the Qwen raw/current comparison. The model card documents the instruction prompt and reports an En→Ja benchmark score of 34.80 for the 3.3B model; this run is an independent Versio audit, not a reproduction of that benchmark.
 - CAT produced Japanese output for all five rows; the existing automatic quality evaluator accepted **5/5**. Generation time was approximately **4.1–10.0 seconds per row** after model load. Manual review remains required; automatic acceptance is not semantic proof.
 - Saved raw outputs and token/latency data in `test-data/real-papers/reports/cat-translate-3.3b-multipaper-v1-evaluated.json`. The audit runner is `scripts/benchmark-cat-translate.py`; it is not wired into production routing and no `.app` build was performed.
 
@@ -17100,7 +17100,7 @@ Recomputed the latest five-row Qwen 2.5 14B selective-cascade report with the cu
 
 ## v1467 (2026-10-04) — CAT audit quality scoring and sentence-local role check
 
-- Added `scripts/evaluate-cat-audit.ts` to apply the same Paper Reader quality evaluator to alternate-model audit output. On the 61 CAT fallback rows, 60 were source-complete enough for scoring and **42/60 (70.0%)** passed the current safety gate. The remaining rows were rejected for real role/invariant/relationship concerns or conservative gate signals; this is not a semantic accuracy estimate.
+- Added `scripts/evaluate-cat-audit.ts` to apply the same Versio quality evaluator to alternate-model audit output. On the 61 CAT fallback rows, 60 were source-complete enough for scoring and **42/60 (70.0%)** passed the current safety gate. The remaining rows were rejected for real role/invariant/relationship concerns or conservative gate signals; this is not a semantic accuracy estimate.
 - Tightened the participant-role check to compare aligned sentences, avoiding a later `参加者` mention masking an earlier `研究者` substitution. The CAT cognitive-VR example is now correctly rejected by the audit evaluator.
 - Quality suite now passes **236 tests**. No CAT output is routed into production; the server remains stopped.
 

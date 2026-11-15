@@ -3,7 +3,7 @@
  *
  * Node: batcher registration, quality gate, sqlite/package checkpoint.
  * Browser: click / scroll / route latency and long tasks while block updates
- *          hit the real Reader and Library (Vite at PAPER_READER_URL).
+ *          hit the real Reader and Library (Vite at VERSIO_URL).
  * MADLAD: wall time and main-thread lag at concurrency 8, 4, and 2.
  *
  *   npx tsx scripts/bench-translation-ui.ts
@@ -262,7 +262,7 @@ async function madladConcurrency(concurrency: number) {
       if (index >= texts.length) return;
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       const token = readMadladServerToken();
-      if (token) headers["X-Paper-Reader-Token"] = token;
+      if (token) headers["X-Versio-Token"] = token;
       const response = await fetch("http://127.0.0.1:8765/translate", {
         method: "POST",
         headers,
@@ -297,7 +297,7 @@ async function madladConcurrency(concurrency: number) {
 
 async function browserBench() {
   const { chromium } = await import("@playwright/test");
-  const base = process.env.PAPER_READER_URL ?? "http://127.0.0.1:5173";
+  const base = process.env.VERSIO_URL ?? "http://127.0.0.1:5173";
   const browser = await chromium.launch({ headless: true });
   try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });

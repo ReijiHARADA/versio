@@ -1,6 +1,6 @@
 /**
  * Import a real PDF via Library file input and capture Reader screenshots.
- * Requires PAPER_READER_URL (default http://127.0.0.1:5173).
+ * Requires VERSIO_URL (default http://127.0.0.1:5173).
  *
  * Usage:
  *   node scripts/spot-reader-extraction.mjs path/to/paper.pdf [label]
@@ -9,7 +9,7 @@ import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { chromium } from "@playwright/test";
 
-const base = process.env.PAPER_READER_URL ?? "http://127.0.0.1:5173";
+const base = process.env.VERSIO_URL ?? "http://127.0.0.1:5173";
 const pdfPath = process.argv[2];
 const label = process.argv[3] ?? path.basename(pdfPath, ".pdf").slice(0, 40);
 if (!pdfPath) {

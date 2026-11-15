@@ -20,6 +20,7 @@ import { ImportCancelledError } from "./cancellation";
 import { resumeAbortControllers, resumingPapers } from "./session";
 import { v4 as uuidv4 } from "uuid";
 import { translationManager } from "../translation";
+import { isPresentationDemoPdf } from "../presentationDemo";
 
 const startedImportKeys = new Set<string>();
 const importFiles = new Map<string, File>();
@@ -161,6 +162,7 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
   importAbortControllers.set(jobId, controller);
 
   try {
+    const presentationDemo = isPresentationDemoPdf(file);
     const result = await importPDFV2(
       file,
       {
@@ -248,7 +250,7 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
             .setSections(section.paperId, (prev) => upsertSection(prev, section));
         },
       },
-      settings || {}
+      { ...(settings || {}), presentationDemo }
     );
 
     if (result) {
@@ -257,7 +259,7 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
       useLibraryCache.getState().addPaper(result.paper);
       useLibraryCache.getState().setSections(result.paper.id, result.sections);
       useLibraryCache.getState().setBlocks(result.paper.id, result.blocks);
-      scheduleMediaEnrichment(result);
+      if (!presentationDemo) scheduleMediaEnrichment(result);
       patch(jobId, { paperId: result.paper.id, stage: "completed" });
       if (workspaceNodeId && !attached) {
         attached = true;

@@ -1,6 +1,6 @@
 import type { EvaluationBundle } from "./schema";
 
-const PREFIX = "paper-reader/extraction-evaluation/";
+const PREFIX = "versio/extraction-evaluation/";
 export function storageKey(fileHash: string) { return `${PREFIX}${fileHash}`; }
 export function saveBundle(bundle: EvaluationBundle) {
   localStorage.setItem(storageKey(bundle.snapshot.source.fileHash), JSON.stringify(bundle));

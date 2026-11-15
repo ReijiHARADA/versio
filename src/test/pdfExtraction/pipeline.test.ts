@@ -1445,10 +1445,18 @@ describe("canonical extraction pipeline", () => {
     });
     const labels = result.canonical.nodes.find((node) => /truth GPT GPT_rel GPT_rot GPT_pos GPT_uni/.test(node.text ?? ""));
     expect(labels?.role).toBe("other");
-    const repeatedPanels = result.canonical.nodes.find((node) =>
-      /lay1 lay1 lay2 lay2 lay3 lay3 lay4 lay4 lay5 lay5/.test(node.text ?? "") &&
-      /position-based attention pattern/.test(node.text ?? "")
-    );
+    // The rotated y-axis panel labels interleave with the horizontal panel
+    // captions once their real glyph geometry is known, so this cluster cannot
+    // be identified by one particular token interleaving. Match the repeated
+    // per-layer labels it carries instead.
+    const repeatedPanels = result.canonical.nodes.find((node) => {
+      const text = node.text ?? "";
+      if (!/position-based attention pattern/.test(text)) return false;
+      const repeatedLayers = new Set(
+        [...text.matchAll(/\blay(\d{1,2}) lay\1\b/g)].map((match) => match[1])
+      );
+      return repeatedLayers.size >= 5;
+    });
     expect(repeatedPanels?.role).toBe("other");
     expect(repeatedPanels?.evidence.some((evidence) => evidence.label === "dense-vector-panel")).toBe(true);
     const multiPanelTicks = result.canonical.nodes.find((node) =>
@@ -1461,9 +1469,13 @@ describe("canonical extraction pipeline", () => {
     );
     expect(microPanelLabel?.role).toBe("other");
     expect(microPanelLabel?.evidence.some((evidence) => evidence.label === "dense-vector-panel")).toBe(true);
-    const repeatedHorizontalPanelLabel = result.canonical.nodes.find((node) =>
-      node.pageStart === 34 && (node.text ?? "").trim() === "for GPTrel over cfg3b data for GPTrel over cfg3b data"
-    );
+    // The panel subtitle repeats once per plot. Line grouping decides how many
+    // of those repetitions share a node, so match any repeat count.
+    const repeatedHorizontalPanelLabel = result.canonical.nodes.find((node) => {
+      const text = (node.text ?? "").trim();
+      return node.pageStart === 34 &&
+        /^(?:for GPTrel over cfg3b data)(?: for GPTrel over cfg3b data)+$/.test(text);
+    });
     expect(repeatedHorizontalPanelLabel?.role).toBe("other");
     expect(repeatedHorizontalPanelLabel?.evidence.some((evidence) => evidence.label === "dense-vector-panel")).toBe(true);
     const captionBoundPanelLabel = result.canonical.nodes.find((node) =>

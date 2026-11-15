@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-20T07:45:28.066Z",
+  "generatedAt": "2026-11-08T11:06:14.865Z",
   "generatorVersion": 2,
   "inclusionPolicy": {
     "distributedOnly": true,
@@ -17,8 +17,8 @@
   },
   "packages": [
     {
-      "id": "app:paper-reader",
-      "name": "Paper Reader",
+      "id": "app:versio",
+      "name": "Versio",
       "version": "0.0.0",
       "ecosystem": "app",
       "license": "MIT",

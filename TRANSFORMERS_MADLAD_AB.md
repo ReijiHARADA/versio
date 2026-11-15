@@ -16,7 +16,7 @@ layout reproduces this under the project's installed 5.16.1 and 5.17.0. Under
 4.57.6, the flag stays false and encoder/decoder inputs match the checkpoint's
 decoder embedding.
 
-Before this change, Paper Reader's installed development environment was
+Before this change, Versio's installed development environment was
 Transformers 5.16.1 even though `requirements.lock` specified 5.17.0. The app
 source contained a manual post-load reassignment. Strict chunked tensor checks
 showed that reassignment restored every encoder row to the checkpoint's
@@ -50,7 +50,7 @@ mapping checks are retained locally in ignored reports:
 
 - `test-data/real-papers/reports/madlad-transformers-5.17.0-raw.json`
 - `test-data/real-papers/reports/madlad-transformers-5.17.0-ab.json` (the
-  existing Paper Reader encoder-to-decoder reassignment, measured before and
+  existing Versio encoder-to-decoder reassignment, measured before and
   after)
 - `test-data/real-papers/reports/madlad-transformers-4.57.6-ab.json`
 - `test-data/real-papers/reports/madlad-transformers-5.16.1-app-repair.json`
@@ -72,8 +72,8 @@ F32 values to the model's loaded bfloat16 dtype. They use strict
 | Load condition | config tie flag after load | Encoder equals checkpoint decoder input | Encoder equals checkpoint lm_head | Decoder / lm_head |
 |---|---:|---:|---:|---|
 | Transformers 5.17.0, unpatched | true | no | yes | each matches its own checkpoint tensor |
-| Transformers 5.17.0, Paper Reader reassignment | true | yes | no | each matches its own checkpoint tensor |
-| Transformers 5.16.1, Paper Reader reassignment | true | yes | no | each matches its own checkpoint tensor |
+| Transformers 5.17.0, Versio reassignment | true | yes | no | each matches its own checkpoint tensor |
+| Transformers 5.16.1, Versio reassignment | true | yes | no | each matches its own checkpoint tensor |
 | Transformers 4.57.6, unpatched | false | yes | no | each matches its own checkpoint tensor |
 
 The checkpoint itself contains neither `shared.weight` nor
@@ -154,7 +154,7 @@ or model interventions.
 
 ## Bundle verification
 
-`npm run tauri:build:fast` completed successfully after fixing four TypeScript project-reference errors in extraction code (geometry evidence typing/weight, median-font argument, and page width propagation). The generated `src-tauri/target/release/bundle/macos/Paper Reader.app` was modified at 2026-09-21 02:48:22 JST. Its bundled translation-server Python reported Transformers 4.57.6; bundled `madlad_mps.py` contains the 4.57.6 runtime guard, v6 cache identity, and fail-closed embedding verification. The application was not launched. Post-fix checks: Vitest 418/418, Python 133 tests + 11 subtests, typecheck, lint, frontend production build, and `git diff --check` all passed.
+`npm run tauri:build:fast` completed successfully after fixing four TypeScript project-reference errors in extraction code (geometry evidence typing/weight, median-font argument, and page width propagation). The generated `src-tauri/target/release/bundle/macos/Versio.app` was modified at 2026-09-21 02:48:22 JST. Its bundled translation-server Python reported Transformers 4.57.6; bundled `madlad_mps.py` contains the 4.57.6 runtime guard, v6 cache identity, and fail-closed embedding verification. The application was not launched. Post-fix checks: Vitest 418/418, Python 133 tests + 11 subtests, typecheck, lint, frontend production build, and `git diff --check` all passed.
 
 ### Manual review of the 12 changed v56 rows
 

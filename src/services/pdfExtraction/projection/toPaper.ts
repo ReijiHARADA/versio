@@ -353,11 +353,13 @@ function expandAuthorLine(text: string): string[] {
       text.trim(),
     );
   if (camelJunctions >= 2 || (camelJunctions === 1 && loneGluedPerson)) {
-    // Keep Scottish/Irish `McGuire` / `MacDonald` intact.
-    const withCamelSpaces = text.replace(
-      /(?<!Mc|Mac|O')([a-zà-öø-ÿ])([A-ZÀ-Ö])/gu,
-      "$1 $2",
-    );
+    // Keep Scottish/Irish `McGuire` / `MacDonald` intact (lookbehind on Mc
+    // alone is wrong — the junction is the `cG` pair itself).
+    const withCamelSpaces = text
+      .replace(/([a-zà-öø-ÿ])([A-ZÀ-Ö])/gu, "$1 $2")
+      .replace(/\bMc\s+([A-ZÀ-Ö])/gu, "Mc$1")
+      .replace(/\bMac\s+([A-ZÀ-Ö])/gu, "Mac$1")
+      .replace(/\bO'\s+([A-ZÀ-Ö])/gu, "O'$1");
     if (withCamelSpaces !== text) {
       return expandAuthorLine(withCamelSpaces);
     }
@@ -588,12 +590,21 @@ function nameLikeTopicPhrase(value: string): boolean {
 }
 
 /** Reject metadata lines that a publisher sometimes labels as author rows. */
+/**
+ * Countries that close a publisher's `Name, Institution, Country` credit line.
+ * Kept as one named list so a missing country cannot silently turn a reviewer
+ * credit into an author (`World Maritime University, Sweden`).
+ */
+const CREDIT_LINE_COUNTRY =
+  "Australia|Austria|Belgium|Brazil|Canada|Chile|China|Colombia|Czechia|Denmark|Egypt|Finland|France|Germany|Greece|Hungary|India|Indonesia|Iran|Ireland|Israel|Italy|Japan|Malaysia|Mexico|Netherlands|New Zealand|Nigeria|Norway|Pakistan|Peru|Poland|Portugal|Qatar|Romania|Russia|Saudi Arabia|Singapore|South Africa|South Korea|Spain|Sweden|Switzerland|Taiwan|Thailand|Türkiye|Turkey|UAE|UK|USA|Ukraine|United Arab Emirates|United Kingdom|United States|Vietnam|The Netherlands";
+
 /** Frontiers sidebar `Name, Institution, Country` reviewer / editor credits. */
 function looksLikeFrontiersReviewerCredit(text: string): boolean {
   const value = text.replace(/\s+/g, " ").trim();
-  return /^[A-ZÀ-ÖØ-Ý][\p{L}'’-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’-]+){1,4},\s+.+\b(?:university|hospital|college|institute|technology)\b.+(?:,\s*)?(?:China|Poland|Germany|India|Japan|USA|United States|UK|United Kingdom|Türkiye|Turkey|Saudi Arabia|Australia|Canada|France|Italy|Spain|Brazil|Portugal)\s*$/iu.test(
-    value,
-  );
+  return new RegExp(
+    `^[A-ZÀ-ÖØ-Ý][\\p{L}'’-]+(?:\\s+[A-ZÀ-ÖØ-Ý][\\p{L}'’-]+){1,4},\\s+.+\\b(?:university|hospital|college|institute|technology)\\b.+(?:,\\s*)?(?:${CREDIT_LINE_COUNTRY})\\s*$`,
+    "iu",
+  ).test(value);
 }
 
 function isNonAuthorMastheadLine(text: string): boolean {
@@ -1021,6 +1032,8 @@ function normalizeAffiliationName(text: string): string {
     // (e.g. `IowaStateUniversity` or `ofEvents`). Restore only a lower-to-
     // upper transition; this cannot split ordinary all-caps institution names.
     .replace(/([\p{Ll}])([\p{Lu}])/gu, "$1 $2")
+    .replace(/\bMc\s+([A-ZÀ-Ö])/gu, "Mc$1")
+    .replace(/\bMac\s+([A-ZÀ-Ö])/gu, "Mac$1")
     // Soft hyphen / end-of-line wrap only (`Engineer-\ning`), not real
     // compounds such as `Evidence-based`.
     .replace(/([\p{L}])\u00ad([\p{L}])/gu, "$1$2")
@@ -2194,7 +2207,7 @@ export function projectCanonicalToPaper(input: {
       // Frontiers editorial wraps the last author onto a dated heading
       // (`… Fresán-Orellana and` / `14 June 2026 Raúl Sampieri-Cabrera *`).
       // The dated line often sits in the left PUBLISHED rail (wide Δx).
-      ((n.role === "heading" || n.role === "copyright" || n.role === "other") &&
+      ((n.role === "heading" || n.role === "other") &&
         n.text.trim().length <= 72 &&
         /^\d{1,2}\s+[A-Za-z]+\s+\d{4}\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´\-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´\-]+){1,4}\s*\*?$/u.test(
           n.text.trim(),

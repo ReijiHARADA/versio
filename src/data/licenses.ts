@@ -8,7 +8,7 @@ import type {
 export type { LicenseEcosystem, LicenseInventory, LicensePackage, LicenseStatus };
 
 export const ECOSYSTEM_LABELS: Record<LicenseEcosystem, string> = {
-  app: "Paper Reader",
+  app: "Versio",
   npm: "npm",
   python: "Python",
   rust: "Rust",

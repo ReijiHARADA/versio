@@ -27,6 +27,10 @@ describe("stacked derivative equation extraction", () => {
     expect(eq1?.role).toBe("equation");
     expect(eq1?.text).toMatch(/d\/dγ/);
     expect(eq1?.text).toMatch(/I\(x;/);
+    // The resolver keeps layout baseline boxes for reading order and a
+    // separate glyph envelope only for visual inspection. Both must survive
+    // the fragment merge that produces this equation.
+    expect(eq1?.overlayBoundingBoxes?.length).toBeGreaterThan(0);
     expect(nodes.some((n) => (n.text ?? "").trim() === "d")).toBe(false);
     expect(nodes.some((n) => (n.text ?? "").trim() === "dγ")).toBe(false);
 

@@ -14,7 +14,7 @@ Command (Python 3.12 via `uvx`):
 
 ```bash
 uvx --python 3.12 docling test-data/real-papers/interactive-jewellery.pdf \
-  --to md --to json --no-ocr --output /tmp/paper-reader-docling-v1
+  --to md --to json --no-ocr --output /tmp/versio-docling-v1
 ```
 
 Runtime: macOS 26 arm64, 25.6 s after model download.
@@ -26,7 +26,7 @@ Observed output:
 - abstract and section headings were recovered;
 - figure 1 was represented as an embedded base64 image;
 - publisher copyright/permission text was inserted into the introduction flow;
-- the Markdown export is not a drop-in replacement for Paper Reader's canonical blocks because images are emitted as very large inline base64 data and table/figure relations are not mapped to the app's `CanonicalDocument` model.
+- the Markdown export is not a drop-in replacement for Versio's canonical blocks because images are emitted as very large inline base64 data and table/figure relations are not mapped to the app's `CanonicalDocument` model.
 
 Conclusion: Docling is a promising **offline comparison extractor**, especially for scanned/complex PDFs, but this run does not justify replacing the existing resolver. It needs an adapter plus post-processing and a broader corpus benchmark.
 
@@ -38,7 +38,7 @@ Observed output:
 
 - title and abstract were recovered;
 - affiliations were identified;
-- figure 2's caption absorbed the following body paragraph, while Paper Reader's current resolver keeps that boundary separate;
+- figure 2's caption absorbed the following body paragraph, while Versio's current resolver keeps that boundary separate;
 - the author structure was less reliable than the current projection (multiple authors/locations were collapsed into two large author records);
 - references were segmented into TEI `biblStruct`, which is useful, but requires a CanonicalDocument adapter.
 
@@ -67,7 +67,7 @@ Apple documents `TranslationSession` as an on-device native API with an `install
 
 ## Same-source Apple vs MADLAD comparison (2026-10-09)
 
-The three inputs below were sent to Apple Translation and to the running Paper Reader MADLAD server with the same source/target languages. This is a fixed diagnostic probe, not a corpus-scale benchmark.
+The three inputs below were sent to Apple Translation and to the running Versio MADLAD server with the same source/target languages. This is a fixed diagnostic probe, not a corpus-scale benchmark.
 
 | fixture | Apple | MADLAD | fallback | observation |
 |---|---|---|---|---|

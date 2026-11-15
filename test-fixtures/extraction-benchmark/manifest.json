@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "kind": "paper-reader-extraction-benchmark-manifest",
+  "kind": "versio-extraction-benchmark-manifest",
   "defaultRegressionIds": ["synthetic-metric-example"],
   "documents": [
     {

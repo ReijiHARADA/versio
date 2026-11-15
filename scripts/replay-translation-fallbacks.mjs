@@ -53,7 +53,7 @@ async function translate(item) {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        ...(serverToken ? { "X-Paper-Reader-Token": serverToken } : {}),
+        ...(serverToken ? { "X-Versio-Token": serverToken } : {}),
       },
       body: JSON.stringify({
         text: item.source,

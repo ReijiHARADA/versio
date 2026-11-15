@@ -10,7 +10,7 @@
  *   npx tsx scripts/benchmark-real-paper-translation.ts --papers thermal-earring,wear-scale --limit 12 --report-name translation-audit-v19-pilot
  *   npx tsx scripts/benchmark-real-paper-translation.ts --limit 4
  *   npx tsx scripts/benchmark-real-paper-translation.ts --resume --full-corpus
- *   npx tsx scripts/benchmark-real-paper-translation.ts --token-file /private/tmp/paper-reader-token
+ *   npx tsx scripts/benchmark-real-paper-translation.ts --token-file /private/tmp/versio-token
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -358,7 +358,7 @@ async function translate(texts: string[]): Promise<ServerTranslation[]> {
           method: "POST",
           headers: {
             "content-type": "application/json",
-            ...(serverToken ? { "X-Paper-Reader-Token": serverToken } : {}),
+            ...(serverToken ? { "X-Versio-Token": serverToken } : {}),
           },
           body: JSON.stringify({ text, source_language: "en", target_language: "ja" }),
           signal: controller.signal,

@@ -1,5 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { migrateLegacyStorageKeys, STORE_KEY } from "../data/migration/renameStorageKeys";
+
+migrateLegacyStorageKeys();
 
 export type Theme = "light" | "dark" | "system";
 export type OriginalDisplayMode = "on-demand" | "always" | "when-untranslated";
@@ -88,7 +91,7 @@ export const useAppStore = create<AppUiState>()(
       clearExpandedOriginals: () => set({ expandedOriginalBlocks: new Set<string>() }),
     }),
     {
-      name: "paper-reader-storage",
+      name: STORE_KEY,
       version: 7,
       migrate: (persisted) => {
         const value = persisted as {

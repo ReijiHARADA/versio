@@ -4,14 +4,14 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-APP_PATH="${PAPER_READER_APP_PATH:-$ROOT/src-tauri/target/release/bundle/macos/Paper Reader.app}"
+APP_PATH="${VERSIO_APP_PATH:-$ROOT/src-tauri/target/release/bundle/macos/Versio.app}"
 ARTIFACT_DIR="$ROOT/scripts/packaged-e2e/artifacts/integration"
-FIXTURE_PDF="${PAPER_READER_E2E_FIXTURE:-$ROOT/test-fixtures/generated-pdfs/single-column.pdf}"
+FIXTURE_PDF="${VERSIO_E2E_FIXTURE:-$ROOT/test-fixtures/generated-pdfs/single-column.pdf}"
 if [[ ! -f "$FIXTURE_PDF" ]]; then
   FIXTURE_PDF="$ROOT/scripts/packaged-e2e/fixture-tiny.pdf"
 fi
-ACCEPTANCE_HOME="${PAPER_READER_ACCEPTANCE_HOME:-$ARTIFACT_DIR/app-data-$$}"
-WAIT_TIMEOUT_S="${PAPER_READER_E2E_TIMEOUT_S:-180}"
+ACCEPTANCE_HOME="${VERSIO_ACCEPTANCE_HOME:-$ARTIFACT_DIR/app-data-$$}"
+WAIT_TIMEOUT_S="${VERSIO_E2E_TIMEOUT_S:-180}"
 LOG_FILE="$ARTIFACT_DIR/app.log"
 STEP_FILE="$ARTIFACT_DIR/step.txt"
 
@@ -187,13 +187,13 @@ PY
 launch_app() {
   step "launch app"
   # Keep the user's HOME so the translation sidecar can reuse its already
-  # downloaded model cache.  Paper Reader's Tauri storage is isolated by
-  # PAPER_READER_ACCEPTANCE_HOME itself; overriding HOME made every packaged
+  # downloaded model cache.  Versio's Tauri storage is isolated by
+  # VERSIO_ACCEPTANCE_HOME itself; overriding HOME made every packaged
   # extraction acceptance run download MADLAD again before the import could
   # reach its partial-ready checkpoint.
-  PAPER_READER_ACCEPTANCE=1 \
-  PAPER_READER_ACCEPTANCE_HOME="$ACCEPTANCE_HOME" \
-  PAPER_READER_ACCEPTANCE_FIXTURE="$FIXTURE_PDF" \
+  VERSIO_ACCEPTANCE=1 \
+  VERSIO_ACCEPTANCE_HOME="$ACCEPTANCE_HOME" \
+  VERSIO_ACCEPTANCE_FIXTURE="$FIXTURE_PDF" \
     "$BIN" >>"$LOG_FILE" 2>&1 &
   APP_PID=$!
   echo "pid=$APP_PID" >>"$LOG_FILE"
@@ -209,13 +209,13 @@ quit_app() {
     kill "$APP_PID" 2>/dev/null || true
     wait "$APP_PID" 2>/dev/null || true
   fi
-  osascript -e 'tell application "Paper Reader" to quit' 2>/dev/null || true
+  osascript -e 'tell application "Versio" to quit' 2>/dev/null || true
   sleep 2
   stop_bundled_sidecars
 }
 
 launch_app
-if [[ "${PAPER_READER_E2E_IMPORT_ONLY:-0}" == "1" ]]; then
+if [[ "${VERSIO_E2E_IMPORT_ONLY:-0}" == "1" ]]; then
   step "wait import"
   wait_for_import_only "$WAIT_TIMEOUT_S"
   PACKAGE_DIR=""
@@ -226,8 +226,8 @@ if [[ "${PAPER_READER_E2E_IMPORT_ONLY:-0}" == "1" ]]; then
   done
   find "$ACCEPTANCE_HOME" -name 'library.sqlite' | grep -q . || fail "library.sqlite missing after import"
   [[ -n "$PACKAGE_DIR" && -f "$PACKAGE_DIR/structure.json" ]] || fail "paper structure package missing"
-  EXPECTED_TABLES="${PAPER_READER_E2E_EXPECT_TABLES:-}"
-  REQUIRE_TABLE_ROWS="${PAPER_READER_E2E_REQUIRE_TABLE_ROWS:-0}"
+  EXPECTED_TABLES="${VERSIO_E2E_EXPECT_TABLES:-}"
+  REQUIRE_TABLE_ROWS="${VERSIO_E2E_REQUIRE_TABLE_ROWS:-0}"
   python3 - "$PACKAGE_DIR/structure.json" "$EXPECTED_TABLES" "$REQUIRE_TABLE_ROWS" <<'PY' || fail "extraction package validation failed"
 import json, sys
 path, expected, require_rows = sys.argv[1], sys.argv[2], sys.argv[3]
@@ -255,9 +255,9 @@ wait_for_step "ready_for_relaunch" "$WAIT_TIMEOUT_S"
 # acceptance marker is written. Keep the app alive for an optional grace period
 # so fixture-based checks can inspect the final package without changing the
 # default acceptance timing.
-if [[ -n "${PAPER_READER_E2E_POST_READY_SLEEP_S:-}" ]]; then
+if [[ -n "${VERSIO_E2E_POST_READY_SLEEP_S:-}" ]]; then
   step "wait background enrichment"
-  sleep "$PAPER_READER_E2E_POST_READY_SLEEP_S"
+  sleep "$VERSIO_E2E_POST_READY_SLEEP_S"
 fi
 
 find "$ACCEPTANCE_HOME" -name 'library.sqlite' | grep -q . || fail "library.sqlite missing after import"

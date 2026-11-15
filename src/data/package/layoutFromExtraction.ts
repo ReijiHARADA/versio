@@ -650,8 +650,23 @@ function inferCaptionGrid(
         box.y < inferredBounds.bottom + 3 && box.y + box.height > inferredBounds.top - 3;
     })
     .map((block) => block.id);
+  // With native layout present, grid lines carry no block id. A projected
+  // block that is exactly one accepted cell (same text, same origin) is a
+  // duplicate of that cell and must leave the Reader with it. Prose that only
+  // shares the region is untouched because it never matches a cell exactly.
+  const cellKeys = new Set(rows.flatMap((row) => row.map((line) =>
+    `${line.text}|${Math.round(line.x)}|${Math.round(line.y)}`)));
+  const duplicateCellIds = hasNativeLayout ? blocks
+    .filter((block) => block.id !== caption.id && block.pageStart === caption.pageStart &&
+      (block.type === "paragraph" || block.type === "table") && !block.metadata?.captionOriginal)
+    .filter((block) => {
+      const box = block.boundingBoxes[0];
+      return block.boundingBoxes.length === 1 && Boolean(box) &&
+        cellKeys.has(`${(block.original ?? "").trim()}|${Math.round(box.x)}|${Math.round(box.y)}`);
+    })
+    .map((block) => block.id) : [];
   return {
-    ids: new Set([...inferredIds, ...rows.flatMap((row) => row.map((line) => line.blockId)).filter(Boolean)]),
+    ids: new Set([...inferredIds, ...duplicateCellIds, ...rows.flatMap((row) => row.map((line) => line.blockId)).filter(Boolean)]),
     rows: rows.map((row) => row.map((line) => ({ text: line.text, x: line.x, width: line.width }))),
   };
 }

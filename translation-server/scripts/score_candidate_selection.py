@@ -123,7 +123,7 @@ def main() -> None:
     for filename in args.candidate:
         report = json.loads(Path(filename).read_text())
         candidate_rows = report.get("results") or report.get("rows") or []
-        # Fresh Paper Reader audits persist papers as an outer envelope. Keep
+        # Fresh Versio audits persist papers as an outer envelope. Keep
         # the paper id when flattening so stable keys remain joinable.
         if not candidate_rows and report.get("papers"):
             candidate_rows = []

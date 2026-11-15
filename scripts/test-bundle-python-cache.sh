@@ -9,8 +9,8 @@ cd "$ROOT"
 echo "== bundle-python cache smoke =="
 
 # Ensure a valid cached venv exists (rebuild only if needed).
-bash scripts/bundle-python.sh cache >/tmp/paper-reader-bundle-python-1.log
-tail -15 /tmp/paper-reader-bundle-python-1.log
+bash scripts/bundle-python.sh cache >/tmp/versio-bundle-python-1.log
+tail -15 /tmp/versio-bundle-python-1.log
 
 out2="$(bash scripts/bundle-python.sh cache 2>&1)"
 echo "$out2" | tail -8
@@ -18,8 +18,8 @@ if ! echo "$out2" | grep -q "Reusing cached venv"; then
   echo "FAIL: second cache run should reuse venv"
   exit 1
 fi
-if ! echo "$out2" | grep -q "PAPER_READER_PYTHON_REBUILT=0"; then
-  echo "FAIL: expected PAPER_READER_PYTHON_REBUILT=0"
+if ! echo "$out2" | grep -q "VERSIO_PYTHON_REBUILT=0"; then
+  echo "FAIL: expected VERSIO_PYTHON_REBUILT=0"
   exit 1
 fi
 
@@ -28,22 +28,22 @@ if ! bash scripts/bundle-python.sh --check-only; then
   exit 1
 fi
 
-stamp="translation-server/venv/.paper-reader-bundle-hash"
+stamp="translation-server/venv/.versio-bundle-hash"
 cp "$stamp" "$stamp.bak"
 echo "deadbeef" >"$stamp"
 set +e
-bash scripts/bundle-python.sh --check-only >/tmp/paper-reader-bundle-check.log 2>&1
+bash scripts/bundle-python.sh --check-only >/tmp/versio-bundle-check.log 2>&1
 check_rc=$?
 set -e
 mv "$stamp.bak" "$stamp"
 if [[ "$check_rc" -eq 0 ]]; then
   echo "FAIL: --check-only should fail with corrupt stamp"
-  cat /tmp/paper-reader-bundle-check.log
+  cat /tmp/versio-bundle-check.log
   exit 1
 fi
-if ! grep -q "cache invalid" /tmp/paper-reader-bundle-check.log; then
+if ! grep -q "cache invalid" /tmp/versio-bundle-check.log; then
   echo "FAIL: expected cache invalid message"
-  cat /tmp/paper-reader-bundle-check.log
+  cat /tmp/versio-bundle-check.log
   exit 1
 fi
 
@@ -59,7 +59,7 @@ for bad in models .venv .venv-mlx tests benchmarks venv; do
     exit 1
   fi
 done
-if [[ ! -f "$stage/server.py" || ! -f "$stage/.paper-reader-venv-external" ]]; then
+if [[ ! -f "$stage/server.py" || ! -f "$stage/.versio-venv-external" ]]; then
   echo "FAIL: staged lite bundle incomplete"
   exit 1
 fi

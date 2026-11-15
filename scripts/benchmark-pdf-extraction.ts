@@ -24,21 +24,35 @@ type CatalogPaper = {
 const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "..");
 const args = process.argv.slice(2);
 const papersIndex = args.indexOf("--papers");
+const cohortIndex = args.indexOf("--cohort");
 const requestedIds = papersIndex >= 0
   ? new Set((args[papersIndex + 1] ?? "").split(",").map((id) => id.trim()).filter(Boolean))
   : undefined;
+const cohortPath = cohortIndex >= 0 ? path.resolve(root, args[cohortIndex + 1] ?? "") : undefined;
+if (requestedIds && cohortPath) throw new Error("Use either --papers or --cohort, not both.");
 const runAll = args.includes("--all");
 const catalog = JSON.parse(
   fs.readFileSync(path.join(root, "test-fixtures/real-papers/catalog.json"), "utf8")
 ) as { pdfDir: string; papers: CatalogPaper[] };
 
-if (!requestedIds && !runAll && catalog.papers.length > 12) {
-  throw new Error("抽出全件ベンチマークには --all を明示してください。通常は --papers id1,id2 で重点fixtureを指定します。");
+const cohortIds = cohortPath
+  ? new Set((JSON.parse(fs.readFileSync(cohortPath, "utf8")) as { documents?: Array<{ id?: string }> }).documents?.map((document) => document.id).filter((id): id is string => Boolean(id)) ?? [])
+  : undefined;
+if (cohortPath && !cohortIds?.size) throw new Error("Cohort must contain at least one document ID.");
+if (cohortIds) {
+  const catalogIds = new Set(catalog.papers.map((paper) => paper.id));
+  const unknown = [...cohortIds].filter((id) => !catalogIds.has(id));
+  if (unknown.length) throw new Error(`Cohort has unknown catalog IDs: ${unknown.join(", ")}`);
+}
+
+if (!requestedIds && !cohortIds && !runAll && catalog.papers.length > 12) {
+  throw new Error("抽出全件ベンチマークには --all を明示してください。通常は --papers id1,id2 または --cohort development-regression.json を指定します。");
 }
 
 const reports: BaselinePaperReport[] = [];
 for (const paper of catalog.papers) {
   if (requestedIds && !requestedIds.has(paper.id)) continue;
+  if (cohortIds && !cohortIds.has(paper.id)) continue;
   const pdfPath = path.join(root, catalog.pdfDir, paper.filename);
   if (!fs.existsSync(pdfPath)) continue;
   const pages = await extractPdfPages(pdfPath);
@@ -119,6 +133,9 @@ const result = {
   },
   reports,
 };
-const reportPath = path.join(root, "test-data/real-papers/reports/extraction-baseline-latest.json");
+const outputIndex = args.indexOf("--output");
+const reportPath = outputIndex >= 0
+  ? path.resolve(root, args[outputIndex + 1] ?? "")
+  : path.join(root, "test-data/real-papers/reports/extraction-baseline-latest.json");
 fs.writeFileSync(reportPath, `${JSON.stringify(result, null, 2)}\n`);
 console.log(JSON.stringify({ ...result, reportPath }, null, 2));

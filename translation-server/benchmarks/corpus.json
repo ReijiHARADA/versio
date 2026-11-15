@@ -1,5 +1,5 @@
 {
-  "name": "paper-reader-madlad-en-ja",
+  "name": "versio-madlad-en-ja",
   "source_language": "en",
   "target_language": "ja",
   "notes": "Fixed English inputs for MPS bf16 vs MLX bf16. Several sentences reuse the Interactive Jewellery / SPEED_BENCH set.",

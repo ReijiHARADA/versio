@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_PATH="${1:-src-tauri/target/release/bundle/macos/Paper Reader.app}"
+APP_PATH="${1:-src-tauri/target/release/bundle/macos/Versio.app}"
 SERVER_ROOT="$APP_PATH/Contents/Resources/translation-server"
 ENGINE="$SERVER_ROOT/engines/madlad_mps.py"
 

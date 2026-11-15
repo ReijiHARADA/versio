@@ -25,7 +25,7 @@ async function download(url, dest) {
     redirect: "follow",
     headers: {
       "User-Agent":
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 PaperReaderTestCorpus/1.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 VersioTestCorpus/1.0",
       Accept: "application/pdf,*/*",
     },
   });

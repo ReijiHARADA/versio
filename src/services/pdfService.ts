@@ -64,22 +64,38 @@ export type ExtractedTextItem = {
   page: number;
   /** Native text-matrix rotation in degrees, when supplied by the PDF. */
   rotation?: number;
+  /** Top edge of the rendered glyph rectangle, in displayed page coordinates. */
+  visualTop?: number;
 };
+
+/**
+ * Share of a page's text that sits on a native ~90° matrix. A whole page
+ * printed sideways (a landscape table in a portrait document) is a different
+ * situation from a few rotated glyphs on an otherwise horizontal page, and the
+ * layout pipeline needs to know which one it is reading.
+ */
+export function dominantNativeTextRotation(items: { transform: number[] }[]): number {
+  let rotated = 0;
+  let total = 0;
+  for (const item of items) {
+    const tx = item.transform;
+    if (!tx || tx.length < 6) continue;
+    total += 1;
+    if (Math.abs((Math.atan2(tx[1]!, tx[0]!) * 180) / Math.PI) >= 45) rotated += 1;
+  }
+  if (total === 0) return 0;
+  return rotated / total >= 0.6 ? 90 : 0;
+}
 
 /** Convert a PDF.js text item into the page's displayed coordinate system. */
 export function textItemGeometry(
   item: { transform: number[]; width: number; height: number },
   viewport: { height: number; convertToViewportPoint: (x: number, y: number) => number[] },
   pageRotation = 0,
-): { x: number; y: number; width: number; height: number; rotation: number } {
+  dominantNativeRotation = 0,
+): { x: number; y: number; width: number; height: number; rotation: number; visualTop: number } {
   const tx = item.transform;
   const nativeRotation = (Math.atan2(tx[1], tx[0]) * 180) / Math.PI;
-  if (!pageRotation) {
-    return {
-      x: tx[4], y: viewport.height - tx[5], width: item.width, height: item.height,
-      rotation: Math.round(nativeRotation * 100) / 100,
-    };
-  }
   const fontScale = Math.max(0.001, Math.hypot(tx[0], tx[1]));
   const xVector: [number, number] = [tx[0] / fontScale * item.width, tx[1] / fontScale * item.width];
   const yVector: [number, number] = [tx[2] / fontScale * item.height, tx[3] / fontScale * item.height];
@@ -93,12 +109,44 @@ export function textItemGeometry(
   const viewportPoints = points.map(([x, y]) => viewport.convertToViewportPoint(x, y));
   const xs = viewportPoints.map(([x]) => x);
   const ys = viewportPoints.map(([, y]) => y);
+
+  // Horizontal text uses its baseline convention throughout the legacy layout
+  // pipeline. A native 90° text matrix on an otherwise horizontal page (the
+  // arXiv side copyright stamp) must instead use the transformed
+  // quadrilateral; treating item.width as a horizontal extent there creates a
+  // page-wide hit box. A page whose text is *predominantly* rotated is a
+  // sideways-printed page: every item shares the rotation, so the baseline
+  // convention still orders and groups it consistently, and switching that
+  // page to narrow vertical boxes instead shreds its table regions and glues
+  // neighbouring prose onto header rows.
+  const sidewaysPage = Math.abs(dominantNativeRotation) >= 45;
+  if (!pageRotation && (Math.abs(nativeRotation) < 45 || sidewaysPage)) {
+    return {
+      x: tx[4], y: viewport.height - tx[5], width: item.width, height: item.height,
+      rotation: Math.round(nativeRotation * 100) / 100,
+      // Overlay consumers still need the true glyph top. Subtracting the
+      // aggregate height from a rotated baseline does not give one, so take it
+      // from the transformed rectangle whenever the item is actually rotated.
+      visualTop: Math.abs(nativeRotation) < 45
+        ? viewport.height - tx[5] - item.height
+        : Math.min(...ys),
+    };
+  }
   const normalizedRotation = ((nativeRotation - pageRotation + 540) % 360) - 180;
   return {
-    x: Math.min(...xs), y: Math.min(...ys),
+    x: Math.min(...xs),
+    // A rotated native text matrix has no useful horizontal baseline for the
+    // layout pipeline.  Keeping its bottom edge as `y` while also retaining
+    // its full vertical extent makes table-cell regions run beyond the page
+    // bottom.  Use the actual glyph top, as we already do for rotated pages.
+    // Horizontal text intentionally retains the legacy baseline convention.
+    y: Math.min(...ys),
     width: Math.max(0.1, Math.max(...xs) - Math.min(...xs)),
     height: Math.max(0.1, Math.max(...ys) - Math.min(...ys)),
     rotation: Math.round(normalizedRotation * 100) / 100,
+    // Preserve the actual screen top explicitly so overlay consumers never
+    // have to infer it from the horizontal-text baseline convention.
+    visualTop: Math.min(...ys),
   };
 }
 
@@ -287,7 +335,8 @@ function isTextItem(item: TextItem | TextMarkedContent): item is TextItem {
 
 export async function extractPDFContent(
   file: File,
-  onProgress?: (page: number, total: number) => void
+  onProgress?: (page: number, total: number) => void,
+  pageNumbers?: number[],
 ): Promise<PDFExtractionResult> {
   const arrayBuffer = await file.arrayBuffer();
   let pdf: Awaited<ReturnType<typeof openPdfDocument>["promise"]>;
@@ -302,7 +351,10 @@ export async function extractPDFContent(
 
   const pages: ExtractedPage[] = [];
 
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+  const requestedPages = pageNumbers?.length
+    ? [...new Set(pageNumbers)].filter((pageNum) => pageNum >= 1 && pageNum <= pdf.numPages).sort((a, b) => a - b)
+    : Array.from({ length: pdf.numPages }, (_, index) => index + 1);
+  for (const pageNum of requestedPages) {
     onProgress?.(pageNum, pdf.numPages);
 
     const page = await pdf.getPage(pageNum);
@@ -310,13 +362,20 @@ export async function extractPDFContent(
     const textContent = await page.getTextContent();
 
     const textItems: ExtractedTextItem[] = [];
+    const pageTextItems = textContent.items.filter(
+      (item): item is TextItem => isTextItem(item) && item.str.trim().length > 0
+    );
+    const dominantRotation = dominantNativeTextRotation(pageTextItems);
 
-    for (const item of textContent.items) {
-      if (!isTextItem(item) || !item.str.trim()) continue;
-
+    for (const item of pageTextItems) {
       const tx = item.transform;
       const fontSize = Math.sqrt(tx[0] * tx[0] + tx[1] * tx[1]);
-      const geometry = textItemGeometry(item, viewport, typeof page.rotate === "number" ? page.rotate : 0);
+      const geometry = textItemGeometry(
+        item,
+        viewport,
+        typeof page.rotate === "number" ? page.rotate : 0,
+        dominantRotation
+      );
 
       textItems.push({
         text: item.str,
@@ -328,6 +387,7 @@ export async function extractPDFContent(
         fontName: item.fontName,
         page: pageNum,
         rotation: geometry.rotation,
+        visualTop: geometry.visualTop,
       });
     }
 

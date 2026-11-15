@@ -4,7 +4,7 @@ import { newReview, type ExtractionSnapshot } from "../../evaluation/schema";
 
 function snapshot(): ExtractionSnapshot {
   return {
-    schemaVersion: 1, kind: "paper-reader-extraction-snapshot", createdAt: "2026-01-01T00:00:00.000Z",
+    schemaVersion: 1, kind: "versio-extraction-snapshot", createdAt: "2026-01-01T00:00:00.000Z",
     parser: { id: "test", version: "1" }, source: { paperId: "p", fileName: "p.pdf", fileHash: "hash", pageCount: 1 },
     pages: [{ page: 1, width: 100, height: 100 }],
     canonical: { source: { fileHash: "hash", pageCount: 1 }, pageCount: 1, format: { applied: "generic", scores: { generic: 1, acm: 0, ieee: 0 }, reason: "test" }, pageKind: "native", formatId: "generic", diagnostics: { layoutConfidence: 1, readingOrderConfidence: 1, textIntegrityConfidence: 1, semanticConfidence: 1, formatConfidence: 1, relationConfidence: 1, columnConfidence: 1, unicodeConfidence: 1, paragraphConfidence: 1 }, relations: [], nodes: [{ id: "n1", role: "paragraph", text: "hello", pageStart: 1, pageEnd: 1, boundingBoxes: [{ page: 1, x: 1, y: 1, width: 10, height: 10 }], confidence: 1, evidence: [], sourceAnchor: { page: 1, boundingBoxes: [] } }] },

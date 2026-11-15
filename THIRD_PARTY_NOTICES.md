@@ -1,8 +1,8 @@
 # Third-party notices
 
-Paper Reader 本体のソースコードは [MIT License](./LICENSE) です。
+Versio 本体のソースコードは [MIT License](./LICENSE) です。
 
-このライセンスは **Paper Reader のソースコードにだけ** 適用されます。翻訳に使う MADLAD-400 のモデル重み、PyTorch、pdf.js、その他の依存ライブラリ／同梱バイナリには、それぞれのライセンスが適用されます。
+このライセンスは **Versio のソースコードにだけ** 適用されます。翻訳に使う MADLAD-400 のモデル重み、PyTorch、pdf.js、その他の依存ライブラリ／同梱バイナリには、それぞれのライセンスが適用されます。
 
 ## アプリ内の一覧（正）
 
@@ -40,4 +40,4 @@ Vite、Vitest、Playwright、oxlint、TypeScript などの **devDependencies** �
 
 ## Ollama
 
-Paper Reader は用語集のために **任意** でローカルの Ollama HTTP API（既定 `http://localhost:11434`）へ接続します。Ollama 本体もそのモデル重みもこのリポジトリには同梱していません。Ollama を使う場合は、Ollama および読み込むモデルそれぞれのライセンスが別途適用されます。
+Versio は用語集のために **任意** でローカルの Ollama HTTP API（既定 `http://localhost:11434`）へ接続します。Ollama 本体もそのモデル重みもこのリポジトリには同梱していません。Ollama を使う場合は、Ollama および読み込むモデルそれぞれのライセンスが別途適用されます。

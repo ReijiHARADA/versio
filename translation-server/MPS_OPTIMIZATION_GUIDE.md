@@ -16,7 +16,7 @@
 現在のPython 3.9.6からPython 3.12へ更新し、MPS対応のPyTorchをインストールします。
 
 ```bash
-cd ~/Desktop/codex/projects/paper-reader/translation-server
+cd ~/Desktop/codex/projects/versio/app/translation-server
 chmod +x update_python_env.sh
 ./update_python_env.sh
 ```
@@ -160,7 +160,7 @@ curl -X POST http://127.0.0.1:8765/translate \
 
 1. フロントエンドアプリを起動
    ```bash
-   cd ~/Desktop/codex/projects/paper-reader
+   cd ~/Desktop/codex/projects/versio/app
    npm run dev
    ```
 

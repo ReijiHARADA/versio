@@ -719,6 +719,25 @@ describe("PDF reading order regression", () => {
     expect(caption?.text).toContain("Inter-item correlation matrix");
   });
 
+  it("keeps a reverse-direction rotated caption label with its title line", () => {
+    const pages: ExtractedPage[] = [{
+      pageNumber: 4,
+      width: 612,
+      height: 792,
+      textItems: [
+        // Some PDFs advance the native text matrix in the opposite direction
+        // along a 90° baseline. Reading order must use that baseline rather
+        // than screen Y ordering.
+        { text: "Table 6", x: 120, y: 724, width: 32, height: 8, fontSize: 8, fontName: "Helvetica", page: 4, rotation: 90 },
+        { text: "Inter-item correlation matrix", x: 120, y: 692, width: 120, height: 8, fontSize: 8, fontName: "Helvetica", page: 4, rotation: 90 },
+      ],
+    }];
+    const { blocks } = reconstructDocument(pages);
+    const caption = blocks.find((block) => block.role === "table_caption");
+    expect(caption?.text).toContain("Table 6");
+    expect(caption?.text).toContain("Inter-item correlation matrix");
+  });
+
   it("keeps every block reproducible from native source lines", () => {
     for (const build of Object.values(FIXTURES)) {
       const { blocks } = reconstructDocument(build());

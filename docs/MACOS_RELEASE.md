@@ -1,6 +1,6 @@
 # macOS Developer ID signing & notarization
 
-Paper Reader is distributed outside the Mac App Store (Developer ID).
+Versio is distributed outside the Mac App Store (Developer ID).
 This document covers **clean release** signing only. Fast development builds
 (`npm run tauri:build:fast`) stay unsigned on purpose.
 
@@ -30,7 +30,7 @@ Scripts:
 
 | Script | Role |
 | --- | --- |
-| `scripts/tauri-build.sh clean` | Build unsigned `.app`; if `PAPER_READER_SIGN=1`, sign then DMG; else unsigned DMG |
+| `scripts/tauri-build.sh clean` | Build unsigned `.app`; if `VERSIO_SIGN=1`, sign then DMG; else unsigned DMG |
 | `scripts/macos-sign-notarize.sh` | Sign/notarize `.app`, then `macos-build-dmg.sh`, then sign DMG |
 | `scripts/macos-build-dmg.sh` | Create `.dmg` from an existing `.app` (no Tauri rebuild) |
 
@@ -39,9 +39,9 @@ export APPLE_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)"
 export APPLE_ID="you@example.com"
 export APPLE_TEAM_ID="TEAMID1234"
 export APPLE_APP_SPECIFIC_PASSWORD="xxxx-xxxx-xxxx-xxxx"
-# or: export APPLE_NOTARY_PROFILE="paper-reader-notary"
+# or: export APPLE_NOTARY_PROFILE="versio-notary"
 
-PAPER_READER_SIGN=1 npm run tauri:build:clean
+VERSIO_SIGN=1 npm run tauri:build:clean
 # equivalent split:
 #   npm run tauri:build:clean          # without SIGN → unsigned .app + unsigned DMG
 #   npm run macos:sign                 # signs existing .app and rebuilds DMG from it
@@ -73,12 +73,12 @@ Store credentials in repository / org secrets — never in git.
 ## Verification (required)
 
 ```bash
-codesign --verify --deep --strict --verbose=2 "Paper Reader.app"
-spctl --assess --type execute --verbose=4 "Paper Reader.app"
-xcrun stapler validate "Paper Reader.app"
+codesign --verify --deep --strict --verbose=2 "Versio.app"
+spctl --assess --type execute --verbose=4 "Versio.app"
+xcrun stapler validate "Versio.app"
 
-codesign --verify --verbose=2 "Paper Reader_….dmg"
-xcrun stapler validate "Paper Reader_….dmg"
+codesign --verify --verbose=2 "Versio_….dmg"
+xcrun stapler validate "Versio_….dmg"
 # mount DMG and re-run codesign/spctl on the inner .app (done by macos-sign-notarize.sh)
 ```
 

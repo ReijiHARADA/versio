@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "kind": "paper-reader-extraction-benchmark-gold",
+  "kind": "versio-extraction-benchmark-gold",
   "id": "cdm-fixture",
   "source": { "fileHash": "cdm-hash" },
   "split": "development",

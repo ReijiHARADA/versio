@@ -4,7 +4,7 @@ import type { CanonicalDocument, CanonicalRole } from "../services/pdfExtraction
 /** A portable parser result. It deliberately does not claim to be ground truth. */
 export type ExtractionSnapshot = {
   schemaVersion: 1;
-  kind: "paper-reader-extraction-snapshot";
+  kind: "versio-extraction-snapshot";
   createdAt: string;
   parser: { id: string; version: string };
   source: { paperId: string; fileName: string; fileHash: string; pageCount: number };
@@ -42,7 +42,13 @@ export type PageCoverage = {
   formulasComplete: boolean;
 };
 
-export type GoldFormulaReview = { nodeId: string; latex: string };
+/**
+ * `text` is the human-authored linear reading used for string NED. `latex`
+ * remains optional and is reserved for visual CDM evaluation; neither value
+ * is inferred from the parser output.
+ */
+/** A reviewed equation may be an extracted node or a human-added missing region. */
+export type GoldFormulaReview = { nodeId?: string; missingRegionId?: string; text?: string; latex?: string };
 export type GoldTableReview = { nodeId: string; tree: { tag: string; text?: string; children?: unknown[] } };
 
 export type BlockReview = {
@@ -117,7 +123,7 @@ export type PageReview = {
 /** Human-authored labels. This must never be synthesized from a snapshot. */
 export type ExtractionReview = {
   schemaVersion: 1;
-  kind: "paper-reader-extraction-review";
+  kind: "versio-extraction-review";
   source: ExtractionSnapshot["source"];
   snapshot: Pick<ExtractionSnapshot, "schemaVersion" | "createdAt" | "parser">;
   pages: PageReview[];
@@ -127,7 +133,7 @@ export type ExtractionReview = {
 
 export type EvaluationBundle = {
   schemaVersion: 1;
-  kind: "paper-reader-extraction-evaluation";
+  kind: "versio-extraction-evaluation";
   snapshot: ExtractionSnapshot;
   review: ExtractionReview;
 };
@@ -168,7 +174,7 @@ export function newReview(snapshot: ExtractionSnapshot): ExtractionReview {
   const now = new Date().toISOString();
   return {
     schemaVersion: 1,
-    kind: "paper-reader-extraction-review",
+    kind: "versio-extraction-review",
     source: snapshot.source,
     snapshot: { schemaVersion: snapshot.schemaVersion, createdAt: snapshot.createdAt, parser: snapshot.parser },
     pages: Array.from({ length: snapshot.source.pageCount }, (_, index) => emptyPageReview(index + 1)),
@@ -179,8 +185,8 @@ export function newReview(snapshot: ExtractionSnapshot): ExtractionReview {
 
 export function isEvaluationBundle(value: unknown): value is EvaluationBundle {
   const candidate = value as Partial<EvaluationBundle> | null;
-  return candidate?.kind === "paper-reader-extraction-evaluation" &&
-    candidate.snapshot?.kind === "paper-reader-extraction-snapshot" &&
-    candidate.review?.kind === "paper-reader-extraction-review" &&
+  return candidate?.kind === "versio-extraction-evaluation" &&
+    candidate.snapshot?.kind === "versio-extraction-snapshot" &&
+    candidate.review?.kind === "versio-extraction-review" &&
     candidate.snapshot.source.fileHash === candidate.review.source.fileHash;
 }

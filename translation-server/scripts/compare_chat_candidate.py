@@ -1,6 +1,6 @@
 """Audit-only comparison for locally cached chat-style translation models.
 
-Uses Paper Reader's production semantic segmenter and citation/scientific span
+Uses Versio's production semantic segmenter and citation/scientific span
 protection, then applies the candidate model's required chat template. This
 script records generations only; it never changes production routing.
 """

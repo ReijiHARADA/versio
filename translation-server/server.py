@@ -484,7 +484,7 @@ cors_kwargs = {
     "allow_origins": ALLOWED_ORIGINS,
     "allow_credentials": True,
     "allow_methods": ["GET", "POST", "OPTIONS"],
-    "allow_headers": ["Authorization", "Content-Type", "X-Paper-Reader-Token"],
+    "allow_headers": ["Authorization", "Content-Type", "X-Versio-Token"],
 }
 # Opt-in broader localhost CORS for unusual Vite ports.
 if os.environ.get("MADLAD_CORS_LOCALHOST_REGEX") == "1":
@@ -495,13 +495,13 @@ app.add_middleware(CORSMiddleware, **cors_kwargs)
 
 async def require_token(
     authorization: Optional[str] = Header(default=None),
-    x_paper_reader_token: Optional[str] = Header(default=None, alias="X-Paper-Reader-Token"),
+    x_versio_token: Optional[str] = Header(default=None, alias="X-Versio-Token"),
 ) -> None:
     if not SERVER_TOKEN:
         return
     provided = None
-    if x_paper_reader_token:
-        provided = x_paper_reader_token.strip()
+    if x_versio_token:
+        provided = x_versio_token.strip()
     elif authorization and authorization.lower().startswith("bearer "):
         provided = authorization[7:].strip()
     if provided != SERVER_TOKEN:

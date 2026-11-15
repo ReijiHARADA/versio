@@ -36,7 +36,7 @@ jobs:
         run: |
           if [ "${{ secrets.APPLE_SIGNING_IDENTITY }}" != "" ]; then
             echo "Apple secrets present in repo settings — run signed flow manually or extend this job."
-            echo "This scheduled job remains unsigned unless PAPER_READER_SIGN is wired with a keychain."
+            echo "This scheduled job remains unsigned unless VERSIO_SIGN is wired with a keychain."
             echo "signed acceptance not executed"
           else
             echo "unsigned acceptance passed"
