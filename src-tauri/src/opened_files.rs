@@ -4,6 +4,9 @@
 //! so paths are queued here and the frontend drains them with
 //! `take_opened_pdfs` on mount and on every `opened-pdfs` event.
 
+// Only macOS delivers RunEvent::Opened; other targets still compile the queue.
+#![cfg_attr(not(target_os = "macos"), allow(dead_code, unused_imports))]
+
 use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager, State, Url};
 
