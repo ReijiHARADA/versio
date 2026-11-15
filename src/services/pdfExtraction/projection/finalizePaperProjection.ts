@@ -12,7 +12,7 @@ export type FinalizeProjectionHelpers = {
   looksLikeFrontiersReviewerCredit: (text: string) => boolean;
   expandAuthorLine: (text: string) => string[];
   stripLetterspacedTitleBanner: (title: string) => string;
-  pickPaperTitle: (metadataTitle: string | undefined, extractedTitle: string) => string;
+  pickPaperTitle: (metadataTitle: string | undefined, extractedTitle: string | undefined) => string | null;
   pickPublication: (metadataTitle: string | undefined) => string | null;
 };
 
