@@ -16,6 +16,8 @@
 - 正解データの取得元は Europe PMC（`isOpenAccess=Y` + CC ライセンス）、arXiv、J-STAGE の無料公開データのみ。
 - 外部取得の User-Agent は汎用名 `VersioCorpusFetcher/1.0`。個人名・メールを入れない。arXiv へは 3 秒に 1 リクエスト以下。
 - PDF・XML・LaTeX ソースはコミットしない（`test-data/field-gold/` を gitignore）。コミットするのは `test-fixtures/field-gold/manifest.json`、スクリプト、レポート Markdown。
+- **権利（ユーザー指示）**: ライセンスが CC 系（CC BY / BY-SA / BY-NC / BY-NC-SA / BY-ND / CC0）と確認できた論文だけを取得・保存する。確認できないものは取得しない（Europe PMC は `license` 欄、arXiv は OAI-PMH `metadataPrefix=arXiv` の `<license>`、J-STAGE は記事のライセンス表示）。manifest に文書ごとの `license` と取得元 URL を記録。用途はローカル評価のみで、再配布しない。
+- コミットするレポート（`docs/EXTRACTION_FIELD_EVAL.md`）には集計値と文書 id・ライセンスのみ載せ、本文・キャプション・参考文献の引用は載せない。ワースト事例の抜粋（各 120 文字以内）は gitignored の `test-data/field-gold/runs/` にだけ出す。
 - 本番抽出コード（`src/services/pdfExtraction/**`）の挙動は変えない。この計画で触るのは評価コード・スクリプト・GROBID TEI パーサの追加関数だけ。
 - 取得元ごとに `trustedFields` にある項目だけを採点する。arXiv は `affiliations` / `authorAffiliation` / `emails` を採点しない。
 - JATS と PDF の対は、正規化後タイトル一致かつ第一著者一致のときだけ採用し、除外数を manifest に記録する。
@@ -165,7 +167,7 @@
   - `export function acceptPair(gold: FieldRecord, pdfFirstPageText: string, language: "en" | "ja"): boolean` — 正規化タイトルが PDF 先頭 2 ページのテキストに含まれ、かつ第一著者の正規化キーも含まれる
   - `export function stratifiedSample<T extends { source: GoldSource; discipline: string; language: "en" | "ja" }>(items: T[], quota: Record<string, number>, seed: number): T[]`
   - ディスク配置: `test-data/field-gold/<id>/{source.pdf, gold.json}`（gold.json は `FieldGold`）
-  - manifest: `{ schemaVersion: 1, createdAt, quotas, excluded: { versionMismatch: number, noLicense: number, fetchFailed: number }, documents: Array<{ id, source, language, discipline, pdfSha256 }> }`
+  - manifest: `{ schemaVersion: 1, createdAt, quotas, excluded: { versionMismatch: number, noLicense: number, fetchFailed: number }, documents: Array<{ id, source, language, discipline, pdfSha256, license, sourceUrl }> }`
 
 クォータ（Claude の判断）: Europe PMC 40（医学・生命 25 / 社会・心理 15）、arXiv 45（cs.HC 25 / その他 cs・stat・physics 20）、J-STAGE 18（日本語）＝計 103。乱数 seed 固定 `20261115`。
 
