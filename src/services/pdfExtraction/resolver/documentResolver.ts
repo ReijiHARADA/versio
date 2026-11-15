@@ -86,7 +86,7 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   // contains several person-shaped tokens without institution vocabulary.
   if (candidate.pageStart === 1 && candidate.role === "affiliation" && candidate.text.length <= 180 &&
       /\b(?:\d{1,2}|[*†‡])\s*(?:,|&|$)/.test(candidate.text) &&
-      (/[\*†‡]/.test(candidate.text) || /\band\b/i.test(candidate.text) ||
+      (/[*†‡]/.test(candidate.text) || /\band\b/i.test(candidate.text) ||
        ((candidate.text.match(/\d{1,2}\s*[, ]\s*[A-ZÀ-ÖØ-Ý]/g)?.length ?? 0) >= 2 && /[À-ÖØ-öø-ÿ]/.test(candidate.text))) &&
       (candidate.text.match(/\b[A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ'’-]{1,}\b/g)?.length ?? 0) >= 3 &&
       !/\b(?:university|department|institute|laboratory|hospital|faculty|school|center|centre)\b/i.test(candidate.text)) {
@@ -137,9 +137,9 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   const symbolicFormula =
     ((candidate.text.match(/[=∈∉∪∩∑∏√∞≤≥≈≠→←↦{}|]/gu) ?? []).length >= 4 &&
       (candidate.text.match(/[A-Za-z]{3,}/g) ?? []).length <= 6) ||
-    (/^(?:d\s*[A-ZΑ-Ω\[]|d\[[A-Za-z]+\]|[A-Za-z][\w,+()]*\s*=)/.test(candidate.text.trim()) &&
+    (/^(?:d\s*[A-ZΑ-Ω[]|d\[[A-Za-z]+\]|[A-Za-z][\w,+()]*\s*=)/.test(candidate.text.trim()) &&
       candidate.text.trim().split(/\s+/).filter(Boolean).length <= 14 &&
-      (/=/.test(candidate.text) || /^d\s*[A-ZΑ-Ω\[]/.test(candidate.text.trim())));
+      (/=/.test(candidate.text) || /^d\s*[A-ZΑ-Ω[]/.test(candidate.text.trim())));
   const imageLabelEvidence = candidate.evidence.some((entry) =>
     entry.label === "image-overlap-label-cluster" || entry.label === "vector-figure-label-cluster"
   );
@@ -940,7 +940,7 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
         words <= 8) ||
       (/^\d\.\d{2,}(?:\s*\([^)]+\))?(?:\s+\d\.\d{2,}(?:\s*\([^)]+\))?)+$/.test(t) &&
         words <= 8) ||
-      /^[—–\-]\s*\d\.\d{2,}(?:\s*\([^)]+\))?/.test(t);
+      /^[—–-]\s*\d\.\d{2,}(?:\s*\([^)]+\))?/.test(t);
     const dualConstructCellHeading =
       !/^\d+(?:\.\d+)*\s/.test(t) &&
       words >= 3 &&
@@ -985,7 +985,7 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
       // Spaced display-math crumbs (`V ar(QM B − QM F )`) promoted as headings.
       (/^[A-Z]\s*[a-z]{1,3}\s*\([^)]*[−–—+\-×·⋅][^)]*\)\s*$/u.test(t) && words <= 12) ||
       // ODE / assignment fragments (`d[PTH]`, `cACE = …`, `= kVIP · …`, `0 = L · konR1`).
-      (/^(?:=\s|\d+\s*=|d\s*[A-ZΑ-Ω\[]|d\[[A-Za-z]+\]|[A-Za-z][+*]?(?:\s+\S+){0,8}\s*=)/.test(t) &&
+      (/^(?:=\s|\d+\s*=|d\s*[A-ZΑ-Ω[]|d\[[A-Za-z]+\]|[A-Za-z][+*]?(?:\s+\S+){0,8}\s*=)/.test(t) &&
         words <= 18 &&
         !/^\d+(?:\.\d+)+\s+[A-Za-z]/.test(t) &&
         !/\b(?:introduction|methods?|results?|discussion|conclusion|related work|abstract|acknowledgements?)\b/i.test(t)) ||

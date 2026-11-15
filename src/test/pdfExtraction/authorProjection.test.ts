@@ -1452,10 +1452,6 @@ describe("author masthead projection", () => {
   }, 60_000);
 
   it("keeps Jan given-name bylines that look like January date crumbs", async () => {
-    const pdf = path.join(
-      root,
-      "test-fixtures/real-papers/pending-pdfs/epmc-a-systematic-review-of-patient-decision-aids-fo.pdf",
-    );
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.startsWith("epmc-a-systematic-review-of-patient-decision"));
     if (!match) return;

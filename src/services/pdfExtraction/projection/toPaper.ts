@@ -401,7 +401,7 @@ function expandAuthorLine(text: string): string[] {
   if (
     withoutLeadingDate !== text.trim() &&
     withoutLeadingDate.length >= 8 &&
-    /^[A-ZÀ-ÖØ-Ý][\p{L}'’´\-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´\-]+){1,4}$/u.test(
+    /^[A-ZÀ-ÖØ-Ý][\p{L}'’´-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´-]+){1,4}$/u.test(
       withoutLeadingDate,
     )
   ) {
@@ -959,7 +959,7 @@ function isNonAuthorMastheadLine(text: string): boolean {
     // Keep dated person wraps used as byline continuations
     // (`14 June 2026 Raúl Sampieri-Cabrera *`).
     if (
-      !/^\d{1,2}\s+[A-Za-z]+\s+(?:19|20)\d{2}\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´\-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´\-]+){1,4}\s*\*?$/u.test(
+      !/^\d{1,2}\s+[A-Za-z]+\s+(?:19|20)\d{2}\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´-]+){1,4}\s*\*?$/u.test(
         value,
       )
     ) {
@@ -2209,7 +2209,7 @@ export function projectCanonicalToPaper(input: {
       // The dated line often sits in the left PUBLISHED rail (wide Δx).
       ((n.role === "heading" || n.role === "other") &&
         n.text.trim().length <= 72 &&
-        /^\d{1,2}\s+[A-Za-z]+\s+\d{4}\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´\-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´\-]+){1,4}\s*\*?$/u.test(
+        /^\d{1,2}\s+[A-Za-z]+\s+\d{4}\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´-]+(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’´-]+){1,4}\s*\*?$/u.test(
           n.text.trim(),
         ) &&
         authorNodes.some((author) => {
@@ -5079,7 +5079,7 @@ export function projectCanonicalToPaper(input: {
     const parts = cleaned.split(/\s+/);
     if (parts.length !== 2) return true;
     const [left, right] = parts;
-    if (!/^[A-Z][\p{L}'’´\-]+$/u.test(left!) || !/^[A-Z]\.?$/u.test(right!)) return true;
+    if (!/^[A-Z][\p{L}'’´-]+$/u.test(left!) || !/^[A-Z]\.?$/u.test(right!)) return true;
     const needle = left!.toLocaleLowerCase();
     return !authorNames.some((other) => {
       if (other === name) return false;

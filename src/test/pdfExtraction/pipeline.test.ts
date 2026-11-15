@@ -724,7 +724,7 @@ describe("canonical extraction pipeline", () => {
     expect(result.paper.affiliations.some((affiliation) => /Duncan of Jordanstone.*University of Dundee/i.test(affiliation.name))).toBe(true);
     expect(result.paper.affiliations.some((affiliation) => /Australian Research.*Macquarie University/i.test(affiliation.name))).toBe(true);
     expect(result.canonical.nodes.some((node) =>
-      /\d[\d,*†‡§∗·\s,;:()\[\]{}]*[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/i.test(node.text ?? "") &&
+      /\d[\d,*†‡§∗·\s,;:()[\]{}]*[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/i.test(node.text ?? "") &&
       ["paragraph", "abstract"].includes(node.role)
     )).toBe(false);
     expect(result.blocks.some((block) => /@/.test(block.original ?? ""))).toBe(false);

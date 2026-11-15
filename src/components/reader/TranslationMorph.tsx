@@ -67,7 +67,7 @@ function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number
       lines.push("");
       continue;
     }
-    const tokens = paragraph.match(/[A-Za-z0-9'’.\-]+(?:\s+)?|./gu) ?? [...paragraph];
+    const tokens = paragraph.match(/[A-Za-z0-9'’.-]+(?:\s+)?|./gu) ?? [...paragraph];
     let line = "";
     for (const token of tokens) {
       const test = line + token;
@@ -381,6 +381,7 @@ export function TranslationMorph({
       window.removeEventListener("resize", onResize);
       fromEl.style.opacity = "";
       fromEl.style.filter = "";
+      // oxlint-disable-next-line react-hooks/exhaustive-deps -- cleanup intentionally resets the element mounted at cleanup time
       const toEl = toRef.current;
       if (toEl) {
         toEl.style.opacity = "";

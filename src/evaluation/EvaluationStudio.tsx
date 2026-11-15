@@ -332,6 +332,7 @@ export function EvaluationStudio() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
+  // oxlint-disable-next-line react-hooks/exhaustive-deps -- dev-only eval tool; handler is rebound via its own deps
   }, [bundle, currentReview?.blockReviews, editingMissingId, selected]);
   const importBundle = async (event: ChangeEvent<HTMLInputElement>) => {
     const uploaded = event.target.files?.[0]; if (!uploaded) return;

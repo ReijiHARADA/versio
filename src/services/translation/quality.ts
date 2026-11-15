@@ -419,7 +419,7 @@ function hasOrphanedInvariantSentence(output: string, source: string): boolean {
     if (/(?:19|20)\d{2}/.test(citationOnly)
       && /(?:\bet\s+al\.|&|,)/i.test(citationOnly)
       && !/[\u3040-\u30ff\u3400-\u9fff]/u.test(citationOnly)
-      && /^[\p{L}\p{M}\d\s.,;:&'’()\[\]\-]+[。.!！？!?]*$/u.test(citationOnly)) return false;
+      && /^[\p{L}\p{M}\d\s.,;:&'’()[\]-]+[。.!！？!?]*$/u.test(citationOnly)) return false;
     // Figure references can be emitted as a detached punctuation span by
     // models that preserve the reference but move it after the translated
     // sentence (`...である。 (Fig. 2 (b))`).  As with citation-only spans,
@@ -1029,8 +1029,8 @@ export function extractScientificInvariants(source: string): ScientificInvariant
       const end = start + match[0].length;
       // A thousands-separated value such as `13,000` is one numeric fact;
       // do not emit the separator tail (`000`) as an independent invariant.
-      if (kind === "number" && start > 0 && invariantSource[start - 1] === "," &&
-          start > 1 && /\d/.test(invariantSource[start - 2])) continue;
+      if (kind === "number" && start > 1 && invariantSource[start - 1] === "," &&
+          /\d/.test(invariantSource[start - 2])) continue;
       // A superscript footnote marker can be flattened by PDF extraction into
       // `3 (Jones 2019; ...)`. It is document structure, not a numeric claim.
       // Exclude only this unambiguous citation-adjacent shape; participant
@@ -1253,7 +1253,7 @@ function citationAtoms(value: string): string[] {
   const body = value.replace(/^\s*\[|\]\s*$/g, "");
   return body
     .split(/\s*,\s*/)
-    .map((part) => normalizeInvariant(part).replace(/[\[\]]/g, ""))
+    .map((part) => normalizeInvariant(part).replace(/[[\]]/g, ""))
     .filter(Boolean);
 }
 
@@ -1744,8 +1744,8 @@ export function evaluateJaTranslation(output: string, source: string): Translati
   if (hasKana && UNEXPECTED_FOREIGN_SCRIPT.test(out)) reasons.push("foreign script contamination");
   if (hasKana && hasUntranslatedForeignProse(out)) reasons.push("untranslated foreign-language prose");
   if (hasKana && hasUntranslatedSourceLabel(source, out)) reasons.push("untranslated repeated source label");
-  const sourceExampleQuotes = (source.match(/\be\.g\.,?\s*[\u201c\"][^\u201d\"]{3,}[\u201d\"]|\be\.g\.,?\s*「[^」]{3,}」/gi) ?? []).length;
-  const outputQuoteSpans = (out.match(/[\u201c\"][^\u201d\"]{3,}[\u201d\"]|「[^」]{3,}」/g) ?? []).length;
+  const sourceExampleQuotes = (source.match(/\be\.g\.,?\s*[\u201c"][^\u201d"]{3,}[\u201d"]|\be\.g\.,?\s*「[^」]{3,}」/gi) ?? []).length;
+  const outputQuoteSpans = (out.match(/[\u201c"][^\u201d"]{3,}[\u201d"]|「[^」]{3,}」/g) ?? []).length;
   if (sourceExampleQuotes > 0 && outputQuoteSpans < sourceExampleQuotes) {
     reasons.push("quoted example content missing");
   }
