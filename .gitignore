@@ -75,3 +75,7 @@ scripts/_tmp-*
 scripts/.diagnose-*
 scripts/.verify-*
 audit-manual-review*.json
+
+# Local tool state / demo output
+.serena/
+demo-output/
