@@ -25,7 +25,8 @@ fn resolve(app: &AppHandle, relative: &str) -> Result<PathBuf, String> {
 }
 
 fn e2e_app_data_root(app: &AppHandle) -> Result<PathBuf, String> {
-    if matches!(std::env::var("VERSIO_ACCEPTANCE"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
+    if matches!(std::env::var("VERSIO_ACCEPTANCE"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true"))
+    {
         if let Ok(path) = std::env::var("VERSIO_ACCEPTANCE_HOME") {
             let root = PathBuf::from(path);
             if root.is_absolute() {
@@ -33,7 +34,8 @@ fn e2e_app_data_root(app: &AppHandle) -> Result<PathBuf, String> {
             }
         }
     }
-    if matches!(std::env::var("VERSIO_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
+    if matches!(std::env::var("VERSIO_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true"))
+    {
         if let Ok(path) = std::env::var("VERSIO_UI_E2E_HOME") {
             let root = PathBuf::from(path);
             if root.is_absolute() {
@@ -181,10 +183,7 @@ fn resolve_export_destination(
 
 /// One save dialog that names the export folder itself (no parent-folder pick
 /// followed by an automatic nested directory).
-fn resolve_export_folder(
-    app: &AppHandle,
-    default_name: &str,
-) -> Result<Option<PathBuf>, String> {
+fn resolve_export_folder(app: &AppHandle, default_name: &str) -> Result<Option<PathBuf>, String> {
     if crate::source_pdf::ui_e2e_enabled() {
         Ok(Some(e2e_export_path(app, default_name)?))
     } else {
@@ -273,9 +272,7 @@ pub fn import_directory_to_app(
     }
     // Require backup.json at the root of the selection
     if !source.join("backup.json").is_file() {
-        return Err(
-            "backup.json が見つかりません。Versio Backup フォルダを選んでください".into(),
-        );
+        return Err("backup.json が見つかりません。Versio Backup フォルダを選んでください".into());
     }
     if dest.exists() {
         fs::remove_dir_all(&dest).map_err(|e| e.to_string())?;

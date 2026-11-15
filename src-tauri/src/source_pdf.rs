@@ -34,14 +34,16 @@ fn paper_dir(app: &AppHandle, paper_id: &str) -> Result<PathBuf, String> {
     if !is_safe_paper_id(paper_id) {
         return Err("無効な論文IDです".into());
     }
-    let root = if matches!(std::env::var("VERSIO_ACCEPTANCE"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
+    let root = if matches!(std::env::var("VERSIO_ACCEPTANCE"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true"))
+    {
         std::env::var("VERSIO_ACCEPTANCE_HOME")
             .ok()
             .map(PathBuf::from)
             .filter(|path| path.is_absolute())
             .or_else(|| app.path().app_data_dir().ok())
             .ok_or_else(|| "app data directory unavailable".to_string())?
-    } else if matches!(std::env::var("VERSIO_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
+    } else if matches!(std::env::var("VERSIO_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true"))
+    {
         std::env::var("VERSIO_UI_E2E_HOME")
             .ok()
             .map(PathBuf::from)

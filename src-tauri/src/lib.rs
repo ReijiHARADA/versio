@@ -1,8 +1,8 @@
 #[cfg(target_os = "macos")]
 mod legacy_data;
-mod ocr;
 #[cfg(target_os = "macos")]
 mod macos_chrome;
+mod ocr;
 mod paper_fs;
 mod source_pdf;
 
@@ -157,8 +157,14 @@ fn translate_with_apple(
     source_language: String,
     target_language: String,
 ) -> Result<String, String> {
-    let helper = app.path().resource_dir().map_err(|e| e.to_string())?.join("apple-translation");
-    if !helper.exists() { return Err("Apple Translation helper is not bundled".into()); }
+    let helper = app
+        .path()
+        .resource_dir()
+        .map_err(|e| e.to_string())?
+        .join("apple-translation");
+    if !helper.exists() {
+        return Err("Apple Translation helper is not bundled".into());
+    }
     let output = Command::new(helper)
         .arg(source_language)
         .arg(target_language)

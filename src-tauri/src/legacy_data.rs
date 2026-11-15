@@ -10,7 +10,9 @@ const LEGACY_IDENTIFIER: &str = "com.harada.paper-reader";
 const IDENTIFIER: &str = "com.harada.versio";
 
 pub fn migrate() {
-    let Some(home) = std::env::var_os("HOME") else { return };
+    let Some(home) = std::env::var_os("HOME") else {
+        return;
+    };
     let library = Path::new(&home).join("Library");
     for parent in ["Application Support", "WebKit"] {
         let base = library.join(parent);
@@ -22,7 +24,10 @@ pub fn migrate() {
             match copy_dir(&legacy, &staging).and_then(|_| fs::rename(&staging, &target)) {
                 Ok(()) => eprintln!("[legacy_data] migrated {}", legacy.display()),
                 Err(e) => {
-                    eprintln!("[legacy_data] migration of {} failed: {e}", legacy.display());
+                    eprintln!(
+                        "[legacy_data] migration of {} failed: {e}",
+                        legacy.display()
+                    );
                     let _ = fs::remove_dir_all(&staging);
                 }
             }
