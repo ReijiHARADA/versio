@@ -39,7 +39,7 @@ user-visible な現在状態だけを書く。日付つきの作業ログ・計�
 3. 長い本文 unit の translation quality failure。
 4. borderless table と flattened numeric rows の汎用抽出。
 5. 100 本規模の section-stratified sampling と manual semantic review が不足。
-6. 抽出コードに特定論文誌・機関向けの個別判定が残る（ROADMAP B1 の方針と不一致）。棚卸し中。
+6. 抽出コードの `formats/` 外に出版社・誌名別の判定が 66 行残る（ROADMAP B1 と不一致）。増加はテストで禁止済み、移行計画は [docs/EXTRACTION_SPECIAL_CASES.md](./docs/EXTRACTION_SPECIAL_CASES.md)。
 7. 元 PDF を開く操作・Vision OCR は macOS 以外未対応。
 
 ## 診断の入口
