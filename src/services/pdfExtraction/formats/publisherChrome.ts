@@ -23,9 +23,7 @@ export const isInstitutionalAuthorLine = (text: string) =>
 export const isBmcStructuredAbstractLead = (text: string) =>
   /^(?:introduction|background)\s*:?\s*$/i.test(text) && !/^\d+(?:\.\d+)*\s/.test(text);
 
-export const isBmjCiteRail = (text: string) =>
-  /\bbmj\s*open\b/i.test(text) || /\bbmjopen-\d/i.test(text) ||
-  (/^[a-z]/i.test(text) && /\b(?:bmj|doi:|protocol|review|diverse population)\b/i.test(text));
+export const isBmjCiteRail = (text: string) => /\b(?:bmj\s*open|doi:|10\.\d{4,}\/)/i.test(text);
 
 export const isFrontiersCitationLead = (text: string) =>
   /^[A-Z][\p{L}'’-]+(?:\s+[A-Z]{1,3})?(?:\s+(?:and|&)\s+[A-Z][\p{L}'’-]+(?:\s+[A-Z]{1,3})?){0,6}\s*\(\d{4}\)/u.exec(text);
@@ -57,8 +55,10 @@ export const isAcmClassificationKeywords = (text: string) => /^acm classificatio
 export const isPublisherCitationByline = (text: string) =>
   /\b(?:bmc|ieee|acm|plos|frontiers|nature|science|lancet|jama|bmj|nucleic|med\s+inform|decis\s+mak)\b/i.test(text);
 
-export const isPreprintLicenseNotice = (text: string) =>
-  /\bgranted (?:biorxiv|medrxiv) a license to display the preprint\b/i.test(text) ||
+export const isPreprintLicenseGrant = (text: string) =>
+  /\bgranted (?:biorxiv|medrxiv) a license to display the preprint\b/i.test(text);
+
+export const isPreprintMarker = (text: string) =>
   /^(?:preprint|medrxiv|biorxiv|chemrxiv|ssrn)\b/i.test(text.trim());
 
 export const isPublisherMasthead = (text: string) =>
@@ -74,11 +74,14 @@ export const isBmjAbstractCitation = (text: string) =>
   text.length <= 260 && /\bbmj\s*open\b/i.test(text) && (/\bdoi:\s*10\./i.test(text) || /^[a-z]/.test(text));
 
 export const isBmjAbstractContinuation = (text: string) =>
-  isBmjCiteRail(text) || (/\bdoi:\s*10\./i.test(text) && text.length <= 180);
+  /\bbmj\s*open\b/i.test(text) ||
+  (/\bdoi:\s*10\./i.test(text) && text.length <= 180) ||
+  (/^[a-z]/.test(text) && /\b(?:protocol|review|bmj|doi:)\b/i.test(text));
 
 export const isBmjAbstractChrome = (text: string) =>
   (text.length <= 280 &&
-    (isBmjCiteRail(text) ||
+    (/\bbmjopen-\d/i.test(text) ||
+      (/\bbmj\s*open\b/i.test(text) && /\b(?:doi:|e\d{5,})\b/i.test(text)) ||
       /\badditional supplemental material\b/i.test(text) ||
       (/^[a-z]/.test(text) && /\b(?:bmj|doi:|protocol on|diverse population)\b/i.test(text) &&
         text.split(/\s+/).length <= 24))) ||

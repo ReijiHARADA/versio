@@ -1667,11 +1667,11 @@ function demoteEarlyAccessBoilerplate(nodes: CanonicalNode[]): CanonicalNode[] {
         ...node.evidence,
         {
           source: "generic-heuristic" as const,
-          label: "early-access-boilerplate",
+          label: "nature-early-access-boilerplate",
           confidence: 0.9,
           page: node.pageStart,
           bbox: node.boundingBoxes[0],
-          reason: "early-access notice demoted from abstract",
+          reason: "Springer Nature early-access notice demoted from abstract",
         },
       ],
     };
@@ -1701,11 +1701,11 @@ function demotePageOneProseAffiliations(nodes: CanonicalNode[]): CanonicalNode[]
           ...node.evidence,
           {
             source: "generic-heuristic" as const,
-            label: "check-for-updates-demotion",
+            label: "nature-check-for-updates-demotion",
             confidence: 0.9,
             page: node.pageStart,
             bbox: node.boundingBoxes[0],
-            reason: "check-for-updates chrome demoted from affiliation",
+            reason: "Nature 'Check for updates' chrome demoted from affiliation",
           },
         ],
       };
@@ -4695,7 +4695,7 @@ export function resolveCanonicalDocument(input: {
         ...node.evidence,
         {
           source: "generic-heuristic" as const,
-          label: "publisher-author-chrome-demotion",
+          label: "bmj-author-chrome-demotion",
           confidence: 0.88,
           page: node.pageStart,
           bbox: node.boundingBoxes[0],

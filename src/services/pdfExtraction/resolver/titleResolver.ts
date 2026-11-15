@@ -342,7 +342,7 @@ function looksLikeCopyrightBoilerplate(text: string): boolean {
     /\blicense\s*\(\s*cc\s*by\b/i.test(t) ||
     // bioRxiv / medRxiv running license stamped as a title candidate.
     /\bwhich was not certified by peer review\b/i.test(t) ||
-    chrome.isPreprintLicenseNotice(t) ||
+    chrome.isPreprintLicenseGrant(t) ||
     /\bit is made available under a CC-BY\b/i.test(t) ||
     /^cc\s*by\b/i.test(t);
 }
@@ -1147,7 +1147,7 @@ function looksLikePreprintChromeMetadataTitle(text: string): boolean {
   // JMIR / server covers store `Preprint - 10.2196/preprints.94431` in PDF
   // metadata. That must not outrank a recovered native article title.
   return (
-    chrome.isPreprintLicenseNotice(t) ||
+    chrome.isPreprintMarker(t) ||
     /\bpreprints?\.\d+/i.test(t) ||
     /^(?:preprint|unpublished)\s*[-–—:]\s*10\.\d+/i.test(t)
   );
