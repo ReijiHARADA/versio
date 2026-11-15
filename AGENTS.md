@@ -46,6 +46,7 @@
 - Batching measurements: `translation-server/MPS_BATCH_OPTIMIZATION_REPORT.md`.
 - Do not run `update_python_env.sh` unless the pinned Python venv is broken. Prefer `.python-version` patch pin.
 - Restart the server with `./restart-translation-server.sh`.
+- The app-spawned server writes stdout/stderr to `~/Library/Logs/com.harada.versio/translation-server.log` (previous launch: `translation-server.prev.log`). Rust warnings/errors go to `Versio.log` in the same dir. Check these first when a packaged `.app` cannot translate.
 - Speed measurements and rejected alternatives live in `translation-server/SPEED_BENCH.md`.
 - MLX bf16 (unquantized official 3B) was measured in `translation-server/MLX_BF16_BENCH_REPORT.md`. Do not switch production to it: quality matches MPS, but it is not 1.5–2× faster than the batched MPS path.
 

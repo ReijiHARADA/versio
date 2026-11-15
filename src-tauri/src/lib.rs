@@ -84,6 +84,22 @@ fn find_python(server_dir: &std::path::Path) -> String {
     "python3".to_string()
 }
 
+const SERVER_LOG_FILE: &str = "translation-server.log";
+const SERVER_PREV_LOG_FILE: &str = "translation-server.prev.log";
+
+/// Per-launch translation server log in the app log dir
+/// (`~/Library/Logs/<identifier>/`). The previous launch is kept as one
+/// `.prev.log` generation so a crash report survives a relaunch.
+fn prepare_server_log(app: &tauri::AppHandle) -> Option<PathBuf> {
+    let dir = app.path().app_log_dir().ok()?;
+    std::fs::create_dir_all(&dir).ok()?;
+    let log = dir.join(SERVER_LOG_FILE);
+    if log.exists() {
+        let _ = std::fs::rename(&log, dir.join(SERVER_PREV_LOG_FILE));
+    }
+    Some(log)
+}
+
 fn spawn_server(app: &tauri::AppHandle, state: &ServerState) {
     let server_dir = resolve_server_dir(app);
     let python = find_python(&server_dir);
@@ -103,13 +119,22 @@ fn spawn_server(app: &tauri::AppHandle, state: &ServerState) {
         .current_dir(&server_dir)
         .env("PYTHONPATH", server_dir.as_os_str())
         .env("PYTORCH_ENABLE_MPS_FALLBACK", "1")
-        .env("MADLAD_SERVER_SILENCE_OUTPUT", "1")
         .env("MADLAD_SERVER_HOST", "127.0.0.1")
         .env("MADLAD_SERVER_PORT", "8765")
         .env("MADLAD_SERVER_TOKEN", &token)
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null());
+
+    match prepare_server_log(app) {
+        Some(log) => {
+            log::info!("Translation server log: {}", log.display());
+            command.env("MADLAD_SERVER_DEBUG_LOG", &log);
+        }
+        None => {
+            command.env("MADLAD_SERVER_SILENCE_OUTPUT", "1");
+        }
+    }
 
     if std::env::var("TRANSLATION_UNIT_DEBUG").unwrap_or_default() == "1" {
         let debug_log = "/tmp/versio-translation-server.log";
@@ -205,13 +230,15 @@ pub fn run() {
     tauri::Builder::default()
         .manage(server_state)
         .setup(|app| {
-            if cfg!(debug_assertions) {
-                app.handle().plugin(
-                    tauri_plugin_log::Builder::default()
-                        .level(log::LevelFilter::Info)
-                        .build(),
-                )?;
-            }
+            // Release keeps warnings and errors in the app log dir so a
+            // distributed `.app` failure can be diagnosed after the fact.
+            let level = if cfg!(debug_assertions) {
+                log::LevelFilter::Info
+            } else {
+                log::LevelFilter::Warn
+            };
+            app.handle()
+                .plugin(tauri_plugin_log::Builder::default().level(level).build())?;
 
             let handle = app.handle().clone();
             let state: State<ServerState> = app.state();
