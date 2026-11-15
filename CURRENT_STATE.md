@@ -2154,7 +2154,7 @@ The packaged UI harness now honors `VERSIO_UI_E2E_HOME` in the Rust app-data and
 - 新規OAサンプル: 16 papers / 16 blocks、10受理・6 fallback。1論文1ブロックの診断値で、製品fallback率ではない。
 - 114本を選択した fresh translation audit を完了（PDF取得済み113本、評価954 units。`precious-materials` はPDF未取得）。全体fallback 624/954 (65.4%)。ordinary-body は 111/360 (30.8%)で、目標5%を未達。内訳は pre-model 4、post-model 107（server/model 由来55、quality gate 32、extraction/structure 17、その他7）。これは現行の実測ベースラインであり、次の改善対象をモデル/品質ゲートと抽出境界に分離できた。
 - 追加fresh sample: 4 papers / 8 blocks、3受理・5 fallback。4件は抽出構造由来、1件は長い本文のpost-model品質拒否。
-- ordinary-body fallback 111件のsource/fallback段階/quality理由を [`translation-failure-triage-v1.json`](test-data/real-papers/reports/translation-failure-triage-v1.json) に固定。server/protection 55、quality-gate 43、extraction/structure 5、その他8（分類はtriage用で重複理由を含む）。
+- ordinary-body fallback 111件のsource/fallback段階/quality理由を [`translation-failure-triage-v1.json`](./test-data/real-papers/reports/translation-failure-triage-v1.json) に固定。server/protection 55、quality-gate 43、extraction/structure 5、その他8（分類はtriage用で重複理由を含む）。
 
 ## 直近の変更
 
@@ -2268,7 +2268,7 @@ The packaged UI harness now honors `VERSIO_UI_E2E_HOME` in the Rust app-data and
 - `quality.ts` の退化出力検出を `src/services/translation/quality/degeneration.ts` に分離。
 - `quality.ts` は既存のexport名・import pathをfacadeとして維持。品質閾値、fallback条件、モデル設定は変更していない。
 - 対象テスト 258/258、全体テスト 624/624、typecheck、`git diff --check` を通過。
-- 分割計画と残りの候補は [`docs/MAINTENANCE_REFACTOR_PLAN.md`](docs/MAINTENANCE_REFACTOR_PLAN.md) に記録。
+- 分割計画と残りの候補は [`docs/MAINTENANCE_REFACTOR_PLAN.md`](./docs/MAINTENANCE_REFACTOR_PLAN.md) に記録。
 
 
 - リスト導入文（コロン終端）を、直後の箇条書き・番号付き項目とは別の安全な翻訳単位として扱うよう改善。
