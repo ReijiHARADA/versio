@@ -16,17 +16,12 @@ export type FinalizeProjectionHelpers = {
   pickPublication: (metadataTitle: string | undefined) => string | null;
 };
 
-export function finalizePaperProjection(
+function projectTitleForFinalization(
   input: ProjectCanonicalToPaperInput,
-  frontMatter: FrontMatterProjection,
-  body: BodyProjection,
-  helpers: FinalizeProjectionHelpers,
-): PaperProjection {
-  const { splitReviewAffiliationStream, splitNumberedAffiliationParts, removeReviewerInstitutionPrefix, affiliationKey, recoverInitialedAuthorRow, isNonAuthorMastheadLine, looksLikeFrontiersReviewerCredit, expandAuthorLine, stripLetterspacedTitleBanner, pickPaperTitle, pickPublication } = helpers;
-  const { canonical, layoutBlocks, paperId } = input;
-  const { titleNode, firstBodyY, hasSidebarBody, authorsStructured, doiMatch } = frontMatter;
-  let { authorNames, affiliations } = frontMatter;
-  const { sections, blocks: splitReferenceEntries } = body;
+  titleNode: FrontMatterProjection["titleNode"],
+  stripLetterspacedTitleBanner: FinalizeProjectionHelpers["stripLetterspacedTitleBanner"],
+): string {
+  const { canonical } = input;
   // Nature "Article in Press" covers often emit a short title on page 1 while
   // the manuscript title lives on page 2. Prefer the later heading when the
   // cover is clearly an early-access wrapper.
@@ -114,11 +109,37 @@ export function finalizePaperProjection(
   // If the citation line is not bilingual or cannot be parsed, retain the
   // native title rather than dropping it and falling back to an unrelated
   // document metadata string.
-  const titleForProjection = stripLetterspacedTitleBanner(
+  return stripLetterspacedTitleBanner(
     titleLooksCorrupt
       ? (citationTitleFallback ?? extractedTitleText)
       : extractedTitleText,
   );
+}
+
+function finalizeBlocks(
+  input: ProjectCanonicalToPaperInput,
+  paper: Paper,
+  sections: BodyProjection["sections"],
+  splitReferenceEntries: BodyProjection["blocks"],
+): PaperProjection {
+  const reconciled = input.previousBlocks?.length
+    ? reconcileBlockIds(input.previousBlocks, splitReferenceEntries).blocks
+    : splitReferenceEntries;
+  const annotatedBlocks = reconciled.map((block) =>
+    block.translationStatus === "skipped"
+      ? { ...block, metadata: { ...block.metadata, translationOutcome: "structural_skip" } }
+      : block
+  );
+
+  return { paper, sections, blocks: annotatedBlocks };
+}
+
+function recoverEditorReviewerNames(
+  layoutBlocks: ProjectCanonicalToPaperInput["layoutBlocks"],
+  firstBodyY: number,
+  authorNames: string[],
+  isNonAuthorMastheadLine: FinalizeProjectionHelpers["isNonAuthorMastheadLine"],
+): string[] {
   if (layoutBlocks.some((block) => block.pageStart === 1 && /\b(?:edited|reviewed)\s+by\b/i.test(block.text))) {
     const lines = layoutBlocks.filter((block) => block.pageStart === 1).flatMap((block) => block.lines ?? [])
       .filter((line) => line.y >= 315 && line.y < Math.min(firstBodyY, 415) && line.fontSize >= 7.5 && line.fontSize <= 10.5)
@@ -155,6 +176,22 @@ export function finalizePaperProjection(
       if (!authorNames.some((existing) => existing.toLocaleLowerCase() === normalized.toLocaleLowerCase())) authorNames.push(normalized);
     }
   }
+  return authorNames;
+}
+
+export function finalizePaperProjection(
+  input: ProjectCanonicalToPaperInput,
+  frontMatter: FrontMatterProjection,
+  body: BodyProjection,
+  helpers: FinalizeProjectionHelpers,
+): PaperProjection {
+  const { splitReviewAffiliationStream, splitNumberedAffiliationParts, removeReviewerInstitutionPrefix, affiliationKey, recoverInitialedAuthorRow, isNonAuthorMastheadLine, looksLikeFrontiersReviewerCredit, expandAuthorLine, stripLetterspacedTitleBanner, pickPaperTitle, pickPublication } = helpers;
+  const { canonical, layoutBlocks, paperId } = input;
+  const { titleNode, firstBodyY, hasSidebarBody, authorsStructured, doiMatch } = frontMatter;
+  let { authorNames, affiliations } = frontMatter;
+  const { sections, blocks: splitReferenceEntries } = body;
+  const titleForProjection = projectTitleForFinalization(input, titleNode, stripLetterspacedTitleBanner);
+  authorNames = recoverEditorReviewerNames(layoutBlocks, firstBodyY, authorNames, isNonAuthorMastheadLine);
   // A numbered affiliation stream can still survive geometry grouping as one
   // long value. Split only at explicit institution markers and deduplicate
   // exact/contained repeats (for example one research center emitted once per
@@ -418,14 +455,5 @@ export function finalizePaperProjection(
     updatedAt: new Date().toISOString(),
   };
 
-  const reconciled = input.previousBlocks?.length
-    ? reconcileBlockIds(input.previousBlocks, splitReferenceEntries).blocks
-    : splitReferenceEntries;
-  const annotatedBlocks = reconciled.map((block) =>
-    block.translationStatus === "skipped"
-      ? { ...block, metadata: { ...block.metadata, translationOutcome: "structural_skip" } }
-      : block
-  );
-
-  return { paper, sections, blocks: annotatedBlocks };
+  return finalizeBlocks(input, paper, sections, splitReferenceEntries);
 }
