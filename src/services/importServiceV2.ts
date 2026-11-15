@@ -64,7 +64,7 @@ import {
   resolveImportConfig,
   usableCachedJa,
 } from "./import/helpers";
-import { activeImportPaperIds } from "./import/session";
+import { acquireImportHash, activeImportPaperIds } from "./import/session";
 import type { ImportCallbacks, ImportConfig } from "./import/types";
 import { ImportCancelledError, throwIfImportAborted } from "./import/cancellation";
 import { createPresentationDemoProjection } from "./presentationDemo";
@@ -98,6 +98,7 @@ export async function importPDFV2(
   const cfg = resolveImportConfig(config);
   const paperId = uuidv4();
   activeImportPaperIds.add(paperId);
+  let releaseImportHash: (() => void) | undefined;
 
   const {
     engine: translationEngine,
@@ -117,6 +118,11 @@ export async function importPDFV2(
     throwIfImportAborted(callbacks.signal, { paperId, partialReady: false });
 
     const fileHash = await computeFileHash(file);
+    throwIfImportAborted(callbacks.signal, { paperId, partialReady: false });
+
+    // Same PDF dropped twice: wait for the first import to publish its paper,
+    // then the duplicate check below reports "already imported".
+    releaseImportHash = await acquireImportHash(fileHash);
     throwIfImportAborted(callbacks.signal, { paperId, partialReady: false });
 
     const { findDuplicatePaper } = await import("./import/duplicate");
@@ -238,6 +244,7 @@ export async function importPDFV2(
     // Make the paper discoverable only after the complete package swap above.
     paper.sourceFileHash = finalSourceHash;
     await savePaper(paper);
+    releaseImportHash();
     // Cache only after the index is final. Calling savePaper with a populated
     // cache schedules another full write, which would defeat the atomic import
     // transaction above and reintroduce a transient package state.
@@ -744,6 +751,7 @@ export async function importPDFV2(
     });
     return null;
   } finally {
+    releaseImportHash?.();
     translationManager.detach(paperId);
     activeImportPaperIds.delete(paperId);
   }
