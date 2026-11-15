@@ -2801,69 +2801,7 @@ function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterPro
   }
   const reviewLabel = canonical.nodes.filter((node) => node.pageStart === 1 &&
     /^(?:edited|reviewed)\s+by\s*:/i.test(node.text?.trim() ?? "")).at(-1);
-  if (reviewLabel) {
-    const reviewY = reviewLabel.boundingBoxes[0]?.y ?? Infinity;
-    const reviewCandidates = canonical.nodes
-      .filter((node) => {
-        const box = node.boundingBoxes[0];
-        const x = box?.x ?? Infinity;
-        const y = box?.y ?? Infinity;
-        const text = node.text ?? "";
-        const likelyReviewerAffiliation = x < 100 && y > reviewY + 35 && text.length < 100 &&
-          /,\s*(?:United States|United Kingdom|Canada|Australia|Brazil|Japan|China|Germany|France|Italy|Spain|Netherlands)\s*$/i.test(text.trim());
-        return node.pageStart === 1 && node.role === "affiliation" && y < 430 &&
-          !likelyReviewerAffiliation &&
-          ((x >= 140 && x <= 310) || (x < 100 && y > reviewY)) &&
-          /\b(?:university|department|school|faculty|college|hospital|centre|center|institute|laboratory|research)\b/i.test(node.text ?? "");
-      })
-      .sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0) ||
-        (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0));
-    const existingLaboratoryCandidates = affiliations
-      .filter((item) => /\blaboratory\b/i.test(item.name))
-      .map((item) => removeReviewerInstitutionPrefix(item.name));
-    const reviewerInstitutionFragments = [...existingLaboratoryCandidates, ...reviewCandidates.map((node) => node.text ?? "")].flatMap((name) => {
-      const fragment = name.match(/\bNIH\b[\s\S]*?(?=\s+(?:Applied|Laboratory|National|Department|School|Faculty)\b|$)/i)?.[0]?.trim();
-      return fragment ? [fragment] : [];
-    });
-    const normalizedCandidates = [...existingLaboratoryCandidates, ...reviewerInstitutionFragments, ...reviewCandidates.map((node) => {
-      const raw = node.text ?? "";
-      const start = raw.search(/\b(?:department|school|faculty|college|hospital|centre|center|institute|laboratory|research|university)\b/i);
-      if (start <= 0) return normalizeAffiliationName(raw);
-      const before = raw.slice(0, start);
-      const afterComma = before.lastIndexOf(",");
-      // A comma before the institution usually belongs to an interleaved
-      // author row; discard that prefix. Without a comma, retain up to two
-      // title-case words (for example `NIH Biomedical Research Center`).
-      const prefix = afterComma >= 0 ? "" : before;
-      const prefixWords = prefix.trim().split(/\s+/).filter(Boolean).slice(-2).join(" ");
-      const normalized = normalizeAffiliationName(`${prefixWords} ${raw.slice(start)}`.trim());
-      return removeReviewerInstitutionPrefix(normalized);
-    })].filter((name) => name.length >= 20);
-    const continuation = normalizedCandidates.find((name) => /^University\s+of\s+/i.test(name) && name.length < 100);
-    const rebuilt = normalizedCandidates.filter((name) => name !== continuation);
-    if (continuation) {
-      for (let index = 0; index < rebuilt.length; index += 1) {
-        if (/(?:\bUniversity of|\bPhysical)$/i.test(rebuilt[index])) {
-          const tail = /\bUniversity\s+of$/i.test(rebuilt[index])
-            ? continuation.replace(/^University\s+of\s+/i, "")
-            : continuation;
-          rebuilt[index] = normalizeAffiliationName(`${rebuilt[index]} ${tail}`);
-        }
-      }
-    }
-    const withoutAggregates = rebuilt.filter((name, _index, all) => {
-      if (name.length <= 180) return true;
-      const key = affiliationKey(name);
-      return all.filter((candidate) => candidate !== name && candidate.length >= 24 &&
-        key.includes(affiliationKey(candidate))).length < 2;
-    });
-    const unique = withoutAggregates.filter((name, index, all) =>
-      all.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase() ||
-        candidate.toLocaleLowerCase().includes(name.toLocaleLowerCase()) && candidate.length >= name.length) === index);
-    if (unique.length >= 3 && unique.length <= 6) {
-      affiliations = unique.map((name, index) => ({ id: `review-masthead-affiliation-${index}`, name }));
-    }
-  }
+  affiliations = applyReviewLabelAffiliations(reviewLabel, canonical, affiliations);
   const editorReviewCreditNames = new Set(
     canonical.nodes
       .map((node) => node.text ?? "")
@@ -2980,50 +2918,7 @@ function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterPro
   // Drop names that are only Frontiers EDITED/REVIEWED sidebar credits
   // (`Marco Carotenuto` / `Soumia Ikiss,`). Keep *CORRESPONDENCE rows
   // (`Filip Stefanovic,`) even when a REVIEWED BY label sits higher up.
-  {
-    const earlyReviewEditYs = canonical.nodes
-      .filter(
-        (node) =>
-          node.pageStart === 1 &&
-          /^(?:edited|reviewed)\s+by\b/i.test((node.text ?? "").trim()),
-      )
-      .map((node) => node.boundingBoxes[0]?.y ?? -Infinity);
-    const correspondenceYs = canonical.nodes
-      .filter(
-        (node) =>
-          node.pageStart === 1 &&
-          /^\*?correspondence\b/i.test((node.text ?? "").trim()),
-      )
-      .map((node) => node.boundingBoxes[0]?.y ?? -Infinity);
-    authorNames = authorNames.filter((name) => {
-      const head = name.replace(/,.*/, "").trim().toLocaleLowerCase();
-      if (!head || head.length < 5) return true;
-      return !canonical.nodes.some((node) => {
-        if (node.pageStart !== 1 || !node.text) return false;
-        const text = node.text.replace(/\s+/g, " ").trim();
-        if (looksLikeFrontiersReviewerCredit(text)) {
-          return text.toLocaleLowerCase().startsWith(head);
-        }
-        const y = node.boundingBoxes[0]?.y ?? Infinity;
-        const underCorrespondence = correspondenceYs.some(
-          (labelY) => labelY < y && y - labelY < 45,
-        );
-        if (underCorrespondence) return false;
-        const underReviewEdit = earlyReviewEditYs.some(
-          (labelY) => labelY < y && y - labelY < 55,
-        );
-        return (
-          underReviewEdit &&
-          (node.role === "copyright" || node.role === "paragraph") &&
-          text.length <= 48 &&
-          /,\s*$/.test(text) &&
-          text.toLocaleLowerCase().startsWith(head) &&
-          !/\band\b/i.test(text) &&
-          (node.boundingBoxes[0]?.x ?? 999) < 160
-        );
-      });
-    });
-  }
+  authorNames = dropFrontiersSidebarCreditNames(canonical, authorNames);
   frontMatterState.authorNames = authorNames;
   recoverBodyBylines(
     frontMatterState,
@@ -3045,6 +2940,150 @@ function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterPro
         /^\d+\s+\p{L}/u.test(name) ||
         /\b(?:university|corporation|department|institute|united states of america)\b/i.test(name),
     );
+  authorNames = recoverAuthorsFromBodyBand(authorNames, authorNamesAreChromeOnly, canonical, firstBodyY, authorBandY);
+  // Nature "Article in Press" covers and page-2 manuscript bylines
+  // (`Ahmed A. Radhi & Abdullahi A. Ibrahim` / `Name 1,2*, Name 1`).
+  recoverNatureCoverBylines(authorNames, canonical);
+  // English byline projected from a bilingual Russian table cell
+  // (`Butkovskaya Galina` / `Statkus Anna`). Only when the page also carries
+  // Cyrillic masthead text — otherwise `Palo Alto,` / `National Education,`
+  // false-positives steal the empty-author recovery slot.
+  if (
+    authorNames.length === 0 &&
+    canonical.nodes.some(
+      (node) => node.pageStart === 1 && /[\u0400-\u04ff]{3,}/.test(node.text ?? ""),
+    )
+  ) {
+    const latinFromTable = canonical.nodes
+      .filter((node) => node.pageStart === 1 && node.text && (node.role === "table" || node.role === "paragraph" || node.role === "other"))
+      .flatMap((node) => {
+        const matches = node.text!.match(
+          /\b([A-Z][a-z'’-]+(?:\s+[A-Z][a-z'’-]+){1,3})\b(?=\s*(?:Candidate of|e-mail|ORCID))/g,
+        );
+        return matches ?? [];
+      })
+      .map((name) => name.replace(/\s+/g, " ").trim())
+      .filter(
+        (name) =>
+          name.split(/\s+/).length >= 2 &&
+          name.split(/\s+/).length <= 4 &&
+          !isNonAuthorMastheadLine(name) &&
+          !/\b(?:University|Management|Moscow|Russia|Digital|Marketing|Consumer|Economic|Sciences|Candidate|National|Education|Services|Palo|Alto)\b/i.test(
+            name,
+          ),
+      );
+    for (const name of latinFromTable) {
+      if (!authorNames.some((existing) => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+        authorNames.push(name);
+      }
+    }
+  }
+  // Frontiers / corresponding-author rows can glue onto the abstract lead
+  // (`Name1, Name2 and Name3* While student-AI…` / `Fabien Lotte1,2 Deep learning…`).
+  // Peel even when other masthead authors already projected so the glued name
+  // is not lost and abstract prose stays clean.
+  for (const glued of canonical.nodes) {
+    if (glued.role !== "abstract" || glued.pageStart !== 1 || !glued.text) continue;
+    const trimmed = glued.text.replace(/\s+/g, " ").trim();
+    const multi = trimmed.match(
+      /^(.+?\d[*†‡§✉]*)\s+((?:While|This|We|The|In|Deep)\b[\s\S]+)$/u,
+    );
+    const single = trimmed.match(
+      /^([A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’.%-]+){1,4}\s*\d+(?:,\d+)*[*†‡§✉]*)\s+([A-Z][a-z]{3,}[\s\S]+)$/u,
+    );
+    const match = multi ?? single;
+    if (!match) continue;
+    const recovered = expandAuthorLine(match[1]!);
+    let added = 0;
+    for (const name of recovered) {
+      const normalized = name.replace(/^and\s+/i, "").replace(/[,;]+$/, "").trim();
+      if (
+        normalized.split(/\s+/).length >= 2 &&
+        normalized.split(/\s+/).length <= 6 &&
+        !isNonAuthorMastheadLine(normalized) &&
+        !authorNames.some((existing) => existing.toLocaleLowerCase() === normalized.toLocaleLowerCase())
+      ) {
+        authorNames.push(normalized);
+        added += 1;
+      }
+    }
+    if (added > 0 || multi) {
+      glued.text = match[2]!.trim();
+    }
+  }
+  // When the native PDF flattened a complete author/affiliation masthead into
+  // affiliation nodes, recover the names and clean institution tails for the
+  // public projection. Keep canonical nodes untouched so resolver evidence and
+  // source traceability remain available.
+  // Topic / book-title crumbs (`Evolution of Human Factors`) can occupy the
+  // author slot and block single-author report recovery — drop them first.
+  authorNames = authorNames.filter(
+    (name) =>
+      !/\b(?:human factors|ergonomics|evolution of|research book title)\b/i.test(name) &&
+      // Equal-contribution / abstract-band crumbs (`Lee, and Sumin Jeong have Abstract`).
+      !/\bhave\s+abstract\b/i.test(name) &&
+      !/^(?:S\s+O\s+F\s+T(?:\s+W\s+A\s+R\s+E)?|SOFTWARE)\b/i.test(name) &&
+      // Title / journal crumbs that land in the author slot.
+      !/\btransfers from abstract\b/i.test(name) &&
+      !/^(?:population health|optic flow)\b/i.test(name) &&
+      !/^Front\.\s*[A-Za-z]/i.test(name) &&
+      // Figure labels / process diagrams mistaken for people.
+      !/^(?:diagram|figure|fig\.?|table)\b/i.test(name) &&
+      !isNonAuthorMastheadLine(name),
+  );
+  // PLOS / mega-author covers overflow the byline into a separate abstract-role
+  // node (`Jetse Goris5, Anne H. Hoekman 6, …`) while the true abstract follows.
+  // Recover those names even when the first author band already projected.
+  recoverOverflowBylineNames(canonical, authorNames);
+  // Drop institution crumbs that overflow recovery may have peeled.
+  authorNames = authorNames.filter(
+    (name) =>
+      !/\b(?:university|hospital|institute|department|centre|center|netherlands|clinical genetics|machine teaming|bernoulli)\b/i.test(
+        name,
+      ) && !isNonAuthorMastheadLine(name),
+  );
+  recoverAuthorsAndAffiliationsFallback(authorNames, canonical, affiliations);
+  // Prefer a labelled page-1 DOI, then any page-1 article DOI, and only then
+  // a later-page match. Drop figure/table suffixes (`.g001`) and trailing
+  // punctuation so citation chrome does not win over the article id.
+  const doiPattern = /(?:doi\s*:?\s*)?(?:https?:\/\/(?:dx\.)?doi\.org\/)?(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)/gi;
+  const normalizeDoi = (raw: string): string =>
+    raw.replace(/[.,;:]+$/g, "").replace(/\.(?:g|t|fig|table)\d+$/i, "");
+  const pageOneTexts = canonical.nodes
+    .filter((node) => node.pageStart === 1)
+    .map((node) => node.text ?? "");
+  const collectDois = (texts: string[]): string[] => {
+    const found: string[] = [];
+    for (const text of texts) {
+      for (const match of text.matchAll(doiPattern)) {
+        const normalized = normalizeDoi(match[1] ?? "");
+        if (normalized && !found.includes(normalized)) found.push(normalized);
+      }
+    }
+    return found;
+  };
+  const labelledDois = (texts: string[]): string[] =>
+    texts
+      .flatMap((text) => [...text.matchAll(/(?:doi|https?:\/\/(?:dx\.)?doi\.org)\s*:?\s*(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)/gi)])
+      .map((match) => normalizeDoi(match[1] ?? ""))
+      .filter(Boolean);
+  const labelledPageOne = labelledDois(pageOneTexts);
+  const pageOneDois = collectDois(pageOneTexts);
+  // Page-1 only. Later-page `doi:` hits are almost always bibliography
+  // entries, including labelled ones (`doi: 10.1016/j.ijmedinf…`).
+  const doiMatch = labelledPageOne[0] ?? pageOneDois[0] ?? null;
+
+
+  return { titleNode, firstBodyY, hasSidebarBody, authorNames, authorsStructured, affiliations, doiMatch };
+}
+
+function recoverAuthorsFromBodyBand(
+  authorNames: string[],
+  authorNamesAreChromeOnly: boolean,
+  canonical: CanonicalDocument,
+  firstBodyY: number,
+  authorBandY: number,
+): string[] {
   if (authorNames.length === 0 || authorNamesAreChromeOnly) {
     if (authorNamesAreChromeOnly) authorNames = [];
     // Repository catalog line: `Author: Friswell, Rena Publication Date: 2013`.
@@ -3364,206 +3403,14 @@ function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterPro
       }
     }
   }
-  // Nature "Article in Press" covers and page-2 manuscript bylines
-  // (`Ahmed A. Radhi & Abdullahi A. Ibrahim` / `Name 1,2*, Name 1`).
-  if (authorNames.length === 0) {
-    const earlyAccessBylines = canonical.nodes
-      .filter(
-        (node) =>
-          node.pageStart <= 2 &&
-          node.text &&
-          (node.role === "paragraph" || node.role === "other" || node.role === "author") &&
-          (node.text?.length ?? 0) <= 160 &&
-          !/^(?:open access|article in press|we are providing|cite this article)\b/i.test(
-            node.text.trim(),
-          ),
-      )
-      .flatMap((node) => {
-        let text = node.text!.replace(/\s+/g, " ").trim();
-        if (/^cite this article as:\s*/i.test(text)) {
-          text = text
-            .replace(/^cite this article as:\s*/i, "")
-            .split(/\.\s+[A-Z]/)[0]
-            ?.replace(/\s+/g, " ")
-            .trim() ?? "";
-          // `Radhi A.A. & Ibrahim A.A.` → expand via Last, I. if needed later.
-          const apa = [...text.matchAll(/([A-Z][\p{L}'’-]+)\s+((?:[A-Z]\.){1,3})/gu)].map(
-            (m) => `${m[2]!.replace(/\./g, " ").trim()} ${m[1]}`.replace(/\s+/g, " ").trim(),
-          );
-          if (apa.length >= 2) return apa;
-        }
-        if (!/^(?:[A-Z][\p{L}'’-]+)/u.test(text)) return [];
-        if (!/(?:\s+&\s+|\d)/.test(text)) return [];
-        if (/\b(?:university|department|institute|faculty|licensed|creativecommons)\b/i.test(text)) {
-          return [];
-        }
-        return expandAuthorLine(text.replace(/\s+&\s+/g, ", "));
-      })
-      .map((name) =>
-        name
-          .replace(/[*†‡§]/g, " ")
-          .replace(/\d+(?:[,\d]*)?/g, " ")
-          .replace(/^(?:and|&)\s+/i, "")
-          .replace(/[,;]+$/g, "")
-          .replace(/\s+/g, " ")
-          .trim(),
-      )
-      .filter(
-        (name) =>
-          name.split(/\s+/).length >= 2 &&
-          name.split(/\s+/).length <= 5 &&
-          /^[A-Z][\p{L}'’. -]+$/u.test(name) &&
-          !isNonAuthorMastheadLine(name),
-      );
-    for (const name of earlyAccessBylines) {
-      if (!authorNames.some((existing) => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
-        authorNames.push(name);
-      }
-    }
-  }
-  // English byline projected from a bilingual Russian table cell
-  // (`Butkovskaya Galina` / `Statkus Anna`). Only when the page also carries
-  // Cyrillic masthead text — otherwise `Palo Alto,` / `National Education,`
-  // false-positives steal the empty-author recovery slot.
-  if (
-    authorNames.length === 0 &&
-    canonical.nodes.some(
-      (node) => node.pageStart === 1 && /[\u0400-\u04ff]{3,}/.test(node.text ?? ""),
-    )
-  ) {
-    const latinFromTable = canonical.nodes
-      .filter((node) => node.pageStart === 1 && node.text && (node.role === "table" || node.role === "paragraph" || node.role === "other"))
-      .flatMap((node) => {
-        const matches = node.text!.match(
-          /\b([A-Z][a-z'’-]+(?:\s+[A-Z][a-z'’-]+){1,3})\b(?=\s*(?:Candidate of|e-mail|ORCID))/g,
-        );
-        return matches ?? [];
-      })
-      .map((name) => name.replace(/\s+/g, " ").trim())
-      .filter(
-        (name) =>
-          name.split(/\s+/).length >= 2 &&
-          name.split(/\s+/).length <= 4 &&
-          !isNonAuthorMastheadLine(name) &&
-          !/\b(?:University|Management|Moscow|Russia|Digital|Marketing|Consumer|Economic|Sciences|Candidate|National|Education|Services|Palo|Alto)\b/i.test(
-            name,
-          ),
-      );
-    for (const name of latinFromTable) {
-      if (!authorNames.some((existing) => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
-        authorNames.push(name);
-      }
-    }
-  }
-  // Frontiers / corresponding-author rows can glue onto the abstract lead
-  // (`Name1, Name2 and Name3* While student-AI…` / `Fabien Lotte1,2 Deep learning…`).
-  // Peel even when other masthead authors already projected so the glued name
-  // is not lost and abstract prose stays clean.
-  for (const glued of canonical.nodes) {
-    if (glued.role !== "abstract" || glued.pageStart !== 1 || !glued.text) continue;
-    const trimmed = glued.text.replace(/\s+/g, " ").trim();
-    const multi = trimmed.match(
-      /^(.+?\d[*†‡§✉]*)\s+((?:While|This|We|The|In|Deep)\b[\s\S]+)$/u,
-    );
-    const single = trimmed.match(
-      /^([A-Z][\p{L}'’-]+(?:\s+[A-Z][\p{L}'’.%-]+){1,4}\s*\d+(?:,\d+)*[*†‡§✉]*)\s+([A-Z][a-z]{3,}[\s\S]+)$/u,
-    );
-    const match = multi ?? single;
-    if (!match) continue;
-    const recovered = expandAuthorLine(match[1]!);
-    let added = 0;
-    for (const name of recovered) {
-      const normalized = name.replace(/^and\s+/i, "").replace(/[,;]+$/, "").trim();
-      if (
-        normalized.split(/\s+/).length >= 2 &&
-        normalized.split(/\s+/).length <= 6 &&
-        !isNonAuthorMastheadLine(normalized) &&
-        !authorNames.some((existing) => existing.toLocaleLowerCase() === normalized.toLocaleLowerCase())
-      ) {
-        authorNames.push(normalized);
-        added += 1;
-      }
-    }
-    if (added > 0 || multi) {
-      glued.text = match[2]!.trim();
-    }
-  }
-  // When the native PDF flattened a complete author/affiliation masthead into
-  // affiliation nodes, recover the names and clean institution tails for the
-  // public projection. Keep canonical nodes untouched so resolver evidence and
-  // source traceability remain available.
-  // Topic / book-title crumbs (`Evolution of Human Factors`) can occupy the
-  // author slot and block single-author report recovery — drop them first.
-  authorNames = authorNames.filter(
-    (name) =>
-      !/\b(?:human factors|ergonomics|evolution of|research book title)\b/i.test(name) &&
-      // Equal-contribution / abstract-band crumbs (`Lee, and Sumin Jeong have Abstract`).
-      !/\bhave\s+abstract\b/i.test(name) &&
-      !/^(?:S\s+O\s+F\s+T(?:\s+W\s+A\s+R\s+E)?|SOFTWARE)\b/i.test(name) &&
-      // Title / journal crumbs that land in the author slot.
-      !/\btransfers from abstract\b/i.test(name) &&
-      !/^(?:population health|optic flow)\b/i.test(name) &&
-      !/^Front\.\s*[A-Za-z]/i.test(name) &&
-      // Figure labels / process diagrams mistaken for people.
-      !/^(?:diagram|figure|fig\.?|table)\b/i.test(name) &&
-      !isNonAuthorMastheadLine(name),
-  );
-  // PLOS / mega-author covers overflow the byline into a separate abstract-role
-  // node (`Jetse Goris5, Anne H. Hoekman 6, …`) while the true abstract follows.
-  // Recover those names even when the first author band already projected.
-  for (const node of canonical.nodes) {
-    if (node.role !== "abstract" || node.pageStart !== 1 || !node.text) continue;
-    const text = node.text.replace(/\s+/g, " ").trim();
-    const commas = (text.match(/,/g) ?? []).length;
-    if (commas < 3 || text.length < 40 || text.length > 900) continue;
-    if (!/^[A-Z][\p{L}'’-]+.+\d/u.test(text)) continue;
-    // Real abstract prose stays; overflow bylines are name+digit lists.
-    if (
-      /\b(?:this study|artificial intelligence|background|methods?:|results?:|conclusions?:|the purpose|we (?:present|propose|investigate))\b/i.test(
-        text,
-      )
-    ) {
-      continue;
-    }
-    if ((text.match(/\d/g) ?? []).length < 3) continue;
-    const recovered = expandAuthorLine(text)
-      .map((name) => name.replace(/^and\s+/i, "").replace(/[,;]+$/, "").trim())
-      .filter(
-        (name) =>
-          name.split(/\s+/).length >= 2 &&
-          name.split(/\s+/).length <= 6 &&
-          !isNonAuthorMastheadLine(name) &&
-          !/\b(?:university|hospital|institute|department|centre|center|netherlands|clinical genetics|machine teaming)\b/i.test(
-            name,
-          ),
-      );
-    if (recovered.length < 2) continue;
-    for (const name of recovered) {
-      if (!authorNames.some((existing) => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
-        authorNames.push(name);
-      }
-    }
-    node.role = "other";
-    node.confidence = Math.min(node.confidence, 0.4);
-    node.evidence = [
-      ...node.evidence,
-      {
-        source: "generic-heuristic" as const,
-        label: "abstract-byline-overflow-recovery",
-        confidence: 0.9,
-        page: node.pageStart,
-        bbox: node.boundingBoxes[0],
-        reason: "mega-author byline overflow demoted from abstract",
-      },
-    ];
-  }
-  // Drop institution crumbs that overflow recovery may have peeled.
-  authorNames = authorNames.filter(
-    (name) =>
-      !/\b(?:university|hospital|institute|department|centre|center|netherlands|clinical genetics|machine teaming|bernoulli)\b/i.test(
-        name,
-      ) && !isNonAuthorMastheadLine(name),
-  );
+  return authorNames;
+}
+
+function recoverAuthorsAndAffiliationsFallback(
+  authorNames: string[],
+  canonical: CanonicalDocument,
+  affiliations: { id: string; name: string; }[],
+): void {
   if (authorNames.length === 0) {
     // A few report/book templates flatten a single author, role, and
     // institution into one affiliation node (for example
@@ -3658,39 +3505,243 @@ function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterPro
       }
     }
   }
-  // Prefer a labelled page-1 DOI, then any page-1 article DOI, and only then
-  // a later-page match. Drop figure/table suffixes (`.g001`) and trailing
-  // punctuation so citation chrome does not win over the article id.
-  const doiPattern = /(?:doi\s*:?\s*)?(?:https?:\/\/(?:dx\.)?doi\.org\/)?(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)/gi;
-  const normalizeDoi = (raw: string): string =>
-    raw.replace(/[.,;:]+$/g, "").replace(/\.(?:g|t|fig|table)\d+$/i, "");
-  const pageOneTexts = canonical.nodes
-    .filter((node) => node.pageStart === 1)
-    .map((node) => node.text ?? "");
-  const collectDois = (texts: string[]): string[] => {
-    const found: string[] = [];
-    for (const text of texts) {
-      for (const match of text.matchAll(doiPattern)) {
-        const normalized = normalizeDoi(match[1] ?? "");
-        if (normalized && !found.includes(normalized)) found.push(normalized);
+}
+
+function recoverNatureCoverBylines(
+  authorNames: string[],
+  canonical: CanonicalDocument,
+): void {
+  if (authorNames.length === 0) {
+    const earlyAccessBylines = canonical.nodes
+      .filter(
+        (node) =>
+          node.pageStart <= 2 &&
+          node.text &&
+          (node.role === "paragraph" || node.role === "other" || node.role === "author") &&
+          (node.text?.length ?? 0) <= 160 &&
+          !/^(?:open access|article in press|we are providing|cite this article)\b/i.test(
+            node.text.trim(),
+          ),
+      )
+      .flatMap((node) => {
+        let text = node.text!.replace(/\s+/g, " ").trim();
+        if (/^cite this article as:\s*/i.test(text)) {
+          text = text
+            .replace(/^cite this article as:\s*/i, "")
+            .split(/\.\s+[A-Z]/)[0]
+            ?.replace(/\s+/g, " ")
+            .trim() ?? "";
+          // `Radhi A.A. & Ibrahim A.A.` → expand via Last, I. if needed later.
+          const apa = [...text.matchAll(/([A-Z][\p{L}'’-]+)\s+((?:[A-Z]\.){1,3})/gu)].map(
+            (m) => `${m[2]!.replace(/\./g, " ").trim()} ${m[1]}`.replace(/\s+/g, " ").trim(),
+          );
+          if (apa.length >= 2) return apa;
+        }
+        if (!/^(?:[A-Z][\p{L}'’-]+)/u.test(text)) return [];
+        if (!/(?:\s+&\s+|\d)/.test(text)) return [];
+        if (/\b(?:university|department|institute|faculty|licensed|creativecommons)\b/i.test(text)) {
+          return [];
+        }
+        return expandAuthorLine(text.replace(/\s+&\s+/g, ", "));
+      })
+      .map((name) =>
+        name
+          .replace(/[*†‡§]/g, " ")
+          .replace(/\d+(?:[,\d]*)?/g, " ")
+          .replace(/^(?:and|&)\s+/i, "")
+          .replace(/[,;]+$/g, "")
+          .replace(/\s+/g, " ")
+          .trim(),
+      )
+      .filter(
+        (name) =>
+          name.split(/\s+/).length >= 2 &&
+          name.split(/\s+/).length <= 5 &&
+          /^[A-Z][\p{L}'’. -]+$/u.test(name) &&
+          !isNonAuthorMastheadLine(name),
+      );
+    for (const name of earlyAccessBylines) {
+      if (!authorNames.some((existing) => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+        authorNames.push(name);
       }
     }
-    return found;
-  };
-  const labelledDois = (texts: string[]): string[] =>
-    texts
-      .flatMap((text) => [...text.matchAll(/(?:doi|https?:\/\/(?:dx\.)?doi\.org)\s*:?\s*(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)/gi)])
-      .map((match) => normalizeDoi(match[1] ?? ""))
-      .filter(Boolean);
-  const labelledPageOne = labelledDois(pageOneTexts);
-  const pageOneDois = collectDois(pageOneTexts);
-  // Page-1 only. Later-page `doi:` hits are almost always bibliography
-  // entries, including labelled ones (`doi: 10.1016/j.ijmedinf…`).
-  const doiMatch = labelledPageOne[0] ?? pageOneDois[0] ?? null;
-
-
-  return { titleNode, firstBodyY, hasSidebarBody, authorNames, authorsStructured, affiliations, doiMatch };
+  }
 }
+
+function recoverOverflowBylineNames(
+  canonical: CanonicalDocument,
+  authorNames: string[],
+): void {
+  for (const node of canonical.nodes) {
+    if (node.role !== "abstract" || node.pageStart !== 1 || !node.text) continue;
+    const text = node.text.replace(/\s+/g, " ").trim();
+    const commas = (text.match(/,/g) ?? []).length;
+    if (commas < 3 || text.length < 40 || text.length > 900) continue;
+    if (!/^[A-Z][\p{L}'’-]+.+\d/u.test(text)) continue;
+    // Real abstract prose stays; overflow bylines are name+digit lists.
+    if (
+      /\b(?:this study|artificial intelligence|background|methods?:|results?:|conclusions?:|the purpose|we (?:present|propose|investigate))\b/i.test(
+        text,
+      )
+    ) {
+      continue;
+    }
+    if ((text.match(/\d/g) ?? []).length < 3) continue;
+    const recovered = expandAuthorLine(text)
+      .map((name) => name.replace(/^and\s+/i, "").replace(/[,;]+$/, "").trim())
+      .filter(
+        (name) =>
+          name.split(/\s+/).length >= 2 &&
+          name.split(/\s+/).length <= 6 &&
+          !isNonAuthorMastheadLine(name) &&
+          !/\b(?:university|hospital|institute|department|centre|center|netherlands|clinical genetics|machine teaming)\b/i.test(
+            name,
+          ),
+      );
+    if (recovered.length < 2) continue;
+    for (const name of recovered) {
+      if (!authorNames.some((existing) => existing.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+        authorNames.push(name);
+      }
+    }
+    node.role = "other";
+    node.confidence = Math.min(node.confidence, 0.4);
+    node.evidence = [
+      ...node.evidence,
+      {
+        source: "generic-heuristic" as const,
+        label: "abstract-byline-overflow-recovery",
+        confidence: 0.9,
+        page: node.pageStart,
+        bbox: node.boundingBoxes[0],
+        reason: "mega-author byline overflow demoted from abstract",
+      },
+    ];
+  }
+}
+
+function dropFrontiersSidebarCreditNames(
+  canonical: CanonicalDocument,
+  authorNames: string[],
+): string[] {
+  {
+    const earlyReviewEditYs = canonical.nodes
+      .filter(
+        (node) =>
+          node.pageStart === 1 &&
+          /^(?:edited|reviewed)\s+by\b/i.test((node.text ?? "").trim()),
+      )
+      .map((node) => node.boundingBoxes[0]?.y ?? -Infinity);
+    const correspondenceYs = canonical.nodes
+      .filter(
+        (node) =>
+          node.pageStart === 1 &&
+          /^\*?correspondence\b/i.test((node.text ?? "").trim()),
+      )
+      .map((node) => node.boundingBoxes[0]?.y ?? -Infinity);
+    authorNames = authorNames.filter((name) => {
+      const head = name.replace(/,.*/, "").trim().toLocaleLowerCase();
+      if (!head || head.length < 5) return true;
+      return !canonical.nodes.some((node) => {
+        if (node.pageStart !== 1 || !node.text) return false;
+        const text = node.text.replace(/\s+/g, " ").trim();
+        if (looksLikeFrontiersReviewerCredit(text)) {
+          return text.toLocaleLowerCase().startsWith(head);
+        }
+        const y = node.boundingBoxes[0]?.y ?? Infinity;
+        const underCorrespondence = correspondenceYs.some(
+          (labelY) => labelY < y && y - labelY < 45,
+        );
+        if (underCorrespondence) return false;
+        const underReviewEdit = earlyReviewEditYs.some(
+          (labelY) => labelY < y && y - labelY < 55,
+        );
+        return (
+          underReviewEdit &&
+          (node.role === "copyright" || node.role === "paragraph") &&
+          text.length <= 48 &&
+          /,\s*$/.test(text) &&
+          text.toLocaleLowerCase().startsWith(head) &&
+          !/\band\b/i.test(text) &&
+          (node.boundingBoxes[0]?.x ?? 999) < 160
+        );
+      });
+    });
+  }
+  return authorNames;
+}
+
+function applyReviewLabelAffiliations(
+  reviewLabel: CanonicalNode | undefined,
+  canonical: CanonicalDocument,
+  affiliations: { id: string; name: string; }[],
+): { id: string; name: string; }[] {
+  if (reviewLabel) {
+    const reviewY = reviewLabel.boundingBoxes[0]?.y ?? Infinity;
+    const reviewCandidates = canonical.nodes
+      .filter((node) => {
+        const box = node.boundingBoxes[0];
+        const x = box?.x ?? Infinity;
+        const y = box?.y ?? Infinity;
+        const text = node.text ?? "";
+        const likelyReviewerAffiliation = x < 100 && y > reviewY + 35 && text.length < 100 &&
+          /,\s*(?:United States|United Kingdom|Canada|Australia|Brazil|Japan|China|Germany|France|Italy|Spain|Netherlands)\s*$/i.test(text.trim());
+        return node.pageStart === 1 && node.role === "affiliation" && y < 430 &&
+          !likelyReviewerAffiliation &&
+          ((x >= 140 && x <= 310) || (x < 100 && y > reviewY)) &&
+          /\b(?:university|department|school|faculty|college|hospital|centre|center|institute|laboratory|research)\b/i.test(node.text ?? "");
+      })
+      .sort((a, b) => (a.boundingBoxes[0]?.y ?? 0) - (b.boundingBoxes[0]?.y ?? 0) ||
+        (a.boundingBoxes[0]?.x ?? 0) - (b.boundingBoxes[0]?.x ?? 0));
+    const existingLaboratoryCandidates = affiliations
+      .filter((item) => /\blaboratory\b/i.test(item.name))
+      .map((item) => removeReviewerInstitutionPrefix(item.name));
+    const reviewerInstitutionFragments = [...existingLaboratoryCandidates, ...reviewCandidates.map((node) => node.text ?? "")].flatMap((name) => {
+      const fragment = name.match(/\bNIH\b[\s\S]*?(?=\s+(?:Applied|Laboratory|National|Department|School|Faculty)\b|$)/i)?.[0]?.trim();
+      return fragment ? [fragment] : [];
+    });
+    const normalizedCandidates = [...existingLaboratoryCandidates, ...reviewerInstitutionFragments, ...reviewCandidates.map((node) => {
+      const raw = node.text ?? "";
+      const start = raw.search(/\b(?:department|school|faculty|college|hospital|centre|center|institute|laboratory|research|university)\b/i);
+      if (start <= 0) return normalizeAffiliationName(raw);
+      const before = raw.slice(0, start);
+      const afterComma = before.lastIndexOf(",");
+      // A comma before the institution usually belongs to an interleaved
+      // author row; discard that prefix. Without a comma, retain up to two
+      // title-case words (for example `NIH Biomedical Research Center`).
+      const prefix = afterComma >= 0 ? "" : before;
+      const prefixWords = prefix.trim().split(/\s+/).filter(Boolean).slice(-2).join(" ");
+      const normalized = normalizeAffiliationName(`${prefixWords} ${raw.slice(start)}`.trim());
+      return removeReviewerInstitutionPrefix(normalized);
+    })].filter((name) => name.length >= 20);
+    const continuation = normalizedCandidates.find((name) => /^University\s+of\s+/i.test(name) && name.length < 100);
+    const rebuilt = normalizedCandidates.filter((name) => name !== continuation);
+    if (continuation) {
+      for (let index = 0; index < rebuilt.length; index += 1) {
+        if (/(?:\bUniversity of|\bPhysical)$/i.test(rebuilt[index])) {
+          const tail = /\bUniversity\s+of$/i.test(rebuilt[index])
+            ? continuation.replace(/^University\s+of\s+/i, "")
+            : continuation;
+          rebuilt[index] = normalizeAffiliationName(`${rebuilt[index]} ${tail}`);
+        }
+      }
+    }
+    const withoutAggregates = rebuilt.filter((name, _index, all) => {
+      if (name.length <= 180) return true;
+      const key = affiliationKey(name);
+      return all.filter((candidate) => candidate !== name && candidate.length >= 24 &&
+        key.includes(affiliationKey(candidate))).length < 2;
+    });
+    const unique = withoutAggregates.filter((name, index, all) =>
+      all.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase() ||
+        candidate.toLocaleLowerCase().includes(name.toLocaleLowerCase()) && candidate.length >= name.length) === index);
+    if (unique.length >= 3 && unique.length <= 6) {
+      affiliations = unique.map((name, index) => ({ id: `review-masthead-affiliation-${index}`, name }));
+    }
+  }
+  return affiliations;
+}
+
 
 
 type BodyProjectionState = {
