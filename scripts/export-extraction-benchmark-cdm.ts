@@ -11,10 +11,12 @@ const gold = JSON.parse(fs.readFileSync(goldPath, "utf8")) as ExtractionBenchmar
 const prediction = JSON.parse(fs.readFileSync(predictionPath, "utf8")) as ExtractionBenchmarkPrediction;
 if (gold.source.fileHash !== prediction.source.fileHash || gold.id !== prediction.id) throw new Error("Gold and prediction must identify the same source.");
 if (gold.coverage.formulas !== "complete" || !gold.formulas?.length || !prediction.formulas?.length) throw new Error("Complete formula gold and predicted formulas are required.");
-const used = new Set<string>(); const rows = gold.formulas.flatMap((reference) => {
-  const candidate = prediction.formulas!.filter((formula) => !used.has(formula.id)).map((formula) => ({ formula, iou: intersectionOverUnion(formula.region, reference.region) })).filter((item) => item.iou >= 0.5).sort((a, b) => b.iou - a.iou)[0];
+const latexGold = gold.formulas.filter((formula) => formula.latex?.trim());
+const latexPrediction = prediction.formulas.filter((formula) => formula.latex?.trim());
+const used = new Set<string>(); const rows = latexGold.flatMap((reference) => {
+  const candidate = latexPrediction.filter((formula) => !used.has(formula.id)).map((formula) => ({ formula, iou: intersectionOverUnion(formula.region, reference.region) })).filter((item) => item.iou >= 0.5).sort((a, b) => b.iou - a.iou)[0];
   if (!candidate) return []; used.add(candidate.formula.id);
-  return [{ sampleKey: `${gold.source.fileHash}:${reference.id}:${candidate.formula.id}`, img_id: gold.source.fileHash, gt_idx: reference.id, pred_idx: candidate.formula.id, gt: reference.latex, pred: candidate.formula.latex }];
+  return [{ sampleKey: `${gold.source.fileHash}:${reference.id}:${candidate.formula.id}`, img_id: gold.source.fileHash, gt_idx: reference.id, pred_idx: candidate.formula.id, gt: reference.latex!, pred: candidate.formula.latex! }];
 });
-fs.mkdirSync(path.dirname(output), { recursive: true }); fs.writeFileSync(output, `${JSON.stringify({ schemaVersion: 1, kind: "paper-reader-cdm-input", source: gold.source, samples: rows }, null, 2)}\n`);
-console.log(JSON.stringify({ output, matchedFormulas: rows.length, unmatchedGold: gold.formulas.length - rows.length }, null, 2));
+fs.mkdirSync(path.dirname(output), { recursive: true }); fs.writeFileSync(output, `${JSON.stringify({ schemaVersion: 1, kind: "versio-cdm-input", source: gold.source, samples: rows }, null, 2)}\n`);
+console.log(JSON.stringify({ output, matchedFormulas: rows.length, unmatchedGold: latexGold.length - rows.length, skippedWithoutLatex: gold.formulas.length - latexGold.length }, null, 2));

@@ -14,6 +14,7 @@ import {
   scrollToSearchHit,
   wrapSearchHitIndex,
 } from "../../../utils/searchHits";
+import { isImeComposing } from "../../../utils/ime";
 import type { ReaderContentHandle } from "../PaperContent";
 
 export function useReaderSearch(opts: {
@@ -126,7 +127,7 @@ export function useReaderSearch(opts: {
     if (!showSearch) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.isComposing || e.keyCode === 229) return;
+      if (isImeComposing(e)) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
       const target = e.target;

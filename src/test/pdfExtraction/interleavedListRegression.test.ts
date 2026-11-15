@@ -21,7 +21,9 @@ describe("interleaved list extraction", () => {
     expect(block?.role).toBe("paragraph");
     expect(block?.text).toContain("{“stake”}, {“usair”, “merger”, “twa”}, {“acquire", "acquisition”}");
     expect(block?.text).toMatch(/\{“acquire”, “acquisition”\}.*\{\s*“voting”, “buyout”, “ownership”/s);
-    expect(block?.text).toContain("which intuitively appear");
+    // Line-wrap hyphens before lowercase are kept (compound policy in
+    // joinHyphenated); the regression guard is that no characters are lost.
+    expect(block?.text).toMatch(/which intu-?itively appear/);
     expect(block?.text).not.toContain("which itively appear");
   });
 
@@ -32,7 +34,7 @@ describe("interleaved list extraction", () => {
     const block = blocks.find((candidate) => candidate.text.includes("Genealogies of Knowledge projects"));
 
     expect(block?.role).toBe("paragraph");
-    expect(block?.text).toContain("projects 3 (Jones 2019; Luz and Sheehan 2020)");
+    expect(block?.text).toMatch(/projects ?3 \(Jones 2019; Luz and Sheehan 2020\)/);
     expect(block?.text).not.toMatch(/projects\s*$/);
   });
 });

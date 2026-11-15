@@ -28,6 +28,15 @@ const pageReports = pages
     const captions = page.textItems
       .filter((item) => /^\s*table\b/i.test(item.text))
       .map((item) => item.text.trim());
+    const captionItems = page.textItems
+      .filter((item) => /table|correlation|matrix/i.test(item.text))
+      .map((item) => ({ text: item.text, x: item.x, y: item.y, width: item.width, height: item.height, rotation: item.rotation }));
+    const captionCandidates = generic.candidates
+      .filter((candidate) => candidate.pageStart === page.pageNumber && (candidate.roleScores.caption ?? 0) >= 0.5)
+      .map((candidate) => ({ id: candidate.id, role: candidate.role, captionScore: candidate.roleScores.caption, text: candidate.text.slice(0, 160), bbox: candidate.boundingBoxes[0] }));
+    const captionLikeCandidates = generic.candidates
+      .filter((candidate) => candidate.pageStart === page.pageNumber && /table|correlation|matrix/i.test(candidate.text))
+      .map((candidate) => ({ id: candidate.id, role: candidate.role, scores: candidate.roleScores, text: candidate.text.slice(0, 160), bbox: candidate.boundingBoxes[0] }));
     const reason = candidates.length > 0
       ? "candidate_role_too_weak (table score present but candidate role remains non-table)"
       : signature
@@ -39,6 +48,9 @@ const pageReports = pages
       expectedTable: expected.get(page.pageNumber),
       page: page.pageNumber,
       captions,
+      captionItems,
+      captionCandidates,
+      captionLikeCandidates,
       signature: signature
         ? {
             columnCount: signature.columnX.length,

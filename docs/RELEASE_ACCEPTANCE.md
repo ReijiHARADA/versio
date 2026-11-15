@@ -62,7 +62,7 @@ Open panel import
 **Constraint:** WKWebView AX text selection is unreliable, so selection is
 synthesized once via the DOM Range API; Save / Search / Export stay external.
 
-When `PAPER_READER_UI_E2E=1`, Markdown export skips the save dialog and writes
+When `VERSIO_UI_E2E=1`, Markdown export skips the save dialog and writes
 under app-data `_acceptance/exports/` (still through the production ExportDialog
 → `saveMarkdownExport` → Tauri command path).
 

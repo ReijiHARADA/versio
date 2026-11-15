@@ -138,6 +138,16 @@ describe("demoteRepeatedBareCaptions", () => {
     ]);
     expect(nodes.find((n) => n.id === "bare")?.role).toBe("other");
   });
+
+  it("demotes vertically rotated page-foot bare Table N chrome", () => {
+    const nodes = demoteRepeatedBareCaptions([
+      {
+        ...node("caption", "Table 1", { id: "rot", page: 4, y: 706 }),
+        boundingBoxes: [{ page: 4, x: 243.2, y: 706.2, width: 9, height: 28.5 }],
+      },
+    ]);
+    expect(nodes.find((n) => n.id === "rot")?.role).toBe("other");
+  });
 });
 
 describe("mergeTableCaptionContinuations legend verbs", () => {

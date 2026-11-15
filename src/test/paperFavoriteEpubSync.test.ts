@@ -75,20 +75,20 @@ describe("sendPaperEpubToSyncFolder", () => {
   });
 
   it("returns ok when a sync folder is configured", async () => {
-    vi.mocked(getEpubSyncFolder).mockResolvedValue("/Users/me/iCloud/PaperReader");
+    vi.mocked(getEpubSyncFolder).mockResolvedValue("/Users/me/iCloud/Versio");
     vi.mocked(pushPaperEpubToSyncFolder).mockResolvedValue({
       synced: true,
-      path: "/Users/me/iCloud/PaperReader/paper.epub",
+      path: "/Users/me/iCloud/Versio/paper.epub",
       fileName: "paper.epub",
     });
 
     await expect(sendPaperEpubToSyncFolder("paper-1")).resolves.toEqual({
       status: "ok",
-      path: "/Users/me/iCloud/PaperReader/paper.epub",
+      path: "/Users/me/iCloud/Versio/paper.epub",
       fileName: "paper.epub",
     });
     expect(pushPaperEpubToSyncFolder).toHaveBeenCalledWith("paper-1", {
-      folderPath: "/Users/me/iCloud/PaperReader",
+      folderPath: "/Users/me/iCloud/Versio",
     });
   });
 

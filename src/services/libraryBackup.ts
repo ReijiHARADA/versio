@@ -66,7 +66,7 @@ export async function runLibraryBackup(appVersion: string): Promise<{
     const dest = await invoke<string | null>("export_app_directory", {
       relativePath: finalRoot,
       dialogTitle: "バックアップフォルダの名前と場所を選択",
-      defaultName: `Paper-Reader-Backup-${stamp}`,
+      defaultName: `Versio-Backup-${stamp}`,
     });
     if (!dest) {
       await setMeta({

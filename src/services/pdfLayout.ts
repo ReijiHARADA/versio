@@ -61,6 +61,8 @@ export type LayoutLine = {
   height: number;
   fontSize: number;
   bbox: BoundingBox;
+  /** Visual top-left glyph bounds for consumers that paint an overlay. */
+  overlayBbox?: BoundingBox;
   rotation?: number;
   pageHeight?: number;
   pageWidth?: number;
@@ -163,6 +165,25 @@ function unionBbox(items: ExtractedTextItem[], page: number): BoundingBox {
     width: right - x,
     height: Math.max(1, bottom - y),
   };
+}
+
+/**
+ * The layout pipeline intentionally keeps `bbox.y` on a text baseline for
+ * stable line ordering. Rendering must not infer a visual top from that
+ * aggregate height: superscripts/subscripts make it much too high. Preserve
+ * the exact glyph envelope separately for presentation consumers.
+ */
+export function overlayTextBbox(items: ExtractedTextItem[], page: number): BoundingBox | undefined {
+  if (items.length === 0) return undefined;
+  const x = Math.min(...items.map((item) => item.x));
+  // `y` remains a baseline for the extraction/layout contract. `visualTop`
+  // carries the PDF.js transformed rectangle for page-rotated and vertical
+  // glyphs, where blindly subtracting height is wrong or unavailable.
+  const tops = items.map((item) => item.visualTop ?? item.y - item.height);
+  const y = Math.min(...tops);
+  const right = Math.max(...items.map((item) => item.x + item.width));
+  const bottom = Math.max(...items.map((item, index) => tops[index]! + item.height));
+  return { page, x, y, width: right - x, height: Math.max(1, bottom - y) };
 }
 
 function blockBbox(lines: LayoutLine[]): BoundingBox {
@@ -632,6 +653,7 @@ function itemsToLine(
     height: bbox.height,
     fontSize,
     bbox,
+    overlayBbox: overlayTextBbox(items, page),
     pageHeight,
     pageWidth,
     rotation: representativeTextRotation(items.map((item) => item.rotation ?? 0)),
@@ -3233,6 +3255,68 @@ function groupLinesIntoBlocks(
   return trimInterleavedHyphenFragments(trimOrphanTailBeforeChrome(ordered));
 }
 
+/**
+ * A PDF producer may attach its native `paragraph` role hint to every line in
+ * a text band.  That is particularly damaging for a multi-baseline display:
+ * the prose lead-in, operator row, equation body and subscript are then one
+ * paragraph, so later math recovery has no boundary to work with.  Split only
+ * around a strong display anchor (a numbered relation or an already detected
+ * equation) and absorb immediately adjacent math-only rows.  This intentionally
+ * uses line geometry/content rather than paper-specific equation vocabulary.
+ */
+function splitEmbeddedDisplayMathBlocks(blocks: LayoutBlock[], baseFont: number): LayoutBlock[] {
+  const mathGlyphs = /[=≡≈≠≤≥∼~∑∏∫√∞±×÷∂∇∈∉→←↦‖∥+-−]/u;
+  const equationNumber = /\(\s*\d{1,2}[a-z]?\s*\)\s*[.,;]?\s*$/i;
+  const proseWordCount = (text: string) => (text.match(/[A-Za-z]{3,}/g) ?? []).length;
+  const compactMathRow = (line: LayoutLine) => {
+    const text = line.text.trim();
+    if (!text || text.length > 96 || proseWordCount(text) > 4) return false;
+    const words = text.split(/\s+/).filter(Boolean);
+    return mathGlyphs.test(text) && words.length <= 12;
+  };
+  const displayAnchor = (line: LayoutLine) => {
+    const text = line.text.trim();
+    if (!text || text.length > 420) return false;
+    if (isEquationLine(text)) return true;
+    // Numbered equations may contain function names (`log`, `mmse`, `Softmax`)
+    // and therefore fail the conservative one-line equation classifier.
+    return equationNumber.test(text) && mathGlyphs.test(text) &&
+      proseWordCount(text) <= 16 && text.split(/\s+/).filter(Boolean).length <= 56;
+  };
+  const closeTo = (a: LayoutLine, b: LayoutLine) =>
+    a.page === b.page && b.y - a.y <= Math.max(baseFont * 2.25, 24);
+  const make = (source: LayoutBlock, lines: LayoutLine[], role: LayoutRole): LayoutBlock => ({
+    ...source,
+    role,
+    text: joinLines(lines),
+    lines,
+    pageStart: lines[0]!.page,
+    pageEnd: lines[lines.length - 1]!.page,
+    column: lines[0]!.column,
+    bbox: blockBbox(lines),
+  });
+
+  return blocks.flatMap((block) => {
+    if (block.role !== "paragraph" || block.lines.length < 2) return [block];
+    const anchor = block.lines.findIndex(displayAnchor);
+    if (anchor < 0) return [block];
+
+    let start = anchor;
+    let end = anchor;
+    while (start > 0 && compactMathRow(block.lines[start - 1]!) && closeTo(block.lines[start - 1]!, block.lines[start]!)) start -= 1;
+    while (end + 1 < block.lines.length && compactMathRow(block.lines[end + 1]!) && closeTo(block.lines[end]!, block.lines[end + 1]!)) end += 1;
+
+    const formula = block.lines.slice(start, end + 1);
+    const before = block.lines.slice(0, start);
+    const after = block.lines.slice(end + 1);
+    return [
+      ...(before.length ? [make(block, before, "paragraph")] : []),
+      make(block, formula, "equation"),
+      ...(after.length ? [make(block, after, "paragraph")] : []),
+    ];
+  });
+}
+
 /** Separate a table caption from a native line that is actually the first
  * wide table header. Some PDF producers put the caption and the header in one
  * LayoutBlock despite incompatible x geometry; keeping them together causes
@@ -3638,10 +3722,18 @@ function rejoinHangingTitleFragments(blocks: LayoutBlock[]): LayoutBlock[] {
 
 function rejoinDetachedCaptionTitles(blocks: LayoutBlock[]): LayoutBlock[] {
   const removed = new Set<LayoutBlock>();
-  const bareCaption = /^(?:(?:table|figure|fig\.?)\s+(?:[a-z]+\.)?\d+(?:\.\d+)*[a-z]?|(?:table|figure|fig\.?)\s+[ivxlcdm]+)\s*[:：]$/i;
+  const bareCaptionWithPunctuation = /^(?:(?:table|figure|fig\.?)\s+(?:[a-z]+\.)?\d+(?:\.\d+)*[a-z]?|(?:table|figure|fig\.?)\s+[ivxlcdm]+)\s*[:：]$/i;
+  const bareNumberedCaption = /^(?:(?:table|figure|fig\.?)\s+(?:[a-z]+\.)?\d+(?:\.\d+)*[a-z]?|(?:table|figure|fig\.?)\s+[ivxlcdm]+)$/i;
   const titleLike = (block: LayoutBlock): boolean => {
     const text = layoutPlain(block.text);
-    return block.role === "paragraph" &&
+    // A detached title normally remains prose.  In a rotated text stream,
+    // however, the title can be promoted to a heading solely because it is a
+    // short Title-Case line.  It is safe to accept that alternate role only
+    // when its native baseline is genuinely rotated; ordinary section
+    // headings continue to be excluded.
+    const rotatedHeading = block.role === "heading" &&
+      block.lines.length === 1 && Math.abs(block.lines[0]?.rotation ?? 0) >= 45;
+    return (block.role === "paragraph" || rotatedHeading) &&
       block.lines.length === 1 &&
       text.length >= 8 && text.length <= 220 &&
       text.trim().split(/\s+/).length >= 2 &&
@@ -3656,9 +3748,14 @@ function rejoinDetachedCaptionTitles(blocks: LayoutBlock[]): LayoutBlock[] {
 
   for (const caption of blocks) {
     if (caption.role !== "table_caption" && caption.role !== "figure_caption") continue;
-    if (!bareCaption.test(layoutPlain(caption.text))) continue;
     const captionLine = caption.lines[0];
     if (!captionLine) continue;
+    // Horizontal bare labels require punctuation to avoid joining a nearby
+    // section heading.  A rotated text matrix has a much stronger native
+    // baseline constraint, and publishers commonly omit that punctuation.
+    const rotatedBareLabel = Math.abs(captionLine.rotation ?? 0) >= 45 &&
+      bareNumberedCaption.test(layoutPlain(caption.text));
+    if (!bareCaptionWithPunctuation.test(layoutPlain(caption.text)) && !rotatedBareLabel) continue;
     const candidates = blocks
       .filter((candidate) => candidate !== caption && !removed.has(candidate) &&
         candidate.pageStart === caption.pageStart && candidate.pageEnd === caption.pageEnd &&
@@ -5915,7 +6012,8 @@ export function reconstructDocument(pages: ExtractedPage[]): {
     title.text = joinLines(title.lines);
     title.bbox = blockBbox(title.lines);
   }
-  return { layouts, lines, blocks: resolvedBlocks, baseFontSize: bodyFont };
+  const displayMathResolvedBlocks = splitEmbeddedDisplayMathBlocks(resolvedBlocks, bodyFont);
+  return { layouts, lines, blocks: displayMathResolvedBlocks, baseFontSize: bodyFont };
 }
 
 export function formatReadingOrderLog(

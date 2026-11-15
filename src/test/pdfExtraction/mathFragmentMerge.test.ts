@@ -69,6 +69,83 @@ describe("mergeMathematicalDisplayFragments", () => {
     expect(merged[0]?.evidence.some((e) => e.label === "stacked-derivative-merge")).toBe(true);
   });
 
+  it("preserves visual overlay boxes when mathematical fragments are merged", () => {
+    const top = { page: 2, x: 252, y: 230, width: 8, height: 10 };
+    const body = { page: 2, x: 262, y: 237, width: 240, height: 12 };
+    const bottom = { page: 2, x: 250, y: 250, width: 16, height: 10 };
+    const merged = mergeMathematicalDisplayFragments([
+      { ...node("a", "paragraph", "d", 242, 252, 8), overlayBoundingBoxes: [top] },
+      { ...node("b", "equation", "I(x; zγ ) = 1/2 mmse(γ). (1)", 247, 262, 240), overlayBoundingBoxes: [body] },
+      { ...node("c", "paragraph", "dγ", 256, 250, 16), overlayBoundingBoxes: [bottom] },
+    ]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0]?.overlayBoundingBoxes).toEqual([body, top, bottom]);
+  });
+
+  it("merges an explicitly continued, spatially aligned display derivation", () => {
+    const merged = mergeMathematicalDisplayFragments([
+      node("first", "equation", "D(x) = ∫ p(x) dx", 100, 150, 320),
+      node("second", "equation", "− 1/2 E[x²]", 126, 252, 180),
+      node("third", "equation", "= 1/2 mmse(x)", 152, 252, 170),
+    ]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0]?.text).toContain("D(x) = ∫ p(x) dx − 1/2 E[x²] = 1/2 mmse(x)");
+    expect(merged[0]?.boundingBoxes).toHaveLength(3);
+    expect(merged[0]?.evidence.some((entry) => entry.label === "aligned-display-continuation-merge")).toBe(true);
+  });
+
+  it("merges a continued display across a nearby non-prose math fragment", () => {
+    const merged = mergeMathematicalDisplayFragments([
+      node("first", "equation", "D(x) = ∫ p(x) dx", 100, 150, 320),
+      node("fraction", "other", "dγ ) √", 111, 260, 36),
+      node("second", "equation", "− 1/2 E[x²]", 126, 252, 180),
+    ]);
+    expect(merged).toHaveLength(1);
+    // Interstitial fragments contribute provenance/geometry but are not
+    // blindly linearized into Reader text.
+    expect(merged[0]?.text).toContain("D(x) = ∫ p(x) dx − 1/2 E[x²]");
+    expect(merged[0]?.boundingBoxes).toHaveLength(3);
+  });
+
+  it("uses the bottom of an intervening stacked fragment for a continued derivation", () => {
+    const first = {
+      ...node("first", "equation", "D(x) = ∫ p(x) dx", 100, 150, 320),
+      boundingBoxes: [
+        { page: 2, x: 150, y: 100, width: 320, height: 12 },
+        { page: 2, x: 252, y: 126, width: 180, height: 12 },
+      ],
+    };
+    const merged = mergeMathematicalDisplayFragments([
+      first,
+      node("stack", "other", ") − E[x|z] ∫", 140, 270, 110),
+      node("next", "equation", "= 1/2 mmse(x)", 162, 250, 170),
+    ]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0]?.text).toContain("= 1/2 mmse(x)");
+    expect(merged[0]?.boundingBoxes).toHaveLength(4);
+  });
+
+  it("promotes compact radical/operator fragments immediately above an equation", () => {
+    const merged = mergeMathematicalDisplayFragments([
+      node("operator", "paragraph", "∫ (", 82, 261, 37),
+      node("radicals", "paragraph", "d √ √", 89, 145, 274),
+      node("body", "equation", "D(x) = 1/2 mmse(x)", 96, 154, 306),
+    ]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0]?.role).toBe("equation");
+    expect(merged[0]?.text).toMatch(/^∫ \( d √ √ D\(x\)/u);
+    expect(merged[0]?.boundingBoxes).toHaveLength(3);
+    expect(merged[0]?.evidence.some((entry) => entry.label === "display-math-prelude-merge")).toBe(true);
+  });
+
+  it("does not merge a later separate display just because it begins with equals", () => {
+    const merged = mergeMathematicalDisplayFragments([
+      node("first", "equation", "D(x) = ∫ p(x) dx", 100, 150, 320),
+      node("later", "equation", "= 1/2 mmse(x)", 155, 252, 170),
+    ]);
+    expect(merged).toHaveLength(2);
+  });
+
   it("reattaches a lone √ glyph to the following paragraph", () => {
     const merged = mergeMathematicalDisplayFragments([
       node("a", "paragraph", "√", 160, 318, 8),
@@ -105,6 +182,54 @@ describe("mergeMathematicalDisplayFragments", () => {
     expect(after).toHaveLength(1);
     expect(after[0]?.text).toContain("²");
     expect(after[0]?.role).toBe("equation");
+  });
+
+  it("reattaches a lower-baseline denominator to an integral display", () => {
+    const merged = mergeMathematicalDisplayFragments([
+      node("integral", "equation", "− log p(x) = ∫ mmse(x, γ) dγ (9)", 154, 170, 330),
+      node("denominator", "paragraph", "1 + γ", 163, 347, 24),
+    ]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0]?.role).toBe("equation");
+    expect(merged[0]?.text).toContain("/ (1 + γ)");
+    expect(merged[0]?.evidence.some((entry) => entry.label === "stacked-fraction-denominator-merge")).toBe(true);
+  });
+
+  it("merges an operator row, numbered body, and denominator into one display", () => {
+    const merged = mergeMathematicalDisplayFragments([
+      node("operator", "equation", "∫ ∞", 142, 306, 130),
+      node("body", "equation", "− log p(x) = 1/2 mmse(x, γ) dγ (9)", 154, 171, 332),
+      node("denominator", "paragraph", "1 + γ", 163, 347, 24),
+    ]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0]?.text).toContain("∫ ∞");
+    expect(merged[0]?.text).toContain("/ (1 + γ)");
+    expect(merged[0]?.evidence.some((entry) => entry.label === "stacked-integral-fraction-merge")).toBe(true);
+  });
+
+  it("does not absorb a nearby prose line as a denominator", () => {
+    const merged = mergeMathematicalDisplayFragments([
+      node("integral", "equation", "− log p(x) = ∫ mmse(x, γ) dγ (9)", 154, 170, 330),
+      node("prose", "paragraph", "This establishes the next result.", 163, 347, 120),
+    ]);
+    expect(merged).toHaveLength(2);
+    expect(merged[1]?.text).toContain("This establishes");
+  });
+
+  it("keeps a long numbered formula with underbrace labels as one equation", () => {
+    const merged = mergeMathematicalDisplayFragments([
+      node(
+        "decorated",
+        "paragraph",
+        "− log p(x) = DKL[p(zγ1|x) ‖ p(zγ1)] + Ep(zγ0|x)[− log p(x|zγ0)] −1/2 mmse(x, γ)dγ . (6) ︸ Prior loss︷︷ ︸ ︸ Reconstruction loss︷︷ ︸",
+        356,
+        109,
+        395,
+      ),
+    ]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0]?.role).toBe("equation");
+    expect(merged[0]?.evidence.some((e) => e.label === "decorated-numbered-display-equation")).toBe(true);
   });
 
   it("scrubs underbrace debris and strips orphan tails after the equation number", () => {

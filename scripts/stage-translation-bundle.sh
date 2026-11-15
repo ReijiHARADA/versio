@@ -16,14 +16,14 @@ SERVER_DIR="$PROJECT_DIR/translation-server"
 VENV_DIR="$SERVER_DIR/venv"
 STAGE_ROOT="$PROJECT_DIR/src-tauri/bundled-resources/translation-server"
 VENV_STAGE="$PROJECT_DIR/src-tauri/bundled-resources/translation-venv"
-MODE="${PAPER_READER_PYTHON_BUNDLE_MODE:-cache}"
+MODE="${VERSIO_PYTHON_BUNDLE_MODE:-cache}"
 
 if [[ ! -x "$VENV_DIR/bin/python3" ]]; then
   echo "エラー: $VENV_DIR がありません。先に scripts/bundle-python.sh を実行してください。"
   exit 1
 fi
 
-HASH_STAMP="$VENV_DIR/.paper-reader-bundle-hash"
+HASH_STAMP="$VENV_DIR/.versio-bundle-hash"
 if [[ ! -f "$HASH_STAMP" ]]; then
   echo "エラー: venv hash stamp がありません。bundle-python.sh を再実行してください。"
   exit 1
@@ -47,7 +47,7 @@ echo "Stage:  $STAGE_ROOT"
 echo "Venv:   $VENV_STAGE"
 echo "Mode:   $MODE"
 
-VENV_HASH_FILE="$VENV_STAGE/.paper-reader-bundle-hash"
+VENV_HASH_FILE="$VENV_STAGE/.versio-bundle-hash"
 REUSE_VENV=0
 if [[ -x "$VENV_STAGE/bin/python3" && -f "$VENV_HASH_FILE" ]]; then
   staged_hash="$(tr -d '[:space:]' < "$VENV_HASH_FILE")"
@@ -73,11 +73,11 @@ rsync -a --delete \
   --exclude '*.pyo' \
   "$SERVER_DIR/engines/" "$TMP_STAGE/engines/"
 
-printf '%s\n' "$CONTENT_HASH" >"$TMP_STAGE/.paper-reader-bundle-hash"
-printf '%s\n' "$MODE" >"$TMP_STAGE/.paper-reader-bundle-mode"
-printf '%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >"$TMP_STAGE/.paper-reader-bundled-at"
+printf '%s\n' "$CONTENT_HASH" >"$TMP_STAGE/.versio-bundle-hash"
+printf '%s\n' "$MODE" >"$TMP_STAGE/.versio-bundle-mode"
+printf '%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >"$TMP_STAGE/.versio-bundled-at"
 # Marker so finalize/verify know the venv is injected after Tauri bundle.
-printf 'external\n' >"$TMP_STAGE/.paper-reader-venv-external"
+printf 'external\n' >"$TMP_STAGE/.versio-venv-external"
 
 rm -rf "$STAGE_ROOT"
 mv "$TMP_STAGE" "$STAGE_ROOT"
@@ -90,7 +90,7 @@ else
   rm -rf "$TMP_VENV"
   mkdir -p "$TMP_VENV"
   copy_tree "$VENV_DIR" "$TMP_VENV"
-  printf '%s\n' "$CONTENT_HASH" >"$TMP_VENV/.paper-reader-bundle-hash"
+  printf '%s\n' "$CONTENT_HASH" >"$TMP_VENV/.versio-bundle-hash"
   rm -rf "$VENV_STAGE"
   mv "$TMP_VENV" "$VENV_STAGE"
 fi

@@ -18,7 +18,7 @@ const results = input.results.map((row) => {
 const report = {
   ...input,
   scoredAt: new Date().toISOString(),
-  scoring: "Paper Reader current client quality-v6; manual source-to-output review still required",
+  scoring: "Versio current client quality-v6; manual source-to-output review still required",
   candidateAccepts: results.filter((row) => row.wouldAccept).length,
   candidateRejects: results.filter((row) => !row.wouldAccept).length,
   results,

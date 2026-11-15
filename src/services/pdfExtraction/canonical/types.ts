@@ -34,6 +34,13 @@ export type CanonicalNode = {
   pageStart: number;
   pageEnd: number;
   boundingBoxes: BoundingBox[];
+  /** Exact visual line rectangles for development overlays; layout boxes stay baseline-based. */
+  overlayBoundingBoxes?: BoundingBox[];
+  /**
+   * Native text-matrix rotation shared by this node's lines, in degrees.
+   * Rotated text does not participate in a horizontal table's row geometry.
+   */
+  textRotation?: number;
   confidence: number;
   evidence: ExtractionEvidence[];
   sourceAnchor: SourceAnchor;

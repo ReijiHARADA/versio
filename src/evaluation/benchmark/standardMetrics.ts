@@ -67,7 +67,11 @@ export function intersectionOverUnion(a: Rect, b: Rect): number {
   return union > 0 ? intersection / union : 0;
 }
 
-/** One-to-one, maximum-IoU matching. It does not turn unmatched labels into TPs. */
+/**
+ * One-to-one maximum-cardinality matching, with higher-IoU candidates tried
+ * first. Maximizing only the first local IoU can strand another prediction
+ * that has no alternative gold region, artificially lowering F1.
+ */
 export function blockF1(predicted: ScoredBlock[], gold: ScoredBlock[], options: { iouThreshold?: number; requireSameRole?: boolean } = {}): F1Score {
   const iouThreshold = options.iouThreshold ?? 0.5;
   const requireSameRole = options.requireSameRole ?? true;
@@ -77,14 +81,27 @@ export function blockF1(predicted: ScoredBlock[], gold: ScoredBlock[], options: 
     iou: intersectionOverUnion(item.region, reference.region),
   }))).filter((item) => item.iou >= iouThreshold && (!requireSameRole || item.predicted.role === item.gold.role))
     .sort((a, b) => b.iou - a.iou || a.predicted.id.localeCompare(b.predicted.id) || a.gold.id.localeCompare(b.gold.id));
-  const usedPredicted = new Set<string>();
-  const usedGold = new Set<string>();
-  const matches: F1Score["matches"] = [];
-  for (const candidate of candidates) {
-    if (usedPredicted.has(candidate.predicted.id) || usedGold.has(candidate.gold.id)) continue;
-    usedPredicted.add(candidate.predicted.id); usedGold.add(candidate.gold.id);
-    matches.push({ predictedId: candidate.predicted.id, goldId: candidate.gold.id, iou: candidate.iou });
-  }
+  const candidatesByPrediction = new Map<string, typeof candidates>();
+  for (const candidate of candidates) candidatesByPrediction.set(candidate.predicted.id, [...(candidatesByPrediction.get(candidate.predicted.id) ?? []), candidate]);
+  const predictedById = new Map(predicted.map((item) => [item.id, item]));
+  const matchedPredictionByGold = new Map<string, string>();
+  const matchPrediction = (predictionId: string, visitedGold = new Set<string>()): boolean => {
+    for (const candidate of candidatesByPrediction.get(predictionId) ?? []) {
+      if (visitedGold.has(candidate.gold.id)) continue;
+      visitedGold.add(candidate.gold.id);
+      const previousPrediction = matchedPredictionByGold.get(candidate.gold.id);
+      if (!previousPrediction || matchPrediction(previousPrediction, visitedGold)) {
+        matchedPredictionByGold.set(candidate.gold.id, predictionId);
+        return true;
+      }
+    }
+    return false;
+  };
+  for (const predictionId of predictedById.keys()) matchPrediction(predictionId);
+  const matches = [...matchedPredictionByGold.entries()].map(([goldId, predictedId]) => {
+    const candidate = candidatesByPrediction.get(predictedId)?.find((item) => item.gold.id === goldId);
+    return { predictedId, goldId, iou: candidate?.iou ?? 0 };
+  });
   const truePositive = matches.length;
   const falsePositive = predicted.length - truePositive;
   const falseNegative = gold.length - truePositive;

@@ -1,16 +1,16 @@
 #!/bin/bash
 # Tauri beforeBuildCommand entrypoint.
 # Prepares cached/clean Python runtime, stages minimal resources, builds frontend.
-# When PAPER_READER_SKIP_BEFORE_BUILD=1, no-ops (wrapper already ran phases).
+# When VERSIO_SKIP_BEFORE_BUILD=1, no-ops (wrapper already ran phases).
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-TIMING_FILE="${PAPER_READER_BUILD_TIMINGS:-$PROJECT_DIR/.build-timings}"
+TIMING_FILE="${VERSIO_BUILD_TIMINGS:-$PROJECT_DIR/.build-timings}"
 
-if [[ "${PAPER_READER_SKIP_BEFORE_BUILD:-0}" == "1" ]]; then
-  echo "before-build: skipped (PAPER_READER_SKIP_BEFORE_BUILD=1)"
+if [[ "${VERSIO_SKIP_BEFORE_BUILD:-0}" == "1" ]]; then
+  echo "before-build: skipped (VERSIO_SKIP_BEFORE_BUILD=1)"
   exit 0
 fi
 
@@ -20,8 +20,8 @@ cd "$PROJECT_DIR"
 # toolchain is available. The app remains MADLAD-capable if it is not.
 bash "$SCRIPT_DIR/compile-apple-translation.sh"
 
-MODE="${PAPER_READER_PYTHON_BUNDLE_MODE:-cache}"
-export PAPER_READER_PYTHON_BUNDLE_MODE="$MODE"
+MODE="${VERSIO_PYTHON_BUNDLE_MODE:-cache}"
+export VERSIO_PYTHON_BUNDLE_MODE="$MODE"
 
 now_ms() {
   python3 -c 'import time; print(int(time.time() * 1000))'

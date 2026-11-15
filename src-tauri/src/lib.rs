@@ -1,6 +1,8 @@
-mod ocr;
+#[cfg(target_os = "macos")]
+mod legacy_data;
 #[cfg(target_os = "macos")]
 mod macos_chrome;
+mod ocr;
 mod paper_fs;
 mod source_pdf;
 
@@ -110,7 +112,7 @@ fn spawn_server(app: &tauri::AppHandle, state: &ServerState) {
         .stderr(Stdio::null());
 
     if std::env::var("TRANSLATION_UNIT_DEBUG").unwrap_or_default() == "1" {
-        let debug_log = "/tmp/paper-reader-translation-server.log";
+        let debug_log = "/tmp/versio-translation-server.log";
         let _ = std::fs::remove_file(debug_log);
         command
             .env("TRANSLATION_UNIT_DEBUG", "1")
@@ -155,8 +157,14 @@ fn translate_with_apple(
     source_language: String,
     target_language: String,
 ) -> Result<String, String> {
-    let helper = app.path().resource_dir().map_err(|e| e.to_string())?.join("apple-translation");
-    if !helper.exists() { return Err("Apple Translation helper is not bundled".into()); }
+    let helper = app
+        .path()
+        .resource_dir()
+        .map_err(|e| e.to_string())?
+        .join("apple-translation");
+    if !helper.exists() {
+        return Err("Apple Translation helper is not bundled".into());
+    }
     let output = Command::new(helper)
         .arg(source_language)
         .arg(target_language)
@@ -187,6 +195,8 @@ fn sync_window_chrome_theme(app: tauri::AppHandle, theme: String) -> Result<(), 
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(target_os = "macos")]
+    legacy_data::migrate();
     let server_state = ServerState {
         child: Arc::new(Mutex::new(None)),
         token: Arc::new(Mutex::new(String::new())),

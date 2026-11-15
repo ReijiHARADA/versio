@@ -85,7 +85,7 @@ async function translationAuthHeaders(): Promise<Record<string, string>> {
     }
   }
   if (cachedServerToken) {
-    headers["X-Paper-Reader-Token"] = cachedServerToken;
+    headers["X-Versio-Token"] = cachedServerToken;
   }
   return headers;
 }

@@ -403,11 +403,11 @@
       "errors": [
         {
           "paper": "wear-scale",
-          "error": "PDF not cached: /Users/harada/Desktop/codex/projects/paper-reader/test-data/real-papers/wear-scale.pdf"
+          "error": "PDF not cached: /Users/harada/Desktop/codex/projects/versio/app/test-data/real-papers/wear-scale.pdf"
         },
         {
           "paper": "precious-materials",
-          "error": "PDF not cached: /Users/harada/Desktop/codex/projects/paper-reader/test-data/real-papers/precious-materials.pdf"
+          "error": "PDF not cached: /Users/harada/Desktop/codex/projects/versio/app/test-data/real-papers/precious-materials.pdf"
         }
       ],
       "reviewedRows": 206,
@@ -3765,9 +3765,9 @@
     "purpose": "trace two v46 accepted severity-2 semantic shifts from exact production request through segmentation/protection/decode/quality gate",
     "modelVersion": "3b-mt-v5-semantic-v73-source-protect-v1-strict-restore-v20",
     "diagnosticArtifacts": {
-      "log": "/tmp/paper-reader-semantic-v47.log",
-      "fullBlockReplay": "/tmp/paper-reader-semantic-v47-replay.json",
-      "sameProcessVariants": "/tmp/paper-reader-semantic-v47-variants.json"
+      "log": "/tmp/versio-semantic-v47.log",
+      "fullBlockReplay": "/tmp/versio-semantic-v47-replay.json",
+      "sameProcessVariants": "/tmp/versio-semantic-v47-variants.json"
     },
     "findings": [
       "Participant scope shift reproduced with intact 161-character sentence as one chunk: various fields of study -> 各学科から88名; no fallback, numeric facts retained.",
@@ -3789,7 +3789,7 @@
   "v48AlternativeModelCheckpoint": {
     "date": "2026-09-21",
     "report": "test-data/real-papers/reports/semantic-model-comparison-v48.md",
-    "rawGenerations": "/tmp/paper-reader-v48-alternative-models.json",
+    "rawGenerations": "/tmp/versio-v48-alternative-models.json",
     "cases": 4,
     "generations": 8,
     "models": [
@@ -3824,7 +3824,7 @@
   "v49Qwen14Checkpoint": {
     "date": "2026-09-21",
     "report": "test-data/real-papers/reports/semantic-model-comparison-v48.md",
-    "rawGenerations": "/tmp/paper-reader-v49-qwen14.json",
+    "rawGenerations": "/tmp/versio-v49-qwen14.json",
     "models": [
       "qwen2.5:14b"
     ],
@@ -3907,8 +3907,8 @@
   "v51MatchedModelReplayCheckpoint": {
     "date": "2026-09-21",
     "report": "test-data/real-papers/reports/semantic-model-matched-v51.md",
-    "rawMadlad": "/tmp/paper-reader-v51-madlad-current.json",
-    "rawAlternatives": "/tmp/paper-reader-v51-independent-model-eval.json",
+    "rawMadlad": "/tmp/versio-v51-madlad-current.json",
+    "rawAlternatives": "/tmp/versio-v51-independent-model-eval.json",
     "papers": 5,
     "disciplines": [
       "HCI",
@@ -4002,8 +4002,8 @@
       }
     },
     "artifact": "TRANSLATION_MODEL_EVAL_V52.md",
-    "rawOutputs": "/tmp/paper-reader-v52-matched-model-eval.json",
-    "selectedSources": "/tmp/paper-reader-v52-selected-sources.json",
+    "rawOutputs": "/tmp/versio-v52-matched-model-eval.json",
+    "selectedSources": "/tmp/versio-v52-selected-sources.json",
     "productionRoutingChanged": false,
     "appBuild": "not run",
     "nextActions": [
@@ -4065,7 +4065,7 @@
       "gemma2:9b": 35100,
       "qwen2.5:14b": 61200
     },
-    "rawOutputs": "/tmp/paper-reader-v53-cascade-rescue.json",
+    "rawOutputs": "/tmp/versio-v53-cascade-rescue.json",
     "productionRoutingChanged": false,
     "conclusion": "Do not integrate gate-only rescue; false accepts remain"
   },
@@ -4105,7 +4105,7 @@
       "homophily→same-sex bias"
     ],
     "gateScoresForTermErrors": 1,
-    "rawOutputs": "/tmp/paper-reader-v54-fresh-gemma.json",
+    "rawOutputs": "/tmp/versio-v54-fresh-gemma.json",
     "productionRoutingChanged": false,
     "appBuild": "not run",
     "nextAction": "evaluate generic term preservation without paper-specific rules on development sources, then fresh held-out papers with manual review"
@@ -4128,13 +4128,13 @@
       "WOM→口コミ (acronym missing although meaning preserved)"
     ],
     "meanLatencyMs": 19229,
-    "rawOutputs": "/tmp/paper-reader-v55-generic-term-prompt.json",
+    "rawOutputs": "/tmp/versio-v55-generic-term-prompt.json",
     "productionChanged": false,
     "nextAction": "evaluate source-grounded terminology retrieval and concept-preserving acronym equivalence on held-out cross-disciplinary papers"
   },
   "v57TransformersIntegrity": {
     "status": "verified; production source and development venv pinned to 4.57.6",
-    "finding": "Unpatched Transformers 5.17.0 changes tie_word_embeddings false to true and loads encoder embedding from lm_head; strict tensor comparison confirms mismatch. The former Paper Reader reassignment masked it in the actual 5.16.1 environment.",
+    "finding": "Unpatched Transformers 5.17.0 changes tie_word_embeddings false to true and loads encoder embedding from lm_head; strict tensor comparison confirms mismatch. The former Versio reassignment masked it in the actual 5.16.1 environment.",
     "correctedRuntime": "4.57.6; raw encoder and decoder embeddings match checkpoint decoder.embed_tokens; lm_head remains separate. Startup integrity check is fail-closed.",
     "fixedFixtureAba": "translation-server/scripts/diagnose_transformers_madlad_ab.py; outputs and exact tensor mapping in TRANSFORMERS_MADLAD_AB.md and ignored reports under test-data/real-papers/reports/",
     "crossPaperReplay": {
@@ -4151,7 +4151,7 @@
     },
     "semanticConclusion": "Correct loading resolves runtime corruption, but MADLAD semantic scope/cardinality and terminology errors persist under 4.57.6. The <=5% ordinary-body fallback target and near-zero unsafe false accept target remain unmet.",
     "productionChange": "Pin transformers==4.57.6 and protobuf dependency; replace manual embedding reassignment with startup integrity verification; bump server/client cache identity to 3b-mt-v6-transformers-4.57.6-semantic-v73-source-protect-v1-strict-restore-v21.",
-    "appBuild": "success: src-tauri/target/release/bundle/macos/Paper Reader.app; modified 2026-09-21 02:48:22 JST; bundled translation-server Python 3.12.14 reports transformers 4.57.6; bundled madlad_mps.py contains v6 cache identity and embedding integrity guard; app not launched",
+    "appBuild": "success: src-tauri/target/release/bundle/macos/Versio.app; modified 2026-09-21 02:48:22 JST; bundled translation-server Python 3.12.14 reports transformers 4.57.6; bundled madlad_mps.py contains v6 cache identity and embedding integrity guard; app not launched",
     "server": {
       "endpoint": "http://127.0.0.1:8765",
       "ready": true,
@@ -4457,7 +4457,7 @@
     "findings": [
       "Unpatched 5.17.0 sets tie_word_embeddings=true and encoder embedding is exactly lm_head.weight, not checkpoint decoder input embedding.",
       "Unpatched 4.57.6 preserves tie_word_embeddings=false and encoder/decoder exactly match checkpoint decoder input embedding.",
-      "Prior Paper Reader 5.17.0 reassignment restores the encoder tensor, but raw 5.17.0 outputs are malformed/truncated.",
+      "Prior Versio 5.17.0 reassignment restores the encoder tensor, but raw 5.17.0 outputs are malformed/truncated.",
       "Correctly loaded 4.57.6 still reproduces group-count and participant-scope semantic drift; runtime repair does not solve model semantic quality."
     ],
     "verification": "translationModelVersion 1/1; translation-server pytest 143 + 11 subtests; git diff --check",

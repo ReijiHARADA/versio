@@ -1,5 +1,5 @@
 /**
- * Inspect a Paper Reader extraction block and its immediate neighbors from a
+ * Inspect a Versio extraction block and its immediate neighbors from a
  * local, legally obtained regression PDF. This is diagnostic only; it never
  * mutates the source PDF, extraction pipeline, or generated benchmark report.
  *

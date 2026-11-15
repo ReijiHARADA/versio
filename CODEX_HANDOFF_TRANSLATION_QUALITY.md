@@ -1,10 +1,10 @@
-# Codex handoff: Paper Reader translation quality
+# Codex handoff: Versio translation quality
 
 Status: paused intentionally at v49. Do not mark the active goal complete.
 
 ## Current objective
 
-Improve Paper Reader academic-paper translation quality to practical research use:
+Improve Versio academic-paper translation quality to practical research use:
 
 - ordinary body paragraph reader-visible fallback <= 5%
 - hallucination / numeric / citation / statistical notation / experimental-condition corruption near zero
@@ -69,7 +69,7 @@ cd translation-server && .venv/bin/python -m unittest tests.test_micro_batcher t
 ## First commands when resuming
 
 ```bash
-cd /Users/harada/Desktop/codex/projects/paper-reader
+cd /Users/harada/Desktop/codex/projects/versio/app
 pgrep -fl "tsx|benchmark-real-paper-translation|server.py|madlad|translation-server|python.*server" || true
 cd translation-server && PYTORCH_ENABLE_MPS_FALLBACK=1 .venv/bin/python server.py
 ```

@@ -38,6 +38,8 @@ export type ImportCallbacks = {
 };
 
 export type ImportConfig = {
+  /** Build-gated presentation fixture; never persisted to user settings. */
+  presentationDemo?: boolean;
   madladServerUrl?: string;
   ollamaServerUrl?: string;
   ollamaModel?: string;

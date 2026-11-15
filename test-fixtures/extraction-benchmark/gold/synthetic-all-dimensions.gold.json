@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "kind": "paper-reader-extraction-benchmark-gold",
+  "kind": "versio-extraction-benchmark-gold",
   "id": "synthetic-all-dimensions",
   "source": { "fileHash": "synthetic-all-dimensions" },
   "split": "development",

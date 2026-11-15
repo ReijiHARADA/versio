@@ -1,4 +1,4 @@
-# Paper Reader ロードマップ
+# Versio ロードマップ
 
 > 2026-09-14  
 > **これから達成するプロダクト目標**だけを書く。いまの実装は [CURRENT_STATE.md](./CURRENT_STATE.md)。製品の定義と起動は [README.md](./README.md)。

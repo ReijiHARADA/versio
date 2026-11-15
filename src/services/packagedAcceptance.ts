@@ -37,8 +37,8 @@ async function writeMarker(result: AcceptanceResult): Promise<void> {
 }
 
 /**
- * Packaged acceptance only: when launched with PAPER_READER_ACCEPTANCE=1 and
- * PAPER_READER_ACCEPTANCE_FIXTURE=<pdf>, import the fixture once, then exercise
+ * Packaged acceptance only: when launched with VERSIO_ACCEPTANCE=1 and
+ * VERSIO_ACCEPTANCE_FIXTURE=<pdf>, import the fixture once, then exercise
  * annotation / search / export against real app-data without MADLAD download.
  * No effect in normal production launches.
  */
@@ -93,7 +93,7 @@ export async function maybeRunPackagedAcceptanceImport(): Promise<void> {
         .jobs.find((item) => item.fileName === "acceptance-fixture.pdf");
       // The shell harness can inspect this lightweight heartbeat when an
       // integration import is slow. It deliberately contains no paper data
-      // and has no production effect outside PAPER_READER_ACCEPTANCE.
+      // and has no production effect outside VERSIO_ACCEPTANCE.
       const observed = job ? `${job.stage}: ${job.error ?? job.message}` : "job missing";
       if (observed !== lastObservedJob) {
         lastObservedJob = observed;

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sign + notarize Paper Reader.app, then build DMG from the signed app and
+# Sign + notarize Versio.app, then build DMG from the signed app and
 # sign/notarize the DMG. Never runs on tauri:build:fast.
 #
 # Correct order:
@@ -16,12 +16,12 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-APP_PATH="${PAPER_READER_APP_PATH:-$ROOT/src-tauri/target/release/bundle/macos/Paper Reader.app}"
-DMG_DIR="${PAPER_READER_DMG_DIR:-$ROOT/src-tauri/target/release/bundle/dmg}"
-DMG_NAME="${PAPER_READER_DMG_NAME:-Paper Reader_0.1.0_aarch64.dmg}"
-DMG_PATH="${PAPER_READER_DMG_PATH:-$DMG_DIR/$DMG_NAME}"
-ENTITLEMENTS="${PAPER_READER_ENTITLEMENTS:-$ROOT/src-tauri/entitlements.plist}"
-SKIP_DMG="${PAPER_READER_SKIP_DMG:-0}"
+APP_PATH="${VERSIO_APP_PATH:-$ROOT/src-tauri/target/release/bundle/macos/Versio.app}"
+DMG_DIR="${VERSIO_DMG_DIR:-$ROOT/src-tauri/target/release/bundle/dmg}"
+DMG_NAME="${VERSIO_DMG_NAME:-Versio_0.1.0_aarch64.dmg}"
+DMG_PATH="${VERSIO_DMG_PATH:-$DMG_DIR/$DMG_NAME}"
+ENTITLEMENTS="${VERSIO_ENTITLEMENTS:-$ROOT/src-tauri/entitlements.plist}"
+SKIP_DMG="${VERSIO_SKIP_DMG:-0}"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
   echo "Signing requires macOS"
@@ -96,7 +96,7 @@ echo "== codesign --verify (.app, pre-notarize) =="
 codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 
 echo "== notarize .app =="
-ZIP_PATH="${TMPDIR:-/tmp}/PaperReader-notarize-$$.zip"
+ZIP_PATH="${TMPDIR:-/tmp}/Versio-notarize-$$.zip"
 ditto -c -k --keepParent "$APP_PATH" "$ZIP_PATH"
 notary_submit "$ZIP_PATH"
 rm -f "$ZIP_PATH"
@@ -115,8 +115,8 @@ fi
 echo "== build DMG from signed .app =="
 # Remove any previously generated (possibly unsigned) DMG first.
 rm -f "$DMG_PATH"
-PAPER_READER_APP_PATH="$APP_PATH" \
-PAPER_READER_DMG_PATH="$DMG_PATH" \
+VERSIO_APP_PATH="$APP_PATH" \
+VERSIO_DMG_PATH="$DMG_PATH" \
   bash "$ROOT/scripts/macos-build-dmg.sh"
 
 echo "== sign + notarize + staple .dmg =="

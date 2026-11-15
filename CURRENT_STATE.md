@@ -1,3 +1,50 @@
+# 2026-11-08: src/test 全green化・extraction corpus 回帰の棚卸し
+
+- `src/test` 4 fail → **1122/1122 pass**、`tsc -p tsconfig.app.json` pass。
+- `layoutFromExtraction.inferCaptionGrid`: native layout がある頁では grid 行に block id が無く、cell と同一（text+原点一致）の投影 paragraph が Reader に残っていた（10-16 の `hasNativeLayout` guard 以降）。完全一致の重複 cell block だけ除去。
+- 古い期待値を現行仕様へ更新: 失敗 caption は transport 失敗として retryable（10-16 方針）、`intu-itively` は `joinHyphenated` の compound 保持方針、脚注記号は `projects3` 形式も許容。
+- **未解決**: `test:extraction-corpus` 13 fail / 215 pass（471s）。baselineRealPapers 11件（title誤選択 例: computational-linguistics が `Common business goals…`、author/format 期待値差）+ realPapers reading-order 2件（ozchi `n = 20` が equation に混入、cognitive-dual-task）。今回の変更を戻しても同じ11件が落ちるため、作業中の未コミット差分（resolver/mathFragmentMerge・candidates・pdfLayout 等）由来。次はここから。
+
+# 2026-11-05: PDF抽出・翻訳品質の現状計測
+
+- `docs/PDF_EXTRACTION_TRANSLATION_QUALITY_EVALUATION.md` と `report:pdf-translation-quality` を追加。EPUB変換・容量・同期を除外し、実在PDFの既存手動構造ラベル（development 7本）と、現行MADLADの4分野×3抽出本文の実行ログだけを再集計する。個別行CSV/JSONはローカルの `test-data/real-papers/reports/` に生成する。
+- 開発用の限定実測は heading recall **86.46%**（3論文）、table-caption recall **75.00%**（4論文）、table-region recall **66.67%**（3論文）、figure-caption recall **100.00%**（2論文）、reading-order pair score **100.00%**（1論文）。分母が小さく開発データなので、全PDFの抽出精度とは表現しない。本文CER/WER、欠落・重複、独立コホートの構造精度、表TEDS、数式CDMは完全な人手goldが無く **N/A**。
+- 翻訳の現行診断標本は12本文中、モデル応答8件、自動受理6件、reader-visible原文fallback 6件。受理済みでも意味改変を確認しているため、受理率は翻訳精度に用いない。抽出起因のpre-model fallback 3件と、post-model fallback 3件を分離して記録する。人によるA/B評価用の12行queueを生成するが、独立転記・参照訳・二重査読の完了前に意味保持率やBLEU/chrF/COMETは報告しない。
+
+# 2026-11-05: 信頼性・性能評価の再現レポート
+
+- `docs/RELIABILITY_PERFORMANCE_EVALUATION.md` と `report:reliability-performance-evaluation` を追加。全1,432ユニークPDFの既存実測、7本のdevelopment抽出ゲート、4本の独立validation health gate、現行MADLADの4分野×3本文auditを、CSV/JSON/SVGグラフへ同じ入力から再生成できる。全件容量の結論は原本PDF→スマホ同期用EPUB 3で **61.34%総容量削減**（1,423/1,432成功、95% Wilson CI 98.8–99.7%）のまま。
+- 抽出の独立コホートはhuman gold未完成のため、CER/NED、Block F1、完全な読み順、TEDS/CDMを正解率として報告しない。現行translation auditは12本文中6件の自動受理・6件のreader-visible fallbackで、gate通過でも重大な意味改変の例を確認したため、翻訳精度の宣伝値には使わない。旧モデルの手動レビューはcurrent modelと分離して記録する。
+- 今回の検証: development extraction 7/7、validation health 4/4、評価ロジック/reading-order等 **267 pass**。同時にauthorProjectionは83件中4件の既存期待値との差分でfail（author正規化・余剰著者）したため、完全greenではない。生成スクリプトと`typecheck`はpass。
+
+# 2026-11-05: 撮影用Presentation Demo
+
+- `VITE_VERSIO_DEMO=1` の明示buildでのみ、取り込んだPDFの抽出段階を撮影用の構造化fixtureへ置換する。通常build・抽出評価は既存`extractAcademicPdf`のまま。fixtureは同じPaper Package→Library→Reader経路を通るが、抽出精度・翻訳品質やbenchmark結果として扱わない。
+- 主要Reader論文は Gemperle et al.「Design for Wearability」(ISWC '98)。本文段落・図キャプション・参考文献11件はローカル原論文PDFからの引用（抜粋。改行ハイフンと明白な誤植のみ修正）、図1/2/4/7/8と13ガイドラインの枠は原PDFから切り出し・抽出した画像、日本語訳は撮影用に人手で作成（MADLAD出力ではない）。目次は16節（ガイドライン1〜6と7–13を2階層目）。
+- Libraryはメモリだけに6論文（Design for Wearability、Interactive Jewellery、Power-over-Skin、SpeeChin、finger-specific touch、OSWorld。いずれもローカル実論文の書誌情報、本文は主要論文のみ）、ワークスペース階層、38%の取込み中カードを表示する。通常ライブラリ・SQLiteへは触れない。
+- `npm run prepare:demo-video` で撮影用PDFと図アセット（gitignored、`pdftoppm`/`pdfimages`/`sips`）を生成し、`npm run tauri:demo`で起動する。`VITE_VERSIO_DEMO_START_PATH` で起動直後のrouteを指定できる。手順は`docs/PRESENTATION_DEMO.md`。
+- 取込み中の論文行は既存論文と同じ星アイコン列を確保し、状態と進捗率は1グループ、キャンセルは独立したホバー領域として右端に収める。
+- 図の画像URLが `/` 始まり（アプリ同梱の静的ファイル）の場合はPaper Package内アセットとして解決しない。
+- 検証: presentation demo tests **3/3**、`tsc -p tsconfig.app.json` pass（ルートの`npm run typecheck`は`files: []`のため実質チェックしない）。src/test全体は1112 pass / 10 fail（抽出・author projection・quality系。デモ変更とは無関係の作業中差分）。
+
+# 2026-11-04: Mobile EPUB同期容量ベンチマーク
+
+- スマホ同期の実出力（1論文ごとの最適化済み EPUB 3 / ZIPコンテナ、外側ZIPなし）を、ブラウザ抽出→Paper Package→production EPUB exporterで全ローカルPDFコーパスへ実測する `bench:mobile-epub-storage` と集計コマンドを追加。翻訳は実行せず、通常の原文フォールバックで本文言語差を容量値へ混入させない。
+- 1,511パス中、内容hash重複79件を除く1,432ユニークPDFを全件測定。1,423件成功（99.4%）、9件はChromium crash/navigationとしてパス付きで記録、未測定0。成功分は原本3,075.84 MiB→EPUB 1,189.10 MiB、合計容量61.3%削減（論文単位平均52.7%、中央値61.7%、増量124件）。抽出済み図表アセット10,968件はEPUBに全件保持（exporter missing 0）。
+- 容量を小さくするための設定変更はしていない。現行同期exporterの既定（必要時のみ1600px/quality 0.92 JPEG化、表はPNG維持）をそのまま計測。コンテンツ特性別・圧縮前後・失敗一覧・プレゼン用注記は `docs/MOBILE_EPUB_STORAGE_BENCHMARK.md`、個別行はローカルgitignore reportで再現できる。typecheck と EPUB export regression **1/1** pass。
+
+# 2026-10-22: 回転 page-foot 裸 Table N demote
+
+- 縦書き相当 bbox（w≤14, h≫w, y>650）の裸 `Table N` を chrome demote（assayblast）
+- 回帰: bareCaptionMerge rotated page-foot
+
+# 2026-10-22: BMJ depression byline + McGuire + symptom reject
+
+- BMJ Open `other` 著者列（Rashmi/Megan/Philip…）を回収；`Hopelessness;…` 症状列を author 拒否
+- CamelCase 分割後に `Mc Guire` → `McGuire` を再膠着
+- Setting/Participants/Objective を structured abstract として回収
+- 回帰: authorProjection bmj-depression-bylines
+
 # 2026-10-22: Frontiers dated and-wrap + Agarwal Group
 
 - `… and` + `14 June 2026 Raúl Sampieri-Cabrera *` を byline continuation（year gate 例外）
@@ -1069,7 +1116,7 @@ and the full real-paper extraction/reading-order suite passes **232/232**
 (118 extraction + 114 reading-order, 436.50s). The refreshed 118-PDF table
 audit still has **0 extraction errors**; readable native row fallbacks increased
 from **491 to 517**. `npm run tauri:build:fast` completed successfully and
-updated `src-tauri/target/release/bundle/macos/Paper Reader.app` at 03:43:29
+updated `src-tauri/target/release/bundle/macos/Versio.app` at 03:43:29
 JST. The fresh bundle passed the complete tiny-fixture packaged integration
 flow (import, annotation, search, both exports, quit, relaunch). A real
 cognitive-memory packaged import also persisted **192 blocks**, including
@@ -1359,14 +1406,14 @@ Targeted regressions, typecheck, lint (pre-existing warnings only), and diff
 validation pass. The complete cached 118-PDF extraction baseline and 114-PDF
 reading-order suite pass **232/232 in 445.34 seconds** under `caffeinate
 -dimsu`. A new fast Tauri bundle was built at **2026-10-15 12:11:53 JST**:
-`src-tauri/target/release/bundle/macos/Paper Reader.app`. Its isolated import
+`src-tauri/target/release/bundle/macos/Versio.app`. Its isolated import
 of the 30-page education PDF completed annotation, search, Markdown and Notion
 export, quit, relaunched, and retained the package (`ok=true`, search hit
 **1**, Markdown **61,695 bytes**, Notion **1,107,751 bytes**). The saved
 structure keeps the preceding `There is a wide range …` text as a paragraph,
 while `Method / Goal-description / Key applications` and the long
 `Distillation of data …` cell are source-only tables with native cell x
-coordinates. No Paper Reader or bundled translation-server process remains.
+coordinates. No Versio or bundled translation-server process remains.
 
 # 2026-10-15: borderless prose tables and CJK checkmark matrices
 
@@ -1420,7 +1467,7 @@ CJK checkmark matrix currently project as paragraphs. Treat those as a
 separate baseline repair, not as evidence against this caption change.
 
 The fast Tauri bundle was rebuilt at **2026-10-14 19:44:08 JST**:
-`src-tauri/target/release/bundle/macos/Paper Reader.app`. Its isolated import
+`src-tauri/target/release/bundle/macos/Versio.app`. Its isolated import
 of the 305-page thesis wrote a package whose `Table 2.5` block has the repaired
 caption metadata and a readable raster table asset. The general packaged E2E
 runner timed out while background Vision OCR reported page 1/7, after package
@@ -1496,7 +1543,7 @@ The complete cached extraction and reading-order corpus passes **232/232** in
 **444.96 seconds** under `caffeinate -dimsu`; the focused package-layout and
 OzCHI regressions, typecheck, lint (existing warnings only), and diff check
 pass. The fast bundle was rebuilt at **2026-10-14 18:25:33 JST**:
-`src-tauri/target/release/bundle/macos/Paper Reader.app`. Continue using
+`src-tauri/target/release/bundle/macos/Versio.app`. Continue using
 `caffeinate -dimsu` for all lengthy commands because the workstation can sleep
 or activate its screen saver.
 
@@ -1538,7 +1585,7 @@ The error-free 114-PDF table-readiness audit improves from **807→728** reader-
 
 # 2026-10-14: packaged figure-panel verification
 
-The fast `.app` containing `d449afb` was rebuilt at **2026-10-14 13:16:42 JST**. The isolated packaged Tauri acceptance again used `linguistics-language-model-physics.pdf` and passed import, annotation, search, Markdown/Notion-package export, quit, relaunch, and persistence. `result.json` records `ok=true`, `searchHits=1`, Markdown export **129,376 bytes**, and Notion package **80,965 bytes**. The harness again left a bundled translation-server process after application exit; it was explicitly stopped, so no Paper Reader process remains.
+The fast `.app` containing `d449afb` was rebuilt at **2026-10-14 13:16:42 JST**. The isolated packaged Tauri acceptance again used `linguistics-language-model-physics.pdf` and passed import, annotation, search, Markdown/Notion-package export, quit, relaunch, and persistence. `result.json` records `ok=true`, `searchHits=1`, Markdown export **129,376 bytes**, and Notion package **80,965 bytes**. The harness again left a bundled translation-server process after application exit; it was explicitly stopped, so no Versio process remains.
 
 # 2026-10-14: figure-caption panel-label disambiguation
 
@@ -1548,7 +1595,7 @@ The 114-PDF readiness audit is still error-free. Its aggregate raw reader fallba
 
 # 2026-10-14: packaged micro-label verification
 
-The fast `.app` was rebuilt at **2026-10-14 12:55:40 JST** with `e32b9db`. Fresh isolated Tauri acceptance used the real `linguistics-language-model-physics.pdf` regression input and passed import, annotation, search, Markdown/Notion-package export, quit, relaunch, and persistence. `result.json` reports `ok=true`, `searchHits=1`, Markdown export **130,206 bytes**, and Notion package **81,148 bytes**. The bundled translation server that survived the harness quit was explicitly stopped; no Paper Reader process remains.
+The fast `.app` was rebuilt at **2026-10-14 12:55:40 JST** with `e32b9db`. Fresh isolated Tauri acceptance used the real `linguistics-language-model-physics.pdf` regression input and passed import, annotation, search, Markdown/Notion-package export, quit, relaunch, and persistence. `result.json` reports `ok=true`, `searchHits=1`, Markdown export **130,206 bytes**, and Notion package **81,148 bytes**. The bundled translation server that survived the harness quit was explicitly stopped; no Versio process remains.
 
 # 2026-10-14: micro-label vector-panel follow-up
 
@@ -1558,7 +1605,7 @@ The refreshed 114-PDF table-readiness audit remains error-free and changes reade
 
 # 2026-10-14: packaged dense-vector verification
 
-The fast Tauri build containing `29ff6ce` completed at **2026-10-14 12:34:43 JST**: `src-tauri/target/release/bundle/macos/Paper Reader.app`. A fresh isolated packaged acceptance imported `linguistics-language-model-physics.pdf`, completed annotation, search, Markdown and Notion-package export, quit, relaunched, and retained the package. `result.json` records `ok=true`, `searchHits=1`, Markdown export **130,190 bytes**, and Notion package **81,167 bytes**. The app exited successfully; its orphaned bundled translation-server process was then explicitly stopped. No app or translation-server process remains.
+The fast Tauri build containing `29ff6ce` completed at **2026-10-14 12:34:43 JST**: `src-tauri/target/release/bundle/macos/Versio.app`. A fresh isolated packaged acceptance imported `linguistics-language-model-physics.pdf`, completed annotation, search, Markdown and Notion-package export, quit, relaunched, and retained the package. `result.json` records `ok=true`, `searchHits=1`, Markdown export **130,190 bytes**, and Notion package **81,167 bytes**. The app exited successfully; its orphaned bundled translation-server process was then explicitly stopped. No app or translation-server process remains.
 
 # 2026-10-14: dense vector-panel table suppression
 
@@ -1616,7 +1663,7 @@ The table candidate guard now rejects only long/multi-line caption-adjacent pros
 
 The real-paper extraction baseline now uses a 600-second corpus timeout (test infrastructure only; product behavior is unchanged). The full cached corpus passed **118/118** tests in 753.92s. The post-change table readiness audit over 114 PDFs completed with `extractionErrors=0`, `tableCaptions=345`, `cropReadyCaptions=255`, `rawTableFragments=1723`, `cropBackedFragments=610`, `readerRawFragments=1115`, `readerCellFallbacks=900`, and reader fragment kinds `structured-grid=900`, `short-label=158`, `prose-like=17`, `ambiguous=38`, `numeric-grid=2`; these are diagnostics, not claims that all tables have perfect semantic schemas.
 
-`npm run lint` and `git diff --check` pass (only existing lint warnings). The latest fast Tauri bundle was built successfully at `2026-10-13 14:26:36 +0900` at `src-tauri/target/release/bundle/macos/Paper Reader.app`. The previous isolated OzCHI packaged acceptance remains green; rerun it after any further source changes that affect package persistence or reader projection.
+`npm run lint` and `git diff --check` pass (only existing lint warnings). The latest fast Tauri bundle was built successfully at `2026-10-13 14:26:36 +0900` at `src-tauri/target/release/bundle/macos/Versio.app`. The previous isolated OzCHI packaged acceptance remains green; rerun it after any further source changes that affect package persistence or reader projection.
 
 # Active PDF extraction objective (2026-10-11)
 
@@ -1643,7 +1690,7 @@ native table-column reconstruction with `caffeinate -dimsu`. It passed
 parallel-column fix together with the existing title, heading, author,
 affiliation, caption, table, reference, reading-order, and page-boundary
 regressions. The command output is retained at
-`/tmp/paper-reader-extraction-regression-final.log` for this session.
+`/tmp/versio-extraction-regression-final.log` for this session.
 
 Long-running extraction, corpus, and packaged-app commands must continue to
 use `caffeinate -dimsu`: the workstation may sleep or enter the screen saver
@@ -1868,7 +1915,7 @@ Reader 左の目次クリックは、本文スクロールコンテナ基準で�
 
 # 2026-10-09: macOS タイトルバーをサイドバー色に
 
-実ウィンドウのタイトルバーを `TitleBarStyle::Transparent` にし、`NSWindow` 背景を `--color-bg-secondary`（light `#f8f9fa` / dark `#252526`）へ同期。テーマ変更時は `sync_window_chrome_theme` で追従。`.app`: `src-tauri/target/release/bundle/macos/Paper Reader.app`。
+実ウィンドウのタイトルバーを `TitleBarStyle::Transparent` にし、`NSWindow` 背景を `--color-bg-secondary`（light `#f8f9fa` / dark `#252526`）へ同期。テーマ変更時は `sync_window_chrome_theme` で追従。`.app`: `src-tauri/target/release/bundle/macos/Versio.app`。
 
 # 2026-10-09: trash CTA radius + hold-to-empty
 
@@ -1912,14 +1959,14 @@ The full PDF extraction suite was rerun with a single Vitest worker to avoid the
 
 # 2026-10-08: packaged UI OCR E2E isolation and duplicate-data diagnosis
 
-The packaged UI harness now honors `PAPER_READER_UI_E2E_HOME` in the Rust app-data and source-PDF paths, and the script accepts the legacy `PAPER_READER_ACCEPTANCE_HOME` alias. `npm run tauri:build:fast` succeeds. A rerun with the malformed multilingual OCR fixture still does not reach the target import: the isolated app-data is populated with pre-existing Paper Packages and the Accessibility label lookup for the add-paper action fails, so this run is not evidence about OCR quality. Native extraction remains 124/124 and real-paper regression remains 118/118.
+The packaged UI harness now honors `VERSIO_UI_E2E_HOME` in the Rust app-data and source-PDF paths, and the script accepts the legacy `VERSIO_ACCEPTANCE_HOME` alias. `npm run tauri:build:fast` succeeds. A rerun with the malformed multilingual OCR fixture still does not reach the target import: the isolated app-data is populated with pre-existing Paper Packages and the Accessibility label lookup for the add-paper action fails, so this run is not evidence about OCR quality. Native extraction remains 124/124 and real-paper regression remains 118/118.
 
 ## Current extraction status (2026-10-07)
 
 - 2026-10-07: OCR enrichment now requests only pages selected by the page classifier instead of rendering every page in a mixed document and discarding most results. This reduces unnecessary Vision OCR exposure on healthy native pages while preserving the existing replacement boundary. Added page-selection regressions; OCR/page-class tests **15/15**, PDF extraction suite **124/124**, and typecheck pass.
 - 2026-10-07: Tauri Vision OCR Rust path revalidated with `cargo test --manifest-path src-tauri/Cargo.toml ocr`; compilation succeeded and the filtered test target completed without failures (the OCR module currently has no unit tests). Runtime recognition still requires launching the macOS app against a scanned/garbled fixture.
 - 2026-10-07: Representative post-change extraction workers for the malformed multilingual title PDF and the 305-page mixed thesis both completed without process or source-integrity failure. The multilingual title mismatch remains a catalog-language disagreement (native/OCR title is Russian while the catalog title is English), not evidence that OCR should overwrite it with metadata.
-- 2026-10-07: Fast macOS Tauri build completed successfully after the OCR page-selection and resolver type fixes. The generated `src-tauri/target/release/bundle/macos/Paper Reader.app` was timestamped 22:23:19, and its bundled `translation-server/engines/segmenter.py` hash matches the source. The build is unsigned.
+- 2026-10-07: Fast macOS Tauri build completed successfully after the OCR page-selection and resolver type fixes. The generated `src-tauri/target/release/bundle/macos/Versio.app` was timestamped 22:23:19, and its bundled `translation-server/engines/segmenter.py` hash matches the source. The build is unsigned.
 - 2026-10-07: The generated unsigned `.app` was launched successfully; the bundled Rust binary was running and contains the `ocr_image` command. This verifies app startup and resource embedding, but not OCR recognition of a PDF page; that still requires importing a scanned/garbled fixture through the running UI.
 - 2026-10-07: Packaged integration E2E was attempted against the built `.app`, but the acceptance harness stalled at `Paper Package tmp validation failed` because another packaged app instance was already running and the harness data contained a stale terminal marker. The run was terminated; this is an E2E harness/environment failure, not an extraction assertion. The existing app process was left untouched.
 - 2026-10-07: Improved `persistPaperPackage` to include validation error codes/messages when temporary package recheck fails. Package persistence tests **6/6**, typecheck, and production frontend build pass; this makes the packaged E2E failure diagnosable on the next clean app run without changing extraction behavior.
@@ -1995,7 +2042,7 @@ The packaged UI harness now honors `PAPER_READER_UI_E2E_HOME` in the Rust app-da
 - 2026-10-06: Affiliation projection now collapses exact repeated institution spans while retaining canonical relation IDs. `power-over-skin` now emits one Carnegie Mellon University entry; focused author regression and typecheck pass.
 - 2026-10-06: Native line geometry showed same-baseline author items (`Daehwa Kim` / `Chris Harrison`) being rejoined during block grouping. Added a generic author-column boundary when both adjacent lines are person-shaped and horizontally separated; added a focused regression asserting three separate authors and no location author (`authorProjection.test.ts`). Focused test and typecheck pass; remaining affiliation deduplication is tracked separately.
 - 2026-10-06: 113本のmastheadサンプルから、著者投影に地名（`Pittsburgh, USA`）、書誌行、メールアドレス、末尾が接続語の断片が混入する一般的な誤抽出を確認。`isNonAuthorMastheadLine` を追加し、著者候補・継続候補・所属候補の境界で除外する補正を実装（`3af9d3b`, `71a879e`）。typecheckとreal-paper extraction回帰118/118は通過。複数著者が同一native lineへ潰れるケース（例: `Daehwa Kim Chris Harrison`）は別のgeometry分離課題として残る。
-# Paper Reader 現在状態
+# Versio 現在状態
 
 - 2026-10-06: 113本の自動抽出指標だけでは見逃す本文汚染を、タイトル診断で追加確認した。インドネシア語ジャーナルPDFでは、ISSN/巻号/発行日帯が本文の先頭行と同じnative line/blockへ連結される形式を確認。`splitInlineBibliographicBand` を行形成前に追加し、構造帯と本文を分離する汎用修正を実装（`e79ba73`）。既存のreal-paper extraction regression **118/118**、typecheck、diff check pass。これは113本全件の目視完了を意味せず、引き続き書式別の目視レビューが必要。
 - 2026-10-06: 上記修正後に113本のisolated extraction benchmarkを再実行。取得済み113/114（`precious-materials`はPDF未取得）。自動title exactは **109/113 (96.46%)**（108/113から改善）。残る4件はPDF内の別言語タイトル3件と英米綴り差1件で、雑誌マストヘッド混同は解消。見出しprecision/recall、図表caption、table-regionはこの計測で1.0、source integrity平均1.0（最小0.997）。これは目視確認済みの正解率ではないため、タイトル・本文混入のmanual reviewを継続する。
@@ -2248,7 +2295,7 @@ The packaged UI harness now honors `PAPER_READER_UI_E2E_HOME` in the Rust app-da
 
 ## 2026-10-05: packaged-server replay checkpoint
 
-- `.app` 同梱translation serverは `MADLAD_SERVER_TOKEN` を要求するため、診断用 `scripts/replay-translation-fallbacks.mjs` が401になっていた。スクリプトが環境変数を `X-Paper-Reader-Token` として送るよう修正し、トークン自体は保存・出力しない。
+- `.app` 同梱translation serverは `MADLAD_SERVER_TOKEN` を要求するため、診断用 `scripts/replay-translation-fallbacks.mjs` が401になっていた。スクリプトが環境変数を `X-Versio-Token` として送るよう修正し、トークン自体は保存・出力しない。
 - 同一`.app`サーバーで3件を再実行。長いJogwheel本文は約182秒後に `whole_item_fallback`、Silent Speech本文は約101秒後に protected-token restore failureを伴う `whole_item_fallback`、参考文献行はサーバー終了により未完了。これは品質改善の証拠ではなく、長文decodeと保護復元の再現診断である。
 - 実行中に`.app`サーバーが終了し、後続の直接再生は接続失敗になった。レポートは `test-data/real-papers/reports/madlad-fallback-replay-v3.json` に保存済み。production routingやgateは変更していない。
 - protected-token restore failureのdebugログに、missing spanを `author_year_citation` / `numeric_citation` / `measurement` / `structural_reference` / `identifier` / `other` へ分類する診断情報を追加。判定・retry可否・出力は変更しない。Python品質テスト **153 passed + 3 subtests**、py_compile、差分チェックを通過。
@@ -2382,7 +2429,7 @@ The packaged UI harness now honors `PAPER_READER_UI_E2E_HOME` in the Rust app-da
 ## 2026-10-05 validation checkpoint
 
 - Final post-build verification: `npm test` passes (69 files / 631 tests), `npx tsc -b --pretty false` passes, `git diff --check` passes, and translation-server `pytest translation-server/tests -q` passes (247 tests, 11 subtests). The `npm test -- --runInBand` invocation itself is unsupported by Vitest; the plain `npm test` run is the authoritative result.
-- The rebuilt macOS bundle is at `src-tauri/target/release/bundle/macos/Paper Reader.app` (mtime 2026-10-05 10:15:39), with bundled `segmenter.py` byte-identical to source and `SEGMENTER_VERSION="semantic-v83"`. The bundled MADLAD source includes the Transformers 4.57.6 / semantic-v83 version components. Fully quit the currently running app/server before launching this bundle; the old process previously reported semantic-v73.
+- The rebuilt macOS bundle is at `src-tauri/target/release/bundle/macos/Versio.app` (mtime 2026-10-05 10:15:39), with bundled `segmenter.py` byte-identical to source and `SEGMENTER_VERSION="semantic-v83"`. The bundled MADLAD source includes the Transformers 4.57.6 / semantic-v83 version components. Fully quit the currently running app/server before launching this bundle; the old process previously reported semantic-v73.
 - Resumed fresh benchmark with the ready local server (`translation-audit` run `2026-10-05T01-19-33-121Z`): 112/114 papers, 1,266 evaluable units, 322 model responses, 994 original fallbacks; ordinary-body fallback was 242/447 (54.1%). The run is diagnostic only because 672 units were blocked by the production input policy and 538 damaged-extraction rows dominated the fallback rate. This confirms that relaxing the quality gate alone would not reach the target; the next work must reduce structural/source blocking and separately evaluate the 322 model outputs semantically. One catalog entry still had no eligible blocks and is recorded in the report.
 - The authenticated-free benchmark `translation-audit-auth-v1` was restarted after the previous 37-paper run stalled on long-lived requests. The new server/benchmark are live (PIDs 3715/4069); `--resume` skipped 29 checkpointed papers and the report currently contains 38 papers / 381 rows, latest `marketing-unavailable-choice`. Current interim ordinary-body fallback is 29/123 (23.6%); this is not final until all selected papers finish.
 - Interim checkpoint diagnostic (not final): 213 sampled rows across those 18 papers include 71 ordinary-body-prose rows; 16 are reader-visible fallbacks (22.5%), with 15 post-model and 1 pre-model. Treat this as directional only until all papers finish; it already indicates that post-model quality rejection remains the dominant ordinary-prose issue.
@@ -3174,7 +3221,7 @@ Final rerun after the masthead continuation tweak completed **232/232** (118 bas
 
 After adding the generic same-column affiliation stitch (comma-terminated row + nearby continuation), the full author projection suite passed **24/24**, and the final cached extraction corpus again passed **232/232**. The interactive-jewellery masthead now keeps the main institution continuations separate without affecting existing masthead cases. The packaged `.app` still needs a rebuild to include these commits.
 
-`npm run tauri:build:fast` was then completed successfully at **2026-10-09 00:47:42**. The generated app is `src-tauri/target/release/bundle/macos/Paper Reader.app`; this is an unsigned fast build with DMG/signing skipped.
+`npm run tauri:build:fast` was then completed successfully at **2026-10-09 00:47:42**. The generated app is `src-tauri/target/release/bundle/macos/Versio.app`; this is an unsigned fast build with DMG/signing skipped.
 
 The Reader header now renders extracted `paper.affiliations` below the author list when available, with a compact secondary style and no output when the list is empty. Reader tests **12/12** and typecheck pass. The UI change was packaged in a new unsigned fast `.app` at **2026-10-09 00:59:09**.
 
@@ -3193,11 +3240,11 @@ The guarded selective backend is production-ready as code but remains **conditio
 - 2026-10-09: Full PDF extraction suite after the affiliation-band boundary fix passed **129/129 tests across 13 files** in a single worker. Parallel Vitest mode still has the known `onTaskUpdate` timeout despite all assertions passing; single-worker is the authoritative result.
 ### 2026-10-11: latest packaged build and typography evidence
 
-- `npm run tauri:build:fast` completed successfully. The latest bundle is `src-tauri/target/release/bundle/macos/Paper Reader.app`, built at `2026-10-11 22:57:00 +0900`.
+- `npm run tauri:build:fast` completed successfully. The latest bundle is `src-tauri/target/release/bundle/macos/Versio.app`, built at `2026-10-11 22:57:00 +0900`.
 - The bundled `translation-server/engines/segmenter.py` and `madlad_mps.py` hashes match the working tree. Native line provenance keeps `fontName`, `fontSize`, x/y, width/height, and rotation through layout diagnostics and package layout. Heading/table/masthead resolvers use font family/size and geometry as evidence, so typography is now an explicit block-boundary clue rather than a display-only field.
-- A packaged acceptance run with `/Users/harada/Desktop/2686612.2686699.pdf` started the bundled server successfully (`/health` ready), but remained at `import_started` for the 120-second harness window. The run was stopped and retained at `/tmp/paper-reader-ozchi-acceptance.Mrk2R0`; no extraction result was claimed from this incomplete run. Direct Canonical extraction and the full regression suite remain the valid evidence until the packaged import can complete in a longer/interactive run.
+- A packaged acceptance run with `/Users/harada/Desktop/2686612.2686699.pdf` started the bundled server successfully (`/health` ready), but remained at `import_started` for the 120-second harness window. The run was stopped and retained at `/tmp/versio-ozchi-acceptance.Mrk2R0`; no extraction result was claimed from this incomplete run. Direct Canonical extraction and the full regression suite remain the valid evidence until the packaged import can complete in a longer/interactive run.
 - The old unrelated PID 54697 server on port 8765 was stopped before the acceptance run, so the bundle spawned its own sidecar; this avoids testing against a stale server.
-- The package checkpoint fix is now bundled at `2026-10-11 23:22:03 +0900`. The latest app was fully restarted from that bundle; its bundled translation server reached `/health` `phase=ready`, `model_loaded=true`. A fresh Tauri run reached `import_dispatched` without the earlier immediate package error during the first 20 seconds (`/tmp/paper-reader-ozchi-acceptance-final2.qk3PcZ`); the full translated import still requires a longer interactive run because this harness was intentionally stopped before completion.
+- The package checkpoint fix is now bundled at `2026-10-11 23:22:03 +0900`. The latest app was fully restarted from that bundle; its bundled translation server reached `/health` `phase=ready`, `model_loaded=true`. A fresh Tauri run reached `import_dispatched` without the earlier immediate package error during the first 20 seconds (`/tmp/versio-ozchi-acceptance-final2.qk3PcZ`); the full translated import still requires a longer interactive run because this harness was intentionally stopped before completion.
 - After adding the post-source-hash flush and live-package read retry, the full JavaScript regression suite passes: **80 files, 758 tests**. Typecheck, focused package tests, and `git diff --check` also pass. The latest app remains running from the 23:16 build for manual Tauri verification.
 - The Golden PDF's same-baseline masthead authors were found to be reversed by sub-pixel y-coordinate noise (`Jonna Häkkilä, Ashley Colley` despite Ashley being left). The generic author-source sort now treats y differences ≤1pt as one visual row and orders by x, yielding `Ashley Colley, Jonna Häkkilä`; a baseline regression asserts this order. Author projection focused tests pass **25/25**. The latest `.app` containing this fix was rebuilt at `2026-10-11 23:27:43 +0900`, restarted, and its bundled translation server reached `phase=ready`.
 
@@ -3212,18 +3259,18 @@ The guarded selective backend is production-ready as code but remains **conditio
 
 - GROBID `0.9.1` was then built and run locally with Java 21 for the same Golden PDF; no Docker, Podman, or cloud service was used. `processHeaderDocument` exactly recovered the title, both author names, emails, DOI, and useful affiliation structure. `processFulltextDocument` excluded the ACM permission chrome, but returned only 20 references versus native 21, 10 figures versus native 12, and logged seven incomplete/malformed tables whose cells are interleaved with prose. The comparison is recorded in `test-data/real-papers/reports/grobid-ozchi-finger-specific-touch-v1.md`. GROBID remains optional local **header evidence** only; it must not replace the native Canonical extraction path. The TEI parser now retains sibling department/institution/country tags within an affiliation link; its focused tests pass 3/3 and typecheck passes. Typography continues to be retained as resolver evidence (`fontName`, size, weight, baseline, indent and spacing) together with geometry, never as a standalone role rule.
 
-- The fast unsigned `.app` was rebuilt after the GROBID TEI parser and comparison-report changes at `2026-10-12 00:19:40 +0900`: `src-tauri/target/release/bundle/macos/Paper Reader.app`. The focused GROBID TEI test passes **3/3**, typecheck and `git diff --check` pass. This rebuild includes all current extraction/UI worktree changes; start this bundle afresh to use it.
+- The fast unsigned `.app` was rebuilt after the GROBID TEI parser and comparison-report changes at `2026-10-12 00:19:40 +0900`: `src-tauri/target/release/bundle/macos/Versio.app`. The focused GROBID TEI test passes **3/3**, typecheck and `git diff --check` pass. This rebuild includes all current extraction/UI worktree changes; start this bundle afresh to use it.
 
 - A fresh packaged Tauri acceptance run against `/Users/harada/Desktop/2686612.2686699.pdf` passed again after that build: isolated import, Canonical/Paper Package persistence, Reader body lookup, annotation, library search, English Markdown export (`46,022` bytes), root-level Notion archive (`1,137,805` bytes), quit/relaunch, and persisted annotation verification all returned `ok=true`. Result: `scripts/packaged-e2e/artifacts/integration/result.json`. The full cached extraction corpus was then rerun against the current worktree: **232/232** pass (118 real-paper baseline + 114 reading-order checks, 417.62s). Parser font/ColorSpace warnings are non-failing PDF.js diagnostics only.
 
-- Latest-bundle visual verification: the normal `Paper Reader.app` process creates a real native window and its library surface was captured from the current bundle at `scripts/packaged-e2e/artifacts/integration/latest-app-window.png`. The dedicated Accessibility UI E2E was strengthened after two harness-only failures: its isolated HOME now reuses the host Hugging Face model cache, and Open-panel paths are pasted rather than typed so a Japanese IME cannot convert path punctuation. The panel now reaches and selects the Golden PDF. The remaining UI-driver issue is the final NSOpenPanel confirmation: the native panel closes but WKWebView does not deliver a file-input change event under System Events automation, so no package is materialized. This does not contradict the separately successful packaged acceptance import, which reads the same PDF through Tauri's `read_dropped_pdf` command. Reader visual interaction still needs either a stable macOS picker driver or a short manual import/open check; do not treat the failed UI harness as an extraction regression.
+- Latest-bundle visual verification: the normal `Versio.app` process creates a real native window and its library surface was captured from the current bundle at `scripts/packaged-e2e/artifacts/integration/latest-app-window.png`. The dedicated Accessibility UI E2E was strengthened after two harness-only failures: its isolated HOME now reuses the host Hugging Face model cache, and Open-panel paths are pasted rather than typed so a Japanese IME cannot convert path punctuation. The panel now reaches and selects the Golden PDF. The remaining UI-driver issue is the final NSOpenPanel confirmation: the native panel closes but WKWebView does not deliver a file-input change event under System Events automation, so no package is materialized. This does not contradict the separately successful packaged acceptance import, which reads the same PDF through Tauri's `read_dropped_pdf` command. Reader visual interaction still needs either a stable macOS picker driver or a short manual import/open check; do not treat the failed UI harness as an extraction regression.
 
-- The fast unsigned `.app` was rebuilt again at **2026-10-12 00:58:24 +0900** after the packaged UI harness changes. The bundle path is `src-tauri/target/release/bundle/macos/Paper Reader.app`; the build completed successfully. The translation server was started separately for UI verification and stopped cleanly afterward.
-- The UI harness now explicitly uses the Tauri `read_dropped_pdf` + `startBackgroundImport` path when `PAPER_READER_UI_E2E=1` and `PAPER_READER_UI_E2E_DIRECT_IMPORT=1`, avoiding the flaky native picker/IME path. A subsequent run with the bundled app and a ready translation server still exited before producing a UI watcher marker, so no new visual UI pass is claimed. The earlier packaged integration acceptance remains the authoritative end-to-end pass; no production direct-import behavior is enabled.
-- Follow-up process audit found four orphaned `Paper Reader.app/Contents/MacOS/app` processes left by earlier UI/manual attempts (including isolated `PAPER_READER_UI_E2E` homes). They were not a current production instance and were terminated. This explains why screen captures showed unrelated/stale window content and why Accessibility enumeration was ambiguous; future UI checks must launch one fresh bundle instance and clean it in a `finally`/trap.
-- Re-inspected the retained latest-bundle screenshot `scripts/packaged-e2e/artifacts/integration/latest-app-window.png`: it is a real Paper Reader library window from the packaged app (Japanese library title and paper card), not a mock or browser capture. It verifies native window rendering and the imported paper card; the deeper Reader-pane visual remains covered by the successful Reader body lookup in packaged integration, but lacks a stable screenshot artifact.
-- After the display was turned back on, CGWindowList inspection identified the Paper Reader native window directly (owner `Paper Reader`, PID 36251, window ID 128250, bounds `1280×832` at `Y=-1018` on another Space/display). Capturing that window with `screencapture -l 128250` succeeded and produced `/tmp/paper-reader-window-direct.png`, confirming the app window was present; the earlier full-screen captures had shown Cursor because they captured the active Space rather than this off-screen window.
-- Keyboard navigation through that same off-screen native window reached the Reader pane. Direct capture `/tmp/paper-reader-keyclick.png` shows the actual Reader layout, TOC, title, abstract and translation-failure banner. This is a real visual verification of the packaged Reader surface. The displayed object is an older persisted user paper (it shows only `Jonna Häkkilä` and six failed blocks), so it is not used as a regression result; the clean packaged acceptance artifact remains authoritative for the Golden PDF's current extraction (Ashley + Jonna, 232/232 corpus).
+- The fast unsigned `.app` was rebuilt again at **2026-10-12 00:58:24 +0900** after the packaged UI harness changes. The bundle path is `src-tauri/target/release/bundle/macos/Versio.app`; the build completed successfully. The translation server was started separately for UI verification and stopped cleanly afterward.
+- The UI harness now explicitly uses the Tauri `read_dropped_pdf` + `startBackgroundImport` path when `VERSIO_UI_E2E=1` and `VERSIO_UI_E2E_DIRECT_IMPORT=1`, avoiding the flaky native picker/IME path. A subsequent run with the bundled app and a ready translation server still exited before producing a UI watcher marker, so no new visual UI pass is claimed. The earlier packaged integration acceptance remains the authoritative end-to-end pass; no production direct-import behavior is enabled.
+- Follow-up process audit found four orphaned `Versio.app/Contents/MacOS/app` processes left by earlier UI/manual attempts (including isolated `VERSIO_UI_E2E` homes). They were not a current production instance and were terminated. This explains why screen captures showed unrelated/stale window content and why Accessibility enumeration was ambiguous; future UI checks must launch one fresh bundle instance and clean it in a `finally`/trap.
+- Re-inspected the retained latest-bundle screenshot `scripts/packaged-e2e/artifacts/integration/latest-app-window.png`: it is a real Versio library window from the packaged app (Japanese library title and paper card), not a mock or browser capture. It verifies native window rendering and the imported paper card; the deeper Reader-pane visual remains covered by the successful Reader body lookup in packaged integration, but lacks a stable screenshot artifact.
+- After the display was turned back on, CGWindowList inspection identified the Versio native window directly (owner `Versio`, PID 36251, window ID 128250, bounds `1280×832` at `Y=-1018` on another Space/display). Capturing that window with `screencapture -l 128250` succeeded and produced `/tmp/versio-window-direct.png`, confirming the app window was present; the earlier full-screen captures had shown Cursor because they captured the active Space rather than this off-screen window.
+- Keyboard navigation through that same off-screen native window reached the Reader pane. Direct capture `/tmp/versio-keyclick.png` shows the actual Reader layout, TOC, title, abstract and translation-failure banner. This is a real visual verification of the packaged Reader surface. The displayed object is an older persisted user paper (it shows only `Jonna Häkkilä` and six failed blocks), so it is not used as a regression result; the clean packaged acceptance artifact remains authoritative for the Golden PDF's current extraction (Ashley + Jonna, 232/232 corpus).
 
 # 2026-10-12: borderless matrix row-label resolution
 
@@ -3248,7 +3295,7 @@ the second reading-order file was still running; no extraction assertion
 failure was reported. The focused Golden diagnostic and new table assertions
 confirm the role change. `npm run tauri:build:fast` completed successfully at
 **2026-10-12 09:58:17 +0900** and produced the unsigned app at
-`src-tauri/target/release/bundle/macos/Paper Reader.app`; the bundle contains
+`src-tauri/target/release/bundle/macos/Versio.app`; the bundle contains
 the updated extraction code and bundled translation server. A full packaged
 import/visual check of the new table rendering remains the next manual step.
 
@@ -3333,7 +3380,7 @@ failure produces an empty OCR result for that page and retains PDF.js native
 text, so an auxiliary macOS OCR request cannot indefinitely block an otherwise
 readable import. The OCR-stall regression, typecheck, lint (existing warnings
 only), and the packaged acceptance test pass. The latest fast unsigned bundle
-is `src-tauri/target/release/bundle/macos/Paper Reader.app`, rebuilt at
+is `src-tauri/target/release/bundle/macos/Versio.app`, rebuilt at
 **2026-10-13 03:05:27 JST**.
 For the OzCHI finger-specific-touch regression itself, all **5/5** numbered
 tables are crop-ready; all 9 raw table fragments are caption-owned and the
@@ -3381,7 +3428,7 @@ and its translation server were stopped after verification.
 Typecheck and lint pass (existing warnings only). The Rust release bundle was
 rebuilt after clearing stale DMG files and debug cache when the development
 volume ran out of space. Current bundle:
-`src-tauri/target/release/bundle/macos/Paper Reader.app`, built at
+`src-tauri/target/release/bundle/macos/Versio.app`, built at
 **2026-10-12 21:54:19 +0900**. The debug cache was intentionally removed; a
 future `cargo test` will rebuild it.
 
@@ -3423,7 +3470,7 @@ same baseline has independently long left and right spans. Both the genuine
 two-column and midpoint-spanning single-column regressions pass. The mixed
 thesis caption test was corrected to select the body caption rather than its
 correctly-suppressed table-of-contents entry. Latest unsigned bundle:
-`src-tauri/target/release/bundle/macos/Paper Reader.app`, built at
+`src-tauri/target/release/bundle/macos/Versio.app`, built at
 **2026-10-12 22:26:32 +0900**.
 
 # 2026-10-12: non-table grid false-positive follow-up
@@ -3439,7 +3486,7 @@ caption-anchored data tables. Real-PDF regressions cover the ergonomics thesis
 contents page and the language-model-physics display. Focused tests, typecheck,
 lint, and diff validation pass. The fast unsigned bundle was rebuilt at
 **2026-10-12 21:26:40 +0900**:
-`src-tauri/target/release/bundle/macos/Paper Reader.app`.
+`src-tauri/target/release/bundle/macos/Versio.app`.
 
 # 2026-10-12: packaged import / persistence acceptance
 
@@ -3452,11 +3499,11 @@ isolated launch recorded `relaunch_ok`, verifying that the imported paper and
 annotation persisted. This is the package-level proof that the provisional
 index visibility fix prevents the earlier incomplete-package Reader state for
 the exercised fixture. Test data lived only under
-`/tmp/paper-reader-package-open.TvjJ4P` and both test app and sidecar were
+`/tmp/versio-package-open.TvjJ4P` and both test app and sidecar were
 stopped afterwards.
 
 The fast unsigned bundle was rebuilt after this change at **2026-10-12
-12:46:37 +0900**: `src-tauri/target/release/bundle/macos/Paper Reader.app`.
+12:46:37 +0900**: `src-tauri/target/release/bundle/macos/Versio.app`.
 
 # 2026-10-12: orphan table-candidate precision pass
 
@@ -3520,7 +3567,7 @@ triage, not an assertion of visual correctness. Artifact:
 
 The unsigned Tauri bundle was rebuilt after this final geometry change at
 **2026-10-12 16:35:27 +0900**:
-`src-tauri/target/release/bundle/macos/Paper Reader.app`. The next action is
+`src-tauri/target/release/bundle/macos/Versio.app`. The next action is
 an isolated packaged import/reload confirmation, then a clean re-import of the
 Golden PDF for Reader visual confirmation.
 
@@ -3545,7 +3592,7 @@ Vitest's long single-fork reporter emits a non-assertion `onTaskUpdate`
 timeout after successful tests. Typecheck, lint, and diff validation pass.
 
 The unsigned bundle was rebuilt at **2026-10-12 17:01:15 +0900**:
-`src-tauri/target/release/bundle/macos/Paper Reader.app`. The next action is
+`src-tauri/target/release/bundle/macos/Versio.app`. The next action is
 to re-import the Golden PDF through the packaged app. Existing package/export
 folders are historical extraction outputs and must be deleted/re-imported to
 reflect this pipeline version.
@@ -3590,7 +3637,7 @@ empty Reader card. `sqlitePersistSafety.test.ts` covers the visibility boundary;
 the focused test, typecheck, lint, and diff validation pass.
 
 The fast unsigned bundle was rebuilt at **2026-10-12 17:49:10 +0900**:
-`src-tauri/target/release/bundle/macos/Paper Reader.app`.
+`src-tauri/target/release/bundle/macos/Versio.app`.
 
 An isolated packaged acceptance run with the large OzCHI PDF no longer reached
 the previous immediate incomplete-package error, but it did not complete before
@@ -3620,7 +3667,7 @@ same-page, same-column raw table-region fragment with horizontal overlap and a
 bounded local vertical distance, so ordinary nearby prose cannot be hidden.
 The focused above-caption and real OzCHI Table 3 regressions pass. The fast
 unsigned bundle including this change was rebuilt at **2026-10-12 21:14:26
-+0900**: `src-tauri/target/release/bundle/macos/Paper Reader.app`.
++0900**: `src-tauri/target/release/bundle/macos/Versio.app`.
 
 The refreshed 114-PDF table-reader diagnostic completed with **0 extraction
 errors**. It now finds 372 numbered captions, 240 crop-ready captions, and
@@ -3665,7 +3712,7 @@ is represented by two independent vertical native columns and is therefore
 covered by the crop path rather than falsely claimed as a reconstructed grid.
 
 The packaged acceptance helper no longer overrides `HOME`: it isolates app
-data with `PAPER_READER_ACCEPTANCE_HOME` while reusing the local MADLAD cache.
+data with `VERSIO_ACCEPTANCE_HOME` while reusing the local MADLAD cache.
 The prior override downloaded a second multi-GB model cache and exhausted the
 disk before extraction could be assessed. An isolated large-PDF acceptance
 run still did not reach its package marker within its 180-second timeout and
@@ -3709,7 +3756,7 @@ audit-only report is `test-data/real-papers/reports/table-reader-readiness-v1.js
 Typecheck, lint (existing warnings only), diff check, and the focused
 linguistics extraction regression pass. A new fast unsigned `.app` was built at
 **2026-10-13 11:44:18 +0900**:
-`src-tauri/target/release/bundle/macos/Paper Reader.app`.
+`src-tauri/target/release/bundle/macos/Versio.app`.
 The real Tauri OzCHI acceptance run passed import, annotation/search/export,
 quit, and relaunch persistence using that bundle. A separate linguistics
 packaged run reached OCR processing on page 7/8 but exceeded the fixed 180
@@ -3736,11 +3783,11 @@ evidence that the PDF has no content. The lazy page-render optimization is in
 place, but the large vector-heavy case still needs profiling/optimization
 before claiming broad packaged-import completion.
 
-The packaged acceptance harness now accepts `PAPER_READER_E2E_TIMEOUT_S` for
+The packaged acceptance harness now accepts `VERSIO_E2E_TIMEOUT_S` for
 large real-paper runs while retaining the 180-second default. With
 `caffeinate` and a 600-second timeout, the latest `.app` completed the full
 language-model-physics import, annotation/search/export, quit, and relaunch
-checks. Marker: `/tmp/paper-reader-acceptance-ling-v4/_acceptance/result.json`
+checks. Marker: `/tmp/versio-acceptance-ling-v4/_acceptance/result.json`
 (`ok: true`, export 130260 bytes, Notion ZIP 81127 bytes). Its persisted
 structure contains 842 blocks (628 paragraphs, 136 tables, 32 figures), so the
 earlier 180-second result was a harness timeout rather than an import failure.
@@ -3785,7 +3832,7 @@ tables have perfect semantic schemas.
 `npm run lint` and `git diff --check` pass (only existing lint warnings). The
 latest fast Tauri bundle was built successfully at
 `2026-10-13 14:26:36 +0900` at
-`src-tauri/target/release/bundle/macos/Paper Reader.app`. The previous isolated
+`src-tauri/target/release/bundle/macos/Versio.app`. The previous isolated
 OzCHI packaged acceptance remains green; rerun it after any further source
 changes that affect package persistence or reader projection.
 # 2026-10-13: parallel table-column reconstruction and captioned-grid rescue
@@ -3957,7 +4004,7 @@ corpus cases pass after narrowing the promotion rule.
 Final verification for this change: the complete extraction and reading-order
 corpus passes **232/232** in **454.19 seconds** after the narrowed rule. This
 change is included in the latest packaged Tauri build at
-`src-tauri/target/release/bundle/macos/Paper Reader.app`, built at
+`src-tauri/target/release/bundle/macos/Versio.app`, built at
 `2026-10-16 00:24:53 +0900`. Packaged import/search/export/relaunch E2E also
 passes. The staged app contains the rotated-page geometry path and the latest
 prose-cell/native-grid table guard. Packaged import/search/export/relaunch E2E
@@ -4000,7 +4047,7 @@ change is not yet included in the packaged `.app`; rebuild and packaged smoke te
 are the next verification steps.
 
 The captionless-grid change is included in the rebuilt `.app` at
-`src-tauri/target/release/bundle/macos/Paper Reader.app` (updated
+`src-tauri/target/release/bundle/macos/Versio.app` (updated
 `2026-10-16 00:45:57 +0900`). Packaged integration E2E passed for both the
 normal fixture and `test-data/real-papers/human-ai-interaction-guidelines.pdf`,
 covering import, Reader marker/search/export, quit, relaunch, and persistence.
@@ -4036,7 +4083,7 @@ The change is source-only and the staged `.app` must be rebuilt before Tauri
 UI verification.
 
 The fast Tauri bundle was rebuilt successfully after the nullability fix;
-`Paper Reader.app` updated at `2026-10-16 01:13:43 +0900`. Packaged integration
+`Versio.app` updated at `2026-10-16 01:13:43 +0900`. Packaged integration
 E2E (import, annotation/search marker, export, quit, relaunch, persistence)
 also passed.
 
@@ -4108,7 +4155,7 @@ refreshed audit reports extraction errors **0**, `readerRawFragments` **658**,
 fragments are primarily source-only tables whose crop was unavailable or
 legitimate numeric/label cells; they remain visible for safety.
 
-The fast Tauri bundle includes this cross-column ownership fix; `Paper Reader.app`
+The fast Tauri bundle includes this cross-column ownership fix; `Versio.app`
 was rebuilt at `2026-10-16 02:06:37 +0900`. Packaged integration E2E with the
 OzCHI fixture passed import, search, export, quit, relaunch, and persistence.
 
@@ -4140,7 +4187,7 @@ structured rows. The full table audit reports extraction errors **0**,
 (previously 503), and `orphanFragments` **739**. The complete extraction
 regression remains **118/118** in **331.94 seconds**.
 
-The fast Tauri bundle includes this package-stage change; `Paper Reader.app`
+The fast Tauri bundle includes this package-stage change; `Versio.app`
 was rebuilt at `2026-10-16 02:29:51 +0900`. Packaged integration E2E passed for
 both `human-ai-interaction-guidelines.pdf` and the OzCHI fixture, covering
 import, search, export, quit, relaunch, and persistence.
@@ -4189,7 +4236,7 @@ it contains the checkpoint coalescing fix and no acceptance-only instrumentation
 The attempted statistical-prose demotion was reverted after focused pipeline
 regressions showed it interfered with existing table/figure boundaries. No
 production extraction rule was retained from that experiment. The clean source
-was rebuilt into `Paper Reader.app` at **2026-10-16 04:39:02 JST**, with the
+was rebuilt into `Versio.app` at **2026-10-16 04:39:02 JST**, with the
 checkpoint-coalescing and FTS-schema fixes included.
 
 The focused `pipeline.test.ts` rerun at 04:37 also exposed four existing
@@ -4232,7 +4279,7 @@ does not enter paragraph translation or table projection.
 
 The fast Tauri bundle was rebuilt after the corpus pass at **2026-10-16
 05:29:17 JST**. Packaged integration E2E then passed using the generated
-`Paper Reader.app`, including import, annotation, search, export, quit, relaunch,
+`Versio.app`, including import, annotation, search, export, quit, relaunch,
 and persistence. No DMG or signing step was run in fast mode.
 
 An additional packaged run used the real `ozchi-finger-specific-touch.pdf`
@@ -4255,11 +4302,11 @@ The `.app` was rebuilt again after that refactor at **2026-10-16 05:37:43
 JST** using `npm run tauri:build:fast`; generated licenses were restored after
 the build and the worktree is clean.
 
-The packaged integration script now supports `PAPER_READER_E2E_IMPORT_ONLY=1`
-with optional `PAPER_READER_E2E_EXPECT_TABLES`. This separates extraction/package
+The packaged integration script now supports `VERSIO_E2E_IMPORT_ONLY=1`
+with optional `VERSIO_E2E_EXPECT_TABLES`. This separates extraction/package
 verification from the later translation/export acceptance marker. Running the
-current `.app` with the real OzCHI PDF and `PAPER_READER_E2E_EXPECT_TABLES=5`
-and `PAPER_READER_E2E_REQUIRE_TABLE_ROWS=1` passed: **137 blocks, 5 structured
+current `.app` with the real OzCHI PDF and `VERSIO_E2E_EXPECT_TABLES=5`
+and `VERSIO_E2E_REQUIRE_TABLE_ROWS=1` passed: **137 blocks, 5 structured
 tables with non-empty structured rows**, followed by a clean app shutdown.
 
 ## 保守リファクタリングの運用
@@ -4268,7 +4315,7 @@ tables with non-empty structured rows**, followed by a clean app shutdown.
 
 直近のチェックポイントは `519eebd` の合成テーブル領域インデックス化で、232/232抽出回帰、OzCHI実PDFのTauri import-only（137 blocks / 5 tables / 非空rows）、typecheck、lintを確認済み。次の候補は、残るベクター数値ラベルのsource-order診断と、`run-ui.sh` の実PDF Reader表示検証である。
 
-Reader表示検証用に `PAPER_READER_UI_E2E_SMOKE_ONLY=1` を追加し、実PDFを同じTauri direct-import経路でReader DOMまで確認できるスモークモードを実装した（`7dec536`）。小さなfixtureでの実行は、app内translation-serverのモデルキャッシュ準備待ちでlibrary marker到達前にタイムアウトしたため未合格。OzCHI実PDFは既存のimport-onlyで137 blocks / 5 tables / 非空rowsを確認済みで、Reader UIスモークはモデルキャッシュを明示的に共有した再試行が次の検証項目。コード反映済みのfast `.app` mtimeは **2026-10-16 05:43:00 JST**。
+Reader表示検証用に `VERSIO_UI_E2E_SMOKE_ONLY=1` を追加し、実PDFを同じTauri direct-import経路でReader DOMまで確認できるスモークモードを実装した（`7dec536`）。小さなfixtureでの実行は、app内translation-serverのモデルキャッシュ準備待ちでlibrary marker到達前にタイムアウトしたため未合格。OzCHI実PDFは既存のimport-onlyで137 blocks / 5 tables / 非空rowsを確認済みで、Reader UIスモークはモデルキャッシュを明示的に共有した再試行が次の検証項目。コード反映済みのfast `.app` mtimeは **2026-10-16 05:43:00 JST**。
 
 Reader smokeの再検証で、起動スクリプトの環境変数継続行にコメントを挟んでいたためdirect-import設定が欠落する問題を修正し、smoke時の通常acceptance二重importも無効化した（`71b1b7b`）。生成済みsingle-column fixtureでは、packaged `.app`で `ui_reader_smoke_ready`（Reader DOMとreader-body存在）まで成功。OzCHI実PDFではpackage生成とtitle marker（Exploring Finger Specific Touch Screen Interaction...）まで確認したが、実Reader route markerは待機中に停止したため、構造検証はimport-only（137 blocks / 5 tables / 非空rows）を正式結果とする。実PDF Reader UIの未解決点は、長い翻訳・Reader route遷移待ちの切り分けである。
 
@@ -4295,7 +4342,7 @@ Reader smokeの再検証で、起動スクリプトの環境変数継続行に�
 
 2026-10-16: Refreshed the source-matching fast `.app` after reverting the synchronous crop-enrichment experiment. Build completed at **07:11:22 JST**; generated license metadata was restored. Packaged OzCHI import-only verification passed with **138 blocks / 5 structured tables**, all five tables retaining non-empty `tableRows`; Table 1 retained 10 rows and Table 3 retained 6 rows. `npm run lint` and the build's typecheck passed (lint has only pre-existing warnings). This confirms the packaged native-grid fallback is present in the current `.app`; image/crop enrichment remains intentionally off the import-critical path because it previously blocked imports beyond 240s.
 
-2026-10-16: Re-ran the packaged Reader UI smoke against the real OzCHI PDF using the correct `PAPER_READER_E2E_FIXTURE` path. The latest `.app` reached `ui_reader_smoke_ready` with title `Exploring Finger Specific Touch Screen Interaction for Mobile Phone User Interfaces`; this verifies the real Tauri import and Reader route, while the import-only package assertion remains the authoritative table-row check. The smoke harness does not yet expose a table-cell DOM marker, so visual cell rendering remains a follow-up verification item.
+2026-10-16: Re-ran the packaged Reader UI smoke against the real OzCHI PDF using the correct `VERSIO_E2E_FIXTURE` path. The latest `.app` reached `ui_reader_smoke_ready` with title `Exploring Finger Specific Touch Screen Interaction for Mobile Phone User Interfaces`; this verifies the real Tauri import and Reader route, while the import-only package assertion remains the authoritative table-row check. The smoke harness does not yet expose a table-cell DOM marker, so visual cell rendering remains a follow-up verification item.
 
 2026-10-16: Added a UI-E2E-only `tableSurfaceVisible` marker and one-time Reader scroll in smoke mode so future real-paper runs can distinguish route readiness from an actually mounted structured table/table image. Typecheck passed and the rebuilt `.app` import-only check still passed **138 blocks / 5 tables**. The OzCHI UI smoke reached the library card but the accessibility card-open step timed out on this run; this is a harness/window-focus failure, while the prior same-build Reader-route smoke and current package verification remain green. The new marker is diagnostic only and has no normal-app behavior.
 
@@ -4320,7 +4367,7 @@ Reader smokeの再検証で、起動スクリプトの環境変数継続行に�
 
 `npm run typecheck`、`npm run lint`（既存warningのみ）、対象3ファイルの81テスト、`caffeinate -dimsu npm run test:extraction-corpus -- --reporter=dot`（118 extraction + 114 reading-order = **232/232**, 462.46s）が通過した。次の品質変更では、同じ判定群を再び `toPaper.ts` に戻さず、この責務単位を入口に characterization test を追加する。未解決の figure/table crop enrichment と、実PDF Reader UIでの structured-cell DOM確認は継続課題である。
 
-同じコミットを含む fast `.app` を **2026-10-16 08:27:02 JST** に再ビルドした。OzCHI実PDFのパッケージimport-only E2Eは **138 blocks / 5 tables / 全表に非空tableRows** で通過し、実行後にPaper Readerおよびtranslation serverの残留プロセスがないことも確認した。
+同じコミットを含む fast `.app` を **2026-10-16 08:27:02 JST** に再ビルドした。OzCHI実PDFのパッケージimport-only E2Eは **138 blocks / 5 tables / 全表に非空tableRows** で通過し、実行後にVersioおよびtranslation serverの残留プロセスがないことも確認した。
 
 # 2026-10-16: merge wrapped table-cell continuations across interleaved rows
 
@@ -4367,7 +4414,7 @@ enrichment remains outside the synchronous import path.
 
 # 2026-10-16: latest fast bundle after cross-column table folding
 
-`caffeinate -dimsu npm run tauri:build:fast` completed successfully at **2026-10-16 10:23:24 JST**. The bundle contains the current `translation-server/engines/segmenter.py` and the current extraction/projection code. Generated license metadata was restored after the build; worktree is clean. This build is ready for the next packaged import-only verification; no translation server or Paper Reader process remains running.
+`caffeinate -dimsu npm run tauri:build:fast` completed successfully at **2026-10-16 10:23:24 JST**. The bundle contains the current `translation-server/engines/segmenter.py` and the current extraction/projection code. Generated license metadata was restored after the build; worktree is clean. This build is ready for the next packaged import-only verification; no translation server or Versio process remains running.
 
 # 2026-10-16: deterministic ordering for caption-owned cross-column grids
 
@@ -4385,7 +4432,7 @@ The behavior-preserving table continuation regex cleanup was included in a fresh
 
 # 2026-10-16: packaged E2E sidecar cleanup
 
-The packaged import-only harness now cleans up the exact bundled translation-server sidecar on shell exit. Tauri app termination from the shell does not reliably execute the window-close callback, so the prior harness could leave an orphaned `server.py`; cleanup is restricted to the current `.app` resource path and never touches a development server on port 8765. Repeated OzCHI packaged import-only verification passed (**143 blocks / 5 tables**) and no Paper Reader/sidecar process remained after exit.
+The packaged import-only harness now cleans up the exact bundled translation-server sidecar on shell exit. Tauri app termination from the shell does not reliably execute the window-close callback, so the prior harness could leave an orphaned `server.py`; cleanup is restricted to the current `.app` resource path and never touches a development server on port 8765. Repeated OzCHI packaged import-only verification passed (**143 blocks / 5 tables**) and no Versio/sidecar process remained after exit.
 
 # 2026-10-16: dense table question-cell and cross-column crop cleanup
 
@@ -4401,9 +4448,9 @@ The OzCHI Table 5 regression now yields structured rows for both Phonebook and G
 
 # 2026-10-16: packaged app after stacked-grid recovery
 
-Fast Tauri build completed at **2026-10-16 11:45:38 JST** from commit `413ab98`. The bundle includes the current native table-region and package-grid recovery code. Real OzCHI import-only packaged E2E passed with **138 blocks / 5 tables / all required tables retaining non-empty `tableRows`**. Generated license metadata was restored after the build, and no Paper Reader or translation-server process remained after the harness exited.
+Fast Tauri build completed at **2026-10-16 11:45:38 JST** from commit `413ab98`. The bundle includes the current native table-region and package-grid recovery code. Real OzCHI import-only packaged E2E passed with **138 blocks / 5 tables / all required tables retaining non-empty `tableRows`**. Generated license metadata was restored after the build, and no Versio or translation-server process remained after the harness exited.
 
-The same **11:45:38 JST** bundle also passed the full packaged integration flow against the OzCHI PDF: import → Reader acceptance marker → search (`hits=1`) → Markdown export → Notion ZIP export (`bytes>0`) → app relaunch and persistence. The harness exited with no Paper Reader or bundled translation-server process remaining.
+The same **11:45:38 JST** bundle also passed the full packaged integration flow against the OzCHI PDF: import → Reader acceptance marker → search (`hits=1`) → Markdown export → Notion ZIP export (`bytes>0`) → app relaunch and persistence. The harness exited with no Versio or bundled translation-server process remaining.
 # 2026-10-16: boxed abstract prose no longer becomes table fallback
 
 The extraction path had a generic false positive on journal front pages that
@@ -4429,7 +4476,7 @@ none is a confirmed ordinary-prose table false positive.
 The updated extraction path was packaged into the fast macOS `.app` at
 **2026-10-16 12:29:47 JST**. Packaged OzCHI import-only verification passed
 with **138 blocks / 5 tables**, every table retaining non-empty `tableRows`.
-The app and bundled sidecar exited cleanly; no Paper Reader or translation
+The app and bundled sidecar exited cleanly; no Versio or translation
 server process remains running.
 
 # 2026-10-16: cross-column table suppression uses cell geometry
@@ -4448,7 +4495,7 @@ server process remains running.
 # 2026-10-16: packaged app rebuilt after table geometry fix
 
 - `npm run tauri:build:fast` completed successfully at 13:02 JST.
-- Bundle: `src-tauri/target/release/bundle/macos/Paper Reader.app` (updated 13:02:11 JST).
+- Bundle: `src-tauri/target/release/bundle/macos/Versio.app` (updated 13:02:11 JST).
 - Translation-server resources were staged from the current source; bundle contains `engines/segmenter.py` and timestamp `2026-10-16T04:01:23Z`.
 - Generated third-party license output was restored after the build as required by the project workflow.
 
@@ -4484,7 +4531,7 @@ server process remains running.
 
 - The UI-only smoke harness was hardened to activate the draggable paper card through its keyboard path before falling back to click. Typecheck/lint pass and the `.app` was rebuilt at 13:17:23 JST.
 - OzCHI UI smoke still stops at the macOS card-to-Reader activation boundary (`ui_library_card_visible` → `ui_reader_visible` timeout), while the same build passes the full packaged acceptance flow (import, Reader acceptance, search/export, relaunch persistence). This remains an Accessibility/WebView harness limitation, not an extraction or package persistence failure; no production behavior is changed by the smoke-only activation path.
-- After the failed smoke run, no Paper Reader or bundled translation-server processes remain.
+- After the failed smoke run, no Versio or bundled translation-server processes remain.
 
 # 2026-10-16: current bundle acceptance after UI smoke harness update
 
@@ -4493,9 +4540,9 @@ server process remains running.
 
 # 2026-10-16: UI smoke foregrounding follow-up
 
-- The harness now explicitly activates the packaged process (`Paper Reader` and the bundle's `app` process) before Accessibility actions (`95fb6f0`, `2d31166`).
+- The harness now explicitly activates the packaged process (`Versio` and the bundle's `app` process) before Accessibility actions (`95fb6f0`, `2d31166`).
 - A fresh smoke run still captured Notion Calendar as the frontmost window and timed out at `ui_reader_visible`; the packaged app process itself was alive and its isolated paper package was complete.
-- This is a host Accessibility/frontmost-control limitation in the smoke harness. It does not invalidate the passing packaged integration flow or the 232/232 extraction corpus gate. No Paper Reader or bundled translation-server process remains after the run.
+- This is a host Accessibility/frontmost-control limitation in the smoke harness. It does not invalidate the passing packaged integration flow or the 232/232 extraction corpus gate. No Versio or bundled translation-server process remains after the run.
 
 # 2026-10-16: caption-adjacent native table reconstruction
 
@@ -4524,7 +4571,7 @@ server process remains running.
 # 2026-10-16: packaged verification after native-table fix
 
 - `npm run tauri:build:fast` completed successfully; the current
-  `src-tauri/target/release/bundle/macos/Paper Reader.app` was updated at
+  `src-tauri/target/release/bundle/macos/Versio.app` was updated at
   14:03:37 JST and contains the current frontend plus bundled
   `translation-server/engines/segmenter.py` and `madlad_mps.py`.
 - `scripts/packaged-e2e/run-integration.sh` passed on the rebuilt app:
@@ -4553,7 +4600,7 @@ server process remains running.
   table was flattened into a translated paragraph.
 - The bundled integration flow passed again: import → annotation/search/export
   → relaunch persistence → quit. The test harness now supports an optional
-  `PAPER_READER_E2E_POST_READY_SLEEP_S` grace period for background enrichment;
+  `VERSIO_E2E_POST_READY_SLEEP_S` grace period for background enrichment;
   default acceptance timing is unchanged.
 
 # 2026-10-16: dense table pages and acceptance marker robustness
@@ -4572,7 +4619,7 @@ server process remains running.
   reads the current acceptance-home marker directly. Standard packaged
   integration passes after the fix.
 - The `.app` containing this dense-page raster change was rebuilt at
-  **14:13:55 JST**; no Paper Reader or translation-server process remains.
+  **14:13:55 JST**; no Versio or translation-server process remains.
 
 # 2026-10-16: final full extraction corpus rerun
 
@@ -4663,7 +4710,7 @@ server process remains running.
   levels/order for older packages. Nested sections have clear indentation and
   a guide line, while section navigation and active tracking remain unchanged.
 - Typecheck passed and the latest Tauri `.app` was rebuilt at **17:35:48 JST**:
-  `src-tauri/target/release/bundle/macos/Paper Reader.app`.
+  `src-tauri/target/release/bundle/macos/Versio.app`.
 
 # 2026-10-16: keep split web access dates out of body paragraphs
 
@@ -4679,7 +4726,7 @@ server process remains running.
 # 2026-10-22: PDF Extraction benchmark foundation
 
 - 開発専用の parser-neutral benchmark schema / runner を追加。CER/NED、role-aware Block F1、reading-order edit distance、段落境界 F1、table TEDS、formula NED を個別に報告し、annotation coverage が complete でない指標は N/A（100%にしない）。CDM は公式ローカル renderer の値だけを `formula_cdm` として受理し、未計測時は N/A。
-- `npm run eval:extraction-benchmark -- --gold-dir … --prediction-dir …` は bounded run、`--all`、進捗、timeout/SIGINT partial report、構造別の対象件数・critical failure を提供。Paper Reader / Docling / GROBID の同一 gold 比較用 artifact format を分離した。
+- `npm run eval:extraction-benchmark -- --gold-dir … --prediction-dir …` は bounded run、`--all`、進捗、timeout/SIGINT partial report、構造別の対象件数・critical failure を提供。Versio / Docling / GROBID の同一 gold 比較用 artifact format を分離した。
 - 既存113本は development 扱い。既存 `heldout-catalog-v1` は6件中5件が development catalog と同一 filename のため、独立 extraction score の根拠には使わない。独立 held-out は source hash・template/publisher family を分離し、reviewed gold を揃えるまで N/A のままとする。
 - 検証: benchmark / Studio metrics **10/10**、`npm run typecheck`、`npx vite build` pass。
 - `independent-cohort-v1` と cohort audit を追加。JMIR/MDPI/Cureus/Wiley/BMC の5本は local source hash と publisher family が development corpus（取得済み109本）と非重複であることを確認済み。ただし reviewed gold annotation 前なので、held-out score は引き続き N/A。
@@ -4715,3 +4762,48 @@ server process remains running.
 - 全指標（Block/Text/Reading Order/段落境界/Caption relation/TEDS/Formula NED/CDM）を明示human goldとして持つsynthetic fixtureを追加。CLIでdevelopment 2件を採点し、各指標の対象件数・N/Aの別を含むreport生成を確認。
 - CLIに`--require-metrics`を追加。回帰gateで必要指標の`evaluatedDocuments=0`を成功扱いにせず、reportを保存してnon-zero終了する。all-dimensions syntheticでrequired全metric成功、空held-outでrequired Block F1がnon-zeroとなることを確認。
 - Studioで空白をドラッグして追加した認識漏れを、保存後もPDF上の破線枠と右ペイン一覧に残し削除できるよう改善。抽出漏れのroleと分かる範囲の正しいtextを記録し、gold converterでは既存のmissing-region ground truthとしてBlock Recall等に反映される。typecheck・Vite build・diff check pass。
+- 数式の下付き説明ラベル（underbrace）が同じnative行に混ざるPDFで、番号付き表示式を本文段落へ誤分類しないよう修正。公開原本 `2302.03792v1` をローカル再抽出し、式(6)が `paragraph` から `equation` へ復帰したことを確認。数式断片の分数・上下添字を完全に線形復元する処理は未対応のため、式(7)–(8)は継続診断対象。focused math regression **38/38** とtypecheck pass。
+- Studioでは原本上のドラッグを常時認識漏れ領域の追加に割り当て、検出済み領域の透明オーバーレイが空白ドラッグを奪う問題を解消。ドラッグ開始・終了の座標をReact描画待ちに依存せず同期保持し、mouse up直後に既定roleの認識漏れとして即時保存する。クリックはブロック選択、既存枠の調整は選択後の四隅ハンドルに分離した。切替操作は不要。typecheck pass。
+- Studioで既存の抽出枠を選択して`抽出枠を削除`できるよう追加。抽出スナップショットを破壊せず、`extra` のcritical reviewとして保存し、PDFと右ペインから除外する。選択中のレビューから`抽出枠を戻す`で復元できる。typecheckとreview gold tests **8/8** pass。
+- 数式の複数ベースラインを扱うため、stale な paragraph hint が本文・演算子行・下添字を一塊にした場合でも、番号付き／関係記号付きの強い表示式アンカーと隣接する短い数式行を独立した equation block に分離するようにした。積分の演算子行・番号付き本体・下段分母も一つの Canonical equation に統合する。公開原本 `2302.03792v1` で Eq. (9)・(10) の `1 + γ` を含む統合、および本文に吸収されていた Eq. (13) の独立式化を確認。focused math / reading-order regressions **124/124** と typecheck pass。
+- ベンチマークの数式NEDは、Versioの線形化数式をLaTeXと偽装せず、人間が明示入力した正しい数式テキストと同表現で比較できるようにした。LaTeXは公式CDM用に別保持し、LaTeX未提供時のCDMはN/Aのまま。validation cohort 4本の再抽出は failure / timeout 0で完了し、式があるPNAS/SAGEでは各1件のformula-text artifact、式がないDove/OUPは0件を確認。benchmark targeted tests **23/23**、typecheck、diff check pass。
+- Studioで追加した`認識漏れ`のroleを`equation`にすると、既存の数式と同じ正解数式テキスト／LaTeX入力対象になるようにした。review-to-gold converterはこの領域を`missing:<id>`の独立gold formulaとして出力するため、見落とした数式がFormula NEDから消えない。review-gold / benchmark tests **21/21**、typecheck pass。
+- benchmark CLIのsynthetic development 2件を再採点し、全dimension report（Formula NED 3 units、CDM 1 unit）を生成できることを確認。既存LaTeX型CDM inputのexportも1/1 match、LaTeXなしの数式はCDM inputから除外される。これはsynthetic fixtureの機能検証であり、未知論文の精度値ではない。
+- Evaluation Studioのbrowser smokeでは、ユーザー提供bundle `2302.03792v1.pdf.evaluation.json` を再読込し4ページ目で `正しい数式テキスト` と `LaTeX（CDM用）` の入力欄が表示されることを確認。原本PDFを再ロードしなくても、保存済みbundleから数式reviewを続行できる。
+- Benchmark集計前のleakage guardを拡張。同一のbenchmark ID、source hash、またはpublisher/templateの`leakageGroup`を別documentへ重複使用すると評価を拒否する。template familyを同一split内で複数回数えて平均を歪める経路も遮断した。指定splitだけの実行でも、入力gold全体を先に監査する。targeted benchmark tests **16/16**、typecheck、synthetic CLI、validation 4 / held-out 5 / development 109 hashのsplit audit pass。
+- CDM scoreの取込を、export済みCDM inputのsource hash・goldとIoU対応済みのprediction formula IDへ固定した。別PDF、未対応formula、重複scoreをprediction artifactへ混入できない。CDM fixtureのexport→applyで1/1 score（93.2）の再取込とtypecheck pass。
+- LaTeXのみでhuman goldを記録した数式がpredictionから完全に欠落した場合も、Formula NEDをN/Aへ逃がさず1.0として数えるよう修正。既存predictionの線形数式をLaTeXと偽装することはせず、形式非互換だけはN/Aを維持する。benchmark / review-gold tests **26/26**、typecheck、diff check pass。
+- Block F1のIoU照合を局所的なgreedy選択から最大一致件数の一対一matchingへ変更。重なり領域で柔軟なpredictionが高IoUのgoldを先取りし、他に候補のないpredictionを不必要にFP/FNにする偏りを防ぐ。overlap matching回帰を含むstandard metrics / benchmark tests **21/21**、typecheck、diff check pass。
+- Table TEDS / Formula NEDのIoU領域対応も同じ最大一致件数matchingに統一。重複したformula/table候補で局所的な高IoUが別の対応可能な要素を塞がない。overlap formula回帰を含むstandard metrics / benchmark / review-gold tests **31/31**、typecheck、diff check pass。
+- Benchmark reportの集計値を`macro_document_mean`として明示。論文ごとの重みを等しくしつつ、`evaluatedDocuments` / `evaluatedUnits`で根拠量を併記するため、長大PDFだけが平均を支配しているように誤読されない。synthetic CLI reportの全metric/categoryにaggregation表示、typecheck、diff check pass。
+- Frozen cohortからprediction snapshotまたはStudio review bundleを生成する前に、ローカルPDFのSHA-256をmanifestと照合するよう追加。原本が差し替わった状態で別論文を同じIDとして採点・注釈することを防ぐ。JMIR 1本でhash verified snapshot（23 pages / 216 nodes）と隔離temporary review bundle生成、typecheck、diff check pass。
+- review bundleの再生成は既存ファイルを既定で拒否し、人間が確認済みの保存内容を上書きしない。置換は明示的な`--overwrite`だけに限定。隔離temporary bundleで拒否と意図的上書き双方を確認し、typecheck、diff check pass。
+- PDF Extraction evaluationの最終開発検証: standard metrics / benchmark / review-gold / math fragment regression **72/72**、typecheck、Vite build、development 109 / validation 4 / held-out 5 split audit、diff check pass。翻訳サーバーは未起動。Viteは既存のpdfjs direct-eval/chunk-size/dynamic-import警告のみ。
+- 新規の人手注釈を待たずに改善を回帰判定できる、7本（ACM / IEEE / Springer / KCI / OzCHI / Elsevier / arXiv）の既存fixture gold専用development gateを追加。各PDFを隔離workerで実行し、個別timeout・進捗・部分report・非zero失敗を持つ。これはdevelopment regressionであり、validation / held-out精度主張には使わない。強制1ms timeoutでpartial reportとfailureを確認、typecheck、diff check pass。
+- development gateへ、人手ラベル不要の`sourceIntegrityRate = 1`（native PDF textの再構成保持）と`canonicalProvenanceRate = 1`（Canonical nodeのPDF provenance保持）をfail-fast invariantとして追加。構造意味・読み順の精度主張とは別の自動健全性検査として扱う。timeout partial reportでinvariant結果を確認、typecheck、diff check pass。
+- isolated development workerを`npx tsx`からproject localの`vite-node`へ変更し、registry/networkの有無でgateが失敗しないよう修正。KCI fixture `fashion-hybrid-cmf`を実行し、source integrity / Canonical provenanceともに1.0、failure 0を確認。構造goldが未提供のdimensionはN/Aを維持。typecheck、diff check pass。
+- 7本の既存fixture development gateを実行完了（failure / invariant failure 0）。自動基準値はsource integrity 1.0（7/7）、Canonical provenance 1.0（7/7）、heading recall 0.865（3件）、table caption recall 0.75（4件）、table region recall 0.667（3件）。未注釈dimensionはN/A。Wear Scale Table 6の回転captionはPDF text streamでmarkerと題名が分断され、題名側が高table evidenceにもかかわらずparagraphに残ることを診断。論文固有の例外は追加していない。
+- 90°回転した表・図キャプションの題名が、PDF text matrixの進行方向によって番号ラベルより前のY座標へ出るケースを修正。句読点なしの`Table N` / `Figure N`ラベルを許容するのは、同じnative face・X座標・font sizeの近傍に題名候補があり、かつラベル自体が回転している場合だけに限定した。逆向き回転captionのreading-order回帰を追加し **84/84** pass。7本development gateも再実行し、failure / invariant failure 0、source integrity / Canonical provenance ともに **1.0 (7/7)** を維持した。これは既存fixtureの回帰保護であり、人手の未確認出力を正解や学習データとして採用しない。
+- 人手の新規正解ラベルが無い間も未知論文の健全性を監査する `npm run audit:pdf-extraction:unlabeled -- --cohort … --all` を追加。各hash固定PDFを隔離workerで二度抽出し、出力determinism、native layout text再現、Canonical座標/provenance、relation整合性、Canonical→Reader projection追跡を検査する。これはCER/NED・Block F1・reading order・TEDS・CDMの精度値を代替せず、reviewed gold無しの指標はN/Aのままにする。validation 4本（Dove 12p/99 nodes、SAGE 12p/163、OUP 8p/110、PNAS 4p/62）で全検査failure 0、typecheck・diff check pass。
+- label-free health reportへ、強いnative数式・表captionアンカーが対応するCanonical roleを持たない場合の**要確認**signalを追加。`Mean ± SD`の統計本文を数式欠落と誤報しないよう、数式番号またはコンパクトな関係式だけに限定した。validation 4本を再実行し、構造failure 0・要確認signal 0。signalはgold/precisionではなく、未知PDFを人間確認または次の一般規則診断へ優先投入するためだけに用いる。
+- Versio snapshot adapterがCanonical paragraph splitをbenchmark prediction artifactへ書き出すよう修正。これまでparagraph-boundary F1のscore実装はあっても、Versio自身の予測境界が無くreviewed goldに対してN/Aになる経路があった。ページ内の隣接paragraph node pairのみを出力し、pageをまたぐ境界は作らない。adapter / benchmark evaluator / review-gold focused tests **28/28**、typecheck、diff check pass。
+- snapshot adapterがReader projectionの`tableRows`を中立的な`table → tr → td(text)` treeへ変換し、TEDS prediction artifactとして書き出すよう修正。table row/cell構造を持つReader表だけを対象にし、画像のみ／captionのみの表へtreeを捏造しないため、その場合はTEDSをN/Aに保つ。adapter / benchmark evaluator / standard metrics focused tests **24/24**、typecheck、diff check pass。validation PNASのfrozen PDF snapshotも1/1成功（63 blocks、row構造を持つtable 0件のためTEDS prediction 0件）。
+- benchmarkのcritical failureをBlock/reading-order/formulaだけでなく、reviewed text CER ≥0.25、段落境界F1=0、caption relation F1=0、TEDS=0にも拡張。未注釈（N/A）をcritical扱いしない。category sliceと併せて、未知論文でどの構造が完全に壊れたかをdocument単位で追跡できる。benchmark evaluator / adapter focused tests **21/21**、typecheck、diff check pass。
+- 全dimension synthetic artifactを`--require-metrics`指定でCLI採点し、Block F1、CER/NED、reading-order ED、paragraph-boundary F1、caption relation F1、TEDS、Formula NED、CDMの全9指標が一つのreportに対象件数付きで出ることを確認（2 documents、critical failure 0）。これは評価経路の機能検証であり、未知論文の精度値ではない。validation/held-outはreviewed goldが0件のため引き続きN/A。
+- 評価CLIに`--fail-on-critical`を追加。reviewed documentでcritical failureが出たときだけnon-zero終了し、N/Aのdimensionは従来どおり失敗扱いにしない。all-dimensions synthetic artifactをこのflagと全required metric指定で実行し成功、typecheck・diff check pass。
+- review progress監査にtextとcaption relationの完了ページ数を追加し、各dimensionの採点可能性を可視化。現在はvalidation 4 + held-out 5の9 unique bundles / 116 pagesで、block/text/reading order/boundary/relation/table/formulaの完了ページはいずれも0。duplicateのJMIR review bundle 1組は二重集計せず明示表示する。typecheck・diff check pass。従って独立精度を出さないN/A判定は意図どおり維持されている。
+- 完成前の人間reviewをgold/学習データにせず改善診断だけに使う `triage:extraction-partial-review` を追加。`2302.03792v1` のbundleでは26ページ中12ページに指摘があり、137件のcritical `extra`削除と100件のparagraph認識漏れを確認。削除された予測のroleと実際のrole訂正を分離して集計し、削除対象（equation 50 / paragraph 52 / table 7等）をrole correctionと誤読しない。priority上位はp13, p3, p14, p6。これはpartial observationであり精度・gold・学習ラベルには使わない。typecheck・diff check pass。
+- OmniDocBenchの公式repository / CVPR論文と指標の分離（text edit、formula CDM、table TEDS、reading-order edit）を照合し、benchmark文書へ「共通の指標語彙だがleaderboard比較ではない」ことを明記。Versio固有のBlock F1・paragraph-boundary・caption relationを別軸として維持し、frozen scientific-PDF cohortのsplit/leakage規則を優先する。
+- Evaluation Studioの通常画面を最小化。PDF・抽出結果・判定の3ペインだけにし、選択ブロックは削除／役割変更／日本語の誤り種別、空白ドラッグの認識漏れは役割変更だけに整理した。読み順・段落境界・表tree・LaTeX・深刻度・コメント・完全性の個別入力は通常操作から外した（既存bundleのデータは保持）。ページ確認済みは1つのチェックに統合し、未注釈の詳細指標は従来どおりN/A。typecheck・diff check pass。
+- 新規の認識漏れ枠を選ぶと、右ペインの`色・役割`で色を直接確認・変更できるようにした。選択肢も`本文（緑）`・`数式（赤）`などに日本語化し、選択中roleの色見本を表示する。typecheck・diff check pass。
+- Evaluation Studioを業務ツール調の情報密度へ再設計。濃色の固定ヘッダー、コンパクトな操作バー、枠線ベースの3ペイン、件数表示、role色付きの抽出一覧、選択状態を明確にした。抽出一覧からの選択後に判定と`色・役割`操作を表示するbrowser smoke、typecheck、Vite build、diff check pass。
+- Evaluation StudioのPDFオーバーレイ座標を、抽出用のbaseline座標と描画用top-left座標の変換境界として`overlayCoordinates`へ分離。非回転ページのnative textだけをbaseline→top-leftへ変換し、PDF.jsが既に変換した90°/180°/270°ページ、図表領域、手描き領域に二重補正を掛けない。旧bundleの明白に横長な縦copyrightだけを限定修復する。baseline、ページ回転、手描き領域、旧copyrightの4回帰を追加。公開原本`2302.03792v1`の1ページ目・数式密度の高い13ページ目で目視確認、targeted test 4/4・typecheck・Vite build・diff check pass。
+- 既存の評価bundleは生成時点の抽出スナップショットを固定しているため、古い単一行bboxを現在の行単位bboxへ更新できる`再抽出`をStudio操作バーへ復元。対象ページのCanonical/Reader predictionだけを差し替え、IDが変わり得る既存の予測block判定は誤結合を防ぐため消去する一方、人間が描いた認識漏れ領域は保持する。実PDFで操作表示・実行を確認、typecheck・diff check pass。
+- PDFオーバーレイの根本設計を修正。抽出・読み順のためのbaseline基準`boundingBoxes`は変更せず、各native text lineの実glyph上端・下端を別の`overlayBoundingBoxes`としてCanonical nodeへ保存し、Studioだけがこれを優先して描画する。従来は一つの数式line内の上付き／下付きの高さをbbox全体から差し引いていたため、枠が過度に上方へずれた。新しいvisual envelopeは数式のglyph extremaから計算し、回転文字は安全な旧フォールバックを使う。数式断片の結合後にもこの値をCanonical node本体に保持することを型・実パイプラインで回帰保護した。新規抽出とページ再抽出に反映され、既存bundleは再抽出するまで旧座標のまま。座標・数式結合・実パイプライン回帰 **49/49**、typecheck、Vite build、diff check pass。
+- Studioのページ再抽出は、再抽出ごとにgeneric Canonical IDが`g-0`から再利用されることによる既存ページとのID衝突を防ぐ。差し替え結果のnode IDをページ固有namespaceへ変換し、Canonical relationとReader projectionの`canonicalNodeId`も同じ対応表で更新する。これにより選択・レビュー・双方向ハイライトが別ページの同名nodeへ誤結合しない。再抽出ID/関係/projection/overlay座標回帰を追加し、focused extraction / Studio regressions **50/50**、typecheck、diff check pass。
+- native縦書き文字のvisual overlayは、layout用baseline `y` と別にPDF.js変換後の`visualTop`をtext itemへ保持して算出するようにした。これにより未回転ページの縦copyrightが水平text用のbaseline補正を誤適用されず、回転済みページのglyph矩形も二重変換されない。公開原本`2302.03792v1`の1ページ目で、縦stampのlayout bbox (`x=12,y=555,w=20,h=337.74`) に対し描画bbox (`x=12,y=217.26,w=20,h=337.74`) を確認。geometry / overlay / Studio regressions **51/51**、typecheck、diff check pass。
+- 数式の導出が行ごとに分断され、間に分数・根号の非prose fragmentが挟まるPDF向けに、明示的な`= / − / +`継続行を前の表示式へ再結合する汎用規則を追加。same-page・近接行間・横方向の重なり・数学断片だけを必須にし、離れた等式や本文は結合しない。断片はbbox/provenanceを保持するが、壊れた線形textをReader本文へ捏造しない。`2302.03792v1` p14の先頭導出3行が一つのCanonical equationへ結合されたこと、math/Studio/geometry regressions **54/54**、7本development regressionのfailure/invariant failure 0、validation 4本のlabel-free健全性監査failure/unhealthy 0、typecheck、Vite build、diff checkを確認。独立accuracy goldではない。
+- 人手ラベルを使わない追加ループとして、背の高い数式内でPDF.jsが主ベースラインの前に出す積分・根号断片と、分数断片を挟む後続等式列を同じ表示式へ統合した。本文を吸収しないため、同一ページ・非prose・28pt以内の連続配置・横方向の重なりをすべて要求し、既存の積分／分母専用規則を優先する。公開原本`2302.03792v1` p14では先頭導出が19 bboxを持つ一つの`equation`になった。focused regressions **56/56**、7本development regression failure/invariant failure 0、validation 4本label-free監査 failure/unhealthy 0、typecheck・diff check pass。これは構造健全性の改善であり、独立した正解率はreviewed goldが無いためN/A。
+- label-free held-out監査でWileyの回転した表セルがページ下端を越えるCanonical bboxを生成することを検出し、native 90°文字はbaseline下端ではなく実glyph上端をlayout座標に使うよう修正した。横書きの既存baseline規約は変更していない。独立held-out候補5本は修正前4/5（Wileyのinvalid bbox）から修正後5/5 healthyとなった。表罫線の`==`だけを数式欠落候補と誤検出しないようlabel-free triageにもoperand必須条件を追加。reading-order / math / Studio focused regressions **140/140**、development 7本 failure/invariant failure 0、typecheck・diff check pass。これも正解率ではなく未知PDFの構造健全性監査結果である。
+- macOS/Chromeの日本語IMEで候補を確定するEnterを、フォルダ名の保存／新規作成として誤解釈しないよう修正。`isComposing`とWebKitのkeyCode `229`を共通判定し、インライン名称変更、新規フォルダ作成、メモの⌘Enter保存、検索結果のEnter移動でIME変換中のキーを無視する。IME判定テスト、typecheck、Vite build、diff check pass。
+- Readerの目次をより高密度に調整。行の縦paddingとline-heightを少し縮め、下位階層の`ul`には左marginを置かずラベルのpaddingだけで字下げるよう変更した。これにより子項目もhover／選択背景が親項目と同じ左端から横幅いっぱいに表示される。typecheck、Vite build、diff check pass。

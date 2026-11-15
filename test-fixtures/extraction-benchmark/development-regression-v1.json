@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "kind": "versio-extraction-development-regression",
+  "split": "development",
+  "purpose": "Bounded automated regression gate using existing fixture gold only. It is not a validation or held-out score and must never be used to select a production claim.",
+  "documents": [
+    { "id": "interactive-jewellery", "leakageGroup": "acm-acmart" },
+    { "id": "design-for-wearability", "leakageGroup": "ieee-conference" },
+    { "id": "wear-scale", "leakageGroup": "springer-open" },
+    { "id": "fashion-hybrid-cmf", "leakageGroup": "kci" },
+    { "id": "ozchi-finger-specific-touch", "leakageGroup": "ozchi-conference" },
+    { "id": "medical-deep-learning-meta-review", "leakageGroup": "elsevier" },
+    { "id": "marketing-consumer-response", "leakageGroup": "arxiv" }
+  ]
+}

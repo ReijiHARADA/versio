@@ -15,7 +15,7 @@ import { chromium } from "playwright";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 const outDir = path.join(root, "src/assets/settings-previews");
-const workRoot = path.join("/tmp", "paper-reader-settings-previews");
+const workRoot = path.join("/tmp", "versio-settings-previews");
 const CAPTURE_URL = "http://127.0.0.1:5199/";
 const VIEWPORT = { width: 680, height: 340 };
 const DPR = 2;

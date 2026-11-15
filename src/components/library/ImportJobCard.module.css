@@ -99,7 +99,47 @@
   white-space: nowrap;
 }
 
+/* Import rows reserve the same leading icon column as ordinary paper rows. */
+.favoritePlaceholder {
+  pointer-events: none;
+}
+
+/* Keep progress, cancellation, and the row's trailing edge as one flex group. */
+.importTrailing {
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  min-width: 12.5rem;
+  max-width: none;
+}
+
+.statusProgress {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+/* PaperCard's generic action is intentionally icon-only; cancellation has text. */
+.cancelAction {
+  width: auto;
+  min-width: max-content;
+  gap: 5px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
 @media (max-width: 720px) {
+  .importTrailing {
+    gap: var(--spacing-sm);
+    min-width: 0;
+  }
+
+  .cancelAction {
+    width: 28px;
+    min-width: 28px;
+    padding: 0;
+  }
+
   .actionText {
     display: none;
   }

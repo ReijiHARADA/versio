@@ -1,4 +1,4 @@
-# Paper Reader
+# Versio
 
 ## 文書の更新ルール
 
@@ -18,11 +18,11 @@
 
 ## Tauri macOS アプリ
 
-- Paper Reader の基本動作確認は **Tauri macOS 実機を基準**にする。ブラウザ／Playwright確認は補助であり、取り込み・PDF抽出・翻訳・永続化・書き出し・macOS固有UIは最新の `.app` または `tauri:dev` で最終確認する。
+- Versio の基本動作確認は **Tauri macOS 実機を基準**にする。ブラウザ／Playwright確認は補助であり、取り込み・PDF抽出・翻訳・永続化・書き出し・macOS固有UIは最新の `.app` または `tauri:dev` で最終確認する。
 - UI を変えたら `npm run dev` または preview を上げ、`npm run verify:browser` で Library / 設定 / Reader を実ブラウザ確認する。このセッションの Cursor に Browser MCP は無いので Playwright（`@playwright/test`）を使う。翻訳サーバーは `http://127.0.0.1:8765/health`。
 - 新しい UI は [UI_INTERACTION_PRINCIPLES.md](./UI_INTERACTION_PRINCIPLES.md) に従う。局所操作は Popover、一時的な大きい作業は Sheet / Overlay、論文全体の一覧は Inspector。本文操作で Notes を自動で開かない。別 route は Library / Reader / Workspace / Settings だけ。同一対象の場所・サイズ変化（図の拡大など）は Shared Element Transition でビューを切らない。
 - `src-tauri/` が Tauri v2 のシェル。`npm run tauri:dev` で開発。日常の `.app` 確認は `npm run tauri:build:fast`（cached Python / `.app` のみ）。リリース確認は `npm run tauri:build:clean`（clean Python / `.app` + `.dmg`）。`npm run tauri:build` は clean のエイリアス。
-- 生成物: `src-tauri/target/release/bundle/macos/Paper Reader.app`
+- 生成物: `src-tauri/target/release/bundle/macos/Versio.app`
 - Xcode は `/Applications/Xcode-beta.app` を使用。ビルド時は `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer` を設定すること。
 - 翻訳サーバーはアプリが spawn し、終了時に停止する。
 - Python runtime は `scripts/bundle-python.sh` が `uv` + `requirements.lock` + `.python-version`（patch 固定）から `translation-server/venv/` を作る（開発者 `.venv` のコピーはしない）。content-hash が一致し validation が通れば reuse。`clean` のみゼロから再構築。Tauri 同梱は lite の `src-tauri/bundled-resources/translation-server`（server / engines、venv なし）＋別 stage の `translation-venv`。`.app` への venv 注入は `scripts/inject-translation-venv.sh`（APFS clone）。`npm run tauri:build:fast` / `clean` が注入まで行う。`models/` や開発用 `.venv*` は入れない。phase 時間は `scripts/tauri-build.sh` と `.build-timings` / [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md)。
@@ -51,7 +51,7 @@
 
 ## Licenses (Settings)
 
-- Settings → ライセンス lists Paper Reader MIT plus **required** third-party notices (distributed on macOS and attribution-required). Regenerate with `npm run generate:licenses` (also `prebuild`). Source of truth is `src/generated/thirdPartyLicenses.json`. Do not invent SPDX identifiers; mark missing metadata as unknown/partial. Exclude: dev-only / non-bundled deps, other-platform Rust crates, and packages where a no-attribution license can be elected (`0BSD` / `Unlicense` / `CC0-1.0` / `MIT-0` / `WTFPL`). Policy details: `THIRD_PARTY_NOTICES.md`.
+- Settings → ライセンス lists Versio MIT plus **required** third-party notices (distributed on macOS and attribution-required). Regenerate with `npm run generate:licenses` (also `prebuild`). Source of truth is `src/generated/thirdPartyLicenses.json`. Do not invent SPDX identifiers; mark missing metadata as unknown/partial. Exclude: dev-only / non-bundled deps, other-platform Rust crates, and packages where a no-attribution license can be elected (`0BSD` / `Unlicense` / `CC0-1.0` / `MIT-0` / `WTFPL`). Policy details: `THIRD_PARTY_NOTICES.md`.
 
 ## Local data
 
@@ -62,7 +62,7 @@
 - Original PDFs stay in the package as `source.pdf`. First import persist includes `sourcePdf` in the atomic Paper Package write. Do not pre-write `source.pdf` and then replace the package directory.
 - SQLite schema is versioned. Add a numbered migration when changing tables. `translation_cache` PK is `(text_hash, model, model_version, source_language, target_language)`. `papers.source_file_hash` is UNIQUE. Close/exit must `flushDocumentPersist` + `db.persist()`; do not drop pending timers without writing.
 - Annotations live in SQLite, anchored to stable block IDs. Re-anchor still uses selectedText + prefix + suffix.
-- IndexedDB `paper-reader` v4 is a read-only backup after migration. Do not delete it in the same release that introduces the new store.
+- IndexedDB `versio` v4 is a read-only backup after migration. Do not delete it in the same release that introduces the new store.
 - Assign papers to any WorkspaceNode by dragging a library paper row onto the sidebar item. Drag onto Inbox to remove all workspace memberships. Do not use HTML5 drag-and-drop for this: WKWebView often starts a drag but never fires `drop`. Use pointer tracking and `elementFromPoint`.
 - Import a PDF by dropping it onto the app window. Use Tauri `onDragDropEvent` in the desktop app (HTML5 `drop` does not receive files in WKWebView). Browser `npm run dev` can keep HTML5 file drop. A drop on `/project/:id` attaches the paper to that project. Do not navigate to `/import` as the main path; start `startBackgroundImport` and stay on Library. Show readiness (`preparing` / `readable` / `translating` / `needs_attention`) on cards, not raw processing stages. `⌘K` is library search, `⌘F` is in-paper search; focusing library search must not leave Reader.
 - Workspace delete lives in the sidebar node's three-dot menu; do not show a duplicate trash icon in the workspace screen header. Deleting a node removes its subtree memberships only; paper records stay, and unassigned papers reappear in Inbox. The “論文を追加” button sits in the header next to the title on a WorkspaceNode, All Papers, and Inbox.

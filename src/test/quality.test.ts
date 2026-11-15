@@ -1828,18 +1828,17 @@ describe("isRetryableTranslationFailure", () => {
     expect(isRetryableTranslationFailure(block)).toBe(false);
   });
 
-  it("does not count failed figure captions that the reader shows as original", () => {
+  it("keeps transport-failed figure captions retryable", () => {
+    // Since the 2026-10-16 retry policy, transport failures on captions keep
+    // the retry surface; quality rejects are stored as completed source.
     const block = makeBlock({
       type: "figure",
       original: "Figure 1. A wearable prototype on a table.",
     });
-    expect(isRetryableTranslationFailure(block)).toBe(false);
+    expect(isRetryableTranslationFailure(block)).toBe(true);
     expect(
       finalizedTranslationStatus([block], isRetryableTranslationFailure)
-    ).toBe("ready");
-    expect(
-      displayProcessingStatus("partial", [block], isRetryableTranslationFailure)
-    ).toBe("ready");
+    ).toBe("partial");
   });
 
   it("keeps stored partial until blocks are loaded", () => {

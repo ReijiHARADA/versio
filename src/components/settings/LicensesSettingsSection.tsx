@@ -72,7 +72,7 @@ export function LicensesSettingsSection() {
 
       <div className={styles.cardStack}>
         {appPackage ? (
-          <SettingsCard title="Paper Reader">
+          <SettingsCard title="Versio">
             <button
               type="button"
               className={licenseStyles.packageRow}

@@ -271,6 +271,22 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   return { role, confidence: score };
 }
 
+/**
+ * Rotation shared by a block's lines. A table row and a label running down the
+ * side of a plot are both "text near each other"; only their baselines tell
+ * them apart, so the resolver needs that signal on the node.
+ */
+function representativeNodeRotation(lines: { rotation?: number }[]): number {
+  if (lines.length === 0) return 0;
+  const rotated = lines.filter((line) => Math.abs(line.rotation ?? 0) >= 45).length;
+  return rotated > lines.length / 2 ? 90 : 0;
+}
+
+/** Rotated and horizontal text never belong to the same table region. */
+function sharesTextRotation(a: CanonicalNode, b: CanonicalNode): boolean {
+  return (Math.abs(a.textRotation ?? 0) >= 45) === (Math.abs(b.textRotation ?? 0) >= 45);
+}
+
 function nodeFromCandidate(candidate: RoleCandidate): CanonicalNode {
   const box = candidate.boundingBoxes[0] ?? candidate.layoutBlock.bbox;
   const resolved = resolvedRole(candidate);
@@ -281,6 +297,8 @@ function nodeFromCandidate(candidate: RoleCandidate): CanonicalNode {
     pageStart: candidate.pageStart,
     pageEnd: candidate.pageEnd,
     boundingBoxes: candidate.boundingBoxes,
+    overlayBoundingBoxes: candidate.layoutBlock.lines.flatMap((line) => line.overlayBbox ? [line.overlayBbox] : []),
+    textRotation: representativeNodeRotation(candidate.layoutBlock.lines),
     confidence: resolved.confidence,
     evidence: [
       ...candidate.evidence,
@@ -2645,11 +2663,15 @@ function suppressVectorLabelClusters(nodes: CanonicalNode[]): CanonicalNode[] {
     // Dense plot panels often duplicate a short lead-in (`for GPTrel … for
     // GPTrel …`). That shape trips looksLikeSentenceProse via a leading `For`,
     // but dense-vector-panel geometry is stronger than translation eligibility.
+    // How many of those repetitions land in one node is a line-grouping
+    // outcome, not a property of the figure, so accept any repeat count and
+    // bound the repeated unit instead of the whole string.
     const trimmedPanel = (node.text ?? "").trim();
+    const repeatedPanelUnit = trimmedPanel.match(/^(.*?)(?:\s+\1)+$/s)?.[1] ?? null;
     const repeatedPanelLead =
-      trimmedPanel.length >= 12 &&
-      trimmedPanel.length <= 120 &&
-      /^(.*?)\s+\1$/s.test(trimmedPanel);
+      repeatedPanelUnit !== null &&
+      repeatedPanelUnit.length >= 12 &&
+      repeatedPanelUnit.length <= 120;
     if (
       denseVectorPanel &&
       (node.role === "heading" || node.role === "paragraph") &&
@@ -3411,13 +3433,22 @@ export function demoteRepeatedBareCaptions(nodes: CanonicalNode[]): CanonicalNod
             /(?:POMDP|VLM|Path\s*Planning)/i.test(ct))
         );
       });
+    // Vertically rotated page-foot `Table N` (width≪height) is running chrome
+    // with no legend text (assayblast Table 1/3 at y≈706, w≈9, h≈28).
+    const rotatedPageFootLabel =
+      (bareTable || bareFigure) &&
+      y > 650 &&
+      (box?.width ?? 99) <= 14 &&
+      (box?.height ?? 0) >= (box?.width ?? 0) * 2 &&
+      (box?.height ?? 0) >= 18;
     if (
       continuedAbove ||
       besideBodyFragment ||
       (nearPageTop && tableBelow) ||
       sameBaselineTableDump ||
       fullCaptionBelow ||
-      continuedTableAtPageFoot
+      continuedTableAtPageFoot ||
+      rotatedPageFootLabel
     ) {
       demoteIds.add(node.id);
     }
@@ -3622,8 +3653,14 @@ export function mergeAdjacentTableRows(nodes: CanonicalNode[]): CanonicalNode[] 
       const line = Math.max(prevBox?.height ?? 12, nodeBox?.height ?? 12, 10);
       // Allow overlap (two-column PDF boxes) and a short run of weak crumbs
       // between native table rows (`partial`, citation tails).
-      if (gap >= -line * 3.5 && gap <= line * 4.2) {
+      if (gap >= -line * 3.5 && gap <= line * 4.2 && sharesTextRotation(prev, node)) {
         const intervening = result.slice(anchorIndex + 1);
+        // A rotated label running down the side of a plot sits between the
+        // rows geometrically but is not part of the table.
+        if (intervening.some((entry) => !sharesTextRotation(prev, entry))) {
+          result.push(node);
+          continue;
+        }
         const interveningText = intervening
           .map((entry) => (entry.text ?? "").trim())
           .filter(Boolean)
@@ -3795,7 +3832,8 @@ export function mergeTableRowsByPageGeometry(nodes: CanonicalNode[]): CanonicalN
       const xCompatible = xOverlap >= -36 || Math.abs((prevBox?.x ?? 0) - (nodeBox?.x ?? 0)) <= 72;
       // Review comparison matrices often leave large vertical gaps between
       // extracted cell crumbs on the same page; keep clustering loosely.
-      if (gap >= -line * 4 && gap <= Math.max(line * 7.5, 96) && xCompatible) {
+      if (gap >= -line * 4 && gap <= Math.max(line * 7.5, 96) && xCompatible &&
+          sharesTextRotation(prev, entry.node)) {
         cluster.push(entry);
       } else {
         flush();

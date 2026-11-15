@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
+import { useAppStore } from "../../stores/appStore";
 import { getAllPapers, getAllWorkspacePapers } from "../../services/database";
 import { addPaperToWorkspace, createWorkspaceNode, listWorkspace, movePaperInWorkspace, removePaperFromAllWorkspaces, removeWorkspaceItem } from "../../services/projectService";
 import { tryStartPdfImport } from "../../services/pdfImport";
@@ -13,17 +14,21 @@ import { setPaperDropHandler, INBOX_DROP_ID, usePaperDragStore } from "../../sto
 import { showToast, useToastStore } from "../../stores/toastStore";
 import { restoreWorkspaceFolderFromTrash, purgeExpiredTrash } from "../../services/trashService";
 import { resumeAfterTranslationServerReady } from "../../services/import/startBackgroundImport";
+import { createPresentationCaptureSeed } from "../../services/presentationDemo";
+import { useImportJobStore } from "../../stores/importJobStore";
 import { isTranslationServerReady, subscribeTranslationServerReady } from "../../utils/serverReady";
 import { setTranslationUiDeferReason } from "../../utils/batchBlockUpdates";
 import styles from "./AppShell.module.css";
 
 export function AppShell() {
   const location = useLocation(); const navigate = useNavigate();
+  const isPresentationDemo = import.meta.env.VITE_VERSIO_DEMO === "1";
   const setPapers = useLibraryCache((state) => state.setPapers);
   const workspaceNodes = useProjectStore((state) => state.workspaceNodes); const memberships = useProjectStore((state) => state.memberships); const searchQuery = useProjectStore((state) => state.searchQuery);
   const setLoaded = useProjectStore((state) => state.setLoaded); const setSearchQuery = useProjectStore((state) => state.setSearchQuery); const mergeWorkspaceNodes = useProjectStore((state) => state.mergeWorkspaceNodes); const setMemberships = useProjectStore((state) => state.setMemberships); const upsertWorkspaceNode = useProjectStore((state) => state.upsertWorkspaceNode); const upsertMembership = useProjectStore((state) => state.upsertMembership); const removeMembershipsForPaper = useProjectStore((state) => state.removeMembershipsForPaper); const removeWorkspaceNodesLocal = useProjectStore((state) => state.removeWorkspaceNodesLocal);
   const showDragToast = usePaperDragStore((state) => state.showToast); const toast = useToastStore((state) => state.toast); const clearToast = useToastStore((state) => state.clearToast);
   const [createParentId, setCreateParentId] = useState<string | null | undefined>(undefined); const [fileNodeId, setFileNodeId] = useState<string | null>(null); const fileInputRef = useRef<HTMLInputElement>(null);
+  const [demoReady, setDemoReady] = useState(!isPresentationDemo);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -46,6 +51,27 @@ export function AppShell() {
     let cancelled = false;
     void (async () => {
       try {
+        if (isPresentationDemo) {
+          // Capture-only, in-memory state: never read or write the user's library.
+          const seed = createPresentationCaptureSeed();
+          useAppStore.getState().setDisplaySettings({ sidebarMode: "expanded" });
+          useProjectStore.getState().setWorkspaceNodes(seed.workspaceNodes);
+          setMemberships(seed.memberships);
+          setPapers(seed.papers);
+          const cache = useLibraryCache.getState();
+          for (const document of seed.documents) {
+            cache.setSections(document.paperId, document.sections);
+            cache.setBlocks(document.paperId, document.blocks);
+          }
+          useImportJobStore.getState().upsertJob(seed.importJob);
+          // Capture-only: let a scripted screenshot open e.g. the Reader directly.
+          const startPath = import.meta.env.VITE_VERSIO_DEMO_START_PATH;
+          if (!cancelled && typeof startPath === "string" && startPath.startsWith("/")) {
+            navigate(startPath, { replace: true });
+          }
+          if (!cancelled) setDemoReady(true);
+          return;
+        }
         // Metadata only at startup — full sections/blocks load in Reader (or import/resume).
         const [dbPapers, dbLinks, dbNodes] = await Promise.all([
           getAllPapers(),
@@ -75,7 +101,7 @@ export function AppShell() {
       cancelled = true;
       unsubscribe();
     };
-  }, [mergeWorkspaceNodes, setLoaded, setMemberships, setPapers]);
+  }, [isPresentationDemo, mergeWorkspaceNodes, setLoaded, setMemberships, setPapers]);
 
   const routeNodeId = location.pathname.startsWith("/project/") ? location.pathname.slice("/project/".length).split("/")[0] : null;
   const papers = useLibraryCache((state) => state.papers); const inboxCount = useMemo(() => {
@@ -125,7 +151,7 @@ export function AppShell() {
   return <div className={styles.shell}>
     <input ref={fileInputRef} type="file" accept=".pdf,application/pdf" className={styles.hiddenInput} onChange={(event) => { const file = event.target.files?.[0]; if (file && fileNodeId) void tryStartPdfImport(file, { workspaceNodeId: fileNodeId }); event.target.value = ""; setFileNodeId(null); }} />
     <AppSidebar workspaceNodes={workspaceNodes} searchQuery={searchQuery} onSearchChange={setSearchQuery} onNewWorkspace={() => setCreateParentId(null)} onNewChild={(node) => setCreateParentId(node.id)} onDeleteNode={deleteNode} onAddPaperToWorkspace={addPaperFile} activeNodeId={routeNodeId} inboxCount={inboxCount} />
-    <div className={styles.main}><Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} /></div><PaperDragPreview />
+    <div className={styles.main}>{demoReady && <Outlet context={{ openNewWorkspace: () => setCreateParentId(null) }} />}</div><PaperDragPreview />
     {toast && <div className={`${styles.toast} ${toast.kind === "error" ? styles.toastError : toast.kind === "info" ? styles.toastInfo : styles.toastOk}`} role="status"><span className={styles.toastMessage}>{toast.message}</span>{toast.actionLabel && toast.onAction && <button type="button" className={styles.toastAction} onClick={() => { toast.onAction?.(); clearToast(); }}>{toast.actionLabel}</button>}</div>}
     {createParentId !== undefined && <NewWorkspaceNodeModal parentName={createParentId ? workspaceNodes.find((node) => node.id === createParentId)?.name : undefined} onClose={() => setCreateParentId(undefined)} onCreate={create} />}
   </div>;

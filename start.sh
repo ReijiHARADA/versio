@@ -1,10 +1,10 @@
 #!/bin/bash
-# Paper Reader 一括起動スクリプト
+# Versio 一括起動スクリプト
 
 # スクリプトのディレクトリに移動
 cd "$(dirname "$0")"
 
-echo "=== Paper Reader 起動中 ==="
+echo "=== Versio 起動中 ==="
 echo ""
 
 # 翻訳サーバー起動

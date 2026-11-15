@@ -185,8 +185,27 @@ function looksLikeDisplayMathBody(text: string): boolean {
   return math >= 2 && prose <= 2;
 }
 
+/**
+ * Some publishers put prose labels under a display with underbraces. pdf.js
+ * returns those labels on the same native line as the formula, which makes the
+ * otherwise valid numbered expression look too long for the normal compact
+ * display guard. The decorations are layout, not body prose: keep the entire
+ * source string, but let the structure resolver retain it as one equation.
+ */
+function isDecoratedNumberedDisplay(text: string): boolean {
+  const t = text.replace(/\s+/g, " ").trim();
+  return /\(\s*\d{1,2}[a-z]?\s*\)/u.test(t) &&
+    /[︸︷]/u.test(t) &&
+    /[=≡≈≠≤≥∼~∑∏∫√∞±×÷+\-−–—⊕⊗⊙∂∇∈∉∪∩→←↦‖∥|∣]/u.test(t) &&
+    t.length <= 720;
+}
+
 function boxY(node: CanonicalNode): number {
   return node.boundingBoxes[0]?.y ?? 0;
+}
+
+function lastBoxY(node: CanonicalNode): number {
+  return Math.max(...node.boundingBoxes.map((box) => box.y), boxY(node));
 }
 
 function boxX(node: CanonicalNode): number {
@@ -221,6 +240,66 @@ function joinText(left: string, right: string, sep = " "): string {
   if (!b) return a;
   if (sep === "" || /[⁄/]$/.test(a) || /^[⁄/]/.test(b)) return `${a}${b}`;
   return `${a}${sep}${b}`;
+}
+
+/** A short row printed below an integral is commonly its stacked denominator. */
+function isStackedDenominatorCrumb(text: string): boolean {
+  const t = text.replace(/\s+/g, " ").trim();
+  if (!t || t.length > 40 || /[.!?;:]/.test(t)) return false;
+  if (/\b(?:the|and|for|with|from|this|that|where)\b/i.test(t)) return false;
+  // Do not pull ordinary numeric prose or equation numbers into a neighbour.
+  if (/^\(\s*\d{1,2}[a-z]?\s*\)$/.test(t)) return false;
+  return /^[0-9A-Za-zα-ωΑ-Ω\s()+\-−=\/.]+$/u.test(t) &&
+    (/[α-ωΑ-Ω]/u.test(t) || /[+\-−\/]/.test(t) || /\d/.test(t));
+}
+
+/** A display derivation often paints each algebraic continuation as a node. */
+function isAlignedDisplayContinuation(text: string): boolean {
+  return /^(?:[=≡≈≤≥+＋−-]|\\(?:quad|qquad|displaystyle|left|right)\b)/u.test(text.replace(/^\s+/u, ""));
+}
+
+function isMathDisplayInterstice(node: CanonicalNode): boolean {
+  const text = (node.text ?? "").replace(/\s+/g, " ").trim();
+  if (!text || text.length > 120 || /[.!?;:]/u.test(text)) return false;
+  if (/\b(?:the|and|for|with|from|this|that|where|which|we|our)\b/i.test(text)) return false;
+  const proseWords = text.match(/[A-Za-z]{4,}/g) ?? [];
+  return proseWords.length <= 1 && /[=+＋−\-−∫∑∏√γΓεδλμσπρτθζξ\[\](){}|]/u.test(text);
+}
+
+function alignedContinuationTarget(result: CanonicalNode[], node: CanonicalNode): { targetIndex: number; target: CanonicalNode; interstice: CanonicalNode[] } | null {
+  if (node.role !== "equation" || !isAlignedDisplayContinuation(node.text ?? "")) return null;
+  const interstice: CanonicalNode[] = [];
+  for (let index = result.length - 1; index >= 0; index -= 1) {
+    const candidate = result[index]!;
+    if (candidate.pageStart !== node.pageStart) return null;
+    if (candidate.role === "equation") return { targetIndex: index, target: candidate, interstice: interstice.reverse() };
+    if (!isMathDisplayInterstice(candidate)) return null;
+    interstice.push(candidate);
+  }
+  return null;
+}
+
+/**
+ * A tall display can start with stacked operator / radical fragments before
+ * pdf.js emits its main baseline as an equation node.  Keep those fragments
+ * with that equation when they form a compact, non-prose vertical stack.  The
+ * rule is deliberately one-sided: it never absorbs a preceding sentence.
+ */
+function displayPreludeTarget(result: CanonicalNode[], node: CanonicalNode): { targetIndex: number; fragments: CanonicalNode[] } | null {
+  if (node.role !== "equation") return null;
+  const fragments: CanonicalNode[] = [];
+  for (let index = result.length - 1; index >= 0; index -= 1) {
+    const candidate = result[index]!;
+    if (candidate.pageStart !== node.pageStart || !isMathDisplayInterstice(candidate)) break;
+    const below = fragments.at(-1) ?? node;
+    if (boxY(below) - lastBoxY(candidate) < -2 || boxY(below) - lastBoxY(candidate) > 28) break;
+    fragments.push(candidate);
+  }
+  if (!fragments.length) return null;
+  const ordered = fragments.reverse();
+  const first = ordered[0]!;
+  if (boxRight(first) < boxX(node) - 28 || boxX(first) > boxRight(node) + 28) return null;
+  return { targetIndex: result.length - ordered.length, fragments: ordered };
 }
 
 /**
@@ -325,6 +404,7 @@ function mergeNodes(
   reason: string,
 ): CanonicalNode {
   const boxes = [primary, ...extras].flatMap((node) => node.boundingBoxes);
+  const overlayBoxes = [primary, ...extras].flatMap((node) => node.overlayBoundingBoxes ?? []);
   const pageStart = Math.min(primary.pageStart, ...extras.map((node) => node.pageStart));
   const pageEnd = Math.max(primary.pageEnd, ...extras.map((node) => node.pageEnd));
   return {
@@ -334,6 +414,7 @@ function mergeNodes(
     pageStart,
     pageEnd,
     boundingBoxes: boxes,
+    ...(overlayBoxes.length > 0 ? { overlayBoundingBoxes: overlayBoxes } : {}),
     confidence: Math.min(primary.confidence, ...extras.map((node) => node.confidence), 0.92),
     evidence: [
       ...primary.evidence,
@@ -369,6 +450,157 @@ export function mergeMathematicalDisplayFragments(nodes: CanonicalNode[]): Canon
     const next = source[index + 1];
     const mid = next;
     const den = source[index + 2];
+
+    // A three-piece stacked integral can arrive as an operator row, a main
+    // numbered row, then its denominator. The operator row has already been
+    // emitted by the time we inspect the main row, so fold all three into one
+    // canonical equation rather than leaving the denominator as prose.
+    const previous = result.at(-1);
+
+    const continuation = alignedContinuationTarget(result, node);
+    // A multi-line derivation is one structural display even when PDF.js
+    // yields a node for each aligned row. Join only an explicit continuation
+    // operator that is spatially inside the preceding display's horizontal
+    // band; this deliberately leaves separately numbered or prose equations
+    // alone. `previous` is the already-merged row, allowing a = / − / = chain.
+    if (
+      continuation &&
+      continuation.target.pageStart === node.pageStart &&
+      // Let the more specific operator/body/denominator merge below own this
+      // shape; consuming its middle row here would strand the denominator.
+      !(
+        next &&
+        /[∫∑∏]/u.test(continuation.target.text ?? "") &&
+        (continuation.target.text ?? "").trim().length <= 96 &&
+        hasEquationNumber(node.text ?? "") &&
+        isStackedDenominatorCrumb(next.text ?? "")
+      ) &&
+      // When a stacked fraction/radical sits between rows, measure the gap
+      // from its bottom rather than from the main row's first baseline.  A
+      // multi-line equation may itself have a tall bounding-box list.
+      boxY(node) - lastBoxY(continuation.interstice.at(-1) ?? continuation.target) >= -2 &&
+      boxY(node) - lastBoxY(continuation.interstice.at(-1) ?? continuation.target) <= 36 &&
+      continuation.interstice.every((fragment, index, all) => {
+        const prior = index === 0 ? continuation.target : all[index - 1]!;
+        return boxY(fragment) - lastBoxY(prior) >= -2 && boxY(fragment) - lastBoxY(prior) <= 28;
+      }) &&
+      (continuation.interstice.length === 0 || boxY(node) - lastBoxY(continuation.interstice.at(-1)!) <= 28) &&
+      boxX(node) <= boxRight(continuation.target) + 24 &&
+      boxRight(node) >= boxX(continuation.target) - 24
+    ) {
+      result.splice(continuation.targetIndex);
+      result.push(
+        mergeNodes(
+          continuation.target,
+          [...continuation.interstice, node],
+          "equation",
+          joinText(continuation.target.text ?? "", node.text ?? ""),
+          "aligned-display-continuation-merge",
+          "nearby aligned equation row beginning with a continuation operator merged into the same display",
+        ),
+      );
+      for (const fragment of continuation.interstice) consumed.add(fragment.id);
+      consumed.add(node.id);
+      continue;
+    }
+
+    const prelude = displayPreludeTarget(result, node);
+    if (
+      prelude &&
+      // Preserve the more specific operator / numbered body / denominator
+      // reconstruction below.  Its text normalization inserts the fraction
+      // bar, whereas a generic prelude merge would only concatenate rows.
+      !(
+        next &&
+        /[∫∑∏]/u.test(prelude.fragments.map((fragment) => fragment.text ?? "").join(" ")) &&
+        hasEquationNumber(node.text ?? "") &&
+        isStackedDenominatorCrumb(next.text ?? "")
+      )
+    ) {
+      result.splice(prelude.targetIndex);
+      result.push(
+        mergeNodes(
+          node,
+          prelude.fragments,
+          "equation",
+          joinText(prelude.fragments.map((fragment) => fragment.text ?? "").join(" "), node.text ?? ""),
+          "display-math-prelude-merge",
+          "compact operator/radical fragments above the main equation baseline merged into the same display",
+        ),
+      );
+      for (const fragment of prelude.fragments) consumed.add(fragment.id);
+      consumed.add(node.id);
+      continue;
+    }
+
+    if (
+      previous &&
+      next &&
+      !consumed.has(next.id) &&
+      previous.pageStart === node.pageStart &&
+      node.pageStart === next.pageStart &&
+      previous.role === "equation" &&
+      (node.role === "equation" ||
+        (hasEquationNumber(node.text ?? "") && looksLikeDisplayMathBody(node.text ?? ""))) &&
+      /[∫∑∏]/u.test(previous.text ?? "") &&
+      (previous.text ?? "").trim().length <= 96 &&
+      hasEquationNumber(node.text ?? "") &&
+      isStackedDenominatorCrumb(next.text ?? "") &&
+      boxY(node) - boxY(previous) >= -2 &&
+      boxY(node) - boxY(previous) <= 32 &&
+      boxY(next) - boxY(node) >= -2 &&
+      boxY(next) - boxY(node) <= 32 &&
+      boxX(next) >= boxX(node) - 12 &&
+      boxRight(next) <= boxRight(node) + 20
+    ) {
+      result.pop();
+      const denominator = (next.text ?? "").replace(/\s+/g, " ").trim();
+      result.push(
+        mergeNodes(
+          node,
+          [previous, next],
+          "equation",
+          `${(previous.text ?? "").trim()} ${(node.text ?? "").trim()} / (${denominator})`,
+          "stacked-integral-fraction-merge",
+          "operator, numbered body, and lower-baseline denominator merged into one display equation",
+        ),
+      );
+      consumed.add(node.id);
+      consumed.add(next.id);
+      continue;
+    }
+
+    // Displayed integrals frequently have a denominator painted on a lower
+    // baseline (`1 + γ`) as its own paragraph node. Keep it with the formula
+    // when the geometry says it sits inside the formula's horizontal span;
+    // a nearby prose/numeric line is intentionally not eligible.
+    if (
+      next &&
+      !consumed.has(next.id) &&
+      node.pageStart === next.pageStart &&
+      node.role === "equation" &&
+      /[∫∑∏]/u.test(node.text ?? "") &&
+      isStackedDenominatorCrumb(next.text ?? "") &&
+      boxY(next) >= boxY(node) - 2 &&
+      boxY(next) - boxY(node) <= 32 &&
+      boxX(next) >= boxX(node) - 12 &&
+      boxRight(next) <= boxRight(node) + 20
+    ) {
+      const denominator = (next.text ?? "").replace(/\s+/g, " ").trim();
+      result.push(
+        mergeNodes(
+          node,
+          [next],
+          "equation",
+          `${(node.text ?? "").trim()} / (${denominator})`,
+          "stacked-fraction-denominator-merge",
+          "lower-baseline denominator reattached to adjacent display equation",
+        ),
+      );
+      consumed.add(node.id);
+      consumed.add(next.id);
+      continue;
+    }
 
     // Stacked derivative: `d` + display body + `dγ` → one equation.
     if (
@@ -733,6 +965,7 @@ export function mergeMathematicalDisplayFragments(nodes: CanonicalNode[]): Canon
     const linearizedStacked =
       /^d\s+.+\(\s*\d{1,2}[a-z]?\s*\)\s*d[γΓg]/u.test((node.text ?? "").replace(/\s+/g, " ").trim());
     const displayText = (node.text ?? "").replace(/\s+/g, " ").trim();
+    const decoratedNumberedDisplay = isDecoratedNumberedDisplay(displayText);
     const unnumberedOperatorDisplay =
       !hasEquationNumber(displayText) &&
       looksLikeDisplayMathBody(displayText) &&
@@ -747,15 +980,17 @@ export function mergeMathematicalDisplayFragments(nodes: CanonicalNode[]): Canon
         node.role === "footnote" ||
         node.role === "heading") &&
       !/\n/.test(displayText) &&
-      (hasEquationNumber(node.text ?? "") || unnumberedOperatorDisplay) &&
-      (looksLikeDisplayMathBody(node.text ?? "") || linearizedStacked || unnumberedOperatorDisplay) &&
-      (node.text ?? "").trim().split(/\s+/).length <= 48
+      (hasEquationNumber(node.text ?? "") || unnumberedOperatorDisplay || decoratedNumberedDisplay) &&
+      (looksLikeDisplayMathBody(node.text ?? "") || linearizedStacked || unnumberedOperatorDisplay || decoratedNumberedDisplay) &&
+      ((node.text ?? "").trim().split(/\s+/).length <= 48 || decoratedNumberedDisplay)
     ) {
       const refined = refineDisplayEquationText(node.text ?? "");
       const changed = refined !== (node.text ?? "").trim();
       const label = unnumberedOperatorDisplay
         ? "unnumbered-operator-display-equation"
-        : changed
+        : decoratedNumberedDisplay
+          ? "decorated-numbered-display-equation"
+          : changed
           ? "linear-stacked-derivative-normalize"
           : "numbered-display-equation";
       result.push({
@@ -768,7 +1003,9 @@ export function mergeMathematicalDisplayFragments(nodes: CanonicalNode[]): Canon
             label,
             unnumberedOperatorDisplay
               ? "unnumbered ∑/∫/∏ display promoted to equation"
-              : changed
+              : decoratedNumberedDisplay
+                ? "numbered display with underbrace labels retained as one equation"
+                : changed
                 ? "linearized d … (n) dγ display normalized to d/dγ"
                 : "numbered symbolic display promoted to equation",
           ),
