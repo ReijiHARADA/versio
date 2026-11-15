@@ -57,7 +57,7 @@ export function parseJatsFields(xml: string): FieldRecord {
   const back = removeElements(removeElements(first(article, "back")?.inner ?? "", "app-group"), "app");
   const captions = captionsOf(body + back.replace(/<ref-list[\s\S]*<\/ref-list>/, ""));
 
-  const references = elements(first(back, "ref-list")?.inner ?? "", "ref").map((ref) => {
+  const references = elements(first(back, "ref-list")?.inner ?? first(article, "ref-list")?.inner ?? "", "ref").map((ref) => {
     const cite = first(ref.inner, "mixed-citation") ?? first(ref.inner, "element-citation") ?? first(ref.inner, "citation") ?? ref;
     const isBook = /book/.test(cite.attrs["publication-type"] ?? "");
     const title = first(cite.inner, "article-title") ?? first(cite.inner, "chapter-title") ?? (isBook ? first(cite.inner, "source") : null);

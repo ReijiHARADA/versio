@@ -81,7 +81,8 @@
     "audit:product-quality": "vite-node --script scripts/summarize-fresh-product-quality.ts",
     "verify:real-paper-source-policy": "npx --yes tsx scripts/verify-real-paper-source-policy.ts",
     "audit:local-translations": "node scripts/audit-local-paper-translations.mjs",
-    "audit:citation-alignment": "vite-node --script scripts/diagnose-citation-alignment.ts"
+    "audit:citation-alignment": "vite-node --script scripts/diagnose-citation-alignment.ts",
+    "eval:fields": "vite-node --script scripts/run-field-eval.ts"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",

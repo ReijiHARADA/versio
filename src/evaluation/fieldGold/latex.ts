@@ -63,7 +63,10 @@ const ACCENTS: Record<string, string> = { "'": "́", "`": "̀", "^": "̂", '"': 
 /** Best-effort LaTeX → plain text for gold strings. */
 export function latexToText(s: string): string {
   let t = s
-    .replace(/\\([`'^"~=.uvHc])\s*\{?\\?([A-Za-z])\}?/g, (_, a: string, l: string) => (l + (ACCENTS[a] ?? "")).normalize("NFC"))
+    .replace(/\\(?:orcid|orcidlink|corref|fnref|tnoteref|IEEEauthorrefmark|footnotemark|affiliationmark|authornote)\s*(?:\[[^\]]*\])?(?:\{[^{}]*\})?/g, "")
+    .replace(/\\(bibinfo|bibfield)\s*\{[^{}]*\}/g, "")
+    .replace(/\\([`'^"~=.])\s*\{?\\?([A-Za-z])\}?/g, (_, a: string, l: string) => (l + (ACCENTS[a] ?? "")).normalize("NFC"))
+    .replace(/\\([uvHc])(?:\s+|\{\\?)([A-Za-z])\}?/g, (_, a: string, l: string) => (l + (ACCENTS[a] ?? "")).normalize("NFC"))
     .replace(/\\(ss|ae|oe|o|aa|l)\b\{?\}?/g, (_, c: string) => ({ ss: "ß", ae: "æ", oe: "œ", o: "ø", aa: "å", l: "ł" })[c] ?? c)
     .replace(/\\\\(\[[^\]]*\])?/g, " ")
     .replace(/\\(newblock|newline|par|noindent|centering|and)\b/g, " ")
@@ -101,7 +104,27 @@ function captionsOf(tex: string): FieldRecord["captions"] {
   });
 }
 
+/** biblatex `.bbl` (`\entry … \endentry`): family names, title, year and DOI from fields. */
+function biblatexReferences(bbl: string): FieldRecord["references"] {
+  return bbl.split(/\\entry\{/).slice(1).map((entry) => {
+    const body = entry.split(/\\endentry/)[0];
+    const fieldValue = (name: string) => {
+      const m = body.match(new RegExp(`\\\\field\\{${name}\\}\\{`));
+      if (!m || m.index === undefined) return undefined;
+      const open = m.index + m[0].length - 1;
+      return latexToText(body.slice(open + 1, braceEnd(body, open)));
+    };
+    const families = [...body.matchAll(/family=\{?([^,}]+)\}?/g)].map((m) => latexToText(m[1]));
+    const title = fieldValue("title");
+    const year = fieldValue("year") ?? body.match(/\\field\{(?:labelyear|date)\}\{(\d{4})/)?.[1];
+    const doi = body.match(/\\verb\{doi\}\s*\\verb\s+(\S+)/)?.[1];
+    const raw = [families.join(", "), title, year].filter(Boolean).join(". ");
+    return { raw, ...(title ? { title } : {}), ...(year ? { year } : {}), ...(doi ? { doi } : {}) };
+  }).filter((r) => r.raw.length > 0);
+}
+
 function bblReferences(bbl: string): FieldRecord["references"] {
+  if (/\\entry\{/.test(bbl)) return biblatexReferences(bbl);
   const body = bbl.replace(/\\begin\{thebibliography\}\{[^}]*\}/, "").replace(/\\end\{thebibliography\}[\s\S]*/, "");
   return body
     .split(/\\bibitem\s*(?:\[[^\]]*(?:\[[^\]]*\][^\]]*)*\])?\s*\{[^}]*\}/)

@@ -112,7 +112,9 @@ async function firstPagesText(pdf: Buffer): Promise<string> {
 }
 
 function goldOf(c: Omit<Candidate, "gold">, fields: FieldRecord, trustedFields: FieldName[], pdfPath: string, pdf: Buffer): FieldGold {
-  return { id: c.id, source: c.source, language: c.language, discipline: c.discipline, pdfPath: path.relative(root, pdfPath), pdfSha256: sha256(pdf), trustedFields, fields };
+  // An empty reference list means the source lacked it, not that the paper has none.
+  const trusted = fields.references.length ? trustedFields : trustedFields.filter((f) => f !== "references");
+  return { id: c.id, source: c.source, language: c.language, discipline: c.discipline, pdfPath: path.relative(root, pdfPath), pdfSha256: sha256(pdf), trustedFields: trusted, fields };
 }
 
 async function consider(meta: Omit<Candidate, "gold">, fields: FieldRecord, trusted: FieldName[], pdf: Buffer, pdfPath: string): Promise<boolean> {
@@ -285,6 +287,7 @@ async function arxiv(): Promise<void> {
     if (!src) { excluded.fetchFailed += 1; continue; }
     if (!src.bbl) { excluded.noBbl += 1; continue; }
     const id = `arxiv-${safe}`;
+    const fields = parseLatexFields(src);
     const pdf = await cached(`arxiv/${safe}.pdf`, `https://arxiv.org/pdf/${c.id}`);
     if (!isPdf(pdf)) { excluded.fetchFailed += 1; continue; }
     const pdfPath = path.join(dataDir, id, "source.pdf");
@@ -292,7 +295,7 @@ async function arxiv(): Promise<void> {
     fs.writeFileSync(pdfPath, pdf);
     await consider(
       { id, source: "arxiv", language: "en", discipline, license: c.license, sourceUrl: `https://arxiv.org/abs/${c.id}` },
-      parseLatexFields(src), ARXIV_TRUSTED, pdf, pdfPath,
+      fields, fields.references.length ? ARXIV_TRUSTED : ARXIV_TRUSTED.filter((f) => f !== "references"), pdf, pdfPath,
     );
   }
 }
@@ -349,7 +352,10 @@ function manual(): void {
     if (!fs.existsSync(gtPath) || !fs.existsSync(pdfPath)) continue;
     n += 1;
     if (dryRun) continue;
-    const gold = goldFromManual(JSON.parse(fs.readFileSync(gtPath, "utf8")), path.relative(root, pdfPath), sha256(fs.readFileSync(pdfPath)));
+    const gt = JSON.parse(fs.readFileSync(gtPath, "utf8"));
+    // Only English and Japanese are in scope; a Chinese-titled ground truth would mislabel a language bucket.
+    if (/\p{Script=Han}/u.test(gt.title ?? "") && !/[\p{Script=Hiragana}\p{Script=Katakana}]/u.test(gt.title ?? "")) continue;
+    const gold = goldFromManual(gt, path.relative(root, pdfPath), sha256(fs.readFileSync(pdfPath)));
     accepted.push({ id: gold.id, source: "manual", language: gold.language, discipline: "manual", license: "existing-local-corpus", sourceUrl: "", gold });
   }
   console.log(`manual: ${n} hand-made ground truths with local PDFs`);

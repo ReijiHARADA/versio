@@ -114,7 +114,12 @@ export function scoreFields(gold: FieldGold, pred: FieldPrediction): FieldScores
 
   if (scorable("references")) {
     const pairs = greedyMatch(g.references, p.references, (x, y) =>
-      Math.max(similarity(x.raw, y.raw), x.title && y.title ? similarity(x.title, y.title) : 0), REFERENCE_MATCH);
+      Math.max(
+        similarity(x.raw, y.raw),
+        x.title && y.title ? similarity(x.title, y.title) : 0,
+        // A raw-only prediction still matches when it carries the gold title verbatim.
+        x.title && x.title.length >= 15 && normalizeText(y.raw).includes(normalizeText(x.title)) ? 1 : 0,
+      ), REFERENCE_MATCH);
     const withTitle = pairs.filter(([i]) => g.references[i].title);
     const withYear = pairs.filter(([i]) => g.references[i].year);
     const withDoi = pairs.filter(([i]) => g.references[i].doi);

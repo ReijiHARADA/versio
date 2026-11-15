@@ -53,4 +53,8 @@ describe("parseJatsFields", () => {
     expect(r.references[0].raw).toContain("Lee A");
     expect(r.references[1]).toMatchObject({ title: "Second", year: "2020" });
   });
+  it("finds a ref-list outside <back>", () => {
+    const xml = `<article><front><article-meta><title-group><article-title>T</article-title></title-group></article-meta></front><body><p>x</p><ref-list><ref id="r1"><mixed-citation>Smith J. <article-title>Only ref</article-title>. 2021.</mixed-citation></ref></ref-list></body></article>`;
+    expect(parseJatsFields(xml).references).toHaveLength(1);
+  });
 });

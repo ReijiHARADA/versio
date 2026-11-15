@@ -78,7 +78,7 @@ export function stratifiedSample<T extends { id: string; source: GoldSource; dis
   return out;
 }
 
-const CJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u;
+const KANA = /[\p{Script=Hiragana}\p{Script=Katakana}]/u;
 
 /** Hand-made ground truth: only the fields it records are trusted. Captions only when annotations are exhaustive. */
 export function goldFromManual(gt: PartialGroundTruth, pdfPath: string, pdfSha256: string): FieldGold {
@@ -102,7 +102,7 @@ export function goldFromManual(gt: PartialGroundTruth, pdfPath: string, pdfSha25
   return {
     id: `manual-${gt.id}`,
     source: "manual",
-    language: CJK.test(gt.title ?? "") ? "ja" : "en",
+    language: KANA.test(gt.title ?? "") ? "ja" : "en",
     discipline: "manual",
     pdfPath,
     pdfSha256,

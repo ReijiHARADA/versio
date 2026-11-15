@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-11-15T12:29:01.308Z",
+  "createdAt": "2026-11-15T12:42:21.819Z",
   "seed": 20261115,
   "quotas": {
     "europepmc/medicine": 25,
@@ -12,8 +12,8 @@
     "manual/manual": 15
   },
   "excluded": {
-    "versionMismatch": 6,
-    "noLicense": 1540,
+    "versionMismatch": 8,
+    "noLicense": 1302,
     "fetchFailed": 15,
     "noBbl": 3
   },
@@ -26,6 +26,15 @@
       "pdfSha256": "2c727838d9a1b364582f4921318f2230fd1f5e27f84859bc2fb29c63b640c00f",
       "license": "cc by",
       "sourceUrl": "https://arxiv.org/abs/2404.01485"
+    },
+    {
+      "id": "arxiv-2411.01344",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "053248a2d78ceaf8e8ec072c50b6113da6d7bfe3521ecdffc34a898c022863d4",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2411.01344"
     },
     {
       "id": "arxiv-2501.10568",
@@ -53,15 +62,6 @@
       "pdfSha256": "2293d18e74af578d973d5c8e1f11bf69b4ce9fae8d0e85f00df87649837bc01f",
       "license": "cc by",
       "sourceUrl": "https://arxiv.org/abs/2502.13281"
-    },
-    {
-      "id": "arxiv-2502.17645",
-      "source": "arxiv",
-      "language": "en",
-      "discipline": "cs.HC",
-      "pdfSha256": "6c571f4529409f21cd5aa6d37833493dee74ff8c1565ec903fe539185f782241",
-      "license": "cc by",
-      "sourceUrl": "https://arxiv.org/abs/2502.17645"
     },
     {
       "id": "arxiv-2502.18044",
@@ -244,6 +244,15 @@
       "sourceUrl": "https://arxiv.org/abs/2510.00019"
     },
     {
+      "id": "arxiv-2510.00222",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "836a956f317cfbb96f266b9e9cb593e2b0f29a802cede49053ff78b6239865ee",
+      "license": "cc by-nc-sa",
+      "sourceUrl": "https://arxiv.org/abs/2510.00222"
+    },
+    {
       "id": "arxiv-2510.00245",
       "source": "arxiv",
       "language": "en",
@@ -287,15 +296,6 @@
       "pdfSha256": "da82501d1afcef442dc0288082a6948fa85de2f9e3c804d167a6c62b9cf7b351",
       "license": "cc by",
       "sourceUrl": "https://arxiv.org/abs/2510.00909"
-    },
-    {
-      "id": "arxiv-2510.01194",
-      "source": "arxiv",
-      "language": "en",
-      "discipline": "cs.HC",
-      "pdfSha256": "fffc65dc731281bc6318c059a71c76c375eed3cff36131b92d00077d622676e4",
-      "license": "cc by",
-      "sourceUrl": "https://arxiv.org/abs/2510.01194"
     },
     {
       "id": "arxiv-2510.01513",
@@ -888,15 +888,6 @@
       "language": "en",
       "discipline": "manual",
       "pdfSha256": "6c97f705a4fe753a8c00475040b3941e8b902ef241fe441c16605b01f8770282",
-      "license": "existing-local-corpus",
-      "sourceUrl": ""
-    },
-    {
-      "id": "manual-ergonomics-human-factors-ihci",
-      "source": "manual",
-      "language": "ja",
-      "discipline": "manual",
-      "pdfSha256": "05c63c1dc7a16d1e4c10b87ee5ceadb8c69077d1613a13ecb5b8f3dccc73e63d",
       "license": "existing-local-corpus",
       "sourceUrl": ""
     },

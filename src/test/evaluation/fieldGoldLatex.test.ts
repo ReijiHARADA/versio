@@ -70,4 +70,26 @@ describe("parseLatexFields", () => {
     expect(parseLatexFields({ mainTex: String.raw`% \title{No}` + "\n" + String.raw`\title{Yes}`, bbl: null }).title).toBe("Yes");
   });
   it("converts accents", () => expect(latexToText(String.raw`M\"{u}ller and Jos\'e`)).toBe("Müller and José"));
+  it("drops ORCID and corref commands from names", () => {
+    const tex = String.raw`\author{Mara Solen\orcid{0000-0002-5191-1234} \and Omid Shoghli\corref{cor}}`;
+    expect(parseLatexFields({ mainTex: tex, bbl: null }).authors.map((a) => a.name)).toEqual(["Mara Solen", "Omid Shoghli"]);
+  });
+  it("unwraps ACM bibinfo markup", () => {
+    const bbl = String.raw`\bibitem[Brungart(2007)]{b}
+\bibfield{author}{\bibinfo{person}{D.S Brungart}}. \bibinfo{year}{2007}. \newblock \bibinfo{title}{Cocktail party listening}.`;
+    expect(parseLatexFields({ mainTex: "", bbl }).references[0].raw).toBe("D.S Brungart. 2007. Cocktail party listening.");
+  });
+  it("reads biblatex entries", () => {
+    const bbl = String.raw`\entry{k}{article}{}
+  \name{author}{1}{}{{{hash=x}{family={Smith},familyi={S\bibinitperiod},given={Jane}}}}
+  \field{title}{Deep models of reading}
+  \field{year}{2020}
+  \verb{doi}
+  \verb 10.1/abc
+  \endverb
+\endentry`;
+    expect(parseLatexFields({ mainTex: "", bbl }).references).toEqual([
+      { raw: "Smith. Deep models of reading. 2020", title: "Deep models of reading", year: "2020", doi: "10.1/abc" },
+    ]);
+  });
 });
