@@ -12,8 +12,8 @@ const pdfPath = path.join(
 );
 
 describe("interleaved list extraction", () => {
-  it("keeps a spanning list introduction and its cross-column items in source order", async () => {
-    if (!fs.existsSync(pdfPath)) return;
+  it("keeps a spanning list introduction and its cross-column items in source order", async (ctx) => {
+    if (!fs.existsSync(pdfPath)) ctx.skip();
     const pages = await extractPdfPages(pdfPath);
     const { blocks } = reconstructDocument(pages);
     const block = blocks.find((candidate) => candidate.text.includes("create separate clusters for"));
@@ -27,8 +27,8 @@ describe("interleaved list extraction", () => {
     expect(block?.text).not.toContain("which itively appear");
   });
 
-  it("reattaches an inline footnote citation that overlaps the paragraph's last line", async () => {
-    if (!fs.existsSync(pdfPath)) return;
+  it("reattaches an inline footnote citation that overlaps the paragraph's last line", async (ctx) => {
+    if (!fs.existsSync(pdfPath)) ctx.skip();
     const pages = await extractPdfPages(pdfPath);
     const { blocks } = reconstructDocument(pages);
     const block = blocks.find((candidate) => candidate.text.includes("Genealogies of Knowledge projects"));

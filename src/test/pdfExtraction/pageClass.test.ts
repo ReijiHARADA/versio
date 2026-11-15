@@ -34,28 +34,28 @@ function page(
 }
 
 describe("page classification", () => {
-  it("routes split-glyph Cyrillic mastheads to OCR", async () => {
+  it("routes split-glyph Cyrillic mastheads to OCR", async (ctx) => {
     const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "../../..");
     const pdf = path.join(root, "test-data/real-papers/linguistics-the-role-of-applied-linguistics-and-language-discourse-analysis-in-eng.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     expect(classifyPage(pageClassSignals(pages[0]))).toBe("garbled");
     expect(pagesNeedingOcr(pages)).toContain(1);
   }, 60_000);
 
-  it("does not route ordinary prose rows with short words to OCR", async () => {
+  it("does not route ordinary prose rows with short words to OCR", async (ctx) => {
     const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "../../..");
     const pdf = path.join(root, "test-data/real-papers/hfe-healthcare-scoping-2024.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     expect(classifyDocument(pages)).toBe("native-text");
     expect(pagesNeedingOcr(pages)).toEqual(new Set());
   }, 60_000);
 
-  it("routes image-only thesis pages to Vision OCR without requiring document-wide scan classification", async () => {
+  it("routes image-only thesis pages to Vision OCR without requiring document-wide scan classification", async (ctx) => {
     const root = path.join(fileURLToPath(new URL(".", import.meta.url)), "../../..");
     const pdf = path.join(root, "test-fixtures/real-papers/pending-pdfs/ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     expect(classifyPage(pageClassSignals(pages[9]))).toBe("scanned");
     expect(pagesNeedingOcr(pages)).toContain(10);

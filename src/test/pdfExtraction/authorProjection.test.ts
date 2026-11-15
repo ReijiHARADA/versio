@@ -33,16 +33,16 @@ const frontiersNumberedMastheadPdf = path.join(root, "test-data/real-papers/cogn
 const mixedMastheadPdf = path.join(root, "test-data/real-papers/marketing-digital-marketing-consumer-behavior.pdf");
 
 describe("author masthead projection", () => {
-  it("recovers numbered Frontiers author continuations without locations", async () => {
-    if (!fs.existsSync(frontiersNumberedMastheadPdf)) return;
+  it("recovers numbered Frontiers author continuations without locations", async (ctx) => {
+    if (!fs.existsSync(frontiersNumberedMastheadPdf)) ctx.skip();
     const pages = await extractPdfPages(frontiersNumberedMastheadPdf);
     const result = await extractFromPages({ pages, paperId: "frontiers-numbered-masthead", filePath: frontiersNumberedMastheadPdf, fileHash: "frontiers-numbered-masthead", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).toEqual(expect.arrayContaining(["Vivian Castillo de Lima", "João Francisco Barbieri", "Hélio José Coelho-Júnior"]));
     expect(result.paper.authors).not.toEqual(expect.arrayContaining(["Campinas, Campinas, Brazil", "United States"]));
   }, 60_000);
 
-  it("keeps a two-column Russian masthead title separate from affiliation text", async () => {
-    if (!fs.existsSync(mixedMastheadPdf)) return;
+  it("keeps a two-column Russian masthead title separate from affiliation text", async (ctx) => {
+    if (!fs.existsSync(mixedMastheadPdf)) ctx.skip();
     const pages = await extractPdfPages(mixedMastheadPdf);
     const reconstructed = reconstructDocument(pages);
     const titleBlocks = reconstructed.blocks.filter((block) => block.role === "title");
@@ -50,16 +50,16 @@ describe("author masthead projection", () => {
     expect(titleBlocks.some((block) => /ЦИФРОВОЙ МАРКЕТИНГ/.test(block.text) && /канд\. экон\. наук/.test(block.text))).toBe(false);
   }, 60_000);
 
-  it("separates a title-case author from location lines flattened into one masthead node", async () => {
-    if (!fs.existsSync(macedonianJournalPdf)) return;
+  it("separates a title-case author from location lines flattened into one masthead node", async (ctx) => {
+    if (!fs.existsSync(macedonianJournalPdf)) ctx.skip();
     const pages = await extractPdfPages(macedonianJournalPdf);
     const result = await extractFromPages({ pages, paperId: "macedonian-journal-masthead", filePath: macedonianJournalPdf, fileHash: "macedonian-journal-masthead", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).toEqual(expect.arrayContaining(["Lidija Pulevska Ivanovska", "Elena Karadakoska"]));
     expect(result.paper.authors.every((name) => !/Republic|Ohrid|Macedonia|Skopje/i.test(name))).toBe(true);
   }, 60_000);
 
-  it("keeps a central Frontiers author row ending in `and`", async () => {
-    if (!fs.existsSync(frontiersAndContinuationPdf)) return;
+  it("keeps a central Frontiers author row ending in `and`", async (ctx) => {
+    if (!fs.existsSync(frontiersAndContinuationPdf)) ctx.skip();
     const pages = await extractPdfPages(frontiersAndContinuationPdf);
     const result = extractFromPages({ pages, paperId: "frontiers-author-continuation", filePath: frontiersAndContinuationPdf, fileHash: "frontiers-author-continuation", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).toEqual(expect.arrayContaining([
@@ -67,8 +67,8 @@ describe("author masthead projection", () => {
     ]));
   }, 60_000);
 
-  it("recovers adjacent title-case authors from mixed email and location columns", async () => {
-    if (!fs.existsSync(landingPagePdf)) return;
+  it("recovers adjacent title-case authors from mixed email and location columns", async (ctx) => {
+    if (!fs.existsSync(landingPagePdf)) ctx.skip();
     const pages = await extractPdfPages(landingPagePdf);
     const result = extractFromPages({ pages, paperId: "landing-page-authors", filePath: landingPagePdf, fileHash: "landing-page-authors", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).toEqual(expect.arrayContaining(["Ruti Gafni", "Nim Dvir"]));
@@ -76,15 +76,15 @@ describe("author masthead projection", () => {
     expect(result.paper.authorsStructured?.every((author) => !/@|Tel Aviv|Israel/i.test(author.name))).toBe(true);
   }, 60_000);
 
-  it("promotes a same-line `and` author continuation in a two-column masthead", async () => {
-    if (!fs.existsSync(gpt3AuthorsPdf)) return;
+  it("promotes a same-line `and` author continuation in a two-column masthead", async (ctx) => {
+    if (!fs.existsSync(gpt3AuthorsPdf)) ctx.skip();
     const pages = await extractPdfPages(gpt3AuthorsPdf);
     const result = extractFromPages({ pages, paperId: "gpt3-authors", filePath: gpt3AuthorsPdf, fileHash: "gpt3-authors", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).toEqual(expect.arrayContaining(["Marcel Binz", "Eric Schulz"]));
   }, 60_000);
 
-  it("keeps same-baseline multi-column names separate and excludes locations", async () => {
-    if (!fs.existsSync(pdf)) return;
+  it("keeps same-baseline multi-column names separate and excludes locations", async (ctx) => {
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -97,8 +97,8 @@ describe("author masthead projection", () => {
     expect(result.paper.authors).not.toEqual(expect.arrayContaining(["Pittsburgh, USA"]));
   }, 60_000);
 
-  it("splits adjacent authors when the second surname has a particle sequence", async () => {
-    if (!fs.existsSync(particlePdf)) return;
+  it("splits adjacent authors when the second surname has a particle sequence", async (ctx) => {
+    if (!fs.existsSync(particlePdf)) ctx.skip();
     const pages = await extractPdfPages(particlePdf);
     const result = extractFromPages({
       pages,
@@ -111,8 +111,8 @@ describe("author masthead projection", () => {
     expect(result.paper.authors).not.toContain("Maarten Versteeg Elise van den Hoven");
   }, 60_000);
 
-  it("keeps wrapped two-column affiliations in their source columns", async () => {
-    if (!fs.existsSync(particlePdf)) return;
+  it("keeps wrapped two-column affiliations in their source columns", async (ctx) => {
+    if (!fs.existsSync(particlePdf)) ctx.skip();
     const pages = await extractPdfPages(particlePdf);
     const result = extractFromPages({ pages, paperId: "interactive-jewellery-affiliations", filePath: particlePdf, fileHash: "affiliation-columns", metadata: { pageCount: pages.length } });
     const names = result.paper.affiliations.map((affiliation) => affiliation.name);
@@ -123,8 +123,8 @@ describe("author masthead projection", () => {
     expect(names.some((name) => /Faculty of Design.*The Netherlands/i.test(name))).toBe(false);
   }, 60_000);
 
-  it("uses a clean ACM reference-format author list when masthead columns overlap", async () => {
-    if (!fs.existsSync(acmPdf)) return;
+  it("uses a clean ACM reference-format author list when masthead columns overlap", async (ctx) => {
+    if (!fs.existsSync(acmPdf)) ctx.skip();
     const pages = await extractPdfPages(acmPdf);
     const result = extractFromPages({ pages, paperId: "ppg-earring", filePath: acmPdf, fileHash: "author-acm-regression", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).toEqual(expect.arrayContaining([
@@ -135,8 +135,8 @@ describe("author masthead projection", () => {
     expect(result.paper.affiliations.every((affiliation) => !/Figure 1|smartphone app|real-time PPG/i.test(affiliation.name))).toBe(true);
   }, 60_000);
 
-  it("splits lettered affiliation blocks from journal mastheads", async () => {
-    if (!fs.existsSync(letteredAffiliationPdf)) return;
+  it("splits lettered affiliation blocks from journal mastheads", async (ctx) => {
+    if (!fs.existsSync(letteredAffiliationPdf)) ctx.skip();
     const pages = await extractPdfPages(letteredAffiliationPdf);
     const result = extractFromPages({ pages, paperId: "medical-deep-learning-meta-review", filePath: letteredAffiliationPdf, fileHash: "lettered-affiliation-regression", metadata: { pageCount: pages.length } });
     expect(result.paper.affiliations).toHaveLength(6);
@@ -144,8 +144,8 @@ describe("author masthead projection", () => {
     expect(result.paper.affiliations.some((affiliation) => /German Cancer Consortium/i.test(affiliation.name))).toBe(true);
   }, 60_000);
 
-  it("does not project editor/reviewer chrome as an affiliation", async () => {
-    if (!fs.existsSync(reviewerMastheadPdf)) return;
+  it("does not project editor/reviewer chrome as an affiliation", async (ctx) => {
+    if (!fs.existsSync(reviewerMastheadPdf)) ctx.skip();
     const pages = await extractPdfPages(reviewerMastheadPdf);
     const result = extractFromPages({ pages, paperId: "reviewer-chrome-affiliation", filePath: reviewerMastheadPdf, fileHash: "reviewer-chrome", metadata: { pageCount: pages.length } });
     const names = result.paper.affiliations.map((affiliation) => affiliation.name);
@@ -157,8 +157,8 @@ describe("author masthead projection", () => {
     expect(names.some((name) => /NIH Biomedical Research Center.*University of Maryland/i.test(name))).toBe(true);
   }, 60_000);
 
-  it("separates numbered institutions from an interleaved author row", async () => {
-    if (!fs.existsSync(interleavedAffiliationPdf)) return;
+  it("separates numbered institutions from an interleaved author row", async (ctx) => {
+    if (!fs.existsSync(interleavedAffiliationPdf)) ctx.skip();
     const pages = await extractPdfPages(interleavedAffiliationPdf);
     const result = await extractFromPages({ pages, paperId: "interleaved-affiliation", filePath: interleavedAffiliationPdf, fileHash: "interleaved-affiliation", metadata: { pageCount: pages.length } });
     const names = result.paper.affiliations.map((affiliation) => affiliation.name);
@@ -176,8 +176,8 @@ describe("author masthead projection", () => {
     expect(names.every((name) => !/Scott Gilliland|Clint Zeagler|Ellen Yi-Luen|\{jamer/i.test(name))).toBe(true);
   }, 60_000);
 
-  it("recovers a single author from a flattened report masthead", async () => {
-    if (!fs.existsSync(singleAuthorReportPdf)) return;
+  it("recovers a single author from a flattened report masthead", async (ctx) => {
+    if (!fs.existsSync(singleAuthorReportPdf)) ctx.skip();
     const pages = await extractPdfPages(singleAuthorReportPdf);
     const result = await extractFromPages({ pages, paperId: "single-author-report", filePath: singleAuthorReportPdf, fileHash: "single-author-report", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).toContain("Murali Krishna Pasupuleti");
@@ -186,8 +186,8 @@ describe("author masthead projection", () => {
     expect(result.paper.authors).not.toContain("Research Book Title :Human Factors and Ergonomics");
   }, 60_000);
 
-  it("does not expose repeated-glyph ToUnicode output as the paper title", async () => {
-    if (!fs.existsSync(brokenUnicodeTitlePdf)) return;
+  it("does not expose repeated-glyph ToUnicode output as the paper title", async (ctx) => {
+    if (!fs.existsSync(brokenUnicodeTitlePdf)) ctx.skip();
     const pages = await extractPdfPages(brokenUnicodeTitlePdf);
     const expectedEn = "The role of applied linguistics and language discourse analysis in English language teaching";
     const result = await extractFromPages({ pages, paperId: "broken-unicode-title", filePath: brokenUnicodeTitlePdf, fileHash: "broken-unicode-title", metadata: { pageCount: pages.length } });
@@ -200,8 +200,8 @@ describe("author masthead projection", () => {
     expect(result.paper.titleOriginal).not.toMatch(/АПФАПФ|CIPCIP/i);
   }, 60_000);
 
-  it("does not project journal metadata or body fragments as authors", async () => {
-    if (!fs.existsSync(journalMastheadPdf)) return;
+  it("does not project journal metadata or body fragments as authors", async (ctx) => {
+    if (!fs.existsSync(journalMastheadPdf)) ctx.skip();
     const pages = await extractPdfPages(journalMastheadPdf);
     const result = await extractFromPages({ pages, paperId: "journal-masthead-boundary", filePath: journalMastheadPdf, fileHash: "journal-masthead-boundary", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).toEqual(["Suvrunda Jadhav", "T.R. Patil"]);
@@ -212,8 +212,8 @@ describe("author masthead projection", () => {
     expect(result.paper.affiliations.some((affiliation) => /Vol\.\s*6|Issue 3/i.test(affiliation.name))).toBe(false);
   }, 60_000);
 
-  it("recovers numbered institutions from a PLOS affiliation line", async () => {
-    if (!fs.existsSync(plosAffiliationPdf)) return;
+  it("recovers numbered institutions from a PLOS affiliation line", async (ctx) => {
+    if (!fs.existsSync(plosAffiliationPdf)) ctx.skip();
     const pages = await extractPdfPages(plosAffiliationPdf);
     const result = await extractFromPages({ pages, paperId: "plos-affiliation-fallback", filePath: plosAffiliationPdf, fileHash: "plos-affiliation-fallback", metadata: { pageCount: pages.length } });
     expect(result.paper.affiliations).toEqual(expect.arrayContaining([
@@ -222,8 +222,8 @@ describe("author masthead projection", () => {
     ]));
   }, 60_000);
 
-  it("stitches wrapped same-column masthead affiliations without absorbing body text", async () => {
-    if (!fs.existsSync(wrappedAffiliationPdf)) return;
+  it("stitches wrapped same-column masthead affiliations without absorbing body text", async (ctx) => {
+    if (!fs.existsSync(wrappedAffiliationPdf)) ctx.skip();
     const pages = await extractPdfPages(wrappedAffiliationPdf);
     const result = await extractFromPages({ pages, paperId: "wear-scale", filePath: wrappedAffiliationPdf, fileHash: "wrapped-affiliation-regression", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).toEqual(expect.arrayContaining(["Changhyun Nam", "Young‑A Lee"]));
@@ -231,8 +231,8 @@ describe("author masthead projection", () => {
     expect(result.paper.affiliations.every((affiliation) => !/Full list of author information|available online/i.test(affiliation.name))).toBe(true);
   }, 60_000);
 
-  it("separates an IEEE author row that swallows its faculty line", async () => {
-    if (!fs.existsSync(ieeeWrappedMastheadPdf)) return;
+  it("separates an IEEE author row that swallows its faculty line", async (ctx) => {
+    if (!fs.existsSync(ieeeWrappedMastheadPdf)) ctx.skip();
     const pages = await extractPdfPages(ieeeWrappedMastheadPdf);
     const result = await extractFromPages({ pages, paperId: "ieee-wrapped-masthead", filePath: ieeeWrappedMastheadPdf, fileHash: "ieee-wrapped-masthead", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).toEqual(expect.arrayContaining(["ABDALLAH M. H. ABBAS", "KHAIRIL IMRAN GHAUTH", "CHOO-YEE TING"]));
@@ -246,9 +246,9 @@ describe("author masthead projection", () => {
     expect(result.canonical.nodes.some((node) => node.role === "heading" && /^I\.\s*INTRODUCTION$/i.test((node.text ?? "").trim()))).toBe(true);
   }, 60_000);
 
-  it("demotes OSWORLD chart/flow chrome out of the outline", async () => {
+  it("demotes OSWORLD chart/flow chrome out of the outline", async (ctx) => {
     const osworldPdf = path.join(root, "test-data/real-papers/osworld-multimodal-agents.pdf");
-    if (!fs.existsSync(osworldPdf)) return;
+    if (!fs.existsSync(osworldPdf)) ctx.skip();
     const pages = await extractPdfPages(osworldPdf);
     const result = extractFromPages({ pages, paperId: "osworld-chrome", filePath: osworldPdf, fileHash: "osworld-chrome", metadata: { pageCount: pages.length } });
     const headings = result.canonical.nodes.filter((node) => node.role === "heading").map((node) => node.text ?? "");
@@ -259,8 +259,8 @@ describe("author masthead projection", () => {
     expect(headings.some((text) => /2\.2\.1\s+Overview/i.test(text))).toBe(true);
   }, 60_000);
 
-  it("does not promote mid-sentence Discussion into an IEEE outline heading", async () => {
-    if (!fs.existsSync(ieeeWrappedMastheadPdf)) return;
+  it("does not promote mid-sentence Discussion into an IEEE outline heading", async (ctx) => {
+    if (!fs.existsSync(ieeeWrappedMastheadPdf)) ctx.skip();
     const pages = await extractPdfPages(ieeeWrappedMastheadPdf);
     const result = extractFromPages({ pages, paperId: "ieee-mid-discussion", filePath: ieeeWrappedMastheadPdf, fileHash: "ieee-mid-discussion", metadata: { pageCount: pages.length } });
     const headings = result.canonical.nodes.filter((node) => node.role === "heading").map((node) => (node.text ?? "").trim());
@@ -268,9 +268,9 @@ describe("author masthead projection", () => {
     expect(headings.some((text) => /^I\.\s*INTRODUCTION$/i.test(text))).toBe(true);
   }, 60_000);
 
-  it("splits structured-abstract Results Of… without leaving an embedded marker", async () => {
+  it("splits structured-abstract Results Of… without leaving an embedded marker", async (ctx) => {
     const handednessPdf = path.join(root, "test-fixtures/real-papers/pending-pdfs/epmc-association-between-handedness-and-occupational-accidents-a-prospective-.pdf");
-    if (!fs.existsSync(handednessPdf)) return;
+    if (!fs.existsSync(handednessPdf)) ctx.skip();
     const pages = await extractPdfPages(handednessPdf);
     const result = extractFromPages({ pages, paperId: "handedness-results-of", filePath: handednessPdf, fileHash: "handedness-results-of", metadata: { pageCount: pages.length } });
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /^Results\s+Of\b/i.test(node.text ?? ""))).toBe(false);
@@ -288,9 +288,9 @@ describe("author masthead projection", () => {
     expect(result.paper.authors.every((name) => !/for the|Study II/i.test(name))).toBe(true);
   }, 60_000);
 
-  it("recovers initialed bylines labelled as affiliations without title crumbs", async () => {
+  it("recovers initialed bylines labelled as affiliations without title crumbs", async (ctx) => {
     const uxPdf = path.join(root, "test-fixtures/real-papers/pending-pdfs/hci-user-experience-analysis-on-mobile-application-design-using-user-exper.pdf");
-    if (!fs.existsSync(uxPdf)) return;
+    if (!fs.existsSync(uxPdf)) ctx.skip();
     const pages = await extractPdfPages(uxPdf);
     const result = extractFromPages({ pages, paperId: "ux-initialed-byline", filePath: uxPdf, fileHash: "ux-initialed-byline", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).toEqual(expect.arrayContaining(["I D Sabukunze", "A Arakaza"]));
@@ -301,9 +301,9 @@ describe("author masthead projection", () => {
     expect(result.paper.doi).toBeNull();
   }, 60_000);
 
-  it("drops Cureus chrome subjects and merges structured abstract bands", async () => {
+  it("drops Cureus chrome subjects and merges structured abstract bands", async (ctx) => {
     const cureusPdf = path.join(root, "test-fixtures/real-papers/pending-pdfs/epmc-evaluating-large-language-models-for-automated-data-cleaning-and-feature.pdf");
-    if (!fs.existsSync(cureusPdf)) return;
+    if (!fs.existsSync(cureusPdf)) ctx.skip();
     const pages = await extractPdfPages(cureusPdf);
     const result = extractFromPages({ pages, paperId: "cureus-chrome", filePath: cureusPdf, fileHash: "cureus-chrome", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).toEqual(expect.arrayContaining(["Shimul A. Babli", "Pulkit Gairola"]));
@@ -312,45 +312,45 @@ describe("author masthead projection", () => {
     expect(result.paper.doi).toBe("10.7759/cureus.108550");
   }, 60_000);
 
-  it("does not expose publication-date bands as affiliations", async () => {
-    if (!fs.existsSync(registerPdf)) return;
+  it("does not expose publication-date bands as affiliations", async (ctx) => {
+    if (!fs.existsSync(registerPdf)) ctx.skip();
     const pages = await extractPdfPages(registerPdf);
     const result = await extractFromPages({ pages, paperId: "linguistics-register", filePath: registerPdf, fileHash: "publication-band", metadata: { pageCount: pages.length } });
     expect(result.paper.affiliations.every((affiliation) => !/Accepted:|Published online/i.test(affiliation.name))).toBe(true);
   }, 60_000);
 
-  it("keeps a numbered affiliation band separate from following article prose", async () => {
-    if (!fs.existsSync(registerPdf)) return;
+  it("keeps a numbered affiliation band separate from following article prose", async (ctx) => {
+    if (!fs.existsSync(registerPdf)) ctx.skip();
     const pages = await extractPdfPages(registerPdf);
     const result = await extractFromPages({ pages, paperId: "linguistics-register-affiliation-band", filePath: registerPdf, fileHash: "numbered-affiliation-band", metadata: { pageCount: pages.length } });
     expect(result.blocks.some((block) => /University of Turku/.test(block.original ?? "") && /discriminative importance/.test(block.original ?? ""))).toBe(false);
     expect(result.canonical.nodes.some((node) => node.role === "affiliation" && /University of Turku/.test(node.text ?? ""))).toBe(true);
   }, 60_000);
 
-  it("keeps location-only masthead fragments out of authors", async () => {
-    if (!fs.existsSync(wearabilityPdf)) return;
+  it("keeps location-only masthead fragments out of authors", async (ctx) => {
+    if (!fs.existsSync(wearabilityPdf)) ctx.skip();
     const pages = await extractPdfPages(wearabilityPdf);
     const result = await extractFromPages({ pages, paperId: "design-for-wearability", filePath: wearabilityPdf, fileHash: "location-author", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).not.toContain("PA USA");
   }, 60_000);
 
-  it("rejects quoted title descriptions from affiliation projection", async () => {
-    if (!fs.existsSync(virtualRealityPdf)) return;
+  it("rejects quoted title descriptions from affiliation projection", async (ctx) => {
+    if (!fs.existsSync(virtualRealityPdf)) ctx.skip();
     const pages = await extractPdfPages(virtualRealityPdf);
     const result = await extractFromPages({ pages, paperId: "virtual-reality-ergonomics", filePath: virtualRealityPdf, fileHash: "quoted-affiliation", metadata: { pageCount: pages.length } });
     expect(result.paper.affiliations.every((affiliation) => !/^\s*["“].*?["”]\s+by\s+/i.test(affiliation.name))).toBe(true);
   }, 60_000);
 
-  it("normalizes spaces inside Japanese author names", async () => {
-    if (!fs.existsSync(virtualRealityPdf)) return;
+  it("normalizes spaces inside Japanese author names", async (ctx) => {
+    if (!fs.existsSync(virtualRealityPdf)) ctx.skip();
     const pages = await extractPdfPages(virtualRealityPdf);
     const result = await extractFromPages({ pages, paperId: "virtual-reality-japanese-author", filePath: virtualRealityPdf, fileHash: "japanese-author", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).toEqual(expect.arrayContaining(["河合隆史"]));
     expect(result.paper.authors).not.toContain("河 合 隆 史");
   }, 60_000);
 
-  it("recovers IEEE affiliation statements emitted as body paragraphs", async () => {
-    if (!fs.existsSync(medicalAffiliationStatementPdf)) return;
+  it("recovers IEEE affiliation statements emitted as body paragraphs", async (ctx) => {
+    if (!fs.existsSync(medicalAffiliationStatementPdf)) ctx.skip();
     const pages = await extractPdfPages(medicalAffiliationStatementPdf);
     const result = await extractFromPages({ pages, paperId: "medical-affiliation-statement", filePath: medicalAffiliationStatementPdf, fileHash: "affiliation-statement", metadata: { pageCount: pages.length } });
     expect(result.paper.affiliations.some((affiliation) => /School of Electronic.*Shaanxi University/i.test(affiliation.name))).toBe(true);
@@ -358,8 +358,8 @@ describe("author masthead projection", () => {
     expect(result.paper.affiliations.filter((affiliation) => /University|Laboratory|Department|School/i.test(affiliation.name)).length).toBeGreaterThanOrEqual(3);
   }, 60_000);
 
-  it("splits title-case authors flattened into a research-center affiliation", async () => {
-    if (!fs.existsSync(legacyConversationPdf)) return;
+  it("splits title-case authors flattened into a research-center affiliation", async (ctx) => {
+    if (!fs.existsSync(legacyConversationPdf)) ctx.skip();
     const pages = await extractPdfPages(legacyConversationPdf);
     const result = await extractFromPages({ pages, paperId: "legacy-conversation-authors", filePath: legacyConversationPdf, fileHash: "title-case-affiliation-prefix", metadata: { pageCount: pages.length } });
     expect(result.paper.authors).toEqual(expect.arrayContaining(["Allison Woodruff", "Paul M. Aoki"]));
@@ -368,8 +368,8 @@ describe("author masthead projection", () => {
     expect(result.paper.affiliations.filter((affiliation) => /Palo Alto Research Center/i.test(affiliation.name))).toHaveLength(1);
   }, 60_000);
 
-  it("splits numbered multi-institution masthead streams without exposing contact text", async () => {
-    if (!fs.existsSync(cognitiveMotorMemoryPdf)) return;
+  it("splits numbered multi-institution masthead streams without exposing contact text", async (ctx) => {
+    if (!fs.existsSync(cognitiveMotorMemoryPdf)) ctx.skip();
     const pages = await extractPdfPages(cognitiveMotorMemoryPdf);
     const result = await extractFromPages({ pages, paperId: "cognitive-motor-affiliations", filePath: cognitiveMotorMemoryPdf, fileHash: "cognitive-motor-affiliations", metadata: { pageCount: pages.length } });
     expect(result.paper.affiliations.length).toBeGreaterThanOrEqual(3);
@@ -416,12 +416,12 @@ describe("author masthead projection", () => {
     }
   }, 60_000);
 
-  it("recovers JMIR preprint cover title stack and authors behind decorative cover art", async () => {
+  it("recovers JMIR preprint cover title stack and authors behind decorative cover art", async (ctx) => {
     const pdf = path.join(
       root,
       "test-fixtures/real-papers/pending-pdfs/epmc-ai-assisted-clinical-documentation-in-routine-danish-general-practice-qu.pdf",
     );
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -441,12 +441,12 @@ describe("author masthead projection", () => {
     expect(result.paper.authors.every((name) => !/Documentation Time|Note Quality/i.test(name))).toBe(true);
   }, 60_000);
 
-  it("recovers JMIR preprint cover title and authors behind decorative cover art", async () => {
+  it("recovers JMIR preprint cover title and authors behind decorative cover art", async (ctx) => {
     const pdf = path.join(
       root,
       "test-fixtures/real-papers/pending-pdfs/epmc-ai-assisted-clinical-documentation-in-routine-danish-general-practice-qu.pdf",
     );
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -473,12 +473,12 @@ describe("author masthead projection", () => {
     expect(result.paper.authors.every((name) => !/Documentation Time|Note Quality/i.test(name))).toBe(true);
   }, 60_000);
 
-  it("restores Frontiers bylines that over-scored as rival titles", async () => {
+  it("restores Frontiers bylines that over-scored as rival titles", async (ctx) => {
     const fishermenPdf = path.join(
       root,
       "test-fixtures/real-papers/pending-pdfs/epmc-mental-health-of-fishermen-current-research-status-and-future-directions.pdf",
     );
-    if (!fs.existsSync(fishermenPdf)) return;
+    if (!fs.existsSync(fishermenPdf)) ctx.skip();
     const pages = await extractPdfPages(fishermenPdf);
     const result = extractFromPages({
       pages,
@@ -491,12 +491,12 @@ describe("author masthead projection", () => {
     expect(result.paper.authors).toEqual(["Wenhao Lin", "Yu Fang", "Haidong Song"]);
   }, 60_000);
 
-  it("rejects Nature Communications journal rails as authors and keeps the article title", async () => {
+  it("rejects Nature Communications journal rails as authors and keeps the article title", async (ctx) => {
     const naturePdf = path.join(
       root,
       "test-fixtures/real-papers/pending-pdfs/epmc-large-scale-integrated-optoelectronic-chaos-for-machine-learning-acceler.pdf",
     );
-    if (!fs.existsSync(naturePdf)) return;
+    if (!fs.existsSync(naturePdf)) ctx.skip();
     const pages = await extractPdfPages(naturePdf);
     const result = extractFromPages({
       pages,
@@ -510,12 +510,12 @@ describe("author masthead projection", () => {
     expect(result.paper.authors).toEqual(expect.arrayContaining(["Zhouyang Pan", "Zhekai Zheng"]));
   }, 60_000);
 
-  it("keeps a PLOS protocol title instead of left-rail OSF registry chrome", async () => {
+  it("keeps a PLOS protocol title instead of left-rail OSF registry chrome", async (ctx) => {
     const plosProtocolPdf = path.join(
       root,
       "test-fixtures/real-papers/pending-pdfs/epmc-digital-behavioral-addictions-in-adolescents-and-young-adults-protocol-f.pdf",
     );
-    if (!fs.existsSync(plosProtocolPdf)) return;
+    if (!fs.existsSync(plosProtocolPdf)) ctx.skip();
     const pages = await extractPdfPages(plosProtocolPdf);
     const result = extractFromPages({
       pages,
@@ -531,14 +531,14 @@ describe("author masthead projection", () => {
     );
   }, 60_000);
 
-  it("does not promote post-Introduction body prose into a synthetic abstract", async () => {
+  it("does not promote post-Introduction body prose into a synthetic abstract", async (ctx) => {
     const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
     const hit = fs.existsSync(pending)
       ? fs.readdirSync(pending).find((name) =>
           name.includes("virtual-reality-for-information-visualization-migh"),
         )
       : undefined;
-    if (!hit) return;
+    if (!hit) ctx.skip();
     const pdf = path.join(pending, hit);
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
@@ -555,14 +555,14 @@ describe("author masthead projection", () => {
     expect(result.canonical.nodes.every((node) => node.role !== "abstract" || !/HMD and tracking/i.test(node.text ?? ""))).toBe(true);
   }, 60_000);
 
-  it("recovers a same-baseline `and` coauthor above the abstract band", async () => {
+  it("recovers a same-baseline `and` coauthor above the abstract band", async (ctx) => {
     const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
     const hit = fs.existsSync(pending)
       ? fs.readdirSync(pending).find((name) =>
           name.includes("exploring-the-status-of-the-human-operator-in-indu"),
         )
       : undefined;
-    if (!hit) return;
+    if (!hit) ctx.skip();
     const pdf = path.join(pending, hit);
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
@@ -584,14 +584,14 @@ describe("author masthead projection", () => {
     ).toBe(true);
   }, 60_000);
 
-  it("demotes letterspaced RESEARCH banners and affiliation dump tails from author", async () => {
+  it("demotes letterspaced RESEARCH banners and affiliation dump tails from author", async (ctx) => {
     const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
     const hit = fs.existsSync(pending)
       ? fs.readdirSync(pending).find((name) =>
           name.includes("can-mhealth-improve-migrant-wellness-during-public"),
         )
       : undefined;
-    if (!hit) return;
+    if (!hit) ctx.skip();
     const pdf = path.join(pending, hit);
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
@@ -614,7 +614,7 @@ describe("author masthead projection", () => {
     ).toBe(true);
   }, 60_000);
 
-  it("recovers chapter-footer authors from copyright bylines", async () => {
+  it("recovers chapter-footer authors from copyright bylines", async (ctx) => {
     const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
     const hit = fs.existsSync(pending)
       ? fs.readdirSync(pending).find((name) =>
@@ -624,7 +624,7 @@ describe("author masthead projection", () => {
     const pdf = hit
       ? path.join(pending, hit)
       : path.join(root, "test-data/real-papers/cognitive-psychology-attention-and-entrepreneurial-cognition.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -637,14 +637,14 @@ describe("author masthead projection", () => {
     expect(result.paper.authors.every((name) => !/SHEPHERD AND|^AND$/i.test(name))).toBe(true);
   }, 60_000);
 
-  it("peels Indonesian cover title+byline glue and recovers numbered authors", async () => {
+  it("peels Indonesian cover title+byline glue and recovers numbered authors", async (ctx) => {
     const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
     const hit = fs.existsSync(pending)
       ? fs.readdirSync(pending).find((name) =>
           name.includes("ergonomics-analisis-pemetaan-bibliometrik"),
         )
       : undefined;
-    if (!hit) return;
+    if (!hit) ctx.skip();
     const pdf = path.join(pending, hit);
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
@@ -662,14 +662,14 @@ describe("author masthead projection", () => {
     expect(result.paper.authors.every((name) => !/Jurnal SENOPATI|INFORMASI|ABSTRACT|Diagram/i.test(name))).toBe(true);
   }, 60_000);
 
-  it("joins a Frontiers title stack ending in Abstract and drops topic crumbs from authors", async () => {
+  it("joins a Frontiers title stack ending in Abstract and drops topic crumbs from authors", async (ctx) => {
     const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
     const hit = fs.existsSync(pending)
       ? fs.readdirSync(pending).find((name) =>
           name.includes("vr-sickness-adaptation-with-ramped-optic-flow"),
         )
       : undefined;
-    if (!hit) return;
+    if (!hit) ctx.skip();
     const pdf = path.join(pending, hit);
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
@@ -688,14 +688,14 @@ describe("author masthead projection", () => {
     expect(result.paper.authors.every((name) => !/Optic Flow|Transfers From Abstract/i.test(name))).toBe(true);
   }, 60_000);
 
-  it("demotes letterspaced INFO / ABSTRACT sidebar banners from authors", async () => {
+  it("demotes letterspaced INFO / ABSTRACT sidebar banners from authors", async (ctx) => {
     const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
     const hit = fs.existsSync(pending)
       ? fs.readdirSync(pending).find((name) =>
           name.includes("a-speech-segregation-algorithm-for-spatial-hearing-aids"),
         )
       : undefined;
-    if (!hit) return;
+    if (!hit) ctx.skip();
     const pdf = path.join(pending, hit);
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
@@ -718,14 +718,14 @@ describe("author masthead projection", () => {
     ).toBe(true);
   }, 60_000);
 
-  it("keeps Spanish compound names and Ma particles without month-name false rejects", async () => {
+  it("keeps Spanish compound names and Ma particles without month-name false rejects", async (ctx) => {
     const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
     const hit = fs.existsSync(pending)
       ? fs.readdirSync(pending).find((name) =>
           name.includes("use-of-artificial-intelligence-in-education-and-tr"),
         )
       : undefined;
-    if (!hit) return;
+    if (!hit) ctx.skip();
     const pdf = path.join(pending, hit);
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
@@ -745,12 +745,12 @@ describe("author masthead projection", () => {
     expect(result.paper.authors.every((name) => !/universidad|facultad/i.test(name))).toBe(true);
   }, 60_000);
 
-  it("recovers Title-Case + ALL-CAPS authors from parenthetical affiliations", async () => {
+  it("recovers Title-Case + ALL-CAPS authors from parenthetical affiliations", async (ctx) => {
     const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
     const hit = fs.existsSync(pending)
       ? fs.readdirSync(pending).find((name) => name.includes("ergonomics-human-factors-in-around"))
       : undefined;
-    if (!hit) return;
+    if (!hit) ctx.skip();
     const pages = await extractPdfPages(path.join(pending, hit));
     const result = extractFromPages({
       pages,
@@ -762,12 +762,12 @@ describe("author masthead projection", () => {
     expect(result.paper.authors).toEqual(["Yoshinori HORIE"]);
   }, 60_000);
 
-  it("recovers a Cyrillic title-case author from an affiliation genre rail", async () => {
+  it("recovers a Cyrillic title-case author from an affiliation genre rail", async (ctx) => {
     const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
     const hit = fs.existsSync(pending)
       ? fs.readdirSync(pending).find((name) => name.startsWith("marketing-impact-of-sensory"))
       : undefined;
-    if (!hit) return;
+    if (!hit) ctx.skip();
     const pages = await extractPdfPages(path.join(pending, hit));
     const result = extractFromPages({
       pages,
@@ -779,14 +779,14 @@ describe("author masthead projection", () => {
     expect(result.paper.authors).toEqual(["Ивана Ж. БАЛТЕЗАРЕВИЋ"]);
   }, 60_000);
 
-  it("recovers a thesis repository Author: Last, First byline and clean title", async () => {
+  it("recovers a thesis repository Author: Last, First byline and clean title", async (ctx) => {
     const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
     const hit = fs.existsSync(pending)
       ? fs.readdirSync(pending).find((name) =>
           name.includes("fatigue-and-occupational-safety-in-short-haul"),
         )
       : undefined;
-    if (!hit) return;
+    if (!hit) ctx.skip();
     const pdf = path.join(pending, hit);
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
@@ -804,12 +804,12 @@ describe("author masthead projection", () => {
     expect(abstractLead).toMatch(/Light goods vehicles/i);
   }, 60_000);
 
-  it("peels a Frontiers RECEIVED date rail off a hydroponic abstract lead", async () => {
+  it("peels a Frontiers RECEIVED date rail off a hydroponic abstract lead", async (ctx) => {
     const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
     const hit = fs.existsSync(pending)
       ? fs.readdirSync(pending).find((name) => name.includes("implementation-of-hydroponic-teaching"))
       : undefined;
-    if (!hit) return;
+    if (!hit) ctx.skip();
     const pdf = path.join(pending, hit);
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
@@ -831,12 +831,12 @@ describe("author masthead projection", () => {
     expect(abstractText).not.toMatch(/RECEIVEDREVISED|ACCEPTEDPUBLISHED/i);
   }, 60_000);
 
-  it("recovers a parenthetical Latin byline from a Japanese society note", async () => {
+  it("recovers a parenthetical Latin byline from a Japanese society note", async (ctx) => {
     const pdf = path.join(
       root,
       "test-fixtures/real-papers/pending-pdfs/ergonomics-2s2-1-ergonomics-human-factors-in-around-1964.pdf",
     );
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -848,12 +848,12 @@ describe("author masthead projection", () => {
     expect(result.paper.authors).toEqual(["Yoshinori HORIE"]);
   }, 60_000);
 
-  it("recovers a Serbian given-initial-surname from a review-article affiliation row", async () => {
+  it("recovers a Serbian given-initial-surname from a review-article affiliation row", async (ctx) => {
     const pdf = path.join(
       root,
       "test-fixtures/real-papers/pending-pdfs/marketing-impact-of-sensory-marketing-on-consumer-behavior.pdf",
     );
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -865,12 +865,12 @@ describe("author masthead projection", () => {
     expect(result.paper.authors).toEqual(["Ивана Ж. БАЛТЕЗАРЕВИЋ"]);
   }, 60_000);
 
-  it("demotes mega-author PLOS abstract overflow bylines into authors", async () => {
+  it("demotes mega-author PLOS abstract overflow bylines into authors", async (ctx) => {
     const preferItPdf = path.join(
       root,
       "test-fixtures/real-papers/pending-pdfs/epmc-prefer-it-a-transdisciplinary-co-created-framework-to-realise-inclusive-.pdf",
     );
-    if (!fs.existsSync(preferItPdf)) return;
+    if (!fs.existsSync(preferItPdf)) ctx.skip();
     const pages = await extractPdfPages(preferItPdf);
     const result = extractFromPages({
       pages,
@@ -891,12 +891,12 @@ describe("author masthead projection", () => {
     expect(abstractText).not.toMatch(/Jetse Goris/i);
   }, 60_000);
 
-  it("keeps BMC Methods-for… bodies inside a structured abstract band", async () => {
+  it("keeps BMC Methods-for… bodies inside a structured abstract band", async (ctx) => {
     const cbSearchPdf = path.join(
       root,
       "test-fixtures/real-papers/pending-pdfs/epmc-cb-search-a-method-for-searching-for-similar-protein-motifs-with-biased-.pdf",
     );
-    if (!fs.existsSync(cbSearchPdf)) return;
+    if (!fs.existsSync(cbSearchPdf)) ctx.skip();
     const pages = await extractPdfPages(cbSearchPdf);
     const result = extractFromPages({
       pages,
@@ -914,14 +914,14 @@ describe("author masthead projection", () => {
     expect(abstractText.length).toBeGreaterThan(800);
   }, 60_000);
 
-  it("recovers a Research Square page-3 Background–Conclusions abstract band", async () => {
+  it("recovers a Research Square page-3 Background–Conclusions abstract band", async (ctx) => {
     const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
     const hit = fs.existsSync(pending)
       ? fs.readdirSync(pending).find((name) =>
           name.includes("introducing-galaxyr-an-easy-to-use-r-implementation"),
         )
       : undefined;
-    if (!hit) return;
+    if (!hit) ctx.skip();
     const pdf = path.join(pending, hit);
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
@@ -937,14 +937,14 @@ describe("author masthead projection", () => {
     expect(abs.some((n) => /GalaxyR/i.test(n.text ?? ""))).toBe(true);
   }, 60_000);
 
-  it("recovers a thesis cover author heading beside partial-fulfil wording", async () => {
+  it("recovers a thesis cover author heading beside partial-fulfil wording", async (ctx) => {
     const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
     const hit = fs.existsSync(pending)
       ? fs.readdirSync(pending).find((name) =>
           name.includes("marketing-is-digital-advertising-effective"),
         )
       : undefined;
-    if (!hit) return;
+    if (!hit) ctx.skip();
     const pdf = path.join(pending, hit);
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
@@ -958,12 +958,12 @@ describe("author masthead projection", () => {
     expect(result.paper.authors).toHaveLength(1);
   }, 60_000);
 
-  it("drops equal-contribution crumbs and SOFTWARE banners from QStrain authors", async () => {
+  it("drops equal-contribution crumbs and SOFTWARE banners from QStrain authors", async (ctx) => {
     const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
     const hit = fs.existsSync(pending)
       ? fs.readdirSync(pending).find((name) => name.includes("qstrain-an-interactive-platform"))
       : undefined;
-    if (!hit) return;
+    if (!hit) ctx.skip();
     const pdf = path.join(pending, hit);
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
@@ -983,14 +983,14 @@ describe("author masthead projection", () => {
     ).toBe(true);
   }, 60_000);
 
-  it("peels a single numbered author glued onto Deep-learning abstract prose", async () => {
+  it("peels a single numbered author glued onto Deep-learning abstract prose", async (ctx) => {
     const pending = path.join(root, "test-fixtures/real-papers/pending-pdfs");
     const hit = fs.existsSync(pending)
       ? fs.readdirSync(pending).find((name) =>
           name.includes("visual-cues-in-mi-bci-induce-biases"),
         )
       : undefined;
-    if (!hit) return;
+    if (!hit) ctx.skip();
     const pdf = path.join(pending, hit);
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
@@ -1012,12 +1012,12 @@ describe("author masthead projection", () => {
     expect(abstractText).not.toMatch(/Fabien Lotte/i);
   }, 60_000);
 
-  it("recovers Frontiers two-author bylines glued onto abstract prose without commas", async () => {
+  it("recovers Frontiers two-author bylines glued onto abstract prose without commas", async (ctx) => {
     const pdf = path.join(
       root,
       "test-fixtures/real-papers/pending-pdfs/epmc-multi-way-radial-consistency-pre-training-for-event-based-optical-flow.pdf",
     );
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -1036,12 +1036,12 @@ describe("author masthead projection", () => {
     expect(abstractText).not.toMatch(/^An Feng/i);
   }, 60_000);
 
-  it("keeps Frontiers sidebar bylines ending in `and` without country crumbs", async () => {
+  it("keeps Frontiers sidebar bylines ending in `and` without country crumbs", async (ctx) => {
     const frontiersSidebarPdf = path.join(
       root,
       "test-fixtures/real-papers/pending-pdfs/epmc-a-retrospective-analysis-of-the-perceived-impact-of-the-covid-19-pandemi.pdf",
     );
-    if (!fs.existsSync(frontiersSidebarPdf)) return;
+    if (!fs.existsSync(frontiersSidebarPdf)) ctx.skip();
     const pages = await extractPdfPages(frontiersSidebarPdf);
     const result = extractFromPages({
       pages,
@@ -1067,10 +1067,10 @@ describe("author masthead projection", () => {
     expect(abstractText).not.toMatch(/Front\. Educ|Reinemann DN \(2024\)|doi:\s*10\./i);
   }, 60_000);
 
-  it("recovers chapter-footer D. A. Shepherd bylines from copyright nodes", async () => {
+  it("recovers chapter-footer D. A. Shepherd bylines from copyright nodes", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.startsWith("cognitive-psychology-attention-and-entrepreneurial"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1082,10 +1082,10 @@ describe("author masthead projection", () => {
     expect(result.paper.authors).toEqual(["D. A. Shepherd", "H. Patzelt"]);
   }, 60_000);
 
-  it("recovers particle surnames from a Scientific Reports abstract byline", async () => {
+  it("recovers particle surnames from a Scientific Reports abstract byline", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("xgboost-based-predictive"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1111,10 +1111,10 @@ describe("author masthead projection", () => {
     expect(abstractText).not.toMatch(/^Moataz M\. El Sherbiny/i);
   }, 60_000);
 
-  it("peels a single Name* author glued onto a Frontiers abstract lead", async () => {
+  it("peels a single Name* author glued onto a Frontiers abstract lead", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("true-xai-causal"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1132,10 +1132,10 @@ describe("author masthead projection", () => {
     expect(abstractText).not.toMatch(/^Gopal Singh Jamnal/i);
   }, 60_000);
 
-  it("recovers Frontiers star-lead byline instead of RECEIVED/KEYWORDS chrome", async () => {
+  it("recovers Frontiers star-lead byline instead of RECEIVED/KEYWORDS chrome", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("regulating-short-form-video-addiction"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1154,10 +1154,10 @@ describe("author masthead projection", () => {
     ).toBe(true);
   }, 60_000);
 
-  it("marks PLOS trailing Abstract and drops biobank consortium crumbs", async () => {
+  it("marks PLOS trailing Abstract and drops biobank consortium crumbs", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("atrial-fibrillation-and-retinal"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1182,10 +1182,10 @@ describe("author masthead projection", () => {
     ).toBe(true);
   }, 60_000);
 
-  it("recovers BMJ Open depression bylines without symptom-list authors", async () => {
+  it("recovers BMJ Open depression bylines without symptom-list authors", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("associations-of-presenting-symptoms"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1215,10 +1215,10 @@ describe("author masthead projection", () => {
     expect(result.canonical.nodes.some((n) => n.role === "abstract")).toBe(true);
   }, 60_000);
 
-  it("recovers dated Frontiers editorial wrap after trailing and", async () => {
+  it("recovers dated Frontiers editorial wrap after trailing and", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("editorial-public-health-strategies-to-improve-m"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1232,10 +1232,10 @@ describe("author masthead projection", () => {
     expect(result.paper.authors.some((a) => /Fres/i.test(a))).toBe(true);
   }, 60_000);
 
-  it("drops Dr Agarwal Group affiliation crumbs from commentary authors", async () => {
+  it("drops Dr Agarwal Group affiliation crumbs from commentary authors", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("commentary-impact-of-extended-reality"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1260,10 +1260,10 @@ describe("author masthead projection", () => {
     ).toBe(true);
   }, 60_000);
 
-  it("recovers BMJ Open Quality structured abstract and drops PRACTICE OR POLICY", async () => {
+  it("recovers BMJ Open Quality structured abstract and drops PRACTICE OR POLICY", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("applications-of-human-factors-approaches"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1286,10 +1286,10 @@ describe("author masthead projection", () => {
     expect(result.paper.authors.every((a) => !/PRACTICE OR POLICY/i.test(a))).toBe(true);
   }, 60_000);
 
-  it("peels glued *CORRESPONDENCE and splits Md. Name pairs", async () => {
+  it("peels glued *CORRESPONDENCE and splits Md. Name pairs", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("toward-reliable-computer-aided-brain"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1314,10 +1314,10 @@ describe("author masthead projection", () => {
     expect(result.paper.authors.filter((a) => /Shabiul Islam/i.test(a))).toHaveLength(1);
   }, 60_000);
 
-  it("dedupes repeated person tokens in a Frontiers byline", async () => {
+  it("dedupes repeated person tokens in a Frontiers byline", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("unraveling-the-role-of-asymmetric"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1333,10 +1333,10 @@ describe("author masthead projection", () => {
     ]);
   }, 60_000);
 
-  it("joins Frontiers other-role and-wrap under a comma-ending author row", async () => {
+  it("joins Frontiers other-role and-wrap under a comma-ending author row", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("toward-a-dual-pathway-model-of-neuroplastic"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1357,10 +1357,10 @@ describe("author masthead projection", () => {
     expect(result.paper.authors.every((a) => !/Chayut|Bunterngchit/i.test(a))).toBe(true);
   }, 60_000);
 
-  it("joins Frontiers comma-wrap paragraph with following and-author row", async () => {
+  it("joins Frontiers comma-wrap paragraph with following and-author row", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("multimodal-dataset-for-socially-aware"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1379,10 +1379,10 @@ describe("author masthead projection", () => {
     );
   }, 60_000);
 
-  it("keeps numbered OUP byline and ignores Corresponding authors contact rail", async () => {
+  it("keeps numbered OUP byline and ignores Corresponding authors contact rail", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("computer-vision-syndrome-and-ergonomic"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1405,10 +1405,10 @@ describe("author masthead projection", () => {
     ).toBe(true);
   }, 60_000);
 
-  it("does not promote Keywords: topic lists into authors", async () => {
+  it("does not promote Keywords: topic lists into authors", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("psychological-distress-subjective-well-bein"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1425,10 +1425,10 @@ describe("author masthead projection", () => {
     ).toBe(true);
   }, 60_000);
 
-  it("drops Frontiers citation crumbs and bare Universidad lines from authors", async () => {
+  it("drops Frontiers citation crumbs and bare Universidad lines from authors", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("editorial-public-health-strategies"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1451,10 +1451,10 @@ describe("author masthead projection", () => {
     ).toBe(true);
   }, 60_000);
 
-  it("keeps Jan given-name bylines that look like January date crumbs", async () => {
+  it("keeps Jan given-name bylines that look like January date crumbs", async (ctx) => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.startsWith("epmc-a-systematic-review-of-patient-decision"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
     const result = extractFromPages({
       pages,
@@ -1472,13 +1472,13 @@ describe("author masthead projection", () => {
     ]);
   }, 60_000);
 
-  it("recovers hyphenated glued starred affiliation authors", async () => {
+  it("recovers hyphenated glued starred affiliation authors", async (ctx) => {
     const pendingDir = path.join(root, "test-fixtures/real-papers/pending-pdfs");
-    if (!fs.existsSync(pendingDir)) return;
+    if (!fs.existsSync(pendingDir)) ctx.skip();
     const match = fs
       .readdirSync(pendingDir)
       .find((f) => f.startsWith("epmc-ai-driven-audience-clustering"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(pendingDir, match));
     const result = extractFromPages({
       pages,
@@ -1497,9 +1497,9 @@ describe("author masthead projection", () => {
     ).toBe(true);
   }, 60_000);
 
-  it("recovers one-comma Frontiers bylines and PLOS ORCID ID rows", async () => {
+  it("recovers one-comma Frontiers bylines and PLOS ORCID ID rows", async (ctx) => {
     const pendingDir = path.join(root, "test-fixtures/real-papers/pending-pdfs");
-    if (!fs.existsSync(pendingDir)) return;
+    if (!fs.existsSync(pendingDir)) ctx.skip();
     const mind = fs
       .readdirSync(pendingDir)
       .find((f) => f.startsWith("epmc-mind-the-gap-an-evidence-gap"));
@@ -1565,9 +1565,9 @@ describe("author masthead projection", () => {
     }
   }, 180_000);
 
-  it("recovers Frontiers body bylines and demotes sidebar reviewer crumbs", async () => {
+  it("recovers Frontiers body bylines and demotes sidebar reviewer crumbs", async (ctx) => {
     const pendingDir = path.join(root, "test-fixtures/real-papers/pending-pdfs");
-    if (!fs.existsSync(pendingDir)) return;
+    if (!fs.existsSync(pendingDir)) ctx.skip();
     const art = fs
       .readdirSync(pendingDir)
       .find((f) => f.startsWith("epmc-art-based-interventions"));
@@ -1610,9 +1610,9 @@ describe("author masthead projection", () => {
     }
   }, 120_000);
 
-  it("recovers glued CamelCase body bylines over Frontiers reviewer crumbs", async () => {
+  it("recovers glued CamelCase body bylines over Frontiers reviewer crumbs", async (ctx) => {
     const pendingDir = path.join(root, "test-fixtures/real-papers/pending-pdfs");
-    if (!fs.existsSync(pendingDir)) return;
+    if (!fs.existsSync(pendingDir)) ctx.skip();
     const postpartum = fs
       .readdirSync(pendingDir)
       .find((f) => f.startsWith("epmc-analysis-of-postpartum"));
@@ -1659,13 +1659,13 @@ describe("author masthead projection", () => {
     }
   }, 120_000);
 
-  it("drops affiliation city tails painted as authors", async () => {
+  it("drops affiliation city tails painted as authors", async (ctx) => {
     const pendingDir = path.join(root, "test-fixtures/real-papers/pending-pdfs");
-    if (!fs.existsSync(pendingDir)) return;
+    if (!fs.existsSync(pendingDir)) ctx.skip();
     const match = fs
       .readdirSync(pendingDir)
       .find((f) => f.startsWith("cognitive-psychology-a-study-on-the-teaching"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(pendingDir, match));
     const result = extractFromPages({
       pages,
@@ -1680,13 +1680,13 @@ describe("author masthead projection", () => {
     ).toBe(true);
   }, 60_000);
 
-  it("splits glued CamelCase Frontiers bylines and drops agency crumbs", async () => {
+  it("splits glued CamelCase Frontiers bylines and drops agency crumbs", async (ctx) => {
     const pendingDir = path.join(root, "test-fixtures/real-papers/pending-pdfs");
-    if (!fs.existsSync(pendingDir)) return;
+    if (!fs.existsSync(pendingDir)) ctx.skip();
     const match = fs
       .readdirSync(pendingDir)
       .find((f) => f.startsWith("epmc-a-multimodal-tableware"));
-    if (!match) return;
+    if (!match) ctx.skip();
     const pages = await extractPdfPages(path.join(pendingDir, match));
     const result = extractFromPages({
       pages,

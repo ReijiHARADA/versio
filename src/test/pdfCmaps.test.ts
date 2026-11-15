@@ -17,9 +17,9 @@ describe("pdf.js CMaps", () => {
     );
   });
 
-  it("decodes Japanese body text from a CID-font PDF when provided", async () => {
+  it("decodes Japanese body text from a CID-font PDF when provided", async (ctx) => {
     const pdfPath = process.env.VERSIO_JA_PDF;
-    if (!pdfPath || !fs.existsSync(pdfPath)) return;
+    if (!pdfPath || !fs.existsSync(pdfPath)) ctx.skip();
     const pages = await extractPdfPages(pdfPath);
     const text = pages
       .flatMap((page) => page.textItems.map((item) => item.text))
