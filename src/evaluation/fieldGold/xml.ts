@@ -64,5 +64,7 @@ export function decodeEntities(s: string): string {
 
 /** Plain text: tags become nothing (inline) — callers insert separators where structure needs them. */
 export function text(xml: string): string {
-  return decodeEntities(xml.replace(/<[^>]+>/g, "")).replace(/\s+/g, " ").trim();
+  const parts = xml.split(/<!\[CDATA\[([\s\S]*?)\]\]>/);
+  const joined = parts.map((part, i) => (i % 2 === 1 ? part : decodeEntities(part.replace(/<[^>]+>/g, "")))).join("");
+  return joined.replace(/\s+/g, " ").trim();
 }
