@@ -26,7 +26,7 @@ export type ExtractionBenchmarkGold = {
   paragraphBoundaries?: Array<[string, string]>;
   captionRelations?: Array<[string, string]>;
   tables?: Array<{ id: string; region: BenchmarkRegion; tree: TreeNode }>;
-  formulas?: Array<{ id: string; region: BenchmarkRegion; latex: string }>;
+  formulas?: Array<{ id: string; region: BenchmarkRegion; text?: string; latex?: string }>;
 };
 
 /** Common adapter output for Paper Reader, Docling, GROBID, etc. */
@@ -41,7 +41,7 @@ export type ExtractionBenchmarkPrediction = {
   paragraphBoundaries?: Array<[string, string]>;
   captionRelations?: Array<[string, string]>;
   tables?: Array<{ id: string; region: BenchmarkRegion; tree: TreeNode }>;
-  formulas?: Array<{ id: string; region: BenchmarkRegion; latex: string; cdm?: number }>;
+  formulas?: Array<{ id: string; region: BenchmarkRegion; text?: string; latex?: string; cdm?: number }>;
 };
 
 export type BenchmarkManifest = {

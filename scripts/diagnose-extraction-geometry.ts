@@ -41,6 +41,7 @@ const blocks = result.layoutBlocks.map((block: any, index: number) => ({
     y: line.y,
     width: line.width,
     height: line.height,
+    overlayBbox: line.overlayBbox,
     fontSize: line.fontSize,
     fontNames: [...new Set((line.items ?? []).map((item: any) => item.fontName).filter(Boolean))],
     text: line.text,
@@ -52,6 +53,7 @@ const blocks = result.layoutBlocks.map((block: any, index: number) => ({
       fontName: item.fontName,
       fontSize: item.fontSize,
       text: item.text,
+      visualTop: item.visualTop,
     })),
   })),
 }));
@@ -166,6 +168,15 @@ const output = {
   candidates,
   interleavedCandidates,
   vectorGraphicRegions,
+  canonicalNodes: result.canonical.nodes.map((node) => ({
+    id: node.id,
+    role: node.role,
+    pageStart: node.pageStart,
+    pageEnd: node.pageEnd,
+    boundingBoxes: node.boundingBoxes,
+    overlayBoundingBoxes: node.overlayBoundingBoxes,
+    text: node.text,
+  })),
 };
 const outputPath = path.resolve(process.argv[3] ?? `${resolvedPdf}.extraction-geometry.json`);
 fs.writeFileSync(outputPath, `${JSON.stringify(output, null, 2)}\n`);

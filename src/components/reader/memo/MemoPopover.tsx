@@ -5,6 +5,7 @@ import {
   type AnchorBox,
 } from "./popoverPosition";
 import styles from "./MemoPopover.module.css";
+import { isImeComposing } from "../../../utils/ime";
 
 export type MemoPopoverMode = "compose" | "view" | "edit" | "cross-block";
 
@@ -122,6 +123,7 @@ export function MemoPopover({
               data-testid="memo-note-input"
               onChange={(event) => onNoteChange(event.target.value)}
               onKeyDown={(event) => {
+                if (isImeComposing(event)) return;
                 if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
                   event.preventDefault();
                   onSave();

@@ -1,3 +1,50 @@
+# 2026-11-08: src/test 全green化・extraction corpus 回帰の棚卸し
+
+- `src/test` 4 fail → **1122/1122 pass**、`tsc -p tsconfig.app.json` pass。
+- `layoutFromExtraction.inferCaptionGrid`: native layout がある頁では grid 行に block id が無く、cell と同一（text+原点一致）の投影 paragraph が Reader に残っていた（10-16 の `hasNativeLayout` guard 以降）。完全一致の重複 cell block だけ除去。
+- 古い期待値を現行仕様へ更新: 失敗 caption は transport 失敗として retryable（10-16 方針）、`intu-itively` は `joinHyphenated` の compound 保持方針、脚注記号は `projects3` 形式も許容。
+- **未解決**: `test:extraction-corpus` 13 fail / 215 pass（471s）。baselineRealPapers 11件（title誤選択 例: computational-linguistics が `Common business goals…`、author/format 期待値差）+ realPapers reading-order 2件（ozchi `n = 20` が equation に混入、cognitive-dual-task）。今回の変更を戻しても同じ11件が落ちるため、作業中の未コミット差分（resolver/mathFragmentMerge・candidates・pdfLayout 等）由来。次はここから。
+
+# 2026-11-05: PDF抽出・翻訳品質の現状計測
+
+- `docs/PDF_EXTRACTION_TRANSLATION_QUALITY_EVALUATION.md` と `report:pdf-translation-quality` を追加。EPUB変換・容量・同期を除外し、実在PDFの既存手動構造ラベル（development 7本）と、現行MADLADの4分野×3抽出本文の実行ログだけを再集計する。個別行CSV/JSONはローカルの `test-data/real-papers/reports/` に生成する。
+- 開発用の限定実測は heading recall **86.46%**（3論文）、table-caption recall **75.00%**（4論文）、table-region recall **66.67%**（3論文）、figure-caption recall **100.00%**（2論文）、reading-order pair score **100.00%**（1論文）。分母が小さく開発データなので、全PDFの抽出精度とは表現しない。本文CER/WER、欠落・重複、独立コホートの構造精度、表TEDS、数式CDMは完全な人手goldが無く **N/A**。
+- 翻訳の現行診断標本は12本文中、モデル応答8件、自動受理6件、reader-visible原文fallback 6件。受理済みでも意味改変を確認しているため、受理率は翻訳精度に用いない。抽出起因のpre-model fallback 3件と、post-model fallback 3件を分離して記録する。人によるA/B評価用の12行queueを生成するが、独立転記・参照訳・二重査読の完了前に意味保持率やBLEU/chrF/COMETは報告しない。
+
+# 2026-11-05: 信頼性・性能評価の再現レポート
+
+- `docs/RELIABILITY_PERFORMANCE_EVALUATION.md` と `report:reliability-performance-evaluation` を追加。全1,432ユニークPDFの既存実測、7本のdevelopment抽出ゲート、4本の独立validation health gate、現行MADLADの4分野×3本文auditを、CSV/JSON/SVGグラフへ同じ入力から再生成できる。全件容量の結論は原本PDF→スマホ同期用EPUB 3で **61.34%総容量削減**（1,423/1,432成功、95% Wilson CI 98.8–99.7%）のまま。
+- 抽出の独立コホートはhuman gold未完成のため、CER/NED、Block F1、完全な読み順、TEDS/CDMを正解率として報告しない。現行translation auditは12本文中6件の自動受理・6件のreader-visible fallbackで、gate通過でも重大な意味改変の例を確認したため、翻訳精度の宣伝値には使わない。旧モデルの手動レビューはcurrent modelと分離して記録する。
+- 今回の検証: development extraction 7/7、validation health 4/4、評価ロジック/reading-order等 **267 pass**。同時にauthorProjectionは83件中4件の既存期待値との差分でfail（author正規化・余剰著者）したため、完全greenではない。生成スクリプトと`typecheck`はpass。
+
+# 2026-11-05: 撮影用Presentation Demo
+
+- `VITE_PAPER_READER_DEMO=1` の明示buildでのみ、取り込んだPDFの抽出段階を撮影用の構造化fixtureへ置換する。通常build・抽出評価は既存`extractAcademicPdf`のまま。fixtureは同じPaper Package→Library→Reader経路を通るが、抽出精度・翻訳品質やbenchmark結果として扱わない。
+- 主要Reader論文は Gemperle et al.「Design for Wearability」(ISWC '98)。本文段落・図キャプション・参考文献11件はローカル原論文PDFからの引用（抜粋。改行ハイフンと明白な誤植のみ修正）、図1/2/4/7/8と13ガイドラインの枠は原PDFから切り出し・抽出した画像、日本語訳は撮影用に人手で作成（MADLAD出力ではない）。目次は16節（ガイドライン1〜6と7–13を2階層目）。
+- Libraryはメモリだけに6論文（Design for Wearability、Interactive Jewellery、Power-over-Skin、SpeeChin、finger-specific touch、OSWorld。いずれもローカル実論文の書誌情報、本文は主要論文のみ）、ワークスペース階層、38%の取込み中カードを表示する。通常ライブラリ・SQLiteへは触れない。
+- `npm run prepare:demo-video` で撮影用PDFと図アセット（gitignored、`pdftoppm`/`pdfimages`/`sips`）を生成し、`npm run tauri:demo`で起動する。`VITE_PAPER_READER_DEMO_START_PATH` で起動直後のrouteを指定できる。手順は`docs/PRESENTATION_DEMO.md`。
+- 取込み中の論文行は既存論文と同じ星アイコン列を確保し、状態と進捗率は1グループ、キャンセルは独立したホバー領域として右端に収める。
+- 図の画像URLが `/` 始まり（アプリ同梱の静的ファイル）の場合はPaper Package内アセットとして解決しない。
+- 検証: presentation demo tests **3/3**、`tsc -p tsconfig.app.json` pass（ルートの`npm run typecheck`は`files: []`のため実質チェックしない）。src/test全体は1112 pass / 10 fail（抽出・author projection・quality系。デモ変更とは無関係の作業中差分）。
+
+# 2026-11-04: Mobile EPUB同期容量ベンチマーク
+
+- スマホ同期の実出力（1論文ごとの最適化済み EPUB 3 / ZIPコンテナ、外側ZIPなし）を、ブラウザ抽出→Paper Package→production EPUB exporterで全ローカルPDFコーパスへ実測する `bench:mobile-epub-storage` と集計コマンドを追加。翻訳は実行せず、通常の原文フォールバックで本文言語差を容量値へ混入させない。
+- 1,511パス中、内容hash重複79件を除く1,432ユニークPDFを全件測定。1,423件成功（99.4%）、9件はChromium crash/navigationとしてパス付きで記録、未測定0。成功分は原本3,075.84 MiB→EPUB 1,189.10 MiB、合計容量61.3%削減（論文単位平均52.7%、中央値61.7%、増量124件）。抽出済み図表アセット10,968件はEPUBに全件保持（exporter missing 0）。
+- 容量を小さくするための設定変更はしていない。現行同期exporterの既定（必要時のみ1600px/quality 0.92 JPEG化、表はPNG維持）をそのまま計測。コンテンツ特性別・圧縮前後・失敗一覧・プレゼン用注記は `docs/MOBILE_EPUB_STORAGE_BENCHMARK.md`、個別行はローカルgitignore reportで再現できる。typecheck と EPUB export regression **1/1** pass。
+
+# 2026-10-22: 回転 page-foot 裸 Table N demote
+
+- 縦書き相当 bbox（w≤14, h≫w, y>650）の裸 `Table N` を chrome demote（assayblast）
+- 回帰: bareCaptionMerge rotated page-foot
+
+# 2026-10-22: BMJ depression byline + McGuire + symptom reject
+
+- BMJ Open `other` 著者列（Rashmi/Megan/Philip…）を回収；`Hopelessness;…` 症状列を author 拒否
+- CamelCase 分割後に `Mc Guire` → `McGuire` を再膠着
+- Setting/Participants/Objective を structured abstract として回収
+- 回帰: authorProjection bmj-depression-bylines
+
 # 2026-10-22: Frontiers dated and-wrap + Agarwal Group
 
 - `… and` + `14 June 2026 Raúl Sampieri-Cabrera *` を byline continuation（year gate 例外）
@@ -4715,3 +4762,48 @@ server process remains running.
 - 全指標（Block/Text/Reading Order/段落境界/Caption relation/TEDS/Formula NED/CDM）を明示human goldとして持つsynthetic fixtureを追加。CLIでdevelopment 2件を採点し、各指標の対象件数・N/Aの別を含むreport生成を確認。
 - CLIに`--require-metrics`を追加。回帰gateで必要指標の`evaluatedDocuments=0`を成功扱いにせず、reportを保存してnon-zero終了する。all-dimensions syntheticでrequired全metric成功、空held-outでrequired Block F1がnon-zeroとなることを確認。
 - Studioで空白をドラッグして追加した認識漏れを、保存後もPDF上の破線枠と右ペイン一覧に残し削除できるよう改善。抽出漏れのroleと分かる範囲の正しいtextを記録し、gold converterでは既存のmissing-region ground truthとしてBlock Recall等に反映される。typecheck・Vite build・diff check pass。
+- 数式の下付き説明ラベル（underbrace）が同じnative行に混ざるPDFで、番号付き表示式を本文段落へ誤分類しないよう修正。公開原本 `2302.03792v1` をローカル再抽出し、式(6)が `paragraph` から `equation` へ復帰したことを確認。数式断片の分数・上下添字を完全に線形復元する処理は未対応のため、式(7)–(8)は継続診断対象。focused math regression **38/38** とtypecheck pass。
+- Studioでは原本上のドラッグを常時認識漏れ領域の追加に割り当て、検出済み領域の透明オーバーレイが空白ドラッグを奪う問題を解消。ドラッグ開始・終了の座標をReact描画待ちに依存せず同期保持し、mouse up直後に既定roleの認識漏れとして即時保存する。クリックはブロック選択、既存枠の調整は選択後の四隅ハンドルに分離した。切替操作は不要。typecheck pass。
+- Studioで既存の抽出枠を選択して`抽出枠を削除`できるよう追加。抽出スナップショットを破壊せず、`extra` のcritical reviewとして保存し、PDFと右ペインから除外する。選択中のレビューから`抽出枠を戻す`で復元できる。typecheckとreview gold tests **8/8** pass。
+- 数式の複数ベースラインを扱うため、stale な paragraph hint が本文・演算子行・下添字を一塊にした場合でも、番号付き／関係記号付きの強い表示式アンカーと隣接する短い数式行を独立した equation block に分離するようにした。積分の演算子行・番号付き本体・下段分母も一つの Canonical equation に統合する。公開原本 `2302.03792v1` で Eq. (9)・(10) の `1 + γ` を含む統合、および本文に吸収されていた Eq. (13) の独立式化を確認。focused math / reading-order regressions **124/124** と typecheck pass。
+- ベンチマークの数式NEDは、Paper Readerの線形化数式をLaTeXと偽装せず、人間が明示入力した正しい数式テキストと同表現で比較できるようにした。LaTeXは公式CDM用に別保持し、LaTeX未提供時のCDMはN/Aのまま。validation cohort 4本の再抽出は failure / timeout 0で完了し、式があるPNAS/SAGEでは各1件のformula-text artifact、式がないDove/OUPは0件を確認。benchmark targeted tests **23/23**、typecheck、diff check pass。
+- Studioで追加した`認識漏れ`のroleを`equation`にすると、既存の数式と同じ正解数式テキスト／LaTeX入力対象になるようにした。review-to-gold converterはこの領域を`missing:<id>`の独立gold formulaとして出力するため、見落とした数式がFormula NEDから消えない。review-gold / benchmark tests **21/21**、typecheck pass。
+- benchmark CLIのsynthetic development 2件を再採点し、全dimension report（Formula NED 3 units、CDM 1 unit）を生成できることを確認。既存LaTeX型CDM inputのexportも1/1 match、LaTeXなしの数式はCDM inputから除外される。これはsynthetic fixtureの機能検証であり、未知論文の精度値ではない。
+- Evaluation Studioのbrowser smokeでは、ユーザー提供bundle `2302.03792v1.pdf.evaluation.json` を再読込し4ページ目で `正しい数式テキスト` と `LaTeX（CDM用）` の入力欄が表示されることを確認。原本PDFを再ロードしなくても、保存済みbundleから数式reviewを続行できる。
+- Benchmark集計前のleakage guardを拡張。同一のbenchmark ID、source hash、またはpublisher/templateの`leakageGroup`を別documentへ重複使用すると評価を拒否する。template familyを同一split内で複数回数えて平均を歪める経路も遮断した。指定splitだけの実行でも、入力gold全体を先に監査する。targeted benchmark tests **16/16**、typecheck、synthetic CLI、validation 4 / held-out 5 / development 109 hashのsplit audit pass。
+- CDM scoreの取込を、export済みCDM inputのsource hash・goldとIoU対応済みのprediction formula IDへ固定した。別PDF、未対応formula、重複scoreをprediction artifactへ混入できない。CDM fixtureのexport→applyで1/1 score（93.2）の再取込とtypecheck pass。
+- LaTeXのみでhuman goldを記録した数式がpredictionから完全に欠落した場合も、Formula NEDをN/Aへ逃がさず1.0として数えるよう修正。既存predictionの線形数式をLaTeXと偽装することはせず、形式非互換だけはN/Aを維持する。benchmark / review-gold tests **26/26**、typecheck、diff check pass。
+- Block F1のIoU照合を局所的なgreedy選択から最大一致件数の一対一matchingへ変更。重なり領域で柔軟なpredictionが高IoUのgoldを先取りし、他に候補のないpredictionを不必要にFP/FNにする偏りを防ぐ。overlap matching回帰を含むstandard metrics / benchmark tests **21/21**、typecheck、diff check pass。
+- Table TEDS / Formula NEDのIoU領域対応も同じ最大一致件数matchingに統一。重複したformula/table候補で局所的な高IoUが別の対応可能な要素を塞がない。overlap formula回帰を含むstandard metrics / benchmark / review-gold tests **31/31**、typecheck、diff check pass。
+- Benchmark reportの集計値を`macro_document_mean`として明示。論文ごとの重みを等しくしつつ、`evaluatedDocuments` / `evaluatedUnits`で根拠量を併記するため、長大PDFだけが平均を支配しているように誤読されない。synthetic CLI reportの全metric/categoryにaggregation表示、typecheck、diff check pass。
+- Frozen cohortからprediction snapshotまたはStudio review bundleを生成する前に、ローカルPDFのSHA-256をmanifestと照合するよう追加。原本が差し替わった状態で別論文を同じIDとして採点・注釈することを防ぐ。JMIR 1本でhash verified snapshot（23 pages / 216 nodes）と隔離temporary review bundle生成、typecheck、diff check pass。
+- review bundleの再生成は既存ファイルを既定で拒否し、人間が確認済みの保存内容を上書きしない。置換は明示的な`--overwrite`だけに限定。隔離temporary bundleで拒否と意図的上書き双方を確認し、typecheck、diff check pass。
+- PDF Extraction evaluationの最終開発検証: standard metrics / benchmark / review-gold / math fragment regression **72/72**、typecheck、Vite build、development 109 / validation 4 / held-out 5 split audit、diff check pass。翻訳サーバーは未起動。Viteは既存のpdfjs direct-eval/chunk-size/dynamic-import警告のみ。
+- 新規の人手注釈を待たずに改善を回帰判定できる、7本（ACM / IEEE / Springer / KCI / OzCHI / Elsevier / arXiv）の既存fixture gold専用development gateを追加。各PDFを隔離workerで実行し、個別timeout・進捗・部分report・非zero失敗を持つ。これはdevelopment regressionであり、validation / held-out精度主張には使わない。強制1ms timeoutでpartial reportとfailureを確認、typecheck、diff check pass。
+- development gateへ、人手ラベル不要の`sourceIntegrityRate = 1`（native PDF textの再構成保持）と`canonicalProvenanceRate = 1`（Canonical nodeのPDF provenance保持）をfail-fast invariantとして追加。構造意味・読み順の精度主張とは別の自動健全性検査として扱う。timeout partial reportでinvariant結果を確認、typecheck、diff check pass。
+- isolated development workerを`npx tsx`からproject localの`vite-node`へ変更し、registry/networkの有無でgateが失敗しないよう修正。KCI fixture `fashion-hybrid-cmf`を実行し、source integrity / Canonical provenanceともに1.0、failure 0を確認。構造goldが未提供のdimensionはN/Aを維持。typecheck、diff check pass。
+- 7本の既存fixture development gateを実行完了（failure / invariant failure 0）。自動基準値はsource integrity 1.0（7/7）、Canonical provenance 1.0（7/7）、heading recall 0.865（3件）、table caption recall 0.75（4件）、table region recall 0.667（3件）。未注釈dimensionはN/A。Wear Scale Table 6の回転captionはPDF text streamでmarkerと題名が分断され、題名側が高table evidenceにもかかわらずparagraphに残ることを診断。論文固有の例外は追加していない。
+- 90°回転した表・図キャプションの題名が、PDF text matrixの進行方向によって番号ラベルより前のY座標へ出るケースを修正。句読点なしの`Table N` / `Figure N`ラベルを許容するのは、同じnative face・X座標・font sizeの近傍に題名候補があり、かつラベル自体が回転している場合だけに限定した。逆向き回転captionのreading-order回帰を追加し **84/84** pass。7本development gateも再実行し、failure / invariant failure 0、source integrity / Canonical provenance ともに **1.0 (7/7)** を維持した。これは既存fixtureの回帰保護であり、人手の未確認出力を正解や学習データとして採用しない。
+- 人手の新規正解ラベルが無い間も未知論文の健全性を監査する `npm run audit:pdf-extraction:unlabeled -- --cohort … --all` を追加。各hash固定PDFを隔離workerで二度抽出し、出力determinism、native layout text再現、Canonical座標/provenance、relation整合性、Canonical→Reader projection追跡を検査する。これはCER/NED・Block F1・reading order・TEDS・CDMの精度値を代替せず、reviewed gold無しの指標はN/Aのままにする。validation 4本（Dove 12p/99 nodes、SAGE 12p/163、OUP 8p/110、PNAS 4p/62）で全検査failure 0、typecheck・diff check pass。
+- label-free health reportへ、強いnative数式・表captionアンカーが対応するCanonical roleを持たない場合の**要確認**signalを追加。`Mean ± SD`の統計本文を数式欠落と誤報しないよう、数式番号またはコンパクトな関係式だけに限定した。validation 4本を再実行し、構造failure 0・要確認signal 0。signalはgold/precisionではなく、未知PDFを人間確認または次の一般規則診断へ優先投入するためだけに用いる。
+- Paper Reader snapshot adapterがCanonical paragraph splitをbenchmark prediction artifactへ書き出すよう修正。これまでparagraph-boundary F1のscore実装はあっても、Paper Reader自身の予測境界が無くreviewed goldに対してN/Aになる経路があった。ページ内の隣接paragraph node pairのみを出力し、pageをまたぐ境界は作らない。adapter / benchmark evaluator / review-gold focused tests **28/28**、typecheck、diff check pass。
+- snapshot adapterがReader projectionの`tableRows`を中立的な`table → tr → td(text)` treeへ変換し、TEDS prediction artifactとして書き出すよう修正。table row/cell構造を持つReader表だけを対象にし、画像のみ／captionのみの表へtreeを捏造しないため、その場合はTEDSをN/Aに保つ。adapter / benchmark evaluator / standard metrics focused tests **24/24**、typecheck、diff check pass。validation PNASのfrozen PDF snapshotも1/1成功（63 blocks、row構造を持つtable 0件のためTEDS prediction 0件）。
+- benchmarkのcritical failureをBlock/reading-order/formulaだけでなく、reviewed text CER ≥0.25、段落境界F1=0、caption relation F1=0、TEDS=0にも拡張。未注釈（N/A）をcritical扱いしない。category sliceと併せて、未知論文でどの構造が完全に壊れたかをdocument単位で追跡できる。benchmark evaluator / adapter focused tests **21/21**、typecheck、diff check pass。
+- 全dimension synthetic artifactを`--require-metrics`指定でCLI採点し、Block F1、CER/NED、reading-order ED、paragraph-boundary F1、caption relation F1、TEDS、Formula NED、CDMの全9指標が一つのreportに対象件数付きで出ることを確認（2 documents、critical failure 0）。これは評価経路の機能検証であり、未知論文の精度値ではない。validation/held-outはreviewed goldが0件のため引き続きN/A。
+- 評価CLIに`--fail-on-critical`を追加。reviewed documentでcritical failureが出たときだけnon-zero終了し、N/Aのdimensionは従来どおり失敗扱いにしない。all-dimensions synthetic artifactをこのflagと全required metric指定で実行し成功、typecheck・diff check pass。
+- review progress監査にtextとcaption relationの完了ページ数を追加し、各dimensionの採点可能性を可視化。現在はvalidation 4 + held-out 5の9 unique bundles / 116 pagesで、block/text/reading order/boundary/relation/table/formulaの完了ページはいずれも0。duplicateのJMIR review bundle 1組は二重集計せず明示表示する。typecheck・diff check pass。従って独立精度を出さないN/A判定は意図どおり維持されている。
+- 完成前の人間reviewをgold/学習データにせず改善診断だけに使う `triage:extraction-partial-review` を追加。`2302.03792v1` のbundleでは26ページ中12ページに指摘があり、137件のcritical `extra`削除と100件のparagraph認識漏れを確認。削除された予測のroleと実際のrole訂正を分離して集計し、削除対象（equation 50 / paragraph 52 / table 7等）をrole correctionと誤読しない。priority上位はp13, p3, p14, p6。これはpartial observationであり精度・gold・学習ラベルには使わない。typecheck・diff check pass。
+- OmniDocBenchの公式repository / CVPR論文と指標の分離（text edit、formula CDM、table TEDS、reading-order edit）を照合し、benchmark文書へ「共通の指標語彙だがleaderboard比較ではない」ことを明記。Paper Reader固有のBlock F1・paragraph-boundary・caption relationを別軸として維持し、frozen scientific-PDF cohortのsplit/leakage規則を優先する。
+- Evaluation Studioの通常画面を最小化。PDF・抽出結果・判定の3ペインだけにし、選択ブロックは削除／役割変更／日本語の誤り種別、空白ドラッグの認識漏れは役割変更だけに整理した。読み順・段落境界・表tree・LaTeX・深刻度・コメント・完全性の個別入力は通常操作から外した（既存bundleのデータは保持）。ページ確認済みは1つのチェックに統合し、未注釈の詳細指標は従来どおりN/A。typecheck・diff check pass。
+- 新規の認識漏れ枠を選ぶと、右ペインの`色・役割`で色を直接確認・変更できるようにした。選択肢も`本文（緑）`・`数式（赤）`などに日本語化し、選択中roleの色見本を表示する。typecheck・diff check pass。
+- Evaluation Studioを業務ツール調の情報密度へ再設計。濃色の固定ヘッダー、コンパクトな操作バー、枠線ベースの3ペイン、件数表示、role色付きの抽出一覧、選択状態を明確にした。抽出一覧からの選択後に判定と`色・役割`操作を表示するbrowser smoke、typecheck、Vite build、diff check pass。
+- Evaluation StudioのPDFオーバーレイ座標を、抽出用のbaseline座標と描画用top-left座標の変換境界として`overlayCoordinates`へ分離。非回転ページのnative textだけをbaseline→top-leftへ変換し、PDF.jsが既に変換した90°/180°/270°ページ、図表領域、手描き領域に二重補正を掛けない。旧bundleの明白に横長な縦copyrightだけを限定修復する。baseline、ページ回転、手描き領域、旧copyrightの4回帰を追加。公開原本`2302.03792v1`の1ページ目・数式密度の高い13ページ目で目視確認、targeted test 4/4・typecheck・Vite build・diff check pass。
+- 既存の評価bundleは生成時点の抽出スナップショットを固定しているため、古い単一行bboxを現在の行単位bboxへ更新できる`再抽出`をStudio操作バーへ復元。対象ページのCanonical/Reader predictionだけを差し替え、IDが変わり得る既存の予測block判定は誤結合を防ぐため消去する一方、人間が描いた認識漏れ領域は保持する。実PDFで操作表示・実行を確認、typecheck・diff check pass。
+- PDFオーバーレイの根本設計を修正。抽出・読み順のためのbaseline基準`boundingBoxes`は変更せず、各native text lineの実glyph上端・下端を別の`overlayBoundingBoxes`としてCanonical nodeへ保存し、Studioだけがこれを優先して描画する。従来は一つの数式line内の上付き／下付きの高さをbbox全体から差し引いていたため、枠が過度に上方へずれた。新しいvisual envelopeは数式のglyph extremaから計算し、回転文字は安全な旧フォールバックを使う。数式断片の結合後にもこの値をCanonical node本体に保持することを型・実パイプラインで回帰保護した。新規抽出とページ再抽出に反映され、既存bundleは再抽出するまで旧座標のまま。座標・数式結合・実パイプライン回帰 **49/49**、typecheck、Vite build、diff check pass。
+- Studioのページ再抽出は、再抽出ごとにgeneric Canonical IDが`g-0`から再利用されることによる既存ページとのID衝突を防ぐ。差し替え結果のnode IDをページ固有namespaceへ変換し、Canonical relationとReader projectionの`canonicalNodeId`も同じ対応表で更新する。これにより選択・レビュー・双方向ハイライトが別ページの同名nodeへ誤結合しない。再抽出ID/関係/projection/overlay座標回帰を追加し、focused extraction / Studio regressions **50/50**、typecheck、diff check pass。
+- native縦書き文字のvisual overlayは、layout用baseline `y` と別にPDF.js変換後の`visualTop`をtext itemへ保持して算出するようにした。これにより未回転ページの縦copyrightが水平text用のbaseline補正を誤適用されず、回転済みページのglyph矩形も二重変換されない。公開原本`2302.03792v1`の1ページ目で、縦stampのlayout bbox (`x=12,y=555,w=20,h=337.74`) に対し描画bbox (`x=12,y=217.26,w=20,h=337.74`) を確認。geometry / overlay / Studio regressions **51/51**、typecheck、diff check pass。
+- 数式の導出が行ごとに分断され、間に分数・根号の非prose fragmentが挟まるPDF向けに、明示的な`= / − / +`継続行を前の表示式へ再結合する汎用規則を追加。same-page・近接行間・横方向の重なり・数学断片だけを必須にし、離れた等式や本文は結合しない。断片はbbox/provenanceを保持するが、壊れた線形textをReader本文へ捏造しない。`2302.03792v1` p14の先頭導出3行が一つのCanonical equationへ結合されたこと、math/Studio/geometry regressions **54/54**、7本development regressionのfailure/invariant failure 0、validation 4本のlabel-free健全性監査failure/unhealthy 0、typecheck、Vite build、diff checkを確認。独立accuracy goldではない。
+- 人手ラベルを使わない追加ループとして、背の高い数式内でPDF.jsが主ベースラインの前に出す積分・根号断片と、分数断片を挟む後続等式列を同じ表示式へ統合した。本文を吸収しないため、同一ページ・非prose・28pt以内の連続配置・横方向の重なりをすべて要求し、既存の積分／分母専用規則を優先する。公開原本`2302.03792v1` p14では先頭導出が19 bboxを持つ一つの`equation`になった。focused regressions **56/56**、7本development regression failure/invariant failure 0、validation 4本label-free監査 failure/unhealthy 0、typecheck・diff check pass。これは構造健全性の改善であり、独立した正解率はreviewed goldが無いためN/A。
+- label-free held-out監査でWileyの回転した表セルがページ下端を越えるCanonical bboxを生成することを検出し、native 90°文字はbaseline下端ではなく実glyph上端をlayout座標に使うよう修正した。横書きの既存baseline規約は変更していない。独立held-out候補5本は修正前4/5（Wileyのinvalid bbox）から修正後5/5 healthyとなった。表罫線の`==`だけを数式欠落候補と誤検出しないようlabel-free triageにもoperand必須条件を追加。reading-order / math / Studio focused regressions **140/140**、development 7本 failure/invariant failure 0、typecheck・diff check pass。これも正解率ではなく未知PDFの構造健全性監査結果である。
+- macOS/Chromeの日本語IMEで候補を確定するEnterを、フォルダ名の保存／新規作成として誤解釈しないよう修正。`isComposing`とWebKitのkeyCode `229`を共通判定し、インライン名称変更、新規フォルダ作成、メモの⌘Enter保存、検索結果のEnter移動でIME変換中のキーを無視する。IME判定テスト、typecheck、Vite build、diff check pass。
+- Readerの目次をより高密度に調整。行の縦paddingとline-heightを少し縮め、下位階層の`ul`には左marginを置かずラベルのpaddingだけで字下げるよう変更した。これにより子項目もhover／選択背景が親項目と同じ左端から横幅いっぱいに表示される。typecheck、Vite build、diff check pass。

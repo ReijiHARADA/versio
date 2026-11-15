@@ -61,13 +61,19 @@ export function goldFromCompletedReview(input: EvaluationBundle, metadata: Pick<
       ? [[`${caption}@${page.page}`, `${target}@${page.page}`] as [string, string]] : [];
   }));
   const canScoreCaptionRelations = allComplete((page) => page.coverage.relationsComplete) && mappedCaptionRelations.length > 0;
-  const reviewPagesByNode = new Map(completed.flatMap((page) => [
-    ...(page.goldFormulas ?? []).map((formula) => [formula.nodeId, { page, latex: formula.latex }] as const),
+  const reviewPagesByTarget = new Map(completed.flatMap((page) => [
+    ...(page.goldFormulas ?? []).flatMap((formula) => {
+      const target = formula.nodeId ? `node:${formula.nodeId}` : formula.missingRegionId ? `missing:${formula.missingRegionId}` : null;
+      return target ? [[target, { page, text: formula.text, latex: formula.latex }] as const] : [];
+    }),
   ]));
   const goldFormulaBlocks = blocks.filter((block) => block.role === "equation");
   const formulas = goldFormulaBlocks.flatMap((block) => {
-    const nodeId = block.id.split("@")[0]; const review = reviewPagesByNode.get(nodeId);
-    return review?.latex.trim() ? [{ id: block.id, region: block.region, latex: review.latex }] : [];
+    const nodeId = block.id.split("@")[0];
+    const target = nodeId.startsWith("missing:") ? nodeId : `node:${nodeId}`;
+    const review = reviewPagesByTarget.get(target);
+    const text = review?.text?.trim(); const latex = review?.latex?.trim();
+    return text || latex ? [{ id: block.id, region: block.region, ...(text ? { text } : {}), ...(latex ? { latex } : {}) }] : [];
   });
   const formulaComplete = goldFormulaBlocks.length > 0 && allComplete((page) => page.coverage.formulasComplete) && formulas.length === goldFormulaBlocks.length;
   const tablePagesByNode = new Map(completed.flatMap((page) => [

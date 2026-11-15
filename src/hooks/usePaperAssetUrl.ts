@@ -20,6 +20,9 @@ function mimeFromPath(path: string): string {
 function isPackageRelativeAsset(src: string | undefined | null): boolean {
   if (!src) return false;
   if (src.startsWith("data:") || src.startsWith("blob:") || src.startsWith("http")) return false;
+  // Package assets are always relative; a root-relative URL is an app-bundled
+  // static file (e.g. the filming-only presentation demo assets).
+  if (src.startsWith("/")) return false;
   const normalized = src.replace(/^\.\//, "");
   return normalized.startsWith("assets/") || !normalized.includes("://");
 }

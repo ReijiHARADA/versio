@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import styles from "./AnnotationEditor.module.css";
+import { isImeComposing } from "../../../utils/ime";
 
 type AnnotationEditorProps = {
   selectedText: string;
@@ -37,6 +38,7 @@ export function AnnotationEditor({
         onChange={(e) => onNoteChange(e.target.value)}
         placeholder="メモを入力（空でもハイライトとして保存できます）"
         onKeyDown={(e) => {
+          if (isImeComposing(e)) return;
           if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
             e.preventDefault();
             onSave();

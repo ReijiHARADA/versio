@@ -42,7 +42,13 @@ export type PageCoverage = {
   formulasComplete: boolean;
 };
 
-export type GoldFormulaReview = { nodeId: string; latex: string };
+/**
+ * `text` is the human-authored linear reading used for string NED. `latex`
+ * remains optional and is reserved for visual CDM evaluation; neither value
+ * is inferred from the parser output.
+ */
+/** A reviewed equation may be an extracted node or a human-added missing region. */
+export type GoldFormulaReview = { nodeId?: string; missingRegionId?: string; text?: string; latex?: string };
 export type GoldTableReview = { nodeId: string; tree: { tag: string; text?: string; children?: unknown[] } };
 
 export type BlockReview = {

@@ -234,6 +234,21 @@ function vectorFigureLabelEvidence(block: LayoutBlock, blocks?: LayoutBlock[], p
  * rich page, tiny typography, and either repeated peer panels or a tiny
  * image-rich micro-grid are required.
  */
+/**
+ * Figure panel labels are frequently set on a rotated baseline, running down
+ * the side of their plot. The box of such a line is tall and thin, so the
+ * horizontal-text assumption that "line thickness == bbox.height" rejects
+ * every vertical label. Measure across the text direction instead.
+ */
+function crossTextThickness(block: LayoutBlock): number {
+  // Measure per line: a block holding two side-by-side rotated labels is wide
+  // and short, while each of its lines is tall and thin.
+  const thicknesses = block.lines.map((line) =>
+    Math.abs(line.rotation ?? 0) >= 45 ? line.bbox.width : line.bbox.height
+  );
+  return thicknesses.length > 0 ? Math.max(...thicknesses) : block.bbox.height;
+}
+
 function denseVectorPanelEvidence(block: LayoutBlock, blocks: LayoutBlock[], page?: ExtractedPage): number {
   if ((block.role !== "table" && block.role !== "paragraph") ||
       (page?.graphicsPrimitives?.length ?? 0) < 300 || block.lines.length === 0) return 0;
@@ -279,17 +294,24 @@ function denseVectorPanelEvidence(block: LayoutBlock, blocks: LayoutBlock[], pag
   // it. Requiring an exact, same-baseline peer on an exceptionally graphics-
   // dense page distinguishes this from an ordinary small data-table cell.
   const normalizedText = block.text.replace(/\s+/g, " ").trim().toLowerCase();
+  // Line grouping can merge the per-panel repetitions into one block (rotated
+  // labels across panels share a baseline), so compare the repeated unit
+  // rather than the whole string. A data table does not consist solely of one
+  // cell text repeated.
+  const annotationUnit = (text: string) => text.match(/^(.{8,140}?)(?: \1)+$/)?.[1] ?? text;
+  const blockUnit = annotationUnit(normalizedText);
   const repeatedHorizontalPanelLabel =
     denseGraphics && imageCount >= 20 && fontSize <= 4.2 &&
-    block.lines.length <= 2 && block.bbox.height <= Math.max(16, fontSize * 4) &&
-    normalizedText.length >= 8 && normalizedText.length <= 140 &&
-    !/[.!?。！？:;]$/.test(normalizedText) &&
+    block.lines.length <= 2 &&
+    (crossTextThickness(block) <= Math.max(16, fontSize * 4) || blockUnit !== normalizedText) &&
+    blockUnit.length >= 8 && blockUnit.length <= 140 &&
+    !/[.!?。！？:;]$/.test(blockUnit) &&
     blocks.some((candidate) => {
       if (candidate === block || candidate.pageStart !== block.pageStart ||
           (candidate.role !== "table" && candidate.role !== "paragraph") ||
           candidate.lines.length > 2) return false;
       const candidateText = candidate.text.replace(/\s+/g, " ").trim().toLowerCase();
-      if (candidateText !== normalizedText) return false;
+      if (annotationUnit(candidateText) !== blockUnit) return false;
       const candidateFont = median(candidate.lines.map((line) => line.fontSize).filter((size) => size > 0));
       return candidateFont > 0 && candidateFont <= 4.2 &&
         Math.abs(candidate.bbox.y - block.bbox.y) <= Math.max(8, fontSize * 2) &&
@@ -318,7 +340,7 @@ function figurePanelLabelEvidence(block: LayoutBlock, blocks: LayoutBlock[], pag
   if (blocks.some((candidate) => candidate.pageStart === block.pageStart && candidate.role === "table_caption" &&
     Math.abs(candidate.bbox.y - block.bbox.y) <= 360)) return 0;
   const fontSize = median(block.lines.map((line) => line.fontSize).filter((size) => size > 0));
-  if (fontSize <= 0 || fontSize > 4 || block.bbox.height > Math.max(22, fontSize * 7)) return 0;
+  if (fontSize <= 0 || fontSize > 4 || crossTextThickness(block) > Math.max(22, fontSize * 7)) return 0;
   const figureCaption = blocks.find((candidate) => {
     if (candidate.pageStart !== block.pageStart || candidate.role !== "figure_caption") return false;
     const candidateBottom = candidate.bbox.y + candidate.bbox.height;

@@ -4,6 +4,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { extractPdfPages } from "../src/test/readingOrder/extractPdf.ts";
 import { extractFromPages } from "../src/services/pdfExtraction/pipeline/extractAcademicPdf.ts";
 import { predictionFromSnapshot } from "../src/evaluation/benchmark/adapters.ts";
@@ -19,6 +20,7 @@ const ids = option("--ids")?.split(",").map((value) => value.trim()).filter(Bool
 if (!ids && !args.includes("--all")) throw new Error("Use --ids id1,id2 for a bounded run, or --all for the frozen cohort.");
 const selected = ids ? cohort.documents.filter((item) => ids.includes(item.id)) : cohort.documents;
 if (ids && selected.length !== ids.length) throw new Error("One or more --ids values are not in the cohort.");
+const digest = (file: string) => crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 let interrupted = false; const onInterrupt = () => { interrupted = true; }; process.on("SIGINT", onInterrupt);
 const started = Date.now(); const completed: string[] = []; const failures: Array<{ id: string; error: string }> = [];
 fs.mkdirSync(outputDir, { recursive: true });
@@ -27,6 +29,7 @@ for (const [index, item] of selected.entries()) {
   try {
     const file = path.join(root, item.pdfPath);
     if (!fs.existsSync(file)) throw new Error("Local PDF is unavailable.");
+    if (digest(file) !== item.fileHash) throw new Error("Local PDF hash does not match the frozen cohort manifest.");
     const pages = await extractPdfPages(file);
     const extracted = extractFromPages({ pages, paperId: item.id, filePath: file, fileHash: item.fileHash, metadata: { pageCount: pages.length } });
     const snapshot = { schemaVersion: 1, kind: "paper-reader-extraction-snapshot", createdAt: new Date().toISOString(), parser: { id: "paper-reader", version: "local" }, source: { paperId: item.id, fileName: path.basename(file), fileHash: item.fileHash, pageCount: pages.length }, pages: [], canonical: extracted.canonical, projection: { blocks: extracted.blocks } } as ExtractionSnapshot;
