@@ -53,8 +53,12 @@ jobs:
         working-directory: src-tauri
     steps:
       - uses: actions/checkout@v5
-      - name: Stub bundled translation-server for Tauri resource check
-        run: mkdir -p src-tauri/bundled-resources/translation-server
+      # tauri.conf.json bundles these macOS build outputs; Linux CI only needs
+      # the paths to exist for the Tauri resource check (working dir: src-tauri).
+      - name: Stub bundled resources for Tauri resource check
+        run: |
+          mkdir -p bundled-resources/translation-server
+          touch bundled-resources/apple-translation
       - name: Install Tauri Linux system dependencies
         run: |
           sudo apt-get update

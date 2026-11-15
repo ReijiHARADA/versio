@@ -128,6 +128,7 @@ fn resolve_target_page(page: Option<u32>, highlight: Option<&SourcePdfHighlight>
     page.filter(|p| *p >= 1)
 }
 
+#[cfg(target_os = "macos")]
 fn open_pdf_path(path: &Path) -> Result<(), String> {
     std::process::Command::new("open")
         .arg(path)
@@ -138,6 +139,7 @@ fn open_pdf_path(path: &Path) -> Result<(), String> {
 
 /// Best-effort Preview page jump. Falls back silently if Accessibility is off
 /// or the viewer is not Preview — the PDF is already open.
+#[cfg(target_os = "macos")]
 fn try_preview_go_to_page(page: u32) -> Result<(), String> {
     let script = format!(
         r#"try
