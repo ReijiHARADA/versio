@@ -29,15 +29,15 @@ const resultPath = option("--result");
 const singleIndex = Number(option("--index") ?? "0");
 const pendingDir = path.join(root, "test-fixtures/real-papers/pending-pdfs");
 const syntheticDir = path.join(root, "test-fixtures/generated-pdfs");
-// The 200 smallest PDFs form a deterministic, broadly varied local sample while
-// keeping each independent extractor process within the available heap.
+// Deterministic sample: the 150 smallest plus the 50 largest PDFs, so long
+// and image-heavy papers are covered too.
 const pending = fs.readdirSync(pendingDir)
   .filter((file) => file.toLowerCase().endsWith(".pdf"))
   .sort((left, right) => {
     const sizeDelta = fs.statSync(path.join(pendingDir, left)).size - fs.statSync(path.join(pendingDir, right)).size;
     return sizeDelta || left.localeCompare(right);
   })
-  .slice(0, 200)
+  .filter((_, i, all) => i < 150 || i >= all.length - 50)
   .map((file) => path.join(pendingDir, file));
 const synthetic = fs.readdirSync(syntheticDir)
   .filter((file) => file.toLowerCase().endsWith(".pdf"))
@@ -45,17 +45,42 @@ const synthetic = fs.readdirSync(syntheticDir)
   .map((file) => path.join(syntheticDir, file));
 const files = [...pending, ...synthetic];
 
-function stableJson(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+/**
+ * Stable (sorted-key) JSON fed into the hash incrementally. Building the whole
+ * string first exceeds V8's max string length on image-heavy papers.
+ */
+function updateStable(hash: crypto.Hash, value: unknown): void {
+  if (Array.isArray(value)) {
+    hash.update("[");
+    value.forEach((item, i) => {
+      if (i > 0) hash.update(",");
+      updateStable(hash, item);
+    });
+    hash.update("]");
+    return;
+  }
   if (value && typeof value === "object") {
     const record = value as Record<string, unknown>;
-    return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${stableJson(record[key])}`).join(",")}}`;
+    hash.update("{");
+    Object.keys(record).sort().forEach((key, i) => {
+      if (i > 0) hash.update(",");
+      hash.update(`${JSON.stringify(key)}:`);
+      updateStable(hash, record[key]);
+    });
+    hash.update("}");
+    return;
   }
-  return JSON.stringify(value);
+  hash.update(JSON.stringify(value) ?? "undefined");
 }
 
 function sha256(value: unknown): string {
-  return crypto.createHash("sha256").update(stableJson(value)).digest("hex");
+  const hash = crypto.createHash("sha256");
+  updateStable(hash, value);
+  return hash.digest("hex");
+}
+
+function sha256Bytes(bytes: Buffer): string {
+  return crypto.createHash("sha256").update(bytes).digest("hex");
 }
 
 async function characterize(file: string, index: number): Promise<string> {
@@ -65,7 +90,7 @@ async function characterize(file: string, index: number): Promise<string> {
     pages,
     paperId: `characterization-${index + 1}`,
     filePath: relativePath,
-    fileHash: sha256(fs.readFileSync(file)),
+    fileHash: sha256Bytes(fs.readFileSync(file)),
     metadata: { pageCount: pages.length },
   });
   const { createdAt: _createdAt, updatedAt: _updatedAt, ...paper } = extracted.paper;
