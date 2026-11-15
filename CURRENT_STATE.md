@@ -22,7 +22,8 @@ user-visible な現在状態だけを書く。日付つきの作業ログ・計�
 - `src/test`: 110 files / 1124 tests pass、typecheck pass（2026-11-15）。oxlint 警告 0 は #6 マージ後。
 - 実 PDF 依存テストはローカル fixture（gitignored）が無い環境では検証されない。CI ではこれらは実質未検証。
 - `test:extraction-corpus`（CI 非ゲート）: 13 fail / 215 pass（2026-11-08 時点）。baselineRealPapers 11 件（title 誤選択・author/format 期待値差）と realPapers reading-order 2 件。
-- 配布 `.app`（公証済み）での主要操作確認は未完了（ROADMAP A1）。
+- 配布 `.app`（ROADMAP A1）: 未署名 `.app` で packaged integration E2E（Layer A: 取り込み・メモ・検索・書き出し・再起動）pass（2026-11-15）。packaged UI E2E（Layer B）は「カードを開く」段階で未通過（System Events の AXPress でカードの onClick が発火しない、過去にも通過記録なし）。署名・公証済みでの確認は未実施。
+- packaged で見つけた同一 PDF の同時取り込みの生 SQLite エラーは修正済み（#12）。
 
 ## 品質の現状値
 
