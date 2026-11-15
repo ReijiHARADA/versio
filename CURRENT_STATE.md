@@ -3242,7 +3242,7 @@ The guarded selective backend is production-ready as code but remains **conditio
 
 - `npm run tauri:build:fast` completed successfully. The latest bundle is `src-tauri/target/release/bundle/macos/Versio.app`, built at `2026-10-11 22:57:00 +0900`.
 - The bundled `translation-server/engines/segmenter.py` and `madlad_mps.py` hashes match the working tree. Native line provenance keeps `fontName`, `fontSize`, x/y, width/height, and rotation through layout diagnostics and package layout. Heading/table/masthead resolvers use font family/size and geometry as evidence, so typography is now an explicit block-boundary clue rather than a display-only field.
-- A packaged acceptance run with `/Users/harada/Desktop/2686612.2686699.pdf` started the bundled server successfully (`/health` ready), but remained at `import_started` for the 120-second harness window. The run was stopped and retained at `/tmp/versio-ozchi-acceptance.Mrk2R0`; no extraction result was claimed from this incomplete run. Direct Canonical extraction and the full regression suite remain the valid evidence until the packaged import can complete in a longer/interactive run.
+- A packaged acceptance run with `~/Desktop/2686612.2686699.pdf` started the bundled server successfully (`/health` ready), but remained at `import_started` for the 120-second harness window. The run was stopped and retained at `/tmp/versio-ozchi-acceptance.Mrk2R0`; no extraction result was claimed from this incomplete run. Direct Canonical extraction and the full regression suite remain the valid evidence until the packaged import can complete in a longer/interactive run.
 - The old unrelated PID 54697 server on port 8765 was stopped before the acceptance run, so the bundle spawned its own sidecar; this avoids testing against a stale server.
 - The package checkpoint fix is now bundled at `2026-10-11 23:22:03 +0900`. The latest app was fully restarted from that bundle; its bundled translation server reached `/health` `phase=ready`, `model_loaded=true`. A fresh Tauri run reached `import_dispatched` without the earlier immediate package error during the first 20 seconds (`/tmp/versio-ozchi-acceptance-final2.qk3PcZ`); the full translated import still requires a longer interactive run because this harness was intentionally stopped before completion.
 - After adding the post-source-hash flush and live-package read retry, the full JavaScript regression suite passes: **80 files, 758 tests**. Typecheck, focused package tests, and `git diff --check` also pass. The latest app remains running from the 23:16 build for manual Tauri verification.
@@ -3251,7 +3251,7 @@ The guarded selective backend is production-ready as code but remains **conditio
 - The 113-paper reading-order rerun exposed one generic regression in `medical-imaging-deep-learning-review`: a short first line beginning `Abstract—Since ...` inherited title typography and was omitted from the paragraph stream. The layout classifier now treats inline abstract labels followed by multi-word prose as paragraph evidence; this is punctuation/typography based and applies to IEEE/arXiv-style layouts generally. The full reading-order corpus now passes **114/114**.
 - The final unsigned fast `.app` was rebuilt at `2026-10-11 23:51:15 +0900` from the working tree, restarted, and its bundled server reports `/health` `phase=ready`, `model_loaded=true`. Bundle hashes match the source for `segmenter.py` (`e6e2ad06…`) and `madlad_mps.py` (`c5c7dc12…`).
 
-- A clean isolated packaged integration acceptance run finally completed for the Golden OzCHI PDF (`/Users/harada/Desktop/2686612.2686699.pdf`): import, Paper Package persistence, Reader body lookup, annotation creation, library search, English Markdown export (`46,022` bytes), quit/relaunch, and persisted annotation verification all returned `ok=true`. The result is retained at `scripts/packaged-e2e/artifacts/integration/result.json`. The persisted package has the expected title, ordered authors Ashley Colley / Jonna Häkkilä with both affiliations, no ACM permission-text paragraph, 21 reference blocks, and captioned Table 1–5 blocks. This validates the real bundled Tauri path through CanonicalDocument/PaperBlock and Markdown export; interactive visual inspection and Notion ZIP inspection remain separate follow-up checks.
+- A clean isolated packaged integration acceptance run finally completed for the Golden OzCHI PDF (`~/Desktop/2686612.2686699.pdf`): import, Paper Package persistence, Reader body lookup, annotation creation, library search, English Markdown export (`46,022` bytes), quit/relaunch, and persisted annotation verification all returned `ok=true`. The result is retained at `scripts/packaged-e2e/artifacts/integration/result.json`. The persisted package has the expected title, ordered authors Ashley Colley / Jonna Häkkilä with both affiliations, no ACM permission-text paragraph, 21 reference blocks, and captioned Table 1–5 blocks. This validates the real bundled Tauri path through CanonicalDocument/PaperBlock and Markdown export; interactive visual inspection and Notion ZIP inspection remain separate follow-up checks.
 
 - Docling was evaluated in an isolated `tmp/docling-eval-venv` (`docling==2.137.0`) on the same Golden PDF. It produced useful Markdown grids for some tables, but introduced title-to-abstract reading-order contamination, emitted the full ACM permission notice as article prose, flattened affiliation/email metadata, and corrupted diacritics/statistical glyphs (`Jonna HŠkkilŠ`, `usersÕ`, `�2`). The full evidence and decision are in `test-data/real-papers/reports/docling-ozchi-finger-specific-touch-v1.md`; Docling is not a native-parser replacement, only a possible future low-confidence table-evidence enricher.
 
@@ -3261,7 +3261,7 @@ The guarded selective backend is production-ready as code but remains **conditio
 
 - The fast unsigned `.app` was rebuilt after the GROBID TEI parser and comparison-report changes at `2026-10-12 00:19:40 +0900`: `src-tauri/target/release/bundle/macos/Versio.app`. The focused GROBID TEI test passes **3/3**, typecheck and `git diff --check` pass. This rebuild includes all current extraction/UI worktree changes; start this bundle afresh to use it.
 
-- A fresh packaged Tauri acceptance run against `/Users/harada/Desktop/2686612.2686699.pdf` passed again after that build: isolated import, Canonical/Paper Package persistence, Reader body lookup, annotation, library search, English Markdown export (`46,022` bytes), root-level Notion archive (`1,137,805` bytes), quit/relaunch, and persisted annotation verification all returned `ok=true`. Result: `scripts/packaged-e2e/artifacts/integration/result.json`. The full cached extraction corpus was then rerun against the current worktree: **232/232** pass (118 real-paper baseline + 114 reading-order checks, 417.62s). Parser font/ColorSpace warnings are non-failing PDF.js diagnostics only.
+- A fresh packaged Tauri acceptance run against `~/Desktop/2686612.2686699.pdf` passed again after that build: isolated import, Canonical/Paper Package persistence, Reader body lookup, annotation, library search, English Markdown export (`46,022` bytes), root-level Notion archive (`1,137,805` bytes), quit/relaunch, and persisted annotation verification all returned `ok=true`. Result: `scripts/packaged-e2e/artifacts/integration/result.json`. The full cached extraction corpus was then rerun against the current worktree: **232/232** pass (118 real-paper baseline + 114 reading-order checks, 417.62s). Parser font/ColorSpace warnings are non-failing PDF.js diagnostics only.
 
 - Latest-bundle visual verification: the normal `Versio.app` process creates a real native window and its library surface was captured from the current bundle at `scripts/packaged-e2e/artifacts/integration/latest-app-window.png`. The dedicated Accessibility UI E2E was strengthened after two harness-only failures: its isolated HOME now reuses the host Hugging Face model cache, and Open-panel paths are pasted rather than typed so a Japanese IME cannot convert path punctuation. The panel now reaches and selects the Golden PDF. The remaining UI-driver issue is the final NSOpenPanel confirmation: the native panel closes but WKWebView does not deliver a file-input change event under System Events automation, so no package is materialized. This does not contradict the separately successful packaged acceptance import, which reads the same PDF through Tauri's `read_dropped_pdf` command. Reader visual interaction still needs either a stable macOS picker driver or a short manual import/open check; do not treat the failed UI harness as an extraction regression.
 
@@ -3417,7 +3417,7 @@ temporary package as incomplete. The filesystem command now uses the same
 environment-aware root for both resolution and recursive listing.
 
 The actual bundled Tauri app imported
-`/Users/harada/Desktop/2686612.2686699.pdf` in an isolated acceptance home and
+`~/Desktop/2686612.2686699.pdf` in an isolated acceptance home and
 reached `ready_for_relaunch`, including annotation, search, Markdown export,
 and Notion ZIP export. The persisted package contains **17 assets**. Its
 original document keeps the `p=0.007` statistical prose as text and represents
@@ -4674,7 +4674,7 @@ server process remains running.
   enrichment is retained as a retry for media that cannot be rendered in the
   first pass.
 - Rebuilt `.app` at **16:49:19 JST** and imported
-  `/Users/harada/Desktop/2686612.2686699.pdf` through the packaged Tauri flow.
+  `~/Desktop/2686612.2686699.pdf` through the packaged Tauri flow.
   The initial persisted package contained **12 figure assets and 5 table
   assets** before the acceptance/relaunch checks; packaged E2E passed.
 
@@ -4687,7 +4687,7 @@ server process remains running.
   leaking the first caption line into the table image while retaining the
   complete final row and border.
 - Rebuilt `.app` at **17:27:42 JST** and verified the packaged import path with
-  `/Users/harada/Desktop/2686612.2686699.pdf`. Table 2 and Table 4 assets now
+  `~/Desktop/2686612.2686699.pdf`. Table 2 and Table 4 assets now
   contain the complete grids without clipped bottom rows or caption text;
   packaged integration E2E passed (import, export, quit, relaunch).
 
@@ -4698,7 +4698,7 @@ server process remains running.
   JPEG quality 0.96 only for unusually large crops. This keeps small cell text
   and thin borders legible without changing table-region detection.
 - Rebuilt `.app` and reran the packaged Tauri import flow for
-  `/Users/harada/Desktop/2686612.2686699.pdf`. Table 2 and Table 4 are now
+  `~/Desktop/2686612.2686699.pdf`. Table 2 and Table 4 are now
   persisted as sharp PNG assets with complete grids; packaged integration E2E
   passed. The focused extraction suite still has the two pre-existing
   captionless/CJK table assertion failures unrelated to image rasterization.

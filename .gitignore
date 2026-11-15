@@ -68,3 +68,10 @@ scripts/packaged-e2e/artifacts/**/Acceptance.pdf
 
 # local scratch / paper copies
 .tmp-*/
+
+# local scratch & third-party paper text dumps
+tmp/
+scripts/_tmp-*
+scripts/.diagnose-*
+scripts/.verify-*
+audit-manual-review*.json

@@ -69,7 +69,7 @@ cd translation-server && .venv/bin/python -m unittest tests.test_micro_batcher t
 ## First commands when resuming
 
 ```bash
-cd /Users/harada/Desktop/codex/projects/versio/app
+cd ~/Desktop/codex/projects/versio/app
 pgrep -fl "tsx|benchmark-real-paper-translation|server.py|madlad|translation-server|python.*server" || true
 cd translation-server && PYTORCH_ENABLE_MPS_FALLBACK=1 .venv/bin/python server.py
 ```

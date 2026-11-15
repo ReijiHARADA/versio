@@ -1,6 +1,6 @@
 {
   "model_id": "google/madlad400-3b-mt",
-  "model_snapshot": "/Users/harada/.cache/huggingface/hub/models--google--madlad400-3b-mt/snapshots/fa184c675da0b5c9e1c8694fccd4e12e2d422094",
+  "model_snapshot": "~/.cache/huggingface/hub/models--google--madlad400-3b-mt/snapshots/fa184c675da0b5c9e1c8694fccd4e12e2d422094",
   "transformers_version": "4.57.6",
   "torch_version": "2.14.0",
   "tokenizers_version": "0.22.2",

@@ -1,7 +1,7 @@
 {
   "engine": "mlx-bf16",
   "model": "google/madlad400-3b-mt",
-  "model_dir": "/Users/harada/Desktop/codex/projects/versio/app/translation-server/models/madlad400-3b-mt-mlx-bf16",
+  "model_dir": "~/Desktop/codex/projects/versio/app/translation-server/models/madlad400-3b-mt-mlx-bf16",
   "device": "mlx",
   "dtype": "mlx.core.bfloat16",
   "batch_size": 1,

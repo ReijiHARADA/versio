@@ -403,11 +403,11 @@
       "errors": [
         {
           "paper": "wear-scale",
-          "error": "PDF not cached: /Users/harada/Desktop/codex/projects/versio/app/test-data/real-papers/wear-scale.pdf"
+          "error": "PDF not cached: ~/Desktop/codex/projects/versio/app/test-data/real-papers/wear-scale.pdf"
         },
         {
           "paper": "precious-materials",
-          "error": "PDF not cached: /Users/harada/Desktop/codex/projects/versio/app/test-data/real-papers/precious-materials.pdf"
+          "error": "PDF not cached: ~/Desktop/codex/projects/versio/app/test-data/real-papers/precious-materials.pdf"
         }
       ],
       "reviewedRows": 206,

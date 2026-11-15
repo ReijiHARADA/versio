@@ -1,6 +1,6 @@
 {
   "version": "protection-ab-v1",
-  "sourceReport": "/Users/harada/Desktop/codex/projects/versio/app/test-data/real-papers/reports/translation-audit-v1079-three-paper-regression.json",
+  "sourceReport": "~/Desktop/codex/projects/versio/app/test-data/real-papers/reports/translation-audit-v1079-three-paper-regression.json",
   "model": "google/madlad400-3b-mt",
   "modelVersion": "3b-mt-v6-transformers-4.57.6-semantic-v82-source-protect-v25-strict-restore-v28-quality-v34-relation-condition-beam-v8-section-marker-contextual-number-citation-group-foreign-script-hangul-supplementary-ref-inventory-long-claim-quoted-boundary-repeat-token-dense-citation-claim-compression-beam-v2-identifier-glue",
   "generation": {
