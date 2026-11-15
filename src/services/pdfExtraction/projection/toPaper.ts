@@ -3936,153 +3936,44 @@ function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterPro
   return { titleNode, firstBodyY, hasSidebarBody, authorNames, authorsStructured, affiliations, doiMatch };
 }
 
-function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
-  const { canonical, paperId, layoutBlocks, layouts, baseFontSize } = input;
-  const childOf = canonical.relations.filter((r) => r.kind === "CHILD_OF");
-  const parentByHeading = new Map<string, string>();
-  for (const rel of childOf) {
-    parentByHeading.set(rel.from, rel.to);
-  }
 
-  const sectionIdByHeading = new Map<string, string>();
-  const sections: Section[] = [];
-  const blocks: PaperBlock[] = [];
-  let currentSectionId: string | null = null;
-  let currentKind: NormalizedSectionKind | null = null;
-  let blockOrder = 0;
-  let sectionOrder = 0;
+type BodyProjectionState = {
+  sectionIdByHeading: Map<string, string>;
+  sections: Section[];
+  blocks: PaperBlock[];
+  currentSectionId: string | null;
+  currentKind: NormalizedSectionKind | null;
+  sectionOrder: number;
+  usedIds: Set<string>;
+};
 
-  const usedIds = new Set<string>();
-  // Synthetic figure/table region nodes have no source text and are represented
-  // by their caption block.  Text-bearing table candidates, however, are
-  // native aligned grids (including captionless tables) and must remain
-  // visible as table blocks instead of being sent through paragraph logic.
-  const skip = new Set(["header", "footer", "title", "copyright", "author", "affiliation", "figure", "table"]);
-  const figureCaptionPages = new Set(
-    canonical.nodes
-      .filter((node) => node.role === "caption" && /^(?:figure|fig\.)\s*\d+/i.test((node.text ?? "").trim()))
-      .map((node) => node.pageStart)
-  );
-  const compactGraphicLabelCountByPage = new Map<number, number>();
-  for (const node of canonical.nodes) {
-    const compact = node.evidence.some((entry) => entry.label === "repeated-prose-cell-grid") &&
-      node.boundingBoxes.length > 0 &&
-      Math.max(...node.boundingBoxes.map((box) => box.height)) <= 9;
-    if (compact) compactGraphicLabelCountByPage.set(node.pageStart, (compactGraphicLabelCountByPage.get(node.pageStart) ?? 0) + 1);
-  }
-  const isDenseGraphicLabel = (node: CanonicalNode) =>
-    node.role === "table" &&
-    figureCaptionPages.has(node.pageStart) &&
-    (compactGraphicLabelCountByPage.get(node.pageStart) ?? 0) >= 12 &&
-    node.evidence.some((entry) => entry.label === "repeated-prose-cell-grid") &&
-    node.boundingBoxes.length > 0 &&
-    Math.max(...node.boundingBoxes.map((box) => box.height)) <= 9;
+type BodyNodeContext = {
+  canonical: CanonicalDocument;
+  paperId: string;
+  layoutBlocks: LayoutBlock[];
+  layouts: PageColumnLayout[];
+  baseFontSize: number;
+  parentByHeading: Map<string, string>;
+  tableAbsorption: ReturnType<typeof captionedTableAbsorption>;
+  nativeCaptionTables: ReturnType<typeof captionedNativeTableRows>;
+  pushBlock: (node: CanonicalNode, layout: LayoutBlock | undefined, partial: Omit<PaperBlock, "id" | "paperId" | "order" | "extractionConfidence">) => void;
+};
 
-  const readable = canonical.nodes.filter((n) => {
-    // Radial diagrams and other dense infographics can be mistaken for a
-    // captionless prose-cell grid. The figure caption is retained as the
-    // readable representation; suppress only when page-level density and a
-    // numbered figure caption corroborate the graphic interpretation.
-    if (isDenseGraphicLabel(n)) return false;
-    if (skip.has(n.role)) return n.role === "table" && Boolean(n.text);
-    // `other` is normally retained because it may contain useful native text,
-    // but a resolver-selected vector/chart label cluster is text painted inside
-    // a figure. Sending that flattened label stream to translation creates a
-    // guaranteed model-quality failure; the figure/caption projection carries
-    // the visible region instead.
-    if (n.role === "other" && n.evidence.some((entry) =>
-      entry.label === "vector-figure-label-cluster" || entry.label === "repeated-numeric-chart-label" ||
-      entry.label === "image-overlap-label-cluster"
-    ) && !isLikelyNarrativeText(n.text ?? "")) return false;
-    return true;
-  });
-  const fallbackIds = readable.map((n) => n.id);
-  const nodeById = new Map(canonical.nodes.map((n) => [n.id, n]));
-  const orderedIds =
-    topologicalOrder(fallbackIds, canonical.relations, (id) => {
-      const node = nodeById.get(id);
-      const box = node?.boundingBoxes[0];
-      return {
-        page: node?.pageStart ?? Number.MAX_SAFE_INTEGER,
-        y: box?.y ?? Number.MAX_SAFE_INTEGER,
-        x: box?.x ?? Number.MAX_SAFE_INTEGER,
-      };
-    }) ?? fallbackIds;
-  const orderedNodes = orderedIds
-    .map((id) => nodeById.get(id))
-    .filter((n): n is CanonicalNode => Boolean(n));
-  const projectionNodes = projectionNodesWithContinuations(orderedNodes, canonical, layoutBlocks);
-  const tableAbsorption = captionedTableAbsorption(canonical);
-  const nativeCaptionTables = captionedNativeTableRows(canonical, layoutBlocks);
-
-  const pushBlock = (
-    node: CanonicalNode,
-    layout: LayoutBlock | undefined,
-    partial: Omit<PaperBlock, "id" | "paperId" | "order" | "extractionConfidence">
-  ) => {
-    const pageLayout = layouts.find((l) => l.page === node.pageStart);
-    const scored = layout
-      ? scoreLayoutBlock(layout, pageLayout)
-      : { score: node.confidence, diagnostics: canonical.diagnostics };
-    blocks.push({
-      id: uniqueId(
-        stableBlockId({
-          type: partial.type,
-          page: node.pageStart,
-          text: node.text ?? "",
-          bbox: node.boundingBoxes[0],
-        }),
-        usedIds
-      ),
-      paperId,
-      order: blockOrder++,
-      extractionConfidence: scored.score,
-      ...partial,
-      metadata: {
-        ...partial.metadata,
-        extractionDiagnostics: {
-          columnConfidence: scored.diagnostics.columnConfidence,
-          readingOrderConfidence: scored.diagnostics.readingOrderConfidence,
-          unicodeConfidence: scored.diagnostics.unicodeConfidence,
-          paragraphConfidence: scored.diagnostics.paragraphConfidence,
-          layoutConfidence: canonical.diagnostics.layoutConfidence,
-          textIntegrityConfidence: canonical.diagnostics.textIntegrityConfidence,
-          semanticConfidence: canonical.diagnostics.semanticConfidence,
-          formatConfidence: canonical.diagnostics.formatConfidence,
-          relationConfidence: canonical.diagnostics.relationConfidence,
-        },
-        evidence: node.evidence,
-        sourceAnchor: node.sourceAnchor,
-        canonicalNodeId: node.id,
-      },
-    });
-  };
-
-  for (const { node, layout } of projectionNodes) {
-    // The caption block owns the grouped source-only grid. Do not project its
-    // individual native cell candidates as separate reader blocks.
-    if (nativeCaptionTables.cellIds.has(node.id)) continue;
-    const boxes =
-      node.boundingBoxes.length > 0
-        ? node.boundingBoxes
-        : layout
-          ? layout.lines.map((line) => line.bbox)
-          : [];
-    const column = node.column ?? layout?.column ?? "single";
-    const nodeText = (node.text ?? "").trim();
-    if (isPublicationLegalMetadata(nodeText)) continue;
+function projectTableNode(context: BodyNodeContext, state: BodyProjectionState, node: CanonicalNode, layout: LayoutBlock | undefined, boxes: BoundingBox[], column: string, nodeText: string): boolean {
+  const { canonical, layoutBlocks, tableAbsorption } = context;
+    if (isPublicationLegalMetadata(nodeText)) return true;
 
     // Resolver role errors inside an explicit References section must not
     // expose bibliography text as a translated paragraph or table. Use the
     // section plus strong textual bibliography evidence before role-specific
     // projection. This also recovers page-range tails that PDF producers emit
     // as footnotes. Captions/equations/headings retain their own semantics.
-    const referenceSectionNode = currentKind === "references" &&
+    const referenceSectionNode = state.currentKind === "references" &&
       node.role !== "heading" && node.role !== "caption" && node.role !== "equation" &&
-      isReferenceText(nodeText, currentKind);
+      isReferenceText(nodeText, state.currentKind);
     if (referenceSectionNode) {
-      pushBlock(node, layout, {
-        sectionId: currentSectionId,
+      context.pushBlock(node, layout, {
+        sectionId: state.currentSectionId,
         type: "reference",
         pageStart: node.pageStart,
         pageEnd: node.pageEnd,
@@ -4093,7 +3984,7 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
         parentBlockId: null,
         metadata: { column, role: "reference", recoveredFromRole: node.role },
       });
-      continue;
+      return true;
     }
 
     // Chart-adjacent prose can inherit a table role from region membership.
@@ -4139,10 +4030,10 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
         (looksLikeProseMistakenForTable(node.text) || weakTableGeometryOnNarrative)) {
       const text = node.text;
       if (isChartDebrisFragment(text)) {
-        continue;
+        return true;
       }
-      pushBlock(node, layout, {
-        sectionId: currentSectionId,
+      context.pushBlock(node, layout, {
+        sectionId: state.currentSectionId,
         type: "paragraph",
         pageStart: node.pageStart,
         pageEnd: node.pageEnd,
@@ -4153,7 +4044,7 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
         parentBlockId: null,
         metadata: { column, role: "paragraph", demotedFromTable: true },
       });
-      continue;
+      return true;
     }
 
     // Numbered Table N already owns a synthetic CAPTION_OF region — skip
@@ -4196,7 +4087,7 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
         return span >= (line.pageWidth ?? 612) * 0.28;
       })))
     ) {
-      continue;
+      return true;
     }
 
     const recoveredNativeGrid = node.role !== "table" && !weakTableGeometryOnNarrative &&
@@ -4224,8 +4115,8 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
     if (weakRepeatedProseTable && !belongsToNumberedCaptionRegion && !proseGridClusterKeep && node.text) {
       const headingEvidence = node.evidence.find((entry) => entry.label === "heading");
       const type = headingEvidence && headingEvidence.confidence >= 0.8 ? "heading" : "paragraph";
-      pushBlock(node, tableLayout, {
-        sectionId: currentSectionId,
+      context.pushBlock(node, tableLayout, {
+        sectionId: state.currentSectionId,
         type,
         pageStart: node.pageStart,
         pageEnd: node.pageEnd,
@@ -4236,7 +4127,7 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
         parentBlockId: null,
         metadata: { column, role: type, demotedFromTable: true, demotionReason: "weak-repeated-prose-grid" },
       });
-      continue;
+      return true;
     }
     const tableRole = node.role === "table" || recoveredNativeGrid;
     const nativeGrid = tableRole && node.text &&
@@ -4302,8 +4193,8 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
       const tableNumber = match
         ? /表/i.test(match[0]) ? `表 ${match[1]}` : `Table ${match[1]}`
         : "Table";
-      pushBlock(node, tableLayout, {
-        sectionId: currentSectionId,
+      context.pushBlock(node, tableLayout, {
+        sectionId: state.currentSectionId,
         type: "table",
         pageStart: node.pageStart,
         pageEnd: node.pageEnd,
@@ -4322,7 +4213,7 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
           ...(tableRows ? { tableRows } : {}),
         } satisfies TableMetadata & { column: string; figureKey: string },
       });
-      continue;
+      return true;
     }
 
     // A high-confidence table role can still lack enough native cells to
@@ -4330,8 +4221,8 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
     // source-only prose instead of silently dropping the node or translating
     // unrelated cells as a fabricated paragraph.
     if (tableRole && node.text) {
-      pushBlock(node, tableLayout, {
-        sectionId: currentSectionId,
+      context.pushBlock(node, tableLayout, {
+        sectionId: state.currentSectionId,
         type: "table",
         pageStart: node.pageStart,
         pageEnd: node.pageEnd,
@@ -4348,15 +4239,21 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
           translationInputWarning: "table-like text preserved in source because a reliable grid was unavailable",
         },
       });
-      continue;
+      return true;
     }
 
+
+  return false;
+}
+
+function projectHeadingNode(context: BodyNodeContext, state: BodyProjectionState, node: CanonicalNode, layout: LayoutBlock | undefined, boxes: BoundingBox[], column: string): boolean {
+  const { baseFontSize, paperId, parentByHeading } = context;
     if (node.role === "heading") {
       const text = node.text ?? "";
-      if (looksLikeConferenceRunningHeader(text)) continue;
-      if (currentKind === "references" && !isReferencesHeading(text)) {
-        pushBlock(node, layout, {
-          sectionId: currentSectionId,
+      if (looksLikeConferenceRunningHeader(text)) return true;
+      if (state.currentKind === "references" && !isReferencesHeading(text)) {
+        context.pushBlock(node, layout, {
+          sectionId: state.currentSectionId,
           type: "reference",
           pageStart: node.pageStart,
           pageEnd: node.pageEnd,
@@ -4367,7 +4264,7 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
           parentBlockId: null,
           metadata: { column, role: "reference" },
         });
-        continue;
+        return true;
       }
       const headingText = displayHeadingText(text);
       const level = detectHeadingLevel(
@@ -4376,29 +4273,29 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
         baseFontSize
       );
       const sectionId = uniqueId(
-        `s-${fingerprintText(`${headingText}|${node.pageStart}|${sectionOrder}`)}`,
-        usedIds
+        `s-${fingerprintText(`${headingText}|${node.pageStart}|${state.sectionOrder}`)}`,
+        state.usedIds
       );
       const kind = normalizeSection(headingText);
       const parentHeadingId = parentByHeading.get(node.id);
       const parentSectionId = parentHeadingId
-        ? (sectionIdByHeading.get(parentHeadingId) ?? null)
+        ? (state.sectionIdByHeading.get(parentHeadingId) ?? null)
         : null;
       const section: Section = {
         id: sectionId,
         paperId,
         parentSectionId,
-        order: sectionOrder++,
+        order: state.sectionOrder++,
         level,
         originalTitle: headingText,
         translatedTitle: null,
         normalizedKind: kind,
       };
-      sections.push(section);
-      sectionIdByHeading.set(node.id, sectionId);
-      currentSectionId = sectionId;
-      currentKind = kind;
-      pushBlock(node, layout, {
+      state.sections.push(section);
+      state.sectionIdByHeading.set(node.id, sectionId);
+      state.currentSectionId = sectionId;
+      state.currentKind = kind;
+      context.pushBlock(node, layout, {
         sectionId,
         type: "heading",
         pageStart: node.pageStart,
@@ -4410,9 +4307,15 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
         parentBlockId: null,
         metadata: { column, role: "heading" },
       });
-      continue;
+      return true;
     }
 
+
+  return false;
+}
+
+function projectCaptionNode(context: BodyNodeContext, state: BodyProjectionState, node: CanonicalNode, layout: LayoutBlock | undefined, boxes: BoundingBox[], column: string): boolean {
+  const { canonical, nativeCaptionTables } = context;
     if (node.role === "caption") {
       const text = node.text ?? "";
       const layoutRole = layout?.role;
@@ -4436,8 +4339,8 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
           (r) => r.kind === "CAPTION_OF" && r.from === node.id
         )?.to;
         const regionNode = captionOf ? canonical.nodes.find((candidate) => candidate.id === captionOf) : undefined;
-        pushBlock(node, layout, {
-          sectionId: currentSectionId,
+        context.pushBlock(node, layout, {
+          sectionId: state.currentSectionId,
           type: "table",
           pageStart: node.pageStart,
           pageEnd: node.pageEnd,
@@ -4471,7 +4374,7 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
             regionBoundingBoxes?: BoundingBox[];
           },
         });
-        continue;
+        return true;
       }
       const match = text.match(/^(figure|fig\.?|図)\s*(\d+)/i);
       const figureNumber = match
@@ -4483,8 +4386,8 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
         (r) => r.kind === "CAPTION_OF" && r.from === node.id
       )?.to;
       const regionNode = captionOf ? canonical.nodes.find((candidate) => candidate.id === captionOf) : undefined;
-      pushBlock(node, layout, {
-        sectionId: currentSectionId,
+      context.pushBlock(node, layout, {
+        sectionId: state.currentSectionId,
         type: "figure",
         pageStart: node.pageStart,
         pageEnd: node.pageEnd,
@@ -4509,14 +4412,19 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
           regionBoundingBoxes?: BoundingBox[];
         },
       });
-      continue;
+      return true;
     }
 
+
+  return false;
+}
+
+function projectEquationNode(context: BodyNodeContext, state: BodyProjectionState, node: CanonicalNode, layout: LayoutBlock | undefined, boxes: BoundingBox[], column: string): boolean {
     if (node.role === "equation") {
       const text = node.text ?? "";
       const num = text.match(/\(\s*(\d{1,2}[a-z]?)\s*\)\s*$/);
-      pushBlock(node, layout, {
-        sectionId: currentSectionId,
+      context.pushBlock(node, layout, {
+        sectionId: state.currentSectionId,
         type: "equation",
         pageStart: node.pageStart,
         pageEnd: node.pageEnd,
@@ -4530,15 +4438,20 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
           column,
         } satisfies EquationMetadata & { column: string },
       });
-      continue;
+      return true;
     }
 
+
+  return false;
+}
+
+function projectFootnoteNode(context: BodyNodeContext, state: BodyProjectionState, node: CanonicalNode, layout: LayoutBlock | undefined, boxes: BoundingBox[], column: string): boolean {
     if (node.role === "footnote") {
       const text = node.text ?? "";
       // Running page indices are often labeled footnote by layout heuristics.
-      if (isStandalonePageNumber(text, node.role)) continue;
-      pushBlock(node, layout, {
-        sectionId: currentSectionId,
+      if (isStandalonePageNumber(text, node.role)) return true;
+      context.pushBlock(node, layout, {
+        sectionId: state.currentSectionId,
         type: "footnote",
         pageStart: node.pageStart,
         pageEnd: node.pageEnd,
@@ -4549,9 +4462,14 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
         parentBlockId: null,
         metadata: { column, role: "footnote" },
       });
-      continue;
+      return true;
     }
 
+
+  return false;
+}
+
+function projectProseNode(context: BodyNodeContext, state: BodyProjectionState, node: CanonicalNode, layout: LayoutBlock | undefined, boxes: BoundingBox[], column: string): boolean {
     if (
       node.role === "paragraph" ||
       node.role === "abstract" ||
@@ -4563,7 +4481,7 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
         isStandaloneAffiliationMarkerRun(text) ||
         isStandalonePageNumber(text, node.role) ||
         looksLikeConferenceRunningHeader(text) ||
-        isChartDebrisFragment(text)) continue;
+        isChartDebrisFragment(text)) return true;
       const listParts = splitFlattenedList(text);
       const standaloneListItem = /^(?:[•‣▪∙]|(?:[1-9]|1[0-9]|20)[.)]|\([A-Za-z]\)|[A-Za-z]\))\s+/.test(text.trim());
       // Being inside a References section is context, not proof that every
@@ -4571,7 +4489,7 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
       // numbered principles/checklist list immediately before the actual
       // REFERENCES heading. Let bibliographic evidence win while preserving
       // numeric entries that contain author/year or publisher signals.
-      const refEvidence = node.role === "reference" || isReferenceText(text, currentKind);
+      const refEvidence = node.role === "reference" || isReferenceText(text, state.currentKind);
       const isRef = refEvidence &&
         (!isNumberedProseListItem(text) ||
           /\b(?:19|20)\d{2}\b/.test(text.slice(0, 180)) ||
@@ -4597,8 +4515,8 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
         const meaningfulListUnit =
           listRole === "intro" ||
           (listRole === "item" && (part.match(/[A-Za-z]{3,}/g)?.length ?? 0) >= 3);
-        pushBlock(node, layout, {
-          sectionId: currentSectionId,
+        context.pushBlock(node, layout, {
+          sectionId: state.currentSectionId,
           type: isRef ? "reference" : "paragraph",
           pageStart: node.pageStart,
           pageEnd: node.pageEnd,
@@ -4620,8 +4538,31 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
         });
       }
     }
-  }
 
+  return node.role === "paragraph" || node.role === "abstract" || node.role === "reference" || node.role === "other";
+}
+
+function dispatchBodyNode(context: BodyNodeContext, state: BodyProjectionState, node: CanonicalNode, layout: LayoutBlock | undefined): void {
+  const { nativeCaptionTables } = context;
+  if (nativeCaptionTables.cellIds.has(node.id)) return;
+    const boxes =
+      node.boundingBoxes.length > 0
+        ? node.boundingBoxes
+        : layout
+          ? layout.lines.map((line) => line.bbox)
+          : [];
+    const column = node.column ?? layout?.column ?? "single";
+    const nodeText = (node.text ?? "").trim();
+
+  if (projectTableNode(context, state, node, layout, boxes, column, nodeText)) return;
+  if (projectHeadingNode(context, state, node, layout, boxes, column)) return;
+  if (projectCaptionNode(context, state, node, layout, boxes, column)) return;
+  if (projectEquationNode(context, state, node, layout, boxes, column)) return;
+  if (projectFootnoteNode(context, state, node, layout, boxes, column)) return;
+  projectProseNode(context, state, node, layout, boxes, column);
+}
+
+function finalizeBodyBlocks(blocks: PaperBlock[], layoutBlocks: LayoutBlock[]): PaperBlock[] {
   // Native table cells can arrive as separate high-confidence table blocks
   // on one visual baseline. Reconstruct the logical row before exposing
   // PaperBlocks, while leaving sidebar-grid cells (which use distinct
@@ -4876,7 +4817,139 @@ function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
   }
 
 
-  return { sections, blocks: splitReferenceEntries };
+  return splitReferenceEntries;
+}
+
+function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
+  const { canonical, paperId, layoutBlocks, layouts, baseFontSize } = input;
+  const childOf = canonical.relations.filter((r) => r.kind === "CHILD_OF");
+  const parentByHeading = new Map<string, string>();
+  for (const rel of childOf) {
+    parentByHeading.set(rel.from, rel.to);
+  }
+
+  const sectionIdByHeading = new Map<string, string>();
+  const sections: Section[] = [];
+  const blocks: PaperBlock[] = [];
+  let currentSectionId: string | null = null;
+  let currentKind: NormalizedSectionKind | null = null;
+  let blockOrder = 0;
+  let sectionOrder = 0;
+
+  const usedIds = new Set<string>();
+  // Synthetic figure/table region nodes have no source text and are represented
+  // by their caption block.  Text-bearing table candidates, however, are
+  // native aligned grids (including captionless tables) and must remain
+  // visible as table blocks instead of being sent through paragraph logic.
+  const skip = new Set(["header", "footer", "title", "copyright", "author", "affiliation", "figure", "table"]);
+  const figureCaptionPages = new Set(
+    canonical.nodes
+      .filter((node) => node.role === "caption" && /^(?:figure|fig\.)\s*\d+/i.test((node.text ?? "").trim()))
+      .map((node) => node.pageStart)
+  );
+  const compactGraphicLabelCountByPage = new Map<number, number>();
+  for (const node of canonical.nodes) {
+    const compact = node.evidence.some((entry) => entry.label === "repeated-prose-cell-grid") &&
+      node.boundingBoxes.length > 0 &&
+      Math.max(...node.boundingBoxes.map((box) => box.height)) <= 9;
+    if (compact) compactGraphicLabelCountByPage.set(node.pageStart, (compactGraphicLabelCountByPage.get(node.pageStart) ?? 0) + 1);
+  }
+  const isDenseGraphicLabel = (node: CanonicalNode) =>
+    node.role === "table" &&
+    figureCaptionPages.has(node.pageStart) &&
+    (compactGraphicLabelCountByPage.get(node.pageStart) ?? 0) >= 12 &&
+    node.evidence.some((entry) => entry.label === "repeated-prose-cell-grid") &&
+    node.boundingBoxes.length > 0 &&
+    Math.max(...node.boundingBoxes.map((box) => box.height)) <= 9;
+
+  const readable = canonical.nodes.filter((n) => {
+    // Radial diagrams and other dense infographics can be mistaken for a
+    // captionless prose-cell grid. The figure caption is retained as the
+    // readable representation; suppress only when page-level density and a
+    // numbered figure caption corroborate the graphic interpretation.
+    if (isDenseGraphicLabel(n)) return false;
+    if (skip.has(n.role)) return n.role === "table" && Boolean(n.text);
+    // `other` is normally retained because it may contain useful native text,
+    // but a resolver-selected vector/chart label cluster is text painted inside
+    // a figure. Sending that flattened label stream to translation creates a
+    // guaranteed model-quality failure; the figure/caption projection carries
+    // the visible region instead.
+    if (n.role === "other" && n.evidence.some((entry) =>
+      entry.label === "vector-figure-label-cluster" || entry.label === "repeated-numeric-chart-label" ||
+      entry.label === "image-overlap-label-cluster"
+    ) && !isLikelyNarrativeText(n.text ?? "")) return false;
+    return true;
+  });
+  const fallbackIds = readable.map((n) => n.id);
+  const nodeById = new Map(canonical.nodes.map((n) => [n.id, n]));
+  const orderedIds =
+    topologicalOrder(fallbackIds, canonical.relations, (id) => {
+      const node = nodeById.get(id);
+      const box = node?.boundingBoxes[0];
+      return {
+        page: node?.pageStart ?? Number.MAX_SAFE_INTEGER,
+        y: box?.y ?? Number.MAX_SAFE_INTEGER,
+        x: box?.x ?? Number.MAX_SAFE_INTEGER,
+      };
+    }) ?? fallbackIds;
+  const orderedNodes = orderedIds
+    .map((id) => nodeById.get(id))
+    .filter((n): n is CanonicalNode => Boolean(n));
+  const projectionNodes = projectionNodesWithContinuations(orderedNodes, canonical, layoutBlocks);
+  const tableAbsorption = captionedTableAbsorption(canonical);
+  const nativeCaptionTables = captionedNativeTableRows(canonical, layoutBlocks);
+
+  const pushBlock = (
+    node: CanonicalNode,
+    layout: LayoutBlock | undefined,
+    partial: Omit<PaperBlock, "id" | "paperId" | "order" | "extractionConfidence">
+  ) => {
+    const pageLayout = layouts.find((l) => l.page === node.pageStart);
+    const scored = layout
+      ? scoreLayoutBlock(layout, pageLayout)
+      : { score: node.confidence, diagnostics: canonical.diagnostics };
+    blocks.push({
+      id: uniqueId(
+        stableBlockId({
+          type: partial.type,
+          page: node.pageStart,
+          text: node.text ?? "",
+          bbox: node.boundingBoxes[0],
+        }),
+        usedIds
+      ),
+      paperId,
+      order: blockOrder++,
+      extractionConfidence: scored.score,
+      ...partial,
+      metadata: {
+        ...partial.metadata,
+        extractionDiagnostics: {
+          columnConfidence: scored.diagnostics.columnConfidence,
+          readingOrderConfidence: scored.diagnostics.readingOrderConfidence,
+          unicodeConfidence: scored.diagnostics.unicodeConfidence,
+          paragraphConfidence: scored.diagnostics.paragraphConfidence,
+          layoutConfidence: canonical.diagnostics.layoutConfidence,
+          textIntegrityConfidence: canonical.diagnostics.textIntegrityConfidence,
+          semanticConfidence: canonical.diagnostics.semanticConfidence,
+          formatConfidence: canonical.diagnostics.formatConfidence,
+          relationConfidence: canonical.diagnostics.relationConfidence,
+        },
+        evidence: node.evidence,
+        sourceAnchor: node.sourceAnchor,
+        canonicalNodeId: node.id,
+      },
+    });
+  };
+
+  const state: BodyProjectionState = { sectionIdByHeading, sections, blocks, currentSectionId, currentKind, sectionOrder, usedIds };
+  const context: BodyNodeContext = { canonical, paperId, layoutBlocks, layouts, baseFontSize, parentByHeading, tableAbsorption, nativeCaptionTables, pushBlock };
+
+  for (const { node, layout } of projectionNodes) {
+    dispatchBodyNode(context, state, node, layout);
+  }
+
+  return { sections, blocks: finalizeBodyBlocks(blocks, layoutBlocks) };
 }
 
 import { finalizePaperProjection as finalizePaperProjectionImpl } from "./finalizePaperProjection";
