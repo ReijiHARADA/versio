@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import fs from "node:fs";
 import path from "node:path";
-import { collectGraphicsPrimitives, collectImagePlacements, textItemGeometry, type ExtractedPage, type ExtractedTextItem } from "../../services/pdfService";
+import { collectGraphicsPrimitives, collectImagePlacements, dominantNativeTextRotation, textItemGeometry, type ExtractedPage, type ExtractedTextItem } from "../../services/pdfService";
 
 const require = createRequire(import.meta.url);
 const pdfjsLib = require("pdfjs-dist/legacy/build/pdf.js") as typeof import("pdfjs-dist");
@@ -33,12 +33,21 @@ export async function extractPdfPages(pdfPath: string): Promise<ExtractedPage[]>
     const operatorList = await page.getOperatorList();
     const textContent = await page.getTextContent();
     const textItems: ExtractedTextItem[] = [];
+    const pageTextItems = textContent.items.filter(
+      (item): item is Extract<typeof item, { str: string; transform: number[] }> =>
+        "str" in item && item.str.trim().length > 0
+    );
+    const dominantRotation = dominantNativeTextRotation(pageTextItems);
 
-    for (const item of textContent.items) {
-      if (!("str" in item) || !item.str.trim()) continue;
+    for (const item of pageTextItems) {
       const tx = item.transform;
       const fontSize = Math.sqrt(tx[0] * tx[0] + tx[1] * tx[1]);
-      const geometry = textItemGeometry(item, viewport, typeof page.rotate === "number" ? page.rotate : 0);
+      const geometry = textItemGeometry(
+        item,
+        viewport,
+        typeof page.rotate === "number" ? page.rotate : 0,
+        dominantRotation
+      );
       textItems.push({
         text: item.str,
         x: geometry.x,
@@ -49,6 +58,7 @@ export async function extractPdfPages(pdfPath: string): Promise<ExtractedPage[]>
         fontName: item.fontName,
         page: pageNum,
         rotation: geometry.rotation,
+        visualTop: geometry.visualTop,
       });
     }
 

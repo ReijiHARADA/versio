@@ -1,0 +1,6 @@
+{
+  "identifier": "com.harada.paper-reader.presentation-demo",
+  "build": {
+    "beforeDevCommand": "npm run dev:demo"
+  }
+}

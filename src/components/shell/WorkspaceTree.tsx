@@ -2,8 +2,6 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { NavLink } from "react-router-dom";
 import {
-  ChevronDown,
-  ChevronRight,
   Upload,
   FilePlus2,
   FileText,
@@ -26,6 +24,7 @@ import { ExportDialog } from "../reader/ExportDialog";
 import { useWorkspaceDrag } from "./useWorkspaceDrag";
 import { hoverExpandId, WORKSPACE_HOVER_EXPAND_MS } from "./workspaceHoverExpand";
 import { renameWorkspaceItem } from "../../services/projectService";
+import { isImeComposing } from "../../utils/ime";
 import styles from "./AppSidebar.module.css";
 
 const MENU_WIDTH = 190;
@@ -268,11 +267,10 @@ export function WorkspaceTree({
               type="button"
               className={styles.chevron}
               aria-label={`${node.name}を${isOpen ? "折りたたむ" : "展開"}`}
+              title={isOpen ? "折りたたむ" : "展開"}
               aria-expanded={isOpen}
               onClick={toggle}
-            >
-              {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            </button>
+            />
           ) : null}
           {editingId === node.id ? (
             <div className={`${styles.item} ${styles.treeLabel}`} data-workspace-editing>
@@ -318,7 +316,12 @@ export function WorkspaceTree({
         </div>
         {isOpen && (
           <div className={styles.treeNested}>
-            <div className={styles.treeNestedClip}>
+            <div
+              className={styles.treeNestedClip}
+              // Guide line runs 7px left of the children's indent, outside
+              // the row backgrounds.
+              style={{ "--tree-line-x": `${(depth + 1) * 16 - 7}px` } as React.CSSProperties}
+            >
               {node.children.map((child) => renderNode(child, depth + 1))}
               {links.map((link) => {
                 const paper = papers.find((item) => item.id === link.paperId);
@@ -442,6 +445,7 @@ function InlineName({ node, onClose }: { node: WorkspaceNode; onClose: () => voi
         onPointerDown={(event) => event.stopPropagation()}
         onBlur={() => void save()}
         onKeyDown={(event) => {
+          if (isImeComposing(event)) return;
           if (event.key === "Escape") onClose();
           if (event.key === "Enter") {
             event.preventDefault();

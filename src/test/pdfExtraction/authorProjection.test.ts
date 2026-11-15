@@ -410,7 +410,7 @@ describe("author masthead projection", () => {
         metadata: { pageCount: pages.length },
       });
       expect(result.paper.authors).toEqual(
-        expect.arrayContaining(["Saturnino Luz", "Fasih Haider", "Brian Mac Whinney"]),
+        expect.arrayContaining(["Saturnino Luz", "Fasih Haider", "Brian MacWhinney"]),
       );
       expect(result.paper.authors.every((name) => !/Dementia Recognition|Spontaneous Speech/i.test(name))).toBe(true);
     }
@@ -602,7 +602,7 @@ describe("author masthead projection", () => {
       metadata: { pageCount: pages.length },
     });
     expect(result.paper.authors).toEqual(
-      expect.arrayContaining(["Chad Abresch", "Michelle Warren", "Russell J. Mc Culloh"]),
+      expect.arrayContaining(["Chad Abresch", "Michelle Warren", "Russell J. McCulloh"]),
     );
     expect(result.paper.authors.every((name) => !/RESEARCH|Nebraska Kearney/i.test(name))).toBe(true);
     expect(
@@ -1182,6 +1182,39 @@ describe("author masthead projection", () => {
     ).toBe(true);
   }, 60_000);
 
+  it("recovers BMJ Open depression bylines without symptom-list authors", async () => {
+    const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
+    const match = files.find((f) => f.includes("associations-of-presenting-symptoms"));
+    if (!match) return;
+    const pages = await extractPdfPages(path.join(root, "test-fixtures/real-papers/pending-pdfs", match));
+    const result = extractFromPages({
+      pages,
+      paperId: "bmj-depression-bylines",
+      filePath: match,
+      fileHash: "bmj-depression-bylines",
+      metadata: { pageCount: pages.length },
+    });
+    expect(result.paper.authors).toEqual(
+      expect.arrayContaining([
+        "Rashmi Patel",
+        "Jessica Irving",
+        "Megan Pritchard",
+        "Hitesh Shetty",
+        "Philip McGuire",
+        "Aimee Brinn",
+        "Matthew Taylor",
+        "Robert Stewart",
+        "Paolo Fusar- Poli",
+      ]),
+    );
+    expect(
+      result.paper.authors.every(
+        (a) => !/;/.test(a) && !/Hopelessness|Helplessness|Worthlessness/i.test(a),
+      ),
+    ).toBe(true);
+    expect(result.canonical.nodes.some((n) => n.role === "abstract")).toBe(true);
+  }, 60_000);
+
   it("recovers dated Frontiers editorial wrap after trailing and", async () => {
     const files = fs.readdirSync(path.join(root, "test-fixtures/real-papers/pending-pdfs"));
     const match = files.find((f) => f.includes("editorial-public-health-strategies-to-improve-m"));
@@ -1404,9 +1437,12 @@ describe("author masthead projection", () => {
       fileHash: "frontiers-editorial-authors",
       metadata: { pageCount: pages.length },
     });
+    // The third editor wraps onto the dated PUBLISHED line; see "recovers dated
+    // Frontiers editorial wrap after trailing and" for that recovery.
     expect(result.paper.authors).toEqual([
       "Diana Patricia Guizar-S´anchez",
       "Ana Fres´an-Orellana",
+      "Ra´ul Sampieri-Cabrera",
     ]);
     expect(
       result.paper.authors.every(

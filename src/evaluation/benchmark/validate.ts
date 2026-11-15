@@ -33,7 +33,7 @@ export function validateBenchmarkGold(gold: ExtractionBenchmarkGold): string[] {
     else if (gold.captionRelations.some(([caption, target]) => !blockIds.has(caption) || !blockIds.has(target) || caption === target) || new Set(gold.captionRelations.map(([caption, target]) => `${caption}\u0000${target}`)).size !== gold.captionRelations.length) issues.push("Caption relations must be unique pairs of distinct gold block IDs.");
   }
   if (gold.coverage.tables === "complete" && (!gold.tables?.length || duplicateIds(gold.tables) || gold.tables.some((table) => !blockIds.has(table.id) || !gold.annotatedPages.includes(table.region.page) || !validRegion(table.region) || !isTreeNode(table.tree)))) issues.push("Complete table coverage requires unique valid table trees on annotated blocks.");
-  if (gold.coverage.formulas === "complete" && (!gold.formulas?.length || duplicateIds(gold.formulas) || gold.formulas.some((formula) => !blockIds.has(formula.id) || !gold.annotatedPages.includes(formula.region.page) || !validRegion(formula.region) || !formula.latex.trim()))) issues.push("Complete formula coverage requires unique non-empty LaTeX on annotated blocks.");
+  if (gold.coverage.formulas === "complete" && (!gold.formulas?.length || duplicateIds(gold.formulas) || gold.formulas.some((formula) => !blockIds.has(formula.id) || !gold.annotatedPages.includes(formula.region.page) || !validRegion(formula.region) || (!formula.text?.trim() && !formula.latex?.trim())))) issues.push("Complete formula coverage requires unique human-authored formula text or LaTeX on annotated blocks.");
   return issues;
 }
 
@@ -51,6 +51,6 @@ export function validateBenchmarkPrediction(prediction: ExtractionBenchmarkPredi
   if (prediction.paragraphBoundaries?.some(([left, right]) => !blockIds.has(left) || !blockIds.has(right) || left === right)) issues.push("Prediction paragraph boundaries must reference distinct block IDs.");
   if (prediction.captionRelations?.some(([caption, target]) => !blockIds.has(caption) || !blockIds.has(target) || caption === target) || (prediction.captionRelations && new Set(prediction.captionRelations.map(([caption, target]) => `${caption}\u0000${target}`)).size !== prediction.captionRelations.length)) issues.push("Prediction caption relations must reference unique distinct block IDs.");
   if (prediction.tables && (duplicateIds(prediction.tables) || prediction.tables.some((table) => !validRegion(table.region) || !isTreeNode(table.tree)))) issues.push("Prediction tables must have unique IDs, valid regions, and valid trees.");
-  if (prediction.formulas && (duplicateIds(prediction.formulas) || prediction.formulas.some((formula) => !validRegion(formula.region) || !formula.latex.trim() || (formula.cdm !== undefined && !Number.isFinite(formula.cdm))))) issues.push("Prediction formulas must have unique IDs, valid regions, non-empty LaTeX, and finite CDM values.");
+  if (prediction.formulas && (duplicateIds(prediction.formulas) || prediction.formulas.some((formula) => !validRegion(formula.region) || (!formula.text?.trim() && !formula.latex?.trim()) || (formula.cdm !== undefined && (!formula.latex?.trim() || !Number.isFinite(formula.cdm)))))) issues.push("Prediction formulas must have unique IDs, valid regions, formula text or LaTeX, and finite CDM values only with LaTeX.");
   return issues;
 }

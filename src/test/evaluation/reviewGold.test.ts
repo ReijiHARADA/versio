@@ -46,10 +46,19 @@ describe("review to benchmark gold", () => {
   it("includes formula and table targets only after their explicit complete annotations", () => {
     const value = snapshot(); value.canonical.nodes[0].role = "equation"; value.canonical.nodes[0].text = "x = 1";
     value.canonical.nodes.push({ ...value.canonical.nodes[0], id: "table", role: "table", text: "A B", boundingBoxes: [{ page: 1, x: 1, y: 12, width: 8, height: 4 }] });
-    const review = newReview(value); const page = review.pages[0]; page.status = "complete"; page.coverage.predictedComplete = true; page.coverage.goldComplete = true; page.coverage.formulasComplete = true; page.coverage.tablesComplete = true; page.goldFormulas = [{ nodeId: "n", latex: "x=1" }]; page.goldTables = [{ nodeId: "table", tree: { tag: "table", children: [{ tag: "tr" }] } }];
+    const review = newReview(value); const page = review.pages[0]; page.status = "complete"; page.coverage.predictedComplete = true; page.coverage.goldComplete = true; page.coverage.formulasComplete = true; page.coverage.tablesComplete = true; page.goldFormulas = [{ nodeId: "n", text: "x = 1", latex: "x=1" }]; page.goldTables = [{ nodeId: "table", tree: { tag: "table", children: [{ tag: "tr" }] } }];
     const gold = goldFromCompletedReview({ schemaVersion: 1, kind: "paper-reader-extraction-evaluation", snapshot: value, review }, { id: "heldout", split: "heldout", leakageGroup: "unique", attributes: {} });
     expect(gold.coverage).toMatchObject({ formulas: "complete", tables: "complete" });
-    expect(gold.formulas?.[0]?.latex).toBe("x=1"); expect(gold.tables?.[0]?.tree.tag).toBe("table");
+    expect(gold.formulas?.[0]).toMatchObject({ text: "x = 1", latex: "x=1" }); expect(gold.tables?.[0]?.tree.tag).toBe("table");
+  });
+  it("includes a human-added missing equation in complete formula gold", () => {
+    const value = snapshot(); value.canonical.nodes[0].role = "equation"; value.canonical.nodes[0].text = "x = 1";
+    const review = newReview(value); const page = review.pages[0]; page.status = "complete"; page.coverage.predictedComplete = true; page.coverage.goldComplete = true; page.coverage.formulasComplete = true;
+    page.missingRegions = [{ id: "miss-eq", page: 1, region: { page: 1, x: 10, y: 20, width: 30, height: 10 }, correctRole: "equation", textAnchor: { text: "y = 2" }, createdAt: "now" }];
+    page.goldFormulas = [{ nodeId: "n", text: "x = 1" }, { missingRegionId: "miss-eq", text: "y = 2" }];
+    const gold = goldFromCompletedReview({ schemaVersion: 1, kind: "paper-reader-extraction-evaluation", snapshot: value, review }, { id: "heldout", split: "heldout", leakageGroup: "unique", attributes: {} });
+    expect(gold.coverage.formulas).toBe("complete");
+    expect(gold.formulas).toEqual(expect.arrayContaining([expect.objectContaining({ id: "n@1", text: "x = 1" }), expect.objectContaining({ id: "missing:miss-eq", text: "y = 2" })]));
   });
   it("uses only an explicit paragraph-boundary pair for boundary gold", () => {
     const value = snapshot(); value.canonical.nodes.push({ ...value.canonical.nodes[0], id: "n2", text: "second", boundingBoxes: [{ page: 1, x: 1, y: 10, width: 3, height: 4 }] });

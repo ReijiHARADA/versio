@@ -8,7 +8,7 @@ import { parsePaperMarkdown } from "./parse";
 import { serializePaperMarkdown } from "./serialize";
 
 function assetName(kind: "figure" | "table" | "equation", index: number, mime?: string): string {
-  const ext = mime?.includes("jpeg") || mime?.includes("jpg") ? "jpg" : "png";
+  const ext = mime?.includes("svg") ? "svg" : mime?.includes("jpeg") || mime?.includes("jpg") ? "jpg" : "png";
   return `assets/${kind}-${String(index).padStart(3, "0")}.${ext}`;
 }
 

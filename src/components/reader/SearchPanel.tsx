@@ -3,6 +3,7 @@ import { Search, X, ChevronUp, ChevronDown } from "lucide-react";
 import type { PaperBlock, Section } from "../../types/paper";
 import { sectionDisplayTitle } from "../../services/translation/quality";
 import styles from "./SearchPanel.module.css";
+import { isImeComposing } from "../../utils/ime";
 
 type SearchResult = {
   block: PaperBlock;
@@ -101,7 +102,7 @@ export function SearchPanel({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.nativeEvent.isComposing) return;
+      if (isImeComposing(e)) return;
       if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter") {
         e.preventDefault();
         return;

@@ -67,6 +67,7 @@ import {
 import { activeImportPaperIds } from "./import/session";
 import type { ImportCallbacks, ImportConfig } from "./import/types";
 import { ImportCancelledError, throwIfImportAborted } from "./import/cancellation";
+import { createPresentationDemoProjection } from "./presentationDemo";
 
 export {
   isRetryableTranslationFailure,
@@ -136,8 +137,20 @@ export async function importPDFV2(
 
     // Stage 2–3: native extract, classify, resolve Canonical, project, figures
     callbacks.onStageChange("extracting");
+    if (cfg.presentationDemo) {
+      callbacks.onProgress({ stage: "extracting", stageProgress: 1, stageTotal: 3, message: "PDFの本文と見出しを読み取っています..." });
+      await new Promise((resolve) => setTimeout(resolve, 550));
+      throwIfImportAborted(callbacks.signal, { paperId, partialReady: false });
+      callbacks.onStageChange("structuring");
+      callbacks.onProgress({ stage: "structuring", stageProgress: 2, stageTotal: 3, message: "図表・数式・引用を構造化しています..." });
+      await new Promise((resolve) => setTimeout(resolve, 650));
+      throwIfImportAborted(callbacks.signal, { paperId, partialReady: false });
+    }
     const previousBlocks = await getBlocksByPaper(paperId);
-    const extracted = await extractAcademicPdf({
+    // Production extraction result; null only in the filming-only demo build.
+    const extraction = cfg.presentationDemo
+      ? null
+      : await extractAcademicPdf({
       paperId,
       filePath: file.name,
       fileHash,
@@ -168,12 +181,18 @@ export async function importPDFV2(
     });
     throwIfImportAborted(callbacks.signal, { paperId, partialReady: false });
 
+    const extracted = extraction ?? createPresentationDemoProjection(paperId, fileHash, file.name);
     const { paper, sections, blocks: extractedBlocks } = extracted;
     const { attachLinesToBlocks, layoutFileFromNative } = await import("../data/package/layoutFromExtraction");
-    const blocks = attachLinesToBlocks(extractedBlocks, extracted.layoutBlocks);
+    const blocks = extraction
+      ? attachLinesToBlocks(extractedBlocks, extraction.layoutBlocks)
+      : extractedBlocks;
     paper.sourceFileName = file.name;
     const sourcePdf = new Uint8Array(await file.arrayBuffer());
     paper.sourceStoredPath = `papers/${paperId}/source.pdf`;
+    if (cfg.presentationDemo) {
+      callbacks.onProgress({ stage: "structuring", stageProgress: 3, stageTotal: 3, message: "読みやすい表示を準備しています..." });
+    }
 
     const preview = blocks
       .filter((b) => b.pageStart === 3 && (b.original || (b.metadata as { captionOriginal?: string }).captionOriginal))
@@ -189,7 +208,7 @@ export async function importPDFV2(
     // PDF via UNIQUE(source_file_hash).
     const finalSourceHash = paper.sourceFileHash;
     paper.sourceFileHash = `importing-${paperId}`;
-    paper.processingStatus = "glossary";
+    paper.processingStatus = cfg.presentationDemo ? "ready" : "glossary";
     // Keep the provisional index hidden while extraction is in progress, then
     // write the complete immutable package in one transaction. Building the
     // package through savePaper/saveSections/saveBlocks first used a mutable
@@ -205,7 +224,7 @@ export async function importPDFV2(
         paper: packagePaper,
         sections,
         blocks,
-        layout: layoutFileFromNative(extracted.native, blocks),
+        layout: extraction ? layoutFileFromNative(extraction.native, blocks) : undefined,
         sourcePdf,
       });
       const persisted = await persistPaperPackage(fs, pkg);
@@ -227,6 +246,15 @@ export async function importPDFV2(
     // Notify that partial data is ready (can start viewing)
     callbacks.onPartialReady(paper, sections, blocks);
     throwIfImportAborted(callbacks.signal, { paperId, partialReady: true });
+
+    if (cfg.presentationDemo) {
+      callbacks.onStageChange("completed");
+      callbacks.onProgress({
+        stage: "completed", stageProgress: 1, stageTotal: 1,
+        message: "デモ用の構造化表示を準備しました", paper, sections, blocks,
+      });
+      return { paper, sections, blocks };
+    }
 
     if (isJapaneseLayoutOnlyPaper(paper.titleOriginal, blocks)) {
       await finalizeJapaneseLayoutOnly(paper, sections, blocks);

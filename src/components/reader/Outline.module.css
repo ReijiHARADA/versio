@@ -18,7 +18,9 @@
 
 .sublist {
   list-style: none;
-  margin: 0 0 2px 18px;
+  /* Indentation belongs to the label padding, not this container: every
+     row's hover/active surface must span the same full sidebar width. */
+  margin: 0 0 2px;
 }
 
 .item {
@@ -28,13 +30,13 @@
 .link {
   display: block;
   width: 100%;
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: 6px var(--spacing-md);
   border: none;
   background: transparent;
   text-align: left;
   color: var(--color-text-secondary);
   font-size: 0.875rem;
-  line-height: 1.4;
+  line-height: 1.35;
   cursor: pointer;
   /* No bg/color transition: interpolating selection blue ↔ gray briefly
      looks like the old soft accent-light highlight while scrolling. */

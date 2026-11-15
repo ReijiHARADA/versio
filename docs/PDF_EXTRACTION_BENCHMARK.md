@@ -8,6 +8,11 @@ translation, and never changes a production parser or a translation model.
 The benchmark follows the task separation used by
 [OmniDocBench](https://github.com/opendatalab/OmniDocBench):
 
+It shares metric vocabulary, not a leaderboard: Paper Reader uses its own
+frozen scientific-PDF cohorts, human-review workflow, and split/leakage rules.
+It also adds Block F1, paragraph-boundary F1, and caption-relation F1 because
+those structures directly affect the Reader projection.
+
 | Dimension | Metric | Direction | Requirement |
 | --- | --- | --- | --- |
 | Text | CER, NED | lower | complete text annotation |
@@ -25,8 +30,10 @@ Block F1 requires both region and role agreement. Text, reading order, and
 paragraph-boundary metrics instead align blocks by region, so a role mistake
 does not hide a separate text or ordering mistake.
 
-Every report emits both `evaluatedDocuments` and `evaluatedUnits`. A dimension
-without complete annotation is `null`/`N/A`, never 100%.
+Every report emits both `evaluatedDocuments` and `evaluatedUnits`. Its displayed
+`value` is explicitly tagged `macro_document_mean`: each reviewed paper has
+equal weight, while the unit count exposes the amount of supporting evidence.
+A dimension without complete annotation is `null`/`N/A`, never 100%.
 An empty gold selection fails by default, so a CI job cannot pass without
 actually evaluating a reviewed document. Use `--allow-empty` only to inspect
 an intentionally empty split.
@@ -46,12 +53,58 @@ scoped predicted block exactly once. An incomplete parser order is `N/A`, not
 a shorter sequence that can hide ordering failures.
 
 The runner validates gold before scoring. Declaring a dimension `complete`
-without its block text, ordered IDs, boundary pairs, table tree, or formula
-LaTeX is an error, not an implicit perfect score.
+without its block text, ordered IDs, boundary pairs, table tree, or
+human-authored formula text/LaTeX is an error, not an implicit perfect score.
 It also validates parser artifacts (unique IDs, finite positive regions,
 well-formed tables, and known boundary references) before scoring. A parser
 may provide a partial reading order, but that dimension remains N/A until the
 order covers every scoped block exactly once.
+
+## Autonomous development gate
+
+New human annotation is not required to reject obvious regressions during
+development. The bounded seven-paper development gate reuses only the existing
+fixture gold already stored under `test-fixtures/real-papers/ground-truth`:
+
+```sh
+npm run bench:pdf-extraction:development
+```
+
+It checks diverse development layouts (ACM, IEEE, Springer, KCI, OzCHI,
+Elsevier, arXiv) in isolated per-PDF workers with a default 240-second
+per-paper timeout, progress, partial report, and non-zero failure status. It
+writes a local report. Workers use the project's local `vite-node`, so this
+gate has no registry/network dependency. It is a regression signal only:
+the documents are development fixtures and must not be reported as validation
+or held-out generalization accuracy. It neither uses the current extraction as
+gold nor starts translation.
+
+The gate also fails label-free invariants: native source text must survive
+reconstruction (`sourceIntegrityRate = 1`) and every Canonical node must retain
+PDF provenance (`canonicalProvenanceRate = 1`). These are integrity checks, not
+claims about reading order or semantic roles.
+
+## Unknown-document health gate without new labels
+
+Before human review is available, run a frozen validation or held-out cohort
+through a separate label-free gate:
+
+```sh
+npm run audit:pdf-extraction:unlabeled -- --cohort test-fixtures/extraction-benchmark/validation-cohort-v1.json --all
+```
+
+Each hash-pinned PDF is extracted twice in an isolated worker. The gate rejects
+non-deterministic output, invalid or unanchored Canonical regions, dangling or
+self-referential relations, non-reproducible native layout text, and Reader
+blocks that cannot be traced back to a Canonical node. It writes a local report
+and has per-paper timeout/progress/failure handling. It does **not** calculate
+or imply CER/NED, Block F1, reading-order accuracy, TEDS, or CDM: those remain
+N/A until human-authored ground truth exists.
+
+The report also lists strong native formula and table-caption anchors that do
+not overlap an `equation` or `caption` Canonical node. They are triage hints for
+which unknown pages to inspect next, not false-positive/false-negative labels
+and never gate the run by themselves.
 
 ## Data isolation
 
@@ -102,8 +155,10 @@ npm run snapshot:extraction-benchmark-cohort -- \
   --ids heldout-nature-machine-learning-mobility,heldout-plos-drug-side-effects
 ```
 
-Use `--all` only to process the frozen five-paper cohort. The command reports
-per-paper progress, honours `--timeout-ms`, and stops cleanly on `SIGINT`.
+Use `--all` only to process the frozen five-paper cohort. The command verifies
+each local PDF's SHA-256 against the frozen cohort manifest before extraction,
+reports per-paper progress, honours `--timeout-ms`, and stops cleanly on
+`SIGINT`.
 
 Create a local bundle for visual review in Evaluation Studio (then open the
 same source PDF and import this bundle):
@@ -112,8 +167,10 @@ same source PDF and import this bundle):
 npm run prepare:extraction-benchmark-review -- --id heldout-jmir-shopautiplan
 ```
 
-Use `--all` only for an explicit cohort-wide review preparation. It reports
-progress, writes each local bundle independently, and honors timeout/SIGINT:
+Use `--all` only for an explicit cohort-wide review preparation. It verifies
+the local PDF hash before annotation, reports progress, writes each local
+bundle independently, and honors timeout/SIGINT. Existing review bundles are
+never overwritten unless `--overwrite` is explicitly supplied:
 
 ```sh
 npm run prepare:extraction-benchmark-review -- --all --timeout-ms 300000
@@ -124,6 +181,16 @@ Track which human-reviewed pages are actually eligible for each metric:
 ```sh
 npm run audit:extraction-benchmark-review-progress
 ```
+
+For an in-progress bundle, create a non-scoring extraction triage queue:
+
+```sh
+npm run triage:extraction-partial-review -- --input /path/to/paper.evaluation.json
+```
+
+It groups explicit `extra` deletions, role corrections, and human-added
+missing regions by role and prioritizes pages. These are partial observations,
+not exhaustive gold or training labels, so the command never emits accuracy.
 
 ## Artifact format
 
@@ -140,8 +207,10 @@ compared fairly without copying Paper Reader identifiers.
 
 `predictionFromSnapshot` in `src/evaluation/benchmark/adapters.ts` converts an
 Evaluation Studio snapshot into a Paper Reader prediction artifact. It maps
-unsupported internal roles to `other` and does not invent formula LaTeX,
-paragraph boundaries, table trees, or gold labels.
+unsupported internal roles to `other`. Equations are exported as their native
+linearized `text`, never fabricated LaTeX. It exports Canonical paragraph
+splits and Reader-native table rows when those structures exist, but never
+invents missing rows, LaTeX, or gold labels.
 
 Export a Studio bundle's immutable snapshot for a benchmark run:
 
@@ -183,13 +252,19 @@ For figure/table associations, use `正しい図表とキャプションの対�
 caption → figure/table pair, then mark `図表関係` complete. The common artifact
 uses page-region IDs, so parser-specific relation IDs never become gold.
 
-For each selected equation, enter reviewed LaTeX; for each table, enter a JSON
+For each selected equation, enter reviewed formula text for Formula NED and,
+when available, reviewed LaTeX for CDM; for each table, enter a JSON
 tree such as `{"tag":"table","children":[{"tag":"tr","children":[{"tag":"td","text":"cell value"}]}]}`.
 `text` is optional, but when supplied it is included in TEDS so cell-content
 corruption is not hidden behind an otherwise correct table shape. Mark the
 corresponding `数式` or `表構造` completeness checkbox only after every such
-block on the page is authored. Formula NED and TEDS then become scoreable;
-CDM remains N/A until an official local CDM result is supplied.
+block on the page is authored. Formula NED compares like representations
+(linear text or LaTeX), TEDS then becomes scoreable, and CDM remains N/A
+until an official local CDM result is supplied.
+An equation added as a `認識漏れ` region appears in the same formula editor once
+its role is set to `equation`; author its formula text as well so missing
+formulas contribute to both Block Recall and Formula NED rather than silently
+dropping out of the metric.
 
 When a local official CDM environment is available, export only IoU-matched
 gold/predicted formula pairs, run that evaluator, then attach the returned
@@ -197,11 +272,14 @@ per-prediction score:
 
 ```sh
 npm run export:extraction-benchmark-cdm -- --gold gold.json --prediction prediction.json --output cdm-input.json
-npm run apply:extraction-benchmark-cdm -- --prediction prediction.json --scores cdm-scores.json --output prediction-with-cdm.json
+npm run apply:extraction-benchmark-cdm -- --prediction prediction.json --cdm-input cdm-input.json --scores cdm-scores.json --output prediction-with-cdm.json
 ```
 
 `cdm-scores.json` is either `{ "scores": [{ "pred_idx": "…", "score": 93.2 }] }`
-or a `{ "predicted-id": 93.2 }` map. Scores are never synthesized by this project.
+or a `{ "predicted-id": 93.2 }` map. The apply command checks every score
+against the exported CDM input's source hash and matched prediction formula
+IDs; score output for another PDF or formula pair is rejected. Scores are
+never synthesized by this project.
 
 No prediction is promoted to gold automatically.
 
@@ -227,7 +305,10 @@ honors `--timeout-ms`, writes the completed partial report on `SIGINT`, and
 returns a non-zero status when interrupted or timed out.
 
 Reports include category slices for publisher, discipline, layout and language,
-plus each document's critical failures. Compare a later run only against the
+plus each document's critical failures. A reviewed zero-score paragraph
+boundary, caption relation, or table TEDS result is critical; so are a 0.25+
+CER, reading-order distance, or formula NED. Unannotated dimensions remain
+N/A and never create a critical failure. Compare a later run only against the
 same source hashes:
 
 ```sh
@@ -238,7 +319,9 @@ The comparison lists every comparable metric delta and marks a regression using
 the correct direction (lower is better for CER/NED/reading order; higher is
 better for F1/TEDS/CDM). Non-overlapping or unannotated metrics remain N/A.
 Add `--fail-on-regression` to make a comparable regression exit non-zero for a
-CI/release gate; it does not fail for N/A or a source-hash mismatch.
+CI/release gate; it does not fail for N/A or a source-hash mismatch. Add
+`--fail-on-critical` to fail only when a reviewed document has a critical
+failure; N/A dimensions remain non-failing.
 
 ## Annotation order
 

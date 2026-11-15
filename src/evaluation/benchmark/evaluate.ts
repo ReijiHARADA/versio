@@ -19,15 +19,32 @@ const average = (name: string, values: MetricScore[]): BenchmarkDimension => {
     : unavailable(name, "No complete annotations for this metric.");
 };
 
-function matchRegions<T extends { id: string; region: { page: number; x: number; y: number; width: number; height: number } }>(predicted: T[], gold: T[], threshold = 0.5): Array<{ predicted: T; gold: T }> {
+function matchRegions<
+  P extends { id: string; region: { page: number; x: number; y: number; width: number; height: number } },
+  G extends { id: string; region: { page: number; x: number; y: number; width: number; height: number } },
+>(predicted: P[], gold: G[], threshold = 0.5): Array<{ predicted: P; gold: G }> {
   const candidates = predicted.flatMap((item) => gold.map((reference) => ({ item, reference, iou: intersectionOverUnion(item.region, reference.region) })))
     .filter((candidate) => candidate.iou >= threshold).sort((left, right) => right.iou - left.iou);
-  const usedPredicted = new Set<string>(); const usedGold = new Set<string>(); const matches: Array<{ predicted: T; gold: T }> = [];
-  for (const candidate of candidates) {
-    if (usedPredicted.has(candidate.item.id) || usedGold.has(candidate.reference.id)) continue;
-    usedPredicted.add(candidate.item.id); usedGold.add(candidate.reference.id); matches.push({ predicted: candidate.item, gold: candidate.reference });
-  }
-  return matches;
+  const candidatesByPrediction = new Map<string, typeof candidates>();
+  for (const candidate of candidates) candidatesByPrediction.set(candidate.item.id, [...(candidatesByPrediction.get(candidate.item.id) ?? []), candidate]);
+  const matchedPredictionByGold = new Map<string, string>();
+  const matchPrediction = (predictionId: string, visitedGold = new Set<string>()): boolean => {
+    for (const candidate of candidatesByPrediction.get(predictionId) ?? []) {
+      if (visitedGold.has(candidate.reference.id)) continue;
+      visitedGold.add(candidate.reference.id);
+      const previousPrediction = matchedPredictionByGold.get(candidate.reference.id);
+      if (!previousPrediction || matchPrediction(previousPrediction, visitedGold)) {
+        matchedPredictionByGold.set(candidate.reference.id, predictionId);
+        return true;
+      }
+    }
+    return false;
+  };
+  for (const item of predicted) matchPrediction(item.id);
+  return [...matchedPredictionByGold.entries()].flatMap(([goldId, predictionId]) => {
+    const candidate = candidatesByPrediction.get(predictionId)?.find((item) => item.reference.id === goldId);
+    return candidate ? [{ predicted: candidate.item, gold: candidate.reference }] : [];
+  });
 }
 
 export function evaluateBenchmarkDocument(gold: ExtractionBenchmarkGold, prediction: ExtractionBenchmarkPrediction): BenchmarkDocumentReport {
@@ -76,22 +93,52 @@ export function evaluateBenchmarkDocument(gold: ExtractionBenchmarkGold, predict
     : unavailable("table_teds", "Table annotations are not complete.");
   const formulaMatches = gold.formulas && prediction.formulas ? matchRegions(prediction.formulas, gold.formulas) : [];
   const formulaPairs = gold.coverage.formulas === "complete" && gold.formulas ? gold.formulas.map((reference) => ({ reference, predicted: formulaMatches.find((item) => item.gold.id === reference.id)?.predicted })) : [];
-  const formulaNed = formulaPairs.length ? average("formula_ned", formulaPairs.map(({ reference, predicted }) => normalizedEditDistance(predicted?.latex ?? "", reference.latex))) : unavailable("formula_ned", "Formula annotations are not complete.");
-  const cdmValues = formulaPairs.flatMap(({ predicted }) => typeof predicted?.cdm === "number" ? [{ value: predicted.cdm, evaluated: 1 }] : []);
+  // Prefer the human-authored linear text representation for Paper Reader;
+  // fall back to LaTeX only when both sides actually provide it. This keeps a
+  // raw PDF string from being misrepresented as TeX.
+  const formulaNedPairs = formulaPairs.flatMap(({ reference, predicted }) => {
+    if (reference.text?.trim()) return [{ reference: reference.text, predicted: predicted?.text ?? "" }];
+    // A missing prediction is a real formula recall error even when the human
+    // gold uses LaTeX. A present parser formula without LaTeX is different: it
+    // has no compatible representation, so leave this metric N/A rather than
+    // treating arbitrary linearized text as TeX.
+    if (reference.latex?.trim() && !predicted) return [{ reference: reference.latex, predicted: "" }];
+    if (reference.latex?.trim() && predicted?.latex?.trim()) return [{ reference: reference.latex, predicted: predicted.latex }];
+    return [];
+  });
+  const formulaNed = formulaNedPairs.length === formulaPairs.length && formulaPairs.length
+    ? average("formula_ned", formulaNedPairs.map((pair) => normalizedEditDistance(pair.predicted, pair.reference)))
+    : unavailable("formula_ned", "Formula annotations are incomplete or the parser has no matching text/LaTeX representation.");
+  const cdmValues = formulaPairs.flatMap(({ reference, predicted }) => reference.latex?.trim() && typeof predicted?.cdm === "number" ? [{ value: predicted.cdm, evaluated: 1 }] : []);
   const formulaCdm = cdmValues.length === formulaPairs.length && formulaPairs.length ? average("formula_cdm", cdmValues) : { name: "formula_cdm", ...formulaCdmUnavailable() };
   const criticalFailures = [
     block.value === 0 ? "No annotated blocks matched." : null,
+    textCer.value !== null && textCer.value >= 0.25 ? "Text character error rate reaches 0.25." : null,
     reading.value !== null && reading.value > 0.25 ? "Reading-order edit distance exceeds 0.25." : null,
+    boundaries.value === 0 ? "No annotated paragraph boundaries matched." : null,
+    captionRelations.value === 0 ? "No annotated caption relations matched." : null,
+    table.value === 0 ? "No annotated table structure matched." : null,
     formulaNed.value !== null && formulaNed.value > 0.25 ? "Formula normalized edit distance exceeds 0.25." : null,
   ].filter((item): item is string => Boolean(item));
   return { id: gold.id, sourceHash: gold.source.fileHash, split: gold.split, attributes: gold.attributes, parser: prediction.parser, blockF1: block, textCer, textNed, readingOrder: reading, paragraphBoundaries: boundaries, captionRelations, tableTeds: table, formulaNed, formulaCdm, criticalFailures };
 }
 
 export function assertNoLeakage(gold: ExtractionBenchmarkGold[]): void {
-  const splitByGroup = new Map<string, ExtractionBenchmarkGold["split"]>();
+  const documentByGroup = new Map<string, { id: string; split: ExtractionBenchmarkGold["split"] }>();
+  const sourceByHash = new Map<string, { id: string; split: ExtractionBenchmarkGold["split"] }>();
+  const documentIds = new Set<string>();
   for (const document of gold) {
-    const previous = splitByGroup.get(document.leakageGroup);
-    if (previous && previous !== document.split) throw new Error(`Leakage group ${document.leakageGroup} occurs in both ${previous} and ${document.split}.`);
-    splitByGroup.set(document.leakageGroup, document.split);
+    if (documentIds.has(document.id)) throw new Error(`Benchmark document ID ${document.id} appears more than once.`);
+    documentIds.add(document.id);
+    const previousGroup = documentByGroup.get(document.leakageGroup);
+    if (previousGroup) {
+      throw new Error(`Leakage group ${document.leakageGroup} is reused by ${previousGroup.id} (${previousGroup.split}) and ${document.id} (${document.split}).`);
+    }
+    documentByGroup.set(document.leakageGroup, { id: document.id, split: document.split });
+    const previousSource = sourceByHash.get(document.source.fileHash);
+    if (previousSource) {
+      throw new Error(`Source hash ${document.source.fileHash} is reused by ${previousSource.id} (${previousSource.split}) and ${document.id} (${document.split}).`);
+    }
+    sourceByHash.set(document.source.fileHash, { id: document.id, split: document.split });
   }
 }
