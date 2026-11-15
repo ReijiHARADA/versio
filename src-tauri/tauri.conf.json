@@ -58,6 +58,16 @@
     "resources": {
       "bundled-resources/translation-server": "translation-server",
       "bundled-resources/apple-translation": "apple-translation"
-    }
+    },
+    "fileAssociations": [
+      {
+        "ext": ["pdf"],
+        "name": "PDF Document",
+        "description": "Academic paper",
+        "mimeType": "application/pdf",
+        "role": "Viewer",
+        "rank": "Alternate"
+      }
+    ]
   }
 }

@@ -72,6 +72,43 @@ export function PdfFileDropLayer() {
     };
   }, [importDroppedFile]);
 
+  // PDFs opened from Finder ("Open With") or `open -a Versio a.pdf b.pdf`.
+  // Rust queues them (they can arrive before this mounts); drain on mount and on each signal.
+  useEffect(() => {
+    if (!isTauriApp()) return;
+    let cancelled = false;
+    let unlisten: (() => void) | undefined;
+
+    const drain = async () => {
+      const { invoke } = await import("@tauri-apps/api/core");
+      const paths = await invoke<string[]>("take_opened_pdfs");
+      for (const path of paths) {
+        try {
+          await importDroppedFile(await fileFromDroppedPath(path));
+        } catch (error: unknown) {
+          console.error("Failed to read opened PDF:", error);
+          showToast({ kind: "error", message: "読み込みに失敗しました" });
+        }
+      }
+    };
+
+    void (async () => {
+      const { listen } = await import("@tauri-apps/api/event");
+      const stop = await listen("opened-pdfs", () => void drain());
+      if (cancelled) {
+        stop();
+        return;
+      }
+      unlisten = stop;
+      await drain();
+    })();
+
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, [importDroppedFile]);
+
   useEffect(() => {
     if (isTauriApp()) return;
 

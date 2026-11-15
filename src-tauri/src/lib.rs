@@ -3,6 +3,7 @@ mod legacy_data;
 #[cfg(target_os = "macos")]
 mod macos_chrome;
 mod ocr;
+mod opened_files;
 mod paper_fs;
 mod source_pdf;
 
@@ -229,6 +230,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .manage(server_state)
+        .manage(opened_files::OpenedPdfQueue::default())
         .setup(|app| {
             // Release keeps warnings and errors in the app log dir so a
             // distributed `.app` failure can be diagnosed after the fact.
@@ -282,6 +284,7 @@ pub fn run() {
             source_pdf::delete_source_pdf,
             source_pdf::source_pdf_exists,
             source_pdf::read_dropped_pdf,
+            opened_files::take_opened_pdfs,
             source_pdf::acceptance_fixture_path,
             source_pdf::ui_e2e_enabled,
             source_pdf::ui_e2e_smoke_only,
@@ -300,6 +303,14 @@ pub fn run() {
             paper_fs::export_app_directory,
             paper_fs::import_directory_to_app,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            // Finder "Open With" / `open -a Versio file.pdf` (also on cold launch).
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Opened { urls } = &event {
+                opened_files::enqueue_opened_urls(app, urls);
+            }
+            let _ = (app, event);
+        });
 }
