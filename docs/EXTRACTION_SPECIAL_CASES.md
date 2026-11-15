@@ -12,18 +12,16 @@ ROADMAP B1「壊れた PDF ごとに heuristic if を増やさない」の運用
 
 | ファイル | 行数 | 主な内容 |
 | --- | ---: | --- |
-| `resolver/documentResolver.ts` | 26 | Frontiers の masthead / cite-head、BMC・BMJ の構造化 abstract、Nature の early-access / check-for-updates 降格、IEEE ACCESS の見出し誤役割 |
+| `resolver/documentResolver.ts` | 14 | 呼び出しのみ。出版社・誌名別 predicate は `formats/publisherChrome.ts` に移動済み（無条件適用） |
 | `projection/toPaper.ts` | 17 | 著者欄に入る誌名・機関名（`Jurnal`、`SENOPATI`、`NSTDA`、consortium / biobank）、出版社 chrome の除外 |
-| `pdfLayout.ts` | 11 | BMJ の running chrome、arXiv 識別子行 |
-| `resolver/titleResolver.ts` | 7 | 誌名 masthead をタイトル候補から除外 |
-| `generic/candidates.ts` | 3 | 出版社 chrome 候補 |
+| `pdfLayout.ts` | 10 | 呼び出しのみ。running chrome / preprint 識別子の predicate は移動済み（無条件適用） |
+| `resolver/titleResolver.ts` | 2 | 呼び出しのみ。誌名 masthead の predicate は移動済み（無条件適用） |
+| `generic/candidates.ts` | 0 | 出版社 chrome predicate は移動済み（無条件適用） |
 | `types.ts` / `index.ts` | 各 1 | 型・ラベル |
 
 計測対象語: BMJ, PLOS, Frontiers, Elsevier, Springer, IEEE, ACM, Nature, arXiv, bioRxiv, BMC, Jurnal, SENOPATI, NSTDA, Biobank, Consortium, MDPI, Lancet, JAMA, Wiley（語頭一致・大小無視）。
 
 ## 移行の順序
 
-1. `projectCanonicalToPaper` の分割（挙動不変）が終わってから着手する。同じファイルを同時に触らない。
-2. 単一論文由来のもの（`SENOPATI`、`NSTDA` など）から、汎用シグナルへの置き換えを試す。置き換え前後で characterization（実 PDF の投影出力ハッシュ）と `test:extraction-corpus` を比較する。
-3. 出版社 chrome（Frontiers / BMJ / Nature など）は Format Profile へ移す。profile の適用閾値は APPLY_MIN=0.75 / APPLY_MARGIN=0.12 のまま。
-4. 移したらラチェットの基準値を下げる。
+1. 出版社 chrome predicate は `formats/publisherChrome.ts` へ移動済みで、Format Profile の検出スコアには gate されず無条件に適用する。
+2. 次は単一論文由来のもの（`SENOPATI`、`NSTDA` など）を汎用シグナルへ一般化する（本タスクの対象外）。置き換え前後で characterization（実 PDF の投影出力ハッシュ）と `test:extraction-corpus` を比較する。

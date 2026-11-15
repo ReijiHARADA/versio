@@ -16,11 +16,10 @@ const NAME =
 const COMMENT = /^\s*(\/\/|\*|\/\*)/;
 
 const BASELINE: Record<string, number> = {
-  "src/services/pdfExtraction/resolver/documentResolver.ts": 26,
+  "src/services/pdfExtraction/resolver/documentResolver.ts": 14,
   "src/services/pdfExtraction/projection/toPaper.ts": 17,
-  "src/services/pdfLayout.ts": 11,
-  "src/services/pdfExtraction/resolver/titleResolver.ts": 7,
-  "src/services/pdfExtraction/generic/candidates.ts": 3,
+  "src/services/pdfLayout.ts": 10,
+  "src/services/pdfExtraction/resolver/titleResolver.ts": 2,
   "src/services/pdfExtraction/types.ts": 1,
   "src/services/pdfExtraction/index.ts": 1,
 };
