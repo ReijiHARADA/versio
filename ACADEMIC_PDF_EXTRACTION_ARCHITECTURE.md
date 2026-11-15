@@ -1,6 +1,6 @@
 # Academic PDF Extraction Architecture
 
-Production architecture for Versio. Research background: [ACADEMIC_PDF_EXTRACTION_RESEARCH.md](./ACADEMIC_PDF_EXTRACTION_RESEARCH.md).
+Production architecture for Versio. Research background: [ACADEMIC_PDF_EXTRACTION_RESEARCH.md](./docs/research/ACADEMIC_PDF_EXTRACTION_RESEARCH.md).
 
 Source of Truth is **CanonicalDocument**, not pdfLayout, GROBID, Docling, OCR, or a Format Profile.
 
