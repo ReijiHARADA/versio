@@ -10,7 +10,7 @@
 
 ## 指標と採否
 
-PDF抽出の指標語彙は [OmniDocBench](https://github.com/opendatalab/OmniDocBench) と既存の [PDF extraction benchmark](PDF_EXTRACTION_BENCHMARK.md) に合わせた。CERは人手正解文字列を分母とする文字Levenshtein距離、role-aware Block F1はIoU対応と役割一致、読み順は正解block列の編集距離、表はTEDS、数式はNED/CDMである。Paragraph-boundary F1とcaption-relation F1はVersio固有の構造保持指標である。これらは完全な同一ページのhuman goldがあるときだけ算出する。
+PDF抽出の指標語彙は [OmniDocBench](https://github.com/opendatalab/OmniDocBench) と既存の [PDF extraction benchmark](./PDF_EXTRACTION_BENCHMARK.md) に合わせた。CERは人手正解文字列を分母とする文字Levenshtein距離、role-aware Block F1はIoU対応と役割一致、読み順は正解block列の編集距離、表はTEDS、数式はNED/CDMである。Paragraph-boundary F1とcaption-relation F1はVersio固有の構造保持指標である。これらは完全な同一ページのhuman goldがあるときだけ算出する。
 
 WERは英語の分かち書き規則に依存し、既存evaluatorに実装されていないため、今回CERの代替数値を作らずN/Aとする。翻訳は、二重blind人手判定で「意味」「情報欠落」「追加/幻覚」「数値・単位・統計」「否定・条件・比較・因果」「専門用語・引用」を別々に判定し、severity 2以上を重大エラーと定義する。品質ゲートの誤受理率は、人手判定済みの自動受理件数を分母に重大エラー件数を置くが、その分母が未整備なのでN/Aである。
 
