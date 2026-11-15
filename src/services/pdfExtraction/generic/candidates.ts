@@ -5,6 +5,7 @@ import { scoreLayoutBlock } from "../../extractionConfidence";
 import type { ExtractedPage } from "../../pdfService";
 import type { CanonicalRole } from "../canonical/types";
 import type { ExtractionEvidence, EvidenceSource } from "../types";
+import { isJournalRunningHeader } from "../formats/publisherChrome";
 
 export type RoleCandidate = {
   id: string;
@@ -1768,13 +1769,7 @@ export function generateGenericCandidates(pages: ExtractedPage[]): GenericExtrac
     }
     // Journal running headers (`Frontiers in Psychology`, `IEEE XPLORE`) often
     // pick up the ALL-CAPS heading boost; keep layout header/copyright roles.
-    const journalRunningHeader =
-      /^(?:\d{1,3}\s+)?frontiersin\.org$/i.test(block.text.trim()) ||
-      /^ieee\s+xplore$/i.test(block.text.trim()) ||
-      /^frontiers(?:\s+in)?(?:\s+[A-Za-z][A-Za-z'’-]*){1,6}(?:\s+\d{1,3}\s+frontiersin\.org)?$/i.test(
-        block.text.trim(),
-      ) ||
-      /^journal of the association of chartered\b/i.test(block.text.trim());
+    const journalRunningHeader = isJournalRunningHeader(block.text);
     if (
       journalRunningHeader ||
       block.role === "header" ||

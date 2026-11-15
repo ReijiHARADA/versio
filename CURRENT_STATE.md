@@ -51,4 +51,5 @@ user-visible な現在状態だけを書く。日付つきの作業ログ・計�
 形式は [docs/REFACTORING_CADENCE.md](./docs/REFACTORING_CADENCE.md)。1 エントリ = 対象 / 挙動維持の根拠 / 検証 / 残課題。
 
 - 2026-11-15 lint 整理: oxlint 警告 53 → 0。正規表現の不要エスケープのみ（意味不変）、hooks 偽陽性に理由付き注記。検証: tsc、pdfExtraction + translation 409 tests（実 PDF あり）。残課題: なし。
+- 2026-11-15 publisher predicate 保守リファクタリング: 対象: 出版社・誌名別 predicate を `pdfExtraction/formats/publisherChrome.ts` へ集約。挙動維持の根拠: 呼び出し位置と無条件適用を維持。検証: policy Vitest、tsc。残課題: SENOPATI/NSTDA 等の単一論文ルールの汎用化は未実施。
 - 2026-11-15 projection 保守リファクタリング: 対象: `projectCanonicalToPaper` を `projectFrontMatter` / `projectBody` / `finalizePaperProjection` に分離。挙動維持の根拠: characterization 209 PDFs、0 diffs。検証: full Vitest、tsc、oxlint。残課題: front-matter の author-recovery spans と約560行の body node loop は state split が必要、単一プロセスの大きな PDF corpus run は Node heap を枯渇させる。

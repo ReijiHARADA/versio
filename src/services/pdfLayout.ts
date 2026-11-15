@@ -14,6 +14,7 @@ import {
   looksLikeSubjectClassification,
   toHalfwidthAscii,
 } from "./translation/quality";
+import * as publisherPredicates from "./pdfExtraction/formats/publisherChrome";
 
 /** Browser-safe env read — bare `process` is undefined in WKWebView / Vite. */
 function layoutEnv(name: string): string | undefined {
@@ -1568,7 +1569,7 @@ function isCopyright(text: string, fontSize: number, baseFont: number): boolean 
     /\b(?:this\s+work\s+is\s+)?licensed\s+under\s+a\s+creative\s+commons\b/i.test(text) ||
     /\b(?:terms\s+of\s+the\s+)?creative\s+commons\s+(?:attribution\s+)?(?:license|licence)\b/i.test(text) ||
     /\bopen[-\s]access\s+article\s+distributed\s+under\b/i.test(text) ||
-    /copyright\s+\d{4}[^.]{0,100}\b(?:acm|ieee|springer|elsevier)\b/i.test(text);
+    publisherPredicates.isPublisherCopyrightNotice(text);
 }
 
 function splitInlineDoi(line: LayoutLine): LayoutLine[] {
@@ -1852,7 +1853,7 @@ function captionShouldContinue(currentText: string, next: LayoutLine, baseFont: 
 const NAMED_HEADINGS = [
   /^abstract$/i,
   /^author keywords?$/i,
-  /^acm classification keywords?$/i,
+  { test: publisherPredicates.isAcmClassificationKeywords },
   /^ccs concepts$/i,
   /^introduction$/i,
   /^related work$/i,
@@ -2183,7 +2184,7 @@ function looksLikePersonName(text: string): boolean {
 function detectTitleFont(lines: LayoutLine[], baseFont: number): number {
   const pageOne = lines.filter((l) =>
     l.page === 1 && l.text.trim().length >= 8 &&
-    !/^arxiv\b/i.test(l.text.trim()) && !looksLikeUrl(l.text)
+    !publisherPredicates.isArxivChrome(l.text) && !looksLikeUrl(l.text)
   );
   if (pageOne.length === 0) return 0;
   const maxFont = Math.max(...pageOne.map((l) => l.fontSize));
@@ -2307,7 +2308,7 @@ function orderPageLines(lines: LayoutLine[], layout: PageColumnLayout): LayoutLi
   // between the two column bands. It must not act as a mid-page cut, or the
   // tail of a left-column paragraph is emitted after the right column.
   const spanningChrome = spanning.filter((l) =>
-    /^(?:arxiv\b|doi\s*[:.]|copyright\b|https?:\/\/doi\.org\/|\d+\s*$)/i.test(l.text.trim())
+    (publisherPredicates.isArxivChrome(l.text) || /^(?:doi\s*[:.]|copyright\b|https?:\/\/doi\.org\/|\d+\s*$)/i.test(l.text.trim()))
   );
   const spanningMid = spanning.filter(
     (l) => l.y >= columnTop - 6 && l.y <= columnBottom + 6 && !spanningChrome.includes(l)
@@ -2623,7 +2624,7 @@ function roleForLine(
   // arXiv's identifier/date header is not the article title. Keep it as
   // chrome so it cannot win the title resolver after the real title has been
   // recovered from the masthead region.
-  if (/^arXiv:\s*\d{4}\.\d{4,}/i.test(text)) return "chrome";
+  if (publisherPredicates.isArxivIdentifier(text)) return "chrome";
   // Explicit author-list geometry must override a stale paragraph hint from
   // line grouping. The predicate is conservative and excludes institutions,
   // sentence punctuation, and section labels.
@@ -3839,7 +3840,7 @@ function rejoinCaptionStatisticFragments(blocks: LayoutBlock[]): LayoutBlock[] {
  * in the same native span as a body paragraph. */
 function splitEmbeddedChromeBlocks(blocks: LayoutBlock[]): LayoutBlock[] {
   const result: LayoutBlock[] = [];
-  const marker = /(?:this(?:nationalwork)?license\.?is\s+licensed|(?:©\s*(?:acm|ieee|springer|elsevier))|copyright\s+\d{4})/i;
+  const marker = publisherPredicates.publisherCopyrightMarker;
   for (const block of blocks) {
     if (block.role !== "paragraph" || block.text.length < 180) {
       result.push(block);
@@ -4582,13 +4583,12 @@ function isPublicationChromeBlock(block: LayoutBlock): boolean {
 /** Some arXiv exports place the version/date band as a large overlay directly
  * over the final line of an abstract. It is safe to treat this very specific
  * geometry as metadata; ordinary arXiv title lines remain hard boundaries. */
-function isArxivOverlayBlock(block: LayoutBlock): boolean {
+function isPreprintOverlayBlock(block: LayoutBlock): boolean {
   if ((block.role !== "title" && block.role !== "paragraph") || block.lines.length !== 1) return false;
   // Some PDF producers classify this metadata band as ordinary paragraph text
   // and use the same body-sized font as the abstract. Match the complete
   // arXiv marker rather than any sentence that merely mentions arXiv.
-  const marker = /^arXiv:\s*\d{4}\.\d{4,}(?:v\d+)?(?:\s*\[[^\]]+\])?(?:\s+(?:\d{1,4}\s+[A-Za-z]{3,9}\s+\d{4}|\d{1,4}))?$/i;
-  return marker.test(block.text.trim());
+  return publisherPredicates.isArxivOverlayText(block.text);
 }
 
 /** Short publisher marks can be emitted as ordinary text at the page edge.
@@ -4685,7 +4685,7 @@ function isTransparentMetadataBlock(block: LayoutBlock, repeatedTexts: Set<strin
     block.role === "affiliation" || block.role === "copyright" || isUnclassifiedFootnote(block) ||
     isAuthorMetadataBlock(block) ||
     (block.role === "paragraph" && block.text.length < 260 && block.lines.length <= 5 && looksLikeAffiliation(block.text)) ||
-    isPublicationChromeBlock(block) || isArxivOverlayBlock(block) || isRepeatedRunningHeader(block, repeatedTexts) ||
+    isPublicationChromeBlock(block) || isPreprintOverlayBlock(block) || isRepeatedRunningHeader(block, repeatedTexts) ||
     isRepeatedEdgeMarker(block, repeatedTexts) || isPageHeaderMarker(block) || isInlineFootnoteBlock(block);
 }
 
@@ -4841,7 +4841,7 @@ function mergeColumnContinuations(blocks: LayoutBlock[]): LayoutBlock[] {
         isUnclassifiedFootnote(result[targetIdx]) ||
         isAuthorMetadataBlock(result[targetIdx]) ||
         isPublicationChromeBlock(result[targetIdx]) ||
-        isArxivOverlayBlock(result[targetIdx]) ||
+        isPreprintOverlayBlock(result[targetIdx]) ||
         result[targetIdx].role === "figure_caption" ||
         result[targetIdx].role === "table_caption" ||
         (figureBandBlocks.has(result[targetIdx]) && !isBodyRunInsideFigureBand(result[targetIdx])) ||

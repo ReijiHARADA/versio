@@ -2,6 +2,7 @@ import { isGarbageTitle } from "../../translation/quality";
 import { fuseTitle } from "../fusion";
 import type { RoleCandidate } from "../generic/candidates";
 import type { ExtractionEvidence } from "../types";
+import * as chrome from "../formats/publisherChrome";
 
 function looksLikeAuthorish(text: string): boolean {
   if (/@/.test(text)) return true;
@@ -138,7 +139,7 @@ function looksLikeCitationBylineTitle(text: string): boolean {
   if (!/\bet\s+al\./i.test(t)) return false;
   if (!/\b(?:19|20)\d{2}\b/.test(t) && !/\bsuppl/i.test(t)) return false;
   return (
-    /\b(?:bmc|ieee|acm|plos|frontiers|nature|science|lancet|jama|bmj|nucleic|med\s+inform|decis\s+mak)\b/i.test(t) ||
+    chrome.isPublisherCitationByline(t) ||
     /https?:\/\//i.test(t) ||
     /\d+\s*\(\s*suppl/i.test(t) ||
     /,\s*\d+(?:\s*\(\s*suppl[^)]*\))?\s*:\s*\d+/i.test(t)
@@ -218,15 +219,14 @@ function looksLikeRotatedMasthead(candidate: RoleCandidate): boolean {
   // arXiv stamps and running mastheads are occasionally emitted with a large
   // title-like font. They are page furniture, even when generic evidence has
   // promoted them to a title candidate.
-  return /^(?:arxiv\b|http\s*:\/\/|https\s*:\/\/)/i.test(text) || Math.abs(rotation) >= 45;
+  return chrome.isArxivChrome(text) || /^(?:http\s*:\/\/|https\s*:\/\/)/i.test(text) || Math.abs(rotation) >= 45;
 }
 
 function looksLikeDocumentMasthead(text: string): boolean {
   const t = text.trim();
   return /^(?:doi\s*:\s*|doi\s+\d|https?:\/\/|www\.)/i.test(t)
-    || /^arxiv\s*:/i.test(t)
+    || chrome.isPublisherMasthead(t)
     || /\b(?:original\s+paper|research\s+article|journal\s+of|volume\s+\d+|\d{4}\s*\)\s*\d{1,4}\s*[:–-])\b/i.test(t)
-    || /^(?:www\.)?nature\.com\b/i.test(t)
     || /^(?:contents\s+lists|journal\s+homepage|available\s+at\s+sciencedirect)\b/i.test(t)
     || /^\d{1,4}\s*\([^)]{0,32}\)\s*\d{4}/.test(t)
     // Repository cover sheets and event headers often put the venue/event
@@ -261,7 +261,7 @@ function looksLikeJournalNameMasthead(text: string): boolean {
   // Explicit journal vocabulary, or a venue line ending in volume/year/article id
   // (`Computer Methods and Programs in Biomedicine 221 (2022) 106874`).
   // Indonesian / regional short banners (`Jurnal SENOPATI`) are venue chrome.
-  if (/^jurnal\s+\S+/i.test(t) && t.split(/\s+/).length <= 5) {
+  if (chrome.isJurnalMasthead(t)) {
     return true;
   }
   if (/\b(?:journal|transactions|proceedings|international\s+journal|advances\s+in\s+(?:scientific|engineering))\b/i.test(t)) {
@@ -342,7 +342,7 @@ function looksLikeCopyrightBoilerplate(text: string): boolean {
     /\blicense\s*\(\s*cc\s*by\b/i.test(t) ||
     // bioRxiv / medRxiv running license stamped as a title candidate.
     /\bwhich was not certified by peer review\b/i.test(t) ||
-    /\bgranted (?:biorxiv|medrxiv) a license to display the preprint\b/i.test(t) ||
+    chrome.isPreprintLicenseGrant(t) ||
     /\bit is made available under a CC-BY\b/i.test(t) ||
     /^cc\s*by\b/i.test(t);
 }
@@ -1147,7 +1147,7 @@ function looksLikePreprintChromeMetadataTitle(text: string): boolean {
   // JMIR / server covers store `Preprint - 10.2196/preprints.94431` in PDF
   // metadata. That must not outrank a recovered native article title.
   return (
-    /^(?:preprint|medrxiv|biorxiv|chemrxiv|ssrn)\b/i.test(t) ||
+    chrome.isPreprintMarker(t) ||
     /\bpreprints?\.\d+/i.test(t) ||
     /^(?:preprint|unpublished)\s*[-–—:]\s*10\.\d+/i.test(t)
   );
