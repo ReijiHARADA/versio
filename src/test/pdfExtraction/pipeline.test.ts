@@ -60,9 +60,9 @@ describe("canonical extraction pipeline", () => {
     expect(crop).toMatchObject({ page: 6, y: 372, height: 70 });
   });
 
-  it("splits a same-baseline cell grid absorbed into a table caption", async () => {
+  it("splits a same-baseline cell grid absorbed into a table caption", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/linguistics-register.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const { blocks } = reconstructDocument(pages);
     const caption = blocks.find((block) => block.pageStart === 15 && block.role === "table_caption" && /^Table 3\b/i.test(block.text));
@@ -237,9 +237,9 @@ describe("canonical extraction pipeline", () => {
     expect(suppressImageBackedTableFragments([fragment, figure])).toEqual([figure]);
   });
 
-  it("keeps a short diagram annotation out of an adjacent prose paragraph", async () => {
+  it("keeps a short diagram annotation out of an adjacent prose paragraph", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/cognitive-psychology-gpt3.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({ pages, paperId: "diagram-annotation-boundary", filePath: pdf, fileHash: "diagram-annotation-boundary", metadata: { pageCount: pages.length } });
     const contaminated = result.blocks.filter((block) => /Linda is 31/.test(block.original ?? ""));
@@ -247,9 +247,9 @@ describe("canonical extraction pipeline", () => {
     expect(result.blocks.some((block) => block.original?.trim() === "A: Option 2.")).toBe(true);
   }, 60_000);
 
-  it("does not promote a wrapped single-span vignette paragraph to a table", async () => {
+  it("does not promote a wrapped single-span vignette paragraph to a table", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/cognitive-psychology-gpt3.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -267,9 +267,9 @@ describe("canonical extraction pipeline", () => {
     }
   }, 60_000);
 
-  it("does not link a table caption to a nearby figure in a mixed thesis page", async () => {
+  it("does not link a table caption to a nearby figure in a mixed thesis page", async (ctx) => {
     const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({ pages, paperId: "thesis-table-figure-boundary", filePath: pdf, fileHash: "thesis-table-figure-boundary", metadata: { pageCount: pages.length } });
     // The thesis contents page also lists `Table 4.1` with a trailing page
@@ -299,9 +299,9 @@ describe("canonical extraction pipeline", () => {
     )).toBe(true);
   }, 60_000);
 
-  it("keeps an unedited author-copy notice out of body paragraphs", async () => {
+  it("keeps an unedited author-copy notice out of body paragraphs", async (ctx) => {
     const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/computational-linguistics-nlp-translation.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages, paperId: "author-copy-notice", filePath: pdf, fileHash: "author-copy-notice",
@@ -316,18 +316,18 @@ describe("canonical extraction pipeline", () => {
     expect(notice?.text).not.toMatch(/As computing systems have become increasingly important/i);
     expect(result.blocks.some((block) => block.type === "paragraph" && /As computing systems have become increasingly important/i.test(block.original ?? "") && /unedited author(?:’|')s copy/i.test(block.original ?? ""))).toBe(false);
   }, 60_000);
-  it("deduplicates a repeated native title layer", async () => {
+  it("deduplicates a repeated native title layer", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/hfe-healthcare-scoping-2024.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({ pages, paperId: "repeated-title-layer", filePath: pdf, fileHash: "repeated-title-layer", metadata: { pageCount: pages.length } });
     const title = result.canonical.nodes.find((node) => node.role === "title");
     expect(title?.text).toBe("Principles for the conduct of human factors/ergonomics in healthcare: a scoping study of the published evidence");
   }, 60_000);
 
-  it("keeps boxed abstract prose out of table fallback blocks", async () => {
+  it("keeps boxed abstract prose out of table fallback blocks", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/hfe-healthcare-scoping-2024.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({ pages, paperId: "boxed-abstract-prose", filePath: pdf, fileHash: "boxed-abstract-prose", metadata: { pageCount: pages.length } });
     const packaged = attachLinesToBlocks(result.blocks, result.layoutBlocks);
@@ -351,9 +351,9 @@ describe("canonical extraction pipeline", () => {
     expect(pageOne.filter((block) => block.type === "table").some((block) => block.metadata.demotionReason === "weak-repeated-prose-grid")).toBe(false);
   }, 60_000);
 
-  it("does not project vector figure labels as headings", async () => {
+  it("does not project vector figure labels as headings", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/interpreting-neural-networks.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({ pages, paperId: "vector-label-role", filePath: pdf, fileHash: "vector-label-role", metadata: { pageCount: pages.length } });
     const labels = result.canonical.nodes.filter((node) => /F1 F2 F3 F4 F5/.test(node.text ?? ""));
@@ -361,9 +361,9 @@ describe("canonical extraction pipeline", () => {
     expect(labels.every((node) => node.role === "other")).toBe(true);
   }, 60_000);
 
-  it("merges wrapped Elsevier author rows without swallowing affiliations", async () => {
+  it("merges wrapped Elsevier author rows without swallowing affiliations", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/medical-deep-learning-meta-review.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({ pages, paperId: "wrapped-elsevier-authors", filePath: pdf, fileHash: "wrapped-elsevier-authors", metadata: { pageCount: pages.length } });
     const authors = result.canonical.nodes.filter((node) => node.role === "author").map((node) => node.text ?? "").join(" ");
@@ -373,9 +373,9 @@ describe("canonical extraction pipeline", () => {
     expect(authors).not.toContain("German Cancer Consortium");
   }, 60_000);
 
-  it("keeps the wear-scale correlation matrix as skipped table blocks", async () => {
+  it("keeps the wear-scale correlation matrix as skipped table blocks", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/wear-scale.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -393,9 +393,9 @@ describe("canonical extraction pipeline", () => {
     expect(pageFourteen.some((block) => /D1|Cronbach/.test(block.original ?? ""))).toBe(true);
   }, 60_000);
 
-  it("drops OzCHI title-wrap fragments from the reading stream", async () => {
+  it("drops OzCHI title-wrap fragments from the reading stream", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -419,9 +419,9 @@ describe("canonical extraction pipeline", () => {
     ).toBe(true);
   }, 60_000);
 
-  it("keeps a multi-sentence statistical paragraph beside OzCHI tables translatable", async () => {
+  it("keeps a multi-sentence statistical paragraph beside OzCHI tables translatable", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -438,9 +438,9 @@ describe("canonical extraction pipeline", () => {
     expect(prose?.original).toContain("p=0.007");
   }, 60_000);
 
-  it("keeps split web access dates attached to their footnote URL", async () => {
+  it("keeps split web access dates attached to their footnote URL", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -455,9 +455,9 @@ describe("canonical extraction pipeline", () => {
     expect(matching[0].original).toContain("accessed 29.9.2014)");
   }, 60_000);
 
-  it("keeps wrapped table-caption prose out of table cells", async () => {
+  it("keeps wrapped table-caption prose out of table cells", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -477,9 +477,9 @@ describe("canonical extraction pipeline", () => {
     )).toBe(false);
   }, 60_000);
 
-  it("reconstructs parallel OzCHI Table 3 columns before its reader image crop is available", async () => {
+  it("reconstructs parallel OzCHI Table 3 columns before its reader image crop is available", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -517,9 +517,9 @@ describe("canonical extraction pipeline", () => {
     expect(visible.some((block) => block.id === imageBackedCaption.id)).toBe(true);
   }, 60_000);
 
-  it("does not absorb a neighbouring prose line into OzCHI Table 5 rows", async () => {
+  it("does not absorb a neighbouring prose line into OzCHI Table 5 rows", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -540,9 +540,9 @@ describe("canonical extraction pipeline", () => {
     expect(rows.flat().some((cell) => /Delete the tapped|Open global help/i.test(cell.text))).toBe(false);
   }, 60_000);
 
-  it("groups borderless OzCHI matrix cells under their caption in source-only mode", async () => {
+  it("groups borderless OzCHI matrix cells under their caption in source-only mode", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -563,9 +563,9 @@ describe("canonical extraction pipeline", () => {
     }
   }, 60_000);
 
-  it("keeps midpoint-spanning single-column thesis prose out of table fallback", async () => {
+  it("keeps midpoint-spanning single-column thesis prose out of table fallback", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     expect(detectPageColumns(pages[59]).isMultiColumn).toBe(false);
     const result = extractFromPages({
@@ -583,9 +583,9 @@ describe("canonical extraction pipeline", () => {
     expect(prose?.original).toContain("advertising produces the effects.");
   }, 60_000);
 
-  it("keeps table-of-contents leader entries out of table cards", async () => {
+  it("keeps table-of-contents leader entries out of table cards", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ergonomics-fatigue-and-occupational-safety-in-short-haul-light-transport.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -608,9 +608,9 @@ describe("canonical extraction pipeline", () => {
     expect(wrappedEntry?.evidence.some((evidence) => evidence.label === "table-of-contents-entry")).toBe(true);
   }, 60_000);
 
-  it("keeps symbolic assignment matrices out of table cards", async () => {
+  it("keeps symbolic assignment matrices out of table cards", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/linguistics-language-model-physics.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -626,9 +626,9 @@ describe("canonical extraction pipeline", () => {
     expect(display?.translationStatus).toBe("skipped");
   }, 60_000);
 
-  it("does not promote math-paper prose fragments to tables without a caption", async () => {
+  it("does not promote math-paper prose fragments to tables without a caption", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/linguistics-language-model-physics.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -644,16 +644,16 @@ describe("canonical extraction pipeline", () => {
     expect(prose.every((node) => node.role === "paragraph")).toBe(true);
   }, 60_000);
 
-  it("retains an ordinary two-column proceedings page as two columns", async () => {
+  it("retains an ordinary two-column proceedings page as two columns", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ozchi-finger-specific-touch.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     expect(detectPageColumns(pages[4]).isMultiColumn).toBe(true);
   }, 60_000);
 
-  it("keeps a multi-part vector figure caption in one figure block", async () => {
+  it("keeps a multi-part vector figure caption in one figure block", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/cognitive-psychology-gpt3.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -669,9 +669,9 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /Linda Cab Hospital|Toma Test Wason/.test(node.text ?? ""))).toBe(false);
   }, 60_000);
 
-  it("does not absorb numbered procedure steps into a figure caption", async () => {
+  it("does not absorb numbered procedure steps into a figure caption", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/linguistics-language-model-physics.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -686,9 +686,9 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /^2\. For each layer\b/.test(node.text ?? ""))).toBe(true);
   }, 60_000);
 
-  it("recognizes unpunctuated legacy Fig. captions and keeps their continuation", async () => {
+  it("recognizes unpunctuated legacy Fig. captions and keeps their continuation", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/significant-other.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -703,9 +703,9 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /^Fig\.2\s+Otto Künzli/.test(node.text ?? ""))).toBe(false);
   }, 60_000);
 
-  it("does not absorb following body prose into interactive jewellery figure captions", async () => {
+  it("does not absorb following body prose into interactive jewellery figure captions", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/interactive-jewellery.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -759,9 +759,9 @@ describe("canonical extraction pipeline", () => {
     expect(result.blocks.some((block) => block.pageStart === 1 && block.original?.trim() === "44")).toBe(false);
   }, 60_000);
 
-  it("keeps a fragmented multi-column review table out of paragraph translation", async () => {
+  it("keeps a fragmented multi-column review table out of paragraph translation", async (ctx) => {
     const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/covid-ml-review.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -779,9 +779,9 @@ describe("canonical extraction pipeline", () => {
     expect(result.blocks.some((block) => block.pageStart === 5 && block.type === "paragraph" && block.original?.startsWith("In order to model"))).toBe(true);
   }, 60_000);
 
-  it("separates multilingual superscript author rows from the article title", async () => {
+  it("separates multilingual superscript author rows from the article title", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/linguistics-the-role-of-applied-linguistics-and-language-discourse-analysis-in-eng.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -795,9 +795,9 @@ describe("canonical extraction pipeline", () => {
     expect(title?.text).not.toContain("ненгах");
   }, 60_000);
 
-  it("separates flattened IEEE authors, funding, and editor credit", async () => {
+  it("separates flattened IEEE authors, funding, and editor credit", async (ctx) => {
     const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/hci-user-experience-design-using-machine-learning-a-systematic-review.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -820,9 +820,9 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /experience design, UX, ED, machine learning, ML, HCI, UX design, user interaction, user behavior\./i.test(node.text ?? ""))).toBe(true);
   }, 60_000);
 
-  it("keeps a captionless method/goal table out of paragraph translation", async () => {
+  it("keeps a captionless method/goal table out of paragraph translation", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/education-learning-analytics.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -862,9 +862,9 @@ describe("canonical extraction pipeline", () => {
     )).toBe(false);
   }, 60_000);
 
-  it("separates a compact left-column table from adjacent right-column prose", async () => {
+  it("separates a compact left-column table from adjacent right-column prose", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/cognitive-memory-cues.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -906,9 +906,9 @@ describe("canonical extraction pipeline", () => {
     )).toBe(true);
   }, 60_000);
 
-  it("preserves multi-column questionnaire cells when a table node was flattened", async () => {
+  it("preserves multi-column questionnaire cells when a table node was flattened", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/cognitive-memory-cues.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -955,9 +955,9 @@ describe("canonical extraction pipeline", () => {
     expect(visibleWithCrop.length).toBeLessThanOrEqual(2);
   }, 60_000);
 
-  it("does not append a repeated top-margin proceedings URL to body paragraphs", async () => {
+  it("does not append a repeated top-margin proceedings URL to body paragraphs", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/marketing-the-impact-of-online-advertising-on-consumer-choice-consumption-traps-.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -969,9 +969,9 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /cpcig-conferences\.com/i.test(node.text ?? ""))).toBe(false);
   }, 60_000);
 
-  it("does not stitch a displaced statistics-table header into body prose", async () => {
+  it("does not stitch a displaced statistics-table header into body prose", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/marketing-platform.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -983,9 +983,9 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /Variable\s+N\s+Mean\s+Std\.\s+Min\s+Max/i.test(node.text ?? ""))).toBe(false);
   }, 60_000);
 
-  it("keeps repeated journal ISSN headers out of body paragraphs", async () => {
+  it("keeps repeated journal ISSN headers out of body paragraphs", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/hci-development-of-user-interface-user-experience-using-design-thinking-ap.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -997,9 +997,9 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /journal-isi\.org/i.test(node.text ?? ""))).toBe(false);
   }, 60_000);
 
-  it("keeps an asymmetric article-info rail separate from the abstract", async () => {
+  it("keeps an asymmetric article-info rail separate from the abstract", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/medical-deep-learning-meta-review.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -1014,9 +1014,9 @@ describe("canonical extraction pipeline", () => {
     expect(abstract?.text).not.toMatch(/^tient data/);
   }, 60_000);
 
-  it("prefers the article title over an Elsevier venue masthead", async () => {
+  it("prefers the article title over an Elsevier venue masthead", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/medical-deep-learning-meta-review.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -1038,9 +1038,9 @@ describe("canonical extraction pipeline", () => {
     expect(blocks.map((block) => block.text).join(" ")).not.toContain(".-");
   });
 
-  it("uses typography evidence to keep a separated all-caps section heading out of table projection", async () => {
+  it("uses typography evidence to keep a separated all-caps section heading out of table projection", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/detecting-statistical-interactions.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -1055,9 +1055,9 @@ describe("canonical extraction pipeline", () => {
     expect(heading?.role).toBe("heading");
   }, 60_000);
 
-  it("recognizes CJK checkmark comparison rows without promoting nearby prose", async () => {
+  it("recognizes CJK checkmark comparison rows without promoting nearby prose", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/ergonomics-human-factors-ihci.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages, paperId: "cjk-checkmark-table", filePath: pdf, fileHash: "cjk-checkmark-table",
@@ -1407,9 +1407,9 @@ describe("canonical extraction pipeline", () => {
     expect(prose?.roleScores.table ?? 0).toBeLessThan(0.94);
   });
 
-  it("keeps math-rich prose with fragmented native spans out of the table role", async () => {
+  it("keeps math-rich prose with fragmented native spans out of the table role", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/economics-regularized-deepiv.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -1432,9 +1432,9 @@ describe("canonical extraction pipeline", () => {
     expect(greekFragment?.evidence.some((evidence) => evidence.label === "fragmented-mathematical-display")).toBe(true);
   }, 60_000);
 
-  it("keeps a figure-adjacent numeric label matrix out of the captionless table fallback", async () => {
+  it("keeps a figure-adjacent numeric label matrix out of the captionless table fallback", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/linguistics-language-model-physics.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -1706,11 +1706,11 @@ describe("canonical extraction pipeline", () => {
     }
   });
 
-  it("does not classify multi-column Japanese memorial prose as tables", async () => {
+  it("does not classify multi-column Japanese memorial prose as tables", async (ctx) => {
     const pdf = path.resolve(
       "test-fixtures/real-papers/pending-pdfs/cognitive-psychology-a-tribute-to-the-memory-of-professor-neisser-the-godfather-of-cognitiv.pdf"
     );
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -1724,9 +1724,9 @@ describe("canonical extraction pipeline", () => {
     expect(result.canonical.nodes.some((node) => node.role === "paragraph" && /Neisser/.test(node.text ?? ""))).toBe(true);
   }, 60_000);
 
-  it("keeps academic Using-to titles instead of vignette option lines", async () => {
+  it("keeps academic Using-to titles instead of vignette option lines", async (ctx) => {
     const pdf = path.resolve("test-data/real-papers/cognitive-psychology-gpt3.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -1740,11 +1740,11 @@ describe("canonical extraction pipeline", () => {
     expect(title).not.toMatch(/Option\s*\d+/i);
   }, 60_000);
 
-  it("prefers the article title over a Cureus tool-line title", async () => {
+  it("prefers the article title over a Cureus tool-line title", async (ctx) => {
     const pdf = path.resolve(
       "test-fixtures/real-papers/pending-pdfs/epmc-code-free-automated-machine-learning-for-referable-glaucoma-classificati.pdf"
     );
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -1928,11 +1928,11 @@ describe("canonical extraction pipeline", () => {
     expect(extracted.blocks.some((block) => /follows:/i.test(block.original ?? "") && block.type === "paragraph")).toBe(true);
   });
 
-  it("prefers a clean Latin title over a contaminated Cyrillic masthead", async () => {
+  it("prefers a clean Latin title over a contaminated Cyrillic masthead", async (ctx) => {
     const pdf = path.resolve(
       "test-fixtures/real-papers/pending-pdfs/marketing-digital-marketing-consumer-behavior.pdf"
     );
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -1946,11 +1946,11 @@ describe("canonical extraction pipeline", () => {
     expect(title).not.toMatch(/канд\.|Аннотация|Бутковская/i);
   }, 60_000);
 
-  it("rejects chapter body prose as the title when a section heading exists", async () => {
+  it("rejects chapter body prose as the title when a section heading exists", async (ctx) => {
     const pdf = path.resolve(
       "test-fixtures/real-papers/pending-pdfs/cognitive-psychology-attention-and-entrepreneurial-cognition.pdf"
     );
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -1965,11 +1965,11 @@ describe("canonical extraction pipeline", () => {
     expect(title).not.toMatch(/[a-z][A-Z].*[a-z][A-Z]/);
   }, 60_000);
 
-  it("recovers a bilingual two-column cover title and author without chrome", async () => {
+  it("recovers a bilingual two-column cover title and author without chrome", async (ctx) => {
     const pdf = path.resolve(
       "test-fixtures/real-papers/pending-pdfs/cognitive-psychology-the-role-of-attention-memory-and-cognition-in-the-decision-making-proc.pdf"
     );
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -1992,11 +1992,11 @@ describe("canonical extraction pipeline", () => {
     expect(abstractText).toMatch(/decision-making/i);
   }, 60_000);
 
-  it("recovers a thesis cover title instead of the copyright sheet", async () => {
+  it("recovers a thesis cover title instead of the copyright sheet", async (ctx) => {
     const pdf = path.resolve(
       "test-fixtures/real-papers/pending-pdfs/marketing-is-digital-advertising-effective-under-conditions-of-low-attention-the.pdf"
     );
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -2011,11 +2011,11 @@ describe("canonical extraction pipeline", () => {
     expect(title).toMatch(/low attention/i);
   }, 90_000);
 
-  it("keeps a date-range narrative title instead of PRISMA table chrome", async () => {
+  it("keeps a date-range narrative title instead of PRISMA table chrome", async (ctx) => {
     const pdf = path.resolve(
       "test-fixtures/real-papers/pending-pdfs/epmc-gaze-and-eye-tracking-perspectives-for-psychological-research-a-narrativ.pdf"
     );
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -2029,11 +2029,11 @@ describe("canonical extraction pipeline", () => {
     expect(title).not.toMatch(/inclusion criteria|gray literature|Employment of eye-tracking/i);
   }, 60_000);
 
-  it("splits plain Materials and Methods / Results section labels", async () => {
+  it("splits plain Materials and Methods / Results section labels", async (ctx) => {
     const pdf = path.resolve(
       "test-fixtures/real-papers/pending-pdfs/ergonomics-risk-factors-for-occupational-fatigue-in-construction-workers-a-system.pdf"
     );
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -2049,11 +2049,11 @@ describe("canonical extraction pipeline", () => {
     expect(headings.some((h) => /^Results And Discussions$/i.test(h))).toBe(true);
   }, 60_000);
 
-  it("demotes figure micro-labels on a real survey PDF", async () => {
+  it("demotes figure micro-labels on a real survey PDF", async (ctx) => {
     const pdf = path.resolve(
       "test-fixtures/real-papers/pending-pdfs/medical-image-segmentation-deep-learning.pdf"
     );
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
@@ -2068,9 +2068,9 @@ describe("canonical extraction pipeline", () => {
     expect(micro).toEqual([]);
   }, 60_000);
 
-  it("rejoins an interrupted native title around publication metadata", async () => {
+  it("rejoins an interrupted native title around publication metadata", async (ctx) => {
     const pdf = path.resolve("test-fixtures/real-papers/pending-pdfs/linguistics-eco-linguistics-in-english-reviewing-the-role-of-language-in-environme.pdf");
-    if (!fs.existsSync(pdf)) return;
+    if (!fs.existsSync(pdf)) ctx.skip();
     const pages = await extractPdfPages(pdf);
     const result = extractFromPages({
       pages,
