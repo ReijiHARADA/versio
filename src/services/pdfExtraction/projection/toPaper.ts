@@ -32,6 +32,7 @@ import {
 import { scoreLayoutBlock } from "../../extractionConfidence";
 import type { CanonicalDocument, CanonicalNode } from "../canonical/types";
 import { topologicalOrder } from "../resolver/relationResolver";
+import { recoverBodyBylines } from "./frontMatter/bodyBylineRecovery";
 import { recoverEarlyMastheadAuthors, type FrontMatterState } from "./frontMatter/authorRecovery";
 import {
   hasStrongNativeTableRows,
@@ -3023,122 +3024,13 @@ function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterPro
       });
     });
   }
-  // Prefer body bylines when the masthead only captured sidebar reviewers /
-  // correspondence fragments: glued CamelCase (`SiddharthaSinghal and …`)
-  // or spaced comma lists (`Liandi He *, Rilei He , … and Xin He`).
-  {
-    const pageOneBylineTexts = canonical.nodes
-      .filter((node) => node.pageStart === 1 && node.text)
-      .map((node) => ({
-        text: (node.text ?? "").replace(/\s+/g, " ").trim(),
-        x: node.boundingBoxes[0]?.x ?? 0,
-      }));
-    const gluedCamelByline = pageOneBylineTexts
-      .map((row) => row.text)
-      .find((text) => {
-        if (text.length < 12 || text.length > 90) return false;
-        if (!/\band\b/i.test(text)) return false;
-        if ((text.match(/[a-zà-öø-ÿ][A-ZÀ-Ö]/gu) ?? []).length < 2) return false;
-        return /^[A-ZÀ-ÖØ-Ý][\p{L}'’.]+(?:\s+and\s+[A-ZÀ-ÖØ-Ý][\p{L}'’.]+)+\*?$/u.test(
-          text,
-        );
-      });
-    // Frontiers star-lead byline with one glued SurnameGiven
-    // (`*, Jennifer S. Stevenson Xia Wang and Jiayi Wang`).
-    // Require a real leading `*` so ordinary `Name and Name` author rows are
-    // not force-promoted over a longer numbered byline.
-    const starLeadByline = pageOneBylineTexts
-      .map((row) => row.text)
-      .filter((text) => /^\*+,?\s+[A-ZÀ-ÖØ-Ý]/u.test(text))
-      .map((text) => text.replace(/^\*+,?\s*/, "").trim())
-      .find((text) => {
-        if (text.length < 20 || text.length > 140) return false;
-        if (!/\band\b/i.test(text)) return false;
-        if (!/^[A-ZÀ-ÖØ-Ý]/.test(text)) return false;
-        if (looksLikeFrontiersReviewerCredit(text)) return false;
-        if (
-          /\b(?:university|institute|department|faculty|school of|college of|laboratory|received|keywords?)\b/i.test(
-            text,
-          )
-        ) {
-          return false;
-        }
-        // `Jennifer S. Stevenson Xia Wang` collapses to one greedy personish
-        // match; require only two personish segments plus `and`, or one glued
-        // CamelCase junction.
-        const glued = (text.match(/[a-zà-öø-ÿ][A-ZÀ-Ö]/gu) ?? []).length;
-        const personish = (
-          text.match(
-            /[A-ZÀ-ÖØ-Ý][\p{L}'’-]+(?:\s+[A-Z]\.)?(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’-]+)+/gu,
-          ) ?? []
-        ).length;
-        return glued >= 1 || personish >= 2;
-      });
-    const spacedBodyByline = pageOneBylineTexts.find((row) => {
-      const text = row.text;
-      if (row.x < 140 || text.length < 24 || text.length > 220) return false;
-      if (looksLikeFrontiersReviewerCredit(text)) return false;
-      // Never treat institute / university rows as author bylines
-      // (`Collaborative Robotics and Intelligent Systems Institute…`).
-      if (
-        /\b(?:university|institute|department|faculty|school of|college of|laboratory)\b/i.test(
-          text,
-        )
-      ) {
-        return false;
-      }
-      if (!/\band\b/i.test(text)) return false;
-      const commas = (text.match(/,/g) ?? []).length;
-      // `Malin Siv Roppel *, Marlene Lakemann and Dagmar Starke` (one comma)
-      // as well as longer comma lists.
-      if (commas < 1) return false;
-      if (commas < 2 && !/[*†‡]/.test(text)) return false;
-      if (!/\d|[*†‡]/.test(text) && commas < 3) return false;
-      return /^[A-ZÀ-ÖØ-Ý]/.test(text);
-    })?.text;
-    const starLeadSource = starLeadByline ? `*, ${starLeadByline}` : null;
-    const bylineSource =
-      gluedCamelByline?.replace(/\s+\band\b\s+/gi, ", ") ??
-      starLeadSource ??
-      spacedBodyByline;
-    if (bylineSource) {
-      const recovered = expandAuthorLine(bylineSource)
-        .map((name) => name.replace(/^and\s+/i, "").replace(/[,;*]+$/g, "").trim())
-        .filter(
-          (name) =>
-            name.split(/\s+/).length >= 2 &&
-            name.split(/\s+/).length <= 5 &&
-            !isNonAuthorMastheadLine(name),
-        );
-      if (recovered.length >= 2) {
-        const authorsAreChrome =
-          authorNames.length > 0 &&
-          authorNames.every(
-            (name) =>
-              isNonAuthorMastheadLine(name) ||
-              /^(?:received|revised|accepted|published|keywords?)\b/i.test(name),
-          );
-        // Star-lead body bylines beat Frontiers REVIEWED BY / chrome crumbs
-        // when they recover a fuller person list.
-        if (
-          authorNames.length === 0 ||
-          authorNames.length < recovered.length ||
-          (authorNames.length === 1 && recovered.length >= 2) ||
-          authorsAreChrome ||
-          (Boolean(starLeadSource) &&
-            recovered.length >= 2 &&
-            authorNames.every((name) =>
-              /^(?:received|revised|accepted|published|keywords?)\b/i.test(name) ||
-              looksLikeFrontiersReviewerCredit(name),
-            ))
-        ) {
-          authorNames = recovered;
-        }
-      } else if (authorNames.length === 0 && recovered.length === 1) {
-        authorNames = recovered;
-      }
-    }
-  }
+  frontMatterState.authorNames = authorNames;
+  recoverBodyBylines(
+    frontMatterState,
+    canonical,
+    { expandAuthorLine, isNonAuthorMastheadLine, looksLikeFrontiersReviewerCredit },
+  );
+  authorNames = frontMatterState.authorNames;
   // Springer / Nature / Frontiers covers often emit the byline as paragraph,
   // other, copyright, or affiliation (`Xin Huang1, Meining Zhang2 and Fang Chen1*`,
   // `Anna Lach-Gruba1 · …`, `Karolina Eszter Kovács,` / `✉ Marike Schiffer`).
