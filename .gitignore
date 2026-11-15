@@ -82,3 +82,4 @@ demo-output/
 
 # Field-level gold corpus (local evaluation only)
 test-data/field-gold/
+tools/doc-structure-probe/.build/

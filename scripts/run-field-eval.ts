@@ -6,9 +6,11 @@
  * Writes predictions/<id>.json, scores.json and report.md (with ≤120-char
  * worst-case excerpts) under the gitignored run directory.
  */
+import { execFile } from "node:child_process";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { predictionFromApple, type ProbeOutput } from "../src/evaluation/fieldGold/adapters/apple";
 import { predictionFromGrobid } from "../src/evaluation/fieldGold/adapters/grobid";
 import { predictionFromVersio } from "../src/evaluation/fieldGold/adapters/versio";
 import { buildReport } from "../src/evaluation/fieldGold/report";
@@ -60,7 +62,17 @@ async function runGrobid(gold: FieldGold): Promise<FieldPrediction> {
   return predictionFromGrobid(gold.id, tei, Math.round(performance.now() - started), GROBID_VERSION);
 }
 
-const RUNNERS: Partial<Record<ParserId, (gold: FieldGold) => Promise<FieldPrediction>>> = { versio: runVersio, grobid: runGrobid };
+const PROBE = path.join(root, "tools/doc-structure-probe/.build/release/doc-structure-probe");
+async function runApple(gold: FieldGold): Promise<FieldPrediction> {
+  if (!fs.existsSync(PROBE)) throw new Error("build the probe first: (cd tools/doc-structure-probe && swift build -c release)");
+  const started = performance.now();
+  const stdout = await new Promise<string>((resolve, reject) =>
+    execFile(PROBE, [path.resolve(root, gold.pdfPath)], { maxBuffer: 64 * 1024 * 1024, timeout: 600_000 }, (error, out) => (error ? reject(error) : resolve(out))),
+  );
+  return predictionFromApple(gold.id, JSON.parse(stdout) as ProbeOutput, Math.round(performance.now() - started));
+}
+
+const RUNNERS: Partial<Record<ParserId, (gold: FieldGold) => Promise<FieldPrediction>>> = { versio: runVersio, grobid: runGrobid, apple: runApple };
 
 const runner = RUNNERS[parser];
 if (!runner) throw new Error(`unknown parser: ${parser}`);
