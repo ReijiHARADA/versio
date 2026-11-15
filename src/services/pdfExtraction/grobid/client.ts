@@ -46,3 +46,34 @@ export async function processHeaderDocument(
   const xml = await response.text();
   return parseGrobidHeaderTei(xml);
 }
+
+/**
+ * Full-text TEI from a local GROBID (evaluation use). Consolidation is off so
+ * GROBID never queries external bibliographic services.
+ */
+export async function processFulltextDocument(
+  pdfBytes: Uint8Array,
+  opts: { filename?: string; signal?: AbortSignal } = {}
+): Promise<string> {
+  const base = grobidBaseUrl();
+  if (!base) {
+    throw new Error("GROBID_URL is not set; live GROBID is skipped");
+  }
+  const form = new FormData();
+  form.append("input", new Blob([Uint8Array.from(pdfBytes)], { type: "application/pdf" }), opts.filename ?? "paper.pdf");
+  form.append("consolidateHeader", "0");
+  form.append("consolidateCitations", "0");
+  form.append("consolidateFunders", "0");
+  form.append("includeRawCitations", "1");
+  form.append("includeRawAffiliations", "1");
+  const response = await fetch(`${base}/api/processFulltextDocument`, {
+    method: "POST",
+    headers: { Accept: "application/xml" },
+    body: form,
+    signal: opts.signal,
+  });
+  if (!response.ok) {
+    throw new Error(`GROBID ${response.status}`);
+  }
+  return response.text();
+}

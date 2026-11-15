@@ -9,9 +9,11 @@
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { predictionFromGrobid } from "../src/evaluation/fieldGold/adapters/grobid";
 import { predictionFromVersio } from "../src/evaluation/fieldGold/adapters/versio";
 import { buildReport } from "../src/evaluation/fieldGold/report";
 import type { FieldGold, FieldPrediction, ParserId } from "../src/evaluation/fieldGold/types";
+import { processFulltextDocument } from "../src/services/pdfExtraction/grobid/client";
 import { extractFromPages } from "../src/services/pdfExtraction/pipeline/extractAcademicPdf";
 import { extractPdfPages } from "../src/test/readingOrder/extractPdf";
 
@@ -45,7 +47,20 @@ async function runVersio(gold: FieldGold): Promise<FieldPrediction> {
   return predictionFromVersio(result, Math.round(performance.now() - started), gold.id);
 }
 
-const RUNNERS: Partial<Record<ParserId, (gold: FieldGold) => Promise<FieldPrediction>>> = { versio: runVersio };
+const GROBID_VERSION = "0.9.1";
+async function runGrobid(gold: FieldGold): Promise<FieldPrediction> {
+  const started = performance.now();
+  let tei: string | null = null;
+  try {
+    tei = await processFulltextDocument(new Uint8Array(fs.readFileSync(path.resolve(root, gold.pdfPath))), { signal: AbortSignal.timeout(180_000) });
+  } catch (error) {
+    // Unreachable or failed GROBID: every field is "unavailable", never scored as 0.
+    console.error(`\n${gold.id}: ${String((error as Error)?.message ?? error).slice(0, 120)}`);
+  }
+  return predictionFromGrobid(gold.id, tei, Math.round(performance.now() - started), GROBID_VERSION);
+}
+
+const RUNNERS: Partial<Record<ParserId, (gold: FieldGold) => Promise<FieldPrediction>>> = { versio: runVersio, grobid: runGrobid };
 
 const runner = RUNNERS[parser];
 if (!runner) throw new Error(`unknown parser: ${parser}`);
