@@ -52,3 +52,4 @@ user-visible な現在状態だけを書く。日付つきの作業ログ・計�
 
 - 2026-11-15 lint 整理: oxlint 警告 53 → 0。正規表現の不要エスケープのみ（意味不変）、hooks 偽陽性に理由付き注記。検証: tsc、pdfExtraction + translation 409 tests（実 PDF あり）。残課題: なし。
 - 2026-11-15 projection 保守リファクタリング: 対象: `projectCanonicalToPaper` を `projectFrontMatter` / `projectBody` / `finalizePaperProjection` に分離。挙動維持の根拠: characterization 209 PDFs、0 diffs。検証: full Vitest、tsc、oxlint。残課題: front-matter の author-recovery spans と約560行の body node loop は state split が必要、単一プロセスの大きな PDF corpus run は Node heap を枯渇させる。
+- 2026-11-15 projection finalization 保守リファクタリング: 対象: `finalizePaperProjection` を title projection・editor/reviewer recovery・block finalization の小さな sub-phase に分離。挙動維持の根拠: main と比較した characterization（150 smallest + 50 largest + synthetic、209 PDFs）で 0 diffs。検証: full Vitest、tsc、oxlint。残課題: front-matter の author-recovery spans と body node dispatcher の state split は後続 PR で扱う。
