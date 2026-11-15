@@ -1,6 +1,6 @@
 # PDF Extraction Evaluation Studio
 
-The Studio is a development-only, standalone Vite entry at `/eval.html`. It never enters the Paper Reader router, starts no translation server, and does not modify a Paper Package or SQLite.
+The Studio is a development-only, standalone Vite entry at `/eval.html`. It never enters the Versio router, starts no translation server, and does not modify a Paper Package or SQLite.
 
 ## Start
 

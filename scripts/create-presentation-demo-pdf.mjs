@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 // quotes this paper; the figures below are cropped or extracted from the
 // original PDF locally and stay gitignored.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const output = resolve(root, "tmp/paper-reader-demo/PaperReader-Demo.pdf");
+const output = resolve(root, "tmp/versio-demo/Versio-Demo.pdf");
 const source = resolve(root, "test-data/real-papers/design-for-wearability.pdf");
 const assets = resolve(root, "public/presentation-demo-assets");
 const extractPrefix = resolve(assets, ".design-for-wearability-extract");

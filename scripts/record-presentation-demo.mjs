@@ -1,4 +1,4 @@
-import { chromium } from "/Users/harada/Desktop/MyProjects/projects/paper-reader/node_modules/playwright/index.mjs";
+import { chromium } from "/Users/harada/Desktop/MyProjects/projects/versio/app/node_modules/playwright/index.mjs";
 
 const OUT = process.argv[2];
 const BASE = "http://localhost:5199/";

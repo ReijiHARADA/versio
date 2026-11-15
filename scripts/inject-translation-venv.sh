@@ -3,13 +3,13 @@
 # Uses APFS clonefile when available so warm rebuilds avoid a full ~700MB copy.
 #
 # Usage:
-#   bash scripts/inject-translation-venv.sh [path-to-Paper-Reader.app]
+#   bash scripts/inject-translation-venv.sh [path-to-Versio.app]
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-APP_PATH="${1:-$PROJECT_DIR/src-tauri/target/release/bundle/macos/Paper Reader.app}"
+APP_PATH="${1:-$PROJECT_DIR/src-tauri/target/release/bundle/macos/Versio.app}"
 VENV_STAGE="$PROJECT_DIR/src-tauri/bundled-resources/translation-venv"
 APP_SERVER="$APP_PATH/Contents/Resources/translation-server"
 APP_VENV="$APP_SERVER/venv"
@@ -42,12 +42,12 @@ if [[ ! -x "$VENV_STAGE/bin/python3" ]]; then
 fi
 
 STAGE_HASH=""
-if [[ -f "$VENV_STAGE/.paper-reader-bundle-hash" ]]; then
-  STAGE_HASH="$(tr -d '[:space:]' <"$VENV_STAGE/.paper-reader-bundle-hash")"
+if [[ -f "$VENV_STAGE/.versio-bundle-hash" ]]; then
+  STAGE_HASH="$(tr -d '[:space:]' <"$VENV_STAGE/.versio-bundle-hash")"
 fi
 APP_HASH=""
-if [[ -f "$APP_VENV/.paper-reader-bundle-hash" ]]; then
-  APP_HASH="$(tr -d '[:space:]' <"$APP_VENV/.paper-reader-bundle-hash")"
+if [[ -f "$APP_VENV/.versio-bundle-hash" ]]; then
+  APP_HASH="$(tr -d '[:space:]' <"$APP_VENV/.versio-bundle-hash")"
 fi
 
 if [[ -x "$APP_VENV/bin/python3" && -n "$STAGE_HASH" && "$APP_HASH" == "$STAGE_HASH" ]]; then
@@ -72,12 +72,12 @@ fi
 
 # Keep lite provenance stamps aligned with the injected venv.
 if [[ -n "$STAGE_HASH" ]]; then
-  printf '%s\n' "$STAGE_HASH" >"$APP_SERVER/.paper-reader-bundle-hash"
+  printf '%s\n' "$STAGE_HASH" >"$APP_SERVER/.versio-bundle-hash"
 fi
 
 elapsed="$(python3 -c "import time; print(f'{(int(time.time() * 1000) - $t0) / 1000:.1f}')")"
 SIZE="$(du -sh "$APP_VENV" | cut -f1)"
 echo "✓ Injected venv ($SIZE) in ${elapsed}s"
-if [[ -n "${PAPER_READER_BUILD_TIMINGS:-}" ]]; then
-  echo "venv_inject_s=$elapsed" >>"$PAPER_READER_BUILD_TIMINGS"
+if [[ -n "${VERSIO_BUILD_TIMINGS:-}" ]]; then
+  echo "venv_inject_s=$elapsed" >>"$VERSIO_BUILD_TIMINGS"
 fi

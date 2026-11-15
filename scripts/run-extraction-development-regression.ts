@@ -64,7 +64,7 @@ const invariantFailures = reports.flatMap((report) => [
   report.sourceIntegrityRate < 1 ? { id: report.id, invariant: "sourceIntegrityRate", value: report.sourceIntegrityRate } : null,
   report.canonicalProvenanceRate < 1 ? { id: report.id, invariant: "canonicalProvenanceRate", value: report.canonicalProvenanceRate } : null,
 ].filter((item): item is { id: string; invariant: string; value: number } => Boolean(item)));
-const result = { schemaVersion: 1, kind: "paper-reader-extraction-development-regression", generatedAt: new Date().toISOString(), cohort: path.relative(root, cohortPath), selection: { requested: ids.length, completed: reports.length, timeoutMs }, summary, failures, invariantFailures, reports };
+const result = { schemaVersion: 1, kind: "versio-extraction-development-regression", generatedAt: new Date().toISOString(), cohort: path.relative(root, cohortPath), selection: { requested: ids.length, completed: reports.length, timeoutMs }, summary, failures, invariantFailures, reports };
 fs.mkdirSync(path.dirname(output), { recursive: true });
 fs.writeFileSync(output, `${JSON.stringify(result, null, 2)}\n`);
 console.log(JSON.stringify({ output, selection: result.selection, summary, failures, invariantFailures }, null, 2));

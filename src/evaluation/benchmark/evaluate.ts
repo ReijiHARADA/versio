@@ -93,7 +93,7 @@ export function evaluateBenchmarkDocument(gold: ExtractionBenchmarkGold, predict
     : unavailable("table_teds", "Table annotations are not complete.");
   const formulaMatches = gold.formulas && prediction.formulas ? matchRegions(prediction.formulas, gold.formulas) : [];
   const formulaPairs = gold.coverage.formulas === "complete" && gold.formulas ? gold.formulas.map((reference) => ({ reference, predicted: formulaMatches.find((item) => item.gold.id === reference.id)?.predicted })) : [];
-  // Prefer the human-authored linear text representation for Paper Reader;
+  // Prefer the human-authored linear text representation for Versio;
   // fall back to LaTeX only when both sides actually provide it. This keeps a
   // raw PDF string from being misrepresented as TeX.
   const formulaNedPairs = formulaPairs.flatMap(({ reference, predicted }) => {

@@ -9,22 +9,22 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-APP_PATH="${PAPER_READER_APP_PATH:-$ROOT/src-tauri/target/release/bundle/macos/Paper Reader.app}"
+APP_PATH="${VERSIO_APP_PATH:-$ROOT/src-tauri/target/release/bundle/macos/Versio.app}"
 ARTIFACT_DIR="$ROOT/scripts/packaged-e2e/artifacts/ui"
-FIXTURE_PDF="${PAPER_READER_E2E_FIXTURE:-$ROOT/test-fixtures/generated-pdfs/single-column.pdf}"
+FIXTURE_PDF="${VERSIO_E2E_FIXTURE:-$ROOT/test-fixtures/generated-pdfs/single-column.pdf}"
 if [[ ! -f "$FIXTURE_PDF" ]]; then
   FIXTURE_PDF="$ROOT/scripts/packaged-e2e/fixture-tiny.pdf"
 fi
-ACCEPTANCE_HOME="${PAPER_READER_UI_E2E_HOME:-${PAPER_READER_ACCEPTANCE_HOME:-$ARTIFACT_DIR/app-data-$$}}"
+ACCEPTANCE_HOME="${VERSIO_UI_E2E_HOME:-${VERSIO_ACCEPTANCE_HOME:-$ARTIFACT_DIR/app-data-$$}}"
 # The UI harness isolates application data by replacing HOME. Keep the model
 # cache outside that isolated home so every run does not redownload MADLAD
 # before it can exercise the import UI. This is cache-only: library data,
 # packages, exports, and acceptance markers remain under ACCEPTANCE_HOME.
-HOST_HF_HOME="${PAPER_READER_UI_E2E_HF_HOME:-${HF_HOME:-$HOME/.cache/huggingface}}"
+HOST_HF_HOME="${VERSIO_UI_E2E_HF_HOME:-${HF_HOME:-$HOME/.cache/huggingface}}"
 LOG_FILE="$ARTIFACT_DIR/app.log"
 STEP_FILE="$ARTIFACT_DIR/step.txt"
 AX_DUMP="$ARTIFACT_DIR/ax-tree.txt"
-SUPPORT_REL="Library/Application Support/com.harada.paper-reader"
+SUPPORT_REL="Library/Application Support/com.harada.versio"
 
 mkdir -p "$ARTIFACT_DIR"
 rm -rf "$ACCEPTANCE_HOME"
@@ -208,19 +208,19 @@ launch_app() {
   # selected PDF, while avoiding the flaky native picker/IME interaction in
   # deterministic packaged UI runs.
   local acceptance_enabled=1
-  if [[ "${PAPER_READER_UI_E2E_SMOKE_ONLY:-0}" == "1" ]]; then
+  if [[ "${VERSIO_UI_E2E_SMOKE_ONLY:-0}" == "1" ]]; then
     acceptance_enabled=0
   fi
   HOME="$ACCEPTANCE_HOME" \
   HF_HOME="$HOST_HF_HOME" \
-  PAPER_READER_ACCEPTANCE="$acceptance_enabled" \
-  PAPER_READER_ACCEPTANCE_HOME="$ACCEPTANCE_HOME" \
-  PAPER_READER_ACCEPTANCE_FIXTURE="$SHORT_FIXTURE" \
-  PAPER_READER_UI_E2E=1 \
-  PAPER_READER_UI_E2E_SMOKE_ONLY="${PAPER_READER_UI_E2E_SMOKE_ONLY:-0}" \
-  PAPER_READER_UI_E2E_DIRECT_IMPORT=1 \
-  PAPER_READER_UI_E2E_HOME="$ACCEPTANCE_HOME" \
-  PAPER_READER_UI_E2E_FIXTURE="$SHORT_FIXTURE" \
+  VERSIO_ACCEPTANCE="$acceptance_enabled" \
+  VERSIO_ACCEPTANCE_HOME="$ACCEPTANCE_HOME" \
+  VERSIO_ACCEPTANCE_FIXTURE="$SHORT_FIXTURE" \
+  VERSIO_UI_E2E=1 \
+  VERSIO_UI_E2E_SMOKE_ONLY="${VERSIO_UI_E2E_SMOKE_ONLY:-0}" \
+  VERSIO_UI_E2E_DIRECT_IMPORT=1 \
+  VERSIO_UI_E2E_HOME="$ACCEPTANCE_HOME" \
+  VERSIO_UI_E2E_FIXTURE="$SHORT_FIXTURE" \
     "$BIN" >>"$LOG_FILE" 2>&1 &
   APP_PID=$!
   echo "pid=$APP_PID" >>"$LOG_FILE"
@@ -229,14 +229,14 @@ launch_app() {
     fail "app exited immediately after launch"
   fi
   # The Tauri launcher can leave another app (for example Notion Calendar)
-  # frontmost even though the Paper Reader process is alive.  Accessibility
+  # frontmost even though the Versio process is alive.  Accessibility
   # actions are then delivered to that app and the smoke run reports a false
   # timeout.  Activate by bundle/application name unconditionally, then use
   # the PID as a best-effort fallback for dev builds with a different name.
-  osascript -e 'tell application "Paper Reader" to activate' 2>/dev/null || true
+  osascript -e 'tell application "Versio" to activate' 2>/dev/null || true
   osascript -e 'tell application "System Events" to set frontmost of first process whose name is "app" to true' 2>/dev/null || true
   osascript -e 'tell application "System Events" to set frontmost of first process whose unix id is '"$APP_PID"' to true' 2>/dev/null || true
-  osascript -e 'tell application "Paper Reader" to activate' 2>/dev/null || true
+  osascript -e 'tell application "Versio" to activate' 2>/dev/null || true
   sleep 1
 }
 
@@ -246,13 +246,13 @@ quit_app() {
     kill "$APP_PID" 2>/dev/null || true
     wait "$APP_PID" 2>/dev/null || true
   fi
-  osascript -e 'tell application "Paper Reader" to quit' 2>/dev/null || true
+  osascript -e 'tell application "Versio" to quit' 2>/dev/null || true
   sleep 2
 }
 
 choose_pdf_via_open_panel() {
   step "UI import via Open panel"
-  if [[ "${PAPER_READER_UI_E2E_DIRECT_IMPORT:-1}" == "1" ]]; then
+  if [[ "${VERSIO_UI_E2E_DIRECT_IMPORT:-1}" == "1" ]]; then
     step "UI fixture import via Tauri read_dropped_pdf"
     return 0
   fi
@@ -316,14 +316,14 @@ launch_app
 choose_pdf_via_open_panel
 
 step "wait library card"
-wait_ui_step "ui_library_card_visible" "${PAPER_READER_UI_E2E_LIBRARY_TIMEOUT_S:-180}"
+wait_ui_step "ui_library_card_visible" "${VERSIO_UI_E2E_LIBRARY_TIMEOUT_S:-180}"
 
 step "open paper card"
 ax_click_by_label "論文" || ax_click_by_label "Acceptance" || true
 sleep 2
-wait_ui_step "ui_reader_visible" "${PAPER_READER_UI_E2E_READER_TIMEOUT_S:-120}"
+wait_ui_step "ui_reader_visible" "${VERSIO_UI_E2E_READER_TIMEOUT_S:-120}"
 
-if [[ "${PAPER_READER_UI_E2E_SMOKE_ONLY:-0}" == "1" ]]; then
+if [[ "${VERSIO_UI_E2E_SMOKE_ONLY:-0}" == "1" ]]; then
   step "reader smoke verified"
   python3 - "$ARTIFACT_DIR/ui-result.json" <<'PY' || fail "reader smoke marker failed"
 import json, sys

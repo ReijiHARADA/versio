@@ -169,7 +169,7 @@ async function fetchPdfBytes(url) {
   const response = await fetch(url, {
     redirect: "follow",
     headers: {
-      "User-Agent": "PaperReaderCorpusFetcher/1.0 (OA CC-licensed evaluation corpus)",
+      "User-Agent": "VersioCorpusFetcher/1.0 (OA CC-licensed evaluation corpus)",
       Accept: "application/pdf,*/*",
     },
   });

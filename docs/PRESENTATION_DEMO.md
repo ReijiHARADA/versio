@@ -16,9 +16,9 @@ Everything lives in `src/services/presentationDemo.ts` and stays in memory; it n
 ## Prepare and launch
 
 1. `npm run fetch:real-papers` (once) so the source PDF exists.
-2. `npm run prepare:demo-video` creates `tmp/paper-reader-demo/PaperReader-Demo.pdf` and the gitignored figure PNGs in `public/presentation-demo-assets/` (needs poppler `pdftoppm`/`pdfimages` and macOS `sips`).
-3. `npm run tauri:demo`. To open a specific screen on launch, set e.g. `VITE_PAPER_READER_DEMO_START_PATH=/reader/demo-design-for-wearability`.
-4. Optional video flow: drag `PaperReader-Demo.pdf` onto the Library window. The normal import job, Paper Package persistence, Library card, and Reader route run; only the extraction payload is replaced by the fixture. All PDF imports in `tauri:demo` use the fixture.
+2. `npm run prepare:demo-video` creates `tmp/versio-demo/Versio-Demo.pdf` and the gitignored figure PNGs in `public/presentation-demo-assets/` (needs poppler `pdftoppm`/`pdfimages` and macOS `sips`).
+3. `npm run tauri:demo`. To open a specific screen on launch, set e.g. `VITE_VERSIO_DEMO_START_PATH=/reader/demo-design-for-wearability`.
+4. Optional video flow: drag `Versio-Demo.pdf` onto the Library window. The normal import job, Paper Package persistence, Library card, and Reader route run; only the extraction payload is replaced by the fixture. All PDF imports in `tauri:demo` use the fixture.
 
 ## Suggested 16:9 MP4 capture
 

@@ -20,7 +20,7 @@
 - `tauri.conf.json` で production CSP を有効化（ESM + wasm-unsafe-eval + worker + localhost:8765）
 - WebView から `shell:allow-spawn/kill` を削除。翻訳プロセスは Rust `std::process::Command` のみ
 - PDF 読取・コピーは絶対パス + `.pdf` + 存在確認。ユーザー書き込みパスは `..` 拒否
-- 翻訳サーバー: CORS を許可 origin 列挙に縮小。`MADLAD_SERVER_TOKEN` 時は POST に `X-Paper-Reader-Token` 必須。Tauri がトークン生成・注入、フロントは invoke で取得
+- 翻訳サーバー: CORS を許可 origin 列挙に縮小。`MADLAD_SERVER_TOKEN` 時は POST に `X-Versio-Token` 必須。Tauri がトークン生成・注入、フロントは invoke で取得
 
 **残課題:** 配布 `.app` での CSP 実機確認。`tauri-plugin-shell` crate 依存は未削除（未使用）。公証フロー自体は未実行。
 

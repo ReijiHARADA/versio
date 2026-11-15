@@ -1,6 +1,6 @@
 # スマートフォンで読むための EPUB 書き出し
 
-Paper Reader は翻訳済み論文を EPUB 3 として保存できます。自前のサーバーや
+Versio は翻訳済み論文を EPUB 3 として保存できます。自前のサーバーや
 スマートフォン用アプリは必要ありません。
 
 ## いちばん簡単な送り方（スマホで読む）
@@ -32,7 +32,7 @@ Apple の Books は Mac から EPUB を読み込めます（[Apple Support](http
 Kindle は Send to Kindle で EPUB を受け付けます（[Amazon Help](https://digprjsurvey.amazon.co.uk/csad/help/node/G5WYD9SAF7PGXRNA)）。
 
 フォルダ単位の一括書き出し（ZIP 内の複数 EPUB）では同期先コピーは使いません。
-OAuth、クラウド API への接続、Paper Reader 内の原本削除は行いません。
+OAuth、クラウド API への接続、Versio 内の原本削除は行いません。
 
 EPUB の内容は現行の Paper Package を元に生成され、タイトル、著者、見出し、目次、
 画像、表、数式、脚注、参考文献を XHTML として収録します。Apple Books / Kindle の

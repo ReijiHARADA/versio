@@ -72,7 +72,7 @@ export async function reportUiE2eExportSuccess(saved: {
 }
 
 /**
- * Packaged UI E2E only (PAPER_READER_UI_E2E=1).
+ * Packaged UI E2E only (VERSIO_UI_E2E=1).
  *
  * Constraint: WKWebView AX text selection is unreliable, so selection is
  * synthesized once via the DOM Range API; Save / Search / Export remain

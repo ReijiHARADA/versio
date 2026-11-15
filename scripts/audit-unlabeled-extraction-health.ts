@@ -60,7 +60,7 @@ const triage = reports.map((report) => ({
   suspectedMissingEquationAnchors: ((report.triage as { suspectedMissingEquationAnchors?: unknown[] } | undefined)?.suspectedMissingEquationAnchors ?? []).length,
   suspectedMissingTableCaptionAnchors: ((report.triage as { suspectedMissingTableCaptionAnchors?: unknown[] } | undefined)?.suspectedMissingTableCaptionAnchors ?? []).length,
 }));
-const result = { schemaVersion: 1, kind: "paper-reader-extraction-unlabeled-health", generatedAt: new Date().toISOString(), cohort: path.relative(root, cohortPath), selection: { requested: ids.length, completed: reports.length, timeoutMs }, reports, failures, unhealthy, triage, note: "This is a label-free health gate, not an extraction-accuracy metric. CER/NED, Block F1, Reading Order, TEDS, and CDM remain N/A without reviewed gold. Triage anchors are raw-PDF review signals, never gold labels or failures." };
+const result = { schemaVersion: 1, kind: "versio-extraction-unlabeled-health", generatedAt: new Date().toISOString(), cohort: path.relative(root, cohortPath), selection: { requested: ids.length, completed: reports.length, timeoutMs }, reports, failures, unhealthy, triage, note: "This is a label-free health gate, not an extraction-accuracy metric. CER/NED, Block F1, Reading Order, TEDS, and CDM remain N/A without reviewed gold. Triage anchors are raw-PDF review signals, never gold labels or failures." };
 fs.mkdirSync(path.dirname(output), { recursive: true });
 fs.writeFileSync(output, `${JSON.stringify(result, null, 2)}\n`);
 console.log(JSON.stringify({ output, selection: result.selection, failures, unhealthy, note: result.note }, null, 2));

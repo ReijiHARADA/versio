@@ -1,4 +1,4 @@
-# Paper Reader 起動手順
+# Versio 起動手順
 
 リポジトリのルート（`package.json` がある場所）で実行してください。
 
@@ -99,7 +99,7 @@ npm run tauri:build:fast
 npm run tauri:build:clean
 # または npm run tauri:build（clean エイリアス）
 
-open "src-tauri/target/release/bundle/macos/Paper Reader.app"
+open "src-tauri/target/release/bundle/macos/Versio.app"
 ```
 
 `beforeBuildCommand`（`scripts/before-build.sh`）は content-hash cache 付きの Python 準備 → 最小 stage → frontend build。開発用 `.venv` はコピーしません。Tauri が同梱するのは `src-tauri/bundled-resources/translation-server` のみ（`models/` や `.venv*` は除外）。phase 時間は [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md)。

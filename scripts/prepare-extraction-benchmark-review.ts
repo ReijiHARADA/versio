@@ -28,8 +28,8 @@ for (const [index, item] of selected.entries()) {
     if (fs.existsSync(destination) && !overwrite) throw new Error("Review bundle already exists; refusing to overwrite saved human review. Use --overwrite only when intentionally replacing it.");
     const pages = await extractPdfPages(file);
     const extracted = extractFromPages({ pages, paperId: item.id, filePath: file, fileHash: item.fileHash, metadata: { pageCount: pages.length } });
-    const snapshot = { schemaVersion: 1, kind: "paper-reader-extraction-snapshot", createdAt: new Date().toISOString(), parser: { id: "paper-reader", version: "local" }, source: { paperId: item.id, fileName: path.basename(file), fileHash: item.fileHash, pageCount: pages.length }, pages: pages.map((page) => ({ page: page.pageNumber, width: page.width, height: page.height, rotation: page.rotation })), canonical: extracted.canonical, projection: { blocks: extracted.blocks } } as ExtractionSnapshot;
-    const bundle = { schemaVersion: 1, kind: "paper-reader-extraction-evaluation", snapshot, review: newReview(snapshot) };
+    const snapshot = { schemaVersion: 1, kind: "versio-extraction-snapshot", createdAt: new Date().toISOString(), parser: { id: "versio", version: "local" }, source: { paperId: item.id, fileName: path.basename(file), fileHash: item.fileHash, pageCount: pages.length }, pages: pages.map((page) => ({ page: page.pageNumber, width: page.width, height: page.height, rotation: page.rotation })), canonical: extracted.canonical, projection: { blocks: extracted.blocks } } as ExtractionSnapshot;
+    const bundle = { schemaVersion: 1, kind: "versio-extraction-evaluation", snapshot, review: newReview(snapshot) };
     fs.writeFileSync(destination, `${JSON.stringify(bundle, null, 2)}\n`);
     completed.push({ id: item.id, pages: pages.length, canonicalNodes: extracted.canonical.nodes.length }); process.stderr.write(`prepared ${index + 1}/${selected.length}: ${item.id}\n`);
   } catch (error) { failures.push({ id: item.id, error: error instanceof Error ? error.message : String(error) }); }

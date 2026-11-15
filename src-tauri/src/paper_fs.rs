@@ -25,16 +25,16 @@ fn resolve(app: &AppHandle, relative: &str) -> Result<PathBuf, String> {
 }
 
 fn e2e_app_data_root(app: &AppHandle) -> Result<PathBuf, String> {
-    if matches!(std::env::var("PAPER_READER_ACCEPTANCE"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
-        if let Ok(path) = std::env::var("PAPER_READER_ACCEPTANCE_HOME") {
+    if matches!(std::env::var("VERSIO_ACCEPTANCE"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
+        if let Ok(path) = std::env::var("VERSIO_ACCEPTANCE_HOME") {
             let root = PathBuf::from(path);
             if root.is_absolute() {
                 return Ok(root);
             }
         }
     }
-    if matches!(std::env::var("PAPER_READER_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
-        if let Ok(path) = std::env::var("PAPER_READER_UI_E2E_HOME") {
+    if matches!(std::env::var("VERSIO_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
+        if let Ok(path) = std::env::var("VERSIO_UI_E2E_HOME") {
             let root = PathBuf::from(path);
             if root.is_absolute() {
                 return Ok(root);
@@ -166,7 +166,7 @@ fn e2e_export_path(app: &AppHandle, default_name: &str) -> Result<PathBuf, Strin
     Ok(root.join("_acceptance").join("exports").join(safe))
 }
 
-/// When PAPER_READER_UI_E2E=1, skip the save dialog and write under app-data
+/// When VERSIO_UI_E2E=1, skip the save dialog and write under app-data
 /// `_acceptance/exports/` so CI can assert a real export without flaky dialogs.
 fn resolve_export_destination(
     app: &AppHandle,
@@ -274,7 +274,7 @@ pub fn import_directory_to_app(
     // Require backup.json at the root of the selection
     if !source.join("backup.json").is_file() {
         return Err(
-            "backup.json が見つかりません。Paper Reader Backup フォルダを選んでください".into(),
+            "backup.json が見つかりません。Versio Backup フォルダを選んでください".into(),
         );
     }
     if dest.exists() {
@@ -502,7 +502,7 @@ pub fn save_verification_export(
 #[tauri::command]
 pub fn list_app_files(app: AppHandle, prefix: String) -> Result<Vec<String>, String> {
     // Keep listing on the same app-data root as read/write.  In particular,
-    // packaged acceptance uses PAPER_READER_ACCEPTANCE_HOME; resolving the
+    // packaged acceptance uses VERSIO_ACCEPTANCE_HOME; resolving the
     // requested directory through that root but collecting relative paths
     // from the normal app-data directory made every freshly-written asset
     // appear missing during package validation.

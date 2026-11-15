@@ -42,7 +42,7 @@ export function predictionFromSnapshot(snapshot: ExtractionSnapshot): Extraction
       return caption && target ? [[caption, target] as [string, string]] : [];
     });
   });
-  // Paper Reader exposes a linearized source representation, not LaTeX. Keep
+  // Versio exposes a linearized source representation, not LaTeX. Keep
   // it in a separately named field so Formula NED can compare like-for-like
   // human text while CDM never receives a falsely labelled TeX string.
   const formulas = blocks.flatMap((block) =>
@@ -73,7 +73,7 @@ export function predictionFromSnapshot(snapshot: ExtractionSnapshot): Extraction
     return paragraphs.slice(1).map((block, index) => [paragraphs[index]!.id, block.id] as [string, string]);
   });
   return {
-    schemaVersion: 1, kind: "paper-reader-extraction-benchmark-prediction", id: snapshot.source.paperId,
+    schemaVersion: 1, kind: "versio-extraction-benchmark-prediction", id: snapshot.source.paperId,
     parser: snapshot.parser, source: { fileHash: snapshot.source.fileHash }, blocks,
     // Canonical node order is the parser's fallback reading order. A gold
     // evaluation aligns these IDs by geometry; it never treats their names as gold.

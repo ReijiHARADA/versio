@@ -9,7 +9,7 @@ function snapshot(): ExtractionSnapshot {
     evidence: [], sourceAnchor: { page, boundingBoxes: [{ page, x: 10, y, width: 40, height: 10 }] },
   });
   return {
-    schemaVersion: 1, kind: "paper-reader-extraction-snapshot", createdAt: "now",
+    schemaVersion: 1, kind: "versio-extraction-snapshot", createdAt: "now",
     parser: { id: "test", version: "1" }, source: { paperId: "p", fileHash: "hash", pageCount: 2 }, pages: [], projection: { blocks: [] },
     canonical: {
       source: { fileHash: "hash", pageCount: 2 }, pageCount: 2, formatId: "generic", pageKind: "native",

@@ -8,7 +8,7 @@ translation, and never changes a production parser or a translation model.
 The benchmark follows the task separation used by
 [OmniDocBench](https://github.com/opendatalab/OmniDocBench):
 
-It shares metric vocabulary, not a leaderboard: Paper Reader uses its own
+It shares metric vocabulary, not a leaderboard: Versio uses its own
 frozen scientific-PDF cohorts, human-review workflow, and split/leakage rules.
 It also adds Block F1, paragraph-boundary F1, and caption-relation F1 because
 those structures directly affect the Reader projection.
@@ -147,7 +147,7 @@ files, source-hash collisions, and publisher-family collisions with the
 development catalog. A manual template-family check remains required for a
 publisher label that is too broad to identify a specific layout.
 
-Generate fresh Paper Reader prediction artifacts only on explicit selection;
+Generate fresh Versio prediction artifacts only on explicit selection;
 this invokes no translation service:
 
 ```sh
@@ -199,14 +199,14 @@ not exhaustive gold or training labels, so the command never emits accuracy.
 - `ExtractionBenchmarkGold`: human-authored source hash, split, completeness,
   blocks, order, boundaries, tables, and formulas.
 - `ExtractionBenchmarkPrediction`: a parser's blocks and optional structure.
-  This lets Paper Reader, Docling, and GROBID be scored against identical gold.
+  This lets Versio, Docling, and GROBID be scored against identical gold.
 
 Block, table, and formula matching is one-to-one by page-region IoU (0.5), not
 by parser node ID. IDs remain diagnostics only, so an external parser can be
-compared fairly without copying Paper Reader identifiers.
+compared fairly without copying Versio identifiers.
 
 `predictionFromSnapshot` in `src/evaluation/benchmark/adapters.ts` converts an
-Evaluation Studio snapshot into a Paper Reader prediction artifact. It maps
+Evaluation Studio snapshot into a Versio prediction artifact. It maps
 unsupported internal roles to `other`. Equations are exported as their native
 linearized `text`, never fabricated LaTeX. It exports Canonical paragraph
 splits and Reader-native table rows when those structures exist, but never

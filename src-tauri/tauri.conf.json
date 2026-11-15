@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Paper Reader",
+  "productName": "Versio",
   "version": "0.1.0",
-  "identifier": "com.harada.paper-reader",
+  "identifier": "com.harada.versio",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Paper Reader",
+        "title": "Versio",
         "width": 1280,
         "height": 800,
         "minWidth": 800,

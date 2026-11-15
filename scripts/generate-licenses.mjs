@@ -10,7 +10,7 @@
  *    alternative can be elected (0BSD, Unlicense, CC0-1.0, MIT-0, WTFPL) are omitted.
  *
  * Collects declared licenses + LICENSE/NOTICE texts from:
- * - Paper Reader (LICENSE)
+ * - Versio (LICENSE)
  * - npm production dependency closure (non-optional)
  * - Rust crates reachable for macOS targets via cargo tree (no-dev, no-build)
  * - Python packages in the bundled translation-server/venv
@@ -38,7 +38,7 @@ const ROOT = path.resolve(SCRIPT_DIR, "..");
 const OUT_DIR = path.join(ROOT, "src", "generated");
 const OUT_JSON = path.join(OUT_DIR, "thirdPartyLicenses.json");
 
-/** Distribution targets for Paper Reader (Tauri macOS). */
+/** Distribution targets for Versio (Tauri macOS). */
 const MACOS_TARGETS = ["aarch64-apple-darwin", "x86_64-apple-darwin"];
 
 /**
@@ -264,7 +264,7 @@ function cargoEnv() {
 }
 
 // ---------------------------------------------------------------------------
-// Paper Reader
+// Versio
 // ---------------------------------------------------------------------------
 
 function collectApp() {
@@ -274,8 +274,8 @@ function collectApp() {
   const copyright = extractCopyright(licenseText);
   addPackage(
     {
-      id: "app:paper-reader",
-      name: "Paper Reader",
+      id: "app:versio",
+      name: "Versio",
       version: readPackageJsonVersion(),
       ecosystem: "app",
       license: "MIT",
@@ -436,7 +436,7 @@ function collectRust() {
   for (const pkg of meta.packages ?? []) {
     if (!resolvedIds.has(pkg.id)) continue;
     if (pkg.name === "app" && pkg.manifest_path?.includes(`${path.sep}src-tauri${path.sep}`)) {
-      continue; // covered by Paper Reader entry
+      continue; // covered by Versio entry
     }
 
     const version = pkg.version ?? "?";
@@ -561,7 +561,7 @@ function collectPython() {
     if (!meta.name) continue;
 
     // Skip the editable / local project if any
-    if (meta.name.toLowerCase() === "paper-reader") continue;
+    if (meta.name.toLowerCase() === "versio") continue;
 
     const version = meta.version ?? "?";
     const license =

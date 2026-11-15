@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "kind": "paper-reader-extraction-independent-cohort",
+  "kind": "versio-extraction-independent-cohort",
   "purpose": "Frozen held-out candidates, publisher-family disjoint from the development catalog. They are unscored until reviewed gold is added.",
   "split": "heldout",
   "documents": [

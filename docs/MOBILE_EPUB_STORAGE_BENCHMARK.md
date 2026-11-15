@@ -56,7 +56,7 @@ Profiles use the share of uncompressed EPUB payload occupied by retained image/t
 
 ## Presentation claim
 
-Use the **total-capacity reduction** only if this final run has no unmeasured PDFs, with this scope note: “In a local corpus of 1423 successfully converted unique academic PDFs, Paper Reader’s phone-sync EPUBs used 61.3% less total storage than the source PDFs; image-heavy papers can be larger.” Do not call it an unconditional product-wide average, and retain the success/failure count in speaker notes.
+Use the **total-capacity reduction** only if this final run has no unmeasured PDFs, with this scope note: “In a local corpus of 1423 successfully converted unique academic PDFs, Versio’s phone-sync EPUBs used 61.3% less total storage than the source PDFs; image-heavy papers can be larger.” Do not call it an unconditional product-wide average, and retain the success/failure count in speaker notes.
 
 ## Reproduction
 

@@ -1,5 +1,5 @@
 {
-  "identifier": "com.harada.paper-reader.presentation-demo",
+  "identifier": "com.harada.versio.presentation-demo",
   "build": {
     "beforeDevCommand": "npm run dev:demo"
   }

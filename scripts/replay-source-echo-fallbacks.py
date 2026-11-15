@@ -46,7 +46,7 @@ def replay(row: dict) -> dict:
     }).encode()
     headers = {"Content-Type": "application/json"}
     if TOKEN:
-        headers["X-Paper-Reader-Token"] = TOKEN
+        headers["X-Versio-Token"] = TOKEN
     request = urllib.request.Request(f"{ENDPOINT}/translate", data=body, headers=headers)
     try:
         with urllib.request.urlopen(request, timeout=300) as response:

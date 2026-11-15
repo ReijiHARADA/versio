@@ -1,6 +1,6 @@
 # Build timings
 
-Paper Reader packaged builds use `scripts/tauri-build.sh` and write `.build-timings` at the repo root.
+Versio packaged builds use `scripts/tauri-build.sh` and write `.build-timings` at the repo root.
 
 ## Commands
 

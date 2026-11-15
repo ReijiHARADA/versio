@@ -2,7 +2,7 @@ import { chromium, expect } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-const base = process.env.PAPER_READER_URL ?? "http://127.0.0.1:5173";
+const base = process.env.VERSIO_URL ?? "http://127.0.0.1:5173";
 const out = new URL("../test-results/browser-verify/", import.meta.url); mkdirSync(out, { recursive: true });
 try {
   await page.goto(base); await page.getByRole("heading", { name: "すべての論文" }).waitFor();

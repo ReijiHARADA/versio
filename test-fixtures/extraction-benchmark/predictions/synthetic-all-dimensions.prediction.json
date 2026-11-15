@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "kind": "paper-reader-extraction-benchmark-prediction",
+  "kind": "versio-extraction-benchmark-prediction",
   "id": "synthetic-all-dimensions",
   "parser": { "id": "fixture", "version": "1" },
   "source": { "fileHash": "synthetic-all-dimensions" },

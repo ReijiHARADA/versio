@@ -1,3 +1,5 @@
+#[cfg(target_os = "macos")]
+mod legacy_data;
 mod ocr;
 #[cfg(target_os = "macos")]
 mod macos_chrome;
@@ -110,7 +112,7 @@ fn spawn_server(app: &tauri::AppHandle, state: &ServerState) {
         .stderr(Stdio::null());
 
     if std::env::var("TRANSLATION_UNIT_DEBUG").unwrap_or_default() == "1" {
-        let debug_log = "/tmp/paper-reader-translation-server.log";
+        let debug_log = "/tmp/versio-translation-server.log";
         let _ = std::fs::remove_file(debug_log);
         command
             .env("TRANSLATION_UNIT_DEBUG", "1")
@@ -187,6 +189,8 @@ fn sync_window_chrome_theme(app: tauri::AppHandle, theme: String) -> Result<(), 
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(target_os = "macos")]
+    legacy_data::migrate();
     let server_state = ServerState {
         child: Arc::new(Mutex::new(None)),
         token: Arc::new(Mutex::new(String::new())),

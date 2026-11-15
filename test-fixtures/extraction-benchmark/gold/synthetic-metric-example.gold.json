@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "kind": "paper-reader-extraction-benchmark-gold",
+  "kind": "versio-extraction-benchmark-gold",
   "id": "synthetic-metric-example",
   "source": { "fileHash": "synthetic-metric-example" },
   "split": "development",

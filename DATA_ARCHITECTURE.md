@@ -1,6 +1,6 @@
-# Paper Reader Data Architecture
+# Versio Data Architecture
 
-Production persistence for Paper Reader. Extraction internals remain in
+Production persistence for Versio. Extraction internals remain in
 [ACADEMIC_PDF_EXTRACTION_ARCHITECTURE.md](./ACADEMIC_PDF_EXTRACTION_ARCHITECTURE.md).
 
 This document is the source of truth for **where data lives** and **what
@@ -64,7 +64,7 @@ rewrite `source.pdf`, `original.md`, `layout.json.gz`, or `assets/`.
 
 ## 4. Markdown convention
 
-Paper Reader Markdown = GFM + YAML front matter + a small comment convention.
+Versio Markdown = GFM + YAML front matter + a small comment convention.
 
 ```markdown
 ---
@@ -200,7 +200,7 @@ source.pdf + ja.md + structure.json + layout.json.gz
 User-facing snapshot of the local library (Settings → データ):
 
 ```text
-Paper Reader Backup/
+Versio Backup/
 ├── backup.json          # formatVersion, appVersion, schema versions, createdAt, paperCount
 ├── library.sqlite
 └── papers/<paperId>/…   # full Paper Packages (source PDF, markdown, assets, …)
@@ -307,7 +307,7 @@ Display number (`12`) and stable `referenceId` (`ref-smith-2024`) are separate.
 
 ## 12. Migration
 
-IndexedDB `paper-reader` v4 remains readable until a later cleanup.
+IndexedDB `versio` v4 remains readable until a later cleanup.
 
 1. Read IDB papers / sections / blocks / projects / links / annotations /
    glossaries / cache / settings / benchmarks.
@@ -384,7 +384,7 @@ Not implemented. Required inputs are stored at extract time:
 | SQLite `meta.schema_version` | integer | 7 |
 | Library Backup / `backup.json` | `formatVersion` | 1 |
 | `translation.json` | `schemaVersion` | 1 |
-| IndexedDB (legacy backup) | `paper-reader` | 4 |
+| IndexedDB (legacy backup) | `versio` | 4 |
 
 Bump the matching version and add a migrator. Do not silently rewrite
 on-disk packages.

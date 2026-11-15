@@ -8,7 +8,9 @@ interface FsDB extends DBSchema {
   };
 }
 
-const DB_NAME = "paper-reader-fs";
+const DB_NAME = "versio-fs";
+/** Name used before the Versio rename; contents are copied once into DB_NAME. */
+const LEGACY_DB_NAME = "paper-reader-fs";
 const DB_VERSION = 1;
 
 let dbPromise: Promise<IDBPDatabase<FsDB>> | null = null;
@@ -22,8 +24,29 @@ function getDb(): Promise<IDBPDatabase<FsDB>> {
         }
       },
     });
+    dbPromise = dbPromise.then(migrateLegacyDb);
   }
   return dbPromise;
+}
+
+async function migrateLegacyDb(db: IDBPDatabase<FsDB>): Promise<IDBPDatabase<FsDB>> {
+  try {
+    if ((await db.count("files")) > 0) return db;
+    const existing = typeof indexedDB.databases === "function" ? await indexedDB.databases() : [];
+    if (!existing.some((info) => info.name === LEGACY_DB_NAME)) return db;
+    const legacy = await openDB<FsDB>(LEGACY_DB_NAME, DB_VERSION);
+    try {
+      if (!legacy.objectStoreNames.contains("files")) return db;
+      const rows = await legacy.getAll("files");
+      const tx = db.transaction("files", "readwrite");
+      await Promise.all([...rows.map((row) => tx.store.put(row)), tx.done]);
+    } finally {
+      legacy.close();
+    }
+  } catch {
+    // Best effort: a failed copy leaves the legacy DB untouched.
+  }
+  return db;
 }
 
 function normalize(path: string): string {

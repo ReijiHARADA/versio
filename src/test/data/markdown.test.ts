@@ -9,7 +9,7 @@ const front = {
   schemaVersion: 1,
 };
 
-describe("Paper Reader markdown", () => {
+describe("Versio markdown", () => {
   it("roundtrips block IDs, images, captions, callouts, dividers, equations, and tables", () => {
     const source = `---
 paperId: "p1"

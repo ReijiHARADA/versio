@@ -48,7 +48,7 @@ const pages = bundle.review.pages.map((page) => {
 const reviewed = bundle.review.pages.filter((page) => page.status !== "unreviewed");
 const result = {
   schemaVersion: 1,
-  kind: "paper-reader-extraction-partial-review-triage",
+  kind: "versio-extraction-partial-review-triage",
   generatedAt: new Date().toISOString(),
   source: bundle.snapshot.source,
   reviewCoverage: { pages: bundle.review.pages.length, touchedPages: reviewed.length, completePages: bundle.review.pages.filter((page) => page.status === "complete").length },

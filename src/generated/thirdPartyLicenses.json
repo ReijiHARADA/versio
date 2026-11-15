@@ -17,8 +17,8 @@
   },
   "packages": [
     {
-      "id": "app:paper-reader",
-      "name": "Paper Reader",
+      "id": "app:versio",
+      "name": "Versio",
       "version": "0.0.0",
       "ecosystem": "app",
       "license": "MIT",

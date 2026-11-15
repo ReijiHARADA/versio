@@ -11,7 +11,7 @@ import {
 
 describe("presentation demo fixture", () => {
   it("is a valid Paper Package with retained visual assets, not an extraction input", async () => {
-    const projection = createPresentationDemoProjection("demo-paper", "demo-hash", "PaperReader-Demo.pdf");
+    const projection = createPresentationDemoProjection("demo-paper", "demo-hash", "Versio-Demo.pdf");
     const pkg = projectionToPackage(projection);
     expect(pkg.assets).toEqual([]);
     const fs = createMemoryFileSystem();
@@ -31,7 +31,7 @@ describe("presentation demo fixture", () => {
   });
 
   it("gives every translatable block a Japanese translation", () => {
-    const { blocks } = createPresentationDemoProjection("demo-paper", "demo-hash", "PaperReader-Demo.pdf");
+    const { blocks } = createPresentationDemoProjection("demo-paper", "demo-hash", "Versio-Demo.pdf");
     for (const block of blocks.filter((item) => item.type !== "reference")) {
       expect(block.translated, block.id).toMatch(/[ぁ-んァ-ン一-龯]/);
     }

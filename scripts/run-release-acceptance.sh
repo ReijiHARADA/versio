@@ -6,7 +6,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-echo "== Paper Reader release acceptance =="
+echo "== Versio release acceptance =="
 echo "See docs/RELEASE_ACCEPTANCE.md for the full checklist."
 echo
 
@@ -48,15 +48,15 @@ npm run bench:library -- --count 100
 
 echo "-- Browser smoke (requires preview on :5173 if not started)"
 if curl -sf http://127.0.0.1:5173/ >/dev/null 2>&1; then
-  PAPER_READER_URL=http://127.0.0.1:5173 npm run verify:browser
+  VERSIO_URL=http://127.0.0.1:5173 npm run verify:browser
 else
   echo "Start preview first: npm run preview -- --host 127.0.0.1 --port 5173"
-  echo "Then re-run this script or: PAPER_READER_URL=http://127.0.0.1:5173 npm run verify:browser"
+  echo "Then re-run this script or: VERSIO_URL=http://127.0.0.1:5173 npm run verify:browser"
 fi
 
 echo
-APP_DEFAULT="$ROOT/src-tauri/target/release/bundle/macos/Paper Reader.app"
-if [[ "$(uname -s)" == "Darwin" && -d "${PAPER_READER_APP_PATH:-$APP_DEFAULT}" ]]; then
+APP_DEFAULT="$ROOT/src-tauri/target/release/bundle/macos/Versio.app"
+if [[ "$(uname -s)" == "Darwin" && -d "${VERSIO_APP_PATH:-$APP_DEFAULT}" ]]; then
   run_gate "Packaged integration E2E (Layer A)" npm run packaged:e2e:integration
   run_gate "Packaged UI E2E (Layer B)" npm run packaged:e2e:ui
 else
@@ -64,13 +64,13 @@ else
 fi
 
 echo
-if [[ "${PAPER_READER_SIGN:-}" == "1" ]]; then
-  echo "== Signed release path requested (PAPER_READER_SIGN=1) =="
+if [[ "${VERSIO_SIGN:-}" == "1" ]]; then
+  echo "== Signed release path requested (VERSIO_SIGN=1) =="
   echo "Ensure Apple credentials are set; see docs/MACOS_RELEASE.md"
 else
   echo "== Signing status =="
   echo "unsigned acceptance path (signed acceptance not executed)"
-  echo "For signed release: PAPER_READER_SIGN=1 npm run tauri:build:clean"
+  echo "For signed release: VERSIO_SIGN=1 npm run tauri:build:clean"
 fi
 
 echo

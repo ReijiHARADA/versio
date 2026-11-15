@@ -86,7 +86,7 @@ export function goldFromCompletedReview(input: EvaluationBundle, metadata: Pick<
   });
   const tableComplete = goldTableBlocks.length > 0 && allComplete((page) => page.coverage.tablesComplete) && tables.length === goldTableBlocks.length;
   return {
-    schemaVersion: 1, kind: "paper-reader-extraction-benchmark-gold", id: metadata.id,
+    schemaVersion: 1, kind: "versio-extraction-benchmark-gold", id: metadata.id,
     source: { fileHash: input.snapshot.source.fileHash, fileName: input.snapshot.source.fileName }, split: metadata.split,
     leakageGroup: metadata.leakageGroup, attributes: metadata.attributes, annotatedPages: completed.map((page) => page.page),
     coverage: {
