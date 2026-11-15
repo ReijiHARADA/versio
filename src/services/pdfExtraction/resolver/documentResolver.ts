@@ -10,7 +10,7 @@ import type { FormatDetection, PageTextKind, ExtractionEvidence } from "../types
 import type { RoleCandidate } from "../generic/candidates";
 import type { StructuralRegionEvidence } from "../types";
 import { formatTitleEvidence } from "../formats/applyHardRules";
-import * as chrome from "../formats/publisherChrome";
+import * as publisherPredicates from "../formats/publisherChrome";
 import { normalizedTextHash } from "../sourceAnchor";
 import { resolveTitle } from "./titleResolver";
 import {
@@ -74,7 +74,7 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   // Institution-shaped text can inherit author styling in flattened journal
   // mastheads. Keep it as affiliation metadata instead of exposing it as an
   // author (e.g. a trailing consortium line after a wrapped author row).
-  if (candidate.role === "author" && chrome.isInstitutionalAuthorLine(candidate.text)) {
+  if (candidate.role === "author" && publisherPredicates.isInstitutionalAuthorLine(candidate.text)) {
     return { role: "affiliation", confidence: Math.max(scores.affiliation ?? 0.82, 0.82) };
   }
   // Layout-owned captions must not lose to heading typography races
@@ -101,7 +101,7 @@ function resolvedRole(candidate: RoleCandidate): { role: CanonicalNode["role"]; 
   }
   if (
     (candidate.layoutBlock.role === "copyright" || candidate.role === "copyright") &&
-    chrome.isJournalRunningHeader(candidate.text)
+    publisherPredicates.isJournalRunningHeader(candidate.text)
   ) {
     return {
       role: "copyright",
@@ -874,12 +874,12 @@ export function demoteEditorialChromeHeadings(nodes: CanonicalNode[]): Canonical
         t === t.toUpperCase());
     // Journal chrome rails: lone `Article` / `Research Article` / OCR `Article ll`.
     const journalTypeRail =
-      chrome.isJournalRunningHeader(t) ||
+      publisherPredicates.isJournalRunningHeader(t) ||
       /^(?:research\s+)?article(?:\s+[a-z]{1,3})?$/i.test(t) ||
       /^(?:brief\s+)?(?:communication|report)$/i.test(t) ||
       /^(?:review\s+article|original\s+article|research\s+paper)$/i.test(t) ||
       // Frontiers running footers (`11 frontiersin.org`).
-      chrome.isFrontiersFooter(t);
+      publisherPredicates.isFrontiersFooter(t);
     // Degree / institution crumbs promoted as outline headings
     // (`1 Doctorand, Universitatea Pedagogică de`).
     const degreeAffiliationHeading =
@@ -1150,7 +1150,7 @@ export function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
       const structuredAbstractLead =
         inAbstract &&
         !sawAbstractBody &&
-        chrome.isBmcStructuredAbstractLead(text);
+        publisherPredicates.isBmcStructuredAbstractLead(text);
       if (
         inAbstract &&
         (STRUCTURED_ABSTRACT_SUBHEAD.test(text) || structuredAbstractLead) &&
@@ -1326,7 +1326,7 @@ export function markAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
                 text,
               )))) ||
         (text.length <= 260 &&
-          chrome.isBmjAbstractCitation(text)) ||
+          publisherPredicates.isBmjAbstractCitation(text)) ||
         (text.length <= 220 &&
           /^[►▶]/.test(text) &&
           /\b(?:prepublication|supplemental|available online)\b/i.test(text))
@@ -1538,7 +1538,7 @@ function markColonStructuredFrontAbstracts(nodes: CanonicalNode[]): CanonicalNod
   }
 
   const looksLikeCiteChrome = (text: string): boolean =>
-    chrome.isFrontiersCiteChrome(text);
+    publisherPredicates.isFrontiersCiteChrome(text);
 
   const beforeBand = (page: number, y: number): boolean =>
     page < firstLabelPage || (page === firstLabelPage && y < firstLabelY - 2);
@@ -1658,7 +1658,7 @@ function demoteEarlyAccessBoilerplate(nodes: CanonicalNode[]): CanonicalNode[] {
   return nodes.map((node) => {
     if (node.role !== "abstract" || !node.text) return node;
     const t = node.text.trim();
-    if (!chrome.isNatureEarlyAccessNotice(t)) return node;
+    if (!publisherPredicates.isNatureEarlyAccessNotice(t)) return node;
     return {
       ...node,
       role: "other" as const,
@@ -1692,7 +1692,7 @@ function demotePageOneProseAffiliations(nodes: CanonicalNode[]): CanonicalNode[]
     if (node.role !== "affiliation" || node.pageStart !== 1 || !node.text) return node;
     const t = node.text.trim();
     // Nature chrome button label painted as affiliation.
-    if (chrome.isNatureUpdateButton(t)) {
+    if (publisherPredicates.isNatureUpdateButton(t)) {
       return {
         ...node,
         role: "other" as const,
@@ -1750,7 +1750,7 @@ function markUnlabeledFrontAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
     (node) =>
       node.pageStart === 1 &&
       node.text &&
-      chrome.isNatureEarlyAccessNotice(node.text),
+      publisherPredicates.isNatureEarlyAccessNotice(node.text),
   );
   if (earlyAccessCover) {
     return nodes;
@@ -2137,7 +2137,7 @@ function promoteLateFrontAbstracts(nodes: CanonicalNode[]): CanonicalNode[] {
     (node) =>
       node.pageStart === 1 &&
       node.text &&
-      chrome.isNatureEarlyAccessNotice(node.text),
+      publisherPredicates.isNatureEarlyAccessNotice(node.text),
   );
   const intro = nodes.find(
     (node) =>
@@ -2259,7 +2259,7 @@ function scrubAbstractCiteCrumbs(text: string): string {
   // Frontiers how-to-cite rails glued onto the abstract lead
   // (`Reinemann DN (2024) …` / `Lin L and Talib MBA (2025) Exploring… This study…`).
   // Bound the cite head (no nested `.*?`) so long abstracts cannot ReDoS.
-  const citationHead = chrome.isFrontiersCitationLead(cleaned);
+  const citationHead = publisherPredicates.isFrontiersCitationLead(cleaned);
   if (citationHead) {
     const afterYear = cleaned.slice(citationHead[0].length);
     const narrative = afterYear.search(/\b(?:The|This|We|Student|Our|In)\b/);
@@ -2400,7 +2400,7 @@ export function mergeAbstractContinuations(nodes: CanonicalNode[]): CanonicalNod
       // demote them out of abstract so they are not counted as body.
       if (
         nextText.length <= 260 &&
-        chrome.isBmjAbstractContinuation(nextText)
+        publisherPredicates.isBmjAbstractContinuation(nextText)
       ) {
         result.push({
           ...node,
@@ -2550,7 +2550,7 @@ export function mergeAbstractContinuations(nodes: CanonicalNode[]): CanonicalNod
   return result.map((node) => {
     if (node.role !== "abstract" || !node.text) return node;
     const text = node.text.replace(/\s+/g, " ").trim();
-    const citeChrome = chrome.isBmjAbstractChrome(text);
+    const citeChrome = publisherPredicates.isBmjAbstractChrome(text);
     if (!citeChrome) return node;
     return {
       ...node,
@@ -4615,7 +4615,7 @@ export function resolveCanonicalDocument(input: {
       if (t.length < 8 || t.length > 220) return node;
       if (!/[A-Za-z]/.test(t) || /[.!?]$/.test(t)) return node;
       // Keep journal DOI / volume tails out of this demotion path.
-      if (chrome.isBmjCiteRail(t) || /\b(?:doi:|10\.\d{4,}\/)/i.test(t)) return node;
+      if (publisherPredicates.isBmjCiteRail(t) || /\b(?:doi:|10\.\d{4,}\/)/i.test(t)) return node;
       const fragNorm = t.toLowerCase().replace(/[\s-]+/g, "");
       if (fragNorm.length < 8) return node;
       // Single dictionary words that happen to appear in the title are body
@@ -4683,7 +4683,7 @@ export function resolveCanonicalDocument(input: {
       /^(?:abstract\s+)?corresponding\s+authors?\s*:?\s*$/i.test(t) ||
       /\b(?:creative\s+commons|attribution\s+license|cc-?by)\b/i.test(t) ||
       /^of\s+(?:the\s+)?(?:university|college|department|faculty|institute|nebraska|hospital|school)\b/i.test(t) ||
-      chrome.isJurnalMasthead(t) ||
+      publisherPredicates.isJurnalMasthead(t) ||
       /^(?:informasi\s+artikel(?:\s+abstract)?|email\s+abstrak|kata\s+kunci)\b/i.test(t) ||
       letterspacedBanner;
     if (!chrome) return node;
