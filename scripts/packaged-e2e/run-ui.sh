@@ -52,6 +52,8 @@ tell application "System Events"
 end tell
 OSA
   screencapture -x "$ARTIFACT_DIR/failure.png" 2>/dev/null || true
+  # Do not leave the app running: a stale instance steals focus from the next run.
+  if [[ -n "${APP_PID:-}" ]]; then kill "$APP_PID" 2>/dev/null || true; fi
   exit 1
 }
 
