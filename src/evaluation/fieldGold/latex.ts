@@ -65,6 +65,7 @@ export function latexToText(s: string): string {
   let t = s
     .replace(/\\(?:orcid|orcidlink|corref|fnref|tnoteref|IEEEauthorrefmark|footnotemark|affiliationmark|authornote)\s*(?:\[[^\]]*\])?(?:\{[^{}]*\})?/g, "")
     .replace(/\\(bibinfo|bibfield)\s*\{[^{}]*\}/g, "")
+    .replace(/\\authororcid\s*\{([^{}]*)\}\s*\{[^{}]*\}/g, "$1")
     .replace(/\\([`'^"~=.])\s*\{?\\?([A-Za-z])\}?/g, (_, a: string, l: string) => (l + (ACCENTS[a] ?? "")).normalize("NFC"))
     .replace(/\\([uvHc])(?:\s+|\{\\?)([A-Za-z])\}?/g, (_, a: string, l: string) => (l + (ACCENTS[a] ?? "")).normalize("NFC"))
     .replace(/\\(ss|ae|oe|o|aa|l)\b\{?\}?/g, (_, c: string) => ({ ss: "ß", ae: "æ", oe: "œ", o: "ø", aa: "å", l: "ł" })[c] ?? c)

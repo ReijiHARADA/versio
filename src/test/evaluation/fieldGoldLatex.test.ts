@@ -92,4 +92,8 @@ describe("parseLatexFields", () => {
       { raw: "Smith. Deep models of reading. 2020", title: "Deep models of reading", year: "2020", doi: "10.1/abc" },
     ]);
   });
+  it("keeps only the name from authororcid", () => {
+    const tex = String.raw`\author{\authororcid{Mara Solen}{0000-0002-5191-5193}, \authororcid{Matt Oddo}{0009-0009-3187-4994}}`;
+    expect(parseLatexFields({ mainTex: tex, bbl: null }).authors.map((a) => a.name)).toEqual(["Mara Solen", "Matt Oddo"]);
+  });
 });
