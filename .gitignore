@@ -79,3 +79,6 @@ audit-manual-review*.json
 # Local tool state / demo output
 .serena/
 demo-output/
+
+# Field-level gold corpus (local evaluation only)
+test-data/field-gold/
