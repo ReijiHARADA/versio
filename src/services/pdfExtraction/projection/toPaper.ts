@@ -1974,7 +1974,7 @@ export type PaperProjection = {
  * CanonicalDocument → Paper / Section / PaperBlock.
  * Import and the reader consume only this projection.
  */
-export function projectCanonicalToPaper(input: {
+type ProjectCanonicalToPaperInput = {
   canonical: CanonicalDocument;
   paperId: string;
   filePath: string;
@@ -1984,8 +1984,25 @@ export function projectCanonicalToPaper(input: {
   layouts: PageColumnLayout[];
   baseFontSize: number;
   previousBlocks?: PaperBlock[];
-}): PaperProjection {
-  const { canonical, paperId, layoutBlocks, layouts, baseFontSize } = input;
+};
+
+type FrontMatterProjection = {
+  titleNode: CanonicalNode | undefined;
+  firstBodyY: number;
+  hasSidebarBody: boolean;
+  authorNames: string[];
+  authorsStructured: Paper["authorsStructured"];
+  affiliations: NonNullable<Paper["affiliations"]>;
+  doiMatch: string | null;
+};
+
+type BodyProjection = {
+  sections: Section[];
+  blocks: PaperBlock[];
+};
+
+function projectFrontMatter(input: ProjectCanonicalToPaperInput): FrontMatterProjection {
+  const { canonical, layoutBlocks } = input;
   const titleNode = canonical.nodes.find((n) => n.role === "title");
   const firstBodyY = canonical.nodes
     .filter((n) => {
@@ -3916,6 +3933,12 @@ export function projectCanonicalToPaper(input: {
   // entries, including labelled ones (`doi: 10.1016/j.ijmedinf…`).
   const doiMatch = labelledPageOne[0] ?? pageOneDois[0] ?? null;
 
+
+  return { titleNode, firstBodyY, hasSidebarBody, authorNames, authorsStructured, affiliations, doiMatch };
+}
+
+function projectBody(input: ProjectCanonicalToPaperInput): BodyProjection {
+  const { canonical, paperId, layoutBlocks, layouts, baseFontSize } = input;
   const childOf = canonical.relations.filter((r) => r.kind === "CHILD_OF");
   const parentByHeading = new Map<string, string>();
   for (const rel of childOf) {
@@ -4853,6 +4876,19 @@ export function projectCanonicalToPaper(input: {
     };
   }
 
+
+  return { sections, blocks: splitReferenceEntries };
+}
+
+function finalizePaperProjection(
+  input: ProjectCanonicalToPaperInput,
+  frontMatter: FrontMatterProjection,
+  body: BodyProjection,
+): PaperProjection {
+  const { canonical, layoutBlocks, paperId } = input;
+  const { titleNode, firstBodyY, hasSidebarBody, authorsStructured, doiMatch } = frontMatter;
+  let { authorNames, affiliations } = frontMatter;
+  const { sections, blocks: splitReferenceEntries } = body;
   // Nature "Article in Press" covers often emit a short title on page 1 while
   // the manuscript title lives on page 2. Prefer the later heading when the
   // cover is clearly an early-access wrapper.
@@ -5254,4 +5290,10 @@ export function projectCanonicalToPaper(input: {
   );
 
   return { paper, sections, blocks: annotatedBlocks };
+}
+
+export function projectCanonicalToPaper(input: ProjectCanonicalToPaperInput): PaperProjection {
+  const frontMatter = projectFrontMatter(input);
+  const body = projectBody(input);
+  return finalizePaperProjection(input, frontMatter, body);
 }
