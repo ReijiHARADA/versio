@@ -53,7 +53,7 @@ function ComparisonColumn({
               <span className={`${styles.dot} ${styles.minimize}`} />
               <span className={`${styles.dot} ${styles.zoom}`} />
             </span>
-            <span className={styles.windowTitle}>Paper Reader</span>
+            <span className={styles.windowTitle}>Versio</span>
           </div>
           <div className={styles.media}>
             <ReplayablePreview

@@ -8,7 +8,7 @@ export type BenchmarkRegion = { page: number; x: number; y: number; width: numbe
 /** Human-authored, parser-independent gold. Do not generate this from a snapshot. */
 export type ExtractionBenchmarkGold = {
   schemaVersion: 1;
-  kind: "paper-reader-extraction-benchmark-gold";
+  kind: "versio-extraction-benchmark-gold";
   id: string;
   source: { fileHash: string; fileName?: string };
   split: BenchmarkSplit;
@@ -29,10 +29,10 @@ export type ExtractionBenchmarkGold = {
   formulas?: Array<{ id: string; region: BenchmarkRegion; text?: string; latex?: string }>;
 };
 
-/** Common adapter output for Paper Reader, Docling, GROBID, etc. */
+/** Common adapter output for Versio, Docling, GROBID, etc. */
 export type ExtractionBenchmarkPrediction = {
   schemaVersion: 1;
-  kind: "paper-reader-extraction-benchmark-prediction";
+  kind: "versio-extraction-benchmark-prediction";
   id: string;
   parser: { id: string; version: string };
   source: { fileHash: string };
@@ -46,7 +46,7 @@ export type ExtractionBenchmarkPrediction = {
 
 export type BenchmarkManifest = {
   schemaVersion: 1;
-  kind: "paper-reader-extraction-benchmark-manifest";
+  kind: "versio-extraction-benchmark-manifest";
   defaultRegressionIds: string[];
   documents: Array<Pick<ExtractionBenchmarkGold, "id" | "split" | "leakageGroup" | "attributes"> & { goldPath?: string; snapshotPath?: string }>;
 };

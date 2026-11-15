@@ -6,12 +6,12 @@ import {
 } from "../data/licenses";
 
 describe("license inventory", () => {
-  it("includes Paper Reader MIT and production ecosystems", async () => {
+  it("includes Versio MIT and production ecosystems", async () => {
     const inventory = await loadLicenseInventory();
     expect(inventory.generatorVersion).toBe(2);
     expect(inventory.packages.length).toBeGreaterThan(10);
 
-    const app = inventory.packages.find((pkg) => pkg.id === "app:paper-reader");
+    const app = inventory.packages.find((pkg) => pkg.id === "app:versio");
     expect(app?.license).toBe("MIT");
     expect(getLicenseText(inventory, app!)).toMatch(/MIT License/);
 

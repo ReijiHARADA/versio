@@ -1,5 +1,5 @@
 /**
- * Consolidate existing Paper Reader evaluation artifacts into a presentation-
+ * Consolidate existing Versio evaluation artifacts into a presentation-
  * safe report. This script never invokes extraction or translation: it is a
  * deterministic aggregation of explicitly named local benchmark outputs.
  *
@@ -279,7 +279,7 @@ const translationChart = barSvg(
   ],
 );
 
-const report = `# Paper Reader reliability and performance evaluation
+const report = `# Versio reliability and performance evaluation
 
 ## Executive summary
 
@@ -388,7 +388,7 @@ The ${failedRows.length} failures are retained in the JSON/CSV, not excluded: ${
 
 Use this sentence, with the note immediately adjacent:
 
-> 実在PDF **1,423本**の全容量測定で、Paper Readerのスマホ同期用EPUBは、原本PDF比で**総容量61.34%削減**（3,075.84 MiB → 1,189.10 MiB、変換成功率99.37%）でした。
+> 実在PDF **1,423本**の全容量測定で、Versioのスマホ同期用EPUBは、原本PDF比で**総容量61.34%削減**（3,075.84 MiB → 1,189.10 MiB、変換成功率99.37%）でした。
 
 Note: “2026-11-04 measurement; 1,511 discovered local paths, 79 content duplicates removed, 1,432 unique PDFs measured. Actual EPUB 3/ZIP output with current image optimization and all exported visual assets; original-text fallback was used, so the figure does not measure Japanese translation text size. Nine conversion failures are included in the success rate.”
 

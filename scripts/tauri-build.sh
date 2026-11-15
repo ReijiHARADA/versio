@@ -5,7 +5,7 @@
 #   bash scripts/tauri-build.sh clean  # clean Python, .app then DMG
 #
 # Clean + signing (optional):
-#   PAPER_READER_SIGN=1 bash scripts/tauri-build.sh clean
+#   VERSIO_SIGN=1 bash scripts/tauri-build.sh clean
 #     → build unsigned .app
 #     → sign/notarize/staple .app
 #     → build DMG from signed .app
@@ -50,12 +50,12 @@ source "${HOME}/.cargo/env" 2>/dev/null || true
 # explicitly here as well.
 bash "$SCRIPT_DIR/compile-apple-translation.sh"
 
-export PAPER_READER_BUILD_TIMINGS="$TIMING_FILE"
+export VERSIO_BUILD_TIMINGS="$TIMING_FILE"
 if [[ "$MODE" == "clean" ]]; then
-  export PAPER_READER_PYTHON_BUNDLE_MODE="clean"
+  export VERSIO_PYTHON_BUNDLE_MODE="clean"
   PYTHON_ARG="clean"
 else
-  export PAPER_READER_PYTHON_BUNDLE_MODE="cache"
+  export VERSIO_PYTHON_BUNDLE_MODE="cache"
   PYTHON_ARG="cache"
 fi
 
@@ -80,9 +80,9 @@ read_timing() {
 }
 
 echo "=========================================="
-echo " Paper Reader tauri build ($MODE)"
+echo " Versio tauri build ($MODE)"
 echo " DEVELOPER_DIR=${DEVELOPER_DIR:-'(unset)'}"
-echo " PAPER_READER_SIGN=${PAPER_READER_SIGN:-0}"
+echo " VERSIO_SIGN=${VERSIO_SIGN:-0}"
 echo "=========================================="
 
 WALL0="$(now_ms)"
@@ -106,7 +106,7 @@ frontend_s="$(elapsed_s "$t0")"
 echo "frontend_s=$frontend_s" >>"$TIMING_FILE"
 echo "⏱  Frontend build: ${frontend_s}s"
 
-export PAPER_READER_SKIP_BEFORE_BUILD=1
+export VERSIO_SKIP_BEFORE_BUILD=1
 # Warm fast rebuilds: keep incremental artifacts even for --release.
 if [[ "$MODE" == "fast" ]]; then
   export CARGO_INCREMENTAL="${CARGO_INCREMENTAL:-1}"
@@ -123,9 +123,9 @@ echo "rust_s=$rust_bundle_s" >>"$TIMING_FILE"
 echo "app_bundle_s=included_in_rust_s" >>"$TIMING_FILE"
 echo "⏱  Rust compile + .app bundle: ${rust_bundle_s}s"
 
-APP_PATH="src-tauri/target/release/bundle/macos/Paper Reader.app"
-DMG_PATH="src-tauri/target/release/bundle/dmg/Paper Reader_0.1.0_aarch64.dmg"
-STAGE_MODE_FILE="src-tauri/bundled-resources/translation-server/.paper-reader-bundle-mode"
+APP_PATH="src-tauri/target/release/bundle/macos/Versio.app"
+DMG_PATH="src-tauri/target/release/bundle/dmg/Versio_0.1.0_aarch64.dmg"
+STAGE_MODE_FILE="src-tauri/bundled-resources/translation-server/.versio-bundle-mode"
 if [[ -f "$STAGE_MODE_FILE" ]]; then
   STAGED_MODE="$(tr -d '[:space:]' < "$STAGE_MODE_FILE")"
 else
@@ -154,13 +154,13 @@ fi
 SIGNED_RELEASE="no"
 dmg_s="skipped"
 
-if [[ "$MODE" == "clean" && "${PAPER_READER_SIGN:-}" == "1" ]]; then
+if [[ "$MODE" == "clean" && "${VERSIO_SIGN:-}" == "1" ]]; then
   echo
-  echo "== Signing / notarization (PAPER_READER_SIGN=1) =="
+  echo "== Signing / notarization (VERSIO_SIGN=1) =="
   echo "Order: sign .app → notarize/staple → DMG from signed .app → sign DMG"
   t0="$(now_ms)"
   # macos-sign-notarize.sh builds the DMG from the signed app (do not pre-build DMG).
-  PAPER_READER_SKIP_DMG=0 bash "$SCRIPT_DIR/macos-sign-notarize.sh"
+  VERSIO_SKIP_DMG=0 bash "$SCRIPT_DIR/macos-sign-notarize.sh"
   dmg_s="$(elapsed_s "$t0")"
   echo "dmg_s=$dmg_s" >>"$TIMING_FILE"
   echo "sign_notarize_s=$dmg_s" >>"$TIMING_FILE"
@@ -200,5 +200,5 @@ echo "  staged python mode: $STAGED_MODE"
 echo "  signed release: $SIGNED_RELEASE"
 echo "  timings file: $TIMING_FILE"
 if [[ "$MODE" == "clean" && "$SIGNED_RELEASE" != "yes" ]]; then
-  echo "  note: unsigned acceptance passed path only (set PAPER_READER_SIGN=1 for signed release)"
+  echo "  note: unsigned acceptance passed path only (set VERSIO_SIGN=1 for signed release)"
 fi

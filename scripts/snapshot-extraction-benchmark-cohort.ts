@@ -32,7 +32,7 @@ for (const [index, item] of selected.entries()) {
     if (digest(file) !== item.fileHash) throw new Error("Local PDF hash does not match the frozen cohort manifest.");
     const pages = await extractPdfPages(file);
     const extracted = extractFromPages({ pages, paperId: item.id, filePath: file, fileHash: item.fileHash, metadata: { pageCount: pages.length } });
-    const snapshot = { schemaVersion: 1, kind: "paper-reader-extraction-snapshot", createdAt: new Date().toISOString(), parser: { id: "paper-reader", version: "local" }, source: { paperId: item.id, fileName: path.basename(file), fileHash: item.fileHash, pageCount: pages.length }, pages: [], canonical: extracted.canonical, projection: { blocks: extracted.blocks } } as ExtractionSnapshot;
+    const snapshot = { schemaVersion: 1, kind: "versio-extraction-snapshot", createdAt: new Date().toISOString(), parser: { id: "versio", version: "local" }, source: { paperId: item.id, fileName: path.basename(file), fileHash: item.fileHash, pageCount: pages.length }, pages: [], canonical: extracted.canonical, projection: { blocks: extracted.blocks } } as ExtractionSnapshot;
     fs.writeFileSync(path.join(outputDir, `${item.id}.prediction.json`), `${JSON.stringify(predictionFromSnapshot(snapshot), null, 2)}\n`);
     completed.push(item.id); process.stderr.write(`extracted ${index + 1}/${selected.length}: ${item.id}\n`);
   } catch (error) { failures.push({ id: item.id, error: error instanceof Error ? error.message : String(error) }); }

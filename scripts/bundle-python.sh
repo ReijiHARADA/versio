@@ -2,14 +2,14 @@
 # Build a clean, reproducible Python runtime for the Tauri release bundle.
 # Does NOT copy a developer .venv — installs from a lockfile into translation-server/venv.
 #
-# Modes (PAPER_READER_PYTHON_BUNDLE_MODE or first arg):
+# Modes (VERSIO_PYTHON_BUNDLE_MODE or first arg):
 #   cache (default) — reuse venv when content-hash + validation pass
 #   clean           — always wipe and rebuild from lock + pinned Python
 #
 # Usage:
 #   bash scripts/bundle-python.sh
 #   bash scripts/bundle-python.sh clean
-#   PAPER_READER_PYTHON_BUNDLE_MODE=clean bash scripts/bundle-python.sh
+#   VERSIO_PYTHON_BUNDLE_MODE=clean bash scripts/bundle-python.sh
 
 set -euo pipefail
 
@@ -21,11 +21,11 @@ DEST_DIR="$SERVER_DIR/venv"
 REQ_TXT="$SERVER_DIR/requirements.txt"
 LOCK_FILE="$SERVER_DIR/requirements.lock"
 VERSION_FILE="$SERVER_DIR/.python-version"
-HASH_STAMP="$DEST_DIR/.paper-reader-bundle-hash"
+HASH_STAMP="$DEST_DIR/.versio-bundle-hash"
 # Bump when install/trim/validation semantics change independently of file bytes.
 BUNDLE_SCRIPT_VERSION="3"
 
-MODE="${PAPER_READER_PYTHON_BUNDLE_MODE:-cache}"
+MODE="${VERSIO_PYTHON_BUNDLE_MODE:-cache}"
 CHECK_ONLY=0
 for arg in "$@"; do
   case "$arg" in
@@ -185,7 +185,7 @@ if [[ "$MODE" != "clean" ]]; then
   if validate_venv "$EXPECTED_HASH" "$PYTHON_VERSION"; then
     SIZE="$(du -sh "$DEST_DIR" | cut -f1)"
     echo "✓ Reusing cached venv ($SIZE) — hash unchanged"
-    echo "PAPER_READER_PYTHON_REBUILT=0"
+    echo "VERSIO_PYTHON_REBUILT=0"
     exit 0
   fi
   echo "Cache miss or invalid venv — rebuilding…"
@@ -218,4 +218,4 @@ echo "✓ Clean venv ready: $(du -sh "$DEST_DIR" | cut -f1)"
 echo "  Python: $PYTHON_VERSION"
 echo "  Lock: $LOCK_FILE"
 echo "  Hash: $EXPECTED_HASH"
-echo "PAPER_READER_PYTHON_REBUILT=1"
+echo "VERSIO_PYTHON_REBUILT=1"

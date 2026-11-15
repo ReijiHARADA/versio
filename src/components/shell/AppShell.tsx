@@ -22,7 +22,7 @@ import styles from "./AppShell.module.css";
 
 export function AppShell() {
   const location = useLocation(); const navigate = useNavigate();
-  const isPresentationDemo = import.meta.env.VITE_PAPER_READER_DEMO === "1";
+  const isPresentationDemo = import.meta.env.VITE_VERSIO_DEMO === "1";
   const setPapers = useLibraryCache((state) => state.setPapers);
   const workspaceNodes = useProjectStore((state) => state.workspaceNodes); const memberships = useProjectStore((state) => state.memberships); const searchQuery = useProjectStore((state) => state.searchQuery);
   const setLoaded = useProjectStore((state) => state.setLoaded); const setSearchQuery = useProjectStore((state) => state.setSearchQuery); const mergeWorkspaceNodes = useProjectStore((state) => state.mergeWorkspaceNodes); const setMemberships = useProjectStore((state) => state.setMemberships); const upsertWorkspaceNode = useProjectStore((state) => state.upsertWorkspaceNode); const upsertMembership = useProjectStore((state) => state.upsertMembership); const removeMembershipsForPaper = useProjectStore((state) => state.removeMembershipsForPaper); const removeWorkspaceNodesLocal = useProjectStore((state) => state.removeWorkspaceNodesLocal);
@@ -65,7 +65,7 @@ export function AppShell() {
           }
           useImportJobStore.getState().upsertJob(seed.importJob);
           // Capture-only: let a scripted screenshot open e.g. the Reader directly.
-          const startPath = import.meta.env.VITE_PAPER_READER_DEMO_START_PATH;
+          const startPath = import.meta.env.VITE_VERSIO_DEMO_START_PATH;
           if (!cancelled && typeof startPath === "string" && startPath.startsWith("/")) {
             navigate(startPath, { replace: true });
           }

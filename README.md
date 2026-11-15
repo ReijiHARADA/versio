@@ -1,4 +1,4 @@
-# Paper Reader
+# Versio
 
 英語論文 PDF を、日本語の Web 記事を読む感覚で読める、**ローカル動作の macOS デスクトップアプリ**（Tauri 2）です。
 
@@ -42,7 +42,7 @@ npm run tauri:build:fast
 
 # リリース確認（clean Python + .app + .dmg）
 npm run tauri:build:clean
-open "src-tauri/target/release/bundle/macos/Paper Reader.app"
+open "src-tauri/target/release/bundle/macos/Versio.app"
 ```
 
 手順・venv・トラブルシュートは [QUICKSTART.md](./QUICKSTART.md)。ビルド時間は [docs/BUILD_TIMINGS.md](./docs/BUILD_TIMINGS.md)。

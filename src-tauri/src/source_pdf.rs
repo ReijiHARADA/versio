@@ -34,15 +34,15 @@ fn paper_dir(app: &AppHandle, paper_id: &str) -> Result<PathBuf, String> {
     if !is_safe_paper_id(paper_id) {
         return Err("無効な論文IDです".into());
     }
-    let root = if matches!(std::env::var("PAPER_READER_ACCEPTANCE"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
-        std::env::var("PAPER_READER_ACCEPTANCE_HOME")
+    let root = if matches!(std::env::var("VERSIO_ACCEPTANCE"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
+        std::env::var("VERSIO_ACCEPTANCE_HOME")
             .ok()
             .map(PathBuf::from)
             .filter(|path| path.is_absolute())
             .or_else(|| app.path().app_data_dir().ok())
             .ok_or_else(|| "app data directory unavailable".to_string())?
-    } else if matches!(std::env::var("PAPER_READER_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
-        std::env::var("PAPER_READER_UI_E2E_HOME")
+    } else if matches!(std::env::var("VERSIO_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")) {
+        std::env::var("VERSIO_UI_E2E_HOME")
             .ok()
             .map(PathBuf::from)
             .filter(|path| path.is_absolute())
@@ -210,12 +210,12 @@ pub fn read_dropped_pdf(path: String) -> Result<Vec<u8>, String> {
     fs::read(&file_path).map_err(|e| e.to_string())
 }
 
-/// Opt-in packaged acceptance: returns fixture path only when PAPER_READER_ACCEPTANCE=1.
+/// Opt-in packaged acceptance: returns fixture path only when VERSIO_ACCEPTANCE=1.
 #[tauri::command]
 pub fn acceptance_fixture_path() -> Option<String> {
-    match std::env::var("PAPER_READER_ACCEPTANCE") {
+    match std::env::var("VERSIO_ACCEPTANCE") {
         Ok(v) if v == "1" || v.eq_ignore_ascii_case("true") => {
-            std::env::var("PAPER_READER_ACCEPTANCE_FIXTURE").ok()
+            std::env::var("VERSIO_ACCEPTANCE_FIXTURE").ok()
         }
         _ => None,
     }
@@ -224,7 +224,7 @@ pub fn acceptance_fixture_path() -> Option<String> {
 /// Opt-in UI E2E: Accessibility-driven harness (not service-call acceptance).
 #[tauri::command]
 pub fn ui_e2e_enabled() -> bool {
-    matches!(std::env::var("PAPER_READER_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true"))
+    matches!(std::env::var("VERSIO_UI_E2E"), Ok(v) if v == "1" || v.eq_ignore_ascii_case("true"))
 }
 
 /// Opt-in UI E2E smoke mode: stop after the imported paper is visible in Reader.
@@ -232,7 +232,7 @@ pub fn ui_e2e_enabled() -> bool {
 pub fn ui_e2e_smoke_only() -> bool {
     ui_e2e_enabled()
         && matches!(
-            std::env::var("PAPER_READER_UI_E2E_SMOKE_ONLY"),
+            std::env::var("VERSIO_UI_E2E_SMOKE_ONLY"),
             Ok(v) if v == "1" || v.eq_ignore_ascii_case("true")
         )
 }
@@ -243,15 +243,15 @@ pub fn ui_e2e_fixture_path() -> Option<String> {
     if !ui_e2e_enabled() {
         return None;
     }
-    let direct = std::env::var("PAPER_READER_UI_E2E_DIRECT_IMPORT")
+    let direct = std::env::var("VERSIO_UI_E2E_DIRECT_IMPORT")
         .map(|value| value == "1" || value.eq_ignore_ascii_case("true"))
         .unwrap_or(false);
     if !direct {
         return None;
     }
-    std::env::var("PAPER_READER_UI_E2E_FIXTURE")
+    std::env::var("VERSIO_UI_E2E_FIXTURE")
         .ok()
-        .or_else(|| std::env::var("PAPER_READER_ACCEPTANCE_FIXTURE").ok())
+        .or_else(|| std::env::var("VERSIO_ACCEPTANCE_FIXTURE").ok())
 }
 
 fn is_safe_external_url(url: &str) -> bool {

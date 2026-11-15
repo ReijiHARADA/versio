@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "kind": "paper-reader-extraction-validation-cohort",
+  "kind": "versio-extraction-validation-cohort",
   "purpose": "Frozen validation candidates, disjoint from development and held-out publisher families.",
   "split": "validation",
   "documents": [

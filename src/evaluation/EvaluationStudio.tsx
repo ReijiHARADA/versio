@@ -258,13 +258,13 @@ export function EvaluationStudio() {
       const pdf = await extractPDFContent(nextFile);
       const result = extractFromPages({ pages: pdf.pages, paperId: `evaluation-${hash.slice(0, 12)}`, filePath: nextFile.name, fileHash: hash, metadata: pdf.metadata });
       const snapshot = {
-        schemaVersion: 1 as const, kind: "paper-reader-extraction-snapshot" as const, createdAt: new Date().toISOString(),
-        parser: { id: "paper-reader-canonical", version: "development" },
+        schemaVersion: 1 as const, kind: "versio-extraction-snapshot" as const, createdAt: new Date().toISOString(),
+        parser: { id: "versio-canonical", version: "development" },
         source: { paperId: `evaluation-${hash.slice(0, 12)}`, fileName: nextFile.name, fileHash: hash, pageCount: pdf.pages.length },
         pages: pdf.pages.map((item) => ({ page: item.pageNumber, width: item.width, height: item.height, rotation: item.rotation })),
         canonical: result.canonical, projection: { blocks: result.blocks },
       };
-      const next = { schemaVersion: 1 as const, kind: "paper-reader-extraction-evaluation" as const, snapshot, review: newReview(snapshot) };
+      const next = { schemaVersion: 1 as const, kind: "versio-extraction-evaluation" as const, snapshot, review: newReview(snapshot) };
       persist(next); setPage(1); setStatus("");
     } catch (error) { setStatus(`抽出できませんでした: ${error instanceof Error ? error.message : String(error)}`); }
   };

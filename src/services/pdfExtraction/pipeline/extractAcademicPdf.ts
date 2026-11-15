@@ -196,7 +196,7 @@ function overallConfidence(canonical: CanonicalDocument): number {
 
 /**
  * Formal PDF extraction entry point. Callers receive CanonicalDocument
- * plus a Paper Reader projection. Internal parsers are not exposed.
+ * plus a Versio projection. Internal parsers are not exposed.
  */
 export async function extractAcademicPdf(
   input: ExtractAcademicPdfInput

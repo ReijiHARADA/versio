@@ -129,7 +129,7 @@ export function evaluateBaselinePaper(input: {
     fileHash: input.id,
     metadata: { title: input.catalogTitle, pageCount: input.pages.length },
   });
-  // Compare the projection consumed by Paper Reader, which expands author
+  // Compare the projection consumed by Versio, which expands author
   // lists and applies flattened-masthead recovery. Layout blocks are retained
   // for diagnostics but are not the user-visible metadata surface.
   const authors = extracted.paper.authors ?? [];

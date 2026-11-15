@@ -18,7 +18,7 @@ async function resolveDirectPdfUrl(candidate) {
     if (pmcId) return `https://europepmc.org/articles/${pmcId}?pdf=render`;
     const response = await fetch(candidate.sourceUrl, {
       redirect: "follow",
-      headers: { "User-Agent": "PaperReaderCorpusFetcher/1.0", Accept: "text/html" },
+      headers: { "User-Agent": "VersioCorpusFetcher/1.0", Accept: "text/html" },
     });
     if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
     const html = await response.text();
@@ -44,7 +44,7 @@ for (const candidate of pending.candidates) {
   }
   const dest = join(outDir, `${candidate.id}.pdf`);
   try {
-    const response = await fetch(url, { redirect: "follow", headers: { "User-Agent": "PaperReaderCorpusFetcher/1.0", Accept: "application/pdf" } });
+    const response = await fetch(url, { redirect: "follow", headers: { "User-Agent": "VersioCorpusFetcher/1.0", Accept: "application/pdf" } });
     if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
     const bytes = Buffer.from(await response.arrayBuffer());
     if (bytes.length < 8000 || !bytes.subarray(0, 5).toString("latin1").startsWith("%PDF")) {

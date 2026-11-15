@@ -1,7 +1,7 @@
 """Compare a local Hugging Face translation model against audit fallbacks.
 
 This is an evaluation harness, not a production cascade.  It translates rows
-that the current Paper Reader pipeline kept as original text, then writes raw
+that the current Versio pipeline kept as original text, then writes raw
 outputs for TypeScript quality scoring and manual semantic review.
 """
 

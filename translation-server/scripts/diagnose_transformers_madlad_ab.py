@@ -3,7 +3,7 @@
 Run once per Transformers version in a fresh process. The source fixtures are
 looked up by stable ID in the existing local real-paper audit reports, so no
 PDF extraction or production server code is involved. Use --repair on 5.x to
-measure the exact encoder/shared reassignment currently used by Paper Reader.
+measure the exact encoder/shared reassignment currently used by Versio.
 """
 from __future__ import annotations
 
@@ -194,7 +194,7 @@ def gen_one(model, tokenizer, text: str) -> dict[str, object]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--repair", action="store_true", help="Apply Paper Reader's encoder/shared -> decoder embedding reassignment")
+    parser.add_argument("--repair", action="store_true", help="Apply Versio's encoder/shared -> decoder embedding reassignment")
     parser.add_argument("--device", default="mps")
     args = parser.parse_args()
     if not MODEL_DIR.exists():

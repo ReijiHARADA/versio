@@ -1,6 +1,6 @@
 # MADLAD Transformers loading diagnostic v1
 
-Generated 2026-09-22. Same local checkpoint, tokenizer, dtype (`torch.bfloat16`), device (`mps`), generation settings, and five fixed Paper Reader fixtures.
+Generated 2026-09-22. Same local checkpoint, tokenizer, dtype (`torch.bfloat16`), device (`mps`), generation settings, and five fixed Versio fixtures.
 
 ## Runtime conclusion
 

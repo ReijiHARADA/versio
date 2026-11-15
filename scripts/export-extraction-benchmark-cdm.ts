@@ -18,5 +18,5 @@ const used = new Set<string>(); const rows = latexGold.flatMap((reference) => {
   if (!candidate) return []; used.add(candidate.formula.id);
   return [{ sampleKey: `${gold.source.fileHash}:${reference.id}:${candidate.formula.id}`, img_id: gold.source.fileHash, gt_idx: reference.id, pred_idx: candidate.formula.id, gt: reference.latex!, pred: candidate.formula.latex! }];
 });
-fs.mkdirSync(path.dirname(output), { recursive: true }); fs.writeFileSync(output, `${JSON.stringify({ schemaVersion: 1, kind: "paper-reader-cdm-input", source: gold.source, samples: rows }, null, 2)}\n`);
+fs.mkdirSync(path.dirname(output), { recursive: true }); fs.writeFileSync(output, `${JSON.stringify({ schemaVersion: 1, kind: "versio-cdm-input", source: gold.source, samples: rows }, null, 2)}\n`);
 console.log(JSON.stringify({ output, matchedFormulas: rows.length, unmatchedGold: latexGold.length - rows.length, skippedWithoutLatex: gold.formulas.length - latexGold.length }, null, 2));

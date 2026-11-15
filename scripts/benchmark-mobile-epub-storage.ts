@@ -1,5 +1,5 @@
 /**
- * Capacity benchmark for the format that Paper Reader actually syncs to a phone.
+ * Capacity benchmark for the format that Versio actually syncs to a phone.
  *
  * The phone-sync feature writes one EPUB 3 file per paper.  This runner uses a
  * real Chromium DOM because both figure extraction and the mobile EPUB image

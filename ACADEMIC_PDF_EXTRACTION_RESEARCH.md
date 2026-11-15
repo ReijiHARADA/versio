@@ -1,6 +1,6 @@
 # 学術 PDF 構造抽出の調査と PoC
 
-対象: Paper Reader（`projects/paper-reader`）  
+対象: Versio（`projects/versio/app`）  
 日付: 2026-09-05  
 ブランチ: `main`（`3ebd33c` 時点の現行 parser を壊さず、import 経路の外で調査）
 
@@ -15,7 +15,7 @@
 
 ---
 
-## 1. 最新版 Paper Reader の現行 parser 分析
+## 1. 最新版 Versio の現行 parser 分析
 
 入口は `importServiceV2.ts`。流れは次のとおり。
 
@@ -170,7 +170,7 @@ Generic 側に残してよい弱い形: 「短い ALL-CAPS の会議ヘッダー
 | メモリ | header だけならコンテナ 2GB 程度。fulltext は 4GB+。full+DL は 8–14GB 級で MADLAD 同居は厳しい |
 | 統合難度 | 中。サイドカーとして任意。常時 RAM 常駐はしない |
 
-Paper Reader での位置づけ: **ヘッダ metadata と参考文献の Evidence。** 本文文字列は使わない（native pdf.js 優先）。
+Versio での位置づけ: **ヘッダ metadata と参考文献の Evidence。** 本文文字列は使わない（native pdf.js 優先）。
 
 本環境: Docker も Java も無し。ライブ GROBID は未実行。TEI パーサと `GROBID_URL` 任意クライアント（クラウド URL 拒否）だけを PoC した。
 
@@ -224,7 +224,7 @@ Clark & Divvala, JCDL 2016。依存はしない。考え方だけ借りる。
 4. 各キャプションについて、隣接 4 方向の proposal を伸ばす。本文・余白・他キャプションと交差させない。列を跨がない（spanning caption 以外）。
 5. proposal をスコアし、重複しない割当（permutation）を選ぶ。
 
-Paper Reader への適用:
+Versio への適用:
 
 - 現行の「埋め込み画像 → 最大重なり 1 対 1」は **baseline として残す**。
 - 画像が無い／小さいときは、キャプション上の crop（現行 `figureImageRect`）に加え、左右 proposal と competing caption ペナルティをスコア化する。
@@ -241,7 +241,7 @@ Table Transformer / PubTables-1M は **detection** と **structure recognition**
 
 今回 **cell-level は Production に入れない。** 設計だけ分ける。
 
-Paper Reader の段階:
+Versio の段階:
 
 1. 今: table caption 検出 + 可能なら周辺 crop 画像。
 2. 次: table bbox detection（caption との `CAPTION_OF`）。
@@ -251,9 +251,9 @@ Paper Reader の段階:
 
 ## 10. 比較表
 
-評価は Paper Reader 用途（学術 PDF、ローカル、M4 24GB、native text 優先）。◎ / ○ / △ / × は「その役割での適性」。
+評価は Versio 用途（学術 PDF、ローカル、M4 24GB、native text 優先）。◎ / ○ / △ / × は「その役割での適性」。
 
-| 項目 | Paper Reader baseline (pdf.js + heuristic) | GROBID | MinerU | Docling | pdffigures2 |
+| 項目 | Versio baseline (pdf.js + heuristic) | GROBID | MinerU | Docling | pdffigures2 |
 |---|---|---|---|---|---|
 | Primary role | Native text + generic layout | Academic semantic | Visual layout | Visual layout | Figure/caption |
 | Title | ○ | ◎ | ○ | ○ | × |
@@ -469,7 +469,7 @@ Metrics:
 
 ## 18. license / distribution 評価
 
-Paper Reader 本体は MIT。同梱物は `THIRD_PARTY_NOTICES.md`。
+Versio 本体は MIT。同梱物は `THIRD_PARTY_NOTICES.md`。
 
 | コンポーネント | 配布アプリに入れるか |
 |---|---|

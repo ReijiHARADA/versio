@@ -9,7 +9,7 @@ const input = argument("--input"); const output = argument("--output");
 if (!input || !output) throw new Error("Usage: npm run export:extraction-benchmark-prediction -- --input bundle.evaluation.json --output id.prediction.json");
 const value = JSON.parse(fs.readFileSync(input, "utf8"));
 const snapshot: ExtractionSnapshot = isEvaluationBundle(value) ? value.snapshot : value;
-if (snapshot?.kind !== "paper-reader-extraction-snapshot") throw new Error("Input must be an Evaluation Studio evaluation bundle or extraction snapshot.");
+if (snapshot?.kind !== "versio-extraction-snapshot") throw new Error("Input must be an Evaluation Studio evaluation bundle or extraction snapshot.");
 fs.mkdirSync(path.dirname(output), { recursive: true });
 fs.writeFileSync(output, `${JSON.stringify(predictionFromSnapshot(snapshot), null, 2)}\n`);
 console.log(JSON.stringify({ output, sourceHash: snapshot.source.fileHash, blocks: snapshot.canonical.nodes.length }, null, 2));

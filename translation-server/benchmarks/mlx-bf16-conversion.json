@@ -1,6 +1,6 @@
 {
   "source_model": "google/madlad400-3b-mt",
-  "output_dir": "/Users/harada/Desktop/codex/projects/paper-reader/translation-server/models/madlad400-3b-mt-mlx-bf16",
+  "output_dir": "/Users/harada/Desktop/codex/projects/versio/app/translation-server/models/madlad400-3b-mt-mlx-bf16",
   "weight_dtype": "bfloat16",
   "quantization": null,
   "conversion_s": 22.834299583977554,

@@ -22,7 +22,7 @@ export function useReaderDocument(paperId: string | undefined) {
   useEffect(() => {
     let cancelled = false;
 
-    if (import.meta.env.VITE_PAPER_READER_DEMO === "1") {
+    if (import.meta.env.VITE_VERSIO_DEMO === "1") {
       setIsLoading(false);
       setHasSourcePdf(false);
       return () => {
@@ -90,7 +90,7 @@ export function useReaderDocument(paperId: string | undefined) {
   useEffect(() => {
     return () => {
       if (!paperId) return;
-      if (import.meta.env.VITE_PAPER_READER_DEMO === "1") return;
+      if (import.meta.env.VITE_VERSIO_DEMO === "1") return;
       const cache = useLibraryCache.getState();
       const paper = cache.papers.find((item) => item.id === paperId);
       const busy =

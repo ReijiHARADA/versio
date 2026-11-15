@@ -2,13 +2,13 @@ import type { Paper, PaperBlock, Section } from "../types/paper";
 import type { WorkspaceNode, WorkspacePaper } from "../types/project";
 import type { ImportJob } from "../stores/importJobStore";
 
-export const PRESENTATION_DEMO_FILE_NAME = "PaperReader-Demo.pdf";
+export const PRESENTATION_DEMO_FILE_NAME = "Versio-Demo.pdf";
 
 /** This build-time gate prevents fixture data entering ordinary imports. */
 export function isPresentationDemoPdf(file: File): boolean {
   // The dedicated build is the boundary. Do not rely on browser-specific file
   // names, which may be rewritten by a picker or drag-and-drop bridge.
-  return import.meta.env.VITE_PAPER_READER_DEMO === "1" && file.type.includes("pdf");
+  return import.meta.env.VITE_VERSIO_DEMO === "1" && file.type.includes("pdf");
 }
 
 /** Figures are cropped/extracted locally by `npm run prepare:demo-video`. */

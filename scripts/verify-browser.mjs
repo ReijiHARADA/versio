@@ -1,8 +1,8 @@
 /**
- * Browser smoke for Paper Reader (Playwright).
+ * Browser smoke for Versio (Playwright).
  *
  * Prerequisites:
- * - Frontend preview/dev serving PAPER_READER_URL (default http://localhost:5173)
+ * - Frontend preview/dev serving VERSIO_URL (default http://localhost:5173)
  * - Built assets already produced (`npm run build` + `npm run preview` in CI)
  *
  * Critical checks must fail (not skip) when fixtures are missing.
@@ -11,7 +11,7 @@
 import { mkdirSync, rmSync } from "node:fs";
 import { chromium } from "@playwright/test";
 
-const base = process.env.PAPER_READER_URL ?? "http://localhost:5173";
+const base = process.env.VERSIO_URL ?? "http://localhost:5173";
 const outDir = new URL("../test-results/browser-verify/", import.meta.url);
 rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });

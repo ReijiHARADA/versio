@@ -8,7 +8,7 @@ const input = option("--prediction"); const cdmInputPath = option("--cdm-input")
 if (!input || !cdmInputPath || !scoresPath || !output) throw new Error("Usage: npm run apply:extraction-benchmark-cdm -- --prediction prediction.json --cdm-input exported-cdm-input.json --scores cdm-scores.json --output prediction-with-cdm.json");
 const prediction = JSON.parse(fs.readFileSync(input, "utf8")) as ExtractionBenchmarkPrediction;
 const cdmInput = JSON.parse(fs.readFileSync(cdmInputPath, "utf8")) as { kind?: string; source?: { fileHash?: string }; samples?: Array<{ sampleKey?: string; img_id?: string; gt_idx?: string; pred_idx?: string }> };
-if (cdmInput.kind !== "paper-reader-cdm-input" || cdmInput.source?.fileHash !== prediction.source.fileHash || !Array.isArray(cdmInput.samples)) throw new Error("CDM input must be an exported paper-reader-cdm-input for the same prediction source.");
+if (cdmInput.kind !== "versio-cdm-input" || cdmInput.source?.fileHash !== prediction.source.fileHash || !Array.isArray(cdmInput.samples)) throw new Error("CDM input must be an exported versio-cdm-input for the same prediction source.");
 const expectedByPrediction = new Map<string, string>();
 for (const sample of cdmInput.samples) {
   if (!sample.sampleKey || !sample.pred_idx || sample.img_id !== prediction.source.fileHash || !sample.gt_idx || expectedByPrediction.has(sample.pred_idx)) throw new Error("CDM input has malformed or duplicate formula samples.");

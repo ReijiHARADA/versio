@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "kind": "paper-reader-extraction-benchmark-prediction",
+  "kind": "versio-extraction-benchmark-prediction",
   "id": "cdm-fixture",
   "parser": { "id": "fixture", "version": "1" },
   "source": { "fileHash": "cdm-hash" },

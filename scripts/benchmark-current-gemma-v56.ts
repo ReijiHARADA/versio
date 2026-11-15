@@ -15,7 +15,7 @@ type AuditRow = {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const reportPath = path.join(root, "test-data/real-papers/reports/translation-audit-v56-transformers-4.57.6.json");
-const previousPath = "/tmp/paper-reader-v54-fresh-gemma.json";
+const previousPath = "/tmp/versio-v54-fresh-gemma.json";
 const outputPath = path.join(root, "test-data/real-papers/reports/gemma-v56-current-runtime-replay.json");
 const baseUrl = process.env.OLLAMA_BASE_URL ?? "http://127.0.0.1:11434";
 const model = process.env.OLLAMA_MODEL ?? "gemma2:9b";
@@ -55,7 +55,7 @@ async function main() {
   const manifest = {
     createdAt: existing?.createdAt ?? new Date().toISOString(),
     sourceReport: "test-data/real-papers/reports/translation-audit-v56-transformers-4.57.6.json",
-    baselineComparison: "/tmp/paper-reader-v54-fresh-gemma.json",
+    baselineComparison: "/tmp/versio-v54-fresh-gemma.json",
     model,
     baseUrl,
     prompt: { system: systemPrompt, userTemplate: "Translate the following paragraph to Japanese:\n\n{source}" },

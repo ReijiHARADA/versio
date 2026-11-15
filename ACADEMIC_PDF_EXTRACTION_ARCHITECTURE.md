@@ -1,6 +1,6 @@
 # Academic PDF Extraction Architecture
 
-Production architecture for Paper Reader. Research background: [ACADEMIC_PDF_EXTRACTION_RESEARCH.md](./ACADEMIC_PDF_EXTRACTION_RESEARCH.md).
+Production architecture for Versio. Research background: [ACADEMIC_PDF_EXTRACTION_RESEARCH.md](./ACADEMIC_PDF_EXTRACTION_RESEARCH.md).
 
 Source of Truth is **CanonicalDocument**, not pdfLayout, GROBID, Docling, OCR, or a Format Profile.
 
@@ -39,7 +39,7 @@ Import calls only `extractAcademicPdf`. It does not contain column, title, autho
 | Format Profile | extra evidence + chrome hard rules after detection | parsing the whole PDF |
 | Enrichers | optional extra evidence | replacing native text |
 | DocumentResolver | final roles, confidence, relations | UI / DB schema |
-| Projection | Paper reader records | re-parsing PDF |
+| Projection | Versio records | re-parsing PDF |
 
 ## CanonicalDocument
 
