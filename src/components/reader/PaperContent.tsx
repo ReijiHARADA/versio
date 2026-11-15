@@ -538,6 +538,7 @@ export const PaperContent = memo(
           const delta = actual - estimated;
           if (Math.abs(delta) <= 2) continue;
           if (sectionEl.getBoundingClientRect().top < containerTop - 1) {
+            // oxlint-disable-next-line react/immutability -- DOM scroll position, not a React prop
             container.scrollTop += delta;
           }
         }

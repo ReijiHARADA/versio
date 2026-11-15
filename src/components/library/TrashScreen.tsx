@@ -67,6 +67,7 @@ function HoldToEmptyButton({
         }
         return;
       }
+      // oxlint-disable-next-line react/immutability -- self-scheduling rAF callback reads tick after initialization
       rafRef.current = requestAnimationFrame(tick);
     },
     [onComplete]

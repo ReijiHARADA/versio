@@ -249,8 +249,8 @@ function isStackedDenominatorCrumb(text: string): boolean {
   if (/\b(?:the|and|for|with|from|this|that|where)\b/i.test(t)) return false;
   // Do not pull ordinary numeric prose or equation numbers into a neighbour.
   if (/^\(\s*\d{1,2}[a-z]?\s*\)$/.test(t)) return false;
-  return /^[0-9A-Za-zα-ωΑ-Ω\s()+\-−=\/.]+$/u.test(t) &&
-    (/[α-ωΑ-Ω]/u.test(t) || /[+\-−\/]/.test(t) || /\d/.test(t));
+  return /^[0-9A-Za-zα-ωΑ-Ω\s()+\-−=/.]+$/u.test(t) &&
+    (/[α-ωΑ-Ω]/u.test(t) || /[+\-−/]/.test(t) || /\d/.test(t));
 }
 
 /** A display derivation often paints each algebraic continuation as a node. */
@@ -263,7 +263,7 @@ function isMathDisplayInterstice(node: CanonicalNode): boolean {
   if (!text || text.length > 120 || /[.!?;:]/u.test(text)) return false;
   if (/\b(?:the|and|for|with|from|this|that|where|which|we|our)\b/i.test(text)) return false;
   const proseWords = text.match(/[A-Za-z]{4,}/g) ?? [];
-  return proseWords.length <= 1 && /[=+＋−\-−∫∑∏√γΓεδλμσπρτθζξ\[\](){}|]/u.test(text);
+  return proseWords.length <= 1 && /[=+＋−\-−∫∑∏√γΓεδλμσπρτθζξ[\](){}|]/u.test(text);
 }
 
 function alignedContinuationTarget(result: CanonicalNode[], node: CanonicalNode): { targetIndex: number; target: CanonicalNode; interstice: CanonicalNode[] } | null {

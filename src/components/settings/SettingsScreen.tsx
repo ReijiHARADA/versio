@@ -344,6 +344,7 @@ export function SettingsScreen() {
       root.removeEventListener("scroll", onScroll);
       if (frame) cancelAnimationFrame(frame);
     };
+  // oxlint-disable-next-line react-hooks/exhaustive-deps -- runs on section change only; scrollToSection is recreated every render
   }, [activeSection]);
 
   return (

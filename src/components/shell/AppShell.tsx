@@ -101,6 +101,7 @@ export function AppShell() {
       cancelled = true;
       unsubscribe();
     };
+  // oxlint-disable-next-line react-hooks/exhaustive-deps -- one-shot demo seed; navigate identity must not re-run it
   }, [isPresentationDemo, mergeWorkspaceNodes, setLoaded, setMemberships, setPapers]);
 
   const routeNodeId = location.pathname.startsWith("/project/") ? location.pathname.slice("/project/".length).split("/")[0] : null;
