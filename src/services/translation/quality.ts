@@ -2173,8 +2173,10 @@ export function unsafeParagraphStructureReason(text: string): string | null {
   // Treat that citation suffix as terminal punctuation; otherwise a complete
   // paragraph is incorrectly classified as a page fragment and never sent to
   // translation.
-  const terminalCitationSuffix = /[.!?。！？]\s*(?:\[\s*\d+(?:\s*[-–—,]\s*\d+)*\s*\]|\d{1,3})$/.test(t);
-  const noTerminal = !/[.!?。！？]$/.test(t) && !terminalCitationSuffix;
+  // Several superscript citations (`... cutoffs.13,14`, `... studies.10–15`) count the same way,
+  // and so does a closing quotation mark or bracket after the full stop (`... resources [25].”`).
+  const terminalCitationSuffix = /[.!?。！？]\s*(?:\[\s*\d+(?:\s*[-–—,]\s*\d+)*\s*\]|\d{1,3}(?:\s*[-–—,]\s*\d{1,3})*)$/.test(t);
+  const noTerminal = !/[.!?。！？][”"’')\]]*$/.test(t) && !terminalCitationSuffix;
   // A paragraph followed by a bare figure/table label is commonly a native
   // block-boundary or caption merge. Keep the structural marker with the
   // layout review instead of sending the mixed unit to a translation model.

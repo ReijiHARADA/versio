@@ -111,3 +111,28 @@ export function isLikelyNarrativeText(text: string): boolean {
   const words = trimmed.split(/\s+/).filter(Boolean);
   return words.length >= 12 && /[.!?](?:\s|$)/.test(trimmed);
 }
+
+/**
+ * A whole body paragraph swept into a table region: several finished
+ * sentences, few numbers, and (when the lines are known) one left-aligned
+ * text column without cell gaps. Table cells never read like this.
+ */
+export function looksLikeRunningProse(text: string, lines?: LayoutBlock["lines"]): boolean {
+  const trimmed = text.trim();
+  if (/^(?:table|fig(?:ure)?\.?|表|図)\s*\d*/i.test(trimmed)) return false;
+  // Cell text keeps its row breaks; a paragraph's lines are joined.
+  if (trimmed.includes("\n")) return false;
+  if (!/[.!?][”"’')\]]*$/.test(trimmed)) return false;
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  if (words.length < 30) return false;
+  if ((trimmed.match(/[a-z)\]][.!?]\s+[A-Z]/g) ?? []).length < 1) return false;
+  const digits = (trimmed.match(/\d/g) ?? []).length;
+  const letters = (trimmed.match(/[A-Za-z]/g) ?? []).length;
+  if (digits / Math.max(1, letters + digits) >= 0.12) return false;
+  const functionWords = words.filter((w) => /^(?:the|of|and|to|in|a|is|are|was|were|for|with|that|this|by|on|as)$/i.test(w)).length;
+  if (functionWords / words.length < 0.15) return false;
+  if (!lines || lines.length < 2) return true;
+  const xs = lines.map((l) => Math.round(l.x / 4));
+  const mode = [...new Set(xs)].map((x) => xs.filter((y) => Math.abs(y - x) <= 1).length).sort((a, b) => b - a)[0];
+  return mode / lines.length >= 0.7;
+}

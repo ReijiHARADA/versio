@@ -43,10 +43,19 @@ import {
   isNumberedTableCaption,
   looksLikeCaptionedTableCellFragment,
   looksLikeProseMistakenForTable,
+  looksLikeRunningProse,
 } from "./tablePredicates";
+
+/**
+ * The reference list's own heading. A body section that only mentions
+ * references ("3.6 Cited references analysis") is prose and stays translatable.
+ */
+const REFERENCES_HEADING =
+  /^(?:[\dIVX]+(?:\.\d+)*\.?\s*)?(?:references?(?:\s+(?:and\s+notes|cited|list))?|bibliography|literature\s+cited|works\s+cited|cited\s+literature|参考文献|引用文献)\s*[:.]?$/i;
 
 function normalizeSection(title: string): NormalizedSectionKind {
   const lower = title.toLowerCase();
+  if (REFERENCES_HEADING.test(title.trim())) return "references";
   if (/abstract|要旨/i.test(lower)) return "abstract";
   if (/introduction|はじめに|序論|序言|まえがき/i.test(lower)) {
     return "introduction";
@@ -67,9 +76,6 @@ function normalizeSection(title: string): NormalizedSectionKind {
   if (/discussion|考察/i.test(lower)) return "discussion";
   if (/conclusion|summary|future|まとめ|結論|おわりに/i.test(lower)) {
     return "conclusion";
-  }
-  if (/reference|bibliography|参考文献|引用文献/i.test(lower)) {
-    return "references";
   }
   if (/acknowledge|謝辞/i.test(lower)) return "other";
   return "other";
@@ -4029,6 +4035,24 @@ function projectTableNode(context: BodyNodeContext, state: BodyProjectionState, 
         translationStatus: type === "paragraph" && shouldTranslateParagraph(node.text) ? "pending" : "skipped",
         parentBlockId: null,
         metadata: { column, role: type, demotedFromTable: true, demotionReason: "weak-repeated-prose-grid" },
+      });
+      return true;
+    }
+    // A body paragraph printed next to a table can be swept into its region.
+    // Running prose (several sentences in one left-aligned column, few
+    // numbers) is never a table: keep it as a translatable paragraph.
+    if (node.role === "table" && node.text && looksLikeRunningProse(node.text, tableLayout?.lines)) {
+      context.pushBlock(node, tableLayout, {
+        sectionId: state.currentSectionId,
+        type: "paragraph",
+        pageStart: node.pageStart,
+        pageEnd: node.pageEnd,
+        boundingBoxes: boxes,
+        original: node.text,
+        translated: null,
+        translationStatus: shouldTranslateParagraph(node.text) ? "pending" : "skipped",
+        parentBlockId: null,
+        metadata: { column, role: "paragraph", demotedFromTable: true, demotionReason: "running-prose" },
       });
       return true;
     }

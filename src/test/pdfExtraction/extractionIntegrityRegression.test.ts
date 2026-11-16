@@ -44,6 +44,10 @@ describe("extraction integrity on real papers", () => {
     if (!pdfOf("epmc-PMC11003102")) ctx.skip();
     const { paragraphs, warned } = await extract("epmc-PMC11003102");
     expect(paragraphs.some((b) => /BMC Psychology \(2024\) 12:195/.test(b.original ?? ""))).toBe(false);
+    // Paragraphs separated only by a first-line indent stay separate, and line-break hyphens are gone.
+    const opening = paragraphs.find((b) => /^Work environment globally is rapidly evolving/.test(b.original ?? ""));
+    expect(opening?.original).not.toMatch(/PSC is an organisational culture/);
+    expect(opening?.original).toMatch(/have experienced violence/);
     expect(warned).toBeLessThanOrEqual(9);
   }, 60_000);
 

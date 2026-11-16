@@ -59,6 +59,9 @@ jobs:
         run: |
           mkdir -p bundled-resources/translation-server
           touch bundled-resources/apple-translation
+          # externalBin sidecar (PLaMo llama-server); Tauri requires the target-suffixed file.
+          mkdir -p binaries
+          touch binaries/llama-server-x86_64-unknown-linux-gnu
       - name: Install Tauri Linux system dependencies
         run: |
           sudo apt-get update

@@ -51,6 +51,11 @@ function documents(): Doc[] {
       .sort()
       .map((f) => ({ id: `real-${f.replace(/\.pdf$/, "")}`, pdf: path.join(dir, f) }));
   }
+  if (corpus === "paragold") {
+    // CC-licensed Europe PMC PDFs with publisher JATS (scripts/fetch-paragraph-gold.ts).
+    const list = JSON.parse(fs.readFileSync(path.join(root, "test-data/paragraph-gold/index.json"), "utf8")) as Array<{ id: string; pdf: string }>;
+    return list.map((d) => ({ id: d.id, pdf: path.join(root, d.pdf), language: "en" }));
+  }
   throw new Error(`unknown corpus ${corpus}`);
 }
 
@@ -71,7 +76,9 @@ const TEXT_TYPES = new Set(["paragraph", "heading", "footnote"]);
 
 await loadNodeCrfRuntime();
 fs.mkdirSync(path.join(outDir, "docs"), { recursive: true });
-const docs = documents().filter((d) => !ids || ids.includes(d.id)).slice(0, limit);
+// --shard k/n: run every n-th document (several processes in parallel share one run directory).
+const [shardK, shardN] = (arg("shard") ?? "0/1").split("/").map(Number);
+const docs = documents().filter((d) => !ids || ids.includes(d.id)).slice(0, limit).filter((_, i) => i % shardN === shardK);
 const summary: Array<Record<string, unknown>> = [];
 for (const [n, doc] of docs.entries()) {
   try {
@@ -108,7 +115,7 @@ for (const [n, doc] of docs.entries()) {
     summary.push({ id: doc.id, error: String((error as Error)?.message ?? error).slice(0, 200) });
   }
 }
-fs.writeFileSync(path.join(outDir, "summary.json"), JSON.stringify(summary, null, 1));
+fs.writeFileSync(path.join(outDir, shardN > 1 ? `summary-${shardK}.json` : "summary.json"), JSON.stringify(summary, null, 1));
 const ok = summary.filter((s) => !s.error) as Array<{ paragraphs: number; warned: number }>;
 const total = ok.reduce((a, s) => a + s.paragraphs, 0);
 const warned = ok.reduce((a, s) => a + s.warned, 0);
