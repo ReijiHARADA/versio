@@ -8,7 +8,9 @@
  *
  * Rule: paragraph A ends without a sentence-final mark, and a later paragraph
  * B (up to the next page) starts as a continuation (lower case, or after a
- * line-end hyphen). Everything between them must be non-prose — figures,
+ * line-end hyphen), or, when A cannot end where it does (comma, function
+ * word, open parenthesis), B is the first paragraph after the interruption
+ * and starts with a number or symbol, or closes A's parenthesis. Everything between them must be non-prose — figures,
  * tables, captions, footnotes, short fragments (table cells, figure labels,
  * running heads) — never a complete prose paragraph or an equation. B is
  * appended to A; the interruptions stay, after the joined paragraph.
@@ -20,6 +22,29 @@ const words = (text: string) => text.match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu)?.
 const TERMINAL = /[.!?。！？][”"’')\]]*\s*$/;
 const isOpenEnded = (text: string) => !TERMINAL.test(text) && !/:\s*$/.test(text);
 const CONTINUATION_START = /^(?:[a-z]|(?:which|that|and|or|but|where|while|whereas|because|although|including|with|for|of|to|in)\b)/;
+/**
+ * A paragraph that cannot end where it does: after a comma, a function word or
+ * inside an open parenthesis.
+ */
+const isHardOpen = (text: string) =>
+  /(?:,|\b(?:and|or|but|nor|that|which|whose|the|a|an|of|to|in|for|with|without|among|between|by|from|on|at|as|than|versus|into|onto|over|under|about|including|such|whether|its|their|our|this|these|those|is|are|was|were|be|been|has|have|had))$/i.test(text) ||
+  hasOpenParenthesis(text);
+const hasOpenParenthesis = (text: string) => (text.match(/\(/g)?.length ?? 0) > (text.match(/\)/g)?.length ?? 0);
+/**
+ * The continuation of a hard-open paragraph that does not start in lower case:
+ * a number or symbol (`… versus` + `25.0%; …`, `… (43.2%, Nd` + `= 308) …`),
+ * or, when the paragraph left a parenthesis open, any text that closes it
+ * (`(Open Science` + `Collaboration, 2015). …`). List items, numbered
+ * headings, footnote marks, captions and symbol-only debris are not.
+ */
+function looseContinuation(open: string, text: string): boolean {
+  if (words(text) < 3 || !/\p{L}{4,}/u.test(text)) return false;
+  if (/^(?:[•‣▪∙*–-]\s|\(?\d{1,2}[.)]\s|\(?[a-z]{1,3}\)\s|\d{1,2}\s+(?:\p{Lu}|https?:)|(?:Fig\.?|Figure|Table|TABLE|FIGURE|Supplementary)\s*\d)/u.test(text)) return false;
+  if (!/^\p{L}/u.test(text)) return true;
+  const head = text.slice(0, 120);
+  const close = head.indexOf(")");
+  return hasOpenParenthesis(open) && close >= 0 && (head.indexOf("(") < 0 || head.indexOf("(") > close);
+}
 /** A complete prose paragraph between the pieces means they do not belong together. */
 const isCompleteProse = (text: string) => words(text) >= 20 && /^[\p{Lu}"“(]/u.test(text) && TERMINAL.test(text);
 
@@ -52,6 +77,8 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
       const currentText = current.original?.trim() ?? "";
       if (!isOpenEnded(currentText) || words(currentText) < 6) break;
       let target = -1;
+      const hardOpen = isHardOpen(currentText);
+      let skippedParagraph = false;
       for (let j = i + 1; j < out.length && j <= i + 12 && out[j].pageStart <= current.pageEnd + 1; j += 1) {
         const candidate = out[j];
         const candidateText = candidate.original?.trim() ?? "";
@@ -59,7 +86,13 @@ export function stitchParagraphContinuations(blocks: PaperBlock[], sections: Arr
           target = j;
           break;
         }
+        // Without a lower-case start, only the first paragraph after the interruption can be the continuation.
+        if (hardOpen && !skippedParagraph && eligible(candidate) && looseContinuation(currentText, candidateText)) {
+          target = j;
+          break;
+        }
         if (!interruptionAllowed(candidate)) break;
+        if (candidate.type === "paragraph") skippedParagraph = true;
       }
       if (target < 0) break;
       const next = out[target];

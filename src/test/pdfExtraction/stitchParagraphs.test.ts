@@ -104,3 +104,22 @@ describe("reconcileTranslationWarnings around display equations", () => {
     expect(orphan[1].metadata.translationInputWarning).toMatch(/先頭/);
   });
 });
+
+describe("stitchParagraphContinuations after a paragraph that cannot end", () => {
+  const sections = [{ id: "s-body", normalizedKind: "body" }];
+  it("joins a continuation that starts with a number or closes an open parenthesis", () => {
+    const a = block("a", "paragraph", "Almost all companies monitored driving hours for light drivers (82.1% versus");
+    const b = block("b", "paragraph", "25.0%; p = .03) and for heavy drivers the share was even higher.");
+    expect(stitchParagraphContinuations([a, block("f", "figure", ""), b], sections)[0].original).toMatch(/versus 25\.0%/);
+    const c = block("c", "paragraph", "Many findings in psychology are reproducible (Open Science");
+    const d = block("d", "paragraph", "Collaboration, 2015). In addition, there have been several replication efforts.");
+    expect(stitchParagraphContinuations([c, d], sections)).toHaveLength(1);
+  });
+
+  it("does not take an upper-case paragraph, a list item, a numbered heading or a footnote as the continuation", () => {
+    const a = block("a", "paragraph", "We report the results of the memory cue and forgetting of gist and");
+    for (const text of ["Results of the forgetting rate differed between the groups.", "(i) the noise is normally distributed", "3 Results and discussion", "7 https://example.org/library/page"]) {
+      expect(stitchParagraphContinuations([a, block("b", "paragraph", text)], sections)).toHaveLength(2);
+    }
+  });
+});
