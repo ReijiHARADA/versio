@@ -28,7 +28,8 @@ const BASELINE: Record<string, number> = {
 function listTs(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) return entry.name === "formats" ? [] : listTs(full);
+    // crf/ is a GROBID port whose features name identifier schemes (arXiv, DOI), not publisher rules.
+    if (entry.isDirectory()) return entry.name === "formats" || entry.name === "crf" ? [] : listTs(full);
     return entry.name.endsWith(".ts") ? [full] : [];
   });
 }
