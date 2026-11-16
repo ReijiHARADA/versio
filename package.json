@@ -10,6 +10,7 @@
     "prepare:demo-video": "node scripts/create-presentation-demo-pdf.mjs",
     "dev:extraction-eval": "vite --open /eval.html",
     "generate:licenses": "node scripts/generate-licenses.mjs",
+    "build:llama-server": "bash scripts/build-llama-server.sh",
     "prebuild": "npm run generate:licenses",
     "build": "tsc -b && vite build",
     "typecheck": "tsc --noEmit",

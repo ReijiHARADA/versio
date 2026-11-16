@@ -23,6 +23,7 @@ tauri = { version = "2.11.3", features = ["macos-private-api"] }
 tauri-plugin-log = "2"
 tauri-plugin-shell = "2"
 base64 = "0.22"
+sha2 = "0.10"
 
 # Apple Vision OCR + window chrome (macOS only)
 [target.'cfg(target_os = "macos")'.dependencies]

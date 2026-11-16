@@ -5,6 +5,7 @@ mod macos_chrome;
 mod ocr;
 mod opened_files;
 mod paper_fs;
+mod plamo;
 mod source_pdf;
 
 use std::path::PathBuf;
@@ -230,6 +231,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .manage(server_state)
+        .manage(plamo::PlamoState::default())
         .manage(opened_files::OpenedPdfQueue::default())
         .setup(|app| {
             // Release keeps warnings and errors in the app log dir so a
@@ -269,11 +271,15 @@ pub fn run() {
                     let _ = child.kill();
                     log::info!("Translation server stopped on window close.");
                 }
+                window.state::<plamo::PlamoState>().stop();
             }
         })
         .invoke_handler(tauri::generate_handler![
             restart_translation_server,
             get_translation_server_token,
+            plamo::plamo_model_status,
+            plamo::download_plamo_model,
+            plamo::ensure_plamo_server,
             translate_with_apple,
             sync_window_chrome_theme,
             ocr::ocr_image,

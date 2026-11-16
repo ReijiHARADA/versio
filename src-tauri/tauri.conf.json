@@ -47,6 +47,7 @@
   },
   "bundle": {
     "active": true,
+    "externalBin": ["binaries/llama-server"],
     "targets": ["app"],
     "icon": [
       "icons/32x32.png",

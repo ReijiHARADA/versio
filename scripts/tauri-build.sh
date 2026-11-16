@@ -90,6 +90,7 @@ WALL0="$(now_ms)"
 
 t0="$(now_ms)"
 bash "$SCRIPT_DIR/bundle-python.sh" "$PYTHON_ARG"
+bash "$SCRIPT_DIR/build-llama-server.sh"
 python_s="$(elapsed_s "$t0")"
 echo "python_prep_s=$python_s" >>"$TIMING_FILE"
 echo "⏱  Python runtime: ${python_s}s"
