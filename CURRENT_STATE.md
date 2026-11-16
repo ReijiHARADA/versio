@@ -1,3 +1,10 @@
+---
+type: Note
+title: Versio 現在の状態
+description: user-visible な現在状態のまとめ。
+tags: [status]
+---
+
 # Versio 現在の状態
 
 user-visible な現在状態だけを書く。日付つきの作業ログ・計測の経緯は `docs/history/` へ。
@@ -13,7 +20,7 @@ user-visible な現在状態だけを書く。日付つきの作業ログ・計�
 | メモ・用語 | 訳文上のインラインメモ（block ID アンカー）、用語集 |
 | 書き出し | 訳文 Markdown / Notion 用 ZIP / EPUB（スマホ同期）、フォルダ単位 ZIP。保存先は Rust save dialog |
 | 元 PDF | 読んでいる付近のページを Preview で開く（macOS のみ） |
-| 翻訳 | MADLAD-400 3B（MPS + bf16、batch 24、microbatch）。アプリが `127.0.0.1:8765` に spawn しトークン認証 |
+| 翻訳 | 既定は PLaMo 3 Translate 2B（同梱 `llama-server`、`127.0.0.1:8766`、起動ごとのトークン）。モデル（1.8 GB）は初回利用時に設定画面または取り込み時にダウンロード。旧 MADLAD-400 3B は設定で選べる（次版で削除）。根拠: [docs/research/local-llm-translation-bench-2026-11.md](./docs/research/local-llm-translation-bench-2026-11.md) |
 | 設定 | 表示設定、ライセンス一覧（Versio MIT + 必須 third-party notices） |
 
 ## 検証状況
@@ -47,7 +54,7 @@ user-visible な現在状態だけを書く。日付つきの作業ログ・計�
 
 ## 診断の入口
 
-- 配布 `.app` の翻訳サーバー出力（#5 マージ後）: `~/Library/Logs/com.harada.versio/translation-server.log`（前回起動分 `.prev.log`）。Rust 側は同ディレクトリの `Versio.log`。
+- 配布 `.app` の PLaMo サイドカー出力: `~/Library/Logs/com.harada.versio/plamo-server.log`。旧 MADLAD サーバー出力（#5 マージ後）: `~/Library/Logs/com.harada.versio/translation-server.log`（前回起動分 `.prev.log`）。Rust 側は同ディレクトリの `Versio.log`。
 
 ## 保守リファクタリング記録
 

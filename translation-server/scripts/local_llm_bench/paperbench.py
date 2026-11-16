@@ -1,7 +1,7 @@
 """Whole-paper wall time: translate every translatable block of one audit-dump paper
 with N concurrent requests (Versio's frontend default is 8).
 
-  python3 paperbench.py --doc <audit doc json> --name X --kind madlad|plamo [--conc 8]
+  python3 paperbench.py --doc <audit doc json> --name X --kind madlad|plamo [--conc 8] [--port 8766 --token T]
 """
 import argparse, json, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -10,8 +10,14 @@ from pathlib import Path
 HERE = Path(__file__).parent
 
 
+TOKEN = None
+
+
 def post(url, body):
-    req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+    headers = {"Content-Type": "application/json"}
+    if TOKEN:
+        headers["Authorization"] = f"Bearer {TOKEN}"
+    req = urllib.request.Request(url, data=json.dumps(body).encode(), headers=headers)
     with urllib.request.urlopen(req, timeout=1800) as r:
         return json.loads(r.read())
 
@@ -20,8 +26,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--doc", required=True); ap.add_argument("--name", required=True)
     ap.add_argument("--kind", choices=["madlad", "plamo"], required=True)
-    ap.add_argument("--conc", type=int, default=8); ap.add_argument("--port", default="8090")
+    ap.add_argument("--conc", type=int, default=8); ap.add_argument("--port", default="8090"); ap.add_argument("--token")
     a = ap.parse_args()
+    global TOKEN
+    TOKEN = a.token
     d = json.loads(Path(a.doc).read_text())
     blocks = [b for b in d["blocks"] if b["translatable"]]
 

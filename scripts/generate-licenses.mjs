@@ -696,6 +696,36 @@ function collectCurated() {
     warnings.push("src/services/pdfExtraction/crf/GROBID-LICENSE.txt が見つかりません");
   }
 
+  // PLaMo 3 Translate weights are downloaded on first use for the llama-server sidecar.
+  const plamoTextKey = storeText(readText(path.join(ROOT, "licenses", "plamo-community-license.txt")));
+  addPackage({
+    id: "model:pfnet/plamo-3-translate-2b-GGUF",
+    name: "PLaMo 3 Translate 2B (model weights) — Built with PLaMo",
+    version: "4f672106b847200bfdc0f6af6c321cd94eba1aed",
+    ecosystem: "model",
+    license: "PLaMo Community License",
+    copyright: "Preferred Networks, Inc.",
+    textKey: plamoTextKey,
+    noticeKey: null,
+    status: packageStatus("PLaMo Community License", plamoTextKey),
+    notes: "Built with PLaMo. 翻訳エンジンのモデル重み（初回利用時にダウンロード）。全文は licenses/plamo-community-license.txt（Hugging Face LICENSE/en を固定 revision で取得）。",
+  }, { force: true });
+
+  // llama-server sidecar (static build of llama.cpp b12110) with its linked MIT dependencies.
+  const llamaTextKey = storeText(readText(path.join(ROOT, "licenses", "llama-cpp-LICENSE.txt")));
+  addPackage({
+    id: "binary:llama.cpp",
+    name: "llama.cpp (llama-server)",
+    version: "b12110",
+    ecosystem: "asset",
+    license: "MIT",
+    copyright: "The ggml authors",
+    textKey: llamaTextKey,
+    noticeKey: null,
+    status: packageStatus("MIT", llamaTextKey),
+    notes: "翻訳サイドカーとして同梱。cpp-httplib (MIT) と nlohmann/json (MIT) の表記を含む。",
+  });
+
   // MADLAD-400 weights are downloaded for the translation server (not MIT).
   // License type confirmed from Hugging Face model card.
   const apacheText = findApache20TextFromTree() ?? null;

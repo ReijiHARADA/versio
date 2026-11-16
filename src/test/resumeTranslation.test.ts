@@ -92,7 +92,7 @@ describe("resumeIncompleteTranslation", () => {
       })
     );
 
-    await resumeIncompleteTranslation(paper.id, {}, { useCache: false });
+    await resumeIncompleteTranslation(paper.id, {}, { translationEngine: "madlad", useCache: false });
 
     expect(createSpy).toHaveBeenCalled();
     expect(createSpy.mock.results[0]?.value.appleRouter).not.toBeNull();
@@ -113,7 +113,7 @@ describe("resumeIncompleteTranslation", () => {
       error: "翻訳サーバーに接続できません",
     });
 
-    await resumeIncompleteTranslation(paper.id, {}, { useCache: false });
+    await resumeIncompleteTranslation(paper.id, {}, { translationEngine: "madlad", useCache: false });
 
     const [result] = await getBlocksByPaper(paper.id);
     expect(result.translationStatus).toBe("pending");
@@ -158,7 +158,7 @@ describe("resumeIncompleteTranslation", () => {
       }),
     );
 
-    await resumeIncompleteTranslation(paper.id, {}, { useCache: false });
+    await resumeIncompleteTranslation(paper.id, {}, { translationEngine: "madlad", useCache: false });
 
     const [result] = await getBlocksByPaper(paper.id);
     expect(result.translationStatus).toBe("completed");

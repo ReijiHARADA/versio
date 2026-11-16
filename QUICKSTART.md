@@ -1,8 +1,24 @@
+---
+type: Playbook
+title: Versio 起動手順
+description: 開発環境のセットアップと日常の起動手順。
+tags: [setup, development]
+---
+
 # Versio 起動手順
 
 リポジトリのルート（`package.json` がある場所）で実行してください。
 
 ## 初回だけ
+
+### 0. 翻訳サイドカー（PLaMo）
+
+```bash
+npm run build:llama-server   # llama.cpp b12110 を静的ビルドして src-tauri/binaries/ に置く（数分、初回のみ）
+```
+
+モデル（約 1.8 GB）はアプリの 設定 → 翻訳 →「モデルをダウンロード」、または最初の取り込み時に自動で取得されます。以下の Python 翻訳サーバーは旧 MADLAD エンジン用です（次版で削除）。
+
 
 ### 1. 翻訳サーバー
 

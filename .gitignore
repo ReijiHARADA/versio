@@ -84,3 +84,7 @@ demo-output/
 test-data/field-gold/
 tools/doc-structure-probe/.build/
 tools/grobid-parity/build/
+
+# llama.cpp sidecar build (scripts/build-llama-server.sh)
+.cache/llama.cpp/
+src-tauri/binaries/

@@ -91,6 +91,11 @@ describe("settings pull-to-navigate", () => {
 });
 
 describe("mergeTranslationSettingsV2", () => {
+  it("merge fills translationEngine=plamo for old saves", () => {
+    expect(mergeTranslationSettingsV2({ madladServerUrl: "http://127.0.0.1:8765" }).translationEngine).toBe("plamo");
+    expect(mergeTranslationSettingsV2({ translationEngine: "madlad" }).translationEngine).toBe("madlad");
+  });
+
   it("keeps default concurrency 8 and existing URLs", () => {
     const merged = mergeTranslationSettingsV2({
       madladServerUrl: "http://127.0.0.1:9000",

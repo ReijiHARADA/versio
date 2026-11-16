@@ -8,6 +8,7 @@ import type { Paper, PaperBlock, Section } from "../../types/paper";
 import { upsertBlock, upsertSection } from "../../utils/mergePaperData";
 import { createBlockUpdateBatcher } from "../../utils/batchBlockUpdates";
 import { waitForTranslationServer } from "../../utils/serverReady";
+import { ensurePlamoReady, isPlamoAvailable } from "../translation/plamoReadiness";
 import { getAllPapers, getPaper, getSetting, savePaper } from "../database";
 import { addPaperToWorkspace } from "../projectService";
 import { reextractPaper } from "../reextractPaper";
@@ -173,6 +174,9 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
             message: "翻訳モデルの準備を待っています...",
             error: undefined,
           });
+          if ((settings?.translationEngine ?? "plamo") === "plamo") {
+            return ensurePlamoReady((message) => patch(jobId, { stage: "translating", message, error: undefined }));
+          }
           return ensureMadladReady(jobId, patch, signal ?? controller.signal);
         },
         onProgress: (next) => {
@@ -499,8 +503,11 @@ export function dismissBackgroundImport(jobId: string): void {
 
 /** Resume a saved paper whose translation was interrupted or failed. */
 export async function retryPaperTranslation(paperId: string): Promise<boolean> {
-  const madlad = await checkMADLADAvailability();
-  if (!madlad.available) {
+  const saved = await getSetting<ImportConfig>("translationSettingsV2");
+  const available = (saved?.translationEngine ?? "plamo") === "plamo"
+    ? await isPlamoAvailable()
+    : (await checkMADLADAvailability()).available;
+  if (!available) {
     showToast({ kind: "error", message: SERVER_UNAVAILABLE_MESSAGE });
     return false;
   }

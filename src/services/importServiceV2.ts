@@ -47,7 +47,7 @@ import {
 import { projectSafeUnitTranslation } from "./translation/partialProjection";
 import { generateGlossary } from "./llm";
 import type { GlossaryEntry } from "./llm/types";
-import { resolveMadladServerUrl, MADLAD_MODEL_VERSION } from "./translation/madladEngine";
+import { resolveMadladServerUrl } from "./translation/madladEngine";
 import { finalizedTranslationStatus } from "./paperStatus";
 import {
   isRetryableTranslationFailure,
@@ -104,6 +104,8 @@ export async function importPDFV2(
     engine: translationEngine,
     appleRouter,
     llmProviders,
+    cacheModel,
+    cacheModelVersion,
   } = createTranslationEngine(cfg);
 
   let releaseExtraction: (() => void) | undefined;
@@ -595,12 +597,13 @@ export async function importPDFV2(
         ? usableCachedJa(
             await getCachedTranslation(
               titleHash,
-              translationEngine.name,
-              MADLAD_MODEL_VERSION,
+              cacheModel,
+              cacheModelVersion,
               "en",
               "ja"
             ),
-            paper.titleOriginal
+            paper.titleOriginal,
+            cfg.translationEngine
           )
         : null;
 
@@ -620,12 +623,13 @@ export async function importPDFV2(
         ? usableCachedJa(
             await getCachedTranslation(
               sectionHash,
-              translationEngine.name,
-              MADLAD_MODEL_VERSION,
+              cacheModel,
+              cacheModelVersion,
               "en",
               "ja"
             ),
-            section.originalTitle
+            section.originalTitle,
+            cfg.translationEngine
           )
         : null;
 
@@ -655,12 +659,13 @@ export async function importPDFV2(
         ? usableCachedJa(
             await getCachedTranslation(
               blockHash,
-              translationEngine.name,
-              MADLAD_MODEL_VERSION,
+              cacheModel,
+              cacheModelVersion,
               "en",
               "ja"
             ),
-            translationSource
+            translationSource,
+            cfg.translationEngine
           )
         : null;
 

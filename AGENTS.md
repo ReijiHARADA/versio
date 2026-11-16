@@ -39,16 +39,18 @@
 
 ## Translation
 
-- Production engine is **MADLAD-400 3B on MPS + bfloat16**. Do not switch the default to CPU or to community MLX INT8.
-- Sentence-level `generate()` calls are batched (default 24). Set `MADLAD_BATCH_SIZE=1` to restore one call per chunk.
-- Concurrent `/translate` requests are coalesced by `MicroBatchScheduler` (25ms window). `generate()` stays single-threaded. Disable with `MADLAD_MICROBATCH=0`.
-- Frontend translation concurrency default is 8 so requests can share a batch; this is not parallel Metal generate.
-- Batching measurements: `translation-server/MPS_BATCH_OPTIMIZATION_REPORT.md`.
-- Do not run `update_python_env.sh` unless the pinned Python venv is broken. Prefer `.python-version` patch pin.
-- Restart the server with `./restart-translation-server.sh`.
-- The app-spawned server writes stdout/stderr to `~/Library/Logs/com.harada.versio/translation-server.log` (previous launch: `translation-server.prev.log`). Rust warnings/errors go to `Versio.log` in the same dir. Check these first when a packaged `.app` cannot translate.
-- Speed measurements and rejected alternatives live in `translation-server/SPEED_BENCH.md`.
-- MLX bf16 (unquantized official 3B) was measured in `translation-server/MLX_BF16_BENCH_REPORT.md`. Do not switch production to it: quality matches MPS, but it is not 1.5–2× faster than the batched MPS path.
+- Production engine is **PLaMo 3 Translate 2B (GGUF Q4_K_M)** served by a bundled static `llama-server` sidecar (llama.cpp `b12110`, `src-tauri/src/plamo.rs`). Rust starts it lazily on `127.0.0.1:8766` (a free port if taken; readiness requires an authenticated `/v1/models` 200) with a per-launch `--api-key`, kills orphaned sidecar/curl via pid files in `<AppData>/models/`, `-np 8 -c 65536`, and stops it on window close. Frontend: `src/services/translation/plamoEngine.ts`.
+- The model is **downloaded on first use** to `<AppData>/models/` (pinned HF revision + SHA-256, resumable `.part`). Do not bundle it in the `.app`. Build the sidecar with `npm run build:llama-server` (also run by `tauri-build.sh`); `src-tauri/binaries/` is gitignored and must link only system libraries.
+- Translations are accepted by the deterministic check in `src/services/translation/translationCheck.ts` (breakdown + numbers/citations/URLs). Do not reintroduce `quality.ts` gates on the PLaMo path; those heuristics were tuned to MADLAD failures.
+- Engine choice and evidence: `docs/research/local-llm-translation-bench-2026-11.md` (blind MQM + fact checks + whole-paper timing). Re-run `translation-server/scripts/local_llm_bench/` before switching models.
+- Sidecar log: `~/Library/Logs/com.harada.versio/plamo-server.log` (previous launch: `plamo-server.prev.log`). Check it first when a packaged `.app` cannot translate.
+- Frontend translation concurrency default is 8, matching the 8 server slots.
+
+### Legacy MADLAD (selectable for one release, then removed)
+
+- MADLAD-400 3B on MPS + bfloat16 via the Python `translation-server` (port 8765) remains selectable in Settings → 翻訳. Do not tune it further.
+- Sentence-level `generate()` batching (default 24, `MADLAD_BATCH_SIZE=1` to disable) and `MicroBatchScheduler` (25ms, `MADLAD_MICROBATCH=0`) apply only to this path. Measurements: `translation-server/MPS_BATCH_OPTIMIZATION_REPORT.md`, `translation-server/SPEED_BENCH.md`, `translation-server/MLX_BF16_BENCH_REPORT.md`.
+- Do not run `update_python_env.sh` unless the pinned Python venv is broken. Restart the server with `./restart-translation-server.sh`. Its log is `translation-server.log` in the same Logs dir.
 
 ## Licenses (Settings)
 
@@ -57,7 +59,7 @@
 ## Local data
 
 - Paper body source of truth is the Paper Package at `<AppData>/papers/<paperId>/` (`source.pdf`, `paper.json`, `original.md`, `ja.md`, `translation.json`, `structure.json`, optional `layout.json.gz`, `assets/`). Do not store paper bodies only in IndexedDB or SQLite. Keep structured authors / affiliations / DOI in `paper.json`; do not mint `author-1` when ids already exist. Block APIs take `{ paperId, blockId }`. Re-extract must `reconcileBlockIds` then remap annotations / reading position.
-- During MADLAD translation, persist only `ja.md` / `paper.json` / `structure.json` on a debounce. Never rewrite `source.pdf`, `assets/`, or `layout.json.gz` per block. Full atomic persist + validation stays on finalize. Do not change MADLAD 3B / MPS / bf16 / batch 24 / microbatch / concurrency 8 to “fix” Reader jank.
+- During translation, persist only `ja.md` / `paper.json` / `structure.json` on a debounce. Never rewrite `source.pdf`, `assets/`, or `layout.json.gz` per block. Full atomic persist + validation stays on finalize. Do not change the translation engine, server slots, or concurrency 8 to “fix” Reader jank.
 - SQLite (`library.sqlite`) holds the library index, workspace tree, annotations, reading positions, glossaries, translation cache, and rebuildable FTS/LIKE search. See `DATA_ARCHITECTURE.md`.
 - Zustand `useAppStore` is UI only (current paper, display settings, expanded originals). `useLibraryCache` / `useProjectStore` are in-memory query caches. Do not treat them as the document authority; persist through Paper Package / SQLite first.
 - Original PDFs stay in the package as `source.pdf`. First import persist includes `sourcePdf` in the atomic Paper Package write. Do not pre-write `source.pdf` and then replace the package directory.
