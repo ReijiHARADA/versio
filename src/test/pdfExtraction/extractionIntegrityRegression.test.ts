@@ -1,0 +1,58 @@
+/**
+ * App-path regression on real CC-licensed papers from the field-gold corpus
+ * (gitignored PDFs; skipped when absent). Each case is a defect found by the
+ * extraction audit (docs/EXTRACTION_INTEGRITY_AUDIT.md). Warned-paragraph
+ * ceilings are the measured values after the fix: a change that breaks more
+ * paragraphs than that fails here.
+ */
+import fs from "node:fs";
+import path from "node:path";
+import { describe, expect, it } from "vitest";
+import { detectPageColumns } from "../../services/pdfLayout";
+import { enhanceReferencesWithCrf } from "../../services/pdfExtraction/crf/applyReferences";
+import { loadNodeCrfRuntime } from "../../services/pdfExtraction/crf/nodeRuntime";
+import { extractFromPages } from "../../services/pdfExtraction/pipeline/extractAcademicPdf";
+import { extractPdfPages } from "../readingOrder/extractPdf";
+
+const root = path.resolve(import.meta.dirname, "../../..");
+const pdfOf = (id: string): string | null => {
+  const gold = path.join(root, "test-data/field-gold", id, "gold.json");
+  if (!fs.existsSync(gold)) return null;
+  const pdf = path.join(root, (JSON.parse(fs.readFileSync(gold, "utf8")) as { pdfPath: string }).pdfPath);
+  return fs.existsSync(pdf) ? pdf : null;
+};
+async function extract(id: string) {
+  const pdf = pdfOf(id)!;
+  const pages = await extractPdfPages(pdf);
+  const result = extractFromPages({ pages, paperId: id, filePath: pdf, fileHash: id, metadata: { pageCount: pages.length } });
+  // Same post-projection step as extractAcademicPdf.
+  await enhanceReferencesWithCrf(result, pages, loadNodeCrfRuntime);
+  const paragraphs = result.blocks.filter((b) => b.type === "paragraph");
+  return { pages, paragraphs, warned: paragraphs.filter((b) => typeof b.metadata.translationInputWarning === "string").length };
+}
+
+describe("extraction integrity on real papers", () => {
+  it("reads narrow-gutter two-column pages as two columns (no interleaved lines)", async (ctx) => {
+    if (!pdfOf("epmc-PMC12885475")) ctx.skip();
+    const { pages, paragraphs, warned } = await extract("epmc-PMC12885475");
+    expect(detectPageColumns(pages[1]).isMultiColumn).toBe(true);
+    expect(paragraphs.some((b) => /focus on different This pattern suggests/.test(b.original ?? ""))).toBe(false);
+    expect(warned).toBeLessThanOrEqual(7);
+  }, 60_000);
+
+  it("drops running heads assembled from several repeated pieces", async (ctx) => {
+    if (!pdfOf("epmc-PMC11003102")) ctx.skip();
+    const { paragraphs, warned } = await extract("epmc-PMC11003102");
+    expect(paragraphs.some((b) => /BMC Psychology \(2024\) 12:195/.test(b.original ?? ""))).toBe(false);
+    expect(warned).toBeLessThanOrEqual(10);
+  }, 60_000);
+
+  it.each([
+    ["epmc-PMC12094662", 5],
+    ["epmc-PMC13551842", 27],
+    ["arxiv-2509.25460", 9],
+  ])("%s keeps warned paragraphs at or below %i", async (id, ceiling, ctx) => {
+    if (!pdfOf(id)) ctx.skip();
+    expect((await extract(id)).warned).toBeLessThanOrEqual(ceiling);
+  }, 60_000);
+});

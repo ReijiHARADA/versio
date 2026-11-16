@@ -38,6 +38,7 @@ const para: Record<ParagraphOutcome["verdict"], number> = { intact: 0, split: 0,
 const blockV: Record<BlockOutcome["verdict"], { all: number; warned: number }> = { complete: { all: 0, warned: 0 }, fragment: { all: 0, warned: 0 }, merged: { all: 0, warned: 0 }, outside: { all: 0, warned: 0 } };
 const byReason = new Map<string, Record<BlockOutcome["verdict"], number>>();
 const causes = new Map<Cause, { n: number; warned: number; docs: Set<string> }>();
+const mismatched: string[] = [];
 let brokenParas = 0;
 let causeShown = 0;
 let brokenWarned = 0;
@@ -46,6 +47,12 @@ for (const doc of docs) {
   const gold = jatsParagraphs(fs.readFileSync(path.join(cacheDir, `${doc.id.slice(5)}.xml`), "utf8"));
   const paragraphs = doc.blocks.filter((b) => b.type === "paragraph");
   const result = alignParagraphs(gold, paragraphs);
+  // The PDF is another version than the JATS (most paragraphs not found): the gold does not apply.
+  const founds = result.paragraphs.map((p) => p.found).sort((a, b) => a - b);
+  if ((founds[founds.length >> 1] ?? 0) < 0.5) {
+    mismatched.push(doc.id);
+    continue;
+  }
   const owner = goldOwnerOf(gold);
   for (const p of result.paragraphs) {
     para[p.verdict] += 1;
@@ -91,7 +98,8 @@ const pct = (n: number, d: number) => `${((100 * n) / Math.max(1, d)).toFixed(1)
 const totalPara = Object.values(para).reduce((a, b) => a + b, 0);
 const warned = Object.values(blockV).reduce((a, b) => a + b.warned, 0);
 const allBlocks = Object.values(blockV).reduce((a, b) => a + b.all, 0);
-console.log(`run ${run} split ${split}: ${docs.length} docs, gold paragraphs ${totalPara}, paragraph blocks ${allBlocks}`);
+if (mismatched.length) console.log(`skipped (PDF and JATS differ): ${mismatched.join(", ")}`);
+console.log(`run ${run} split ${split}: ${docs.length - mismatched.length} docs, gold paragraphs ${totalPara}, paragraph blocks ${allBlocks}`);
 console.log(`gold paragraphs: intact ${pct(para.intact, totalPara)} split ${pct(para.split, totalPara)} partial ${pct(para.partial, totalPara)} missing ${pct(para.missing, totalPara)}`);
 console.log(`warned blocks ${warned} (${pct(warned, allBlocks)}): fragment ${blockV.fragment.warned} / complete ${blockV.complete.warned} / merged ${blockV.merged.warned} / outside ${blockV.outside.warned}`);
 console.log(`warning precision (fragment or outside) ${pct(blockV.fragment.warned + blockV.outside.warned, warned)}; broken prose paragraphs warned ${pct(brokenWarned, brokenParas)} of ${brokenParas}`);

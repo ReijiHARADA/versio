@@ -262,7 +262,10 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
       const crossing = midpointRows.filter((row) => row.some((item) => item.x < x - 4 && item.x + item.width > x + 4)).length;
       // Two-column pages: only spanning rows (title, abstract, captions) cross, ~25%.
       // Single-column pages cut into spans: most rows cross everywhere (≥ 60% measured).
-      if (crossing / midpointRows.length <= 0.4) return true;
+      if (crossing / midpointRows.length > 0.4) continue;
+      // Body columns on both sides (column-wide lines), not the cell gap of a wide table.
+      const long = (side: (item: ExtractedTextItem) => boolean) => usable.filter((item) => side(item) && item.width >= page.width * 0.25).length;
+      if (long((item) => item.x + item.width <= x) >= 5 && long((item) => item.x >= x) >= 5) return true;
     }
     return false;
   })();
@@ -1820,6 +1823,9 @@ function isRepeatedHeadingLead(heading: LayoutLine, body: LayoutLine): boolean {
 function captionShouldContinue(currentText: string, next: LayoutLine, baseFont: number): boolean {
   const nextText = next.text.trim();
   if (!nextText) return false;
+  // A line that opens with its own label (`Table 3 Linear mixed…` after `Fig. 3 Likelihood…`)
+  // is the next caption, never the continuation of the current one.
+  if ((isFigureCaption(nextText) || isTableCaption(nextText)) && !/^(?:figure|fig\.?|table|図|表)\s*\d+[a-z]?\s*[:.：]?\s*$/i.test(currentText.trim())) return false;
   // Table captions are often followed immediately by a centered table
   // section header. It can be emitted as one native item and otherwise looks
   // like a short wrapped caption line. A substantial x shift from the
