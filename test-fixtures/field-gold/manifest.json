@@ -1,0 +1,976 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-11-16T00:16:34.304Z",
+  "seed": 20261115,
+  "quotas": {
+    "europepmc/medicine": 25,
+    "europepmc/social": 15,
+    "europepmc/ja": 18,
+    "arxiv/cs.HC": 25,
+    "arxiv/other": 20,
+    "jstage/ja": 18,
+    "manual/manual": 15
+  },
+  "excluded": {
+    "versionMismatch": 8,
+    "noLicense": 1302,
+    "fetchFailed": 15,
+    "noBbl": 3
+  },
+  "documents": [
+    {
+      "id": "arxiv-2404.01485",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "2c727838d9a1b364582f4921318f2230fd1f5e27f84859bc2fb29c63b640c00f",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2404.01485"
+    },
+    {
+      "id": "arxiv-2411.01344",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "053248a2d78ceaf8e8ec072c50b6113da6d7bfe3521ecdffc34a898c022863d4",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2411.01344"
+    },
+    {
+      "id": "arxiv-2501.10568",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "38eecc7c3292ec91e4b8a828faed364cb795416bf445ae8ebcbdba04d7fa8089",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2501.10568"
+    },
+    {
+      "id": "arxiv-2502.11277",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "957a0ffccc13745179840a5412cee092ca2321870d974f7afb154779b3f9d0ba",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2502.11277"
+    },
+    {
+      "id": "arxiv-2502.13281",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "2293d18e74af578d973d5c8e1f11bf69b4ce9fae8d0e85f00df87649837bc01f",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2502.13281"
+    },
+    {
+      "id": "arxiv-2502.18044",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "267dafc68efedc82bba849d4add7bdeb6239f8c9c0f7b805715acc373d097363",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2502.18044"
+    },
+    {
+      "id": "arxiv-2505.04584",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "964f4ba458cac1fa1c315ea072fb7a05a90356c28bc65c96ac4ef16bef7b7cbd",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2505.04584"
+    },
+    {
+      "id": "arxiv-2505.14031",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "32c9ae750f8c9b5b590f53c69a1b8fea11932ebc5f6dfbc7959c26e19481cb86",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2505.14031"
+    },
+    {
+      "id": "arxiv-2506.03113",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "d946fa469f455683a416f9e4de8bd40505b58effac0086be82c114992109e217",
+      "license": "cc by-nc-nd",
+      "sourceUrl": "https://arxiv.org/abs/2506.03113"
+    },
+    {
+      "id": "arxiv-2506.21150",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "3e7d82d96db8711e38797899d949b744aad58e7ac32e0d01b319b7ad3cbb6061",
+      "license": "cc by-nc-nd",
+      "sourceUrl": "https://arxiv.org/abs/2506.21150"
+    },
+    {
+      "id": "arxiv-2508.16612",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "b86cee1ea3b6ad7d83ed3c7d44f6b04c85f61c3b19f4557b70a3cbe1edfda07a",
+      "license": "cc by-nc-nd",
+      "sourceUrl": "https://arxiv.org/abs/2508.16612"
+    },
+    {
+      "id": "arxiv-2509.07314",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "ea2c48887f8a48e6d2460b7d66258a49aa474fe39313e389305e84d61ed0b78c",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2509.07314"
+    },
+    {
+      "id": "arxiv-2509.20148",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "ba080eeb9b688b4be6cb52eb2a429f5d59f6a5bdc10c107d77ec300242012877",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2509.20148"
+    },
+    {
+      "id": "arxiv-2509.22229",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "5e3cab0d3c83160baee444dc7ce6b5569b295e0aca5e7148adcd5844c6aa1866",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2509.22229"
+    },
+    {
+      "id": "arxiv-2509.24008",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "38b2c8d19d120719e70f430c2eaf6da07ff2ebb97f0ca70f4fef28d156412361",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2509.24008"
+    },
+    {
+      "id": "arxiv-2509.24167",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "0fca9602eb0363666ea84abc1790e15a0432ecb5c79374f32505dbb4a2605873",
+      "license": "cc by-sa",
+      "sourceUrl": "https://arxiv.org/abs/2509.24167"
+    },
+    {
+      "id": "arxiv-2509.24913",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "659dbb1b9b3d9651519cbfba9dfb7962e90523b962c310f9d131314fe2d1312d",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2509.24913"
+    },
+    {
+      "id": "arxiv-2509.25179",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "ada09be91f341672ebd4b0d862be09944a2b901d49183393f8adf39e72081f63",
+      "license": "cc by-nc-nd",
+      "sourceUrl": "https://arxiv.org/abs/2509.25179"
+    },
+    {
+      "id": "arxiv-2509.25253",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "a7c51cc720da393f9cc7ee0af0be096931bc6ba84e803f76c7383e0d9506d89c",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2509.25253"
+    },
+    {
+      "id": "arxiv-2509.25293",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "77b8cf2f6dd028f6269f5ccf3713b1f5a227e5462e25b9df50ceab10f4abc0ac",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2509.25293"
+    },
+    {
+      "id": "arxiv-2509.25460",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "61918f4eac5d7fabc62644d96558833a36a8ee765da3b8caa95962b07fa42695",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2509.25460"
+    },
+    {
+      "id": "arxiv-2509.25504",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "e55cf9cd2a2e2651019cb9926d88c8c242fdda9c1df4e3e29b8c1bf375ec6f08",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2509.25504"
+    },
+    {
+      "id": "arxiv-2509.25968",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "11b838286c56feb38ca092971e5ed442155d0a2417e7b500be442126e6766844",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2509.25968"
+    },
+    {
+      "id": "arxiv-2509.26537",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "a80c43688b071580cd87fcc7d56e35bc612b8860ce6e3ffaf3bd9eae49b266be",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2509.26537"
+    },
+    {
+      "id": "arxiv-2510.00019",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "6caec7911cd9d8dd22db7a5e20e6a650abc5d06f9f7c731ea84991ac80ff1ca0",
+      "license": "cc by-nc-nd",
+      "sourceUrl": "https://arxiv.org/abs/2510.00019"
+    },
+    {
+      "id": "arxiv-2510.00222",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "836a956f317cfbb96f266b9e9cb593e2b0f29a802cede49053ff78b6239865ee",
+      "license": "cc by-nc-sa",
+      "sourceUrl": "https://arxiv.org/abs/2510.00222"
+    },
+    {
+      "id": "arxiv-2510.00245",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "cf87b3d982a5c682fa0146c7e41158d101e9efc83b6edc54c5464401e72a7f41",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.00245"
+    },
+    {
+      "id": "arxiv-2510.00407",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "e8d6acda6877491cb722d67d8f5f29ac474db0b5c0d7a911db995e848a11e955",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.00407"
+    },
+    {
+      "id": "arxiv-2510.00489",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "a3a1749a00e1bd89cfbc0a7cd82aa46062fdde4145365d98b165c93ad351e8b4",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.00489"
+    },
+    {
+      "id": "arxiv-2510.00651",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "a6b710583015e33d5c895919117ca12203ddf27be3d9dff45a00f5e2bfe5699d",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.00651"
+    },
+    {
+      "id": "arxiv-2510.00909",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "da82501d1afcef442dc0288082a6948fa85de2f9e3c804d167a6c62b9cf7b351",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.00909"
+    },
+    {
+      "id": "arxiv-2510.01513",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "c637358f4eb555ed6af809f40da97cf837a368989fb6e1c9af4f0214eb555e46",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.01513"
+    },
+    {
+      "id": "arxiv-2510.01887",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "817d7237b34431cb4ba61f267f7458c79b2671d888e76d70a89c1d6d840530e5",
+      "license": "cc by-nc-nd",
+      "sourceUrl": "https://arxiv.org/abs/2510.01887"
+    },
+    {
+      "id": "arxiv-2510.02017",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "f4ed1f4bdc753021c28ebc2917ec48301426e2e5d32cc1113c8077f54da72e2e",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.02017"
+    },
+    {
+      "id": "arxiv-2510.02040",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "37859b3a15b83fd1d99ffda1278dfb8abd1bd44bf855e8104303fc86583511ed",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.02040"
+    },
+    {
+      "id": "arxiv-2510.02157",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "157ffe385b81add587fd3963cc6baa30d17507209a033b513f4d02c2550e6b60",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.02157"
+    },
+    {
+      "id": "arxiv-2510.02172",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "6b16b6ceb82def0b732721f4f5788dd6d24a45854edc63fe8db0f07be45ac7ad",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.02172"
+    },
+    {
+      "id": "arxiv-2510.02680",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "622645feffcc165c479e6552243a856de84adf83fa06532f3f8f0431a63738b7",
+      "license": "cc by-nc-nd",
+      "sourceUrl": "https://arxiv.org/abs/2510.02680"
+    },
+    {
+      "id": "arxiv-2510.02836",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "9f7334e6081f41f1a52070973da734f90d37b8644c71666b6d1c2884cd782fb9",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.02836"
+    },
+    {
+      "id": "arxiv-2510.04364",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "af7fc7b3346af82f94075d20e447e21fb0b941bcaceacda40941bfb7073ae0e7",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.04364"
+    },
+    {
+      "id": "arxiv-2510.04493",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "cs.HC",
+      "pdfSha256": "503af503429af3d945f30fd8af899f6ba5c9c8c89ed36dba21a269c56bdb1adc",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.04493"
+    },
+    {
+      "id": "arxiv-2510.04643",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "a1cc7214ce25cab2b9cdfb6a771f1fb8606cb0fd7319bccf25d233e6c005fd73",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.04643"
+    },
+    {
+      "id": "arxiv-2510.04786",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "ca7e562706009423bba33f07b5d97f4b0eb727d5894e08751ed15047a7aed519",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.04786"
+    },
+    {
+      "id": "arxiv-2510.04825",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "793e6b033ea71b51099c00b9b2ea533e2dd12667f4a2dd66ac2354ead6104f10",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.04825"
+    },
+    {
+      "id": "arxiv-2510.04973",
+      "source": "arxiv",
+      "language": "en",
+      "discipline": "other",
+      "pdfSha256": "d5505deae748f87bf73f62b1897a4eab4e25d93fde40b1e576094c8602c1b768",
+      "license": "cc by",
+      "sourceUrl": "https://arxiv.org/abs/2510.04973"
+    },
+    {
+      "id": "epmc-PMC10448142",
+      "source": "europepmc",
+      "language": "ja",
+      "discipline": "ja",
+      "pdfSha256": "3178385abaa293bea61c681856837674506f53678b3e10eed848bc13f62e3be2",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC10448142"
+    },
+    {
+      "id": "epmc-PMC11003102",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "social",
+      "pdfSha256": "6aa04af6f8be027c23ced26f765ee5252abf257d5afcd12386f76aa000449497",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC11003102"
+    },
+    {
+      "id": "epmc-PMC11586609",
+      "source": "europepmc",
+      "language": "ja",
+      "discipline": "ja",
+      "pdfSha256": "1972111bc45036f12f06c6eb3ec93935efe6425419222382a2b1264a25e006c5",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC11586609"
+    },
+    {
+      "id": "epmc-PMC11997001",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "1b57c9d2b38fa3bcf1efc64f2564bd77c29aefb7759a7443d5335fb26956660e",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC11997001"
+    },
+    {
+      "id": "epmc-PMC12090981",
+      "source": "europepmc",
+      "language": "ja",
+      "discipline": "ja",
+      "pdfSha256": "a4a1a8ca2fcbf303f77999752c94cdc1b7887877b41a0cd108cd31e97cff9c63",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC12090981"
+    },
+    {
+      "id": "epmc-PMC12094662",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "social",
+      "pdfSha256": "affa12bf2dc3d48fa60e75a489c9a1435402bf47848ad9f338109ae42c16b39a",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC12094662"
+    },
+    {
+      "id": "epmc-PMC12176826",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "e38233df5d8d508fc763f8082b6dfdcb14cc2c2d50fff86f5626f90d4a6edfd8",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC12176826"
+    },
+    {
+      "id": "epmc-PMC12885475",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "social",
+      "pdfSha256": "a9118aa0c1b9808a759109c1a6fe92e9d4bc6e127ce3bf7eee8fafb0f30e2296",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC12885475"
+    },
+    {
+      "id": "epmc-PMC13039361",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "b4a9db605cf905d6bb37bd5a4edbe8e78e3165cb1a6a36172c7389d452e67ca3",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13039361"
+    },
+    {
+      "id": "epmc-PMC13079215",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "social",
+      "pdfSha256": "99dda30ed188559dec4afcffdc1d628fd2e236590e89c388d2fcf8aae999ef34",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13079215"
+    },
+    {
+      "id": "epmc-PMC13147804",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "05c321002e3903c19dbdcace5f9f6890852f17c69a2feb19192bf480fe2a88cb",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13147804"
+    },
+    {
+      "id": "epmc-PMC13185203",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "082b59ca4420abc1e8659987d30d10fe405510cd58ce98a3b9e1f63fb63a5c9d",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13185203"
+    },
+    {
+      "id": "epmc-PMC13312647",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "65b38c2ff6d245cf1a97715f41b412d26b09e6af9b8b9f3a1cbd48babb457eea",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13312647"
+    },
+    {
+      "id": "epmc-PMC13331908",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "a74e9a7d3fb5ebbd782b396a5897e67f3d1a7412cf2fdb0945359e1810a450ad",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13331908"
+    },
+    {
+      "id": "epmc-PMC13345230",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "332bc8b010b9f74348878bcc30338aeebc7bd05328497595ca20d490a8d11584",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13345230"
+    },
+    {
+      "id": "epmc-PMC13345299",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "a810521d8ee11966277a5261242e72557589556f7ef49b56d9b1f6a74e4c4c32",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13345299"
+    },
+    {
+      "id": "epmc-PMC13377764",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "social",
+      "pdfSha256": "761fc97e9ef174d3e4372051e7ad86e4b14d65d2b219011a351f16f07545d54e",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13377764"
+    },
+    {
+      "id": "epmc-PMC13422829",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "social",
+      "pdfSha256": "338c3941f6b381360a3951e8ba40d4214eb5736779506f184404dff709f2fa48",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13422829"
+    },
+    {
+      "id": "epmc-PMC13443672",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "social",
+      "pdfSha256": "05263d5be4c14bad6f92e8c72d56176c482f7f46453f3e3aa266e71e30d97956",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13443672"
+    },
+    {
+      "id": "epmc-PMC13445422",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "social",
+      "pdfSha256": "1c13704971a824eb0d6fda88a0784242f22c7af5019811e142c6e01c4dd81d73",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13445422"
+    },
+    {
+      "id": "epmc-PMC13476272",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "2112de803b89c64af3f08d970ad7c3f661553bc384c9e64469c2e3559bf71091",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13476272"
+    },
+    {
+      "id": "epmc-PMC13546806",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "6d783fcc8e4fbb5bae178c1f25af3dafcbba83b1a49e05495dc001534d93e1dd",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13546806"
+    },
+    {
+      "id": "epmc-PMC13551842",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "social",
+      "pdfSha256": "e2a66ef261f2ae57e8ececef3246a8b2e1be06cb3e0cb0684b1f2accfbb1e590",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13551842"
+    },
+    {
+      "id": "epmc-PMC13569490",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "0de156d249181c3418aa5b8bb5f9cf9fddac03cbb0a281cbeb2973f556637c52",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13569490"
+    },
+    {
+      "id": "epmc-PMC13573431",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "1c298632858086b17c63be5c770ee24bc99e0b7c36cde7165b53cfb347b20470",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13573431"
+    },
+    {
+      "id": "epmc-PMC13577332",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "social",
+      "pdfSha256": "a5a7cb20830b00df6f71c322778889baa52f7021b76f7dc23a4a4fc137e6ed55",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13577332"
+    },
+    {
+      "id": "epmc-PMC13577346",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "social",
+      "pdfSha256": "95dd651797a5c4c7341ab813e4e4ac1b6b0a1512176ce3da05ebbfd05e1f1b62",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13577346"
+    },
+    {
+      "id": "epmc-PMC13577534",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "236c108b7755991175ce1f4c9287d0c91e4a6d0eef31695ac1985756e0cb011d",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13577534"
+    },
+    {
+      "id": "epmc-PMC13586154",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "social",
+      "pdfSha256": "84f03360f5953aecfd29f3407fe65649502f56d02ee8032cdfcccfd5141cb572",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13586154"
+    },
+    {
+      "id": "epmc-PMC13592641",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "a38ddd2735511c80ed0ae193818b4687454ab2b45dee7e30b507ea9e8e4d5005",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13592641"
+    },
+    {
+      "id": "epmc-PMC13596825",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "213da8041b2ee625d03b4df6a81d877156d04b974abbc285e81460e679f7993f",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13596825"
+    },
+    {
+      "id": "epmc-PMC13598749",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "2b4fc84d1d6fd20fc4c196f307ea1c94986e0e6f33dea7e2f5c3036bb12a7d42",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13598749"
+    },
+    {
+      "id": "epmc-PMC13613203",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "15f8219ebbab8846e74dd1bd712d41adac16e25ad75e0b03ccba6b7bfb575cb7",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13613203"
+    },
+    {
+      "id": "epmc-PMC13613328",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "82ab82f9e0c09f52da85fd5be03323de3392668d179486d3a236b58c7aaf0a1c",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13613328"
+    },
+    {
+      "id": "epmc-PMC13614542",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "13c8c1cd18742d322ded0e6c29607ba59d2c6f024edb5a89a3f115f16d3cb248",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13614542"
+    },
+    {
+      "id": "epmc-PMC13617023",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "d4dfdb78a4737cfb0b14b3ede4bf286071ec7ad085b34807ab5d74e2d6a776e9",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13617023"
+    },
+    {
+      "id": "epmc-PMC13621752",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "social",
+      "pdfSha256": "7eeed61212d3c47d7a2fdd0a769e5ad2ecc17abee44c21ec0710bdec02afb950",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13621752"
+    },
+    {
+      "id": "epmc-PMC13627401",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "b0b4333242dcc9e32619ea20c28a867bc458f7c8b94321ee8b4bd92958863928",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13627401"
+    },
+    {
+      "id": "epmc-PMC13627437",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "6419b6f4fe7dd21b340cfd9ad8afb7d958ef6a31d4e40ab0e93b7ed493dd9f5d",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13627437"
+    },
+    {
+      "id": "epmc-PMC13630993",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "f39fc2e63b81a6e417bc81c910265baa9302eaa2d046b9d6a4fa00a2974ab3d8",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13630993"
+    },
+    {
+      "id": "epmc-PMC13643957",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "social",
+      "pdfSha256": "26a4696ff501be6f907bac9b715a580e1a43682c7d2dc8e1aac5a076e02a6a12",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13643957"
+    },
+    {
+      "id": "epmc-PMC13652345",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "medicine",
+      "pdfSha256": "37fc483c15f4593c8c647db5f5a0ccecb32c9a02ed30cb998fda746d103ab044",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC13652345"
+    },
+    {
+      "id": "epmc-PMC8095323",
+      "source": "europepmc",
+      "language": "ja",
+      "discipline": "ja",
+      "pdfSha256": "377c76a2fb35eca5f9e3162830083fa495df9d15d8ec6855e9371b6fe0b58a1b",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC8095323"
+    },
+    {
+      "id": "epmc-PMC8424459",
+      "source": "europepmc",
+      "language": "ja",
+      "discipline": "ja",
+      "pdfSha256": "24146ca39029c7194905eb6e551b8387584307a5a5eb22b1fd9e1dc0a1260ae1",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC8424459"
+    },
+    {
+      "id": "epmc-PMC8495659",
+      "source": "europepmc",
+      "language": "ja",
+      "discipline": "ja",
+      "pdfSha256": "ecd9c34678b11215cbcca30c717cde086de37d7b51a882d99dfe9f04c3b48cad",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC8495659"
+    },
+    {
+      "id": "epmc-PMC8861472",
+      "source": "europepmc",
+      "language": "ja",
+      "discipline": "ja",
+      "pdfSha256": "279d6d24c8a9454615326186e9cfcde653bf1b4fad9df61619a859da60da48d9",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC8861472"
+    },
+    {
+      "id": "epmc-PMC9253657",
+      "source": "europepmc",
+      "language": "ja",
+      "discipline": "ja",
+      "pdfSha256": "6e005b41bf623f295eba981d21ad68c382f18aea0cf433016febdefddcb72ae4",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC9253657"
+    },
+    {
+      "id": "epmc-PMC9277704",
+      "source": "europepmc",
+      "language": "ja",
+      "discipline": "ja",
+      "pdfSha256": "52bff05261cab07fc1ef251527c86a23d55edd58c1dfe6ed958639034b1616bb",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC9277704"
+    },
+    {
+      "id": "epmc-PMC9543628",
+      "source": "europepmc",
+      "language": "en",
+      "discipline": "social",
+      "pdfSha256": "c905f43e99247de5a5350c7c0aa4b8bf2060a097ec8ed6bcadf2343b7999a29b",
+      "license": "cc by",
+      "sourceUrl": "https://europepmc.org/article/PMC/PMC9543628"
+    },
+    {
+      "id": "manual-covid-ml-review",
+      "source": "manual",
+      "language": "en",
+      "discipline": "manual",
+      "pdfSha256": "be6157171e8f52d66d5db54163afe9936e0d2735dd50c0ac7160efee3dde19b2",
+      "license": "existing-local-corpus",
+      "sourceUrl": ""
+    },
+    {
+      "id": "manual-design-for-wearability",
+      "source": "manual",
+      "language": "en",
+      "discipline": "manual",
+      "pdfSha256": "64aa3ae6d8eab92d494e98401a8b5daebdfb2318de1ef87b3b241cf57526c801",
+      "license": "existing-local-corpus",
+      "sourceUrl": ""
+    },
+    {
+      "id": "manual-education-learning-analytics",
+      "source": "manual",
+      "language": "en",
+      "discipline": "manual",
+      "pdfSha256": "6c97f705a4fe753a8c00475040b3941e8b902ef241fe441c16605b01f8770282",
+      "license": "existing-local-corpus",
+      "sourceUrl": ""
+    },
+    {
+      "id": "manual-fashion-hybrid-cmf",
+      "source": "manual",
+      "language": "en",
+      "discipline": "manual",
+      "pdfSha256": "976d7f1ad25fc072713a550ea546e5a265988d090b53576f81f2773746022198",
+      "license": "existing-local-corpus",
+      "sourceUrl": ""
+    },
+    {
+      "id": "manual-interactive-jewellery",
+      "source": "manual",
+      "language": "en",
+      "discipline": "manual",
+      "pdfSha256": "c591323c68d5b72c4320f83f76ed8de6b3140716ee08f4242c04f64cd598963c",
+      "license": "existing-local-corpus",
+      "sourceUrl": ""
+    },
+    {
+      "id": "manual-marketing-consumer-response",
+      "source": "manual",
+      "language": "en",
+      "discipline": "manual",
+      "pdfSha256": "70066d10d12c7e8a1f57092ed5732daf6b4f5d7f53fa187d0aa0475b96ef132e",
+      "license": "existing-local-corpus",
+      "sourceUrl": ""
+    },
+    {
+      "id": "manual-medical-deep-learning-meta-review",
+      "source": "manual",
+      "language": "en",
+      "discipline": "manual",
+      "pdfSha256": "5d06fa45a332523e5391cc47e5a640290f37a8a971e8f104a5678c7bc6179606",
+      "license": "existing-local-corpus",
+      "sourceUrl": ""
+    },
+    {
+      "id": "manual-medical-image-segmentation-deep-learning",
+      "source": "manual",
+      "language": "en",
+      "discipline": "manual",
+      "pdfSha256": "e341951706ef093a3124bb737b318fc79abd41e9a737024d3b5e4ecdc39f3af9",
+      "license": "existing-local-corpus",
+      "sourceUrl": ""
+    },
+    {
+      "id": "manual-medical-imaging-deep-learning-review",
+      "source": "manual",
+      "language": "en",
+      "discipline": "manual",
+      "pdfSha256": "da0b8054d3641c40623ec59d16ee4dec38390cae48462c355fedd3d5a8cb0800",
+      "license": "existing-local-corpus",
+      "sourceUrl": ""
+    },
+    {
+      "id": "manual-ozchi-finger-specific-touch",
+      "source": "manual",
+      "language": "en",
+      "discipline": "manual",
+      "pdfSha256": "3bcceb4afa40da52822689465efa1a9b0bbcb914842a320bf2dd372a9d470067",
+      "license": "existing-local-corpus",
+      "sourceUrl": ""
+    },
+    {
+      "id": "manual-thermal-earring",
+      "source": "manual",
+      "language": "en",
+      "discipline": "manual",
+      "pdfSha256": "4e493a24b4a937a307b1f9738e4c1bd548136b80196850d2e36ba1516b1f92ea",
+      "license": "existing-local-corpus",
+      "sourceUrl": ""
+    },
+    {
+      "id": "manual-wear-scale",
+      "source": "manual",
+      "language": "en",
+      "discipline": "manual",
+      "pdfSha256": "2dbbf4bc760df7812e4fc385e6e99563081feed5895f8c28c302f10b2cebf810",
+      "license": "existing-local-corpus",
+      "sourceUrl": ""
+    }
+  ]
+}
