@@ -20,3 +20,14 @@ for (const p of ["versio", "grobid", "crfport"]) {
   const med = (a: number[]) => a.sort((x, y) => x - y)[a.length >> 1];
   console.log(p, "countRatio median", med(r.map((x: any) => x.countRatio)).toFixed(2), "P", (r.reduce((a: number, x: any) => a + x.precision, 0) / r.length).toFixed(2), "R", (r.reduce((a: number, x: any) => a + x.recall, 0) / r.length).toFixed(2));
 }
+const boundary = { predicted: 0, predictedHit: 0, gold: 0, goldHit: 0 };
+for (const d of m.documents.filter((d: any) => d.language === "en")) {
+  const goldFile = `${root}/test-data/field-gold/${d.id}/gold.json`;
+  const predFile = `${root}/test-data/field-gold/runs/crfport/predictions/${d.id}.json`;
+  if (!fs.existsSync(goldFile) || !fs.existsSync(predFile)) continue;
+  const gold = JSON.parse(fs.readFileSync(goldFile, "utf8")).fields.references.map((r: any) => r.raw) as string[];
+  const predicted = JSON.parse(fs.readFileSync(predFile, "utf8")).fields.references.map((r: any) => r.raw) as string[];
+  for (const raw of predicted) { boundary.predicted++; if (gold.some((candidate) => similarity(raw, candidate) >= 0.6)) boundary.predictedHit++; }
+  for (const raw of gold) { boundary.gold++; if (predicted.some((candidate) => similarity(raw, candidate) >= 0.6)) boundary.goldHit++; }
+}
+console.log(`crfport boundary >=0.6: predicted ${boundary.predictedHit}/${boundary.predicted} = ${(boundary.predictedHit / boundary.predicted).toFixed(3)}, gold ${boundary.goldHit}/${boundary.gold} = ${(boundary.goldHit / boundary.gold).toFixed(3)}`);
