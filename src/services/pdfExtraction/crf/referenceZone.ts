@@ -67,7 +67,9 @@ export function pageLines(page: ExtractedPage): Line[] {
   const items = page.textItems.filter((it) => it.text.trim() && !it.rotation);
   const gutter = findGutter(items, page.width);
   if (gutter === null) return toLines(baselineGroups(items), page.pageNumber);
-  const crosses = (it: Item) => it.x < gutter - 1 && it.x + it.width > gutter + 1;
+  // Only text that clearly runs across the gutter (a full-width title or caption) splits the page into bands;
+  // a column line that just touches the gutter does not.
+  const crosses = (it: Item) => it.x < gutter - 20 && it.x + it.width > gutter + 20;
   const out: Line[] = [];
   let band: Item[] = [];
   const flush = () => {
@@ -106,14 +108,21 @@ function computeZone(pages: ExtractedPage[]): Line[] | null {
     if (!seen.has(key)) seen.set(key, new Set());
     seen.get(key)!.add(p);
   }));
-  const repeated = (l: Line) => (seen.get(normalise(l.text))?.size ?? 0) >= 3 || /^\s*\d{1,4}\s*$/.test(l.text);
-  const all = perPage.flat().filter((l) => !repeated(l));
+  // Only in the page margins: "arXiv:1908.10063." repeats with digits masked, but inside the text.
+  const repeated = (l: Line, height: number) =>
+    (l.y < height * 0.08 || l.y + l.height > height * 0.92) && ((seen.get(normalise(l.text))?.size ?? 0) >= 3 || /^\s*\d{1,4}\s*$/.test(l.text));
+  const all = perPage.flatMap((lines, p) => lines.filter((l) => !repeated(l, ordered[p].height)));
   let start = -1;
   all.forEach((l, i) => {
-    if (isHeading(l.text)) start = i;
+    if (isHeading(l.text)) start = i + 1;
   });
-  if (start < 0 || start === all.length - 1) return null;
-  const zone = trimZone(all.slice(start + 1));
+  // No heading text (drawn as an image or with unmapped glyphs): a "[1]" entry followed by [2] and [3].
+  if (start < 0) {
+    const first = all.findIndex((l, i) => /^\[1\]\s/.test(l.text) && ["[2]", "[3]"].every((label) => all.slice(i + 1, i + 80).some((m) => m.text.startsWith(label))));
+    if (first >= 0) start = first;
+  }
+  if (start < 0 || start >= all.length) return null;
+  const zone = trimZone(all.slice(start));
   if (zone.length) zone[0] = { ...zone[0], blockStart: true };
   return zone;
 }
@@ -136,9 +145,12 @@ export function trimZone<T extends { text: string; fontSize: number }>(lines: T[
   // Back matter can sit between two parts of the list (Frontiers: notes in the right column,
   // references continuing on the next page): a heading ends the zone only when no reference
   // text follows it.
-  // Entry openings ("[3] ", "12. Smith", "Adaimi, R.", "Ajisoko, P."), not prose that cites a year.
-  const ENTRY_START = /^(?:\[\d+\]|\d{1,3}\.\s+\p{Lu}|\p{Lu}[\p{L}'’-]+,\s+\p{Lu})/u;
-  const referencesFollow = (i: number) => lines.slice(i + 1, i + 41).filter((l) => sameFont(l) && ENTRY_START.test(l.text)).length >= 3;
+  // Entry openings in the list's own style ("[3] ", "12. Smith", "Adaimi, R."), so neither prose
+  // that cites a year nor a numbered list in an author-year paper's appendix counts.
+  const STYLES = [/^\[\d+\]/, /^\d{1,3}\.\s+\p{Lu}/u, /^\p{Lu}[\p{L}'’-]+,\s+\p{Lu}/u];
+  const opening = lines.slice(0, 40);
+  const style = STYLES.map((re) => ({ re, n: opening.filter((l) => re.test(l.text)).length })).sort((a, b) => b.n - a.n)[0];
+  const referencesFollow = (i: number) => style.n >= 3 && lines.slice(i + 1, i + 41).filter((l) => sameFont(l) && style.re.test(l.text)).length >= 3;
   let end = lines.length;
   for (let i = 2; i < lines.length; i += 1) {
     const { text, fontSize } = lines[i];
@@ -147,7 +159,9 @@ export function trimZone<T extends { text: string; fontSize: number }>(lines: T[
     // reference ("1. Smith J, ... 2020") carries a comma or a year.
     const numberedHeading =
       fontSize >= refFont * 1.1 && /^(?:[A-Z]|\d{1,2})(?:\.\d+)*\.?\s+\p{Lu}/u.test(text) && !/,/.test(text) && !hasYear(lines[i]);
-    if (text.length <= 80 && (AFTER_REFERENCES.test(text) || numberedHeading) && !referencesFollow(i)) {
+    // ICLR-style appendix headings are set in capitals at the reference size ("A ETHICAL STATEMENT").
+    const capsHeading = /^[A-Z](?:\.\d+)*\.?\s+[A-Z][A-Z0-9\s:&,()-]{3,}$/.test(text);
+    if (text.length <= 80 && (AFTER_REFERENCES.test(text) || numberedHeading || capsHeading) && !referencesFollow(i)) {
       end = i;
       break;
     }

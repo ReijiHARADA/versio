@@ -35,7 +35,8 @@ export function segmentReferenceLines(lines: RefLine[]): ReferenceSegment[] {
   });
   // GROBID's labels often start after a label token. Keep explicit numbering as a conservative PDF-layout fallback.
   visualLines.forEach((line, index) => {
-    if (/^\s*(?:\[\s*\d+\s*\]|\d+[.)])\s+/.test(line.text)) starts.add(index);
+    // At most 3 digits: "2025. URL ..." is the tail of an entry, not label 2025.
+    if (/^\s*(?:\[\s*\d+\s*\]|\d{1,3}[.)])\s+/.test(line.text)) starts.add(index);
   });
   starts.add(0);
   const boundaries = [...starts].filter((index) => index >= 0 && index < visualLines.length).sort((a, b) => a - b);
