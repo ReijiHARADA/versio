@@ -1,7 +1,10 @@
 /**
  * Translation-stage audit on the app's acceptance path (local only).
  *
- *   npx vite-node --script scripts/translation-audit.ts -- --run fix4-fieldgold [--split dev|test] [--n 120]
+ *   npx vite-node --script scripts/translation-audit.ts -- --run fix4-fieldgold [--split dev|test] [--n 120] [--released base-run]
+ *
+ * --released base-run: sample only paragraphs that were warned in base-run and
+ * are not warned here (the blocks a change newly sends to translation).
  *
  * Samples translatable, unwarned paragraph blocks from an extraction audit
  * run (English Europe PMC papers, so each block also has a JATS verdict),
@@ -27,6 +30,7 @@ const arg = (name: string, fallback: string) => {
 const run = arg("run", "fix4-fieldgold");
 const split = arg("split", "dev");
 const n = Number(arg("n", "120"));
+const released = arg("released", "");
 const runDir = path.join(root, "test-data/extraction-audit", run);
 const cacheDir = path.join(root, "test-data/field-gold/_cache/epmc");
 
@@ -38,12 +42,16 @@ const sample: Array<{ doc: string; id: string; text: string; verdict: string }> 
 const docs = fs
   .readdirSync(path.join(runDir, "docs"))
   .map((f) => JSON.parse(fs.readFileSync(path.join(runDir, "docs", f), "utf8")) as Dump)
-  .filter((d) => d.id.startsWith("epmc-") && d.language === "en" && d.split === split && fs.existsSync(path.join(cacheDir, `${d.id.slice(5)}.xml`)));
+  .filter((d) => d.language === "en" && d.split === split && (released || (d.id.startsWith("epmc-") && fs.existsSync(path.join(cacheDir, `${d.id.slice(5)}.xml`)))));
 const perDoc = Math.ceil(n / Math.max(1, docs.length));
 for (const doc of docs) {
   const paragraphs = doc.blocks.filter((b) => b.type === "paragraph");
-  const verdicts = new Map(alignParagraphs(jatsParagraphs(fs.readFileSync(path.join(cacheDir, `${doc.id.slice(5)}.xml`), "utf8")), paragraphs).blocks.map((b) => [b.id, b.verdict]));
-  const pool = paragraphs.filter((b) => b.translatable && !b.warning && b.text.split(/\s+/).length >= 8);
+  const jats = path.join(cacheDir, `${doc.id.slice(5)}.xml`);
+  const verdicts = new Map(doc.id.startsWith("epmc-") && fs.existsSync(jats) ? alignParagraphs(jatsParagraphs(fs.readFileSync(jats, "utf8")), paragraphs).blocks.map((b) => [b.id, b.verdict]) : []);
+  const baseWarned = released
+    ? new Set((JSON.parse(fs.readFileSync(path.join(root, "test-data/extraction-audit", released, "docs", `${doc.id}.json`), "utf8")) as Dump).blocks.filter((b) => b.warning).map((b) => `${b.id}\u0000${b.text}`))
+    : null;
+  const pool = paragraphs.filter((b) => b.translatable && !b.warning && b.text.split(/\s+/).length >= 8 && (!baseWarned || baseWarned.has(`${b.id}\u0000${b.text}`)));
   for (const b of pool.map((x) => [rand(), x] as const).sort((a, c) => a[0] - c[0]).slice(0, perDoc).map(([, x]) => x)) {
     sample.push({ doc: doc.id, id: b.id, text: b.text, verdict: verdicts.get(b.id) ?? "?" });
   }
@@ -62,10 +70,10 @@ for (const [i, b] of sample.entries()) {
     outcomes.push({ ...b, outcome: "request_failed", source: b.text, output: String(error).slice(0, 120) });
   }
   // Saved after every block: a long run that is stopped keeps what it measured.
-  fs.writeFileSync(path.join(runDir, `translation-${split}.json`), JSON.stringify(outcomes, null, 1));
+  fs.writeFileSync(path.join(runDir, `translation-${split}${released ? "-released" : ""}.json`), JSON.stringify(outcomes, null, 1));
   process.stdout.write(`\r${i + 1}/${sample.length}`);
 }
-fs.writeFileSync(path.join(runDir, `translation-${split}.json`), JSON.stringify(outcomes, null, 1));
+fs.writeFileSync(path.join(runDir, `translation-${split}${released ? "-released" : ""}.json`), JSON.stringify(outcomes, null, 1));
 const table = new Map<string, Map<string, number>>();
 for (const o of outcomes) {
   if (!table.has(o.verdict)) table.set(o.verdict, new Map());

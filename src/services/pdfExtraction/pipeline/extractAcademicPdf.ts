@@ -1,6 +1,6 @@
 import { extractPDFContent, extractFigureImages, graphicsToExtractionEvidence, type ExtractedPage } from "../../pdfService";
 import { figureLookupKey, formatReadingOrderLog } from "../../pdfLayout";
-import { stitchParagraphContinuations } from "../projection/stitchParagraphs";
+import { reconcileTranslationWarnings, stitchParagraphContinuations } from "../projection/stitchParagraphs";
 import type { Paper, Section, PaperBlock } from "../../../types/paper";
 import type { LayoutBlock, PageColumnLayout } from "../../pdfLayout";
 import { nativeDocumentFromExtracted } from "../native/fromExtracted";
@@ -394,7 +394,7 @@ export function extractFromPages(input: {
     paper: projected.paper,
     sections: projected.sections,
     // Paragraphs interrupted by figures, tables, footnotes or page breaks are rejoined.
-    blocks: stitchParagraphContinuations(projected.blocks, projected.sections),
+    blocks: reconcileTranslationWarnings(stitchParagraphContinuations(projected.blocks, projected.sections)),
     layoutBlocks: generic.blocks,
     layouts: generic.layouts,
     pageKind,

@@ -37,20 +37,30 @@ describe("extraction integrity on real papers", () => {
     const { pages, paragraphs, warned } = await extract("epmc-PMC12885475");
     expect(detectPageColumns(pages[1]).isMultiColumn).toBe(true);
     expect(paragraphs.some((b) => /focus on different This pattern suggests/.test(b.original ?? ""))).toBe(false);
-    expect(warned).toBeLessThanOrEqual(7);
+    expect(warned).toBeLessThanOrEqual(5);
   }, 60_000);
 
   it("drops running heads assembled from several repeated pieces", async (ctx) => {
     if (!pdfOf("epmc-PMC11003102")) ctx.skip();
     const { paragraphs, warned } = await extract("epmc-PMC11003102");
     expect(paragraphs.some((b) => /BMC Psychology \(2024\) 12:195/.test(b.original ?? ""))).toBe(false);
-    expect(warned).toBeLessThanOrEqual(10);
+    expect(warned).toBeLessThanOrEqual(9);
+  }, 60_000);
+
+  it("translates lead-ins and where-clauses around display equations", async (ctx) => {
+    if (!pdfOf("epmc-PMC13586154")) ctx.skip();
+    const { paragraphs, warned } = await extract("epmc-PMC13586154");
+    const leadIns = paragraphs.filter((b) => /Eq\. \d:$/.test((b.original ?? "").trim()));
+    expect(leadIns.length).toBeGreaterThanOrEqual(6);
+    expect(leadIns.filter((b) => b.metadata.translationInputWarning)).toEqual([]);
+    expect(paragraphs.filter((b) => /^where θ denotes/.test(b.original ?? "") && b.metadata.translationInputWarning)).toEqual([]);
+    expect(warned).toBeLessThanOrEqual(7);
   }, 60_000);
 
   for (const [id, ceiling] of [
-    ["epmc-PMC12094662", 5],
-    ["epmc-PMC13551842", 27],
-    ["arxiv-2509.25460", 9],
+    ["epmc-PMC12094662", 4],
+    ["epmc-PMC13551842", 26],
+    ["arxiv-2509.25460", 8],
   ] as const) {
     it.skipIf(!pdfOf(id))(`${id} keeps warned paragraphs at or below ${ceiling}`, async () => {
       expect((await extract(id)).warned).toBeLessThanOrEqual(ceiling);
