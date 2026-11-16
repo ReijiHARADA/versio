@@ -3,7 +3,7 @@ type: Spec
 title: PLaMo 3 Translate 翻訳エンジン統合設計
 description: 本番翻訳を MADLAD-400 3B から PLaMo 3 Translate 2B（llama-server サイドカー）へ移す設計。
 tags: [translation, plamo, llama-cpp, tauri, design]
-status: draft
+status: stable
 sources: [/docs/research/local-llm-translation-bench-2026-11.md]
 ---
 
