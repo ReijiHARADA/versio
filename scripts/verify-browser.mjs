@@ -275,8 +275,7 @@ try {
 
   await check("settings translation engine", async () => {
     await page.getByRole("button", { name: "翻訳", exact: true }).click();
-    await page.getByLabel("翻訳エンジン").first().waitFor({ timeout: 10_000 });
-    await page.getByText("PLaMo 3 Translate 2B（推奨）").first().waitFor({ timeout: 5_000 });
+    await page.getByText("翻訳モデル", { exact: true }).first().waitFor({ timeout: 10_000 });
     await page.getByText("デスクトップ版でのみ利用できます").first().waitFor({ timeout: 5_000 });
   });
   await shot("settings-translation");
