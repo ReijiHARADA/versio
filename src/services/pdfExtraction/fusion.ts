@@ -15,6 +15,7 @@ const SOURCE_WEIGHT: Record<Evidence["source"], number> = {
   "format-profile": 0.35,
   grobid: 0.9,
   "layout-model": 0.8,
+  crf: 0.85,
   ocr: 0.45,
 };
 

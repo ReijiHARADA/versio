@@ -13,6 +13,10 @@ import path from "node:path";
 import { predictionFromApple, type ProbeOutput } from "../src/evaluation/fieldGold/adapters/apple";
 import { predictionFromGrobid } from "../src/evaluation/fieldGold/adapters/grobid";
 import { predictionFromVersio } from "../src/evaluation/fieldGold/adapters/versio";
+import { predictionFromCrfPort } from "../src/evaluation/fieldGold/adapters/crfport";
+import { enhanceReferencesWithCrf } from "../src/services/pdfExtraction/crf/applyReferences";
+import { loadNodeCrfRuntime } from "../src/services/pdfExtraction/crf/nodeRuntime";
+import { referenceLinesFromPages, selectReferenceBlocks } from "../src/services/pdfExtraction/crf/referenceLines";
 import { buildReport } from "../src/evaluation/fieldGold/report";
 import { proposeWinners } from "../src/evaluation/fieldGold/winners";
 import type { FieldGold, FieldPrediction, ParserId } from "../src/evaluation/fieldGold/types";
@@ -47,6 +51,8 @@ async function runVersio(gold: FieldGold): Promise<FieldPrediction> {
   const pages = await extractPdfPages(pdfPath);
   const info = await pdfInfo(pdfPath);
   const result = extractFromPages({ pages, paperId: gold.id, filePath: pdfPath, fileHash: gold.pdfSha256, metadata: { ...info, pageCount: pages.length } });
+  // Same post-projection step as extractAcademicPdf (CRF references).
+  await enhanceReferencesWithCrf(result, pages, loadNodeCrfRuntime);
   return predictionFromVersio(result, Math.round(performance.now() - started), gold.id);
 }
 
@@ -73,7 +79,19 @@ async function runApple(gold: FieldGold): Promise<FieldPrediction> {
   return predictionFromApple(gold.id, JSON.parse(stdout) as ProbeOutput, Math.round(performance.now() - started));
 }
 
-const RUNNERS: Partial<Record<ParserId, (gold: FieldGold) => Promise<FieldPrediction>>> = { versio: runVersio, grobid: runGrobid, apple: runApple };
+async function runCrfPort(gold: FieldGold): Promise<FieldPrediction> {
+  await loadNodeCrfRuntime();
+  const pdfPath = path.resolve(root, gold.pdfPath);
+  const started = performance.now();
+  const pages = await extractPdfPages(pdfPath);
+  const result = extractFromPages({ pages, paperId: gold.id, filePath: pdfPath, fileHash: gold.pdfSha256, metadata: { pageCount: pages.length } });
+  // The projection has already associated canonical reference lines into visible blocks;
+  // those preserve the reference-section order while keeping source geometry available.
+  const lines = referenceLinesFromPages(pages, selectReferenceBlocks(result.blocks, result.sections));
+  return predictionFromCrfPort(gold.id, gold.language, lines, Math.round(performance.now() - started));
+}
+
+const RUNNERS: Partial<Record<ParserId, (gold: FieldGold) => Promise<FieldPrediction>>> = { versio: runVersio, grobid: runGrobid, apple: runApple, crfport: runCrfPort };
 
 const compare = arg("compare")?.split(",") as ParserId[] | undefined;
 if (compare) {
