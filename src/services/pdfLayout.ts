@@ -250,7 +250,26 @@ export function detectPageColumns(page: ExtractedPage): PageColumnLayout {
     !hasSeparateColumnSpans(row) &&
     row.some((item) => item.x < page.width * 0.5 && item.x + item.width > page.width * 0.5)
   ).length;
-  if (midpointBridgedRows >= 8 && midpointBridgedRows / Math.max(midpointRows.length, 1) >= 0.55) {
+  // Narrow-gutter journals start the right column a few points left of the
+  // midpoint (left column ends at 272pt, right starts at 295pt on a 595pt
+  // page), so every right-column span "crosses" it. Such a page still has a
+  // clean vertical gutter that almost no row crosses; a single-column page
+  // whose lines are cut into arbitrary spans has none.
+  // Not on the first page: side-by-side author/affiliation blocks there open fake gutters.
+  const cleanGutter = (() => {
+    if (page.pageNumber <= 1 || midpointRows.length < 8) return false;
+    for (let x = page.width * 0.4; x <= page.width * 0.6; x += 2) {
+      const crossing = midpointRows.filter((row) => row.some((item) => item.x < x - 4 && item.x + item.width > x + 4)).length;
+      // Two-column pages: only spanning rows (title, abstract, captions) cross, ~25%.
+      // Single-column pages cut into spans: most rows cross everywhere (≥ 60% measured).
+      if (crossing / midpointRows.length > 0.4) continue;
+      // Body columns on both sides (column-wide lines), not the cell gap of a wide table.
+      const long = (side: (item: ExtractedTextItem) => boolean) => usable.filter((item) => side(item) && item.width >= page.width * 0.25).length;
+      if (long((item) => item.x + item.width <= x) >= 5 && long((item) => item.x >= x) >= 5) return true;
+    }
+    return false;
+  })();
+  if (!cleanGutter && midpointBridgedRows >= 8 && midpointBridgedRows / Math.max(midpointRows.length, 1) >= 0.55) {
     return fallback;
   }
 
@@ -1381,6 +1400,11 @@ function isEdgeChrome(
   // satisfy these caption predicates.
   if (isTableCaption(line.text) || isFigureCaption(line.text)) return false;
   const topBand = Math.max(HEADER_Y, layout.pageHeight * 0.08);
+  // A running header assembled from several repeated pieces (`Amoadu et al. BMC
+  // Psychology (2024) 12:195` + `Page 3 of 12`) matches no pattern as a whole
+  // line, and its width makes it look like a body continuation below.
+  const pieces = line.items.filter((item) => item.text.trim());
+  if (line.y < topBand && pieces.length >= 2 && pieces.every((item) => patterns.has(normalizeChromeKey(item.text)))) return true;
   if (line.y < topBand) {
     // Journal PDFs can begin the next page with the continuation of a body
     // paragraph.  A blanket top-band rule drops that line before paragraph
@@ -1799,6 +1823,9 @@ function isRepeatedHeadingLead(heading: LayoutLine, body: LayoutLine): boolean {
 function captionShouldContinue(currentText: string, next: LayoutLine, baseFont: number): boolean {
   const nextText = next.text.trim();
   if (!nextText) return false;
+  // A line that opens with its own label (`Table 3 Linear mixed…` after `Fig. 3 Likelihood…`)
+  // is the next caption, never the continuation of the current one.
+  if ((isFigureCaption(nextText) || isTableCaption(nextText)) && !/^(?:figure|fig\.?|table|図|表)\s*\d+[a-z]?\s*[:.：]?\s*$/i.test(currentText.trim())) return false;
   // Table captions are often followed immediately by a centered table
   // section header. It can be emitted as one native item and otherwise looks
   // like a short wrapped caption line. A substantial x shift from the

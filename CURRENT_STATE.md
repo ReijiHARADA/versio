@@ -31,6 +31,7 @@ user-visible な現在状態だけを書く。日付つきの作業ログ・計�
 
 - 抽出（OA コーパス 113 本）: source integrity 平均 0.99987、heading recall 平均 0.993、table-region recall 0.950。title exactness 0.867（正解未検証のため保留）。→ [docs/PDF_EXTRACTION_EVALUATION.md](./docs/PDF_EXTRACTION_EVALUATION.md)
 - 抽出の項目別（出版社の構造化データを正解に 106 本・英日、ユーザー目視で妥当性確認済み）: 英語で title 0.95 / authors 0.24 / 著者↔所属 0.05 / references 0.95、日本語 title 0.20。英語の参考文献は、ページの文字列から参考文献の範囲を決め、GROBID 0.9.1 の CRF（Apache-2.0）を TypeScript に移植した区切り・解析で 1 件ずつのブロック（著者・題・年・誌名・DOI 付き）に再構成する（日本語・失敗時は従来どおり）。GROBID 本体は英語の authors 0.85・references 0.95。→ [docs/EXTRACTION_FIELD_EVAL.md](./docs/EXTRACTION_FIELD_EVAL.md)
+- 段落の抽出品質（JATS とページ画像の書き起こしを正解に、アプリと同じ抽出経路で監査）: 「段落の末尾が欠けている…原文を表示しています」の大半は抽出の失敗（図表・柱をまたぐ段落の分断、狭いガターの 2 段組の行の交互混入）。段落のつなぎ直しと段組・柱の判定を直し、警告の出る段落は実論文 113 本で 15.8% → 11.8%、評価用セットで 20.9% → 14.9%。→ [docs/EXTRACTION_INTEGRITY_AUDIT.md](./docs/EXTRACTION_INTEGRITY_AUDIT.md)
 - 翻訳: fresh audit（113 本 / 954 units）で ordinary-body fallback 30.8%、目標 5% は未達。自動受理は品質達成とは扱わない。→ [TRANSLATION_CORPUS_AUDIT.md](./TRANSLATION_CORPUS_AUDIT.md)、[docs/PDF_EXTRACTION_TRANSLATION_QUALITY_EVALUATION.md](./docs/PDF_EXTRACTION_TRANSLATION_QUALITY_EVALUATION.md)
 - CAT-Translate / Gemma / Qwen は監査比較のみで本番 routing 未統合。
 
