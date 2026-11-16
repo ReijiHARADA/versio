@@ -5,28 +5,75 @@ import type { RefLine } from "./segmentReferences";
 
 const inside = (x: number, y: number, box: { x: number; y: number; width: number; height: number }) => x >= box.x - 2 && x <= box.x + box.width + 2 && y >= box.y - box.height - 2 && y <= box.y + box.height + 2;
 
-/** Recover native visual lines that intersect a projected reference block, ordered by page, column, then baseline. */
+type Item = ExtractedPage["textItems"][number];
+
+/** Join a baseline group, inserting a space only where the glyph runs are visibly apart. */
+function joinItems(items: Item[]): string {
+  let out = "";
+  let prevEnd = -Infinity;
+  for (const item of items) {
+    const gap = item.x - prevEnd;
+    if (out && gap > Math.max(1, item.fontSize * 0.15) && !out.endsWith(" ") && !item.text.startsWith(" ")) out += " ";
+    out += item.text;
+    prevEnd = item.x + item.width;
+  }
+  return out.replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Recover native visual lines of the references section. The projected
+ * reference blocks only locate the section: their boxes are merged into one
+ * region per page column, and lines are rebuilt from the text items inside each
+ * region (so wrong block splits upstream do not leak into the CRF input, and
+ * left/right-column lines at the same height are never merged).
+ */
 export function referenceLinesFromPages(pages: ExtractedPage[], referenceBlocks: PaperBlock[]): RefLine[] {
-  const boxes = referenceBlocks.flatMap((block) => block.boundingBoxes.map((box) => ({ ...box, blockStart: true })));
-  const lines: Array<RefLine & { page: number; y: number }> = [];
-  for (const page of pages) {
-    const candidates = page.textItems.filter((item) => item.text.trim() && boxes.some((box) => box.page === page.pageNumber && inside(item.x, item.y, box)));
-    const grouped: Array<typeof candidates> = [];
-    for (const item of [...candidates].sort((a, b) => a.y - b.y || a.x - b.x)) {
-      const existing = grouped.find((group) => Math.abs(group[0].y - item.y) <= Math.max(2, item.fontSize * 0.35));
-      (existing ?? (grouped.push([]), grouped[grouped.length - 1])).push(item);
+  const boxes = referenceBlocks.flatMap((block) => block.boundingBoxes);
+  const output: Array<RefLine & { y: number }> = [];
+  for (const page of [...pages].sort((a, b) => a.pageNumber - b.pageNumber)) {
+    const pageBoxes = boxes.filter((box) => box.page === page.pageNumber);
+    if (pageBoxes.length === 0) continue;
+    // Merge boxes whose x-ranges overlap into column regions.
+    const columns: Array<{ x: number; y: number; width: number; height: number }> = [];
+    for (const box of [...pageBoxes].sort((a, b) => a.x - b.x)) {
+      const col = columns.find((c) => box.x < c.x + c.width && c.x < box.x + box.width);
+      if (!col) {
+        columns.push({ x: box.x, y: box.y, width: box.width, height: box.height });
+        continue;
+      }
+      const left = Math.min(col.x, box.x);
+      const right = Math.max(col.x + col.width, box.x + box.width);
+      const top = Math.min(col.y, box.y);
+      const bottom = Math.max(col.y + col.height, box.y + box.height);
+      Object.assign(col, { x: left, y: top, width: right - left, height: bottom - top });
     }
-    for (const group of grouped) {
-      const ordered = group.sort((a, b) => a.x - b.x); const x = ordered[0].x;
-      const y = ordered[0].y; const width = Math.max(...ordered.map((item) => item.x + item.width)) - x;
-      lines.push({ text: ordered.map((item) => item.text).join(" ").replace(/\s+/g, " ").trim(), x, width, fontSize: ordered.reduce((sum, item) => sum + item.fontSize, 0) / ordered.length, blockStart: false, page: page.pageNumber, y });
+    const used = new Set<Item>();
+    for (const column of columns.sort((a, b) => a.x - b.x)) {
+      const items = page.textItems.filter((item) => item.text.trim() && !used.has(item) && inside(item.x + Math.min(item.width, 4) / 2, item.y, column));
+      for (const item of items) used.add(item);
+      const groups: Item[][] = [];
+      for (const item of [...items].sort((a, b) => a.y - b.y || a.x - b.x)) {
+        const group = groups.find((g) => Math.abs(g[0].y - item.y) <= Math.max(2, item.fontSize * 0.35));
+        if (group) group.push(item);
+        else groups.push([item]);
+      }
+      let first = true;
+      const sortedGroups = groups.sort((a, b) => a[0].y - b[0].y);
+      // A new block (pdfalto-like paragraph) starts where the line pitch opens up clearly.
+      const pitches = sortedGroups.slice(1).map((g, i) => g[0].y - sortedGroups[i][0].y).sort((a, b) => a - b);
+      const medianPitch = pitches.length ? pitches[pitches.length >> 1] : Infinity;
+      for (const group of sortedGroups) {
+        const ordered = group.sort((a, b) => a.x - b.x);
+        const x = ordered[0].x;
+        const y = ordered[0].y;
+        const width = Math.max(...ordered.map((item) => item.x + item.width)) - x;
+        const fontSize = ordered.reduce((sum, item) => sum + item.fontSize, 0) / ordered.length;
+        const prev = output.at(-1);
+        const blockStart = first || !prev || y - prev.y > medianPitch * 1.35;
+        output.push({ text: joinItems(ordered), x, width, fontSize, blockStart, y });
+        first = false;
+      }
     }
   }
-  const byPage = new Map<number, typeof lines>(); for (const line of lines) (byPage.get(line.page) ?? (byPage.set(line.page, []), byPage.get(line.page)!)).push(line);
-  const output: RefLine[] = [];
-  for (const pageLines of [...byPage.values()]) {
-    const columns = [...pageLines].sort((a, b) => a.x - b.x).reduce<Array<typeof lines>>((cols, line) => { const col = cols.find((c) => Math.abs(c[0].x - line.x) < Math.max(24, line.fontSize * 3)); (col ?? (cols.push([]), cols[cols.length - 1])).push(line); return cols; }, []);
-    for (const column of columns) for (const line of column.sort((a, b) => a.y - b.y)) { const prev = output.at(-1) as (RefLine & { y?: number }) | undefined; line.blockStart = !prev || (line.y - (prev.y ?? line.y)) > line.fontSize * 2.2; output.push(line); }
-  }
-  return output;
+  return output.filter((line) => line.text).map(({ y: _y, ...line }) => line);
 }

@@ -8,11 +8,42 @@ import { gunzipSync } from "node:zlib";
 import { GROBID_DELIMITERS, tokenizeGrobid } from "./tokenize";
 
 /**
- * A FastMatcher gazetteer without a nested-map trie: `full` holds complete
- * phrases and `prefixes` every proper or complete token prefix, each as tokens
- * joined by U+0001. Same matches as GROBID's trie, far less memory.
+ * A FastMatcher gazetteer without a nested-map trie. Every token prefix of every
+ * phrase is kept as a 53-bit hash (tokens joined by U+0001, plus a mark:
+ * U+0002 = complete phrase, U+0003 = prefix) in a sorted Float64Array. Same
+ * matches as GROBID's trie (collision chance ~1e-10 per lookup) in a few MB.
  */
-export type PhraseMatcher = { full: Set<string>; prefixes: Set<string> };
+export type PhraseMatcher = Float64Array;
+const FULL = "\u0002";
+const PART = "\u0003";
+
+/** Two independent 32-bit FNV-1a variants folded into an exact 53-bit integer. */
+function hash53(s: string): number {
+  let h1 = 0x811c9dc5;
+  let h2 = 0x01000193;
+  for (let i = 0; i < s.length; i += 1) {
+    const c = s.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 0x01000193) >>> 0;
+    h2 = Math.imul(h2 ^ c, 0x5bd1e995) >>> 0;
+  }
+  return h1 * 0x200000 + (h2 & 0x1fffff);
+}
+
+function contains(sorted: Float64Array, value: number): boolean {
+  let lo = 0;
+  let hi = sorted.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >>> 1;
+    const v = sorted[mid];
+    if (v === value) return true;
+    if (v < value) lo = mid + 1;
+    else hi = mid - 1;
+  }
+  return false;
+}
+
+const isPrefix = (m: PhraseMatcher, key: string) => contains(m, hash53(key + FULL)) || contains(m, hash53(key + PART));
+const isFull = (m: PhraseMatcher, key: string) => contains(m, hash53(key + FULL));
 
 export type Lexicons = {
   journals: PhraseMatcher;
@@ -33,30 +64,40 @@ const SEP = "\u0001";
 export function normaliseText(s: string): string {
   return s
     .normalize("NFKC")
-    .replace(/[‐-―−﹘﹣－]/g, "-")
-    .replace(/[‘’‚‛′]/g, "'")
-    .replace(/[“”„‟″]/g, '"')
-    .replace(/[  -​  　]/g, " ");
+    .replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, "-")
+    .replace(/[\u2018\u2019\u201A\u201B\u2032]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u201F\u2033]/g, '"')
+    .replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, " ");
 }
 
 const isSkippable = (token: string) => token === " " || token === "\n" || token.length === 0 || GROBID_DELIMITERS.includes(token);
 
 export function buildPhraseMatcher(entries: Iterable<string>): PhraseMatcher {
-  const full = new Set<string>();
-  const prefixes = new Set<string>();
+  let out = new Float64Array(1024);
+  let n = 0;
+  const push = (v: number) => {
+    if (n === out.length) {
+      const grown = new Float64Array(out.length * 2);
+      grown.set(out);
+      out = grown;
+    }
+    out[n++] = v;
+  };
   for (const raw of entries) {
     const line = normaliseText(raw).replace(/\s+/g, " ").trim().toLowerCase();
     if (!line) continue;
     const parts = tokenizeGrobid(line).filter((t) => !isSkippable(t));
-    if (parts.length === 0) continue;
     let key = "";
-    for (const part of parts) {
+    parts.forEach((part, i) => {
       key = key ? key + SEP + part : part;
-      prefixes.add(key);
-    }
-    full.add(key);
+      // A key may be both a complete phrase and a prefix of a longer one: keep both marks.
+      push(hash53(key + (i === parts.length - 1 ? FULL : PART)));
+    });
   }
-  return { full, prefixes };
+  const sorted = out.subarray(0, n).sort();
+  let w = 0;
+  for (let r = 0; r < sorted.length; r += 1) if (r === 0 || sorted[r] !== sorted[r - 1]) sorted[w++] = sorted[r];
+  return sorted.slice(0, w);
 }
 
 /** FastMatcher.matchLayoutToken(tokens, ignoreDelimiters=true, caseSensitive=false): inclusive token-index spans. */
@@ -70,14 +111,14 @@ export function matchPhrases(tokens: string[], matcher: PhraseMatcher): Array<[n
     const next: typeof current = [];
     for (const m of current) {
       const key = m.key + SEP + text;
-      if (matcher.prefixes.has(key)) next.push({ key, start: m.start, last: pos });
+      if (isPrefix(matcher, key)) next.push({ key, start: m.start, last: pos });
       // GROBID reports a completed phrase when the following token is examined.
-      if (matcher.full.has(m.key)) results.push([m.start, m.last]);
+      if (isFull(matcher, m.key)) results.push([m.start, m.last]);
     }
-    if (matcher.prefixes.has(text)) next.push({ key: text, start: pos, last: pos });
+    if (isPrefix(matcher, text)) next.push({ key: text, start: pos, last: pos });
     current = next;
   }
-  for (const m of current) if (matcher.full.has(m.key)) results.push([m.start, m.last]);
+  for (const m of current) if (isFull(matcher, m.key)) results.push([m.start, m.last]);
   return results;
 }
 
