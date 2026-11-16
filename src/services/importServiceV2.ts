@@ -55,7 +55,6 @@ import {
   shouldTranslateSection,
 } from "./import/policy";
 import {
-  DEFAULT_IMPORT_CONFIG,
   finalizeJapaneseLayoutOnly,
   isJapaneseLayoutOnlyPaper,
   persistUntranslatableAsSkipped,

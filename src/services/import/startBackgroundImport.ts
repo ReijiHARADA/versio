@@ -1,7 +1,7 @@
 import { resumeIncompleteTranslation } from "./resume";
 import { classifyImportFailure } from "./classifyFailure";
 import { showToast } from "../../stores/toastStore";
-import { useImportJobStore, type ImportJob } from "../../stores/importJobStore";
+import { useImportJobStore } from "../../stores/importJobStore";
 import { useLibraryCache } from "../../stores/libraryCache";
 import { useProjectStore } from "../../stores/projectStore";
 import type { Paper, PaperBlock, Section } from "../../types/paper";
@@ -118,7 +118,7 @@ async function runImport(jobId: string, file: File, fileKey: string, workspaceNo
       file,
       {
         signal: controller.signal,
-        waitForTranslationEngine: async (signal) => {
+        waitForTranslationEngine: async () => {
           patch(jobId, {
             stage: "translating",
             message: "翻訳モデルの準備を待っています...",
@@ -450,10 +450,9 @@ export function dismissBackgroundImport(jobId: string): void {
 
 /** Resume a saved paper whose translation was interrupted or failed. */
 export async function retryPaperTranslation(paperId: string): Promise<boolean> {
-  const saved = await getSetting<ImportConfig>("translationSettingsV2");
   const available = await isPlamoAvailable();
   if (!available) {
-    showToast({ kind: "error", message: SERVER_UNAVAILABLE_MESSAGE });
+    showToast({ kind: "error", message: "翻訳モデルを準備できません。設定 → 翻訳 を確認してください" });
     return false;
   }
   const before = useLibraryCache.getState().papers.find((p) => p.id === paperId);
