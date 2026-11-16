@@ -25,6 +25,9 @@ const split = (arg("split") ?? "all") as AuditSplit | "all";
 const examples = Number(arg("examples") ?? 0);
 const runDir = path.join(root, "test-data/extraction-audit", run, "docs");
 const cacheDir = path.join(root, "test-data/field-gold/_cache/epmc");
+// Per gold paragraph, the share of its bigrams printed in the PDF (scripts/paragraph-gold-coverage.ts).
+const coverageDir = path.join(root, "test-data/field-gold/_cache/coverage");
+const PRINTED = 0.9;
 
 type Dump = { id: string; language: string | null; split: AuditSplit; blocks: Array<{ id: string; type: string; order: number; text: string; warning: string | null; section: string; page: number }> };
 
@@ -40,6 +43,7 @@ const byReason = new Map<string, Record<BlockOutcome["verdict"], number>>();
 const causes = new Map<Cause, { n: number; warned: number; docs: Set<string> }>();
 const mismatched: string[] = [];
 let brokenParas = 0;
+const printed = { all: 0, intact: 0, unprinted: 0 };
 let causeShown = 0;
 let brokenWarned = 0;
 const shown: string[] = [];
@@ -54,8 +58,19 @@ for (const doc of docs) {
     continue;
   }
   const owner = goldOwnerOf(gold);
+  const coverageFile = path.join(coverageDir, `${doc.id.slice(5)}.json`);
+  const coverage = fs.existsSync(coverageFile) ? (JSON.parse(fs.readFileSync(coverageFile, "utf8")) as number[]) : undefined;
   for (const p of result.paragraphs) {
     para[p.verdict] += 1;
+    // Not printed in this PDF (another version, JATS-only text): no extractor can make it intact.
+    if (coverage && p.verdict !== "intact" && (coverage[p.index] ?? 1) < PRINTED) {
+      printed.unprinted += 1;
+      continue;
+    }
+    if (coverage) {
+      printed.all += 1;
+      if (p.verdict === "intact") printed.intact += 1;
+    }
     if (p.verdict !== "intact" && !gold[p.index].hasDisplayFormula) {
       brokenParas += 1;
       if (p.warned) brokenWarned += 1;
@@ -101,6 +116,7 @@ const allBlocks = Object.values(blockV).reduce((a, b) => a + b.all, 0);
 if (mismatched.length) console.log(`skipped (PDF and JATS differ): ${mismatched.join(", ")}`);
 console.log(`run ${run} split ${split}: ${docs.length - mismatched.length} docs, gold paragraphs ${totalPara}, paragraph blocks ${allBlocks}`);
 console.log(`gold paragraphs: intact ${pct(para.intact, totalPara)} split ${pct(para.split, totalPara)} partial ${pct(para.partial, totalPara)} missing ${pct(para.missing, totalPara)}`);
+if (printed.all) console.log(`printed gold paragraphs (PDF bigram coverage ≥ ${PRINTED} or intact): intact ${pct(printed.intact, printed.all)} of ${printed.all}; not printed ${printed.unprinted}`);
 console.log(`warned blocks ${warned} (${pct(warned, allBlocks)}): fragment ${blockV.fragment.warned} / complete ${blockV.complete.warned} / merged ${blockV.merged.warned} / outside ${blockV.outside.warned}`);
 console.log(`warning precision (fragment or outside) ${pct(blockV.fragment.warned + blockV.outside.warned, warned)}; broken prose paragraphs warned ${pct(brokenWarned, brokenParas)} of ${brokenParas}`);
 console.log(`fragment blocks without warning: ${blockV.fragment.all - blockV.fragment.warned} of ${blockV.fragment.all}`);
