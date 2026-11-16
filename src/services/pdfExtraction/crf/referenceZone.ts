@@ -25,7 +25,8 @@ function findGutter(items: Item[], width: number): number | null {
   for (let x = width * 0.3; x <= width * 0.7; x += 2) {
     const crossing = chars(items.filter((it) => it.x < x - 1 && it.x + it.width > x + 1));
     const left = chars(items.filter((it) => it.x + it.width <= x + 1));
-    if (left < total * 0.2 || total - left - crossing < total * 0.2) continue;
+    // A short right column (the end of a reference list) still makes a two-column page.
+    if (left < total * 0.1 || total - left - crossing < total * 0.1) continue;
     if (!best || crossing < best.crossing) best = { x, crossing };
   }
   return best && best.crossing <= total * 0.12 ? best.x : null;
