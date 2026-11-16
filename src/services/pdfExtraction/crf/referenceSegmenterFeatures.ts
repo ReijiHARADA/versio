@@ -22,10 +22,10 @@ export function punctType(s: string): string {
   return /^[,:;?.]+$/.test(s) ? "PUNCT" : "NOPUNCT";
 }
 
-/** INITCAP when the first char is upper case, ALLCAP when additionally no char is lower case. */
+/** FeatureFactory.test_all_capital wins: no lower-case char at all (punctuation too) is ALLCAP; else INITCAP on an upper-case first char. */
 export function capitalisation(s: string): string {
-  if (!/^\p{Lu}/u.test(s)) return "NOCAPS";
-  return /\p{Ll}/u.test(s) ? "INITCAP" : "ALLCAP";
+  if (s.length > 0 && !/\p{Ll}/u.test(s)) return "ALLCAP";
+  return /^\p{Lu}/u.test(s) ? "INITCAP" : "NOCAPS";
 }
 
 /** TextUtilities.punctuationProfile length bucket: "no" or min(10, count). */
@@ -41,8 +41,8 @@ export function referenceSegmenterFeatureRows(lines: RefLine[], lex: Lexicons = 
   const rows: string[][] = [];
   const tokens: string[] = [];
   const lineForToken: number[] = [];
-  // Java counts every token text of the line plus the newline token.
-  const lineLengths = lines.map((line) => line.text.length + 1);
+  // Java counts every token text of the line: pdfalto lines end with a space token before the newline token.
+  const lineLengths = lines.map((line) => line.text.length + 2);
   const maxLineLength = Math.max(1, ...lineLengths);
   let indented = false;
   let previousStartX: number | null = null;
@@ -78,7 +78,8 @@ export function referenceSegmenterFeatureRows(lines: RefLine[], lex: Lexicons = 
       nn += text.length;
       const first = k === 0;
       const last = k === meaningful.length - 1;
-      if (first) nn = 0;
+      // Java resets nn on the newline token only (its LINESTART reset is dead code), except for the very first token.
+      if (rows.length === 0) nn = 0;
       const lower = text.toLowerCase();
       const allDigits = /^\d+$/.test(text);
       const blockStatus = line.blockStart && first ? "BLOCKSTART" : blockEndLine.has(lineIndex) && last ? "BLOCKEND" : "BLOCKIN";
