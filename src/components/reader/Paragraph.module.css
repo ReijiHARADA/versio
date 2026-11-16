@@ -23,6 +23,11 @@
   color: var(--color-text);
 }
 
+/* English source shown in place of a translation (waiting, warning, untranslated). */
+.translated[data-text-role="original"] {
+  text-align: justify;
+}
+
 .toggleButton {
   position: absolute;
   top: 0;
@@ -80,6 +85,7 @@
 
 .original {
   margin: 0;
+  text-align: justify;
   font-size: 0.9375em;
   color: var(--color-text-secondary);
   line-height: 1.7;
@@ -166,6 +172,7 @@
 }
 
 .originalFallback {
+  text-align: justify;
   font-size: 0.9375rem;
   color: var(--color-text-secondary);
   line-height: 1.7;
