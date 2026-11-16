@@ -1,4 +1,7 @@
+export type TranslationEngineId = "plamo" | "madlad";
+
 export type TranslationSettingsV2 = {
+  translationEngine: TranslationEngineId;
   madladServerUrl: string;
   ollamaServerUrl: string;
   ollamaModel: string;
@@ -8,6 +11,7 @@ export type TranslationSettingsV2 = {
 };
 
 export const DEFAULT_TRANSLATION_SETTINGS_V2: TranslationSettingsV2 = {
+  translationEngine: "plamo",
   madladServerUrl: "http://127.0.0.1:8765",
   ollamaServerUrl: "http://localhost:11434",
   ollamaModel: "gemma2:9b",

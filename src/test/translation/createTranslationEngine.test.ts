@@ -4,7 +4,7 @@ import { createTranslationEngine } from "../../services/translation/createTransl
 
 describe("createTranslationEngine", () => {
   it("wires Apple → MADLAD when Apple translation is enabled", () => {
-    const cfg = resolveImportConfig({ enableAppleTranslation: true });
+    const cfg = resolveImportConfig({ translationEngine: "madlad", enableAppleTranslation: true });
     const { engine, appleRouter, madladEngine } = createTranslationEngine(cfg);
     expect(appleRouter).not.toBeNull();
     expect(appleRouter?.name).toBe("selective-apple");
@@ -13,7 +13,7 @@ describe("createTranslationEngine", () => {
   });
 
   it("uses MADLAD alone when Apple translation is disabled", () => {
-    const cfg = resolveImportConfig({ enableAppleTranslation: false });
+    const cfg = resolveImportConfig({ translationEngine: "madlad", enableAppleTranslation: false });
     const { engine, appleRouter, madladEngine } = createTranslationEngine(cfg);
     expect(appleRouter).toBeNull();
     expect(engine).toBe(madladEngine);
@@ -21,6 +21,7 @@ describe("createTranslationEngine", () => {
 
   it("wraps the Apple/MADLAD base with selective cascade when enabled", () => {
     const cfg = resolveImportConfig({
+      translationEngine: "madlad",
       enableAppleTranslation: true,
       enableSelectiveCascade: true,
     });

@@ -21,6 +21,7 @@ import {
 import { localizeNamedFigureCaption, shouldTranslateTitle, titleTranslationComplete } from "../translation/quality";
 import { isAcceptableTranslation } from "../translation/translationCheck";
 import { checkMADLADServer } from "../translation/madladEngine";
+import { isPlamoAvailable } from "../translation/plamoReadiness";
 import { projectSafeUnitTranslation } from "../translation/partialProjection";
 import {
   collectAppleEligibleSources,
@@ -108,8 +109,10 @@ export async function resumeIncompleteTranslation(
 
     const cfg = resolveImportConfig(config);
     // Leave pending work untouched so a later server-ready resume can pick it up.
-    const madlad = await checkMADLADServer(cfg.madladServerUrl);
-    if (!madlad.available) {
+    const engineAvailable = cfg.translationEngine === "plamo"
+      ? await isPlamoAvailable()
+      : (await checkMADLADServer(cfg.madladServerUrl)).available;
+    if (!engineAvailable) {
       paper.needsTranslationResume = true;
       await savePaper(paper);
       return;

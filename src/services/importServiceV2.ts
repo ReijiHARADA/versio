@@ -47,7 +47,7 @@ import {
 import { projectSafeUnitTranslation } from "./translation/partialProjection";
 import { generateGlossary } from "./llm";
 import type { GlossaryEntry } from "./llm/types";
-import { resolveMadladServerUrl, MADLAD_MODEL_VERSION } from "./translation/madladEngine";
+import { resolveMadladServerUrl } from "./translation/madladEngine";
 import { finalizedTranslationStatus } from "./paperStatus";
 import {
   isRetryableTranslationFailure,
@@ -104,6 +104,7 @@ export async function importPDFV2(
     engine: translationEngine,
     appleRouter,
     llmProviders,
+    cacheModelVersion,
   } = createTranslationEngine(cfg);
 
   let releaseExtraction: (() => void) | undefined;
@@ -596,7 +597,7 @@ export async function importPDFV2(
             await getCachedTranslation(
               titleHash,
               translationEngine.name,
-              MADLAD_MODEL_VERSION,
+              cacheModelVersion,
               "en",
               "ja"
             ),
@@ -621,7 +622,7 @@ export async function importPDFV2(
             await getCachedTranslation(
               sectionHash,
               translationEngine.name,
-              MADLAD_MODEL_VERSION,
+              cacheModelVersion,
               "en",
               "ja"
             ),
@@ -656,7 +657,7 @@ export async function importPDFV2(
             await getCachedTranslation(
               blockHash,
               translationEngine.name,
-              MADLAD_MODEL_VERSION,
+              cacheModelVersion,
               "en",
               "ja"
             ),

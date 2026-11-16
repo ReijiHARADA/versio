@@ -5,11 +5,13 @@
 
 import { OllamaProvider } from "../llm";
 import { AppleTranslationEngine, SelectiveAppleTranslationEngine } from "./appleTranslationEngine";
-import { MADLADEngine } from "./madladEngine";
+import { MADLADEngine, MADLAD_MODEL_VERSION } from "./madladEngine";
+import { PLAMO_MODEL_VERSION, PlamoEngine } from "./plamoEngine";
 import { OllamaTranslationEngine } from "./ollamaTranslationEngine";
 import type { TranslationEngine } from "./types";
 
 export type TranslationEngineConfig = {
+  translationEngine?: "plamo" | "madlad";
   madladServerUrl: string;
   ollamaServerUrl: string;
   ollamaModel: string;
@@ -22,6 +24,10 @@ export type TranslationEngineBundle = {
   engine: TranslationEngine;
   appleRouter: SelectiveAppleTranslationEngine | null;
   madladEngine: MADLADEngine;
+  /** Base engine before the optional Ollama cascade. */
+  primaryEngine: TranslationEngine;
+  /** model_version used for translation_cache lookups. */
+  cacheModelVersion: string;
   /** Same ordered providers used for selective cascade / glossary. */
   llmProviders: OllamaProvider[];
 };
@@ -30,10 +36,12 @@ export function createTranslationEngine(
   cfg: TranslationEngineConfig
 ): TranslationEngineBundle {
   const madladEngine = new MADLADEngine(cfg.madladServerUrl);
-  const appleRouter = cfg.enableAppleTranslation
+  const usePlamo = (cfg.translationEngine ?? "plamo") === "plamo";
+  // The Apple short-item router existed to speed up MADLAD; PLaMo does not need it.
+  const appleRouter = !usePlamo && cfg.enableAppleTranslation
     ? new SelectiveAppleTranslationEngine(new AppleTranslationEngine(), madladEngine)
     : null;
-  const baseEngine = appleRouter ?? madladEngine;
+  const baseEngine: TranslationEngine = usePlamo ? new PlamoEngine() : appleRouter ?? madladEngine;
   const llmProviders = [cfg.ollamaModel, ...(cfg.ollamaModels ?? [])]
     .filter(
       (model, index, models): model is string =>
@@ -43,7 +51,14 @@ export function createTranslationEngine(
   const engine = cfg.enableSelectiveCascade
     ? new OllamaTranslationEngine(baseEngine, llmProviders)
     : baseEngine;
-  return { engine, appleRouter, madladEngine, llmProviders };
+  return {
+    engine,
+    appleRouter,
+    madladEngine,
+    primaryEngine: baseEngine,
+    cacheModelVersion: usePlamo ? PLAMO_MODEL_VERSION : MADLAD_MODEL_VERSION,
+    llmProviders,
+  };
 }
 
 export function setAppleEligibleSources(

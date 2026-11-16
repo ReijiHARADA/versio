@@ -38,6 +38,8 @@ export type ImportCallbacks = {
 };
 
 export type ImportConfig = {
+  /** Primary engine; PLaMo is the default, MADLAD is legacy for one release. */
+  translationEngine?: "plamo" | "madlad";
   /** Build-gated presentation fixture; never persisted to user settings. */
   presentationDemo?: boolean;
   madladServerUrl?: string;
