@@ -3,7 +3,7 @@ import type { ExtractedPage } from "../../pdfService";
 import type { PaperBlock } from "../../../types/paper";
 import type { RefLine } from "./segmentReferences";
 
-const inside = (x: number, y: number, box: { x: number; y: number; width: number; height: number }) => x >= box.x - 2 && x <= box.x + box.width + 2 && y >= box.y - box.height - 2 && y <= box.y + box.height + 2;
+const inside = (x: number, y: number, box: { x: number; y: number; width: number; height: number }) => x >= box.x - 2 && x <= box.x + box.width + 2 && y >= box.y - 2 && y <= box.y + box.height + 2;
 
 type Item = ExtractedPage["textItems"][number];
 
@@ -35,8 +35,11 @@ export function referenceLinesFromPages(pages: ExtractedPage[], referenceBlocks:
     if (pageBoxes.length === 0) continue;
     // Merge boxes whose x-ranges overlap into column regions.
     const columns: Array<{ x: number; y: number; width: number; height: number }> = [];
-    for (const box of [...pageBoxes].sort((a, b) => a.x - b.x)) {
-      const col = columns.find((c) => box.x < c.x + c.width && c.x < box.x + box.width);
+    for (const box of [...pageBoxes].sort((a, b) => a.x - b.x || a.y - b.y)) {
+      // Same column (x overlap) and vertically contiguous: a gap of a few lines means
+      // other content sits between the boxes, so it starts a new region.
+      const near = (c: { y: number; height: number }) => box.y <= c.y + c.height + 24 && c.y <= box.y + box.height + 24;
+      const col = columns.find((c) => box.x < c.x + c.width && c.x < box.x + box.width && near(c));
       if (!col) {
         columns.push({ x: box.x, y: box.y, width: box.width, height: box.height });
         continue;
@@ -48,7 +51,9 @@ export function referenceLinesFromPages(pages: ExtractedPage[], referenceBlocks:
       Object.assign(col, { x: left, y: top, width: right - left, height: bottom - top });
     }
     const used = new Set<Item>();
-    for (const column of columns.sort((a, b) => a.x - b.x)) {
+    // Reading order: left column first, then top to bottom within it.
+    const colX = (c: { x: number }) => Math.round(c.x / 40);
+    for (const column of columns.sort((a, b) => colX(a) - colX(b) || a.y - b.y)) {
       const items = page.textItems.filter((item) => item.text.trim() && !used.has(item) && inside(item.x + Math.min(item.width, 4) / 2, item.y, column));
       for (const item of items) used.add(item);
       const groups: Item[][] = [];
@@ -76,4 +81,15 @@ export function referenceLinesFromPages(pages: ExtractedPage[], referenceBlocks:
     }
   }
   return output.filter((line) => line.text).map(({ y: _y, ...line }) => line);
+}
+
+/**
+ * Blocks that delimit the references section. When the document has a section
+ * classified as references, only blocks inside it are used, so body paragraphs
+ * mislabelled as references elsewhere do not reach the CRF.
+ */
+export function selectReferenceBlocks(blocks: PaperBlock[], sections: Array<{ id: string; normalizedKind: string }>): PaperBlock[] {
+  const referenceSections = new Set(sections.filter((s) => s.normalizedKind === "references").map((s) => s.id));
+  const inSection = blocks.filter((b) => b.sectionId !== null && referenceSections.has(b.sectionId) && (b.type === "reference" || b.type === "paragraph"));
+  return inSection.length > 0 ? inSection : blocks.filter((b) => b.type === "reference");
 }

@@ -8,5 +8,5 @@ const empty = (): FieldRecord => ({ title: null, authors: [], affiliations: [], 
 
 export function predictionFromCrfPort(id: string, language: "en" | "ja", lines: RefLine[], elapsedMs: number): FieldPrediction {
   const unavailableFields: FieldName[] = language === "ja" ? [...OTHER, "references"] : OTHER;
-  return { id, parser: "crfport", parserVersion: "grobid-0.9.1-port", elapsedMs, unavailableFields, fields: { ...empty(), references: language === "ja" ? [] : segmentReferences(lines).map(parseCitation) } };
+  return { id, parser: "crfport", parserVersion: "grobid-0.9.1-port", elapsedMs, unavailableFields, fields: { ...empty(), references: language === "ja" ? [] : segmentReferences(lines).map(parseCitation).filter((c) => !c.rejected).map(({ rejected: _r, ...c }) => c) } };
 }

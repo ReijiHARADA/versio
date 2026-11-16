@@ -108,14 +108,25 @@ PDF をアプリで確認するときは `open -a Versio.app test-data/field-gol
 3. 日本語は、著者は現行を維持。所属・参考文献の GROBID 採用は、日本語正解を増やして確かめてから決める。
 4. 同梱方式（常駐サイドカー、初回ダウンロード、オプトインなど）は RAM 2.8 GB・数百 MB の配布増を踏まえて段階 3 で設計する。
 
-## CRF port（GROBID 0.9.1、評価専用、2026-11-16）
+## CRF port（GROBID 0.9.1 の参考文献 CRF を TypeScript に移植、評価専用、2026-11-16）
 
-| parser | references en F1 (85) | references ja F1 (6) | median 秒/本 |
-|---|---:|---:|---:|
-| versio | 0.243 | 0.042 | 0.8 |
-| grobid | 0.954 | 0.367 | 1.8 |
-| crfport | 0.491 | unavailable | 0.8 |
+設計: [specs/2026-11-16-crf-references-port-design.md](./superpowers/specs/2026-11-16-crf-references-port-design.md)。本番パイプラインは未接続（`npm run eval:fields -- --parser crfport`）。
 
-- gzip assets: citation model 274.9 KiB、reference-segmenter model 18.6 KiB、lexicons 0.92 MiB、合計 1.22 MiB。
-- `location` (4.02 MiB gzip / 620,618 entries) is dropped after ablation because its JavaScript `Set` exceeded the runtime-memory budget. The added English wordform and complete first/last-name lists improve raw-citation title diagnosis from 0.340 to 0.471 (year 0.880→0.852).
-- The local Java parity harness obtains GROBID's internal Wapiti stream directly: 60 gold references / 2,650 tokens currently give 43.4% exact feature-row agreement and 52.5% label agreement. The real pdf.js visual-line input fixes crfport count-ratio median from 0.26 to 1.06 and English references F1 from 0.417 to 0.491, but the ≥95% parity and ≥0.85 F1 targets remain blocked by incomplete FastMatcher/identifier-URL feature parity and segmenter layout parity.
+| 指標 | 値 |
+|---|---|
+| references F1（英語） | **0.829**（現行 0.243、本家 GROBID 0.954） |
+| references F1（日本語） | 未実行（英語専用） |
+| citation モデルの本家一致率（60 件・2,650 トークン） | 特徴量 97.7%、ラベル 99.7% |
+| 正しく区切った参考文献での題名正解率 / 年正解率 | 0.869 / 0.993 |
+| 区切りの一致（類似度 0.6 以上）: 予測側 / 正解側 | 0.654 / 0.846 |
+| 配布サイズ（モデル＋辞書、gzip） | 4.98 MB（citation モデル 0.28 MB、区切りモデル 0.02 MB、残りは辞書） |
+| 辞書の読み込み | 約 1 秒。句の照合は 53 bit ハッシュの整列配列（JS ヒープ 4 MB＋配列） |
+| 処理時間 | 中央値 0.8 秒/本（Versio の抽出込み） |
+
+経緯（英語 references F1）: 初回 0.417 → 実際の行を入力 0.491 → 辞書照合と bigram の向きを本家どおりに修正 0.565 → 段ごとに行を再構成 0.659〜0.750 → 区切り特徴量を本家どおりに 0.758 → 参考文献セクションに限定 0.799 → 本家の除外規則 0.808 → 範囲判定の修正 0.829。
+
+残っている差の主因:
+
+- 区切りモデルのレイアウト特徴（行頭・字下げ・ブロック）は本家が pdfalto の行とブロックから作る。pdf.js の行から作る本移植とは一致しきらず、折り返し行で 1 件が 2 件に割れる誤りが残る。
+- Versio の参考文献セクション判定が本文や付録を含む論文では、その分だけ余計な項目が出る。
+- 正解側の書式（arXiv の `.bbl`、JATS）と PDF の書式が違うため、正しく区切れていても類似度が基準に届かない項目がある（指標側の限界）。
