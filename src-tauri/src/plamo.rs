@@ -164,6 +164,20 @@ pub fn kill_orphan(pid_file: &Path, expected_comm: &str) {
     }
 }
 
+/// Kill `child` if `parent` dies first. SIGTERM / crash / force-quit skip the window-close
+/// hook, and macOS has no parent-death signal, so a tiny shell watcher covers that case.
+/// The watcher exits on its own when the child exits.
+pub fn spawn_watchdog(parent: u32, child: u32) {
+    let script = "while kill -0 \"$0\" 2>/dev/null && kill -0 \"$1\" 2>/dev/null; do sleep 2; done; \
+                  kill -0 \"$0\" 2>/dev/null || kill -9 \"$1\" 2>/dev/null";
+    let _ = Command::new("/bin/sh")
+        .args(["-c", script, &parent.to_string(), &child.to_string()])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn();
+}
+
 fn pid_file(app: &AppHandle, name: &str) -> Result<PathBuf, String> {
     Ok(model_path(app)?.with_file_name(name))
 }
@@ -209,6 +223,7 @@ fn download_blocking(app: &AppHandle) -> Result<(), String> {
         .spawn()
         .map_err(|e| e.to_string())?;
     let _ = std::fs::write(&curl_pid, child.id().to_string());
+    spawn_watchdog(std::process::id(), child.id());
     *state.download_child.lock().unwrap() = Some(child);
     let exit = loop {
         let polled = {
@@ -296,6 +311,7 @@ fn ensure_blocking(app: &AppHandle) -> Result<PlamoServerInfo, String> {
     };
     let child = command.spawn().map_err(|e| format!("spawn_failed: {e}"))?;
     let _ = std::fs::write(&server_pid, child.id().to_string());
+    spawn_watchdog(std::process::id(), child.id());
     // Publish immediately so `stop()` can kill a still-starting server without waiting.
     *state.server.lock().unwrap() = Some((child, port, token.clone()));
     let started = Instant::now();
@@ -427,6 +443,17 @@ mod tests {
         assert!(t0.elapsed() < Duration::from_secs(1));
         assert!(state.download_child.lock().unwrap().is_none());
         assert!(state.server.lock().unwrap().is_none());
+    }
+
+    #[test]
+    fn watchdog_kills_child_when_parent_dies() {
+        let mut parent = Command::new("/bin/sleep").arg("30").spawn().unwrap();
+        let mut child = Command::new("/bin/sleep").arg("30").spawn().unwrap();
+        spawn_watchdog(parent.id(), child.id());
+        parent.kill().unwrap();
+        parent.wait().unwrap();
+        std::thread::sleep(Duration::from_secs(3));
+        assert!(!child_alive(&mut child));
     }
 
     #[test]

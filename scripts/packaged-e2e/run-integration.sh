@@ -49,6 +49,7 @@ stop_bundled_sidecars() {
     [[ -n "$pid" ]] || continue
     kill "$pid" 2>/dev/null || true
   done < <(ps -axo pid=,command= | awk -v prefix="$prefix" 'index($0, prefix) { print $1 }')
+  pkill -f "^$APP_PATH/Contents/MacOS/llama-server " 2>/dev/null || true
 }
 
 trap stop_bundled_sidecars EXIT
@@ -209,7 +210,8 @@ quit_app() {
     kill "$APP_PID" 2>/dev/null || true
     wait "$APP_PID" 2>/dev/null || true
   fi
-  osascript -e 'tell application "Versio" to quit' 2>/dev/null || true
+  # Quit only the instance this script launched (by pid); quitting "Versio" by name
+  # would also close a user's running Versio.
   sleep 2
   stop_bundled_sidecars
 }
