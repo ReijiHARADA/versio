@@ -3292,7 +3292,78 @@ function groupLinesIntoBlocks(
   // parallel table band.
   const postSplitMerged = mergeColumnContinuations(split);
   const ordered = repairInterleavedContinuationOrder(repairPageBoundaryContinuations(repairDetachedMarginContinuations(postSplitMerged)));
-  return trimInterleavedHyphenFragments(trimOrphanTailBeforeChrome(ordered));
+  return trimInterleavedHyphenFragments(trimOrphanTailBeforeChrome(joinFullLineBreaks(ordered)));
+}
+
+/**
+ * A paragraph broken by a column, page or float at a sentence boundary.
+ * The text cannot tell (A ends with a full stop, B starts a sentence), the
+ * typesetting can: a paragraph's last line is short, so a justified line that
+ * runs to the right margin means the paragraph goes on, and in a journal that
+ * marks paragraphs with a first-line indent, an unindented first line of B
+ * continues the previous paragraph. Only captions, footnotes and page chrome
+ * may lie between the two pieces; they stay after the joined paragraph.
+ */
+function joinFullLineBreaks(blocks: LayoutBlock[]): LayoutBlock[] {
+  const bodyLines = blocks.filter((b) => b.role === "paragraph").flatMap((b) => b.lines);
+  if (bodyLines.length === 0) return blocks;
+  const font = median(bodyLines.map((l) => l.fontSize));
+  // Consecutive lines of the block on one page and column, starting at `from` and moving by `step`.
+  const run = (block: LayoutBlock, from: number, step: 1 | -1) => {
+    const anchor = block.lines[from];
+    const out: LayoutLine[] = [];
+    for (let k = from; k >= 0 && k < block.lines.length; k += step) {
+      const l = block.lines[k];
+      if (l.page !== anchor.page || l.column !== anchor.column) break;
+      out.push(l);
+    }
+    return out;
+  };
+  const isBody = (b: LayoutBlock) => b.role === "paragraph" && b.lines.length > 0 &&
+    Math.abs(median(b.lines.map((l) => l.fontSize)) - font) <= font * 0.08;
+  // First-line indent of a paragraph: its first line against the rest of its first run.
+  const indentOf = (b: LayoutBlock) => {
+    const first = run(b, 0, 1);
+    return first.length >= 2 ? first[0].x - Math.min(...first.slice(1).map((l) => l.x)) : undefined;
+  };
+  const indents = blocks.filter(isBody).map(indentOf).filter((x): x is number => x !== undefined);
+  const indentStyle = indents.length >= 4 && indents.filter((x) => x >= font * 0.8 && x <= font * 4).length >= indents.length * 0.4;
+  const result = [...blocks];
+  const repeated = new Set<string>();
+  for (let i = 0; i < result.length; i += 1) {
+    const a = result[i];
+    if (!isBody(a) || a.text.trim().length < 80) continue;
+    let j = i + 1;
+    while (j < result.length && j <= i + 8 && (result[j].role === "figure_caption" || result[j].role === "table_caption" ||
+      result[j].role === "table" || isTransparentMetadataBlock(result[j], repeated))) j += 1;
+    const b = result[j];
+    if (!b || !isBody(b)) continue;
+    const tail = run(a, a.lines.length - 1, -1);
+    const head = run(b, 0, 1);
+    const last = tail[0];
+    const first = head[0];
+    if (head.length < 2 || (tail.length < 2 && (head[0].column !== last.column || head[0].page !== last.page))) continue;
+    if (/^(?:[•‣▪∙*–-]\s|\(?\d{1,3}[.)]\s|\[\d+\]|\(?[a-z]{1,3}\)\s|(?:Fig\.?|Figure|Table)\s*\d)/i.test(b.text.trim())) continue;
+    const right = (l: LayoutLine) => l.x + l.width;
+    // The column's right margin and line width, from A's last run or, when that is one line, from B's first.
+    const ref = tail.length >= 2 ? tail.slice(1) : head;
+    const full = right(last) >= Math.max(...ref.map(right)) - font * 0.6 && last.width >= Math.max(...ref.map((l) => l.width)) * 0.92;
+    const unindented = Math.abs(first.x - Math.min(...head.slice(1).map((l) => l.x))) <= font * 0.4;
+    if (!full || !unindented) continue;
+    // A physical break: another page or column, or the text resumes after skipped floats.
+    const broken = last.page !== first.page || last.column !== first.column || first.y < last.y || j > i + 1;
+    // Same place: an indent-marked journal needs no more; otherwise B must follow at the ordinary line pitch.
+    const pitch = median(head.slice(1).map((l, k) => l.y - head[k].y));
+    if (!broken && !indentStyle && first.y - last.y > pitch * 1.2) continue;
+    a.text = joinHyphenated(a.text, b.text).replace(/\s+/g, " ").trim();
+    a.lines = [...a.lines, ...b.lines];
+    a.pageEnd = Math.max(a.pageEnd, b.pageEnd);
+    a.bbox = blockBbox(a.lines);
+    if (last.column !== first.column) a.preserveColumnContinuation = true;
+    result.splice(j, 1);
+    i -= 1;
+  }
+  return result;
 }
 
 /**
@@ -3305,7 +3376,8 @@ function groupLinesIntoBlocks(
  * uses line geometry/content rather than paper-specific equation vocabulary.
  */
 function splitEmbeddedDisplayMathBlocks(blocks: LayoutBlock[], baseFont: number): LayoutBlock[] {
-  const mathGlyphs = /[=≡≈≠≤≥∼~∑∏∫√∞±×÷∂∇∈∉→←↦‖∥+-−]/u;
+  // `+-−` inside a class is a range that takes in letters and digits; a hyphen counts only as a spaced operator.
+  const mathGlyphs = /[=≡≈≠≤≥∼~∑∏∫√∞±×÷∂∇∈∉→←↦‖∥+−]|\s-\s/u;
   const equationNumber = /\(\s*\d{1,2}[a-z]?\s*\)\s*[.,;]?\s*$/i;
   const proseWordCount = (text: string) => (text.match(/[A-Za-z]{3,}/g) ?? []).length;
   const compactMathRow = (line: LayoutLine) => {
